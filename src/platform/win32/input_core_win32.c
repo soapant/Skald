@@ -152,10 +152,6 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam
       log_info("hook swallow=hotkey vk=0x%X mods=%d title='%s'", pressed_vk, modifiers, _t2 ? _t2 : "");
       return 1;
     }
-    if (alt_down && wParam == SETTINGS_KEY) {
-      Platform_SettingsPopUp(WindowManager_Get());
-      return true;
-    }
     PROFILE_END_VAR(timer, "ProcessHotkey");
 
     PROFILE_START(timer3);

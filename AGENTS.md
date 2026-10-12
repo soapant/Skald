@@ -14,7 +14,6 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 ### Known layering violations (do not extend these)
 1. `include/core/flapi.h:436,439,441` declares `Platform_PreRender`, `Platform_SetPreRenderState`, `Platform_SetPreRenderStateWin32` — all also in `include/platform/draw.h:48,34,15`.
 2. `src/platform/x11/platform_x11.c:47` and `src/platform/win32/platform_win32.c:25` include `../../../nob.h` for `nob_mkdir_if_not_exists`.
-3. `Platform_SettingsPopUp` — header `include/platform/platform.h:58` takes `WindowManager*`, but the Win32 definition `wm_platform_win32.c:273` takes none. Links only because `-std=gnu17`.
 
 ---
 
@@ -56,7 +55,7 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
   - `LISTBOX` **must** carry `LBS_NOINTEGRALHEIGHT`. Without it Windows rounds `LB_SETITEMHEIGHT` to a multiple of the font line height and vertically centres the item block, so row 0 is not at the list top — this was the main cause of the listbox y offset being wrong.
   - Item text x is `PROMPT_ITEM_TEXT_X` relative to the listbox client, which is now popup x 0.
   - Rounded selection rect insets horizontally by `PROMPT_SEL_X` to reproduce X11's `bx=4`.
-  - `win32_apply_rounded_corners` is called for the prompt/edit/settings popups but X11 can only shape **non**-override-redirect windows (`helpers_x11.c` `x11_apply_shape_rounded` is gated `!override_redirect`). Widgets and message popups are override-redirect on X11 and therefore never rounded, while Win32 does round them. Inert while `RoundedCorners = false`.
+  - `win32_apply_rounded_corners` is called for the prompt/edit popups but X11 can only shape **non**-override-redirect windows (`helpers_x11.c` `x11_apply_shape_rounded` is gated `!override_redirect`). Widgets and message popups are override-redirect on X11 and therefore never rounded, while Win32 does round them. Inert while `RoundedCorners = false`.
 - `Platform_GetUIScale()` is hardcoded `1.0f` on Win32 (`ui_scale_win32.c`). It is still consumed by `CalculateWindowMetrics` so the sizing logic matches X11, but Windows has no DPI awareness anywhere in the tree — no `LOGPIXELSX`, `MulDiv`, `GetDpiForWindow`, or `SetProcessDpiAwarenessContext`.
 
 ---
@@ -65,7 +64,7 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 
 - `fl_popup` is a macro → `fl_popup_impl` (`src/flapi.c:1010`). It maps `FlPopupSpec.placeholder` via `EditPopup_SetPlaceholder` (grey); `initial_text` is the real prefill. Default size `500x70`, `align` hardcoded `"LEFT"`.
 - `fl_popup_impl:1017` takes `wm = WindowManager_Get()` and dereferences it at `:1023` with no NULL check, and it runs its own blocking `while (wm->running && popup->manager) Platform_WM_ProcessEvents(wm)` loop (`:1023-1025`). Anything that changes the WM lifecycle must keep that loop able to exit.
-- Popup size/centering: prompt popup `900x640 * Platform_GetUIScale()` (`src/core/popup/prompt_popup.c:153`), settings popup `900x700`. Center via `WindowManager_GetCenteredPos` (`src/core/window_manager.c:125`).
+- Popup size/centering: prompt popup `900x640 * Platform_GetUIScale()` (`src/core/popup/prompt_popup.c:153`). Center via `WindowManager_GetCenteredPos` (`src/core/window_manager.c:125`).
 - Popup object model: `Popup` + `PopupVTable` (`include/core/window_manager.h:21,36`), `PopupType` enum at `:30`. `WMEditPopupData` (`:63`) is the struct shared across the `.so` boundary.
 - Widgets (`FlWidget`, `flapi.h:394-423`) are persistent desktop windows, not prompt UI. `fl_widget_create` `src/flapi.c:1892`, `fl_widget_relayout` `src/flapi.c:1855` stacks them into `FL_WIDGET_SLOT_*` corners using `WidgetGap`. Render callbacks run inside `Platform_BeginMeasure()`/`Platform_EndMeasure()` so widgets auto-size (`src/flapi.c:1732-1748`).
 - Widget hot-reload safety: each widget records its owning `.so` path via `Platform_GetModuleOwnerPath`; `fl_widget_purge_owner` (`src/flapi.c:1771`) kills matching widgets, drops frame callbacks, posts destruction on the render thread, then `Platform_RenderThread_Sync()`s. `src/core/feature_loader.c` calls this around every unload. Never free a widget's render callback yourself.
@@ -77,7 +76,7 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 
 - `src/flapi.c:1042` — `fl_draw_text_impl` treats `text` as an integer char code when `(uintptr_t)real_text < 256`. Any small/invalid pointer takes the wrong branch. Pass a real string.
 - `src/core/window_manager.c:13` — `SavePerFeatureState` is an empty stub, yet still called from `src/core/popup/prompt_popup.c:109`. `ModePersistsThroughFeatures` + `RememberLastIndex` silently do nothing per-feature.
-- `src/core/popup/search_popup.c:10` — `SearchPopup_Create` returns NULL (all params `(void)`). The whole X11 `Platform_SettingsPopup*` family is a no-op (`src/platform/x11/settings_popup_x11.c:5-38`).
+- `src/core/popup/search_popup.c:10` — `SearchPopup_Create` returns NULL (all params `(void)`).
 - `src/features/todo.c:42` — `#define TODO_TAG_FORMAT TODO_TAG_FORMAT` is self-referential.
 - `src/features/zoxide.c:35-64` — `TriggerYaziZoxide`/`yazi_refresh`/`yazi_enter`/`yazi_edit` defined, never registered.
 - `include/core/types/file.h:41` — `WinPromptState` defined, never used.

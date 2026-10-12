@@ -52,7 +52,7 @@ static bool is_flint_popup_class(HWND hwnd) {
     char cls[64] = {0};
     GetClassNameA(hwnd, cls, sizeof(cls));
     return strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0
-        || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0 || strcmp(cls, "SettingsPopupClass")==0;
+        || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0;
 }
 
 HWND Platform_GetFlintPrevFg(void) {

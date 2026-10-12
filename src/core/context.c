@@ -7,7 +7,6 @@ static FlintContext g_ctx = {
         .hPopupWnd = {0},
         .hListBox = {0},
         .hDisplayMessage = {0},
-        .hSettings = {0},
         .selection_complete = false,
         .output_buffer = {0},
         .current_feature = NULL,

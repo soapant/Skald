@@ -123,7 +123,6 @@ typedef struct {
 #define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
 #endif
 #define ID_EXIT 2001
-#define ID_SETTINGS 2002
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
 

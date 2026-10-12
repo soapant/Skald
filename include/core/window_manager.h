@@ -30,8 +30,7 @@ typedef struct {
 typedef enum { POPUP_PROMPT,
   POPUP_EDIT, 
   POPUP_MESSAGE, 
-  POPUP_SEARCH,
-  POPUP_SETTINGS } PopupType;
+  POPUP_SEARCH } PopupType;
 
 struct Popup {
     const PopupVTable* vtable;
@@ -98,7 +97,6 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec);
 Popup* SearchPopup_Create(WindowManager* wm, const char* title,
                           int x, int y, int w, int h,
                           EditPopupConfirmCallback on_confirm, void* user_data);
-Popup* SettingsPopup_Create(WindowManager* wm);
 void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
 void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w, int *out_h);
