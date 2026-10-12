@@ -33,17 +33,20 @@
 #include "deps/stb_ds.h"
 
 size_t fl_clipboard_history_count(void) {
-    return clipboard_history_count_platform();
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_clipboard_history_count"); return clipboard_history_count_platform(); }
 }
 
 const FlClipboardEntry* fl_clipboard_history_get(size_t index) {
-    return clipboard_history_get_platform(index);
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_clipboard_history_get"); return clipboard_history_get_platform(index); }
 }
 
 const FlClipboardEntry* fl_clipboard_latest(void) {
+    PROFILE_START(_pt);
     size_t n = clipboard_history_count_platform();
-    if (n == 0) return NULL;
-    return clipboard_history_get_platform(n - 1);
+    if (n == 0) { PROFILE_END_VAR(_pt, "fl_clipboard_latest"); return NULL; }
+    { PROFILE_END_VAR(_pt, "fl_clipboard_latest"); return clipboard_history_get_platform(n - 1); }
 }
 
 void fl_clipboard_clear_history(void) {
@@ -51,55 +54,60 @@ void fl_clipboard_clear_history(void) {
 }
 
 bool fl_copy_to_clipboard(const char* text) {
-    if (text == NULL) return 0;
+    PROFILE_START(_pt);
+    if (text == NULL) { PROFILE_END_VAR(_pt, "fl_copy_to_clipboard"); return 0; }
     bool ok = Platform_CopyToClipboard(text);
     if (ok) clipboard_history_push_text_platform(text);
-    return ok;
+    { PROFILE_END_VAR(_pt, "fl_copy_to_clipboard"); return ok; }
 }
 
 bool fl_copy_file_path(const char* path) {
-    if (!path) return false;
-    return clipboard_set_path_platform(path);
+    PROFILE_START(_pt);
+    if (!path) { PROFILE_END_VAR(_pt, "fl_copy_file_path"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_copy_file_path"); return clipboard_set_path_platform(path); }
 }
 
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension) {
-    if (!dir_path || !list_of_files) return false;
+    PROFILE_START(_pt);
+    if (!dir_path || !list_of_files) { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return false; }
 
     char expanded_dir[MAX_PATH];
-    if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) return false;
+    if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return false; }
     dir_path = expanded_dir;
 
-    return Platform_GetAllFilesFromDir(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension);
+    { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return Platform_GetAllFilesFromDir(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension); }
 }
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path){
-    if (!directory) return NULL;
+    PROFILE_START(_pt);
+    if (!directory) { PROFILE_END_VAR(_pt, "fl_search_file_in_dir"); return NULL; }
 
     char expanded_dir[MAX_PATH];
-    if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir))) return NULL;
+    if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir))) { PROFILE_END_VAR(_pt, "fl_search_file_in_dir"); return NULL; }
     directory = expanded_dir;
 
-    return fl_search_file_in_dir_platform(directory,search_string,output_path);
+    { PROFILE_END_VAR(_pt, "fl_search_file_in_dir"); return fl_search_file_in_dir_platform(directory,search_string,output_path); }
 }
 
 bool fl_launch_with_args(const char* path, const char* args) {
     PROFILE_START(_pt);
-    if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_with_args"); return false; }
+    if (!path) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_launch_with_args"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_with_args"); return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_launch_with_args"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     bool r = fl_launch_with_args_platform(expanded, args);
     PROFILE_END_VAR(_pt, "api:fl_launch_with_args");
     return r;
 }
 
 bool fl_launch_with_args_as_admin(const char* path, const char* args) {
-    if (!path) return false;
+    PROFILE_START(_pt);
+    if (!path) { PROFILE_END_VAR(_pt, "fl_launch_with_args_as_admin"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-    return fl_launch_with_args_as_admin_platform(expanded, args);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "fl_launch_with_args_as_admin"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_launch_with_args_as_admin"); return fl_launch_with_args_as_admin_platform(expanded, args); }
 }
-
-/* ---------------------------------------------------------------- caps ---- */
 
 typedef struct {
     char key[FL_CAP_KEY_LEN];
@@ -112,7 +120,8 @@ static FlCap g_caps[FL_CAP_MAX];
 static int g_cap_count = 0;
 static unsigned g_cap_generation = 1;
 
-unsigned fl_cap_generation(void) { return g_cap_generation; }
+unsigned fl_cap_generation(void) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_cap_generation"); return g_cap_generation; } }
 
 void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
     if (!key || !key[0] || !fn) return;
@@ -134,8 +143,9 @@ void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
     }
 
     if (g_cap_count >= FL_CAP_MAX) {
+    PROFILE_START(_pt);
         log_error("fl_cap table full, dropping '%s'", key);
-        return;
+        { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     FlCap *c = &g_caps[g_cap_count++];
     snprintf(c->key, FL_CAP_KEY_LEN, "%s", key);
@@ -152,8 +162,9 @@ void *fl_cap_resolve_abi(const char *key, unsigned abi) {
     for (int i = 0; i < g_cap_count; i++) {
         if (strcmp(g_caps[i].key, key) != 0) continue;
         if (g_caps[i].abi != abi) {
+    PROFILE_START(_pt);
             log_warn("fl_cap '%s' abi mismatch want=%u have=%u", key, abi, g_caps[i].abi);
-            return NULL;
+            { PROFILE_END_VAR(_pt, "f"); return NULL; }
         }
         return g_caps[i].fn;
     }
@@ -161,11 +172,12 @@ void *fl_cap_resolve_abi(const char *key, unsigned abi) {
 }
 
 void fl_cap_bind_declare(const char *key, void *consumer) {
-    if (!key || !key[0] || !consumer) return;
+    PROFILE_START(_pt);
+    if (!key || !key[0] || !consumer) { PROFILE_END_VAR(_pt, "fl_cap_bind_declare"); return ; }
 
     char consumer_path[OWNER_PATH_MAX];
     Owner_ResolveForFunc(consumer, consumer_path, sizeof(consumer_path));
-    if (!consumer_path[0]) return;
+    if (!consumer_path[0]) { PROFILE_END_VAR(_pt, "fl_cap_bind_declare"); return ; }
 
     for (int i = 0; i < g_cap_count; i++) {
         if (strcmp(g_caps[i].key, key) != 0) continue;
@@ -180,7 +192,8 @@ void fl_cap_bind_declare(const char *key, void *consumer) {
 }
 
 void fl_cap_purge_owner(const char *path_a, const char *path_b) {
-    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
+    PROFILE_START(_pt);
+    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) { PROFILE_END_VAR(_pt, "fl_cap_purge_owner"); return ; }
 
     int n = 0;
     for (int i = 0; i < g_cap_count; i++) {
@@ -212,8 +225,9 @@ FlStringList fl_load_file_list(const char* filepath) {
     if (!filepath) return list;
     char full[MAX_PATH];
     if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) {
+    PROFILE_START(_pt);
         log_warn("fl_load_file_list resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
-        return list;
+        { PROFILE_END_VAR(_pt, "f"); return list; }
     }
     long budget = (long)MAX_FILE_LINES * (long)(MAX_FILE_LINE_LENGTH + 2);
     list = File_ReadLines(full, budget);
@@ -229,19 +243,22 @@ long fl_load_file(const char* filepath, char* buffer, long buffer_size) {
     buffer[0] = '\0';
     char full[MAX_PATH];
     if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) {
+    PROFILE_START(_pt);
         log_warn("fl_load_file resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
-        return -1;
+        { PROFILE_END_VAR(_pt, "f"); return -1; }
     }
     return File_ReadAll(full, buffer, buffer_size);
 }
 
 bool fl_free_list(const char* list[], int count) {
-    if (!list || count <= 0) return false;
+    PROFILE_START(_pt);
+    if (!list || count <= 0) { PROFILE_END_VAR(_pt, "fl_free_list"); return false; }
     for (int i = 0; i < count; i++) free((void*)list[i]);
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_free_list"); return true; }
 }
 void fl_free_file_list(FlStringList* list) {
-    if (!list) return;
+    PROFILE_START(_pt);
+    if (!list) { PROFILE_END_VAR(_pt, "fl_free_file_list"); return ; }
     if (list->items) {
         for (int i = 0; i < list->count; i++) free(list->items[i]);
         free(list->items);
@@ -250,14 +267,15 @@ void fl_free_file_list(FlStringList* list) {
     list->count = 0;
 }
 bool fl_free_window_list(PlWindowList *list) {
-    if (!list) return false;
+    PROFILE_START(_pt);
+    if (!list) { PROFILE_END_VAR(_pt, "fl_free_window_list"); return false; }
     if (list->windows) {
         for (int i = 0; i < list->count; i++) free(list->windows[i]);
         free(list->windows);
         list->windows = NULL;
         list->count = 0;
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_free_window_list"); return true; }
 }
 
 bool fl_append_to_file(const char* filepath, const char* line) {
@@ -267,8 +285,9 @@ bool fl_append_to_file(const char* filepath, const char* line) {
     filepath = full;
     FILE* f = fopen(filepath, "a");
     if (!f) {
+    PROFILE_START(_pt);
         f = fopen(filepath, "w");
-        if (!f) return false;
+        if (!f) { PROFILE_END_VAR(_pt, "f"); return false; }
     }
     fclose(f);
     f = fopen(filepath, "r");
@@ -295,24 +314,26 @@ bool fl_append_to_file(const char* filepath, const char* line) {
 }
 
 bool fl_write_to_file(const char* filepath, const char* lines[], int count) {
-    if (!filepath) return false;
-    if (count < 0) return false;
-    if (count > 0 && !lines) return false;
+    PROFILE_START(_pt);
+    if (!filepath) { PROFILE_END_VAR(_pt, "fl_write_to_file"); return false; }
+    if (count < 0) { PROFILE_END_VAR(_pt, "fl_write_to_file"); return false; }
+    if (count > 0 && !lines) { PROFILE_END_VAR(_pt, "fl_write_to_file"); return false; }
     char full[MAX_PATH];
-    if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) return false;
+    if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) { PROFILE_END_VAR(_pt, "fl_write_to_file"); return false; }
     filepath = full;
     FILE* f = fopen(filepath, "w");
-    if (!f) return false;
+    if (!f) { PROFILE_END_VAR(_pt, "fl_write_to_file"); return false; }
     for (int i = 0; i < count; i++) {
         if (lines[i]) fprintf(f, "%s\n", lines[i]);
         else fprintf(f, "\n");
     }
     fclose(f);
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_write_to_file"); return true; }
 }
 
 bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
-    return Platform_WriteTempFile(name, data, len, out_path, out_len);
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_write_temp_file"); return Platform_WriteTempFile(name, data, len, out_path, out_len); }
 }
 
 char* fl_read_file_to_string(const char* path, size_t* out_len) {
@@ -321,12 +342,14 @@ char* fl_read_file_to_string(const char* path, size_t* out_len) {
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
     FILE* f = fopen(expanded, "rb");
     if (!f) return NULL;
-    if (fseek(f, 0, SEEK_END)!=0) { fclose(f); return NULL; }
+    if (fseek(f, 0, SEEK_END)!=0) {     PROFILE_START(_pt);
+fclose(f); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
     long sz = ftell(f);
     if (sz < 0) sz = 0;
     rewind(f);
     char* buf = (char*)malloc((size_t)sz + 1);
-    if (!buf) { fclose(f); return NULL; }
+    if (!buf) {     PROFILE_START(_pt);
+fclose(f); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
     size_t read = fread(buf, 1, (size_t)sz, f);
     buf[read] = '\0';
     fclose(f);
@@ -335,10 +358,12 @@ char* fl_read_file_to_string(const char* path, size_t* out_len) {
 }
 
 long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size) {
-    return File_ReadAll(full_path, buffer, buffer_size);
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_read_entire_file"); return File_ReadAll(full_path, buffer, buffer_size); }
 }
 bool fl_write_string_to_file(const char* path, const char* content) {
-    if (!path || !content) return false;
+    PROFILE_START(_pt);
+    if (!path || !content) { PROFILE_END_VAR(_pt, "fl_write_string_to_file"); return false; }
     char full[MAX_PATH];
     if (Platform_ResolveDataPath(__builtin_return_address(0), path, full, sizeof(full))) {
         path = full;
@@ -348,50 +373,55 @@ bool fl_write_string_to_file(const char* path, const char* content) {
         path = expanded;
     }
     FILE* f = fopen(path, "w");
-    if (!f) return false;
+    if (!f) { PROFILE_END_VAR(_pt, "fl_write_string_to_file"); return false; }
     fputs(content, f);
     fclose(f);
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_write_string_to_file"); return true; }
 }
 bool fl_file_exists(const char* path) {
     if (!path) return false;
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
     FILE* f = fopen(expanded, "rb");
-    if (f) { fclose(f); return true; }
+    if (f) {     PROFILE_START(_pt);
+fclose(f); { PROFILE_END_VAR(_pt, "f"); return true; } }
     return false;
 }
 bool fl_append_unique_line(const char* path, const char* line) {
-    if (!path || !line) return false;
+    PROFILE_START(_pt);
+    if (!path || !line) { PROFILE_END_VAR(_pt, "fl_append_unique_line"); return false; }
     FlStringList files = fl_load_file_list(path);
     bool ok = fl_append_to_file(path, line);
     fl_free_file_list(&files);
-    return ok;
+    { PROFILE_END_VAR(_pt, "fl_append_unique_line"); return ok; }
 }
 bool fl_remove_line(const char* path, const char* line) {
-    if (!path || !line) return false;
+    PROFILE_START(_pt);
+    if (!path || !line) { PROFILE_END_VAR(_pt, "fl_remove_line"); return false; }
     FlStringList files = fl_load_file_list(path);
     const char* kept[1024]; int k=0;
     for (int i=0;i<files.count && k<1024;i++) if (strcmp(files.items[i], line)!=0) kept[k++]=files.items[i]; else { free(files.items[i]); files.items[i]=NULL; }
     bool ok = fl_write_to_file(path, kept, k);
     fl_free_file_list(&files);
-    return ok;
+    { PROFILE_END_VAR(_pt, "fl_remove_line"); return ok; }
 }
 bool fl_remove_line_contains(const char* path, const char* substr) {
-    if (!path || !substr) return false;
+    PROFILE_START(_pt);
+    if (!path || !substr) { PROFILE_END_VAR(_pt, "fl_remove_line_contains"); return false; }
     FlStringList files = fl_load_file_list(path);
     const char* kept[1024]; int k=0;
     for (int i=0;i<files.count && k<1024;i++) if (!strstr(files.items[i], substr)) kept[k++]=files.items[i]; else { free(files.items[i]); files.items[i]=NULL; }
     bool ok = fl_write_to_file(path, kept, k);
     fl_free_file_list(&files);
-    return ok;
+    { PROFILE_END_VAR(_pt, "fl_remove_line_contains"); return ok; }
 }
 bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay) {
-    if (!path || !out_name) return false;
+    PROFILE_START(_pt);
+    if (!path || !out_name) { PROFILE_END_VAR(_pt, "fl_parse_desktop_file"); return false; }
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
     FILE* f = fopen(expanded, "r");
-    if (!f) return false;
+    if (!f) { PROFILE_END_VAR(_pt, "fl_parse_desktop_file"); return false; }
     char line[1024]; bool found=false;
     if (out_nodisplay) *out_nodisplay=false;
     while(fgets(line,sizeof(line),f)){
@@ -406,17 +436,19 @@ bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out
         }
     }
     fclose(f);
-    return found;
+    { PROFILE_END_VAR(_pt, "fl_parse_desktop_file"); return found; }
 }
 
 bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows) {
-    if (!src || !dst) return false;
-    return remap_register_internal(src, dst, whitelist, windows);
+    PROFILE_START(_pt);
+    if (!src || !dst) { PROFILE_END_VAR(_pt, "fl_register_remapping_impl"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_register_remapping_impl"); return remap_register_internal(src, dst, whitelist, windows); }
 }
 
 static void fl_snippet_fire(int idx, int del) {
+    PROFILE_START(_pt);
     const SnippetBinding* b = snippet_get_binding(idx);
-    if (!b || !b->trigger) return;
+    if (!b || !b->trigger) { PROFILE_END_VAR(_pt, "fl_snippet_fire"); return ; }
     for (int i = 0; i < del; i++) {
         Platform_EmitKey(VK_BACK, 1);
         Platform_EmitKey(VK_BACK, 0);
@@ -426,9 +458,10 @@ static void fl_snippet_fire(int idx, int del) {
 }
 
 bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFunc fn, bool whitelist, const char** windows) {
-    if (!trigger || (!text && !fn)) return false;
+    PROFILE_START(_pt);
+    if (!trigger || (!text && !fn)) { PROFILE_END_VAR(_pt, "fl_register_snippet_impl"); return false; }
     snippet_set_fire_fn(fl_snippet_fire);
-    return snippet_register_internal(trigger, text, fn, whitelist, windows, (void*)__builtin_return_address(0));
+    { PROFILE_END_VAR(_pt, "fl_register_snippet_impl"); return snippet_register_internal(trigger, text, fn, whitelist, windows, (void*)__builtin_return_address(0)); }
 }
 
 typedef struct { char *key; void *value; } FlintMapEnt;
@@ -439,8 +472,9 @@ static int g_feature_order_count = 0;
 static int g_feature_order_cap = 0;
 
 static FlintMap* ensure_feature_map(void) {
+    PROFILE_START(_pt);
     if (!g_feature_map) { g_feature_map = NULL; sh_new_strdup(g_feature_map); }
-    return g_feature_map;
+    { PROFILE_END_VAR(_pt, "ensure_feature_map"); return g_feature_map; }
 }
 
 void fl_register_feature(const char* name, void (*cb)(void)) {
@@ -452,6 +486,7 @@ void fl_register_feature_with_icon(const char* name, void (*cb)(void), const cha
     ptrdiff_t idx = shgeti(g_feature_map, (char*)name);
     FeatureReg* existing = idx >= 0 ? (FeatureReg*)g_feature_map[idx].value : NULL;
     if (existing) {
+    PROFILE_START(_pt);
         existing->cb = cb;
         if (icon_path) {
             strncpy(existing->icon, icon_path, sizeof(existing->icon)-1);
@@ -460,7 +495,7 @@ void fl_register_feature_with_icon(const char* name, void (*cb)(void), const cha
             existing->icon[0] = '\0';
         }
         hotkey_mark_feature_toggles(cb);
-        return;
+        { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     FeatureReg* reg = (FeatureReg*)calloc(1, sizeof(FeatureReg));
     if (!reg) return;
@@ -475,7 +510,8 @@ void fl_register_feature_with_icon(const char* name, void (*cb)(void), const cha
     if (g_feature_order_count >= g_feature_order_cap) {
         int new_cap = g_feature_order_cap ? g_feature_order_cap * 2 : 32;
         FeatureReg** new_order = (FeatureReg**)realloc(g_feature_order, new_cap * sizeof(FeatureReg*));
-        if (!new_order) { shdel(g_feature_map, reg->name); free(reg); return; }
+        if (!new_order) {     PROFILE_START(_pt);
+shdel(g_feature_map, reg->name); free(reg); { PROFILE_END_VAR(_pt, "f"); return ; } }
         g_feature_order = new_order;
         g_feature_order_cap = new_cap;
     }
@@ -484,6 +520,7 @@ void fl_register_feature_with_icon(const char* name, void (*cb)(void), const cha
 }
 
 bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows) {
+    PROFILE_START(_pt);
     HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
                                                         on_hotkey_trigger,
                                                         optional_condition_for_hotkey,
@@ -495,19 +532,21 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
             if (g_feature_order[i] && g_feature_order[i]->cb == on_hotkey_trigger) { binding.is_feature_toggle = true; break; }
         }
     }
-    return hotkey_register_internal(binding);
+    { PROFILE_END_VAR(_pt, "fl_register_hotkey_impl"); return hotkey_register_internal(binding); }
 }
 
 int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max) {
+    PROFILE_START(_pt);
     int n = g_feature_order_count < max ? g_feature_order_count : max;
     for (int i=0;i<n;i++) {
         if (out_names) out_names[i] = g_feature_order[i]->name;
         if (out_cbs) out_cbs[i] = g_feature_order[i]->cb;
     }
-    return n;
+    { PROFILE_END_VAR(_pt, "fl_get_feature_list"); return n; }
 }
 
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max) {
+    PROFILE_START(_pt);
     int n = g_feature_order_count < max ? g_feature_order_count : max;
     for (int i=0;i<n;i++) {
         if (out_names) out_names[i] = g_feature_order[i]->name;
@@ -528,38 +567,44 @@ int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void
     } else {
         if (out_icons) *out_icons = NULL;
     }
-    return n;
+    { PROFILE_END_VAR(_pt, "fl_get_feature_list_with_icons"); return n; }
 }
 char* fl_get_icon_path(const char* app_path_path) {
-    if (!app_path_path) return NULL;
-    return Platform_GetIconPath((char*)app_path_path);
+    PROFILE_START(_pt);
+    if (!app_path_path) { PROFILE_END_VAR(_pt, "fl_get_icon_path"); return NULL; }
+    { PROFILE_END_VAR(_pt, "fl_get_icon_path"); return Platform_GetIconPath((char*)app_path_path); }
 }
 int fl_get_icon_size(const char* icon_path) {
-    if (!icon_path) return 20;
-    return Platform_GetIconSize((char*)icon_path);
+    PROFILE_START(_pt);
+    if (!icon_path) { PROFILE_END_VAR(_pt, "fl_get_icon_size"); return 20; }
+    { PROFILE_END_VAR(_pt, "fl_get_icon_size"); return Platform_GetIconSize((char*)icon_path); }
 }
 
 char* fl_run_terminal_command(char* command) {
   PROFILE_START(_pt);
-  if (!command) { PROFILE_END_VAR(_pt, "api:fl_run_terminal_command"); return NULL; }
+  if (!command) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_run_terminal_command"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
   char* r = Platform_RunTerminalCommand(command,false);
   PROFILE_END_VAR(_pt, "api:fl_run_terminal_command");
   return r;
 }
 
 char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status) {
-  if (!argv || !argv[0]) return NULL;
-  return Platform_RunArgvCapture(argv, stdin_data, out_status);
+    PROFILE_START(_pt);
+  if (!argv || !argv[0]) { PROFILE_END_VAR(_pt, "fl_run_argv"); return NULL; }
+  { PROFILE_END_VAR(_pt, "fl_run_argv"); return Platform_RunArgvCapture(argv, stdin_data, out_status); }
 }
 
 char* fl_run_terminal_command_blocking(char* command) {
-  if (!command) return NULL;
-  return Platform_RunCommandAndGetOutput(command);
+    PROFILE_START(_pt);
+  if (!command) { PROFILE_END_VAR(_pt, "fl_run_terminal_command_blocking"); return NULL; }
+  { PROFILE_END_VAR(_pt, "fl_run_terminal_command_blocking"); return Platform_RunCommandAndGetOutput(command); }
 }
 
 char* fl_run_terminal_command_and_open(char* command) {
   PROFILE_START(_pt);
-  if (!command) { PROFILE_END_VAR(_pt, "api:fl_run_terminal_command_and_open"); return NULL; }
+  if (!command) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_run_terminal_command_and_open"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
   char* r = Platform_RunTerminalCommand(command,true);
   PROFILE_END_VAR(_pt, "api:fl_run_terminal_command_and_open");
   return r;
@@ -567,7 +612,8 @@ char* fl_run_terminal_command_and_open(char* command) {
 
 bool fl_launch_detached(char* command) {
   PROFILE_START(_pt);
-  if (!command) { PROFILE_END_VAR(_pt, "api:fl_launch_detached"); return false; }
+  if (!command) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_launch_detached"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   bool r = Platform_LaunchDetached(command);
   PROFILE_END_VAR(_pt, "api:fl_launch_detached");
   return r;
@@ -576,9 +622,11 @@ bool fl_launch_detached(char* command) {
 bool fl_launch_terminal_at_path(char* path,char* args) {
   PROFILE_START(_pt);
   bool r = false;
-  if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path"); return false; }
+  if (!path) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path"); return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     r = Platform_LaunchTerminalAtPath(expanded,args);
   PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path");
   return r;
@@ -587,44 +635,62 @@ bool fl_launch_terminal_at_path(char* path,char* args) {
 bool fl_launch_file_manager_at_path(char* path,char* args) {
   PROFILE_START(_pt);
   bool r = false;
-  if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); return false; }
+  if (!path) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     r = Platform_LaunchFileManagerAtPath(expanded,args);
   PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path");
   return r;
 }
 
 char* fl_get_zoxide_match(char* query) {
-  if (!query) return NULL;
-  return Platform_QueryZoxidePath(query);
+    PROFILE_START(_pt);
+  if (!query) { PROFILE_END_VAR(_pt, "fl_get_zoxide_match"); return NULL; }
+  { PROFILE_END_VAR(_pt, "fl_get_zoxide_match"); return Platform_QueryZoxidePath(query); }
 }
 
 bool fl_terminate_process_by_name(const char* exe_name) {
-    if (!exe_name) return false;
-    return Platform_TerminateProcessByName(exe_name);
+    PROFILE_START(_pt);
+    if (!exe_name) { PROFILE_END_VAR(_pt, "fl_terminate_process_by_name"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_terminate_process_by_name"); return Platform_TerminateProcessByName(exe_name); }
 }
 bool fl_string_contains(const char* haystack, const char* needle) {
-    if (!needle || !haystack) return false;
-    return Platform_StringContainsCaseInsensitive(needle,haystack);
+    PROFILE_START(_pt);
+    if (!needle || !haystack) { PROFILE_END_VAR(_pt, "fl_string_contains"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_string_contains"); return Platform_StringContainsCaseInsensitive(needle,haystack); }
 }
-char* fl_string_cut_at(const char* str, char delim) { return String_CutAt(str, delim); }
-char* fl_string_cut_before(const char* str, char delim) { return String_CutBefore(str, delim); }
-char* fl_string_cut_after(const char* str, char delim) { return String_CutAfter(str, delim); }
-char* fl_string_between(const char* str, char open, char close) { return String_Between(str, open, close); }
-char* fl_string_inside(const char* str, char delim) { return String_Inside(str, delim); }
-char* fl_string_trim(const char* str) { return String_Trim(str); }
-char* fl_string_to_lower(const char* str) { return String_ToLower(str); }
-char* fl_string_to_upper(const char* str) { return String_ToUpper(str); }
-bool fl_string_starts_with(const char* str, const char* prefix) { return String_StartsWith(str, prefix); }
-bool fl_string_ends_with(const char* str, const char* suffix) { return String_EndsWith(str, suffix); }
-char* fl_string_replace(const char* str, const char* from, const char* to) { return String_Replace(str, from, to); }
-char* fl_string_slice(const char* str, int start, int end) { return String_Slice(str, start, end); }
+char* fl_string_cut_at(const char* str, char delim) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_cut_at"); return String_CutAt(str, delim); } }
+char* fl_string_cut_before(const char* str, char delim) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_cut_before"); return String_CutBefore(str, delim); } }
+char* fl_string_cut_after(const char* str, char delim) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_cut_after"); return String_CutAfter(str, delim); } }
+char* fl_string_between(const char* str, char open, char close) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_between"); return String_Between(str, open, close); } }
+char* fl_string_inside(const char* str, char delim) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_inside"); return String_Inside(str, delim); } }
+char* fl_string_trim(const char* str) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_trim"); return String_Trim(str); } }
+char* fl_string_to_lower(const char* str) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_to_lower"); return String_ToLower(str); } }
+char* fl_string_to_upper(const char* str) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_to_upper"); return String_ToUpper(str); } }
+bool fl_string_starts_with(const char* str, const char* prefix) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_starts_with"); return String_StartsWith(str, prefix); } }
+bool fl_string_ends_with(const char* str, const char* suffix) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_ends_with"); return String_EndsWith(str, suffix); } }
+char* fl_string_replace(const char* str, const char* from, const char* to) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_replace"); return String_Replace(str, from, to); } }
+char* fl_string_slice(const char* str, int start, int end) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_string_slice"); return String_Slice(str, start, end); } }
 
 StringList fl_string_split(const char* str, const char* delimiter) {
+    PROFILE_START(_pt);
     StringList empty = {NULL, 0};
-    if (!str || !delimiter || !delimiter[0]) return empty;
-    return String_Split(str, delimiter);
+    if (!str || !delimiter || !delimiter[0]) { PROFILE_END_VAR(_pt, "fl_string_split"); return empty; }
+    { PROFILE_END_VAR(_pt, "fl_string_split"); return String_Split(str, delimiter); }
 }
 
 void fl_string_list_free(StringList* list) {
@@ -636,33 +702,38 @@ void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items
 }
 
 bool fl_is_selected(ListBoxInfo* lb) {
-    if (!lb) return false;
-    return UI_IsListBoxSelected(lb);
+    PROFILE_START(_pt);
+    if (!lb) { PROFILE_END_VAR(_pt, "fl_is_selected"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_is_selected"); return UI_IsListBoxSelected(lb); }
 }
 
 void fl_set_edit_text(const char* text) {
+    PROFILE_START(_pt);
     FlintContext* ctx = FlintContext_Get();
-    if (!ctx) return;
+    if (!ctx) { PROFILE_END_VAR(_pt, "fl_set_edit_text"); return ; }
     UI_SetText(text ? text : "");
 }
 
 void fl_set_edit_cursor(int position) {
+    PROFILE_START(_pt);
     FlintContext* ctx = FlintContext_Get();
-    if (!ctx) return;
+    if (!ctx) { PROFILE_END_VAR(_pt, "fl_set_edit_cursor"); return ; }
     UI_SetCursorPosition(position);
 }
 
 void fl_get_edit_text(char* buffer, size_t cap) {
-    if (!buffer || cap == 0) return;
+    PROFILE_START(_pt);
+    if (!buffer || cap == 0) { PROFILE_END_VAR(_pt, "fl_get_edit_text"); return ; }
     buffer[0] = '\0';
     FlintContext* ctx = FlintContext_Get();
-    if (!ctx) return;
+    if (!ctx) { PROFILE_END_VAR(_pt, "fl_get_edit_text"); return ; }
     UI_GetCurrentTextEdit(buffer, cap);
 }
 
 static void fl_hover_popup_frame(void *ud) {
+    PROFILE_START(_pt);
     FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
-    if (!p || !p->render) return;
+    if (!p || !p->render) { PROFILE_END_VAR(_pt, "fl_hover_popup_frame"); return ; }
     p->frame++;
     FlWidgetState st = {0};
     st.width = p->w;
@@ -682,14 +753,15 @@ static void fl_hover_popup_frame(void *ud) {
 }
 
 static FlHoverPopupCtx *fl_hover_popup_ctx_new(const FlMessageSpec *spec) {
+    PROFILE_START(_pt);
     FlHoverPopupCtx *p = (FlHoverPopupCtx *)calloc(1, sizeof(*p));
-    if (!p) return NULL;
+    if (!p) { PROFILE_END_VAR(_pt, "fl_hover_popup_ctx_new"); return NULL; }
     p->render = spec->render;
     p->w = spec->w > 0 ? spec->w : FL_WIDGET_PROVISIONAL_W;
     p->h = spec->h > 0 ? spec->h : FL_WIDGET_PROVISIONAL_H;
     p->created_at = fl_start_timer_platform();
     p->pad = FL_WIDGET_DEFAULT_PAD;
-    return p;
+    { PROFILE_END_VAR(_pt, "fl_hover_popup_ctx_new"); return p; }
 }
 
 static void fl_hover_popup_ctx_free(void *ud) {
@@ -707,6 +779,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
     ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
     if (spec->hover_key && spec->hover_key[0]) {
         if (spec->render) {
+    PROFILE_START(_pt);
             FlHoverPopupCtx *ctx = fl_hover_popup_ctx_new(spec);
             if (ctx) {
                 Platform_HoverWidgetShow(spec->hover_key, fl_hover_popup_frame, ctx,
@@ -716,16 +789,17 @@ void fl_message_impl(const FlMessageSpec* spec) {
                                          spec->color_bg ? rgb_to_hex(spec->color_bg) : 0UL,
                                          fl_hover_popup_ctx_free, ctx);
             }
-            return;
+            { PROFILE_END_VAR(_pt, "f"); return ; }
         }
         Platform_HoverMessage(spec->hover_key, spec->message, spec->x, spec->y, w, h, mw, mh, color,spec->no_bg);
         return;
     }
     MessageSlot slot = spec->slot;
     if (slot == AUTO) {
+    PROFILE_START(_pt);
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER_RELATIVE;
         Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL);
-        return;
+        { PROFILE_END_VAR(_pt, "f"); return ; }
     } else if (slot == FREE || spec->x != 0 || spec->y != 0) {
         Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL);
         return;
@@ -734,22 +808,26 @@ void fl_message_impl(const FlMessageSpec* spec) {
 }
 bool fl_launch_browser(char* url) {
     PROFILE_START(_pt);
-    if (!url) { PROFILE_END_VAR(_pt, "api:fl_launch_browser"); return false; }
+    if (!url) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_launch_browser"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     bool r = Platform_LaunchBrowserAtUrl(url,false);
     PROFILE_END_VAR(_pt, "api:fl_launch_browser");
     return r;
 }
 bool fl_query_browser(const char* query) {
-    if (!query) return false;
-    return Platform_QueryBrowser(query);
+    PROFILE_START(_pt);
+    if (!query) { PROFILE_END_VAR(_pt, "fl_query_browser"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_query_browser"); return Platform_QueryBrowser(query); }
 }
 
 char* fl_on_dir_changed(const char* dir_path, DirChangeCallback callback) {
-    if (!dir_path) return NULL;
-    return Platform_RegisterDirWatcher(dir_path, callback);
+    PROFILE_START(_pt);
+    if (!dir_path) { PROFILE_END_VAR(_pt, "fl_on_dir_changed"); return NULL; }
+    { PROFILE_END_VAR(_pt, "fl_on_dir_changed"); return Platform_RegisterDirWatcher(dir_path, callback); }
 }
 
 char* fl_get_last_clipboard_entry() {
+    PROFILE_START(_pt);
     char* current = Platform_GetClipboardEntry();
     if (current) {
         if (current[0]) {
@@ -763,16 +841,18 @@ char* fl_get_last_clipboard_entry() {
         const FlClipboardEntry* e = clipboard_history_get_platform(i - 1);
         if (e->type == FL_CLIPBOARD_TEXT && e->text) return strdup(e->text);
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "fl_get_last_clipboard_entry"); return NULL; }
 }
 bool fl_paste_from_clipboard() {
+    PROFILE_START(_pt);
     char* content = Platform_GetClipboardEntry();
-   return Platform_PasteContent(content);
+   { PROFILE_END_VAR(_pt, "fl_paste_from_clipboard"); return Platform_PasteContent(content); }
 }
 
 bool fl_paste(char* content) {
-    if (!content) return false;
-   return Platform_PasteContent(content);
+    PROFILE_START(_pt);
+    if (!content) { PROFILE_END_VAR(_pt, "fl_paste"); return false; }
+   { PROFILE_END_VAR(_pt, "fl_paste"); return Platform_PasteContent(content); }
 }
 
 static void fl_edit_blocking_confirm(const char* text, void* user_data) {
@@ -781,6 +861,7 @@ static void fl_edit_blocking_confirm(const char* text, void* user_data) {
 }
 
 char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
+    PROFILE_START(_pt);
     const char* initial_text = spec ? spec->initial_text : NULL;
     int x = spec->x ? spec->x : 960;
     int y = spec->y ? spec->y : 540;
@@ -790,15 +871,15 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     ListBoxInfo* lb = spec ? spec->lb : NULL;
     int* out_index = spec ? spec->out_index : NULL;
     if (out_index) *out_index = -1;
-    if (!lb) return NULL;
+    if (!lb) { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return NULL; }
     if (!initial_text) initial_text = "";
     int idx = lb->selected_index;
     int true_idx = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     WindowManager* wm = WindowManager_Get();
-    if (!wm) return NULL;
+    if (!wm) { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return NULL; }
     char* result = NULL;
     Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm, &result);
-    if (!popup) return NULL;
+    if (!popup) { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return NULL; }
     WindowManager_PushPopup(wm, popup);
     while (wm->running && popup->manager) {
         Platform_WM_ProcessEvents(wm);
@@ -818,24 +899,26 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
         free(result);
         result = NULL;
     }
-    if (!result) return NULL;
+    if (!result) { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return NULL; }
     if (out_index) *out_index = true_idx;
-    return result;
+    { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return result; }
 }
 
 bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text) {
     if (!filepath || !new_text || line_index < 0) return false;
     FlStringList files = fl_load_file_list(filepath);
     if (line_index >= files.count) {
+    PROFILE_START(_pt);
         fl_free_file_list(&files);
-        return false;
+        { PROFILE_END_VAR(_pt, "f"); return false; }
     }
     free(files.items[line_index]);
     files.items[line_index] = NULL;
     files.items[line_index] = strdup(new_text);
     if (!files.items[line_index]) {
+    PROFILE_START(_pt);
         fl_free_file_list(&files);
-        return false;
+        { PROFILE_END_VAR(_pt, "f"); return false; }
     }
     bool ok = fl_write_to_file(filepath, (const char**)files.items, files.count);
     fl_free_file_list(&files);
@@ -844,7 +927,8 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
 
 bool fl_focus_window_by_title(char* title) {
   PROFILE_START(_pt);
-  if (!title) { PROFILE_END_VAR(_pt, "api:fl_focus_window_by_title"); return false; }
+  if (!title) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_focus_window_by_title"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   bool r = Platform_FocusWindow(title);
   PROFILE_END_VAR(_pt, "api:fl_focus_window_by_title");
   return r;
@@ -858,7 +942,12 @@ bool fl_close_active_window(void) {
 }
 
 bool fl_dismiss_message(void) {
+  PROFILE_START(_pt);
+  bool r = Platform_CloseActiveWindow();
   Platform_DismissMessage();
+  Platform_DismissIndefiniteMessage();
+  PROFILE_END_VAR(_pt, "api:fl_dismiss_message");
+  return true;
 }
 
 bool fl_toggle_fullscreen_active(void) {
@@ -919,10 +1008,12 @@ char* fl_popup_impl(const FlPopupSpec *spec) {
     int h = spec->h > 0 ? spec->h : 70;
     const char* align = "LEFT";
     WindowManager* wm = WindowManager_Get();
-    if (!wm) { log_error("fl_popup: no WindowManager"); return NULL; }
+    if (!wm) {     PROFILE_START(_pt);
+log_error("fl_popup: no WindowManager"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
     char* result = NULL;
     Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm, &result);
-    if (!popup) { log_error("fl_popup: EditPopup_Create failed w=%d h=%d", w, h); return NULL; }
+    if (!popup) {     PROFILE_START(_pt);
+log_error("fl_popup: EditPopup_Create failed w=%d h=%d", w, h); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
     EditPopup_SetPlaceholder(popup, spec->placeholder);
 
     WindowManager_PushPopup(wm, popup);
@@ -947,16 +1038,19 @@ unsigned long fl_listbox_get_current_standard_color(void);
 
 bool fl_draw_text_impl(const FlTextSpec *spec) {
     PROFILE_START(_pt);
-    if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_text"); return false; }
+    if (!spec) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_text"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     const char *real_text = spec->text;
     char tmp[2] = {0};
     if ((uintptr_t)real_text < 256) {
-        if (!real_text) { PROFILE_END_VAR(_pt, "api:fl_draw_text"); return false; }
+        if (!real_text) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_text"); { PROFILE_END_VAR(_pt, "f"); return false; } }
         tmp[0] = (char)(uintptr_t)real_text;
         tmp[1] = '\0';
         real_text = tmp;
     }
-    if (!real_text) { PROFILE_END_VAR(_pt, "api:fl_draw_text"); return false; }
+    if (!real_text) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_text"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     unsigned long col = spec->color;
     if (col == 0) {
         unsigned long cur = fl_listbox_get_current_standard_color();
@@ -976,11 +1070,12 @@ typedef void (*FlWrapDrawFn)(void* ctx, int x, int y, const char* s, int n);
 typedef struct { unsigned long color; int fontsize; } FlWrapCtx;
 
 static int FlUtf8LeadLen(unsigned char c) {
-    if ((c & 0x80) == 0) return 1;
-    if ((c & 0xE0) == 0xC0) return 2;
-    if ((c & 0xF0) == 0xE0) return 3;
-    if ((c & 0xF8) == 0xF0) return 4;
-    return 1;
+    PROFILE_START(_pt);
+    if ((c & 0x80) == 0) { PROFILE_END_VAR(_pt, "FlUtf8LeadLen"); return 1; }
+    if ((c & 0xE0) == 0xC0) { PROFILE_END_VAR(_pt, "FlUtf8LeadLen"); return 2; }
+    if ((c & 0xF0) == 0xE0) { PROFILE_END_VAR(_pt, "FlUtf8LeadLen"); return 3; }
+    if ((c & 0xF8) == 0xF0) { PROFILE_END_VAR(_pt, "FlUtf8LeadLen"); return 4; }
+    { PROFILE_END_VAR(_pt, "FlUtf8LeadLen"); return 1; }
 }
 
 static void FlWrapRecord(FlCharPos* out, int maxout, int* count, int x, int y) {
@@ -993,6 +1088,7 @@ static void FlWrapRecord(FlCharPos* out, int maxout, int* count, int x, int y) {
 }
 
 static int FlWrapPlaceWord(FlWrapMeasureFn measure, FlWrapDrawFn draw, void* ctx, const char* text, int ws, int we, int wx, int rowtop, FlCharPos* out, int maxout, int* count) {
+    PROFILE_START(_pt);
     int i = ws;
     while (i < we) {
         int j = i + FlUtf8LeadLen((unsigned char)text[i]);
@@ -1002,10 +1098,11 @@ static int FlWrapPlaceWord(FlWrapMeasureFn measure, FlWrapDrawFn draw, void* ctx
         i = j;
     }
     draw(ctx, wx, rowtop, text + ws, we - ws);
-    return measure(ctx, text + ws, we - ws);
+    { PROFILE_END_VAR(_pt, "FlWrapPlaceWord"); return measure(ctx, text + ws, we - ws); }
 }
 
 static int FlWrapLayout(const char* text, int x0, int y0, int max_width, int line_height, FlWrapMeasureFn measure, FlWrapDrawFn draw, void* ctx, FlCharPos* out, int maxout) {
+    PROFILE_START(_pt);
     int count = 0;
     int len = (int)strlen(text);
     int avail = max_width;
@@ -1084,12 +1181,13 @@ static int FlWrapLayout(const char* text, int x0, int y0, int max_width, int lin
         has = true;
         p = we;
     }
-    return count;
+    { PROFILE_END_VAR(_pt, "FlWrapLayout"); return count; }
 }
 
 static int FlWrapMeasureThunk(void* ctx, const char* s, int n) {
+    PROFILE_START(_pt);
     FlWrapCtx* c = (FlWrapCtx*)ctx;
-    return Platform_MeasureTextWidth(s, n, c->fontsize);
+    { PROFILE_END_VAR(_pt, "FlWrapMeasureThunk"); return Platform_MeasureTextWidth(s, n, c->fontsize); }
 }
 
 static void FlWrapDrawThunk(void* ctx, int x, int y, const char* s, int n) {
@@ -1107,7 +1205,8 @@ static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
 
 int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
     PROFILE_START(_pt);
-    if (!spec || !spec->text) { PROFILE_END_VAR(_pt, "api:fl_measure_text_wrapped"); return 0; }
+    if (!spec || !spec->text) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_measure_text_wrapped"); { PROFILE_END_VAR(_pt, "f"); return 0; } }
     int fontsize = spec->fontsize;
     if (fontsize <= 0) fontsize = FontSize;
     int line_height = spec->line_height;
@@ -1123,7 +1222,8 @@ int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
 
 int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const char* text, int fontsize, unsigned long color, FlCharPos* out_positions, int max_positions) {
     PROFILE_START(_pt);
-    if (!text) { PROFILE_END_VAR(_pt, "api:fl_draw_text_wrapped_ex"); return 0; }
+    if (!text) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_text_wrapped_ex"); { PROFILE_END_VAR(_pt, "f"); return 0; } }
     if (fontsize <= 0) fontsize = FontSize;
     if (line_height <= 0) line_height = fontsize + 4;
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
@@ -1137,7 +1237,8 @@ int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const 
 
 bool fl_place_editbox_impl(const FlEditSpec *spec) {
   PROFILE_START(_pt);
-  if (!spec) { PROFILE_END_VAR(_pt, "api:fl_place_editbox"); return false; }
+  if (!spec) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_place_editbox"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   FlintContext_Get()->window.editbox_placed = true;
   bool r = fl_place_editbox_platform(spec);
   PROFILE_END_VAR(_pt, "api:fl_place_editbox");
@@ -1145,7 +1246,8 @@ bool fl_place_editbox_impl(const FlEditSpec *spec) {
 }
 bool fl_draw_image_impl(const FlImageSpec *spec) {
   PROFILE_START(_pt);
-  if (!spec || !spec->path || !spec->path[0]) { PROFILE_END_VAR(_pt, "api:fl_draw_image"); return false; }
+  if (!spec || !spec->path || !spec->path[0]) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_image"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
   bool r = Platform_DrawImageAt(spec->path, spec->x, spec->y, w, h);
@@ -1154,15 +1256,17 @@ bool fl_draw_image_impl(const FlImageSpec *spec) {
 }
 bool fl_draw_rect_impl(const FlRectSpec *spec) {
   PROFILE_START(_pt);
-  if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_rect"); return false; }
+  if (!spec) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_rect"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   unsigned long col = spec->color;
   if (col == 0) col = COLOR_TEXT;
   col = rgb_to_hex(col);
   if (spec->transparent) {
+    PROFILE_START(_pt);
     col = Color_Lerp(rgb_to_hex(COLOR_BG), col, (float)FL_DRAW_ALPHA_TRANSPARENT / 255.0f);
     bool rr = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness);
     PROFILE_END_VAR(_pt, "api:fl_draw_rect");
-    return rr;
+    { PROFILE_END_VAR(_pt, "f"); return rr; }
   }
   bool r = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_rect");
@@ -1170,15 +1274,16 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
 }
 
 int fl_rand_num_between(int min, int max) {
+    PROFILE_START(_pt);
   if (max < min) { int t = min; min = max; max = t; }
   unsigned long span = (unsigned long)((long)max - (long)min) + 1UL;
-  if (span == 0UL) return min;
+  if (span == 0UL) { PROFILE_END_VAR(_pt, "fl_rand_num_between"); return min; }
   unsigned long limit = (unsigned long)RAND_MAX + 1UL;
   unsigned long r = (unsigned long)rand();
   if (span > limit) {
     r = (r << 31) | (unsigned long)rand();
   }
-  return min + (int)(r % span);
+  { PROFILE_END_VAR(_pt, "fl_rand_num_between"); return min + (int)(r % span); }
 }
 
 int fl_get_text_height(const char *text) {
@@ -1193,7 +1298,8 @@ int fl_get_text_height(const char *text) {
 
 bool fl_draw_line_impl(const FlLineSpec *spec) {
   PROFILE_START(_pt);
-  if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_line"); return false; }
+  if (!spec) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_line"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   unsigned long col = spec->color;
   col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
@@ -1203,7 +1309,8 @@ bool fl_draw_line_impl(const FlLineSpec *spec) {
 }
 bool fl_draw_circle_impl(const FlCircleSpec *spec) {
   PROFILE_START(_pt);
-  if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_circle"); return false; }
+  if (!spec) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_circle"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   unsigned long col = spec->color;
   col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
@@ -1213,7 +1320,8 @@ bool fl_draw_circle_impl(const FlCircleSpec *spec) {
 }
 bool fl_draw_rounded_rect_impl(const FlRoundedRectSpec *spec) {
   PROFILE_START(_pt);
-  if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect"); return false; }
+  if (!spec) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   unsigned long col = spec->color;
   col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
@@ -1224,14 +1332,16 @@ bool fl_draw_rounded_rect_impl(const FlRoundedRectSpec *spec) {
 
 bool fl_listbox_begin(const FlListSpec *spec) {
     PROFILE_START(_pt);
-    if (!spec) { PROFILE_END_VAR(_pt, "api:fl_listbox_begin"); return false; }
+    if (!spec) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_listbox_begin"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     bool r = fl_listbox_begin_platform(spec);
     PROFILE_END_VAR(_pt, "api:fl_listbox_begin");
     return r;
 }
 bool fl_listbox_next(FlListItemCtx *out) {
     PROFILE_START(_pt);
-    if (!out) { PROFILE_END_VAR(_pt, "api:fl_listbox_next"); return false; }
+    if (!out) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_listbox_next"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     bool r = fl_listbox_next_platform(out);
     PROFILE_END_VAR(_pt, "api:fl_listbox_next");
     return r;
@@ -1243,8 +1353,10 @@ void fl_listbox_end(void) {
 }
 bool fl_place_listbox_impl(const FlListSpec *spec) {
     PROFILE_START(_pt);
-    if (!spec) { PROFILE_END_VAR(_pt, "api:fl_place_listbox"); return false; }
-    if (!fl_listbox_begin(spec)) { PROFILE_END_VAR(_pt, "api:fl_place_listbox"); return false; }
+    if (!spec) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_place_listbox"); { PROFILE_END_VAR(_pt, "f"); return false; } }
+    if (!fl_listbox_begin(spec)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_place_listbox"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
         fl_draw_text(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=ctx.x + 10);
@@ -1268,8 +1380,9 @@ PlWindowList fl_get_all_window_names() {
 }
 
 void fl_toggle_play_pause(void) {
+    PROFILE_START(_pt);
   fl_toggle_play_pause_platform();
-  return;
+  { PROFILE_END_VAR(_pt, "fl_toggle_play_pause"); return ; }
 }
 
 PlColor fl_get_pixel_color(PlPos pos) {
@@ -1319,7 +1432,8 @@ bool fl_click_button_at(PlPos pos, int button) {
   PROFILE_START(_pt);
   bool moved = fl_move_to_pos(pos);
   bool down = moved && Platform_MouseButtonDown(button, true);
-  if (!down) { PROFILE_END_VAR(_pt, "flapi:fl_click_button_at"); return false; }
+  if (!down) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_click_button_at"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   fl_sleep(0.02);
   bool up = Platform_MouseButtonDown(button, false);
   PROFILE_END_VAR(_pt, "flapi:fl_click_button_at");
@@ -1334,9 +1448,11 @@ bool fl_mouse_scroll(int notches) {
 
 static bool fl_rel_to_abs(int rx, int ry, FlPos *out) {
   PROFILE_START(_pt);
-  if (!out) { PROFILE_END_VAR(_pt, "flapi:fl_rel_to_abs"); return false; }
+  if (!out) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_rel_to_abs"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   int vx = 0, vy = 0, vw = 0, vh = 0;
-  if (!Platform_GetVirtualBounds(&vx, &vy, &vw, &vh)) { PROFILE_END_VAR(_pt, "flapi:fl_rel_to_abs"); return false; }
+  if (!Platform_GetVirtualBounds(&vx, &vy, &vw, &vh)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_rel_to_abs"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   out->x = vx + rx;
   out->y = vy + ry;
   PROFILE_END_VAR(_pt, "flapi:fl_rel_to_abs");
@@ -1346,7 +1462,8 @@ static bool fl_rel_to_abs(int rx, int ry, FlPos *out) {
 bool fl_move_to_pos_rel(int rx, int ry) {
   PROFILE_START(_pt);
   FlPos abs;
-  if (!fl_rel_to_abs(rx, ry, &abs)) { PROFILE_END_VAR(_pt, "flapi:fl_move_to_pos_rel"); return false; }
+  if (!fl_rel_to_abs(rx, ry, &abs)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_move_to_pos_rel"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   bool ok = fl_move_to_pos(abs);
   PROFILE_END_VAR(_pt, "flapi:fl_move_to_pos_rel");
   return ok;
@@ -1355,7 +1472,8 @@ bool fl_move_to_pos_rel(int rx, int ry) {
 bool fl_click_at_pos_rel(int rx, int ry) {
   PROFILE_START(_pt);
   FlPos abs;
-  if (!fl_rel_to_abs(rx, ry, &abs)) { PROFILE_END_VAR(_pt, "flapi:fl_click_at_pos_rel"); return false; }
+  if (!fl_rel_to_abs(rx, ry, &abs)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_click_at_pos_rel"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   bool ok = fl_click_at_pos(abs);
   PROFILE_END_VAR(_pt, "flapi:fl_click_at_pos_rel");
   return ok;
@@ -1364,7 +1482,8 @@ bool fl_click_at_pos_rel(int rx, int ry) {
 bool fl_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
   PROFILE_START(_pt);
   FlPos abs;
-  if (!fl_rel_to_abs(rx, ry, &abs)) { PROFILE_END_VAR(_pt, "flapi:fl_emit_mouse_button_at_rel"); return false; }
+  if (!fl_rel_to_abs(rx, ry, &abs)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_emit_mouse_button_at_rel"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   bool ok = fl_emit_mouse_button_at(abs, button, down);
   PROFILE_END_VAR(_pt, "flapi:fl_emit_mouse_button_at_rel");
   return ok;
@@ -1373,7 +1492,8 @@ bool fl_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
 bool fl_click_button_at_rel(int rx, int ry, int button) {
   PROFILE_START(_pt);
   FlPos abs;
-  if (!fl_rel_to_abs(rx, ry, &abs)) { PROFILE_END_VAR(_pt, "flapi:fl_click_button_at_rel"); return false; }
+  if (!fl_rel_to_abs(rx, ry, &abs)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_click_button_at_rel"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   bool ok = fl_click_button_at(abs, button);
   PROFILE_END_VAR(_pt, "flapi:fl_click_button_at_rel");
   return ok;
@@ -1385,30 +1505,37 @@ void fl_emit_key(int vk, bool down) {
   PROFILE_END_VAR(_pt, "flapi:fl_emit_key");
 }
 int fl_get_current_volume(void) {
-  return fl_get_current_volume_platform();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_get_current_volume"); return fl_get_current_volume_platform(); }
 }
 bool fl_set_current_volume(int volume) {
-  return fl_set_volume_platform(volume);
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_set_current_volume"); return fl_set_volume_platform(volume); }
 }
 bool fl_increment_volume_by(int increment) {
-  return fl_set_current_volume(fl_get_current_volume() + increment);
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_increment_volume_by"); return fl_set_current_volume(fl_get_current_volume() + increment); }
 }
 
 bool fl_decrement_volume_by(int decrement) {
-  return fl_set_current_volume(fl_get_current_volume() - decrement);
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_decrement_volume_by"); return fl_set_current_volume(fl_get_current_volume() - decrement); }
 }
 bool fl_increment_volume_by_percent(int increment_percent) {
+    PROFILE_START(_pt);
   int current_volume = fl_get_current_volume();
-  return fl_set_current_volume(current_volume + (current_volume * increment_percent / 100));
+  { PROFILE_END_VAR(_pt, "fl_increment_volume_by_percent"); return fl_set_current_volume(current_volume + (current_volume * increment_percent / 100)); }
 }
 
 bool fl_decrement_volume_by_percent(int decrement_percent) {
+    PROFILE_START(_pt);
   int current_volume = fl_get_current_volume();
-  return fl_set_current_volume(current_volume - (current_volume * decrement_percent / 100));
+  { PROFILE_END_VAR(_pt, "fl_decrement_volume_by_percent"); return fl_set_current_volume(current_volume - (current_volume * decrement_percent / 100)); }
 }
 
 bool fl_type_text(const char *s) {
-  return fl_type_text_platform(s);
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_type_text"); return fl_type_text_platform(s); }
 }
 
 void fl_sleep(double seconds) {
@@ -1416,87 +1543,105 @@ void fl_sleep(double seconds) {
 }
 
 FlThread fl_thread_create(FlThreadFunc fn, void* arg) {
-  if (!fn) return NULL;
-  return (FlThread)fl_thread_create_platform((void* (*)(void*))fn, arg);
+    PROFILE_START(_pt);
+  if (!fn) { PROFILE_END_VAR(_pt, "fl_thread_create"); return NULL; }
+  { PROFILE_END_VAR(_pt, "fl_thread_create"); return (FlThread)fl_thread_create_platform((void* (*)(void*))fn, arg); }
 }
 
 void fl_thread_join(FlThread thread) {
-  if (!thread) return;
+    PROFILE_START(_pt);
+  if (!thread) { PROFILE_END_VAR(_pt, "fl_thread_join"); return ; }
   fl_thread_join_platform((void*)thread);
 }
 
 FlMutex fl_mutex_create(void) {
-  return (FlMutex)fl_mutex_create_platform();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_mutex_create"); return (FlMutex)fl_mutex_create_platform(); }
 }
 
 void fl_mutex_destroy(FlMutex mutex) {
-  if (!mutex) return;
+    PROFILE_START(_pt);
+  if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_destroy"); return ; }
   fl_mutex_destroy_platform((void*)mutex);
 }
 
 void fl_mutex_lock(FlMutex mutex) {
-  if (!mutex) return;
+    PROFILE_START(_pt);
+  if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_lock"); return ; }
   fl_mutex_lock_platform((void*)mutex);
 }
 
 void fl_mutex_unlock(FlMutex mutex) {
-  if (!mutex) return;
+    PROFILE_START(_pt);
+  if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_unlock"); return ; }
   fl_mutex_unlock_platform((void*)mutex);
 }
 
 void fl_send_hotkey(const char* hotkey_string) {
-  if (!hotkey_string) return;
+    PROFILE_START(_pt);
+  if (!hotkey_string) { PROFILE_END_VAR(_pt, "fl_send_hotkey"); return ; }
   remap_send_combo(hotkey_string);
 }
 
 bool fl_is_key_down(int vk){
-  return Platform_IsKeyDown(vk); 
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_is_key_down"); return Platform_IsKeyDown(vk); } 
 }
 bool fl_is_key_pressed(int vk){
-  return Platform_WasKeyPressed(vk); 
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_is_key_pressed"); return Platform_WasKeyPressed(vk); } 
 }
 bool fl_is_key_released(int vk){
-  return Platform_WasKeyReleased(vk); 
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_is_key_released"); return Platform_WasKeyReleased(vk); } 
 }
 bool fl_ctrl_pressed(void){
-  return Platform_IsCtrlPressed();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_ctrl_pressed"); return Platform_IsCtrlPressed(); }
 }
 bool fl_shift_pressed(void){
-  return Platform_IsShiftPressed();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_shift_pressed"); return Platform_IsShiftPressed(); }
 }
 bool fl_alt_pressed(void){
-  return Platform_IsAltPressed();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_alt_pressed"); return Platform_IsAltPressed(); }
 }
 bool fl_super_pressed(void){
-  return Platform_IsSuperPressed();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_super_pressed"); return Platform_IsSuperPressed(); }
 }
 void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
   Platform_SetKeyCallback(cb,ud);
 }
 int fl_get_key_pressed(void){
-  return Platform_GetPressedKey();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_get_key_pressed"); return Platform_GetPressedKey(); }
 }
 char fl_get_char_pressed(void){
-  return Platform_GetPressedChar();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_get_char_pressed"); return Platform_GetPressedChar(); }
 }
 
 bool fl_poll_key(FlKeyEvent *out) {
-  if (!out) return false;
+    PROFILE_START(_pt);
+  if (!out) { PROFILE_END_VAR(_pt, "fl_poll_key"); return false; }
   PlatformKeyEvent ev;
-  if (!Platform_GlobalKey_Pop(&ev)) return false;
+  if (!Platform_GlobalKey_Pop(&ev)) { PROFILE_END_VAR(_pt, "fl_poll_key"); return false; }
   out->vk = ev.vk;
   out->scancode = ev.scancode;
   out->mods = ev.mods;
   out->down = ev.down;
   out->repeat = ev.repeat;
   out->t_us = ev.t_us;
-  return true;
+  { PROFILE_END_VAR(_pt, "fl_poll_key"); return true; }
 }
 
 bool fl_poll_mouse(FlMouseEvent *out) {
-  if (!out) return false;
+    PROFILE_START(_pt);
+  if (!out) { PROFILE_END_VAR(_pt, "fl_poll_mouse"); return false; }
   PlatformMouseEvent ev;
-  if (!Platform_GlobalMouse_Pop(&ev)) return false;
+  if (!Platform_GlobalMouse_Pop(&ev)) { PROFILE_END_VAR(_pt, "fl_poll_mouse"); return false; }
   out->button = ev.button;
   out->x = ev.x;
   out->y = ev.y;
@@ -1504,15 +1649,17 @@ bool fl_poll_mouse(FlMouseEvent *out) {
   out->down = ev.down;
   out->repeat = ev.repeat;
   out->t_us = ev.t_us;
-  return true;
+  { PROFILE_END_VAR(_pt, "fl_poll_mouse"); return true; }
 }
 
 int fl_mouse_queue_len(void) {
-  return Platform_GlobalMouse_Pending();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_mouse_queue_len"); return Platform_GlobalMouse_Pending(); }
 }
 
 unsigned long fl_mouse_queue_dropped(void) {
-  return Platform_GlobalMouse_Dropped();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_mouse_queue_dropped"); return Platform_GlobalMouse_Dropped(); }
 }
 
 void fl_clear_mouse_queue(void) {
@@ -1520,21 +1667,25 @@ void fl_clear_mouse_queue(void) {
 }
 
 FlPos fl_get_cursor_pos() {
+    PROFILE_START(_pt);
   int x, y;
   Platform_GetMousePos(&x, &y);
-  return (FlPos){x, y};
+  { PROFILE_END_VAR(_pt, "fl_get_cursor_pos"); return (FlPos){x, y}; }
 }
 
 bool fl_mouse_pressed(int button) {
-  return Platform_MouseStateDown(button);
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_mouse_pressed"); return Platform_MouseStateDown(button); }
 }
 
 int fl_key_queue_len(void) {
-  return Platform_GlobalKey_Pending();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_key_queue_len"); return Platform_GlobalKey_Pending(); }
 }
 
 unsigned long fl_key_queue_dropped(void) {
-  return Platform_GlobalKey_Dropped();
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_key_queue_dropped"); return Platform_GlobalKey_Dropped(); }
 }
 
 void fl_clear_key_queue(void) {
@@ -1542,20 +1693,24 @@ void fl_clear_key_queue(void) {
 }
 
 int fl_char_for_key(int vk, int scancode, int mods) {
-  return Platform_CharForKey(vk, scancode, mods);
+    PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_char_for_key"); return Platform_CharForKey(vk, scancode, mods); }
 }
 
-bool fl_is_flag_prefix(char c) { return c == '-' || c == '/'; }
+bool fl_is_flag_prefix(char c) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_is_flag_prefix"); return c == '-' || c == '/'; } }
 
 size_t fl_extract_flag_name(char *p, char *out, size_t cap) {
+    PROFILE_START(_pt);
     size_t n = 0;
     while (p[n] && !isspace((unsigned char)p[n]) && p[n] != '=') n++;
     if (n >= cap) n = cap - 1;
     memcpy(out, p, n); out[n] = '\0';
-    return n;
+    { PROFILE_END_VAR(_pt, "fl_extract_flag_name"); return n; }
 }
 
 bool fl_extract_quoted(char **pp, char *out, size_t cap) {
+    PROFILE_START(_pt);
     char *p = *pp;
     char q = *p++;
     char *s = p;
@@ -1565,22 +1720,24 @@ bool fl_extract_quoted(char **pp, char *out, size_t cap) {
     memcpy(out, s, len); out[len] = '\0';
     if (*p == q) p++;
     *pp = p;
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_extract_quoted"); return true; }
 }
 bool fl_extract_value(char **pp, char *out, size_t cap) {
+    PROFILE_START(_pt);
     char *p = *pp;
-    if (*p == '"' || *p == '\'') return fl_extract_quoted(pp, out, cap);
+    if (*p == '"' || *p == '\'') { PROFILE_END_VAR(_pt, "fl_extract_value"); return fl_extract_quoted(pp, out, cap); }
     char *s = p;
     while (*p && !isspace((unsigned char)*p)) p++;
     size_t len = p - s;
     if (len >= cap) len = cap - 1;
     memcpy(out, s, len); out[len] = '\0';
     *pp = p;
-    return len > 0;
+    { PROFILE_END_VAR(_pt, "fl_extract_value"); return len > 0; }
 }
 bool fl_next_flag(char *p) {
+    PROFILE_START(_pt);
     while (*p && isspace((unsigned char)*p)) p++;
-    return *p == '-' || *p == '/';
+    { PROFILE_END_VAR(_pt, "fl_next_flag"); return *p == '-' || *p == '/'; }
 }
 Fl_FlagList fl_parse_flags(const char* input) {
     Fl_FlagList out = {0};
@@ -1589,7 +1746,8 @@ Fl_FlagList fl_parse_flags(const char* input) {
     if (!copy) return out;
     size_t cap = 8;
     Fl_Flag *arr = (Fl_Flag*)calloc(cap, sizeof(Fl_Flag));
-    if (!arr) { free(copy); return out; }
+    if (!arr) {     PROFILE_START(_pt);
+free(copy); { PROFILE_END_VAR(_pt, "f"); return out; } }
     char *p = copy;
     while (*p) {
         while (*p && isspace((unsigned char)*p)) p++;
@@ -1628,27 +1786,30 @@ Fl_FlagList fl_parse_flags(const char* input) {
 }
 
 void fl_free_flags(Fl_FlagList* list) {
-    if (!list) return;
+    PROFILE_START(_pt);
+    if (!list) { PROFILE_END_VAR(_pt, "fl_free_flags"); return ; }
     free(list->flags);
     list->flags = NULL;
     list->count = 0;
 }
 
 int fl_time_unit_mult(const char *unit) {
-    if (!unit || !*unit) return 1;
-    if (strcmp(unit,"ms")==0 || strcmp(unit,"millis")==0) return 0;
-    if (strcmp(unit,"s")==0 || strcmp(unit,"sec")==0 || strcmp(unit,"secs")==0 || strcmp(unit,"second")==0) return 1;
-    if (strcmp(unit,"m")==0 || strcmp(unit,"min")==0 || strcmp(unit,"mins")==0 || strcmp(unit,"minute")==0) return 60;
-    if (strcmp(unit,"h")==0 || strcmp(unit,"hr")==0 || strcmp(unit,"hrs")==0 || strcmp(unit,"hour")==0) return 3600;
-    if (strcmp(unit,"d")==0 || strcmp(unit,"day")==0 || strcmp(unit,"days")==0) return 86400;
-    if (strcmp(unit,"w")==0 || strcmp(unit,"week")==0 || strcmp(unit,"weeks")==0) return 604800;
-    if (strcmp(unit,"mo")==0 || strcmp(unit,"month")==0 || strcmp(unit,"months")==0) return 2592000;
-    if (strcmp(unit,"y")==0 || strcmp(unit,"yr")==0 || strcmp(unit,"year")==0) return 31536000;
-    return 1;
+    PROFILE_START(_pt);
+    if (!unit || !*unit) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 1; }
+    if (strcmp(unit,"ms")==0 || strcmp(unit,"millis")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 0; }
+    if (strcmp(unit,"s")==0 || strcmp(unit,"sec")==0 || strcmp(unit,"secs")==0 || strcmp(unit,"second")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 1; }
+    if (strcmp(unit,"m")==0 || strcmp(unit,"min")==0 || strcmp(unit,"mins")==0 || strcmp(unit,"minute")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 60; }
+    if (strcmp(unit,"h")==0 || strcmp(unit,"hr")==0 || strcmp(unit,"hrs")==0 || strcmp(unit,"hour")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 3600; }
+    if (strcmp(unit,"d")==0 || strcmp(unit,"day")==0 || strcmp(unit,"days")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 86400; }
+    if (strcmp(unit,"w")==0 || strcmp(unit,"week")==0 || strcmp(unit,"weeks")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 604800; }
+    if (strcmp(unit,"mo")==0 || strcmp(unit,"month")==0 || strcmp(unit,"months")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 2592000; }
+    if (strcmp(unit,"y")==0 || strcmp(unit,"yr")==0 || strcmp(unit,"year")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 31536000; }
+    { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 1; }
 }
 
 int fl_parse_time(const char* time_str) {
-    if (!time_str || !*time_str) return 0;
+    PROFILE_START(_pt);
+    if (!time_str || !*time_str) { PROFILE_END_VAR(_pt, "fl_parse_time"); return 0; }
     int total = 0;
     const char *p = time_str;
     while (*p) {
@@ -1667,25 +1828,29 @@ int fl_parse_time(const char* time_str) {
         if (mult == 0) total += num / 1000;
         else total += num * mult;
     }
-    return total;
+    { PROFILE_END_VAR(_pt, "fl_parse_time"); return total; }
 }
 
 void fl_run_after_time(double seconds, void (*callback)(void)) {
-    return fl_run_after_time_platform(seconds,callback);
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_run_after_time"); return fl_run_after_time_platform(seconds,callback); }
 }
 
 FlTimer fl_start_timer(void) {
-    return fl_start_timer_platform();
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_start_timer"); return fl_start_timer_platform(); }
 }
 
 double fl_end_timer(FlTimer t) {
-    return fl_end_timer_platform(t);
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_end_timer"); return fl_end_timer_platform(t); }
 }
 
 char* fl_get_active_window_title(void) {
   PROFILE_START(_pt);
   char* title = Platform_GetActiveWindowTitle();
-  if (!title || !title[0]) { PROFILE_END_VAR(_pt, "api:fl_get_active_window_title"); return NULL; }
+  if (!title || !title[0]) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_get_active_window_title"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
   char* r = strdup(title);
   PROFILE_END_VAR(_pt, "api:fl_get_active_window_title");
   return r;
@@ -1694,7 +1859,8 @@ char* fl_get_active_window_title(void) {
 char* fl_get_active_window_app_id(void) {
   PROFILE_START(_pt);
   char* id = Platform_GetActiveWindowAppId();
-  if (!id || !id[0]) { PROFILE_END_VAR(_pt, "api:fl_get_active_window_app_id"); return NULL; }
+  if (!id || !id[0]) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_get_active_window_app_id"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
   char* r = strdup(id);
   PROFILE_END_VAR(_pt, "api:fl_get_active_window_app_id");
   return r;
@@ -1705,68 +1871,80 @@ bool fl_is_window_active(char* title) {
   PlWindowList l = Platform_GetWindowTitles();
   for (int i = 0; i < l.count;i++) {
       if (Platform_StringContainsCaseInsensitive(l.windows[i],title)) {
+    PROFILE_START(_pt);
         PROFILE_END_VAR(_pt, "api:fl_is_window_active");
-        return true;
+        { PROFILE_END_VAR(_pt, "f"); return true; }
       }
   }
   PROFILE_END_VAR(_pt, "api:fl_is_window_active");
   return false;
 }
 char* fl_get_working_dir() {
-    return Platform_GetWorkingDir();
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_get_working_dir"); return Platform_GetWorkingDir(); }
 }
 
 void fl_hashmap_init(FlHashMap** map) {
-    if (!map) return;
+    PROFILE_START(_pt);
+    if (!map) { PROFILE_END_VAR(_pt, "fl_hashmap_init"); return ; }
     sh_new_strdup(*map);
 }
 
 void fl_hashmap_free(FlHashMap** map) {
-    if (!map) return;
+    PROFILE_START(_pt);
+    if (!map) { PROFILE_END_VAR(_pt, "fl_hashmap_free"); return ; }
     shfree(*map);
 }
 
 void fl_hashmap_put(FlHashMap** map, const char* key, long value) {
-    if (!map || !key) return;
+    PROFILE_START(_pt);
+    if (!map || !key) { PROFILE_END_VAR(_pt, "fl_hashmap_put"); return ; }
     shput(*map, (char*)key, value);
 }
 
 void fl_hashmap_add(FlHashMap** map, const char* key, long delta) {
-    if (!map || !key) return;
+    PROFILE_START(_pt);
+    if (!map || !key) { PROFILE_END_VAR(_pt, "fl_hashmap_add"); return ; }
     ptrdiff_t idx = shgeti(*map, (char*)key);
     if (idx >= 0) (*map)[idx].value += delta;
     else shput(*map, (char*)key, delta);
 }
 
 long fl_hashmap_get(FlHashMap* map, const char* key, long def) {
-    if (!map || !key) return def;
+    PROFILE_START(_pt);
+    if (!map || !key) { PROFILE_END_VAR(_pt, "fl_hashmap_get"); return def; }
     ptrdiff_t idx = shgeti(map, (char*)key);
-    if (idx < 0) return def;
-    return map[idx].value;
+    if (idx < 0) { PROFILE_END_VAR(_pt, "fl_hashmap_get"); return def; }
+    { PROFILE_END_VAR(_pt, "fl_hashmap_get"); return map[idx].value; }
 }
 
 bool fl_hashmap_has(FlHashMap* map, const char* key) {
-    if (!map || !key) return false;
-    return shgeti(map, (char*)key) >= 0;
+    PROFILE_START(_pt);
+    if (!map || !key) { PROFILE_END_VAR(_pt, "fl_hashmap_has"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_hashmap_has"); return shgeti(map, (char*)key) >= 0; }
 }
 
 bool fl_hashmap_del(FlHashMap** map, const char* key) {
-    if (!map || !*map || !key) return false;
-    return shdel(*map, (char*)key) != 0;
+    PROFILE_START(_pt);
+    if (!map || !*map || !key) { PROFILE_END_VAR(_pt, "fl_hashmap_del"); return false; }
+    { PROFILE_END_VAR(_pt, "fl_hashmap_del"); return shdel(*map, (char*)key) != 0; }
 }
 
 size_t fl_hashmap_len(FlHashMap* map) {
-    if (!map) return 0;
-    return shlenu(map);
+    PROFILE_START(_pt);
+    if (!map) { PROFILE_END_VAR(_pt, "fl_hashmap_len"); return 0; }
+    { PROFILE_END_VAR(_pt, "fl_hashmap_len"); return shlenu(map); }
 }
 
 const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index) {
-    if (!map || index >= shlenu(map)) return NULL;
-    return &map[index];
+    PROFILE_START(_pt);
+    if (!map || index >= shlenu(map)) { PROFILE_END_VAR(_pt, "fl_hashmap_at"); return NULL; }
+    { PROFILE_END_VAR(_pt, "fl_hashmap_at"); return &map[index]; }
 }
 
 FlTimer fl_profile_start() {
-    return fl_start_timer_platform();
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_profile_start"); return fl_start_timer_platform(); }
 }
 
 void fl_profile_end(FlTimer timer) {
@@ -1796,19 +1974,22 @@ static void fl_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
 }
 
 unsigned fl_widget_bump_generation(void) {
-    return ++g_fl_widget_gen;
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_widget_bump_generation"); return ++g_fl_widget_gen; }
 }
 
 unsigned fl_widget_current_generation(void) {
-    return g_fl_widget_gen;
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_widget_current_generation"); return g_fl_widget_gen; }
 }
 
 static FlWidget *fl_widget_find_by_name(const char *name) {
-    if (!name || !name[0]) return NULL;
+    PROFILE_START(_pt);
+    if (!name || !name[0]) { PROFILE_END_VAR(_pt, "fl_widget_find_by_name"); return NULL; }
     for (int i = 0; i < g_fl_widget_count; i++) {
         if (g_fl_widgets[i] && strcmp(g_fl_widgets[i]->name, name) == 0) return g_fl_widgets[i];
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "fl_widget_find_by_name"); return NULL; }
 }
 
 static void fl_widget_relayout(void);
@@ -1821,8 +2002,9 @@ static void fl_widget_hover_poll(void) {
     PROFILE_START(_pt);
     FlTimer now = fl_start_timer_platform();
     if (g_fl_hover_valid && fl_end_timer_platform(g_fl_hover_at) < 400.0) {
+    PROFILE_START(_pt);
         PROFILE_END_VAR(_pt, "flapi:fl_widget_hover_poll");
-        return;
+        { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     g_fl_hover_pos = fl_get_cursor_pos();
     g_fl_hover_at = now;
@@ -1831,16 +2013,18 @@ static void fl_widget_hover_poll(void) {
 }
 
 static void *fl_widget_hover_worker(void *ud) {
+    PROFILE_START(_pt);
     FlWidget *w = (FlWidget *)ud;
     if (w && w->on_hover) w->on_hover();
     if (w) w->hover_running = false;
-    return NULL;
+    { PROFILE_END_VAR(_pt, "fl_widget_hover_worker"); return NULL; }
 }
 
 static void fl_widget_render_frame(void *ud) {
     PROFILE_START(_pt);
     FlWidget *widget = (FlWidget *)ud;
-    if (!widget || !widget->render || widget->dead) { PROFILE_END_VAR(_pt, "flapi:widget[null]"); return; }
+    if (!widget || !widget->render || widget->dead) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:widget[null]"); { PROFILE_END_VAR(_pt, "f"); return ; } }
     widget->frame++;
     bool hoverable = (widget->on_hover != NULL);
     if (hoverable) {
@@ -1903,7 +2087,8 @@ static void fl_widget_owner_path(void *addr, char *out, size_t n) {
 }
 
 static const char* fl_widget_owner_basename(const char* p, char* out, size_t n) {
-    if (!p || !p[0]) { if (n) out[0] = '\0'; return out; }
+    if (!p || !p[0]) {     PROFILE_START(_pt);
+if (n) out[0] = '\0'; { PROFILE_END_VAR(_pt, "f"); return out; } }
     const char* s = p;
     for (const char* q = p; *q; q++) if (*q == '/' || *q == '\\') s = q + 1;
     snprintf(out, n, "%s", s);
@@ -1916,14 +2101,17 @@ static bool fl_widget_owner_matches(const FlWidget *widget, const char *a, const
     if (b && b[0] && strcmp(widget->owner, b) == 0) return true;
     char ab[512], bb[512], wb[512];
     fl_widget_owner_basename(widget->owner, wb, sizeof(wb));
-    if (a && a[0]) { fl_widget_owner_basename(a, ab, sizeof(ab)); if (strcmp(wb, ab) == 0) return true; }
-    if (b && b[0]) { fl_widget_owner_basename(b, bb, sizeof(bb)); if (strcmp(wb, bb) == 0) return true; }
+    if (a && a[0]) {     PROFILE_START(_pt);
+fl_widget_owner_basename(a, ab, sizeof(ab)); if (strcmp(wb, ab) == 0) { PROFILE_END_VAR(_pt, "f"); return true; } }
+    if (b && b[0]) {     PROFILE_START(_pt);
+fl_widget_owner_basename(b, bb, sizeof(bb)); if (strcmp(wb, bb) == 0) { PROFILE_END_VAR(_pt, "f"); return true; } }
     return false;
 }
 
 static void fl_widget_destroy_window(void *ud) {
+    PROFILE_START(_pt);
     FlWidget *widget = (FlWidget *)ud;
-    if (!widget) return;
+    if (!widget) { PROFILE_END_VAR(_pt, "fl_widget_destroy_window"); return ; }
     widget->hovered = false;
     Platform_HoverMessageRelease(widget->name);
     Platform_HoverWidgetHide(widget->name);
@@ -1939,7 +2127,8 @@ static void fl_widget_destroy_window(void *ud) {
 }
 void fl_widget_purge_owner(const char *path_a, const char *path_b, unsigned generation) {
     PROFILE_START(_pt);
-    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) { PROFILE_END_VAR(_pt, "flapi:fl_widget_purge_owner"); return; }
+    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_widget_purge_owner"); { PROFILE_END_VAR(_pt, "f"); return ; } }
 
     for (int i = 0; i < g_fl_widget_count; i++) {
         FlWidget *w = g_fl_widgets[i];
@@ -1974,10 +2163,12 @@ void fl_widget_purge_owner(const char *path_a, const char *path_b, unsigned gene
 
 bool fl_widget_owner_active(const char *path) {
     PROFILE_START(_pt);
-    if (!path || !path[0]) { PROFILE_END_VAR(_pt, "flapi:fl_widget_owner_active"); return false; }
+    if (!path || !path[0]) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_widget_owner_active"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     for (int i = 0; i < g_fl_widget_count; i++) {
         FlWidget *w = g_fl_widgets[i];
-        if (w && fl_widget_owner_matches(w, path, NULL)) { PROFILE_END_VAR(_pt, "flapi:fl_widget_owner_active"); return true; }
+        if (w && fl_widget_owner_matches(w, path, NULL)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_widget_owner_active"); { PROFILE_END_VAR(_pt, "f"); return true; } }
     }
     PROFILE_END_VAR(_pt, "flapi:fl_widget_owner_active");
     return false;
@@ -1986,7 +2177,8 @@ bool fl_widget_owner_active(const char *path) {
 static void fl_widget_attach_window(void *ud) {
     PROFILE_START(_pt);
     FlWidget *widget = (FlWidget *)ud;
-    if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "flapi:fl_widget_attach_window"); return; }
+    if (!widget || widget->dead) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "flapi:fl_widget_attach_window"); { PROFILE_END_VAR(_pt, "f"); return ; } }
     bool created = false;
     if (!Platform_Widget_IsValid(widget->win)) {
         Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
@@ -2009,19 +2201,23 @@ static void fl_widget_apply_geometry(FlWidget *widget, int x, int y) {
     widget->x = x;
     widget->y = y;
     if (Platform_RenderThread_IsCurrentThread()) {
+    PROFILE_START(_pt);
         fl_widget_attach_window(widget);
-        return;
+        { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     if (!Platform_RenderThread_EnsureStarted(widget->fps)) {
-        return;
+    PROFILE_START(_pt);
+        { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     if (!Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
-        return;
+    PROFILE_START(_pt);
+        { PROFILE_END_VAR(_pt, "f"); return ; }
     }
 }
 
 static int fl_widget_sort_key(const FlWidget *widget) {
-    return widget->order_set ? widget->order : widget->seq;
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_widget_sort_key"); return widget->order_set ? widget->order : widget->seq; }
 }
 
 static void fl_widget_relayout(void) {
@@ -2064,20 +2260,23 @@ static void fl_widget_relayout(void) {
 FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     PROFILE_START(_pt);
     if (!spec || !spec->name || !spec->name[0]) {
+    PROFILE_START(_pt);
         log_warn("fl_widget_create: name is required");
         PROFILE_END_VAR(_pt, "api:fl_widget_create");
-        return NULL;
+        { PROFILE_END_VAR(_pt, "f"); return NULL; }
     }
     FlWidget *widget = fl_widget_find_by_name(spec->name);
     bool fresh = (widget == NULL);
     if (fresh) {
         if (g_fl_widget_count >= FL_WIDGET_MAX) {
+    PROFILE_START(_pt);
             log_warn("fl_widget_create: widget table full");
             PROFILE_END_VAR(_pt, "api:fl_widget_create");
-            return NULL;
+            { PROFILE_END_VAR(_pt, "f"); return NULL; }
         }
         widget = (FlWidget *)calloc(1, sizeof(*widget));
-        if (!widget) { PROFILE_END_VAR(_pt, "api:fl_widget_create"); return NULL; }
+        if (!widget) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_widget_create"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
         snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
         widget->seq = g_fl_widget_seq++;
         g_fl_widgets[g_fl_widget_count++] = widget;
@@ -2136,7 +2335,8 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
 }
 
 bool fl_widget_valid(FlWidget *widget) {
-    return widget != NULL;
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_widget_valid"); return widget != NULL; }
 }
 
 PlPos fl_get_widget_pos(const char *name) {
@@ -2167,8 +2367,10 @@ static void fl_widget_apply_hide(void *ud) {
 
 void fl_widget_show(FlWidget *widget) {
     PROFILE_START(_pt);
-    if (!fl_widget_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_show"); return; }
-    if (widget->mapped) { PROFILE_END_VAR(_pt, "api:fl_widget_show"); return; }
+    if (!fl_widget_valid(widget)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_widget_show"); { PROFILE_END_VAR(_pt, "f"); return ; } }
+    if (widget->mapped) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_widget_show"); { PROFILE_END_VAR(_pt, "f"); return ; } }
     widget->mapped = true;
     Platform_RenderThread_Post(fl_widget_apply_show, widget);
     PROFILE_END_VAR(_pt, "api:fl_widget_show");
@@ -2176,8 +2378,10 @@ void fl_widget_show(FlWidget *widget) {
 
 void fl_widget_hide(FlWidget *widget) {
     PROFILE_START(_pt);
-    if (!fl_widget_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_hide"); return; }
-    if (!widget->mapped) { PROFILE_END_VAR(_pt, "api:fl_widget_hide"); return; }
+    if (!fl_widget_valid(widget)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_widget_hide"); { PROFILE_END_VAR(_pt, "f"); return ; } }
+    if (!widget->mapped) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_widget_hide"); { PROFILE_END_VAR(_pt, "f"); return ; } }
     widget->mapped = false;
     Platform_RenderThread_Post(fl_widget_apply_hide, widget);
     PROFILE_END_VAR(_pt, "api:fl_widget_hide");
@@ -2185,7 +2389,8 @@ void fl_widget_hide(FlWidget *widget) {
 
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
     PROFILE_START(_pt);
-    if (!fl_widget_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_set_render"); return; }
+    if (!fl_widget_valid(widget)) {     PROFILE_START(_pt);
+PROFILE_END_VAR(_pt, "api:fl_widget_set_render"); { PROFILE_END_VAR(_pt, "f"); return ; } }
     widget->render = render;
     if (Platform_Widget_IsValid(widget->win)) {
         Platform_Widget_Invalidate(widget->win);
@@ -2212,41 +2417,47 @@ void fl_format_bytes(unsigned long long bytes, char* buf, size_t buflen) {
     }
 }
 FlNetStatus fl_net_status(void) {
-    return fl_net_status_platform();
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_net_status"); return fl_net_status_platform(); }
 }
 
 unsigned long long fl_net_rx_bytes() {
-    return fl_net_rx_bytes_platform();
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_net_rx_bytes"); return fl_net_rx_bytes_platform(); }
 }
 
 
 unsigned long long fl_net_rx_bytes_over(double seconds) {
-    if (seconds <= 0) return 0;
+    PROFILE_START(_pt);
+    if (seconds <= 0) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_over"); return 0; }
 
     unsigned long long before = fl_net_rx_bytes_platform();
-    if (before == 0) return 0;
+    if (before == 0) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_over"); return 0; }
 
     fl_sleep(seconds);
 
     unsigned long long after = fl_net_rx_bytes_platform();
-    if (after < before) return 0;
-    return after - before;
+    if (after < before) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_over"); return 0; }
+    { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_over"); return after - before; }
 }
 FlRect fl_get_monitor_geometry() {
+    PROFILE_START(_pt);
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
-    return (PlRect){x,y,w,h};
+    { PROFILE_END_VAR(_pt, "fl_get_monitor_geometry"); return (PlRect){x,y,w,h}; }
 }
 
 int fl_get_screen_width() {
+    PROFILE_START(_pt);
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
-    return w;
+    { PROFILE_END_VAR(_pt, "fl_get_screen_width"); return w; }
 }
 
 int fl_get_screen_height() {
+    PROFILE_START(_pt);
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
-    return h;
+    { PROFILE_END_VAR(_pt, "fl_get_screen_height"); return h; }
 }
 
