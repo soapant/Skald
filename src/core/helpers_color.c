@@ -4,11 +4,15 @@
 #include "helpers/helpers_ui.h"
 
 unsigned long rgb_to_hex(unsigned long win_color) {
+#if !defined(_WIN32)
     unsigned long r = win_color & 0xFF;          
     unsigned long g = (win_color >> 8) & 0xFF;  
     unsigned long b = (win_color >> 16) & 0xFF;
-
     return (r << 16) | (g << 8) | b;
+#else
+    return win_color;
+#endif
+
 }
 
 void eval_window_title_color(PromptState* state,unsigned long *window_title_color) {
