@@ -1267,16 +1267,10 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
   if (!spec) {     PROFILE_START(_pt);
 PROFILE_END_VAR(_pt, "api:fl_draw_rect"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   unsigned long col = spec->color;
+  bool transparent = spec->transparent ? spec->transparent : true;
   if (col == 0) col = COLOR_TEXT;
   col = rgb_to_hex(col);
-  if (spec->transparent) {
-    PROFILE_START(_pt);
-    col = Color_Lerp(rgb_to_hex(COLOR_BG), col, (float)FL_DRAW_ALPHA_TRANSPARENT / 255.0f);
-    bool rr = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness,spec->filled);
-    PROFILE_END_VAR(_pt, "api:fl_draw_rect");
-    { PROFILE_END_VAR(_pt, "f"); return rr; }
-  }
-  bool r = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness,spec->filled);
+  bool r = Platform_DrawRectRaw(spec->x, spec->y, spec->w, spec->h, col,spec->radius ? spec->radius : 0,spec->rounded ? spec->rounded : RoundedCorners,!transparent,spec->thickness,spec->filled);
   PROFILE_END_VAR(_pt, "api:fl_draw_rect");
   return r;
 }
@@ -1303,6 +1297,9 @@ int fl_get_text_height(const char *text) {
   PROFILE_END_VAR(_pt, "api:fl_get_text_height");
   return r;
 }
+int fl_get_text_width(const char *text,int fontsize) {
+    return Platform_MeasureTextWidth(text,strlen(text), fontsize);
+}
 
 bool fl_draw_line_impl(const FlLineSpec *spec) {
   PROFILE_START(_pt);
@@ -1326,18 +1323,6 @@ PROFILE_END_VAR(_pt, "api:fl_draw_circle"); { PROFILE_END_VAR(_pt, "f"); return 
   PROFILE_END_VAR(_pt, "api:fl_draw_circle");
   return r;
 }
-bool fl_draw_rounded_rect_impl(const FlRoundedRectSpec *spec) {
-  PROFILE_START(_pt);
-  if (!spec) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect"); { PROFILE_END_VAR(_pt, "f"); return false; } }
-  unsigned long col = spec->color;
-  col = rgb_to_hex(col);
-  if (col == 0) col = COLOR_TEXT;
-  bool r = Platform_DrawRoundedRectRaw(spec->x, spec->y, spec->w, spec->h, spec->radius, col, spec->thickness);
-  PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect");
-  return r;
-}
-
 bool fl_listbox_begin(const FlListSpec *spec) {
     PROFILE_START(_pt);
     if (!spec) {     PROFILE_START(_pt);
@@ -1476,19 +1461,14 @@ void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
     if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "api:fl_draw_checkbox"); return; }
 
     unsigned long border = hovered ? FL_WHITE : FL_GRAY;
-    unsigned long fill = checked ? COLOR_SELECTED_TEXT : COLOR_BG;
-    if (hovered) {
-        fill = rgb_to_hex(Color_Lerp(rgb_to_hex(fill), rgb_to_hex(COLOR_TEXT), 0.10f));
-    }
 
-    Platform_FillRectOpaque(x, y, w, h, rgb_to_hex(fill));
-    Platform_DrawRectBorderOpaque(x, y, w, h, rgb_to_hex(border), 1);
+    Platform_DrawRectRaw(x, y, w, h, FL_DARK_GRAY, 0, false, true, 1, true);
+    Platform_DrawRectRaw(x, y, w, h, border, 0, false, true, 2, false);
 
     if (checked) {
         int fontsize = w * 3 / 4;
         if (fontsize < 1) fontsize = 1;
-        int tw = Platform_MeasureTextWidth(FL_CHECKBOX_GLYPH,
-                                           (int)strlen(FL_CHECKBOX_GLYPH), fontsize);
+        int tw = fl_get_text_width(FL_CHECKBOX_GLYPH,fontsize);
         int th = fl_checkbox_line_height(fontsize);
         int tx = x + (w - tw) / 2;
         int ty = y + (h - th) / 2;
