@@ -90,6 +90,9 @@ if (nCode < 0) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallN
   _mev.down = _isDown;
   _mev.repeat = false;
   Platform_GlobalMouse_Push(&_mev);
+  if (_isDown && _btn > 0 && _btn <= FL_MOUSE_BTN_MAX) {
+    hotkey_process(FL_MOUSE_VK(_btn), _mev.mods);
+  }
 
   { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
 }

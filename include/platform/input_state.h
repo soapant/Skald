@@ -34,6 +34,8 @@ int Platform_CharForKey(int vk, int scancode, int mods);
 #define MOUSE_BTN_SIDE2   0x05
 #define MOUSE_BTN_BACK    0x06
 #define MOUSE_BTN_FORWARD 0x07
+#define MOUSE_BTN_TASK    0x08
+#define MOUSE_BTN_EXTRA1  0x09
 
 typedef struct {
     int button;
