@@ -121,8 +121,28 @@ if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     if (!popup) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     Display* dpy = wm->display;
     long long last_tick = 0;
+    int last_mx = 0, last_my = 0;
+    int last_btn = -1;
     while (wm->running && popup->manager) {
         Platform_WM_ProcessEvents(wm);
+        bool mouse_changed = false;
+        {
+            int mx = 0, my = 0;
+            if (Platform_GetMousePos(&mx, &my)) {
+                int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
+                if (mx != last_mx || my != last_my || btn != last_btn) {
+                    last_mx = mx;
+                    last_my = my;
+                    last_btn = btn;
+                    mouse_changed = true;
+                }
+            }
+        }
+        Popup* mouse_top = WindowManager_GetTopPopup(wm);
+        if (mouse_changed && mouse_top && mouse_top->vtable && mouse_top->vtable->on_render) {
+            mouse_top->vtable->on_render(mouse_top);
+            if (dpy) XFlush(dpy);
+        }
         long long now = Platform_GetWallClockMs();
         if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
             last_tick = now;

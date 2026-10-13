@@ -356,15 +356,7 @@ static void internet_hover_render() {
     char today[32], month[32], rate[32];
     fl_format_bytes(g_net.today_bytes, today, sizeof(today));
     fl_format_bytes(g_net.month_bytes, month, sizeof(month));
-
-    double bps = g_net.rate_bps;
-    if (bps >= 1000000.0) {
-        snprintf(rate, sizeof(rate), "%.2f MB/s", bps / 1048576.0);
-    } else if (bps >= 1000.0) {
-        snprintf(rate, sizeof(rate), "%.1f KB/s", bps / 1024.0);
-    } else {
-        snprintf(rate, sizeof(rate), "%.0f B/s", bps);
-    }
+    fl_format_bytes(g_net.rate_bps * 1024, rate, sizeof(rate));
 
     int y = NET_PAD;
     net_row(y, "rate now", rate, RGB(160, 220, 255));

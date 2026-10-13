@@ -723,6 +723,7 @@ case WM_CHAR: {
             PromptState *state = Platform_GetWin32PromptState();
             if (state) {
                 fl_editbox_reset_placed();
+                fl_checkbox_frame_begin();
                 Platform_SetDrawContextWin32(paintDC);
                 FlintContext_Get()->prompt_callbacks.render(state);
             }

@@ -270,6 +270,21 @@ void Platform_SetDrawOffset(int dx, int dy) {
 g_draw_off_x = dx;
     g_draw_off_y = dy;
 }
+void Platform_GetDrawOffset(int *out_x, int *out_y) {
+    if (out_x) *out_x = g_draw_off_x;
+    if (out_y) *out_y = g_draw_off_y;
+}
+bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
+    HWND w = WH_TO_HWND(h);
+    if (!w || !IsWindow(w)) return false;
+    POINT pt;
+    pt.x = 0;
+    pt.y = 0;
+    if (!ClientToScreen(w, &pt)) return false;
+    if (out_x) *out_x = (int)pt.x;
+    if (out_y) *out_y = (int)pt.y;
+    return true;
+}
 static void measure_track(int x, int y, int w, int h) {
         PROFILE_START(_pt);
 if (!g_measuring) { PROFILE_END_VAR(_pt, "measure_track"); return ; }
@@ -484,21 +499,52 @@ if (thickness <= 0.0f) { PROFILE_END_VAR(_pt, "win32_thickness_px"); return 0; }
     { PROFILE_END_VAR(_pt, "win32_thickness_px"); return px; }
 }
 
-bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color, float thickness) {
-        PROFILE_START(_pt);
-int t = win32_thickness_px(thickness);
-    if (t <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return Platform_DrawRectRawOpaque(x, y, w, h, color); }
-    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return false; }
+bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color,
+                             float thickness, bool filled) {
+    PROFILE_START(_pt);
+
+    if (w <= 0 || h <= 0) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        return false;
+    }
+
+    if (filled) {
+        measure_track(x, y, w, h);
+        HBRUSH brush = CreateSolidBrush(win32_colorref(color));
+        HGDIOBJ old_brush = SelectObject(g_draw_hdc, brush);
+        HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
+
+        Rectangle(g_draw_hdc, x, y, x + w, y + h);
+
+        SelectObject(g_draw_hdc, old_pen);
+        SelectObject(g_draw_hdc, old_brush);
+        DeleteObject(brush);
+
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        return true;
+    }
+
+    int t = win32_thickness_px(thickness);
+    if (t <= 0) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        return Platform_DrawRectRawOpaque(x, y, w, h, color);
+    }
+
     measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+
     RECT r = { x, y, x + w, y + h };
     HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
     HGDIOBJ old_pen = SelectObject(g_draw_hdc, pen);
     HGDIOBJ old_br = SelectObject(g_draw_hdc, GetStockObject(NULL_BRUSH));
+
     Rectangle(g_draw_hdc, r.left, r.top, r.right, r.bottom);
+
     SelectObject(g_draw_hdc, old_br);
     SelectObject(g_draw_hdc, old_pen);
     DeleteObject(pen);
-    { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return true; }
+
+    PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+    return true;
 }
 
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
