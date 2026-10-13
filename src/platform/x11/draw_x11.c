@@ -73,6 +73,22 @@ void Platform_SetDrawOffset(int dx, int dy) {
 g_draw_off_x = dx;
     g_draw_off_y = dy;
 }
+void Platform_GetDrawOffset(int *out_x, int *out_y) {
+    if (out_x) *out_x = g_draw_off_x;
+    if (out_y) *out_y = g_draw_off_y;
+}
+bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
+    Display* dpy = get_display();
+    if (!dpy) return false;
+    Window w = (Window)WH_TO_HWND(h);
+    if (w == None) return false;
+    Window child = None;
+    int ax = 0, ay = 0;
+    if (!XTranslateCoordinates(dpy, w, DefaultRootWindow(dpy), 0, 0, &ax, &ay, &child)) return false;
+    if (out_x) *out_x = ax;
+    if (out_y) *out_y = ay;
+    return true;
+}
 static void measure_track(int x, int y, int w, int h) {
         PROFILE_START(_pt);
 if (!g_measuring) { PROFILE_END_VAR(_pt, "measure_track"); return ; }
@@ -611,20 +627,53 @@ if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "raw_prepare"); return NULL; }
     { PROFILE_END_VAR(_pt, "raw_prepare"); return gc; }
 }
 
-bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color, float thickness) {
-        PROFILE_START(_pt);
-if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return false; }
-    int t = raw_thickness_px(thickness);
-    if (t <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return Platform_DrawRectRawOpaque(x, y, w, h, color); }
-    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return false; }
+bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color,
+                             float thickness, bool filled) {
+    PROFILE_START(_pt);
+
+    if (!raw_can_draw()) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        return false;
+    }
+    if (w <= 0 || h <= 0) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        return false;
+    }
+
     x += g_draw_off_x;
     y += g_draw_off_y;
+
+    if (filled) {
+        measure_track(x, y, w, h);
+        GC gc = raw_prepare(color, 1);
+        if (!gc) {
+            PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+            return false;
+        }
+        Drawable d = XftDrawDrawable(g_draw_xd);
+        XFillRectangle(g_draw_dpy, d, gc, x, y, (unsigned)w, (unsigned)h);
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        return true;
+    }
+
+    int t = raw_thickness_px(thickness);
+    if (t <= 0) t = 1;
+
     measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
     GC gc = raw_prepare(color, t);
-    if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return false; }
+    if (!gc) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        return false;
+    }
     Drawable d = XftDrawDrawable(g_draw_xd);
-    XDrawRectangle(g_draw_dpy, d, gc, x, y, (unsigned)w, (unsigned)h);
-    { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return true; }
+
+    XFillRectangle(g_draw_dpy, d, gc, x,         y,         w, t);
+    XFillRectangle(g_draw_dpy, d, gc, x,         y + h - t, w, t);
+    XFillRectangle(g_draw_dpy, d, gc, x,         y,         t, h);
+    XFillRectangle(g_draw_dpy, d, gc, x + w - t, y,         t, h);
+
+    PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+    return true;
 }
 
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
