@@ -180,13 +180,13 @@ PROFILE_START(timer);
                 if (cx < sx0) cx = sx0;
                 if (cx > sx1) cx = sx1;
                 int w = sx1 - sx0;
-                if (w > 0) Platform_DrawRectRawOpaque(sx0, tint_y, w, FontSize, tint);
+                if (w > 0) Platform_DrawRectRaw(sx0, tint_y, w,FontSize,tint,0,false,true,1,true);
             }
         } else {
             int tint_x = cursor_draw_x;
             if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
             if (tint_x > data->w - PROMPT_CARET_HI_CLAMP) tint_x = data->w - PROMPT_CARET_HI_CLAMP;
-            Platform_DrawRectRawOpaque(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, tint);
+            Platform_DrawRectRaw(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL,FontSize,tint,0,false,true,1,true);
         }
     }
 
@@ -200,7 +200,7 @@ PROFILE_START(timer);
         if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
         if (cursor_draw_x > data->w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = data->w - PROMPT_CARET_HI_CLAMP;
         int cursor_y = x11_font_cursor_y_of(font, draw_y);
-        Platform_DrawRectRawOpaque(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(Modal_CursorColor()));
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
     }
     Platform_SetDrawContext(NULL, NULL, NULL, 0);
     if (buffered) {
