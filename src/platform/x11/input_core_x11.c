@@ -29,6 +29,8 @@ X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
 int g_x11_keyboard_count = 0;
 X11Keyboard g_x11_mice[X11_MAX_MICE];
 int g_x11_mouse_count = 0;
+bool g_x11_mouse_grabbed[X11_MAX_MICE] = {false};
+int g_x11_uinput_mouse_fd = -1;
 int g_x11_uinput_fd = -1;
 bool g_x11_suppress_release[KEY_MAX + 1] = {0};
 static long g_x11_suppress_ms[KEY_MAX + 1] = {0};
@@ -38,9 +40,16 @@ bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 static int g_x11_rejected_fds[X11_REJECTED_MAX];
 static int g_x11_rejected_count = 0;
 
+static int x11_linux_button_to_mouse_impl(int code);
+
 static int x11_linux_button_to_mouse(int code) {
         PROFILE_START(_pt);
-switch (code) {
+int btn = x11_linux_button_to_mouse_impl(code);
+{ PROFILE_END_VAR(_pt, "x11_linux_button_to_mouse"); return btn; }
+}
+
+static int x11_linux_button_to_mouse_impl(int code) {
+    switch (code) {
         case BTN_LEFT:    return MOUSE_BTN_LEFT;
         case BTN_RIGHT:   return MOUSE_BTN_RIGHT;
         case BTN_MIDDLE:  return MOUSE_BTN_MIDDLE;
@@ -48,8 +57,18 @@ switch (code) {
         case BTN_EXTRA:   return MOUSE_BTN_SIDE2;
         case BTN_BACK:    return MOUSE_BTN_BACK;
         case BTN_FORWARD: return MOUSE_BTN_FORWARD;
-        default:          return 0;
+        case BTN_TASK:    return MOUSE_BTN_TASK;
+        default: break;
     }
+    if (code >= BTN_0 && code <= BTN_9) {
+        int n = MOUSE_BTN_EXTRA1 + (code - BTN_0);
+        return n <= FL_MOUSE_BTN_MAX ? n : 0;
+    }
+    if (code >= 0x14e && code <= 0x159) {
+        int n = 0x13 + (code - 0x14e);
+        return (n > 0 && n <= FL_MOUSE_BTN_MAX) ? n : 0;
+    }
+    return 0;
 }
 
 static void x11_queue_mouse_event(struct input_event* ev) {
@@ -71,6 +90,9 @@ if (!ev || ev->type != EV_KEY) { PROFILE_END_VAR(_pt, "x11_queue_mouse_event"); 
     mev.repeat = repeat;
     mev.t_us = 0;
     Platform_GlobalMouse_Push(&mev);
+    if (down && !repeat && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
+        hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+    }
 }
 
 bool x11_handle_evdev_mouse(struct input_event *ev) {
@@ -135,6 +157,7 @@ g_x11_wm = wm;
 
 static void x11_force_cleanup(void);
 static void x11_install_cleanup_handlers(void);
+void x11_mouse_grab_end(void);
 static volatile sig_atomic_t g_x11_cleanup_done = 0;
 
 static void x11_sig_handler(int sig) {
@@ -165,6 +188,7 @@ if (g_x11_cleanup_done) { PROFILE_END_VAR(_pt, "x11_force_cleanup"); return ; }
             ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
         }
     }
+    x11_mouse_grab_end();
     for (int i=0;i<256;i++) {
         extern bool remap_is_virt_held(int vk);
         if (remap_is_virt_held(i)) Platform_EmitKey(i, 0);
@@ -256,11 +280,98 @@ PROFILE_START(timer);
     { PROFILE_END_VAR(_pt, "x11_init_uinput"); return fd; }
 }
 
+void x11_mouse_grab_end(void) {
+    for (int i = 0; i < g_x11_mouse_count; i++) {
+        if (g_x11_mice[i].fd >= 0 && g_x11_mouse_grabbed[i]) {
+            ioctl(g_x11_mice[i].fd, EVIOCGRAB, 0);
+            log_info("ungrabbed mouse fd=%d", (int)g_x11_mice[i].fd);
+        }
+        g_x11_mouse_grabbed[i] = false;
+    }
+    if (g_x11_uinput_mouse_fd >= 0) {
+        ioctl(g_x11_uinput_mouse_fd, UI_DEV_DESTROY);
+        close(g_x11_uinput_mouse_fd);
+        g_x11_uinput_mouse_fd = -1;
+    }
+}
+
 void x11_destroy_uinput(void) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
     if (g_x11_uinput_fd >= 0) { ioctl(g_x11_uinput_fd, UI_DEV_DESTROY); close(g_x11_uinput_fd); g_x11_uinput_fd = -1; }
     PROFILE_END_VAR(timer, "input:x11_destroy_uinput");
+}
+
+static int x11_init_uinput_mouse(void) {
+    int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
+    if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
+    if (fd < 0) { log_error("uinput mouse open failed: %s", strerror(errno)); return -1; }
+
+    ioctl(fd, UI_SET_EVBIT, EV_KEY);
+    ioctl(fd, UI_SET_EVBIT, EV_REL);
+    ioctl(fd, UI_SET_EVBIT, EV_MSC);
+    ioctl(fd, UI_SET_EVBIT, EV_SYN);
+
+    for (int c = BTN_MISC; c <= BTN_TASK; c++) ioctl(fd, UI_SET_KEYBIT, c);
+    for (int c = BTN_0; c <= BTN_9; c++) ioctl(fd, UI_SET_KEYBIT, c);
+    for (int c = 0x14e; c <= 0x159; c++) ioctl(fd, UI_SET_KEYBIT, c);
+
+    for (int r = REL_X; r <= REL_MAX; r++) ioctl(fd, UI_SET_RELBIT, r);
+    ioctl(fd, UI_SET_MSCBIT, MSC_SCAN);
+
+    struct uinput_setup setup;
+    memset(&setup, 0, sizeof(setup));
+    setup.id.bustype = BUS_USB;
+    setup.id.vendor = 0x1234;
+    setup.id.product = 0x5679;
+    snprintf(setup.name, sizeof(setup.name), "flint-virtual-mouse");
+    if (ioctl(fd, UI_DEV_SETUP, &setup) == 0) {
+        if (ioctl(fd, UI_DEV_CREATE) < 0) { perror("[UINPUT-M] UI_DEV_CREATE"); close(fd); return -1; }
+    } else {
+        struct uinput_user_dev uud;
+        memset(&uud, 0, sizeof(uud));
+        snprintf(uud.name, sizeof(uud.name), "flint-virtual-mouse");
+        uud.id.bustype = BUS_USB; uud.id.vendor = 0x1234; uud.id.product = 0x5679;
+        if (write(fd, &uud, sizeof(uud)) != sizeof(uud)) perror("[UINPUT-M] write uud");
+        if (ioctl(fd, UI_DEV_CREATE) < 0) { perror("[UINPUT-M] UI_DEV_CREATE legacy"); close(fd); return -1; }
+    }
+    log_info("virtual mouse created (fd=%d)", fd);
+    return fd;
+}
+
+void x11_mouse_grab_begin(void) {
+    if (g_x11_uinput_mouse_fd < 0) {
+        g_x11_uinput_mouse_fd = x11_init_uinput_mouse();
+        if (g_x11_uinput_mouse_fd < 0) { log_warn("mouse grab disabled, uinput mouse failed"); return; }
+    }
+    for (int i = 0; i < g_x11_mouse_count; i++) {
+        if (g_x11_mice[i].fd < 0 || g_x11_mouse_grabbed[i]) continue;
+        struct input_event drain;
+        while (read(g_x11_mice[i].fd, &drain, sizeof(drain)) > 0) {}
+        if (ioctl(g_x11_mice[i].fd, EVIOCGRAB, 1) == 0) {
+            g_x11_mouse_grabbed[i] = true;
+            log_info("grabbed mouse fd=%d", (int)g_x11_mice[i].fd);
+        }
+    }
+}
+
+void x11_mouse_forward(const struct input_event *ev, int grabbed) {
+    if (!grabbed || g_x11_uinput_mouse_fd < 0) return;
+    if (ev->type == EV_KEY) {
+        int btn = x11_linux_button_to_mouse_impl(ev->code);
+        if (btn > 0 && hotkey_mouse_button_bound(btn)) return;
+    }
+    if (write(g_x11_uinput_mouse_fd, ev, sizeof(*ev)) < 0) {
+        if (errno != EAGAIN) perror("[UINPUT-M] write");
+        return;
+    }
+    if (ev->type != EV_SYN) {
+        struct input_event syn;
+        memset(&syn, 0, sizeof(syn));
+        gettimeofday(&syn.time, NULL);
+        syn.type = EV_SYN; syn.code = SYN_REPORT; syn.value = 0;
+        if (write(g_x11_uinput_mouse_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN) perror("[UINPUT-M] write syn");
+    }
 }
 
 void x11_uinput_emit(const struct input_event *ev) {

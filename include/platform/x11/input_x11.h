@@ -24,6 +24,7 @@ extern int g_x11_mouse_count;
 extern int g_x11_uinput_fd;
 extern bool g_x11_suppress_release[KEY_MAX + 1];
 extern bool g_x11_device_grabbed[X11_MAX_KEYBOARDS];
+extern bool g_x11_mouse_grabbed[X11_MAX_MICE];
 
 extern bool g_x11_ctrl_held;
 extern bool g_x11_alt_held;
@@ -42,6 +43,9 @@ bool x11_should_use_grab(void);
 int x11_init_uinput(void);
 void x11_destroy_uinput(void);
 void x11_uinput_emit(const struct input_event *ev);
+void x11_mouse_grab_begin(void);
+void x11_mouse_grab_end(void);
+void x11_mouse_forward(const struct input_event *ev, int grabbed);
 void x11_scan_keyboards(void);
 int x11_keysym_to_vk(KeySym ks);
 int x11_vk_to_linux_key(int vk);

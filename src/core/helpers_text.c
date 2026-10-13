@@ -3,8 +3,44 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "platform/platform.h"
+#include "platform/input_state.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_text.h"
+#include "deps/log.h"
+
+static int hotkey_parse_mouse_token(const char* token) {
+    if (!token || !token[0]) return 0;
+
+    static const struct { const char* name; int btn; } named[] = {
+        { "MouseLeft",         MOUSE_BTN_LEFT },
+        { "LeftMouseButton",   MOUSE_BTN_LEFT },
+        { "MouseRight",        MOUSE_BTN_RIGHT },
+        { "RightMouseButton",  MOUSE_BTN_RIGHT },
+        { "MouseMiddle",       MOUSE_BTN_MIDDLE },
+        { "MiddleMouseButton", MOUSE_BTN_MIDDLE },
+        { "MouseSide1",        MOUSE_BTN_SIDE1 },
+        { "MouseSide2",        MOUSE_BTN_SIDE2 },
+        { "MouseBack",         MOUSE_BTN_BACK },
+        { "MouseForward",      MOUSE_BTN_FORWARD },
+        { "MouseTask",         MOUSE_BTN_TASK },
+    };
+    for (size_t i = 0; i < sizeof(named) / sizeof(named[0]); i++) {
+        if (strcasecmp(token, named[i].name) == 0) return named[i].btn;
+    }
+
+    if (Platform_StringContainsCaseInsensitive(token, "Mouse") ||
+        Platform_StringContainsCaseInsensitive(token, "MouseButton")) {
+        int n = 0;
+        for (const char* p = token; *p; p++) {
+            if (*p >= '0' && *p <= '9') {
+                n = n * 10 + (*p - '0');
+                if (n > FL_MOUSE_BTN_MAX) return 0;
+            }
+        }
+        if (n >= 1 && n <= FL_MOUSE_BTN_MAX) return n;
+    }
+    return 0;
+}
 
 HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_trigger)(void), 
                                           bool (*optional_condition_for_hotkey)(void), 
@@ -51,6 +87,10 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
         } else if (Platform_StringContainsCaseInsensitive(token, "Win") || Platform_StringContainsCaseInsensitive(token, "Super") || Platform_StringContainsCaseInsensitive(token, "Meta") ) {
             out_modifiers |= HOTKEY_MOD_SUPER;
         } else {
+            int mb = hotkey_parse_mouse_token(token);
+            if (mb > 0) {
+                out_key = FL_MOUSE_VK(mb);
+            } else
             if (strcasecmp(token, "LeftBracket") == 0) out_key = VK_OEM_4;
             else if (strcasecmp(token, "RightBracket") == 0) out_key = VK_OEM_6;
             else if (token[0] == '[' && token[1] == '\0') out_key = VK_OEM_4;

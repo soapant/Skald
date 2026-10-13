@@ -109,24 +109,23 @@ void toggle_minimized(void) {
 }
 
 void easy(void) {
-  fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("1");
+ fl_send_hotkey("1"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("1");
 }
 
 void medium(void) {
-  fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("2");
+ fl_send_hotkey("2"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("2");
 }
 void hard(void) {
-  fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("3");
+ fl_send_hotkey("3"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("3");
 }
 void fuckme(void) {
-  fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("4");
+ fl_send_hotkey("4"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("4");
 }
 
 static FlPos last_mouse_pos = {0, 0}; 
 
 void start_auto_click(void) {
     last_mouse_pos = fl_get_mouse_pos();
-    
     while (fl_get_mouse_pos().x == last_mouse_pos.x && 
            fl_get_mouse_pos().y == last_mouse_pos.y) {
         fl_click();
@@ -134,7 +133,7 @@ void start_auto_click(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Ctrl+Alt+B", start_auto_click);
+    fl_register_hotkey("Mouse4", start_auto_click,"Fortnite");
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("Alt+Shift+F", next_image);
     fl_register_hotkey("E", next_image,WHITELIST,"feh");
