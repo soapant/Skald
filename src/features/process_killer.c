@@ -61,6 +61,9 @@ static int pk_cmp_alpha(const void* a, const void* b) {
     return strcasecmp(((const PkProc*)a)->name, ((const PkProc*)b)->name);
 }
 
+
+#if !defined(_WIN32)
+
 static void pk_parse_line(char* line) {
     pk_rtrim(line);
     size_t len = strlen(line);
@@ -100,9 +103,6 @@ static void pk_parse_line(char* line) {
     p->rss_kb = strtoull(rss_s, NULL, 10);
     p->cpu = strtod(cpu_s, NULL);
 }
-
-#if !defined(_WIN32)
-
 
 static void pk_collect_running_processes(void) {
     g_pk_count = 0;
