@@ -303,22 +303,6 @@ if (g_raw_count > 0) {
     g_raw_count++;
     { PROFILE_END_VAR(_pt, "RawLine_Push"); return true; }
 }
-static bool RawRect_Map(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
-        PROFILE_START(_pt);
-RawLine_Flush();
-    if (g_raw_map_count <= 0 || g_raw_map_pitch <= 0) { PROFILE_END_VAR(_pt, "RawRect_Map"); return false; }
-    if (y != g_raw_map_y || g_raw_map_xd != g_draw_xd || !g_draw_xd) { PROFILE_END_VAR(_pt, "RawRect_Map"); return false; }
-    if (x < g_raw_map_x0 || x >= g_raw_map_x0 + g_raw_map_count * g_raw_map_pitch) { PROFILE_END_VAR(_pt, "RawRect_Map"); return false; }
-    int idx = (x - g_raw_map_x0 + g_raw_map_pitch / 2) / g_raw_map_pitch;
-    if (idx < 0) idx = 0;
-    if (idx >= g_raw_map_count) idx = g_raw_map_count - 1;
-    XftColor rc;
-    unsigned short a16 = (unsigned short)(((unsigned int)alpha * 0xFFFFu) / 255u);
-    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, a16, &rc);
-    XftDrawRect(g_draw_xd, &rc, g_raw_map_x[idx] + (x - (g_raw_map_x0 + idx * g_raw_map_pitch)), g_raw_map_top[idx] + (y - g_raw_map_y), w, h);
-    XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &rc);
-    { PROFILE_END_VAR(_pt, "RawRect_Map"); return true; }
-}
 void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap) {
         PROFILE_START(_pt);
 RawLine_Flush();
@@ -522,7 +506,6 @@ if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
     int text_len = (int)strlen(state->filter);
     int sel_start = 0, sel_end = 0;
     bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
-    if (!has_sel && state->cursor < 0) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
 
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     int tint_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
@@ -541,14 +524,14 @@ if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
         if (caret_x > x1) caret_x = x1;
         int w = x1 - x0 + PromptNormalCaretWidth();
         if (w <= 0) return;
-        Platform_DrawRectRawOpaque(x0, tint_y, w, FontSize, tint);
+        Platform_DrawRectRaw(x0, tint_y, w, FontSize,tint,0,false,true,1,true);
         return;
     }
 
     int tint_x = x11_char_x(dpy, xf, state, state->cursor, NULL);
     if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
     if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
-    Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, tint);
+    Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(),FontSize,tint,0,false,true,1,true);
 }
 
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
@@ -562,31 +545,10 @@ XftFont *xf = FH_TO_XFT(font);
     if (cursor_draw_x > state->width - PROMPT_CARET_HI_CLAMP) cursor_draw_x = state->width - PROMPT_CARET_HI_CLAMP;
     int cursor_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
     if (!IsInsertMode()) { PROFILE_END_VAR(_pt, "Platform_DrawEditCursor"); return ; }
-    Platform_DrawRectRawOpaque(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(Modal_CursorColor()));
-}
-bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
-        PROFILE_START(_pt);
-x += g_draw_off_x;
-    y += g_draw_off_y;
-    measure_track(x, y, w, h);
-    if (RawRect_Map(x, y, w, h, color, alpha)) { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return true; }
-    XftColor col;
-    unsigned short a16;
-    if (alpha == 255) {
-        a16 = OpacityAlpha16();
-    } else {
-        a16 = (unsigned short)(((unsigned int)alpha * 0xFFFFu) / 255u);
-    }
-    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, a16, &col);
-    XftDrawRect(g_draw_xd, &col, x, y, w, h);
-    XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
-    { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return true; }
+    Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
 }
 
-bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_DrawRectRawOpaque"); return Platform_DrawRectRaw(x, y, w, h, color, 255); }
-}
+static GC raw_gc_for(Display* dpy, Drawable d);
 
 static int raw_thickness_px(float thickness) {
         PROFILE_START(_pt);
@@ -628,141 +590,102 @@ if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "raw_prepare"); return NULL; }
     { PROFILE_END_VAR(_pt, "raw_prepare"); return gc; }
 }
 
-static Picture raw_pict_for(Display* dpy, Visual* vis, Drawable d) {
-    static Picture pict = 0;
-    static Drawable owner = 0;
-    if (pict != 0 && owner == d) return pict;
-    if (pict != 0) { XRenderFreePicture(dpy, pict); pict = 0; }
-    XRenderPictFormat* fmt = XRenderFindVisualFormat(dpy, vis);
-    if (!fmt) return 0;
-    pict = XRenderCreatePicture(dpy, d, fmt, 0, 0);
-    if (pict == 0) return 0;
-    owner = d;
-    return pict;
-}
-
-bool Platform_FillRectOpaque(int x, int y, int w, int h, unsigned long color) {
-    PROFILE_START(_pt);
-    if (!raw_can_draw() || w <= 0 || h <= 0) {
-        PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
-        return false;
-    }
-    Display* dpy = g_draw_dpy;
-    if (!dpy) {
-        PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
-        return false;
-    }
-    x += g_draw_off_x;
-    y += g_draw_off_y;
-    measure_track(x, y, w, h);
-
-    Drawable d = XftDrawDrawable(g_draw_xd);
-    Picture pict = raw_pict_for(dpy, g_draw_vis, d);
-    if (!pict) {
-        PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
-        return false;
-    }
-
-    XRenderColor rc;
-    rc.red = (unsigned short)(((color >> 16) & 0xFF) * 0x101);
-    rc.green = (unsigned short)(((color >> 8) & 0xFF) * 0x101);
-    rc.blue = (unsigned short)((color & 0xFF) * 0x101);
-    rc.alpha = 0xFFFF;
-
-    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, x, y, (unsigned)w, (unsigned)h);
-    PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
-    return true;
-}
-
-bool Platform_DrawRectBorderOpaque(int x, int y, int w, int h, unsigned long color, float thickness) {
-    PROFILE_START(_pt);
-    if (!raw_can_draw() || w <= 0 || h <= 0) {
-        PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
-        return false;
-    }
-    Display* dpy = g_draw_dpy;
-    if (!dpy) {
-        PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
-        return false;
-    }
-    int t = raw_thickness_px(thickness);
-    if (t <= 0) t = 1;
-    if (t > w) t = w;
-    if (t > h) t = h;
-
-    x += g_draw_off_x;
-    y += g_draw_off_y;
-    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
-
-    Drawable d = XftDrawDrawable(g_draw_xd);
-    Picture pict = raw_pict_for(dpy, g_draw_vis, d);
-    if (!pict) {
-        PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
-        return false;
-    }
-
-    XRenderColor rc;
-    rc.red = (unsigned short)(((color >> 16) & 0xFF) * 0x101);
-    rc.green = (unsigned short)(((color >> 8) & 0xFF) * 0x101);
-    rc.blue = (unsigned short)((color & 0xFF) * 0x101);
-    rc.alpha = 0xFFFF;
-
-    unsigned long uw = (unsigned long)w, uh = (unsigned long)h, ut = (unsigned long)t;
-    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, x, y, uw, ut);
-    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, x, (int)(y + h - t), uw, ut);
-    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, x, y, ut, uh);
-    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, (int)(x + w - t), y, ut, uh);
-
-    PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
-    return true;
-}
-
-bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color,
+bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int radius, bool rounded, bool opaque,
                              float thickness, bool filled) {
     PROFILE_START(_pt);
 
     if (!raw_can_draw()) {
-        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
         return false;
     }
     if (w <= 0 || h <= 0) {
-        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
         return false;
     }
 
     x += g_draw_off_x;
     y += g_draw_off_y;
 
-    if (filled) {
-        measure_track(x, y, w, h);
-        GC gc = raw_prepare(color, 1);
-        if (!gc) {
-            PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
-            return false;
-        }
-        Drawable d = XftDrawDrawable(g_draw_xd);
-        XFillRectangle(g_draw_dpy, d, gc, x, y, (unsigned)w, (unsigned)h);
-        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
-        return true;
-    }
-
     int t = raw_thickness_px(thickness);
     if (t <= 0) t = 1;
 
-    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
-    GC gc = raw_prepare(color, t);
+    if (filled) {
+        measure_track(x, y, w, h);
+    } else {
+        measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+    }
+
+    unsigned short target_alpha = opaque ? 0xFFFFu : OpacityAlpha16();
+
+    if (filled) {
+        if (rounded && radius > 0) {
+            int r = radius;
+            if (r * 2 > w) r = w / 2;
+            if (r * 2 > h) r = h / 2;
+
+            x11_fill_rounded_rect(g_draw_dpy, g_draw_xd, g_draw_vis, g_draw_cmap, 
+                                  color, target_alpha, x, y, w, h, r, w, h);
+        } else {
+            Drawable d = XftDrawDrawable(g_draw_xd);
+            GC gc = raw_gc_for(g_draw_dpy, d);
+            if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return false; }
+            
+            XftColor col;
+            x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, target_alpha, &col);
+            XSetForeground(g_draw_dpy, gc, col.pixel);
+            XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
+            XSetLineAttributes(g_draw_dpy, gc, 1, LineSolid, CapButt, JoinMiter);
+            
+            XFillRectangle(g_draw_dpy, d, gc, x, y, (unsigned)w, (unsigned)h);
+        }
+        PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
+        return true;
+    }
+
+    Drawable d = XftDrawDrawable(g_draw_xd);
+    GC gc = raw_gc_for(g_draw_dpy, d);
     if (!gc) {
-        PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
         return false;
     }
-    Drawable d = XftDrawDrawable(g_draw_xd);
+    XftColor col;
+    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, target_alpha, &col);
+    XSetForeground(g_draw_dpy, gc, col.pixel);
+    XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
+    XSetLineAttributes(g_draw_dpy, gc, t, LineSolid, CapButt, JoinMiter);
 
-    XFillRectangle(g_draw_dpy, d, gc, x,         y,         w, t);
-    XFillRectangle(g_draw_dpy, d, gc, x,         y + h - t, w, t);
-    XFillRectangle(g_draw_dpy, d, gc, x,         y,         t, h);
-    XFillRectangle(g_draw_dpy, d, gc, x + w - t, y,         t, h);
+    if (rounded && radius > 0) {
+        int r = radius;
+        if (r * 2 > w) r = w / 2;
+        if (r * 2 > h) r = h / 2;
 
-    PROFILE_END_VAR(_pt, "Platform_DrawRectBorder");
+        if (r > 0) {
+            XArc arcs[4] = {
+                { (short)x,           (short)y,           (unsigned short)(r*2), (unsigned short)(r*2),  90*64,  90*64 },
+                { (short)(x + w - r*2), (short)y,           (unsigned short)(r*2), (unsigned short)(r*2),   0*64,  90*64 },
+                { (short)(x + w - r*2), (short)(y + h - r*2), (unsigned short)(r*2), (unsigned short)(r*2), 270*64,  90*64 },
+                { (short)x,           (short)(y + h - r*2), (unsigned short)(r*2), (unsigned short)(r*2), 180*64,  90*64 }
+            };
+            XDrawArcs(g_draw_dpy, d, gc, arcs, 4);
+
+            XSegment segments[4] = {
+                { x + r,     y,         x + w - r, y         },
+                { x + w,     y + r,     x + w,     y + h - r },
+                { x + r,     y + h,     x + w - r, y + h     },
+                { x,         y + r,     x,         y + h - r }
+            };
+            XDrawSegments(g_draw_dpy, d, gc, segments, 4);
+        } else {
+            XDrawRectangle(g_draw_dpy, d, gc, x, y, w, h);
+        }
+    } else {
+        XFillRectangle(g_draw_dpy, d, gc, x,         y,         w, t);
+        XFillRectangle(g_draw_dpy, d, gc, x,         y + h - t, w, t);
+        XFillRectangle(g_draw_dpy, d, gc, x,         y,         t, h);
+        XFillRectangle(g_draw_dpy, d, gc, x + w - t, y,         t, h);
+    }
+
+    PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
     return true;
 }
 
@@ -801,43 +724,6 @@ if (!raw_can_draw() || radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleR
     if (t > 0) XDrawArc(g_draw_dpy, d, gc, cx - radius, cy - radius, dd, dd, 0, 360 * 64);
     else XFillArc(g_draw_dpy, d, gc, cx - radius, cy - radius, dd, dd, 0, 360 * 64);
     { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return true; }
-}
-
-bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigned long color, float thickness) {
-        PROFILE_START(_pt);
-if (!raw_can_draw() || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRoundedRectRaw"); return false; }
-    int t = raw_thickness_px(thickness);
-    if (radius < 0) radius = 0;
-    int maxr = (w < h ? w : h) / 2;
-    if (radius > maxr) radius = maxr;
-    x += g_draw_off_x;
-    y += g_draw_off_y;
-    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
-    GC gc = raw_prepare(color, t);
-    if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawRoundedRectRaw"); return false; }
-    Drawable d = XftDrawDrawable(g_draw_xd);
-    Display* dpy = g_draw_dpy;
-    unsigned rw = (unsigned)(w - radius * 2);
-    unsigned rh = (unsigned)(h - radius * 2);
-    unsigned rd = (unsigned)(radius * 2);
-    if (t > 0) {
-        XDrawLine(dpy, d, gc, x + radius, y, x + w - radius, y);
-        XDrawLine(dpy, d, gc, x + radius, y + h, x + w - radius, y + h);
-        XDrawLine(dpy, d, gc, x, y + radius, x, y + h - radius);
-        XDrawLine(dpy, d, gc, x + w, y + radius, x + w, y + h - radius);
-        XDrawArc(dpy, d, gc, x, y, rd, rd, 180 * 64, 180 * 64);
-        XDrawArc(dpy, d, gc, x + w - rd, y, rd, rd, 270 * 64, 180 * 64);
-        XDrawArc(dpy, d, gc, x + w - rd, y + h - rd, rd, rd, 0, 180 * 64);
-        XDrawArc(dpy, d, gc, x, y + h - rd, rd, rd, 90 * 64, 180 * 64);
-    } else {
-        XFillRectangle(dpy, d, gc, radius, 0, rw, (unsigned)h);
-        XFillRectangle(dpy, d, gc, 0, radius, (unsigned)w, rh);
-        XFillArc(dpy, d, gc, x, y, rd, rd, 0, 360 * 64);
-        XFillArc(dpy, d, gc, x + w - rd, y, rd, rd, 0, 360 * 64);
-        XFillArc(dpy, d, gc, x + w - rd, y + h - rd, rd, rd, 0, 360 * 64);
-        XFillArc(dpy, d, gc, x, y + h - rd, rd, rd, 0, 360 * 64);
-    }
-    { PROFILE_END_VAR(_pt, "Platform_DrawRoundedRectRaw"); return true; }
 }
 
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
