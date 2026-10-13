@@ -57,6 +57,7 @@ void ConfigApply(void) {
     VimModeText = false;
     WindowTitleText = false;
     ColoredVimModeText = true;
+    EnableAutoPairing = true;
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
