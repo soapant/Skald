@@ -950,10 +950,9 @@ bool fl_close_active_window(void) {
 
 bool fl_dismiss_message(void) {
   PROFILE_START(_pt);
-  Platform_DismissMessage();
-  Platform_DismissIndefiniteMessage();
+  bool r = fl_dismiss_message_platform();
   PROFILE_END_VAR(_pt, "api:fl_dismiss_message");
-  return true;
+  return r;
 }
 
 bool fl_toggle_fullscreen_active(void) {

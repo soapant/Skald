@@ -1066,3 +1066,8 @@ char iface[32] = {0};
     }
     { PROFILE_END_VAR(_pt, "fl_net_status_platform"); return FL_NET_OFFLINE; }
 }
+
+bool fl_dismiss_message_platform() {
+    Platform_DismissMessage();
+    Platform_DismissIndefiniteMessage();
+}
