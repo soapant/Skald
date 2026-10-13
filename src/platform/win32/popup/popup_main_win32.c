@@ -202,7 +202,7 @@ int wParam = key->vk;
         return true;
     }
 
-    if (wParam == COPY_SELECTION_KEY) {
+    if (wParam == COPY_SELECTION_KEY && !IsInsertMode()) {
         bool copy_ctrl = key->ctrl;
         if (shift_pressed) {
             if (UI_IsListBoxSelected(lb)) {

@@ -51,6 +51,8 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h);
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsigned char alpha);
 bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color);
+bool Platform_FillRectOpaque(int x, int y, int w, int h, unsigned long color);
+bool Platform_DrawRectBorderOpaque(int x, int y, int w, int h, unsigned long color, float thickness);
 bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color, float thickness,bool filled);
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness);
 bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness);

@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include <stdio.h>
 
 void settings_refresh(const char* filter, ListBoxInfo* lb) {
 }
