@@ -179,7 +179,7 @@ unsigned long Platform_GlobalKey_Dropped(void){
 static PlatformMouseEvent g_gmice[GLOBAL_MOUSE_RING];
 static int g_gmouse_head = 0, g_gmouse_tail = 0;
 static unsigned long g_gmouse_dropped = 0;
-static bool g_mbtn_down[16] = {0};
+static bool g_mbtn_down[FL_MOUSE_BTN_MAX] = {0};
 #if !defined(_WIN32)
 static pthread_mutex_t g_gmouse_mtx = PTHREAD_MUTEX_INITIALIZER;
 #define GMOUSE_LOCK() pthread_mutex_lock(&g_gmouse_mtx)

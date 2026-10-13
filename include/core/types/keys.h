@@ -126,4 +126,12 @@
 #define HOTKEY_MOD_SHIFT_CTRL   (HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 #define HOTKEY_MOD_ALT_SHIFT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 
+#if !defined(FL_MOUSE_BTN_MAX)
+#define FL_MOUSE_BTN_MAX 24
+#endif
+#if !defined(VK_MOUSE_BASE)
+#define VK_MOUSE_BASE 0xE3
+#endif
+#define FL_MOUSE_VK(btn) (VK_MOUSE_BASE + (btn) - 1)
+
 #endif

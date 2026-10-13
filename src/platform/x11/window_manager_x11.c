@@ -49,6 +49,7 @@ static int init_uinput(void) {
 }
 static void destroy_uinput(void) {
     PROFILE_START(_pt);
+x11_mouse_grab_end();
 x11_destroy_uinput(); 
 }
 static void ScanAndHookKeyboards(void) {
@@ -81,8 +82,10 @@ WindowManager* wm = (WindowManager*)arg;
                 }
             }
             for (int i=0;i<g_x11_mouse_count;i++) if (fds[g_x11_keyboard_count+i].revents & POLLIN) {
+                bool mgrab = g_x11_mouse_grabbed[i];
                 while (read(g_x11_mice[i].fd, &ev, sizeof(ev)) > 0) {
                     x11_handle_evdev_mouse(&ev);
+                    x11_mouse_forward(&ev, mgrab ? 1 : 0);
                 }
             }
         }
@@ -206,6 +209,10 @@ XEvent xev;
     }
 
     ScanAndHookKeyboards();
+
+    if (hotkey_has_mouse_binding()) {
+        x11_mouse_grab_begin();
+    }
 
     if (remap_has_bindings()) {
         if (g_x11_uinput_fd < 0) {
