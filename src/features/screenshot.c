@@ -144,7 +144,6 @@ static bool g_sel_done = false;
 static bool g_sel_cancel = false;
 static bool g_sel_has = false;
 static POINT g_sel_anchor = {0, 0};
-static RECT g_sel_cur = {0, 0, 0, 0};
 static RECT g_sel_prev = {0, 0, 0, 0};
 static RECT g_sel_result = {0, 0, 0, 0};
 
