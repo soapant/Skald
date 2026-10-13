@@ -804,3 +804,13 @@ DWORD now = GetTickCount();
     net_unlock();
     { PROFILE_END_VAR(_pt, "fl_net_status_platform"); return st; }
 }
+
+bool fl_dismiss_message_platform() {
+    if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
+      KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+      DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+      FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+      return true;
+    }
+    return false;
+}
