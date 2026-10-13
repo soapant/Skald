@@ -11,6 +11,7 @@
 #include "config.h"
 #include "core/window_manager.h"
 #include "../../nob.h"
+#include "core/flapi.h"
 #undef copy_file
 #undef mkdir_if_not_exists
 #undef read_entire_dir
@@ -730,7 +731,6 @@ void FeatureLoader_ReloadAll(void) {
     FeatureLoader_Init();
     FL_LOCK();
     for (int i = 0; i < g_retired_count; i++) {
-        if (g_retired[i].owner[0]) { fl_cap_purge_owner(g_retired[i].owner, NULL); hotkey_purge_owner(g_retired[i].owner, NULL); snippet_purge_owner(g_retired[i].owner, NULL); fl_widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen); }
     }
     sweep_retired_libs();
     FL_UNLOCK();

@@ -1394,8 +1394,8 @@ static struct {
 } g_cb_mouse;
 
 void fl_checkbox_frame_begin(void) {
-        PROFILE_START(_pt);
-g_cb_mouse.valid = false;
+      PROFILE_START(_pt);
+      g_cb_mouse.valid = false;
 }
 
 static void fl_checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
@@ -1476,7 +1476,6 @@ void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
     PROFILE_START(_pt);
     if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "api:fl_draw_checkbox"); return; }
 
-    float thickness = (float)((h / 8) > 1 ? (h / 8) : 1);
     unsigned long border = hovered ? FL_WHITE : FL_GRAY;
     unsigned long fill = checked ? COLOR_SELECTED_TEXT : COLOR_BG;
     if (hovered) {
@@ -1484,7 +1483,7 @@ void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
     }
 
     Platform_FillRectOpaque(x, y, w, h, rgb_to_hex(fill));
-    Platform_DrawRectBorderOpaque(x, y, w, h, rgb_to_hex(border), thickness);
+    Platform_DrawRectBorderOpaque(x, y, w, h, rgb_to_hex(border), 1);
 
     if (checked) {
         int fontsize = w * 3 / 4;
@@ -2647,5 +2646,33 @@ int fl_get_screen_height() {
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
     { PROFILE_END_VAR(_pt, "fl_get_screen_height"); return h; }
+}
+
+static int g_cc_entry_count = 0;
+static FlCcEntrySpec g_cc_specs[128];
+
+bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
+    if (!spec || g_cc_entry_count >= 128) return false;
+    FlCcEntrySpec s = *spec;
+    if (!s.internal_name) s.internal_name = s.display_name ? s.display_name : "";
+    if (!s.on_enter) s.on_enter = NULL;          
+    if (!s.on_ctrl_enter) s.on_ctrl_enter = NULL;
+    if (!s.on_tab) s.on_tab = NULL;
+    if (!s.on_action) s.on_action = NULL;       
+    if (!s.icon) s.icon = "";
+    if (!s.type) s.type = "";
+    if (!s.payload) s.payload = "";
+    g_cc_specs[g_cc_entry_count] = s;
+    g_cc_entry_count++;
+    return true;
+}
+
+int fl_cc_entry_count(void) {
+    return g_cc_entry_count;
+}
+
+const FlCcEntrySpec *fl_cc_entry_at(int index) {
+    if (index < 0 || index >= g_cc_entry_count) return NULL;
+    return &g_cc_specs[index];
 }
 
