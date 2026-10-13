@@ -128,6 +128,7 @@ Platform_SetPreRenderState(state);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
           fl_editbox_reset_placed();
+          fl_checkbox_frame_begin();
           Platform_SetDrawContext(dpy, NULL, NULL, 0);
           FlintContext_Get()->prompt_callbacks.render(state);
         } else {
@@ -145,6 +146,7 @@ Platform_SetPreRenderState(state);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
           fl_editbox_reset_placed();
+          fl_checkbox_frame_begin();
           FlintContext_Get()->prompt_callbacks.render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
@@ -167,6 +169,7 @@ Platform_SetPreRenderState(state);
     Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
         fl_editbox_reset_placed();
+        fl_checkbox_frame_begin();
         FlintContext_Get()->prompt_callbacks.render(state);
     } else {
         if (state->has_listbox) {

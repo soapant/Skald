@@ -1263,11 +1263,11 @@ PROFILE_END_VAR(_pt, "api:fl_draw_rect"); { PROFILE_END_VAR(_pt, "f"); return fa
   if (spec->transparent) {
     PROFILE_START(_pt);
     col = Color_Lerp(rgb_to_hex(COLOR_BG), col, (float)FL_DRAW_ALPHA_TRANSPARENT / 255.0f);
-    bool rr = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness);
+    bool rr = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness,spec->filled);
     PROFILE_END_VAR(_pt, "api:fl_draw_rect");
     { PROFILE_END_VAR(_pt, "f"); return rr; }
   }
-  bool r = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness);
+  bool r = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness,spec->filled);
   PROFILE_END_VAR(_pt, "api:fl_draw_rect");
   return r;
 }
@@ -1362,6 +1362,174 @@ PROFILE_END_VAR(_pt, "api:fl_place_listbox"); { PROFILE_END_VAR(_pt, "f"); retur
     }
     fl_listbox_end();
     PROFILE_END_VAR(_pt, "api:fl_place_listbox");
+    return true;
+}
+typedef struct {
+    char name[128];
+    bool checked;
+    bool hovered;
+    bool was_down;
+    void (*on_click)(const char *name, bool checked);
+    void (*on_hover)(const char *name, bool hovered);
+} FlCheckboxState;
+
+#define FL_CHECKBOX_MAX 64
+static FlCheckboxState g_checkboxes[FL_CHECKBOX_MAX];
+static int g_checkbox_count = 0;
+
+static struct {
+    bool valid;
+    int mx, my;
+    bool down;
+} g_cb_mouse;
+
+void fl_checkbox_frame_begin(void) {
+    g_cb_mouse.valid = false;
+}
+
+static void fl_checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
+    if (!g_cb_mouse.valid) {
+        bool have = Platform_GetMousePos(&g_cb_mouse.mx, &g_cb_mouse.my);
+        if (have) {
+            int wx = 0, wy = 0, dx = 0, dy = 0;
+            WindowManager* wm = WindowManager_Get();
+            Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+            if (top && Platform_WindowToRoot(top->handle, &wx, &wy)) {
+                g_cb_mouse.mx -= wx;
+                g_cb_mouse.my -= wy;
+            }
+            Platform_GetDrawOffset(&dx, &dy);
+            g_cb_mouse.mx -= dx;
+            g_cb_mouse.my -= dy;
+        } else {
+            g_cb_mouse.mx = 0;
+            g_cb_mouse.my = 0;
+        }
+        g_cb_mouse.down = Platform_MouseStateDown(MOUSE_BTN_LEFT);
+        g_cb_mouse.valid = true;
+    }
+    if (out_x) *out_x = g_cb_mouse.mx;
+    if (out_y) *out_y = g_cb_mouse.my;
+    if (out_down) *out_down = g_cb_mouse.down;
+}
+
+static FlCheckboxState* fl_checkbox_find(const char* name) {
+    for (int i = 0; i < g_checkbox_count; i++) {
+        if (strcmp(g_checkboxes[i].name, name) == 0) return &g_checkboxes[i];
+    }
+    return NULL;
+}
+
+static FlCheckboxState* fl_checkbox_intern(const char* name, bool seed) {
+    FlCheckboxState* cb = fl_checkbox_find(name);
+    if (cb) return cb;
+    if (g_checkbox_count >= FL_CHECKBOX_MAX) return NULL;
+    cb = &g_checkboxes[g_checkbox_count++];
+    memset(cb, 0, sizeof(*cb));
+    snprintf(cb->name, sizeof(cb->name), "%s", name);
+    cb->checked = seed;
+    return cb;
+}
+
+bool fl_checkbox_is_checked(const char *name) {
+    PROFILE_START(_pt);
+    FlCheckboxState* cb = name ? fl_checkbox_find(name) : NULL;
+    bool r = cb ? cb->checked : false;
+    PROFILE_END_VAR(_pt, "api:fl_checkbox_is_checked");
+    return r;
+}
+
+bool fl_checkbox_is_hovered(const char *name) {
+    PROFILE_START(_pt);
+    FlCheckboxState* cb = name ? fl_checkbox_find(name) : NULL;
+    bool r = cb ? cb->hovered : false;
+    PROFILE_END_VAR(_pt, "api:fl_checkbox_is_hovered");
+    return r;
+}
+
+#define FL_CHECKBOX_BASE 16
+#define FL_CHECKBOX_GLYPH "\xe2\x9c\x93"
+
+static int fl_checkbox_line_height(int fontsize) {
+    int ref_h = fl_get_text_height("");
+    int ref_fs = FontSize > 0 ? FontSize : fontsize;
+    if (ref_h <= 0 || ref_fs <= 0) return fontsize;
+    return (int)((long)ref_h * fontsize / ref_fs);
+}
+
+void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
+    PROFILE_START(_pt);
+    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "api:fl_draw_checkbox"); return; }
+
+    float thickness = (float)((h / 8) > 1 ? (h / 8) : 1);
+    unsigned long border = hovered ? FL_WHITE : FL_GRAY;
+    unsigned long fill = checked ? COLOR_SELECTED_TEXT : COLOR_BG;
+    if (hovered) {
+        fill = rgb_to_hex(Color_Lerp(rgb_to_hex(fill), rgb_to_hex(COLOR_TEXT), 0.18f));
+    }
+
+    fl_draw_rect(.x = x, .y = y, .w = w, .h = h,
+                 .color = fill, .thickness = thickness, .filled = true);
+    fl_draw_rect(.x = x, .y = y, .w = w, .h = h,
+                 .color = border, .thickness = thickness, .filled = false);
+
+    if (checked) {
+        int fontsize = w * 3 / 4;
+        if (fontsize < 1) fontsize = 1;
+        int tw = Platform_MeasureTextWidth(FL_CHECKBOX_GLYPH,
+                                           (int)strlen(FL_CHECKBOX_GLYPH), fontsize);
+        int th = fl_checkbox_line_height(fontsize);
+        int tx = x + (w - tw) / 2;
+        int ty = y + (h - th) / 2;
+        fl_draw_text(.text = FL_CHECKBOX_GLYPH,
+                     .x = tx,
+                     .y = ty - 2,
+                     .fontsize = fontsize,
+                     .color = FL_WHITE,
+                     .align = "LEFT");
+    }
+
+    PROFILE_END_VAR(_pt, "api:fl_draw_checkbox");
+}
+
+bool fl_place_checkbox_impl(const FlCheckboxSpec *spec) {
+    PROFILE_START(_pt);
+    if (!spec || !spec->name || !spec->name[0]) {
+        PROFILE_END_VAR(_pt, "api:fl_place_checkbox");
+        return false;
+    }
+
+    int x = spec->x;
+    int y = spec->y;
+    int scale = spec->scale > 0 ? spec->scale : 1;
+    int side = FL_CHECKBOX_BASE * scale;
+
+    FlCheckboxState* cb = fl_checkbox_intern(spec->name, spec->checked);
+    if (!cb) { PROFILE_END_VAR(_pt, "api:fl_place_checkbox"); return false; }
+    cb->on_click = spec->on_click;
+    cb->on_hover = spec->on_hover;
+
+    int mx = 0, my = 0;
+    bool down = false;
+    fl_checkbox_mouse(&mx, &my, &down);
+
+    bool hovered = (mx >= x && mx < x + side && my >= y && my < y + side);
+    bool hover_changed = (hovered != cb->hovered);
+    cb->hovered = hovered;
+
+    bool clicked = false;
+    if (down && !cb->was_down && hovered) {
+        cb->checked = !cb->checked;
+        clicked = true;
+    }
+    cb->was_down = down;
+
+    fl_draw_checkbox(x, y, side, side, cb->checked, cb->hovered);
+
+    if (clicked && cb->on_click) cb->on_click(cb->name, cb->checked);
+    if (hover_changed && cb->on_hover) cb->on_hover(cb->name, cb->hovered);
+
+    PROFILE_END_VAR(_pt, "api:fl_place_checkbox");
     return true;
 }
 

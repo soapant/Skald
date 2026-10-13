@@ -304,15 +304,30 @@ typedef struct {
     int x; int y; int w; int h;
 } FlImageSpec;
 
+typedef struct {
+    const char* name;       
+    int x;
+    int y;
+    int scale;
+    bool checked;           
+    void (*on_click)(const char *name, bool checked);
+    void (*on_hover)(const char *name, bool hovered);
+} FlCheckboxSpec;
+
 bool fl_draw_text_impl(const FlTextSpec *spec);
+bool fl_draw_image_impl(const FlImageSpec *spec);
 bool fl_place_editbox_impl(const FlEditSpec *spec);
 bool fl_place_listbox_impl(const FlListSpec *spec);
-bool fl_draw_image_impl(const FlImageSpec *spec);
+bool fl_place_checkbox_impl(const FlCheckboxSpec *spec);
+bool fl_checkbox_is_checked(const char *name);
+bool fl_checkbox_is_hovered(const char *name);
+void fl_checkbox_frame_begin(void);
 
 #define fl_draw_text(...) fl_draw_text_impl(&(FlTextSpec){__VA_ARGS__})
 #define fl_draw_image(...) fl_draw_image_impl(&(FlImageSpec){__VA_ARGS__})
 #define fl_place_editbox(...) fl_place_editbox_impl(&(FlEditSpec){__VA_ARGS__})
 #define fl_place_listbox(...) fl_place_listbox_impl(&(FlListSpec){__VA_ARGS__})
+#define fl_place_checkbox(...) fl_place_checkbox_impl(&(FlCheckboxSpec){__VA_ARGS__})
 
 bool fl_listbox_begin(const FlListSpec *spec);
 bool fl_listbox_next(FlListItemCtx *out);
@@ -453,6 +468,7 @@ typedef struct {
     unsigned long color;
     float thickness;
     bool transparent;
+    bool filled;
 } FlRectSpec;
 
 typedef struct {
@@ -805,5 +821,35 @@ bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFu
         var##_gen = fl_cap_generation();                              \
     }                                                                 \
     var = var##_fn
+
+#define FL_WHITE        RGB(255, 255, 255)
+#define FL_BLACK        RGB(0, 0, 0)
+#define FL_RED          RGB(255, 0, 0)
+#define FL_GREEN        RGB(0, 255, 0)
+#define FL_BLUE         RGB(0, 0, 255)
+#define FL_YELLOW       RGB(255, 255, 0)
+#define FL_CYAN         RGB(0, 255, 255)
+#define FL_MAGENTA      RGB(255, 0, 255)
+#define FL_ORANGE       RGB(255, 165, 0)
+#define FL_PURPLE       RGB(128, 0, 128)
+#define FL_PINK         RGB(255, 192, 203)
+#define FL_BROWN        RGB(139, 69, 19)
+#define FL_LIME         RGB(50, 205, 50)
+#define FL_TEAL         RGB(0, 128, 128)
+#define FL_NAVY         RGB(0, 0, 128)
+#define FL_MAROON       RGB(128, 0, 0)
+#define FL_OLIVE        RGB(128, 128, 0)
+#define FL_SILVER       RGB(192, 192, 192)
+#define FL_GOLD         RGB(255, 215, 0)
+#define FL_INDIGO       RGB(75, 0, 130)
+#define FL_VIOLET       RGB(238, 130, 238)
+#define FL_TURQUOISE    RGB(64, 224, 208)
+#define FL_SALMON       RGB(250, 128, 114)
+#define FL_CORAL        RGB(255, 127, 80)
+#define FL_CRIMSON      RGB(220, 20, 60)
+#define FL_CHOCOLATE    RGB(210, 105, 30)
+#define FL_GRAY         RGB(128, 128, 128)
+#define FL_LIGHT_GRAY   RGB(211, 211, 211)
+#define FL_DARK_GRAY    RGB(64, 64, 64)
 
 #endif
