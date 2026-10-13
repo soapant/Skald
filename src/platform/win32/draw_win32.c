@@ -422,65 +422,6 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
     if (plain_color) *plain_color = p;
 }
 
-bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
-        PROFILE_START(_pt);
-measure_track(x, y, w, h);
-RECT rect;
-  rect.left = x;
-  rect.top = y;
-  rect.right = x + w;
-  rect.bottom = y + h;
-
-  if (alpha >= 255) {
-    HBRUSH hBrush = CreateSolidBrush(color);
-    FillRect(g_draw_hdc, &rect, hBrush);
-    DeleteObject(hBrush);
-    return true;
-  }
-
-  int rw = rect.right - rect.left;
-  int rh = rect.bottom - rect.top;
-  if (rw <= 0 || rh <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return true; }
-
-  HDC screen = GetDC(NULL);
-  HDC mem = CreateCompatibleDC(screen);
-  HBITMAP bmp = CreateCompatibleBitmap(screen, rw, rh);
-  HGDIOBJ old = SelectObject(mem, bmp);
-
-  RECT all = {0, 0, rw, rh};
-  HBRUSH clear = CreateSolidBrush(0);
-  FillRect(mem, &all, clear);
-  DeleteObject(clear);
-
-  HBRUSH hBrush = CreateSolidBrush(color);
-  FillRect(mem, &all, hBrush);
-  DeleteObject(hBrush);
-
-  BYTE* px = (BYTE*)GetDIBits(mem, bmp, 0, rh, NULL, NULL, DIB_RGB_COLORS);
-  if (px) {
-    for (int i = 0; i < rw * rh; i++) {
-      px[i * 4 + 3] = alpha;
-    }
-  }
-
-  BLENDFUNCTION blend;
-  blend.BlendOp = AC_SRC_OVER;
-  blend.BlendFlags = 0;
-  blend.SourceConstantAlpha = 255;
-  blend.AlphaFormat = AC_SRC_ALPHA;
-  BOOL ok = AlphaBlend(g_draw_hdc, rect.left, rect.top, rw, rh, mem, 0, 0, rw, rh, blend);
-
-  SelectObject(mem, old);
-  DeleteObject(bmp);
-  DeleteDC(mem);
-  ReleaseDC(NULL, screen);
-  { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return ok != 0; }
-}
-
-bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color) {
-      return Platform_DrawRectRaw(x, y, w, h, color, 255);
-}
-
 static COLORREF win32_colorref(unsigned long hex) {
         PROFILE_START(_pt);
 unsigned long r = hex & 0xFF;
@@ -498,7 +439,7 @@ if (thickness <= 0.0f) { PROFILE_END_VAR(_pt, "win32_thickness_px"); return 0; }
     { PROFILE_END_VAR(_pt, "win32_thickness_px"); return px; }
 }
 
-bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color,
+bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int radius, bool rounded, bool opaque,
                              float thickness, bool filled) {
     PROFILE_START(_pt);
 
@@ -507,13 +448,24 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color,
         return false;
     }
 
+    int corner_w = 0;
+    int corner_h = 0;
+    if (rounded && radius > 0) {
+        int r = radius;
+        if (r * 2 > w) r = w / 2;
+        if (r * 2 > h) r = h / 2;
+        
+        corner_w = r * 2;
+        corner_h = r * 2;
+    }
+
     if (filled) {
         measure_track(x, y, w, h);
         HBRUSH brush = CreateSolidBrush(win32_colorref(color));
         HGDIOBJ old_brush = SelectObject(g_draw_hdc, brush);
         HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
 
-        Rectangle(g_draw_hdc, x, y, x + w, y + h);
+        RoundRect(g_draw_hdc, x, y, x + w, y + h, corner_w, corner_h);
 
         SelectObject(g_draw_hdc, old_pen);
         SelectObject(g_draw_hdc, old_brush);
@@ -526,17 +478,16 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color,
     int t = win32_thickness_px(thickness);
     if (t <= 0) {
         PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
-        return Platform_DrawRectRawOpaque(x, y, w, h, color);
+        return Platform_DrawRectRaw(x, y, w, h, color,0, false, true, 1, true);
     }
 
     measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
 
-    RECT r = { x, y, x + w, y + h };
     HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
     HGDIOBJ old_pen = SelectObject(g_draw_hdc, pen);
     HGDIOBJ old_br = SelectObject(g_draw_hdc, GetStockObject(NULL_BRUSH));
 
-    Rectangle(g_draw_hdc, r.left, r.top, r.right, r.bottom);
+    RoundRect(g_draw_hdc, x, y, x + w, y + h, corner_w, corner_h);
 
     SelectObject(g_draw_hdc, old_br);
     SelectObject(g_draw_hdc, old_pen);
@@ -894,13 +845,13 @@ PROFILE_START(timer);
                 if (cx < x0) cx = x0;
                 if (cx > x1) cx = x1;
                 int w = x1 - x0 + PromptNormalCaretWidth();
-                if (w > 0) Platform_DrawRectRawOpaque(x0, tint_y, w, FontSize, tint);
+                if (w > 0) Platform_DrawRectRaw(x0, tint_y, w, FontSize, tint,0, false, true, 1, true);
             }
         } else {
             int tint_x = PROMPT_EDIT_INSET + cursor_x - scroll;
             if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
             if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
-            Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, tint);
+            Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, tint,0, false, true, 1, true);
         }
     }
     if (text_len > 0) {
@@ -931,6 +882,6 @@ PROFILE_START(timer);
     if (oldFont) SelectObject(g_draw_hdc, oldFont);
     Platform_DestroyFont(font);
     if (!IsInsertMode()) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
-    Platform_DrawRectRawOpaque(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, Modal_CursorColor());
+    Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, Modal_CursorColor(),0, false, true, 1, true);
     PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor");
 }

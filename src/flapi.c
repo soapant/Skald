@@ -1462,7 +1462,7 @@ void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
 
     unsigned long border = hovered ? FL_WHITE : FL_GRAY;
 
-    Platform_DrawRectRaw(x, y, w, h, FL_DARK_GRAY, 0, false, true, 1, true);
+    Platform_DrawRectRaw(x, y, w, h, FL_DARK_GRAY,0, false, true, 1, true);
     Platform_DrawRectRaw(x, y, w, h, border, 0, false, true, 2, false);
 
     if (checked) {
