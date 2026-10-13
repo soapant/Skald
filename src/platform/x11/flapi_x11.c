@@ -786,9 +786,9 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     if (cursor_draw_x < x + PROMPT_CARET_LO_CLAMP) cursor_draw_x = x + PROMPT_CARET_LO_CLAMP;
     if (cursor_draw_x > x + w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = x + w - PROMPT_CARET_HI_CLAMP;
     if (IsInsertMode()) {
-        Platform_DrawRectRawOpaque(cursor_draw_x,cursor_y,PROMPT_CARET_W_INSERT,textH,rgb_to_hex(Modal_CursorColor()));
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_CARET_W_INSERT,textH,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
     } else {
-        Platform_DrawRectRawOpaque(cursor_draw_x,cursor_y,PROMPT_EDITPOPUP_CARET_W_NORMAL,textH,rgb_to_hex(Modal_CursorColor()));
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_EDITPOPUP_CARET_W_NORMAL,textH,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
     }
     if (state) {
         if (WindowTitleText && state->window_title) {
