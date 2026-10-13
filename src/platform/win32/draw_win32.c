@@ -499,6 +499,65 @@ if (thickness <= 0.0f) { PROFILE_END_VAR(_pt, "win32_thickness_px"); return 0; }
     { PROFILE_END_VAR(_pt, "win32_thickness_px"); return px; }
 }
 
+bool Platform_FillRectOpaque(int x, int y, int w, int h, unsigned long color) {
+    PROFILE_START(_pt);
+    if (w <= 0 || h <= 0) {
+        PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
+        return false;
+    }
+    x += g_draw_off_x;
+    y += g_draw_off_y;
+    measure_track(x, y, w, h);
+    HBRUSH brush = CreateSolidBrush(win32_colorref(color));
+    HGDIOBJ old_brush = SelectObject(g_draw_hdc, brush);
+    HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
+    Rectangle(g_draw_hdc, x, y, x + w, y + h);
+    SelectObject(g_draw_hdc, old_pen);
+    SelectObject(g_draw_hdc, old_brush);
+    DeleteObject(brush);
+    PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
+    return true;
+}
+
+bool Platform_DrawRectBorderOpaque(int x, int y, int w, int h, unsigned long color, float thickness) {
+    PROFILE_START(_pt);
+    if (w <= 0 || h <= 0) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
+        return false;
+    }
+    int t = win32_thickness_px(thickness);
+    if (t <= 0) t = 1;
+    if (t > w) t = w;
+    if (t > h) t = h;
+
+    x += g_draw_off_x;
+    y += g_draw_off_y;
+    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+
+    HBRUSH brush = CreateSolidBrush(win32_colorref(color));
+    HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
+    HGDIOBJ old_brush = SelectObject(g_draw_hdc, brush);
+    HGDIOBJ old_pen = SelectObject(g_draw_hdc, pen);
+
+    RECT r = { x, y, x + w, y + h };
+    MoveToEx(g_draw_hdc, r.left, r.top, 0);
+    LineTo(g_draw_hdc, r.right, r.top);
+    MoveToEx(g_draw_hdc, r.right, r.top, 0);
+    LineTo(g_draw_hdc, r.right, r.bottom);
+    MoveToEx(g_draw_hdc, r.right, r.bottom, 0);
+    LineTo(g_draw_hdc, r.left, r.bottom);
+    MoveToEx(g_draw_hdc, r.left, r.bottom, 0);
+    LineTo(g_draw_hdc, r.left, r.top);
+
+    SelectObject(g_draw_hdc, old_pen);
+    SelectObject(g_draw_hdc, old_brush);
+    DeleteObject(pen);
+    DeleteObject(brush);
+
+    PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
+    return true;
+}
+
 bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color,
                              float thickness, bool filled) {
     PROFILE_START(_pt);

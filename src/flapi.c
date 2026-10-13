@@ -50,7 +50,8 @@ const FlClipboardEntry* fl_clipboard_latest(void) {
 }
 
 void fl_clipboard_clear_history(void) {
-    clipboard_clear_history_platform();
+        PROFILE_START(_pt);
+clipboard_clear_history_platform();
 }
 
 bool fl_copy_to_clipboard(const char* text) {
@@ -212,7 +213,8 @@ void fl_cap_purge_owner(const char *path_a, const char *path_b) {
 }
 
 void fl_cap_dump(void) {
-    log_info("fl_cap table: %d entries", g_cap_count);
+        PROFILE_START(_pt);
+log_info("fl_cap table: %d entries", g_cap_count);
     for (int i = 0; i < g_cap_count; i++) {
         char ob[OWNER_PATH_MAX];
         Owner_ModuleBasename(g_caps[i].owner, ob, sizeof(ob));
@@ -478,7 +480,8 @@ static FlintMap* ensure_feature_map(void) {
 }
 
 void fl_register_feature(const char* name, void (*cb)(void)) {
-    fl_register_feature_with_icon(name, cb, NULL);
+        PROFILE_START(_pt);
+fl_register_feature_with_icon(name, cb, NULL);
 }
 void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path) {
     if (!name || !cb) return;
@@ -694,11 +697,13 @@ StringList fl_string_split(const char* str, const char* delimiter) {
 }
 
 void fl_string_list_free(StringList* list) {
-    StringList_Free(list);
+        PROFILE_START(_pt);
+StringList_Free(list);
 }
 
 void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items, int count) {
-    PopulateListBox(lb, filter, items, count, NULL);
+        PROFILE_START(_pt);
+PopulateListBox(lb, filter, items, count, NULL);
 }
 
 bool fl_is_selected(ListBoxInfo* lb) {
@@ -765,7 +770,8 @@ static FlHoverPopupCtx *fl_hover_popup_ctx_new(const FlMessageSpec *spec) {
 }
 
 static void fl_hover_popup_ctx_free(void *ud) {
-    FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
+        PROFILE_START(_pt);
+FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
     if (p) free(p);
 }
 
@@ -856,7 +862,8 @@ bool fl_paste(char* content) {
 }
 
 static void fl_edit_blocking_confirm(const char* text, void* user_data) {
-    char** out = (char**)user_data;
+        PROFILE_START(_pt);
+char** out = (char**)user_data;
     if (out && text) *out = strdup(text);
 }
 
@@ -1078,7 +1085,8 @@ static int FlUtf8LeadLen(unsigned char c) {
 }
 
 static void FlWrapRecord(FlCharPos* out, int maxout, int* count, int x, int y) {
-    int i = *count;
+        PROFILE_START(_pt);
+int i = *count;
     (*count)++;
     if (out && i < maxout) {
         out[i].x = x;
@@ -1190,12 +1198,14 @@ static int FlWrapMeasureThunk(void* ctx, const char* s, int n) {
 }
 
 static void FlWrapDrawThunk(void* ctx, int x, int y, const char* s, int n) {
-    FlWrapCtx* c = (FlWrapCtx*)ctx;
+        PROFILE_START(_pt);
+FlWrapCtx* c = (FlWrapCtx*)ctx;
     Platform_DrawTextLine(x, y, s, n, c->color, c->fontsize);
 }
 
 static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
-    (void)ctx;
+        PROFILE_START(_pt);
+(void)ctx;
     (void)x;
     (void)y;
     (void)s;
@@ -1384,11 +1394,13 @@ static struct {
 } g_cb_mouse;
 
 void fl_checkbox_frame_begin(void) {
-    g_cb_mouse.valid = false;
+        PROFILE_START(_pt);
+g_cb_mouse.valid = false;
 }
 
 static void fl_checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
-    if (!g_cb_mouse.valid) {
+        PROFILE_START(_pt);
+if (!g_cb_mouse.valid) {
         bool have = Platform_GetMousePos(&g_cb_mouse.mx, &g_cb_mouse.my);
         if (have) {
             int wx = 0, wy = 0, dx = 0, dy = 0;
@@ -1414,21 +1426,23 @@ static void fl_checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
 }
 
 static FlCheckboxState* fl_checkbox_find(const char* name) {
-    for (int i = 0; i < g_checkbox_count; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < g_checkbox_count; i++) {
         if (strcmp(g_checkboxes[i].name, name) == 0) return &g_checkboxes[i];
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "fl_checkbox_find"); return NULL; }
 }
 
 static FlCheckboxState* fl_checkbox_intern(const char* name, bool seed) {
-    FlCheckboxState* cb = fl_checkbox_find(name);
-    if (cb) return cb;
-    if (g_checkbox_count >= FL_CHECKBOX_MAX) return NULL;
+        PROFILE_START(_pt);
+FlCheckboxState* cb = fl_checkbox_find(name);
+    if (cb) { PROFILE_END_VAR(_pt, "fl_checkbox_intern"); return cb; }
+    if (g_checkbox_count >= FL_CHECKBOX_MAX) { PROFILE_END_VAR(_pt, "fl_checkbox_intern"); return NULL; }
     cb = &g_checkboxes[g_checkbox_count++];
     memset(cb, 0, sizeof(*cb));
     snprintf(cb->name, sizeof(cb->name), "%s", name);
     cb->checked = seed;
-    return cb;
+    { PROFILE_END_VAR(_pt, "fl_checkbox_intern"); return cb; }
 }
 
 bool fl_checkbox_is_checked(const char *name) {
@@ -1451,10 +1465,11 @@ bool fl_checkbox_is_hovered(const char *name) {
 #define FL_CHECKBOX_GLYPH "\xe2\x9c\x93"
 
 static int fl_checkbox_line_height(int fontsize) {
-    int ref_h = fl_get_text_height("");
+        PROFILE_START(_pt);
+int ref_h = fl_get_text_height("");
     int ref_fs = FontSize > 0 ? FontSize : fontsize;
-    if (ref_h <= 0 || ref_fs <= 0) return fontsize;
-    return (int)((long)ref_h * fontsize / ref_fs);
+    if (ref_h <= 0 || ref_fs <= 0) { PROFILE_END_VAR(_pt, "fl_checkbox_line_height"); return fontsize; }
+    { PROFILE_END_VAR(_pt, "fl_checkbox_line_height"); return (int)((long)ref_h * fontsize / ref_fs); }
 }
 
 void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
@@ -1465,13 +1480,11 @@ void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
     unsigned long border = hovered ? FL_WHITE : FL_GRAY;
     unsigned long fill = checked ? COLOR_SELECTED_TEXT : COLOR_BG;
     if (hovered) {
-        fill = rgb_to_hex(Color_Lerp(rgb_to_hex(fill), rgb_to_hex(COLOR_TEXT), 0.18f));
+        fill = rgb_to_hex(Color_Lerp(rgb_to_hex(fill), rgb_to_hex(COLOR_TEXT), 0.10f));
     }
 
-    fl_draw_rect(.x = x, .y = y, .w = w, .h = h,
-                 .color = fill, .thickness = thickness, .filled = true);
-    fl_draw_rect(.x = x, .y = y, .w = w, .h = h,
-                 .color = border, .thickness = thickness, .filled = false);
+    Platform_FillRectOpaque(x, y, w, h, rgb_to_hex(fill));
+    Platform_DrawRectBorderOpaque(x, y, w, h, rgb_to_hex(border), thickness);
 
     if (checked) {
         int fontsize = w * 3 / 4;
@@ -1706,7 +1719,8 @@ bool fl_type_text(const char *s) {
 }
 
 void fl_sleep(double seconds) {
-  fl_sleep_platform(seconds);
+    PROFILE_START(_pt);
+fl_sleep_platform(seconds);
 }
 
 FlThread fl_thread_create(FlThreadFunc fn, void* arg) {
@@ -1779,7 +1793,8 @@ bool fl_super_pressed(void){
   { PROFILE_END_VAR(_pt, "fl_super_pressed"); return Platform_IsSuperPressed(); }
 }
 void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
-  Platform_SetKeyCallback(cb,ud);
+    PROFILE_START(_pt);
+Platform_SetKeyCallback(cb,ud);
 }
 int fl_get_key_pressed(void){
     PROFILE_START(_pt);
@@ -1830,7 +1845,8 @@ unsigned long fl_mouse_queue_dropped(void) {
 }
 
 void fl_clear_mouse_queue(void) {
-  Platform_GlobalMouse_Clear();
+    PROFILE_START(_pt);
+Platform_GlobalMouse_Clear();
 }
 
 FlPos fl_get_cursor_pos() {
@@ -1856,7 +1872,8 @@ unsigned long fl_key_queue_dropped(void) {
 }
 
 void fl_clear_key_queue(void) {
-  Platform_GlobalKey_Clear();
+    PROFILE_START(_pt);
+Platform_GlobalKey_Clear();
 }
 
 int fl_char_for_key(int vk, int scancode, int mods) {
@@ -2115,7 +2132,8 @@ FlTimer fl_profile_start() {
 }
 
 void fl_profile_end(FlTimer timer) {
-    printf("[profile] %f s\n", fl_end_timer_platform(timer) / 1000);
+        PROFILE_START(_pt);
+printf("[profile] %f s\n", fl_end_timer_platform(timer) / 1000);
 }
 
 
@@ -2129,7 +2147,8 @@ static bool g_mon_valid = false;
 static int g_mon_x, g_mon_y, g_mon_w, g_mon_h;
 
 static void fl_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
-    if (!g_mon_valid || fl_end_timer_platform(g_mon_at) > 2000) {
+        PROFILE_START(_pt);
+if (!g_mon_valid || fl_end_timer_platform(g_mon_at) > 2000) {
         Platform_WM_GetMonitorGeometry(&g_mon_x, &g_mon_y, &g_mon_w, &g_mon_h);
         g_mon_at = fl_start_timer_platform();
         g_mon_valid = true;
@@ -2250,7 +2269,8 @@ PROFILE_END_VAR(_pt, "flapi:widget[null]"); { PROFILE_END_VAR(_pt, "f"); return 
 }
 
 static void fl_widget_owner_path(void *addr, char *out, size_t n) {
-    Platform_GetModuleOwnerPath(addr, out, n);
+        PROFILE_START(_pt);
+Platform_GetModuleOwnerPath(addr, out, n);
 }
 
 static const char* fl_widget_owner_basename(const char* p, char* out, size_t n) {
@@ -2566,7 +2586,8 @@ PROFILE_END_VAR(_pt, "api:fl_widget_set_render"); { PROFILE_END_VAR(_pt, "f"); r
 }
 
 void fl_format_bytes(unsigned long long bytes, char* buf, size_t buflen) {
-    const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
+        PROFILE_START(_pt);
+const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
     const int   count   = sizeof(units) / sizeof(units[0]);
 
     double value = (double)bytes;

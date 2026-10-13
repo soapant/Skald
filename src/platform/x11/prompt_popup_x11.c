@@ -279,7 +279,7 @@ PROFILE_START(timer);
         return true;
       }
     }
-    if (wParam == COPY_SELECTION_KEY) {
+    if (wParam == COPY_SELECTION_KEY && !IsInsertMode()) {
       if (shift_pressed || ctrl_pressed) {
         int type = shift_pressed ? 0 : 1;
         int idx = -1;
