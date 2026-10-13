@@ -626,17 +626,10 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
             x11_fill_rounded_rect(g_draw_dpy, g_draw_xd, g_draw_vis, g_draw_cmap, 
                                   color, target_alpha, x, y, w, h, r, w, h);
         } else {
-            Drawable d = XftDrawDrawable(g_draw_xd);
-            GC gc = raw_gc_for(g_draw_dpy, d);
-            if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return false; }
-            
             XftColor col;
             x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, target_alpha, &col);
-            XSetForeground(g_draw_dpy, gc, col.pixel);
+            XftDrawRect(g_draw_xd, &col, x, y, w, h);
             XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
-            XSetLineAttributes(g_draw_dpy, gc, 1, LineSolid, CapButt, JoinMiter);
-            
-            XFillRectangle(g_draw_dpy, d, gc, x, y, (unsigned)w, (unsigned)h);
         }
         PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
         return true;
@@ -679,10 +672,15 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
             XDrawRectangle(g_draw_dpy, d, gc, x, y, w, h);
         }
     } else {
-        XFillRectangle(g_draw_dpy, d, gc, x,         y,         w, t);
-        XFillRectangle(g_draw_dpy, d, gc, x,         y + h - t, w, t);
-        XFillRectangle(g_draw_dpy, d, gc, x,         y,         t, h);
-        XFillRectangle(g_draw_dpy, d, gc, x + w - t, y,         t, h);
+        XftColor border_col;
+        x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, target_alpha, &border_col);
+        
+        XftDrawRect(g_draw_xd, &border_col, x,         y,         w, t); 
+        XftDrawRect(g_draw_xd, &border_col, x,         y + h - t, w, t); 
+        XftDrawRect(g_draw_xd, &border_col, x,         y,         t, h); 
+        XftDrawRect(g_draw_xd, &border_col, x + w - t, y,         t, h); 
+        
+        XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &border_col);
     }
 
     PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
