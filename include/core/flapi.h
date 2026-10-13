@@ -668,6 +668,24 @@ unsigned long fl_key_queue_dropped(void);
 void fl_clear_key_queue(void);
 int fl_char_for_key(int vk, int scancode, int mods);
 
+typedef struct {
+    const char *display_name;
+    const char *internal_name;
+    void (*on_enter)(const char *payload);
+    void (*on_ctrl_enter)(const char *payload);
+    void (*on_tab)(const char *payload);
+    void (*on_action)(void);
+    const char *icon;
+    const char *type;
+    const char *payload;
+} FlCcEntrySpec;
+
+bool fl_add_to_cc_impl(const FlCcEntrySpec *spec);
+#define fl_add_to_cc(...) fl_add_to_cc_impl(&(FlCcEntrySpec){__VA_ARGS__})
+
+int fl_cc_entry_count(void);
+const FlCcEntrySpec *fl_cc_entry_at(int index);
+
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
 

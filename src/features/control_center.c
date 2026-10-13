@@ -105,6 +105,16 @@ static void cc_build(void) {
         CcEntry *e = cc_entry_add(g_actions[i].label, g_actions[i].type, "");
         if (e) e->on_action = g_actions[i].fn;
     }
+    for (int i = 0; i < fl_cc_entry_count(); i++) {
+        const FlCcEntrySpec *s = fl_cc_entry_at(i);
+        if (!s || !s->display_name || !s->display_name[0]) continue;
+        CcEntry *e = cc_entry_add_icon(s->display_name, s->type ? s->type : "", s->payload ? s->payload : "", s->icon ? s->icon : "");
+        if (!e) continue;
+        if (s->on_enter) e->on_enter = s->on_enter;
+        if (s->on_ctrl_enter) e->on_ctrl_enter = s->on_ctrl_enter;
+        if (s->on_tab) e->on_tab = s->on_tab;
+        if (s->on_action) e->on_action = s->on_action;
+    }
 }
 
 static const CcEntry *cc_find(const char *label) {
