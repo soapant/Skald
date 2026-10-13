@@ -6,6 +6,7 @@
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include <X11/Xft/Xft.h>
+#include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include "platform/x11/drawing_x11.h"
@@ -625,6 +626,95 @@ if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "raw_prepare"); return NULL; }
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid, CapButt, JoinMiter);
     { PROFILE_END_VAR(_pt, "raw_prepare"); return gc; }
+}
+
+static Picture raw_pict_for(Display* dpy, Visual* vis, Drawable d) {
+    static Picture pict = 0;
+    static Drawable owner = 0;
+    if (pict != 0 && owner == d) return pict;
+    if (pict != 0) { XRenderFreePicture(dpy, pict); pict = 0; }
+    XRenderPictFormat* fmt = XRenderFindVisualFormat(dpy, vis);
+    if (!fmt) return 0;
+    pict = XRenderCreatePicture(dpy, d, fmt, 0, 0);
+    if (pict == 0) return 0;
+    owner = d;
+    return pict;
+}
+
+bool Platform_FillRectOpaque(int x, int y, int w, int h, unsigned long color) {
+    PROFILE_START(_pt);
+    if (!raw_can_draw() || w <= 0 || h <= 0) {
+        PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
+        return false;
+    }
+    Display* dpy = g_draw_dpy;
+    if (!dpy) {
+        PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
+        return false;
+    }
+    x += g_draw_off_x;
+    y += g_draw_off_y;
+    measure_track(x, y, w, h);
+
+    Drawable d = XftDrawDrawable(g_draw_xd);
+    Picture pict = raw_pict_for(dpy, g_draw_vis, d);
+    if (!pict) {
+        PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
+        return false;
+    }
+
+    XRenderColor rc;
+    rc.red = (unsigned short)(((color >> 16) & 0xFF) * 0x101);
+    rc.green = (unsigned short)(((color >> 8) & 0xFF) * 0x101);
+    rc.blue = (unsigned short)((color & 0xFF) * 0x101);
+    rc.alpha = 0xFFFF;
+
+    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, x, y, (unsigned)w, (unsigned)h);
+    PROFILE_END_VAR(_pt, "Platform_FillRectOpaque");
+    return true;
+}
+
+bool Platform_DrawRectBorderOpaque(int x, int y, int w, int h, unsigned long color, float thickness) {
+    PROFILE_START(_pt);
+    if (!raw_can_draw() || w <= 0 || h <= 0) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
+        return false;
+    }
+    Display* dpy = g_draw_dpy;
+    if (!dpy) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
+        return false;
+    }
+    int t = raw_thickness_px(thickness);
+    if (t <= 0) t = 1;
+    if (t > w) t = w;
+    if (t > h) t = h;
+
+    x += g_draw_off_x;
+    y += g_draw_off_y;
+    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+
+    Drawable d = XftDrawDrawable(g_draw_xd);
+    Picture pict = raw_pict_for(dpy, g_draw_vis, d);
+    if (!pict) {
+        PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
+        return false;
+    }
+
+    XRenderColor rc;
+    rc.red = (unsigned short)(((color >> 16) & 0xFF) * 0x101);
+    rc.green = (unsigned short)(((color >> 8) & 0xFF) * 0x101);
+    rc.blue = (unsigned short)((color & 0xFF) * 0x101);
+    rc.alpha = 0xFFFF;
+
+    unsigned long uw = (unsigned long)w, uh = (unsigned long)h, ut = (unsigned long)t;
+    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, x, y, uw, ut);
+    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, x, (int)(y + h - t), uw, ut);
+    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, x, y, ut, uh);
+    XRenderFillRectangle(dpy, PictOpSrc, pict, &rc, (int)(x + w - t), y, ut, uh);
+
+    PROFILE_END_VAR(_pt, "Platform_DrawRectBorderOpaque");
+    return true;
 }
 
 bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color,
