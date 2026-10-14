@@ -609,6 +609,15 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
     int t = raw_thickness_px(thickness);
     if (t <= 0) t = 1;
 
+    bool want_round = rounded && radius > 0;
+    int r = 0;
+    if (want_round) {
+        r = radius;
+        if (r * 2 > w) r = w / 2;
+        if (r * 2 > h) r = h / 2;
+        if (r < 0) r = 0;
+    }
+
     if (filled) {
         measure_track(x, y, w, h);
     } else {
@@ -618,12 +627,8 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
     unsigned short target_alpha = opaque ? 0xFFFFu : OpacityAlpha16();
 
     if (filled) {
-        if (rounded && radius > 0) {
-            int r = radius;
-            if (r * 2 > w) r = w / 2;
-            if (r * 2 > h) r = h / 2;
-
-            x11_fill_rounded_rect(g_draw_dpy, g_draw_xd, g_draw_vis, g_draw_cmap, 
+        if (want_round && r > 0) {
+            x11_fill_rounded_rect(g_draw_dpy, g_draw_xd, g_draw_vis, g_draw_cmap,
                                   color, target_alpha, x, y, w, h, r, w, h);
         } else {
             XftColor col;
@@ -647,11 +652,7 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     XSetLineAttributes(g_draw_dpy, gc, t, LineSolid, CapButt, JoinMiter);
 
-    if (rounded && radius > 0) {
-        int r = radius;
-        if (r * 2 > w) r = w / 2;
-        if (r * 2 > h) r = h / 2;
-
+    if (want_round) {
         if (r > 0) {
             XArc arcs[4] = {
                 { (short)x,           (short)y,           (unsigned short)(r*2), (unsigned short)(r*2),  90*64,  90*64 },
