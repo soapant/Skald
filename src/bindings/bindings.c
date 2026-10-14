@@ -186,12 +186,14 @@ if (!sequence_in_scope(b, MODE_VISUAL)) continue;
                     return true;
                 }
                 if (SequenceStartsWith(b->sequence)) {
-                    for (int j = 0; j < g_binding_count; j++) {
-                        const MotionBinding* mb = &g_bindings[j];
-                        if (!binding_in_scope(mb, MODE_NORMAL)) continue;
-                        if (mb->vk_code == pressed_vk && mb->modifiers == modifiers) {
-                            out->handler = mb->handler;
-                            break;
+                    if (SequenceLength() == 1) {
+                        for (int j = 0; j < g_binding_count; j++) {
+                            const MotionBinding* mb = &g_bindings[j];
+                            if (!binding_in_scope(mb, MODE_NORMAL)) continue;
+                            if (mb->vk_code == pressed_vk && mb->modifiers == modifiers) {
+                                out->handler = mb->handler;
+                                break;
+                            }
                         }
                     }
                     return true;
