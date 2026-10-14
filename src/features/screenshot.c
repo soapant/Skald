@@ -15,11 +15,6 @@ static const char* shot_working_dir(void) {
     return (wd && wd[0]) ? wd : ".";
 }
 
-// scrot encodes through Imlib2, which dlopens its format codecs from a
-// loaders directory. The bundled libImlib2.so.1 carries a hardcoded store
-// path from the machine it was copied from, which no longer exists, so Imlib2
-// finds no loaders and PNG saves fail with "giblib error". Point it at a real
-// one. ldconfig is no help: NixOS has no ld cache.
 static void shot_imlib_env(char* buf, size_t n) {
     buf[0] = '\0';
     const char* existing = getenv("IMLIB2_LOADER_PATH");
@@ -550,4 +545,6 @@ static void pk_ocr_area_to_clipboard(void) {
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+Shift+X", pk_screenshot_copy_area);
     fl_register_hotkey("Alt+Shift+C", pk_ocr_area_to_clipboard);
+    fl_add_to_cc(.display_name="Screenshot Region",.on_enter=pk_screenshot_copy_area,.type="Screenshot",.icon="📷");
+    fl_add_to_cc(.display_name="OCR Region ",.on_enter=pk_ocr_area_to_clipboard,.type="Screenshot",.icon="📷");
 }

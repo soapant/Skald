@@ -20,6 +20,7 @@
 #include "core/cap_registry.h"
 #include "core/hotkey_manager.h"
 #include "core/snippet_manager.h"
+#include "core/cc_registry.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -561,6 +562,7 @@ void FeatureLoader_Shutdown(void) {
             hotkey_purge_owner(NULL, g_features[i].path);
             snippet_purge_owner(NULL, g_features[i].path);
             fl_widget_purge_owner(NULL, g_features[i].path, fl_widget_bump_generation());
+            fl_cc_registry_purge_owner(NULL, g_features[i].path);
             Platform_UnloadLibrary(g_features[i].handle);
             if (g_features[i].uniq[0]) remove(g_features[i].uniq);
         }
@@ -647,6 +649,7 @@ void FeatureLoader_Reload(const char* name) {
             hotkey_purge_owner(retire_owner, path_copy);
             snippet_purge_owner(retire_owner, path_copy);
             fl_widget_purge_owner(retire_owner, path_copy, retire_gen);
+            fl_cc_registry_purge_owner(retire_owner, path_copy);
             sweep_retired_libs();
             log_info("reloaded %s", name);
             FL_UNLOCK();
@@ -688,6 +691,7 @@ void FeatureLoader_Unload(const char* name) {
             hotkey_purge_owner(loaded, owner_path);
             snippet_purge_owner(loaded, owner_path);
             fl_widget_purge_owner(loaded, owner_path, purge_gen);
+            fl_cc_registry_purge_owner(loaded, owner_path);
             sweep_retired_libs();
             for (int k=i;k+1<g_feature_count;k++) g_features[k]=g_features[k+1];
             g_feature_count--;
@@ -731,6 +735,7 @@ void FeatureLoader_ReloadAll(void) {
     FeatureLoader_Init();
     FL_LOCK();
     for (int i = 0; i < g_retired_count; i++) {
+        if (g_retired[i].owner[0]) { fl_cap_purge_owner(g_retired[i].owner, NULL); hotkey_purge_owner(g_retired[i].owner, NULL); snippet_purge_owner(g_retired[i].owner, NULL); fl_widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen); fl_cc_registry_purge_owner(g_retired[i].owner, NULL); }
     }
     sweep_retired_libs();
     FL_UNLOCK();

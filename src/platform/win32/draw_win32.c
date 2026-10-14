@@ -515,6 +515,25 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
     return true;
 }
 
+int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
+        PROFILE_START(_pt);
+if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return fontsize > 0 ? fontsize : 0; }
+    if (!g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return fontsize; }
+    int wlen = 0;
+    wchar_t *wide = win32_widen(text, (int)strlen(text), &wlen);
+    if (!wide || wlen <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return fontsize; }
+    FontHandle font = Platform_CreateFont(FontSize, UsedFont);
+    HFONT old = font.hfont ? (HFONT)SelectObject(g_draw_hdc, font.hfont) : NULL;
+    GLYPHMETRICS gm;
+    memset(&gm, 0, sizeof(gm));
+    GetGlyphOutlineW(g_draw_hdc, (UINT)(wide[0] & 0xFFFF), GGO_METRICS, &gm, 0, NULL, NULL);
+    if (old) SelectObject(g_draw_hdc, old);
+    Platform_DestroyFont(font);
+    free(wide);
+    int ink = (int)(gm.gmBlackBoxY);
+    { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink > 0 ? ink : fontsize; }
+}
+
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
         PROFILE_START(_pt);
 int t = win32_thickness_px(thickness);

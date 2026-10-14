@@ -501,6 +501,7 @@ bool fl_draw_circle_impl(const FlCircleSpec *spec);
 int fl_rand_num_between(int min, int max);
 int fl_get_text_width(const char *text,int fontsize);
 int fl_get_text_height(const char *text);
+int fl_get_glyph_ink_height(const char *text, int fontsize);
 
 typedef struct {
     char name[64];
@@ -666,13 +667,12 @@ int fl_char_for_key(int vk, int scancode, int mods);
 typedef struct {
     const char *display_name;
     const char *internal_name;
-    void (*on_enter)(const char *payload);
-    void (*on_ctrl_enter)(const char *payload);
-    void (*on_tab)(const char *payload);
+    void (*on_enter)(void);
+    void (*on_ctrl_enter)(void);
+    void (*on_tab)(void);
     void (*on_action)(void);
     const char *icon;
     const char *type;
-    const char *payload;
 } FlCcEntrySpec;
 
 bool fl_add_to_cc_impl(const FlCcEntrySpec *spec);

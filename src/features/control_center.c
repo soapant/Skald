@@ -13,9 +13,9 @@ typedef struct {
     char type[64];
     char payload[MAX_PATH];
     char icon[MAX_PATH];
-    void (*on_enter)(const char *payload);
-    void (*on_ctrl_enter)(const char *payload);
-    void (*on_tab)(const char *payload);
+    void (*on_enter)(void);
+    void (*on_ctrl_enter)(void);
+    void (*on_tab)(void);
     void (*on_action)(void);
 } CcEntry;
 
@@ -121,7 +121,7 @@ static void cc_build(void) {
     for (int i = 0; i < fl_cc_entry_count(); i++) {
         const FlCcEntrySpec *s = fl_cc_entry_at(i);
         if (!s || !s->display_name || !s->display_name[0]) continue;
-        CcEntry *e = cc_entry_add_icon(s->display_name, s->type ? s->type : "", s->payload ? s->payload : "", s->icon ? s->icon : "");
+        CcEntry *e = cc_entry_add_icon(s->display_name, s->type ? s->type : "", "", s->icon ? s->icon : "");
         if (!e) continue;
         if (s->on_enter) e->on_enter = s->on_enter;
         if (s->on_ctrl_enter) e->on_ctrl_enter = s->on_ctrl_enter;
@@ -141,40 +141,42 @@ static const CcEntry *cc_find(const char *label) {
     return NULL;
 }
 
+static const char *g_cc_staged_label = NULL;
 static void (*g_pending_action)(void);
-static void (*g_pending_fn)(const char *payload);
-static char g_pending_payload[MAX_PATH];
+static void (*g_pending_fn)(void);
+static char g_pending_label[256];
 
 static void cc_stage(const CcEntry *e, bool ctrl) {
     g_pending_action = NULL;
     g_pending_fn = NULL;
-    g_pending_payload[0] = '\0';
+    g_pending_label[0] = '\0';
     if (!e) return;
     if (ctrl) {
         if (e->on_ctrl_enter) {
             g_pending_fn = e->on_ctrl_enter;
-            snprintf(g_pending_payload, sizeof(g_pending_payload), "%s", e->payload);
+            snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
         }
         return;
     }
     if (e->on_action) {
         g_pending_action = e->on_action;
+        snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
     } else if (e->on_enter) {
         g_pending_fn = e->on_enter;
-        snprintf(g_pending_payload, sizeof(g_pending_payload), "%s", e->payload);
+        snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
     }
 }
 
 static void cc_run_pending(void) {
     void (*act)(void) = g_pending_action;
-    void (*pfn)(const char *) = g_pending_fn;
-    char payload[MAX_PATH];
-    snprintf(payload, sizeof(payload), "%s", g_pending_payload);
+    void (*pfn)(void) = g_pending_fn;
+    snprintf(g_pending_label, sizeof(g_pending_label), "%s", g_pending_label);
     g_pending_action = NULL;
     g_pending_fn = NULL;
-    g_pending_payload[0] = '\0';
+    g_cc_staged_label = g_pending_label;
     if (act) act();
-    else if (pfn) pfn(payload);
+    else if (pfn) pfn();
+    g_cc_staged_label = NULL;
 }
 
 static const char *ListOfShitToIgnore[] = {
@@ -485,20 +487,65 @@ static void cc_rescan_app_cache(const char *full_path, int added) {
     else cc_app_cache_drop(full_path);
 }
 
-static void cc_launch_app(const char *path) {
-    if (path && path[0]) fl_launch_with_args(path, NULL);
+/* Name -> path lookup for application entries. Lets every callback keep the
+ * uniform void(void) signature; the staged entry name resolves the path here. */
+#define CC_APP_MAP_SLOTS 2048
+static char g_cc_app_map_key[CC_APP_MAP_SLOTS][128];
+static char g_cc_app_map_path[CC_APP_MAP_SLOTS][MAX_PATH];
+
+static unsigned cc_map_hash(const char *s) {
+    unsigned h = 2166136261u;
+    while (s && *s) { h ^= (unsigned char)*s++; h *= 16777619u; }
+    return h;
 }
 
-static void cc_launch_app_as_admin(const char *path) {
-    if (path && path[0]) fl_launch_with_args_as_admin(path, NULL);
+static void cc_app_map_clear(void) {
+    memset(g_cc_app_map_key, 0, sizeof(g_cc_app_map_key));
+    memset(g_cc_app_map_path, 0, sizeof(g_cc_app_map_path));
+}
+
+static void cc_app_map_put(const char *name, const char *path) {
+    if (!name || !name[0] || !path || !path[0]) return;
+    unsigned i = cc_map_hash(name) % CC_APP_MAP_SLOTS;
+    for (unsigned n = 0; n < CC_APP_MAP_SLOTS; n++) {
+        unsigned slot = (i + n) % CC_APP_MAP_SLOTS;
+        if (g_cc_app_map_key[slot][0] == '\0' || strcmp(g_cc_app_map_key[slot], name) == 0) {
+            snprintf(g_cc_app_map_key[slot], sizeof(g_cc_app_map_key[slot]), "%s", name);
+            snprintf(g_cc_app_map_path[slot], sizeof(g_cc_app_map_path[slot]), "%s", path);
+            return;
+        }
+    }
+}
+
+static const char *cc_app_map_get(const char *name) {
+    if (!name || !name[0]) return NULL;
+    unsigned i = cc_map_hash(name) % CC_APP_MAP_SLOTS;
+    for (unsigned n = 0; n < CC_APP_MAP_SLOTS; n++) {
+        unsigned slot = (i + n) % CC_APP_MAP_SLOTS;
+        if (g_cc_app_map_key[slot][0] == '\0') return NULL;
+        if (strcmp(g_cc_app_map_key[slot], name) == 0) return g_cc_app_map_path[slot];
+    }
+    return NULL;
+}
+
+static void cc_launch_app(void) {
+    const char *path = g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
+    if (path && path[0]) fl_launch_with_args((char *)path, NULL);
+}
+
+static void cc_launch_app_as_admin(void) {
+    const char *path = g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
+    if (path && path[0]) fl_launch_with_args_as_admin((char *)path, NULL);
 }
 
 static void cc_fill_applications(void) {
     cc_ensure_app_cache();
+    cc_app_map_clear();
     for (size_t i = 0; i < g_apps.count; i++) {
         CcEntry *e = cc_entry_add_icon(g_apps.files[i].name, "Application",
                                        g_apps.files[i].path, cc_app_icon(i));
         if (!e) break;
+        cc_app_map_put(g_apps.files[i].name, g_apps.files[i].path);
         e->on_enter = cc_launch_app;
         e->on_ctrl_enter = cc_launch_app_as_admin;
     }
@@ -570,7 +617,11 @@ static void cc_render(PromptState *state) {
             int icon_x = ctx.x + CC_ITEM_TEXT_X;
             int icon_y = ctx.y + (ctx.h - icon_size) / 2;
             if (cc_icon_is_glyph(e->icon)) {
-                fl_draw_text(.x = icon_x, .y = ctx.y + CC_ITEM_TEXT_Y,
+                int gh = fl_get_glyph_ink_height(e->icon, icon_size);
+                if (gh <= 0) gh = icon_size;
+                int gw = fl_get_text_width(e->icon, icon_size);
+                fl_draw_text(.x = icon_x + (icon_size - gw) / 2,
+                             .y = ctx.y + (ctx.h - gh) / 2,
                              .text = e->icon, .align = "LEFT", .pad = 0,
                              .fontsize = icon_size);
             } else {
@@ -611,7 +662,7 @@ static void cc_on_close(void) {
 
 static void cc_tab(ListBoxInfo *lb) {
     const CcEntry *e = cc_find(ListBoxInfo_GetSelectedText(lb));
-    if (e && e->on_tab) e->on_tab(e->payload);
+    if (e && e->on_tab) e->on_tab();
 }
 
 static void TriggerControl(void) {

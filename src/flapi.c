@@ -18,6 +18,7 @@
 #include "core/clipboard_history.h"
 #include "core/flapi.h"
 #include "core/feature_loader.h"
+#include "core/cc_registry.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
 #include "platform/flapi_platform.h"
@@ -1299,6 +1300,12 @@ int fl_get_text_height(const char *text) {
 }
 int fl_get_text_width(const char *text,int fontsize) {
     return Platform_MeasureTextWidth(text,strlen(text), fontsize);
+}
+int fl_get_glyph_ink_height(const char *text, int fontsize) {
+  PROFILE_START(_pt);
+  int r = Platform_GetGlyphInkHeight(text, fontsize);
+  PROFILE_END_VAR(_pt, "api:fl_get_glyph_ink_height");
+  return r;
 }
 
 bool fl_draw_line_impl(const FlLineSpec *spec) {
@@ -2627,21 +2634,47 @@ int fl_get_screen_height() {
     { PROFILE_END_VAR(_pt, "fl_get_screen_height"); return h; }
 }
 
+#define FL_CC_MAX 128
+#define FL_CC_STR_MAX 512
+
+typedef struct {
+    FlCcEntrySpec pub;
+    char display_name[FL_CC_STR_MAX];
+    char internal_name[FL_CC_STR_MAX];
+    char icon[FL_CC_STR_MAX];
+    char type[128];
+    char owner[OWNER_PATH_MAX];
+} FlCcEntry;
+
 static int g_cc_entry_count = 0;
-static FlCcEntrySpec g_cc_specs[128];
+static FlCcEntry g_cc_entries[FL_CC_MAX];
+
+static const char *fl_cc_dup(char *dst, size_t cap, const char *src) {
+    snprintf(dst, cap, "%s", src ? src : "");
+    return dst;
+}
 
 bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
-    if (!spec || g_cc_entry_count >= 128) return false;
-    FlCcEntrySpec s = *spec;
-    if (!s.internal_name) s.internal_name = s.display_name ? s.display_name : "";
-    if (!s.on_enter) s.on_enter = NULL;          
-    if (!s.on_ctrl_enter) s.on_ctrl_enter = NULL;
-    if (!s.on_tab) s.on_tab = NULL;
-    if (!s.on_action) s.on_action = NULL;       
-    if (!s.icon) s.icon = "";
-    if (!s.type) s.type = "";
-    if (!s.payload) s.payload = "";
-    g_cc_specs[g_cc_entry_count] = s;
+    if (!spec || g_cc_entry_count >= FL_CC_MAX) return false;
+    FlCcEntry *e = &g_cc_entries[g_cc_entry_count];
+    memset(e, 0, sizeof(*e));
+    e->pub.on_enter = spec->on_enter;
+    e->pub.on_ctrl_enter = spec->on_ctrl_enter;
+    e->pub.on_tab = spec->on_tab;
+    e->pub.on_action = spec->on_action;
+    e->pub.display_name = fl_cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
+    e->pub.icon = fl_cc_dup(e->icon, sizeof(e->icon), spec->icon);
+    e->pub.type = fl_cc_dup(e->type, sizeof(e->type), spec->type);
+    if (spec->internal_name) {
+        e->pub.internal_name = fl_cc_dup(e->internal_name, sizeof(e->internal_name), spec->internal_name);
+    } else {
+        e->pub.internal_name = fl_cc_dup(e->internal_name, sizeof(e->internal_name), spec->display_name);
+    }
+    void *anchor = (void*)(uintptr_t)spec->on_enter;
+    if (!anchor) anchor = (void*)(uintptr_t)spec->on_ctrl_enter;
+    if (!anchor) anchor = (void*)(uintptr_t)spec->on_tab;
+    if (!anchor) anchor = (void*)(uintptr_t)spec->on_action;
+    Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
     g_cc_entry_count++;
     return true;
 }
@@ -2652,6 +2685,29 @@ int fl_cc_entry_count(void) {
 
 const FlCcEntrySpec *fl_cc_entry_at(int index) {
     if (index < 0 || index >= g_cc_entry_count) return NULL;
-    return &g_cc_specs[index];
+    return &g_cc_entries[index].pub;
+}
+
+int fl_cc_registry_count(void) {
+    return g_cc_entry_count;
+}
+
+const FlCcEntrySpec *fl_cc_registry_at(int index) {
+    return fl_cc_entry_at(index);
+}
+
+void fl_cc_registry_purge_owner(const char *path_a, const char *path_b) {
+    if (!path_a && !path_b) return;
+    int out = 0;
+    for (int i = 0; i < g_cc_entry_count; i++) {
+        if (Owner_ModuleMatches(g_cc_entries[i].owner, path_a, path_b)) continue;
+        if (out != i) g_cc_entries[out] = g_cc_entries[i];
+        out++;
+    }
+    g_cc_entry_count = out;
+}
+
+void fl_cc_registry_reset(void) {
+    g_cc_entry_count = 0;
 }
 
