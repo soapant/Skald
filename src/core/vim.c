@@ -166,6 +166,10 @@ int SequenceTypedCount(void) {
     return seq_state.typed_count;
 }
 
+int SequenceLength(void) {
+    return seq_state.len;
+}
+
 bool SequenceMatches(const char* pattern) {
     int seq_len = seq_state.len;
     int pat_len = strlen(pattern);

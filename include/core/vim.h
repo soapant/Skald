@@ -27,6 +27,7 @@ ListBoxInfo* Vim_GetListBox(FlintContext* ctx);
 void SequenceAddKey(char key, bool was_typed);
 void SequenceReset(void);
 int SequenceTypedCount(void);
+int SequenceLength(void);
 bool SequenceMatches(const char* pattern);
 bool SequenceStartsWith(const char* pattern);
 void SequenceStartTimer(void);
