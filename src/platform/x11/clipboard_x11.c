@@ -517,8 +517,7 @@ if (g_clip_rd_dpy) { PROFILE_END_VAR(_pt, "x11_clipboard_read_display"); return 
 }
 
 static char *ClipReadTarget(Atom target) {
-        PROFILE_START(_pt);
-Display *dpy = x11_clipboard_read_display();
+    Display *dpy = x11_clipboard_read_display();
     if (!dpy || g_clip_rd_win == None) { cl_trace("READ", "no read display/win"); return NULL; }
     Window win = g_clip_rd_win;
     Atom prop = g_clip_rd_prop;
@@ -552,7 +551,6 @@ Display *dpy = x11_clipboard_read_display();
         return ClipReadIncr(dpy, win, prop, &w);
     }
     char *res = ClipReadProperty(dpy, win, prop, NULL);
-    { PROFILE_END_VAR(_pt, "ClipReadTarget"); return res; }
 }
 
 unsigned long x11_clipboard_owner(void) {
@@ -564,8 +562,7 @@ x11_clipboard_ensure_started();
 }
 
 char *x11_clipboard_get_text(void) {
-        PROFILE_START(_pt);
-g_cl_reads++;
+    g_cl_reads++;
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) { cl_trace("GETTEXT", "no display, read#%ld", g_cl_reads); return NULL; }
@@ -577,7 +574,6 @@ g_cl_reads++;
         out = ClipReadTarget(XA_STRING);
     }
     if (!out) g_cl_read_fail++;
-    { PROFILE_END_VAR(_pt, "x11_clipboard_get_text"); return out; }
 }
 
 #if !defined(FLINT_WAYLAND_SESSION)
