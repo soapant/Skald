@@ -8,8 +8,8 @@ const char* ListOfFilePaths[] = {
     #if defined(_WIN32)
       "C:\\Projects",
     #else 
-      "/home/dog/Programming/Projects",
-      "/home/dog/miscellaneous",
+      "~/Programming/Projects",
+      "~/miscellaneous",
     #endif
 };
 

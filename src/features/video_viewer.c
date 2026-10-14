@@ -75,8 +75,16 @@ static bool video_set_long(const char* window_title, const char* atom_name, long
 }
 #endif
 
-const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
-const char* VideosPath = "{VIDEOS}";
+#if defined(_WIN32)
+const char* VideoViewerPath = "C:/Projects/Video Viewer/video_viewer.exe";
+#else
+const char* VideoViewerPath = "~/Programming/Projects/Video Viewer/video_viewer";
+#endif
+#if defined(_WIN32)
+const char* VideosPath = "C:/Videos";
+#else
+const char* VideosPath = "~/Videos";
+#endif
 
 char *allowed_video_formats[] = {"webm","mp4"};
 

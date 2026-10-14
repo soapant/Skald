@@ -187,9 +187,9 @@ static const char *ListOfShitToIgnore[] = {
 
 static const char *ListOfProgramPaths[] = {
 #if defined(_WIN32)
-    "{APPDATA}/Microsoft/Windows/Start Menu",
-    "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
-    "{MISC}",
+    "C:Users/HP/AppData/Roaming/Microsoft/Windows/Start Menu",
+    "C:ProgramData/Microsoft/Windows/Start Menu/Programs",
+    "C:miscellaneous",
     "shell:AppsFolder",
 #else
     "/usr/share/applications",
