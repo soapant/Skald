@@ -2198,18 +2198,6 @@ if (!name || !name[0] || !out_path || out_len == 0) { PROFILE_END_VAR(_pt, "Plat
     { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return ok; }
 }
 
-#define HTTP_CONNECT_TIMEOUT_S 10
-#define HTTP_TIMEOUT_S 30
-#define HTTP_MAX_REDIRECTS 10
-#define HTTP_DEFAULT_LIMIT ((size_t)64 * 1024 * 1024)
-
-typedef struct {
-    char *buf;
-    size_t len;
-    size_t cap;
-    size_t limit;
-    int overflow;
-} HttpBuf;
 
 static size_t http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
     HttpBuf *b = (HttpBuf *)userdata;
