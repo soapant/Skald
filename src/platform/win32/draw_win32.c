@@ -389,6 +389,8 @@ if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); retu
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
         PROFILE_START(_pt);
 if (!text || len <= 0 || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
+    x += g_draw_off_x;
+    y += g_draw_off_y;
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     int wlen = 0;
@@ -430,6 +432,21 @@ unsigned long r = hex & 0xFF;
     { PROFILE_END_VAR(_pt, "win32_colorref"); return (COLORREF)((b << 16) | (g << 8) | r); }
 }
 
+static COLORREF win32_resolve_color(unsigned long hex, bool opaque) {
+        PROFILE_START(_pt);
+COLORREF c = win32_colorref(hex);
+    if (opaque) { PROFILE_END_VAR(_pt, "win32_resolve_color"); return c; }
+    float t = WindowOpacity / 255.0f;
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+    COLORREF bg = win32_colorref(COLOR_BG);
+    int br = (bg >> 16) & 0xFF, bg_g = (bg >> 8) & 0xFF, bb = bg & 0xFF;
+    int r = (int)((c & 0xFF) * t + br * (1.0f - t));
+    int g = (int)(((c >> 8) & 0xFF) * t + bg_g * (1.0f - t));
+    int b = (int)(((c >> 16) & 0xFF) * t + bb * (1.0f - t));
+    { PROFILE_END_VAR(_pt, "win32_resolve_color"); return (COLORREF)((b << 16) | (g << 8) | r); }
+}
+
 static int win32_thickness_px(float thickness) {
         PROFILE_START(_pt);
 if (thickness <= 0.0f) { PROFILE_END_VAR(_pt, "win32_thickness_px"); return 0; }
@@ -443,10 +460,13 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
                              float thickness, bool filled) {
     PROFILE_START(_pt);
 
-    if (w <= 0 || h <= 0) {
+    if (!g_draw_hdc || w <= 0 || h <= 0) {
         PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
         return false;
     }
+
+    x += g_draw_off_x;
+    y += g_draw_off_y;
 
     int corner_w = 0;
     int corner_h = 0;
@@ -459,9 +479,11 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
         corner_h = r * 2;
     }
 
-    if (filled) {
-        measure_track(x, y, w, h);
-        HBRUSH brush = CreateSolidBrush(win32_colorref(color));
+    if (filled || thickness <= 0.0f) {
+        int fill_t = filled ? 0 : 1;
+        if (filled) measure_track(x, y, w, h);
+        else measure_track(x - fill_t, y - fill_t, w + 2 * fill_t, h + 2 * fill_t);
+        HBRUSH brush = CreateSolidBrush(win32_resolve_color(color, opaque));
         HGDIOBJ old_brush = SelectObject(g_draw_hdc, brush);
         HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
 
@@ -476,14 +498,10 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
     }
 
     int t = win32_thickness_px(thickness);
-    if (t <= 0) {
-        PROFILE_END_VAR(_pt, "Platform_DrawRectRaw");
-        return Platform_DrawRectRaw(x, y, w, h, color,0, false, true, 1, true);
-    }
 
     measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
 
-    HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
+    HPEN pen = CreatePen(PS_SOLID, t, win32_resolve_color(color, opaque));
     HGDIOBJ old_pen = SelectObject(g_draw_hdc, pen);
     HGDIOBJ old_br = SelectObject(g_draw_hdc, GetStockObject(NULL_BRUSH));
 
@@ -501,6 +519,8 @@ bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, f
         PROFILE_START(_pt);
 int t = win32_thickness_px(thickness);
     if (t < 1) t = 1;
+    x1 += g_draw_off_x; y1 += g_draw_off_y;
+    x2 += g_draw_off_x; y2 += g_draw_off_y;
     int bx = x1 < x2 ? x1 : x2;
     int by = y1 < y2 ? y1 : y2;
     int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
@@ -519,6 +539,8 @@ bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, flo
         PROFILE_START(_pt);
 if (radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
     int t = win32_thickness_px(thickness);
+    cx += g_draw_off_x;
+    cy += g_draw_off_y;
     measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
     int left = cx - radius, top = cy - radius;
     int right = cx + radius, bottom = cy + radius;
