@@ -133,7 +133,7 @@ void start_auto_click(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Mouse4", start_auto_click,"Zen");
+    fl_register_hotkey("Ctrl+Alt+B", start_auto_click,"Zen");
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("Alt+Shift+F", next_image);
     fl_register_hotkey("E", next_image,WHITELIST,"feh");

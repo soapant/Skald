@@ -36,6 +36,6 @@ void TriggerSettings(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+D", TriggerSettings);
+    fl_register_hotkey("Alt+D", TriggerSettings,"Fortnite");
     fl_register_feature("Settings", TriggerSettings);
 }

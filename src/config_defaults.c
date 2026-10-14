@@ -39,17 +39,6 @@ const char* IconPath = "{MISC}/switch_window.ico";
 const char* ControlHotkey = "Alt+Space";
 const char* Theme = "rose-pine";
 
-static const PathVar default_path_vars[] = {
-    {"DEV",          "D:\\Projects",                    "/home/dog/Programming/Projects"},
-    {"MISC",         "D:\\retard games\\miscellaneous", "/home/dog/miscellaneous"},
-    {"MUSIC",        "D:\\Music",                       "/home/dog/Music"},
-    {"VIDEOS",       "D:\\videos",                      "/home/dog/Videos"},
-    {"PROGRAMDATA",  "C:\\ProgramData",                 ""},
-    {"SystemRoot",   "C:\\Windows",                     ""},
-};
-const PathVar* G_PATH_VARS = default_path_vars;
-unsigned int PATH_VAR_COUNT = ARRAY_LEN(default_path_vars);
-
 bool FullTextNeedsKeyPress = true;
 bool MessagesEnabled = true;
 bool EnableAutoPairing = false;

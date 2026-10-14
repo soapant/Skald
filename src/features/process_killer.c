@@ -36,10 +36,6 @@ static const char* pk_sort_label(int mode) {
 
 static bool pk_isspace(char c) { return c == ' ' || c == '\t'; }
 
-static void pk_rtrim(char* s) {
-    size_t n = strlen(s);
-    while (n > 0 && pk_isspace(s[n - 1])) s[--n] = '\0';
-}
 
 
 static int pk_cmp_mem(const void* a, const void* b) {
@@ -63,6 +59,11 @@ static int pk_cmp_alpha(const void* a, const void* b) {
 
 
 #if !defined(_WIN32)
+
+static void pk_rtrim(char* s) {
+    size_t n = strlen(s);
+    while (n > 0 && pk_isspace(s[n - 1])) s[--n] = '\0';
+}
 
 static void pk_parse_line(char* line) {
     pk_rtrim(line);

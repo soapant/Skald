@@ -531,7 +531,7 @@ if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyp
     Platform_DestroyFont(font);
     free(wide);
     int ink = (int)(gm.gmBlackBoxY);
-    { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink > 0 ? ink : fontsize; }
+    { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink; }
 }
 
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
