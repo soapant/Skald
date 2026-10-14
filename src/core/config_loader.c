@@ -59,9 +59,7 @@ static char* heap_dup(const char* s) {
     if (d) memcpy(d, s, n);
     return d;
 }
-static PathVar* g_heap_path_vars = NULL;
 static AliasEntry* g_heap_aliases = NULL;
-static unsigned int g_heap_path_count = 0;
 static size_t g_heap_alias_count = 0;
 static char *g_heap_used_font = NULL, *g_heap_used_terminal = NULL, *g_heap_used_shell = NULL;
 static char *g_heap_used_browser = NULL;
@@ -71,18 +69,12 @@ static void heapify_config(void) {
     char *n_font = heap_dup(UsedFont), *n_term = heap_dup(UsedTerminal), *n_shell = heap_dup(UsedShell);
     char *n_search = heap_dup(UsedSearchEngine), *n_feat = heap_dup(FeaturePath),*n_browser = heap_dup(UsedBrowser),*n_icon = heap_dup(IconPath);
     char *n_hotk = heap_dup(ControlHotkey), *n_pos = heap_dup(EditPopUpPos), *n_theme = heap_dup(Theme);
-    PathVar *n_path = NULL; unsigned n_path_cnt = 0;
     AliasEntry *n_alias = NULL; size_t n_alias_cnt = 0;
-    if (G_PATH_VARS && PATH_VAR_COUNT) {
-        n_path = (PathVar*)calloc(PATH_VAR_COUNT, sizeof(PathVar));
-        if (n_path) { n_path_cnt = PATH_VAR_COUNT; for (unsigned i=0;i<n_path_cnt;i++){ n_path[i].name=heap_dup(G_PATH_VARS[i].name); n_path[i].win32_value=heap_dup(G_PATH_VARS[i].win32_value); n_path[i].linux_value=heap_dup(G_PATH_VARS[i].linux_value); } }
-    }
     if (Aliases && ALIAS_ENTRY_COUNT) {
         n_alias = (AliasEntry*)calloc(ALIAS_ENTRY_COUNT, sizeof(AliasEntry));
         if (n_alias) { n_alias_cnt = ALIAS_ENTRY_COUNT; for (size_t i=0;i<n_alias_cnt;i++){ n_alias[i].alias=heap_dup(Aliases[i].alias); n_alias[i].text=heap_dup(Aliases[i].text); n_alias[i].feature=heap_dup(Aliases[i].feature); } }
     }
     char *old_font=g_heap_used_font, *old_term=g_heap_used_terminal, *old_shell=g_heap_used_shell, *old_browser=g_heap_used_browser, *old_search=g_heap_used_search, *old_feat=g_heap_feature_path, *old_icon=g_heap_icon_path, *old_hotk=g_heap_control_hotkey, *old_pos=g_heap_edit_popup_pos, *old_theme=g_heap_theme;
-    PathVar *old_path=g_heap_path_vars; unsigned old_path_cnt=g_heap_path_count;
     AliasEntry *old_alias=g_heap_aliases; size_t old_alias_cnt=g_heap_alias_count;
     if (n_font) { UsedFont=n_font; g_heap_used_font=n_font; } else g_heap_used_font=old_font, old_font=NULL;
     if (n_term) { UsedTerminal=n_term; g_heap_used_terminal=n_term; } else g_heap_used_terminal=old_term, old_term=NULL;
@@ -94,10 +86,9 @@ static void heapify_config(void) {
     if (n_hotk) { ControlHotkey=n_hotk; g_heap_control_hotkey=n_hotk; } else g_heap_control_hotkey=old_hotk, old_hotk=NULL;
     if (n_pos) { EditPopUpPos=n_pos; g_heap_edit_popup_pos=n_pos; } else g_heap_edit_popup_pos=old_pos, old_pos=NULL;
     if (n_theme) { Theme=n_theme; g_heap_theme=n_theme; } else g_heap_theme=old_theme, old_theme=NULL;
-    if (n_path) { G_PATH_VARS=n_path; g_heap_path_vars=n_path; g_heap_path_count=n_path_cnt; } else { g_heap_path_vars=old_path; g_heap_path_count=old_path_cnt; old_path=NULL; }
     if (n_alias) { Aliases=n_alias; g_heap_aliases=n_alias; g_heap_alias_count=n_alias_cnt; } else { g_heap_aliases=old_alias; g_heap_alias_count=old_alias_cnt; old_alias=NULL; }
     (void)old_font; (void)old_term; (void)old_shell; (void)old_browser; (void)old_search; (void)old_feat; (void)old_icon; (void)old_hotk; (void)old_pos; (void)old_theme;
-    (void)old_path; (void)old_alias;
+    (void)old_alias;
 }
 static bool config_load_copy(const char* uniq, LibHandle* out) {
     LibHandle h = Platform_LoadLibrary(uniq);
@@ -280,16 +271,6 @@ static void cfg_put_str_var(char* buf, size_t cap, size_t* off, const char* name
 
 static size_t config_emit_region(char* buf, size_t cap) {
     size_t off = 0;
-    cfg_put(buf, cap, &off, "static const PathVar user_path_vars[] = {\n");
-    for (unsigned int i = 0; i < PATH_VAR_COUNT && G_PATH_VARS; i++) {
-        cfg_put(buf, cap, &off, "    {");
-        cfg_put_escaped(buf, cap, &off, G_PATH_VARS[i].name);
-        cfg_put(buf, cap, &off, ", ");
-        cfg_put_escaped(buf, cap, &off, G_PATH_VARS[i].win32_value);
-        cfg_put(buf, cap, &off, ", ");
-        cfg_put_escaped(buf, cap, &off, G_PATH_VARS[i].linux_value);
-        cfg_put(buf, cap, &off, "},\n");
-    }
     cfg_put(buf, cap, &off, "};\n\n");
     cfg_put(buf, cap, &off, "static const AliasEntry user_aliases[] = {\n");
     for (size_t i = 0; i < ALIAS_ENTRY_COUNT && Aliases; i++) {
@@ -368,8 +349,6 @@ static size_t config_emit_region(char* buf, size_t cap) {
     for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
         cfg_put(buf, cap, &off, "    %s = RGB(%u, %u, %u);\n", names[i], cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);
     }
-    cfg_put(buf, cap, &off, "    G_PATH_VARS = user_path_vars;\n");
-    cfg_put(buf, cap, &off, "    PATH_VAR_COUNT = %u;\n", PATH_VAR_COUNT);
     cfg_put(buf, cap, &off, "    Aliases = user_aliases;\n");
     cfg_put(buf, cap, &off, "    ALIAS_ENTRY_COUNT = %u;\n", (unsigned)ALIAS_ENTRY_COUNT);
     cfg_put(buf, cap, &off, "}\n");
