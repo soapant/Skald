@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <winhttp.h>
 #include <psapi.h>
 #include <dwmapi.h>
 #include "deps/log.h"
@@ -22,6 +23,7 @@
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <ctype.h>
+#pragma comment(lib, "winhttp.lib")
 #define NOB_IMPLEMENTATION
 #define NOB_NO_ECHO
 #include "../../../nob.h"
@@ -227,7 +229,7 @@ if (command == NULL || strlen(command) == 0) { PROFILE_END_VAR(_pt, "Platform_Ru
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
         PROFILE_START(_pt);
 if (!path || !path[0]) { log_error("path is NULL args='%s'", args ? args : "null"); return false; }
-    //temporarily not being used and just doiung explorere on widnwos no diea if this is the right way to do it but it works for now
+    //temporary not being used and just doiung explorere on widnwos no diea if this is the right way to do it but it works for now
     HINSTANCE res = ShellExecuteA(NULL, "open", "explorer.exe", path ? path : "", NULL, SW_SHOWNORMAL);
     if ((intptr_t)res <= 32) { log_error("ShellExecute failed for filemanager path='%s' err=%ld", path, (long)(intptr_t)res); return false; }
     (void)args;
@@ -1848,37 +1850,194 @@ g_win32_waiting_for_key = true;
 log_info("Platform_WaitForKeypressAsync callback=%p", callback);;
 }
 
-static void Platform_http_buf_init(FlHttpBuf *buf, size_t limit) {
+
+static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
     memset(buf, 0, sizeof(*buf));
     buf->limit = limit;
     if (limit) {
         buf->buf = (char *)malloc(limit + 1);
-        if (buf->buf) { buf->buf[0] = '\0'; buf->cap = limit + 1; }
+        if (buf->buf) { 
+            buf->buf[0] = '\0'; 
+            buf->cap = limit + 1; 
+        }
     }
+}
+
+int Platform_http_perform(const char *url, const char *method, const char *headers, const char *body, HttpBuf *resp_buf, FILE *file_out, long max_redirects) {
+    if (!url || !url[0]) return 0;
+
+    HINTERNET hSession = NULL, hConnect = NULL, hRequest = NULL;
+    int status_code = 0;
+    int redirects_followed = 0;
+    char current_url[L_MAX_URL_LENGTH];
+    strncpy_s(current_url, sizeof(current_url), url, _TRUNCATE);
+
+    hSession = WinHttpOpen(L"PlatformHTTP/1.0", 
+                           WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, 
+                           WINHTTP_NO_PROXY_BYPASS, 
+                           WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) return 0;
+
+redirect_loop:
+    {
+        URL_COMPONENTS urlComp;
+        ZeroMemory(&urlComp, sizeof(urlComp));
+        urlComp.dwStructSize = sizeof(urlComp);
+
+        wchar_t szHostName[256];
+        wchar_t szUrlPath[2048];
+
+        urlComp.lpszHostName = szHostName;
+        urlComp.dwHostNameLength = ARRAYSIZE(szHostName);
+        urlComp.lpszUrlPath = szUrlPath;
+        urlComp.dwUrlPathLength = ARRAYSIZE(szUrlPath);
+
+        wchar_t wUrl[L_MAX_URL_LENGTH];
+        MultiByteToWideChar(CP_UTF8, 0, current_url, -1, wUrl, ARRAYSIZE(wUrl));
+
+        if (!WinHttpCrackUrl(wUrl, (DWORD)wcslen(wUrl), 0, &urlComp)) {
+            WinHttpCloseHandle(hSession);
+            return 0;
+        }
+
+        if (hConnect) WinHttpCloseHandle(hConnect);
+        hConnect = WinHttpConnect(hSession, urlComp.lpszHostName, urlComp.nPort, 0);
+        if (!hConnect) {
+            WinHttpCloseHandle(hSession);
+            return 0;
+        }
+
+        DWORD dwFlags = (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
+        
+        wchar_t wMethod[32];
+        MultiByteToWideChar(CP_UTF8, 0, method ? method : "GET", -1, wMethod, ARRAYSIZE(wMethod));
+
+        if (hRequest) WinHttpCloseHandle(hRequest);
+        hRequest = WinHttpOpenRequest(hConnect, wMethod, urlComp.lpszUrlPath,
+                                      NULL, WINHTTP_NO_REFERER, 
+                                      WINHTTP_DEFAULT_ACCEPT_TYPES, 
+                                      dwFlags);
+        if (!hRequest) {
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+            return 0;
+        }
+
+        wchar_t *wHeaders = NULL;
+        DWORD wHeadersLen = 0;
+        if (headers && headers[0]) {
+            int len = MultiByteToWideChar(CP_UTF8, 0, headers, -1, NULL, 0);
+            wHeaders = (wchar_t *)malloc(len * sizeof(wchar_t));
+            if (wHeaders) {
+                MultiByteToWideChar(CP_UTF8, 0, headers, -1, wHeaders, len);
+                wHeadersLen = (DWORD)(len - 1);
+            }
+        }
+
+        DWORD bodyLen = body ? (DWORD)strlen(body) : 0;
+        BOOL bResults = WinHttpSendRequest(hRequest, 
+                                           wHeaders, wHeadersLen, 
+                                           (LPVOID)(bodyLen > 0 ? body : WINHTTP_NO_REQUEST_DATA), 
+                                           bodyLen, bodyLen, 0);
+        if (wHeaders) free(wHeaders);
+
+        if (!bResults || !WinHttpReceiveResponse(hRequest, NULL)) {
+            WinHttpCloseHandle(hRequest);
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+            return 0;
+        }
+
+        DWORD dwStatusCode = 0;
+        DWORD dwSize = sizeof(dwStatusCode);
+        WinHttpQueryHeaders(hRequest, 
+                            WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, 
+                            WINHTTP_HEADER_NAME_BY_INDEX, 
+                            &dwStatusCode, &dwSize, WINHTTP_NO_HEADER_INDEX);
+        status_code = (int)dwStatusCode;
+
+        if ((status_code == 301 || status_code == 302 || status_code == 303 || status_code == 307 || status_code == 308) &&
+            redirects_followed < max_redirects) {
+            
+            wchar_t szLocation[L_MAX_URL_LENGTH];
+            DWORD dwLocSize = sizeof(szLocation);
+            if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_LOCATION, WINHTTP_HEADER_NAME_BY_INDEX, szLocation, &dwLocSize, WINHTTP_NO_HEADER_INDEX)) {
+                WideCharToMultiByte(CP_UTF8, 0, szLocation, -1, current_url, sizeof(current_url), NULL, NULL);
+                redirects_followed++;
+                if (status_code == 303 || ((status_code == 301 || status_code == 302) && strcmp(method, "POST") == 0)) {
+                    method = "GET";
+                    body = NULL;
+                }
+                goto redirect_loop;
+            }
+        }
+
+        while (TRUE) {
+            DWORD dwSizeAvailable = 0;
+            if (!WinHttpQueryDataAvailable(hRequest, &dwSizeAvailable) || dwSizeAvailable == 0) {
+                break;
+            }
+
+            LPSTR pszOutBuffer = (LPSTR)malloc(dwSizeAvailable + 1);
+            if (!pszOutBuffer) break;
+
+            ZeroMemory(pszOutBuffer, dwSizeAvailable + 1);
+            DWORD dwRead = 0;
+            if (WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSizeAvailable, &dwRead) && dwRead > 0) {
+                if (file_out) {
+                    fwrite(pszOutBuffer, 1, dwRead, file_out);
+                } else if (resp_buf) {
+                    size_t space_left = resp_buf->limit > resp_buf->len ? resp_buf->limit - resp_buf->len : 0;
+                    if (dwRead > space_left) {
+                        resp_buf->overflow = true;
+                        dwRead = (DWORD)space_left;
+                    }
+                    if (dwRead > 0) {
+                        memcpy(resp_buf->buf + resp_buf->len, pszOutBuffer, dwRead);
+                        resp_buf->len += dwRead;
+                        resp_buf->buf[resp_buf->len] = '\0';
+                    }
+                }
+            }
+            free(pszOutBuffer);
+            if (resp_buf && resp_buf->overflow) break;
+        }
+    }
+
+    if (hRequest) WinHttpCloseHandle(hRequest);
+    if (hConnect) WinHttpCloseHandle(hConnect);
+    if (hSession) WinHttpCloseHandle(hSession);
+
+    return status_code;
 }
 
 char *Platform_HttpGetLimited(const char *url, size_t max_bytes, size_t *out_len) {
     if (!url || !url[0]) { if (out_len) *out_len = 0; return NULL; }
-    FlHttpBuf buf;
-    Platform_http_buf_init(&buf, max_bytes ? max_bytes : FL_HTTP_DEFAULT_LIMIT);
-    int ok = fl_http_perform(url, "GET", NULL, NULL, &buf, NULL, FL_HTTP_MAX_REDIRECTS);
+    HttpBuf buf;
+    Platform_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
+    int ok = Platform_http_perform(url, "GET", NULL, NULL, &buf, NULL, HTTP_MAX_REDIRECTS);
     if (out_len) *out_len = buf.len;
-    if (!ok) { log_warn("http GET failed: %s", url); free(buf.buf); return NULL; }
+    if (ok < 200 || ok >= 300) { 
+        free(buf.buf); 
+        return NULL; 
+    }
     if (!buf.buf) buf.buf = (char *)calloc(1, 1);
-    if (buf.overflow) log_warn("http response exceeded %zu byte limit", max_bytes);
     return buf.buf;
 }
 
 char *Platform_HttpGet(const char *url) {
-    return Platform_HttpGetLimited(url, FL_HTTP_DEFAULT_LIMIT, NULL);
+    return Platform_HttpGetLimited(url, HTTP_DEFAULT_LIMIT, NULL);
 }
 
 char *Platform_HttpPost(const char *url, const char *content_type, const char *body) {
     if (!url || !url[0]) return NULL;
-    FlHttpBuf buf;
-    fl_http_buf_init(&buf, FL_HTTP_DEFAULT_LIMIT);
-    int ok = fl_http_perform(url, "POST", content_type, body ? body : "", &buf, NULL, FL_HTTP_MAX_REDIRECTS);
-    if (!ok) { log_warn("http POST failed: %s", url); free(buf.buf); return NULL; }
+    HttpBuf buf;
+    Platform_http_buf_init(&buf, HTTP_DEFAULT_LIMIT);
+    int ok = Platform_http_perform(url, "POST", content_type, body ? body : "", &buf, NULL, HTTP_MAX_REDIRECTS);
+    if (ok < 200 || ok >= 300) { 
+        free(buf.buf); 
+        return NULL; 
+    }
     if (!buf.buf) buf.buf = (char *)calloc(1, 1);
     return buf.buf;
 }
@@ -1889,22 +2048,38 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
     snprintf(tmp, sizeof(tmp), "%s.part", save_path);
     FILE *f = fopen(tmp, "wb");
     if (!f) return false;
-    FlHttpBuf unused;
+    
+    HttpBuf unused;
     memset(&unused, 0, sizeof(unused));
-    int ok = fl_http_perform(url, "GET", NULL, NULL, &unused, f, FL_HTTP_MAX_REDIRECTS);
+    int ok = Platform_http_perform(url, "GET", NULL, NULL, &unused, f, HTTP_MAX_REDIRECTS);
     fclose(f);
-    if (!ok) { log_warn("http download failed: %s", url); remove(tmp); return false; }
+    
+    if (ok < 200 || ok >= 300) { 
+        remove(tmp); 
+        return false; 
+    }
     remove(save_path);
-    if (rename(tmp, save_path) != 0) { log_warn("http download rename failed for %s", save_path); remove(tmp); return false; }
+    if (rename(tmp, save_path) != 0) { 
+        remove(tmp); 
+        return false; 
+    }
     return true;
 }
 
-typedef struct { char *url; PlatformHttpCallback cb; void *userdata; } FlHttpAsyncJob;
+typedef void (*PlatformHttpCallback)(const char *body, bool success, void *userdata);
 
-static DWORD WINAPI fl_http_async_worker(LPVOID arg) {
-    FlHttpAsyncJob *job = (FlHttpAsyncJob *)arg;
+typedef struct { 
+    char *url; 
+    PlatformHttpCallback cb; 
+    void *userdata; 
+} HttpAsyncJob;
+
+static DWORD WINAPI http_async_worker(LPVOID arg) {
+    HttpAsyncJob *job = (HttpAsyncJob *)arg;
     char *body = Platform_HttpGet(job->url);
-    job->cb(body ? body : "", body != NULL, job->userdata);
+    if (job->cb) {
+        job->cb(body ? body : "", body != NULL, job->userdata);
+    }
     free(body);
     free(job->url);
     free(job);
@@ -1913,14 +2088,18 @@ static DWORD WINAPI fl_http_async_worker(LPVOID arg) {
 
 void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userdata) {
     if (!url || !url[0] || !cb) return;
-    FlHttpAsyncJob *job = (FlHttpAsyncJob *)calloc(1, sizeof(*job));
+    HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
     if (!job) return;
     job->url = _strdup(url);
     job->cb = cb;
     job->userdata = userdata;
     if (!job->url) { free(job); return; }
-    HANDLE t = CreateThread(NULL, 0, fl_http_async_worker, job, 0, NULL);
-    if (!t) { log_warn("http async thread create failed"); free(job->url); free(job); return; }
+    
+    HANDLE t = CreateThread(NULL, 0, http_async_worker, job, 0, NULL);
+    if (!t) { 
+        free(job->url); 
+        free(job); 
+        return; 
+    }
     CloseHandle(t);
 }
-
