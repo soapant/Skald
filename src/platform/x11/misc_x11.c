@@ -177,63 +177,6 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir");
     { PROFILE_END_VAR(_pt, "Platform_GetRuntimeDir"); return buf[0]?buf:"/run/user/1000"; }
 }
 
-static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    for (unsigned int i = 0; i < PATH_VAR_COUNT; i++) {
-        if (strcmp(G_PATH_VARS[i].name, token) == 0) {
-            const char* value = G_PATH_VARS[i].linux_value;
-            if (value == NULL || value[0] == '\0') { PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken"); return false; }
-            snprintf(out, out_size, "%s", value);
-            PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken");
-            return true;
-        }
-    }
-
-    const char* home = getenv("HOME");
-
-    if (strcmp(token, "HOME") == 0) {
-        if (!home) { PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken"); return false; }
-        snprintf(out, out_size, "%s", home);
-        PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken");
-        return true;
-    }
-    if (strcmp(token, "APPDATA") == 0) {
-        const char* xdg = getenv("XDG_CONFIG_HOME");
-        if (xdg && xdg[0] != '\0') {
-            snprintf(out, out_size, "%s", xdg);
-            PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken");
-            return true;
-        }
-        if (!home) { PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken"); return false; }
-        snprintf(out, out_size, "%s/.config", home);
-        PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken");
-        return true;
-    }
-    if (strcmp(token, "PROGRAM_FILES") == 0) {
-        snprintf(out, out_size, "/usr");
-        PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken");
-        return true;
-    }
-
-    static const struct { const char* name; const char* subdir; } subdirs[] = {
-        {"PICTURES", "Pictures"},
-        {"DESKTOP", "Desktop"},
-        {"DOCUMENTS", "Documents"},
-        {"DOWNLOADS", "Downloads"},
-    };
-    for (size_t i = 0; i < ARRAY_LEN(subdirs); i++) {
-        if (strcmp(token, subdirs[i].name) == 0) {
-            if (!home) { PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken"); return false; }
-            snprintf(out, out_size, "%s/%s", home, subdirs[i].subdir);
-            PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken");
-            return true;
-        }
-    }
-    PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken");
-    { PROFILE_END_VAR(_pt, "ResolvePathToken"); return false; }
-}
-
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
         PROFILE_START(_pt);
 PROFILE_START(timer);

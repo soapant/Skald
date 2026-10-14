@@ -15,38 +15,6 @@
 #include <time.h>
 
 #include "core/timer.h"
-static bool FolderToPath(int csidl, const char* subdir, char* out, size_t out_size) {
-        PROFILE_START(_pt);
-char folder[MAX_PATH];
-    if (SHGetFolderPathA(NULL, csidl, NULL, SHGFP_TYPE_CURRENT, folder) != S_OK) { PROFILE_END_VAR(_pt, "FolderToPath"); return false; }
-    if (subdir != NULL) {
-        snprintf(out, out_size, "%s\\%s", folder, subdir);
-    } else {
-        snprintf(out, out_size, "%s", folder);
-    }
-    { PROFILE_END_VAR(_pt, "FolderToPath"); return true; }
-}
-
-static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
-        PROFILE_START(_pt);
-for (unsigned int i = 0; i < PATH_VAR_COUNT; i++) {
-        if (strcmp(G_PATH_VARS[i].name, token) == 0) {
-            const char* value = G_PATH_VARS[i].win32_value;
-            if (value == NULL || value[0] == '\0') return false;
-            snprintf(out, out_size, "%s", value);
-            return true;
-        }
-    }
-
-    if (strcmp(token, "HOME") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_PROFILE, NULL, out, out_size); }
-    if (strcmp(token, "APPDATA") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_APPDATA, NULL, out, out_size); }
-    if (strcmp(token, "PICTURES") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_MYPICTURES, NULL, out, out_size); }
-    if (strcmp(token, "DESKTOP") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_DESKTOPDIRECTORY, NULL, out, out_size); }
-    if (strcmp(token, "DOCUMENTS") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_MYDOCUMENTS, NULL, out, out_size); }
-    if (strcmp(token, "DOWNLOADS") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_PROFILE, "Downloads", out, out_size); }
-    if (strcmp(token, "PROGRAM_FILES") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_PROGRAM_FILES, NULL, out, out_size); }
-    { PROFILE_END_VAR(_pt, "ResolvePathToken"); return false; }
-}
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
         PROFILE_START(_pt);
@@ -64,16 +32,6 @@ if (template_path == NULL || out_size == 0) { log_error("operation failed, retur
                     memcpy(token, p + 1, token_len);
                     token[token_len] = '\0';
                     char resolved[1024];
-                    if (ResolvePathToken(token, resolved, sizeof(resolved))) {
-                        size_t rlen = strlen(resolved);
-                        size_t room = out_size - 1 - o;
-                        size_t copy = (rlen < room) ? rlen : room;
-                        memcpy(out + o, resolved, copy);
-                        o += copy;
-                        p = close + 1;
-                        continue;
-                    }
-                    log_info("'%s' is not set, ignoring: %s", token, template_path);
                     return false;
                 }
             }
@@ -81,7 +39,7 @@ if (template_path == NULL || out_size == 0) { log_error("operation failed, retur
         out[o++] = *p++;
     }
     out[o] = '\0';
-log_info("Platform_ExpandPath template_path='%s' out='%s' out_size=%d", template_path ? template_path : "", out ? out : "", out_size);;
+    log_info("Platform_ExpandPath template_path='%s' out='%s' out_size=%d", template_path ? template_path : "", out ? out : "", out_size);;
     { PROFILE_END_VAR(_pt, "Platform_ExpandPath"); return true; }
 }
 

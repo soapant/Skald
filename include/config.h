@@ -74,20 +74,6 @@ extern ColorRef COLOR_VISUAL_MODE;
 #define COLOR_NORMAL_MODE_TEXT (ColoredVimModeText ? COLOR_NORMAL_MODE : COLOR_TEXT)
 #define COLOR_VISUAL_MODE_TEXT (ColoredVimModeText ? COLOR_VISUAL_MODE : COLOR_TEXT)
 
-typedef struct {
-    const char* path;
-    const char* name;
-} PathEntry;
-
-typedef struct {
-    const char* name;
-    const char* win32_value;
-    const char* linux_value;
-} PathVar;
-
-extern const PathVar* G_PATH_VARS;
-extern unsigned int PATH_VAR_COUNT;
-
 extern const AliasEntry* Aliases;
 extern size_t ALIAS_ENTRY_COUNT;
 
