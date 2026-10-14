@@ -9,11 +9,11 @@ static int current_image_id = 0;
 static int previous_image_id = 0;
 
 void IncrementVolume(void) {
-  fl_increment_volume_by_percent(10);
+  fl_increment_volume_by(10);
 }
 
 void DecrementVolume(void) {
-  fl_decrement_volume_by_percent(10);
+  fl_decrement_volume_by(10);
 }
 
 void GoogleMeaning(void) {

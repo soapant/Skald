@@ -1712,18 +1712,6 @@ bool fl_decrement_volume_by(int decrement) {
     PROFILE_START(_pt);
   { PROFILE_END_VAR(_pt, "fl_decrement_volume_by"); return fl_set_current_volume(fl_get_current_volume() - decrement); }
 }
-bool fl_increment_volume_by_percent(int increment_percent) {
-    PROFILE_START(_pt);
-  int current_volume = fl_get_current_volume();
-  { PROFILE_END_VAR(_pt, "fl_increment_volume_by_percent"); return fl_set_current_volume(current_volume + (current_volume * increment_percent / 100)); }
-}
-
-bool fl_decrement_volume_by_percent(int decrement_percent) {
-    PROFILE_START(_pt);
-  int current_volume = fl_get_current_volume();
-  { PROFILE_END_VAR(_pt, "fl_decrement_volume_by_percent"); return fl_set_current_volume(current_volume - (current_volume * decrement_percent / 100)); }
-}
-
 bool fl_type_text(const char *s) {
     PROFILE_START(_pt);
   { PROFILE_END_VAR(_pt, "fl_type_text"); return fl_type_text_platform(s); }
