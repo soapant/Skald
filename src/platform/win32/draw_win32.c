@@ -724,7 +724,7 @@ static GpBitmap* win32_load_shell_icon_bitmap(const char *path) {
         PROFILE_START(_pt);
 SHFILEINFOA sfi;
     ZeroMemory(&sfi, sizeof(sfi));
-    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON)) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
+    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES)) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
     if (!sfi.hIcon) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
     GpBitmap* bmp = NULL;
     GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
@@ -777,45 +777,80 @@ win32_gdip_ensure();
     { PROFILE_END_VAR(_pt, "win32_load_scaled_bitmap"); return out; }
 }
 
+static HDC s_cached_hdc = NULL;
+static GpGraphics* s_cached_g = NULL;
+
+void Platform_ReleaseDrawCache(void) {
+    if (s_cached_g) {
+        GdipDeleteGraphics(s_cached_g);
+        s_cached_g = NULL;
+    }
+    s_cached_hdc = NULL;
+}
+
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+    PROFILE_START(_pt);
+    PROFILE_START(timer);
+
     if (!path || !path[0]) { PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
-    if (w <= 0) w = IconSize;
-    if (h <= 0) h = IconSize;
-    if (w <= 0) w = 16;
-    if (h <= 0) h = 16;
+    if (w <= 0) w = (IconSize > 0) ? IconSize : 16;
+    if (h <= 0) h = (IconSize > 0) ? IconSize : 16;
     measure_track(x, y, w, h);
-    if (!g_draw_hdc) { log_error("img: no draw context (g_draw_hdc NULL)"); PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
+
+    if (!g_draw_hdc) { 
+        log_error("img: no draw context (g_draw_hdc NULL)"); 
+        PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); 
+        return false; 
+    }
 
     HDC screen = win32_screen_dc();
-    if (!screen) { log_error("img: GetDC(NULL) failed"); PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
+    if (!screen) { 
+        log_error("img: GetDC(NULL) failed"); 
+        PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); 
+        return false; 
+    }
 
     void* bmp = win32_img_cache_get(path, screen, w, h);
     if (!bmp) {
         bmp = win32_load_scaled_bitmap(path, w, h);
-        if (bmp) win32_img_cache_put(path, screen, w, h, bmp);
-    }
-    bool ok = false;
-    if (bmp) {
-        win32_gdip_ensure();
-        if (g_gdip_token == 0) {
-            log_error("img: Gdiplus unavailable");
-        } else {
-            GpGraphics *g = NULL;
-            GpStatus _h2 = GdipCreateFromHDC(g_draw_hdc, &g);
-            if (_h2 != Ok || !g) {
-                log_error("img: GdipCreateFromHDC st=%d hdc=%p", (int)_h2, (void *)g_draw_hdc);
-            } else {
-                GpStatus _d2 = GdipDrawImageRectI(g, (GpBitmap *)bmp, x, y, w, h);
-                if (_d2 != Ok) log_error("img: GdipDrawImageRectI st=%d at %d,%d %dx%d", (int)_d2, x, y, w, h);
-                GdipDeleteGraphics(g);
-                ok = true;
-            }
+        if (bmp) {
+            win32_img_cache_put(path, screen, w, h, bmp);
         }
     }
+    if (!bmp) {
+        PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
+        { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return false; }
+    }
+
+    win32_gdip_ensure();
+    if (g_gdip_token == 0) {
+        log_error("img: Gdiplus unavailable");
+        PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
+        { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return false; }
+    }
+
+    if (s_cached_hdc != g_draw_hdc || !s_cached_g) {
+        if (s_cached_g) {
+            GdipDeleteGraphics(s_cached_g);
+            s_cached_g = NULL;
+        }
+        s_cached_hdc = g_draw_hdc;
+        if (GdipCreateFromHDC(g_draw_hdc, &s_cached_g) != Ok || !s_cached_g) {
+            log_error("img: GdipCreateFromHDC failed for hdc=%p", (void *)g_draw_hdc);
+            s_cached_hdc = NULL;
+            s_cached_g = NULL;
+            PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
+            { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return false; }
+        }
+    }
+
+    GpStatus status = GdipDrawImageRectI(s_cached_g, (GpBitmap *)bmp, x, y, w, h);
+    if (status != Ok) {
+        log_error("img: GdipDrawImageRectI failed st=%d at %d,%d %dx%d", (int)status, x, y, w, h);
+    }
+
     PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
-    { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return ok; }
+    { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return (status == Ok); }
 }
 
 static int win32_update_edit_scroll_offset(HDC hdc, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
