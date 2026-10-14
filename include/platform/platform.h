@@ -12,6 +12,19 @@ typedef struct {
     char original;
 } NewlineInfo;
 
+#define HTTP_CONNECT_TIMEOUT_S 10
+#define HTTP_TIMEOUT_S 30
+#define HTTP_MAX_REDIRECTS 10
+#define HTTP_DEFAULT_LIMIT ((size_t)64 * 1024 * 1024)
+
+typedef struct {
+    char *buf;
+    size_t len;
+    size_t cap;
+    size_t limit;
+    int overflow;
+} HttpBuf;
+
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async);
 bool Platform_IsCtrlPressed(void);
 bool Platform_IsShiftPressed(void);
