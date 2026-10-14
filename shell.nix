@@ -24,6 +24,7 @@ pkgs.mkShell {
     fontconfig
     wayland
     pulseaudio
+    curl.dev
   ];
 
   shellHook = ''
