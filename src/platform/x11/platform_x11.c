@@ -2211,8 +2211,8 @@ typedef struct {
     int overflow;
 } HttpBuf;
 
-static size_t fl_http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
-    HttpBuf *b = (FlHttpBuf *)userdata;
+static size_t http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
+    HttpBuf *b = (HttpBuf *)userdata;
     size_t n = sz * nm;
     if (n == 0) return 0;
     if (b->limit && b->len + n > b->limit) {
@@ -2236,7 +2236,7 @@ static size_t fl_http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) 
     return n;
 }
 
-static void fl_http_global_init(void) {
+static void http_global_init(void) {
     static int done = 0;
     static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_lock(&mtx);
@@ -2244,8 +2244,8 @@ static void fl_http_global_init(void) {
     pthread_mutex_unlock(&mtx);
 }
 
-static CURL *fl_http_new(const char *url, size_t limit, HttpBuf *buf) {
-    fl_http_global_init();
+static CURL *http_new(const char *url, size_t limit, HttpBuf *buf) {
+    http_global_init();
     CURL *c = curl_easy_init();
     if (!c) return NULL;
     memset(buf, 0, sizeof(*buf));
@@ -2257,7 +2257,7 @@ static CURL *fl_http_new(const char *url, size_t limit, HttpBuf *buf) {
         buf->cap = limit + 1;
     }
     curl_easy_setopt(c, CURLOPT_URL, url);
-    curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, fl_http_write_cb);
+    curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, http_write_cb);
     curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)buf);
     curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
@@ -2272,7 +2272,7 @@ static CURL *fl_http_new(const char *url, size_t limit, HttpBuf *buf) {
     return c;
 }
 
-static char *fl_http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
+static char *http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
     if (out_len) *out_len = buf->len;
     if (res != CURLE_OK) {
         log_warn("http transfer failed: %s", curl_easy_strerror(res));
@@ -2288,10 +2288,10 @@ static char *fl_http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len
 char *Platform_HttpGetLimited(const char *url, size_t max_bytes, size_t *out_len) {
     if (!url || !url[0]) { if (out_len) *out_len = 0; return NULL; }
     HttpBuf buf;
-    CURL *c = fl_http_new(url, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT, &buf);
+    CURL *c = http_new(url, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT, &buf);
     if (!c) { if (out_len) *out_len = 0; return NULL; }
     CURLcode res = curl_easy_perform(c);
-    char *out = fl_http_finish(c, &buf, res, out_len);
+    char *out = http_finish(c, &buf, res, out_len);
     if (out && buf.overflow) log_warn("http response exceeded %zu byte limit", max_bytes);
     return out;
 }
@@ -2303,7 +2303,7 @@ char *Platform_HttpGet(const char *url) {
 char *Platform_HttpPost(const char *url, const char *content_type, const char *body) {
     if (!url || !url[0]) return NULL;
     HttpBuf buf;
-    CURL *c = fl_http_new(url, HTTP_DEFAULT_LIMIT, &buf);
+    CURL *c = http_new(url, HTTP_DEFAULT_LIMIT, &buf);
     if (!c) return NULL;
     curl_easy_setopt(c, CURLOPT_POST, 1L);
     curl_easy_setopt(c, CURLOPT_POSTFIELDS, body ? body : "");
@@ -2311,7 +2311,7 @@ char *Platform_HttpPost(const char *url, const char *content_type, const char *b
     struct curl_slist *hdrs = curl_slist_append(NULL, content_type && content_type[0] ? content_type : "application/octet-stream");
     curl_easy_setopt(c, CURLOPT_HTTPHEADER, hdrs);
     CURLcode res = curl_easy_perform(c);
-    char *out = fl_http_finish(c, &buf, res, NULL);
+    char *out = http_finish(c, &buf, res, NULL);
     if (hdrs) curl_slist_free_all(hdrs);
     return out;
 }
@@ -2326,7 +2326,7 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
     snprintf(tmp, sizeof(tmp), "%s.part", save_path);
     FILE *f = fopen(tmp, "wb");
     if (!f) return false;
-    fl_http_global_init();
+    http_global_init();
     CURL *c = curl_easy_init();
     if (!c) { fclose(f); remove(tmp); return false; }
     curl_easy_setopt(c, CURLOPT_URL, url);
@@ -2349,10 +2349,10 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
     return true;
 }
 
-typedef struct { char *url; PlatformHttpCallback cb; void *userdata; } FlHttpAsyncJob;
+typedef struct { char *url; PlatformHttpCallback cb; void *userdata; } HttpAsyncJob;
 
 static void *Platform_http_async_worker(void *arg) {
-    FlHttpAsyncJob *job = (FlHttpAsyncJob *)arg;
+    HttpAsyncJob *job = (HttpAsyncJob *)arg;
     char *body = Platform_HttpGet(job->url);
     job->cb(body ? body : "", body != NULL, job->userdata);
     free(body);
@@ -2363,7 +2363,7 @@ static void *Platform_http_async_worker(void *arg) {
 
 void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userdata) {
     if (!url || !url[0] || !cb) return;
-    FlHttpAsyncJob *job = (FlHttpAsyncJob *)calloc(1, sizeof(*job));
+    HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
     if (!job) return;
     job->url = strdup(url);
     job->cb = cb;
