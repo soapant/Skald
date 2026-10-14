@@ -264,6 +264,30 @@ XGlyphInfo e;
     { PROFILE_END_VAR(_pt, "x11_ink_center"); return (double)e.yOff + (double)e.height / 2.0; }
 }
 
+int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
+        PROFILE_START(_pt);
+if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return fontsize > 0 ? fontsize : 0; }
+    Display *dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return fontsize; }
+    FontHandle fh = Platform_CreateFontOnDisplay(dpy, fontsize, UsedFont);
+    XftFont *xf = FH_TO_XFT(fh);
+    if (!xf) { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return fontsize; }
+    const unsigned char *b = (const unsigned char *)text;
+    const unsigned char *end = b + strlen(text);
+    int clen = 1;
+    FcChar32 cp = x11_utf8_cp(b, end, &clen);
+    XftFont *use = x11_font_has(xf, cp) ? xf : x11_fallback_for(dpy, cp, fontsize);
+    int ink = fontsize;
+    if (use) {
+        XGlyphInfo e;
+        XftTextExtentsUtf8(dpy, use, (FcChar8*)b, clen, &e);
+        int h = e.height;
+        if (h > 0) ink = h;
+    }
+    Platform_DestroyFont(fh);
+    { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink; }
+}
+
 int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, int y, XftFont* xf, const char* s, int n, int px) {
         PROFILE_START(_pt);
 if (!xf || !xd || !s || n <= 0) { PROFILE_END_VAR(_pt, "x11_draw_utf8_fallback"); return 0; }
