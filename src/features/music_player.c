@@ -64,8 +64,16 @@ static bool music_send_command(const char* window_title, const char* atom_name, 
 }
 #endif
 
-const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
-const char* MusicPath = "{MUSIC}";
+#if defined(_WIN32)
+const char* MusicPlayerPath = "C:/Projects/Music Player/music_player.exe";
+#else
+const char* MusicPlayerPath = "~/Programming/Projects/Music Player/music_player";
+#endif
+#if defined(_WIN32)
+const char* MusicPath = "C:/Music";
+#else
+const char* MusicPath = "~/Music";
+#endif
 
 char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
