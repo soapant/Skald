@@ -483,7 +483,7 @@ PROFILE_START(timer);
     { PROFILE_END_VAR(_pt, "ListBoxItemDisplayText"); return trunc; }
 }
 
-#define IMG_CACHE_SLOTS 16
+#define IMG_CACHE_SLOTS 256
 
 static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y);
 static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h);

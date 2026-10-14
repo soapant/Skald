@@ -135,7 +135,7 @@ static void* ch_sampler(void* arg) {
     (void)arg;
     while (ch_running) {
         ch_sample_once();
-        fl_sleep(1);
+        fl_sleep(5);
     }
     return NULL;
 }

@@ -544,6 +544,17 @@ static unsigned long cc_type_color(void) {
     return RGB((h >> 16) & 0xFF, (h >> 8) & 0xFF, h & 0xFF);
 }
 
+static bool cc_icon_is_glyph(const char *icon) {
+    if (!icon || !icon[0]) return false;
+    unsigned char c = (unsigned char)icon[0];
+    int len = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 0;
+    if (len <= 0) return false;
+    const char *tail = icon + len;
+    if (tail[0] == '\0') return true;
+    if ((unsigned char)tail[0] == 0xEF && (unsigned char)tail[1] == 0xB8 && (unsigned char)tail[2] == 0x8F && tail[3] == '\0') return true;
+    return false;
+}
+
 static void cc_render(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = { .lb = lb };
@@ -556,10 +567,17 @@ static void cc_render(PromptState *state) {
         int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
         const CcEntry *e = cc_find(ctx.text);
         if (e && e->icon[0]) {
-            fl_draw_image(.path = e->icon,
-                          .x = ctx.x + CC_ITEM_TEXT_X,
-                          .y = ctx.y + (ctx.h - icon_size) / 2,
-                          .w = icon_size, .h = icon_size);
+            int icon_x = ctx.x + CC_ITEM_TEXT_X;
+            int icon_y = ctx.y + (ctx.h - icon_size) / 2;
+            if (cc_icon_is_glyph(e->icon)) {
+                fl_draw_text(.x = icon_x, .y = ctx.y + CC_ITEM_TEXT_Y,
+                             .text = e->icon, .align = "LEFT", .pad = 0,
+                             .fontsize = icon_size);
+            } else {
+                fl_draw_image(.path = e->icon,
+                              .x = icon_x, .y = icon_y,
+                              .w = icon_size, .h = icon_size);
+            }
         }
         fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                      .text = ctx.text, .align = "LEFT", .pad = name_x);
