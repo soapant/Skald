@@ -19,6 +19,8 @@
 #include "core/modal.h"
 #include "config.h"
 #include "core/prompt_geometry.h"
+#include "bindings/vim_state.h"
+#include "platform/win32/common_ui_win32.h"
 #include "helpers/helpers_ui.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -527,13 +529,44 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         int cursor_y = y_raw + (textH - cursorH) / 2;
         if (cursor_y < y_raw) cursor_y = y_raw;
         RECT textRc = {x + PROMPT_EDIT_INSET - scroll, y_raw, x + w, y_raw + textH};
+        if (!IsInsertMode()) {
+            int tint_y = y_raw + (textH - cursorH) / 2;
+            if (tint_y < y_raw) tint_y = y_raw;
+            COLORREF tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
+            int tint_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
+            if (tint_x < x + PROMPT_CARET_LO_CLAMP) tint_x = x + PROMPT_CARET_LO_CLAMP;
+            if (tint_x > x + w - PROMPT_CARET_HI_CLAMP) tint_x = x + w - PROMPT_CARET_HI_CLAMP;
+            int sel_start = 0, sel_end = 0;
+            bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+            RECT tintRc;
+            if (has_sel) {
+                if (sel_start < 0) sel_start = 0;
+                if (sel_end >= text_len) sel_end = text_len - 1;
+                if (sel_start <= sel_end) {
+                    int sx0 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_start, FontSize) - scroll;
+                    int sx1 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_end + 1, FontSize) - scroll;
+                    if (sx0 < x + PROMPT_CARET_LO_CLAMP) sx0 = x + PROMPT_CARET_LO_CLAMP;
+                    if (sx1 > x + w - PROMPT_CARET_HI_CLAMP) sx1 = x + w - PROMPT_CARET_HI_CLAMP;
+                    int cx = tint_x;
+                    if (cx < sx0) cx = sx0;
+                    if (cx > sx1) cx = sx1;
+                    int sw = sx1 - sx0;
+                    tintRc = (RECT){sx0, tint_y, sx0 + sw, tint_y + cursorH};
+                }
+            } else {
+                tintRc = (RECT){tint_x, tint_y, tint_x + PromptNormalCaretWidth(), tint_y + cursorH};
+            }
+            HBRUSH tbr = CreateSolidBrush(tint);
+            FillRect(hdc, &tintRc, tbr);
+            DeleteObject(tbr);
+        }
         DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_TOP | DT_LEFT);
-        HBRUSH cbr = CreateSolidBrush(Modal_CursorColor());
-        RECT cRc;
-        if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+PROMPT_CARET_W_INSERT, cursor_y+cursorH};
-        else cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+PromptNormalCaretWidth(), cursor_y+cursorH};
-        FillRect(hdc, &cRc, cbr);
-        DeleteObject(cbr);
+        if (IsInsertMode()) {
+            HBRUSH cbr = CreateSolidBrush(Modal_CursorColor());
+            RECT cRc = {cursor_draw_x, cursor_y, cursor_draw_x + PROMPT_CARET_W_INSERT, cursor_y + cursorH};
+            FillRect(hdc, &cRc, cbr);
+            DeleteObject(cbr);
+        }
     } else {
         RECT textRc = {x + PROMPT_EDIT_INSET - scroll, y, x + w, y + h};
         DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
