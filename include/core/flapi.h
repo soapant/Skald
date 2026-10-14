@@ -519,12 +519,6 @@ void fl_free_flags(Fl_FlagList* list);
 int fl_parse_time(const char* time_str);
 
 // =============================================================================
-// HOTKEY MACROS DONT LOOK AT 
-// =============================================================================
-
-bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
-
-// =============================================================================
 // AUDIO / VOLUME
 // =============================================================================
 
@@ -680,6 +674,8 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec);
 
 int fl_cc_entry_count(void);
 const FlCcEntrySpec *fl_cc_entry_at(int index);
+
+bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
