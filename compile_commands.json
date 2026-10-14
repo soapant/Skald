@@ -1,6 +1,6 @@
 [
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/main.c",
     "arguments": [
       "gcc",
@@ -33,7 +33,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/config_resolve.c",
     "arguments": [
       "gcc",
@@ -66,7 +66,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/deps/log.c",
     "arguments": [
       "gcc",
@@ -99,7 +99,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/helpers_owner.c",
     "arguments": [
       "gcc",
@@ -132,7 +132,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/feature_loader.c",
     "arguments": [
       "gcc",
@@ -165,7 +165,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/modal.c",
     "arguments": [
       "gcc",
@@ -198,7 +198,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/prompt_controller.c",
     "arguments": [
       "gcc",
@@ -231,7 +231,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/helpers_history.c",
     "arguments": [
       "gcc",
@@ -264,7 +264,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/popup/prompt_popup.c",
     "arguments": [
       "gcc",
@@ -297,7 +297,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/popup/edit_popup.c",
     "arguments": [
       "gcc",
@@ -330,7 +330,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/popup/search_popup.c",
     "arguments": [
       "gcc",
@@ -363,7 +363,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/config_loader.c",
     "arguments": [
       "gcc",
@@ -396,7 +396,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/helpers_text.c",
     "arguments": [
       "gcc",
@@ -429,7 +429,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/remap_manager.c",
     "arguments": [
       "gcc",
@@ -462,7 +462,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/timer.c",
     "arguments": [
       "gcc",
@@ -495,7 +495,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/input_state.c",
     "arguments": [
       "gcc",
@@ -528,7 +528,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/context.c",
     "arguments": [
       "gcc",
@@ -561,7 +561,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/clipboard_history.c",
     "arguments": [
       "gcc",
@@ -594,7 +594,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/hotkey_manager.c",
     "arguments": [
       "gcc",
@@ -627,7 +627,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/window_manager.c",
     "arguments": [
       "gcc",
@@ -660,7 +660,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/history.c",
     "arguments": [
       "gcc",
@@ -693,7 +693,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/theme.c",
     "arguments": [
       "gcc",
@@ -726,7 +726,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/helpers.c",
     "arguments": [
       "gcc",
@@ -759,7 +759,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/helpers_color.c",
     "arguments": [
       "gcc",
@@ -792,7 +792,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/snippet_manager.c",
     "arguments": [
       "gcc",
@@ -825,7 +825,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/feature_data.c",
     "arguments": [
       "gcc",
@@ -858,7 +858,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/common_ui.c",
     "arguments": [
       "gcc",
@@ -891,7 +891,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/core/vim.c",
     "arguments": [
       "gcc",
@@ -924,7 +924,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/prompt_popup_x11.c",
     "arguments": [
       "gcc",
@@ -957,7 +957,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/lib_x11.c",
     "arguments": [
       "gcc",
@@ -990,7 +990,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/default_apps_x11.c",
     "arguments": [
       "gcc",
@@ -1023,7 +1023,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/widget_x11.c",
     "arguments": [
       "gcc",
@@ -1056,7 +1056,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/remap_x11.c",
     "arguments": [
       "gcc",
@@ -1089,7 +1089,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/watcher_x11.c",
     "arguments": [
       "gcc",
@@ -1122,7 +1122,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/misc_x11.c",
     "arguments": [
       "gcc",
@@ -1155,7 +1155,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/display_x11.c",
     "arguments": [
       "gcc",
@@ -1188,7 +1188,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/helpers_x11.c",
     "arguments": [
       "gcc",
@@ -1221,7 +1221,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/wm_platform_x11.c",
     "arguments": [
       "gcc",
@@ -1254,7 +1254,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/clipboard_x11.c",
     "arguments": [
       "gcc",
@@ -1287,7 +1287,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/render_thread_x11.c",
     "arguments": [
       "gcc",
@@ -1320,7 +1320,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/desktop_helpers_x11.c",
     "arguments": [
       "gcc",
@@ -1353,7 +1353,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/ui_scale_x11.c",
     "arguments": [
       "gcc",
@@ -1386,7 +1386,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/input_core_x11.c",
     "arguments": [
       "gcc",
@@ -1419,7 +1419,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/env_helpers_x11.c",
     "arguments": [
       "gcc",
@@ -1452,7 +1452,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/draw_x11.c",
     "arguments": [
       "gcc",
@@ -1485,7 +1485,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/platform_x11.c",
     "arguments": [
       "gcc",
@@ -1518,7 +1518,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/message_popup_x11.c",
     "arguments": [
       "gcc",
@@ -1551,7 +1551,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/input/input_x11.c",
     "arguments": [
       "gcc",
@@ -1584,7 +1584,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/input/edit_buffer_x11.c",
     "arguments": [
       "gcc",
@@ -1617,7 +1617,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/render/render_prompt_x11.c",
     "arguments": [
       "gcc",
@@ -1650,7 +1650,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/flapi_x11.c",
     "arguments": [
       "gcc",
@@ -1683,7 +1683,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/edit_popup_x11.c",
     "arguments": [
       "gcc",
@@ -1716,7 +1716,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/ui_x11.c",
     "arguments": [
       "gcc",
@@ -1749,7 +1749,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/x11/window_manager_x11.c",
     "arguments": [
       "gcc",
@@ -1782,7 +1782,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/wm/sway_wm.c",
     "arguments": [
       "gcc",
@@ -1815,7 +1815,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/wm/niri_wm.c",
     "arguments": [
       "gcc",
@@ -1848,7 +1848,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/wm/hyprland_wm.c",
     "arguments": [
       "gcc",
@@ -1881,7 +1881,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/wm/wm.c",
     "arguments": [
       "gcc",
@@ -1914,7 +1914,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/wm/kwin_wm.c",
     "arguments": [
       "gcc",
@@ -1947,7 +1947,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/platform/wm/x11_wm.c",
     "arguments": [
       "gcc",
@@ -1980,7 +1980,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/config_defaults.c",
     "arguments": [
       "gcc",
@@ -2013,7 +2013,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/bindings/vim_bindings.c",
     "arguments": [
       "gcc",
@@ -2046,7 +2046,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/bindings/bindings.c",
     "arguments": [
       "gcc",
@@ -2079,7 +2079,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/bindings/vim_state.c",
     "arguments": [
       "gcc",
@@ -2112,7 +2112,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/bindings/vim_motions.c",
     "arguments": [
       "gcc",
@@ -2145,7 +2145,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/bindings/vim_helpers.c",
     "arguments": [
       "gcc",
@@ -2178,7 +2178,7 @@
     ]
   },
   {
-    "directory": "/home/dog/Programming/Projects/Flint",
+    "directory": "/home/dog/Programming/Projects/flint",
     "file": "src/flapi.c",
     "arguments": [
       "gcc",
