@@ -1,5 +1,6 @@
 #include <winsock2.h>
 #include <windows.h>
+#include <winhttp.h>
 #include <iphlpapi.h>
 #include <iptypes.h>
 #include <netioapi.h>
@@ -847,3 +848,145 @@ bool fl_dismiss_message_platform() {
     }
     return false;
 }
+
+/* ---- HTTP (WinHTTP) ---- */
+
+#define FL_HTTP_CONNECT_TIMEOUT_S 10
+#define FL_HTTP_TIMEOUT_S 30
+#define FL_HTTP_MAX_REDIRECTS 10
+#define FL_HTTP_DEFAULT_LIMIT ((size_t)64 * 1024 * 1024)
+
+typedef struct { char *buf; size_t len; size_t cap; size_t limit; int overflow; } FlHttpBuf;
+
+static int fl_http_buf_append(FlHttpBuf *b, const char *data, size_t n) {
+    if (b->limit && b->len + n > b->limit) {
+        size_t room = b->limit > b->len ? b->limit - b->len : 0;
+        if (room > 0) { memcpy(b->buf + b->len, data, room); b->len += room; b->buf[b->len] = '\0'; }
+        b->overflow = 1;
+        return 0;
+    }
+    size_t need = b->len + n + 1;
+    if (need > b->cap) {
+        size_t cap = b->cap ? b->cap : 4096;
+        while (cap < need) cap *= 2;
+        char *grown = (char *)realloc(b->buf, cap);
+        if (!grown) return 0;
+        b->buf = grown;
+        b->cap = cap;
+    }
+    memcpy(b->buf + b->len, data, n);
+    b->len += n;
+    b->buf[b->len] = '\0';
+    return 1;
+}
+
+static wchar_t *fl_http_widen(const char *s) {
+    if (!s || !s[0]) return NULL;
+    int n = MultiByteToWideChar(CP_UTF8, 0, s, -1, NULL, 0);
+    if (n <= 0) return NULL;
+    wchar_t *w = (wchar_t *)malloc((size_t)n * sizeof(wchar_t));
+    if (!w) return NULL;
+    MultiByteToWideChar(CP_UTF8, 0, s, -1, w, n);
+    return w;
+}
+
+static void fl_http_url_parts(const char *url, wchar_t **out_host, wchar_t **out_path, int *out_secure) {
+    *out_host = NULL; *out_path = NULL; *out_secure = 0;
+    const char *p = url;
+    if (Platform_StringStartsWithCaseInsensitive(p, "https://")) { *out_secure = 1; p += 8; }
+    else if (Platform_StringStartsWithCaseInsensitive(p, "http://")) { p += 7; }
+    else return;
+    const char *slash = strchr(p, '/');
+    char hostbuf[256];
+    if (slash) {
+        size_t hl = (size_t)(slash - p);
+        if (hl >= sizeof(hostbuf)) hl = sizeof(hostbuf) - 1;
+        memcpy(hostbuf, p, hl);
+        hostbuf[hl] = '\0';
+        *out_path = fl_http_widen(slash);
+    } else {
+        snprintf(hostbuf, sizeof(hostbuf), "%s", p);
+        *out_path = fl_http_widen("/");
+    }
+    *out_host = fl_http_widen(hostbuf);
+}
+
+static HINTERNET fl_http_session(void) {
+    static HINTERNET cached = NULL;
+    if (!cached) cached = WinHttpOpen(L"Flint/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    return cached;
+}
+
+static int fl_http_perform(const char *url, const char *method, const char *content_type,
+                           const char *body, FlHttpBuf *buf, FILE *out_file, int redirects_left) {
+    wchar_t *host = NULL, *path = NULL;
+    int secure = 0;
+    fl_http_url_parts(url, &host, &path, &secure);
+    if (!host || !path) { free(host); free(path); return 0; }
+    HINTERNET hs = fl_http_session();
+    if (!hs) { free(host); free(path); return 0; }
+    HINTERNET hc = WinHttpConnect(hs, host, secure ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT, 0);
+    if (!hc) { free(host); free(path); return 0; }
+    wchar_t wmethod[16];
+    MultiByteToWideChar(CP_UTF8, 0, method, -1, wmethod, 16);
+    HINTERNET hr = WinHttpOpenRequest(hc, wmethod, path, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, secure ? WINHTTP_FLAG_SECURE : 0);
+    free(host);
+    free(path);
+    if (!hr) { WinHttpCloseHandle(hc); return 0; }
+    DWORD t = FL_HTTP_TIMEOUT_S * 1000;
+    WinHttpSetTimeouts(hr, (DWORD)(FL_HTTP_CONNECT_TIMEOUT_S * 1000), t, t, t);
+    int ok = 0;
+    if (body && body[0]) {
+        size_t blen = strlen(body);
+        wchar_t *wct = content_type && content_type[0] ? fl_http_widen(content_type) : NULL;
+        ok = WinHttpSendRequest(hr, WINHTTP_NO_ADDITIONAL_HEADERS, 0, (LPVOID)body, (DWORD)blen, (DWORD)blen, 0) ? 1 : 0;
+        if (ok && wct) {
+            wchar_t hdr[256];
+            _snwprintf(hdr, 256, L"Content-Type: %s", wct);
+            hdr[255] = 0;
+            ok = WinHttpAddRequestHeaders(hr, hdr, (DWORD)-1L, WINHTTP_ADDREQ_FLAG_ADD) ? 1 : 0;
+        }
+        free(wct);
+        if (ok) ok = WinHttpReceiveResponse(hr, NULL) ? 1 : 0;
+    } else {
+        ok = WinHttpSendRequest(hr, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) ? 1 : 0;
+        if (ok) ok = WinHttpReceiveResponse(hr, NULL) ? 1 : 0;
+    }
+    if (ok) {
+        DWORD status = 0, sz = sizeof(status);
+        WinHttpQueryHeaders(hr, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &status, &sz, WINHTTP_NO_HEADER_INDEX);
+        if ((status >= 300 && status < 400) && redirects_left > 0) {
+            wchar_t *loc = NULL; DWORD locsz = 0;
+            if (WinHttpQueryHeaders(hr, WINHTTP_QUERY_LOCATION, WINHTTP_HEADER_NAME_BY_INDEX, NULL, &locsz, WINHTTP_NO_HEADER_INDEX) && locsz > 0) {
+                loc = (wchar_t *)malloc(locsz);
+                if (loc) {
+                    WinHttpQueryHeaders(hr, WINHTTP_QUERY_LOCATION, WINHTTP_HEADER_NAME_BY_INDEX, loc, &locsz, WINHTTP_NO_HEADER_INDEX);
+                    char narrow[2048];
+                    WideCharToMultiByte(CP_UTF8, 0, loc, -1, narrow, sizeof(narrow), NULL, NULL);
+                    WinHttpCloseHandle(hr);
+                    WinHttpCloseHandle(hc);
+                    free(loc);
+                    int r = fl_http_perform(narrow, method, content_type, body, buf, out_file, redirects_left - 1);
+                    return r;
+                }
+            }
+            ok = 1;
+        } else {
+            DWORD avail = 0;
+            while (ok && WinHttpQueryDataAvailable(hr, &avail) && avail > 0) {
+                DWORD want = avail > 65536 ? 65536 : avail;
+                char *chunk = (char *)malloc(want);
+                if (!chunk) { ok = 0; break; }
+                DWORD got = 0;
+                if (!WinHttpReadData(hr, chunk, want, &got) || got == 0) { free(chunk); break; }
+                if (out_file) { fwrite(chunk, 1, got, out_file); }
+                else if (!fl_http_buf_append(buf, chunk, got)) { free(chunk); ok = 0; break; }
+                free(chunk);
+            }
+        }
+    }
+    WinHttpCloseHandle(hr);
+    WinHttpCloseHandle(hc);
+    return ok;
+}
+

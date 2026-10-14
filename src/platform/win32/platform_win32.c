@@ -1847,3 +1847,80 @@ g_win32_waiting_for_key = true;
   g_win32_key_callback = callback;
 log_info("Platform_WaitForKeypressAsync callback=%p", callback);;
 }
+
+static void Platform_http_buf_init(FlHttpBuf *buf, size_t limit) {
+    memset(buf, 0, sizeof(*buf));
+    buf->limit = limit;
+    if (limit) {
+        buf->buf = (char *)malloc(limit + 1);
+        if (buf->buf) { buf->buf[0] = '\0'; buf->cap = limit + 1; }
+    }
+}
+
+char *Platform_HttpGetLimited(const char *url, size_t max_bytes, size_t *out_len) {
+    if (!url || !url[0]) { if (out_len) *out_len = 0; return NULL; }
+    FlHttpBuf buf;
+    Platform_http_buf_init(&buf, max_bytes ? max_bytes : FL_HTTP_DEFAULT_LIMIT);
+    int ok = fl_http_perform(url, "GET", NULL, NULL, &buf, NULL, FL_HTTP_MAX_REDIRECTS);
+    if (out_len) *out_len = buf.len;
+    if (!ok) { log_warn("http GET failed: %s", url); free(buf.buf); return NULL; }
+    if (!buf.buf) buf.buf = (char *)calloc(1, 1);
+    if (buf.overflow) log_warn("http response exceeded %zu byte limit", max_bytes);
+    return buf.buf;
+}
+
+char *Platform_HttpGet(const char *url) {
+    return Platform_HttpGetLimited(url, FL_HTTP_DEFAULT_LIMIT, NULL);
+}
+
+char *Platform_HttpPost(const char *url, const char *content_type, const char *body) {
+    if (!url || !url[0]) return NULL;
+    FlHttpBuf buf;
+    fl_http_buf_init(&buf, FL_HTTP_DEFAULT_LIMIT);
+    int ok = fl_http_perform(url, "POST", content_type, body ? body : "", &buf, NULL, FL_HTTP_MAX_REDIRECTS);
+    if (!ok) { log_warn("http POST failed: %s", url); free(buf.buf); return NULL; }
+    if (!buf.buf) buf.buf = (char *)calloc(1, 1);
+    return buf.buf;
+}
+
+bool Platform_HttpDownload(const char *url, const char *save_path) {
+    if (!url || !url[0] || !save_path || !save_path[0]) return false;
+    char tmp[MAX_PATH];
+    snprintf(tmp, sizeof(tmp), "%s.part", save_path);
+    FILE *f = fopen(tmp, "wb");
+    if (!f) return false;
+    FlHttpBuf unused;
+    memset(&unused, 0, sizeof(unused));
+    int ok = fl_http_perform(url, "GET", NULL, NULL, &unused, f, FL_HTTP_MAX_REDIRECTS);
+    fclose(f);
+    if (!ok) { log_warn("http download failed: %s", url); remove(tmp); return false; }
+    remove(save_path);
+    if (rename(tmp, save_path) != 0) { log_warn("http download rename failed for %s", save_path); remove(tmp); return false; }
+    return true;
+}
+
+typedef struct { char *url; PlatformHttpCallback cb; void *userdata; } FlHttpAsyncJob;
+
+static DWORD WINAPI fl_http_async_worker(LPVOID arg) {
+    FlHttpAsyncJob *job = (FlHttpAsyncJob *)arg;
+    char *body = Platform_HttpGet(job->url);
+    job->cb(body ? body : "", body != NULL, job->userdata);
+    free(body);
+    free(job->url);
+    free(job);
+    return 0;
+}
+
+void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userdata) {
+    if (!url || !url[0] || !cb) return;
+    FlHttpAsyncJob *job = (FlHttpAsyncJob *)calloc(1, sizeof(*job));
+    if (!job) return;
+    job->url = _strdup(url);
+    job->cb = cb;
+    job->userdata = userdata;
+    if (!job->url) { free(job); return; }
+    HANDLE t = CreateThread(NULL, 0, fl_http_async_worker, job, 0, NULL);
+    if (!t) { log_warn("http async thread create failed"); free(job->url); free(job); return; }
+    CloseHandle(t);
+}
+

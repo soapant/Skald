@@ -503,6 +503,14 @@ int fl_get_text_width(const char *text,int fontsize);
 int fl_get_text_height(const char *text);
 int fl_get_glyph_ink_height(const char *text, int fontsize);
 
+char *fl_http_get(const char *url);
+char *fl_http_get_limited(const char *url, size_t max_bytes, size_t *out_len);
+bool fl_http_download(const char *url, const char *save_path);
+char *fl_http_post(const char *url, const char *content_type, const char *body);
+
+typedef void (*FlHttpCallback)(const char *body, bool ok, void *userdata);
+void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata);
+
 typedef struct {
     char name[64];
     char value[256];

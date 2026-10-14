@@ -44,6 +44,7 @@
 #include <fontconfig/fontconfig.h>
 #include "platform/x11/env_helpers_x11.h"
 #include "wm/wm.h"
+#include <curl/curl.h>
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif
@@ -2197,3 +2198,183 @@ if (!name || !name[0] || !out_path || out_len == 0) { PROFILE_END_VAR(_pt, "Plat
     { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return ok; }
 }
 
+#define HTTP_CONNECT_TIMEOUT_S 10
+#define HTTP_TIMEOUT_S 30
+#define HTTP_MAX_REDIRECTS 10
+#define HTTP_DEFAULT_LIMIT ((size_t)64 * 1024 * 1024)
+
+typedef struct {
+    char *buf;
+    size_t len;
+    size_t cap;
+    size_t limit;
+    int overflow;
+} HttpBuf;
+
+static size_t fl_http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
+    HttpBuf *b = (FlHttpBuf *)userdata;
+    size_t n = sz * nm;
+    if (n == 0) return 0;
+    if (b->limit && b->len + n > b->limit) {
+        size_t room = b->limit > b->len ? b->limit - b->len : 0;
+        if (room > 0) { memcpy(b->buf + b->len, ptr, room); b->len += room; b->buf[b->len] = '\0'; }
+        b->overflow = 1;
+        return 0;
+    }
+    size_t need = b->len + n + 1;
+    if (need > b->cap) {
+        size_t cap = b->cap ? b->cap : 4096;
+        while (cap < need) cap *= 2;
+        char *grown = (char *)realloc(b->buf, cap);
+        if (!grown) return 0;
+        b->buf = grown;
+        b->cap = cap;
+    }
+    memcpy(b->buf + b->len, ptr, n);
+    b->len += n;
+    b->buf[b->len] = '\0';
+    return n;
+}
+
+static void fl_http_global_init(void) {
+    static int done = 0;
+    static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mtx);
+    if (!done) { curl_global_init(CURL_GLOBAL_DEFAULT); done = 1; }
+    pthread_mutex_unlock(&mtx);
+}
+
+static CURL *fl_http_new(const char *url, size_t limit, HttpBuf *buf) {
+    fl_http_global_init();
+    CURL *c = curl_easy_init();
+    if (!c) return NULL;
+    memset(buf, 0, sizeof(*buf));
+    buf->limit = limit;
+    if (limit) {
+        buf->buf = (char *)malloc(limit + 1);
+        if (!buf->buf) { curl_easy_cleanup(c); return NULL; }
+        buf->buf[0] = '\0';
+        buf->cap = limit + 1;
+    }
+    curl_easy_setopt(c, CURLOPT_URL, url);
+    curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, fl_http_write_cb);
+    curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)buf);
+    curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
+    curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
+    curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
+    curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(c, CURLOPT_USERAGENT, "Flint/1.0");
+    curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
+    curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
+    curl_easy_setopt(c, CURLOPT_FAILONERROR, 0L);
+    return c;
+}
+
+static char *fl_http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
+    if (out_len) *out_len = buf->len;
+    if (res != CURLE_OK) {
+        log_warn("http transfer failed: %s", curl_easy_strerror(res));
+        curl_easy_cleanup(c);
+        free(buf->buf);
+        return NULL;
+    }
+    curl_easy_cleanup(c);
+    if (!buf->buf) buf->buf = (char *)calloc(1, 1);
+    return buf->buf;
+}
+
+char *Platform_HttpGetLimited(const char *url, size_t max_bytes, size_t *out_len) {
+    if (!url || !url[0]) { if (out_len) *out_len = 0; return NULL; }
+    HttpBuf buf;
+    CURL *c = fl_http_new(url, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT, &buf);
+    if (!c) { if (out_len) *out_len = 0; return NULL; }
+    CURLcode res = curl_easy_perform(c);
+    char *out = fl_http_finish(c, &buf, res, out_len);
+    if (out && buf.overflow) log_warn("http response exceeded %zu byte limit", max_bytes);
+    return out;
+}
+
+char *Platform_HttpGet(const char *url) {
+    return Platform_HttpGetLimited(url, HTTP_DEFAULT_LIMIT, NULL);
+}
+
+char *Platform_HttpPost(const char *url, const char *content_type, const char *body) {
+    if (!url || !url[0]) return NULL;
+    HttpBuf buf;
+    CURL *c = fl_http_new(url, HTTP_DEFAULT_LIMIT, &buf);
+    if (!c) return NULL;
+    curl_easy_setopt(c, CURLOPT_POST, 1L);
+    curl_easy_setopt(c, CURLOPT_POSTFIELDS, body ? body : "");
+    curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE, (long)(body ? strlen(body) : 0));
+    struct curl_slist *hdrs = curl_slist_append(NULL, content_type && content_type[0] ? content_type : "application/octet-stream");
+    curl_easy_setopt(c, CURLOPT_HTTPHEADER, hdrs);
+    CURLcode res = curl_easy_perform(c);
+    char *out = fl_http_finish(c, &buf, res, NULL);
+    if (hdrs) curl_slist_free_all(hdrs);
+    return out;
+}
+
+static size_t Platform_http_write_file_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
+    return fwrite(ptr, sz, nm, (FILE *)userdata);
+}
+
+bool Platform_HttpDownload(const char *url, const char *save_path) {
+    if (!url || !url[0] || !save_path || !save_path[0]) return false;
+    char tmp[MAX_PATH];
+    snprintf(tmp, sizeof(tmp), "%s.part", save_path);
+    FILE *f = fopen(tmp, "wb");
+    if (!f) return false;
+    fl_http_global_init();
+    CURL *c = curl_easy_init();
+    if (!c) { fclose(f); remove(tmp); return false; }
+    curl_easy_setopt(c, CURLOPT_URL, url);
+    curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, (curl_write_callback)Platform_http_write_file_cb);
+    curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)f);
+    curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
+    curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
+    curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
+    curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
+    curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
+    CURLcode res = curl_easy_perform(c);
+    curl_easy_cleanup(c);
+    fclose(f);
+    if (res != CURLE_OK) { log_warn("http download failed: %s", curl_easy_strerror(res)); remove(tmp); return false; }
+    remove(save_path);
+    if (rename(tmp, save_path) != 0) { log_warn("http download rename failed for %s", save_path); remove(tmp); return false; }
+    return true;
+}
+
+typedef struct { char *url; PlatformHttpCallback cb; void *userdata; } FlHttpAsyncJob;
+
+static void *Platform_http_async_worker(void *arg) {
+    FlHttpAsyncJob *job = (FlHttpAsyncJob *)arg;
+    char *body = Platform_HttpGet(job->url);
+    job->cb(body ? body : "", body != NULL, job->userdata);
+    free(body);
+    free(job->url);
+    free(job);
+    return NULL;
+}
+
+void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userdata) {
+    if (!url || !url[0] || !cb) return;
+    FlHttpAsyncJob *job = (FlHttpAsyncJob *)calloc(1, sizeof(*job));
+    if (!job) return;
+    job->url = strdup(url);
+    job->cb = cb;
+    job->userdata = userdata;
+    if (!job->url) { free(job); return; }
+    pthread_t t;
+    if (pthread_create(&t, NULL, Platform_http_async_worker, job) != 0) {
+        log_warn("http async thread create failed");
+        free(job->url);
+        free(job);
+        return;
+    }
+    pthread_detach(t);
+}

@@ -1107,3 +1107,4 @@ bool fl_dismiss_message_platform() {
     Platform_DismissMessage();
     Platform_DismissIndefiniteMessage();
 }
+
