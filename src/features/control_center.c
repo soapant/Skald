@@ -98,6 +98,19 @@ static CC_MAYBE_UNUSED bool cc_add_action(const char *label, const char *type, v
     return true;
 }
 
+static bool g_cc_fallback_active = false;
+
+static CcEntry *cc_add_fallback(void) {
+    CcEntry *fallback = cc_entry_new();
+    if (!fallback) return NULL;
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
+    buffer[0] = toupper((unsigned char)buffer[0]);
+    snprintf(fallback->label, sizeof(fallback->label), "%s", buffer);
+    snprintf(fallback->icon, sizeof(fallback->icon), "resources/%s.png", UsedSearchEngine);
+    return fallback;
+}
+
 static void cc_build(void) {
     g_entry_count = 0;
     for (int i = 0; i < g_type_count; i++) g_type_fills[i]();
@@ -115,6 +128,7 @@ static void cc_build(void) {
         if (s->on_tab) e->on_tab = s->on_tab;
         if (s->on_action) e->on_action = s->on_action;
     }
+    if (g_cc_fallback_active) cc_add_fallback();
 }
 
 static const CcEntry *cc_find(const char *label) {
@@ -514,22 +528,13 @@ static void cc_refresh(const char *filter, ListBoxInfo *lb) {
     int n = g_entry_count;
     for (int i = 0; i < n; i++) g_names[i] = g_entries[i].label;
     fl_populate_listbox(lb, filter, g_names, n);
+    if (lb->total_matches > 0) g_cc_fallback_active = false;
     if (lb->total_matches == 0) {
-       CcEntry *fallback = cc_entry_new();
+       CcEntry *fallback = cc_add_fallback();
        if (fallback) {
-           char buffer[256];
-           snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
-           buffer[0] = toupper((unsigned char)buffer[0]);
-           
-           char icon_path[MAX_PATH];
-           snprintf(icon_path, sizeof(icon_path), "resources/%s.png", UsedSearchEngine);
-
-           snprintf(fallback->label, sizeof(fallback->label), "%s", buffer);
-           snprintf(fallback->icon, sizeof(fallback->icon), "%s", icon_path);
-           
            g_names[n] = fallback->label;
-           
            fl_populate_listbox(lb, "", &g_names[n], 1);
+           g_cc_fallback_active = true;
        }
     }
 }
