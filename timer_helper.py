@@ -1,12 +1,4 @@
 #!/usr/bin/env python3
-"""
-Add PROFILE_START/PROFILE_END_VAR instrumentation to C functions,
-and ensure #include "core/timer.h" is present.
-
-Usage:
-    python3 instrument.py <file.c> [--dry-run]
-"""
-
 import re
 import sys
 from pathlib import Path

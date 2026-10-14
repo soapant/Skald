@@ -14,7 +14,7 @@ void ConfigApply(void) {
     AllowOtherFeatureTogglesInFeature = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = false;
+    DoTimeDebugs = true;
     DebugMode = false;
     RoundedCorners = true;
     CornerRadius = 14;
@@ -28,7 +28,7 @@ void ConfigApply(void) {
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 18;
+    FontSize = 25;
     IconSize = 32;
     WidgetGap = 0;
     MaxFeatures = 1000;
