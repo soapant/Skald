@@ -285,7 +285,7 @@ if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyp
         if (h > 0) ink = h;
     }
     Platform_DestroyFont(fh);
-    { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink; }
+    { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink + 10; }
 }
 
 int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, int y, XftFont* xf, const char* s, int n, int px) {
