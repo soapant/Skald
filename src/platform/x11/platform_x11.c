@@ -1360,9 +1360,9 @@ typedef struct {
 } NameToPath;
 
 NameToPath supported_names_to_paths[] =  {
-  {"sway","/home/dog/Programming/Projects/Flint/resources/Sway.svg"},
-  {"anki","/home/dog/Programming/Projects/Flint/resources/Anki.png"},
-  {"xdg-desktop-portal-gtk","/home/dog/Programming/Projects/Flint/resources/xdg-desktop-portal-gtk.png"},
+  {"sway","/resources/Sway.svg"},
+  {"anki","/resources/Anki.png"},
+  {"xdg-desktop-portal-gtk","/resources/xdg-desktop-portal-gtk.png"},
 };
 
 #define MAX_ICON_CACHE 1024
