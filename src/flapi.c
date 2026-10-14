@@ -1308,6 +1308,32 @@ int fl_get_glyph_ink_height(const char *text, int fontsize) {
   return r;
 }
 
+char *fl_http_get(const char *url) {
+  PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_http_get"); return Platform_HttpGet(url); }
+}
+
+char *fl_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
+  PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_http_get_limited"); return Platform_HttpGetLimited(url, max_bytes, out_len); }
+}
+
+bool fl_http_download(const char *url, const char *save_path) {
+  PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_http_download"); return Platform_HttpDownload(url, save_path); }
+}
+
+char *fl_http_post(const char *url, const char *content_type, const char *body) {
+  PROFILE_START(_pt);
+  { PROFILE_END_VAR(_pt, "fl_http_post"); return Platform_HttpPost(url, content_type, body); }
+}
+
+void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata) {
+  PROFILE_START(_pt);
+  Platform_HttpGetAsync(url, cb, userdata);
+  { PROFILE_END_VAR(_pt, "fl_http_get_async"); return ; }
+}
+
 bool fl_draw_line_impl(const FlLineSpec *spec) {
   PROFILE_START(_pt);
   if (!spec) {     PROFILE_START(_pt);
