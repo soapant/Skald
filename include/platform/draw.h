@@ -59,5 +59,6 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
 bool Platform_PreRender(void);
 
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top);
+int Platform_GetGlyphInkHeight(const char *text, int fontsize);
 
 #endif
