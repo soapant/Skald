@@ -97,7 +97,7 @@ WindowManager* wm = (WindowManager*)arg;
 static void x11_handle_key_press(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    int mods = remap_current_mods();
+    int mods = 0;
     if (ev->state & ControlMask) mods |= HOTKEY_MOD_CTRL;
     if (ev->state & Mod1Mask) mods |= HOTKEY_MOD_ALT;
     if (ev->state & ShiftMask) mods |= HOTKEY_MOD_SHIFT;

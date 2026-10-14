@@ -379,23 +379,6 @@ bool remap_handle_vk(int vk_code, int value) {
             remap_fire_binding(b, vk_code);
         } else if (before && !after) {
             remap_release_binding(b, allowed[i]);
-            if (!allowed[i]) continue;
-            if (b->src_mods & HOTKEY_MOD_CTRL) {
-                if (g_phys_vk[VK_LCONTROL]) { Platform_EmitKey(VK_LCONTROL, 1); g_virt_vk[VK_LCONTROL]=1; }
-                if (g_phys_vk[VK_RCONTROL]) { Platform_EmitKey(VK_RCONTROL, 1); g_virt_vk[VK_RCONTROL]=1; }
-            }
-            if (b->src_mods & HOTKEY_MOD_ALT) {
-                if (g_phys_vk[VK_LMENU]) { Platform_EmitKey(VK_LMENU, 1); g_virt_vk[VK_LMENU]=1; }
-                if (g_phys_vk[VK_RMENU]) { Platform_EmitKey(VK_RMENU, 1); g_virt_vk[VK_RMENU]=1; }
-            }
-            if (b->src_mods & HOTKEY_MOD_SHIFT) {
-                if (g_phys_vk[VK_LSHIFT]) { Platform_EmitKey(VK_LSHIFT, 1); g_virt_vk[VK_LSHIFT]=1; }
-                if (g_phys_vk[VK_RSHIFT]) { Platform_EmitKey(VK_RSHIFT, 1); g_virt_vk[VK_RSHIFT]=1; }
-            }
-            if (b->src_mods & HOTKEY_MOD_SUPER) {
-                if (g_phys_vk[VK_LWIN]) { Platform_EmitKey(VK_LWIN, 1); g_virt_vk[VK_LWIN]=1; }
-                if (g_phys_vk[VK_RWIN]) { Platform_EmitKey(VK_RWIN, 1); g_virt_vk[VK_RWIN]=1; }
-            }
         }
     }
 
