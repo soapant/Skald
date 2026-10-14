@@ -10,6 +10,8 @@
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/audio_x11.h"
 #include "helpers/helpers_ui.h"
+#include "bindings/vim_state.h"
+
 #include "config.h"
 #include "core/prompt_geometry.h"
 #include <string.h>
@@ -779,6 +781,42 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     }
     int cursor_y = x11_font_cursor_y_of(fh, y_raw);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
+    if (!IsInsertMode()) {
+        int tint_y = x11_font_cursor_y_of(fh, y_raw);
+        unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
+        int tint_x = draw_x + cursor_x;
+        if (tint_x < x + PROMPT_CARET_LO_CLAMP) tint_x = x + PROMPT_CARET_LO_CLAMP;
+        if (tint_x > x + w - PROMPT_CARET_HI_CLAMP) tint_x = x + w - PROMPT_CARET_HI_CLAMP;
+        int sel_start = 0, sel_end = 0;
+        bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+        if (has_sel) {
+            if (sel_start < 0) sel_start = 0;
+            if (sel_end >= text_len) sel_end = text_len - 1;
+            if (sel_start <= sel_end && xf) {
+                int sx0 = draw_x;
+                int sx1 = draw_x;
+                if (sel_start > 0) {
+                    XGlyphInfo e0;
+                    XftTextExtentsUtf8(dpy, xf, (FcChar8*)buf, sel_start, &e0);
+                    sx0 = draw_x + e0.xOff;
+                }
+                if (sel_end + 1 <= text_len) {
+                    XGlyphInfo e1;
+                    XftTextExtentsUtf8(dpy, xf, (FcChar8*)buf, sel_end + 1, &e1);
+                    sx1 = draw_x + e1.xOff;
+                }
+                int cx = tint_x;
+                if (sx0 < x + PROMPT_CARET_LO_CLAMP) sx0 = x + PROMPT_CARET_LO_CLAMP;
+                if (sx1 > x + w - PROMPT_CARET_HI_CLAMP) sx1 = x + w - PROMPT_CARET_HI_CLAMP;
+                if (cx < sx0) cx = sx0;
+                if (cx > sx1) cx = sx1;
+                int sw = sx1 - sx0;
+                if (sw > 0) Platform_DrawRectRaw(sx0, tint_y, sw, textH, tint, 0, false, true, 1, true);
+            }
+        } else {
+            Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(), textH, tint, 0, false, true, 1, true);
+        }
+    }
     if (text_len > 0) {
         Platform_DrawTextRaw(draw_x, y_raw, (char*)buf, text_hex, fh, "", 0, 0);
     }
@@ -787,8 +825,6 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     if (cursor_draw_x > x + w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = x + w - PROMPT_CARET_HI_CLAMP;
     if (IsInsertMode()) {
         Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_CARET_W_INSERT,textH,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
-    } else {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_EDITPOPUP_CARET_W_NORMAL,textH,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
     }
     if (state) {
         if (WindowTitleText && state->window_title) {
