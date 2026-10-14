@@ -1,15 +1,6 @@
 #include "config.h"
 
 // <flint-config-generated>
-static const PathVar user_path_vars[] = {
-    {"DEV", "C:\\Programming\\Projects", "/home/dog/Programming/Projects"},
-    {"MISC", "D:\\retard games\\miscellaneous", "/home/dog/miscellaneous"},
-    {"MUSIC", "C:\\Music", "/home/dog/Music"},
-    {"VIDEOS", "C:\\videos", "/home/dog/Videos"},
-    {"PROGRAMDATA", "C:\\ProgramData", ""},
-    {"SystemRoot", "C:\\Windows", ""},
-};
-
 static const AliasEntry user_aliases[] = {
     {"brw", "Brawlhalla", "AppLauncher"},
 };
@@ -74,8 +65,6 @@ void ConfigApply(void) {
     COLOR_VISUAL_MODE = RGB(188, 140, 255);
     COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
     COLOR_CURSOR = RGB(201, 209, 217);
-    G_PATH_VARS = user_path_vars;
-    PATH_VAR_COUNT = 6;
     Aliases = user_aliases;
     ALIAS_ENTRY_COUNT = 1;
 }
