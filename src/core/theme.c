@@ -1,7 +1,12 @@
 #include "core/theme.h"
 #include "config.h"
 #include "deps/log.h"
+#include <stdio.h>
 #include <string.h>
+
+#ifndef CONFIG_SRC
+#define CONFIG_SRC "config/config.c"
+#endif
 
 typedef struct {
     const char* name;
@@ -208,5 +213,67 @@ void Theme_Apply(void) {
     COLOR_NORMAL_MODE = found->normal_mode;
     COLOR_VISUAL_MODE = found->visual_mode;
     COLOR_CURSOR = found->cursor;
+}
+
+#define THEME_MAX_PINNED 32
+static char g_theme_pinned[THEME_MAX_PINNED][64];
+static int g_theme_pinned_count = 0;
+static bool g_theme_pinned_scanned = false;
+
+static void theme_scan_config(void) {
+    if (g_theme_pinned_scanned) return;
+    g_theme_pinned_scanned = true;
+    FILE *f = fopen(CONFIG_SRC, "rb");
+    if (!f) return;
+    char line[512];
+    while (fgets(line, sizeof(line), f)) {
+        if (line[0] == ' ' || line[0] == '\t') {
+            char name[64];
+            if (sscanf(line, " %63[A-Z_] =", name) == 1 &&
+                strncmp(name, "COLOR_", 6) == 0) {
+                bool known = false;
+                for (int i = 0; i < g_theme_pinned_count; i++) {
+                    if (strcmp(g_theme_pinned[i], name) == 0) { known = true; break; }
+                }
+                if (!known && g_theme_pinned_count < THEME_MAX_PINNED) {
+                    snprintf(g_theme_pinned[g_theme_pinned_count], sizeof(g_theme_pinned[0]), "%s", name);
+                    g_theme_pinned_count++;
+                }
+            }
+        }
+    }
+    fclose(f);
+}
+
+bool Theme_ColorPinned(const char *name) {
+    if (!name || !name[0]) return false;
+    theme_scan_config();
+    for (int i = 0; i < g_theme_pinned_count; i++) {
+        if (strcmp(g_theme_pinned[i], name) == 0) return true;
+    }
+    return false;
+}
+
+void Theme_MarkColorPinned(const char *name, bool pinned) {
+    if (!name || !name[0]) return;
+    theme_scan_config();
+    int found = -1;
+    for (int i = 0; i < g_theme_pinned_count; i++) {
+        if (strcmp(g_theme_pinned[i], name) == 0) { found = i; break; }
+    }
+    if (pinned) {
+        if (found >= 0) return;
+        if (g_theme_pinned_count < THEME_MAX_PINNED) {
+            snprintf(g_theme_pinned[g_theme_pinned_count], sizeof(g_theme_pinned[0]), "%s", name);
+            g_theme_pinned_count++;
+        }
+        return;
+    }
+    if (found >= 0) {
+        for (int i = found; i < g_theme_pinned_count - 1; i++) {
+            snprintf(g_theme_pinned[i], sizeof(g_theme_pinned[0]), "%s", g_theme_pinned[i + 1]);
+        }
+        g_theme_pinned_count--;
+    }
 }
 
