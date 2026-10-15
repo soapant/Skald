@@ -217,16 +217,6 @@ PROFILE_START(timer);
                     memcpy(token, p + 1, token_len);
                     token[token_len] = '\0';
                     char resolved[1024];
-                    if (ResolvePathToken(token, resolved, sizeof(resolved))) {
-                        size_t rlen = strlen(resolved);
-                        size_t room = out_size - 1 - o;
-                        size_t copy = (rlen < room) ? rlen : room;
-                        memcpy(out + o, resolved, copy);
-                        o += copy;
-                        p = close + 1;
-                        continue;
-                    }
-                    log_info("'%s' is not set, ignoring: %s", token, template_path);
                     PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath");
                     return false;
                 }

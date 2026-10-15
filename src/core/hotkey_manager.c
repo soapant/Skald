@@ -59,7 +59,9 @@ typedef struct {
 static HotkeyHoldSlot g_hold_slots[HOTKEY_HOLD_MAX];
 
 static unsigned long long hotkey_now_ms(void) {
+#if defined(_WIN32)
     return (unsigned long long)GetTickCount64();
+#endif
 }
 
 static int hotkey_repeat_interval_ms(void) {

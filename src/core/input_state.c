@@ -125,6 +125,7 @@ void Platform_GlobalKey_Clear(void){
   GKEY_UNLOCK();
 }
 
+#if defined(_WIN32)
 static unsigned long long win32_qpc_us(void) {
   static LONG freq = 0;
   if (!freq) {
@@ -137,6 +138,7 @@ static unsigned long long win32_qpc_us(void) {
   QueryPerformanceCounter(&q);
   return (unsigned long long)((q.QuadPart * 1000000ULL) / (unsigned long long)freq);
 }
+#endif
 
 void Platform_GlobalKey_Push(const PlatformKeyEvent* ev){
   if(!ev) return;

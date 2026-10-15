@@ -19,10 +19,10 @@
      #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
      #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp", "-Lbuild/winlibs","-liphlpapi"
 #else
-     #define CC_FLAGS "-I", "include","-MMD", "-MP","-O4","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
+     #define CC_FLAGS "-I", "include","-MMD", "-MP","-O4","-Wall","-Wextra","-Wformat","-Wno-error=format-security","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
-     #define PKG_CFLAGS_PKGS_STR "curl x11 xft fontconfig freetype2 glib-2.0 gio-unix-2.0 libpng xext xrandr xrender xtst xi libpulse"
-     #define PKG_LIBS_PKGS_STR   "x11 xft fontconfig libpng xext xrandr xrender xtst xi gio-2.0 gobject-2.0 glib-2.0 libpulse"
+     #define PKG_CFLAGS_PKGS_STR "libcurl x11 xft fontconfig freetype2 glib-2.0 gio-unix-2.0 libpng xext xrandr xrender xtst xi libpulse"
+     #define PKG_LIBS_PKGS_STR   " libcurl x11 xft fontconfig libpng xext xrandr xrender xtst xi gio-2.0 gobject-2.0 glib-2.0 libpulse"
 #endif
 
 static Nob_File_Paths sources = {0};
@@ -106,8 +106,8 @@ static Nob_File_Paths dep_ldflags = {0};
 
 static void append_ws_split(Nob_File_Paths* da, const char* s) {
     if (!s) return;
-    char buf[4096];
-    snprintf(buf, sizeof(buf), "%s", s);
+    char* buf = strdup(s);
+    if (!buf) return;
     char* p = buf;
     while (*p) {
         while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;
@@ -117,39 +117,55 @@ static void append_ws_split(Nob_File_Paths* da, const char* s) {
         if (*p) *p++ = '\0';
         nob_da_append(da, nob_temp_strdup(start));
     }
+    free(buf);
 }
 
 static char* run_capture(const char* cmdline) {
     FILE* f = popen(cmdline, "r");
     if (!f) return NULL;
-    static char out[8192];
-    size_t n = fread(out, 1, sizeof(out) - 1, f);
-    out[n] = '\0';
+    static char* out = NULL;
+    static size_t cap = 0;
+    if (!out) {
+        cap = 16384;
+        out = malloc(cap);
+        if (!out) { pclose(f); return NULL; }
+    }
+    size_t len = 0;
+    for (;;) {
+        if (len + 1 >= cap) {
+            size_t ncap = cap * 2;
+            char* nout = realloc(out, ncap);
+            if (!nout) { pclose(f); return NULL; }
+            out = nout;
+            cap = ncap;
+        }
+        size_t n = fread(out + len, 1, cap - len - 1, f);
+        len += n;
+        if (n == 0) break;
+    }
+    out[len] = '\0';
     pclose(f);
     return out;
 }
 
-// On NixOS the .pc files of profile packages are not in pkg-config's
-// compiled-in search path and PKG_CONFIG_PATH is normally unset outside a
-// nix-shell. Some packages (xorgproto) ship .pc under share/pkgconfig while
-// others use lib/pkgconfig, and the profile aggregation only merges the
-// latter. So scan the store for whichever dirs actually provide the modules we
-// need and hand those to pkg-config. On non-Nix systems this finds nothing and
-// leaves the normal search path untouched.
 static void augment_pkg_config_path(void) {
+    if (system("pkg-config --exists glib-2.0 2>/dev/null") == 0) {
+            return; 
+    }
     const char* need[] = {
-        "x11", "xft", "fontconfig", "freetype2", "glib-2.0", "gio-2.0",
+
+        "x11", "xft", "fontconfig", "freetype2", "glib-2.0", "gio-2.0", "gio-unix-2.0",
         "gobject-2.0", "libpng", "xext", "xrandr", "xrender", "xtst", "xi",
         "wayland-client",
-        // transitive requirements pulled in by the above .pc files
         "xproto", "kbproto", "xextproto", "xcb", "xau", "xdmcp", "sm", "ice",
         NULL
     };
     const char* patterns[] = {
         "/nix/store/*/lib/pkgconfig", "/nix/store/*/share/pkgconfig", NULL
     };
-    char found[64][512];
+    char** found = NULL;
     size_t found_n = 0;
+    size_t found_cap = 0;
     for (int p = 0; patterns[p]; ++p) {
         glob_t g;
         memset(&g, 0, sizeof(g));
@@ -162,27 +178,40 @@ static void augment_pkg_config_path(void) {
                 bool dup = false;
                 for (size_t f = 0; f < found_n; ++f)
                     if (strcmp(found[f], g.gl_pathv[i]) == 0) { dup = true; break; }
-                if (!dup && found_n < 64) {
-                    snprintf(found[found_n], sizeof(found[0]), "%s", g.gl_pathv[i]);
-                    found_n++;
+                if (!dup) {
+                    if (found_n == found_cap) {
+                        size_t ncap = found_cap ? found_cap * 2 : 64;
+                        char** nfound = realloc(found, ncap * sizeof(char*));
+                        if (!nfound) { globfree(&g); free(found); return; }
+                        found = nfound;
+                        found_cap = ncap;
+                    }
+                    found[found_n++] = nob_temp_strdup(g.gl_pathv[i]);
                 }
                 break;
             }
         }
         globfree(&g);
     }
-    if (found_n == 0) return;
-    char path[8192];
-    path[0] = '\0';
-    for (size_t f = 0; f < found_n; ++f) {
-        if (path[0]) strncat(path, ":", sizeof(path) - strlen(path) - 1);
-        strncat(path, found[f], sizeof(path) - strlen(path) - 1);
-    }
+    if (found_n == 0) { free(found); return; }
+    size_t total = 1;
+    for (size_t f = 0; f < found_n; ++f) total += strlen(found[f]) + 1;
     const char* cur = getenv("PKG_CONFIG_PATH");
-    char full[16384];
-    if (cur && cur[0]) snprintf(full, sizeof(full), "%s:%s", path, cur);
-    else snprintf(full, sizeof(full), "%s", path);
+    if (cur && cur[0]) total += strlen(cur) + 1;
+    char* full = malloc(total);
+    if (!full) { free(found); return; }
+    full[0] = '\0';
+    for (size_t f = 0; f < found_n; ++f) {
+        if (full[0]) strcat(full, ":");
+        strcat(full, found[f]);
+    }
+    if (cur && cur[0]) {
+        strcat(full, ":");
+        strcat(full, cur);
+    }
     setenv("PKG_CONFIG_PATH", full, 1);
+    free(full);
+    free(found);
 }
 
 static void discover_dep_flags(void) {
