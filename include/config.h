@@ -17,6 +17,7 @@ extern bool MessageAfterEachHotkey;
 extern bool AllowOtherFeatureTogglesInFeature;
 extern bool ModePersistsThroughFeatures;
 extern int  TimeOutForMessages;
+extern int  HotkeyRepeatDelayMs;
 extern bool DoTimeDebugs;
 extern bool DebugMode;
 extern bool RoundedCorners;

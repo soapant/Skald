@@ -48,7 +48,92 @@ static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle, const char* owner)
     }
     HOTKEY_Q_UNLOCK();
 }
+#define HOTKEY_HOLD_MAX 16
+static bool hotkey_toggle_blocked(HotkeyBinding* b);
+typedef struct {
+    int vk;
+    int modifiers;
+    unsigned long long next_fire_ms;
+    bool active;
+} HotkeyHoldSlot;
+static HotkeyHoldSlot g_hold_slots[HOTKEY_HOLD_MAX];
+
+static unsigned long long hotkey_now_ms(void) {
+    return (unsigned long long)GetTickCount64();
+}
+
+static int hotkey_repeat_interval_ms(void) {
+    int ms = HotkeyRepeatDelayMs;
+    if (ms < HOTKEY_HOLD_MIN_INTERVAL_MS) ms = HOTKEY_HOLD_MIN_INTERVAL_MS;
+    return ms;
+}
+
+static void hotkey_hold_end(int vk) {
+    HOTKEY_Q_LOCK();
+    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+        if (g_hold_slots[i].active && g_hold_slots[i].vk == vk) g_hold_slots[i].active = false;
+    }
+    HOTKEY_Q_UNLOCK();
+}
+
+void hotkey_key_up(int vk_code) {
+    if (!vk_code) return;
+    hotkey_hold_end(vk_code);
+}
+
+static void hotkey_hold_begin(int vk, int modifiers) {
+    int interval_ms = hotkey_repeat_interval_ms();
+    unsigned long long now = hotkey_now_ms();
+    HOTKEY_Q_LOCK();
+    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+        if (g_hold_slots[i].active && g_hold_slots[i].vk == vk) {
+            g_hold_slots[i].modifiers = modifiers;
+            g_hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
+            HOTKEY_Q_UNLOCK();
+            return;
+        }
+    }
+    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+        if (!g_hold_slots[i].active) {
+            g_hold_slots[i].active = true;
+            g_hold_slots[i].vk = vk;
+            g_hold_slots[i].modifiers = modifiers;
+            g_hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
+            HOTKEY_Q_UNLOCK();
+            return;
+        }
+    }
+    HOTKEY_Q_UNLOCK();
+}
+
+static void hotkey_tick_holds(void) {
+    unsigned long long now = hotkey_now_ms();
+    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+        if (!g_hold_slots[i].active) continue;
+        if ((long long)(now - g_hold_slots[i].next_fire_ms) < 0) continue;
+
+        int vk = g_hold_slots[i].vk;
+        int mods = g_hold_slots[i].modifiers;
+        HotkeyBinding* b = NULL;
+        for (int k = 0; k < g_hotkey_count; k++) {
+            if (g_hotkeys[k].vk_code == vk && g_hotkeys[k].modifiers == mods && g_hotkeys[k].hold) {
+                b = &g_hotkeys[k];
+                break;
+            }
+        }
+        if (!b) {
+            g_hold_slots[i].active = false;
+            continue;
+        }
+        if (hotkey_toggle_blocked(b)) continue;
+
+        g_hold_slots[i].next_fire_ms = now + (unsigned long long)hotkey_repeat_interval_ms();
+        hotkey_enqueue(b->hotkey_callback, b->is_feature_toggle, b->owner);
+    }
+}
+
 void hotkey_drain_pending(void) {
+    hotkey_tick_holds();
     for (;;) {
         HotkeyCallback fn = NULL;
         bool is_toggle = false;
@@ -142,6 +227,17 @@ void hotkey_purge_owner(const char* path_a, const char* path_b) {
     if (dropped > 0) log_info("hotkey purged %d binding%s", dropped, dropped == 1 ? "" : "s");
 
     HOTKEY_Q_LOCK();
+    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+        if (!g_hold_slots[i].active) continue;
+        for (int k = 0; k < g_hotkey_count; k++) {
+            if (g_hotkeys[k].vk_code == g_hold_slots[i].vk &&
+                g_hotkeys[k].modifiers == g_hold_slots[i].modifiers &&
+                Owner_ModuleMatches(g_hotkeys[k].owner, path_a, path_b)) {
+                g_hold_slots[i].active = false;
+                break;
+            }
+        }
+    }
     int qn = g_pending_head;
     while (qn != g_pending_tail) {
         if (Owner_ModuleMatches(g_pending_owner[qn], path_a, path_b)) {
@@ -242,6 +338,7 @@ bool hotkey_process(int vk_code, int modifiers) {
         if (blocked) return true;
         log_info("hotkey match vk=0x%X mods=%d enqueue", vk_code, eff_modifiers);
         hotkey_enqueue(cb, b->is_feature_toggle, b->owner);
+        if (b->hold) hotkey_hold_begin(vk_code, b->modifiers);
         return true;
     }
 
