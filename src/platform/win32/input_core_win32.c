@@ -86,10 +86,18 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
         if (GetKeyState(VK_SHIFT) & 0x8000) mev.mods |= HOTKEY_MOD_SHIFT;
         Platform_GlobalMouse_Push(&mev);
         if (down && btn <= FL_MOUSE_BTN_MAX) hotkey_process(FL_MOUSE_VK(btn), mev.mods);
-    } else if (!Platform_GlobalMouse_Full()) {
-        mev.button = 0;
-        mev.down = false;
-        Platform_GlobalMouse_Push(&mev);
+    } else {
+        static int s_last_mx = -1;
+        static int s_last_my = -1;
+        if (mev.x != s_last_mx || mev.y != s_last_my) {
+            s_last_mx = mev.x;
+            s_last_my = mev.y;
+            if (!Platform_GlobalMouse_Full()) {
+                mev.button = 0;
+                mev.down = false;
+                Platform_GlobalMouse_Push(&mev);
+            }
+        }
     }
     free(buf);
     PROFILE_END_VAR(_pt, "win32_handle_raw_mouse");
