@@ -213,6 +213,16 @@ static const char *ListOfProgramPaths[] = {
 
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
 
+/* Icon paths pointing at a shell link force a multi-ms shell extraction on every
+   repaint. fl_get_icon_path returns an exported PNG instead, so cached entries
+   left over from before that existed must be re-resolved. */
+static bool cc_icon_is_shell_only(const char *icon) {
+        if (!icon || !icon[0]) return false;
+    const char *dot = strrchr(icon, '.');
+    if (!dot) return false;
+    return (strcmp(dot, ".lnk") == 0 || strcmp(dot, ".exe") == 0 || strcmp(dot, ".url") == 0);
+}
+
 static ListOfFiles g_apps = {0};
 
 static char (*g_app_icons)[MAX_PATH] = NULL;
@@ -294,6 +304,8 @@ size_t n = g_apps.count;
     free(lines);
 }
 
+static bool g_cc_reexported = false;
+
 static bool cc_load_app_cache(void) {
         PROFILE_START(_pt);
 FlStringList lines = fl_load_file_list(CC_APPCACHE_FILE);
@@ -347,15 +359,19 @@ FlStringList lines = fl_load_file_list(CC_APPCACHE_FILE);
         free(icons);
         return false;
     }
+    bool reexported = false;
+    g_cc_reexported = false;
     for (size_t i = 0; i < tmp.count; i++) {
-        if (icons[i][0] == '\0') {
+        if (icons[i][0] == '\0' || cc_icon_is_shell_only(icons[i])) {
             char *resolved = fl_get_icon_path(tmp.files[i].path);
             if (resolved) {
+                if (strcmp(resolved, icons[i]) != 0) reexported = true;
                 snprintf(icons[i], MAX_PATH, "%s", resolved);
                 free(resolved);
             }
         }
     }
+    g_cc_reexported = reexported;
     if (g_apps.files) free(g_apps.files);
     g_apps = tmp;
     cc_app_icons_clear();
@@ -438,15 +454,37 @@ static void cc_scan_app_dirs(void) {
     }
 }
 
+static FlMutex g_app_cache_mtx = NULL;
 static bool g_app_cache_ready = false;
 
+/* Icon extraction costs several ms per app, so the cache is built on a worker
+   thread during startup. Callers block on the mutex until it is available. */
 static void cc_ensure_app_cache(void) {
         PROFILE_START(_pt);
-if (g_app_cache_ready) { PROFILE_END_VAR(_pt, "cc_ensure_app_cache"); return ; }
-    g_app_cache_ready = true;
-    if (cc_load_app_cache()) { PROFILE_END_VAR(_pt, "cc_ensure_app_cache"); return ; }
-    cc_scan_app_dirs();
-    cc_save_app_cache();
+if (!g_app_cache_mtx) { printf("[cc] ensure: MUTEX NULL, bailing\n"); fflush(stdout); PROFILE_END_VAR(_pt, "cc_ensure_app_cache"); return ; }
+    printf("[cc] ensure: enter (ready=%d)\n", g_app_cache_ready ? 1 : 0); fflush(stdout);
+    fl_mutex_lock(g_app_cache_mtx);
+    if (!g_app_cache_ready) {
+        int loaded = cc_load_app_cache();
+        printf("[cc] ensure: load_cache=%d apps=%zu reexported=%d\n", loaded, g_apps.count, g_cc_reexported ? 1 : 0); fflush(stdout);
+        if (!loaded) {
+            cc_scan_app_dirs();
+            cc_save_app_cache();
+            printf("[cc] ensure: scanned+saved apps=%zu\n", g_apps.count); fflush(stdout);
+        } else if (g_cc_reexported) {
+            cc_save_app_cache();
+            printf("[cc] ensure: saved re-resolved icons\n"); fflush(stdout);
+        }
+        g_app_cache_ready = true;
+    }
+    fl_mutex_unlock(g_app_cache_mtx);
+    { PROFILE_END_VAR(_pt, "cc_ensure_app_cache"); return ; }
+}
+
+static void* cc_prewarm_app_cache(void* arg) {
+    (void)arg;
+    cc_ensure_app_cache();
+    return NULL;
 }
 
 static bool cc_app_ext_allowed(const char *name) {
@@ -723,7 +761,13 @@ cc_build_xdg_paths();
 }
 
 FLINT_FEATURE_INIT {
-    cc_register_type("Application", cc_fill_applications);
-    cc_register_type("Feature", cc_fill_features);
-    fl_register_hotkey((char *)ControlHotkey, TriggerControl,"Fortnite");
+  g_app_cache_mtx = fl_mutex_create();
+  printf("[cc] INIT mutex=%p\n", (void*)g_app_cache_mtx); fflush(stdout);
+  if (g_app_cache_mtx) {
+    FlThread t = fl_thread_create(cc_prewarm_app_cache, NULL);
+    printf("[cc] INIT prewarm thread=%p\n", (void*)t); fflush(stdout);
+  }
+  cc_register_type("Application", cc_fill_applications);
+  cc_register_type("Feature", cc_fill_features);
+  fl_register_hotkey((char *)ControlHotkey, TriggerControl,"Fortnite");
 }
