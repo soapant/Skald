@@ -8,6 +8,7 @@ bool MessageAfterEachHotkey = false;
 bool AllowOtherFeatureTogglesInFeature = false;
 bool ModePersistsThroughFeatures = false;
 int  TimeOutForMessages = 1;
+int  HotkeyRepeatDelayMs = 50;
 bool DoTimeDebugs = false;
     bool DebugMode = false;
 bool RoundedCorners = true;
