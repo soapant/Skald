@@ -681,6 +681,9 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec);
 int fl_cc_entry_count(void);
 const FlCcEntrySpec *fl_cc_entry_at(int index);
 
+bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
+#define fl_add_dep(...) fl_add_dep_impl(__VA_ARGS__, __FILE__)
+
 bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
