@@ -125,6 +125,21 @@ static unsigned g_cap_generation = 1;
 unsigned fl_cap_generation(void) {     PROFILE_START(_pt);
 { PROFILE_END_VAR(_pt, "fl_cap_generation"); return g_cap_generation; } }
 
+static void fl_add_provides(const char *owner, const char *key) {
+    FeatureLoader_ManifestAddProvides(owner, key);
+}
+
+bool fl_add_dep_impl(const char *dep_name, const char *owner_file) {
+    if (!dep_name || !dep_name[0] || !owner_file || !owner_file[0]) return false;
+    char dep[64];
+    snprintf(dep, sizeof(dep), "%s", dep_name);
+    char *dot = strrchr(dep, '.');
+    if (dot) *dot = '\0';
+    if (!dep[0]) return false;
+    FeatureLoader_ManifestAddDepends(owner_file, dep);
+    return true;
+}
+
 void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
     if (!key || !key[0] || !fn) return;
 
@@ -139,8 +154,8 @@ void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
         snprintf(g_caps[i].owner, sizeof(g_caps[i].owner), "%s", owner);
         g_caps[i].abi = abi;
         g_caps[i].fn = fn;
-        g_cap_generation++;
-        if (owner[0]) FeatureLoader_ManifestAddProvides(owner, key);
+g_cap_generation++;
+        if (owner[0]) fl_add_provides(owner, key);
         return;
     }
 
@@ -156,7 +171,7 @@ void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
     c->fn = fn;
     g_cap_generation++;
     log_info("fl_cap '%s' registered abi=%u owner='%s'", key, abi, owner[0] ? owner : "?");
-    if (owner[0]) FeatureLoader_ManifestAddProvides(owner, key);
+    if (owner[0]) fl_add_provides(owner, key);
 }
 
 void *fl_cap_resolve_abi(const char *key, unsigned abi) {
@@ -2650,6 +2665,7 @@ int fl_get_screen_height() {
 
 #define FL_CC_MAX 128
 #define FL_CC_STR_MAX 512
+#define FL_CC_DEP_FEATURE "control_center.c"
 
 typedef struct {
     FlCcEntrySpec pub;
@@ -2662,6 +2678,21 @@ typedef struct {
 
 static int g_cc_entry_count = 0;
 static FlCcEntry g_cc_entries[FL_CC_MAX];
+
+#define FL_CC_DEP_OWNERS 64
+static char g_cc_dep_owners[FL_CC_DEP_OWNERS][OWNER_PATH_MAX];
+static int g_cc_dep_owner_count = 0;
+
+static bool fl_cc_dep_seen(const char *owner) {
+    for (int i = 0; i < g_cc_dep_owner_count; i++)
+        if (strcmp(g_cc_dep_owners[i], owner) == 0) return true;
+    return false;
+}
+
+static void fl_cc_dep_mark(const char *owner) {
+    if (g_cc_dep_owner_count >= FL_CC_DEP_OWNERS) return;
+    snprintf(g_cc_dep_owners[g_cc_dep_owner_count++], OWNER_PATH_MAX, "%s", owner);
+}
 
 static const char *fl_cc_dup(char *dst, size_t cap, const char *src) {
     snprintf(dst, cap, "%s", src ? src : "");
@@ -2689,6 +2720,10 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
     if (!anchor) anchor = (void*)(uintptr_t)spec->on_tab;
     if (!anchor) anchor = (void*)(uintptr_t)spec->on_action;
     Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
+    if (e->owner[0] && !fl_cc_dep_seen(e->owner)) {
+        fl_cc_dep_mark(e->owner);
+        fl_add_dep_impl(FL_CC_DEP_FEATURE, e->owner);
+    }
     g_cc_entry_count++;
     return true;
 }
