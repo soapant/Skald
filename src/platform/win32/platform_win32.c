@@ -1175,6 +1175,100 @@ char cand[MAX_PATH];
     { PROFILE_END_VAR(_pt, "win32_placeholder_icon"); return false; }
 }
 
+static ULONG_PTR g_gdiplusToken = 0;
+
+static bool win32_is_shell_icon(const char* p) {
+    const char* dot = strrchr(p, '.');
+    if (!dot) return false;
+    return (_stricmp(dot, ".lnk") == 0 || _stricmp(dot, ".exe") == 0 || _stricmp(dot, ".url") == 0);
+}
+
+static unsigned win32_icon_hash(const char* s) {
+    unsigned h = 2166136261u;
+    while (s && *s) { h ^= (unsigned char)*s++; h *= 16777619u; }
+    return h;
+}
+
+static bool win32_icon_exe_dir(char* out, size_t n) {
+    char exe[MAX_PATH];
+    DWORD len = GetModuleFileNameA(NULL, exe, (DWORD)sizeof(exe));
+    if (len == 0 || len >= sizeof(exe)) return false;
+    char* slash = strrchr(exe, '\\');
+    if (!slash) return false;
+    *slash = '\0';
+    snprintf(out, n, "%s", exe);
+    return true;
+}
+
+static bool win32_icon_png_path(const char* src, char* out, size_t n) {
+    char dir[MAX_PATH];
+    if (!win32_icon_exe_dir(dir, sizeof(dir))) return false;
+    snprintf(out, n, "%s\\icon_cache\\%08x.png", dir, win32_icon_hash(src));
+    return true;
+}
+
+static void win32_gdiplus_ready(void) {
+    if (g_gdiplusToken != 0) return;
+    GdiplusStartupInput in;
+    in.GdiplusVersion = 1;
+    in.DebugEventCallback = NULL;
+    in.SuppressBackgroundThread = FALSE;
+    in.SuppressExternalCodecs = FALSE;
+    GdiplusStartup(&g_gdiplusToken, &in, NULL);
+}
+
+/* Shell icon extraction costs several ms and cannot be cached by the draw path,
+   so flatten it to a PNG once and hand that back as the icon path. */
+static bool win32_export_shell_icon_png(const char* native_path) {
+    char png[MAX_PATH];
+    if (!win32_icon_png_path(native_path, png, sizeof(png))) return false;
+    if (GetFileAttributesA(png) != INVALID_FILE_ATTRIBUTES) return true;
+
+    SHFILEINFOA sfi;
+    ZeroMemory(&sfi, sizeof(sfi));
+    if (!SHGetFileInfoA(native_path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES)) return false;
+    if (!sfi.hIcon) return false;
+
+    win32_gdiplus_ready();
+    GpBitmap* src = NULL;
+    GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &src);
+    DestroyIcon(sfi.hIcon);
+    if (st != Ok || !src) { if (src) GdipDisposeImage(src); return false; }
+
+    const int px = 32;
+    unsigned char* zeros = (unsigned char*)calloc((size_t)px * (size_t)px, 4);
+    GpBitmap* flat = NULL;
+    if (!zeros || GdipCreateBitmapFromScan0(px, px, px * 4, PixelFormat32bppPARGB, zeros, &flat) != Ok || !flat) {
+        if (zeros) free(zeros);
+        GdipDisposeImage(src);
+        return false;
+    }
+    GpGraphics* g = NULL;
+    if (GdipGetImageGraphicsContext(flat, &g) == Ok && g) {
+        GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
+        GdipSetCompositingMode(g, CompositingModeSourceCopy);
+        GdipSetSmoothingMode(g, SmoothingModeHighQuality);
+        GdipDrawImageRectI(g, src, 0, 0, px, px);
+        GdipDeleteGraphics(g);
+    }
+    GdipDisposeImage(src);
+
+    char dir[MAX_PATH];
+    if (win32_icon_exe_dir(dir, sizeof(dir))) {
+        snprintf(dir, sizeof(dir), "%s\\icon_cache", dir);
+        CreateDirectoryA(dir, NULL);
+    }
+    static const GUID kPng = { 0x557cf406, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e } };
+    wchar_t wpng[MAX_PATH * 2];
+    int wn = MultiByteToWideChar(CP_UTF8, 0, png, -1, wpng, (int)(sizeof(wpng) / sizeof(wchar_t)));
+    bool ok = wn > 0 && GdipSaveImageToFile(flat, wpng, &kPng, NULL) == Ok;
+    if (!ok) DeleteFileA(png);
+
+    GdipDisposeImage(flat);
+    free(zeros);
+    return ok;
+}
+
 char* Platform_GetIconPath(char* app_path) {
     PROFILE_START(_pt);
 if (!app_path || !app_path[0]) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
@@ -1189,6 +1283,16 @@ if (!app_path || !app_path[0]) { log_error("operation failed, returning error ap
   for (char* p = native; *p; p++) if (*p == '/') *p = '\\';
   src = native;
   if (GetFileAttributesA(src) != INVALID_FILE_ATTRIBUTES) {
+      if (win32_is_shell_icon(src)) {
+          char png[MAX_PATH];
+          if (win32_icon_png_path(src, png, sizeof(png)) &&
+              GetFileAttributesA(png) != INVALID_FILE_ATTRIBUTES) {
+              return _strdup(png);
+          }
+          if (win32_export_shell_icon_png(src)) {
+              return _strdup(png);
+          }
+      }
       return _strdup(src);
   }
   char full[MAX_PATH];
@@ -1759,8 +1863,6 @@ log_info("Platform_InitializeTrayIcon completed");
   { PROFILE_END_VAR(_pt, "Platform_InitializeTrayIcon"); return 0; }
 }
 
-static ULONG_PTR g_gdiplusToken = 0;
-
 void Platform_InitUI() {
     PROFILE_START(_pt);
 struct GdiplusStartupInput gdiplusStartupInput;
@@ -1769,6 +1871,20 @@ struct GdiplusStartupInput gdiplusStartupInput;
   gdiplusStartupInput.SuppressBackgroundThread = FALSE;
   gdiplusStartupInput.SuppressExternalCodecs = FALSE;
   GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
+
+  /* Force the shell icon subsystem to warm up here. Its first SHGetFileInfoA
+     costs ~90ms; paying it at launch keeps it out of the first prompt paint. */
+  {
+      char warm[MAX_PATH];
+      if (SearchPathA(NULL, "shell32.dll", NULL, MAX_PATH, warm, NULL)) {
+          SHFILEINFOA sfi;
+          ZeroMemory(&sfi, sizeof(sfi));
+          if (SHGetFileInfoA(warm, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES) && sfi.hIcon) {
+              DestroyIcon(sfi.hIcon);
+          }
+      }
+      win32_gdiplus_ready();
+  }
 
 
   WNDCLASSA wc = {0};
