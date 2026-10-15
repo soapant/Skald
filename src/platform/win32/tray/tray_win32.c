@@ -7,6 +7,7 @@
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
+#include "platform/win32/input_core_win32.h"
 
 #include "core/timer.h"
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -34,6 +35,11 @@ switch (msg) {
       break;
   }
     
+  case WM_INPUT: {
+    Platform_HandleRawMouseInput(lParam);
+    break;
+  }
+
   case WM_TRAYICON: {
     if (lParam == WM_RBUTTONUP) {
       POINT pt;
