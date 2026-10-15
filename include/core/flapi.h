@@ -730,6 +730,8 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
 
 bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows);
 
+bool fl_replay_hotkey(int vk, int mods);
+
 typedef void (*FlSnippetFunc)(void);
 bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFunc fn, bool whitelist, const char** windows);
 

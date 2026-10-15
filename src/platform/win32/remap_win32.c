@@ -13,5 +13,9 @@ log_warn("Platform_EmitKey win32 vk=%d down=%d", vk_code, down);
     if (vk_code == VK_UP || vk_code == VK_DOWN || vk_code == VK_LEFT || vk_code == VK_RIGHT || vk_code == VK_RCONTROL || vk_code == VK_RMENU) {
         inp.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
     }
-    SendInput(1, &inp, sizeof(INPUT));
+    UINT sent = SendInput(1, &inp, sizeof(INPUT));
+    if (sent != 1) {
+      log_error("Platform_EmitKey FAILED vk=%d down=%d sent=%u err=%lu",
+                vk_code, down, (unsigned)sent, GetLastError());
+    }
 }

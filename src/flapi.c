@@ -1710,6 +1710,13 @@ void fl_emit_key(int vk, bool down) {
   Platform_EmitKey(vk, down ? 1 : 0);
   PROFILE_END_VAR(_pt, "flapi:fl_emit_key");
 }
+
+bool fl_replay_hotkey(int vk, int mods) {
+  PROFILE_START(_pt);
+  bool matched = hotkey_process(vk, mods);
+  PROFILE_END_VAR(_pt, "flapi:fl_replay_hotkey");
+  return matched;
+}
 int fl_get_current_volume(void) {
     PROFILE_START(_pt);
   { PROFILE_END_VAR(_pt, "fl_get_current_volume"); return fl_get_current_volume_platform(); }
