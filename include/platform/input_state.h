@@ -48,6 +48,7 @@ typedef struct {
 } PlatformMouseEvent;
 
 void Platform_GlobalMouse_Push(const PlatformMouseEvent* ev);
+int Platform_GlobalMouse_Full(void);
 bool Platform_GlobalMouse_Pop(PlatformMouseEvent* out);
 void Platform_GlobalMouse_Clear(void);
 int Platform_GlobalMouse_Pending(void);

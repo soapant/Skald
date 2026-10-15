@@ -62,13 +62,17 @@ static void record_push_key(const FlKeyEvent* e) {
 static void record_push_mouse(const FlMouseEvent* e) {
     MacroEvent m;
     memset(&m, 0, sizeof(m));
-    m.type = EVT_MOUSE;
-    m.a = e->button;
+    if (e->button == 0) {
+        m.type = EVT_MOVE;
+    } else {
+        m.type = EVT_MOUSE;
+        m.a = e->button;
+        m.mods = e->mods;
+        m.down = e->down;
+        m.repeat = e->repeat;
+    }
     m.x = e->x;
     m.y = e->y;
-    m.mods = e->mods;
-    m.down = e->down;
-    m.repeat = e->repeat;
     m.t_us = e->t_us;
     record_push(&m);
 }
@@ -90,43 +94,32 @@ static void sort_events(void) {
     }
 }
 
-static void record_push_move(int x, int y, unsigned long long t_us) {
-    MacroEvent m;
-    memset(&m, 0, sizeof(m));
-    m.type = EVT_MOVE;
-    m.x = x;
-    m.y = y;
-    m.mods = 0;
-    m.t_us = t_us;
-    record_push(&m);
-}
-
-static unsigned long long now_us(void) {
-  FlTimer t = fl_start_timer();
-  return t.ticks / 1000ULL;
-}
-
+/* Event timestamps come from the platform input queue in microseconds. Keep the
+   same clock here: QueryPerformanceCounter runs at 10MHz, so raw ticks are not
+   microseconds and mixing the two scales makes every wait 100x too long. */
 static void* recorder_loop(void* arg) {
   (void)arg;
-  int last_x = -1, last_y = -1;
+  unsigned long long spins = 0, keys = 0, mice = 0;
+  printf("[macro] recorder_loop START\n"); fflush(stdout);
   while (g_recording) {
-
     FlKeyEvent ke;
-    while (fl_poll_key(&ke)) record_push_key(&ke);
+    while (fl_poll_key(&ke)) { record_push_key(&ke); keys++; }
 
     FlMouseEvent me;
-    while (fl_poll_mouse(&me)) record_push_mouse(&me);
+    while (fl_poll_mouse(&me)) { record_push_mouse(&me); mice++; }
 
-    FlPos p = fl_get_cursor_pos();
-    if (p.x != last_x || p.y != last_y) {
-      record_push_move(p.x, p.y, now_us());
-      last_x = p.x;
-      last_y = p.y;
+    spins++;
+    if ((spins % 200) == 0) {
+      printf("[macro] rec spins=%llu keys=%llu mice=%llu events=%d overflow=%d\n",
+             spins, keys, mice, g_event_count, g_overflow ? 1 : 0);
+      fflush(stdout);
     }
-
     fl_sleep(0.005);
   }
 
+  printf("[macro] recorder_loop STOP spins=%llu keys=%llu mice=%llu events=%d overflow=%d\n",
+         spins, keys, mice, g_event_count, g_overflow ? 1 : 0);
+  fflush(stdout);
   g_thread = NULL;
   return NULL;
 }
@@ -175,25 +168,36 @@ static void* playback_loop(void* arg) {
   }
   sort_events();
   unsigned long long t0 = g_events[0].t_us;
-  unsigned long long start = now_us();
+  FlTimer start = fl_start_timer();
   g_held_count = 0;
+  int emitted = 0, skipped = 0;
   for (int i = 0; i < g_event_count && g_playing; i++) {
     const MacroEvent* m = &g_events[i];
-    long long target_us = (long long)(m->t_us - t0);
-    long long cur_us = (long long)(now_us() - start);
-    long long wait = target_us - cur_us;
-    if (wait > 0) fl_sleep((double)wait / 1000000.0);
+    double target_ms = (double)(m->t_us - t0) / 1000.0;
+    double cur_ms = fl_end_timer(start);
+    double wait_ms = target_ms - cur_ms;
+    if (wait_ms > 0.0) fl_sleep(wait_ms / 1000.0);
     if (m->type == EVT_KEY) {
-      if (m->repeat) continue;
+      if (m->repeat) { skipped++; continue; }
       fl_emit_key(m->a, m->down);
       if (m->down) held_add(m->a); else held_remove(m->a);
     } else if (m->type == EVT_MOUSE) {
-      if (m->a != 0) fl_emit_mouse_button(m->a, m->down);
+      if (m->a != 0) fl_emit_mouse_button(m->a, m->down); else { skipped++; continue; }
     } else {
       FlPos p = { m->x, m->y };
       fl_move_to_pos(p);
     }
+    if (emitted < 30) {
+      const char* tn = (m->type == EVT_KEY) ? "KEY" : (m->type == EVT_MOUSE) ? "MOUSE" : "MOVE";
+      printf("[macro] play[%d] %s a=%d x=%d y=%d mods=%d down=%d rep=%d t_us=%llu target_ms=%.1f cur_ms=%.1f wait=%.1f\n",
+             i, tn, m->a, m->x, m->y, m->mods, m->down ? 1 : 0, m->repeat ? 1 : 0,
+             m->t_us, target_ms, cur_ms, wait_ms);
+      fflush(stdout);
+      emitted++;
+    }
   }
+  printf("[macro] playback DONE emitted=%d skipped=%d of %d\n", emitted, skipped, g_event_count);
+  fflush(stdout);
   release_everything();
   g_playing = false;
   g_play_thread = NULL;
@@ -201,33 +205,53 @@ static void* playback_loop(void* arg) {
 }
 
 void RecordToggle(void) {
+  printf("[macro] RecordToggle enter recording=%d events=%d\n", g_recording ? 1 : 0, g_event_count);
+  fflush(stdout);
   if (!g_recording) {
     fl_message(.render=recording_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=1000.0);
+    printf("[macro] fl_message returned, clearing queues\n"); fflush(stdout);
     fl_clear_key_queue();
     fl_clear_mouse_queue();
     reset_recording();
     g_recording = true;
-    if (!g_thread) g_thread = fl_thread_create(recorder_loop, NULL);
+    if (!g_thread) {
+      g_thread = fl_thread_create(recorder_loop, NULL);
+      printf("[macro] recorder thread=%p pending_keys=%d pending_mouse=%d\n",
+             (void*)g_thread, fl_key_queue_len(), fl_mouse_queue_len());
+      fflush(stdout);
+    } else {
+      printf("[macro] recorder thread ALREADY existed=%p\n", (void*)g_thread); fflush(stdout);
+    }
     return;
   }
+  printf("[macro] stopping recording, events=%d\n", g_event_count); fflush(stdout);
   fl_dismiss_message();
   g_recording = false;
 }
 
 void PlayToggle(void) {
+  printf("[macro] PlayToggle enter playing=%d events=%d overflow=%d\n",
+         g_playing ? 1 : 0, g_event_count, g_overflow ? 1 : 0);
+  fflush(stdout);
   if (!g_playing) {
-    if (g_event_count == 0) return;
+    if (g_event_count == 0) { printf("[macro] play ABORT: no events\n"); fflush(stdout); return; }
     fl_clear_key_queue();
     fl_clear_mouse_queue();
     g_playing = true;
-    if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
+    if (!g_play_thread) {
+      g_play_thread = fl_thread_create(playback_loop, NULL);
+      printf("[macro] playback thread=%p\n", (void*)g_play_thread); fflush(stdout);
+    }
     return;
   }
+  printf("[macro] stopping playback\n"); fflush(stdout);
   g_playing = false;
   release_everything();
 }
 
 FLINT_FEATURE_INIT {
+  printf("[macro] FLINT_FEATURE_INIT loaded\n"); fflush(stdout);
   fl_register_hotkey("Ctrl+Alt+R", RecordToggle);
   fl_register_hotkey("Ctrl+Alt+P", PlayToggle);
+  printf("[macro] hotkeys registered\n"); fflush(stdout);
 }
