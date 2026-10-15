@@ -11,6 +11,9 @@ static FlThread g_thread = NULL;
 
 #define MACRO_MAX_EVENTS 32768 * 2
 
+#define MACRO_RECORD_VK 'R'
+#define MACRO_PLAY_VK 'P'
+
 #define EVT_KEY   1
 #define EVT_MOUSE 2
 #define EVT_MOVE  3
@@ -148,6 +151,11 @@ static void release_everything(void) {
     for (int b = 1; b <= 5; b++) fl_emit_mouse_button(b, false);
 }
 
+static bool is_macro_control_chord(int vk, int mods) {
+  if (mods != (HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT)) return false;
+  return vk == MACRO_RECORD_VK || vk == MACRO_PLAY_VK;
+}
+
 static void* playback_loop(void* arg) {
   (void)arg;
   if (g_event_count == 0) {
@@ -167,6 +175,8 @@ static void* playback_loop(void* arg) {
     if (wait_ms > 0.0) fl_sleep(wait_ms / 1000.0);
     if (m->type == EVT_KEY) {
       if (m->repeat) continue;
+      if (m->down && is_macro_control_chord(m->a, m->mods)) continue;
+      if (m->down && fl_replay_hotkey(m->a, m->mods)) continue;
       fl_emit_key(m->a, m->down);
       if (m->down) held_add(m->a); else held_remove(m->a);
     } else if (m->type == EVT_MOUSE) {
