@@ -486,7 +486,7 @@ XftFont *xf = FH_TO_XFT(font);
     int draw_x = PROMPT_EDIT_INSET - scroll;
     Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);
     if (text_len > 0) {
-        Platform_SetDrawContext(dpy, xd, vis, cmap);
+        FontHandle font = Platform_CreateFont(FontSize, UsedFont);
         if (RainbowText) {
             int nchars = 0;
             for (int p = 0; p < text_len; ) {
@@ -503,15 +503,16 @@ XftFont *xf = FH_TO_XFT(font);
                 if (cl < 1) cl = 1;
                 char buf[8];
                 memcpy(buf, state->filter + pos, cl);
-                buf[cl] = '\\0';
-                int x = draw_x + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
-                unsigned long col = rgb_to_hex(GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.55f, GradientBrightness));
+                buf[cl] = '\0';
+                int x = (PROMPT_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
+                unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
                 Platform_DrawTextRaw(x, PROMPT_EDIT_INSET, buf, col, font, "", 0, 0);
                 pos += cl; ci++;
             }
         } else {
-            Platform_DrawTextRaw(draw_x, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
+            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
         }
+        Platform_DestroyFont(font);
     }
 }
 static int x11_char_x(Display *dpy, XftFont *xf, PromptState *state, int index, int *out_scroll) {

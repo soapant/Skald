@@ -822,7 +822,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         if (RainbowText) {
             int nchars = 0;
             for (int p = 0; p < text_len; ) {
-                unsigned char c = (unsigned char)spec->buffer[p];
+                unsigned char c = (unsigned char)state->filter[p];
                 int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
                 if (cl < 1) cl = 1;
                 p += cl; nchars++;
@@ -830,19 +830,19 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
             int ci = 0;
             size_t pos = 0;
             while (pos < (size_t)text_len) {
-                unsigned char c = (unsigned char)spec->buffer[pos];
+                unsigned char c = (unsigned char)state->filter[pos];
                 int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
                 if (cl < 1) cl = 1;
                 char buf[8];
-                memcpy(buf, spec->buffer + pos, cl);
+                memcpy(buf, state->filter + pos, cl);
                 buf[cl] = '\0';
-                int x = draw_x + Platform_MeasureTextWidth(spec->buffer, (int)pos, FontSize);
-                unsigned long col = rgb_to_hex(GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.55f, GradientBrightness));
-                Platform_DrawTextRaw(x, cursor_y, buf, col, fh, "", 0, 0);
+                int x = (PROMPT_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
+                unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
+                Platform_DrawTextRaw(x, PROMPT_EDIT_INSET, buf, col, spec->font, "", 0, 0);
                 pos += cl; ci++;
             }
         } else {
-            Platform_DrawTextRaw(draw_x, cursor_y, spec->buffer, rgb_to_hex(COLOR_TEXT), fh, "", 0, 0);
+            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), spec->font, "", 0, 0);
         }
     }
     int cursor_draw_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
