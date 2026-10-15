@@ -39,6 +39,7 @@ const char* FeaturePath = "src/features";
 const char* IconPath = "{MISC}/switch_window.ico";
 const char* ControlHotkey = "Alt+Space";
 const char* Theme = "rose-pine";
+const char* BackgroundImage = "";
 
 bool FullTextNeedsKeyPress = true;
 bool MessagesEnabled = true;

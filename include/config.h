@@ -57,6 +57,7 @@ extern bool VimModeText;
 extern int GradientItems;
 extern float GradientBrightness;
 extern const char* Theme;
+extern const char* BackgroundImage;
 
 extern ColorRef COLOR_BG;
 extern ColorRef COLOR_CURSOR;
