@@ -3825,12 +3825,6 @@ static int FlWrapMeasureThunk(void* ctx, const char* s, int n) {
     { PROFILE_END_VAR(_pt, "FlWrapMeasureThunk"); return Platform_MeasureTextWidth(s, n, c->fontsize); }
 }
 
-static void FlWrapDrawThunk(void* ctx, int x, int y, const char* s, int n) {
-        PROFILE_START(_pt);
-FlWrapCtx* c = (FlWrapCtx*)ctx;
-    Platform_DrawTextLine(x, y, s, n, c->color, c->fontsize);
-}
-
 static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
         PROFILE_START(_pt);
 (void)ctx;
