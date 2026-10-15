@@ -166,7 +166,10 @@ void hotkey_drain_pending(void) {
 void hotkey_mark_feature_toggles(HotkeyCallback cb) {
     if (!cb) return;
     for (int i = 0; i < g_hotkey_count; i++) {
-        if (g_hotkeys[i].hotkey_callback == cb) g_hotkeys[i].is_feature_toggle = true;
+        if (g_hotkeys[i].hotkey_callback == cb) {
+            g_hotkeys[i].is_feature_toggle = true;
+            g_hotkeys[i].hold = false;
+        }
     }
 }
 
