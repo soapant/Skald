@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include "core/flapi.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -209,6 +210,164 @@ static const CcScanPath ListOfProgramPaths[] = {
     { "/home/dog/.local/bin", FL_DIR_WALK_UNLIMITED },
     { "/home/dog/miscellaneous", FL_DIR_WALK_UNLIMITED },
 #endif
+=======
+#include "core/flapi.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
+#include <stdlib.h>
+
+typedef void (*CcFill)(void);
+
+typedef struct {
+    char label[256];
+    char type[64];
+    char payload[MAX_PATH];
+    char icon[MAX_PATH];
+    void (*on_enter)(void);
+    void (*on_ctrl_enter)(void);
+    void (*on_tab)(void);
+    void (*on_action)(void);
+} CcEntry;
+
+#define CC_MAX_TYPES 16
+#define CC_FEATURE_MAX 130
+
+#define CC_ITEM_TEXT_X 10
+#define CC_ITEM_TEXT_Y 4
+
+#define CC_ICON_GAP 8
+
+static const char *g_type_names[CC_MAX_TYPES];
+static CcFill g_type_fills[CC_MAX_TYPES];
+static int g_type_count;
+
+static CcEntry *g_entries;
+static int g_entry_count;
+static int g_entry_cap;
+
+static CcEntry *cc_entry_new(void) {
+        if (g_entry_count >= g_entry_cap) {
+        int cap = g_entry_cap ? g_entry_cap * 2 : 128;
+        CcEntry *grown = (CcEntry *)realloc(g_entries, (size_t)cap * sizeof(CcEntry));
+        if (!grown) return NULL;
+        g_entries = grown;
+        g_entry_cap = cap;
+    }
+    CcEntry *e = &g_entries[g_entry_count++];
+    memset(e, 0, sizeof(*e));
+    {  return e; }
+}
+
+static CcEntry *cc_entry_add_icon(const char *label, const char *type, const char *payload, const char *icon) {
+        if (!label || !label[0]) {  return NULL; }
+    if (g_entry_count >= MAX_VISIBLE_ITEMS) {  return NULL; }
+    CcEntry *e = cc_entry_new();
+    if (!e) {  return NULL; }
+    snprintf(e->label, sizeof(e->label), "%s", label);
+    snprintf(e->type, sizeof(e->type), "%s", type ? type : "");
+    snprintf(e->payload, sizeof(e->payload), "%s", payload ? payload : "");
+    snprintf(e->icon, sizeof(e->icon), "%s", icon ? icon : "");
+    {  return e; }
+}
+
+static CcEntry *cc_entry_add(const char *label, const char *type, const char *payload) {
+        {  return cc_entry_add_icon(label, type, payload, NULL); }
+}
+
+
+
+static bool cc_register_type(const char *name, CcFill fill) {
+        if (!name || !fill || g_type_count >= CC_MAX_TYPES) {  return false; }
+    g_type_names[g_type_count] = name;
+    g_type_fills[g_type_count] = fill;
+    g_type_count++;
+    {  return true; }
+}
+
+static bool g_cc_fallback_active = false;
+
+static CcEntry *cc_add_fallback(void) {
+        CcEntry *fallback = cc_entry_new();
+    if (!fallback) {  return NULL; }
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
+    buffer[0] = toupper((unsigned char)buffer[0]);
+    snprintf(fallback->label, sizeof(fallback->label), "%s", buffer);
+    snprintf(fallback->icon, sizeof(fallback->icon), "resources/%s.png", UsedSearchEngine);
+    {  return fallback; }
+}
+
+static void cc_build(void) {
+        g_entry_count = 0;
+    for (int i = 0; i < g_type_count; i++) g_type_fills[i]();
+    for (int i = 0; i < fl_cc_entry_count(); i++) {
+        const FlCcEntrySpec *s = fl_cc_entry_at(i);
+        if (!s || !s->display_name || !s->display_name[0]) continue;
+        CcEntry *e = cc_entry_add_icon(s->display_name, s->type ? s->type : "", "", s->icon ? s->icon : "");
+        if (!e) continue;
+        if (s->on_enter) e->on_enter = s->on_enter;
+        if (s->on_ctrl_enter) e->on_ctrl_enter = s->on_ctrl_enter;
+        if (s->on_tab) e->on_tab = s->on_tab;
+        if (s->on_action) e->on_action = s->on_action;
+    }
+    if (g_cc_fallback_active) cc_add_fallback();
+}
+
+static const CcEntry *cc_find(const char *label) {
+        if (!label || !label[0]) {  return NULL; }
+    for (int i = 0; i < g_entry_count; i++) {
+        if (strcmp(g_entries[i].label, label) == 0)  {
+            return &g_entries[i];
+        }
+    }
+    {  return NULL; }
+}
+
+static const char *g_cc_staged_label = NULL;
+static void (*g_pending_action)(void);
+static void (*g_pending_fn)(void);
+static char g_pending_label[256];
+
+static void cc_stage(const CcEntry *e, bool ctrl) {
+        g_pending_action = NULL;
+    g_pending_fn = NULL;
+    g_pending_label[0] = '\0';
+    if (!e) {  return ; }
+    if (ctrl) {
+        if (e->on_ctrl_enter) {
+            g_pending_fn = e->on_ctrl_enter;
+            snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+        }
+        return;
+    }
+    if (e->on_action) {
+        g_pending_action = e->on_action;
+        snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+    } else if (e->on_enter) {
+        g_pending_fn = e->on_enter;
+        snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+    }
+}
+
+static void cc_run_pending(void) {
+        void (*act)(void) = g_pending_action;
+    void (*pfn)(void) = g_pending_fn;
+    snprintf(g_pending_label, sizeof(g_pending_label), "%s", g_pending_label);
+    g_pending_action = NULL;
+    g_pending_fn = NULL;
+    g_cc_staged_label = g_pending_label;
+    if (act) act();
+    else if (pfn) pfn();
+    g_cc_staged_label = NULL;
+}
+
+static const char *ListOfShitToIgnore[] = {
+  "node_modules",
+  "git",
+  "dll",
+>>>>>>> 408a6905 (removed some dead functions)
 };
 
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
