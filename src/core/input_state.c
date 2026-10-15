@@ -125,14 +125,24 @@ void Platform_GlobalKey_Clear(void){
   GKEY_UNLOCK();
 }
 
+static unsigned long long win32_qpc_us(void) {
+  static LONG freq = 0;
+  if (!freq) {
+    LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    freq = (LONG)f.QuadPart;
+    if (freq <= 0) freq = 1;
+  }
+  LARGE_INTEGER q;
+  QueryPerformanceCounter(&q);
+  return (unsigned long long)((q.QuadPart * 1000000ULL) / (unsigned long long)freq);
+}
+
 void Platform_GlobalKey_Push(const PlatformKeyEvent* ev){
   if(!ev) return;
   PlatformKeyEvent stamped = *ev;
 #if defined(_WIN32)
-  LARGE_INTEGER q, f;
-  QueryPerformanceFrequency(&f);
-  QueryPerformanceCounter(&q);
-  stamped.t_us = (unsigned long long)((q.QuadPart * 1000000ULL) / (unsigned long long)f.QuadPart);
+  stamped.t_us = win32_qpc_us();
 #else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -194,14 +204,17 @@ static void gmouse_lock_init(void) {
 #define GMOUSE_UNLOCK() do { gmouse_lock_init(); LeaveCriticalSection(&g_gmouse_cs); } while (0)
 #endif
 
+int Platform_GlobalMouse_Full(void){
+  int next = (g_gmouse_tail + 1) % GLOBAL_MOUSE_RING;
+  return next == g_gmouse_head;
+}
+
 void Platform_GlobalMouse_Push(const PlatformMouseEvent* ev){
   if(!ev) return;
+  if (Platform_GlobalMouse_Full()) return;
   PlatformMouseEvent stamped = *ev;
 #if defined(_WIN32)
-  LARGE_INTEGER q, f;
-  QueryPerformanceFrequency(&f);
-  QueryPerformanceCounter(&q);
-  stamped.t_us = (unsigned long long)((q.QuadPart * 1000000ULL) / (unsigned long long)f.QuadPart);
+  stamped.t_us = win32_qpc_us();
 #else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
