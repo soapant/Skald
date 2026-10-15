@@ -133,6 +133,7 @@ if (nCode < 0) {
             _gev.down = _isDown;
             _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
             Platform_GlobalKey_Push(&_gev);
+            if (_isUp) hotkey_key_up(_vk);
             if (remap_should_swallow_vk(_vk, _val)) {
                 char* _t = Platform_GetActiveWindowTitle();
                 log_info("hook swallow=remap vk=0x%X val=%d title='%s'", _vk, _val, _t ? _t : "");
