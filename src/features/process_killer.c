@@ -374,5 +374,5 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+U", TriggerProcessKiller,"Fortnite");
     fl_register_hotkey("Alt+Shift+P", bulk_kill_bkp);
 
-    fl_register_feature("Process Killer", TriggerProcessKiller);
+    fl_register_feature(.name="Process Killer",.cb=TriggerProcessKiller);
 }

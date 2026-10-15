@@ -66,6 +66,6 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+W", TriggerZoxide, "Fortnite");
     fl_register_hotkey("Alt+R",TriggerFileManager,"Fortnite");
 
-    fl_register_feature("Zoxide", TriggerZoxide);
-    fl_register_feature("File Manager", TriggerFileManager);
+    fl_register_feature(.name="Zoxide",.cb=TriggerZoxide);
+    fl_register_feature(.name="File Manager",.cb=TriggerFileManager);
 }

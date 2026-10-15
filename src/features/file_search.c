@@ -271,5 +271,5 @@ void TriggerFileSearch(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+X", TriggerFileSearch,"Fortnite");
-    fl_register_feature("File Search", TriggerFileSearch);
+    fl_register_feature(.name="File Search",.cb=TriggerFileSearch);
 }
