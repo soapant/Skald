@@ -1,5 +1,6 @@
 #include "config.h"
 #include "platform/platform.h"
+#include <time.h>
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 #include "deps/log.h"
@@ -61,6 +62,10 @@ static HotkeyHoldSlot g_hold_slots[HOTKEY_HOLD_MAX];
 static unsigned long long hotkey_now_ms(void) {
 #if defined(_WIN32)
     return (unsigned long long)GetTickCount64();
+#else
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (unsigned long long)ts.tv_sec * 1000ULL + (unsigned long long)ts.tv_nsec / 1000000ULL;
 #endif
 }
 
