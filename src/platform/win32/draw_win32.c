@@ -584,6 +584,7 @@ if (radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false;
 }
 
 #define WIN32_IMG_CACHE_SLOTS 128
+#define WIN32_IMG_REVALIDATE_MS 1000
 
 typedef struct {
     char key[512];
@@ -593,6 +594,7 @@ typedef struct {
     HDC screen;
     void* bmp;
     ULONGLONG stamp;
+    DWORD checked_ms;
 } Win32ImgSlot;
 
 static Win32ImgSlot g_img_cache[WIN32_IMG_CACHE_SLOTS];
@@ -655,17 +657,25 @@ ft->dwLowDateTime = 0;
 
 static void* win32_img_cache_get(const char *path, HDC screen, int w, int h) {
         PROFILE_START(_pt);
-FILETIME ft;
-    DWORD size;
-    win32_img_stat(path, &ft, &size);
     HBITMAP found = NULL;
+    DWORD now = GetTickCount();
     win32_img_cache_lock();
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
         Win32ImgSlot *s = &g_img_cache[i];
         if (!s->bmp) continue;
         if (s->screen != screen || s->w != w || s->h != h) continue;
-        if (memcmp(&s->mtime, &ft, sizeof(ft)) != 0 || s->size != size) continue;
         if (strcmp(s->key, path) != 0) continue;
+        if (now - s->checked_ms >= WIN32_IMG_REVALIDATE_MS) {
+            FILETIME ft;
+            DWORD size;
+            win32_img_stat(path, &ft, &size);
+            s->checked_ms = now;
+            if (memcmp(&s->mtime, &ft, sizeof(ft)) != 0 || s->size != size) {
+                win32_gdip_dispose(s->bmp);
+                s->bmp = NULL;
+                continue;
+            }
+        }
         s->stamp = ++g_img_cache_tick;
         found = s->bmp;
         break;
@@ -699,6 +709,7 @@ if (!bmp) { PROFILE_END_VAR(_pt, "win32_img_cache_put"); return ; }
     s->size = size;
     s->screen = screen;
     s->bmp = bmp;
+    s->checked_ms = GetTickCount();
     s->stamp = ++g_img_cache_tick;
     win32_img_cache_unlock();
 }
