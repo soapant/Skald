@@ -108,9 +108,15 @@ int fl_get_icon_size(const char* icon_path);
 // =============================================================================
 // FEATURES
 // =============================================================================
+typedef struct {
+    const char* name;
+    void (*cb)(void);
+    const char* icon_path;
+} FlFeatureSpec;
 
-void fl_register_feature(const char* name, void (*cb)(void));
-void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path);
+void fl_register_feature_impl(const FlFeatureSpec* spec);
+#define fl_register_feature(...) fl_register_feature_impl(&(FlFeatureSpec){__VA_ARGS__})
+
 int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max);
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max);
 

@@ -495,32 +495,30 @@ static FlintMap* ensure_feature_map(void) {
     { PROFILE_END_VAR(_pt, "ensure_feature_map"); return g_feature_map; }
 }
 
-void fl_register_feature(const char* name, void (*cb)(void)) {
-        PROFILE_START(_pt);
-fl_register_feature_with_icon(name, cb, NULL);
-}
-void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path) {
-    if (!name || !cb) return;
+void fl_register_feature_impl(const FlFeatureSpec* spec) {
+    PROFILE_START(_pt);
+    if (!spec->name || !spec->cb) return;
+    char* icon_path = spec->icon_path ? spec->icon_path : "";
     ensure_feature_map();
-    ptrdiff_t idx = shgeti(g_feature_map, (char*)name);
+    ptrdiff_t idx = shgeti(g_feature_map, (char*)spec->name);
     FeatureReg* existing = idx >= 0 ? (FeatureReg*)g_feature_map[idx].value : NULL;
     if (existing) {
     PROFILE_START(_pt);
-        existing->cb = cb;
+        existing->cb = spec->cb;
         if (icon_path) {
             strncpy(existing->icon, icon_path, sizeof(existing->icon)-1);
             existing->icon[sizeof(existing->icon)-1] = '\0';
         } else {
             existing->icon[0] = '\0';
         }
-        hotkey_mark_feature_toggles(cb);
+        hotkey_mark_feature_toggles(spec->cb);
         { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     FeatureReg* reg = (FeatureReg*)calloc(1, sizeof(FeatureReg));
     if (!reg) return;
-    strncpy(reg->name, name, sizeof(reg->name)-1);
+    strncpy(reg->name, spec->name, sizeof(reg->name)-1);
     reg->name[sizeof(reg->name)-1] = '\0';
-    reg->cb = cb;
+    reg->cb = spec->cb;
     if (icon_path) {
         strncpy(reg->icon, icon_path, sizeof(reg->icon)-1);
         reg->icon[sizeof(reg->icon)-1] = '\0';
@@ -530,12 +528,12 @@ void fl_register_feature_with_icon(const char* name, void (*cb)(void), const cha
         int new_cap = g_feature_order_cap ? g_feature_order_cap * 2 : 32;
         FeatureReg** new_order = (FeatureReg**)realloc(g_feature_order, new_cap * sizeof(FeatureReg*));
         if (!new_order) {     PROFILE_START(_pt);
-shdel(g_feature_map, reg->name); free(reg); { PROFILE_END_VAR(_pt, "f"); return ; } }
+      shdel(g_feature_map, reg->name); free(reg); { PROFILE_END_VAR(_pt, "f"); return ; } }
         g_feature_order = new_order;
         g_feature_order_cap = new_cap;
     }
     g_feature_order[g_feature_order_count++] = reg;
-    hotkey_mark_feature_toggles(cb);
+    hotkey_mark_feature_toggles(spec->cb);
 }
 
 bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows) {
