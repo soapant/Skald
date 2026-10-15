@@ -171,7 +171,7 @@ void music_prompt(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL, true);
+    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL, true, FL_DIR_WALK_UNLIMITED);
     fl_register_hotkey("Alt+,", music_cmd_1);
     fl_register_hotkey("Alt+/", music_cmd_5);
     fl_register_hotkey("Alt+;", music_cmd_6);

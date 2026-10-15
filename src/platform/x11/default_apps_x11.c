@@ -52,7 +52,7 @@ static int next_slot = 0;
         g_ad_cache[slot].count = 0;
         g_ad_cache[slot].capacity = 0;
     }
-    Platform_GetAllFilesFromDir(dir, NULL, &g_ad_cache[slot], NULL, true);
+    Platform_GetAllFilesFromDir(dir, NULL, &g_ad_cache[slot], NULL, true, 0);
     snprintf(g_ad_path[slot], sizeof(g_ad_path[slot]), "%s", dir);
     g_ad_valid[slot] = true;
     { PROFILE_END_VAR(_pt, "x11_applications_dir_files"); return &g_ad_cache[slot]; }

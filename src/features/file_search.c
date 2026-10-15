@@ -89,7 +89,7 @@ static void scan_app_dirs(void) {
     ListOfFiles tmp = {0};
     for (int i = 0; i < (int)ARRAY_LEN(ListOfFilePaths); i++) {
         if (!ListOfFilePaths[i] || ListOfFilePaths[i][0] == '\0') continue;
-        fl_get_all_files_from_dir(ListOfFilePaths[i], allowed, &tmp, NULL, false);
+        fl_get_all_files_from_dir(ListOfFilePaths[i], allowed, &tmp, NULL, false, FL_DIR_WALK_UNLIMITED);
     }
     for (size_t i = 0; i < tmp.count; ) {
         bool skip = false;

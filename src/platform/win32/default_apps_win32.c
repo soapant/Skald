@@ -60,7 +60,7 @@ if (slot < 0 || slot >= SM_SLOTS) { PROFILE_END_VAR(_pt, "sm_lookup"); return NU
     if (!g_sm_scanned) {
         g_sm_scanned = true;
         Platform_GetAllFilesFromDir("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
-                                    NULL, &g_sm_files, NULL, true);
+                                    NULL, &g_sm_files, NULL, true, 0);
     }
     for (size_t j = 0; j < count; j++) {
         for (int i = 0; i < g_sm_files.count; i++) {
