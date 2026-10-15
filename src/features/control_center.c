@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include "core/flapi.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -47,7 +46,7 @@ static int g_entry_count;
 static int g_entry_cap;
 
 static CcEntry *cc_entry_new(void) {
-        if (g_entry_count >= g_entry_cap) {
+    if (g_entry_count >= g_entry_cap) {
         int cap = g_entry_cap ? g_entry_cap * 2 : 128;
         CcEntry *grown = (CcEntry *)realloc(g_entries, (size_t)cap * sizeof(CcEntry));
         if (!grown) return NULL;
@@ -56,63 +55,63 @@ static CcEntry *cc_entry_new(void) {
     }
     CcEntry *e = &g_entries[g_entry_count++];
     memset(e, 0, sizeof(*e));
-    {  return e; }
+    return e;
 }
 
 static CcEntry *cc_entry_add_icon(const char *label, const char *type, const char *payload, const char *icon) {
-        if (!label || !label[0]) {  return NULL; }
-    if (g_entry_count >= MAX_VISIBLE_ITEMS) {  return NULL; }
+    if (!label || !label[0]) return NULL;
+    if (g_entry_count >= MAX_VISIBLE_ITEMS) return NULL;
     CcEntry *e = cc_entry_new();
-    if (!e) {  return NULL; }
+    if (!e) return NULL;
     snprintf(e->label, sizeof(e->label), "%s", label);
     snprintf(e->type, sizeof(e->type), "%s", type ? type : "");
     snprintf(e->payload, sizeof(e->payload), "%s", payload ? payload : "");
     snprintf(e->icon, sizeof(e->icon), "%s", icon ? icon : "");
-    {  return e; }
+    return e;
 }
 
 static CcEntry *cc_entry_add(const char *label, const char *type, const char *payload) {
-        {  return cc_entry_add_icon(label, type, payload, NULL); }
+    return cc_entry_add_icon(label, type, payload, NULL);
 }
 
 static CcEntry *cc_entry_add_fn(const char *label, const char *type, void (*fn)(void)) {
-        CcEntry *e = cc_entry_add(label, type, "");
+    CcEntry *e = cc_entry_add(label, type, "");
     if (e) e->on_action = fn;
-    {  return e; }
+    return e;
 }
 
 static bool cc_register_type(const char *name, CcFill fill) {
-        if (!name || !fill || g_type_count >= CC_MAX_TYPES) {  return false; }
+    if (!name || !fill || g_type_count >= CC_MAX_TYPES) return false;
     g_type_names[g_type_count] = name;
     g_type_fills[g_type_count] = fill;
     g_type_count++;
-    {  return true; }
+    return true;
 }
 
 static CC_MAYBE_UNUSED bool cc_add_action(const char *label, const char *type, void (*fn)(void)) {
-        if (!label || !label[0] || !fn || g_action_count >= CC_MAX_ACTIONS) {  return false; }
+    if (!label || !label[0] || !fn || g_action_count >= CC_MAX_ACTIONS) return false;
     CcActionDef *a = &g_actions[g_action_count++];
     snprintf(a->label, sizeof(a->label), "%s", label);
     snprintf(a->type, sizeof(a->type), "%s", type ? type : "");
     a->fn = fn;
-    {  return true; }
+    return true;
 }
 
 static bool g_cc_fallback_active = false;
 
 static CcEntry *cc_add_fallback(void) {
-        CcEntry *fallback = cc_entry_new();
-    if (!fallback) {  return NULL; }
+    CcEntry *fallback = cc_entry_new();
+    if (!fallback) return NULL;
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
     buffer[0] = toupper((unsigned char)buffer[0]);
     snprintf(fallback->label, sizeof(fallback->label), "%s", buffer);
     snprintf(fallback->icon, sizeof(fallback->icon), "resources/%s.png", UsedSearchEngine);
-    {  return fallback; }
+    return fallback;
 }
 
 static void cc_build(void) {
-        g_entry_count = 0;
+    g_entry_count = 0;
     for (int i = 0; i < g_type_count; i++) g_type_fills[i]();
     for (int i = 0; i < g_action_count; i++) {
         CcEntry *e = cc_entry_add(g_actions[i].label, g_actions[i].type, "");
@@ -132,13 +131,13 @@ static void cc_build(void) {
 }
 
 static const CcEntry *cc_find(const char *label) {
-        if (!label || !label[0]) {  return NULL; }
+    if (!label || !label[0]) return NULL;
     for (int i = 0; i < g_entry_count; i++) {
-        if (strcmp(g_entries[i].label, label) == 0)  {
+        if (strcmp(g_entries[i].label, label) == 0) {
             return &g_entries[i];
         }
     }
-    {  return NULL; }
+    return NULL;
 }
 
 static const char *g_cc_staged_label = NULL;
@@ -147,10 +146,10 @@ static void (*g_pending_fn)(void);
 static char g_pending_label[256];
 
 static void cc_stage(const CcEntry *e, bool ctrl) {
-        g_pending_action = NULL;
+    g_pending_action = NULL;
     g_pending_fn = NULL;
     g_pending_label[0] = '\0';
-    if (!e) {  return ; }
+    if (!e) return;
     if (ctrl) {
         if (e->on_ctrl_enter) {
             g_pending_fn = e->on_ctrl_enter;
@@ -168,9 +167,8 @@ static void cc_stage(const CcEntry *e, bool ctrl) {
 }
 
 static void cc_run_pending(void) {
-        void (*act)(void) = g_pending_action;
+    void (*act)(void) = g_pending_action;
     void (*pfn)(void) = g_pending_fn;
-    snprintf(g_pending_label, sizeof(g_pending_label), "%s", g_pending_label);
     g_pending_action = NULL;
     g_pending_fn = NULL;
     g_cc_staged_label = g_pending_label;
@@ -183,6 +181,7 @@ static const char *ListOfShitToIgnore[] = {
   "node_modules",
   "git",
   "dll",
+  NULL,
 };
 
 typedef struct {
@@ -210,164 +209,6 @@ static const CcScanPath ListOfProgramPaths[] = {
     { "/home/dog/.local/bin", FL_DIR_WALK_UNLIMITED },
     { "/home/dog/miscellaneous", FL_DIR_WALK_UNLIMITED },
 #endif
-=======
-#include "core/flapi.h"
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <stdlib.h>
-
-typedef void (*CcFill)(void);
-
-typedef struct {
-    char label[256];
-    char type[64];
-    char payload[MAX_PATH];
-    char icon[MAX_PATH];
-    void (*on_enter)(void);
-    void (*on_ctrl_enter)(void);
-    void (*on_tab)(void);
-    void (*on_action)(void);
-} CcEntry;
-
-#define CC_MAX_TYPES 16
-#define CC_FEATURE_MAX 130
-
-#define CC_ITEM_TEXT_X 10
-#define CC_ITEM_TEXT_Y 4
-
-#define CC_ICON_GAP 8
-
-static const char *g_type_names[CC_MAX_TYPES];
-static CcFill g_type_fills[CC_MAX_TYPES];
-static int g_type_count;
-
-static CcEntry *g_entries;
-static int g_entry_count;
-static int g_entry_cap;
-
-static CcEntry *cc_entry_new(void) {
-        if (g_entry_count >= g_entry_cap) {
-        int cap = g_entry_cap ? g_entry_cap * 2 : 128;
-        CcEntry *grown = (CcEntry *)realloc(g_entries, (size_t)cap * sizeof(CcEntry));
-        if (!grown) return NULL;
-        g_entries = grown;
-        g_entry_cap = cap;
-    }
-    CcEntry *e = &g_entries[g_entry_count++];
-    memset(e, 0, sizeof(*e));
-    {  return e; }
-}
-
-static CcEntry *cc_entry_add_icon(const char *label, const char *type, const char *payload, const char *icon) {
-        if (!label || !label[0]) {  return NULL; }
-    if (g_entry_count >= MAX_VISIBLE_ITEMS) {  return NULL; }
-    CcEntry *e = cc_entry_new();
-    if (!e) {  return NULL; }
-    snprintf(e->label, sizeof(e->label), "%s", label);
-    snprintf(e->type, sizeof(e->type), "%s", type ? type : "");
-    snprintf(e->payload, sizeof(e->payload), "%s", payload ? payload : "");
-    snprintf(e->icon, sizeof(e->icon), "%s", icon ? icon : "");
-    {  return e; }
-}
-
-static CcEntry *cc_entry_add(const char *label, const char *type, const char *payload) {
-        {  return cc_entry_add_icon(label, type, payload, NULL); }
-}
-
-
-
-static bool cc_register_type(const char *name, CcFill fill) {
-        if (!name || !fill || g_type_count >= CC_MAX_TYPES) {  return false; }
-    g_type_names[g_type_count] = name;
-    g_type_fills[g_type_count] = fill;
-    g_type_count++;
-    {  return true; }
-}
-
-static bool g_cc_fallback_active = false;
-
-static CcEntry *cc_add_fallback(void) {
-        CcEntry *fallback = cc_entry_new();
-    if (!fallback) {  return NULL; }
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
-    buffer[0] = toupper((unsigned char)buffer[0]);
-    snprintf(fallback->label, sizeof(fallback->label), "%s", buffer);
-    snprintf(fallback->icon, sizeof(fallback->icon), "resources/%s.png", UsedSearchEngine);
-    {  return fallback; }
-}
-
-static void cc_build(void) {
-        g_entry_count = 0;
-    for (int i = 0; i < g_type_count; i++) g_type_fills[i]();
-    for (int i = 0; i < fl_cc_entry_count(); i++) {
-        const FlCcEntrySpec *s = fl_cc_entry_at(i);
-        if (!s || !s->display_name || !s->display_name[0]) continue;
-        CcEntry *e = cc_entry_add_icon(s->display_name, s->type ? s->type : "", "", s->icon ? s->icon : "");
-        if (!e) continue;
-        if (s->on_enter) e->on_enter = s->on_enter;
-        if (s->on_ctrl_enter) e->on_ctrl_enter = s->on_ctrl_enter;
-        if (s->on_tab) e->on_tab = s->on_tab;
-        if (s->on_action) e->on_action = s->on_action;
-    }
-    if (g_cc_fallback_active) cc_add_fallback();
-}
-
-static const CcEntry *cc_find(const char *label) {
-        if (!label || !label[0]) {  return NULL; }
-    for (int i = 0; i < g_entry_count; i++) {
-        if (strcmp(g_entries[i].label, label) == 0)  {
-            return &g_entries[i];
-        }
-    }
-    {  return NULL; }
-}
-
-static const char *g_cc_staged_label = NULL;
-static void (*g_pending_action)(void);
-static void (*g_pending_fn)(void);
-static char g_pending_label[256];
-
-static void cc_stage(const CcEntry *e, bool ctrl) {
-        g_pending_action = NULL;
-    g_pending_fn = NULL;
-    g_pending_label[0] = '\0';
-    if (!e) {  return ; }
-    if (ctrl) {
-        if (e->on_ctrl_enter) {
-            g_pending_fn = e->on_ctrl_enter;
-            snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
-        }
-        return;
-    }
-    if (e->on_action) {
-        g_pending_action = e->on_action;
-        snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
-    } else if (e->on_enter) {
-        g_pending_fn = e->on_enter;
-        snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
-    }
-}
-
-static void cc_run_pending(void) {
-        void (*act)(void) = g_pending_action;
-    void (*pfn)(void) = g_pending_fn;
-    snprintf(g_pending_label, sizeof(g_pending_label), "%s", g_pending_label);
-    g_pending_action = NULL;
-    g_pending_fn = NULL;
-    g_cc_staged_label = g_pending_label;
-    if (act) act();
-    else if (pfn) pfn();
-    g_cc_staged_label = NULL;
-}
-
-static const char *ListOfShitToIgnore[] = {
-  "node_modules",
-  "git",
-  "dll",
->>>>>>> 408a6905 (removed some dead functions)
 };
 
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
@@ -377,7 +218,7 @@ static const char *ListOfShitToIgnore[] = {
    repaint. fl_get_icon_path returns an exported PNG instead, so cached entries
    left over from before that existed must be re-resolved. */
 static bool cc_icon_is_shell_only(const char *icon) {
-        if (!icon || !icon[0]) return false;
+    if (!icon || !icon[0]) return false;
     const char *dot = strrchr(icon, '.');
     if (!dot) return false;
     return (strcmp(dot, ".lnk") == 0 || strcmp(dot, ".exe") == 0 || strcmp(dot, ".url") == 0);
@@ -389,50 +230,50 @@ static char (*g_app_icons)[MAX_PATH] = NULL;
 static size_t g_app_icons_cap = 0;
 
 static bool cc_app_icons_reserve(size_t n) {
-        if (n <= g_app_icons_cap) {  return true; }
+    if (n <= g_app_icons_cap) return true;
     size_t cap = g_app_icons_cap ? g_app_icons_cap : 64;
     while (cap < n) cap *= 2;
     char (*grown)[MAX_PATH] = (char (*)[MAX_PATH])realloc(g_app_icons, cap * MAX_PATH);
-    if (!grown) {  return false; }
+    if (!grown) return false;
     memset(grown + g_app_icons_cap, 0, (cap - g_app_icons_cap) * MAX_PATH);
     g_app_icons = grown;
     g_app_icons_cap = cap;
-    {  return true; }
+    return true;
 }
 
 static void cc_app_icons_clear(void) {
-        free(g_app_icons);
+    free(g_app_icons);
     g_app_icons = NULL;
     g_app_icons_cap = 0;
 }
 
 static void cc_resolve_app_icon(size_t idx) {
-        if (idx >= g_app_icons_cap) {  return ; }
+    if (idx >= g_app_icons_cap) return;
     g_app_icons[idx][0] = '\0';
     char *icon = fl_get_icon_path(g_apps.files[idx].path);
-    if (!icon) {  return ; }
+    if (!icon) return;
     snprintf(g_app_icons[idx], MAX_PATH, "%s", icon);
     free(icon);
 }
 
 static const char *cc_app_icon(size_t idx) {
-        if (idx >= g_app_icons_cap) {  return ""; }
-    {  return g_app_icons[idx]; }
+    if (idx >= g_app_icons_cap) return "";
+    return g_app_icons[idx];
 }
 
 static bool cc_app_cache_grow(ListOfFiles *l) {
-        size_t new_cap = l->capacity ? l->capacity * 2 : 64;
+    size_t new_cap = l->capacity ? l->capacity * 2 : 64;
     FileItem *grown = (FileItem *)realloc(l->files, new_cap * sizeof(FileItem));
-    if (!grown) {  return false; }
+    if (!grown) return false;
     l->files = grown;
     l->capacity = new_cap;
-    {  return true; }
+    return true;
 }
 
 static void cc_save_app_cache(void) {
-        size_t n = g_apps.count;
-    if (n == 0) {  return ; }
-    if (!cc_app_icons_reserve(n)) {  return ; }
+    size_t n = g_apps.count;
+    if (n == 0) return;
+    if (!cc_app_icons_reserve(n)) return;
     size_t total = 0;
     for (size_t i = 0; i < n; i++) {
         total += strlen(g_apps.files[i].name) + 1;
@@ -469,7 +310,7 @@ static void cc_save_app_cache(void) {
 static bool g_cc_reexported = false;
 
 static bool cc_load_app_cache(void) {
-        FlStringList lines = fl_load_file_list(CC_APPCACHE_FILE);
+    FlStringList lines = fl_load_file_list(CC_APPCACHE_FILE);
     if (!lines.items || lines.count <= 0) {
         if (lines.items) fl_free_file_list(&lines);
         return false;
@@ -544,7 +385,7 @@ static bool cc_load_app_cache(void) {
         g_app_icons = icons;
         g_app_icons_cap = icons_cap;
     }
-    {  return true; }
+    return true;
 }
 
 static const char **g_xdg_paths = NULL;
@@ -552,10 +393,10 @@ static size_t g_xdg_path_count = 0;
 static int *g_xdg_depths = NULL;
 
 static void cc_build_xdg_paths(void) {
-        if (g_xdg_paths) {  return ; }
+    if (g_xdg_paths) return;
     g_xdg_paths = calloc(ARRAY_LEN(ListOfProgramPaths) + 16, sizeof(char *));
     g_xdg_depths = calloc(ARRAY_LEN(ListOfProgramPaths) + 16, sizeof(int));
-    if (!g_xdg_paths || !g_xdg_depths) {  return ; }
+    if (!g_xdg_paths || !g_xdg_depths) return;
     for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
         g_xdg_paths[i] = ListOfProgramPaths[i].path;
         g_xdg_depths[i] = ListOfProgramPaths[i].max_depth;
@@ -579,7 +420,7 @@ static void cc_build_xdg_paths(void) {
 }
 
 static void cc_scan_app_dirs(void) {
-    #if defined(_WIN32)
+#if defined(_WIN32)
     char *allowed[] = {"lnk", "exe", "url", NULL};
 #else
     char *allowed[] = {"desktop", NULL};
@@ -652,21 +493,21 @@ static void* cc_prewarm_app_cache(void* arg) {
 }
 
 static bool cc_app_ext_allowed(const char *name) {
-    #if defined(_WIN32)
+#if defined(_WIN32)
     static const char *exts[] = {"lnk", "exe", "url", NULL};
 #else
     static const char *exts[] = {"desktop", NULL};
 #endif
     const char *dot = strrchr(name, '.');
-    if (!dot || !dot[1]) {  return false; }
+    if (!dot || !dot[1]) return false;
     for (int i = 0; exts[i]; i++) {
         if (strcasecmp(dot + 1, exts[i]) == 0) return true;
     }
-    {  return false; }
+    return false;
 }
 
 static void cc_app_cache_drop(const char *full_path) {
-        for (size_t i = 0; i < g_apps.count; i++) {
+    for (size_t i = 0; i < g_apps.count; i++) {
         if (strcmp(g_apps.files[i].path, full_path) == 0) {
             for (size_t k = i; k + 1 < g_apps.count; k++) {
                 g_apps.files[k] = g_apps.files[k + 1];
@@ -679,13 +520,13 @@ static void cc_app_cache_drop(const char *full_path) {
 }
 
 static void cc_app_cache_add(const char *full_path) {
-        for (size_t i = 0; i < g_apps.count; i++) {
+    for (size_t i = 0; i < g_apps.count; i++) {
         if (strcmp(g_apps.files[i].path, full_path) == 0) return;
     }
     const char *base = strrchr(full_path, '/');
     if (!base) base = strrchr(full_path, '\\');
     base = base ? base + 1 : full_path;
-    if (!cc_app_ext_allowed(base)) {  return ; }
+    if (!cc_app_ext_allowed(base)) return;
     size_t before = g_apps.count;
     ListOfFiles tmp = {0};
     fl_get_all_files_from_dir(full_path, NULL, &tmp, NULL, true, FL_DIR_WALK_UNLIMITED);
@@ -705,7 +546,7 @@ static void cc_app_cache_add(const char *full_path) {
 }
 
 static void cc_rescan_app_cache(const char *full_path, int added) {
-        if (!full_path || !g_app_cache_ready) {  return ; }
+    if (!full_path || !g_app_cache_ready) return;
     if (added) cc_app_cache_add(full_path);
     else cc_app_cache_drop(full_path);
 }
@@ -717,18 +558,18 @@ static char g_cc_app_map_key[CC_APP_MAP_SLOTS][128];
 static char g_cc_app_map_path[CC_APP_MAP_SLOTS][MAX_PATH];
 
 static unsigned cc_map_hash(const char *s) {
-        unsigned h = 2166136261u;
+    unsigned h = 2166136261u;
     while (s && *s) { h ^= (unsigned char)*s++; h *= 16777619u; }
-    {  return h; }
+    return h;
 }
 
 static void cc_app_map_clear(void) {
-        memset(g_cc_app_map_key, 0, sizeof(g_cc_app_map_key));
+    memset(g_cc_app_map_key, 0, sizeof(g_cc_app_map_key));
     memset(g_cc_app_map_path, 0, sizeof(g_cc_app_map_path));
 }
 
 static void cc_app_map_put(const char *name, const char *path) {
-        if (!name || !name[0] || !path || !path[0]) {  return ; }
+    if (!name || !name[0] || !path || !path[0]) return;
     unsigned i = cc_map_hash(name) % CC_APP_MAP_SLOTS;
     for (unsigned n = 0; n < CC_APP_MAP_SLOTS; n++) {
         unsigned slot = (i + n) % CC_APP_MAP_SLOTS;
@@ -741,28 +582,28 @@ static void cc_app_map_put(const char *name, const char *path) {
 }
 
 static const char *cc_app_map_get(const char *name) {
-        if (!name || !name[0]) {  return NULL; }
+    if (!name || !name[0]) return NULL;
     unsigned i = cc_map_hash(name) % CC_APP_MAP_SLOTS;
     for (unsigned n = 0; n < CC_APP_MAP_SLOTS; n++) {
         unsigned slot = (i + n) % CC_APP_MAP_SLOTS;
         if (g_cc_app_map_key[slot][0] == '\0') return NULL;
         if (strcmp(g_cc_app_map_key[slot], name) == 0) return g_cc_app_map_path[slot];
     }
-    {  return NULL; }
+    return NULL;
 }
 
 static void cc_launch_app(void) {
-        const char *path = g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
+    const char *path = g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
     if (path && path[0]) fl_launch_with_args((char *)path, NULL);
 }
 
 static void cc_launch_app_as_admin(void) {
-        const char *path = g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
+    const char *path = g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
     if (path && path[0]) fl_launch_with_args_as_admin((char *)path, NULL);
 }
 
 static void cc_fill_applications(void) {
-        cc_ensure_app_cache();
+    cc_ensure_app_cache();
     cc_app_map_clear();
     for (size_t i = 0; i < g_apps.count; i++) {
         CcEntry *e = cc_entry_add_icon(g_apps.files[i].name, "Application",
@@ -778,58 +619,54 @@ static const char *cc_feature_names[CC_FEATURE_MAX];
 static void (*cc_feature_cbs[CC_FEATURE_MAX])(void);
 
 static void cc_fill_features(void) {
-        int n = fl_get_feature_list(cc_feature_names, cc_feature_cbs, CC_FEATURE_MAX);
+    int n = fl_get_feature_list(cc_feature_names, cc_feature_cbs, CC_FEATURE_MAX);
     for (int i = 0; i < n; i++) {
         if (!cc_entry_add_fn(cc_feature_names[i], "Feature", cc_feature_cbs[i])) break;
     }
 }
 
-static const char **g_names = NULL;
+static const char *g_names[MAX_VISIBLE_ITEMS + 1];
 static const char **g_no_results = NULL;
 
 static void cc_refresh(const char *filter, ListBoxInfo *lb) {
-        cc_build();
-    if (!g_names || !g_no_results) {
-        g_names = (const char **)malloc(sizeof(char *) * MAX_VISIBLE_ITEMS);
-        g_no_results = (const char **)malloc(sizeof(char *) * MAX_VISIBLE_ITEMS);
-        if (!g_names) return;
-        if (!g_no_results) return;
-    }
+    cc_build();
+    (void)g_no_results;
     int n = g_entry_count;
+    if (n > MAX_VISIBLE_ITEMS) n = MAX_VISIBLE_ITEMS;
     for (int i = 0; i < n; i++) g_names[i] = g_entries[i].label;
     fl_populate_listbox(lb, filter, g_names, n);
     if (lb->total_matches > 0) g_cc_fallback_active = false;
     if (lb->total_matches == 0) {
-       CcEntry *fallback = cc_add_fallback();
-       if (fallback) {
-           g_names[n] = fallback->label;
-           fl_populate_listbox(lb, "", &g_names[n], 1);
-           g_cc_fallback_active = true;
-       }
+        CcEntry *fallback = cc_add_fallback();
+        if (fallback && n < MAX_VISIBLE_ITEMS) {
+            g_names[n] = fallback->label;
+            fl_populate_listbox(lb, "", &g_names[n], 1);
+            g_cc_fallback_active = true;
+        }
     }
 }
 
 static unsigned long cc_type_color(void) {
-        unsigned int h = Color_Lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(COLOR_BG), 0.45f);
-    {  return RGB((h >> 16) & 0xFF, (h >> 8) & 0xFF, h & 0xFF); }
+    unsigned int h = Color_Lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(COLOR_BG), 0.45f);
+    return RGB((h >> 16) & 0xFF, (h >> 8) & 0xFF, h & 0xFF);
 }
 
 static bool cc_icon_is_glyph(const char *icon) {
-        if (!icon || !icon[0]) {  return false; }
+    if (!icon || !icon[0]) return false;
     unsigned char c = (unsigned char)icon[0];
     int len = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 0;
-    if (len <= 0) {  return false; }
+    if (len <= 0) return false;
     const char *tail = icon + len;
-    if (tail[0] == '\0') {  return true; }
-    if ((unsigned char)tail[0] == 0xEF && (unsigned char)tail[1] == 0xB8 && (unsigned char)tail[2] == 0x8F && tail[3] == '\0') {  return true; }
-    {  return false; }
+    if (tail[0] == '\0') return true;
+    if ((unsigned char)tail[0] == 0xEF && (unsigned char)tail[1] == 0xB8 && (unsigned char)tail[2] == 0x8F && tail[3] == '\0') return true;
+    return false;
 }
 
 static void cc_render(PromptState *state) {
-        ListBoxInfo *lb = &state->listbox;
+    ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = { .lb = lb };
     fl_place_editbox();
-    if (!fl_listbox_begin(&spec)) {  return ; }
+    if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
     int icon_size = FontSize;
     FlListItemCtx ctx;
@@ -854,7 +691,7 @@ static void cc_render(PromptState *state) {
             }
         }
         fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
-                     .text = ctx.text, .align = "LEFT", .pad = name_x);
+                     .text = ctx.text, .align = "LEFT", .pad = 0);
         if (e && e->type[0]) {
             fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                          .text = e->type, .align = "RIGHT", .color = cc_type_color());
@@ -864,32 +701,32 @@ static void cc_render(PromptState *state) {
 }
 
 static bool cc_enter(const char *selection, ListBoxInfo *lb) {
-        if (!fl_is_selected(lb)) {
+    if (!fl_is_selected(lb)) {
         fl_query_browser(selection);
     }
     cc_stage(cc_find(selection), false);
-    {  return true; }
+    return true;
 }
 
 static bool cc_ctrl_enter(const char *selection, ListBoxInfo *lb) {
-        if (!fl_is_selected(lb)) {
+    if (!fl_is_selected(lb)) {
         fl_query_browser(selection);
     }
     cc_stage(cc_find(selection), true);
-    {  return true; }
+    return true;
 }
 
 static void cc_on_close(void) {
-        cc_run_pending();
+    cc_run_pending();
 }
 
 static void cc_tab(ListBoxInfo *lb) {
-        const CcEntry *e = cc_find(ListBoxInfo_GetSelectedText(lb));
+    const CcEntry *e = cc_find(ListBoxInfo_GetSelectedText(lb));
     if (e && e->on_tab) e->on_tab();
 }
 
 static void TriggerControl(void) {
-        cc_build_xdg_paths();
+    cc_build_xdg_paths();
     for (size_t i = 0; i < g_xdg_path_count; i++) {
         const char *p = g_xdg_paths[i];
         if (p) fl_on_dir_changed(p, cc_rescan_app_cache);
@@ -904,9 +741,9 @@ static void TriggerControl(void) {
 }
 
 FLINT_FEATURE_INIT {
-  g_app_cache_mtx = fl_mutex_create();
-  if (g_app_cache_mtx) fl_thread_create(cc_prewarm_app_cache, NULL);
-  cc_register_type("Application", cc_fill_applications);
-  cc_register_type("Feature", cc_fill_features);
-  fl_register_hotkey((char *)ControlHotkey, TriggerControl,"Fortnite");
+    g_app_cache_mtx = fl_mutex_create();
+    if (g_app_cache_mtx) fl_thread_create(cc_prewarm_app_cache, NULL);
+    cc_register_type("Application", cc_fill_applications);
+    cc_register_type("Feature", cc_fill_features);
+    fl_register_hotkey((char *)ControlHotkey, TriggerControl, "Fortnite");
 }
