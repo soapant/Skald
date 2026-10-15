@@ -184,22 +184,35 @@ static const char *ListOfShitToIgnore[] = {
   "dll",
 };
 
-static const char *ListOfProgramPaths[] = {
+typedef struct {
+    const char *path;
+    int max_depth;
+} CcScanPath;
+
+static const CcScanPath ListOfProgramPaths[] = {
 #if defined(_WIN32)
-    "C:Users/HP/AppData/Roaming/Microsoft/Windows/Start Menu",
-    "C:ProgramData/Microsoft/Windows/Start Menu/Programs",
-    "C:miscellaneous",
-    "shell:AppsFolder",
+    { "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu", FL_DIR_WALK_UNLIMITED },
+    { "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", FL_DIR_WALK_UNLIMITED },
+    { "C:\\miscellaneous", FL_DIR_WALK_UNLIMITED },
+    { "shell:AppsFolder", FL_DIR_WALK_UNLIMITED },
+    { "C:\\Program Files\\Epic Games", 5 },
+    { "C:\\Program Files (x86)\\Epic Games", 5 },
+    { "D:\\Epic Games", 5 },
+    { "C:\\Games", 5 },
+    { "C:\\XboxGames", 5 },
+    { "C:\\Program Files (x86)\\Steam\\steamapps\\common", 5 },
+    { "C:\\Program Files\\Steam\\steamapps\\common", 5 },
 #else
-    "/usr/share/applications",
-    "/home/dog/.local/share/applications",
-    "/usr/bin",
-    "/home/dog/.local/bin",
-    "/home/dog/miscellaneous",
+    { "/usr/share/applications", FL_DIR_WALK_UNLIMITED },
+    { "/home/dog/.local/share/applications", FL_DIR_WALK_UNLIMITED },
+    { "/usr/bin", FL_DIR_WALK_UNLIMITED },
+    { "/home/dog/.local/bin", FL_DIR_WALK_UNLIMITED },
+    { "/home/dog/miscellaneous", FL_DIR_WALK_UNLIMITED },
 #endif
 };
 
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
+#define CC_APPCACHE_VERSION "#cc3"
 
 /* Icon paths pointing at a shell link force a multi-ms shell extraction on every
    repaint. fl_get_icon_path returns an exported PNG instead, so cached entries
@@ -267,11 +280,19 @@ static void cc_save_app_cache(void) {
         total += strlen(g_apps.files[i].path) + 1;
         total += strlen(cc_app_icon(i)) + 2;
     }
-    const char **lines = (const char **)malloc(n * sizeof(char *));
+    total += sizeof(CC_APPCACHE_VERSION);
+    const char **lines = (const char **)malloc((n + 1) * sizeof(char *));
     char *store = (char *)malloc(total);
     if (!lines || !store) { free(lines); free(store); return; }
     size_t off = 0;
     size_t written = 0;
+    {
+        int k = snprintf(store + off, total - off, "%s", CC_APPCACHE_VERSION);
+        if (k > 0 && (size_t)k < total - off) {
+            lines[written++] = store + off;
+            off += (size_t)k + 1;
+        }
+    }
     for (size_t i = 0; i < n; i++) {
         const char *nm = g_apps.files[i].name;
         const char *pth = g_apps.files[i].path;
@@ -294,6 +315,10 @@ static bool cc_load_app_cache(void) {
         if (lines.items) fl_free_file_list(&lines);
         return false;
     }
+    if (strcmp(lines.items[0], CC_APPCACHE_VERSION) != 0) {
+        fl_free_file_list(&lines);
+        return false;
+    }
     ListOfFiles tmp = {0};
     char (*icons)[MAX_PATH] = NULL;
     size_t icons_cap = 0;
@@ -302,7 +327,7 @@ static bool cc_load_app_cache(void) {
         icons = (char (*)[MAX_PATH])calloc(icons_cap, MAX_PATH);
         if (!icons) { fl_free_file_list(&lines); return false; }
     }
-    for (int i = 0; i < lines.count; i++) {
+    for (int i = 1; i < lines.count; i++) {
         char *entry = lines.items[i];
         if (!entry) continue;
         char *first = strchr(entry, ';');
@@ -365,12 +390,17 @@ static bool cc_load_app_cache(void) {
 
 static const char **g_xdg_paths = NULL;
 static size_t g_xdg_path_count = 0;
+static int *g_xdg_depths = NULL;
 
 static void cc_build_xdg_paths(void) {
         if (g_xdg_paths) {  return ; }
     g_xdg_paths = calloc(ARRAY_LEN(ListOfProgramPaths) + 16, sizeof(char *));
-    if (!g_xdg_paths) {  return ; }
-    for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) g_xdg_paths[i] = ListOfProgramPaths[i];
+    g_xdg_depths = calloc(ARRAY_LEN(ListOfProgramPaths) + 16, sizeof(int));
+    if (!g_xdg_paths || !g_xdg_depths) {  return ; }
+    for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
+        g_xdg_paths[i] = ListOfProgramPaths[i].path;
+        g_xdg_depths[i] = ListOfProgramPaths[i].max_depth;
+    }
     g_xdg_path_count = ARRAY_LEN(ListOfProgramPaths);
 #if !defined(_WIN32)
     const char *data_dirs = getenv("XDG_DATA_DIRS");
@@ -382,7 +412,9 @@ static void cc_build_xdg_paths(void) {
         char *dir = malloc(strlen(tok) + 16);
         if (!dir) continue;
         snprintf(dir, strlen(tok) + 16, "%s/applications", tok);
-        g_xdg_paths[g_xdg_path_count++] = dir;
+        g_xdg_paths[g_xdg_path_count] = dir;
+        g_xdg_depths[g_xdg_path_count] = FL_DIR_WALK_UNLIMITED;
+        g_xdg_path_count++;
     }
 #endif
 }
@@ -398,7 +430,7 @@ static void cc_scan_app_dirs(void) {
     for (size_t i = 0; i < g_xdg_path_count; i++) {
         const char *p = g_xdg_paths[i];
         if (!p || p[0] == '\0') continue;
-        fl_get_all_files_from_dir((char *)p, allowed, &tmp, (char **)ListOfShitToIgnore, true);
+        fl_get_all_files_from_dir((char *)p, allowed, &tmp, (char **)ListOfShitToIgnore, true, g_xdg_depths[i]);
     }
     for (size_t i = 0; i < tmp.count; ) {
         bool skip = false;
@@ -497,7 +529,7 @@ static void cc_app_cache_add(const char *full_path) {
     if (!cc_app_ext_allowed(base)) {  return ; }
     size_t before = g_apps.count;
     ListOfFiles tmp = {0};
-    fl_get_all_files_from_dir(full_path, NULL, &tmp, NULL, true);
+    fl_get_all_files_from_dir(full_path, NULL, &tmp, NULL, true, FL_DIR_WALK_UNLIMITED);
     if (tmp.count > 0) {
         if (g_apps.count >= g_apps.capacity && !cc_app_cache_grow(&g_apps)) { free(tmp.files); return; }
         if (!cc_app_icons_reserve(g_apps.count + 1)) { free(tmp.files); return; }

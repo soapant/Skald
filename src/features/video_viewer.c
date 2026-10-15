@@ -93,7 +93,7 @@ static const char* s_video_items[MAX_VISIBLE_ITEMS];
 
 void video_refresh_callback(const char* filter, ListBoxInfo* lb) {
     video_files.count = 0;
-    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL, true);
+    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL, true, FL_DIR_WALK_UNLIMITED);
     
     size_t n = video_files.count;
     if (n > MAX_VISIBLE_ITEMS) n = MAX_VISIBLE_ITEMS;
@@ -113,7 +113,7 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
     if (!result) {
         ListOfFiles tmp = {0};
-        fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL, true);
+        fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL, true, FL_DIR_WALK_UNLIMITED);
         for (size_t i = 0; i < tmp.count; i++) {
             if (strcmp(tmp.files[i].name, selection) == 0) {
                 result = tmp.files[i].path;

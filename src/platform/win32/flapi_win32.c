@@ -29,7 +29,7 @@
 #include <time.h>
 
 #include "core/timer.h"
-bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension) {
+bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension, int max_depth) {
     PROFILE_START(_pt);
 
     char search_path[MAX_PATH];
@@ -57,8 +57,8 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
                     }
                 }
             }
-            if (!should_ignore) {
-                Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension);
+            if (!should_ignore && (max_depth == 0 || max_depth > 1)) {
+                Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension, max_depth > 0 ? max_depth - 1 : 0);
             }
         } else {
             bool allowed = true;
