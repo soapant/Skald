@@ -1931,6 +1931,9 @@ struct GdiplusStartupInput gdiplusStartupInput;
      log_warn("WH_KEYBOARD_LL hook installed handle=%p", (void*)g_win32_hKeyboardHook);
    }
 
+   Platform_RegisterRawMouse(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd));
+  g_win32_hMouseHook = NULL;
+
    FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
    log_warn("warm font size=%d face='%s' created=%d", FontSize, UsedFont ? UsedFont : "", FH_TO_HFONT(warm) ? 1 : 0);
    Platform_DestroyFont(warm);

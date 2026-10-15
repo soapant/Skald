@@ -18,83 +18,81 @@
 #include "platform/win32/input_core_win32.h"
 #include "config.h"
 
-static int win32_mouse_button_from_vk(WPARAM wParam) {
-        PROFILE_START(_pt);
-switch (wParam) {
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:    return MOUSE_BTN_LEFT;
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:    return MOUSE_BTN_RIGHT;
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:    return MOUSE_BTN_MIDDLE;
-        case WM_XBUTTONDOWN:
-        case WM_XBUTTONUP:    return MOUSE_BTN_SIDE1;
-        default:              return 0;
-    }
-}
-
 bool Platform_GetMousePos(int* out_x, int* out_y) {
         PROFILE_START(_pt);
-POINT pt;
+    POINT pt;
     if (!GetCursorPos(&pt)) { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return false; }
     if (out_x) *out_x = (int)pt.x;
     if (out_y) *out_y = (int)pt.y;
     { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return true; }
 }
 
-LRESULT CALLBACK win32_handle_global_mouse(int nCode, WPARAM wParam, LPARAM lParam) {
+void Platform_RegisterRawMouse(HWND hwnd) {
     PROFILE_START(_pt);
-if (nCode < 0) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
-  if (nCode != HC_ACTION) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
+    if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "win32_register_raw_mouse"); return ; }
+    RAWINPUTDEVICE rid;
+    memset(&rid, 0, sizeof(rid));
+    rid.usUsagePage = 0x01;
+    rid.usUsage = 0x02;
+    rid.dwFlags = RIDEV_INPUTSINK;
+    rid.hwndTarget = hwnd;
+    if (!RegisterRawInputDevices(&rid, 1, sizeof(rid))) {
+        log_warn("RegisterRawInputDevices failed err=%lu", GetLastError());
+    }
+    PROFILE_END_VAR(_pt, "win32_register_raw_mouse");
+}
 
-  MSLLHOOKSTRUCT* _rm = (MSLLHOOKSTRUCT*)lParam;
-  if (!_rm) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
-  if (_rm->flags & LLMHF_INJECTED) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
+void Platform_HandleRawMouseInput(LPARAM lParam) {
+    PROFILE_START(_pt);
+    UINT size = 0;
+    if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER)) != 0) { PROFILE_END_VAR(_pt, "win32_handle_raw_mouse"); return ; }
+    if (size == 0 || size > 4096) { PROFILE_END_VAR(_pt, "win32_handle_raw_mouse"); return ; }
+    BYTE *buf = (BYTE*)malloc(size);
+    if (!buf) { PROFILE_END_VAR(_pt, "win32_handle_raw_mouse"); return ; }
+    BOOL got = GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buf, &size, sizeof(RAWINPUTHEADER));
+    RAWINPUT *raw = (RAWINPUT*)buf;
+    if (!got || raw->header.dwType != RIM_TYPEMOUSE) {
+        free(buf);
+        PROFILE_END_VAR(_pt, "win32_handle_raw_mouse");
+        return ;
+    }
+    RAWMOUSE *rm = &raw->data.mouse;
+    POINT pt;
+    if (!GetCursorPos(&pt)) { free(buf); PROFILE_END_VAR(_pt, "win32_handle_raw_mouse"); return ; }
+    unsigned short flags = rm->usButtonFlags;
+    int btn = 0;
+    bool down = false;
+    bool is_btn = true;
+    if (flags & RI_MOUSE_LEFT_BUTTON_DOWN)       { btn = MOUSE_BTN_LEFT;   down = true;  }
+    else if (flags & RI_MOUSE_LEFT_BUTTON_UP)   { btn = MOUSE_BTN_LEFT;   down = false; }
+    else if (flags & RI_MOUSE_RIGHT_BUTTON_DOWN) { btn = MOUSE_BTN_RIGHT;  down = true;  }
+    else if (flags & RI_MOUSE_RIGHT_BUTTON_UP)  { btn = MOUSE_BTN_RIGHT;  down = false; }
+    else if (flags & RI_MOUSE_MIDDLE_BUTTON_DOWN){ btn = MOUSE_BTN_MIDDLE; down = true;  }
+    else if (flags & RI_MOUSE_MIDDLE_BUTTON_UP)  { btn = MOUSE_BTN_MIDDLE; down = false; }
+    else is_btn = false;
 
-  if (wParam == WM_MOUSEMOVE || wParam == WM_MOUSEWHEEL || wParam == WM_MOUSEHWHEEL) {
-      PlatformMouseEvent _mev;
-      memset(&_mev, 0, sizeof(_mev));
-      _mev.button = 0;
-      _mev.x = (int)_rm->pt.x;
-      _mev.y = (int)_rm->pt.y;
-      _mev.mods = 0;
-      if (GetKeyState(VK_CONTROL) & 0x8000) _mev.mods |= HOTKEY_MOD_CTRL;
-      if (GetKeyState(VK_MENU) & 0x8000) _mev.mods |= HOTKEY_MOD_ALT;
-      if (GetKeyState(VK_SHIFT) & 0x8000) _mev.mods |= HOTKEY_MOD_SHIFT;
-      _mev.down = false;
-      _mev.repeat = false;
-      Platform_GlobalMouse_Push(&_mev);
-      return CallNextHookEx(NULL, nCode, wParam, lParam);
-  }
+    PlatformMouseEvent mev;
+    memset(&mev, 0, sizeof(mev));
+    mev.x = (int)pt.x;
+    mev.y = (int)pt.y;
+    mev.repeat = false;
 
-  int _btn = win32_mouse_button_from_vk(wParam);
-  if (_btn == 0) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
-
-  bool _isDown = (wParam == WM_LBUTTONDOWN || wParam == WM_RBUTTONDOWN ||
-                  wParam == WM_MBUTTONDOWN || wParam == WM_XBUTTONDOWN);
-  bool _isUp = !_isDown;
-  if (_isUp && wParam == WM_XBUTTONUP) {
-      _btn = (_rm->mouseData == XBUTTON2) ? MOUSE_BTN_SIDE2 : MOUSE_BTN_SIDE1;
-  }
-  Platform_UpdateMouseButton(_btn, _isDown);
-
-  PlatformMouseEvent _mev;
-  memset(&_mev, 0, sizeof(_mev));
-  _mev.button = _btn;
-  _mev.x = (int)_rm->pt.x;
-  _mev.y = (int)_rm->pt.y;
-  _mev.mods = 0;
-  if (GetKeyState(VK_CONTROL) & 0x8000) _mev.mods |= HOTKEY_MOD_CTRL;
-  if (GetKeyState(VK_MENU) & 0x8000) _mev.mods |= HOTKEY_MOD_ALT;
-  if (GetKeyState(VK_SHIFT) & 0x8000) _mev.mods |= HOTKEY_MOD_SHIFT;
-  _mev.down = _isDown;
-  _mev.repeat = false;
-  Platform_GlobalMouse_Push(&_mev);
-  if (_isDown && _btn > 0 && _btn <= FL_MOUSE_BTN_MAX) {
-    hotkey_process(FL_MOUSE_VK(_btn), _mev.mods);
-  }
-
-  { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
+    if (is_btn) {
+        Platform_UpdateMouseButton(btn, down);
+        mev.button = btn;
+        mev.down = down;
+        if (GetKeyState(VK_CONTROL) & 0x8000) mev.mods |= HOTKEY_MOD_CTRL;
+        if (GetKeyState(VK_MENU) & 0x8000) mev.mods |= HOTKEY_MOD_ALT;
+        if (GetKeyState(VK_SHIFT) & 0x8000) mev.mods |= HOTKEY_MOD_SHIFT;
+        Platform_GlobalMouse_Push(&mev);
+        if (down && btn <= FL_MOUSE_BTN_MAX) hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+    } else if (!Platform_GlobalMouse_Full()) {
+        mev.button = 0;
+        mev.down = false;
+        Platform_GlobalMouse_Push(&mev);
+    }
+    free(buf);
+    PROFILE_END_VAR(_pt, "win32_handle_raw_mouse");
 }
 
 LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam) {
