@@ -18,10 +18,11 @@ pkgs.mkShell {
     libxtst
     libxi
     xorgproto
-    freetype
+    freetype.dev
     glib
-    libpng
-    fontconfig
+    glib.dev
+    libpng.dev
+    fontconfig.dev
     wayland
     pulseaudio
     curl.dev
