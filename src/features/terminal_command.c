@@ -45,5 +45,5 @@ void TriggerTerminalCommand(void) {
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+{", TriggerTerminalCommand);
 
-    fl_register_feature("Terminal", TriggerTerminalCommand);
+    fl_register_feature(.name="Terminal",.cb=TriggerTerminalCommand);
 }
