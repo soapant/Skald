@@ -38,10 +38,20 @@ static void recording_render() {
     int max_x = WIDTH - 1;
     int max_y = HEIGHT - 1;
 
-    fl_draw_line(.x1 = 0,     .y1 = 0,     .x2 = max_x, .y2 = 0,     .color = RGB(180, 0, 0));
-    fl_draw_line(.x1 = max_x, .y1 = 0,     .x2 = max_x, .y2 = max_y, .color = RGB(180, 0, 0));
-    fl_draw_line(.x1 = max_x, .y1 = max_y, .x2 = 0,     .y2 = max_y, .color = RGB(180, 0, 0));
-    fl_draw_line(.x1 = 0,     .y1 = max_y, .x2 = 0,     .y2 = 0,     .color = RGB(180, 0, 0));
+    fl_draw_line(.x1 = 0,     .y1 = 0,     .x2 = max_x, .y2 = 0,     .color = FL_RED);
+    fl_draw_line(.x1 = max_x, .y1 = 0,     .x2 = max_x, .y2 = max_y, .color = FL_RED);
+    fl_draw_line(.x1 = max_x, .y1 = max_y, .x2 = 0,     .y2 = max_y, .color = FL_RED);
+    fl_draw_line(.x1 = 0,     .y1 = max_y, .x2 = 0,     .y2 = 0,     .color = FL_RED);
+}
+
+static void playback_render() {
+    int max_x = WIDTH - 1;
+    int max_y = HEIGHT - 1;
+
+    fl_draw_line(.x1 = 0,     .y1 = 0,     .x2 = max_x, .y2 = 0,     .color = FL_BLUE);
+    fl_draw_line(.x1 = max_x, .y1 = 0,     .x2 = max_x, .y2 = max_y, .color = FL_BLUE);
+    fl_draw_line(.x1 = max_x, .y1 = max_y, .x2 = 0,     .y2 = max_y, .color = FL_BLUE);
+    fl_draw_line(.x1 = 0,     .y1 = max_y, .x2 = 0,     .y2 = 0,     .color = FL_BLUE);
 }
 
 static void record_push(const MacroEvent* m) {
@@ -209,12 +219,14 @@ void RecordToggle(void) {
 void PlayToggle(void) {
   if (!g_playing) {
     if (g_event_count == 0) return;
+    fl_message(.render=playback_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=1000.0);
     fl_clear_key_queue();
     fl_clear_mouse_queue();
     g_playing = true;
     if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
     return;
   }
+  fl_dismiss_message();
   g_playing = false;
   release_everything();
 }
