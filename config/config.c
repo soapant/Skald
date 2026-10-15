@@ -1,6 +1,7 @@
 #include "config.h"
 
 // <flint-config-generated>
+
 static const AliasEntry user_aliases[] = {
     {"brw", "Brawlhalla", "AppLauncher"},
 };
@@ -15,7 +16,7 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = false;
@@ -28,10 +29,11 @@ void ConfigApply(void) {
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 20;
+    FontSize = 19;
     IconSize = 32;
     WidgetGap = 0;
     MaxFeatures = 1000;
+    BackgroundImage = "C:/miscellaneous/862186.png";
     VimFontSize = 18;
     PaddingForScrolling = 3;
     UsedTerminal = "";
@@ -51,7 +53,8 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "github-dark";
+Theme = "github-dark";
+    BackgroundImage = "C:/miscellaneous/862186.png";
     COLOR_BG = RGB(13, 17, 23);
     COLOR_TEXT = RGB(201, 209, 217);
     COLOR_ALTERNATE = RGB(63, 185, 80);
