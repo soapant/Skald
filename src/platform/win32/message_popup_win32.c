@@ -468,9 +468,7 @@ HWND existing = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
     winWidth = textWidth + 30;
     winHeight = textHeight + 30;
 if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
-  if (maxWidth > 0 && winWidth < maxWidth) winWidth = maxWidth;
   if (maxHeight > 0 && winHeight > maxHeight) winHeight = maxHeight;
-  if (maxHeight > 0 && winHeight < maxHeight) winHeight = maxHeight;
   }
 
   Platform_HoverMessageRelease(g_hover_key);
@@ -535,9 +533,7 @@ log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g no_bg=
   int winHeight = textHeight + padding;
 
   if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
-  if (maxWidth > 0 && winWidth < maxWidth) winWidth = maxWidth;
   if (maxHeight > 0 && winHeight > maxHeight) winHeight = maxHeight;
-  if (maxHeight > 0 && winHeight < maxHeight) winHeight = maxHeight;
 
   FadeWindowData* pWndData = (FadeWindowData*)malloc(sizeof(FadeWindowData));
   if (!pWndData) {
