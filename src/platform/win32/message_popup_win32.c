@@ -526,14 +526,19 @@ log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g no_bg=
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
   int textWidth = 0, textHeight = 0;
-  Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth, &textHeight);
+  int winWidth = 0, winHeight = 0;
 
-  int padding = 30;
-  int winWidth = textWidth + padding;
-  int winHeight = textHeight + padding;
-
-  if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
-  if (maxHeight > 0 && winHeight > maxHeight) winHeight = maxHeight;
+  if ((!message || !message[0]) && maxWidth > 0 && maxHeight > 0) {
+    winWidth = maxWidth;
+    winHeight = maxHeight;
+  } else {
+    Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth, &textHeight);
+    int padding = 30;
+    winWidth = textWidth + padding;
+    winHeight = textHeight + padding;
+    if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
+    if (maxHeight > 0 && winHeight > maxHeight) winHeight = maxHeight;
+  }
 
   FadeWindowData* pWndData = (FadeWindowData*)malloc(sizeof(FadeWindowData));
   if (!pWndData) {
