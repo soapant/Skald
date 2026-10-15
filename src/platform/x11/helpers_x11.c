@@ -5,6 +5,7 @@
 #include "config.h"
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
@@ -508,9 +509,10 @@ PROFILE_START(timer);
 }
 
 #define IMG_CACHE_SLOTS 256
+#define X11_IMG_REVALIDATE_MS 1000
 
-static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y);
-static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h);
+static bool x11_blit_argb(Display *dpy, Drawable drw, Visual *vis, unsigned char *argb, int w, int h, int x, int y);
+static unsigned char* x11_decode_image_argb(const char *path, int* out_w, int* out_h);
 
 typedef struct {
     char key[512];
@@ -519,7 +521,14 @@ typedef struct {
     long long size;
     unsigned char* argb;
     unsigned long stamp;
+    long long checked_ms;
 } ImgCacheSlot;
+
+static long long x11_now_ms(void) {
+    struct timespec ts;
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) return 0;
+    return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
 
 static ImgCacheSlot g_img_cache[IMG_CACHE_SLOTS];
 static unsigned long g_img_cache_tick = 0;
@@ -535,16 +544,26 @@ pthread_mutex_lock(&g_img_cache_mtx);
     pthread_mutex_unlock(&g_img_cache_mtx);
 }
 
-static unsigned char* x11_img_cache_get(const char* key, int w, int h, long long mtime, long long size) {
+static unsigned char* x11_img_cache_get(const char* key, int w, int h) {
         PROFILE_START(_pt);
+long long now = x11_now_ms();
 for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
         ImgCacheSlot* s = &g_img_cache[i];
         if (!s->argb) continue;
-        if (s->w == w && s->h == h && s->mtime == mtime && s->size == size && strcmp(s->key, key) == 0) {
-            s->stamp = ++g_img_cache_tick;
-            return s->argb;
+        if (s->w != w || s->h != h) continue;
+        if (strcmp(s->key, key) != 0) continue;
+        if (now - s->checked_ms >= X11_IMG_REVALIDATE_MS) {
+            struct stat st;
+            s->checked_ms = now;
+            if (stat(key, &st) != 0 || (long long)st.st_mtime != s->mtime || (long long)st.st_size != s->size) {
+                free(s->argb);
+                s->argb = NULL;
+                continue;
+            }
         }
-    }
+        s->stamp = ++g_img_cache_tick;
+        return s->argb;
+}
     { PROFILE_END_VAR(_pt, "x11_img_cache_get"); return NULL; }
 }
 
@@ -567,6 +586,7 @@ if (!argb) { PROFILE_END_VAR(_pt, "x11_img_cache_put"); return ; }
     s->mtime = mtime;
     s->size = size;
     s->argb = argb;
+    s->checked_ms = x11_now_ms();
     s->stamp = ++g_img_cache_tick;
 }
 
@@ -574,15 +594,13 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
         PROFILE_START(_pt);
 PROFILE_START(timer);
     if (!dpy || !xd || !path || !path[0]) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
-    struct stat st;
-    if (stat(path, &st) != 0) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
     if (tw <= 0) tw = IconSize;
     if (th <= 0) th = IconSize;
     int cw = tw;
     int ch = th;
     unsigned char* argb = NULL;
     pthread_mutex_lock(&g_img_cache_mtx);
-    argb = x11_img_cache_get(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size);
+    argb = x11_img_cache_get(path, cw, ch);
     if (argb) {
         pthread_mutex_unlock(&g_img_cache_mtx);
         Drawable drw = XftDrawDrawable(xd);
@@ -591,6 +609,8 @@ PROFILE_START(timer);
         return ok;
     }
     pthread_mutex_unlock(&g_img_cache_mtx);
+    struct stat st;
+    if (stat(path, &st) != 0) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
     argb = x11_decode_image_argb(path, &cw, &ch);
     if (!argb) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
     pthread_mutex_lock(&g_img_cache_mtx);
