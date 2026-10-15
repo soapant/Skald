@@ -65,7 +65,8 @@ void fl_clipboard_clear_history(void);
 // =============================================================================
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
-bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore, bool strip_extension);
+#define FL_DIR_WALK_UNLIMITED 0
+bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore, bool strip_extension, int max_depth);
 
 FlStringList fl_load_file_list(const char* filepath);
 long fl_load_file(const char* filepath, char* buffer, long buffer_size);

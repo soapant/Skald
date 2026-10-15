@@ -69,7 +69,7 @@ bool fl_copy_file_path(const char* path) {
     { PROFILE_END_VAR(_pt, "fl_copy_file_path"); return clipboard_set_path_platform(path); }
 }
 
-bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension) {
+bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension, int max_depth) {
     PROFILE_START(_pt);
     if (!dir_path || !list_of_files) { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return false; }
 
@@ -77,7 +77,7 @@ bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_exte
     if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return false; }
     dir_path = expanded_dir;
 
-    { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return Platform_GetAllFilesFromDir(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension); }
+    { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return Platform_GetAllFilesFromDir(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension, max_depth); }
 }
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path){
