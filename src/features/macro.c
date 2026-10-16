@@ -6,9 +6,6 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#if defined(_WIN32)
-#include <direct.h>
-#endif
 
 static bool g_recording = false;
 static FlThread g_thread = NULL;
@@ -232,6 +229,16 @@ static const char *macro_file_name_ptrs[MAX_VISIBLE_ITEMS + 1];
 static bool macro_save(const char *name) {
     if (g_event_count == 0) return false;
     if (!name || !name[0]) name = "last.macro";
+    char filename[256];
+    snprintf(filename, sizeof(filename), "%s", name);
+    size_t ln = strlen(filename);
+    bool has_ext = (ln >= 4 && filename[ln-4] == '.' && filename[ln-3] == 't' && filename[ln-2] == 'x' && filename[ln-1] == 't');
+    if (!has_ext) {
+        size_t l = strlen(filename);
+        if (l + 4 < sizeof(filename)) strcat(filename, ".txt");
+    }
+
+
     size_t cap = (size_t)g_event_count * 128 + 256;
     char *buf = (char*)malloc(cap);
     if (!buf) return false;
@@ -242,14 +249,21 @@ static bool macro_save(const char *name) {
             g_events[i].type, g_events[i].a, g_events[i].b, g_events[i].x, g_events[i].y,
             g_events[i].mods, g_events[i].down ? 1 : 0, g_events[i].repeat ? 1 : 0, g_events[i].t_us);
     }
-    bool ok = fl_write_string_to_file(name, buf);
+    bool ok = fl_write_string_to_file(filename, buf);
     free(buf);
     return ok;
 }
 
 static int macro_load(const char *name) {
     if (!name || !name[0]) name = "last.macro";
-    char *path = fl_resolve_data_path(name);
+    char filename[256];
+    snprintf(filename, sizeof(filename), "%s", name);
+    size_t ln = strlen(filename);
+    bool has_ext2 = (ln >= 4 && filename[ln-4] == '.' && filename[ln-3] == 't' && filename[ln-2] == 'x' && filename[ln-1] == 't');
+    if (!has_ext2) {
+        if (ln + 4 < sizeof(filename)) strcat(filename, ".txt");
+    }
+    char *path = fl_resolve_data_path(filename);
     if (!path) return 0;
     size_t len = 0;
     char *data = fl_read_file_to_string(path, &len);
@@ -266,7 +280,8 @@ static int macro_load(const char *name) {
         memset(&m, 0, sizeof(m));
         int down = 0, repeat = 0;
         unsigned long long t = 0;
-        if (sscanf(cursor, "%d %d %d %d %d %d %d %d %llu", &m.type, &m.a, &m.b, &m.x, &m.y, &m.mods, &down, &repeat, &t) != 9) break;
+        if (sscanf(cursor, "%d %d %d %d %d %d %d %d %llu",
+            &m.type, &m.a, &m.b, &m.x, &m.y, &m.mods, &down, &repeat, &t) != 9) break;
         m.down = down != 0;
         m.repeat = repeat != 0;
         m.t_us = t;
@@ -279,9 +294,18 @@ static int macro_load(const char *name) {
 }
 
 static void macro_refresh_cache(void) {
-    char dir[1024];
-    char *exts[] = {NULL};
-    fl_get_all_files_from_dir(dir, exts, &macro_load_files, NULL, false, 1);
+    macro_load_files.count = 0;
+    char *resolved = fl_resolve_data_path("last.macro");
+    if (resolved) {
+        char dir[1024];
+        snprintf(dir, sizeof(dir), "%s", resolved);
+        char *slash = strrchr(dir, '/');
+        char *back = strrchr(dir, '\\');
+        if (back && (!slash || back > slash)) slash = back;
+        if (slash) *slash = '\0';
+        fl_get_all_files_from_dir(dir, NULL, &macro_load_files, NULL, false, 1);
+        free(resolved);
+    }
 }
 
 static void macro_refresh(const char *filter, ListBoxInfo *lb) {
@@ -303,7 +327,7 @@ void SaveMacro(void) {
         fl_message(.message="No recording in memory", .timeout=3.0);
         return;
     }
-    char *name = fl_popup(.initial_text="last.macro", .placeholder="Macro file name", .w=500, .h=70);
+    char *name = fl_popup(.placeholder="Macro file name");
     char chosen[256];
     if (name && name[0]) {
         snprintf(chosen, sizeof(chosen), "%s", name);
