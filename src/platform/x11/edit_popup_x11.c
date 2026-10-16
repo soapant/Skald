@@ -209,7 +209,7 @@ PROFILE_START(timer);
                 memcpy(buf, data->text + pos, cl);
                 buf[cl] = '\\0';
                 int x = draw_x + Platform_MeasureTextWidth(data->text, (int)pos, FontSize);
-                unsigned long col = rgb_to_hex(GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.55f, GradientBrightness));
+                unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
                 Platform_DrawTextRaw(x, draw_y, buf, col, font, "", 0, 0);
                 pos += cl; ci++;
             }
