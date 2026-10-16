@@ -190,23 +190,6 @@ if (size <= 0) size = FontSize;
   { PROFILE_END_VAR(_pt, "win32_sized_font"); return g_sizeFonts[slot]; }
 }
 
-static __thread const char *g_prerender_text = NULL;
-static __thread void *g_prerender_rect = NULL;
-void Platform_SetPreRenderStateWin32(const char *text, void *rect) {
-    PROFILE_START(_pt);
-g_prerender_text = text; g_prerender_rect = rect; 
-}
-
-bool Platform_PreRender(void) {
-        PROFILE_START(_pt);
-if (!g_prerender_text || !g_prerender_rect) { PROFILE_END_VAR(_pt, "Platform_PreRender"); return false; }
-    { PROFILE_END_VAR(_pt, "Platform_PreRender"); return true; }
-}
-
-__attribute__((weak)) bool fl_prerender(void) {
-    return Platform_PreRender();
-}
-
 static __thread unsigned long g_draw_bg_override = 0;
 static __thread bool g_transparent_window = false;
 

@@ -15,8 +15,6 @@
 #include "core/modal.h"
 #include "bindings/vim_state.h"
 
-static __thread PromptState *g_prerender_state = NULL;
-
 static __thread unsigned long g_draw_bg_override = 0;
 static __thread bool g_transparent_window = false;
 
@@ -98,26 +96,6 @@ if (!g_measuring) { PROFILE_END_VAR(_pt, "measure_track"); return ; }
     if (y < g_meas_y0) g_meas_y0 = y;
     if (x + w > g_meas_x1) g_meas_x1 = x + w;
     if (y + h > g_meas_y1) g_meas_y1 = y + h;
-}
-
-void Platform_SetPreRenderState(PromptState *state) {
-    PROFILE_START(_pt);
-g_prerender_state = state; 
-}
-
-bool Platform_PreRender(void) {
-        PROFILE_START(_pt);
-PromptState *state = g_prerender_state;
-    if (!state) { PROFILE_END_VAR(_pt, "Platform_PreRender"); return false; }
-    { PROFILE_END_VAR(_pt, "Platform_PreRender"); return true; }
-}
-PromptState* Platform_GetPreRenderStatePtr(void) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_GetPreRenderStatePtr"); return g_prerender_state; }
-}
-
-__attribute__((weak)) bool fl_prerender(void) {
-    return Platform_PreRender();
 }
 
 static __thread Display* g_draw_dpy = NULL;
