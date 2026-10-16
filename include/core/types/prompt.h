@@ -109,6 +109,9 @@ typedef struct {
     HelpCallback help;
     CloseCallback on_close;
     bool tick;
+    bool auto_scale;
+    int w;
+    int h;
 } PromptSpec;
 
 typedef struct {

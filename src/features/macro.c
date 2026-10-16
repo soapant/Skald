@@ -4,6 +4,12 @@
 #include <string.h>
 #include <time.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#if defined(_WIN32)
+#include <direct.h>
+#endif
+
 static bool g_recording = false;
 static FlThread g_thread = NULL;
 
@@ -109,9 +115,7 @@ static void sort_events(void) {
 }
 
 
-#if !defined(_WIN32)
 static int g_macro_last_mx = -1, g_macro_last_my = -1;
-#endif
 
 static void* recorder_loop(void* arg) {
   (void)arg;
@@ -122,13 +126,10 @@ static void* recorder_loop(void* arg) {
     FlMouseEvent me;
     while (fl_poll_mouse(&me)) record_push_mouse(&me);
 
-#if !defined(_WIN32)
     {
       FlPos _mp = fl_get_cursor_pos();
       if (_mp.x != g_macro_last_mx || _mp.y != g_macro_last_my) {
-        struct timespec _ts;
-        clock_gettime(CLOCK_MONOTONIC, &_ts);
-        unsigned long long _now = (unsigned long long)_ts.tv_sec * 1000000ULL + (unsigned long long)(_ts.tv_nsec / 1000);
+        unsigned long long _now = fl_start_timer().ticks / 1000ULL;
         FlMouseEvent _me;
         memset(&_me, 0, sizeof(_me));
         _me.button = 0;
@@ -140,7 +141,6 @@ static void* recorder_loop(void* arg) {
         g_macro_last_my = _mp.y;
       }
     }
-#endif
     fl_sleep(0.005);
   }
 
@@ -225,6 +225,118 @@ static void* playback_loop(void* arg) {
   return NULL;
 }
 
+
+static ListOfFiles macro_load_files;
+static const char *macro_file_name_ptrs[MAX_VISIBLE_ITEMS + 1];
+
+static bool macro_save(const char *name) {
+    if (g_event_count == 0) return false;
+    if (!name || !name[0]) name = "last.macro";
+    size_t cap = (size_t)g_event_count * 128 + 256;
+    char *buf = (char*)malloc(cap);
+    if (!buf) return false;
+    size_t off = 0;
+    off += (size_t)snprintf(buf + off, cap - off, "%d\n", g_event_count);
+    for (int i = 0; i < g_event_count; i++) {
+        off += (size_t)snprintf(buf + off, cap - off, "%d %d %d %d %d %d %d %d %llu\n",
+            g_events[i].type, g_events[i].a, g_events[i].b, g_events[i].x, g_events[i].y,
+            g_events[i].mods, g_events[i].down ? 1 : 0, g_events[i].repeat ? 1 : 0, g_events[i].t_us);
+    }
+    bool ok = fl_write_string_to_file(name, buf);
+    free(buf);
+    return ok;
+}
+
+static int macro_load(const char *name) {
+    if (!name || !name[0]) name = "last.macro";
+    char *path = fl_resolve_data_path(name);
+    if (!path) return 0;
+    size_t len = 0;
+    char *data = fl_read_file_to_string(path, &len);
+    free(path);
+    if (!data) return 0;
+    int count = 0;
+    char *cursor = data;
+    if (sscanf(cursor, "%d", &count) != 1 || count < 0 || count > MACRO_MAX_EVENTS) { free(data); return 0; }
+    while (*cursor && *cursor != '\n') cursor++;
+    if (*cursor == '\n') cursor++;
+    g_event_count = 0;
+    for (int i = 0; i < count; i++) {
+        MacroEvent m;
+        memset(&m, 0, sizeof(m));
+        int down = 0, repeat = 0;
+        unsigned long long t = 0;
+        if (sscanf(cursor, "%d %d %d %d %d %d %d %d %llu", &m.type, &m.a, &m.b, &m.x, &m.y, &m.mods, &down, &repeat, &t) != 9) break;
+        m.down = down != 0;
+        m.repeat = repeat != 0;
+        m.t_us = t;
+        record_push(&m);
+        while (*cursor && *cursor != '\n') cursor++;
+        if (*cursor == '\n') cursor++;
+    }
+    free(data);
+    return g_event_count;
+}
+
+static void macro_refresh_cache(void) {
+    char dir[1024];
+    char *exts[] = {NULL};
+    fl_get_all_files_from_dir(dir, exts, &macro_load_files, NULL, false, 1);
+}
+
+static void macro_refresh(const char *filter, ListBoxInfo *lb) {
+    macro_refresh_cache();
+    int n = (int)macro_load_files.count;
+    if (n > MAX_VISIBLE_ITEMS) n = MAX_VISIBLE_ITEMS;
+    for (int i = 0; i < n; i++) macro_file_name_ptrs[i] = macro_load_files.files[i].name;
+    fl_populate_listbox(lb, filter, macro_file_name_ptrs, n);
+}
+
+static bool macro_load_enter(const char *selection, ListBoxInfo *lb) {
+    (void)lb;
+    if (selection) macro_load(selection);
+    return true;
+}
+
+void SaveMacro(void) {
+    if (g_event_count == 0) {
+        fl_message(.message="No recording in memory", .timeout=3.0);
+        return;
+    }
+    char *name = fl_popup(.initial_text="last.macro", .placeholder="Macro file name", .w=500, .h=70);
+    char chosen[256];
+    if (name && name[0]) {
+        snprintf(chosen, sizeof(chosen), "%s", name);
+        free(name);
+    } else {
+        if (name) free(name);
+        snprintf(chosen, sizeof(chosen), "%s", "last.macro");
+    }
+    macro_save(chosen);
+}
+
+void LoadMacro(void) {
+    PROMPT(.title="Macro Load", .refresh=macro_refresh, .enter=macro_load_enter,.auto_scale=true);
+}
+
+void PlayMacro(void) {
+    if (!g_playing) {
+        if (g_event_count == 0) {
+            fl_message(.message="No macro loaded", .timeout=3.0);
+            return;
+        }
+        fl_message(.render=playback_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=1000.0);
+        fl_clear_key_queue();
+        fl_clear_mouse_queue();
+        g_playing = true;
+        if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
+        return;
+    }
+    fl_dismiss_message();
+    g_playing = false;
+    release_everything();
+}
+
 void RecordToggle(void) {
   if (!g_recording) {
     fl_message(.render=recording_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=1000.0);
@@ -239,22 +351,11 @@ void RecordToggle(void) {
   g_recording = false;
 }
 
-void PlayToggle(void) {
-  if (!g_playing) {
-    if (g_event_count == 0) return;
-    fl_message(.render=playback_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=1000.0);
-    fl_clear_key_queue();
-    fl_clear_mouse_queue();
-    g_playing = true;
-    if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
-    return;
-  }
-  fl_dismiss_message();
-  g_playing = false;
-  release_everything();
-}
 
 FLINT_FEATURE_INIT {
   fl_register_hotkey("Ctrl+Alt+R", RecordToggle);
-  fl_register_hotkey("Ctrl+Alt+P", PlayToggle);
+  fl_add_to_cc(.display_name="SaveMacro",.on_enter=SaveMacro,.type="Macro",.icon="");
+  fl_add_to_cc(.display_name="LoadMacro",.on_enter=LoadMacro,.type="Macro",.icon="");
+  fl_register_hotkey("Ctrl+Alt+P", PlayMacro);
+
 }

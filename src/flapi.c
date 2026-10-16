@@ -2087,6 +2087,16 @@ char* fl_get_working_dir() {
     PROFILE_START(_pt);
     { PROFILE_END_VAR(_pt, "fl_get_working_dir"); return Platform_GetWorkingDir(); }
 }
+char* fl_resolve_data_path(const char* name) {
+    PROFILE_START(_pt);
+    if (!name || !name[0]) { PROFILE_END_VAR(_pt, "fl_resolve_data_path"); return NULL; }
+    char full[MAX_PATH];
+    if (!Platform_ResolveDataPath(__builtin_return_address(0), name, full, sizeof(full))) { PROFILE_END_VAR(_pt, "fl_resolve_data_path"); return NULL; }
+    char* r = (char*)malloc(strlen(full) + 1);
+    if (!r) { PROFILE_END_VAR(_pt, "fl_resolve_data_path"); return NULL; }
+    strcpy(r, full);
+    { PROFILE_END_VAR(_pt, "fl_resolve_data_path"); return r; }
+}
 
 void fl_hashmap_init(FlHashMap** map) {
     PROFILE_START(_pt);
