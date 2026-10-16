@@ -1532,6 +1532,7 @@ void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
 
 bool fl_place_checkbox_impl(const FlCheckboxSpec *spec) {
     PROFILE_START(_pt);
+    WindowManager_TopPopupSetMouseHover(WindowManager_Get(), true);
     if (!spec || !spec->name || !spec->name[0]) {
         PROFILE_END_VAR(_pt, "api:fl_place_checkbox");
         return false;

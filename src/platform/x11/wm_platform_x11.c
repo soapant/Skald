@@ -126,7 +126,7 @@ if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     while (wm->running && popup->manager) {
         Platform_WM_ProcessEvents(wm);
         bool mouse_changed = false;
-        {
+        if (WindowManager_TopPopupWantsMouseRender(wm)) {
             int mx = 0, my = 0;
             if (Platform_GetMousePos(&mx, &my)) {
                 int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
