@@ -544,12 +544,13 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
                                                         optional_blacklistedwindows,
                                                         whitelist);
     binding.is_feature_toggle = false;
-    binding.hold = false;
+    binding.hold = true;
     if (on_hotkey_trigger && g_feature_map) {
         for (int i = 0; i < g_feature_order_count; i++) {
             if (g_feature_order[i] && g_feature_order[i]->cb == on_hotkey_trigger) { binding.is_feature_toggle = true; break; }
         }
     }
+    if (binding.is_feature_toggle) binding.hold = false;
     { PROFILE_END_VAR(_pt, "fl_register_hotkey_impl"); return hotkey_register_internal(binding); }
 }
 
