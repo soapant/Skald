@@ -58,6 +58,7 @@ static void PromptPopup_OnShow(Popup* self) {
       data->state->has_listbox = false;
     }
     ListBoxInfo_Init(&data->state->listbox);
+    data->state->no_bg = data->spec.no_bg;
     data->state->listbox.selected_index = -1;
     extern EditorMode g_last_mode;
     if (ModePersistsThroughFeatures) {
@@ -69,6 +70,7 @@ static void PromptPopup_OnShow(Popup* self) {
         SetModeWithListBox(MODE_INSERT, &data->state->listbox);
     }
     self->user_data = data->state;
+    data->state->no_bg = data->spec.no_bg;
 
     FlintContext* ctx2 = FlintContext_Get();
     if (!wm->ctx) wm->ctx = ctx2;
