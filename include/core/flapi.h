@@ -111,7 +111,7 @@ int fl_get_icon_size(const char* icon_path);
 typedef struct {
     const char* name;
     void (*cb)(void);
-    const char* icon_path;
+    const char* icon;
 } FlFeatureSpec;
 
 void fl_register_feature_impl(const FlFeatureSpec* spec);

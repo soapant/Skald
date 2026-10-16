@@ -498,7 +498,7 @@ static FlintMap* ensure_feature_map(void) {
 void fl_register_feature_impl(const FlFeatureSpec* spec) {
     PROFILE_START(_pt);
     if (!spec->name || !spec->cb) return;
-    char* icon_path = spec->icon_path ? spec->icon_path : "";
+    char* icon_path = spec->icon ? spec->icon : "";
     ensure_feature_map();
     ptrdiff_t idx = shgeti(g_feature_map, (char*)spec->name);
     FeatureReg* existing = idx >= 0 ? (FeatureReg*)g_feature_map[idx].value : NULL;
