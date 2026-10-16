@@ -406,14 +406,14 @@ void PlayMacro(void) {
 
 void InfinitePlaybackToggle(void) {
     g_macro_infinite = !g_macro_infinite;
-    if (g_macro_infinite) fl_message(.message="Infinite playback enabled", .timeout=1.0);
-    else fl_message(.message="Infinite playback disabled", .timeout=1.0);
+    if (g_macro_infinite) fl_message(.message="Infinite playback enabled", .timeout=1.0,.slot=BOTTOM_CENTER);
+    else fl_message(.message="Infinite playback disabled", .timeout=1.0,.slot=BOTTOM_CENTER);
 }
 
 void RemoveDeadTimeToggle(void) {
     g_macro_remove_dead = !g_macro_remove_dead;
-    if (g_macro_remove_dead) fl_message(.message="Remove dead time enabled", .timeout=1.0);
-    else fl_message(.message="Remove dead time disabled", .timeout=1.0);
+    if (g_macro_remove_dead) fl_message(.message="Remove dead time enabled", .timeout=1.0,.slot=BOTTOM_CENTER);
+    else fl_message(.message="Remove dead time disabled", .timeout=1.0,.slot=BOTTOM_CENTER);
 }
 
 void RecordToggle(void) {
