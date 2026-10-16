@@ -156,13 +156,21 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     Pixmap dbl = g_pbuf_pm;
     XftDraw* xdDbl = g_pbuf_xd;
     x11_set_dbl_visual(dpy, vis, cmap, depth);
-    Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
-    if (bg) {
-        GC gc = XCreateGC(dpy, dbl, 0, NULL);
-        XCopyArea(dpy, bg, dbl, gc, 0, 0, w, h, 0, 0);
-        XFreeGC(dpy, gc);
+    PromptState* pss = state;
+    if (!(pss && pss->no_bg)) {
+        Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
+        if (bg) {
+            GC gc = XCreateGC(dpy, dbl, 0, NULL);
+            XCopyArea(dpy, bg, dbl, gc, 0, 0, w, h, 0, 0);
+            XFreeGC(dpy, gc);
+        } else {
+            x11_draw_background_to_drawable(dpy, dbl, w, h);
+        }
     } else {
-        x11_draw_background_to_drawable(dpy, dbl, w, h);
+        GC clear_gc = XCreateGC(dpy, dbl, 0, NULL);
+        XSetForeground(dpy, clear_gc, 0);
+        XFillRectangle(dpy, dbl, clear_gc, 0, 0, w, h);
+        XFreeGC(dpy, clear_gc);
     }
     Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
