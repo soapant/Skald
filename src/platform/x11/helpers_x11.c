@@ -1028,7 +1028,7 @@ PROFILE_START(timer);
         unsigned int r = (bg_color >> 16) & 0xFF;
         unsigned int g = (bg_color >> 8) & 0xFF;
         unsigned int b = bg_color & 0xFF;
-        unsigned int a = RoundedCorners ? (unsigned int)WindowOpacity : (Platform_GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity);
+        unsigned int a = Platform_GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity;
         attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
