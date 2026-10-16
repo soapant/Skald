@@ -54,6 +54,21 @@ static void playback_render() {
     fl_draw_line(.x1 = 0,     .y1 = max_y, .x2 = 0,     .y2 = 0,     .color = FL_BLUE);
 }
 
+static FlTimer g_macro_clock;
+static bool g_macro_clock_valid = false;
+
+static void macro_clock_reset(void) {
+  g_macro_clock = fl_start_timer();
+  g_macro_clock_valid = true;
+}
+
+static unsigned long long macro_now_us(void) {
+  if (!g_macro_clock_valid) macro_clock_reset();
+  double ms = fl_end_timer(g_macro_clock);
+  if (ms < 0.0) ms = 0.0;
+  return (unsigned long long)(ms * 1000.0);
+}
+
 static void record_push(const MacroEvent* m) {
     if (g_event_count >= MACRO_MAX_EVENTS) { g_overflow = true; return; }
     g_events[g_event_count++] = *m;
@@ -68,7 +83,7 @@ static void record_push_key(const FlKeyEvent* e) {
     m.mods = e->mods;
     m.down = e->down;
     m.repeat = e->repeat;
-    m.t_us = e->t_us;
+    m.t_us = macro_now_us();
     record_push(&m);
 }
 
@@ -86,7 +101,7 @@ static void record_push_mouse(const FlMouseEvent* e) {
     }
     m.x = e->x;
     m.y = e->y;
-    m.t_us = e->t_us;
+    m.t_us = macro_now_us();
     record_push(&m);
 }
 
@@ -122,13 +137,12 @@ static void* recorder_loop(void* arg) {
     {
       FlPos _mp = fl_get_cursor_pos();
       if (_mp.x != g_macro_last_mx || _mp.y != g_macro_last_my) {
-        unsigned long long _now = fl_start_timer().ticks / 1000ULL;
         FlMouseEvent _me;
         memset(&_me, 0, sizeof(_me));
         _me.button = 0;
         _me.x = _mp.x;
         _me.y = _mp.y;
-        _me.t_us = _now;
+        _me.t_us = macro_now_us();
         record_push_mouse(&_me);
         g_macro_last_mx = _mp.x;
         g_macro_last_my = _mp.y;
@@ -144,6 +158,9 @@ static void* recorder_loop(void* arg) {
 static void reset_recording(void) {
   g_event_count = 0;
   g_overflow = false;
+  g_macro_last_mx = -1;
+  g_macro_last_my = -1;
+  macro_clock_reset();
 }
 
 static bool g_playing = false;
@@ -360,13 +377,22 @@ void LoadMacro(void) {
     PROMPT(.title="Macro Load", .refresh=macro_refresh, .enter=macro_load_enter,.ctrl_enter=macro_load_ctrlenter,.auto_scale=true);
 }
 
+static void macro_show_overlay(void (*render)(void)) {
+    FlRect m = fl_get_monitor_geometry();
+    int w = m.w > 0 ? m.w : fl_get_screen_width();
+    int h = m.h > 0 ? m.h : fl_get_screen_height();
+    if (w <= 0) w = 1920;
+    if (h <= 0) h = 1080;
+    fl_message(.render=render, .no_bg=true, .w=w, .h=h, .x=m.x + w / 2, .y=m.y + h / 2, .timeout=1000.0);
+}
+
 void PlayMacro(void) {
     if (!g_playing) {
         if (g_event_count == 0) {
             fl_message(.message="No macro loaded", .timeout=3.0);
             return;
         }
-        fl_message(.render=playback_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=1000.0);
+        macro_show_overlay(playback_render);
         fl_clear_key_queue();
         fl_clear_mouse_queue();
         g_playing = true;
@@ -392,7 +418,7 @@ void RemoveDeadTimeToggle(void) {
 
 void RecordToggle(void) {
   if (!g_recording) {
-    fl_message(.render=recording_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=1000.0);
+    macro_show_overlay(recording_render);
     fl_clear_key_queue();
     fl_clear_mouse_queue();
     reset_recording();

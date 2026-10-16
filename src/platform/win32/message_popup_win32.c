@@ -248,6 +248,22 @@ int useMaxW = maxWidth;
   Platform_CreateDisplayMessageWindow(message, centerX, centerY, useMaxW, useMaxH, timeout, color, no_bg, render);
 }
 
+void Platform_DismissDisplayMessage(void) {
+    PROFILE_START(_pt);
+    HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+    if (h == NULL) { PROFILE_END_VAR(_pt, "Platform_DismissDisplayMessage"); return; }
+    HWND tray = WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd);
+    if (tray != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
+      SendMessageA(tray, WM_DISMISS_MESSAGE, 0, 0);
+      PROFILE_END_VAR(_pt, "Platform_DismissDisplayMessage");
+      return;
+    }
+    KillTimer(h, 999);
+    DestroyWindow(h);
+    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+    PROFILE_END_VAR(_pt, "Platform_DismissDisplayMessage");
+}
+
 static char g_hover_key[64] = {0};
 
 #define HOVER_WIDGET_MAX 8

@@ -6,6 +6,7 @@
 
 
 #define WM_DISPLAY_MESSAGE (WM_APP + 2)
+#define WM_DISMISS_MESSAGE (WM_APP + 3)
 
 typedef struct {
   const char* message;
