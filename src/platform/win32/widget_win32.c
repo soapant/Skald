@@ -121,7 +121,6 @@ if (!layer_acquire(widget)) { PROFILE_END_VAR(_pt, "widget_push_layered"); retur
     Platform_SetDrawBgColor(0);
     SetBkMode(widget->layer_dc, TRANSPARENT);
     Platform_SetDrawContextWin32(widget->layer_dc);
-    Platform_SetPreRenderStateWin32(NULL, NULL);
     if (widget->fn) widget->fn(widget->ud);
     GdiFlush();
 
