@@ -108,9 +108,7 @@ static void sort_events(void) {
     }
 }
 
-/* Event timestamps come from the platform input queue in microseconds. Keep the
-   same clock here: QueryPerformanceCounter runs at 10MHz, so raw ticks are not
-   microseconds and mixing the two scales makes every wait 100x too long. */
+
 #if !defined(_WIN32)
 static int g_macro_last_mx = -1, g_macro_last_my = -1;
 #endif
@@ -124,28 +122,28 @@ static void* recorder_loop(void* arg) {
     FlMouseEvent me;
     while (fl_poll_mouse(&me)) record_push_mouse(&me);
 
+#if !defined(_WIN32)
+    {
+      FlPos _mp = fl_get_cursor_pos();
+      if (_mp.x != g_macro_last_mx || _mp.y != g_macro_last_my) {
+        struct timespec _ts;
+        clock_gettime(CLOCK_MONOTONIC, &_ts);
+        unsigned long long _now = (unsigned long long)_ts.tv_sec * 1000000ULL + (unsigned long long)(_ts.tv_nsec / 1000);
+        FlMouseEvent _me;
+        memset(&_me, 0, sizeof(_me));
+        _me.button = 0;
+        _me.x = _mp.x;
+        _me.y = _mp.y;
+        _me.t_us = _now;
+        record_push_mouse(&_me);
+        g_macro_last_mx = _mp.x;
+        g_macro_last_my = _mp.y;
+      }
+    }
+#endif
     fl_sleep(0.005);
   }
 
-#if !defined(_WIN32)
-  {
-    FlPos _mp = fl_get_cursor_pos();
-    if (_mp.x != g_macro_last_mx || _mp.y != g_macro_last_my) {
-      struct timespec _ts;
-      clock_gettime(CLOCK_MONOTONIC, &_ts);
-      unsigned long long _now = (unsigned long long)_ts.tv_sec * 1000000ULL + (unsigned long long)(_ts.tv_nsec / 1000);
-      FlMouseEvent _me;
-      memset(&_me, 0, sizeof(_me));
-      _me.button = 0;
-      _me.x = _mp.x;
-      _me.y = _mp.y;
-      _me.t_us = _now;
-      record_push_mouse(&_me);
-      g_macro_last_mx = _mp.x;
-      g_macro_last_my = _mp.y;
-    }
-  }
-#endif
   g_thread = NULL;
   return NULL;
 }
@@ -222,7 +220,6 @@ static void* playback_loop(void* arg) {
   }
   release_everything();
   fl_dismiss_message();
-  g_playing = false;
   g_playing = false;
   g_play_thread = NULL;
   return NULL;
