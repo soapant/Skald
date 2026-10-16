@@ -1,5 +1,5 @@
-#ifndef PROMPT_CONTROLLER_H
-#define PROMPT_CONTROLLER_H
+#ifndef fl_window_CONTROLLER_H
+#define fl_window_CONTROLLER_H
 
 #include <stdbool.h>
 

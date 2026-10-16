@@ -37,7 +37,7 @@ if (!key) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
 static int edit_popup_scroll_offset(HDC hdc, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
+    int visible_w = width - fl_window_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
     if (hdc && text) {
@@ -149,7 +149,7 @@ PROFILE_START(timer);
     if (font.hfont) SelectObject(paint, font.hfont);
 
     if (g_vim_mode != NULL && VimModeText) {
-        Platform_DrawTextRaw(PROMPT_EDITPOPUP_MODE_X, PROMPT_EDITPOPUP_MODE_Y, g_vim_mode, VimModeTextColor(), font, "LEFT", PROMPT_EDITPOPUP_MODE_PAD, FontSize);
+        Platform_DrawTextRaw(fl_window_EDITPOPUP_MODE_X, fl_window_EDITPOPUP_MODE_Y, g_vim_mode, VimModeTextColor(), font, "LEFT", fl_window_EDITPOPUP_MODE_PAD, FontSize);
     }
 
     int cursor_x = 0;
@@ -159,15 +159,15 @@ PROFILE_START(timer);
     scroll = edit_popup_scroll_offset(paint, data->text ? data->text : "", text_len, data->cursor, w, 0, &cursor_x);
     if (text_len > 0) text_w = Platform_MeasureTextWidth(data->text, text_len, FontSize);
 
-    int draw_x = PROMPT_EDITPOPUP_INSET - scroll;
-    int cursor_draw_x = PROMPT_EDITPOPUP_INSET + cursor_x - scroll;
-    int draw_y = h / 2 + PROMPT_EDITPOPUP_CENTER_OFFSET_Y;
+    int draw_x = fl_window_EDITPOPUP_INSET - scroll;
+    int cursor_draw_x = fl_window_EDITPOPUP_INSET + cursor_x - scroll;
+    int draw_y = h / 2 + fl_window_EDITPOPUP_CENTER_OFFSET_Y;
     if (text_w > 0 && text_w <= w - 20 && data->align) {
         if (Platform_StringContainsCaseInsensitive(data->align, "CENTER")) {
             draw_x = (w - text_w) / 2;
             cursor_draw_x = draw_x + cursor_x;
         } else if (Platform_StringContainsCaseInsensitive(data->align, "RIGHT")) {
-            draw_x = w - PROMPT_EDITPOPUP_INSET - text_w;
+            draw_x = w - fl_window_EDITPOPUP_INSET - text_w;
             cursor_draw_x = draw_x + cursor_x;
         }
     }
@@ -184,8 +184,8 @@ PROFILE_START(timer);
                 int sx0 = draw_x + Platform_MeasureTextWidth(data->text, sel_start, FontSize);
                 int sx1 = draw_x + Platform_MeasureTextWidth(data->text, sel_end + 1, FontSize);
                 int cx = cursor_draw_x;
-                if (sx0 < PROMPT_CARET_LO_CLAMP) sx0 = PROMPT_CARET_LO_CLAMP;
-                if (sx1 > w - PROMPT_CARET_HI_CLAMP) sx1 = w - PROMPT_CARET_HI_CLAMP;
+                if (sx0 < fl_window_CARET_LO_CLAMP) sx0 = fl_window_CARET_LO_CLAMP;
+                if (sx1 > w - fl_window_CARET_HI_CLAMP) sx1 = w - fl_window_CARET_HI_CLAMP;
                 if (cx < sx0) cx = sx0;
                 if (cx > sx1) cx = sx1;
                 int selw = sx1 - sx0;
@@ -193,9 +193,9 @@ PROFILE_START(timer);
             }
         } else {
             int tint_x = cursor_draw_x;
-            if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-            if (tint_x > w - PROMPT_CARET_HI_CLAMP) tint_x = w - PROMPT_CARET_HI_CLAMP;
-            Platform_DrawRectRaw(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, tint,0, false, true, 1, true);
+            if (tint_x < fl_window_CARET_LO_CLAMP) tint_x = fl_window_CARET_LO_CLAMP;
+            if (tint_x > w - fl_window_CARET_HI_CLAMP) tint_x = w - fl_window_CARET_HI_CLAMP;
+            Platform_DrawRectRaw(tint_x, tint_y, fl_window_EDITPOPUP_CARET_W_NORMAL, FontSize, tint,0, false, true, 1, true);
         }
     }
 
@@ -218,7 +218,7 @@ PROFILE_START(timer);
                 memcpy(buf, data->text + pos, cl);
                 buf[cl] = '\0';
                 int x = draw_x + Platform_MeasureTextWidth(data->text, (int)pos, FontSize);
-                if (x >= data->w - PROMPT_EDITPOPUP_INSET) break;
+                if (x >= data->w - fl_window_EDITPOPUP_INSET) break;
                 unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
                 Platform_DrawTextRaw(x, draw_y, buf, col, font, "", 0, 0);
                 pos += cl; ci++;
@@ -232,10 +232,10 @@ PROFILE_START(timer);
     }
 
     if (IsInsertMode()) {
-        if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
-        if (cursor_draw_x > w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = w - PROMPT_CARET_HI_CLAMP;
+        if (cursor_draw_x < fl_window_CARET_LO_CLAMP) cursor_draw_x = fl_window_CARET_LO_CLAMP;
+        if (cursor_draw_x > w - fl_window_CARET_HI_CLAMP) cursor_draw_x = w - fl_window_CARET_HI_CLAMP;
         int cursor_y = edit_popup_cursor_y(paint, draw_y);
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, Modal_CursorColor(),0, false, true, 1, true);
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, FontSize, Modal_CursorColor(),0, false, true, 1, true);
     }
 
     Platform_SetDrawContextWin32(NULL);

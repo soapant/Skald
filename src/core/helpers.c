@@ -10,7 +10,7 @@
 #include "platform/wm_platform.h"
 #include "core/window_manager.h"
 
-int MessagePromptGap = MSG_PROMPT_GAP_DEFAULT;
+int MessagePromptGap = MSG_fl_window_GAP_DEFAULT;
 int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
 
 unsigned long VimModeTextColor(void) {

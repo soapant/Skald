@@ -27,7 +27,7 @@ static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
 }
 static void TriggerZoxide(void) {
     FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
-    PROMPT(.title = "⌨️ Zoxide", .items = (const char**)files.items,
+    fl_window(.title = "⌨️ Zoxide", .items = (const char**)files.items,
            .refresh = zoxide_refresh, .enter = zoxide_enter, .edit = zoxide_edit);
     fl_free_file_list(&files);
 }
@@ -57,7 +57,7 @@ static void file_manager_edit(const char* selection, ListBoxInfo* lb) {
 }
 static void TriggerFileManager(void) {
     FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
-    PROMPT(.title = "📁 FileManager", .items = (const char**)files.items,
+    fl_window(.title = "📁 FileManager", .items = (const char**)files.items,
            .refresh = file_manager_refresh, .enter = file_manager_enter, .edit = file_manager_edit);
     fl_free_file_list(&files);
 }

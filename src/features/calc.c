@@ -467,7 +467,7 @@ bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 void TriggerCalculator(void) {
     g_calc_show_fraction = false;
     g_calc_has_toggled = false;
-    PROMPT(.title = "🧮 Calculator",
+    fl_window(.title = "🧮 Calculator",
            .render = calculator_render_callback,
            .enter = calculator_enter_callback,
            .ctrl_enter = calculator_ctrlenter_callback,

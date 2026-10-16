@@ -26,7 +26,7 @@ void settings_render(PromptState *state) {
 }
 
 void TriggerSettings(void) {
-    PROMPT(.title = "Settings",
+    fl_window(.title = "Settings",
            .refresh = settings_refresh,
            .enter = settings_enter,
            .ctrl_enter = settings_ctrl_enter,

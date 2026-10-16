@@ -180,7 +180,7 @@ bool clipboard_history_enter(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerClipboardHistory(void) {
-    PROMPT(.title = "Clipboard History",
+    fl_window(.title = "Clipboard History",
            .refresh = clipboard_history_refresh,
            .enter = clipboard_history_enter);
 }

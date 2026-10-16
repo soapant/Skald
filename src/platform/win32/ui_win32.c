@@ -266,7 +266,7 @@ out->text = NULL;
             return true;
         }
     }
-    if (top && top->type == POPUP_PROMPT && top->user_data) {
+    if (top && top->type == POPUP_fl_window && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         out->text = prompt->filter;
         out->capacity = sizeof(prompt->filter);
