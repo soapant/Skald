@@ -1027,7 +1027,7 @@ PROFILE_START(timer);
         unsigned int r = (bg_color >> 16) & 0xFF;
         unsigned int g = (bg_color >> 8) & 0xFF;
         unsigned int b = bg_color & 0xFF;
-        unsigned int a = (RoundedCorners || Platform_GetTransparentWindow()) ? 0 : (unsigned int)WindowOpacity;
+        unsigned int a = RoundedCorners ? (unsigned int)WindowOpacity : (Platform_GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity);
         attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
@@ -1124,6 +1124,7 @@ PROFILE_START(timer);
         }
     }
     XShapeCombineMask(dpy, win, ShapeBounding, 0, 0, mask, ShapeSet);
+    XSync(dpy, False);
     XFreePixmap(dpy, mask);
     XFreeGC(dpy, gc);
     PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded");
@@ -1629,26 +1630,29 @@ Window x11_create_prompt_window(Display* dpy, int x, int y, int w, int h) {
 PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_prompt_window");
+    Window win;
     if (niri_is_active()) {
         log_error("niri override_redirect prompt w=%d h=%d", w, h);
-        return x11_create_window_ex_or(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask, true);
+        win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask, true);
+    } else {
+        win = x11_create_window_ex(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
+        Window focus_win = None;
+        int revert_to = 0;
+        XGetInputFocus(dpy, &focus_win, &revert_to);
+        if (focus_win != None && focus_win != PointerRoot && focus_win != win) XSetTransientForHint(dpy, win, focus_win);
+        char unique_title[64];
+        snprintf(unique_title, sizeof(unique_title), "flint-%lu-%d", (unsigned long)win, (int)getpid());
+        XStoreName(dpy, win, unique_title);
+        XSizeHints* sh = XAllocSizeHints();
+        sh->flags = PMinSize | PMaxSize;
+        sh->min_width = w;
+        sh->min_height = h;
+        sh->max_width = w;
+        sh->max_height = h;
+        XSetWMNormalHints(dpy, win, sh);
+        XFree(sh);
     }
-    Window win = x11_create_window_ex(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
-    Window focus_win = None;
-    int revert_to = 0;
-    XGetInputFocus(dpy, &focus_win, &revert_to);
-    if (focus_win != None && focus_win != PointerRoot && focus_win != win) XSetTransientForHint(dpy, win, focus_win);
-    char unique_title[64];
-    snprintf(unique_title, sizeof(unique_title), "flint-%lu-%d", (unsigned long)win, (int)getpid());
-    XStoreName(dpy, win, unique_title);
-    XSizeHints* sh = XAllocSizeHints();
-    sh->flags = PMinSize | PMaxSize;
-    sh->min_width = w;
-    sh->min_height = h;
-    sh->max_width = w;
-    sh->max_height = h;
-    XSetWMNormalHints(dpy, win, sh);
-    XFree(sh);
+    if (RoundedCorners && CornerRadius > 0) x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
     { PROFILE_END_VAR(_pt, "x11_create_prompt_window"); return win; }
 }
 
