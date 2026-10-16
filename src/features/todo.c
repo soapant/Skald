@@ -351,7 +351,7 @@ void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerTodo(void) {
-    PROMPT(
+    fl_window(
         .title = "📝 Todo",
         .refresh = todo_refresh_callback,
         .enter = todo_enter_callback,

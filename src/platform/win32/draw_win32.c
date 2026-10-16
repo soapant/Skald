@@ -358,9 +358,9 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     int box = (pad == 0) ? x : 0;
     int x0;
     if (centered) {
-        x0 = box > 0 ? (box - msz.cx) / 2 : pad + (PROMPT_WRAP_BOX_CENTER - msz.cx) / 2;
+        x0 = box > 0 ? (box - msz.cx) / 2 : pad + (fl_window_WRAP_BOX_CENTER - msz.cx) / 2;
     } else {
-        x0 = box > 0 ? box - msz.cx : PROMPT_WRAP_BOX_RIGHT - msz.cx - pad;
+        x0 = box > 0 ? box - msz.cx : fl_window_WRAP_BOX_RIGHT - msz.cx - pad;
     }
     TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
     free(wide);
@@ -866,7 +866,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
 
 static int win32_update_edit_scroll_offset(HDC hdc, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
         PROFILE_START(_pt);
-int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
+int visible_w = width - fl_window_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
     if (text) {
@@ -913,7 +913,7 @@ PROFILE_START(timer);
         if (tfont.hfont) told = (HFONT)SelectObject(g_draw_hdc, tfont.hfont);
         GetTextMetrics(g_draw_hdc, &ttm);
         int tlh = ttm.tmAscent + ttm.tmDescent;
-        int tint_y = (tlh <= 0 || FontSize <= 0) ? PROMPT_EDIT_INSET : PROMPT_EDIT_INSET + (tlh - FontSize) / 2;
+        int tint_y = (tlh <= 0 || FontSize <= 0) ? fl_window_EDIT_INSET : fl_window_EDIT_INSET + (tlh - FontSize) / 2;
         if (told) SelectObject(g_draw_hdc, told);
         Platform_DestroyFont(tfont);
 
@@ -924,20 +924,20 @@ PROFILE_START(timer);
             if (sel_start < 0) sel_start = 0;
             if (sel_end >= text_len) sel_end = text_len - 1;
             if (sel_start <= sel_end) {
-                int x0 = PROMPT_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, sel_start, scroll);
-                int x1 = PROMPT_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, sel_end, scroll);
-                int cx = PROMPT_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, (int)state->cursor, scroll);
-                if (x0 < PROMPT_CARET_LO_CLAMP) x0 = PROMPT_CARET_LO_CLAMP;
-                if (x1 > state->width - PROMPT_CARET_HI_CLAMP) x1 = state->width - PROMPT_CARET_HI_CLAMP;
+                int x0 = fl_window_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, sel_start, scroll);
+                int x1 = fl_window_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, sel_end, scroll);
+                int cx = fl_window_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, (int)state->cursor, scroll);
+                if (x0 < fl_window_CARET_LO_CLAMP) x0 = fl_window_CARET_LO_CLAMP;
+                if (x1 > state->width - fl_window_CARET_HI_CLAMP) x1 = state->width - fl_window_CARET_HI_CLAMP;
                 if (cx < x0) cx = x0;
                 if (cx > x1) cx = x1;
                 int w = x1 - x0 + PromptNormalCaretWidth();
                 if (w > 0) Platform_DrawRectRaw(x0, tint_y, w, FontSize, tint,0, false, true, 1, true);
             }
         } else {
-            int tint_x = PROMPT_EDIT_INSET + cursor_x - scroll;
-            if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-            if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
+            int tint_x = fl_window_EDIT_INSET + cursor_x - scroll;
+            if (tint_x < fl_window_CARET_LO_CLAMP) tint_x = fl_window_CARET_LO_CLAMP;
+            if (tint_x > state->width - fl_window_CARET_HI_CLAMP) tint_x = state->width - fl_window_CARET_HI_CLAMP;
             Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, tint,0, false, true, 1, true);
         }
     }
@@ -960,13 +960,13 @@ PROFILE_START(timer);
                 char buf[8];
                 memcpy(buf, state->filter + pos, cl);
                 buf[cl] = '\0';
-                int x = (PROMPT_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
+                int x = (fl_window_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
                 unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
-                Platform_DrawTextRaw(x, PROMPT_EDIT_INSET, buf, col, font, "", 0, 0);
+                Platform_DrawTextRaw(x, fl_window_EDIT_INSET, buf, col, font, "", 0, 0);
                 pos += cl; ci++;
             }
         } else {
-            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
+            Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
         }
         Platform_DestroyFont(font);
     }
@@ -979,9 +979,9 @@ PROFILE_START(timer);
     if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
     int cursor_x = 0;
     win32_update_edit_scroll_offset(g_draw_hdc, state->filter, (int)strlen(state->filter), (int)state->cursor, state->width, state->scroll_offset, &cursor_x);
-    int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - state->scroll_offset;
-    if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
-    if (cursor_draw_x > state->width - PROMPT_CARET_HI_CLAMP) cursor_draw_x = state->width - PROMPT_CARET_HI_CLAMP;
+    int cursor_draw_x = fl_window_EDIT_INSET + cursor_x - state->scroll_offset;
+    if (cursor_draw_x < fl_window_CARET_LO_CLAMP) cursor_draw_x = fl_window_CARET_LO_CLAMP;
+    if (cursor_draw_x > state->width - fl_window_CARET_HI_CLAMP) cursor_draw_x = state->width - fl_window_CARET_HI_CLAMP;
     FontHandle font = Platform_CreateFont(FontSize, UsedFont);
     HFONT oldFont = NULL;
     TEXTMETRIC tm;
@@ -989,10 +989,10 @@ PROFILE_START(timer);
     if (font.hfont) oldFont = (HFONT)SelectObject(g_draw_hdc, font.hfont);
     GetTextMetrics(g_draw_hdc, &tm);
     int line_h = tm.tmAscent + tm.tmDescent;
-    int cursor_y = (line_h <= 0 || FontSize <= 0) ? PROMPT_EDIT_INSET : PROMPT_EDIT_INSET + (line_h - FontSize) / 2;
+    int cursor_y = (line_h <= 0 || FontSize <= 0) ? fl_window_EDIT_INSET : fl_window_EDIT_INSET + (line_h - FontSize) / 2;
     if (oldFont) SelectObject(g_draw_hdc, oldFont);
     Platform_DestroyFont(font);
     if (!IsInsertMode()) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
-    Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, Modal_CursorColor(),0, false, true, 1, true);
+    Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, FontSize, Modal_CursorColor(),0, false, true, 1, true);
     PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor");
 }

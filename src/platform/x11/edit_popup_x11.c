@@ -126,7 +126,7 @@ PROFILE_START(timer);
     XftFont* xf = FH_TO_XFT(font);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (xf && VimModeText) {
-        Platform_DrawTextRaw(PROMPT_EDITPOPUP_MODE_X, PROMPT_EDITPOPUP_MODE_Y, g_vim_mode, VimModeTextColor(), font, "LEFT", PROMPT_EDITPOPUP_MODE_PAD, FontSize);
+        Platform_DrawTextRaw(fl_window_EDITPOPUP_MODE_X, fl_window_EDITPOPUP_MODE_Y, g_vim_mode, VimModeTextColor(), font, "LEFT", fl_window_EDITPOPUP_MODE_PAD, FontSize);
     }
     int cursor_x = 0;
     int text_len = data->text ? strlen(data->text) : 0;
@@ -140,15 +140,15 @@ PROFILE_START(timer);
             text_w = textExt.xOff;
         }
     }
-    int draw_x = PROMPT_EDITPOPUP_INSET - scroll;
-    int cursor_draw_x = PROMPT_EDITPOPUP_INSET + cursor_x - scroll;
-    int draw_y = data->h / 2 + PROMPT_EDITPOPUP_CENTER_OFFSET_Y;
+    int draw_x = fl_window_EDITPOPUP_INSET - scroll;
+    int cursor_draw_x = fl_window_EDITPOPUP_INSET + cursor_x - scroll;
+    int draw_y = data->h / 2 + fl_window_EDITPOPUP_CENTER_OFFSET_Y;
     if (text_w > 0 && text_w <= data->w - 20 && data->align) {
         if (Platform_StringContainsCaseInsensitive(data->align, "CENTER")) {
             draw_x = (data->w - text_w) / 2;
             cursor_draw_x = draw_x + cursor_x;
         } else if (Platform_StringContainsCaseInsensitive(data->align, "RIGHT")) {
-            draw_x = data->w - PROMPT_EDITPOPUP_INSET - text_w;
+            draw_x = data->w - fl_window_EDITPOPUP_INSET - text_w;
             cursor_draw_x = draw_x + cursor_x;
         }
     }
@@ -175,8 +175,8 @@ PROFILE_START(timer);
                     sx1 = draw_x + e1.xOff;
                 }
                 int cx = cursor_draw_x;
-                if (sx0 < PROMPT_CARET_LO_CLAMP) sx0 = PROMPT_CARET_LO_CLAMP;
-                if (sx1 > data->w - PROMPT_CARET_HI_CLAMP) sx1 = data->w - PROMPT_CARET_HI_CLAMP;
+                if (sx0 < fl_window_CARET_LO_CLAMP) sx0 = fl_window_CARET_LO_CLAMP;
+                if (sx1 > data->w - fl_window_CARET_HI_CLAMP) sx1 = data->w - fl_window_CARET_HI_CLAMP;
                 if (cx < sx0) cx = sx0;
                 if (cx > sx1) cx = sx1;
                 int w = sx1 - sx0;
@@ -184,9 +184,9 @@ PROFILE_START(timer);
             }
         } else {
             int tint_x = cursor_draw_x;
-            if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-            if (tint_x > data->w - PROMPT_CARET_HI_CLAMP) tint_x = data->w - PROMPT_CARET_HI_CLAMP;
-            Platform_DrawRectRaw(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL,FontSize,tint,0,false,true,1,true);
+            if (tint_x < fl_window_CARET_LO_CLAMP) tint_x = fl_window_CARET_LO_CLAMP;
+            if (tint_x > data->w - fl_window_CARET_HI_CLAMP) tint_x = data->w - fl_window_CARET_HI_CLAMP;
+            Platform_DrawRectRaw(tint_x, tint_y, fl_window_EDITPOPUP_CARET_W_NORMAL,FontSize,tint,0,false,true,1,true);
         }
     }
 
@@ -209,7 +209,7 @@ PROFILE_START(timer);
                 memcpy(buf, data->text + pos, cl);
                 buf[cl] = '\0';
                 int x = draw_x + Platform_MeasureTextWidth(data->text, (int)pos, FontSize);
-                if (x >= data->w - PROMPT_EDITPOPUP_INSET) break;
+                if (x >= data->w - fl_window_EDITPOPUP_INSET) break;
                 unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
                 Platform_DrawTextRaw(x, draw_y, buf, col, font, "", 0, 0);
                 Platform_FlushDraw();
@@ -223,10 +223,10 @@ PROFILE_START(timer);
         Platform_DrawTextRaw(draw_x, draw_y, data->placeholder, ph, font, "", 0, 0);
     }
     if (IsInsertMode()) {
-        if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
-        if (cursor_draw_x > data->w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = data->w - PROMPT_CARET_HI_CLAMP;
+        if (cursor_draw_x < fl_window_CARET_LO_CLAMP) cursor_draw_x = fl_window_CARET_LO_CLAMP;
+        if (cursor_draw_x > data->w - fl_window_CARET_HI_CLAMP) cursor_draw_x = data->w - fl_window_CARET_HI_CLAMP;
         int cursor_y = x11_font_cursor_y_of(font, draw_y);
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, FontSize,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
     }
     Platform_SetDrawContext(NULL, NULL, NULL, 0);
     if (buffered) {

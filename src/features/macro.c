@@ -126,7 +126,6 @@ static void sort_events(void) {
 static int g_macro_last_mx = -1, g_macro_last_my = -1;
 
 static void* recorder_loop(void* arg) {
-  (void)arg;
   while (g_recording) {
     FlKeyEvent ke;
     while (fl_poll_key(&ke)) record_push_key(&ke);
@@ -374,7 +373,7 @@ void SaveMacro(void) {
 }
 
 void LoadMacro(void) {
-    PROMPT(.title="Macro Load", .refresh=macro_refresh, .enter=macro_load_enter,.ctrl_enter=macro_load_ctrlenter,.auto_scale=true);
+    fl_window(.title="Macro Load", .refresh=macro_refresh, .enter=macro_load_enter,.ctrl_enter=macro_load_ctrlenter,.auto_scale=true);
 }
 
 static void macro_show_overlay(void (*render)(void)) {
@@ -433,9 +432,9 @@ void RecordToggle(void) {
 
 FLINT_FEATURE_INIT {
   fl_register_hotkey("Ctrl+Alt+R", RecordToggle);
+  fl_register_hotkey("Ctrl+Alt+P", PlayMacro);
   fl_add_to_cc(.display_name="SaveMacro",.on_enter=SaveMacro,.type="Macro",.icon="");
   fl_add_to_cc(.display_name="LoadMacro",.on_enter=LoadMacro,.type="Macro",.icon="");
-  fl_register_hotkey("Ctrl+Alt+P", PlayMacro);
   fl_add_to_cc(.display_name="InfinitePlayback",.on_enter=InfinitePlaybackToggle,.type="Macro",.icon="");
   fl_add_to_cc(.display_name="RemoveDeadTime",.on_enter=RemoveDeadTimeToggle,.type="Macro",.icon="");
 

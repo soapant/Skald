@@ -219,15 +219,15 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     int bottomMargin = PromptListBottomMargin();
     int list_h;
     if (spec->h) list_h = spec->h;
-    else list_h = st ? (st->height - g_fl_list_y0 - bottomMargin) : PROMPT_CUSTOM_FALLBACK_LIST_H;
+    else list_h = st ? (st->height - g_fl_list_y0 - bottomMargin) : fl_window_CUSTOM_FALLBACK_LIST_H;
     if (!spec->x && !spec->w) {
-        g_fl_list_bx = PROMPT_SEL_X;
-        g_fl_list_bw = (st ? st->width : PROMPT_W) - PROMPT_SEL_W_SHRINK;
-        g_fl_list_fw = st ? st->width : PROMPT_W;
+        g_fl_list_bx = fl_window_SEL_X;
+        g_fl_list_bw = (st ? st->width : fl_window_W) - fl_window_SEL_W_SHRINK;
+        g_fl_list_fw = st ? st->width : fl_window_W;
     } else {
-        g_fl_list_bx = spec->x + PROMPT_SEL_INSET;
-        g_fl_list_bw = (spec->w ? spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
-        g_fl_list_fw = spec->w ? spec->w : PROMPT_W;
+        g_fl_list_bx = spec->x + fl_window_SEL_INSET;
+        g_fl_list_bw = (spec->w ? spec->w : fl_window_CUSTOM_FALLBACK_LIST_W) - 2;
+        g_fl_list_fw = spec->w ? spec->w : fl_window_W;
     }
     int visible = list_h / g_fl_list_itemH;
     if (visible < 1) visible = 1;
@@ -258,11 +258,11 @@ if (!out || !g_fl_list_lb) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); r
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
-        int R=PROMPT_SEL_RADIUS; if (R > CornerRadius) R = CornerRadius;
-        int t = PROMPT_SEL_INSET;
+        int R=fl_window_SEL_RADIUS; if (R > CornerRadius) R = CornerRadius;
+        int t = fl_window_SEL_INSET;
         int bx = g_fl_list_bx;
         int bw = g_fl_list_bw;
-        RECT inner = {bx+t, y+PROMPT_SEL_TOP_INSET+t, bx+bw-t, y+g_fl_list_itemH-1-t};
+        RECT inner = {bx+t, y+fl_window_SEL_TOP_INSET+t, bx+bw-t, y+g_fl_list_itemH-1-t};
         int innerR = R-1; if (innerR < 0) innerR = 0;
         if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = (RECT){bx, y, bx+bw, y+g_fl_list_itemH}; innerR = R; }
         if (sel) {
@@ -492,7 +492,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     int y = spec->y;
     int w = spec->w;
     int h = spec->h;
-    if (w <= 0) w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
+    if (w <= 0) w = state ? state->width : fl_window_CUSTOM_FALLBACK_W;
     if (w < 40) w = 40;
     if (h <= 0) h = PromptCustomEditHeight();
     HFONT hfont = spec->font.hfont ? spec->font.hfont : (g_win32_hMainFont ? g_win32_hMainFont : NULL);
@@ -505,7 +505,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     int cursor = state ? state->cursor : text_len;
     if (cursor < 0) cursor = 0;
     if (cursor > text_len) cursor = text_len;
-    int visible_w = w - PROMPT_EDIT_SCROLL_PAD;
+    int visible_w = w - fl_window_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int scroll = state ? state->scroll_offset : 0;
     if (hfont) {
@@ -513,7 +513,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         memset(&tm, 0, sizeof(tm));
         GetTextMetrics(hdc, &tm);
         int textH = tm.tmHeight > 0 ? tm.tmHeight : FontSize;
-        int y_raw = (spec->y == 0) ? PROMPT_EDIT_INSET : spec->y;
+        int y_raw = (spec->y == 0) ? fl_window_EDIT_INSET : spec->y;
         SIZE szCur; GetTextExtentPoint32A(hdc, buf, cursor, &szCur); cursor_x = szCur.cx;
         SIZE szText; GetTextExtentPoint32A(hdc, buf, text_len, &szText); int text_w = szText.cx;
         if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
@@ -521,20 +521,20 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         if (scroll < 0) scroll = 0;
         if (text_w - scroll < visible_w && scroll > 0) { if (text_w < visible_w) scroll = 0; else scroll = text_w - visible_w; }
         if (state) state->scroll_offset = scroll;
-        int cursor_draw_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
-        if (cursor_draw_x < x + PROMPT_CARET_LO_CLAMP) cursor_draw_x = x + PROMPT_CARET_LO_CLAMP;
-        if (cursor_draw_x > x + w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = x + w - PROMPT_CARET_HI_CLAMP;
+        int cursor_draw_x = x + fl_window_EDIT_INSET + cursor_x - scroll;
+        if (cursor_draw_x < x + fl_window_CARET_LO_CLAMP) cursor_draw_x = x + fl_window_CARET_LO_CLAMP;
+        if (cursor_draw_x > x + w - fl_window_CARET_HI_CLAMP) cursor_draw_x = x + w - fl_window_CARET_HI_CLAMP;
         int cursorH = FontSize;
         int cursor_y = y_raw + (textH - cursorH) / 2;
         if (cursor_y < y_raw) cursor_y = y_raw;
-        RECT textRc = {x + PROMPT_EDIT_INSET - scroll, y_raw, x + w, y_raw + textH};
+        RECT textRc = {x + fl_window_EDIT_INSET - scroll, y_raw, x + w, y_raw + textH};
         if (!IsInsertMode()) {
             int tint_y = y_raw + (textH - cursorH) / 2;
             if (tint_y < y_raw) tint_y = y_raw;
             COLORREF tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
-            int tint_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
-            if (tint_x < x + PROMPT_CARET_LO_CLAMP) tint_x = x + PROMPT_CARET_LO_CLAMP;
-            if (tint_x > x + w - PROMPT_CARET_HI_CLAMP) tint_x = x + w - PROMPT_CARET_HI_CLAMP;
+            int tint_x = x + fl_window_EDIT_INSET + cursor_x - scroll;
+            if (tint_x < x + fl_window_CARET_LO_CLAMP) tint_x = x + fl_window_CARET_LO_CLAMP;
+            if (tint_x > x + w - fl_window_CARET_HI_CLAMP) tint_x = x + w - fl_window_CARET_HI_CLAMP;
             int sel_start = 0, sel_end = 0;
             bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
             RECT tintRc;
@@ -542,10 +542,10 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
                 if (sel_start < 0) sel_start = 0;
                 if (sel_end >= text_len) sel_end = text_len - 1;
                 if (sel_start <= sel_end) {
-                    int sx0 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_start, FontSize) - scroll;
-                    int sx1 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_end + 1, FontSize) - scroll;
-                    if (sx0 < x + PROMPT_CARET_LO_CLAMP) sx0 = x + PROMPT_CARET_LO_CLAMP;
-                    if (sx1 > x + w - PROMPT_CARET_HI_CLAMP) sx1 = x + w - PROMPT_CARET_HI_CLAMP;
+                    int sx0 = x + fl_window_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_start, FontSize) - scroll;
+                    int sx1 = x + fl_window_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_end + 1, FontSize) - scroll;
+                    if (sx0 < x + fl_window_CARET_LO_CLAMP) sx0 = x + fl_window_CARET_LO_CLAMP;
+                    if (sx1 > x + w - fl_window_CARET_HI_CLAMP) sx1 = x + w - fl_window_CARET_HI_CLAMP;
                     int cx = tint_x;
                     if (cx < sx0) cx = sx0;
                     if (cx > sx1) cx = sx1;
@@ -576,22 +576,22 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
                 char buf[8];
                 memcpy(buf, state->filter + pos, cl);
                 buf[cl] = '\0';
-                int x = (PROMPT_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
+                int x = (fl_window_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
                 unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
-                Platform_DrawTextRaw(x, PROMPT_EDIT_INSET, buf, col, spec->font, "", 0, 0);
+                Platform_DrawTextRaw(x, fl_window_EDIT_INSET, buf, col, spec->font, "", 0, 0);
                 pos += cl; ci++;
             }
         } else {
-            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), spec->font, "", 0, 0);
+            Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), spec->font, "", 0, 0);
         }
         if (IsInsertMode()) {
             HBRUSH cbr = CreateSolidBrush(Modal_CursorColor());
-            RECT cRc = {cursor_draw_x, cursor_y, cursor_draw_x + PROMPT_CARET_W_INSERT, cursor_y + cursorH};
+            RECT cRc = {cursor_draw_x, cursor_y, cursor_draw_x + fl_window_CARET_W_INSERT, cursor_y + cursorH};
             FillRect(hdc, &cRc, cbr);
             DeleteObject(cbr);
         }
     } else {
-        RECT textRc = {x + PROMPT_EDIT_INSET - scroll, y, x + w, y + h};
+        RECT textRc = {x + fl_window_EDIT_INSET - scroll, y, x + w, y + h};
         DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
     }
     if (old) SelectObject(hdc, old);

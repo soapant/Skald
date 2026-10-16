@@ -263,7 +263,7 @@ void typing_test_render(PromptState *state) {
 }
 
 void TriggerTypingTest(void) {
-    PROMPT(.enter = typing_test_enter,
+    fl_window(.enter = typing_test_enter,
            .render = typing_test_render,
            .on_close = typing_test_reset);
 }

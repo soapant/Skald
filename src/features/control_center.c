@@ -730,7 +730,7 @@ static void TriggerControl(void) {
         const char *p = g_xdg_paths[i];
         if (p) fl_on_dir_changed(p, cc_rescan_app_cache);
     }
-    PROMPT(.title = "⚡ Control",
+    fl_window(.title = "⚡ Control",
            .refresh = cc_refresh,
            .enter = cc_enter,
            .ctrl_enter = cc_ctrl_enter,

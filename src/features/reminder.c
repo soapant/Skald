@@ -22,7 +22,7 @@ void reminder_render(PromptState *state) {
 }
 
 void TriggerReminder(void) {
-    PROMPT(.title = "Reminder",
+    fl_window(.title = "Reminder",
            .refresh = reminder_refresh,
            .enter = reminder_enter,
            .ctrl_enter = reminder_ctrl_enter,
