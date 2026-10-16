@@ -119,7 +119,7 @@ typedef struct {
     int y;
     int w;
     int h;
-} FlPopupSpec;
+} PopupSpec;
 
 typedef struct WindowManager WindowManager;
 WindowManager* WindowManager_Get(void);
