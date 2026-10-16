@@ -1651,6 +1651,19 @@ PROFILE_START(timer);
     XFree(sh);
     { PROFILE_END_VAR(_pt, "x11_create_prompt_window"); return win; }
 }
+
+void Platform_PrewarmBackgroundPixmap(void) {
+    PROFILE_START(_pt);
+    Display* dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
+    Window win = x11_create_prompt_window(dpy, -32000, -32000, PROMPT_W, PROMPT_H);
+    if (win == None) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
+    x11_get_cached_background(dpy, win, PROMPT_W, PROMPT_H);
+    XDestroyWindow(dpy, win);
+    XSync(dpy, False);
+    PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap");
+}
+
 Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
