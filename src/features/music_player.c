@@ -165,7 +165,7 @@ void random_music(void) {
 
 }
 void music_prompt(void) {
-    PROMPT(.title = "🎵 Player",
+    fl_window(.title = "🎵 Player",
            .refresh = music_refresh_callback,
            .enter = music_enter_callback);
 }

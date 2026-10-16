@@ -35,7 +35,7 @@ bool terminal_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerTerminalCommand(void) {
-    PROMPT(.title = "⌨️ Terminal",
+    fl_window(.title = "⌨️ Terminal",
            .refresh = terminal_refresh_callback,
            .enter = terminal_enter_callback,
            .ctrl_enter = terminal_ctrlenter_callback,

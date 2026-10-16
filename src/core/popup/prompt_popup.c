@@ -145,7 +145,7 @@ static const PopupVTable g_prompt_popup_vtable = {
 };
 
 int PromptPopup_GetBounds(Popup* p, int* x, int* y, int* w, int* h) {
-    if (!p || p->type != POPUP_PROMPT) return 0;
+    if (!p || p->type != POPUP_fl_window) return 0;
     PromptPopupData* d = (PromptPopupData*)p;
     if (x) *x = d->x;
     if (y) *y = d->y;
@@ -191,7 +191,7 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
 
     data->base.vtable = &g_prompt_popup_vtable;
     data->base.manager = wm;
-    data->base.type = POPUP_PROMPT;
+    data->base.type = POPUP_fl_window;
     data->spec = *spec;
     data->x = x; data->y = y; data->w = layout_w; data->h = layout_h;
 
@@ -201,21 +201,21 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
 
 bool WindowManager_TopPopupWantsMouseRender(WindowManager* wm) {
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || top->type != POPUP_PROMPT) return false;
+    if (!top || top->type != POPUP_fl_window) return false;
     PromptPopupData* data = (PromptPopupData*)top;
     return data->state && data->state->mouse_hover;
 }
 
 void WindowManager_TopPopupSetMouseHover(WindowManager* wm, bool enabled) {
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || top->type != POPUP_PROMPT) return;
+    if (!top || top->type != POPUP_fl_window) return;
     PromptPopupData* data = (PromptPopupData*)top;
     if (data->state) data->state->mouse_hover = enabled;
 }
 
 bool WindowManager_TopPopupWantsTick(WindowManager* wm) {
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || top->type != POPUP_PROMPT) return false;
+    if (!top || top->type != POPUP_fl_window) return false;
     PromptPopupData* data = (PromptPopupData*)top;
     return data->spec.tick;
 }

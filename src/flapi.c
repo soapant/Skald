@@ -2777,3 +2777,13 @@ void fl_cc_registry_purge_owner(const char *path_a, const char *path_b) {
 void fl_cc_registry_reset(void) {
     g_cc_entry_count = 0;
 }
+void fl_window_impl(const FlPromptSpec* spec) {
+    WindowManager_ShowPrompt(WindowManager_Get(), spec);
+}
+
+
+
+
+
+
+

@@ -153,7 +153,6 @@ static void augment_pkg_config_path(void) {
             return; 
     }
     const char* need[] = {
-
         "x11", "xft", "fontconfig", "freetype2", "glib-2.0", "gio-2.0", "gio-unix-2.0",
         "gobject-2.0", "libpng", "xext", "xrandr", "xrender", "xtst", "xi",
         "wayland-client",

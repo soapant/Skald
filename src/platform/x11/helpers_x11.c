@@ -348,10 +348,10 @@ PROFILE_START(timer);
     if (centered_to != NULL) {
         if (Platform_StringContainsCaseInsensitive(centered_to, "CENTER")) {
             alignment = 1;
-            maxWidth = boxWidth > 0 ? boxWidth : PROMPT_WRAP_BOX_CENTER;
+            maxWidth = boxWidth > 0 ? boxWidth : fl_window_WRAP_BOX_CENTER;
         } else if (Platform_StringContainsCaseInsensitive(centered_to, "RIGHT")) {
             alignment = 2;
-            maxWidth = boxWidth > 0 ? boxWidth : PROMPT_WRAP_BOX_RIGHT;
+            maxWidth = boxWidth > 0 ? boxWidth : fl_window_WRAP_BOX_RIGHT;
         } else {
             alignment = 0;
             maxWidth = FontSize * text_len;
@@ -418,7 +418,7 @@ PROFILE_START(timer);
 int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
+    int visible_w = width - fl_window_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
     if (xf) {
@@ -447,12 +447,12 @@ PROFILE_START(timer);
 
 int x11_font_row_height(int font_size) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "x11_font_row_height"); return font_size + PROMPT_ROW_H_BONUS; }
+{ PROFILE_END_VAR(_pt, "x11_font_row_height"); return font_size + fl_window_ROW_H_BONUS; }
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "x11_font_list_top"); return font_size + PROMPT_LIST_TOP_BONUS; }
+{ PROFILE_END_VAR(_pt, "x11_font_list_top"); return font_size + fl_window_LIST_TOP_BONUS; }
 }
 
 int x11_font_row_height_of(FontHandle font) {
@@ -483,13 +483,13 @@ int x11_font_cursor_y_of(FontHandle font, int box_top) {
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - scroll;
-    if (cursor_draw_x > width - PROMPT_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - PROMPT_X11_DEADCURSOR_CLAMP;
-    int cursor_y = PROMPT_X11_DEADCURSOR_Y;
+    int cursor_draw_x = fl_window_EDIT_INSET + cursor_x - scroll;
+    if (cursor_draw_x > width - fl_window_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - fl_window_X11_DEADCURSOR_CLAMP;
+    int cursor_y = fl_window_X11_DEADCURSOR_Y;
     if (IsInsertMode()) {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, FontSize);
     } else {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, fl_window_EDITPOPUP_CARET_W_NORMAL, FontSize);
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_draw_edit_cursor");
 }
@@ -845,7 +845,7 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
 PROFILE_START(timer);
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText"); return; }
-    int XOffset = PROMPT_ITEM_TEXT_X;
+    int XOffset = fl_window_ITEM_TEXT_X;
     int row_h = x11_font_row_height_of(font);
     int pad_top = (row_h - (xf->ascent + xf->descent)) / 2;
     if (pad_top < 0) pad_top = 0;
@@ -1661,9 +1661,9 @@ void Platform_PrewarmBackgroundPixmap(void) {
     PROFILE_START(_pt);
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
-    Window win = x11_create_prompt_window(dpy, -32000, -32000, PROMPT_W, PROMPT_H);
+    Window win = x11_create_prompt_window(dpy, -32000, -32000, fl_window_W, fl_window_H);
     if (win == None) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
-    x11_get_cached_background(dpy, win, PROMPT_W, PROMPT_H);
+    x11_get_cached_background(dpy, win, fl_window_W, fl_window_H);
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
     PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap");

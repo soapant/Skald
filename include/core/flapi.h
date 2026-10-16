@@ -239,6 +239,11 @@ typedef struct {
 void fl_message_impl(const FlMessageSpec* spec);
 #define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
 
+#define FlPromptSpec PromptSpec
+
+void fl_window_impl(const FlPromptSpec* spec);
+#define fl_window(...) fl_window_impl(&(FlPromptSpec){__VA_ARGS__})
+
 typedef enum {
     FLANCHOR_TOP_LEFT,
     FLANCHOR_TOP_CENTER,
