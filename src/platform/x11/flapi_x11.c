@@ -428,13 +428,11 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     g_fl_list_y0 = spec->y ? spec->y : x11_font_list_top_of(g_fl_list_font);
     int yOff = PromptListBottomMargin();
     int list_h;
-    PromptState *st = Platform_GetPreRenderStatePtr();
-    if (!st) {
-        WindowManager* wmgr = WindowManager_Get();
-        if (wmgr) {
-            Popup* top = WindowManager_GetTopPopup(wmgr);
-            if (top && top->user_data && top->type == POPUP_fl_window) st = (PromptState*)top->user_data;
-        }
+    WindowManager* wmgr = WindowManager_Get();
+    PromptState *st = NULL;
+    if (wmgr) {
+        Popup* top = WindowManager_GetTopPopup(wmgr);
+        if (top && top->user_data && top->type == POPUP_fl_window) st = (PromptState*)top->user_data;
     }
     if (spec->h) list_h = spec->h;
     else list_h = st ? (st->height - g_fl_list_y0 - yOff) : fl_window_CUSTOM_FALLBACK_LIST_H;
@@ -734,13 +732,11 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     Display *dpy; XftDraw *xd; Visual *vis; Colormap cmap;
     Platform_GetDrawContext(&dpy,&xd,&vis,&cmap);
     if (!dpy || !xd) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
-    PromptState *state = Platform_GetPreRenderStatePtr();
-    if (!state) {
-        WindowManager* wm = WindowManager_Get();
-        if (wm) {
-            Popup* top = WindowManager_GetTopPopup(wm);
-            if (top && top->user_data && top->type == POPUP_fl_window) state = (PromptState*)top->user_data;
-        }
+    WindowManager* wm = WindowManager_Get();
+    PromptState *state = NULL;
+    if (wm) {
+        Popup* top = WindowManager_GetTopPopup(wm);
+        if (top && top->user_data && top->type == POPUP_fl_window) state = (PromptState*)top->user_data;
     }
     const char *buf = spec->buffer;
     if (!buf) {

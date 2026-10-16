@@ -118,8 +118,6 @@ PROFILE_START(timer);
 
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
         PROFILE_START(_pt);
-Platform_SetPreRenderState(state);
-    if (!fl_prerender()) { PROFILE_END_VAR(_pt, "x11_render_prompt_user"); return true; }
     int w = state->width;
     int h = state->height;
     XWindowAttributes attrs;
