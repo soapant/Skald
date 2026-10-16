@@ -1019,7 +1019,7 @@ bool fl_toggle_minimized_active(void) {
   return r;
 }
 
-char* fl_popup_impl(const FlPopupSpec *spec) {
+char* fl_popup_impl(const PopupSpec *spec) {
     if (!spec) return NULL;
     const char* initial_text = spec->initial_text ? spec->initial_text : "";
     int x = spec->x ? spec->x : 0;
