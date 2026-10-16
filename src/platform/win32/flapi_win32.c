@@ -304,8 +304,6 @@ unsigned long fl_listbox_get_current_standard_color(void) {
 if (!g_fl_list_lb || g_fl_list_cur == 0) { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return 0; }
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return 0; }
-    bool sel = (idx == g_fl_list_lb->selected_index);
-    if (sel) { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return rgb_to_hex(COLOR_TEXT); }
     int orig_idx = idx;
     int orig_cnt = g_fl_list_lb->populated_count;
     if (idx >= 0 && idx < g_fl_list_lb->populated_count) {
