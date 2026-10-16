@@ -1833,6 +1833,9 @@ if (!name || !name[0] || !out_path || out_len == 0) { PROFILE_END_VAR(_pt, "Plat
     { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return ok; }
 }
 
+void Platform_PrewarmBackgroundPixmap(void) {
+}
+
 int Platform_InitializeTrayIcon() {
     PROFILE_START(_pt);
 HINSTANCE hInstance = GetModuleHandle(NULL);
