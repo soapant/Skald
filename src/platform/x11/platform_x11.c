@@ -1079,9 +1079,11 @@ static void* watch_register_worker(void* arg) {
 WatchRoot* root = (WatchRoot*)arg;
     pthread_mutex_lock(&g_watch_paths_mtx);
     if (!g_watch_quit && root->fd >= 0) {
-        int n = watch_add_tree(root->index, root->fd, root->root_path, 0);
-        root->path_count = n;
-        log_info("dir watch registered root='%s' dirs=%d", root->root_path, n);
+        int wd = inotify_add_watch(root->fd, root->root_path,
+            IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVED_FROM | IN_DELETE_SELF | IN_IGNORED);
+        if (wd >= 0) watch_record_path(wd, root->index, root->root_path);
+        root->path_count = 1;
+        log_info("dir watch registered root='%s' dirs=1", root->root_path);
     }
     pthread_mutex_unlock(&g_watch_paths_mtx);
 
@@ -1138,10 +1140,12 @@ PROFILE_START(timer);
         pthread_mutex_unlock(&g_watch_mtx);
 
         pthread_mutex_lock(&g_watch_paths_mtx);
-        int n = watch_add_tree(ri, fd, dir_path, 0);
-        g_watch_roots[ri].path_count = n;
+        int wd = inotify_add_watch(fd, dir_path,
+            IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVED_FROM | IN_DELETE_SELF | IN_IGNORED);
+        if (wd >= 0) watch_record_path(wd, ri, dir_path);
+        g_watch_roots[ri].path_count = 1;
         pthread_mutex_unlock(&g_watch_paths_mtx);
-        log_info("dir watch registered root='%s' dirs=%d", dir_path, n);
+        log_info("dir watch registered root='%s' dirs=1", dir_path);
         PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
         return NULL;
     }
