@@ -74,6 +74,10 @@ switch (msg) {
       }
     return 0;
   }
+  case WM_DISMISS_MESSAGE: {
+    Platform_DismissDisplayMessage();
+    return 0;
+  }
         
   case WM_DESTROY: {
     NOTIFYICONDATA nid = {0};
