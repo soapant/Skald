@@ -1,5 +1,5 @@
-#ifndef TYPES_PROMPT_H
-#define TYPES_PROMPT_H
+#ifndef TYPES_fl_window_H
+#define TYPES_fl_window_H
 
 #include <string.h>
 #include <stdlib.h>
@@ -128,7 +128,6 @@ typedef struct {
 typedef struct WindowManager WindowManager;
 WindowManager* WindowManager_Get(void);
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
-#define PROMPT(...) ((char*)WindowManager_ShowPrompt(WindowManager_Get(), &(PromptSpec){ __VA_ARGS__ }))
 
 typedef struct {
     char keys[MAX_SEQUENCE_LEN];

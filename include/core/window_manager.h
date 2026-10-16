@@ -27,7 +27,7 @@ typedef struct {
     void (*destroy)(Popup* self);
 } PopupVTable;
 
-typedef enum { POPUP_PROMPT,
+typedef enum { POPUP_fl_window,
   POPUP_EDIT, 
   POPUP_MESSAGE, 
   POPUP_SEARCH } PopupType;
