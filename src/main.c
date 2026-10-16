@@ -44,6 +44,7 @@ int main() {
   InitFeatureDataSystem();
   History_Init();
   Platform_InitUI();
+  Platform_PrewarmBackgroundPixmap();
   PROFILE_END_VAR(t_svc, "startup:services_init");
 
   PROFILE_START(t_feat);
