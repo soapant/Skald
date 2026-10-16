@@ -874,7 +874,8 @@ PROFILE_START(timer);
     if (pos) {
       *pos = 0;
     }
-    unsigned long pcol=0; Platform_GetItemColors(idx, lb->populated_count, NULL, NULL, &pcol);
+    unsigned long pcol = plain_color ? plain_color->pixel : 0;
+    if (!pcol) pcol = rgb_to_hex(COLOR_TEXT);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     Platform_DrawTextRaw(XOffset, text_y, trunc, pcol, font, "LEFT", XOffset, FontSize);
 
