@@ -3,6 +3,7 @@
 #include "core/window_manager.h"
 #include "wm/wm.h"
 #include "platform/platform.h"
+#include "platform/draw.h"
 #include "platform/ui.h"
 #include "config.h"
 #include "platform/wm_platform.h"
@@ -17,6 +18,7 @@
 #include "platform/input.h"
 #include "bindings/vim_helpers.h"
 #include "helpers/helpers_alias.h"
+#include "platform/draw.h"
 #include "helpers/helpers_ui.h"
 #include "deps/log.h"
 #include <X11/Xlib.h>
@@ -44,7 +46,8 @@ PROFILE_START(timer);
     self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
     XSelectInput(dpy, self->handle.xid, KeyPressMask | ExposureMask | FocusChangeMask);
     clock_gettime(CLOCK_MONOTONIC, &_t1);
-    x11_draw_background(dpy, self->handle.xid, w, h);
+    Popup* popup = self;
+    (void)popup;
     clock_gettime(CLOCK_MONOTONIC, &_t2);
     if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
     clock_gettime(CLOCK_MONOTONIC, &_t3);
@@ -107,7 +110,16 @@ void Platform_PromptPopupRender(Popup* self) {
         PROFILE_START(_pt);
 WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
-    if (dpy) x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
+    if (dpy) {
+        PromptState* psr = (PromptState*)self->user_data;
+        if (psr && psr->no_bg) {
+            Platform_SetTransparentWindow(true);
+            x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
+            Platform_SetTransparentWindow(false);
+            { PROFILE_END_VAR(_pt, "Platform_PromptPopupRender"); return; }
+        }
+        x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
+    }
 }
 
 void Platform_PromptPopupDestroyWindow(Popup* self) {

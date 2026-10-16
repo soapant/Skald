@@ -409,8 +409,13 @@ if (!text || len <= 0 || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Plat
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected) {
         PROFILE_START(_pt);
 if (selected) {
+    if (state && state->no_bg) {
+        // transparent selection: lighter alpha
+        x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
+    } else {
         x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
     }
+}
 }
 
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color) {
