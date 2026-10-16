@@ -74,11 +74,6 @@ static CcEntry *cc_entry_add(const char *label, const char *type, const char *pa
     return cc_entry_add_icon(label, type, payload, NULL);
 }
 
-static CcEntry *cc_entry_add_fn(const char *label, const char *type, void (*fn)(void)) {
-    CcEntry *e = cc_entry_add(label, type, "");
-    if (e) e->on_action = fn;
-    return e;
-}
 
 static bool cc_register_type(const char *name, CcFill fill) {
     if (!name || !fill || g_type_count >= CC_MAX_TYPES) return false;
@@ -619,9 +614,13 @@ static const char *cc_feature_names[CC_FEATURE_MAX];
 static void (*cc_feature_cbs[CC_FEATURE_MAX])(void);
 
 static void cc_fill_features(void) {
-    int n = fl_get_feature_list(cc_feature_names, cc_feature_cbs, CC_FEATURE_MAX);
+    const char **cc_feature_icons = NULL;
+    int n = fl_get_feature_list_with_icons(cc_feature_names, cc_feature_cbs, &cc_feature_icons, CC_FEATURE_MAX);
     for (int i = 0; i < n; i++) {
-        if (!cc_entry_add_fn(cc_feature_names[i], "Feature", cc_feature_cbs[i])) break;
+        const char *icon = (cc_feature_icons && cc_feature_icons[i]) ? cc_feature_icons[i] : NULL;
+        CcEntry *e = cc_entry_add_icon(cc_feature_names[i], "Feature", "", icon ? icon : "");
+        if (!e) break;
+        e->on_action = cc_feature_cbs[i];
     }
 }
 
