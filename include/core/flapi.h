@@ -555,6 +555,7 @@ void fl_run_after_time(double seconds, void (*callback)(void));
 char* fl_on_dir_changed(const char* dir_path, DirChangeCallback callback);
 bool fl_string_contains(const char* needle, const char* haystack);
 char* fl_get_working_dir();
+char* fl_resolve_data_path(const char* name);
 
 // =============================================================================
 // THREADS / SYNC (opaque handles, joinable threads)
