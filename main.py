@@ -18,3 +18,4 @@ for root, _, files in os.walk("."):
 print(f"Total Core lines: {lines}")
 print(f"Total Feature lines: {feature_lines}")
 print(f"Total lines: {lines + feature_lines}")
+
