@@ -1,5 +1,6 @@
 #include "config.h"
 #include "platform/platform.h"
+#include "platform/input_state.h"
 #include <time.h>
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
@@ -70,8 +71,14 @@ static unsigned long long hotkey_now_ms(void) {
 }
 
 static int hotkey_repeat_interval_ms(void) {
-    int ms = HotkeyRepeatDelayMs;
+    int ms = 50;
     if (ms < HOTKEY_HOLD_MIN_INTERVAL_MS) ms = HOTKEY_HOLD_MIN_INTERVAL_MS;
+    return ms;
+}
+
+static int hotkey_hold_delay_ms(void) {
+    int ms = HotkeyRepeatDelayMs;
+    if (ms < 0) ms = 0;
     return ms;
 }
 
@@ -89,7 +96,7 @@ void hotkey_key_up(int vk_code) {
 }
 
 static void hotkey_hold_begin(int vk, int modifiers) {
-    int interval_ms = hotkey_repeat_interval_ms();
+    int interval_ms = hotkey_hold_delay_ms();
     unsigned long long now = hotkey_now_ms();
     HOTKEY_Q_LOCK();
     for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
