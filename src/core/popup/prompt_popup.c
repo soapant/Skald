@@ -2,6 +2,7 @@
 #include "core/modal.h"
 #include "core/window_manager.h"
 #include "platform/platform.h"
+#include "platform/draw.h"
 #include "core/feature_data.h"
 #include "config.h"
 #include "core/history.h"
@@ -157,8 +158,30 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
 
-    int layout_w = (int)(900 * Platform_GetUIScale());
-    int layout_h = (int)(640 * Platform_GetUIScale());
+    int scale = (int)Platform_GetUIScale();
+    if (scale <= 0) scale = 1;
+    int layout_w = spec->w > 0 ? spec->w : 900 * scale;
+    int layout_h = spec->h > 0 ? spec->h : 640 * scale;
+
+    if (spec->auto_scale) {
+        int rows = 0;
+        if (spec->items) { while (spec->items[rows]) rows++; }
+        if (rows <= 0) rows = 1;
+        int line_h = 0, row_h = 0, list_top = 0;
+        Platform_GetTextLayoutMetrics(&line_h, &row_h, &list_top);
+        if (row_h <= 0) row_h = 16 * scale;
+        int edit_h = row_h * 2;
+        if (edit_h < 40) edit_h = 40;
+        int desired_h = edit_h + rows * row_h + 20;
+        int mx, my, mw, mh;
+        WindowManager_GetMainMonitorGeometry(&mx, &my, &mw, &mh);
+        int max_h = mh - 40;
+        if (max_h < 100) max_h = 100;
+        if (desired_h > max_h) desired_h = max_h;
+        if (desired_h < edit_h + row_h) desired_h = edit_h + row_h;
+        layout_h = desired_h;
+        if (layout_w > mw - 40) layout_w = mw - 40;
+    }
 
     int x, y;
     WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
