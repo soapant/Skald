@@ -272,7 +272,6 @@ static void cfg_put_str_var(char* buf, size_t cap, size_t* off, const char* name
 
 static size_t config_emit_region(char* buf, size_t cap) {
     size_t off = 0;
-    cfg_put(buf, cap, &off, "};\n\n");
     cfg_put(buf, cap, &off, "static const AliasEntry user_aliases[] = {\n");
     for (size_t i = 0; i < ALIAS_ENTRY_COUNT && Aliases; i++) {
         cfg_put(buf, cap, &off, "    {");
