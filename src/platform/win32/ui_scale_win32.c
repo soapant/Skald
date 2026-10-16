@@ -20,7 +20,6 @@ void Platform_AdjustFontSize(int delta) {
         PROFILE_START(_pt);
 FontSize += delta;
     if (FontSize < 8) FontSize = 8;
-    if (FontSize > 48) FontSize = 48;
 }
 
 void Platform_ResetUIScale(void) {
