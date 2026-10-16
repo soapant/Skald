@@ -569,7 +569,7 @@ PROFILE_START(timer);
     remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     x11_sync_held_from_phys();
     if (value == 0) { hotkey_key_up(ConvertLinuxKeyToWindowsVK(key_code)); PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
-    if (value != 1) { PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
+    if (value != 1 && value != 2) { PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
     int modifiers = remap_current_mods();
     if (pressed_vk && hotkey_process(pressed_vk, modifiers)) {
@@ -608,6 +608,7 @@ PROFILE_START(timer);
         PROFILE_END_VAR(timer, "input:x11_handle_evdev");
         return true;
     }
+    if (val == 0) hotkey_key_up(ConvertLinuxKeyToWindowsVK(code));
     if (val != 2) {
         remap_update_phys(ConvertLinuxKeyToWindowsVK(code), val);
         x11_sync_held_from_phys();
