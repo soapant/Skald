@@ -358,7 +358,7 @@ void TriggerTodo(void) {
         .ctrl_enter = todo_ctrlenter_callback,
         .copy = todo_copy_callback,
         .render = todo_render_callback,
-        .edit = todo_edit_callback);
+        .edit = todo_edit_callback,.no_bg=true);
 
 }
 

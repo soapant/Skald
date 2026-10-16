@@ -453,15 +453,6 @@ void fl_widget_hide(FlWidget *widget);
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
 
 // =============================================================================
-// PRE-RENDER HOOK (global overridable)
-// =============================================================================
-
-bool Platform_PreRender(void);
-bool fl_prerender(void);
-void Platform_SetPreRenderState(PromptState *state);
-void Platform_SetPreRenderStateWin32(const char *text, void *rect);
-
-// =============================================================================
 // IMAGES / ICONS
 // =============================================================================
 

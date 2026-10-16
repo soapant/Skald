@@ -665,10 +665,7 @@ case WM_CHAR: {
             RECT textRect = pdis->rcItem;
             textRect.left += fl_window_ITEM_TEXT_X;
           
-            Platform_SetPreRenderStateWin32(textBuffer, &textRect);
             Platform_SetDrawContextWin32(pdis->hDC);
-            // temporary
-            // if (!fl_prerender()) return TRUE;
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
               return TRUE;
             } else {

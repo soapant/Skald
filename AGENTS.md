@@ -11,12 +11,6 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 - **DO NOT** sprinkle `#if defined(_WIN32)` inside function bodies. Put an outer shell in `whateverfile.c` that calls `Platform_whatever*`, and add `src/platform/x11/whatever_x11.c` + `src/platform/win32/whatever_win32.c`. Files ending `_x11.c` are skipped on Windows by `nob.c:43`; `_win32.c` by `nob.c:46`; `wm.c` by `nob.c:44`.
 - **DO** keep platform files minimal and OS-specific: Linux uses `linux/input.h` / `linux/uinput.h` / evdev / uinput / `XTest`; Windows uses `SendInput`. No `<windows.h>` in Linux files.
 
-### Known layering violations (do not extend these)
-1. `include/core/flapi.h:436,439,441` declares `Platform_PreRender`, `Platform_SetPreRenderState`, `Platform_SetPreRenderStateWin32` — all also in `include/platform/draw.h:48,34,15`.
-2. `src/platform/x11/platform_x11.c:47` and `src/platform/win32/platform_win32.c:25` include `../../../nob.h` for `nob_mkdir_if_not_exists`.
-
----
-
 ## 3. Build
 
 - **DO** use `./nob` (Linux) and `./nob_linux_window_build` (Linux→Windows cross). `nob.c:91` `obj_path()` uses the **basename only** — two `.c` files sharing a basename collide into one `build/obj/<base>.o` → `multiple definition`. Fix by renaming to a unique basename that keeps the `_x11.c`/`_win32.c` suffix so the `nob.c:43/46` skips still work. **Not** by patching `nob.c` unless explicitly allowed.

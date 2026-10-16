@@ -121,7 +121,6 @@ PlatformWidget *widget = (PlatformWidget *)ud;
     }
 
     Platform_SetDrawContext(dpy, widget->xd, widget->vis, widget->cmap);
-    Platform_SetPreRenderState(NULL);
     if (widget->fn) widget->fn(widget->ud);
     Platform_FlushDraw();
     XFlush(dpy);

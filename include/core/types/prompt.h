@@ -111,6 +111,7 @@ typedef struct {
     CloseCallback on_close;
     bool tick;
     bool auto_scale;
+    bool no_bg;
     int w;
     int h;
 } PromptSpec;
