@@ -752,19 +752,6 @@ FlintContext* ctx = FlintContext_Get();
     return pos;
 }
 
-void fl_set_mode(EditorMode mode) {
-        PROFILE_START(_pt);
-SetMode(mode);
-    PROFILE_END_VAR(_pt, "fl_set_mode");
-}
-
-EditorMode fl_get_mode(void) {
-        PROFILE_START(_pt);
-EditorMode m = GetMode();
-    PROFILE_END_VAR(_pt, "fl_get_mode");
-    return m;
-}
-
 void fl_get_edit_text(char* buffer, size_t cap) {
     PROFILE_START(_pt);
     if (!buffer || cap == 0) { PROFILE_END_VAR(_pt, "fl_get_edit_text"); return ; }
