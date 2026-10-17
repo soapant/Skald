@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include "core/types.h"
 #include "core/types/prompt.h"
-#include "core/context.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
 #include "core/flapi_input.h"
@@ -176,8 +175,6 @@ void fl_set_edit_text(const char* text);
 void fl_set_edit_cursor(int position);
 int  fl_get_edit_cursor(void);
 void fl_get_edit_text(char* buffer, size_t cap);
-void fl_set_mode(EditorMode mode);
-EditorMode fl_get_mode(void);
 
 // =============================================================================
 // POPUPS / UI
