@@ -13,6 +13,7 @@ extern char* selection_feature;
 void SetMode(EditorMode mode);
 ColorRef Modal_CursorColor(void);
 void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb);
+EditorMode GetMode(void);
 bool IsNormalMode(void);
 bool IsInsertMode(void);
 bool IsVisualMode(void);
