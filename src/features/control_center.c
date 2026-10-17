@@ -856,7 +856,7 @@ static void ccx_trim_copy(const char* src, char* dst, size_t cap){
     strncpy(dst, src, len); dst[len]='\0';
 }
 
-#define CC_CALC_ROW_ICON "🧮"
+#define CC_CALC_ROW_ICON "\xEF\x87\xAC"
 
 static char g_cc_calc_label[256] = {0};
 
@@ -1031,8 +1031,8 @@ static void cc_render(PromptState *state) {
                 int gh = fl_get_glyph_ink_height(row_icon, icon_size);
                 if (gh <= 0) gh = icon_size;
                 int gw = fl_get_text_width(row_icon, icon_size);
-                fl_draw_text(.x = icon_x + (icon_size - gw) / 2,
-                             .y = ctx.y + (ctx.h - gh) / 2,
+                fl_draw_text(.x = icon_x + (icon_size - gw) / 2 ,
+                             .y = ctx.y + (ctx.h - gh) / 2 + 1,
                              .text = row_icon, .align = "LEFT", .pad = 0,
                              .fontsize = icon_size);
             } else {

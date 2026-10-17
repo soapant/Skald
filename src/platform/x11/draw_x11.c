@@ -533,14 +533,14 @@ if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
         if (caret_x > x1) caret_x = x1;
         int w = x1 - x0 + PromptNormalCaretWidth();
         if (w <= 0) return;
-        Platform_DrawRectRaw(x0, tint_y, w, FontSize,tint,0,false,true,1,true);
+        Platform_DrawRectRaw(x0, tint_y, w, PromptCaretHeight(),tint,0,false,true,1,true);
         return;
     }
 
     int tint_x = x11_char_x(dpy, xf, state, state->cursor, NULL);
     if (tint_x < fl_window_CARET_LO_CLAMP) tint_x = fl_window_CARET_LO_CLAMP;
     if (tint_x > state->width - fl_window_CARET_HI_CLAMP) tint_x = state->width - fl_window_CARET_HI_CLAMP;
-    Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(),FontSize,tint,0,false,true,1,true);
+    Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(),PromptCaretHeight(),tint,0,false,true,1,true);
 }
 
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
@@ -554,7 +554,7 @@ XftFont *xf = FH_TO_XFT(font);
     if (cursor_draw_x > state->width - fl_window_CARET_HI_CLAMP) cursor_draw_x = state->width - fl_window_CARET_HI_CLAMP;
     int cursor_y = x11_font_cursor_y_of(font, fl_window_EDIT_INSET);
     if (!IsInsertMode()) { PROFILE_END_VAR(_pt, "Platform_DrawEditCursor"); return ; }
-    Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, FontSize,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
+    Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, PromptCaretHeight(),rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
 }
 
 static GC raw_gc_for(Display* dpy, Drawable d);

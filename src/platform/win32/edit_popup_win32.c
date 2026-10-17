@@ -189,13 +189,13 @@ PROFILE_START(timer);
                 if (cx < sx0) cx = sx0;
                 if (cx > sx1) cx = sx1;
                 int selw = sx1 - sx0;
-                if (selw > 0) Platform_DrawRectRaw(sx0, tint_y, selw, FontSize, tint,0, false, true, 1, true);
+                if (selw > 0) Platform_DrawRectRaw(sx0, tint_y, selw, PromptCaretHeight(), tint,0, false, true, 1, true);
             }
         } else {
             int tint_x = cursor_draw_x;
             if (tint_x < fl_window_CARET_LO_CLAMP) tint_x = fl_window_CARET_LO_CLAMP;
             if (tint_x > w - fl_window_CARET_HI_CLAMP) tint_x = w - fl_window_CARET_HI_CLAMP;
-            Platform_DrawRectRaw(tint_x, tint_y, fl_window_EDITPOPUP_CARET_W_NORMAL, FontSize, tint,0, false, true, 1, true);
+            Platform_DrawRectRaw(tint_x, tint_y, fl_window_EDITPOPUP_CARET_W_NORMAL, PromptCaretHeight(), tint,0, false, true, 1, true);
         }
     }
 
@@ -235,7 +235,7 @@ PROFILE_START(timer);
         if (cursor_draw_x < fl_window_CARET_LO_CLAMP) cursor_draw_x = fl_window_CARET_LO_CLAMP;
         if (cursor_draw_x > w - fl_window_CARET_HI_CLAMP) cursor_draw_x = w - fl_window_CARET_HI_CLAMP;
         int cursor_y = edit_popup_cursor_y(paint, draw_y);
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, FontSize, Modal_CursorColor(),0, false, true, 1, true);
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, PromptCaretHeight(), Modal_CursorColor(),0, false, true, 1, true);
     }
 
     Platform_SetDrawContextWin32(NULL);
