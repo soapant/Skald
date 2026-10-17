@@ -239,6 +239,8 @@ typedef struct {
 void fl_message_impl(const FlMessageSpec* spec);
 #define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
 
+#define fl_overlay(...) fl_message(__VA_ARGS__, .timeout=10000000.0)
+
 #define FlPromptSpec PromptSpec
 
 void fl_window_impl(const FlPromptSpec* spec);
