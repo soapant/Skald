@@ -38,7 +38,8 @@ typedef enum {
     MOTION_EXIT_VISUAL,
     MOTION_VISUAL_LEFT,
     MOTION_VISUAL_RIGHT,
-    MOTION_VISUAL_DELETE,
+    MOTION_VISUAL_DELETE_X,
+    MOTION_VISUAL_DELETE_D,
     MOTION_VISUAL_CHANGE,
     MOTION_VISUAL_WORD_FORWARD,
     MOTION_VISUAL_WORD_BACKWARD,
@@ -139,6 +140,7 @@ typedef enum {
     MOTION_VISUAL_AROUND_CURLY,
     MOTION_VISUAL_INNER_SQUARE,
     MOTION_VISUAL_AROUND_SQUARE,
+    MOTION_VISUAL_YANK,
 } MotionAction;
 
 typedef enum {
@@ -172,6 +174,8 @@ void HandleEnterVisual(FlintContext* ctx);
 void HandleExitVisual(FlintContext* ctx);
 void HandleVisualLeft(FlintContext* ctx);
 void HandleVisualRight(FlintContext* ctx);
+void HandleEnterVisualLine(FlintContext* ctx);
+void HandleVisualYank(FlintContext* ctx);
 void HandleVisualDeleteSelection(FlintContext* ctx);
 void HandleVisualChangeSelection(FlintContext* ctx);
 void HandleVisualInnerWord(FlintContext* ctx);

@@ -1067,21 +1067,21 @@ TEST(visual_selection_deleting_to_end_of_text) {
 TEST(visual_bindings_exist) {
     ASSERT_TRUE(vbinding(MOTION_VISUAL_LEFT) != NULL);
     ASSERT_TRUE(vbinding(MOTION_VISUAL_RIGHT) != NULL);
-    ASSERT_TRUE(vbinding(MOTION_VISUAL_DELETE) != NULL);
+    ASSERT_TRUE(vbinding(MOTION_VISUAL_DELETE_X) != NULL);
     ASSERT_TRUE(vbinding(MOTION_VISUAL_CHANGE) != NULL);
 }
 
 TEST(visual_bindings_are_visual_mode) {
     ASSERT_EQ_INT(vbinding(MOTION_VISUAL_LEFT)->mode, MODE_VISUAL);
     ASSERT_EQ_INT(vbinding(MOTION_VISUAL_RIGHT)->mode, MODE_VISUAL);
-    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_DELETE)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_DELETE_X)->mode, MODE_VISUAL);
     ASSERT_EQ_INT(vbinding(MOTION_VISUAL_CHANGE)->mode, MODE_VISUAL);
 }
 
 TEST(visual_keys_are_h_l_x_s) {
     ASSERT_EQ_INT(vbinding(MOTION_VISUAL_LEFT)->vk_code, 'H');
     ASSERT_EQ_INT(vbinding(MOTION_VISUAL_RIGHT)->vk_code, 'L');
-    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_DELETE)->vk_code, 'X');
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_DELETE_X)->vk_code, 'X');
     ASSERT_EQ_INT(vbinding(MOTION_VISUAL_CHANGE)->vk_code, 'S');
 }
 
