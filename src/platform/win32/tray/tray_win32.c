@@ -70,7 +70,7 @@ switch (msg) {
   case WM_DISPLAY_MESSAGE: {
     DisplayMessageParams* p = (DisplayMessageParams*)lParam;
       if (p != NULL) {
-        Platform_CreateDisplayMessageWindow(p->message, p->centerX, p->centerY, p->maxWidth, p->maxHeight, p->timeout, p->color, p->no_bg, p->render);
+        Platform_CreateDisplayMessageWindow(p->message, p->centerX, p->centerY, p->maxWidth, p->maxHeight, p->timeout, p->color, p->no_bg, p->render, NULL);
       }
     return 0;
   }

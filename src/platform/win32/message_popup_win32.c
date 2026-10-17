@@ -223,7 +223,7 @@ bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
   { PROFILE_END_VAR(_pt, "Platform_MessagePopupOnKey"); return false; }
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void)) {
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void), const char* name) {
     PROFILE_START(_pt);
 int useMaxW = maxWidth;
   int useMaxH = maxHeight;
@@ -245,7 +245,7 @@ int useMaxW = maxWidth;
     SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
     return;
   }
-  Platform_CreateDisplayMessageWindow(message, centerX, centerY, useMaxW, useMaxH, timeout, color, no_bg, render);
+  Platform_CreateDisplayMessageWindow(message, centerX, centerY, useMaxW, useMaxH, timeout, color, no_bg, render, name);
 }
 
 void Platform_DismissDisplayMessage(void) {
@@ -262,6 +262,23 @@ void Platform_DismissDisplayMessage(void) {
     DestroyWindow(h);
     FlintContext_Get()->window.hDisplayMessage = WH_NULL;
     PROFILE_END_VAR(_pt, "Platform_DismissDisplayMessage");
+}
+
+bool Platform_DismissMessage(const char* name) {
+    PROFILE_START(_pt);
+    if (!name || !name[0]) {
+        bool had = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL;
+        Platform_DismissDisplayMessage();
+        PROFILE_END_VAR(_pt, "Platform_DismissMessage");
+        return had;
+    }
+    HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+    if (h == NULL || !IsWindow(h)) { PROFILE_END_VAR(_pt, "Platform_DismissMessage"); return false; }
+    FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(h, GWLP_USERDATA);
+    if (!data || strcmp(data->name, name) != 0) { PROFILE_END_VAR(_pt, "Platform_DismissMessage"); return false; }
+    Platform_DismissDisplayMessage();
+    PROFILE_END_VAR(_pt, "Platform_DismissMessage");
+    return true;
 }
 
 static char g_hover_key[64] = {0};
@@ -488,7 +505,7 @@ if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
   }
 
   Platform_HoverMessageRelease(g_hover_key);
-  Platform_CreateDisplayMessageWindow(message, centerX, centerY, winWidth, winHeight, 6969.0, color, no_bg, NULL);
+  Platform_CreateDisplayMessageWindow(message, centerX, centerY, winWidth, winHeight, 6969.0, color, no_bg, NULL, NULL);
   g_win32_msg_w = winWidth;
   g_win32_msg_h = winHeight;
   snprintf(g_hover_key, sizeof(g_hover_key), "%s", key);
@@ -530,10 +547,10 @@ if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnch
   log_info("MSG anchored msg='%s' rect=(%d,%d,%d,%d) slot=(%d,%d) gap=%d outward=%d -> center=(%d,%d) win=(%d,%d)",
            message, rect_x, rect_y, rect_w, rect_h, h_slot, v_slot, gap, outward, centerX, centerY, winWidth, winHeight);
 
-  Platform_DisplayMessage(message, centerX, centerY, no_bg, winWidth, winHeight, maxWidth, maxHeight, timeout, color, NULL);
+  Platform_DisplayMessage(message, centerX, centerY, no_bg, winWidth, winHeight, maxWidth, maxHeight, timeout, color, NULL, NULL);
 }
 
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color, bool no_bg, void (*render)(void)) {
+void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color, bool no_bg, void (*render)(void), const char* name) {
     PROFILE_START(_pt);
 log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g no_bg=%d render=%p",
            message ? message : "(null)", centerX, centerY, maxWidth, maxHeight, timeout, no_bg ? 1 : 0, (void*)render);
@@ -569,6 +586,8 @@ log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g no_bg=
   pWndData->color = color;
   pWndData->no_bg = no_bg;
   pWndData->render = render;
+  if (name && name[0]) snprintf(pWndData->name, sizeof(pWndData->name), "%s", name);
+  else pWndData->name[0] = '\0';
   pWndData->timeout = timeout;
   if (timeout == 6969.0 || timeout <= 0.0) {
     pWndData->deadline_ms = 0;

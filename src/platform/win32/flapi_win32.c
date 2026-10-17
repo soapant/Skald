@@ -861,12 +861,11 @@ DWORD now = GetTickCount();
     { PROFILE_END_VAR(_pt, "fl_net_status_platform"); return st; }
 }
 
-bool fl_dismiss_message_platform() {
+bool fl_dismiss_message_platform(const char* name) {
     if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) == NULL) {
       return false;
     }
-    Platform_DismissDisplayMessage();
-    return true;
+    return Platform_DismissMessage(name);
 }
 
 /* ---- HTTP (WinHTTP) ---- */
