@@ -322,6 +322,15 @@ if (!text) text = "";
     }
 }
 
+int UI_GetCursorPosition(void) {
+    PROFILE_START(_pt);
+Win32TextTarget t;
+    if (!win32_resolve_text_target(&t) || !t.text) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return 0; }
+    int pos = win32_target_cursor(&t);
+    PROFILE_END_VAR(_pt, "UI_GetCursorPosition");
+    return pos;
+}
+
 void UI_SetCursorPosition(int position) {
         PROFILE_START(_pt);
 s_pending_high_surrogate = 0;

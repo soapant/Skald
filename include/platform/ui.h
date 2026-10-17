@@ -28,6 +28,7 @@ void UI_Edit_GetSel(uint32_t* start, uint32_t* end);
 void UI_GetCurrentTextEdit(char* buffer, size_t cap);
 void UI_SetText(const char* text);
 void UI_SetCursorPosition(int position);
+int UI_GetCursorPosition(void);
 int UI_InsertText(const char *utf8, int len);
 void UI_Backspace(void);
 void UI_DeleteForward(void);
