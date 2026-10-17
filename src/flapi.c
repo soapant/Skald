@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "core/context.h"
+#include "core/modal.h"
 #include "core/timer.h"
 #include "deps/log.h"
 #include "config.h"
@@ -740,6 +741,28 @@ void fl_set_edit_cursor(int position) {
     FlintContext* ctx = FlintContext_Get();
     if (!ctx) { PROFILE_END_VAR(_pt, "fl_set_edit_cursor"); return ; }
     UI_SetCursorPosition(position);
+}
+
+int fl_get_edit_cursor(void) {
+        PROFILE_START(_pt);
+FlintContext* ctx = FlintContext_Get();
+    if (!ctx) { PROFILE_END_VAR(_pt, "fl_get_edit_cursor"); return 0; }
+    int pos = UI_GetCursorPosition();
+    PROFILE_END_VAR(_pt, "fl_get_edit_cursor");
+    return pos;
+}
+
+void fl_set_mode(EditorMode mode) {
+        PROFILE_START(_pt);
+SetMode(mode);
+    PROFILE_END_VAR(_pt, "fl_set_mode");
+}
+
+EditorMode fl_get_mode(void) {
+        PROFILE_START(_pt);
+EditorMode m = GetMode();
+    PROFILE_END_VAR(_pt, "fl_get_mode");
+    return m;
 }
 
 void fl_get_edit_text(char* buffer, size_t cap) {

@@ -191,6 +191,25 @@ if (!text) text = "";
     }
 }
 
+int UI_GetCursorPosition(void) {
+        PROFILE_START(_pt);
+WindowManager* wm = WindowManager_Get();
+    if (!wm) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return 0; }
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return 0; }
+    if (top->type == POPUP_fl_window && top->user_data) {
+        PromptState* prompt = (PromptState*)top->user_data;
+        PROFILE_END_VAR(_pt, "UI_GetCursorPosition");
+        return (int)prompt->cursor;
+    }
+    if (top->type == POPUP_EDIT) {
+        WMEditPopupData* ed = (WMEditPopupData*)top;
+        if (ed) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return (int)ed->cursor; }
+    }
+    PROFILE_END_VAR(_pt, "UI_GetCursorPosition");
+    return 0;
+}
+
 void UI_SetCursorPosition(int position) {
         PROFILE_START(_pt);
 WindowManager* wm = WindowManager_Get();
