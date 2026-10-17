@@ -1122,8 +1122,7 @@ char iface[32] = {0};
     { PROFILE_END_VAR(_pt, "fl_net_status_platform"); return FL_NET_OFFLINE; }
 }
 
-bool fl_dismiss_message_platform() {
-    Platform_DismissMessage();
+bool fl_dismiss_message_platform(const char* name) {
     Platform_DismissIndefiniteMessage();
-    return true;
+    return Platform_DismissMessage(name);
 }

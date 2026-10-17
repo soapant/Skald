@@ -820,10 +820,10 @@ void fl_message_impl(const FlMessageSpec* spec) {
     if (slot == AUTO) {
     PROFILE_START(_pt);
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER : BOTTOM_CENTER;
-        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL);
+        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL, spec->name);
         { PROFILE_END_VAR(_pt, "f"); return ; }
     } else if (slot == FREE || spec->x != 0 || spec->y != 0) {
-        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL);
+        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL, spec->name);
         return;
     }
     DisplayMessageSlot(spec->message, slot, mw, mh, spec->prompt_gap, timeout, color);
@@ -964,9 +964,9 @@ bool fl_close_active_window(void) {
   return r;
 }
 
-bool fl_dismiss_message(void) {
+bool fl_dismiss_message(const char* name) {
   PROFILE_START(_pt);
-  bool r = fl_dismiss_message_platform();
+  bool r = fl_dismiss_message_platform(name);
   PROFILE_END_VAR(_pt, "api:fl_dismiss_message");
   return r;
 }

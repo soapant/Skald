@@ -27,6 +27,7 @@ typedef struct {
     Window win;
     bool indefinite;
     char key[64];
+    char name[64];
     int w;
     int h;
 } MsgSlot;
@@ -267,7 +268,7 @@ XWindowAttributes attrs;
     XFlush(dpy);
 }
 
-static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW, int winH,double timeout, ColorRef color,bool no_bg,void (*render)(void)) {
+static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW, int winH,double timeout, ColorRef color,bool no_bg,void (*render)(void),const char *name) {
         PROFILE_START(_pt);
 int ax,ay,aw,ah;
     WindowManager_GetMainMonitorGeometry(&ax,&ay,&aw,&ah);
@@ -284,6 +285,8 @@ int ax,ay,aw,ah;
     g_msg_slots[g_msg_slot_count].win = win;
     g_msg_slots[g_msg_slot_count].indefinite = indefinite;
     g_msg_slots[g_msg_slot_count].key[0] = '\0';
+    if (name && name[0]) snprintf(g_msg_slots[g_msg_slot_count].name, sizeof(g_msg_slots[g_msg_slot_count].name), "%s", name);
+    else g_msg_slots[g_msg_slot_count].name[0] = '\0';
     g_msg_slots[g_msg_slot_count].w = winW;
     g_msg_slots[g_msg_slot_count].h = winH;
     g_msg_slot_count++;
@@ -485,7 +488,7 @@ Display *dpy = get_display();
     XFlush(dpy);
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void)) {
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void), const char* name) {
         PROFILE_START(_pt);
 Display *dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DisplayMessage"); return ; }
@@ -526,7 +529,7 @@ Display *dpy = get_display();
 
     int x = abs(centerX - winW / 2);
     int y = abs(centerY - winH / 2);
-    MsgPresent(dpy, message, x, y, winW, winH,timeout,color,no_bg,render);
+    MsgPresent(dpy, message, x, y, winW, winH,timeout,color,no_bg,render,name);
 }
 
 static void MsgMeasure(Display *dpy, const char *message, int maxWidth, int maxHeight,
@@ -609,17 +612,27 @@ if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnch
     else y = rect_y + (rect_h - winH) / 2;
     int ax,ay,aw,ah;
     WindowManager_GetMainMonitorGeometry(&ax,&ay,&aw,&ah);
-    MsgPresent(dpy, message, x - ax, y - ay, winW, winH, timeout, color,no_bg,NULL);
+    MsgPresent(dpy, message, x - ax, y - ay, winW, winH, timeout, color,no_bg,NULL,NULL);
 }
 
-void Platform_DismissMessage(void) {
+bool Platform_DismissMessage(const char* name) {
         PROFILE_START(_pt);
-Display *dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DismissMessage"); return ; }
+    Display *dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DismissMessage"); return false; }
+    bool removed = false;
     pthread_mutex_lock(&g_msg_lock);
-    while (g_msg_slot_count > 0) MsgRemoveSlotLocked(dpy, 0);
+    if (name && name[0]) {
+        for (int i = 0; i < g_msg_slot_count; ) {
+            if (strcmp(g_msg_slots[i].name, name) == 0) { MsgRemoveSlotLocked(dpy, i); removed = true; }
+            else i++;
+        }
+    } else {
+        while (g_msg_slot_count > 0) { MsgRemoveSlotLocked(dpy, 0); removed = true; }
+    }
     pthread_mutex_unlock(&g_msg_lock);
     XFlush(dpy);
+    PROFILE_END_VAR(_pt, "Platform_DismissMessage");
+    return removed;
 }
 
 void Platform_DismissIndefiniteMessage(void) {
