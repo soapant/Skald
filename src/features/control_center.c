@@ -856,6 +856,8 @@ static void ccx_trim_copy(const char* src, char* dst, size_t cap){
     strncpy(dst, src, len); dst[len]='\0';
 }
 
+#define CC_CALC_ROW_ICON "🧮"
+
 static char g_cc_calc_label[256] = {0};
 
 static bool cc_calc_strict_number(const char *str, double *out) {
@@ -1018,19 +1020,23 @@ static void cc_render(PromptState *state) {
     while (fl_listbox_next(&ctx)) {
         int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
         const CcEntry *e = cc_find(ctx.text);
-        if (e && e->icon[0]) {
+        const char *row_icon = (e && e->icon[0]) ? e->icon : NULL;
+        if (!row_icon && g_cc_calc_label[0] && strcmp(ctx.text, g_cc_calc_label) == 0) {
+            row_icon = CC_CALC_ROW_ICON;
+        }
+        if (row_icon) {
             int icon_x = ctx.x + CC_ITEM_TEXT_X;
             int icon_y = ctx.y + (ctx.h - icon_size) / 2;
-            if (cc_icon_is_glyph(e->icon)) {
-                int gh = fl_get_glyph_ink_height(e->icon, icon_size);
+            if (cc_icon_is_glyph(row_icon)) {
+                int gh = fl_get_glyph_ink_height(row_icon, icon_size);
                 if (gh <= 0) gh = icon_size;
-                int gw = fl_get_text_width(e->icon, icon_size);
+                int gw = fl_get_text_width(row_icon, icon_size);
                 fl_draw_text(.x = icon_x + (icon_size - gw) / 2,
                              .y = ctx.y + (ctx.h - gh) / 2,
-                             .text = e->icon, .align = "LEFT", .pad = 0,
+                             .text = row_icon, .align = "LEFT", .pad = 0,
                              .fontsize = icon_size);
             } else {
-                fl_draw_image(.path = e->icon,
+                fl_draw_image(.path = row_icon,
                               .x = icon_x, .y = icon_y,
                               .w = icon_size, .h = icon_size);
             }
