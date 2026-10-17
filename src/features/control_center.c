@@ -4,6 +4,7 @@
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef void (*CcFill)(void);
 
@@ -627,12 +628,357 @@ static void cc_fill_features(void) {
 static const char *g_names[MAX_VISIBLE_ITEMS + 1];
 static const char **g_no_results = NULL;
 
+typedef struct {
+    const char* canonical;
+    double to_seconds;
+    const char* aliases[16];
+    int alias_count;
+} CcCalcUnit;
+
+static CcCalcUnit CC_CALC_UNITS[] = {
+    {"ms",   0.001,       {"ms","millis","millisecond","milliseconds","milli","msec","msecs"}, 7},
+    {"s",    1.0,         {"s","sec","secs","second","seconds","sec.","secs.","sec"}, 6},
+    {"min",  60.0,        {"m","min","mins","minute","minutes"}, 5},
+    {"hour", 3600.0,      {"h","hr","hrs","hour","hours"}, 5},
+    {"day",  86400.0,     {"d","day","days"}, 3},
+    {"week", 604800.0,    {"w","wk","wks","week","weeks"}, 5},
+    {"month",2629746.0,   {"mo","mos","month","months"}, 4}, 
+    {"year", 31557600.0,  {"y","yr","yrs","year","years"}, 5},
+};
+#define CC_CALC_UNIT_COUNT (sizeof(CC_CALC_UNITS)/sizeof(CC_CALC_UNITS[0]))
+static int ccx_str_casecmp_n(const char* a, const char* b) {
+    while(*a && *b){ int ca=tolower((unsigned char)*a), cb=tolower((unsigned char)*b); if(ca!=cb) return ca-cb; a++; b++; }
+    return tolower((unsigned char)*a)-tolower((unsigned char)*b);
+}
+static bool ccx_str_equals_ci(const char* a, const char* b){
+    if(!a||!b) return false;
+    if(strlen(a)!=strlen(b)) return false;
+    return ccx_str_casecmp_n(a,b)==0;
+}
+static int ccx_levenshtein_ci(const char* s, const char* t){
+    int ls=strlen(s), lt=strlen(t);
+    if(ls>32||lt>32) return 999;
+    int d[33][33];
+    for(int i=0;i<=ls;i++) d[i][0]=i;
+    for(int j=0;j<=lt;j++) d[0][j]=j;
+    for(int i=1;i<=ls;i++) for(int j=1;j<=lt;j++){
+        int cost = tolower((unsigned char)s[i-1])==tolower((unsigned char)t[j-1])?0:1;
+        int del=d[i-1][j]+1, ins=d[i][j-1]+1, sub=d[i-1][j-1]+cost;
+        int m=del<ins?del:ins; m=m<sub?m:sub; d[i][j]=m;
+    }
+    return d[ls][lt];
+}
+static CcCalcUnit* ccx_find_unit_fuzzy(const char* input){
+    if(!input || !*input) return NULL;
+    
+    char tmp[64]; strncpy(tmp, input, sizeof(tmp)-1); tmp[sizeof(tmp)-1]='\0';
+    
+    char* s=tmp; while(*s && isspace((unsigned char)*s)) s++;
+    char* e=s+strlen(s); while(e>s && isspace((unsigned char)*(e-1))) *--e='\0';
+    if(!*s) return NULL;
+    
+    for(size_t i=0;i<CC_CALC_UNIT_COUNT;i++) for(int j=0;j<CC_CALC_UNITS[i].alias_count;j++) if(ccx_str_equals_ci(s, CC_CALC_UNITS[i].aliases[j])) return &CC_CALC_UNITS[i];
+    for(size_t i=0;i<CC_CALC_UNIT_COUNT;i++) if(ccx_str_equals_ci(s, CC_CALC_UNITS[i].canonical)) return &CC_CALC_UNITS[i];
+    
+    for(size_t i=0;i<CC_CALC_UNIT_COUNT;i++) for(int j=0;j<CC_CALC_UNITS[i].alias_count;j++){
+        if(fl_string_contains(CC_CALC_UNITS[i].aliases[j], s) || fl_string_contains(s, CC_CALC_UNITS[i].aliases[j])) return &CC_CALC_UNITS[i];
+    }
+    
+    CcCalcUnit* best=NULL; int bestd=999;
+    for(size_t i=0;i<CC_CALC_UNIT_COUNT;i++) for(int j=0;j<CC_CALC_UNITS[i].alias_count;j++){
+        int d=ccx_levenshtein_ci(s, CC_CALC_UNITS[i].aliases[j]);
+        if(d<bestd && d<=2 && strlen(s)>=3) { bestd=d; best=&CC_CALC_UNITS[i]; }
+    }
+    if(best) return best;
+    
+    for(size_t i=0;i<CC_CALC_UNIT_COUNT;i++){ int d=ccx_levenshtein_ci(s, CC_CALC_UNITS[i].canonical); if(d<bestd && d<=2 && strlen(s)>=3){ bestd=d; best=&CC_CALC_UNITS[i]; } }
+    return best;
+}
+
+static void ccx_format_number_plain(double num, char* out, size_t max_len){
+    if(isnan(num) || isinf(num)){ snprintf(out, max_len, "%g", num); return; }
+    double a=fabs(num);
+    if(a>=1e12 || (a!=0 && a<1e-6)){
+        snprintf(out, max_len, "%.6e", num);
+    } else {
+        
+        snprintf(out, max_len, "%.12g", num);
+    }
+}
+
+static double ccx_parse_number_with_suffix(const char* str) {
+    char cleaned[64];
+    strncpy(cleaned, str, sizeof(cleaned) - 1);
+    cleaned[sizeof(cleaned) - 1] = '\0';
+    int len = strlen(cleaned);
+    while (len > 0 && isspace((unsigned char)cleaned[len - 1])) cleaned[--len] = '\0';
+    char* p=cleaned; while(*p && isspace((unsigned char)*p)) p++;
+    if(*p=='\0') return 0.0;
+    
+    len=strlen(p);
+    if(len==0) return 0.0;
+    char suffix = tolower((unsigned char)p[len - 1]);
+    if(suffix=='k' || suffix=='m'){
+        
+        
+        
+        char num_part[64]; strncpy(num_part, p, len-1); num_part[len-1]='\0';
+        char* end=NULL; double v=strtod(num_part, &end);
+        if(end && *end=='\0'){
+            if(suffix=='k') return v*1000.0;
+            if(suffix=='m') return v*1000000.0;
+        }
+    }
+    return atof(p);
+}
+
+static void ccx_trim_trailinspaces(char* str) {
+    int len = strlen(str);
+    while (len > 0 && isspace((unsigned char)str[len - 1])) str[--len] = '\0';
+}
+
+
+
+static int ccx_precedence(char op) {
+  if(op=='*'||op=='/'||op=='^') return 2;
+  if(op=='+'||op=='-') return 1; 
+  return 0; 
+}
+static bool ccx_apply_op(double* vals, int* vtop, char* ops, int* otop, bool* ok){
+    if(*vtop<1 || *otop<0) { *ok=false; return false; }
+    double b=vals[(*vtop)--];
+    double a=vals[(*vtop)--];
+    char op=ops[(*otop)--];
+    double r=0;
+    switch(op){
+        case '+': r=a+b; break;
+        case '-': r=a-b; break;
+        case '*': r=a*b; break;
+        case '^': r=pow(a,b); break;
+        case '/': if(b==0){ *ok=false; return false; } r=a/b; break;
+        default: *ok=false; return false;
+    }
+    vals[++(*vtop)]=r; return true;
+}
+static double ccx_evaluate_expression(const char* expr, bool* out_ok){
+    if(!expr){ if(out_ok) *out_ok=false; return 0; }
+    char clean[512]; strncpy(clean, expr, sizeof(clean)-1); clean[sizeof(clean)-1]='\0';
+    
+    for(int i=0; clean[i]; i++) if(clean[i]=='x'||clean[i]=='X') clean[i]='*';
+    double vals[128]; int vtop=-1;
+    char ops[128]; int otop=-1;
+    bool ok=true;
+    bool expect_number=true;
+    int n=strlen(clean);
+    for(int i=0;i<n;){
+        if(isspace((unsigned char)clean[i])){ i++; continue; }
+        if(clean[i]=='('){ ops[++otop]='('; expect_number=true; i++; continue; }
+        if(clean[i]==')'){
+            while(otop>=0 && ops[otop]!='('){ if(!ccx_apply_op(vals,&vtop,ops,&otop,&ok)) break; } if(otop>=0 && ops[otop]=='(') otop--; else ok=false;
+            expect_number=false; i++; continue;
+        }
+        if(expect_number && (clean[i]=='-' || clean[i]=='+')){
+            
+            int j=i+1; while(j<n && isspace((unsigned char)clean[j])) j++;
+            if(j<n && (isdigit((unsigned char)clean[j]) || clean[j]=='.')){
+                
+            } else if(clean[j]=='('){
+                
+                vals[++vtop]=0; ops[++otop]=clean[i]; expect_number=true; i++; continue;
+            } else { ok=false; break; }
+        }
+        if(isdigit((unsigned char)clean[i]) || clean[i]=='.' || (expect_number && (clean[i]=='-'||clean[i]=='+'))){
+            int j=i;
+            if(clean[j]=='-'||clean[j]=='+') j++;
+            while(j<n && (isdigit((unsigned char)clean[j]) || clean[j]=='.')) j++;
+            
+            if(j<n && (clean[j]=='k'||clean[j]=='K'||clean[j]=='m'||clean[j]=='M')){
+                
+                
+                char nxt = (j+1<n)?clean[j+1]:'\0';
+                if(nxt=='\0' || isspace((unsigned char)nxt) || strchr("+-*^/()", nxt)){
+                    j++;
+                }
+            }
+            char numtok[64]={0}; int len=j-i; if(len>= (int)sizeof(numtok)) len=sizeof(numtok)-1;
+            strncpy(numtok, clean+i, len); numtok[len]='\0';
+            double v=ccx_parse_number_with_suffix(numtok);
+            
+            if(v==0 && numtok[0]!='0'){
+                
+            }
+            vals[++vtop]=v;
+            expect_number=false;
+            i=j; continue;
+        }
+        if(strchr("+-^*/", clean[i])){
+            char cur=clean[i];
+            while(otop>=0 && ops[otop]!='(' && ccx_precedence(ops[otop])>=ccx_precedence(cur)){
+                if(!ccx_apply_op(vals,&vtop,ops,&otop,&ok)) break;
+            }
+            ops[++otop]=cur;
+            expect_number=true; i++; continue;
+        }
+        
+        ok=false; break;
+    }
+    while(ok && otop>=0){
+        if(ops[otop]=='('||ops[otop]==')'){ ok=false; break; }
+        if(!ccx_apply_op(vals,&vtop,ops,&otop,&ok)) break;
+    }
+    if(!ok || vtop!=0){ if(out_ok) *out_ok=false; return 0; }
+    if(out_ok) *out_ok=true;
+    return vals[0];
+}
+
+
+
+static int ccx_find_in_keyword(const char* s){ 
+    if(!s) return -1;
+    int n=strlen(s);
+    for(int i=0;i<n-2;i++){
+        if(tolower((unsigned char)s[i])==' ' && tolower((unsigned char)s[i+1])=='i' && tolower((unsigned char)s[i+2])=='n'){
+            
+            
+            if(i+3>=n || isspace((unsigned char)s[i+3]) || s[i+3]=='\0'){
+                
+                return i+1; 
+            }
+        }
+    }
+    return -1;
+}
+static void ccx_trim_copy(const char* src, char* dst, size_t cap){
+    if(!src||!dst||cap==0) return;
+    while(*src && isspace((unsigned char)*src)) src++;
+    size_t len=strlen(src); while(len>0 && isspace((unsigned char)src[len-1])) len--;
+    if(len>=cap) len=cap-1;
+    strncpy(dst, src, len); dst[len]='\0';
+}
+
+static char g_cc_calc_label[256] = {0};
+
+static bool cc_calc_strict_number(const char *str, double *out) {
+    if (!str || !*str) return false;
+    while (*str && isspace((unsigned char)*str)) str++;
+    char *end = NULL;
+    double v = strtod(str, &end);
+    if (end == str) return false;
+    while (*end && isspace((unsigned char)*end)) end++;
+    if (*end == 'k' || *end == 'K') { v *= 1000.0; end++; }
+    else if (*end == 'm' || *end == 'M') { v *= 1000000.0; end++; }
+    while (*end && isspace((unsigned char)*end)) end++;
+    if (*end != '\0') return false;
+    if (out) *out = v;
+    return true;
+}
+
+static bool cc_calc_result_for(const char *filter, char *out_value, size_t cap) {
+    if (!filter || !filter[0]) return false;
+    char clean[512];
+    snprintf(clean, sizeof(clean), "%s", filter);
+    int in_pos = ccx_find_in_keyword(clean);
+    if (in_pos >= 0) {
+        char target_unit[64] = {0};
+        snprintf(target_unit, sizeof(target_unit), "%s", clean + in_pos + 2);
+        ccx_trim_trailinspaces(target_unit);
+        char *tp = target_unit;
+        while (*tp && isspace((unsigned char)*tp)) tp++;
+        memmove(target_unit, tp, strlen(tp) + 1);
+        clean[in_pos - 1] = '\0';
+        ccx_trim_trailinspaces(clean);
+        char left_trim[256];
+        ccx_trim_copy(clean, left_trim, sizeof(left_trim));
+        char *last_sp = strrchr(left_trim, ' ');
+        CcCalcUnit *fromU = NULL;
+        char expr_part[256] = {0};
+        double val = 0;
+        bool ok = false;
+        if (last_sp) {
+            char cand[64];
+            ccx_trim_copy(last_sp + 1, cand, sizeof(cand));
+            CcCalcUnit *u = ccx_find_unit_fuzzy(cand);
+            if (u) {
+                fromU = u;
+                *last_sp = '\0';
+                ccx_trim_copy(left_trim, expr_part, sizeof(expr_part));
+                if (expr_part[0] == '\0') strcpy(expr_part, "1");
+                val = ccx_evaluate_expression(expr_part, &ok);
+                if (!ok) val = ccx_parse_number_with_suffix(expr_part);
+            } else {
+                return false;
+            }
+        } else {
+            int L = (int)strlen(left_trim);
+            int p = L - 1;
+            while (p >= 0 && isalpha((unsigned char)left_trim[p])) p--;
+            if (p >= L - 1) return false;
+            char unit_cand[64] = {0};
+            snprintf(unit_cand, sizeof(unit_cand), "%s", left_trim + p + 1);
+            CcCalcUnit *u = ccx_find_unit_fuzzy(unit_cand);
+            if (!u) return false;
+            fromU = u;
+            char numpart[256] = {0};
+            snprintf(numpart, sizeof(numpart), "%s", left_trim);
+            numpart[p + 1] = '\0';
+            ccx_trim_copy(numpart, expr_part, sizeof(expr_part));
+            if (expr_part[0] == '\0') strcpy(expr_part, "1");
+            val = ccx_evaluate_expression(expr_part, &ok);
+            if (!ok) val = ccx_parse_number_with_suffix(expr_part);
+        }
+        CcCalcUnit *toU = ccx_find_unit_fuzzy(target_unit);
+        if (!fromU || !toU) return false;
+        double result = val * (fromU->to_seconds / toU->to_seconds);
+        char formatted[64];
+        ccx_format_number_plain(result, formatted, sizeof(formatted));
+        snprintf(out_value, cap, "%s %s", formatted, toU->canonical);
+        return true;
+    }
+
+    bool ok = false;
+    double result = ccx_evaluate_expression(clean, &ok);
+    if (ok) {
+        char formatted[64];
+        ccx_format_number_plain(result, formatted, sizeof(formatted));
+        snprintf(out_value, cap, "%s", formatted);
+        return true;
+    }
+    double val = 0;
+    if (cc_calc_strict_number(clean, &val)) {
+        char formatted[64];
+        ccx_format_number_plain(val, formatted, sizeof(formatted));
+        snprintf(out_value, cap, "%s", formatted);
+        return true;
+    }
+    return false;
+}
+
+static bool cc_calc_build_label(const char *filter) {
+    g_cc_calc_label[0] = '\0';
+    if (!filter || !filter[0]) return false;
+    char trimmed[256];
+    ccx_trim_copy(filter, trimmed, sizeof(trimmed));
+    if (!trimmed[0]) return false;
+    int has_digit = 0;
+    for (const char *p = trimmed; *p; p++) {
+        if (isdigit((unsigned char)*p) || *p == '.') { has_digit = 1; break; }
+    }
+    if (!has_digit) return false;
+    char value[128] = {0};
+    if (!cc_calc_result_for(trimmed, value, sizeof(value))) return false;
+    snprintf(g_cc_calc_label, sizeof(g_cc_calc_label), "%s = %s", trimmed, value);
+    return true;
+}
 static void cc_refresh(const char *filter, ListBoxInfo *lb) {
     cc_build();
     (void)g_no_results;
     int n = g_entry_count;
     if (n > MAX_VISIBLE_ITEMS) n = MAX_VISIBLE_ITEMS;
     for (int i = 0; i < n; i++) g_names[i] = g_entries[i].label;
+    if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(filter)) {
+        g_names[n] = g_cc_calc_label;
+        n++;
+    }
     fl_populate_listbox(lb, filter, g_names, n);
     if (lb->total_matches > 0) g_cc_fallback_active = false;
     if (lb->total_matches == 0) {
@@ -700,6 +1046,18 @@ static void cc_render(PromptState *state) {
 }
 
 static bool cc_enter(const char *selection, ListBoxInfo *lb) {
+    if (selection && g_cc_calc_label[0] && strcmp(selection, g_cc_calc_label) == 0) {
+        const char *eq = strchr(g_cc_calc_label, '=');
+        if (eq) {
+            char value[128];
+            snprintf(value, sizeof(value), "%s", eq + 1);
+            char *v = value;
+            while (*v && isspace((unsigned char)*v)) v++;
+            ccx_trim_trailinspaces(v);
+            fl_copy_to_clipboard(v);
+        }
+        return true;
+    }
     if (!fl_is_selected(lb)) {
         fl_query_browser(selection);
     }
@@ -730,6 +1088,7 @@ static void TriggerControl(void) {
         const char *p = g_xdg_paths[i];
         if (p) fl_on_dir_changed(p, cc_rescan_app_cache);
     }
+
     fl_window(.title = "⚡ Control",
            .refresh = cc_refresh,
            .enter = cc_enter,

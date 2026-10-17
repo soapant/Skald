@@ -56,6 +56,37 @@ void HandleEnterVisual(FlintContext* ctx) {
     SetMode(MODE_VISUAL);
 }
 
+void HandleEnterVisualLine(FlintContext* ctx) {
+    char text[VIM_TEXT_BUF];
+    Vim_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    VimState_BeginSelection(0);
+    if (len > 0) VimState_UpdateSelection(len);
+    SetMode(MODE_VISUAL);
+}
+
+void HandleVisualYank(FlintContext* ctx) {
+    int start = 0, end = 0;
+    if (VimState_GetSelection(&start, &end)) {
+        if (end < start) { int t = start; start = end; end = t; }
+        char text[VIM_TEXT_BUF];
+        Vim_GetText(ctx, text, sizeof(text));
+        int len = (int)strlen(text);
+        if (start < 0) start = 0;
+        if (end > len) end = len;
+        if (end > start) {
+            char sel[VIM_TEXT_BUF];
+            int n = end - start;
+            if (n >= (int)sizeof(sel)) n = (int)sizeof(sel) - 1;
+            memcpy(sel, text + start, (size_t)n);
+            sel[n] = '\0';
+            Platform_CopyToClipboard(sel);
+        }
+    }
+    VimState_EndSelection();
+    SetMode(MODE_NORMAL);
+}
+
 void HandleExitVisual(FlintContext* ctx) {
     (void)ctx;
     VimState_EndSelection();
