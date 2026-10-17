@@ -126,6 +126,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     win_state->width = 900;
     win_state->height = 640;
     win_state->has_listbox = true;
+    win_state->no_bg = spec->no_bg;
     win_state->window_title = (char*)window_title;
     lb_ptr = &win_state->listbox;
     ListBoxInfo_Init(lb_ptr);
@@ -200,7 +201,11 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
 
   PROFILE_START(timer2);
 
-  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, (BYTE)WindowOpacity, LWA_ALPHA);
+  if (win_state && win_state->no_bg) {
+    SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, 0, LWA_COLORKEY);
+  } else {
+    SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, (BYTE)WindowOpacity, LWA_ALPHA);
+  }
 
   PROFILE_END_VAR(timer2, "WindowBs");
 

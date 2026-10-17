@@ -368,6 +368,14 @@ static HBRUSH s_bg_brush = NULL;
   { PROFILE_END_VAR(_pt, "ListBoxSubclassProc"); return 0; }
 }
 
+extern PromptState* g_win32_prompt_state;
+
+static bool prompt_win_no_bg(void) {
+        PROFILE_START(_pt);
+if (g_win32_prompt_state && g_win32_prompt_state->no_bg) { PROFILE_END_VAR(_pt, "prompt_win_no_bg"); return true; }
+    { PROFILE_END_VAR(_pt, "prompt_win_no_bg"); return false; }
+}
+
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     PROFILE_START(_pt);
 if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
@@ -456,6 +464,11 @@ case WM_CHAR: {
     case WM_CTLCOLOREDIT: {
       HDC hdc = (HDC)wParam;
       COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, GradientBrightness) : COLOR_TEXT;
+      if (prompt_win_no_bg()) {
+        SetTextColor(hdc, tc);
+        SetBkMode(hdc, TRANSPARENT);
+        return (LRESULT)GetStockObject(NULL_BRUSH);
+      }
       if (EnableShaders && ShaderPreset != 0) {
         SetTextColor(hdc, tc);
         SetBkMode(hdc, TRANSPARENT);
@@ -469,6 +482,11 @@ case WM_CHAR: {
     }
     case WM_CTLCOLORLISTBOX: {
       HDC hdc = (HDC)wParam;
+      if (prompt_win_no_bg()) {
+        SetTextColor(hdc, COLOR_TEXT);
+        SetBkMode(hdc, TRANSPARENT);
+        return (LRESULT)GetStockObject(NULL_BRUSH);
+      }
       if (EnableShaders && ShaderPreset != 0) {
         SetTextColor(hdc, COLOR_TEXT);
         SetBkMode(hdc, TRANSPARENT);
@@ -723,7 +741,11 @@ case WM_CHAR: {
             useRenderBuf = false;
           }
         }
-        if (EnableShaders && ShaderPreset != 0) {
+        if (prompt_win_no_bg()) {
+          HBRUSH hKeyBrush = CreateSolidBrush(RGB(0, 0, 0));
+            FillRect(paintDC, &rect, hKeyBrush);
+            DeleteObject(hKeyBrush);
+        } else if (EnableShaders && ShaderPreset != 0) {
           win32_draw_background(paintDC, &rect);
         } else {
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
