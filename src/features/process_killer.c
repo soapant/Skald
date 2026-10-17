@@ -280,10 +280,6 @@ static void BulkKillProcesses(const char* window_titles[], int count) {
     }
 }
 
-static void bulk_kill_bkp(void) {
-    BulkKillProcesses(bkp_windows, ARRAY_LEN(bkp_windows));
-}
-
 static void pk_cycle_sort(void) {
     g_pk_sort = (g_pk_sort + 1) % PK_SORT_MODES;
     pk_collect_and_sort();
@@ -372,7 +368,6 @@ static void TriggerProcessKiller(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+U", TriggerProcessKiller,"Fortnite");
-    fl_register_hotkey("Alt+Shift+P", bulk_kill_bkp);
 
     fl_register_feature(.name="Process Killer",.cb=TriggerProcessKiller);
 }
