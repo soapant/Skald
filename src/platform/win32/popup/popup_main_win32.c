@@ -687,20 +687,16 @@ case WM_CHAR: {
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
               return TRUE;
             } else {
-              HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_win32_hMainFont);
-                if (!isSelected) {
-                    unsigned long ncol, bcol, pcol;
-                    int orig_idx = (int)pdis->itemID;
-                    int orig_cnt = lb ? lb->populated_count : 0;
-                    if (lb && (int)pdis->itemID >= 0 && pdis->itemID < (UINT)lb->populated_count) {
-                      orig_idx = lb->matching_indices[pdis->itemID];
-                      orig_cnt = lb->last_item_count > 0 ? lb->last_item_count : lb->populated_count;
-                    }
-                    Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
-                    SetTextColor(pdis->hDC, ncol);
-                } else {
-                    SetTextColor(pdis->hDC, COLOR_TEXT);
+                HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_win32_hMainFont);
+                unsigned long ncol, bcol, pcol;
+                int orig_idx = (int)pdis->itemID;
+                int orig_cnt = lb ? lb->populated_count : 0;
+                if (lb && (int)pdis->itemID >= 0 && pdis->itemID < (UINT)lb->populated_count) {
+                  orig_idx = lb->matching_indices[pdis->itemID];
+                  orig_cnt = lb->last_item_count > 0 ? lb->last_item_count : lb->populated_count;
                 }
+                Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
+                SetTextColor(pdis->hDC, ncol);
                 DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                 const char* alias_pos = strstr(textBuffer, " [");
                 if (alias_pos) {
