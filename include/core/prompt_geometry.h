@@ -13,6 +13,7 @@
 #define fl_window_CARET_HI_CLAMP 4
 #define fl_window_CARET_W_INSERT 2
 #define fl_window_CARET_W_NORMAL_BONUS 2
+#define fl_window_CARET_H_BONUS 6
 #define fl_window_EDIT_H_BONUS 12
 
 #define fl_window_ROW_H_BONUS 12
@@ -52,6 +53,7 @@
 static inline int PromptRowHeight(void) { return FontSize + fl_window_ROW_H_BONUS; }
 static inline int PromptListTop(void) { return FontSize + fl_window_LIST_TOP_BONUS; }
 static inline int PromptNormalCaretWidth(void) { return FontSize / 2 + fl_window_CARET_W_NORMAL_BONUS; }
+static inline int PromptCaretHeight(void) { return FontSize + fl_window_CARET_H_BONUS; }
 static inline int PromptCustomEditHeight(void) { return FontSize + fl_window_CUSTOM_EDIT_H_BONUS; }
 static inline int PromptListBottomMargin(void) {
   return (WindowTitleText || VimModeText) ? fl_window_LIST_BOTTOM_TITLE : 0;

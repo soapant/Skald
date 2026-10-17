@@ -524,7 +524,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         int cursor_draw_x = x + fl_window_EDIT_INSET + cursor_x - scroll;
         if (cursor_draw_x < x + fl_window_CARET_LO_CLAMP) cursor_draw_x = x + fl_window_CARET_LO_CLAMP;
         if (cursor_draw_x > x + w - fl_window_CARET_HI_CLAMP) cursor_draw_x = x + w - fl_window_CARET_HI_CLAMP;
-        int cursorH = FontSize;
+        int cursorH = PromptCaretHeight();
         int cursor_y = y_raw + (textH - cursorH) / 2;
         if (cursor_y < y_raw) cursor_y = y_raw;
         RECT textRc = {x + fl_window_EDIT_INSET - scroll, y_raw, x + w, y_raw + textH};

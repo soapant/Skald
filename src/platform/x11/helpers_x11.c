@@ -487,9 +487,9 @@ PROFILE_START(timer);
     if (cursor_draw_x > width - fl_window_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - fl_window_X11_DEADCURSOR_CLAMP;
     int cursor_y = fl_window_X11_DEADCURSOR_Y;
     if (IsInsertMode()) {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, PromptCaretHeight());
     } else {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, fl_window_EDITPOPUP_CARET_W_NORMAL, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, fl_window_EDITPOPUP_CARET_W_NORMAL, PromptCaretHeight());
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_draw_edit_cursor");
 }
