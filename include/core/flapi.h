@@ -139,7 +139,7 @@ bool fl_launch_browser_in_a_new_window(char* url);
 char* fl_get_zoxide_match(char* query);
 bool fl_focus_window_by_title(char* title);
 bool fl_close_active_window(void);
-bool fl_dismiss_message(void);
+bool fl_dismiss_message(const char* name);
 bool fl_toggle_fullscreen_active(void);
 bool fl_move_active_window_to_monitor(bool right);
 bool fl_move_active_window_left(void);
@@ -225,6 +225,7 @@ typedef struct {
     int fps;
     bool no_bg;
     ColorRef color_bg;
+    const char* name;
 } FlMessageSpec;
 
 typedef struct {
@@ -240,6 +241,7 @@ void fl_message_impl(const FlMessageSpec* spec);
 #define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
 
 #define fl_overlay(...) fl_message(__VA_ARGS__, .timeout=10000000.0)
+#define fl_dismiss_overlay(...) fl_dismiss_message(__VA_ARGS__)
 
 #define FlPromptSpec PromptSpec
 

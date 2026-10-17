@@ -14,6 +14,8 @@ static FlThread g_thread = NULL;
 #define MACRO_RECORD_VK 'R'
 #define MACRO_PLAY_VK 'P'
 
+#define MACRO_OVERLAY_NAME "macro_overlay"
+
 #define EVT_KEY   1
 #define EVT_MOUSE 2
 #define EVT_MOVE  3
@@ -237,7 +239,7 @@ static void* playback_loop(void* arg) {
     break;
   }
   release_everything();
-  fl_dismiss_message();
+  fl_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_playing = false;
   g_play_thread = NULL;
   return NULL;
@@ -377,7 +379,7 @@ void LoadMacro(void) {
 }
 
 static void macro_show_overlay(void (*render)(void)) {
-    fl_overlay(.render=render, .w=WIDTH, .h=HEIGHT, .x = WIDTH / 2, .y = HEIGHT / 2,.no_bg=true);
+    fl_overlay(.name=MACRO_OVERLAY_NAME, .render=render, .w=WIDTH, .h=HEIGHT, .x = WIDTH / 2, .y = HEIGHT / 2,.no_bg=true);
 }
 
 void PlayMacro(void) {
@@ -393,7 +395,7 @@ void PlayMacro(void) {
         if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
         return;
     }
-    fl_dismiss_message();
+    fl_dismiss_overlay(MACRO_OVERLAY_NAME);
     g_playing = false;
     release_everything();
 }
@@ -420,7 +422,7 @@ void RecordToggle(void) {
     if (!g_thread) g_thread = fl_thread_create(recorder_loop, NULL);
     return;
   }
-  fl_dismiss_message();
+  fl_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_recording = false;
 }
 
