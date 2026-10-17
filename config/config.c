@@ -22,7 +22,7 @@ void ConfigApply(void) {
     ShaderPreset = 1;
     ShaderIntensity = 0.3f;
     ShaderBrightness = 0.55f;
-    TimeBetweenHotReload = 2;
+    TimeBetweenHotReload = 1;
     WindowOpacity = 235.0f;
     EditPopUpPos = "middle";
     EditPopUpWidthMin = 400;
@@ -51,7 +51,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "github-dark";
+    Theme = "onedark-pro";
     BackgroundImage = "C:/miscellaneous/862186.png";
     COLOR_BG = RGB(13, 17, 23);
     COLOR_TEXT = RGB(201, 209, 217);
