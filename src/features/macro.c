@@ -377,12 +377,7 @@ void LoadMacro(void) {
 }
 
 static void macro_show_overlay(void (*render)(void)) {
-    FlRect m = fl_get_monitor_geometry();
-    int w = m.w > 0 ? m.w : fl_get_screen_width();
-    int h = m.h > 0 ? m.h : fl_get_screen_height();
-    if (w <= 0) w = 1920;
-    if (h <= 0) h = 1080;
-    fl_message(.render=render, .no_bg=true, .w=w, .h=h, .x=m.x + w / 2, .y=m.y + h / 2, .timeout=1000.0);
+    fl_overlay(.render=render, .w=WIDTH, .h=HEIGHT, .x = WIDTH / 2, .y = HEIGHT / 2,.no_bg=true);
 }
 
 void PlayMacro(void) {
