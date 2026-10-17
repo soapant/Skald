@@ -19,4 +19,13 @@ typedef uint32_t ColorRef;
 #define RGB(r, g, b)  ((unsigned long)(((unsigned char)(r)|((unsigned short)((unsigned char)(g))<<8))|(((unsigned long)(unsigned char)(b))<<16)))
 #endif
 
+/* Inverse of RGB: takes a 0xRRGGBB literal and yields the ColorRef that
+   RGB(r,g,b) would produce for the same colour. Use this instead of passing
+   a bare hex literal to any fl_ colour field, which is read as BGR. */
+#ifndef HEX
+#define HEX(h) ((ColorRef)((((unsigned long)(h) & 0xFF0000UL) >> 16) \
+                          | (((unsigned long)(h) & 0xFF00UL)) \
+                          | (((unsigned long)(h) & 0xFFUL) << 16)))
+#endif
+
 #endif
