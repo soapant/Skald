@@ -235,6 +235,7 @@ PROFILE_START(timer);
         XCopyArea(dpy, dbl, self->handle.xid, gc, 0, 0, data->w, data->h, 0, 0);
         XFreeGC(dpy, gc);
     }
+    x11_draw_window_border(dpy, self->handle.xid, data->w, data->h, false);
     XftDrawDestroy(xd);
     if (dbl) XFreePixmap(dpy, dbl);
     Platform_DestroyFont(font);
