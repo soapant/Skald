@@ -778,52 +778,24 @@ if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return N
     unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
     if (!argb) { free(data); return false; }
 
+    /* Nearest-neighbour sampling: O(dst) instead of O(src*dst). The box
+       average above was O(src_w*src_h) per decode which dominated runtime
+       for large source images (e.g. 4K wallpapers). */
     for (int dy = 0; dy < dst_h; dy++) {
-        float y0f = (float)dy       * h / dst_h;
-        float y1f = (float)(dy + 1) * h / dst_h;
-
-        int y0 = (int)y0f;
-        int y1 = (int)(y1f + 0.5f);
-        if (y1 > h) y1 = h;
-        if (y1 <= y0) y1 = y0 + 1;
-        if (y0 >= h) y0 = h - 1;
-
+        int sy = (int)((long long)dy * h / dst_h);
+        if (sy >= h) sy = h - 1;
+        if (sy < 0) sy = 0;
+        const unsigned char* src_row = data + (size_t)sy * row_bytes;
         unsigned char* dst_row = argb + (size_t)dy * dst_w * 4;
-
         for (int dx = 0; dx < dst_w; dx++) {
-            float x0f = (float)dx       * w / dst_w;
-            float x1f = (float)(dx + 1) * w / dst_w;
-
-            int x0 = (int)x0f;
-            int x1 = (int)(x1f + 0.5f);
-            if (x1 > w) x1 = w;
-            if (x1 <= x0) x1 = x0 + 1;
-            if (x0 >= w) x0 = w - 1;
-
-            unsigned int sum_r = 0, sum_g = 0, sum_b = 0, sum_a = 0;
-            unsigned int count = 0;
-
-            for (int sy = y0; sy < y1; sy++) {
-                const unsigned char* src_row = data + (size_t)sy * row_bytes;
-                for (int sx = x0; sx < x1; sx++) {
-                    const unsigned char* s = src_row + (size_t)sx * 4;
-                    sum_r += s[0];
-                    sum_g += s[1];
-                    sum_b += s[2];
-                    sum_a += s[3];
-                    count++;
-                }
-            }
-
-            unsigned int r = sum_r / count;
-            unsigned int g = sum_g / count;
-            unsigned int b = sum_b / count;
-            unsigned int a = sum_a / count;
-
+            int sx = (int)((long long)dx * w / dst_w);
+            if (sx >= w) sx = w - 1;
+            if (sx < 0) sx = 0;
+            const unsigned char* s = src_row + (size_t)sx * 4;
+            unsigned int r = s[0], g = s[1], b = s[2], a = s[3];
             unsigned int pr = r * a / 255;
             unsigned int pg = g * a / 255;
             unsigned int pb = b * a / 255;
-
             unsigned char* d = dst_row + (size_t)dx * 4;
             d[0] = (unsigned char)pb;
             d[1] = (unsigned char)pg;
@@ -1701,11 +1673,6 @@ void Platform_PrewarmBackgroundPixmap(void) {
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
     x11_bg_image_prewarm(dpy, PROMPT_W, PROMPT_H);
-    Window win = x11_create_prompt_window(dpy, -32000, -32000, PROMPT_W, PROMPT_H);
-    if (win == None) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
-    x11_get_cached_background(dpy, win, PROMPT_W, PROMPT_H);
-    XDestroyWindow(dpy, win);
-    XSync(dpy, False);
     PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap");
 }
 

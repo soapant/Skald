@@ -724,8 +724,7 @@ if (volume < 0) volume = 0;
 static bool g_edit_placed = false;
 void fl_editbox_reset_placed(void) {     PROFILE_START(_pt);
 g_edit_placed = false; }
-bool fl_editbox_was_placed(void) {     PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "fl_editbox_was_placed"); return g_edit_placed; } }
+
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
         PROFILE_START(_pt);
 if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
@@ -841,7 +840,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         }
     } else if (state && state->placeholder && state->placeholder[0]) {
         unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
-        Platform_DrawTextRaw(draw_x, y_raw, state->placeholder, ph, spec->font, "", 0, 0);
+        Platform_DrawTextRaw(draw_x, y_raw + 2, state->placeholder, ph, spec->font, "", 0, 0);
     }
     int cursor_draw_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
     if (cursor_draw_x < x + PROMPT_CARET_LO_CLAMP) cursor_draw_x = x + PROMPT_CARET_LO_CLAMP;
