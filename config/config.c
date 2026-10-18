@@ -17,6 +17,7 @@ void ConfigApply(void) {
     DoTimeDebugs = true;
     DebugMode = false;
     RoundedCorners = true;
+    EnableBorders = true;
     CornerRadius = 14;
     EnableShaders = false;
     ShaderPreset = 1;

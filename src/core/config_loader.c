@@ -290,6 +290,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    DoTimeDebugs = %s;\n", DoTimeDebugs ? "true" : "false");
     cfg_put(buf, cap, &off, "    DebugMode = %s;\n", DebugMode ? "true" : "false");
     cfg_put(buf, cap, &off, "    RoundedCorners = %s;\n", RoundedCorners ? "true" : "false");
+    cfg_put(buf, cap, &off, "    EnableBorders = %s;\n", EnableBorders ? "true" : "false");
     cfg_put(buf, cap, &off, "    CornerRadius = %d;\n", CornerRadius);
     cfg_put(buf, cap, &off, "    EnableShaders = %s;\n", EnableShaders ? "true" : "false");
     cfg_put(buf, cap, &off, "    ShaderPreset = %d;\n", ShaderPreset);

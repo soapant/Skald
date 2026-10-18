@@ -1628,7 +1628,7 @@ if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_draw_selection_background"); r
 
 void x11_draw_window_border(Display* dpy, Drawable drw, int w, int h, bool no_bg) {
         PROFILE_START(_pt);
-    if (!dpy || !drw || no_bg) { PROFILE_END_VAR(_pt, "helpers_x11:x11_draw_window_border"); return; }
+    if (!dpy || !drw || no_bg || !EnableBorders) { PROFILE_END_VAR(_pt, "helpers_x11:x11_draw_window_border"); return; }
     int t = fl_window_BORDER_W;
     if (w <= 2 * t || h <= 2 * t) { PROFILE_END_VAR(_pt, "helpers_x11:x11_draw_window_border"); return; }
     int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
