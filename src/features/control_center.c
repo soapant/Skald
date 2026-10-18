@@ -28,6 +28,9 @@ typedef struct {
 #define CC_ITEM_TEXT_Y 4
 
 #define CC_ICON_GAP 8
+#define CC_TYPE_GAP 6
+#define CC_TYPE_SIZE_DELTA 2
+#define CC_TYPE_LABEL "Command"
 
 static const char *g_type_names[CC_MAX_TYPES];
 static CcFill g_type_fills[CC_MAX_TYPES];
@@ -1043,9 +1046,25 @@ static void cc_render(PromptState *state) {
         }
         fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                      .text = ctx.text, .align = "LEFT", .pad = 0);
-        if (e && e->type[0]) {
+        bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
+                                strcmp(e->type, "Feature") == 0);
+        if (plain_type) {
             fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                          .text = e->type, .align = "RIGHT", .color = cc_type_color());
+        } else if (e) {
+            int type_sz = FontSize - CC_TYPE_SIZE_DELTA;
+            if (type_sz < 8) type_sz = FontSize;
+            unsigned long meta_col = cc_type_color();
+            if (e->type[0]) {
+                int name_w = fl_get_text_width(ctx.text, FontSize);
+                fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
+                             .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
+                             .text = e->type, .align = "LEFT", .pad = 0,
+                             .fontsize = type_sz, .color = meta_col);
+            }
+            fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
+                         .text = CC_TYPE_LABEL, .align = "RIGHT",
+                         .pad = 0, .color = meta_col);
         }
     }
     fl_listbox_end();

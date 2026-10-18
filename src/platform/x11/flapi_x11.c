@@ -806,7 +806,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
                 if (cx < sx0) cx = sx0;
                 if (cx > sx1) cx = sx1;
                 int sw = sx1 - sx0;
-                if (sw > 0) Platform_DrawRectRaw(sx0, tint_y, sw, textH, tint, 0, false, true, 1, true);
+                if (sw > 0) Platform_DrawRectRaw(sx0, tint_y, sw, textH + fl_window_CARET_H_BONUS, tint, 0, false, true, 1, true);
             }
         } else {
             Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(), textH + fl_window_CARET_H_BONUS, tint, 0, false, true, 1, true);
