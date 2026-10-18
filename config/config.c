@@ -8,6 +8,7 @@ static const AliasEntry user_aliases[] = {
 void ConfigApply(void) {
     Tray = true;
     EnableVimMode = true;
+    EnableAutoPairing = true;
     RememberLastIndex = true;
     KeepSelectionAfterClose = false;
     MessageAfterEachHotkey = false;
@@ -24,12 +25,13 @@ void ConfigApply(void) {
     ShaderIntensity = 0.3f;
     ShaderBrightness = 0.55f;
     TimeBetweenHotReload = 1;
+    HotkeyRepeatDelayMs = 300;
     WindowOpacity = 255.0f;
     EditPopUpPos = "middle";
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 24;
+    FontSize = 17;
     IconSize = 32;
     WidgetGap = 0;
     MaxFeatures = 1000;
@@ -41,7 +43,6 @@ void ConfigApply(void) {
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
-    EnableAutoPairing = true;
     ControlHotkey = "Alt+Space";
     FullTextNeedsKeyPress = true;
     MessagesEnabled = true;
@@ -66,8 +67,8 @@ void ConfigApply(void) {
     COLOR_INSERT_MODE = RGB(63, 185, 80);
     COLOR_NORMAL_MODE = RGB(88, 166, 255);
     COLOR_VISUAL_MODE = RGB(188, 140, 255);
-    COLOR_CURSOR = RGB(201, 209, 217);
     COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
+    COLOR_CURSOR = RGB(201, 209, 217);
     COLOR_BORDER = RGB(128, 128, 128);
     Aliases = user_aliases;
     ALIAS_ENTRY_COUNT = 1;
