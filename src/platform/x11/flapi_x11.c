@@ -838,6 +838,9 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         } else {
             Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), spec->font, "", 0, 0);
         }
+    } else if (state && state->placeholder && state->placeholder[0]) {
+        unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
+        Platform_DrawTextRaw(draw_x, y_raw, state->placeholder, ph, spec->font, "", 0, 0);
     }
     int cursor_draw_x = x + fl_window_EDIT_INSET + cursor_x - scroll;
     if (cursor_draw_x < x + fl_window_CARET_LO_CLAMP) cursor_draw_x = x + fl_window_CARET_LO_CLAMP;

@@ -50,6 +50,9 @@ static void PromptPopup_OnShow(Popup* self) {
     const char* title = data->spec.title ? data->spec.title : "Flint";
     data->state->window_title = (char*)prompt_feature_name(title);
     data->state->filter[0] = '\0';
+    if (data->spec.placeholder && data->spec.placeholder[0]) {
+        data->state->placeholder = strdup(data->spec.placeholder);
+    }
     FlintContext_Get()->window.filter[0] = '\0';
     FlintContext_Get()->window.filter_cursor = 0;
     if (data->spec.items || data->spec.refresh) {
@@ -132,6 +135,7 @@ static void PromptPopup_Destroy(Popup* self) {
     Platform_PromptPopupDestroyWindow(self);
     if (data->state) {
         ListBoxInfo_Free(&data->state->listbox);
+        free(data->state->placeholder);
         free(data->state);
     }
     free(data);

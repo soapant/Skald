@@ -36,6 +36,7 @@ typedef struct {
      bool        has_listbox;
      bool        mouse_hover;
      bool        no_bg;
+     char*       placeholder;
 } PromptState;
 
 typedef void (*RefreshCallback)(const char* filter, ListBoxInfo* lb);
@@ -110,6 +111,7 @@ typedef struct {
     FilterCallback filter;
     HelpCallback help;
     CloseCallback on_close;
+    const char* placeholder;
     bool tick;
     bool auto_scale;
     bool no_bg;

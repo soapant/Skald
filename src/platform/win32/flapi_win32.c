@@ -584,6 +584,11 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         } else {
             Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), spec->font, "", 0, 0);
         }
+        if (text_len == 0 && state && state->placeholder && state->placeholder[0]) {
+            Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET,
+                                 state->placeholder, LerpColor(COLOR_BG, COLOR_TEXT, 0.45f),
+                                 spec->font, "", 0, 0);
+        }
         if (IsInsertMode()) {
             HBRUSH cbr = CreateSolidBrush(Modal_CursorColor());
             RECT cRc = {cursor_draw_x, cursor_y, cursor_draw_x + fl_window_CARET_W_INSERT, cursor_y + cursorH};
