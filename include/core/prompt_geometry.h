@@ -38,6 +38,7 @@
 #define fl_window_EDITPOPUP_MODE_Y 5
 #define fl_window_EDITPOPUP_MODE_PAD 5
 #define fl_window_EDITPOPUP_CARET_W_NORMAL 12
+#define fl_window_EDITPOPUP_CARET_X_NUDGE 2
 
 #define fl_window_X11_DEADCURSOR_CLAMP 10
 #define fl_window_X11_DEADCURSOR_Y 20

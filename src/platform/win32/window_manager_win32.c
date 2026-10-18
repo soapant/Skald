@@ -1,5 +1,6 @@
 #include "core/window_manager.h"
 #include "core/hotkey_manager.h"
+#include "core/context.h"
 #include "platform/widget.h"
 #include <windows.h>
 
@@ -30,6 +31,17 @@ if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_RunWin32"); return -1; }
     { PROFILE_END_VAR(_pt, "WindowManager_RunWin32"); return 0; }
 }
 
+static void WindowManager_DrainSelectionComplete(WindowManager* wm) {
+        PROFILE_START(_pt);
+    if (!wm || wm->popup_count == 0) { PROFILE_END_VAR(_pt, "DrainSelectionComplete"); return; }
+    if (!FlintContext_Get()->window.selection_complete) { PROFILE_END_VAR(_pt, "DrainSelectionComplete"); return; }
+    FlintContext_Get()->window.selection_complete = false;
+    WindowManager_PopPopup(wm);
+    Popup* top_after = WindowManager_GetTopPopup(wm);
+    if (top_after && top_after->vtable && top_after->vtable->on_render) top_after->vtable->on_render(top_after);
+    { PROFILE_END_VAR(_pt, "DrainSelectionComplete"); }
+}
+
 void WindowManager_ProcessEventsWin32(WindowManager* wm) {
         PROFILE_START(_pt);
 if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_ProcessEventsWin32"); return ; }
@@ -43,6 +55,7 @@ if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_ProcessEventsWin32"); return ; }
     }
     if (!got) MsgWaitForMultipleObjects(0, NULL, FALSE, 16, QS_ALLINPUT);
     hotkey_drain_pending();
+    WindowManager_DrainSelectionComplete(wm);
 }
 
 void WindowManager_QuitWin32(WindowManager* wm) {
