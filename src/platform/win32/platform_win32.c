@@ -1838,7 +1838,7 @@ if (!name || !name[0] || !out_path || out_len == 0) { PROFILE_END_VAR(_pt, "Plat
 void Platform_PrewarmBackgroundPixmap(void) {
     PROFILE_START(_pt);
 win32_bg_image_purge();
-    win32_bg_image_prewarm(fl_window_W, fl_window_H);
+    win32_bg_image_prewarm(PROMPT_W, PROMPT_H);
     { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); }
 }
 
