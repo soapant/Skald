@@ -280,6 +280,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "void ConfigApply(void) {\n");
     cfg_put(buf, cap, &off, "    Tray = %s;\n", Tray ? "true" : "false");
     cfg_put(buf, cap, &off, "    EnableVimMode = %s;\n", EnableVimMode ? "true" : "false");
+    cfg_put(buf, cap, &off, "    EnableAutoPairing = %s;\n", EnableAutoPairing ? "true" : "false");
     cfg_put(buf, cap, &off, "    RememberLastIndex = %s;\n", RememberLastIndex ? "true" : "false");
     cfg_put(buf, cap, &off, "    KeepSelectionAfterClose = %s;\n", KeepSelectionAfterClose ? "true" : "false");
     cfg_put(buf, cap, &off, "    MessageAfterEachHotkey = %s;\n", MessageAfterEachHotkey ? "true" : "false");
@@ -295,6 +296,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put_float(buf, cap, &off, "ShaderIntensity", ShaderIntensity);
     cfg_put_float(buf, cap, &off, "ShaderBrightness", ShaderBrightness);
     cfg_put(buf, cap, &off, "    TimeBetweenHotReload = %d;\n", TimeBetweenHotReload);
+    cfg_put(buf, cap, &off, "    HotkeyRepeatDelayMs = %d;\n", HotkeyRepeatDelayMs);
     cfg_put_float(buf, cap, &off, "WindowOpacity", WindowOpacity);
     cfg_put(buf, cap, &off, "    EditPopUpPos = ");
     cfg_put_escaped(buf, cap, &off, EditPopUpPos);
