@@ -880,6 +880,16 @@ int x = 0;
     { PROFILE_END_VAR(_pt, "win32_char_x"); return x - scroll; }
 }
 
+static bool win32_prompt_is_insert_mode(void) {
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "win32_prompt_is_insert_mode"); return g_current_mode == MODE_INSERT; }
+}
+
+static ColorRef win32_prompt_cursor_color(void) {
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "win32_prompt_cursor_color"); return g_current_mode == MODE_VISUAL ? COLOR_VISUAL_CURSOR : COLOR_CURSOR; }
+}
+
 void Platform_DrawPromptEditText(PromptState* state) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
@@ -888,7 +898,7 @@ PROFILE_START(timer);
     int text_len = (int)strlen(state->filter);
     int scroll = win32_update_edit_scroll_offset(g_draw_hdc, state->filter, text_len, (int)state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
-    if (!IsInsertMode() && state->cursor >= 0) {
+    if (!win32_prompt_is_insert_mode() && state->cursor >= 0) {
         FontHandle tfont = Platform_CreateFont(FontSize, UsedFont);
         HFONT told = NULL;
         TEXTMETRIC ttm;
@@ -901,7 +911,7 @@ PROFILE_START(timer);
         Platform_DestroyFont(tfont);
 
         int sel_start = 0, sel_end = 0;
-        unsigned long tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
+        unsigned long tint = LerpColor(COLOR_BG, win32_prompt_cursor_color(), 0.72f);
         bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
         if (has_sel) {
             if (sel_start < 0) sel_start = 0;
@@ -975,7 +985,7 @@ PROFILE_START(timer);
     int cursor_y = (line_h <= 0 || FontSize <= 0) ? fl_window_EDIT_INSET : fl_window_EDIT_INSET + (line_h - FontSize) / 2;
     if (oldFont) SelectObject(g_draw_hdc, oldFont);
     Platform_DestroyFont(font);
-    if (!IsInsertMode()) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
-    Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, PromptCaretHeight(), Modal_CursorColor(),0, false, true, 1, true);
+    if (!win32_prompt_is_insert_mode()) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
+    Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, PromptCaretHeight(), win32_prompt_cursor_color(),0, false, true, 1, true);
     PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor");
 }
