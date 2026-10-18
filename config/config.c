@@ -15,7 +15,7 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = false;
@@ -51,7 +51,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "onedark-pro";
+    Theme = "cyberpunk";
     BackgroundImage = "C:/miscellaneous/862186.png";
     COLOR_BG = RGB(13, 17, 23);
     COLOR_TEXT = RGB(201, 209, 217);

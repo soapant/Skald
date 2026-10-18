@@ -14,6 +14,8 @@
 #include "helpers/helpers_hotkey.h"
 #include "platform/win32/win32_state.h"
 #include "platform/win32/subclasses_win32.h"
+#include "platform/win32/bg_image_win32.h"
+#include "core/prompt_geometry.h"
 #include "platform/win32/input_core_win32.h"
 #include "helpers/helpers_ui.h"
 #include "platform/lib.h"
@@ -1834,6 +1836,10 @@ if (!name || !name[0] || !out_path || out_len == 0) { PROFILE_END_VAR(_pt, "Plat
 }
 
 void Platform_PrewarmBackgroundPixmap(void) {
+    PROFILE_START(_pt);
+win32_bg_image_purge();
+    win32_bg_image_prewarm(fl_window_W, fl_window_H);
+    { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); }
 }
 
 int Platform_InitializeTrayIcon() {
