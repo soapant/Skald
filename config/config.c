@@ -35,7 +35,6 @@ void ConfigApply(void) {
     VimFontSize = 18;
     PaddingForScrolling = 3;
     UsedTerminal = "";
-    EnableAutoPairing = true;
     UsedShell = "nu";
     UsedBrowser = "";
     UsedSearchEngine = "google";
@@ -67,6 +66,7 @@ void ConfigApply(void) {
     COLOR_VISUAL_MODE = RGB(188, 140, 255);
     COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
     COLOR_CURSOR = RGB(201, 209, 217);
+    COLOR_BORDER = RGB(128, 128, 128);
     Aliases = user_aliases;
     ALIAS_ENTRY_COUNT = 1;
 }

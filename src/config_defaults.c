@@ -66,6 +66,7 @@ ColorRef COLOR_INSERT_MODE = RGB(50, 255, 50);
 ColorRef COLOR_NORMAL_MODE = RGB(100, 255, 255);
 ColorRef COLOR_VISUAL_MODE = RGB(200, 3, 222);
 ColorRef COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
+ColorRef COLOR_BORDER = RGB(128, 128, 128);
 
 static const AliasEntry default_aliases[] = {
   {"brw","Brawlhalla","AppLauncher"},

@@ -329,6 +329,7 @@ static HBRUSH s_bg_brush = NULL;
           FillRect(memDC, &rc, s_bg_brush);
         }
       }
+      Platform_DrawPromptSeparator(0, winW);
       SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
       {
         int itemH = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);

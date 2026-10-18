@@ -341,8 +341,8 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    BackgroundImage = ");
     cfg_put_escaped(buf, cap, &off, BackgroundImage ? BackgroundImage : "");
     cfg_put(buf, cap, &off, ";\n");
-    ColorRef cols[] = {COLOR_BG, COLOR_TEXT, COLOR_ALTERNATE, COLOR_SELECTED_TEXT, COLOR_ALIAS_TEXT, COLOR_ERROR, COLOR_NORMAL, COLOR_TIP, COLOR_INSERT_MODE, COLOR_NORMAL_MODE, COLOR_VISUAL_MODE, COLOR_VISUAL_CURSOR, COLOR_CURSOR};
-    const char* names[] = {"COLOR_BG", "COLOR_TEXT", "COLOR_ALTERNATE", "COLOR_SELECTED_TEXT", "COLOR_ALIAS_TEXT", "COLOR_ERROR", "COLOR_NORMAL", "COLOR_TIP", "COLOR_INSERT_MODE", "COLOR_NORMAL_MODE", "COLOR_VISUAL_MODE", "COLOR_VISUAL_CURSOR", "COLOR_CURSOR"};
+    ColorRef cols[] = {COLOR_BG, COLOR_TEXT, COLOR_ALTERNATE, COLOR_SELECTED_TEXT, COLOR_ALIAS_TEXT, COLOR_ERROR, COLOR_NORMAL, COLOR_TIP, COLOR_INSERT_MODE, COLOR_NORMAL_MODE, COLOR_VISUAL_MODE, COLOR_VISUAL_CURSOR, COLOR_CURSOR, COLOR_BORDER};
+    const char* names[] = {"COLOR_BG", "COLOR_TEXT", "COLOR_ALTERNATE", "COLOR_SELECTED_TEXT", "COLOR_ALIAS_TEXT", "COLOR_ERROR", "COLOR_NORMAL", "COLOR_TIP", "COLOR_INSERT_MODE", "COLOR_NORMAL_MODE", "COLOR_VISUAL_MODE", "COLOR_VISUAL_CURSOR", "COLOR_CURSOR", "COLOR_BORDER"};
     for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
         cfg_put(buf, cap, &off, "    %s = RGB(%u, %u, %u);\n", names[i], cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);
     }
