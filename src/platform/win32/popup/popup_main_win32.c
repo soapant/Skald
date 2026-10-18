@@ -572,14 +572,14 @@ case WM_CHAR: {
               return TRUE;
             }
           if (RoundedCorners && CornerRadius > 0) {
-            int R = fl_window_SEL_RADIUS;
+            int R = PROMPT_SEL_RADIUS;
             if (R > CornerRadius) R = CornerRadius;
-            int t = fl_window_SEL_INSET;
+            int t = PROMPT_SEL_INSET;
             RECT inner = pdis->rcItem;
-            inner.left += fl_window_SEL_X + t;
-            inner.top += fl_window_SEL_TOP_INSET + t;
-            inner.right -= fl_window_SEL_X + t;
-            inner.bottom -= fl_window_SEL_TOP_INSET + t;
+            inner.left += PROMPT_SEL_X + t;
+            inner.top += PROMPT_SEL_TOP_INSET + t;
+            inner.right -= PROMPT_SEL_X + t;
+            inner.bottom -= PROMPT_SEL_TOP_INSET + t;
             if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = pdis->rcItem; t = 0; }
             int innerR = R - 1; if (innerR < 0) innerR = 0;
             {
@@ -722,7 +722,7 @@ case WM_CHAR: {
             
             SetBkMode(pdis->hDC, TRANSPARENT);
             RECT textRect = pdis->rcItem;
-            textRect.left += fl_window_ITEM_TEXT_X;
+            textRect.left += PROMPT_ITEM_TEXT_X;
           
             Platform_SetDrawContextWin32(pdis->hDC);
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
@@ -832,9 +832,9 @@ case WM_CHAR: {
           SIZE sz;
           GetTextExtentPoint32W(paintDC, wmode, (int)wcslen(wmode), &sz);
           RECT modeRect;
-          modeRect.right = rect.right - fl_window_FOOTER_PAD;
+          modeRect.right = rect.right - PROMPT_FOOTER_PAD;
           modeRect.left = modeRect.right - sz.cx;
-          modeRect.top = rect.bottom - fl_window_FOOTER_Y_FROM_BOTTOM;
+          modeRect.top = rect.bottom - PROMPT_FOOTER_Y_FROM_BOTTOM;
           modeRect.bottom = modeRect.top + sz.cy;
           DrawTextW(paintDC, wmode, -1, &modeRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
           SelectObject(paintDC, hOldFont);
@@ -847,9 +847,9 @@ case WM_CHAR: {
           SIZE sz;
           GetTextExtentPoint32W(paintDC, wtitle, (int)wcslen(wtitle), &sz);
           RECT titleRect;
-          titleRect.left = fl_window_FOOTER_X;
-          titleRect.top = rect.bottom - fl_window_FOOTER_Y_FROM_BOTTOM;
-          titleRect.right = titleRect.left + sz.cx + fl_window_FOOTER_PAD;
+          titleRect.left = PROMPT_FOOTER_X;
+          titleRect.top = rect.bottom - PROMPT_FOOTER_Y_FROM_BOTTOM;
+          titleRect.right = titleRect.left + sz.cx + PROMPT_FOOTER_PAD;
           titleRect.bottom = titleRect.top + sz.cy;
           COLORREF titleColor;
           if ((lb ? lb->populated_count : 0) < 25) {
