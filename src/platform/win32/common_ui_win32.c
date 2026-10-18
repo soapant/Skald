@@ -478,10 +478,10 @@ POINT pt = { 0, 0 };
 
   float ui_scale = Platform_GetUIScale();
 
-  layout->w = (int)(fl_window_W * ui_scale);
+  layout->w = (int)(PROMPT_W * ui_scale);
   layout->item_height = item_height;
 
-  layout->h = (int)(fl_window_H * ui_scale);
+  layout->h = (int)(PROMPT_H * ui_scale);
 
   if (layout->h < height) layout->h = height;
   if (layout->h > width) layout->h = width;
