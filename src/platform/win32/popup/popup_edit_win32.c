@@ -18,6 +18,7 @@
 #include "platform/wm_platform.h"
 
 #include "core/timer.h"
+static bool s_edit_swallow_next_char = false;
 static void EditPopup_Close(bool confirmed) {
         PROFILE_START(_pt);
 WindowManager* wm = WindowManager_Get();
@@ -83,6 +84,7 @@ ListBoxInfo* lb = NULL;
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN: {
       if (!data) break;
+      s_edit_swallow_next_char = false;
       PopupKeyEvent key;
       memset(&key, 0, sizeof(key));
       key.vk = (int)wParam;
@@ -94,6 +96,7 @@ ListBoxInfo* lb = NULL;
         win32_fill_popup_key_text(&key);
       }
       if (EditPopupWindow_OnKey(hwnd, data, &key)) {
+        s_edit_swallow_next_char = true;
         InvalidateRect(hwnd, NULL, FALSE);
         return 0;
       }
@@ -102,6 +105,7 @@ ListBoxInfo* lb = NULL;
     }
 
     case WM_CHAR: {
+      if (s_edit_swallow_next_char) { s_edit_swallow_next_char = false; return 0; }
       if (!data) break;
       if (wParam == 0x0D || wParam == 0x1B) return 0;
       if (wParam < 0x20 && wParam != 0x08 && wParam != 0x09) return 0;
@@ -122,6 +126,13 @@ ListBoxInfo* lb = NULL;
         }
       }
       break;
+    }
+
+    case WM_KILLFOCUS: {
+      if (CloseOnLossOfFocus) {
+            FlintContext_Get()->window.selection_complete = true;
+        }
+        break;
     }
 
     case WM_ERASEBKGND: {

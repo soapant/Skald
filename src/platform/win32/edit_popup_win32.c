@@ -22,6 +22,9 @@ void win32_fill_popup_key_text(PopupKeyEvent* key) {
 if (!key) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
     BYTE state[256];
     memset(state, 0, sizeof(state));
+    if (GetKeyState(VK_SHIFT) & 0x8000) { state[VK_SHIFT] = 0x80; state[VK_LSHIFT] = 0x80; state[VK_RSHIFT] = 0x80; }
+    if (GetKeyState(VK_CONTROL) & 0x8000) { state[VK_CONTROL] = 0x80; state[VK_LCONTROL] = 0x80; state[VK_RCONTROL] = 0x80; }
+    if (GetKeyState(VK_MENU) & 0x8000) { state[VK_MENU] = 0x80; state[VK_LMENU] = 0x80; state[VK_RMENU] = 0x80; }
     UINT sc = MapVirtualKeyA((UINT)key->vk, MAPVK_VK_TO_VSC);
     wchar_t wbuf[8];
     int wlen = ToUnicodeEx((UINT)key->vk, sc, state, wbuf, 8, 0, GetKeyboardLayout(0));
@@ -89,8 +92,13 @@ void Platform_EditPopupShowWindow(Popup* self) {
 PROFILE_START(timer);
     HWND hwnd = WH_TO_HWND(self->handle);
     if (hwnd && IsWindow(hwnd)) {
+        ShowWindow(hwnd, SW_SHOWNA);
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+            SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_ASYNCWINDOWPOS);
         SetForegroundWindow(hwnd);
         SetFocus(hwnd);
+        InvalidateRect(hwnd, NULL, FALSE);
+        UpdateWindow(hwnd);
     }
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupShowWindow");
 }
@@ -124,9 +132,6 @@ PROFILE_START(timer);
     RECT rect;
     GetClientRect(hwnd, &rect);
 
-    if (EnableShaders && ShaderPreset != 0) win32_draw_background(hdc, &rect);
-    else { HBRUSH br = CreateSolidBrush(COLOR_BG); FillRect(hdc, &rect, br); DeleteObject(br); }
-
     HDC memDC = CreateCompatibleDC(hdc);
     HBITMAP memBmp = memDC ? CreateCompatibleBitmap(hdc, rect.right, rect.bottom) : NULL;
     HBITMAP oldBmp = NULL;
@@ -140,6 +145,9 @@ PROFILE_START(timer);
         memDC = NULL;
         memBmp = NULL;
     }
+
+    if (EnableShaders && ShaderPreset != 0) win32_draw_background(paint, &rect);
+    else { HBRUSH br = CreateSolidBrush(COLOR_BG); FillRect(paint, &rect, br); DeleteObject(br); }
 
     int w = rect.right - rect.left;
     int h = rect.bottom - rect.top;
@@ -192,7 +200,7 @@ PROFILE_START(timer);
                 if (selw > 0) Platform_DrawRectRaw(sx0, tint_y, selw, PromptCaretHeight(), tint,0, false, true, 1, true);
             }
         } else {
-            int tint_x = cursor_draw_x;
+            int tint_x = cursor_draw_x + fl_window_EDITPOPUP_CARET_X_NUDGE;
             if (tint_x < fl_window_CARET_LO_CLAMP) tint_x = fl_window_CARET_LO_CLAMP;
             if (tint_x > w - fl_window_CARET_HI_CLAMP) tint_x = w - fl_window_CARET_HI_CLAMP;
             Platform_DrawRectRaw(tint_x, tint_y, fl_window_EDITPOPUP_CARET_W_NORMAL, PromptCaretHeight(), tint,0, false, true, 1, true);

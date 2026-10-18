@@ -40,7 +40,7 @@ ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx);
 void UI_SyncEditCursor(FlintContext* ctx, int pos);
 bool UI_ApplyBackspaceToPopup(FlintContext* ctx);
 
-#define UI_DEBOUNCE_MS 0
+#define UI_DEBOUNCE_MS 40
 #define UI_DEBOUNCE_TIMER_ID 998
 #define UI_TICK_TIMER_ID 997
 #define UI_TICK_TIMER_MS 1000
