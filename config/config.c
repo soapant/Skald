@@ -40,6 +40,7 @@ void ConfigApply(void) {
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
+    EnableAutoPairing = true;
     ControlHotkey = "Alt+Space";
     FullTextNeedsKeyPress = true;
     MessagesEnabled = true;
