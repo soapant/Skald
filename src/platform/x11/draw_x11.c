@@ -496,6 +496,11 @@ XftFont *xf = FH_TO_XFT(font);
             Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
         }
         Platform_DestroyFont(font);
+    } else if (state->placeholder && state->placeholder[0]) {
+        FontHandle font = Platform_CreateFont(FontSize, UsedFont);
+        unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
+        Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->placeholder, ph, font, "", 0, 0);
+        Platform_DestroyFont(font);
     }
 }
 static int x11_char_x(Display *dpy, XftFont *xf, PromptState *state, int index, int *out_scroll) {
