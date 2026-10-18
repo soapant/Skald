@@ -44,6 +44,7 @@ const char* BackgroundImage = "";
 bool FullTextNeedsKeyPress = true;
 bool MessagesEnabled = true;
 bool EnableAutoPairing = false;
+bool EnableBorders = true;
 bool RainbowText = false;
 bool AlternatingText = false;
 bool VimModeText = false;
