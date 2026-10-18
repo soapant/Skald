@@ -474,6 +474,7 @@ if (!out || !g_fl_list_lb) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); r
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); return false; }
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
+    if (g_fl_list_cur == 0) Platform_DrawPromptSeparator(g_fl_list_y0, g_fl_list_fw);
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
         int R=fl_window_SEL_RADIUS; int t=fl_window_SEL_INSET;
