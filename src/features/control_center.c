@@ -1065,9 +1065,9 @@ static void cc_render(PromptState *state) {
             if (e->type[0]) {
                 int name_w = fl_get_text_width(ctx.text, FontSize);
                 fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
-                             .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA + 4,
+                             .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
                              .text = e->type, .align = "LEFT", .pad = 0,
-                             .fontsize = type_sz - 6, .color = meta_col);
+                             .fontsize = type_sz, .color = meta_col);
             }
             fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                          .text = CC_TYPE_LABEL, .align = "RIGHT",

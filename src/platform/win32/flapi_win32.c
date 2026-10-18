@@ -472,9 +472,6 @@ static bool g_edit_placed_win = false;
 void fl_editbox_reset_placed(void) {     PROFILE_START(_pt);
 g_edit_placed_win = false; }
 
-bool fl_editbox_was_placed(void) {     PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "fl_editbox_was_placed"); return g_edit_placed_win; } }
-
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
         PROFILE_START(_pt);
 if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
@@ -586,7 +583,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
             Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), spec->font, "", 0, 0);
         }
         if (text_len == 0 && state && state->placeholder && state->placeholder[0]) {
-            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET,
+            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET + 2,
                                  state->placeholder, LerpColor(COLOR_BG, COLOR_TEXT, 0.45f),
                                  spec->font, "", 0, 0);
         }
