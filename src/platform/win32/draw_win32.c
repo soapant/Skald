@@ -962,6 +962,11 @@ PROFILE_START(timer);
             Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
         }
         Platform_DestroyFont(font);
+    } else if (state->placeholder && state->placeholder[0]) {
+        FontHandle font = Platform_CreateFont(FontSize, UsedFont);
+        unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
+        Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->placeholder, ph, font, "", 0, 0);
+        Platform_DestroyFont(font);
     }
     PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditText");
 }

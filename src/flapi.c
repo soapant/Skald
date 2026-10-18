@@ -958,6 +958,30 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
     return ok;
 }
 
+void fl_add_placeholder_to_search(const char *text) {
+    PROFILE_START(_pt);
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) {
+        log_warn("fl_add_placeholder_to_search: no WindowManager");
+        PROFILE_END_VAR(_pt, "api:fl_add_placeholder_to_search"); return;
+    }
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || !top->user_data || top->type != POPUP_fl_window) {
+        log_warn("fl_add_placeholder_to_search: no prompt on top");
+        PROFILE_END_VAR(_pt, "api:fl_add_placeholder_to_search"); return;
+    }
+    PromptState* state = (PromptState*)top->user_data;
+    char* dup = (text && text[0]) ? strdup(text) : NULL;
+    if (text && text[0] && !dup) {
+        log_error("fl_add_placeholder_to_search: out of memory");
+        PROFILE_END_VAR(_pt, "api:fl_add_placeholder_to_search"); return;
+    }
+    free(state->placeholder);
+    state->placeholder = dup;
+    log_info("search placeholder = %s", dup ? dup : "(cleared)");
+    PROFILE_END_VAR(_pt, "api:fl_add_placeholder_to_search");
+}
+
 bool fl_focus_window_by_title(char* title) {
   PROFILE_START(_pt);
   if (!title) {     PROFILE_START(_pt);
