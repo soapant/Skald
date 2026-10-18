@@ -456,8 +456,8 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, 
 unsigned long window_title_text_color_map;
     eval_window_title_color(state,&window_title_text_color_map);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    if (WindowTitleText) Platform_DrawTextRaw(fl_window_FOOTER_X, state->height - fl_window_FOOTER_Y_FROM_BOTTOM, state->window_title, window_title_text_color_map, font, "LEFT", fl_window_FOOTER_PAD, FontSize);
-    if (VimModeText) Platform_DrawTextRaw(fl_window_FOOTER_X, state->height - fl_window_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), font, "RIGHT", fl_window_FOOTER_PAD, FontSize);
+    if (WindowTitleText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, state->window_title, window_title_text_color_map, font, "LEFT", PROMPT_FOOTER_PAD, FontSize);
+    if (VimModeText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), font, "RIGHT", PROMPT_FOOTER_PAD, FontSize);
 }
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
         PROFILE_START(_pt);
@@ -466,7 +466,7 @@ XftFont *xf = FH_TO_XFT(font);
     int text_len = strlen(state->filter);
     int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
-    int draw_x = fl_window_EDIT_INSET - scroll;
+    int draw_x = PROMPT_EDIT_INSET - scroll;
     Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);
     if (text_len > 0) {
         FontHandle font = Platform_CreateFont(FontSize, UsedFont);
@@ -487,19 +487,19 @@ XftFont *xf = FH_TO_XFT(font);
                 char buf[8];
                 memcpy(buf, state->filter + pos, cl);
                 buf[cl] = '\0';
-                int x = (fl_window_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
+                int x = (PROMPT_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
                 unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
-                Platform_DrawTextRaw(x, fl_window_EDIT_INSET, buf, col, font, "", 0, 0);
+                Platform_DrawTextRaw(x, PROMPT_EDIT_INSET, buf, col, font, "", 0, 0);
                 pos += cl; ci++;
             }
         } else {
-            Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
+            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
         }
         Platform_DestroyFont(font);
     } else if (state->placeholder && state->placeholder[0]) {
         FontHandle font = Platform_CreateFont(FontSize, UsedFont);
         unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
-        Platform_DrawTextRaw(fl_window_EDIT_INSET - scroll, fl_window_EDIT_INSET, state->placeholder, ph, font, "", 0, 0);
+        Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->placeholder, ph, font, "", 0, 0);
         Platform_DestroyFont(font);
     }
 }
@@ -509,7 +509,7 @@ int text_len = (int)strlen(state->filter);
     int cursor_x = 0;
     int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, index, state->width, state->scroll_offset, &cursor_x);
     if (out_scroll) *out_scroll = scroll;
-    { PROFILE_END_VAR(_pt, "x11_char_x"); return fl_window_EDIT_INSET + cursor_x - scroll; }
+    { PROFILE_END_VAR(_pt, "x11_char_x"); return PROMPT_EDIT_INSET + cursor_x - scroll; }
 }
 
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
@@ -522,7 +522,7 @@ if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
     bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
 
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    int tint_y = x11_font_cursor_y_of(font, fl_window_EDIT_INSET);
+    int tint_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
     unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
 
     if (has_sel) {
@@ -532,8 +532,8 @@ if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
         int x0 = x11_char_x(dpy, xf, state, sel_start, NULL);
         int x1 = x11_char_x(dpy, xf, state, sel_end, NULL);
         int caret_x = x11_char_x(dpy, xf, state, state->cursor, NULL);
-        if (x0 < fl_window_CARET_LO_CLAMP) x0 = fl_window_CARET_LO_CLAMP;
-        if (x1 > state->width - fl_window_CARET_HI_CLAMP) x1 = state->width - fl_window_CARET_HI_CLAMP;
+        if (x0 < PROMPT_CARET_LO_CLAMP) x0 = PROMPT_CARET_LO_CLAMP;
+        if (x1 > state->width - PROMPT_CARET_HI_CLAMP) x1 = state->width - PROMPT_CARET_HI_CLAMP;
         if (caret_x < x0) caret_x = x0;
         if (caret_x > x1) caret_x = x1;
         int w = x1 - x0 + PromptNormalCaretWidth();
@@ -543,8 +543,8 @@ if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
     }
 
     int tint_x = x11_char_x(dpy, xf, state, state->cursor, NULL);
-    if (tint_x < fl_window_CARET_LO_CLAMP) tint_x = fl_window_CARET_LO_CLAMP;
-    if (tint_x > state->width - fl_window_CARET_HI_CLAMP) tint_x = state->width - fl_window_CARET_HI_CLAMP;
+    if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
+    if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
     Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(),PromptCaretHeight(),tint,0,false,true,1,true);
 }
 
@@ -554,12 +554,12 @@ XftFont *xf = FH_TO_XFT(font);
     int cursor_x = 0;
     x11_update_edit_scroll_offset(dpy, xf, state->filter, strlen(state->filter), state->cursor, state->width, state->scroll_offset, &cursor_x);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    int cursor_draw_x = fl_window_EDIT_INSET + cursor_x - state->scroll_offset;
-    if (cursor_draw_x < fl_window_CARET_LO_CLAMP) cursor_draw_x = fl_window_CARET_LO_CLAMP;
-    if (cursor_draw_x > state->width - fl_window_CARET_HI_CLAMP) cursor_draw_x = state->width - fl_window_CARET_HI_CLAMP;
-    int cursor_y = x11_font_cursor_y_of(font, fl_window_EDIT_INSET);
+    int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - state->scroll_offset;
+    if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
+    if (cursor_draw_x > state->width - PROMPT_CARET_HI_CLAMP) cursor_draw_x = state->width - PROMPT_CARET_HI_CLAMP;
+    int cursor_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
     if (!IsInsertMode()) { PROFILE_END_VAR(_pt, "Platform_DrawEditCursor"); return ; }
-    Platform_DrawRectRaw(cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, PromptCaretHeight(),rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
+    Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, PromptCaretHeight(),rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
 }
 
 static GC raw_gc_for(Display* dpy, Drawable d);
@@ -742,7 +742,7 @@ if (!raw_can_draw() || radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleR
 void Platform_DrawPromptSeparator(int y, int width) {
         PROFILE_START(_pt);
     if (!EnableBorders || width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
-    Platform_DrawRectRaw(0, y, width, fl_window_SEP_W,
+    Platform_DrawRectRaw(0, y, width, PROMPT_SEP_W,
                          rgb_to_hex(COLOR_BORDER), 0, false, true, 1, true);
     { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); }
 }
@@ -786,7 +786,7 @@ PROFILE_START(timer);
     int itemH = x11_font_row_height_of(font);
     int y0 = x11_font_list_top_of(font);
     Platform_DrawPromptSeparator(y0, state->width);
-    int yOffset = fl_window_LIST_BOTTOM_TITLE;
+    int yOffset = PROMPT_LIST_BOTTOM_TITLE;
     if (!WindowTitleText && !VimModeText) yOffset = 0;
     int visible = (state->height - y0 - yOffset) / itemH;
     if (visible < 1) visible = 1;
@@ -809,17 +809,17 @@ PROFILE_START(timer);
         int y = y0 + i * itemH;
         bool sel = (idx == lb->selected_index);
         if (RoundedCorners && CornerRadius>0) {
-            int R=fl_window_SEL_RADIUS; int t=fl_window_SEL_INSET;
-            int bx=fl_window_SEL_X, bw=state->width-fl_window_SEL_W_SHRINK;
+            int R=PROMPT_SEL_RADIUS; int t=PROMPT_SEL_INSET;
+            int bx=PROMPT_SEL_X, bw=state->width-PROMPT_SEL_W_SHRINK;
             if (sel) {
-                x11_fill_rounded_rect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+fl_window_SEL_TOP_INSET+t, bw-2*t, itemH-2-2*t, R-1, state->width, state->height);
+                x11_fill_rounded_rect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+PROMPT_SEL_TOP_INSET+t, bw-2*t, itemH-2-2*t, R-1, state->width, state->height);
             }
         } else {
             Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
         }
         //temporary
         const char *icon_path = NULL;
-        Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y, fl_window_ITEM_TEXT_X, icon_path);
+        Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y, PROMPT_ITEM_TEXT_X, icon_path);
     }
 
     Platform_DestroyFont(font);

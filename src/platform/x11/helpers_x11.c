@@ -349,10 +349,10 @@ PROFILE_START(timer);
     if (centered_to != NULL) {
         if (Platform_StringContainsCaseInsensitive(centered_to, "CENTER")) {
             alignment = 1;
-            maxWidth = boxWidth > 0 ? boxWidth : fl_window_WRAP_BOX_CENTER;
+            maxWidth = boxWidth > 0 ? boxWidth : PROMPT_WRAP_BOX_CENTER;
         } else if (Platform_StringContainsCaseInsensitive(centered_to, "RIGHT")) {
             alignment = 2;
-            maxWidth = boxWidth > 0 ? boxWidth : fl_window_WRAP_BOX_RIGHT;
+            maxWidth = boxWidth > 0 ? boxWidth : PROMPT_WRAP_BOX_RIGHT;
         } else {
             alignment = 0;
             maxWidth = FontSize * text_len;
@@ -419,7 +419,7 @@ PROFILE_START(timer);
 int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    int visible_w = width - fl_window_EDIT_SCROLL_PAD;
+    int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
     if (xf) {
@@ -448,12 +448,12 @@ PROFILE_START(timer);
 
 int x11_font_row_height(int font_size) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "x11_font_row_height"); return font_size + fl_window_ROW_H_BONUS; }
+{ PROFILE_END_VAR(_pt, "x11_font_row_height"); return font_size + PROMPT_ROW_H_BONUS; }
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "x11_font_list_top"); return font_size + fl_window_LIST_TOP_BONUS; }
+{ PROFILE_END_VAR(_pt, "x11_font_list_top"); return font_size + PROMPT_LIST_TOP_BONUS; }
 }
 
 int x11_font_row_height_of(FontHandle font) {
@@ -484,13 +484,13 @@ int x11_font_cursor_y_of(FontHandle font, int box_top) {
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    int cursor_draw_x = fl_window_EDIT_INSET + cursor_x - scroll;
-    if (cursor_draw_x > width - fl_window_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - fl_window_X11_DEADCURSOR_CLAMP;
-    int cursor_y = fl_window_X11_DEADCURSOR_Y;
+    int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - scroll;
+    if (cursor_draw_x > width - PROMPT_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - PROMPT_X11_DEADCURSOR_CLAMP;
+    int cursor_y = PROMPT_X11_DEADCURSOR_Y;
     if (IsInsertMode()) {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, fl_window_CARET_W_INSERT, PromptCaretHeight());
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, PromptCaretHeight());
     } else {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, fl_window_EDITPOPUP_CARET_W_NORMAL, PromptCaretHeight());
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, PromptCaretHeight());
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_draw_edit_cursor");
 }
@@ -845,7 +845,7 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
 PROFILE_START(timer);
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText"); return; }
-    int XOffset = fl_window_ITEM_TEXT_X;
+    int XOffset = PROMPT_ITEM_TEXT_X;
     int row_h = x11_font_row_height_of(font);
     int pad_top = (row_h - (xf->ascent + xf->descent)) / 2;
     if (pad_top < 0) pad_top = 0;
@@ -1629,7 +1629,7 @@ if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_draw_selection_background"); r
 void x11_draw_window_border(Display* dpy, Drawable drw, int w, int h, bool no_bg) {
         PROFILE_START(_pt);
     if (!dpy || !drw || no_bg || !EnableBorders) { PROFILE_END_VAR(_pt, "helpers_x11:x11_draw_window_border"); return; }
-    int t = fl_window_BORDER_W;
+    int t = PROMPT_BORDER_W;
     if (w <= 2 * t || h <= 2 * t) { PROFILE_END_VAR(_pt, "helpers_x11:x11_draw_window_border"); return; }
     int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
     if (r > w / 2) r = w / 2;
@@ -1644,7 +1644,7 @@ void x11_draw_window_border(Display* dpy, Drawable drw, int w, int h, bool no_bg
     XFillRectangle(dpy, drw, gc, r, h - t, w - 2 * r, t);
     XFillRectangle(dpy, drw, gc, 0, r, t, h - 2 * r);
     XFillRectangle(dpy, drw, gc, w - t, r, t, h - 2 * r);
-    float ri = (float)r - fl_window_BORDER_INNER_OFF;
+    float ri = (float)r - PROMPT_BORDER_INNER_OFF;
     if (r > t) {
         for (int y = 0; y < h; y++) {
             if (y >= r && y < h - r) continue;
@@ -1700,10 +1700,10 @@ void Platform_PrewarmBackgroundPixmap(void) {
     PROFILE_START(_pt);
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
-    x11_bg_image_prewarm(dpy, fl_window_W, fl_window_H);
-    Window win = x11_create_prompt_window(dpy, -32000, -32000, fl_window_W, fl_window_H);
+    x11_bg_image_prewarm(dpy, PROMPT_W, PROMPT_H);
+    Window win = x11_create_prompt_window(dpy, -32000, -32000, PROMPT_W, PROMPT_H);
     if (win == None) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
-    x11_get_cached_background(dpy, win, fl_window_W, fl_window_H);
+    x11_get_cached_background(dpy, win, PROMPT_W, PROMPT_H);
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
     PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap");
