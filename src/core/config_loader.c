@@ -105,13 +105,7 @@ static bool config_load_copy(const char* uniq, LibHandle* out) {
         return false;
     }
     apply();
-    {
-        ColorRef cfg_cursor = COLOR_CURSOR;
-        ColorRef cfg_visual_cursor = COLOR_VISUAL_CURSOR;
-        Theme_Apply();
-        if (Theme_ColorPinned("COLOR_CURSOR")) COLOR_CURSOR = cfg_cursor;
-        if (Theme_ColorPinned("COLOR_VISUAL_CURSOR")) COLOR_VISUAL_CURSOR = cfg_visual_cursor;
-    }
+    Theme_Apply();
     heapify_config();
     *out = h;
     return true;
