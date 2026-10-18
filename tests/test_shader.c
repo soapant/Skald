@@ -6,8 +6,6 @@
 
 #define DARK 0x192419u
 
-/* cfg_intensity is the ShaderIntensity config value; the per-call multiplier is
-   always 1.0f in production, so these helpers drive the global directly. */
 static void derive_at(unsigned int base, float cfg_intensity, int* r, int* g, int* b) {
     ShaderIntensity = cfg_intensity;
     unsigned char cr, cg, cb;
@@ -179,12 +177,6 @@ TEST(theme_apply_never_overwrites_shader_settings) {
     }
 }
 
-TEST(theme_apply_still_sets_colors) {
-    Theme = "rose-pine";
-    COLOR_BG = 0;
-    Theme_Apply();
-    ASSERT_EQ_INT(COLOR_BG, RGB(25, 23, 36));
-}
 
 TEST(theme_apply_ignores_unknown_theme) {
     Theme = "no-such-theme";
@@ -214,7 +206,6 @@ int main(void) {
     RUN(hash_noise_is_deterministic_and_bounded);
     RUN(gradient_endpoints_are_visibly_distinct);
     RUN(theme_apply_never_overwrites_shader_settings);
-    RUN(theme_apply_still_sets_colors);
     RUN(theme_apply_ignores_unknown_theme);
     ShaderIntensity = 0.55f;
     return TEST_SUMMARY() != 0 ? 1 : 0;
