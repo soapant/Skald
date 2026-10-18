@@ -1,0 +1,342 @@
+#include "platform/x11/bg_image_x11.h"
+#include "platform/x11/display_x11.h"
+#include "core/timer.h"
+#include "config.h"
+#include "deps/log.h"
+#include "deps/nanosvg.h"
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/extensions/Xrender.h>
+#include <png.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include <sys/stat.h>
+#include <pwd.h>
+#include <unistd.h>
+#include <time.h>
+
+#define BG_TILE_SLOTS      4
+#define BG_REVALIDATE_MS   1000
+#define BG_RETRY_MS        2000
+
+typedef struct {
+    Pixmap       pm;
+    Picture      pic;
+    int          w;
+    int          h;
+    char         path[512];
+    struct stat  st;
+    bool         has_stat;
+    unsigned long stamp;
+    unsigned long checked_ms;
+    bool         failed;
+} BgTileSlot;
+
+static BgTileSlot     g_bg_tiles[BG_TILE_SLOTS];
+static unsigned long  g_bg_tick = 0;
+static pthread_mutex_t g_bg_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+static unsigned long bg_now_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (unsigned long)(ts.tv_sec * 1000UL + ts.tv_nsec / 1000000UL);
+}
+
+static bool bg_has_ext(const char* path, const char* ext) {
+    size_t pl = strlen(path), el = strlen(ext);
+    if (pl < el) return false;
+    for (size_t i = 0; i < el; i++) {
+        char a = path[pl - el + i];
+        if (a >= 'A' && a <= 'Z') a = (char)(a - 'A' + 'a');
+        if (a != ext[i]) return false;
+    }
+    return true;
+}
+
+/* A config string is not shell-expanded, so honour a leading ~ ourselves. */
+static const char* bg_resolve(const char* in, char* out, size_t cap) {
+    if (!in || !in[0] || !out || cap == 0) return NULL;
+    if (in[0] != '~') return in;
+    if (in[1] != 0 && in[1] != '/' && in[1] != '\\') return in;
+    const char* home = getenv("HOME");
+    if (!home || !home[0]) home = getenv("USERPROFILE");
+    if (!home || !home[0]) {
+        struct passwd* pw = getpwuid(getuid());
+        if (pw && pw->pw_dir && pw->pw_dir[0]) home = pw->pw_dir;
+    }
+    if (!home || !home[0]) return NULL;
+    snprintf(out, cap, "%s%s", home, in[1] ? in + 1 : "");
+    return out;
+}
+
+/* Intrinsic size of the source, so the cover fit can preserve aspect ratio
+   instead of stretching the way a plain dst-sized decode would. */
+static bool bg_src_dims(const char* path, int* out_w, int* out_h) {
+    if (bg_has_ext(path, ".svg")) {
+        NSVGimage* img = nsvgParseFromFile(path, "px", 96.0f);
+        if (!img) return false;
+        if (img->width <= 0.0f || img->height <= 0.0f) { nsvgDelete(img); return false; }
+        if (out_w) *out_w = (int)(img->width + 0.5f);
+        if (out_h) *out_h = (int)(img->height + 0.5f);
+        nsvgDelete(img);
+        return true;
+    }
+
+    FILE* fp = fopen(path, "rb");
+    if (!fp) return false;
+    unsigned char sig[8];
+    if (fread(sig, 1, 8, fp) != 8 || png_sig_cmp(sig, 0, 8) != 0) { fclose(fp); return false; }
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png) { fclose(fp); return false; }
+    png_infop info = png_create_info_struct(png);
+    if (!info) { png_destroy_read_struct(&png, NULL, NULL); fclose(fp); return false; }
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_read_struct(&png, &info, NULL);
+        fclose(fp);
+        return false;
+    }
+    png_init_io(png, fp);
+    png_set_sig_bytes(png, 8);
+    png_read_info(png, info);
+    png_uint_32 pw = png_get_image_width(png, info);
+    png_uint_32 ph = png_get_image_height(png, info);
+    png_destroy_read_struct(&png, &info, NULL);
+    fclose(fp);
+    if (pw == 0 || ph == 0) return false;
+    if (out_w) *out_w = (int)pw;
+    if (out_h) *out_h = (int)ph;
+    return true;
+}
+
+static void bg_slot_release(Display* dpy, BgTileSlot* t) {
+    if (!t) return;
+    if (t->pic) { XRenderFreePicture(dpy, t->pic); t->pic = 0; }
+    if (t->pm)   { XFreePixmap(dpy, t->pm);    t->pm = 0; }
+    t->w = 0;
+    t->h = 0;
+    t->has_stat = false;
+    t->failed = false;
+    t->path[0] = 0;
+}
+
+bool x11_bg_image_enabled(void) {
+    const char* p = BackgroundImage;
+    return p && p[0];
+}
+
+void x11_bg_image_purge(void) {
+    Display* dpy = get_display();
+    pthread_mutex_lock(&g_bg_mtx);
+    if (dpy) for (int i = 0; i < BG_TILE_SLOTS; i++) bg_slot_release(dpy, &g_bg_tiles[i]);
+    pthread_mutex_unlock(&g_bg_mtx);
+}
+
+/* Scale-to-cover then centre-crop, matching the Win32 tile geometry. */
+static bool bg_tile_compose(Display* dpy, const char* path, int w, int h,
+                            Pixmap* out_pm, Picture* out_pic) {
+    if (!dpy || !path || !path[0] || w <= 0 || h <= 0) return false;
+
+    struct stat pst;
+    if (stat(path, &pst) != 0) {
+        fprintf(stderr, "[bg_image] file not found: %s\n", path);
+        return false;
+    }
+
+    int sw = 0, sh = 0;
+    if (!bg_src_dims(path, &sw, &sh)) {
+        fprintf(stderr, "[bg_image] undecodable (need PNG or SVG): %s\n", path);
+        return false;
+    }
+    if (sw <= 0 || sh <= 0) return false;
+
+    double scale  = (double)w / (double)sw;
+    double scaleY = (double)h / (double)sh;
+    if (scaleY > scale) scale = scaleY;
+    if (scale <= 0.0) return false;
+
+    int dw = (int)((double)sw * scale + 0.5);
+    int dh = (int)((double)sh * scale + 0.5);
+    if (dw < 1) dw = 1;
+    if (dh < 1) dh = 1;
+
+    int cw = dw, ch = dh;
+    unsigned char* full = x11_decode_image_argb(path, &cw, &ch);
+    if (!full) {
+        fprintf(stderr, "[bg_image] decode failed: %s\n", path);
+        return false;
+    }
+
+    int ox = (w - dw) / 2;
+    int oy = (h - dh) / 2;
+    unsigned char* crop = (unsigned char*)malloc((size_t)w * (size_t)h * 4);
+    if (!crop) { free(full); return false; }
+    for (int dy = 0; dy < h; dy++) {
+        int sy = dy - oy;
+        if (sy < 0) sy = 0;
+        if (sy >= ch) sy = ch - 1;
+        memcpy(crop + (size_t)dy * (size_t)w * 4,
+               full + (size_t)sy * (size_t)cw * 4,
+               (size_t)w * 4);
+    }
+    free(full);
+
+    Pixmap pm = XCreatePixmap(dpy, DefaultRootWindow(dpy), w, h, 32);
+    if (!pm) { free(crop); return false; }
+
+    XRenderPictFormat* fmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
+    if (!fmt) { XFreePixmap(dpy, pm); free(crop); return false; }
+
+    XImage img;
+    memset(&img, 0, sizeof(img));
+    img.width = w;
+    img.height = h;
+    img.xoffset = 0;
+    img.format = ZPixmap;
+    img.data = (char*)crop;
+    img.byte_order = ImageByteOrder(dpy);
+    img.bitmap_unit = BitmapUnit(dpy);
+    img.bitmap_bit_order = BitmapBitOrder(dpy);
+    img.bitmap_pad = 32;
+    img.depth = 32;
+    img.bytes_per_line = w * 4;
+    img.bits_per_pixel = 32;
+    img.red_mask = 0xff0000;
+    img.green_mask = 0x00ff00;
+    img.blue_mask = 0x0000ff;
+    img.obdata = NULL;
+    bool ok = false;
+    if (XInitImage(&img)) {
+        GC gc = XCreateGC(dpy, pm, 0, NULL);
+        XPutImage(dpy, pm, gc, &img, 0, 0, 0, 0, w, h);
+        XFreeGC(dpy, gc);
+        Picture pic = XRenderCreatePicture(dpy, pm, fmt, 0, NULL);
+        if (pic) {
+            *out_pm = pm;
+            *out_pic = pic;
+            ok = true;
+        }
+    }
+    if (!ok) { XFreePixmap(dpy, pm); }
+    free(crop);
+    return ok;
+}
+
+static bool bg_slot_valid(Display* dpy, BgTileSlot* t, const char* path, int w, int h) {
+    if (!t->pm || !t->pic) return false;
+    if (t->w != w || t->h != h) return false;
+    if (strcmp(t->path, path) != 0) return false;
+    struct stat st;
+    if (stat(path, &st) != 0) return true;
+    if (!t->has_stat) return true;
+    return t->st.st_mtime == st.st_mtime && t->st.st_size == st.st_size;
+}
+
+Pixmap x11_bg_image_tile(Display* dpy, int w, int h) {
+    if (!x11_bg_image_enabled() || !dpy || w <= 0 || h <= 0) return 0;
+    char rbuf[512];
+    const char* path = bg_resolve(BackgroundImage, rbuf, sizeof(rbuf));
+    if (!path) return 0;
+    unsigned long now = bg_now_ms();
+
+    pthread_mutex_lock(&g_bg_mtx);
+
+    BgTileSlot* fresh = NULL;
+    for (int i = 0; i < BG_TILE_SLOTS; i++) {
+        BgTileSlot* t = &g_bg_tiles[i];
+        if (t->failed && strcmp(t->path, path) == 0 && t->w == w && t->h == h &&
+            now - t->checked_ms < BG_RETRY_MS) {
+            pthread_mutex_unlock(&g_bg_mtx);
+            return 0;
+        }
+        if (bg_slot_valid(dpy, t, path, w, h)) {
+            if (now - t->checked_ms < BG_REVALIDATE_MS) {
+                t->stamp = ++g_bg_tick;
+                Pixmap pm = t->pm;
+                pthread_mutex_unlock(&g_bg_mtx);
+                return pm;
+            }
+            struct stat st;
+            if (stat(path, &st) == 0 && t->has_stat &&
+                t->st.st_mtime == st.st_mtime && t->st.st_size == st.st_size) {
+                t->checked_ms = now;
+                t->stamp = ++g_bg_tick;
+                Pixmap pm = t->pm;
+                pthread_mutex_unlock(&g_bg_mtx);
+                return pm;
+            }
+        } else if (t->pm) {
+            fresh = t;
+            break;
+        }
+    }
+
+    BgTileSlot* slot = fresh;
+    if (!slot) {
+        for (int i = 0; i < BG_TILE_SLOTS; i++) {
+            if (!g_bg_tiles[i].pm) { slot = &g_bg_tiles[i]; break; }
+        }
+    }
+    if (!slot) {
+        int oldest = 0;
+        for (int i = 1; i < BG_TILE_SLOTS; i++)
+            if (g_bg_tiles[i].stamp < g_bg_tiles[oldest].stamp) oldest = i;
+        slot = &g_bg_tiles[oldest];
+    }
+
+    bg_slot_release(dpy, slot);
+
+    Pixmap pm = 0;
+    Picture pic = 0;
+    bool ok = bg_tile_compose(dpy, path, w, h, &pm, &pic);
+    snprintf(slot->path, sizeof(slot->path), "%s", path);
+    slot->w = w;
+    slot->h = h;
+    slot->checked_ms = now;
+    slot->stamp = ++g_bg_tick;
+    slot->has_stat = (stat(path, &slot->st) == 0);
+    if (ok) {
+        slot->pm = pm;
+        slot->pic = pic;
+        slot->failed = false;
+        fprintf(stderr, "[bg_image] tile OK container=%dx%d\n", w, h);
+    } else {
+        slot->failed = true;
+    }
+    Pixmap result = ok ? pm : 0;
+    pthread_mutex_unlock(&g_bg_mtx);
+    return result;
+}
+
+bool x11_bg_image_blit(Display* dpy, Drawable dst, Visual* vis, int depth, int w, int h) {
+    if (!x11_bg_image_enabled() || !dpy || !dst || w <= 0 || h <= 0) return false;
+    Pixmap pm = x11_bg_image_tile(dpy, w, h);
+    if (!pm) return false;
+
+    pthread_mutex_lock(&g_bg_mtx);
+    Picture src = 0;
+    for (int i = 0; i < BG_TILE_SLOTS; i++) {
+        if (g_bg_tiles[i].pm == pm) { src = g_bg_tiles[i].pic; break; }
+    }
+    bool ok = false;
+    if (src) {
+        if (!vis) vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
+        (void)depth;
+        XRenderPictFormat* dfmt = XRenderFindVisualFormat(dpy, vis);
+        Picture dp = dfmt ? XRenderCreatePicture(dpy, dst, dfmt, 0, NULL) : 0;
+        if (dp) {
+            XRenderComposite(dpy, PictOpOver, src, None, dp, 0, 0, 0, 0, 0, 0, w, h);
+            XRenderFreePicture(dpy, dp);
+            ok = true;
+        }
+    }
+    pthread_mutex_unlock(&g_bg_mtx);
+    return ok;
+}
+
+int x11_bg_image_prewarm(Display* dpy, int w, int h) {
+    if (!x11_bg_image_enabled() || !dpy || w <= 0 || h <= 0) return 0;
+    return x11_bg_image_tile(dpy, w, h) ? 1 : 0;
+}

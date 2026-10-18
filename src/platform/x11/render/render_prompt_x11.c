@@ -10,6 +10,7 @@
 #include "platform/draw.h"
 #include "platform/flapi_platform.h"
 #include "platform/x11/drawing_x11.h"
+#include "platform/x11/bg_image_x11.h"
 
 static Display* g_pbuf_dpy = NULL;
 static Window g_pbuf_win = None;
@@ -158,13 +159,15 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     x11_set_dbl_visual(dpy, vis, cmap, depth);
     PromptState* pss = state;
     if (!(pss && pss->no_bg)) {
-        Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
-        if (bg) {
-            GC gc = XCreateGC(dpy, dbl, 0, NULL);
-            XCopyArea(dpy, bg, dbl, gc, 0, 0, w, h, 0, 0);
-            XFreeGC(dpy, gc);
-        } else {
-            x11_draw_background_to_drawable(dpy, dbl, w, h);
+        if (!x11_bg_image_blit(dpy, dbl, vis, depth, w, h)) {
+            Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
+            if (bg) {
+                GC gc = XCreateGC(dpy, dbl, 0, NULL);
+                XCopyArea(dpy, bg, dbl, gc, 0, 0, w, h, 0, 0);
+                XFreeGC(dpy, gc);
+            } else {
+                x11_draw_background_to_drawable(dpy, dbl, w, h);
+            }
         }
     } else {
         GC clear_gc = XCreateGC(dpy, dbl, 0, NULL);
