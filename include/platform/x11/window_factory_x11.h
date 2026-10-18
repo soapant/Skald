@@ -10,6 +10,7 @@ pid_t GetWindowPid(Display* dpy, Window w);
 void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen);
 Window x11_create_window_ex(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask);
 Window x11_create_prompt_window(Display* dpy, int x, int y, int w, int h);
+void x11_draw_window_border(Display* dpy, Drawable drw, int w, int h, bool no_bg);
 Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h);
 Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h, bool clickable);
 void x11_apply_click_through(Display* dpy, Window win);

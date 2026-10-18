@@ -11,6 +11,7 @@
 #include "platform/flapi_platform.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/bg_image_x11.h"
+#include "platform/x11/window_factory_x11.h"
 
 static Display* g_pbuf_dpy = NULL;
 static Window g_pbuf_win = None;
@@ -191,6 +192,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     GC gc = XCreateGC(dpy, *win, 0, NULL);
     XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
     XFreeGC(dpy, gc);
+    x11_draw_window_border(dpy, *win, w, h, state && state->no_bg);
     XFlush(dpy);
     { PROFILE_END_VAR(_pt, "x11_render_prompt_user"); return true; }
 }

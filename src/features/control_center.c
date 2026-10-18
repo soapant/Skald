@@ -24,6 +24,8 @@ typedef struct {
 #define CC_FEATURE_MAX 130
 #define CC_MAYBE_UNUSED __attribute__((unused))
 
+static volatile int g_cc_stopping = 0;
+
 #define CC_ITEM_TEXT_X 10
 #define CC_ITEM_TEXT_Y 4
 
@@ -427,10 +429,12 @@ static void cc_scan_app_dirs(void) {
     ListOfFiles tmp = {0};
     cc_build_xdg_paths();
     for (size_t i = 0; i < g_xdg_path_count; i++) {
+        if (g_cc_stopping) { if (tmp.files) free(tmp.files); return; }
         const char *p = g_xdg_paths[i];
         if (!p || p[0] == '\0') continue;
         fl_get_all_files_from_dir((char *)p, allowed, &tmp, (char **)ListOfShitToIgnore, true, g_xdg_depths[i]);
     }
+    if (g_cc_stopping) { if (tmp.files) free(tmp.files); return; }
     for (size_t i = 0; i < tmp.count; ) {
         bool skip = false;
         char display_name[256] = {0};
@@ -466,6 +470,7 @@ static void cc_scan_app_dirs(void) {
 
 static FlMutex g_app_cache_mtx = NULL;
 static bool g_app_cache_ready = false;
+static FlThread g_prewarm_thread = NULL;
 
 /* Icon extraction costs several ms per app, so the cache is built on a worker
    thread during startup. Callers block on the mutex until it is available. */
@@ -473,6 +478,7 @@ static void cc_ensure_app_cache(void) {
     if (!g_app_cache_mtx) return;
     fl_mutex_lock(g_app_cache_mtx);
     if (!g_app_cache_ready) {
+        if (g_cc_stopping) { fl_mutex_unlock(g_app_cache_mtx); return; }
         int loaded = cc_load_app_cache();
         if (!loaded) {
             cc_scan_app_dirs();
@@ -1046,6 +1052,7 @@ static void cc_render(PromptState *state) {
         }
         fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                      .text = ctx.text, .align = "LEFT", .pad = 0);
+
         bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
                                 strcmp(e->type, "Feature") == 0);
         if (plain_type) {
@@ -1058,9 +1065,9 @@ static void cc_render(PromptState *state) {
             if (e->type[0]) {
                 int name_w = fl_get_text_width(ctx.text, FontSize);
                 fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
-                             .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
+                             .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA + 4,
                              .text = e->type, .align = "LEFT", .pad = 0,
-                             .fontsize = type_sz, .color = meta_col);
+                             .fontsize = type_sz - 6, .color = meta_col);
             }
             fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                          .text = CC_TYPE_LABEL, .align = "RIGHT",
@@ -1124,9 +1131,25 @@ static void TriggerControl(void) {
 }
 
 FLINT_FEATURE_INIT {
+    g_cc_stopping = 0;
     g_app_cache_mtx = fl_mutex_create();
-    if (g_app_cache_mtx) fl_thread_create(cc_prewarm_app_cache, NULL);
+    if (g_app_cache_mtx) g_prewarm_thread = fl_thread_create(cc_prewarm_app_cache, NULL);
     cc_register_type("Application", cc_fill_applications);
     cc_register_type("Feature", cc_fill_features);
     fl_register_hotkey((char *)ControlHotkey, TriggerControl, "Fortnite");
+}
+
+/* The prewarm worker runs inside this .so. feature_loader calls this before
+   retiring the library, and sweep_retired_libs() has no thread awareness --
+   without joining here it can dlclose us out from under a live worker. */
+FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void) {
+    g_cc_stopping = 1;
+    if (g_prewarm_thread) {
+        fl_thread_join(g_prewarm_thread);
+        g_prewarm_thread = NULL;
+    }
+    /* g_app_cache_mtx is deliberately not destroyed: cc_fill_applications()
+       takes it on the render thread, and there is no refcount proving no
+       popup is mid-cc_ensure_app_cache() right now. The few bytes leak once
+       per hot reload, which beats a use-after-free. */
 }
