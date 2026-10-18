@@ -1122,6 +1122,7 @@ static void TriggerControl(void) {
     }
 
     fl_window(.title = "⚡ Control",
+           .placeholder = "Search For Something",
            .refresh = cc_refresh,
            .enter = cc_enter,
            .ctrl_enter = cc_ctrl_enter,
@@ -1139,17 +1140,10 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey((char *)ControlHotkey, TriggerControl, "Fortnite");
 }
 
-/* The prewarm worker runs inside this .so. feature_loader calls this before
-   retiring the library, and sweep_retired_libs() has no thread awareness --
-   without joining here it can dlclose us out from under a live worker. */
 FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void) {
     g_cc_stopping = 1;
     if (g_prewarm_thread) {
         fl_thread_join(g_prewarm_thread);
         g_prewarm_thread = NULL;
     }
-    /* g_app_cache_mtx is deliberately not destroyed: cc_fill_applications()
-       takes it on the render thread, and there is no refcount proving no
-       popup is mid-cc_ensure_app_cache() right now. The few bytes leak once
-       per hot reload, which beats a use-after-free. */
 }
