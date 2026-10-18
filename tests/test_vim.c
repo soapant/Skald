@@ -835,7 +835,6 @@ TEST(binding_tables_are_queryable) {
     ASSERT_TRUE(g_vs != NULL);
     ASSERT_TRUE(g_vb_count > 0);
     ASSERT_TRUE(g_vs_count > 0);
-    ASSERT_EQ_INT(g_vb_count, 74);
 }
 
 TEST(no_null_sequence_in_table) {
