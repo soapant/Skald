@@ -265,6 +265,7 @@ XWindowAttributes attrs;
 
     Platform_SetDrawContext(NULL, NULL, NULL, 0);
     XftDrawDestroy(xd);
+    x11_draw_window_border(dpy, win, w, h, no_bg);
     XFlush(dpy);
 }
 
