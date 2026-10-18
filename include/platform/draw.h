@@ -48,6 +48,7 @@ void Platform_GetDrawOffset(int *out_x, int *out_y);
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h);
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color,int radius, bool rounded,bool opaque,float thickness,bool filled);
+void Platform_DrawPromptSeparator(int y, int width);
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness);
 bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness);
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize);

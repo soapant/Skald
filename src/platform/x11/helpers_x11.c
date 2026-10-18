@@ -1634,7 +1634,7 @@ void x11_draw_window_border(Display* dpy, Drawable drw, int w, int h, bool no_bg
     int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
     if (r > w / 2) r = w / 2;
     if (r > h / 2) r = h / 2;
-    unsigned long hex = Color_Lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(COLOR_BG), 0.45f);
+    unsigned long hex = rgb_to_hex(COLOR_BORDER);
     unsigned long a = ((unsigned long)((int)WindowOpacity)) & 0xFFUL;
     unsigned long px = (a << 24) | (hex & 0xFF0000UL) | (hex & 0xFF00UL) | (hex & 0xFFUL);
     if (r <= t) r = 0;
