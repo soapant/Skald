@@ -195,10 +195,6 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec);
 #define fl_edit_text_popup(...) fl_edit_text_popup_impl(&(FlEditPopupSpec){__VA_ARGS__})
 bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text);
 
-/* Grey hint shown in the main prompt's search box while it is empty.
-   Pass NULL or "" to clear. strdup'd internally. */
-void fl_add_placeholder_to_search(const char *text);
-
 char* fl_popup_impl(const PopupSpec *spec);
 #define fl_popup(...) fl_popup_impl(&(PopupSpec){__VA_ARGS__})
 
