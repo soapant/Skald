@@ -1626,6 +1626,45 @@ if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_draw_selection_background"); r
     XftColorFree(dpy, vis, cmap, &c);
 }
 
+void x11_draw_window_border(Display* dpy, Drawable drw, int w, int h, bool no_bg) {
+        PROFILE_START(_pt);
+    if (!dpy || !drw || no_bg) { PROFILE_END_VAR(_pt, "helpers_x11:x11_draw_window_border"); return; }
+    int t = fl_window_BORDER_W;
+    if (w <= 2 * t || h <= 2 * t) { PROFILE_END_VAR(_pt, "helpers_x11:x11_draw_window_border"); return; }
+    int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
+    unsigned long hex = Color_Lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(COLOR_BG), 0.45f);
+    unsigned long a = ((unsigned long)((int)WindowOpacity)) & 0xFFUL;
+    unsigned long px = (a << 24) | (hex & 0xFF0000UL) | (hex & 0xFF00UL) | (hex & 0xFFUL);
+    if (r <= t) r = 0;
+    GC gc = XCreateGC(dpy, drw, 0, NULL);
+    XSetForeground(dpy, gc, px);
+    XFillRectangle(dpy, drw, gc, r, 0, w - 2 * r, t);
+    XFillRectangle(dpy, drw, gc, r, h - t, w - 2 * r, t);
+    XFillRectangle(dpy, drw, gc, 0, r, t, h - 2 * r);
+    XFillRectangle(dpy, drw, gc, w - t, r, t, h - 2 * r);
+    float ri = (float)r - fl_window_BORDER_INNER_OFF;
+    if (r > t) {
+        for (int y = 0; y < h; y++) {
+            if (y >= r && y < h - r) continue;
+            int cy = (y < r) ? r : h - r - 1;
+            for (int x = 0; x < w; x++) {
+                if (x >= r && x < w - r) continue;
+                int cx = (x < r) ? r : w - r - 1;
+                float dx = (float)x - (float)cx;
+                float dy = (float)y - (float)cy;
+                float d = sqrtf(dx * dx + dy * dy);
+                if (d <= ri) continue;
+                if (CornerAlpha(x, y, w, h, r, 255) == 0) continue;
+                XFillRectangle(dpy, drw, gc, x, y, 1, 1);
+            }
+        }
+    }
+    XFreeGC(dpy, gc);
+    { PROFILE_END_VAR(_pt, "helpers_x11:x11_draw_window_border"); }
+}
+
 Window x11_create_prompt_window(Display* dpy, int x, int y, int w, int h) {
         PROFILE_START(_pt);
 PROFILE_START(timer);

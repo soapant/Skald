@@ -6,6 +6,11 @@
 #define fl_window_W 900
 #define fl_window_H 640
 
+#define fl_window_BORDER_W 1
+/* how far inside the corner arc the band stops; 0.5 keeps it 1px on the
+   straight runs without opening gaps in the rasterised arc. */
+#define fl_window_BORDER_INNER_OFF 0.5f
+
 #define fl_window_EDIT_INSET 14
 #define fl_window_EDIT_SCROLL_PAD 28
 

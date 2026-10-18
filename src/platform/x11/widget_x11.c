@@ -123,6 +123,7 @@ PlatformWidget *widget = (PlatformWidget *)ud;
     Platform_SetDrawContext(dpy, widget->xd, widget->vis, widget->cmap);
     if (widget->fn) widget->fn(widget->ud);
     Platform_FlushDraw();
+    x11_draw_window_border(dpy, widget->win, widget->w, widget->h, widget->no_bg);
     XFlush(dpy);
 }
 
