@@ -739,6 +739,14 @@ if (!raw_can_draw() || radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleR
     { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return true; }
 }
 
+void Platform_DrawPromptSeparator(int y, int width) {
+        PROFILE_START(_pt);
+    if (width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
+    Platform_DrawRectRaw(0, y, width, fl_window_SEP_W,
+                         rgb_to_hex(COLOR_BORDER), 0, false, true, 1, true);
+    { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); }
+}
+
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
@@ -777,6 +785,7 @@ PROFILE_START(timer);
 
     int itemH = x11_font_row_height_of(font);
     int y0 = x11_font_list_top_of(font);
+    Platform_DrawPromptSeparator(y0, state->width);
     int yOffset = fl_window_LIST_BOTTOM_TITLE;
     if (!WindowTitleText && !VimModeText) yOffset = 0;
     int visible = (state->height - y0 - yOffset) / itemH;

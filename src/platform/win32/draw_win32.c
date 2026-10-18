@@ -890,6 +890,14 @@ static ColorRef win32_prompt_cursor_color(void) {
 { PROFILE_END_VAR(_pt, "win32_prompt_cursor_color"); return g_current_mode == MODE_VISUAL ? COLOR_VISUAL_CURSOR : COLOR_CURSOR; }
 }
 
+void Platform_DrawPromptSeparator(int y, int width) {
+        PROFILE_START(_pt);
+    if (width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
+    Platform_DrawRectRaw(0, y, width, fl_window_SEP_W,
+                         rgb_to_hex(COLOR_BORDER), 0, false, true, 1, true);
+    { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); }
+}
+
 void Platform_DrawPromptEditText(PromptState* state) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
