@@ -180,7 +180,7 @@ PROFILE_START(timer);
                 if (cx < sx0) cx = sx0;
                 if (cx > sx1) cx = sx1;
                 int w = sx1 - sx0;
-                if (w > 0) Platform_DrawRectRaw(sx0, tint_y, w,FontSize,tint,0,false,true,1,true);
+                if (w > 0) Platform_DrawRectRaw(sx0, tint_y, w,PromptCaretHeight(),tint,0,false,true,1,true);
             }
         } else {
             int tint_x = cursor_draw_x;
