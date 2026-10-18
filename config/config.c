@@ -23,7 +23,7 @@ void ConfigApply(void) {
     ShaderIntensity = 0.3f;
     ShaderBrightness = 0.55f;
     TimeBetweenHotReload = 1;
-    WindowOpacity = 235.0f;
+    WindowOpacity = 255.0f;
     EditPopUpPos = "middle";
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
@@ -35,6 +35,7 @@ void ConfigApply(void) {
     VimFontSize = 18;
     PaddingForScrolling = 3;
     UsedTerminal = "";
+    EnableAutoPairing = true;
     UsedShell = "nu";
     UsedBrowser = "";
     UsedSearchEngine = "google";
@@ -43,7 +44,7 @@ void ConfigApply(void) {
     ControlHotkey = "Alt+Space";
     FullTextNeedsKeyPress = true;
     MessagesEnabled = true;
-    RainbowText = true;
+    RainbowText = false;
     AlternatingText = false;
     VimModeText = false;
     WindowTitleText = false;
@@ -52,7 +53,7 @@ void ConfigApply(void) {
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
     Theme = "cyberpunk";
-    BackgroundImage = "C:/miscellaneous/862186.png";
+    BackgroundImage = "~/Pictures/wallpaper.png";
     COLOR_BG = RGB(13, 17, 23);
     COLOR_TEXT = RGB(201, 209, 217);
     COLOR_ALTERNATE = RGB(63, 185, 80);

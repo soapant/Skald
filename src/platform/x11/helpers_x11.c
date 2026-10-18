@@ -3,6 +3,7 @@
 #include "core/window_manager.h"
 #include "core/modal.h"
 #include "config.h"
+#include "platform/x11/bg_image_x11.h"
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
@@ -512,7 +513,6 @@ PROFILE_START(timer);
 #define X11_IMG_REVALIDATE_MS 1000
 
 static bool x11_blit_argb(Display *dpy, Drawable drw, Visual *vis, unsigned char *argb, int w, int h, int x, int y);
-static unsigned char* x11_decode_image_argb(const char *path, int* out_w, int* out_h);
 
 typedef struct {
     char key[512];
@@ -667,7 +667,7 @@ if (!dpy || !argb || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_blit_argb"); 
     { PROFILE_END_VAR(_pt, "x11_blit_argb"); return ok; }
 }
 
-static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
+unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
         PROFILE_START(_pt);
 if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
     int dst_w = *out_w;
@@ -1661,6 +1661,7 @@ void Platform_PrewarmBackgroundPixmap(void) {
     PROFILE_START(_pt);
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
+    x11_bg_image_prewarm(dpy, fl_window_W, fl_window_H);
     Window win = x11_create_prompt_window(dpy, -32000, -32000, fl_window_W, fl_window_H);
     if (win == None) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
     x11_get_cached_background(dpy, win, fl_window_W, fl_window_H);
