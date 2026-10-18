@@ -3,6 +3,7 @@
 #include "deps/log.h"
 #include <stdio.h>
 #include <string.h>
+#include <stddef.h>
 
 #ifndef CONFIG_SRC
 #define CONFIG_SRC "config/config.c"
@@ -194,6 +195,29 @@ static bool theme_name_eq(const char* a, const char* b) {
     return *a == *b;
 }
 
+/* Maps each theme slot to the config global it drives, so a per-colour
+   config value can win over the theme. Order must match ThemeEntry. */
+static const struct { const char* name; size_t off; } g_theme_slots[] = {
+    { "COLOR_BG",            offsetof(ThemeEntry, bg) },
+    { "COLOR_TEXT",          offsetof(ThemeEntry, text) },
+    { "COLOR_ALTERNATE",     offsetof(ThemeEntry, alternate) },
+    { "COLOR_SELECTED_TEXT", offsetof(ThemeEntry, selected_text) },
+    { "COLOR_ALIAS_TEXT",    offsetof(ThemeEntry, alias_text) },
+    { "COLOR_ERROR",         offsetof(ThemeEntry, error) },
+    { "COLOR_NORMAL",        offsetof(ThemeEntry, normal) },
+    { "COLOR_TIP",           offsetof(ThemeEntry, tip) },
+    { "COLOR_INSERT_MODE",   offsetof(ThemeEntry, insert_mode) },
+    { "COLOR_NORMAL_MODE",   offsetof(ThemeEntry, normal_mode) },
+    { "COLOR_VISUAL_MODE",   offsetof(ThemeEntry, visual_mode) },
+    { "COLOR_CURSOR",        offsetof(ThemeEntry, cursor) },
+};
+static ColorRef* g_theme_targets[] = {
+    &COLOR_BG, &COLOR_TEXT, &COLOR_ALTERNATE, &COLOR_SELECTED_TEXT,
+    &COLOR_ALIAS_TEXT, &COLOR_ERROR, &COLOR_NORMAL, &COLOR_TIP,
+    &COLOR_INSERT_MODE, &COLOR_NORMAL_MODE, &COLOR_VISUAL_MODE, &COLOR_CURSOR,
+};
+#define THEME_SLOT_COUNT (sizeof(g_theme_slots) / sizeof(g_theme_slots[0]))
+
 void Theme_Apply(void) {
     if (!Theme || !Theme[0]) return;
     const ThemeEntry* found = NULL;
@@ -201,18 +225,14 @@ void Theme_Apply(void) {
         if (theme_name_eq(Theme, g_themes[i].name)) { found = &g_themes[i]; break; }
     }
     if (!found) { log_warn("unknown Theme \"%s\", keeping current colors", Theme); return; }
-    COLOR_BG = found->bg;
-    COLOR_TEXT = found->text;
-    COLOR_ALTERNATE = found->alternate;
-    COLOR_SELECTED_TEXT = found->selected_text;
-    COLOR_ALIAS_TEXT = found->alias_text;
-    COLOR_ERROR = found->error;
-    COLOR_NORMAL = found->normal;
-    COLOR_TIP = found->tip;
-    COLOR_INSERT_MODE = found->insert_mode;
-    COLOR_NORMAL_MODE = found->normal_mode;
-    COLOR_VISUAL_MODE = found->visual_mode;
-    COLOR_CURSOR = found->cursor;
+    ColorRef saved[THEME_SLOT_COUNT];
+    for (size_t i = 0; i < THEME_SLOT_COUNT; i++) saved[i] = *g_theme_targets[i];
+    for (size_t i = 0; i < THEME_SLOT_COUNT; i++)
+        *g_theme_targets[i] = *(ColorRef*)((const char*)found + g_theme_slots[i].off);
+    for (size_t i = 0; i < THEME_SLOT_COUNT; i++) {
+        if (saved[i] != *g_theme_targets[i] && Theme_ColorPinned(g_theme_slots[i].name))
+            *g_theme_targets[i] = saved[i];
+    }
 }
 
 #define THEME_MAX_PINNED 32
