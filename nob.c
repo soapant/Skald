@@ -21,8 +21,8 @@
 #else
      #define CC_FLAGS "-I", "include","-MMD", "-MP","-O4","-Wall","-Wextra","-Wformat","-Wno-error=format-security","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
-     #define PKG_CFLAGS_PKGS_STR "libcurl x11 xft fontconfig freetype2 gio-unix-2.0 libpng xext xrandr xrender xtst xi libpulse"
-     #define PKG_LIBS_PKGS_STR   " libcurl x11 xft fontconfig libpng xext xrandr xrender xtst xi gio-2.0 gobject-2.0 libpulse"
+     #define PKG_CFLAGS_PKGS_STR "libcurl x11 xft fontconfig freetype2 gio-unix-2.0 xext xrandr xrender xtst xi libpulse"
+     #define PKG_LIBS_PKGS_STR   " libcurl x11 xft fontconfig xext xrandr xrender xtst xi gio-2.0 gobject-2.0 libpulse"
 #endif
 
 static Nob_File_Paths sources = {0};
@@ -154,7 +154,7 @@ static void augment_pkg_config_path(void) {
     }
     const char* need[] = {
         "x11", "xft", "fontconfig", "freetype2", "glib-2.0", "gio-2.0", "gio-unix-2.0",
-        "gobject-2.0", "libpng", "xext", "xrandr", "xrender", "xtst", "xi",
+        "gobject-2.0", "xext", "xrandr", "xrender", "xtst", "xi",
         "wayland-client",
         "xproto", "kbproto", "xextproto", "xcb", "xau", "xdmcp", "sm", "ice",
         NULL
@@ -243,7 +243,7 @@ static void discover_dep_flags(void) {
     } else {
         const char* fb[] = {
             "-lX11", "-lXft", "-lfontconfig", "-lXrender", "-lXrandr",
-            "-lXext", "-lXtst", "-lpng", "-lgio-2.0", "-lglib-2.0",
+            "-lXext", "-lXtst", "-lgio-2.0", "-lglib-2.0",
             "-lgobject-2.0",
         };
         for (size_t i = 0; i < sizeof(fb)/sizeof(fb[0]); i++)         nob_da_append(&dep_ldflags, nob_temp_strdup(fb[i]));
