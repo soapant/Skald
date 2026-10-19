@@ -4,10 +4,10 @@
 #include "config.h"
 #include "deps/log.h"
 #include "deps/nanosvg.h"
+#include "deps/stb_image.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrender.h>
-#include <png.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -85,29 +85,11 @@ static bool bg_src_dims(const char* path, int* out_w, int* out_h) {
         return true;
     }
 
-    FILE* fp = fopen(path, "rb");
-    if (!fp) return false;
-    unsigned char sig[8];
-    if (fread(sig, 1, 8, fp) != 8 || png_sig_cmp(sig, 0, 8) != 0) { fclose(fp); return false; }
-    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png) { fclose(fp); return false; }
-    png_infop info = png_create_info_struct(png);
-    if (!info) { png_destroy_read_struct(&png, NULL, NULL); fclose(fp); return false; }
-    if (setjmp(png_jmpbuf(png))) {
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp);
-        return false;
-    }
-    png_init_io(png, fp);
-    png_set_sig_bytes(png, 8);
-    png_read_info(png, info);
-    png_uint_32 pw = png_get_image_width(png, info);
-    png_uint_32 ph = png_get_image_height(png, info);
-    png_destroy_read_struct(&png, &info, NULL);
-    fclose(fp);
-    if (pw == 0 || ph == 0) return false;
-    if (out_w) *out_w = (int)pw;
-    if (out_h) *out_h = (int)ph;
+    int pw = 0, ph = 0, pc = 0;
+    if (!stbi_info(path, &pw, &ph, &pc)) return false;
+    if (pw <= 0 || ph <= 0) return false;
+    if (out_w) *out_w = pw;
+    if (out_h) *out_h = ph;
     return true;
 }
 

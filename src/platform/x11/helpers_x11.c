@@ -17,7 +17,6 @@
 #include <X11/extensions/shape.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <png.h>
 #include <stdint.h>
 #include "config.h"
 #include "core/prompt_geometry.h"
@@ -31,6 +30,8 @@
 #include "deps/nanosvg.h"
 #define NANOSVGRAST_IMPLEMENTATION
 #include "deps/nanosvgrast.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "deps/stb_image.h"
 
 #define X11_SHADER_SMOOTHNESS 5
 
@@ -711,72 +712,16 @@ if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return N
         return argb;
     }
 
-    FILE* fp = fopen(path, "rb");
-    if (!fp) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return false; }
-
-    unsigned char sig[8];
-    if (fread(sig, 1, 8, fp) != 8 || png_sig_cmp(sig, 0, 8) != 0) {
-        fclose(fp);
+    int w = 0, h = 0, comp = 0;
+    unsigned char* src = stbi_load(path, &w, &h, &comp, 4);
+    if (!src) {
+        log_error("img: cannot decode '%s': %s", path, stbi_failure_reason());
+        PROFILE_END_VAR(_pt, "x11_decode_image_argb");
         return false;
     }
-
-    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png) { fclose(fp); return false; }
-
-    png_infop info = png_create_info_struct(png);
-    if (!info) { png_destroy_read_struct(&png, NULL, NULL); fclose(fp); return false; }
-
-    if (setjmp(png_jmpbuf(png))) {
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp);
-        return false;
-    }
-
-    png_init_io(png, fp);
-    png_set_sig_bytes(png, 8);
-    png_read_info(png, info);
-
-    int w = png_get_image_width(png, info);
-    int h = png_get_image_height(png, info);
-    png_byte color_type = png_get_color_type(png, info);
-    png_byte bit_depth  = png_get_bit_depth(png, info);
-
-    if (bit_depth == 16) png_set_strip_16(png);
-    if (color_type == PNG_COLOR_TYPE_PALETTE) png_set_palette_to_rgb(png);
-    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) png_set_expand_gray_1_2_4_to_8(png);
-    if (png_get_valid(png, info, PNG_INFO_tRNS)) png_set_tRNS_to_alpha(png);
-    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-        png_set_gray_to_rgb(png);
-    if (!(color_type == PNG_COLOR_TYPE_RGB_ALPHA || color_type == PNG_COLOR_TYPE_GRAY_ALPHA))
-        png_set_add_alpha(png, 0xFF, PNG_FILLER_AFTER);
-
-    png_read_update_info(png, info);
-
-    int row_bytes = png_get_rowbytes(png, info);
-    unsigned char* data = (unsigned char*)malloc((size_t)row_bytes * h);
-    if (!data) {
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp);
-        return false;
-    }
-
-    png_bytep* rows = (png_bytep*)malloc(sizeof(png_bytep) * h);
-    if (!rows) {
-        free(data);
-        png_destroy_read_struct(&png, &info, NULL);
-        fclose(fp);
-        return false;
-    }
-    for (int i = 0; i < h; i++) rows[i] = data + (size_t)i * row_bytes;
-
-    png_read_image(png, rows);
-    png_read_end(png, NULL);
-    fclose(fp);
-    png_destroy_read_struct(&png, &info, NULL);
-    free(rows);
 
     unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
-    if (!argb) { free(data); return false; }
+    if (!argb) { stbi_image_free(src); return false; }
 
     /* Nearest-neighbour sampling: O(dst) instead of O(src*dst). The box
        average above was O(src_w*src_h) per decode which dominated runtime
@@ -785,7 +730,7 @@ if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return N
         int sy = (int)((long long)dy * h / dst_h);
         if (sy >= h) sy = h - 1;
         if (sy < 0) sy = 0;
-        const unsigned char* src_row = data + (size_t)sy * row_bytes;
+        const unsigned char* src_row = src + (size_t)sy * w * 4;
         unsigned char* dst_row = argb + (size_t)dy * dst_w * 4;
         for (int dx = 0; dx < dst_w; dx++) {
             int sx = (int)((long long)dx * w / dst_w);
@@ -803,7 +748,7 @@ if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return N
             d[3] = (unsigned char)a;
         }
     }
-    free(data);
+    stbi_image_free(src);
 
     *out_w = dst_w;
     *out_h = dst_h;

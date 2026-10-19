@@ -29,12 +29,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -67,12 +67,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -105,12 +105,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -143,12 +143,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -181,12 +181,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -219,12 +219,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -257,12 +257,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -295,12 +295,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -333,12 +333,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -371,12 +371,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -409,12 +409,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -447,12 +447,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -485,12 +485,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -523,12 +523,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -561,12 +561,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -599,12 +599,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -637,12 +637,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -675,12 +675,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -713,12 +713,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -751,12 +751,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -789,12 +789,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -827,12 +827,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -865,12 +865,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -903,12 +903,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -941,12 +941,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -979,12 +979,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1017,12 +1017,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1055,12 +1055,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1093,12 +1093,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1131,12 +1131,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1169,12 +1169,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1207,12 +1207,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1245,12 +1245,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1283,12 +1283,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1321,12 +1321,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1359,12 +1359,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1397,12 +1397,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1435,12 +1435,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1473,12 +1473,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1511,12 +1511,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1549,12 +1549,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1587,12 +1587,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1625,12 +1625,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1663,12 +1663,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1701,12 +1701,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1739,12 +1739,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1777,12 +1777,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1815,12 +1815,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1853,12 +1853,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1891,12 +1891,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1929,12 +1929,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -1967,12 +1967,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2005,12 +2005,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2043,12 +2043,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2081,12 +2081,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2119,12 +2119,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2157,12 +2157,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2195,12 +2195,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2233,12 +2233,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2271,12 +2271,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2309,12 +2309,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2347,12 +2347,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2385,12 +2385,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2423,12 +2423,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2461,12 +2461,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2499,12 +2499,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2537,12 +2537,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   },
   {
@@ -2575,12 +2575,12 @@
       "-pthread",
       "-D_REENTRANT",
       "-I/usr/include/freetype2",
+      "-I/usr/include/libpng16",
       "-I/usr/include/gio-unix-2.0",
       "-I/usr/include/libmount",
       "-I/usr/include/blkid",
       "-I/usr/include/glib-2.0",
-      "-I/usr/lib64/glib-2.0/include",
-      "-I/usr/include/libpng16"
+      "-I/usr/lib64/glib-2.0/include"
     ]
   }
 ]
