@@ -1,8 +1,0 @@
-name = "adb_example"
-description = ""
-
-[provides]
-
-[depends]
-adb
-

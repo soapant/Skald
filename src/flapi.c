@@ -499,7 +499,14 @@ static FlintMap* ensure_feature_map(void) {
 void fl_register_feature_impl(const FlFeatureSpec* spec) {
     PROFILE_START(_pt);
     if (!spec->name || !spec->cb) return;
-    char* icon_path = spec->icon ? spec->icon : "";
+    /* Resolve "/icon.png" against the registering feature now: the list is
+       rendered by control_center, so the owning module is only knowable here. */
+    char icon_asset[MAX_PATH];
+    const char* icon_path = spec->icon ? spec->icon : "";
+    if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
+        Platform_ResolveAssetPath(__builtin_return_address(0), spec->icon, icon_asset, sizeof(icon_asset))) {
+        icon_path = icon_asset;
+    }
     ensure_feature_map();
     ptrdiff_t idx = shgeti(g_feature_map, (char*)spec->name);
     FeatureReg* existing = idx >= 0 ? (FeatureReg*)g_feature_map[idx].value : NULL;
