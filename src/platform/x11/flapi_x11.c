@@ -33,7 +33,6 @@
 #include <pthread.h>
 #include <linux/input.h>
 #include <glib.h>
-#include <gio/gio.h>
 #include <pulse/pulseaudio.h>
 
 
@@ -548,28 +547,6 @@ PROFILE_START(timer);
     PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform");
     { PROFILE_END_VAR(_pt, "fl_search_file_in_dir_platform"); return NULL; }
 }
-void fl_toggle_play_pause_platform(void) {
-        PROFILE_START(_pt);
-GError *error = NULL;
-    GDBusConnection *conn = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
-    if (!conn) { g_error_free(error); return; }
-
-    gchar* bus_name = FindPlayerBusName(conn);
-    if (!bus_name) { g_object_unref(conn); return; }
-
-    GDBusProxy *proxy = g_dbus_proxy_new_sync(conn, G_DBUS_PROXY_FLAGS_NONE, NULL,
-        bus_name, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player", NULL, &error);
-    
-    if (proxy) {
-        g_dbus_proxy_call_sync(proxy, "PlayPause", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
-        g_object_unref(proxy);
-    }
-
-    if (error) g_error_free(error);
-    g_free(bus_name);
-    g_object_unref(conn);
-}
-
 typedef struct {
     pa_mainloop *mainloop;
     char *default_sink_name;

@@ -27,8 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
 #include "core/timer.h"
+
 bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension, int max_depth) {
     PROFILE_START(_pt);
 
@@ -347,8 +347,8 @@ char search_path[MAX_PATH];
 #define VK_MEDIA_PLAY_PAUSE 0xB3
 
 void fl_toggle_play_pause_platform(void) {
-        PROFILE_START(_pt);
-INPUT input[2] = {0};
+    PROFILE_START(_pt);
+    INPUT input[2] = {0};
 
     input[0].type = INPUT_KEYBOARD;
     input[0].ki.wVk = VK_MEDIA_PLAY_PAUSE;
