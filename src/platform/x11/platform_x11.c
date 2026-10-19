@@ -21,7 +21,6 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <glob.h>
-#include <png.h>
 #include "platform/platform.h"
 #include "config.h"
 #include "config.h"
