@@ -8,8 +8,6 @@
 #include <strings.h>
 #endif
 
-const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam","Wine","EpicGamesLauncher"};
-
 #define PK_MAX        2048
 #define PK_NAME_LEN   64
 #define PK_ROW_LEN    160
@@ -359,4 +357,5 @@ static void TriggerProcessKiller(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+U", TriggerProcessKiller,"Fortnite");
-    fl_register_feature(.name="Process Killer",.cb=TriggerProcessKiller); }
+    fl_register_feature(.name="Process Killer",.cb=TriggerProcessKiller); 
+}
