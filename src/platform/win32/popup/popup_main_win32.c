@@ -175,7 +175,7 @@ int wParam = key->vk;
         return true;
     }
 
-    if (wParam == VK_BACK) {
+    if (wParam == VK_BACK && IsInsertMode()) {
         if (ctrl_pressed) {
             UI_SetText("");
             UI_Redraw(lb, FlintContext_Get()->window.hListBox);
