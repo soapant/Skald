@@ -723,28 +723,40 @@ if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return N
     unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
     if (!argb) { stbi_image_free(src); return false; }
 
-    /* Nearest-neighbour sampling: O(dst) instead of O(src*dst). The box
-       average above was O(src_w*src_h) per decode which dominated runtime
-       for large source images (e.g. 4K wallpapers). */
+    /* Box filter (area average) over the source rectangle each destination
+       pixel covers. Nearest-neighbour threw away ~98% of the pixels when
+       minifying, which erased thin strokes entirely: a 128px icon drawn at
+       16px came out as a couple of stray pixels. When not minifying the box
+       is 1x1 and this degenerates to a plain copy, so no special case is
+       needed. Decodes are cached per path+size, so the extra work is paid
+       once rather than per frame. */
     for (int dy = 0; dy < dst_h; dy++) {
-        int sy = (int)((long long)dy * h / dst_h);
-        if (sy >= h) sy = h - 1;
-        if (sy < 0) sy = 0;
-        const unsigned char* src_row = src + (size_t)sy * w * 4;
+        int y0 = (int)((long long)dy * h / dst_h);
+        int y1 = (int)((long long)(dy + 1) * h / dst_h);
+        if (y1 <= y0) y1 = y0 + 1;
+        if (y1 > h) y1 = h;
         unsigned char* dst_row = argb + (size_t)dy * dst_w * 4;
         for (int dx = 0; dx < dst_w; dx++) {
-            int sx = (int)((long long)dx * w / dst_w);
-            if (sx >= w) sx = w - 1;
-            if (sx < 0) sx = 0;
-            const unsigned char* s = src_row + (size_t)sx * 4;
-            unsigned int r = s[0], g = s[1], b = s[2], a = s[3];
-            unsigned int pr = r * a / 255;
-            unsigned int pg = g * a / 255;
-            unsigned int pb = b * a / 255;
+            int x0 = (int)((long long)dx * w / dst_w);
+            int x1 = (int)((long long)(dx + 1) * w / dst_w);
+            if (x1 <= x0) x1 = x0 + 1;
+            if (x1 > w) x1 = w;
+            long long sr = 0, sg = 0, sb = 0, sa = 0, n = 0;
+            for (int sy = y0; sy < y1; sy++) {
+                const unsigned char* src_row = src + (size_t)sy * w * 4;
+                for (int sx = x0; sx < x1; sx++) {
+                    const unsigned char* s = src_row + (size_t)sx * 4;
+                    sr += s[0]; sg += s[1]; sb += s[2]; sa += s[3]; n++;
+                }
+            }
+            unsigned int r = (unsigned int)(sr / n);
+            unsigned int g = (unsigned int)(sg / n);
+            unsigned int b = (unsigned int)(sb / n);
+            unsigned int a = (unsigned int)(sa / n);
             unsigned char* d = dst_row + (size_t)dx * 4;
-            d[0] = (unsigned char)pb;
-            d[1] = (unsigned char)pg;
-            d[2] = (unsigned char)pr;
+            d[0] = (unsigned char)(b * a / 255);
+            d[1] = (unsigned char)(g * a / 255);
+            d[2] = (unsigned char)(r * a / 255);
             d[3] = (unsigned char)a;
         }
     }
