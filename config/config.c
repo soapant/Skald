@@ -16,7 +16,7 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = true;
-    DebugMode = true;
+    DebugMode = false;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
