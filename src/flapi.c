@@ -1749,6 +1749,26 @@ void fl_sleep(double seconds) {
 fl_sleep_platform(seconds);
 }
 
+FlLibrary fl_library_open(const char* path) {
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_library_open"); return (FlLibrary)Platform_LoadLibrary(path); }
+}
+
+void* fl_library_symbol(FlLibrary lib, const char* name) {
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_library_symbol"); return Platform_GetSymbol((LibHandle)lib, name); }
+}
+
+void fl_library_close(FlLibrary lib) {
+    PROFILE_START(_pt);
+    Platform_UnloadLibrary((LibHandle)lib);
+}
+
+const char* fl_library_error(void) {
+    PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "fl_library_error"); return Platform_GetLoadError(); }
+}
+
 FlThread fl_thread_create(FlThreadFunc fn, void* arg) {
     PROFILE_START(_pt);
   if (!fn) { PROFILE_END_VAR(_pt, "fl_thread_create"); return NULL; }

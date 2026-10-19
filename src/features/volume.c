@@ -13,6 +13,106 @@ const GUID flint_IID_IAudioEndpointVolume =
 #else
 #include <unistd.h>
 
+#define VOLUME_GIO_PATH "libgio-2.0.so.0"
+#define VOLUME_G_BUS_TYPE_SESSION 2
+#define VOLUME_G_DBUS_FLAGS_NONE 0
+
+typedef struct { unsigned int domain; int code; char *message; } GlError;
+typedef struct _GDBusConnection GlDbConnection;
+typedef struct _GDBusProxy GlDbProxy;
+typedef struct _GVariant GlVariant;
+typedef struct _GVariantIter GlVariantIter;
+
+typedef GlDbConnection* (*pfn_g_bus_get_sync)(int, void*, GlError**);
+typedef GlVariant* (*pfn_g_dbus_connection_call_sync)(GlDbConnection*, const char*, const char*, const char*, const char*, GlVariant*, void*, int, int, void*, GlError**);
+typedef GlDbProxy* (*pfn_g_dbus_proxy_new_sync)(GlDbConnection*, int, void*, const char*, const char*, const char*, void*, GlError**);
+typedef GlVariant* (*pfn_g_dbus_proxy_call_sync)(GlDbProxy*, const char*, GlVariant*, int, int, void*, GlError**);
+typedef void (*pfn_g_variant_get)(GlVariant*, const char*, ...);
+typedef int (*pfn_g_variant_iter_next)(GlVariantIter*, const char*, ...);
+typedef void (*pfn_g_variant_iter_free)(GlVariantIter*);
+typedef void (*pfn_g_variant_unref)(GlVariant*);
+typedef void (*pfn_g_object_unref)(void*);
+typedef void (*pfn_g_error_free)(GlError*);
+typedef char* (*pfn_g_strdup)(const char*);
+typedef int (*pfn_g_str_has_prefix)(const char*, const char*);
+typedef void (*pfn_g_free)(void*);
+
+static struct {
+    bool ready;
+    FlLibrary handle;
+    pfn_g_bus_get_sync bus_get_sync;
+    pfn_g_dbus_connection_call_sync dbus_connection_call_sync;
+    pfn_g_dbus_proxy_new_sync dbus_proxy_new_sync;
+    pfn_g_dbus_proxy_call_sync dbus_proxy_call_sync;
+    pfn_g_variant_get variant_get;
+    pfn_g_variant_iter_next variant_iter_next;
+    pfn_g_variant_iter_free variant_iter_free;
+    pfn_g_variant_unref variant_unref;
+    pfn_g_object_unref object_unref;
+    pfn_g_error_free error_free;
+    pfn_g_strdup strdup;
+    pfn_g_str_has_prefix str_has_prefix;
+    pfn_g_free free;
+} gio;
+
+#define GIO_RESOLVE(handle, field, symbol) \
+    gio.field = (pfn_##symbol)fl_library_symbol((handle), #symbol)
+
+static bool gio_load(void) {
+    if (gio.ready) return true;
+    FlLibrary handle = fl_library_open(VOLUME_GIO_PATH);
+    if (!handle) {
+        printf("volume: cannot open %s: %s\n", VOLUME_GIO_PATH, fl_library_error() ? fl_library_error() : "not found");
+        return false;
+    }
+    GIO_RESOLVE(handle, bus_get_sync, g_bus_get_sync);
+    GIO_RESOLVE(handle, dbus_connection_call_sync, g_dbus_connection_call_sync);
+    GIO_RESOLVE(handle, dbus_proxy_new_sync, g_dbus_proxy_new_sync);
+    GIO_RESOLVE(handle, dbus_proxy_call_sync, g_dbus_proxy_call_sync);
+    GIO_RESOLVE(handle, variant_get, g_variant_get);
+    GIO_RESOLVE(handle, variant_iter_next, g_variant_iter_next);
+    GIO_RESOLVE(handle, variant_iter_free, g_variant_iter_free);
+    GIO_RESOLVE(handle, variant_unref, g_variant_unref);
+    GIO_RESOLVE(handle, object_unref, g_object_unref);
+    GIO_RESOLVE(handle, error_free, g_error_free);
+    GIO_RESOLVE(handle, strdup, g_strdup);
+    GIO_RESOLVE(handle, str_has_prefix, g_str_has_prefix);
+    GIO_RESOLVE(handle, free, g_free);
+    if (!gio.bus_get_sync || !gio.dbus_connection_call_sync || !gio.dbus_proxy_new_sync ||
+        !gio.dbus_proxy_call_sync || !gio.variant_get || !gio.variant_iter_next ||
+        !gio.variant_iter_free || !gio.variant_unref || !gio.object_unref ||
+        !gio.error_free || !gio.strdup || !gio.str_has_prefix || !gio.free) {
+        printf("volume: gio symbols missing: %s\n", fl_library_error() ? fl_library_error() : "null");
+        fl_library_close(handle);
+        memset(&gio, 0, sizeof(gio));
+        return false;
+    }
+    gio.handle = handle;
+    gio.ready = true;
+    return true;
+}
+
+static char* find_player_bus_name(GlDbConnection* conn) {
+    GlVariant* reply = gio.dbus_connection_call_sync(conn,
+        "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+        "ListNames", NULL, NULL, VOLUME_G_DBUS_FLAGS_NONE, -1, NULL, NULL);
+    char* player_name = NULL;
+    if (reply) {
+        GlVariantIter* iter = NULL;
+        const char* name = NULL;
+        gio.variant_get(reply, "(as)", &iter);
+        while (gio.variant_iter_next(iter, "&s", &name)) {
+            if (gio.str_has_prefix(name, "org.mpris.MediaPlayer2.")) {
+                player_name = gio.strdup(name);
+                break;
+            }
+        }
+        gio.variant_iter_free(iter);
+        gio.variant_unref(reply);
+    }
+    return player_name;
+}
+
 static void pulse_sink(void) {
     if (getenv("XDG_RUNTIME_DIR")) return;
     char runtime_dir[64];
@@ -167,24 +267,26 @@ void toggle_play_pause(void) {
 
       SendInput(2, input, sizeof(INPUT));
     #else
-      GError *error = NULL;
-      GDBusConnection *conn = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
-      if (!conn) { g_error_free(error); return; }
+      if (!gio_load()) return;
+      GlError *error = NULL;
+      GlDbConnection *conn = gio.bus_get_sync(VOLUME_G_BUS_TYPE_SESSION, NULL, &error);
+      if (!conn) { if (error) gio.error_free(error); return; }
 
-      gchar* bus_name = FindPlayerBusName(conn);
-      if (!bus_name) { g_object_unref(conn); return; }
+      char* bus_name = find_player_bus_name(conn);
+      if (!bus_name) { gio.object_unref(conn); return; }
 
-      GDBusProxy *proxy = g_dbus_proxy_new_sync(conn, G_DBUS_PROXY_FLAGS_NONE, NULL,
+      GlDbProxy *proxy = gio.dbus_proxy_new_sync(conn, VOLUME_G_DBUS_FLAGS_NONE, NULL,
           bus_name, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player", NULL, &error);
-      
+
       if (proxy) {
-          g_dbus_proxy_call_sync(proxy, "PlayPause", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
-          g_object_unref(proxy);
+          GlVariant *result = gio.dbus_proxy_call_sync(proxy, "PlayPause", NULL, VOLUME_G_DBUS_FLAGS_NONE, -1, NULL, &error);
+          if (result) gio.variant_unref(result);
+          gio.object_unref(proxy);
       }
 
-      if (error) g_error_free(error);
-      g_free(bus_name);
-      g_object_unref(conn);
+      if (error) gio.error_free(error);
+      gio.free(bus_name);
+      gio.object_unref(conn);
     #endif
 }
 

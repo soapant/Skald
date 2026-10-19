@@ -549,6 +549,17 @@ char* fl_get_working_dir();
 char* fl_resolve_data_path(const char* name);
 
 // =============================================================================
+// DYNAMIC LIBRARIES
+// =============================================================================
+
+typedef void* FlLibrary;
+
+FlLibrary fl_library_open(const char *path);
+void* fl_library_symbol(FlLibrary lib, const char *name);
+void fl_library_close(FlLibrary lib);
+const char *fl_library_error(void);
+
+// =============================================================================
 // THREADS / SYNC (opaque handles, joinable threads)
 // =============================================================================
 
