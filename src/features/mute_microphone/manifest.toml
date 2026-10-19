@@ -1,7 +1,0 @@
-name = "mute_microphone"
-description = ""
-
-[provides]
-
-[depends]
-

@@ -1,7 +1,0 @@
-name = "notification_getter"
-description = ""
-
-[provides]
-
-[depends]
-
