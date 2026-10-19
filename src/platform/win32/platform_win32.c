@@ -1829,6 +1829,27 @@ if (!name || !name[0] || !out || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_
     { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return Platform_GetFeaturePath(safe, name, out, out_len); }
 }
 
+bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t out_len) {
+        PROFILE_START(_pt);
+    if (!name || !name[0] || !out || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    if (!FeaturePath || !FeaturePath[0]) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    const char* rel = name;
+    while (*rel == '/' || *rel == '\\') rel++;
+    if (!rel[0]) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    for (const char* p = rel; *p; p++) {
+        if (*p == '/' || *p == '\\') { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    }
+    if (strstr(rel, "..")) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    char stem[128];
+    if (!feature_stem_from_caller(caller, stem, sizeof(stem))) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    char full[512];
+    snprintf(full, sizeof(full), "%s\\%s\\%s", FeaturePath, stem, rel);
+    DWORD attr = GetFileAttributesA(full);
+    if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    snprintf(out, out_len, "%s", full);
+    { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return true; }
+}
+
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
         PROFILE_START(_pt);
 if (!name || !name[0] || !out_path || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return false; }
