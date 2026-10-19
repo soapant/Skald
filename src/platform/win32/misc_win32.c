@@ -39,7 +39,6 @@ if (template_path == NULL || out_size == 0) { log_error("operation failed, retur
         out[o++] = *p++;
     }
     out[o] = '\0';
-    log_info("Platform_ExpandPath template_path='%s' out='%s' out_size=%d", template_path ? template_path : "", out ? out : "", out_size);;
     { PROFILE_END_VAR(_pt, "Platform_ExpandPath"); return true; }
 }
 
