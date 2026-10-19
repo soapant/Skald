@@ -217,7 +217,8 @@ static void manifest_write_baseline(const char *name) {
 
     char dir[512];
     if (!flint_feature_dir(name, dir, sizeof(dir))) return;
-    nob_mkdir_if_not_exists(dir);
+    struct stat dst;
+    if (stat(dir, &dst) != 0 || !S_ISDIR(dst.st_mode)) return;
     f = fopen(path, "wb");
     if (!f) return;
     fprintf(f, "name = \"%s\"\n", name);
@@ -472,6 +473,16 @@ bool FeatureLoader_LoadAllFromDir(const char* dir) {
         snprintf(nm, sizeof(nm), "%s", e->d_name);
         char* dot = strrchr(nm, '.');
         if (dot) *dot = '\0';
+        char fdir[512];
+        if (!flint_feature_dir(nm, fdir, sizeof(fdir))) continue;
+        struct stat fst;
+        if (stat(fdir, &fst) != 0 || !S_ISDIR(fst.st_mode)) {
+            char orphan[1024];
+            snprintf(orphan, sizeof(orphan), "%s/%s%s", dir, nm, ext);
+            printf("flint: removed orphan feature '%s' (no src/features/%s)\n", nm, nm);
+            remove(orphan);
+            continue;
+        }
         manifest_write_baseline(nm);
         snprintf(names[n_names++], sizeof(names[0]), "%s", nm);
     }
