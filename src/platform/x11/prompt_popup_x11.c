@@ -17,6 +17,7 @@
 #include "platform/x11/window_factory_x11.h"
 #include "platform/input.h"
 #include "bindings/vim_helpers.h"
+#include "bindings/vim_state.h"
 #include "helpers/helpers_alias.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
@@ -157,8 +158,46 @@ PROFILE_START(timer);
     bool ctrl_pressed = key->ctrl;
     bool shift_pressed = key->shift;
     bool alt_pressed = key->alt;
+    if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
+        int len = (int)strlen(state->filter);
+        VimState_BeginSelection(0);
+        VimState_UpdateSelection(len);
+        state->cursor = len;
+        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
+        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true;
+    }
+    if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            if (se < ss) { int t=ss; ss=se; se=t; }
+            int len=(int)strlen(state->filter);
+            if (ss<0) ss=0; if (se>len) se=len;
+            if (se>ss) {
+                char buf[512];
+                int n=se-ss; if (n>=(int)sizeof(buf)) n=(int)sizeof(buf)-1;
+                memcpy(buf, state->filter+ss, n); buf[n]='\0';
+                Platform_CopyToClipboard(buf);
+            }
+        }
+        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true;
+    }
     if (PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
     if (wParam == VK_BACK) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            if (se < ss) { int t=ss; ss=se; se=t; }
+            int len=(int)strlen(state->filter);
+            if (ss<0) ss=0; if (se>len) se=len;
+            if (se>ss) {
+                memmove(state->filter+ss, state->filter+se, len-se+1);
+                state->cursor = ss;
+                VimState_EndSelection();
+                if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
+                PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
+                return true;
+            }
+            VimState_EndSelection();
+        }
         if (ctrl_pressed) {
             state->filter[0] = '\0';
             state->cursor = 0;
@@ -191,11 +230,13 @@ PROFILE_START(timer);
         }
     }
     if (wParam == VK_RIGHT) {
+      VimState_EndSelection();
       CursorForward(&state->cursor, strlen(state->filter));
       PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
       return true;
     }
     if (wParam == VK_LEFT) {
+      VimState_EndSelection();
        CursorBack(&state->cursor, strlen(state->filter));
       PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
       return true;
@@ -235,6 +276,21 @@ PROFILE_START(timer);
       return true;
     }
     if (wParam == VK_DELETE) {
+      int ss=0, se=0;
+      if (VimState_GetSelection(&ss, &se)) {
+        if (se < ss) { int t=ss; ss=se; se=t; }
+        int len=(int)strlen(state->filter);
+        if (ss<0) ss=0; if (se>len) se=len;
+        if (se>ss) {
+            memmove(state->filter+ss, state->filter+se, len-se+1);
+            state->cursor = ss;
+            VimState_EndSelection();
+            if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
+            PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
+            return true;
+        }
+        VimState_EndSelection();
+      }
       if (state && EditBufferDeleteChar(state->filter, &state->cursor)) {
         History_ResetCursor(FlintContext_Get()->window.current_feature);
         if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
@@ -243,11 +299,13 @@ PROFILE_START(timer);
       return true;
     }
     if (wParam == VK_HOME) {
+      VimState_EndSelection();
       SetCursorToStartOfText(FlintContext_Get());
       PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
       return true;
     }
     if (wParam == VK_END) {
+      VimState_EndSelection();
       SetCursorToEndOfText(FlintContext_Get());
       PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
       return true;
@@ -381,6 +439,17 @@ PROFILE_START(timer);
             bool is_printable = true;
             for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
             if (is_printable) {
+                int ss=0, se=0;
+                if (VimState_GetSelection(&ss, &se)) {
+                    if (se < ss) { int t=ss; ss=se; se=t; }
+                    int len=(int)strlen(state->filter);
+                    if (ss<0) ss=0; if (se>len) se=len;
+                    if (se>ss) {
+                        memmove(state->filter+ss, state->filter+se, len-se+1);
+                        state->cursor = ss;
+                    }
+                    VimState_EndSelection();
+                }
                 size_t fcur = (size_t)state->cursor;
                 EditBufferInsertText(state->filter, sizeof(state->filter), &fcur, key->text, (size_t)key->text_len);
                 state->cursor = (int)fcur;
