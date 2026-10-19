@@ -16,6 +16,6 @@ static void do_shutdown(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_add_to_cc(.display_name="Restart/Reboot",.on_enter=do_restart,.type="SystemControl",.icon="⚙️");
-    fl_add_to_cc(.display_name="ShutDown",.on_enter=do_shutdown,.type="SystemControl",.icon="⚙️");
+    fl_add_to_cc(.display_name="Restart/Reboot",.on_enter=do_restart,.type="SystemControl",.icon="/refresh.png");
+    fl_add_to_cc(.display_name="ShutDown",.on_enter=do_shutdown,.type="SystemControl",.icon="/power.png");
 }
