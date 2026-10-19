@@ -1,0 +1,9 @@
+name = "pixel_helpers"
+description = ""
+
+[provides]
+pixel.wait_for_pixel
+pixel.pixel_color_matches
+
+[depends]
+
