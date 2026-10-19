@@ -21,27 +21,29 @@ WindowManager* wm = (WindowManager*)arg;
         char* filename = Platform_WatchForCFileChanges(FeaturePath);
         if (filename) {
             usleep(200000);
-            Platform_WatchForCFileChanges(FeaturePath);
+            char* drained = Platform_WatchForCFileChanges(FeaturePath);
+            free(drained);
             log_info("Changed file: %s", filename);
-            char buf[256];
-            strncpy(buf, filename, sizeof(buf)-1);
-            buf[sizeof(buf)-1]='\0';
-            free(filename);
-            char* base = strrchr(buf, '/');
-            if (!base) base = strrchr(buf, '\\');
-            if (base) base++; else base = buf;
-            char* dot = strrchr(base, '.');
+            char rel[256];
+            strncpy(rel, filename, sizeof(rel)-1);
+            rel[sizeof(rel)-1]='\0';
+            char* base = strrchr(rel, '/');
+            if (!base) base = strrchr(rel, '\\');
+            char name[128];
+            snprintf(name, sizeof(name), "%s", base ? base + 1 : rel);
+            char* dot = strrchr(name, '.');
             if (dot) *dot = '\0';
+            free(filename);
             if (!FeaturePath || !FeaturePath[0]) continue;
             char src[512], dll[512];
-            snprintf(src, sizeof(src), "%s/%s", FeaturePath, filename);
-            snprintf(dll, sizeof(dll), "build/features/%s.so", base);
+            snprintf(src, sizeof(src), "%s/%s", FeaturePath, rel);
+            snprintf(dll, sizeof(dll), "build/features/%s.so", name);
             log_info("recompiling %s -> %s", src, dll); fflush(stdout);
             if (Platform_BuildFeature(src, dll)) {
-                log_info("reload %s", base); fflush(stdout);
-                FeatureLoader_Reload(base);
+                log_info("reload %s", name); fflush(stdout);
+                FeatureLoader_Reload(name);
             } else {
-                log_error("compile failed for %s", base);
+                log_error("compile failed for %s", name);
             }
         }
         for (int i=0;i<5;i++) {

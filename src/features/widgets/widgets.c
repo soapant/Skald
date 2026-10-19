@@ -209,24 +209,25 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
 
 static void net_usage_tick(void);
 
+#define NET_ICON_WIFI     "src/features/widgets/net_wifi.png"
+#define NET_ICON_ETHERNET "src/features/widgets/net_ethernet.png"
+#define NET_ICON_OFFLINE  "src/features/widgets/net_offline.png"
+#define NET_ICON_SIZE 16
+
 static void widgets_internet_render(FlWidgetState *state) {
     net_usage_tick();
 
     FlNetStatus status = fl_net_status();
-    int x = 40;
-    int y = 7;
-    int fontsize = FONTSIZE + 1;
+    const char* icon = NULL;
     switch (status) {
-        case FL_NET_OFFLINE:
-            fl_draw_text(.text = "🚫",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
-            break;
-        case FL_NET_ETHERNET:
-            fl_draw_text(.text = "🔌",.x = x, .y = y - 2,.fontsize=fontsize,.align="LEFT");
-            break;
-        case FL_NET_WIFI:
-            fl_draw_text(.text = "ᯤ",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
-            break;
+        case FL_NET_OFFLINE:  icon = NET_ICON_OFFLINE;  break;
+        case FL_NET_ETHERNET: icon = NET_ICON_ETHERNET; break;
+        case FL_NET_WIFI:     icon = NET_ICON_WIFI;     break;
     }
+    if (!icon) return;
+
+    fl_draw_image(.path = icon, .x = 40,.y=2,
+                  .w = NET_ICON_SIZE, .h = NET_ICON_SIZE);
 }
 
 static FlWidget* g_disk = NULL;
