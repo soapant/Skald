@@ -164,7 +164,7 @@ PROFILE_START(timer);
             state->cursor = 0;
         } else {
             size_t fcur = (size_t)state->cursor;
-            if (!EditBufferBackspacePair(state->filter, &fcur)) {
+            if (!EditBufferBackspacePair(state->filter, &fcur) && IsInsertMode()) {
                 EditBufferBackspace(state->filter, &fcur);
             }
             state->cursor = (int)fcur;
