@@ -57,7 +57,7 @@ void last_image(void) {
         fl_close_active_window();
     }
     char cmd[512];
-    snprintf(cmd,sizeof(cmd),"feh /home/dog/Programming/RandomShit/shit/images/%i --zoom 65",previous_image_id);
+    snprintf(cmd,sizeof(cmd),"feh ~/Programming/RandomShit/shit/images/%i --zoom 65",previous_image_id);
     fl_launch_detached(cmd);
 }
 
