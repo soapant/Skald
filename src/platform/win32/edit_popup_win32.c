@@ -334,7 +334,7 @@ PROFILE_START(timer);
         return true;
     }
     if (wParam == VK_ESCAPE) {
-        if (IsInsertMode()) {
+        if (EnableVimMode && IsInsertMode()) {
             SetMode(MODE_NORMAL);
         } else {
             FlintContext_Get()->window.selection_complete = true;

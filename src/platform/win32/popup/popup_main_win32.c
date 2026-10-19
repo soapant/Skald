@@ -115,7 +115,7 @@ int wParam = key->vk;
 
     if (wParam == VK_ESCAPE) {
         if (FlintContext_Get()->window.editbox_placed) {
-            if (IsInsertMode()) {
+            if (EnableVimMode && IsInsertMode()) {
                 SetModeWithListBox(MODE_NORMAL, lb);
             } else {
                 FlintContext_Get()->window.output_buffer[0] = '\0';
