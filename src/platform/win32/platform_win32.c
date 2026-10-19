@@ -655,83 +655,101 @@ typedef struct { char path[256]; char file[256]; FILETIME lastWrite; bool inited
 static CWatch g_c_watches[MAX_C_WATCH];
 static int g_c_watch_count = 0;
 static char g_c_watch_dir[256] = {0};
-static char g_last_c_file[256] = {0};
+static char g_last_c_file[512] = {0};
 static DWORD g_last_c_tick = 0;
 
-char* Platform_WatchForCFileChanges(const char* dir_path) {
-        PROFILE_START(_pt);
-if (!dir_path) { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
-    const char* watch_dir = dir_path;
-    if (!watch_dir || !watch_dir[0]) watch_dir = FeaturePath ? FeaturePath : "src/features";
-
-    bool found_dir = false;
-    for (int i = 0; i < g_c_watch_count; i++) if (strcmp(g_c_watches[i].path, watch_dir) == 0) { found_dir = true; break; }
-    if (!found_dir && g_c_watch_count == 0) {
-        strncpy(g_c_watch_dir, watch_dir, sizeof(g_c_watch_dir)-1);
-
-        char pattern[MAX_PATH];
-        snprintf(pattern, sizeof(pattern), "%s\\*.c", watch_dir);
-        WIN32_FIND_DATAA fd;
-        HANDLE hFind = FindFirstFileA(pattern, &fd);
-        if (hFind != INVALID_HANDLE_VALUE) {
-            do {
-                if (g_c_watch_count >= MAX_C_WATCH) break;
-                strncpy(g_c_watches[g_c_watch_count].path, watch_dir, sizeof(g_c_watches[0].path)-1);
-                strncpy(g_c_watches[g_c_watch_count].file, fd.cFileName, sizeof(g_c_watches[0].file)-1);
-                g_c_watches[g_c_watch_count].lastWrite = fd.ftLastWriteTime;
-                g_c_watches[g_c_watch_count].inited = true;
-                g_c_watch_count++;
-            } while (FindNextFileA(hFind, &fd));
-            FindClose(hFind);
-        }
-        return NULL;
+static void c_watch_rel_of(const char* root, const char* dir, const char* file, char* out, size_t n) {
+    size_t root_len = strlen(root);
+    if (strncmp(dir, root, root_len) == 0 && dir[root_len] == '\\') {
+        snprintf(out, n, "%s\\%s", dir + root_len + 1, file);
+    } else {
+        snprintf(out, n, "%s", file);
     }
+}
 
+static char* c_watch_scan(const char* root, const char* dir, bool report) {
+        PROFILE_START(_pt);
     char pattern[MAX_PATH];
-    snprintf(pattern, sizeof(pattern), "%s\\*.c", watch_dir);
+    snprintf(pattern, sizeof(pattern), "%s\\*.c", dir);
     WIN32_FIND_DATAA fd;
     HANDLE hFind = FindFirstFileA(pattern, &fd);
-    if (hFind == INVALID_HANDLE_VALUE) { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
+    if (hFind == INVALID_HANDLE_VALUE) { PROFILE_END_VAR(_pt, "c_watch_scan"); return NULL; }
+    char* ret = NULL;
     do {
-        bool found = false;
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+        int idx = -1;
         for (int i = 0; i < g_c_watch_count; i++) {
-            if (strcmp(g_c_watches[i].path, watch_dir) == 0 && strcmp(g_c_watches[i].file, fd.cFileName) == 0) {
-                found = true;
-                if (CompareFileTime(&fd.ftLastWriteTime, &g_c_watches[i].lastWrite) != 0) {
-                    DWORD now = GetTickCount();
-                    bool debounce = (strcmp(g_last_c_file, fd.cFileName)==0 && (now - g_last_c_tick) < 1500);
-                    g_c_watches[i].lastWrite = fd.ftLastWriteTime;
-                    if (debounce) {
-                        break;
-                    }
-                    strncpy(g_last_c_file, fd.cFileName, sizeof(g_last_c_file)-1);
-                    g_last_c_tick = now;
-                    char* ret = _strdup(fd.cFileName);
-                    FindClose(hFind);
-                    return ret;
-                }
-                break;
-            }
+            if (strcmp(g_c_watches[i].path, dir) == 0 && strcmp(g_c_watches[i].file, fd.cFileName) == 0) { idx = i; break; }
         }
-        if (!found && g_c_watch_count < MAX_C_WATCH) {
-            strncpy(g_c_watches[g_c_watch_count].path, watch_dir, sizeof(g_c_watches[0].path)-1);
+        if (idx >= 0) {
+            if (CompareFileTime(&fd.ftLastWriteTime, &g_c_watches[idx].lastWrite) == 0) continue;
+            g_c_watches[idx].lastWrite = fd.ftLastWriteTime;
+        } else {
+            if (g_c_watch_count >= MAX_C_WATCH) continue;
+            strncpy(g_c_watches[g_c_watch_count].path, dir, sizeof(g_c_watches[0].path)-1);
+            g_c_watches[g_c_watch_count].path[sizeof(g_c_watches[0].path)-1] = '\0';
             strncpy(g_c_watches[g_c_watch_count].file, fd.cFileName, sizeof(g_c_watches[0].file)-1);
+            g_c_watches[g_c_watch_count].file[sizeof(g_c_watches[0].file)-1] = '\0';
             g_c_watches[g_c_watch_count].lastWrite = fd.ftLastWriteTime;
             g_c_watches[g_c_watch_count].inited = true;
             g_c_watch_count++;
-            DWORD now = GetTickCount();
-            if (strcmp(g_last_c_file, fd.cFileName)==0 && (now - g_last_c_tick) < 1500) {
-                break;
-            }
-            strncpy(g_last_c_file, fd.cFileName, sizeof(g_last_c_file)-1);
-            g_last_c_tick = now;
-            char* ret = _strdup(fd.cFileName);
-            FindClose(hFind);
-            return ret;
         }
+        if (!report) continue;
+        char rel[512];
+        c_watch_rel_of(root, dir, fd.cFileName, rel, sizeof(rel));
+        DWORD now = GetTickCount();
+        if (strcmp(g_last_c_file, rel) == 0 && (now - g_last_c_tick) < 1500) continue;
+        strncpy(g_last_c_file, rel, sizeof(g_last_c_file)-1);
+        g_last_c_file[sizeof(g_last_c_file)-1] = '\0';
+        g_last_c_tick = now;
+        ret = _strdup(rel);
+        break;
     } while (FindNextFileA(hFind, &fd));
     FindClose(hFind);
-    { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
+    { PROFILE_END_VAR(_pt, "c_watch_scan"); return ret; }
+}
+
+static char* c_watch_scan_tree(const char* root, bool report) {
+        PROFILE_START(_pt);
+    char* ret = c_watch_scan(root, root, report);
+    if (ret) { PROFILE_END_VAR(_pt, "c_watch_scan_tree"); return ret; }
+    char pattern[MAX_PATH];
+    snprintf(pattern, sizeof(pattern), "%s\\*", root);
+    WIN32_FIND_DATAA fd;
+    HANDLE hFind = FindFirstFileA(pattern, &fd);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) continue;
+            if (fd.cFileName[0] == '.') continue;
+            char sub[MAX_PATH];
+            snprintf(sub, sizeof(sub), "%s\\%s", root, fd.cFileName);
+            char* found = c_watch_scan(root, sub, report);
+            if (found) { ret = found; break; }
+        } while (FindNextFileA(hFind, &fd));
+        FindClose(hFind);
+    }
+    { PROFILE_END_VAR(_pt, "c_watch_scan_tree"); return ret; }
+}
+
+char* Platform_WatchForCFileChanges(const char* dir_path) {
+        PROFILE_START(_pt);
+    if (!dir_path) { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
+    const char* watch_dir = dir_path;
+    if (!watch_dir || !watch_dir[0]) watch_dir = FeaturePath ? FeaturePath : "src/features";
+
+    if (g_c_watch_count == 0 || strcmp(g_c_watch_dir, watch_dir) != 0) {
+        g_c_watch_count = 0;
+        strncpy(g_c_watch_dir, watch_dir, sizeof(g_c_watch_dir)-1);
+        g_c_watch_dir[sizeof(g_c_watch_dir)-1] = '\0';
+        g_last_c_file[0] = '\0';
+        g_last_c_tick = 0;
+        char* found = c_watch_scan_tree(watch_dir, false);
+        if (found) free(found);
+        { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
+    }
+
+    char* ret = c_watch_scan_tree(watch_dir, true);
+    { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return ret; }
 }
 
 void Platform_CleanupDirWatchers(void) {

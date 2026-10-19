@@ -224,7 +224,7 @@ static void widgets_internet_render(FlWidgetState *state) {
             fl_draw_text(.text = "🔌",.x = x, .y = y - 2,.fontsize=fontsize,.align="LEFT");
             break;
         case FL_NET_WIFI:
-            fl_draw_text(.text = "",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
+            fl_draw_text(.text = "ᯤ",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
             break;
     }
 }
