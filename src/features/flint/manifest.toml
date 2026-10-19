@@ -1,8 +1,0 @@
-name = "flint"
-description = ""
-
-[provides]
-pixel.get_pixel_color
-
-[depends]
-
