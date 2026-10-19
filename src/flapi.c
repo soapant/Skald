@@ -506,9 +506,16 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
     if (existing) {
     PROFILE_START(_pt);
         existing->cb = spec->cb;
-        if (icon_path) {
-            strncpy(existing->icon, icon_path, sizeof(existing->icon)-1);
-            existing->icon[sizeof(existing->icon)-1] = '\0';
+        if (icon_path && icon_path[0]) {
+            char icon_asset[MAX_PATH];
+            if ((icon_path[0] == '/' || icon_path[0] == '\\') &&
+                Platform_ResolveAssetPath(__builtin_return_address(0), icon_path, icon_asset, sizeof(icon_asset))) {
+                strncpy(existing->icon, icon_asset, sizeof(existing->icon)-1);
+                existing->icon[sizeof(existing->icon)-1] = '\0';
+            } else {
+                strncpy(existing->icon, icon_path, sizeof(existing->icon)-1);
+                existing->icon[sizeof(existing->icon)-1] = '\0';
+            }
         } else {
             existing->icon[0] = '\0';
         }
@@ -520,9 +527,16 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
     strncpy(reg->name, spec->name, sizeof(reg->name)-1);
     reg->name[sizeof(reg->name)-1] = '\0';
     reg->cb = spec->cb;
-    if (icon_path) {
-        strncpy(reg->icon, icon_path, sizeof(reg->icon)-1);
-        reg->icon[sizeof(reg->icon)-1] = '\0';
+    if (icon_path && icon_path[0]) {
+        char icon_asset[MAX_PATH];
+        if ((icon_path[0] == '/' || icon_path[0] == '\\') &&
+            Platform_ResolveAssetPath(__builtin_return_address(0), icon_path, icon_asset, sizeof(icon_asset))) {
+            strncpy(reg->icon, icon_asset, sizeof(reg->icon)-1);
+            reg->icon[sizeof(reg->icon)-1] = '\0';
+        } else {
+            strncpy(reg->icon, icon_path, sizeof(reg->icon)-1);
+            reg->icon[sizeof(reg->icon)-1] = '\0';
+        }
     }
     shput(g_feature_map, reg->name, reg);
     if (g_feature_order_count >= g_feature_order_cap) {

@@ -213,7 +213,7 @@ void typing_test_render(PromptState *state) {
         if (draw_cursor && typing_test_position < text_len) {
             fl_draw_rect(.x = positions[typing_test_position].x + margin + 2,
                          .y = positions[typing_test_position].y + base / 4 + 2,
-                         .w = body / 2, .h = body);
+                         .w = body / 2, .h = body + 4);
         }
 
         for (int i = 0; i < text_len; i++) {
@@ -271,5 +271,5 @@ void TriggerTypingTest(void) {
 FLINT_FEATURE_INIT {
     text = typing_test_get_random_text(typing_test_word_count);
     fl_register_hotkey("Alt+B", TriggerTypingTest);
-    fl_register_feature(.name="Typing Test",.cb=TriggerTypingTest);
+    fl_register_feature(.name="Typing Test",.cb=TriggerTypingTest,.icon="/keyboard.png");
 }
