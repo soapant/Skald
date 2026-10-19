@@ -152,6 +152,42 @@ cleanup:
     return;
 }
 
+#define VK_MEDIA_PLAY_PAUSE 0xB3
+
+void toggle_play_pause(void) {
+    #if defined(_WIN32)
+      INPUT input[2] = {0};
+
+      input[0].type = INPUT_KEYBOARD;
+      input[0].ki.wVk = VK_MEDIA_PLAY_PAUSE;
+
+      input[1].type = INPUT_KEYBOARD;
+      input[1].ki.wVk = VK_MEDIA_PLAY_PAUSE;
+      input[1].ki.dwFlags = KEYEVENTF_KEYUP;
+
+      SendInput(2, input, sizeof(INPUT));
+    #else
+      GError *error = NULL;
+      GDBusConnection *conn = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+      if (!conn) { g_error_free(error); return; }
+
+      gchar* bus_name = FindPlayerBusName(conn);
+      if (!bus_name) { g_object_unref(conn); return; }
+
+      GDBusProxy *proxy = g_dbus_proxy_new_sync(conn, G_DBUS_PROXY_FLAGS_NONE, NULL,
+          bus_name, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player", NULL, &error);
+      
+      if (proxy) {
+          g_dbus_proxy_call_sync(proxy, "PlayPause", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+          g_object_unref(proxy);
+      }
+
+      if (error) g_error_free(error);
+      g_free(bus_name);
+      g_object_unref(conn);
+    #endif
+}
+
 void increment_volume() {
     set_volume(get_current_volume() + 10);
 }
@@ -163,5 +199,5 @@ void decrement_volume() {
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+]",increment_volume);
     fl_register_hotkey("Ctrl+[",decrement_volume);
-    fl_register_hotkey("RShift",fl_toggle_play_pause);
+    fl_register_hotkey("RShift",toggle_play_pause); 
 }

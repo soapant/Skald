@@ -1596,12 +1596,6 @@ PlWindowList fl_get_all_window_names() {
   return l;
 }
 
-void fl_toggle_play_pause(void) {
-    PROFILE_START(_pt);
-  fl_toggle_play_pause_platform();
-  { PROFILE_END_VAR(_pt, "fl_toggle_play_pause"); return ; }
-}
-
 PlColor fl_get_pixel_color(PlPos pos) {
   PROFILE_START(_pt);
   PlColor c = Platform_GetPixelColor(pos.x, pos.y);
