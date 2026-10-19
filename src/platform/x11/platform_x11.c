@@ -1003,6 +1003,11 @@ static bool g_watch_quit = false;
 static int g_cfile_fd = -1;
 static char g_cfile_root[256] = {0};
 
+#define MAX_CFILE_DIRS 130
+typedef struct { int wd; char rel[256]; } CFileDir;
+static CFileDir g_cfile_dirs[MAX_CFILE_DIRS];
+static int g_cfile_dir_count = 0;
+
 static void watch_record_path(int wd, int root_index, const char* abs_path) {
         PROFILE_START(_pt);
 for (int i = 0; i < g_watch_path_count; i++) {
@@ -1237,6 +1242,43 @@ pthread_mutex_lock(&g_watch_mtx);
         g_cfile_fd = -1;
     }
     g_cfile_root[0] = '\0';
+    g_cfile_dir_count = 0;
+}
+
+static void cfile_add_watch_dir(int fd, const char* abs_dir, const char* rel) {
+    int wd = inotify_add_watch(fd, abs_dir, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVE_SELF);
+    if (wd < 0) return;
+    for (int i = 0; i < g_cfile_dir_count; i++) {
+        if (g_cfile_dirs[i].wd == wd) return;
+    }
+    if (g_cfile_dir_count >= MAX_CFILE_DIRS) return;
+    g_cfile_dirs[g_cfile_dir_count].wd = wd;
+    snprintf(g_cfile_dirs[g_cfile_dir_count].rel, sizeof(g_cfile_dirs[0].rel), "%s", rel ? rel : "");
+    g_cfile_dir_count++;
+}
+
+static const char* cfile_dir_for_wd(int wd) {
+    for (int i = 0; i < g_cfile_dir_count; i++) {
+        if (g_cfile_dirs[i].wd == wd) return g_cfile_dirs[i].rel;
+    }
+    return NULL;
+}
+
+static void cfile_watch_tree(int fd, const char* root, const char* rel) {
+    cfile_add_watch_dir(fd, root, rel);
+    if (rel[0]) return;
+    DIR* d = opendir(root);
+    if (!d) return;
+    struct dirent* e;
+    while ((e = readdir(d)) != NULL) {
+        if (e->d_name[0] == '.') continue;
+        char abs[512];
+        snprintf(abs, sizeof(abs), "%s/%s", root, e->d_name);
+        struct stat st;
+        if (stat(abs, &st) != 0 || !S_ISDIR(st.st_mode)) continue;
+        cfile_add_watch_dir(fd, abs, e->d_name);
+    }
+    closedir(d);
 }
 
 char* Platform_WatchForCFileChanges(const char* dir_path) {
@@ -1254,8 +1296,9 @@ PROFILE_START(timer);
             PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
             return NULL;
         }
-        int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVE_SELF);
-        if (wd < 0) {
+        g_cfile_dir_count = 0;
+        cfile_watch_tree(fd, dir_path, "");
+        if (g_cfile_dir_count == 0) {
             close(fd);
             PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
             return NULL;
@@ -1264,6 +1307,20 @@ PROFILE_START(timer);
         snprintf(g_cfile_root, sizeof(g_cfile_root), "%s", dir_path);
         PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
         return NULL;
+    }
+
+    DIR* root = opendir(g_cfile_root);
+    if (root) {
+        struct dirent* e;
+        while ((e = readdir(root)) != NULL) {
+            if (e->d_name[0] == '.') continue;
+            char abs[512];
+            snprintf(abs, sizeof(abs), "%s/%s", g_cfile_root, e->d_name);
+            struct stat st;
+            if (stat(abs, &st) != 0 || !S_ISDIR(st.st_mode)) continue;
+            cfile_add_watch_dir(g_cfile_fd, abs, e->d_name);
+        }
+        closedir(root);
     }
 
     char buffer[8 * 1024];
@@ -1277,7 +1334,17 @@ PROFILE_START(timer);
             const char* name = event->name;
             size_t name_len = strlen(name);
             if (name_len > 2 && strcmp(name + name_len - 2, ".c") == 0) {
-                char* found_name = strdup(event->name);
+                const char* rel = cfile_dir_for_wd(event->wd);
+                char* found_name = NULL;
+                if (rel) {
+                    if (rel[0]) {
+                        char joined[512];
+                        snprintf(joined, sizeof(joined), "%s/%s", rel, name);
+                        found_name = strdup(joined);
+                    } else {
+                        found_name = strdup(name);
+                    }
+                }
                 if (found_name) {
                     PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
                     return found_name;

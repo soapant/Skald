@@ -168,11 +168,10 @@ static int g_feature_init_count = 0;
 
 #define FLINT_MANIFEST_LIST_MAX 32
 
-static const char* flint_manifest_dir(void) {
-    if (!FeaturePath || !FeaturePath[0]) return NULL;
-    static char buf[512];
-    snprintf(buf, sizeof(buf), "%s/manifests", FeaturePath);
-    return buf;
+static bool flint_feature_dir(const char* name, char* out, size_t n) {
+    if (!FeaturePath || !FeaturePath[0] || !name || !name[0]) return false;
+    snprintf(out, n, "%s/%s", FeaturePath, name);
+    return true;
 }
 
 typedef struct {
@@ -204,20 +203,20 @@ static void manifest_unquote(char *s) {
 }
 
 static bool manifest_path(const char *name, char *out, size_t n) {
-    const char *dir = flint_manifest_dir();
-    if (!dir) return false;
-    snprintf(out, n, "%s/%s.toml", dir, name);
+    char dir[512];
+    if (!flint_feature_dir(name, dir, sizeof(dir))) return false;
+    snprintf(out, n, "%s/manifest.toml", dir);
     return true;
 }
 
 static void manifest_write_baseline(const char *name) {
     char path[512];
     if (!manifest_path(name, path, sizeof(path))) return;
-    const char *dir = flint_manifest_dir();
-    if (!dir) return;
     FILE *f = fopen(path, "rb");
     if (f) { fclose(f); return; }
 
+    char dir[512];
+    if (!flint_feature_dir(name, dir, sizeof(dir))) return;
     nob_mkdir_if_not_exists(dir);
     f = fopen(path, "wb");
     if (!f) return;
