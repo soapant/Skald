@@ -388,112 +388,329 @@ PROFILE_START(timer);
 }
 
 static char* Platform_RunCommandDetachedCapture(char* command) {
-        PROFILE_START(_pt);
-int pfd[2];
-    if (pipe(pfd) != 0) { log_error("pipe failed cmd='%s' err=%d", command ? command : "null", errno); return strdup(""); }
+    PROFILE_START(_pt);
+
+    if (!command || !*command) {
+        log_error("capture: null/empty command");
+        PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture");
+        return strdup("");
+    }
+
+    const char* real_user = Platform_GetRealUser();
+    const char* real_home = Platform_GetRealHome();
+
+    log_info("capture: original cmd='%s'", command);
+    log_info("capture: real_user='%s' real_home='%s' is_root=%d",
+             real_user ? real_user : "(null)",
+             real_home ? real_home : "(null)",
+             Platform_IsRunningAsRoot());
+
+    char expanded[4096];
+    const char* final_cmd = command;
+
+    if (command[0] == '~' && (command[1] == '/' || command[1] == '\0') && real_home && real_home[0]) {
+        // real_home already has the leading '/', command+1 starts with '/'
+        snprintf(expanded, sizeof(expanded), "%s%s", real_home, command + 1);
+        final_cmd = expanded;
+        log_info("capture: expanded cmd='%s'", final_cmd);
+    }
+
+    // Existence check on the script part only
+    {
+        char test_path[4096];
+        const char* space = strchr(final_cmd, ' ');
+        size_t len = space ? (size_t)(space - final_cmd) : strlen(final_cmd);
+        if (len >= sizeof(test_path)) len = sizeof(test_path) - 1;
+        memcpy(test_path, final_cmd, len);
+        test_path[len] = '\0';
+
+        if (access(test_path, X_OK) != 0) {
+            log_error("capture: script not executable or not found: '%s' (errno=%d %s)",
+                      test_path, errno, strerror(errno));
+        } else {
+            log_info("capture: script exists and is executable: '%s'", test_path);
+        }
+    }
+
+    int pfd[2];
+    if (pipe(pfd) != 0) {
+        log_error("capture: pipe failed cmd='%s' err=%d %s", final_cmd, errno, strerror(errno));
+        PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture");
+        return strdup("");
+    }
+
     pid_t pid = fork();
-    if (pid < 0) { log_error("fork failed cmd='%s' err=%d", command ? command : "null", errno); close(pfd[0]); close(pfd[1]); return strdup(""); }
-    if (pid == 0) {
-        setsid();
-        pid_t pid2 = fork();
-        if (pid2 < 0) _exit(1);
-        if (pid2 > 0) _exit(0);
+    if (pid < 0) {
+        log_error("capture: fork failed cmd='%s' err=%d %s", final_cmd, errno, strerror(errno));
+        close(pfd[0]);
+        close(pfd[1]);
+        PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture");
+        return strdup("");
+    }
+
+    if (pid == 0) {  // child
+        // Optional: drop privileges here if you have the helper
+        // if (Platform_IsRunningAsRoot()) Platform_DropToRealUser();
+
+        if (real_home) setenv("HOME", real_home, 1);
+        if (real_user) {
+            setenv("USER", real_user, 1);
+            setenv("LOGNAME", real_user, 1);
+        }
+
         close(pfd[0]);
         signal(SIGPIPE, SIG_IGN);
         dup2(pfd[1], STDOUT_FILENO);
         dup2(pfd[1], STDERR_FILENO);
         if (pfd[1] > 2) close(pfd[1]);
+
         int fd = open("/dev/null", O_RDONLY);
-        if (fd >= 0) { dup2(fd, STDIN_FILENO); if (fd > 2) close(fd); }
-        execl("/bin/sh", "sh", "-c", command, (char*)NULL);
+        if (fd >= 0) {
+            dup2(fd, STDIN_FILENO);
+            if (fd > 2) close(fd);
+        }
+
+        // Log right before exec (will appear in the captured output if it gets that far)
+        // (we can't use log_* here reliably after dup2, so just exec)
+        execl("/bin/sh", "sh", "-c", final_cmd, (char*)NULL);
+
+        // If we reach here, execl failed
+        // Write a clear message to the pipe so parent can see it
+        const char* msg = "execl /bin/sh failed\n";
+        write(STDOUT_FILENO, msg, strlen(msg));
         _exit(127);
     }
+
+    // parent
     close(pfd[1]);
-    int st = 0;
-    waitpid(pid, &st, 0);
+    log_info("capture: forked child pid=%d for cmd='%s'", (int)pid, final_cmd);
+
+    int flags = fcntl(pfd[0], F_GETFL, 0);
+    if (flags >= 0) fcntl(pfd[0], F_SETFL, flags | O_NONBLOCK);
+
     size_t cap = 8192;
     size_t total = 0;
     char* out = malloc(cap);
-    if (!out) { close(pfd[0]); return strdup(""); }
-    int flags = fcntl(pfd[0], F_GETFL, 0);
-    if (flags >= 0) fcntl(pfd[0], F_SETFL, flags | O_NONBLOCK);
+    if (!out) {
+        log_error("capture: malloc failed");
+        close(pfd[0]);
+        waitpid(pid, NULL, 0);
+        PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture");
+        return strdup("");
+    }
+
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    long quiet_ms = 350;
-    long drain_ms = 5000;
-    long deadline = quiet_ms;
+
+    const long drain_ms = 8000;
+    const long start_ms = 30000;   // 30 s max for first data (was 180 s, shortened for testing)
+    long deadline = start_ms;
     bool got_data = false;
     bool eof = false;
     char buf[16096];
+    int poll_count = 0;
+
     while (1) {
         struct timespec now;
         clock_gettime(CLOCK_MONOTONIC, &now);
-        long elapsed = (now.tv_sec - start.tv_sec) * 1000L + (now.tv_nsec - start.tv_nsec) / 1000000L;
+        long elapsed = (now.tv_sec - start.tv_sec) * 1000L +
+                       (now.tv_nsec - start.tv_nsec) / 1000000L;
         long remain = deadline - elapsed;
-        if (remain <= 0) break;
-        struct pollfd p = { pfd[0], POLLIN | POLLHUP | POLLERR, 0 };
+        if (remain <= 0) {
+            log_info("capture: deadline reached (elapsed=%ld ms, got_data=%d)", elapsed, got_data);
+            break;
+        }
+
+        struct pollfd p = { .fd = pfd[0], .events = POLLIN | POLLHUP | POLLERR };
         int r = poll(&p, 1, (int)remain);
-        if (r < 0) { if (errno == EINTR) continue; break; }
-        if (r == 0) break;
+        poll_count++;
+
+        if (r < 0) {
+            if (errno == EINTR) continue;
+            log_error("capture: poll error err=%d %s", errno, strerror(errno));
+            break;
+        }
+        if (r == 0) {
+            log_info("capture: poll timeout (elapsed=%ld)", elapsed);
+            break;
+        }
+
+        log_info("capture: poll ok revents=0x%x elapsed=%ld", p.revents, elapsed);
+
         ssize_t n;
         bool read_any = false;
         while ((n = read(pfd[0], buf, sizeof(buf))) > 0) {
             read_any = true;
-            if (!got_data) { got_data = true; deadline = elapsed + drain_ms; if (deadline < quiet_ms) deadline = quiet_ms; }
+            if (!got_data) {
+                got_data = true;
+                deadline = elapsed + drain_ms;
+                log_info("capture: first data received (%zd bytes), new deadline=%ld", n, deadline);
+            }
             while (total + (size_t)n + 1 > cap) {
                 cap *= 2;
                 char* no = realloc(out, cap);
-                if (!no) { free(out); close(pfd[0]); return strdup(""); }
+                if (!no) {
+                    log_error("capture: realloc failed");
+                    free(out);
+                    close(pfd[0]);
+                    waitpid(pid, NULL, 0);
+                    PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture");
+                    return strdup("");
+                }
                 out = no;
             }
             memcpy(out + total, buf, (size_t)n);
             total += (size_t)n;
+
             clock_gettime(CLOCK_MONOTONIC, &now);
-            elapsed = (now.tv_sec - start.tv_sec) * 1000L + (now.tv_nsec - start.tv_nsec) / 1000000L;
+            elapsed = (now.tv_sec - start.tv_sec) * 1000L +
+                      (now.tv_nsec - start.tv_nsec) / 1000000L;
             if (got_data) deadline = elapsed + drain_ms;
         }
-        if (n == 0) { eof = true; break; }
-        if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-            if (p.revents & POLLHUP) { eof = true; }
+
+        if (n == 0) {
+            log_info("capture: read returned 0 (EOF)");
+            eof = true;
             break;
         }
-        if (!read_any && (p.revents & POLLHUP)) { eof = true; break; }
+        if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            log_error("capture: read error n=%zd err=%d %s", n, errno, strerror(errno));
+            if (p.revents & POLLHUP) eof = true;
+            break;
+        }
+        if (!read_any && (p.revents & POLLHUP)) {
+            log_info("capture: POLLHUP with no data");
+            eof = true;
+            break;
+        }
     }
+
     close(pfd[0]);
-    (void)eof;
+
+    int status = 0;
+    pid_t waited = waitpid(pid, &status, 0);
+    log_info("capture: waitpid returned %d, status=0x%x", (int)waited, status);
+
+    if (WIFEXITED(status)) {
+        log_info("capture: child exited normally with code %d", WEXITSTATUS(status));
+    } else if (WIFSIGNALED(status)) {
+        log_error("capture: child killed by signal %d", WTERMSIG(status));
+    } else {
+        log_error("capture: child ended with unexpected status 0x%x", status);
+    }
+
     if (total + 1 > cap) {
         char* no = realloc(out, total + 1);
-        if (!no) { free(out); return strdup(""); }
+        if (!no) {
+            free(out);
+            PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture");
+            return strdup("");
+        }
         out = no;
     }
     out[total] = '\0';
-    if (total == 0) log_error("capture empty cmd='%s' eof=%d", command ? command : "null", eof);
-    { PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture"); return out; }
+
+    log_info("capture: finished total_bytes=%zu eof=%d poll_count=%d", total, eof, poll_count);
+    if (total == 0) {
+        log_error("capture empty cmd='%s' eof=%d status=0x%x", final_cmd, eof, status);
+    } else {
+        // Log first 200 chars of output for debugging
+        char preview[201];
+        size_t plen = total < 200 ? total : 200;
+        memcpy(preview, out, plen);
+        preview[plen] = '\0';
+        log_info("capture: output preview: '%s'", preview);
+    }
+
+    PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture");
+    return out;
 }
 
 bool Platform_LaunchDetached(char* command) {
-        PROFILE_START(_pt);
-if (!command || !command[0]) { PROFILE_END_VAR(_pt, "Platform_LaunchDetached"); return false; }
+    PROFILE_START(_pt);
+
+    if (!command || !command[0]) {
+        log_error("LaunchDetached: null or empty command");
+        PROFILE_END_VAR(_pt, "Platform_LaunchDetached");
+        return false;
+    }
+
+    log_info("LaunchDetached: starting cmd='%s'", command);
+
     pid_t pid = fork();
-    if (pid < 0) { PROFILE_END_VAR(_pt, "Platform_LaunchDetached"); return false; }
+    if (pid < 0) {
+        log_error("LaunchDetached: fork failed: %s", strerror(errno));
+        PROFILE_END_VAR(_pt, "Platform_LaunchDetached");
+        return false;
+    }
+
     if (pid == 0) {
-        setsid();
+        // child
+        log_info("LaunchDetached: child pid=%d starting setsid", (int)getpid());
+
+        if (setsid() < 0) {
+            // can't log easily after this point, just exit
+            _exit(1);
+        }
+
         pid_t pid2 = fork();
-        if (pid2 < 0) _exit(1);
-        if (pid2 > 0) _exit(0);
+        if (pid2 < 0) {
+            _exit(1);
+        }
+        if (pid2 > 0) {
+            // intermediate process exits immediately
+            _exit(0);
+        }
+
+        // === grandchild ===
         int fd = open("/dev/null", O_RDWR);
         if (fd >= 0) {
-            dup2(fd, 0);
-            dup2(fd, 1);
-            dup2(fd, 2);
+            dup2(fd, STDIN_FILENO);
+            dup2(fd, STDOUT_FILENO);
+            dup2(fd, STDERR_FILENO);
             if (fd > 2) close(fd);
         }
+
+        const char* real_home = Platform_GetRealHome();
+        if (real_home) setenv("HOME", real_home, 1);
+
+        const char* display = getenv("DISPLAY");
+        if (display) setenv("DISPLAY", display, 1);
+
+        const char* xauth = getenv("XAUTHORITY");
+        if (xauth) setenv("XAUTHORITY", xauth, 1);
+
+        const char* dbus = getenv("DBUS_SESSION_BUS_ADDRESS");
+        if (dbus) setenv("DBUS_SESSION_BUS_ADDRESS", dbus, 1);
+
+        // Final exec
         execl("/bin/sh", "sh", "-c", command, (char*)NULL);
+
+        // If we reach here, exec failed
         _exit(127);
     }
+
+    // parent
+    log_info("LaunchDetached: parent waiting for intermediate pid=%d", (int)pid);
+
     int st = 0;
-    waitpid(pid, &st, 0);
-    { PROFILE_END_VAR(_pt, "Platform_LaunchDetached"); return true; }
+    pid_t waited = waitpid(pid, &st, 0);
+
+    if (waited < 0) {
+        log_error("LaunchDetached: waitpid failed: %s", strerror(errno));
+    } else {
+        if (WIFEXITED(st)) {
+            log_info("LaunchDetached: intermediate exited with code %d", WEXITSTATUS(st));
+        } else if (WIFSIGNALED(st)) {
+            log_error("LaunchDetached: intermediate killed by signal %d", WTERMSIG(st));
+        } else {
+            log_info("LaunchDetached: intermediate status=0x%x", st);
+        }
+    }
+
+    log_info("LaunchDetached: returning true (should be instant)");
+    PROFILE_END_VAR(_pt, "Platform_LaunchDetached");
+    return true;
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
