@@ -515,11 +515,11 @@ int text_len = (int)strlen(state->filter);
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
         PROFILE_START(_pt);
 if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
-    if (IsInsertMode()) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
-    XftFont *xf = FH_TO_XFT(font);
     int text_len = (int)strlen(state->filter);
     int sel_start = 0, sel_end = 0;
     bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+    if (IsInsertMode() && !has_sel) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
+    XftFont *xf = FH_TO_XFT(font);
 
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     int tint_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
