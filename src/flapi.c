@@ -1284,7 +1284,13 @@ bool fl_draw_image_impl(const FlImageSpec *spec) {
 PROFILE_END_VAR(_pt, "api:fl_draw_image"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
-  bool r = Platform_DrawImageAt(spec->path, spec->x, spec->y, w, h);
+  char asset[MAX_PATH];
+  const char* path = spec->path;
+  if ((path[0] == '/' || path[0] == '\\') &&
+      Platform_ResolveAssetPath(__builtin_return_address(0), path, asset, sizeof(asset))) {
+    path = asset;
+  }
+  bool r = Platform_DrawImageAt(path, spec->x, spec->y, w, h);
   PROFILE_END_VAR(_pt, "api:fl_draw_image");
   return r;
 }
@@ -2750,7 +2756,13 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
     e->pub.on_tab = spec->on_tab;
     e->pub.on_action = spec->on_action;
     e->pub.display_name = fl_cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
-    e->pub.icon = fl_cc_dup(e->icon, sizeof(e->icon), spec->icon);
+    char icon_asset[MAX_PATH];
+    if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
+        Platform_ResolveAssetPath(__builtin_return_address(0), spec->icon, icon_asset, sizeof(icon_asset))) {
+        e->pub.icon = fl_cc_dup(e->icon, sizeof(e->icon), icon_asset);
+    } else {
+        e->pub.icon = fl_cc_dup(e->icon, sizeof(e->icon), spec->icon);
+    }
     e->pub.type = fl_cc_dup(e->type, sizeof(e->type), spec->type);
     if (spec->internal_name) {
         e->pub.internal_name = fl_cc_dup(e->internal_name, sizeof(e->internal_name), spec->internal_name);

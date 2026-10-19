@@ -209,9 +209,6 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
 
 static void net_usage_tick(void);
 
-#define NET_ICON_WIFI     "src/features/widgets/net_wifi.png"
-#define NET_ICON_ETHERNET "src/features/widgets/net_ethernet.png"
-#define NET_ICON_OFFLINE  "src/features/widgets/net_offline.png"
 #define NET_ICON_SIZE 16
 
 static void widgets_internet_render(FlWidgetState *state) {
@@ -220,9 +217,9 @@ static void widgets_internet_render(FlWidgetState *state) {
     FlNetStatus status = fl_net_status();
     const char* icon = NULL;
     switch (status) {
-        case FL_NET_OFFLINE:  icon = NET_ICON_OFFLINE;  break;
-        case FL_NET_ETHERNET: icon = NET_ICON_ETHERNET; break;
-        case FL_NET_WIFI:     icon = NET_ICON_WIFI;     break;
+        case FL_NET_OFFLINE:  icon = "/net_offline.png";  break;
+        case FL_NET_ETHERNET: icon = "/net_ethernet.png"; break;
+        case FL_NET_WIFI:     icon = "/net_wifi.png";     break;
     }
     if (!icon) return;
 
