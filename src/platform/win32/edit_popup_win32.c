@@ -180,11 +180,11 @@ PROFILE_START(timer);
         }
     }
 
-    if (!IsInsertMode() && data->cursor >= 0) {
+    int sel_start = 0, sel_end = 0;
+    bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+    if ((IsInsertMode() ? has_sel : true) && data->cursor >= 0) {
         int tint_y = edit_popup_cursor_y(paint, draw_y);
         unsigned long tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
-        int sel_start = 0, sel_end = 0;
-        bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
         if (has_sel) {
             if (sel_start < 0) sel_start = 0;
             if (sel_end >= text_len) sel_end = text_len - 1;
@@ -279,6 +279,28 @@ PROFILE_START(timer);
     bool alt_pressed = key->alt;
     (void)shift_pressed;
     (void)alt_pressed;
+    if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
+        int len = (int)strlen(ed->text);
+        VimState_BeginSelection(0);
+        VimState_UpdateSelection(len);
+        ed->cursor = len;
+        PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true;
+    }
+    if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            if (se < ss) { int t=ss; ss=se; se=t; }
+            int len=(int)strlen(ed->text);
+            if (ss<0) ss=0; if (se>len) se=len;
+            if (se>ss) {
+                char buf[1024];
+                int n=se-ss; if (n>=(int)sizeof(buf)) n=(int)sizeof(buf)-1;
+                memcpy(buf, ed->text+ss, n); buf[n]='\0';
+                Platform_CopyToClipboard(buf);
+            }
+        }
+        PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true;
+    }
     if (PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true; }
 
     size_t cap = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
@@ -287,6 +309,19 @@ PROFILE_START(timer);
     if ((size_t)ed->cursor > n) ed->cursor = (int)n;
 
     if (wParam == VK_BACK) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            if (se < ss) { int t=ss; ss=se; se=t; }
+            size_t nn = strlen(ed->text);
+            if (ss<0) ss=0; if ((size_t)se>nn) se=(int)nn;
+            if (se>ss) {
+                memmove(ed->text+ss, ed->text+se, nn-se+1);
+                ed->cursor = ss;
+                VimState_EndSelection();
+                PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true;
+            }
+            VimState_EndSelection();
+        }
         if (ctrl_pressed) {
             ed->text[0] = '\0';
             ed->cursor = 0;
@@ -308,26 +343,43 @@ PROFILE_START(timer);
         return true;
     }
     if (wParam == VK_LEFT) {
+        VimState_EndSelection();
         if (ed->cursor > 0) ed->cursor--;
         PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey");
         return true;
     }
     if (wParam == VK_RIGHT) {
+        VimState_EndSelection();
         if ((size_t)ed->cursor < n) ed->cursor++;
         PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey");
         return true;
     }
     if (wParam == VK_HOME) {
+        VimState_EndSelection();
         ed->cursor = 0;
         PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey");
         return true;
     }
     if (wParam == VK_END) {
+        VimState_EndSelection();
         ed->cursor = (int)n;
         PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey");
         return true;
     }
     if (wParam == VK_DELETE) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            if (se < ss) { int t=ss; ss=se; se=t; }
+            size_t nn = strlen(ed->text);
+            if (ss<0) ss=0; if ((size_t)se>nn) se=(int)nn;
+            if (se>ss) {
+                memmove(ed->text+ss, ed->text+se, nn-se+1);
+                ed->cursor = ss;
+                VimState_EndSelection();
+                PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true;
+            }
+            VimState_EndSelection();
+        }
         if ((size_t)ed->cursor < n) {
             memmove(ed->text + ed->cursor, ed->text + ed->cursor + 1, n - (size_t)ed->cursor);
         }
@@ -370,6 +422,17 @@ PROFILE_START(timer);
             bool is_printable = true;
             for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
             if (is_printable) {
+                int ss=0, se=0;
+                if (VimState_GetSelection(&ss, &se)) {
+                    if (se < ss) { int t=ss; ss=se; se=t; }
+                    size_t nn = strlen(ed->text);
+                    if (ss<0) ss=0; if ((size_t)se>nn) se=(int)nn;
+                    if (se>ss) {
+                        memmove(ed->text+ss, ed->text+se, nn-se+1);
+                        ed->cursor = ss;
+                    }
+                    VimState_EndSelection();
+                }
                 size_t cap2 = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
                 size_t m = strlen(ed->text);
                 if (ed->cursor < 0) ed->cursor = 0;

@@ -22,6 +22,7 @@
 #include "platform/win32/popup_helpers_win32.h"
 #include "platform/flapi_platform.h"
 #include "core/prompt_controller.h"
+#include "bindings/vim_state.h"
 
 #include "core/timer.h"
 static bool s_swallow_next_char = false;
@@ -175,7 +176,57 @@ int wParam = key->vk;
         return true;
     }
 
+    if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
+        PromptState* ps = g_win32_prompt_state;
+        if (ps) {
+            int len = (int)strlen(ps->filter);
+            VimState_BeginSelection(0);
+            VimState_UpdateSelection(len);
+            ps->cursor = len;
+            UI_SetCursorPosition(len);
+        }
+        InvalidateRect(hwnd, NULL, FALSE);
+        return true;
+    }
+    if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            PromptState* ps = g_win32_prompt_state;
+            if (ps) {
+                if (se < ss) { int t=ss; ss=se; se=t; }
+                int len=(int)strlen(ps->filter);
+                if (ss<0) ss=0; if (se>len) se=len;
+                if (se>ss) {
+                    char buf[512];
+                    int n=se-ss; if (n>=(int)sizeof(buf)) n=(int)sizeof(buf)-1;
+                    memcpy(buf, ps->filter+ss, n); buf[n]='\0';
+                    Platform_CopyToClipboard(buf);
+                }
+            }
+        }
+        return true;
+    }
     if (wParam == VK_BACK && IsInsertMode()) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            PromptState* ps = g_win32_prompt_state;
+            if (ps) {
+                if (se < ss) { int t=ss; ss=se; se=t; }
+                size_t n = strlen(ps->filter);
+                if (ss<0) ss=0; if ((size_t)se>n) se=(int)n;
+                if (se>ss) {
+                    memmove(ps->filter+ss, ps->filter+se, n-se+1);
+                    ps->cursor = ss;
+                    VimState_EndSelection();
+                    UI_SetText(ps->filter);
+                    UI_SetCursorPosition(ps->cursor);
+                    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return true;
+                }
+                VimState_EndSelection();
+            }
+        }
         if (ctrl_pressed) {
             UI_SetText("");
             UI_Redraw(lb, FlintContext_Get()->window.hListBox);
@@ -198,6 +249,26 @@ int wParam = key->vk;
     }
 
     if (wParam == VK_DELETE) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            PromptState* ps = g_win32_prompt_state;
+            if (ps) {
+                if (se < ss) { int t=ss; ss=se; se=t; }
+                size_t n = strlen(ps->filter);
+                if (ss<0) ss=0; if ((size_t)se>n) se=(int)n;
+                if (se>ss) {
+                    memmove(ps->filter+ss, ps->filter+se, n-se+1);
+                    ps->cursor = ss;
+                    VimState_EndSelection();
+                    UI_SetText(ps->filter);
+                    UI_SetCursorPosition(ps->cursor);
+                    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return true;
+                }
+                VimState_EndSelection();
+            }
+        }
         UI_DeleteForward();
         InvalidateRect(hwnd, NULL, TRUE);
         return true;
@@ -445,7 +516,24 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
 case WM_CHAR: {
       if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
       if (wParam == 0x08 || wParam == 0x7F) return 0;
-      if (wParam >= 0x20 && IsInsertMode() && UI_InsertChar((wchar_t)wParam) > 0) {
+      if (wParam >= 0x20 && IsInsertMode()) {
+        int ss=0, se=0;
+        if (VimState_GetSelection(&ss, &se)) {
+            PromptState* ps = g_win32_prompt_state;
+            if (ps) {
+                if (se < ss) { int t=ss; ss=se; se=t; }
+                size_t n = strlen(ps->filter);
+                if (ss<0) ss=0; if ((size_t)se>n) se=(int)n;
+                if (se>ss) {
+                    memmove(ps->filter+ss, ps->filter+se, n-se+1);
+                    ps->cursor = ss;
+                    VimState_EndSelection();
+                    UI_SetText(ps->filter);
+                    UI_SetCursorPosition(ps->cursor);
+                } else VimState_EndSelection();
+            } else VimState_EndSelection();
+        }
+        if (UI_InsertChar((wchar_t)wParam) > 0) {
         PromptState* ps = g_win32_prompt_state;
         if (ps) {
           strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
@@ -455,6 +543,7 @@ case WM_CHAR: {
         UI_Redraw(lb, FlintContext_Get()->window.hListBox);
         InvalidateRect(hwnd, NULL, FALSE);
         return 0;
+      }
       }
       break;
     }

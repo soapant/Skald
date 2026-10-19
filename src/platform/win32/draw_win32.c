@@ -906,7 +906,9 @@ PROFILE_START(timer);
     int text_len = (int)strlen(state->filter);
     int scroll = win32_update_edit_scroll_offset(g_draw_hdc, state->filter, text_len, (int)state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
-    if (!win32_prompt_is_insert_mode() && state->cursor >= 0) {
+    int sel_start = 0, sel_end = 0;
+    bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+    if ((win32_prompt_is_insert_mode() ? has_sel : true) && state->cursor >= 0) {
         FontHandle tfont = Platform_CreateFont(FontSize, UsedFont);
         HFONT told = NULL;
         TEXTMETRIC ttm;
@@ -918,9 +920,7 @@ PROFILE_START(timer);
         if (told) SelectObject(g_draw_hdc, told);
         Platform_DestroyFont(tfont);
 
-        int sel_start = 0, sel_end = 0;
         unsigned long tint = LerpColor(COLOR_BG, win32_prompt_cursor_color(), 0.72f);
-        bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
         if (has_sel) {
             if (sel_start < 0) sel_start = 0;
             if (sel_end >= text_len) sel_end = text_len - 1;
