@@ -131,7 +131,6 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("E", next_image,WHITELIST,"feh");
     fl_register_hotkey("Q", last_image,WHITELIST,"feh");
     fl_register_hotkey("Alt+Shift+D", get_current_keyword);
-    fl_register_hotkey("RShift",fl_toggle_play_pause); 
     fl_register_hotkey("Alt+Q", open_terminal);
     fl_register_hotkey("Ctrl+Shift+B", open_browser);
     fl_register_hotkey("Alt+Shift+L", move_active_window_right);

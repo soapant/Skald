@@ -535,16 +535,6 @@ void fl_free_flags(Fl_FlagList* list);
 int fl_parse_time(const char* time_str);
 
 // =============================================================================
-// AUDIO / VOLUME
-// =============================================================================
-
-void fl_toggle_play_pause(void);
-int fl_get_current_volume(void);
-bool fl_set_current_volume(int volume);
-bool fl_increment_volume_by(int increment);
-bool fl_decrement_volume_by(int decrement);
-
-// =============================================================================
 // MISC
 // =============================================================================
 
