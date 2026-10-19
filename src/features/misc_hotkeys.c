@@ -8,14 +8,6 @@ static char current_keyword[256] = "";
 static int current_image_id = 0;
 static int previous_image_id = 0;
 
-void IncrementVolume(void) {
-  fl_increment_volume_by(10);
-}
-
-void DecrementVolume(void) {
-  fl_decrement_volume_by(10);
-}
-
 void GoogleMeaning(void) {
   char *clip = fl_get_last_clipboard_entry();
   char search[50];
@@ -140,8 +132,6 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Q", last_image,WHITELIST,"feh");
     fl_register_hotkey("Alt+Shift+D", get_current_keyword);
     fl_register_hotkey("RShift",fl_toggle_play_pause); 
-    fl_register_hotkey("Ctrl+]",IncrementVolume); 
-    fl_register_hotkey("Ctrl+[",DecrementVolume); 
     fl_register_hotkey("Alt+Q", open_terminal);
     fl_register_hotkey("Ctrl+Shift+B", open_browser);
     fl_register_hotkey("Alt+Shift+L", move_active_window_right);
