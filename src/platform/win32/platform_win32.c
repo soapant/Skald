@@ -1223,7 +1223,7 @@ static bool win32_icon_exe_dir(char* out, size_t n) {
 static bool win32_icon_png_path(const char* src, char* out, size_t n) {
     char dir[MAX_PATH];
     if (!win32_icon_exe_dir(dir, sizeof(dir))) return false;
-    snprintf(out, n, "%s\\icon_cache\\%08x.png", dir, win32_icon_hash(src));
+    snprintf(out, n, "%s\\icon_cache\\%08x_v2.png", dir, win32_icon_hash(src));
     return true;
 }
 
@@ -1246,7 +1246,7 @@ static bool win32_export_shell_icon_png(const char* native_path) {
 
     SHFILEINFOA sfi;
     ZeroMemory(&sfi, sizeof(sfi));
-    if (!SHGetFileInfoA(native_path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES)) return false;
+    if (!SHGetFileInfoA(native_path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON)) return false;
     if (!sfi.hIcon) return false;
 
     win32_gdiplus_ready();
@@ -1274,15 +1274,17 @@ static bool win32_export_shell_icon_png(const char* native_path) {
     GdipDisposeImage(src);
 
     char dir[MAX_PATH];
+    char cache_dir[MAX_PATH];
     if (win32_icon_exe_dir(dir, sizeof(dir))) {
-        snprintf(dir, sizeof(dir), "%s\\icon_cache", dir);
-        CreateDirectoryA(dir, NULL);
+        snprintf(cache_dir, sizeof(cache_dir), "%s\\icon_cache", dir);
+        CreateDirectoryA(cache_dir, NULL);
     }
     static const GUID kPng = { 0x557cf406, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e } };
     wchar_t wpng[MAX_PATH * 2];
     int wn = MultiByteToWideChar(CP_UTF8, 0, png, -1, wpng, (int)(sizeof(wpng) / sizeof(wchar_t)));
-    bool ok = wn > 0 && GdipSaveImageToFile(flat, wpng, &kPng, NULL) == Ok;
-    if (!ok) DeleteFileA(png);
+    GpStatus save_st = wn > 0 ? GdipSaveImageToFile(flat, wpng, &kPng, NULL) : GenericError;
+    bool ok = save_st == Ok;
+    if (!ok) { log_error("win32_export_shell_icon_png save failed st=%d path='%s'", (int)save_st, png); DeleteFileA(png); }
 
     GdipDisposeImage(flat);
     free(zeros);
@@ -1302,19 +1304,12 @@ if (!app_path || !app_path[0]) { log_error("operation failed, returning error ap
   snprintf(native, sizeof(native), "%s", src);
   for (char* p = native; *p; p++) if (*p == '/') *p = '\\';
   src = native;
-  if (GetFileAttributesA(src) != INVALID_FILE_ATTRIBUTES) {
-      if (win32_is_shell_icon(src)) {
-          char png[MAX_PATH];
-          if (win32_icon_png_path(src, png, sizeof(png)) &&
-              GetFileAttributesA(png) != INVALID_FILE_ATTRIBUTES) {
-              return _strdup(png);
-          }
-          if (win32_export_shell_icon_png(src)) {
-              return _strdup(png);
-          }
-      }
-      return _strdup(src);
-  }
+   if (GetFileAttributesA(src) != INVALID_FILE_ATTRIBUTES) {
+       if (win32_is_shell_icon(src)) {
+           return _strdup(src);
+       }
+       return _strdup(src);
+   }
   char full[MAX_PATH];
   if (SearchPathA(NULL, src, NULL, MAX_PATH, full, NULL) && GetFileAttributesA(full) != INVALID_FILE_ATTRIBUTES) {
       return _strdup(full);
@@ -1927,7 +1922,7 @@ struct GdiplusStartupInput gdiplusStartupInput;
       if (SearchPathA(NULL, "shell32.dll", NULL, MAX_PATH, warm, NULL)) {
           SHFILEINFOA sfi;
           ZeroMemory(&sfi, sizeof(sfi));
-          if (SHGetFileInfoA(warm, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES) && sfi.hIcon) {
+          if (SHGetFileInfoA(warm, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON) && sfi.hIcon) {
               DestroyIcon(sfi.hIcon);
           }
       }
