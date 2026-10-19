@@ -877,6 +877,7 @@ HWND hwnd = win32_foreground_target();
 }
 
 static BOOL g_win32_fs_active = FALSE;
+static char g_win32_project_root[MAX_PATH] = {0};
 static HWND g_win32_last_min = NULL;
 static RECT g_win32_fs_rect;
 static LONG g_win32_fs_style;
@@ -1258,7 +1259,7 @@ static bool win32_export_shell_icon_png(const char* native_path) {
     const int px = 32;
     unsigned char* zeros = (unsigned char*)calloc((size_t)px * (size_t)px, 4);
     GpBitmap* flat = NULL;
-    if (!zeros || GdipCreateBitmapFromScan0(px, px, px * 4, PixelFormat32bppPARGB, zeros, &flat) != Ok || !flat) {
+    if (!zeros || GdipCreateBitmapFromScan0(px, px, px * 4, PixelFormat32bppARGB, zeros, &flat) != Ok || !flat) {
         if (zeros) free(zeros);
         GdipDisposeImage(src);
         return false;
@@ -1266,7 +1267,7 @@ static bool win32_export_shell_icon_png(const char* native_path) {
     GpGraphics* g = NULL;
     if (GdipGetImageGraphicsContext(flat, &g) == Ok && g) {
         GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
-        GdipSetCompositingMode(g, CompositingModeSourceCopy);
+        GdipSetCompositingMode(g, CompositingModeSourceOver);
         GdipSetSmoothingMode(g, SmoothingModeHighQuality);
         GdipDrawImageRectI(g, src, 0, 0, px, px);
         GdipDeleteGraphics(g);
@@ -1285,6 +1286,12 @@ static bool win32_export_shell_icon_png(const char* native_path) {
     GpStatus save_st = wn > 0 ? GdipSaveImageToFile(flat, wpng, &kPng, NULL) : GenericError;
     bool ok = save_st == Ok;
     if (!ok) { log_error("win32_export_shell_icon_png save failed st=%d path='%s'", (int)save_st, png); DeleteFileA(png); }
+    else {
+        WIN32_FILE_ATTRIBUTE_DATA fad;
+        DWORD sz = 0;
+        if (GetFileAttributesExA(png, GetFileExInfoStandard, &fad)) sz = (fad.nFileSizeHigh << 16) | fad.nFileSizeLow;
+        log_info("win32_export_shell_icon_png saved='%s' size=%u", png, sz);
+    }
 
     GdipDisposeImage(flat);
     free(zeros);
@@ -1306,7 +1313,14 @@ if (!app_path || !app_path[0]) { log_error("operation failed, returning error ap
   src = native;
    if (GetFileAttributesA(src) != INVALID_FILE_ATTRIBUTES) {
        if (win32_is_shell_icon(src)) {
-           return _strdup(src);
+           char png[MAX_PATH];
+           if (win32_icon_png_path(src, png, sizeof(png)) &&
+               GetFileAttributesA(png) != INVALID_FILE_ATTRIBUTES) {
+               return _strdup(png);
+           }
+           if (win32_export_shell_icon_png(src)) {
+               return _strdup(png);
+           }
        }
        return _strdup(src);
    }
@@ -1523,7 +1537,10 @@ char buf[MAX_PATH];
         char probe[MAX_PATH];
         snprintf(probe, sizeof(probe), "%s\\data", buf);
         if (win32_dir_exists(probe) || win32_is_project_root(buf)) {
-            if (SetCurrentDirectoryA(buf)) return;
+            if (SetCurrentDirectoryA(buf)) {
+                snprintf(g_win32_project_root, sizeof(g_win32_project_root), "%s", buf);
+                return;
+            }
         }
         slash = strrchr(buf, '\\');
         if (!slash) break;
@@ -1537,6 +1554,7 @@ char buf[MAX_PATH];
         SetCurrentDirectoryA(exe_dir);
     }
     GetCurrentDirectoryA(sizeof(cwd), cwd);
+    snprintf(g_win32_project_root, sizeof(g_win32_project_root), "%s", cwd);
     log_info("Platform_FixWorkingDirectory cwd='%s'", cwd);
 }
 
@@ -1769,13 +1787,13 @@ static bool feature_stem_from_caller(void *caller, char *out, size_t out_len) {
 if (!caller || !out || out_len == 0) { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
     out[0] = '\0';
     char mod_path[512];
-    if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
+    if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) { log_error("feature_stem mod path fail"); PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
     const char *base = strrchr(mod_path, '\\');
     const char *fs = strrchr(mod_path, '/');
     if (fs && (!base || fs > base)) base = fs;
     base = base ? base + 1 : mod_path;
     char stem[128];
-    if (!lib_basename_stem(base, stem, sizeof(stem))) { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
+    if (!lib_basename_stem(base, stem, sizeof(stem))) { log_error("feature_stem lib stem fail mod='%s'", mod_path); PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
     sanitize_feature_stem(stem, out, out_len);
     { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return out[0] != '\0'; }
 }
@@ -1836,11 +1854,19 @@ bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t
     }
     if (strstr(rel, "..")) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
     char stem[128];
-    if (!feature_stem_from_caller(caller, stem, sizeof(stem))) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    if (!feature_stem_from_caller(caller, stem, sizeof(stem))) { log_error("ResolveAsset stem fail name='%s'", name); PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    char feature_base[512];
+    if (FeaturePath[0] && FeaturePath[1] == ':') {
+        snprintf(feature_base, sizeof(feature_base), "%s", FeaturePath);
+    } else if (g_win32_project_root[0]) {
+        snprintf(feature_base, sizeof(feature_base), "%s\\%s", g_win32_project_root, FeaturePath);
+    } else {
+        snprintf(feature_base, sizeof(feature_base), "%s", FeaturePath);
+    }
     char full[512];
-    snprintf(full, sizeof(full), "%s\\%s\\%s", FeaturePath, stem, rel);
+    snprintf(full, sizeof(full), "%s\\%s\\%s", feature_base, stem, rel);
     DWORD attr = GetFileAttributesA(full);
-    if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) { log_error("ResolveAsset not found full='%s'", full); PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
     snprintf(out, out_len, "%s", full);
     { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return true; }
 }
