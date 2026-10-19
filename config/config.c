@@ -7,7 +7,7 @@ static const AliasEntry user_aliases[] = {
 
 void ConfigApply(void) {
     Tray = true;
-    EnableVimMode = true;
+    EnableVimMode = false;
     EnableAutoPairing = true;
     RememberLastIndex = true;
     KeepSelectionAfterClose = false;
