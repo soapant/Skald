@@ -419,9 +419,9 @@ int pfd[2];
     if (flags >= 0) fcntl(pfd[0], F_SETFL, flags | O_NONBLOCK);
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
+    long quiet_ms = 350;
     long drain_ms = 5000;
-    long start_ms = 180000;
-    long deadline = start_ms;
+    long deadline = quiet_ms;
     bool got_data = false;
     bool eof = false;
     char buf[16096];
@@ -439,7 +439,7 @@ int pfd[2];
         bool read_any = false;
         while ((n = read(pfd[0], buf, sizeof(buf))) > 0) {
             read_any = true;
-            if (!got_data) { got_data = true; deadline = elapsed + drain_ms; }
+            if (!got_data) { got_data = true; deadline = elapsed + drain_ms; if (deadline < quiet_ms) deadline = quiet_ms; }
             while (total + (size_t)n + 1 > cap) {
                 cap *= 2;
                 char* no = realloc(out, cap);
@@ -1772,12 +1772,6 @@ if (!src || !out) { log_error("operation failed, returning error src='%s' out='%
         ok = true;
     }
     if (!ok) { unlink(tmp); return false; }
-    struct stat bst;
-    if (stat(tmp, &bst) != 0) {
-        log_error("compile reported success but produced no '%s': %s", tmp, strerror(errno));
-        unlink(tmp);
-        return false;
-    }
     if (rename(tmp, out) != 0) { unlink(tmp); log_error("rename %s -> %s failed: %s", tmp, out, strerror(errno)); return false; }
     log_info("Platform_BuildFeature src='%s' out='%s'", src ? src : "", out ? out : "");;
     { PROFILE_END_VAR(_pt, "Platform_BuildFeature"); return true; }
