@@ -259,8 +259,10 @@ int main(int argc, char** argv) {
     {
         Nob_Cmd sh = {0};
         nob_cmd_append(&sh, "sh", "-c",
-            "set -- /nix/store/*mcfgthread*mingw32*/lib/libmcfgthread.a; "
-            "[ -f \"$1\" ] && ln -sf \"$1\" build/winlibs/libmcfgthread.a");
+            "set -- /usr/x86_64-w64-mingw32/lib/libmcfgthread.a "
+            "/nix/store/*mcfgthread*mingw32*/lib/libmcfgthread.a; "
+            "for f in \"$@\"; do [ -f \"$f\" ] && ln -sf \"$f\" build/winlibs/libmcfgthread.a && exit 0; done; "
+            "exit 0");
         if (!nob_cmd_run(&sh)) nob_log(NOB_ERROR, "Failed to stage libmcfgthread");
     }
     if (!nob_walk_dir(SRC_FOLDER, collect_source)) {
@@ -287,10 +289,26 @@ int main(int argc, char** argv) {
     if (do_test) return 0;
 
     const char* output = OUTPUT;
-    if (!any_compiled && nob_file_exists(output) &&
+    bool features_stale = false;
+    for (size_t i = 0; i < feature_sources.count; ++i) {
+        const char* src = feature_sources.items[i];
+        size_t len = strlen(nob_path_name(src));
+        char* no_ext = malloc(len + 1);
+        strcpy(no_ext, nob_path_name(src));
+        char* dot = strrchr(no_ext, '.');
+        if (dot) *dot = '\0';
+        char* so = nob_temp_sprintf("build/features/%s.dll", no_ext);
+        if (!nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0) features_stale = true;
+        free(no_ext);
+        if (features_stale) break;
+    }
+    if (!any_compiled && !features_stale && nob_file_exists(output) &&
         nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) == 0) {
         nob_log(NOB_INFO, "No changes, skipping link");
         return 0;
+    }
+    if (!any_compiled && !features_stale) {
+        nob_log(NOB_INFO, "No changes to core, skipping link");
     }
 
     Nob_File_Paths objs = {0};
