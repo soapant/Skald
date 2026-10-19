@@ -364,5 +364,6 @@ void TriggerTodo(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+T",TriggerTodo,"Fortnite");
-    fl_register_feature(.name="Todo",.cb=TriggerTodo,.icon="/list-check.png");
+
+    fl_register_feature(.name="Todo",.cb=TriggerTodo);
 }
