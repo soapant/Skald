@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #if !defined(_WIN32)
 #include <strings.h>
@@ -34,9 +35,6 @@ static const char* pk_sort_label(int mode) {
     return "memory";
 }
 
-static bool pk_isspace(char c) { return c == ' ' || c == '\t'; }
-
-
 
 static int pk_cmp_mem(const void* a, const void* b) {
     const PkProc* x = a;
@@ -62,7 +60,7 @@ static int pk_cmp_alpha(const void* a, const void* b) {
 
 static void pk_rtrim(char* s) {
     size_t n = strlen(s);
-    while (n > 0 && pk_isspace(s[n - 1])) s[--n] = '\0';
+    while (n > 0 && isspace(s[n - 1])) s[--n] = '\0';
 }
 
 static void pk_parse_line(char* line) {
@@ -71,20 +69,20 @@ static void pk_parse_line(char* line) {
     if (len == 0) return;
 
     size_t e = len;
-    while (e > 0 && pk_isspace(line[e - 1])) e--;
+    while (e > 0 && isspace(line[e - 1])) e--;
     if (e == 0) return;
 
     size_t f3 = e;
-    while (f3 > 0 && !pk_isspace(line[f3 - 1])) f3--;
+    while (f3 > 0 && !isspace(line[f3 - 1])) f3--;
     if (f3 == 0) return;
     line[f3] = '\0';
     const char* cpu_s = line + f3 + 1;
 
     size_t f2 = f3;
-    while (f2 > 0 && pk_isspace(line[f2 - 1])) f2--;
+    while (f2 > 0 && isspace(line[f2 - 1])) f2--;
     if (f2 == 0) return;
     size_t f2e = f2;
-    while (f2 > 0 && !pk_isspace(line[f2 - 1])) f2--;
+    while (f2 > 0 && !isspace(line[f2 - 1])) f2--;
 
     char rss_buf[32];
     size_t rlen = f2e - f2;
@@ -95,7 +93,7 @@ static void pk_parse_line(char* line) {
     const char* rss_s = rss_buf;
 
     char* name = line;
-    while (pk_isspace(*name)) name++;
+    while (isspace(*name)) name++;
     if (*name == '\0') return;
     if (g_pk_count >= PK_MAX) return;
 
