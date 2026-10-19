@@ -34,7 +34,7 @@ WindowManager* wm = (WindowManager*)arg;
             if (dot) *dot = '\0';
             if (!FeaturePath || !FeaturePath[0]) continue;
             char src[512], dll[512];
-            snprintf(src, sizeof(src), "%s/%s.c", FeaturePath, base);
+            snprintf(src, sizeof(src), "%s/%s", FeaturePath, filename);
             snprintf(dll, sizeof(dll), "build/features/%s.so", base);
             log_info("recompiling %s -> %s", src, dll); fflush(stdout);
             if (Platform_BuildFeature(src, dll)) {
