@@ -1122,7 +1122,7 @@ static void TriggerControl(void) {
     }
 
     fl_window(.title = "⚡ Control",
-           .placeholder = "Search For Something",
+           .placeholder = "Search For Something...",
            .refresh = cc_refresh,
            .enter = cc_enter,
            .ctrl_enter = cc_ctrl_enter,

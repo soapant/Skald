@@ -212,8 +212,8 @@ void typing_test_render(PromptState *state) {
 
         if (draw_cursor && typing_test_position < text_len) {
             fl_draw_rect(.x = positions[typing_test_position].x + margin + 2,
-                         .y = positions[typing_test_position].y + base / 4,
-                         .w = body / 2, .h = body,.transparent=true);
+                         .y = positions[typing_test_position].y + base / 4 + 2,
+                         .w = body / 2, .h = body);
         }
 
         for (int i = 0; i < text_len; i++) {

@@ -56,7 +56,7 @@ static bool bg_has_ext(const char* path, const char* ext) {
     return true;
 }
 
-/* A config string is not shell-expanded, so honour a leading ~ ourselves. */
+
 static const char* bg_resolve(const char* in, char* out, size_t cap) {
     if (!in || !in[0] || !out || cap == 0) return NULL;
     if (in[0] != '~') return in;
@@ -72,8 +72,7 @@ static const char* bg_resolve(const char* in, char* out, size_t cap) {
     return out;
 }
 
-/* Intrinsic size of the source, so the cover fit can preserve aspect ratio
-   instead of stretching the way a plain dst-sized decode would. */
+
 static bool bg_src_dims(const char* path, int* out_w, int* out_h) {
     if (bg_has_ext(path, ".svg")) {
         NSVGimage* img = nsvgParseFromFile(path, "px", 96.0f);
@@ -116,7 +115,8 @@ void x11_bg_image_purge(void) {
     pthread_mutex_unlock(&g_bg_mtx);
 }
 
-/* Scale-to-cover then centre-crop, matching the Win32 tile geometry. */
+
+
 static bool bg_tile_compose(Display* dpy, const char* path, int w, int h,
                             Pixmap* out_pm, Picture* out_pic) {
     if (!dpy || !path || !path[0] || w <= 0 || h <= 0) return false;

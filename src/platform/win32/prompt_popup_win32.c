@@ -12,7 +12,7 @@ static BOOL g_old_track = FALSE;
 static BOOL g_track_saved = FALSE;
 static HWND g_pending_restore = NULL;
 
-static void CALLBACK Flint_ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD time) {
+static void CALLBACK ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD time) {
         PROFILE_START(_pt);
 (void)hwnd; (void)msg; (void)time;
     KillTimer(NULL, id);
@@ -23,14 +23,14 @@ static void CALLBACK Flint_ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, D
     }
 }
 
-static void CALLBACK Flint_RestoreFocusProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD time) {
+static void CALLBACK RestoreFocusProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD time) {
         PROFILE_START(_pt);
 (void)hwnd; (void)msg; (void)time;
     KillTimer(NULL, id);
     if (g_pending_restore && IsWindow(g_pending_restore)) {
         HWND cur = GetForegroundWindow();
         if (cur != g_pending_restore) {
-            log_info("Flint_RestoreFocusProc re-asserting focus cur=%p target=%p", cur, g_pending_restore);
+            log_info("RestoreFocusProc re-asserting focus cur=%p target=%p", cur, g_pending_restore);
             HWND target = g_pending_restore;
             if (IsIconic(target)) ShowWindow(target, SW_RESTORE);
             DWORD fgTid = cur ? GetWindowThreadProcessId(cur, NULL) : 0;
@@ -49,12 +49,12 @@ static void CALLBACK Flint_RestoreFocusProc(HWND hwnd, UINT msg, UINT_PTR id, DW
     }
 }
 
-static bool is_flint_popup_class(HWND hwnd) {
+static bool is_popup_class(HWND hwnd) {
         PROFILE_START(_pt);
-if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "is_flint_popup_class"); return false; }
+if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "is_popup_class"); return false; }
     char cls[64] = {0};
     GetClassNameA(hwnd, cls, sizeof(cls));
-    { PROFILE_END_VAR(_pt, "is_flint_popup_class"); return strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0
+    { PROFILE_END_VAR(_pt, "is_popup_class"); return strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0
         || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0; }
 }
 
@@ -73,7 +73,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
 (void)self;
     PROFILE_START(timer);
     HWND fg = GetForegroundWindow();
-    if (fg && IsWindow(fg) && !is_flint_popup_class(fg)) g_prev_fg = fg;
+    if (fg && IsWindow(fg) && !is_popup_class(fg)) g_prev_fg = fg;
     else if (!fg || !IsWindow(fg)) g_prev_fg = NULL;
     char _save_title[128] = {0};
     if (g_prev_fg) GetWindowTextA(g_prev_fg, _save_title, sizeof(_save_title));
@@ -137,12 +137,12 @@ void Platform_PromptPopupHideWindow(Popup* self) {
         HWND after = GetForegroundWindow();
         log_info("after restore cur=%p target=%p %s", after, target, after==target?"ok":"MISMATCH");
         g_pending_restore = target;
-        SetTimer(NULL, 0xC0DE, 80, Flint_RestoreFocusProc);
-        if (g_track_saved && g_old_track) SetTimer(NULL, 0xC0DF, 800, Flint_ReenableTrackProc);
+        SetTimer(NULL, 0xC0DE, 80, RestoreFocusProc);
+        if (g_track_saved && g_old_track) SetTimer(NULL, 0xC0DF, 800, ReenableTrackProc);
         else g_track_saved = FALSE;
         g_prev_fg = NULL;
     } else {
-        if (g_track_saved && g_old_track) SetTimer(NULL, 0xC0DF, 800, Flint_ReenableTrackProc);
+        if (g_track_saved && g_old_track) SetTimer(NULL, 0xC0DF, 800, ReenableTrackProc);
         else g_track_saved = FALSE;
     }
     PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupHideWindow");
@@ -159,8 +159,8 @@ Platform_PromptPopupHideWindow(self);
 }
 
 bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-        PROFILE_START(_pt);
-(void)self;
+    PROFILE_START(_pt);
+    (void)self;
     (void)key;
     { PROFILE_END_VAR(_pt, "Platform_PromptPopupOnKey"); return false; }
 }
