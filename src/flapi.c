@@ -631,12 +631,16 @@ PROFILE_END_VAR(_pt, "api:fl_run_terminal_command_and_open"); { PROFILE_END_VAR(
 }
 
 bool fl_launch_detached(char* command) {
-  PROFILE_START(_pt);
-  if (!command) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_launch_detached"); { PROFILE_END_VAR(_pt, "f"); return false; } }
-  bool r = Platform_LaunchDetached(command);
-  PROFILE_END_VAR(_pt, "api:fl_launch_detached");
-  return r;
+    PROFILE_START(_pt);
+
+    if (!command) {
+        PROFILE_END_VAR(_pt, "api:fl_launch_detached");
+        return false;
+    }
+
+    bool r = Platform_LaunchDetached(command);
+    PROFILE_END_VAR(_pt, "api:fl_launch_detached");
+    return r;
 }
 
 bool fl_launch_terminal_at_path(char* path,char* args) {

@@ -18,7 +18,7 @@ void GoogleMeaning(void) {
 void next_image(void) {
   if (current_keyword[0]) {
       char cmd1[400];
-      snprintf(cmd1,sizeof(cmd1),"~/Programming/RandomShit/shit/run.sh get_ids.py %s --random",current_keyword);
+      snprintf(cmd1,sizeof(cmd1),"python ~/Programming/RandomShit/shit/get_ids.py %s --random",current_keyword);
       char* output = fl_run_terminal_command(cmd1);
       char* title = fl_get_active_window_title();
       if (!title) title = "";
@@ -27,14 +27,14 @@ void next_image(void) {
       }
       char cmd[512];
       FlStringList list = fl_string_split(output,"\n");
-      snprintf(cmd,sizeof(cmd),"feh /home/dog/Programming/RandomShit/shit/images/%s --zoom 65",list.items[0]);
-      fl_run_terminal_command(cmd);
+      snprintf(cmd,sizeof(cmd),"feh ~/Programming/RandomShit/shit/images/%s --zoom 65",list.items[0]);
+      fl_launch_detached(cmd);
       previous_image_id = current_image_id;
       current_image_id = atoi(list.items[0]);
       free(output);
   } else {
      char cmd[400];
-     char* output = fl_run_terminal_command("ls /home/dog/Programming/RandomShit/shit/images");
+     char* output = fl_run_terminal_command("ls ~/Programming/RandomShit/shit/images");
      FlStringList list = fl_string_split(output,"\n");
      int idx = fl_rand_num_between(0, list.count - 1);
      char* title = fl_get_active_window_title();
@@ -42,8 +42,8 @@ void next_image(void) {
      if (fl_string_contains("feh",title)) {
          fl_close_active_window();
      }
-     snprintf(cmd,sizeof(cmd),"feh /home/dog/Programming/RandomShit/shit/images/%s --zoom 65",list.items[idx]);
-     fl_run_terminal_command(cmd);
+     snprintf(cmd,sizeof(cmd),"feh ~/Programming/RandomShit/shit/images/%s --zoom 65",list.items[idx]);
+     fl_launch_detached(cmd);
      previous_image_id = current_image_id;
      current_image_id = atoi(list.items[0]);
      free(output);
@@ -58,7 +58,7 @@ void last_image(void) {
     }
     char cmd[512];
     snprintf(cmd,sizeof(cmd),"feh /home/dog/Programming/RandomShit/shit/images/%i --zoom 65",previous_image_id);
-    fl_run_terminal_command(cmd);
+    fl_launch_detached(cmd);
 }
 
 
