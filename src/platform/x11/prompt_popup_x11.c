@@ -216,10 +216,10 @@ PROFILE_START(timer);
 
     if (FlintContext_Get()->window.editbox_placed) {
         if (wParam == VK_ESCAPE) {
-            if (IsInsertMode()) {
-                SetMode(MODE_NORMAL);
-            } else {
+            if (!EnableVimMode || !IsInsertMode()) {
                 FlintContext_Get()->window.selection_complete = true;
+            } else {
+                SetMode(MODE_NORMAL);
             }
             return true;
         }
