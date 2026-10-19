@@ -1020,7 +1020,7 @@ static bool cc_icon_is_glyph(const char *icon) {
 
 static void cc_render(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
-    FlListSpec spec = { .lb = lb };
+    FlListSpec spec = { .lb = lb ,.item_height = FontSize * 2};
     fl_place_editbox();
     if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
