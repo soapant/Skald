@@ -29,6 +29,8 @@ typedef struct {
      size_t      item_count;
      char        filter[512];
      size_t      cursor;
+     int         sel_start;
+     int         sel_end;
      int         scroll_offset;
      int         width, height;
      char*       window_title;

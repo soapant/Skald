@@ -526,22 +526,26 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         int cursor_y = y_raw + (textH - cursorH) / 2;
         if (cursor_y < y_raw) cursor_y = y_raw;
         RECT textRc = {x + PROMPT_EDIT_INSET - scroll, y_raw, x + w, y_raw + textH};
-        if (!IsInsertMode()) {
+        bool insert_mode = IsInsertMode() || !EnableVimMode;
+        int sel_start = state ? state->sel_start : 0;
+        int sel_end = state ? state->sel_end : 0;
+        bool has_sel = (sel_start >= 0 && sel_end > sel_start && sel_start < text_len) || (VimState_GetSelection(&sel_start, &sel_end) && text_len > 0);
+        if (has_sel && !(sel_start >= 0 && sel_end > sel_start)) { has_sel = false; }
+        if (has_sel) { if (sel_start < 0) sel_start = 0; if (sel_end > text_len) sel_end = text_len; }
+        if (!insert_mode || has_sel) {
             int tint_y = y_raw + (textH - cursorH) / 2;
             if (tint_y < y_raw) tint_y = y_raw;
             COLORREF tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
             int tint_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
             if (tint_x < x + PROMPT_CARET_LO_CLAMP) tint_x = x + PROMPT_CARET_LO_CLAMP;
             if (tint_x > x + w - PROMPT_CARET_HI_CLAMP) tint_x = x + w - PROMPT_CARET_HI_CLAMP;
-            int sel_start = 0, sel_end = 0;
-            bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
             RECT tintRc;
             if (has_sel) {
                 if (sel_start < 0) sel_start = 0;
-                if (sel_end >= text_len) sel_end = text_len - 1;
-                if (sel_start <= sel_end) {
+                if (sel_end > text_len) sel_end = text_len;
+                if (sel_start < sel_end) {
                     int sx0 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_start, FontSize) - scroll;
-                    int sx1 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_end + 1, FontSize) - scroll;
+                    int sx1 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_end, FontSize) - scroll;
                     if (sx0 < x + PROMPT_CARET_LO_CLAMP) sx0 = x + PROMPT_CARET_LO_CLAMP;
                     if (sx1 > x + w - PROMPT_CARET_HI_CLAMP) sx1 = x + w - PROMPT_CARET_HI_CLAMP;
                     int cx = tint_x;
@@ -587,7 +591,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
                                  state->placeholder, LerpColor(COLOR_BG, COLOR_TEXT, 0.45f),
                                  spec->font, "", 0, 0);
         }
-        if (IsInsertMode()) {
+        if (insert_mode) {
             HBRUSH cbr = CreateSolidBrush(Modal_CursorColor());
             RECT cRc = {cursor_draw_x, cursor_y, cursor_draw_x + PROMPT_CARET_W_INSERT, cursor_y + cursorH};
             FillRect(hdc, &cRc, cbr);
