@@ -8,7 +8,8 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 
 - **`fl_` API** (for features) lives **only** in `include/core/flapi.h` → `src/flapi.c` → `src/platform/x11/flapi_x11.c` / `src/platform/win32/flapi_win32.c`. Do **not** include `flapi.h` or the platform `flapi_*.c` from any file that is not a feature.
 - **`Platform_` API** (for core) lives **only** in `include/platform/*.h` → `src/platform/x11/*.c` / `src/platform/win32/*.c`. Core files (`src/core/*`, `src/platform/x11/window_manager_x11.c`) call `Platform_`, never `fl_`.
-- **DO NOT** sprinkle `#if defined(_WIN32)` inside function bodies. Put an outer shell in `whateverfile.c` that calls `Platform_whatever*`, and add `src/platform/x11/whatever_x11.c` + `src/platform/win32/whatever_win32.c`. Files ending `_x11.c` are skipped on Windows by `nob.c:43`; `_win32.c` by `nob.c:46`; `wm.c` by `nob.c:44`.
+- **DO NOT** sprinkle `#if defined(_WIN32)` inside function bodies **in core** (`src/core/*`, `src/platform/*`, `src/flapi.c`, `src/config_*.c`, `src/bindings/*`). Put an outer shell in `whateverfile.c` that calls `Platform_whatever*`, and add `src/platform/x11/whatever_x11.c` + `src/platform/win32/whatever_win32.c`. Files ending `_x11.c` are skipped on Windows by `nob.c:43`; `_win32.c` by `nob.c:46`; `wm.c` by `nob.c:44`.
+- **MAY** use `#if defined(_WIN32)` freely inside `src/features/*.c` — a feature is a single self-contained `.so`/`.dll` compiled per-platform, so it does not need the core platform split. Two constraints still apply: OS headers go at **file scope**, never inside a function body; and the guard must not leave dead code warnings on the inactive side (`-Wall -Wextra` is on for feature builds too).
 - **DO** keep platform files minimal and OS-specific: Linux uses `linux/input.h` / `linux/uinput.h` / evdev / uinput / `XTest`; Windows uses `SendInput`. No `<windows.h>` in Linux files.
 
 ## 3. Build
