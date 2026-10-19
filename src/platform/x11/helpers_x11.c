@@ -723,13 +723,6 @@ if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return N
     unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
     if (!argb) { stbi_image_free(src); return false; }
 
-    /* Box filter (area average) over the source rectangle each destination
-       pixel covers. Nearest-neighbour threw away ~98% of the pixels when
-       minifying, which erased thin strokes entirely: a 128px icon drawn at
-       16px came out as a couple of stray pixels. When not minifying the box
-       is 1x1 and this degenerates to a plain copy, so no special case is
-       needed. Decodes are cached per path+size, so the extra work is paid
-       once rather than per frame. */
     for (int dy = 0; dy < dst_h; dy++) {
         int y0 = (int)((long long)dy * h / dst_h);
         int y1 = (int)((long long)(dy + 1) * h / dst_h);
