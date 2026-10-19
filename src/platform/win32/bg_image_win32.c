@@ -1,5 +1,6 @@
 #include "platform/win32/bg_image_win32.h"
 #include "config.h"
+#include "platform/platform.h"
 #include "deps/log.h"
 #include "core/timer.h"
 #include <windows.h>
@@ -75,7 +76,16 @@ if (g_bg_gdip_token != 0) { PROFILE_END_VAR(_pt, "bg_gdip_ensure"); return; }
 static void bg_native_path(char* out, size_t cap, const char* path) {
     PROFILE_START(_pt);
 if (!out || cap == 0) { PROFILE_END_VAR(_pt, "bg_native_path"); return; }
-    snprintf(out, cap, "%s", path ? path : "");
+    const char* src = path ? path : "";
+    char expanded[512];
+    if (src[0] == '~' && (src[1] == '\0' || src[1] == '/' || src[1] == '\\')) {
+        const char* home = Platform_GetRealHome();
+        if (home && home[0]) {
+            snprintf(expanded, sizeof(expanded), "%s%s", home, src[1] ? src + 1 : "");
+            src = expanded;
+        }
+    }
+    snprintf(out, cap, "%s", src);
     for (char* q = out; *q; q++) if (*q == '/') *q = '\\';
     { PROFILE_END_VAR(_pt, "bg_native_path"); }
 }

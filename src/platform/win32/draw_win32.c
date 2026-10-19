@@ -718,7 +718,7 @@ static GpBitmap* win32_load_shell_icon_bitmap(const char *path) {
         PROFILE_START(_pt);
 SHFILEINFOA sfi;
     ZeroMemory(&sfi, sizeof(sfi));
-    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES)) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
+    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON)) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
     if (!sfi.hIcon) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
     GpBitmap* bmp = NULL;
     GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
