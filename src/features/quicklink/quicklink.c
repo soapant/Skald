@@ -6,6 +6,6 @@ bool open_youtube(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+Ctrl+Y", open_youtube);
+    fl_register_hotkey(.hotkey="Alt+Ctrl+Y", .cb=open_youtube);
     fl_add_to_cc(.display_name="Open YouTube",.on_enter=open_youtube,.type="QuickLink",.icon="/video.png");
 }

@@ -14,6 +14,7 @@ typedef struct {
     int blacklist_count;
     bool whitelist;
     HotkeyCallback hotkey_callback;
+    HotkeyCallback should_swallow;
     HotkeyCondition hotkey_condition;
     bool is_feature_toggle;
     bool hold;

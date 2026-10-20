@@ -191,10 +191,10 @@ bool video_prompt(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+Shift+,", video_cmd_1);
-    fl_register_hotkey("Alt+Shift+.", video_cmd_5);
-    fl_register_hotkey("Alt+Shift+;", video_cmd_6);
-    fl_register_hotkey("Alt+V", video_prompt);
+    fl_register_hotkey(.hotkey="Alt+Shift+,", .cb=video_cmd_1);
+    fl_register_hotkey(.hotkey="Alt+Shift+.", .cb=video_cmd_5);
+    fl_register_hotkey(.hotkey="Alt+Shift+;", .cb=video_cmd_6);
+    fl_register_hotkey(.hotkey="Alt+V", .cb=video_prompt);
 
     fl_register_feature(.name="Video Viewer",.cb=video_prompt,.icon="/video.png");
 }
