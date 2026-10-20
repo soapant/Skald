@@ -694,6 +694,7 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec);
 
 int fl_cc_entry_count(void);
 const FlCcEntrySpec *fl_cc_entry_at(int index);
+void fl_cc_registry_purge_owner(const char *path_a, const char *path_b);
 
 bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
 #define fl_add_dep(...) fl_add_dep_impl(__VA_ARGS__, __FILE__)

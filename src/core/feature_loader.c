@@ -20,7 +20,6 @@
 #include "core/cap_registry.h"
 #include "core/hotkey_manager.h"
 #include "core/snippet_manager.h"
-#include "core/cc_registry.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
