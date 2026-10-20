@@ -143,24 +143,24 @@ bool start_auto_click(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Ctrl+Alt+B", start_auto_click);
-    fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
-    fl_register_hotkey("Alt+Shift+F", next_image);
-    fl_register_hotkey("E", next_image,WHITELIST,"feh");
-    fl_register_hotkey("Q", last_image,WHITELIST,"feh");
-    fl_register_hotkey("Alt+Shift+D", get_current_keyword);
-    fl_register_hotkey("Alt+Q", open_terminal);
-    fl_register_hotkey("Ctrl+Shift+B", open_browser);
-    fl_register_hotkey("Alt+Shift+L", move_active_window_right);
-    fl_register_hotkey("Alt+Shift+H", move_active_window_left);
-    fl_register_hotkey("Alt+Shift+O", focus_window_right);
-    fl_register_hotkey("Alt+Shift+I", focus_window_left);
-    fl_register_hotkey("Ctrl+Q", close_active_window);
-    fl_register_hotkey("Alt+F", toggle_fullscreen);
-    fl_register_hotkey("Alt+M", toggle_minimized);
-    fl_register_hotkey("J", easy,WHITELIST,"anki");
-    fl_register_hotkey("K", medium,WHITELIST,"anki");
-    fl_register_hotkey("L", hard,WHITELIST,"anki");
-    fl_register_hotkey(";", fuckme,WHITELIST,"anki");
+    fl_register_hotkey(.hotkey="Ctrl+Alt+B", .cb=start_auto_click);
+    fl_register_hotkey(.hotkey="Alt+Shift+G", .cb=GoogleMeaning);
+    fl_register_hotkey(.hotkey="Alt+Shift+F", .cb=next_image);
+    fl_register_hotkey(.hotkey="E", .cb=next_image, .whitelist=(const char*[]){"feh", NULL});
+    fl_register_hotkey(.hotkey="Q", .cb=last_image, .whitelist=(const char*[]){"feh", NULL});
+    fl_register_hotkey(.hotkey="Alt+Shift+D", .cb=get_current_keyword);
+    fl_register_hotkey(.hotkey="Alt+Q", .cb=open_terminal);
+    fl_register_hotkey(.hotkey="Ctrl+Shift+B", .cb=open_browser);
+    fl_register_hotkey(.hotkey="Alt+Shift+L", .cb=move_active_window_right);
+    fl_register_hotkey(.hotkey="Alt+Shift+H", .cb=move_active_window_left);
+    fl_register_hotkey(.hotkey="Alt+Shift+O", .cb=focus_window_right);
+    fl_register_hotkey(.hotkey="Alt+Shift+I", .cb=focus_window_left);
+    fl_register_hotkey(.hotkey="Ctrl+Q", .cb=close_active_window);
+    fl_register_hotkey(.hotkey="Alt+F", .cb=toggle_fullscreen);
+    fl_register_hotkey(.hotkey="Alt+M", .cb=toggle_minimized);
+    fl_register_hotkey(.hotkey="J", .cb=easy, .whitelist=(const char*[]){"anki", NULL});
+    fl_register_hotkey(.hotkey="K", .cb=medium, .whitelist=(const char*[]){"anki", NULL});
+    fl_register_hotkey(.hotkey="L", .cb=hard, .whitelist=(const char*[]){"anki", NULL});
+    fl_register_hotkey(.hotkey=";", .cb=fuckme, .whitelist=(const char*[]){"anki", NULL});
 }
 

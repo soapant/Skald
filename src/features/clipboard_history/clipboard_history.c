@@ -205,6 +205,6 @@ FLINT_FEATURE_INIT {
     ch_load();
     ch_running = true;
     ch_thread = fl_thread_create(ch_sampler, NULL);
-    fl_register_hotkey("Alt+Shift+R", TriggerClipboardHistory);
+    fl_register_hotkey(.hotkey="Alt+Shift+R", .cb=TriggerClipboardHistory);
     fl_register_feature(.name="Clipboard History",.cb=TriggerClipboardHistory,.icon="/clipboard.png");
 }

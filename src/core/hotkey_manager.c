@@ -365,10 +365,16 @@ bool hotkey_process(int vk_code, int modifiers) {
         HotkeyCallback cb = b->hotkey_callback;
         bool blocked = hotkey_toggle_blocked(b);
         if (blocked) return true;
+        bool swallow = true;
+        if (b->should_swallow) {
+            FeatureLoader_Lock();
+            swallow = b->should_swallow();
+            FeatureLoader_Unlock();
+        }
         log_info("hotkey match vk=0x%X mods=%d enqueue", vk_code, eff_modifiers);
         hotkey_enqueue(cb, b->is_feature_toggle, b->owner, vk_code, eff_modifiers);
         if (b->hold) hotkey_hold_begin(vk_code, b->modifiers);
-        return true;
+        return swallow;
     }
 
 
