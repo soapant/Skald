@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-typedef void (*HotkeyCallback)(void);
+typedef bool (*HotkeyCallback)(void);
 typedef bool (*HotkeyCondition)(void);
 
 typedef struct {
@@ -24,7 +24,7 @@ typedef struct {
 
 bool AlwaysEnabled(void);
 bool AlwaysDisabled(void);
-HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist);
+HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,bool (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist);
 void hotkey_mark_feature_toggles(HotkeyCallback cb);
 void hotkey_purge_owner(const char* path_a, const char* path_b);
 void hotkey_key_up(int vk_code);
