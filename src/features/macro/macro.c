@@ -384,23 +384,20 @@ static void macro_show_overlay(void (*render)(void)) {
     fl_overlay(.name=MACRO_OVERLAY_NAME, .render=render, .w=WIDTH, .h=HEIGHT, .x = WIDTH / 2, .y = HEIGHT / 2,.no_bg=true);
 }
 
-bool PlayMacro(void) {
+void PlayMacro(void) {
     if (!g_playing) {
         if (g_event_count == 0) {
             fl_message(.message="No macro loaded", .timeout=3.0);
-            return true;
         }
         macro_show_overlay(playback_render);
         fl_clear_key_queue();
         fl_clear_mouse_queue();
         g_playing = true;
         if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
-        return true;
     }
     fl_dismiss_overlay(MACRO_OVERLAY_NAME);
     g_playing = false;
     release_everything();
-    return true;
 }
 
 bool InfinitePlaybackToggle(void) {
@@ -417,7 +414,7 @@ bool RemoveDeadTimeToggle(void) {
     return true;
 }
 
-bool RecordToggle(void) {
+void RecordToggle(void) {
   if (!g_recording) {
     macro_show_overlay(recording_render);
     fl_clear_key_queue();
@@ -425,20 +422,18 @@ bool RecordToggle(void) {
     reset_recording();
     g_recording = true;
     if (!g_thread) g_thread = fl_thread_create(recorder_loop, NULL);
-    return true;
   }
   fl_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_recording = false;
-    return true;
 }
 
 
 FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey="Ctrl+Alt+R", .cb=RecordToggle);
   fl_register_hotkey(.hotkey="Ctrl+Alt+P", .cb=PlayMacro);
-  fl_add_to_cc(.display_name="SaveMacro",.on_enter=SaveMacro,.type="Macro",.icon="/save.png");
-  fl_add_to_cc(.display_name="LoadMacro",.on_enter=LoadMacro,.type="Macro",.icon="/load.png");
-  fl_add_to_cc(.display_name="InfinitePlayback",.on_enter=InfinitePlaybackToggle,.type="Macro",.icon="/repeat.png");
-  fl_add_to_cc(.display_name="RemoveDeadTime",.on_enter=RemoveDeadTimeToggle,.type="Macro",.icon="/clock-off.png");
+  fl_add_to_cc(.display_name="SaveMacro",.on_enter=(bool(*)(void))SaveMacro,.type="Macro",.icon="/save.png");
+  fl_add_to_cc(.display_name="LoadMacro",.on_enter=(bool(*)(void))LoadMacro,.type="Macro",.icon="/load.png");
+  fl_add_to_cc(.display_name="InfinitePlayback",.on_enter=(bool(*)(void))InfinitePlaybackToggle,.type="Macro",.icon="/repeat.png");
+  fl_add_to_cc(.display_name="RemoveDeadTime",.on_enter=(bool(*)(void))RemoveDeadTimeToggle,.type="Macro",.icon="/clock-off.png");
 
 }

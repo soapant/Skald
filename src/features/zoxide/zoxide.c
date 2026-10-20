@@ -25,12 +25,11 @@ static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
     free(path);
     return true;
 }
-static bool TriggerZoxide(void) {
+static void TriggerZoxide(void) {
     FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
     fl_window(.title = "⌨️ Zoxide", .items = (const char**)files.items,
            .refresh = zoxide_refresh, .enter = zoxide_enter, .edit = zoxide_edit);
     fl_free_file_list(&files);
-    return true;
 }
 
 const char* FileManagerZoxideFilePath = "FileManagerZoxide.txt";
@@ -56,18 +55,17 @@ static void file_manager_edit(const char* selection, ListBoxInfo* lb) {
     free(edited);
     file_manager_refresh("", lb);
 }
-static bool TriggerFileManager(void) {
+static void TriggerFileManager(void) {
     FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
     fl_window(.title = "📁 FileManager", .items = (const char**)files.items,
            .refresh = file_manager_refresh, .enter = file_manager_enter, .edit = file_manager_edit);
     fl_free_file_list(&files);
-    return true;
 }
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+W", .cb=TriggerZoxide, .blacklist={"\1"});
     fl_register_hotkey(.hotkey="Alt+R", .cb=TriggerFileManager, .blacklist={"\1"});
 
-    fl_register_feature(.name="Zoxide",.cb=TriggerZoxide,.icon="/folder.png");
-    fl_register_feature(.name="File Manager",.cb=TriggerFileManager,.icon="/folder.png");
+    fl_register_feature(.name="Zoxide",.cb=(bool(*)(void))TriggerZoxide,.icon="/folder.png");
+    fl_register_feature(.name="File Manager",.cb=(bool(*)(void))TriggerFileManager,.icon="/folder.png");
 }

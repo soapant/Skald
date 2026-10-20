@@ -1170,7 +1170,7 @@ static void cc_tab(ListBoxInfo *lb) {
     if (e && e->on_tab) e->on_tab();
 }
 
-static bool TriggerControl(void) {
+static void TriggerControl(void) {
     cc_build_xdg_paths();
     for (size_t i = 0; i < g_xdg_path_count; i++) {
         const char *p = g_xdg_paths[i];
@@ -1189,7 +1189,6 @@ static bool TriggerControl(void) {
            .tab = cc_tab,
            .render = cc_render,
            .on_close = cc_on_close);
-    return true;
 }
 
 FLINT_FEATURE_INIT {

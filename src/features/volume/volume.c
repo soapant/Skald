@@ -254,7 +254,7 @@ cleanup:
 
 #define VK_MEDIA_PLAY_PAUSE 0xB3
 
-bool toggle_play_pause(void) {
+void toggle_play_pause(void) {
     #if defined(_WIN32)
       INPUT input[2] = {0};
 
@@ -267,13 +267,13 @@ bool toggle_play_pause(void) {
 
       SendInput(2, input, sizeof(INPUT));
     #else
-      if (!gio_load()) return true;
+      if (!gio_load()) return;
       GlError *error = NULL;
       GlDbConnection *conn = gio.bus_get_sync(VOLUME_G_BUS_TYPE_SESSION, NULL, &error);
-      if (!conn) { if (error) gio.error_free(error); return true; }
+      if (!conn) { if (error) gio.error_free(error); return; }
 
       char* bus_name = find_player_bus_name(conn);
-      if (!bus_name) { gio.object_unref(conn); return true; }
+      if (!bus_name) { gio.object_unref(conn); return; }
 
       GlDbProxy *proxy = gio.dbus_proxy_new_sync(conn, VOLUME_G_DBUS_FLAGS_NONE, NULL,
           bus_name, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player", NULL, &error);
@@ -288,17 +288,14 @@ bool toggle_play_pause(void) {
       gio.free(bus_name);
       gio.object_unref(conn);
     #endif
-    return true;
 }
 
-bool increment_volume() {
+void increment_volume() {
     set_volume(get_current_volume() + 10);
-    return true;
 }
 
-bool decrement_volume() {
+void decrement_volume() {
     set_volume(get_current_volume() - 10);
-    return true;
 }
 
 FLINT_FEATURE_INIT {
