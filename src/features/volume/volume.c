@@ -302,7 +302,7 @@ bool decrement_volume() {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Ctrl+]",increment_volume);
-    fl_register_hotkey("Ctrl+[",decrement_volume);
-    fl_register_hotkey("RShift",toggle_play_pause); 
+    fl_register_hotkey(.hotkey="Ctrl+]", .cb=increment_volume);
+    fl_register_hotkey(.hotkey="Ctrl+[", .cb=decrement_volume);
+    fl_register_hotkey(.hotkey="RShift", .cb=toggle_play_pause);
 }

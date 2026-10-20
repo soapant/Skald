@@ -551,18 +551,26 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
     hotkey_mark_feature_toggles(spec->cb);
 }
 
-bool fl_register_hotkey_impl(char* hotkey_string,bool (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows) {
+bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
     PROFILE_START(_pt);
-    HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
-                                                        on_hotkey_trigger,
-                                                        optional_condition_for_hotkey,
-                                                        optional_blacklistedwindows,
+    if (!spec || !spec->hotkey || !spec->cb) { PROFILE_END_VAR(_pt, "fl_register_hotkey_impl"); return false; }
+    const char** wl = spec->whitelist;
+    const char** bl = spec->blacklist;
+    bool whitelist = (wl != NULL && bl == NULL);
+    const char** bw = bl ? bl : (wl ? wl : NULL);
+    HotkeyBinding binding = convert_into_hotkey_binding((char*)spec->hotkey,
+                                                        spec->cb,
+                                                        NULL,
+                                                        bw,
                                                         whitelist);
     binding.is_feature_toggle = false;
     binding.hold = true;
-    if (on_hotkey_trigger && g_feature_map) {
+    binding.should_swallow = spec->should_swallow;
+    bool swallow_default = spec->swallow;
+    if (binding.should_swallow == NULL) { /* use swallow default */ }
+    if (spec->cb && g_feature_map) {
         for (int i = 0; i < g_feature_order_count; i++) {
-            if (g_feature_order[i] && g_feature_order[i]->cb == on_hotkey_trigger) { binding.is_feature_toggle = true; break; }
+            if (g_feature_order[i] && g_feature_order[i]->cb == spec->cb) { binding.is_feature_toggle = true; break; }
         }
     }
     if (binding.is_feature_toggle) binding.hold = false;

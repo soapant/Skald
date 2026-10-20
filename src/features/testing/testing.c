@@ -4,8 +4,8 @@
 
 
 bool Testing() {
-    return true;
+    return false;
 }
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Space", Testing);
+    fl_register_hotkey(.hotkey="Space", .should_swallow=Testing);
 }

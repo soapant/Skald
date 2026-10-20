@@ -547,8 +547,8 @@ static bool pk_ocr_area_to_clipboard(void) {
 #endif
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Ctrl+Shift+X", pk_screenshot_copy_area);
-    fl_register_hotkey("Alt+Shift+C", pk_ocr_area_to_clipboard);
+    fl_register_hotkey(.hotkey="Ctrl+Shift+X", .cb=pk_screenshot_copy_area);
+    fl_register_hotkey(.hotkey="Alt+Shift+C", .cb=pk_ocr_area_to_clipboard);
     fl_add_to_cc(.display_name="Screenshot Region",.on_enter=pk_screenshot_copy_area,.type="Screenshot",.icon="/camera.png");
     fl_add_to_cc(.display_name="OCR Region ",.on_enter=pk_ocr_area_to_clipboard,.type="Screenshot",.icon="/scan-text.png");
 }

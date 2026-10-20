@@ -65,8 +65,8 @@ static bool TriggerFileManager(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+W", TriggerZoxide, "Fortnite");
-    fl_register_hotkey("Alt+R",TriggerFileManager,"Fortnite");
+    fl_register_hotkey(.hotkey="Alt+W", .cb=TriggerZoxide, .blacklist=(const char*[]){"Fortnite", NULL});
+    fl_register_hotkey(.hotkey="Alt+R", .cb=TriggerFileManager, .blacklist=(const char*[]){"Fortnite", NULL});
 
     fl_register_feature(.name="Zoxide",.cb=TriggerZoxide,.icon="/folder.png");
     fl_register_feature(.name="File Manager",.cb=TriggerFileManager,.icon="/folder.png");

@@ -357,6 +357,6 @@ static bool TriggerProcessKiller(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+U", TriggerProcessKiller,"Fortnite");
+    fl_register_hotkey(.hotkey="Alt+U", .cb=TriggerProcessKiller, .blacklist=(const char*[]){"Fortnite", NULL});
     fl_register_feature(.name="Process Killer",.cb=TriggerProcessKiller,.icon="/skull.png"); 
 }

@@ -434,8 +434,8 @@ bool RecordToggle(void) {
 
 
 FLINT_FEATURE_INIT {
-  fl_register_hotkey("Ctrl+Alt+R", RecordToggle);
-  fl_register_hotkey("Ctrl+Alt+P", PlayMacro);
+  fl_register_hotkey(.hotkey="Ctrl+Alt+R", .cb=RecordToggle);
+  fl_register_hotkey(.hotkey="Ctrl+Alt+P", .cb=PlayMacro);
   fl_add_to_cc(.display_name="SaveMacro",.on_enter=SaveMacro,.type="Macro",.icon="/save.png");
   fl_add_to_cc(.display_name="LoadMacro",.on_enter=LoadMacro,.type="Macro",.icon="/load.png");
   fl_add_to_cc(.display_name="InfinitePlayback",.on_enter=InfinitePlaybackToggle,.type="Macro",.icon="/repeat.png");

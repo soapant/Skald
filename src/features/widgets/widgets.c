@@ -426,6 +426,6 @@ FLINT_FEATURE_INIT {
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_internet_render);
 
-    fl_register_hotkey("Alt+Shift+S", FlipWidgets);
+    fl_register_hotkey(.hotkey="Alt+Shift+S", .cb=FlipWidgets);
 }
 

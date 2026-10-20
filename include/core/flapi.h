@@ -694,7 +694,16 @@ const FlCcEntrySpec *fl_cc_entry_at(int index);
 bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
 #define fl_add_dep(...) fl_add_dep_impl(__VA_ARGS__, __FILE__)
 
-bool fl_register_hotkey_impl(char* hotkey_string,bool (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
+typedef struct {
+    const char *hotkey;
+    bool (*cb)(void);
+    bool (*should_swallow)(void);
+    const char **whitelist;
+    const char **blacklist;
+    bool swallow;
+} FlHotkeySpec;
+
+bool fl_register_hotkey_impl(const FlHotkeySpec *spec);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
@@ -735,8 +744,8 @@ bool fl_register_hotkey_impl(char* hotkey_string,bool (*on_hotkey_trigger)(void)
 
 #define _FL_GET_MACRO(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
 
-#define fl_register_hotkey(...) \
-    _FL_GET_MACRO(__VA_ARGS__, _FL_HOTKEY_ROUTER_6, _FL_HOTKEY_ROUTER_5, _FL_HOTKEY_ROUTER_4, _FL_HOTKEY_ROUTER_3, _FL_HOTKEY_ROUTER_2)(__VA_ARGS__)
+#define fl_register_hotkey(...) fl_register_hotkey_impl(&(FlHotkeySpec){__VA_ARGS__})
+
 
 bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows);
 
