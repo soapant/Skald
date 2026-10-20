@@ -316,7 +316,6 @@ PROFILE_START(timer);
       return true;
     }
     if (wParam == VK_RETURN) {
-      bool is_ctrl = ctrl_pressed;
       const char* sel = NULL;
       char filter_copy[sizeof(state->filter)];
       if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
@@ -328,26 +327,37 @@ PROFILE_START(timer);
       }
       const char* feat = FlintContext_Get()->window.current_feature;
       if (feat && sel && sel[0]) History_Add(feat, sel);
-      if (is_ctrl) {
-        {
-          FlintContext* _c = FlintContext_Get();
-          bool should_close = false;
+      {
+        FlintContext* _c = FlintContext_Get();
+        bool should_close = true;
+        if (ctrl_pressed && shift_pressed) {
+          should_close = false;
+          if (_c->prompt_callbacks.ctrl_shift_enter) should_close = _c->prompt_callbacks.ctrl_shift_enter(sel, &state->listbox);
+          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
+        } else if (ctrl_pressed && alt_pressed) {
+          should_close = false;
+          if (_c->prompt_callbacks.ctrl_alt_enter) should_close = _c->prompt_callbacks.ctrl_alt_enter(sel, &state->listbox);
+          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
+        } else if (shift_pressed && alt_pressed) {
+          should_close = false;
+          if (_c->prompt_callbacks.shift_alt_enter) should_close = _c->prompt_callbacks.shift_alt_enter(sel, &state->listbox);
+          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
+        } else if (shift_pressed) {
+          should_close = false;
+          if (_c->prompt_callbacks.shift_enter) should_close = _c->prompt_callbacks.shift_enter(sel, &state->listbox);
+          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
+        } else if (ctrl_pressed) {
+          should_close = false;
           if (_c->prompt_callbacks.ctrl_enter) should_close = _c->prompt_callbacks.ctrl_enter(sel, &state->listbox);
           else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
-          _c->window.selection_complete = should_close;
+        } else {
+          should_close = true;
+          if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
         }
-        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-        return true;
-      } else {
-        {
-          FlintContext* _c2 = FlintContext_Get();
-          bool should_close = true;
-          if (_c2->prompt_callbacks.enter) should_close = _c2->prompt_callbacks.enter(sel, &state->listbox);
-          _c2->window.selection_complete = should_close;
-        }
-        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-        return true;
+        _c->window.selection_complete = should_close;
       }
+      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
+      return true;
     }
     if (wParam == COPY_SELECTION_KEY && !IsInsertMode()) {
       if (shift_pressed || ctrl_pressed) {

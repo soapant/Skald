@@ -289,7 +289,6 @@ bool todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     todo_refresh_callback("", lb);
     return false;
 }
-
 void todo_copy_callback(const char* selection,int true_index,int type) {
     char buffer[512];
     strncpy(buffer, selection, sizeof(buffer) - 1);

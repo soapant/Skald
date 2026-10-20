@@ -679,6 +679,10 @@ typedef struct {
     const char *internal_name;
     bool (*on_enter)(void);
     bool (*on_ctrl_enter)(void);
+    bool (*on_shift_enter)(void);
+    bool (*on_ctrl_shift_enter)(void);
+    bool (*on_ctrl_alt_enter)(void);
+    bool (*on_shift_alt_enter)(void);
     bool (*on_tab)(void);
     bool (*on_action)(void);
     const char *icon;
