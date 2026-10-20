@@ -44,6 +44,10 @@ typedef struct {
 typedef void (*RefreshCallback)(const char* filter, ListBoxInfo* lb);
 typedef bool (*EnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef bool (*CtrlEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*ShiftEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*CtrlShiftEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*CtrlAltEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*ShiftAltEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*TabCallback)(ListBoxInfo* lb);
 typedef void (*RenderCallback)(PromptState *state);
 typedef void (*AliasCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
@@ -106,6 +110,10 @@ typedef struct {
     RefreshCallback refresh;
     EnterCallback enter;
     CtrlEnterCallback ctrl_enter;
+    ShiftEnterCallback shift_enter;
+    CtrlShiftEnterCallback ctrl_shift_enter;
+    CtrlAltEnterCallback ctrl_alt_enter;
+    ShiftAltEnterCallback shift_alt_enter;
     TabCallback tab;
     CopyCallback copy;
     RenderCallback render;

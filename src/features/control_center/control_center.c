@@ -15,6 +15,10 @@ typedef struct {
     char icon[MAX_PATH];
     bool (*on_enter)(void);
     bool (*on_ctrl_enter)(void);
+    bool (*on_shift_enter)(void);
+    bool (*on_ctrl_shift_enter)(void);
+    bool (*on_ctrl_alt_enter)(void);
+    bool (*on_shift_alt_enter)(void);
     bool (*on_tab)(void);
     bool (*on_action)(void);
 } CcEntry;
@@ -125,6 +129,10 @@ static void cc_build(void) {
         if (!e) continue;
         if (s->on_enter) e->on_enter = s->on_enter;
         if (s->on_ctrl_enter) e->on_ctrl_enter = s->on_ctrl_enter;
+        if (s->on_shift_enter) e->on_shift_enter = s->on_shift_enter;
+        if (s->on_ctrl_shift_enter) e->on_ctrl_shift_enter = s->on_ctrl_shift_enter;
+        if (s->on_ctrl_alt_enter) e->on_ctrl_alt_enter = s->on_ctrl_alt_enter;
+        if (s->on_shift_alt_enter) e->on_shift_alt_enter = s->on_shift_alt_enter;
         if (s->on_tab) e->on_tab = s->on_tab;
         if (s->on_action) e->on_action = s->on_action;
     }
@@ -146,16 +154,33 @@ static bool (*g_pending_action)(void);
 static bool (*g_pending_fn)(void);
 static char g_pending_label[256];
 
-static void cc_stage(const CcEntry *e, bool ctrl) {
+static void cc_stage(const CcEntry *e, int mode) {
     g_pending_action = NULL;
     g_pending_fn = NULL;
     g_pending_label[0] = '\0';
     if (!e) return;
-    if (ctrl) {
-        if (e->on_ctrl_enter) {
-            g_pending_fn = e->on_ctrl_enter;
-            snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
-        }
+    if (mode == 1) {
+        if (e->on_ctrl_enter) { g_pending_fn = e->on_ctrl_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
+        return;
+    }
+    if (mode == 2) {
+        if (e->on_shift_enter) { g_pending_fn = e->on_shift_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
+        else if (e->on_enter) { g_pending_fn = e->on_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
+        return;
+    }
+    if (mode == 3) {
+        if (e->on_ctrl_shift_enter) { g_pending_fn = e->on_ctrl_shift_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
+        else if (e->on_ctrl_enter) { g_pending_fn = e->on_ctrl_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
+        return;
+    }
+    if (mode == 4) {
+        if (e->on_ctrl_alt_enter) { g_pending_fn = e->on_ctrl_alt_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
+        else if (e->on_ctrl_enter) { g_pending_fn = e->on_ctrl_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
+        return;
+    }
+    if (mode == 5) {
+        if (e->on_shift_alt_enter) { g_pending_fn = e->on_shift_alt_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
+        else if (e->on_enter) { g_pending_fn = e->on_enter; snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label); }
         return;
     }
     if (e->on_action) {
@@ -1095,7 +1120,7 @@ static bool cc_enter(const char *selection, ListBoxInfo *lb) {
     if (!fl_is_selected(lb)) {
         fl_query_browser(selection);
     }
-    cc_stage(cc_find(selection), false);
+    cc_stage(cc_find(selection), 0);
     return true;
 }
 
@@ -1103,7 +1128,36 @@ static bool cc_ctrl_enter(const char *selection, ListBoxInfo *lb) {
     if (!fl_is_selected(lb)) {
         fl_query_browser(selection);
     }
-    cc_stage(cc_find(selection), true);
+    cc_stage(cc_find(selection), 1);
+    return true;
+}
+
+static bool cc_shift_enter(const char *selection, ListBoxInfo *lb) {
+    if (!fl_is_selected(lb)) {
+        fl_query_browser(selection);
+    }
+    cc_stage(cc_find(selection), 2);
+    return true;
+}
+static bool cc_ctrl_shift_enter(const char *selection, ListBoxInfo *lb) {
+    if (!fl_is_selected(lb)) {
+        fl_query_browser(selection);
+    }
+    cc_stage(cc_find(selection), 3);
+    return true;
+}
+static bool cc_ctrl_alt_enter(const char *selection, ListBoxInfo *lb) {
+    if (!fl_is_selected(lb)) {
+        fl_query_browser(selection);
+    }
+    cc_stage(cc_find(selection), 4);
+    return true;
+}
+static bool cc_shift_alt_enter(const char *selection, ListBoxInfo *lb) {
+    if (!fl_is_selected(lb)) {
+        fl_query_browser(selection);
+    }
+    cc_stage(cc_find(selection), 5);
     return true;
 }
 
@@ -1128,6 +1182,10 @@ static bool TriggerControl(void) {
            .refresh = cc_refresh,
            .enter = cc_enter,
            .ctrl_enter = cc_ctrl_enter,
+           .shift_enter = cc_shift_enter,
+           .ctrl_shift_enter = cc_ctrl_shift_enter,
+           .ctrl_alt_enter = cc_ctrl_alt_enter,
+           .shift_alt_enter = cc_shift_alt_enter,
            .tab = cc_tab,
            .render = cc_render,
            .on_close = cc_on_close);

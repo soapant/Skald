@@ -2783,6 +2783,10 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
     memset(e, 0, sizeof(*e));
     e->pub.on_enter = spec->on_enter;
     e->pub.on_ctrl_enter = spec->on_ctrl_enter;
+    e->pub.on_shift_enter = spec->on_shift_enter;
+    e->pub.on_ctrl_shift_enter = spec->on_ctrl_shift_enter;
+    e->pub.on_ctrl_alt_enter = spec->on_ctrl_alt_enter;
+    e->pub.on_shift_alt_enter = spec->on_shift_alt_enter;
     e->pub.on_tab = spec->on_tab;
     e->pub.on_action = spec->on_action;
     e->pub.display_name = fl_cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
@@ -2801,6 +2805,10 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
     }
     void *anchor = (void*)(uintptr_t)spec->on_enter;
     if (!anchor) anchor = (void*)(uintptr_t)spec->on_ctrl_enter;
+    if (!anchor) anchor = (void*)(uintptr_t)spec->on_shift_enter;
+    if (!anchor) anchor = (void*)(uintptr_t)spec->on_ctrl_shift_enter;
+    if (!anchor) anchor = (void*)(uintptr_t)spec->on_ctrl_alt_enter;
+    if (!anchor) anchor = (void*)(uintptr_t)spec->on_shift_alt_enter;
     if (!anchor) anchor = (void*)(uintptr_t)spec->on_tab;
     if (!anchor) anchor = (void*)(uintptr_t)spec->on_action;
     Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
