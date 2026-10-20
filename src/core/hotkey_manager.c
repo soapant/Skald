@@ -316,7 +316,7 @@ bool hotkey_process(int vk_code, int modifiers) {
                         continue;
                     }
                     if (!title_fetched) {
-                        title = Platform_GetActiveWindowTitle();
+                        title = Platform_GetActiveWindowAppId();
                         title_fetched = true;
                     }
                     bool match = Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
@@ -343,7 +343,7 @@ bool hotkey_process(int vk_code, int modifiers) {
                     continue;
                 }
                 if (!title_fetched) {
-                    title = Platform_GetActiveWindowTitle();
+                    title = Platform_GetActiveWindowAppId();
                     title_fetched = true;
                 }
                 bool match = Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
