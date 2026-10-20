@@ -169,7 +169,11 @@ static CardList get_cards_in_deck(const char* db_path, const char* target_deck_n
             card.due_ts = anki_due_ts((long long)time(NULL), card.queue, card.due);
             if (strstr(flds, "{{c") != NULL) {
                 card.type = CARD_TYPE_CLOZE;
-                card.data.cloze.text = safe_strdup(flds);
+                char* csep = strchr(flds, '\x1f');
+                size_t clen = csep ? (size_t)(csep - flds) : strlen(flds);
+                card.data.cloze.text = malloc(clen + 1);
+                strncpy(card.data.cloze.text, flds, clen);
+                card.data.cloze.text[clen] = '\0';
             } else {
                 card.type = CARD_TYPE_BASIC;
                 char* sep = strchr(flds, '\x1f');
@@ -227,7 +231,7 @@ void display_card_question(TYPE_NAME card) {
         }
         question[o] = '\0';
     }
-    fl_message(.message = question,.slot=TOP_CENTER,.timeout=2.0);
+    fl_message(.name="question",.message = question,.slot=TOP_CENTER,.timeout=10000.0);
 }
 
 void display_card_answer(TYPE_NAME card) {
@@ -278,7 +282,7 @@ void display_card_answer(TYPE_NAME card) {
         answer[o] = '\0';
     }
 
-    // do something with `answer` here
+    fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=10000.0);
 }
 
 void print_due_card(void) {
