@@ -146,8 +146,8 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Ctrl+Alt+B", .cb=start_auto_click);
     fl_register_hotkey(.hotkey="Alt+Shift+G", .cb=GoogleMeaning);
     fl_register_hotkey(.hotkey="Alt+Shift+F", .cb=next_image);
-    fl_register_hotkey(.hotkey="E", .cb=next_image, .whitelist=(const char*[]){"feh", NULL});
-    fl_register_hotkey(.hotkey="Q", .cb=last_image, .whitelist=(const char*[]){"feh", NULL});
+    fl_register_hotkey(.hotkey="E", .cb=next_image, .whitelist={"feh"});
+    fl_register_hotkey(.hotkey="Q", .cb=last_image, .whitelist={"feh"});
     fl_register_hotkey(.hotkey="Alt+Shift+D", .cb=get_current_keyword);
     fl_register_hotkey(.hotkey="Alt+Q", .cb=open_terminal);
     fl_register_hotkey(.hotkey="Ctrl+Shift+B", .cb=open_browser);
@@ -158,9 +158,9 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Ctrl+Q", .cb=close_active_window);
     fl_register_hotkey(.hotkey="Alt+F", .cb=toggle_fullscreen);
     fl_register_hotkey(.hotkey="Alt+M", .cb=toggle_minimized);
-    fl_register_hotkey(.hotkey="J", .cb=easy, .whitelist=(const char*[]){"anki", NULL});
-    fl_register_hotkey(.hotkey="K", .cb=medium, .whitelist=(const char*[]){"anki", NULL});
-    fl_register_hotkey(.hotkey="L", .cb=hard, .whitelist=(const char*[]){"anki", NULL});
-    fl_register_hotkey(.hotkey=";", .cb=fuckme, .whitelist=(const char*[]){"anki", NULL});
+    fl_register_hotkey(.hotkey="J", .cb=easy, .whitelist={"anki"});
+    fl_register_hotkey(.hotkey="K", .cb=medium, .whitelist={"anki"});
+    fl_register_hotkey(.hotkey="L", .cb=hard, .whitelist={"anki"});
+    fl_register_hotkey(.hotkey=";", .cb=fuckme, .whitelist={"anki"});
 }
 
