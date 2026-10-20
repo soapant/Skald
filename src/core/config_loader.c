@@ -284,7 +284,6 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    RememberLastIndex = %s;\n", RememberLastIndex ? "true" : "false");
     cfg_put(buf, cap, &off, "    KeepSelectionAfterClose = %s;\n", KeepSelectionAfterClose ? "true" : "false");
     cfg_put(buf, cap, &off, "    MessageAfterEachHotkey = %s;\n", MessageAfterEachHotkey ? "true" : "false");
-    cfg_put(buf, cap, &off, "    AllowOtherFeatureTogglesInFeature = %s;\n", AllowOtherFeatureTogglesInFeature ? "true" : "false");
     cfg_put(buf, cap, &off, "    ModePersistsThroughFeatures = %s;\n", ModePersistsThroughFeatures ? "true" : "false");
     cfg_put(buf, cap, &off, "    TimeOutForMessages = %d;\n", TimeOutForMessages);
     cfg_put(buf, cap, &off, "    DoTimeDebugs = %s;\n", DoTimeDebugs ? "true" : "false");

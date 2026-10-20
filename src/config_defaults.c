@@ -5,7 +5,6 @@ bool EnableVimMode = true;
 bool RememberLastIndex = true;
 bool KeepSelectionAfterClose = false;
 bool MessageAfterEachHotkey = false;
-bool AllowOtherFeatureTogglesInFeature = false;
 bool ModePersistsThroughFeatures = false;
 int  TimeOutForMessages = 1;
 int  HotkeyRepeatDelayMs = 300;
