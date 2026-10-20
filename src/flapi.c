@@ -2745,21 +2745,17 @@ int fl_get_screen_height() {
     { PROFILE_END_VAR(_pt, "fl_get_screen_height"); return h; }
 }
 
-#define FL_CC_MAX 128
-#define FL_CC_STR_MAX 512
-#define FL_CC_DEP_FEATURE "control_center.c"
-
 typedef struct {
     FlCcEntrySpec pub;
-    char display_name[FL_CC_STR_MAX];
-    char internal_name[FL_CC_STR_MAX];
-    char icon[FL_CC_STR_MAX];
+    char display_name[1024];
+    char internal_name[1024];
+    char icon[1024];
     char type[128];
     char owner[OWNER_PATH_MAX];
 } FlCcEntry;
 
 static int g_cc_entry_count = 0;
-static FlCcEntry g_cc_entries[FL_CC_MAX];
+static FlCcEntry g_cc_entries[4096];
 
 #define FL_CC_DEP_OWNERS 64
 static char g_cc_dep_owners[FL_CC_DEP_OWNERS][OWNER_PATH_MAX];
@@ -2782,7 +2778,7 @@ static const char *fl_cc_dup(char *dst, size_t cap, const char *src) {
 }
 
 bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
-    if (!spec || g_cc_entry_count >= FL_CC_MAX) return false;
+    if (!spec || g_cc_entry_count >= 4096) return false;
     FlCcEntry *e = &g_cc_entries[g_cc_entry_count];
     memset(e, 0, sizeof(*e));
     e->pub.on_enter = spec->on_enter;
@@ -2810,7 +2806,7 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
     Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
     if (e->owner[0] && !fl_cc_dep_seen(e->owner)) {
         fl_cc_dep_mark(e->owner);
-        fl_add_dep_impl(FL_CC_DEP_FEATURE, e->owner);
+        fl_add_dep_impl("control_center.c", e->owner);
     }
     g_cc_entry_count++;
     return true;
