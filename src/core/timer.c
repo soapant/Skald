@@ -42,7 +42,7 @@ void TimerEnd(WinTimer t, const char* operation_name,
               const char *file, int line) {
   double elapsed_us = timer_elapsed_us(t);
   if (DoTimeDebugs) {
-    if (elapsed_us < 10000.0) return;
+    if (elapsed_us < 1000.0) return;
     timer_print(elapsed_us, operation_name, file, line);
   }
 }

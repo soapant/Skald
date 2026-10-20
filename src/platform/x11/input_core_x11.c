@@ -105,8 +105,8 @@ PROFILE_START(timer);
 }
 
 bool Platform_GetMousePos(int* out_x, int* out_y) {
-        PROFILE_START(_pt);
-Display* dpy = get_display();
+    PROFILE_START(_pt);
+    Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return false; }
     Window root = DefaultRootWindow(dpy);
     Window rw = 0, cw = 0;
