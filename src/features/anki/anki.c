@@ -5,13 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 #define DB_PATH "/home/win/.local/share/Anki2/User 1/collection.anki2"
 
 typedef enum { CARD_TYPE_BASIC, CARD_TYPE_CLOZE, CARD_TYPE_UNKNOWN } CardType;
 typedef struct { char* front; char* back; } BasicCard;
 typedef struct { char* text; } ClozeCard;
-typedef struct { CardType type; union { BasicCard basic; ClozeCard cloze; } data; } TYPE_NAME;
+typedef struct { CardType type; long long due; int queue; long long due_ts; union { BasicCard basic; ClozeCard cloze; } data; } TYPE_NAME;
 typedef struct { TYPE_NAME* items; size_t count; size_t capacity; } CardList;
 
 static FlLibrary g_sqlite_lib = NULL;
@@ -48,6 +49,28 @@ static int sqlite_init(void) {
     p_sqlite3_bind_text = (int(*)(sqlite3_stmt*,int,const char*,int,void(*)(void*)))fl_library_symbol(g_sqlite_lib, "sqlite3_bind_text");
     p_sqlite3_close = (int(*)(sqlite3*))fl_library_symbol(g_sqlite_lib, "sqlite3_close");
     return p_sqlite3_open_v2 && p_sqlite3_errmsg && p_sqlite3_prepare_v2 && p_sqlite3_step;
+}
+
+static long long g_anki_crt = 0;
+
+static long long anki_due_ts(long long now, int queue, long long due) {
+    if (queue == 1 || queue == 3) {
+        return due;
+    }
+    if (queue == 2) {
+        long long days_elapsed = (now - g_anki_crt) / 86400;
+        long long next_day_at = g_anki_crt + (days_elapsed + 1) * 86400;
+        return next_day_at + (due - days_elapsed) * 86400;
+    }
+    return 0;
+}
+
+static int card_due_cmp(const void* a, const void* b) {
+    const TYPE_NAME* ca = (const TYPE_NAME*)a;
+    const TYPE_NAME* cb = (const TYPE_NAME*)b;
+    if (ca->due_ts < cb->due_ts) return -1;
+    if (ca->due_ts > cb->due_ts) return 1;
+    return 0;
 }
 
 static char* safe_strdup(const char* s) {
@@ -107,11 +130,24 @@ static CardList get_cards_in_deck(const char* db_path, const char* target_deck_n
         fprintf(stderr, "Failed to open DB: %s\n", p_sqlite3_errmsg(db));
         return list;
     }
+    {
+        sqlite3_stmt* cs = NULL;
+        if (p_sqlite3_prepare_v2(db, "SELECT crt FROM col;", -1, &cs, NULL) == SQLITE_OK) {
+            if (p_sqlite3_step(cs) == SQLITE_ROW) g_anki_crt = p_sqlite3_column_int64(cs, 0);
+            p_sqlite3_finalize(cs);
+        }
+    }
     char* deck_id = NULL;
-    if (p_sqlite3_prepare_v2(db, "SELECT decks FROM col;", -1, &stmt, NULL) == SQLITE_OK) {
-        if (p_sqlite3_step(stmt) == SQLITE_ROW) {
-            const char* decks_json = (const char*)p_sqlite3_column_text(stmt, 0);
-            if (decks_json) deck_id = find_deck_id(decks_json, target_deck_name);
+    if (p_sqlite3_prepare_v2(db, "SELECT id, name FROM decks;", -1, &stmt, NULL) == SQLITE_OK) {
+        while (p_sqlite3_step(stmt) == SQLITE_ROW) {
+            long long id = p_sqlite3_column_int64(stmt, 0);
+            const char* name = (const char*)p_sqlite3_column_text(stmt, 1);
+            if (name && strcmp(name, target_deck_name) == 0) {
+                char tmp[32];
+                snprintf(tmp, sizeof(tmp), "%lld", id);
+                deck_id = safe_strdup(tmp);
+                break;
+            }
         }
         p_sqlite3_finalize(stmt);
         stmt = NULL;
@@ -121,13 +157,16 @@ static CardList get_cards_in_deck(const char* db_path, const char* target_deck_n
         p_sqlite3_close(db);
         return list;
     }
-    const char* query = "SELECT n.flds, n.mid FROM notes n JOIN cards c ON n.id = c.nid WHERE c.did = ?;";
+    const char* query = "SELECT n.flds, n.mid, c.due, c.queue FROM notes n JOIN cards c ON n.id = c.nid WHERE c.did = ?;";
     if (p_sqlite3_prepare_v2(db, query, -1, &stmt, NULL) == SQLITE_OK) {
         p_sqlite3_bind_text(stmt, 1, deck_id, -1, SQLITE_TRANSIENT);
         while (p_sqlite3_step(stmt) == SQLITE_ROW) {
             const char* flds = (const char*)p_sqlite3_column_text(stmt, 0);
             if (!flds) continue;
             TYPE_NAME card = {0};
+            card.due = p_sqlite3_column_int64(stmt, 2);
+            card.queue = (int)p_sqlite3_column_int64(stmt, 3);
+            card.due_ts = anki_due_ts((long long)time(NULL), card.queue, card.due);
             if (strstr(flds, "{{c") != NULL) {
                 card.type = CARD_TYPE_CLOZE;
                 card.data.cloze.text = safe_strdup(flds);
@@ -153,6 +192,7 @@ static CardList get_cards_in_deck(const char* db_path, const char* target_deck_n
     } else {
         fprintf(stderr, "Failed to prepare query: %s\n", p_sqlite3_errmsg(db));
     }
+    qsort(list.items, list.count, sizeof(TYPE_NAME), card_due_cmp);
     free(deck_id);
     p_sqlite3_close(db);
     return list;
@@ -166,6 +206,14 @@ void print_all_cards(void) {
             printf("Back: %s\n", card.data.basic.back);
         } else if (card.type == CARD_TYPE_CLOZE) {
             printf("Cloze: %s\n", card.data.cloze.text);
+        }
+        long long now = (long long)time(NULL);
+        if (card.due_ts > 0) {
+            long long left = card.due_ts - now;
+            if (left < 0) left = 0;
+            printf("Time left: %lldh %lldm\n", left / 3600, (left % 3600) / 60);
+        } else {
+            printf("Time left: now\n");
         }
     }
     free_card_list(&list);
