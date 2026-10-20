@@ -1,18 +1,20 @@
 #include "core/flapi.h"
 
-static void do_restart(void) {
+static bool do_restart(void) {
 #if defined(_WIN32)
     fl_run_terminal_command("Restart-Computer");
 #else
     fl_run_terminal_command("reboot");
 #endif
+    return true;
 }
-static void do_shutdown(void) {
+static bool do_shutdown(void) {
 #if defined(_WIN32)
     fl_run_terminal_command("Stop-Computer");
 #else
     fl_run_terminal_command("shutdown now");
 #endif
+    return true;
 }
 
 FLINT_FEATURE_INIT {

@@ -357,10 +357,10 @@ static bool macro_load_ctrlenter(const char *selection, ListBoxInfo *lb) {
     return false;
 }
 
-void SaveMacro(void) {
+bool SaveMacro(void) {
     if (g_event_count == 0) {
         fl_message(.message="No recording in memory", .timeout=3.0);
-        return;
+        return true;
     }
     char *name = fl_popup(.placeholder="Macro file name");
     char chosen[256];
@@ -372,47 +372,52 @@ void SaveMacro(void) {
         snprintf(chosen, sizeof(chosen), "%s", "last.macro");
     }
     macro_save(chosen);
+    return true;
 }
 
-void LoadMacro(void) {
+bool LoadMacro(void) {
     fl_window(.title="Macro Load", .refresh=macro_refresh, .enter=macro_load_enter,.ctrl_enter=macro_load_ctrlenter,.auto_scale=true);
+    return true;
 }
 
 static void macro_show_overlay(void (*render)(void)) {
     fl_overlay(.name=MACRO_OVERLAY_NAME, .render=render, .w=WIDTH, .h=HEIGHT, .x = WIDTH / 2, .y = HEIGHT / 2,.no_bg=true);
 }
 
-void PlayMacro(void) {
+bool PlayMacro(void) {
     if (!g_playing) {
         if (g_event_count == 0) {
             fl_message(.message="No macro loaded", .timeout=3.0);
-            return;
+            return true;
         }
         macro_show_overlay(playback_render);
         fl_clear_key_queue();
         fl_clear_mouse_queue();
         g_playing = true;
         if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
-        return;
+        return true;
     }
     fl_dismiss_overlay(MACRO_OVERLAY_NAME);
     g_playing = false;
     release_everything();
+    return true;
 }
 
-void InfinitePlaybackToggle(void) {
+bool InfinitePlaybackToggle(void) {
     g_macro_infinite = !g_macro_infinite;
     if (g_macro_infinite) fl_message(.message="Infinite playback enabled", .timeout=1.0,.slot=BOTTOM_CENTER);
     else fl_message(.message="Infinite playback disabled", .timeout=1.0,.slot=BOTTOM_CENTER);
+    return true;
 }
 
-void RemoveDeadTimeToggle(void) {
+bool RemoveDeadTimeToggle(void) {
     g_macro_remove_dead = !g_macro_remove_dead;
     if (g_macro_remove_dead) fl_message(.message="Remove dead time enabled", .timeout=1.0,.slot=BOTTOM_CENTER);
     else fl_message(.message="Remove dead time disabled", .timeout=1.0,.slot=BOTTOM_CENTER);
+    return true;
 }
 
-void RecordToggle(void) {
+bool RecordToggle(void) {
   if (!g_recording) {
     macro_show_overlay(recording_render);
     fl_clear_key_queue();
@@ -420,10 +425,11 @@ void RecordToggle(void) {
     reset_recording();
     g_recording = true;
     if (!g_thread) g_thread = fl_thread_create(recorder_loop, NULL);
-    return;
+    return true;
   }
   fl_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_recording = false;
+    return true;
 }
 
 

@@ -13,10 +13,10 @@ typedef struct {
     char type[64];
     char payload[MAX_PATH];
     char icon[MAX_PATH];
-    void (*on_enter)(void);
-    void (*on_ctrl_enter)(void);
-    void (*on_tab)(void);
-    void (*on_action)(void);
+    bool (*on_enter)(void);
+    bool (*on_ctrl_enter)(void);
+    bool (*on_tab)(void);
+    bool (*on_action)(void);
 } CcEntry;
 
 #define CC_MAX_TYPES 16
@@ -41,7 +41,7 @@ static int g_type_count;
 typedef struct {
     char label[256];
     char type[64];
-    void (*fn)(void);
+    bool (*fn)(void);
 } CcActionDef;
 
 static CcActionDef g_actions[CC_MAX_ACTIONS];
@@ -89,7 +89,7 @@ static bool cc_register_type(const char *name, CcFill fill) {
     return true;
 }
 
-static CC_MAYBE_UNUSED bool cc_add_action(const char *label, const char *type, void (*fn)(void)) {
+static CC_MAYBE_UNUSED bool cc_add_action(const char *label, const char *type, bool (*fn)(void)) {
     if (!label || !label[0] || !fn || g_action_count >= CC_MAX_ACTIONS) return false;
     CcActionDef *a = &g_actions[g_action_count++];
     snprintf(a->label, sizeof(a->label), "%s", label);
@@ -142,8 +142,8 @@ static const CcEntry *cc_find(const char *label) {
 }
 
 static const char *g_cc_staged_label = NULL;
-static void (*g_pending_action)(void);
-static void (*g_pending_fn)(void);
+static bool (*g_pending_action)(void);
+static bool (*g_pending_fn)(void);
 static char g_pending_label[256];
 
 static void cc_stage(const CcEntry *e, bool ctrl) {
@@ -168,8 +168,8 @@ static void cc_stage(const CcEntry *e, bool ctrl) {
 }
 
 static void cc_run_pending(void) {
-    void (*act)(void) = g_pending_action;
-    void (*pfn)(void) = g_pending_fn;
+    bool (*act)(void) = g_pending_action;
+    bool (*pfn)(void) = g_pending_fn;
     g_pending_action = NULL;
     g_pending_fn = NULL;
     g_cc_staged_label = g_pending_label;
@@ -597,14 +597,16 @@ static const char *cc_app_map_get(const char *name) {
     return NULL;
 }
 
-static void cc_launch_app(void) {
+static bool cc_launch_app(void) {
     const char *path = g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
     if (path && path[0]) fl_launch_with_args((char *)path, NULL);
+    return true;
 }
 
-static void cc_launch_app_as_admin(void) {
+static bool cc_launch_app_as_admin(void) {
     const char *path = g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
     if (path && path[0]) fl_launch_with_args_as_admin((char *)path, NULL);
+    return true;
 }
 
 static void cc_fill_applications(void) {
@@ -621,7 +623,7 @@ static void cc_fill_applications(void) {
 }
 
 static const char *cc_feature_names[CC_FEATURE_MAX];
-static void (*cc_feature_cbs[CC_FEATURE_MAX])(void);
+static bool (*cc_feature_cbs[CC_FEATURE_MAX])(void);
 
 static void cc_fill_features(void) {
     const char **cc_feature_icons = NULL;
@@ -1114,7 +1116,7 @@ static void cc_tab(ListBoxInfo *lb) {
     if (e && e->on_tab) e->on_tab();
 }
 
-static void TriggerControl(void) {
+static bool TriggerControl(void) {
     cc_build_xdg_paths();
     for (size_t i = 0; i < g_xdg_path_count; i++) {
         const char *p = g_xdg_paths[i];
@@ -1129,6 +1131,7 @@ static void TriggerControl(void) {
            .tab = cc_tab,
            .render = cc_render,
            .on_close = cc_on_close);
+    return true;
 }
 
 FLINT_FEATURE_INIT {

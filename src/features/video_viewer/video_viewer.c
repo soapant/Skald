@@ -156,34 +156,38 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
 #endif
     return true;
 }
-void video_cmd_1(void) {
+bool video_cmd_1(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #else
     video_set_long("Video Viewer", "_MP_CMD", 1);
 #endif
+    return true;
 }
-void video_cmd_5(void) {
+bool video_cmd_5(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
 #else
     video_set_long("Video Viewer", "_MP_CMD", 5);
 #endif
+    return true;
 }
-void video_cmd_6(void) {
+bool video_cmd_6(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
 #else
     video_set_long("Video Viewer", "_MP_CMD", 6);
 #endif
+    return true;
 }
-void video_prompt(void) {
+bool video_prompt(void) {
     fl_window(.title = "🎥 Viewer",
            .refresh = video_refresh_callback,
            .enter = video_enter_callback);
+    return true;
 }
 
 FLINT_FEATURE_INIT {

@@ -484,7 +484,7 @@ bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFu
 }
 
 typedef struct { char *key; void *value; } FlintMapEnt;
-typedef struct { char name[128]; void (*cb)(void); char icon[512]; } FeatureReg;
+typedef struct { char name[128]; bool (*cb)(void); char icon[512]; } FeatureReg;
 static FlintMap* g_feature_map = NULL;
 static FeatureReg** g_feature_order = NULL;
 static int g_feature_order_count = 0;
@@ -551,7 +551,7 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
     hotkey_mark_feature_toggles(spec->cb);
 }
 
-bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows) {
+bool fl_register_hotkey_impl(char* hotkey_string,bool (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows) {
     PROFILE_START(_pt);
     HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
                                                         on_hotkey_trigger,
@@ -569,7 +569,7 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
     { PROFILE_END_VAR(_pt, "fl_register_hotkey_impl"); return hotkey_register_internal(binding); }
 }
 
-int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max) {
+int fl_get_feature_list(const char** out_names, bool (**out_cbs)(void), int max) {
     PROFILE_START(_pt);
     int n = g_feature_order_count < max ? g_feature_order_count : max;
     for (int i=0;i<n;i++) {
@@ -579,7 +579,7 @@ int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max)
     { PROFILE_END_VAR(_pt, "fl_get_feature_list"); return n; }
 }
 
-int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max) {
+int fl_get_feature_list_with_icons(const char** out_names, bool (**out_cbs)(void), const char*** out_icons, int max) {
     PROFILE_START(_pt);
     int n = g_feature_order_count < max ? g_feature_order_count : max;
     for (int i=0;i<n;i++) {
