@@ -262,15 +262,14 @@ void typing_test_render(PromptState *state) {
     free(positions);
 }
 
-bool TriggerTypingTest(void) {
+void TriggerTypingTest(void) {
     fl_window(.enter = typing_test_enter,
            .render = typing_test_render,
            .on_close = typing_test_reset);
-    return true;
 }
 
 FLINT_FEATURE_INIT {
     text = typing_test_get_random_text(typing_test_word_count);
     fl_register_hotkey(.hotkey="Alt+B", .cb=TriggerTypingTest);
-    fl_register_feature(.name="Typing Test",.cb=TriggerTypingTest,.icon="/keyboard.png");
+    fl_register_feature(.name="Typing Test",.cb=(bool(*)(void))TriggerTypingTest,.icon="/keyboard.png");
 }

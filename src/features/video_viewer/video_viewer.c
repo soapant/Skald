@@ -156,38 +156,34 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
 #endif
     return true;
 }
-bool video_cmd_1(void) {
+void video_cmd_1(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #else
     video_set_long("Video Viewer", "_MP_CMD", 1);
 #endif
-    return true;
 }
-bool video_cmd_5(void) {
+void video_cmd_5(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
 #else
     video_set_long("Video Viewer", "_MP_CMD", 5);
 #endif
-    return true;
 }
-bool video_cmd_6(void) {
+void video_cmd_6(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
 #else
     video_set_long("Video Viewer", "_MP_CMD", 6);
 #endif
-    return true;
 }
-bool video_prompt(void) {
+void video_prompt(void) {
     fl_window(.title = "🎥 Viewer",
            .refresh = video_refresh_callback,
            .enter = video_enter_callback);
-    return true;
 }
 
 FLINT_FEATURE_INIT {
@@ -196,5 +192,5 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+Shift+;", .cb=video_cmd_6);
     fl_register_hotkey(.hotkey="Alt+V", .cb=video_prompt);
 
-    fl_register_feature(.name="Video Viewer",.cb=video_prompt,.icon="/video.png");
+    fl_register_feature(.name="Video Viewer",.cb=(bool(*)(void))video_prompt,.icon="/video.png");
 }

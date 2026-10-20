@@ -55,7 +55,7 @@ static void shot_clip_path(char* buf, size_t n) {
     snprintf(buf, n, "%s/flint_clip.png", shot_working_dir());
 }
 
-static bool pk_screenshot_copy_area(void) {
+static void pk_screenshot_copy_area(void) {
     char env[SHOT_BUF];
     char path[SHOT_BUF];
     char cmd[SHOT_BUF * 3];
@@ -72,10 +72,9 @@ static bool pk_screenshot_copy_area(void) {
 
     free(fl_run_terminal_command_blocking(cmd));
     fl_copy_file_path(path);
-    return true;
 }
 
-static bool pk_ocr_area_to_clipboard(void) {
+static void pk_ocr_area_to_clipboard(void) {
     char env[SHOT_BUF];
     char cmd[SHOT_BUF * 2];
     shot_env(env, sizeof(env));
@@ -93,13 +92,12 @@ static bool pk_ocr_area_to_clipboard(void) {
     }
 
     char* out = fl_run_terminal_command_blocking(cmd);
-    if (!out || !out[0]) { free(out); return true; }
+    if (!out || !out[0]) { free(out); return; }
 
     size_t n = strlen(out);
     while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
     if (out[0]) fl_copy_to_clipboard(out);
     free(out);
-    return true;
 }
 
 #else
@@ -501,7 +499,7 @@ static void shot_stage_path(char* out, size_t cap, const char* leaf) {
     snprintf(out, cap, "%s/%s", t, leaf);
 }
 
-static bool pk_screenshot_copy_area(void) {
+static void pk_screenshot_copy_area(void) {
     RECT r;
     if (!shot_select_area(&r)) { printf("screenshot: no area selected\n"); return; }
     char path[MAX_PATH * 2];
@@ -514,7 +512,7 @@ static bool pk_screenshot_copy_area(void) {
     return true;
 }
 
-static bool pk_ocr_area_to_clipboard(void) {
+static void pk_ocr_area_to_clipboard(void) {
     RECT full;
     HDC sc = GetDC(NULL);
     if (!sc) return;
@@ -549,6 +547,6 @@ static bool pk_ocr_area_to_clipboard(void) {
 FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Ctrl+Shift+X", .cb=pk_screenshot_copy_area);
     fl_register_hotkey(.hotkey="Alt+Shift+C", .cb=pk_ocr_area_to_clipboard);
-    fl_add_to_cc(.display_name="Screenshot Region",.on_enter=pk_screenshot_copy_area,.type="Screenshot",.icon="/camera.png");
-    fl_add_to_cc(.display_name="OCR Region ",.on_enter=pk_ocr_area_to_clipboard,.type="Screenshot",.icon="/scan-text.png");
+    fl_add_to_cc(.display_name="Screenshot Region",.on_enter=(bool(*)(void))pk_screenshot_copy_area,.type="Screenshot",.icon="/camera.png");
+    fl_add_to_cc(.display_name="OCR Region ",.on_enter=(bool(*)(void))pk_ocr_area_to_clipboard,.type="Screenshot",.icon="/scan-text.png");
 }

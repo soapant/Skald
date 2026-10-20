@@ -700,7 +700,7 @@ bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
 
 typedef struct {
     const char *hotkey;
-    bool (*cb)(void);
+    void (*cb)(void);
     bool (*should_swallow)(void);
     const char *whitelist[16];
     const char *blacklist[16];

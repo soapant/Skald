@@ -1,0 +1,7 @@
+name = "sqlite3"
+description = ""
+
+[provides]
+
+[depends]
+

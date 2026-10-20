@@ -347,16 +347,15 @@ static void pk_render_callback(PromptState* state) {
     fl_listbox_end();
 }
 
-static bool TriggerProcessKiller(void) {
+static void TriggerProcessKiller(void) {
     pk_collect_and_sort();
     fl_window(.title = "💀 ProcessKiller",
            .refresh = pk_refresh_callback,
            .enter = pk_enter_callback,
            .render = pk_render_callback);
-    return true;
 }
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+U", .cb=TriggerProcessKiller, .blacklist={"\1"});
-    fl_register_feature(.name="Process Killer",.cb=TriggerProcessKiller,.icon="/skull.png"); 
+    fl_register_feature(.name="Process Killer",.cb=(bool(*)(void))TriggerProcessKiller,.icon="/skull.png"); 
 }
