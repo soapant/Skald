@@ -19,7 +19,6 @@
 #include "core/clipboard_history.h"
 #include "core/flapi.h"
 #include "core/feature_loader.h"
-#include "core/cc_registry.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
 #include "platform/flapi_platform.h"
@@ -2757,7 +2756,7 @@ typedef struct {
 static int g_cc_entry_count = 0;
 static FlCcEntry g_cc_entries[4096];
 
-#define FL_CC_DEP_OWNERS 64
+#define FL_CC_DEP_OWNERS 256
 static char g_cc_dep_owners[FL_CC_DEP_OWNERS][OWNER_PATH_MAX];
 static int g_cc_dep_owner_count = 0;
 
@@ -2829,14 +2828,6 @@ const FlCcEntrySpec *fl_cc_entry_at(int index) {
     return &g_cc_entries[index].pub;
 }
 
-int fl_cc_registry_count(void) {
-    return g_cc_entry_count;
-}
-
-const FlCcEntrySpec *fl_cc_registry_at(int index) {
-    return fl_cc_entry_at(index);
-}
-
 void fl_cc_registry_purge_owner(const char *path_a, const char *path_b) {
     if (!path_a && !path_b) return;
     int out = 0;
@@ -2848,16 +2839,6 @@ void fl_cc_registry_purge_owner(const char *path_a, const char *path_b) {
     g_cc_entry_count = out;
 }
 
-void fl_cc_registry_reset(void) {
-    g_cc_entry_count = 0;
-}
 void fl_window_impl(const FlPromptSpec* spec) {
     WindowManager_ShowPrompt(WindowManager_Get(), spec);
 }
-
-
-
-
-
-
-
