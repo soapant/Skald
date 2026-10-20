@@ -491,11 +491,10 @@ Display* display = get_display();
 }
 
 static bool x11_activate_neighbor(bool right) {
-        PROFILE_START(_pt);
-Display* display = get_display();
+    PROFILE_START(_pt);
+    Display* display = get_display();
     if (!display) { PROFILE_END_VAR(_pt, "x11_activate_neighbor"); return false; }
     Window focus = x11_focused_window(display);
-    if (focus == None) { PROFILE_END_VAR(_pt, "x11_activate_neighbor"); return false; }
     int fcx = 0, fcy = 0, fw = 0, fh = 0;
     if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh)) { PROFILE_END_VAR(_pt, "x11_activate_neighbor"); return false; }
     fcx += fw / 2;
