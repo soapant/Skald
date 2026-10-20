@@ -3,9 +3,10 @@
 #include <stdio.h>
 
 
-bool Testing() {
-    return false;
+void Testing() {
+    FlTimer p = fl_profile_start();
+    fl_profile_end(p);
 }
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Space", .should_swallow=Testing);
+    fl_register_hotkey("Alt+Shift+V", Testing);
 }
