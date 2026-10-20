@@ -1824,6 +1824,8 @@ if (!app_path) { log_error("operation failed, returning error app_path='%s'", ap
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
     snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+    snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.xpm",bare);
+    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
     const char* home_ph = Platform_GetRealHome();
     if (!home_ph || !home_ph[0]) home_ph = getenv("HOME");
     if (home_ph && home_ph[0]) {
