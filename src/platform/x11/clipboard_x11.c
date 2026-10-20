@@ -551,6 +551,7 @@ static char *ClipReadTarget(Atom target) {
         return ClipReadIncr(dpy, win, prop, &w);
     }
     char *res = ClipReadProperty(dpy, win, prop, NULL);
+    return res;
 }
 
 unsigned long x11_clipboard_owner(void) {
@@ -574,6 +575,7 @@ char *x11_clipboard_get_text(void) {
         out = ClipReadTarget(XA_STRING);
     }
     if (!out) g_cl_read_fail++;
+    return out;
 }
 
 #if !defined(FLINT_WAYLAND_SESSION)
