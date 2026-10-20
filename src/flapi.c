@@ -577,7 +577,6 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
     binding.hold = true;
     binding.should_swallow = spec->should_swallow;
     bool swallow_default = spec->swallow;
-    if (binding.should_swallow == NULL) { /* use swallow default */ }
     if (spec->cb && g_feature_map) {
         for (int i = 0; i < g_feature_order_count; i++) {
             if (g_feature_order[i] && (void*)g_feature_order[i]->cb == (void*)spec->cb) { binding.is_feature_toggle = true; break; }
