@@ -476,11 +476,15 @@ static void fl_snippet_fire(int idx, int del) {
     else if (b->func) b->func();
 }
 
-bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFunc fn, bool whitelist, const char** windows) {
+bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
     PROFILE_START(_pt);
-    if (!trigger || (!text && !fn)) { PROFILE_END_VAR(_pt, "fl_register_snippet_impl"); return false; }
+    if (!spec || !spec->trigger || (!spec->text && !spec->fn)) { PROFILE_END_VAR(_pt, "fl_register_snippet_impl"); return false; }
     snippet_set_fire_fn(fl_snippet_fire);
-    { PROFILE_END_VAR(_pt, "fl_register_snippet_impl"); return snippet_register_internal(trigger, text, fn, whitelist, windows, (void*)__builtin_return_address(0)); }
+    const char** wl = spec->whitelist;
+    const char** bl = spec->blacklist;
+    bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
+    const char** windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
+    { PROFILE_END_VAR(_pt, "fl_register_snippet_impl"); return snippet_register_internal(spec->trigger, spec->text, spec->fn, whitelist, windows, (void*)__builtin_return_address(0)); }
 }
 
 typedef struct { char *key; void *value; } FlintMapEnt;
