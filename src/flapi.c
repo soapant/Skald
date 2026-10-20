@@ -556,8 +556,8 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
     if (!spec || !spec->hotkey || !spec->cb) { PROFILE_END_VAR(_pt, "fl_register_hotkey_impl"); return false; }
     const char** wl = spec->whitelist;
     const char** bl = spec->blacklist;
-    bool whitelist = (wl != NULL && bl == NULL);
-    const char** bw = bl ? bl : (wl ? wl : NULL);
+    bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
+    const char** bw = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
     HotkeyBinding binding = convert_into_hotkey_binding((char*)spec->hotkey,
                                                         spec->cb,
                                                         NULL,

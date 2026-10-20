@@ -364,6 +364,6 @@ bool TriggerTodo(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+T", .cb=TriggerTodo, .blacklist=(const char*[]){"Fortnite", NULL});
+    fl_register_hotkey(.hotkey="Alt+T", .cb=TriggerTodo, .blacklist={"\1"});
     fl_register_feature(.name="Todo",.cb=TriggerTodo,.icon="/list-check.png");
 }
