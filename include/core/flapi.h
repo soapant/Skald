@@ -705,49 +705,22 @@ typedef struct {
 
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec);
 
-#define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
-    fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
-
 #define _FL_AS_COND(x)   _Generic((x)+0, int: (bool(*)(void))NULL, default: (bool(*)(void))(x))
 #define _FL_AS_BOOL(x)   _Generic((x)+0, int: (bool)(x), default: false)
 #define _FL_AS_STR(x)    _Generic((x)+0, int: (const char*)NULL, default: (const char*)(x))
-
-#define _FL_HOTKEY_ROUTER_2(hk, tr)              _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, NULL)
-#define _FL_HOTKEY_ROUTER_3(hk, tr, s1)          _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, s1)
-
-#define _FL_HOTKEY_ROUTER_4(hk, tr, arg3, arg4) \
-    _Generic((arg3), \
-        int: _FL_HOTKEY_EXPAND(hk, tr, NULL, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4)), \
-        char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4), \
-        const char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4), \
-        default: _Generic((arg3), \
-            bool(*)(void): _FL_HOTKEY_EXPAND(hk, tr, _FL_AS_COND(arg3), false, _FL_AS_STR(arg4)), \
-            default: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4) \
-        ) \
-    )
-
-#define _FL_HOTKEY_ROUTER_5(hk, tr, arg3, arg4, arg5) \
-    _Generic((arg3), \
-        int: _FL_HOTKEY_EXPAND(hk, tr, NULL, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4), _FL_AS_STR(arg5)), \
-        char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4, arg5), \
-        const char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4, arg5), \
-        default: _FL_HOTKEY_EXPAND(hk, tr, _FL_AS_COND(arg3), _FL_AS_BOOL(arg4), _FL_AS_STR(arg5)) \
-    )
-
-#define _FL_HOTKEY_ROUTER_6(hk, tr, arg3, arg4, arg5, arg6) \
-    _Generic((arg3), \
-        int: _FL_HOTKEY_EXPAND(hk, tr, NULL, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4), _FL_AS_STR(arg5), _FL_AS_STR(arg6)), \
-        char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4, arg5, arg6), \
-        const char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4, arg5, arg6), \
-        default: _FL_HOTKEY_EXPAND(hk, tr, _FL_AS_COND(arg3), _FL_AS_BOOL(arg4), _FL_AS_STR(arg5), _FL_AS_STR(arg6)) \
-    )
 
 #define _FL_GET_MACRO(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
 
 #define fl_register_hotkey(...) fl_register_hotkey_impl(&(FlHotkeySpec){__VA_ARGS__})
 
+typedef struct {
+    const char *src;
+    const char *dst;
+    const char *whitelist[8];
+    const char *blacklist[8];
+} FlRemappingSpec;
 
-bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows);
+bool fl_register_remapping_impl(const FlRemappingSpec *spec);
 
 bool fl_replay_hotkey(int vk, int mods);
 
@@ -765,40 +738,7 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec);
 
 #define fl_register_snippet(...) fl_register_snippet_impl(&(FlSnippetSpec){__VA_ARGS__})
 
-
-
-#define _FL_REMAP_EXPAND(src, dst, whitelist, ...) \
-    fl_register_remapping_impl(src, dst, whitelist, (const char*[]){__VA_ARGS__, NULL})
-
-#define _FL_REMAP_ROUTER_2(src, dst)             _FL_REMAP_EXPAND(src, dst, 0, NULL)
-#define _FL_REMAP_ROUTER_3(src, dst, w1)         _FL_REMAP_EXPAND(src, dst, 0, w1)
-
-#define _FL_REMAP_ROUTER_4(src, dst, arg3, arg4) \
-    _Generic((arg3)+0, \
-        int: _FL_REMAP_EXPAND(src, dst, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4)), \
-        char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4), \
-        const char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4), \
-        default: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4) \
-    )
-
-#define _FL_REMAP_ROUTER_5(src, dst, arg3, arg4, arg5) \
-    _Generic((arg3)+0, \
-        int: _FL_REMAP_EXPAND(src, dst, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4), _FL_AS_STR(arg5)), \
-        char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5), \
-        const char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5), \
-        default: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5) \
-    )
-
-#define _FL_REMAP_ROUTER_6(src, dst, arg3, arg4, arg5, arg6) \
-    _Generic((arg3)+0, \
-        int: _FL_REMAP_EXPAND(src, dst, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4), _FL_AS_STR(arg5), _FL_AS_STR(arg6)), \
-        char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5, arg6), \
-        const char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5, arg6), \
-        default: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5, arg6) \
-    )
-
-#define fl_register_remapping(...) \
-    _FL_GET_MACRO(__VA_ARGS__, _FL_REMAP_ROUTER_6, _FL_REMAP_ROUTER_5, _FL_REMAP_ROUTER_4, _FL_REMAP_ROUTER_3, _FL_REMAP_ROUTER_2)(__VA_ARGS__)
+#define fl_register_remapping(...) fl_register_remapping_impl(&(FlRemappingSpec){__VA_ARGS__})
 
 #if defined(_WIN32)
 #define FLINT_FEATURE_EXPORT __declspec(dllexport)
@@ -809,6 +749,7 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec);
 #define FLINT_FEATURE_INIT FLINT_FEATURE_EXPORT __attribute__((constructor)) void FlintFeatureInit(void)
 
 #include "core/cap_registry.h"
+
 #define fl_cap_register(key, fn)  fl_cap_register_abi((key), FL_CAP_ABI_V1, (fn))
 #define fl_cap_resolve(key)       fl_cap_resolve_abi((key), FL_CAP_ABI_V1)
 
