@@ -38,6 +38,6 @@ bool TriggerSettings(void) {
 
 FLINT_FEATURE_INIT {
     // temporary
-    // fl_register_hotkey(.hotkey="Alt+D", .cb=TriggerSettings, .blacklist=(const char*[]){"Fortnite", NULL});
+    // fl_register_hotkey(.hotkey="Alt+D", .cb=TriggerSettings, .blacklist={"\1"});
     fl_register_feature(.name="Settings",.cb=TriggerSettings,.icon="/settings.png");
 }

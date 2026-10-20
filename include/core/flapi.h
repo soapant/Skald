@@ -698,8 +698,8 @@ typedef struct {
     const char *hotkey;
     bool (*cb)(void);
     bool (*should_swallow)(void);
-    const char **whitelist;
-    const char **blacklist;
+    const char *whitelist[8];
+    const char *blacklist[8];
     bool swallow;
 } FlHotkeySpec;
 
