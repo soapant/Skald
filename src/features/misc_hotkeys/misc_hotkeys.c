@@ -140,10 +140,10 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Ctrl+Q", .cb=close_active_window);
     fl_register_hotkey(.hotkey="Alt+F", .cb=toggle_fullscreen);
     fl_register_hotkey(.hotkey="Alt+M", .cb=toggle_minimized);
-    // fl_register_hotkey(.hotkey="J", .cb=easy, .whitelist={"anki"});
-    // fl_register_hotkey(.hotkey="K", .cb=medium, .whitelist={"anki"});
-    // fl_register_hotkey(.hotkey="L", .cb=hard, .whitelist={"anki"});
-    // fl_register_hotkey(.hotkey=";", .cb=fuckme, .whitelist={"anki"});
+    fl_register_hotkey(.hotkey="J", .cb=easy, .whitelist={"anki"});
+    fl_register_hotkey(.hotkey="K", .cb=medium, .whitelist={"anki"});
+    fl_register_hotkey(.hotkey="L", .cb=hard, .whitelist={"anki"});
+    fl_register_hotkey(.hotkey=";", .cb=fuckme, .whitelist={"anki"});
     fl_register_snippet(.trigger="nigga",.text="fuck");
 }
 

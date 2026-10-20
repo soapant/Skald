@@ -311,5 +311,5 @@ void print_due_card(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+A", .cb=print_due_card);
+    // fl_register_hotkey(.hotkey="Alt+A", .cb=print_due_card);
 }
