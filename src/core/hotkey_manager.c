@@ -159,7 +159,7 @@ void hotkey_drain_pending(void) {
         }
         HOTKEY_Q_UNLOCK();
         if (!fn) break;
-        if (is_toggle && !AllowOtherFeatureTogglesInFeature) {
+        if (is_toggle) {
             WindowManager* dwm = WindowManager_Get();
             if (dwm && dwm->popup_count > 0) continue;
         }
@@ -198,7 +198,7 @@ bool hotkey_mouse_button_bound(int btn) {
 }
 
 static bool hotkey_toggle_blocked(HotkeyBinding* b) {
-    if (!b || !b->is_feature_toggle || AllowOtherFeatureTogglesInFeature) return false;
+    if (!b || !b->is_feature_toggle) return false;
     WindowManager* wm = WindowManager_Get();
     return wm && wm->popup_count > 0;
 }

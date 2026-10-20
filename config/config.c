@@ -12,11 +12,10 @@ void ConfigApply(void) {
     RememberLastIndex = true;
     KeepSelectionAfterClose = false;
     MessageAfterEachHotkey = false;
-    AllowOtherFeatureTogglesInFeature = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = true;
-    DebugMode = true;
+    DebugMode = false;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
