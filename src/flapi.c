@@ -458,10 +458,14 @@ bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out
     { PROFILE_END_VAR(_pt, "fl_parse_desktop_file"); return found; }
 }
 
-bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows) {
+bool fl_register_remapping_impl(const FlRemappingSpec *spec) {
     PROFILE_START(_pt);
-    if (!src || !dst) { PROFILE_END_VAR(_pt, "fl_register_remapping_impl"); return false; }
-    { PROFILE_END_VAR(_pt, "fl_register_remapping_impl"); return remap_register_internal(src, dst, whitelist, windows); }
+    if (!spec || !spec->src || !spec->dst) { PROFILE_END_VAR(_pt, "fl_register_remapping_impl"); return false; }
+    const char** wl = spec->whitelist;
+    const char** bl = spec->blacklist;
+    bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
+    const char** windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
+    { PROFILE_END_VAR(_pt, "fl_register_remapping_impl"); return remap_register_internal(spec->src, spec->dst, whitelist, windows); }
 }
 
 static void fl_snippet_fire(int idx, int del) {
