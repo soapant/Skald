@@ -1761,23 +1761,6 @@ bool fl_replay_hotkey(int vk, int mods) {
   PROFILE_END_VAR(_pt, "flapi:fl_replay_hotkey");
   return matched;
 }
-int fl_get_current_volume(void) {
-    PROFILE_START(_pt);
-  { PROFILE_END_VAR(_pt, "fl_get_current_volume"); return fl_get_current_volume_platform(); }
-}
-bool fl_set_current_volume(int volume) {
-    PROFILE_START(_pt);
-  { PROFILE_END_VAR(_pt, "fl_set_current_volume"); return fl_set_volume_platform(volume); }
-}
-bool fl_increment_volume_by(int increment) {
-    PROFILE_START(_pt);
-  { PROFILE_END_VAR(_pt, "fl_increment_volume_by"); return fl_set_current_volume(fl_get_current_volume() + increment); }
-}
-
-bool fl_decrement_volume_by(int decrement) {
-    PROFILE_START(_pt);
-  { PROFILE_END_VAR(_pt, "fl_decrement_volume_by"); return fl_set_current_volume(fl_get_current_volume() - decrement); }
-}
 bool fl_type_text(const char *s) {
     PROFILE_START(_pt);
   { PROFILE_END_VAR(_pt, "fl_type_text"); return fl_type_text_platform(s); }
@@ -1991,6 +1974,7 @@ bool fl_extract_quoted(char **pp, char *out, size_t cap) {
     *pp = p;
     { PROFILE_END_VAR(_pt, "fl_extract_quoted"); return true; }
 }
+
 bool fl_extract_value(char **pp, char *out, size_t cap) {
     PROFILE_START(_pt);
     char *p = *pp;
@@ -2003,20 +1987,22 @@ bool fl_extract_value(char **pp, char *out, size_t cap) {
     *pp = p;
     { PROFILE_END_VAR(_pt, "fl_extract_value"); return len > 0; }
 }
+
 bool fl_next_flag(char *p) {
     PROFILE_START(_pt);
     while (*p && isspace((unsigned char)*p)) p++;
     { PROFILE_END_VAR(_pt, "fl_next_flag"); return *p == '-' || *p == '/'; }
 }
-Fl_FlagList fl_parse_flags(const char* input) {
-    Fl_FlagList out = {0};
+
+FlFlagList fl_parse_flags(const char* input) {
+    FlFlagList out = {0};
     if (!input || !*input) return out;
     char *copy = strdup(input);
     if (!copy) return out;
     size_t cap = 8;
     Fl_Flag *arr = (Fl_Flag*)calloc(cap, sizeof(Fl_Flag));
     if (!arr) {     PROFILE_START(_pt);
-free(copy); { PROFILE_END_VAR(_pt, "f"); return out; } }
+    free(copy); { PROFILE_END_VAR(_pt, "f"); return out; } }
     char *p = copy;
     while (*p) {
         while (*p && isspace((unsigned char)*p)) p++;
@@ -2054,50 +2040,12 @@ free(copy); { PROFILE_END_VAR(_pt, "f"); return out; } }
     return out;
 }
 
-void fl_free_flags(Fl_FlagList* list) {
+void fl_free_flags(FlFlagList* list) {
     PROFILE_START(_pt);
     if (!list) { PROFILE_END_VAR(_pt, "fl_free_flags"); return ; }
     free(list->flags);
     list->flags = NULL;
     list->count = 0;
-}
-
-int fl_time_unit_mult(const char *unit) {
-    PROFILE_START(_pt);
-    if (!unit || !*unit) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 1; }
-    if (strcmp(unit,"ms")==0 || strcmp(unit,"millis")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 0; }
-    if (strcmp(unit,"s")==0 || strcmp(unit,"sec")==0 || strcmp(unit,"secs")==0 || strcmp(unit,"second")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 1; }
-    if (strcmp(unit,"m")==0 || strcmp(unit,"min")==0 || strcmp(unit,"mins")==0 || strcmp(unit,"minute")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 60; }
-    if (strcmp(unit,"h")==0 || strcmp(unit,"hr")==0 || strcmp(unit,"hrs")==0 || strcmp(unit,"hour")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 3600; }
-    if (strcmp(unit,"d")==0 || strcmp(unit,"day")==0 || strcmp(unit,"days")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 86400; }
-    if (strcmp(unit,"w")==0 || strcmp(unit,"week")==0 || strcmp(unit,"weeks")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 604800; }
-    if (strcmp(unit,"mo")==0 || strcmp(unit,"month")==0 || strcmp(unit,"months")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 2592000; }
-    if (strcmp(unit,"y")==0 || strcmp(unit,"yr")==0 || strcmp(unit,"year")==0) { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 31536000; }
-    { PROFILE_END_VAR(_pt, "fl_time_unit_mult"); return 1; }
-}
-
-int fl_parse_time(const char* time_str) {
-    PROFILE_START(_pt);
-    if (!time_str || !*time_str) { PROFILE_END_VAR(_pt, "fl_parse_time"); return 0; }
-    int total = 0;
-    const char *p = time_str;
-    while (*p) {
-        while (*p && isspace((unsigned char)*p)) p++;
-        if (!*p) break;
-        char *end = NULL;
-        long num = strtol(p, &end, 10);
-        if (end == p) { p++; continue; }
-        p = end;
-        while (*p && isspace((unsigned char)*p)) p++;
-        char unit[16] = {0};
-        int ui = 0;
-        while (*p && isalpha((unsigned char)*p) && ui < 15) unit[ui++] = tolower((unsigned char)*p++);
-        unit[ui]='\0';
-        int mult = fl_time_unit_mult(unit);
-        if (mult == 0) total += num / 1000;
-        else total += num * mult;
-    }
-    { PROFILE_END_VAR(_pt, "fl_parse_time"); return total; }
 }
 
 void fl_run_after_time(double seconds, void (*callback)(void)) {
@@ -2119,7 +2067,7 @@ char* fl_get_active_window_title(void) {
   PROFILE_START(_pt);
   char* title = Platform_GetActiveWindowTitle();
   if (!title || !title[0]) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_get_active_window_title"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
+  PROFILE_END_VAR(_pt, "api:fl_get_active_window_title"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
   char* r = strdup(title);
   PROFILE_END_VAR(_pt, "api:fl_get_active_window_title");
   return r;
@@ -2129,7 +2077,7 @@ char* fl_get_active_window_app_id(void) {
   PROFILE_START(_pt);
   char* id = Platform_GetActiveWindowAppId();
   if (!id || !id[0]) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_get_active_window_app_id"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
+  PROFILE_END_VAR(_pt, "api:fl_get_active_window_app_id"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
   char* r = strdup(id);
   PROFILE_END_VAR(_pt, "api:fl_get_active_window_app_id");
   return r;
@@ -2227,8 +2175,8 @@ FlTimer fl_profile_start() {
 }
 
 void fl_profile_end(FlTimer timer) {
-        PROFILE_START(_pt);
-printf("[profile] %f s\n", fl_end_timer_platform(timer) / 1000);
+      PROFILE_START(_pt);
+      printf("[profile] %f s\n", fl_end_timer_platform(timer) / 1000);
 }
 
 
@@ -2723,6 +2671,7 @@ unsigned long long fl_net_rx_bytes_over(double seconds) {
     if (after < before) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_over"); return 0; }
     { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_over"); return after - before; }
 }
+
 FlRect fl_get_monitor_geometry() {
     PROFILE_START(_pt);
     int x, y, w, h;

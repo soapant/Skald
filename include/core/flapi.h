@@ -528,11 +528,10 @@ typedef struct {
 typedef struct {
     Fl_Flag* flags;
     size_t count;
-} Fl_FlagList;
+} FlFlagList;
 
-Fl_FlagList fl_parse_flags(const char* input);
-void fl_free_flags(Fl_FlagList* list);
-int fl_parse_time(const char* time_str);
+FlFlagList fl_parse_flags(const char* input);
+void fl_free_flags(FlFlagList* list);
 
 // =============================================================================
 // MISC
