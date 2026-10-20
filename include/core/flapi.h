@@ -705,12 +705,6 @@ typedef struct {
 
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec);
 
-#define _FL_AS_COND(x)   _Generic((x)+0, int: (bool(*)(void))NULL, default: (bool(*)(void))(x))
-#define _FL_AS_BOOL(x)   _Generic((x)+0, int: (bool)(x), default: false)
-#define _FL_AS_STR(x)    _Generic((x)+0, int: (const char*)NULL, default: (const char*)(x))
-
-#define _FL_GET_MACRO(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
-
 #define fl_register_hotkey(...) fl_register_hotkey_impl(&(FlHotkeySpec){__VA_ARGS__})
 
 typedef struct {
