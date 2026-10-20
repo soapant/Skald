@@ -197,28 +197,115 @@ static CardList get_cards_in_deck(const char* db_path, const char* target_deck_n
     p_sqlite3_close(db);
     return list;
 }
-void print_all_cards(void) {
-    CardList list = get_cards_in_deck(DB_PATH, "Chemistry");
-    for (size_t i = 0; i < list.count; i++) {
-        TYPE_NAME card = list.items[i];
-        if (card.type == CARD_TYPE_BASIC) {
-            printf("Front: %s\n", card.data.basic.front);
-            printf("Back: %s\n", card.data.basic.back);
-        } else if (card.type == CARD_TYPE_CLOZE) {
-            printf("Cloze: %s\n", card.data.cloze.text);
+
+void display_card_question(TYPE_NAME card) {
+    char question[1024];
+    question[0] = '\0';
+    if (card.type == CARD_TYPE_BASIC) {
+        snprintf(question, sizeof(question), "%s", card.data.basic.front);
+    } else if (card.type == CARD_TYPE_CLOZE) {
+        const char* src = card.data.cloze.text;
+        size_t src_len = strlen(src);
+        size_t o = 0;
+
+        size_t i = 0;
+        while (i < src_len && o + 1 < sizeof(question)) {
+            if (src[i] == '{') {
+                size_t j = i + 1;
+                while (j < src_len && src[j] != '}') j++;
+
+                if (j < src_len) {
+                    const char* replacement = "[...]";
+                    for (size_t k = 0; replacement[k] && o + 1 < sizeof(question); k++) {
+                        question[o++] = replacement[k];
+                    }
+                    i = j + 2;
+                    continue;
+                }
+            }
+            question[o++] = src[i++];
         }
-        long long now = (long long)time(NULL);
-        if (card.due_ts > 0) {
-            long long left = card.due_ts - now;
-            if (left < 0) left = 0;
-            printf("Time left: %lldh %lldm\n", left / 3600, (left % 3600) / 60);
-        } else {
-            printf("Time left: now\n");
-        }
+        question[o] = '\0';
     }
+    fl_message(.message = question,.slot=TOP_CENTER,.timeout=2.0);
+}
+
+void display_card_answer(TYPE_NAME card) {
+    char answer[1024];
+    answer[0] = '\0';
+
+    if (card.type == CARD_TYPE_BASIC) {
+        snprintf(answer, sizeof(answer), "%s\n---\n%s",
+                 card.data.basic.front,
+                 card.data.basic.back);
+    } else if (card.type == CARD_TYPE_CLOZE) {
+        const char* src = card.data.cloze.text;
+        size_t src_len = strlen(src);
+        size_t o = 0;
+
+        size_t i = 0;
+        while (i < src_len && o + 1 < sizeof(answer)) {
+            if (src[i] == '{') {
+                size_t j = i + 1;
+                while (j < src_len && src[j] != '}') j++;
+
+                if (j < src_len) {
+                    const char* content_start = src + i + 1;
+                    size_t content_len = j - i - 1;
+
+                    const char* sep = NULL;
+                    for (size_t k = 0; k + 1 < content_len; k++) {
+                        if (content_start[k] == ':' && content_start[k + 1] == ':') {
+                            sep = content_start + k;
+                            break;
+                        }
+                    }
+
+                    const char* ans = sep ? sep + 2 : content_start;
+                    size_t ans_len = sep
+                        ? (size_t)((content_start + content_len) - ans)
+                        : content_len;
+
+                    for (size_t k = 0; k < ans_len && o + 1 < sizeof(answer); k++) {
+                        answer[o++] = ans[k];
+                    }
+                    i = j + 1;
+                    continue;
+                }
+            }
+            answer[o++] = src[i++];
+        }
+        answer[o] = '\0';
+    }
+
+    // do something with `answer` here
+}
+
+void print_due_card(void) {
+    FlTimer p = fl_profile_start();
+    CardList list = get_cards_in_deck(DB_PATH, "Chemistry");
+    long long now = (long long)time(NULL);
+    size_t* due = malloc(list.count * sizeof(size_t));
+    size_t due_count = 0;
+    for (size_t i = 0; i < list.count; i++) {
+        long long left = list.items[i].due_ts - now;
+        if (left <= 0) due[due_count++] = i;
+    }
+    if (due_count == 0) {
+        printf("No due cards.\n");
+        free(due);
+        free_card_list(&list);
+        fl_profile_end(p);
+        return;
+    }
+    size_t pick = due[fl_rand_num_between(0, (int)(due_count - 1))];
+    TYPE_NAME card = list.items[pick];
+    display_card_question(card);
+    free(due);
     free_card_list(&list);
+    fl_profile_end(p);
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+A", .cb=print_all_cards);
+    fl_register_hotkey(.hotkey="Alt+A", .cb=print_due_card);
 }
