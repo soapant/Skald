@@ -853,8 +853,8 @@ PROFILE_START(timer);
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+    PROFILE_START(timer);
+    PROFILE_START(_pt);
     if (!query) {
         log_error("query is NULL");
 
@@ -889,7 +889,7 @@ PROFILE_START(timer);
 
     char* out = Platform_RunTerminalCommand(command, false);
     if (!out) {
- PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
+         PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
     out[strcspn(out, "\r\n")] = '\0';
@@ -904,7 +904,6 @@ PROFILE_START(timer);
     }
 
     log_info("Platform_QueryZoxidePath query='%s'", query ? query : "");;
-
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
     { PROFILE_END_VAR(_pt, "Platform_QueryZoxidePath"); return out; }
