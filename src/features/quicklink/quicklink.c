@@ -1,7 +1,8 @@
 #include "core/flapi.h"
 
-void open_youtube(void) {
+bool open_youtube(void) {
     fl_launch_browser("https://youtube.com");
+    return true;
 }
 
 FLINT_FEATURE_INIT {

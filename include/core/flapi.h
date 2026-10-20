@@ -110,15 +110,15 @@ int fl_get_icon_size(const char* icon_path);
 // =============================================================================
 typedef struct {
     const char* name;
-    void (*cb)(void);
+    bool (*cb)(void);
     const char* icon;
 } FlFeatureSpec;
 
 void fl_register_feature_impl(const FlFeatureSpec* spec);
 #define fl_register_feature(...) fl_register_feature_impl(&(FlFeatureSpec){__VA_ARGS__})
 
-int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max);
-int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max);
+int fl_get_feature_list(const char** out_names, bool (**out_cbs)(void), int max);
+int fl_get_feature_list_with_icons(const char** out_names, bool (**out_cbs)(void), const char*** out_icons, int max);
 
 // =============================================================================
 // HOTKEYS
@@ -677,10 +677,10 @@ int fl_char_for_key(int vk, int scancode, int mods);
 typedef struct {
     const char *display_name;
     const char *internal_name;
-    void (*on_enter)(void);
-    void (*on_ctrl_enter)(void);
-    void (*on_tab)(void);
-    void (*on_action)(void);
+    bool (*on_enter)(void);
+    bool (*on_ctrl_enter)(void);
+    bool (*on_tab)(void);
+    bool (*on_action)(void);
     const char *icon;
     const char *type;
 } FlCcEntrySpec;
@@ -694,7 +694,7 @@ const FlCcEntrySpec *fl_cc_entry_at(int index);
 bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
 #define fl_add_dep(...) fl_add_dep_impl(__VA_ARGS__, __FILE__)
 
-bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
+bool fl_register_hotkey_impl(char* hotkey_string,bool (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})

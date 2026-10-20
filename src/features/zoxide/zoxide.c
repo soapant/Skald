@@ -25,11 +25,12 @@ static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
     free(path);
     return true;
 }
-static void TriggerZoxide(void) {
+static bool TriggerZoxide(void) {
     FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
     fl_window(.title = "⌨️ Zoxide", .items = (const char**)files.items,
            .refresh = zoxide_refresh, .enter = zoxide_enter, .edit = zoxide_edit);
     fl_free_file_list(&files);
+    return true;
 }
 
 const char* FileManagerZoxideFilePath = "FileManagerZoxide.txt";
@@ -55,11 +56,12 @@ static void file_manager_edit(const char* selection, ListBoxInfo* lb) {
     free(edited);
     file_manager_refresh("", lb);
 }
-static void TriggerFileManager(void) {
+static bool TriggerFileManager(void) {
     FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
     fl_window(.title = "📁 FileManager", .items = (const char**)files.items,
            .refresh = file_manager_refresh, .enter = file_manager_enter, .edit = file_manager_edit);
     fl_free_file_list(&files);
+    return true;
 }
 
 FLINT_FEATURE_INIT {

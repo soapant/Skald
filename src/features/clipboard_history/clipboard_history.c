@@ -179,10 +179,11 @@ bool clipboard_history_enter(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
-void TriggerClipboardHistory(void) {
+bool TriggerClipboardHistory(void) {
     fl_window(.title = "Clipboard History",
            .refresh = clipboard_history_refresh,
            .enter = clipboard_history_enter);
+    return true;
 }
 
 FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void) {

@@ -8,14 +8,15 @@ static char current_keyword[256] = "";
 static int current_image_id = 0;
 static int previous_image_id = 0;
 
-void GoogleMeaning(void) {
+bool GoogleMeaning(void) {
   char *clip = fl_get_last_clipboard_entry();
   char search[50];
   snprintf(search,sizeof(search),"what is %s",clip);
   fl_query_browser(search);
+    return true;
 }
 
-void next_image(void) {
+bool next_image(void) {
   if (current_keyword[0]) {
       char cmd1[400];
       snprintf(cmd1,sizeof(cmd1),"python ~/Programming/RandomShit/shit/get_ids.py %s --random",current_keyword);
@@ -48,9 +49,10 @@ void next_image(void) {
      current_image_id = atoi(list.items[0]);
      free(output);
   }
+    return true;
 }
 
-void last_image(void) {
+bool last_image(void) {
     char* title = fl_get_active_window_title();
     if (!title) title = "";
     if (fl_string_contains("feh",title)) {
@@ -59,10 +61,11 @@ void last_image(void) {
     char cmd[512];
     snprintf(cmd,sizeof(cmd),"feh ~/Programming/RandomShit/shit/images/%i --zoom 65",previous_image_id);
     fl_launch_detached(cmd);
+    return true;
 }
 
 
-void get_current_keyword(void) {
+bool get_current_keyword(void) {
     char *popup_res = fl_popup();
     if (popup_res) {
         strncpy(current_keyword, popup_res, sizeof(current_keyword) - 1);
@@ -70,58 +73,73 @@ void get_current_keyword(void) {
     } else {
         current_keyword[0] = '\0';
     }
+    return true;
 }
 
-void open_terminal(void) {
+bool open_terminal(void) {
     fl_run_terminal_command_and_open("");
+    return true;
 }
-void open_browser(void) {
+bool open_browser(void) {
     fl_launch_browser("");
+    return true;
 }
-void move_active_window_right(void) {
+bool move_active_window_right(void) {
     fl_move_active_window_right();
+    return true;
 }
-void move_active_window_left(void) {
+bool move_active_window_left(void) {
     fl_move_active_window_left();
+    return true;
 }
-void focus_window_right(void) {
+bool focus_window_right(void) {
     fl_focus_window_right();
+    return true;
 }
-void focus_window_left(void) {
+bool focus_window_left(void) {
     fl_focus_window_left();
+    return true;
 }
-void close_active_window(void) {
+bool close_active_window(void) {
     fl_close_active_window();
+    return true;
 }
-void toggle_fullscreen(void) {
+bool toggle_fullscreen(void) {
     fl_toggle_fullscreen_active();
+    return true;
 }
-void toggle_minimized(void) {
+bool toggle_minimized(void) {
     fl_toggle_minimized_active();
+    return true;
 }
 
-void easy(void) {
+bool easy(void) {
  fl_send_hotkey("1"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("1");
+    return true;
 }
 
-void medium(void) {
+bool medium(void) {
  fl_send_hotkey("2"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("2");
+    return true;
 }
-void hard(void) {
+bool hard(void) {
  fl_send_hotkey("3"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("3");
+    return true;
 }
-void fuckme(void) {
+bool fuckme(void) {
  fl_send_hotkey("4"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("4");
+    return true;
 }
 
 static FlPos last_mouse_pos = {0, 0}; 
 
-void start_auto_click(void) {
+bool start_auto_click(void) {
     last_mouse_pos = fl_get_mouse_pos();
     while (fl_get_mouse_pos().x == last_mouse_pos.x && 
            fl_get_mouse_pos().y == last_mouse_pos.y) {
         fl_click();
     }
+    return true;
 }
 
 FLINT_FEATURE_INIT {

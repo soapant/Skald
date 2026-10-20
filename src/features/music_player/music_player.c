@@ -126,48 +126,54 @@ bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
-void music_cmd_1(void) {
+bool music_cmd_1(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #else
     music_send_command("Music Player", "_MP_PLAYER_CMD", 1);
 #endif
+    return true;
 }
-void music_cmd_5(void) {
+bool music_cmd_5(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
 #else
     music_send_command("Music Player", "_MP_PLAYER_CMD", 5);
 #endif
+    return true;
 }
-void music_cmd_6(void) {
+bool music_cmd_6(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
 #else
     music_send_command("Music Player", "_MP_PLAYER_CMD", 6);
 #endif
+    return true;
 }
-void music_cmd_2(void) {
+bool music_cmd_2(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 2, 0);
 #else
     music_send_command("Music Player", "_MP_PLAYER_CMD", 2);
 #endif
+    return true;
 }
 
-void random_music(void) {
+bool random_music(void) {
     int idx = fl_rand_num_between(0, s_music_files.count - 1);
     music_enter_callback(s_music_files.files[idx].name,NULL);
 
+    return true;
 }
-void music_prompt(void) {
+bool music_prompt(void) {
     fl_window(.title = "🎵 Player",
            .refresh = music_refresh_callback,
            .enter = music_enter_callback);
+    return true;
 }
 
 FLINT_FEATURE_INIT {

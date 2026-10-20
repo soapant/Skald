@@ -25,7 +25,7 @@ void settings_render(PromptState *state) {
     fl_place_checkbox(.name = "Checkbox",.x=state->width / 2,.y=state->height / 2,.scale=scale,.checked = true);
 }
 
-void TriggerSettings(void) {
+bool TriggerSettings(void) {
     fl_window(.title = "Settings",
            .refresh = settings_refresh,
            .enter = settings_enter,
@@ -33,6 +33,7 @@ void TriggerSettings(void) {
            .copy = settings_copy,
            .tab = settings_tab,
            .render = settings_render);
+    return true;
 }
 
 FLINT_FEATURE_INIT {
