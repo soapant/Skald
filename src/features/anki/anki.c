@@ -1,0 +1,176 @@
+#include "core/flapi.h"
+#include "platform/lib.h"
+#include "sqlite3.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define DB_PATH "/home/win/.local/share/Anki2/User 1/collection.anki2"
+
+typedef enum { CARD_TYPE_BASIC, CARD_TYPE_CLOZE, CARD_TYPE_UNKNOWN } CardType;
+typedef struct { char* front; char* back; } BasicCard;
+typedef struct { char* text; } ClozeCard;
+typedef struct { CardType type; union { BasicCard basic; ClozeCard cloze; } data; } TYPE_NAME;
+typedef struct { TYPE_NAME* items; size_t count; size_t capacity; } CardList;
+
+static FlLibrary g_sqlite_lib = NULL;
+static int (*p_sqlite3_open_v2)(const char*, sqlite3**, int, const char*) = NULL;
+static const char* (*p_sqlite3_errmsg)(sqlite3*) = NULL;
+static int (*p_sqlite3_prepare_v2)(sqlite3*, const char*, int, sqlite3_stmt**, const char**) = NULL;
+static int (*p_sqlite3_step)(sqlite3_stmt*) = NULL;
+static const unsigned char* (*p_sqlite3_column_text)(sqlite3_stmt*, int) = NULL;
+static long long (*p_sqlite3_column_int64)(sqlite3_stmt*, int) = NULL;
+static int (*p_sqlite3_finalize)(sqlite3_stmt*) = NULL;
+static int (*p_sqlite3_bind_text)(sqlite3_stmt*, int, const char*, int, void(*)(void*)) = NULL;
+static int (*p_sqlite3_close)(sqlite3*) = NULL;
+
+static int sqlite_init(void) {
+    if (g_sqlite_lib) return 1;
+    char mod[1024] = {0};
+    Platform_GetModuleOwnerPath((void*)sqlite_init, mod, sizeof(mod));
+    char dir[1024] = {0};
+    snprintf(dir, sizeof(dir), "%s", mod);
+    char* sl = strrchr(dir, '/');
+    if (sl) *sl = '\0';
+    char buf[1024];
+    snprintf(buf, sizeof(buf), "%s/libsqlite3.so", dir);
+    g_sqlite_lib = fl_library_open(buf);
+    if (!g_sqlite_lib) g_sqlite_lib = fl_library_open("libsqlite3.so");
+    if (!g_sqlite_lib) return 0;
+    p_sqlite3_open_v2 = (int(*)(const char*,sqlite3**,int,const char*))fl_library_symbol(g_sqlite_lib, "sqlite3_open_v2");
+    p_sqlite3_errmsg = (const char*(*)(sqlite3*))fl_library_symbol(g_sqlite_lib, "sqlite3_errmsg");
+    p_sqlite3_prepare_v2 = (int(*)(sqlite3*,const char*,int,sqlite3_stmt**,const char**))fl_library_symbol(g_sqlite_lib, "sqlite3_prepare_v2");
+    p_sqlite3_step = (int(*)(sqlite3_stmt*))fl_library_symbol(g_sqlite_lib, "sqlite3_step");
+    p_sqlite3_column_text = (const unsigned char*(*)(sqlite3_stmt*,int))fl_library_symbol(g_sqlite_lib, "sqlite3_column_text");
+    p_sqlite3_column_int64 = (long long(*)(sqlite3_stmt*,int))fl_library_symbol(g_sqlite_lib, "sqlite3_column_int64");
+    p_sqlite3_finalize = (int(*)(sqlite3_stmt*))fl_library_symbol(g_sqlite_lib, "sqlite3_finalize");
+    p_sqlite3_bind_text = (int(*)(sqlite3_stmt*,int,const char*,int,void(*)(void*)))fl_library_symbol(g_sqlite_lib, "sqlite3_bind_text");
+    p_sqlite3_close = (int(*)(sqlite3*))fl_library_symbol(g_sqlite_lib, "sqlite3_close");
+    return p_sqlite3_open_v2 && p_sqlite3_errmsg && p_sqlite3_prepare_v2 && p_sqlite3_step;
+}
+
+static char* safe_strdup(const char* s) {
+    if (!s) return NULL;
+    size_t len = strlen(s) + 1;
+    char* new_s = malloc(len);
+    if (new_s) memcpy(new_s, s, len);
+    return new_s;
+}
+
+static void card_list_push(CardList* list, TYPE_NAME card) {
+    if (list->count == list->capacity) {
+        list->capacity = list->capacity == 0 ? 16 : list->capacity * 2;
+        list->items = realloc(list->items, list->capacity * sizeof(TYPE_NAME));
+    }
+    list->items[list->count++] = card;
+}
+
+static void free_card_list(CardList* list) {
+    for (size_t i = 0; i < list->count; i++) {
+        if (list->items[i].type == CARD_TYPE_BASIC) {
+            free(list->items[i].data.basic.front);
+            free(list->items[i].data.basic.back);
+        } else if (list->items[i].type == CARD_TYPE_CLOZE) {
+            free(list->items[i].data.cloze.text);
+        }
+    }
+    free(list->items);
+    list->items = NULL;
+    list->count = 0;
+    list->capacity = 0;
+}
+
+static char* find_deck_id(const char* json, const char* deck_name) {
+    char search_str[256];
+    snprintf(search_str, sizeof(search_str), "\"%s\"", deck_name);
+    char* pos = strstr(json, search_str);
+    if (!pos) return NULL;
+    char* start = pos;
+    while (start > json && *start != '"') start--;
+    start++;
+    char* end = start;
+    while (*end != '"') end++;
+    size_t id_len = end - start;
+    char* deck_id = malloc(id_len + 1);
+    strncpy(deck_id, start, id_len);
+    deck_id[id_len] = '\0';
+    return deck_id;
+}
+
+static CardList get_cards_in_deck(const char* db_path, const char* target_deck_name) {
+    CardList list = {0};
+    if (!sqlite_init()) { fprintf(stderr, "sqlite lib not found\n"); return list; }
+    sqlite3 *db = NULL;
+    sqlite3_stmt *stmt = NULL;
+    if (p_sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READONLY, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Failed to open DB: %s\n", p_sqlite3_errmsg(db));
+        return list;
+    }
+    char* deck_id = NULL;
+    if (p_sqlite3_prepare_v2(db, "SELECT decks FROM col;", -1, &stmt, NULL) == SQLITE_OK) {
+        if (p_sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* decks_json = (const char*)p_sqlite3_column_text(stmt, 0);
+            if (decks_json) deck_id = find_deck_id(decks_json, target_deck_name);
+        }
+        p_sqlite3_finalize(stmt);
+        stmt = NULL;
+    }
+    if (!deck_id) {
+        fprintf(stderr, "Deck '%s' not found in collection.\n", target_deck_name);
+        p_sqlite3_close(db);
+        return list;
+    }
+    const char* query = "SELECT n.flds, n.mid FROM notes n JOIN cards c ON n.id = c.nid WHERE c.did = ?;";
+    if (p_sqlite3_prepare_v2(db, query, -1, &stmt, NULL) == SQLITE_OK) {
+        p_sqlite3_bind_text(stmt, 1, deck_id, -1, SQLITE_TRANSIENT);
+        while (p_sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* flds = (const char*)p_sqlite3_column_text(stmt, 0);
+            if (!flds) continue;
+            TYPE_NAME card = {0};
+            if (strstr(flds, "{{c") != NULL) {
+                card.type = CARD_TYPE_CLOZE;
+                card.data.cloze.text = safe_strdup(flds);
+            } else {
+                card.type = CARD_TYPE_BASIC;
+                char* sep = strchr(flds, '\x1f');
+                if (sep) {
+                    size_t front_len = sep - flds;
+                    char* front = malloc(front_len + 1);
+                    strncpy(front, flds, front_len);
+                    front[front_len] = '\0';
+                    card.data.basic.front = front;
+                    card.data.basic.back = safe_strdup(sep + 1);
+                } else {
+                    card.data.basic.front = safe_strdup(flds);
+                    card.data.basic.back = safe_strdup("");
+                }
+            }
+            card_list_push(&list, card);
+        }
+        p_sqlite3_finalize(stmt);
+        stmt = NULL;
+    } else {
+        fprintf(stderr, "Failed to prepare query: %s\n", p_sqlite3_errmsg(db));
+    }
+    free(deck_id);
+    p_sqlite3_close(db);
+    return list;
+}
+void print_all_cards(void) {
+    CardList list = get_cards_in_deck(DB_PATH, "Chemistry");
+    for (size_t i = 0; i < list.count; i++) {
+        TYPE_NAME card = list.items[i];
+        if (card.type == CARD_TYPE_BASIC) {
+            printf("Front: %s\n", card.data.basic.front);
+            printf("Back: %s\n", card.data.basic.back);
+        } else if (card.type == CARD_TYPE_CLOZE) {
+            printf("Cloze: %s\n", card.data.cloze.text);
+        }
+    }
+    free_card_list(&list);
+}
+
+FLINT_FEATURE_INIT {
+    fl_register_hotkey(.hotkey="Alt+A", .cb=print_all_cards);
+}

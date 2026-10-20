@@ -529,7 +529,7 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
         } else {
             existing->icon[0] = '\0';
         }
-        hotkey_mark_feature_toggles(spec->cb);
+        hotkey_mark_feature_toggles((HotkeyCallback)spec->cb);
         { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     FeatureReg* reg = (FeatureReg*)calloc(1, sizeof(FeatureReg));
@@ -558,7 +558,7 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
         g_feature_order_cap = new_cap;
     }
     g_feature_order[g_feature_order_count++] = reg;
-    hotkey_mark_feature_toggles(spec->cb);
+    hotkey_mark_feature_toggles((HotkeyCallback)spec->cb);
 }
 
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
@@ -580,7 +580,7 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
     if (binding.should_swallow == NULL) { /* use swallow default */ }
     if (spec->cb && g_feature_map) {
         for (int i = 0; i < g_feature_order_count; i++) {
-            if (g_feature_order[i] && g_feature_order[i]->cb == spec->cb) { binding.is_feature_toggle = true; break; }
+            if (g_feature_order[i] && (void*)g_feature_order[i]->cb == (void*)spec->cb) { binding.is_feature_toggle = true; break; }
         }
     }
     if (binding.is_feature_toggle) binding.hold = false;

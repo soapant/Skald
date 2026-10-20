@@ -385,13 +385,12 @@ void on_internet_hover(void) {
 }
 
 
-bool FlipWidgets(void) {
+void FlipWidgets(void) {
     percentage = !percentage;
     fl_widget_set_render(g_disk, widgets_disk_usage_render);
     fl_widget_set_render(g_mem, widgets_memory_usage_render);
     fl_widget_set_render(g_cpu, widgets_cpu_usage_render);
     fl_widget_set_render(g_internet, widgets_internet_render);
-    return true;
 }
 
 FLINT_FEATURE_INIT {

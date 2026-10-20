@@ -179,11 +179,10 @@ bool clipboard_history_enter(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
-bool TriggerClipboardHistory(void) {
+void TriggerClipboardHistory(void) {
     fl_window(.title = "Clipboard History",
            .refresh = clipboard_history_refresh,
            .enter = clipboard_history_enter);
-    return true;
 }
 
 FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void) {
@@ -206,5 +205,5 @@ FLINT_FEATURE_INIT {
     ch_running = true;
     ch_thread = fl_thread_create(ch_sampler, NULL);
     fl_register_hotkey(.hotkey="Alt+Shift+R", .cb=TriggerClipboardHistory);
-    fl_register_feature(.name="Clipboard History",.cb=TriggerClipboardHistory,.icon="/clipboard.png");
+    fl_register_feature(.name="Clipboard History",.cb=(bool(*)(void))TriggerClipboardHistory,.icon="/clipboard.png");
 }

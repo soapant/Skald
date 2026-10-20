@@ -349,7 +349,7 @@ void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     todo_refresh_callback("", lb);
 }
 
-bool TriggerTodo(void) {
+void TriggerTodo(void) {
     fl_window(
         .title = "📝 Todo",
         .refresh = todo_refresh_callback,
@@ -359,10 +359,9 @@ bool TriggerTodo(void) {
         .render = todo_render_callback,
         .edit = todo_edit_callback);
 
-    return true;
 }
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+T", .cb=TriggerTodo, .blacklist={"\1"});
-    fl_register_feature(.name="Todo",.cb=TriggerTodo,.icon="/list-check.png");
+    fl_register_feature(.name="Todo",.cb=(bool(*)(void))TriggerTodo,.icon="/list-check.png");
 }

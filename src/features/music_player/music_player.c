@@ -126,54 +126,48 @@ bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
-bool music_cmd_1(void) {
+void music_cmd_1(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #else
     music_send_command("Music Player", "_MP_PLAYER_CMD", 1);
 #endif
-    return true;
 }
-bool music_cmd_5(void) {
+void music_cmd_5(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
 #else
     music_send_command("Music Player", "_MP_PLAYER_CMD", 5);
 #endif
-    return true;
 }
-bool music_cmd_6(void) {
+void music_cmd_6(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
 #else
     music_send_command("Music Player", "_MP_PLAYER_CMD", 6);
 #endif
-    return true;
 }
-bool music_cmd_2(void) {
+void music_cmd_2(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 2, 0);
 #else
     music_send_command("Music Player", "_MP_PLAYER_CMD", 2);
 #endif
-    return true;
 }
 
-bool random_music(void) {
+void random_music(void) {
     int idx = fl_rand_num_between(0, s_music_files.count - 1);
     music_enter_callback(s_music_files.files[idx].name,NULL);
 
-    return true;
 }
-bool music_prompt(void) {
+void music_prompt(void) {
     fl_window(.title = "🎵 Player",
            .refresh = music_refresh_callback,
            .enter = music_enter_callback);
-    return true;
 }
 
 FLINT_FEATURE_INIT {
@@ -185,5 +179,5 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+P", .cb=music_prompt);
     fl_register_hotkey(.hotkey="Alt+Shift+P", .cb=random_music);
 
-    fl_register_feature(.name="Music Player",.cb=music_prompt,.icon="/music.png");
+    fl_register_feature(.name="Music Player",.cb=(bool(*)(void))music_prompt,.icon="/music.png");
 }
