@@ -173,12 +173,8 @@ void hotkey_drain_pending(void) {
         }
         log_info("hotkey drain run");
         FeatureLoader_Lock();
-        bool r = fn();
+        fn();
         FeatureLoader_Unlock();
-        if (!r && qvk) {
-            Platform_EmitKey(qvk, 1);
-            Platform_EmitKey(qvk, 0);
-        }
     }
 }
 
