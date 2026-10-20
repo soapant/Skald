@@ -2,18 +2,18 @@
 #include <stdio.h>
 
 FLINT_FEATURE_INIT {
-    fl_register_remapping("LeftShift+RightAlt", "Enter");
+    fl_register_remapping(.src="LeftShift+RightAlt", .dst="Enter");
 
-    fl_register_remapping("Ctrl+Alt+W", "Up");
-    fl_register_remapping("Ctrl+Alt+A", "Left");
-    fl_register_remapping("Ctrl+Alt+S", "Down");
-    fl_register_remapping("Ctrl+Alt+D", "Right");
+    fl_register_remapping(.src="Ctrl+Alt+W", .dst="Up");
+    fl_register_remapping(.src="Ctrl+Alt+A", .dst="Left");
+    fl_register_remapping(.src="Ctrl+Alt+S", .dst="Down");
+    fl_register_remapping(.src="Ctrl+Alt+D", .dst="Right");
 
 
-    fl_register_remapping("Ctrl+I", "~");
-    fl_register_remapping("Ctrl+U", "|");
+    fl_register_remapping(.src="Ctrl+I", .dst="~");
+    fl_register_remapping(.src="Ctrl+U", .dst="|");
 
-    fl_register_remapping("A", "Left",WHITELIST,"feh");
-    fl_register_remapping("D", "Right",WHITELIST,"feh");
+    fl_register_remapping(.src="A", .dst="Left", .whitelist={"feh"});
+    fl_register_remapping(.src="D", .dst="Right", .whitelist={"feh"});
 }
 
