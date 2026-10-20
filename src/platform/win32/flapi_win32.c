@@ -14,7 +14,6 @@
 #include "core/clipboard_history.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
-#include <endpointvolume.h>
 #include "platform/draw.h"
 #include "platform/ui.h"
 #include "core/modal.h"
@@ -358,102 +357,6 @@ void fl_toggle_play_pause_platform(void) {
     input[1].ki.dwFlags = KEYEVENTF_KEYUP;
 
     SendInput(2, input, sizeof(INPUT));
-}
-
-static int vol_query_raw(void) {
-        PROFILE_START(_pt);
-HRESULT hr;
-    IMMDeviceEnumerator *pEnumerator = NULL;
-    IMMDevice *pDevice = NULL;
-    IAudioEndpointVolume *pVolume = NULL;
-    float currentVolume = 0.0f;
-
-    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-    if (hr == RPC_E_CHANGED_MODE) {
-    } else if (FAILED(hr)) {
-        return 0;
-    }
-
-    hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
-                          &IID_IMMDeviceEnumerator, (void**)&pEnumerator);
-    if (FAILED(hr)) goto cleanup;
-
-    hr = pEnumerator->lpVtbl->GetDefaultAudioEndpoint(pEnumerator, eRender, eConsole, &pDevice);
-    if (FAILED(hr)) goto cleanup;
-
-    hr = pDevice->lpVtbl->Activate(pDevice, &IID_IAudioEndpointVolume, CLSCTX_ALL, NULL,
-                                   (void**)&pVolume);
-    if (FAILED(hr)) goto cleanup;
-
-    pVolume->lpVtbl->GetMasterVolumeLevelScalar(pVolume, &currentVolume);
-
-cleanup:
-    if (pVolume) pVolume->lpVtbl->Release(pVolume);
-    if (pDevice) pDevice->lpVtbl->Release(pDevice);
-    if (pEnumerator) pEnumerator->lpVtbl->Release(pEnumerator);
-    CoUninitialize();
-
-    { PROFILE_END_VAR(_pt, "vol_query_raw"); return (int)(currentVolume * 100.0f + 0.5f); }
-}
-
-#define FL_VOL_TTL_MS 500
-
-int fl_get_current_volume_platform(void) {
-        PROFILE_START(_pt);
-static CRITICAL_SECTION cs;
-    static BOOL cs_ready = FALSE;
-    static int cached = -1;
-    static DWORD cached_at = 0;
-    static BOOL ever = FALSE;
-
-    if (!cs_ready) { InitializeCriticalSection(&cs); cs_ready = TRUE; }
-    EnterCriticalSection(&cs);
-    DWORD now = GetTickCount();
-    if (!ever || (now - cached_at) >= FL_VOL_TTL_MS) {
-        cached = vol_query_raw();
-        cached_at = now;
-        ever = TRUE;
-    }
-    int out = cached;
-    LeaveCriticalSection(&cs);
-    { PROFILE_END_VAR(_pt, "fl_get_current_volume_platform"); return out; }
-}
-bool fl_set_volume_platform(int volume) {
-        PROFILE_START(_pt);
-HRESULT hr;
-    IMMDeviceEnumerator *pEnumerator = NULL;
-    IMMDevice *pDevice = NULL;
-    IAudioEndpointVolume *pVolume = NULL;
-    bool success = false;
-
-    hr = CoInitialize(NULL);
-    if (FAILED(hr)) { PROFILE_END_VAR(_pt, "fl_set_volume_platform"); return false; }
-
-    hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
-                          &IID_IMMDeviceEnumerator, (void**)&pEnumerator);
-    if (FAILED(hr)) goto cleanup;
-
-    hr = pEnumerator->lpVtbl->GetDefaultAudioEndpoint(pEnumerator, eRender, eConsole, &pDevice);
-    if (FAILED(hr)) goto cleanup;
-
-    hr = pDevice->lpVtbl->Activate(pDevice, &IID_IAudioEndpointVolume, CLSCTX_ALL, NULL,
-                                   (void**)&pVolume);
-    if (FAILED(hr)) goto cleanup;
-
-    float volume_float = (float)volume / 100.0f;
-
-    hr = pVolume->lpVtbl->SetMasterVolumeLevelScalar(pVolume, volume_float, NULL);
-    if (SUCCEEDED(hr)) {
-        success = true;
-    }
-
-cleanup:
-    if (pVolume) pVolume->lpVtbl->Release(pVolume);
-    if (pDevice) pDevice->lpVtbl->Release(pDevice);
-    if (pEnumerator) pEnumerator->lpVtbl->Release(pEnumerator);
-    CoUninitialize();
-
-    { PROFILE_END_VAR(_pt, "fl_set_volume_platform"); return success; }
 }
 
 bool fl_type_text_platform(const char *s){

@@ -95,7 +95,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
     clean_text[0] = '\0';
     *tag_count = 0;
     
-    Fl_FlagList flist = fl_parse_flags(input);
+    FlFlagList flist = fl_parse_flags(input);
     for (size_t i = 0; i < flist.count && *tag_count < 10; i++) {
         Fl_Flag *f = &flist.flags[i];
         for (size_t j = 0; j < TODO_CONFIG_FLAGS_COUNT; j++) {
