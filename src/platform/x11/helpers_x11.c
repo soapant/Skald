@@ -668,6 +668,135 @@ if (!dpy || !argb || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_blit_argb"); 
     { PROFILE_END_VAR(_pt, "x11_blit_argb"); return ok; }
 }
 
+static unsigned char* xpm_load(const char* path, int* out_w, int* out_h) {
+    FILE* f = fopen(path, "r");
+    if (!f) return NULL;
+    /* read whole file */
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    if (sz <= 0) { fclose(f); return NULL; }
+    fseek(f, 0, SEEK_SET);
+    char* buf = (char*)malloc((size_t)sz + 1);
+    if (!buf) { fclose(f); return NULL; }
+    size_t rd = fread(buf, 1, (size_t)sz, f);
+    buf[rd] = '\0';
+    fclose(f);
+
+    /* find quoted strings */
+    /* parse header: "W H ncolors cpp" */
+    int w=0,h=0,ncolors=0,cpp=1;
+    /* find first quoted line containing 4 ints */
+    char* p = buf;
+    /* skip to first quote */
+    while (*p && *p != '"') p++;
+    if (*p == '"') {
+        p++;
+        if (sscanf(p, "%d %d %d %d", &w, &h, &ncolors, &cpp) < 3) { free(buf); return NULL; }
+        if (cpp < 1) cpp = 1;
+        if (ncolors < 1) { free(buf); return NULL; }
+    }
+    if (w <= 0 || h <= 0) { free(buf); return NULL; }
+
+    /* parse colormap: next ncolors lines "key c color" */
+    /* map key (cpp chars) -> RGBA */
+    /* store in arrays */
+    char (*keys)[16] = (char(*)[16])calloc((size_t)ncolors, 16);
+    unsigned char* colors = (unsigned char*)calloc((size_t)ncolors * 4, 1);
+    if (!keys || !colors) { free(buf); free(keys); free(colors); return NULL; }
+
+    /* advance p past header line */
+    /* find end of first quoted string */
+    char* q = strchr(p, '"');
+    if (q) p = q + 1;
+
+    int ci = 0;
+    while (ci < ncolors) {
+        /* find next quote */
+        while (*p && *p != '"') p++;
+        if (!*p) break;
+        p++;
+        /* read key */
+        char keybuf[16] = {0};
+        strncpy(keybuf, p, (size_t)cpp);
+        keybuf[cpp] = '\0';
+        /* find "c" token */
+        char* cp = p;
+        /* skip cpp chars */
+        cp += cpp;
+        while (*cp == ' ' || *cp == '\t') cp++;
+        /* expect 'c' */
+        if (*cp == 'c') {
+            cp++;
+            while (*cp == ' ' || *cp == '\t') cp++;
+        }
+        char colorname[64] = {0};
+        /* read until quote or space */
+        int ci2 = 0;
+        while (cp[ci2] && cp[ci2] != '"' && cp[ci2] != ' ' && cp[ci2] != '\t' && ci2 < 63) { colorname[ci2] = cp[ci2]; ci2++; }
+        colorname[ci2] = '\0';
+        /* if colorname empty or "None" */
+        unsigned char r=0,g=0,b=0,a=255;
+        if (strcasecmp(colorname, "None") == 0 || colorname[0] == '\0') {
+            a = 0;
+        } else if (colorname[0] == '#') {
+            /* hex */
+            unsigned int val = 0;
+            if (strlen(colorname) == 7) { sscanf(colorname+1, "%06x", &val); r=(val>>16)&0xff; g=(val>>8)&0xff; b=val&0xff; }
+            else if (strlen(colorname) == 4) { sscanf(colorname+1, "%03x", &val); r=((val>>8)&0xf)*17; g=((val>>4)&0xf)*17; b=(val&0xf)*17; }
+        }
+        strncpy(keys[ci], keybuf, 15);
+        colors[ci*4+0] = b; /* XPM stored as BGRA? we'll store RGBA then convert later; store as RGBA here */
+        colors[ci*4+1] = g;
+        colors[ci*4+2] = r;
+        colors[ci*4+3] = a;
+        /* advance p to end of this quoted string */
+        char* endq = strchr(p, '"');
+        if (endq) p = endq + 1;
+        ci++;
+    }
+
+    /* parse pixel rows */
+    unsigned char* out = (unsigned char*)calloc((size_t)w * h * 4, 1);
+    if (!out) { free(buf); free(keys); free(colors); return NULL; }
+    int row = 0;
+    while (row < h && *p) {
+        while (*p && *p != '"') p++;
+        if (!*p) break;
+        p++;
+        /* check if this line has enough chars */
+        if ((int)strlen(p) < w * cpp) { 
+            /* maybe short; try */
+        }
+        /* read w pixels */
+        for (int x = 0; x < w; x++) {
+            char keybuf[16] = {0};
+            strncpy(keybuf, p + x*cpp, (size_t)cpp);
+            keybuf[cpp] = '\0';
+            /* find color index */
+            int idx = -1;
+            for (int c = 0; c < ncolors; c++) {
+                if (strcmp(keys[c], keybuf) == 0) { idx = c; break; }
+            }
+            if (idx >= 0) {
+                out[(row*w+x)*4+0] = colors[idx*4+0];
+                out[(row*w+x)*4+1] = colors[idx*4+1];
+                out[(row*w+x)*4+2] = colors[idx*4+2];
+                out[(row*w+x)*4+3] = colors[idx*4+3];
+            }
+        }
+        char* endq = strchr(p, '"');
+        if (endq) p = endq + 1;
+        row++;
+    }
+
+    free(buf);
+    free(keys);
+    free(colors);
+    *out_w = w;
+    *out_h = h;
+    return out;
+}
+
 unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
         PROFILE_START(_pt);
 if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
@@ -713,11 +842,23 @@ if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return N
     }
 
     int w = 0, h = 0, comp = 0;
-    unsigned char* src = stbi_load(path, &w, &h, &comp, 4);
-    if (!src) {
-        log_error("img: cannot decode '%s': %s", path, stbi_failure_reason());
-        PROFILE_END_VAR(_pt, "x11_decode_image_argb");
-        return false;
+    bool _is_xpm = _plen > 4 && Platform_StringContainsCaseInsensitive(path + _plen - 4, ".xpm");
+    unsigned char* src = NULL;
+    if (_is_xpm) {
+        src = xpm_load(path, &w, &h);
+        comp = 4;
+        if (!src) {
+            log_error("img: cannot decode xpm '%s'", path);
+            PROFILE_END_VAR(_pt, "x11_decode_image_argb");
+            return false;
+        }
+    } else {
+        src = stbi_load(path, &w, &h, &comp, 4);
+        if (!src) {
+            log_error("img: cannot decode '%s': %s", path, stbi_failure_reason());
+            PROFILE_END_VAR(_pt, "x11_decode_image_argb");
+            return false;
+        }
     }
 
     unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
