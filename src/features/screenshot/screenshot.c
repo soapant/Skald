@@ -55,7 +55,7 @@ static void shot_clip_path(char* buf, size_t n) {
     snprintf(buf, n, "%s/flint_clip.png", shot_working_dir());
 }
 
-static void pk_screenshot_copy_area(void) {
+static bool pk_screenshot_copy_area(void) {
     char env[SHOT_BUF];
     char path[SHOT_BUF];
     char cmd[SHOT_BUF * 3];
@@ -72,9 +72,10 @@ static void pk_screenshot_copy_area(void) {
 
     free(fl_run_terminal_command_blocking(cmd));
     fl_copy_file_path(path);
+    return true;
 }
 
-static void pk_ocr_area_to_clipboard(void) {
+static bool pk_ocr_area_to_clipboard(void) {
     char env[SHOT_BUF];
     char cmd[SHOT_BUF * 2];
     shot_env(env, sizeof(env));
@@ -92,12 +93,13 @@ static void pk_ocr_area_to_clipboard(void) {
     }
 
     char* out = fl_run_terminal_command_blocking(cmd);
-    if (!out || !out[0]) { free(out); return; }
+    if (!out || !out[0]) { free(out); return true; }
 
     size_t n = strlen(out);
     while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
     if (out[0]) fl_copy_to_clipboard(out);
     free(out);
+    return true;
 }
 
 #else
@@ -499,7 +501,7 @@ static void shot_stage_path(char* out, size_t cap, const char* leaf) {
     snprintf(out, cap, "%s/%s", t, leaf);
 }
 
-static void pk_screenshot_copy_area(void) {
+static bool pk_screenshot_copy_area(void) {
     RECT r;
     if (!shot_select_area(&r)) { printf("screenshot: no area selected\n"); return; }
     char path[MAX_PATH * 2];
@@ -509,9 +511,10 @@ static void pk_screenshot_copy_area(void) {
            (int)(r.right - r.left), (int)(r.bottom - r.top), (long)r.left, (long)r.top);
     fl_copy_file_path(path);
     shot_capture_release();
+    return true;
 }
 
-static void pk_ocr_area_to_clipboard(void) {
+static bool pk_ocr_area_to_clipboard(void) {
     RECT full;
     HDC sc = GetDC(NULL);
     if (!sc) return;
@@ -538,6 +541,7 @@ static void pk_ocr_area_to_clipboard(void) {
     while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
     if (out[0]) fl_copy_to_clipboard(out);
     free(out);
+    return true;
 }
 
 #endif

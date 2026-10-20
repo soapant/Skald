@@ -350,7 +350,7 @@ void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     todo_refresh_callback("", lb);
 }
 
-void TriggerTodo(void) {
+bool TriggerTodo(void) {
     fl_window(
         .title = "📝 Todo",
         .refresh = todo_refresh_callback,
@@ -360,6 +360,7 @@ void TriggerTodo(void) {
         .render = todo_render_callback,
         .edit = todo_edit_callback);
 
+    return true;
 }
 
 FLINT_FEATURE_INIT {

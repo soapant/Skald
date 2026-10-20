@@ -42,7 +42,7 @@ static int hotkey_parse_mouse_token(const char* token) {
     return 0;
 }
 
-HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_trigger)(void), 
+HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, bool (*on_hotkey_trigger)(void), 
                                           bool (*optional_condition_for_hotkey)(void), 
                                           const char** optional_blacklistedwindows, bool whitelist) { 
     HotkeyBinding output = {0};

@@ -262,10 +262,11 @@ void typing_test_render(PromptState *state) {
     free(positions);
 }
 
-void TriggerTypingTest(void) {
+bool TriggerTypingTest(void) {
     fl_window(.enter = typing_test_enter,
            .render = typing_test_render,
            .on_close = typing_test_reset);
+    return true;
 }
 
 FLINT_FEATURE_INIT {
