@@ -80,6 +80,10 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->prompt_callbacks.refresh = data->spec.refresh;
     ctx2->prompt_callbacks.enter = data->spec.enter;
     ctx2->prompt_callbacks.ctrl_enter = data->spec.ctrl_enter;
+    ctx2->prompt_callbacks.shift_enter = data->spec.shift_enter;
+    ctx2->prompt_callbacks.ctrl_shift_enter = data->spec.ctrl_shift_enter;
+    ctx2->prompt_callbacks.ctrl_alt_enter = data->spec.ctrl_alt_enter;
+    ctx2->prompt_callbacks.shift_alt_enter = data->spec.shift_alt_enter;
     ctx2->prompt_callbacks.tab = data->spec.tab;
     ctx2->prompt_callbacks.copy = data->spec.copy;
     ctx2->prompt_callbacks.render = data->spec.render;
