@@ -14,7 +14,6 @@ extern bool RememberLastIndex;
 extern bool EnableVimMode;
 extern bool KeepSelectionAfterClose;
 extern bool MessageAfterEachHotkey;
-extern bool AllowOtherFeatureTogglesInFeature;
 extern bool ModePersistsThroughFeatures;
 extern int  TimeOutForMessages;
 extern int  HotkeyRepeatDelayMs;

@@ -333,10 +333,7 @@ static void net_usage_sample(void) {
 static FlTimer g_net_last_tick;
 
 static void net_usage_tick(void) {
-        /* This runs from the render callback, i.e. every frame. Sampling the
-           interface table and reloading the state file at frame rate costs
-           ~7ms a frame; the rate estimate is smoothed, so 2Hz is plenty. */
-        if (fl_end_timer(g_net_last_tick) < NET_SAMPLE_INTERVAL_MS) return;
+    if (fl_end_timer(g_net_last_tick) < NET_SAMPLE_INTERVAL_MS) return;
     g_net_last_tick = fl_start_timer();
     net_usage_load();
 
