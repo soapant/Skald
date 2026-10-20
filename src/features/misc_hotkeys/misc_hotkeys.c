@@ -162,5 +162,6 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="K", .cb=medium, .whitelist={"anki"});
     fl_register_hotkey(.hotkey="L", .cb=hard, .whitelist={"anki"});
     fl_register_hotkey(.hotkey=";", .cb=fuckme, .whitelist={"anki"});
+    fl_register_snippet(.trigger="nigga",.text="fuck");
 }
 
