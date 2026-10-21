@@ -387,7 +387,7 @@ static void macro_show_overlay(void (*render)(void)) {
 void PlayMacro(void) {
     if (!g_playing) {
         if (g_event_count == 0) {
-            fl_message(.message="No macro loaded", .timeout=3.0);
+            fl_message(.message="No macro loaded",.timeout=3.0);
         }
         macro_show_overlay(playback_render);
         fl_clear_key_queue();

@@ -863,11 +863,9 @@ void fl_message_impl(const FlMessageSpec* spec) {
     }
     MessageSlot slot = spec->slot;
     if (slot == AUTO) {
-    PROFILE_START(_pt);
-        slot = IsPopupActive(WH_NULL) ? TOP_CENTER : BOTTOM_CENTER;
-        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL, spec->name);
-        { PROFILE_END_VAR(_pt, "f"); return ; }
-    } else if (slot == FREE || spec->x != 0 || spec->y != 0) {
+        PROFILE_START(_pt);
+        slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : TOP_CENTER;
+    } else if (slot == FREE) {
         Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL, spec->name);
         return;
     }
