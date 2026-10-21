@@ -1,18 +1,16 @@
 #ifndef TYPES_MISC_H
 #define TYPES_MISC_H
 
-#if !defined(_WIN32)
-#include <time.h>
-#endif
+#include <stdint.h>
 #include "core/types.h"
+#include "core/types/alias.h"
 
+/* Platform neutral: raw tick count plus ticks-per-second. core/timer.h
+   fills these in from QueryPerformanceCounter or CLOCK_MONOTONIC, which
+   keeps <windows.h> out of this header (it is on the feature .so path). */
 typedef struct {
-#if defined(_WIN32)
-    LARGE_INTEGER start;
-    LARGE_INTEGER frequency;
-#else
-    struct timespec start;
-#endif
+    int64_t start;
+    int64_t frequency;
 } WinTimer;
 
 struct feature_data {
@@ -22,19 +20,9 @@ struct feature_data {
 };
 
 typedef struct {
-   char* alias;
-   char* text;
-   char* feature;
-} AliasEntry;
-
-typedef struct {
     char* initial_text;
     char* result;
-#if defined(_WIN32)
-    HFONT hFont;
-#else
     void* hFont;
-#endif
     int alpha;
     WindowHandle hEdit;
 } EditPopupData;
@@ -45,12 +33,5 @@ typedef enum {
     DEFAULT_SHELL,
     DEFAULT_APP_COUNT
 } DefaultAppKind;
-
-
-#if defined(_WIN32)
-LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
-#endif
 
 #endif

@@ -1,4 +1,4 @@
-#include "config.h"
+#include "config_values.h"
 
 // <flint-config-generated>
 static const AliasEntry user_aliases[] = {
@@ -14,8 +14,8 @@ void ConfigApply(void) {
     MessageAfterEachHotkey = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = false;
-    DebugMode = true;
+    DoTimeDebugs = true;
+    DebugMode = false;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;

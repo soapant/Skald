@@ -4,17 +4,18 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#if defined(_WIN32)
-#include <windows.h>
-#endif
 #if !defined(_WIN32)
 typedef struct _XDisplay Display;
 typedef struct _XftFont XftFont;
 #endif
 
+/* Handles are opaque on purpose: this header is on the feature .so include
+   path, and <windows.h> costs ~1s of parsing per hot-reload compile. The
+   Win32 side casts the void* back to HWND/HFONT, which is implicit in C. */
+
 typedef struct WindowHandle {
 #if defined(_WIN32)
-    HWND hwnd;
+    void* hwnd;
 #else
     unsigned long xid;
 #endif
@@ -22,7 +23,7 @@ typedef struct WindowHandle {
 
 typedef struct FontHandle {
 #if defined(_WIN32)
-    HFONT hfont;
+    void* hfont;
 #else
     XftFont* xfont;
     Display* dpy;
@@ -32,7 +33,7 @@ typedef struct FontHandle {
 #define WH_NULL ((WindowHandle){0})
 
 #if defined(_WIN32)
-#define WH_FROM_HWND(h) ((WindowHandle){ .hwnd = (HWND)(h) })
+#define WH_FROM_HWND(h) ((WindowHandle){ .hwnd = (void*)(h) })
 #define WH_TO_HWND(h) ((h).hwnd)
 #else
 #define WH_FROM_HWND(h) ((void)(h), WH_NULL)
@@ -42,7 +43,7 @@ typedef struct FontHandle {
 #define FH_NULL ((FontHandle){0})
 
 #if defined(_WIN32)
-#define FH_FROM_HFONT(h) ((FontHandle){ .hfont = (HFONT)(h) })
+#define FH_FROM_HFONT(h) ((FontHandle){ .hfont = (void*)(h) })
 #define FH_TO_HFONT(h) ((h).hfont)
 #else
 #define FH_TO_XFT(h) ((h).xfont)
@@ -55,22 +56,10 @@ typedef struct {
 } WindowLayout;
 
 typedef struct {
-    int index;
-    WindowHandle hwnd;
-    char title[256];
-    char exe[256];
-} SavedWindow;
-
-typedef struct {
     WindowHandle hwnd;
     char title[256];
     char exe[256];
 } WindowData;
-
-typedef struct {
-    WindowHandle hwnd;
-    char title[256];
-} MonitorWindowData;
 
 typedef struct {
     size_t r, g, b;
@@ -88,32 +77,6 @@ typedef struct {
     char** windows;
     int count;
 } PlWindowList;
-
-typedef struct {
-#if defined(_WIN32)
-    HMONITOR targetMonitor;
-#else
-    unsigned long targetMonitor;
-#endif
-    int count;
-    int capacity;
-    MonitorWindowData items[64];
-} MonitorFlWindowList;
-
-typedef struct {
-    int targetIndex;
-    int currentIndex;
-#if defined(_WIN32)
-    HMONITOR foundMonitor;
-#else
-    unsigned long foundMonitor;
-#endif
-} MonitorSearch;
-
-#if defined(_WIN32)
-#define MAIN_CENTER_X (GetSystemMetrics(SM_CXSCREEN) / 2)
-#define MAIN_CENTER_Y (GetSystemMetrics(SM_CYSCREEN) / 2)
-#endif
 
 #define GAP 20
 #define ID_TRAY_ICON 1001

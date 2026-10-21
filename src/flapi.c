@@ -652,7 +652,7 @@ char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_sta
 char* fl_run_terminal_command_blocking(char* command) {
     PROFILE_START(_pt);
   if (!command) { PROFILE_END_VAR(_pt, "fl_run_terminal_command_blocking"); return NULL; }
-  { PROFILE_END_VAR(_pt, "fl_run_terminal_command_blocking"); return Platform_RunCommandAndGetOutput(command); }
+  { PROFILE_END_VAR(_pt, "fl_run_terminal_command_blocking"); return Platform_RunCommandAndGetOutput(command, PLATFORM_RUN_PRIO_NORMAL); }
 }
 
 char* fl_run_terminal_command_and_open(char* command) {
