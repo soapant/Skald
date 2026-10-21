@@ -45,7 +45,7 @@ PROFILE_START(timer);
     struct timespec _t0, _t1, _t2, _t3;
     clock_gettime(CLOCK_MONOTONIC, &_t0);
     self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
-    XSelectInput(dpy, self->handle.xid, KeyPressMask | ExposureMask | FocusChangeMask);
+    XSelectInput(dpy, self->handle.xid, KeyPressMask | ExposureMask | FocusChangeMask | ButtonPressMask);
     clock_gettime(CLOCK_MONOTONIC, &_t1);
     Popup* popup = self;
     (void)popup;
