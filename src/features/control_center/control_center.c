@@ -20,7 +20,7 @@ typedef struct {
     bool (*on_ctrl_alt_enter)(void);
     bool (*on_shift_alt_enter)(void);
     bool (*on_tab)(void);
-    bool (*on_action)(void);
+    void (*on_action)(void);
 } CcEntry;
 
 #define CC_MAX_TYPES 16
@@ -45,7 +45,7 @@ static int g_type_count;
 typedef struct {
     char label[256];
     char type[64];
-    bool (*fn)(void);
+    void (*fn)(void);
 } CcActionDef;
 
 static CcActionDef g_actions[CC_MAX_ACTIONS];
@@ -93,7 +93,7 @@ static bool cc_register_type(const char *name, CcFill fill) {
     return true;
 }
 
-static CC_MAYBE_UNUSED bool cc_add_action(const char *label, const char *type, bool (*fn)(void)) {
+static CC_MAYBE_UNUSED bool cc_add_action(const char *label, const char *type, void (*fn)(void)) {
     if (!label || !label[0] || !fn || g_action_count >= CC_MAX_ACTIONS) return false;
     CcActionDef *a = &g_actions[g_action_count++];
     snprintf(a->label, sizeof(a->label), "%s", label);
@@ -150,7 +150,7 @@ static const CcEntry *cc_find(const char *label) {
 }
 
 static const char *g_cc_staged_label = NULL;
-static bool (*g_pending_action)(void);
+static void (*g_pending_action)(void);
 static bool (*g_pending_fn)(void);
 static char g_pending_label[256];
 
@@ -193,7 +193,7 @@ static void cc_stage(const CcEntry *e, int mode) {
 }
 
 static void cc_run_pending(void) {
-    bool (*act)(void) = g_pending_action;
+    void (*act)(void) = g_pending_action;
     bool (*pfn)(void) = g_pending_fn;
     g_pending_action = NULL;
     g_pending_fn = NULL;
@@ -646,7 +646,7 @@ static void cc_fill_applications(void) {
 }
 
 static const char *cc_feature_names[CC_FEATURE_MAX];
-static bool (*cc_feature_cbs[CC_FEATURE_MAX])(void);
+static void (*cc_feature_cbs[CC_FEATURE_MAX])(void);
 
 static void cc_fill_features(void) {
     const char **cc_feature_icons = NULL;

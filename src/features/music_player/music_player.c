@@ -179,5 +179,5 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+P", .cb=music_prompt);
     fl_register_hotkey(.hotkey="Alt+Shift+P", .cb=random_music);
 
-    fl_register_feature(.name="Music Player",.cb=(bool(*)(void))music_prompt,.icon="/music.png");
+    fl_register_feature(.name="Music Player",.cb=music_prompt,.icon="/music.png");
 }

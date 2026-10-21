@@ -36,7 +36,6 @@ typedef struct {
      char*       window_title;
      ListBoxInfo listbox;
      bool        has_listbox;
-     bool        mouse_hover;
      bool        no_bg;
      char*       placeholder;
 } PromptState;

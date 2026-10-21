@@ -123,13 +123,11 @@ static bool bg_tile_compose(Display* dpy, const char* path, int w, int h,
 
     struct stat pst;
     if (stat(path, &pst) != 0) {
-        fprintf(stderr, "[bg_image] file not found: %s\n", path);
         return false;
     }
 
     int sw = 0, sh = 0;
     if (!bg_src_dims(path, &sw, &sh)) {
-        fprintf(stderr, "[bg_image] undecodable (need PNG or SVG): %s\n", path);
         return false;
     }
     if (sw <= 0 || sh <= 0) return false;
@@ -147,7 +145,6 @@ static bool bg_tile_compose(Display* dpy, const char* path, int w, int h,
     int cw = dw, ch = dh;
     unsigned char* full = x11_decode_image_argb(path, &cw, &ch);
     if (!full) {
-        fprintf(stderr, "[bg_image] decode failed: %s\n", path);
         return false;
     }
 
@@ -283,7 +280,6 @@ Pixmap x11_bg_image_tile(Display* dpy, int w, int h) {
         slot->pm = pm;
         slot->pic = pic;
         slot->failed = false;
-        fprintf(stderr, "[bg_image] tile OK container=%dx%d\n", w, h);
     } else {
         slot->failed = true;
     }

@@ -494,7 +494,7 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
 }
 
 typedef struct { char *key; void *value; } FlintMapEnt;
-typedef struct { char name[128]; bool (*cb)(void); char icon[512]; } FeatureReg;
+typedef struct { char name[128]; void (*cb)(void); char icon[512]; } FeatureReg;
 static FlintMap* g_feature_map = NULL;
 static FeatureReg** g_feature_order = NULL;
 static int g_feature_order_count = 0;
@@ -586,7 +586,7 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
     { PROFILE_END_VAR(_pt, "fl_register_hotkey_impl"); return hotkey_register_internal(binding); }
 }
 
-int fl_get_feature_list(const char** out_names, bool (**out_cbs)(void), int max) {
+int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max) {
     PROFILE_START(_pt);
     int n = g_feature_order_count < max ? g_feature_order_count : max;
     for (int i=0;i<n;i++) {
@@ -596,7 +596,7 @@ int fl_get_feature_list(const char** out_names, bool (**out_cbs)(void), int max)
     { PROFILE_END_VAR(_pt, "fl_get_feature_list"); return n; }
 }
 
-int fl_get_feature_list_with_icons(const char** out_names, bool (**out_cbs)(void), const char*** out_icons, int max) {
+int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max) {
     PROFILE_START(_pt);
     int n = g_feature_order_count < max ? g_feature_order_count : max;
     for (int i=0;i<n;i++) {
@@ -856,7 +856,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
                                          spec->color_bg ? rgb_to_hex(spec->color_bg) : 0UL,
                                          fl_hover_popup_ctx_free, ctx);
             }
-            { PROFILE_END_VAR(_pt, "f"); return ; }
+            return ;
         }
         Platform_HoverMessage(spec->hover_key, spec->message, spec->x, spec->y, w, h, mw, mh, color,spec->no_bg);
         return;
@@ -1591,7 +1591,6 @@ void fl_draw_checkbox(int x, int y, int w, int h, bool checked, bool hovered) {
 
 bool fl_place_checkbox_impl(const FlCheckboxSpec *spec) {
     PROFILE_START(_pt);
-    WindowManager_TopPopupSetMouseHover(WindowManager_Get(), true);
     if (!spec || !spec->name || !spec->name[0]) {
         PROFILE_END_VAR(_pt, "api:fl_place_checkbox");
         return false;
@@ -2185,8 +2184,17 @@ FlTimer fl_profile_start() {
 }
 
 void fl_profile_end(FlTimer timer) {
-      PROFILE_START(_pt);
-      printf("[profile] %f s\n", fl_end_timer_platform(timer) / 1000);
+    PROFILE_START(_pt);
+    double ms = fl_end_timer_platform(timer);
+    if (ms < 0.0) ms = 0.0;
+
+    if (ms >= 1000.0) {
+        printf("[profile] %.3f s\n", ms / 1000.0);
+    } else if (ms >= 1.0) {
+        printf("[profile] %.3f ms\n", ms);
+    } else {
+        printf("[profile] %.3f µs\n", ms * 1000.0);
+    }
 }
 
 
