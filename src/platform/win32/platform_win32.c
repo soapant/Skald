@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "core/context.h"
+#include "core/feature_path.h"
 #include "config.h"
 #include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
@@ -1734,127 +1735,33 @@ if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) { PROF
     { PROFILE_END_VAR(_pt, "Platform_GetFeaturePath"); return true; }
 }
 
-static void sanitize_feature_stem(const char *src, char *out, size_t out_len) {
-        PROFILE_START(_pt);
-if (!out || out_len == 0) { PROFILE_END_VAR(_pt, "sanitize_feature_stem"); return ; }
-    out[0] = '\0';
-    size_t w = 0;
-    for (const char *p = src; *p && w + 1 < out_len; p++) {
-        char c = *p;
-        if (c >= 'A' && c <= 'Z') out[w++] = (char)(c + 32);
-        else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') out[w++] = c;
-        else if (c == ' ') out[w++] = '_';
-    }
-    out[w] = '\0';
-    if (w == 0 || strcmp(out, ".") == 0 || strcmp(out, "..") == 0) out[0] = '\0';
-}
 
-static bool lib_basename_stem(const char *base, char *out, size_t out_len) {
-        PROFILE_START(_pt);
-char work[256];
-    size_t len = strlen(base);
-    if (len == 0 || len >= sizeof(work)) { PROFILE_END_VAR(_pt, "lib_basename_stem"); return false; }
-    memcpy(work, base, len + 1);
-    for (;;) {
-        if (len < 4) break;
-        size_t dot_at = 0;
-        for (size_t i = len; i > 0; i--) {
-            if (work[i - 1] == '.') { dot_at = i - 1; break; }
-        }
-        if (dot_at == 0) break;
-        if (_strnicmp(work + dot_at + 1, "hot", 3) != 0) break;
-        bool digits = false;
-        for (size_t i = dot_at + 4; i < len; i++) {
-            if (work[i] < '0' || work[i] > '9') { digits = false; break; }
-            digits = true;
-        }
-        if (!digits) break;
-        len = dot_at;
-        work[len] = '\0';
-    }
-    if (len >= 3 && _strnicmp(work + len - 3, ".so", 3) == 0) len -= 3;
-    else if (len >= 4 && _stricmp(work + len - 4, ".dll") == 0) len -= 4;
-    else if (len >= 5 && _stricmp(work + len - 5, ".dylib") == 0) len -= 5;
-    else { PROFILE_END_VAR(_pt, "lib_basename_stem"); return false; }
-    if (len == 0 || len >= out_len) { PROFILE_END_VAR(_pt, "lib_basename_stem"); return false; }
-    memcpy(out, work, len);
-    out[len] = '\0';
-    { PROFILE_END_VAR(_pt, "lib_basename_stem"); return true; }
-}
 
-static bool feature_stem_from_caller(void *caller, char *out, size_t out_len) {
-        PROFILE_START(_pt);
-if (!caller || !out || out_len == 0) { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
-    out[0] = '\0';
-    char mod_path[512];
-    if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) { log_error("feature_stem mod path fail"); PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
-    const char *base = strrchr(mod_path, '\\');
-    const char *fs = strrchr(mod_path, '/');
-    if (fs && (!base || fs > base)) base = fs;
-    base = base ? base + 1 : mod_path;
-    char stem[128];
-    if (!lib_basename_stem(base, stem, sizeof(stem))) { log_error("feature_stem lib stem fail mod='%s'", mod_path); PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
-    sanitize_feature_stem(stem, out, out_len);
-    { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return out[0] != '\0'; }
-}
 
 bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t out_len) {
         PROFILE_START(_pt);
-if (!name || !name[0] || !out || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return false; }
-    for (const char* p = name; *p; p++) {
-        if (*p == '/' || *p == '\\') return false;
-    }
-    if (strstr(name, "..")) { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return false; }
-    const char* dot = strrchr(name, '.');
-    size_t stemlen = dot ? (size_t)(dot - name) : strlen(name);
-    if (stemlen > 0 && stemlen < 64) {
-        int stemok = 1;
-        for (size_t i = 0; i < stemlen; i++) {
-            char c = name[i];
-            if (c >= 'A' && c <= 'Z') continue;
-            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') continue;
-            stemok = 0;
-            break;
-        }
-        if (stemok) {
-            char stem[64];
-            for (size_t i = 0; i < stemlen; i++) {
-                char c = name[i];
-                stem[i] = (c >= 'A' && c <= 'Z') ? (char)(c + 32) : c;
-            }
-            stem[stemlen] = '\0';
-            char dir_path[256];
-            snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint\\%s", Platform_GetRealHome(), stem);
-            if (GetFileAttributesA(dir_path) != INVALID_FILE_ATTRIBUTES) {
-                return Platform_GetFeaturePath(stem, name, out, out_len);
-            }
-        }
-    }
-    char from_caller[128];
-    if (feature_stem_from_caller(caller, from_caller, sizeof(from_caller))) {
-        return Platform_GetFeaturePath(from_caller, name, out, out_len);
-    }
-    const char* feat = FlintContext_Get()->window.current_feature;
-    if (!feat || !feat[0]) { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return false; }
-    char safe[128];
-    sanitize_feature_stem(feat, safe, sizeof(safe));
-    if (safe[0] == '\0') { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return false; }
-    { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return Platform_GetFeaturePath(safe, name, out, out_len); }
+    bool ok = FeaturePath_ResolveDataPath(caller, name, out, out_len);
+    { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return ok; }
 }
 
 bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t out_len) {
         PROFILE_START(_pt);
-    if (!name || !name[0] || !out || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
-    if (!FeaturePath || !FeaturePath[0]) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
-    const char* rel = name;
-    while (*rel == '/' || *rel == '\\') rel++;
-    if (!rel[0]) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
-    for (const char* p = rel; *p; p++) {
-        if (*p == '/' || *p == '\\') { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
-    }
-    if (strstr(rel, "..")) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
-    char stem[128];
-    if (!feature_stem_from_caller(caller, stem, sizeof(stem))) { log_error("ResolveAsset stem fail name='%s'", name); PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    bool ok = FeaturePath_ResolveAssetPath(caller, name, out, out_len);
+    { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return ok; }
+}
+
+bool Platform_FeatureDataDirExists(const char* stem) {
+        PROFILE_START(_pt);
+    if (!stem || !stem[0]) { PROFILE_END_VAR(_pt, "Platform_FeatureDataDirExists"); return false; }
+    char dir_path[256];
+    snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint\\%s", Platform_GetRealHome(), stem);
+    bool ok = (GetFileAttributesA(dir_path) != INVALID_FILE_ATTRIBUTES);
+    { PROFILE_END_VAR(_pt, "Platform_FeatureDataDirExists"); return ok; }
+}
+
+bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, size_t out_len) {
+        PROFILE_START(_pt);
+    if (!stem || !rel || !out || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_ResolveAssetFile"); return false; }
     char feature_base[512];
     if (FeaturePath[0] && FeaturePath[1] == ':') {
         snprintf(feature_base, sizeof(feature_base), "%s", FeaturePath);
@@ -1863,12 +1770,15 @@ bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t
     } else {
         snprintf(feature_base, sizeof(feature_base), "%s", FeaturePath);
     }
-    char full[512];
+    char full[600];
     snprintf(full, sizeof(full), "%s\\%s\\%s", feature_base, stem, rel);
     DWORD attr = GetFileAttributesA(full);
-    if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) { log_error("ResolveAsset not found full='%s'", full); PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return false; }
+    if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+        PROFILE_END_VAR(_pt, "Platform_ResolveAssetFile");
+        return false;
+    }
     snprintf(out, out_len, "%s", full);
-    { PROFILE_END_VAR(_pt, "Platform_ResolveAssetPath"); return true; }
+    { PROFILE_END_VAR(_pt, "Platform_ResolveAssetFile"); return true; }
 }
 
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {

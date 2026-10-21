@@ -25,339 +25,63 @@
 
 #include "core/timer.h"
 #include "core/listbox_hover.h"
+#include "core/prompt_keys.h"
 #include "core/checkbox.h"
 #include "core/listbox_hover.h"
 static bool s_swallow_next_char = false;
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
         PROFILE_START(_pt);
-int wParam = key->vk;
-    bool ctrl_pressed = key->ctrl;
-    bool shift_pressed = key->shift;
+    int wParam = key->vk;
 
     if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
 
-    ListBoxInfo* lb = GetLBFromChild(hwnd);
+    extern PromptState* Platform_GetWin32PromptState(void);
+    PromptState* state = Platform_GetWin32PromptState();
+    int old_font = FontSize;
 
-    if (PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, key->alt)) {
-        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-            HWND hPar = GetParent(hwnd);
-            if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
-        }
-        return true;
-    }
-
-    if (!ctrl_pressed) {
-        if (wParam == VK_UP || wParam == VK_DOWN) {
-            if (WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL) {
-                if (wParam == VK_UP) {
-                    UI_NavigateUp(lb, FlintContext_Get()->window.hListBox);
-                } else {
-                    UI_NavigateDown(lb, FlintContext_Get()->window.hListBox);
-                }
-            }
-            return true;
-        }
-    }
-
-    if (wParam == VK_RETURN) {
-        bool ctrl_down = key->ctrl;
-        FlintContext_Get()->window.output_buffer[0] = '\0';
-        if (UI_IsListBoxSelected(lb)) {
-            if (lb && lb->selected_index >= 0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
-            FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer) - 1] = '\0';
-        } else {
-            UI_GetCurrentTextEdit(FlintContext_Get()->window.output_buffer, sizeof(FlintContext_Get()->window.output_buffer));
-        }
+    if (wParam == VK_ESCAPE) {
         if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
             KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
             DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-            FlintContext_Get()->window.hDisplayMessage = WH_NULL;
-        }
-        if (ctrl_down) {
-            bool should_close = false;
-            HWND popup_wnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-            if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_HIDE);
-            if (FlintContext_Get()->prompt_callbacks.ctrl_enter != NULL) {
-                char sel_copy[256];
-                strncpy(sel_copy, FlintContext_Get()->window.output_buffer, sizeof(sel_copy) - 1);
-                sel_copy[sizeof(sel_copy) - 1] = '\0';
-                should_close = FlintContext_Get()->prompt_callbacks.ctrl_enter(sel_copy, lb);
-            } else {
-                should_close = false;
-            }
-            if (should_close) {
-                FlintContext_Get()->window.selection_complete = true;
-            } else {
-                if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
-                if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
-            }
-            return true;
-        } else {
-            bool should_close = false;
-            HWND popup_wnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-            if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_HIDE);
-            if (FlintContext_Get()->prompt_callbacks.enter != NULL) {
-                char sel_copy[256];
-                strncpy(sel_copy, FlintContext_Get()->window.output_buffer, sizeof(sel_copy) - 1);
-                sel_copy[sizeof(sel_copy) - 1] = '\0';
-                should_close = FlintContext_Get()->prompt_callbacks.enter(sel_copy, lb);
-            } else {
-                should_close = true;
-            }
-            if (should_close) {
-                FlintContext_Get()->window.selection_complete = true;
-            } else {
-                if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
-                if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
-            }
-            return true;
         }
     }
 
-    if (wParam == VK_ESCAPE) {
-        if (FlintContext_Get()->window.editbox_placed) {
-            if (EnableVimMode && IsInsertMode()) {
-                SetModeWithListBox(MODE_NORMAL, lb);
-            } else {
-                FlintContext_Get()->window.output_buffer[0] = '\0';
-                FlintContext_Get()->window.selection_complete = true;
-                if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
-                    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
-                    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-                }
-            }
-        } else {
-            FlintContext_Get()->window.output_buffer[0] = '\0';
-            FlintContext_Get()->window.selection_complete = true;
-            if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
-                KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
-                DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-            }
-        }
-        return true;
+    bool hide_popup = (wParam == VK_RETURN);
+    HWND popup_wnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    if (hide_popup && popup_wnd != NULL) ShowWindow(popup_wnd, SW_HIDE);
+
+    bool handled = false;
+    if (state) handled = Prompt_HandleKey(state, key);
+
+    if (!handled) { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
+
+    if (hide_popup && !FlintContext_Get()->window.selection_complete) {
+        if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
+        if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
     }
-
-    if (wParam == VK_TAB) {
-        struct feature_data* data = GetFeatureData(FlintContext_Get()->window.current_feature);
-        if (FlintContext_Get()->prompt_callbacks.tab != NULL) {
-            FlintContext_Get()->prompt_callbacks.tab(lb);
+    if (FontSize != old_font) {
+        if (g_win32_hMainFont) { DeleteObject(g_win32_hMainFont); g_win32_hMainFont = NULL; }
+        g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+        if (WH_TO_HWND(FlintContext_Get()->window.hListBox) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
+            UI_LB_SetFont(FlintContext_Get()->window.hListBox, g_win32_hMainFont);
+            UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, PromptRowHeight());
         }
-        if (data) {
-            for (int i = 0; i < data->selection_count; ++i) {
-                log_info("%s ", data->last_selections[i]);
-            }
+        HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+        if (hPopup && IsWindow(hPopup)) {
+            InvalidateRect(hPopup, NULL, TRUE);
+            if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, TRUE);
+            UpdateWindow(hPopup);
         }
-        return true;
     }
-
-    if (wParam == 'V' && ctrl_pressed) {
-        char *clip = Platform_GetClipboardEntry();
-        if (!clip) return true;
-        clip[strcspn(clip, "\r\n")] = '\0';
-        if (clip[0] == '\0') { free(clip); return true; }
-
-        PromptState *ps = g_win32_prompt_state;
-        if (!ps) { free(clip); return true; }
-        size_t cur_len = strlen(ps->filter);
-        size_t clip_len = strlen(clip);
-        size_t avail = sizeof(ps->filter) - cur_len - 1;
-        if (clip_len > avail) clip_len = avail;
-        if (clip_len > 0) {
-            memmove(ps->filter + ps->cursor + clip_len,
-                    ps->filter + ps->cursor,
-                    cur_len - ps->cursor + 1);
-            memcpy(ps->filter + ps->cursor, clip, clip_len);
-            ps->cursor += (int)clip_len;
-        }
-        free(clip);
-
-        if (FlintContext_Get()->prompt_callbacks.refresh) {
-            FlintContext_Get()->prompt_callbacks.refresh(ps->filter, ps->has_listbox ? &ps->listbox : NULL);
-        }
-        return true;
-    }
-
-    if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
-        PromptState* ps = g_win32_prompt_state;
-        if (ps) {
-            int len = (int)strlen(ps->filter);
-            VimState_BeginSelection(0);
-            VimState_UpdateSelection(len);
-            ps->cursor = len;
-            UI_SetCursorPosition(len);
-        }
+    if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+        HWND hPar = GetParent(hwnd);
+        if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
+    } else {
         InvalidateRect(hwnd, NULL, FALSE);
-        return true;
     }
-    if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
-        int ss=0, se=0;
-        if (VimState_GetSelection(&ss, &se)) {
-            PromptState* ps = g_win32_prompt_state;
-            if (ps) {
-                if (se < ss) { int t=ss; ss=se; se=t; }
-                int len=(int)strlen(ps->filter);
-                if (ss<0) ss=0; if (se>len) se=len;
-                if (se>ss) {
-                    char buf[512];
-                    int n=se-ss; if (n>=(int)sizeof(buf)) n=(int)sizeof(buf)-1;
-                    memcpy(buf, ps->filter+ss, n); buf[n]='\0';
-                    Platform_CopyToClipboard(buf);
-                }
-            }
-        }
-        return true;
-    }
-    if (wParam == VK_BACK && IsInsertMode()) {
-        int ss=0, se=0;
-        if (VimState_GetSelection(&ss, &se)) {
-            PromptState* ps = g_win32_prompt_state;
-            if (ps) {
-                if (se < ss) { int t=ss; ss=se; se=t; }
-                size_t n = strlen(ps->filter);
-                if (ss<0) ss=0; if ((size_t)se>n) se=(int)n;
-                if (se>ss) {
-                    memmove(ps->filter+ss, ps->filter+se, n-se+1);
-                    ps->cursor = ss;
-                    VimState_EndSelection();
-                    UI_SetText(ps->filter);
-                    UI_SetCursorPosition(ps->cursor);
-                    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-                    InvalidateRect(hwnd, NULL, TRUE);
-                    return true;
-                }
-                VimState_EndSelection();
-            }
-        }
-        if (ctrl_pressed) {
-            UI_SetText("");
-            UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-            InvalidateRect(hwnd, NULL, TRUE);
-            return true;
-        } else {
-            PromptState* ps = g_win32_prompt_state;
-            if (ps) {
-                size_t len = strlen(ps->filter);
-                size_t cur = ps->cursor;
-                if (cur > 0) {
-                    if (cur > len) cur = len;
-                    memmove(ps->filter + cur - 1, ps->filter + cur, len - cur + 1);
-                    ps->cursor = cur - 1;
-                }
-            }
-            InvalidateRect(hwnd, NULL, TRUE);
-            return true;
-        }
-    }
-
-    if (wParam == VK_DELETE) {
-        int ss=0, se=0;
-        if (VimState_GetSelection(&ss, &se)) {
-            PromptState* ps = g_win32_prompt_state;
-            if (ps) {
-                if (se < ss) { int t=ss; ss=se; se=t; }
-                size_t n = strlen(ps->filter);
-                if (ss<0) ss=0; if ((size_t)se>n) se=(int)n;
-                if (se>ss) {
-                    memmove(ps->filter+ss, ps->filter+se, n-se+1);
-                    ps->cursor = ss;
-                    VimState_EndSelection();
-                    UI_SetText(ps->filter);
-                    UI_SetCursorPosition(ps->cursor);
-                    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-                    InvalidateRect(hwnd, NULL, TRUE);
-                    return true;
-                }
-                VimState_EndSelection();
-            }
-        }
-        UI_DeleteForward();
-        InvalidateRect(hwnd, NULL, TRUE);
-        return true;
-    }
-
-    if (wParam == COPY_SELECTION_KEY && !IsInsertMode()) {
-        bool copy_ctrl = key->ctrl;
-        if (shift_pressed) {
-            if (UI_IsListBoxSelected(lb)) {
-                if (lb && lb->selected_index >= 0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
-                FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer) - 1] = '\0';
-            }
-            int true_idx = -1;
-            if (lb && lb->selected_index >= 0 && lb->selected_index < lb->populated_count) true_idx = lb->matching_indices[lb->selected_index];
-            else true_idx = UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer);
-            if (FlintContext_Get()->prompt_callbacks.copy != NULL) {
-                FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer, true_idx, 0);
-            } else {
-                Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
-            }
-            return true;
-        } else if (copy_ctrl) {
-            if (UI_IsListBoxSelected(lb)) {
-                if (lb && lb->selected_index >= 0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
-                FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer) - 1] = '\0';
-            }
-            int true_idx = -1;
-            if (lb && lb->selected_index >= 0 && lb->selected_index < lb->populated_count) true_idx = lb->matching_indices[lb->selected_index];
-            else true_idx = UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer);
-            if (FlintContext_Get()->prompt_callbacks.copy != NULL) {
-                FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer, true_idx, 1);
-            } else {
-                Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    if (wParam == HELP_SCREEN_KEY && ctrl_pressed) {
-      if (FlintContext_Get()->prompt_callbacks.help) FlintContext_Get()->prompt_callbacks.help();
-      return true;
-    }
-
-    if (wParam == VK_DOWN) {
-        if (ctrl_pressed) {
-            char text[256];
-            UI_GetCurrentTextEdit(text, sizeof(text));
-            UI_SetCursorPosition(strlen(text));
-        }
-        return true;
-    }
-
-    if (wParam == VK_UP) {
-        if (ctrl_pressed) {
-            UI_SetCursorPosition(1);
-        }
-        return true;
-    }
-
-    if (ctrl_pressed) {
-        bool is_minus = (wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT);
-        bool is_plus  = (wParam == VK_OEM_PLUS  || wParam == VK_ADD || wParam == 0xBB || wParam == 0xBD);
-        if (is_minus || is_plus) {
-            int old = FontSize;
-            if (is_minus) Platform_AdjustFontSize(-1); else Platform_AdjustFontSize(1);
-            if (FontSize != old) {
-                if (g_win32_hMainFont) { DeleteObject(g_win32_hMainFont); g_win32_hMainFont = NULL; }
-                g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
-                if (WH_TO_HWND(FlintContext_Get()->window.hListBox) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
-                    UI_LB_SetFont(FlintContext_Get()->window.hListBox, g_win32_hMainFont);
-                    int newItemH = PromptRowHeight();
-                    UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, newItemH);
-                }
-                HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-                if (hPopup && IsWindow(hPopup)) {
-                    InvalidateRect(hPopup, NULL, TRUE);
-                    if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, TRUE);
-                    UpdateWindow(hPopup);
-                }
-            }
-            Config_Save();
-            return true;
-        }
-    }
-
-    { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
+    PROFILE_END_VAR(_pt, "PromptWindow_OnKey");
+    return true;
 }
 
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
@@ -547,21 +271,10 @@ case WM_CHAR: {
       if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
       if (wParam == 0x08 || wParam == 0x7F) return 0;
       if (wParam >= 0x20 && IsInsertMode()) {
-        int ss=0, se=0;
-        if (VimState_GetSelection(&ss, &se)) {
-            PromptState* ps = g_win32_prompt_state;
-            if (ps) {
-                if (se < ss) { int t=ss; ss=se; se=t; }
-                size_t n = strlen(ps->filter);
-                if (ss<0) ss=0; if ((size_t)se>n) se=(int)n;
-                if (se>ss) {
-                    memmove(ps->filter+ss, ps->filter+se, n-se+1);
-                    ps->cursor = ss;
-                    VimState_EndSelection();
-                    UI_SetText(ps->filter);
-                    UI_SetCursorPosition(ps->cursor);
-                } else VimState_EndSelection();
-            } else VimState_EndSelection();
+        PromptState* ps = g_win32_prompt_state;
+        if (ps && Prompt_DeleteSelection(ps)) {
+            UI_SetText(ps->filter);
+            UI_SetCursorPosition(ps->cursor);
         }
         if (UI_InsertChar((wchar_t)wParam) > 0) {
         PromptState* ps = g_win32_prompt_state;

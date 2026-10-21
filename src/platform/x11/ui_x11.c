@@ -7,6 +7,7 @@
 
 #include "core/timer.h"
 #include "core/listbox_hover.h"
+#include "core/prompt_keys.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
         PROFILE_START(_pt);
 (void)hPopupWnd;
@@ -116,24 +117,14 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
 
 void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
         PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateUp"); return ; }
-    int sel = lb->selected_index;
-    if (sel >= 0) sel--;
-    if (sel == lb->selected_index) { PROFILE_END_VAR(_pt, "UI_NavigateUp"); return ; }
-    UI_NavigateTo(lb, hListBox, sel);
+    ListBox_NavigateUp(lb, hListBox);
+    PROFILE_END_VAR(_pt, "UI_NavigateUp");
 }
 
 void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
         PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
-    int count = lb->populated_count;
-    if (count <= 0) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
-    int sel = lb->selected_index;
-    if (sel < 0) sel = -1;
-    if (sel >= count - 1) sel = count - 1;
-    else sel++;
-    if (sel == lb->selected_index) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
-    UI_NavigateTo(lb, hListBox, sel);
+    ListBox_NavigateDown(lb, hListBox);
+    PROFILE_END_VAR(_pt, "UI_NavigateDown");
 }
 
 void UI_Edit_SetSel(uint32_t start, uint32_t end) {
@@ -234,12 +225,8 @@ WindowManager* wm = WindowManager_Get();
 
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
         PROFILE_START(_pt);
-FlintContext* _c = FlintContext_Get();
-    if (_c->prompt_callbacks.refresh != NULL) {
-        char buffer[MaxFeatures];
-        UI_GetCurrentTextEdit(buffer, sizeof(buffer));
-        _c->prompt_callbacks.refresh(buffer, lb);
-    }
+    Prompt_RedrawNow(lb, hListBox);
+    PROFILE_END_VAR(_pt, "UI_RedrawNow");
 }
 
 void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {

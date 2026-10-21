@@ -4,14 +4,6 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-/*
- * Single owner of the editbox behaviour: scroll offset, caret geometry,
- * selection block, text and placeholder painting.
- *
- * The platform files only supply the font, the text metrics and the draw
- * context; every rule about how an editbox looks lives in src/core/editbox.c.
- */
-
 typedef int (*FlEditboxMeasureFn)(const char* text, int len, void* user);
 
 typedef enum {
@@ -80,6 +72,24 @@ typedef struct {
     bool draw_insert_caret;
 } FlEditboxLayout;
 
+typedef struct {
+    PromptState* state;
+    const char* text;
+    int text_len;
+    int cursor;
+    bool insert_mode;
+    int x;
+    int y;
+    int w;
+    int cursor_x;
+    int text_w;
+    int ascent;
+    int descent;
+    unsigned long text_color;
+    FontHandle font;
+} EditboxInit;
+
+void Editbox_BuildSpec(FlEditboxSpec* out, const EditboxInit* in);
 int  Editbox_CaretY(int box_top, int ascent, int descent);
 void Editbox_ResolveSelection(PromptState* state, int text_len, bool prefer_state,
                               int* out_start, int* out_end, bool* out_has);
