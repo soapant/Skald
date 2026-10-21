@@ -445,7 +445,18 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
         HGDIOBJ old_brush = SelectObject(g_draw_hdc, brush);
         HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
 
-        RoundRect(g_draw_hdc, x, y, x + w, y + h, corner_w, corner_h);
+        if (corner_w > 0 && corner_h > 0) {
+            RoundRect(g_draw_hdc, x, y, x + w, y + h, corner_w, corner_h);
+        } else {
+            /* RoundRect renders nothing when the rect is 1px thin, which
+               silently killed the 1px prompt separator. */
+            RECT rc;
+            rc.left = x;
+            rc.top = y;
+            rc.right = x + w;
+            rc.bottom = y + h;
+            FillRect(g_draw_hdc, &rc, brush);
+        }
 
         SelectObject(g_draw_hdc, old_pen);
         SelectObject(g_draw_hdc, old_brush);

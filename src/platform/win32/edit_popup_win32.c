@@ -117,6 +117,7 @@ PROFILE_START(timer);
 
     if (EnableShaders && ShaderPreset != 0) win32_draw_background(paint, &rect);
     else { HBRUSH br = CreateSolidBrush(COLOR_BG); FillRect(paint, &rect, br); DeleteObject(br); }
+    win32_draw_window_border(paint, 0, 0, rect.right, rect.bottom, NULL);
 
     int w = rect.right - rect.left;
     int h = rect.bottom - rect.top;
