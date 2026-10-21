@@ -19,6 +19,7 @@
 #include "core/modal.h"
 #include "config.h"
 #include "core/listbox_hover.h"
+#include "core/editbox.h"
 #include "core/prompt_geometry.h"
 #include "bindings/vim_state.h"
 #include "platform/win32/common_ui_win32.h"
@@ -388,110 +389,65 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     HFONT old = NULL;
     if (hfont) old = (HFONT)SelectObject(hdc, hfont);
     SetBkMode(hdc, TRANSPARENT);
-    unsigned long text_hex = spec->color ? spec->color : COLOR_TEXT;
-    SetTextColor(hdc, text_hex);
     int text_len = (int)strlen(buf);
     int cursor = state ? state->cursor : text_len;
     if (cursor < 0) cursor = 0;
     if (cursor > text_len) cursor = text_len;
     int visible_w = w - PROMPT_EDIT_SCROLL_PAD;
     int cursor_x = 0;
-    int scroll = state ? state->scroll_offset : 0;
+    int text_w = 0;
+    int y_raw = (spec->y == 0) ? PROMPT_EDIT_INSET : spec->y;
+    int caret_h = PromptCaretHeight();
+    int ascent = 0;
+    int descent = 0;
     if (hfont) {
         TEXTMETRIC tm;
         memset(&tm, 0, sizeof(tm));
         GetTextMetrics(hdc, &tm);
-        int textH = tm.tmHeight > 0 ? tm.tmHeight : FontSize;
-        int y_raw = (spec->y == 0) ? PROMPT_EDIT_INSET : spec->y;
+        ascent = tm.tmAscent;
+        descent = tm.tmDescent;
         SIZE szCur; GetTextExtentPoint32A(hdc, buf, cursor, &szCur); cursor_x = szCur.cx;
-        SIZE szText; GetTextExtentPoint32A(hdc, buf, text_len, &szText); int text_w = szText.cx;
-        if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
-        if (cursor_x - scroll < 0) scroll = cursor_x;
-        if (scroll < 0) scroll = 0;
-        if (text_w - scroll < visible_w && scroll > 0) { if (text_w < visible_w) scroll = 0; else scroll = text_w - visible_w; }
-        if (state) state->scroll_offset = scroll;
-        int cursor_draw_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
-        if (cursor_draw_x < x + PROMPT_CARET_LO_CLAMP) cursor_draw_x = x + PROMPT_CARET_LO_CLAMP;
-        if (cursor_draw_x > x + w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = x + w - PROMPT_CARET_HI_CLAMP;
-        int cursorH = PromptCaretHeight();
-        int cursor_y = y_raw + (textH - cursorH) / 2;
-        if (cursor_y < y_raw) cursor_y = y_raw;
-        RECT textRc = {x + PROMPT_EDIT_INSET - scroll, y_raw, x + w, y_raw + textH};
-        bool insert_mode = IsInsertMode() || !EnableVimMode;
-        int sel_start = state ? state->sel_start : 0;
-        int sel_end = state ? state->sel_end : 0;
-        bool has_sel = (sel_start >= 0 && sel_end > sel_start && sel_start < text_len) || (VimState_GetSelection(&sel_start, &sel_end) && text_len > 0);
-        if (has_sel && !(sel_start >= 0 && sel_end > sel_start)) { has_sel = false; }
-        if (has_sel) { if (sel_start < 0) sel_start = 0; if (sel_end > text_len) sel_end = text_len; }
-        if (!insert_mode || has_sel) {
-            int tint_y = y_raw + (textH - cursorH) / 2;
-            if (tint_y < y_raw) tint_y = y_raw;
-            COLORREF tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
-            int tint_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
-            if (tint_x < x + PROMPT_CARET_LO_CLAMP) tint_x = x + PROMPT_CARET_LO_CLAMP;
-            if (tint_x > x + w - PROMPT_CARET_HI_CLAMP) tint_x = x + w - PROMPT_CARET_HI_CLAMP;
-            RECT tintRc;
-            if (has_sel) {
-                if (sel_start < 0) sel_start = 0;
-                if (sel_end > text_len) sel_end = text_len;
-                if (sel_start < sel_end) {
-                    int sx0 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_start, FontSize) - scroll;
-                    int sx1 = x + PROMPT_EDIT_INSET + Platform_MeasureTextWidth(buf, sel_end, FontSize) - scroll;
-                    if (sx0 < x + PROMPT_CARET_LO_CLAMP) sx0 = x + PROMPT_CARET_LO_CLAMP;
-                    if (sx1 > x + w - PROMPT_CARET_HI_CLAMP) sx1 = x + w - PROMPT_CARET_HI_CLAMP;
-                    int cx = tint_x;
-                    if (cx < sx0) cx = sx0;
-                    if (cx > sx1) cx = sx1;
-                    int sw = sx1 - sx0;
-                    tintRc = (RECT){sx0, tint_y, sx0 + sw, tint_y + cursorH};
-                }
-            } else {
-                tintRc = (RECT){tint_x, tint_y, tint_x + PromptNormalCaretWidth(), tint_y + cursorH};
-            }
-            HBRUSH tbr = CreateSolidBrush(tint);
-            FillRect(hdc, &tintRc, tbr);
-            DeleteObject(tbr);
-        }
-        if (RainbowText) {
-            int nchars = 0;
-            for (int p = 0; p < text_len; ) {
-                unsigned char c = (unsigned char)state->filter[p];
-                int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
-                if (cl < 1) cl = 1;
-                p += cl; nchars++;
-            }
-            int ci = 0;
-            size_t pos = 0;
-            while (pos < (size_t)text_len) {
-                unsigned char c = (unsigned char)state->filter[pos];
-                int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
-                if (cl < 1) cl = 1;
-                char buf[8];
-                memcpy(buf, state->filter + pos, cl);
-                buf[cl] = '\0';
-                int x = (PROMPT_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
-                unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
-                Platform_DrawTextRaw(x, PROMPT_EDIT_INSET, buf, col, spec->font, "", 0, 0);
-                pos += cl; ci++;
-            }
-        } else {
-            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), spec->font, "", 0, 0);
-        }
-        if (text_len == 0 && state && state->placeholder && state->placeholder[0]) {
-            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET + 2,
-                                 state->placeholder, LerpColor(COLOR_BG, COLOR_TEXT, 0.45f),
-                                 spec->font, "", 0, 0);
-        }
-        if (insert_mode) {
-            HBRUSH cbr = CreateSolidBrush(Modal_CursorColor());
-            RECT cRc = {cursor_draw_x, cursor_y, cursor_draw_x + PROMPT_CARET_W_INSERT, cursor_y + cursorH};
-            FillRect(hdc, &cRc, cbr);
-            DeleteObject(cbr);
-        }
+        SIZE szText; GetTextExtentPoint32A(hdc, buf, text_len, &szText); text_w = szText.cx;
     } else {
-        RECT textRc = {x + PROMPT_EDIT_INSET - scroll, y, x + w, y + h};
+        RECT textRc = {x + PROMPT_EDIT_INSET, y, x + w, y + h};
         DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
     }
+    int sel_start = 0, sel_end = 0;
+    bool has_sel = false;
+    Editbox_ResolveSelection(state, text_len, true, &sel_start, &sel_end, &has_sel);
+
+    FlEditboxSpec eb;
+    memset(&eb, 0, sizeof(eb));
+    eb.text = buf;
+    eb.text_len = text_len;
+    eb.cursor = cursor;
+    eb.sel_start = sel_start;
+    eb.sel_end = sel_end;
+    eb.has_selection = has_sel;
+    eb.sel_mode = EDITBOX_SEL_EXCLUSIVE;
+    eb.insert_mode = IsInsertMode() || !EnableVimMode;
+    eb.x = x;
+    eb.y = y_raw;
+    eb.w = w;
+    eb.inset = PROMPT_EDIT_INSET;
+    eb.visible_w = visible_w;
+    eb.scroll = state ? state->scroll_offset : 0;
+    eb.cursor_x = cursor_x;
+    eb.text_w = text_w;
+    eb.text_y = y_raw;
+    eb.caret_y = Editbox_CaretY(y_raw, ascent, descent);
+    eb.caret_h = caret_h;
+    eb.caret_w_normal = PromptNormalCaretWidth();
+    eb.caret_w_insert = PROMPT_CARET_W_INSERT;
+    eb.placeholder = state ? state->placeholder : NULL;
+    eb.placeholder_dy = 2;
+    eb.rainbow_limit_x = -1;
+    eb.text_color = rgb_to_hex(COLOR_TEXT);
+    eb.font = spec->font;
+
+    Editbox_Render(&eb, NULL);
+    if (state) state->scroll_offset = eb.scroll;
+
     if (old) SelectObject(hdc, old);
     { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return true; }
 }

@@ -5,6 +5,7 @@
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
 #include "platform/draw.h"
+#include "platform/ui.h"
 #include "platform/x11/env_helpers_x11.h"
 #include "platform/x11/desktop_helpers_x11.h"
 #include "platform/x11/drawing_x11.h"
@@ -15,6 +16,7 @@
 #include "config.h"
 #include "core/prompt_geometry.h"
 #include "core/listbox_hover.h"
+#include "core/editbox.h"
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -451,6 +453,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     if (visible < 1) visible = 1;
     if (visible > lb->populated_count) visible = lb->populated_count;
     g_fl_list_visible = visible;
+    UI_LB_SetVisibleCount(visible);
     g_fl_list_cur = 0;
     g_fl_list_font = Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
     g_fl_list_font_owned = true;
@@ -570,101 +573,64 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         needDestroy = true;
     }
     XftFont *xf = FH_TO_XFT(fh);
-    unsigned long text_hex = spec->color ? rgb_to_hex(spec->color) : rgb_to_hex(COLOR_TEXT);
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
+
     int text_len = (int)strlen(buf);
     int cursor = state ? state->cursor : text_len;
     if (cursor < 0) cursor = 0;
     if (cursor > text_len) cursor = text_len;
+
+    FlEditboxX11Metrics metrics = { dpy, xf };
     int cursor_x = 0;
-    int scroll = 0;
+    int text_w = 0;
     if (xf) {
-        scroll = x11_update_edit_scroll_offset(dpy,xf,buf,text_len,cursor,w, state ? state->scroll_offset : 0, &cursor_x);
-        if (state) state->scroll_offset = scroll;
+        XGlyphInfo ce;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)buf, cursor, &ce);
+        cursor_x = ce.xOff;
+        XGlyphInfo te;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)buf, text_len, &te);
+        text_w = te.xOff;
     }
-    int draw_x = x + PROMPT_EDIT_INSET - scroll;
-    int textH = FontSize;
-    int y_raw;
-    if (spec->y == 0) {
-        y_raw = PROMPT_EDIT_INSET;
-    } else {
-        y_raw = spec->y;
-    }
-    int cursor_y = x11_font_cursor_y_of(fh, y_raw);
-    Platform_SetDrawContext(dpy, xd, vis, cmap);
-    bool insert_mode = IsInsertMode() || !EnableVimMode;
+
+    int y_raw = (spec->y == 0) ? PROMPT_EDIT_INSET : spec->y;
     int sel_start = 0, sel_end = 0;
-    bool has_sel = (state && state->sel_start >= 0 && state->sel_end > state->sel_start) ? (sel_start=state->sel_start, sel_end=state->sel_end, true) : (VimState_GetSelection(&sel_start, &sel_end) && text_len > 0);
-    if (has_sel) { sel_start = sel_start < 0 ? 0 : sel_start; if (sel_end > text_len) sel_end = text_len; }
-    if (!insert_mode || has_sel) {
-        int tint_y = x11_font_cursor_y_of(fh, y_raw);
-        unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
-        int tint_x = draw_x + cursor_x;
-        if (tint_x < x + PROMPT_CARET_LO_CLAMP) tint_x = x + PROMPT_CARET_LO_CLAMP;
-        if (tint_x > x + w - PROMPT_CARET_HI_CLAMP) tint_x = x + w - PROMPT_CARET_HI_CLAMP;
-        if (has_sel) {
-            if (sel_start < 0) sel_start = 0;
-            if (sel_end > text_len) sel_end = text_len;
-            if (sel_start < sel_end && xf) {
-                int sx0 = draw_x;
-                int sx1 = draw_x;
-                if (sel_start > 0) {
-                    XGlyphInfo e0;
-                    XftTextExtentsUtf8(dpy, xf, (FcChar8*)buf, sel_start, &e0);
-                    sx0 = draw_x + e0.xOff;
-                }
-                if (sel_end <= text_len) {
-                    XGlyphInfo e1;
-                    XftTextExtentsUtf8(dpy, xf, (FcChar8*)buf, sel_end, &e1);
-                    sx1 = draw_x + e1.xOff;
-                }
-                int cx = tint_x;
-                if (sx0 < x + PROMPT_CARET_LO_CLAMP) sx0 = x + PROMPT_CARET_LO_CLAMP;
-                if (sx1 > x + w - PROMPT_CARET_HI_CLAMP) sx1 = x + w - PROMPT_CARET_HI_CLAMP;
-                if (cx < sx0) cx = sx0;
-                if (cx > sx1) cx = sx1;
-                int sw = sx1 - sx0;
-                if (sw > 0) Platform_DrawRectRaw(sx0, tint_y, sw, textH + PROMPT_CARET_H_BONUS, tint, 0, false, true, 1, true);
-            }
-        } else {
-            Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(), textH + PROMPT_CARET_H_BONUS, tint, 0, false, true, 1, true);
-        }
-    }
-    if (text_len > 0) {
-        if (RainbowText) {
-            int nchars = 0;
-            for (int p = 0; p < text_len; ) {
-                unsigned char c = (unsigned char)state->filter[p];
-                int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
-                if (cl < 1) cl = 1;
-                p += cl; nchars++;
-            }
-            int ci = 0;
-            size_t pos = 0;
-            while (pos < (size_t)text_len) {
-                unsigned char c = (unsigned char)state->filter[pos];
-                int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
-                if (cl < 1) cl = 1;
-                char buf[8];
-                memcpy(buf, state->filter + pos, cl);
-                buf[cl] = '\0';
-                int x = (PROMPT_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
-                unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
-                Platform_DrawTextRaw(x, PROMPT_EDIT_INSET, buf, col, spec->font, "", 0, 0);
-                pos += cl; ci++;
-            }
-        } else {
-            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), spec->font, "", 0, 0);
-        }
-    } else if (state && state->placeholder && state->placeholder[0]) {
-        unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
-        Platform_DrawTextRaw(draw_x, y_raw + 2, state->placeholder, ph, spec->font, "", 0, 0);
-    }
-    int cursor_draw_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
-    if (cursor_draw_x < x + PROMPT_CARET_LO_CLAMP) cursor_draw_x = x + PROMPT_CARET_LO_CLAMP;
-    if (cursor_draw_x > x + w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = x + w - PROMPT_CARET_HI_CLAMP;
-    if (insert_mode) {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_CARET_W_INSERT,textH + PROMPT_CARET_H_BONUS,rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
-    }
+    bool has_sel = false;
+    Editbox_ResolveSelection(state, text_len, true, &sel_start, &sel_end, &has_sel);
+
+    FlEditboxSpec eb;
+    memset(&eb, 0, sizeof(eb));
+    eb.text = buf;
+    eb.text_len = text_len;
+    eb.cursor = cursor;
+    eb.sel_start = sel_start;
+    eb.sel_end = sel_end;
+    eb.has_selection = has_sel;
+    eb.sel_mode = EDITBOX_SEL_EXCLUSIVE;
+    eb.insert_mode = IsInsertMode() || !EnableVimMode;
+    eb.x = x;
+    eb.y = y_raw;
+    eb.w = w;
+    eb.inset = PROMPT_EDIT_INSET;
+    eb.visible_w = w - PROMPT_EDIT_SCROLL_PAD;
+    eb.scroll = state ? state->scroll_offset : 0;
+    eb.cursor_x = cursor_x;
+    eb.text_w = text_w;
+    eb.text_y = y_raw;
+    eb.caret_y = Editbox_CaretY(y_raw, xf ? xf->ascent : 0, xf ? xf->descent : 0);
+    eb.caret_h = PromptCaretHeight();
+    eb.caret_w_normal = PromptNormalCaretWidth();
+    eb.caret_w_insert = PROMPT_CARET_W_INSERT;
+    eb.placeholder = state ? state->placeholder : NULL;
+    eb.placeholder_dy = 2;
+    eb.rainbow_limit_x = -1;
+    eb.text_color = rgb_to_hex(COLOR_TEXT);
+    eb.font = fh;
+    eb.measure = x11_editbox_measure;
+    eb.measure_user = &metrics;
+
+    Editbox_Render(&eb, NULL);
+    if (state) state->scroll_offset = eb.scroll;
+
     if (state) {
         if (WindowTitleText && state->window_title) {
             unsigned long title_col = 0;

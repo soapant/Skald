@@ -3,6 +3,7 @@
 #include "core/modal.h"
 #include "bindings/vim_helpers.h"
 #include "platform/ui.h"
+#include "core/listbox_hover.h"
 #include "core/vim.h"
 #include <ctype.h>
 
@@ -219,16 +220,16 @@ void DeleteCharUnderCursor(FlintContext* ctx) {
 void GoToFirstListBoxItem(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
-    UI_SetSelection(lb, ctx->window.hListBox, 0);
-    UI_LB_SetTopIndex(ctx->window.hListBox,0);
+    UI_NavigateTo(lb, ctx->window.hListBox, 0);
+    ListBox_ScrollToSelection(lb);
 }
 
 void GoToLastListBoxItem(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
     int lastIndex = lb->populated_count - 1;
-    UI_SetSelection(lb, ctx->window.hListBox, lastIndex);
-    UI_LB_SetCaretIndex(ctx->window.hListBox, lastIndex, false);
+    UI_NavigateTo(lb, ctx->window.hListBox, lastIndex);
+    ListBox_ScrollToSelection(lb);
 }
 
 void SetCursorToStartOfText(FlintContext* ctx) {

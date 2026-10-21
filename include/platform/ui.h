@@ -15,6 +15,7 @@ void UI_LB_SetItemHeight(WindowHandle hList, int height);
 void UI_LB_SetCaretIndex(WindowHandle hList, int index, bool scroll);
 void UI_LB_SetTopIndex(WindowHandle hList, int index);
 int UI_LB_GetTopIndex(WindowHandle hList);
+int UI_LB_GetViewTop(ListBoxInfo* lb);
 int UI_LB_GetVisibleCount(void);
 void UI_LB_SetVisibleCount(int count);
 void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index);

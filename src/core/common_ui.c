@@ -9,6 +9,7 @@
 #include "core/vim.h"
 #include "platform/platform.h"
 #include "core/timer.h"
+#include "core/listbox_hover.h"
 #if !defined(_WIN32)
 #include <strings.h>
 #include <ctype.h>
@@ -244,6 +245,7 @@ static void Populate_BuildCache(ListBoxInfo* lb, const char** items, int total_m
 }
 
 static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_matches, const char* filter) {
+  ListBox_ListRebuilt();
   UI_LB_SetCount(lb, hListBox, total_matches);
   if (SequenceIsWaiting()) return;
   if (IsNormalMode()) {
@@ -266,6 +268,7 @@ static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_
   } else {
     UI_SetSelection(lb, hListBox, -1);
   }
+  ListBox_ScrollToSelection(lb);
   if (total_matches == 0) {
     if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
 #if defined(_WIN32)

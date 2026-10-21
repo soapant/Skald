@@ -13,6 +13,7 @@
 #include "core/timer.h"
 #include "core/history.h"
 #include "core/prompt_controller.h"
+#include "core/listbox_hover.h"
 #include "platform/x11/input_x11.h"
 #include "platform/x11/window_factory_x11.h"
 #include "platform/input.h"
@@ -44,6 +45,7 @@ PROFILE_START(timer);
     if (!dpy) { PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow"); return false; }
     struct timespec _t0, _t1, _t2, _t3;
     clock_gettime(CLOCK_MONOTONIC, &_t0);
+    ListBox_InvalidateMousePos();
     self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
     XSelectInput(dpy, self->handle.xid, KeyPressMask | ExposureMask | FocusChangeMask | ButtonPressMask);
     clock_gettime(CLOCK_MONOTONIC, &_t1);
@@ -138,8 +140,8 @@ void HandleCommandExecution(ListBoxInfo* lb, char* string) {
         PROFILE_START(_pt);
 if (!lb) { PROFILE_END_VAR(_pt, "HandleCommandExecution"); return ; }
     int num = atoi(string);
-    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, num - 1);
-    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);
+    UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, num - 1);
+    ListBox_ScrollToSelection(lb);
 }
 
 static void command_confirm(const char* new_text, void* user_data) {

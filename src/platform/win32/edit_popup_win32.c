@@ -9,6 +9,7 @@
 #include "platform/platform.h"
 #include "platform/win32/common_ui_win32.h"
 #include "core/prompt_geometry.h"
+#include "core/editbox.h"
 #include "core/prompt_controller.h"
 #include "helpers/helpers_ui.h"
 #include "deps/log.h"
@@ -37,41 +38,7 @@ if (!key) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
     memcpy(key->text, out, (size_t)key->text_len);
 }
 
-static int edit_popup_scroll_offset(HDC hdc, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
-    int cursor_x = 0;
-    int text_w = 0;
-    if (hdc && text) {
-        if (cursor > 0) cursor_x = Platform_MeasureTextWidth(text, cursor, FontSize);
-        if (text_len > 0) text_w = Platform_MeasureTextWidth(text, text_len, FontSize);
-    }
-    int scroll = prev_scroll;
-    int margin = 0;
-    if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
-    if (cursor_x - scroll < margin) scroll = cursor_x - margin;
-    if (scroll < 0) scroll = 0;
-    if (text_w - scroll < visible_w && scroll > 0) {
-        if (text_w < visible_w) scroll = 0;
-        else scroll = text_w - visible_w;
-    }
-    if (cursor_x - scroll < 0) scroll = cursor_x;
-    if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
-    if (out_cursor_x) *out_cursor_x = cursor_x;
-    PROFILE_END_VAR(timer, "edit_popup_win32:edit_popup_scroll_offset");
-    { PROFILE_END_VAR(_pt, "edit_popup_scroll_offset"); return scroll; }
-}
 
-static int edit_popup_cursor_y(HDC hdc, int box_top) {
-        PROFILE_START(_pt);
-TEXTMETRIC tm;
-    memset(&tm, 0, sizeof(tm));
-    GetTextMetrics(hdc, &tm);
-    int line_h = tm.tmAscent + tm.tmDescent;
-    if (line_h <= 0 || FontSize <= 0) { PROFILE_END_VAR(_pt, "edit_popup_cursor_y"); return box_top; }
-    { PROFILE_END_VAR(_pt, "edit_popup_cursor_y"); return box_top + (line_h - FontSize) / 2; }
-}
 
 bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
         PROFILE_START(_pt);
@@ -162,89 +129,54 @@ PROFILE_START(timer);
 
     int cursor_x = 0;
     int text_len = data->text ? (int)strlen(data->text) : 0;
-    int scroll = 0;
     int text_w = 0;
-    scroll = edit_popup_scroll_offset(paint, data->text ? data->text : "", text_len, data->cursor, w, 0, &cursor_x);
-    if (text_len > 0) text_w = Platform_MeasureTextWidth(data->text, text_len, FontSize);
-
-    int draw_x = PROMPT_EDITPOPUP_INSET - scroll;
-    int cursor_draw_x = PROMPT_EDITPOPUP_INSET + cursor_x - scroll;
+    int ascent = 0;
+    int descent = 0;
+    if (font.hfont) {
+        TEXTMETRIC tm;
+        memset(&tm, 0, sizeof(tm));
+        GetTextMetrics(paint, &tm);
+        ascent = tm.tmAscent;
+        descent = tm.tmDescent;
+        if (data->cursor > 0) cursor_x = Platform_MeasureTextWidth(data->text ? data->text : "", data->cursor, FontSize);
+        if (text_len > 0) text_w = Platform_MeasureTextWidth(data->text, text_len, FontSize);
+    }
     int draw_y = h / 2 + PROMPT_EDITPOPUP_CENTER_OFFSET_Y;
-    if (text_w > 0 && text_w <= w - 20 && data->align) {
-        if (Platform_StringContainsCaseInsensitive(data->align, "CENTER")) {
-            draw_x = (w - text_w) / 2;
-            cursor_draw_x = draw_x + cursor_x;
-        } else if (Platform_StringContainsCaseInsensitive(data->align, "RIGHT")) {
-            draw_x = w - PROMPT_EDITPOPUP_INSET - text_w;
-            cursor_draw_x = draw_x + cursor_x;
-        }
-    }
-
     int sel_start = 0, sel_end = 0;
-    bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
-    if ((IsInsertMode() ? has_sel : true) && data->cursor >= 0) {
-        int tint_y = edit_popup_cursor_y(paint, draw_y);
-        unsigned long tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
-        if (has_sel) {
-            if (sel_start < 0) sel_start = 0;
-            if (sel_end >= text_len) sel_end = text_len - 1;
-            if (sel_start <= sel_end) {
-                int sx0 = draw_x + Platform_MeasureTextWidth(data->text, sel_start, FontSize);
-                int sx1 = draw_x + Platform_MeasureTextWidth(data->text, sel_end + 1, FontSize);
-                int cx = cursor_draw_x;
-                if (sx0 < PROMPT_CARET_LO_CLAMP) sx0 = PROMPT_CARET_LO_CLAMP;
-                if (sx1 > w - PROMPT_CARET_HI_CLAMP) sx1 = w - PROMPT_CARET_HI_CLAMP;
-                if (cx < sx0) cx = sx0;
-                if (cx > sx1) cx = sx1;
-                int selw = sx1 - sx0;
-                if (selw > 0) Platform_DrawRectRaw(sx0, tint_y, selw, PromptCaretHeight(), tint,0, false, true, 1, true);
-            }
-        } else {
-            int tint_x = cursor_draw_x + PROMPT_EDITPOPUP_CARET_X_NUDGE;
-            if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-            if (tint_x > w - PROMPT_CARET_HI_CLAMP) tint_x = w - PROMPT_CARET_HI_CLAMP;
-            Platform_DrawRectRaw(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, PromptCaretHeight(), tint,0, false, true, 1, true);
-        }
-    }
+    bool has_sel = false;
+    Editbox_ResolveSelection(NULL, text_len, false, &sel_start, &sel_end, &has_sel);
 
-    if (text_len > 0) {
-        if (RainbowText) {
-            int nchars = 0;
-            for (int p = 0; p < text_len; ) {
-                unsigned char c = (unsigned char)data->text[p];
-                int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
-                if (cl < 1) cl = 1;
-                p += cl; nchars++;
-            }
-            int ci = 0;
-            size_t pos = 0;
-            while (pos < (size_t)text_len) {
-                unsigned char c = (unsigned char)data->text[pos];
-                int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
-                if (cl < 1) cl = 1;
-                char buf[8];
-                memcpy(buf, data->text + pos, cl);
-                buf[cl] = '\0';
-                int x = draw_x + Platform_MeasureTextWidth(data->text, (int)pos, FontSize);
-                if (x >= data->w - PROMPT_EDITPOPUP_INSET) break;
-                unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
-                Platform_DrawTextRaw(x, draw_y, buf, col, font, "", 0, 0);
-                pos += cl; ci++;
-            }
-        } else {
-            Platform_DrawTextRaw(draw_x, draw_y, data->text, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
-        }
-    } else if (data->placeholder && data->placeholder[0]) {
-        unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
-        Platform_DrawTextRaw(draw_x, draw_y, data->placeholder, ph, font, "", 0, 0);
-    }
+    FlEditboxSpec eb;
+    memset(&eb, 0, sizeof(eb));
+    eb.text = data->text ? data->text : "";
+    eb.text_len = text_len;
+    eb.cursor = data->cursor;
+    eb.sel_start = sel_start;
+    eb.sel_end = sel_end;
+    eb.has_selection = has_sel;
+    eb.sel_mode = EDITBOX_SEL_INCLUSIVE;
+    eb.insert_mode = IsInsertMode();
+    eb.x = 0;
+    eb.y = draw_y;
+    eb.w = w;
+    eb.inset = PROMPT_EDITPOPUP_INSET;
+    eb.visible_w = w - PROMPT_EDIT_SCROLL_PAD;
+    eb.scroll = 0;
+    eb.cursor_x = cursor_x;
+    eb.text_w = text_w;
+    eb.text_y = draw_y;
+    eb.caret_y = Editbox_CaretY(draw_y, ascent, descent);
+    eb.caret_h = PromptCaretHeight();
+    eb.caret_w_normal = PROMPT_EDITPOPUP_CARET_W_NORMAL;
+    eb.caret_w_insert = PROMPT_CARET_W_INSERT;
+    eb.align = data->align;
+    eb.placeholder_dy = 0;
+    eb.rainbow_limit_x = w - PROMPT_EDITPOPUP_INSET;
+    eb.placeholder = data->placeholder;
+    eb.text_color = rgb_to_hex(COLOR_TEXT);
+    eb.font = font;
 
-    if (IsInsertMode()) {
-        if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
-        if (cursor_draw_x > w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = w - PROMPT_CARET_HI_CLAMP;
-        int cursor_y = edit_popup_cursor_y(paint, draw_y);
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, PromptCaretHeight(), Modal_CursorColor(),0, false, true, 1, true);
-    }
+    Editbox_Render(&eb, NULL);
 
     Platform_SetDrawContextWin32(NULL);
     Platform_DestroyFont(font);

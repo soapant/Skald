@@ -6,6 +6,7 @@
 #include "platform/ui.h"
 #include "core/vim.h"
 #include "core/window_manager.h"
+#include "core/listbox_hover.h"
 #include "config.h"
 #include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
@@ -540,8 +541,8 @@ void HandlePageUp(FlintContext* ctx) {
   int current_sel = lb->selected_index;
   int wanted_sel = current_sel - PageUpDownLen;
   if (wanted_sel <= 0) wanted_sel = 0;
-  UI_SetSelection(lb, ctx->window.hListBox, wanted_sel);
-  UI_LB_SetTopIndex(ctx->window.hListBox,wanted_sel);
+  UI_NavigateTo(lb, ctx->window.hListBox, wanted_sel);
+  ListBox_ScrollToSelection(lb);
 }
 void HandlePageDown(FlintContext* ctx) {
   ListBoxInfo* lb = Vim_GetListBox(ctx);
@@ -549,8 +550,8 @@ void HandlePageDown(FlintContext* ctx) {
   int current_sel = lb->selected_index;
   int wanted_sel = current_sel + PageUpDownLen;
   if (wanted_sel >= lb->total_matches) wanted_sel = lb->total_matches;
-  UI_SetSelection(lb, ctx->window.hListBox, wanted_sel - 1);
-  UI_LB_SetTopIndex(ctx->window.hListBox,current_sel);
+  UI_NavigateTo(lb, ctx->window.hListBox, wanted_sel - 1);
+  ListBox_ScrollToSelection(lb);
 }
 void HandleNormalEdit(FlintContext* ctx) {
   ListBoxInfo* lb = Vim_GetListBox(ctx);
