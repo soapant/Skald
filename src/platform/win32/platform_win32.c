@@ -1211,21 +1211,28 @@ static unsigned win32_icon_hash(const char* s) {
     return h;
 }
 
-static bool win32_icon_exe_dir(char* out, size_t n) {
-    char exe[MAX_PATH];
-    DWORD len = GetModuleFileNameA(NULL, exe, (DWORD)sizeof(exe));
-    if (len == 0 || len >= sizeof(exe)) return false;
-    char* slash = strrchr(exe, '\\');
-    if (!slash) return false;
-    *slash = '\0';
-    snprintf(out, n, "%s", exe);
+static bool win32_icon_cache_dir(char* out, size_t n) {
+    char base[MAX_PATH];
+    snprintf(base, sizeof(base), "%s\\AppData\\Roaming\\Flint", Platform_GetRealHome());
+    nob_mkdir_if_not_exists(base);
+    snprintf(out, n, "%s\\icon_cache", base);
+    nob_mkdir_if_not_exists(out);
     return true;
+}
+
+static bool win32_icon_file_ok(const char* path) {
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    if (!path || !path[0]) return false;
+    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &fad)) return false;
+    if (fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) return false;
+    DWORD hi = fad.nFileSizeHigh, lo = fad.nFileSizeLow;
+    return (hi != 0 || lo != 0);
 }
 
 static bool win32_icon_png_path(const char* src, char* out, size_t n) {
     char dir[MAX_PATH];
-    if (!win32_icon_exe_dir(dir, sizeof(dir))) return false;
-    snprintf(out, n, "%s\\icon_cache\\%08x_v2.png", dir, win32_icon_hash(src));
+    if (!win32_icon_cache_dir(dir, sizeof(dir))) return false;
+    snprintf(out, n, "%s\\%08x_v2.png", dir, win32_icon_hash(src));
     return true;
 }
 
@@ -1244,7 +1251,7 @@ static void win32_gdiplus_ready(void) {
 static bool win32_export_shell_icon_png(const char* native_path) {
     char png[MAX_PATH];
     if (!win32_icon_png_path(native_path, png, sizeof(png))) return false;
-    if (GetFileAttributesA(png) != INVALID_FILE_ATTRIBUTES) return true;
+    if (win32_icon_file_ok(png)) return true;
 
     SHFILEINFOA sfi;
     ZeroMemory(&sfi, sizeof(sfi));
@@ -1275,12 +1282,6 @@ static bool win32_export_shell_icon_png(const char* native_path) {
     }
     GdipDisposeImage(src);
 
-    char dir[MAX_PATH];
-    char cache_dir[MAX_PATH];
-    if (win32_icon_exe_dir(dir, sizeof(dir))) {
-        snprintf(cache_dir, sizeof(cache_dir), "%s\\icon_cache", dir);
-        CreateDirectoryA(cache_dir, NULL);
-    }
     static const GUID kPng = { 0x557cf406, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e } };
     wchar_t wpng[MAX_PATH * 2];
     int wn = MultiByteToWideChar(CP_UTF8, 0, png, -1, wpng, (int)(sizeof(wpng) / sizeof(wchar_t)));
@@ -1315,10 +1316,10 @@ if (!app_path || !app_path[0]) { log_error("operation failed, returning error ap
    if (GetFileAttributesA(src) != INVALID_FILE_ATTRIBUTES) {
        if (win32_is_shell_icon(src)) {
            char png[MAX_PATH];
-           if (win32_icon_png_path(src, png, sizeof(png)) &&
-               GetFileAttributesA(png) != INVALID_FILE_ATTRIBUTES) {
-               return _strdup(png);
-           }
+            if (win32_icon_png_path(src, png, sizeof(png)) &&
+                win32_icon_file_ok(png)) {
+                return _strdup(png);
+            }
            if (win32_export_shell_icon_png(src)) {
                return _strdup(png);
            }

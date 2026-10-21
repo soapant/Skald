@@ -102,6 +102,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
         PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
         return false;
     }
+    if (self) self->handle = FlintContext_Get()->window.hPopupWnd;
     extern PromptState* g_win32_prompt_state;
     if (!(g_win32_prompt_state && g_win32_prompt_state->no_bg)) {
         win32_apply_rounded_corners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), w, h);
@@ -120,6 +121,7 @@ void Platform_PromptPopupHideWindow(Popup* self) {
         DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
         FlintContext_Get()->window.hPopupWnd = WH_NULL;
     }
+    if (self) self->handle = WH_NULL;
     if (g_prev_fg && IsWindow(g_prev_fg)) {
         HWND target = g_prev_fg;
         log_info("Platform_PromptPopupHideWindow restoring prev_fg=%p", target);

@@ -23,6 +23,7 @@ static int g_pub_y = 0;
 
 void ListBox_FocusByKeyboard(void) {
     g_focus_by_keyboard = true;
+    g_mouse_moved = false;
 }
 
 void ListBox_FocusByMouse(void) {
@@ -61,7 +62,9 @@ bool ListBox_ClientMousePos(int* out_x, int* out_y) {
     int wx = 0, wy = 0, dx = 0, dy = 0;
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-    if (top && Platform_WindowToRoot(top->handle, &wx, &wy)) {
+    bool have_origin = Platform_WindowToRoot(FlintContext_Get()->window.hPopupWnd, &wx, &wy);
+    if (!have_origin && top) have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
+    if (have_origin) {
         mx -= wx;
         my -= wy;
     }
