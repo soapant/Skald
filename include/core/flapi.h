@@ -110,15 +110,15 @@ int fl_get_icon_size(const char* icon_path);
 // =============================================================================
 typedef struct {
     const char* name;
-    bool (*cb)(void);
+    void (*cb)(void);
     const char* icon;
 } FlFeatureSpec;
 
 void fl_register_feature_impl(const FlFeatureSpec* spec);
 #define fl_register_feature(...) fl_register_feature_impl(&(FlFeatureSpec){__VA_ARGS__})
 
-int fl_get_feature_list(const char** out_names, bool (**out_cbs)(void), int max);
-int fl_get_feature_list_with_icons(const char** out_names, bool (**out_cbs)(void), const char*** out_icons, int max);
+int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max);
+int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max);
 
 // =============================================================================
 // HOTKEYS
@@ -683,7 +683,7 @@ typedef struct {
     bool (*on_ctrl_alt_enter)(void);
     bool (*on_shift_alt_enter)(void);
     bool (*on_tab)(void);
-    bool (*on_action)(void);
+    void (*on_action)(void);
     const char *icon;
     const char *type;
 } FlCcEntrySpec;

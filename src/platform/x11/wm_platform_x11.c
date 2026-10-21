@@ -115,8 +115,8 @@ int x = 0, y = 0, w = 1920, h = 1080;
 }
 
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
-        PROFILE_START(_pt);
-if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
+    PROFILE_START(_pt);
+    if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     Popup* popup = PromptPopup_Create(wm, spec);
     if (!popup) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     Display* dpy = wm->display;
@@ -126,16 +126,14 @@ if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     while (wm->running && popup->manager) {
         Platform_WM_ProcessEvents(wm);
         bool mouse_changed = false;
-        if (WindowManager_TopPopupWantsMouseRender(wm)) {
-            int mx = 0, my = 0;
-            if (Platform_GetMousePos(&mx, &my)) {
-                int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
-                if (mx != last_mx || my != last_my || btn != last_btn) {
-                    last_mx = mx;
-                    last_my = my;
-                    last_btn = btn;
-                    mouse_changed = true;
-                }
+        int mx = 0, my = 0;
+        if (Platform_GetMousePos(&mx, &my)) {
+            int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
+            if (mx != last_mx || my != last_my || btn != last_btn) {
+                last_mx = mx;
+                last_my = my;
+                last_btn = btn;
+                mouse_changed = true;
             }
         }
         Popup* mouse_top = WindowManager_GetTopPopup(wm);

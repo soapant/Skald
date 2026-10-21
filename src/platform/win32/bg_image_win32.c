@@ -135,15 +135,12 @@ bg_gdip_ensure();
         if (bmp) GdipDisposeImage((GpImage*)bmp);
         bmp = (GpBitmap*)bg_shell_icon_bitmap(native);
         if (!bmp) {
-            log_error("bg_image: cannot decode '%s' st=%d", native, (int)st);
-            fprintf(stderr, "[bg_image] DECODE FAILED path='%s' status=%d\n", native, (int)st);
             PROFILE_END_VAR(_pt, "bg_load_native");
             return NULL;
         }
     }
     UINT gw = 0, gh = 0;
     if (GdipGetImageWidth((GpImage*)bmp, &gw) != Ok || GdipGetImageHeight((GpImage*)bmp, &gh) != Ok || gw == 0 || gh == 0) {
-        fprintf(stderr, "[bg_image] bad image dimensions in '%s'\n", native);
         GdipDisposeImage((GpImage*)bmp);
         PROFILE_END_VAR(_pt, "bg_load_native");
         return NULL;
@@ -278,14 +275,8 @@ PROFILE_START(timer);
         GdipSetSmoothingMode(g, SmoothingModeHighQuality);
         GdipSetPixelOffsetMode(g, PixelOffsetModeHalf);
         GpStatus dst = GdipDrawImageRectI(g, (GpBitmap*)s->src, ox, oy, dw, dh);
-        if (dst != Ok) {
-            log_error("bg_image: draw st=%d at %d,%d %dx%d", (int)dst, ox, oy, dw, dh);
-            fprintf(stderr, "[bg_image] DRAW FAILED st=%d dest=%d,%d %dx%d\n", (int)dst, ox, oy, dw, dh);
-        }
         GdipDeleteGraphics(g);
-    } else {
-        fprintf(stderr, "[bg_image] GdipCreateFromHDC failed st=%d (tile would be black)\n", (int)gst);
-    }
+    } 
 
     BgTileSlot* slot = NULL;
     for (int i = 0; i < BG_TILE_SLOTS; i++) {
@@ -306,8 +297,6 @@ PROFILE_START(timer);
     slot->stamp = ++g_bg_tick;
     slot->checked_ms = GetTickCount();
     snprintf(slot->path, sizeof(slot->path), "%s", native);
-    log_info("bg_image: tile %dx%d from %dx%d -> %dx%d at %d,%d", w, h, sw, sh, dw, dh, ox, oy);
-    fprintf(stderr, "[bg_image] tile OK container=%dx%d src=%dx%d scaled=%dx%d off=%d,%d\n", w, h, sw, sh, dw, dh, ox, oy);
     PROFILE_END_VAR(timer, "bg_tile_compose");
     { PROFILE_END_VAR(_pt, "bg_tile_compose"); return slot; }
 }
