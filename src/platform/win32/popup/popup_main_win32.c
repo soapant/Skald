@@ -94,6 +94,20 @@ static HBRUSH s_bg_brush = NULL;
                             break;
     case WM_ERASEBKGND:
                        return TRUE;
+    case WM_LBUTTONDOWN: {
+      extern PromptState* Platform_GetWin32PromptState(void);
+      PromptState* hst = Platform_GetWin32PromptState();
+      if (hst && hst->has_listbox) {
+        POINT pt; GetCursorPos(&pt);
+        ListBox_PublishMousePos(pt.x, pt.y);
+        ListBox_SetGeometry(PromptListTop(), UI_LB_GetItemHeight(WH_FROM_HWND(hWnd)), UI_LB_GetVisibleCount());
+        bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+        bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+        bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+        Prompt_HandleListClick(hst, ctrl, shift, alt);
+      }
+      return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
     case WM_MOUSEMOVE: {
       extern PromptState* Platform_GetWin32PromptState(void);
       PromptState* hst = Platform_GetWin32PromptState();
@@ -102,6 +116,7 @@ static HBRUSH s_bg_brush = NULL;
         int hItemH = UI_LB_GetItemHeight(WH_FROM_HWND(hWnd));
         int hVisible = UI_LB_GetVisibleCount();
         int hTop = UI_LB_GetTopIndex(WH_FROM_HWND(hWnd));
+        ListBox_SetGeometry(PromptListTop(), hItemH, hVisible);
         ListBox_HoverFocus(hlb, PromptListTop(), hItemH, hTop, hVisible);
       }
       return 0;
