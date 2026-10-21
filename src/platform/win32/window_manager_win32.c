@@ -1,7 +1,9 @@
 #include "core/window_manager.h"
 #include "core/hotkey_manager.h"
 #include "core/context.h"
+#include "core/listbox_hover.h"
 #include "platform/widget.h"
+#include "platform/input_state.h"
 #include <windows.h>
 
 #include "core/timer.h"
@@ -55,6 +57,10 @@ if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_ProcessEventsWin32"); return ; }
     }
     if (!got) MsgWaitForMultipleObjects(0, NULL, FALSE, 16, QS_ALLINPUT);
     hotkey_drain_pending();
+    {
+        int mx = 0, my = 0;
+        if (Platform_GetMousePos(&mx, &my)) ListBox_PublishMousePos(mx, my);
+    }
     WindowManager_DrainSelectionComplete(wm);
 }
 

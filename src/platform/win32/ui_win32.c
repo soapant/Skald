@@ -152,8 +152,8 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
         return;
     }
     int old_sel = lb->selected_index;
-    if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     ListBox_FocusByKeyboard();
+    if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     lb->selected_index = index;
     UI_LB_SetCaretIndex(hListBox, index, false);
     int itemHeight = UI_LB_GetItemHeight(hListBox);
