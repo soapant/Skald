@@ -1,7 +1,7 @@
 #include "core/checkbox.h"
 #include "core/timer.h"
 #include "core/types.h"
-#include "core/window_manager.h"
+#include "core/listbox_hover.h"
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"
 #include "platform/input_state.h"
@@ -44,19 +44,8 @@ void Checkbox_FrameBegin(void) {
 static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
     PROFILE_START(_pt);
     if (!g_cb_mouse.valid) {
-        bool have = Platform_GetMousePos(&g_cb_mouse.mx, &g_cb_mouse.my);
-        if (have) {
-            int wx = 0, wy = 0, dx = 0, dy = 0;
-            WindowManager* wm = WindowManager_Get();
-            Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-            if (top && Platform_WindowToRoot(top->handle, &wx, &wy)) {
-                g_cb_mouse.mx -= wx;
-                g_cb_mouse.my -= wy;
-            }
-            Platform_GetDrawOffset(&dx, &dy);
-            g_cb_mouse.mx -= dx;
-            g_cb_mouse.my -= dy;
-        } else {
+        bool have = ListBox_ClientMousePos(&g_cb_mouse.mx, &g_cb_mouse.my);
+        if (!have) {
             g_cb_mouse.mx = 0;
             g_cb_mouse.my = 0;
         }
