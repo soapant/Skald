@@ -1,6 +1,7 @@
 #include "core/window_manager.h"
 #include "deps/log.h"
 #include "core/prompt_controller.h"
+#include "core/listbox_hover.h"
 
 #include "platform/input_state.h"
 #include <X11/Xlib.h>
@@ -171,6 +172,14 @@ if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(_pt, "Linux_ProcessXE
             break;
         case KeyRelease:
             x11_handle_key_release(dpy, &ev->xkey);
+            break;
+        case ButtonPress:
+            if (ev->xbutton.button == Button4 || ev->xbutton.button == Button5) {
+                ListBox_QueueScroll(ev->xbutton.button == Button4 ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS);
+                if (top->vtable && top->vtable->on_render) {
+                    top->vtable->on_render(top);
+                }
+            }
             break;
         case Expose:
             if (top->vtable && top->vtable->on_render) {
