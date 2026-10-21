@@ -370,15 +370,10 @@ if(!s) { PROFILE_END_VAR(_pt, "fl_type_text_platform"); return false; }
  for(;*s;s++){ SHORT sc=VkKeyScanA(*s); if(sc==-1){ if(*s=='\n'){ Platform_EmitKey(VK_RETURN,1); Platform_EmitKey(VK_RETURN,0); } else if(*s=='\t'){ Platform_EmitKey(VK_TAB,1); Platform_EmitKey(VK_TAB,0); } continue; } BYTE vk=LOBYTE(sc); BYTE sh=HIBYTE(sc); INPUT ins[4]={0}; int n=0; if(sh&1){ ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=VK_SHIFT; n++; } ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=vk; n++; ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=vk; ins[n].ki.dwFlags=KEYEVENTF_KEYUP; n++; if(sh&1){ ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=VK_SHIFT; ins[n].ki.dwFlags=KEYEVENTF_KEYUP; n++; } SendInput(n, ins, sizeof(INPUT)); Sleep(5); }
  { PROFILE_END_VAR(_pt, "fl_type_text_platform"); return true; }
 }
-static bool g_edit_placed_win = false;
-
-void fl_editbox_reset_placed(void) {     PROFILE_START(_pt);
-g_edit_placed_win = false; }
 
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
         PROFILE_START(_pt);
 if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
-    g_edit_placed_win = true;
     HDC hdc = NULL;
     Platform_GetDrawContextWin32(&hdc);
     if (!hdc) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
