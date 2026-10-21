@@ -84,13 +84,15 @@ int UI_LB_GetTopIndex(WindowHandle hList) {
 
 int UI_LB_GetViewTop(ListBoxInfo* lb) {
         PROFILE_START(_pt);
-(void)lb;
-    { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return UI_LB_GetTopIndex(FlintContext_Get()->window.hListBox); }
+    { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return lb ? lb->view_offset : 0; }
 }
+
+static int g_render_lb_visible = 0;
 
 int UI_LB_GetVisibleCount(void) {
         PROFILE_START(_pt);
-WindowHandle hList = FlintContext_Get()->window.hListBox;
+    if (g_render_lb_visible > 0) { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return g_render_lb_visible; }
+    WindowHandle hList = FlintContext_Get()->window.hListBox;
     if (!WH_TO_HWND(hList)) { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return 16; }
     int itemHeight = UI_LB_GetItemHeight(hList);
     if (itemHeight <= 0) { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return 16; }
@@ -103,7 +105,7 @@ WindowHandle hList = FlintContext_Get()->window.hListBox;
 
 void UI_LB_SetVisibleCount(int count) {
         PROFILE_START(_pt);
-(void)count;
+    g_render_lb_visible = count;
 }
 
 void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
@@ -115,6 +117,7 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop"); return ; }
     if (top_index + visible > lb->populated_count) top_index = lb->populated_count - visible;
     if (top_index < 0) top_index = 0;
     lb->view_offset = top_index;
+    log_info("UI_LB_ScrollToTop lb=%p top=%d view_off=%d", (void*)lb, top_index, lb->view_offset);
     SendMessageA(WH_TO_HWND(hList), LB_SETTOPINDEX, top_index, 0);
 }
 
@@ -156,27 +159,10 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     lb->selected_index = index;
     UI_LB_SetCaretIndex(hListBox, index, false);
-    int itemHeight = UI_LB_GetItemHeight(hListBox);
-    RECT rect;
-    GetClientRect(WH_TO_HWND(hListBox), &rect);
-    int visibleCount = (itemHeight > 0) ? (rect.bottom / itemHeight) : 16;
-    if (visibleCount < 1) visibleCount = 1;
-    lb->view_offset = UI_LB_GetTopIndex(hListBox);
-    int oldTop = lb->view_offset;
-    int newTop = ListBox_ScrollTopFor(index, visibleCount, count);
-    if (newTop != oldTop) {
-        lb->view_offset = newTop;
-        SendMessageA(WH_TO_HWND(hListBox), WM_SETREDRAW, FALSE, 0);
-        UI_LB_SetTopIndex(hListBox, newTop);
-        SendMessageA(WH_TO_HWND(hListBox), WM_SETREDRAW, TRUE, 0);
-    }
+    ListBox_ScrollToSelection(lb);
     if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
         HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
         if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
-        return;
-    }
-    if (newTop != oldTop) {
-        RedrawWindow(WH_TO_HWND(hListBox), NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
         return;
     }
     RECT invalidRect = {0};

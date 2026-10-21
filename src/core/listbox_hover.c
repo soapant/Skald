@@ -1,4 +1,5 @@
 #include "core/listbox_hover.h"
+#include "deps/log.h"
 #include <stdlib.h>
 #include "core/context.h"
 #include "core/timer.h"
@@ -176,11 +177,12 @@ int ListBox_ScrollTopFor(int index, int visible_count, int count) {
 }
 
 void ListBox_ScrollToSelection(ListBoxInfo* lb) {
-    if (!lb || lb->selected_index < 0 || lb->populated_count <= 0) return;
+    if (!lb || lb->selected_index < 0 || lb->populated_count <= 0) { log_info("ScrollToSelection SKIP sel=%d cnt=%d", lb?lb->selected_index:-2, lb?lb->populated_count:-1); return; }
     int visible = UI_LB_GetVisibleCount();
     if (visible <= 0) visible = 16;
     int old_top = UI_LB_GetViewTop(lb);
     int new_top = ListBox_ScrollTopFor(lb->selected_index, visible, lb->populated_count);
+    log_info("ScrollToSelection lb=%p sel=%d cnt=%d vis=%d old_top=%d new_top=%d", (void*)lb, lb->selected_index, lb->populated_count, visible, old_top, new_top);
     if (new_top != old_top) UI_LB_ScrollToTop(lb, new_top);
 }
 
