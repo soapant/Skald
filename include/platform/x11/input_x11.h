@@ -60,6 +60,5 @@ int x11_keysym_to_windows_vk(KeySym keysym);
 void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed);
 
 
-void HandleCommandExecution(ListBoxInfo* lb, char* string);
 
 #endif

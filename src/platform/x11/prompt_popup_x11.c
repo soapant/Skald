@@ -14,6 +14,8 @@
 #include "core/history.h"
 #include "core/prompt_controller.h"
 #include "core/listbox_hover.h"
+#include "core/prompt_keys.h"
+#include "core/hotkey_text.h"
 #include "platform/x11/input_x11.h"
 #include "platform/x11/window_factory_x11.h"
 #include "platform/input.h"
@@ -136,18 +138,11 @@ PROFILE_START(timer);
     PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupDestroyWindow");
 }
 
-void HandleCommandExecution(ListBoxInfo* lb, char* string) {
-        PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "HandleCommandExecution"); return ; }
-    int num = atoi(string);
-    UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, num - 1);
-    ListBox_ScrollToSelection(lb);
-}
 
 static void command_confirm(const char* new_text, void* user_data) {
         PROFILE_START(_pt);
 PromptState* state = (PromptState*)user_data;
-    HandleCommandExecution(&state->listbox, (char*)new_text);
+    ListBox_CommandExecute(&state->listbox, new_text);
 }
 
 bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
@@ -155,322 +150,24 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
 PROFILE_START(timer);
     PromptState* state = self ? (PromptState*)self->user_data : NULL;
     if (!state) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
+    if (Prompt_HandleKey(state, key)) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
 
     int wParam = key->vk;
-    bool ctrl_pressed = key->ctrl;
     bool shift_pressed = key->shift;
-    bool alt_pressed = key->alt;
-    if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
-        int len = (int)strlen(state->filter);
-        VimState_BeginSelection(0);
-        VimState_UpdateSelection(len);
-        state->cursor = len;
-        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
-        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true;
-    }
-    if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
-        int ss=0, se=0;
-        if (VimState_GetSelection(&ss, &se)) {
-            if (se < ss) { int t=ss; ss=se; se=t; }
-            int len=(int)strlen(state->filter);
-            if (ss<0) ss=0; if (se>len) se=len;
-            if (se>ss) {
-                char buf[512];
-                int n=se-ss; if (n>=(int)sizeof(buf)) n=(int)sizeof(buf)-1;
-                memcpy(buf, state->filter+ss, n); buf[n]='\0';
-                Platform_CopyToClipboard(buf);
-            }
-        }
-        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true;
-    }
-    if (PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
-    if (wParam == VK_BACK) {
-        int ss=0, se=0;
-        if (VimState_GetSelection(&ss, &se)) {
-            if (se < ss) { int t=ss; ss=se; se=t; }
-            int len=(int)strlen(state->filter);
-            if (ss<0) ss=0; if (se>len) se=len;
-            if (se>ss) {
-                memmove(state->filter+ss, state->filter+se, len-se+1);
-                state->cursor = ss;
-                VimState_EndSelection();
-                if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
-                PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-                return true;
-            }
-            VimState_EndSelection();
-        }
-        if (ctrl_pressed) {
-            state->filter[0] = '\0';
-            state->cursor = 0;
-        } else {
-            size_t fcur = (size_t)state->cursor;
-            if (!EditBufferBackspacePair(state->filter, &fcur) && IsInsertMode()) {
-                EditBufferBackspace(state->filter, &fcur);
-            }
-            state->cursor = (int)fcur;
-        }
-        History_ResetCursor(FlintContext_Get()->window.current_feature);
-        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
-        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-        return true;
-    }
-
-    if (FlintContext_Get()->window.editbox_placed) {
-        if (wParam == VK_ESCAPE) {
-            if (!EnableVimMode || !IsInsertMode()) {
-                FlintContext_Get()->window.selection_complete = true;
-            } else {
-                SetMode(MODE_NORMAL);
-            }
-            return true;
-        }
-    } else {
-        if (wParam == VK_ESCAPE) {
-            FlintContext_Get()->window.selection_complete = true;
-            return true;
-        }
-    }
-    if (wParam == VK_RIGHT) {
-      VimState_EndSelection();
-      CursorForward(&state->cursor, strlen(state->filter));
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == VK_LEFT) {
-      VimState_EndSelection();
-       CursorBack(&state->cursor, strlen(state->filter));
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == VK_UP) {
-      if (ctrl_pressed) {
-        SetCursorToStartOfText(FlintContext_Get());
-        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-        return true;
-      }
-      if (state->has_listbox) {
-        if (state->listbox.selected_index == -1) {
-          char hist[512];
-          const char* feat = FlintContext_Get()->window.current_feature;
-          if (feat && History_CycleUp(feat, hist, sizeof(hist))) {
-            strncpy(state->filter, hist, sizeof(state->filter)-1);
-            state->filter[sizeof(state->filter)-1]='\0';
-            state->cursor = (int)strlen(state->filter);
-            if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
-            PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-            return true;
-          }
-        }
-        UI_NavigateUp(&state->listbox, FlintContext_Get()->window.hListBox);
-      }
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == VK_DOWN) {
-      if (ctrl_pressed) {
-        SetCursorToEndOfText(FlintContext_Get());
-        PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-        return true;
-      }
-      if (state->has_listbox) UI_NavigateDown(&state->listbox, FlintContext_Get()->window.hListBox);
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == VK_DELETE) {
-      int ss=0, se=0;
-      if (VimState_GetSelection(&ss, &se)) {
-        if (se < ss) { int t=ss; ss=se; se=t; }
-        int len=(int)strlen(state->filter);
-        if (ss<0) ss=0; if (se>len) se=len;
-        if (se>ss) {
-            memmove(state->filter+ss, state->filter+se, len-se+1);
-            state->cursor = ss;
-            VimState_EndSelection();
-            if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
-            PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-            return true;
-        }
-        VimState_EndSelection();
-      }
-      if (state && EditBufferDeleteChar(state->filter, &state->cursor)) {
-        History_ResetCursor(FlintContext_Get()->window.current_feature);
-        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
-      }
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == VK_HOME) {
-      VimState_EndSelection();
-      SetCursorToStartOfText(FlintContext_Get());
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == VK_END) {
-      VimState_EndSelection();
-      SetCursorToEndOfText(FlintContext_Get());
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == VK_TAB) {
-      if (FlintContext_Get()->prompt_callbacks.tab) FlintContext_Get()->prompt_callbacks.tab(&state->listbox);
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == VK_RETURN) {
-      const char* sel = NULL;
-      char filter_copy[sizeof(state->filter)];
-      if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
-        sel = ListBoxInfo_Row(&state->listbox, state->listbox.selected_index);
-      } else {
-        strncpy(filter_copy, state->filter, sizeof(filter_copy)-1);
-        filter_copy[sizeof(filter_copy)-1]='\0';
-        sel = filter_copy;
-      }
-      const char* feat = FlintContext_Get()->window.current_feature;
-      if (feat && sel && sel[0]) History_Add(feat, sel);
-      {
-        FlintContext* _c = FlintContext_Get();
-        bool should_close = true;
-        if (ctrl_pressed && shift_pressed) {
-          should_close = false;
-          if (_c->prompt_callbacks.ctrl_shift_enter) should_close = _c->prompt_callbacks.ctrl_shift_enter(sel, &state->listbox);
-          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
-        } else if (ctrl_pressed && alt_pressed) {
-          should_close = false;
-          if (_c->prompt_callbacks.ctrl_alt_enter) should_close = _c->prompt_callbacks.ctrl_alt_enter(sel, &state->listbox);
-          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
-        } else if (shift_pressed && alt_pressed) {
-          should_close = false;
-          if (_c->prompt_callbacks.shift_alt_enter) should_close = _c->prompt_callbacks.shift_alt_enter(sel, &state->listbox);
-          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
-        } else if (shift_pressed) {
-          should_close = false;
-          if (_c->prompt_callbacks.shift_enter) should_close = _c->prompt_callbacks.shift_enter(sel, &state->listbox);
-          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
-        } else if (ctrl_pressed) {
-          should_close = false;
-          if (_c->prompt_callbacks.ctrl_enter) should_close = _c->prompt_callbacks.ctrl_enter(sel, &state->listbox);
-          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
-        } else {
-          should_close = true;
-          if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
-        }
-        _c->window.selection_complete = should_close;
-      }
-      PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-      return true;
-    }
-    if (wParam == COPY_SELECTION_KEY && !IsInsertMode()) {
-      if (shift_pressed || ctrl_pressed) {
-        int type = shift_pressed ? 0 : 1;
-        int idx = -1;
-        if (state->has_listbox && state->listbox.selected_index >= 0 && state->listbox.selected_index < state->listbox.populated_count) {
-          idx = state->listbox.matching_indices[state->listbox.selected_index];
-        } else {
-          idx = UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer);
-        }
-        if (FlintContext_Get()->prompt_callbacks.copy) {
-          FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer,idx,type);
-        } else {
-          Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
-        }
-        return true;
-      }
-    }
-    if (wParam == HELP_SCREEN_KEY && ctrl_pressed) {
-      if (FlintContext_Get()->prompt_callbacks.help) FlintContext_Get()->prompt_callbacks.help();
-      return true;
-    }
 
     if (wParam == COMMAND_MODE_KEY && shift_pressed) {
         WindowManager* wm = WindowManager_Get();
         Popup* popup = EditPopup_Create(wm,"Command Mode", 960, 540, 1000, 100, "LEFT", command_confirm,state);
         WindowManager_PushPopup(wm, popup);
         return true;
-      }
-      if (wParam == 'V' && ctrl_pressed) {
-        char *clip = Platform_GetClipboardEntry();
-        if (!clip) { log_warn("prompt Ctrl+V clipboard null"); return true; }
-        log_info("prompt Ctrl+V clip len=%d", (int)strlen(clip));
-        clip[strcspn(clip, "\r\n")] = '\0';
-        if (clip[0] == '\0') { free(clip); return true; }
-
-        size_t cur_len = strlen(state->filter);
-        size_t clip_len = strlen(clip);
-        size_t avail = sizeof(state->filter) - cur_len - 1;
-        if (clip_len > avail) clip_len = avail;
-        if (clip_len > 0) {
-          memmove(state->filter + state->cursor + clip_len,
-                  state->filter + state->cursor,
-                  cur_len - state->cursor + 1);
-          memcpy(state->filter + state->cursor, clip, clip_len);
-          state->cursor += clip_len;
-        }
-        free(clip);
-
-        if (FlintContext_Get()->prompt_callbacks.refresh) {
-          FlintContext_Get()->prompt_callbacks.refresh(state->filter, &state->listbox);
-        }
-        return true;
-      }
-      if (ctrl_pressed) {
-        if (wParam == VK_OEM_MINUS) {
-          Platform_AdjustFontSize(-1);
-          Config_Save();
-        }
-        if (wParam == VK_OEM_PLUS) {
-          Platform_AdjustFontSize(1);
-          Config_Save();
-        }
-      }
+    }
 
     if (IsInsertMode() && key->text_len > 0) {
-        bool swallow = false;
-        bool trigger_press = false;
-        if (pending_hotkey_vk != 0 && key->text_len == 1) {
-            struct timeval tv; gettimeofday(&tv, NULL);
-            long now = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-            if (now - pending_hotkey_timeMs < 800) {
-                unsigned char c = (unsigned char)key->text[0];
-                int vkc = 0;
-                if (c >= 'a' && c <= 'z') vkc = c - 'a' + 'A';
-                else if (c >= 'A' && c <= 'Z') vkc = c;
-                else if (c == ' ') vkc = VK_SPACE;
-                else if (c == '[' || c == '{') vkc = VK_OEM_4;
-                else if (c == ']' || c == '}') vkc = VK_OEM_6;
-                else if (c == ';' || c == ':') vkc = VK_OEM_1;
-                else if (c == '/' || c == '?') vkc = VK_OEM_2;
-                if (vkc != 0 && vkc == pending_hotkey_vk) trigger_press = true;
-            }
-            pending_hotkey_vk = 0;
-            pending_hotkey_mod = 0;
-        }
-        if (!trigger_press && !swallow && (key->ctrl || key->alt)) swallow = true;
-        if (!swallow) {
-            bool is_printable = true;
-            for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
-            if (is_printable) {
-                int ss=0, se=0;
-                if (VimState_GetSelection(&ss, &se)) {
-                    if (se < ss) { int t=ss; ss=se; se=t; }
-                    int len=(int)strlen(state->filter);
-                    if (ss<0) ss=0; if (se>len) se=len;
-                    if (se>ss) {
-                        memmove(state->filter+ss, state->filter+se, len-se+1);
-                        state->cursor = ss;
-                    }
-                    VimState_EndSelection();
-                }
-                size_t fcur = (size_t)state->cursor;
-                EditBufferInsertText(state->filter, sizeof(state->filter), &fcur, key->text, (size_t)key->text_len);
-                state->cursor = (int)fcur;
-                History_ResetCursor(FlintContext_Get()->window.current_feature);
-                FlintContext* _c = FlintContext_Get();
-                if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
-                PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-                return true;
-            }
+        bool swallow = HotkeyText_ShouldSwallow(key);
+        if (!swallow && HotkeyText_IsPrintable(key)) {
+            Prompt_InsertText(state, key->text, key->text_len);
+            PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
+            return true;
         }
     }
 
