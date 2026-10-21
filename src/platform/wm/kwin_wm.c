@@ -1,6 +1,7 @@
 #include "wm/kwin_wm.h"
 #include "deps/log.h"
 #include "platform/platform.h"
+#include <time.h>
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>

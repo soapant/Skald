@@ -2,6 +2,7 @@
 #define CONFIG_H
 #include <stddef.h>
 #include "core/types.h"
+#include "config_values.h"
 
 #define EDIT_TEXT_KEY       'E'
 #define HELP_SCREEN_KEY     'H'
@@ -9,76 +10,9 @@
 #define COMMAND_MODE_KEY        VK_OEM_1
 #define SEARCH_PROGRAM_KEY      VK_OEM_2
 
-extern bool Tray;
-extern bool RememberLastIndex;
-extern bool EnableVimMode;
-extern bool KeepSelectionAfterClose;
-extern bool MessageAfterEachHotkey;
-extern bool ModePersistsThroughFeatures;
-extern int  TimeOutForMessages;
-extern int  HotkeyRepeatDelayMs;
-extern bool DoTimeDebugs;
-extern bool DebugMode;
-extern bool RoundedCorners;
-extern int CornerRadius;
-extern bool EnableShaders;
-extern int ShaderPreset;
-extern float ShaderIntensity;
-extern float ShaderBrightness;
-extern char* EditPopUpPos;
-extern int EditPopUpWidthMin;
-extern int PageUpDownLen;
-extern int TimeBetweenHotReload;
-extern float WindowOpacity;
-extern int FontSize;
-extern const char* UsedFont;
-extern int IconSize;
-extern int WidgetGap;
-extern int MaxFeatures;
-extern int VimFontSize;
-extern int PaddingForScrolling;
-extern bool CloseOnLossOfFocus;
-extern const char* UsedTerminal;
-extern const char* UsedShell;
-extern const char* UsedBrowser;
-extern const char* UsedSearchEngine;
-extern const char* FeaturePath;
-extern const char* IconPath;
-extern const char* ControlHotkey;
-extern bool FullTextNeedsKeyPress;
-extern bool MessagesEnabled;
-extern bool EnableAutoPairing;
-extern bool EnableBorders;
-extern bool RainbowText;
-extern bool ColoredVimModeText;
-extern bool WindowTitleText;
-extern bool AlternatingText;
-extern bool VimModeText;
-extern int GradientItems;
-extern float GradientBrightness;
-extern const char* Theme;
-extern const char* BackgroundImage;
-
-extern ColorRef COLOR_BG;
-extern ColorRef COLOR_CURSOR;
-extern ColorRef COLOR_TEXT;
-extern ColorRef COLOR_ALTERNATE;
-extern ColorRef COLOR_SELECTED_TEXT;
-extern ColorRef COLOR_ALIAS_TEXT;
-extern ColorRef COLOR_ERROR;
-extern ColorRef COLOR_NORMAL;
-extern ColorRef COLOR_TIP;
-extern ColorRef COLOR_INSERT_MODE;
-extern ColorRef COLOR_NORMAL_MODE;
-extern ColorRef COLOR_VISUAL_CURSOR;
-extern ColorRef COLOR_VISUAL_MODE;
-extern ColorRef COLOR_BORDER;
 #define COLOR_INSERT_MODE_TEXT (ColoredVimModeText ? COLOR_INSERT_MODE : COLOR_TEXT)
 #define COLOR_NORMAL_MODE_TEXT (ColoredVimModeText ? COLOR_NORMAL_MODE : COLOR_TEXT)
 #define COLOR_VISUAL_MODE_TEXT (ColoredVimModeText ? COLOR_VISUAL_MODE : COLOR_TEXT)
-
-extern const AliasEntry* Aliases;
-extern size_t ALIAS_ENTRY_COUNT;
 
 #define MAX_FILE_LINES 10000
 #define MAX_FILE_LINE_LENGTH 1024

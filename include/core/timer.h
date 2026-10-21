@@ -12,14 +12,32 @@
 #define TIMER_BUF_LINES 8192
 #define TIMER_BUF_LINE 256
 
+static inline int64_t TimerNowTicks(void) {
+#if defined(_WIN32)
+  LARGE_INTEGER c;
+  QueryPerformanceCounter(&c);
+  return (int64_t)c.QuadPart;
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (int64_t)ts.tv_sec * 1000000000LL + (int64_t)ts.tv_nsec;
+#endif
+}
+
+static inline int64_t TimerTickFrequency(void) {
+#if defined(_WIN32)
+  LARGE_INTEGER f;
+  QueryPerformanceFrequency(&f);
+  return (int64_t)f.QuadPart;
+#else
+  return 1000000000LL;
+#endif
+}
+
 static inline WinTimer TimerStart(void) {
   WinTimer t;
-#if defined(_WIN32)
-  QueryPerformanceFrequency(&t.frequency);
-  QueryPerformanceCounter(&t.start);
-#else
-  clock_gettime(CLOCK_MONOTONIC, &t.start);
-#endif
+  t.frequency = TimerTickFrequency();
+  t.start = TimerNowTicks();
   return t;
 }
 

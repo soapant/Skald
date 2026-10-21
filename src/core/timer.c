@@ -4,15 +4,9 @@
 #include <stdlib.h>
 
 static double timer_elapsed_us(WinTimer t) {
-#if defined(_WIN32)
-  LARGE_INTEGER end;
-  QueryPerformanceCounter(&end);
-  return (double)(end.QuadPart - t.start.QuadPart) * 1000000.0 / (double)t.frequency.QuadPart;
-#else
-  struct timespec end;
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  return (double)(end.tv_sec - t.start.tv_sec) * 1000000.0 + (double)(end.tv_nsec - t.start.tv_nsec) / 1000.0;
-#endif
+  int64_t end = TimerNowTicks();
+  if (t.frequency <= 0) return 0.0;
+  return (double)(end - t.start) * 1000000.0 / (double)t.frequency;
 }
 
 double TimerElapsedUs(WinTimer t) {

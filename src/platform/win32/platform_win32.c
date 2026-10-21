@@ -186,25 +186,27 @@ if (!command || !command[0]) { PROFILE_END_VAR(_pt, "Platform_LaunchDetached"); 
     { PROFILE_END_VAR(_pt, "Platform_LaunchDetached"); return true; }
 }
 
-char* Platform_RunCommandAndGetOutput(char* command) {
+char* Platform_RunCommandAndGetOutput(char* command, int priority) {
         PROFILE_START(_pt);
 if (command == NULL || strlen(command) == 0) { PROFILE_END_VAR(_pt, "Platform_RunCommandAndGetOutput"); return NULL; }
-    SECURITY_ATTRIBUTES sa;
-    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-    sa.bInheritHandle = TRUE;
-    sa.lpSecurityDescriptor = NULL;
-    HANDLE hRead, hWrite;
-    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) { PROFILE_END_VAR(_pt, "Platform_RunCommandAndGetOutput"); return strdup(""); }
-    SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
-    STARTUPINFOA si = {0};
-    si.cb = sizeof(STARTUPINFOA);
-    si.hStdOutput = hWrite;
-    si.hStdError = hWrite;
-    si.dwFlags = STARTF_USESTDHANDLES;
-    PROCESS_INFORMATION pi = {0};
-    char cmdLine[4096];
-    snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
-    BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+SECURITY_ATTRIBUTES sa;
+sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+sa.bInheritHandle = TRUE;
+sa.lpSecurityDescriptor = NULL;
+HANDLE hRead, hWrite;
+if (!CreatePipe(&hRead, &hWrite, &sa, 0)) { PROFILE_END_VAR(_pt, "Platform_RunCommandAndGetOutput"); return strdup(""); }
+SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
+STARTUPINFOA si = {0};
+si.cb = sizeof(STARTUPINFOA);
+si.hStdOutput = hWrite;
+si.hStdError = hWrite;
+si.dwFlags = STARTF_USESTDHANDLES;
+PROCESS_INFORMATION pi = {0};
+char cmdLine[4096];
+snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
+DWORD creation_flags = CREATE_NO_WINDOW;
+if (priority == PLATFORM_RUN_PRIO_LOW) creation_flags |= BELOW_NORMAL_PRIORITY_CLASS;
+BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, creation_flags, NULL, NULL, &si, &pi);
     CloseHandle(hWrite);
     if (!ok) { CloseHandle(hRead); return strdup(""); }
     WaitForSingleObject(pi.hProcess, INFINITE);
@@ -1363,9 +1365,9 @@ if (!src || !out) { PROFILE_END_VAR(_pt, "Platform_BuildFeature"); return false;
     snprintf(tmp, sizeof(tmp), "%s.tmp", out);
     char cmd[2048];
     snprintf(cmd, sizeof(cmd),
-        "gcc -I include -DCOBJMACROS -O3 -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
+        "gcc -I include -DCOBJMACROS -O1 -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
         tmp, src);
-    char* outStr = Platform_RunCommandAndGetOutput(cmd);
+    char* outStr = Platform_RunCommandAndGetOutput(cmd, PLATFORM_RUN_PRIO_LOW);
     bool ok = false;
     if (outStr) {
         if (strlen(outStr)==0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) ok = true;

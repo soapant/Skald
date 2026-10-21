@@ -25,6 +25,11 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 - `nob.c:646-669` and `nob.c:709-733` duplicate the whole feature-build block; `nob.c:667-669` is a dead empty loop.
 - Build always kills the running instance first (`stop_running_instance()`, `nob.c:476`: `systemctl --user stop flint.service; pkill -f 'build/[f]lint'`).
 - Flags: `./nob -run` (build+launch), `./nob -test` (build+run tests), `./nob -actual` (Windows only → `build/flint.exe -mwindows` instead of `build/debug/flint.exe`).
+- **Hot-reload compile cost (Windows):** `Platform_BuildFeature` shells out to `gcc` on every feature/config change. On MinGW, `#include <windows.h>` alone costs **~970 ms** of parsing per compile, and `-O3` costs another ~600 ms on a 45 KB source. The hot-reload build therefore uses `-O1 -pipe` (`platform_win32.c` / `platform_x11.c` `Platform_BuildFeature`), and the hot-reload process runs at `BELOW_NORMAL_PRIORITY_CLASS` so it does not stutter the whole PC.
+  - **DO NOT** add `#include <windows.h>` (or anything that pulls it in) to a header on the **feature include path** — `include/core/types/*.h`, `include/core/flapi.h`, `include/config*.h`, `include/helpers/*.h`. That path is compiled fresh on every hot reload.
+  - Shared headers must stay platform-neutral: handles are opaque `void*` (`include/core/types/window.h`), the timer is plain `int64_t` (`include/core/types/misc.h` `WinTimer`, filled in by `core/timer.h`), and `AliasEntry` lives alone in `include/core/types/alias.h`.
+  - A feature that genuinely needs Win32 (e.g. `music_player`, `video_viewer`, `process_killer`, `screenshot`, `volume`, `widgets`) must include `<windows.h>` **at file scope** under `#if defined(_WIN32)` — it pays the ~1 s cost, but that is its own choice.
+  - The config is compiled from `config/config.c`, which includes `include/config_values.h` (not `config.h`) precisely so it stays off the `windows.h` path.
 
 ---
 
