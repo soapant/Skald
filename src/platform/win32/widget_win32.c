@@ -67,6 +67,7 @@ if (widget->layer_dc) {
         if (widget->layer_old) SelectObject(widget->layer_dc, widget->layer_old);
         if (widget->layer_bmp) DeleteObject(widget->layer_bmp);
         DeleteDC(widget->layer_dc);
+        Platform_ReleaseDrawCache();
     }
     widget->layer_dc = NULL;
     widget->layer_bmp = NULL;
