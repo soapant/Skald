@@ -8,11 +8,24 @@
 #include <gdiplus/gdiplus.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #define BG_SRC_SLOTS      2
 #define BG_TILE_SLOTS     4
 #define BG_REVALIDATE_MS  1000
 #define BG_RETRY_MS       2000
+#define BG_CACHE_DIR    "bg_cache"
+#define BG_CACHE_MAGIC  "FLCB"
+#define BG_CACHE_VER    1
+
+#pragma pack(push, 1)
+typedef struct {
+    char     magic[4];
+    uint32_t version;
+    uint64_t src_mtime;
+    uint32_t src_size;
+} BgCacheHeader;
+#pragma pack(pop)
 
 typedef struct {
     char      path[512];
@@ -104,11 +117,90 @@ ft->dwLowDateTime = 0;
 
 static void bg_widen(const char* in, wchar_t* out, int out_max) {
     PROFILE_START(_pt);
-out[0] = 0;
+    out[0] = 0;
     if (!in || !in[0] || out_max <= 0) { PROFILE_END_VAR(_pt, "bg_widen"); return; }
     if (MultiByteToWideChar(CP_UTF8, 0, in, -1, out, out_max) <= 0) out[0] = 0;
     { PROFILE_END_VAR(_pt, "bg_widen"); }
 }
+
+static unsigned int bg_hash_str(const char* s) {
+    unsigned int h = 2166136261u;
+    for (; s && *s; s++) { h ^= (unsigned char)*s; h *= 16777619u; }
+    return h;
+}
+
+static bool bg_cache_file(char* out, size_t cap, const char* native, int w, int h) {
+    char dir[MAX_PATH];
+    if (!Platform_GetFeaturePath("core", BG_CACHE_DIR, dir, sizeof(dir))) return false;
+    /* Platform_GetFeaturePath only creates the feature dir, not the leaf. */
+    CreateDirectoryA(dir, NULL);
+    snprintf(out, cap, "%s\\%08x_%dx%d.bmp", dir, bg_hash_str(native), w, h);
+    return true;
+}
+
+static uint64_t bg_mtime_key(const FILETIME* ft) {
+    if (!ft) return 0;
+    return ((uint64_t)ft->dwHighDateTime << 32) | (uint64_t)ft->dwLowDateTime;
+}
+
+/* The tile is stored as the raw DIB pixels, so the cache is byte exact and
+   costs a plain file read on the way back in. */
+static bool bg_cache_store(const char* file, int w, int h, const void* bits, const FILETIME* ft, DWORD sz) {
+    PROFILE_START(_pt);
+    FILE* f = fopen(file, "wb");
+    if (!f) { PROFILE_END_VAR(_pt, "bg_cache_store"); return false; }
+    BgCacheHeader ch;
+    memset(&ch, 0, sizeof(ch));
+    memcpy(ch.magic, BG_CACHE_MAGIC, 4);
+    ch.version = BG_CACHE_VER;
+    ch.src_mtime = bg_mtime_key(ft);
+    ch.src_size = sz;
+    BITMAPFILEHEADER fh;
+    memset(&fh, 0, sizeof(fh));
+    fh.bfType = 0x4D42;
+    fh.bfOffBits = (DWORD)(sizeof(BgCacheHeader) + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER));
+    fh.bfSize = fh.bfOffBits + (DWORD)((size_t)w * (size_t)h * 4);
+    BITMAPINFOHEADER ih;
+    memset(&ih, 0, sizeof(ih));
+    ih.biSize = sizeof(BITMAPINFOHEADER);
+    ih.biWidth = w;
+    ih.biHeight = -h;
+    ih.biPlanes = 1;
+    ih.biBitCount = 32;
+    ih.biCompression = BI_RGB;
+    ih.biSizeImage = (DWORD)((size_t)w * (size_t)h * 4);
+    bool ok = fwrite(&ch, sizeof(ch), 1, f) == 1
+           && fwrite(&fh, sizeof(fh), 1, f) == 1
+           && fwrite(&ih, sizeof(ih), 1, f) == 1
+           && fwrite(bits, 4, (size_t)w * (size_t)h, f) == (size_t)w * (size_t)h;
+    fclose(f);
+    { PROFILE_END_VAR(_pt, "bg_cache_store"); return ok; }
+}
+
+static bool bg_cache_load(const char* file, int w, int h, void* bits, const FILETIME* ft, DWORD sz) {
+    PROFILE_START(_pt);
+    FILE* f = fopen(file, "rb");
+    if (!f) { PROFILE_END_VAR(_pt, "bg_cache_load"); return false; }
+    BgCacheHeader ch;
+    BITMAPFILEHEADER fh;
+    BITMAPINFOHEADER ih;
+    bool ok = false;
+    if (fread(&ch, sizeof(ch), 1, f) == 1 &&
+        memcmp(ch.magic, BG_CACHE_MAGIC, 4) == 0 &&
+        ch.version == BG_CACHE_VER &&
+        ch.src_mtime == bg_mtime_key(ft) &&
+        ch.src_size == sz &&
+        fread(&fh, sizeof(fh), 1, f) == 1 &&
+        fread(&ih, sizeof(ih), 1, f) == 1 &&
+        fh.bfType == 0x4D42 &&
+        ih.biWidth == w && ih.biHeight == -h &&
+        ih.biBitCount == 32 && ih.biCompression == BI_RGB) {
+        ok = fread(bits, 4, (size_t)w * (size_t)h, f) == (size_t)w * (size_t)h;
+    }
+    fclose(f);
+    { PROFILE_END_VAR(_pt, "bg_cache_load"); return ok; }
+}
+
 
 static void* bg_shell_icon_bitmap(const char* native) {
     PROFILE_START(_pt);
@@ -230,21 +322,6 @@ DWORD now = GetTickCount();
 static BgTileSlot* bg_tile_compose(HDC refDC, const char* native, int w, int h, FILETIME ft, DWORD sz) {
     PROFILE_START(_pt);
 PROFILE_START(timer);
-    BgSrcSlot* s = bg_src_get(native);
-    if (!s || !s->src) { PROFILE_END_VAR(timer, "bg_tile_compose"); return NULL; }
-    int sw = s->src_w;
-    int sh = s->src_h;
-    double scale = (double)w / (double)sw;
-    double scale_y = (double)h / (double)sh;
-    if (scale_y > scale) scale = scale_y;
-    if (scale <= 0.0) { PROFILE_END_VAR(timer, "bg_tile_compose"); return NULL; }
-    int dw = (int)((double)sw * scale + 0.5);
-    int dh = (int)((double)sh * scale + 0.5);
-    if (dw < 1) dw = 1;
-    if (dh < 1) dh = 1;
-    int ox = (w - dw) / 2;
-    int oy = (h - dh) / 2;
-
     HDC dc = CreateCompatibleDC(NULL);
     if (!dc) { PROFILE_END_VAR(timer, "bg_tile_compose"); return NULL; }
     BITMAPINFO bmi;
@@ -267,16 +344,53 @@ PROFILE_START(timer);
     }
     memset(bits, 0, (size_t)w * (size_t)h * 4);
     SelectObject(dc, bmp);
-    GpGraphics* g = NULL;
-    GpStatus gst = GdipCreateFromHDC(dc, &g);
-    if (gst == Ok && g) {
-        GdipSetCompositingMode(g, CompositingModeSourceOver);
-        GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
-        GdipSetSmoothingMode(g, SmoothingModeHighQuality);
-        GdipSetPixelOffsetMode(g, PixelOffsetModeHalf);
-        GpStatus dst = GdipDrawImageRectI(g, (GpBitmap*)s->src, ox, oy, dw, dh);
-        GdipDeleteGraphics(g);
-    } 
+
+    char cacheFile[MAX_PATH];
+    bool haveCache = bg_cache_file(cacheFile, sizeof(cacheFile), native, w, h);
+    bool fromCache = haveCache && bg_cache_load(cacheFile, w, h, bits, &ft, sz);
+    if (!fromCache) {
+        BgSrcSlot* s = bg_src_get(native);        if (!s || !s->src) {
+            DeleteDC(dc);
+            DeleteObject(bmp);
+            PROFILE_END_VAR(timer, "bg_tile_compose");
+            return NULL;
+        }
+        int sw = s->src_w;
+        int sh = s->src_h;
+        double scale = (double)w / (double)sw;
+        double scale_y = (double)h / (double)sh;
+        if (scale_y > scale) scale = scale_y;
+        if (scale <= 0.0) {
+            DeleteDC(dc);
+            DeleteObject(bmp);
+            PROFILE_END_VAR(timer, "bg_tile_compose");
+            return NULL;
+        }
+        int dw = (int)((double)sw * scale + 0.5);
+        int dh = (int)((double)sh * scale + 0.5);
+        if (dw < 1) dw = 1;
+        if (dh < 1) dh = 1;
+        int ox = (w - dw) / 2;
+        int oy = (h - dh) / 2;
+
+        GpGraphics* g = NULL;
+        GpStatus gst = GdipCreateFromHDC(dc, &g);
+        if (gst == Ok && g) {
+            GdipSetCompositingMode(g, CompositingModeSourceOver);
+            GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
+            GdipSetSmoothingMode(g, SmoothingModeHighQuality);
+            GdipSetPixelOffsetMode(g, PixelOffsetModeHalf);
+            GpStatus dst = GdipDrawImageRectI(g, (GpBitmap*)s->src, ox, oy, dw, dh);
+            GdipDeleteGraphics(g);
+            if (dst != Ok) {
+                DeleteDC(dc);
+                DeleteObject(bmp);
+                PROFILE_END_VAR(timer, "bg_tile_compose");
+                return NULL;
+            }
+        }
+        if (haveCache) bg_cache_store(cacheFile, w, h, bits, &ft, sz);
+    }
 
     BgTileSlot* slot = NULL;
     for (int i = 0; i < BG_TILE_SLOTS; i++) {

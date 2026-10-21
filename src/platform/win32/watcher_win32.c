@@ -20,8 +20,6 @@ WindowManager* wm = (WindowManager*)arg;
         char* filename = Platform_WatchForCFileChanges(FeaturePath);
         if (filename) {
             Sleep(200);
-            char* drained = Platform_WatchForCFileChanges(FeaturePath);
-            free(drained);
             log_info("Changed file: %s", filename);
             char rel[256];
             strncpy(rel, filename, sizeof(rel)-1);
