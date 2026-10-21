@@ -490,8 +490,8 @@ Display *dpy = get_display();
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void), const char* name) {
-        PROFILE_START(_pt);
-Display *dpy = get_display();
+    PROFILE_START(_pt);
+    Display *dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DisplayMessage"); return ; }
 
     int winW = 0;
