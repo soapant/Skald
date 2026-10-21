@@ -127,7 +127,6 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
         x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          fl_editbox_reset_placed();
           fl_checkbox_frame_begin();
           Platform_SetDrawContext(dpy, NULL, NULL, 0);
           FlintContext_Get()->prompt_callbacks.render(state);
@@ -145,7 +144,6 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
         x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          fl_editbox_reset_placed();
           fl_checkbox_frame_begin();
           FlintContext_Get()->prompt_callbacks.render(state);
         } else {
@@ -178,7 +176,6 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     }
     Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-        fl_editbox_reset_placed();
         fl_checkbox_frame_begin();
         FlintContext_Get()->prompt_callbacks.render(state);
     } else {

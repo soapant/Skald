@@ -548,14 +548,9 @@ PROFILE_START(timer);
     { PROFILE_END_VAR(_pt, "fl_search_file_in_dir_platform"); return NULL; }
 }
 
-static bool g_edit_placed = false;
-void fl_editbox_reset_placed(void) {     PROFILE_START(_pt);
-g_edit_placed = false; }
-
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
         PROFILE_START(_pt);
 if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
-    g_edit_placed = true;
     Display *dpy; XftDraw *xd; Visual *vis; Colormap cmap;
     Platform_GetDrawContext(&dpy,&xd,&vis,&cmap);
     if (!dpy || !xd) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }

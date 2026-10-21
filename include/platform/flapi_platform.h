@@ -11,7 +11,6 @@ bool fl_listbox_next_platform(FlListItemCtx *out);
 void fl_listbox_end_platform(void);
 int fl_listbox_get_count(void);
 bool fl_place_editbox_platform(const FlEditSpec *spec);
-void fl_editbox_reset_placed(void);
 bool fl_type_text_platform(const char *s);
 void fl_run_after_time_platform(double seconds, void (*callback)(void));
 FlTimer fl_start_timer_platform(void);
