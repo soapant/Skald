@@ -121,6 +121,7 @@ void start_auto_click(void) {
     while (fl_get_mouse_pos().x == last_mouse_pos.x && 
            fl_get_mouse_pos().y == last_mouse_pos.y) {
         fl_click();
+        fl_sleep(0.01);
     }
 }
 

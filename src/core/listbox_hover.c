@@ -14,6 +14,9 @@ static int g_mouse_y = 0;
 static int g_pending_scroll = 0;
 static bool g_focus_by_keyboard = false;
 static bool g_mouse_moved = false;
+static int g_list_top = 0;
+static int g_item_height = 0;
+static int g_visible_count = 0;
 static bool g_pub_set = false;
 static int g_pub_x = 0;
 static int g_pub_y = 0;
@@ -176,6 +179,18 @@ void ListBox_ScrollToSelection(ListBoxInfo* lb) {
     int old_top = UI_LB_GetViewTop(lb);
     int new_top = ListBox_ScrollTopFor(lb->selected_index, visible, lb->populated_count);
     if (new_top != old_top) UI_LB_ScrollToTop(lb, new_top);
+}
+
+void ListBox_SetGeometry(int list_top, int item_height, int visible_count) {
+    g_list_top = list_top;
+    g_item_height = item_height;
+    g_visible_count = visible_count;
+}
+
+void ListBox_GetGeometry(int* out_list_top, int* out_item_height, int* out_visible_count) {
+    if (out_list_top) *out_list_top = g_list_top;
+    if (out_item_height) *out_item_height = g_item_height;
+    if (out_visible_count) *out_visible_count = g_visible_count;
 }
 
 void ListBox_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
