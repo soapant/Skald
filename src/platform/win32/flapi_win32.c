@@ -559,79 +559,27 @@ if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_unlock_platform"); return ; }
     LeaveCriticalSection((CRITICAL_SECTION*)mutex);
 }
 
-int fl_get_active_interface_platform(char out[], size_t max_len) {
-        PROFILE_START(_pt);
-ULONG size = 15 * 1024;
-    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
-    if (!addrs) { PROFILE_END_VAR(_pt, "fl_get_active_interface_platform"); return 0; }
+/* GetAdaptersAddresses costs ~6ms on a machine with many adapters (Hyper-V,
+   WSL, VPN, Bluetooth, ...), and the net widgets used to call it on every
+   sample. The active adapter changes rarely, so resolve it once and reuse
+   the interface index for a few seconds. GetIfEntry on that index is then a
+   ~0.08ms single-interface query instead of two full GetIfTable sweeps. */
+#define FL_NET_ADAPTER_TTL_MS 5000
 
-    DWORD ret = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, addrs, &size);
-    if (ret != NO_ERROR) {
-        free(addrs);
-        return 0;
-    }
-
-    for (IP_ADAPTER_ADDRESSES* a = addrs; a; a = a->Next) {
-        if (a->IfType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
-        if (a->OperStatus != IfOperStatusUp) continue;
-        if (a->FirstGatewayAddress == NULL) continue;
-
-        const char* id = a->AdapterName;
-        if (!id[0]) continue;
-        size_t len = strlen(id);
-        if (len >= max_len) len = max_len - 1;
-        memcpy(out, id, len);
-        out[len] = '\0';
-        free(addrs);
-        return 1;
-    }
-
-    free(addrs);
-    out[0] = '\0';
-    { PROFILE_END_VAR(_pt, "fl_get_active_interface_platform"); return 0; }
-}
-
-unsigned long long fl_net_rx_bytes_platform() {
-        PROFILE_START(_pt);
-char iface[64];
-    if (!fl_get_active_interface_platform(iface, sizeof(iface)) || !iface[0]) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return 0; }
-    MIB_IFTABLE* table = NULL;
-    DWORD size = 0;
-    
-    if (GetIfTable(NULL, &size, FALSE) != ERROR_INSUFFICIENT_BUFFER) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return 0; }
-    
-    table = (MIB_IFTABLE*)malloc(size);
-    if (!table) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return 0; }
-    
-    if (GetIfTable(table, &size, FALSE) != NO_ERROR) {
-        free(table);
-        return 0;
-    }
-    
-    unsigned long long rx = 0;
-    for (DWORD i = 0; i < table->dwNumEntries; i++) {
-        MIB_IFROW* row = &table->table[i];
-        if (row->dwType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
-        
-        if (iface && iface[0]) {
-            char name[256];
-            wcstombs(name, row->wszName, sizeof(name) - 1);
-            name[sizeof(name) - 1] = '\0';
-            const char* guid = strrchr(name, '{');
-            if (!guid || _stricmp(guid, iface) != 0) continue;
-        }
-        rx += row->dwInOctets;
-    }
-    
-    free(table);
-    { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return rx; }
-}
+typedef struct {
+    ULONG index;      /* MIB interface index */
+    ULONG if_type;    /* IF_TYPE_* */
+    char  guid[64];   /* adapter GUID, as GetIfTable reports it */
+    DWORD at_ms;
+    bool  valid;
+} FlNetAdapter;
 
 static CRITICAL_SECTION g_net_cs;
 static BOOL g_net_cs_ready = FALSE;
 static FlNetStatus g_net_cached = FL_NET_OFFLINE;
 static DWORD g_net_cached_at = 0;
 static DWORD g_net_ever = 0;
+static FlNetAdapter g_net_adapter = {0};
 
 #define FL_NET_TTL_MS 5000
 
@@ -645,34 +593,117 @@ if (!g_net_cs_ready) {
 }
 
 static void net_unlock(void) {
-        PROFILE_START(_pt);
+    PROFILE_START(_pt);
 if (g_net_cs_ready) LeaveCriticalSection(&g_net_cs);
 }
 
-static void net_refresh(void) {
-        PROFILE_START(_pt);
-g_net_cached = FL_NET_OFFLINE;
-
-    ULONG size = 15 * 1024;
+static bool net_resolve_adapter(FlNetAdapter* out) {
+    PROFILE_START(_pt);
+    ULONG size = 16 * 1024;
     IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
-    if (!addrs) { PROFILE_END_VAR(_pt, "net_refresh"); return ; }
-    if (GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, addrs, &size) != NO_ERROR) {
+    if (!addrs) { PROFILE_END_VAR(_pt, "net_resolve_adapter"); return false; }
+    ULONG rc = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, addrs, &size);
+    if (rc == ERROR_BUFFER_OVERFLOW) {
         free(addrs);
-        return;
+        addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
+        if (!addrs) { PROFILE_END_VAR(_pt, "net_resolve_adapter"); return false; }
+        rc = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, addrs, &size);
     }
-
+    if (rc != NO_ERROR) {
+        free(addrs);
+        PROFILE_END_VAR(_pt, "net_resolve_adapter");
+        return false;
+    }
+    bool found = false;
     for (IP_ADAPTER_ADDRESSES* a = addrs; a; a = a->Next) {
         if (a->IfType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
         if (a->OperStatus != IfOperStatusUp) continue;
         if (a->FirstGatewayAddress == NULL) continue;
-
-        if (a->IfType == IF_TYPE_IEEE80211) g_net_cached = FL_NET_WIFI;
-        else if (a->IfType == IF_TYPE_ETHERNET_CSMACD) g_net_cached = FL_NET_ETHERNET;
+        out->index = a->IfIndex;
+        out->if_type = a->IfType;
+        const char* id = a->AdapterName ? a->AdapterName : "";
+        strncpy(out->guid, id, sizeof(out->guid) - 1);
+        out->guid[sizeof(out->guid) - 1] = '\0';
+        found = true;
         break;
     }
-
     free(addrs);
+    { PROFILE_END_VAR(_pt, "net_resolve_adapter"); return found; }
 }
+
+static FlNetAdapter net_active_adapter(void) {
+    PROFILE_START(_pt);
+    net_lock();
+    DWORD now = GetTickCount();
+    if (g_net_adapter.valid && (now - g_net_adapter.at_ms) < FL_NET_ADAPTER_TTL_MS) {
+        FlNetAdapter cached = g_net_adapter;
+        net_unlock();
+        PROFILE_END_VAR(_pt, "net_active_adapter");
+        return cached;
+    }
+    net_unlock();
+    FlNetAdapter a;
+    memset(&a, 0, sizeof(a));
+    a.valid = net_resolve_adapter(&a);
+    a.at_ms = now;
+    net_lock();
+    g_net_adapter = a;
+    FlNetAdapter result = g_net_adapter;
+    net_unlock();
+    { PROFILE_END_VAR(_pt, "net_active_adapter"); return result; }
+}
+
+static void net_invalidate_adapter(void) {
+    net_lock();
+    g_net_adapter.valid = false;
+    g_net_adapter.index = 0;
+    net_unlock();
+}
+
+static void net_refresh(void) {
+    PROFILE_START(_pt);
+    g_net_cached = FL_NET_OFFLINE;
+    FlNetAdapter a = net_active_adapter();
+    if (a.valid) {
+        if (a.if_type == IF_TYPE_IEEE80211) g_net_cached = FL_NET_WIFI;
+        else if (a.if_type == IF_TYPE_ETHERNET_CSMACD) g_net_cached = FL_NET_ETHERNET;
+    }
+    { PROFILE_END_VAR(_pt, "net_refresh"); }
+}
+
+int fl_get_active_interface_platform(char out[], size_t max_len) {
+        PROFILE_START(_pt);
+    if (!out || max_len == 0) { PROFILE_END_VAR(_pt, "fl_get_active_interface_platform"); return 0; }
+    FlNetAdapter a = net_active_adapter();
+    if (!a.valid || !a.guid[0]) {
+        out[0] = '\0';
+        PROFILE_END_VAR(_pt, "fl_get_active_interface_platform");
+        return 0;
+    }
+    size_t len = strlen(a.guid);
+    if (len >= max_len) len = max_len - 1;
+    memcpy(out, a.guid, len);
+    out[len] = '\0';
+    { PROFILE_END_VAR(_pt, "fl_get_active_interface_platform"); return 1; }
+}
+
+unsigned long long fl_net_rx_bytes_platform() {
+        PROFILE_START(_pt);
+    FlNetAdapter a = net_active_adapter();
+    if (!a.valid || !a.index) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return 0; }
+    MIB_IFROW row;
+    memset(&row, 0, sizeof(row));
+    row.dwIndex = a.index;
+    if (GetIfEntry(&row) != NO_ERROR) {
+        /* The interface went away or the index was recycled: resolve again. */
+        net_invalidate_adapter();
+        PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform");
+        return 0;
+    }
+    unsigned long long rx = (unsigned long long)row.dwInOctets;
+    { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return rx; }
+}
+
 
 FlNetStatus fl_net_status_platform(void) {
         PROFILE_START(_pt);
@@ -838,4 +869,6 @@ static int fl_http_perform(const char *url, const char *method, const char *cont
     WinHttpCloseHandle(hc);
     return ok;
 }
+
+
 
