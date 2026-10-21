@@ -209,20 +209,6 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     return WindowManager_PushPopup(wm, (Popup*)data);
 }
 
-bool WindowManager_TopPopupWantsMouseRender(WindowManager* wm) {
-    Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || top->type != POPUP_fl_window) return false;
-    PromptPopupData* data = (PromptPopupData*)top;
-    return data->state && data->state->mouse_hover;
-}
-
-void WindowManager_TopPopupSetMouseHover(WindowManager* wm, bool enabled) {
-    Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || top->type != POPUP_fl_window) return;
-    PromptPopupData* data = (PromptPopupData*)top;
-    if (data->state) data->state->mouse_hover = enabled;
-}
-
 bool WindowManager_TopPopupWantsTick(WindowManager* wm) {
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top || top->type != POPUP_fl_window) return false;

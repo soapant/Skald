@@ -271,5 +271,5 @@ void TriggerTypingTest(void) {
 FLINT_FEATURE_INIT {
     text = typing_test_get_random_text(typing_test_word_count);
     fl_register_hotkey(.hotkey="Alt+B", .cb=TriggerTypingTest);
-    fl_register_feature(.name="Typing Test",.cb=(bool(*)(void))TriggerTypingTest,.icon="/keyboard.png");
+    fl_register_feature(.name="Typing Test",.cb=TriggerTypingTest,.icon="/keyboard.png");
 }

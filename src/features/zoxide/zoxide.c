@@ -66,6 +66,6 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+W", .cb=TriggerZoxide, .blacklist={"\1"});
     fl_register_hotkey(.hotkey="Alt+R", .cb=TriggerFileManager, .blacklist={"\1"});
 
-    fl_register_feature(.name="Zoxide",.cb=(bool(*)(void))TriggerZoxide,.icon="/folder.png");
-    fl_register_feature(.name="File Manager",.cb=(bool(*)(void))TriggerFileManager,.icon="/folder.png");
+    fl_register_feature(.name="Zoxide",.cb=TriggerZoxide,.icon="/folder.png");
+    fl_register_feature(.name="File Manager",.cb=TriggerFileManager,.icon="/folder.png");
 }
