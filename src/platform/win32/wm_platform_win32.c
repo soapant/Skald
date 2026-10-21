@@ -12,6 +12,7 @@
 #include "core/modal.h"
 #include "core/feature_data.h"
 #include "core/timer.h"
+#include "core/listbox_hover.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "platform/win32/common_ui_win32.h"
@@ -243,6 +244,7 @@ PROFILE_END_VAR(timer3, "Focus");
     {
       int mx = 0, my = 0;
       if (Platform_GetMousePos(&mx, &my)) {
+        ListBox_PublishMousePos(mx, my);
         int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
         if (mx != last_mx || my != last_my || btn != last_btn) {
           last_mx = mx;

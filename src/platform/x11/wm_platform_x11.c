@@ -13,6 +13,7 @@
 #include <X11/extensions/Xrandr.h>
 
 #include "core/timer.h"
+#include "core/listbox_hover.h"
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
@@ -128,6 +129,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
         bool mouse_changed = false;
         int mx = 0, my = 0;
         if (Platform_GetMousePos(&mx, &my)) {
+            ListBox_PublishMousePos(mx, my);
             int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
             if (mx != last_mx || my != last_my || btn != last_btn) {
                 last_mx = mx;
