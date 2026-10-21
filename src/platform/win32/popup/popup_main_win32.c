@@ -13,6 +13,7 @@
 #include "platform/ui.h"
 #include "core/feature_data.h"
 #include "platform/win32/subclasses_win32.h"
+#include "platform/win32/common_ui_win32.h"
 #include "platform/win32/bg_image_win32.h"
 #include "platform/input_state.h"
 #include "wingdi.h"
@@ -29,6 +30,8 @@
 #include "core/checkbox.h"
 #include "core/listbox_hover.h"
 static bool s_swallow_next_char = false;
+
+static bool prompt_win_no_bg(void);
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
         PROFILE_START(_pt);
@@ -153,8 +156,21 @@ static HBRUSH s_bg_brush = NULL;
           FillRect(memDC, &rc, s_bg_brush);
         }
       }
-      Platform_DrawPromptSeparator(0, winW);
       SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+      {
+        int lbCount = (int)SendMessageA(hWnd, LB_GETCOUNT, 0, 0);
+        if (lbCount > 0) {
+          HDC prevDC = NULL;
+          Platform_GetDrawContextWin32(&prevDC);
+          int prevOx = 0, prevOy = 0;
+          Platform_GetDrawOffset(&prevOx, &prevOy);
+          Platform_SetDrawContextWin32(memDC);
+          Platform_SetDrawOffset(0, 0);
+          Platform_DrawPromptSeparator(0, winW);
+          Platform_SetDrawOffset(prevOx, prevOy);
+          Platform_SetDrawContextWin32(prevDC);
+        }
+      }
       {
         int itemH = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
         int count = (int)SendMessageA(hWnd, LB_GETCOUNT, 0, 0);
@@ -188,6 +204,16 @@ static HBRUSH s_bg_brush = NULL;
               FillRect(memDC, &rc, s_bg_brush);
             }
           }
+        }
+      }
+      {
+        RECT borderRegion;
+        borderRegion.left = lbOrigin.x;
+        borderRegion.top = lbOrigin.y;
+        borderRegion.right = lbOrigin.x + rc.right;
+        borderRegion.bottom = lbOrigin.y + rc.bottom;
+        if (!prompt_win_no_bg()) {
+          win32_draw_window_border(memDC, -lbOrigin.x, -lbOrigin.y, winW, winH, &borderRegion);
         }
       }
       BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
@@ -644,6 +670,7 @@ case WM_CHAR: {
                 FillRect(paintDC, &ps.rcPaint, s_bg_brush);
             }
           }
+          win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
         }
         if (FlintContext_Get()->prompt_callbacks.render) {
             extern PromptState* Platform_GetWin32PromptState(void);

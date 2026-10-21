@@ -9,6 +9,7 @@
 #include "config.h"
 #include "platform/ui.h"
 #include "platform/win32/subclasses_win32.h"
+#include "platform/win32/common_ui_win32.h"
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
@@ -71,6 +72,9 @@ FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
             HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &rect, hBackgroundBrush);
             DeleteObject(hBackgroundBrush);
+          }
+          if (!(data && data->no_bg)) {
+            win32_draw_window_border(hdc, 0, 0, rect.right, rect.bottom, NULL);
           }
 
           if (data && data->render) {
