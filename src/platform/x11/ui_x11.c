@@ -108,8 +108,8 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
         return;
     }
     int old_sel = lb->selected_index;
-    if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     ListBox_FocusByKeyboard();
+    if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     lb->selected_index = index;
     UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, index, false);
     ListBox_ScrollToSelection(lb);
