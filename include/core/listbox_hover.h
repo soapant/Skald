@@ -15,7 +15,6 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
                         int top_index, int visible_count);
 void ListBox_FocusByKeyboard(void);
 void ListBox_FocusByMouse(void);
-void ListBox_ListRebuilt(void);
 void ListBox_QueueScroll(int rows);
 int ListBox_TakeScroll(void);
 void ListBox_ScrollBy(ListBoxInfo* lb, int rows, int visible_count);
