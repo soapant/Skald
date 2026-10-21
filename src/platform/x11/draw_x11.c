@@ -5,6 +5,7 @@
 #include "core/prompt_geometry.h"
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
+#include "core/listbox_hover.h"
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
@@ -793,16 +794,7 @@ PROFILE_START(timer);
     if (visible > lb->populated_count) visible = lb->populated_count;
     UI_LB_SetVisibleCount(visible);
 
-    if (lb->selected_index >= 0) {
-        if (lb->selected_index < lb->view_offset + PaddingForScrolling)
-            lb->view_offset = lb->selected_index - PaddingForScrolling;
-        else if (lb->selected_index >= lb->view_offset + visible - PaddingForScrolling)
-            lb->view_offset = lb->selected_index - visible + PaddingForScrolling + 1;
-    }
-    if (lb->view_offset < 0) lb->view_offset = 0;
-    if (lb->view_offset + visible > lb->populated_count)
-        lb->view_offset = lb->populated_count - visible;
-    if (lb->view_offset < 0) lb->view_offset = 0;
+    ListBox_HoverFocus(lb, y0, itemH, lb->view_offset, visible);
 
     for (int i = 0; i < visible; i++) {
         int idx = lb->view_offset + i;

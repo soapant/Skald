@@ -25,6 +25,7 @@
 
 #include "core/timer.h"
 #include "core/checkbox.h"
+#include "core/listbox_hover.h"
 static bool s_swallow_next_char = false;
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
@@ -368,6 +369,18 @@ static HBRUSH s_bg_brush = NULL;
                             break;
     case WM_ERASEBKGND:
                        return TRUE;
+    case WM_MOUSEMOVE: {
+      extern PromptState* Platform_GetWin32PromptState(void);
+      PromptState* hst = Platform_GetWin32PromptState();
+      if (hst && hst->has_listbox) {
+        ListBoxInfo* hlb = &hst->listbox;
+        int hItemH = UI_LB_GetItemHeight(WH_FROM_HWND(hWnd));
+        int hVisible = UI_LB_GetVisibleCount();
+        int hTop = UI_LB_GetTopIndex(WH_FROM_HWND(hWnd));
+        ListBox_HoverFocus(hlb, PromptListTop(), hItemH, hTop, hVisible);
+      }
+      return 0;
+    }
     case WM_PAINT: {
       PAINTSTRUCT ps;
       HDC hdc = BeginPaint(hWnd, &ps);

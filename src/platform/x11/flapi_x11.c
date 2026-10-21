@@ -14,6 +14,7 @@
 
 #include "config.h"
 #include "core/prompt_geometry.h"
+#include "core/listbox_hover.h"
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -449,20 +450,11 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     int visible = list_h / g_fl_list_itemH;
     if (visible < 1) visible = 1;
     if (visible > lb->populated_count) visible = lb->populated_count;
-    if (lb->selected_index >= 0) {
-        if (lb->selected_index < lb->view_offset + PaddingForScrolling)
-            lb->view_offset = lb->selected_index - PaddingForScrolling;
-        else if (lb->selected_index >= lb->view_offset + visible - PaddingForScrolling)
-            lb->view_offset = lb->selected_index - visible + PaddingForScrolling + 1;
-    }
-    if (lb->view_offset < 0) lb->view_offset = 0;
-    if (lb->view_offset + visible > lb->populated_count)
-        lb->view_offset = lb->populated_count - visible;
-    if (lb->view_offset < 0) lb->view_offset = 0;
     g_fl_list_visible = visible;
     g_fl_list_cur = 0;
     g_fl_list_font = Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
     g_fl_list_font_owned = true;
+    ListBox_HoverFocus(g_fl_list_lb, g_fl_list_y0, g_fl_list_itemH, g_fl_list_lb->view_offset, visible);
     { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return true; }
 }
 
