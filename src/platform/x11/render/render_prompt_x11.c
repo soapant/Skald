@@ -7,8 +7,8 @@
 #include <X11/Xft/Xft.h>
 #include <sys/time.h>
 #include "core/timer.h"
+#include "core/checkbox.h"
 #include "platform/draw.h"
-#include "platform/flapi_platform.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/bg_image_x11.h"
 #include "platform/x11/window_factory_x11.h"
@@ -127,7 +127,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
         x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          fl_checkbox_frame_begin();
+          Checkbox_FrameBegin();
           Platform_SetDrawContext(dpy, NULL, NULL, 0);
           FlintContext_Get()->prompt_callbacks.render(state);
         } else {
@@ -144,7 +144,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
         x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          fl_checkbox_frame_begin();
+          Checkbox_FrameBegin();
           FlintContext_Get()->prompt_callbacks.render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
@@ -176,7 +176,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     }
     Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-        fl_checkbox_frame_begin();
+        Checkbox_FrameBegin();
         FlintContext_Get()->prompt_callbacks.render(state);
     } else {
         if (state->has_listbox) {
