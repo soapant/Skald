@@ -794,6 +794,8 @@ PROFILE_START(timer);
     if (visible > lb->populated_count) visible = lb->populated_count;
     UI_LB_SetVisibleCount(visible);
 
+    ListBox_ApplyPendingScroll(lb, visible);
+
     ListBox_HoverFocus(lb, y0, itemH, lb->view_offset, visible);
 
     for (int i = 0; i < visible; i++) {
