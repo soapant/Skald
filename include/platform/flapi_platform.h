@@ -1,7 +1,7 @@
 #ifndef FLAPI_PLATFORM_H
 #define FLAPI_PLATFORM_H
 
-#include "core/flapi.h"
+#include "core/types/flapi_types.h"
 
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path);
 bool fl_launch_with_args_platform(const char* path, const char* args);

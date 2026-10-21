@@ -10,8 +10,8 @@
 #include <ctype.h>
 #include "deps/log.h"
 #include <shlwapi.h>
-#include "platform/flapi_platform.h"
 #include "core/clipboard_history.h"
+#include "platform/flapi_platform.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
 #include "platform/draw.h"
