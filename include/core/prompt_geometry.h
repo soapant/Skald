@@ -26,6 +26,8 @@
 
 #define PROMPT_ITEM_TEXT_X 10
 
+#define PROMPT_GLYPH_INK_PAD 10
+
 #define PROMPT_SEL_RADIUS 6
 #define PROMPT_SEL_INSET 1
 #define PROMPT_SEL_X 4
