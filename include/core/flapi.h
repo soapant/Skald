@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "core/types.h"
 #include "core/types/prompt.h"
+#include "core/types/flapi_types.h"
 #include "core/checkbox.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
@@ -23,7 +24,6 @@
 #define FlClipboardEntry ClipboardEntry
 #define FlClipboardHistory ClipboardHistory
 
-typedef struct { uint64_t ticks; } FlTimer;
 typedef struct PlatformWidget PlatformWidget;
 
 typedef PlColor FlColor;
@@ -41,12 +41,6 @@ bool fl_paste_from_clipboard();
 bool fl_paste(char* content);
 char* fl_get_last_clipboard_entry();
 
-
-typedef enum {
-    FL_NET_OFFLINE,
-    FL_NET_ETHERNET,
-    FL_NET_WIFI,
-} FlNetStatus;
 
 // =============================================================================
 //  NETWORK
@@ -294,28 +288,6 @@ typedef struct {
 
 int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec);
 #define fl_measure_text_wrapped(...) fl_measure_text_wrapped_impl(&(FlMeasureSpec){__VA_ARGS__})
-
-typedef struct {
-    const char *buffer;
-    int x; int y; int w; int h;
-    unsigned long color;
-    FontHandle font;
-} FlEditSpec;
-
-typedef struct {
-    ListBoxInfo *lb;
-    const char **items;
-    int count;
-    int x; int y; int w; int h;
-    int item_height;
-} FlListSpec;
-
-typedef struct {
-    int idx;
-    bool selected;
-    int x; int y; int w; int h;
-    const char *text;
-} FlListItemCtx;
 
 typedef struct {
     const char *path;
