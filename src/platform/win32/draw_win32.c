@@ -774,6 +774,8 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     PROFILE_START(timer);
 
     if (!path || !path[0]) { PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
+    x += FlDrawState_Get()->off_x;
+    y += FlDrawState_Get()->off_y;
     if (w <= 0) w = (IconSize > 0) ? IconSize : 16;
     if (h <= 0) h = (IconSize > 0) ? IconSize : 16;
     measure_track(x, y, w, h);
