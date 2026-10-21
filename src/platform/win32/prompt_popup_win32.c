@@ -167,10 +167,3 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     { PROFILE_END_VAR(_pt, "Platform_PromptPopupOnKey"); return false; }
 }
 
-void HandleCommandExecution(ListBoxInfo* lb, char* string) {
-        PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "HandleCommandExecution"); return ; }
-    int num = atoi(string);
-    UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, num - 1);
-    ListBox_ScrollToSelection(lb);
-}

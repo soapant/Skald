@@ -1,7 +1,7 @@
 #include "core/listbox_hover.h"
+#include <stdlib.h>
 #include "core/context.h"
 #include "core/timer.h"
-#include "deps/log.h"
 #include "core/window_manager.h"
 #include "config.h"
 #include "platform/draw.h"
@@ -19,17 +19,14 @@ static bool g_focus_by_keyboard = false;
 static bool g_list_rebuilt = false;
 
 void ListBox_FocusByKeyboard(void) {
-    if (!g_focus_by_keyboard) log_info("listbox: focus -> keyboard");
     g_focus_by_keyboard = true;
 }
 
 void ListBox_FocusByMouse(void) {
-    if (g_focus_by_keyboard) log_info("listbox: focus -> mouse");
     g_focus_by_keyboard = false;
 }
 
 void ListBox_ListRebuilt(void) {
-    log_info("listbox: list rebuilt, mouse re-asserts");
     g_list_rebuilt = true;
     g_focus_by_keyboard = false;
 }
@@ -124,19 +121,8 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
     bool rebuilt = g_list_rebuilt;
     g_list_rebuilt = false;
     if (idx < 0 || idx == lb->selected_index) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
-    if (g_focus_by_keyboard) {
-        log_info("listbox: hover skip (keyboard) mouse=%d,%d row=%d sel=%d view=%d",
-                 mx, my, idx, lb->selected_index, lb->view_offset);
-        PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
-        return false;
-    }
-    if (!mouse_moved && !rebuilt) {
-        log_info("listbox: hover skip (no move/rebuild) mouse=%d,%d row=%d sel=%d view=%d",
-                 mx, my, idx, lb->selected_index, lb->view_offset);
-        PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
-        return false;
-    }
-    log_info("listbox: hover focus %d -> %d (mouse=%d,%d view=%d)", lb->selected_index, idx, mx, my, lb->view_offset);
+    if (g_focus_by_keyboard) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    if (!mouse_moved && !rebuilt) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
     UI_SetSelection(lb, FlintContext_Get()->window.hListBox, idx);
     PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
     return true;
@@ -171,8 +157,6 @@ void ListBox_ScrollBy(ListBoxInfo* lb, int rows, int visible_count) {
         lb->selected_index = sel;
         UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, sel, false);
     }
-    log_info("listbox: wheel scroll view %d -> %d (sel %d -> %d)",
-             off - delta, off, old_sel, lb->selected_index);
     UI_LB_SetTopIndex(FlintContext_Get()->window.hListBox, off);
     PROFILE_END_VAR(_pt, "ListBox_ScrollBy");
 }
@@ -198,9 +182,32 @@ void ListBox_ScrollToSelection(ListBoxInfo* lb) {
     if (visible <= 0) visible = 16;
     int old_top = UI_LB_GetViewTop(lb);
     int new_top = ListBox_ScrollTopFor(lb->selected_index, visible, lb->populated_count);
-    if (new_top != old_top) {
-        log_info("listbox: scroll to selection view %d -> %d (sel=%d visible=%d)",
-                 old_top, new_top, lb->selected_index, visible);
-        UI_LB_ScrollToTop(lb, new_top);
-    }
+    if (new_top != old_top) UI_LB_ScrollToTop(lb, new_top);
+}
+
+void ListBox_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
+    if (!lb) return;
+    int sel = lb->selected_index;
+    if (sel >= 0) sel--;
+    if (sel == lb->selected_index) return;
+    UI_NavigateTo(lb, hListBox, sel);
+}
+
+void ListBox_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
+    if (!lb) return;
+    int count = lb->populated_count;
+    if (count <= 0) return;
+    int sel = lb->selected_index;
+    if (sel < 0) sel = -1;
+    if (sel >= count - 1) sel = count - 1;
+    else sel++;
+    if (sel == lb->selected_index) return;
+    UI_NavigateTo(lb, hListBox, sel);
+}
+
+void ListBox_CommandExecute(ListBoxInfo* lb, const char* string) {
+    if (!lb || !string) return;
+    int num = atoi(string);
+    UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, num - 1);
+    ListBox_ScrollToSelection(lb);
 }

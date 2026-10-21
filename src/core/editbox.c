@@ -14,6 +14,36 @@ static int editbox_measure(const FlEditboxSpec* spec, const char* text, int len)
     return Platform_MeasureTextWidth(text, len, FontSize);
 }
 
+void Editbox_BuildSpec(FlEditboxSpec* out, const EditboxInit* in) {
+    if (!out || !in) return;
+    memset(out, 0, sizeof(*out));
+    out->text = in->text;
+    out->text_len = in->text_len;
+    out->cursor = in->cursor;
+    out->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
+    out->insert_mode = in->insert_mode;
+    out->x = in->x;
+    out->y = in->y;
+    out->w = in->w;
+    out->inset = PROMPT_EDIT_INSET;
+    out->visible_w = in->w - PROMPT_EDIT_SCROLL_PAD;
+    out->scroll = in->state ? in->state->scroll_offset : 0;
+    out->cursor_x = in->cursor_x;
+    out->text_w = in->text_w;
+    out->text_y = in->y;
+    out->caret_y = Editbox_CaretY(in->y, in->ascent, in->descent);
+    out->caret_h = PromptCaretHeight();
+    out->caret_w_normal = PromptNormalCaretWidth();
+    out->caret_w_insert = PROMPT_CARET_W_INSERT;
+    out->placeholder = in->state ? in->state->placeholder : NULL;
+    out->placeholder_dy = 2;
+    out->rainbow_limit_x = -1;
+    out->text_color = in->text_color;
+    out->font = in->font;
+    Editbox_ResolveSelection(in->state, in->text_len, true, &out->sel_start, &out->sel_end,
+                             &out->has_selection);
+}
+
 int Editbox_CaretY(int box_top, int ascent, int descent) {
     int line_h = ascent + descent;
     if (line_h <= 0 || FontSize <= 0) return box_top;

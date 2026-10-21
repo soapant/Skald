@@ -11,6 +11,7 @@
 #include "core/context.h"
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
+#include "core/draw_state.h"
 #include "deps/log.h"
 #include <stdio.h>
 #include <string.h>
@@ -191,72 +192,49 @@ if (size <= 0) size = FontSize;
   { PROFILE_END_VAR(_pt, "win32_sized_font"); return g_sizeFonts[slot]; }
 }
 
-static __thread unsigned long g_draw_bg_override = 0;
-static __thread bool g_transparent_window = false;
 
 void Platform_SetTransparentWindow(bool on) {
         PROFILE_START(_pt);
-g_transparent_window = on;
+FlDrawState_Get()->transparent = on;
 }
 bool Platform_GetTransparentWindow(void) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_GetTransparentWindow"); return g_transparent_window; }
+{ PROFILE_END_VAR(_pt, "Platform_GetTransparentWindow"); return FlDrawState_Get()->transparent; }
 }
 
 void Platform_SetDrawBgColor(unsigned long hex) {
         PROFILE_START(_pt);
-g_draw_bg_override = hex;
+FlDrawState_Get()->bg_override = hex;
 }
 unsigned long Platform_GetDrawBgColor(void) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_GetDrawBgColor"); return g_draw_bg_override; }
+{ PROFILE_END_VAR(_pt, "Platform_GetDrawBgColor"); return FlDrawState_Get()->bg_override; }
 }
 
-static __thread bool g_measuring = false;
-static __thread bool g_meas_any = false;
-static __thread int g_meas_origin_x = 0, g_meas_origin_y = 0;
-static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
 
-static void measure_reset(void) {
-        PROFILE_START(_pt);
-g_measuring = false;
-    g_meas_any = false;
-    g_meas_x0 = 0; g_meas_y0 = 0; g_meas_x1 = 0; g_meas_y1 = 0;
-}
 void Platform_BeginMeasure(void) {
         PROFILE_START(_pt);
-g_measuring = true;
-    g_meas_x0 = 1 << 30; g_meas_y0 = 1 << 30;
-    g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
-    g_meas_any = false;
+    FlDrawState_BeginMeasure();
+    PROFILE_END_VAR(_pt, "Platform_BeginMeasure");
 }
 void Platform_EndMeasure(int *out_w, int *out_h) {
         PROFILE_START(_pt);
-int rw = 0, rh = 0;
-    if (g_meas_any) {
-        rw = (g_meas_x1 > g_meas_x0) ? (g_meas_x1 - g_meas_x0) : 0;
-        rh = (g_meas_y1 > g_meas_y0) ? (g_meas_y1 - g_meas_y0) : 0;
-    }
-    if (out_w) *out_w = rw;
-    if (out_h) *out_h = rh;
-    g_meas_origin_x = g_meas_x0;
-    g_meas_origin_y = g_meas_y0;
-    measure_reset();
+    FlDrawState_EndMeasure(out_w, out_h);
+    PROFILE_END_VAR(_pt, "Platform_EndMeasure");
 }
 void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
         PROFILE_START(_pt);
-if (out_x) *out_x = g_meas_origin_x;
-    if (out_y) *out_y = g_meas_origin_y;
+if (out_x) *out_x = FlDrawState_Get()->meas_origin_x;
+    if (out_y) *out_y = FlDrawState_Get()->meas_origin_y;
 }
-static __thread int g_draw_off_x = 0, g_draw_off_y = 0;
 void Platform_SetDrawOffset(int dx, int dy) {
         PROFILE_START(_pt);
-g_draw_off_x = dx;
-    g_draw_off_y = dy;
+FlDrawState_Get()->off_x = dx;
+    FlDrawState_Get()->off_y = dy;
 }
 void Platform_GetDrawOffset(int *out_x, int *out_y) {
-    if (out_x) *out_x = g_draw_off_x;
-    if (out_y) *out_y = g_draw_off_y;
+    if (out_x) *out_x = FlDrawState_Get()->off_x;
+    if (out_y) *out_y = FlDrawState_Get()->off_y;
 }
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
     HWND w = WH_TO_HWND(h);
@@ -271,12 +249,8 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
 }
 static void measure_track(int x, int y, int w, int h) {
         PROFILE_START(_pt);
-if (!g_measuring) { PROFILE_END_VAR(_pt, "measure_track"); return ; }
-    if (x < g_meas_x0) g_meas_x0 = x;
-    if (y < g_meas_y0) g_meas_y0 = y;
-    if (x + w > g_meas_x1) g_meas_x1 = x + w;
-    if (y + h > g_meas_y1) g_meas_y1 = y + h;
-    g_meas_any = true;
+    FlDrawState_TrackMeasure(x, y, w, h);
+    PROFILE_END_VAR(_pt, "measure_track");
 }
 void Platform_SetDrawContextWin32(HDC hdc) {
     PROFILE_START(_pt);
@@ -289,8 +263,8 @@ if (out) *out = g_draw_hdc;
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
         PROFILE_START(_pt);
 if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
-    x += g_draw_off_x;
-    y += g_draw_off_y;
+    x += FlDrawState_Get()->off_x;
+    y += FlDrawState_Get()->off_y;
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     const char *a = align ? align : "CENTER";
@@ -325,7 +299,7 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     } else {
         GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
     }
-    if (g_measuring) {
+    if (FlDrawState_Get()->measuring) {
         int bx = x;
         if (centered) bx = x - msz.cx / 2;
         else if (right) bx = x - msz.cx;
@@ -333,7 +307,7 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     }
     if (!centered && !right) {
         int x0 = pad ? pad : x;
-        if (g_measuring) measure_track(x0, y, msz.cx, msz.cy);
+        if (FlDrawState_Get()->measuring) measure_track(x0, y, msz.cx, msz.cy);
         TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
         free(wide);
         if (old) SelectObject(g_draw_hdc, old);
@@ -373,8 +347,8 @@ if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); retu
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
         PROFILE_START(_pt);
 if (!text || len <= 0 || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
-    x += g_draw_off_x;
-    y += g_draw_off_y;
+    x += FlDrawState_Get()->off_x;
+    y += FlDrawState_Get()->off_y;
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     int wlen = 0;
@@ -449,8 +423,8 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
         return false;
     }
 
-    x += g_draw_off_x;
-    y += g_draw_off_y;
+    x += FlDrawState_Get()->off_x;
+    y += FlDrawState_Get()->off_y;
 
     int corner_w = 0;
     int corner_h = 0;
@@ -522,8 +496,8 @@ bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, f
         PROFILE_START(_pt);
 int t = win32_thickness_px(thickness);
     if (t < 1) t = 1;
-    x1 += g_draw_off_x; y1 += g_draw_off_y;
-    x2 += g_draw_off_x; y2 += g_draw_off_y;
+    x1 += FlDrawState_Get()->off_x; y1 += FlDrawState_Get()->off_y;
+    x2 += FlDrawState_Get()->off_x; y2 += FlDrawState_Get()->off_y;
     int bx = x1 < x2 ? x1 : x2;
     int by = y1 < y2 ? y1 : y2;
     int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
@@ -542,8 +516,8 @@ bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, flo
         PROFILE_START(_pt);
 if (radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
     int t = win32_thickness_px(thickness);
-    cx += g_draw_off_x;
-    cy += g_draw_off_y;
+    cx += FlDrawState_Get()->off_x;
+    cy += FlDrawState_Get()->off_y;
     measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
     int left = cx - radius, top = cy - radius;
     int right = cx + radius, bottom = cy + radius;
