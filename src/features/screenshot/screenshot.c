@@ -509,7 +509,6 @@ static void pk_screenshot_copy_area(void) {
            (int)(r.right - r.left), (int)(r.bottom - r.top), (long)r.left, (long)r.top);
     fl_copy_file_path(path);
     shot_capture_release();
-    return true;
 }
 
 static void pk_ocr_area_to_clipboard(void) {
@@ -539,7 +538,6 @@ static void pk_ocr_area_to_clipboard(void) {
     while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
     if (out[0]) fl_copy_to_clipboard(out);
     free(out);
-    return true;
 }
 
 #endif

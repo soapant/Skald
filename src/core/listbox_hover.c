@@ -10,6 +10,7 @@
 static bool g_mouse_valid = false;
 static int g_mouse_x = 0;
 static int g_mouse_y = 0;
+static int g_pending_scroll = 0;
 
 void ListBox_PublishMousePos(int x, int y) {
     g_mouse_x = x;
@@ -79,4 +80,34 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
     UI_SetSelection(lb, FlintContext_Get()->window.hListBox, idx);
     PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
     return true;
+}
+
+void ListBox_QueueScroll(int rows) {
+    g_pending_scroll += rows;
+}
+
+int ListBox_TakeScroll(void) {
+    int rows = g_pending_scroll;
+    g_pending_scroll = 0;
+    return rows;
+}
+
+void ListBox_ScrollBy(ListBoxInfo* lb, int rows, int visible_count) {
+    PROFILE_START(_pt);
+    if (!lb || rows == 0) { PROFILE_END_VAR(_pt, "ListBox_ScrollBy"); return; }
+    int max_off = lb->populated_count - visible_count;
+    if (max_off < 0) max_off = 0;
+    int off = lb->view_offset + rows;
+    if (off < 0) off = 0;
+    if (off > max_off) off = max_off;
+    if (off == lb->view_offset) { PROFILE_END_VAR(_pt, "ListBox_ScrollBy"); return; }
+    lb->view_offset = off;
+    UI_LB_SetTopIndex(FlintContext_Get()->window.hListBox, off);
+    PROFILE_END_VAR(_pt, "ListBox_ScrollBy");
+}
+
+void ListBox_ApplyPendingScroll(ListBoxInfo* lb, int visible_count) {
+    int rows = ListBox_TakeScroll();
+    if (rows == 0) return;
+    ListBox_ScrollBy(lb, rows, visible_count);
 }

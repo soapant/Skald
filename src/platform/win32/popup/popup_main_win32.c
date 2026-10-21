@@ -24,6 +24,7 @@
 #include "bindings/vim_state.h"
 
 #include "core/timer.h"
+#include "core/listbox_hover.h"
 #include "core/checkbox.h"
 #include "core/listbox_hover.h"
 static bool s_swallow_next_char = false;
@@ -484,6 +485,21 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
 
     
     switch (msg) {
+    case WM_MOUSEWHEEL: {
+      extern PromptState* Platform_GetWin32PromptState(void);
+      short delta = (short)HIWORD(wParam);
+      int rows = (delta > 0) ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS;
+      HWND hLB = WH_TO_HWND(FlintContext_Get()->window.hListBox);
+      PromptState* hst = Platform_GetWin32PromptState();
+      if (hLB && IsWindow(hLB) && IsWindowVisible(hLB) && hst && hst->has_listbox) {
+        ListBox_ScrollBy(&hst->listbox, rows, UI_LB_GetVisibleCount());
+        InvalidateRect(hLB, NULL, FALSE);
+      } else {
+        ListBox_QueueScroll(rows);
+        InvalidateRect(hwnd, NULL, FALSE);
+      }
+      return 0;
+    }
     case WM_KEYDOWN: {
       s_swallow_next_char = false;
       HWND hKey = hwnd;
