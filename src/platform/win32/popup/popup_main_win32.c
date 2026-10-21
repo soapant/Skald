@@ -20,11 +20,11 @@
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
-#include "platform/flapi_platform.h"
 #include "core/prompt_controller.h"
 #include "bindings/vim_state.h"
 
 #include "core/timer.h"
+#include "core/checkbox.h"
 static bool s_swallow_next_char = false;
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
@@ -891,7 +891,7 @@ case WM_CHAR: {
             extern PromptState* Platform_GetWin32PromptState(void);
             PromptState *state = Platform_GetWin32PromptState();
             if (state) {
-                fl_checkbox_frame_begin();
+                Checkbox_FrameBegin();
                 Platform_SetDrawContextWin32(paintDC);
                 FlintContext_Get()->prompt_callbacks.render(state);
             }

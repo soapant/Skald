@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "core/types.h"
 #include "core/types/prompt.h"
+#include "core/checkbox.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
 #include "core/flapi_input.h"
@@ -321,16 +322,6 @@ typedef struct {
     int x; int y; int w; int h;
 } FlImageSpec;
 
-typedef struct {
-    const char* name;       
-    int x;
-    int y;
-    int scale;
-    bool checked;           
-    void (*on_click)(const char *name, bool checked);
-    void (*on_hover)(const char *name, bool hovered);
-} FlCheckboxSpec;
-
 bool fl_draw_text_impl(const FlTextSpec *spec);
 bool fl_draw_image_impl(const FlImageSpec *spec);
 bool fl_place_editbox_impl(const FlEditSpec *spec);
@@ -338,7 +329,6 @@ bool fl_place_listbox_impl(const FlListSpec *spec);
 bool fl_place_checkbox_impl(const FlCheckboxSpec *spec);
 bool fl_checkbox_is_checked(const char *name);
 bool fl_checkbox_is_hovered(const char *name);
-void fl_checkbox_frame_begin(void);
 
 #define fl_draw_text(...) fl_draw_text_impl(&(FlTextSpec){__VA_ARGS__})
 #define fl_draw_image(...) fl_draw_image_impl(&(FlImageSpec){__VA_ARGS__})
