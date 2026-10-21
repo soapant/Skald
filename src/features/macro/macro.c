@@ -394,6 +394,7 @@ void PlayMacro(void) {
         fl_clear_mouse_queue();
         g_playing = true;
         if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
+        return;
     }
     fl_dismiss_overlay(MACRO_OVERLAY_NAME);
     g_playing = false;
@@ -422,6 +423,7 @@ void RecordToggle(void) {
     reset_recording();
     g_recording = true;
     if (!g_thread) g_thread = fl_thread_create(recorder_loop, NULL);
+    return;
   }
   fl_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_recording = false;
