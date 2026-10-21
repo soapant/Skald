@@ -86,7 +86,9 @@ bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len);
 void Platform_ShutdownUI(void);
 char* Platform_RunTerminalCommand(char* command,bool open_terminal);
-char* Platform_RunCommandAndGetOutput(char* command);
+#define PLATFORM_RUN_PRIO_NORMAL 0
+#define PLATFORM_RUN_PRIO_LOW 1
+char* Platform_RunCommandAndGetOutput(char* command, int priority);
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status);
 bool Platform_LaunchFileManagerAtPath(char* path,char* args);
 long Platform_GetFileSize(char *filepath);

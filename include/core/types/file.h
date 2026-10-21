@@ -3,19 +3,16 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#if defined(_WIN32)
-#include <windows.h>
-#endif
 #include "core/types.h"
 
 typedef struct {
 #if defined(_WIN32)
-    HANDLE hFile;
-    HANDLE hMapping;
-    size_t fileSize;   
-    size_t capacity;   
-#else 
-     int fd;           
+    void* hFile;
+    void* hMapping;
+    size_t fileSize;
+    size_t capacity;
+#else
+     int fd;
      size_t fileSize;
 #endif
     char *pBuffer;

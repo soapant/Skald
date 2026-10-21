@@ -336,9 +336,10 @@ PROFILE_START(timer);
     { PROFILE_END_VAR(_pt, "Platform_SetX11StringProperty"); return ok; }
 }
 
-char* Platform_RunCommandAndGetOutput(char* command) {
+char* Platform_RunCommandAndGetOutput(char* command, int priority) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
+(void)priority;
     FILE* fp;
     char buffer[8192];
     size_t cap = 8192;
@@ -1980,7 +1981,7 @@ if (!src || !out) { log_error("operation failed, returning error src='%s' out='%
     char tmp[1024];
     snprintf(tmp, sizeof(tmp), "%s.tmp.%d", out, (int)getpid());
     char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "gcc -std=gnu17 -I include -I/usr/include/freetype2 -O3 -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-discarded-qualifiers -Wno-stringop-truncation -Wno-misleading-indentation -fPIC -shared -o %s %s 2>&1", tmp, src);
+    snprintf(cmd, sizeof(cmd), "gcc -std=gnu17 -I include -I/usr/include/freetype2 -O1 -pipe -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-discarded-qualifiers -Wno-stringop-truncation -Wno-misleading-indentation -fPIC -shared -o %s %s 2>&1", tmp, src);
     char* outStr = Platform_RunTerminalCommand(cmd, false);
     bool ok = false;
     if (outStr) {
