@@ -2,8 +2,11 @@
 #include "deps/log.h"
 #include "core/prompt_controller.h"
 #include "core/listbox_hover.h"
+#include "core/prompt_keys.h"
 
 #include "platform/input_state.h"
+#include "platform/draw.h"
+#include "platform/x11/drawing_x11.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -180,6 +183,18 @@ if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(_pt, "Linux_ProcessXE
                 ListBox_QueueScroll(ev->xbutton.button == Button4 ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS);
                 if (top->vtable && top->vtable->on_render) {
                     top->vtable->on_render(top);
+                }
+            } else if (ev->xbutton.button == Button1) {
+                int wx = 0, wy = 0;
+                if (Platform_WindowToRoot(top->handle, &wx, &wy)) {
+                    ListBox_PublishMousePos(wx + ev->xbutton.x, wy + ev->xbutton.y);
+                }
+                if (top->type == POPUP_fl_window && top->user_data) {
+                    PromptState* st = (PromptState*)top->user_data;
+                    bool ctrl = (ev->xbutton.state & ControlMask) != 0;
+                    bool shift = (ev->xbutton.state & ShiftMask) != 0;
+                    bool alt = (ev->xbutton.state & Mod1Mask) != 0;
+                    Prompt_HandleListClick(st, ctrl, shift, alt);
                 }
             }
             break;

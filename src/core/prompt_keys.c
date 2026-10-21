@@ -3,6 +3,7 @@
 #include "core/context.h"
 #include "core/history.h"
 #include "core/modal.h"
+#include "core/listbox_hover.h"
 #include "core/prompt_controller.h"
 #include "core/timer.h"
 #include "bindings/vim_helpers.h"
@@ -59,7 +60,7 @@ void Prompt_InsertText(PromptState* state, const char* text, int len) {
     PROFILE_END_VAR(_pt, "Prompt_InsertText");
 }
 
-static void prompt_handle_enter(PromptState* state, bool ctrl, bool shift, bool alt) {
+void Prompt_TriggerEnter(PromptState* state, bool ctrl, bool shift, bool alt) {
     PROFILE_START(_pt);
     const char* sel = NULL;
     char filter_copy[sizeof(state->filter)];
@@ -99,7 +100,24 @@ static void prompt_handle_enter(PromptState* state, bool ctrl, bool shift, bool 
         if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
     }
     ctx->window.selection_complete = should_close;
-    PROFILE_END_VAR(_pt, "prompt_handle_enter");
+    PROFILE_END_VAR(_pt, "Prompt_TriggerEnter");
+}
+
+bool Prompt_HandleListClick(PromptState* state, bool ctrl, bool shift, bool alt) {
+    PROFILE_START(_pt);
+    if (!state || !state->has_listbox) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
+    int list_top = 0, item_height = 0, visible_count = 0;
+    ListBox_GetGeometry(&list_top, &item_height, &visible_count);
+    if (item_height <= 0 || visible_count <= 0) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
+    ListBoxInfo* lb = &state->listbox;
+    int mx = 0, my = 0;
+    if (!ListBox_ClientMousePos(&mx, &my)) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
+    int idx = ListBox_RowAtY(lb, list_top, item_height, lb->view_offset, visible_count, my);
+    if (idx < 0) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
+    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, idx);
+    Prompt_TriggerEnter(state, ctrl, shift, alt);
+    PROFILE_END_VAR(_pt, "Prompt_HandleListClick");
+    return true;
 }
 
 bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
@@ -254,7 +272,7 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
         return true;
     }
     if (vk == VK_RETURN) {
-        prompt_handle_enter(state, ctrl, shift, alt);
+        Prompt_TriggerEnter(state, ctrl, shift, alt);
         PROFILE_END_VAR(_pt, "Prompt_HandleKey");
         return true;
     }

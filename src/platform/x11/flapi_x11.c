@@ -448,6 +448,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     g_fl_list_font = Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
     g_fl_list_font_owned = true;
     ListBox_ApplyPendingScroll(g_fl_list_lb, lay.visible);
+    ListBox_SetGeometry(g_fl_list_y0, g_fl_list_itemH, lay.visible);
     ListBox_HoverFocus(g_fl_list_lb, g_fl_list_y0, g_fl_list_itemH, g_fl_list_lb->view_offset, lay.visible);
     { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return true; }
 }
