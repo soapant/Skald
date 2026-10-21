@@ -480,7 +480,7 @@ if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyp
     int wlen = 0;
     wchar_t *wide = win32_widen(text, (int)strlen(text), &wlen);
     if (!wide || wlen <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return fontsize; }
-    FontHandle font = Platform_CreateFont(FontSize, UsedFont);
+    FontHandle font = Platform_CreateFont(fontsize, UsedFont);
     HFONT old = font.hfont ? (HFONT)SelectObject(g_draw_hdc, font.hfont) : NULL;
     GLYPHMETRICS gm;
     memset(&gm, 0, sizeof(gm));
@@ -489,7 +489,8 @@ if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyp
     Platform_DestroyFont(font);
     free(wide);
     int ink = (int)(gm.gmBlackBoxY);
-    { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink; }
+    if (ink <= 0) ink = fontsize;
+    { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink + PROMPT_GLYPH_INK_PAD; }
 }
 
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
