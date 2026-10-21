@@ -13,7 +13,6 @@ int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, in
 int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, int px);
 void x11_xft_alloc_color(Display* dpy, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha, XftColor* out);
 
-int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x);
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width);
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size);
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
@@ -41,6 +40,13 @@ int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top);
 int x11_font_row_height_of(FontHandle font);
 int x11_font_list_top_of(FontHandle font);
 int x11_font_cursor_y_of(FontHandle font, int box_top);
+
+typedef struct {
+    Display* dpy;
+    XftFont* xf;
+} FlEditboxX11Metrics;
+
+int x11_editbox_measure(const char* text, int len, void* user);
 #endif
 
 #endif

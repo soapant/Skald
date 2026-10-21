@@ -14,6 +14,7 @@
 #include "platform/win32/common_ui_win32.h"
 
 #include "core/timer.h"
+#include "core/listbox_hover.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
         PROFILE_START(_pt);
 (void)hPopupWnd;
@@ -78,6 +79,12 @@ SendMessageA(WH_TO_HWND(hList), LB_SETTOPINDEX, index, 0);
 int UI_LB_GetTopIndex(WindowHandle hList) {
         PROFILE_START(_pt);
 { PROFILE_END_VAR(_pt, "UI_LB_GetTopIndex"); return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTOPINDEX, 0, 0); }
+}
+
+int UI_LB_GetViewTop(ListBoxInfo* lb) {
+        PROFILE_START(_pt);
+(void)lb;
+    { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return UI_LB_GetTopIndex(FlintContext_Get()->window.hListBox); }
 }
 
 int UI_LB_GetVisibleCount(void) {
@@ -145,7 +152,7 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     }
     int old_sel = lb->selected_index;
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
-    int oldTop = UI_LB_GetTopIndex(hListBox);
+    ListBox_FocusByKeyboard();
     lb->selected_index = index;
     UI_LB_SetCaretIndex(hListBox, index, false);
     int itemHeight = UI_LB_GetItemHeight(hListBox);
@@ -153,13 +160,11 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     GetClientRect(WH_TO_HWND(hListBox), &rect);
     int visibleCount = (itemHeight > 0) ? (rect.bottom / itemHeight) : 16;
     if (visibleCount < 1) visibleCount = 1;
-    int newTop = oldTop;
-    if (index <= oldTop + PaddingForScrolling) newTop = index - PaddingForScrolling;
-    else if (index >= oldTop + visibleCount - PaddingForScrolling) newTop = index - visibleCount + PaddingForScrolling + 1;
-    if (newTop < 0) newTop = 0;
-    if (newTop + visibleCount > count) newTop = count - visibleCount;
-    if (newTop < 0) newTop = 0;
+    lb->view_offset = UI_LB_GetTopIndex(hListBox);
+    int oldTop = lb->view_offset;
+    int newTop = ListBox_ScrollTopFor(index, visibleCount, count);
     if (newTop != oldTop) {
+        lb->view_offset = newTop;
         SendMessageA(WH_TO_HWND(hListBox), WM_SETREDRAW, FALSE, 0);
         UI_LB_SetTopIndex(hListBox, newTop);
         SendMessageA(WH_TO_HWND(hListBox), WM_SETREDRAW, TRUE, 0);

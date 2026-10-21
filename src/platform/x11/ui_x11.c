@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "core/timer.h"
+#include "core/listbox_hover.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
         PROFILE_START(_pt);
 (void)hPopupWnd;
@@ -50,6 +51,11 @@ int UI_LB_GetTopIndex(WindowHandle hList) {
         PROFILE_START(_pt);
 (void)hList;
     { PROFILE_END_VAR(_pt, "UI_LB_GetTopIndex"); return 0; }
+}
+
+int UI_LB_GetViewTop(ListBoxInfo* lb) {
+        PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return lb ? lb->view_offset : 0; }
 }
 
 static int g_x11_lb_visible;
@@ -102,17 +108,10 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     }
     int old_sel = lb->selected_index;
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
-    int oldTop = UI_LB_GetTopIndex(FlintContext_Get()->window.hListBox);
+    ListBox_FocusByKeyboard();
     lb->selected_index = index;
     UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, index, false);
-    int visibleCount = 16;
-    int newTop = oldTop;
-    if (index <= oldTop + PaddingForScrolling) newTop = index - PaddingForScrolling;
-    else if (index >= oldTop + visibleCount - PaddingForScrolling) newTop = index - visibleCount + PaddingForScrolling + 1;
-    if (newTop < 0) newTop = 0;
-    if (newTop + visibleCount > count) newTop = count - visibleCount;
-    if (newTop < 0) newTop = 0;
-    if (newTop != oldTop) UI_LB_SetTopIndex(FlintContext_Get()->window.hListBox, newTop);
+    ListBox_ScrollToSelection(lb);
 }
 
 void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {

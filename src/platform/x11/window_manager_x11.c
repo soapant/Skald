@@ -175,6 +175,7 @@ if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(_pt, "Linux_ProcessXE
             break;
         case ButtonPress:
             if (ev->xbutton.button == Button4 || ev->xbutton.button == Button5) {
+                ListBox_PublishMousePos(ev->xbutton.x, ev->xbutton.y);
                 ListBox_QueueScroll(ev->xbutton.button == Button4 ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS);
                 if (top->vtable && top->vtable->on_render) {
                     top->vtable->on_render(top);

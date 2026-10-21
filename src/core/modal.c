@@ -1,5 +1,6 @@
 #include "core/context.h"
 #include "core/modal.h"
+#include "core/listbox_hover.h"
 #include "core/modal.h"
 #include "config.h"
 #include "platform/ui.h"
@@ -60,6 +61,7 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
                 UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, last_index);
             } else {
                 UI_SetSelection(lb, FlintContext_Get()->window.hListBox, 0);
+                ListBox_ScrollToSelection(lb);
             }
         }
     }

@@ -417,36 +417,6 @@ PROFILE_START(timer);
     PROFILE_END_VAR(timer, "helpers_x11:x11_xft_alloc_color");
 }
 
-int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
-    int cursor_x = 0;
-    int text_w = 0;
-    if (xf) {
-        XGlyphInfo cext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, cursor, &cext);
-        cursor_x = cext.xOff;
-        XGlyphInfo textExt;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, text_len, &textExt);
-        text_w = textExt.xOff;
-    }
-    int scroll = prev_scroll;
-    int margin = 0;
-    if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
-    if (cursor_x - scroll < margin) scroll = cursor_x - margin;
-    if (scroll < 0) scroll = 0;
-    if (text_w - scroll < visible_w && scroll > 0) {
-        if (text_w < visible_w) scroll = 0;
-        else scroll = text_w - visible_w;
-    }
-    if (cursor_x - scroll < 0) scroll = cursor_x;
-    if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
-    *out_cursor_x = cursor_x;
-    PROFILE_END_VAR(timer, "helpers_x11:x11_update_edit_scroll_offset");
-    { PROFILE_END_VAR(_pt, "x11_update_edit_scroll_offset"); return scroll; }
-}
-
 int x11_font_row_height(int font_size) {
         PROFILE_START(_pt);
 { PROFILE_END_VAR(_pt, "x11_font_row_height"); return font_size + PROMPT_ROW_H_BONUS; }

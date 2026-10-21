@@ -489,6 +489,7 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
       extern PromptState* Platform_GetWin32PromptState(void);
       short delta = (short)HIWORD(wParam);
       int rows = (delta > 0) ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS;
+      ListBox_PublishMousePos((short)(lParam & 0xFFFF), (short)((lParam >> 16) & 0xFFFF));
       HWND hLB = WH_TO_HWND(FlintContext_Get()->window.hListBox);
       PromptState* hst = Platform_GetWin32PromptState();
       if (hLB && IsWindow(hLB) && IsWindowVisible(hLB) && hst && hst->has_listbox) {
