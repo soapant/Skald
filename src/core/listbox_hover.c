@@ -1,6 +1,7 @@
 #include "core/listbox_hover.h"
 #include "core/context.h"
 #include "core/timer.h"
+#include "deps/log.h"
 #include "core/window_manager.h"
 #include "config.h"
 #include "platform/draw.h"
@@ -11,6 +12,27 @@ static bool g_mouse_valid = false;
 static int g_mouse_x = 0;
 static int g_mouse_y = 0;
 static int g_pending_scroll = 0;
+static bool g_hover_set = false;
+static int g_hover_x = 0;
+static int g_hover_y = 0;
+static bool g_focus_by_keyboard = false;
+static bool g_list_rebuilt = false;
+
+void ListBox_FocusByKeyboard(void) {
+    if (!g_focus_by_keyboard) log_info("listbox: focus -> keyboard");
+    g_focus_by_keyboard = true;
+}
+
+void ListBox_FocusByMouse(void) {
+    if (g_focus_by_keyboard) log_info("listbox: focus -> mouse");
+    g_focus_by_keyboard = false;
+}
+
+void ListBox_ListRebuilt(void) {
+    log_info("listbox: list rebuilt, mouse re-asserts");
+    g_list_rebuilt = true;
+    g_focus_by_keyboard = false;
+}
 
 void ListBox_PublishMousePos(int x, int y) {
     g_mouse_x = x;
@@ -20,6 +42,7 @@ void ListBox_PublishMousePos(int x, int y) {
 
 void ListBox_InvalidateMousePos(void) {
     g_mouse_valid = false;
+    g_hover_set = false;
 }
 
 bool ListBox_ClientMousePos(int* out_x, int* out_y) {
@@ -46,8 +69,26 @@ bool ListBox_ClientMousePos(int* out_x, int* out_y) {
     Platform_GetDrawOffset(&dx, &dy);
     mx -= dx;
     my -= dy;
+    int pw = 0, ph = 0;
+    if (top) {
+        if (top->type == POPUP_fl_window && top->user_data) {
+            PromptState* s = (PromptState*)top->user_data;
+            pw = s->width;
+            ph = s->height;
+        } else if (top->type == POPUP_EDIT) {
+            WMEditPopupData* e = (WMEditPopupData*)top;
+            pw = e->w;
+            ph = e->h;
+        }
+    }
+    bool inside = (pw <= 0 || ph <= 0) ||
+                  (mx >= 0 && my >= 0 && mx < pw && my < ph);
     if (out_x) *out_x = mx;
     if (out_y) *out_y = my;
+    if (!inside) {
+        PROFILE_END_VAR(_pt, "ListBox_ClientMousePos");
+        return false;
+    }
     PROFILE_END_VAR(_pt, "ListBox_ClientMousePos");
     return true;
 }
@@ -74,9 +115,28 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
     if (!lb || lb->populated_count <= 0) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
     int mx = 0, my = 0;
     if (!ListBox_ClientMousePos(&mx, &my)) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    bool mouse_moved = !g_hover_set || g_hover_x != mx || g_hover_y != my;
     int idx = ListBox_RowAtY(lb, list_top, item_height, top_index, visible_count, my);
-    if (idx < 0) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
-    if (idx == lb->selected_index) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    g_hover_set = true;
+    g_hover_x = mx;
+    g_hover_y = my;
+    if (mouse_moved) ListBox_FocusByMouse();
+    bool rebuilt = g_list_rebuilt;
+    g_list_rebuilt = false;
+    if (idx < 0 || idx == lb->selected_index) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    if (g_focus_by_keyboard) {
+        log_info("listbox: hover skip (keyboard) mouse=%d,%d row=%d sel=%d view=%d",
+                 mx, my, idx, lb->selected_index, lb->view_offset);
+        PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
+        return false;
+    }
+    if (!mouse_moved && !rebuilt) {
+        log_info("listbox: hover skip (no move/rebuild) mouse=%d,%d row=%d sel=%d view=%d",
+                 mx, my, idx, lb->selected_index, lb->view_offset);
+        PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
+        return false;
+    }
+    log_info("listbox: hover focus %d -> %d (mouse=%d,%d view=%d)", lb->selected_index, idx, mx, my, lb->view_offset);
     UI_SetSelection(lb, FlintContext_Get()->window.hListBox, idx);
     PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
     return true;
@@ -100,8 +160,19 @@ void ListBox_ScrollBy(ListBoxInfo* lb, int rows, int visible_count) {
     int off = lb->view_offset + rows;
     if (off < 0) off = 0;
     if (off > max_off) off = max_off;
-    if (off == lb->view_offset) { PROFILE_END_VAR(_pt, "ListBox_ScrollBy"); return; }
+    int delta = off - lb->view_offset;
+    if (delta == 0) { PROFILE_END_VAR(_pt, "ListBox_ScrollBy"); return; }
+    int old_sel = lb->selected_index;
     lb->view_offset = off;
+    if (!g_focus_by_keyboard && old_sel >= 0) {
+        int sel = old_sel + delta;
+        if (sel < 0) sel = 0;
+        if (sel >= lb->populated_count) sel = lb->populated_count - 1;
+        lb->selected_index = sel;
+        UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, sel, false);
+    }
+    log_info("listbox: wheel scroll view %d -> %d (sel %d -> %d)",
+             off - delta, off, old_sel, lb->selected_index);
     UI_LB_SetTopIndex(FlintContext_Get()->window.hListBox, off);
     PROFILE_END_VAR(_pt, "ListBox_ScrollBy");
 }
@@ -110,4 +181,26 @@ void ListBox_ApplyPendingScroll(ListBoxInfo* lb, int visible_count) {
     int rows = ListBox_TakeScroll();
     if (rows == 0) return;
     ListBox_ScrollBy(lb, rows, visible_count);
+}
+
+int ListBox_ScrollTopFor(int index, int visible_count, int count) {
+    if (visible_count <= 0) visible_count = 16;
+    int new_top = index - visible_count / 2;
+    if (new_top < 0) new_top = 0;
+    if (new_top + visible_count > count) new_top = count - visible_count;
+    if (new_top < 0) new_top = 0;
+    return new_top;
+}
+
+void ListBox_ScrollToSelection(ListBoxInfo* lb) {
+    if (!lb || lb->selected_index < 0 || lb->populated_count <= 0) return;
+    int visible = UI_LB_GetVisibleCount();
+    if (visible <= 0) visible = 16;
+    int old_top = UI_LB_GetViewTop(lb);
+    int new_top = ListBox_ScrollTopFor(lb->selected_index, visible, lb->populated_count);
+    if (new_top != old_top) {
+        log_info("listbox: scroll to selection view %d -> %d (sel=%d visible=%d)",
+                 old_top, new_top, lb->selected_index, visible);
+        UI_LB_ScrollToTop(lb, new_top);
+    }
 }

@@ -6,6 +6,7 @@
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"
+#include "core/editbox.h"
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
@@ -383,6 +384,15 @@ if (size <= 0) size = FontSize;
     { PROFILE_END_VAR(_pt, "LineFont"); return g_line_font; }
 }
 
+int x11_editbox_measure(const char* text, int len, void* user) {
+        PROFILE_START(_pt);
+    FlEditboxX11Metrics* m = (FlEditboxX11Metrics*)user;
+    if (!m || !m->dpy || !m->xf || !text || len <= 0) { PROFILE_END_VAR(_pt, "x11_editbox_measure"); return 0; }
+    XGlyphInfo ext;
+    XftTextExtentsUtf8(m->dpy, m->xf, (FcChar8*)text, len, &ext);
+    { PROFILE_END_VAR(_pt, "x11_editbox_measure"); return ext.xOff; }
+}
+
 int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
         PROFILE_START(_pt);
 if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
@@ -460,107 +470,92 @@ unsigned long window_title_text_color_map;
     if (WindowTitleText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, state->window_title, window_title_text_color_map, font, "LEFT", PROMPT_FOOTER_PAD, FontSize);
     if (VimModeText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), font, "RIGHT", PROMPT_FOOTER_PAD, FontSize);
 }
+static void x11_prompt_editbox_spec(PromptState* state, FontHandle font, FlEditboxSpec* eb, FlEditboxX11Metrics* metrics) {
+    XftFont* xf = FH_TO_XFT(font);
+    int text_len = (int)strlen(state->filter);
+    int cursor_x = 0;
+    int text_w = 0;
+    if (xf) {
+        XGlyphInfo cext;
+        XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8*)state->filter, state->cursor, &cext);
+        cursor_x = cext.xOff;
+        XGlyphInfo textExt;
+        XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8*)state->filter, text_len, &textExt);
+        text_w = textExt.xOff;
+    }
+    int sel_start = 0, sel_end = 0;
+    bool has_sel = false;
+    Editbox_ResolveSelection(state, text_len, false, &sel_start, &sel_end, &has_sel);
+    memset(eb, 0, sizeof(*eb));
+    eb->text = state->filter;
+    eb->text_len = text_len;
+    eb->cursor = state->cursor;
+    eb->sel_start = sel_start;
+    eb->sel_end = sel_end;
+    eb->has_selection = has_sel;
+    eb->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
+    eb->insert_mode = IsInsertMode();
+    eb->x = 0;
+    eb->y = PROMPT_EDIT_INSET;
+    eb->w = state->width;
+    eb->inset = PROMPT_EDIT_INSET;
+    eb->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
+    eb->scroll = state->scroll_offset;
+    eb->cursor_x = cursor_x;
+    eb->text_w = text_w;
+    eb->text_y = PROMPT_EDIT_INSET;
+    eb->caret_y = Editbox_CaretY(PROMPT_EDIT_INSET, xf ? xf->ascent : 0, xf ? xf->descent : 0);
+    eb->caret_h = PromptCaretHeight();
+    eb->caret_w_normal = PromptNormalCaretWidth();
+    eb->caret_w_insert = PROMPT_CARET_W_INSERT;
+    eb->placeholder_dy = 2;
+    eb->rainbow_limit_x = -1;
+    eb->placeholder = state->placeholder;
+    eb->text_color = rgb_to_hex(COLOR_TEXT);
+    eb->font = font;
+    eb->measure = x11_editbox_measure;
+    eb->measure_user = metrics;
+}
+
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
         PROFILE_START(_pt);
-XftFont *xf = FH_TO_XFT(font);
-    int cursor_x = 0;
-    int text_len = strlen(state->filter);
-    int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
-    state->scroll_offset = scroll;
-    int draw_x = PROMPT_EDIT_INSET - scroll;
-    Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);
-    if (text_len > 0) {
-        FontHandle font = Platform_CreateFont(FontSize, UsedFont);
-        if (RainbowText) {
-            int nchars = 0;
-            for (int p = 0; p < text_len; ) {
-                unsigned char c = (unsigned char)state->filter[p];
-                int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
-                if (cl < 1) cl = 1;
-                p += cl; nchars++;
-            }
-            int ci = 0;
-            size_t pos = 0;
-            while (pos < (size_t)text_len) {
-                unsigned char c = (unsigned char)state->filter[pos];
-                int cl = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 1;
-                if (cl < 1) cl = 1;
-                char buf[8];
-                memcpy(buf, state->filter + pos, cl);
-                buf[cl] = '\0';
-                int x = (PROMPT_EDIT_INSET - scroll) + Platform_MeasureTextWidth(state->filter, (int)pos, FontSize);
-                unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
-                Platform_DrawTextRaw(x, PROMPT_EDIT_INSET, buf, col, font, "", 0, 0);
-                pos += cl; ci++;
-            }
-        } else {
-            Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
-        }
-        Platform_DestroyFont(font);
-    } else if (state->placeholder && state->placeholder[0]) {
-        FontHandle font = Platform_CreateFont(FontSize, UsedFont);
-        unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
-        Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET + 2, state->placeholder, ph, font, "", 0, 0);
-        Platform_DestroyFont(font);
-    }
+    if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditText"); return; }
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
+    FlEditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
+    FlEditboxSpec eb;
+    FlEditboxLayout lay;
+    x11_prompt_editbox_spec(state, font, &eb, &metrics);
+    Editbox_Layout(&eb, &lay);
+    state->scroll_offset = eb.scroll;
+    Editbox_Draw(&eb, &lay, EDITBOX_PART_TEXT);
+    PROFILE_END_VAR(_pt, "Platform_DrawEditText");
 }
-static int x11_char_x(Display *dpy, XftFont *xf, PromptState *state, int index, int *out_scroll) {
-        PROFILE_START(_pt);
-int text_len = (int)strlen(state->filter);
-    int cursor_x = 0;
-    int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, index, state->width, state->scroll_offset, &cursor_x);
-    if (out_scroll) *out_scroll = scroll;
-    { PROFILE_END_VAR(_pt, "x11_char_x"); return PROMPT_EDIT_INSET + cursor_x - scroll; }
-}
+
 
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
         PROFILE_START(_pt);
-if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
-    int text_len = (int)strlen(state->filter);
-    int sel_start = 0, sel_end = 0;
-    bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
-    if (IsInsertMode() && !has_sel) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
-    XftFont *xf = FH_TO_XFT(font);
-
+    if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    int tint_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
-    unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
-
-    if (has_sel) {
-        if (sel_start < 0) sel_start = 0;
-        if (sel_end >= text_len) sel_end = text_len - 1;
-        if (sel_start > sel_end) return;
-        int x0 = x11_char_x(dpy, xf, state, sel_start, NULL);
-        int x1 = x11_char_x(dpy, xf, state, sel_end, NULL);
-        int caret_x = x11_char_x(dpy, xf, state, state->cursor, NULL);
-        if (x0 < PROMPT_CARET_LO_CLAMP) x0 = PROMPT_CARET_LO_CLAMP;
-        if (x1 > state->width - PROMPT_CARET_HI_CLAMP) x1 = state->width - PROMPT_CARET_HI_CLAMP;
-        if (caret_x < x0) caret_x = x0;
-        if (caret_x > x1) caret_x = x1;
-        int w = x1 - x0 + PromptNormalCaretWidth();
-        if (w <= 0) return;
-        Platform_DrawRectRaw(x0, tint_y, w, PromptCaretHeight(),tint,0,false,true,1,true);
-        return;
-    }
-
-    int tint_x = x11_char_x(dpy, xf, state, state->cursor, NULL);
-    if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-    if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
-    Platform_DrawRectRaw(tint_x, tint_y, PromptNormalCaretWidth(),PromptCaretHeight(),tint,0,false,true,1,true);
+    FlEditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
+    FlEditboxSpec eb;
+    FlEditboxLayout lay;
+    x11_prompt_editbox_spec(state, font, &eb, &metrics);
+    Editbox_Layout(&eb, &lay);
+    Editbox_Draw(&eb, &lay, EDITBOX_PART_TINT);
+    PROFILE_END_VAR(_pt, "Platform_DrawEditTint");
 }
 
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
         PROFILE_START(_pt);
-XftFont *xf = FH_TO_XFT(font);
-    int cursor_x = 0;
-    x11_update_edit_scroll_offset(dpy, xf, state->filter, strlen(state->filter), state->cursor, state->width, state->scroll_offset, &cursor_x);
+    if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditCursor"); return ; }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - state->scroll_offset;
-    if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
-    if (cursor_draw_x > state->width - PROMPT_CARET_HI_CLAMP) cursor_draw_x = state->width - PROMPT_CARET_HI_CLAMP;
-    int cursor_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
-    if (!IsInsertMode()) { PROFILE_END_VAR(_pt, "Platform_DrawEditCursor"); return ; }
-    Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, PromptCaretHeight(),rgb_to_hex(Modal_CursorColor()),0,false,true,1,true);
+    FlEditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
+    FlEditboxSpec eb;
+    FlEditboxLayout lay;
+    x11_prompt_editbox_spec(state, font, &eb, &metrics);
+    Editbox_Layout(&eb, &lay);
+    Editbox_Draw(&eb, &lay, EDITBOX_PART_CARET);
+    PROFILE_END_VAR(_pt, "Platform_DrawEditCursor");
 }
 
 static GC raw_gc_for(Display* dpy, Drawable d);
@@ -755,6 +750,7 @@ PROFILE_START(timer);
     FlintContext_Get()->window.editbox_placed = true;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     Platform_DrawEditBackground(state, dpy, xd, vis, cmap, font);
+    Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);
     Platform_DrawEditText(state, dpy, xd, vis, cmap, font);
     Platform_DrawEditCursor(state, dpy, xd, vis, cmap, font);
     Platform_DestroyFont(font);
