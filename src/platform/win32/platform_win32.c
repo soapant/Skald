@@ -14,6 +14,7 @@
 #include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "platform/win32/win32_state.h"
+#include "platform/win32/cwatch_win32.h"
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/bg_image_win32.h"
 #include "core/prompt_geometry.h"
@@ -713,7 +714,7 @@ static char* c_watch_scan(const char* root, const char* dir, bool report) {
 }
 
 static char* c_watch_scan_tree(const char* root, bool report) {
-        PROFILE_START(_pt);
+    PROFILE_START(_pt);
     char* ret = c_watch_scan(root, root, report);
     if (ret) { PROFILE_END_VAR(_pt, "c_watch_scan_tree"); return ret; }
     char pattern[MAX_PATH];
@@ -735,10 +736,17 @@ static char* c_watch_scan_tree(const char* root, bool report) {
 }
 
 char* Platform_WatchForCFileChanges(const char* dir_path) {
-        PROFILE_START(_pt);
+    PROFILE_START(_pt);
     if (!dir_path) { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
     const char* watch_dir = dir_path;
     if (!watch_dir || !watch_dir[0]) watch_dir = FeaturePath ? FeaturePath : "src/features";
+
+    /* Try to arm the event driven watch first. It reports nothing on the
+       call that arms it. If it cannot be armed (unsupported volume,
+       permissions) fall back to the polling scan below. */
+    char* armed = win32_cwatch_poll(watch_dir);
+    if (armed) { { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return armed; } }
+    if (win32_cwatch_active()) { { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; } }
 
     if (g_c_watch_count == 0 || strcmp(g_c_watch_dir, watch_dir) != 0) {
         g_c_watch_count = 0;
