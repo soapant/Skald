@@ -12,11 +12,11 @@ static bool g_mouse_valid = false;
 static int g_mouse_x = 0;
 static int g_mouse_y = 0;
 static int g_pending_scroll = 0;
-static bool g_hover_set = false;
-static int g_hover_x = 0;
-static int g_hover_y = 0;
 static bool g_focus_by_keyboard = false;
-static bool g_list_rebuilt = false;
+static bool g_mouse_moved = false;
+static bool g_pub_set = false;
+static int g_pub_x = 0;
+static int g_pub_y = 0;
 
 void ListBox_FocusByKeyboard(void) {
     g_focus_by_keyboard = true;
@@ -26,12 +26,11 @@ void ListBox_FocusByMouse(void) {
     g_focus_by_keyboard = false;
 }
 
-void ListBox_ListRebuilt(void) {
-    g_list_rebuilt = true;
-    g_focus_by_keyboard = false;
-}
-
 void ListBox_PublishMousePos(int x, int y) {
+    if (g_pub_set && (g_pub_x != x || g_pub_y != y)) g_mouse_moved = true;
+    g_pub_x = x;
+    g_pub_y = y;
+    g_pub_set = true;
     g_mouse_x = x;
     g_mouse_y = y;
     g_mouse_valid = true;
@@ -39,7 +38,7 @@ void ListBox_PublishMousePos(int x, int y) {
 
 void ListBox_InvalidateMousePos(void) {
     g_mouse_valid = false;
-    g_hover_set = false;
+    g_mouse_moved = false;
 }
 
 bool ListBox_ClientMousePos(int* out_x, int* out_y) {
@@ -110,19 +109,13 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
                         int top_index, int visible_count) {
     PROFILE_START(_pt);
     if (!lb || lb->populated_count <= 0) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    if (!g_mouse_moved) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    g_mouse_moved = false;
+    ListBox_FocusByMouse();
     int mx = 0, my = 0;
     if (!ListBox_ClientMousePos(&mx, &my)) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
-    bool mouse_moved = !g_hover_set || g_hover_x != mx || g_hover_y != my;
     int idx = ListBox_RowAtY(lb, list_top, item_height, top_index, visible_count, my);
-    g_hover_set = true;
-    g_hover_x = mx;
-    g_hover_y = my;
-    if (mouse_moved) ListBox_FocusByMouse();
-    bool rebuilt = g_list_rebuilt;
-    g_list_rebuilt = false;
     if (idx < 0 || idx == lb->selected_index) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
-    if (g_focus_by_keyboard) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
-    if (!mouse_moved && !rebuilt) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
     UI_SetSelection(lb, FlintContext_Get()->window.hListBox, idx);
     PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
     return true;

@@ -245,7 +245,6 @@ static void Populate_BuildCache(ListBoxInfo* lb, const char** items, int total_m
 }
 
 static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_matches, const char* filter) {
-  ListBox_ListRebuilt();
   UI_LB_SetCount(lb, hListBox, total_matches);
   if (SequenceIsWaiting()) return;
   if (IsNormalMode()) {
