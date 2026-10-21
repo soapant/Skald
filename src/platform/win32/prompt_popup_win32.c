@@ -1,6 +1,7 @@
 #include "core/context.h"
 #include "core/window_manager.h"
 #include "core/timer.h"
+#include "core/listbox_hover.h"
 #include "deps/log.h"
 #include "platform/wm_platform.h"
 #include "platform/ui.h"
@@ -72,6 +73,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
         PROFILE_START(_pt);
 (void)self;
     PROFILE_START(timer);
+    ListBox_InvalidateMousePos();
     HWND fg = GetForegroundWindow();
     if (fg && IsWindow(fg) && !is_popup_class(fg)) g_prev_fg = fg;
     else if (!fg || !IsWindow(fg)) g_prev_fg = NULL;
@@ -169,6 +171,6 @@ void HandleCommandExecution(ListBoxInfo* lb, char* string) {
         PROFILE_START(_pt);
 if (!lb) { PROFILE_END_VAR(_pt, "HandleCommandExecution"); return ; }
     int num = atoi(string);
-    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, num - 1);
-    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);
+    UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, num - 1);
+    ListBox_ScrollToSelection(lb);
 }
