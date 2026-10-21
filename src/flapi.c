@@ -862,6 +862,9 @@ void fl_message_impl(const FlMessageSpec* spec) {
         return;
     }
     MessageSlot slot = spec->slot;
+    if (spec->render) {
+      slot = FREE;
+    }
     if (slot == AUTO) {
         PROFILE_START(_pt);
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : TOP_CENTER;
