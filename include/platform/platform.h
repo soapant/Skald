@@ -79,6 +79,8 @@ void Platform_PrewarmBackgroundPixmap(void);
 void Platform_InitUI(void);
 void Platform_InitDataFolder(void);
 bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len);
+bool Platform_FeatureDataDirExists(const char* stem);
+bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, size_t out_len);
 bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t out_len);
 bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t out_len);
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len);

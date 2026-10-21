@@ -15,6 +15,7 @@
 
 #include "core/timer.h"
 #include "core/listbox_hover.h"
+#include "core/prompt_keys.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
         PROFILE_START(_pt);
 (void)hPopupWnd;
@@ -197,24 +198,14 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
 
 void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
         PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateUp"); return ; }
-    int sel = lb->selected_index;
-    if (sel >= 0) sel--;
-    if (sel == lb->selected_index) { PROFILE_END_VAR(_pt, "UI_NavigateUp"); return ; }
-    UI_NavigateTo(lb, hListBox, sel);
+    ListBox_NavigateUp(lb, hListBox);
+    PROFILE_END_VAR(_pt, "UI_NavigateUp");
 }
 
 void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
         PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
-    int count = lb->populated_count;
-    if (count <= 0) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
-    int sel = lb->selected_index;
-    if (sel < 0) sel = -1;
-    if (sel >= count - 1) sel = count - 1;
-    else sel++;
-    if (sel == lb->selected_index) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
-    UI_NavigateTo(lb, hListBox, sel);
+    ListBox_NavigateDown(lb, hListBox);
+    PROFILE_END_VAR(_pt, "UI_NavigateDown");
 }
 
 int UI_LB_GetTextLen(WindowHandle hList) {
@@ -445,12 +436,8 @@ SendMessageA(WH_TO_HWND(hEdit), WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0
 PromptState *g_win32_prompt_state = NULL;
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
         PROFILE_START(_pt);
-FlintContext* _c = FlintContext_Get();
-    if (_c->prompt_callbacks.refresh != NULL) {
-        char buffer[MaxFeatures];
-        UI_GetCurrentTextEdit(buffer, sizeof(buffer));
-        _c->prompt_callbacks.refresh(buffer, lb);
-    }
+    Prompt_RedrawNow(lb, hListBox);
+    PROFILE_END_VAR(_pt, "UI_RedrawNow");
 }
 
 static bool g_toggle_key_pending = false;
@@ -500,12 +487,11 @@ PromptState* Platform_GetWin32PromptState(void) {     PROFILE_START(_pt);
 
 static void win_command_confirm(const char* text, void* user_data) {
     PROFILE_START(_pt);
-extern void HandleCommandExecution(ListBoxInfo* lb, char* string);
   ListBoxInfo* lb = (ListBoxInfo*)user_data;
   if (!text) { PROFILE_END_VAR(_pt, "win_command_confirm"); return ; }
   char* dup = _strdup(text);
   if (!dup) { PROFILE_END_VAR(_pt, "win_command_confirm"); return ; }
-  HandleCommandExecution(lb, dup);
+  ListBox_CommandExecute(lb, dup);
   free(dup);
 }
 

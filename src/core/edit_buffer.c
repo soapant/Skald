@@ -14,18 +14,18 @@ PROFILE_START(timer);
                 n - *cursor + 1);
         (*cursor)--;
     }
-    PROFILE_END_VAR(timer, "subclasses_x11:EditBufferBackspace");
+    PROFILE_END_VAR(timer, "core:EditBufferBackspace");
 }
 
 bool EditBufferDeleteChar(char* buf, size_t* cursor) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
     size_t n = strlen(buf);
-    if (*cursor >= n) { PROFILE_END_VAR(timer, "subclasses_x11:EditBufferDeleteChar"); return false; }
+    if (*cursor >= n) { PROFILE_END_VAR(timer, "core:EditBufferDeleteChar"); return false; }
     memmove(buf + *cursor,
             buf + *cursor + 1,
             n - *cursor);
-    PROFILE_END_VAR(timer, "subclasses_x11:EditBufferDeleteChar");
+    PROFILE_END_VAR(timer, "core:EditBufferDeleteChar");
     { PROFILE_END_VAR(_pt, "EditBufferDeleteChar"); return true; }
 }
 
@@ -65,7 +65,7 @@ switch (c) {
 size_t EditBufferInsertText(char* buf, size_t cap, size_t* cursor, const char* text, size_t len) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    if (!buf || !cursor || !text || len == 0 || cap == 0) { PROFILE_END_VAR(timer, "subclasses_x11:EditBufferInsertText"); return 0; }
+    if (!buf || !cursor || !text || len == 0 || cap == 0) { PROFILE_END_VAR(timer, "core:EditBufferInsertText"); return 0; }
     size_t n = strlen(buf);
     if (*cursor > n) *cursor = n;
 
@@ -73,7 +73,7 @@ PROFILE_START(timer);
     if (EnableAutoPairing && len == 1) {
         if (fl_edit_is_closer(text[0]) && *cursor < n && buf[*cursor] == text[0]) {
             (*cursor)++;
-            PROFILE_END_VAR(timer, "subclasses_x11:EditBufferInsertText");
+            PROFILE_END_VAR(timer, "core:EditBufferInsertText");
             return 0;
         }
         if (!fl_edit_is_quote(text[0]) || fl_edit_quote_at_word_start(buf, *cursor)) {
@@ -82,27 +82,45 @@ PROFILE_START(timer);
     }
 
     size_t total = len + (closer ? (size_t)1 : (size_t)0);
-    if (n + total >= cap) { PROFILE_END_VAR(timer, "subclasses_x11:EditBufferInsertText"); return 0; }
+    if (n + total >= cap) { PROFILE_END_VAR(timer, "core:EditBufferInsertText"); return 0; }
     memmove(buf + *cursor + total, buf + *cursor, n - *cursor + 1);
     memcpy(buf + *cursor, text, len);
     if (closer) buf[*cursor + len] = closer;
     *cursor += len;
-    PROFILE_END_VAR(timer, "subclasses_x11:EditBufferInsertText");
+    PROFILE_END_VAR(timer, "core:EditBufferInsertText");
     { PROFILE_END_VAR(_pt, "EditBufferInsertText"); return total; }
 }
 
 bool EditBufferBackspacePair(char* buf, size_t* cursor) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    if (!buf || !cursor || !EnableAutoPairing) { PROFILE_END_VAR(timer, "subclasses_x11:EditBufferBackspacePair"); return false; }
+    if (!buf || !cursor || !EnableAutoPairing) { PROFILE_END_VAR(timer, "core:EditBufferBackspacePair"); return false; }
     size_t c = *cursor;
     size_t n = strlen(buf);
-    if (c == 0 || c > n) { PROFILE_END_VAR(timer, "subclasses_x11:EditBufferBackspacePair"); return false; }
+    if (c == 0 || c > n) { PROFILE_END_VAR(timer, "core:EditBufferBackspacePair"); return false; }
     char closer = buf[c];
-    if (closer == '\0' || !fl_edit_is_closer(closer)) { PROFILE_END_VAR(timer, "subclasses_x11:EditBufferBackspacePair"); return false; }
-    if (EditBufferPairFor(buf[c - 1]) != closer) { PROFILE_END_VAR(timer, "subclasses_x11:EditBufferBackspacePair"); return false; }
+    if (closer == '\0' || !fl_edit_is_closer(closer)) { PROFILE_END_VAR(timer, "core:EditBufferBackspacePair"); return false; }
+    if (EditBufferPairFor(buf[c - 1]) != closer) { PROFILE_END_VAR(timer, "core:EditBufferBackspacePair"); return false; }
     memmove(buf + c - 1, buf + c + 1, n - c);
     (*cursor)--;
-    PROFILE_END_VAR(timer, "subclasses_x11:EditBufferBackspacePair");
+    PROFILE_END_VAR(timer, "core:EditBufferBackspacePair");
     { PROFILE_END_VAR(_pt, "EditBufferBackspacePair"); return true; }
+}
+
+bool CursorBack(size_t* cursor, size_t text_len) {
+        PROFILE_START(_pt);
+PROFILE_START(timer);
+    if (*cursor == 0) { PROFILE_END_VAR(timer, "core:CursorBack"); return false;  }
+    (*cursor)--;
+    PROFILE_END_VAR(timer, "core:CursorBack");
+    { PROFILE_END_VAR(_pt, "CursorBack"); return true; }
+}
+
+bool CursorForward(size_t* cursor, size_t text_len) {
+        PROFILE_START(_pt);
+PROFILE_START(timer);
+    if (*cursor >= text_len) { PROFILE_END_VAR(timer, "core:CursorForward"); return false; }
+    (*cursor)++;
+    PROFILE_END_VAR(timer, "core:CursorForward");
+    { PROFILE_END_VAR(_pt, "CursorForward"); return true; }
 }

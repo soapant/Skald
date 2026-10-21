@@ -922,24 +922,6 @@ PROFILE_START(timer);
     PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText");
 }
 
-bool CursorBack(size_t* cursor, size_t text_len) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    if (*cursor == 0) { PROFILE_END_VAR(timer, "helpers_x11:CursorBack"); return false;  }
-    (*cursor)--;
-    PROFILE_END_VAR(timer, "helpers_x11:CursorBack");
-    { PROFILE_END_VAR(_pt, "CursorBack"); return true; }
-}
-
-bool CursorForward(size_t* cursor, size_t text_len) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    if (*cursor >= text_len) { PROFILE_END_VAR(timer, "helpers_x11:CursorForward"); return false; }
-    (*cursor)++;
-    PROFILE_END_VAR(timer, "helpers_x11:CursorForward");
-    { PROFILE_END_VAR(_pt, "CursorForward"); return true; }
-}
-
 static int x11_error_occurred = 0;
 
 static int dummy_x_error_handler(Display *dpy, XErrorEvent *error) {

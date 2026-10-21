@@ -19,6 +19,7 @@
 #include "core/modal.h"
 #include "config.h"
 #include "core/listbox_hover.h"
+#include "core/listbox_layout.h"
 #include "core/editbox.h"
 #include "core/prompt_geometry.h"
 #include "bindings/vim_state.h"
@@ -216,29 +217,19 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     extern PromptState* Platform_GetWin32PromptState(void);
     PromptState *st = Platform_GetWin32PromptState();
     g_fl_list_itemH = spec->item_height ? spec->item_height : PromptRowHeight();
-    g_fl_list_y0 = spec->y ? spec->y : PromptListTop();
-    int bottomMargin = PromptListBottomMargin();
-    int list_h;
-    if (spec->h) list_h = spec->h;
-    else list_h = st ? (st->height - g_fl_list_y0 - bottomMargin) : PROMPT_CUSTOM_FALLBACK_LIST_H;
-    if (!spec->x && !spec->w) {
-        g_fl_list_bx = PROMPT_SEL_X;
-        g_fl_list_bw = (st ? st->width : PROMPT_W) - PROMPT_SEL_W_SHRINK;
-        g_fl_list_fw = st ? st->width : PROMPT_W;
-    } else {
-        g_fl_list_bx = spec->x + PROMPT_SEL_INSET;
-        g_fl_list_bw = (spec->w ? spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
-        g_fl_list_fw = spec->w ? spec->w : PROMPT_W;
-    }
-    int visible = list_h / g_fl_list_itemH;
-    if (visible < 1) visible = 1;
-    if (visible > lb->populated_count) visible = lb->populated_count;
-    g_fl_list_visible = visible;
+    ListboxLayout lay;
+    Listbox_ComputeLayout(spec, PromptListTop(), g_fl_list_itemH,
+                          st ? st->width : 0, st ? st->height : 0, lb->populated_count, &lay);
+    g_fl_list_y0 = lay.y0;
+    g_fl_list_bx = lay.bx;
+    g_fl_list_bw = lay.bw;
+    g_fl_list_fw = lay.fw;
+    g_fl_list_visible = lay.visible;
     g_fl_list_cur = 0;
     g_fl_list_font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
     g_fl_list_font_owned = false;
-    ListBox_ApplyPendingScroll(g_fl_list_lb, visible);
-    ListBox_HoverFocus(g_fl_list_lb, g_fl_list_y0, g_fl_list_itemH, g_fl_list_lb->view_offset, visible);
+    ListBox_ApplyPendingScroll(g_fl_list_lb, lay.visible);
+    ListBox_HoverFocus(g_fl_list_lb, g_fl_list_y0, g_fl_list_itemH, g_fl_list_lb->view_offset, lay.visible);
     { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return true; }
 }
 
@@ -383,7 +374,6 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     int w = spec->w;
     int h = spec->h;
     if (w <= 0) w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
-    if (w < 40) w = 40;
     if (h <= 0) h = PromptCustomEditHeight();
     HFONT hfont = spec->font.hfont ? spec->font.hfont : (g_win32_hMainFont ? g_win32_hMainFont : NULL);
     HFONT old = NULL;
@@ -393,11 +383,9 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     int cursor = state ? state->cursor : text_len;
     if (cursor < 0) cursor = 0;
     if (cursor > text_len) cursor = text_len;
-    int visible_w = w - PROMPT_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
     int y_raw = (spec->y == 0) ? PROMPT_EDIT_INSET : spec->y;
-    int caret_h = PromptCaretHeight();
     int ascent = 0;
     int descent = 0;
     if (hfont) {
@@ -412,38 +400,25 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
         RECT textRc = {x + PROMPT_EDIT_INSET, y, x + w, y + h};
         DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
     }
-    int sel_start = 0, sel_end = 0;
-    bool has_sel = false;
-    Editbox_ResolveSelection(state, text_len, true, &sel_start, &sel_end, &has_sel);
+    EditboxInit ebi;
+    memset(&ebi, 0, sizeof(ebi));
+    ebi.state = state;
+    ebi.text = buf;
+    ebi.text_len = text_len;
+    ebi.cursor = cursor;
+    ebi.insert_mode = IsInsertMode() || !EnableVimMode;
+    ebi.x = x;
+    ebi.y = y_raw;
+    ebi.w = w;
+    ebi.cursor_x = cursor_x;
+    ebi.text_w = text_w;
+    ebi.ascent = ascent;
+    ebi.descent = descent;
+    ebi.text_color = rgb_to_hex(COLOR_TEXT);
+    ebi.font = spec->font;
 
     FlEditboxSpec eb;
-    memset(&eb, 0, sizeof(eb));
-    eb.text = buf;
-    eb.text_len = text_len;
-    eb.cursor = cursor;
-    eb.sel_start = sel_start;
-    eb.sel_end = sel_end;
-    eb.has_selection = has_sel;
-    eb.sel_mode = EDITBOX_SEL_EXCLUSIVE;
-    eb.insert_mode = IsInsertMode() || !EnableVimMode;
-    eb.x = x;
-    eb.y = y_raw;
-    eb.w = w;
-    eb.inset = PROMPT_EDIT_INSET;
-    eb.visible_w = visible_w;
-    eb.scroll = state ? state->scroll_offset : 0;
-    eb.cursor_x = cursor_x;
-    eb.text_w = text_w;
-    eb.text_y = y_raw;
-    eb.caret_y = Editbox_CaretY(y_raw, ascent, descent);
-    eb.caret_h = caret_h;
-    eb.caret_w_normal = PromptNormalCaretWidth();
-    eb.caret_w_insert = PROMPT_CARET_W_INSERT;
-    eb.placeholder = state ? state->placeholder : NULL;
-    eb.placeholder_dy = 2;
-    eb.rainbow_limit_x = -1;
-    eb.text_color = rgb_to_hex(COLOR_TEXT);
-    eb.font = spec->font;
+    Editbox_BuildSpec(&eb, &ebi);
 
     Editbox_Render(&eb, NULL);
     if (state) state->scroll_offset = eb.scroll;

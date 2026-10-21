@@ -22,5 +22,8 @@ void ListBox_ScrollBy(ListBoxInfo* lb, int rows, int visible_count);
 void ListBox_ApplyPendingScroll(ListBoxInfo* lb, int visible_count);
 int ListBox_ScrollTopFor(int index, int visible_count, int count);
 void ListBox_ScrollToSelection(ListBoxInfo* lb);
+void ListBox_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox);
+void ListBox_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox);
+void ListBox_CommandExecute(ListBoxInfo* lb, const char* string);
 
 #endif
