@@ -12,6 +12,7 @@ unsigned long Platform_GetDrawBgColor(void);
 void Platform_SetTransparentWindow(bool on);
 bool Platform_GetTransparentWindow(void);
 void Platform_GetDrawContextWin32(HDC *out);
+void Platform_ReleaseDrawCache(void);
 void Platform_BeginMeasure(void);
 void Platform_EndMeasure(int *out_w, int *out_h);
 void Platform_GetLastMeasureOrigin(int *out_x, int *out_y);
