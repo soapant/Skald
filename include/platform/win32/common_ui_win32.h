@@ -11,5 +11,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 WindowHandle FindWindowByPartialTitle(const char* partialTitle);
 COLORREF LerpColor(COLORREF a, COLORREF b, float t);
+void win32_draw_window_border(HDC hdc, int ox, int oy, int ww, int wh, const RECT* region);
+void win32_apply_listbox_bottom_corners(HWND hwnd, int w, int h, bool at_window_bottom);
 
 #endif

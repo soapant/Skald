@@ -21,6 +21,29 @@ HFONT CreateCustomNerdFont(int height, const char* face_name) {
 { PROFILE_END_VAR(_pt, "CreateCustomNerdFont"); return FH_TO_HFONT(Platform_CreateFont(height, face_name)); }
 }
 
+/* The listbox is a child window, so the parent's window region does not
+   clip it: its bottom corners would square off the rounded popup. Give the
+   listbox the same bottom corner radius when it reaches the window edge. */
+void win32_apply_listbox_bottom_corners(HWND hwnd, int w, int h, bool at_window_bottom) {
+    PROFILE_START(_pt);
+    if (!hwnd || !IsWindow(hwnd) || !RoundedCorners || !at_window_bottom) { PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners"); return ; }
+    int radius = CornerRadius;
+    if (radius < 0) radius = 0;
+    if (radius > 32) radius = 32;
+    if (radius * 2 > w) radius = w / 2;
+    if (radius * 2 > h) radius = h / 2;
+    if (radius <= 0) { PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners"); return ; }
+    HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius * 2, radius * 2);
+    if (!rgn) { PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners"); return ; }
+    HRGN top = CreateRectRgn(0, 0, w + 1, h - radius + 1);
+    if (top) {
+        CombineRgn(rgn, rgn, top, RGN_OR);
+        DeleteObject(top);
+    }
+    SetWindowRgn(hwnd, rgn, TRUE);
+    PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners");
+}
+
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
     PROFILE_START(_pt);
 if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corners"); return ; }
@@ -42,13 +65,12 @@ if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corner
         FreeLibrary(dwm);
         return;
       }
-      const int DWMWCP_ROUND = 2;
+      const int DWMWCP_DONOTROUND = 0;
       const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-      HRESULT hr = pDwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_ROUND, sizeof(DWMWCP_ROUND));
-      if (SUCCEEDED(hr)) {
-        FreeLibrary(dwm);
-        return;
-      }
+      /* DWM rounds with its own fixed radius, which is tighter than
+         CornerRadius and would clip the 1px border arc away. The region
+         below owns the shape so the border can trace the same arc. */
+      pDwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_DONOTROUND, sizeof(DWMWCP_DONOTROUND));
     }
     FreeLibrary(dwm);
   }
@@ -57,6 +79,9 @@ if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corner
   int radius = CornerRadius;
   if (radius < 0) radius = 0;
   if (radius > 32) radius = 32;
+  if (radius * 2 > w) radius = w / 2;
+  if (radius * 2 > h) radius = h / 2;
+  if (radius <= 0) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corners"); return ; }
   HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius*2, radius*2);
   if (rgn) SetWindowRgn(hwnd, rgn, TRUE);
 }
@@ -368,6 +393,67 @@ int preset = ShaderPreset;
 
 }
 
+static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1, int ey1,
+                               int ox, int oy, int rx0, int ry0, int rx1, int ry1) {
+  int ix0 = ex0 > rx0 ? ex0 : rx0;
+  int iy0 = ey0 > ry0 ? ey0 : ry0;
+  int ix1 = ex1 < rx1 ? ex1 : rx1;
+  int iy1 = ey1 < ry1 ? ey1 : ry1;
+  if (ix1 <= ix0 || iy1 <= iy0) return;
+  RECT r;
+  r.left = ix0 + ox;
+  r.top = iy0 + oy;
+  r.right = ix1 + ox;
+  r.bottom = iy1 + oy;
+  FillRect(hdc, &r, brush);
+}
+
+void win32_draw_window_border(HDC hdc, int ox, int oy, int ww, int wh, const RECT* region) {
+  if (!hdc || !EnableBorders || ww <= 0 || wh <= 0) return;
+  int t = PROMPT_BORDER_W;
+  if (t <= 0) return;
+  int rx0 = 0, ry0 = 0, rx1 = ww, ry1 = wh;
+  if (region) { rx0 = region->left; ry0 = region->top; rx1 = region->right; ry1 = region->bottom; }
+  if (rx1 <= rx0 || ry1 <= ry0) return;
+  int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
+  if (r > ww / 2) r = ww / 2;
+  if (r > wh / 2) r = wh / 2;
+  if (r <= t) r = 0;
+  HBRUSH brush = CreateSolidBrush(COLOR_BORDER);
+  if (!brush) return;
+  win32_border_edge(hdc, brush, r, 0, ww - r, t, ox, oy, rx0, ry0, rx1, ry1);
+  win32_border_edge(hdc, brush, r, wh - t, ww - r, wh, ox, oy, rx0, ry0, rx1, ry1);
+  win32_border_edge(hdc, brush, 0, r, t, wh - r, ox, oy, rx0, ry0, rx1, ry1);
+  win32_border_edge(hdc, brush, ww - t, r, ww, wh - r, ox, oy, rx0, ry0, rx1, ry1);
+  if (r > t) {
+    HRGN shape = CreateRoundRectRgn(0, 0, ww + 1, wh + 1, r * 2, r * 2);
+    if (shape) {
+      for (int y = 0; y < wh; y++) {
+        if (y >= r && y < wh - r) continue;
+        for (int x = 0; x < ww; x++) {
+          if (x >= r && x < ww - r) continue;
+          if (x < rx0 || x >= rx1 || y < ry0 || y >= ry1) continue;
+          if (!PtInRegion(shape, x, y)) continue;
+          int edge = 0;
+          if (!PtInRegion(shape, x - 1, y)) edge = 1;
+          if (!PtInRegion(shape, x + 1, y)) edge = 1;
+          if (!PtInRegion(shape, x, y - 1)) edge = 1;
+          if (!PtInRegion(shape, x, y + 1)) edge = 1;
+          if (!edge) continue;
+          RECT px;
+          px.left = x + ox;
+          px.top = y + oy;
+          px.right = x + ox + 1;
+          px.bottom = y + oy + 1;
+          FillRect(hdc, &px, brush);
+        }
+      }
+      DeleteObject(shape);
+    }
+  }
+  DeleteObject(brush);
+}
+
 void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius) {
     PROFILE_START(_pt);
 if (!RoundedCorners || radius <= 0) {
@@ -550,6 +636,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
     SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hListBox), ListBoxSubclassProc, 0, 0);
     UI_LB_SetFont(FlintContext_Get()->window.hListBox, hFont);
     UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, layout->item_height);
+    win32_apply_listbox_bottom_corners(WH_TO_HWND(FlintContext_Get()->window.hListBox), layout->w, listH, PromptListBottomMargin() == 0);
 
     int max_width = layout->w;
 
