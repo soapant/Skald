@@ -2022,6 +2022,10 @@ char* fl_resolve_feature_path(const char* name) {
     return res;
 }
 
+char* fl_resolve_user_path() {
+    return Platform_GetRealHome();
+}
+
 void fl_hashmap_init(FlHashMap** map) {
     PROFILE_START(_pt);
     if (!map) { PROFILE_END_VAR(_pt, "fl_hashmap_init"); return ; }
