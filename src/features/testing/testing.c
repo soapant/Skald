@@ -5,6 +5,7 @@
 
 void Testing() {
     FlTimer p = fl_profile_start();
+    printf("%s \n",fl_resolve_data_path(__FILE__));
     fl_profile_end(p);
 }
 

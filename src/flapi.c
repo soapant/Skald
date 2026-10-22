@@ -1988,10 +1988,12 @@ bool fl_is_window_active(char* title) {
   PROFILE_END_VAR(_pt, "api:fl_is_window_active");
   return false;
 }
+
 char* fl_get_working_dir() {
     PROFILE_START(_pt);
     { PROFILE_END_VAR(_pt, "fl_get_working_dir"); return Platform_GetWorkingDir(); }
 }
+
 char* fl_resolve_data_path(const char* name) {
     PROFILE_START(_pt);
     if (!name || !name[0]) { PROFILE_END_VAR(_pt, "fl_resolve_data_path"); return NULL; }
@@ -2001,6 +2003,23 @@ char* fl_resolve_data_path(const char* name) {
     if (!r) { PROFILE_END_VAR(_pt, "fl_resolve_data_path"); return NULL; }
     strcpy(r, full);
     { PROFILE_END_VAR(_pt, "fl_resolve_data_path"); return r; }
+}
+
+char* fl_resolve_feature_path(const char* name) {
+    char buf[340];
+    int len = snprintf(buf, sizeof(buf), "%s/%s", FeaturePath, name);
+    
+    if (len < 0 || len >= (int)sizeof(buf)) {
+        return NULL;
+    }
+
+    char* res = (char*)malloc(len + 1);
+    if (!res) {
+        return NULL;
+    }
+
+    strcpy(res, buf);
+    return res;
 }
 
 void fl_hashmap_init(FlHashMap** map) {
