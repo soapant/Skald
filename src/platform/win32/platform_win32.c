@@ -313,7 +313,7 @@ if (!query || !query[0]) { PROFILE_END_VAR(_pt, "Platform_QueryZoxidePath"); ret
     if (strstr(out, "no match found")) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
-        DisplayMessageSlot(buffer, TOP_CENTER_RELATIVE, 0, 0, 0, TimeOutForMessages, COLOR_ERROR);
+        DisplayMessageSlot(buffer, TOP_CENTER_RELATIVE, 0, 0, 0, TimeOutForMessages, COLOR_ERROR, NULL);
         free(out);
         return NULL;
     }
