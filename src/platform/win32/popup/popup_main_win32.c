@@ -849,6 +849,7 @@ case WM_CHAR: {
         }
       if (s_sel_brush) { DeleteObject(s_sel_brush); s_sel_brush = NULL; }
         popup_free_back_buffer();
+        s_repaint_queued = false;
         rainbow_init = false;
         break;
     }
