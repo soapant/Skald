@@ -308,7 +308,7 @@ void display_card_answer() {
         answer[o] = '\0';
     }
     fl_dismiss_message("question");
-    fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=4.0);
+    fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=10000.0);
 }
 
 void print_due_card(void) {
@@ -340,15 +340,15 @@ void print_due_card(void) {
 }
 
 void handle_anki(void) {
-    // bool q_active = fl_message_active("question");
-    // bool a_active = fl_message_active("answer");
-    //
-    // if (!q_active && !a_active) {
-    //     print_due_card();
-    // } 
-    // else if (q_active && !a_active) {
-    //     display_card_answer();
-    // }
+    bool q = fl_message_active("question");
+    bool a = fl_message_active("answer");
+
+    if (q) {
+        display_card_answer();
+    }
+    else if (a) {
+        fl_dismiss_message("answer");
+    }
 }
 bool should_swallow_anki(void) {
     bool q_active = fl_message_active("question");

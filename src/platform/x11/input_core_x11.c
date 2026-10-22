@@ -572,7 +572,8 @@ PROFILE_START(timer);
     if (value != 1 && value != 2) { PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
     int modifiers = remap_current_mods();
-    if (pressed_vk && hotkey_process(pressed_vk, modifiers)) {
+    bool processed = hotkey_process(pressed_vk, modifiers);
+    if (pressed_vk && processed) {
         pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
         PROFILE_END_VAR(timer, "input:x11_handle_global_key");
         return true;
@@ -625,7 +626,8 @@ PROFILE_START(timer);
     if (val == 0 && x11_is_suppressed(code)) { x11_set_suppress(code, false); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
     if (val == 2 && x11_is_suppressed(code)) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
     if (has_popup) {
-        if (val==1 && x11_handle_global_key(code, val)) { x11_set_suppress(code, true); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
+        bool hk_swallowed = (val==1) && x11_handle_global_key(code, val);
+        if (hk_swallowed) { x11_set_suppress(code, true); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
         if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
         PROFILE_END_VAR(timer, "input:x11_handle_evdev");
         return false;
