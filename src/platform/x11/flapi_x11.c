@@ -432,7 +432,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     PromptState *st = NULL;
     if (wmgr) {
         Popup* top = WindowManager_GetTopPopup(wmgr);
-        if (top && top->user_data && top->type == POPUP_fl_window) st = (PromptState*)top->user_data;
+        if (top && top->user_data && top->type == POPUP_PROMPT) st = (PromptState*)top->user_data;
     }
     ListboxLayout lay;
     Listbox_ComputeLayout(spec, x11_font_list_top_of(g_fl_list_font), g_fl_list_itemH,
@@ -545,7 +545,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     PromptState *state = NULL;
     if (wm) {
         Popup* top = WindowManager_GetTopPopup(wm);
-        if (top && top->user_data && top->type == POPUP_fl_window) state = (PromptState*)top->user_data;
+        if (top && top->user_data && top->type == POPUP_PROMPT) state = (PromptState*)top->user_data;
     }
     const char *buf = spec->buffer;
     if (!buf) {

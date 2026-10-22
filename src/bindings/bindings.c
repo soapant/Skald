@@ -17,7 +17,7 @@ static int g_sequence_count;
 static bool vim_scope_allows(VimScope scope) {
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-    bool in_prompt = top && top->type == POPUP_fl_window;
+    bool in_prompt = top && top->type == POPUP_PROMPT;
     bool in_edit = top && top->type == POPUP_EDIT;
     if (!in_prompt && !in_edit && IsPopupActive(WH_NULL)) in_prompt = true;
     switch (scope) {

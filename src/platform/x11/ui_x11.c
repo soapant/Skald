@@ -169,7 +169,7 @@ if (!buffer || cap == 0) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return
     if (!wm) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return ; }
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return ; }
-    if (top->type == POPUP_fl_window && top->user_data) {
+    if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         snprintf(buffer, cap, "%s", prompt->filter);
         buffer[cap-1]='\0';
@@ -188,7 +188,7 @@ if (!text) text = "";
     if (!wm) { PROFILE_END_VAR(_pt, "UI_SetText"); return ; }
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(_pt, "UI_SetText"); return ; }
-    if (top->type == POPUP_fl_window && top->user_data) {
+    if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         strncpy(prompt->filter, text, sizeof(prompt->filter)-1);
         prompt->filter[sizeof(prompt->filter)-1]='\0';
@@ -210,7 +210,7 @@ WindowManager* wm = WindowManager_Get();
     if (!wm) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return 0; }
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return 0; }
-    if (top->type == POPUP_fl_window && top->user_data) {
+    if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         PROFILE_END_VAR(_pt, "UI_GetCursorPosition");
         return (int)prompt->cursor;
@@ -229,7 +229,7 @@ WindowManager* wm = WindowManager_Get();
     if (!wm) { PROFILE_END_VAR(_pt, "UI_SetCursorPosition"); return ; }
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(_pt, "UI_SetCursorPosition"); return ; }
-    if (top->type == POPUP_fl_window && top->user_data) {
+    if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         int len = (int)strlen(prompt->filter);
         if (position < 0) position = 0;
@@ -263,7 +263,7 @@ if (!ctx) { PROFILE_END_VAR(_pt, "UI_SyncFilterFromEdit"); return ; }
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (!top) { PROFILE_END_VAR(_pt, "UI_SyncFilterFromEdit"); return ; }
-    if (top->type == POPUP_fl_window && top->user_data) {
+    if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         strncpy(ctx->window.filter, prompt->filter, sizeof(ctx->window.filter) - 1);
         ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
@@ -286,7 +286,7 @@ if (!ctx) { PROFILE_END_VAR(_pt, "UI_ApplyFilterToEdit"); return ; }
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (!top) { PROFILE_END_VAR(_pt, "UI_ApplyFilterToEdit"); return ; }
-    if (top->type == POPUP_fl_window && top->user_data) {
+    if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         strncpy(prompt->filter, ctx->window.filter, sizeof(prompt->filter) - 1);
         prompt->filter[sizeof(prompt->filter) - 1] = '\0';
@@ -307,7 +307,7 @@ if (!ctx) { PROFILE_END_VAR(_pt, "UI_GetPopupListBox"); return NULL; }
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (!top) { PROFILE_END_VAR(_pt, "UI_GetPopupListBox"); return NULL; }
-    if (top->type == POPUP_fl_window && top->user_data) {
+    if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         return prompt->has_listbox ? &prompt->listbox : NULL;
     }
@@ -320,7 +320,7 @@ if (!ctx) { PROFILE_END_VAR(_pt, "UI_SyncEditCursor"); return ; }
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (!top) { PROFILE_END_VAR(_pt, "UI_SyncEditCursor"); return ; }
-    if (top->type == POPUP_fl_window && top->user_data) {
+    if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         int len = (int)strlen(prompt->filter);
         if (pos < 0) pos = 0;

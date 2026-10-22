@@ -130,7 +130,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w, int *out_
     WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
     Popup* top = WindowManager_GetTopPopup(NULL);
     int pw = 0, ph = 0, px = -1, py = -1;
-    if (top && top->type == POPUP_fl_window) PromptPopup_GetBounds(top, &px, &py, &pw, &ph);
+    if (top && top->type == POPUP_PROMPT) PromptPopup_GetBounds(top, &px, &py, &pw, &ph);
     if (pw <= 0 || ph <= 0) {
         pw = (int)(900 * Platform_GetUIScale());
         ph = (int)(640 * Platform_GetUIScale());
