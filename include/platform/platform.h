@@ -66,6 +66,7 @@ void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color, bool no_bg, void (*render)(void), const char* name);
 void Platform_DismissDisplayMessage(void);
 bool Platform_DismissMessage(const char* name);
+bool Platform_MessageActive(const char* name);
 void Platform_HoverMessage(const char* key, const char* message, int centerX, int centerY, int w, int h, int maxWidth, int maxHeight, ColorRef color,bool no_bg);
 void Platform_HoverMessageRelease(const char* key);
 void Platform_HoverWidgetShow(const char* key, void (*render)(void* ud), void* ud, int x, int y, int w, int h, int fps, bool no_bg, unsigned long bg_hex, void (*release)(void* ud), void* release_ud);
