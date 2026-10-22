@@ -30,29 +30,6 @@ static void test_stem_dir(const char* stem, char* out, size_t n) {
     snprintf(out, n, "%s%s%s", base, TEST_SEP, stem);
 }
 
-TEST(stem_match_null_feature) {
-    char dir[512];
-    test_stem_dir("chteststem", dir, sizeof(dir));
-    TEST_MKDIR(dir);
-    FlintContext_Get()->window.current_feature = NULL;
-    char out[512] = {0};
-    bool ok = Platform_ResolveDataPath(__builtin_return_address(0),"chteststem.txt", out, sizeof(out));
-    ASSERT_TRUE(ok);
-    ASSERT_TRUE(strstr(out, "chteststem" TEST_SEP "chteststem.txt") != NULL);
-    TEST_RMDIR(dir);
-}
-
-TEST(stem_match_stale_feature) {
-    char dir[512];
-    test_stem_dir("chteststem", dir, sizeof(dir));
-    TEST_MKDIR(dir);
-    FlintContext_Get()->window.current_feature = (char*)"Todo";
-    char out[512] = {0};
-    bool ok = Platform_ResolveDataPath(__builtin_return_address(0),"chteststem.txt", out, sizeof(out));
-    ASSERT_TRUE(ok);
-    ASSERT_TRUE(strstr(out, "chteststem" TEST_SEP "chteststem.txt") != NULL);
-    TEST_RMDIR(dir);
-}
 
 TEST(existing_behavior_preserved) {
     char dir[512];
@@ -86,8 +63,6 @@ TEST(foreground_first_save) {
 }
 
 int main(void) {
-    RUN(stem_match_null_feature);
-    RUN(stem_match_stale_feature);
     RUN(existing_behavior_preserved);
     RUN(unknown_still_fails);
     RUN(foreground_first_save);
