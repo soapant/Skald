@@ -20,6 +20,7 @@ typedef enum {
 
 static TYPE_NAME g_current_card = {0};
 static AnkiState g_anki_state = ANKI_STATE_IDLE;
+static FlTimer g_card_timer = {0};
 
 static FlLibrary g_sqlite_lib = NULL;
 static int (*p_sqlite3_open_v2)(const char*, sqlite3**, int, const char*) = NULL;
@@ -35,7 +36,7 @@ static int (*p_sqlite3_close)(sqlite3*) = NULL;
 static FlThread anki_thread = NULL;
 static FlMutex anki_lock = NULL;
 static bool anki_running = false;
-static int time_between_qs = 5;
+static int time_between_qs = 20;
 
 static char* safe_strdup(const char* s) {
     if (!s) return NULL;
@@ -333,7 +334,7 @@ void print_due_card(void) {
         fl_profile_end(p);
         return;
     }
-    int random = rand()%due_count-1;
+    int random = fl_rand_num_between(0, (int)(due_count - 1));
     printf("%i \n",random);
     size_t pick = due[random];
     TYPE_NAME card = list.items[pick];
@@ -342,6 +343,7 @@ void print_due_card(void) {
     free_card_contents(&g_current_card);
     g_current_card = card_clone(list.items[pick]);
     g_anki_state = ANKI_STATE_QUESTION;
+    g_card_timer = fl_start_timer();
     fl_mutex_unlock(anki_lock);
 
     display_card_question(card);
@@ -351,6 +353,7 @@ void print_due_card(void) {
 }
 
 static void* anki_timer_thread(void* arg) {
+    srand((unsigned int)(time(NULL) ^ (uintptr_t)&anki_running));
     while (anki_running) {
         fl_sleep(time_between_qs); 
         if (anki_running) {
@@ -366,6 +369,21 @@ void handle_anki(void) {
     fl_mutex_unlock(anki_lock);
 
     if (current_state == ANKI_STATE_QUESTION) {
+        double elapsed_seconds = fl_end_timer(g_card_timer);
+
+        double bonus_time = 0.0;
+        if (elapsed_seconds < 5.0) {
+            bonus_time = 180.0; 
+        } else if (elapsed_seconds < 15.0) {
+            bonus_time = 600.0; 
+        } else {
+            bonus_time = 900.0; 
+        }
+
+        fl_mutex_lock(anki_lock);
+        g_current_card.due_ts += (long long)bonus_time;
+        fl_mutex_unlock(anki_lock);
+
         display_card_answer();
     }
     else if (current_state == ANKI_STATE_ANSWER) {
@@ -384,8 +402,6 @@ bool should_swallow_anki(void) {
 }
 
 FLINT_FEATURE_INIT {
-    //temporary untill i fix randomness not working on windows
-    srand((unsigned)time(NULL));
     anki_lock = fl_mutex_create();
     anki_running = true;
     anki_thread = fl_thread_create(anki_timer_thread, NULL);
