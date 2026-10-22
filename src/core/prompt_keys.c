@@ -1,6 +1,7 @@
 #include "core/prompt_keys.h"
 #include "config.h"
 #include "core/context.h"
+#include "deps/log.h"
 #include "core/history.h"
 #include "core/modal.h"
 #include "core/listbox_hover.h"

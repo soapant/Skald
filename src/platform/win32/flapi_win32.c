@@ -227,7 +227,6 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     g_fl_list_visible = lay.visible;
     UI_LB_SetVisibleCount(lay.visible);
     g_fl_list_cur = 0;
-    log_info("fl_listbox_begin lb=%p view_off=%d cnt=%d vis=%d", (void*)lb, lb->view_offset, lb->populated_count, lay.visible);
     g_fl_list_font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
     g_fl_list_font_owned = false;
     ListBox_ApplyPendingScroll(g_fl_list_lb, lay.visible);
