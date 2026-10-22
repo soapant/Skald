@@ -1,5 +1,5 @@
-#ifndef TYPES_fl_window_H
-#define TYPES_fl_window_H
+#ifndef TYPES_PROMPT_H
+#define TYPES_PROMPT_H
 
 #include <string.h>
 #include <stdlib.h>

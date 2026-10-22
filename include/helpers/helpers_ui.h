@@ -52,7 +52,7 @@ bool UI_IsListBoxSelected(ListBoxInfo* lb);
 void UpdateTextCaret(void);
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height);
 
-#define MSG_fl_window_GAP_DEFAULT 300
+#define MSG_PROMPT_GAP_DEFAULT 300
 #define MSG_SCREEN_GAP_DEFAULT 20
 
 
