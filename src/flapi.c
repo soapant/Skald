@@ -691,19 +691,6 @@ bool fl_launch_terminal_at_path(char* path,char* args) {
   return r;
 }
 
-bool fl_launch_file_manager_at_path(char* path,char* args) {
-  PROFILE_START(_pt);
-  bool r = false;
-  if (!path) {     PROFILE_START(_pt);
-    PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); { PROFILE_END_VAR(_pt, "f"); return false; } }
-    char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {     PROFILE_START(_pt);
-    PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); { PROFILE_END_VAR(_pt, "f"); return false; } }
-    r = Platform_LaunchFileManagerAtPath(expanded,args);
-    PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path");
-    return r;
-}
-
 char* fl_get_zoxide_match(char* query) {
     PROFILE_START(_pt);
   if (!query) { PROFILE_END_VAR(_pt, "fl_get_zoxide_match"); return NULL; }
