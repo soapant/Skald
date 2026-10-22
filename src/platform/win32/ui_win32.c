@@ -46,6 +46,12 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
     int old_sel = lb->selected_index;
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
     lb->selected_index = index;
+    if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hList))) {
+        HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+        if (hPopup && IsWindow(hPopup)) { UI_RequestPopupRepaint(); }
+        PROFILE_END_VAR(_pt, "UI_SetSelection");
+        return;
+    }
     RECT invalidRect = {0};
     bool hasInvalid = false;
     RECT itemRect = {0, 0, 0, 0};
@@ -60,11 +66,6 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
             if (!hasInvalid) { invalidRect = itemRect; hasInvalid = true; }
             else UnionRect(&invalidRect, &invalidRect, &itemRect);
         }
-    }
-    if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hList))) {
-        HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-        if (hPopup && IsWindow(hPopup)) { UI_RequestPopupRepaint(); }
-        return;
     }
     if (hasInvalid) {
         UI_LB_BeginUpdate(hList);
