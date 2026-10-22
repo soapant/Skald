@@ -129,8 +129,7 @@ bool FeaturePath_ResolveDataPath(void* caller, const char* name, char* out, size
 
     if (strstr(filename, "..")) { PROFILE_END_VAR(_pt, "FeaturePath_ResolveDataPath"); return false; }
     
-    const char* dot = strrchr(filename, '.');
-    size_t stemlen = dot ? (size_t)(dot - filename) : strlen(filename);
+    size_t stemlen = strlen(filename);
     
     char stem[64];
     if (stemlen > 0 && stemlen < 64) {
@@ -139,6 +138,7 @@ bool FeaturePath_ResolveDataPath(void* caller, const char* name, char* out, size
             char c = filename[i];
             if (c >= 'A' && c <= 'Z') continue;
             if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') continue;
+            if (c == '.') continue; 
             stemok = 0;
             break;
         }
