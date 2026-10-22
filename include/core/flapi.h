@@ -30,6 +30,7 @@ typedef struct PlatformWidget PlatformWidget;
 typedef PlColor FlColor;
 typedef PlRect FlRect;
 typedef PlPos FlPos;
+typedef PlListSpec FlListSpec;
 typedef PlWindowList FlWindowList;
 
 // =============================================================================
