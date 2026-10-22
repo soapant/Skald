@@ -3,9 +3,7 @@
 bool Tray = true;
 bool EnableVimMode = true;
 bool RememberLastIndex = true;
-bool KeepSelectionAfterClose = false;
 bool MessageAfterEachHotkey = false;
-bool ModePersistsThroughFeatures = false;
 int  TimeOutForMessages = 1;
 int  HotkeyRepeatDelayMs = 300;
 bool DoTimeDebugs = false;
@@ -16,7 +14,6 @@ bool EnableShaders = true;
 int ShaderPreset = 1;
 float ShaderIntensity = 0.55f;
 float ShaderBrightness = 0.55f;
-int TimeBetweenHotReload = 2;
 float WindowOpacity = 235.0;
 
 char* EditPopUpPos = "middle";

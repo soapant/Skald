@@ -64,5 +64,3 @@ void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int ma
     MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap, &outward);
     Platform_DisplayMessageAnchored(message, x, y, w, h, h_slot, v_slot, gap, outward, max_w, max_h, timeout, color,false);
 }
-
-EditorMode g_last_mode = MODE_INSERT;

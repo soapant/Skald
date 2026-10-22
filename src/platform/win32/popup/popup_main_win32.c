@@ -792,13 +792,9 @@ case WM_CHAR: {
     case WM_DESTROY: {
       static const WORD held_modifiers[] = { VK_LSHIFT, VK_RSHIFT, VK_LCONTROL, VK_RCONTROL,
         VK_LMENU, VK_RMENU, VK_LWIN, VK_RWIN };
-        if (!KeepSelectionAfterClose)  {
-          last_index = 0;
-            if (lb) lb->selected_index = 0;
-        }
+        last_index = 0;
+        if (lb) lb->selected_index = 0;
       
-        extern EditorMode g_last_mode;
-        g_last_mode = g_current_mode;
         selection_feature = FlintContext_Get()->window.current_feature;
         for (int i = 0; i < (int)ARRAY_LEN(held_modifiers); i++) {
           if (GetAsyncKeyState(held_modifiers[i]) & 0x8000) {

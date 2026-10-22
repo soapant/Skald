@@ -192,8 +192,7 @@ bool Config_Reload(void) {
     if (InterlockedCompareExchange(&g_cfg_reload_lock, 1, 0) != 0) return false;
 #endif
     long long now = Platform_GetWallClockMs();
-    long long debounce = (long long)TimeBetweenHotReload * 1000;
-    if (debounce < 250) debounce = 250;
+    long long debounce = (long long)1000;
     if (g_cfg_last_reload_ms && now - g_cfg_last_reload_ms < debounce) {
         log_warn("cfg reload blocked: debounce, %lldms since last", (long long)(now - g_cfg_last_reload_ms));
 #ifdef _WIN32
@@ -282,9 +281,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    EnableVimMode = %s;\n", EnableVimMode ? "true" : "false");
     cfg_put(buf, cap, &off, "    EnableAutoPairing = %s;\n", EnableAutoPairing ? "true" : "false");
     cfg_put(buf, cap, &off, "    RememberLastIndex = %s;\n", RememberLastIndex ? "true" : "false");
-    cfg_put(buf, cap, &off, "    KeepSelectionAfterClose = %s;\n", KeepSelectionAfterClose ? "true" : "false");
     cfg_put(buf, cap, &off, "    MessageAfterEachHotkey = %s;\n", MessageAfterEachHotkey ? "true" : "false");
-    cfg_put(buf, cap, &off, "    ModePersistsThroughFeatures = %s;\n", ModePersistsThroughFeatures ? "true" : "false");
     cfg_put(buf, cap, &off, "    TimeOutForMessages = %d;\n", TimeOutForMessages);
     cfg_put(buf, cap, &off, "    DoTimeDebugs = %s;\n", DoTimeDebugs ? "true" : "false");
     cfg_put(buf, cap, &off, "    DebugMode = %s;\n", DebugMode ? "true" : "false");
@@ -295,7 +292,6 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    ShaderPreset = %d;\n", ShaderPreset);
     cfg_put_float(buf, cap, &off, "ShaderIntensity", ShaderIntensity);
     cfg_put_float(buf, cap, &off, "ShaderBrightness", ShaderBrightness);
-    cfg_put(buf, cap, &off, "    TimeBetweenHotReload = %d;\n", TimeBetweenHotReload);
     cfg_put(buf, cap, &off, "    HotkeyRepeatDelayMs = %d;\n", HotkeyRepeatDelayMs);
     cfg_put_float(buf, cap, &off, "WindowOpacity", WindowOpacity);
     cfg_put(buf, cap, &off, "    EditPopUpPos = ");
@@ -438,8 +434,7 @@ void Config_PollWatcher(void) {
         return;
     }
     if (g_cfg_change_at == 0) return;
-    long long debounce = (long long)TimeBetweenHotReload * 1000;
-    if (debounce < 250) debounce = 250;
+    long long debounce = (long long)1000;
     if (Platform_GetWallClockMs() - g_cfg_change_at < debounce) return;
     if (g_cfg_last_reload_ms && Platform_GetWallClockMs() - g_cfg_last_reload_ms < debounce) return;
     WindowManager* _wm = WindowManager_Get();
