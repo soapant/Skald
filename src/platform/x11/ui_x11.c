@@ -30,7 +30,30 @@ void UI_SetHorizontalExtent(WindowHandle hList, int width) {
 void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count) {
         PROFILE_START(_pt);
 (void)hList;
-    if (lb) lb->populated_count = count;
+if (lb) lb->populated_count = count;
+    PROFILE_END_VAR(_pt, "UI_LB_SetCount");
+}
+
+void UI_LB_BeginUpdate(WindowHandle hList) {
+        PROFILE_START(_pt);
+(void)hList;
+    PROFILE_END_VAR(_pt, "UI_LB_BeginUpdate");
+}
+
+void UI_LB_EndUpdate(WindowHandle hList) {
+        PROFILE_START(_pt);
+(void)hList;
+    PROFILE_END_VAR(_pt, "UI_LB_EndUpdate");
+}
+
+void UI_RequestPopupRepaint(void) {
+        PROFILE_START(_pt);
+    PROFILE_END_VAR(_pt, "UI_RequestPopupRepaint");
+}
+
+void UI_LegacySyncRepaint(void) {
+        PROFILE_START(_pt);
+    PROFILE_END_VAR(_pt, "UI_LegacySyncRepaint");
 }
 
 void UI_LB_SetItemHeight(WindowHandle hList, int height) {

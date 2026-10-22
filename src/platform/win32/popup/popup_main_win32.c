@@ -31,6 +31,23 @@
 #include "core/listbox_hover.h"
 static bool s_swallow_next_char = false;
 
+static bool s_repaint_queued = false;
+
+void win32_popup_request_repaint(HWND hPopup) {
+    if (!hPopup || !IsWindow(hPopup)) return;
+    if (s_repaint_queued) return;
+    s_repaint_queued = true;
+    PostMessageA(hPopup, WM_APP + 41, 0, 0);
+}
+
+static void popup_request_repaint(HWND hwnd) {
+    if (FlintContext_Get()->prompt_callbacks.render == NULL) {
+        UI_LegacySyncRepaint();
+        return;
+    }
+    win32_popup_request_repaint(hwnd);
+}
+
 static bool prompt_win_no_bg(void);
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
@@ -79,7 +96,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     }
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
         HWND hPar = GetParent(hwnd);
-        if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
+        if (hPar && IsWindow(hPar)) { InvalidateRect(hPar, NULL, FALSE); }
     } else {
         InvalidateRect(hwnd, NULL, FALSE);
     }
@@ -302,10 +319,11 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
         return 0;
       }
       if (consumed) {
-        InvalidateRect(hwnd, NULL, FALSE);
+        popup_request_repaint(hwnd);
         return 0;
       }
-      InvalidateRect(hwnd, NULL, FALSE);
+      if (IsInsertMode() && wParam >= 0x20 && wParam < 0x7F) break;
+      popup_request_repaint(hwnd);
       break;
     }
 case WM_CHAR: {
@@ -325,7 +343,7 @@ case WM_CHAR: {
           FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
         }
         UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-        InvalidateRect(hwnd, NULL, FALSE);
+        popup_request_repaint(hwnd);
         return 0;
       }
       }
@@ -417,6 +435,7 @@ case WM_CHAR: {
         KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
           UI_RedrawNow(lb, FlintContext_Get()->window.hListBox);
           if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
+          else UI_LegacySyncRepaint();
           return 0;
       }
       if (wParam == UI_TICK_TIMER_ID) {
@@ -628,6 +647,15 @@ case WM_CHAR: {
         }
       break;
     }
+    case WM_APP + 41: {
+        s_repaint_queued = false;
+        if (FlintContext_Get()->prompt_callbacks.render == NULL) {
+            UI_LegacySyncRepaint();
+            return 0;
+        }
+        InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+    }
     case WM_PAINT: {
       PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
@@ -637,7 +665,7 @@ case WM_CHAR: {
         HDC memDC = NULL;
         HBITMAP memBmp = NULL;
         HBITMAP oldBmp = NULL;
-        bool useRenderBuf = (FlintContext_Get()->prompt_callbacks.render != NULL && rect.right > 0 && rect.bottom > 0);
+        bool useRenderBuf = (rect.right > 0 && rect.bottom > 0);
         if (useRenderBuf) {
           memDC = CreateCompatibleDC(hdc);
           memBmp = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
@@ -685,8 +713,8 @@ case WM_CHAR: {
             PromptState *estate = Platform_GetWin32PromptState();
             if (estate) {
                 Platform_SetDrawContextWin32(paintDC);
-                Platform_DrawPromptEditText(estate);
-                Platform_DrawPromptEditCursor(estate);
+                extern void Platform_DrawPromptEditbox(PromptState* state);
+                Platform_DrawPromptEditbox(estate);
                 Platform_SetDrawContextWin32(NULL);
             }
         }
