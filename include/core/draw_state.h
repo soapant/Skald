@@ -16,11 +16,11 @@ typedef struct {
     int meas_y1;
     int meas_origin_x;
     int meas_origin_y;
-} FlDrawState;
+} PlDrawState;
 
-FlDrawState* FlDrawState_Get(void);
-void FlDrawState_BeginMeasure(void);
-void FlDrawState_TrackMeasure(int x, int y, int w, int h);
-void FlDrawState_EndMeasure(int* out_w, int* out_h);
+PlDrawState* PlDrawState_Get(void);
+void PlDrawState_BeginMeasure(void);
+void PlDrawState_TrackMeasure(int x, int y, int w, int h);
+void PlDrawState_EndMeasure(int* out_w, int* out_h);
 
 #endif
