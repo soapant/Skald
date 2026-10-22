@@ -21,46 +21,46 @@
 
 void Platform_SetTransparentWindow(bool on) {
         PROFILE_START(_pt);
-FlDrawState_Get()->transparent = on;
+PlDrawState_Get()->transparent = on;
 }
 bool Platform_GetTransparentWindow(void) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_GetTransparentWindow"); return FlDrawState_Get()->transparent; }
+{ PROFILE_END_VAR(_pt, "Platform_GetTransparentWindow"); return PlDrawState_Get()->transparent; }
 }
 
 void Platform_SetDrawBgColor(unsigned long hex) {
         PROFILE_START(_pt);
-FlDrawState_Get()->bg_override = hex;
+PlDrawState_Get()->bg_override = hex;
 }
 unsigned long Platform_GetDrawBgColor(void) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_GetDrawBgColor"); return FlDrawState_Get()->bg_override; }
+{ PROFILE_END_VAR(_pt, "Platform_GetDrawBgColor"); return PlDrawState_Get()->bg_override; }
 }
 
 
 void Platform_BeginMeasure(void) {
         PROFILE_START(_pt);
-    FlDrawState_BeginMeasure();
+    PlDrawState_BeginMeasure();
     PROFILE_END_VAR(_pt, "Platform_BeginMeasure");
 }
 void Platform_EndMeasure(int *out_w, int *out_h) {
         PROFILE_START(_pt);
-    FlDrawState_EndMeasure(out_w, out_h);
+    PlDrawState_EndMeasure(out_w, out_h);
     PROFILE_END_VAR(_pt, "Platform_EndMeasure");
 }
 void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
         PROFILE_START(_pt);
-if (out_x) *out_x = FlDrawState_Get()->meas_origin_x;
-    if (out_y) *out_y = FlDrawState_Get()->meas_origin_y;
+if (out_x) *out_x = PlDrawState_Get()->meas_origin_x;
+    if (out_y) *out_y = PlDrawState_Get()->meas_origin_y;
 }
 void Platform_SetDrawOffset(int dx, int dy) {
         PROFILE_START(_pt);
-FlDrawState_Get()->off_x = dx;
-    FlDrawState_Get()->off_y = dy;
+PlDrawState_Get()->off_x = dx;
+    PlDrawState_Get()->off_y = dy;
 }
 void Platform_GetDrawOffset(int *out_x, int *out_y) {
-    if (out_x) *out_x = FlDrawState_Get()->off_x;
-    if (out_y) *out_y = FlDrawState_Get()->off_y;
+    if (out_x) *out_x = PlDrawState_Get()->off_x;
+    if (out_y) *out_y = PlDrawState_Get()->off_y;
 }
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
     Display* dpy = get_display();
@@ -76,7 +76,7 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
 }
 static void measure_track(int x, int y, int w, int h) {
         PROFILE_START(_pt);
-    FlDrawState_TrackMeasure(x, y, w, h);
+    PlDrawState_TrackMeasure(x, y, w, h);
     PROFILE_END_VAR(_pt, "measure_track");
 }
 
@@ -276,8 +276,8 @@ RawLine_Flush();
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         PROFILE_START(_pt);
 if (!path || !path[0] || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return false; }
-    x += FlDrawState_Get()->off_x;
-    y += FlDrawState_Get()->off_y;
+    x += PlDrawState_Get()->off_x;
+    y += PlDrawState_Get()->off_y;
     if (w <= 0) w = IconSize;
     if (h <= 0) h = IconSize;
     measure_track(x, y, w, h);
@@ -293,8 +293,8 @@ if (dpy) *dpy = g_draw_dpy;
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
         PROFILE_START(_pt);
 if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
-    x += FlDrawState_Get()->off_x;
-    y += FlDrawState_Get()->off_y;
+    x += PlDrawState_Get()->off_x;
+    y += PlDrawState_Get()->off_y;
     FontHandle fh = font;
     bool needDestroy = false;
     if (!FH_TO_XFT(fh)) {
@@ -307,7 +307,7 @@ if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTex
     }
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
     const char *a = align ? align : "CENTER";
-    if (FlDrawState_Get()->measuring) {
+    if (PlDrawState_Get()->measuring) {
         XftFont *mf = FH_TO_XFT(fh);
         int tw = 0;
         if (mf) {
@@ -385,8 +385,8 @@ if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); retu
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
         PROFILE_START(_pt);
 if (!text || len <= 0 || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
-    x += FlDrawState_Get()->off_x;
-    y += FlDrawState_Get()->off_y;
+    x += PlDrawState_Get()->off_x;
+    y += PlDrawState_Get()->off_y;
     XftFont* xf = LineFont(g_draw_dpy, fontsize);
     if (!xf) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
@@ -593,8 +593,8 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int r
         return false;
     }
 
-    x += FlDrawState_Get()->off_x;
-    y += FlDrawState_Get()->off_y;
+    x += PlDrawState_Get()->off_x;
+    y += PlDrawState_Get()->off_y;
 
     int t = raw_thickness_px(thickness);
     if (t <= 0) t = 1;
@@ -683,10 +683,10 @@ bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, f
 if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return false; }
     int t = raw_thickness_px(thickness);
     if (t < 1) t = 1;
-    x1 += FlDrawState_Get()->off_x;
-    y1 += FlDrawState_Get()->off_y;
-    x2 += FlDrawState_Get()->off_x;
-    y2 += FlDrawState_Get()->off_y;
+    x1 += PlDrawState_Get()->off_x;
+    y1 += PlDrawState_Get()->off_y;
+    x2 += PlDrawState_Get()->off_x;
+    y2 += PlDrawState_Get()->off_y;
     int bx = x1 < x2 ? x1 : x2;
     int by = y1 < y2 ? y1 : y2;
     int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
@@ -703,8 +703,8 @@ bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, flo
         PROFILE_START(_pt);
 if (!raw_can_draw() || radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
     int t = raw_thickness_px(thickness);
-    cx += FlDrawState_Get()->off_x;
-    cy += FlDrawState_Get()->off_y;
+    cx += PlDrawState_Get()->off_x;
+    cy += PlDrawState_Get()->off_y;
     measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
     GC gc = raw_prepare(color, t);
     if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
