@@ -5,7 +5,9 @@
 #include "core/types.h"
 
 #define LISTBOX_WHEEL_ROWS 3
+#define MOUSE_RECHECK_INTERVAL_MS 80
 
+void ListBox_SetHoverThrottleMs(int ms);
 bool ListBox_ClientMousePos(int* out_x, int* out_y);
 void ListBox_PublishMousePos(int x, int y);
 void ListBox_InvalidateMousePos(void);

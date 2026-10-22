@@ -24,6 +24,24 @@ static int g_visible_count = 0;
 static bool g_pub_set = false;
 static int g_pub_x = 0;
 static int g_pub_y = 0;
+static int g_hover_throttle_ms = 0;
+static int64_t g_last_hover_ticks = 0;
+
+void ListBox_SetHoverThrottleMs(int ms) {
+    g_hover_throttle_ms = ms > 0 ? ms : 0;
+    g_last_hover_ticks = 0;
+}
+
+static bool listbox_hover_throttled(void) {
+    if (g_hover_throttle_ms <= 0) return false;
+    int64_t now = TimerNowTicks();
+    int64_t interval = (int64_t)g_hover_throttle_ms * TimerTickFrequency() / 1000;
+    if (g_last_hover_ticks != 0 && (now - g_last_hover_ticks) < interval) {
+        return true;
+    }
+    g_last_hover_ticks = now;
+    return false;
+}
 
 void ListBox_FocusByKeyboard(void) {
     g_focus_by_keyboard = true;
@@ -121,6 +139,7 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
     PROFILE_START(_pt);
     if (!lb || lb->populated_count <= 0) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
     if (!g_mouse_moved) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    if (listbox_hover_throttled()) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
     g_mouse_moved = false;
     int mx = 0, my = 0;
     if (!ListBox_ClientMousePos(&mx, &my)) {

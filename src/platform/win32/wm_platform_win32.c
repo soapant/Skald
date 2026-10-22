@@ -226,6 +226,8 @@ PROFILE_END_VAR(timer3, "Focus");
   MSG msg;
   int loop_counter = 0;
   int last_mx = -1, last_my = -1, last_btn = -1;
+  DWORD last_mouse_check = GetTickCount();
+  ListBox_SetHoverThrottleMs(MOUSE_RECHECK_INTERVAL_MS);
   UI_PreparePopupPump();
   while (!FlintContext_Get()->window.selection_complete) {
     if (GetMessage(&msg, NULL, 0, 0)) {
@@ -240,13 +242,20 @@ PROFILE_END_VAR(timer3, "Focus");
       int mx = 0, my = 0;
       if (Platform_GetMousePos(&mx, &my)) {
         ListBox_PublishMousePos(mx, my);
-        int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
-        if (mx != last_mx || my != last_my || btn != last_btn) {
-          last_mx = mx;
-          last_my = my;
-          last_btn = btn;
-          HWND ph = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-          if (ph && IsWindow(ph)) InvalidateRect(ph, NULL, FALSE);
+        DWORD now = GetTickCount();
+        if (now - last_mouse_check >= MOUSE_RECHECK_INTERVAL_MS) {
+          last_mouse_check = now;
+          int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
+          if (mx != last_mx || my != last_my || btn != last_btn) {
+            bool btn_changed = (btn != last_btn);
+            last_mx = mx;
+            last_my = my;
+            last_btn = btn;
+            if (btn_changed) {
+              HWND ph = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+              if (ph && IsWindow(ph)) InvalidateRect(ph, NULL, FALSE);
+            }
+          }
         }
       }
     }
