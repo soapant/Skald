@@ -162,13 +162,8 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   }
   SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
   BuildAliasDisplayItems(lb_ptr, window_list, count);
-  extern EditorMode g_last_mode;
 
-  if (ModePersistsThroughFeatures) {
-    SetModeWithListBox(g_last_mode, lb_ptr);
-  } else {
-    SetModeWithListBox(MODE_INSERT, lb_ptr);
-  }
+  SetModeWithListBox(MODE_INSERT, lb_ptr);
 
   WindowLayout layout;
   CalculateWindowMetrics(&layout, 640, 900, item_height);
