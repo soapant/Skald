@@ -283,23 +283,26 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     SetTextColor(g_draw_hdc, color);
     bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
     bool right = !centered && Platform_StringContainsCaseInsensitive(a,"RIGHT");
+    bool measuring = FlDrawState_Get()->measuring;
     SIZE msz;
     msz.cx = 0;
     msz.cy = 0;
-    if (dy != 0) {
-        HFONT nf = win32_sized_font(fontsize);
-        if (!nf) nf = g_win32_hMainFont;
-        if (nf) {
-            HFONT t2 = (HFONT)SelectObject(g_draw_hdc, nf);
-            GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
-            SelectObject(g_draw_hdc, t2);
+    if (measuring || centered || right) {
+        if (dy != 0) {
+            HFONT nf = win32_sized_font(fontsize);
+            if (!nf) nf = g_win32_hMainFont;
+            if (nf) {
+                HFONT t2 = (HFONT)SelectObject(g_draw_hdc, nf);
+                GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
+                SelectObject(g_draw_hdc, t2);
+            } else {
+                GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
+            }
         } else {
             GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
         }
-    } else {
-        GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
     }
-    if (FlDrawState_Get()->measuring) {
+    if (measuring) {
         int bx = x;
         if (centered) bx = x - msz.cx / 2;
         else if (right) bx = x - msz.cx;
@@ -307,7 +310,7 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     }
     if (!centered && !right) {
         int x0 = pad ? pad : x;
-        if (FlDrawState_Get()->measuring) measure_track(x0, y, msz.cx, msz.cy);
+        if (measuring) measure_track(x0, y, msz.cx, msz.cy);
         TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
         free(wide);
         if (old) SelectObject(g_draw_hdc, old);
