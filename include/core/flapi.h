@@ -23,6 +23,7 @@
 #define FL_CLIPBOARD_IMAGE CLIPBOARD_IMAGE
 #define FlClipboardEntry ClipboardEntry
 #define FlClipboardHistory ClipboardHistory
+#define FlKey HotkeyKey
 
 typedef struct PlatformWidget PlatformWidget;
 
@@ -123,6 +124,9 @@ void fl_init_all_hotkeys(void);
 void fl_send_hotkey(const char* hotkey_string);
 
 #define fl_send_key fl_send_hotkey
+
+char* fl_hotkey_to_string(FlKey key);
+FlKey fl_hotkey_from_string(const char* str);
 
 // =============================================================================
 // BROWSER / ZOXIDE / SYSTEM
