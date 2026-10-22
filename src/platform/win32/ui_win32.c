@@ -518,7 +518,16 @@ const MSG* m = (const MSG*)msg;
     if (!g_toggle_key_pending) { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return false; }
     if (m->message == WM_KEYDOWN || m->message == WM_SYSKEYDOWN || m->message == WM_KEYUP || m->message == WM_SYSKEYUP || m->message == WM_CHAR || m->message == WM_SYSCHAR) {
         g_toggle_key_pending = false;
-        return true;
+        extern int pending_hotkey_vk;
+        extern int pending_hotkey_mod;
+        if (pending_hotkey_vk != 0 &&
+            (m->message == WM_KEYDOWN || m->message == WM_SYSKEYDOWN || m->message == WM_KEYUP || m->message == WM_SYSKEYUP) &&
+            (int)m->wParam == pending_hotkey_vk) {
+            pending_hotkey_vk = 0;
+            pending_hotkey_mod = 0;
+            { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return true; }
+        }
+        { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return false; }
     }
     { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return false; }
 }
