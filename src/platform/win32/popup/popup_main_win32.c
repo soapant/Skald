@@ -130,6 +130,8 @@ static HBRUSH s_bg_brush = NULL;
     }
     case WM_MOUSEMOVE: {
       extern PromptState* Platform_GetWin32PromptState(void);
+      POINT pt;
+      if (GetCursorPos(&pt)) ListBox_PublishMousePos((int)pt.x, (int)pt.y);
       PromptState* hst = Platform_GetWin32PromptState();
       if (hst && hst->has_listbox) {
         ListBoxInfo* hlb = &hst->listbox;
@@ -143,8 +145,8 @@ static HBRUSH s_bg_brush = NULL;
     }
     case WM_PAINT: {
       PAINTSTRUCT ps;
-      HDC hdc = BeginPaint(hWnd, &ps);
-      RECT rc; GetClientRect(hWnd, &rc);
+        HDC hdc = BeginPaint(hWnd, &ps);
+        RECT rc; GetClientRect(hWnd, &rc);
       if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hWnd, &ps); return 0; }
       HDC memDC = CreateCompatibleDC(hdc);
       HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
@@ -298,6 +300,20 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
 
     
     switch (msg) {
+    case WM_MOUSEMOVE: {
+      extern PromptState* Platform_GetWin32PromptState(void);
+      POINT pt;
+      if (GetCursorPos(&pt)) ListBox_PublishMousePos((int)pt.x, (int)pt.y);
+      PromptState* hst = Platform_GetWin32PromptState();
+      if (hst && hst->has_listbox) {
+        ListBoxInfo* hlb = &hst->listbox;
+        int list_top = 0, item_h = 0, visible = 0;
+        ListBox_GetGeometry(&list_top, &item_h, &visible);
+        int hTop = UI_LB_GetViewTop(hlb);
+        ListBox_HoverFocus(hlb, list_top, item_h, hTop, visible);
+      }
+      return 0;
+    }
     case WM_MOUSEWHEEL: {
       extern PromptState* Platform_GetWin32PromptState(void);
       short delta = (short)HIWORD(wParam);
@@ -694,7 +710,6 @@ case WM_CHAR: {
         GetClientRect(hwnd, &rect);
         HDC paintDC = hdc;
         HDC memDC = NULL;
-        HBITMAP memBmp = NULL;
         HBITMAP oldBmp = NULL;
         bool useRenderBuf = (rect.right > 0 && rect.bottom > 0);
         if (useRenderBuf) {
@@ -703,7 +718,6 @@ case WM_CHAR: {
           if (buf) {
             oldBmp = prev;
             memDC = buf;
-            memBmp = NULL;
             paintDC = memDC;
           } else {
             useRenderBuf = false;
