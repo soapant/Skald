@@ -12,6 +12,7 @@
 #include <shlwapi.h>
 #include "core/clipboard_history.h"
 #include "platform/flapi_platform.h"
+#include "core/flapi.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
 #include "platform/draw.h"

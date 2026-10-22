@@ -4,14 +4,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "core/types/prompt.h"
 #if !defined(_WIN32)
 typedef struct _XDisplay Display;
 typedef struct _XftFont XftFont;
 #endif
-
-/* Handles are opaque on purpose: this header is on the feature .so include
-   path, and <windows.h> costs ~1s of parsing per hot-reload compile. The
-   Win32 side casts the void* back to HWND/HFONT, which is implicit in C. */
 
 typedef struct WindowHandle {
 #if defined(_WIN32)
@@ -77,6 +74,15 @@ typedef struct {
     char** windows;
     int count;
 } PlWindowList;
+
+typedef struct {
+    ListBoxInfo *lb;
+    const char **items;
+    int count;
+    int x; int y; int w; int h;
+    int item_height;
+} PlListSpec;
+
 
 #define GAP 20
 #define ID_TRAY_ICON 1001

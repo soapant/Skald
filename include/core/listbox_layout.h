@@ -15,7 +15,7 @@ typedef struct {
     int visible;
 } ListboxLayout;
 
-void Listbox_ComputeLayout(const FlListSpec* spec, int default_y0, int item_h,
+void Listbox_ComputeLayout(const PlListSpec* spec, int default_y0, int item_h,
                            int popup_w, int popup_h, int count, ListboxLayout* out);
 
 #endif
