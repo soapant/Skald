@@ -278,7 +278,10 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     if (!hfont) hfont = win32_sized_font(fontsize);
     if (!hfont) hfont = g_win32_hMainFont;
     if (!old && hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
-    int y_draw = y + dy;
+    TEXTMETRICW tm = {0};
+    GetTextMetricsW(g_draw_hdc, &tm);
+
+    int y_draw = y + dy + (tm.tmHeight - tm.tmAscent) / 2;
     SetBkMode(g_draw_hdc, TRANSPARENT);
     SetTextColor(g_draw_hdc, color);
     bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
