@@ -245,8 +245,9 @@ static void Populate_BuildCache(ListBoxInfo* lb, const char** items, int total_m
 }
 
 static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_matches, const char* filter) {
+  UI_LB_BeginUpdate(hListBox);
   UI_LB_SetCount(lb, hListBox, total_matches);
-  if (SequenceIsWaiting()) return;
+  if (SequenceIsWaiting()) { UI_LB_EndUpdate(hListBox); return; }
   if (IsNormalMode()) {
     int keep;
     if (RememberLastIndex) {
@@ -277,6 +278,7 @@ static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_
       FlintContext_Get()->window.hDisplayMessage = WH_NULL;
     }
   }
+  UI_LB_EndUpdate(hListBox);
 }
 
 static void Populate_CommitState(ListBoxInfo* lb, int item_count, int total_matches) {

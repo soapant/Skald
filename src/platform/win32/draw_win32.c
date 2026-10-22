@@ -925,6 +925,21 @@ void Platform_DrawPromptEditText(PromptState* state) {
     PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditText");
 }
 
+void Platform_DrawPromptEditbox(PromptState* state) {
+        PROFILE_START(_pt);
+ PROFILE_START(timer);
+    if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditbox"); return; }
+    FontHandle font = Platform_CreateFont(FontSize, UsedFont);
+    FlEditboxSpec eb;
+    FlEditboxLayout lay;
+    win32_prompt_editbox_spec(state, font, &eb);
+    Editbox_Layout(&eb, &lay);
+    state->scroll_offset = eb.scroll;
+    Editbox_Draw(&eb, &lay, EDITBOX_PART_ALL);
+    Platform_DestroyFont(font);
+    PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditbox");
+}
+
 void Platform_DrawPromptEditCursor(PromptState* state) {
         PROFILE_START(_pt);
  PROFILE_START(timer);
