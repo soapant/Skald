@@ -172,15 +172,18 @@ void music_prompt(void) {
            .refresh = music_refresh_callback,
            .enter = music_enter_callback);
 }
+void reload_music(void) {
+    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL, true, FL_DIR_WALK_UNLIMITED);
+}
 
 FLINT_FEATURE_INIT {
-    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL, true, FL_DIR_WALK_UNLIMITED);
+    reload_music();
     fl_register_hotkey(.hotkey="Alt+,", .cb=music_cmd_1);
     fl_register_hotkey(.hotkey="Alt+/", .cb=music_cmd_5);
     fl_register_hotkey(.hotkey="Alt+;", .cb=music_cmd_6);
     fl_register_hotkey(.hotkey="Alt+'", .cb=music_cmd_2);
     fl_register_hotkey(.hotkey="Alt+P", .cb=music_prompt);
     fl_register_hotkey(.hotkey="Alt+Shift+P", .cb=random_music);
-
+    fl_add_to_cc(.display_name="Force Reload Music",.on_action=reload_music,.icon="/music.png");
     fl_register_feature(.name="Music Player",.cb=music_prompt,.icon="/music.png");
 }
