@@ -2,6 +2,7 @@
 #include "platform/platform.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
+#include "core/hotkey_string.h"
 #include "deps/log.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
@@ -373,7 +374,9 @@ bool hotkey_process(int vk_code, int modifiers) {
         hotkey_enqueue(cb, b->is_feature_toggle, b->owner, vk_code, eff_modifiers);
         if (MessageAfterEachHotkey) {
             char buf[2556];
-            snprintf(buf,sizeof(buf),"Ran Hotkey %s",b->owner);
+            char hotkey_buf[2422];
+            HotkeyString_Format((HotkeyKey){.vk_code=vk_code,.mods=eff_modifiers},hotkey_buf,sizeof(hotkey_buf));
+            snprintf(buf,sizeof(buf),"Ran Hotkey %s",hotkey_buf);
             DisplayMessageSlot(buf,BOTTOM_CENTER,400,400,20,TimeOutForMessages,COLOR_TEXT);
         }
         if (b->hold) hotkey_hold_begin(vk_code, b->modifiers);
