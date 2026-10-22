@@ -10,12 +10,10 @@ void ConfigApply(void) {
     EnableVimMode = true;
     EnableAutoPairing = true;
     RememberLastIndex = true;
-    KeepSelectionAfterClose = false;
     MessageAfterEachHotkey = false;
-    ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = false;
-    DebugMode = true;
+    DoTimeDebugs = true;
+    DebugMode = false;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
@@ -23,7 +21,6 @@ void ConfigApply(void) {
     ShaderPreset = 1;
     ShaderIntensity = 0.3f;
     ShaderBrightness = 0.55f;
-    TimeBetweenHotReload = 1;
     HotkeyRepeatDelayMs = 300;
     WindowOpacity = 255.0f;
     EditPopUpPos = "middle";

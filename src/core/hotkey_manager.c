@@ -1,11 +1,10 @@
 #include "config.h"
 #include "platform/platform.h"
-#include "platform/input_state.h"
-#include <time.h>
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 #include "deps/log.h"
 #include "helpers/helpers_hotkey.h"
+#include "helpers/helpers_ui.h"
 #include "helpers/helpers_owner.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -372,28 +371,13 @@ bool hotkey_process(int vk_code, int modifiers) {
         }
         log_info("hotkey match vk=0x%X mods=%d enqueue", vk_code, eff_modifiers);
         hotkey_enqueue(cb, b->is_feature_toggle, b->owner, vk_code, eff_modifiers);
+        if (MessageAfterEachHotkey) {
+            char buf[2556];
+            snprintf(buf,sizeof(buf),"Ran Hotkey %s",b->owner);
+            DisplayMessageSlot(buf,BOTTOM_CENTER,400,400,20,TimeOutForMessages,COLOR_TEXT);
+        }
         if (b->hold) hotkey_hold_begin(vk_code, b->modifiers);
         return swallow;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     return false;
 }

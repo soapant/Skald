@@ -70,7 +70,6 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 ## 7. Known Bugs / Dead Code (do not "fix" silently — ask first)
 
 - `src/flapi.c:1042` — `fl_draw_text_impl` treats `text` as an integer char code when `(uintptr_t)real_text < 256`. Any small/invalid pointer takes the wrong branch. Pass a real string.
-- `src/core/window_manager.c:13` — `SavePerFeatureState` is an empty stub, yet still called from `src/core/popup/prompt_popup.c:109`. `ModePersistsThroughFeatures` + `RememberLastIndex` silently do nothing per-feature.
 - `src/core/popup/search_popup.c:10` — `SearchPopup_Create` returns NULL (all params `(void)`).
 - `src/features/todo.c:42` — `#define TODO_TAG_FORMAT TODO_TAG_FORMAT` is self-referential.
 - `src/features/zoxide.c:35-64` — `TriggerYaziZoxide`/`yazi_refresh`/`yazi_enter`/`yazi_edit` defined, never registered.

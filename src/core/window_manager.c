@@ -10,12 +10,6 @@
 
 static WindowManager* g_window_manager = NULL;
 
-void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) {
-    PROFILE_START(timer);
-    (void)feature; (void)mode; (void)last_index;
-    PROFILE_END_VAR(timer, "window_manager:SavePerFeatureState");
-}
-
 WindowManager* WindowManager_Create(void) {
     PROFILE_START(timer);
     WindowManager* wm = calloc(1, sizeof(WindowManager));

@@ -43,7 +43,7 @@ WindowManager* wm = (WindowManager*)arg;
             } else {
                 log_error("compile failed for %s", name);
             }
-            Sleep(TimeBetweenHotReload*1000);
+            Sleep(1000);
         } else {
             for (int i=0;i<5;i++) {
                 if (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)!=0 || (wm && wm->watcher_stop)) break;
