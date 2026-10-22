@@ -347,6 +347,5 @@ bool should_swallow_anki(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+A", .cb=print_due_card);
     fl_register_hotkey(.hotkey="Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }
