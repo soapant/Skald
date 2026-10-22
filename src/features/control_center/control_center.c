@@ -1058,12 +1058,12 @@ static void cc_render(PromptState *state) {
         if (!row_icon && g_cc_calc_label[0] && strcmp(ctx.text, g_cc_calc_label) == 0) {
             row_icon = CC_CALC_ROW_ICON;
         }
+        int gh = fl_get_glyph_ink_height(row_icon, icon_size);
+        if (gh <= 0) gh = icon_size;
         if (row_icon) {
             int icon_x = ctx.x + CC_ITEM_TEXT_X;
             int icon_y = ctx.y + (ctx.h - icon_size) / 2;
             if (cc_icon_is_glyph(row_icon)) {
-                int gh = fl_get_glyph_ink_height(row_icon, icon_size);
-                if (gh <= 0) gh = icon_size;
                 int gw = fl_get_text_width(row_icon, icon_size);
                 fl_draw_text(.x = icon_x + (icon_size - gw) / 2 ,
                              .y = ctx.y + (ctx.h - gh) / 2 + 1,
@@ -1075,7 +1075,7 @@ static void cc_render(PromptState *state) {
                               .w = icon_size, .h = icon_size);
             }
         }
-        fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
+        fl_draw_text(.x = name_x, .y = ctx.y + (ctx.h - gh) / 2 + 1,
                      .text = ctx.text, .align = "LEFT", .pad = 0);
 
         bool plain_type = e && (strcmp(e->type, "Application") == 0 ||

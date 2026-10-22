@@ -445,8 +445,8 @@ TimerPayload* payload = (TimerPayload*)lpParam;
 }
 
 void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
-        PROFILE_START(_pt);
-if (!callback || seconds < 0) { PROFILE_END_VAR(_pt, "fl_run_after_time_platform"); return ; }
+    PROFILE_START(_pt);
+    if (!callback || seconds < 0) { PROFILE_END_VAR(_pt, "fl_run_after_time_platform"); return ; }
 
     TimerPayload* payload = (TimerPayload*)malloc(sizeof(TimerPayload));
     if (!payload) { PROFILE_END_VAR(_pt, "fl_run_after_time_platform"); return ; }
@@ -467,7 +467,6 @@ if (!callback || seconds < 0) { PROFILE_END_VAR(_pt, "fl_run_after_time_platform
         return; 
     }
 }
-
 FlTimer fl_start_timer_platform(void) {
         PROFILE_START(_pt);
 FlTimer t = {0};
