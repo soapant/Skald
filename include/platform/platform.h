@@ -91,7 +91,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 #define PLATFORM_RUN_PRIO_LOW 1
 char* Platform_RunCommandAndGetOutput(char* command, int priority);
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status);
-bool Platform_LaunchFileManagerAtPath(char* path,char* args);
 long Platform_GetFileSize(char *filepath);
 char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback);
 char* Platform_WatchForCFileChanges(const char* dir_path);

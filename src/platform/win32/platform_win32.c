@@ -232,17 +232,6 @@ BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, creation_flags, NULL, 
     { PROFILE_END_VAR(_pt, "Platform_RunCommandAndGetOutput"); return out; }
 }
 
-bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
-        PROFILE_START(_pt);
-if (!path || !path[0]) { log_error("path is NULL args='%s'", args ? args : "null"); return false; }
-    //temporary not being used and just doiung explorere on widnwos no diea if this is the right way to do it but it works for now
-    HINSTANCE res = ShellExecuteA(NULL, "open", "explorer.exe", path ? path : "", NULL, SW_SHOWNORMAL);
-    if ((intptr_t)res <= 32) { log_error("ShellExecute failed for filemanager path='%s' err=%ld", path, (long)(intptr_t)res); return false; }
-    (void)args;
-log_info("Platform_LaunchFileManagerAtPath path='%s' args='%s'", path ? path : "", args ? args : "");;
-    { PROFILE_END_VAR(_pt, "Platform_LaunchFileManagerAtPath"); return true; }
-}
-
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
         PROFILE_START(_pt);
 if (out_status) *out_status = -1;
@@ -298,8 +287,8 @@ if (out_status) *out_status = -1;
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-        PROFILE_START(_pt);
-if (!query || !query[0]) { PROFILE_END_VAR(_pt, "Platform_QueryZoxidePath"); return NULL; }
+    PROFILE_START(_pt);
+    if (!query || !query[0]) { PROFILE_END_VAR(_pt, "Platform_QueryZoxidePath"); return NULL; }
     char clean_query[512];
     strncpy(clean_query, query, sizeof(clean_query) - 1);
     clean_query[sizeof(clean_query) - 1] = '\0';
