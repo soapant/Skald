@@ -1,13 +1,12 @@
 #include "core/flapi.h"
 #include "platform/lib.h"
+#include "platform/platform.h"
 #include "sqlite3.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
-
-#define DB_PATH "/home/win/.local/share/Anki2/User 1/collection.anki2"
 
 typedef enum { CARD_TYPE_BASIC, CARD_TYPE_CLOZE, CARD_TYPE_UNKNOWN } CardType;
 typedef struct { char* front; char* back; } BasicCard;
@@ -61,16 +60,14 @@ static void free_card_contents(TYPE_NAME* card) {
 
 static int sqlite_init(void) {
     if (g_sqlite_lib) return 1;
-    char mod[1024] = {0};
-    Platform_GetModuleOwnerPath((void*)sqlite_init, mod, sizeof(mod));
-    char dir[1024] = {0};
-    snprintf(dir, sizeof(dir), "%s", mod);
-    char* sl = strrchr(dir, '/');
-    if (sl) *sl = '\0';
-    char buf[1024];
+    char buf[1024] = {0};
+    char* dir = fl_resolve_feature_path("anki");
+#if defined (_WIN32)
+    snprintf(buf, sizeof(buf), "%s/sqlite3.dll", dir);
+#else
     snprintf(buf, sizeof(buf), "%s/libsqlite3.so", dir);
+#endif
     g_sqlite_lib = fl_library_open(buf);
-    if (!g_sqlite_lib) g_sqlite_lib = fl_library_open("libsqlite3.so");
     if (!g_sqlite_lib) return 0;
     p_sqlite3_open_v2 = (int(*)(const char*,sqlite3**,int,const char*))fl_library_symbol(g_sqlite_lib, "sqlite3_open_v2");
     p_sqlite3_errmsg = (const char*(*)(sqlite3*))fl_library_symbol(g_sqlite_lib, "sqlite3_errmsg");
@@ -127,23 +124,6 @@ static void free_card_list(CardList* list) {
     list->items = NULL;
     list->count = 0;
     list->capacity = 0;
-}
-
-static char* find_deck_id(const char* json, const char* deck_name) {
-    char search_str[256];
-    snprintf(search_str, sizeof(search_str), "\"%s\"", deck_name);
-    char* pos = strstr(json, search_str);
-    if (!pos) return NULL;
-    char* start = pos;
-    while (start > json && *start != '"') start--;
-    start++;
-    char* end = start;
-    while (*end != '"') end++;
-    size_t id_len = end - start;
-    char* deck_id = malloc(id_len + 1);
-    strncpy(deck_id, start, id_len);
-    deck_id[id_len] = '\0';
-    return deck_id;
 }
 
 static CardList get_cards_in_deck(const char* db_path, const char* target_deck_name) {
@@ -313,7 +293,13 @@ void display_card_answer() {
 
 void print_due_card(void) {
     FlTimer p = fl_profile_start();
-    CardList list = get_cards_in_deck(DB_PATH, "Chemistry");
+    char buf[300];
+#if defined (_WIN32)
+    snprintf(buf,sizeof(buf),"%s/AppData/Roaming/Anki2/User 1/collection.anki2",Platform_GetRealHome());
+#else
+    snprintf(buf,sizeof(buf),"%s/Anki2/User 1/collection.anki2",Platform_GetRealHome());
+#endif
+    CardList list = get_cards_in_deck(buf, "Chemistry");
     long long now = (long long)time(NULL);
     size_t* due = malloc(list.count * sizeof(size_t));
     size_t due_count = 0;
@@ -361,5 +347,6 @@ bool should_swallow_anki(void) {
 }
 
 FLINT_FEATURE_INIT {
+    fl_register_hotkey(.hotkey="Alt+A", .cb=print_due_card);
     fl_register_hotkey(.hotkey="Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }

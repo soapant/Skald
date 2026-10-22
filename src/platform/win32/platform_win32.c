@@ -1750,7 +1750,7 @@ if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) { PROF
 
 
 bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t out_len) {
-        PROFILE_START(_pt);
+    PROFILE_START(_pt);
     bool ok = FeaturePath_ResolveDataPath(caller, name, out, out_len);
     { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return ok; }
 }
