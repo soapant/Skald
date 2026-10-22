@@ -63,15 +63,7 @@ static void PromptPopup_OnShow(Popup* self) {
     ListBoxInfo_Init(&data->state->listbox);
     data->state->no_bg = data->spec.no_bg;
     data->state->listbox.selected_index = -1;
-    extern EditorMode g_last_mode;
-    if (ModePersistsThroughFeatures) {
-        SetModeWithListBox(g_last_mode, &data->state->listbox);
-        if (RememberLastIndex && last_index >= 0 && data->state->has_listbox) {
-            data->state->listbox.selected_index = last_index;
-        }
-    } else {
-        SetModeWithListBox(MODE_INSERT, &data->state->listbox);
-    }
+    SetModeWithListBox(MODE_INSERT, &data->state->listbox);
     self->user_data = data->state;
     data->state->no_bg = data->spec.no_bg;
 
@@ -103,21 +95,10 @@ static void PromptPopup_OnHide(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
     Platform_PromptPopupHideWindow(self);
-    extern EditorMode g_last_mode;
-    extern void SavePerFeatureState(const char* feature, EditorMode mode, int last_index);
     if (data->state) {
-        if (!KeepSelectionAfterClose) {
-            last_index = 0;
-            if (data->state->has_listbox) data->state->listbox.selected_index = 0;
-        } else {
-            last_index = data->state->listbox.selected_index;
-        }
-        g_last_mode = g_current_mode;
+        last_index = 0;
+        if (data->state->has_listbox) data->state->listbox.selected_index = 0;
         FlintContext* _c3 = FlintContext_Get();
-        const char* feat = _c3->window.current_feature;
-        if (ModePersistsThroughFeatures && feat) {
-            SavePerFeatureState(feat, g_current_mode, last_index);
-        }
         _c3->window.current_feature = NULL;
     }
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnHide");

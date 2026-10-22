@@ -1,11 +1,6 @@
 #ifndef CONFIG_VALUES_H
 #define CONFIG_VALUES_H
 
-/* Declarations of the live config variables, in a form that does NOT pull in
-   core/types.h. config/config.c is hot-recompiled whenever the config changes
-   and core/types.h drags in <windows.h> on MinGW, which costs ~1s of parsing
-   per reload. Keep this header free of platform headers. */
-
 #include <stddef.h>
 #include <stdbool.h>
 #include "core/types/color.h"
@@ -14,9 +9,7 @@
 extern bool Tray;
 extern bool RememberLastIndex;
 extern bool EnableVimMode;
-extern bool KeepSelectionAfterClose;
 extern bool MessageAfterEachHotkey;
-extern bool ModePersistsThroughFeatures;
 extern int  TimeOutForMessages;
 extern int  HotkeyRepeatDelayMs;
 extern bool DoTimeDebugs;
@@ -30,7 +23,6 @@ extern float ShaderBrightness;
 extern char* EditPopUpPos;
 extern int EditPopUpWidthMin;
 extern int PageUpDownLen;
-extern int TimeBetweenHotReload;
 extern float WindowOpacity;
 extern int FontSize;
 extern const char* UsedFont;
