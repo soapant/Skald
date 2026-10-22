@@ -96,7 +96,7 @@ bool ListBox_ClientMousePos(int* out_x, int* out_y) {
     my -= dy;
     int pw = 0, ph = 0;
     if (top) {
-        if (top->type == POPUP_fl_window && top->user_data) {
+        if (top->type == POPUP_PROMPT && top->user_data) {
             PromptState* s = (PromptState*)top->user_data;
             pw = s->width;
             ph = s->height;
