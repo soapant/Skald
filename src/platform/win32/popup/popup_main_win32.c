@@ -248,6 +248,37 @@ static HBRUSH s_bg_brush = NULL;
 
 extern PromptState* g_win32_prompt_state;
 
+static HDC s_bb_dc = NULL;
+static HBITMAP s_bb_bmp = NULL;
+static HBITMAP s_bb_prev = NULL;
+static int s_bb_w = 0;
+static int s_bb_h = 0;
+
+static void popup_free_back_buffer(void) {
+    if (s_bb_dc) { DeleteDC(s_bb_dc); s_bb_dc = NULL; }
+    if (s_bb_bmp) { DeleteObject(s_bb_bmp); s_bb_bmp = NULL; }
+    s_bb_prev = NULL;
+    s_bb_w = 0;
+    s_bb_h = 0;
+}
+
+static HDC popup_back_buffer(HDC hdc, int w, int h, HBITMAP* out_prev) {
+    if (w <= 0 || h <= 0) return NULL;
+    if (!s_bb_dc || !s_bb_bmp || s_bb_w != w || s_bb_h != h) {
+        popup_free_back_buffer();
+        s_bb_dc = CreateCompatibleDC(hdc);
+        s_bb_bmp = CreateCompatibleBitmap(hdc, w, h);
+        s_bb_w = w;
+        s_bb_h = h;
+    }
+    if (!s_bb_dc || !s_bb_bmp) {
+        popup_free_back_buffer();
+        return NULL;
+    }
+    *out_prev = (HBITMAP)SelectObject(s_bb_dc, s_bb_bmp);
+    return s_bb_dc;
+}
+
 static bool prompt_win_no_bg(void) {
         PROFILE_START(_pt);
 if (g_win32_prompt_state && g_win32_prompt_state->no_bg) { PROFILE_END_VAR(_pt, "prompt_win_no_bg"); return true; }
@@ -667,15 +698,14 @@ case WM_CHAR: {
         HBITMAP oldBmp = NULL;
         bool useRenderBuf = (rect.right > 0 && rect.bottom > 0);
         if (useRenderBuf) {
-          memDC = CreateCompatibleDC(hdc);
-          memBmp = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
-          if (memDC && memBmp) {
-            oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
+          HBITMAP prev = NULL;
+          HDC buf = popup_back_buffer(hdc, rect.right, rect.bottom, &prev);
+          if (buf) {
+            oldBmp = prev;
+            memDC = buf;
+            memBmp = NULL;
             paintDC = memDC;
           } else {
-            if (memDC) DeleteDC(memDC);
-            if (memBmp) DeleteObject(memBmp);
-            memDC = NULL;
             useRenderBuf = false;
           }
         }
@@ -779,8 +809,6 @@ case WM_CHAR: {
         if (useRenderBuf) {
           BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
           SelectObject(memDC, oldBmp);
-          DeleteObject(memBmp);
-          DeleteDC(memDC);
         }
         EndPaint(hwnd, &ps);
         break;
@@ -806,6 +834,7 @@ case WM_CHAR: {
           }
         }
       if (s_sel_brush) { DeleteObject(s_sel_brush); s_sel_brush = NULL; }
+        popup_free_back_buffer();
         rainbow_init = false;
         break;
     }

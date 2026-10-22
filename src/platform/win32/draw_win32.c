@@ -555,6 +555,7 @@ if (radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false;
 
 #define WIN32_IMG_CACHE_SLOTS 128
 #define WIN32_IMG_REVALIDATE_MS 1000
+#define WIN32_SRC_CACHE_SLOTS 32
 
 typedef struct {
     char key[512];
@@ -565,12 +566,25 @@ typedef struct {
     void* bmp;
     ULONGLONG stamp;
     DWORD checked_ms;
+    int failed;
 } Win32ImgSlot;
 
+typedef struct {
+    char key[512];
+    FILETIME mtime;
+    DWORD size;
+    void* src;
+    ULONGLONG stamp;
+    DWORD checked_ms;
+} Win32SrcSlot;
+
 static Win32ImgSlot g_img_cache[WIN32_IMG_CACHE_SLOTS];
+static Win32SrcSlot g_src_cache[WIN32_SRC_CACHE_SLOTS];
 static ULONGLONG g_img_cache_tick = 0;
 static CRITICAL_SECTION g_img_cache_cs;
 static BOOL g_img_cache_cs_ready = FALSE;
+
+#define WIN32_IMG_FAILED ((void*)1)
 
 static ULONG_PTR g_gdip_token = 0;
 
@@ -632,7 +646,7 @@ static void* win32_img_cache_get(const char *path, HDC screen, int w, int h) {
     win32_img_cache_lock();
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
         Win32ImgSlot *s = &g_img_cache[i];
-        if (!s->bmp) continue;
+        if (!s->bmp && !s->failed) continue;
         if (s->screen != screen || s->w != w || s->h != h) continue;
         if (strcmp(s->key, path) != 0) continue;
         if (now - s->checked_ms >= WIN32_IMG_REVALIDATE_MS) {
@@ -643,11 +657,12 @@ static void* win32_img_cache_get(const char *path, HDC screen, int w, int h) {
             if (memcmp(&s->mtime, &ft, sizeof(ft)) != 0 || s->size != size) {
                 win32_gdip_dispose(s->bmp);
                 s->bmp = NULL;
+                s->failed = 0;
                 continue;
             }
         }
         s->stamp = ++g_img_cache_tick;
-        found = s->bmp;
+        found = s->bmp ? s->bmp : WIN32_IMG_FAILED;
         break;
     }
     win32_img_cache_unlock();
@@ -656,7 +671,6 @@ static void* win32_img_cache_get(const char *path, HDC screen, int w, int h) {
 
 static void win32_img_cache_put(const char *path, HDC screen, int w, int h, void* bmp) {
         PROFILE_START(_pt);
-if (!bmp) { PROFILE_END_VAR(_pt, "win32_img_cache_put"); return ; }
     FILETIME ft;
     DWORD size;
     win32_img_stat(path, &ft, &size);
@@ -665,9 +679,16 @@ if (!bmp) { PROFILE_END_VAR(_pt, "win32_img_cache_put"); return ; }
     ULONGLONG oldest = ~(ULONGLONG)0;
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
         Win32ImgSlot *s = &g_img_cache[i];
-        if (!s->bmp) { slot = i; break; }
-        if (s->screen != screen) continue;
+        if (!s->bmp && !s->failed) { slot = i; break; }
+        if (s->screen != screen || s->w != w || s->h != h || strcmp(s->key, path) != 0) continue;
         if (s->stamp < oldest) { oldest = s->stamp; slot = i; }
+    }
+    if (slot < 0) {
+        for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
+            Win32ImgSlot *s = &g_img_cache[i];
+            if (s->screen != screen) continue;
+            if (s->stamp < oldest) { oldest = s->stamp; slot = i; }
+        }
     }
     if (slot < 0) slot = 0;
     Win32ImgSlot *s = &g_img_cache[slot];
@@ -679,6 +700,59 @@ if (!bmp) { PROFILE_END_VAR(_pt, "win32_img_cache_put"); return ; }
     s->size = size;
     s->screen = screen;
     s->bmp = bmp;
+    s->failed = (bmp == NULL) ? 1 : 0;
+    s->checked_ms = GetTickCount();
+    s->stamp = ++g_img_cache_tick;
+    win32_img_cache_unlock();
+}
+
+static void* win32_src_cache_get(const char *path) {
+    DWORD now = GetTickCount();
+    void* found = NULL;
+    win32_img_cache_lock();
+    for (int i = 0; i < WIN32_SRC_CACHE_SLOTS; i++) {
+        Win32SrcSlot *s = &g_src_cache[i];
+        if (!s->src) continue;
+        if (strcmp(s->key, path) != 0) continue;
+        if (now - s->checked_ms >= WIN32_IMG_REVALIDATE_MS) {
+            FILETIME ft;
+            DWORD size;
+            win32_img_stat(path, &ft, &size);
+            s->checked_ms = now;
+            if (memcmp(&s->mtime, &ft, sizeof(ft)) != 0 || s->size != size) {
+                win32_gdip_dispose(s->src);
+                s->src = NULL;
+                continue;
+            }
+        }
+        s->stamp = ++g_img_cache_tick;
+        found = s->src;
+        break;
+    }
+    win32_img_cache_unlock();
+    return found;
+}
+
+static void win32_src_cache_put(const char *path, void* src) {
+    if (!src) return;
+    FILETIME ft;
+    DWORD size;
+    win32_img_stat(path, &ft, &size);
+    win32_img_cache_lock();
+    int slot = -1;
+    ULONGLONG oldest = ~(ULONGLONG)0;
+    for (int i = 0; i < WIN32_SRC_CACHE_SLOTS; i++) {
+        Win32SrcSlot *s = &g_src_cache[i];
+        if (!s->src) { slot = i; break; }
+        if (s->stamp < oldest) { oldest = s->stamp; slot = i; }
+    }
+    if (slot < 0) slot = 0;
+    Win32SrcSlot *s = &g_src_cache[slot];
+    win32_gdip_dispose(s->src);
+    snprintf(s->key, sizeof(s->key), "%s", path);
+    s->mtime = ft;
+    s->size = size;
+    s->src = src;
     s->checked_ms = GetTickCount();
     s->stamp = ++g_img_cache_tick;
     win32_img_cache_unlock();
@@ -690,6 +764,10 @@ win32_img_cache_lock();
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
         if (g_img_cache[i].bmp) { win32_gdip_dispose(g_img_cache[i].bmp); }
         memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
+    }
+    for (int i = 0; i < WIN32_SRC_CACHE_SLOTS; i++) {
+        if (g_src_cache[i].src) { win32_gdip_dispose(g_src_cache[i].src); }
+        memset(&g_src_cache[i], 0, sizeof(g_src_cache[i]));
     }
     win32_img_cache_unlock();
 }
@@ -720,28 +798,30 @@ win32_gdip_ensure();
     if (g_gdip_token == 0) { log_error("img: GdiplusStartup failed"); return NULL; }
     if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "win32_load_scaled_bitmap"); return NULL; }
 
-    char native[MAX_PATH * 2];
-    snprintf(native, sizeof(native), "%s", path);
-    for (char *p = native; *p; p++) if (*p == '/') *p = '\\';
+    GpBitmap *src = (GpBitmap *)win32_src_cache_get(path);
+    if (!src) {
+        char native[MAX_PATH * 2];
+        snprintf(native, sizeof(native), "%s", path);
+        for (char *p = native; *p; p++) if (*p == '/') *p = '\\';
 
-    wchar_t wpath[MAX_PATH * 2];
-    win32_utf8_to_wide(native, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
+        wchar_t wpath[MAX_PATH * 2];
+        win32_utf8_to_wide(native, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
 
-    GpBitmap *src = NULL;
-    GpStatus _fs = GdipCreateBitmapFromFile(wpath, &src);
-    if (_fs != Ok || !src) {
-        if (src) GdipDisposeImage(src);
-        src = win32_load_shell_icon_bitmap(native);
-        if (!src) {
-            log_error("img: cannot decode '%s' st=%d and no shell icon", path, (int)_fs);
-            return NULL;
+        GpStatus _fs = GdipCreateBitmapFromFile(wpath, &src);
+        if (_fs != Ok || !src) {
+            if (src) GdipDisposeImage(src);
+            src = win32_load_shell_icon_bitmap(native);
+            if (!src) {
+                log_error("img: cannot decode '%s' st=%d and no shell icon", path, (int)_fs);
+                { PROFILE_END_VAR(_pt, "win32_load_scaled_bitmap"); return NULL; }
+            }
         }
+        win32_src_cache_put(path, src);
     }
 
     GpBitmap *out = NULL;
     if (GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppPARGB, NULL, &out) != Ok || !out) {
-        GdipDisposeImage(src);
-        return NULL;
+        { PROFILE_END_VAR(_pt, "win32_load_scaled_bitmap"); return NULL; }
     }
     GpGraphics *g = NULL;
     GpStatus _gs = GdipGetImageGraphicsContext(out, &g);
@@ -754,7 +834,6 @@ win32_gdip_ensure();
     } else {
         log_error("img: ctx st=%d", (int)_gs);
     }
-    GdipDisposeImage(src);
     { PROFILE_END_VAR(_pt, "win32_load_scaled_bitmap"); return out; }
 }
 
@@ -794,11 +873,13 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     }
 
     void* bmp = win32_img_cache_get(path, screen, w, h);
+    if (bmp == WIN32_IMG_FAILED) {
+        PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
+        { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return false; }
+    }
     if (!bmp) {
         bmp = win32_load_scaled_bitmap(path, w, h);
-        if (bmp) {
-            win32_img_cache_put(path, screen, w, h, bmp);
-        }
+        win32_img_cache_put(path, screen, w, h, bmp);
     }
     if (!bmp) {
         PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
@@ -825,6 +906,10 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
             PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
             { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return false; }
         }
+        GdipSetInterpolationMode(s_cached_g, InterpolationModeNearestNeighbor);
+        GdipSetPixelOffsetMode(s_cached_g, PixelOffsetModeHalf);
+        GdipSetCompositingQuality(s_cached_g, CompositingQualityHighSpeed);
+        GdipSetSmoothingMode(s_cached_g, SmoothingModeHighSpeed);
     }
 
     GpStatus status = GdipDrawImageRectI(s_cached_g, (GpBitmap *)bmp, x, y, w, h);
