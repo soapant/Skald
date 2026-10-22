@@ -1021,6 +1021,13 @@ bool fl_dismiss_message(const char* name) {
   return r;
 }
 
+bool fl_message_active(const char* name) {
+  PROFILE_START(_pt);
+  bool r = Platform_MessageActive(name);
+  PROFILE_END_VAR(_pt, "api:fl_message_active");
+  return r;
+}
+
 bool fl_toggle_fullscreen_active(void) {
   PROFILE_START(_pt);
   bool r = Platform_ToggleFullscreenActive();
