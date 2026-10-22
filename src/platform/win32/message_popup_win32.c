@@ -285,6 +285,17 @@ bool Platform_DismissMessage(const char* name) {
     return true;
 }
 
+bool Platform_MessageActive(const char* name) {
+    PROFILE_START(_pt);
+    if (!name || !name[0]) { PROFILE_END_VAR(_pt, "Platform_MessageActive"); return false; }
+    HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+    if (h == NULL || !IsWindow(h)) { PROFILE_END_VAR(_pt, "Platform_MessageActive"); return false; }
+    FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(h, GWLP_USERDATA);
+    bool active = (data && strcmp(data->name, name) == 0);
+    PROFILE_END_VAR(_pt, "Platform_MessageActive");
+    return active;
+}
+
 static char g_hover_key[64] = {0};
 
 #define HOVER_WIDGET_MAX 8

@@ -637,6 +637,21 @@ bool Platform_DismissMessage(const char* name) {
     return removed;
 }
 
+bool Platform_MessageActive(const char* name) {
+        PROFILE_START(_pt);
+    if (!name || !name[0]) { PROFILE_END_VAR(_pt, "Platform_MessageActive"); return false; }
+    Display *dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_MessageActive"); return false; }
+    bool found = false;
+    pthread_mutex_lock(&g_msg_lock);
+    for (int i = 0; i < g_msg_slot_count; i++) {
+        if (strcmp(g_msg_slots[i].name, name) == 0) { found = true; break; }
+    }
+    pthread_mutex_unlock(&g_msg_lock);
+    PROFILE_END_VAR(_pt, "Platform_MessageActive");
+    return found;
+}
+
 void Platform_DismissIndefiniteMessage(void) {
         PROFILE_START(_pt);
 Display *dpy = get_display();

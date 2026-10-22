@@ -339,7 +339,27 @@ void print_due_card(void) {
     fl_profile_end(p);
 }
 
+void handle_anki(void) {
+    // bool q_active = fl_message_active("question");
+    // bool a_active = fl_message_active("answer");
+    //
+    // if (!q_active && !a_active) {
+    //     print_due_card();
+    // } 
+    // else if (q_active && !a_active) {
+    //     display_card_answer();
+    // }
+}
+bool should_swallow_anki(void) {
+    bool q_active = fl_message_active("question");
+    bool a_active = fl_message_active("answer");
+
+    if (!q_active && !a_active) {
+        return false;
+    }
+    return true;
+}
+
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+A", .cb=print_due_card);
-    fl_register_hotkey(.hotkey="Alt+S", .cb=display_card_answer);
+    fl_register_hotkey(.hotkey="Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }
