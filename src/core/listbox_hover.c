@@ -15,6 +15,9 @@ static int g_mouse_y = 0;
 static int g_pending_scroll = 0;
 static bool g_focus_by_keyboard = false;
 static bool g_mouse_moved = false;
+static bool g_hover_pos_set = false;
+static int g_hover_x = 0;
+static int g_hover_y = 0;
 static int g_list_top = 0;
 static int g_item_height = 0;
 static int g_visible_count = 0;
@@ -44,6 +47,7 @@ void ListBox_PublishMousePos(int x, int y) {
 void ListBox_InvalidateMousePos(void) {
     g_mouse_valid = false;
     g_mouse_moved = false;
+    g_hover_pos_set = false;
 }
 
 bool ListBox_ClientMousePos(int* out_x, int* out_y) {
@@ -118,9 +122,18 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
     if (!lb || lb->populated_count <= 0) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
     if (!g_mouse_moved) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
     g_mouse_moved = false;
-    ListBox_FocusByMouse();
     int mx = 0, my = 0;
-    if (!ListBox_ClientMousePos(&mx, &my)) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    if (!ListBox_ClientMousePos(&mx, &my)) {
+        g_hover_pos_set = false;
+        PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
+        return false;
+    }
+    bool mouse_moved = !g_hover_pos_set || g_hover_x != mx || g_hover_y != my;
+    g_hover_pos_set = true;
+    g_hover_x = mx;
+    g_hover_y = my;
+    if (!mouse_moved) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    ListBox_FocusByMouse();
     int idx = ListBox_RowAtY(lb, list_top, item_height, top_index, visible_count, my);
     if (idx < 0 || idx == lb->selected_index) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
     UI_SetSelection(lb, FlintContext_Get()->window.hListBox, idx);
