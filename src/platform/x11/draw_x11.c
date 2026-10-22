@@ -788,9 +788,7 @@ PROFILE_START(timer);
         } else {
             Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
         }
-        //temporary
-        const char *icon_path = NULL;
-        Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y, PROMPT_ITEM_TEXT_X, icon_path);
+        Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y, PROMPT_ITEM_TEXT_X, NULL);
     }
 
     Platform_DestroyFont(font);

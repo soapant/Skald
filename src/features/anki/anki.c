@@ -1,6 +1,4 @@
 #include "core/flapi.h"
-#include "platform/lib.h"
-#include "platform/platform.h"
 #include "sqlite3.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +12,15 @@ typedef struct { char* text; } ClozeCard;
 typedef struct { CardType type; long long due; int queue; long long due_ts; union { BasicCard basic; ClozeCard cloze; } data; } TYPE_NAME;
 typedef struct { TYPE_NAME* items; size_t count; size_t capacity; } CardList;
 
+typedef enum {
+    ANKI_STATE_IDLE = 0,
+    ANKI_STATE_QUESTION,
+    ANKI_STATE_ANSWER
+} AnkiState;
+
 static TYPE_NAME g_current_card = {0};
+static AnkiState g_anki_state = ANKI_STATE_IDLE;
+
 static FlLibrary g_sqlite_lib = NULL;
 static int (*p_sqlite3_open_v2)(const char*, sqlite3**, int, const char*) = NULL;
 static const char* (*p_sqlite3_errmsg)(sqlite3*) = NULL;
@@ -25,6 +31,11 @@ static long long (*p_sqlite3_column_int64)(sqlite3_stmt*, int) = NULL;
 static int (*p_sqlite3_finalize)(sqlite3_stmt*) = NULL;
 static int (*p_sqlite3_bind_text)(sqlite3_stmt*, int, const char*, int, void(*)(void*)) = NULL;
 static int (*p_sqlite3_close)(sqlite3*) = NULL;
+
+static FlThread anki_thread = NULL;
+static FlMutex anki_lock = NULL;
+static bool anki_running = false;
+static int time_between_qs = 5;
 
 static char* safe_strdup(const char* s) {
     if (!s) return NULL;
@@ -239,10 +250,13 @@ void display_card_question(TYPE_NAME card) {
     fl_message(.name="question",.message = question,.slot=TOP_CENTER,.timeout=10000.0);
 }
 
-void display_card_answer() {
+void display_card_answer(void) {
     char answer[1024];
     answer[0] = '\0';
+    
+    fl_mutex_lock(anki_lock);
     TYPE_NAME card = g_current_card;
+    fl_mutex_unlock(anki_lock);
 
     if (card.type == CARD_TYPE_BASIC) {
         snprintf(answer, sizeof(answer), "%s\n---\n%s",
@@ -279,7 +293,7 @@ void display_card_answer() {
                     for (size_t k = 0; k < ans_len && o + 1 < sizeof(answer); k++) {
                         answer[o++] = ans[k];
                     }
-                    i = j + 1;
+                    i = j + 2;
                     continue;
                 }
             }
@@ -287,6 +301,11 @@ void display_card_answer() {
         }
         answer[o] = '\0';
     }
+    
+    fl_mutex_lock(anki_lock);
+    g_anki_state = ANKI_STATE_ANSWER;
+    fl_mutex_unlock(anki_lock);
+
     fl_dismiss_message("question");
     fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=10000.0);
 }
@@ -314,38 +333,62 @@ void print_due_card(void) {
         fl_profile_end(p);
         return;
     }
-    size_t pick = due[fl_rand_num_between(0, (int)(due_count - 1))];
+    int random = rand()%due_count-1;
+    printf("%i \n",random);
+    size_t pick = due[random];
     TYPE_NAME card = list.items[pick];
-    free_card_contents(&g_current_card);
     
+    fl_mutex_lock(anki_lock);
+    free_card_contents(&g_current_card);
     g_current_card = card_clone(list.items[pick]);
+    g_anki_state = ANKI_STATE_QUESTION;
+    fl_mutex_unlock(anki_lock);
+
     display_card_question(card);
     free(due);
     free_card_list(&list);
     fl_profile_end(p);
 }
 
-void handle_anki(void) {
-    bool q = fl_message_active("question");
-    bool a = fl_message_active("answer");
+static void* anki_timer_thread(void* arg) {
+    while (anki_running) {
+        fl_sleep(time_between_qs); 
+        if (anki_running) {
+            print_due_card();
+        }
+    }
+    return NULL;
+}
 
-    if (q) {
+void handle_anki(void) {
+    fl_mutex_lock(anki_lock);
+    AnkiState current_state = g_anki_state;
+    fl_mutex_unlock(anki_lock);
+
+    if (current_state == ANKI_STATE_QUESTION) {
         display_card_answer();
     }
-    else if (a) {
+    else if (current_state == ANKI_STATE_ANSWER) {
+        fl_mutex_lock(anki_lock);
+        g_anki_state = ANKI_STATE_IDLE;
+        fl_mutex_unlock(anki_lock);
         fl_dismiss_message("answer");
     }
 }
-bool should_swallow_anki(void) {
-    bool q_active = fl_message_active("question");
-    bool a_active = fl_message_active("answer");
 
-    if (!q_active && !a_active) {
-        return false;
-    }
-    return true;
+bool should_swallow_anki(void) {
+    fl_mutex_lock(anki_lock);
+    bool active = (g_anki_state != ANKI_STATE_IDLE);
+    fl_mutex_unlock(anki_lock);
+    return active;
 }
 
 FLINT_FEATURE_INIT {
+    //temporary untill i fix randomness not working on windows
+    srand((unsigned)time(NULL));
+    anki_lock = fl_mutex_create();
+    anki_running = true;
+    anki_thread = fl_thread_create(anki_timer_thread, NULL);
+
     fl_register_hotkey(.hotkey="Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }

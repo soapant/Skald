@@ -763,16 +763,6 @@ PROFILE_START(timer);
     { PROFILE_END_VAR(_pt, "Platform_RunTerminalCommand"); return strdup(""); }
 }
 
-bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
-          PROFILE_START(_pt);
-PROFILE_START(timer);
-     bool ret = Platform_ShellExecuteWithVerb(path, "open", true);
-     log_info("Platform_LaunchFileManagerAtPath path='%s' args='%s'", path ? path : "", args ? args : "");;
-
-     PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchFileManagerAtPath");
-     { PROFILE_END_VAR(_pt, "Platform_LaunchFileManagerAtPath"); return ret; }
-}
-
 bool Platform_IsCtrlPressed(void) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
