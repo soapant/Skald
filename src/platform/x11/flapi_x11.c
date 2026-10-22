@@ -12,7 +12,7 @@
 #include "platform/x11/audio_x11.h"
 #include "helpers/helpers_ui.h"
 #include "bindings/vim_state.h"
-
+#include "core/flapi.h"
 #include "config.h"
 #include "core/prompt_geometry.h"
 #include "core/listbox_hover.h"
