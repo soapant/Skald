@@ -189,7 +189,7 @@ if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(_pt, "Linux_ProcessXE
                 if (Platform_WindowToRoot(top->handle, &wx, &wy)) {
                     ListBox_PublishMousePos(wx + ev->xbutton.x, wy + ev->xbutton.y);
                 }
-                if (top->type == POPUP_fl_window && top->user_data) {
+                if (top->type == POPUP_PROMPT && top->user_data) {
                     PromptState* st = (PromptState*)top->user_data;
                     bool ctrl = (ev->xbutton.state & ControlMask) != 0;
                     bool shift = (ev->xbutton.state & ShiftMask) != 0;

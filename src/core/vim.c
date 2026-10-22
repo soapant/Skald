@@ -19,7 +19,7 @@ ListBoxInfo* Vim_GetListBox(FlintContext* ctx) {
           Popup* top = WindowManager_GetTopPopup(wm);
           if (top) {
               if (top->type == POPUP_EDIT) return NULL;
-              if (top->type == POPUP_fl_window && top->user_data) {
+              if (top->type == POPUP_PROMPT && top->user_data) {
                   PromptState* s = (PromptState*)top->user_data;
                   if (s && s->has_listbox) return &s->listbox;
               }
@@ -50,7 +50,7 @@ static void SyncFilterToActiveState(FlintContext* ctx) {
     if (wm) {
         Popup* top = WindowManager_GetTopPopup(wm);
         if (top && top->user_data) {
-            if (top->type == POPUP_fl_window) {
+            if (top->type == POPUP_PROMPT) {
                 PromptState* s = (PromptState*)top->user_data;
                 strncpy(s->filter, ctx->window.filter, sizeof(s->filter)-1);
                 s->filter[sizeof(s->filter)-1]='\0';
@@ -240,7 +240,7 @@ void DeleteLastTypedChar(FlintContext* ctx) {
         }
         return;
     }
-    if (top && top->user_data && top->type == POPUP_fl_window) {
+    if (top && top->user_data && top->type == POPUP_PROMPT) {
         PromptState* s = (PromptState*)top->user_data;
         int len = (int)strlen(s->filter);
         int cur = s->cursor;
