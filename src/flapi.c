@@ -26,6 +26,7 @@
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
+#include "core/hotkey_string.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "platform/widget.h"
@@ -1695,6 +1696,25 @@ void fl_send_hotkey(const char* hotkey_string) {
     PROFILE_START(_pt);
   if (!hotkey_string) { PROFILE_END_VAR(_pt, "fl_send_hotkey"); return ; }
   remap_send_combo(hotkey_string);
+}
+
+static char g_fl_hotkey_string[HOTKEY_STRING_MAX_LEN];
+
+char* fl_hotkey_to_string(FlKey key) {
+    PROFILE_START(_pt);
+  if (!HotkeyString_Format(key, g_fl_hotkey_string, (int)sizeof(g_fl_hotkey_string))) {
+    g_fl_hotkey_string[0] = '\0';
+  }
+  PROFILE_END_VAR(_pt, "fl_hotkey_to_string");
+  return g_fl_hotkey_string;
+}
+
+FlKey fl_hotkey_from_string(const char* str) {
+    PROFILE_START(_pt);
+  FlKey key = {0};
+  HotkeyString_Parse(str, &key);
+  PROFILE_END_VAR(_pt, "fl_hotkey_from_string");
+  return key;
 }
 
 bool fl_is_key_down(int vk){
