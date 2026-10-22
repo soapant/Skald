@@ -497,10 +497,11 @@ void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
 }
 
 static bool g_toggle_key_pending = false;
+static int g_toggle_skip_vk = 0;
 
 void UI_FlushPendingInput(void) {
         PROFILE_START(_pt);
-MSG msg;
+    MSG msg;
     while (PeekMessageA(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE)) {
         if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) g_toggle_key_pending = false;
     }
@@ -509,6 +510,11 @@ MSG msg;
 void UI_PreparePopupPump(void) {
         PROFILE_START(_pt);
 g_toggle_key_pending = true;
+    extern int pending_hotkey_vk;
+    extern int pending_hotkey_mod;
+    g_toggle_skip_vk = pending_hotkey_vk;
+    pending_hotkey_vk = 0;
+    pending_hotkey_mod = 0;
     UI_FlushPendingInput();
 }
 
@@ -518,13 +524,10 @@ const MSG* m = (const MSG*)msg;
     if (!g_toggle_key_pending) { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return false; }
     if (m->message == WM_KEYDOWN || m->message == WM_SYSKEYDOWN || m->message == WM_KEYUP || m->message == WM_SYSKEYUP || m->message == WM_CHAR || m->message == WM_SYSCHAR) {
         g_toggle_key_pending = false;
-        extern int pending_hotkey_vk;
-        extern int pending_hotkey_mod;
-        if (pending_hotkey_vk != 0 &&
+        if (g_toggle_skip_vk != 0 &&
             (m->message == WM_KEYDOWN || m->message == WM_SYSKEYDOWN || m->message == WM_KEYUP || m->message == WM_SYSKEYUP) &&
-            (int)m->wParam == pending_hotkey_vk) {
-            pending_hotkey_vk = 0;
-            pending_hotkey_mod = 0;
+            (int)m->wParam == g_toggle_skip_vk) {
+            g_toggle_skip_vk = 0;
             { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return true; }
         }
         { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return false; }
