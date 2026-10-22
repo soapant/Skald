@@ -31,6 +31,8 @@ typedef struct {
 static volatile int g_cc_stopping = 0;
 
 #define CC_ITEM_TEXT_X 10
+#define CC_ITEM_TEXT_Y 4
+
 #define CC_ICON_GAP 8
 #define CC_TYPE_GAP 6
 #define CC_TYPE_SIZE_DELTA 2
@@ -390,7 +392,7 @@ static bool cc_load_app_cache(void) {
     bool reexported = false;
     g_cc_reexported = false;
     for (size_t i = 0; i < tmp.count; i++) {
-        if (icons[i][0] == '\0' || cc_icon_is_shell_only(icons[i]) || !fl_file_exists(icons[i])) {
+        if (icons[i][0] == '\0' || cc_icon_is_shell_only(icons[i])) {
             char *resolved = fl_get_icon_path(tmp.files[i].path);
             if (resolved) {
                 if (strcmp(resolved, icons[i]) != 0) reexported = true;
@@ -1050,7 +1052,6 @@ static void cc_render(PromptState *state) {
     int icon_size = FontSize;
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
-        int row_y = ctx.y + (ctx.h - icon_size) / 2;
         int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
         const CcEntry *e = cc_find(ctx.text);
         const char *row_icon = (e && e->icon[0]) ? e->icon : NULL;
@@ -1059,17 +1060,13 @@ static void cc_render(PromptState *state) {
         }
         if (row_icon) {
             int icon_x = ctx.x + CC_ITEM_TEXT_X;
-            int icon_y = row_y;
-            int glyph = cc_icon_is_glyph(row_icon) ? 1 : 0;
-            int gh = 0, gw = 0;
-            if (glyph) {
-                gh = fl_get_glyph_ink_height(row_icon, icon_size);
+            int icon_y = ctx.y + (ctx.h - icon_size) / 2;
+            if (cc_icon_is_glyph(row_icon)) {
+                int gh = fl_get_glyph_ink_height(row_icon, icon_size);
                 if (gh <= 0) gh = icon_size;
-                gw = fl_get_text_width(row_icon, icon_size);
-            }
-            if (glyph) {
+                int gw = fl_get_text_width(row_icon, icon_size);
                 fl_draw_text(.x = icon_x + (icon_size - gw) / 2 ,
-                             .y = row_y,
+                             .y = ctx.y + (ctx.h - gh) / 2 + 1,
                              .text = row_icon, .align = "LEFT", .pad = 0,
                              .fontsize = icon_size);
             } else {
@@ -1078,13 +1075,13 @@ static void cc_render(PromptState *state) {
                               .w = icon_size, .h = icon_size);
             }
         }
-        fl_draw_text(.x = name_x, .y = row_y,
+        fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                      .text = ctx.text, .align = "LEFT", .pad = 0);
 
         bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
                                 strcmp(e->type, "Feature") == 0);
         if (plain_type) {
-            fl_draw_text(.x = type_x, .y = row_y,
+            fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                          .text = e->type, .align = "RIGHT", .color = cc_type_color());
         } else if (e) {
             int type_sz = FontSize - CC_TYPE_SIZE_DELTA;
@@ -1093,11 +1090,11 @@ static void cc_render(PromptState *state) {
             if (e->type[0]) {
                 int name_w = fl_get_text_width(ctx.text, FontSize);
                 fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
-                             .y = row_y + CC_TYPE_SIZE_DELTA,
+                             .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
                              .text = e->type, .align = "LEFT", .pad = 0,
                              .fontsize = type_sz, .color = meta_col);
             }
-            fl_draw_text(.x = type_x, .y = row_y,
+            fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                          .text = CC_TYPE_LABEL, .align = "RIGHT",
                          .pad = 0, .color = meta_col);
         }
