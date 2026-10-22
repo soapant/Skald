@@ -746,6 +746,14 @@ void FeatureLoader_Lock(void) {
     FL_LOCK();
 }
 
+bool FeatureLoader_TryLock(void) {
+#if defined(_WIN32)
+    return TryEnterCriticalSection(&g_fl_cs) != 0;
+#else
+    return pthread_mutex_trylock(&g_fl_mutex) == 0;
+#endif
+}
+
 void FeatureLoader_Unlock(void) {
     FL_UNLOCK();
 }
