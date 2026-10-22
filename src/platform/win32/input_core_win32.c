@@ -167,6 +167,12 @@ if (nCode < 0) {
 
     PROFILE_START(timer);
     if (! _popupActive && hotkey_process(pressed_vk, modifiers)) {
+      extern int pending_hotkey_vk;
+      extern int pending_hotkey_mod;
+      extern long pending_hotkey_timeMs;
+      pending_hotkey_vk = pressed_vk;
+      pending_hotkey_mod = modifiers;
+      pending_hotkey_timeMs = (long)GetTickCount();
       char* _t2 = Platform_GetActiveWindowTitle();
       log_info("hook swallow=hotkey vk=0x%X mods=%d title='%s'", pressed_vk, modifiers, _t2 ? _t2 : "");
       return 1;
