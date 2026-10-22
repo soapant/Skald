@@ -78,27 +78,6 @@ void open_terminal(void) {
 void open_browser(void) {
     fl_launch_browser("");
 }
-void move_active_window_right(void) {
-    fl_move_active_window_right();
-}
-void move_active_window_left(void) {
-    fl_move_active_window_left();
-}
-void focus_window_right(void) {
-    fl_focus_window_right();
-}
-void focus_window_left(void) {
-    fl_focus_window_left();
-}
-void close_active_window(void) {
-    fl_close_active_window();
-}
-void toggle_fullscreen(void) {
-    fl_toggle_fullscreen_active();
-}
-void toggle_minimized(void) {
-    fl_toggle_minimized_active();
-}
 
 void easy(void) {
  fl_send_hotkey("1"); fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("1");
@@ -134,13 +113,6 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+Shift+D", .cb=get_current_keyword);
     fl_register_hotkey(.hotkey="Alt+Q", .cb=open_terminal);
     fl_register_hotkey(.hotkey="Ctrl+Shift+B", .cb=open_browser);
-    fl_register_hotkey(.hotkey="Alt+Shift+L", .cb=move_active_window_right);
-    fl_register_hotkey(.hotkey="Alt+Shift+H", .cb=move_active_window_left);
-    fl_register_hotkey(.hotkey="Alt+Shift+O", .cb=focus_window_right);
-    fl_register_hotkey(.hotkey="Alt+Shift+I", .cb=focus_window_left);
-    fl_register_hotkey(.hotkey="Ctrl+Q", .cb=close_active_window);
-    fl_register_hotkey(.hotkey="Alt+F", .cb=toggle_fullscreen);
-    fl_register_hotkey(.hotkey="Alt+M", .cb=toggle_minimized);
     fl_register_hotkey(.hotkey="J", .cb=easy, .whitelist={"anki"});
     fl_register_hotkey(.hotkey="K", .cb=medium, .whitelist={"anki"});
     fl_register_hotkey(.hotkey="L", .cb=hard, .whitelist={"anki"});
