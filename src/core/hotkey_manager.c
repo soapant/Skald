@@ -92,7 +92,9 @@ static int hotkey_hold_delay_ms(void) {
 static void hotkey_hold_end(int vk) {
     HOTKEY_Q_LOCK();
     for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-        if (g_hold_slots[i].active && g_hold_slots[i].vk == vk) g_hold_slots[i].active = false;
+        if (g_hold_slots[i].active && g_hold_slots[i].vk == vk) {
+            g_hold_slots[i].active = false;
+        }
     }
     HOTKEY_Q_UNLOCK();
 }
@@ -174,7 +176,6 @@ void hotkey_drain_pending(void) {
             WindowManager* dwm = WindowManager_Get();
             if (dwm && dwm->popup_count > 0) continue;
         }
-        log_info("hotkey drain run");
         FeatureLoader_Lock();
         fn();
         FeatureLoader_Unlock();
@@ -366,11 +367,13 @@ bool hotkey_process(int vk_code, int modifiers) {
         if (blocked) return true;
         bool swallow = true;
         if (b->should_swallow) {
-            FeatureLoader_Lock();
-            swallow = b->should_swallow();
-            FeatureLoader_Unlock();
+            if (FeatureLoader_TryLock()) {
+                swallow = b->should_swallow();
+                FeatureLoader_Unlock();
+            } else {
+                swallow = false;
+            }
         }
-        log_info("hotkey match vk=0x%X mods=%d enqueue", vk_code, eff_modifiers);
         hotkey_enqueue(cb, b->is_feature_toggle, b->owner, vk_code, eff_modifiers);
         if (MessageAfterEachHotkey) {
             char buf[2556];
