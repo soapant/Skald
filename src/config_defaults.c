@@ -66,7 +66,6 @@ ColorRef COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
 ColorRef COLOR_BORDER = RGB(128, 128, 128);
 
 static const AliasEntry default_aliases[] = {
-  {"brw","Brawlhalla","AppLauncher"},
 };
 const AliasEntry* Aliases = default_aliases;
 size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(default_aliases);

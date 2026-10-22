@@ -121,6 +121,11 @@ static bool config_output_is_fresh(const char* out) {
 static bool config_build_load_store(void) {
     PROFILE_START(timer);
     const char* out = config_out_path();
+    if (!out) {
+        log_error("config_out_path() returned NULL!");
+        return false;
+    }
+
     if (config_output_is_fresh(out)) {
         log_info("config .so is newer than source, skipping compile");
     } else {
@@ -134,7 +139,12 @@ static bool config_build_load_store(void) {
         }
     }
     char uniq[256];
-    snprintf(uniq, sizeof(uniq), "build/config.hot%d%s", ++g_cfg_seq, Platform_LibExtension());
+    const char* lib_ext = Platform_LibExtension();
+    if (!lib_ext) {
+        log_error("Platform_LibExtension() returned NULL!");
+        return false;
+    }
+    snprintf(uniq, sizeof(uniq), "build/config.hot%d%s", ++g_cfg_seq, lib_ext);
     {
         PROFILE_START(t_cfgcopy);
         bool ok = config_copy_file(out, uniq);
@@ -344,7 +354,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
         cfg_put(buf, cap, &off, "    %s = RGB(%u, %u, %u);\n", names[i], cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);
     }
-    cfg_put(buf, cap, &off, "    Aliases = user_aliases;\n");
+    cfg_put(buf, cap, &off, "    Aliases = ALIAS_ENTRY_COUNT > 0 ? user_aliases : NULL;\n");
     cfg_put(buf, cap, &off, "    ALIAS_ENTRY_COUNT = %u;\n", (unsigned)ALIAS_ENTRY_COUNT);
     cfg_put(buf, cap, &off, "}\n");
     return off;
