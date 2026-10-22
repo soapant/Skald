@@ -2,7 +2,6 @@
 
 // <flint-config-generated>
 static const AliasEntry user_aliases[] = {
-    {"brw", "Brawlhalla", "AppLauncher"},
 };
 
 void ConfigApply(void) {
