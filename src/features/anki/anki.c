@@ -15,6 +15,7 @@ typedef struct { char* text; } ClozeCard;
 typedef struct { CardType type; long long due; int queue; long long due_ts; union { BasicCard basic; ClozeCard cloze; } data; } TYPE_NAME;
 typedef struct { TYPE_NAME* items; size_t count; size_t capacity; } CardList;
 
+static TYPE_NAME g_current_card = {0};
 static FlLibrary g_sqlite_lib = NULL;
 static int (*p_sqlite3_open_v2)(const char*, sqlite3**, int, const char*) = NULL;
 static const char* (*p_sqlite3_errmsg)(sqlite3*) = NULL;
@@ -25,6 +26,38 @@ static long long (*p_sqlite3_column_int64)(sqlite3_stmt*, int) = NULL;
 static int (*p_sqlite3_finalize)(sqlite3_stmt*) = NULL;
 static int (*p_sqlite3_bind_text)(sqlite3_stmt*, int, const char*, int, void(*)(void*)) = NULL;
 static int (*p_sqlite3_close)(sqlite3*) = NULL;
+
+static char* safe_strdup(const char* s) {
+    if (!s) return NULL;
+    size_t len = strlen(s) + 1;
+    char* new_s = malloc(len);
+    if (new_s) memcpy(new_s, s, len);
+    return new_s;
+}
+
+static TYPE_NAME card_clone(TYPE_NAME card) {
+    TYPE_NAME clone = card;
+    if (card.type == CARD_TYPE_BASIC) {
+        clone.data.basic.front = safe_strdup(card.data.basic.front);
+        clone.data.basic.back = safe_strdup(card.data.basic.back);
+    } else if (card.type == CARD_TYPE_CLOZE) {
+        clone.data.cloze.text = safe_strdup(card.data.cloze.text);
+    }
+    return clone;
+}
+
+static void free_card_contents(TYPE_NAME* card) {
+    if (card->type == CARD_TYPE_BASIC) {
+        free(card->data.basic.front);
+        free(card->data.basic.back);
+        card->data.basic.front = NULL;
+        card->data.basic.back = NULL;
+    } else if (card->type == CARD_TYPE_CLOZE) {
+        free(card->data.cloze.text);
+        card->data.cloze.text = NULL;
+    }
+    card->type = CARD_TYPE_UNKNOWN;
+}
 
 static int sqlite_init(void) {
     if (g_sqlite_lib) return 1;
@@ -71,14 +104,6 @@ static int card_due_cmp(const void* a, const void* b) {
     if (ca->due_ts < cb->due_ts) return -1;
     if (ca->due_ts > cb->due_ts) return 1;
     return 0;
-}
-
-static char* safe_strdup(const char* s) {
-    if (!s) return NULL;
-    size_t len = strlen(s) + 1;
-    char* new_s = malloc(len);
-    if (new_s) memcpy(new_s, s, len);
-    return new_s;
 }
 
 static void card_list_push(CardList* list, TYPE_NAME card) {
@@ -234,9 +259,10 @@ void display_card_question(TYPE_NAME card) {
     fl_message(.name="question",.message = question,.slot=TOP_CENTER,.timeout=10000.0);
 }
 
-void display_card_answer(TYPE_NAME card) {
+void display_card_answer() {
     char answer[1024];
     answer[0] = '\0';
+    TYPE_NAME card = g_current_card;
 
     if (card.type == CARD_TYPE_BASIC) {
         snprintf(answer, sizeof(answer), "%s\n---\n%s",
@@ -281,8 +307,8 @@ void display_card_answer(TYPE_NAME card) {
         }
         answer[o] = '\0';
     }
-
-    fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=10000.0);
+    fl_dismiss_message("question");
+    fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=4.0);
 }
 
 void print_due_card(void) {
@@ -304,6 +330,9 @@ void print_due_card(void) {
     }
     size_t pick = due[fl_rand_num_between(0, (int)(due_count - 1))];
     TYPE_NAME card = list.items[pick];
+    free_card_contents(&g_current_card);
+    
+    g_current_card = card_clone(list.items[pick]);
     display_card_question(card);
     free(due);
     free_card_list(&list);
@@ -311,5 +340,6 @@ void print_due_card(void) {
 }
 
 FLINT_FEATURE_INIT {
-    // fl_register_hotkey(.hotkey="Alt+A", .cb=print_due_card);
+    fl_register_hotkey(.hotkey="Alt+A", .cb=print_due_card);
+    fl_register_hotkey(.hotkey="Alt+S", .cb=display_card_answer);
 }
