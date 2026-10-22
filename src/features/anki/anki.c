@@ -295,9 +295,9 @@ void print_due_card(void) {
     FlTimer p = fl_profile_start();
     char buf[300];
 #if defined (_WIN32)
-    snprintf(buf,sizeof(buf),"%s/AppData/Roaming/Anki2/User 1/collection.anki2",Platform_GetRealHome());
+    snprintf(buf,sizeof(buf),"%s/AppData/Roaming/Anki2/User 1/collection.anki2",fl_resolve_user_path());
 #else
-    snprintf(buf,sizeof(buf),"%s/Anki2/User 1/collection.anki2",Platform_GetRealHome());
+    snprintf(buf,sizeof(buf),"%s/Anki2/User 1/collection.anki2",fl_resolve_user_path());
 #endif
     CardList list = get_cards_in_deck(buf, "Chemistry");
     long long now = (long long)time(NULL);
