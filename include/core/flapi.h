@@ -91,7 +91,6 @@ void fl_format_bytes(unsigned long long bytes, char* out_str, size_t out_len);
 bool fl_launch_with_args(const char* path, const char* args);
 bool fl_launch_with_args_as_admin(const char* path, const char* args);
 bool fl_launch_terminal_at_path(char* path,char* args);
-bool fl_launch_file_manager_at_path(char* path,char* args);
 char* fl_run_terminal_command(char* command);
 char* fl_run_terminal_command_blocking(char* command);
 char* fl_run_terminal_command_and_open(char* command);

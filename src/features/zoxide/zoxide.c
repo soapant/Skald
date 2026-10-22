@@ -32,40 +32,8 @@ static void TriggerZoxide(void) {
     fl_free_file_list(&files);
 }
 
-const char* FileManagerZoxideFilePath = "FileManagerZoxide.txt";
-static void file_manager_refresh(const char* filter, ListBoxInfo* lb) {
-    FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
-    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
-    fl_free_file_list(&files);
-}
-static bool file_manager_enter(const char* selection, ListBoxInfo* lb) {
-    char* path = fl_get_zoxide_match((char*)selection);
-    if (!path) return false;
-    if (fl_launch_file_manager_at_path(path,NULL)) {
-        if (!fl_is_selected(lb)) fl_append_unique_line(FileManagerZoxideFilePath, selection);
-    }
-    free(path);
-    return true;
-}
-static void file_manager_edit(const char* selection, ListBoxInfo* lb) {
-    int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
-    if (!edited) return;
-    if (idx >= 0) fl_replace_line_in_file(FileManagerZoxideFilePath, idx, edited);
-    free(edited);
-    file_manager_refresh("", lb);
-}
-static void TriggerFileManager(void) {
-    FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
-    fl_window(.title = "📁 FileManager", .items = (const char**)files.items,
-           .refresh = file_manager_refresh, .enter = file_manager_enter, .edit = file_manager_edit);
-    fl_free_file_list(&files);
-}
-
 FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+W", .cb=TriggerZoxide, .blacklist={"\1"});
-    fl_register_hotkey(.hotkey="Alt+R", .cb=TriggerFileManager, .blacklist={"\1"});
 
     fl_register_feature(.name="Zoxide",.cb=TriggerZoxide,.icon="/folder.png");
-    fl_register_feature(.name="File Manager",.cb=TriggerFileManager,.icon="/folder.png");
 }
