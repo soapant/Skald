@@ -874,7 +874,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
         Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL, spec->name);
         return;
     }
-    DisplayMessageSlot(spec->message, slot, mw, mh, spec->prompt_gap, timeout, color);
+    DisplayMessageSlot(spec->message, slot, mw, mh, spec->prompt_gap, timeout, color, spec->name);
 }
 
 bool fl_launch_browser(char* url) {

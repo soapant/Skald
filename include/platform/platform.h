@@ -62,7 +62,7 @@ long long Platform_GetWallClockMs(void);
 
 void Platform_WaitForKeypressAsync(KeyCallback callback);
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void), const char* name);
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg);
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg,const char* name);
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color, bool no_bg, void (*render)(void), const char* name);
 void Platform_DismissDisplayMessage(void);
 bool Platform_DismissMessage(const char* name);

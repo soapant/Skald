@@ -460,7 +460,7 @@ void HandleShowFullText(FlintContext* ctx) {
   if (FullTextNeedsKeyPress) {
       ListBoxInfo* lb = Vim_GetListBox(ctx);
       if (lb && UI_IsListBoxSelected(lb)) {
-        DisplayMessageSlot(lb_selected_text(lb), TOP_CENTER_RELATIVE, 0, 0, 0, 6969, COLOR_TEXT);
+        DisplayMessageSlot(lb_selected_text(lb), TOP_CENTER_RELATIVE, 0, 0, 0, 6969, COLOR_TEXT, NULL);
       }
   }
 }
@@ -730,11 +730,11 @@ static void vim_find_with(FlintContext* ctx, char target, bool till, bool backwa
 static void vim_show_pending(const char* prefix) {
     char buf[64];
     snprintf(buf, sizeof(buf), "%s--", prefix);
-    DisplayMessageSlot(buf, TOP_CENTER_RELATIVE, 0, 0, 0, 1200, COLOR_TIP);
+    DisplayMessageSlot(buf, TOP_CENTER_RELATIVE, 0, 0, 0, 1200, COLOR_TIP, NULL);
 }
 
 static void vim_clear_pending(void) {
-    DisplayMessageSlot("", TOP_CENTER_RELATIVE, 0, 0, 0, 0, COLOR_TIP);
+    DisplayMessageSlot("", TOP_CENTER_RELATIVE, 0, 0, 0, 0, COLOR_TIP, NULL);
 }
 
 static void vim_till_forward_cb(int key) {
