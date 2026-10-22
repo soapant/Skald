@@ -66,6 +66,6 @@ void ConfigApply(void) {
     COLOR_CURSOR = RGB(201, 209, 217);
     COLOR_BORDER = RGB(128, 128, 128);
     Aliases = user_aliases;
-    ALIAS_ENTRY_COUNT = 1;
+    ALIAS_ENTRY_COUNT = 0;
 }
 // </flint-config-generated>
