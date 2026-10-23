@@ -136,7 +136,6 @@ FlKey fl_hotkey_from_string(const char* str);
 bool fl_launch_browser(char* url);
 bool fl_query_browser(const char* query);
 bool fl_launch_browser_in_a_new_window(char* url);
-char* fl_get_zoxide_match(char* query);
 bool fl_focus_window_by_title(char* title);
 bool fl_close_active_window(void);
 bool fl_dismiss_message(const char* name);
@@ -516,6 +515,8 @@ char* fl_get_working_dir();
 char* fl_resolve_data_path(const char* name);
 char* fl_resolve_feature_path(const char* name);
 char* fl_resolve_user_path();
+char* fl_get_user_name();
+bool fl_is_root();
 
 // =============================================================================
 // DYNAMIC LIBRARIES

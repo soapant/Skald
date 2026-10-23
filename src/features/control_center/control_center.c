@@ -1075,7 +1075,8 @@ static void cc_render(PromptState *state) {
                               .w = icon_size, .h = icon_size);
             }
         }
-        fl_draw_text(.x = name_x, .y = ctx.y + (ctx.h - gh) / 2 + 1,
+
+        fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                      .text = ctx.text, .align = "LEFT", .pad = 0);
 
         bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
