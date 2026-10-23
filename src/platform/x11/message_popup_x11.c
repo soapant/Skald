@@ -577,7 +577,7 @@ Display *dpy = get_display();
     MsgHoverPresent(dpy, key, message, centerX, centerY, winW, winH, color,no_bg);
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg,const char* name) {
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg,void (*render)(void),const char* name) {
         PROFILE_START(_pt);
 if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
     Display *dpy = get_display();
@@ -614,7 +614,7 @@ if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnch
     else y = rect_y + (rect_h - winH) / 2;
     int ax,ay,aw,ah;
     WindowManager_GetMainMonitorGeometry(&ax,&ay,&aw,&ah);
-    MsgPresent(dpy, message, x - ax, y - ay, winW, winH, timeout, color,no_bg,NULL,name);
+    MsgPresent(dpy, message, x - ax, y - ay, winW, winH, timeout, color,no_bg,render,name);
 }
 
 bool Platform_DismissMessage(const char* name) {
