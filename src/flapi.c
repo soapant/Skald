@@ -742,6 +742,10 @@ void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items
     PopulateListBox(lb, filter, items, count, NULL);
 }
 
+void fl_populate_listbox_ex(ListBoxInfo* lb, const char* filter, const char** items, int count, bool (*filter_match)(const char* item, const char* filter)) {
+    PopulateListBox(lb, filter, items, count, filter_match);
+}
+
 bool fl_is_selected(ListBoxInfo* lb) {
     PROFILE_START(_pt);
     if (!lb) { PROFILE_END_VAR(_pt, "fl_is_selected"); return false; }
@@ -2697,6 +2701,36 @@ void fl_cc_registry_purge_owner(const char *path_a, const char *path_b) {
         out++;
     }
     g_cc_entry_count = out;
+}
+
+#define FL_MAX_ALIASES 1024
+static char g_alias_alias[FL_MAX_ALIASES][128];
+static char g_alias_target[FL_MAX_ALIASES][256];
+static int g_alias_count = 0;
+
+bool fl_add_alias_impl(const FlAliasSpec *spec) {
+    if (!spec || !spec->alias || !spec->target) return false;
+    if (g_alias_count >= FL_MAX_ALIASES) return false;
+    for (int i = 0; i < g_alias_count; i++) {
+        if (strcmp(g_alias_target[i], spec->target) == 0) {
+            snprintf(g_alias_alias[i], sizeof(g_alias_alias[i]), "%s", spec->alias);
+            return true;
+        }
+    }
+    snprintf(g_alias_alias[g_alias_count], sizeof(g_alias_alias[g_alias_count]), "%s", spec->alias);
+    snprintf(g_alias_target[g_alias_count], sizeof(g_alias_target[g_alias_count]), "%s", spec->target);
+    g_alias_count++;
+    return true;
+}
+
+int fl_alias_count(void) { return g_alias_count; }
+
+const char *fl_alias_for(const char *target) {
+    if (!target) return NULL;
+    for (int i = 0; i < g_alias_count; i++) {
+        if (strcmp(g_alias_target[i], target) == 0) return g_alias_alias[i];
+    }
+    return NULL;
 }
 
 void fl_window_impl(const FlPromptSpec* spec) {
