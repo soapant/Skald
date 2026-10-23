@@ -1002,6 +1002,25 @@ static bool cc_calc_build_label(const char *filter) {
     snprintf(g_cc_calc_label, sizeof(g_cc_calc_label), "%s = %s", trimmed, value);
     return true;
 }
+static bool cc_contains_ci(const char *hay, const char *needle) {
+    if (!hay || !needle || !needle[0]) return true;
+    size_t nlen = strlen(needle);
+    for (const char *p = hay; *p; p++) {
+        size_t i = 0;
+        while (i < nlen && p[i] && tolower((unsigned char)p[i]) == tolower((unsigned char)needle[i])) i++;
+        if (i == nlen) return true;
+    }
+    return false;
+}
+
+static bool cc_filter_match(const char *item, const char *filter) {
+    if (!item || !filter || !filter[0]) return true;
+    if (cc_contains_ci(item, filter)) return true;
+    const char *al = fl_alias_for(item);
+    if (al && cc_contains_ci(al, filter)) return true;
+    return false;
+}
+
 static void cc_refresh(const char *filter, ListBoxInfo *lb) {
     cc_build();
     (void)g_no_results;
@@ -1012,7 +1031,7 @@ static void cc_refresh(const char *filter, ListBoxInfo *lb) {
         g_names[n] = g_cc_calc_label;
         n++;
     }
-    fl_populate_listbox(lb, filter, g_names, n);
+    fl_populate_listbox_ex(lb, filter, g_names, n, cc_filter_match);
     if (lb->total_matches > 0) g_cc_fallback_active = false;
     if (lb->total_matches == 0) {
         CcEntry *fallback = cc_add_fallback();
@@ -1074,7 +1093,15 @@ static void cc_render(PromptState *state) {
         }
 
         fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
-                     .text = ctx.text, .align = "LEFT", .pad = 0);
+                      .text = ctx.text, .align = "LEFT", .pad = 0);
+        const char *al = fl_alias_for(ctx.text);
+        if (al) {
+            char abuf[160];
+            snprintf(abuf, sizeof(abuf), "[%s]", al);
+            int name_w = fl_get_text_width(ctx.text, FontSize);
+            fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP, .y = ctx.y + CC_ITEM_TEXT_Y,
+                          .text = abuf, .align = "LEFT", .pad = 0);
+        }
 
         bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
                                 strcmp(e->type, "Feature") == 0);
@@ -1194,6 +1221,7 @@ FLINT_FEATURE_INIT {
     cc_register_type("Application", cc_fill_applications);
     cc_register_type("Feature", cc_fill_features);
     fl_register_hotkey(.hotkey=(char *)ControlHotkey, .cb=TriggerControl, .blacklist={"\1"});
+    fl_add_alias(.alias="brw", .target="Brawlhalla");
 }
 
 FLINT_FEATURE_SHUTDOWN {

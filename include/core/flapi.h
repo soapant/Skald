@@ -170,6 +170,7 @@ char* fl_string_slice(const char* str, int start, int end);
 FlStringList fl_string_split(const char* str, const char* delimiter);
 void fl_string_list_free(StringList* list);
 void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items, int count);
+void fl_populate_listbox_ex(ListBoxInfo* lb, const char* filter, const char** items, int count, bool (*filter_match)(const char* item, const char* filter));
 bool fl_is_selected(ListBoxInfo* lb);
 void fl_set_edit_text(const char* text);
 void fl_set_edit_cursor(int position);
@@ -658,9 +659,20 @@ typedef struct {
     const char *icon;
     const char *type;
 } FlCcEntrySpec;
-
 bool fl_add_to_cc_impl(const FlCcEntrySpec *spec);
+
 #define fl_add_to_cc(...) fl_add_to_cc_impl(&(FlCcEntrySpec){__VA_ARGS__})
+
+typedef struct {
+    const char *alias;
+    const char *target;
+} FlAliasSpec;
+
+bool fl_add_alias_impl(const FlAliasSpec *spec);
+#define fl_add_alias(...) fl_add_alias_impl(&(FlAliasSpec){__VA_ARGS__})
+
+int fl_alias_count(void);
+const char *fl_alias_for(const char *target);
 
 int fl_cc_entry_count(void);
 const FlCcEntrySpec *fl_cc_entry_at(int index);
