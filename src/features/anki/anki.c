@@ -280,8 +280,11 @@ void anki_apply_elapsed(double elapsed_ms) {
     sqlite3_stmt *stmt = NULL;
     const char *sql = "UPDATE cards SET ivl = ? WHERE id = ?;";
     if (p_sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        p_sqlite3_bind_int(stmt, 1, offset_seconds);
-        p_sqlite3_bind_int64(stmt, 2, (sqlite3_int64)g_current_card.id);
+        char off[32], idstr[32];
+        snprintf(off, sizeof(off), "%d", offset_seconds);
+        snprintf(idstr, sizeof(idstr), "%lld", g_current_card.id);
+        p_sqlite3_bind_text(stmt, 1, off, -1, SQLITE_TRANSIENT);
+        p_sqlite3_bind_text(stmt, 2, idstr, -1, SQLITE_TRANSIENT);
         
         p_sqlite3_finalize(stmt);
     }

@@ -656,10 +656,11 @@ PROFILE_START(timer);
         return true;
     }
     if (grabbed) {
-        if (g_x11_uinput_fd >= 0) {
-            if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true)) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return false; }
-            x11_uinput_emit(ev);
-        }
+         if (g_x11_uinput_fd >= 0) {
+             if (hotkey_process(ConvertLinuxKeyToWindowsVK(code), remap_current_mods())) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
+             if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true)) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return false; }
+             x11_uinput_emit(ev);
+         }
         else { static bool warned=false; if(!warned){ log_warn("grabbed but no uinput - key %d lost", code); warned=true; } }
     }
     else {

@@ -1099,8 +1099,8 @@ static void cc_render(PromptState *state) {
             char abuf[160];
             snprintf(abuf, sizeof(abuf), "[%s]", al);
             int name_w = fl_get_text_width(ctx.text, FontSize);
-            fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP, .y = ctx.y + CC_ITEM_TEXT_Y,
-                          .text = abuf, .align = "LEFT", .pad = 0);
+            fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP, .y = ctx.y + CC_ITEM_TEXT_Y + 2,
+                          .text = abuf, .align = "LEFT", .pad = 0,.color=FL_GRAY,.fontsize=FontSize-3);
         }
 
         bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
