@@ -23,7 +23,6 @@ typedef struct {
     HelpCallback help;
     CopyCallback copy;
     RenderCallback render;
-    AliasCallback alias;
     EditCallback edit;
     FilterCallback filter;
 } PromptCallbacks;

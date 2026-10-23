@@ -108,12 +108,6 @@ if (widget->layer_bits && widget->layer_w == widget->w && widget->layer_h == wid
     { PROFILE_END_VAR(_pt, "layer_acquire"); return true; }
 }
 
-/* GDI antialiasing blends toward the destination fill and never writes the alpha
-   byte, so the layer is filled opaque black and rendered once. On the black
-   background each glyph pixel is already coverage-scaled text colour, which is
-   exactly the premultiplied form AC_SRC_ALPHA expects, so the blue channel is a
-   direct coverage readout. Rendering once per frame keeps feature render
-   callbacks (and their per-frame state) intact. */
 static void widget_push_layered(PlatformWidget *widget, unsigned long bg, unsigned char alpha) {
         PROFILE_START(_pt);
 if (!layer_acquire(widget)) { PROFILE_END_VAR(_pt, "widget_push_layered"); return ; }
