@@ -20,7 +20,6 @@ typedef enum {
 
 static TYPE_NAME g_current_card = {0};
 static AnkiState g_anki_state = ANKI_STATE_IDLE;
-static FlTimer g_card_timer = {0};
 
 static FlLibrary g_sqlite_lib = NULL;
 static int (*p_sqlite3_open_v2)(const char*, sqlite3**, int, const char*) = NULL;
@@ -36,7 +35,7 @@ static int (*p_sqlite3_close)(sqlite3*) = NULL;
 static FlThread anki_thread = NULL;
 static FlMutex anki_lock = NULL;
 static bool anki_running = false;
-static int time_between_qs = 20;
+static int time_between_qs = 30;
 
 static char* safe_strdup(const char* s) {
     if (!s) return NULL;
@@ -308,16 +307,18 @@ void display_card_answer(void) {
     fl_mutex_unlock(anki_lock);
 
     fl_dismiss_message("question");
-    fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=10000.0);
+    fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=1000.0);
 }
 
 void print_due_card(void) {
+    fl_dismiss_message("question");
+    fl_dismiss_message("answer");
     FlTimer p = fl_profile_start();
     char buf[300];
 #if defined (_WIN32)
     snprintf(buf,sizeof(buf),"%s/AppData/Roaming/Anki2/User 1/collection.anki2",fl_resolve_user_path());
 #else
-    snprintf(buf,sizeof(buf),"%s/Anki2/User 1/collection.anki2",fl_resolve_user_path());
+    snprintf(buf,sizeof(buf),"%s/.local/share/Anki2/User 1/collection.anki2",fl_resolve_user_path());
 #endif
     CardList list = get_cards_in_deck(buf, "Chemistry");
     long long now = (long long)time(NULL);
@@ -343,7 +344,6 @@ void print_due_card(void) {
     free_card_contents(&g_current_card);
     g_current_card = card_clone(list.items[pick]);
     g_anki_state = ANKI_STATE_QUESTION;
-    g_card_timer = fl_start_timer();
     fl_mutex_unlock(anki_lock);
 
     display_card_question(card);
@@ -369,19 +369,7 @@ void handle_anki(void) {
     fl_mutex_unlock(anki_lock);
 
     if (current_state == ANKI_STATE_QUESTION) {
-        double elapsed_seconds = fl_end_timer(g_card_timer);
-
-        double bonus_time = 0.0;
-        if (elapsed_seconds < 5.0) {
-            bonus_time = 180.0; 
-        } else if (elapsed_seconds < 15.0) {
-            bonus_time = 600.0; 
-        } else {
-            bonus_time = 900.0; 
-        }
-
         fl_mutex_lock(anki_lock);
-        g_current_card.due_ts += (long long)bonus_time;
         fl_mutex_unlock(anki_lock);
 
         display_card_answer();
@@ -405,6 +393,5 @@ FLINT_FEATURE_INIT {
     anki_lock = fl_mutex_create();
     anki_running = true;
     anki_thread = fl_thread_create(anki_timer_thread, NULL);
-
-    fl_register_hotkey(.hotkey="Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
+    fl_register_hotkey(.hotkey="Shift+Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }
