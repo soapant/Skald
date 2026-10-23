@@ -118,7 +118,7 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="L", .cb=hard, .whitelist={"anki"});
     fl_register_hotkey(.hotkey=";", .cb=fuckme, .whitelist={"anki"});
     fl_register_snippet(.trigger="mit", .text="/*\n\
-     * Copyright (c) 2020 rxi\n\
+     * Copyright (c) 2020 r\n\
      *\n\
      * Permission is hereby granted, free of charge, to any person obtaining a copy\n\
      * of this software and associated documentation files (the \"Software\"), to\n\
@@ -128,6 +128,7 @@ FLINT_FEATURE_INIT {
      * furnished to do so, subject to the following conditions:\n\
      *\n\
      * The above copyright notice and this permission notice shall be included in\n\
+     *\n\
      * all copies or substantial portions of the Software.\n\
      *\n\
      * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n\
@@ -139,4 +140,3 @@ FLINT_FEATURE_INIT {
      * IN THE SOFTWARE.\n\
      */");
 }
-
