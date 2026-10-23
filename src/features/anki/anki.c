@@ -9,7 +9,7 @@
 typedef enum { CARD_TYPE_BASIC, CARD_TYPE_CLOZE, CARD_TYPE_UNKNOWN } CardType;
 typedef struct { char* front; char* back; } BasicCard;
 typedef struct { char* text; } ClozeCard;
-typedef struct { CardType type; long long due; int queue; long long due_ts; union { BasicCard basic; ClozeCard cloze; } data; } TYPE_NAME;
+typedef struct { CardType type; long long id; long long due; int queue; long long due_ts; union { BasicCard basic; ClozeCard cloze; } data; } TYPE_NAME;
 typedef struct { TYPE_NAME* items; size_t count; size_t capacity; } CardList;
 
 typedef enum {
@@ -20,6 +20,7 @@ typedef enum {
 
 static TYPE_NAME g_current_card = {0};
 static AnkiState g_anki_state = ANKI_STATE_IDLE;
+static FlTimer g_q_timer = {0};
 
 static FlLibrary g_sqlite_lib = NULL;
 static int (*p_sqlite3_open_v2)(const char*, sqlite3**, int, const char*) = NULL;
@@ -173,15 +174,16 @@ static CardList get_cards_in_deck(const char* db_path, const char* target_deck_n
         p_sqlite3_close(db);
         return list;
     }
-    const char* query = "SELECT n.flds, n.mid, c.due, c.queue FROM notes n JOIN cards c ON n.id = c.nid WHERE c.did = ?;";
+    const char* query = "SELECT c.id, n.flds, n.mid, c.due, c.queue FROM notes n JOIN cards c ON n.id = c.nid WHERE c.did = ?;";
     if (p_sqlite3_prepare_v2(db, query, -1, &stmt, NULL) == SQLITE_OK) {
         p_sqlite3_bind_text(stmt, 1, deck_id, -1, SQLITE_TRANSIENT);
         while (p_sqlite3_step(stmt) == SQLITE_ROW) {
-            const char* flds = (const char*)p_sqlite3_column_text(stmt, 0);
+            const char* flds = (const char*)p_sqlite3_column_text(stmt, 1);
             if (!flds) continue;
             TYPE_NAME card = {0};
-            card.due = p_sqlite3_column_int64(stmt, 2);
-            card.queue = (int)p_sqlite3_column_int64(stmt, 3);
+            card.id = p_sqlite3_column_int64(stmt, 0);
+            card.due = p_sqlite3_column_int64(stmt, 3);
+            card.queue = (int)p_sqlite3_column_int64(stmt, 4);
             card.due_ts = anki_due_ts((long long)time(NULL), card.queue, card.due);
             if (strstr(flds, "{{c") != NULL) {
                 card.type = CARD_TYPE_CLOZE;
@@ -247,7 +249,44 @@ void display_card_question(TYPE_NAME card) {
         }
         question[o] = '\0';
     }
+    g_q_timer = fl_start_timer();
     fl_message(.name="question",.message = question,.slot=TOP_CENTER,.timeout=10000.0);
+}
+
+void anki_apply_elapsed(double elapsed_ms) {
+    double elapsed_s = elapsed_ms / 1000.0;
+    
+    int offset_seconds = 0;
+    if (elapsed_s <= 2)      offset_seconds = -1200; 
+    else if (elapsed_s <= 5) offset_seconds = -600;  
+    else if (elapsed_s <= 20)offset_seconds = -60;   
+    else                     return;                 
+
+    char buf[300];
+#if defined (_WIN32)
+    snprintf(buf, sizeof(buf), "%s/AppData/Roaming/Anki2/User 1/collection.anki2", fl_resolve_user_path());
+#else
+    snprintf(buf, sizeof(buf), "%s/.local/share/Anki2/User 1/collection.anki2", fl_resolve_user_path());
+#endif
+
+    if (!sqlite_init()) return;
+    
+    sqlite3 *db = NULL;
+    if (p_sqlite3_open_v2(buf, &db, 2, NULL) != SQLITE_OK) {
+        if (db) p_sqlite3_close(db);
+        return;
+    }
+
+    sqlite3_stmt *stmt = NULL;
+    const char *sql = "UPDATE cards SET ivl = ? WHERE id = ?;";
+    if (p_sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+        p_sqlite3_bind_int(stmt, 1, offset_seconds);
+        p_sqlite3_bind_int64(stmt, 2, (sqlite3_int64)g_current_card.id);
+        
+        p_sqlite3_finalize(stmt);
+    }
+    
+    p_sqlite3_close(db);
 }
 
 void display_card_answer(void) {
@@ -302,6 +341,11 @@ void display_card_answer(void) {
         answer[o] = '\0';
     }
     
+    double elapsed_ms = fl_end_timer(g_q_timer);
+    printf("Anki question->answer: %.0f ms\\n", elapsed_ms);
+    fflush(stdout);
+    anki_apply_elapsed(elapsed_ms);
+
     fl_mutex_lock(anki_lock);
     g_anki_state = ANKI_STATE_ANSWER;
     fl_mutex_unlock(anki_lock);
@@ -396,8 +440,8 @@ FLINT_FEATURE_SHUTDOWN {
 }
 
 FLINT_FEATURE_INIT {
-    // anki_lock = fl_mutex_create();
-    // anki_running = true;
-    // anki_thread = fl_thread_create(anki_timer_thread, NULL);
+    anki_lock = fl_mutex_create();
+    anki_running = true;
+    anki_thread = fl_thread_create(anki_timer_thread, NULL);
     fl_register_hotkey(.hotkey="Shift+Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }
