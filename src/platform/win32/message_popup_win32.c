@@ -534,7 +534,7 @@ if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
   }
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg,const char* name) {
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg,void (*render)(void),const char* name) {
     PROFILE_START(_pt);
 if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
   if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
@@ -562,7 +562,7 @@ if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnch
   log_info("MSG anchored msg='%s' rect=(%d,%d,%d,%d) slot=(%d,%d) gap=%d outward=%d -> center=(%d,%d) win=(%d,%d)",
            message, rect_x, rect_y, rect_w, rect_h, h_slot, v_slot, gap, outward, centerX, centerY, winWidth, winHeight);
 
-  Platform_DisplayMessage(message, centerX, centerY, no_bg, winWidth, winHeight, maxWidth, maxHeight, timeout, color, NULL, name);
+  Platform_DisplayMessage(message, centerX, centerY, no_bg, winWidth, winHeight, maxWidth, maxHeight, timeout, color, render, name);
 }
 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color, bool no_bg, void (*render)(void), const char* name) {
