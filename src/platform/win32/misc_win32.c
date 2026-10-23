@@ -611,3 +611,13 @@ static char buf[512] = {0};
 
     { PROFILE_END_VAR(_pt, "Platform_GetRealHome"); return buf; }
 }
+
+bool Platform_IsRunningAsRoot(void) {
+  //temporary
+  return false;
+}
+const char* Platform_GetRealUser(void) {
+  //temporary
+  return false;
+}
+
