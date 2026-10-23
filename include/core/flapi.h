@@ -774,7 +774,10 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec);
 #define FL_CRIMSON      RGB(220, 20, 60)
 #define FL_CHOCOLATE    RGB(210, 105, 30)
 #define FL_GRAY         RGB(128, 128, 128)
+#define FL_GREY         RGB(128, 128, 128)
 #define FL_LIGHT_GRAY   RGB(211, 211, 211)
 #define FL_DARK_GRAY    RGB(14, 14, 14)
+#define FL_LIGHT_GREY   RGB(211, 211, 211)
+#define FL_DARK_GREY    RGB(14, 14, 14)
 
 #endif
