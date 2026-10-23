@@ -845,60 +845,6 @@ PROFILE_START(timer);
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-    PROFILE_START(timer);
-    PROFILE_START(_pt);
-    if (!query) {
-        log_error("query is NULL");
-
-        PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
-        return NULL;
-    }
-
-    char clean_query[512];
-    strncpy(clean_query, query, sizeof(clean_query) - 1);
-    clean_query[sizeof(clean_query) - 1] = '\0';
-    clean_query[strcspn(clean_query, "\r\n")] = '\0';
-
-    const char* real_user = Platform_GetRealUser();
-    const char* real_home = Platform_GetRealHome();
-    
-    char command[1024];
-    if (Platform_IsRunningAsRoot()){
-        snprintf(command, sizeof(command),
-                 "export HOME=\"%s\"; "
-                 "export _ZO_DATA_DIR=\"%s/.local/share/zoxide\"; "
-                 "export PATH=\"%s/.local/bin:%s/.cargo/bin:/usr/local/bin:$PATH\"; "
-                 "sudo -u %s zoxide query -- \"%s\" 2>&1",
-                 real_home, real_home, real_home, real_home, real_user, clean_query);
-    } else {
-        snprintf(command, sizeof(command),
-                 "export HOME=\"%s\"; "
-                 "export _ZO_DATA_DIR=\"%s/.local/share/zoxide\"; "
-                 "export PATH=\"%s/.local/bin:%s/.cargo/bin:/usr/local/bin:$PATH\"; "
-                 "zoxide query -- \"%s\" 2>&1",
-                 real_home, real_home, real_home, real_home, clean_query);
-    }
-
-    char* out = Platform_RunTerminalCommand(command, false);
-    if (!out) {
-         PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
-        return NULL;
-    }
-    out[strcspn(out, "\r\n")] = '\0';
-
-    if (strstr(out, "no match found") || strlen(out) == 0) {
-        char buffer[256];
-        snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
-        DisplayMessageSlot(buffer, TOP_CENTER_RELATIVE, 0, 0, 0, TimeOutForMessages, COLOR_ERROR, NULL);
-        free(out);
-        PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
-        return NULL;
-    }
-
-    log_info("Platform_QueryZoxidePath query='%s'", query ? query : "");;
-
-    PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
-    { PROFILE_END_VAR(_pt, "Platform_QueryZoxidePath"); return out; }
 }
 
 void Platform_StartUniversalTimer(void) {

@@ -691,12 +691,6 @@ bool fl_launch_terminal_at_path(char* path,char* args) {
   return r;
 }
 
-char* fl_get_zoxide_match(char* query) {
-    PROFILE_START(_pt);
-  if (!query) { PROFILE_END_VAR(_pt, "fl_get_zoxide_match"); return NULL; }
-  { PROFILE_END_VAR(_pt, "fl_get_zoxide_match"); return Platform_QueryZoxidePath(query); }
-}
-
 bool fl_terminate_process_by_name(const char* exe_name) {
     PROFILE_START(_pt);
     if (!exe_name) { PROFILE_END_VAR(_pt, "fl_terminate_process_by_name"); return false; }
@@ -2701,4 +2695,12 @@ void fl_cc_registry_purge_owner(const char *path_a, const char *path_b) {
 
 void fl_window_impl(const FlPromptSpec* spec) {
     WindowManager_ShowPrompt(WindowManager_Get(), spec);
+}
+
+char* fl_get_user_name() {
+    return Platform_GetRealUser();
+}
+
+bool fl_is_root() {
+    return Platform_IsRunningAsRoot();
 }

@@ -286,31 +286,6 @@ if (out_status) *out_status = -1;
     { PROFILE_END_VAR(_pt, "Platform_RunArgvCapture"); return strdup(""); }
 }
 
-char* Platform_QueryZoxidePath(const char* query) {
-    PROFILE_START(_pt);
-    if (!query || !query[0]) { PROFILE_END_VAR(_pt, "Platform_QueryZoxidePath"); return NULL; }
-    char clean_query[512];
-    strncpy(clean_query, query, sizeof(clean_query) - 1);
-    clean_query[sizeof(clean_query) - 1] = '\0';
-    clean_query[strcspn(clean_query, "\r\n")] = '\0';
-    char command[1024];
-    snprintf(command, sizeof(command), "zoxide query %s", clean_query);
-    char* out = Platform_RunTerminalCommand(command, false);
-    if (!out || !out[0]) { free(out); return NULL; }
-    size_t n = strlen(out);
-    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
-    if (strstr(out, "no match found")) {
-        char buffer[256];
-        snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
-        DisplayMessageSlot(buffer, TOP_CENTER_RELATIVE, 0, 0, 0, TimeOutForMessages, COLOR_ERROR, NULL);
-        free(out);
-        return NULL;
-    }
-    if (!out[0]) { free(out); return NULL; }
-    log_info("Platform_QueryZoxidePath query='%s'", query ? query : "");
-    { PROFILE_END_VAR(_pt, "Platform_QueryZoxidePath"); return out; }
-}
-
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
         PROFILE_START(_pt);
 if (!path || !path[0]) { log_error("path is NULL/empty verb='%s' async=%d", verb ? verb : "null", async); return false; }
