@@ -47,21 +47,10 @@ bool GetFromHistory(ListBoxInfo* lb) {
                 shput(FlintContext_Get()->history_indices, FlintContext_Get()->window.current_feature, idx_ptr);
                 if (shgeti(FlintContext_Get()->history_indices, FlintContext_Get()->window.current_feature) < 0) { free(idx_ptr); return true; }
             }
-            *idx_ptr = idx;
-            return true;
-        } 
+    *idx_ptr = idx;
+    return true;
+        }
     }
     return false;
 }
 
-const char* get_alias_for_item(const char* item) {
-    for (size_t i = 0; i < ALIAS_ENTRY_COUNT; i++) {
-        const char* expanded = Aliases[i].text;
-        if (!expanded || expanded[0]=='\0') expanded = Aliases[i].text;
-        if (!expanded) continue;
-        if (Platform_StringContainsCaseInsensitive(item, expanded)) {
-            return Aliases[i].alias;
-        }
-    }
-    return NULL;
-}
