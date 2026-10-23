@@ -43,7 +43,6 @@ bool Platform_PasteContent(char* content);
 int Platform_CopyToClipboard(const char* text);
 int Platform_CopyImageToClipboard(const unsigned char* png, size_t len);
 int Platform_SetFileToClipboard(const char* path);
-char* Platform_QueryZoxidePath(const char* query);
 char* Platform_GetWorkingDir();
 void *Platform_FeatureWatcherThread(void* arg);
 
