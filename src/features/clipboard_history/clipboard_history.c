@@ -185,7 +185,7 @@ void TriggerClipboardHistory(void) {
            .enter = clipboard_history_enter);
 }
 
-FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void) {
+FLINT_FEATURE_SHUTDOWN {
     ch_running = false;
     if (ch_inited) fl_thread_join(ch_thread);
     ch_save();
