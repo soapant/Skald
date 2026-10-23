@@ -1,9 +1,6 @@
 #include "config_values.h"
 
 // <flint-config-generated>
-static const AliasEntry user_aliases[] = {
-};
-
 void ConfigApply(void) {
     Tray = true;
     EnableVimMode = true;
@@ -55,7 +52,6 @@ void ConfigApply(void) {
     COLOR_TEXT = RGB(201, 209, 217);
     COLOR_ALTERNATE = RGB(63, 185, 80);
     COLOR_SELECTED_TEXT = RGB(22, 27, 34);
-    COLOR_ALIAS_TEXT = RGB(88, 166, 255);
     COLOR_ERROR = RGB(248, 81, 73);
     COLOR_NORMAL = RGB(210, 153, 34);
     COLOR_TIP = RGB(63, 185, 80);
@@ -65,7 +61,5 @@ void ConfigApply(void) {
     COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
     COLOR_CURSOR = RGB(201, 209, 217);
     COLOR_BORDER = RGB(128, 128, 128);
-    Aliases = user_aliases;
-    ALIAS_ENTRY_COUNT = 0;
 }
 // </flint-config-generated>

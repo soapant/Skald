@@ -13,9 +13,6 @@ typedef struct ListBoxInfo ListBoxInfo;
 struct ListBoxInfo {
     char (*populated_cache)[LISTBOX_ROW_BYTES];
     int   populated_cache_cap;
-    const char* alias_suffix[MAX_VISIBLE_ITEMS];
-    int  alias_suffix_count;
-    bool alias_suffix_active;
     int  populated_count;
     int  matching_indices[MAX_VISIBLE_ITEMS];
     int  total_matches;
@@ -49,7 +46,6 @@ typedef bool (*CtrlAltEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef bool (*ShiftAltEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*TabCallback)(ListBoxInfo* lb);
 typedef void (*RenderCallback)(PromptState *state);
-typedef void (*AliasCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
 typedef void (*EditCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*FilterCallback)(const char* item,const char* filter);
 typedef void (*CopyCallback)(const char* selection,int true_index,int type);
@@ -94,8 +90,6 @@ static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
     lb->total_matches = 0;
     lb->view_offset = 0;
     lb->last_item_count = 0;
-    lb->alias_suffix_count = 0;
-    lb->alias_suffix_active = false;
 }
 
 static inline const char* ListBoxInfo_GetSelectedText(ListBoxInfo *lb) {

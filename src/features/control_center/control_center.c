@@ -238,9 +238,6 @@ static const CcScanPath ListOfProgramPaths[] = {
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
 #define CC_APPCACHE_VERSION "#cc4"
 
-/* Icon paths pointing at a shell link force a multi-ms shell extraction on every
-   repaint. fl_get_icon_path returns an exported PNG instead, so cached entries
-   left over from before that existed must be re-resolved. */
 static bool cc_icon_is_shell_only(const char *icon) {
     if (!icon || !icon[0]) return false;
     const char *dot = strrchr(icon, '.');

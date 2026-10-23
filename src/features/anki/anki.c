@@ -387,10 +387,7 @@ bool should_swallow_anki(void) {
 }
 
 FLINT_FEATURE_SHUTDOWN {
-    // temporary: shutdown also runs on plain process exit (not just hot reload),
-    // where the join below can stall exit by up to time_between_qs seconds
-    // because the timer thread sits inside fl_sleep. Non-hot-reload handling
-    // (interruptible sleep or detached exit) goes here later.
+    // temporary: for now this is needed in the future we should automate handling of thread joins
     if (anki_lock) fl_mutex_lock(anki_lock);
     anki_running = false;
     if (anki_lock) fl_mutex_unlock(anki_lock);
@@ -399,8 +396,8 @@ FLINT_FEATURE_SHUTDOWN {
 }
 
 FLINT_FEATURE_INIT {
-    anki_lock = fl_mutex_create();
-    anki_running = true;
-    anki_thread = fl_thread_create(anki_timer_thread, NULL);
+    // anki_lock = fl_mutex_create();
+    // anki_running = true;
+    // anki_thread = fl_thread_create(anki_timer_thread, NULL);
     fl_register_hotkey(.hotkey="Shift+Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }

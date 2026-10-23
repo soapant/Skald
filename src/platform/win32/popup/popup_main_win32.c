@@ -642,16 +642,9 @@ case WM_CHAR: {
                   } 
                 } 
            
-            char composed[1024];
             const char* textBuffer = "";
             if (pdis->itemID < (lb ? lb->populated_count : 0)) {
-              int raw = lb->matching_indices[pdis->itemID];
-                if (lb && lb->alias_suffix_active && lb->alias_suffix_count > 0 && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw]) {
-                  snprintf(composed, sizeof(composed), "%s [%s]", lb->populated_cache[pdis->itemID], lb->alias_suffix[raw]);
-                  textBuffer = composed;
-                } else {
-                  textBuffer = lb->populated_cache[pdis->itemID];
-                }
+                textBuffer = lb->populated_cache[pdis->itemID];
             }
           
             if (pdis->itemID == -1 || pdis->itemID >= (lb ? lb->populated_count : 0)) {
@@ -678,15 +671,6 @@ case WM_CHAR: {
                 Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
                 SetTextColor(pdis->hDC, ncol);
                 DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
-                const char* alias_pos = strstr(textBuffer, " [");
-                if (alias_pos) {
-                  SIZE sz;
-                    GetTextExtentPoint32A(pdis->hDC, textBuffer, (int)(alias_pos - textBuffer), &sz);
-                    RECT aliasRect = textRect;
-                    aliasRect.left += sz.cx;
-                    SetTextColor(pdis->hDC, COLOR_ALIAS_TEXT);
-                    DrawTextA(pdis->hDC, alias_pos, -1, &aliasRect, DT_SINGLELINE | DT_VCENTER);
-                }
               SelectObject(pdis->hDC, hOldMainFont);
             }
           

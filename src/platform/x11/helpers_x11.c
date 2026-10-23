@@ -469,13 +469,8 @@ PROFILE_START(timer);
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
-    int raw = (idx >= 0 && lb && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
     const char* baseText = lb ? ListBoxInfo_Row(lb, idx) : NULL;
-    if (lb && lb->alias_suffix_active && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw]) {
-        snprintf(trunc, trunc_size, "%s [%s]", baseText ? baseText : "", lb->alias_suffix[raw]);
-    } else {
-        snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
-    }
+    snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
     PROFILE_END_VAR(timer, "helpers_x11:ListBoxItemDisplayText");
     { PROFILE_END_VAR(_pt, "ListBoxItemDisplayText"); return trunc; }
 }
@@ -901,19 +896,6 @@ PROFILE_START(timer);
     char trunc[512];
     ListBoxItemDisplayText(lb, idx, trunc, sizeof(trunc));
 
-    char* alias_text = strstr(trunc, " [");
-
-    if (alias_text) {
-        int XOffsetAlias = 0;
-        eval_xoffset_for_alias(alias_text,strlen(trunc),&XOffsetAlias);
-        Platform_SetDrawContext(dpy, xd, vis, cmap);
-        Platform_DrawTextRaw(XOffsetAlias, text_y, alias_text, rgb_to_hex(COLOR_ALIAS_TEXT), font, "LEFT", XOffsetAlias, FontSize);
-    }
-
-    char* pos = strstr(trunc, " [");
-    if (pos) {
-      *pos = 0;
-    }
     unsigned long pcol = plain_color ? plain_color->pixel : 0;
     if (!pcol) pcol = rgb_to_hex(COLOR_TEXT);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
