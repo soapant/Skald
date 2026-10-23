@@ -380,7 +380,7 @@ bool hotkey_process(int vk_code, int modifiers) {
             char hotkey_buf[2422];
             HotkeyString_Format((HotkeyKey){.vk_code=vk_code,.mods=eff_modifiers},hotkey_buf,sizeof(hotkey_buf));
             snprintf(buf,sizeof(buf),"Ran Hotkey %s",hotkey_buf);
-            DisplayMessageSlot(buf,BOTTOM_CENTER,400,400,20,TimeOutForMessages,COLOR_TEXT,NULL);
+            DisplayMessageSlot(buf,BOTTOM_CENTER,400,400,20,TimeOutForMessages,COLOR_TEXT,NULL,NULL);
         }
         if (b->hold) hotkey_hold_begin(vk_code, b->modifiers);
         return swallow;
