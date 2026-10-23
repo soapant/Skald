@@ -2631,8 +2631,17 @@ static const char *fl_cc_dup(char *dst, size_t cap, const char *src) {
 }
 
 bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
-    if (!spec || g_cc_entry_count >= 4096) return false;
-    FlCcEntry *e = &g_cc_entries[g_cc_entry_count];
+    if (!spec) return false;
+    int slot = -1;
+    for (int i = 0; i < g_cc_entry_count; i++) {
+        if (spec->display_name && g_cc_entries[i].display_name[0] &&
+            strcmp(g_cc_entries[i].display_name, spec->display_name) == 0) { slot = i; break; }
+    }
+    if (slot < 0) {
+        if (g_cc_entry_count >= 4096) return false;
+        slot = g_cc_entry_count++;
+    }
+    FlCcEntry *e = &g_cc_entries[slot];
     memset(e, 0, sizeof(*e));
     e->pub.on_enter = spec->on_enter;
     e->pub.on_ctrl_enter = spec->on_ctrl_enter;
