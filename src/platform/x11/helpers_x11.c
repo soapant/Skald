@@ -1500,6 +1500,35 @@ Visual* vis = attrs->visual;
     XPutImage(dpy, pm, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
     XDestroyImage(img);
+    if (x11_bg_image_enabled()) {
+        x11_bg_image_blit(dpy, pm, vis, depth, w, h);
+    }
+    if (rounded && R > 0) {
+        XImage* img2 = XGetImage(dpy, pm, 0, 0, w, h, AllPlanes, ZPixmap);
+        if (img2) {
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                    if (a < baseAlpha8) {
+                        uint32_t pixel = XGetPixel(img2, x, y);
+                        unsigned int alpha = (pixel >> 24) & 0xFF;
+                        unsigned int new_alpha = (alpha * a + 127) / 255;
+                        unsigned int r_c = (pixel >> 16) & 0xFF;
+                        unsigned int g_c = (pixel >> 8) & 0xFF;
+                        unsigned int b_c = pixel & 0xFF;
+                        unsigned int pm_r = (r_c * new_alpha + 127) / 255;
+                        unsigned int pm_g = (g_c * new_alpha + 127) / 255;
+                        unsigned int pm_b = (b_c * new_alpha + 127) / 255;
+                        XPutPixel(img2, x, y, (new_alpha << 24) | (pm_r << 16) | (pm_g << 8) | pm_b);
+                    }
+                }
+            }
+            GC gc2 = XCreateGC(dpy, pm, 0, NULL);
+            XPutImage(dpy, pm, gc2, img2, 0, 0, 0, 0, w, h);
+            XFreeGC(dpy, gc2);
+            XDestroyImage(img2);
+        }
+    }
     { PROFILE_END_VAR(_pt, "x11_create_background_pixmap"); return pm; }
 }
 
@@ -1516,7 +1545,7 @@ PROFILE_START(timer);
     float smoothness = 1;
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
-    if ((!EnableShaders || ShaderPreset == 0) && !(rounded && radius > 0)) {
+    if ((!EnableShaders || ShaderPreset == 0) && !(rounded && radius > 0) && !x11_bg_image_enabled()) {
         PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background");
         return None;
     }

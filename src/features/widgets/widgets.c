@@ -16,7 +16,6 @@
 #define NO_BG true
 #define FONTSIZE 14
 
-static bool percentage = false;
 
 static bool read_disk(unsigned long long *used_out, unsigned long long *total_out) {
     *used_out = 0;
@@ -155,8 +154,6 @@ static void draw_usage(const char* label, unsigned long long used, unsigned long
     char buf[128];
     if (total == 0) {
         snprintf(buf, sizeof(buf), "%s??", label);
-    } else if (percentage) {
-        snprintf(buf, sizeof(buf), "%s%3llu%%", label, (used * 100ULL) / total);
     } else {
         char used_str[32];
         char total_str[32];
@@ -384,15 +381,6 @@ void on_internet_hover(void) {
                .hover_key = "internet");
 }
 
-
-void FlipWidgets(void) {
-    percentage = !percentage;
-    fl_widget_set_render(g_disk, widgets_disk_usage_render);
-    fl_widget_set_render(g_mem, widgets_memory_usage_render);
-    fl_widget_set_render(g_cpu, widgets_cpu_usage_render);
-    fl_widget_set_render(g_internet, widgets_internet_render);
-}
-
 FLINT_FEATURE_INIT {
     g_disk = fl_widget(.name = "disk_usage",
               .fps = FPS,
@@ -424,7 +412,5 @@ FLINT_FEATURE_INIT {
               .on_hover = on_internet_hover,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_internet_render);
-
-    fl_register_hotkey(.hotkey="Alt+Shift+S", .cb=FlipWidgets);
 }
 
