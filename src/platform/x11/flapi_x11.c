@@ -31,6 +31,7 @@
 #include "core/timer.h"
 #include "core/remap_manager.h"
 #include "core/window_manager.h"
+#include "platform/wm_platform.h"
 #include "core/modal.h"
 #include <ctype.h>
 #include <time.h>
@@ -629,61 +630,14 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
 bool fl_type_text_platform(const char *s){
   PROFILE_START(_pt);
 if(!s) { PROFILE_END_VAR(_pt, "fl_type_text_platform"); return false; }
- remap_reset();
- Platform_EmitKey(VK_LCONTROL,0); Platform_EmitKey(VK_RCONTROL,0);
- Platform_EmitKey(VK_LSHIFT,0); Platform_EmitKey(VK_RSHIFT,0);
- Platform_EmitKey(VK_LMENU,0); Platform_EmitKey(VK_RMENU,0);
- Platform_EmitKey(VK_LWIN,0); Platform_EmitKey(VK_RWIN,0);
- for(;*s;s++){
-  char c=*s;
-  if(c==' '){ Platform_EmitKey(VK_SPACE,1); Platform_EmitKey(VK_SPACE,0); continue; }
-  if(c=='\n'){ Platform_EmitKey(VK_RETURN,1); Platform_EmitKey(VK_RETURN,0); continue; }
-  if(c=='\t'){ Platform_EmitKey(VK_TAB,1); Platform_EmitKey(VK_TAB,0);continue; }
-  int vk=0; bool shift=false;
-  if(c>='a' && c<='z'){ vk=toupper((unsigned char)c); }
-  else if(c>='A' && c<='Z'){ vk=c; shift=true; }
-  else if(c>='0' && c<='9'){ vk=c; }
-  else {
-   switch(c){
-    case '!': vk='1'; shift=true; break;
-    case '@': vk='2'; shift=true; break;
-    case '#': vk='3'; shift=true; break;
-    case '$': vk='4'; shift=true; break;
-    case '%': vk='5'; shift=true; break;
-    case '^': vk='6'; shift=true; break;
-    case '&': vk='7'; shift=true; break;
-    case '*': vk='8'; shift=true; break;
-    case '(': vk='9'; shift=true; break;
-    case ')': vk='0'; shift=true; break;
-    case '_': vk=VK_OEM_MINUS; shift=true; break;
-    case '-': vk=VK_OEM_MINUS; break;
-    case '+': vk=VK_OEM_PLUS; shift=true; break;
-    case '=': vk=VK_OEM_PLUS; break;
-    case '{': vk=VK_OEM_4; shift=true; break;
-    case '[': vk=VK_OEM_4; break;
-    case '}': vk=VK_OEM_6; shift=true; break;
-    case ']': vk=VK_OEM_6; break;
-    case ':': vk=VK_OEM_1; shift=true; break;
-    case ';': vk=VK_OEM_1; break;
-    case '"': vk=VK_OEM_7; shift=true; break;
-    case '\'': vk=VK_OEM_7; break;
-    case '<': vk=VK_OEM_COMMA; shift=true; break;
-    case ',': vk=VK_OEM_COMMA; break;
-    case '>': vk=VK_OEM_PERIOD; shift=true; break;
-    case '.': vk=VK_OEM_PERIOD; break;
-    case '?': vk=VK_OEM_2; shift=true; break;
-    case '/': vk=VK_OEM_2; break;
-    case '|': vk=0xDC; shift=true; break;
-    case '\\': vk=0xDC; break;
-    case '`': vk=VK_OEM_3; break;
-    case '~': vk=VK_OEM_3; shift=true; break;
-    default: continue;
-   }
-  }
-  if(shift) Platform_EmitKey(VK_LSHIFT,1);
-  Platform_EmitKey(vk,1); Platform_EmitKey(vk,0);
-  if(shift) Platform_EmitKey(VK_LSHIFT,0);
- }
+ char* old = Platform_GetClipboardEntry();
+ Platform_CopyToClipboard(s);
+ Platform_EmitKey(VK_LCONTROL,1);
+ Platform_EmitKey('V',1); Platform_EmitKey('V',0);
+ Platform_EmitKey(VK_LCONTROL,0);
+ WindowManager* wm = WindowManager_Get();
+ for (int i=0;i<40;i++){ if (wm) Platform_WM_ProcessEvents(wm); usleep(5000); }
+ if (old) { Platform_CopyToClipboard(old); free(old); }
  { PROFILE_END_VAR(_pt, "fl_type_text_platform"); return true; }
 }
 
