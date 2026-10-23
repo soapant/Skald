@@ -672,14 +672,12 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
                 lb->matching_indices[i] = i;
             }
             lb->populated_count = count;
-            BuildAliasDisplayItems(lb, list, count);
         } else {
             lb->populated_count = 0;
             lb->total_matches = 0;
             lb->last_item_count = 0;
             lb->selected_index = -1;
             for (int i=0;i<MAX_VISIBLE_ITEMS;i++) lb->matching_indices[i]=i;
-            BuildAliasDisplayItems(lb, NULL, 0);
             log_info("list NULL count=%d lb_count=0", count);
         }
     }

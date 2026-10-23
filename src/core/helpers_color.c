@@ -31,11 +31,6 @@ void eval_window_title_color(PromptState* state,unsigned long *window_title_colo
   *window_title_color = final_color;
 }
 
-void eval_xoffset_for_alias(char* alias_text,int main_text_lenght,int* xOffsetAlias) {
-  int main_text_w = (main_text_lenght * FontSize) / 2;
-  *xOffsetAlias = main_text_w;
-}
-
 unsigned short OpacityAlpha16(void) {
     float t = WindowOpacity / 255.0f;
     if (t < 0.0f) t = 0.0f;

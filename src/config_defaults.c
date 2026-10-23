@@ -55,7 +55,6 @@ ColorRef COLOR_TEXT = RGB(255, 255, 255);
 ColorRef COLOR_ALTERNATE = RGB(57, 255, 20);
 ColorRef COLOR_SELECTED_TEXT = RGB(0, 0, 0);
 ColorRef COLOR_CURSOR = RGB(255, 255, 255);
-ColorRef COLOR_ALIAS_TEXT = RGB(255, 255, 255);
 ColorRef COLOR_ERROR = RGB(180, 0, 0);
 ColorRef COLOR_NORMAL = RGB(200, 200, 0);
 ColorRef COLOR_TIP = RGB(0, 160, 0);
@@ -64,8 +63,3 @@ ColorRef COLOR_NORMAL_MODE = RGB(100, 255, 255);
 ColorRef COLOR_VISUAL_MODE = RGB(200, 3, 222);
 ColorRef COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
 ColorRef COLOR_BORDER = RGB(128, 128, 128);
-
-static const AliasEntry default_aliases[] = {
-};
-const AliasEntry* Aliases = default_aliases;
-size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(default_aliases);

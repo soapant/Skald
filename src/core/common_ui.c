@@ -3,7 +3,6 @@
 #include "core/modal.h"
 #include "config.h"
 #include "platform/platform.h"
-#include "helpers/helpers_alias.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
@@ -90,21 +89,6 @@ static int FuzzyScore(const char* text, const char* pattern) {
     return score;
 }
 
-void BuildAliasDisplayItems(ListBoxInfo* lb, const char** items, int count) {
-  if (!lb) return;
-  lb->alias_suffix_active = false;
-  lb->alias_suffix_count = 0;
-  if (!items || count <= 0) return;
-  if (count > MAX_VISIBLE_ITEMS) count = MAX_VISIBLE_ITEMS;
-  for (int i = 0; i < count; i++) {
-    lb->alias_suffix[i] = NULL;
-    if (!items[i]) continue;
-    lb->alias_suffix[i] = get_alias_for_item(items[i]);
-    lb->alias_suffix_count = i + 1;
-  }
-  if (lb->alias_suffix_count > 0) lb->alias_suffix_active = true;
-}
-
 static void Populate_CaptureSelection(ListBoxInfo* lb, char* out_text, size_t out_size, int* out_sel) {
   int current_sel = lb->selected_index;
   if (out_sel) *out_sel = current_sel;
@@ -155,30 +139,14 @@ static void NormalizeForMatch(const char* src, char* dst, size_t dst_size) {
   dst[j] = '\0';
 }
 
-static bool Populate_ItemMatches(const char* search_text, const char* original_item, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
+static bool Populate_ItemMatches(const char* search_text, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
   if (filter_match) return filter_match(search_text, clean_filter);
   char norm_search[1024];
-  char norm_alias[512];
   NormalizeForMatch(search_text, norm_search, sizeof(norm_search));
   if (Platform_StringStartsWithCaseInsensitive(FlintContext_Get()->window.current_feature, "center")) {
     return FuzzyMatchWithTypo(norm_search, clean_filter);
   }
-  if (Platform_StringContainsCaseInsensitive(norm_search, clean_filter)) return true;
-  const char* alias = get_alias_for_item(original_item);
-  if (alias) {
-    NormalizeForMatch(alias, norm_alias, sizeof(norm_alias));
-    if (Platform_StringContainsCaseInsensitive(norm_alias, clean_filter)) return true;
-    if (Platform_StringContainsCaseInsensitive(norm_search, clean_filter)) return true;
-  }
-  return false;
-}
-
-static const char* AliasComposedText(ListBoxInfo* lb, const char* item, int raw, char* out, size_t out_size) {
-  if (lb && lb->alias_suffix_active && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw] && item) {
-    snprintf(out, out_size, "%.*s [%s]", (int)strcspn(item, "\r\n"), item, lb->alias_suffix[raw]);
-    return out;
-  }
-  return item;
+  return Platform_StringContainsCaseInsensitive(norm_search, clean_filter);
 }
 
 static int Populate_Filter(ListBoxInfo* lb, const char** items, int item_count, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
@@ -190,9 +158,7 @@ static int Populate_Filter(ListBoxInfo* lb, const char** items, int item_count, 
       lb->matching_indices[total_matches++] = i;
       continue;
     }
-    char composed[1024];
-    const char* search_text = AliasComposedText(lb, items[i], i, composed, sizeof(composed));
-    if (Populate_ItemMatches(search_text, items[i], clean_filter, filter_match)) {
+    if (Populate_ItemMatches(items[i], clean_filter, filter_match)) {
       lb->matching_indices[total_matches++] = i;
     }
   }
@@ -206,8 +172,7 @@ static void Populate_RankMatches(ListBoxInfo* lb, const char** items, const char
   int scores[MAX_VISIBLE_ITEMS];
   for (int i = 0; i < total_matches; i++) {
     int idx = lb->matching_indices[i];
-    char composed[1024];
-    const char* txt = AliasComposedText(lb, items[idx], idx, composed, sizeof(composed));
+    const char* txt = items[idx] ? items[idx] : "";
     if (FuzzyMatch(txt, clean_filter)) scores[i] = FuzzyScore(txt, clean_filter);
     else scores[i] = 500 + Levenshtein(txt, clean_filter) * 20;
   }
@@ -291,13 +256,12 @@ void PopulateListBox(ListBoxInfo* lb, const char* filter,
     bool (*filter_match)(const char* item, const char* filter)) {
   if (!lb) return;
   WindowHandle hListBox = FlintContext_Get()->window.hListBox;
-  PROFILE_START(timer_alias);
+  PROFILE_START(timer_index);
   if (SequenceHasPendingWait()) {
     log_info("PopulateListBox waiting filter='%s'", filter ? filter : "");
     return;
   }
   if (!filter) filter = "";
-  BuildAliasDisplayItems(lb, items, item_count);
   if (items && item_count > 0) {
     if (FlintContext_Get()->item_index_map) {
       shfree(FlintContext_Get()->item_index_map);
@@ -307,7 +271,7 @@ void PopulateListBox(ListBoxInfo* lb, const char* filter,
     sh_new_strdup(FlintContext_Get()->item_index_map);
     for (int i = 0; i < item_count; i++) if (items[i]) shput(FlintContext_Get()->item_index_map, (char*)items[i], (void*)(size_t)(i + 1));
   }
-  PROFILE_END_VAR(timer_alias, "PopulateListBox - Aliases");
+  PROFILE_END_VAR(timer_index, "PopulateListBox - ItemIndexMap");
 
   PROFILE_START(timer_total);
 

@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "core/types/color.h"
-#include "core/types/alias.h"
 
 extern bool Tray;
 extern bool RememberLastIndex;
@@ -58,7 +57,6 @@ extern ColorRef COLOR_CURSOR;
 extern ColorRef COLOR_TEXT;
 extern ColorRef COLOR_ALTERNATE;
 extern ColorRef COLOR_SELECTED_TEXT;
-extern ColorRef COLOR_ALIAS_TEXT;
 extern ColorRef COLOR_ERROR;
 extern ColorRef COLOR_NORMAL;
 extern ColorRef COLOR_TIP;
@@ -67,8 +65,5 @@ extern ColorRef COLOR_NORMAL_MODE;
 extern ColorRef COLOR_VISUAL_CURSOR;
 extern ColorRef COLOR_VISUAL_MODE;
 extern ColorRef COLOR_BORDER;
-
-extern const AliasEntry* Aliases;
-extern size_t ALIAS_ENTRY_COUNT;
 
 #endif

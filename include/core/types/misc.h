@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include "core/types.h"
-#include "core/types/alias.h"
 
 /* Platform neutral: raw tick count plus ticks-per-second. core/timer.h
    fills these in from QueryPerformanceCounter or CLOCK_MONOTONIC, which

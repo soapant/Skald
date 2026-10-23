@@ -161,7 +161,6 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     FlintContext_Get()->window.current_feature = (char*)name;
   }
   SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
-  BuildAliasDisplayItems(lb_ptr, window_list, count);
 
   SetModeWithListBox(MODE_INSERT, lb_ptr);
 
