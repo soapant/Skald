@@ -1199,7 +1199,7 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey=(char *)ControlHotkey, .cb=TriggerControl, .blacklist={"\1"});
 }
 
-FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void) {
+FLINT_FEATURE_SHUTDOWN {
     g_cc_stopping = 1;
     if (g_prewarm_thread) {
         fl_thread_join(g_prewarm_thread);

@@ -386,9 +386,21 @@ bool should_swallow_anki(void) {
     return active;
 }
 
+FLINT_FEATURE_SHUTDOWN {
+    // temporary: shutdown also runs on plain process exit (not just hot reload),
+    // where the join below can stall exit by up to time_between_qs seconds
+    // because the timer thread sits inside fl_sleep. Non-hot-reload handling
+    // (interruptible sleep or detached exit) goes here later.
+    if (anki_lock) fl_mutex_lock(anki_lock);
+    anki_running = false;
+    if (anki_lock) fl_mutex_unlock(anki_lock);
+    if (anki_thread) { fl_thread_join(anki_thread); anki_thread = NULL; }
+    if (anki_lock) { fl_mutex_destroy(anki_lock); anki_lock = NULL; }
+}
+
 FLINT_FEATURE_INIT {
-    // anki_lock = fl_mutex_create();
-    // anki_running = true;
-    // anki_thread = fl_thread_create(anki_timer_thread, NULL);
+    anki_lock = fl_mutex_create();
+    anki_running = true;
+    anki_thread = fl_thread_create(anki_timer_thread, NULL);
     fl_register_hotkey(.hotkey="Shift+Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }

@@ -717,6 +717,8 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec);
 
 #define FLINT_FEATURE_INIT FLINT_FEATURE_EXPORT __attribute__((constructor)) void FlintFeatureInit(void)
 
+#define FLINT_FEATURE_SHUTDOWN FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void)
+
 #include "core/cap_registry.h"
 
 #define fl_cap_register(key, fn)  fl_cap_register_abi((key), FL_CAP_ABI_V1, (fn))
