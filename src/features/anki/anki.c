@@ -311,9 +311,9 @@ void display_card_answer(void) {
 }
 
 void print_due_card(void) {
+    if (fl_string_contains(fl_get_active_window_title(), "Anki")) return;
     fl_dismiss_message("question");
     fl_dismiss_message("answer");
-    FlTimer p = fl_profile_start();
     char buf[300];
 #if defined (_WIN32)
     snprintf(buf,sizeof(buf),"%s/AppData/Roaming/Anki2/User 1/collection.anki2",fl_resolve_user_path());
@@ -332,11 +332,9 @@ void print_due_card(void) {
         printf("No due cards.\n");
         free(due);
         free_card_list(&list);
-        fl_profile_end(p);
         return;
     }
     int random = fl_rand_num_between(0, (int)(due_count - 1));
-    printf("%i \n",random);
     size_t pick = due[random];
     TYPE_NAME card = list.items[pick];
     
@@ -349,7 +347,6 @@ void print_due_card(void) {
     display_card_question(card);
     free(due);
     free_card_list(&list);
-    fl_profile_end(p);
 }
 
 static void* anki_timer_thread(void* arg) {
