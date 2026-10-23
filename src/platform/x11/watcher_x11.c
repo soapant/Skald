@@ -85,5 +85,4 @@ if (!wm) { PROFILE_END_VAR(_pt, "Platform_WatcherStop"); return ; }
         pthread_join(tid, NULL);
         wm->watcher_running = false;
     }
-    Platform_CleanupDirWatchers();
 }
