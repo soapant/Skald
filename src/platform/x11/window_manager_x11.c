@@ -396,6 +396,7 @@ if (!wm || !wm->display) { PROFILE_END_VAR(_pt, "WindowManager_ProcessEventsLinu
             }
         }
     }
+    hotkey_drain_pending();
 }
 
 void WindowManager_QuitLinux(WindowManager* wm) {
