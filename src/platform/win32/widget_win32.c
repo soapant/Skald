@@ -8,6 +8,7 @@
 #include "platform/ui.h"
 #include "deps/log.h"
 #include "config.h"
+#include "platform/win32/bg_image_win32.h"
 
 #include "core/timer.h"
 #define FLINT_WIDGET_CLASS "FlintWidgetClass"
@@ -112,7 +113,16 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg, unsign
         PROFILE_START(_pt);
 if (!layer_acquire(widget)) { PROFILE_END_VAR(_pt, "widget_push_layered"); return ; }
 
-    layer_fill(widget, bg);
+    if (widget->no_bg) {
+        layer_fill(widget, 0xFF000000u);
+    } else if (win32_bg_image_enabled()) {
+        RECT full = {0, 0, widget->layer_w, widget->layer_h};
+        if (!win32_draw_bg_image_slice(widget->layer_dc, &full, widget->layer_w, widget->layer_h, 0, 0)) {
+            layer_fill(widget, 0xFF000000u | (widget->has_bg ? widget->bg_hex : 0u));
+        }
+    } else {
+        layer_fill(widget, bg);
+    }
     Platform_SetDrawBgColor(0);
     SetBkMode(widget->layer_dc, TRANSPARENT);
     Platform_SetDrawContextWin32(widget->layer_dc);
