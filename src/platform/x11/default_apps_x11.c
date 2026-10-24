@@ -223,7 +223,23 @@ const char* get_default_browser(int slot) {
         snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", env);
         return default_apps_x11[slot];
     }
-
+    const char* possible_browsers[] = {
+        "Chrome", "Firefox", "Edge", "Brave", "Opera",
+        "Vivaldi", "Tor", "Waterfox", "LibreWolf", "Arc", "Sidekick",
+        "Pale Moon", "Internet Explorer","Zen"
+    };
+    ListOfFiles browser_files = {0};
+    Platform_GetAllFilesFromDir("/usr/share/applications", NULL, &browser_files, NULL, true, 0);
+    for (size_t i = 0; i < browser_files.count; i++) {
+        const char* name = browser_files.files[i].name;
+        for (size_t j = 0; j < sizeof(possible_browsers) / sizeof(possible_browsers[0]); j++) {
+            if (Platform_StringContainsCaseInsensitive(name, possible_browsers[j])) { snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", String_ToLower(possible_browsers[j]));
+                PROFILE_END_VAR(_pt, "get_default_browser");
+                return default_apps_x11[slot];
+            }
+        }
+        break;
+    }
     StringList l = File_ReadLines("~/.config/mimeapps.list", 65536);
     for (size_t i = 0; i < l.count; i++) {
         const char *line = l.items[i];
