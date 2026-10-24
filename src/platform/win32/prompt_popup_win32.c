@@ -93,7 +93,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
-        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
+        WS_EX_TOOLWINDOW | WS_EX_COMPOSITED,
         "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN,
         x, y, w, h, NULL, NULL, hInstance, NULL
         ));
