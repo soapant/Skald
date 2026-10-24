@@ -123,14 +123,6 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
         if(pid2 < 0) _exit(1);
         if(pid2 > 0) _exit(0);
 
-        int fd = open("/dev/null", O_RDWR);
-        if(fd >= 0){
-            dup2(fd, 0);
-            dup2(fd, 1);
-            dup2(fd, 2);
-            if(fd > 2) close(fd);
-        }
-
         if(Env_IsRunningAsRoot()){
             if(extra_args && extra_args[0]){
                 char cmd[2048];
