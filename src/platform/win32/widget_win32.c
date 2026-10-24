@@ -46,6 +46,7 @@ unsigned int *px = (unsigned int *)widget->layer_bits;
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static void widget_queue_click(void (*fn)(void));
+static void widget_destroy_on_owner_thread(void* ud);
 
 static void widget_register_class(void) {
         PROFILE_START(_pt);
@@ -255,6 +256,12 @@ static int g_wclick_head = 0, g_wclick_tail = 0;
 static CRITICAL_SECTION g_wclick_cs;
 static LONG g_wclick_cs_ready = 0;
 
+#define WDESTROY_MAX 32
+static PlatformWidget *g_wdestroy[WDESTROY_MAX];
+static int g_wdestroy_count = 0;
+static CRITICAL_SECTION g_wdestroy_cs;
+static LONG g_wdestroy_cs_ready = 0;
+
 static void wclick_lock(void) {
         PROFILE_START(_pt);
 if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
@@ -268,6 +275,17 @@ if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
         InitializeCriticalSection(&g_wclick_cs);
     }
     LeaveCriticalSection(&g_wclick_cs);
+}
+
+static void wdestroy_lock(void) {
+    if (InterlockedCompareExchange(&g_wdestroy_cs_ready, 1, 0) == 0) {
+        InitializeCriticalSection(&g_wdestroy_cs);
+    }
+    EnterCriticalSection(&g_wdestroy_cs);
+}
+
+static void wdestroy_unlock(void) {
+    LeaveCriticalSection(&g_wdestroy_cs);
 }
 
 static void widget_queue_click(void (*fn)(void)) {
@@ -296,6 +314,16 @@ for (;;) {
         if (!fn) break;
         fn();
     }
+}
+
+void Platform_Widget_FlushDestruction(void) {
+    PROFILE_START(_pt);
+    wdestroy_lock();
+    for (int i = 0; i < g_wdestroy_count; i++) {
+        widget_destroy_on_owner_thread(g_wdestroy[i]);
+    }
+    g_wdestroy_count = 0;
+    wdestroy_unlock();
 }
 
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
@@ -380,17 +408,14 @@ PlatformWidget *widget = (PlatformWidget *)ud;
 void Platform_Widget_Destroy(PlatformWidget *widget) {
         PROFILE_START(_pt);
 if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Destroy"); return ; }
-    if (widget->owner_tid != GetCurrentThreadId()) {
-        PlatformWidget *copy = (PlatformWidget *)malloc(sizeof(*copy));
-        if (copy) {
-            *copy = *widget;
-            widget->dead = true;
-            if (Platform_RenderThread_Post(widget_destroy_on_owner_thread, copy)) return;
-            free(copy);
-            widget->dead = false;
-        }
+    widget->dead = true;
+    wdestroy_lock();
+    if (g_wdestroy_count < WDESTROY_MAX) {
+        g_wdestroy[g_wdestroy_count++] = widget;
+    } else {
+        widget_destroy_on_owner_thread(widget);
     }
-    widget_destroy_on_owner_thread(widget);
+    wdestroy_unlock();
 }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
