@@ -8,8 +8,8 @@ void ConfigApply(void) {
     RememberLastIndex = true;
     MessageAfterEachHotkey = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = true;
-    DebugMode = false;
+    DoTimeDebugs = false;
+    DebugMode = true;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
