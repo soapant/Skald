@@ -2,6 +2,8 @@
 
 void Testing() {
     FlTimer p = fl_profile_start();
+    fl_window();
+    fl_window(.x=100);
     fl_profile_end(p);
 }
 

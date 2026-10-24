@@ -174,8 +174,11 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
         if (layout_w > mw - 40) layout_w = mw - 40;
     }
 
-    int x, y;
-    WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
+    int x = spec->x ? spec->x : 0;
+    int y = spec->y ? spec->y : 0;
+    if (x == 0 && y == 0) {
+      WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
+    }
 
     PromptPopupData* data = calloc(1, sizeof(PromptPopupData));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
