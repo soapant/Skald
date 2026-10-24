@@ -7,6 +7,8 @@ typedef struct {
     const char* name;
     int x;
     int y;
+    int w;
+    int h;
     int scale;
     bool checked;
     bool button;
@@ -21,6 +23,6 @@ void Checkbox_FrameBegin(void);
 bool Checkbox_IsChecked(const char* name);
 bool Checkbox_IsHovered(const char* name);
 bool Checkbox_Place(const CheckboxSpec* spec);
-void Checkbox_Draw(int x, int y, int w, int h, bool checked, bool hovered);
+void Checkbox_Draw(const CheckboxSpec* spec);
 
 #endif
