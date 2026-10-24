@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#define BG_TILE_SLOTS      4
+#define BG_TILE_SLOTS      32
 #define BG_REVALIDATE_MS   1000
 #define BG_RETRY_MS        2000
 
