@@ -28,6 +28,8 @@ static int g_remap_count = 0;
 
 static int g_phys_vk[256] = {0};
 static int g_virt_vk[256] = {0};
+static unsigned long long g_key_seq[256] = {0};
+static unsigned long long g_seq_counter = 0;
 
 static int vk_from_token(const char* tok) {
     if (!tok || !tok[0]) return 0;
@@ -237,6 +239,12 @@ void remap_update_phys(int vk_code, int value) {
     if (vk_code<0 || vk_code>=256) return;
     if (value==2) return;
     g_phys_vk[vk_code] = (value != 0);
+    if (value != 0) {
+        g_seq_counter++;
+        g_key_seq[vk_code] = g_seq_counter;
+    } else {
+        g_key_seq[vk_code] = 0;
+    }
 }
 
 void remap_reset(void) {
@@ -246,7 +254,41 @@ void remap_reset(void) {
             g_virt_vk[i]=0;
         }
         g_phys_vk[i]=0;
+        g_key_seq[i]=0;
     }
+    g_seq_counter = 0;
+}
+
+bool remap_check_strict_order(int trigger_vk, int mods) {
+    if (trigger_vk < 0 || trigger_vk >= 256) return true;
+    unsigned long long trig_seq = g_key_seq[trigger_vk];
+    if (trig_seq == 0) return false;
+
+    if (mods & HOTKEY_MOD_CTRL) {
+        unsigned long long mseq = 0;
+        if (g_key_seq[VK_LCONTROL]) mseq = g_key_seq[VK_LCONTROL];
+        if (g_key_seq[VK_RCONTROL] && g_key_seq[VK_RCONTROL] > mseq) mseq = g_key_seq[VK_RCONTROL];
+        if (mseq > trig_seq) return false;
+    }
+    if (mods & HOTKEY_MOD_ALT) {
+        unsigned long long mseq = 0;
+        if (g_key_seq[VK_LMENU]) mseq = g_key_seq[VK_LMENU];
+        if (g_key_seq[VK_RMENU] && g_key_seq[VK_RMENU] > mseq) mseq = g_key_seq[VK_RMENU];
+        if (mseq > trig_seq) return false;
+    }
+    if (mods & HOTKEY_MOD_SHIFT) {
+        unsigned long long mseq = 0;
+        if (g_key_seq[VK_LSHIFT]) mseq = g_key_seq[VK_LSHIFT];
+        if (g_key_seq[VK_RSHIFT] && g_key_seq[VK_RSHIFT] > mseq) mseq = g_key_seq[VK_RSHIFT];
+        if (mseq > trig_seq) return false;
+    }
+    if (mods & HOTKEY_MOD_SUPER) {
+        unsigned long long mseq = 0;
+        if (g_key_seq[VK_LWIN]) mseq = g_key_seq[VK_LWIN];
+        if (g_key_seq[VK_RWIN] && g_key_seq[VK_RWIN] > mseq) mseq = g_key_seq[VK_RWIN];
+        if (mseq > trig_seq) return false;
+    }
+    return true;
 }
 
 int remap_current_mods(void) {
