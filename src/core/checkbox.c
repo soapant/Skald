@@ -66,6 +66,8 @@ static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
     memset(cb, 0, sizeof(*cb));
     cb->name = name;
     cb->checked = seed;
+    cb->thickness = 1;
+    cb->border = true;
     { PROFILE_END_VAR(_pt, "checkbox_intern"); return cb; }
 }
 
@@ -97,18 +99,29 @@ static int checkbox_line_height(int fontsize) {
 
 void Checkbox_Draw(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
-    unsigned long checkbox_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
-    unsigned long button_border = spec->clicked ? CHECKBOX_WHITE : CHECKBOX_GRAY;
-    unsigned long checkbox_body = spec->hovered ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
-    unsigned long button_body = spec->clicked ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
+    unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+    unsigned long def_btn_border = spec->clicked ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+    unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
+    unsigned long def_btn_body = spec->clicked ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
+
+    unsigned long checkbox_border = spec->hovered_color ? spec->hovered_color : def_cb_border;
+    unsigned long button_border = spec->clicked_color ? spec->clicked_color : def_btn_border;
+    unsigned long checkbox_body = spec->hovered_color ? spec->hovered_color : def_cb_body;
+    unsigned long button_body = spec->clicked_color ? spec->clicked_color : def_btn_body;
+
+    int thick = spec->thickness > 0 ? spec->thickness : 1;
+
     if (spec->checkbox) {
         int w = spec->w > 0 ? spec->w : 16;
         int h = spec->h > 0 ? spec->h : 16;
-        Platform_DrawRectRaw(spec->x,spec->y,w,h, checkbox_body, 0, false, true, 1, true);
-        Platform_DrawRectRaw(spec->x,spec->y,w,h, checkbox_border, CornerRadius / 3,true, true, 1, false);
+        if (!spec->no_bg) {
+            Platform_DrawRectRaw(spec->x, spec->y, w, h, checkbox_body, 0, false, true, thick, true);
+            if (spec->border) {
+                Platform_DrawRectRaw(spec->x, spec->y, w, h, checkbox_border, CornerRadius / 3, true, true, thick, false);
+            }
+        }
 
         if (spec->checked) {
-            //temporary going to be image later
             int fontsize = w * 3 / 4;
             if (fontsize < 1) fontsize = 1;
             int tw = Platform_MeasureTextWidth(CHECKBOX_GLYPH, (int)strlen(CHECKBOX_GLYPH), fontsize);
@@ -120,8 +133,12 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
     } else if (spec->button) {
         int w = spec->w > 0 ? spec->w : 100;
         int h = spec->h > 0 ? spec->h : 24;
-        Platform_DrawRectRaw(spec->x,spec->y,w,h, button_body, CornerRadius / 2, true, true, 1, true);
-        Platform_DrawRectRaw(spec->x,spec->y,w,h, button_border, CornerRadius / 2, true, true, 1, false);
+        if (!spec->no_bg) {
+            Platform_DrawRectRaw(spec->x, spec->y, w, h, button_body, CornerRadius / 2, true, true, thick, true);
+            if (spec->border) {
+                Platform_DrawRectRaw(spec->x, spec->y, w, h, button_border, CornerRadius / 2, true, true, thick, false);
+            }
+        }
     }
 
     PROFILE_END_VAR(_pt, "Checkbox_Draw");
@@ -152,6 +169,11 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     cb->on_hover = spec->on_hover;
     cb->checkbox = spec->checkbox;
     cb->button = spec->button;
+    cb->thickness = spec->thickness;
+    cb->hovered_color = spec->hovered_color;
+    cb->clicked_color = spec->clicked_color;
+    cb->border = spec->border;
+    cb->no_bg = spec->no_bg;
     cb->w = w;       
     cb->h = h;        
     cb->x = spec->x;

@@ -16,6 +16,11 @@ typedef struct {
     bool hovered;
     bool was_down;
     bool clicked;
+    int thickness;
+    unsigned long hovered_color;
+    unsigned long clicked_color;
+    bool border;
+    bool no_bg;
     void (*on_click)(const char* name, bool checked);
     void (*on_hover)(const char* name, bool hovered);
 } CheckboxSpec;
