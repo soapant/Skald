@@ -215,8 +215,8 @@ default_apps_x11[slot][0] = '\0';
     { PROFILE_END_VAR(_pt, "get_default_terminal"); return default_apps_x11[slot]; }
 }
 const char* get_default_browser(int slot) {
-        PROFILE_START(_pt);
-default_apps_x11[slot][0] = '\0';
+    PROFILE_START(_pt);
+    default_apps_x11[slot][0] = '\0';
 
     const char *env = getenv("BROWSER");
     if (env && env[0]) {

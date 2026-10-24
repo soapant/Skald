@@ -106,8 +106,8 @@ const char* possible_terminals[] = {
 }
 
 const char* get_default_browser(void) {
-        PROFILE_START(_pt);
-const char* possible_browsers[] = {
+    PROFILE_START(_pt);
+    const char* possible_browsers[] = {
         "Google Chrome", "Mozilla Firefox", "Microsoft Edge", "Brave", "Opera",
         "Vivaldi", "Tor Browser", "Waterfox", "LibreWolf", "Arc", "Sidekick",
         "Pale Moon", "Internet Explorer","Zen"
