@@ -9,15 +9,6 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef struct {
-    char name[128];
-    bool checked;
-    bool hovered;
-    bool was_down;
-    void (*on_click)(const char *name, bool checked);
-    void (*on_hover)(const char *name, bool hovered);
-} FlCheckboxState;
-
 #define FL_CHECKBOX_MAX 1024
 #define FL_CHECKBOX_BASE 16
 #define FL_CHECKBOX_GLYPH "\xe2\x9c\x93"
@@ -26,7 +17,7 @@ typedef struct {
 #define CHECKBOX_GRAY RGB(128, 128, 128)
 #define CHECKBOX_DARK_GRAY RGB(14, 14, 14)
 
-static FlCheckboxState g_checkboxes[FL_CHECKBOX_MAX];
+static CheckboxSpec g_checkboxes[FL_CHECKBOX_MAX];
 static int g_checkbox_count = 0;
 
 static struct {
@@ -58,7 +49,7 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
     PROFILE_END_VAR(_pt, "checkbox_mouse");
 }
 
-static FlCheckboxState* checkbox_find(const char* name) {
+static CheckboxSpec* checkbox_find(const char* name) {
     PROFILE_START(_pt);
     for (int i = 0; i < g_checkbox_count; i++) {
         if (strcmp(g_checkboxes[i].name, name) == 0) { PROFILE_END_VAR(_pt, "checkbox_find"); return &g_checkboxes[i]; }
@@ -66,9 +57,9 @@ static FlCheckboxState* checkbox_find(const char* name) {
     { PROFILE_END_VAR(_pt, "checkbox_find"); return NULL; }
 }
 
-static FlCheckboxState* checkbox_intern(const char* name, bool seed) {
+static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
     PROFILE_START(_pt);
-    FlCheckboxState* cb = checkbox_find(name);
+    CheckboxSpec* cb = checkbox_find(name);
     if (cb) { PROFILE_END_VAR(_pt, "checkbox_intern"); return cb; }
     if (g_checkbox_count >= FL_CHECKBOX_MAX) { PROFILE_END_VAR(_pt, "checkbox_intern"); return NULL; }
     cb = &g_checkboxes[g_checkbox_count++];
@@ -80,7 +71,7 @@ static FlCheckboxState* checkbox_intern(const char* name, bool seed) {
 
 bool Checkbox_IsChecked(const char* name) {
     PROFILE_START(_pt);
-    FlCheckboxState* cb = name ? checkbox_find(name) : NULL;
+    CheckboxSpec* cb = name ? checkbox_find(name) : NULL;
     bool r = cb ? cb->checked : false;
     PROFILE_END_VAR(_pt, "Checkbox_IsChecked");
     return r;
@@ -88,7 +79,7 @@ bool Checkbox_IsChecked(const char* name) {
 
 bool Checkbox_IsHovered(const char* name) {
     PROFILE_START(_pt);
-    FlCheckboxState* cb = name ? checkbox_find(name) : NULL;
+    CheckboxSpec* cb = name ? checkbox_find(name) : NULL;
     bool r = cb ? cb->hovered : false;
     PROFILE_END_VAR(_pt, "Checkbox_IsHovered");
     return r;
@@ -126,7 +117,7 @@ void Checkbox_Draw(int x, int y, int w, int h, bool checked, bool hovered) {
     PROFILE_END_VAR(_pt, "Checkbox_Draw");
 }
 
-bool Checkbox_Place(const FlCheckboxSpec* spec) {
+bool Checkbox_Place(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
     if (!spec || !spec->name || !spec->name[0]) {
         PROFILE_END_VAR(_pt, "Checkbox_Place");
@@ -138,7 +129,7 @@ bool Checkbox_Place(const FlCheckboxSpec* spec) {
     int scale = spec->scale > 0 ? spec->scale : 1;
     int side = FL_CHECKBOX_BASE * scale;
 
-    FlCheckboxState* cb = checkbox_intern(spec->name, spec->checked);
+    CheckboxSpec* cb = checkbox_intern(spec->name, spec->checked);
     if (!cb) { PROFILE_END_VAR(_pt, "Checkbox_Place"); return false; }
     cb->on_click = spec->on_click;
     cb->on_hover = spec->on_hover;
