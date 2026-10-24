@@ -302,7 +302,11 @@ void HandleExitWindow(FlintContext* ctx) {
     WindowManager* wm = WindowManager_Get();
     if (!wm) return;
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (top && top->manager->popup_count > 1) {
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* ed = (WMEditPopupData*)top;
+        ed->confirmed = false;
+        FlintContext_Get()->window.selection_complete = true;
+    } else if (top && top->manager->popup_count > 1) {
         SetMode(MODE_NORMAL);
     } else {
         FlintContext_Get()->window.selection_complete = true;

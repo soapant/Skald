@@ -40,6 +40,17 @@ void EditPopup_InsertText(WMEditPopupData* ed, const char* text, int len) {
     size_t ecur = (size_t)(ed->cursor < 0 ? 0 : ed->cursor);
     EditBufferInsertText(ed->text, cap, &ecur, text, (size_t)len);
     ed->cursor = (int)ecur;
+    size_t tlen = strlen(ed->text);
+    if (tlen >= 2) {
+        if ((ed->text[tlen-2] == 'j' || ed->text[tlen-2] == 'J') &&
+            (ed->text[tlen-1] == 'q' || ed->text[tlen-1] == 'Q')) {
+            ed->text[tlen-2] = '\0';
+            ed->cursor -= 2;
+            if (ed->cursor < 0) ed->cursor = 0;
+            ed->confirmed = false;
+            FlintContext_Get()->window.selection_complete = true;
+        }
+    }
     PROFILE_END_VAR(_pt, "EditPopup_InsertText");
 }
 
