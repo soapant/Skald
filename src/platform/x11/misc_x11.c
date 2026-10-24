@@ -746,9 +746,9 @@ PROFILE_START(timer);
       return Platform_RunTerminalCommand(command,false);
     } else {
     if (Platform_IsRunningAsRoot()) {
-        snprintf(command, sizeof(command), "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", real_user, display, xauthority, runtime_dir, full_url);
+        snprintf(command, sizeof(command), "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s \"%s\" > /dev/null 2>&1 &", real_user, display, xauthority, runtime_dir,UsedBrowser,full_url);
     } else {
-        snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir, full_url);
+        snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir,UsedBrowser,full_url);
     }
     PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
     return Platform_RunTerminalCommand(command,false);
@@ -766,7 +766,6 @@ if (!query || !query[0]) { PROFILE_END_VAR(_pt, "Platform_QueryBrowser"); return
     if (tok_len >= sizeof(browser_tok)) tok_len = sizeof(browser_tok) - 1;
     if (UsedBrowser) memcpy(browser_tok, UsedBrowser, tok_len);
     browser_tok[tok_len] = '\0';
-    const char* browser = (tok_len > 0 && x11_cmd_exists(browser_tok)) ? UsedBrowser : "xdg-open";
     PROFILE_START(timer);
     char command[2048];
     char url[2048];
@@ -828,11 +827,11 @@ if (!query || !query[0]) { PROFILE_END_VAR(_pt, "Platform_QueryBrowser"); return
     if (Platform_IsRunningAsRoot()) {
         snprintf(command, sizeof(command), 
                  "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s\"%s\" > /dev/null 2>&1 &",
-                 real_user, display, xauthority, runtime_dir, browser, url);
+                 real_user, display, xauthority, runtime_dir, UsedBrowser, url);
     } else {
         snprintf(command, sizeof(command), 
                  "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s \"%s\" > /dev/null 2>&1 &",
-                 display, xauthority, runtime_dir, browser, url);
+                 display, xauthority, runtime_dir, UsedBrowser, url);
     }
     
       log_info("Platform_QueryBrowser query='%s'", query ? query : "");;

@@ -181,61 +181,6 @@ static bool daemon_spawn_sudo_env(const char* real_user, const char* display, co
     { PROFILE_END_VAR(_pt, "daemon_spawn_sudo_env"); return ok; }
 }
 
-bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    if (!path) { log_error("path is NULL verb='%s' async=%d", verb ? verb : "null", async); PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb"); return false; }
-    (void)verb;
-    const char* real_user = Platform_GetRealUser();
-    const char* display = Platform_GetSessionDisplay();
-    const char* xauthority = Platform_GetSessionXAuthority();
-    char runtime_dir[256];
-    snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
-
-    if (!async) {
-        if (Platform_IsRunningAsRoot()){
-            char command[2048];
-            snprintf(command, sizeof(command),
-                     "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
-                     real_user, display, xauthority, runtime_dir, path);
-
-            PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
-            return Platform_RunTerminalCommand(command,false);
-        } else {
-            char command[2048];
-            snprintf(command, sizeof(command),
-                     "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
-                     display, xauthority, runtime_dir, path);
-
-            PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
-            return  Platform_RunTerminalCommand(command,false);
-        }
-    }
-    char disp_env[256], xauth_env[512], runtime_env[512];
-    snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
-    snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
-    snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
-    if (Platform_IsRunningAsRoot()){
-        char* const argv[] = {"sudo","-u", (char*)real_user, "env", disp_env, xauth_env, runtime_env, "xdg-open", (char*)path, NULL};
-        bool ok = daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
-        if (!ok) { log_error("daemon_spawn failed for '%s'", path); }
-
-        PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
-        return ok;
-    } else {
-        char* const argv[] = {"xdg-open", (char*)path, NULL};
-        bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
-        if (!ok) { log_error("daemon_exec failed for '%s'", path); }
-        log_info("Platform_ShellExecuteWithVerb At Path %s ",path);
-
-        PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
-        return ok;
-    }
-    PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
-}
-
-
-
 static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* title) {
         PROFILE_START(_pt);
 PROFILE_START(timer);

@@ -25,7 +25,6 @@ typedef struct {
     int overflow;
 } HttpBuf;
 
-bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async);
 bool Platform_IsCtrlPressed(void);
 bool Platform_IsShiftPressed(void);
 bool Platform_IsAltPressed(void);

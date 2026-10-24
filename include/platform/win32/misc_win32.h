@@ -11,6 +11,5 @@ FontHandle Platform_CreateFont(int size, const char* face_name);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
-bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async);
 
 #endif
