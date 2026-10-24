@@ -291,8 +291,8 @@ if (dpy) *dpy = g_draw_dpy;
     if (cmap) *cmap = g_draw_cmap;
 }
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
-        PROFILE_START(_pt);
-if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
+    PROFILE_START(_pt);
+    if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
     x += PlDrawState_Get()->off_x;
     y += PlDrawState_Get()->off_y;
     FontHandle fh = font;
@@ -301,7 +301,7 @@ if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTex
         if (fontsize) {
           fh = Platform_CreateFontOnDisplay(g_draw_dpy, fontsize, UsedFont);
         } else {
-        fh = Platform_CreateFontOnDisplay(g_draw_dpy, FontSize, UsedFont);
+          fh = Platform_CreateFontOnDisplay(g_draw_dpy, FontSize, UsedFont);
         }
         needDestroy = true;
     }
