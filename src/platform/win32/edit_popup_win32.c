@@ -8,6 +8,7 @@
 #include "platform/draw.h"
 #include "platform/platform.h"
 #include "platform/win32/common_ui_win32.h"
+#include "platform/win32/bg_image_win32.h"
 #include "core/prompt_geometry.h"
 #include "core/editbox.h"
 #include "core/hotkey_text.h"
@@ -115,7 +116,8 @@ PROFILE_START(timer);
         memBmp = NULL;
     }
 
-    if (EnableShaders && ShaderPreset != 0) win32_draw_background(paint, &rect);
+    if (win32_bg_image_enabled() && win32_draw_bg_image_slice(paint, &rect, rect.right - rect.left, rect.bottom - rect.top, 0, 0)) {
+    } else if (EnableShaders && ShaderPreset != 0) win32_draw_background(paint, &rect);
     else { HBRUSH br = CreateSolidBrush(COLOR_BG); FillRect(paint, &rect, br); DeleteObject(br); }
     win32_draw_window_border(paint, 0, 0, rect.right, rect.bottom, NULL);
 

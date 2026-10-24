@@ -10,6 +10,7 @@
 #include "platform/ui.h"
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/common_ui_win32.h"
+#include "platform/win32/bg_image_win32.h"
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
@@ -66,6 +67,7 @@ FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
           if (data && data->no_bg) {
             win32_fill_rounded_rect(hdc, &rect, RGB(0, 0, 0), 0);
+          } else if (win32_bg_image_enabled() && win32_draw_bg_image_slice(hdc, &rect, rect.right, rect.bottom, 0, 0)) {
           } else if (EnableShaders && ShaderPreset != 0) {
             win32_draw_background(hdc, &rect);
           } else {
