@@ -147,10 +147,17 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
             Env_ApplyToCurrentProcess(&env);
             if(extra_args && extra_args[0]){
                 char cmd[2048];
-                //temporary ill get to it later
-                snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" -e %s", UsedTerminal, working_dir, extra_args);
+                if (strncmp(extra_args, "-e", 2) == 0) {
+                    snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
+                } else {
+                    snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" -e %s", UsedTerminal, working_dir, extra_args);
+                }
                 execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
-                snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
+                if (strncmp(extra_args, "-e", 2) == 0) {
+                    snprintf(cmd, sizeof(cmd), "%s %s", UsedTerminal, extra_args);
+                } else {
+                    snprintf(cmd, sizeof(cmd), "%s -e %s", UsedTerminal, extra_args);
+                }
                 execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
             } else {
                 execlp(UsedTerminal, UsedTerminal, "--working-directory", working_dir, (char*)NULL);
