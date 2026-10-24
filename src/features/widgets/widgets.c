@@ -220,7 +220,8 @@ static void widgets_internet_render(FlWidgetState *state) {
     }
     if (!icon) return;
 
-    fl_draw_image(.path = icon, .x = 40,.y=2,
+    int icon_y = (state->height - NET_ICON_SIZE) / 2;
+    fl_draw_image(.path = icon, .x = 40, .y = icon_y,
                   .w = NET_ICON_SIZE, .h = NET_ICON_SIZE);
 }
 
