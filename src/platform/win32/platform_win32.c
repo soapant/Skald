@@ -286,26 +286,6 @@ if (out_status) *out_status = -1;
     { PROFILE_END_VAR(_pt, "Platform_RunArgvCapture"); return strdup(""); }
 }
 
-bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
-        PROFILE_START(_pt);
-if (!path || !path[0]) { log_error("path is NULL/empty verb='%s' async=%d", verb ? verb : "null", async); return false; }
-    SHELLEXECUTEINFOA sei = {0};
-    sei.cbSize = sizeof(SHELLEXECUTEINFOA);
-    sei.fMask = (async ? SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK : SEE_MASK_FLAG_NO_UI);
-    sei.lpVerb = verb ? verb : "open";
-    sei.lpFile = path;
-    sei.nShow = SW_SHOWNORMAL;
-    BOOL ok = ShellExecuteExA(&sei);
-    if (!ok) {
-        log_error("ShellExecuteEx failed for '%s' verb='%s' err=%lu", path, verb ? verb : "open", GetLastError());
-        return false;
-    }
-    log_info("Platform_ShellExecuteWithVerb path='%s' verb='%s' async=%d", path ? path : "", verb ? verb : "", async);
-    { PROFILE_END_VAR(_pt, "Platform_ShellExecuteWithVerb"); return true; }
-
-    if (!path) { log_error("path is NULL"); return false; }
-}
-
 bool Platform_IsCtrlPressed(void) {
         PROFILE_START(_pt);
 log_info("Platform_IsCtrlPressed completed");
