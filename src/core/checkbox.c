@@ -95,22 +95,20 @@ static int checkbox_line_height(int fontsize) {
     { PROFILE_END_VAR(_pt, "checkbox_line_height"); return (int)((long)ref_h * fontsize / ref_fs); }
 }
 
-void Checkbox_Draw(int x, int y, int w, int h, bool checked, bool hovered) {
+void Checkbox_Draw(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
-    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Checkbox_Draw"); return; }
+    unsigned long border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
 
-    unsigned long border = hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+    Platform_DrawRectRaw(spec->x,spec->y,spec->w,spec->h, CHECKBOX_DARK_GRAY, 0, false, true, 1, true);
+    Platform_DrawRectRaw(spec->x,spec->y,spec->w,spec->h, border, 0, false, true, 2, false);
 
-    Platform_DrawRectRaw(x, y, w, h, CHECKBOX_DARK_GRAY, 0, false, true, 1, true);
-    Platform_DrawRectRaw(x, y, w, h, border, 0, false, true, 2, false);
-
-    if (checked) {
-        int fontsize = w * 3 / 4;
+    if (spec->checked) {
+        int fontsize = spec->w * 3 / 4;
         if (fontsize < 1) fontsize = 1;
         int tw = Platform_MeasureTextWidth(FL_CHECKBOX_GLYPH, (int)strlen(FL_CHECKBOX_GLYPH), fontsize);
         int th = checkbox_line_height(fontsize);
-        int tx = x + (w - tw) / 2;
-        int ty = y + (h - th) / 2;
+        int tx = spec->x + (spec->w - tw) / 2;
+        int ty = spec->y + (spec->h - th) / 2;
         Platform_DrawTextRaw(tx, ty - 2, FL_CHECKBOX_GLYPH, rgb_to_hex(CHECKBOX_WHITE), FH_NULL, "LEFT", 0, fontsize);
     }
 
@@ -149,7 +147,7 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     }
     cb->was_down = down;
 
-    Checkbox_Draw(x, y, side, side, cb->checked, cb->hovered);
+    Checkbox_Draw(cb);
 
     if (clicked && cb->on_click) cb->on_click(cb->name, cb->checked);
     if (hover_changed && cb->on_hover) cb->on_hover(cb->name, cb->hovered);
