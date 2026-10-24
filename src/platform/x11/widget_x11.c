@@ -316,6 +316,8 @@ int Platform_Widget_Width(const PlatformWidget *widget) {
 }
 
 int Platform_Widget_Height(const PlatformWidget *widget) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_Widget_Height"); return widget ? widget->h : 0; }
+        PROFILE_START(_pt); { PROFILE_END_VAR(_pt, "Platform_Widget_Height"); return widget ? widget->h : 0; }
+}
+
+void Platform_Widget_FlushDestruction(void) {
 }
