@@ -762,80 +762,129 @@ static unsigned char* xpm_load(const char* path, int* out_w, int* out_h) {
     return out;
 }
 
+typedef struct {
+    char path[512];
+    unsigned char* src;
+    int w;
+    int h;
+    struct stat st;
+    bool has_stat;
+} SvgSrcCacheSlot;
+
+static SvgSrcCacheSlot g_svg_src_cache[8];
+static int g_svg_src_count = 0;
+
 unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
-        PROFILE_START(_pt);
-if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
+    PROFILE_START(_pt);
+    if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
     int dst_w = *out_w;
     int dst_h = *out_h;
     if (dst_w <= 0) dst_w = 16;
     if (dst_h <= 0) dst_h = 16;
-    size_t _plen = strlen(path);
-    bool _is_svg = _plen > 4 && Platform_StringContainsCaseInsensitive(path + _plen - 4, ".svg");
-    if (_is_svg) {
-        NSVGimage* image = nsvgParseFromFile(path, "px", 96.0f);
-        if (!image) return false;
-        if (image->width <= 0 || image->height <= 0) { nsvgDelete(image); return false; }
-        NSVGrasterizer* rast = nsvgCreateRasterizer();
-        if (!rast) { nsvgDelete(image); return false; }
-        unsigned char* svg_data = (unsigned char*)calloc((size_t)dst_w * dst_h * 4, 1);
-        if (!svg_data) { nsvgDeleteRasterizer(rast); nsvgDelete(image); return false; }
-        float scale = fminf((float)dst_w / image->width, (float)dst_h / image->height);
-        float tx = ((float)dst_w - image->width * scale) * 0.5f;
-        float ty = ((float)dst_h - image->height * scale) * 0.5f;
-        nsvgRasterize(rast, image, tx, ty, scale, svg_data, dst_w, dst_h, dst_w * 4);
-        unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
-        if (!argb) { free(svg_data); nsvgDeleteRasterizer(rast); nsvgDelete(image); return false; }
-        for (int i = 0; i < dst_w * dst_h; i++) {
-            unsigned char r = svg_data[i*4+0];
-            unsigned char g = svg_data[i*4+1];
-            unsigned char b = svg_data[i*4+2];
-            unsigned char a = svg_data[i*4+3];
-            unsigned int pr = (unsigned int)r * a / 255;
-            unsigned int pg = (unsigned int)g * a / 255;
-            unsigned int pb = (unsigned int)b * a / 255;
-            argb[i*4+0] = (unsigned char)pb;
-            argb[i*4+1] = (unsigned char)pg;
-            argb[i*4+2] = (unsigned char)pr;
-            argb[i*4+3] = a;
+
+    struct stat st;
+    bool has_stat = (stat(path, &st) == 0);
+
+    unsigned char* src = NULL;
+    int w = 0, h = 0;
+
+    int cached_idx = -1;
+    for (int i = 0; i < g_svg_src_count; i++) {
+        if (strcmp(g_svg_src_cache[i].path, path) == 0) {
+            if (!has_stat || (g_svg_src_cache[i].has_stat && g_svg_src_cache[i].st.st_mtime == st.st_mtime && g_svg_src_cache[i].st.st_size == st.st_size)) {
+                cached_idx = i;
+            }
+            break;
         }
-        free(svg_data);
-        nsvgDeleteRasterizer(rast);
-        nsvgDelete(image);
-        *out_w = dst_w;
-        *out_h = dst_h;
-        return argb;
     }
 
-    int w = 0, h = 0, comp = 0;
-    bool _is_xpm = _plen > 4 && Platform_StringContainsCaseInsensitive(path + _plen - 4, ".xpm");
-    unsigned char* src = NULL;
-    if (_is_xpm) {
-        src = xpm_load(path, &w, &h);
-        comp = 4;
-        if (!src) {
-            log_error("img: cannot decode xpm '%s'", path);
-            PROFILE_END_VAR(_pt, "x11_decode_image_argb");
-            return false;
-        }
+    if (cached_idx >= 0) {
+        src = g_svg_src_cache[cached_idx].src;
+        w = g_svg_src_cache[cached_idx].w;
+        h = g_svg_src_cache[cached_idx].h;
     } else {
-        src = stbi_load(path, &w, &h, &comp, 4);
-        if (!src) {
-            log_error("img: cannot decode '%s': %s", path, stbi_failure_reason());
-            PROFILE_END_VAR(_pt, "x11_decode_image_argb");
-            return false;
+        size_t _plen = strlen(path);
+        bool _is_svg = _plen > 4 && Platform_StringContainsCaseInsensitive(path + _plen - 4, ".svg");
+        if (_is_svg) {
+            NSVGimage* image = nsvgParseFromFile(path, "px", 96.0f);
+            if (!image) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
+            if (image->width <= 0 || image->height <= 0) { nsvgDelete(image); PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
+            w = (int)(image->width + 0.5f);
+            h = (int)(image->height + 0.5f);
+            if (w < 256) w = 256;
+            if (h < 256) h = 256;
+            NSVGrasterizer* rast = nsvgCreateRasterizer();
+            if (!rast) { nsvgDelete(image); PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
+            unsigned char* svg_data = (unsigned char*)calloc((size_t)w * h * 4, 1);
+            if (!svg_data) { nsvgDeleteRasterizer(rast); nsvgDelete(image); PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
+            nsvgRasterize(rast, image, 0, 0, (float)w / image->width, svg_data, w, h, w * 4);
+            src = (unsigned char*)malloc((size_t)w * h * 4);
+            if (!src) { free(svg_data); nsvgDeleteRasterizer(rast); nsvgDelete(image); PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
+            for (int i = 0; i < w * h; i++) {
+                unsigned char r = svg_data[i*4+0];
+                unsigned char g = svg_data[i*4+1];
+                unsigned char b = svg_data[i*4+2];
+                unsigned char a = svg_data[i*4+3];
+                unsigned int pr = (unsigned int)r * a / 255;
+                unsigned int pg = (unsigned int)g * a / 255;
+                unsigned int pb = (unsigned int)b * a / 255;
+                src[i*4+0] = (unsigned char)pb;
+                src[i*4+1] = (unsigned char)pg;
+                src[i*4+2] = (unsigned char)pr;
+                src[i*4+3] = a;
+            }
+            free(svg_data);
+            nsvgDeleteRasterizer(rast);
+            nsvgDelete(image);
+        } else {
+            bool _is_xpm = _plen > 4 && Platform_StringContainsCaseInsensitive(path + _plen - 4, ".xpm");
+            int comp = 0;
+            if (_is_xpm) {
+                src = xpm_load(path, &w, &h);
+            } else {
+                unsigned char* raw_src = stbi_load(path, &w, &h, &comp, 4);
+                if (!raw_src) {
+                    log_error("img: cannot decode '%s': %s", path, stbi_failure_reason());
+                    PROFILE_END_VAR(_pt, "x11_decode_image_argb");
+                    return NULL;
+                }
+                src = raw_src;
+            }
+            if (!src) {
+                PROFILE_END_VAR(_pt, "x11_decode_image_argb");
+                return NULL;
+            }
+            for (int i = 0; i < w * h; i++) {
+                unsigned char r = src[i*4+0];
+                unsigned char g = src[i*4+1];
+                unsigned char b = src[i*4+2];
+                unsigned char a = src[i*4+3];
+                src[i*4+0] = (unsigned char)((unsigned int)b * a / 255);
+                src[i*4+1] = (unsigned char)((unsigned int)g * a / 255);
+                src[i*4+2] = (unsigned char)((unsigned int)r * a / 255);
+                src[i*4+3] = a;
+            }
         }
+
+        int idx = g_svg_src_count;
+        if (idx >= 8) {
+            free(g_svg_src_cache[0].src);
+            for (int i = 0; i < 7; i++) g_svg_src_cache[i] = g_svg_src_cache[i+1];
+            idx = 7;
+        } else {
+            g_svg_src_count++;
+        }
+        snprintf(g_svg_src_cache[idx].path, sizeof(g_svg_src_cache[idx].path), "%s", path);
+        g_svg_src_cache[idx].src = src;
+        g_svg_src_cache[idx].w = w;
+        g_svg_src_cache[idx].h = h;
+        g_svg_src_cache[idx].st = st;
+        g_svg_src_cache[idx].has_stat = has_stat;
     }
 
     unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
-    if (!argb) { stbi_image_free(src); return false; }
+    if (!argb) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
 
-    /* Box filter (area average) over the source rectangle each destination
-       pixel covers. Nearest-neighbour threw away ~98% of the pixels when
-       minifying, which erased thin strokes entirely: a 128px icon drawn at
-       16px came out as a couple of stray pixels. When not minifying the box
-       is 1x1 and this degenerates to a plain copy, so no special case is
-       needed. Decodes are cached per path+size, so the extra work is paid
-       once rather than per frame. */
     for (int dy = 0; dy < dst_h; dy++) {
         int y0 = (int)((long long)dy * h / dst_h);
         int y1 = (int)((long long)(dy + 1) * h / dst_h);
@@ -852,25 +901,21 @@ if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return N
                 const unsigned char* src_row = src + (size_t)sy * w * 4;
                 for (int sx = x0; sx < x1; sx++) {
                     const unsigned char* s = src_row + (size_t)sx * 4;
-                    sr += s[0]; sg += s[1]; sb += s[2]; sa += s[3]; n++;
+                    sb += s[0]; sg += s[1]; sr += s[2]; sa += s[3]; n++;
                 }
             }
-            unsigned int r = (unsigned int)(sr / n);
-            unsigned int g = (unsigned int)(sg / n);
-            unsigned int b = (unsigned int)(sb / n);
-            unsigned int a = (unsigned int)(sa / n);
             unsigned char* d = dst_row + (size_t)dx * 4;
-            d[0] = (unsigned char)(b * a / 255);
-            d[1] = (unsigned char)(g * a / 255);
-            d[2] = (unsigned char)(r * a / 255);
-            d[3] = (unsigned char)a;
+            d[0] = (unsigned char)(sb / n);
+            d[1] = (unsigned char)(sg / n);
+            d[2] = (unsigned char)(sr / n);
+            d[3] = (unsigned char)(sa / n);
         }
     }
-    stbi_image_free(src);
 
     *out_w = dst_w;
     *out_h = dst_h;
-    { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return argb; }
+    PROFILE_END_VAR(_pt, "x11_decode_image_argb");
+    return argb;
 }
 
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
@@ -1027,23 +1072,46 @@ PROFILE_START(timer);
         use_argb = true;
     }
     Window win;
+    Pixmap bg_pm = x11_bg_image_enabled() ? x11_bg_image_tile(dpy, w, h) : None;
     if (use_argb) {
         XSetWindowAttributes attrs = {0};
         unsigned int r = (bg_color >> 16) & 0xFF;
         unsigned int g = (bg_color >> 8) & 0xFF;
         unsigned int b = bg_color & 0xFF;
         unsigned int a = Platform_GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity;
-        attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
+        unsigned long valuemask = CWColormap | CWBorderPixel;
+        if (bg_pm != None) {
+            attrs.background_pixmap = bg_pm;
+            valuemask |= CWBackPixmap;
+        } else {
+            attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
+            valuemask |= CWBackPixel;
+        }
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
-        if (override_redirect) attrs.override_redirect = True;
+        if (override_redirect) {
+            attrs.override_redirect = True;
+            valuemask |= CWOverrideRedirect;
+        }
         win = XCreateWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, depth, InputOutput, visual,
-                            CWBackPixel|CWColormap|CWBorderPixel|(override_redirect ? CWOverrideRedirect : 0), &attrs);
+                            valuemask, &attrs);
     } else {
         XSetWindowAttributes attrs = {0};
-        if (override_redirect) attrs.override_redirect = True;
-        win = XCreateSimpleWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, bg_color, bg_color);
-        if (override_redirect) XChangeWindowAttributes(dpy, win, CWOverrideRedirect, &attrs);
+        unsigned long valuemask = CWBorderPixel;
+        if (bg_pm != None) {
+            attrs.background_pixmap = bg_pm;
+            valuemask |= CWBackPixmap;
+        } else {
+            attrs.background_pixel = bg_color;
+            valuemask |= CWBackPixel;
+        }
+        attrs.border_pixel = bg_color;
+        if (override_redirect) {
+            attrs.override_redirect = True;
+            valuemask |= CWOverrideRedirect;
+        }
+        win = XCreateWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, DefaultDepth(dpy, screen), InputOutput, DefaultVisual(dpy, screen),
+                            valuemask, &attrs);
     }
     if (!override_redirect) {
         Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);

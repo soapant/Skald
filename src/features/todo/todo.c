@@ -307,7 +307,7 @@ void todo_render_callback(PromptState *state) {
     int line_h = fl_get_text_height(NULL);
     FlListSpec spec = {
         .lb = lb,
-        .item_height = line_h * 3
+        .item_height = line_h * 3 + 3
     };
     fl_place_editbox();
     if (!fl_listbox_begin(&spec)) return;
