@@ -1330,48 +1330,6 @@ static void nsvg__initPaint(NSVGcachedPaint* cache, NSVGpaint* paint, float opac
 
 }
 
-/*
-static void dumpEdges(NSVGrasterizer* r, const char* name)
-{
-	float xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-	NSVGedge *e = NULL;
-	int i;
-	if (r->nedges == 0) return;
-	FILE* fp = fopen(name, "w");
-	if (fp == NULL) return;
-
-	xmin = xmax = r->edges[0].x0;
-	ymin = ymax = r->edges[0].y0;
-	for (i = 0; i < r->nedges; i++) {
-		e = &r->edges[i];
-		xmin = nsvg__minf(xmin, e->x0);
-		xmin = nsvg__minf(xmin, e->x1);
-		xmax = nsvg__maxf(xmax, e->x0);
-		xmax = nsvg__maxf(xmax, e->x1);
-		ymin = nsvg__minf(ymin, e->y0);
-		ymin = nsvg__minf(ymin, e->y1);
-		ymax = nsvg__maxf(ymax, e->y0);
-		ymax = nsvg__maxf(ymax, e->y1);
-	}
-
-	fprintf(fp, "<svg viewBox=\"%f %f %f %f\" xmlns=\"http://www.w3.org/2000/svg\">", xmin, ymin, (xmax - xmin), (ymax - ymin));
-
-	for (i = 0; i < r->nedges; i++) {
-		e = &r->edges[i];
-		fprintf(fp ,"<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:#000;\" />", e->x0,e->y0, e->x1,e->y1);
-	}
-
-	for (i = 0; i < r->npoints; i++) {
-		if (i+1 < r->npoints)
-			fprintf(fp ,"<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:#f00;\" />", r->points[i].x, r->points[i].y, r->points[i+1].x, r->points[i+1].y);
-		fprintf(fp ,"<circle cx=\"%f\" cy=\"%f\" r=\"1\" style=\"fill:%s;\" />", r->points[i].x, r->points[i].y, r->points[i].flags == 0 ? "#f00" : "#0f0");
-	}
-
-	fprintf(fp, "</svg>");
-	fclose(fp);
-}
-*/
-
 void nsvgRasterize(NSVGrasterizer* r,
 				   NSVGimage* image, float tx, float ty, float scale,
 				   unsigned char* dst, int w, int h, int stride)
