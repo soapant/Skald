@@ -120,6 +120,8 @@ typedef struct {
     bool no_bg;
     int w;
     int h;
+    int x;
+    int y;
 } PromptSpec;
 
 typedef struct {
