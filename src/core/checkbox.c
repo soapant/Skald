@@ -64,7 +64,7 @@ static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
     if (g_checkbox_count >= FL_CHECKBOX_MAX) { PROFILE_END_VAR(_pt, "checkbox_intern"); return NULL; }
     cb = &g_checkboxes[g_checkbox_count++];
     memset(cb, 0, sizeof(*cb));
-    snprintf(cb->name, sizeof(cb->name), "%s", name);
+    cb->name = name;
     cb->checked = seed;
     { PROFILE_END_VAR(_pt, "checkbox_intern"); return cb; }
 }
@@ -98,18 +98,21 @@ static int checkbox_line_height(int fontsize) {
 void Checkbox_Draw(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
     unsigned long border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+    if (spec->checkbox) {
+        int w = spec->w > 0 ? spec->w : 16;
+        int h = spec->h > 0 ? spec->h : 16;
+        Platform_DrawRectRaw(spec->x,spec->y,w,h, CHECKBOX_DARK_GRAY, 0, false, true, 1, true);
+        Platform_DrawRectRaw(spec->x,spec->y,w,h, border, 0, false, true, 2, false);
 
-    Platform_DrawRectRaw(spec->x,spec->y,spec->w,spec->h, CHECKBOX_DARK_GRAY, 0, false, true, 1, true);
-    Platform_DrawRectRaw(spec->x,spec->y,spec->w,spec->h, border, 0, false, true, 2, false);
-
-    if (spec->checked) {
-        int fontsize = spec->w * 3 / 4;
-        if (fontsize < 1) fontsize = 1;
-        int tw = Platform_MeasureTextWidth(FL_CHECKBOX_GLYPH, (int)strlen(FL_CHECKBOX_GLYPH), fontsize);
-        int th = checkbox_line_height(fontsize);
-        int tx = spec->x + (spec->w - tw) / 2;
-        int ty = spec->y + (spec->h - th) / 2;
-        Platform_DrawTextRaw(tx, ty - 2, FL_CHECKBOX_GLYPH, rgb_to_hex(CHECKBOX_WHITE), FH_NULL, "LEFT", 0, fontsize);
+        if (spec->checked) {
+            int fontsize = w * 3 / 4;
+            if (fontsize < 1) fontsize = 1;
+            int tw = Platform_MeasureTextWidth(FL_CHECKBOX_GLYPH, (int)strlen(FL_CHECKBOX_GLYPH), fontsize);
+            int th = checkbox_line_height(fontsize);
+            int tx = spec->x + (w - tw) / 2;
+            int ty = spec->y + (h - th) / 2;
+            Platform_DrawTextRaw(tx, ty - 2, FL_CHECKBOX_GLYPH, rgb_to_hex(CHECKBOX_WHITE), FH_NULL, "LEFT", 0, fontsize);
+        }
     }
 
     PROFILE_END_VAR(_pt, "Checkbox_Draw");
@@ -131,6 +134,13 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     if (!cb) { PROFILE_END_VAR(_pt, "Checkbox_Place"); return false; }
     cb->on_click = spec->on_click;
     cb->on_hover = spec->on_hover;
+    cb->checkbox = spec->checkbox;
+    cb->button = spec->button;
+    cb->w = spec->w;
+    cb->h = spec->h;
+    cb->x = spec->x;
+    cb->y = spec->y;
+    cb->scale = spec->scale;
 
     int mx = 0, my = 0;
     bool down = false;
