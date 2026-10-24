@@ -5,6 +5,7 @@
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"
 #include "platform/input_state.h"
+#include "platform/platform.h"
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
@@ -139,6 +140,19 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
                 Platform_DrawRectRaw(spec->x, spec->y, w, h, button_border, CornerRadius / 2, true, true, thick, false);
             }
         }
+        if (spec->text) {
+            int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
+            FontHandle font = Platform_CreateFont(fontsize, UsedFont);
+            XftFont *xf = FH_TO_XFT(font);
+            int ascent = xf ? xf->ascent : (fontsize * 3 / 4);
+            int descent = xf ? xf->descent : (fontsize / 4);
+            int lineHeight = ascent + descent;
+            int tw = Platform_MeasureTextWidth(spec->text, (int)strlen(spec->text), fontsize);
+            int tx = spec->x + (w - tw) / 2;
+            int ty = spec->y + (h - lineHeight) / 2;
+            Platform_DrawTextRaw(tx, ty, spec->text, spec->text_color, font, "LEFT", 0, fontsize);
+            Platform_DestroyFont(font);
+        }
     }
 
     PROFILE_END_VAR(_pt, "Checkbox_Draw");
@@ -178,6 +192,9 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     cb->h = h;        
     cb->x = spec->x;
     cb->y = spec->y;
+    cb->text = spec->text;
+    cb->fontsize = spec->fontsize;
+    cb->text_color = spec->text_color;
     cb->scale = scale;
 
     int mx = 0, my = 0;
