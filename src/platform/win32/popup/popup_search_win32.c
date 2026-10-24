@@ -12,6 +12,7 @@
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"
 #include "platform/win32/popup_helpers_win32.h"
+#include "platform/win32/bg_image_win32.h"
 
 #include "core/timer.h"
 LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -36,7 +37,8 @@ ListBoxInfo* lb = NULL;
         HDC hdc = BeginPaint(hwnd, &ps);
         RECT rect;
         GetClientRect(hwnd, &rect);
-        if (EnableShaders && ShaderPreset != 0) win32_draw_background(hdc, &rect);
+        if (win32_bg_image_enabled() && win32_draw_bg_image_slice(hdc, &rect, rect.right, rect.bottom, 0, 0)) {
+        } else if (EnableShaders && ShaderPreset != 0) win32_draw_background(hdc, &rect);
         else { HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG); FillRect(hdc, &rect, hBgBrush); DeleteObject(hBgBrush); }
 
         {
