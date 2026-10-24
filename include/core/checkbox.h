@@ -15,6 +15,7 @@ typedef struct {
     bool checkbox;
     bool hovered;
     bool was_down;
+    bool clicked;
     void (*on_click)(const char* name, bool checked);
     void (*on_hover)(const char* name, bool hovered);
 } CheckboxSpec;
