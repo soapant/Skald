@@ -3,6 +3,7 @@
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 #include "core/hotkey_string.h"
+#include "core/remap_manager.h"
 #include "deps/log.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
@@ -90,9 +91,21 @@ static int hotkey_hold_delay_ms(void) {
 }
 
 static void hotkey_hold_end(int vk) {
+    if (!vk) return;
     HOTKEY_Q_LOCK();
     for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-        if (g_hold_slots[i].active && g_hold_slots[i].vk == vk) {
+        if (!g_hold_slots[i].active) continue;
+        bool match = false;
+        if (g_hold_slots[i].vk == vk) {
+            match = true;
+        } else {
+            int mods = g_hold_slots[i].modifiers;
+            if ((mods & HOTKEY_MOD_CTRL) && (vk == VK_LCONTROL || vk == VK_RCONTROL || vk == VK_CONTROL)) match = true;
+            else if ((mods & HOTKEY_MOD_ALT) && (vk == VK_LMENU || vk == VK_RMENU || vk == VK_MENU)) match = true;
+            else if ((mods & HOTKEY_MOD_SHIFT) && (vk == VK_LSHIFT || vk == VK_RSHIFT || vk == VK_SHIFT)) match = true;
+            else if ((mods & HOTKEY_MOD_SUPER) && (vk == VK_LWIN || vk == VK_RWIN)) match = true;
+        }
+        if (match) {
             g_hold_slots[i].active = false;
         }
     }
@@ -160,14 +173,10 @@ void hotkey_drain_pending(void) {
     for (;;) {
         HotkeyCallback fn = NULL;
         bool is_toggle = false;
-        int qvk = 0;
-        int qmods = 0;
         HOTKEY_Q_LOCK();
         if (g_pending_head != g_pending_tail) {
             fn = g_pending_q[g_pending_head];
             is_toggle = g_pending_toggle[g_pending_head];
-            qvk = g_pending_vk[g_pending_head];
-            qmods = g_pending_mods[g_pending_head];
             g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
         }
         HOTKEY_Q_UNLOCK();
@@ -296,6 +305,9 @@ bool hotkey_process(int vk_code, int modifiers) {
         else if (b->vk_code == VK_LMENU || b->vk_code == VK_RMENU || b->vk_code == VK_MENU) b_eff &= ~HOTKEY_MOD_ALT;
         else if (b->vk_code == VK_LWIN || b->vk_code == VK_RWIN) b_eff &= ~HOTKEY_MOD_SUPER;
         if (b_eff != eff_modifiers) {
+            continue;
+        }
+        if (b_eff != 0 && !remap_check_strict_order(vk_code, b_eff)) {
             continue;
         }
 
