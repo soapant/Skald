@@ -53,7 +53,7 @@ static bool g_sm_slot_done[SM_SLOTS];
 
 static const char* sm_lookup(int slot, const char* const possibilities[], size_t count) {
         PROFILE_START(_pt);
-if (slot < 0 || slot >= SM_SLOTS) { PROFILE_END_VAR(_pt, "sm_lookup"); return NULL; }
+    if (slot < 0 || slot >= SM_SLOTS) { PROFILE_END_VAR(_pt, "sm_lookup"); return NULL; }
     if (g_sm_slot_done[slot]) { PROFILE_END_VAR(_pt, "sm_lookup"); return g_sm_match[slot][0] ? g_sm_match[slot] : NULL; }
     g_sm_slot_done[slot] = true;
 
