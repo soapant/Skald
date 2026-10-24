@@ -2294,6 +2294,7 @@ PROFILE_END_VAR(_pt, "flapi:fl_widget_purge_owner"); { PROFILE_END_VAR(_pt, "f")
     }
     g_fl_widget_count = n;
     if (g_fl_widget_count > 0) fl_widget_relayout();
+    Platform_Widget_FlushDestruction();
     PROFILE_END_VAR(_pt, "flapi:fl_widget_purge_owner");
 }
 
