@@ -544,6 +544,7 @@ static void pk_ocr_area_to_clipboard(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Ctrl+Shift+X", .cb=pk_screenshot_copy_area);
+    fl_register_hotkey(.hotkey="X", .cb=pk_screenshot_copy_area,.whitelist={"zathura"});
     fl_register_hotkey(.hotkey="Alt+Shift+C", .cb=pk_ocr_area_to_clipboard);
     fl_add_to_cc(.display_name="Screenshot Region",.on_enter=(bool(*)(void))pk_screenshot_copy_area,.type="Screenshot",.icon="/camera.png");
     fl_add_to_cc(.display_name="OCR Region ",.on_enter=(bool(*)(void))pk_ocr_area_to_clipboard,.type="Screenshot",.icon="/scan-text.png");
