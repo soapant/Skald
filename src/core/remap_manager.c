@@ -238,11 +238,12 @@ bool remap_register_internal(const char* src, const char* dst, bool whitelist, c
 void remap_update_phys(int vk_code, int value) {
     if (vk_code<0 || vk_code>=256) return;
     if (value==2) return;
+    bool was_down = g_phys_vk[vk_code];
     g_phys_vk[vk_code] = (value != 0);
-    if (value != 0) {
+    if (value != 0 && !was_down) {
         g_seq_counter++;
         g_key_seq[vk_code] = g_seq_counter;
-    } else {
+    } else if (value == 0) {
         g_key_seq[vk_code] = 0;
     }
 }
@@ -375,6 +376,12 @@ static void remap_release_binding(RemapBinding* b, bool restore_src) {
     }
 }
 
+static void remap_repeat_binding(RemapBinding* b) {
+    if (b->dst_vk) {
+        Platform_EmitKey(b->dst_vk, 1);
+    }
+}
+
 void remap_send_combo(const char* combo) {
     if (!combo || !combo[0]) return;
     int mods = 0;
@@ -421,6 +428,8 @@ bool remap_handle_vk(int vk_code, int value) {
             remap_fire_binding(b, vk_code);
         } else if (before && !after) {
             remap_release_binding(b, allowed[i]);
+        } else if (before && after && allowed[i]) {
+            remap_repeat_binding(b);
         }
     }
 
