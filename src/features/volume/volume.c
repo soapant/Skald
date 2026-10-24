@@ -317,10 +317,10 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Ctrl+]", .cb=increment_volume);
     fl_register_hotkey(.hotkey="Ctrl+[", .cb=decrement_volume);
     fl_register_hotkey(.hotkey="RShift", .cb=toggle_play_pause);
-    fl_add_to_cc(.display_name="Set Volume To 0%",.on_action=set_volume_to_0,.icon="/volume.png");
-    fl_add_to_cc(.display_name="Set Volume To 25%",.on_action=set_volume_to_25,.icon="/volume.png");
-    fl_add_to_cc(.display_name="Set Volume To 50%",.on_action=set_volume_to_50,.icon="/volume.png");
-    fl_add_to_cc(.display_name="Set Volume To 75%",.on_action=set_volume_to_75,.icon="/volume.png");
-    fl_add_to_cc(.display_name="Set Volume To 100%",.on_action=set_volume_to_100,.icon="/volume.png");
-    fl_add_to_cc(.display_name="Toggle Play/Pause",.on_action=toggle_play_pause,.icon="/volume.png");
+    fl_add_to_cc(.type="VolumeControl",.display_name="Set Volume To 0%",.on_action=set_volume_to_0,.icon="/volume.png");
+    fl_add_to_cc(.type="VolumeControl",.display_name="Set Volume To 25%",.on_action=set_volume_to_25,.icon="/volume.png");
+    fl_add_to_cc(.type="VolumeControl",.display_name="Set Volume To 50%",.on_action=set_volume_to_50,.icon="/volume.png");
+    fl_add_to_cc(.type="VolumeControl",.display_name="Set Volume To 75%",.on_action=set_volume_to_75,.icon="/volume.png");
+    fl_add_to_cc(.type="VolumeControl",.display_name="Set Volume To 100%",.on_action=set_volume_to_100,.icon="/volume.png");
+    fl_add_to_cc(.type="VolumeControl",.display_name="Toggle Play/Pause",.on_action=toggle_play_pause,.icon="/volume.png");
 }
