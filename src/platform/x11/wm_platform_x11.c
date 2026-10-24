@@ -11,6 +11,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
+#include <malloc.h>
 
 #include "core/timer.h"
 #include "core/listbox_hover.h"
@@ -47,6 +48,8 @@ void Platform_WM_OnPopEmpty(WindowManager* wm) {
     remap_reset();
     x11_sync_held_from_phys();
     Platform_InputState_Clear();
+    malloc_trim(0);
+    PROFILE_END_VAR(_pt, "Platform_WM_OnPopEmpty");
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {

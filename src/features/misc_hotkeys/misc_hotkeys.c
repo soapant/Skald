@@ -76,7 +76,7 @@ void open_terminal(void) {
     fl_run_terminal_command_and_open("");
 }
 void open_browser(void) {
-    fl_launch_browser("");
+    fl_launch_detached("librewolf");
 }
 
 void easy(void) {
