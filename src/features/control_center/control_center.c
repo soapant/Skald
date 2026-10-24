@@ -225,7 +225,7 @@ static const CcScanPath ListOfProgramPaths[] = {
     { "C:\\Program Files (x86)\\Epic Games", 5 },
     { "D:\\Epic Games", 5 },
     { "C:\\Games", 5 },
-    { "C:\\XboxGames", 5 },
+    { "C:\\C:\\Program Files\\WindowsApps", 5 },
     { "C:\\Program Files (x86)\\Steam\\steamapps\\common", 5 },
     { "C:\\Program Files\\Steam\\steamapps\\common", 5 },
 #else
@@ -492,8 +492,6 @@ static FlMutex g_app_cache_mtx = NULL;
 static bool g_app_cache_ready = false;
 static FlThread g_prewarm_thread = NULL;
 
-/* Icon extraction costs several ms per app, so the cache is built on a worker
-   thread during startup. Callers block on the mutex until it is available. */
 static void cc_ensure_app_cache(void) {
     if (!g_app_cache_mtx) return;
     fl_mutex_lock(g_app_cache_mtx);
@@ -576,8 +574,6 @@ static void cc_rescan_app_cache(const char *full_path, int added) {
     else cc_app_cache_drop(full_path);
 }
 
-/* Name -> path lookup for application entries. Lets every callback keep the
- * uniform void(void) signature; the staged entry name resolves the path here. */
 #define CC_APP_MAP_SLOTS 2048
 static char g_cc_app_map_key[CC_APP_MAP_SLOTS][128];
 static char g_cc_app_map_path[CC_APP_MAP_SLOTS][MAX_PATH];
@@ -1065,12 +1061,12 @@ static void cc_render(PromptState *state) {
     fl_place_editbox();
     if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
-    int icon_size = FontSize;
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
-        int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
         const CcEntry *e = cc_find(ctx.text);
         const char *row_icon = (e && e->icon[0]) ? e->icon : NULL;
+        int icon_size = FontSize;
+        int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
         if (!row_icon && g_cc_calc_label[0] && strcmp(ctx.text, g_cc_calc_label) == 0) {
             row_icon = CC_CALC_ROW_ICON;
         }
