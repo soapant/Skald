@@ -122,6 +122,7 @@ typedef struct {
     int h;
     int x;
     int y;
+    bool subwindow;
 } PromptSpec;
 
 typedef struct {
