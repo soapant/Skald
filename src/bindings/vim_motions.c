@@ -306,8 +306,6 @@ void HandleExitWindow(FlintContext* ctx) {
         WMEditPopupData* ed = (WMEditPopupData*)top;
         ed->confirmed = false;
         FlintContext_Get()->window.selection_complete = true;
-    } else if (top && top->manager->popup_count > 1) {
-        SetMode(MODE_NORMAL);
     } else {
         FlintContext_Get()->window.selection_complete = true;
     }

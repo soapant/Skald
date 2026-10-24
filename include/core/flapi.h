@@ -32,6 +32,7 @@ typedef PlRect FlRect;
 typedef PlPos FlPos;
 typedef PlListSpec FlListSpec;
 typedef PlWindowList FlWindowList;
+typedef CheckboxSpec FlCheckboxSpec;
 
 // =============================================================================
 // CLIPBOARD
@@ -244,6 +245,7 @@ void fl_message_impl(const FlMessageSpec* spec);
 
 #define fl_overlay(...) fl_message(__VA_ARGS__, .timeout=10000000.0)
 #define fl_dismiss_overlay(...) fl_dismiss_message(__VA_ARGS__)
+#define fl_subwindow(...) fl_window(__VA_ARGS__,.subwindow=true)
 
 #define FlPromptSpec PromptSpec
 
@@ -305,14 +307,20 @@ bool fl_draw_image_impl(const FlImageSpec *spec);
 bool fl_place_editbox_impl(const FlEditSpec *spec);
 bool fl_place_listbox_impl(const FlListSpec *spec);
 bool fl_place_checkbox_impl(const FlCheckboxSpec *spec);
+
 bool fl_checkbox_is_checked(const char *name);
 bool fl_checkbox_is_hovered(const char *name);
+
+#define fl_place_button(...) fl_place_checkbox_impl(&(FlCheckboxSpec){__VA_ARGS__,.button=true})
+#define fl_place_checkbox(...) fl_place_checkbox_impl(&(FlCheckboxSpec){__VA_ARGS__,.checkbox=true})
+
+#define fl_button_is_clicked fl_checkbox_is_checked
+#define fl_button_is_hovered fl_checkbox_is_hovered
 
 #define fl_draw_text(...) fl_draw_text_impl(&(FlTextSpec){__VA_ARGS__})
 #define fl_draw_image(...) fl_draw_image_impl(&(FlImageSpec){__VA_ARGS__})
 #define fl_place_editbox(...) fl_place_editbox_impl(&(FlEditSpec){__VA_ARGS__})
 #define fl_place_listbox(...) fl_place_listbox_impl(&(FlListSpec){__VA_ARGS__})
-#define fl_place_checkbox(...) fl_place_checkbox_impl(&(FlCheckboxSpec){__VA_ARGS__})
 
 bool fl_listbox_begin(const FlListSpec *spec);
 bool fl_listbox_next(FlListItemCtx *out);
@@ -592,9 +600,14 @@ bool fl_emit_mouse_button_at_rel(int rx, int ry, int button, bool down);
 bool fl_click_button_at_rel(int rx, int ry, int button);
 bool fl_type_text(const char *s);
 void fl_sleep(double seconds);
+
 bool fl_is_key_down(int vk);
 bool fl_is_key_pressed(int vk);
 bool fl_is_key_released(int vk);
+bool fl_is_key_pressed(int vk);
+bool fl_is_key_released(int vk);
+bool fl_is_key_released(int vk);
+
 bool fl_ctrl_pressed(void);
 bool fl_shift_pressed(void);
 bool fl_alt_pressed(void);
@@ -602,6 +615,18 @@ bool fl_super_pressed(void);
 void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud);
 int fl_get_key_pressed(void);
 char fl_get_char_pressed(void);
+
+#define fl_key_pressed        fl_is_key_pressed
+#define fl_key_released       fl_is_key_released
+#define fl_ctrl_down          fl_ctrl_pressed
+#define fl_shift_down         fl_shift_pressed
+#define fl_alt_down           fl_alt_pressed
+#define fl_super_down         fl_super_pressed
+#define fl_is_ctrl_pressed    fl_ctrl_pressed
+#define fl_is_shift_pressed   fl_shift_pressed
+#define fl_is_alt_pressed     fl_alt_pressed
+#define fl_is_super_pressed   fl_super_pressed
+
 
 typedef struct {
     int vk;
