@@ -5,6 +5,9 @@
 
 typedef struct {
     const char* name;
+    char* text;
+    int fontsize;
+    unsigned long text_color;
     int x;
     int y;
     int w;
