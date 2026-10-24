@@ -22,7 +22,7 @@ void settings_render(PromptState *state) {
     static int scale = 1;
     if (fl_is_key_pressed('L') && fl_ctrl_pressed()) scale *= 2;
     if (fl_is_key_pressed('H') && fl_ctrl_pressed()) scale /= 2;
-    fl_place_button(.name = "Checkbox",.x=state->width / 2,.y=state->height / 2,.scale=scale,.checked = true);
+    fl_place_button(.name = "Checkbox",.x=state->width / 2,.y=state->height / 2,.scale=scale,.border=false);
 }
 
 void TriggerSettings(void) {
