@@ -93,15 +93,6 @@ static bool cc_register_type(const char *name, CcFill fill) {
     return true;
 }
 
-static CC_MAYBE_UNUSED bool cc_add_action(const char *label, const char *type, void (*fn)(void)) {
-    if (!label || !label[0] || !fn || g_action_count >= CC_MAX_ACTIONS) return false;
-    CcActionDef *a = &g_actions[g_action_count++];
-    snprintf(a->label, sizeof(a->label), "%s", label);
-    snprintf(a->type, sizeof(a->type), "%s", type ? type : "");
-    a->fn = fn;
-    return true;
-}
-
 static bool g_cc_fallback_active = false;
 
 static CcEntry *cc_add_fallback(void) {
