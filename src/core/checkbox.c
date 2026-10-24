@@ -13,8 +13,8 @@
 #define FL_CHECKBOX_BASE 16
 #define CHECKBOX_GLYPH "\xe2\x9c\x93"
 
-#define CHECKBOX_WHITE RGB(255, 255, 255)
-#define CHECKBOX_GRAY RGB(128, 128, 128)
+#define CHECKBOX_WHITE RGB(155, 155, 155)
+#define CHECKBOX_GRAY RGB(68, 68, 68)
 #define CHECKBOX_DARK_GRAY RGB(14, 14, 14)
 
 static CheckboxSpec g_checkboxes[FL_CHECKBOX_MAX];
@@ -99,11 +99,13 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
     unsigned long checkbox_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
     unsigned long button_border = spec->clicked ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+    unsigned long checkbox_body = spec->hovered ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
+    unsigned long button_body = spec->clicked ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
     if (spec->checkbox) {
         int w = spec->w > 0 ? spec->w : 16;
         int h = spec->h > 0 ? spec->h : 16;
-        Platform_DrawRectRaw(spec->x,spec->y,w,h, CHECKBOX_DARK_GRAY, 0, false, true, 1, true);
-        Platform_DrawRectRaw(spec->x,spec->y,w,h, checkbox_border, CornerRadius / 3,true, true, 2, false);
+        Platform_DrawRectRaw(spec->x,spec->y,w,h, checkbox_body, 0, false, true, 1, true);
+        Platform_DrawRectRaw(spec->x,spec->y,w,h, checkbox_border, CornerRadius / 3,true, true, 1, false);
 
         if (spec->checked) {
             //temporary going to be image later
@@ -118,8 +120,8 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
     } else if (spec->button) {
         int w = spec->w > 0 ? spec->w : 100;
         int h = spec->h > 0 ? spec->h : 24;
-        Platform_DrawRectRaw(spec->x,spec->y,w,h, CHECKBOX_DARK_GRAY, CornerRadius / 2, true, true, 1, true);
-        Platform_DrawRectRaw(spec->x,spec->y,w,h, button_border, CornerRadius / 2, true, true, 2, false);
+        Platform_DrawRectRaw(spec->x,spec->y,w,h, button_body, CornerRadius / 2, true, true, 1, true);
+        Platform_DrawRectRaw(spec->x,spec->y,w,h, button_border, CornerRadius / 2, true, true, 1, false);
     }
 
     PROFILE_END_VAR(_pt, "Checkbox_Draw");
