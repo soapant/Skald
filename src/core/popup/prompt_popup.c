@@ -55,7 +55,7 @@ static void PromptPopup_OnShow(Popup* self) {
     }
     FlintContext_Get()->window.filter[0] = '\0';
     FlintContext_Get()->window.filter_cursor = 0;
-    if (data->spec.items || data->spec.refresh) {
+    if (data->spec.items || data->spec.refresh || data->spec.render) {
       data->state->has_listbox = true;
     } else {
       data->state->has_listbox = false;
@@ -79,6 +79,7 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->prompt_callbacks.tab = data->spec.tab;
     ctx2->prompt_callbacks.copy = data->spec.copy;
     ctx2->prompt_callbacks.render = data->spec.render;
+    data->state->render = data->spec.render;
     ctx2->prompt_callbacks.edit = data->spec.edit;
     ctx2->prompt_callbacks.filter = data->spec.filter;
     ctx2->prompt_callbacks.help = data->spec.help;
@@ -211,4 +212,17 @@ bool WindowManager_TopPopupWantsTick(WindowManager* wm) {
     if (!top || top->type != POPUP_PROMPT) return false;
     PromptPopupData* data = (PromptPopupData*)top;
     return data->spec.tick;
+}
+
+bool WindowManager_CloseSubwindow(WindowManager* wm, const char* name) {
+    if (!wm || wm->popup_count <= 1) return false;
+    Popup* top = wm->popups[wm->popup_count - 1];
+    if (top && top->type == POPUP_PROMPT) {
+        PromptPopupData* data = (PromptPopupData*)top;
+        if (!name || (data->spec.title && strcmp(prompt_feature_name(data->spec.title), prompt_feature_name(name)) == 0)) {
+            WindowManager_PopPopup(wm);
+            return true;
+        }
+    }
+    return false;
 }

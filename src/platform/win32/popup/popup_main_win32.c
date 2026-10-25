@@ -739,12 +739,13 @@ case WM_CHAR: {
           win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
         }
         if (FlintContext_Get()->prompt_callbacks.render) {
+            FlintContext_Get()->window.editbox_placed = false;
             extern PromptState* Platform_GetWin32PromptState(void);
             PromptState *state = Platform_GetWin32PromptState();
-            if (state) {
+            if (state && state->render) {
                 Checkbox_FrameBegin();
                 Platform_SetDrawContextWin32(paintDC);
-                FlintContext_Get()->prompt_callbacks.render(state);
+                state->render(state);
             }
         } else {
             extern PromptState* Platform_GetWin32PromptState(void);

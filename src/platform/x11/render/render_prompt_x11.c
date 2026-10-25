@@ -120,16 +120,17 @@ PROFILE_START(timer);
 
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
         PROFILE_START(_pt);
+    FlintContext_Get()->window.editbox_placed = false;
     int w = state->width;
     int h = state->height;
     XWindowAttributes attrs;
     if (!XGetWindowAttributes(dpy, *win, &attrs)) {
         x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
-        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+        if (state->render != NULL) {
           Checkbox_FrameBegin();
           Platform_SetDrawContext(dpy, NULL, NULL, 0);
-          FlintContext_Get()->prompt_callbacks.render(state);
+          state->render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
           DrawPromptUserEditControl(dpy, win,state);
@@ -143,9 +144,9 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     if (!x11_pbuf_acquire(dpy, *win, w, h, depth, vis, cmap)) {
         x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
-        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+        if (state->render != NULL) {
           Checkbox_FrameBegin();
-          FlintContext_Get()->prompt_callbacks.render(state);
+          state->render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
           DrawPromptUserEditControl(dpy, win,state);
@@ -175,9 +176,9 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
         XFreeGC(dpy, clear_gc);
     }
     Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
-    if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+    if (state->render != NULL) {
         Checkbox_FrameBegin();
-        FlintContext_Get()->prompt_callbacks.render(state);
+        state->render(state);
     } else {
         if (state->has_listbox) {
             DrawPromptUserListBoxOnDraw(dpy, xdDbl, vis, cmap, state);
