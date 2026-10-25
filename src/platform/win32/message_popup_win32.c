@@ -417,6 +417,7 @@ int idx = HoverWidgetFindLocked(key);
   if (w) {
     Platform_Widget_SetFrameCallback(w, NULL, NULL);
     Platform_Widget_Destroy(w);
+    Platform_Widget_FlushDestruction();
   }
   if (release) release(release_ud);
 }
