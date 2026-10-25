@@ -210,6 +210,9 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
             cb->checked = false;
             cb->clicked = false;
         }
+    } else if (!down && cb->button) {
+        cb->checked = false;
+        cb->clicked = false;
     }
     cb->was_down = down;
 
