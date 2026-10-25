@@ -203,6 +203,11 @@ if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(_pt, "Linux_ProcessXE
                     bool alt = (ev->xbutton.state & Mod1Mask) != 0;
                     Prompt_HandleListClick(st, ctrl, shift, alt);
                 }
+                Popup* current_top = WindowManager_GetTopPopup(wm);
+                if (current_top && current_top->vtable && current_top->vtable->on_render) {
+                    current_top->vtable->on_render(current_top);
+                }
+                XFlush(dpy);
             }
             break;
         case Expose:
