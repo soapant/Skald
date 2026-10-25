@@ -321,6 +321,7 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
         int hTop = UI_LB_GetViewTop(hlb);
         ListBox_HoverFocus(hlb, list_top, item_h, hTop, visible);
       }
+      InvalidateRect(hwnd, NULL, FALSE);
       return 0;
     }
     case WM_MOUSEWHEEL: {
