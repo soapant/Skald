@@ -13,5 +13,7 @@ extern bool g_win32_waiting_for_key;
 extern int g_win32_key_pressed;
 extern KeyCallback g_win32_key_callback;
 extern PromptState* g_win32_prompt_state;
+PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+PromptState* Platform_GetWin32PromptState(void);
 
 #endif

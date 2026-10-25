@@ -557,15 +557,36 @@ log_error("operation failed, returning error"); { PROFILE_END_VAR(_pt, "Platform
 
 #include <gdiplus.h>
 
-PromptState* Platform_GetWin32PromptState(void) {     PROFILE_START(_pt);
-    WindowManager* wm = WindowManager_Get();
-    if (wm) {
-        Popup* top = WindowManager_GetTopPopup(wm);
-        if (top && top->type == POPUP_PROMPT && top->user_data) {
-            { PROFILE_END_VAR(_pt, "Platform_GetWin32PromptState"); return (PromptState*)top->user_data; }
+PromptState* Platform_GetPromptStateForHWND(HWND hwnd) {
+    PROFILE_START(_pt);
+    if (hwnd && IsWindow(hwnd)) {
+        PromptState* st = (PromptState*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+        if (st) { PROFILE_END_VAR(_pt, "Platform_GetPromptStateForHWND"); return st; }
+        HWND parent = GetParent(hwnd);
+        if (parent && IsWindow(parent)) {
+            st = (PromptState*)GetWindowLongPtrA(parent, GWLP_USERDATA);
+            if (st) { PROFILE_END_VAR(_pt, "Platform_GetPromptStateForHWND"); return st; }
         }
     }
-{ PROFILE_END_VAR(_pt, "Platform_GetWin32PromptState"); return g_win32_prompt_state; } }
+    WindowManager* wm = WindowManager_Get();
+    if (wm) {
+        for (int i = 0; i < wm->popup_count; i++) {
+            Popup* p = wm->popups[i];
+            if (p && WH_TO_HWND(p->handle) == hwnd && p->user_data) {
+                { PROFILE_END_VAR(_pt, "Platform_GetPromptStateForHWND"); return (PromptState*)p->user_data; }
+            }
+        }
+        Popup* top = WindowManager_GetTopPopup(wm);
+        if (top && top->type == POPUP_PROMPT && top->user_data) {
+            { PROFILE_END_VAR(_pt, "Platform_GetPromptStateForHWND"); return (PromptState*)top->user_data; }
+        }
+    }
+    { PROFILE_END_VAR(_pt, "Platform_GetPromptStateForHWND"); return g_win32_prompt_state; }
+}
+
+PromptState* Platform_GetWin32PromptState(void) {     PROFILE_START(_pt);
+    { PROFILE_END_VAR(_pt, "Platform_GetWin32PromptState"); return Platform_GetPromptStateForHWND(GetFocus() ? GetFocus() : GetForegroundWindow()); }
+}
 
 static void win_command_confirm(const char* text, void* user_data) {
     PROFILE_START(_pt);
