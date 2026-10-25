@@ -101,5 +101,6 @@ void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
 void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w, int *out_h);
 bool WindowManager_CloseSubwindow(WindowManager* wm, const char* name);
+bool WindowManager_IsPointInTopPopup(WindowManager* wm, int root_x, int root_y);
 
 #endif
