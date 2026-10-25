@@ -197,7 +197,7 @@ if (!path) { PROFILE_END_VAR(_pt, "fl_launch_with_args_as_admin_platform"); retu
 static FlListSpec g_fl_list_spec;
 static ListBoxInfo *g_fl_list_lb;
 static int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
-static int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw;
+static int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw, g_fl_list_h;
 static HDC g_fl_list_hdc;
 static HFONT g_fl_list_font;
 static bool g_fl_list_font_owned;
@@ -225,6 +225,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     g_fl_list_bx = lay.bx;
     g_fl_list_bw = lay.bw;
     g_fl_list_fw = lay.fw;
+    g_fl_list_h = lay.list_h;
     g_fl_list_visible = lay.visible;
     UI_LB_SetVisibleCount(lay.visible);
     g_fl_list_cur = 0;
@@ -277,7 +278,10 @@ if (!out || !g_fl_list_lb) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); r
 
 void fl_listbox_end_platform(void) {
         PROFILE_START(_pt);
-g_fl_list_lb = NULL;
+    if (PromptListBottomMargin() > 0 && g_fl_list_hdc) {
+        Platform_DrawPromptSeparator(g_fl_list_y0 + g_fl_list_h, g_fl_list_fw);
+    }
+    g_fl_list_lb = NULL;
     g_fl_list_visible = 0;
     g_fl_list_cur = 0;
 }

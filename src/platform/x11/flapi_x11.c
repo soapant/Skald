@@ -405,7 +405,7 @@ PROFILE_START(timer);
 
 static __thread FlListSpec g_fl_list_spec;
 static __thread ListBoxInfo *g_fl_list_lb;
-static __thread int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
+static __thread int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur, g_fl_list_h;
 static __thread int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw, g_fl_list_fh;
 static __thread Display *g_fl_list_dpy;
 static __thread XftDraw *g_fl_list_xd;
@@ -443,6 +443,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     g_fl_list_bw = lay.bw;
     g_fl_list_fw = lay.fw;
     g_fl_list_fh = lay.fh;
+    g_fl_list_h = lay.list_h;
     g_fl_list_visible = lay.visible;
     UI_LB_SetVisibleCount(lay.visible);
     g_fl_list_cur = 0;
@@ -488,7 +489,10 @@ if (!out || !g_fl_list_lb) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); r
 
 void fl_listbox_end_platform(void) {
         PROFILE_START(_pt);
-if (g_fl_list_font_owned) { Platform_DestroyFont(g_fl_list_font); g_fl_list_font_owned = false; }
+    if (PromptListBottomMargin() > 0 && g_fl_list_y0 >= 0) {
+        Platform_DrawPromptSeparator(g_fl_list_y0 + g_fl_list_h, g_fl_list_fw);
+    }
+    if (g_fl_list_font_owned) { Platform_DestroyFont(g_fl_list_font); g_fl_list_font_owned = false; }
     g_fl_list_lb = NULL;
     g_fl_list_visible = 0;
     g_fl_list_cur = 0;
