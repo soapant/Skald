@@ -1045,12 +1045,15 @@ static bool cc_icon_is_glyph(const char *icon) {
     if ((unsigned char)tail[0] == 0xEF && (unsigned char)tail[1] == 0xB8 && (unsigned char)tail[2] == 0x8F && tail[3] == '\0') return true;
     return false;
 }
+static void cc_subwindow_render(PromptState *state) {
+    (void)state;
+}
 
 static void cc_render(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = { .lb = lb ,.item_height = FontSize * 2};
     fl_place_editbox();
-    fl_place_button(.name = "Actions",.x=state->width - 220,.y=state->height - 30,.w=180,.border=false,.text= "Actions Ctrl+B",.fontsize=20);
+    fl_place_button(.name = "Actions",.x=state->width - 200,.y=state->height - 30,.w=180,.border=false,.text= "Actions Ctrl+B",.fontsize=20,.no_bg=true);
     if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
     FlListItemCtx ctx;
@@ -1113,6 +1116,10 @@ static void cc_render(PromptState *state) {
         }
     }
     fl_listbox_end();
+    if (fl_button_is_clicked("Actions")) {
+        fl_subwindow(.x=(state->width / 2) + 240,.y=(state->height / 2) - 50,.w=200,.h=300,.render=cc_subwindow_render);
+    }
+
 }
 
 static bool cc_enter(const char *selection, ListBoxInfo *lb) {
