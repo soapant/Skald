@@ -16,6 +16,7 @@ typedef struct {
     Popup base;
     PromptSpec spec;
     PromptState* state;
+    PromptCallbacks saved_callbacks;
     int x, y, w, h;
 } PromptPopupData;
 
@@ -69,6 +70,7 @@ static void PromptPopup_OnShow(Popup* self) {
 
     FlintContext* ctx2 = FlintContext_Get();
     if (!wm->ctx) wm->ctx = ctx2;
+    data->saved_callbacks = ctx2->prompt_callbacks;
     ctx2->prompt_callbacks.refresh = data->spec.refresh;
     ctx2->prompt_callbacks.enter = data->spec.enter;
     ctx2->prompt_callbacks.ctrl_enter = data->spec.ctrl_enter;
@@ -101,6 +103,7 @@ static void PromptPopup_OnHide(Popup* self) {
         if (data->state->has_listbox) data->state->listbox.selected_index = 0;
         FlintContext* _c3 = FlintContext_Get();
         _c3->window.current_feature = NULL;
+        _c3->prompt_callbacks = data->saved_callbacks;
     }
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnHide");
 }
@@ -225,4 +228,12 @@ bool WindowManager_CloseSubwindow(WindowManager* wm, const char* name) {
         }
     }
     return false;
+}
+
+bool WindowManager_IsPointInTopPopup(WindowManager* wm, int root_x, int root_y) {
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || top->type != POPUP_PROMPT) return true;
+    PromptPopupData* data = (PromptPopupData*)top;
+    return (root_x >= data->x && root_x <= data->x + data->w &&
+            root_y >= data->y && root_y <= data->y + data->h);
 }

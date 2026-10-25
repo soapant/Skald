@@ -185,7 +185,7 @@ if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(_pt, "Linux_ProcessXE
                     top->vtable->on_render(top);
                 }
             } else if (ev->xbutton.button == Button1) {
-                if (wm->popup_count > 1 && ev->xbutton.window != top->handle.xid) {
+                if (wm->popup_count > 1 && !WindowManager_IsPointInTopPopup(wm, ev->xbutton.x_root, ev->xbutton.y_root)) {
                     WindowManager_PopPopup(wm);
                     Popup* new_top = WindowManager_GetTopPopup(wm);
                     if (new_top && new_top->vtable && new_top->vtable->on_render) new_top->vtable->on_render(new_top);
