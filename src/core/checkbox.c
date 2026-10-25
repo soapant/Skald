@@ -69,6 +69,7 @@ static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
     cb->checked = seed;
     cb->thickness = 1;
     cb->border = true;
+    cb->name = strdup(name);
     { PROFILE_END_VAR(_pt, "checkbox_intern"); return cb; }
 }
 
