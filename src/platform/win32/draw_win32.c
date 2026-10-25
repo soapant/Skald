@@ -332,6 +332,24 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return true; }
 }
 
+void Platform_DrawTextCentered(int x, int y, int w, int h, const char *text, unsigned long color, FontHandle font, int fontsize) {
+    PROFILE_START(_pt);
+    if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); return; }
+    HFONT hfont = font.hfont ? font.hfont : win32_sized_font(fontsize);
+    HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
+    TEXTMETRICW tm = {0};
+    GetTextMetricsW(g_draw_hdc, &tm);
+    int ascent = tm.tmAscent;
+    int descent = tm.tmDescent;
+    int lineHeight = ascent + descent;
+    int tw = Platform_MeasureTextWidth(text, (int)strlen(text), fontsize);
+    int tx = x + (w - tw) / 2;
+    int ty = y + (h - lineHeight) / 2;
+    Platform_DrawTextRaw(tx, ty, text, color, font, "LEFT", 0, fontsize);
+    if (old) SelectObject(g_draw_hdc, old);
+    { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); }
+}
+
 int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
         PROFILE_START(_pt);
 if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
