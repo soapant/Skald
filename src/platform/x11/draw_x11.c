@@ -805,6 +805,10 @@ PROFILE_START(timer);
         Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y, PROMPT_ITEM_TEXT_X, NULL);
     }
 
+    if (PromptListBottomMargin() > 0) {
+        Platform_DrawPromptSeparator(y0 + visible * itemH, state->width);
+    }
+
     Platform_DestroyFont(font);
     PROFILE_END_VAR(timer, "draw_x11:Platform_DrawListBox");
 }
