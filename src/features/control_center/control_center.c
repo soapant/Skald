@@ -1050,6 +1050,7 @@ static void cc_render(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = { .lb = lb ,.item_height = FontSize * 2};
     fl_place_editbox();
+    fl_place_button(.name = "Actions",.x=state->width - 220,.y=state->height - 30,.w=180,.border=false,.text= "Actions Ctrl+B",.fontsize=20);
     if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
     FlListItemCtx ctx;
