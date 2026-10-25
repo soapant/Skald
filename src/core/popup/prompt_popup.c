@@ -17,6 +17,7 @@ typedef struct {
     PromptSpec spec;
     PromptState* state;
     PromptCallbacks saved_callbacks;
+    WindowHandle prev_hPopupWnd;
     int x, y, w, h;
 } PromptPopupData;
 
@@ -37,6 +38,7 @@ static void PromptPopup_OnShow(Popup* self) {
     FlintContext* ctx = FlintContext_Get();
     ctx->window.selection_complete = false;
     ctx->window.output_buffer[0] = '\0';
+    data->prev_hPopupWnd = ctx->window.hPopupWnd;
 
     Platform_PromptPopupShowWindow(self, data->x, data->y, data->w, data->h);
 
@@ -104,6 +106,7 @@ static void PromptPopup_OnHide(Popup* self) {
         FlintContext* _c3 = FlintContext_Get();
         _c3->window.current_feature = NULL;
         _c3->prompt_callbacks = data->saved_callbacks;
+        _c3->window.hPopupWnd = data->prev_hPopupWnd;
     }
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnHide");
 }
