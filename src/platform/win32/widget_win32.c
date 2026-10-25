@@ -395,7 +395,8 @@ widget->hwnd = CreateWindowExA(
 static void widget_destroy_on_owner_thread(void* ud) {
         PROFILE_START(_pt);
 PlatformWidget *widget = (PlatformWidget *)ud;
-    if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "widget_destroy_on_owner_thread"); return ; }
+    if (!widget) { PROFILE_END_VAR(_pt, "widget_destroy_on_owner_thread"); return ; }
+    if (widget->hwnd == NULL && widget->dead) { PROFILE_END_VAR(_pt, "widget_destroy_on_owner_thread"); return ; }
     widget->dead = true;
     Platform_RenderThread_RemoveFrameCallback(widget_frame, widget);
     if (widget->hwnd && IsWindow(widget->hwnd)) {
@@ -403,6 +404,7 @@ PlatformWidget *widget = (PlatformWidget *)ud;
     }
     widget->hwnd = NULL;
     free(widget);
+    PROFILE_END_VAR(_pt, "widget_destroy_on_owner_thread");
 }
 
 void Platform_Widget_Destroy(PlatformWidget *widget) {
