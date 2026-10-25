@@ -186,6 +186,9 @@ static HBRUSH s_bg_brush = NULL;
           Platform_SetDrawContextWin32(memDC);
           Platform_SetDrawOffset(0, 0);
           Platform_DrawPromptSeparator(0, winW);
+          int _listTop = PromptListTop();
+          int listH = winH - _listTop - PromptListBottomMargin();
+          Platform_DrawPromptSeparator(_listTop + listH, winW);
           Platform_SetDrawOffset(prevOx, prevOy);
           Platform_SetDrawContextWin32(prevDC);
         }
@@ -743,6 +746,9 @@ case WM_CHAR: {
                 Platform_SetDrawContextWin32(paintDC);
                 extern void Platform_DrawPromptEditbox(PromptState* state);
                 Platform_DrawPromptEditbox(estate);
+                if (PromptListBottomMargin() > 0 && estate->has_listbox) {
+                    Platform_DrawPromptSeparator(rect.bottom - PromptListBottomMargin(), rect.right - rect.left);
+                }
                 Platform_SetDrawContextWin32(NULL);
             }
         }

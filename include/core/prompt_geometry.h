@@ -63,7 +63,7 @@ static inline int PromptNormalCaretWidth(void) { return FontSize / 2 + PROMPT_CA
 static inline int PromptCaretHeight(void) { return FontSize + PROMPT_CARET_H_BONUS; }
 static inline int PromptCustomEditHeight(void) { return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS; }
 static inline int PromptListBottomMargin(void) {
-  return (WindowTitleText || VimModeText) ? PROMPT_LIST_BOTTOM_TITLE : 0;
+  return (WindowTitleText || VimModeText) ? PROMPT_LIST_BOTTOM_TITLE : 40;
 }
 
 #endif
