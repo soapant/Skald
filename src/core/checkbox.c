@@ -162,7 +162,7 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         }
         if (spec->text) {
             int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
-            if (!s_font.xfont) s_font = Platform_CreateFont(fontsize, UsedFont);
+            if (!Platform_FontInitalized(s_font)) s_font = Platform_CreateFont(fontsize, UsedFont);
             Platform_DrawTextCentered(spec->x, spec->y, w, h, spec->text, spec->text_color, s_font, fontsize);
         }
     }
@@ -216,10 +216,6 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     bool hovered = (mx >= x && mx < x + w && my >= y && my < y + h);
     bool hover_changed = (hovered != cb->hovered);
     cb->hovered = hovered;
-
-    if (cb->name && strcmp(cb->name, "Actions") == 0) {
-        log_info("ACTIONS PLACE: mx=%d my=%d down=%d was_down=%d hovered=%d", mx, my, down, cb->was_down, hovered);
-    }
 
     bool clicked = false;
     

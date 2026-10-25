@@ -2437,3 +2437,7 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userd
     }
     pthread_detach(t);
 }
+
+bool Platform_FontInitalized(FontHandle font) {
+    return font.xfont != NULL;
+}
