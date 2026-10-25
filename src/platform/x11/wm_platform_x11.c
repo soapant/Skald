@@ -119,50 +119,14 @@ int x = 0, y = 0, w = 1920, h = 1080;
     if (oh) *oh = h;
 }
 
-static void* subwindow_thread_func(void* arg) {
-    PromptSpec* spec = (PromptSpec*)arg;
-    WindowManager* wm = WindowManager_Get();
-    if (wm) {
-        Platform_PromptUser(wm, spec);
-    }
-    if (spec->items) {
-        for (int i = 0; spec->items[i]; i++) {
-            free(spec->items[i]);
-        }
-        free(spec->items);
-    }
-    free(spec);
-    return NULL;
-}
-
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(_pt);
     if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     if (spec->subwindow) {
-        PromptSpec* heap_spec = malloc(sizeof(PromptSpec));
-        if (!heap_spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
-        *heap_spec = *spec;
-        heap_spec->subwindow = false;
-        if (spec->items) {
-            int count = 0;
-            while (spec->items[count]) count++;
-            char** items_copy = malloc((count + 1) * sizeof(char*));
-            for (int i = 0; i < count; i++) {
-                items_copy[i] = spec->items[i] ? strdup(spec->items[i]) : NULL;
-            }
-            items_copy[count] = NULL;
-            heap_spec->items = (const char**)items_copy;
-        }
-        pthread_t tid;
-        if (pthread_create(&tid, NULL, subwindow_thread_func, heap_spec) == 0) {
-            pthread_detach(tid);
-        } else {
-            if (heap_spec->items) {
-                for (int i = 0; heap_spec->items[i]; i++) free(heap_spec->items[i]);
-                free(heap_spec->items);
-            }
-            free(heap_spec);
-        }
+        PromptSpec heap_spec = *spec;
+        heap_spec.subwindow = false;
+        Popup* popup = PromptPopup_Create(wm, &heap_spec);
+        if (popup) WindowManager_PushPopup(wm, popup);
         PROFILE_END_VAR(_pt, "Platform_PromptUser");
         return NULL;
     }
