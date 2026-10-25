@@ -56,8 +56,8 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
 
     if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
 
-    extern PromptState* Platform_GetWin32PromptState(void);
-    PromptState* state = Platform_GetWin32PromptState();
+    extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+    PromptState* state = Platform_GetPromptStateForHWND(hwnd);
     int old_font = FontSize;
 
     if (wParam == VK_ESCAPE) {
@@ -115,8 +115,8 @@ static HBRUSH s_bg_brush = NULL;
     case WM_ERASEBKGND:
                        return TRUE;
     case WM_LBUTTONDOWN: {
-      extern PromptState* Platform_GetWin32PromptState(void);
-      PromptState* hst = Platform_GetWin32PromptState();
+      extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+      PromptState* hst = Platform_GetPromptStateForHWND(GetParent(hWnd) ? GetParent(hWnd) : hWnd);
       if (hst && hst->has_listbox) {
         POINT pt; GetCursorPos(&pt);
         ListBox_PublishMousePos(pt.x, pt.y);
@@ -129,10 +129,10 @@ static HBRUSH s_bg_brush = NULL;
       return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
     case WM_MOUSEMOVE: {
-      extern PromptState* Platform_GetWin32PromptState(void);
+      extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
       POINT pt;
       if (GetCursorPos(&pt)) ListBox_PublishMousePos((int)pt.x, (int)pt.y);
-      PromptState* hst = Platform_GetWin32PromptState();
+      PromptState* hst = Platform_GetPromptStateForHWND(GetParent(hWnd) ? GetParent(hWnd) : hWnd);
       if (hst && hst->has_listbox) {
         ListBoxInfo* hlb = &hst->listbox;
         int hItemH = UI_LB_GetItemHeight(WH_FROM_HWND(hWnd));
@@ -286,7 +286,9 @@ static HDC popup_back_buffer(HDC hdc, int w, int h, HBITMAP* out_prev) {
 
 static bool prompt_win_no_bg(void) {
         PROFILE_START(_pt);
-if (g_win32_prompt_state && g_win32_prompt_state->no_bg) { PROFILE_END_VAR(_pt, "prompt_win_no_bg"); return true; }
+    extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+    PromptState* st = Platform_GetPromptStateForHWND(GetFocus());
+    if (st && st->no_bg) { PROFILE_END_VAR(_pt, "prompt_win_no_bg"); return true; }
     { PROFILE_END_VAR(_pt, "prompt_win_no_bg"); return false; }
 }
 
@@ -310,10 +312,10 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
       break;
     }
     case WM_MOUSEMOVE: {
-      extern PromptState* Platform_GetWin32PromptState(void);
+      extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
       POINT pt;
       if (GetCursorPos(&pt)) ListBox_PublishMousePos((int)pt.x, (int)pt.y);
-      PromptState* hst = Platform_GetWin32PromptState();
+      PromptState* hst = Platform_GetPromptStateForHWND(hwnd);
       if (hst && hst->has_listbox) {
         ListBoxInfo* hlb = &hst->listbox;
         int list_top = 0, item_h = 0, visible = 0;
@@ -325,12 +327,12 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
       return 0;
     }
     case WM_MOUSEWHEEL: {
-      extern PromptState* Platform_GetWin32PromptState(void);
+      extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
       short delta = (short)HIWORD(wParam);
       int rows = (delta > 0) ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS;
       ListBox_PublishMousePos((short)(lParam & 0xFFFF), (short)((lParam >> 16) & 0xFFFF));
       HWND hLB = WH_TO_HWND(FlintContext_Get()->window.hListBox);
-      PromptState* hst = Platform_GetWin32PromptState();
+      PromptState* hst = Platform_GetPromptStateForHWND(hwnd);
       if (hLB && IsWindow(hLB) && IsWindowVisible(hLB) && hst && hst->has_listbox) {
         ListBox_ScrollBy(&hst->listbox, rows, UI_LB_GetVisibleCount());
         InvalidateRect(hLB, NULL, FALSE);
@@ -352,7 +354,8 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
       s_swallow_next_char = true;
       bool consumed = PromptWindow_OnKey(hKey, &pkey);
       if (wParam == VK_BACK) {
-        PromptState* ps = g_win32_prompt_state;
+        extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+        PromptState* ps = Platform_GetPromptStateForHWND(hwnd);
         if (ps) {
           strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
           FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
@@ -365,7 +368,8 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
       if (!consumed) s_swallow_next_char = false;
       if (wParam == VK_DELETE) {
         UI_DeleteForward();
-        PromptState* ps = g_win32_prompt_state;
+        extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+        PromptState* ps = Platform_GetPromptStateForHWND(hwnd);
         if (ps) {
           strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
           FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
@@ -387,13 +391,14 @@ case WM_CHAR: {
       if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
       if (wParam == 0x08 || wParam == 0x7F) return 0;
       if (wParam >= 0x20 && IsInsertMode()) {
-        PromptState* ps = g_win32_prompt_state;
+        extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+        PromptState* ps = Platform_GetPromptStateForHWND(hwnd);
         if (ps && Prompt_DeleteSelection(ps)) {
             UI_SetText(ps->filter);
             UI_SetCursorPosition(ps->cursor);
         }
         if (UI_InsertChar((wchar_t)wParam) > 0) {
-        PromptState* ps = g_win32_prompt_state;
+        PromptState* ps = Platform_GetPromptStateForHWND(hwnd);
         if (ps) {
           strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
           FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
@@ -740,16 +745,16 @@ case WM_CHAR: {
         }
         if (FlintContext_Get()->prompt_callbacks.render) {
             FlintContext_Get()->window.editbox_placed = false;
-            extern PromptState* Platform_GetWin32PromptState(void);
-            PromptState *state = Platform_GetWin32PromptState();
+            extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+            PromptState *state = Platform_GetPromptStateForHWND(hwnd);
             if (state && state->render) {
                 Checkbox_FrameBegin();
                 Platform_SetDrawContextWin32(paintDC);
                 state->render(state);
             }
         } else {
-            extern PromptState* Platform_GetWin32PromptState(void);
-            PromptState *estate = Platform_GetWin32PromptState();
+            extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+            PromptState *estate = Platform_GetPromptStateForHWND(hwnd);
             if (estate) {
                 Platform_SetDrawContextWin32(paintDC);
                 extern void Platform_DrawPromptEditbox(PromptState* state);
