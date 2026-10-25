@@ -1046,10 +1046,15 @@ static bool cc_icon_is_glyph(const char *icon) {
     if ((unsigned char)tail[0] == 0xEF && (unsigned char)tail[1] == 0xB8 && (unsigned char)tail[2] == 0x8F && tail[3] == '\0') return true;
     return false;
 }
+
+static void cc_subwindow_refresh(const char* filter, ListBoxInfo* lb) {
+    const char *items[] = { "Action 1", "Action 2", "Action 3", NULL };
+    fl_populate_listbox(lb, filter, (const char**)items, 3);
+}
+
+
 static void cc_subwindow_render(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
-    const char *items[] = { "Action 1", "Action 2", "Action 3", NULL };
-    fl_populate_listbox(lb, state->filter, (const char**)items, 3);
     FlListSpec spec = { .lb = lb };
     if (!fl_listbox_begin(&spec)) return;
     FlListItemCtx ctx;
@@ -1064,7 +1069,7 @@ static void cc_render(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = { .lb = lb ,.item_height = FontSize * 2};
     fl_place_editbox();
-    fl_place_button(.name = "Actions",.x=state->width - 200,.y=state->height - 30,.w=180,.border=false,.text= "Actions Ctrl+B",.fontsize=20,.no_bg=true);
+    fl_place_button(.name = "Actions",.x=state->width - 200,.y=state->height - 30,.w=180,.border=false,.text= "Actions Ctrl+B",.fontsize=20);
     if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
     FlListItemCtx ctx;
@@ -1096,6 +1101,7 @@ static void cc_render(PromptState *state) {
 
         fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                       .text = ctx.text, .align = "LEFT", .pad = 0);
+
         const char *al = fl_alias_for(ctx.text);
         if (al) {
             char abuf[160];
@@ -1130,8 +1136,9 @@ static void cc_render(PromptState *state) {
     static bool s_actions_was_clicked = false;
     bool actions_clicked = fl_button_is_clicked("Actions");
     if (actions_clicked && !s_actions_was_clicked) {
-        if (!fl_close_subwindow("Actions")) {
-            fl_subwindow(.title = "Actions", .x = (state->width / 2) + 240, .y = (state->height / 2) - 50, .w = 200, .h = 300, .render = cc_subwindow_render);
+        WindowManager* wm = WindowManager_Get();
+        if (wm && wm->popup_count <= 1) {
+            fl_subwindow(.title = "Actions", .x = (state->width / 2) + 240, .y = (state->height / 2) - 50, .w = 200, .h = 300, .render = cc_subwindow_render, .refresh = cc_subwindow_refresh);
         }
     }
     s_actions_was_clicked = actions_clicked;

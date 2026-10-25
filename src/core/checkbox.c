@@ -1,4 +1,5 @@
 #include "core/checkbox.h"
+#include "core/window_manager.h"
 #include "core/timer.h"
 #include "core/types.h"
 #include "core/listbox_hover.h"
@@ -6,6 +7,7 @@
 #include "platform/draw.h"
 #include "platform/input_state.h"
 #include "platform/platform.h"
+#include "deps/log.h"
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
@@ -36,8 +38,23 @@ void Checkbox_FrameBegin(void) {
 static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
     PROFILE_START(_pt);
     if (!g_cb_mouse.valid) {
-        bool have = ListBox_ClientMousePos(&g_cb_mouse.mx, &g_cb_mouse.my);
-        if (!have) {
+        int mx = 0, my = 0;
+        if (Platform_GetMousePos(&mx, &my)) {
+            int wx = 0, wy = 0;
+            WindowManager* wm = WindowManager_Get();
+            Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+            bool have_origin = false;
+            if (top) have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
+            if (!have_origin) {
+                have_origin = Platform_WindowToRoot(FlintContext_Get()->window.hPopupWnd, &wx, &wy);
+            }
+            if (have_origin) {
+                mx -= wx;
+                my -= wy;
+            }
+            g_cb_mouse.mx = mx;
+            g_cb_mouse.my = my;
+        } else {
             g_cb_mouse.mx = -9999;
             g_cb_mouse.my = -9999;
         }
@@ -99,6 +116,8 @@ static int checkbox_line_height(int fontsize) {
     { PROFILE_END_VAR(_pt, "checkbox_line_height"); return (int)((long)ref_h * fontsize / ref_fs); }
 }
 
+FontHandle s_font;
+
 void Checkbox_Draw(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
     unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
@@ -143,9 +162,8 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         }
         if (spec->text) {
             int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
-            FontHandle font = Platform_CreateFont(fontsize, UsedFont);
-            Platform_DrawTextCentered(spec->x, spec->y, w, h, spec->text, spec->text_color, font, fontsize);
-            Platform_DestroyFont(font);
+            if (!s_font.xfont) s_font = Platform_CreateFont(fontsize, UsedFont);
+            Platform_DrawTextCentered(spec->x, spec->y, w, h, spec->text, spec->text_color, s_font, fontsize);
         }
     }
 
@@ -199,20 +217,23 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     bool hover_changed = (hovered != cb->hovered);
     cb->hovered = hovered;
 
+    if (cb->name && strcmp(cb->name, "Actions") == 0) {
+        log_info("ACTIONS PLACE: mx=%d my=%d down=%d was_down=%d hovered=%d", mx, my, down, cb->was_down, hovered);
+    }
+
     bool clicked = false;
     
+    if (cb->button) {
+        cb->checked = false;
+        cb->clicked = false;
+    }
+
     if (down && !cb->was_down) {
         if (hovered) {
             cb->checked = true;
             cb->clicked = true;
             clicked = true;
-        } else if (cb->button) {
-            cb->checked = false;
-            cb->clicked = false;
         }
-    } else if (!down && cb->button) {
-        cb->checked = false;
-        cb->clicked = false;
     }
     cb->was_down = down;
 
