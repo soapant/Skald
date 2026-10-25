@@ -174,10 +174,23 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
         if (layout_w > mw - 40) layout_w = mw - 40;
     }
 
-    int x = spec->x ? spec->x : 0;
-    int y = spec->y ? spec->y : 0;
+    int x = spec->x;
+    int y = spec->y;
     if (x == 0 && y == 0) {
-      WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
+        WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
+    } else {
+        int wx = 0, wy = 0;
+        Popup* top = WindowManager_GetTopPopup(wm);
+        bool have_origin = false;
+        if (top) have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
+        if (!have_origin) {
+            WindowHandle hMain = FlintContext_Get()->window.hPopupWnd;
+            have_origin = Platform_WindowToRoot(hMain, &wx, &wy);
+        }
+        if (have_origin) {
+            x += wx;
+            y += wy;
+        }
     }
 
     PromptPopupData* data = calloc(1, sizeof(PromptPopupData));
