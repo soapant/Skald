@@ -38,8 +38,8 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
     if (!g_cb_mouse.valid) {
         bool have = ListBox_ClientMousePos(&g_cb_mouse.mx, &g_cb_mouse.my);
         if (!have) {
-            g_cb_mouse.mx = 0;
-            g_cb_mouse.my = 0;
+            g_cb_mouse.mx = -9999;
+            g_cb_mouse.my = -9999;
         }
         g_cb_mouse.down = Platform_MouseStateDown(MOUSE_BTN_LEFT);
         g_cb_mouse.valid = true;
@@ -102,9 +102,9 @@ static int checkbox_line_height(int fontsize) {
 void Checkbox_Draw(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
     unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
-    unsigned long def_btn_border = spec->clicked ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+    unsigned long def_btn_border = (spec->clicked || spec->hovered) ? CHECKBOX_WHITE : CHECKBOX_GRAY;
     unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
-    unsigned long def_btn_body = spec->clicked ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
+    unsigned long def_btn_body = (spec->clicked || spec->hovered) ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
 
     unsigned long checkbox_border = spec->hovered_color ? spec->hovered_color : def_cb_border;
     unsigned long button_border = spec->clicked_color ? spec->clicked_color : def_btn_border;
@@ -203,9 +203,9 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     
     if (down && !cb->was_down) {
         if (hovered) {
-            cb->checked = !cb->checked;
-            clicked = true;
+            cb->checked = true;
             cb->clicked = true;
+            clicked = true;
         } else if (cb->button) {
             cb->checked = false;
             cb->clicked = false;
