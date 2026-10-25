@@ -303,6 +303,12 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
 
     
     switch (msg) {
+    case WM_LBUTTONDOWN: {
+      POINT pt;
+      if (GetCursorPos(&pt)) ListBox_PublishMousePos((int)pt.x, (int)pt.y);
+      InvalidateRect(hwnd, NULL, FALSE);
+      break;
+    }
     case WM_MOUSEMOVE: {
       extern PromptState* Platform_GetWin32PromptState(void);
       POINT pt;
