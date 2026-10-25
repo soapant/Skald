@@ -103,8 +103,8 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
     unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
     unsigned long def_btn_border = (spec->clicked || spec->hovered) ? CHECKBOX_WHITE : CHECKBOX_GRAY;
-    unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
-    unsigned long def_btn_body = (spec->clicked || spec->hovered) ? CHECKBOX_GRAY : CHECKBOX_DARK_GRAY;
+    unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : COLOR_BG;
+    unsigned long def_btn_body = (spec->clicked || spec->hovered) ? CHECKBOX_GRAY : COLOR_BG;
 
     unsigned long checkbox_border = spec->hovered_color ? spec->hovered_color : def_cb_border;
     unsigned long button_border = spec->clicked_color ? spec->clicked_color : def_btn_border;
