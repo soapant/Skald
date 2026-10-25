@@ -184,6 +184,12 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
         return true;
     }
     if (vk == VK_ESCAPE) {
+        WindowManager* wm = WindowManager_Get();
+        if (wm && wm->popup_count > 1) {
+            WindowManager_PopPopup(wm);
+            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            return true;
+        }
         if (ctx->window.editbox_placed) {
             if (!EnableVimMode || !IsInsertMode()) {
                 ctx->window.selection_complete = true;
