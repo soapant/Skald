@@ -143,14 +143,7 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         if (spec->text) {
             int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
             FontHandle font = Platform_CreateFont(fontsize, UsedFont);
-            XftFont *xf = FH_TO_XFT(font);
-            int ascent = xf ? xf->ascent : (fontsize * 3 / 4);
-            int descent = xf ? xf->descent : (fontsize / 4);
-            int lineHeight = ascent + descent;
-            int tw = Platform_MeasureTextWidth(spec->text, (int)strlen(spec->text), fontsize);
-            int tx = spec->x + (w - tw) / 2;
-            int ty = spec->y + (h - lineHeight) / 2;
-            Platform_DrawTextRaw(tx, ty, spec->text, spec->text_color, font, "LEFT", 0, fontsize);
+            Platform_DrawTextCentered(spec->x, spec->y, w, h, spec->text, spec->text_color, font, fontsize);
             Platform_DestroyFont(font);
         }
     }

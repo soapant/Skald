@@ -340,6 +340,20 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return true; }
 }
 
+void Platform_DrawTextCentered(int x, int y, int w, int h, const char *text, unsigned long color, FontHandle font, int fontsize) {
+    PROFILE_START(_pt);
+    if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); return; }
+    XftFont *xf = FH_TO_XFT(font);
+    int ascent = xf ? xf->ascent : (fontsize * 3 / 4);
+    int descent = xf ? xf->descent : (fontsize / 4);
+    int lineHeight = ascent + descent;
+    int tw = Platform_MeasureTextWidth(text, (int)strlen(text), fontsize);
+    int tx = x + (w - tw) / 2;
+    int ty = y + (h - lineHeight) / 2;
+    Platform_DrawTextRaw(tx, ty, text, color, font, "LEFT", 0, fontsize);
+    { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); }
+}
+
 static Display* g_line_dpy = NULL;
 static int g_line_size = 0;
 static XftFont* g_line_font = NULL;
