@@ -102,11 +102,15 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
         PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
         return false;
     }
+    HWND hwnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     if (self) self->handle = FlintContext_Get()->window.hPopupWnd;
     extern PromptState* g_win32_prompt_state;
     if (!(g_win32_prompt_state && g_win32_prompt_state->no_bg)) {
-        win32_apply_rounded_corners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), w, h);
+        win32_apply_rounded_corners(hwnd, w, h);
     }
+    ShowWindow(hwnd, SW_SHOW);
+    UpdateWindow(hwnd);
+    ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
     PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
     { PROFILE_END_VAR(_pt, "Platform_PromptPopupShowWindow"); return true; }
 }
