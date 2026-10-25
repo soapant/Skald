@@ -125,8 +125,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     if (spec->subwindow) {
         PromptSpec heap_spec = *spec;
         heap_spec.subwindow = false;
-        Popup* popup = PromptPopup_Create(wm, &heap_spec);
-        if (popup) WindowManager_PushPopup(wm, popup);
+        (void)PromptPopup_Create(wm, &heap_spec);
         PROFILE_END_VAR(_pt, "Platform_PromptUser");
         return NULL;
     }
