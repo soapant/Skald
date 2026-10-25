@@ -246,6 +246,7 @@ void fl_message_impl(const FlMessageSpec* spec);
 #define fl_overlay(...) fl_message(__VA_ARGS__, .timeout=10000000.0)
 #define fl_dismiss_overlay(...) fl_dismiss_message(__VA_ARGS__)
 #define fl_subwindow(...) fl_window(__VA_ARGS__,.subwindow=true)
+bool fl_close_subwindow(const char* name);
 
 #define FlPromptSpec PromptSpec
 

@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "core/window_manager.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -1046,7 +1047,17 @@ static bool cc_icon_is_glyph(const char *icon) {
     return false;
 }
 static void cc_subwindow_render(PromptState *state) {
-    (void)state;
+    ListBoxInfo *lb = &state->listbox;
+    const char *items[] = { "Action 1", "Action 2", "Action 3", NULL };
+    fl_populate_listbox(lb, state->filter, (const char**)items, 3);
+    FlListSpec spec = { .lb = lb };
+    if (!fl_listbox_begin(&spec)) return;
+    FlListItemCtx ctx;
+    while (fl_listbox_next(&ctx)) {
+        fl_draw_text(.x = 14, .y = ctx.y + CC_ITEM_TEXT_Y,
+                      .text = ctx.text, .align = "LEFT");
+    }
+    fl_listbox_end();
 }
 
 static void cc_render(PromptState *state) {
@@ -1116,9 +1127,14 @@ static void cc_render(PromptState *state) {
         }
     }
     fl_listbox_end();
-    if (fl_button_is_clicked("Actions")) {
-        fl_subwindow(.x=(state->width / 2) + 240,.y=(state->height / 2) - 50,.w=200,.h=300,.render=cc_subwindow_render);
+    static bool s_actions_was_clicked = false;
+    bool actions_clicked = fl_button_is_clicked("Actions");
+    if (actions_clicked && !s_actions_was_clicked) {
+        if (!fl_close_subwindow("Actions")) {
+            fl_subwindow(.title = "Actions", .x = (state->width / 2) + 240, .y = (state->height / 2) - 50, .w = 200, .h = 300, .render = cc_subwindow_render);
+        }
     }
+    s_actions_was_clicked = actions_clicked;
 
 }
 

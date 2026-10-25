@@ -7,6 +7,8 @@
 #include "core/types.h"
 
 typedef struct ListBoxInfo ListBoxInfo;
+typedef struct PromptState PromptState;
+typedef void (*RenderCallback)(PromptState *state);
 
 #define LISTBOX_ROW_BYTES 512
 
@@ -21,7 +23,7 @@ struct ListBoxInfo {
     int  last_item_count;
 };
 
-typedef struct {
+struct PromptState {
      char**      items;
      size_t      item_count;
      char        filter[512];
@@ -35,7 +37,9 @@ typedef struct {
      bool        has_listbox;
      bool        no_bg;
      char*       placeholder;
-} PromptState;
+     RenderCallback render;
+     bool        editbox_placed;
+};
 
 typedef void (*RefreshCallback)(const char* filter, ListBoxInfo* lb);
 typedef bool (*EnterCallback)(const char* selection, ListBoxInfo* lb);
@@ -45,7 +49,6 @@ typedef bool (*CtrlShiftEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef bool (*CtrlAltEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef bool (*ShiftAltEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*TabCallback)(ListBoxInfo* lb);
-typedef void (*RenderCallback)(PromptState *state);
 typedef void (*EditCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*FilterCallback)(const char* item,const char* filter);
 typedef void (*CopyCallback)(const char* selection,int true_index,int type);
