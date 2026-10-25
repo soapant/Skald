@@ -558,6 +558,13 @@ log_error("operation failed, returning error"); { PROFILE_END_VAR(_pt, "Platform
 #include <gdiplus.h>
 
 PromptState* Platform_GetWin32PromptState(void) {     PROFILE_START(_pt);
+    WindowManager* wm = WindowManager_Get();
+    if (wm) {
+        Popup* top = WindowManager_GetTopPopup(wm);
+        if (top && top->type == POPUP_PROMPT && top->user_data) {
+            { PROFILE_END_VAR(_pt, "Platform_GetWin32PromptState"); return (PromptState*)top->user_data; }
+        }
+    }
 { PROFILE_END_VAR(_pt, "Platform_GetWin32PromptState"); return g_win32_prompt_state; } }
 
 static void win_command_confirm(const char* text, void* user_data) {

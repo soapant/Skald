@@ -1,7 +1,9 @@
 #include "platform/wm_platform.h"
+#include "platform/platform.h"
 #include "platform/input_state.h"
 #include "core/window_manager.h"
 #include "core/remap_manager.h"
+#include "core/prompt_controller.h"
 #include "deps/log.h"
 #include <windows.h>
 #include <string.h>
@@ -93,216 +95,51 @@ PROFILE_START(timer);
 
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(_pt);
-(void)wm;
-  if (!spec) { log_error("Platform_PromptUser null spec"); return NULL; }
-  const char** window_list = spec->items;
-  const char* window_title = spec->title ? spec->title : "Flint";
-  int count = 0;
-  if (window_list) {
-    for (count = 0; count < 8192 && window_list[count]; count++) {}
-  }
-  int item_height = PromptRowHeight();
-  RefreshCallback refresh_callback = spec->refresh;
-  EnterCallback enter_callback = spec->enter;
-  CtrlEnterCallback ctrl_enter_callback = spec->ctrl_enter;
-  TabCallback tab_callback = spec->tab;
-  CopyCallback copy_callback = spec->copy;
-  RenderCallback render_callback = spec->render;
-  EditCallback edit_callback = spec->edit;
-  FilterCallback filter_callback = spec->filter;
-  HelpCallback help_callback = spec->help;
-
-  FlintContext_Get()->window.selection_complete = false;
-  FlintContext_Get()->window.output_buffer[0] = '\0';
-  PROFILE_START(timer);
-
-  if (g_win32_prompt_state) { ListBoxInfo_Free(&g_win32_prompt_state->listbox); free(g_win32_prompt_state); g_win32_prompt_state = NULL; }
-  PromptState *win_state = NULL;
-  ListBoxInfo* lb_ptr = NULL;
-  FlintContext_Get()->window.editbox_placed = (render_callback == NULL);
-  bool has_listbox = (window_list || spec->refresh || spec->render);
-  if (has_listbox) {
-    win_state = (PromptState*)calloc(1, sizeof(PromptState));
-    if (!win_state) { log_error("operation failed, returning error spec=%p", spec); return NULL; }
-    win_state->width = 900;
-    win_state->height = 640;
-    win_state->has_listbox = true;
-    win_state->no_bg = spec->no_bg;
-    win_state->window_title = (char*)window_title;
-    lb_ptr = &win_state->listbox;
-    ListBoxInfo_Init(lb_ptr);
-    g_win32_prompt_state = win_state;
-  }
-
-  FlintContext_Get()->prompt_callbacks.refresh = refresh_callback;
-  FlintContext_Get()->prompt_callbacks.enter = enter_callback;
-  FlintContext_Get()->prompt_callbacks.ctrl_enter = ctrl_enter_callback;
-  FlintContext_Get()->prompt_callbacks.shift_enter = spec->shift_enter;
-  FlintContext_Get()->prompt_callbacks.ctrl_shift_enter = spec->ctrl_shift_enter;
-  FlintContext_Get()->prompt_callbacks.ctrl_alt_enter = spec->ctrl_alt_enter;
-  FlintContext_Get()->prompt_callbacks.shift_alt_enter = spec->shift_alt_enter;
-  FlintContext_Get()->prompt_callbacks.tab = tab_callback;
-  FlintContext_Get()->prompt_callbacks.copy = copy_callback;
-  FlintContext_Get()->prompt_callbacks.render = render_callback;
-  FlintContext_Get()->prompt_callbacks.edit = edit_callback;
-  FlintContext_Get()->prompt_callbacks.filter = filter_callback;
-  FlintContext_Get()->prompt_callbacks.help = help_callback;
-  FlintContext_Get()->window.title = window_title;
-  {
-    const char* p = strchr(window_title, ' ');
-    const char* name = window_title;
-    if (p) {
-        int has_high = 0;
-        for (const char* q = window_title; q < p; q++) {
-            if ((unsigned char)*q >= 0x80) { has_high = 1; break; }
-        }
-        if (has_high) name = p + 1;
+    if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
+    Popup* popup = PromptPopup_Create(wm, spec);
+    if (!popup) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
+    if (spec->subwindow) {
+        PROFILE_END_VAR(_pt, "Platform_PromptUser");
+        return NULL;
     }
-    FlintContext_Get()->window.current_feature = (char*)name;
-  }
-  SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
-
-  SetModeWithListBox(MODE_INSERT, lb_ptr);
-
-  WindowLayout layout;
-  CalculateWindowMetrics(&layout, 640, 900, item_height);
-  if (win_state) {
-    win_state->width = layout.w;
-    win_state->height = layout.h;
-  }
-
-  HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
-
-  if (!Platform_PromptPopupShowWindow(NULL, layout.x, layout.y, layout.w, layout.h)) {
-    DeleteObject(hCustomFont);
-    if (win_state) free(win_state);
-    else if (lb_ptr) free(lb_ptr);
-    if (g_win32_prompt_state == win_state) g_win32_prompt_state = NULL;
-    return NULL;
-  }
-  SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
-  if (spec->tick) SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_TICK_TIMER_ID, UI_TICK_TIMER_MS, NULL);
-
-  PROFILE_END_VAR(timer, "Window Init");
-
-  PROFILE_START(timer1);
-
-  CreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
-  if (render_callback) {
-    if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox), SW_HIDE);
-  }
-  if (refresh_callback && has_listbox && lb_ptr) {
-      refresh_callback("", lb_ptr);
-      if (g_win32_prompt_state) g_win32_prompt_state->listbox = *lb_ptr;
-  }
-
-  PROFILE_END_VAR(timer1, "CreateChildControl");
-
-  PROFILE_START(timer2);
-
-  if (win_state && win_state->no_bg) {
-    SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, 0, LWA_COLORKEY);
-  } else {
-    SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, (BYTE)WindowOpacity, LWA_ALPHA);
-  }
-
-  PROFILE_END_VAR(timer2, "WindowBs");
-
-  PROFILE_START(timer3);
-
-  if (IsNormalMode() && RememberLastIndex && last_index >= 0 && has_listbox) {
-    RequestInitialNavigation(last_index);
-  }
-
-  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
-
-
-    log_info("Platform_PromptUser spec=%p", spec);;
-PROFILE_END_VAR(timer3, "Focus");
-
-  log_info("Entering local message modal loop...");
-  log_info("Entering modal loop", GetTickCount());
-  MSG msg;
-  int loop_counter = 0;
-  int last_mx = -1, last_my = -1, last_btn = -1;
-  DWORD last_mouse_check = GetTickCount();
-  ListBox_SetHoverThrottleMs(MOUSE_RECHECK_INTERVAL_MS);
-  UI_PreparePopupPump();
-  while (!FlintContext_Get()->window.selection_complete) {
-    if (GetMessage(&msg, NULL, 0, 0)) {
-      if (UI_ShouldSkipPopupKey(&msg)) continue;
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-      loop_counter++;
-    } else {
-      break; 
-    }
-    {
-      int mx = 0, my = 0;
-      if (Platform_GetMousePos(&mx, &my)) {
-        ListBox_PublishMousePos(mx, my);
-        DWORD now = GetTickCount();
-        if (now - last_mouse_check >= MOUSE_RECHECK_INTERVAL_MS) {
-          last_mouse_check = now;
-          int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
-          if (mx != last_mx || my != last_my || btn != last_btn) {
-            bool btn_changed = (btn != last_btn);
-            last_mx = mx;
-            last_my = my;
-            last_btn = btn;
-            if (btn_changed) {
-              HWND ph = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-              if (ph && IsWindow(ph)) InvalidateRect(ph, NULL, FALSE);
+    long long last_tick = 0;
+    int last_mx = 0, last_my = 0;
+    int last_btn = -1;
+    while (wm->running && popup->manager) {
+        Platform_WM_ProcessEvents(wm);
+        bool mouse_changed = false;
+        int mx = 0, my = 0;
+        if (Platform_GetMousePos(&mx, &my)) {
+            ListBox_PublishMousePos(mx, my);
+            int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
+            if (mx != last_mx || my != last_my || btn != last_btn) {
+                last_mx = mx;
+                last_my = my;
+                last_btn = btn;
+                mouse_changed = true;
             }
-          }
         }
-      }
+        Popup* mouse_top = WindowManager_GetTopPopup(wm);
+        if (mouse_changed && mouse_top && mouse_top->vtable && mouse_top->vtable->on_render) {
+            mouse_top->vtable->on_render(mouse_top);
+        }
+        long long now = Platform_GetWallClockMs();
+        if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
+            last_tick = now;
+            Popup* top = WindowManager_GetTopPopup(wm);
+            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+        }
+        if (PromptController_PollSequenceTimeout()) {
+            Popup* top = WindowManager_GetTopPopup(wm);
+            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+        }
     }
-  }
-  log_info("Left local loop. Processed %d messages.", loop_counter);
-
-  Platform_PromptPopupHideWindow(NULL);
-
-  log_info("Flushing trailing queue entries...");
-  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-  }
-
-  struct feature_data* data = GetFeatureData(FlintContext_Get()->window.current_feature);
-  if (data) {
-    char* new_name = _strdup(FlintContext_Get()->window.current_feature);
-    if (new_name) {
-        free(data->name);
-        data->name = new_name;
+    if (popup->manager == NULL) {
+        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
+    } else {
+        WindowManager_PopPopup(wm);
+        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
-  }
-
-
-  DeleteObject(hCustomFont);
-  if (g_win32_prompt_state) { ListBoxInfo_Free(&g_win32_prompt_state->listbox); free(g_win32_prompt_state); g_win32_prompt_state = NULL; lb_ptr = NULL; }
-  else if (win_state) { ListBoxInfo_Free(&win_state->listbox); free(win_state); win_state = NULL; lb_ptr = NULL; }
-  else if (lb_ptr) { ListBoxInfo_Free(lb_ptr); free(lb_ptr); }
-  FlintContext_Get()->window.selection_complete = false;
-  FlintContext_Get()->prompt_callbacks.refresh = NULL;
-  FlintContext_Get()->prompt_callbacks.enter = NULL;
-  FlintContext_Get()->prompt_callbacks.ctrl_enter = NULL;
-  FlintContext_Get()->prompt_callbacks.shift_enter = NULL;
-  FlintContext_Get()->prompt_callbacks.ctrl_shift_enter = NULL;
-  FlintContext_Get()->prompt_callbacks.ctrl_alt_enter = NULL;
-  FlintContext_Get()->prompt_callbacks.shift_alt_enter = NULL;
-  FlintContext_Get()->prompt_callbacks.tab = NULL;
-  FlintContext_Get()->prompt_callbacks.copy = NULL;
-  FlintContext_Get()->prompt_callbacks.render = NULL;
-  FlintContext_Get()->prompt_callbacks.edit = NULL;
-  FlintContext_Get()->prompt_callbacks.filter = NULL;
-  FlintContext_Get()->prompt_callbacks.help = NULL;
-
-  if (FlintContext_Get()->item_index_map) {
-    shfree(FlintContext_Get()->item_index_map);
-    FlintContext_Get()->item_index_map = NULL;
-  }
-
-  log_info("Returning from Platform_PromptUser. Buffer Length: %zu", strlen(FlintContext_Get()->window.output_buffer));
-  { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL; }
+    FlintContext* _c = FlintContext_Get();
+    { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL; }
 }
