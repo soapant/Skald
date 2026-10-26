@@ -415,7 +415,6 @@ void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, 
         PROFILE_START(_pt);
 if (selected) {
     if (state && state->no_bg) {
-        // transparent selection: lighter alpha
         x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
     } else {
         x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));

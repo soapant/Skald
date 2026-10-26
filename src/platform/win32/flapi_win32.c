@@ -210,7 +210,6 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
         if (!spec->items || spec->count <= 0) return false;
         return false;
     }
-    if (!lb->populated_count) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     Platform_GetDrawContextWin32(&g_fl_list_hdc);
     if (!g_fl_list_hdc) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     g_fl_list_spec = *spec;
