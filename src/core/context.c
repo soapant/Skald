@@ -5,7 +5,6 @@ static FlintContext g_ctx = {
     .vim_mode_str = "INSERT",
     .window = {
         .hPopupWnd = {0},
-        .hListBox = {0},
         .hDisplayMessage = {0},
         .selection_complete = false,
         .output_buffer = {0},
