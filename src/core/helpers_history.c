@@ -37,7 +37,7 @@ bool GetFromHistory(ListBoxInfo* lb) {
             UI_SetCursorPosition(strlen(HistoryList[idx]));
 
             if (!IsNormalMode()) {
-              UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+              UI_Redraw(lb);
             }
             if (!idx_ptr) {
                 idx_ptr = malloc(sizeof(int));

@@ -115,7 +115,7 @@ bool Prompt_HandleListClick(PromptState* state, bool ctrl, bool shift, bool alt)
     if (!ListBox_ClientMousePos(&mx, &my)) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
     int idx = ListBox_RowAtY(lb, list_top, item_height, lb->view_offset, visible_count, my);
     if (idx < 0) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
-    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, idx);
+    UI_SetSelection(lb,idx);
     Prompt_TriggerEnter(state, ctrl, shift, alt);
     PROFILE_END_VAR(_pt, "Prompt_HandleListClick");
     return true;
@@ -245,7 +245,7 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
                     return true;
                 }
             }
-            UI_NavigateUp(&state->listbox, ctx->window.hListBox);
+            UI_NavigateUp(&state->listbox);
         }
         PROFILE_END_VAR(_pt, "Prompt_HandleKey");
         return true;
@@ -256,7 +256,7 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
             PROFILE_END_VAR(_pt, "Prompt_HandleKey");
             return true;
         }
-        if (state->has_listbox) UI_NavigateDown(&state->listbox, ctx->window.hListBox);
+        if (state->has_listbox) UI_NavigateDown(&state->listbox);
         PROFILE_END_VAR(_pt, "Prompt_HandleKey");
         return true;
     }
@@ -352,7 +352,7 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
     return false;
 }
 
-void Prompt_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
+void Prompt_RedrawNow(ListBoxInfo* lb) {
     PROFILE_START(_pt);
     FlintContext* ctx = FlintContext_Get();
     if (!ctx) { PROFILE_END_VAR(_pt, "Prompt_RedrawNow"); return; }

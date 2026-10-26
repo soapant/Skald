@@ -220,7 +220,7 @@ void DeleteCharUnderCursor(FlintContext* ctx) {
 void GoToFirstListBoxItem(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
-    UI_NavigateTo(lb, ctx->window.hListBox, 0);
+    UI_NavigateTo(lb, 0);
     ListBox_ScrollToSelection(lb);
 }
 
@@ -228,7 +228,7 @@ void GoToLastListBoxItem(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
     int lastIndex = lb->populated_count - 1;
-    UI_NavigateTo(lb, ctx->window.hListBox, lastIndex);
+    UI_NavigateTo(lb, lastIndex);
     ListBox_ScrollToSelection(lb);
 }
 

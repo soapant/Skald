@@ -90,16 +90,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     if (FontSize != old_font) {
         if (g_win32_hMainFont) { DeleteObject(g_win32_hMainFont); g_win32_hMainFont = NULL; }
         g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
-        if (WH_TO_HWND(FlintContext_Get()->window.hListBox) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
-            UI_LB_SetFont(FlintContext_Get()->window.hListBox, g_win32_hMainFont);
-            UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, PromptRowHeight());
-        }
         HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-        if (hPopup && IsWindow(hPopup)) {
-            InvalidateRect(hPopup, NULL, TRUE);
-            if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, TRUE);
-            UpdateWindow(hPopup);
-        }
     }
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
         HWND hPar = GetParent(hwnd);
@@ -127,7 +118,7 @@ static HBRUSH s_bg_brush = NULL;
       if (hst && hst->has_listbox) {
         POINT pt; GetCursorPos(&pt);
         ListBox_PublishMousePos(pt.x, pt.y);
-        ListBox_SetGeometry(PromptListTop(), UI_LB_GetItemHeight(WH_FROM_HWND(hWnd)), UI_LB_GetVisibleCount());
+        ListBox_SetGeometry(PromptListTop(), UI_LB_GetItemHeight(),UI_LB_GetVisibleCount());
         bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
         bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
         bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
@@ -142,9 +133,9 @@ static HBRUSH s_bg_brush = NULL;
       PromptState* hst = Platform_GetPromptStateForHWND(GetParent(hWnd) ? GetParent(hWnd) : hWnd);
       if (hst && hst->has_listbox) {
         ListBoxInfo* hlb = &hst->listbox;
-        int hItemH = UI_LB_GetItemHeight(WH_FROM_HWND(hWnd));
+        int hItemH = UI_LB_GetItemHeight();
         int hVisible = UI_LB_GetVisibleCount();
-        int hTop = UI_LB_GetTopIndex(WH_FROM_HWND(hWnd));
+        int hTop = UI_LB_GetTopIndex();
         ListBox_SetGeometry(PromptListTop(), hItemH, hVisible);
         ListBox_HoverFocus(hlb, PromptListTop(), hItemH, hTop, hVisible);
       }
@@ -182,7 +173,28 @@ static HBRUSH s_bg_brush = NULL;
           FillRect(memDC, &rc, s_bg_brush);
         }
       }
-      SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+      {
+          extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
+          PromptState* hst = Platform_GetPromptStateForHWND(GetParent(hWnd) ? GetParent(hWnd) : hWnd);
+          if (hst && hst->has_listbox) {
+              ListBoxInfo* lb = &hst->listbox;
+              int itemH = UI_LB_GetItemHeight();
+              for (int i = 0; i < lb->populated_count; i++) {
+                  int idx = lb->view_offset + i;
+                  if (idx >= lb->populated_count) break;
+                  RECT itemRect = {0, i * itemH, rc.right, (i + 1) * itemH};
+                  
+                  if (idx == lb->selected_index) {
+                      HBRUSH selBrush = CreateSolidBrush(COLOR_SELECTED_TEXT);
+                      FillRect(memDC, &itemRect, selBrush);
+                      DeleteObject(selBrush);
+                  }
+                  
+                  SetTextColor(memDC, COLOR_TEXT);
+                  DrawTextA(memDC, lb->populated_cache[idx], -1, &itemRect, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+              }
+          }
+      }
       {
         int lbCount = (int)SendMessageA(hWnd, LB_GETCOUNT, 0, 0);
         if (lbCount > 0) {
@@ -338,15 +350,9 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
       short delta = (short)HIWORD(wParam);
       int rows = (delta > 0) ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS;
       ListBox_PublishMousePos((short)(lParam & 0xFFFF), (short)((lParam >> 16) & 0xFFFF));
-      HWND hLB = WH_TO_HWND(FlintContext_Get()->window.hListBox);
       PromptState* hst = Platform_GetPromptStateForHWND(hwnd);
-      if (hLB && IsWindow(hLB) && IsWindowVisible(hLB) && hst && hst->has_listbox) {
-        ListBox_ScrollBy(&hst->listbox, rows, UI_LB_GetVisibleCount());
-        InvalidateRect(hLB, NULL, FALSE);
-      } else {
-        ListBox_QueueScroll(rows);
-        InvalidateRect(hwnd, NULL, FALSE);
-      }
+      ListBox_QueueScroll(rows);
+      InvalidateRect(hwnd, NULL, FALSE);
       return 0;
     }
     case WM_KEYDOWN: {
@@ -382,7 +388,7 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
           FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
           FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
         }
-        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        UI_Redraw(lb);
         InvalidateRect(hwnd, NULL, FALSE);
         return 0;
       }
@@ -411,7 +417,7 @@ case WM_CHAR: {
           FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
           FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
         }
-        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        UI_Redraw(lb);
         popup_request_repaint(hwnd);
         return 0;
       }
@@ -483,10 +489,7 @@ case WM_CHAR: {
       if (wParam && g_pending_navigate >= 0) {
         int idx = g_pending_navigate;
           g_pending_navigate = -1;
-          if (WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
-            UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, idx);
-              UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox));
-          }
+          UI_NavigateTo(lb, idx);
       }
       break;
     }
@@ -502,14 +505,14 @@ case WM_CHAR: {
     case WM_TIMER: {
       if (wParam == UI_DEBOUNCE_TIMER_ID) {
         KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
-          UI_RedrawNow(lb, FlintContext_Get()->window.hListBox);
+          UI_RedrawNow(lb);
           if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
           else UI_LegacySyncRepaint();
           return 0;
       }
       if (wParam == UI_TICK_TIMER_ID) {
           if (PromptController_PollSequenceTimeout()) {
-              if (lb && WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL) UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+              UI_Redraw(lb);
           }
           if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
           return 0;
