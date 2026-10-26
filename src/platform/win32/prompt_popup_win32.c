@@ -2,7 +2,6 @@
 #include "core/window_manager.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"
-#include "deps/log.h"
 #include "platform/wm_platform.h"
 #include "platform/ui.h"
 #include <windows.h>
@@ -19,7 +18,6 @@ static void CALLBACK ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD t
     KillTimer(NULL, id);
     if (g_track_saved) {
         SystemParametersInfoA(SPI_SETACTIVEWINDOWTRACKING, 0, (PVOID)(uintptr_t)g_old_track, 0);
-        log_info("re-enabled active window tracking=%d", (int)g_old_track);
         g_track_saved = FALSE;
     }
 }
@@ -31,7 +29,6 @@ static void CALLBACK RestoreFocusProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD ti
     if (g_pending_restore && IsWindow(g_pending_restore)) {
         HWND cur = GetForegroundWindow();
         if (cur != g_pending_restore) {
-            log_info("RestoreFocusProc re-asserting focus cur=%p target=%p", cur, g_pending_restore);
             HWND target = g_pending_restore;
             if (IsIconic(target)) ShowWindow(target, SW_RESTORE);
             DWORD fgTid = cur ? GetWindowThreadProcessId(cur, NULL) : 0;
@@ -79,7 +76,6 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     else if (!fg || !IsWindow(fg)) g_prev_fg = NULL;
     char _save_title[128] = {0};
     if (g_prev_fg) GetWindowTextA(g_prev_fg, _save_title, sizeof(_save_title));
-    log_info("Platform_PromptPopupShowWindow saving prev_fg=%p title='%s'", g_prev_fg, _save_title);
     {
         BOOL cur = FALSE;
         if (SystemParametersInfoA(SPI_GETACTIVEWINDOWTRACKING, 0, &cur, 0)) {
@@ -87,7 +83,6 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
             g_track_saved = TRUE;
             if (cur) {
                 SystemParametersInfoA(SPI_SETACTIVEWINDOWTRACKING, 0, (PVOID)FALSE, 0);
-                log_info("disabled active window tracking (was %d)", (int)cur);
             }
         }
     }
@@ -98,7 +93,6 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
         x, y, w, h, NULL, NULL, hInstance, NULL
         ));
     if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
-        log_error("CreateWindowExA failed: %lu", GetLastError());
         PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
         return false;
     }
@@ -121,6 +115,7 @@ void Platform_PromptPopupHideWindow(Popup* self) {
     
     HWND hwnd = (self && WH_TO_HWND(self->handle) != NULL) ? WH_TO_HWND(self->handle) : WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     
+    
     if (hwnd != NULL && IsWindow(hwnd)) {
         KillTimer(hwnd, 999);
         KillTimer(hwnd, UI_TICK_TIMER_ID);
@@ -131,24 +126,10 @@ void Platform_PromptPopupHideWindow(Popup* self) {
     }
     
     if (self) self->handle = WH_NULL;
+    
     if (g_prev_fg && IsWindow(g_prev_fg)) {
         HWND target = g_prev_fg;
-        if (IsIconic(target)) ShowWindow(target, SW_RESTORE);
-        HWND fg = GetForegroundWindow();
-        DWORD fgTid = fg ? GetWindowThreadProcessId(fg, NULL) : 0;
-        DWORD targetTid = GetWindowThreadProcessId(target, NULL);
-        DWORD curTid = GetCurrentThreadId();
-        if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, TRUE);
-        if (targetTid && targetTid != curTid) AttachThreadInput(targetTid, curTid, TRUE);
-        AllowSetForegroundWindow(ASFW_ANY);
-        SetForegroundWindow(target);
-        SetActiveWindow(target);
-        BringWindowToTop(target);
-        if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, FALSE);
-        if (targetTid && targetTid != curTid) AttachThreadInput(targetTid, curTid, FALSE);
-        HWND after = GetForegroundWindow();
         g_pending_restore = target;
-        SetTimer(NULL, 0xC0DE, 80, RestoreFocusProc);
         if (g_track_saved && g_old_track) SetTimer(NULL, 0xC0DF, 800, ReenableTrackProc);
         else g_track_saved = FALSE;
         g_prev_fg = NULL;
