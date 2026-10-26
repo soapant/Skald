@@ -51,7 +51,14 @@ static void popup_request_repaint(HWND hwnd) {
 static bool prompt_win_no_bg(void);
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
-        PROFILE_START(_pt);
+    PROFILE_START(_pt);
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || WH_TO_HWND(top->handle) != hwnd) {
+        PROFILE_END_VAR(_pt, "PromptWindow_OnKey");
+        return false;
+    }
+    
     int wParam = key->vk;
 
     if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
