@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 #include "platform/render_thread.h"
+#include "config.h"
+
 
 typedef struct PlatformWidget PlatformWidget;
 
@@ -14,7 +16,7 @@ void Platform_Widget_Show(PlatformWidget *widget);
 void Platform_Widget_Hide(PlatformWidget *widget);
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y);
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h);
-void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex);
+void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color);
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg);
 void Platform_Widget_SetFps(PlatformWidget *widget, int fps);
 void Platform_Widget_Invalidate(PlatformWidget *widget);
