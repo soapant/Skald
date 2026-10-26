@@ -118,12 +118,18 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
 void Platform_PromptPopupHideWindow(Popup* self) {
     PROFILE_START(_pt);
     PROFILE_START(timer);
-    if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
-        KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
-        KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_TICK_TIMER_ID);
-        DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
-        FlintContext_Get()->window.hPopupWnd = WH_NULL;
+    
+    HWND hwnd = (self && WH_TO_HWND(self->handle) != NULL) ? WH_TO_HWND(self->handle) : WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    
+    if (hwnd != NULL && IsWindow(hwnd)) {
+        KillTimer(hwnd, 999);
+        KillTimer(hwnd, UI_TICK_TIMER_ID);
+        DestroyWindow(hwnd);
+        if (hwnd == WH_TO_HWND(FlintContext_Get()->window.hPopupWnd)) {
+            FlintContext_Get()->window.hPopupWnd = WH_NULL;
+        }
     }
+    
     if (self) self->handle = WH_NULL;
     if (g_prev_fg && IsWindow(g_prev_fg)) {
         HWND target = g_prev_fg;
