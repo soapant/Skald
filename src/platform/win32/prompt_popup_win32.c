@@ -2,8 +2,14 @@
 #include "core/window_manager.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"
+#include "core/types/prompt.h"
+#include "core/types/window.h"
+#include "core/prompt_geometry.h"
 #include "platform/wm_platform.h"
 #include "platform/ui.h"
+#include "platform/draw.h"
+#include "config.h"
+#include "deps/log.h"
 #include <windows.h>
 #include <stdlib.h>
 
@@ -141,6 +147,11 @@ void Platform_PromptPopupHideWindow(Popup* self) {
 }
 
 void Platform_PromptPopupRender(Popup* self) {
+    PromptState* state = (PromptState*)self->user_data;
+    if (!state) return;
+    if (state->render) {
+        state->render(state);
+    }
 }
 
 void Platform_PromptPopupDestroyWindow(Popup* self) {
