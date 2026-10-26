@@ -2318,7 +2318,7 @@ static void fl_widget_attach_window(void *ud) {
 PROFILE_END_VAR(_pt, "flapi:fl_widget_attach_window"); { PROFILE_END_VAR(_pt, "f"); return ; } }
     bool created = false;
     if (!Platform_Widget_IsValid(widget->win)) {
-        Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
+        Platform_SetDrawBgColor(widget->has_bg ? widget->bg_color : 0);
         widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg, widget->on_click, widget->name);
         Platform_SetDrawBgColor(0);
         created = (widget->win != NULL);
@@ -2326,7 +2326,7 @@ PROFILE_END_VAR(_pt, "flapi:fl_widget_attach_window"); { PROFILE_END_VAR(_pt, "f
         Platform_Widget_Move(widget->win, widget->x, widget->y);
     }
     if (widget->win) {
-        Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
+        Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_color : 0);
         Platform_Widget_SetNoBg(widget->win, widget->no_bg);
         Platform_Widget_SetFps(widget->win, widget->fps);
         if (created) Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
@@ -2430,7 +2430,7 @@ PROFILE_END_VAR(_pt, "api:fl_widget_create"); { PROFILE_END_VAR(_pt, "f"); retur
 
     widget->gen = g_fl_widget_gen;
     widget->has_bg = spec->color != 0;
-    widget->bg_hex = widget->has_bg ? rgb_to_hex(spec->color) : 0;
+    widget->bg_color = widget->has_bg ? spec->color : 0;
     widget->no_bg = spec->no_bg;
     widget->auto_w = spec->w <= 0;
     widget->auto_h = spec->h <= 0;

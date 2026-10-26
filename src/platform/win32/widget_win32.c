@@ -21,7 +21,7 @@ struct PlatformWidget {
     Platform_RenderFrameFn fn;
     void *ud;
     int fps;
-    unsigned long bg_hex;
+    ColorRef bg_color;
     bool has_bg;
     bool no_bg;
     bool dirty;
@@ -119,7 +119,7 @@ if (!layer_acquire(widget)) { PROFILE_END_VAR(_pt, "widget_push_layered"); retur
     } else if (win32_bg_image_enabled()) {
         RECT full = {0, 0, widget->layer_w, widget->layer_h};
         if (!win32_draw_bg_image_slice(widget->layer_dc, &full, widget->layer_w, widget->layer_h, 0, 0)) {
-            layer_fill(widget, 0xFF000000u | (widget->has_bg ? widget->bg_hex : 0u));
+            layer_fill(widget, 0xFF000000u | (widget->has_bg ? widget->bg_color : 0u));
         }
     } else {
         layer_fill(widget, bg);
@@ -183,7 +183,7 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
         PROFILE_START(_pt);
 (void)hdc;
     (void)rect;
-    widget_push_layered(widget, 0xFF000000u | (widget->has_bg ? widget->bg_hex : 0u), (unsigned char)WindowOpacity);
+    widget_push_layered(widget, 0xFF000000u | (widget->has_bg ? widget->bg_color : 0u), (unsigned char)WindowOpacity);
 }
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -378,10 +378,10 @@ widget->hwnd = CreateWindowExA(
         return NULL;
     }
 
-    unsigned long amb = Platform_GetDrawBgColor();
+    ColorRef amb = Platform_GetDrawBgColor();
     if (amb) {
         widget->has_bg = true;
-        widget->bg_hex = amb;
+        widget->bg_color = amb;
     }
 
     widget_frame(widget);
@@ -476,11 +476,11 @@ if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFps"); r
     Platform_Widget_Invalidate(widget);
 }
 
-void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
+void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
         PROFILE_START(_pt);
 if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetBgColor"); return ; }
-    widget->has_bg = hex != 0;
-    widget->bg_hex = hex;
+    widget->has_bg = color != 0;
+    widget->bg_color = color;
     Platform_Widget_Invalidate(widget);
 }
 
