@@ -64,7 +64,7 @@ typedef void (*RenderCallback)(PromptState *state);
 
 struct ListBoxInfo {
     char (*populated_cache)[LISTBOX_ROW_BYTES];
-    int   populated_cache_cap;
+    int  populated_cache_cap;
     int  populated_count;
     int  matching_indices[MAX_VISIBLE_ITEMS];
     int  total_matches;

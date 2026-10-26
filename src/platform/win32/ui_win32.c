@@ -97,16 +97,16 @@ void UI_LB_SetTopIndex(int index) {
     PROFILE_END_VAR(_pt, "UI_LB_SetTopIndex");
 }
 
-int UI_LB_GetTopIndex(void) {
+int UI_LB_GetTopIndex(ListBoxInfo* lb) {
     PROFILE_START(_pt);
     PROFILE_END_VAR(_pt, "UI_LB_GetTopIndex");
-    return 0;
+    return lb ? lb->view_offset : 0;
 }
 
 int UI_LB_GetViewTop(ListBoxInfo* lb) {
-        PROFILE_START(_pt);
-    if (FlintContext_Get()->prompt_callbacks.render != NULL) { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return lb ? lb->view_offset : 0; }
-    { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return UI_LB_GetTopIndex(); }
+    PROFILE_START(_pt);
+    PROFILE_END_VAR(_pt, "UI_LB_GetViewTop");
+    return lb ? lb->view_offset : 0;
 }
 
 static int g_render_lb_visible = 0;
@@ -170,7 +170,9 @@ void UI_NavigateTo(ListBoxInfo* lb, int index) {
     int old_sel = lb->selected_index;
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     lb->selected_index = index;
+    ListBox_ScrollToSelection(lb);
     UI_RequestPopupRepaint();
+    PROFILE_END_VAR(_pt, "UI_NavigateTo");
 }
 
 void UI_NavigateUp(ListBoxInfo* lb) {

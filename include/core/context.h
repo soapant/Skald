@@ -30,7 +30,6 @@ typedef struct {
 typedef struct {
     WindowHandle hGlobalTrayWnd;
     WindowHandle hPopupWnd;
-    WindowHandle hListBox;
     WindowHandle hDisplayMessage;
     WindowHandle g_hEditPopup;
     EditPopupData* g_EditData;

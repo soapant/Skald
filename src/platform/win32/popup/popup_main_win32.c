@@ -135,7 +135,7 @@ static HBRUSH s_bg_brush = NULL;
         ListBoxInfo* hlb = &hst->listbox;
         int hItemH = UI_LB_GetItemHeight();
         int hVisible = UI_LB_GetVisibleCount();
-        int hTop = UI_LB_GetTopIndex();
+        int hTop = UI_LB_GetTopIndex(&hst->listbox);
         ListBox_SetGeometry(PromptListTop(), hItemH, hVisible);
         ListBox_HoverFocus(hlb, PromptListTop(), hItemH, hTop, hVisible);
       }
