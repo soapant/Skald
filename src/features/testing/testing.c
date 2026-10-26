@@ -1,5 +1,3 @@
-#define XML_IMPLEMENTATION
-#include "xml.h"
 #include "core/flapi.h"
 
 void Testing() {
