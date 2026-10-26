@@ -101,8 +101,8 @@ PROFILE_START(timer);
 }
 
 void Platform_PromptPopupHideWindow(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+    PROFILE_START(_pt);
+    PROFILE_START(timer);
     Display* dpy = get_display();
     if (dpy) {
         XUnmapWindow(dpy, self->handle.xid);

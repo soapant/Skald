@@ -116,8 +116,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
 }
 
 void Platform_PromptPopupHideWindow(Popup* self) {
-        PROFILE_START(_pt);
-(void)self;
+    PROFILE_START(_pt);
     PROFILE_START(timer);
     if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
         KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
@@ -128,7 +127,6 @@ void Platform_PromptPopupHideWindow(Popup* self) {
     if (self) self->handle = WH_NULL;
     if (g_prev_fg && IsWindow(g_prev_fg)) {
         HWND target = g_prev_fg;
-        log_info("Platform_PromptPopupHideWindow restoring prev_fg=%p", target);
         if (IsIconic(target)) ShowWindow(target, SW_RESTORE);
         HWND fg = GetForegroundWindow();
         DWORD fgTid = fg ? GetWindowThreadProcessId(fg, NULL) : 0;
@@ -143,7 +141,6 @@ void Platform_PromptPopupHideWindow(Popup* self) {
         if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, FALSE);
         if (targetTid && targetTid != curTid) AttachThreadInput(targetTid, curTid, FALSE);
         HWND after = GetForegroundWindow();
-        log_info("after restore cur=%p target=%p %s", after, target, after==target?"ok":"MISMATCH");
         g_pending_restore = target;
         SetTimer(NULL, 0xC0DE, 80, RestoreFocusProc);
         if (g_track_saved && g_old_track) SetTimer(NULL, 0xC0DF, 800, ReenableTrackProc);
@@ -157,19 +154,12 @@ void Platform_PromptPopupHideWindow(Popup* self) {
 }
 
 void Platform_PromptPopupRender(Popup* self) {
-        PROFILE_START(_pt);
-(void)self;
 }
 
 void Platform_PromptPopupDestroyWindow(Popup* self) {
-        PROFILE_START(_pt);
-Platform_PromptPopupHideWindow(self);
 }
 
 bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-    PROFILE_START(_pt);
-    (void)self;
-    (void)key;
-    { PROFILE_END_VAR(_pt, "Platform_PromptPopupOnKey"); return false; }
+      return false;
 }
 
