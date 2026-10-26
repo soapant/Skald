@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 #include "core/types.h"
 #include "core/types/prompt.h"
 #include "core/types/flapi_types.h"
@@ -16,38 +15,174 @@
 #include "core/clipboard_history.h"
 #include "config.h"
 
-#define WHITELIST 1
-#define BLACKLIST 0
 #define FlStringList StringList
-#define FL_CLIPBOARD_TEXT CLIPBOARD_TEXT
-#define FL_CLIPBOARD_IMAGE CLIPBOARD_IMAGE
-#define FlClipboardEntry ClipboardEntry
-#define FlClipboardHistory ClipboardHistory
 #define FlKey HotkeyKey
 
 typedef struct PlatformWidget PlatformWidget;
 
+/**
+ * @brief A color value.
+ *
+ * Construct with `RGB(r, g, b)` or `HEX(0xRRGGBB)`. Both produce the
+ * same internal representation. All color parameters and fields in
+ * flapi accept either.
+ */
 typedef PlColor FlColor;
+
+/**
+ * @brief A rectangle in screen coordinates.
+ *
+ * Fields:
+ * - `x`, `y` — Top-left corner.
+ * - `w`, `h` — Width and height in pixels.
+ *
+ */
 typedef PlRect FlRect;
+
+/**
+ * @brief A position in screen coordinates.
+ *
+ * Fields:
+ * - `x` — Horizontal position.
+ * - `y` — Vertical position.
+ *
+ */
 typedef PlPos FlPos;
+
+// typedef struct {
+//     ListBoxInfo *lb;
+//     const char **items;
+//     int count;
+//     int x; int y; int w; int h;
+//     int item_height;
+// } PlListSpec;
+
+/**
+ * @brief Parameters for a listbox widget.
+ *
+ * Used by `fl_place_listbox`.
+ *
+ * Fields:
+ * - `lb`          — Internal listbox state. Populated by `fl_populate_listbox` See `ListBoxInfo`;
+ * - `items`       — Array of `count` strings to display.
+ * - `count`       — Number of items in `items`.
+ * - `x`, `y`      — Top-left corner in screen coordinates.
+ * - `w`, `h`      — Width and height in pixels.
+ * - `item_height` — Height of each row in pixels, or 0 for the default.
+ *
+ */
 typedef PlListSpec FlListSpec;
+
+/**
+ * @brief A window list, as returned by window enumeration functions.
+ *
+ * Returned from `fl_get_all_window_titles` and `fl_get_all_window_names`
+ *
+ * Fields:
+ * - `windows` — List of window titles or ids.
+ * - `count` — Amount of windows.
+ *
+ */
 typedef PlWindowList FlWindowList;
+
+/**
+ * @brief Parameters for a checkbox widget.
+ *
+ * Used by `fl_place_checkbox`.
+ *
+ */
+
 typedef CheckboxSpec FlCheckboxSpec;
 
-// =============================================================================
-// CLIPBOARD
-// =============================================================================
+
+/**
+*
+ * @name Clipboard
+ * @{
+ */
+
+/**
+ * @brief A single entry in the clipboard history.
+ *
+ * Fields:
+ * - `type`      — CLIPBOARD_TEXT or CLIPBOARD_IMAGE. Determines which of text/image_path is set.
+ * - `text`      — null-terminated string, or NULL for image entries.
+ * - `image_path`— path to the image entry.
+ * - `image_width`— image width.
+ * - `image_height`— image height.
+ * - `timestamp` — when the entry was added (Unix epoch).
+ *
+ */
+typedef ClipboardEntry FlClipboardEntry; 
+
+/**
+ * @brief The full clipboard history.
+ *
+ * Fields:
+ * - `entries` — Array of `count` entries. Do not free; owned by Flint.
+ * - `count`   — Number of valid entries in `entries`.
+ *
+ */
+typedef ClipboardHistory FlClipboardHistory;
+
+/**
+ * @brief Copy a string into the system clipboard.
+ *
+ * Replaces the current clipboard contents with the string. 
+ *
+ * @param text  string to copy. Must not be NULL.
+ * @return      true on success, false if the clipboard is unavailable.
+ */
 
 bool fl_copy_to_clipboard(const char* text);
+
+/**
+ * @brief Copy a file into the system clipboard.
+ *
+ * Replaces the current clipboard contents with the file. 
+ *
+ * @param path  file path to copy.
+ * @return      true on success, false if the clipboard is unavailable.
+ */
+
 bool fl_copy_file_path(const char* path);
+
+/**
+ * @brief Paste the current clipboard text into the focused window.
+ *
+ * Reads the system clipboard and inserts its text contents at the
+ * current cursor position in the focused input field. Does nothing
+ * if the clipboard contains no text.
+ *
+ * @return true if a paste was performed, false otherwise.
+ */
+
 bool fl_paste_from_clipboard();
+
+/**
+ * @brief Paste a specific string into the focused window.
+ *
+ * Inserts `content` at the current cursor position in the focused
+ * input field, as if the user had typed it.
+ *
+ * @param content  string to paste. Must not be NULL.
+ * @return         true on success, false if could not paste.
+ */
+
 bool fl_paste(char* content);
+
+/**
+ * @brief Get the most recent text entry from the clipboard history.
+ *
+ * Returns the text of the newest entry whose type is `FL_CLIPBOARD_TEXT`.
+ * Image entries are skipped.
+ *
+ * @return Borrowed pointer to a null-terminated string, or NULL if the
+ *         history is empty or contains only images. Needs to be Freed.
+ */
+
 char* fl_get_last_clipboard_entry();
 
-
-// =============================================================================
-//  NETWORK
-// =============================================================================
 
 FlNetStatus fl_net_status(void);
 unsigned long long fl_net_rx_bytes();
@@ -58,9 +193,6 @@ const FlClipboardEntry* fl_clipboard_history_get(size_t index);
 const FlClipboardEntry* fl_clipboard_latest(void);
 void fl_clipboard_clear_history(void);
 
-// =============================================================================
-// FILES / FILESYSTEM
-// =============================================================================
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
 #define FL_DIR_WALK_UNLIMITED 0
@@ -85,9 +217,6 @@ bool fl_write_to_file(const char* filepath, const char* lines[], int count);
 bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len);
 void fl_format_bytes(unsigned long long bytes, char* out_str, size_t out_len);
 
-// =============================================================================
-// LAUNCH / PROCESS
-// =============================================================================
 
 bool fl_launch_with_args(const char* path, const char* args);
 bool fl_launch_with_args_as_admin(const char* path, const char* args);
@@ -102,9 +231,6 @@ bool fl_terminate_process_by_name(const char* exe_name);
 
 int fl_get_icon_size(const char* icon_path);
 
-// =============================================================================
-// FEATURES
-// =============================================================================
 
 typedef struct {
     const char* name;
@@ -118,9 +244,6 @@ void fl_register_feature_impl(const FlFeatureSpec* spec);
 int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max);
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max);
 
-// =============================================================================
-// HOTKEYS
-// =============================================================================
 
 void fl_init_all_hotkeys(void);
 void fl_send_hotkey(const char* hotkey_string);
@@ -130,9 +253,6 @@ void fl_send_hotkey(const char* hotkey_string);
 char* fl_hotkey_to_string(FlKey key);
 FlKey fl_hotkey_from_string(const char* str);
 
-// =============================================================================
-// BROWSER / ZOXIDE / SYSTEM
-// =============================================================================
 
 bool fl_launch_browser(char* url);
 bool fl_query_browser(const char* query);
@@ -152,9 +272,6 @@ FlRect fl_get_monitor_geometry();
 int fl_get_screen_width();
 int fl_get_screen_height();
 
-// =============================================================================
-// STRING UTILITIES (all returned char* are heap-allocated, caller must free())
-// =============================================================================
 
 char* fl_string_cut_at(const char* str, char delim);
 char* fl_string_cut_before(const char* str, char delim);
@@ -178,9 +295,6 @@ void fl_set_edit_cursor(int position);
 int  fl_get_edit_cursor(void);
 void fl_get_edit_text(char* buffer, size_t cap);
 
-// =============================================================================
-// POPUPS / UI
-// =============================================================================
 
 typedef struct {
     const char* initial_text;
@@ -327,18 +441,12 @@ bool fl_listbox_begin(const FlListSpec *spec);
 bool fl_listbox_next(FlListItemCtx *out);
 void fl_listbox_end(void);
 
-// =============================================================================
-// ANCHORED PLACEMENT (preset positions)
-// =============================================================================
 
 bool fl_draw_text_anchored(FlAnchor anchor, int offset_x, int offset_y, const char *text);
 bool fl_place_editbox_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *buffer);
 bool fl_place_listbox_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char **items, int count);
 bool fl_draw_image_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *path);
 
-// =============================================================================
-// AUTO LAYOUT (column / row math)
-// =============================================================================
 
 void fl_layout_begin_column_anchored(FlAnchor anchor, int start_x, int start_y, int gap);
 void fl_layout_begin_column(int start_x, int start_y, int gap);
@@ -350,10 +458,6 @@ bool fl_draw_text_auto(const char *text);
 bool fl_place_editbox_auto(int w, int h, const char *buffer);
 bool fl_place_listbox_auto(int w, int h, const char **items, int count);
 bool fl_draw_image_auto(int w, int h, const char *path);
-
-// =============================================================================
-// WIDGETS 
-// =============================================================================
 
 typedef struct FlWidget FlWidget;
 
@@ -434,16 +538,10 @@ void fl_widget_show(FlWidget *widget);
 void fl_widget_hide(FlWidget *widget);
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
 
-// =============================================================================
-// IMAGES / ICONS
-// =============================================================================
 
 void* fl_load_image(const char *path);
 void fl_free_image(void *image);
 
-// =============================================================================
-// BASIC UI DRAWING 
-// =============================================================================
 
 #define FL_DRAW_ALPHA_OPAQUE 255
 #define FL_DRAW_ALPHA_TRANSPARENT 128
@@ -479,9 +577,6 @@ bool fl_draw_circle_impl(const FlCircleSpec *spec);
 #define fl_draw_line(...) fl_draw_line_impl(&(FlLineSpec){__VA_ARGS__})
 #define fl_draw_circle(...) fl_draw_circle_impl(&(FlCircleSpec){__VA_ARGS__})
 
-// =============================================================================
-// HELPERS
-// =============================================================================
 
 int fl_rand_num_between(int min, int max);
 int fl_get_text_width(const char *text,int fontsize);
@@ -510,9 +605,6 @@ typedef struct {
 FlFlagList fl_parse_flags(const char* input);
 void fl_free_flags(FlFlagList* list);
 
-// =============================================================================
-// MISC
-// =============================================================================
 
 FlTimer fl_start_timer(void);
 double fl_end_timer(FlTimer t);
@@ -528,9 +620,6 @@ char* fl_resolve_user_path();
 char* fl_get_user_name();
 bool fl_is_root();
 
-// =============================================================================
-// DYNAMIC LIBRARIES
-// =============================================================================
 
 typedef void* FlLibrary;
 
@@ -539,9 +628,6 @@ void* fl_library_symbol(FlLibrary lib, const char *name);
 void fl_library_close(FlLibrary lib);
 const char *fl_library_error(void);
 
-// =============================================================================
-// THREADS / SYNC (opaque handles, joinable threads)
-// =============================================================================
 
 typedef void* FlThread;
 typedef void* FlMutex;
@@ -553,9 +639,6 @@ void fl_mutex_destroy(FlMutex mutex);
 void fl_mutex_lock(FlMutex mutex);
 void fl_mutex_unlock(FlMutex mutex);
 
-// =============================================================================
-// HASHMAP 
-// =============================================================================
 
 typedef struct {
     char* key;
@@ -572,9 +655,6 @@ bool fl_hashmap_del(FlHashMap** map, const char* key);
 size_t fl_hashmap_len(FlHashMap* map);
 const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index);
 
-// =============================================================================
-// WINDOW
-// =============================================================================
 
 FlWindowList fl_get_all_window_titles();
 FlWindowList fl_get_all_window_names();
