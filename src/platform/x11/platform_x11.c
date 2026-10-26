@@ -346,13 +346,11 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
     const char* final_cmd = command;
 
     if (command[0] == '~' && (command[1] == '/' || command[1] == '\0') && real_home && real_home[0]) {
-        // real_home already has the leading '/', command+1 starts with '/'
         snprintf(expanded, sizeof(expanded), "%s%s", real_home, command + 1);
         final_cmd = expanded;
         log_info("capture: expanded cmd='%s'", final_cmd);
     }
 
-    // Existence check on the script part only
     {
         char test_path[4096];
         const char* space = strchr(final_cmd, ' ');
@@ -385,10 +383,7 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
         return strdup("");
     }
 
-    if (pid == 0) {  // child
-        // Optional: drop privileges here if you have the helper
-        // if (Platform_IsRunningAsRoot()) Platform_DropToRealUser();
-
+    if (pid == 0) {  
         if (real_home) setenv("HOME", real_home, 1);
         if (real_user) {
             setenv("USER", real_user, 1);
@@ -407,18 +402,13 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
             if (fd > 2) close(fd);
         }
 
-        // Log right before exec (will appear in the captured output if it gets that far)
-        // (we can't use log_* here reliably after dup2, so just exec)
         execl("/bin/sh", "sh", "-c", final_cmd, (char*)NULL);
 
-        // If we reach here, execl failed
-        // Write a clear message to the pipe so parent can see it
         const char* msg = "execl /bin/sh failed\n";
         write(STDOUT_FILENO, msg, strlen(msg));
         _exit(127);
     }
 
-    // parent
     close(pfd[1]);
     log_info("capture: forked child pid=%d for cmd='%s'", (int)pid, final_cmd);
 
@@ -440,7 +430,7 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     const long drain_ms = 8000;
-    const long start_ms = 30000;   // 30 s max for first data (was 180 s, shortened for testing)
+    const long start_ms = 30000;   
     long deadline = start_ms;
     bool got_data = false;
     bool eof = false;
@@ -551,7 +541,6 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
     if (total == 0) {
         log_error("capture empty cmd='%s' eof=%d status=0x%x", final_cmd, eof, status);
     } else {
-        // Log first 200 chars of output for debugging
         char preview[201];
         size_t plen = total < 200 ? total : 200;
         memcpy(preview, out, plen);
@@ -582,11 +571,9 @@ bool Platform_LaunchDetached(char* command) {
     }
 
     if (pid == 0) {
-        // child
         log_info("LaunchDetached: child pid=%d starting setsid", (int)getpid());
 
         if (setsid() < 0) {
-            // can't log easily after this point, just exit
             _exit(1);
         }
 
@@ -595,11 +582,9 @@ bool Platform_LaunchDetached(char* command) {
             _exit(1);
         }
         if (pid2 > 0) {
-            // intermediate process exits immediately
             _exit(0);
         }
 
-        // === grandchild ===
         int fd = open("/dev/null", O_RDWR);
         if (fd >= 0) {
             dup2(fd, STDIN_FILENO);
@@ -620,14 +605,11 @@ bool Platform_LaunchDetached(char* command) {
         const char* dbus = getenv("DBUS_SESSION_BUS_ADDRESS");
         if (dbus) setenv("DBUS_SESSION_BUS_ADDRESS", dbus, 1);
 
-        // Final exec
         execl("/bin/sh", "sh", "-c", command, (char*)NULL);
 
-        // If we reach here, exec failed
         _exit(127);
     }
 
-    // parent
     log_info("LaunchDetached: parent waiting for intermediate pid=%d", (int)pid);
 
     int st = 0;
