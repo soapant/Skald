@@ -1248,11 +1248,6 @@ static int FlWrapMeasureThunk(void* ctx, const char* s, int n) {
     { PROFILE_END_VAR(_pt, "FlWrapMeasureThunk"); return Platform_MeasureTextWidth(s, n, c->fontsize); }
 }
 
-static void FlWrapDrawThunk(void* ctx, int x, int y, const char* s, int n) {
-    FlWrapCtx* c = (FlWrapCtx*)ctx;
-    Platform_DrawTextLine(x, y, s, n, c->color, c->fontsize);
-}
-
 static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
     (void)ctx;
     (void)x;
@@ -1275,21 +1270,6 @@ int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
     int cap = (int)strlen(spec->text) + 1;
     int r = FlWrapLayout(spec->text, spec->x, spec->y, spec->max_width, line_height, FlWrapMeasureThunk, FlWrapNoDraw, &ctx, spec->out_positions, cap);
     PROFILE_END_VAR(_pt, "api:fl_measure_text_wrapped");
-    return r;
-}
-
-int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const char* text, int fontsize, unsigned long color, FlCharPos* out_positions, int max_positions) {
-    PROFILE_START(_pt);
-    if (!text) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_draw_text_wrapped_ex"); { PROFILE_END_VAR(_pt, "f"); return 0; } }
-    if (fontsize <= 0) fontsize = FontSize;
-    if (line_height <= 0) line_height = fontsize + 4;
-    if (color == 0) color = rgb_to_hex(COLOR_TEXT);
-    FlWrapCtx ctx;
-    ctx.color = color;
-    ctx.fontsize = fontsize;
-    int r = FlWrapLayout(text, x, y, max_width, line_height, FlWrapMeasureThunk, FlWrapDrawThunk, &ctx, out_positions, max_positions);
-    PROFILE_END_VAR(_pt, "api:fl_draw_text_wrapped_ex");
     return r;
 }
 
