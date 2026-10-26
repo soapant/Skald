@@ -47,7 +47,7 @@ void Editbox_BuildSpec(FlEditboxSpec* out, const EditboxInit* in) {
 int Editbox_CaretY(int box_top, int ascent, int descent) {
     int line_h = ascent + descent;
     if (line_h <= 0 || FontSize <= 0) return box_top;
-    return box_top + (line_h - FontSize) / 2;
+    return box_top + (line_h - FontSize) / 2 + (PROMPT_DEADCURSOR_Y / 4);
 }
 
 void Editbox_ResolveSelection(PromptState* state, int text_len, bool prefer_state,
