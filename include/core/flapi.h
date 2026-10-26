@@ -891,7 +891,7 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
 /**
  * @brief Implementation for creating a generic popup.
  * @param spec  The specification. See `PopupSpec`.
- * @return      Resulting text (caller must free), or NULL.
+ * @return      Resulting text or NULL.
  */
 char* fl_popup_impl(const PopupSpec *spec);
 
@@ -903,6 +903,20 @@ char* fl_popup_impl(const PopupSpec *spec);
  * @{
  */
 
+/**
+ * @brief Per-frame state passed to a widget's render callback.
+ *
+ * Fields:
+ * - `width`   — Widget width in pixels.
+ * - `height`  — Widget height in pixels.
+ * - `frame`   — Frame counter. Increments every render. Useful for
+ *               animation (e.g., `sin(frame * 0.1)`).
+ * - `elapsed` — Seconds since the widget was created. Useful for
+ *               time-based animation independent of frame rate.
+ *
+ * Passed by pointer to `FlWidgetRenderFn` once per frame.
+ */
+
 typedef struct {
     int width;
     int height;
@@ -911,19 +925,32 @@ typedef struct {
     bool hovered;
 } FlWidgetState;
 
+/**
+ * @brief Render callback for a widget.
+ *
+ * Called once per frame to draw the widget's contents. The callback
+ * receives the widget's current state See `FlWidgetState`.
+ * Drawing is clipped to the widget's bounds; content outside the
+ * widget's width and height will not appear.
+ *
+ * @param state  Current state of the widget. See `FlWidgetState`.
+ */
 typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
 
 /**
- * @brief Message popup specification.
+ * @brief Message popup specification. Automatically auto scales the window when w and h are 0 / NULL.
  *
  * Fields:
  * - `message` — Message text.
  * - `slot` — Message position slot. See `MessageSlot`.
  * - `x`, `y` — Top-left corner.
  * - `w`, `h` — Size.
+ * - `mw`, `mh` — Max size for auto scaling
+ * - `fps` — How many times the message window renders every second.
+ * - `render` — Render callback (void void) callback.
  * - `timeout` — Auto-dismissal time.
- * - `color_text` — Text color.
- * - `color_bg` — Background color.
+ * - `color_text` — Text color See `FlColor`.
+ * - `color_bg` — Background color See `FlColor`.
  * - `name` — Unique identifier.
  */
 typedef struct {
@@ -957,7 +984,7 @@ typedef struct {
 
 /**
  * @def Create and show a message popup.
- * @param ... Fields of `FlMessageSpec`. See `FlMessageSpec`.
+ * @param ... Fields of FlMessageSpec. See `FlMessageSpec`.
  */
 #define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
 
@@ -971,11 +998,11 @@ void fl_message_impl(const FlMessageSpec* spec);
 #define fl_dismiss_overlay(...) fl_dismiss_message(__VA_ARGS__)
 #define fl_subwindow(...) fl_window(__VA_ARGS__,.subwindow=true)
 
-#define FlPromptSpec PromptSpec
+typedef PromptSpec FlPromptSpec;
 
 /**
  * @def Create and show a window.
- * @param ... Fields of `FlPromptSpec`. See `FlPromptSpec`.
+ * @param ... Fields of FlPromptSpec. See `FlPromptSpec`.
  */
 #define fl_window(...) fl_window_impl(&(FlPromptSpec){__VA_ARGS__})
 
@@ -1163,14 +1190,17 @@ typedef struct {
 /**
  * @brief Widget structure.
  *
- * Fields (only user-modifiable fields shown):
+ * Fields 
  * - `name` — Widget identifier.
  * - `w`, `h` — Widget size.
- * - `slot` — Positioning slot.
- * - `order` — Rendering order.
+ * - `slot` — Positioning slot See `FlWidgetSlot`.
+ * - `fps` — How many times the widget runs every second.
+ * - `bg_color` — Color of background See 'FlColor'.
+ * - `no_bg` — Determines if background is drawn at all.
  * - `x`, `y` — Widget position.
- * - `on_click` — Click callback function.
- * - `on_hover` — Hover callback function.
+ * - `on_click` — Click callback function (void void).
+ * - `on_hover` — Hover callback function (void void).
+ * - `render` — Render callback function See `FlWidgetRenderFn`.
  */
 struct FlWidget {
     char name[FL_WIDGET_NAME_MAX];
@@ -1211,14 +1241,14 @@ struct FlWidget {
 
 /**
  * @def Create a new widget.
- * @param ... Fields of `FlWidgetSpec`. See `FlWidgetSpec`.
+ * @param ... Fields of FlWidgetSpec. See `FlWidgetSpec`.
  */
 #define fl_widget(...) fl_widget_create(&(FlWidgetSpec){__VA_ARGS__})
 
 /**
  * @brief Create a new widget.
  * @param spec  The widget specification. See `FlWidgetSpec`.
- * @return      Pointer to the created `FlWidget`. See `FlWidget`.
+ * @return      Pointer to the created FlWidget. See `FlWidget`.
  */
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);
 
