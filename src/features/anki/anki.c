@@ -353,7 +353,6 @@ void display_card_answer(void) {
     fl_mutex_unlock(anki_lock);
 
     fl_dismiss_message("question");
-    printf("%s \n",answer);
     fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=1000.0);
 }
 

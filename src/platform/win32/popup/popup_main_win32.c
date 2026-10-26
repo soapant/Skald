@@ -147,7 +147,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     PROFILE_START(_pt);
 if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
   if(msg==WM_KEYUP){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,false,mods); }
-  ListBoxInfo* lb = GetLBForPopupWindow(hwnd);
+  ListBoxInfo* lb = GetLBFromPopup(hwnd);
   static HBRUSH s_bg_brush = NULL;
     static HBRUSH s_bg_gradient_brushes[128] = {0};
     static bool s_bg_gradient_ready = false;
@@ -219,6 +219,10 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
           strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
           FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
           FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
+          
+          if (FlintContext_Get()->prompt_callbacks.refresh) {
+            FlintContext_Get()->prompt_callbacks.refresh(ps->filter, ps->has_listbox ? &ps->listbox : NULL);
+          }
         }
         UI_Redraw(lb);
         InvalidateRect(hwnd, NULL, FALSE);
@@ -248,6 +252,10 @@ case WM_CHAR: {
           strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
           FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
           FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
+          
+          if (FlintContext_Get()->prompt_callbacks.refresh) {
+            FlintContext_Get()->prompt_callbacks.refresh(ps->filter, ps->has_listbox ? &ps->listbox : NULL);
+          }
         }
         UI_Redraw(lb);
         popup_request_repaint(hwnd);
