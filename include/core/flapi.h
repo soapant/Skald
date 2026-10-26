@@ -15,8 +15,18 @@
 #include "core/clipboard_history.h"
 #include "config.h"
 
-#define FlStringList StringList
-#define FlKey HotkeyKey
+
+/**
+ * @brief A list of strings.
+ *
+ * Fields:
+ * - `items` - A list of strings.
+ *   `count` — Amount of strings.
+ *
+ */
+typedef StringList FlStringList;
+
+typedef HotkeyKey FlKey;
 
 typedef struct PlatformWidget PlatformWidget;
 
@@ -49,13 +59,6 @@ typedef PlRect FlRect;
  */
 typedef PlPos FlPos;
 
-// typedef struct {
-//     ListBoxInfo *lb;
-//     const char **items;
-//     int count;
-//     int x; int y; int w; int h;
-//     int item_height;
-// } PlListSpec;
 
 /**
  * @brief Parameters for a listbox widget.
@@ -85,15 +88,7 @@ typedef PlListSpec FlListSpec;
  */
 typedef PlWindowList FlWindowList;
 
-/**
- * @brief Parameters for a checkbox widget.
- *
- * Used by `fl_place_checkbox`.
- *
- */
-
 typedef CheckboxSpec FlCheckboxSpec;
-
 
 /**
 *
@@ -133,7 +128,6 @@ typedef ClipboardHistory FlClipboardHistory;
  * @param text  string to copy. Must not be NULL.
  * @return      true on success, false if the clipboard is unavailable.
  */
-
 bool fl_copy_to_clipboard(const char* text);
 
 /**
@@ -144,7 +138,6 @@ bool fl_copy_to_clipboard(const char* text);
  * @param path  file path to copy.
  * @return      true on success, false if the clipboard is unavailable.
  */
-
 bool fl_copy_file_path(const char* path);
 
 /**
@@ -156,7 +149,6 @@ bool fl_copy_file_path(const char* path);
  *
  * @return true if a paste was performed, false otherwise.
  */
-
 bool fl_paste_from_clipboard();
 
 /**
@@ -168,7 +160,6 @@ bool fl_paste_from_clipboard();
  * @param content  string to paste. Must not be NULL.
  * @return         true on success, false if could not paste.
  */
-
 bool fl_paste(char* content);
 
 /**
@@ -177,27 +168,119 @@ bool fl_paste(char* content);
  * Returns the text of the newest entry whose type is `FL_CLIPBOARD_TEXT`.
  * Image entries are skipped.
  *
- * @return Borrowed pointer to a null-terminated string, or NULL if the
+ * @return pointer to a string, or NULL if the
  *         history is empty or contains only images. Needs to be Freed.
  */
+char* fl_get_last_clipboard_entry();
 
+/**
+ * @brief Number of entries in the clipboard history.
+ *
+ * Includes both text and image entries. The history is bounded by an
+ * internal cap; once full, the oldest entries are evicted.
+ *
+ * @return Number of entries currently stored, or 0 if the history is
+ *         empty or disabled.
+ */
+size_t fl_clipboard_history_count(void);
+
+/**
+ * @brief Get a clipboard history entry by index.
+ *
+ * Index 0 is the oldest entry; `fl_clipboard_history_count() - 1` is
+ * the most recent. To get the newest entry without knowing the count,
+ * use `fl_clipboard_latest`.
+ *
+ * @param index  Index in the range [0, fl_clipboard_history_count()).
+ * @return       Clipboard Entry See `FlClipboardEntry` as a Borrowed Pointer.
+ *               
+ *               
+ */
+const FlClipboardEntry* fl_clipboard_history_get(size_t index);
+
+/**
+ * @brief Get the most recent entry in the clipboard history.
+ *
+ * Returns the newest entry regardless of type (text or image). To get
+ * only the most recent text entry, use `fl_get_last_clipboard_entry`.
+ *
+ * @return Borrowed pointer to the entry, or NULL if the history is
+ *         empty.
+ */
+const FlClipboardEntry* fl_clipboard_latest(void);
+
+/**
+ * @brief Clear all entries from the clipboard history.
+ *
+ * Does not modify the system clipboard itself; only Flint's internal
+ * history is cleared. Any pointers previously returned by
+ * `fl_clipboard_history_get` or `fl_clipboard_latest` become invalid.
+ */
+void fl_clipboard_clear_history(void);
+
+/**
+ * @brief Get the most recent text entry from the clipboard history.
+ *
+ * Skips image entries. Returns a copy of the text, so the caller owns
+ * the returned pointer and must free it.
+ *
+ * @return Heap-allocated null-terminated string, or NULL if the history
+ *         is empty or contains only image entries. Caller must free.
+ */
 char* fl_get_last_clipboard_entry();
 
 
+/** @} */
+
+/**
+ * @name Internet
+ * @{
+ */
+
+
+/**
+ * @brief Current network connectivity state.
+ *
+ * Returns the type of the active connection, or `FL_NET_OFFLINE` if
+ * there is no active connection. See `FlNetStatus` for the possible
+ * values.
+ *
+ * @return The current connectivity state.
+ */
 FlNetStatus fl_net_status(void);
+
+/**
+ * @brief Cumulative bytes received on the active network interface.
+ *
+ * Returns the total number of bytes received since
+ * since boot.This is a
+ * monotonically increasing counter; to measure throughput, sample
+ * it twice and divide the difference by the elapsed time.
+ *
+ * @return Bytes received, or 0 if no interface is active or the
+ *         value is unavailable on this platform.
+ */
 unsigned long long fl_net_rx_bytes();
+
+/**
+ * @brief Bytes received in the last `seconds` seconds.
+ *
+ * Computes throughput by sampling `fl_net_rx_bytes` twice with a
+ * delay of `seconds` between samples. Doesnt block for the duration of the
+ * measurement as it is ran on a seperate thread.
+ *
+ * @param seconds  Sampling window in seconds. Must be greater than 0.
+ * @return         Bytes received during the window, or 0 if no
+ *                 interface is active or the value is unavailable.
+ */
 unsigned long long fl_net_rx_bytes_over(double seconds);
 
-size_t fl_clipboard_history_count(void);
-const FlClipboardEntry* fl_clipboard_history_get(size_t index);
-const FlClipboardEntry* fl_clipboard_latest(void);
-void fl_clipboard_clear_history(void);
+/** @} */
 
 
-char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
 #define FL_DIR_WALK_UNLIMITED 0
+char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore, bool strip_extension, int max_depth);
-
 FlStringList fl_load_file_list(const char* filepath);
 long fl_load_file(const char* filepath, char* buffer, long buffer_size);
 char* fl_read_file_to_string(const char* path, size_t* out_len);
@@ -209,12 +292,16 @@ bool fl_remove_line(const char* path, const char* line);
 bool fl_remove_line_contains(const char* path, const char* substr);
 bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay);
 char* fl_get_icon_path(const char* app_path_path);
-void fl_free_file_list(FlStringList* list);
-bool fl_free_list(const char* list[], int count);
-bool fl_free_window_list(FlWindowList *list);
 bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
 bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len);
+int fl_get_icon_size(const char* icon_path);
+
+void fl_free_file_list(FlStringList* list);
+bool fl_free_list(const char* list[], int count);
+bool fl_free_window_list(FlWindowList *list);
+void fl_string_list_free(StringList* list);
+
 void fl_format_bytes(unsigned long long bytes, char* out_str, size_t out_len);
 
 
@@ -227,9 +314,6 @@ char* fl_run_terminal_command_and_open(char* command);
 char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status);
 bool fl_launch_detached(char* command);
 bool fl_terminate_process_by_name(const char* exe_name);
-
-
-int fl_get_icon_size(const char* icon_path);
 
 
 typedef struct {
@@ -256,7 +340,7 @@ FlKey fl_hotkey_from_string(const char* str);
 
 bool fl_launch_browser(char* url);
 bool fl_query_browser(const char* query);
-bool fl_launch_browser_in_a_new_window(char* url);
+
 bool fl_focus_window_by_title(char* title);
 bool fl_close_active_window(void);
 bool fl_dismiss_message(const char* name);
@@ -268,9 +352,9 @@ bool fl_move_active_window_right(void);
 bool fl_focus_window_left(void);
 bool fl_focus_window_right(void);
 bool fl_toggle_minimized_active(void);
-FlRect fl_get_monitor_geometry();
 int fl_get_screen_width();
 int fl_get_screen_height();
+FlRect fl_get_monitor_geometry();
 
 
 char* fl_string_cut_at(const char* str, char delim);
@@ -286,7 +370,7 @@ bool fl_string_ends_with(const char* str, const char* suffix);
 char* fl_string_replace(const char* str, const char* from, const char* to);
 char* fl_string_slice(const char* str, int start, int end);
 FlStringList fl_string_split(const char* str, const char* delimiter);
-void fl_string_list_free(StringList* list);
+
 void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items, int count);
 void fl_populate_listbox_ex(ListBoxInfo* lb, const char* filter, const char** items, int count, bool (*filter_match)(const char* item, const char* filter));
 bool fl_is_selected(ListBoxInfo* lb);
@@ -360,7 +444,6 @@ void fl_message_impl(const FlMessageSpec* spec);
 #define fl_overlay(...) fl_message(__VA_ARGS__, .timeout=10000000.0)
 #define fl_dismiss_overlay(...) fl_dismiss_message(__VA_ARGS__)
 #define fl_subwindow(...) fl_window(__VA_ARGS__,.subwindow=true)
-bool fl_close_subwindow(const char* name);
 
 #define FlPromptSpec PromptSpec
 

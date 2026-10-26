@@ -220,19 +220,6 @@ bool WindowManager_TopPopupWantsTick(WindowManager* wm) {
     return data->spec.tick;
 }
 
-bool WindowManager_CloseSubwindow(WindowManager* wm, const char* name) {
-    if (!wm || wm->popup_count <= 1) return false;
-    Popup* top = wm->popups[wm->popup_count - 1];
-    if (top && top->type == POPUP_PROMPT) {
-        PromptPopupData* data = (PromptPopupData*)top;
-        if (!name || (data->spec.title && strcmp(prompt_feature_name(data->spec.title), prompt_feature_name(name)) == 0)) {
-            WindowManager_PopPopup(wm);
-            return true;
-        }
-    }
-    return false;
-}
-
 bool WindowManager_IsPointInTopPopup(WindowManager* wm, int root_x, int root_y) {
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top || top->type != POPUP_PROMPT) return true;

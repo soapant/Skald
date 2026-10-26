@@ -2738,10 +2738,6 @@ void fl_window_impl(const FlPromptSpec* spec) {
     WindowManager_ShowPrompt(WindowManager_Get(), spec);
 }
 
-bool fl_close_subwindow(const char* name) {
-    return WindowManager_CloseSubwindow(WindowManager_Get(), name);
-}
-
 char* fl_get_user_name() {
     return Platform_GetRealUser();
 }
