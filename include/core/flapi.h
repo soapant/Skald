@@ -223,27 +223,164 @@ char* fl_search_file_in_dir(const char* directory, const char* search_string, ch
  * @return                        True on success, false otherwise.
  */
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore, bool strip_extension, int max_depth);
+
+/**
+ * @brief Load a file list.
+ * @param filepath  Path to the file.
+ * @return          `FlStringList` of items. See `FlStringList`.
+ */
 FlStringList fl_load_file_list(const char* filepath);
+
+/**
+ * @brief Load file content into a buffer.
+ * @param filepath     Path to the file.
+ * @param buffer       Destination buffer.
+ * @param buffer_size  Size of the buffer.
+ * @return             Bytes loaded, or -1 on failure.
+ */
 long fl_load_file(const char* filepath, char* buffer, long buffer_size);
+
+/**
+ * @brief Read file to a newly allocated string.
+ * @param path     Path to the file.
+ * @param out_len  Pointer to store the length.
+ * @return         String (caller must free), or NULL on failure.
+ */
 char* fl_read_file_to_string(const char* path, size_t* out_len);
+
+/**
+ * @brief Read entire file into a buffer.
+ * @param full_path    Full path to the file.
+ * @param buffer       Destination buffer.
+ * @param buffer_size  Size of the buffer.
+ * @return             Bytes read.
+ */
 long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size);
+
+/**
+ * @brief Write a string to a file.
+ * @param path     Path to the file.
+ * @param content  String content.
+ * @return         True on success, false otherwise.
+ */
 bool fl_write_string_to_file(const char* path, const char* content);
+
+/**
+ * @brief Check if a file exists.
+ * @param path  Path to the file.
+ * @return      True if it exists, false otherwise.
+ */
 bool fl_file_exists(const char* path);
+
+/**
+ * @brief Append a line if it doesn't already exist.
+ * @param path  Path to the file.
+ * @param line  The line content.
+ * @return      True on success, false otherwise.
+ */
 bool fl_append_unique_line(const char* path, const char* line);
+
+/**
+ * @brief Remove a line from a file.
+ * @param path  Path to the file.
+ * @param line  The line content to remove.
+ * @return      True on success, false otherwise.
+ */
 bool fl_remove_line(const char* path, const char* line);
+
+/**
+ * @brief Remove any line containing a substring.
+ * @param path     Path to the file.
+ * @param substr   Substring to match.
+ * @return         True on success, false otherwise.
+ */
 bool fl_remove_line_contains(const char* path, const char* substr);
+
+/**
+ * @brief Parse a desktop file.
+ * @param path          Path to the desktop file.
+ * @param out_name      Buffer for the output name.
+ * @param n             Size of out_name.
+ * @param out_nodisplay Pointer to store NoDisplay flag.
+ * @return              True on success, false otherwise.
+ */
 bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay);
+
+/**
+ * @brief Get the icon path for an application.
+ * @param app_path_path  Path to the application.
+ * @return               Icon path (caller must free), or NULL.
+ */
 char* fl_get_icon_path(const char* app_path_path);
+
+/**
+ * @brief Append a line to a file.
+ * @param filepath  Path to the file.
+ * @param line      Line content.
+ * @return          True on success, false otherwise.
+ */
 bool fl_append_to_file(const char* filepath, const char* line);
+
+/**
+ * @brief Write lines to a file.
+ * @param filepath  Path to the file.
+ * @param lines     Array of strings.
+ * @param count     Number of lines.
+ * @return          True on success, false otherwise.
+ */
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
+
+/**
+ * @brief Write a temporary file.
+ * @param name      Base name.
+ * @param data      Data.
+ * @param len       Length of data.
+ * @param out_path  Output path buffer.
+ * @param out_len   Length of out_path buffer.
+ * @return          True on success, false otherwise.
+ */
 bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len);
+
+/**
+ * @brief Get the size of an icon.
+ * @param icon_path  Path to the icon.
+ * @return           Size, or 0 on failure.
+ */
 int fl_get_icon_size(const char* icon_path);
 
+/**
+ * @brief Free a file list.
+ * @param list  The list to free. See `FlStringList`.
+ */
 void fl_free_file_list(FlStringList* list);
+
+/**
+ * @brief Free a list of strings.
+ * @param list   The string list.
+ * @param count  Number of items.
+ * @return       True.
+ */
 bool fl_free_list(const char* list[], int count);
+
+/**
+ * @brief Free a window list.
+ * @param list  The window list to free. See `FlWindowList`.
+ * @return      True.
+ */
 bool fl_free_window_list(FlWindowList *list);
+
+/**
+ * @brief Free a StringList.
+ * @param list  The string list to free. See `StringList`.
+ */
 void fl_string_list_free(StringList* list);
 
+/**
+ * @brief Format bytes into human-readable string.
+ * @param bytes    Bytes.
+ * @param out_str  Buffer.
+ * @param out_len  Buffer size.
+ */
 void fl_format_bytes(unsigned long long bytes, char* out_str, size_t out_len);
 
 
