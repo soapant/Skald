@@ -18,7 +18,7 @@ void UI_LegacySyncRepaint(void);
 void UI_LB_SetItemHeight(int height);
 void UI_LB_SetCaretIndex(int index, bool scroll);
 void UI_LB_SetTopIndex(int index);
-int UI_LB_GetTopIndex(void);
+int UI_LB_GetTopIndex(ListBoxInfo* lb);
 int UI_LB_GetViewTop(ListBoxInfo* lb);
 int UI_LB_GetVisibleCount(void);
 void UI_LB_SetVisibleCount(int count);
