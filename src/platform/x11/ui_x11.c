@@ -104,49 +104,46 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop"); return ; }
     lb->view_offset = top_index;
 }
 
-void UI_LB_SetFont(WindowHandle hList, void* hFont) {
-        PROFILE_START(_pt);
-(void)hList; (void)hFont;
+void UI_LB_SetFont(void* hFont) {
 }
 
-int UI_LB_GetItemHeight(WindowHandle hList) {
-        PROFILE_START(_pt);
-(void)hList;
+int UI_LB_GetItemHeight() {
+      PROFILE_START(_pt);
     { PROFILE_END_VAR(_pt, "UI_LB_GetItemHeight"); return 0; }
 }
 
-void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int index) {
+void UI_NavigateTo(ListBoxInfo* lb,int index) {
         PROFILE_START(_pt);
 if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     int count = lb->populated_count;
     if (count <= 0) {
         lb->selected_index = -1;
-        UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, -1, false);
+        UI_LB_SetCaretIndex(-1, false);
         return;
     }
     if (index >= count) index = count - 1;
     if (index == -1) {
         lb->selected_index = -1;
-        UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, -1, false);
+        UI_LB_SetCaretIndex(-1, false);
         return;
     }
     int old_sel = lb->selected_index;
     ListBox_FocusByKeyboard();
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     lb->selected_index = index;
-    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, index, false);
+    UI_LB_SetCaretIndex(index, false);
     ListBox_ScrollToSelection(lb);
 }
 
-void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
+void UI_NavigateUp(ListBoxInfo* lb) {
         PROFILE_START(_pt);
-    ListBox_NavigateUp(lb, hListBox);
+    ListBox_NavigateUp(lb);
     PROFILE_END_VAR(_pt, "UI_NavigateUp");
 }
 
-void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
-        PROFILE_START(_pt);
-    ListBox_NavigateDown(lb, hListBox);
+void UI_NavigateDown(ListBoxInfo* lb) {
+    PROFILE_START(_pt);
+    ListBox_NavigateDown(lb);
     PROFILE_END_VAR(_pt, "UI_NavigateDown");
 }
 
@@ -246,15 +243,15 @@ WindowManager* wm = WindowManager_Get();
     }
 }
 
-void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
+void UI_RedrawNow(ListBoxInfo* lb) {
         PROFILE_START(_pt);
-    Prompt_RedrawNow(lb, hListBox);
+    Prompt_RedrawNow(lb);
     PROFILE_END_VAR(_pt, "UI_RedrawNow");
 }
 
-void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
+void UI_Redraw(ListBoxInfo* lb) {
         PROFILE_START(_pt);
-UI_RedrawNow(lb, FlintContext_Get()->window.hListBox);
+        UI_RedrawNow(lb);
 }
 
 void UI_SyncFilterFromEdit(FlintContext* ctx) {

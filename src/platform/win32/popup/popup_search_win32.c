@@ -90,14 +90,14 @@ ListBoxInfo* lb = NULL;
     case WM_KEYDOWN: {
       if (wParam == VK_ESCAPE) {
         DestroyWindow(hwnd);
-        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        UI_Redraw(lb);
         return 0;
       }
       if (wParam == VK_RETURN) {
         if (GetKeyState(VK_SHIFT) & 0x8000) break;
         log_info("Enter pressed");
         DestroyWindow(hwnd);
-        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        UI_Redraw(lb);
         return 0;
       }
       if (wParam == VK_BACK) {
@@ -140,7 +140,7 @@ ListBoxInfo* lb = NULL;
     case WM_CHAR: {
       if (wParam == 0x08 || wParam == 0x7F) return 0;
       if (wParam >= 0x20 && IsInsertMode() && UI_InsertChar((wchar_t)wParam) > 0) {
-        if (lb) UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        if (lb) UI_Redraw(lb);
         InvalidateRect(hwnd, NULL, FALSE);
         return 0;
       }

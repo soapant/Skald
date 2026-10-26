@@ -209,10 +209,10 @@ static void Populate_BuildCache(ListBoxInfo* lb, const char** items, int total_m
   }
 }
 
-static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_matches, const char* filter) {
-  UI_LB_BeginUpdate(hListBox);
-  UI_LB_SetCount(lb, hListBox, total_matches);
-  if (SequenceIsWaiting()) { UI_LB_EndUpdate(hListBox); return; }
+static void Populate_UpdateUI(ListBoxInfo* lb, int total_matches, const char* filter) {
+  UI_LB_BeginUpdate();
+  UI_LB_SetCount(lb, total_matches);
+  if (SequenceIsWaiting()) { UI_LB_EndUpdate(); return; }
   if (IsNormalMode()) {
     int keep;
     if (RememberLastIndex) {
@@ -221,17 +221,17 @@ static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_
       if (total_matches == 0) keep = -1;
       else if (keep < 0) keep = 0;
       else if (keep >= total_matches) keep = total_matches - 1;
-      UI_NavigateTo(lb, hListBox, keep);
+      UI_NavigateTo(lb, keep);
     } else {
       keep = (total_matches > 0) ? 0 : -1;
-      UI_SetSelection(lb, hListBox, keep);
+      UI_SetSelection(lb, keep);
     }
   } else if (total_matches != 0 && strlen(filter) > 0) {
-    UI_SetSelection(lb, hListBox, 0);
+    UI_SetSelection(lb, 0);
   } else if (lb->selected_index >= 0) {
-    UI_NavigateTo(lb, hListBox, lb->selected_index);
+    UI_NavigateTo(lb, lb->selected_index);
   } else {
-    UI_SetSelection(lb, hListBox, -1);
+    UI_SetSelection(lb, -1);
   }
   ListBox_ScrollToSelection(lb);
   if (total_matches == 0) {
@@ -243,7 +243,7 @@ static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_
       FlintContext_Get()->window.hDisplayMessage = WH_NULL;
     }
   }
-  UI_LB_EndUpdate(hListBox);
+  UI_LB_EndUpdate();
 }
 
 static void Populate_CommitState(ListBoxInfo* lb, int item_count, int total_matches) {
@@ -255,7 +255,6 @@ void PopulateListBox(ListBoxInfo* lb, const char* filter,
     const char** items, int item_count,
     bool (*filter_match)(const char* item, const char* filter)) {
   if (!lb) return;
-  WindowHandle hListBox = FlintContext_Get()->window.hListBox;
   PROFILE_START(timer_index);
   if (SequenceHasPendingWait()) {
     log_info("PopulateListBox waiting filter='%s'", filter ? filter : "");
@@ -303,7 +302,7 @@ void PopulateListBox(ListBoxInfo* lb, const char* filter,
   PROFILE_END_VAR(timer_cache, "  PopulateListBox - Cache build");
 
   PROFILE_START(timer_ui);
-  Populate_UpdateUI(lb, hListBox, total_matches, filter);
+  Populate_UpdateUI(lb, total_matches, filter);
   PROFILE_END_VAR(timer_ui, "  PopulateListBox - UI update");
 
   PROFILE_START(timer_cleanup);

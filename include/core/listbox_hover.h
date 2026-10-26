@@ -25,8 +25,8 @@ int ListBox_ScrollTopFor(int index, int visible_count, int count);
 void ListBox_ScrollToSelection(ListBoxInfo* lb);
 void ListBox_SetGeometry(int list_top, int item_height, int visible_count);
 void ListBox_GetGeometry(int* out_list_top, int* out_item_height, int* out_visible_count);
-void ListBox_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox);
-void ListBox_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox);
+void ListBox_NavigateUp(ListBoxInfo* lb);
+void ListBox_NavigateDown(ListBoxInfo* lb);
 void ListBox_CommandExecute(ListBoxInfo* lb, const char* string);
 
 #endif

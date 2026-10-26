@@ -155,7 +155,7 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
     ListBox_FocusByMouse();
     int idx = ListBox_RowAtY(lb, list_top, item_height, top_index, visible_count, my);
     if (idx < 0 || idx == lb->selected_index) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
-    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, idx);
+    UI_SetSelection(lb,idx);
     PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
     return true;
 }
@@ -187,9 +187,9 @@ void ListBox_ScrollBy(ListBoxInfo* lb, int rows, int visible_count) {
         if (sel < 0) sel = 0;
         if (sel >= lb->populated_count) sel = lb->populated_count - 1;
         lb->selected_index = sel;
-        UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, sel, false);
+        UI_LB_SetCaretIndex(sel, false);
     }
-    UI_LB_SetTopIndex(FlintContext_Get()->window.hListBox, off);
+    UI_LB_SetTopIndex(off);
     PROFILE_END_VAR(_pt, "ListBox_ScrollBy");
 }
 
@@ -229,15 +229,15 @@ void ListBox_GetGeometry(int* out_list_top, int* out_item_height, int* out_visib
     if (out_visible_count) *out_visible_count = g_visible_count;
 }
 
-void ListBox_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
+void ListBox_NavigateUp(ListBoxInfo* lb) {
     if (!lb) return;
     int sel = lb->selected_index;
     if (sel >= 0) sel--;
     if (sel == lb->selected_index) return;
-    UI_NavigateTo(lb, hListBox, sel);
+    UI_NavigateTo(lb, sel);
 }
 
-void ListBox_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
+void ListBox_NavigateDown(ListBoxInfo* lb) {
     if (!lb) return;
     int count = lb->populated_count;
     if (count <= 0) return;
@@ -246,12 +246,12 @@ void ListBox_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
     if (sel >= count - 1) sel = count - 1;
     else sel++;
     if (sel == lb->selected_index) return;
-    UI_NavigateTo(lb, hListBox, sel);
+    UI_NavigateTo(lb,sel);
 }
 
 void ListBox_CommandExecute(ListBoxInfo* lb, const char* string) {
     if (!lb || !string) return;
     int num = atoi(string);
-    UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, num - 1);
+    UI_NavigateTo(lb,num - 1);
     ListBox_ScrollToSelection(lb);
 }

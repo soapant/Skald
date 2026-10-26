@@ -345,7 +345,6 @@ void display_card_answer(void) {
     }
     
     double elapsed_ms = fl_end_timer(g_q_timer);
-    printf("Anki question->answer: %.0f ms\\n", elapsed_ms);
     fflush(stdout);
     anki_apply_elapsed(elapsed_ms);
 
@@ -354,6 +353,7 @@ void display_card_answer(void) {
     fl_mutex_unlock(anki_lock);
 
     fl_dismiss_message("question");
+    printf("%s \n",answer);
     fl_message(.name="answer",.message = answer,.slot=TOP_CENTER,.timeout=1000.0);
 }
 
@@ -443,8 +443,8 @@ FLINT_FEATURE_SHUTDOWN {
 }
 
 FLINT_FEATURE_INIT {
-    // anki_lock = fl_mutex_create();
-    // anki_running = true;
-    // anki_thread = fl_thread_create(anki_timer_thread, NULL);
+    anki_lock = fl_mutex_create();
+    anki_running = true;
+    anki_thread = fl_thread_create(anki_timer_thread, NULL);
     fl_register_hotkey(.hotkey="Shift+Space", .cb=handle_anki, .should_swallow=should_swallow_anki);
 }

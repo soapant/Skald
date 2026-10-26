@@ -224,7 +224,7 @@ void HandleEnter(FlintContext* ctx) {
 void HandleMoveUp(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!ctx || !lb) return;
-    UI_NavigateUp(lb, ctx->window.hListBox);
+    UI_NavigateUp(lb);
 }
 void HandleMoveRight(FlintContext* ctx) {
     if (!ctx) return;
@@ -240,7 +240,7 @@ void HandleMoveRight(FlintContext* ctx) {
 void HandleMoveDown(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!ctx || !lb) return;
-    UI_NavigateDown(lb, ctx->window.hListBox);
+    UI_NavigateDown(lb);
 }
 
 void HandlePersistentDelete(FlintContext* ctx) {
@@ -453,7 +453,7 @@ void HandleToggleHistory(FlintContext* ctx) {
   ListBoxInfo* lb = Vim_GetListBox(ctx);
   if (!ctx || !lb) return;
   if (UI_IsListBoxSelected(lb)) {
-    UI_SetSelection(lb, ctx->window.hListBox, -1);
+    UI_SetSelection(lb, -1);
   }
   GetFromHistory(lb);
 }
@@ -543,7 +543,7 @@ void HandlePageUp(FlintContext* ctx) {
   int current_sel = lb->selected_index;
   int wanted_sel = current_sel - PageUpDownLen;
   if (wanted_sel <= 0) wanted_sel = 0;
-  UI_NavigateTo(lb, ctx->window.hListBox, wanted_sel);
+  UI_NavigateTo(lb, wanted_sel);
   ListBox_ScrollToSelection(lb);
 }
 void HandlePageDown(FlintContext* ctx) {
@@ -552,13 +552,13 @@ void HandlePageDown(FlintContext* ctx) {
   int current_sel = lb->selected_index;
   int wanted_sel = current_sel + PageUpDownLen;
   if (wanted_sel >= lb->total_matches) wanted_sel = lb->total_matches;
-  UI_NavigateTo(lb, ctx->window.hListBox, wanted_sel - 1);
+  UI_NavigateTo(lb, wanted_sel - 1);
   ListBox_ScrollToSelection(lb);
 }
 void HandleNormalEdit(FlintContext* ctx) {
   ListBoxInfo* lb = Vim_GetListBox(ctx);
   if (!ctx || !lb) return;
-  UI_SetSelection(lb, ctx->window.hListBox, -1);
+  UI_SetSelection(lb, -1);
 }
 
 static void vim_get_text(FlintContext* ctx, char* buf, int cap) {
@@ -840,7 +840,7 @@ void HandleScreenTop(FlintContext* ctx) {
     if (!lb || !UI_IsListBoxSelected(lb)) return;
     int visible = UI_LB_GetVisibleCount();
     if (visible <= 0) visible = 1;
-    UI_NavigateTo(lb, ctx->window.hListBox, lb->view_offset);
+    UI_NavigateTo(lb, lb->view_offset);
 }
 
 void HandleScreenMiddle(FlintContext* ctx) {
@@ -849,7 +849,7 @@ void HandleScreenMiddle(FlintContext* ctx) {
     if (!lb || !UI_IsListBoxSelected(lb)) return;
     int visible = UI_LB_GetVisibleCount();
     if (visible <= 0) visible = 1;
-    UI_NavigateTo(lb, ctx->window.hListBox, lb->view_offset + visible / 2);
+    UI_NavigateTo(lb, lb->view_offset + visible / 2);
 }
 
 void HandleScreenBottom(FlintContext* ctx) {
@@ -860,7 +860,7 @@ void HandleScreenBottom(FlintContext* ctx) {
     if (visible <= 0) visible = 1;
     int bottom = lb->view_offset + visible - 1;
     if (bottom > lb->populated_count - 1) bottom = lb->populated_count - 1;
-    UI_NavigateTo(lb, ctx->window.hListBox, bottom);
+    UI_NavigateTo(lb, bottom);
 }
 
 static void vim_move_lines(int delta) {
@@ -871,7 +871,7 @@ static void vim_move_lines(int delta) {
     int target = lb->selected_index + delta;
     if (target < 0) target = 0;
     if (target > lb->populated_count - 1) target = lb->populated_count - 1;
-    UI_NavigateTo(lb, ctx->window.hListBox, target);
+    UI_NavigateTo(lb, target);
 }
 
 void HandleHalfPageDown(FlintContext* ctx) {
@@ -908,7 +908,7 @@ static void vim_mark_position(bool set) {
     }
     int mcursor = 0, msel = 0;
     if (!VimState_GetMark(name, &mcursor, &msel)) return;
-    if (msel >= 0 && lb && msel < lb->populated_count) UI_NavigateTo(lb, ctx->window.hListBox, msel);
+    if (msel >= 0 && lb && msel < lb->populated_count) UI_NavigateTo(lb, msel);
     vim_clamp_cursor(ctx, mcursor);
 }
 
@@ -943,7 +943,7 @@ void HandleJumpPrevContext(FlintContext* ctx) {
     int cursor = 0, sel = 0;
     if (!VimState_GetMark(VIM_MARK_PREV, &cursor, &sel)) return;
     ListBoxInfo* lb = Vim_GetListBox(fc);
-    if (sel >= 0 && lb && sel < lb->populated_count) UI_NavigateTo(lb, fc->window.hListBox, sel);
+    if (sel >= 0 && lb && sel < lb->populated_count) UI_NavigateTo(lb,sel);
     vim_clamp_cursor(fc, cursor);
 }
 
@@ -954,7 +954,7 @@ static void vim_jump_history(bool backward) {
     int cursor = 0, sel = 0;
     bool ok = backward ? VimState_PopJump(&cursor, &sel) : VimState_PeekJump(&cursor, &sel);
     if (!ok) return;
-    if (sel >= 0 && lb && sel < lb->populated_count) UI_NavigateTo(lb, ctx->window.hListBox, sel);
+    if (sel >= 0 && lb && sel < lb->populated_count) UI_NavigateTo(lb, sel);
     vim_clamp_cursor(ctx, cursor);
 }
 

@@ -40,135 +40,83 @@ void UI_LegacySyncRepaint(void) {
     PROFILE_END_VAR(_pt, "UI_LegacySyncRepaint");
 }
 
-void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
-        PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
+void UI_SetSelection(ListBoxInfo* lb, int index) {
+    PROFILE_START(_pt);
+    if (!lb) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
     int old_sel = lb->selected_index;
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
     lb->selected_index = index;
-    if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hList))) {
-        HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-        if (hPopup && IsWindow(hPopup)) { UI_RequestPopupRepaint(); }
-        PROFILE_END_VAR(_pt, "UI_SetSelection");
-        return;
-    }
-    RECT invalidRect = {0};
-    bool hasInvalid = false;
-    RECT itemRect = {0, 0, 0, 0};
-    if (old_sel >= 0 && old_sel < lb->populated_count) {
-        if ((int)SendMessageA(WH_TO_HWND(hList), LB_GETITEMRECT, old_sel, (LPARAM)&itemRect) != LB_ERR) {
-            invalidRect = itemRect;
-            hasInvalid = true;
-        }
-    }
-    if (index >= 0 && index < lb->populated_count) {
-        if ((int)SendMessageA(WH_TO_HWND(hList), LB_GETITEMRECT, index, (LPARAM)&itemRect) != LB_ERR) {
-            if (!hasInvalid) { invalidRect = itemRect; hasInvalid = true; }
-            else UnionRect(&invalidRect, &invalidRect, &itemRect);
-        }
-    }
-    if (hasInvalid) {
-        UI_LB_BeginUpdate(hList);
-        RedrawWindow(WH_TO_HWND(hList), &invalidRect, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
-        UI_LB_EndUpdate(hList);
-    }
+    
+    // Custom drawing instead of native listbox interactions
+    UI_RequestPopupRepaint();
+    PROFILE_END_VAR(_pt, "UI_SetSelection");
 }
 
-void UI_SetHorizontalExtent(WindowHandle hList, int width) {
-        PROFILE_START(_pt);
-SendMessageA(WH_TO_HWND(hList), LB_SETHORIZONTALEXTENT, width, 0);
+void UI_SetHorizontalExtent(int width) {
+    PROFILE_START(_pt);
+    // Not used in custom rendering
+    PROFILE_END_VAR(_pt, "UI_SetHorizontalExtent");
 }
 
 static int g_lb_update_depth = 0;
 static HWND g_lb_update_hwnd = NULL;
 
-void UI_LB_BeginUpdate(WindowHandle hList) {
-        PROFILE_START(_pt);
-    HWND h = WH_TO_HWND(hList);
-    if (g_lb_update_depth == 0 && h) {
-        g_lb_update_hwnd = h;
-        SendMessageA(h, WM_SETREDRAW, FALSE, 0);
-    }
+void UI_LB_BeginUpdate(void) {
+    PROFILE_START(_pt);
     g_lb_update_depth++;
     PROFILE_END_VAR(_pt, "UI_LB_BeginUpdate");
 }
 
-void UI_LB_EndUpdate(WindowHandle hList) {
-        PROFILE_START(_pt);
-    HWND h = WH_TO_HWND(hList);
+void UI_LB_EndUpdate(void) {
+    PROFILE_START(_pt);
     if (g_lb_update_depth > 0) g_lb_update_depth--;
-    if (g_lb_update_depth == 0) {
-        HWND target = h ? h : g_lb_update_hwnd;
-        g_lb_update_hwnd = NULL;
-        if (target) {
-            SendMessageA(target, WM_SETREDRAW, TRUE, 0);
-            InvalidateRect(target, NULL, FALSE);
-        }
-    }
     PROFILE_END_VAR(_pt, "UI_LB_EndUpdate");
 }
 
-void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count) {
-        PROFILE_START(_pt);
-if (lb) lb->populated_count = count;
-    if (FlintContext_Get()->prompt_callbacks.render != NULL) { PROFILE_END_VAR(_pt, "UI_LB_SetCount"); return; }
-    HWND h = WH_TO_HWND(hList);
-    if (!h) { PROFILE_END_VAR(_pt, "UI_LB_SetCount"); return; }
-    int top = UI_LB_GetTopIndex(hList);
-    if (top > count) top = count;
-    if (top < 0) top = 0;
-    UI_LB_BeginUpdate(hList);
-    SendMessageA(h, LB_SETCOUNT, count, 0);
-    if (top > 0) SendMessageA(h, LB_SETTOPINDEX, top, 0);
-    UI_LB_EndUpdate(hList);
-    if (lb) lb->view_offset = (int)SendMessageA(h, LB_GETTOPINDEX, 0, 0);
+void UI_LB_SetCount(ListBoxInfo* lb,int count) {
+    PROFILE_START(_pt);
+    if (lb) lb->populated_count = count;
+    UI_RequestPopupRepaint();
+    PROFILE_END_VAR(_pt, "UI_LB_SetCount");
 }
 
-void UI_LB_SetItemHeight(WindowHandle hList, int height) {
-        PROFILE_START(_pt);
-SendMessageA(WH_TO_HWND(hList), LB_SETITEMHEIGHT, 0, height);
+void UI_LB_SetItemHeight(int height) {
+    PROFILE_START(_pt);
+    PROFILE_END_VAR(_pt, "UI_LB_SetItemHeight");
 }
 
-void UI_LB_SetCaretIndex(WindowHandle hList, int index, bool scroll) {
-        PROFILE_START(_pt);
-    HWND h = WH_TO_HWND(hList);
-    if (!h) { PROFILE_END_VAR(_pt, "UI_LB_SetCaretIndex"); return; }
-    UI_LB_BeginUpdate(hList);
-    SendMessageA(h, LB_SETCARETINDEX, index, scroll);
-    UI_LB_EndUpdate(hList);
+void UI_LB_SetCaretIndex(int index, bool scroll) {
+    PROFILE_START(_pt);
+    UI_RequestPopupRepaint();
+    PROFILE_END_VAR(_pt, "UI_LB_SetCaretIndex");
 }
 
-void UI_LB_SetTopIndex(WindowHandle hList, int index) {
-        PROFILE_START(_pt);
-    HWND h = WH_TO_HWND(hList);
-    if (!h) { PROFILE_END_VAR(_pt, "UI_LB_SetTopIndex"); return; }
-    UI_LB_BeginUpdate(hList);
-    SendMessageA(h, LB_SETTOPINDEX, index, 0);
-    UI_LB_EndUpdate(hList);
+void UI_LB_SetTopIndex(int index) {
+    PROFILE_START(_pt);
+    UI_RequestPopupRepaint();
+    PROFILE_END_VAR(_pt, "UI_LB_SetTopIndex");
 }
 
-int UI_LB_GetTopIndex(WindowHandle hList) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "UI_LB_GetTopIndex"); return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTOPINDEX, 0, 0); }
+int UI_LB_GetTopIndex(void) {
+    PROFILE_START(_pt);
+    PROFILE_END_VAR(_pt, "UI_LB_GetTopIndex");
+    return 0;
 }
 
 int UI_LB_GetViewTop(ListBoxInfo* lb) {
         PROFILE_START(_pt);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return lb ? lb->view_offset : 0; }
-    { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return UI_LB_GetTopIndex(FlintContext_Get()->window.hListBox); }
+    { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return UI_LB_GetTopIndex(); }
 }
 
 static int g_render_lb_visible = 0;
 
 int UI_LB_GetVisibleCount(void) {
-        PROFILE_START(_pt);
+    PROFILE_START(_pt);
     if (FlintContext_Get()->prompt_callbacks.render != NULL && g_render_lb_visible > 0) { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return g_render_lb_visible; }
-    WindowHandle hList = FlintContext_Get()->window.hListBox;
-    if (!WH_TO_HWND(hList)) { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return 16; }
-    int itemHeight = UI_LB_GetItemHeight(hList);
+    int itemHeight = UI_LB_GetItemHeight();
     if (itemHeight <= 0) { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return 16; }
     RECT rect;
-    GetClientRect(WH_TO_HWND(hList), &rect);
     int visible = rect.bottom / itemHeight;
     if (visible < 1) visible = 1;
     { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return visible; }
@@ -180,80 +128,62 @@ void UI_LB_SetVisibleCount(int count) {
 }
 
 void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
-        PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop"); return ; }
-    WindowHandle hList = FlintContext_Get()->window.hListBox;
+    PROFILE_START(_pt);
+    if (!lb) { PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop"); return ; }
     int visible = UI_LB_GetVisibleCount();
     if (top_index < 0) top_index = 0;
-    if (top_index + visible > lb->populated_count) top_index = lb->populated_count - visible;
+    if (visible > 0 && top_index + visible > lb->populated_count) top_index = lb->populated_count - visible;
     if (top_index < 0) top_index = 0;
     lb->view_offset = top_index;
-    if (FlintContext_Get()->prompt_callbacks.render != NULL) { PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop"); return; }
-    HWND h = WH_TO_HWND(hList);
-    if (!h) { PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop"); return; }
-    UI_LB_BeginUpdate(hList);
-    SendMessageA(h, LB_SETTOPINDEX, top_index, 0);
-    UI_LB_EndUpdate(hList);
+    
+    // Custom drawing, just repaint
+    UI_RequestPopupRepaint();
+    PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop");
 }
 
-void UI_LB_SetFont(WindowHandle hList, void* hFont) {
-        PROFILE_START(_pt);
-SendMessageA(WH_TO_HWND(hList), WM_SETFONT, (WPARAM)hFont, FALSE);
+void UI_LB_SetFont(void* hFont) {
+    PROFILE_START(_pt);
+    PROFILE_END_VAR(_pt, "UI_LB_SetFont");
 }
 
-int UI_LB_GetItemHeight(WindowHandle hList) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "UI_LB_GetItemHeight"); return (int)SendMessageA(WH_TO_HWND(hList), LB_GETITEMHEIGHT, 0, 0); }
+int UI_LB_GetItemHeight(void) {
+    PROFILE_START(_pt);
+    PROFILE_END_VAR(_pt, "UI_LB_GetItemHeight");
+    return 0;
 }
 
-void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int index) {
-        PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
+void UI_NavigateTo(ListBoxInfo* lb, int index) {
+    PROFILE_START(_pt);
+    if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     int count = lb->populated_count;
     if (count <= 0) {
         lb->selected_index = -1;
-        UI_LB_SetCaretIndex(hListBox, -1, false);
-        if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
-            HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-            if (hPopup && IsWindow(hPopup)) UI_RequestPopupRepaint();
-        }
+        UI_RequestPopupRepaint();
         return;
     }
     if (index >= count) index = count - 1;
     if (index == -1) {
         lb->selected_index = -1;
-        UI_LB_SetCaretIndex(hListBox, -1, false);
-        if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
-            HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-            if (hPopup && IsWindow(hPopup)) UI_RequestPopupRepaint();
-        }
+        UI_RequestPopupRepaint();
         return;
     }
     int old_sel = lb->selected_index;
-    ListBox_FocusByKeyboard();
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     lb->selected_index = index;
-    UI_LB_BeginUpdate(hListBox);
-    UI_LB_SetCaretIndex(hListBox, index, false);
-    ListBox_ScrollToSelection(lb);
-    if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
-        UI_LB_EndUpdate(hListBox);
-        HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-        if (hPopup && IsWindow(hPopup)) { UI_RequestPopupRepaint(); }
-        return;
-    }
-    UI_LB_EndUpdate(hListBox);
+    UI_RequestPopupRepaint();
 }
 
-void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
-        PROFILE_START(_pt);
-    ListBox_NavigateUp(lb, hListBox);
+void UI_NavigateUp(ListBoxInfo* lb) {
+    PROFILE_START(_pt);
+    ListBox_NavigateUp(lb);
+    UI_RequestPopupRepaint();
     PROFILE_END_VAR(_pt, "UI_NavigateUp");
 }
 
-void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
-        PROFILE_START(_pt);
-    ListBox_NavigateDown(lb, hListBox);
+void UI_NavigateDown(ListBoxInfo* lb) {
+    PROFILE_START(_pt);
+    ListBox_NavigateDown(lb);
+    UI_RequestPopupRepaint();
     PROFILE_END_VAR(_pt, "UI_NavigateDown");
 }
 
@@ -354,7 +284,7 @@ if (!buffer || cap == 0) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return
 
 void UI_SetText(const char* text) {
         PROFILE_START(_pt);
-if (!text) text = "";
+    if (!text) text = "";
     Win32TextTarget t;
     if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) { PROFILE_END_VAR(_pt, "UI_SetText"); return ; }
     strncpy(t.text, text, t.capacity - 1);
@@ -367,11 +297,6 @@ if (!text) text = "";
     }
     HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     if (popup && IsWindow(popup)) UI_RequestPopupRepaint();
-    if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) {
-        UI_LB_BeginUpdate(FlintContext_Get()->window.hListBox);
-        InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, FALSE);
-        UI_LB_EndUpdate(FlintContext_Get()->window.hListBox);
-    }
 }
 
 int UI_GetCursorPosition(void) {
@@ -490,9 +415,12 @@ SendMessageA(WH_TO_HWND(hEdit), WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0
 }
 
 PromptState *g_win32_prompt_state = NULL;
-void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
-        PROFILE_START(_pt);
-    Prompt_RedrawNow(lb, hListBox);
+void UI_RedrawNow(ListBoxInfo* lb) {
+    PROFILE_START(_pt);
+    HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    if (hPopup && IsWindow(hPopup)) {
+        UI_RequestPopupRepaint();
+    }
     PROFILE_END_VAR(_pt, "UI_RedrawNow");
 }
 
@@ -535,20 +463,19 @@ const MSG* m = (const MSG*)msg;
     { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return false; }
 }
 
-void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
+void UI_Redraw(ListBoxInfo* lb) {
         PROFILE_START(_pt);
     if (FlintContext_Get()->prompt_callbacks.render == NULL) {
         HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
         if (hPopup) KillTimer(hPopup, UI_DEBOUNCE_TIMER_ID);
-        UI_RedrawNow(lb, hListBox);
+        UI_RedrawNow(lb);
         PROFILE_END_VAR(_pt, "UI_Redraw");
         return;
     }
-if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
+    if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
         SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_DEBOUNCE_TIMER_ID, UI_DEBOUNCE_MS, NULL);
         return;
     }
-    UI_RedrawNow(lb, FlintContext_Get()->window.hListBox);
 }
 
 char* Platform_SearchPopup(void) {     PROFILE_START(_pt);
@@ -587,17 +514,6 @@ PromptState* Platform_GetPromptStateForHWND(HWND hwnd) {
 PromptState* Platform_GetWin32PromptState(void) {     PROFILE_START(_pt);
     { PROFILE_END_VAR(_pt, "Platform_GetWin32PromptState"); return Platform_GetPromptStateForHWND(GetFocus() ? GetFocus() : GetForegroundWindow()); }
 }
-
-static void win_command_confirm(const char* text, void* user_data) {
-    PROFILE_START(_pt);
-  ListBoxInfo* lb = (ListBoxInfo*)user_data;
-  if (!text) { PROFILE_END_VAR(_pt, "win_command_confirm"); return ; }
-  char* dup = _strdup(text);
-  if (!dup) { PROFILE_END_VAR(_pt, "win_command_confirm"); return ; }
-  ListBox_CommandExecute(lb, dup);
-  free(dup);
-}
-
 
 void UI_SyncFilterFromEdit(FlintContext* ctx) {
         PROFILE_START(_pt);
