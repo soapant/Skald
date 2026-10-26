@@ -165,14 +165,24 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
     case WM_MOUSEMOVE: {
       extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
       POINT pt;
-      if (GetCursorPos(&pt)) ListBox_PublishMousePos((int)pt.x, (int)pt.y);
-      PromptState* hst = Platform_GetPromptStateForHWND(hwnd);
-      if (hst && hst->has_listbox) {
-        ListBoxInfo* hlb = &hst->listbox;
-        int list_top = 0, item_h = 0, visible = 0;
-        ListBox_GetGeometry(&list_top, &item_h, &visible);
-        int hTop = UI_LB_GetViewTop(hlb);
-        ListBox_HoverFocus(hlb, list_top, item_h, hTop, visible);
+      RECT rect;
+      GetClientRect(hwnd, &rect);
+      if (GetCursorPos(&pt)) {
+        ListBox_PublishMousePos(pt.x, pt.y);
+      }
+      
+      if (FlintContext_Get()->prompt_callbacks.render == NULL) {
+          PromptState* hst = Platform_GetPromptStateForHWND(hwnd);
+          if (hst && hst->has_listbox) {
+            ListBoxInfo* hlb = &hst->listbox;
+            int list_top = PromptListTop();
+            int item_h = PromptRowHeight();
+            int visible = (rect.bottom - PromptListBottomMargin() - list_top) / item_h;
+            
+            ListBox_SetGeometry(list_top, item_h, visible);
+            
+            ListBox_HoverFocus(hlb, list_top, item_h, hlb->view_offset, visible);
+          }
       }
       InvalidateRect(hwnd, NULL, FALSE);
       return 0;
