@@ -456,8 +456,8 @@ void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll
         PROFILE_START(_pt);
 PROFILE_START(timer);
     int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - scroll;
-    if (cursor_draw_x > width - PROMPT_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - PROMPT_X11_DEADCURSOR_CLAMP;
-    int cursor_y = PROMPT_X11_DEADCURSOR_Y;
+    if (cursor_draw_x > width - PROMPT_DEADCURSOR_CLAMP) cursor_draw_x = width - PROMPT_DEADCURSOR_CLAMP;
+    int cursor_y = PROMPT_DEADCURSOR_Y;
     if (IsInsertMode()) {
         XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, PromptCaretHeight());
     } else {
