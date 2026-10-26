@@ -21,18 +21,3 @@ ListBoxInfo* GetLBFromPopup(HWND hPopup) {
     }
   { PROFILE_END_VAR(_pt, "GetLBFromPopup"); return NULL; }
 }
-ListBoxInfo* GetLBFromChild(HWND hChild) {
-    PROFILE_START(_pt);
-HWND hParent = GetParent(hChild);
-  if (hParent && IsWindow(hParent)) { PROFILE_END_VAR(_pt, "GetLBFromChild"); return GetLBFromPopup(hParent); }
-  
-  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) { PROFILE_END_VAR(_pt, "GetLBFromChild"); return GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd)); }
-  { PROFILE_END_VAR(_pt, "GetLBFromChild"); return NULL; }
-}
-ListBoxInfo* GetLBForPopupWindow(HWND hPopup) {     PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "GetLBForPopupWindow"); return GetLBFromPopup(hPopup); } }
-
-void RequestInitialNavigation(int index) {
-    PROFILE_START(_pt);
-g_pending_navigate = index;
-}
