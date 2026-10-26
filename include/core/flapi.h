@@ -1194,6 +1194,9 @@ struct FlWidget {
     bool no_bg;
     int pad;
     bool mapped;
+    volatile bool dead;
+    bool hover_running;
+    void (*hover_thread)(void);
     PlatformWidget *win;
     FlWidgetRenderFn render;
     unsigned long frame;
