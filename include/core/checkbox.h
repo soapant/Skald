@@ -12,7 +12,6 @@ typedef struct {
     int y;
     int w;
     int h;
-    int scale;
     bool checked;
     bool button;
     bool checkbox;

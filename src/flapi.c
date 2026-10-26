@@ -886,14 +886,14 @@ char* fl_get_last_clipboard_entry() {
     if (current) {
         if (current[0]) {
             const FlClipboardEntry* latest = fl_clipboard_latest();
-            if (!latest || latest->type != FL_CLIPBOARD_TEXT || !latest->text || strcmp(latest->text, current) != 0)
+            if (!latest || latest->type != CLIPBOARD_TEXT || !latest->text || strcmp(latest->text, current) != 0)
                 clipboard_history_push_text_platform(current);
         }
         free(current);
     }
     for (size_t i = clipboard_history_count_platform(); i > 0; i--) {
         const FlClipboardEntry* e = clipboard_history_get_platform(i - 1);
-        if (e->type == FL_CLIPBOARD_TEXT && e->text) return strdup(e->text);
+        if (e->type == CLIPBOARD_TEXT && e->text) return strdup(e->text);
     }
     { PROFILE_END_VAR(_pt, "fl_get_last_clipboard_entry"); return NULL; }
 }

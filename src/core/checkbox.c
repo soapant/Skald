@@ -178,15 +178,14 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     }
 
     int w, h;
-    int scale = spec->scale > 0 ? spec->scale : 1;
     int x = spec->x, y = spec->y;
     
     if (spec->button) {
         w = spec->w > 0 ? spec->w : 100;
         h = spec->h > 0 ? spec->h : 24;
     } else {
-        w = spec->w > 0 ? spec->w : (FL_CHECKBOX_BASE * scale);
-        h = spec->h > 0 ? spec->h : (FL_CHECKBOX_BASE * scale);
+        w = spec->w > 0 ? spec->w : FL_CHECKBOX_BASE;
+        h = spec->h > 0 ? spec->h : FL_CHECKBOX_BASE;
     }
 
     CheckboxSpec* cb = checkbox_intern(spec->name, spec->checked);
@@ -207,7 +206,6 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     cb->text = spec->text;
     cb->fontsize = spec->fontsize;
     cb->text_color = spec->text_color;
-    cb->scale = scale;
 
     int mx = 0, my = 0;
     bool down = false;
