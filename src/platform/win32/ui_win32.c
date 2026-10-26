@@ -47,14 +47,12 @@ void UI_SetSelection(ListBoxInfo* lb, int index) {
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
     lb->selected_index = index;
     
-    // Custom drawing instead of native listbox interactions
     UI_RequestPopupRepaint();
     PROFILE_END_VAR(_pt, "UI_SetSelection");
 }
 
 void UI_SetHorizontalExtent(int width) {
     PROFILE_START(_pt);
-    // Not used in custom rendering
     PROFILE_END_VAR(_pt, "UI_SetHorizontalExtent");
 }
 
@@ -136,7 +134,6 @@ void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
     if (top_index < 0) top_index = 0;
     lb->view_offset = top_index;
     
-    // Custom drawing, just repaint
     UI_RequestPopupRepaint();
     PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop");
 }

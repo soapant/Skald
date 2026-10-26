@@ -224,7 +224,6 @@ bool SequenceConsumeTimeout(void) {
 void DeleteLastTypedChar(FlintContext* ctx) {
     if (!ctx) return;
     UI_SyncFilterFromEdit(ctx);
-    // Try to delete from active prompt state if it holds the typed char (for insert JK)
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (top && top->type == POPUP_EDIT) {
