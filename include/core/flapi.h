@@ -593,7 +593,7 @@ struct FlWidget {
     bool auto_h;
     int origin_x;
     int origin_y;
-    unsigned long bg_hex;
+    ColorRef bg_color;
     bool has_bg;
     bool no_bg;
     int pad;
