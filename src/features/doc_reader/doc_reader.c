@@ -265,7 +265,7 @@ static void get_doc_details(const char* name, char* out, size_t cap) {
 bool doc_enter(const char* selection, ListBoxInfo* lb) {
     char details[1024];
     get_doc_details(selection, details, sizeof(details));
-    fl_message(.message = details,.slot=TOP_CENTER,.close_on_keypress=true);
+    fl_message(.message = details,.slot=CENTER,.close_on_keypress=true);
     return false;
 }
 
