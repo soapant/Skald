@@ -1131,7 +1131,6 @@ bool fl_draw_text_impl(const FlTextSpec *spec) {
     }
     const char *align = spec->align ? spec->align : "CENTER";
     FontHandle fh = spec->font;
-    log_info("[IMGDBG][fl_draw_text] text=%s x=%d y=%d fontsize=%d align=%s", real_text, spec->x, spec->y, spec->fontsize, align);
     bool r = Platform_DrawTextRaw(spec->x, spec->y, real_text, col, fh, align, spec->pad,spec->fontsize);
     PROFILE_END_VAR(_pt, "api:fl_draw_text");
     return r;
@@ -1309,7 +1308,6 @@ PROFILE_END_VAR(_pt, "api:fl_draw_image"); { PROFILE_END_VAR(_pt, "f"); return f
       Platform_ResolveAssetPath(__builtin_return_address(0), path, asset, sizeof(asset))) {
     path = asset;
   }
-  log_info("[IMGDBG][fl_draw_image] path=%s x=%d y=%d w=%d h=%d", path, spec->x, spec->y, w, h);
   bool r = Platform_DrawImageAt(path, spec->x, spec->y, w, h);
   PROFILE_END_VAR(_pt, "api:fl_draw_image");
   return r;
