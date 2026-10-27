@@ -109,6 +109,31 @@ static bool config_output_is_fresh(const char* out) {
     return out_st.st_mtime >= src_st.st_mtime;
 }
 
+static bool config_build_feature(const char* src, const char* out) {
+    char tmp[1024];
+    snprintf(tmp, sizeof(tmp), "%s.tmp", out);
+    char cmd[2048];
+#ifdef _WIN32
+    snprintf(cmd, sizeof(cmd),
+        "gcc -I include -DCOBJMACROS -O1 -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
+        tmp, src);
+#else
+    snprintf(cmd, sizeof(cmd), "gcc -std=gnu17 -I include -I/usr/include/freetype2 -O3 -pipe -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-discarded-qualifiers -Wno-stringop-truncation -Wno-misleading-indentation -fPIC -shared -o %s %s 2>&1", tmp, src);
+#endif
+    char* outStr = Platform_RunTerminalCommand(cmd, false);
+    bool ok = false;
+    if (outStr) {
+        if (strlen(outStr) == 0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) ok = true;
+        log_info("%s", outStr);
+        free(outStr);
+    } else {
+        ok = true;
+    }
+    if (!ok) { unlink(tmp); return false; }
+    if (rename(tmp, out) != 0) { unlink(tmp); return false; }
+    return true;
+}
+
 static bool config_build_load_store(void) {
     PROFILE_START(timer);
     const char* out = config_out_path();
@@ -121,7 +146,7 @@ static bool config_build_load_store(void) {
         log_info("config .so is newer than source, skipping compile");
     } else {
         PROFILE_START(t_cfgcompile);
-        bool ok = Platform_BuildFeature(CONFIG_SRC, out);
+        bool ok = config_build_feature(CONFIG_SRC, out);
         PROFILE_END_VAR(t_cfgcompile, "config:compile_config_c");
         if (!ok) {
             log_error("config compile failed, keeping current");
