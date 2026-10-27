@@ -13,7 +13,7 @@
 
 
 #define FPS 1
-#define NO_BG true
+#define NO_BG false
 #define FONTSIZE 14
 
 
