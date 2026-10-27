@@ -1087,7 +1087,6 @@ static void cc_render(PromptState *state) {
         if (row_icon) {
             int icon_x = ctx.x + CC_ITEM_TEXT_X;
             int icon_y = ctx.y + (ctx.h - icon_size) / 2;
-            log_info("[IMGDBG][cc] ctx.y=%d ctx.h=%d icon_size=%d icon_y=%d gh=%d", ctx.y, ctx.h, icon_size, icon_y, gh);
             if (cc_icon_is_glyph(row_icon)) {
                 int gw = fl_get_text_width(row_icon, icon_size);
                 fl_draw_text(.x = icon_x + (icon_size - gw) / 2 ,
@@ -1096,7 +1095,7 @@ static void cc_render(PromptState *state) {
                              .fontsize = icon_size);
             } else {
                 fl_draw_image(.path = row_icon,
-                              .x = icon_x, .y = icon_y,
+                              .x = icon_x, .y = icon_y - 2,
                               .w = icon_size, .h = icon_size);
             }
         }
