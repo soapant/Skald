@@ -1,0 +1,791 @@
+05:36:09 INFO  src\platform\win32\platform_win32.c:318: Platform_StartUniversalTimer completed
+05:36:09 INFO  src\platform\win32\platform_win32.c:1796: Platform_InitializeTrayIcon completed
+05:36:09 INFO  src\platform\win32\platform_win32.c:1832: QuickSwitcherModalClass registered successfully with OS.
+05:36:09 WARN  src\platform\win32\platform_win32.c:1865: WH_KEYBOARD_LL hook installed handle=00000000002a02e5
+05:36:09 WARN  src\platform\win32\platform_win32.c:1872: warm font size=24 face='0xProto Nerd Font' created=1
+05:36:09 INFO  src\platform\win32\platform_win32.c:1874: Platform_InitUI completed
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='LeftShift+RightAlt' (mods=0 count=2) dst='Enter' (mods=0 vk=13) wl=0 wins=0 tota
+l=1
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='Ctrl+Alt+W' (mods=5 count=1) dst='Up' (mods=0 vk=38) wl=0 wins=0 total=2
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='Ctrl+Alt+A' (mods=5 count=1) dst='Left' (mods=0 vk=37) wl=0 wins=0 total=3
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='Ctrl+Alt+S' (mods=5 count=1) dst='Down' (mods=0 vk=40) wl=0 wins=0 total=4
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='Ctrl+Alt+D' (mods=5 count=1) dst='Right' (mods=0 vk=39) wl=0 wins=0 total=5
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='Ctrl+I' (mods=4 count=1) dst='~' (mods=2 vk=192) wl=0 wins=0 total=6
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='Ctrl+U' (mods=4 count=1) dst='|' (mods=2 vk=220) wl=0 wins=0 total=7
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='A' (mods=0 count=1) dst='Left' (mods=0 vk=37) wl=1 wins=1 total=8
+05:36:09 WARN  src\core\remap_manager.c:234: remap registered src='D' (mods=0 count=1) dst='Right' (mods=0 vk=39) wl=1 wins=1 total=9
+05:36:09 INFO  src\platform\win32\wm_platform_win32.c:77: Platform_WM_GetMonitorGeometry cursor=(858,203) mon=(0,0 1920x1080)
+05:36:09 INFO  src\core\feature_loader.c:529: FeatureLoader_LoadAllFromDir completed
+05:36:09 INFO  src\core\feature_loader.c:543: init done, 21 features loaded (hot reload dir: build/features)
+05:36:09 INFO  src\main.c:63: entering main loop
+05:36:09 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Disk Usage:187.2 GB/211.5 GB x=10 y=6 fontsize=14 align=LEFT
+05:36:09 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=0,0 final=10,6
+05:36:09 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:09 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Mem Usage:4.0 GB/15.3 GB x=10 y=6 fontsize=14 align=LEFT
+05:36:09 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=0,0 final=10,6
+05:36:09 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:09 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CPU Usage:  0% x=10 y=6 fontsize=14 align=LEFT
+05:36:09 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=0,0 final=10,6
+05:36:09 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:09 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Tuesday October 27 05:36:09 x=10 y=6 fontsize=14 align=LEFT
+05:36:09 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=0,0 final=10,6
+05:36:09 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:09 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Projects\Flint\src/features\widgets\net_ethernet.png x=40 y=6 w=16 h=16
+05:36:09 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Projects\Flint\src/features\widgets\net_ethernet.png in=40,6 off=0,0 fi
+nal=40,6 size=16x16 IconSize=32
+05:36:09 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=40 y=6 w=16 h=16
+05:36:09 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Disk Usage:187.2 GB/211.5 GB x=10 y=6 fontsize=14 align=LEFT
+05:36:09 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:09 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:09 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Mem Usage:4.0 GB/15.3 GB x=10 y=6 fontsize=14 align=LEFT
+05:36:09 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:09 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:09 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CPU Usage:  8% x=10 y=6 fontsize=14 align=LEFT
+05:36:09 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:09 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:09 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Tuesday October 27 05:36:09 x=10 y=6 fontsize=14 align=LEFT
+05:36:09 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:09 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:09 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Projects\Flint\src/features\widgets\net_ethernet.png x=40 y=6 w=16 h=16
+05:36:09 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Projects\Flint\src/features\widgets\net_ethernet.png in=40,6 off=-40,0 
+final=0,6 size=16x16 IconSize=32
+05:36:09 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=0 y=6 w=16 h=16
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Disk Usage:187.2 GB/211.5 GB x=10 y=6 fontsize=14 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Mem Usage:4.0 GB/15.3 GB x=10 y=6 fontsize=14 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CPU Usage:  0% x=10 y=6 fontsize=14 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Tuesday October 27 05:36:10 x=10 y=6 fontsize=14 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Projects\Flint\src/features\widgets\net_ethernet.png x=40 y=6 w=16 h=16
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Projects\Flint\src/features\widgets\net_ethernet.png in=40,6 off=-40,0 
+final=0,6 size=16x16 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=0 y=6 w=16 h=16
+05:36:10 INFO  src\platform\win32\input_core_win32.c:177: hook swallow=hotkey vk=0x20 mods=1 title='nu.exe - (term://C:\Projects\Flint//11040:C:\Us
+ers\HP\scoop\shims) - Nvim'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\Users\HP\AppData\Roaming\Microsoft\Windows\Start Menu'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\ProgramData\Microsoft\Windows\Start Menu\Programs'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\miscellaneous'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='shell:AppsFolder'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\Program Files\Epic Games'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\Program Files (x86)\Epic Games'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='D:\Epic Games'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\Games'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\C:\Program Files\WindowsApps'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\Program Files (x86)\Steam\steamapps\common'
+05:36:10 INFO  src\platform\win32\platform_win32.c:597: dir watch registered root='C:\Program Files\Steam\steamapps\common'
+05:36:10 INFO  src\platform\win32\wm_platform_win32.c:77: Platform_WM_GetMonitorGeometry cursor=(858,203) mon=(0,0 1920x1080)
+05:36:10 INFO  src\core\window_manager.c:83: PushPopup wm=00000000026e8380 popup=00000000026b0c30 count_before=0
+05:36:10 INFO  src\core\popup\prompt_popup.c:43: PromptPopup_OnShow title=⚡ Control x=510 y=220 popup_count=1
+05:36:10 WARN  src\platform\win32\platform_win32.c:500: dir watch open failed root='shell:AppsFolder' err=2
+05:36:10 WARN  src\platform\win32\platform_win32.c:500: dir watch open failed root='C:\C:\Program Files\WindowsApps' err=123
+05:36:10 WARN  src\platform\win32\platform_win32.c:500: dir watch open failed root='C:\Program Files (x86)\Steam\steamapps\common' err=3
+05:36:10 WARN  src\platform\win32\platform_win32.c:500: dir watch open failed root='C:\Program Files\Steam\steamapps\common' err=3
+05:36:10 INFO  src\core\common_ui.c:312: PopulateListBox completed for filter=''
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=14,16 off=0,0 final=14,16
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=19
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=706,610 off=0,0 final=706,610
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=24 tmAscent=19 dy=0 y_draw=612
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=62 ctx.h=48 icon_size=24 icon_y=74 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png x=10 y=70 w=24 h=24     
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png in=10,70 off=
+0,0 final=10,70 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=70 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CompactGUI x=42 y=66 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,66 off=0,0 final=42,66
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=66 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,66 off=0,0 final=890,66
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=110 ctx.h=48 icon_size=24 icon_y=122 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png x=10 y=118 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png in=10,118 off
+=0,0 final=10,118 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=118 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=OpenIV x=42 y=114 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,114 off=0,0 final=42,114
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=114 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,114 off=0,0 final=890,114
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=158 ctx.h=48 icon_size=24 icon_y=170 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png x=10 y=166 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png in=10,166 off
+=0,0 final=10,166 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=166 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#0 Android Device x=42 y=162 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,162 off=0,0 final=42,162
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=162 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,162 off=0,0 final=890,162
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=206 ctx.h=48 icon_size=24 icon_y=218 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png x=10 y=214 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png in=10,214 off
+=0,0 final=10,214 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=214 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#3 Android Device-1-1-1 x=42 y=210 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,210 off=0,0 final=42,210
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=210 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,210 off=0,0 final=890,210
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=254 ctx.h=48 icon_size=24 icon_y=266 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png x=10 y=262 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png in=10,262 off
+=0,0 final=10,262 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=262 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=LiveCaptions x=42 y=258 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,258 off=0,0 final=42,258
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=258 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,258 off=0,0 final=890,258
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=302 ctx.h=48 icon_size=24 icon_y=314 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png x=10 y=310 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png in=10,310 off
+=0,0 final=10,310 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=310 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Magnify x=42 y=306 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,306 off=0,0 final=42,306
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=306 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,306 off=0,0 final=890,306
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=350 ctx.h=48 icon_size=24 icon_y=362 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png x=10 y=358 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png in=10,358 off
+=0,0 final=10,358 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=358 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Narrator x=42 y=354 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,354 off=0,0 final=42,354
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=354 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,354 off=0,0 final=890,354
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=398 ctx.h=48 icon_size=24 icon_y=410 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png x=10 y=406 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png in=10,406 off
+=0,0 final=10,406 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=406 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=On-Screen Keyboard x=42 y=402 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,402 off=0,0 final=42,402
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=402 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,402 off=0,0 final=890,402
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=446 ctx.h=48 icon_size=24 icon_y=458 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png x=10 y=454 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png in=10,454 off
+=0,0 final=10,454 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=454 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=VoiceAccess x=42 y=450 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,450 off=0,0 final=42,450
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=450 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,450 off=0,0 final=890,450
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=494 ctx.h=48 icon_size=24 icon_y=506 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png x=10 y=502 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png in=10,502 off
+=0,0 final=10,502 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=502 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Administrative Tools x=42 y=498 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,498 off=0,0 final=42,498
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=498 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,498 off=0,0 final=890,498
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=542 ctx.h=48 icon_size=24 icon_y=554 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png x=10 y=550 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png in=10,550 off
+=0,0 final=10,550 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=550 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Ahk2Exe x=42 y=546 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,546 off=0,0 final=42,546
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=546 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,546 off=0,0 final=890,546
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=14,16 off=0,0 final=14,16
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=19
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=706,610 off=0,0 final=706,610
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=24 tmAscent=19 dy=0 y_draw=612
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=62 ctx.h=48 icon_size=24 icon_y=74 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png x=10 y=70 w=24 h=24     
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png in=10,70 off=
+0,0 final=10,70 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=70 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CompactGUI x=42 y=66 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,66 off=0,0 final=42,66
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=66 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,66 off=0,0 final=890,66
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=110 ctx.h=48 icon_size=24 icon_y=122 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png x=10 y=118 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png in=10,118 off
+=0,0 final=10,118 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=118 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=OpenIV x=42 y=114 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,114 off=0,0 final=42,114
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=114 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,114 off=0,0 final=890,114
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=158 ctx.h=48 icon_size=24 icon_y=170 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png x=10 y=166 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png in=10,166 off
+=0,0 final=10,166 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=166 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#0 Android Device x=42 y=162 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,162 off=0,0 final=42,162
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=162 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,162 off=0,0 final=890,162
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=206 ctx.h=48 icon_size=24 icon_y=218 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png x=10 y=214 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png in=10,214 off
+=0,0 final=10,214 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=214 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#3 Android Device-1-1-1 x=42 y=210 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,210 off=0,0 final=42,210
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=210 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,210 off=0,0 final=890,210
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=254 ctx.h=48 icon_size=24 icon_y=266 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png x=10 y=262 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png in=10,262 off
+=0,0 final=10,262 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=262 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=LiveCaptions x=42 y=258 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,258 off=0,0 final=42,258
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=258 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,258 off=0,0 final=890,258
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=302 ctx.h=48 icon_size=24 icon_y=314 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png x=10 y=310 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png in=10,310 off
+=0,0 final=10,310 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=310 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Magnify x=42 y=306 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,306 off=0,0 final=42,306
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=306 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,306 off=0,0 final=890,306
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=350 ctx.h=48 icon_size=24 icon_y=362 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png x=10 y=358 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png in=10,358 off
+=0,0 final=10,358 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=358 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Narrator x=42 y=354 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,354 off=0,0 final=42,354
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=354 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,354 off=0,0 final=890,354
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=398 ctx.h=48 icon_size=24 icon_y=410 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png x=10 y=406 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png in=10,406 off
+=0,0 final=10,406 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=406 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=On-Screen Keyboard x=42 y=402 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,402 off=0,0 final=42,402
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=402 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,402 off=0,0 final=890,402
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=446 ctx.h=48 icon_size=24 icon_y=458 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png x=10 y=454 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png in=10,454 off
+=0,0 final=10,454 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=454 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=VoiceAccess x=42 y=450 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,450 off=0,0 final=42,450
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=450 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,450 off=0,0 final=890,450
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=494 ctx.h=48 icon_size=24 icon_y=506 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png x=10 y=502 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png in=10,502 off
+=0,0 final=10,502 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=502 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Administrative Tools x=42 y=498 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,498 off=0,0 final=42,498
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=498 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,498 off=0,0 final=890,498
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:10 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:10 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=542 ctx.h=48 icon_size=24 icon_y=554 gh=34
+05:36:10 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png x=10 y=550 w=24 h=24    
+05:36:10 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png in=10,550 off
+=0,0 final=10,550 size=24x24 IconSize=32
+05:36:10 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=550 w=24 h=24
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Ahk2Exe x=42 y=546 fontsize=0 align=LEFT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,546 off=0,0 final=42,546
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:10 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=546 fontsize=0 align=RIGHT
+05:36:10 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,546 off=0,0 final=890,546
+05:36:10 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:11 INFO  src\bindings\bindings.c:108: CheckVimMotion insert seqstart key='j'
+05:36:11 INFO  src\core\common_ui.c:260: PopulateListBox waiting filter='j'
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=14,14 off=0,0 final=14,14
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=17
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=706,610 off=0,0 final=706,610
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=24 tmAscent=19 dy=0 y_draw=612
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=62 ctx.h=48 icon_size=24 icon_y=74 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png x=10 y=70 w=24 h=24     
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png in=10,70 off=
+0,0 final=10,70 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=70 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CompactGUI x=42 y=66 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,66 off=0,0 final=42,66
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=66 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,66 off=0,0 final=890,66
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=110 ctx.h=48 icon_size=24 icon_y=122 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png x=10 y=118 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png in=10,118 off
+=0,0 final=10,118 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=118 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=OpenIV x=42 y=114 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,114 off=0,0 final=42,114
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=114 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,114 off=0,0 final=890,114
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=158 ctx.h=48 icon_size=24 icon_y=170 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png x=10 y=166 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png in=10,166 off
+=0,0 final=10,166 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=166 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#0 Android Device x=42 y=162 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,162 off=0,0 final=42,162
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=162 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,162 off=0,0 final=890,162
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=206 ctx.h=48 icon_size=24 icon_y=218 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png x=10 y=214 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png in=10,214 off
+=0,0 final=10,214 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=214 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#3 Android Device-1-1-1 x=42 y=210 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,210 off=0,0 final=42,210
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=210 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,210 off=0,0 final=890,210
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=254 ctx.h=48 icon_size=24 icon_y=266 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png x=10 y=262 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png in=10,262 off
+=0,0 final=10,262 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=262 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=LiveCaptions x=42 y=258 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,258 off=0,0 final=42,258
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=258 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,258 off=0,0 final=890,258
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=302 ctx.h=48 icon_size=24 icon_y=314 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png x=10 y=310 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png in=10,310 off
+=0,0 final=10,310 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=310 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Magnify x=42 y=306 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,306 off=0,0 final=42,306
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=306 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,306 off=0,0 final=890,306
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=350 ctx.h=48 icon_size=24 icon_y=362 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png x=10 y=358 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png in=10,358 off
+=0,0 final=10,358 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=358 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Narrator x=42 y=354 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,354 off=0,0 final=42,354
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=354 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,354 off=0,0 final=890,354
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=398 ctx.h=48 icon_size=24 icon_y=410 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png x=10 y=406 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png in=10,406 off
+=0,0 final=10,406 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=406 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=On-Screen Keyboard x=42 y=402 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,402 off=0,0 final=42,402
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=402 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,402 off=0,0 final=890,402
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=446 ctx.h=48 icon_size=24 icon_y=458 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png x=10 y=454 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png in=10,454 off
+=0,0 final=10,454 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=454 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=VoiceAccess x=42 y=450 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,450 off=0,0 final=42,450
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=450 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,450 off=0,0 final=890,450
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=494 ctx.h=48 icon_size=24 icon_y=506 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png x=10 y=502 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png in=10,502 off
+=0,0 final=10,502 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=502 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Administrative Tools x=42 y=498 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,498 off=0,0 final=42,498
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=498 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,498 off=0,0 final=890,498
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=542 ctx.h=48 icon_size=24 icon_y=554 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png x=10 y=550 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png in=10,550 off
+=0,0 final=10,550 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=550 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Ahk2Exe x=42 y=546 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,546 off=0,0 final=42,546
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=546 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,546 off=0,0 final=890,546
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=14,14 off=0,0 final=14,14
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=17
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=706,610 off=0,0 final=706,610
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=24 tmAscent=19 dy=0 y_draw=612
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=62 ctx.h=48 icon_size=24 icon_y=74 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png x=10 y=70 w=24 h=24     
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png in=10,70 off=
+0,0 final=10,70 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=70 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CompactGUI x=42 y=66 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,66 off=0,0 final=42,66
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=66 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,66 off=0,0 final=890,66
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=110 ctx.h=48 icon_size=24 icon_y=122 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png x=10 y=118 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png in=10,118 off
+=0,0 final=10,118 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=118 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=OpenIV x=42 y=114 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,114 off=0,0 final=42,114
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=114 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,114 off=0,0 final=890,114
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=158 ctx.h=48 icon_size=24 icon_y=170 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png x=10 y=166 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png in=10,166 off
+=0,0 final=10,166 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=166 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#0 Android Device x=42 y=162 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,162 off=0,0 final=42,162
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=162 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,162 off=0,0 final=890,162
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=206 ctx.h=48 icon_size=24 icon_y=218 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png x=10 y=214 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png in=10,214 off
+=0,0 final=10,214 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=214 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#3 Android Device-1-1-1 x=42 y=210 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,210 off=0,0 final=42,210
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=210 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,210 off=0,0 final=890,210
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=254 ctx.h=48 icon_size=24 icon_y=266 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png x=10 y=262 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png in=10,262 off
+=0,0 final=10,262 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=262 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=LiveCaptions x=42 y=258 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,258 off=0,0 final=42,258
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=258 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,258 off=0,0 final=890,258
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=302 ctx.h=48 icon_size=24 icon_y=314 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png x=10 y=310 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png in=10,310 off
+=0,0 final=10,310 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=310 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Magnify x=42 y=306 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,306 off=0,0 final=42,306
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=306 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,306 off=0,0 final=890,306
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=350 ctx.h=48 icon_size=24 icon_y=362 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png x=10 y=358 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png in=10,358 off
+=0,0 final=10,358 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=358 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Narrator x=42 y=354 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,354 off=0,0 final=42,354
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=354 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,354 off=0,0 final=890,354
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=398 ctx.h=48 icon_size=24 icon_y=410 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png x=10 y=406 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png in=10,406 off
+=0,0 final=10,406 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=406 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=On-Screen Keyboard x=42 y=402 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,402 off=0,0 final=42,402
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=402 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,402 off=0,0 final=890,402
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=446 ctx.h=48 icon_size=24 icon_y=458 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png x=10 y=454 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png in=10,454 off
+=0,0 final=10,454 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=454 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=VoiceAccess x=42 y=450 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,450 off=0,0 final=42,450
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=450 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,450 off=0,0 final=890,450
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=494 ctx.h=48 icon_size=24 icon_y=506 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png x=10 y=502 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png in=10,502 off
+=0,0 final=10,502 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=502 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Administrative Tools x=42 y=498 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,498 off=0,0 final=42,498
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=498 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,498 off=0,0 final=890,498
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=542 ctx.h=48 icon_size=24 icon_y=554 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png x=10 y=550 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png in=10,550 off
+=0,0 final=10,550 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=550 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Ahk2Exe x=42 y=546 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,546 off=0,0 final=42,546
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=546 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,546 off=0,0 final=890,546
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:11 INFO  src\bindings\bindings.c:75: CheckVimMotion insert match seq='JQ'
+05:36:11 INFO  src\core\common_ui.c:312: PopulateListBox completed for filter=''
+05:36:11 INFO  src\core\common_ui.c:312: PopulateListBox completed for filter=''
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=14,16 off=0,0 final=14,16
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=19
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=706,610 off=0,0 final=706,610
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=24 tmAscent=19 dy=0 y_draw=612
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=62 ctx.h=48 icon_size=24 icon_y=74 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png x=10 y=70 w=24 h=24     
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8151b34d_v2.png in=10,70 off=
+0,0 final=10,70 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=70 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CompactGUI x=42 y=66 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,66 off=0,0 final=42,66
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=66 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,66 off=0,0 final=890,66
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=69
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=110 ctx.h=48 icon_size=24 icon_y=122 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png x=10 y=118 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\55d2dda6_v2.png in=10,118 off
+=0,0 final=10,118 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=118 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=OpenIV x=42 y=114 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,114 off=0,0 final=42,114
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=114 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,114 off=0,0 final=890,114
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=117
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=158 ctx.h=48 icon_size=24 icon_y=170 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png x=10 y=166 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\a3d22842_v2.png in=10,166 off
+=0,0 final=10,166 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=166 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#0 Android Device x=42 y=162 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,162 off=0,0 final=42,162
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=162 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,162 off=0,0 final=890,162
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=165
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=206 ctx.h=48 icon_size=24 icon_y=218 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png x=10 y=214 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\7e8780e7_v2.png in=10,214 off
+=0,0 final=10,214 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=214 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=#3 Android Device-1-1-1 x=42 y=210 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,210 off=0,0 final=42,210
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=210 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,210 off=0,0 final=890,210
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=213
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=254 ctx.h=48 icon_size=24 icon_y=266 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png x=10 y=262 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\f500053f_v2.png in=10,262 off
+=0,0 final=10,262 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=262 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=LiveCaptions x=42 y=258 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,258 off=0,0 final=42,258
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=258 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,258 off=0,0 final=890,258
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=261
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=302 ctx.h=48 icon_size=24 icon_y=314 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png x=10 y=310 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\5ba7e5f7_v2.png in=10,310 off
+=0,0 final=10,310 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=310 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Magnify x=42 y=306 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,306 off=0,0 final=42,306
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=306 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,306 off=0,0 final=890,306
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=309
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=350 ctx.h=48 icon_size=24 icon_y=362 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png x=10 y=358 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4b61c6e3_v2.png in=10,358 off
+=0,0 final=10,358 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=358 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Narrator x=42 y=354 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,354 off=0,0 final=42,354
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=354 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,354 off=0,0 final=890,354
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=357
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=398 ctx.h=48 icon_size=24 icon_y=410 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png x=10 y=406 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\69f6e52f_v2.png in=10,406 off
+=0,0 final=10,406 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=406 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=On-Screen Keyboard x=42 y=402 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,402 off=0,0 final=42,402
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=402 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,402 off=0,0 final=890,402
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=405
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=446 ctx.h=48 icon_size=24 icon_y=458 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png x=10 y=454 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\8f71ce38_v2.png in=10,454 off
+=0,0 final=10,454 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=454 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=VoiceAccess x=42 y=450 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,450 off=0,0 final=42,450
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=450 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,450 off=0,0 final=890,450
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=453
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=494 ctx.h=48 icon_size=24 icon_y=506 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png x=10 y=502 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\bccec50f_v2.png in=10,502 off
+=0,0 final=10,502 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=502 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Administrative Tools x=42 y=498 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,498 off=0,0 final=42,498
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=498 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,498 off=0,0 final=890,498
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=501
+05:36:11 INFO  src\platform\win32\draw_win32.c:537: [IMGDBG][win32-glyph] fontsize=24 ink=24 return=34
+05:36:11 INFO  src\features\control_center\control_center.c:1090: [IMGDBG][cc] ctx.y=542 ctx.h=48 icon_size=24 icon_y=554 gh=34
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png x=10 y=550 w=24 h=24    
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Users\HP\AppData\Roaming\Flint\icon_cache\4830b814_v2.png in=10,550 off
+=0,0 final=10,550 size=24x24 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=10 y=550 w=24 h=24
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Ahk2Exe x=42 y=546 fontsize=0 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=42,546 off=0,0 final=42,546
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Application x=890 y=546 fontsize=0 align=RIGHT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=890,546 off=0,0 final=890,546
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=29 tmAscent=23 dy=0 y_draw=549
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Disk Usage:187.2 GB/211.5 GB x=10 y=6 fontsize=14 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Mem Usage:4.0 GB/15.3 GB x=10 y=6 fontsize=14 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=CPU Usage:  1% x=10 y=6 fontsize=14 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:11 INFO  src\flapi.c:1121: [IMGDBG][fl_draw_text] text=Tuesday October 27 05:36:11 x=10 y=6 fontsize=14 align=LEFT
+05:36:11 INFO  src\platform\win32\draw_win32.c:271: [IMGDBG][win32-text] in=10,6 off=-10,0 final=0,6
+05:36:11 INFO  src\platform\win32\draw_win32.c:289: [IMGDBG][win32-text] tmHeight=17 tmAscent=13 dy=0 y_draw=8
+05:36:11 INFO  src\flapi.c:1299: [IMGDBG][fl_draw_image] path=C:\Projects\Flint\src/features\widgets\net_ethernet.png x=40 y=6 w=16 h=16
+05:36:11 INFO  src\platform\win32\draw_win32.c:896: [IMGDBG][win32] path=C:\Projects\Flint\src/features\widgets\net_ethernet.png in=40,6 off=-40,0 
+final=0,6 size=16x16 IconSize=32
+05:36:11 INFO  src\platform\win32\draw_win32.c:953: [IMGDBG][win32-draw] status=0 x=0 y=6 w=16 h=16
+C:\Projects\Flint>                                                                                               -1073741510 10/27/2026 05:36:11 AM
