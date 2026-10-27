@@ -1269,41 +1269,6 @@ int Platform_GetIconSize(char* icon_path) {
     { PROFILE_END_VAR(_pt, "Platform_GetIconSize"); return s; }
 }
 
-bool Platform_BuildFeature(const char* src, const char* out) {
-    PROFILE_START(_pt);
-    if (!src || !out) { PROFILE_END_VAR(_pt, "Platform_BuildFeature"); return false; }
-    if (GetFileAttributesA("build/main.lib.a") == INVALID_FILE_ATTRIBUTES) {
-        log_error("build/main.lib.a missing, need to build main first");
-        return false;
-    }
-    char tmp[512];
-    snprintf(tmp, sizeof(tmp), "%s.tmp", out);
-    char cmd[2048];
-    snprintf(cmd, sizeof(cmd),
-        "gcc -I include -DCOBJMACROS -O1 -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
-        tmp, src);
-    char* outStr = Platform_RunCommandAndGetOutput(cmd, PLATFORM_RUN_PRIO_LOW);
-    bool ok = false;
-    if (outStr) {
-        if (strlen(outStr)==0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) ok = true;
-        log_info("%s", outStr);
-        free(outStr);
-    } else {
-        log_error("build produced no output for %s, treating as failure", src);
-        ok = false;
-    }
-    if (!ok) { remove(tmp); return false; }
-    remove(out);
-    if (rename(tmp, out) != 0) {
-        if (!MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING)) {
-            log_error("failed to move %s -> %s", tmp, out);
-            return false;
-        }
-    }
-    log_info("Platform_BuildFeature src='%s' out='%s'", src ? src : "", out ? out : "");;
-    { PROFILE_END_VAR(_pt, "Platform_BuildFeature"); return true; }
-}
-
 typedef struct { PlWindowList *titles; PlWindowList *names; } WinPair;
 
 static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
