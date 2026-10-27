@@ -34,6 +34,7 @@ const char* UsedSearchEngine = "google";
 const char* FeaturePath = "src/features";
 const char* IconPath = "{MISC}/switch_window.ico";
 const char* ControlHotkey = "Alt+Space";
+const char* ReloadFeaturesHotkey = "Ctrl+R";
 const char* Theme = "rose-pine";
 const char* BackgroundImage = "";
 

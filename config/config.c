@@ -23,7 +23,7 @@ void ConfigApply(void) {
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 22;
+    FontSize = 19;
     IconSize = 32;
     WidgetGap = 0;
     MaxFeatures = 1000;
@@ -36,6 +36,7 @@ void ConfigApply(void) {
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
     ControlHotkey = "Alt+Space";
+    ReloadFeaturesHotkey = "Alt+R";
     FullTextNeedsKeyPress = true;
     MessagesEnabled = true;
     RainbowText = false;

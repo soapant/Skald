@@ -1,12 +1,16 @@
 #include "core/flapi.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
+#include "core/feature_loader.h"
+#include "platform/platform.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
 #include <math.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
 typedef void (*CcFill)(void);
 
@@ -1095,7 +1099,7 @@ static void cc_render(PromptState *state) {
                              .fontsize = icon_size);
             } else {
                 fl_draw_image(.path = row_icon,
-                              .x = icon_x, .y = icon_y - 2,
+                              .x = icon_x, .y = icon_y,
                               .w = icon_size, .h = icon_size);
             }
         }
@@ -1137,10 +1141,7 @@ static void cc_render(PromptState *state) {
     static bool s_actions_was_clicked = false;
     bool actions_clicked = fl_button_is_clicked("Actions");
     if (actions_clicked && !s_actions_was_clicked) {
-        WindowManager* wm = WindowManager_Get();
-        if (wm && wm->popup_count <= 1) {
-            fl_subwindow(.title = "Actions", .x = (state->width / 2) + 240, .y = (state->height / 2) - 50, .w = 200, .h = 300, .render = cc_subwindow_render, .refresh = cc_subwindow_refresh);
-        }
+          fl_subwindow(.title = "Actions", .x = (state->width / 2) + 240, .y = (state->height / 2) - 50, .w = 200, .h = 300, .render = cc_subwindow_render, .refresh = cc_subwindow_refresh);
     }
     s_actions_was_clicked = actions_clicked;
 
@@ -1212,6 +1213,42 @@ static void cc_tab(ListBoxInfo *lb) {
     if (e && e->on_tab) e->on_tab();
 }
 
+static void ManualReloadFeatures(void) {
+    if (!FeaturePath || !FeaturePath[0]) return;
+    DIR* dir = opendir(FeaturePath);
+    if (!dir) return;
+    struct dirent* ent;
+    int reloaded = 0;
+    while ((ent = readdir(dir)) != NULL) {
+        if (ent->d_name[0] == '.') continue;
+        char subpath[512];
+        snprintf(subpath, sizeof(subpath), "%s/%s", FeaturePath, ent->d_name);
+        struct stat st;
+        if (stat(subpath, &st) != 0 || !S_ISDIR(st.st_mode)) continue;
+        char src[512], dll[512];
+        snprintf(src, sizeof(src), "%s/%s.c", subpath, ent->d_name);
+        snprintf(dll, sizeof(dll), "build/features/%s.so", ent->d_name);
+        struct stat st_src, st_dll;
+        bool should_build = false;
+        if (stat(src, &st_src) == 0) {
+            if (stat(dll, &st_dll) != 0 || st_src.st_mtime > st_dll.st_mtime) {
+                should_build = true;
+            }
+        }
+        if (should_build) {
+            log_info("Manual reload building %s -> %s", src, dll);
+            if (Platform_BuildFeature(src, dll)) {
+                FeatureLoader_Reload(ent->d_name);
+                reloaded++;
+            }
+        }
+    }
+    closedir(dir);
+    char msg[128];
+    snprintf(msg, sizeof(msg), "Reloaded %d feature(s)!", reloaded);
+    fl_message(.message = msg, .slot = BOTTOM_CENTER,.timeout=1.0);
+}
+
 static void TriggerControl(void) {
     cc_build_xdg_paths();
     for (size_t i = 0; i < g_xdg_path_count; i++) {
@@ -1240,6 +1277,7 @@ FLINT_FEATURE_INIT {
     cc_register_type("Application", cc_fill_applications);
     cc_register_type("Feature", cc_fill_features);
     fl_register_hotkey(.hotkey=(char *)ControlHotkey, .cb=TriggerControl);
+    fl_register_hotkey(.hotkey=(char *)ReloadFeaturesHotkey, .cb=ManualReloadFeatures);
     fl_add_alias(.alias="brw", .target="Brawlhalla");
 }
 
