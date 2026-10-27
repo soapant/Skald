@@ -1798,8 +1798,8 @@ void Platform_PrewarmBackgroundPixmap(void) {
 }
 
 Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+    PROFILE_START(_pt);
+    PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_edit_popup_window");
     if (niri_is_active()) {
