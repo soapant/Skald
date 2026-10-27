@@ -99,6 +99,24 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     Popup* popup = PromptPopup_Create(wm, spec);
     if (!popup) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     if (spec->subwindow) {
+        static bool s_subwindow_creating = false;
+        if (s_subwindow_creating) {
+            log_info("Platform_PromptUser subwindow REENTRANT blocked title=%s", spec->title ? spec->title : "(null)");
+            PROFILE_END_VAR(_pt, "Platform_PromptUser");
+            return NULL;
+        }
+        if (wm && wm->popup_count > 1) {
+            log_info("Platform_PromptUser subwindow BLOCKED (already open) title=%s popup_count=%d", spec->title ? spec->title : "(null)", wm->popup_count);
+            PROFILE_END_VAR(_pt, "Platform_PromptUser");
+            return NULL;
+        }
+        s_subwindow_creating = true;
+        log_info("Platform_PromptUser subwindow ENTER title=%s popup_count=%d", spec->title ? spec->title : "(null)", wm ? wm->popup_count : -1);
+        PromptSpec heap_spec = *spec;
+        heap_spec.subwindow = false;
+        Popup* _created = PromptPopup_Create(wm, &heap_spec);
+        log_info("Platform_PromptUser subwindow EXIT created=%p popup_count=%d", (void*)_created, wm ? wm->popup_count : -1);
+        s_subwindow_creating = false;
         PROFILE_END_VAR(_pt, "Platform_PromptUser");
         return NULL;
     }
