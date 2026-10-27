@@ -1373,6 +1373,9 @@ PROFILE_START(timer);
 
     char buffer[8 * 1024];
     int length = read(g_cfile_fd, buffer, sizeof(buffer));
+    if (length < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+        log_error("inotify read error: %s", strerror(errno));
+    }
     if (length > 0) {
         int j = 0;
         while (j < length) {
