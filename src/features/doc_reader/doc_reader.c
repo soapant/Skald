@@ -132,7 +132,85 @@ void doc_refresh(const char* filter, ListBoxInfo* lb) {
     fl_populate_listbox(lb, filter, names, g_doc_item_count);
 }
 
+static void collect_text(XMLNode* node, char* out, size_t cap, size_t* used) {
+    if (!node) return;
+    if (node->text) {
+        size_t n = strlen(node->text);
+        if (*used + n + 1 < cap) {
+            memcpy(out + *used, node->text, n);
+            *used += n;
+            out[*used] = '\0';
+        }
+    }
+    if (node->children) {
+        for (size_t i = 0; i < node->children->len; i++) {
+            collect_text(xml_node_child_at(node, i), out, cap, used);
+        }
+    }
+}
+
+static void get_doc_details(const char* name, char* out, size_t cap) {
+    DocItem item = doc_item(name);
+
+    char path[512];
+    snprintf(path, sizeof(path), "docs/xml/%s.xml", item.file_refid);
+
+    size_t len = 0;
+    char* content = fl_read_file_to_string(path, &len);
+    if (!content) return;
+
+    XMLNode* parsed = xml_parse_string(content);
+    XMLNode* root = xml_root(parsed);
+
+    XMLNode* compounddef = root ? xml_node_find_tag(root, "compounddef", true) : NULL;
+    if (compounddef && compounddef->children) {
+        for (size_t s = 0; s < compounddef->children->len; s++) {
+            XMLNode* section = xml_node_child_at(compounddef, s);
+            if (!section->tag || strcmp(section->tag, "sectiondef") != 0) continue;
+
+            for (size_t m = 0; m < section->children->len; m++) {
+                XMLNode* member = xml_node_child_at(section, m);
+                if (!member->tag || strcmp(member->tag, "memberdef") != 0) continue;
+
+                const char* id = xml_node_attr(member, "id");
+                if (!id || strcmp(id, item.refid) != 0) continue;
+
+                XMLNode* type_node = xml_node_find_tag(member, "type", true);
+                XMLNode* brief = xml_node_find_tag(member, "briefdescription", true);
+                XMLNode* detail = xml_node_find_tag(member, "detaileddescription", true);
+
+                size_t used = 0;
+                out[0] = '\0';
+
+                if (type_node && type_node->text) {
+                    snprintf(out + used, cap - used, "%s ", type_node->text);
+                    used = strlen(out);
+                }
+                snprintf(out + used, cap - used, "%s\n\n", item.name);
+                used = strlen(out);
+
+                if (brief) collect_text(brief, out, cap, &used);
+                if (detail) {
+                    snprintf(out + used, cap - used, "\n\n");
+                    used = strlen(out);
+                    collect_text(detail, out, cap, &used);
+                }
+
+                xml_node_free(parsed);
+                free(content);
+                return;
+            }
+        }
+    }
+
+    xml_node_free(parsed);
+    free(content);
+}
+
 bool doc_enter(const char* selection, ListBoxInfo* lb) {
+    char details[1024];
+    get_doc_details(selection, details, sizeof(details));
+    printf("%s\n", details);
     return true;
 }
 
