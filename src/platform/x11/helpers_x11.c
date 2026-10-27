@@ -288,6 +288,7 @@ if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyp
         if (h > 0) ink = h;
     }
     Platform_DestroyFont(fh);
+    log_info("[IMGDBG][x11-glyph] fontsize=%d ink=%d return=%d", fontsize, ink, ink + PROMPT_GLYPH_INK_PAD);
     { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink + PROMPT_GLYPH_INK_PAD; }
 }
 
@@ -452,20 +453,6 @@ int x11_font_cursor_y_of(FontHandle font, int box_top) {
     { PROFILE_END_VAR(_pt, "x11_font_cursor_y_of"); return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top); }
 }
 
-void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - scroll;
-    if (cursor_draw_x > width - PROMPT_DEADCURSOR_CLAMP) cursor_draw_x = width - PROMPT_DEADCURSOR_CLAMP;
-    int cursor_y = PROMPT_DEADCURSOR_Y;
-    if (IsInsertMode()) {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, PromptCaretHeight());
-    } else {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, PromptCaretHeight());
-    }
-    PROFILE_END_VAR(timer, "helpers_x11:x11_draw_edit_cursor");
-}
-
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
@@ -591,6 +578,14 @@ PROFILE_START(timer);
 static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y) {
         PROFILE_START(_pt);
 if (!dpy || !argb || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_blit_argb"); return false; }
+    log_info("[IMGDBG][x11-blit] x=%d y=%d w=%d h=%d", x, y, w, h);
+    int first_opaque_row = -1;
+    for (int ry = 0; ry < h && first_opaque_row < 0; ry++) {
+        for (int rx = 0; rx < w; rx++) {
+            if (argb[(ry*w+rx)*4+3] > 0) { first_opaque_row = ry; break; }
+        }
+    }
+    log_info("[IMGDBG][x11-blit] first_opaque_row=%d", first_opaque_row);
     if (!vis) vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
     XImage img;
     memset(&img, 0, sizeof(img));

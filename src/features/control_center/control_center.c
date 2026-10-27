@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "deps/log.h"
 #include "core/window_manager.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -1086,6 +1087,7 @@ static void cc_render(PromptState *state) {
         if (row_icon) {
             int icon_x = ctx.x + CC_ITEM_TEXT_X;
             int icon_y = ctx.y + (ctx.h - icon_size) / 2;
+            log_info("[IMGDBG][cc] ctx.y=%d ctx.h=%d icon_size=%d icon_y=%d gh=%d", ctx.y, ctx.h, icon_size, icon_y, gh);
             if (cc_icon_is_glyph(row_icon)) {
                 int gw = fl_get_text_width(row_icon, icon_size);
                 fl_draw_text(.x = icon_x + (icon_size - gw) / 2 ,

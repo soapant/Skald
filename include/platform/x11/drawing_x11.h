@@ -13,7 +13,6 @@ int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, in
 int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, int px);
 void x11_xft_alloc_color(Display* dpy, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha, XftColor* out);
 
-void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width);
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size);
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
                          XftColor* num_color, XftColor* body_color, XftColor* plain_color,
