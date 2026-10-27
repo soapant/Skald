@@ -6,6 +6,7 @@
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include "core/draw_state.h"
+#include "deps/log.h"
 #include "core/listbox_hover.h"
 #include "core/editbox.h"
 #include <X11/Xft/Xft.h>
@@ -276,10 +277,13 @@ RawLine_Flush();
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         PROFILE_START(_pt);
 if (!path || !path[0] || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return false; }
-    x += PlDrawState_Get()->off_x;
-    y += PlDrawState_Get()->off_y;
+    int _offx = PlDrawState_Get()->off_x;
+    int _offy = PlDrawState_Get()->off_y;
+    x += _offx;
+    y += _offy;
     if (w <= 0) w = IconSize;
     if (h <= 0) h = IconSize;
+    log_info("[IMGDBG][x11] path=%s in=%d,%d off=%d,%d final=%d,%d size=%dx%d IconSize=%d", path, x-_offx, y-_offy, _offx, _offy, x, y, w, h, IconSize);
     measure_track(x, y, w, h);
     { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return Platform_DrawImageScaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y, w, h); }
 }
@@ -293,8 +297,12 @@ if (dpy) *dpy = g_draw_dpy;
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
     PROFILE_START(_pt);
     if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
-    x += PlDrawState_Get()->off_x;
-    y += PlDrawState_Get()->off_y;
+    int _ox = PlDrawState_Get()->off_x;
+    int _oy = PlDrawState_Get()->off_y;
+    int _iy = y;
+    x += _ox;
+    y += _oy;
+    log_info("[IMGDBG][x11-text] in=%d,%d off=%d,%d final=%d,%d fontsize=%d align=%s", x-_ox, _iy, _ox, _oy, x, y, fontsize, align ? align : "NULL");
     FontHandle fh = font;
     bool needDestroy = false;
     if (!FH_TO_XFT(fh)) {

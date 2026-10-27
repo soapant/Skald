@@ -263,8 +263,12 @@ if (out) *out = g_draw_hdc;
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
         PROFILE_START(_pt);
 if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
-    x += PlDrawState_Get()->off_x;
-    y += PlDrawState_Get()->off_y;
+    int _ox = PlDrawState_Get()->off_x;
+    int _oy = PlDrawState_Get()->off_y;
+    int _iy = y;
+    x += _ox;
+    y += _oy;
+    log_info("[IMGDBG][win32-text] in=%d,%d off=%d,%d final=%d,%d", x-_ox, _iy, _ox, _oy, x, y);
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     const char *a = align ? align : "CENTER";
@@ -282,6 +286,7 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     GetTextMetricsW(g_draw_hdc, &tm);
 
     int y_draw = y + dy + (tm.tmHeight - tm.tmAscent) / 2;
+    log_info("[IMGDBG][win32-text] tmHeight=%d tmAscent=%d dy=%d y_draw=%d", tm.tmHeight, tm.tmAscent, dy, y_draw);
     SetBkMode(g_draw_hdc, TRANSPARENT);
     SetTextColor(g_draw_hdc, color);
     bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
@@ -371,8 +376,12 @@ if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); retu
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
         PROFILE_START(_pt);
 if (!text || len <= 0 || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
-    x += PlDrawState_Get()->off_x;
-    y += PlDrawState_Get()->off_y;
+    int _ox = PlDrawState_Get()->off_x;
+    int _oy = PlDrawState_Get()->off_y;
+    int _iy = y;
+    x += _ox;
+    y += _oy;
+    log_info("[IMGDBG][win32-text] in=%d,%d off=%d,%d final=%d,%d", x-_ox, _iy, _ox, _oy, x, y);
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     int wlen = 0;
@@ -525,6 +534,7 @@ if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyp
     free(wide);
     int ink = (int)(gm.gmBlackBoxY);
     if (ink <= 0) ink = fontsize;
+    log_info("[IMGDBG][win32-glyph] fontsize=%d ink=%d return=%d", fontsize, ink, ink + PROMPT_GLYPH_INK_PAD);
     { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink + PROMPT_GLYPH_INK_PAD; }
 }
 
@@ -877,10 +887,13 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     PROFILE_START(timer);
 
     if (!path || !path[0]) { PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
-    x += PlDrawState_Get()->off_x;
-    y += PlDrawState_Get()->off_y;
+    int _offx = PlDrawState_Get()->off_x;
+    int _offy = PlDrawState_Get()->off_y;
+    x += _offx;
+    y += _offy;
     if (w <= 0) w = (IconSize > 0) ? IconSize : 16;
     if (h <= 0) h = (IconSize > 0) ? IconSize : 16;
+    log_info("[IMGDBG][win32] path=%s in=%d,%d off=%d,%d final=%d,%d size=%dx%d IconSize=%d", path, x-_offx, y-_offy, _offx, _offy, x, y, w, h, IconSize);
     measure_track(x, y, w, h);
 
     if (!g_draw_hdc) { 
@@ -937,6 +950,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     }
 
     GpStatus status = GdipDrawImageRectI(s_cached_g, (GpBitmap *)bmp, x, y, w, h);
+    log_info("[IMGDBG][win32-draw] status=%d x=%d y=%d w=%d h=%d", (int)status, x, y, w, h);
     if (status != Ok) {
         log_error("img: GdipDrawImageRectI failed st=%d at %d,%d %dx%d", (int)status, x, y, w, h);
     }
