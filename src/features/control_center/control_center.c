@@ -1238,7 +1238,7 @@ FLINT_FEATURE_INIT {
     if (g_app_cache_mtx) g_prewarm_thread = fl_thread_create(cc_prewarm_app_cache, NULL);
     cc_register_type("Application", cc_fill_applications);
     cc_register_type("Feature", cc_fill_features);
-    fl_register_hotkey(.hotkey=(char *)ControlHotkey, .cb=TriggerControl, .blacklist={"\1"});
+    fl_register_hotkey(.hotkey=(char *)ControlHotkey, .cb=TriggerControl);
     fl_add_alias(.alias="brw", .target="Brawlhalla");
 }
 

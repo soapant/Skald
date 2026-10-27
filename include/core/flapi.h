@@ -865,6 +865,7 @@ typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
  * - `fps` — How many times the message window renders every second.
  * - `render` — Render callback (void void) callback.
  * - `timeout` — Auto-dismissal time.
+ * - `close_on_keypress` — Close the message as soon as any key is pressed (overrides auto-dismissal).
  * - `color_text` — Text color See `FlColor`.
  * - `color_bg` — Background color See `FlColor`.
  * - `name` — Unique identifier.
@@ -887,6 +888,7 @@ typedef struct {
     bool no_bg;
     ColorRef color_bg;
     const char* name;
+    bool close_on_keypress;
 } FlMessageSpec;
 
 typedef struct {
