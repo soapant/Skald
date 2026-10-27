@@ -1854,7 +1854,7 @@ FlFlagList fl_parse_flags(const char* input) {
     char *copy = strdup(input);
     if (!copy) return out;
     size_t cap = 8;
-    Fl_Flag *arr = (Fl_Flag*)calloc(cap, sizeof(Fl_Flag));
+    FlFlag *arr = (FlFlag*)calloc(cap, sizeof(FlFlag));
     if (!arr) {     PROFILE_START(_pt);
     free(copy); { PROFILE_END_VAR(_pt, "f"); return out; } }
     char *p = copy;
@@ -1879,11 +1879,11 @@ FlFlagList fl_parse_flags(const char* input) {
         }
         if (out.count >= cap) {
             cap *= 2;
-            Fl_Flag *narr = (Fl_Flag*)realloc(arr, cap * sizeof(Fl_Flag));
+            FlFlag *narr = (FlFlag*)realloc(arr, cap * sizeof(FlFlag));
             if (!narr) break;
             arr = narr;
         }
-        Fl_Flag *f = &arr[out.count++];
+        FlFlag *f = &arr[out.count++];
         memset(f, 0, sizeof(*f));
         strncpy(f->name, name, sizeof(f->name)-1);
         if (has_val) { strncpy(f->value, valbuf, sizeof(f->value)-1); f->has_value = true; }
