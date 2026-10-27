@@ -6,11 +6,14 @@
 typedef enum {
     DOC_TYPE_FUNC,
     DOC_TYPE_STRUCT,
+    DOC_TYPE_UNKNOWN,
 } DocType;
 
 typedef struct {
     DocType type;
     char* name;
+    char* refid;    
+    char* file_refid;
 } DocItem;
 
 static DocItem* g_doc_items = NULL;
@@ -71,7 +74,7 @@ void fill_doc_items(void) {
                     for (size_t m = 0; m < section->children->len; m++) {
                         XMLNode* member = xml_node_child_at(section, m);
                         if (!member->tag || strcmp(member->tag, "memberdef") != 0) continue;
-
+                        const char* member_id = xml_node_attr(member, "id");    
                         XMLNode* name_node = xml_node_find_tag(member, "name", true);
                         if (!name_node || !name_node->text) continue;
 
@@ -81,6 +84,8 @@ void fill_doc_items(void) {
                         }
                         g_doc_items[g_doc_item_count].type = DOC_TYPE_FUNC;
                         g_doc_items[g_doc_item_count].name = strdup(name_node->text);
+                        g_doc_items[g_doc_item_count].refid = strdup(member_id);          
+                        g_doc_items[g_doc_item_count].file_refid = strdup(refid);  
                         g_doc_item_count++;
                     }
                 }
@@ -105,6 +110,13 @@ void fill_doc_items(void) {
 
     xml_node_free(parsed);
     free(content);
+}
+
+DocItem doc_item(const char* name) {
+    for (int i = 0; i < g_doc_item_count; i++) {
+        if (strcmp(g_doc_items[i].name, name) == 0) return g_doc_items[i];
+    }
+    return (DocItem){0};
 }
 
 void doc_refresh(const char* filter, ListBoxInfo* lb) {
@@ -133,8 +145,18 @@ void doc_render(PromptState* state) {
   fl_place_editbox();
   FlListItemCtx ctx;
   while (fl_listbox_next(&ctx)) {
+      DocItem item = doc_item(ctx.text);
+      char* current_id;
+      switch(item.type) {
+          case DOC_TYPE_FUNC: current_id = "Function"; break;
+          case DOC_TYPE_STRUCT: current_id = "Struct"; break;
+          default: current_id = "Unknown"; break;
+      }
       fl_draw_text(.x = 14, .y = ctx.y,
                       .text = ctx.text, .align = "LEFT");
+      if (current_id) {
+          fl_draw_text(.y = ctx.y, .text = current_id, .align = "RIGHT",.pad=14,.color=FL_GRAY);
+      }
   }
   fl_listbox_end();
 }

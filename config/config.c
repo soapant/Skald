@@ -9,7 +9,7 @@ void ConfigApply(void) {
     MessageAfterEachHotkey = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
@@ -23,7 +23,7 @@ void ConfigApply(void) {
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 24;
+    FontSize = 23;
     IconSize = 32;
     WidgetGap = 0;
     MaxFeatures = 1000;
