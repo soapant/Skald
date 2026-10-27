@@ -74,9 +74,13 @@ void WindowManager_Quit(WindowManager* wm) {
     PROFILE_END_VAR(timer, "window_manager:WindowManager_Quit");
 }
 
+static bool g_popup_push_in_progress = false;
+
 Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
     PROFILE_START(timer);
+    if (g_popup_push_in_progress) { log_info("PushPopup REENTRANT blocked"); PROFILE_END_VAR(timer, "window_manager:WindowManager_PushPopup"); return NULL; }
     if (!wm || !popup) { PROFILE_END_VAR(timer, "window_manager:WindowManager_PushPopup"); return NULL; }
+    log_info("PushPopup wm=%p popup=%p count_before=%d", (void*)wm, (void*)popup, wm->popup_count);
     if (wm->popup_count >= wm->popup_capacity) {
         int new_cap = wm->popup_capacity * 2;
         Popup** new_popups = realloc(wm->popups, new_cap * sizeof(Popup*));
@@ -87,9 +91,11 @@ Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
     popup->manager = wm;
     popup->visible = true;
     wm->popups[wm->popup_count++] = popup;
+    g_popup_push_in_progress = true;
     if (popup->vtable && popup->vtable->on_show) {
         popup->vtable->on_show(popup);
     }
+    g_popup_push_in_progress = false;
     PROFILE_END_VAR(timer, "window_manager:WindowManager_PushPopup");
     return popup;
 }
