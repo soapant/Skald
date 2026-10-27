@@ -415,6 +415,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     ebi.x = x;
     ebi.y = y_raw;
     ebi.w = w;
+    ebi.h = h;
     ebi.cursor_x = cursor_x;
     ebi.text_w = text_w;
     ebi.ascent = ascent;

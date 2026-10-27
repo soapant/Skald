@@ -30,8 +30,8 @@
 #include <stdio.h>
 
 bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+      PROFILE_START(_pt);
+    PROFILE_START(timer);
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     ((WMEditPopupData*)self)->base.handle.xid = x11_create_edit_popup_window(dpy, x, y, w, h);

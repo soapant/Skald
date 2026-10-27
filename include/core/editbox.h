@@ -81,6 +81,7 @@ typedef struct {
     int x;
     int y;
     int w;
+    int h;
     int cursor_x;
     int text_w;
     int ascent;
