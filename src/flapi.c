@@ -508,6 +508,16 @@ static FlintMap* ensure_feature_map(void) {
     { PROFILE_END_VAR(_pt, "ensure_feature_map"); return g_feature_map; }
 }
 
+static void feature_sync_cc_entry(const FeatureReg* reg) {
+    FlCcEntrySpec cc_spec = {0};
+    cc_spec.display_name = reg->name;
+    cc_spec.internal_name = reg->name;
+    cc_spec.on_enter = (bool (*)(void))reg->cb;
+    cc_spec.icon = reg->icon;
+    cc_spec.type = "Feature";
+    fl_add_to_cc_impl(&cc_spec);
+}
+
 void fl_register_feature_impl(const FlFeatureSpec* spec) {
     PROFILE_START(_pt);
     if (!spec->name || !spec->cb) return;
@@ -532,6 +542,7 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
             existing->icon[0] = '\0';
         }
         hotkey_mark_feature_toggles((HotkeyCallback)spec->cb);
+        feature_sync_cc_entry(existing);
         { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     FeatureReg* reg = (FeatureReg*)calloc(1, sizeof(FeatureReg));
@@ -561,6 +572,7 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
     }
     g_feature_order[g_feature_order_count++] = reg;
     hotkey_mark_feature_toggles((HotkeyCallback)spec->cb);
+    feature_sync_cc_entry(reg);
 }
 
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
@@ -830,6 +842,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
     int mw = spec->mw > 0 ? spec->mw : 0;
     int mh = spec->mh > 0 ? spec->mh : 0;
     double timeout = spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
+    if (spec->close_on_keypress) timeout = 6969.0;
     ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
     if (spec->hover_key && spec->hover_key[0]) {
         if (spec->render) {
@@ -1856,7 +1869,7 @@ FlFlagList fl_parse_flags(const char* input) {
     char *copy = strdup(input);
     if (!copy) return out;
     size_t cap = 8;
-    Fl_Flag *arr = (Fl_Flag*)calloc(cap, sizeof(Fl_Flag));
+    FlFlag *arr = (FlFlag*)calloc(cap, sizeof(FlFlag));
     if (!arr) {     PROFILE_START(_pt);
     free(copy); { PROFILE_END_VAR(_pt, "f"); return out; } }
     char *p = copy;
@@ -1881,11 +1894,11 @@ FlFlagList fl_parse_flags(const char* input) {
         }
         if (out.count >= cap) {
             cap *= 2;
-            Fl_Flag *narr = (Fl_Flag*)realloc(arr, cap * sizeof(Fl_Flag));
+            FlFlag *narr = (FlFlag*)realloc(arr, cap * sizeof(FlFlag));
             if (!narr) break;
             arr = narr;
         }
-        Fl_Flag *f = &arr[out.count++];
+        FlFlag *f = &arr[out.count++];
         memset(f, 0, sizeof(*f));
         strncpy(f->name, name, sizeof(f->name)-1);
         if (has_val) { strncpy(f->value, valbuf, sizeof(f->value)-1); f->has_value = true; }
@@ -2662,7 +2675,6 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
         fl_cc_dep_mark(e->owner);
         fl_add_dep_impl("control_center.c", e->owner);
     }
-    g_cc_entry_count++;
     return true;
 }
 

@@ -1096,7 +1096,7 @@ static void cc_render(PromptState *state) {
                              .fontsize = icon_size);
             } else {
                 fl_draw_image(.path = row_icon,
-                              .x = icon_x, .y = icon_y - 4,
+                              .x = icon_x, .y = icon_y,
                               .w = icon_size, .h = icon_size);
             }
         }
@@ -1240,7 +1240,7 @@ FLINT_FEATURE_INIT {
     if (g_app_cache_mtx) g_prewarm_thread = fl_thread_create(cc_prewarm_app_cache, NULL);
     cc_register_type("Application", cc_fill_applications);
     cc_register_type("Feature", cc_fill_features);
-    fl_register_hotkey(.hotkey=(char *)ControlHotkey, .cb=TriggerControl, .blacklist={"\1"});
+    fl_register_hotkey(.hotkey=(char *)ControlHotkey, .cb=TriggerControl);
     fl_add_alias(.alias="brw", .target="Brawlhalla");
 }
 

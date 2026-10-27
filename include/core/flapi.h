@@ -16,10 +16,6 @@
 #include "config.h"
 
 
-/**
- * @name Basic Types
- * @{
- */
 
 /**
  * @brief A list of strings.
@@ -85,14 +81,6 @@ typedef PlListSpec FlListSpec;
 typedef PlWindowList FlWindowList;
 
 typedef CheckboxSpec FlCheckboxSpec;
-
-/** @} */
-
-/**
-*
- * @name Clipboard
- * @{
- */
 
 /**
  * @brief A single entry in the clipboard history.
@@ -173,13 +161,6 @@ const FlClipboardEntry* fl_clipboard_latest(void);
  */
 void fl_clipboard_clear_history(void);
 
-
-/** @} */
-
-/**
- * @name Internet
- * @{
- */
 
 /**
  * @brief Current network connectivity state.
@@ -385,11 +366,6 @@ void fl_format_bytes(unsigned long long bytes, char* out_str, size_t out_len);
 
 
 /**
- * @name Process Management
- * @{
- */
-
-/**
  * @brief Launch a process with arguments.
  * @param path  Path to the executable.
  * @param args  Arguments string.
@@ -457,14 +433,6 @@ bool fl_launch_detached(char* command);
  */
 bool fl_terminate_process_by_name(const char* exe_name);
 
-/** @} */
-
-
-/**
- * @name Features
- * @{
- */
-
 /**
  * @brief Feature registration specification.
  *
@@ -510,14 +478,6 @@ int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max)
  */
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max);
 
-/** @} */
-
-
-/**
- * @name Hotkeys
- * @{
- */
-
 /**
  * @brief Initialize all configured hotkeys.
  */
@@ -543,14 +503,6 @@ char* fl_hotkey_to_string(FlKey key);
  */
 FlKey fl_hotkey_from_string(const char* str);
 
-/** @} */
-
-
-/**
- * @name Browser
- * @{
- */
-
 /**
  * @brief Launch the default browser with a URL.
  * @param url  The URL to open.
@@ -564,13 +516,6 @@ bool fl_launch_browser(char* url);
  * @return       True on success, false on failure.
  */
 bool fl_query_browser(const char* query);
-
-/** @} */
-
-/**
- * @name Window Management
- * @{
- */
 
 /**
  * @brief Focus a window by its title.
@@ -661,12 +606,6 @@ int fl_get_screen_height(void);
 FlRect fl_get_monitor_geometry(void);
 
 /** @} */
-
-
-/**
- * @name String Utilities
- * @{
- */
 
 /**
  * @brief Cut a string at the first occurrence of a delimiter.
@@ -772,13 +711,6 @@ char* fl_string_slice(const char* str, int start, int end);
  */
 FlStringList fl_string_split(const char* str, const char* delimiter);
 
-/** @} */
-
-/**
- * @name UI Widgets (List/Edit)
- * @{
- */
-
 /**
  * @brief Populate a listbox widget.
  * @param lb      Pointer to the listbox information. See `ListBoxInfo`.
@@ -829,14 +761,6 @@ int  fl_get_edit_cursor(void);
  * @param cap     Size of the buffer.
  */
 void fl_get_edit_text(char* buffer, size_t cap);
-
-/** @} */
-
-
-/**
- * @name Popups
- * @{
- */
 
 /**
  * @brief Edit popup specification.
@@ -895,14 +819,6 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
  */
 char* fl_popup_impl(const PopupSpec *spec);
 
-/** @} */
-
-
-/**
- * @name Widgets and Messages
- * @{
- */
-
 /**
  * @brief Per-frame state passed to a widget's render callback.
  *
@@ -949,6 +865,7 @@ typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
  * - `fps` — How many times the message window renders every second.
  * - `render` — Render callback (void void) callback.
  * - `timeout` — Auto-dismissal time.
+ * - `close_on_keypress` — Close the message as soon as any key is pressed (overrides auto-dismissal).
  * - `color_text` — Text color See `FlColor`.
  * - `color_bg` — Background color See `FlColor`.
  * - `name` — Unique identifier.
@@ -971,6 +888,7 @@ typedef struct {
     bool no_bg;
     ColorRef color_bg;
     const char* name;
+    bool close_on_keypress;
 } FlMessageSpec;
 
 typedef struct {
@@ -1011,13 +929,6 @@ typedef PromptSpec FlPromptSpec;
  * @param spec  The specification. See `FlPromptSpec`.
  */
 void fl_window_impl(const FlPromptSpec* spec);
-
-/** @} */
-
-/**
- * @name Text and Drawing Utilities
- * @{
- */
 
 typedef enum {
     FLANCHOR_TOP_LEFT,
@@ -1285,12 +1196,6 @@ void fl_widget_hide(FlWidget *widget);
  */
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
 
-
-/**
- * @name Widgets
- * @{
- */
-
 /**
  * @brief Load an image from a path.
  * @param path  Path to the image.
@@ -1303,13 +1208,6 @@ void* fl_load_image(const char *path);
  * @param image  Image handle (pointer) to free.
  */
 void fl_free_image(void *image);
-
-/** @} */
-
-/**
- * @name Primitive Drawing
- * @{
- */
 
 #define FL_DRAW_ALPHA_OPAQUE 255
 #define FL_DRAW_ALPHA_TRANSPARENT 128
@@ -1406,13 +1304,6 @@ bool fl_draw_circle_impl(const FlCircleSpec *spec);
  */
 #define fl_draw_circle(...) fl_draw_circle_impl(&(FlCircleSpec){__VA_ARGS__})
 
-/** @} */
-
-/**
- * @name Utility Functions
- * @{
- */
-
 /**
  * @brief Get a random number between min and max inclusive.
  * @param min  Minimum value.
@@ -1443,13 +1334,6 @@ int fl_get_text_height(const char *text);
  * @return          Ink height in pixels.
  */
 int fl_get_glyph_ink_height(const char *text, int fontsize);
-
-/** @} */
-
-/**
- * @name HTTP
- * @{
- */
 
 /**
  * @brief Perform an HTTP GET request.
@@ -1497,13 +1381,6 @@ typedef void (*FlHttpCallback)(const char *body, bool ok, void *userdata);
  */
 void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata);
 
-/** @} */
-
-/**
- * @name Flags
- * @{
- */
-
 /**
  * @brief A single command-line flag.
  *
@@ -1516,17 +1393,17 @@ typedef struct {
     char name[64];
     char value[256];
     bool has_value;
-} Fl_Flag;
+} FlFlag;
 
 /**
  * @brief A list of command-line flags.
  *
  * Fields:
- * - `flags` — Array of `Fl_Flag`. See `Fl_Flag`.
+ * - `flags` — Array of `FlFlag`. See `FlFlag`.
  * - `count` — Number of flags.
  */
 typedef struct {
-    Fl_Flag* flags;
+    FlFlag* flags;
     size_t count;
 } FlFlagList;
 
@@ -1542,13 +1419,6 @@ FlFlagList fl_parse_flags(const char* input);
  * @param list  The flag list to free.
  */
 void fl_free_flags(FlFlagList* list);
-
-/** @} */
-
-/**
- * @name System and Timers
- * @{
- */
 
 /**
  * @brief Start a timer.
@@ -1636,14 +1506,6 @@ char* fl_get_user_name(void);
  */
 bool fl_is_root(void);
 
-/** @} */
-
-
-/**
- * @name Library Loading
- * @{
- */
-
 typedef void* FlLibrary;
 
 /**
@@ -1672,13 +1534,6 @@ void fl_library_close(FlLibrary lib);
  * @return  Error message string.
  */
 const char *fl_library_error(void);
-
-/** @} */
-
-/**
- * @name Threading
- * @{
- */
 
 typedef void* FlThread;
 typedef void* FlMutex;
@@ -1721,13 +1576,6 @@ void fl_mutex_lock(FlMutex mutex);
  * @param mutex  Mutex handle.
  */
 void fl_mutex_unlock(FlMutex mutex);
-
-/** @} */
-
-/**
- * @name Hashmap
- * @{
- */
 
 /**
  * @brief Hashmap structure.
@@ -1809,14 +1657,6 @@ size_t fl_hashmap_len(FlHashMap* map);
  */
 const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index);
 
-/** @} */
-
-
-/**
- * @name Window Queries
- * @{
- */
-
 /**
  * @brief Get all window titles.
  * @return  A `FlWindowList`. See `FlWindowList`.
@@ -1847,13 +1687,6 @@ char* fl_get_active_window_app_id(void);
  * @return       True if active, false otherwise.
  */
 bool fl_is_window_active(char* title);
-
-/** @} */
-
-/**
- * @name Mouse and Keyboard
- * @{
- */
 
 /**
  * @brief Get the color of a pixel at a position.
@@ -2159,13 +1992,6 @@ void fl_clear_key_queue(void);
  */
 int fl_char_for_key(int vk, int scancode, int mods);
 
-/** @} */
-
-/**
- * @name Control Center
- * @{
- */
-
 /**
  * @brief Control center entry specification.
  *
@@ -2267,13 +2093,6 @@ bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
  */
 #define fl_add_dep(...) fl_add_dep_impl(__VA_ARGS__, __FILE__)
 
-/** @} */
-
-/**
- * @name Hotkeys and Snippets
- * @{
- */
-
 /**
  * @brief Hotkey registration specification.
  *
@@ -2370,13 +2189,6 @@ typedef struct {
  */
 bool fl_register_snippet_impl(const FlSnippetSpec *spec);
 
-/** @} */
-
-/**
- * @name Feature Registration and Capability Registry
- * @{
- */
-
 #if defined(_WIN32)
 #define FLINT_FEATURE_EXPORT __declspec(dllexport)
 #else
@@ -2424,13 +2236,6 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec);
         var##_gen = fl_cap_generation();                              \
     }                                                                 \
     var = var##_fn
-
-/** @} */
-
-/**
- * @name Colors
- * @{
- */
 
 #define FL_WHITE        RGB(255, 255, 255)
 #define FL_BLACK        RGB(0, 0, 0)
