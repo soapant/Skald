@@ -1270,8 +1270,8 @@ int Platform_GetIconSize(char* icon_path) {
 }
 
 bool Platform_BuildFeature(const char* src, const char* out) {
-        PROFILE_START(_pt);
-if (!src || !out) { PROFILE_END_VAR(_pt, "Platform_BuildFeature"); return false; }
+    PROFILE_START(_pt);
+    if (!src || !out) { PROFILE_END_VAR(_pt, "Platform_BuildFeature"); return false; }
     if (GetFileAttributesA("build/main.lib.a") == INVALID_FILE_ATTRIBUTES) {
         log_error("build/main.lib.a missing, need to build main first");
         return false;

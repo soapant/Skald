@@ -2189,6 +2189,9 @@ typedef struct {
  */
 bool fl_register_snippet_impl(const FlSnippetSpec *spec);
 
+void fl_reload_feature(char* name);
+int fl_get_pid();
+
 #if defined(_WIN32)
 #define FLINT_FEATURE_EXPORT __declspec(dllexport)
 #else

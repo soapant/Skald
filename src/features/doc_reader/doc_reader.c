@@ -288,7 +288,7 @@ void doc_render(PromptState* state) {
       fl_draw_text(.x = 14, .y = ctx.y,
                       .text = ctx.text, .align = "LEFT");
       if (current_id) {
-          fl_draw_text(.y = ctx.y, .text = current_id, .align = "RIGHT",.pad=14,.color=FL_GRAY);
+          fl_draw_text(.y = ctx.y, .text = current_id, .align = "RIGHT",.pad=14,.color=FL_GREY);
       }
   }
   fl_listbox_end();

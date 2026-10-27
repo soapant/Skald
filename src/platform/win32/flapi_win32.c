@@ -873,5 +873,7 @@ static int fl_http_perform(const char *url, const char *method, const char *cont
     return ok;
 }
 
-
+int fl_get_pid_platform() {
+  return (int)GetCurrentProcessId();
+}
 
