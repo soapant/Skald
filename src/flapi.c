@@ -842,6 +842,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
     int mw = spec->mw > 0 ? spec->mw : 0;
     int mh = spec->mh > 0 ? spec->mh : 0;
     double timeout = spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
+    if (spec->close_on_keypress) timeout = 6969.0;
     ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
     if (spec->hover_key && spec->hover_key[0]) {
         if (spec->render) {
