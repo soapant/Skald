@@ -39,7 +39,6 @@ void WindowManager_Destroy(WindowManager* wm) {
     PROFILE_START(timer);
     if (!wm) { PROFILE_END_VAR(timer, "window_manager:WindowManager_Destroy"); return; }
     wm->watcher_stop = true;
-    Platform_WatcherStop(wm);
     for (int i = 0; i < wm->popup_count; i++) {
         if (wm->popups[i] && wm->popups[i]->vtable && wm->popups[i]->vtable->destroy) {
             wm->popups[i]->vtable->destroy(wm->popups[i]);

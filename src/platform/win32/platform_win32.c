@@ -679,43 +679,6 @@ static char* c_watch_scan_tree(const char* root, bool report) {
     { PROFILE_END_VAR(_pt, "c_watch_scan_tree"); return ret; }
 }
 
-char* Platform_WatchForCFileChanges(const char* dir_path) {
-    PROFILE_START(_pt);
-    if (!dir_path) { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
-    const char* watch_dir = dir_path;
-    if (!watch_dir || !watch_dir[0]) watch_dir = FeaturePath ? FeaturePath : "src/features";
-
-    /* Try to arm the event driven watch first. It reports nothing on the
-       call that arms it. If it cannot be armed (unsupported volume,
-       permissions) fall back to the polling scan below. */
-    char* armed = win32_cwatch_poll(watch_dir);
-    if (armed) { { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return armed; } }
-    if (win32_cwatch_active()) { { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; } }
-
-    if (g_c_watch_count == 0 || strcmp(g_c_watch_dir, watch_dir) != 0) {
-        g_c_watch_count = 0;
-        strncpy(g_c_watch_dir, watch_dir, sizeof(g_c_watch_dir)-1);
-        g_c_watch_dir[sizeof(g_c_watch_dir)-1] = '\0';
-        g_last_c_file[0] = '\0';
-        g_last_c_tick = 0;
-        char* found = c_watch_scan_tree(watch_dir, false);
-        if (found) free(found);
-        { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
-    }
-
-    char* ret = c_watch_scan_tree(watch_dir, true);
-    { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return ret; }
-}
-
-void Platform_CleanupDirWatchers(void) {
-        PROFILE_START(_pt);
-g_c_watch_count = 0;
-    g_c_watch_dir[0] = '\0';
-    g_last_c_file[0] = '\0';
-    g_last_c_tick = 0;
-    log_info("Platform_CleanupDirWatchers completed");
-}
-
 typedef struct {
     const char* target_title;
     HWND found_hwnd;
