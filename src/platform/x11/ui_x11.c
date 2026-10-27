@@ -9,72 +9,51 @@
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
-        PROFILE_START(_pt);
-(void)hPopupWnd;
+      PROFILE_START(_pt);
+    (void)hPopupWnd;
     WindowManager* wm = WindowManager_Get();
     { PROFILE_END_VAR(_pt, "IsPopupActive"); return wm && wm->popup_count > 0; }
 }
 
-void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
-        PROFILE_START(_pt);
-(void)hList;
-    if (!lb) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
+void UI_SetSelection(ListBoxInfo* lb, int index) {
     lb->selected_index = index;
+    return;
 }
 
-void UI_SetHorizontalExtent(WindowHandle hList, int width) {
-        PROFILE_START(_pt);
-(void)hList; (void)width;
+void UI_SetHorizontalExtent(int width) {
 }
 
-void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count) {
-        PROFILE_START(_pt);
-(void)hList;
-if (lb) lb->populated_count = count;
-    PROFILE_END_VAR(_pt, "UI_LB_SetCount");
+void UI_LB_SetCount(ListBoxInfo* lb,int count) {
+    if (lb) lb->populated_count = count;
 }
 
-void UI_LB_BeginUpdate(WindowHandle hList) {
-        PROFILE_START(_pt);
-(void)hList;
-    PROFILE_END_VAR(_pt, "UI_LB_BeginUpdate");
+void UI_LB_BeginUpdate() {
 }
 
-void UI_LB_EndUpdate(WindowHandle hList) {
-        PROFILE_START(_pt);
-(void)hList;
-    PROFILE_END_VAR(_pt, "UI_LB_EndUpdate");
+void UI_LB_EndUpdate() {
 }
 
 void UI_RequestPopupRepaint(void) {
-        PROFILE_START(_pt);
+    PROFILE_START(_pt);
     PROFILE_END_VAR(_pt, "UI_RequestPopupRepaint");
 }
 
 void UI_LegacySyncRepaint(void) {
-        PROFILE_START(_pt);
+    PROFILE_START(_pt);
     PROFILE_END_VAR(_pt, "UI_LegacySyncRepaint");
 }
 
-void UI_LB_SetItemHeight(WindowHandle hList, int height) {
-        PROFILE_START(_pt);
-(void)hList; (void)height;
+void UI_LB_SetItemHeight(int height) {
 }
 
-void UI_LB_SetCaretIndex(WindowHandle hList, int index, bool scroll) {
-        PROFILE_START(_pt);
-(void)hList; (void)index; (void)scroll;
+void UI_LB_SetCaretIndex(int index, bool scroll) {
 }
 
-void UI_LB_SetTopIndex(WindowHandle hList, int index) {
-        PROFILE_START(_pt);
-(void)hList; (void)index;
+void UI_LB_SetTopIndex(int index) {
 }
 
-int UI_LB_GetTopIndex(WindowHandle hList) {
-        PROFILE_START(_pt);
-(void)hList;
-    { PROFILE_END_VAR(_pt, "UI_LB_GetTopIndex"); return 0; }
+int UI_LB_GetTopIndex(ListBoxInfo* lb) {
+  return 0;
 }
 
 int UI_LB_GetViewTop(ListBoxInfo* lb) {
