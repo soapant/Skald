@@ -148,6 +148,18 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
   if(msg==WM_KEYUP){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,false,mods); }
   ListBoxInfo* lb = GetLBFromPopup(hwnd);
+  WindowManager* _wm_guard = WindowManager_Get();
+  Popup* _top_guard = _wm_guard ? WindowManager_GetTopPopup(_wm_guard) : NULL;
+  if (_top_guard && _top_guard->type == POPUP_PROMPT && WH_TO_HWND(_top_guard->handle) != NULL && WH_TO_HWND(_top_guard->handle) != hwnd) {
+      if (msg == WM_PAINT) {
+          log_info("PopupWndProc SKIP PAINT hwnd=%p top=%p", (void*)hwnd, (void*)WH_TO_HWND(_top_guard->handle));
+          PAINTSTRUCT _ps; BeginPaint(hwnd, &_ps); EndPaint(hwnd, &_ps);
+          { PROFILE_END_VAR(_pt, "PopupWndProc"); return 0; }
+      }
+      if (msg == WM_MOUSEMOVE || msg == WM_LBUTTONDOWN || msg == WM_MOUSEWHEEL) {
+          { PROFILE_END_VAR(_pt, "PopupWndProc"); return DefWindowProcA(hwnd, msg, wParam, lParam); }
+      }
+  }
   static HBRUSH s_bg_brush = NULL;
     static HBRUSH s_bg_gradient_brushes[128] = {0};
     static bool s_bg_gradient_ready = false;
@@ -275,13 +287,33 @@ case WM_CHAR: {
       break;
     }
     case WM_ACTIVATE: {
-        if (CloseOnLossOfFocus && LOWORD(wParam) == WA_INACTIVE) {
-            FlintContext_Get()->window.output_buffer[0] = '\0';
-            FlintContext_Get()->window.selection_complete = true;
+        if (LOWORD(wParam) == WA_INACTIVE) {
+            WindowManager* _wm = WindowManager_Get();
+            if (_wm && _wm->popup_count > 1) {
+                Popup* _top = WindowManager_GetTopPopup(_wm);
+                if (_top && WH_TO_HWND(_top->handle) == hwnd) {
+                    WindowManager_PopPopup(_wm);
+                    return 0;
+                }
+                return 0;
+            }
+            if (CloseOnLossOfFocus) {
+                FlintContext_Get()->window.output_buffer[0] = '\0';
+                FlintContext_Get()->window.selection_complete = true;
+            }
         }
         break;
     }
     case WM_KILLFOCUS: {
+        WindowManager* _wm = WindowManager_Get();
+        if (_wm && _wm->popup_count > 1) {
+            Popup* _top = WindowManager_GetTopPopup(_wm);
+            if (_top && WH_TO_HWND(_top->handle) == hwnd) {
+                WindowManager_PopPopup(_wm);
+                return 0;
+            }
+            return 0;
+        }
         if (CloseOnLossOfFocus) {
             FlintContext_Get()->window.output_buffer[0] = '\0';
             FlintContext_Get()->window.selection_complete = true;

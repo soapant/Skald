@@ -193,6 +193,7 @@ if (!path) { PROFILE_END_VAR(_pt, "fl_launch_with_args_as_admin_platform"); retu
 #include "platform/draw.h"
 #include "platform/ui.h"
 #include "config.h"
+#include "core/window_manager.h"
 
 static FlListSpec g_fl_list_spec;
 static ListBoxInfo *g_fl_list_lb;
@@ -214,8 +215,21 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     if (!g_fl_list_hdc) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     g_fl_list_spec = *spec;
     g_fl_list_lb = lb;
-    extern PromptState* Platform_GetWin32PromptState(void);
-    PromptState *st = Platform_GetWin32PromptState();
+    PromptState *st = NULL;
+    WindowManager* _wm_lb = WindowManager_Get();
+    if (_wm_lb) {
+        for (int _i = _wm_lb->popup_count - 1; _i >= 0; _i--) {
+            Popup* _p = _wm_lb->popups[_i];
+            if (_p && _p->user_data) {
+                PromptState* _ps = (PromptState*)_p->user_data;
+                if (&_ps->listbox == lb) { st = _ps; break; }
+            }
+        }
+    }
+    if (!st) {
+        extern PromptState* Platform_GetWin32PromptState(void);
+        st = Platform_GetWin32PromptState();
+    }
     g_fl_list_itemH = spec->item_height ? spec->item_height : PromptRowHeight();
     ListboxLayout lay;
     Listbox_ComputeLayout(spec, PromptListTop(), g_fl_list_itemH,

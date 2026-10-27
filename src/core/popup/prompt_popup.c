@@ -8,6 +8,7 @@
 #include "core/history.h"
 #include "platform/wm_platform.h"
 #include "core/timer.h"
+#include "deps/log.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +40,7 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx->window.selection_complete = false;
     ctx->window.output_buffer[0] = '\0';
     data->prev_hPopupWnd = ctx->window.hPopupWnd;
+    log_info("PromptPopup_OnShow title=%s x=%d y=%d popup_count=%d", data->spec.title ? data->spec.title : "(null)", data->x, data->y, wm->popup_count);
 
     Platform_PromptPopupShowWindow(self, data->x, data->y, data->w, data->h);
 
