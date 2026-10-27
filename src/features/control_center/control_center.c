@@ -1094,7 +1094,7 @@ static void cc_render(PromptState *state) {
                              .fontsize = icon_size);
             } else {
                 fl_draw_image(.path = row_icon,
-                              .x = icon_x, .y = icon_y - 4,
+                              .x = icon_x, .y = icon_y,
                               .w = icon_size, .h = icon_size);
             }
         }
