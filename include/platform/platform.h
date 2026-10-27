@@ -43,7 +43,6 @@ int Platform_CopyToClipboard(const char* text);
 int Platform_CopyImageToClipboard(const unsigned char* png, size_t len);
 int Platform_SetFileToClipboard(const char* path);
 char* Platform_GetWorkingDir();
-void *Platform_FeatureWatcherThread(void* arg);
 
 int Platform_FileAppend(MappedFile *mf, const char *text);
 void Platform_FileClose(MappedFile *mf);
@@ -91,8 +90,6 @@ char* Platform_RunCommandAndGetOutput(char* command, int priority);
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status);
 long Platform_GetFileSize(char *filepath);
 char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback);
-char* Platform_WatchForCFileChanges(const char* dir_path);
-void Platform_CleanupDirWatchers(void);
 bool Platform_BuildFeature(const char* src, const char* out);
 char* Platform_GetActiveWindowTitle();
 char* Platform_GetActiveWindowAppId();

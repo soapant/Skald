@@ -4,9 +4,6 @@
 #include "core/window_manager.h"
 #include "core/types.h"
 
-bool Platform_WatcherStart(WindowManager* wm);
-void Platform_WatcherStop(WindowManager* wm);
-
 bool Platform_WM_InitDisplay(WindowManager* wm);
 int Platform_WM_Run(WindowManager* wm);
 void Platform_WM_Quit(WindowManager* wm);
