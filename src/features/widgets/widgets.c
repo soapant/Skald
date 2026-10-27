@@ -13,7 +13,7 @@
 
 
 #define FPS 1
-#define NO_BG false
+#define NO_BG true
 #define FONTSIZE 14
 
 
@@ -220,7 +220,7 @@ static void widgets_internet_render(FlWidgetState *state) {
     }
     if (!icon) return;
 
-    fl_draw_image(.path = icon, .x = 40, .y = 2,
+    fl_draw_image(.path = icon, .x = 40, .y = 6,
                   .w = NET_ICON_SIZE, .h = NET_ICON_SIZE);
 }
 
