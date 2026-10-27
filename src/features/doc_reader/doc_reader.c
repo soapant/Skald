@@ -94,18 +94,24 @@ void fill_doc_items(void) {
             xml_node_free(fparsed);
             free(fcontent);
         }
-        else if (strcmp(kind, "struct") == 0) {
-            XMLNode* name_node = xml_node_find_tag(compound, "name", true);
-            if (!name_node || !name_node->text) continue;
+      else if (strcmp(kind, "struct") == 0) {
+          XMLNode* name_node = xml_node_find_tag(compound, "name", true);
+          if (!name_node || !name_node->text) continue;
 
-            if (g_doc_item_count >= cap) {
-                cap = cap ? cap * 2 : 64;
-                g_doc_items = realloc(g_doc_items, cap * sizeof(DocItem));
-            }
-            g_doc_items[g_doc_item_count].type = DOC_TYPE_STRUCT;
-            g_doc_items[g_doc_item_count].name = strdup(name_node->text);
-            g_doc_item_count++;
-        }
+          if (g_doc_item_count >= cap) {
+              cap = cap ? cap * 2 : 64;
+              g_doc_items = realloc(g_doc_items, cap * sizeof(DocItem));
+          }
+
+          char fname[256];
+          snprintf(fname, sizeof(fname), "struct%s", name_node->text);
+
+          g_doc_items[g_doc_item_count].type = DOC_TYPE_STRUCT;
+          g_doc_items[g_doc_item_count].name = strdup(name_node->text);
+          g_doc_items[g_doc_item_count].refid = strdup(refid);          
+          g_doc_items[g_doc_item_count].file_refid = strdup(fname);     
+          g_doc_item_count++;
+      }
     }
 
     xml_node_free(parsed);
@@ -151,7 +157,6 @@ static void collect_text(XMLNode* node, char* out, size_t cap, size_t* used) {
 
 static void get_doc_details(const char* name, char* out, size_t cap) {
     DocItem item = doc_item(name);
-
     char path[512];
     snprintf(path, sizeof(path), "docs/xml/%s.xml", item.file_refid);
 
@@ -161,44 +166,94 @@ static void get_doc_details(const char* name, char* out, size_t cap) {
 
     XMLNode* parsed = xml_parse_string(content);
     XMLNode* root = xml_root(parsed);
-
     XMLNode* compounddef = root ? xml_node_find_tag(root, "compounddef", true) : NULL;
-    if (compounddef && compounddef->children) {
-        for (size_t s = 0; s < compounddef->children->len; s++) {
-            XMLNode* section = xml_node_child_at(compounddef, s);
-            if (!section->tag || strcmp(section->tag, "sectiondef") != 0) continue;
+    if (!compounddef) {
+        xml_node_free(parsed);
+        free(content);
+        return;
+    }
 
-            for (size_t m = 0; m < section->children->len; m++) {
-                XMLNode* member = xml_node_child_at(section, m);
-                if (!member->tag || strcmp(member->tag, "memberdef") != 0) continue;
+    size_t used = 0;
+    out[0] = '\0';
 
-                const char* id = xml_node_attr(member, "id");
-                if (!id || strcmp(id, item.refid) != 0) continue;
+    if (item.type == DOC_TYPE_STRUCT) {
+        XMLNode* brief  = xml_node_find_tag(compounddef, "briefdescription", true);
+        XMLNode* detail = xml_node_find_tag(compounddef, "detaileddescription", true);
 
-                XMLNode* type_node = xml_node_find_tag(member, "type", true);
-                XMLNode* brief = xml_node_find_tag(member, "briefdescription", true);
-                XMLNode* detail = xml_node_find_tag(member, "detaileddescription", true);
+        snprintf(out + used, cap - used, "struct %s\n\n", item.name);
+        used = strlen(out);
 
-                size_t used = 0;
-                out[0] = '\0';
+        if (brief)  collect_text(brief,  out, cap, &used);
+        if (detail) {
+            snprintf(out + used, cap - used, "\n\n");
+            used = strlen(out);
+            collect_text(detail, out, cap, &used);
+        }
 
-                if (type_node && type_node->text) {
-                    snprintf(out + used, cap - used, "%s ", type_node->text);
-                    used = strlen(out);
+        if (compounddef->children) {
+            for (size_t s = 0; s < compounddef->children->len; s++) {
+                XMLNode* section = xml_node_child_at(compounddef, s);
+                if (!section->tag || strcmp(section->tag, "sectiondef") != 0) continue;
+
+                for (size_t m = 0; m < section->children->len; m++) {
+                    XMLNode* member = xml_node_child_at(section, m);
+                    if (!member->tag || strcmp(member->tag, "memberdef") != 0) continue;
+
+                    XMLNode* ftype  = xml_node_find_tag(member, "type", true);
+                    XMLNode* fname  = xml_node_find_tag(member, "name", true);
+                    XMLNode* fbrief = xml_node_find_tag(member, "briefdescription", true);
+
+                    if (ftype && ftype->text) {
+                        snprintf(out + used, cap - used, "\n%s ", ftype->text);
+                        used = strlen(out);
+                    }
+                    if (fname && fname->text) {
+                        snprintf(out + used, cap - used, "%s", fname->text);
+                        used = strlen(out);
+                    }
+                    if (fbrief) {
+                        snprintf(out + used, cap - used, " — ");
+                        used = strlen(out);
+                        collect_text(fbrief, out, cap, &used);
+                    }
                 }
-                snprintf(out + used, cap - used, "%s\n\n", item.name);
-                used = strlen(out);
+            }
+        }
+    } else {
+        if (compounddef->children) {
+            for (size_t s = 0; s < compounddef->children->len; s++) {
+                XMLNode* section = xml_node_child_at(compounddef, s);
+                if (!section->tag || strcmp(section->tag, "sectiondef") != 0) continue;
 
-                if (brief) collect_text(brief, out, cap, &used);
-                if (detail) {
-                    snprintf(out + used, cap - used, "\n\n");
+                for (size_t m = 0; m < section->children->len; m++) {
+                    XMLNode* member = xml_node_child_at(section, m);
+                    if (!member->tag || strcmp(member->tag, "memberdef") != 0) continue;
+
+                    const char* id = xml_node_attr(member, "id");
+                    if (!id || strcmp(id, item.refid) != 0) continue;
+
+                    XMLNode* type_node = xml_node_find_tag(member, "type", true);
+                    XMLNode* brief     = xml_node_find_tag(member, "briefdescription", true);
+                    XMLNode* detail    = xml_node_find_tag(member, "detaileddescription", true);
+
+                    if (type_node && type_node->text) {
+                        snprintf(out + used, cap - used, "%s ", type_node->text);
+                        used = strlen(out);
+                    }
+                    snprintf(out + used, cap - used, "%s\n\n", item.name);
                     used = strlen(out);
-                    collect_text(detail, out, cap, &used);
-                }
 
-                xml_node_free(parsed);
-                free(content);
-                return;
+                    if (brief)  collect_text(brief,  out, cap, &used);
+                    if (detail) {
+                        snprintf(out + used, cap - used, "\n\n");
+                        used = strlen(out);
+                        collect_text(detail, out, cap, &used);
+                    }
+
+                    xml_node_free(parsed);
+                    free(content);
+                    return;
+                }
             }
         }
     }
@@ -210,8 +265,8 @@ static void get_doc_details(const char* name, char* out, size_t cap) {
 bool doc_enter(const char* selection, ListBoxInfo* lb) {
     char details[1024];
     get_doc_details(selection, details, sizeof(details));
-    printf("%s\n", details);
-    return true;
+    fl_message(.message = details,.slot=TOP_CENTER);
+    return false;
 }
 
 void doc_render(PromptState* state) {

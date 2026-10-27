@@ -508,6 +508,16 @@ static FlintMap* ensure_feature_map(void) {
     { PROFILE_END_VAR(_pt, "ensure_feature_map"); return g_feature_map; }
 }
 
+static void feature_sync_cc_entry(const FeatureReg* reg) {
+    FlCcEntrySpec cc_spec = {0};
+    cc_spec.display_name = reg->name;
+    cc_spec.internal_name = reg->name;
+    cc_spec.on_enter = (bool (*)(void))reg->cb;
+    cc_spec.icon = reg->icon;
+    cc_spec.type = "Feature";
+    fl_add_to_cc_impl(&cc_spec);
+}
+
 void fl_register_feature_impl(const FlFeatureSpec* spec) {
     PROFILE_START(_pt);
     if (!spec->name || !spec->cb) return;
@@ -532,6 +542,7 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
             existing->icon[0] = '\0';
         }
         hotkey_mark_feature_toggles((HotkeyCallback)spec->cb);
+        feature_sync_cc_entry(existing);
         { PROFILE_END_VAR(_pt, "f"); return ; }
     }
     FeatureReg* reg = (FeatureReg*)calloc(1, sizeof(FeatureReg));
@@ -561,6 +572,7 @@ void fl_register_feature_impl(const FlFeatureSpec* spec) {
     }
     g_feature_order[g_feature_order_count++] = reg;
     hotkey_mark_feature_toggles((HotkeyCallback)spec->cb);
+    feature_sync_cc_entry(reg);
 }
 
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
@@ -2660,7 +2672,6 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
         fl_cc_dep_mark(e->owner);
         fl_add_dep_impl("control_center.c", e->owner);
     }
-    g_cc_entry_count++;
     return true;
 }
 
