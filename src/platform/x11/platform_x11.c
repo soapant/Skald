@@ -12,6 +12,7 @@
 
 #include <sys/stat.h> 
 #include <sys/wait.h>
+#include <sys/inotify.h>
 #include <poll.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -34,7 +35,6 @@
 #include <stdlib.h>
 #include "platform/lib.h"
 #include <time.h>
-#include <sys/inotify.h>
 #include <pthread.h>
 #include "core/timer.h"
 #include <linux/uinput.h>
@@ -52,57 +52,6 @@
 #define NOB_NO_ECHO
 #include "../../../nob.h"
 
-
-static bool x11_daemon_exec(char* const argv[]) {
-        PROFILE_START(_pt);
-pid_t pid = fork();
-    if (pid < 0) { PROFILE_END_VAR(_pt, "x11_daemon_exec"); return false; }
-    if (pid == 0) {
-        setsid();
-        pid_t pid2 = fork();
-        if (pid2 < 0) _exit(1);
-        if (pid2 > 0) _exit(0);
-        int fd = open("/dev/null", O_RDWR);
-        if (fd >= 0) {
-            dup2(fd, STDIN_FILENO);
-            dup2(fd, STDOUT_FILENO);
-            dup2(fd, STDERR_FILENO);
-            if (fd > 2) close(fd);
-        }
-        execvp(argv[0], argv);
-        _exit(127);
-    }
-    int st = 0;
-    waitpid(pid, &st, 0);
-    { PROFILE_END_VAR(_pt, "x11_daemon_exec"); return true; }
-}
-
-static bool x11_daemon_exec_with_x11_env(char* const argv[], const char* display, const char* xauth, const char* runtime_dir) {
-        PROFILE_START(_pt);
-pid_t pid = fork();
-    if (pid < 0) { PROFILE_END_VAR(_pt, "x11_daemon_exec_with_x11_env"); return false; }
-    if (pid == 0) {
-        setsid();
-        pid_t pid2 = fork();
-        if (pid2 < 0) _exit(1);
-        if (pid2 > 0) _exit(0);
-        int fd = open("/dev/null", O_RDWR);
-        if (fd >= 0) {
-            dup2(fd, STDIN_FILENO);
-            dup2(fd, STDOUT_FILENO);
-            dup2(fd, STDERR_FILENO);
-            if (fd > 2) close(fd);
-        }
-        if (display) setenv("DISPLAY", display, 1);
-        if (xauth) setenv("XAUTHORITY", xauth, 1);
-        if (runtime_dir) setenv("XDG_RUNTIME_DIR", runtime_dir, 1);
-        execvp(argv[0], argv);
-        _exit(127);
-    }
-    int st = 0;
-    waitpid(pid, &st, 0);
-    { PROFILE_END_VAR(_pt, "x11_daemon_exec_with_x11_env"); return true; }
-}
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
     PROFILE_START(_pt);
@@ -1254,169 +1203,6 @@ PROFILE_START(timer);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
     { PROFILE_END_VAR(_pt, "Platform_RegisterDirWatcher"); return NULL; }
-}
-
-void Platform_CleanupDirWatchers(void) {
-        PROFILE_START(_pt);
-pthread_mutex_lock(&g_watch_mtx);
-    g_watch_quit = true;
-    pthread_mutex_unlock(&g_watch_mtx);
-
-    for (int i = 0; i < g_watch_root_count; i++) {
-        if (g_watch_roots[i].thread_started) {
-            pthread_join(g_watch_roots[i].thread, NULL);
-            g_watch_roots[i].thread_started = false;
-        }
-    }
-
-    pthread_mutex_lock(&g_watch_mtx);
-    for (int i = 0; i < g_watch_root_count; i++) {
-        if (g_watch_roots[i].fd >= 0) {
-            close(g_watch_roots[i].fd);
-            g_watch_roots[i].fd = -1;
-        }
-    }
-    g_watch_root_count = 0;
-    g_watch_walking = 0;
-    g_watch_quit = false;
-    pthread_mutex_unlock(&g_watch_mtx);
-
-    pthread_mutex_lock(&g_watch_paths_mtx);
-    g_watch_path_count = 0;
-    pthread_mutex_unlock(&g_watch_paths_mtx);
-
-    if (g_cfile_fd >= 0) {
-        close(g_cfile_fd);
-        g_cfile_fd = -1;
-    }
-    g_cfile_root[0] = '\0';
-    g_cfile_dir_count = 0;
-}
-
-static void cfile_add_watch_dir(int fd, const char* abs_dir, const char* rel) {
-    int wd = inotify_add_watch(fd, abs_dir, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVE_SELF);
-    if (wd < 0) return;
-    for (int i = 0; i < g_cfile_dir_count; i++) {
-        if (g_cfile_dirs[i].wd == wd) return;
-    }
-    if (g_cfile_dir_count >= MAX_CFILE_DIRS) return;
-    g_cfile_dirs[g_cfile_dir_count].wd = wd;
-    snprintf(g_cfile_dirs[g_cfile_dir_count].rel, sizeof(g_cfile_dirs[0].rel), "%s", rel ? rel : "");
-    g_cfile_dir_count++;
-}
-
-static const char* cfile_dir_for_wd(int wd) {
-    for (int i = 0; i < g_cfile_dir_count; i++) {
-        if (g_cfile_dirs[i].wd == wd) return g_cfile_dirs[i].rel;
-    }
-    return NULL;
-}
-
-static void cfile_watch_tree(int fd, const char* root, const char* rel) {
-    cfile_add_watch_dir(fd, root, rel);
-    if (rel[0]) return;
-    DIR* d = opendir(root);
-    if (!d) return;
-    struct dirent* e;
-    while ((e = readdir(d)) != NULL) {
-        if (e->d_name[0] == '.') continue;
-        char abs[512];
-        snprintf(abs, sizeof(abs), "%s/%s", root, e->d_name);
-        struct stat st;
-        if (stat(abs, &st) != 0 || !S_ISDIR(st.st_mode)) continue;
-        cfile_add_watch_dir(fd, abs, e->d_name);
-    }
-    closedir(d);
-}
-
-char* Platform_WatchForCFileChanges(const char* dir_path) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
-
-    if (g_cfile_fd < 0 || strcmp(g_cfile_root, dir_path) != 0) {
-        if (g_cfile_fd >= 0) {
-            close(g_cfile_fd);
-            g_cfile_fd = -1;
-        }
-        int fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
-        if (fd < 0) {
-            PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
-            return NULL;
-        }
-        g_cfile_dir_count = 0;
-        cfile_watch_tree(fd, dir_path, "");
-        if (g_cfile_dir_count == 0) {
-            close(fd);
-            PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
-            return NULL;
-        }
-        g_cfile_fd = fd;
-        snprintf(g_cfile_root, sizeof(g_cfile_root), "%s", dir_path);
-        PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
-        return NULL;
-    }
-
-    DIR* root = opendir(g_cfile_root);
-    if (root) {
-        struct dirent* e;
-        while ((e = readdir(root)) != NULL) {
-            if (e->d_name[0] == '.') continue;
-            char abs[512];
-            snprintf(abs, sizeof(abs), "%s/%s", g_cfile_root, e->d_name);
-            struct stat st;
-            if (stat(abs, &st) != 0 || !S_ISDIR(st.st_mode)) continue;
-            cfile_add_watch_dir(g_cfile_fd, abs, e->d_name);
-        }
-        closedir(root);
-    }
-
-    char buffer[8 * 1024];
-    int length = read(g_cfile_fd, buffer, sizeof(buffer));
-    if (length < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-        log_error("inotify read error: %s, resetting watcher", strerror(errno));
-        close(g_cfile_fd);
-        g_cfile_fd = -1;
-        g_cfile_root[0] = '\0';
-        g_cfile_dir_count = 0;
-    }
-    if (length > 0) {
-        int j = 0;
-        while (j < length) {
-            struct inotify_event* event = (struct inotify_event*)&buffer[j];
-            j += sizeof(struct inotify_event) + event->len;
-            if (event->len == 0) continue;
-            if (event->mask & IN_Q_OVERFLOW) {
-                log_warn("inotify queue overflow, resetting watcher");
-                close(g_cfile_fd);
-                g_cfile_fd = -1;
-                g_cfile_root[0] = '\0';
-                g_cfile_dir_count = 0;
-                break;
-            }
-            const char* name = event->name;
-            size_t name_len = strlen(name);
-            if (name_len > 2 && strcmp(name + name_len - 2, ".c") == 0) {
-                const char* rel = cfile_dir_for_wd(event->wd);
-                char* found_name = NULL;
-                if (rel) {
-                    if (rel[0]) {
-                        char joined[512];
-                        snprintf(joined, sizeof(joined), "%s/%s", rel, name);
-                        found_name = strdup(joined);
-                    } else {
-                        found_name = strdup(name);
-                    }
-                }
-                if (found_name) {
-                    PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
-                    return found_name;
-                }
-            }
-        }
-    }
-    PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
-    { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
 }
 
 bool Platform_FocusWindow(const char* title) {
