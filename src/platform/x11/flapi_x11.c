@@ -848,3 +848,7 @@ bool fl_dismiss_message_platform(const char* name) {
     Platform_DismissIndefiniteMessage();
     return Platform_DismissMessage(name);
 }
+
+int fl_get_pid_platform() {
+  return (int)getpid();
+}

@@ -2725,3 +2725,10 @@ char* fl_get_user_name() {
 bool fl_is_root() {
     return Platform_IsRunningAsRoot();
 }
+void fl_reload_feature(char* name) {
+    FeatureLoader_Reload(name);
+}
+
+int fl_get_pid() {
+    return fl_get_pid_platform();
+}

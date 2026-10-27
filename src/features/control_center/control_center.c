@@ -1,8 +1,4 @@
 #include "core/flapi.h"
-#include "deps/log.h"
-#include "core/window_manager.h"
-#include "core/feature_loader.h"
-#include "platform/platform.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -1208,12 +1204,66 @@ static void cc_on_close(void) {
     cc_run_pending();
 }
 
+bool build_feature(const char* src, const char* out) {
+    char tmp[1024];
+#if defined(_WIN32)
+    snprintf(tmp, sizeof(tmp), "%s.tmp", out);
+#else
+    snprintf(tmp, sizeof(tmp), "%s.tmp.%d", out,fl_get_pid());
+#endif
+
+    char cmd[2048];
+#if defined(_WIN32)
+    snprintf(cmd, sizeof(cmd),
+        "gcc -I include -DCOBJMACROS -O1 -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
+        tmp, src);
+#else
+    snprintf(cmd, sizeof(cmd), 
+        "gcc -std=gnu17 -I include -I/usr/include/freetype2 -O3 -pipe -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-discarded-qualifiers -Wno-stringop-truncation -Wno-misleading-indentation -fPIC -shared -o \"%s\" \"%s\" 2>&1", 
+        tmp, src);
+#endif
+    char* outStr = fl_run_terminal_command(cmd);
+    bool ok = false;
+    if (outStr) {
+        if (strlen(outStr) == 0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) {
+            ok = true;
+        }
+        free(outStr);
+    } else {
+#if defined(_WIN32)
+        ok = false;
+#else
+        ok = true; 
+#endif
+    }
+
+    if (!ok) { 
+        remove(tmp); 
+        return false; 
+    }
+
+#if defined(_WIN32)
+    remove(out);
+    if (rename(tmp, out) != 0) {
+        if (!MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING)) {
+            return false;
+        }
+    }
+#else
+    if (rename(tmp, out) != 0) { 
+        remove(tmp); 
+        return false; 
+    }
+#endif
+    return true;
+}
+
 static void cc_tab(ListBoxInfo *lb) {
     const CcEntry *e = cc_find(ListBoxInfo_GetSelectedText(lb));
     if (e && e->on_tab) e->on_tab();
 }
 
-static void ManualReloadFeatures(void) {
+static void ReloadFeatures(void) {
     if (!FeaturePath || !FeaturePath[0]) return;
     DIR* dir = opendir(FeaturePath);
     if (!dir) return;
@@ -1227,6 +1277,7 @@ static void ManualReloadFeatures(void) {
         if (stat(subpath, &st) != 0 || !S_ISDIR(st.st_mode)) continue;
         char src[512], dll[512];
         snprintf(src, sizeof(src), "%s/%s.c", subpath, ent->d_name);
+        //temporary
         snprintf(dll, sizeof(dll), "build/features/%s.so", ent->d_name);
         struct stat st_src, st_dll;
         bool should_build = false;
@@ -1236,9 +1287,8 @@ static void ManualReloadFeatures(void) {
             }
         }
         if (should_build) {
-            log_info("Manual reload building %s -> %s", src, dll);
-            if (Platform_BuildFeature(src, dll)) {
-                FeatureLoader_Reload(ent->d_name);
+            if (build_feature(src, dll)) {
+                fl_reload_feature(ent->d_name);
                 reloaded++;
             }
         }
@@ -1277,7 +1327,7 @@ FLINT_FEATURE_INIT {
     cc_register_type("Application", cc_fill_applications);
     cc_register_type("Feature", cc_fill_features);
     fl_register_hotkey(.hotkey=(char *)ControlHotkey, .cb=TriggerControl);
-    fl_register_hotkey(.hotkey=(char *)ReloadFeaturesHotkey, .cb=ManualReloadFeatures);
+    fl_register_hotkey(.hotkey=(char *)ReloadFeaturesHotkey, .cb=ReloadFeatures);
     fl_add_alias(.alias="brw", .target="Brawlhalla");
 }
 
