@@ -1374,7 +1374,11 @@ PROFILE_START(timer);
     char buffer[8 * 1024];
     int length = read(g_cfile_fd, buffer, sizeof(buffer));
     if (length < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-        log_error("inotify read error: %s", strerror(errno));
+        log_error("inotify read error: %s, resetting watcher", strerror(errno));
+        close(g_cfile_fd);
+        g_cfile_fd = -1;
+        g_cfile_root[0] = '\0';
+        g_cfile_dir_count = 0;
     }
     if (length > 0) {
         int j = 0;
@@ -1382,6 +1386,14 @@ PROFILE_START(timer);
             struct inotify_event* event = (struct inotify_event*)&buffer[j];
             j += sizeof(struct inotify_event) + event->len;
             if (event->len == 0) continue;
+            if (event->mask & IN_Q_OVERFLOW) {
+                log_warn("inotify queue overflow, resetting watcher");
+                close(g_cfile_fd);
+                g_cfile_fd = -1;
+                g_cfile_root[0] = '\0';
+                g_cfile_dir_count = 0;
+                break;
+            }
             const char* name = event->name;
             size_t name_len = strlen(name);
             if (name_len > 2 && strcmp(name + name_len - 2, ".c") == 0) {
