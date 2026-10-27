@@ -17,13 +17,13 @@ void doc_render(PromptState* state) {
       .lb = lb,
   };
   if (!fl_listbox_begin(&spec)) return;
+  fl_place_editbox();
   FlListItemCtx ctx;
   while (fl_listbox_next(&ctx)) {
       fl_draw_text(.x = 14, .y = ctx.y + 4,
                       .text = ctx.text, .align = "LEFT");
   }
   fl_listbox_end();
-  fl_place_editbox();
 }
 
 void TriggerDocReader(void) {
