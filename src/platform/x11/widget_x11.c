@@ -15,6 +15,7 @@
 #include "deps/log.h"
 
 #include "core/timer.h"
+
 struct PlatformWidget {
     Display *dpy;
     Window win;
@@ -27,7 +28,7 @@ struct PlatformWidget {
     Platform_RenderFrameFn fn;
     void *ud;
     int fps;
-    unsigned long bg_hex;
+    ColorRef bg_color;
     bool has_bg;
     bool no_bg;
     bool dirty;
@@ -85,12 +86,9 @@ PlatformWidget *widget = (PlatformWidget *)ud;
     long long now = widget_now_ms();
     long long interval = widget->fps > 0 ? 1000LL / widget->fps : 1000LL;
     if (interval < 16) interval = 16;
-    const char *reason = "fps";
     if (!widget->dirty) {
         if (now - widget->last_draw_ms < interval) return;
-    } else {
-        reason = "DIRTY";
-    }
+    } 
     widget->dirty = false;
     widget->last_draw_ms = now;
 
@@ -100,7 +98,7 @@ PlatformWidget *widget = (PlatformWidget *)ud;
         XFillRectangle(dpy, widget->win, tgc, 0, 0, widget->w, widget->h);
         XFreeGC(dpy, tgc);
     } else {
-        Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
+        Platform_SetDrawBgColor(widget->has_bg ? widget->bg_color : 0);
         Pixmap bg = x11_get_cached_background(dpy, widget->win, widget->w, widget->h);
         if (bg) {
             GC gc = XCreateGC(dpy, widget->win, 0, NULL);
@@ -177,7 +175,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     unsigned long amb = Platform_GetDrawBgColor();
     if (amb) {
         widget->has_bg = true;
-        widget->bg_hex = amb;
+        widget->bg_color = amb;
     }
 
     widget_frame(widget);
@@ -269,14 +267,14 @@ if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFps"); r
     Platform_RenderThread_Wake();
 }
 
-void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
+void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
         PROFILE_START(_pt);
-if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetBgColor"); return ; }
-    widget->has_bg = hex != 0;
-    widget->bg_hex = hex;
+    if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetBgColor"); return ; }
+    widget->has_bg = bg_color != 0;
+    widget->bg_color = bg_color;
     if (!widget->dpy || widget->win == None) { PROFILE_END_VAR(_pt, "Platform_Widget_SetBgColor"); return ; }
     unsigned int a = (RoundedCorners || widget->no_bg) ? 0 : (unsigned int)WindowOpacity;
-    unsigned long bg = widget->no_bg ? 0UL : (widget->has_bg ? hex : rgb_to_hex(COLOR_BG));
+    unsigned long bg = widget->no_bg ? 0UL : (widget->has_bg ?  rgb_to_hex(bg_color) : rgb_to_hex(COLOR_BG));
     unsigned int r = (unsigned int)((bg >> 16) & 0xFF);
     unsigned int g = (unsigned int)((bg >> 8) & 0xFF);
     unsigned int b = (unsigned int)(bg & 0xFF);
