@@ -492,6 +492,7 @@ if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); r
     if (widget->w == w && widget->h == h) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
     widget->w = w;
     widget->h = h;
+    if (!widget->no_bg) win32_apply_rounded_corners(widget->hwnd, w, h);
     SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->x, widget->y, w, h, SWP_NOACTIVATE);
     Platform_Widget_Invalidate(widget);
 }
