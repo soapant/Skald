@@ -97,7 +97,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
     
     FlFlagList flist = fl_parse_flags(input);
     for (size_t i = 0; i < flist.count && *tag_count < 10; i++) {
-        Fl_Flag *f = &flist.flags[i];
+        FlFlag *f = &flist.flags[i];
         for (size_t j = 0; j < TODO_CONFIG_FLAGS_COUNT; j++) {
             const char *flag = TODO_CONFIG_FLAGS[j].flag;
             const char *bare = flag[0]=='-' ? flag+1 : flag;
@@ -123,7 +123,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
         bool is_flag = false;
         bool flag_has_val = false;
         for (size_t i = 0; i < flist.count; i++) {
-            Fl_Flag *f = &flist.flags[i];
+            FlFlag *f = &flist.flags[i];
             char withdash[68]; snprintf(withdash, sizeof(withdash), "-%s", f->name);
             char withdash2[68]; snprintf(withdash2, sizeof(withdash2), "--%s", f->name);
             if (strcmp(token, withdash) == 0 || strcmp(token, withdash2) == 0) { is_flag = true; flag_has_val = f->has_value; break; }

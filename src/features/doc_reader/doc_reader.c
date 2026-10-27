@@ -1,10 +1,123 @@
-#define XML_IMPLEMENTATION
+#define XML_H_IMPLEMENTATION
 #include "xml.h"
 #include "core/flapi.h"
+#include <stdio.h>
+
+typedef enum {
+    DOC_TYPE_FUNC,
+    DOC_TYPE_STRUCT,
+} DocType;
+
+typedef struct {
+    DocType type;
+    char* name;
+} DocItem;
+
+static DocItem* g_doc_items = NULL;
+static int g_doc_item_count = 0;
+
+static XMLNode* xml_root(XMLNode* parsed) {
+    if (!parsed) return NULL;
+    if (parsed->tag) return parsed;
+    if (parsed->children && parsed->children->len > 0)
+        return xml_node_child_at(parsed, 0);
+    return parsed;
+}
+
+void fill_doc_items(void) {
+    if (g_doc_items) return;
+
+    size_t len = 0;
+    char* content = fl_read_file_to_string("docs/xml/index.xml", &len);
+    if (!content) return;
+
+    XMLNode* parsed = xml_parse_string(content);
+    XMLNode* root = xml_root(parsed);
+    if (!root || !root->children) {
+        xml_node_free(parsed);
+        free(content);
+        return;
+    }
+
+    int cap = 0;
+    for (size_t i = 0; i < root->children->len; i++) {
+        XMLNode* compound = xml_node_child_at(root, i);
+        if (!compound->tag || strcmp(compound->tag, "compound") != 0) continue;
+
+        const char* kind  = xml_node_attr(compound, "kind");
+        const char* refid = xml_node_attr(compound, "refid");
+        if (!kind || !refid) continue;
+
+        if (strcmp(kind, "file") == 0) {
+            char path[512];
+            snprintf(path, sizeof(path), "docs/xml/%s.xml", refid);
+
+            size_t flen = 0;
+            char* fcontent = fl_read_file_to_string(path, &flen);
+            if (!fcontent) continue;
+
+            XMLNode* fparsed = xml_parse_string(fcontent);
+            XMLNode* froot = xml_root(fparsed);
+            XMLNode* compounddef = froot ? xml_node_find_tag(froot, "compounddef", true) : NULL;
+
+            if (compounddef && compounddef->children) {
+                for (size_t s = 0; s < compounddef->children->len; s++) {
+                    XMLNode* section = xml_node_child_at(compounddef, s);
+                    if (!section->tag || strcmp(section->tag, "sectiondef") != 0) continue;
+
+                    const char* skind = xml_node_attr(section, "kind");
+                    if (!skind || strcmp(skind, "func") != 0) continue;
+
+                    for (size_t m = 0; m < section->children->len; m++) {
+                        XMLNode* member = xml_node_child_at(section, m);
+                        if (!member->tag || strcmp(member->tag, "memberdef") != 0) continue;
+
+                        XMLNode* name_node = xml_node_find_tag(member, "name", true);
+                        if (!name_node || !name_node->text) continue;
+
+                        if (g_doc_item_count >= cap) {
+                            cap = cap ? cap * 2 : 64;
+                            g_doc_items = realloc(g_doc_items, cap * sizeof(DocItem));
+                        }
+                        g_doc_items[g_doc_item_count].type = DOC_TYPE_FUNC;
+                        g_doc_items[g_doc_item_count].name = strdup(name_node->text);
+                        g_doc_item_count++;
+                    }
+                }
+            }
+
+            xml_node_free(fparsed);
+            free(fcontent);
+        }
+        else if (strcmp(kind, "struct") == 0) {
+            XMLNode* name_node = xml_node_find_tag(compound, "name", true);
+            if (!name_node || !name_node->text) continue;
+
+            if (g_doc_item_count >= cap) {
+                cap = cap ? cap * 2 : 64;
+                g_doc_items = realloc(g_doc_items, cap * sizeof(DocItem));
+            }
+            g_doc_items[g_doc_item_count].type = DOC_TYPE_STRUCT;
+            g_doc_items[g_doc_item_count].name = strdup(name_node->text);
+            g_doc_item_count++;
+        }
+    }
+
+    xml_node_free(parsed);
+    free(content);
+}
 
 void doc_refresh(const char* filter, ListBoxInfo* lb) {
-    // const char* strings[] = {"value1"};
-    // fl_populate_listbox(lb, filter,strings, 1);
+    const char** names = malloc(g_doc_item_count * sizeof(const char*));
+    for (int i = 0; i < g_doc_item_count; i++) {
+        if (fl_string_contains("_impl",g_doc_items[i].name)) {
+            g_doc_items[i].name[strlen(g_doc_items[i].name)-5]='\0';
+            names[i] = g_doc_items[i].name;
+        } else {
+          names[i] = g_doc_items[i].name;
+        }
+    }
+    fl_populate_listbox(lb, filter, names, g_doc_item_count);
 }
 
 bool doc_enter(const char* selection, ListBoxInfo* lb) {
@@ -20,7 +133,7 @@ void doc_render(PromptState* state) {
   fl_place_editbox();
   FlListItemCtx ctx;
   while (fl_listbox_next(&ctx)) {
-      fl_draw_text(.x = 14, .y = ctx.y + 4,
+      fl_draw_text(.x = 14, .y = ctx.y,
                       .text = ctx.text, .align = "LEFT");
   }
   fl_listbox_end();
@@ -34,6 +147,7 @@ void TriggerDocReader(void) {
 }
 
 FLINT_FEATURE_INIT {
+    fill_doc_items();
     fl_register_hotkey(.hotkey="Alt+C",.cb=TriggerDocReader);
     fl_register_feature(.name="FlintDocs",.cb=TriggerDocReader,.icon="/list-check.png");
 }
