@@ -12,10 +12,9 @@
 #endif
 
 
-#define FPS 1
+#define FPS 1 
 #define NO_BG true
 #define FONTSIZE 14
-
 
 static bool read_disk(unsigned long long *used_out, unsigned long long *total_out) {
     *used_out = 0;
@@ -220,7 +219,7 @@ static void widgets_internet_render(FlWidgetState *state) {
     }
     if (!icon) return;
 
-    fl_draw_image(.path = icon, .x = 40, .y = 6,
+    fl_draw_image(.path = icon, .x = 40, .y = 2,
                   .w = NET_ICON_SIZE, .h = NET_ICON_SIZE);
 }
 
