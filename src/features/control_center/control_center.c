@@ -1069,17 +1069,34 @@ static void cc_subwindow_render(PromptState *state) {
 }
 
 static void cc_open_actions_subwindow(void) {
-    fl_subwindow(.title = "Actions", .x = (g_cc_width / 2) + 240, .y = (g_cc_height / 2) - 50, .w = 200, .h = 300, .render = cc_subwindow_render, .refresh = cc_subwindow_refresh);
+    fl_subwindow(.title = "Actions",
+                 .x = (g_cc_width / 2) + 240,
+                 .y = (g_cc_height / 2) - 50,
+                 .w = 200, .h = 300,
+                 .render = cc_subwindow_render,
+                 .refresh = cc_subwindow_refresh);
 }
 static void cc_on_actions_click(void) {
     g_pending_post_render = cc_open_actions_subwindow;
+}
+
+static void cc_on_actions_render(void) {
+   if (fl_button_is_hovered("Actions")) {
+   }
 }
 static void cc_render(PromptState *state) {
     g_cc_width = state->width; g_cc_height = state->height;
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = { .lb = lb ,.item_height = FontSize * 2};
     fl_place_editbox();
-    fl_place_button(.name = "Actions",.x=state->width - 200,.y=state->height - 30,.w=180,.border=false,.text= "Actions Ctrl+B",.fontsize=20,.on_click=cc_on_actions_click);
+    fl_place_button(.name = "Actions",
+                    .x=state->width - 200,
+                    .y=state->height - 30,
+                    .w=180,
+                    .render=cc_on_actions_render,
+                    .fontsize=20,
+                    .on_click=cc_on_actions_click);
+
     if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
     FlListItemCtx ctx;
