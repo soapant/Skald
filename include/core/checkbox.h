@@ -2,7 +2,7 @@
 #define CORE_CHECKBOX_H
 
 #include <stdbool.h>
-#include "core/types/color.h"
+#include "core/types.h"
 
 typedef struct {
     const char* name;
