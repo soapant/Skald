@@ -56,13 +56,6 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
         if (strcmp(g_vim_mode, "Insert") == 0) {
             if (RememberLastIndex) { last_index = lb->selected_index; if (ctx) ctx->window.last_index = last_index; }
             UI_SetSelection(lb, -1);
-        } else if (strcmp(g_vim_mode, "Normal") == 0) {
-            if (last_index < lb->total_matches && RememberLastIndex) {
-                UI_NavigateTo(lb, last_index);
-            } else {
-                UI_SetSelection(lb, 0);
-                ListBox_ScrollToSelection(lb);
-            }
         }
     }
 

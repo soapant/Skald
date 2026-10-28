@@ -1060,7 +1060,7 @@ static void cc_subwindow_render(PromptState *state) {
     if (!fl_listbox_begin(&spec)) return;
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
-        fl_draw_text(.x = 14, .y = ctx.y + CC_ITEM_TEXT_Y,
+        fl_draw_text(.x = 14, .y = ctx.y,
                       .text = ctx.text, .align = "LEFT");
     }
     fl_listbox_end();
