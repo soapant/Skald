@@ -96,11 +96,16 @@ void fuckme(void) {
 static FlPos last_mouse_pos = {0, 0}; 
 
 void start_auto_click(void) {
-    last_mouse_pos = fl_get_mouse_pos();
-    while (fl_get_mouse_pos().x == last_mouse_pos.x && 
-           fl_get_mouse_pos().y == last_mouse_pos.y) {
+    FlMouseEvent ev;
+    while (fl_poll_mouse(&ev)) {}
+    while (1) {
         fl_click();
         fl_sleep(0.01);
+        bool stop = false;
+        while (fl_poll_mouse(&ev)) {
+            if (ev.down) stop = true;
+        }
+        if (stop) break;
     }
 }
 
