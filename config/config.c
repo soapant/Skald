@@ -8,8 +8,8 @@ void ConfigApply(void) {
     RememberLastIndex = true;
     MessageAfterEachHotkey = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = false;
-    DebugMode = true;
+    DoTimeDebugs = true;
+    DebugMode = false;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
@@ -23,7 +23,7 @@ void ConfigApply(void) {
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 20;
+    FontSize = 15;
     IconSize = 32;
     WidgetGap = 0;
     MaxFeatures = 1000;

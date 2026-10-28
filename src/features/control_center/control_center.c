@@ -561,12 +561,6 @@ static void cc_app_cache_add(const char *full_path) {
     }
 }
 
-static void cc_rescan_app_cache(const char *full_path, int added) {
-    if (!full_path || !g_app_cache_ready) return;
-    if (added) cc_app_cache_add(full_path);
-    else cc_app_cache_drop(full_path);
-}
-
 #define CC_APP_MAP_SLOTS 2048
 static char g_cc_app_map_key[CC_APP_MAP_SLOTS][128];
 static char g_cc_app_map_path[CC_APP_MAP_SLOTS][MAX_PATH];
@@ -1082,16 +1076,21 @@ static void cc_on_actions_click(void) {
 
 static void cc_on_actions_render(FlRect rect) {
     char buf[200];
-    snprintf(buf,sizeof(buf),"Actions %s",ActionsHotkey);
-    fl_draw_rect(.radius=6,.x=rect.x,.y=rect.y - 2,.w=rect.w - 2,.h=rect.h,.filled=true,.color=FL_DARK_GRAY);
-
-    fl_draw_rect(.radius=6,.x=rect.x + (rect.w / 2) + 5,.y=rect.y,.w=(rect.w / 2) - 10,.h=rect.h - 4,.filled=true,.color=FL_DARK_GRAY);
-    fl_draw_rect(.radius=6,.x=rect.x + (rect.w / 2) + 5,.y=rect.y,.w=(rect.w / 2) - 10,.h=rect.h - 4,.color=FL_GRAY);
-
-    fl_draw_rect(.radius=6,.x=rect.x + 2,.y=rect.y,.w=(rect.w / 2) - 10,.h=rect.h - 4,.filled=true,.color=FL_DARK_GRAY);
-    fl_draw_rect(.radius=6,.x=rect.x + 2,.y=rect.y,.w=(rect.w / 2) - 10,.h=rect.h - 4,.color=FL_GRAY);
-
-    fl_draw_text(.x=rect.x, .y=rect.y - 5, .text=buf, .align="LEFT");
+    char* hotkey_str = strdup(ActionsHotkey);
+    char *plus = strchr(hotkey_str, '+');
+    *plus = ' ';
+    fl_draw_text(.x=rect.x + 20, .y=rect.y - 5, .text="Actions", .align="LEFT",.color=FL_GRAY,.fontsize=16);
+    fl_draw_rect(
+        .x = rect.x + (rect.w / 2),
+        .y = rect.y,
+        .w = rect.w - 20,
+        .h = rect.h,
+        .filled = true,
+        .color = FL_DARK_GRAY,
+        .radius = 6
+    );
+    fl_draw_text(.x=rect.x + 100, .y=rect.y - 7, .text=hotkey_str, .align="LEFT",.fontsize=20);
+    free(hotkey_str);
 }
 static void cc_render(PromptState *state) {
     g_cc_width = state->width; g_cc_height = state->height;
@@ -1103,7 +1102,6 @@ static void cc_render(PromptState *state) {
                     .y=state->height - 30,
                     .w=180,
                     .render=cc_on_actions_render,
-                    .fontsize=20,
                     .on_click=cc_on_actions_click);
 
     if (!fl_listbox_begin(&spec)) return;
@@ -1239,10 +1237,6 @@ static void cc_tab(ListBoxInfo *lb) {
 
 static void TriggerControl(void) {
     cc_build_xdg_paths();
-    for (size_t i = 0; i < g_xdg_path_count; i++) {
-        const char *p = g_xdg_paths[i];
-        if (p) fl_on_dir_changed(p, cc_rescan_app_cache);
-    }
 
     fl_window(.title = "⚡ Control",
            .placeholder = "Search For Something...",

@@ -1458,14 +1458,6 @@ void fl_profile_end(FlTimer timer);
 void fl_run_after_time(double seconds, void (*callback)(void));
 
 /**
- * @brief Register a callback for directory changes.
- * @param dir_path  Directory path.
- * @param callback  Callback function (See `DirChangeCallback`).
- * @return          Handle string (caller must free), or NULL on error.
- */
-char* fl_on_dir_changed(const char* dir_path, DirChangeCallback callback);
-
-/**
  * @brief Check if a string contains another string.
  * @param needle    Substring to find.
  * @param haystack  String to search in.

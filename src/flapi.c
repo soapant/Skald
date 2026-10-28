@@ -878,12 +878,6 @@ bool fl_query_browser(const char* query) {
     { PROFILE_END_VAR(_pt, "fl_query_browser"); return Platform_QueryBrowser(query); }
 }
 
-char* fl_on_dir_changed(const char* dir_path, DirChangeCallback callback) {
-    PROFILE_START(_pt);
-    if (!dir_path) { PROFILE_END_VAR(_pt, "fl_on_dir_changed"); return NULL; }
-    { PROFILE_END_VAR(_pt, "fl_on_dir_changed"); return Platform_RegisterDirWatcher(dir_path, callback); }
-}
-
 char* fl_get_last_clipboard_entry() {
     PROFILE_START(_pt);
     char* current = Platform_GetClipboardEntry();
