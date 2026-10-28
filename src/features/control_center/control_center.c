@@ -1080,9 +1080,10 @@ static void cc_on_actions_click(void) {
     g_pending_post_render = cc_open_actions_subwindow;
 }
 
-static void cc_on_actions_render(void) {
-   if (fl_button_is_hovered("Actions")) {
-   }
+static void cc_on_actions_render(int x, int y, int w, int h) {
+    char buf[200];
+    snprintf(buf,sizeof(buf),"Actions %s",ActionsHotkey);
+    fl_draw_text(.x=x, .y=y - 5, .text=buf,.align="LEFT");
 }
 static void cc_render(PromptState *state) {
     g_cc_width = state->width; g_cc_height = state->height;
@@ -1263,6 +1264,7 @@ FLINT_FEATURE_INIT {
 
 FLINT_FEATURE_SHUTDOWN {
     g_cc_stopping = 1;
+    g_pending_post_render = NULL;
     if (g_prewarm_thread) {
         fl_thread_join(g_prewarm_thread);
         g_prewarm_thread = NULL;

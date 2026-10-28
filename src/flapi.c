@@ -1106,6 +1106,8 @@ unsigned long fl_listbox_get_current_standard_color(void);
 
 bool fl_draw_text_impl(const FlTextSpec *spec) {
     PROFILE_START(_pt);
+    int x = spec->x ? spec->x : 0;
+    int y = spec->y ? spec->y : 0;
     if (!spec) {     PROFILE_START(_pt);
     PROFILE_END_VAR(_pt, "api:fl_draw_text"); { PROFILE_END_VAR(_pt, "f"); return false; } }
     const char *real_text = spec->text;

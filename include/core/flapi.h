@@ -1031,11 +1031,16 @@ bool fl_place_checkbox_impl(const FlCheckboxSpec *spec);
 bool fl_checkbox_is_checked(const char *name);
 bool fl_checkbox_is_hovered(const char *name);
 
+#define  fl_checkbox_hovered fl_checkbox_is_hovered
+#define  fl_checkbox_clicked fl_checkbox_is_clicked
+
 #define fl_place_button(...) fl_place_checkbox_impl(&(FlCheckboxSpec){.border=true, __VA_ARGS__,.button=true})
 #define fl_place_checkbox(...) fl_place_checkbox_impl(&(FlCheckboxSpec){.border=true, __VA_ARGS__,.checkbox=true})
 
 #define fl_button_is_clicked fl_checkbox_is_checked
 #define fl_button_is_hovered fl_checkbox_is_hovered
+#define fl_button_clicked fl_checkbox_checked
+#define fl_button_hovered fl_checkbox_hovered
 
 #define fl_draw_text(...) fl_draw_text_impl(&(FlTextSpec){__VA_ARGS__})
 #define fl_draw_image(...) fl_draw_image_impl(&(FlImageSpec){__VA_ARGS__})
