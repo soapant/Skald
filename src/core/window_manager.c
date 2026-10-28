@@ -103,6 +103,7 @@ void WindowManager_PopPopup(WindowManager* wm) {
     if (!wm || wm->popup_count == 0) return;
     Checkbox_ResetAll();
     Popup* popup = wm->popups[--wm->popup_count];
+    CloseCallback on_close = PromptPopup_TakeOnClose(popup);
     if (popup->vtable && popup->vtable->on_hide) {
         popup->vtable->on_hide(popup);
     }
@@ -114,6 +115,9 @@ void WindowManager_PopPopup(WindowManager* wm) {
     }
     if (wm->popup_count == 0) {
         Platform_WM_OnPopEmpty(wm);
+    }
+    if (on_close) {
+        on_close();
     }
 }
 

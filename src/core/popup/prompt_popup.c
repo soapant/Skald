@@ -111,11 +111,6 @@ static void PromptPopup_OnHide(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
     log_info("DEBUG_ON_HIDE title='%s'", data->spec.title ? data->spec.title : "(null)");
-    if (data->spec.on_close) {
-        CloseCallback cb = data->spec.on_close;
-        data->spec.on_close = NULL;
-        cb();
-    }
     Platform_PromptPopupHideWindow(self);
     if (data->state) {
         last_index = 0;
@@ -244,4 +239,12 @@ bool WindowManager_IsPointInTopPopup(WindowManager* wm, int root_x, int root_y) 
     PromptPopupData* data = (PromptPopupData*)top;
     return (root_x >= data->x && root_x <= data->x + data->w &&
             root_y >= data->y && root_y <= data->y + data->h);
+}
+
+CloseCallback PromptPopup_TakeOnClose(Popup* p) {
+    if (!p || p->type != POPUP_PROMPT) return NULL;
+    PromptPopupData* data = (PromptPopupData*)p;
+    CloseCallback cb = data->spec.on_close;
+    data->spec.on_close = NULL;
+    return cb;
 }
