@@ -4,9 +4,6 @@
 #include <stdint.h>
 #include "core/types.h"
 
-/* Platform neutral: raw tick count plus ticks-per-second. core/timer.h
-   fills these in from QueryPerformanceCounter or CLOCK_MONOTONIC, which
-   keeps <windows.h> out of this header (it is on the feature .so path). */
 typedef struct {
     int64_t start;
     int64_t frequency;

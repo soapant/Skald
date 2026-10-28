@@ -1080,10 +1080,10 @@ static void cc_on_actions_click(void) {
     g_pending_post_render = cc_open_actions_subwindow;
 }
 
-static void cc_on_actions_render(int x, int y, int w, int h) {
+static void cc_on_actions_render(FlRect rect) {
     char buf[200];
     snprintf(buf,sizeof(buf),"Actions %s",ActionsHotkey);
-    fl_draw_text(.x=x, .y=y - 5, .text=buf,.align="LEFT");
+    fl_draw_text(.x=rect., .y=rect.y - 5, .text=buf, .align="LEFT");
 }
 static void cc_render(PromptState *state) {
     g_cc_width = state->width; g_cc_height = state->height;

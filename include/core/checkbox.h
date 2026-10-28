@@ -26,7 +26,7 @@ typedef struct {
     bool no_bg;
     void (*on_click)(void);
     void (*on_hover)(void);
-    void (*render)(int x, int y, int w, int h);
+    void (*render)(PlRect rect);
 } CheckboxSpec;
 
 void Checkbox_FrameBegin(void);
