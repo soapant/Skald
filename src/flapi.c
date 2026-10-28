@@ -914,11 +914,6 @@ bool fl_paste(char* content) {
    { PROFILE_END_VAR(_pt, "fl_paste"); return Platform_PasteContent(content); }
 }
 
-static void fl_edit_blocking_confirm(const char* text, void* user_data) {
-    char** out = (char**)user_data;
-    if (out && text) *out = strdup(text);
-}
-
 typedef struct {
     char* text;
     bool confirmed;
@@ -1315,7 +1310,7 @@ PROFILE_END_VAR(_pt, "api:fl_draw_image"); { PROFILE_END_VAR(_pt, "f"); return f
 bool fl_draw_rect_impl(const FlRectSpec *spec) {
   PROFILE_START(_pt);
   if (!spec) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_draw_rect"); { PROFILE_END_VAR(_pt, "f"); return false; } }
+  PROFILE_END_VAR(_pt, "api:fl_draw_rect"); { PROFILE_END_VAR(_pt, "f"); return false; } }
   unsigned long col = spec->color;
   bool transparent = spec->transparent ? spec->transparent : true;
   if (col == 0) col = COLOR_TEXT;
