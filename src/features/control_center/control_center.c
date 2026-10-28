@@ -1025,35 +1025,21 @@ static void cc_on_actions_render(FlRect rect) {
     char buf[200];
     char* hotkey_str = strdup(ActionsHotkey);
     char *plus = strchr(hotkey_str, '+');
-    FlColor bg_color = FL_DARK_GRAY;
     *plus = ' ';
-    fl_draw_text(.x=rect.x + 20, .y=rect.y - 5, .text="Actions", .align="LEFT",.color=FL_GRAY,.fontsize=16);
-    if (fl_button_hovered("Actions")) {
-        bg_color = FL_GRAY;
-        fl_draw_rect(
-            .x = rect.x,
-            .y = rect.y,
-            .w = rect.w,
-            .h = rect.h,
-            .filled = true,
-            .color = bg_color,
-            .radius = 6
-        );
-    } else {
-      bg_color = FL_DARK_GRAY;
-    }
     fl_draw_rect(
-        .x = rect.x + (rect.w / 2) + 10,
-        .y = rect.y,
-        .w = 75,
-        .h = rect.h - 5,
+        .x = rect.x + 20,
+        .y = rect.y - 2,
+        .w = rect.w - 25,
+        .h = rect.h,
         .filled = true,
-        .color = bg_color,
+        .color = fl_button_hovered("Actions") ? RGB(60,60,60) : FL_DARK_GRAY ,
         .radius = 6
     );
+    fl_draw_text(.x=rect.x + 20, .y=rect.y - 4, .text="Actions", .align="LEFT",.color=FL_GRAY,.fontsize=16);
     fl_draw_text(.x=rect.x + 100, .y=rect.y - 7, .text=hotkey_str, .align="LEFT",.fontsize=20);
     free(hotkey_str);
 }
+
 static void cc_render(PromptState *state) {
     g_cc_width = state->width; g_cc_height = state->height;
     ListBoxInfo *lb = &state->listbox;
