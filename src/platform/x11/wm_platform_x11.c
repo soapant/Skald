@@ -2,6 +2,7 @@
 #include "core/window_manager.h"
 #include "core/context.h"
 #include "platform/platform.h"
+#include "core/flapi.h"
 #include "core/prompt_controller.h"
 #include "deps/log.h"
 #include "platform/x11/input_x11.h"
@@ -151,19 +152,22 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
         }
         Popup* mouse_top = WindowManager_GetTopPopup(wm);
         if (mouse_changed && mouse_top && mouse_top->vtable && mouse_top->vtable->on_render) {
+            g_render_depth++;
             mouse_top->vtable->on_render(mouse_top);
+            g_render_depth--;
+            if (g_pending_post_render) { g_pending_post_render(); g_pending_post_render = NULL; }
             if (dpy) XFlush(dpy);
         }
         long long now = Platform_GetWallClockMs();
         if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
             last_tick = now;
             Popup* top = WindowManager_GetTopPopup(wm);
-            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            if (top && top->vtable && top->vtable->on_render) { g_render_depth++; top->vtable->on_render(top); g_render_depth--; if (g_pending_post_render) { g_pending_post_render(); g_pending_post_render = NULL; } }
             if (dpy) XFlush(dpy);
         }
         if (PromptController_PollSequenceTimeout()) {
             Popup* top = WindowManager_GetTopPopup(wm);
-            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            if (top && top->vtable && top->vtable->on_render) { g_render_depth++; top->vtable->on_render(top); g_render_depth--; if (g_pending_post_render) { g_pending_post_render(); g_pending_post_render = NULL; } }
             if (dpy) XFlush(dpy);
         }
     }
