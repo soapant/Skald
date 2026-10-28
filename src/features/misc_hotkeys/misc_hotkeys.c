@@ -64,8 +64,6 @@ void last_image(void) {
 
 void get_current_keyword(void) {
     char *popup_res = fl_popup();
-    printf("%s\n", popup_res ? popup_res : "(null)");
-    fflush(stdout);
     if (popup_res) {
         strncpy(current_keyword, popup_res, sizeof(current_keyword) - 1);
         current_keyword[sizeof(current_keyword) - 1] = '\0';

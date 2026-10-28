@@ -916,6 +916,20 @@ static void fl_edit_blocking_confirm(const char* text, void* user_data) {
     if (out && text) *out = strdup(text);
 }
 
+typedef struct {
+    char* text;
+    bool confirmed;
+} PopupConfirmCtx;
+
+static void fl_edit_blocking_confirm_ctx(const char* text, void* user_data) {
+    PopupConfirmCtx* ctx = (PopupConfirmCtx*)user_data;
+    if (ctx && text) {
+        free(ctx->text);
+        ctx->text = strdup(text);
+        ctx->confirmed = true;
+    }
+}
+
 char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     PROFILE_START(_pt);
     const char* initial_text = spec ? spec->initial_text : NULL;
@@ -933,31 +947,27 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     int true_idx = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     WindowManager* wm = WindowManager_Get();
     if (!wm) { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return NULL; }
-    char* result = NULL;
-    Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm, &result);
+    PopupConfirmCtx ctx = {0};
+    Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm_ctx, &ctx);
     if (!popup) { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return NULL; }
     WindowManager_PushPopup(wm, popup);
-    while (wm->running && popup->manager) {
+    while (wm->running && popup->manager && !ctx.confirmed) {
         Platform_WM_ProcessEvents(wm);
     }
-    bool was_confirmed = ((WMEditPopupData*)popup)->confirmed;
-    if (popup->manager == NULL) {
-        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
-    } else {
+    if (popup->manager != NULL) {
         WindowManager_PopPopup(wm);
-        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
     if (lb && idx >= 0) {
         int keep_idx = idx < lb->populated_count ? idx : lb->populated_count - 1;
         if (keep_idx >= 0) lb->selected_index = keep_idx;
     }
-    if (!was_confirmed) {
-        free(result);
-        result = NULL;
+    if (!ctx.confirmed) {
+        free(ctx.text);
+        ctx.text = NULL;
     }
-    if (!result) { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return NULL; }
+    if (!ctx.text) { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return NULL; }
     if (out_index) *out_index = true_idx;
-    { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return result; }
+    { PROFILE_END_VAR(_pt, "fl_edit_text_popup_impl"); return ctx.text; }
 }
 
 bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text) {
@@ -1070,27 +1080,23 @@ char* fl_popup_impl(const PopupSpec *spec) {
     const char* align = "LEFT";
     WindowManager* wm = WindowManager_Get();
     if (!wm) { ; return NULL; }
-    char* result = NULL;
-    Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm, &result);
+    PopupConfirmCtx ctx = {0};
+    Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm_ctx, &ctx);
     if (!popup) { ; return NULL; }
     EditPopup_SetPlaceholder(popup, spec->placeholder);
 
     WindowManager_PushPopup(wm, popup);
-    while (wm->running && popup->manager) {
+    while (wm->running && popup->manager && !ctx.confirmed) {
         Platform_WM_ProcessEvents(wm);
     }
-    bool was_confirmed = ((WMEditPopupData*)popup)->confirmed;
-    if (popup->manager == NULL) {
-        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
-    } else {
+    if (popup->manager != NULL) {
         WindowManager_PopPopup(wm);
-        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
-    if (!was_confirmed) {
-        free(result);
-        result = NULL;
+    if (!ctx.confirmed) {
+        free(ctx.text);
+        ctx.text = NULL;
     }
-    return result;
+    return ctx.text;
 }
 
 unsigned long fl_listbox_get_current_standard_color(void);
