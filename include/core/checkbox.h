@@ -2,6 +2,7 @@
 #define CORE_CHECKBOX_H
 
 #include <stdbool.h>
+#include "core/types/color.h"
 
 typedef struct {
     const char* name;
@@ -19,12 +20,13 @@ typedef struct {
     bool was_down;
     bool clicked;
     int thickness;
-    unsigned long hovered_color;
-    unsigned long clicked_color;
+    ColorRef hovered_color;
+    ColorRef clicked_color;
     bool border;
     bool no_bg;
     void (*on_click)(void);
     void (*on_hover)(void);
+    void (*render)(void);
 } CheckboxSpec;
 
 void Checkbox_FrameBegin(void);

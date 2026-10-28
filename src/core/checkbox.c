@@ -131,6 +131,7 @@ FontHandle s_font;
 
 void Checkbox_Draw(const CheckboxSpec* spec) {
     PROFILE_START(_pt);
+    if (spec->render) { spec->render(); PROFILE_END_VAR(_pt, "Checkbox_Draw"); return; }
     unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
     unsigned long def_btn_border = (spec->checked || spec->clicked || spec->hovered) ? CHECKBOX_WHITE : CHECKBOX_GRAY;
     unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : COLOR_BG;
@@ -217,6 +218,7 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     cb->text = spec->text;
     cb->fontsize = spec->fontsize;
     cb->text_color = spec->text_color;
+    cb->render = spec->render;
 
     int mx = 0, my = 0;
     bool down = false;
