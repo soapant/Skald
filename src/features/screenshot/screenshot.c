@@ -81,13 +81,13 @@ static void pk_ocr_area_to_clipboard(void) {
 
     if (getenv("WAYLAND_DISPLAY")) {
         snprintf(cmd, sizeof(cmd),
-                 "%s%s/external/grim -g \"$(%s/external/slurp)\" - | tesseract stdin stdout -l eng png",
+                 "%s%s/external/grim -g \"$(%s/external/slurp)\" - | tesseract-ocr stdin stdout -l eng png",
                  env, shot_working_dir(), shot_working_dir());
     } else {
         char temp_path[SHOT_BUF];
         snprintf(temp_path, sizeof(temp_path), "/tmp/flint_ocr_%d", (int)getpid());
         snprintf(cmd, sizeof(cmd),
-                 "%s%s/external/scrot -s %s && tesseract %s stdout -l eng; rm -f %s",
+                 "%s%s/external/scrot -s %s && tesseract-ocr %s stdout -l eng; rm -f %s",
                  env, shot_working_dir(), temp_path, temp_path, temp_path);
     }
 
