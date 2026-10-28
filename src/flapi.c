@@ -1,5 +1,8 @@
 #include <stdint.h> 
 #include <stdlib.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -2737,4 +2740,54 @@ void fl_reload_feature(char* name) {
 
 int fl_get_pid() {
     return fl_get_pid_platform();
+}
+
+void fl_reload_all_features(void) {
+    if (!FeaturePath || !FeaturePath[0]) return;
+    DIR* dir = opendir(FeaturePath);
+    if (!dir) return;
+    struct dirent* ent;
+    int reloaded = 0;
+    while ((ent = readdir(dir)) != NULL) {
+        if (ent->d_name[0] == '.') continue;
+        char subpath[512];
+        snprintf(subpath, sizeof(subpath), "%s/%s", FeaturePath, ent->d_name);
+        struct stat st;
+        if (stat(subpath, &st) != 0 || !S_ISDIR(st.st_mode)) continue;
+        char src[512], dll[512];
+        snprintf(src, sizeof(src), "%s/%s.c", subpath, ent->d_name);
+        snprintf(dll, sizeof(dll), "build/features/%s.so", ent->d_name);
+        struct stat st_src, st_dll;
+        bool should_build = false;
+        if (stat(src, &st_src) == 0) {
+            if (stat(dll, &st_dll) != 0 || st_src.st_mtime > st_dll.st_mtime) {
+                should_build = true;
+            }
+        }
+        if (!should_build) continue;
+        /* build */
+        char tmp[1024];
+        snprintf(tmp, sizeof(tmp), "%s.tmp.%d", dll, fl_get_pid());
+        char cmd[2048];
+        snprintf(cmd, sizeof(cmd), "gcc -std=gnu17 -I include -I/usr/include/freetype2 -O3 -pipe -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-discarded-qualifiers -Wno-stringop-truncation -Wno-misleading-indentation -fPIC -shared -o \"%s\" \"%s\" 2>&1", tmp, src);
+        char* outStr = fl_run_terminal_command(cmd);
+        bool ok = false;
+        if (outStr) {
+            if (strlen(outStr) == 0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) {
+                ok = true;
+            }
+            free(outStr);
+        } else {
+            ok = true;
+        }
+        if (!ok) { remove(tmp); continue; }
+        remove(dll);
+        rename(tmp, dll);
+        fl_reload_feature(ent->d_name);
+        reloaded++;
+    }
+    closedir(dir);
+    char msg[128];
+    snprintf(msg, sizeof(msg), "Reloaded %d feature(s)!", reloaded);
+    fl_message(.message = msg, .slot = BOTTOM_CENTER, .timeout = 1.0);
 }
