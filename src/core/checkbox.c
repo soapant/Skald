@@ -106,6 +106,17 @@ bool Checkbox_IsHovered(const char* name) {
     return r;
 }
 
+void Checkbox_ResetAll(void) {
+    PROFILE_START(_pt);
+    for (int i = 0; i < g_checkbox_count; i++) {
+        g_checkboxes[i].checked = false;
+        g_checkboxes[i].clicked = false;
+        g_checkboxes[i].hovered = false;
+        g_checkboxes[i].was_down = false;
+    }
+    PROFILE_END_VAR(_pt, "Checkbox_ResetAll");
+}
+
 static int checkbox_line_height(int fontsize) {
     PROFILE_START(_pt);
     int lh = 0, rh = 0, lt = 0;
@@ -233,8 +244,8 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
 
     Checkbox_Draw(cb);
 
-    if (clicked && cb->on_click) cb->on_click(cb->name, cb->checked);
-    if (hover_changed && cb->on_hover) cb->on_hover(cb->name, cb->hovered);
+    if (clicked && cb->on_click) cb->on_click();
+    if (hover_changed && cb->on_hover) cb->on_hover();
 
     PROFILE_END_VAR(_pt, "Checkbox_Place");
     return true;

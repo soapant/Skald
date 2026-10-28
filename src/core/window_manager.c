@@ -1,6 +1,7 @@
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
+#include "core/checkbox.h"
 #include "platform/platform.h"
 #include "core/timer.h"
 #include "platform/wm_platform.h"
@@ -100,6 +101,7 @@ Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
 
 void WindowManager_PopPopup(WindowManager* wm) {
     if (!wm || wm->popup_count == 0) return;
+    Checkbox_ResetAll();
     Popup* popup = wm->popups[--wm->popup_count];
     if (popup->vtable && popup->vtable->on_hide) {
         popup->vtable->on_hide(popup);
