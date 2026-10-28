@@ -1204,59 +1204,6 @@ static void cc_on_close(void) {
     cc_run_pending();
 }
 
-bool build_feature(const char* src, const char* out) {
-    char tmp[1024];
-#if defined(_WIN32)
-    snprintf(tmp, sizeof(tmp), "%s.tmp", out);
-#else
-    snprintf(tmp, sizeof(tmp), "%s.tmp.%d", out,fl_get_pid());
-#endif
-
-    char cmd[2048];
-#if defined(_WIN32)
-    snprintf(cmd, sizeof(cmd),
-        "gcc -I include -DCOBJMACROS -O1 -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
-        tmp, src);
-#else
-    snprintf(cmd, sizeof(cmd), 
-        "gcc -std=gnu17 -I include -I/usr/include/freetype2 -O3 -pipe -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-discarded-qualifiers -Wno-stringop-truncation -Wno-misleading-indentation -fPIC -shared -o \"%s\" \"%s\" 2>&1", 
-        tmp, src);
-#endif
-    char* outStr = fl_run_terminal_command(cmd);
-    bool ok = false;
-    if (outStr) {
-        if (strlen(outStr) == 0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) {
-            ok = true;
-        }
-        free(outStr);
-    } else {
-#if defined(_WIN32)
-        ok = false;
-#else
-        ok = true; 
-#endif
-    }
-
-    if (!ok) { 
-        remove(tmp); 
-        return false; 
-    }
-
-#if defined(_WIN32)
-    remove(out);
-    if (rename(tmp, out) != 0) {
-        if (!MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING)) {
-            return false;
-        }
-    }
-#else
-    if (rename(tmp, out) != 0) { 
-        remove(tmp); 
-        return false; 
-    }
-#endif
-    return true;
-}
 
 static void cc_tab(ListBoxInfo *lb) {
     const CcEntry *e = cc_find(ListBoxInfo_GetSelectedText(lb));
