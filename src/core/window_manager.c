@@ -173,7 +173,12 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
         }
     }
     char* res = Platform_PromptUser(wm, spec);
-    if (on_close) on_close();
+    log_info("PLATFORM_PROMPTUSER_RETURNED res=%p on_close=%p", (void*)res, (void*)on_close);
+    if (on_close) {
+        log_info("CALLING_ON_CLOSE");
+        on_close();
+        log_info("ON_CLOSE_RETURNED");
+    }
     return res;
 }
 

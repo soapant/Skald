@@ -74,21 +74,29 @@ static void PromptPopup_OnShow(Popup* self) {
 
     FlintContext* ctx2 = FlintContext_Get();
     if (!wm->ctx) wm->ctx = ctx2;
+    log_info("BEFORE SAVE: ctx=%p enter=%p ctrl_enter=%p",
+             (void*)ctx2,
+             (void*)ctx2->prompt_callbacks.enter,
+             (void*)ctx2->prompt_callbacks.ctrl_enter);
     data->saved_callbacks = ctx2->prompt_callbacks;
-    ctx2->prompt_callbacks.refresh = data->spec.refresh;
-    ctx2->prompt_callbacks.enter = data->spec.enter;
-    ctx2->prompt_callbacks.ctrl_enter = data->spec.ctrl_enter;
-    ctx2->prompt_callbacks.shift_enter = data->spec.shift_enter;
-    ctx2->prompt_callbacks.ctrl_shift_enter = data->spec.ctrl_shift_enter;
-    ctx2->prompt_callbacks.ctrl_alt_enter = data->spec.ctrl_alt_enter;
-    ctx2->prompt_callbacks.shift_alt_enter = data->spec.shift_alt_enter;
-    ctx2->prompt_callbacks.tab = data->spec.tab;
-    ctx2->prompt_callbacks.copy = data->spec.copy;
-    ctx2->prompt_callbacks.render = data->spec.render;
-    data->state->render = data->spec.render;
-    ctx2->prompt_callbacks.edit = data->spec.edit;
-    ctx2->prompt_callbacks.filter = data->spec.filter;
-    ctx2->prompt_callbacks.help = data->spec.help;
+    log_info("DEBUG_SAVE_CALLBACKS title='%s' saved_enter=%p saved_ctrl_enter=%p spec_enter=%p spec_ctrl_enter=%p",
+             data->spec.title ? data->spec.title : "(null)",
+             (void*)data->saved_callbacks.enter, (void*)data->saved_callbacks.ctrl_enter,
+             (void*)data->spec.enter, (void*)data->spec.ctrl_enter);
+    ctx2->prompt_callbacks.refresh = data->spec.refresh ? data->spec.refresh : data->saved_callbacks.refresh;
+    ctx2->prompt_callbacks.enter = data->spec.enter ? data->spec.enter : data->saved_callbacks.enter;
+    ctx2->prompt_callbacks.ctrl_enter = data->spec.ctrl_enter ? data->spec.ctrl_enter : data->saved_callbacks.ctrl_enter;
+    ctx2->prompt_callbacks.shift_enter = data->spec.shift_enter ? data->spec.shift_enter : data->saved_callbacks.shift_enter;
+    ctx2->prompt_callbacks.ctrl_shift_enter = data->spec.ctrl_shift_enter ? data->spec.ctrl_shift_enter : data->saved_callbacks.ctrl_shift_enter;
+    ctx2->prompt_callbacks.ctrl_alt_enter = data->spec.ctrl_alt_enter ? data->spec.ctrl_alt_enter : data->saved_callbacks.ctrl_alt_enter;
+    ctx2->prompt_callbacks.shift_alt_enter = data->spec.shift_alt_enter ? data->spec.shift_alt_enter : data->saved_callbacks.shift_alt_enter;
+    ctx2->prompt_callbacks.tab = data->spec.tab ? data->spec.tab : data->saved_callbacks.tab;
+    ctx2->prompt_callbacks.copy = data->spec.copy ? data->spec.copy : data->saved_callbacks.copy;
+    ctx2->prompt_callbacks.render = data->spec.render ? data->spec.render : data->saved_callbacks.render;
+    data->state->render = ctx2->prompt_callbacks.render;
+    ctx2->prompt_callbacks.edit = data->spec.edit ? data->spec.edit : data->saved_callbacks.edit;
+    ctx2->prompt_callbacks.filter = data->spec.filter ? data->spec.filter : data->saved_callbacks.filter;
+    ctx2->prompt_callbacks.help = data->spec.help ? data->spec.help : data->saved_callbacks.help;
     ctx2->window.current_feature = (char*)prompt_feature_name(title);
     ctx2->window.title = title;
     ctx2->window.callbacks = ctx2->prompt_callbacks;
@@ -102,6 +110,7 @@ static void PromptPopup_OnShow(Popup* self) {
 static void PromptPopup_OnHide(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
+    log_info("DEBUG_ON_HIDE title='%s'", data->spec.title ? data->spec.title : "(null)");
     Platform_PromptPopupHideWindow(self);
     if (data->state) {
         last_index = 0;
@@ -109,6 +118,7 @@ static void PromptPopup_OnHide(Popup* self) {
         FlintContext* _c3 = FlintContext_Get();
         _c3->window.current_feature = NULL;
         _c3->prompt_callbacks = data->saved_callbacks;
+        _c3->window.callbacks = data->saved_callbacks;
         _c3->window.hPopupWnd = data->prev_hPopupWnd;
     }
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnHide");

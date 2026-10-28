@@ -231,7 +231,6 @@ bool remap_register_internal(const char* src, const char* dst, bool whitelist, c
         }
     }
     g_remaps[g_remap_count++] = b;
-    log_warn("remap registered src='%s' (mods=%d count=%d) dst='%s' (mods=%d vk=%d) wl=%d wins=%d total=%d", src, tmp_mods, tmp_count, dst, dst_mods, b.dst_vk, b.whitelist ? 1 : 0, b.window_count, g_remap_count);
     return true;
 }
 

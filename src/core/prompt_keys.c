@@ -75,6 +75,16 @@ void Prompt_TriggerEnter(PromptState* state, bool ctrl, bool shift, bool alt) {
     const char* feat = FlintContext_Get()->window.current_feature;
     if (feat && sel && sel[0]) History_Add(feat, sel);
     FlintContext* ctx = FlintContext_Get();
+    log_info(
+        "ENTER_DISPATCH: ctx=%p current_feature=%s "
+        "enter=%p ctrl_enter=%p window_enter=%p",
+        (void*)ctx,
+        ctx->window.current_feature
+            ? ctx->window.current_feature : "(null)",
+        (void*)ctx->prompt_callbacks.enter,
+        (void*)ctx->prompt_callbacks.ctrl_enter,
+        (void*)ctx->window.callbacks.enter
+    );
     bool should_close = true;
     if (ctrl && shift) {
         should_close = false;
@@ -94,11 +104,35 @@ void Prompt_TriggerEnter(PromptState* state, bool ctrl, bool shift, bool alt) {
         else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
     } else if (ctrl) {
         should_close = false;
-        if (ctx->prompt_callbacks.ctrl_enter) should_close = ctx->prompt_callbacks.ctrl_enter(sel, &state->listbox);
-        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+        log_info("CTRL_ENTER_BRANCH: ctrl_enter=%p sel='%s'", (void*)ctx->prompt_callbacks.ctrl_enter, sel ? sel : "(null)");
+        if (ctx->prompt_callbacks.ctrl_enter) {
+            log_info("CTRL_ENTER_CALLBACK_CALLING");
+            should_close = ctx->prompt_callbacks.ctrl_enter(sel, &state->listbox);
+            log_info("CTRL_ENTER_CALLBACK_RETURNED should_close=%d", should_close);
+        } else if (ctx->prompt_callbacks.enter) {
+            log_info("ENTER_FALLBACK_CALLBACK_CALLING");
+            should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+            log_info("ENTER_FALLBACK_CALLBACK_RETURNED should_close=%d", should_close);
+        } else {
+            log_info("CTRL_ENTER_CALLBACK_IS_NULL");
+        }
     } else {
         should_close = true;
-        if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+
+        log_info("ENTER_BRANCH: enter=%p sel='%s'",
+                 (void*)ctx->prompt_callbacks.enter,
+                 sel ? sel : "(null)");
+
+        if (ctx->prompt_callbacks.enter) {
+            log_info("ENTER_CALLBACK_CALLING");
+
+            should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+
+            log_info("ENTER_CALLBACK_RETURNED should_close=%d",
+                     should_close);
+        } else {
+            log_info("ENTER_CALLBACK_IS_NULL");
+        }
     }
     ctx->window.selection_complete = should_close;
     PROFILE_END_VAR(_pt, "Prompt_TriggerEnter");
