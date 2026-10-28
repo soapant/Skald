@@ -35,6 +35,7 @@ const char* FeaturePath = "src/features";
 const char* IconPath = "{MISC}/switch_window.ico";
 const char* ControlHotkey = "Alt+Space";
 const char* ReloadFeaturesHotkey = "Ctrl+R";
+const char* ActionsHotkey = "Ctrl+K";
 const char* Theme = "rose-pine";
 const char* BackgroundImage = "";
 

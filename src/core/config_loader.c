@@ -62,12 +62,12 @@ static char* heap_dup(const char* s) {
 static char *g_heap_used_font = NULL, *g_heap_used_terminal = NULL, *g_heap_used_shell = NULL;
 static char *g_heap_used_browser = NULL;
 static char *g_heap_used_search = NULL, *g_heap_feature_path = NULL, *g_heap_icon_path = NULL;
-static char *g_heap_control_hotkey = NULL, *g_heap_reload_features_hotkey = NULL, *g_heap_edit_popup_pos = NULL, *g_heap_theme = NULL, *g_heap_background_image = NULL;
+static char *g_heap_control_hotkey = NULL, *g_heap_reload_features_hotkey = NULL, *g_heap_actions_hotkey = NULL, *g_heap_edit_popup_pos = NULL, *g_heap_theme = NULL, *g_heap_background_image = NULL;
 static void heapify_config(void) {
     char *n_font = heap_dup(UsedFont), *n_term = heap_dup(UsedTerminal), *n_shell = heap_dup(UsedShell);
     char *n_search = heap_dup(UsedSearchEngine), *n_feat = heap_dup(FeaturePath),*n_browser = heap_dup(UsedBrowser),*n_icon = heap_dup(IconPath);
-    char *n_hotk = heap_dup(ControlHotkey), *n_reload_hotk = heap_dup(ReloadFeaturesHotkey), *n_pos = heap_dup(EditPopUpPos), *n_theme = heap_dup(Theme), *n_bgimg = heap_dup(BackgroundImage);
-    char *old_font=g_heap_used_font, *old_term=g_heap_used_terminal, *old_shell=g_heap_used_shell, *old_browser=g_heap_used_browser, *old_search=g_heap_used_search, *old_feat=g_heap_feature_path, *old_icon=g_heap_icon_path, *old_hotk=g_heap_control_hotkey, *old_reload_hotk=g_heap_reload_features_hotkey, *old_pos=g_heap_edit_popup_pos, *old_theme=g_heap_theme, *old_bgimg=g_heap_background_image;
+    char *n_hotk = heap_dup(ControlHotkey), *n_reload_hotk = heap_dup(ReloadFeaturesHotkey), *n_actions_hotk = heap_dup(ActionsHotkey), *n_pos = heap_dup(EditPopUpPos), *n_theme = heap_dup(Theme), *n_bgimg = heap_dup(BackgroundImage);
+    char *old_font=g_heap_used_font, *old_term=g_heap_used_terminal, *old_shell=g_heap_used_shell, *old_browser=g_heap_used_browser, *old_search=g_heap_used_search, *old_feat=g_heap_feature_path, *old_icon=g_heap_icon_path, *old_hotk=g_heap_control_hotkey, *old_reload_hotk=g_heap_reload_features_hotkey, *old_actions_hotk=g_heap_actions_hotkey, *old_pos=g_heap_edit_popup_pos, *old_theme=g_heap_theme, *old_bgimg=g_heap_background_image;
     if (n_font) { UsedFont=n_font; g_heap_used_font=n_font; } else g_heap_used_font=old_font, old_font=NULL;
     if (n_term) { UsedTerminal=n_term; g_heap_used_terminal=n_term; } else g_heap_used_terminal=old_term, old_term=NULL;
     if (n_shell) { UsedShell=n_shell; g_heap_used_shell=n_shell; } else g_heap_used_shell=old_shell, old_shell=NULL;
@@ -77,6 +77,7 @@ static void heapify_config(void) {
     if (n_icon) { IconPath=n_icon; g_heap_icon_path=n_icon; } else g_heap_icon_path=old_icon, old_icon=NULL;
     if (n_hotk) { ControlHotkey=n_hotk; g_heap_control_hotkey=n_hotk; } else g_heap_control_hotkey=old_hotk, old_hotk=NULL;
     if (n_reload_hotk) { ReloadFeaturesHotkey=n_reload_hotk; g_heap_reload_features_hotkey=n_reload_hotk; } else g_heap_reload_features_hotkey=old_reload_hotk, old_reload_hotk=NULL;
+    if (n_actions_hotk) { ActionsHotkey=n_actions_hotk; g_heap_actions_hotkey=n_actions_hotk; } else g_heap_actions_hotkey=old_actions_hotk, old_actions_hotk=NULL;
     if (n_pos) { EditPopUpPos=n_pos; g_heap_edit_popup_pos=n_pos; } else g_heap_edit_popup_pos=old_pos, old_pos=NULL;
     if (n_theme) { Theme=n_theme; g_heap_theme=n_theme; } else g_heap_theme=old_theme, old_theme=NULL;
     if (n_bgimg) { BackgroundImage=n_bgimg; g_heap_background_image=n_bgimg; } else g_heap_background_image=old_bgimg, old_bgimg=NULL;
@@ -340,6 +341,9 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, ";\n");
     cfg_put(buf, cap, &off, "    ReloadFeaturesHotkey = ");
     cfg_put_escaped(buf, cap, &off, ReloadFeaturesHotkey);
+    cfg_put(buf, cap, &off, ";\n");
+    cfg_put(buf, cap, &off, "    ActionsHotkey = ");
+    cfg_put_escaped(buf, cap, &off, ActionsHotkey);
     cfg_put(buf, cap, &off, ";\n");
     cfg_put(buf, cap, &off, "    FullTextNeedsKeyPress = %s;\n", FullTextNeedsKeyPress ? "true" : "false");
     cfg_put(buf, cap, &off, "    MessagesEnabled = %s;\n", MessagesEnabled ? "true" : "false");

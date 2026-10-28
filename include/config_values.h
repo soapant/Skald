@@ -39,6 +39,7 @@ extern const char* FeaturePath;
 extern const char* IconPath;
 extern const char* ControlHotkey;
 extern const char* ReloadFeaturesHotkey;
+extern const char* ActionsHotkey;
 extern bool FullTextNeedsKeyPress;
 extern bool MessagesEnabled;
 extern bool EnableAutoPairing;
