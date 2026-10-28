@@ -111,6 +111,11 @@ static void PromptPopup_OnHide(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
     log_info("DEBUG_ON_HIDE title='%s'", data->spec.title ? data->spec.title : "(null)");
+    if (data->spec.on_close) {
+        CloseCallback cb = data->spec.on_close;
+        data->spec.on_close = NULL;
+        cb();
+    }
     Platform_PromptPopupHideWindow(self);
     if (data->state) {
         last_index = 0;
