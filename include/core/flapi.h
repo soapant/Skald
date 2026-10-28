@@ -2249,7 +2249,7 @@ int fl_get_pid();
     var = var##_fn
 
 #define FL_WHITE        RGB(255, 255, 255)
-#define FL_BLACK        RGB(0, 0, 0)
+#define FL_BLACK        RGB(1, 1, 1)
 #define FL_RED          RGB(255, 0, 0)
 #define FL_GREEN        RGB(0, 255, 0)
 #define FL_BLUE         RGB(0, 0, 255)
