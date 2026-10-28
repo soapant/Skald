@@ -2191,6 +2191,8 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec);
 
 void fl_reload_feature(char* name);
 void fl_reload_all_features(void);
+extern volatile int g_render_depth;
+extern void (*g_pending_post_render)(void);
 int fl_get_pid();
 
 #if defined(_WIN32)

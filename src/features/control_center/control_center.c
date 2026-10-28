@@ -1054,7 +1054,9 @@ static void cc_subwindow_refresh(const char* filter, ListBoxInfo* lb) {
 }
 
 
+static int g_cc_width = 0, g_cc_height = 0;
 static void cc_subwindow_render(PromptState *state) {
+    g_cc_width = state->width; g_cc_height = state->height;
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = { .lb = lb };
     if (!fl_listbox_begin(&spec)) return;
@@ -1066,11 +1068,18 @@ static void cc_subwindow_render(PromptState *state) {
     fl_listbox_end();
 }
 
+static void cc_open_actions_subwindow(void) {
+    fl_subwindow(.title = "Actions", .x = (g_cc_width / 2) + 240, .y = (g_cc_height / 2) - 50, .w = 200, .h = 300, .render = cc_subwindow_render, .refresh = cc_subwindow_refresh);
+}
+static void cc_on_actions_click(void) {
+    g_pending_post_render = cc_open_actions_subwindow;
+}
 static void cc_render(PromptState *state) {
+    g_cc_width = state->width; g_cc_height = state->height;
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = { .lb = lb ,.item_height = FontSize * 2};
     fl_place_editbox();
-    fl_place_button(.name = "Actions",.x=state->width - 200,.y=state->height - 30,.w=180,.border=false,.text= "Actions Ctrl+B",.fontsize=20);
+    fl_place_button(.name = "Actions",.x=state->width - 200,.y=state->height - 30,.w=180,.border=false,.text= "Actions Ctrl+B",.fontsize=20,.on_click=cc_on_actions_click);
     if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
     FlListItemCtx ctx;
@@ -1134,13 +1143,6 @@ static void cc_render(PromptState *state) {
         }
     }
     fl_listbox_end();
-    static bool s_actions_was_clicked = false;
-    bool actions_clicked = fl_button_is_clicked("Actions");
-    if (actions_clicked && !s_actions_was_clicked) {
-          fl_subwindow(.title = "Actions", .x = (state->width / 2) + 240, .y = (state->height / 2) - 50, .w = 200, .h = 300, .render = cc_subwindow_render, .refresh = cc_subwindow_refresh);
-    }
-    s_actions_was_clicked = actions_clicked;
-
 }
 
 static bool cc_enter(const char *selection, ListBoxInfo *lb) {

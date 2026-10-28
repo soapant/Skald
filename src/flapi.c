@@ -2791,3 +2791,6 @@ void fl_reload_all_features(void) {
     snprintf(msg, sizeof(msg), "Reloaded %d feature(s)!", reloaded);
     fl_message(.message = msg, .slot = BOTTOM_CENTER, .timeout = 1.0);
 }
+
+volatile int g_render_depth = 0;
+void (*g_pending_post_render)(void) = NULL;
