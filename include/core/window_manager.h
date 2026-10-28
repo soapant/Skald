@@ -54,9 +54,6 @@ struct WindowManager {
     #else
     void* display;
     #endif
-    bool watcher_stop;
-    void* watcher_thread;
-    bool watcher_running;
 };
 
 typedef struct {

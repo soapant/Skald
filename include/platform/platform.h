@@ -89,7 +89,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 char* Platform_RunCommandAndGetOutput(char* command, int priority);
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status);
 long Platform_GetFileSize(char *filepath);
-char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback);
 char* Platform_GetActiveWindowTitle();
 char* Platform_GetActiveWindowAppId();
 char* Platform_GetIconPath(char* app_path);
