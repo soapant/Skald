@@ -6,6 +6,7 @@
 #include "core/types.h"
 #include "core/vim.h"
 #include "core/hotkey_manager.h"
+#include "helpers/helpers_hotkey.h"
 #include "platform/platform.h"
 #include "core/window_manager.h"
 #include "core/snippet_manager.h"
@@ -78,14 +79,34 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
     mev.repeat = false;
 
     if (is_btn) {
+        bool was_down = Platform_MouseStateDown(btn);
+        if (down && was_down) {
+            Platform_UpdateMouseButton(btn, false);
+            PlatformMouseEvent rev;
+            memset(&rev, 0, sizeof(rev));
+            rev.button = btn; rev.x = mev.x; rev.y = mev.y; rev.down = false; rev.repeat = false;
+            Platform_GlobalMouse_Push(&rev);
+        }
         Platform_UpdateMouseButton(btn, down);
+        if (!down && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
+            hotkey_key_up(FL_MOUSE_VK(btn));
+        }
         mev.button = btn;
         mev.down = down;
         if (GetKeyState(VK_CONTROL) & 0x8000) mev.mods |= HOTKEY_MOD_CTRL;
         if (GetKeyState(VK_MENU) & 0x8000) mev.mods |= HOTKEY_MOD_ALT;
         if (GetKeyState(VK_SHIFT) & 0x8000) mev.mods |= HOTKEY_MOD_SHIFT;
         Platform_GlobalMouse_Push(&mev);
-        if (down && btn <= FL_MOUSE_BTN_MAX) hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+        if (down && btn <= FL_MOUSE_BTN_MAX) {
+            static unsigned long long s_last_fire[FL_MOUSE_BTN_MAX + 1] = {0};
+            unsigned long long now = GetTickCount64();
+            bool rising = !was_down;
+            bool stale = (now - s_last_fire[btn]) > 200;
+            if (rising || stale) {
+                s_last_fire[btn] = now;
+                hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+            }
+        }
     } else {
         static int s_last_mx = -1;
         static int s_last_my = -1;

@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include <stdio.h>
 
 void Testing() {
     FlTimer p = fl_profile_start();
