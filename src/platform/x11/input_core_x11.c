@@ -305,7 +305,6 @@ void x11_mouse_grab_end(void) {
     for (int i = 0; i < g_x11_mouse_count; i++) {
         if (g_x11_mice[i].fd >= 0 && g_x11_mouse_grabbed[i]) {
             ioctl(g_x11_mice[i].fd, EVIOCGRAB, 0);
-            log_info("ungrabbed mouse fd=%d", (int)g_x11_mice[i].fd);
         }
         g_x11_mouse_grabbed[i] = false;
     }
@@ -371,7 +370,6 @@ void x11_mouse_grab_begin(void) {
         while (read(g_x11_mice[i].fd, &drain, sizeof(drain)) > 0) {}
         if (ioctl(g_x11_mice[i].fd, EVIOCGRAB, 1) == 0) {
             g_x11_mouse_grabbed[i] = true;
-            log_info("grabbed mouse fd=%d", (int)g_x11_mice[i].fd);
         }
     }
 }
@@ -448,12 +446,10 @@ PROFILE_START(timer);
                 g_x11_keyboards[g_x11_keyboard_count].fd = fd;
                 strncpy(g_x11_keyboards[g_x11_keyboard_count].path, full_path, 255);
                 g_x11_keyboard_count++;
-                log_warn("x11_scan_keyboards grabbed keyboard %s fd=%d", full_path, fd);
             } else if (is_mouse && g_x11_mouse_count < X11_MAX_MICE) {
                 g_x11_mice[g_x11_mouse_count].fd = fd;
                 strncpy(g_x11_mice[g_x11_mouse_count].path, full_path, 255);
                 g_x11_mouse_count++;
-                log_warn("x11_scan_keyboards opened mouse %s fd=%d (not grabbed)", full_path, fd);
             } else if (g_x11_rejected_count < X11_REJECTED_MAX) {
                 g_x11_rejected_fds[g_x11_rejected_count++] = fd;
             } else {

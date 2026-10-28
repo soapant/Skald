@@ -1232,7 +1232,6 @@ static void cc_on_close(void) {
     cc_run_pending();
 }
 
-
 static void cc_tab(ListBoxInfo *lb) {
     const CcEntry *e = cc_find(ListBoxInfo_GetSelectedText(lb));
     if (e && e->on_tab) e->on_tab();
