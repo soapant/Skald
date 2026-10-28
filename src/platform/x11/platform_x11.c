@@ -1804,10 +1804,10 @@ PROFILE_START(timer);
     int xb = x11_x11_button(button);
     if (xb == 0) { PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton"); return false; }
 #if __has_include(<X11/extensions/XTest.h>)
-    usleep(60000);
+    usleep(1000);
     XTestFakeButtonEvent(dpy, (unsigned int)xb, True, CurrentTime);
     XSync(dpy, False);
-    usleep(30000);
+    usleep(1000);
     XTestFakeButtonEvent(dpy, (unsigned int)xb, False, CurrentTime);
     XSync(dpy, False);
     PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton");
