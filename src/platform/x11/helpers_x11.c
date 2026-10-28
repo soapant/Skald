@@ -1064,7 +1064,7 @@ PROFILE_START(timer);
         use_argb = true;
     }
     Window win;
-    Pixmap bg_pm = x11_bg_image_enabled() ? x11_bg_image_tile(dpy, w, h) : None;
+    Pixmap bg_pm = (Platform_GetTransparentWindow() || !x11_bg_image_enabled()) ? None : x11_bg_image_tile(dpy, w, h);
     if (use_argb) {
         XSetWindowAttributes attrs = {0};
         unsigned int r = (bg_color >> 16) & 0xFF;
