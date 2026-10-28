@@ -110,7 +110,7 @@ void start_auto_click(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Ctrl+Alt+B", .cb=start_auto_click);
+    fl_register_hotkey(.hotkey="MouseButton4", .cb=start_auto_click,.blacklist="Fortnite");
     fl_register_hotkey(.hotkey="Alt+Shift+G", .cb=GoogleMeaning);
     fl_register_hotkey(.hotkey="Alt+Shift+F", .cb=next_image);
     fl_register_hotkey(.hotkey="E", .cb=next_image, .whitelist={"feh"});

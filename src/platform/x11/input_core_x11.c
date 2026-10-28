@@ -3,6 +3,7 @@
 #include "deps/log.h"
 #include "core/timer.h"
 #include "core/hotkey_manager.h"
+#include "helpers/helpers_hotkey.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "config.h"
@@ -71,6 +72,7 @@ static int x11_linux_button_to_mouse_impl(int code) {
     return 0;
 }
 
+static long long x11_mouse_last_fire_ms[FL_MOUSE_BTN_MAX + 1] = {0};
 static void x11_queue_mouse_event(struct input_event* ev) {
         PROFILE_START(_pt);
 if (!ev || ev->type != EV_KEY) { PROFILE_END_VAR(_pt, "x11_queue_mouse_event"); return ; }
@@ -78,7 +80,20 @@ if (!ev || ev->type != EV_KEY) { PROFILE_END_VAR(_pt, "x11_queue_mouse_event"); 
     if (btn == 0) { PROFILE_END_VAR(_pt, "x11_queue_mouse_event"); return ; }
     bool down = (ev->value != 0);
     bool repeat = (ev->value == 2);
+    bool was_down = Platform_MouseStateDown(btn);
+    if (down && was_down && !repeat) {
+        Platform_UpdateMouseButton(btn, false);
+        int rmx = 0, rmy = 0;
+        Platform_GetMousePos(&rmx, &rmy);
+        PlatformMouseEvent rev;
+        rev.button = btn; rev.x = rmx; rev.y = rmy; rev.mods = remap_current_mods();
+        rev.down = false; rev.repeat = false; rev.t_us = 0;
+        Platform_GlobalMouse_Push(&rev);
+    }
     Platform_UpdateMouseButton(btn, down);
+    if (!down && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
+        hotkey_key_up(FL_MOUSE_VK(btn));
+    }
     int mx = 0, my = 0;
     Platform_GetMousePos(&mx, &my);
     PlatformMouseEvent mev;
@@ -91,7 +106,13 @@ if (!ev || ev->type != EV_KEY) { PROFILE_END_VAR(_pt, "x11_queue_mouse_event"); 
     mev.t_us = 0;
     Platform_GlobalMouse_Push(&mev);
     if (down && !repeat && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
-        hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+        long long now_ms = (long long)ev->time.tv_sec * 1000LL + ev->time.tv_usec / 1000LL;
+        bool rising = !was_down;
+        bool stale = (now_ms - x11_mouse_last_fire_ms[btn]) > 200;
+        if (rising || stale) {
+            x11_mouse_last_fire_ms[btn] = now_ms;
+            hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+        }
     }
 }
 
