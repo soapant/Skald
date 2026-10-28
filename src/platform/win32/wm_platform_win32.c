@@ -1,5 +1,6 @@
 #include "platform/wm_platform.h"
 #include "platform/platform.h"
+#include "core/flapi.h"
 #include "platform/input_state.h"
 #include "core/window_manager.h"
 #include "core/remap_manager.h"
@@ -139,17 +140,20 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
         }
         Popup* mouse_top = WindowManager_GetTopPopup(wm);
         if (mouse_changed && mouse_top && mouse_top->vtable && mouse_top->vtable->on_render) {
+            g_render_depth++;
             mouse_top->vtable->on_render(mouse_top);
+            g_render_depth--;
+            if (g_pending_post_render) { g_pending_post_render(); g_pending_post_render = NULL; }
         }
         long long now = Platform_GetWallClockMs();
         if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
             last_tick = now;
             Popup* top = WindowManager_GetTopPopup(wm);
-            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            if (top && top->vtable && top->vtable->on_render) { g_render_depth++; top->vtable->on_render(top); g_render_depth--; if (g_pending_post_render) { g_pending_post_render(); g_pending_post_render = NULL; } }
         }
         if (PromptController_PollSequenceTimeout()) {
             Popup* top = WindowManager_GetTopPopup(wm);
-            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            if (top && top->vtable && top->vtable->on_render) { g_render_depth++; top->vtable->on_render(top); g_render_depth--; if (g_pending_post_render) { g_pending_post_render(); g_pending_post_render = NULL; } }
         }
     }
     if (popup->manager == NULL) {
