@@ -94,6 +94,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
                         EditPopupConfirmCallback on_confirm, void* user_data);
 void EditPopup_SetPlaceholder(Popup* popup, const char* placeholder);
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec);
+CloseCallback PromptPopup_TakeOnClose(Popup* p);
 Popup* SearchPopup_Create(WindowManager* wm, const char* title,
                           int x, int y, int w, int h,
                           EditPopupConfirmCallback on_confirm, void* user_data);
