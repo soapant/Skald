@@ -113,6 +113,9 @@ void Checkbox_ResetAll(void) {
         g_checkboxes[i].clicked = false;
         g_checkboxes[i].hovered = false;
         g_checkboxes[i].was_down = false;
+        g_checkboxes[i].on_click = NULL;
+        g_checkboxes[i].on_hover = NULL;
+        g_checkboxes[i].render = NULL;
     }
     PROFILE_END_VAR(_pt, "Checkbox_ResetAll");
 }

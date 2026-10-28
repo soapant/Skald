@@ -1084,6 +1084,7 @@ static void cc_on_actions_render(FlRect rect) {
     char buf[200];
     snprintf(buf,sizeof(buf),"Actions %s",ActionsHotkey);
     fl_draw_text(.x=rect.x, .y=rect.y - 5, .text=buf, .align="LEFT");
+    fl_draw_rect(.radius=6,.x=rect.x + (rect.w / 2) + 10,.y=rect.y,.w=rect.w / 2,.h=rect.h);
 }
 static void cc_render(PromptState *state) {
     g_cc_width = state->width; g_cc_height = state->height;
