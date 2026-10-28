@@ -508,59 +508,6 @@ static void* cc_prewarm_app_cache(void* arg) {
     return NULL;
 }
 
-static bool cc_app_ext_allowed(const char *name) {
-#if defined(_WIN32)
-    static const char *exts[] = {"lnk", "exe", "url", NULL};
-#else
-    static const char *exts[] = {"desktop", NULL};
-#endif
-    const char *dot = strrchr(name, '.');
-    if (!dot || !dot[1]) return false;
-    for (int i = 0; exts[i]; i++) {
-        if (strcasecmp(dot + 1, exts[i]) == 0) return true;
-    }
-    return false;
-}
-
-static void cc_app_cache_drop(const char *full_path) {
-    for (size_t i = 0; i < g_apps.count; i++) {
-        if (strcmp(g_apps.files[i].path, full_path) == 0) {
-            for (size_t k = i; k + 1 < g_apps.count; k++) {
-                g_apps.files[k] = g_apps.files[k + 1];
-                if (k + 1 < g_app_icons_cap) memcpy(g_app_icons[k], g_app_icons[k + 1], MAX_PATH);
-            }
-            g_apps.count--;
-            return;
-        }
-    }
-}
-
-static void cc_app_cache_add(const char *full_path) {
-    for (size_t i = 0; i < g_apps.count; i++) {
-        if (strcmp(g_apps.files[i].path, full_path) == 0) return;
-    }
-    const char *base = strrchr(full_path, '/');
-    if (!base) base = strrchr(full_path, '\\');
-    base = base ? base + 1 : full_path;
-    if (!cc_app_ext_allowed(base)) return;
-    size_t before = g_apps.count;
-    ListOfFiles tmp = {0};
-    fl_get_all_files_from_dir(full_path, NULL, &tmp, NULL, true, FL_DIR_WALK_UNLIMITED);
-    if (tmp.count > 0) {
-        if (g_apps.count >= g_apps.capacity && !cc_app_cache_grow(&g_apps)) { free(tmp.files); return; }
-        if (!cc_app_icons_reserve(g_apps.count + 1)) { free(tmp.files); return; }
-        g_apps.files[g_apps.count++] = tmp.files[0];
-        cc_resolve_app_icon(g_apps.count - 1);
-        tmp.count = 0;
-    }
-    if (tmp.files) free(tmp.files);
-    if (g_apps.count != before) {
-        cc_save_app_cache();
-        printf("[control_center] incremental add '%s' count=%zu\n", base, g_apps.count);
-        fflush(stdout);
-    }
-}
-
 #define CC_APP_MAP_SLOTS 2048
 static char g_cc_app_map_key[CC_APP_MAP_SLOTS][128];
 static char g_cc_app_map_path[CC_APP_MAP_SLOTS][MAX_PATH];
@@ -1078,15 +1025,30 @@ static void cc_on_actions_render(FlRect rect) {
     char buf[200];
     char* hotkey_str = strdup(ActionsHotkey);
     char *plus = strchr(hotkey_str, '+');
+    FlColor bg_color = FL_DARK_GRAY;
     *plus = ' ';
     fl_draw_text(.x=rect.x + 20, .y=rect.y - 5, .text="Actions", .align="LEFT",.color=FL_GRAY,.fontsize=16);
+    if (fl_button_hovered("Actions")) {
+        bg_color = FL_GRAY;
+        fl_draw_rect(
+            .x = rect.x,
+            .y = rect.y,
+            .w = rect.w,
+            .h = rect.h,
+            .filled = true,
+            .color = bg_color,
+            .radius = 6
+        );
+    } else {
+      bg_color = FL_DARK_GRAY;
+    }
     fl_draw_rect(
-        .x = rect.x + (rect.w / 2),
+        .x = rect.x + (rect.w / 2) + 10,
         .y = rect.y,
-        .w = rect.w - 20,
-        .h = rect.h,
+        .w = 75,
+        .h = rect.h - 5,
         .filled = true,
-        .color = FL_DARK_GRAY,
+        .color = bg_color,
         .radius = 6
     );
     fl_draw_text(.x=rect.x + 100, .y=rect.y - 7, .text=hotkey_str, .align="LEFT",.fontsize=20);
