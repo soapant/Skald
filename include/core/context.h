@@ -31,8 +31,6 @@ typedef struct {
     WindowHandle hGlobalTrayWnd;
     WindowHandle hPopupWnd;
     WindowHandle hDisplayMessage;
-    WindowHandle g_hEditPopup;
-    EditPopupData* g_EditData;
     bool selection_complete;
     bool editbox_placed;
     char output_buffer[256];
@@ -42,9 +40,6 @@ typedef struct {
     const char* title;
     int last_index;
     PromptCallbacks callbacks;
-#if !defined(_WIN32)
-    Display* g_font_dpy;
-#endif
 } WindowContext;
 
 typedef struct {

@@ -198,7 +198,7 @@ PlatformWidget *widget = (PlatformWidget *)GetWindowLongPtrA(hwnd, GWLP_USERDATA
     }
     case WM_NCHITTEST: {
         if (widget && widget->on_click) return HTCLIENT;
-        return HTTRANSPARENT;
+        return 0;
     }
     case WM_LBUTTONDOWN: {
         if (widget && widget->on_click) widget_queue_click(widget->on_click);
