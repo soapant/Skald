@@ -7,6 +7,5 @@ nob.exe.old
 nob_linux_window_build
 nob_linux_window_build.exe
 nob_linux_window_build.exe.old
-*.md
 Doxyfile
 /docs/xml
