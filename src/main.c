@@ -6,7 +6,6 @@
 #include "deps/log.h"
 #include "config.h"
 #include "platform/platform.h"
-#include "core/feature_data.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 #include "core/history.h"
@@ -41,7 +40,6 @@ int main() {
   Platform_InitializeTrayIcon();
   FlintContext_Get()->feature_history = NULL;
   sh_new_strdup(FlintContext_Get()->feature_history);
-  InitFeatureDataSystem();
   History_Init();
   Platform_InitUI();
   Platform_PrewarmBackgroundPixmap();
@@ -72,7 +70,6 @@ int main() {
   Platform_CleanupDisplaySafe();
 
   Platform_CleanupPlatformResources();
-  CleanupFeatureDataSystem();
   History_Shutdown();
 
   FlintContext* _ctx = FlintContext_Get();
