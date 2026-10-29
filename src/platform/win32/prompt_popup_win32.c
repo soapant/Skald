@@ -28,31 +28,6 @@ static void CALLBACK ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD t
     }
 }
 
-static void CALLBACK RestoreFocusProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD time) {
-        PROFILE_START(_pt);
-(void)hwnd; (void)msg; (void)time;
-    KillTimer(NULL, id);
-    if (g_pending_restore && IsWindow(g_pending_restore)) {
-        HWND cur = GetForegroundWindow();
-        if (cur != g_pending_restore) {
-            HWND target = g_pending_restore;
-            if (IsIconic(target)) ShowWindow(target, SW_RESTORE);
-            DWORD fgTid = cur ? GetWindowThreadProcessId(cur, NULL) : 0;
-            DWORD targetTid = GetWindowThreadProcessId(target, NULL);
-            DWORD curTid = GetCurrentThreadId();
-            if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, TRUE);
-            if (targetTid && targetTid != curTid) AttachThreadInput(targetTid, curTid, TRUE);
-            AllowSetForegroundWindow(ASFW_ANY);
-            SetForegroundWindow(target);
-            SetActiveWindow(target);
-            BringWindowToTop(target);
-            if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, FALSE);
-            if (targetTid && targetTid != curTid) AttachThreadInput(targetTid, curTid, FALSE);
-        }
-        g_pending_restore = NULL;
-    }
-}
-
 static bool is_popup_class(HWND hwnd) {
         PROFILE_START(_pt);
 if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "is_popup_class"); return false; }
