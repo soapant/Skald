@@ -166,7 +166,6 @@ if (!title || !*title) { log_error("title is NULL"); return false; }
             char *b = a + strlen(a);
             while (b > a && (iscntrl((unsigned char)b[-1]) || isspace((unsigned char)b[-1]))) *--b = '\0';
             if (!strcmp(a, title) || !strcasecmp(a, title)) {
-                char *id_pos = NULL;
                 const char *search = p - 4000;
                 if (search < json) search = json;
                 const char *last_id = NULL;

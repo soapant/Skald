@@ -39,7 +39,6 @@ typedef struct {
      ListBoxInfo listbox;
      bool        has_listbox;
      WindowHandle hListBox;
-     WindowHandle hEditControl;
      WindowHandle hPopupWnd;
 } WinPromptState;
 #endif

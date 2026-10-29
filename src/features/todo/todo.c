@@ -20,26 +20,11 @@ typedef struct {
     void (*handler)(const char*);
 } GenericFlagEntry;
 
-typedef struct {
-    const char* open_bracket;
-    const char* close_bracket; const char* tag_separator;
-    const char* tag_prefix;
-    const char* alias_separator;
-} TagFormatConfig;
-
 #define TODO_TAG_OPEN "["
 #define TODO_TAG_CLOSE "]"
 #define TODO_TAG_SEPARATOR "|"
 #define TODO_ENTRY_DELIMITER "||"
 
-const TagFormatConfig TODO_TAG_FORMAT = {
-    "[",
-    "]",
-    "|",
-    "",
-    " "
-};
-#define TODO_TAG_FORMAT TODO_TAG_FORMAT
 
 #define TODO_CONFIG_MASTER \
     X("-pf", "Flint",         "Flint",         RGB(137, 180, 250), true) \
@@ -71,7 +56,6 @@ const size_t TODO_CONFIG_FLAGS_COUNT = ARRAY_LEN(TODO_CONFIG_FLAGS);
 const TodoConfigEntry TODO_DICT[] = {
     TODO_CONFIG_MASTER
 };
-const size_t TODO_DICT_COUNT = ARRAY_LEN(TODO_DICT);
 #undef X
 
 ColorRef GetTagColor(const char* tag_text) {

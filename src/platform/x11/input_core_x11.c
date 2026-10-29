@@ -153,7 +153,6 @@ for (int i = 0; i < g_x11_rejected_count; i++) {
 bool g_x11_ctrl_held = false;
 bool g_x11_alt_held = false;
 bool g_x11_shift_held = false;
-pthread_mutex_t g_input_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;

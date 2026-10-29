@@ -242,7 +242,6 @@ typedef struct {
     int month_index;
     unsigned long long last_total_rx;
     double rate_bps;
-    char last_iface[64];
     int have_baseline;
 } NetUsage;
 
