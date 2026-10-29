@@ -55,7 +55,7 @@ typedef struct {
 
     FlEditboxMeasureFn measure;
     void* measure_user;
-} FlEditboxSpec;
+} EditboxSpec;
 
 typedef struct {
     int scroll;
@@ -69,7 +69,7 @@ typedef struct {
     bool draw_selection;
     int insert_x;
     bool draw_insert_caret;
-} FlEditboxLayout;
+} EditboxLayout;
 
 typedef struct {
     PromptState* state;
@@ -89,13 +89,13 @@ typedef struct {
     FontHandle font;
 } EditboxInit;
 
-void Editbox_BuildSpec(FlEditboxSpec* out, const EditboxInit* in);
+void Editbox_BuildSpec(EditboxSpec* out, const EditboxInit* in);
 int  Editbox_CaretY(int box_top, int ascent, int descent);
 void Editbox_ResolveSelection(PromptState* state, int text_len, bool prefer_state,
                               int* out_start, int* out_end, bool* out_has);
-int  Editbox_ScrollOffset(const FlEditboxSpec* spec);
-void Editbox_Layout(FlEditboxSpec* spec, FlEditboxLayout* out);
-void Editbox_Draw(const FlEditboxSpec* spec, const FlEditboxLayout* layout, int parts);
-void Editbox_Render(FlEditboxSpec* spec, FlEditboxLayout* out);
+int  Editbox_ScrollOffset(const EditboxSpec* spec);
+void Editbox_Layout(EditboxSpec* spec, EditboxLayout* out);
+void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int parts);
+void Editbox_Render(EditboxSpec* spec, EditboxLayout* out);
 
 #endif

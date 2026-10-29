@@ -423,7 +423,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     ebi.text_color = rgb_to_hex(COLOR_TEXT);
     ebi.font = spec->font;
 
-    FlEditboxSpec eb;
+    EditboxSpec eb;
     Editbox_BuildSpec(&eb, &ebi);
 
     Editbox_Render(&eb, NULL);

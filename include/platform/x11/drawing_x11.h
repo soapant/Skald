@@ -41,7 +41,7 @@ int x11_font_cursor_y_of(FontHandle font, int box_top);
 typedef struct {
     Display* dpy;
     XftFont* xf;
-} FlEditboxX11Metrics;
+} EditboxX11Metrics;
 
 int x11_editbox_measure(const char* text, int len, void* user);
 #endif

@@ -223,7 +223,6 @@ static const CcScanPath ListOfProgramPaths[] = {
     { "C:\\Program Files\\Steam\\steamapps\\common", 5 },
 #else
     { "/usr/share/applications", FL_DIR_WALK_UNLIMITED },
-    { "/home/win/.local/share/applications", 6},
     { "/home/win", 6 },
 #endif
 };

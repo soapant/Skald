@@ -13,7 +13,7 @@ typedef struct {
     int cursor;
 } HistoryList;
 
-static FlintMap* g_history = NULL;
+static HashMap* g_history = NULL;
 
 static void free_history_list(void* v) {
     HistoryList* hl = (HistoryList*)v;

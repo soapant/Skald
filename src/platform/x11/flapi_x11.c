@@ -584,7 +584,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     if (cursor < 0) cursor = 0;
     if (cursor > text_len) cursor = text_len;
 
-    FlEditboxX11Metrics metrics = { dpy, xf };
+    EditboxX11Metrics metrics = { dpy, xf };
     int cursor_x = 0;
     int text_w = 0;
     if (xf) {
@@ -615,7 +615,7 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     ebi.text_color = rgb_to_hex(COLOR_TEXT);
     ebi.font = fh;
 
-    FlEditboxSpec eb;
+    EditboxSpec eb;
     Editbox_BuildSpec(&eb, &ebi);
     eb.measure = x11_editbox_measure;
     eb.measure_user = &metrics;

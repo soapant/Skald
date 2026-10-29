@@ -149,8 +149,8 @@ PROFILE_START(timer);
     bool has_sel = false;
     Editbox_ResolveSelection(NULL, text_len, false, &sel_start, &sel_end, &has_sel);
 
-    FlEditboxX11Metrics metrics = { dpy, xf };
-    FlEditboxSpec eb;
+    EditboxX11Metrics metrics = { dpy, xf };
+    EditboxSpec eb;
     memset(&eb, 0, sizeof(eb));
     eb.text = data->text ? data->text : "";
     eb.text_len = text_len;
