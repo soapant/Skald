@@ -12,11 +12,11 @@
 #include "core/window_manager.h"
 #include "core/checkbox.h"
 #include "../../nob.h"
-#include "core/flapi.h"
 #undef copy_file
 #undef mkdir_if_not_exists
 #undef read_entire_dir
 #undef copy_directory_recursively
+#include "core/cc_registry.h"
 #include "core/widget_registry.h"
 #include "core/cap_registry.h"
 #include "core/hotkey_manager.h"
@@ -80,7 +80,7 @@ static void retire_old_lib(LibHandle handle, const char* uniq, const char* owner
         strncpy(r.uniq, uniq, sizeof(r.uniq) - 1);
         r.uniq[sizeof(r.uniq) - 1] = '\0';
     }
-    r.owner_gen = fl_widget_current_generation();
+    r.owner_gen = widget_current_generation();
     r.owner[0] = '\0';
     if (owner && owner[0]) {
         strncpy(r.owner, owner, sizeof(r.owner) - 1);
@@ -110,7 +110,7 @@ static void sweep_retired_libs(void) {
     int n = 0;
     for (int i = 0; i < g_retired_count; i++) {
         bool alive = false;
-        if (g_retired[i].owner[0] && fl_widget_owner_active(g_retired[i].owner)) {
+        if (g_retired[i].owner[0] && widget_owner_active(g_retired[i].owner)) {
             alive = true;
         } else if (wm && g_retired[i].npins >= 0) {
             for (int a = 0; a < g_retired[i].npins && !alive; a++) {
@@ -136,23 +136,23 @@ static void sweep_retired_libs(void) {
 
 #if !defined(_WIN32)
 #include <pthread.h>
-static pthread_mutex_t g_fl_mutex;
-static pthread_once_t g_fl_once = PTHREAD_ONCE_INIT;
-static void fl_mutex_init(void) {
+static pthread_mutex_t g_mutex;
+static pthread_once_t g_once = PTHREAD_ONCE_INIT;
+static void mutex_init(void) {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&g_fl_mutex, &attr);
+    pthread_mutex_init(&g_mutex, &attr);
     pthread_mutexattr_destroy(&attr);
 }
-#define FL_LOCK() do { pthread_once(&g_fl_once, fl_mutex_init); pthread_mutex_lock(&g_fl_mutex); } while (0)
-#define FL_UNLOCK() pthread_mutex_unlock(&g_fl_mutex)
+#define LOCK() do { pthread_once(&g_once, mutex_init); pthread_mutex_lock(&g_mutex); } while (0)
+#define UNLOCK() pthread_mutex_unlock(&g_mutex)
 #else
-static CRITICAL_SECTION g_fl_cs;
-static bool g_fl_cs_inited = false;
-static void fl_lock_init(void) { if (!g_fl_cs_inited) { InitializeCriticalSection(&g_fl_cs); g_fl_cs_inited = true; } }
-#define FL_LOCK() do { fl_lock_init(); EnterCriticalSection(&g_fl_cs); } while(0)
-#define FL_UNLOCK() LeaveCriticalSection(&g_fl_cs)
+static CRITICAL_SECTION g_cs;
+static bool g_cs_inited = false;
+static void lock_init(void) { if (!g_cs_inited) { InitializeCriticalSection(&g_cs); g_cs_inited = true; } }
+#define LOCK() do { lock_init(); EnterCriticalSection(&g_cs); } while(0)
+#define UNLOCK() LeaveCriticalSection(&g_cs)
 #endif
 
 static bool ends_with(const char* str, const char* suffix) {
@@ -455,10 +455,10 @@ static bool load_named(const char *dir, const char *ext, const char *name) {
 }
 
 bool FeatureLoader_LoadAllFromDir(const char* dir) {
-    FL_LOCK();
+    LOCK();
     const char* ext = Platform_LibExtension();
     DIR* d = opendir(dir);
-    if (!d) { FL_UNLOCK(); return false; }
+    if (!d) { UNLOCK(); return false; }
 
     char names[MAX_FEATURES][64];
     int n_names = 0;
@@ -480,7 +480,7 @@ bool FeatureLoader_LoadAllFromDir(const char* dir) {
     FeatureManifest* mans = (FeatureManifest*)calloc((size_t)n_names, sizeof(FeatureManifest));
     bool* loaded = (bool*)calloc((size_t)n_names, sizeof(bool));
     if (!mans || !loaded) {
-        free(mans); free(loaded); FL_UNLOCK(); return false;
+        free(mans); free(loaded); UNLOCK(); return false;
     }
     for (int i = 0; i < n_names; i++) manifest_parse(names[i], &mans[i]);
 
@@ -526,21 +526,21 @@ bool FeatureLoader_LoadAllFromDir(const char* dir) {
 
     free(mans);
     free(loaded);
-    FL_UNLOCK();
+    UNLOCK();
 log_info("FeatureLoader_LoadAllFromDir completed");
     return true;
 }
 
 bool FeatureLoader_Init(void) {
-    FL_LOCK();
+    LOCK();
     g_feature_count = 0;
-    FL_UNLOCK();
+    UNLOCK();
     g_feature_init_us = 0.0;
     g_feature_init_count = 0;
     FeatureLoader_LoadAllFromDir("build/features");
-    FL_LOCK();
+    LOCK();
     int cnt = g_feature_count;
-    FL_UNLOCK();
+    UNLOCK();
     log_info("init done, %d features loaded (hot reload dir: build/features)", cnt);
     if (DoTimeDebugs) {
         char label[96];
@@ -551,7 +551,7 @@ bool FeatureLoader_Init(void) {
 }
 
 void FeatureLoader_Shutdown(void) {
-    FL_LOCK();
+    LOCK();
     for (int i=0;i<g_feature_count;i++) {
         if (g_features[i].handle) {
             typedef void (*ShutdownFn)(void);
@@ -560,8 +560,8 @@ void FeatureLoader_Shutdown(void) {
             cap_purge_owner(NULL, g_features[i].path);
             hotkey_purge_owner(NULL, g_features[i].path);
             snippet_purge_owner(NULL, g_features[i].path);
-            fl_widget_purge_owner(NULL, g_features[i].path, fl_widget_bump_generation());
-            fl_cc_registry_purge_owner(NULL, g_features[i].path);
+            widget_purge_owner(NULL, g_features[i].path, widget_bump_generation());
+            cc_registry_purge_owner(NULL, g_features[i].path);
             Platform_UnloadLibrary(g_features[i].handle);
             if (g_features[i].uniq[0]) remove(g_features[i].uniq);
         }
@@ -572,13 +572,13 @@ void FeatureLoader_Shutdown(void) {
     }
     g_retired_count = 0;
     g_feature_count = 0;
-    FL_UNLOCK();
+    UNLOCK();
 log_info("FeatureLoader_Shutdown completed");
 }
 
 void FeatureLoader_Reload(const char* name) {
     if (!name) return FeatureLoader_ReloadAll();
-    FL_LOCK();
+    LOCK();
     sweep_retired_libs();
     for (int i=0;i<g_feature_count;i++) {
         if (strcmp(g_features[i].name, name)==0) {
@@ -590,13 +590,13 @@ void FeatureLoader_Reload(const char* name) {
             snprintf(uniquepath, sizeof(uniquepath), "%s.hot%d", path_copy, ++g_reload_seq);
             if (!copy_file(path_copy, uniquepath)) {
                 log_error("reload %s: copy failed (keeping old)", name);
-                FL_UNLOCK(); return;
+                UNLOCK(); return;
             }
             LibHandle h = Platform_LoadLibrary(uniquepath);
             if (!h) {
                 log_error("reload %s failed: %s (keeping old)", name, Platform_GetLoadError());
                 remove(uniquepath);
-                FL_UNLOCK(); return;
+                UNLOCK(); return;
             }
             typedef void (*InitFn)(void);
             InitFn init = (InitFn)Platform_GetSymbol(h, "FlintFeatureInit");
@@ -605,13 +605,13 @@ void FeatureLoader_Reload(const char* name) {
                 log_error("reload %s: no init symbol, keeping old", name);
                 Platform_UnloadLibrary(h);
                 remove(uniquepath);
-                FL_UNLOCK(); return;
+                UNLOCK(); return;
             }
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(old, "FlintFeatureShutdown");
             if (shut) shut();
             Checkbox_ResetAll();
-            unsigned retire_gen = fl_widget_current_generation();
+            unsigned retire_gen = widget_current_generation();
             char retire_owner[512];
             retire_owner[0] = '\0';
             if (g_features[i].uniq[0]) {
@@ -622,23 +622,23 @@ void FeatureLoader_Reload(const char* name) {
             retire_owner[sizeof(retire_owner)-1] = '\0';
             retire_old_lib(old, g_features[i].uniq, retire_owner);
 #ifdef _WIN32
-            FL_UNLOCK();
+            UNLOCK();
             Sleep(100);
-            FL_LOCK();
+            LOCK();
             if (i >= g_feature_count || strcmp(g_features[i].name, name)!=0) {
                 Platform_UnloadLibrary(h);
                 remove(uniquepath);
-                FL_UNLOCK();
+                UNLOCK();
                 char file2[MaxFeatures];
                 snprintf(file2, sizeof(file2), "%s%s", name, Platform_LibExtension());
-                FL_LOCK();
+                LOCK();
                 bool ok = load_single("build/features", file2);
-                FL_UNLOCK();
+                UNLOCK();
                 (void)ok;
                 return;
             }
 #endif
-            fl_widget_bump_generation();
+            widget_bump_generation();
             log_info("feature_reload: %s (constructor ran at dlopen)", name);
             g_features[i].handle = h;
             strncpy(g_features[i].path, path_copy, sizeof(g_features[i].path)-1);
@@ -648,11 +648,11 @@ void FeatureLoader_Reload(const char* name) {
             cap_purge_owner(retire_owner, path_copy);
             hotkey_purge_owner(retire_owner, path_copy);
             snippet_purge_owner(retire_owner, path_copy);
-            fl_widget_purge_owner(retire_owner, path_copy, retire_gen);
-            fl_cc_registry_purge_owner(retire_owner, path_copy);
+            widget_purge_owner(retire_owner, path_copy, retire_gen);
+            cc_registry_purge_owner(retire_owner, path_copy);
             sweep_retired_libs();
             log_info("reloaded %s", name);
-            FL_UNLOCK();
+            UNLOCK();
             return;
         }
     }
@@ -660,14 +660,14 @@ void FeatureLoader_Reload(const char* name) {
     snprintf(file, sizeof(file), "%s%s", name, Platform_LibExtension());
     bool ok = load_single("build/features", file);
     (void)ok;
-    FL_UNLOCK();
+    UNLOCK();
 log_info("FeatureLoader_Reload completed");
     return;
 }
 
 void FeatureLoader_Unload(const char* name) {
     if (!name) return;
-    FL_LOCK();
+    LOCK();
     for (int i=0;i<g_feature_count;i++) {
         if (strcmp(g_features[i].name, name)==0) {
             typedef void (*ShutdownFn)(void);
@@ -685,29 +685,29 @@ void FeatureLoader_Unload(const char* name) {
             strncpy(owner_path, g_features[i].path, sizeof(owner_path)-1);
             owner_path[sizeof(owner_path)-1] = '\0';
             retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
-            unsigned purge_gen = fl_widget_current_generation();
-            fl_widget_bump_generation();
+            unsigned purge_gen = widget_current_generation();
+            widget_bump_generation();
             cap_purge_owner(loaded, owner_path);
             hotkey_purge_owner(loaded, owner_path);
             snippet_purge_owner(loaded, owner_path);
-            fl_widget_purge_owner(loaded, owner_path, purge_gen);
-            fl_cc_registry_purge_owner(loaded, owner_path);
+            widget_purge_owner(loaded, owner_path, purge_gen);
+            cc_registry_purge_owner(loaded, owner_path);
             sweep_retired_libs();
             for (int k=i;k+1<g_feature_count;k++) g_features[k]=g_features[k+1];
             g_feature_count--;
             log_info("unloaded %s", name);
-            FL_UNLOCK();
+            UNLOCK();
             return;
         }
     }
-    FL_UNLOCK();
+    UNLOCK();
 log_info("FeatureLoader_Unload completed");
 }
 
 void FeatureLoader_ReloadAll(void) {
     PROFILE_START(timer1);
 
-    FL_LOCK();
+    LOCK();
     for (int i = 0; i < g_feature_count; i++) {
         if (g_features[i].handle) {
             typedef void (*ShutdownFn)(void);
@@ -730,32 +730,32 @@ void FeatureLoader_ReloadAll(void) {
     }
     g_feature_count = 0;
     sweep_retired_libs();
-    FL_UNLOCK();
-    fl_widget_bump_generation();
+    UNLOCK();
+    widget_bump_generation();
     FeatureLoader_Init();
-    FL_LOCK();
+    LOCK();
     for (int i = 0; i < g_retired_count; i++) {
-        if (g_retired[i].owner[0]) { cap_purge_owner(g_retired[i].owner, NULL); hotkey_purge_owner(g_retired[i].owner, NULL); snippet_purge_owner(g_retired[i].owner, NULL); fl_widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen); fl_cc_registry_purge_owner(g_retired[i].owner, NULL); }
+        if (g_retired[i].owner[0]) { cap_purge_owner(g_retired[i].owner, NULL); hotkey_purge_owner(g_retired[i].owner, NULL); snippet_purge_owner(g_retired[i].owner, NULL); widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen); cc_registry_purge_owner(g_retired[i].owner, NULL); }
     }
     sweep_retired_libs();
-    FL_UNLOCK();
+    UNLOCK();
 
         log_info("FeatureLoader_ReloadAll completed");
 PROFILE_END_VAR(timer1, "Hot Reload");
 }
 
 void FeatureLoader_Lock(void) {
-    FL_LOCK();
+    LOCK();
 }
 
 bool FeatureLoader_TryLock(void) {
 #if defined(_WIN32)
-    return TryEnterCriticalSection(&g_fl_cs) != 0;
+    return TryEnterCriticalSection(&g_cs) != 0;
 #else
-    return pthread_mutex_trylock(&g_fl_mutex) == 0;
+    return pthread_mutex_trylock(&g_mutex) == 0;
 #endif
 }
 
 void FeatureLoader_Unlock(void) {
-    FL_UNLOCK();
+    UNLOCK();
 }

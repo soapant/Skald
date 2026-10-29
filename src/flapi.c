@@ -2270,144 +2270,27 @@ static void fl_widget_relayout(void) {
 }
 
 FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
-    PROFILE_START(_pt);
-    if (!spec || !spec->name || !spec->name[0]) {
-    PROFILE_START(_pt);
-        log_warn("fl_widget_create: name is required");
-        PROFILE_END_VAR(_pt, "api:fl_widget_create");
-        { PROFILE_END_VAR(_pt, "f"); return NULL; }
-    }
-    FlWidget *widget = fl_widget_find_by_name(spec->name);
-    bool fresh = (widget == NULL);
-    if (fresh) {
-        if (g_fl_widget_count >= FL_WIDGET_MAX) {
-    PROFILE_START(_pt);
-            log_warn("fl_widget_create: widget table full");
-            PROFILE_END_VAR(_pt, "api:fl_widget_create");
-            { PROFILE_END_VAR(_pt, "f"); return NULL; }
-        }
-        widget = (FlWidget *)calloc(1, sizeof(*widget));
-        if (!widget) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_widget_create"); { PROFILE_END_VAR(_pt, "f"); return NULL; } }
-        snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
-        widget->seq = g_fl_widget_seq++;
-        g_fl_widgets[g_fl_widget_count++] = widget;
-    }
-
-    {
-        char owner_path[512];
-        fl_widget_owner_path(__builtin_return_address(0), owner_path, sizeof(owner_path));
-        if (owner_path[0]) {
-            if (widget->owner) free(widget->owner);
-            widget->owner = strdup(owner_path);
-        }
-    }
-
-    widget->gen = g_fl_widget_gen;
-    widget->has_bg = spec->color != 0;
-    widget->bg_color = widget->has_bg ? spec->color : 0;
-    widget->no_bg = spec->no_bg;
-    widget->auto_w = spec->w <= 0;
-    widget->auto_h = spec->h <= 0;
-    widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
-    if (fresh || !widget->auto_w) widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
-    if (fresh || !widget->auto_h) widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
-    widget->gap_override = spec->gap > 0 ? spec->gap : 0;
-    widget->fps = spec->fps ? spec->fps : 1;
-    widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT && spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT) ? spec->slot : FL_WIDGET_SLOT_BOTTOM_LEFT;
-    widget->order = spec->order;
-    widget->order_set = spec->order > 0;
-    widget->render = spec->render;
-    widget->on_click = spec->on_click;
-    widget->on_hover = spec->on_hover;
-    widget->free_pos = (spec->slot == FL_WIDGET_FREE);
-    widget->frame = 0;
-    widget->created_at = fl_start_timer_platform();
-
-    if (widget->free_pos) {
-        int x = spec->x;
-        int y = spec->y;
-        if (x < 0 && y < 0) {
-            int mx = 0, my = 0, mw = 1920, mh = 1080;
-            fl_widget_monitor_geometry(&mx, &my, &mw, &mh);
-            x = mx + (mw - widget->w) / 2;
-            y = my + (mh - widget->h) / 2;
-        }
-        fl_widget_apply_geometry(widget, x, y);
-        Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
-    } else {
-        fl_widget_relayout();
-        Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
-    }
-
-    if (!Platform_Widget_IsValid(widget->win)) {
-    }
-    PROFILE_END_VAR(_pt, "api:fl_widget_create");
-    return widget;
+    return widget_create(spec);
 }
 
 bool fl_widget_valid(FlWidget *widget) {
-    PROFILE_START(_pt);
-    { PROFILE_END_VAR(_pt, "fl_widget_valid"); return widget != NULL; }
+    return widget_valid(widget);
 }
 
 FlPos fl_get_widget_pos(const char *name) {
-    PROFILE_START(_pt);
-    FlPos r = {0, 0};
-    FlWidget *w = fl_widget_find_by_name(name);
-    if (w && w->x < 0x7fffffff) {
-        r.x = w->x + w->w / 2;
-        r.y = w->y + w->h / 2;
-    }
-    PROFILE_END_VAR(_pt, "api:fl_get_widget_pos");
-    return r;
-}
-
-static void fl_widget_apply_show(void *ud) {
-    PROFILE_START(_pt);
-    FlWidget *widget = (FlWidget *)ud;
-    if (widget) Platform_Widget_Show(widget->win);
-    PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_show");
-}
-
-static void fl_widget_apply_hide(void *ud) {
-    PROFILE_START(_pt);
-    FlWidget *widget = (FlWidget *)ud;
-    if (widget) Platform_Widget_Hide(widget->win);
-    PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_hide");
+    return widget_get_pos(name);
 }
 
 void fl_widget_show(FlWidget *widget) {
-    PROFILE_START(_pt);
-    if (!fl_widget_valid(widget)) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_widget_show"); { PROFILE_END_VAR(_pt, "f"); return ; } }
-    if (widget->mapped) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_widget_show"); { PROFILE_END_VAR(_pt, "f"); return ; } }
-    widget->mapped = true;
-    Platform_RenderThread_Post(fl_widget_apply_show, widget);
-    PROFILE_END_VAR(_pt, "api:fl_widget_show");
+    widget_show(widget);
 }
 
 void fl_widget_hide(FlWidget *widget) {
-    PROFILE_START(_pt);
-    if (!fl_widget_valid(widget)) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_widget_hide"); { PROFILE_END_VAR(_pt, "f"); return ; } }
-    if (!widget->mapped) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_widget_hide"); { PROFILE_END_VAR(_pt, "f"); return ; } }
-    widget->mapped = false;
-    Platform_RenderThread_Post(fl_widget_apply_hide, widget);
-    PROFILE_END_VAR(_pt, "api:fl_widget_hide");
+    widget_hide(widget);
 }
 
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
-    PROFILE_START(_pt);
-    if (!fl_widget_valid(widget)) {     PROFILE_START(_pt);
-PROFILE_END_VAR(_pt, "api:fl_widget_set_render"); { PROFILE_END_VAR(_pt, "f"); return ; } }
-    widget->render = render;
-    if (Platform_Widget_IsValid(widget->win)) {
-        Platform_Widget_Invalidate(widget->win);
-    }
-    PROFILE_END_VAR(_pt, "api:fl_widget_set_render");
+    widget_set_render(widget, render);
 }
 
 void fl_format_bytes(unsigned long long bytes, char* buf, size_t buflen) {
