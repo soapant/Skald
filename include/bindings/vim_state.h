@@ -42,7 +42,6 @@ void VimState_Reset(void);
 
 void VimState_SetFind(char target, VimFindDir dir);
 bool VimState_GetFind(VimFindState* out);
-VimFindDir VimState_InvertDir(VimFindDir dir);
 
 void VimState_BeginSelection(int cursor);
 void VimState_UpdateSelection(int cursor);

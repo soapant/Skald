@@ -108,15 +108,6 @@ bool x11_bg_image_enabled(void) {
     return p && p[0];
 }
 
-void x11_bg_image_purge(void) {
-    Display* dpy = get_display();
-    pthread_mutex_lock(&g_bg_mtx);
-    if (dpy) for (int i = 0; i < BG_TILE_SLOTS; i++) bg_slot_release(dpy, &g_bg_tiles[i]);
-    pthread_mutex_unlock(&g_bg_mtx);
-}
-
-
-
 static bool bg_tile_compose(Display* dpy, const char* path, int w, int h,
                             Pixmap* out_pm, Picture* out_pic) {
     if (!dpy || !path || !path[0] || w <= 0 || h <= 0) return false;

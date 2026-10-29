@@ -17,6 +17,5 @@ EditorMode GetMode(void);
 bool IsNormalMode(void);
 bool IsInsertMode(void);
 bool IsVisualMode(void);
-const char* Vim_ModeName(EditorMode mode);
 
 #endif

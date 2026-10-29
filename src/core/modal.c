@@ -13,11 +13,6 @@ static const char* g_mode_names[] = { "Normal", "Insert", "Visual" };
 int last_index = 0;
 char* selection_feature = "";
 
-const char* Vim_ModeName(EditorMode mode) {
-    if ((int)mode < 0 || (int)mode > 2) return g_mode_names[0];
-    return g_mode_names[mode];
-}
-
 static EditorMode ActiveMode(void) {
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;

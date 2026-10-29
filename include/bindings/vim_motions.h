@@ -292,9 +292,6 @@ void HandleJumpBack(FlintContext* ctx);
 void HandleJumpForward(FlintContext* ctx);
 void HandleSearchForward(FlintContext* ctx);
 void HandleSearchBackward(FlintContext* ctx);
-void Vim_SearchCollect(int key);
-void Vim_SearchCommitForward(int key);
-void Vim_SearchCommitBackward(int key);
 void Vim_SearchCancel(int key);
 void HandlePasteAtCursor(FlintContext* ctx);
 

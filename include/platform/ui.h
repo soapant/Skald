@@ -54,11 +54,8 @@ bool UI_ApplyBackspaceToPopup(FlintContext* ctx);
 #if defined(_WIN32)
 #include <windows.h>
 void win32_apply_rounded_corners(HWND hwnd, int w, int h);
-void win32_draw_background(HDC hdc, RECT* rc);
 void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base);
 void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius);
-void win32_fill_rounded_rect_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius);
-void win32_draw_rounded_selection(HDC hdc, RECT* rc, COLORREF base, int radius);
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);
 HFONT CreateCustomNerdFont(int height, const char* face_name);
 void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb);
@@ -66,10 +63,6 @@ int UI_LB_GetTextLen(WindowHandle hList);
 int UI_LB_GetText(WindowHandle hList, int index, char* buffer);
 void UI_Edit_SetFont(HFONT hFont);
 int UI_InsertChar(wchar_t wc);
-HFONT UI_GetFont(WindowHandle hWnd);
-void UI_Edit_UpdateUIState(WindowHandle hEdit, UINT action, UINT uiFlags);
-void UI_FlushPendingInput(void);
-void UI_PreparePopupPump(void);
 bool UI_ShouldSkipPopupKey(const void* msg);
 #endif
 

@@ -181,51 +181,6 @@ if (!RoundedCorners || radius <= 0) {
   DeleteObject(rgn);
 }
 
-void win32_fill_rounded_rect_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius) {
-  PROFILE_START(_pt);
-  if (radius > (rc->right - rc->left)/2) radius = (rc->right - rc->left)/2;
-  if (radius > (rc->bottom - rc->top)/2) radius = (rc->bottom - rc->top)/2;
-  int save = SaveDC(hdc);
-  HRGN rgn = CreateRoundRectRgn(rc->left, rc->top, rc->right+1, rc->bottom+1, radius*2, radius*2);
-  SelectClipRgn(hdc, rgn);
-  SelectClipRgn(hdc, NULL);
-  RestoreDC(hdc, save);
-  DeleteObject(rgn);
-}
-
-void win32_draw_rounded_selection(HDC hdc, RECT* rc, COLORREF base, int radius) {
-    PROFILE_START(_pt);
-if (!RoundedCorners || radius <= 0) {
-    win32_draw_selection_background(hdc, rc, base);
-    return;
-  }
-  if (radius > (rc->right - rc->left)/2) radius = (rc->right - rc->left)/2;
-  if (radius > (rc->bottom - rc->top)/2) radius = (rc->bottom - rc->top)/2;
-  int save = SaveDC(hdc);
-  HRGN rgn = CreateRoundRectRgn(rc->left, rc->top, rc->right+1, rc->bottom+1, radius*2, radius*2);
-  SelectClipRgn(hdc, rgn);
-  win32_draw_selection_background(hdc, rc, base);
-  SelectClipRgn(hdc, NULL);
-  RestoreDC(hdc, save);
-  DeleteObject(rgn);
-}
-
-void win32_draw_background(HDC hdc, RECT* rc) {
-  PROFILE_START(_pt);
-  PROFILE_START(timer);
-  const char* name = "solid";
-  int w = rc->right - rc->left;
-  int h = rc->bottom - rc->top;
-  if (w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "WinBg solid"); return; }
-  COLORREF base = COLOR_BG;
-  name = "solid";
-  HBRUSH br = CreateSolidBrush(base);
-  FillRect(hdc, rc, br);
-  DeleteObject(br);
-  PROFILE_END_VAR(timer, name);
-  return;
-}
-
 void UpdateTextCaret(void)
 {
     PROFILE_START(_pt);

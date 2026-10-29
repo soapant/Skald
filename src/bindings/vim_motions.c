@@ -1010,20 +1010,6 @@ static void vim_collect_backward_cb(int key) {
     Platform_WaitForKeypressAsync(vim_collect_backward_cb);
 }
 
-void Vim_SearchCollect(int key) {
-    VimState_AppendSearchPattern((char)key);
-}
-
-void Vim_SearchCommitForward(int key) {
-    (void)key;
-    vim_run_search(false);
-}
-
-void Vim_SearchCommitBackward(int key) {
-    (void)key;
-    vim_run_search(true);
-}
-
 void Vim_SearchCancel(int key) {
     (void)key;
     const char* ignored = NULL;

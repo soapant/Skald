@@ -92,12 +92,6 @@ bool VimState_GetLastPattern(char* out, int cap) {
     return true;
 }
 
-VimFindDir VimState_InvertDir(VimFindDir dir) {
-    if (dir == VIM_FIND_BACKWARD) return VIM_FIND_T;
-    if (dir == VIM_FIND_T) return VIM_FIND_BACKWARD;
-    return VIM_FIND_T;
-}
-
 void VimState_SetMark(char name, int cursor, int selection) {
     int idx = MarkIndex(name);
     if (idx < 0) return;
