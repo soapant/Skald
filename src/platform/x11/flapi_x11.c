@@ -431,8 +431,17 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     WindowManager* wmgr = WindowManager_Get();
     PromptState *st = NULL;
     if (wmgr) {
-        Popup* top = WindowManager_GetTopPopup(wmgr);
-        if (top && top->user_data && top->type == POPUP_PROMPT) st = (PromptState*)top->user_data;
+        for (int _i = wmgr->popup_count - 1; _i >= 0; _i--) {
+            Popup* _p = wmgr->popups[_i];
+            if (_p && _p->user_data && _p->type == POPUP_PROMPT) {
+                PromptState* _ps = (PromptState*)_p->user_data;
+                if (&_ps->listbox == lb) { st = _ps; break; }
+            }
+        }
+        if (!st && wmgr->popup_count > 0) {
+            Popup* top = WindowManager_GetTopPopup(wmgr);
+            if (top && top->user_data && top->type == POPUP_PROMPT) st = (PromptState*)top->user_data;
+        }
     }
     ListboxLayout lay;
     Listbox_ComputeLayout(spec, x11_font_list_top_of(g_fl_list_font), g_fl_list_itemH,
