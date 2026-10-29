@@ -13,10 +13,6 @@ void ConfigApply(void) {
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
-    EnableShaders = false;
-    ShaderPreset = 1;
-    ShaderIntensity = 0.3f;
-    ShaderBrightness = 0.55f;
     HotkeyRepeatDelayMs = 300;
     WindowOpacity = 255.0f;
     EditPopUpPos = "middle";

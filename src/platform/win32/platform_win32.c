@@ -1581,8 +1581,6 @@ log_info("Platform_InitUI completed");
 
 void Platform_ShutdownUI() {
     PROFILE_START(_pt);
-extern void win32_free_bg_cache(void);
-  win32_free_bg_cache();
   {
     extern void win32_img_cache_free_all(void);
     win32_img_cache_free_all();

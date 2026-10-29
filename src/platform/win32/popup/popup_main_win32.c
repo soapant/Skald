@@ -328,16 +328,10 @@ case WM_CHAR: {
         SetBkMode(hdc, TRANSPARENT);
         return (LRESULT)GetStockObject(NULL_BRUSH);
       }
-      if ((EnableShaders && ShaderPreset != 0) || win32_bg_image_enabled()) {
-        SetTextColor(hdc, tc);
-        SetBkMode(hdc, TRANSPARENT);
-        return (LRESULT)GetStockObject(NULL_BRUSH);
-      } else {
-        SetTextColor(hdc, tc);
-        SetBkColor(hdc, COLOR_BG);
-        if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-        return (LRESULT)s_bg_brush;
-      }
+      SetTextColor(hdc, tc);
+      SetBkColor(hdc, COLOR_BG);
+      if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+      return (LRESULT)s_bg_brush;
     }
     case WM_CTLCOLORLISTBOX: {
       HDC hdc = (HDC)wParam;
@@ -346,16 +340,10 @@ case WM_CHAR: {
         SetBkMode(hdc, TRANSPARENT);
         return (LRESULT)GetStockObject(NULL_BRUSH);
       }
-      if ((EnableShaders && ShaderPreset != 0) || win32_bg_image_enabled()) {
-        SetTextColor(hdc, COLOR_TEXT);
-        SetBkMode(hdc, TRANSPARENT);
-        return (LRESULT)GetStockObject(NULL_BRUSH);
-      } else {
-        SetTextColor(hdc, COLOR_TEXT);
-        SetBkColor(hdc, COLOR_BG);
-        if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-        return (LRESULT)s_bg_brush;
-      }
+      SetTextColor(hdc, COLOR_TEXT);
+      SetBkColor(hdc, COLOR_BG);
+      if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+      return (LRESULT)s_bg_brush;
     }
     case WM_CREATE: {
       if (g_win32_hMainFont) {
@@ -438,66 +426,25 @@ case WM_CHAR: {
               int gx = lbOrigin2.x + pdis->rcItem.left;
               int gy = lbOrigin2.y + pdis->rcItem.top;
               if (!win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, winW, winH, lbOrigin2.x, lbOrigin2.y)) {
-                if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-                  win32_draw_background_slice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, gx, gy);
-                }
               }
             }
             if (isSelected) {
               win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
             } else {
-              if (EnableShaders && ShaderPreset != 0) {
-                RECT winRc; GetClientRect(hwnd, &winRc);
-                int winW = winRc.right - winRc.left;
-                int winH = winRc.bottom - winRc.top;
-                POINT lbOrigin = {0,0};
-                ClientToScreen(pdis->hwndItem, &lbOrigin);
-                ScreenToClient(hwnd, &lbOrigin);
-                int globalX = lbOrigin.x + inner.left;
-                int globalY = lbOrigin.y + inner.top;
-                if (winW <= 0) winW = pdis->rcItem.right - pdis->rcItem.left;
-                if (winH <= 0) { RECT tr; GetClientRect(hwnd,&tr); winH = tr.bottom - tr.top; if(winH<=0) winH = pdis->rcItem.bottom - pdis->rcItem.top + 600; }
-                if (!win32_draw_bg_image_slice(pdis->hDC, &inner, winW, winH, lbOrigin.x, lbOrigin.y)) {
-                  if (EnableShaders && ShaderPreset != 0) {
-                    win32_fill_rounded_rect_slice(pdis->hDC, &inner, COLOR_BG, winW, winH, globalX, globalY, innerR);
-                  } else {
-                    win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_BG, innerR);
-                  }
-                }
-              } else {
-                RECT winRcI; GetClientRect(hwnd, &winRcI);
-                int iwW = winRcI.right - winRcI.left;
-                int iwH = winRcI.bottom - winRcI.top;
-                POINT lbOriginI = {0,0};
-                ClientToScreen(pdis->hwndItem, &lbOriginI);
-                ScreenToClient(hwnd, &lbOriginI);
-                if (iwW <= 0) iwW = pdis->rcItem.right - pdis->rcItem.left;
-                if (iwH <= 0) iwH = pdis->rcItem.bottom - pdis->rcItem.top + 600;
-                if (!win32_draw_bg_image_slice(pdis->hDC, &inner, iwW, iwH, lbOriginI.x, lbOriginI.y)) {
-                  win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_BG, innerR);
-                }
+              RECT winRcI; GetClientRect(hwnd, &winRcI);
+              int iwW = winRcI.right - winRcI.left;
+              int iwH = winRcI.bottom - winRcI.top;
+              POINT lbOriginI = {0,0};
+              ClientToScreen(pdis->hwndItem, &lbOriginI);
+              ScreenToClient(hwnd, &lbOriginI);
+              if (iwW <= 0) iwW = pdis->rcItem.right - pdis->rcItem.left;
+              if (iwH <= 0) iwH = pdis->rcItem.bottom - pdis->rcItem.top + 600;
+              if (!win32_draw_bg_image_slice(pdis->hDC, &inner, iwW, iwH, lbOriginI.x, lbOriginI.y)) {
+                win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_BG, innerR);
               }
             }
-          } else if (EnableShaders && ShaderPreset != 0) {
-            if (isSelected) {
-              if (!s_sel_brush) s_sel_brush = CreateSolidBrush(COLOR_SELECTED_TEXT);
-              FillRect(pdis->hDC, &pdis->rcItem, s_sel_brush);
-            } else {
-              RECT winRc; GetClientRect(hwnd, &winRc);
-              int winW = winRc.right - winRc.left;
-              int winH = winRc.bottom - winRc.top;
-              POINT lbOrigin = {0,0};
-              ClientToScreen(pdis->hwndItem, &lbOrigin);
-              ScreenToClient(hwnd, &lbOrigin);
-              int globalX = lbOrigin.x + pdis->rcItem.left;
-              int globalY = lbOrigin.y + pdis->rcItem.top;
-              if (winW <= 0) winW = pdis->rcItem.right - pdis->rcItem.left;
-              if (winH <= 0) { RECT tr2; GetClientRect(hwnd,&tr2); winH = tr2.bottom - tr2.top; if(winH<=0) winH = pdis->rcItem.bottom - pdis->rcItem.top + 600; }
-              if (!win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, winW, winH, lbOrigin.x, lbOrigin.y)) {
-                win32_draw_background_slice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, globalX, globalY);
-              }
-            }
-          } else {
+          }
+          else {
             if (isSelected) {
               if (!s_sel_brush) s_sel_brush = CreateSolidBrush(COLOR_SELECTED_TEXT);
               FillRect(pdis->hDC, &pdis->rcItem, s_sel_brush);
@@ -626,12 +573,8 @@ case WM_CHAR: {
             imgDrawn = win32_draw_bg_image_slice(paintDC, &visRect, rect.right - rect.left, rect.bottom - rect.top, 0, 0);
           }
           if (!imgDrawn) {
-            if (EnableShaders && ShaderPreset != 0) {
-              win32_draw_background(paintDC, &rect);
-            } else {
               if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
                 FillRect(paintDC, &ps.rcPaint, s_bg_brush);
-            }
           }
           win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
         }

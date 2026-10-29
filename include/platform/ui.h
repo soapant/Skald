@@ -56,7 +56,6 @@ bool UI_ApplyBackspaceToPopup(FlintContext* ctx);
 void win32_apply_rounded_corners(HWND hwnd, int w, int h);
 void win32_draw_background(HDC hdc, RECT* rc);
 void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base);
-void win32_draw_background_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY);
 void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius);
 void win32_fill_rounded_rect_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius);
 void win32_draw_rounded_selection(HDC hdc, RECT* rc, COLORREF base, int radius);

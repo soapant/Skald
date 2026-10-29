@@ -234,7 +234,6 @@ bool Config_Reload(void) {
 #endif
         return false;
     }
-    log_warn("cfg reload applied: intensity=%.3f brightness=%.3f preset=%d shaders=%d", (double)ShaderIntensity, (double)ShaderBrightness, ShaderPreset, EnableShaders ? 1 : 0);
     g_cfg_last_reload_ms = Platform_GetWallClockMs();
     Platform_ResetUIScale();
 #ifdef _WIN32
@@ -304,10 +303,6 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    RoundedCorners = %s;\n", RoundedCorners ? "true" : "false");
     cfg_put(buf, cap, &off, "    EnableBorders = %s;\n", EnableBorders ? "true" : "false");
     cfg_put(buf, cap, &off, "    CornerRadius = %d;\n", CornerRadius);
-    cfg_put(buf, cap, &off, "    EnableShaders = %s;\n", EnableShaders ? "true" : "false");
-    cfg_put(buf, cap, &off, "    ShaderPreset = %d;\n", ShaderPreset);
-    cfg_put_float(buf, cap, &off, "ShaderIntensity", ShaderIntensity);
-    cfg_put_float(buf, cap, &off, "ShaderBrightness", ShaderBrightness);
     cfg_put(buf, cap, &off, "    HotkeyRepeatDelayMs = %d;\n", HotkeyRepeatDelayMs);
     cfg_put_float(buf, cap, &off, "WindowOpacity", WindowOpacity);
     cfg_put(buf, cap, &off, "    EditPopUpPos = ");
