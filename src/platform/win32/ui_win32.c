@@ -496,10 +496,13 @@ PromptState* Platform_GetPromptStateForHWND(HWND hwnd) {
     }
     WindowManager* wm = WindowManager_Get();
     if (wm) {
-        for (int i = 0; i < wm->popup_count; i++) {
+        for (int i = wm->popup_count - 1; i >= 0; i--) {
             Popup* p = wm->popups[i];
-            if (p && WH_TO_HWND(p->handle) == hwnd && p->user_data) {
-                { PROFILE_END_VAR(_pt, "Platform_GetPromptStateForHWND"); return (PromptState*)p->user_data; }
+            if (p && p->user_data && p->type == POPUP_PROMPT) {
+                HWND ph = WH_TO_HWND(p->handle);
+                if (hwnd && ph && (hwnd == ph || IsChild(ph, hwnd))) {
+                    { PROFILE_END_VAR(_pt, "Platform_GetPromptStateForHWND"); return (PromptState*)p->user_data; }
+                }
             }
         }
         Popup* top = WindowManager_GetTopPopup(wm);
