@@ -16,8 +16,6 @@ static FlintContext g_ctx = {
     .feature_history = NULL,
     .item_index_map = NULL,
     .history_indices = NULL,
-    .SelectionData = {0},
-    .SelectionDataCount = 0,
 };
 
 FlintContext* FlintContext_Get(void) {
