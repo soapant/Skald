@@ -82,6 +82,7 @@ static int sqlite_init(void) {
     snprintf(buf, sizeof(buf), "%s/libsqlite3.so", dir);
 #endif
     g_sqlite_lib = fl_library_open(buf);
+    if (g_sqlite_lib) fl_library_register("sqlite", g_sqlite_lib);
     if (!g_sqlite_lib) return 0;
     p_sqlite3_open_v2 = (int(*)(const char*,sqlite3**,int,const char*))fl_library_symbol(g_sqlite_lib, "sqlite3_open_v2");
     p_sqlite3_errmsg = (const char*(*)(sqlite3*))fl_library_symbol(g_sqlite_lib, "sqlite3_errmsg");
