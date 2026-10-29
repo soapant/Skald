@@ -116,10 +116,10 @@ static bool config_build_feature(const char* src, const char* out) {
     char cmd[2048];
 #ifdef _WIN32
     snprintf(cmd, sizeof(cmd),
-        "gcc -I include -DCOBJMACROS -O1 -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
+        "gcc -I include  -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" 2>&1",
         tmp, src);
 #else
-    snprintf(cmd, sizeof(cmd), "gcc -std=gnu17 -I include -I/usr/include/freetype2 -O3 -pipe -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-discarded-qualifiers -Wno-stringop-truncation -Wno-misleading-indentation -fPIC -shared -o %s %s 2>&1", tmp, src);
+    snprintf(cmd, sizeof(cmd), "gcc -std=gnu17 -I include  -pipe -fPIC -shared -o %s %s 2>&1", tmp, src);
 #endif
     char* outStr = Platform_RunTerminalCommand(cmd, false);
     bool ok = false;
