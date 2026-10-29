@@ -1244,12 +1244,10 @@ PROFILE_START(timer);
     XftColorFree(dpy, vis, cmap, &solid);
     PROFILE_END_VAR(timer, "helpers_x11:x11_fill_rounded_rect");
 }
-}
 
 static unsigned int x11_bg_channel_at(float c, int x, int y) {
     PROFILE_START(_pt);
-    float d = (float)(Color_BayerDither(x, y)) * 2.5f;
-    int v = (int)(c + d);
+    int v = (int)(c);
     if (v < 0) v = 0;
     if (v > 255) v = 255;
     { PROFILE_END_VAR(_pt, "x11_bg_channel_at"); return (unsigned int)v; }
@@ -1354,6 +1352,7 @@ static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
     slot->pm = pm;
     slot->dpy = dpy;
     slot->w = k->w; slot->h = k->h; slot->base = k->base;
+    slot->radius = k->radius;
     slot->rounded = k->rounded;
 }
 
@@ -1455,6 +1454,7 @@ if (!dpy || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_draw_background_to_dra
     bool rounded = RoundedCorners;
     BgKey k;
     k.base = base;
+    k.radius = radius;
     k.rounded = rounded;
     k.w = w; k.h = h;
     Pixmap cached = bg_cache_find(dpy, &k);
