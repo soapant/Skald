@@ -143,6 +143,13 @@ bool Platform_HttpDownload(const char *url, const char *save_path);
 char *Platform_HttpPost(const char *url, const char *content_type, const char *body);
 void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userdata);
 
+void* Platform_ThreadCreate(void* (*fn)(void*), void* arg);
+void Platform_ThreadJoin(void* thread);
+void* Platform_MutexCreate(void);
+void Platform_MutexDestroy(void* mutex);
+void Platform_MutexLock(void* mutex);
+void Platform_MutexUnlock(void* mutex);
+
 #if !defined(_WIN32)
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state);

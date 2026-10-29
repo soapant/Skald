@@ -1884,3 +1884,66 @@ double Platform_EndTimer(PlTimer t) {
     if (end < start) { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return 0.0; }
     { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return (double)(end - start) * 1000.0 / (double)freq.QuadPart; }
 }
+
+typedef struct {
+    void* (*fn)(void*);
+    void* arg;
+} FlWinThreadStart;
+
+static DWORD WINAPI fl_win_thread_entry(LPVOID p) {
+    PROFILE_START(_pt);
+    FlWinThreadStart* s = (FlWinThreadStart*)p;
+    void* (*fn)(void*) = s->fn;
+    void* arg = s->arg;
+    free(s);
+    fn(arg);
+    { PROFILE_END_VAR(_pt, "fl_win_thread_entry"); return 0; }
+}
+
+void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
+    PROFILE_START(_pt);
+    if (!fn) { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return NULL; }
+    FlWinThreadStart* s = malloc(sizeof(*s));
+    if (!s) { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return NULL; }
+    s->fn = fn;
+    s->arg = arg;
+    HANDLE h = CreateThread(NULL, 0, fl_win_thread_entry, s, 0, NULL);
+    if (!h) { free(s); return NULL; }
+    { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return (void*)h; }
+}
+
+void Platform_ThreadJoin(void* thread) {
+    PROFILE_START(_pt);
+    if (!thread) { PROFILE_END_VAR(_pt, "Platform_ThreadJoin"); return ; }
+    WaitForSingleObject((HANDLE)thread, INFINITE);
+    CloseHandle((HANDLE)thread);
+}
+
+void* Platform_MutexCreate(void) {
+    PROFILE_START(_pt);
+    CRITICAL_SECTION* cs = malloc(sizeof(*cs));
+    if (!cs) { PROFILE_END_VAR(_pt, "Platform_MutexCreate"); return NULL; }
+    InitializeCriticalSection(cs);
+    { PROFILE_END_VAR(_pt, "Platform_MutexCreate"); return cs; }
+}
+
+void Platform_MutexDestroy(void* mutex) {
+    PROFILE_START(_pt);
+    if (!mutex) { PROFILE_END_VAR(_pt, "Platform_MutexDestroy"); return ; }
+    CRITICAL_SECTION* cs = (CRITICAL_SECTION*)mutex;
+    DeleteCriticalSection(cs);
+    free(cs);
+}
+
+void Platform_MutexLock(void* mutex) {
+    PROFILE_START(_pt);
+    if (!mutex) { PROFILE_END_VAR(_pt, "Platform_MutexLock"); return ; }
+    EnterCriticalSection((CRITICAL_SECTION*)mutex);
+}
+
+void Platform_MutexUnlock(void* mutex) {
+    PROFILE_START(_pt);
+    if (!mutex) { PROFILE_END_VAR(_pt, "Platform_MutexUnlock"); return ; }
+    LeaveCriticalSection((CRITICAL_SECTION*)mutex);
+}
+

@@ -479,68 +479,6 @@ if (seconds <= 0) { PROFILE_END_VAR(_pt, "fl_sleep_platform"); return ; }
     Sleep((DWORD)ms);
 }
 
-typedef struct {
-    void* (*fn)(void*);
-    void* arg;
-} FlWinThreadStart;
-
-static DWORD WINAPI fl_win_thread_entry(LPVOID p) {
-        PROFILE_START(_pt);
-FlWinThreadStart* s = (FlWinThreadStart*)p;
-    void* (*fn)(void*) = s->fn;
-    void* arg = s->arg;
-    free(s);
-    fn(arg);
-    { PROFILE_END_VAR(_pt, "fl_win_thread_entry"); return 0; }
-}
-
-void* fl_thread_create_platform(void* (*fn)(void*), void* arg) {
-        PROFILE_START(_pt);
-if (!fn) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
-    FlWinThreadStart* s = malloc(sizeof(*s));
-    if (!s) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
-    s->fn = fn;
-    s->arg = arg;
-    HANDLE h = CreateThread(NULL, 0, fl_win_thread_entry, s, 0, NULL);
-    if (!h) { free(s); return NULL; }
-    { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return (void*)h; }
-}
-
-void fl_thread_join_platform(void* thread) {
-        PROFILE_START(_pt);
-if (!thread) { PROFILE_END_VAR(_pt, "fl_thread_join_platform"); return ; }
-    WaitForSingleObject((HANDLE)thread, INFINITE);
-    CloseHandle((HANDLE)thread);
-}
-
-void* fl_mutex_create_platform(void) {
-        PROFILE_START(_pt);
-CRITICAL_SECTION* cs = malloc(sizeof(*cs));
-    if (!cs) { PROFILE_END_VAR(_pt, "fl_mutex_create_platform"); return NULL; }
-    InitializeCriticalSection(cs);
-    { PROFILE_END_VAR(_pt, "fl_mutex_create_platform"); return cs; }
-}
-
-void fl_mutex_destroy_platform(void* mutex) {
-        PROFILE_START(_pt);
-if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_destroy_platform"); return ; }
-    CRITICAL_SECTION* cs = (CRITICAL_SECTION*)mutex;
-    DeleteCriticalSection(cs);
-    free(cs);
-}
-
-void fl_mutex_lock_platform(void* mutex) {
-        PROFILE_START(_pt);
-if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_lock_platform"); return ; }
-    EnterCriticalSection((CRITICAL_SECTION*)mutex);
-}
-
-void fl_mutex_unlock_platform(void* mutex) {
-        PROFILE_START(_pt);
-if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_unlock_platform"); return ; }
-    LeaveCriticalSection((CRITICAL_SECTION*)mutex);
-}
-
 /* GetAdaptersAddresses costs ~6ms on a machine with many adapters (Hyper-V,
    WSL, VPN, Bluetooth, ...), and the net widgets used to call it on every
    sample. The active adapter changes rarely, so resolve it once and reuse
