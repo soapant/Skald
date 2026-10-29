@@ -3,7 +3,7 @@
 
 #include "core/types.h"
 #include "deps/stb_ds.h"
-typedef struct { char *key; void *value; } FlintMap;
+typedef struct { char *key; void *value; } HashMap;
 
 typedef enum {
     MODE_NORMAL,
@@ -47,9 +47,9 @@ typedef struct {
     const char* vim_mode_str;
     WindowContext window;
     PromptCallbacks prompt_callbacks;
-    FlintMap* feature_history;
-    FlintMap* item_index_map;
-    FlintMap* history_indices;
+    HashMap* feature_history;
+    HashMap* item_index_map;
+    HashMap* history_indices;
 } FlintContext;
 
 FlintContext* FlintContext_Get(void);
