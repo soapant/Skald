@@ -1017,10 +1017,6 @@ static void cc_open_actions_subwindow(void) {
                  .render = cc_subwindow_render,
                  .refresh = cc_subwindow_refresh);
 }
-static void cc_on_actions_click(void) {
-    g_pending_post_render = cc_open_actions_subwindow;
-}
-
 static void cc_on_actions_render(FlRect rect) {
     char buf[200];
     char* hotkey_str = strdup(ActionsHotkey);
@@ -1050,7 +1046,7 @@ static void cc_render(PromptState *state) {
                     .y=state->height - 30,
                     .w=180,
                     .render=cc_on_actions_render,
-                    .on_click=cc_on_actions_click);
+                    .on_click=cc_open_actions_subwindow);
 
     if (!fl_listbox_begin(&spec)) return;
     int type_x = state->width - CC_ITEM_TEXT_X;
@@ -1213,7 +1209,6 @@ FLINT_FEATURE_INIT {
 
 FLINT_FEATURE_SHUTDOWN {
     g_cc_stopping = 1;
-    g_pending_post_render = NULL;
     if (g_prewarm_thread) {
         fl_thread_join(g_prewarm_thread);
         g_prewarm_thread = NULL;

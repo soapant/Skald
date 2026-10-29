@@ -2756,7 +2756,6 @@ void fl_reload_all_features(void) {
             }
         }
         if (!should_build) continue;
-        /* build */
         char tmp[1024];
         snprintf(tmp, sizeof(tmp), "%s.tmp.%d", dll, fl_get_pid());
         char cmd[2048];
@@ -2791,6 +2790,3 @@ bool fl_hotkey_down(FlKey key) {
     if ((key.mods & FL_SUPER) && !fl_super_pressed()) return false;
     return true;
 }
-
-volatile int g_render_depth = 0;
-void (*g_pending_post_render)(void) = NULL;
