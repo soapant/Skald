@@ -1598,6 +1598,11 @@ void Platform_PrewarmBackgroundPixmap(void) {
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap"); return; }
     x11_bg_image_prewarm(dpy, PROMPT_W, PROMPT_H);
+    Window _pw = x11_create_prompt_window(dpy, 0, 0, PROMPT_W, PROMPT_H);
+    if (_pw != None) {
+        x11_get_cached_background(dpy, _pw, PROMPT_W, PROMPT_H);
+        XDestroyWindow(dpy, _pw);
+    }
     PROFILE_END_VAR(_pt, "Platform_PrewarmBackgroundPixmap");
 }
 
