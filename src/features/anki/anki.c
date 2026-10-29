@@ -32,6 +32,8 @@ static long long (*p_sqlite3_column_int64)(sqlite3_stmt*, int) = NULL;
 static int (*p_sqlite3_finalize)(sqlite3_stmt*) = NULL;
 static int (*p_sqlite3_bind_text)(sqlite3_stmt*, int, const char*, int, void(*)(void*)) = NULL;
 static int (*p_sqlite3_close)(sqlite3*) = NULL;
+static int (*p_sqlite3_bind_int64)(sqlite3_stmt*, int, sqlite3_int64) = NULL;
+static int (*p_sqlite3_column_int)(sqlite3_stmt*, int) = NULL;
 
 static FlThread anki_thread = NULL;
 static FlMutex anki_lock = NULL;
@@ -90,6 +92,7 @@ static int sqlite_init(void) {
     p_sqlite3_finalize = (int(*)(sqlite3_stmt*))fl_library_symbol(g_sqlite_lib, "sqlite3_finalize");
     p_sqlite3_bind_text = (int(*)(sqlite3_stmt*,int,const char*,int,void(*)(void*)))fl_library_symbol(g_sqlite_lib, "sqlite3_bind_text");
     p_sqlite3_close = (int(*)(sqlite3*))fl_library_symbol(g_sqlite_lib, "sqlite3_close");
+    p_sqlite3_bind_int64 = (int(*)(sqlite3_stmt*, int, long long))fl_library_symbol(g_sqlite_lib, "sqlite3_bind_int64");
     return p_sqlite3_open_v2 && p_sqlite3_errmsg && p_sqlite3_prepare_v2 && p_sqlite3_step;
 }
 
@@ -256,11 +259,7 @@ void display_card_question(TYPE_NAME card) {
 void anki_apply_elapsed(double elapsed_ms) {
     double elapsed_s = elapsed_ms / 1000.0;
     
-    int offset_seconds = 0;
-    if (elapsed_s <= 2)      offset_seconds = -1200; 
-    else if (elapsed_s <= 5) offset_seconds = -600;  
-    else if (elapsed_s <= 20)offset_seconds = -60;   
-    else                     return;                 
+    if (elapsed_s > 20) return; 
 
     char buf[300];
 #if defined (_WIN32)
@@ -272,26 +271,78 @@ void anki_apply_elapsed(double elapsed_ms) {
     if (!sqlite_init()) return;
     
     sqlite3 *db = NULL;
-    if (p_sqlite3_open_v2(buf, &db, 2, NULL) != SQLITE_OK) {
+    if (p_sqlite3_open_v2(buf, &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK) {
         if (db) p_sqlite3_close(db);
         return;
     }
 
-    sqlite3_stmt *stmt = NULL;
-    const char *sql = "UPDATE cards SET ivl = ? WHERE id = ?;";
-    if (p_sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        char off[32], idstr[32];
-        snprintf(off, sizeof(off), "%d", offset_seconds);
-        snprintf(idstr, sizeof(idstr), "%lld", g_current_card.id);
-        p_sqlite3_bind_text(stmt, 1, off, -1, SQLITE_TRANSIENT);
-        p_sqlite3_bind_text(stmt, 2, idstr, -1, SQLITE_TRANSIENT);
+    long long current_ivl = 0;
+    long long current_reps = 0;
+    int current_queue = 1;
+
+    sqlite3_stmt *select_stmt = NULL;
+    if (p_sqlite3_prepare_v2(db, "SELECT ivl, reps, queue FROM cards WHERE id = ?;", -1, &select_stmt, NULL) == SQLITE_OK) {
+        p_sqlite3_bind_int64(select_stmt, 1, g_current_card.id);
+        if (p_sqlite3_step(select_stmt) == SQLITE_ROW) {
+            current_ivl = p_sqlite3_column_int64(select_stmt, 0);
+            current_reps = p_sqlite3_column_int64(select_stmt, 1);
+            current_queue = (int)p_sqlite3_column_int64(select_stmt, 2);
+        }
+        p_sqlite3_finalize(select_stmt);
+    }
+
+    long long new_ivl = current_ivl;
+    long long new_reps = current_reps + 1;
+    int new_queue = current_queue;
+    long long due_offset_seconds = 0;
+
+    if (elapsed_s <= 3.0) {
+        if (current_queue == 1 || current_ivl < 0) {
+            if (new_reps >= 2) {
+                new_queue = 2;
+                new_ivl = 1; 
+                due_offset_seconds = 86400; 
+            } else {
+                new_ivl = -600; 
+                due_offset_seconds = 600;
+            }
+        } else {
+            long long calculated_ivl = (long long)(current_ivl * 2.5);
+            new_ivl = calculated_ivl < 1 ? 1 : calculated_ivl;
+            due_offset_seconds = new_ivl * 86400;
+        }
+    } else {
+        if (current_queue == 1 || current_ivl < 0) {
+            new_ivl = -300; 
+            due_offset_seconds = 300;
+        } else {
+            new_ivl = current_ivl + 1;
+            due_offset_seconds = new_ivl * 86400;
+        }
+    }
+
+    long long new_due = (long long)time(NULL) + due_offset_seconds;
+
+    sqlite3_stmt *update_stmt = NULL;
+    const char *sql = "UPDATE cards SET ivl = ?, reps = ?, queue = ?, due = ? WHERE id = ?;";
+    if (p_sqlite3_prepare_v2(db, sql, -1, &update_stmt, NULL) == SQLITE_OK) {
+        p_sqlite3_bind_int64(update_stmt, 1, new_ivl);
+        p_sqlite3_bind_int64(update_stmt, 2, new_reps);
+        p_sqlite3_bind_int64(update_stmt, 3, new_queue);
+        p_sqlite3_bind_int64(update_stmt, 4, new_due);
+        p_sqlite3_bind_int64(update_stmt, 5, g_current_card.id);
         
-        p_sqlite3_finalize(stmt);
+        if (p_sqlite3_step(update_stmt) != SQLITE_DONE) {
+            fprintf(stderr, "Failed to execute update: %s\n", p_sqlite3_errmsg(db));
+        }
+        
+        p_sqlite3_finalize(update_stmt);
+    } else {
+        fprintf(stderr, "Failed to prepare update: %s\n", p_sqlite3_errmsg(db));
     }
     
     p_sqlite3_close(db);
 }
-
 void display_card_answer(void) {
     char answer[1024];
     answer[0] = '\0';

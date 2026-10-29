@@ -2217,20 +2217,18 @@ int fl_get_pid();
  */
 #define FLINT_FEATURE_SHUTDOWN FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void)
 
-#include "core/cap_registry.h"
-
 /**
  * @def Register a capability.
  * @param key  Capability key.
  * @param fn   Capability function.
  */
-#define fl_cap_register(key, fn)  fl_cap_register_abi((key), FL_CAP_ABI_V1, (fn))
+#define fl_cap_register(key, fn)  fl_cap_register_abi((key), CAP_ABI_V1, (fn))
 
 /**
  * @def Resolve a capability.
  * @param key  Capability key.
  */
-#define fl_cap_resolve(key)       fl_cap_resolve_abi((key), FL_CAP_ABI_V1)
+#define fl_cap_resolve(key)       fl_cap_resolve_abi((key), CAP_ABI_V1)
 
 /**
  * @def Bind a capability function pointer.

@@ -13,7 +13,7 @@
 #include <string.h>
 
 #define FL_CHECKBOX_MAX 1024
-#define FL_CHECKBOX_BASE 16
+#define CHECKBOX_BASE 16
 #define CHECKBOX_GLYPH "\xe2\x9c\x93"
 
 #define CHECKBOX_WHITE RGB(155, 155, 155)
@@ -199,8 +199,8 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
         w = spec->w > 0 ? spec->w : 100;
         h = spec->h > 0 ? spec->h : 24;
     } else {
-        w = spec->w > 0 ? spec->w : FL_CHECKBOX_BASE;
-        h = spec->h > 0 ? spec->h : FL_CHECKBOX_BASE;
+        w = spec->w > 0 ? spec->w : CHECKBOX_BASE;
+        h = spec->h > 0 ? spec->h : CHECKBOX_BASE;
     }
 
     CheckboxSpec* cb = checkbox_intern(spec->name, spec->checked);

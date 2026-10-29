@@ -94,7 +94,7 @@ static void retire_old_lib(LibHandle handle, const char* uniq, const char* owner
     }
     if (g_retired_count >= MAX_RETIRED) {
         log_error("retired lib overflow, force unloading oldest");
-        fl_cap_purge_owner(g_retired[0].owner, NULL);
+        cap_purge_owner(g_retired[0].owner, NULL);
         hotkey_purge_owner(g_retired[0].owner, NULL);
         snippet_purge_owner(g_retired[0].owner, NULL);
         Platform_UnloadLibrary(g_retired[0].handle);
@@ -124,7 +124,7 @@ static void sweep_retired_libs(void) {
         if (alive) {
             g_retired[n++] = g_retired[i];
         } else {
-            fl_cap_purge_owner(g_retired[i].owner, NULL);
+            cap_purge_owner(g_retired[i].owner, NULL);
             hotkey_purge_owner(g_retired[i].owner, NULL);
             snippet_purge_owner(g_retired[i].owner, NULL);
             Platform_UnloadLibrary(g_retired[i].handle);
@@ -557,7 +557,7 @@ void FeatureLoader_Shutdown(void) {
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
             if (shut) shut();
-            fl_cap_purge_owner(NULL, g_features[i].path);
+            cap_purge_owner(NULL, g_features[i].path);
             hotkey_purge_owner(NULL, g_features[i].path);
             snippet_purge_owner(NULL, g_features[i].path);
             fl_widget_purge_owner(NULL, g_features[i].path, fl_widget_bump_generation());
@@ -645,7 +645,7 @@ void FeatureLoader_Reload(const char* name) {
             g_features[i].path[sizeof(g_features[i].path)-1] = '\0';
             strncpy(g_features[i].uniq, uniquepath, sizeof(g_features[i].uniq)-1);
             g_features[i].uniq[sizeof(g_features[i].uniq)-1] = '\0';
-            fl_cap_purge_owner(retire_owner, path_copy);
+            cap_purge_owner(retire_owner, path_copy);
             hotkey_purge_owner(retire_owner, path_copy);
             snippet_purge_owner(retire_owner, path_copy);
             fl_widget_purge_owner(retire_owner, path_copy, retire_gen);
@@ -687,7 +687,7 @@ void FeatureLoader_Unload(const char* name) {
             retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
             unsigned purge_gen = fl_widget_current_generation();
             fl_widget_bump_generation();
-            fl_cap_purge_owner(loaded, owner_path);
+            cap_purge_owner(loaded, owner_path);
             hotkey_purge_owner(loaded, owner_path);
             snippet_purge_owner(loaded, owner_path);
             fl_widget_purge_owner(loaded, owner_path, purge_gen);
@@ -735,7 +735,7 @@ void FeatureLoader_ReloadAll(void) {
     FeatureLoader_Init();
     FL_LOCK();
     for (int i = 0; i < g_retired_count; i++) {
-        if (g_retired[i].owner[0]) { fl_cap_purge_owner(g_retired[i].owner, NULL); hotkey_purge_owner(g_retired[i].owner, NULL); snippet_purge_owner(g_retired[i].owner, NULL); fl_widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen); fl_cc_registry_purge_owner(g_retired[i].owner, NULL); }
+        if (g_retired[i].owner[0]) { cap_purge_owner(g_retired[i].owner, NULL); hotkey_purge_owner(g_retired[i].owner, NULL); snippet_purge_owner(g_retired[i].owner, NULL); fl_widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen); fl_cc_registry_purge_owner(g_retired[i].owner, NULL); }
     }
     sweep_retired_libs();
     FL_UNLOCK();
