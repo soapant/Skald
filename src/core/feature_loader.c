@@ -11,7 +11,6 @@
 #include "config.h"
 #include "core/window_manager.h"
 #include "core/checkbox.h"
-extern void (*g_pending_post_render)(void);
 #include "../../nob.h"
 #include "core/flapi.h"
 #undef copy_file
@@ -611,7 +610,6 @@ void FeatureLoader_Reload(const char* name) {
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(old, "FlintFeatureShutdown");
             if (shut) shut();
-            g_pending_post_render = NULL;
             Checkbox_ResetAll();
             unsigned retire_gen = fl_widget_current_generation();
             char retire_owner[512];
