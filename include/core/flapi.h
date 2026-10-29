@@ -1525,6 +1525,20 @@ typedef void* FlLibrary;
 FlLibrary fl_library_open(const char *path);
 
 /**
+ * @brief Register a dynamic library handle.
+ * @param name   Library name.
+ * @param handle Library handle.
+ */
+void fl_library_register(const char *name, FlLibrary handle);
+
+/**
+ * @brief Retrieve a dynamic library handle.
+ * @param name  Library name.
+ * @return      Library handle, or NULL if not found.
+ */
+FlLibrary fl_library_get(const char *name);
+
+/**
  * @brief Get a symbol from a library.
  * @param lib   Library handle.
  * @param name  Symbol name.

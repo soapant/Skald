@@ -1960,6 +1960,33 @@ static int g_fl_widget_count = 0;
 static int g_fl_widget_seq = 0;
 static unsigned g_fl_widget_gen = 1;
 
+typedef struct { char name[64]; FlLibrary handle; } LibraryEntry;
+static LibraryEntry g_library_registry[32];
+static int g_registry_count = 0;
+
+void fl_library_register(const char *name, FlLibrary handle) {
+    if (!name || !handle) return;
+    for (int i=0; i<g_registry_count; ++i) {
+        if (strcmp(g_library_registry[i].name, name) == 0) {
+            g_library_registry[i].handle = handle;
+            return;
+        }
+    }
+    if (g_registry_count < 32) {
+        strncpy(g_library_registry[g_registry_count].name, name, 63);
+        g_library_registry[g_registry_count].handle = handle;
+        g_registry_count++;
+    }
+}
+
+FlLibrary fl_library_get(const char *name) {
+    if (!name) return NULL;
+    for (int i=0; i<g_registry_count; ++i) {
+        if (strcmp(g_library_registry[i].name, name) == 0) return g_library_registry[i].handle;
+    }
+    return NULL;
+}
+
 static FlTimer g_mon_at;
 static bool g_mon_valid = false;
 static int g_mon_x, g_mon_y, g_mon_w, g_mon_h;
