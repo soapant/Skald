@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define FL_CHECKBOX_MAX 1024
+#define CHECKBOX_MAX 1024
 #define CHECKBOX_BASE 16
 #define CHECKBOX_GLYPH "\xe2\x9c\x93"
 
@@ -20,7 +20,7 @@
 #define CHECKBOX_GRAY RGB(68, 68, 68)
 #define CHECKBOX_DARK_GRAY RGB(14, 14, 14)
 
-static CheckboxSpec g_checkboxes[FL_CHECKBOX_MAX];
+static CheckboxSpec g_checkboxes[CHECKBOX_MAX];
 static int g_checkbox_count = 0;
 
 static struct {
@@ -79,7 +79,7 @@ static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
     PROFILE_START(_pt);
     CheckboxSpec* cb = checkbox_find(name);
     if (cb) { PROFILE_END_VAR(_pt, "checkbox_intern"); return cb; }
-    if (g_checkbox_count >= FL_CHECKBOX_MAX) { PROFILE_END_VAR(_pt, "checkbox_intern"); return NULL; }
+    if (g_checkbox_count >= CHECKBOX_MAX) { PROFILE_END_VAR(_pt, "checkbox_intern"); return NULL; }
     cb = &g_checkboxes[g_checkbox_count++];
     memset(cb, 0, sizeof(*cb));
     cb->name = name;
