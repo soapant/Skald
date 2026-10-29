@@ -22,7 +22,7 @@ unsigned cap_generation(void) {
     { PROFILE_END_VAR(_pt, "cap_generation"); return g_cap_generation; }
 }
 
-static void fl_add_provides(const char *owner, const char *key) {
+static void cap_add_provides(const char *owner, const char *key) {
     FeatureLoader_ManifestAddProvides(owner, key);
 }
 
@@ -41,7 +41,7 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
         g_caps[i].abi = abi;
         g_caps[i].fn = fn;
         g_cap_generation++;
-        if (owner[0]) fl_add_provides(owner, key);
+        if (owner[0]) cap_add_provides(owner, key);
         return;
     }
 
@@ -57,7 +57,7 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     c->fn = fn;
     g_cap_generation++;
     log_info("cap '%s' registered abi=%u owner='%s'", key, abi, owner[0] ? owner : "?");
-    if (owner[0]) fl_add_provides(owner, key);
+    if (owner[0]) cap_add_provides(owner, key);
 }
 
 void cap_register(const char *key, void *fn) {
