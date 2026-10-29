@@ -9,11 +9,7 @@ unsigned long rgb_to_hex(unsigned long win_color);
 void eval_window_title_color(PromptState * state,unsigned long *window_title_color);
 unsigned short OpacityAlpha16(void);
 
-float Color_ShaderGamma(float smoothness);
-float Color_BayerDither(int x, int y);
-unsigned int Color_HashNoise(int x, int y);
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
-void Color_DeriveLighter(unsigned int base, float intensity, unsigned char* out_r, unsigned char* out_g, unsigned char* out_b);
 unsigned long VimModeTextColor(void);
 
 void PopulateListBox(ListBoxInfo* lb, const char* filter,
