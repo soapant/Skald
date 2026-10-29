@@ -75,6 +75,8 @@ typedef struct {
     int count;
 } PlWindowList;
 
+typedef struct { uint64_t ticks; } PlTimer;
+
 typedef struct {
     ListBoxInfo *lb;
     const char **items;

@@ -471,28 +471,6 @@ void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
         return; 
     }
 }
-FlTimer fl_start_timer_platform(void) {
-        PROFILE_START(_pt);
-FlTimer t = {0};
-    LARGE_INTEGER c;
-    QueryPerformanceCounter(&c);
-    t.ticks = (uint64_t)c.QuadPart;
-    { PROFILE_END_VAR(_pt, "fl_start_timer_platform"); return t; }
-}
-
-double fl_end_timer_platform(FlTimer t) {
-        PROFILE_START(_pt);
-LARGE_INTEGER now;
-    LARGE_INTEGER freq;
-    QueryPerformanceCounter(&now);
-    QueryPerformanceFrequency(&freq);
-    if (freq.QuadPart == 0) { PROFILE_END_VAR(_pt, "fl_end_timer_platform"); return 0.0; }
-    uint64_t start = t.ticks;
-    uint64_t end = (uint64_t)now.QuadPart;
-    if (end < start) { PROFILE_END_VAR(_pt, "fl_end_timer_platform"); return 0.0; }
-    { PROFILE_END_VAR(_pt, "fl_end_timer_platform"); return (double)(end - start) * 1000.0 / (double)freq.QuadPart; }
-}
-
 void fl_sleep_platform(double seconds) {
         PROFILE_START(_pt);
 if (seconds <= 0) { PROFILE_END_VAR(_pt, "fl_sleep_platform"); return ; }

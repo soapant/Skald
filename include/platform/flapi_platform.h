@@ -13,8 +13,6 @@ int fl_listbox_get_count(void);
 bool fl_place_editbox_platform(const FlEditSpec *spec);
 bool fl_type_text_platform(const char *s);
 void fl_run_after_time_platform(double seconds, void (*callback)(void));
-FlTimer fl_start_timer_platform(void);
-double fl_end_timer_platform(FlTimer t);
 void fl_sleep_platform(double seconds);
 void* fl_thread_create_platform(void* (*fn)(void*), void* arg);
 void fl_thread_join_platform(void* thread);

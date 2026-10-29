@@ -123,6 +123,8 @@ const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args);
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window);
+PlTimer Platform_StartTimer(void);
+double Platform_EndTimer(PlTimer t);
 
 void Platform_EmitKey(int vk_code, int down);
 

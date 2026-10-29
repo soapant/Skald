@@ -684,7 +684,7 @@ static void fl_hover_popup_frame(void *ud) {
     st.width = p->w;
     st.height = p->h;
     st.frame = p->frame;
-    st.elapsed = fl_end_timer_platform(p->created_at);
+    st.elapsed = fl_end_timer(p->created_at);
     st.hovered = true;
     Platform_SetDrawOffset(0, 0);
     Platform_BeginMeasure();
@@ -704,7 +704,7 @@ static FlHoverPopupCtx *fl_hover_popup_ctx_new(const FlMessageSpec *spec) {
     p->render = spec->render;
     p->w = spec->w > 0 ? spec->w : FL_WIDGET_PROVISIONAL_W;
     p->h = spec->h > 0 ? spec->h : FL_WIDGET_PROVISIONAL_H;
-    p->created_at = fl_start_timer_platform();
+    p->created_at = fl_start_timer();
     p->pad = FL_WIDGET_DEFAULT_PAD;
     { PROFILE_END_VAR(_pt, "fl_hover_popup_ctx_new"); return p; }
 }
@@ -1798,12 +1798,12 @@ void fl_run_after_time(double seconds, void (*callback)(void)) {
 
 FlTimer fl_start_timer(void) {
     PROFILE_START(_pt);
-    { PROFILE_END_VAR(_pt, "fl_start_timer"); return fl_start_timer_platform(); }
+    { PROFILE_END_VAR(_pt, "fl_start_timer"); return Platform_StartTimer(); }
 }
 
 double fl_end_timer(FlTimer t) {
     PROFILE_START(_pt);
-    { PROFILE_END_VAR(_pt, "fl_end_timer"); return fl_end_timer_platform(t); }
+    { PROFILE_END_VAR(_pt, "fl_end_timer"); return Platform_EndTimer(t); }
 }
 
 char* fl_get_active_window_title(void) {
@@ -1937,12 +1937,12 @@ const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index) {
 
 FlTimer fl_profile_start() {
     PROFILE_START(_pt);
-    { PROFILE_END_VAR(_pt, "fl_profile_start"); return fl_start_timer_platform(); }
+    { PROFILE_END_VAR(_pt, "fl_profile_start"); return fl_start_timer(); }
 }
 
 void fl_profile_end(FlTimer timer) {
     PROFILE_START(_pt);
-    double ms = fl_end_timer_platform(timer);
+    double ms = fl_end_timer(timer);
     if (ms < 0.0) ms = 0.0;
 
     if (ms >= 1000.0) {
@@ -1966,9 +1966,9 @@ static int g_mon_x, g_mon_y, g_mon_w, g_mon_h;
 
 static void fl_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
         PROFILE_START(_pt);
-if (!g_mon_valid || fl_end_timer_platform(g_mon_at) > 2000) {
+if (!g_mon_valid || fl_end_timer(g_mon_at) > 2000) {
         Platform_WM_GetMonitorGeometry(&g_mon_x, &g_mon_y, &g_mon_w, &g_mon_h);
-        g_mon_at = fl_start_timer_platform();
+        g_mon_at = fl_start_timer();
         g_mon_valid = true;
     }
     *x = g_mon_x;
@@ -1995,8 +1995,8 @@ static bool g_fl_hover_valid = false;
 
 static void fl_widget_hover_poll(void) {
     PROFILE_START(_pt);
-    FlTimer now = fl_start_timer_platform();
-    if (g_fl_hover_valid && fl_end_timer_platform(g_fl_hover_at) < 400.0) {
+    FlTimer now = fl_start_timer();
+    if (g_fl_hover_valid && fl_end_timer(g_fl_hover_at) < 400.0) {
     PROFILE_START(_pt);
         PROFILE_END_VAR(_pt, "flapi:fl_widget_hover_poll");
         { PROFILE_END_VAR(_pt, "f"); return ; }
@@ -2042,7 +2042,7 @@ PROFILE_END_VAR(_pt, "flapi:widget[null]"); { PROFILE_END_VAR(_pt, "f"); return 
     st.width = widget->w;
     st.height = widget->h;
     st.frame = widget->frame;
-    st.elapsed = fl_end_timer_platform(widget->created_at);
+    st.elapsed = fl_end_timer(widget->created_at);
     st.hovered = widget->hovered;
 
     Platform_SetDrawOffset(-widget->origin_x, 0);

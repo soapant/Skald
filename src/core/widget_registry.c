@@ -24,9 +24,9 @@ static bool mon_valid = false;
 static int mon_x, mon_y, mon_w, mon_h;
 
 static void widget_monitor_geometry(int *x, int *y, int *w, int *h) {
-    if (!mon_valid || fl_end_timer_platform(mon_at_timer) > 2000) {
+    if (!mon_valid || Platform_EndTimer(mon_at_timer) > 2000) {
         Platform_WM_GetMonitorGeometry(&mon_x, &mon_y, &mon_w, &mon_h);
-        mon_at_timer = fl_start_timer_platform();
+        mon_at_timer = Platform_StartTimer();
         mon_valid = true;
     }
     *x = mon_x;
@@ -53,13 +53,13 @@ static FlWidget *widget_find_by_name(const char *name) {
 
 static void widget_relayout(void);
 
-static FlPos hover_pos = {0, 0};
-static FlTimer hover_at_timer = {0};
+static PlPos hover_pos = {0, 0};
+static PlTimer hover_at_timer = {0};
 static bool hover_valid = false;
 
 static void widget_hover_poll(void) {
-    FlTimer now = fl_start_timer_platform();
-    if (hover_valid && fl_end_timer_platform(hover_at_timer) < 400.0) {
+    PlTimer now = Platform_StartTimer();
+    if (hover_valid && Platform_EndTimer(hover_at_timer) < 400.0) {
         return;
     }
     int mx, my;
@@ -101,7 +101,7 @@ static void widget_render_frame(void *ud) {
     st.width = widget->w;
     st.height = widget->h;
     st.frame = widget->frame;
-    st.elapsed = fl_end_timer_platform(widget->created_at);
+    st.elapsed = Platform_EndTimer(widget->created_at);
     st.hovered = widget->hovered;
 
     Platform_SetDrawOffset(-widget->origin_x, 0);
@@ -339,7 +339,7 @@ FlWidget *widget_create(const FlWidgetSpec *spec) {
     widget->on_hover = spec->on_hover;
     widget->free_pos = (spec->slot == FL_WIDGET_FREE);
     widget->frame = 0;
-    widget->created_at = fl_start_timer_platform();
+    widget->created_at = Platform_StartTimer();
 
     if (widget->free_pos) {
         int x = spec->x;
