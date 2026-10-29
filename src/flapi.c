@@ -1518,36 +1518,36 @@ const char* fl_library_error(void) {
 FlThread fl_thread_create(FlThreadFunc fn, void* arg) {
     PROFILE_START(_pt);
   if (!fn) { PROFILE_END_VAR(_pt, "fl_thread_create"); return NULL; }
-  { PROFILE_END_VAR(_pt, "fl_thread_create"); return (FlThread)fl_thread_create_platform((void* (*)(void*))fn, arg); }
+  { PROFILE_END_VAR(_pt, "fl_thread_create"); return (FlThread)Platform_ThreadCreate((void* (*)(void*))fn, arg); }
 }
 
 void fl_thread_join(FlThread thread) {
     PROFILE_START(_pt);
   if (!thread) { PROFILE_END_VAR(_pt, "fl_thread_join"); return ; }
-  fl_thread_join_platform((void*)thread);
+  Platform_ThreadJoin((void*)thread);
 }
 
 FlMutex fl_mutex_create(void) {
     PROFILE_START(_pt);
-  { PROFILE_END_VAR(_pt, "fl_mutex_create"); return (FlMutex)fl_mutex_create_platform(); }
+  { PROFILE_END_VAR(_pt, "fl_mutex_create"); return (FlMutex)Platform_MutexCreate(); }
 }
 
 void fl_mutex_destroy(FlMutex mutex) {
     PROFILE_START(_pt);
   if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_destroy"); return ; }
-  fl_mutex_destroy_platform((void*)mutex);
+  Platform_MutexDestroy((void*)mutex);
 }
 
 void fl_mutex_lock(FlMutex mutex) {
     PROFILE_START(_pt);
   if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_lock"); return ; }
-  fl_mutex_lock_platform((void*)mutex);
+  Platform_MutexLock((void*)mutex);
 }
 
 void fl_mutex_unlock(FlMutex mutex) {
     PROFILE_START(_pt);
   if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_unlock"); return ; }
-  fl_mutex_unlock_platform((void*)mutex);
+  Platform_MutexUnlock((void*)mutex);
 }
 
 void fl_send_hotkey(const char* hotkey_string) {

@@ -8,7 +8,6 @@
 #include "platform/render_thread.h"
 #include "platform/draw.h"
 #include "platform/lib.h"
-#include "platform/flapi_platform.h"
 #include "platform/input_state.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +87,7 @@ static void widget_render_frame(void *ud) {
                hover_pos.y >= widget->y && hover_pos.y < widget->y + widget->h);
         if (inside && !widget->hovered && widget->on_hover && !widget->hover_running) {
             widget->hover_running = true;
-            widget->hover_thread = fl_thread_create_platform(widget_hover_worker, widget);
+            widget->hover_thread = Platform_ThreadCreate(widget_hover_worker, widget);
             if (!widget->hover_thread) widget->hover_running = false;
         }
         widget->hovered = inside;
@@ -169,7 +168,7 @@ static void widget_destroy_window(void *ud) {
     Platform_HoverMessageRelease(widget->name);
     Platform_HoverWidgetHide(widget->name);
     if (widget->hover_thread) {
-        fl_thread_join_platform(widget->hover_thread);
+        Platform_ThreadJoin(widget->hover_thread);
         widget->hover_thread = NULL;
         widget->hover_running = false;
     }

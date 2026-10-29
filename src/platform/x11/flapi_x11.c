@@ -706,51 +706,6 @@ struct MemoryStruct {
     size_t size;
 };
 
-void* fl_thread_create_platform(void* (*fn)(void*), void* arg) {
-    PROFILE_START(_pt);
-    if (!fn) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
-    pthread_t* t = malloc(sizeof(*t));
-    if (!t) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
-    if (pthread_create(t, NULL, fn, arg) != 0) { free(t); return NULL; }
-    { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return t; }
-}
-
-void fl_thread_join_platform(void* thread) {
-        PROFILE_START(_pt);
-if (!thread) { PROFILE_END_VAR(_pt, "fl_thread_join_platform"); return ; }
-    pthread_t* t = (pthread_t*)thread;
-    pthread_join(*t, NULL);
-    free(t);
-}
-
-void* fl_mutex_create_platform(void) {
-        PROFILE_START(_pt);
-pthread_mutex_t* m = malloc(sizeof(*m));
-    if (!m) { PROFILE_END_VAR(_pt, "fl_mutex_create_platform"); return NULL; }
-    if (pthread_mutex_init(m, NULL) != 0) { free(m); return NULL; }
-    { PROFILE_END_VAR(_pt, "fl_mutex_create_platform"); return m; }
-}
-
-void fl_mutex_destroy_platform(void* mutex) {
-        PROFILE_START(_pt);
-if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_destroy_platform"); return ; }
-    pthread_mutex_t* m = (pthread_mutex_t*)mutex;
-    pthread_mutex_destroy(m);
-    free(m);
-}
-
-void fl_mutex_lock_platform(void* mutex) {
-        PROFILE_START(_pt);
-if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_lock_platform"); return ; }
-    pthread_mutex_lock((pthread_mutex_t*)mutex);
-}
-
-void fl_mutex_unlock_platform(void* mutex) {
-        PROFILE_START(_pt);
-if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_unlock_platform"); return ; }
-    pthread_mutex_unlock((pthread_mutex_t*)mutex);
-}
-
 int fl_get_active_interface_platform(char out[], size_t max_len) {
         PROFILE_START(_pt);
 static char content[16384];
