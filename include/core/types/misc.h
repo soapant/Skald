@@ -9,12 +9,6 @@ typedef struct {
     int64_t frequency;
 } WinTimer;
 
-struct feature_data {
-    char* name;
-    const char* last_selections[2048];
-    int selection_count;
-};
-
 typedef struct {
     char* initial_text;
     char* result;

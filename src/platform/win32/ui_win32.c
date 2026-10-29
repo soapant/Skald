@@ -57,7 +57,6 @@ void UI_SetHorizontalExtent(int width) {
 }
 
 static int g_lb_update_depth = 0;
-static HWND g_lb_update_hwnd = NULL;
 
 void UI_LB_BeginUpdate(void) {
     PROFILE_START(_pt);

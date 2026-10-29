@@ -42,7 +42,6 @@ struct Popup {
 };
 
 struct WindowManager {
-    WindowHandle main_window;
     Popup** popups;
     int popup_count;
     int popup_capacity;

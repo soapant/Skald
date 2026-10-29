@@ -521,7 +521,6 @@ static char *ClipReadTarget(Atom target) {
     if (!dpy || g_clip_rd_win == None) { cl_trace("READ", "no read display/win"); return NULL; }
     Window win = g_clip_rd_win;
     Atom prop = g_clip_rd_prop;
-    Window sel_owner = XGetSelectionOwner(dpy, g_clip_clipboard);
     char *tname = XGetAtomName(dpy, target);
     char tbuf[64] = {0};
     if (tname) { strncpy(tbuf, tname, sizeof(tbuf) - 1); XFree(tname); tname = NULL; }
