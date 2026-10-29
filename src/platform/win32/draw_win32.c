@@ -982,7 +982,7 @@ void Platform_DrawPromptSeparator(int y, int width) {
     { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); }
 }
 
-static void win32_prompt_editbox_spec(PromptState* state, FontHandle font, FlEditboxSpec* eb) {
+static void win32_prompt_editbox_spec(PromptState* state, FontHandle font, EditboxSpec* eb) {
     int text_len = (int)strlen(state->filter);
     int cursor_x = 0;
     int text_w = 0;
@@ -1043,8 +1043,8 @@ void Platform_DrawPromptEditText(PromptState* state) {
  PROFILE_START(timer);
     if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditText"); return; }
     FontHandle font = Platform_CreateFont(FontSize, UsedFont);
-    FlEditboxSpec eb;
-    FlEditboxLayout lay;
+    EditboxSpec eb;
+    EditboxLayout lay;
     win32_prompt_editbox_spec(state, font, &eb);
     Editbox_Layout(&eb, &lay);
     state->scroll_offset = eb.scroll;
@@ -1058,8 +1058,8 @@ void Platform_DrawPromptEditbox(PromptState* state) {
  PROFILE_START(timer);
     if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditbox"); return; }
     FontHandle font = Platform_CreateFont(FontSize, UsedFont);
-    FlEditboxSpec eb;
-    FlEditboxLayout lay;
+    EditboxSpec eb;
+    EditboxLayout lay;
     win32_prompt_editbox_spec(state, font, &eb);
     Editbox_Layout(&eb, &lay);
     state->scroll_offset = eb.scroll;
@@ -1073,8 +1073,8 @@ void Platform_DrawPromptEditCursor(PromptState* state) {
  PROFILE_START(timer);
     if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
     FontHandle font = Platform_CreateFont(FontSize, UsedFont);
-    FlEditboxSpec eb;
-    FlEditboxLayout lay;
+    EditboxSpec eb;
+    EditboxLayout lay;
     win32_prompt_editbox_spec(state, font, &eb);
     Editbox_Layout(&eb, &lay);
     Editbox_Draw(&eb, &lay, EDITBOX_PART_CARET);

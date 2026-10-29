@@ -386,7 +386,7 @@ if (size <= 0) size = FontSize;
 
 int x11_editbox_measure(const char* text, int len, void* user) {
         PROFILE_START(_pt);
-    FlEditboxX11Metrics* m = (FlEditboxX11Metrics*)user;
+    EditboxX11Metrics* m = (EditboxX11Metrics*)user;
     if (!m || !m->dpy || !m->xf || !text || len <= 0) { PROFILE_END_VAR(_pt, "x11_editbox_measure"); return 0; }
     XGlyphInfo ext;
     XftTextExtentsUtf8(m->dpy, m->xf, (FcChar8*)text, len, &ext);
@@ -469,7 +469,7 @@ unsigned long window_title_text_color_map;
     if (WindowTitleText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, state->window_title, window_title_text_color_map, font, "LEFT", PROMPT_FOOTER_PAD, FontSize);
     if (VimModeText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), font, "RIGHT", PROMPT_FOOTER_PAD, FontSize);
 }
-static void x11_prompt_editbox_spec(PromptState* state, FontHandle font, FlEditboxSpec* eb, FlEditboxX11Metrics* metrics) {
+static void x11_prompt_editbox_spec(PromptState* state, FontHandle font, EditboxSpec* eb, EditboxX11Metrics* metrics) {
     XftFont* xf = FH_TO_XFT(font);
     int text_len = (int)strlen(state->filter);
     int cursor_x = 0;
@@ -520,9 +520,9 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
         PROFILE_START(_pt);
     if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditText"); return; }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    FlEditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
-    FlEditboxSpec eb;
-    FlEditboxLayout lay;
+    EditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
+    EditboxSpec eb;
+    EditboxLayout lay;
     x11_prompt_editbox_spec(state, font, &eb, &metrics);
     Editbox_Layout(&eb, &lay);
     state->scroll_offset = eb.scroll;
@@ -535,9 +535,9 @@ void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd, Visual
         PROFILE_START(_pt);
     if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    FlEditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
-    FlEditboxSpec eb;
-    FlEditboxLayout lay;
+    EditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
+    EditboxSpec eb;
+    EditboxLayout lay;
     x11_prompt_editbox_spec(state, font, &eb, &metrics);
     Editbox_Layout(&eb, &lay);
     Editbox_Draw(&eb, &lay, EDITBOX_PART_TINT);
@@ -548,9 +548,9 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
         PROFILE_START(_pt);
     if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditCursor"); return ; }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    FlEditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
-    FlEditboxSpec eb;
-    FlEditboxLayout lay;
+    EditboxX11Metrics metrics = { dpy, FH_TO_XFT(font) };
+    EditboxSpec eb;
+    EditboxLayout lay;
     x11_prompt_editbox_spec(state, font, &eb, &metrics);
     Editbox_Layout(&eb, &lay);
     Editbox_Draw(&eb, &lay, EDITBOX_PART_CARET);

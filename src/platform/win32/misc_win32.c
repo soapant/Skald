@@ -581,7 +581,7 @@ if (!content || !content[0]) { log_error("operation failed, returning error cont
     }
 
     free(inputs);
-log_info("Platform_PasteContent content='%s'", content ? content : "");;
+    log_info("Platform_PasteContent content='%s'", content ? content : "");;
     { PROFILE_END_VAR(_pt, "Platform_PasteContent"); return success; }
 }
 const char* Platform_GetRealHome(void) {

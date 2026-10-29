@@ -8,13 +8,13 @@
 #include "platform/draw.h"
 #include "platform/platform.h"
 
-static int editbox_measure(const FlEditboxSpec* spec, const char* text, int len) {
+static int editbox_measure(const EditboxSpec* spec, const char* text, int len) {
     if (!text || len <= 0) return 0;
     if (spec->measure) return spec->measure(text, len, spec->measure_user);
     return Platform_MeasureTextWidth(text, len, FontSize);
 }
 
-void Editbox_BuildSpec(FlEditboxSpec* out, const EditboxInit* in) {
+void Editbox_BuildSpec(EditboxSpec* out, const EditboxInit* in) {
     if (!out || !in) return;
     memset(out, 0, sizeof(*out));
     out->text = in->text;
@@ -67,7 +67,7 @@ void Editbox_ResolveSelection(PromptState* state, int text_len, bool prefer_stat
     if (out_has) *out_has = has;
 }
 
-int Editbox_ScrollOffset(const FlEditboxSpec* spec) {
+int Editbox_ScrollOffset(const EditboxSpec* spec) {
     if (!spec) return 0;
     int visible_w = spec->visible_w;
     int scroll = spec->scroll;
@@ -86,7 +86,7 @@ int Editbox_ScrollOffset(const FlEditboxSpec* spec) {
     return scroll;
 }
 
-static void editbox_draw_rainbow(const FlEditboxSpec* spec, const FlEditboxLayout* layout) {
+static void editbox_draw_rainbow(const EditboxSpec* spec, const EditboxLayout* layout) {
     int text_len = spec->text_len;
     int nchars = 0;
     for (int p = 0; p < text_len; ) {
@@ -114,11 +114,11 @@ static void editbox_draw_rainbow(const FlEditboxSpec* spec, const FlEditboxLayou
     }
 }
 
-void Editbox_Layout(FlEditboxSpec* spec, FlEditboxLayout* out) {
+void Editbox_Layout(EditboxSpec* spec, EditboxLayout* out) {
     PROFILE_START(_pt);
     if (!spec) { PROFILE_END_VAR(_pt, "Editbox_Layout"); return; }
 
-    FlEditboxLayout layout;
+    EditboxLayout layout;
     memset(&layout, 0, sizeof(layout));
 
     int scroll = Editbox_ScrollOffset(spec);
@@ -194,7 +194,7 @@ void Editbox_Layout(FlEditboxSpec* spec, FlEditboxLayout* out) {
     PROFILE_END_VAR(_pt, "Editbox_Layout");
 }
 
-void Editbox_Draw(const FlEditboxSpec* spec, const FlEditboxLayout* layout, int parts) {
+void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int parts) {
     PROFILE_START(_pt);
     if (!spec || !layout) { PROFILE_END_VAR(_pt, "Editbox_Draw"); return; }
 
@@ -230,10 +230,10 @@ void Editbox_Draw(const FlEditboxSpec* spec, const FlEditboxLayout* layout, int 
     PROFILE_END_VAR(_pt, "Editbox_Draw");
 }
 
-void Editbox_Render(FlEditboxSpec* spec, FlEditboxLayout* out) {
+void Editbox_Render(EditboxSpec* spec, EditboxLayout* out) {
     PROFILE_START(_pt);
     if (!spec) { PROFILE_END_VAR(_pt, "Editbox_Render"); return; }
-    FlEditboxLayout layout;
+    EditboxLayout layout;
     Editbox_Layout(spec, &layout);
     Editbox_Draw(spec, &layout, EDITBOX_PART_ALL);
     if (out) *out = layout;

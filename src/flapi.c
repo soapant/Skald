@@ -124,8 +124,6 @@ unsigned fl_cap_generation(void) { return cap_generation(); }
 void fl_cap_register_abi(const char *key, unsigned abi, void *fn) { cap_register_abi(key, abi, fn); }
 void *fl_cap_resolve_abi(const char *key, unsigned abi) { return cap_resolve_abi(key, abi); }
 void fl_cap_bind_declare(const char *key, void *consumer) { cap_bind_declare(key, consumer); }
-void fl_cap_purge_owner(const char *path_a, const char *path_b) { cap_purge_owner(path_a, path_b); }
-void fl_cap_dump(void) { cap_dump(); }
 
 
 FlStringList fl_load_file_list(const char* filepath) {
@@ -387,14 +385,14 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
     { PROFILE_END_VAR(_pt, "fl_register_snippet_impl"); return snippet_register_internal(spec->trigger, spec->text, spec->fn, whitelist, windows, (void*)__builtin_return_address(0)); }
 }
 
-typedef struct { char *key; void *value; } FlintMapEnt;
+typedef struct { char *key; void *value; } HashMapEnt;
 typedef struct { char name[128]; void (*cb)(void); char icon[512]; } FeatureReg;
-static FlintMap* g_feature_map = NULL;
+static HashMap* g_feature_map = NULL;
 static FeatureReg** g_feature_order = NULL;
 static int g_feature_order_count = 0;
 static int g_feature_order_cap = 0;
 
-static FlintMap* ensure_feature_map(void) {
+static HashMap* ensure_feature_map(void) {
     PROFILE_START(_pt);
     if (!g_feature_map) { g_feature_map = NULL; sh_new_strdup(g_feature_map); }
     { PROFILE_END_VAR(_pt, "ensure_feature_map"); return g_feature_map; }

@@ -72,3 +72,4 @@ Flint is in active, early development. The following bugs are known and will be 
 *   **Settings GUI:** Build a proper graphical settings menu (currently just an empty feature placeholder).
 *   **Control Center Actions:** Flesh out the "Actions" button in the Control Center, allowing users to add hotkeys and aliases to any entry via the UI.
 *   **Feature Registry:** A centralized website where users can easily find and download community-made features (like a "Flint Extensions" store), alongside a feature in Flint.
+*   **Auto Detect Compiler:** auto detech comiler instead of hardcoded gcc and its flags.
