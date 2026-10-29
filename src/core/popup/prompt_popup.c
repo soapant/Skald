@@ -3,7 +3,6 @@
 #include "core/window_manager.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
-#include "core/feature_data.h"
 #include "config.h"
 #include "core/history.h"
 #include "platform/wm_platform.h"
@@ -100,7 +99,6 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->window.current_feature = (char*)prompt_feature_name(title);
     ctx2->window.title = title;
     ctx2->window.callbacks = ctx2->prompt_callbacks;
-    SetCurrentFeatureName(ctx2->window.current_feature);
     History_ResetCursor(ctx2->window.current_feature);
     ctx2->window.editbox_placed = true;
     if (data->spec.refresh) data->spec.refresh(data->state->filter, data->state->has_listbox ? &data->state->listbox : NULL);
