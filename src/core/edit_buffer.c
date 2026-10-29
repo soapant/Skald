@@ -29,25 +29,25 @@ PROFILE_START(timer);
     { PROFILE_END_VAR(_pt, "EditBufferDeleteChar"); return true; }
 }
 
-static bool fl_edit_is_quote(char c) {
+static bool edit_is_quote(char c) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "fl_edit_is_quote"); return c == '"' || c == '\''; }
+{ PROFILE_END_VAR(_pt, "edit_is_quote"); return c == '"' || c == '\''; }
 }
 
-static bool fl_edit_is_closer(char c) {
+static bool edit_is_closer(char c) {
         PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "fl_edit_is_closer"); return c == '}' || c == ')' || c == ']' || fl_edit_is_quote(c); }
+{ PROFILE_END_VAR(_pt, "edit_is_closer"); return c == '}' || c == ')' || c == ']' || edit_is_quote(c); }
 }
 
-static bool fl_edit_quote_at_word_start(const char* buf, size_t cursor) {
+static bool edit_quote_at_word_start(const char* buf, size_t cursor) {
         PROFILE_START(_pt);
-if (cursor == 0) { PROFILE_END_VAR(_pt, "fl_edit_quote_at_word_start"); return true; }
+if (cursor == 0) { PROFILE_END_VAR(_pt, "edit_quote_at_word_start"); return true; }
     unsigned char prev = (unsigned char)buf[cursor - 1];
-    if (prev >= 0x80) { PROFILE_END_VAR(_pt, "fl_edit_quote_at_word_start"); return false; }
-    if (prev >= 'a' && prev <= 'z') { PROFILE_END_VAR(_pt, "fl_edit_quote_at_word_start"); return false; }
-    if (prev >= 'A' && prev <= 'Z') { PROFILE_END_VAR(_pt, "fl_edit_quote_at_word_start"); return false; }
-    if (prev >= '0' && prev <= '9') { PROFILE_END_VAR(_pt, "fl_edit_quote_at_word_start"); return false; }
-    { PROFILE_END_VAR(_pt, "fl_edit_quote_at_word_start"); return true; }
+    if (prev >= 0x80) { PROFILE_END_VAR(_pt, "edit_quote_at_word_start"); return false; }
+    if (prev >= 'a' && prev <= 'z') { PROFILE_END_VAR(_pt, "edit_quote_at_word_start"); return false; }
+    if (prev >= 'A' && prev <= 'Z') { PROFILE_END_VAR(_pt, "edit_quote_at_word_start"); return false; }
+    if (prev >= '0' && prev <= '9') { PROFILE_END_VAR(_pt, "edit_quote_at_word_start"); return false; }
+    { PROFILE_END_VAR(_pt, "edit_quote_at_word_start"); return true; }
 }
 
 char EditBufferPairFor(char c) {
@@ -71,12 +71,12 @@ PROFILE_START(timer);
 
     char closer = 0;
     if (EnableAutoPairing && len == 1) {
-        if (fl_edit_is_closer(text[0]) && *cursor < n && buf[*cursor] == text[0]) {
+        if (edit_is_closer(text[0]) && *cursor < n && buf[*cursor] == text[0]) {
             (*cursor)++;
             PROFILE_END_VAR(timer, "core:EditBufferInsertText");
             return 0;
         }
-        if (!fl_edit_is_quote(text[0]) || fl_edit_quote_at_word_start(buf, *cursor)) {
+        if (!edit_is_quote(text[0]) || edit_quote_at_word_start(buf, *cursor)) {
             closer = EditBufferPairFor(text[0]);
         }
     }
@@ -99,7 +99,7 @@ PROFILE_START(timer);
     size_t n = strlen(buf);
     if (c == 0 || c > n) { PROFILE_END_VAR(timer, "core:EditBufferBackspacePair"); return false; }
     char closer = buf[c];
-    if (closer == '\0' || !fl_edit_is_closer(closer)) { PROFILE_END_VAR(timer, "core:EditBufferBackspacePair"); return false; }
+    if (closer == '\0' || !edit_is_closer(closer)) { PROFILE_END_VAR(timer, "core:EditBufferBackspacePair"); return false; }
     if (EditBufferPairFor(buf[c - 1]) != closer) { PROFILE_END_VAR(timer, "core:EditBufferBackspacePair"); return false; }
     memmove(buf + c - 1, buf + c + 1, n - c);
     (*cursor)--;
