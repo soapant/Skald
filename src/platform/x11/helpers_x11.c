@@ -1702,3 +1702,4 @@ PROFILE_START(timer);
     if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
     PROFILE_END_VAR(timer, "helpers_x11:UpdateTextCaret");
 }
+
