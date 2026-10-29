@@ -76,10 +76,6 @@ void SetMode(EditorMode mode) {
     SetModeWithListBox(mode, NULL);
 }
 
-EditorMode GetMode(void) {
-    return ActiveMode();
-}
-
 bool IsNormalMode(void) {
     return ActiveMode() == MODE_NORMAL;
 }
