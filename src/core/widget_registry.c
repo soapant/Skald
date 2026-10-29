@@ -8,7 +8,8 @@
 #include "platform/render_thread.h"
 #include "platform/draw.h"
 #include "platform/lib.h"
-#include "helpers/helpers_owner.h"
+#include "platform/flapi_platform.h"
+#include "platform/input_state.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,9 +24,9 @@ static bool mon_valid = false;
 static int mon_x, mon_y, mon_w, mon_h;
 
 static void widget_monitor_geometry(int *x, int *y, int *w, int *h) {
-    if (!mon_valid || fl_end_timer(mon_at_timer) > 2000) {
+    if (!mon_valid || fl_end_timer_platform(mon_at_timer) > 2000) {
         Platform_WM_GetMonitorGeometry(&mon_x, &mon_y, &mon_w, &mon_h);
-        mon_at_timer = fl_start_timer();
+        mon_at_timer = fl_start_timer_platform();
         mon_valid = true;
     }
     *x = mon_x;
@@ -57,11 +58,13 @@ static FlTimer hover_at_timer = {0};
 static bool hover_valid = false;
 
 static void widget_hover_poll(void) {
-    FlTimer now = fl_start_timer();
-    if (hover_valid && fl_end_timer(hover_at_timer) < 400.0) {
+    FlTimer now = fl_start_timer_platform();
+    if (hover_valid && fl_end_timer_platform(hover_at_timer) < 400.0) {
         return;
     }
-    hover_pos = fl_get_cursor_pos();
+    int mx, my;
+    Platform_GetMousePos(&mx, &my);
+    hover_pos = (FlPos){mx, my};
     hover_at_timer = now;
     hover_valid = true;
 }
@@ -85,7 +88,7 @@ static void widget_render_frame(void *ud) {
                hover_pos.y >= widget->y && hover_pos.y < widget->y + widget->h);
         if (inside && !widget->hovered && widget->on_hover && !widget->hover_running) {
             widget->hover_running = true;
-            widget->hover_thread = fl_thread_create(widget_hover_worker, widget);
+            widget->hover_thread = fl_thread_create_platform(widget_hover_worker, widget);
             if (!widget->hover_thread) widget->hover_running = false;
         }
         widget->hovered = inside;
@@ -98,7 +101,7 @@ static void widget_render_frame(void *ud) {
     st.width = widget->w;
     st.height = widget->h;
     st.frame = widget->frame;
-    st.elapsed = fl_end_timer(widget->created_at);
+    st.elapsed = fl_end_timer_platform(widget->created_at);
     st.hovered = widget->hovered;
 
     Platform_SetDrawOffset(-widget->origin_x, 0);
@@ -166,7 +169,7 @@ static void widget_destroy_window(void *ud) {
     Platform_HoverMessageRelease(widget->name);
     Platform_HoverWidgetHide(widget->name);
     if (widget->hover_thread) {
-        fl_thread_join(widget->hover_thread);
+        fl_thread_join_platform(widget->hover_thread);
         widget->hover_thread = NULL;
         widget->hover_running = false;
     }
@@ -336,7 +339,7 @@ FlWidget *widget_create(const FlWidgetSpec *spec) {
     widget->on_hover = spec->on_hover;
     widget->free_pos = (spec->slot == FL_WIDGET_FREE);
     widget->frame = 0;
-    widget->created_at = fl_start_timer();
+    widget->created_at = fl_start_timer_platform();
 
     if (widget->free_pos) {
         int x = spec->x;
