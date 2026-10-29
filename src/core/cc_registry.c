@@ -5,10 +5,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "core/types/flapi_types.h"
+#include "core/feature_loader.h"
 
 typedef struct {
-    FlCcEntrySpec pub;
+    CcEntrySpec pub;
     char display_name[1024];
     char internal_name[1024];
     char icon[1024];
@@ -39,7 +39,18 @@ static const char *cc_dup(char *dst, size_t cap, const char *src) {
     return dst;
 }
 
-bool add_to_cc_impl(const FlCcEntrySpec *spec) {
+bool add_dep(const char *dep_name, const char *owner_file) {
+    if (!dep_name || !dep_name[0] || !owner_file || !owner_file[0]) return false;
+    char dep[64];
+    snprintf(dep, sizeof(dep), "%s", dep_name);
+    char *dot = strrchr(dep, '.');
+    if (dot) *dot = '\0';
+    if (!dep[0]) return false;
+    FeatureLoader_ManifestAddDepends(owner_file, dep);
+    return true;
+}
+
+bool add_to_cc(const CcEntrySpec *spec) {
     if (!spec) return false;
     int slot = -1;
     for (int i = 0; i < g_cc_entry_count; i++) {
@@ -85,16 +96,17 @@ bool add_to_cc_impl(const FlCcEntrySpec *spec) {
     Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
     if (e->owner[0] && !cc_dep_seen(e->owner)) {
         cc_dep_mark(e->owner);
-        fl_add_dep_impl("control_center.c", e->owner);
+        add_dep("control_center.c", e->owner);
     }
     return true;
 }
+
 
 int cc_entry_count(void) {
     return g_cc_entry_count;
 }
 
-const FlCcEntrySpec *cc_entry_at(int index) {
+const CcEntrySpec *cc_entry_at(int index) {
     if (index < 0 || index >= g_cc_entry_count) return NULL;
     return &g_cc_entries[index].pub;
 }

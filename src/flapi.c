@@ -115,15 +115,9 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "fl_launch_with_args_as_admin"); return false; }
     { PROFILE_END_VAR(_pt, "fl_launch_with_args_as_admin"); return fl_launch_with_args_as_admin_platform(expanded, args); }
 }
+
 bool fl_add_dep_impl(const char *dep_name, const char *owner_file) {    
-    if (!dep_name || !dep_name[0] || !owner_file || !owner_file[0]) return false;
-    char dep[64];
-    snprintf(dep, sizeof(dep), "%s", dep_name);
-    char *dot = strrchr(dep, '.');
-    if (dot) *dot = '\0';
-    if (!dep[0]) return false;
-    FeatureLoader_ManifestAddDepends(owner_file, dep);
-    return true;
+    return add_dep(dep_name,owner_file);
 }
 
 unsigned fl_cap_generation(void) { return cap_generation(); }
@@ -1993,15 +1987,6 @@ unsigned fl_widget_current_generation(void) {
     { PROFILE_END_VAR(_pt, "fl_widget_current_generation"); return g_fl_widget_gen; }
 }
 
-static FlWidget *fl_widget_find_by_name(const char *name) {
-    PROFILE_START(_pt);
-    if (!name || !name[0]) { PROFILE_END_VAR(_pt, "fl_widget_find_by_name"); return NULL; }
-    for (int i = 0; i < g_fl_widget_count; i++) {
-        if (g_fl_widgets[i] && strcmp(g_fl_widgets[i]->name, name) == 0) return g_fl_widgets[i];
-    }
-    { PROFILE_END_VAR(_pt, "fl_widget_find_by_name"); return NULL; }
-}
-
 static void fl_widget_relayout(void);
 
 static FlPos g_fl_hover_pos = {0, 0};
@@ -2090,11 +2075,6 @@ PROFILE_END_VAR(_pt, "flapi:widget[null]"); { PROFILE_END_VAR(_pt, "f"); return 
     char prof_label[80];
     snprintf(prof_label, sizeof(prof_label), "flapi:widget[%s]", widget->name);
     PROFILE_END_VAR(_pt, prof_label);
-}
-
-static void fl_widget_owner_path(void *addr, char *out, size_t n) {
-        PROFILE_START(_pt);
-Platform_GetModuleOwnerPath(addr, out, n);
 }
 
 static const char* fl_widget_owner_basename(const char* p, char* out, size_t n) {
@@ -2436,7 +2416,7 @@ bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
     Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
     if (e->owner[0] && !fl_cc_dep_seen(e->owner)) {
         fl_cc_dep_mark(e->owner);
-        fl_add_dep_impl("control_center.c", e->owner);
+        add_dep("control_center.c", e->owner);
     }
     return true;
 }
