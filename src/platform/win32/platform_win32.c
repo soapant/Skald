@@ -1888,26 +1888,26 @@ double Platform_EndTimer(PlTimer t) {
 typedef struct {
     void* (*fn)(void*);
     void* arg;
-} FlWinThreadStart;
+} WinThreadStart;
 
-static DWORD WINAPI fl_win_thread_entry(LPVOID p) {
+static DWORD WINAPI win_thread_entry(LPVOID p) {
     PROFILE_START(_pt);
-    FlWinThreadStart* s = (FlWinThreadStart*)p;
+    WinThreadStart* s = (WinThreadStart*)p;
     void* (*fn)(void*) = s->fn;
     void* arg = s->arg;
     free(s);
     fn(arg);
-    { PROFILE_END_VAR(_pt, "fl_win_thread_entry"); return 0; }
+    { PROFILE_END_VAR(_pt, "in_thread_entry"); return 0; }
 }
 
 void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
     PROFILE_START(_pt);
     if (!fn) { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return NULL; }
-    FlWinThreadStart* s = malloc(sizeof(*s));
+    WinThreadStart* s = malloc(sizeof(*s));
     if (!s) { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return NULL; }
     s->fn = fn;
     s->arg = arg;
-    HANDLE h = CreateThread(NULL, 0, fl_win_thread_entry, s, 0, NULL);
+    HANDLE h = CreateThread(NULL, 0, win_thread_entry, s, 0, NULL);
     if (!h) { free(s); return NULL; }
     { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return (void*)h; }
 }
