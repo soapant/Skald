@@ -504,6 +504,17 @@ char* fl_hotkey_to_string(FlKey key);
 FlKey fl_hotkey_from_string(const char* str);
 
 /**
+ * @brief Check if a specific key combination is currently held down.
+ *
+ * Returns true if the main key is down AND all modifiers in `key.mods`
+ * are currently pressed. Useful for polling key state inside a render loop.
+ *
+ * @param key  The key combination. See `FlKey`.
+ * @return     True if the combination is currently active, false otherwise.
+ */
+bool fl_hotkey_down(FlKey key);
+
+/**
  * @brief Launch the default browser with a URL.
  * @param url  The URL to open.
  * @return     True on success, false on failure.

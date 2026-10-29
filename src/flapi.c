@@ -2783,5 +2783,14 @@ void fl_reload_all_features(void) {
     fl_message(.message = msg, .slot = BOTTOM_CENTER, .timeout = 1.0);
 }
 
+bool fl_hotkey_down(FlKey key) {
+    if (!fl_is_key_down(key.vk_code)) return false;
+    if ((key.mods & FL_CTRL) && !fl_ctrl_pressed()) return false;
+    if ((key.mods & FL_SHIFT) && !fl_shift_pressed()) return false;
+    if ((key.mods & FL_ALT) && !fl_alt_pressed()) return false;
+    if ((key.mods & FL_SUPER) && !fl_super_pressed()) return false;
+    return true;
+}
+
 volatile int g_render_depth = 0;
 void (*g_pending_post_render)(void) = NULL;
