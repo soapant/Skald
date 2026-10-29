@@ -55,8 +55,6 @@ typedef struct {
     FlintMap* feature_history;
     FlintMap* item_index_map;
     FlintMap* history_indices;
-    char* SelectionData[2048];
-    int SelectionDataCount;
 } FlintContext;
 
 FlintContext* FlintContext_Get(void);

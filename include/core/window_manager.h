@@ -68,7 +68,6 @@ typedef struct {
     void* user_data;
     int x, y, w, h;
     bool confirmed;
-    int saved_mode;
     EditorMode mode;
 } WMEditPopupData;
 
