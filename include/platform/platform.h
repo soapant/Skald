@@ -132,7 +132,6 @@ void Platform_CleanupDisplaySafe(void);
 void Platform_InitMainThreadContext(void);
 void Platform_FixWorkingDirectory(void);
 void Platform_CleanupPlatformResources(void);
-void Platform_StartNotificationDaemon(void);
 bool Platform_FontInitalized(FontHandle font);
 
 typedef void (*PlatformHttpCallback)(const char *body, bool ok, void *userdata);

@@ -30,23 +30,6 @@ void CleanupFeatureDataSystem(void) {
     g_current_feature_name = NULL;
 }
 
-struct feature_data* GetFeatureData(const char* name) {
-    if (!g_feature_data) {
-        InitFeatureDataSystem();
-    }
-    ptrdiff_t idx = shgeti(g_feature_data, (char*)name);
-    struct feature_data* data = idx >= 0 ? (struct feature_data*)g_feature_data[idx].value : NULL;
-    if (!data) {
-        data = malloc(sizeof(struct feature_data));
-        if (data) {
-            memset(data, 0, sizeof(struct feature_data));
-            data->name = strdup(name);
-            shput(g_feature_data, (char*)name, data);
-        }
-    }
-    return data;
-}
-
 void SetCurrentFeatureName(const char* name) {
     g_current_feature_name = name;
 }

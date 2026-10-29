@@ -27,11 +27,6 @@ static int g_pub_y = 0;
 static int g_hover_throttle_ms = 0;
 static int64_t g_last_hover_ticks = 0;
 
-void ListBox_SetHoverThrottleMs(int ms) {
-    g_hover_throttle_ms = ms > 0 ? ms : 0;
-    g_last_hover_ticks = 0;
-}
-
 static bool listbox_hover_throttled(void) {
     if (g_hover_throttle_ms <= 0) return false;
     int64_t now = TimerNowTicks();

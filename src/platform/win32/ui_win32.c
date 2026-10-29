@@ -403,16 +403,6 @@ wchar_t pair[2];
     { PROFILE_END_VAR(_pt, "UI_InsertChar"); return UI_InsertText(utf8, n); }
 }
 
-HFONT UI_GetFont(WindowHandle hWnd) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "UI_GetFont"); return (HFONT)SendMessageA(WH_TO_HWND(hWnd), WM_GETFONT, 0, 0); }
-}
-
-void UI_Edit_UpdateUIState(WindowHandle hEdit, unsigned int action, unsigned int uiFlags) {
-        PROFILE_START(_pt);
-SendMessageA(WH_TO_HWND(hEdit), WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0);
-}
-
 PromptState *g_win32_prompt_state = NULL;
 void UI_RedrawNow(ListBoxInfo* lb) {
     PROFILE_START(_pt);
@@ -425,25 +415,6 @@ void UI_RedrawNow(ListBoxInfo* lb) {
 
 static bool g_toggle_key_pending = false;
 static int g_toggle_skip_vk = 0;
-
-void UI_FlushPendingInput(void) {
-        PROFILE_START(_pt);
-    MSG msg;
-    while (PeekMessageA(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE)) {
-        if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) g_toggle_key_pending = false;
-    }
-}
-
-void UI_PreparePopupPump(void) {
-        PROFILE_START(_pt);
-g_toggle_key_pending = true;
-    extern int pending_hotkey_vk;
-    extern int pending_hotkey_mod;
-    g_toggle_skip_vk = pending_hotkey_vk;
-    pending_hotkey_vk = 0;
-    pending_hotkey_mod = 0;
-    UI_FlushPendingInput();
-}
 
 bool UI_ShouldSkipPopupKey(const void* msg) {
         PROFILE_START(_pt);

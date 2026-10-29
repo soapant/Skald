@@ -5,6 +5,5 @@
 
 void Theme_Apply(void);
 bool Theme_ColorPinned(const char *name);
-void Theme_MarkColorPinned(const char *name, bool pinned);
 
 #endif

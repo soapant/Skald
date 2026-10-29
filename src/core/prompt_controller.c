@@ -12,15 +12,6 @@ extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
-bool PromptController_ShouldSwallowPending(int wParam, int mods) {
-    if (pending_hotkey_vk == 0) return false;
-    struct timeval tv; gettimeofday(&tv,NULL);
-    long now = tv.tv_sec*1000 + tv.tv_usec/1000;
-    if (now - pending_hotkey_timeMs > 800) { pending_hotkey_vk=0; pending_hotkey_mod=0; return false; }
-    if (wParam == pending_hotkey_vk) { pending_hotkey_vk=0; pending_hotkey_mod=0; return true; }
-    return false;
-}
-
 bool PromptController_TryVimMotion(int wParam, bool ctrl, bool shift, bool alt) {
     int mod = HOTKEY_MOD_NONE;
     if (ctrl) mod |= HOTKEY_MOD_CTRL;
