@@ -1977,3 +1977,21 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userd
 bool Platform_FontInitalized(FontHandle font) {
     return font.xfont != NULL;
 }
+
+PlTimer Platform_StartTimer(void) {
+    PROFILE_START(_pt);
+    FlTimer t = {0};
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+    { PROFILE_END_VAR(_pt, "Platform_StartTimer"); return t; }
+}
+
+double Platform_EndTimer(PlTimer t) {
+    PROFILE_START(_pt);
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+    if (now < t.ticks) { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return 0.0; }
+    { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return (double)(now - t.ticks) / 1000000.0; }
+}

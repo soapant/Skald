@@ -1862,3 +1862,25 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userd
 bool Platform_FontInitalized(FontHandle font) {
     return font.hfont != NULL;
 }
+
+PlTimer Platform_StartTimer(void) {
+    PROFILE_START(_pt);
+    PlTimer t = {0};
+    LARGE_INTEGER c;
+    QueryPerformanceCounter(&c);
+    t.ticks = (uint64_t)c.QuadPart;
+    { PROFILE_END_VAR(_pt, "Platform_StartTimer"); return t; }
+}
+
+double Platform_EndTimer(PlTimer t) {
+    PROFILE_START(_pt);
+    LARGE_INTEGER now;
+    LARGE_INTEGER freq;
+    QueryPerformanceCounter(&now);
+    QueryPerformanceFrequency(&freq);
+    if (freq.QuadPart == 0) { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return 0.0; }
+    uint64_t start = t.ticks;
+    uint64_t end = (uint64_t)now.QuadPart;
+    if (end < start) { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return 0.0; }
+    { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return (double)(end - start) * 1000.0 / (double)freq.QuadPart; }
+}
