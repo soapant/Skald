@@ -378,27 +378,3 @@ bool Theme_ColorPinned(const char *name) {
     }
     return false;
 }
-
-void Theme_MarkColorPinned(const char *name, bool pinned) {
-    if (!name || !name[0]) return;
-    theme_scan_config();
-    int found = -1;
-    for (int i = 0; i < g_theme_pinned_count; i++) {
-        if (strcmp(g_theme_pinned[i], name) == 0) { found = i; break; }
-    }
-    if (pinned) {
-        if (found >= 0) return;
-        if (g_theme_pinned_count < THEME_MAX_PINNED) {
-            snprintf(g_theme_pinned[g_theme_pinned_count], sizeof(g_theme_pinned[0]), "%s", name);
-            g_theme_pinned_count++;
-        }
-        return;
-    }
-    if (found >= 0) {
-        for (int i = found; i < g_theme_pinned_count - 1; i++) {
-            snprintf(g_theme_pinned[i], sizeof(g_theme_pinned[0]), "%s", g_theme_pinned[i + 1]);
-        }
-        g_theme_pinned_count--;
-    }
-}
-

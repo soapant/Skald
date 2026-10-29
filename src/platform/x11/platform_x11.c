@@ -1505,10 +1505,6 @@ CleanupPerFeatureVimMap();
     FcFini();
 }
 
-void Platform_StartNotificationDaemon(void) {
-    PROFILE_START(_pt);
-}
-
 int Platform_InitializeTrayIcon(void) {
     PROFILE_START(_pt);
 { PROFILE_END_VAR(_pt, "Platform_InitializeTrayIcon"); return 0; } 
