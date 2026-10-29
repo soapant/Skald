@@ -68,9 +68,8 @@ FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
           if (data && data->no_bg) {
             win32_fill_rounded_rect(hdc, &rect, RGB(0, 0, 0), 0);
           } else if (win32_bg_image_enabled() && win32_draw_bg_image_slice(hdc, &rect, rect.right, rect.bottom, 0, 0)) {
-          } else if (EnableShaders && ShaderPreset != 0) {
-            win32_draw_background(hdc, &rect);
-          } else {
+          }
+          else {
             HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &rect, hBackgroundBrush);
             DeleteObject(hBackgroundBrush);

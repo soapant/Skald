@@ -10,10 +10,6 @@ bool DoTimeDebugs = false;
 bool DebugMode = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
-bool EnableShaders = true;
-int ShaderPreset = 1;
-float ShaderIntensity = 0.55f;
-float ShaderBrightness = 0.55f;
 float WindowOpacity = 235.0;
 
 char* EditPopUpPos = "middle";

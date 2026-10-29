@@ -63,17 +63,11 @@ ListBoxInfo* lb = NULL;
     case WM_CTLCOLOREDIT: {
       HDC hdc = (HDC)wParam;
       COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, GradientBrightness) : COLOR_TEXT;
-      if (EnableShaders && ShaderPreset != 0) {
-        SetTextColor(hdc, tc);
-        SetBkMode(hdc, TRANSPARENT);
-        return (LRESULT)GetStockObject(NULL_BRUSH);
-      } else {
-        SetTextColor(hdc, tc);
-        SetBkColor(hdc, COLOR_BG);
-        static HBRUSH hBrush = NULL;
-        if (!hBrush) hBrush = CreateSolidBrush(COLOR_BG);
-        return (LRESULT)hBrush;
-      }
+      SetTextColor(hdc, tc);
+      SetBkColor(hdc, COLOR_BG);
+      static HBRUSH hBrush = NULL;
+      if (!hBrush) hBrush = CreateSolidBrush(COLOR_BG);
+      return (LRESULT)hBrush;
     }
            
     case WM_PAINT: {

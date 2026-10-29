@@ -14,16 +14,11 @@
 #include <shlwapi.h>
 #include <string.h>
 
-#define WIN32_SHADER_SMOOTHNESS 10
-
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
     PROFILE_START(_pt);
 { PROFILE_END_VAR(_pt, "CreateCustomNerdFont"); return FH_TO_HFONT(Platform_CreateFont(height, face_name)); }
 }
 
-/* The listbox is a child window, so the parent's window region does not
-   clip it: its bottom corners would square off the rounded popup. Give the
-   listbox the same bottom corner radius when it reaches the window edge. */
 void win32_apply_listbox_bottom_corners(HWND hwnd, int w, int h, bool at_window_bottom) {
     PROFILE_START(_pt);
     if (!hwnd || !IsWindow(hwnd) || !RoundedCorners || !at_window_bottom) { PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners"); return ; }
@@ -90,281 +85,6 @@ static inline unsigned int win32_to_rgb(COLORREF c) {
     PROFILE_START(_pt);
 { PROFILE_END_VAR(_pt, "win32_to_rgb"); return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c); }
 }
-COLORREF LerpColor(COLORREF a, COLORREF b, float t) {
-    PROFILE_START(_pt);
-unsigned int mixed = Color_Lerp(win32_to_rgb(a), win32_to_rgb(b), t);
-  { PROFILE_END_VAR(_pt, "LerpColor"); return RGB((mixed >> 16) & 0xFF, (mixed >> 8) & 0xFF, mixed & 0xFF); }
-}
-static COLORREF DeriveLighterWin(COLORREF base, float intensity) {
-    PROFILE_START(_pt);
-unsigned char r, g, b;
-  Color_DeriveLighter(win32_to_rgb(base), intensity, &r, &g, &b);
-  { PROFILE_END_VAR(_pt, "DeriveLighterWin"); return RGB(r, g, b); }
-}
-static unsigned int HashNoiseWin(int x, int y) {
-    PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "HashNoiseWin"); return Color_HashNoise(x, y); }
-}
-static float win32_compute_gamma(void) {
-    PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "win32_compute_gamma"); return Color_ShaderGamma(WIN32_SHADER_SMOOTHNESS); }
-}
-static inline float win32_dither(int x, int y) {
-    PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "win32_dither"); return Color_BayerDither(x, y); }
-}
-
-typedef struct { HBITMAP bmp; HDC dc; int w; int h; COLORREF base; int preset; float gamma; float intensity; } win32_gradient_cache;
-static win32_gradient_cache g_bgCache = {0};
-static win32_gradient_cache g_selCache = {0};
-
-static void win32_free_gradient_cache(win32_gradient_cache* c) {
-    PROFILE_START(_pt);
-if (!c) { PROFILE_END_VAR(_pt, "win32_free_gradient_cache"); return ; }
-  if (c->dc) { DeleteDC(c->dc); c->dc = NULL; }
-  if (c->bmp) { DeleteObject(c->bmp); c->bmp = NULL; }
-  c->w = c->h = 0;
-  c->preset = -1;
-}
-
-void win32_free_bg_cache(void) {
-    PROFILE_START(_pt);
-win32_free_gradient_cache(&g_bgCache);
-  win32_free_gradient_cache(&g_selCache);
-}
-
-static void win32_ensure_gradient_cache(win32_gradient_cache* c, HDC refDC, int containerW, int containerH, COLORREF base, int preset) {
-    PROFILE_START(_pt);
-float gamma = win32_compute_gamma();
-  float intensity = ShaderIntensity;
-  if (c->bmp && c->dc && c->w == containerW && c->h == containerH && c->base == base && c->preset == preset && fabsf(c->gamma - gamma) < 0.001f && fabsf(c->intensity - intensity) < 0.001f) {
-    return;
-  }
-  win32_free_gradient_cache(c);
-  if (containerW <= 0 || containerH <= 0) { PROFILE_END_VAR(_pt, "win32_ensure_gradient_cache"); return ; }
-  BITMAPINFO bmi = {0};
-  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bmi.bmiHeader.biWidth = containerW;
-  bmi.bmiHeader.biHeight = -containerH;
-  bmi.bmiHeader.biPlanes = 1;
-  bmi.bmiHeader.biBitCount = 32;
-  bmi.bmiHeader.biCompression = BI_RGB;
-  void* bits = NULL;
-  HBITMAP hBmp = CreateDIBSection(refDC, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
-  if (!hBmp || !bits) { PROFILE_END_VAR(_pt, "win32_ensure_gradient_cache"); return ; }
-  uint32_t* pixels = (uint32_t*)bits;
-  COLORREF light = DeriveLighterWin(base, 1.0f);
-  if (preset == 1) {
-    for (int y = 0; y < containerH; y++) {
-      float t = containerH > 1 ? (float)y / (float)(containerH - 1) : 0;
-      t = powf(t, gamma);
-      COLORREF col = LerpColor(base, light, t * 0.9f);
-      BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-      float d = win32_dither(0, y);
-      int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
-      if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
-      uint32_t pix = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
-      uint32_t* row = pixels + y * containerW;
-      for (int x = 0; x < containerW; x++) row[x] = pix;
-    }
-  } else if (preset == 2) {
-    float denom = (float)(containerW + containerH); if (denom < 1) denom = 1;
-    for (int y = 0; y < containerH; y++) {
-      uint32_t* row = pixels + y * containerW;
-      for (int x = 0; x < containerW; x++) {
-        float t = ((float)x + (float)y) / denom;
-        t = powf(t, gamma);
-        COLORREF col = LerpColor(base, light, t * 0.9f);
-        BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-        float d = win32_dither(x, y);
-        int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
-        if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
-        row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
-      }
-    }
-  } else if (preset == 3) {
-    float cx = containerW * 0.5f, cy = containerH * 0.35f;
-    float maxDist = sqrtf(cx*cx + cy*cy); if (maxDist < 1) maxDist = 1;
-    for (int y = 0; y < containerH; y++) {
-      uint32_t* row = pixels + y * containerW;
-      for (int x = 0; x < containerW; x++) {
-        float dx = x - cx, dy = y - cy;
-        float dist = sqrtf(dx*dx + dy*dy) / maxDist; if (dist > 1) dist = 1;
-        float t = powf(dist, gamma) * 0.85f;
-        COLORREF col = LerpColor(light, base, t);
-        BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-        float d = win32_dither(x, y);
-        int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
-        if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
-        row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
-      }
-    }
-  } else if (preset == 4) {
-    for (int y = 0; y < containerH; y++) {
-      float tBase = containerH > 1 ? (float)y / (float)(containerH - 1) : 0;
-      tBase = powf(tBase, gamma);
-      uint32_t* row = pixels + y * containerW;
-      for (int x = 0; x < containerW; x++) {
-        float t = tBase * 0.85f;
-        COLORREF col = LerpColor(base, light, t);
-        unsigned int n = HashNoiseWin(x, y);
-        int delta = (int)(n & 0x1F) - 16;
-        delta = (int)(delta * ShaderIntensity * 0.5f);
-        int r = GetRValue(col) + delta, g = GetGValue(col) + delta, b = GetBValue(col) + delta;
-        float d = win32_dither(x, y);
-        r = (int)(r + d); g = (int)(g + d); b = (int)(b + d);
-        if (r < 0) r = 0; if (r > 255) r = 255; if (g < 0) g = 0; if (g > 255) g = 255; if (b < 0) b = 0; if (b > 255) b = 255;
-        row[x] = (uint32_t)b | ((uint32_t)g << 8) | ((uint32_t)r << 16);
-      }
-    }
-  } else {
-    uint32_t pix = (uint32_t)GetBValue(base) | ((uint32_t)GetGValue(base) << 8) | ((uint32_t)GetRValue(base) << 16);
-    for (int i = 0; i < containerW * containerH; i++) pixels[i] = pix;
-  }
-  HDC memDC = CreateCompatibleDC(refDC);
-  HBITMAP old = (HBITMAP)SelectObject(memDC, hBmp);
-  c->bmp = hBmp;
-  c->dc = memDC;
-  c->w = containerW; c->h = containerH;
-  c->base = base; c->preset = preset;
-  c->gamma = gamma; c->intensity = intensity;
-}
-
-static void win32_draw_gradient_dib(HDC hdc, RECT* rc, COLORREF base, int preset, int containerW, int containerH, int offsetX, int offsetY) {
-    PROFILE_START(_pt);
-int w = rc->right - rc->left;
-  int h = rc->bottom - rc->top;
-  if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "win32_draw_gradient_dib"); return ; }
-  if (preset == 1 || preset == 2 || preset == 3 || preset == 4) {
-    if (containerW > 0 && containerH > 0 && (containerW != w || containerH != h || offsetX != 0 || offsetY != 0)) {
-      win32_ensure_gradient_cache(&g_bgCache, hdc, containerW, containerH, base, preset);
-      if (g_bgCache.dc && g_bgCache.bmp) {
-        BitBlt(hdc, rc->left, rc->top, w, h, g_bgCache.dc, offsetX, offsetY, SRCCOPY);
-        return;
-      }
-    }
-  }
-  BITMAPINFO bmi = {0};
-  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bmi.bmiHeader.biWidth = w;
-  bmi.bmiHeader.biHeight = -h;
-  bmi.bmiHeader.biPlanes = 1;
-  bmi.bmiHeader.biBitCount = 32;
-  bmi.bmiHeader.biCompression = BI_RGB;
-  void* bits = NULL;
-  HBITMAP hBmp = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
-  if (!hBmp || !bits) {
-    HBRUSH br = CreateSolidBrush(base);
-    FillRect(hdc, rc, br);
-    DeleteObject(br);
-    return;
-  }
-  uint32_t* pixels = (uint32_t*)bits;
-  COLORREF light = DeriveLighterWin(base, 1.0f);
-  float gamma = win32_compute_gamma();
-  if (preset == 1) {
-    for (int y = 0; y < h; y++) {
-      float t;
-      if (containerW > 0 && containerH > 0) {
-        int globalY = offsetY + y;
-        t = containerH > 1 ? (float)globalY / (float)(containerH - 1) : 0;
-      } else {
-        t = h > 1 ? (float)y / (float)(h - 1) : 0;
-      }
-      t = powf(t, gamma);
-      COLORREF col = LerpColor(base, light, t * 0.9f);
-      BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-      int dY = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
-      float d = win32_dither(0, dY);
-      int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
-      if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
-      uint32_t pix = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
-      uint32_t* row = pixels + y * w;
-      for (int x = 0; x < w; x++) row[x] = pix;
-    }
-  } else if (preset == 2) {
-    float denom;
-    if (containerW > 0 && containerH > 0) denom = (float)(containerW + containerH); else denom = (float)(w + h);
-    if (denom < 1) denom = 1;
-    for (int y = 0; y < h; y++) {
-      uint32_t* row = pixels + y * w;
-      for (int x = 0; x < w; x++) {
-        float t;
-        if (containerW > 0 && containerH > 0) {
-          int gx = offsetX + x; int gy = offsetY + y;
-          t = ((float)gx + (float)gy) / denom;
-        } else {
-          t = ((float)x + (float)y) / denom;
-        }
-        t = powf(t, gamma);
-        COLORREF col = LerpColor(base, light, t * 0.9f);
-        BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-        int dX2 = (containerW > 0 && containerH > 0) ? (offsetX + x) : x;
-        int dY2 = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
-        float d = win32_dither(dX2, dY2);
-        int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
-        if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
-        row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
-      }
-    }
-  } else if (preset == 3) {
-    float cx, cy, maxDist;
-    if (containerW > 0 && containerH > 0) { cx = containerW * 0.5f; cy = containerH * 0.35f; maxDist = sqrtf(cx*cx + cy*cy); } else { cx = w * 0.5f; cy = h * 0.35f; maxDist = sqrtf(cx*cx + cy*cy); }
-    if (maxDist < 1) maxDist = 1;
-    for (int y = 0; y < h; y++) {
-      uint32_t* row = pixels + y * w;
-      for (int x = 0; x < w; x++) {
-        float dx, dy;
-        if (containerW > 0 && containerH > 0) { dx = (offsetX + x) - cx; dy = (offsetY + y) - cy; } else { dx = x - cx; dy = y - cy; }
-        float dist = sqrtf(dx*dx + dy*dy) / maxDist; if (dist > 1) dist = 1;
-        float t = powf(dist, gamma) * 0.85f;
-        COLORREF col = LerpColor(light, base, t);
-        BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-        int dX3 = (containerW > 0 && containerH > 0) ? (offsetX + x) : x;
-        int dY3 = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
-        float d = win32_dither(dX3, dY3);
-        int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
-        if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
-        row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
-      }
-    }
-  } else if (preset == 4) {
-    for (int y = 0; y < h; y++) {
-      float tBase;
-      if (containerW > 0 && containerH > 0) {
-        int gy = offsetY + y;
-        tBase = containerH > 1 ? (float)gy / (float)(containerH - 1) : 0;
-      } else {
-        tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
-      }
-      tBase = powf(tBase, gamma);
-      uint32_t* row = pixels + y * w;
-      for (int x = 0; x < w; x++) {
-        float t = tBase * 0.85f;
-        COLORREF col = LerpColor(base, light, t);
-        unsigned int gx = (containerW > 0 && containerH > 0) ? (unsigned int)(offsetX + x) : (unsigned int)x;
-        unsigned int gy = (containerW > 0 && containerH > 0) ? (unsigned int)(offsetY + y) : (unsigned int)y;
-        unsigned int n = HashNoiseWin((int)gx, (int)gy);
-        int delta = (int)(n & 0x1F) - 16;
-        delta = (int)(delta * ShaderIntensity * 0.5f);
-        int r = GetRValue(col) + delta, g = GetGValue(col) + delta, b = GetBValue(col) + delta;
-        float d = win32_dither((int)gx, (int)gy);
-        r = (int)(r + d); g = (int)(g + d); b = (int)(b + d);
-        if (r < 0) r = 0; if (r > 255) r = 255; if (g < 0) g = 0; if (g > 255) g = 255; if (b < 0) b = 0; if (b > 255) b = 255;
-        row[x] = (uint32_t)b | ((uint32_t)g << 8) | ((uint32_t)r << 16);
-      }
-    }
-  } else {
-    uint32_t pix = (uint32_t)GetBValue(base) | ((uint32_t)GetGValue(base) << 8) | ((uint32_t)GetRValue(base) << 16);
-    for (int i = 0; i < w*h; i++) pixels[i] = pix;
-  }
-  HDC memDC = CreateCompatibleDC(hdc);
-  HBITMAP old = (HBITMAP)SelectObject(memDC, hBmp);
-  BitBlt(hdc, rc->left, rc->top, w, h, memDC, 0, 0, SRCCOPY);
-  SelectObject(memDC, old);
-  DeleteDC(memDC);
-  DeleteObject(hBmp);
-}
 
 void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base) {
     PROFILE_START(_pt);
@@ -377,20 +97,6 @@ PROFILE_START(timer);
   DeleteObject(br);
   PROFILE_END_VAR(timer, "sel-solid");
   { PROFILE_END_VAR(_pt, "win32_draw_selection_background"); return ; }
-}
-
-void win32_draw_background_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY) {
-    PROFILE_START(_pt);
-int preset = ShaderPreset;
-  if (!EnableShaders || preset == 0) {
-    HBRUSH br = CreateSolidBrush(base);
-    FillRect(hdc, rc, br);
-    DeleteObject(br);
-    return;
-  }
-  win32_draw_gradient_dib(hdc, rc, base, preset, containerW, containerH, offsetX, offsetY);
-  { PROFILE_END_VAR(_pt, "win32_draw_background_slice"); return ; }
-
 }
 
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1, int ey1,
@@ -476,17 +182,12 @@ if (!RoundedCorners || radius <= 0) {
 }
 
 void win32_fill_rounded_rect_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius) {
-    PROFILE_START(_pt);
-if (!RoundedCorners || radius <= 0) {
-    win32_draw_background_slice(hdc, rc, base, containerW, containerH, offsetX, offsetY);
-    return;
-  }
+  PROFILE_START(_pt);
   if (radius > (rc->right - rc->left)/2) radius = (rc->right - rc->left)/2;
   if (radius > (rc->bottom - rc->top)/2) radius = (rc->bottom - rc->top)/2;
   int save = SaveDC(hdc);
   HRGN rgn = CreateRoundRectRgn(rc->left, rc->top, rc->right+1, rc->bottom+1, radius*2, radius*2);
   SelectClipRgn(hdc, rgn);
-  win32_draw_background_slice(hdc, rc, base, containerW, containerH, offsetX, offsetY);
   SelectClipRgn(hdc, NULL);
   RestoreDC(hdc, save);
   DeleteObject(rgn);
@@ -510,37 +211,19 @@ if (!RoundedCorners || radius <= 0) {
 }
 
 void win32_draw_background(HDC hdc, RECT* rc) {
-    PROFILE_START(_pt);
-PROFILE_START(timer);
+  PROFILE_START(_pt);
+  PROFILE_START(timer);
   const char* name = "solid";
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
   if (w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "WinBg solid"); return; }
   COLORREF base = COLOR_BG;
-  if (!EnableShaders || ShaderPreset == 0) {
-    name = "solid";
-    HBRUSH br = CreateSolidBrush(base);
-    FillRect(hdc, rc, br);
-    DeleteObject(br);
-    PROFILE_END_VAR(timer, name);
-    return;
-  }
-  int preset = ShaderPreset;
-  if (preset == 1) name = "vertical";
-  else if (preset == 2) name = "diagonal";
-  else if (preset == 3) name = "radial";
-  else if (preset == 4) name = "noise";
-  win32_ensure_gradient_cache(&g_bgCache, hdc, w, h, base, preset);
-  if (g_bgCache.dc && g_bgCache.bmp) {
-    BitBlt(hdc, rc->left, rc->top, w, h, g_bgCache.dc, 0, 0, SRCCOPY);
-    PROFILE_END_VAR(timer, name);
-    return;
-  }
-  win32_draw_gradient_dib(hdc, rc, base, preset, 0, 0, 0, 0);
+  name = "solid";
+  HBRUSH br = CreateSolidBrush(base);
+  FillRect(hdc, rc, br);
+  DeleteObject(br);
   PROFILE_END_VAR(timer, name);
-  { PROFILE_END_VAR(_pt, "win32_draw_background"); return ; }
-
-  PROFILE_END_VAR(timer, name);
+  return;
 }
 
 void UpdateTextCaret(void)

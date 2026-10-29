@@ -38,7 +38,7 @@ ListBoxInfo* lb = NULL;
         RECT rect;
         GetClientRect(hwnd, &rect);
         if (win32_bg_image_enabled() && win32_draw_bg_image_slice(hdc, &rect, rect.right, rect.bottom, 0, 0)) {
-        } else if (EnableShaders && ShaderPreset != 0) win32_draw_background(hdc, &rect);
+        }
         else { HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG); FillRect(hdc, &rect, hBgBrush); DeleteObject(hBgBrush); }
 
         {

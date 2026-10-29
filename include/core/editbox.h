@@ -10,7 +10,7 @@ typedef enum {
     EDITBOX_SEL_EXCLUSIVE = 0,
     EDITBOX_SEL_INCLUSIVE = 1,
     EDITBOX_SEL_INCLUSIVE_CARET = 2
-} FlEditboxSelMode;
+} EditboxSelMode;
 
 #define EDITBOX_PART_TINT  1
 #define EDITBOX_PART_TEXT  2
@@ -25,7 +25,7 @@ typedef struct {
     int sel_start;
     int sel_end;
     bool has_selection;
-    FlEditboxSelMode sel_mode;
+    EditboxSelMode sel_mode;
 
     bool insert_mode;
 
