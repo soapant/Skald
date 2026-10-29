@@ -11,6 +11,9 @@ Flint is a keyboard-driven launcher and system control center. Unlike other tool
 - **Window Manager Native:** Deep integration with X11, Wayland (Sway/Hyprland), and Windows.
 - **Zero Dependencies:** (On Windows) statically linked `.exe`. (On Linux) ships with an RPATH bundle. No package manager required to run.
 
+##  **Early Development Warning:** 
+> Flint is evolving rapidly. The public API (`flapi.h`) is currently **unstable** and changes frequently. If you write your own features right now, be prepared to update your code often as the API matures till the stable release after that release Flint will be backwards compatible.
+
 ##  Build System
 
 Flint uses **Nob** (a single-header build system by Tsoding `https://github.com/tsoding/nob.h`). You only need to compile the build tool once.
@@ -31,6 +34,7 @@ Download the latest `.tar.gz` from the [Releases page](link) and extract it.
 ```bash
 tar -xzf flint-linux-x86_64.tar.gz
 cd flint
+./flint
 ```
 
 **2. Required (Needed For Hotkeys/Remaps To Work Correctly)
@@ -57,4 +61,5 @@ Flint is in active, early development. The following bugs are known and will be 
 1. **Font Hardcoding:** The UI is currently tuned for the `0xProto Nerd Font`. Using any other font will cause text alignment and offset issues.
 2. **Windows Image Offset:** Images rendered on Windows currently have an offset placement bug (they are sometimes rendered too far up or down).
 3. **Wayland Hotkeys:** Global hotkeys may fail to register on certain Wayland compositors (e.g., GNOME) due to security restrictions. Flint is designed primarily for X11 right now. It should work on Wayland, but don't be surprised if it doesn't.
-4. **Wayland Mouse Polling:** Mouse polling does not work on Wayland because the protocol does not easily support querying the global mouse position.
+4. **Wayland Mouse Polling:** Mouse polling does not work on Wayland because the protocol does not easily support querying the global mouse position so dont expect widgets on hover on click to work.
+

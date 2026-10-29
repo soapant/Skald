@@ -1995,3 +1995,49 @@ double Platform_EndTimer(PlTimer t) {
     if (now < t.ticks) { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return 0.0; }
     { PROFILE_END_VAR(_pt, "Platform_EndTimer"); return (double)(now - t.ticks) / 1000000.0; }
 }
+
+void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
+    PROFILE_START(_pt);
+    if (!fn) { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return NULL; }
+    pthread_t* t = malloc(sizeof(*t));
+    if (!t) { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return NULL; }
+    if (pthread_create(t, NULL, fn, arg) != 0) { free(t); return NULL; }
+    { PROFILE_END_VAR(_pt, "Platform_ThreadCreate"); return t; }
+}
+
+void Platform_ThreadJoin(void* thread) {
+    PROFILE_START(_pt);
+    if (!thread) { PROFILE_END_VAR(_pt, "Platform_ThreadJoin"); return ; }
+    pthread_t* t = (pthread_t*)thread;
+    pthread_join(*t, NULL);
+    free(t);
+}
+
+void* Platform_MutexCreate(void) {
+    PROFILE_START(_pt);
+    pthread_mutex_t* m = malloc(sizeof(*m));
+    if (!m) { PROFILE_END_VAR(_pt, "Platform_MutexCreate"); return NULL; }
+    if (pthread_mutex_init(m, NULL) != 0) { free(m); return NULL; }
+    { PROFILE_END_VAR(_pt, "Platform_MutexCreate"); return m; }
+}
+
+void Platform_MutexDestroy(void* mutex) {
+    PROFILE_START(_pt);
+    if (!mutex) { PROFILE_END_VAR(_pt, "Platform_MutexDestroy"); return ; }
+    pthread_mutex_t* m = (pthread_mutex_t*)mutex;
+    pthread_mutex_destroy(m);
+    free(m);
+}
+
+void Platform_MutexLock(void* mutex) {
+    PROFILE_START(_pt);
+    if (!mutex) { PROFILE_END_VAR(_pt, "Platform_MutexLock"); return ; }
+    pthread_mutex_lock((pthread_mutex_t*)mutex);
+}
+
+void Platform_MutexUnlock(void* mutex) {
+    PROFILE_START(_pt);
+    if (!mutex) { PROFILE_END_VAR(_pt, "Platform_MutexUnlock"); return ; }
+    pthread_mutex_unlock((pthread_mutex_t*)mutex);
+}
+
