@@ -13,7 +13,6 @@ typedef WMEditPopupData EditPopupDataInternal;
 static void EditPopup_OnShow(Popup* self) {
     PROFILE_START(timer);
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
-    data->saved_mode = g_current_mode;
     data->mode = MODE_INSERT;
     Platform_EditPopupShowWindow(self);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnShow");

@@ -44,7 +44,6 @@ typedef struct {
     int caret_h;
     int caret_w_normal;
     int caret_w_insert;
-    int caret_nudge_x;
 
     const char* align;
     int placeholder_dy;

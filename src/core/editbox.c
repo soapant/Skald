@@ -142,7 +142,7 @@ void Editbox_Layout(FlEditboxSpec* spec, FlEditboxLayout* out) {
     int lo = spec->x + PROMPT_CARET_LO_CLAMP;
     int hi = spec->x + spec->w - PROMPT_CARET_HI_CLAMP;
 
-    int tint_x = draw_x + spec->cursor_x + spec->caret_nudge_x;
+    int tint_x = draw_x + spec->cursor_x;
     if (tint_x < lo) tint_x = lo;
     if (tint_x > hi) tint_x = hi;
 
