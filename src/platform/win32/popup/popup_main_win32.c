@@ -11,7 +11,6 @@
 #include "core/prompt_geometry.h"
 #include "platform/draw.h"
 #include "platform/ui.h"
-#include "core/feature_data.h"
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/common_ui_win32.h"
 #include "platform/win32/bg_image_win32.h"
