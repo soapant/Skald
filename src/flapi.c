@@ -2759,7 +2759,7 @@ void fl_reload_all_features(void) {
         char tmp[1024];
         snprintf(tmp, sizeof(tmp), "%s.tmp.%d", dll, fl_get_pid());
         char cmd[2048];
-        snprintf(cmd, sizeof(cmd), "gcc -std=gnu17 -I include -I/usr/include/freetype2 -O3 -pipe -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-discarded-qualifiers -Wno-stringop-truncation -Wno-misleading-indentation -fPIC -shared -o \"%s\" \"%s\" 2>&1", tmp, src);
+        snprintf(cmd, sizeof(cmd), "gcc -I include -pipe -fPIC -shared -o \"%s\" \"%s\" 2>&1", tmp, src);
         char* outStr = fl_run_terminal_command(cmd);
         bool ok = false;
         if (outStr) {
