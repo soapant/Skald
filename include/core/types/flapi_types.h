@@ -11,7 +11,7 @@
  * Returned by `fl_timer_start`. Pass it back to
  * `fl_timer_end` to measure elapsed time.
  */
-typedef struct { uint64_t ticks; } FlTimer;
+typedef PlTimer FlTimer;
 
 /**
  * @brief Current network connectivity state.

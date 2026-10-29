@@ -692,24 +692,6 @@ if (!callback || seconds < 0) { PROFILE_END_VAR(_pt, "fl_run_after_time_platform
     pthread_detach(thread);
 }
 
-FlTimer fl_start_timer_platform(void) {
-        PROFILE_START(_pt);
-FlTimer t = {0};
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-    { PROFILE_END_VAR(_pt, "fl_start_timer_platform"); return t; }
-}
-
-double fl_end_timer_platform(FlTimer t) {
-        PROFILE_START(_pt);
-struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-    if (now < t.ticks) { PROFILE_END_VAR(_pt, "fl_end_timer_platform"); return 0.0; }
-    { PROFILE_END_VAR(_pt, "fl_end_timer_platform"); return (double)(now - t.ticks) / 1000000.0; }
-}
-
 void fl_sleep_platform(double seconds) {
         PROFILE_START(_pt);
 if (seconds <= 0) { PROFILE_END_VAR(_pt, "fl_sleep_platform"); return ; }
@@ -725,8 +707,8 @@ struct MemoryStruct {
 };
 
 void* fl_thread_create_platform(void* (*fn)(void*), void* arg) {
-        PROFILE_START(_pt);
-if (!fn) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
+    PROFILE_START(_pt);
+    if (!fn) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
     pthread_t* t = malloc(sizeof(*t));
     if (!t) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
     if (pthread_create(t, NULL, fn, arg) != 0) { free(t); return NULL; }
