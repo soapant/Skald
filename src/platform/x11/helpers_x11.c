@@ -257,13 +257,6 @@ if (!xf || !s || n <= 0) { PROFILE_END_VAR(_pt, "x11_measure_utf8_fallback"); re
     { PROFILE_END_VAR(_pt, "x11_measure_utf8_fallback"); return total; }
 }
 
-static double x11_ink_center(Display* dpy, XftFont* f, const char* t, int n) {
-        PROFILE_START(_pt);
-XGlyphInfo e;
-    XftTextExtentsUtf8(dpy, f, (FcChar8*)t, n, &e);
-    { PROFILE_END_VAR(_pt, "x11_ink_center"); return (double)e.yOff + (double)e.height / 2.0; }
-}
-
 int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
         PROFILE_START(_pt);
 if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return fontsize > 0 ? fontsize : 0; }
@@ -1028,14 +1021,6 @@ PROFILE_START(timer);
 static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int radius);
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8);
 
-static bool x11_has_compositor(Display* dpy, int screen) {
-        PROFILE_START(_pt);
-char sel[32];
-    snprintf(sel, sizeof(sel), "_NET_WM_CM_S%d", screen);
-    Atom a = XInternAtom(dpy, sel, False);
-    { PROFILE_END_VAR(_pt, "x11_has_compositor"); return XGetSelectionOwner(dpy, a) != None; }
-}
-
 Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
         PROFILE_START(_pt);
 PROFILE_START(timer);
@@ -1259,24 +1244,11 @@ PROFILE_START(timer);
     XftColorFree(dpy, vis, cmap, &solid);
     PROFILE_END_VAR(timer, "helpers_x11:x11_fill_rounded_rect");
 }
-static unsigned long LerpHex(unsigned long a, unsigned long b, float t) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "LerpHex"); return Color_Lerp(a, b, t); }
-}
-static unsigned long DeriveLighter(unsigned long base, float intensity) {
-        PROFILE_START(_pt);
-unsigned char r, g, b;
-    Color_DeriveLighter((unsigned int)base, intensity, &r, &g, &b);
-    { PROFILE_END_VAR(_pt, "DeriveLighter"); return ((unsigned long)r << 16) | ((unsigned long)g << 8) | (unsigned long)b; }
-}
-static unsigned int HashNoise(int x, int y) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "HashNoise"); return Color_HashNoise(x, y); }
 }
 
 static unsigned int x11_bg_channel_at(float c, int x, int y) {
-        PROFILE_START(_pt);
-float d = (float)(Color_BayerDither(x, y)) * 2.5f;
+    PROFILE_START(_pt);
+    float d = (float)(Color_BayerDither(x, y)) * 2.5f;
     int v = (int)(c + d);
     if (v < 0) v = 0;
     if (v > 255) v = 255;
@@ -1362,7 +1334,6 @@ static bool bg_slot_matches(const BgSlot* slot, const BgKey* k) {
   { PROFILE_END_VAR(_pt, "bg_slot_matches"); return slot->used && slot->dpy != NULL && slot->base == k->base
         && slot->radius == k->radius
         && slot->rounded == k->rounded
-        && slot->brightness == k->brightness
         && slot->w == k->w && slot->h == k->h; }
 }
 
@@ -1483,8 +1454,8 @@ if (!dpy || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_draw_background_to_dra
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
     BgKey k;
-    k.base = base; k.preset = preset;
-    k.rounded = rounded;k.brightness = brightness;
+    k.base = base;
+    k.rounded = rounded;
     k.w = w; k.h = h;
     Pixmap cached = bg_cache_find(dpy, &k);
     if (cached != None) {
