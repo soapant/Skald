@@ -1980,7 +1980,7 @@ bool Platform_FontInitalized(FontHandle font) {
 
 PlTimer Platform_StartTimer(void) {
     PROFILE_START(_pt);
-    FlTimer t = {0};
+    PlTimer t = {0};
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
