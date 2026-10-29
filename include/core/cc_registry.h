@@ -1,12 +1,35 @@
 #ifndef CC_REGISTRY_H
 #define CC_REGISTRY_H
 
-#include "core/flapi.h"
+#include <stdbool.h>
 
-// Re-declarations for now, will remove from flapi.h later
-bool add_to_cc_impl(const FlCcEntrySpec *spec);
+/**
+ * @brief Control center entry specification.
+ *
+ * Fields:
+ * - `display_name` — Display name.
+ * - `internal_name` — Internal unique name.
+ * - `icon` — Icon path.
+ */
+typedef struct {
+    const char *display_name;
+    const char *internal_name;
+    bool (*on_enter)(void);
+    bool (*on_ctrl_enter)(void);
+    bool (*on_shift_enter)(void);
+    bool (*on_ctrl_shift_enter)(void);
+    bool (*on_ctrl_alt_enter)(void);
+    bool (*on_shift_alt_enter)(void);
+    bool (*on_tab)(void);
+    void (*on_action)(void);
+    const char *icon;
+    const char *type;
+} CcEntrySpec;
+
+bool add_to_cc(const CcEntrySpec *spec);
+bool add_dep(const char *dep_name, const char *owner_file);
 int cc_entry_count(void);
-const FlCcEntrySpec *cc_entry_at(int index);
+const CcEntrySpec *cc_entry_at(int index);
 void cc_registry_purge_owner(const char *path_a, const char *path_b);
 
 #endif
