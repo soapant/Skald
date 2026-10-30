@@ -357,5 +357,5 @@ static void TriggerProcessKiller(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+U", .cb=TriggerProcessKiller, .blacklist={"\1"});
-    fl_register_feature(.name="Process Killer",.cb=TriggerProcessKiller,.icon="/skull.png"); 
+    fl_add_to_cc(.display_name="Process Killer",.on_action=TriggerProcessKiller,.icon="/skull.png"); 
 }

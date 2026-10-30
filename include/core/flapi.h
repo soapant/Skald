@@ -435,32 +435,6 @@ bool fl_launch_detached(char* command);
 bool fl_terminate_process_by_name(const char* exe_name);
 
 /**
- * @brief Feature registration specification.
- *
- * Fields:
- * - `name` — Display name of the feature.
- * - `cb` — Callback function invoked when the feature is selected.
- * - `icon` — Icon path or name.
- */
-typedef struct {
-    const char* name;
-    void (*cb)(void);
-    const char* icon;
-} FlFeatureSpec;
-
-/**
- * @def Register a new feature.
- * @param ... Fields of `FlFeatureSpec`. See `FlFeatureSpec`.
- */
-#define fl_register_feature(...) fl_register_feature_impl(&(FlFeatureSpec){__VA_ARGS__})
-
-/**
- * @brief Register a feature (internal implementation).
- * @param spec  Pointer to feature specification. See `FlFeatureSpec`.
- */
-void fl_register_feature_impl(const FlFeatureSpec* spec);
-
-/**
  * @brief Get list of registered feature names.
  * @param out_names  Array to store feature names.
  * @param out_cbs    Array to store feature callbacks.

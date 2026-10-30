@@ -195,5 +195,5 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey(.hotkey="Alt+Shift+;", .cb=video_cmd_6);
     fl_register_hotkey(.hotkey="Alt+V", .cb=video_prompt);
 
-    fl_register_feature(.name="Video Viewer",.cb=video_prompt,.icon="/video.png");
+    fl_add_to_cc(.display_name="Video Viewer",.on_action=video_prompt,.icon="/video.png");
 }

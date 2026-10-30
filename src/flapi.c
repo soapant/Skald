@@ -398,61 +398,6 @@ static HashMap* ensure_feature_map(void) {
     { PROFILE_END_VAR(_pt, "ensure_feature_map"); return g_feature_map; }
 }
 
-void fl_register_feature_impl(const FlFeatureSpec* spec) {
-    PROFILE_START(_pt);
-    if (!spec->name || !spec->cb) return;
-    char* icon_path = spec->icon ? spec->icon : "";
-    ensure_feature_map();
-    ptrdiff_t idx = shgeti(g_feature_map, (char*)spec->name);
-    FeatureReg* existing = idx >= 0 ? (FeatureReg*)g_feature_map[idx].value : NULL;
-    if (existing) {
-    PROFILE_START(_pt);
-        existing->cb = spec->cb;
-        if (icon_path && icon_path[0]) {
-            char icon_asset[MAX_PATH];
-            if ((icon_path[0] == '/' || icon_path[0] == '\\') &&
-                Platform_ResolveAssetPath(__builtin_return_address(0), icon_path, icon_asset, sizeof(icon_asset))) {
-                strncpy(existing->icon, icon_asset, sizeof(existing->icon)-1);
-                existing->icon[sizeof(existing->icon)-1] = '\0';
-            } else {
-                strncpy(existing->icon, icon_path, sizeof(existing->icon)-1);
-                existing->icon[sizeof(existing->icon)-1] = '\0';
-            }
-        } else {
-            existing->icon[0] = '\0';
-        }
-        hotkey_mark_feature_toggles((HotkeyCallback)spec->cb);
-        { PROFILE_END_VAR(_pt, "f"); return ; }
-    }
-    FeatureReg* reg = (FeatureReg*)calloc(1, sizeof(FeatureReg));
-    if (!reg) return;
-    strncpy(reg->name, spec->name, sizeof(reg->name)-1);
-    reg->name[sizeof(reg->name)-1] = '\0';
-    reg->cb = spec->cb;
-    if (icon_path && icon_path[0]) {
-        char icon_asset[MAX_PATH];
-        if ((icon_path[0] == '/' || icon_path[0] == '\\') &&
-            Platform_ResolveAssetPath(__builtin_return_address(0), icon_path, icon_asset, sizeof(icon_asset))) {
-            strncpy(reg->icon, icon_asset, sizeof(reg->icon)-1);
-            reg->icon[sizeof(reg->icon)-1] = '\0';
-        } else {
-            strncpy(reg->icon, icon_path, sizeof(reg->icon)-1);
-            reg->icon[sizeof(reg->icon)-1] = '\0';
-        }
-    }
-    shput(g_feature_map, reg->name, reg);
-    if (g_feature_order_count >= g_feature_order_cap) {
-        int new_cap = g_feature_order_cap ? g_feature_order_cap * 2 : 32;
-        FeatureReg** new_order = (FeatureReg**)realloc(g_feature_order, new_cap * sizeof(FeatureReg*));
-        if (!new_order) {     PROFILE_START(_pt);
-      shdel(g_feature_map, reg->name); free(reg); { PROFILE_END_VAR(_pt, "f"); return ; } }
-        g_feature_order = new_order;
-        g_feature_order_cap = new_cap;
-    }
-    g_feature_order[g_feature_order_count++] = reg;
-    hotkey_mark_feature_toggles((HotkeyCallback)spec->cb);
-}
-
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
     PROFILE_START(_pt);
     if (!spec || !spec->hotkey || !spec->cb) { PROFILE_END_VAR(_pt, "fl_register_hotkey_impl"); return false; }
