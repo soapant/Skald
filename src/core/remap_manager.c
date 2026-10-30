@@ -463,7 +463,7 @@ bool remap_should_swallow_vk(int vk_code, int value) {
     return remap_handle_vk(vk_code, value);
 }
 
-#if !defined(_WIN32)
+#if defined(__linux__)
 bool remap_should_swallow_linux_key(int linux_code, int value) {
     int vk = ConvertLinuxKeyToWindowsVK(linux_code);
     if (!vk) {

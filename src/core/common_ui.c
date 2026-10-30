@@ -9,7 +9,7 @@
 #include "platform/platform.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"
-#if !defined(_WIN32)
+#if defined(__linux__)
 #include <strings.h>
 #include <ctype.h>
 #include <string.h>

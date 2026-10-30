@@ -48,9 +48,9 @@ struct WindowManager {
     bool running;
     FlintContext* ctx;
     
-    #if !defined(_WIN32)
+    #if defined(__linux__)
     Display* display;
-    #else
+    #elif defined(_WIN32)
     void* display;
     #endif
 };

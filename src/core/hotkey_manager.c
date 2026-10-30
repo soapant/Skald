@@ -14,7 +14,7 @@
 #if defined(_WIN32)
 #include <windows.h>
 #endif
-#if !defined(_WIN32)
+#if defined(__linux__)
 #include <pthread.h>
 #endif
 #include "platform/platform.h"
@@ -31,7 +31,7 @@ static int g_pending_mods[HOTKEY_PENDING_MAX];
 static char g_pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
 static int g_pending_head = 0;
 static int g_pending_tail = 0;
-#if !defined(_WIN32)
+#if defined(__linux__)
 static pthread_mutex_t g_q_mtx = PTHREAD_MUTEX_INITIALIZER;
 #define HOTKEY_Q_LOCK() pthread_mutex_lock(&g_q_mtx)
 #define HOTKEY_Q_UNLOCK() pthread_mutex_unlock(&g_q_mtx)
