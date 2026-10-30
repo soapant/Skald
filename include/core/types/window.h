@@ -13,7 +13,7 @@ typedef struct _XftFont XftFont;
 typedef struct WindowHandle {
 #if defined(_WIN32)
     void* hwnd;
-#else
+#elif defined(__linux__)
     unsigned long xid;
 #endif
 } WindowHandle;
@@ -21,7 +21,7 @@ typedef struct WindowHandle {
 typedef struct FontHandle {
 #if defined(_WIN32)
     void* hfont;
-#else
+#elif defined(__linux__)
     XftFont* xfont;
     Display* dpy;
 #endif
@@ -32,7 +32,7 @@ typedef struct FontHandle {
 #if defined(_WIN32)
 #define WH_FROM_HWND(h) ((WindowHandle){ .hwnd = (void*)(h) })
 #define WH_TO_HWND(h) ((h).hwnd)
-#else
+#elif defined(__linux__)
 #define WH_FROM_HWND(h) ((void)(h), WH_NULL)
 #define WH_TO_HWND(h) ((h).xid)
 #endif
@@ -42,7 +42,7 @@ typedef struct FontHandle {
 #if defined(_WIN32)
 #define FH_FROM_HFONT(h) ((FontHandle){ .hfont = (void*)(h) })
 #define FH_TO_HFONT(h) ((h).hfont)
-#else
+#elif defined(__linux__)
 #define FH_TO_XFT(h) ((h).xfont)
 #define FH_TO_DPY(h) ((h).dpy)
 #endif
