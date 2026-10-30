@@ -35,7 +35,7 @@ static int g_pending_tail = 0;
 static pthread_mutex_t g_q_mtx = PTHREAD_MUTEX_INITIALIZER;
 #define HOTKEY_Q_LOCK() pthread_mutex_lock(&g_q_mtx)
 #define HOTKEY_Q_UNLOCK() pthread_mutex_unlock(&g_q_mtx)
-#else
+#elif defined (_WIN32)
 static CRITICAL_SECTION g_q_cs;
 static LONG g_q_cs_ready = 0;
 static void hotkey_queue_init(void) {
@@ -71,7 +71,7 @@ static HotkeyHoldSlot g_hold_slots[HOTKEY_HOLD_MAX];
 static unsigned long long hotkey_now_ms(void) {
 #if defined(_WIN32)
     return (unsigned long long)GetTickCount64();
-#else
+#elif defined (__linux__)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (unsigned long long)ts.tv_sec * 1000ULL + (unsigned long long)ts.tv_nsec / 1000000ULL;

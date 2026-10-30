@@ -26,7 +26,7 @@ static int sqlite_init(void) {
         if (dir) {
 #if defined (_WIN32)
             snprintf(buf, sizeof(buf), "%s/sqlite3.dll", dir);
-#else
+#elif defined (__linux__)
             snprintf(buf, sizeof(buf), "%s/libsqlite3.so", dir);
 #endif
             g_sqlite_lib = fl_library_open(buf);
@@ -49,7 +49,7 @@ static void browser_scan(void) {
     const char* appdata = getenv("APPDATA");
     if (appdata) snprintf(path, sizeof(path), "%s\\LibreWolf", appdata);
     else return;
-#else
+#elif defined (__linux__)
     const char* home = getenv("HOME");
     if (!home) return;
     snprintf(path, sizeof(path), "%s/.config/librewolf", home);

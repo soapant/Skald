@@ -99,7 +99,7 @@ static void pk_ocr_area_to_clipboard(void) {
     free(out);
 }
 
-#else
+#elif defined (_WIN32)
 
 #include <windows.h>
 #include <windowsx.h>

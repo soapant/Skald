@@ -3,7 +3,7 @@
 static bool do_restart(void) {
 #if defined(_WIN32)
     fl_run_terminal_command("Restart-Computer");
-#else
+#elif defined (__linux__)
     fl_run_terminal_command("reboot");
 #endif
     return true;
@@ -11,7 +11,7 @@ static bool do_restart(void) {
 static bool do_shutdown(void) {
 #if defined(_WIN32)
     fl_run_terminal_command("Stop-Computer");
-#else
+#elif defined (__linux__)
     fl_run_terminal_command("shutdown now");
 #endif
     return true;

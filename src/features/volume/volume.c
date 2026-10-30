@@ -10,7 +10,7 @@
 
 const GUID flint_IID_IAudioEndpointVolume =
   { 0x5cdf2c82, 0x841e, 0x4546, { 0x97, 0x22, 0x0c, 0xf7, 0x40, 0x78, 0x22, 0x9a } };
-#else
+#elif defined (__linux__)
 #include <unistd.h>
 
 #define VOLUME_GIO_PATH "libgio-2.0.so.0"
@@ -194,7 +194,7 @@ cleanup:
     CoUninitialize();
 
     return (int)(currentVolume * 100.0f + 0.5f);
-#else
+#elif defined (__linux__)
     pulse_sink();
     int volume = run_parse("pactl get-sink-volume @DEFAULT_SINK@");
     if (volume < 0) volume = run_parse("wpctl get-volume @DEFAULT_AUDIO_SINK@");
@@ -232,7 +232,7 @@ cleanup:
     if (pDevice) pDevice->lpVtbl->Release(pDevice);
     if (pEnumerator) pEnumerator->lpVtbl->Release(pEnumerator);
     CoUninitialize();
-#else
+#elif defined (__linux__)
     pulse_sink();
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "pactl set-sink-volume @DEFAULT_SINK@ %d%%", volume);
@@ -266,7 +266,7 @@ void toggle_play_pause(void) {
       input[1].ki.dwFlags = KEYEVENTF_KEYUP;
 
       SendInput(2, input, sizeof(INPUT));
-    #else
+#elif defined (__linux__)
       if (!gio_load()) return;
       GlError *error = NULL;
       GlDbConnection *conn = gio.bus_get_sync(VOLUME_G_BUS_TYPE_SESSION, NULL, &error);

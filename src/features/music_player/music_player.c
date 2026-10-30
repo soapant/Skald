@@ -69,12 +69,12 @@ static bool music_send_command(const char* window_title, const char* atom_name, 
 
 #if defined(_WIN32)
 const char* MusicPlayerPath = "C:/Projects/Music Player/music_player.exe";
-#else
+#elif defined (__linux__)
 const char* MusicPlayerPath = "~/Programming/Projects/Music Player/music_player";
 #endif
 #if defined(_WIN32)
 const char* MusicPath = "C:/Music";
-#else
+#elif defined (__linux__)
 const char* MusicPath = "~/Music";
 #endif
 
@@ -115,7 +115,7 @@ bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
         snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
         fl_launch_with_args(MusicPlayerPath, quoted_result);
     }
-#else
+#elif defined (__linux__)
     if (music_set_string("Music Player", "_MP_TRACK", result) &&
         music_send_command("Music Player", "_MP_TRACK_CHANGED", 1)) {
         return true;
@@ -133,7 +133,7 @@ void music_cmd_1(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
-#else
+#elif defined (__linux__)
     music_send_command("Music Player", "_MP_PLAYER_CMD", 1);
 #endif
 }
@@ -141,7 +141,7 @@ void music_cmd_5(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
-#else
+#elif defined (__linux__)
     music_send_command("Music Player", "_MP_PLAYER_CMD", 5);
 #endif
 }
@@ -149,7 +149,7 @@ void music_cmd_6(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
-#else
+#elif defined (__linux__)
     music_send_command("Music Player", "_MP_PLAYER_CMD", 6);
 #endif
 }
@@ -157,7 +157,7 @@ void music_cmd_2(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 2, 0);
-#else
+#elif defined (__linux__)
     music_send_command("Music Player", "_MP_PLAYER_CMD", 2);
 #endif
 }

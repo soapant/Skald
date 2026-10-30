@@ -11,7 +11,7 @@ typedef struct {
     void* hMapping;
     size_t fileSize;
     size_t capacity;
-#else
+#elif defined (__linux__)
      int fd;
      size_t fileSize;
 #endif

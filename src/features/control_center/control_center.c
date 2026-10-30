@@ -221,7 +221,7 @@ static const CcScanPath ListOfProgramPaths[] = {
     { "C:\\C:\\Program Files\\WindowsApps", 5 },
     { "C:\\Program Files (x86)\\Steam\\steamapps\\common", 5 },
     { "C:\\Program Files\\Steam\\steamapps\\common", 5 },
-#else
+#elif defined (__linux__)
     { "/usr/share/applications", FL_DIR_WALK_UNLIMITED },
     { "/home/win", 6 },
 #endif
@@ -435,7 +435,7 @@ static void cc_build_xdg_paths(void) {
 static void cc_scan_app_dirs(void) {
 #if defined(_WIN32)
     char *allowed[] = {"lnk", "exe", "url", NULL};
-#else
+#elif defined (__linux__)
     char *allowed[] = {"desktop", NULL};
 #endif
     ListOfFiles tmp = {0};

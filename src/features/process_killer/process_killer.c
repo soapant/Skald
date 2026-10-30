@@ -113,7 +113,7 @@ static void pk_collect_running_processes(void) {
     }
     free(out);
 }
-#else 
+#elif defined (__linux__)
 #include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>

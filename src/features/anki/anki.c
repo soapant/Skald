@@ -78,7 +78,7 @@ static int sqlite_init(void) {
     char* dir = fl_resolve_feature_path("anki");
 #if defined (_WIN32)
     snprintf(buf, sizeof(buf), "%s/sqlite3.dll", dir);
-#else
+#elif defined (__linux__)
     snprintf(buf, sizeof(buf), "%s/libsqlite3.so", dir);
 #endif
     g_sqlite_lib = fl_library_open(buf);
@@ -265,7 +265,7 @@ void anki_apply_elapsed(double elapsed_ms) {
     char buf[300];
 #if defined (_WIN32)
     snprintf(buf, sizeof(buf), "%s/AppData/Roaming/Anki2/User 1/collection.anki2", fl_resolve_user_path());
-#else
+#elif defined (__linux__)
     snprintf(buf, sizeof(buf), "%s/.local/share/Anki2/User 1/collection.anki2", fl_resolve_user_path());
 #endif
 
@@ -415,7 +415,7 @@ void print_due_card(void) {
     char buf[300];
 #if defined (_WIN32)
     snprintf(buf,sizeof(buf),"%s/AppData/Roaming/Anki2/User 1/collection.anki2",fl_resolve_user_path());
-#else
+#elif defined (__linux__)
     snprintf(buf,sizeof(buf),"%s/.local/share/Anki2/User 1/collection.anki2",fl_resolve_user_path());
 #endif
     CardList list = get_cards_in_deck(buf, "Chemistry");
