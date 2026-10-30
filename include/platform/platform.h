@@ -3,10 +3,6 @@
 
 #include "core/types.h"
 
-#if defined(__linux__)
-#include <X11/Xlib.h>
-#endif
-
 typedef struct {
     size_t index;
     char original;
@@ -152,17 +148,5 @@ void Platform_MutexUnlock(void* mutex);
 
 bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size);
 bool Platform_AtomicRename(const char* old_path, const char* new_path);
-
-#if defined(__linux__)
-FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
-bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state);
-void Platform_DismissIndefiniteMessage(void);
-bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);
-bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value);
-bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value);
-const char* Platform_GetSessionDisplay(void);
-const char* Platform_GetSessionXAuthority(void);
-const char* Platform_GetRuntimeDir(void);
-#endif
 
 #endif
