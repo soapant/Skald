@@ -72,7 +72,7 @@ static void TriggerZoxide(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+W", .cb=TriggerZoxide, .blacklist={"\1"});
+    fl_register_hotkey(.hotkey="Alt+W", .cb=TriggerZoxide);
 
     fl_add_to_cc(.display_name="Zoxide",.on_action=TriggerZoxide,.icon="/folder.png");
 }

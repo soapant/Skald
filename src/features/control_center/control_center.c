@@ -104,7 +104,7 @@ static CcEntry *cc_add_fallback(void) {
     snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
     buffer[0] = toupper((unsigned char)buffer[0]);
     snprintf(fallback->label, sizeof(fallback->label), "%s", buffer);
-    snprintf(fallback->icon, sizeof(fallback->icon), "resources/%s.png", UsedSearchEngine);
+    snprintf(fallback->icon, sizeof(fallback->icon), "/%s.png", UsedSearchEngine);
     return fallback;
 }
 
