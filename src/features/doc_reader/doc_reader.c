@@ -304,5 +304,5 @@ void TriggerDocReader(void) {
 FLINT_FEATURE_INIT {
     fill_doc_items();
     fl_register_hotkey(.hotkey="Alt+C",.cb=TriggerDocReader);
-    fl_register_feature(.name="FlintDocs",.cb=TriggerDocReader,.icon="/list-check.png");
+    fl_add_to_cc(.display_name="FlintDocs",.on_action=TriggerDocReader,.icon="/list-check.png");
 }
