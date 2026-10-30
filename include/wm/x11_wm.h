@@ -18,4 +18,5 @@ bool move_active_window_right_x11(void);
 bool focus_window_left_x11(void);
 bool focus_window_right_x11(void);
 bool minimize_active_window_x11(void);
+bool get_mouse_pos_x11(int *x, int *y);
 #endif

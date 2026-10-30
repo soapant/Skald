@@ -17,4 +17,5 @@ bool move_active_window_right_hyprland(void);
 bool focus_window_left_hyprland(void);
 bool focus_window_right_hyprland(void);
 bool minimize_active_window_hyprland(void);
+bool get_mouse_pos_hyprland(int *x, int *y);
 #endif

@@ -274,3 +274,8 @@ bool minimize_active_window_niri(void) {
 if (!niri_is_active()) { PROFILE_END_VAR(_pt, "minimize_active_window_niri"); return false; }
     { PROFILE_END_VAR(_pt, "minimize_active_window_niri"); return false; }
 }
+
+bool get_mouse_pos_niri(int *x, int *y) {
+    (void)x; (void)y;
+    return false;
+}

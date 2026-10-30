@@ -24,5 +24,6 @@ bool Wm_ScreenshotCopy(void);
 bool Wm_ScreenshotSaveArea(char* save_path);
 bool Wm_ScreenshotSave(char* save_path);
 char* Wm_OcrArea(void);
+bool Wm_GetMousePos(int *x, int *y);
 
 #endif

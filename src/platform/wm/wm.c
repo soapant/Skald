@@ -284,3 +284,14 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     { PROFILE_END_VAR(_pt, "Wm_OcrArea"); return NULL; }
 }
+
+bool Wm_GetMousePos(int *x, int *y) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (get_mouse_pos_hyprland(x, y)) return true;
+        if (get_mouse_pos_kwin(x, y)) return true;
+        if (get_mouse_pos_niri(x, y)) return true;
+        if (get_mouse_pos_sway(x, y)) return true;
+    }
+    if (get_mouse_pos_x11(x, y)) return true;
+    return false;
+}

@@ -491,3 +491,8 @@ if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "ocr_area_kwin"); return NULL; }
     if (!out || !out[0]) { free(out); return NULL; }
     { PROFILE_END_VAR(_pt, "ocr_area_kwin"); return out; }
 }
+
+bool get_mouse_pos_kwin(int *x, int *y) {
+    (void)x; (void)y;
+    return false;
+}

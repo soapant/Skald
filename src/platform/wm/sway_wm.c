@@ -576,3 +576,8 @@ bool move_active_window_right_sway(void) {
         PROFILE_START(_pt);
 { PROFILE_END_VAR(_pt, "move_active_window_right_sway"); return move_active_window_to_monitor_sway(true); }
 }
+
+bool get_mouse_pos_sway(int *x, int *y) {
+    (void)x; (void)y;
+    return false;
+}
