@@ -2,7 +2,6 @@
 #define PLATFORM_DRAW_H
 
 #include "core/types.h"
-#include "core/context.h"
 
 void Platform_SetDrawBgColor(unsigned long hex);
 unsigned long Platform_GetDrawBgColor(void);
