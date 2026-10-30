@@ -172,6 +172,21 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     int layout_w = spec->w > 0 ? spec->w : 900 * scale;
     int layout_h = spec->h > 0 ? spec->h : 640 * scale;
 
+    {
+        int mx = 0, my = 0, mw = 0, mh = 0;
+        WindowManager_GetMainMonitorGeometry(&mx, &my, &mw, &mh);
+        if (mw > 0) {
+            if (layout_w > mw - 40) layout_w = mw - 40;
+            if (layout_w < 100) layout_w = mw > 140 ? mw - 40 : mw;
+        }
+        if (mh > 0) {
+            if (layout_h > mh - 40) layout_h = mh - 40;
+            if (layout_h < 100) layout_h = mh > 140 ? mh - 40 : mh;
+        }
+        if (layout_w <= 0) layout_w = spec->w > 0 ? spec->w : 900;
+        if (layout_h <= 0) layout_h = spec->h > 0 ? spec->h : 640;
+    }
+
     if (spec->auto_scale) {
         int rows = 0;
         if (spec->items) { while (spec->items[rows]) rows++; }
