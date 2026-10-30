@@ -22,3 +22,12 @@ const char* Platform_GetRealUser(void) {
 bool Platform_QueryBrowser(char* query) {
     return false;
 }
+
+bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size) {
+    snprintf(cmd, cmd_size, "gcc -std=gnu17 -I include  -pipe -fPIC -shared -o %s %s 2>&1", out_tmp, src);
+    return true;
+}
+
+bool Platform_AtomicRename(const char* old_path, const char* new_path) {
+    return rename(old_path, new_path) == 0;
+}

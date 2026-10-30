@@ -150,6 +150,9 @@ void Platform_MutexDestroy(void* mutex);
 void Platform_MutexLock(void* mutex);
 void Platform_MutexUnlock(void* mutex);
 
+bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size);
+bool Platform_AtomicRename(const char* old_path, const char* new_path);
+
 #if defined(__linux__)
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state);
