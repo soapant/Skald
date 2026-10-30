@@ -6,6 +6,7 @@
 #include "platform/wm_platform.h"
 #include "platform/ui.h"
 #include "platform/draw.h"
+#include "platform/win32/win32_state.h"
 #include "platform/platform.h"
 #include "platform/win32/common_ui_win32.h"
 #include "platform/win32/bg_image_win32.h"

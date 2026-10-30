@@ -15,4 +15,8 @@ extern PromptState* g_win32_prompt_state;
 PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
 PromptState* Platform_GetWin32PromptState(void);
 
+void Platform_SetDrawContextWin32(HDC hdc);
+void Platform_GetDrawContextWin32(HDC *out);
+void Platform_ReleaseDrawCache(void);
+
 #endif
