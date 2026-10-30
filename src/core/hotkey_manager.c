@@ -11,11 +11,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#if defined(_WIN32)
-#include <windows.h>
-#else
-#include <pthread.h>
-#endif
 #include "platform/platform.h"
 
 static HotkeyBinding* g_hotkeys = NULL;
@@ -30,19 +25,12 @@ static int g_pending_mods[HOTKEY_PENDING_MAX];
 static char g_pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
 static int g_pending_head = 0;
 static int g_pending_tail = 0;
-#if defined(_WIN32)
-static CRITICAL_SECTION g_q_cs;
-static LONG g_q_cs_ready = 0;
+static void* g_q_mutex = NULL;
 static void hotkey_queue_init(void) {
-    if (InterlockedCompareExchange(&g_q_cs_ready, 1, 0) == 0) InitializeCriticalSection(&g_q_cs);
+    if (!g_q_mutex) g_q_mutex = Platform_MutexCreate();
 }
-#define HOTKEY_Q_LOCK() do { hotkey_queue_init(); EnterCriticalSection(&g_q_cs); } while (0)
-#define HOTKEY_Q_UNLOCK() do { hotkey_queue_init(); LeaveCriticalSection(&g_q_cs); } while (0)
-#else
-static pthread_mutex_t g_q_mtx = PTHREAD_MUTEX_INITIALIZER;
-#define HOTKEY_Q_LOCK() pthread_mutex_lock(&g_q_mtx)
-#define HOTKEY_Q_UNLOCK() pthread_mutex_unlock(&g_q_mtx)
-#endif
+#define HOTKEY_Q_LOCK() do { hotkey_queue_init(); Platform_MutexLock(g_q_mutex); } while (0)
+#define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(g_q_mutex)
 static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle, const char* owner, int vk, int mods) {
     if (!fn) return;
     HOTKEY_Q_LOCK();
