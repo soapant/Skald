@@ -346,6 +346,6 @@ void TriggerTodo(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+T", .cb=TriggerTodo, .blacklist={"\1"});
+    fl_register_hotkey(.hotkey="Alt+T", .cb=TriggerTodo);
     fl_add_to_cc(.display_name="Todo",.on_action=TriggerTodo,.icon="/list-check.png");
 }
