@@ -17,6 +17,7 @@ bool move_active_window_right_sway(void);
 bool focus_window_left_sway(void);
 bool focus_window_right_sway(void);
 bool minimize_active_window_sway(void);
+bool get_mouse_pos_sway(int *x, int *y);
 
 #endif
 

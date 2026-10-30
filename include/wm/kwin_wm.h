@@ -18,6 +18,7 @@ bool move_active_window_right_kwin(void);
 bool focus_window_left_kwin(void);
 bool focus_window_right_kwin(void);
 bool minimize_active_window_kwin(void);
+bool get_mouse_pos_kwin(int *x, int *y);
 bool screenshot_copy_area_kwin(void);
 bool screenshot_copy_kwin(void);
 bool screenshot_save_area_kwin(char* save_path);
