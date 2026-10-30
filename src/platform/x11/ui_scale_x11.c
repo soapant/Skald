@@ -62,6 +62,18 @@ const char* ov = getenv("FLINT_SCALE");
     }
     if (best < 1.0f) best = 1.0f;
     if (best > 3.0f) best = 3.0f;
+    if (dpy) {
+        int pw = DisplayWidth(dpy, DefaultScreen(dpy));
+        int ph = DisplayHeight(dpy, DefaultScreen(dpy));
+        if (pw > 0 && ph > 0) {
+            int max_int_scale = pw / 900;
+            if (max_int_scale < 1) max_int_scale = 1;
+            int max_h_scale = ph / 640;
+            if (max_h_scale < max_int_scale) max_int_scale = max_h_scale;
+            if (max_int_scale < 1) max_int_scale = 1;
+            if (best > (float)max_int_scale) best = (float)max_int_scale;
+        }
+    }
     { PROFILE_END_VAR(_pt, "ui_scale_detect"); return best; }
 }
 
