@@ -19,7 +19,7 @@
 static bool read_disk(unsigned long long *used_out, unsigned long long *total_out) {
     *used_out = 0;
     *total_out = 0;
-#if !defined(_WIN32)
+#if defined(__linux__)
     struct statvfs vfs;
     if (statvfs("/", &vfs) != 0) return false;
     unsigned long long block_size = vfs.f_frsize ? vfs.f_frsize : vfs.f_bsize;
@@ -48,7 +48,7 @@ static bool read_disk(unsigned long long *used_out, unsigned long long *total_ou
 static bool read_mem(unsigned long long *used_out, unsigned long long *total_out) {
     *used_out = 0;
     *total_out = 0;
-#if !defined(_WIN32)
+#if defined(__linux__)
     FILE* fp = fopen("/proc/meminfo", "r");
     if (!fp) return false;
     unsigned long long total_kb = 0, avail_kb = 0;
@@ -78,7 +78,7 @@ static bool read_mem(unsigned long long *used_out, unsigned long long *total_out
 }
 
 static bool sample_cpu(unsigned long long *busy_out, unsigned long long *total_out) {
-#if !defined(_WIN32)
+#if defined(__linux__)
     FILE* fp = fopen("/proc/stat", "r");
     if (!fp) return false;
     char label[16];

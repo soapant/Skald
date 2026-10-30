@@ -5,8 +5,7 @@
 
 #define SHOT_BUF 1024
 
-#if !defined(_WIN32)
-
+#if defined(__linux__)
 #include <unistd.h>
 #include <glob.h>
 

@@ -2,12 +2,12 @@
 #define PLATFORM_X11_DRAWING_H
 
 #include "core/types.h"
-#if !defined(_WIN32)
+#if defined(__linux__)
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 #endif
 
-#if !defined(_WIN32)
+#if defined(__linux__)
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY,char* centered_to,int xOffset, int boxWidth);
 int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, int y, XftFont* xf, const char* s, int n, int px);
 int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, int px);

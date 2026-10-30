@@ -6,7 +6,8 @@
 #if defined(_WIN32)
 #include <windows.h>
 #endif
-#if !defined(_WIN32)
+
+#if defined(__linux__)
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 static Window video_find_window(Display* dpy, Window w, const char* title) {
