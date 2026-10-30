@@ -3,7 +3,7 @@
 #include <stddef.h>
 #if defined(_WIN32)
 #include <windows.h>
-#elif defined (__linux__)
+#else
 #include <pthread.h>
 #endif
 #include <time.h>
@@ -104,11 +104,7 @@ char Platform_GetPressedChar(void){
 static PlatformKeyEvent g_gkeys[GLOBAL_KEY_RING];
 static int g_gkey_head = 0, g_gkey_tail = 0;
 static unsigned long g_gkey_dropped = 0;
-#if defined(__linux__)
-static pthread_mutex_t g_gkey_mtx = PTHREAD_MUTEX_INITIALIZER;
-#define GKEY_LOCK() pthread_mutex_lock(&g_gkey_mtx)
-#define GKEY_UNLOCK() pthread_mutex_unlock(&g_gkey_mtx)
-#elif defined (_WIN32)
+#if defined(_WIN32)
 static CRITICAL_SECTION g_gkey_cs;
 static LONG g_gkey_cs_ready = 0;
 static void gkey_lock_init(void) {
@@ -116,6 +112,10 @@ static void gkey_lock_init(void) {
 }
 #define GKEY_LOCK() do { gkey_lock_init(); EnterCriticalSection(&g_gkey_cs); } while (0)
 #define GKEY_UNLOCK() do { gkey_lock_init(); LeaveCriticalSection(&g_gkey_cs); } while (0)
+#else
+static pthread_mutex_t g_gkey_mtx = PTHREAD_MUTEX_INITIALIZER;
+#define GKEY_LOCK() pthread_mutex_lock(&g_gkey_mtx)
+#define GKEY_UNLOCK() pthread_mutex_unlock(&g_gkey_mtx)
 #endif
 
 void Platform_GlobalKey_Clear(void){
@@ -145,7 +145,7 @@ void Platform_GlobalKey_Push(const PlatformKeyEvent* ev){
   PlatformKeyEvent stamped = *ev;
 #if defined(_WIN32)
   stamped.t_us = win32_qpc_us();
-#elif defined (__linux__)
+#else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   stamped.t_us = (unsigned long long)ts.tv_sec * 1000000ULL + (unsigned long long)(ts.tv_nsec / 1000);
@@ -192,11 +192,7 @@ static PlatformMouseEvent g_gmice[GLOBAL_MOUSE_RING];
 static int g_gmouse_head = 0, g_gmouse_tail = 0;
 static unsigned long g_gmouse_dropped = 0;
 static bool g_mbtn_down[FL_MOUSE_BTN_MAX] = {0};
-#if defined(__linux__)
-static pthread_mutex_t g_gmouse_mtx = PTHREAD_MUTEX_INITIALIZER;
-#define GMOUSE_LOCK() pthread_mutex_lock(&g_gmouse_mtx)
-#define GMOUSE_UNLOCK() pthread_mutex_unlock(&g_gmouse_mtx)
-#elif defined (_WIN32)
+#if defined(_WIN32)
 static CRITICAL_SECTION g_gmouse_cs;
 static LONG g_gmouse_cs_ready = 0;
 static void gmouse_lock_init(void) {
@@ -204,6 +200,10 @@ static void gmouse_lock_init(void) {
 }
 #define GMOUSE_LOCK() do { gmouse_lock_init(); EnterCriticalSection(&g_gmouse_cs); } while (0)
 #define GMOUSE_UNLOCK() do { gmouse_lock_init(); LeaveCriticalSection(&g_gmouse_cs); } while (0)
+#else
+static pthread_mutex_t g_gmouse_mtx = PTHREAD_MUTEX_INITIALIZER;
+#define GMOUSE_LOCK() pthread_mutex_lock(&g_gmouse_mtx)
+#define GMOUSE_UNLOCK() pthread_mutex_unlock(&g_gmouse_mtx)
 #endif
 
 int Platform_GlobalMouse_Full(void){
@@ -217,7 +217,7 @@ void Platform_GlobalMouse_Push(const PlatformMouseEvent* ev){
   PlatformMouseEvent stamped = *ev;
 #if defined(_WIN32)
   stamped.t_us = win32_qpc_us();
-#elif defined (__linux__)
+#else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   stamped.t_us = (unsigned long long)ts.tv_sec * 1000000ULL + (unsigned long long)(ts.tv_nsec / 1000);

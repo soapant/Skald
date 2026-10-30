@@ -2179,7 +2179,7 @@ int fl_get_pid();
 
 #if defined(_WIN32)
 #define FLINT_FEATURE_EXPORT __declspec(dllexport)
-#elif defined (__linux__)
+#else
 #define FLINT_FEATURE_EXPORT __attribute__((visibility("default")))
 #endif
 

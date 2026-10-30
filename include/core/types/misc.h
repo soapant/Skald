@@ -14,7 +14,6 @@ typedef struct {
     char* result;
     void* hFont;
     int alpha;
-    WindowHandle hEdit;
 } EditPopupData;
 
 typedef enum {

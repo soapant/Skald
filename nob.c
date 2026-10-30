@@ -53,6 +53,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
             if (nob_sv_ends_with_cstr(path, "_wayland.c")) return true;
             if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
+            if (nob_sv_starts_with(path, nob_sv_from_cstr("src/platform/x11/"))) return true;
 #else
             if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
             if (nob_sv_ends_with_cstr(path, "_macos.c")) return true;
@@ -226,6 +227,9 @@ static void augment_pkg_config_path(void) {
 }
 
 static void discover_dep_flags(void) {
+#if defined(__APPLE__)
+    return;
+#else
     char cmdline[512];
     augment_pkg_config_path();
     snprintf(cmdline, sizeof(cmdline), "pkg-config --cflags %s 2>/dev/null", PKG_CFLAGS_PKGS_STR);
@@ -260,6 +264,7 @@ static void discover_dep_flags(void) {
         };
         for (size_t i = 0; i < sizeof(fb)/sizeof(fb[0]); i++)         nob_da_append(&dep_ldflags, nob_temp_strdup(fb[i]));
     }
+#endif
 }
 
 static void append_dep_cflags(Nob_Cmd* cmd) {
@@ -674,6 +679,9 @@ int main(int argc, char** argv) {
                 nob_cc_flags(&fcmd);
 #if defined(_WIN32)
                 nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", "-MF", feature_dep_path(src), LINK_FLAGS);
+#elif defined(__APPLE__)
+                nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src), LINK_FLAGS);
+                append_dep_cflags(&fcmd);
 #else
                 nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src));
                 append_dep_cflags(&fcmd);
@@ -734,6 +742,9 @@ int main(int argc, char** argv) {
             nob_cc_flags(&fcmd);
 #if defined(_WIN32)
             nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", "-MF", feature_dep_path(src), LINK_FLAGS);
+#elif defined(__APPLE__)
+            nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src), LINK_FLAGS);
+            append_dep_cflags(&fcmd);
 #else
             nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src));
             append_dep_cflags(&fcmd);
