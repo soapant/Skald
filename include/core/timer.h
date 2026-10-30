@@ -1,37 +1,19 @@
 #ifndef CORE_TIMER_H
 #define CORE_TIMER_H
 
-#if defined(_WIN32)
-#include <windows.h>
-#elif defined (__linux__)
-#include <time.h>
-#endif
 #include "core/types.h"
+#include "platform/platform.h"
 
 #define TIMER_LOG_CAP 65536
 #define TIMER_BUF_LINES 8192
 #define TIMER_BUF_LINE 256
 
 static inline int64_t TimerNowTicks(void) {
-#if defined(_WIN32)
-  LARGE_INTEGER c;
-  QueryPerformanceCounter(&c);
-  return (int64_t)c.QuadPart;
-#elif defined (__linux__)
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (int64_t)ts.tv_sec * 1000000000LL + (int64_t)ts.tv_nsec;
-#endif
+  return Platform_TimerNowTicks();
 }
 
 static inline int64_t TimerTickFrequency(void) {
-#if defined(_WIN32)
-  LARGE_INTEGER f;
-  QueryPerformanceFrequency(&f);
-  return (int64_t)f.QuadPart;
-#elif defined (__linux__)
-  return 1000000000LL;
-#endif
+  return Platform_TimerTickFrequency();
 }
 
 static inline WinTimer TimerStart(void) {

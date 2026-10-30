@@ -31,3 +31,13 @@ bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char*
 bool Platform_AtomicRename(const char* old_path, const char* new_path) {
     return rename(old_path, new_path) == 0;
 }
+
+int64_t Platform_TimerNowTicks(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (int64_t)ts.tv_sec * 1000000000LL + (int64_t)ts.tv_nsec;
+}
+
+int64_t Platform_TimerTickFrequency(void) {
+    return 1000000000LL;
+}
