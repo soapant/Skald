@@ -6,6 +6,7 @@
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
+#include "platform/win32/common_ui_win32.h"
 #include "platform/win32/subclasses_win32.h"
 #include "core/timer.h"
 #include <math.h>
