@@ -235,15 +235,7 @@ static void Populate_UpdateUI(ListBoxInfo* lb, int total_matches, const char* fi
   }
   ListBox_ScrollToSelection(lb);
   if (total_matches == 0) {
-#if defined(_WIN32)
-    if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
-      KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
-      DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-      FlintContext_Get()->window.hDisplayMessage = WH_NULL;
-    }
-#else
-    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
-#endif
+    Platform_DismissDisplayMessage();
   }
   UI_LB_EndUpdate();
 }
