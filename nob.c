@@ -19,7 +19,7 @@
      #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
      #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp", "-Lbuild/winlibs","-liphlpapi"
 #elif defined(__APPLE__)
-     #define CC_FLAGS "-I", "include", "-MMD", "-MP", "-O3", "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare", "-Wno-discarded-qualifiers", "-Wno-stringop-truncation", "-Wno-unused-variable"
+     #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,-undefined,dynamic_lookup", "-framework", "Cocoa", "-framework", "CoreGraphics"
      #define PKG_CFLAGS_PKGS_STR "libcurl"
      #define PKG_LIBS_PKGS_STR   " libcurl"
