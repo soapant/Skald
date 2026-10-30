@@ -633,3 +633,15 @@ bool Platform_AtomicRename(const char* old_path, const char* new_path) {
     return MoveFileExA(old_path, new_path, MOVEFILE_REPLACE_EXISTING) != 0;
 }
 
+int64_t Platform_TimerNowTicks(void) {
+    LARGE_INTEGER c;
+    QueryPerformanceCounter(&c);
+    return (int64_t)c.QuadPart;
+}
+
+int64_t Platform_TimerTickFrequency(void) {
+    LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    return (int64_t)f.QuadPart;
+}
+
