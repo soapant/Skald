@@ -606,9 +606,17 @@ PROFILE_START(timer);
     { PROFILE_END_VAR(_pt, "x11_handle_global_key"); return false; }
 }
 
+bool remap_should_swallow_linux_key(int linux_code, int value) {
+    int vk = ConvertLinuxKeyToWindowsVK(linux_code);
+    if (!vk) {
+        return false;
+    }
+    return remap_handle_vk(vk, value);
+}
+
 bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+    PROFILE_START(_pt);
+    PROFILE_START(timer);
     if (!ev) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return false; }
     if (ev->type != EV_KEY) {
         if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);

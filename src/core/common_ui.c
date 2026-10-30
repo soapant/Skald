@@ -6,9 +6,10 @@
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
-#include "platform/platform.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"
+#include <ctype.h>
+#include <string.h>
 
 static bool FuzzyMatch(const char* text, const char* pattern) {
     if (!pattern || !pattern[0]) return true;

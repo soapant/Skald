@@ -121,6 +121,8 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window);
 PlTimer Platform_StartTimer(void);
 double Platform_EndTimer(PlTimer t);
+int64_t Platform_TimerNowTicks(void);
+int64_t Platform_TimerTickFrequency(void);
 
 void Platform_EmitKey(int vk_code, int down);
 
