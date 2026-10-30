@@ -390,7 +390,6 @@ typedef struct { char name[128]; void (*cb)(void); char icon[512]; } FeatureReg;
 static HashMap* g_feature_map = NULL;
 static FeatureReg** g_feature_order = NULL;
 static int g_feature_order_count = 0;
-static int g_feature_order_cap = 0;
 
 static HashMap* ensure_feature_map(void) {
     PROFILE_START(_pt);
@@ -1900,7 +1899,6 @@ void fl_profile_end(FlTimer timer) {
 
 static FlWidget *g_fl_widgets[FL_WIDGET_MAX];
 static int g_fl_widget_count = 0;
-static int g_fl_widget_seq = 0;
 static unsigned g_fl_widget_gen = 1;
 
 typedef struct { char name[64]; FlLibrary handle; } LibraryEntry;

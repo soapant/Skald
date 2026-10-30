@@ -69,7 +69,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
-        WS_EX_TOOLWINDOW | WS_EX_COMPOSITED,
+        WS_EX_TOOLWINDOW | WS_EX_COMPOSITED | WS_EX_LAYERED,
         "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN,
         x, y, w, h, NULL, NULL, hInstance, NULL
         ));
@@ -79,6 +79,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     }
     HWND hwnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     if (self) self->handle = FlintContext_Get()->window.hPopupWnd;
+    SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
     extern PromptState* g_win32_prompt_state;
     if (!(g_win32_prompt_state && g_win32_prompt_state->no_bg)) {
         win32_apply_rounded_corners(hwnd, w, h);
