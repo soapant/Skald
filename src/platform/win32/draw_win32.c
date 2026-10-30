@@ -963,16 +963,7 @@ static ColorRef win32_prompt_cursor_color(void) {
 { PROFILE_END_VAR(_pt, "win32_prompt_cursor_color"); return g_current_mode == MODE_VISUAL ? COLOR_VISUAL_CURSOR : COLOR_CURSOR; }
 }
 
-void Platform_DrawListBackground(PromptState *state, HDC hdc, int y, int h, bool selected) {
-    PROFILE_START(_pt);
-    if (selected) {
-        RECT rc = { 0, y, state->width, y + h };
-        HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
-        FillRect(hdc, &rc, br);
-        DeleteObject(br);
-    }
-    PROFILE_END_VAR(_pt, "Platform_DrawListBackground");
-}
+
 
 void Platform_DrawPromptSeparator(int y, int width) {
         PROFILE_START(_pt);

@@ -4,6 +4,7 @@
 #include <string.h>
 #include "platform/widget.h"
 #include "platform/draw.h"
+#include "platform/win32/win32_state.h"
 #include "platform/render_thread.h"
 #include "platform/ui.h"
 #include "deps/log.h"
