@@ -69,18 +69,6 @@ char p[64];
     { PROFILE_END_VAR(_pt, "wl_dir_fd_count"); return total; }
 }
 
-static long wl_dir_rss_mb(const char *pid) {
-        PROFILE_START(_pt);
-char p[64];
-    snprintf(p, sizeof(p), "/proc/%s/statm", pid);
-    FILE *f = fopen(p, "r");
-    if (!f) { PROFILE_END_VAR(_pt, "wl_dir_rss_mb"); return -1; }
-    long total = 0, res = 0;
-    if (fscanf(f, "%ld %ld", &total, &res) != 2) { fclose(f); return -1; }
-    fclose(f);
-    { PROFILE_END_VAR(_pt, "wl_dir_rss_mb"); return (res * 4) / 1024; }
-}
-
 static int wl_find_pid(const char *name) {
         PROFILE_START(_pt);
 DIR *d = opendir("/proc");
@@ -103,60 +91,6 @@ DIR *d = opendir("/proc");
     }
     closedir(d);
     { PROFILE_END_VAR(_pt, "wl_find_pid"); return found; }
-}
-
-static void *wl_sampler_func(void *arg) {
-        PROFILE_START(_pt);
-(void)arg;
-    int hypr = -1, xway = -1, self = (int)getpid();
-    int base_self = -1, base_hypr = -1;
-    int prev_hypr_fd = -1;
-    bool fired = false;
-    for (int i = 0; i < 1200; i++) {
-        struct timespec ts = { 1, 0 };
-        nanosleep(&ts, NULL);
-        int prev = hypr;
-        hypr = wl_find_pid("Hyprland");
-        xway = wl_find_pid("Xwayland");
-        if (hypr != prev)  base_hypr = -1;
-        char spid[32];
-        snprintf(spid, sizeof(spid), "%d", self);
-        int self_fd = wl_dir_fd_count(spid, NULL);
-        int self_pipe = wl_dir_fd_count(spid, "pipes");
-        int h_fd = -1, h_pipe = -1, h_rss = -1;
-        if (hypr > 0) {
-            char hp[32];
-            snprintf(hp, sizeof(hp), "%d", hypr);
-            h_fd = wl_dir_fd_count(hp, NULL);
-            h_pipe = h_fd;
-            if (h_fd < 20000) h_pipe = wl_dir_fd_count(hp, "pipes");
-            else h_pipe = -2;
-            h_rss = (int)wl_dir_rss_mb(hp);
-            if (base_hypr < 0) base_hypr = h_fd;
-        }
-        if (base_self < 0) base_self = self_fd;
-        int x_fd = -1;
-        if (xway > 0) { char xp[32]; snprintf(xp, sizeof(xp), "%d", xway); x_fd = wl_dir_fd_count(xp, NULL); }
-        if (h_fd > 0) { g_wl_hypr_pid = hypr; g_wl_hypr_fd = h_fd; }
-        if (h_fd > 20000 && !fired) fired = true; 
-        prev_hypr_fd = h_fd > 0 ? h_fd : prev_hypr_fd;
-        wl_trace("SAMPLE",
-            "self_fd=%d(+%d) self_pipe=%d | hypr_pid=%d fds=%d(+%d) pipes=%d rss=%dmb | xwayland_fd=%d | ev=%ld req=%ld send=%ld recv=%ld prepfail=%ld selreq=%ld rcalls=%ld rblocked=%ld readoff=%d",
-            self_fd, self_fd - base_self, self_pipe, hypr, h_fd, h_fd - base_hypr, h_pipe, h_rss, x_fd,
-            g_wl_ev_count, g_wl_req_count, g_wl_send_count, g_wl_recv_count, g_wl_prepare_fail, g_cl_selreq,
-            g_wl_receive_calls, g_wl_receive_blocked, g_wl_read_disabled ? 1 : 0);
-    }
-    { PROFILE_END_VAR(_pt, "wl_sampler_func"); return NULL; }
-}
-
-static void wl_sampler_start(void) {
-        PROFILE_START(_pt);
-static bool started = false;
-    if (started) { PROFILE_END_VAR(_pt, "wl_sampler_start"); return ; }
-    started = true;
-    pthread_t t;
-    if (pthread_create(&t, NULL, wl_sampler_func, NULL) != 0);
-    else wl_trace("SAMPLER", "started");
 }
 
 static void wl_hypr_refresh(void) {
@@ -738,7 +672,6 @@ if (g_wl_ready) { PROFILE_END_VAR(_pt, "wl_setup"); return true; }
     }
     g_wl_thread_started = true;
     g_wl_ready = true;
-    wl_sampler_start();
     wl_trace("SETUP", "READY dpy=%p dpyfd=%d mgr=%p dev=%p seat=%p bind_ver=%d proto=%s",
         (void*)g_wl_dpy, wl.display_get_fd(g_wl_dpy), (void*)g_wl_manager, (void*)g_wl_device,
         (void*)g_wl_seat, g_mgr_bind_ver, g_mgr_proto);

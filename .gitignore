@@ -8,4 +8,5 @@ nob_linux_window_build
 nob_linux_window_build.exe
 nob_linux_window_build.exe.old
 Doxyfile
+compile_commands.json
 /docs/xml
