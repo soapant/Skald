@@ -18,6 +18,9 @@
 #if defined(_WIN32)
      #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
      #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp", "-Lbuild/winlibs","-liphlpapi"
+#elif defined(__APPLE__)
+     #define CC_FLAGS "-I", "include", "-MMD", "-MP", "-O3", "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare", "-Wno-discarded-qualifiers", "-Wno-stringop-truncation", "-Wno-unused-variable"
+     #define LINK_FLAGS "-lm", "-ldl", "-Wl,-undefined,dynamic_lookup", "-framework", "Cocoa", "-framework", "CoreGraphics"
 #else
      #define CC_FLAGS "-I", "include","-MMD", "-MP","-O4","-Wall","-Wextra","-Wformat","-Wno-error=format-security","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
@@ -42,8 +45,15 @@ static bool collect_source(Nob_Walk_Entry entry) {
 #if defined(_WIN32)
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
             if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "_macos.c")) return true;
+#elif defined(__APPLE__)
+            if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "_wayland.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
 #else
             if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "_macos.c")) return true;
 #endif
             if (!getenv("WAYLAND_DISPLAY"))  if (nob_sv_ends_with_cstr(path, "_wayland.c")) return true;
             bool is_feature = false;
