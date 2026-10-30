@@ -11,7 +11,7 @@
 #include <glob.h>
 
 static const char* shot_working_dir(void) {
-    char* wd = fl_get_working_dir();
+    char* wd = fl_resolve_feature_path("screenshot");
     return (wd && wd[0]) ? wd : ".";
 }
 
