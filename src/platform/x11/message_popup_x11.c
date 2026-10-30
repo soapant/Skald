@@ -696,8 +696,12 @@ void Platform_MessagePopupDestroyWindow(Popup* self) {
 }
 
 bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
-        PROFILE_START(_pt);
-(void)self;
+    PROFILE_START(_pt);
+    (void)self;
     (void)key;
     { PROFILE_END_VAR(_pt, "Platform_MessagePopupOnKey"); return false; }
+}
+
+void Platform_DismissDisplayMessage(void) {
+    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
 }
