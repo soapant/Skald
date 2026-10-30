@@ -21,6 +21,8 @@
 #elif defined(__APPLE__)
      #define CC_FLAGS "-I", "include", "-MMD", "-MP", "-O3", "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare", "-Wno-discarded-qualifiers", "-Wno-stringop-truncation", "-Wno-unused-variable"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,-undefined,dynamic_lookup", "-framework", "Cocoa", "-framework", "CoreGraphics"
+     #define PKG_CFLAGS_PKGS_STR "libcurl"
+     #define PKG_LIBS_PKGS_STR   " libcurl"
 #else
      #define CC_FLAGS "-I", "include","-MMD", "-MP","-O4","-Wall","-Wextra","-Wformat","-Wno-error=format-security","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wno-format","-Wno-unused-variable"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
