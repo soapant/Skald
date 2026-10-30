@@ -68,13 +68,7 @@ typedef struct {
 static HotkeyHoldSlot g_hold_slots[HOTKEY_HOLD_MAX];
 
 static unsigned long long hotkey_now_ms(void) {
-#if defined(_WIN32)
-    return (unsigned long long)GetTickCount64();
-#else
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (unsigned long long)ts.tv_sec * 1000ULL + (unsigned long long)ts.tv_nsec / 1000000ULL;
-#endif
+    return (unsigned long long)Platform_GetWallClockMs();
 }
 
 static int hotkey_repeat_interval_ms(void) {
