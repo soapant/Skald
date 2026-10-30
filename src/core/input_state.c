@@ -1,4 +1,5 @@
 #include "platform/input_state.h"
+#include "platform/platform.h"
 #include "core/types/keys.h"
 #include "core/timer.h"
 #include <stddef.h>
@@ -100,19 +101,12 @@ char Platform_GetPressedChar(void){
 static PlatformKeyEvent g_gkeys[GLOBAL_KEY_RING];
 static int g_gkey_head = 0, g_gkey_tail = 0;
 static unsigned long g_gkey_dropped = 0;
-#if defined(_WIN32)
-static CRITICAL_SECTION g_gkey_cs;
-static LONG g_gkey_cs_ready = 0;
+static void* g_gkey_mutex = NULL;
 static void gkey_lock_init(void) {
-    if (InterlockedCompareExchange(&g_gkey_cs_ready, 1, 0) == 0) InitializeCriticalSection(&g_gkey_cs);
+    if (!g_gkey_mutex) g_gkey_mutex = Platform_MutexCreate();
 }
-#define GKEY_LOCK() do { gkey_lock_init(); EnterCriticalSection(&g_gkey_cs); } while (0)
-#define GKEY_UNLOCK() do { gkey_lock_init(); LeaveCriticalSection(&g_gkey_cs); } while (0)
-#else
-static pthread_mutex_t g_gkey_mtx = PTHREAD_MUTEX_INITIALIZER;
-#define GKEY_LOCK() pthread_mutex_lock(&g_gkey_mtx)
-#define GKEY_UNLOCK() pthread_mutex_unlock(&g_gkey_mtx)
-#endif
+#define GKEY_LOCK() do { gkey_lock_init(); Platform_MutexLock(g_gkey_mutex); } while (0)
+#define GKEY_UNLOCK() Platform_MutexUnlock(g_gkey_mutex)
 
 void Platform_GlobalKey_Clear(void){
   GKEY_LOCK();
@@ -174,19 +168,12 @@ static PlatformMouseEvent g_gmice[GLOBAL_MOUSE_RING];
 static int g_gmouse_head = 0, g_gmouse_tail = 0;
 static unsigned long g_gmouse_dropped = 0;
 static bool g_mbtn_down[FL_MOUSE_BTN_MAX] = {0};
-#if defined(_WIN32)
-static CRITICAL_SECTION g_gmouse_cs;
-static LONG g_gmouse_cs_ready = 0;
+static void* g_gmouse_mutex = NULL;
 static void gmouse_lock_init(void) {
-    if (InterlockedCompareExchange(&g_gmouse_cs_ready, 1, 0) == 0) InitializeCriticalSection(&g_gmouse_cs);
+    if (!g_gmouse_mutex) g_gmouse_mutex = Platform_MutexCreate();
 }
-#define GMOUSE_LOCK() do { gmouse_lock_init(); EnterCriticalSection(&g_gmouse_cs); } while (0)
-#define GMOUSE_UNLOCK() do { gmouse_lock_init(); LeaveCriticalSection(&g_gmouse_cs); } while (0)
-#else
-static pthread_mutex_t g_gmouse_mtx = PTHREAD_MUTEX_INITIALIZER;
-#define GMOUSE_LOCK() pthread_mutex_lock(&g_gmouse_mtx)
-#define GMOUSE_UNLOCK() pthread_mutex_unlock(&g_gmouse_mtx)
-#endif
+#define GMOUSE_LOCK() do { gmouse_lock_init(); Platform_MutexLock(g_gmouse_mutex); } while (0)
+#define GMOUSE_UNLOCK() Platform_MutexUnlock(g_gmouse_mutex)
 
 int Platform_GlobalMouse_Full(void){
   int next = (g_gmouse_tail + 1) % GLOBAL_MOUSE_RING;
