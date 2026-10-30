@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "core/types/prompt.h"
-#if !defined(_WIN32)
+#if defined(__linux__)
 typedef struct _XDisplay Display;
 typedef struct _XftFont XftFont;
 #endif

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#if !defined(_WIN32)
+#if defined(__linux__)
 #include <strings.h>
 #endif
 
@@ -54,8 +54,7 @@ static int pk_cmp_alpha(const void* a, const void* b) {
 }
 
 
-#if !defined(_WIN32)
-
+#if defined(__linux__)
 static void pk_rtrim(char* s) {
     size_t n = strlen(s);
     while (n > 0 && isspace(s[n - 1])) s[--n] = '\0';

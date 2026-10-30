@@ -3,7 +3,7 @@
 
 #include "core/types.h"
 
-#if !defined(_WIN32)
+#if defined(__linux__)
 #include <X11/Xlib.h>
 #endif
 
@@ -150,7 +150,7 @@ void Platform_MutexDestroy(void* mutex);
 void Platform_MutexLock(void* mutex);
 void Platform_MutexUnlock(void* mutex);
 
-#if !defined(_WIN32)
+#if defined(__linux__)
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state);
 void Platform_DismissIndefiniteMessage(void);

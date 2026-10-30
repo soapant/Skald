@@ -104,7 +104,7 @@ char Platform_GetPressedChar(void){
 static PlatformKeyEvent g_gkeys[GLOBAL_KEY_RING];
 static int g_gkey_head = 0, g_gkey_tail = 0;
 static unsigned long g_gkey_dropped = 0;
-#if !defined(_WIN32)
+#if defined(__linux__)
 static pthread_mutex_t g_gkey_mtx = PTHREAD_MUTEX_INITIALIZER;
 #define GKEY_LOCK() pthread_mutex_lock(&g_gkey_mtx)
 #define GKEY_UNLOCK() pthread_mutex_unlock(&g_gkey_mtx)
@@ -192,7 +192,7 @@ static PlatformMouseEvent g_gmice[GLOBAL_MOUSE_RING];
 static int g_gmouse_head = 0, g_gmouse_tail = 0;
 static unsigned long g_gmouse_dropped = 0;
 static bool g_mbtn_down[FL_MOUSE_BTN_MAX] = {0};
-#if !defined(_WIN32)
+#if defined(__linux__)
 static pthread_mutex_t g_gmouse_mtx = PTHREAD_MUTEX_INITIALIZER;
 #define GMOUSE_LOCK() pthread_mutex_lock(&g_gmouse_mtx)
 #define GMOUSE_UNLOCK() pthread_mutex_unlock(&g_gmouse_mtx)

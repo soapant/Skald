@@ -21,7 +21,7 @@
 #include "core/cap_registry.h"
 #include "core/hotkey_manager.h"
 #include "core/snippet_manager.h"
-#ifdef _WIN32
+#if defined(_WIN32) 
 #include <windows.h>
 #endif
 
@@ -134,7 +134,7 @@ static void sweep_retired_libs(void) {
     g_retired_count = n;
 }
 
-#if !defined(_WIN32)
+#if defined(__linux__)
 #include <pthread.h>
 static pthread_mutex_t g_mutex;
 static pthread_once_t g_once = PTHREAD_ONCE_INIT;
@@ -621,7 +621,7 @@ void FeatureLoader_Reload(const char* name) {
             }
             retire_owner[sizeof(retire_owner)-1] = '\0';
             retire_old_lib(old, g_features[i].uniq, retire_owner);
-#ifdef _WIN32
+#if defined(_WIN32)
             UNLOCK();
             Sleep(100);
             LOCK();

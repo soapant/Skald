@@ -415,7 +415,7 @@ static void cc_build_xdg_paths(void) {
         g_xdg_depths[i] = ListOfProgramPaths[i].max_depth;
     }
     g_xdg_path_count = ARRAY_LEN(ListOfProgramPaths);
-#if !defined(_WIN32)
+#if defined(__linux__)
     const char *data_dirs = getenv("XDG_DATA_DIRS");
     if (!data_dirs || !data_dirs[0]) data_dirs = "/usr/local/share:/usr/share";
     char buf[4096];
