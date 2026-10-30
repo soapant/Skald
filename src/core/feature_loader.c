@@ -147,7 +147,7 @@ static void mutex_init(void) {
 }
 #define LOCK() do { pthread_once(&g_once, mutex_init); pthread_mutex_lock(&g_mutex); } while (0)
 #define UNLOCK() pthread_mutex_unlock(&g_mutex)
-#else
+#elif defined (_WIN32)
 static CRITICAL_SECTION g_cs;
 static bool g_cs_inited = false;
 static void lock_init(void) { if (!g_cs_inited) { InitializeCriticalSection(&g_cs); g_cs_inited = true; } }
@@ -751,7 +751,7 @@ void FeatureLoader_Lock(void) {
 bool FeatureLoader_TryLock(void) {
 #if defined(_WIN32)
     return TryEnterCriticalSection(&g_cs) != 0;
-#else
+#elif defined (__linux__)
     return pthread_mutex_trylock(&g_mutex) == 0;
 #endif
 }

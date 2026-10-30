@@ -13,7 +13,7 @@
 #include <strings.h>
 #include <ctype.h>
 #include <string.h>
-#else
+#elif defined(_WIN32)
 #include <shlwapi.h>
 #endif
 

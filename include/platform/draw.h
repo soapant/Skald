@@ -17,7 +17,7 @@ void Platform_BeginMeasure(void);
 void Platform_EndMeasure(int *out_w, int *out_h);
 void Platform_GetLastMeasureOrigin(int *out_x, int *out_y);
 void Platform_SetDrawOffset(int dx, int dy);
-#else
+#elif defined(__linux__)
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 #include "platform/x11/display_x11.h"

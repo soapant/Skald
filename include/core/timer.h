@@ -3,7 +3,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-#else
+#elif defined (__linux__)
 #include <time.h>
 #endif
 #include "core/types.h"
@@ -17,7 +17,7 @@ static inline int64_t TimerNowTicks(void) {
   LARGE_INTEGER c;
   QueryPerformanceCounter(&c);
   return (int64_t)c.QuadPart;
-#else
+#elif defined (__linux__)
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   return (int64_t)ts.tv_sec * 1000000000LL + (int64_t)ts.tv_nsec;
@@ -29,7 +29,7 @@ static inline int64_t TimerTickFrequency(void) {
   LARGE_INTEGER f;
   QueryPerformanceFrequency(&f);
   return (int64_t)f.QuadPart;
-#else
+#elif defined (__linux__)
   return 1000000000LL;
 #endif
 }
