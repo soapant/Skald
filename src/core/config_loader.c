@@ -114,13 +114,7 @@ static bool config_build_feature(const char* src, const char* out) {
     char tmp[1024];
     snprintf(tmp, sizeof(tmp), "%s.tmp", out);
     char cmd[2048];
-#if defined(_WIN32)
-    snprintf(cmd, sizeof(cmd),
-        "gcc -I include  -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" 2>&1",
-        tmp, src);
-#elif defined (__linux__)
-    snprintf(cmd, sizeof(cmd), "gcc -std=gnu17 -I include  -pipe -fPIC -shared -o %s %s 2>&1", tmp, src);
-#endif
+    if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd))) return false;
     char* outStr = Platform_RunTerminalCommand(cmd, false);
     bool ok = false;
     if (outStr) {
@@ -408,12 +402,7 @@ void Config_Save(void) {
     if (fclose(out) != 0) ok = false;
     free(orig);
     if (!ok) { remove(tmp); log_error("config write failed"); return; }
-#if defined(_WIN32)
-    remove(CONFIG_SRC);
-    if (!MoveFileExA(tmp, CONFIG_SRC, MOVEFILE_REPLACE_EXISTING)) { remove(tmp); log_error("config rename failed %lu", GetLastError()); return; }
-#elif defined (__linux__)
-    if (rename(tmp, CONFIG_SRC) != 0) { remove(tmp); log_error("config rename failed"); return; }
-#endif
+    if (!Platform_AtomicRename(tmp, CONFIG_SRC)) { remove(tmp); log_error("config rename failed"); return; }
     struct stat st;
     if (stat(CONFIG_SRC, &st) == 0) {
         g_cfg_saved_mtime = (long long)st.st_mtime;
