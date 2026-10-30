@@ -51,19 +51,4 @@ bool UI_ApplyBackspaceToPopup(FlintContext* ctx);
 #define UI_TICK_TIMER_ID 997
 #define UI_TICK_TIMER_MS 1000
 
-#if defined(_WIN32)
-#include <windows.h>
-void win32_apply_rounded_corners(HWND hwnd, int w, int h);
-void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base);
-void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius);
-void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);
-HFONT CreateCustomNerdFont(int height, const char* face_name);
-void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb);
-int UI_LB_GetTextLen(WindowHandle hList);
-int UI_LB_GetText(WindowHandle hList, int index, char* buffer);
-void UI_Edit_SetFont(HFONT hFont);
-int UI_InsertChar(wchar_t wc);
-bool UI_ShouldSkipPopupKey(const void* msg);
-#endif
-
 #endif

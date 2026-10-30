@@ -7,6 +7,7 @@
 #include "core/prompt_geometry.h"
 #include "platform/wm_platform.h"
 #include "platform/ui.h"
+#include "platform/win32/common_ui_win32.h"
 #include "platform/draw.h"
 #include "config.h"
 #include "deps/log.h"

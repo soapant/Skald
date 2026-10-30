@@ -7,6 +7,7 @@
 #include <shellapi.h>
 #include "config.h"
 #include "platform/ui.h"
+#include "platform/win32/common_ui_win32.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
 #include "helpers/helpers_ui.h"

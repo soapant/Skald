@@ -1,6 +1,7 @@
 #ifndef COMMON_UI_WIN32_H
 #define COMMON_UI_WIN32_H
 
+#include <windows.h>
 #include "core/types.h"
 
 HFONT CreateCustomNerdFont(int height, const char* face_name);
@@ -13,5 +14,13 @@ WindowHandle FindWindowByPartialTitle(const char* partialTitle);
 COLORREF LerpColor(COLORREF a, COLORREF b, float t);
 void win32_draw_window_border(HDC hdc, int ox, int oy, int ww, int wh, const RECT* region);
 void win32_apply_listbox_bottom_corners(HWND hwnd, int w, int h, bool at_window_bottom);
+void win32_apply_rounded_corners(HWND hwnd, int w, int h);
+void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base);
+void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius);
+int UI_LB_GetTextLen(WindowHandle hList);
+int UI_LB_GetText(WindowHandle hList, int index, char* buffer);
+void UI_Edit_SetFont(HFONT hFont);
+int UI_InsertChar(wchar_t wc);
+bool UI_ShouldSkipPopupKey(const void* msg);
 
 #endif
