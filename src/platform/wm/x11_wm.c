@@ -1,4 +1,5 @@
 #include "wm/x11_wm.h"
+#include "platform/x11/display_x11.h"
 #include "deps/log.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -682,4 +683,17 @@ Display* display = get_display();
         return true;
     }
     { PROFILE_END_VAR(_pt, "minimize_active_window_x11"); return false; }
+}
+
+bool get_mouse_pos_x11(int *x, int *y) {
+    Display *dpy = get_display();
+    if (!dpy) return false;
+    Window root = DefaultRootWindow(dpy);
+    Window rw = 0, cw = 0;
+    int rx = 0, ry = 0, wx = 0, wy = 0;
+    int mask = 0;
+    if (!XQueryPointer(dpy, root, &rw, &cw, &rx, &ry, &wx, &wy, &mask)) return false;
+    if (x) *x = rx;
+    if (y) *y = ry;
+    return true;
 }

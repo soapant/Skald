@@ -8,6 +8,7 @@
 #include "core/snippet_manager.h"
 #include "config.h"
 #include "platform/platform.h"
+#include "wm/wm.h"
 #include "platform/input_state.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -127,6 +128,12 @@ PROFILE_START(timer);
 
 bool Platform_GetMousePos(int* out_x, int* out_y) {
     PROFILE_START(_pt);
+    int mx = 0, my = 0;
+    if (getenv("WAYLAND_DISPLAY") && Wm_GetMousePos(&mx, &my)) {
+        if (out_x) *out_x = mx;
+        if (out_y) *out_y = my;
+        { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return true; }
+    }
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return false; }
     Window root = DefaultRootWindow(dpy);

@@ -18,5 +18,6 @@ bool move_active_window_right_niri(void);
 bool focus_window_left_niri(void);
 bool focus_window_right_niri(void);
 bool minimize_active_window_niri(void);
+bool get_mouse_pos_niri(int *x, int *y);
 
 #endif

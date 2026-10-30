@@ -300,3 +300,49 @@ bool move_active_window_right_hyprland(void) {
     PROFILE_START(_pt);
 { PROFILE_END_VAR(_pt, "move_active_window_right_hyprland"); return move_active_window_to_monitor_hyprland(true); }
 }
+
+
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+
+bool get_mouse_pos_hyprland(int *x, int *y) {
+    PROFILE_START(_pt);
+    const char *rtd = getenv("XDG_RUNTIME_DIR");
+    const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+    if (!rtd || !sig) { PROFILE_END_VAR(_pt, "get_mouse_pos_hyprland"); return false; }
+    char path[512];
+    snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", rtd, sig);
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0) { PROFILE_END_VAR(_pt, "get_mouse_pos_hyprland"); return false; }
+    struct sockaddr_un addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path);
+    if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
+        close(fd);
+        { PROFILE_END_VAR(_pt, "get_mouse_pos_hyprland"); return false; }
+    }
+    if (send(fd, "cursorpos", 9, 0) < 0) {
+        close(fd);
+        { PROFILE_END_VAR(_pt, "get_mouse_pos_hyprland"); return false; }
+    }
+    shutdown(fd, SHUT_WR);
+    char buf[64] = {0};
+    int total = 0;
+    for (;;) {
+        int r = recv(fd, buf + total, sizeof(buf) - 1 - total, 0);
+        if (r <= 0) break;
+        total += r;
+        if (total >= (int)sizeof(buf) - 1) break;
+    }
+    close(fd);
+    buf[total] = '\0';
+    int px = 0, py = 0;
+    if (sscanf(buf, "%d, %d", &px, &py) == 2) {
+        if (x) *x = px;
+        if (y) *y = py;
+        { PROFILE_END_VAR(_pt, "get_mouse_pos_hyprland"); return true; }
+    }
+    { PROFILE_END_VAR(_pt, "get_mouse_pos_hyprland"); return false; }
+}
