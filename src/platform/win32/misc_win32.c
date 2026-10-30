@@ -621,3 +621,15 @@ const char* Platform_GetRealUser(void) {
   return false;
 }
 
+bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size) {
+    snprintf(cmd, cmd_size,
+        "gcc -I include  -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" 2>&1",
+        out_tmp, src);
+    return true;
+}
+
+bool Platform_AtomicRename(const char* old_path, const char* new_path) {
+    remove(new_path);
+    return MoveFileExA(old_path, new_path, MOVEFILE_REPLACE_EXISTING) != 0;
+}
+
