@@ -7,6 +7,7 @@
 #include "platform/win32/win32_state.h"
 #include "platform/render_thread.h"
 #include "platform/ui.h"
+#include "platform/win32/common_ui_win32.h"
 #include "deps/log.h"
 #include "config.h"
 #include "platform/win32/bg_image_win32.h"
