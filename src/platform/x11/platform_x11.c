@@ -2041,3 +2041,9 @@ void Platform_MutexUnlock(void* mutex) {
     pthread_mutex_unlock((pthread_mutex_t*)mutex);
 }
 
+bool Platform_MutexTryLock(void* mutex) {
+    PROFILE_START(_pt);
+    if (!mutex) { PROFILE_END_VAR(_pt, "Platform_MutexTryLock"); return false; }
+    { PROFILE_END_VAR(_pt, "Platform_MutexTryLock"); return pthread_mutex_trylock((pthread_mutex_t*)mutex) == 0; }
+}
+

@@ -145,6 +145,7 @@ void* Platform_MutexCreate(void);
 void Platform_MutexDestroy(void* mutex);
 void Platform_MutexLock(void* mutex);
 void Platform_MutexUnlock(void* mutex);
+bool Platform_MutexTryLock(void* mutex);
 
 bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size);
 bool Platform_AtomicRename(const char* old_path, const char* new_path);

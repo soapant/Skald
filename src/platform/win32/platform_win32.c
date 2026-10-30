@@ -1947,3 +1947,9 @@ void Platform_MutexUnlock(void* mutex) {
     LeaveCriticalSection((CRITICAL_SECTION*)mutex);
 }
 
+bool Platform_MutexTryLock(void* mutex) {
+    PROFILE_START(_pt);
+    if (!mutex) { PROFILE_END_VAR(_pt, "Platform_MutexTryLock"); return false; }
+    { PROFILE_END_VAR(_pt, "Platform_MutexTryLock"); return TryEnterCriticalSection((CRITICAL_SECTION*)mutex) != 0; }
+}
+

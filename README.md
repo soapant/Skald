@@ -61,7 +61,7 @@ Flint is split into two halves: **The Core** and **Features**.
 Flint is in active, early development. The following bugs are known and will be addressed in future updates. Please do not open a new issue for these unless you have additional debugging information.
 
 1. **Font Hardcoding:** The UI is currently tuned for the `0xProto Nerd Font`. Using any other font will cause text alignment and offset issues.
-2. **Windows Image Offset:** Images rendered on Windows currently have an offset placement bug (they are sometimes rendered too far up or down).
+2. **Windows Offsets:** Images rendered on Windows currently have an offset placement bug (they are sometimes rendered too far up or down) and the drawing of the editbox caret is too far up.
 3. **Wayland Hotkeys:** Global hotkeys may fail to register on certain Wayland compositors (e.g., GNOME) due to security restrictions. Flint is designed primarily for X11 right now. It should work on Wayland, but don't be surprised if it doesn't.
 4. **Wayland Mouse Polling:** Mouse polling does not work on Wayland because the protocol does not easily support querying the global mouse position. Do not expect hover or click widgets to work on Wayland yet.
 
@@ -70,6 +70,5 @@ Flint is in active, early development. The following bugs are known and will be 
 *   **macOS Support:** Port the platform layer to fully support macOS.
 *   **Polyglot Features:** Allow features to be written in languages other than C (e.g., WASM, Lua, or Rust).
 *   **Settings GUI:** Build a proper graphical settings menu (currently just an empty feature placeholder).
-*   **Control Center Actions:** Flesh out the "Actions" button in the Control Center, allowing users to add hotkeys and aliases to any entry via the UI.
 *   **Feature Registry:** A centralized website where users can easily find and download community-made features (like a "Flint Extensions" store), alongside a feature in Flint.
-*   **Auto Detect Compiler:** auto detech comiler instead of hardcoded gcc and its flags.
+*   **Full Git Integration :*
