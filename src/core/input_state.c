@@ -2,11 +2,6 @@
 #include "core/types/keys.h"
 #include "core/timer.h"
 #include <stddef.h>
-#if defined(_WIN32)
-#include <windows.h>
-#else
-#include <pthread.h>
-#endif
 #include <time.h>
 
 static bool g_down[256] = {0};
