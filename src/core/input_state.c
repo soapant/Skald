@@ -1,5 +1,6 @@
 #include "platform/input_state.h"
 #include "core/types/keys.h"
+#include "core/timer.h"
 #include <stddef.h>
 #if defined(_WIN32)
 #include <windows.h>
@@ -125,31 +126,17 @@ void Platform_GlobalKey_Clear(void){
   GKEY_UNLOCK();
 }
 
-#if defined(_WIN32)
-static unsigned long long win32_qpc_us(void) {
-  static LONG freq = 0;
-  if (!freq) {
-    LARGE_INTEGER f;
-    QueryPerformanceFrequency(&f);
-    freq = (LONG)f.QuadPart;
-    if (freq <= 0) freq = 1;
-  }
-  LARGE_INTEGER q;
-  QueryPerformanceCounter(&q);
-  return (unsigned long long)((q.QuadPart * 1000000ULL) / (unsigned long long)freq);
+static unsigned long long input_now_us(void) {
+  int64_t ticks = TimerNowTicks();
+  int64_t freq = TimerTickFrequency();
+  if (freq <= 0) freq = 1;
+  return (unsigned long long)((ticks * 1000000LL) / freq);
 }
-#endif
 
 void Platform_GlobalKey_Push(const PlatformKeyEvent* ev){
   if(!ev) return;
   PlatformKeyEvent stamped = *ev;
-#if defined(_WIN32)
-  stamped.t_us = win32_qpc_us();
-#else
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  stamped.t_us = (unsigned long long)ts.tv_sec * 1000000ULL + (unsigned long long)(ts.tv_nsec / 1000);
-#endif
+  stamped.t_us = input_now_us();
   GKEY_LOCK();
   int nxt = (g_gkey_tail + 1) % GLOBAL_KEY_RING;
   if(nxt == g_gkey_head){ g_gkey_dropped++; GKEY_UNLOCK(); return; }
@@ -215,13 +202,7 @@ void Platform_GlobalMouse_Push(const PlatformMouseEvent* ev){
   if(!ev) return;
   if (Platform_GlobalMouse_Full()) return;
   PlatformMouseEvent stamped = *ev;
-#if defined(_WIN32)
-  stamped.t_us = win32_qpc_us();
-#else
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  stamped.t_us = (unsigned long long)ts.tv_sec * 1000000ULL + (unsigned long long)(ts.tv_nsec / 1000);
-#endif
+  stamped.t_us = input_now_us();
   GMOUSE_LOCK();
   int nxt = (g_gmouse_tail + 1) % GLOBAL_MOUSE_RING;
   if(nxt == g_gmouse_head){ g_gmouse_dropped++; GMOUSE_UNLOCK(); return; }
