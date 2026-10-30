@@ -16,7 +16,7 @@ char* get_zoxide_match(char* query) {
     snprintf(command, sizeof(command),
                  "cmd.exe /c \"set \"HOME=%s\" & set \"_ZO_DATA_DIR=%s\\AppData\\Local\\zoxide\" & zoxide query -- \"%s\" 2>&1\"",
                  real_home, real_home, clean_query);
-#else
+#elif defined (__linux__)
     snprintf(command, sizeof(command),
              "export HOME=\"%s\"; "
              "export _ZO_DATA_DIR=\"%s/.local/share/zoxide\"; "

@@ -9,7 +9,7 @@ unsigned long rgb_to_hex(unsigned long win_color) {
     unsigned long g = (win_color >> 8) & 0xFF;  
     unsigned long b = (win_color >> 16) & 0xFF;
     return (r << 16) | (g << 8) | b;
-#else
+#elif defined (_WIN32)
     return win_color;
 #endif
 

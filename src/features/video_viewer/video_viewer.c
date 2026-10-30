@@ -81,12 +81,12 @@ static bool video_set_long(const char* window_title, const char* atom_name, long
 
 #if defined(_WIN32)
 const char* VideoViewerPath = "C:/Projects/Video Viewer/video_viewer.exe";
-#else
+#elif defined (__linux__)
 const char* VideoViewerPath = "~/Programming/Projects/Video Viewer/video_viewer";
 #endif
 #if defined(_WIN32)
 const char* VideosPath = "C:/Videos";
-#else
+#elif defined (__linux__)
 const char* VideosPath = "~/Videos";
 #endif
 
@@ -147,7 +147,7 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
         snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
         fl_launch_with_args(VideoViewerPath, quoted_result);
     }
-#else
+#elif defined (__linux__)
     if (video_set_string("Video Viewer", "_MP_TRACK", result) &&
         video_send_command("Video Viewer", "_MP_TRACK_CHANGED", 1)) {
         return true;
@@ -164,7 +164,7 @@ void video_cmd_1(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
-#else
+#elif defined (__linux__)
     video_set_long("Video Viewer", "_MP_CMD", 1);
 #endif
 }
@@ -172,7 +172,7 @@ void video_cmd_5(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
-#else
+#elif defined (__linux__)
     video_set_long("Video Viewer", "_MP_CMD", 5);
 #endif
 }
@@ -180,7 +180,7 @@ void video_cmd_6(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
-#else
+#elif defined (__linux__)
     video_set_long("Video Viewer", "_MP_CMD", 6);
 #endif
 }

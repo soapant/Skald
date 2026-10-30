@@ -471,7 +471,7 @@ bool remap_should_swallow_linux_key(int linux_code, int value) {
     }
     return remap_handle_vk(vk, value);
 }
-#else
+#elif defined (_WIN32)
 bool remap_should_swallow_linux_key(int linux_code, int value) {
     (void)linux_code; (void)value;
     return false;

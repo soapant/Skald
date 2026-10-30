@@ -7,7 +7,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-#else
+#elif defined (__linux__)
 #include <sys/statvfs.h>
 #endif
 
@@ -28,7 +28,7 @@ static bool read_disk(unsigned long long *used_out, unsigned long long *total_ou
     *used_out = total - vfs.f_bfree * block_size;
     *total_out = total;
     return true;
-#else
+#elif defined (_WIN32)
     char root[MAX_PATH] = {0};
     DWORD n = GetCurrentDirectoryA(sizeof(root) - 1, root);
     if (n == 0 || n < 3) return false;
@@ -66,7 +66,7 @@ static bool read_mem(unsigned long long *used_out, unsigned long long *total_out
     *used_out = (total_kb - avail_kb) * 1024ULL;
     *total_out = total_kb * 1024ULL;
     return true;
-#else
+#elif defined (_WIN32)
     MEMORYSTATUSEX ms;
     ms.dwLength = sizeof(ms);
     if (!GlobalMemoryStatusEx(&ms)) return false;
@@ -94,7 +94,7 @@ static bool sample_cpu(unsigned long long *busy_out, unsigned long long *total_o
     *busy_out = busy;
     *total_out = total;
     return true;
-#else
+#elif defined (_WIN32)
     FILETIME idle_ft, kernel_ft, user_ft;
     if (!GetSystemTimes(&idle_ft, &kernel_ft, &user_ft)) return false;
 
@@ -253,7 +253,7 @@ static bool g_net_persist_loaded;
 static void net_localtime(time_t t, struct tm *out) {
 #if defined(_WIN32)
     localtime_s(out, &t);
-#else
+#elif defined (__linux__)
     localtime_r(&t, out);
 #endif
 }
