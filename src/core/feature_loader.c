@@ -134,7 +134,13 @@ static void sweep_retired_libs(void) {
     g_retired_count = n;
 }
 
-#if defined(__linux__)
+#if defined(_WIN32)
+static CRITICAL_SECTION g_cs;
+static bool g_cs_inited = false;
+static void lock_init(void) { if (!g_cs_inited) { InitializeCriticalSection(&g_cs); g_cs_inited = true; } }
+#define LOCK() do { lock_init(); EnterCriticalSection(&g_cs); } while(0)
+#define UNLOCK() LeaveCriticalSection(&g_cs)
+#else
 #include <pthread.h>
 static pthread_mutex_t g_mutex;
 static pthread_once_t g_once = PTHREAD_ONCE_INIT;
@@ -147,12 +153,6 @@ static void mutex_init(void) {
 }
 #define LOCK() do { pthread_once(&g_once, mutex_init); pthread_mutex_lock(&g_mutex); } while (0)
 #define UNLOCK() pthread_mutex_unlock(&g_mutex)
-#elif defined (_WIN32)
-static CRITICAL_SECTION g_cs;
-static bool g_cs_inited = false;
-static void lock_init(void) { if (!g_cs_inited) { InitializeCriticalSection(&g_cs); g_cs_inited = true; } }
-#define LOCK() do { lock_init(); EnterCriticalSection(&g_cs); } while(0)
-#define UNLOCK() LeaveCriticalSection(&g_cs)
 #endif
 
 static bool ends_with(const char* str, const char* suffix) {

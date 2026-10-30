@@ -9,12 +9,12 @@
 #include "platform/platform.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"
-#if defined(__linux__)
+#if defined(_WIN32)
+#include <shlwapi.h>
+#else
 #include <strings.h>
 #include <ctype.h>
 #include <string.h>
-#elif defined(_WIN32)
-#include <shlwapi.h>
 #endif
 
 
@@ -235,13 +235,15 @@ static void Populate_UpdateUI(ListBoxInfo* lb, int total_matches, const char* fi
   }
   ListBox_ScrollToSelection(lb);
   if (total_matches == 0) {
-    if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
 #if defined(_WIN32)
+    if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
       KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
       DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-#endif
       FlintContext_Get()->window.hDisplayMessage = WH_NULL;
     }
+#else
+    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+#endif
   }
   UI_LB_EndUpdate();
 }

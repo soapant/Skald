@@ -14,7 +14,6 @@
 typedef struct {
     ListBoxInfo* lb;
     WindowHandle hListBox;
-    WindowHandle hEdit;
 } VimContext;
 
 void Vim_GetText(FlintContext* ctx, char* buf, size_t cap);
