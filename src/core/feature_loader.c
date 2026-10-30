@@ -1,6 +1,7 @@
 #include "core/feature_loader.h"
 #include "deps/log.h"
 #include "platform/lib.h"
+#include "platform/platform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,9 +22,6 @@
 #include "core/cap_registry.h"
 #include "core/hotkey_manager.h"
 #include "core/snippet_manager.h"
-#if defined(_WIN32) 
-#include <windows.h>
-#endif
 
 #define MAX_FEATURES 130
 #define MAX_RETIRED 64
@@ -134,26 +132,12 @@ static void sweep_retired_libs(void) {
     g_retired_count = n;
 }
 
-#if defined(_WIN32)
-static CRITICAL_SECTION g_cs;
-static bool g_cs_inited = false;
-static void lock_init(void) { if (!g_cs_inited) { InitializeCriticalSection(&g_cs); g_cs_inited = true; } }
-#define LOCK() do { lock_init(); EnterCriticalSection(&g_cs); } while(0)
-#define UNLOCK() LeaveCriticalSection(&g_cs)
-#else
-#include <pthread.h>
-static pthread_mutex_t g_mutex;
-static pthread_once_t g_once = PTHREAD_ONCE_INIT;
-static void mutex_init(void) {
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&g_mutex, &attr);
-    pthread_mutexattr_destroy(&attr);
+static void* g_feature_mutex = NULL;
+static void feature_mutex_init(void) {
+    if (!g_feature_mutex) g_feature_mutex = Platform_MutexCreate();
 }
-#define LOCK() do { pthread_once(&g_once, mutex_init); pthread_mutex_lock(&g_mutex); } while (0)
-#define UNLOCK() pthread_mutex_unlock(&g_mutex)
-#endif
+#define LOCK() do { feature_mutex_init(); Platform_MutexLock(g_feature_mutex); } while(0)
+#define UNLOCK() Platform_MutexUnlock(g_feature_mutex)
 
 static bool ends_with(const char* str, const char* suffix) {
     if (!str || !suffix) return false;
@@ -749,11 +733,8 @@ void FeatureLoader_Lock(void) {
 }
 
 bool FeatureLoader_TryLock(void) {
-#if defined(_WIN32)
-    return TryEnterCriticalSection(&g_cs) != 0;
-#elif defined (__linux__)
-    return pthread_mutex_trylock(&g_mutex) == 0;
-#endif
+    feature_mutex_init();
+    return Platform_MutexTryLock(g_feature_mutex);
 }
 
 void FeatureLoader_Unlock(void) {

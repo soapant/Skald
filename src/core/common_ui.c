@@ -9,15 +9,6 @@
 #include "platform/platform.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"
-#if defined(_WIN32)
-#include <shlwapi.h>
-#else
-#include <strings.h>
-#include <ctype.h>
-#include <string.h>
-#endif
-
-
 
 static bool FuzzyMatch(const char* text, const char* pattern) {
     if (!pattern || !pattern[0]) return true;
