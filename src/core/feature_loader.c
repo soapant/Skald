@@ -605,23 +605,6 @@ void FeatureLoader_Reload(const char* name) {
             }
             retire_owner[sizeof(retire_owner)-1] = '\0';
             retire_old_lib(old, g_features[i].uniq, retire_owner);
-#if defined(_WIN32)
-            UNLOCK();
-            Sleep(100);
-            LOCK();
-            if (i >= g_feature_count || strcmp(g_features[i].name, name)!=0) {
-                Platform_UnloadLibrary(h);
-                remove(uniquepath);
-                UNLOCK();
-                char file2[MaxFeatures];
-                snprintf(file2, sizeof(file2), "%s%s", name, Platform_LibExtension());
-                LOCK();
-                bool ok = load_single("build/features", file2);
-                UNLOCK();
-                (void)ok;
-                return;
-            }
-#endif
             widget_bump_generation();
             log_info("feature_reload: %s (constructor ran at dlopen)", name);
             g_features[i].handle = h;
