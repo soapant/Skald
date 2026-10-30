@@ -42,7 +42,19 @@ void Platform_EndMeasure(int *out_w, int *out_h);
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
 void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
 bool Platform_DrawImageScaled(Display *dpy, XftDraw *xd, Visual *vis, const char *path, int x, int y, int w, int h);
+#else
+void Platform_SetDrawBgColor(unsigned long hex);
+unsigned long Platform_GetDrawBgColor(void);
+void Platform_SetTransparentWindow(bool on);
+bool Platform_GetTransparentWindow(void);
+void Platform_FlushDraw(void);
+void Platform_SetPreRenderState(PromptState *state);
+void Platform_GetLastMeasureOrigin(int *out_x, int *out_y);
+void Platform_SetDrawOffset(int dx, int dy);
+void Platform_BeginMeasure(void);
+void Platform_EndMeasure(int *out_w, int *out_h);
 #endif
+
 void Platform_DrawPromptEditText(PromptState *state);
 void Platform_DrawPromptEditCursor(PromptState *state);
 void Platform_GetDrawOffset(int *out_x, int *out_y);

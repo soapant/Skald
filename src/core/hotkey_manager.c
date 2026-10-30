@@ -13,8 +13,7 @@
 #include <stdlib.h>
 #if defined(_WIN32)
 #include <windows.h>
-#endif
-#if defined(__linux__)
+#else
 #include <pthread.h>
 #endif
 #include "platform/platform.h"
@@ -31,11 +30,7 @@ static int g_pending_mods[HOTKEY_PENDING_MAX];
 static char g_pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
 static int g_pending_head = 0;
 static int g_pending_tail = 0;
-#if defined(__linux__)
-static pthread_mutex_t g_q_mtx = PTHREAD_MUTEX_INITIALIZER;
-#define HOTKEY_Q_LOCK() pthread_mutex_lock(&g_q_mtx)
-#define HOTKEY_Q_UNLOCK() pthread_mutex_unlock(&g_q_mtx)
-#elif defined (_WIN32)
+#if defined(_WIN32)
 static CRITICAL_SECTION g_q_cs;
 static LONG g_q_cs_ready = 0;
 static void hotkey_queue_init(void) {
@@ -43,6 +38,10 @@ static void hotkey_queue_init(void) {
 }
 #define HOTKEY_Q_LOCK() do { hotkey_queue_init(); EnterCriticalSection(&g_q_cs); } while (0)
 #define HOTKEY_Q_UNLOCK() do { hotkey_queue_init(); LeaveCriticalSection(&g_q_cs); } while (0)
+#else
+static pthread_mutex_t g_q_mtx = PTHREAD_MUTEX_INITIALIZER;
+#define HOTKEY_Q_LOCK() pthread_mutex_lock(&g_q_mtx)
+#define HOTKEY_Q_UNLOCK() pthread_mutex_unlock(&g_q_mtx)
 #endif
 static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle, const char* owner, int vk, int mods) {
     if (!fn) return;
@@ -71,7 +70,7 @@ static HotkeyHoldSlot g_hold_slots[HOTKEY_HOLD_MAX];
 static unsigned long long hotkey_now_ms(void) {
 #if defined(_WIN32)
     return (unsigned long long)GetTickCount64();
-#elif defined (__linux__)
+#else
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (unsigned long long)ts.tv_sec * 1000ULL + (unsigned long long)ts.tv_nsec / 1000000ULL;
