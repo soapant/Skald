@@ -54,14 +54,13 @@ static void ScanAndHookKeyboards(void) { x11_scan_keyboards(); }
 static int XKeysymToVK(KeySym ks) { return x11_keysym_to_vk(ks); }
 
 static void *input_thread_func(void *arg) {
-
   WindowManager *wm = (WindowManager *)arg;
   if (g_x11_keyboard_count == 0 && g_x11_mouse_count == 0)
     return NULL;
   int nfds = g_x11_keyboard_count + g_x11_mouse_count;
   struct pollfd *fds = calloc((size_t)nfds, sizeof(struct pollfd));
   if (!fds) {
-    return;
+    return NULL;
   }
   for (int i = 0; i < g_x11_keyboard_count; i++) {
     fds[i].fd = g_x11_keyboards[i].fd;
