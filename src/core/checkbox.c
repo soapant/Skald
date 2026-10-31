@@ -30,13 +30,13 @@ static struct {
 } g_cb_mouse;
 
 void Checkbox_FrameBegin(void) {
-    PROFILE_START(_pt);
+    
     g_cb_mouse.valid = false;
-    PROFILE_END_VAR(_pt, "Checkbox_FrameBegin");
+    
 }
 
 static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
-    PROFILE_START(_pt);
+    
     if (!g_cb_mouse.valid) {
         int mx = 0, my = 0;
         if (Platform_GetMousePos(&mx, &my)) {
@@ -64,22 +64,22 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
     if (out_x) *out_x = g_cb_mouse.mx;
     if (out_y) *out_y = g_cb_mouse.my;
     if (out_down) *out_down = g_cb_mouse.down;
-    PROFILE_END_VAR(_pt, "checkbox_mouse");
+    
 }
 
 static CheckboxSpec* checkbox_find(const char* name) {
-    PROFILE_START(_pt);
+    
     for (int i = 0; i < g_checkbox_count; i++) {
-        if (strcmp(g_checkboxes[i].name, name) == 0) { PROFILE_END_VAR(_pt, "checkbox_find"); return &g_checkboxes[i]; }
+        if (strcmp(g_checkboxes[i].name, name) == 0) {  return &g_checkboxes[i]; }
     }
-    { PROFILE_END_VAR(_pt, "checkbox_find"); return NULL; }
+    {  return NULL; }
 }
 
 static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
-    PROFILE_START(_pt);
+    
     CheckboxSpec* cb = checkbox_find(name);
-    if (cb) { PROFILE_END_VAR(_pt, "checkbox_intern"); return cb; }
-    if (g_checkbox_count >= CHECKBOX_MAX) { PROFILE_END_VAR(_pt, "checkbox_intern"); return NULL; }
+    if (cb) {  return cb; }
+    if (g_checkbox_count >= CHECKBOX_MAX) {  return NULL; }
     cb = &g_checkboxes[g_checkbox_count++];
     memset(cb, 0, sizeof(*cb));
     cb->name = name;
@@ -87,27 +87,27 @@ static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
     cb->thickness = 1;
     cb->border = true;
     cb->name = strdup(name);
-    { PROFILE_END_VAR(_pt, "checkbox_intern"); return cb; }
+    {  return cb; }
 }
 
 bool Checkbox_IsChecked(const char* name) {
-    PROFILE_START(_pt);
+    
     CheckboxSpec* cb = name ? checkbox_find(name) : NULL;
     bool r = cb ? cb->checked : false;
-    PROFILE_END_VAR(_pt, "Checkbox_IsChecked");
+    
     return r;
 }
 
 bool Checkbox_IsHovered(const char* name) {
-    PROFILE_START(_pt);
+    
     CheckboxSpec* cb = name ? checkbox_find(name) : NULL;
     bool r = cb ? cb->hovered : false;
-    PROFILE_END_VAR(_pt, "Checkbox_IsHovered");
+    
     return r;
 }
 
 void Checkbox_ResetAll(void) {
-    PROFILE_START(_pt);
+    
     for (int i = 0; i < g_checkbox_count; i++) {
         g_checkboxes[i].checked = false;
         g_checkboxes[i].clicked = false;
@@ -117,24 +117,24 @@ void Checkbox_ResetAll(void) {
         g_checkboxes[i].on_hover = NULL;
         g_checkboxes[i].render = NULL;
     }
-    PROFILE_END_VAR(_pt, "Checkbox_ResetAll");
+    
 }
 
 static int checkbox_line_height(int fontsize) {
-    PROFILE_START(_pt);
+    
     int lh = 0, rh = 0, lt = 0;
     Platform_GetTextLayoutMetrics(&lh, &rh, &lt);
     int ref_h = lh > 0 ? lh : FontSize;
     int ref_fs = FontSize > 0 ? FontSize : fontsize;
-    if (ref_h <= 0 || ref_fs <= 0) { PROFILE_END_VAR(_pt, "checkbox_line_height"); return fontsize; }
-    { PROFILE_END_VAR(_pt, "checkbox_line_height"); return (int)((long)ref_h * fontsize / ref_fs); }
+    if (ref_h <= 0 || ref_fs <= 0) {  return fontsize; }
+    {  return (int)((long)ref_h * fontsize / ref_fs); }
 }
 
 FontHandle s_font;
 
 void Checkbox_Draw(const CheckboxSpec* spec) {
-    PROFILE_START(_pt);
-    if (spec->render) { PlRect _r = { spec->x, spec->y, spec->w > 0 ? spec->w : (spec->button ? 100 : 16), spec->h > 0 ? spec->h : (spec->button ? 24 : 16) }; spec->render(_r); PROFILE_END_VAR(_pt, "Checkbox_Draw"); return; }
+    
+    if (spec->render) { PlRect _r = { spec->x, spec->y, spec->w > 0 ? spec->w : (spec->button ? 100 : 16), spec->h > 0 ? spec->h : (spec->button ? 24 : 16) }; spec->render(_r);  return; }
     unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
     unsigned long def_btn_border = (spec->checked || spec->clicked || spec->hovered) ? CHECKBOX_WHITE : CHECKBOX_GRAY;
     unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : COLOR_BG;
@@ -219,13 +219,13 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         }
     }
 
-    PROFILE_END_VAR(_pt, "Checkbox_Draw");
+    
 }
 
 bool Checkbox_Place(const CheckboxSpec* spec) {
-    PROFILE_START(_pt);
+    
     if (!spec || !spec->name || !spec->name[0]) {
-        PROFILE_END_VAR(_pt, "Checkbox_Place");
+        
         return false;
     }
 
@@ -241,7 +241,7 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     }
 
     CheckboxSpec* cb = checkbox_intern(spec->name, spec->checked);
-    if (!cb) { PROFILE_END_VAR(_pt, "Checkbox_Place"); return false; }
+    if (!cb) {  return false; }
     cb->on_click = spec->on_click;
     cb->on_hover = spec->on_hover;
     cb->checkbox = spec->checkbox;
@@ -289,6 +289,6 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     if (clicked && cb->on_click) cb->on_click();
     if (hover_changed && cb->on_hover) cb->on_hover();
 
-    PROFILE_END_VAR(_pt, "Checkbox_Place");
+    
     return true;
 }

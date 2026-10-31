@@ -26,35 +26,35 @@ extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
 #include "platform/win32/win32_state.h"
 
 bool Platform_WM_InitDisplay(WindowManager* wm) {
-        PROFILE_START(_pt);
+        
 (void)wm;
-    { PROFILE_END_VAR(_pt, "Platform_WM_InitDisplay"); return true; }
+    {  return true; }
 }
 
 int Platform_WM_Run(WindowManager* wm) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_WM_Run"); return WindowManager_RunWin32(wm); }
+        
+{  return WindowManager_RunWin32(wm); }
 }
 
 void Platform_WM_Quit(WindowManager* wm) {
-        PROFILE_START(_pt);
+        
 WindowManager_QuitWin32(wm);
 }
 
 void Platform_WM_ProcessEvents(WindowManager* wm) {
-        PROFILE_START(_pt);
+        
 WindowManager_ProcessEventsWin32(wm);
 }
 
 void Platform_WM_OnPopEmpty(WindowManager* wm) {
-        PROFILE_START(_pt);
+        
 (void)wm;
     remap_reset();
     Platform_InputState_Clear();
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
-        PROFILE_START(_pt);
+        
 int x = 0, y = 0, w = GetSystemMetrics(SM_CXSCREEN), h = GetSystemMetrics(SM_CYSCREEN);
     if (!w) w = 1920;
     if (!h) h = 1080;
@@ -83,31 +83,31 @@ int x = 0, y = 0, w = GetSystemMetrics(SM_CXSCREEN), h = GetSystemMetrics(SM_CYS
 
 
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     int lh = FontSize;
     int rh = PromptRowHeight();
     if (line_h) *line_h = lh;
     if (row_h) *row_h = rh;
     if (list_top) *list_top = PromptListTop();
-    PROFILE_END_VAR(timer, "wm_platform_win32:Platform_GetTextLayoutMetrics");
+    
 }
 
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
-    PROFILE_START(_pt);
-    if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
+    
+    if (!wm || !spec) {  return NULL; }
     Popup* popup = PromptPopup_Create(wm, spec);
-    if (!popup) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
+    if (!popup) {  return NULL; }
     if (spec->subwindow) {
         static bool s_subwindow_creating = false;
         if (s_subwindow_creating) {
             log_info("Platform_PromptUser subwindow REENTRANT blocked title=%s", spec->title ? spec->title : "(null)");
-            PROFILE_END_VAR(_pt, "Platform_PromptUser");
+            
             return NULL;
         }
         if (wm && wm->popup_count > 1) {
             log_info("Platform_PromptUser subwindow BLOCKED (already open) title=%s popup_count=%d", spec->title ? spec->title : "(null)", wm->popup_count);
-            PROFILE_END_VAR(_pt, "Platform_PromptUser");
+            
             return NULL;
         }
         s_subwindow_creating = true;
@@ -117,7 +117,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
         Popup* _created = PromptPopup_Create(wm, &heap_spec);
         log_info("Platform_PromptUser subwindow EXIT created=%p popup_count=%d", (void*)_created, wm ? wm->popup_count : -1);
         s_subwindow_creating = false;
-        PROFILE_END_VAR(_pt, "Platform_PromptUser");
+        
         return NULL;
     }
     long long last_tick = 0;
@@ -159,5 +159,5 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
     FlintContext* _c = FlintContext_Get();
-    { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL; }
+    {  return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL; }
 }

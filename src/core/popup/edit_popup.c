@@ -11,23 +11,23 @@
 typedef WMEditPopupData EditPopupDataInternal;
 
 static void EditPopup_OnShow(Popup* self) {
-    PROFILE_START(timer);
+    
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     data->mode = MODE_INSERT;
     Platform_EditPopupShowWindow(self);
-    PROFILE_END_VAR(timer, "window_manager:EditPopup_OnShow");
+    
 }
 
 static void EditPopup_OnHide(Popup* self) {
-    PROFILE_START(timer);
+    
     Platform_EditPopupHideWindow(self);
-    PROFILE_END_VAR(timer, "window_manager:EditPopup_OnHide");
+    
 }
 
 static void EditPopup_OnRender(Popup* self) {
-    PROFILE_START(timer);
+    
     Platform_EditPopupRender(self);
-    PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender");
+    
 }
 
 static bool EditPopup_OnKey(Popup* self, const PopupKeyEvent* key) {
@@ -35,14 +35,14 @@ static bool EditPopup_OnKey(Popup* self, const PopupKeyEvent* key) {
 }
 
 static void EditPopup_Destroy(Popup* self) {
-    PROFILE_START(timer);
+    
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     free(data->text);
     free(data->align);
     free(data->placeholder);
     Platform_EditPopupDestroyWindow(self);
     free(data);
-    PROFILE_END_VAR(timer, "window_manager:EditPopup_Destroy");
+    
 }
 
 static const PopupVTable g_edit_popup_vtable = {
@@ -67,9 +67,9 @@ void EditPopup_SetPlaceholder(Popup* popup, const char* placeholder) {
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
                         int x, int y, int w, int h, const char* align,
                         EditPopupConfirmCallback on_confirm, void* user_data) {
-    PROFILE_START(timer);
+    
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
-    if (!data) { PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL; }
+    if (!data) {  return NULL; }
     w = (int)(w * Platform_GetUIScale());
     h = (int)(h * Platform_GetUIScale());
     WindowManager_GetCenteredPos(w, h, &x, &y);
@@ -81,14 +81,14 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     if (!data->align) {
         free(data->align);
         free(data);
-        PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL;
+         return NULL;
     }
     data->text_capacity = 1024;
     data->text = calloc(data->text_capacity, 1);
     if (!data->text) {
         free(data->align);
         free(data);
-        PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL;
+         return NULL;
     }
     if (initial_text) {
         strncpy(data->text, initial_text, data->text_capacity - 1);
@@ -103,10 +103,10 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
         free(data->text);
         free(data->align);
         free(data);
-        PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
+        
         return NULL;
     }
 
-    PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
+    
     return (Popup*)data;
 }

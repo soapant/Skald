@@ -20,7 +20,7 @@ static BOOL g_track_saved = FALSE;
 static HWND g_pending_restore = NULL;
 
 static void CALLBACK ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD time) {
-        PROFILE_START(_pt);
+        
 (void)hwnd; (void)msg; (void)time;
     KillTimer(NULL, id);
     if (g_track_saved) {
@@ -30,28 +30,28 @@ static void CALLBACK ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD t
 }
 
 static bool is_popup_class(HWND hwnd) {
-        PROFILE_START(_pt);
-if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "is_popup_class"); return false; }
+        
+if (!hwnd || !IsWindow(hwnd)) {  return false; }
     char cls[64] = {0};
     GetClassNameA(hwnd, cls, sizeof(cls));
-    { PROFILE_END_VAR(_pt, "is_popup_class"); return strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0
+    {  return strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0
         || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0; }
 }
 
 HWND Platform_GetFlintPrevFg(void) {
-        PROFILE_START(_pt);
-if (g_prev_fg && IsWindow(g_prev_fg)) { PROFILE_END_VAR(_pt, "Platform_GetFlintPrevFg"); return g_prev_fg; }
-    { PROFILE_END_VAR(_pt, "Platform_GetFlintPrevFg"); return NULL; }
+        
+if (g_prev_fg && IsWindow(g_prev_fg)) {  return g_prev_fg; }
+    {  return NULL; }
 }
 void Platform_SetFlintPrevFg(HWND h) {
-        PROFILE_START(_pt);
+        
 if (h && IsWindow(h)) g_prev_fg = h;
 }
 
 bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
-        PROFILE_START(_pt);
+        
 (void)self;
-    PROFILE_START(timer);
+    
     ListBox_InvalidateMousePos();
     HWND fg = GetForegroundWindow();
     if (fg && IsWindow(fg) && !is_popup_class(fg)) g_prev_fg = fg;
@@ -75,7 +75,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
         x, y, w, h, NULL, NULL, hInstance, NULL
         ));
     if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
-        PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
+        
         return false;
     }
     HWND hwnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
@@ -88,13 +88,13 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
     ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
-    PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
-    { PROFILE_END_VAR(_pt, "Platform_PromptPopupShowWindow"); return true; }
+    
+    {  return true; }
 }
 
 void Platform_PromptPopupHideWindow(Popup* self) {
-    PROFILE_START(_pt);
-    PROFILE_START(timer);
+    
+    
     
     HWND hwnd = (self && WH_TO_HWND(self->handle) != NULL) ? WH_TO_HWND(self->handle) : WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     
@@ -120,7 +120,7 @@ void Platform_PromptPopupHideWindow(Popup* self) {
         if (g_track_saved && g_old_track) SetTimer(NULL, 0xC0DF, 800, ReenableTrackProc);
         else g_track_saved = FALSE;
     }
-    PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupHideWindow");
+    
 }
 
 void Platform_PromptPopupRender(Popup* self) {

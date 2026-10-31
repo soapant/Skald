@@ -11,7 +11,7 @@
 #endif
 
 void Platform_EmitKey(int vk_code, int down) {
-        PROFILE_START(_pt);
+        
 int linux_code = x11_vk_to_linux_key(vk_code);
     if (!linux_code) {
         if (vk_code == VK_LCONTROL) linux_code = KEY_LEFTCTRL;

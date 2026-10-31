@@ -7,13 +7,13 @@
 
 #include "core/timer.h"
 bool Desktop_Parse(const char* desktop_path, char exec_line[1024], char workdir[1024], bool* is_terminal) {
-        PROFILE_START(_pt);
+        
 if (exec_line) exec_line[0] = '\0';
     if (workdir) workdir[0] = '\0';
     if (is_terminal) *is_terminal = false;
-    if (!desktop_path) { PROFILE_END_VAR(_pt, "Desktop_Parse"); return false; }
+    if (!desktop_path) {  return false; }
     static char content[16384];
-    if (File_ReadAll(desktop_path, content, (long)sizeof(content)) <= 0) { PROFILE_END_VAR(_pt, "Desktop_Parse"); return false; }
+    if (File_ReadAll(desktop_path, content, (long)sizeof(content)) <= 0) {  return false; }
     char* cur = content;
     while (*cur) {
         char* nl = strchr(cur, '\n');
@@ -39,12 +39,12 @@ if (exec_line) exec_line[0] = '\0';
             if (workdir) strncpy(workdir, v, 1024 - 1);
         }
     }
-    { PROFILE_END_VAR(_pt, "Desktop_Parse"); return true; }
+    {  return true; }
 }
 
 void Desktop_CleanExec(char exec_line[1024]) {
-        PROFILE_START(_pt);
-if (!exec_line || !exec_line[0]) { PROFILE_END_VAR(_pt, "Desktop_CleanExec"); return ; }
+        
+if (!exec_line || !exec_line[0]) {  return ; }
     char cleaned[1024] = {0};
     size_t o = 0;
     for (size_t i = 0; exec_line[i] && o < sizeof(cleaned) - 1; i++) {

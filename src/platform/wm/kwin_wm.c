@@ -15,30 +15,30 @@
 static pthread_mutex_t g_kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 bool kwin_is_active(void) {
-        PROFILE_START(_pt);
+        
 const char* v = getenv("KDE_SESSION_VERSION");
-    if (v && v[0]) { PROFILE_END_VAR(_pt, "kwin_is_active"); return true; }
+    if (v && v[0]) {  return true; }
     const char* d = getenv("XDG_CURRENT_DESKTOP");
-    if (d && d[0] && strstr(d, "KDE")) { PROFILE_END_VAR(_pt, "kwin_is_active"); return true; }
-    { PROFILE_END_VAR(_pt, "kwin_is_active"); return false; }
+    if (d && d[0] && strstr(d, "KDE")) {  return true; }
+    {  return false; }
 }
 
 static bool kwin_has_error(char* output) {
-        PROFILE_START(_pt);
-if (!output) { PROFILE_END_VAR(_pt, "kwin_has_error"); return true; }
-    { PROFILE_END_VAR(_pt, "kwin_has_error"); return Platform_StringContainsCaseInsensitive(output, "error"); }
+        
+if (!output) {  return true; }
+    {  return Platform_StringContainsCaseInsensitive(output, "error"); }
 }
 
 static void kwin_ensure_bus(void) {
-        PROFILE_START(_pt);
+        
 const char* cur = getenv("DBUS_SESSION_BUS_ADDRESS");
-    if (cur && cur[0]) { PROFILE_END_VAR(_pt, "kwin_ensure_bus"); return ; }
+    if (cur && cur[0]) {  return ; }
     const char* rtd = getenv("XDG_RUNTIME_DIR");
-    if (!rtd || !rtd[0]) { PROFILE_END_VAR(_pt, "kwin_ensure_bus"); return ; }
+    if (!rtd || !rtd[0]) {  return ; }
     char sock[512];
     snprintf(sock, sizeof(sock), "%s/bus", rtd);
     struct stat st;
-    if (stat(sock, &st) != 0) { PROFILE_END_VAR(_pt, "kwin_ensure_bus"); return ; }
+    if (stat(sock, &st) != 0) {  return ; }
     char addr[600];
     snprintf(addr, sizeof(addr), "unix:path=%s", sock);
     setenv("DBUS_SESSION_BUS_ADDRESS", addr, 1);
@@ -48,7 +48,7 @@ const char* cur = getenv("DBUS_SESSION_BUS_ADDRESS");
 static char g_kwin_qdbus[64] = {0};
 
 static char* kwin_qdbus_call(const char* args) {
-        PROFILE_START(_pt);
+        
 kwin_ensure_bus();
     if (!g_kwin_qdbus[0]) {
         const char* c = "/usr/bin/qdbus6";
@@ -57,13 +57,13 @@ kwin_ensure_bus();
     }
     char cmd[2048];
     snprintf(cmd, sizeof(cmd), "%s %s 2>/dev/null || echo error", g_kwin_qdbus, args);
-    { PROFILE_END_VAR(_pt, "kwin_qdbus_call"); return Platform_RunTerminalCommand(cmd, false); }
+    {  return Platform_RunTerminalCommand(cmd, false); }
 }
 
 static bool kwin_run_script_inner(const char* body) {
-        PROFILE_START(_pt);
+        
 FILE* f = fopen("/tmp/flint_kwin_do.js", "w");
-    if (!f) { PROFILE_END_VAR(_pt, "kwin_run_script_inner"); return false; }
+    if (!f) {  return false; }
     fputs(body, f);
     fclose(f);
     char* pre = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flint");
@@ -84,15 +84,15 @@ FILE* f = fopen("/tmp/flint_kwin_do.js", "w");
     if (out2) free(out2);
     char* out3 = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flint");
     if (out3) free(out3);
-    { PROFILE_END_VAR(_pt, "kwin_run_script_inner"); return ok; }
+    {  return ok; }
 }
 
 static bool kwin_run_script(const char* body) {
-        PROFILE_START(_pt);
+        
 pthread_mutex_lock(&g_kwin_mtx);
     bool ok = kwin_run_script_inner(body);
     pthread_mutex_unlock(&g_kwin_mtx);
-    { PROFILE_END_VAR(_pt, "kwin_run_script"); return ok; }
+    {  return ok; }
 }
 
 static char* g_kwin_records = NULL;
@@ -123,9 +123,9 @@ static const char g_kwin_q_body[] =
     "})();";
 
 static bool kwin_q_load(void) {
-        PROFILE_START(_pt);
+        
 long long now = Platform_GetWallClockMs();
-    if (now - g_kwin_q_load_tried_at < 2000 && g_kwin_q_load_tried_at != 0) { PROFILE_END_VAR(_pt, "kwin_q_load"); return false; }
+    if (now - g_kwin_q_load_tried_at < 2000 && g_kwin_q_load_tried_at != 0) {  return false; }
     g_kwin_q_load_tried_at = now;
     if (!g_kwin_q_legacy_cleared) {
         g_kwin_q_legacy_cleared = true;
@@ -140,7 +140,7 @@ long long now = Platform_GetWallClockMs();
         g_kwin_q_name[0] = '\0';
     }
     FILE* f = fopen("/tmp/flint_kwin_q.js", "w");
-    if (!f) { PROFILE_END_VAR(_pt, "kwin_q_load"); return false; }
+    if (!f) {  return false; }
     fputs(g_kwin_q_body, f);
     fclose(f);
     for (int round = 0; round < 3; round++) {
@@ -169,11 +169,11 @@ long long now = Platform_GetWallClockMs();
     }
     g_kwin_q_loaded = false;
     g_kwin_q_name[0] = '\0';
-    { PROFILE_END_VAR(_pt, "kwin_q_load"); return false; }
+    {  return false; }
 }
 
 static void kwin_snap_store(const char* blob) {
-        PROFILE_START(_pt);
+        
 char* rec = NULL;
     char* at = NULL;
     char* ac = NULL;
@@ -206,9 +206,9 @@ char* rec = NULL;
 }
 
 static bool kwin_snapshot_locked(void) {
-        PROFILE_START(_pt);
+        
 long long now = Platform_GetWallClockMs();
-    if (g_kwin_records && now - g_kwin_snap_at < KWIN_SNAP_TTL_MS) { PROFILE_END_VAR(_pt, "kwin_snapshot_locked"); return true; }
+    if (g_kwin_records && now - g_kwin_snap_at < KWIN_SNAP_TTL_MS) {  return true; }
     for (int tries = 0; tries < 2; tries++) {
         if (!g_kwin_q_loaded && !kwin_q_load()) return false;
         char args[128];
@@ -242,19 +242,19 @@ long long now = Platform_GetWallClockMs();
         g_kwin_q_loaded = false;
         return g_kwin_records != NULL;
     }
-    { PROFILE_END_VAR(_pt, "kwin_snapshot_locked"); return g_kwin_records != NULL; }
+    {  return g_kwin_records != NULL; }
 }
 
 static bool kwin_skip_caption(const char* cap) {
-        PROFILE_START(_pt);
-if (!cap || !cap[0]) { PROFILE_END_VAR(_pt, "kwin_skip_caption"); return true; }
-    if (!strncmp(cap, "flint-", 6)) { PROFILE_END_VAR(_pt, "kwin_skip_caption"); return true; }
-    if (!strcasecmp(cap, "window") || !strcasecmp(cap, "colored")) { PROFILE_END_VAR(_pt, "kwin_skip_caption"); return true; }
-    { PROFILE_END_VAR(_pt, "kwin_skip_caption"); return false; }
+        
+if (!cap || !cap[0]) {  return true; }
+    if (!strncmp(cap, "flint-", 6)) {  return true; }
+    if (!strcasecmp(cap, "window") || !strcasecmp(cap, "colored")) {  return true; }
+    {  return false; }
 }
 
 static void kwin_clean_copy(const char* src, size_t n, char* dst, size_t cap) {
-        PROFILE_START(_pt);
+        
 size_t o = 0;
     for (size_t i = 0; i < n && o + 1 < cap; i++) {
         unsigned char c = (unsigned char)src[i];
@@ -265,42 +265,42 @@ size_t o = 0;
 }
 
 bool get_title_kwin(char *buffer, int buffer_size) {
-        PROFILE_START(_pt);
-if (!buffer || buffer_size <= 0) { PROFILE_END_VAR(_pt, "get_title_kwin"); return false; }
+        
+if (!buffer || buffer_size <= 0) {  return false; }
     buffer[0] = '\0';
-    if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "get_title_kwin"); return false; }
+    if (!kwin_is_active()) {  return false; }
     pthread_mutex_lock(&g_kwin_mtx);
     bool ok = kwin_snapshot_locked() && g_kwin_active_title && g_kwin_active_title[0];
     if (ok) kwin_clean_copy(g_kwin_active_title, strlen(g_kwin_active_title), buffer, (size_t)buffer_size);
     pthread_mutex_unlock(&g_kwin_mtx);
-    { PROFILE_END_VAR(_pt, "get_title_kwin"); return ok && buffer[0] != '\0'; }
+    {  return ok && buffer[0] != '\0'; }
 }
 
 bool get_app_id_kwin(char *buffer, int buffer_size) {
-        PROFILE_START(_pt);
-if (!buffer || buffer_size <= 0) { PROFILE_END_VAR(_pt, "get_app_id_kwin"); return false; }
+        
+if (!buffer || buffer_size <= 0) {  return false; }
     buffer[0] = '\0';
-    if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "get_app_id_kwin"); return false; }
+    if (!kwin_is_active()) {  return false; }
     pthread_mutex_lock(&g_kwin_mtx);
     bool ok = kwin_snapshot_locked() && g_kwin_active_class && g_kwin_active_class[0];
     if (ok) kwin_clean_copy(g_kwin_active_class, strlen(g_kwin_active_class), buffer, (size_t)buffer_size);
     pthread_mutex_unlock(&g_kwin_mtx);
-    { PROFILE_END_VAR(_pt, "get_app_id_kwin"); return ok && buffer[0] != '\0'; }
+    {  return ok && buffer[0] != '\0'; }
 }
 
 char* paste_kwin(char* content) {
-        PROFILE_START(_pt);
+        
 if (!content) { log_error("content is NULL"); return NULL; }
-    if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "paste_kwin"); return NULL; }
+    if (!kwin_is_active()) {  return NULL; }
     char buffer[100];
     snprintf(buffer, sizeof(buffer), "wtype %s", content);
     char* out = Platform_RunTerminalCommand(buffer, false);
     if (!out) log_error("content='%s'", content ? content : "null");
-    { PROFILE_END_VAR(_pt, "paste_kwin"); return out; }
+    {  return out; }
 }
 
 static bool kwin_focus_js_cmd(const char* title, char* out, size_t cap) {
-        PROFILE_START(_pt);
+        
 char esc[1024];
     size_t o = 0;
     for (const char* s = title; *s && o + 2 < sizeof(esc); s++) {
@@ -314,32 +314,32 @@ char esc[1024];
         }
     }
     esc[o] = '\0';
-    if (!esc[0]) { PROFILE_END_VAR(_pt, "kwin_focus_js_cmd"); return false; }
+    if (!esc[0]) {  return false; }
     char low[1024];
     strncpy(low, esc, sizeof(low)-1);
     low[sizeof(low)-1] = '\0';
     if (low[0]) low[0] = tolower((unsigned char)low[0]);
     snprintf(out, cap, "var __t=\"%s\";var __l=\"%s\";var __ws=workspace.stackingOrder;for(var i=0;i<__ws.length;i++){var __c=__ws[i].caption;if(__c==__t||__c.toLowerCase()==__l){workspace.activeWindow=__ws[i];break;}}", esc, low);
-    { PROFILE_END_VAR(_pt, "kwin_focus_js_cmd"); return true; }
+    {  return true; }
 }
 
 bool focus_window_title_kwin(char* title) {
-        PROFILE_START(_pt);
+        
 if (!title) { log_error("title is NULL"); return false; }
-    if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "focus_window_title_kwin"); return false; }
+    if (!kwin_is_active()) {  return false; }
     while (*title && (iscntrl((unsigned char)*title) || isspace((unsigned char)*title))) title++;
     char *end = title + strlen(title);
     while (end > title && (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1]))) *--end = '\0';
     if (!*title) { log_error("title empty after trim"); return false; }
     char body[2300];
-    if (!kwin_focus_js_cmd(title, body, sizeof(body))) { PROFILE_END_VAR(_pt, "focus_window_title_kwin"); return false; }
-    { PROFILE_END_VAR(_pt, "focus_window_title_kwin"); return kwin_run_script(body); }
+    if (!kwin_focus_js_cmd(title, body, sizeof(body))) {  return false; }
+    {  return kwin_run_script(body); }
 }
 
 PlWindowList get_window_titles_kwin() {
-        PROFILE_START(_pt);
+        
 PlWindowList list = {0};
-    if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "get_window_titles_kwin"); return list; }
+    if (!kwin_is_active()) {  return list; }
     pthread_mutex_lock(&g_kwin_mtx);
     if (!kwin_snapshot_locked() || !g_kwin_records) {
         pthread_mutex_unlock(&g_kwin_mtx);
@@ -362,13 +362,13 @@ PlWindowList list = {0};
         p = rend ? rend + 1 : p + rlen;
     }
     pthread_mutex_unlock(&g_kwin_mtx);
-    { PROFILE_END_VAR(_pt, "get_window_titles_kwin"); return list; }
+    {  return list; }
 }
 
 PlWindowList get_window_names_kwin() {
-        PROFILE_START(_pt);
+        
 PlWindowList list = {0};
-    if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "get_window_names_kwin"); return list; }
+    if (!kwin_is_active()) {  return list; }
     pthread_mutex_lock(&g_kwin_mtx);
     if (!kwin_snapshot_locked() || !g_kwin_records) {
         pthread_mutex_unlock(&g_kwin_mtx);
@@ -395,101 +395,101 @@ PlWindowList list = {0};
         p = rend ? rend + 1 : p + rlen;
     }
     pthread_mutex_unlock(&g_kwin_mtx);
-    { PROFILE_END_VAR(_pt, "get_window_names_kwin"); return list; }
+    {  return list; }
 }
 
 
 bool close_active_window_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "close_active_window_kwin"); return false; }
-    { PROFILE_END_VAR(_pt, "close_active_window_kwin"); return kwin_run_script("workspace.slotWindowClose();"); }
+        
+if (!kwin_is_active()) {  return false; }
+    {  return kwin_run_script("workspace.slotWindowClose();"); }
 }
 
 bool toggle_fullscreen_active_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_kwin"); return false; }
-    { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_kwin"); return kwin_run_script("workspace.slotWindowFullScreen();"); }
+        
+if (!kwin_is_active()) {  return false; }
+    {  return kwin_run_script("workspace.slotWindowFullScreen();"); }
 }
 
 bool move_active_window_to_monitor_kwin(bool right) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_kwin"); return false; }
-    if (right) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_kwin"); return kwin_run_script("workspace.slotWindowToRightScreen();"); }
-    { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_kwin"); return kwin_run_script("workspace.slotWindowToLeftScreen();"); }
+        
+if (!kwin_is_active()) {  return false; }
+    if (right) {  return kwin_run_script("workspace.slotWindowToRightScreen();"); }
+    {  return kwin_run_script("workspace.slotWindowToLeftScreen();"); }
 }
 
 bool move_active_window_left_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "move_active_window_left_kwin"); return false; }
-    { PROFILE_END_VAR(_pt, "move_active_window_left_kwin"); return kwin_run_script("workspace.slotWindowToLeftScreen();"); }
+        
+if (!kwin_is_active()) {  return false; }
+    {  return kwin_run_script("workspace.slotWindowToLeftScreen();"); }
 }
 
 bool move_active_window_right_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "move_active_window_right_kwin"); return false; }
-    { PROFILE_END_VAR(_pt, "move_active_window_right_kwin"); return kwin_run_script("workspace.slotWindowToRightScreen();"); }
+        
+if (!kwin_is_active()) {  return false; }
+    {  return kwin_run_script("workspace.slotWindowToRightScreen();"); }
 }
 
 bool focus_window_left_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "focus_window_left_kwin"); return false; }
-    { PROFILE_END_VAR(_pt, "focus_window_left_kwin"); return kwin_run_script("workspace.slotSwitchWindowLeft();"); }
+        
+if (!kwin_is_active()) {  return false; }
+    {  return kwin_run_script("workspace.slotSwitchWindowLeft();"); }
 }
 
 bool focus_window_right_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "focus_window_right_kwin"); return false; }
-    { PROFILE_END_VAR(_pt, "focus_window_right_kwin"); return kwin_run_script("workspace.slotSwitchWindowRight();"); }
+        
+if (!kwin_is_active()) {  return false; }
+    {  return kwin_run_script("workspace.slotSwitchWindowRight();"); }
 }
 
 bool minimize_active_window_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "minimize_active_window_kwin"); return false; }
-    { PROFILE_END_VAR(_pt, "minimize_active_window_kwin"); return kwin_run_script("workspace.slotWindowMinimize();"); }
+        
+if (!kwin_is_active()) {  return false; }
+    {  return kwin_run_script("workspace.slotWindowMinimize();"); }
 }
 
 bool screenshot_copy_area_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "screenshot_copy_area_kwin"); return false; }
+        
+if (!kwin_is_active()) {  return false; }
     free(Platform_RunTerminalCommand("spectacle -b -n -r -c", false));
-    { PROFILE_END_VAR(_pt, "screenshot_copy_area_kwin"); return true; }
+    {  return true; }
 }
 
 bool screenshot_copy_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "screenshot_copy_kwin"); return false; }
+        
+if (!kwin_is_active()) {  return false; }
     free(Platform_RunTerminalCommand("spectacle -b -n -c", false));
-    { PROFILE_END_VAR(_pt, "screenshot_copy_kwin"); return true; }
+    {  return true; }
 }
 
 bool screenshot_save_area_kwin(char* save_path) {
-        PROFILE_START(_pt);
-if (!kwin_is_active() || !save_path || !save_path[0]) { PROFILE_END_VAR(_pt, "screenshot_save_area_kwin"); return false; }
+        
+if (!kwin_is_active() || !save_path || !save_path[0]) {  return false; }
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\"", save_path);
     free(Platform_RunTerminalCommand(cmd, false));
-    { PROFILE_END_VAR(_pt, "screenshot_save_area_kwin"); return true; }
+    {  return true; }
 }
 
 bool screenshot_save_kwin(char* save_path) {
-        PROFILE_START(_pt);
-if (!kwin_is_active() || !save_path || !save_path[0]) { PROFILE_END_VAR(_pt, "screenshot_save_kwin"); return false; }
+        
+if (!kwin_is_active() || !save_path || !save_path[0]) {  return false; }
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -o \"%s\"", save_path);
     free(Platform_RunTerminalCommand(cmd, false));
-    { PROFILE_END_VAR(_pt, "screenshot_save_kwin"); return true; }
+    {  return true; }
 }
 
 char* ocr_area_kwin(void) {
-        PROFILE_START(_pt);
-if (!kwin_is_active()) { PROFILE_END_VAR(_pt, "ocr_area_kwin"); return NULL; }
+        
+if (!kwin_is_active()) {  return NULL; }
     char path[128];
     snprintf(path, sizeof(path), "/tmp/flint_ocr_%d.png", (int)getpid());
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\" && tesseract \"%s\" stdout -l eng; rm -f \"%s\"", path, path, path);
     char* out = Platform_RunTerminalCommand(cmd, false);
     if (!out || !out[0]) { free(out); return NULL; }
-    { PROFILE_END_VAR(_pt, "ocr_area_kwin"); return out; }
+    {  return out; }
 }
 
 bool get_mouse_pos_kwin(int *x, int *y) {

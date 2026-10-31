@@ -17,7 +17,7 @@
 #include "core/timer.h"
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
-        PROFILE_START(_pt);
+        
 if (template_path == NULL || out_size == 0) { log_error("operation failed, returning error template_path='%s' out='%s' out_size=%d", template_path ? template_path : "null", out ? out : "null", out_size); return false; }
 
     size_t o = 0;
@@ -39,35 +39,35 @@ if (template_path == NULL || out_size == 0) { log_error("operation failed, retur
         out[o++] = *p++;
     }
     out[o] = '\0';
-    { PROFILE_END_VAR(_pt, "Platform_ExpandPath"); return true; }
+    {  return true; }
 }
 
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
-        PROFILE_START(_pt);
+        
 if (!haystack || !needle) { log_error("operation failed, returning error haystack='%s' needle='%s'", haystack ? haystack : "null", needle ? needle : "null"); return false; }
-    { PROFILE_END_VAR(_pt, "Platform_StringContainsCaseInsensitive"); return StrStrIA(haystack, needle) != NULL; }
+    {  return StrStrIA(haystack, needle) != NULL; }
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
-        PROFILE_START(_pt);
+        
 if (!str || !prefix) { log_error("operation failed, returning error str='%s' prefix='%s'", str ? str : "null", prefix ? prefix : "null"); return false; }
-    { PROFILE_END_VAR(_pt, "Platform_StringStartsWithCaseInsensitive"); return StrStrIA(str, prefix) == str; }
+    {  return StrStrIA(str, prefix) == str; }
 }
 
 long long Platform_GetWallClockMs(void) {
-        PROFILE_START(_pt);
+        
 FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
     ULARGE_INTEGER t;
     t.LowPart = ft.dwLowDateTime;
     t.HighPart = ft.dwHighDateTime;
-    { PROFILE_END_VAR(_pt, "Platform_GetWallClockMs"); return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL); }
+    {  return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL); }
 }
 
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
-        PROFILE_START(_pt);
+        
 if (!exe_name || !*exe_name) {
         log_error("operation failed, returning error exe_name='%s'", exe_name ? exe_name : "null");
         return false;
@@ -85,31 +85,31 @@ if (!exe_name || !*exe_name) {
     Platform_RunTerminalCommand(cmd, false);
     log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
     
-    { PROFILE_END_VAR(_pt, "Platform_TerminateProcessByName"); return true; }
+    {  return true; }
 }
 
 static bool win32_default_browser_exe(char* out, size_t cap) {
-        PROFILE_START(_pt);
+        
 HKEY key = NULL;
     if (RegOpenKeyExA(HKEY_CURRENT_USER,
             "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice",
-            0, KEY_READ, &key) != ERROR_SUCCESS) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
+            0, KEY_READ, &key) != ERROR_SUCCESS) {  return false; }
 
     char prog[128] = {0};
     DWORD sz = sizeof(prog) - 1;
     LONG r = RegQueryValueExA(key, "ProgId", NULL, NULL, (LPBYTE)prog, &sz);
     RegCloseKey(key);
-    if (r != ERROR_SUCCESS || !prog[0]) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
+    if (r != ERROR_SUCCESS || !prog[0]) {  return false; }
 
     char sub[256];
     snprintf(sub, sizeof(sub), "%s\\shell\\open\\command", prog);
-    if (RegOpenKeyExA(HKEY_CLASSES_ROOT, sub, 0, KEY_READ, &key) != ERROR_SUCCESS) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
+    if (RegOpenKeyExA(HKEY_CLASSES_ROOT, sub, 0, KEY_READ, &key) != ERROR_SUCCESS) {  return false; }
 
     char cmd[1024] = {0};
     sz = sizeof(cmd) - 1;
     r = RegQueryValueExA(key, NULL, NULL, NULL, (LPBYTE)cmd, &sz);
     RegCloseKey(key);
-    if (r != ERROR_SUCCESS || !cmd[0]) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
+    if (r != ERROR_SUCCESS || !cmd[0]) {  return false; }
 
     const char* p = cmd;
     size_t len = 0;
@@ -119,14 +119,14 @@ HKEY key = NULL;
     } else {
         while (p[len] && !isspace((unsigned char)p[len]) && len < cap - 1) len++;
     }
-    if (len == 0) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
+    if (len == 0) {  return false; }
     memcpy(out, p, len);
     out[len] = '\0';
-    { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return out[0] != '\0'; }
+    {  return out[0] != '\0'; }
 }
 
 static bool win32_launch_default_browser_blank(void) {
-        PROFILE_START(_pt);
+        
 char exe[512];
     if (!win32_default_browser_exe(exe, sizeof(exe))) {
         log_info("Platform_LaunchBrowserAtUrl could not resolve default browser");
@@ -138,11 +138,11 @@ char exe[512];
         log_info("Platform_LaunchBrowserAtUrl ShellExecute failed for '%s'", exe);
         return false;
     }
-    { PROFILE_END_VAR(_pt, "win32_launch_default_browser_blank"); return true; }
+    {  return true; }
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
-        PROFILE_START(_pt);
+        
 char full_url[2048] = {0};
     if (!url || !url[0]) full_url[0] = '\0';
     else if (strstr(url, "://")) snprintf(full_url, sizeof(full_url), "%s", url);
@@ -182,11 +182,11 @@ char full_url[2048] = {0};
     char command[2048];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", full_url);
     log_info("Platform_LaunchBrowserAtUrl fallback url='%s' new_window=%d", full_url, new_window);
-    { PROFILE_END_VAR(_pt, "Platform_LaunchBrowserAtUrl"); return Platform_RunTerminalCommand(command,false); }
+    {  return Platform_RunTerminalCommand(command,false); }
 }
 
 bool Platform_QueryBrowser(char* query) {
-        PROFILE_START(_pt);
+        
 if (!query || !query[0]) { log_error("operation failed, returning error query='%s'", query ? query : "null"); return false; }
     
     char encoded_query[2048] = {0};
@@ -227,11 +227,11 @@ if (!query || !query[0]) { log_error("operation failed, returning error query='%
     char command[4096];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
 log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
-    { PROFILE_END_VAR(_pt, "Platform_QueryBrowser"); return Platform_RunTerminalCommand(command,false); }
+    {  return Platform_RunTerminalCommand(command,false); }
 }
 
 char* Platform_GetClipboardEntry(void) {
-        PROFILE_START(_pt);
+        
 char* result = NULL;
 
     if (!OpenClipboard(NULL)) { log_error("operation failed, returning error"); return NULL; }
@@ -262,16 +262,16 @@ char* result = NULL;
     GlobalUnlock(hClipData);
     CloseClipboard();
 
-    { PROFILE_END_VAR(_pt, "Platform_GetClipboardEntry"); return result; }
+    {  return result; }
 }
 
 bool Platform_PasteContent(char* content) {
-        PROFILE_START(_pt);
+        
 if (!content || !content[0]) { log_error("operation failed, returning error content='%s'", content ? content : "null"); return false; }
 
     size_t len = strlen(content);
     INPUT* inputs = (INPUT*)calloc(len, sizeof(INPUT));
-    if (!inputs) { PROFILE_END_VAR(_pt, "Platform_PasteContent"); return false; }
+    if (!inputs) {  return false; }
 
     for (size_t i = 0; i < len; i++) {
         char c = content[i];
@@ -305,10 +305,10 @@ if (!content || !content[0]) { log_error("operation failed, returning error cont
 
     free(inputs);
     log_info("Platform_PasteContent content='%s'", content ? content : "");;
-    { PROFILE_END_VAR(_pt, "Platform_PasteContent"); return success; }
+    {  return success; }
 }
 const char* Platform_GetRealHome(void) {
-        PROFILE_START(_pt);
+        
 static char buf[512] = {0};
 
     const char* profile = getenv("USERPROFILE");
@@ -332,7 +332,7 @@ static char buf[512] = {0};
         return buf;
     }
 
-    { PROFILE_END_VAR(_pt, "Platform_GetRealHome"); return buf; }
+    {  return buf; }
 }
 
 bool Platform_IsRunningAsRoot(void) {

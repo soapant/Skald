@@ -10,24 +10,24 @@ static bool g_display_initialized = false;
 
 
 int x11_error_handler(Display *d, XErrorEvent *e) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     char error_text[256];
     XGetErrorText(d, e->error_code, error_text, sizeof(error_text));
     log_error("Request Code: %d, Error Code: %d (%s), Resource ID: %lu, Serial: %lu", e->request_code, e->error_code, error_text, e->resourceid, e->serial);
-    PROFILE_END_VAR(timer, "display_x11:x11_error_handler");
-    { PROFILE_END_VAR(_pt, "x11_error_handler"); return 0; } 
+    
+    {  return 0; } 
 }
 
 
 static Display* OpenBestDisplay(void) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     Display* d = XOpenDisplay(NULL);
-    if (d) { PROFILE_END_VAR(timer, "display_x11:OpenBestDisplay"); return d; }
+    if (d) {  return d; }
 
     DIR* dir = opendir("/tmp/.X11-unix");
-    if (!dir) { PROFILE_END_VAR(timer, "display_x11:OpenBestDisplay"); return NULL; }
+    if (!dir) {  return NULL; }
 
     char name[32];
     struct dirent* e;
@@ -39,15 +39,15 @@ PROFILE_START(timer);
         }
     }
     closedir(dir);
-    PROFILE_END_VAR(timer, "display_x11:OpenBestDisplay");
-    { PROFILE_END_VAR(_pt, "OpenBestDisplay"); return d; }
+    
+    {  return d; }
 }
 
 bool init_display(void) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     if (g_display_initialized) {
-        PROFILE_END_VAR(timer, "display_x11:init_display");
+        
         return true; 
     }
     
@@ -58,31 +58,31 @@ PROFILE_START(timer);
     g_display = OpenBestDisplay();
     if (g_display == NULL) {
         log_error("Failed to open X11 display.");
-        PROFILE_END_VAR(timer, "display_x11:init_display");
+        
         return false;
     }
 
     g_display_initialized = true;
-    PROFILE_END_VAR(timer, "display_x11:init_display");
-    { PROFILE_END_VAR(_pt, "init_display"); return true; }
+    
+    {  return true; }
 }
 
 Display* get_display(void) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     if (!g_display_initialized) {
         if (!init_display()) {
-            PROFILE_END_VAR(timer, "display_x11:get_display");
+            
             return NULL; 
         }
     }
-    PROFILE_END_VAR(timer, "display_x11:get_display");
-    { PROFILE_END_VAR(_pt, "get_display"); return g_display; }
+    
+    {  return g_display; }
 }
 
 void cleanup_display(void) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     if (g_display_initialized && g_display != NULL) {
         XCloseDisplay(g_display);
         g_display = NULL;
@@ -90,5 +90,5 @@ PROFILE_START(timer);
         
         XSetErrorHandler(NULL); 
     }
-    PROFILE_END_VAR(timer, "display_x11:cleanup_display");
+    
 }

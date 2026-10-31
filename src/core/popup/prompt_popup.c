@@ -32,7 +32,7 @@ static const char* prompt_feature_name(const char* title) {
 }
 
 static void PromptPopup_OnShow(Popup* self) {
-    PROFILE_START(timer);
+    
     PromptPopupData* data = (PromptPopupData*)self;
     WindowManager* wm = (WindowManager*)self->manager;
     FlintContext* ctx = FlintContext_Get();
@@ -44,7 +44,7 @@ static void PromptPopup_OnShow(Popup* self) {
     Platform_PromptPopupShowWindow(self, data->x, data->y, data->w, data->h);
 
     data->state = calloc(1, sizeof(PromptState));
-    if (!data->state) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnShow"); return; }
+    if (!data->state) {  return; }
 
     data->state->items = (char**)data->spec.items;
     data->state->item_count = 0;
@@ -101,11 +101,11 @@ static void PromptPopup_OnShow(Popup* self) {
     History_ResetCursor(ctx2->window.current_feature);
     ctx2->window.editbox_placed = true;
     if (data->spec.refresh) data->spec.refresh(data->state->filter, data->state->has_listbox ? &data->state->listbox : NULL);
-    PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnShow");
+    
 }
 
 static void PromptPopup_OnHide(Popup* self) {
-    PROFILE_START(timer);
+    
     PromptPopupData* data = (PromptPopupData*)self;
     log_info("DEBUG_ON_HIDE title='%s'", data->spec.title ? data->spec.title : "(null)");
     Platform_PromptPopupHideWindow(self);
@@ -118,7 +118,7 @@ static void PromptPopup_OnHide(Popup* self) {
         _c3->window.callbacks = data->saved_callbacks;
         _c3->window.hPopupWnd = data->prev_hPopupWnd;
     }
-    PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnHide");
+    
 }
 
 static void PromptPopup_OnRender(Popup* self) {
@@ -132,7 +132,7 @@ static bool PromptPopup_OnKey(Popup* self, const PopupKeyEvent* key) {
 }
 
 static void PromptPopup_Destroy(Popup* self) {
-    PROFILE_START(timer);
+    
     PromptPopupData* data = (PromptPopupData*)self;
     Platform_PromptPopupDestroyWindow(self);
     if (data->state) {
@@ -141,7 +141,7 @@ static void PromptPopup_Destroy(Popup* self) {
         free(data->state);
     }
     free(data);
-    PROFILE_END_VAR(timer, "window_manager:PromptPopup_Destroy");
+    
 }
 
 static const PopupVTable g_prompt_popup_vtable = {
@@ -163,8 +163,8 @@ int PromptPopup_GetBounds(Popup* p, int* x, int* y, int* w, int* h) {
 }
 
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
-    PROFILE_START(timer);
-    if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
+    
+    if (!wm || !spec) {  return NULL; }
 
     int scale = (int)Platform_GetUIScale();
     if (scale <= 0) scale = 1;
@@ -226,7 +226,7 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     }
 
     PromptPopupData* data = calloc(1, sizeof(PromptPopupData));
-    if (!data) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
+    if (!data) {  return NULL; }
 
     data->base.vtable = &g_prompt_popup_vtable;
     data->base.manager = wm;
@@ -234,7 +234,7 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     data->spec = *spec;
     data->x = x; data->y = y; data->w = layout_w; data->h = layout_h;
 
-    PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create");
+    
     return WindowManager_PushPopup(wm, (Popup*)data);
 }
 

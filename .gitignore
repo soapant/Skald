@@ -10,3 +10,4 @@ nob_linux_window_build.exe.old
 Doxyfile
 compile_commands.json
 /docs/xml
+/data.xml

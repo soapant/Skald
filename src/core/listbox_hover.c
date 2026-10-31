@@ -64,13 +64,13 @@ void ListBox_InvalidateMousePos(void) {
 }
 
 bool ListBox_ClientMousePos(int* out_x, int* out_y) {
-    PROFILE_START(_pt);
+    
     if (!g_mouse_valid) {
         if (!Platform_GetMousePos(&g_mouse_x, &g_mouse_y)) {
             g_mouse_valid = false;
             if (out_x) *out_x = 0;
             if (out_y) *out_y = 0;
-            PROFILE_END_VAR(_pt, "ListBox_ClientMousePos");
+            
             return false;
         }
         g_mouse_valid = true;
@@ -106,52 +106,52 @@ bool ListBox_ClientMousePos(int* out_x, int* out_y) {
     if (out_x) *out_x = mx;
     if (out_y) *out_y = my;
     if (!inside) {
-        PROFILE_END_VAR(_pt, "ListBox_ClientMousePos");
+        
         return false;
     }
-    PROFILE_END_VAR(_pt, "ListBox_ClientMousePos");
+    
     return true;
 }
 
 int ListBox_RowAtY(const ListBoxInfo* lb, int list_top, int item_height,
                    int top_index, int visible_count, int mouse_y) {
-    PROFILE_START(_pt);
+    
     if (!lb || item_height <= 0 || visible_count <= 0) {
-        PROFILE_END_VAR(_pt, "ListBox_RowAtY");
+        
         return -1;
     }
     int rel = mouse_y - list_top;
-    if (rel < 0) { PROFILE_END_VAR(_pt, "ListBox_RowAtY"); return -1; }
+    if (rel < 0) {  return -1; }
     int row = rel / item_height;
-    if (row >= visible_count) { PROFILE_END_VAR(_pt, "ListBox_RowAtY"); return -1; }
+    if (row >= visible_count) {  return -1; }
     int idx = top_index + row;
-    if (idx < 0 || idx >= lb->populated_count) { PROFILE_END_VAR(_pt, "ListBox_RowAtY"); return -1; }
-    { PROFILE_END_VAR(_pt, "ListBox_RowAtY"); return idx; }
+    if (idx < 0 || idx >= lb->populated_count) {  return -1; }
+    {  return idx; }
 }
 
 bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
                         int top_index, int visible_count) {
-    PROFILE_START(_pt);
-    if (!lb || lb->populated_count <= 0) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
-    if (!g_mouse_moved) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
-    if (listbox_hover_throttled()) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    
+    if (!lb || lb->populated_count <= 0) {  return false; }
+    if (!g_mouse_moved) {  return false; }
+    if (listbox_hover_throttled()) {  return false; }
     g_mouse_moved = false;
     int mx = 0, my = 0;
     if (!ListBox_ClientMousePos(&mx, &my)) {
         g_hover_pos_set = false;
-        PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
+        
         return false;
     }
     bool mouse_moved = !g_hover_pos_set || g_hover_x != mx || g_hover_y != my;
     g_hover_pos_set = true;
     g_hover_x = mx;
     g_hover_y = my;
-    if (!mouse_moved) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    if (!mouse_moved) {  return false; }
     ListBox_FocusByMouse();
     int idx = ListBox_RowAtY(lb, list_top, item_height, top_index, visible_count, my);
-    if (idx < 0 || idx == lb->selected_index) { PROFILE_END_VAR(_pt, "ListBox_HoverFocus"); return false; }
+    if (idx < 0 || idx == lb->selected_index) {  return false; }
     UI_SetSelection(lb,idx);
-    PROFILE_END_VAR(_pt, "ListBox_HoverFocus");
+    
     return true;
 }
 
@@ -166,15 +166,15 @@ int ListBox_TakeScroll(void) {
 }
 
 void ListBox_ScrollBy(ListBoxInfo* lb, int rows, int visible_count) {
-    PROFILE_START(_pt);
-    if (!lb || rows == 0) { PROFILE_END_VAR(_pt, "ListBox_ScrollBy"); return; }
+    
+    if (!lb || rows == 0) {  return; }
     int max_off = lb->populated_count - visible_count;
     if (max_off < 0) max_off = 0;
     int off = lb->view_offset + rows;
     if (off < 0) off = 0;
     if (off > max_off) off = max_off;
     int delta = off - lb->view_offset;
-    if (delta == 0) { PROFILE_END_VAR(_pt, "ListBox_ScrollBy"); return; }
+    if (delta == 0) {  return; }
     int old_sel = lb->selected_index;
     lb->view_offset = off;
     if (!g_focus_by_keyboard && old_sel >= 0) {
@@ -185,7 +185,7 @@ void ListBox_ScrollBy(ListBoxInfo* lb, int rows, int visible_count) {
         UI_LB_SetCaretIndex(sel, false);
     }
     UI_LB_SetTopIndex(off);
-    PROFILE_END_VAR(_pt, "ListBox_ScrollBy");
+    
 }
 
 void ListBox_ApplyPendingScroll(ListBoxInfo* lb, int visible_count) {

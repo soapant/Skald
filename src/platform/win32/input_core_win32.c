@@ -20,17 +20,17 @@
 #include "config.h"
 
 bool Platform_GetMousePos(int* out_x, int* out_y) {
-        PROFILE_START(_pt);
+        
     POINT pt;
-    if (!GetCursorPos(&pt)) { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return false; }
+    if (!GetCursorPos(&pt)) {  return false; }
     if (out_x) *out_x = (int)pt.x;
     if (out_y) *out_y = (int)pt.y;
-    { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return true; }
+    {  return true; }
 }
 
 void Platform_RegisterRawMouse(HWND hwnd) {
-    PROFILE_START(_pt);
-    if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "win32_register_raw_mouse"); return ; }
+    
+    if (!hwnd || !IsWindow(hwnd)) {  return ; }
     RAWINPUTDEVICE rid;
     memset(&rid, 0, sizeof(rid));
     rid.usUsagePage = 0x01;
@@ -40,26 +40,26 @@ void Platform_RegisterRawMouse(HWND hwnd) {
     if (!RegisterRawInputDevices(&rid, 1, sizeof(rid))) {
         log_warn("RegisterRawInputDevices failed err=%lu", GetLastError());
     }
-    PROFILE_END_VAR(_pt, "win32_register_raw_mouse");
+    
 }
 
 void Platform_HandleRawMouseInput(LPARAM lParam) {
-    PROFILE_START(_pt);
+    
     UINT size = 0;
-    if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER)) != 0) { PROFILE_END_VAR(_pt, "win32_handle_raw_mouse"); return ; }
-    if (size == 0 || size > 4096) { PROFILE_END_VAR(_pt, "win32_handle_raw_mouse"); return ; }
+    if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER)) != 0) {  return ; }
+    if (size == 0 || size > 4096) {  return ; }
     BYTE *buf = (BYTE*)malloc(size);
-    if (!buf) { PROFILE_END_VAR(_pt, "win32_handle_raw_mouse"); return ; }
+    if (!buf) {  return ; }
     BOOL got = GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buf, &size, sizeof(RAWINPUTHEADER));
     RAWINPUT *raw = (RAWINPUT*)buf;
     if (!got || raw->header.dwType != RIM_TYPEMOUSE) {
         free(buf);
-        PROFILE_END_VAR(_pt, "win32_handle_raw_mouse");
+        
         return ;
     }
     RAWMOUSE *rm = &raw->data.mouse;
     POINT pt;
-    if (!GetCursorPos(&pt)) { free(buf); PROFILE_END_VAR(_pt, "win32_handle_raw_mouse"); return ; }
+    if (!GetCursorPos(&pt)) { free(buf);  return ; }
     unsigned short flags = rm->usButtonFlags;
     int btn = 0;
     bool down = false;
@@ -121,11 +121,11 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
         }
     }
     free(buf);
-    PROFILE_END_VAR(_pt, "win32_handle_raw_mouse");
+    
 }
 
 LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam) {
-    PROFILE_START(_pt);
+    
 if (nCode < 0) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
   }
@@ -186,7 +186,7 @@ if (nCode < 0) {
     if (shift_down) modifiers |= HOTKEY_MOD_SHIFT;
     if (ctrl_down) modifiers |= HOTKEY_MOD_CTRL;
 
-    PROFILE_START(timer);
+    
     if (! _popupActive && hotkey_process(pressed_vk, modifiers)) {
       extern int pending_hotkey_vk;
       extern int pending_hotkey_mod;
@@ -198,22 +198,22 @@ if (nCode < 0) {
       log_info("hook swallow=hotkey vk=0x%X mods=%d title='%s'", pressed_vk, modifiers, _t2 ? _t2 : "");
       return 1;
     }
-    PROFILE_END_VAR(timer, "ProcessHotkey");
+    
 
-    PROFILE_START(timer3);
+    
 
     if (IsNormalMode()) {
       if (g_win32_waiting_for_key) {
         g_win32_waiting_for_key = false;
         if (g_win32_key_callback) {
           g_win32_key_callback(pKeyInfo->vkCode);
-          PROFILE_END_VAR(timer3, "KeyCallback");
+          
         }
         log_info("hook swallow=waiting_for_key vk=0x%X", pKeyInfo->vkCode);
         return 1;
       }
     }
-    PROFILE_END_VAR(timer3, "NormalModeCheck");
+    
 
 
   }
@@ -229,11 +229,11 @@ if (nCode < 0) {
       }
     }
   }
-  { PROFILE_END_VAR(_pt, "win32_handle_global_key"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
+  {  return CallNextHookEx(NULL, nCode, wParam, lParam); }
 }
 
 int Platform_CharForKey(int vk, int scancode, int mods) {
-    PROFILE_START(_pt);
+    
 BYTE state[256];
   memset(state, 0, sizeof(state));
   if (mods & HOTKEY_MOD_SHIFT) state[VK_SHIFT] = 0x80;
@@ -242,10 +242,10 @@ BYTE state[256];
   HKL layout = GetKeyboardLayout(0);
   wchar_t buf[8];
   int n = ToUnicodeEx((UINT)vk, (UINT)scancode, state, buf, 8, 0, layout);
-  if (n <= 0) { PROFILE_END_VAR(_pt, "Platform_CharForKey"); return 0; }
-  if (n == 1) { PROFILE_END_VAR(_pt, "Platform_CharForKey"); return (int)buf[0]; }
+  if (n <= 0) {  return 0; }
+  if (n == 1) {  return (int)buf[0]; }
   char mb[16];
   int m = WideCharToMultiByte(CP_UTF8, 0, buf, 1, mb, sizeof(mb), NULL, NULL);
-  if (m <= 0) { PROFILE_END_VAR(_pt, "Platform_CharForKey"); return 0; }
-  { PROFILE_END_VAR(_pt, "Platform_CharForKey"); return (int)(unsigned char)mb[0]; }
+  if (m <= 0) {  return 0; }
+  {  return (int)(unsigned char)mb[0]; }
 }

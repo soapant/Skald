@@ -8,29 +8,29 @@ PlDrawState* PlDrawState_Get(void) {
 }
 
 void PlDrawState_BeginMeasure(void) {
-    PROFILE_START(_pt);
+    
     PlDrawState* ds = PlDrawState_Get();
     ds->measuring = true;
     ds->meas_x0 = 1 << 30;
     ds->meas_y0 = 1 << 30;
     ds->meas_x1 = -(1 << 30);
     ds->meas_y1 = -(1 << 30);
-    PROFILE_END_VAR(_pt, "PlDrawState_BeginMeasure");
+    
 }
 
 void PlDrawState_TrackMeasure(int x, int y, int w, int h) {
-    PROFILE_START(_pt);
+    
     PlDrawState* ds = PlDrawState_Get();
-    if (!ds->measuring) { PROFILE_END_VAR(_pt, "PlDrawState_TrackMeasure"); return; }
+    if (!ds->measuring) {  return; }
     if (x < ds->meas_x0) ds->meas_x0 = x;
     if (y < ds->meas_y0) ds->meas_y0 = y;
     if (x + w > ds->meas_x1) ds->meas_x1 = x + w;
     if (y + h > ds->meas_y1) ds->meas_y1 = y + h;
-    PROFILE_END_VAR(_pt, "PlDrawState_TrackMeasure");
+    
 }
 
 void PlDrawState_EndMeasure(int* out_w, int* out_h) {
-    PROFILE_START(_pt);
+    
     PlDrawState* ds = PlDrawState_Get();
     int rw = 0, rh = 0;
     if (ds->meas_x1 > ds->meas_x0) rw = ds->meas_x1 - ds->meas_x0;
@@ -44,5 +44,5 @@ void PlDrawState_EndMeasure(int* out_w, int* out_h) {
     ds->meas_y0 = 0;
     ds->meas_x1 = 0;
     ds->meas_y1 = 0;
-    PROFILE_END_VAR(_pt, "PlDrawState_EndMeasure");
+    
 }

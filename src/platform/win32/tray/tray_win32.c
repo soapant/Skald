@@ -11,7 +11,7 @@
 
 #include "core/timer.h"
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    PROFILE_START(_pt);
+    
 switch (msg) {
   case WM_CREATE: {
     NOTIFYICONDATA nid = {0};
@@ -105,5 +105,5 @@ switch (msg) {
   default:
           return DefWindowProc(hwnd, msg, wParam, lParam);
   }
-  { PROFILE_END_VAR(_pt, "WndProc"); return 0; }
+  {  return 0; }
 }

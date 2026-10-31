@@ -23,8 +23,8 @@
 #include <stdio.h>
 
 void win32_fill_popup_key_text(PopupKeyEvent* key) {
-        PROFILE_START(_pt);
-if (!key) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
+        
+if (!key) {  return ; }
     BYTE state[256];
     memset(state, 0, sizeof(state));
     if (GetKeyState(VK_SHIFT) & 0x8000) { state[VK_SHIFT] = 0x80; state[VK_LSHIFT] = 0x80; state[VK_RSHIFT] = 0x80; }
@@ -33,10 +33,10 @@ if (!key) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
     UINT sc = MapVirtualKeyA((UINT)key->vk, MAPVK_VK_TO_VSC);
     wchar_t wbuf[8];
     int wlen = ToUnicodeEx((UINT)key->vk, sc, state, wbuf, 8, 0, GetKeyboardLayout(0));
-    if (wlen <= 0) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
+    if (wlen <= 0) {  return ; }
     char out[32];
     int olen = WideCharToMultiByte(CP_UTF8, 0, wbuf, wlen, out, (int)sizeof(out) - 1, NULL, NULL);
-    if (olen <= 0) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
+    if (olen <= 0) {  return ; }
     out[olen] = '\0';
     key->text_len = olen < (int)sizeof(key->text) ? olen : (int)sizeof(key->text) - 1;
     memcpy(key->text, out, (size_t)key->text_len);
@@ -45,22 +45,22 @@ if (!key) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
 
 
 bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     WMEditPopupData* data = (WMEditPopupData*)self;
     HINSTANCE hInst = GetModuleHandle(NULL);
     HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, "EditPopupClass","", WS_POPUP | WS_CLIPCHILDREN, x, y, w, h, NULL, NULL, hInst, data);
-    if (!hwnd) { PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupCreateWindow"); return false; }
+    if (!hwnd) {  return false; }
     win32_apply_rounded_corners(hwnd, w, h);
     SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
     data->base.handle = WH_FROM_HWND(hwnd);
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupCreateWindow");
-    { PROFILE_END_VAR(_pt, "Platform_EditPopupCreateWindow"); return true; }
+    
+    {  return true; }
 }
 
 void Platform_EditPopupShowWindow(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     HWND hwnd = WH_TO_HWND(self->handle);
     if (hwnd && IsWindow(hwnd)) {
         ShowWindow(hwnd, SW_SHOWNA);
@@ -71,12 +71,12 @@ PROFILE_START(timer);
         InvalidateRect(hwnd, NULL, FALSE);
         UpdateWindow(hwnd);
     }
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupShowWindow");
+    
 }
 
 void Platform_EditPopupHideWindow(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     HWND hwnd = WH_TO_HWND(self->handle);
     if (hwnd && IsWindow(hwnd)) ShowWindow(hwnd, SW_HIDE);
     WindowManager* wm = WindowManager_Get();
@@ -88,15 +88,15 @@ PROFILE_START(timer);
             if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
         }
     }
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupHideWindow");
+    
 }
 
 void Platform_EditPopupRender(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     WMEditPopupData* data = (WMEditPopupData*)self;
     HWND hwnd = WH_TO_HWND(self->handle);
-    if (!data || !hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupRender"); return; }
+    if (!data || !hwnd || !IsWindow(hwnd)) {  return; }
 
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
@@ -194,34 +194,34 @@ PROFILE_START(timer);
         DeleteDC(memDC);
     }
     EndPaint(hwnd, &ps);
-    PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupRender");
+    
 }
 
 void Platform_EditPopupDestroyWindow(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     HWND hwnd = WH_TO_HWND(self->handle);
     if (hwnd && IsWindow(hwnd)) DestroyWindow(hwnd);
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupDestroyWindow");
+    
 }
 
 bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     WMEditPopupData* ed = (WMEditPopupData*)self;
-    if (!ed || !ed->text || !key) { PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return false; }
-    if (EditPopup_HandleKey(ed, key)) { PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true; }
+    if (!ed || !ed->text || !key) {  return false; }
+    if (EditPopup_HandleKey(ed, key)) {  return true; }
 
     int wParam = key->vk;
     bool ctrl_pressed = key->ctrl;
 
     if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
         EditPopup_SelectAll(ed);
-        PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true;
+         return true;
     }
     if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
         EditPopup_CopySelection(ed);
-        PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true;
+         return true;
     }
     if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
         int ss=0, se=0;
@@ -236,18 +236,18 @@ PROFILE_START(timer);
                 Platform_CopyToClipboard(buf);
             }
         }
-        PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true;
+         return true;
     }
 
     if (IsInsertMode() && key->text_len > 0) {
         bool swallow = HotkeyText_ShouldSwallow(key);
         if (!swallow && HotkeyText_IsPrintable(key)) {
             EditPopup_InsertText(ed, key->text, key->text_len);
-            PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey");
+            
             return true;
         }
     }
 
-    PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey");
-    { PROFILE_END_VAR(_pt, "Platform_EditPopupOnKey"); return false; }
+    
+    {  return false; }
 }

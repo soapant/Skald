@@ -12,8 +12,8 @@ int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
 
 int WindowManager_RunWin32(WindowManager* wm) {
-        PROFILE_START(_pt);
-if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_RunWin32"); return -1; }
+        
+if (!wm) {  return -1; }
     wm->running = true;
 
     MSG msg;
@@ -30,23 +30,23 @@ if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_RunWin32"); return -1; }
         if (!got) Sleep(10);
     }
 
-    { PROFILE_END_VAR(_pt, "WindowManager_RunWin32"); return 0; }
+    {  return 0; }
 }
 
 static void WindowManager_DrainSelectionComplete(WindowManager* wm) {
-        PROFILE_START(_pt);
-    if (!wm || wm->popup_count == 0) { PROFILE_END_VAR(_pt, "DrainSelectionComplete"); return; }
-    if (!FlintContext_Get()->window.selection_complete) { PROFILE_END_VAR(_pt, "DrainSelectionComplete"); return; }
+        
+    if (!wm || wm->popup_count == 0) {  return; }
+    if (!FlintContext_Get()->window.selection_complete) {  return; }
     FlintContext_Get()->window.selection_complete = false;
     WindowManager_PopPopup(wm);
     Popup* top_after = WindowManager_GetTopPopup(wm);
     if (top_after && top_after->vtable && top_after->vtable->on_render) top_after->vtable->on_render(top_after);
-    { PROFILE_END_VAR(_pt, "DrainSelectionComplete"); }
+    {  }
 }
 
 void WindowManager_ProcessEventsWin32(WindowManager* wm) {
-        PROFILE_START(_pt);
-if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_ProcessEventsWin32"); return ; }
+        
+if (!wm) {  return ; }
 
     MSG msg;
     bool got = false;
@@ -65,7 +65,7 @@ if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_ProcessEventsWin32"); return ; }
 }
 
 void WindowManager_QuitWin32(WindowManager* wm) {
-        PROFILE_START(_pt);
+        
 if (wm) wm->running = false;
     PostQuitMessage(0);
 }

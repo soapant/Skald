@@ -19,7 +19,7 @@ static void free_history_list(void* v) {
 }
 
 int main() {
-  PROFILE_START(t_start);
+  
   srand((unsigned)time(NULL));
   if (!Platform_TryAcquireSingleInstance()) {
       fprintf(stderr, "Flint is already running, exiting.\n");
@@ -30,12 +30,12 @@ int main() {
   Platform_FixWorkingDirectory();
   Platform_InitDisplaySafe();
 
-  PROFILE_START(t_cfg);
+  
   Config_Load();
   Config_ResolveDefaultApps();
-  PROFILE_END_VAR(t_cfg, "startup:config_load+resolve");
+  
 
-  PROFILE_START(t_svc);
+  
   Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();
   FlintContext_Get()->feature_history = NULL;
@@ -43,21 +43,21 @@ int main() {
   History_Init();
   Platform_InitUI();
   Platform_PrewarmBackgroundPixmap();
-  PROFILE_END_VAR(t_svc, "startup:services_init");
+  
 
-  PROFILE_START(t_feat);
+  
   FeatureLoader_Init();
-  PROFILE_END_VAR(t_feat, "startup:FeatureLoader_Init");
+  
 
-  PROFILE_START(t_wm);
+  
   WindowManager* wm = WindowManager_Create();
-  PROFILE_END_VAR(t_wm, "startup:WindowManager_Create");
+  
   if (!wm) {
       log_error("Failed to create WindowManager");
       return 1;
   }
 
-  PROFILE_END_VAR(t_start, "startup:total_before_main_loop");
+  
   log_info("entering main loop");
 
   WindowManager_Run(wm);

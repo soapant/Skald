@@ -115,8 +115,8 @@ static void editbox_draw_rainbow(const EditboxSpec* spec, const EditboxLayout* l
 }
 
 void Editbox_Layout(EditboxSpec* spec, EditboxLayout* out) {
-    PROFILE_START(_pt);
-    if (!spec) { PROFILE_END_VAR(_pt, "Editbox_Layout"); return; }
+    
+    if (!spec) {  return; }
 
     EditboxLayout layout;
     memset(&layout, 0, sizeof(layout));
@@ -191,12 +191,12 @@ void Editbox_Layout(EditboxSpec* spec, EditboxLayout* out) {
     layout.draw_insert_caret = spec->insert_mode;
 
     if (out) *out = layout;
-    PROFILE_END_VAR(_pt, "Editbox_Layout");
+    
 }
 
 void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int parts) {
-    PROFILE_START(_pt);
-    if (!spec || !layout) { PROFILE_END_VAR(_pt, "Editbox_Draw"); return; }
+    
+    if (!spec || !layout) {  return; }
 
     if (parts & EDITBOX_PART_TINT) {
         unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
@@ -252,15 +252,15 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
         );
     }
 
-    PROFILE_END_VAR(_pt, "Editbox_Draw");
+    
 }
 
 void Editbox_Render(EditboxSpec* spec, EditboxLayout* out) {
-    PROFILE_START(_pt);
-    if (!spec) { PROFILE_END_VAR(_pt, "Editbox_Render"); return; }
+    
+    if (!spec) {  return; }
     EditboxLayout layout;
     Editbox_Layout(spec, &layout);
     Editbox_Draw(spec, &layout, EDITBOX_PART_ALL);
     if (out) *out = layout;
-    PROFILE_END_VAR(_pt, "Editbox_Render");
+    
 }
