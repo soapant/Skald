@@ -82,7 +82,14 @@ bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_exte
     if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return false; }
     dir_path = expanded_dir;
 
-    { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return Platform_GetAllFilesFromDir(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension, max_depth); }
+    { PROFILE_END_VAR(_pt, "fl_get_all_files_from_dir"); return Platform_GetAllFilesFromDir(
+        .dir_path = dir_path,
+        .list_of_allowed_extensions = list_of_allowed_extensions,
+        .list_of_files = list_of_files,
+        .list_of_names_to_ignore = list_of_names_to_ignore,
+        .strip_extension = strip_extension,
+        .max_depth = max_depth
+    ); }
 }
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path){
@@ -670,16 +677,35 @@ void fl_message_impl(const FlMessageSpec* spec) {
     PROFILE_START(_pt);
             FlHoverPopupCtx *ctx = fl_hover_popup_ctx_new(spec);
             if (ctx) {
-                Platform_HoverWidgetShow(spec->hover_key, fl_hover_popup_frame, ctx,
-                                         spec->x, spec->y, ctx->w, ctx->h,
-                                         spec->fps > 0 ? spec->fps : 1,
-                                         spec->no_bg,
-                                         spec->color_bg ? rgb_to_hex(spec->color_bg) : 0UL,
-                                         fl_hover_popup_ctx_free, ctx);
+                Platform_HoverWidgetShow(
+                    .key = spec->hover_key,
+                    .render = fl_hover_popup_frame,
+                    .ud = ctx,
+                    .x = spec->x,
+                    .y = spec->y,
+                    .w = ctx->w,
+                    .h = ctx->h,
+                    .fps = spec->fps > 0 ? spec->fps : 1,
+                    .no_bg = spec->no_bg,
+                    .bg_hex = spec->color_bg ? rgb_to_hex(spec->color_bg) : 0UL,
+                    .release = fl_hover_popup_ctx_free,
+                    .release_ud = ctx
+                );
             }
             return ;
         }
-        Platform_HoverMessage(spec->hover_key, spec->message, spec->x, spec->y, w, h, mw, mh, color,spec->no_bg);
+        Platform_HoverMessage(
+            .key = spec->hover_key,
+            .message = spec->message,
+            .x = spec->x,
+            .y = spec->y,
+            .w = w,
+            .h = h,
+            .max_width = mw,
+            .max_height = mh,
+            .color = color,
+            .no_bg = spec->no_bg
+        );
         return;
     }
     MessageSlot slot = spec->slot;
@@ -687,7 +713,20 @@ void fl_message_impl(const FlMessageSpec* spec) {
         PROFILE_START(_pt);
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : TOP_CENTER;
     } else if (slot == FREE) {
-        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL, spec->name);
+        Platform_DisplayMessage(
+            .message = spec->message,
+            .x = spec->x,
+            .y = spec->y,
+            .no_bg = spec->no_bg,
+            .w = w,
+            .h = h,
+            .max_width = mw,
+            .max_height = mh,
+            .timeout = timeout,
+            .color = color,
+            .render = spec->render ? spec->render : NULL,
+            .name = spec->name
+        );
         return;
     }
     DisplayMessageSlot(spec->message, slot, mw, mh, spec->prompt_gap, timeout, color, spec->render, spec->name);
@@ -1139,7 +1178,18 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
   bool transparent = spec->transparent ? spec->transparent : true;
   if (col == 0) col = COLOR_TEXT;
   col = rgb_to_hex(col);
-  bool r = Platform_DrawRectRaw(spec->x, spec->y, spec->w, spec->h, col,spec->radius ? spec->radius : 0,spec->rounded ? spec->rounded : RoundedCorners,!transparent,spec->thickness,spec->filled);
+  bool r = Platform_DrawRectRaw(
+      .x = spec->x,
+      .y = spec->y,
+      .w = spec->w,
+      .h = spec->h,
+      .color = col,
+      .radius = spec->radius ? spec->radius : 0,
+      .rounded = spec->rounded ? spec->rounded : RoundedCorners,
+      .opaque = !transparent,
+      .thickness = spec->thickness,
+      .filled = spec->filled
+  );
   PROFILE_END_VAR(_pt, "api:fl_draw_rect");
   return r;
 }

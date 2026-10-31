@@ -3,6 +3,73 @@
 
 #include "core/types.h"
 
+typedef struct {
+    const char* message;
+    int x, y, w, h;
+    int h_slot, v_slot;
+    int gap;
+    int outward;
+    int max_width, max_height;
+    double timeout;
+    ColorRef color;
+    bool no_bg;
+    void (*render)(void);
+    const char* name;
+} PlAnchoredMessageSpec;
+
+typedef struct {
+    const char* key;
+    void (*render)(void* ud);
+    void* ud;
+    int x, y, w, h;
+    int fps;
+    bool no_bg;
+    unsigned long bg_hex;
+    void (*release)(void* ud);
+    void* release_ud;
+} PlHoverWidgetShowSpec;
+
+typedef struct {
+    const char* message;
+    int x, y;
+    int max_width, max_height;
+    double timeout;
+    ColorRef color;
+    bool no_bg;
+    void (*render)(void);
+    const char* name;
+} PlCreateDisplayMessageWindowSpec;
+
+typedef struct {
+    const char* key;
+    const char* message;
+    int x, y, w, h;
+    int max_width, max_height;
+    ColorRef color;
+    bool no_bg;
+} PlHoverMessageSpec;
+
+typedef struct {
+    const char* message;
+    int x, y;
+    bool no_bg;
+    int w, h;
+    int max_width, max_height;
+    double timeout;
+    ColorRef color;
+    void (*render)(void);
+    const char* name;
+} PlDisplayMessageSpec;
+
+typedef struct {
+    const char* dir_path;
+    char** list_of_allowed_extensions;
+    ListOfFiles* list_of_files;
+    char** list_of_names_to_ignore;
+    bool strip_extension;
+    int max_depth;
+} PlGetAllFilesFromDirSpec;
+
 #define HTTP_CONNECT_TIMEOUT_S 10
 #define HTTP_TIMEOUT_S 30
 #define HTTP_MAX_REDIRECTS 10
@@ -42,15 +109,27 @@ double Platform_GetUniversalTimeSeconds(void);
 long long Platform_GetWallClockMs(void);
 
 void Platform_WaitForKeypressAsync(KeyCallback callback);
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void), const char* name);
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg,void (*render)(void),const char* name);
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color, bool no_bg, void (*render)(void), const char* name);
+void Platform_DisplayMessage_impl(PlDisplayMessageSpec spec);
+#define Platform_DisplayMessage(...) Platform_DisplayMessage_impl((PlDisplayMessageSpec){__VA_ARGS__})
+
+void Platform_DisplayMessageAnchored_impl(PlAnchoredMessageSpec spec);
+#define Platform_DisplayMessageAnchored(...) Platform_DisplayMessageAnchored_impl((PlAnchoredMessageSpec){__VA_ARGS__})
+
+void Platform_CreateDisplayMessageWindow_impl(PlCreateDisplayMessageWindowSpec spec);
+#define Platform_CreateDisplayMessageWindow(...) Platform_CreateDisplayMessageWindow_impl((PlCreateDisplayMessageWindowSpec){__VA_ARGS__})
+
 void Platform_DismissDisplayMessage(void);
 bool Platform_DismissMessage(const char* name);
 bool Platform_MessageActive(const char* name);
-void Platform_HoverMessage(const char* key, const char* message, int centerX, int centerY, int w, int h, int maxWidth, int maxHeight, ColorRef color,bool no_bg);
+
+void Platform_HoverMessage_impl(PlHoverMessageSpec spec);
+#define Platform_HoverMessage(...) Platform_HoverMessage_impl((PlHoverMessageSpec){__VA_ARGS__})
+
 void Platform_HoverMessageRelease(const char* key);
-void Platform_HoverWidgetShow(const char* key, void (*render)(void* ud), void* ud, int x, int y, int w, int h, int fps, bool no_bg, unsigned long bg_hex, void (*release)(void* ud), void* release_ud);
+
+void Platform_HoverWidgetShow_impl(PlHoverWidgetShowSpec spec);
+#define Platform_HoverWidgetShow(...) Platform_HoverWidgetShow_impl((PlHoverWidgetShowSpec){__VA_ARGS__})
+
 void Platform_HoverWidgetHide(const char* key);
 FontHandle Platform_CreateFont(int size, const char* face_name);
 
@@ -101,7 +180,8 @@ bool Platform_MinimizeActiveWindow(void);
 bool Platform_LaunchDetached(char* command);
 const char* Platform_GetDefaultApp(DefaultAppKind kind);
 bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_size);
-bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore, bool strip_extension, int max_depth);
+bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec);
+#define Platform_GetAllFilesFromDir(...) Platform_GetAllFilesFromDir_impl((PlGetAllFilesFromDirSpec){__VA_ARGS__})
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);

@@ -59,8 +59,14 @@ static const char* sm_lookup(int slot, const char* const possibilities[], size_t
 
     if (!g_sm_scanned) {
         g_sm_scanned = true;
-        Platform_GetAllFilesFromDir("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
-                                    NULL, &g_sm_files, NULL, true, 0);
+        Platform_GetAllFilesFromDir(
+            .dir_path = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
+            .list_of_allowed_extensions = NULL,
+            .list_of_files = &g_sm_files,
+            .list_of_names_to_ignore = NULL,
+            .strip_extension = true,
+            .max_depth = 0
+        );
     }
     for (size_t j = 0; j < count; j++) {
         for (int i = 0; i < g_sm_files.count; i++) {

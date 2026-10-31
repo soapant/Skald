@@ -444,8 +444,17 @@ if (thickness <= 0.0f) { PROFILE_END_VAR(_pt, "win32_thickness_px"); return 0; }
     { PROFILE_END_VAR(_pt, "win32_thickness_px"); return px; }
 }
 
-bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int radius, bool rounded, bool opaque,
-                             float thickness, bool filled) {
+bool Platform_DrawRectRaw_impl(PlDrawRectRawSpec spec) {
+    int x = spec.x;
+    int y = spec.y;
+    int w = spec.w;
+    int h = spec.h;
+    unsigned long color = spec.color;
+    int radius = spec.radius;
+    bool rounded = spec.rounded;
+    bool opaque = spec.opaque;
+    float thickness = spec.thickness;
+    bool filled = spec.filled;
     PROFILE_START(_pt);
 
     if (!g_draw_hdc || w <= 0 || h <= 0) {
@@ -953,18 +962,6 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return (status == Ok); }
 }
 
-static bool win32_prompt_is_insert_mode(void) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "win32_prompt_is_insert_mode"); return g_current_mode == MODE_INSERT; }
-}
-
-static ColorRef win32_prompt_cursor_color(void) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "win32_prompt_cursor_color"); return g_current_mode == MODE_VISUAL ? COLOR_VISUAL_CURSOR : COLOR_CURSOR; }
-}
-
-
-
 void Platform_DrawPromptSeparator(int y, int width) {
         PROFILE_START(_pt);
     if (!EnableBorders || width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
@@ -1008,7 +1005,7 @@ static void win32_prompt_editbox_spec(PromptState* state, FontHandle font, Editb
     eb->sel_end = sel_end;
     eb->has_selection = has_sel;
     eb->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
-    eb->insert_mode = win32_prompt_is_insert_mode();
+    eb->insert_mode = IsInsertMode();
     eb->x = 0;
     eb->y = PROMPT_EDIT_INSET;
     eb->w = state->width;

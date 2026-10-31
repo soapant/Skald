@@ -371,10 +371,22 @@ if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetHide"); return 
     if (!Platform_RenderThread_IsCurrentThread()) Platform_RenderThread_Sync();
 }
 
-void Platform_HoverWidgetShow(const char *key, void (*render)(void* ud), void* ud, int x, int y,
-                              int w, int h, int fps, bool no_bg, unsigned long bg_hex,
-                              void (*release)(void *ud), void *release_ud) {        PROFILE_START(_pt);
-if (!key || !key[0] || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetShow"); return ; }
+void Platform_HoverWidgetShow_impl(PlHoverWidgetShowSpec spec) {
+    const char *key = spec.key;
+    void (*render)(void* ud) = spec.render;
+    void* ud = spec.ud;
+    int x = spec.x;
+    int y = spec.y;
+    int w = spec.w;
+    int h = spec.h;
+    int fps = spec.fps;
+    bool no_bg = spec.no_bg;
+    unsigned long bg_hex = spec.bg_hex;
+    void (*release)(void* ud) = spec.release;
+    void* release_ud = spec.release_ud;
+    PROFILE_START(_pt);
+    if (!key || !key[0] || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetShow"); return ; }
+
 
     pthread_mutex_lock(&g_hover_widget_lock);
     int idx = HoverWidgetFindLocked(key);
@@ -490,7 +502,19 @@ Display *dpy = get_display();
     XFlush(dpy);
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void), const char* name) {
+void Platform_DisplayMessage_impl(PlDisplayMessageSpec spec) {
+    const char* message = spec.message;
+    int centerX = spec.x;
+    int centerY = spec.y;
+    bool no_bg = spec.no_bg;
+    int w = spec.w;
+    int h = spec.h;
+    int maxWidth = spec.max_width;
+    int maxHeight = spec.max_height;
+    double timeout = spec.timeout;
+    ColorRef color = spec.color;
+    void (*render)(void) = spec.render;
+    const char* name = spec.name;
     PROFILE_START(_pt);
     Display *dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DisplayMessage"); return ; }
@@ -560,11 +584,21 @@ static void MsgMeasure(Display *dpy, const char *message, int maxWidth, int maxH
     *outH = winH;
 }
 
-void Platform_HoverMessage(const char* key, const char* message, int centerX, int centerY,
-                           int w, int h, int maxWidth, int maxHeight, ColorRef color,bool no_bg) {
-        PROFILE_START(_pt);
-Display *dpy = get_display();
+void Platform_HoverMessage_impl(PlHoverMessageSpec spec) {
+    const char* key = spec.key;
+    const char* message = spec.message;
+    int centerX = spec.x;
+    int centerY = spec.y;
+    int w = spec.w;
+    int h = spec.h;
+    int maxWidth = spec.max_width;
+    int maxHeight = spec.max_height;
+    ColorRef color = spec.color;
+    bool no_bg = spec.no_bg;
+    PROFILE_START(_pt);
+    Display *dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_HoverMessage"); return ; }
+
     if (maxWidth <= 0) maxWidth = MSG_HOVER_DEFAULT_W;
     if (maxHeight <= 0) maxHeight = MSG_HOVER_DEFAULT_H;
     int winW = 0, winH = 0;
@@ -577,11 +611,28 @@ Display *dpy = get_display();
     MsgHoverPresent(dpy, key, message, centerX, centerY, winW, winH, color,no_bg);
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg,void (*render)(void),const char* name) {
-        PROFILE_START(_pt);
-if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
+void Platform_DisplayMessageAnchored_impl(PlAnchoredMessageSpec spec) {
+    const char* message = spec.message;
+    int rect_x = spec.x;
+    int rect_y = spec.y;
+    int rect_w = spec.w;
+    int rect_h = spec.h;
+    int h_slot = spec.h_slot;
+    int v_slot = spec.v_slot;
+    int gap = spec.gap;
+    int outward = spec.outward;
+    int maxWidth = spec.max_width;
+    int maxHeight = spec.max_height;
+    double timeout = spec.timeout;
+    ColorRef color = spec.color;
+    bool no_bg = spec.no_bg;
+    void (*render)(void) = spec.render;
+    const char* name = spec.name;
+    PROFILE_START(_pt);
+    if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
     Display *dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
+
     if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
     if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
