@@ -174,7 +174,6 @@ static int hotkey_named_key_to_vk(const char *token) {
     if (n >= 1 && n <= 12)
       return VK_F1 + (n - 1);
   }
-
   return 0;
 }
 
@@ -240,12 +239,10 @@ static int hotkey_token_to_vk(const char *token, int *out_mods) {
   int named_vk = hotkey_named_key_to_vk(token);
   if (named_vk != 0)
     return named_vk;
-
   return toupper((unsigned char)token[0]);
 }
 
 bool HotkeyString_Parse(const char *str, HotkeyKey *out) {
-
   if (out) {
     out->vk_code = 0;
     out->mods = 0;
@@ -282,7 +279,6 @@ bool HotkeyString_Parse(const char *str, HotkeyKey *out) {
     out->vk_code = out_key;
     out->mods = mods;
   }
-
   return out_key != 0;
 }
 
@@ -426,7 +422,6 @@ static int hotkey_vk_to_name(int vk, char *out, int out_size) {
 }
 
 bool HotkeyString_Format(HotkeyKey key, char *out, int out_size) {
-
   if (!out || out_size <= 0)
     return false;
   out[0] = '\0';
@@ -435,7 +430,6 @@ bool HotkeyString_Format(HotkeyKey key, char *out, int out_size) {
 
   char key_name[32];
   if (hotkey_vk_to_name(key.vk_code, key_name, (int)sizeof(key_name)) == 0) {
-
     return false;
   }
 
@@ -453,9 +447,7 @@ bool HotkeyString_Format(HotkeyKey key, char *out, int out_size) {
   int written = snprintf(out, (size_t)out_size, "%s%s", mods_part, key_name);
   if (written < 0 || written >= out_size) {
     out[0] = '\0';
-
     return false;
   }
-
   return true;
 }

@@ -21,7 +21,6 @@ static bool niri_sock_live(const char *sock) {
 }
 
 bool niri_is_active(void) {
-
   const char *cur = getenv("NIRI_SOCKET");
   if (niri_sock_live(cur))
     return true;
@@ -90,7 +89,6 @@ static size_t niri_copy_json_string(const char *s, char *out, size_t cap) {
 }
 
 bool get_title_niri(char *buffer, int buffer_size) {
-
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -113,7 +111,6 @@ bool get_title_niri(char *buffer, int buffer_size) {
 }
 
 bool get_app_id_niri(char *buffer, int buffer_size) {
-
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -136,7 +133,6 @@ bool get_app_id_niri(char *buffer, int buffer_size) {
 }
 
 char *paste_niri(char *content) {
-
   if (!content) {
     log_error("content is NULL");
     return NULL;
@@ -152,7 +148,6 @@ char *paste_niri(char *content) {
 }
 
 bool focus_window_title_niri(char *title) {
-
   if (!title || !*title)
     return false;
   if (!niri_is_active())
@@ -204,7 +199,6 @@ bool focus_window_title_niri(char *title) {
 }
 
 PlWindowList get_window_titles_niri() {
-
   PlWindowList list = {0};
   if (!niri_is_active())
     return list;
@@ -237,7 +231,6 @@ PlWindowList get_window_titles_niri() {
 }
 
 PlWindowList get_window_names_niri() {
-
   PlWindowList list = {0};
   if (!niri_is_active())
     return list;
@@ -271,7 +264,6 @@ PlWindowList get_window_names_niri() {
 }
 
 bool close_active_window_niri(void) {
-
   if (!niri_is_active())
     return false;
   char *out =
@@ -282,7 +274,6 @@ bool close_active_window_niri(void) {
 }
 
 bool toggle_fullscreen_active_niri(void) {
-
   if (!niri_is_active())
     return false;
   char *out =
@@ -293,7 +284,6 @@ bool toggle_fullscreen_active_niri(void) {
 }
 
 bool move_active_window_to_monitor_niri(bool right) {
-
   if (!niri_is_active())
     return false;
   char cmd[64];
@@ -306,7 +296,6 @@ bool move_active_window_to_monitor_niri(bool right) {
 }
 
 bool move_active_window_left_niri(void) {
-
   if (!niri_is_active())
     return false;
   char *out = Platform_RunTerminalCommand(
@@ -317,7 +306,6 @@ bool move_active_window_left_niri(void) {
 }
 
 bool move_active_window_right_niri(void) {
-
   if (!niri_is_active())
     return false;
   char *out = Platform_RunTerminalCommand(
@@ -328,7 +316,6 @@ bool move_active_window_right_niri(void) {
 }
 
 bool focus_window_left_niri(void) {
-
   if (!niri_is_active())
     return false;
   char *out = Platform_RunTerminalCommand(
@@ -339,7 +326,6 @@ bool focus_window_left_niri(void) {
 }
 
 bool focus_window_right_niri(void) {
-
   if (!niri_is_active())
     return false;
   char *out = Platform_RunTerminalCommand(
@@ -350,7 +336,6 @@ bool focus_window_right_niri(void) {
 }
 
 bool minimize_active_window_niri(void) {
-
   if (!niri_is_active())
     return false;
   return false;

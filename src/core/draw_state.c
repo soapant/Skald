@@ -5,7 +5,6 @@ static __thread PlDrawState g_draw_state;
 PlDrawState *PlDrawState_Get(void) { return &g_draw_state; }
 
 void PlDrawState_BeginMeasure(void) {
-
   PlDrawState *ds = PlDrawState_Get();
   ds->measuring = true;
   ds->meas_x0 = 1 << 30;
@@ -15,7 +14,6 @@ void PlDrawState_BeginMeasure(void) {
 }
 
 void PlDrawState_TrackMeasure(int x, int y, int w, int h) {
-
   PlDrawState *ds = PlDrawState_Get();
   if (!ds->measuring) {
     return;
@@ -31,7 +29,6 @@ void PlDrawState_TrackMeasure(int x, int y, int w, int h) {
 }
 
 void PlDrawState_EndMeasure(int *out_w, int *out_h) {
-
   PlDrawState *ds = PlDrawState_Get();
   int rw = 0, rh = 0;
   if (ds->meas_x1 > ds->meas_x0)

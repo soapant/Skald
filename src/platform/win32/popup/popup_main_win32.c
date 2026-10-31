@@ -56,7 +56,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = WindowManager_GetTopPopup(wm);
   if (!top || WH_TO_HWND(top->handle) != hwnd) {
-
     return false;
   }
 
@@ -110,7 +109,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   } else {
     InvalidateRect(hwnd, NULL, FALSE);
   }
-
   return true;
 }
 
@@ -640,7 +638,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
                   DT_SINGLELINE | DT_VCENTER);
         SelectObject(pdis->hDC, hOldMainFont);
       }
-
       return TRUE;
     }
     break;

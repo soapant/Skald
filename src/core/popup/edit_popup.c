@@ -99,9 +99,7 @@ Popup *EditPopup_Create(WindowManager *wm, const char *initial_text, int x,
     free(data->text);
     free(data->align);
     free(data);
-
     return NULL;
   }
-
   return (Popup *)data;
 }

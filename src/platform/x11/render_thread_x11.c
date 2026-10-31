@@ -66,7 +66,6 @@ bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
 }
 
 void Platform_RenderThread_Wake(void) {
-
   if (!g_rt_running) {
     return;
   }
@@ -80,7 +79,6 @@ void *Platform_RenderThread_Display(void) { return (void *)g_rt_dpy; }
 bool Platform_RenderThread_IsRunning(void) { return g_rt_running; }
 
 int Platform_RenderThread_CallbackCount(void) {
-
   pthread_mutex_lock(&g_rt_lock);
   int n = g_rt_count;
   pthread_mutex_unlock(&g_rt_lock);
@@ -141,7 +139,6 @@ static void rt_sync_mark(void *ud) {
 }
 
 void Platform_RenderThread_Sync(void) {
-
   if (!g_rt_running) {
     return;
   }
@@ -171,7 +168,6 @@ void Platform_RenderThread_Sync(void) {
 }
 
 bool Platform_RenderThread_EnsureStarted(int fps) {
-
   if (fps > g_rt_fps)
     g_rt_fps = fps;
   if (g_rt_running)
@@ -194,7 +190,6 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
 }
 
 void Platform_RenderThread_Stop(void) {
-
   if (!g_rt_running) {
     return;
   }

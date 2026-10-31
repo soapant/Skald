@@ -21,7 +21,6 @@
 #include "core/types.h"
 
 bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
-
   (void)x;
   (void)y;
   WindowManager *wm = (WindowManager *)self->manager;
@@ -85,12 +84,10 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
     }
   }
   XFlush(dpy);
-
   return true;
 }
 
 void Platform_PromptPopupHideWindow(Popup *self) {
-
   Display *dpy = get_display();
   if (dpy) {
     XUnmapWindow(dpy, self->handle.xid);
@@ -116,7 +113,6 @@ void Platform_PromptPopupRender(Popup *self) {
 }
 
 void Platform_PromptPopupDestroyWindow(Popup *self) {
-
   Display *dpy = get_display();
   if (dpy) {
     x11_release_prompt_buffer(dpy, self->handle.xid);
@@ -131,7 +127,6 @@ static void command_confirm(const char *new_text, void *user_data) {
 }
 
 bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
-
   PromptState *state = self ? (PromptState *)self->user_data : NULL;
   if (!state)
     return true;
@@ -153,10 +148,8 @@ bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
     bool swallow = HotkeyText_ShouldSwallow(key);
     if (!swallow && HotkeyText_IsPrintable(key)) {
       Prompt_InsertText(state, key->text, key->text_len);
-
       return true;
     }
   }
-
   return false;
 }

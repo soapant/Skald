@@ -53,7 +53,6 @@ void Platform_SetFlintPrevFg(HWND h) {
 }
 
 bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
-
   (void)self;
 
   ListBox_InvalidateMousePos();
@@ -81,7 +80,6 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, x, y, w, h,
       NULL, NULL, hInstance, NULL));
   if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
-
     return false;
   }
   HWND hwnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
@@ -95,12 +93,10 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   ShowWindow(hwnd, SW_SHOW);
   UpdateWindow(hwnd);
   ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
-
   return true;
 }
 
 void Platform_PromptPopupHideWindow(Popup *self) {
-
   HWND hwnd = (self && WH_TO_HWND(self->handle) != NULL)
                   ? WH_TO_HWND(self->handle)
                   : WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);

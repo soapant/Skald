@@ -57,7 +57,6 @@ bool Desktop_Parse(const char *desktop_path, char exec_line[1024],
 }
 
 void Desktop_CleanExec(char exec_line[1024]) {
-
   if (!exec_line || !exec_line[0]) {
     return;
   }

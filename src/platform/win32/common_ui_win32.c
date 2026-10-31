@@ -16,7 +16,6 @@
 #include <string.h>
 
 HFONT CreateCustomNerdFont(int height, const char *face_name) {
-
   return FH_TO_HFONT(Platform_CreateFont(height, face_name));
 }
 
@@ -158,7 +157,6 @@ void win32_draw_window_border(HDC hdc, int ox, int oy, int ww, int wh,
 }
 
 void win32_fill_rounded_rect(HDC hdc, RECT *rc, COLORREF col, int radius) {
-
   if (!RoundedCorners || radius <= 0) {
     HBRUSH br = CreateSolidBrush(col);
     FillRect(hdc, rc, br);
@@ -182,7 +180,6 @@ void win32_fill_rounded_rect(HDC hdc, RECT *rc, COLORREF col, int radius) {
 }
 
 void UpdateTextCaret(void) {
-
   HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (popup && IsWindow(popup))
     InvalidateRect(popup, NULL, FALSE);
@@ -222,7 +219,6 @@ void CalculateWindowMetrics(WindowLayout *layout, int height, int width,
            monitorHeight, layout->x, layout->y, layout->w, layout->h);
 }
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
-
   ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);
 
   SetWindowPos(WH_TO_HWND(hwndTarget), HWND_TOPMOST, 0, 0, 0, 0,

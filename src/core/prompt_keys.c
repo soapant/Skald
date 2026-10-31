@@ -21,7 +21,6 @@
 #include "core/types/keys.h"
 
 void Prompt_Refresh(PromptState *state) {
-
   if (!state) {
     return;
   }
@@ -33,12 +32,10 @@ void Prompt_Refresh(PromptState *state) {
 }
 
 bool Prompt_DeleteSelection(PromptState *state) {
-
   if (!state)
     return false;
   int ss = 0, se = 0;
   if (!VimState_GetSelection(&ss, &se)) {
-
     return false;
   }
   if (se < ss) {
@@ -55,16 +52,13 @@ bool Prompt_DeleteSelection(PromptState *state) {
     memmove(state->filter + ss, state->filter + se, len - se + 1);
     state->cursor = ss;
     VimState_EndSelection();
-
     return true;
   }
   VimState_EndSelection();
-
   return false;
 }
 
 void Prompt_InsertText(PromptState *state, const char *text, int len) {
-
   if (!state || !text || len <= 0) {
     return;
   }
@@ -78,7 +72,6 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
 }
 
 void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
-
   const char *sel = NULL;
   char filter_copy[sizeof(state->filter)];
   if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
@@ -178,12 +171,10 @@ bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,
     return false;
   UI_SetSelection(lb, idx);
   Prompt_TriggerEnter(state, ctrl, shift, alt);
-
   return true;
 }
 
 bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
-
   if (!state || !key)
     return false;
   int vk = key->vk;
@@ -198,7 +189,6 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     VimState_UpdateSelection(len);
     state->cursor = len;
     Prompt_Refresh(state);
-
     return true;
   }
   if (ctrl && (vk == 'C' || vk == 'c')) {
@@ -224,17 +214,14 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
         Platform_CopyToClipboard(buf);
       }
     }
-
     return true;
   }
   if (PromptController_TryVimMotion(vk, ctrl, shift, alt)) {
-
     return true;
   }
   if (vk == VK_BACK) {
     if (Prompt_DeleteSelection(state)) {
       Prompt_Refresh(state);
-
       return true;
     }
     if (ctrl) {
@@ -249,14 +236,12 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     }
     History_ResetCursor(ctx->window.current_feature);
     Prompt_Refresh(state);
-
     return true;
   }
   if (vk == VK_ESCAPE) {
     WindowManager *wm = WindowManager_Get();
     if (wm && wm->popup_count > 1) {
       WindowManager_PopPopup(wm);
-
       return true;
     }
     if (ctx->window.editbox_placed) {
@@ -268,37 +253,31 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     } else {
       ctx->window.selection_complete = true;
     }
-
     return true;
   }
   if (vk == VK_RIGHT) {
     VimState_EndSelection();
     CursorForward(&state->cursor, strlen(state->filter));
-
     return true;
   }
   if (vk == VK_LEFT) {
     VimState_EndSelection();
     CursorBack(&state->cursor, strlen(state->filter));
-
     return true;
   }
   if (vk == VK_HOME) {
     VimState_EndSelection();
     SetCursorToStartOfText(ctx);
-
     return true;
   }
   if (vk == VK_END) {
     VimState_EndSelection();
     SetCursorToEndOfText(ctx);
-
     return true;
   }
   if (vk == VK_UP) {
     if (ctrl) {
       SetCursorToStartOfText(ctx);
-
       return true;
     }
     if (state->has_listbox) {
@@ -310,48 +289,40 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
           state->filter[sizeof(state->filter) - 1] = '\0';
           state->cursor = (int)strlen(state->filter);
           Prompt_Refresh(state);
-
           return true;
         }
       }
       UI_NavigateUp(&state->listbox);
     }
-
     return true;
   }
   if (vk == VK_DOWN) {
     if (ctrl) {
       SetCursorToEndOfText(ctx);
-
       return true;
     }
     if (state->has_listbox)
       UI_NavigateDown(&state->listbox);
-
     return true;
   }
   if (vk == VK_DELETE) {
     if (Prompt_DeleteSelection(state)) {
       Prompt_Refresh(state);
-
       return true;
     }
     if (EditBufferDeleteChar(state->filter, &state->cursor)) {
       History_ResetCursor(ctx->window.current_feature);
       Prompt_Refresh(state);
     }
-
     return true;
   }
   if (vk == VK_TAB) {
     if (ctx->prompt_callbacks.tab)
       ctx->prompt_callbacks.tab(&state->listbox);
-
     return true;
   }
   if (vk == VK_RETURN) {
     Prompt_TriggerEnter(state, ctrl, shift, alt);
-
     return true;
   }
   if (vk == COPY_SELECTION_KEY && !IsInsertMode()) {
@@ -366,25 +337,21 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       }
       Platform_CopyToClipboard(ctx->window.output_buffer);
     }
-
     return true;
   }
   if (vk == HELP_SCREEN_KEY && ctrl) {
     if (ctx->prompt_callbacks.help)
       ctx->prompt_callbacks.help();
-
     return true;
   }
   if (vk == 'V' && ctrl) {
     char *clip = Platform_GetClipboardEntry();
     if (!clip) {
-
       return true;
     }
     clip[strcspn(clip, "\r\n")] = '\0';
     if (clip[0] == '\0') {
       free(clip);
-
       return true;
     }
     size_t cur_len = strlen(state->filter);
@@ -400,29 +367,24 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     }
     free(clip);
     Prompt_Refresh(state);
-
     return true;
   }
   if (ctrl) {
     if (vk == VK_OEM_MINUS) {
       Platform_AdjustFontSize(-1);
       Config_Save();
-
       return true;
     }
     if (vk == VK_OEM_PLUS) {
       Platform_AdjustFontSize(1);
       Config_Save();
-
       return true;
     }
   }
-
   return false;
 }
 
 void Prompt_RedrawNow(ListBoxInfo *lb) {
-
   FlintContext *ctx = FlintContext_Get();
   if (!ctx) {
     return;

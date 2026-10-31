@@ -14,6 +14,5 @@ Popup *SearchPopup_Create(WindowManager *wm, const char *title, int x, int y,
   (void)h;
   (void)on_confirm;
   (void)user_data;
-
   return NULL;
 }

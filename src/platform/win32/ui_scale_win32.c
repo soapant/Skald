@@ -9,7 +9,6 @@ void Platform_ApplyUIScale(void) {}
 int Platform_GetUnscaledFontSize(void) { return FontSize; }
 
 void Platform_AdjustFontSize(int delta) {
-
   FontSize += delta;
   if (FontSize < 8)
     FontSize = 8;

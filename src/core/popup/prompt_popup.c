@@ -196,7 +196,6 @@ int PromptPopup_GetBounds(Popup *p, int *x, int *y, int *w, int *h) {
 }
 
 Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec) {
-
   if (!wm || !spec)
     return NULL;
 
@@ -289,7 +288,6 @@ Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec) {
   data->y = y;
   data->w = layout_w;
   data->h = layout_h;
-
   return WindowManager_PushPopup(wm, (Popup *)data);
 }
 

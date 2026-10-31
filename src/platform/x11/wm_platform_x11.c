@@ -23,7 +23,6 @@ extern void WindowManager_QuitLinux(WindowManager *wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager *wm);
 
 bool Platform_WM_InitDisplay(WindowManager *wm) {
-
   if (!wm)
     return false;
   wm->display = get_display();
@@ -35,12 +34,10 @@ int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunLinux(wm); }
 void Platform_WM_Quit(WindowManager *wm) { WindowManager_QuitLinux(wm); }
 
 void Platform_WM_ProcessEvents(WindowManager *wm) {
-
   WindowManager_ProcessEventsLinux(wm);
 }
 
 void Platform_WM_OnPopEmpty(WindowManager *wm) {
-
   (void)wm;
   x11_clear_suppress();
   remap_reset();
@@ -50,7 +47,6 @@ void Platform_WM_OnPopEmpty(WindowManager *wm) {
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
-
   int x = 0, y = 0, w = 1920, h = 1080;
   Display *dpy = NULL;
   WindowManager *wm = WindowManager_Get();
@@ -163,7 +159,6 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
     PromptSpec heap_spec = *spec;
     heap_spec.subwindow = false;
     (void)PromptPopup_Create(wm, &heap_spec);
-
     return NULL;
   }
   Popup *popup = PromptPopup_Create(wm, spec);

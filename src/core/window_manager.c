@@ -13,7 +13,6 @@
 static WindowManager *g_window_manager = NULL;
 
 WindowManager *WindowManager_Create(void) {
-
   WindowManager *wm = calloc(1, sizeof(WindowManager));
   if (!wm)
     return NULL;
@@ -21,24 +20,20 @@ WindowManager *WindowManager_Create(void) {
   wm->popups = calloc(wm->popup_capacity, sizeof(Popup *));
   if (!wm->popups) {
     free(wm);
-
     return NULL;
   }
   if (!Platform_WM_InitDisplay(wm)) {
     free(wm->popups);
     free(wm);
-
     return NULL;
   }
   Platform_ApplyUIScale();
   wm->ctx = FlintContext_Get();
   g_window_manager = wm;
-
   return wm;
 }
 
 void WindowManager_Destroy(WindowManager *wm) {
-
   if (!wm) {
     return;
   }
@@ -58,18 +53,15 @@ void WindowManager_Destroy(WindowManager *wm) {
 WindowManager *WindowManager_Get(void) { return g_window_manager; }
 
 int WindowManager_Run(WindowManager *wm) {
-
   if (!wm)
     return -1;
   int rc = Platform_WM_Run(wm);
-
   return rc;
 }
 
 static bool g_popup_push_in_progress = false;
 
 Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
-
   if (g_popup_push_in_progress) {
     log_info("PushPopup REENTRANT blocked");
     return NULL;
@@ -94,7 +86,6 @@ Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
     popup->vtable->on_show(popup);
   }
   g_popup_push_in_progress = false;
-
   return popup;
 }
 

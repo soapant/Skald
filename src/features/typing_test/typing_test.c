@@ -1234,7 +1234,6 @@ char *typing_test_get_random_text(int word_count) {
       *p++ = ' ';
   }
   *p = '\0';
-
   return result;
 }
 

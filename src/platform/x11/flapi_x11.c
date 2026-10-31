@@ -48,7 +48,6 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
   bool strip_extension = spec.strip_extension;
   int max_depth = spec.max_depth;
   if (!dir_path || !list_of_files) {
-
     return false;
   }
 
@@ -123,7 +122,6 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
               realloc(list_of_files->files, new_capacity * sizeof(FileItem));
           if (!new_items) {
             closedir(dir);
-
             return false;
           }
           list_of_files->files = new_items;
@@ -328,7 +326,6 @@ bool fl_launch_with_args_platform(const char *path, const char *args) {
     }
     if (!exec_line[0]) {
       log_warn("desktop '%s' has no usable Exec line", expanded);
-
       return false;
     }
 

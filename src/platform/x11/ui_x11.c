@@ -12,7 +12,6 @@
 #include "core/types/window.h"
 
 bool IsPopupActive(WindowHandle hPopupWnd) {
-
   (void)hPopupWnd;
   WindowManager *wm = WindowManager_Get();
   return wm && wm->popup_count > 0;
@@ -51,7 +50,6 @@ int UI_LB_GetVisibleCount(void) { return g_x11_lb_visible; }
 void UI_LB_SetVisibleCount(int count) { g_x11_lb_visible = count; }
 
 void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
-
   if (!lb) {
     return;
   }
@@ -66,7 +64,6 @@ void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
 }
 
 void UI_NavigateTo(ListBoxInfo *lb, int index) {
-
   if (!lb) {
     return;
   }
@@ -98,13 +95,11 @@ void UI_NavigateUp(ListBoxInfo *lb) { ListBox_NavigateUp(lb); }
 void UI_NavigateDown(ListBoxInfo *lb) { ListBox_NavigateDown(lb); }
 
 void UI_Edit_SetSel(uint32_t start, uint32_t end) {
-
   (void)start;
   (void)end;
 }
 
 void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
-
   if (start)
     *start = 0;
   if (end)
@@ -112,7 +107,6 @@ void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
 }
 
 void UI_GetCurrentTextEdit(char *buffer, size_t cap) {
-
   if (!buffer || cap == 0) {
     return;
   }
@@ -138,7 +132,6 @@ void UI_GetCurrentTextEdit(char *buffer, size_t cap) {
 }
 
 void UI_SetText(const char *text) {
-
   if (!text)
     text = "";
   WindowManager *wm = WindowManager_Get();
@@ -165,7 +158,6 @@ void UI_SetText(const char *text) {
 }
 
 int UI_GetCursorPosition(void) {
-
   WindowManager *wm = WindowManager_Get();
   if (!wm)
     return 0;
@@ -174,7 +166,6 @@ int UI_GetCursorPosition(void) {
     return 0;
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-
     return (int)prompt->cursor;
   }
   if (top->type == POPUP_EDIT) {
@@ -182,12 +173,10 @@ int UI_GetCursorPosition(void) {
     if (ed)
       return (int)ed->cursor;
   }
-
   return 0;
 }
 
 void UI_SetCursorPosition(int position) {
-
   WindowManager *wm = WindowManager_Get();
   if (!wm) {
     return;
@@ -222,7 +211,6 @@ void UI_RedrawNow(ListBoxInfo *lb) { Prompt_RedrawNow(lb); }
 void UI_Redraw(ListBoxInfo *lb) { UI_RedrawNow(lb); }
 
 void UI_SyncFilterFromEdit(FlintContext *ctx) {
-
   if (!ctx) {
     return;
   }
@@ -249,7 +237,6 @@ void UI_SyncFilterFromEdit(FlintContext *ctx) {
 }
 
 void UI_ApplyFilterToEdit(FlintContext *ctx) {
-
   if (!ctx) {
     return;
   }
@@ -274,7 +261,6 @@ void UI_ApplyFilterToEdit(FlintContext *ctx) {
 }
 
 ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
-
   if (!ctx)
     return NULL;
   WindowManager *wm = WindowManager_Get();
@@ -289,7 +275,6 @@ ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
 }
 
 void UI_SyncEditCursor(FlintContext *ctx, int pos) {
-
   if (!ctx) {
     return;
   }
@@ -321,7 +306,6 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
 }
 
 bool UI_ApplyBackspaceToPopup(FlintContext *ctx) {
-
   (void)ctx;
   return false;
 }

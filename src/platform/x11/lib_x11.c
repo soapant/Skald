@@ -6,7 +6,6 @@
 #include "platform/lib.h"
 
 bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n) {
-
   if (!out || n == 0)
     return false;
   out[0] = '\0';
@@ -20,19 +19,16 @@ bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n) {
 }
 
 LibHandle Platform_LoadLibrary(const char *path) {
-
   if (!path)
     return NULL;
   return dlopen(path, RTLD_NOW);
 }
 void *Platform_GetSymbol(LibHandle lib, const char *name) {
-
   if (!lib || !name)
     return NULL;
   return dlsym(lib, name);
 }
 void Platform_UnloadLibrary(LibHandle lib) {
-
   if (lib)
     dlclose(lib);
 }

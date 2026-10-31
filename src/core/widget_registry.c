@@ -408,7 +408,6 @@ FlWidget *widget_create(const FlWidgetSpec *spec) {
     widget_relayout();
     Platform_Widget_SetFrameCallback(widget->win, widget_render_frame, widget);
   }
-
   return widget;
 }
 

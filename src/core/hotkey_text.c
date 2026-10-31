@@ -10,7 +10,6 @@ extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
 bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
-
   if (!key || key->text_len <= 0)
     return false;
   for (int i = 0; i < key->text_len; i++) {
@@ -18,12 +17,10 @@ bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
     if (c < 0x20 || c == 0x7F)
       return false;
   }
-
   return true;
 }
 
 bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key) {
-
   if (!key)
     return false;
   bool trigger_press = false;
@@ -55,6 +52,5 @@ bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key) {
     pending_hotkey_mod = 0;
   }
   bool swallow = !trigger_press && (key->ctrl || key->alt);
-
   return swallow;
 }

@@ -64,7 +64,6 @@ static void widget_registry_remove(PlatformWidget *w) {
 }
 
 bool Platform_Widget_DispatchClick(long window_id) {
-
   for (int i = 0; i < WIDGET_REG_MAX; i++) {
     PlatformWidget *w = s_widgets[i];
     if (!w || w->dead)
@@ -217,7 +216,6 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
 }
 
 void Platform_Widget_Destroy(PlatformWidget *widget) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -238,7 +236,6 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
-
   return widget && !widget->dead;
 }
 
@@ -253,7 +250,6 @@ void Platform_Widget_SetFrameCallback(PlatformWidget *widget,
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-
   if (!widget || widget->dead || widget->mapped) {
     return;
   }
@@ -266,7 +262,6 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-
   if (!widget || widget->dead || !widget->mapped) {
     return;
   }
@@ -279,7 +274,6 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -296,7 +290,6 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -306,7 +299,6 @@ void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
 }
 
 void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -323,7 +315,6 @@ void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -350,7 +341,6 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
 }
 
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -359,7 +349,6 @@ void Platform_Widget_Invalidate(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -381,7 +370,6 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
 }
 
 int Platform_Widget_Width(const PlatformWidget *widget) {
-
   return widget ? widget->w : 0;
 }
 

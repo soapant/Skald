@@ -38,7 +38,6 @@ static int fp_strcasecmp(const char *a, const char *b) {
 }
 
 void FeaturePath_SanitizeStem(const char *src, char *out, size_t out_len) {
-
   if (!out || out_len == 0) {
     return;
   }
@@ -63,7 +62,6 @@ void FeaturePath_SanitizeStem(const char *src, char *out, size_t out_len) {
 }
 
 bool FeaturePath_LibBasenameStem(const char *base, char *out, size_t out_len) {
-
   if (!base || !out || out_len == 0)
     return false;
   char work[256];
@@ -110,18 +108,15 @@ bool FeaturePath_LibBasenameStem(const char *base, char *out, size_t out_len) {
     return false;
   memcpy(out, work, len);
   out[len] = '\0';
-
   return true;
 }
 
 bool FeaturePath_StemFromCaller(void *caller, char *out, size_t out_len) {
-
   if (!caller || !out || out_len == 0)
     return false;
   out[0] = '\0';
   char mod_path[512];
   if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) {
-
     return false;
   }
   const char *base = strrchr(mod_path, '\\');
@@ -131,11 +126,9 @@ bool FeaturePath_StemFromCaller(void *caller, char *out, size_t out_len) {
   base = base ? base + 1 : mod_path;
   char stem[128];
   if (!FeaturePath_LibBasenameStem(base, stem, sizeof(stem))) {
-
     return false;
   }
   FeaturePath_SanitizeStem(stem, out, out_len);
-
   return out[0] != '\0';
 }
 
@@ -143,7 +136,6 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
                                  size_t out_len) {
 
   if (!name || !name[0] || !out || out_len == 0) {
-
     return false;
   }
 
@@ -155,7 +147,6 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
   }
 
   if (!filename[0]) {
-
     return false;
   }
 
@@ -186,18 +177,15 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
       }
       stem[stemlen] = '\0';
       if (Platform_FeatureDataDirExists(stem)) {
-
         return Platform_GetFeaturePath(stem, stem, out, out_len);
       }
     }
   } else {
-
     return false;
   }
 
   char from_caller[128];
   if (FeaturePath_StemFromCaller(caller, from_caller, sizeof(from_caller))) {
-
     return Platform_GetFeaturePath(from_caller, stem, out, out_len);
   }
 
@@ -208,7 +196,6 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
   FeaturePath_SanitizeStem(feat, safe, sizeof(safe));
   if (safe[0] == '\0')
     return false;
-
   return Platform_GetFeaturePath(safe, stem, out, out_len);
 }
 
@@ -216,11 +203,9 @@ bool FeaturePath_ResolveAssetPath(void *caller, const char *name, char *out,
                                   size_t out_len) {
 
   if (!name || !name[0] || !out || out_len == 0) {
-
     return false;
   }
   if (!FeaturePath || !FeaturePath[0]) {
-
     return false;
   }
   const char *rel = name;
@@ -230,7 +215,6 @@ bool FeaturePath_ResolveAssetPath(void *caller, const char *name, char *out,
     return false;
   for (const char *p = rel; *p; p++) {
     if (*p == '/' || *p == '\\') {
-
       return false;
     }
   }
@@ -238,9 +222,7 @@ bool FeaturePath_ResolveAssetPath(void *caller, const char *name, char *out,
     return false;
   char stem[128];
   if (!FeaturePath_StemFromCaller(caller, stem, sizeof(stem))) {
-
     return false;
   }
-
   return Platform_ResolveAssetFile(stem, rel, out, out_len);
 }

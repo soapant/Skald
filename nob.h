@@ -902,7 +902,6 @@ NOBDEF char *nob_win32_error_message(DWORD err) {
   while (errMsgSize > 1 && isspace(win32ErrMsg[errMsgSize - 1])) {
     win32ErrMsg[--errMsgSize] = '\0';
   }
-
   return win32ErrMsg;
 }
 
@@ -1407,7 +1406,6 @@ NOBDEF uint64_t nob_nanos_since_unspecified_epoch(void) {
 #else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
-
   return NOB_NANOS_PER_SEC * ts.tv_sec + ts.tv_nsec;
 #endif
 }
@@ -1462,7 +1460,6 @@ static Nob_Proc nob__cmd_start_process(Nob_Cmd cmd, Nob_Fd *fdin, Nob_Fd *fdout,
   }
 
   CloseHandle(piProcInfo.hThread);
-
   return piProcInfo.hProcess;
 #else
   pid_t cpid = fork();
@@ -1507,7 +1504,6 @@ static Nob_Proc nob__cmd_start_process(Nob_Cmd cmd, Nob_Fd *fdin, Nob_Fd *fdout,
     }
     NOB_UNREACHABLE("nob_cmd_run_async_redirect");
   }
-
   return cpid;
 #endif
 }
@@ -1566,7 +1562,6 @@ NOBDEF Nob_Fd nob_fd_open_for_read(const char *path) {
             nob_win32_error_message(GetLastError()));
     return NOB_INVALID_FD;
   }
-
   return result;
 #endif
 }
@@ -1593,7 +1588,6 @@ NOBDEF Nob_Fd nob_fd_open_for_write(const char *path) {
             nob_win32_error_message(GetLastError()));
     return NOB_INVALID_FD;
   }
-
   return result;
 #endif
 }
@@ -1618,7 +1612,6 @@ NOBDEF bool nob_pipe_create(Nob_Pipe *pp) {
             nob_win32_error_message(GetLastError()));
     return false;
   }
-
   return true;
 #else
   int pipefd[2];
@@ -1629,7 +1622,6 @@ NOBDEF bool nob_pipe_create(Nob_Pipe *pp) {
 
   pp->read = pipefd[0];
   pp->write = pipefd[1];
-
   return true;
 #endif
 }
@@ -1678,7 +1670,6 @@ NOBDEF bool nob_proc_wait(Nob_Proc proc) {
   }
 
   CloseHandle(proc);
-
   return true;
 #else
   for (;;) {
@@ -1705,7 +1696,6 @@ NOBDEF bool nob_proc_wait(Nob_Proc proc) {
       return false;
     }
   }
-
   return true;
 #endif
 }
@@ -1740,7 +1730,6 @@ static int nob__proc_wait_async(Nob_Proc proc, int ms) {
   }
 
   CloseHandle(proc);
-
   return 1;
 #else
   long ns = ms * 1000 * 1000;
@@ -1768,7 +1757,6 @@ static int nob__proc_wait_async(Nob_Proc proc, int ms) {
       nob_log(NOB_ERROR, "command exited with exit code %d", exit_status);
       return -1;
     }
-
     return 1;
   }
 
@@ -1791,7 +1779,6 @@ NOBDEF bool nob_procs_append_with_flush(Nob_Procs *procs, Nob_Proc proc,
     if (!nob_procs_flush(procs))
       return false;
   }
-
   return true;
 }
 
@@ -2150,7 +2137,6 @@ NOBDEF Nob_File_Type nob_get_file_type(const char *path) {
 
   if (attr & FILE_ATTRIBUTE_DIRECTORY)
     return NOB_FILE_DIRECTORY;
-
   return NOB_FILE_REGULAR;
 #else
   struct stat statbuf;
@@ -2315,7 +2301,6 @@ NOBDEF char *nob_temp_vsprintf(const char *format, va_list ap) {
   va_copy(args, ap);
   vsnprintf(result, n + 1, format, args);
   va_end(args);
-
   return result;
 }
 
@@ -2387,7 +2372,6 @@ NOBDEF int nob_needs_rebuild(const char *output_path, const char **input_paths,
     if (CompareFileTime(&input_path_time, &output_path_time) == 1)
       return 1;
   }
-
   return 0;
 #else
   struct stat statbuf = {0};
@@ -2413,7 +2397,6 @@ NOBDEF int nob_needs_rebuild(const char *output_path, const char **input_paths,
     if (input_path_time > output_path_time)
       return 1;
   }
-
   return 0;
 #endif
 }
@@ -2510,7 +2493,6 @@ NOBDEF int nob_sb_appendf(Nob_String_Builder *sb, const char *fmt, ...) {
   va_end(args);
 
   sb->count += n;
-
   return n;
 }
 
@@ -2532,7 +2514,6 @@ NOBDEF Nob_String_View nob_sv_chop_while(Nob_String_View *sv, int (*p)(int x)) {
   Nob_String_View result = nob_sv_from_parts(sv->data, i);
   sv->count -= i;
   sv->data += i;
-
   return result;
 }
 
@@ -2551,7 +2532,6 @@ NOBDEF Nob_String_View nob_sv_chop_by_delim(Nob_String_View *sv, char delim) {
     sv->count -= i;
     sv->data += i;
   }
-
   return result;
 }
 
@@ -2580,7 +2560,6 @@ NOBDEF Nob_String_View nob_sv_chop_left(Nob_String_View *sv, size_t n) {
 
   sv->data += n;
   sv->count -= n;
-
   return result;
 }
 
@@ -2592,7 +2571,6 @@ NOBDEF Nob_String_View nob_sv_chop_right(Nob_String_View *sv, size_t n) {
   Nob_String_View result = nob_sv_from_parts(sv->data + sv->count - n, n);
 
   sv->count -= n;
-
   return result;
 }
 
@@ -2611,7 +2589,6 @@ NOBDEF Nob_String_View nob_sv_trim_left(Nob_String_View sv) {
 
   if (i == 0)
     return sv;
-
   return nob_sv_from_parts(sv.data + i, sv.count - i);
 }
 
@@ -2620,7 +2597,6 @@ NOBDEF Nob_String_View nob_sv_trim_right(Nob_String_View sv) {
   while (i < sv.count && isspace(sv.data[sv.count - 1 - i])) {
     i += 1;
   }
-
   return nob_sv_from_parts(sv.data, sv.count - i);
 }
 
@@ -2666,7 +2642,6 @@ NOBDEF bool nob_sv_starts_with(Nob_String_View sv,
         nob_sv_from_parts(sv.data, expected_prefix.count);
     return nob_sv_eq(expected_prefix, actual_prefix);
   }
-
   return false;
 }
 
@@ -2693,7 +2668,6 @@ NOBDEF const char *nob_get_current_dir_temp(void) {
             nob_win32_error_message(GetLastError()));
     return NULL;
   }
-
   return buffer;
 #else
   char *buffer = (char *)nob_temp_alloc(PATH_MAX);
@@ -2701,7 +2675,6 @@ NOBDEF const char *nob_get_current_dir_temp(void) {
     nob_log(NOB_ERROR, "could not get current directory: %s", strerror(errno));
     return NULL;
   }
-
   return buffer;
 #endif
 }

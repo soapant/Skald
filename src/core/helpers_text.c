@@ -45,7 +45,6 @@ HotkeyBinding convert_into_hotkey_binding(
     output.blacklist = NULL;
     output.blacklist_count = 0;
   }
-
   return output;
 }
 
@@ -106,7 +105,6 @@ StringList String_Split(const char *string, const char *delimiter) {
 
     start = end + delimiter_len;
   }
-
   return result;
 }
 
@@ -173,7 +171,6 @@ long File_ReadAll(const char *path, char *buffer, long buffer_size) {
   fclose(f);
 
   buffer[total] = '\0';
-
   return (long)total;
 }
 
@@ -493,6 +490,5 @@ StringList File_ReadLines(const char *path, long buffer_size) {
   result.items = all.items;
   result.count = kept;
   result.items[kept] = NULL;
-
   return result;
 }

@@ -262,7 +262,6 @@ static bool config_build_load_store(void) {
 
     if (!ok) {
       log_error("config copy failed, keeping current");
-
       return false;
     }
   }
@@ -273,7 +272,6 @@ static bool config_build_load_store(void) {
 
     if (!ok) {
       remove(uniq);
-
       return false;
     }
   }
@@ -288,12 +286,10 @@ static bool config_build_load_store(void) {
           sizeof(g_cfg_libs[g_cfg_count].uniq) - 1);
   g_cfg_libs[g_cfg_count].uniq[sizeof(g_cfg_libs[g_cfg_count].uniq) - 1] = '\0';
   g_cfg_count++;
-
   return true;
 }
 
 bool Config_Load(void) {
-
   bool ok = config_build_load_store();
 
   if (!ok) {

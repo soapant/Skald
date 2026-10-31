@@ -16,7 +16,6 @@ unsigned long VimModeTextColor(void) {
     return rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
   if (g_current_mode == MODE_INSERT)
     return rgb_to_hex(COLOR_INSERT_MODE_TEXT);
-
   return rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
 }
 

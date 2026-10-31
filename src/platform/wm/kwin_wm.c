@@ -13,7 +13,6 @@
 static pthread_mutex_t g_kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 bool kwin_is_active(void) {
-
   const char *v = getenv("KDE_SESSION_VERSION");
   if (v && v[0])
     return true;
@@ -350,7 +349,6 @@ static void kwin_clean_copy(const char *src, size_t n, char *dst, size_t cap) {
 }
 
 bool get_title_kwin(char *buffer, int buffer_size) {
-
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -367,7 +365,6 @@ bool get_title_kwin(char *buffer, int buffer_size) {
 }
 
 bool get_app_id_kwin(char *buffer, int buffer_size) {
-
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -384,7 +381,6 @@ bool get_app_id_kwin(char *buffer, int buffer_size) {
 }
 
 char *paste_kwin(char *content) {
-
   if (!content) {
     log_error("content is NULL");
     return NULL;
@@ -431,7 +427,6 @@ static bool kwin_focus_js_cmd(const char *title, char *out, size_t cap) {
 }
 
 bool focus_window_title_kwin(char *title) {
-
   if (!title) {
     log_error("title is NULL");
     return false;
@@ -456,7 +451,6 @@ bool focus_window_title_kwin(char *title) {
 }
 
 PlWindowList get_window_titles_kwin() {
-
   PlWindowList list = {0};
   if (!kwin_is_active())
     return list;
@@ -488,7 +482,6 @@ PlWindowList get_window_titles_kwin() {
 }
 
 PlWindowList get_window_names_kwin() {
-
   PlWindowList list = {0};
   if (!kwin_is_active())
     return list;
@@ -527,21 +520,18 @@ PlWindowList get_window_names_kwin() {
 }
 
 bool close_active_window_kwin(void) {
-
   if (!kwin_is_active())
     return false;
   return kwin_run_script("workspace.slotWindowClose();");
 }
 
 bool toggle_fullscreen_active_kwin(void) {
-
   if (!kwin_is_active())
     return false;
   return kwin_run_script("workspace.slotWindowFullScreen();");
 }
 
 bool move_active_window_to_monitor_kwin(bool right) {
-
   if (!kwin_is_active())
     return false;
   if (right) {
@@ -551,35 +541,30 @@ bool move_active_window_to_monitor_kwin(bool right) {
 }
 
 bool move_active_window_left_kwin(void) {
-
   if (!kwin_is_active())
     return false;
   return kwin_run_script("workspace.slotWindowToLeftScreen();");
 }
 
 bool move_active_window_right_kwin(void) {
-
   if (!kwin_is_active())
     return false;
   return kwin_run_script("workspace.slotWindowToRightScreen();");
 }
 
 bool focus_window_left_kwin(void) {
-
   if (!kwin_is_active())
     return false;
   return kwin_run_script("workspace.slotSwitchWindowLeft();");
 }
 
 bool focus_window_right_kwin(void) {
-
   if (!kwin_is_active())
     return false;
   return kwin_run_script("workspace.slotSwitchWindowRight();");
 }
 
 bool minimize_active_window_kwin(void) {
-
   if (!kwin_is_active())
     return false;
   return kwin_run_script("workspace.slotWindowMinimize();");

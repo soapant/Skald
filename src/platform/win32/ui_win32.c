@@ -17,14 +17,12 @@
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
-
   (void)hPopupWnd;
   return WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL &&
          IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
 }
 
 void UI_RequestPopupRepaint(void) {
-
   HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (!hPopup || !IsWindow(hPopup)) {
     return;
@@ -34,7 +32,6 @@ void UI_RequestPopupRepaint(void) {
 }
 
 void UI_LegacySyncRepaint(void) {
-
   HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     RedrawWindow(hPopup, NULL, NULL,
@@ -43,7 +40,6 @@ void UI_LegacySyncRepaint(void) {
 }
 
 void UI_SetSelection(ListBoxInfo *lb, int index) {
-
   if (!lb) {
     return;
   }
@@ -63,13 +59,11 @@ static int g_lb_update_depth = 0;
 void UI_LB_BeginUpdate(void) { g_lb_update_depth++; }
 
 void UI_LB_EndUpdate(void) {
-
   if (g_lb_update_depth > 0)
     g_lb_update_depth--;
 }
 
 void UI_LB_SetCount(ListBoxInfo *lb, int count) {
-
   if (lb)
     lb->populated_count = count;
   UI_RequestPopupRepaint();
@@ -84,7 +78,6 @@ int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
 static int g_render_lb_visible = 0;
 
 int UI_LB_GetVisibleCount(void) {
-
   if (FlintContext_Get()->prompt_callbacks.render != NULL &&
       g_render_lb_visible > 0)
     return g_render_lb_visible;
@@ -101,7 +94,6 @@ int UI_LB_GetVisibleCount(void) {
 void UI_LB_SetVisibleCount(int count) { g_render_lb_visible = count; }
 
 void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
-
   if (!lb) {
     return;
   }
@@ -216,13 +208,11 @@ static bool win32_resolve_text_target(Win32TextTarget *out) {
 }
 
 void UI_Edit_SetSel(uint32_t start, uint32_t end) {
-
   (void)end;
   UI_SetCursorPosition((int)start);
 }
 
 void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
-
   Win32TextTarget t;
   uint32_t cursor = 0;
   if (win32_resolve_text_target(&t))
@@ -234,7 +224,6 @@ void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
 }
 
 void UI_GetCurrentTextEdit(char *buffer, size_t cap) {
-
   if (!buffer || cap == 0) {
     return;
   }
@@ -248,7 +237,6 @@ void UI_GetCurrentTextEdit(char *buffer, size_t cap) {
 }
 
 void UI_SetText(const char *text) {
-
   if (!text)
     text = "";
   Win32TextTarget t;
@@ -260,7 +248,6 @@ void UI_SetText(const char *text) {
   UI_SetCursorPosition((int)strlen(t.text));
   if (FlintContext_Get()->prompt_callbacks.render == NULL) {
     UI_RequestPopupRepaint();
-
     return;
   }
   HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
@@ -269,17 +256,14 @@ void UI_SetText(const char *text) {
 }
 
 int UI_GetCursorPosition(void) {
-
   Win32TextTarget t;
   if (!win32_resolve_text_target(&t) || !t.text)
     return 0;
   int pos = win32_target_cursor(&t);
-
   return pos;
 }
 
 void UI_SetCursorPosition(int position) {
-
   s_pending_high_surrogate = 0;
   Win32TextTarget t;
   if (!win32_resolve_text_target(&t) || !t.text) {
@@ -294,7 +278,6 @@ void UI_SetCursorPosition(int position) {
 }
 
 int UI_InsertText(const char *utf8, int len) {
-
   Win32TextTarget t;
   if (!utf8 || len <= 0)
     return 0;
@@ -333,7 +316,6 @@ static int win32_next_char_len(const char *text, size_t len, size_t cur) {
 }
 
 void UI_Backspace(void) {
-
   s_pending_high_surrogate = 0;
   Win32TextTarget t;
   if (!win32_resolve_text_target(&t) || !t.text) {
@@ -352,7 +334,6 @@ void UI_Backspace(void) {
 }
 
 void UI_DeleteForward(void) {
-
   s_pending_high_surrogate = 0;
   Win32TextTarget t;
   if (!win32_resolve_text_target(&t) || !t.text) {
@@ -370,7 +351,6 @@ void UI_DeleteForward(void) {
 }
 
 int UI_InsertChar(wchar_t wc) {
-
   wchar_t pair[2];
   int pairlen = 0;
   if (s_pending_high_surrogate) {
@@ -400,7 +380,6 @@ int UI_InsertChar(wchar_t wc) {
 
 PromptState *g_win32_prompt_state = NULL;
 void UI_RedrawNow(ListBoxInfo *lb) {
-
   HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     UI_RequestPopupRepaint();
@@ -413,7 +392,6 @@ void UI_Redraw(ListBoxInfo *lb) {
     if (hPopup)
       KillTimer(hPopup, UI_DEBOUNCE_TIMER_ID);
     UI_RedrawNow(lb);
-
     return;
   }
   if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
@@ -430,7 +408,6 @@ char *Platform_SearchPopup(void) {
 #include <gdiplus.h>
 
 PromptState *Platform_GetPromptStateForHWND(HWND hwnd) {
-
   if (hwnd && IsWindow(hwnd)) {
     PromptState *st = (PromptState *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     if (st)
@@ -467,7 +444,6 @@ PromptState *Platform_GetWin32PromptState(void) {
 }
 
 void UI_SyncFilterFromEdit(FlintContext *ctx) {
-
   if (!ctx) {
     return;
   }
@@ -490,7 +466,6 @@ void UI_SyncFilterFromEdit(FlintContext *ctx) {
 }
 
 void UI_ApplyFilterToEdit(FlintContext *ctx) {
-
   if (!ctx) {
     return;
   }
@@ -516,7 +491,6 @@ void UI_ApplyFilterToEdit(FlintContext *ctx) {
 }
 
 ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
-
   (void)ctx;
   PromptState *ws = g_win32_prompt_state;
   if (ws && ws->has_listbox)
@@ -531,7 +505,6 @@ ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
 }
 
 void UI_SyncEditCursor(FlintContext *ctx, int pos) {
-
   if (!ctx) {
     return;
   }

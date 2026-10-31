@@ -81,7 +81,6 @@ long long Platform_GetWallClockMs(void) {
 }
 
 bool Platform_TerminateProcessByName(const char *exe_name) {
-
   if (!exe_name || !*exe_name) {
     log_error("operation failed, returning error exe_name='%s'",
               exe_name ? exe_name : "null");
@@ -99,7 +98,6 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
 
   Platform_RunTerminalCommand(cmd, false);
   log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
-
   return true;
 }
 
@@ -165,7 +163,6 @@ static bool win32_launch_default_browser_blank(void) {
 }
 
 bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
-
   char full_url[2048] = {0};
   if (!url || !url[0])
     full_url[0] = '\0';
@@ -257,7 +254,6 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
 }
 
 bool Platform_QueryBrowser(char *query) {
-
   if (!query || !query[0]) {
     log_error("operation failed, returning error query='%s'",
               query ? query : "null");
@@ -310,7 +306,6 @@ bool Platform_QueryBrowser(char *query) {
 }
 
 char *Platform_GetClipboardEntry(void) {
-
   char *result = NULL;
 
   if (!OpenClipboard(NULL)) {
@@ -345,12 +340,10 @@ char *Platform_GetClipboardEntry(void) {
 
   GlobalUnlock(hClipData);
   CloseClipboard();
-
   return result;
 }
 
 bool Platform_PasteContent(char *content) {
-
   if (!content || !content[0]) {
     log_error("operation failed, returning error content='%s'",
               content ? content : "null");
@@ -421,7 +414,6 @@ const char *Platform_GetRealHome(void) {
     buf[sizeof(buf) - 1] = '\0';
     return buf;
   }
-
   return buf;
 }
 

@@ -79,7 +79,6 @@ static size_t g_incr_off = 0;
 static long g_incr_old_mask = 0;
 
 void x11_clipboard_ensure_started(void) {
-
   if (g_cl_t0 == 0)
     g_cl_t0 = cl_ms_since();
   Display *dpy = get_display();
@@ -265,7 +264,6 @@ static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
 }
 
 bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
-
   if (!dpy || !ev)
     return false;
   if (ev->type == SelectionRequest) {
@@ -329,12 +327,10 @@ static int x11_clipboard_take_ownership(Display *dpy) {
   Window owner = XGetSelectionOwner(dpy, g_clip_clipboard);
   cl_trace("OWN", "after owner=%lu we_own=%d", (unsigned long)owner,
            owner == g_clip_win ? 1 : 0);
-
   return owner == g_clip_win;
 }
 
 int x11_clipboard_set_text(const char *text) {
-
   if (!text)
     return 0;
   cl_trace("SETTEXT", "begin len=%d text='%s'", (int)strlen(text), text);
@@ -364,7 +360,6 @@ int x11_clipboard_set_text(const char *text) {
 }
 
 int x11_clipboard_set_file(const char *path) {
-
   if (!path || !path[0])
     return 0;
   x11_clipboard_ensure_started();
@@ -395,7 +390,6 @@ int x11_clipboard_set_file(const char *path) {
 }
 
 int x11_clipboard_set_image(const unsigned char *png, size_t len) {
-
   if (!png || len == 0)
     return 0;
 
@@ -423,7 +417,6 @@ int x11_clipboard_set_image(const unsigned char *png, size_t len) {
 }
 
 void x11_clipboard_shutdown(void) {
-
   Display *dpy = get_display();
   if (dpy && g_clip_win != None)
     XDestroyWindow(dpy, g_clip_win);
@@ -576,7 +569,6 @@ static Display *x11_clipboard_read_display(void) {
     }
   }
   if (!d) {
-
     return NULL;
   }
   Window root = DefaultRootWindow(d);
@@ -588,7 +580,6 @@ static Display *x11_clipboard_read_display(void) {
   g_clip_incr = XInternAtom(d, "INCR", False);
   XFlush(d);
   g_clip_rd_dpy = d;
-
   return g_clip_rd_dpy;
 }
 
@@ -673,17 +664,14 @@ char *x11_clipboard_get_text(void) {
 bool Platform_ClipboardAvailable(void) { return true; }
 
 int Platform_ClipboardSetText(const char *text) {
-
   return x11_clipboard_set_text(text);
 }
 
 int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
-
   return x11_clipboard_set_image(png, len);
 }
 
 int Platform_ClipboardSetFile(const char *path) {
-
   (void)path;
   return 0;
 }

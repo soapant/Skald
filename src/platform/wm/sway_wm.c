@@ -45,7 +45,6 @@ static void sway_ensure_sock(void) {
 }
 
 bool get_title_sway(char *buffer, int buffer_size) {
-
   if (!buffer || buffer_size <= 0) {
     log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null",
               buffer_size);
@@ -115,7 +114,6 @@ bool get_title_sway(char *buffer, int buffer_size) {
 }
 
 bool get_app_id_sway(char *buffer, int buffer_size) {
-
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -158,7 +156,6 @@ bool get_app_id_sway(char *buffer, int buffer_size) {
 }
 
 char *paste_sway(char *content) {
-
   if (!content) {
     log_error("content is NULL");
     return NULL;
@@ -171,7 +168,6 @@ char *paste_sway(char *content) {
   return out;
 }
 bool succeded_sway(char *output) {
-
   if (!output) {
     log_error("output is NULL");
     return false;
@@ -201,7 +197,6 @@ static bool sway_name_for_pid(const char *json, const char *pid_pos,
                               const char *next_pid, char *out, size_t cap);
 
 bool focus_window_title_sway(char *title) {
-
   if (!title || !*title) {
     log_error("title is NULL");
     return false;
@@ -375,7 +370,6 @@ static bool sway_app_for_pid(const char *pid_pos, const char *next_pid,
 }
 
 PlWindowList get_window_names_sway() {
-
   sway_ensure_sock();
   char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
   PlWindowList list = {0};
@@ -405,7 +399,6 @@ PlWindowList get_window_names_sway() {
 }
 
 PlWindowList get_window_titles_sway() {
-
   sway_ensure_sock();
   char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
   PlWindowList list = {0};
@@ -531,7 +524,6 @@ static int sway_key_str(const char *base, const char *from, const char *end,
 }
 
 bool close_active_window_sway(void) {
-
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
   if (!sock || !sock[0])
@@ -545,7 +537,6 @@ bool close_active_window_sway(void) {
 }
 
 bool toggle_fullscreen_active_sway(void) {
-
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
   if (!sock || !sock[0])
@@ -559,7 +550,6 @@ bool toggle_fullscreen_active_sway(void) {
 }
 
 bool move_active_window_to_monitor_sway(bool right) {
-
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
   if (!sock || !sock[0])
@@ -699,7 +689,6 @@ bool move_active_window_to_monitor_sway(bool right) {
 }
 
 bool minimize_active_window_sway(void) {
-
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
   if (!sock || !sock[0])
@@ -722,7 +711,6 @@ bool minimize_active_window_sway(void) {
 }
 
 bool focus_window_left_sway(void) {
-
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
   if (!sock || !sock[0])
@@ -736,7 +724,6 @@ bool focus_window_left_sway(void) {
 }
 
 bool focus_window_right_sway(void) {
-
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
   if (!sock || !sock[0])
@@ -750,12 +737,10 @@ bool focus_window_right_sway(void) {
 }
 
 bool move_active_window_left_sway(void) {
-
   return move_active_window_to_monitor_sway(false);
 }
 
 bool move_active_window_right_sway(void) {
-
   return move_active_window_to_monitor_sway(true);
 }
 
