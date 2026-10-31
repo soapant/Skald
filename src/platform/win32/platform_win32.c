@@ -1511,8 +1511,6 @@ struct GdiplusStartupInput gdiplusStartupInput;
   gdiplusStartupInput.SuppressExternalCodecs = FALSE;
   GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
-  /* Force the shell icon subsystem to warm up here. Its first SHGetFileInfoA
-     costs ~90ms; paying it at launch keeps it out of the first prompt paint. */
   {
       char warm[MAX_PATH];
       if (SearchPathA(NULL, "shell32.dll", NULL, MAX_PATH, warm, NULL)) {
