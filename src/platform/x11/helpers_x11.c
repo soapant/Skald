@@ -137,17 +137,15 @@ static bool x11_font_has(XftFont* f, FcChar32 cp) {
 }
 
 static int x11_font_px(XftFont* xf, int px) {
-        
-if (px > 0) {  return px; }
-    double d = 0;
-    if (xf && xf->pattern && FcPatternGetDouble(xf->pattern, FC_PIXEL_SIZE, 0, &d) == FcResultMatch && d > 0)
-        {  return (int)(d + 0.5); }
-    {  return FontSize; }
+    if (px > 0) {  return px; }
+        double d = 0;
+        if (xf && xf->pattern && FcPatternGetDouble(xf->pattern, FC_PIXEL_SIZE, 0, &d) == FcResultMatch && d > 0)
+            {  return (int)(d + 0.5); }
+    return FontSize;
 }
 
 static XftFont* x11_open_fallback_at_locked(Display* dpy, FcChar32 cp, int px) {
-        
-XftFont* fb = NULL;
+    XftFont* fb = NULL;
     FcCharSet* cs = FcCharSetCreate();
     FcPattern* pat = FcPatternCreate();
     if (cs && pat) {
@@ -168,85 +166,79 @@ XftFont* fb = NULL;
     }
     if (pat) FcPatternDestroy(pat);
     if (cs) FcCharSetDestroy(cs);
-    {  return fb; }
+    return fb;
 }
 
-static XftFont* x11_open_fallback_at_locked(Display* dpy, FcChar32 cp, int px);
-
 static XftFont* x11_fallback_for_locked(Display* dpy, FcChar32 cp, int px) {
-        
-if (!g_fb_config) g_fb_config = FcInitLoadConfigAndFonts();
-    if (!g_fb_config) {  return NULL; }
-    for (int i = 0; i < X11_FB_CACHE; i++) {
-        if (g_fb_cache[i].f && g_fb_cache[i].dpy == dpy && g_fb_cache[i].cp == cp && g_fb_cache[i].px == px)
-            return g_fb_cache[i].f;
-    }
-    XftFont* fb = x11_open_fallback_at_locked(dpy, cp, px > 0 ? px : FontSize);
-    if (!fb) {  return NULL; }
-    if (g_fb_cache[g_fb_next].f) {
-        Display* odpy = g_fb_cache[g_fb_next].dpy;
-        XLockDisplay(odpy);
-        XftFontClose(odpy, g_fb_cache[g_fb_next].f);
-        XUnlockDisplay(odpy);
-    }
-    g_fb_cache[g_fb_next].dpy = dpy;
-    g_fb_cache[g_fb_next].cp = cp;
-    g_fb_cache[g_fb_next].px = px;
-    g_fb_cache[g_fb_next].f = fb;
-    g_fb_next = (g_fb_next + 1) % X11_FB_CACHE;
-    {  return fb; }
+    if (!g_fb_config) g_fb_config = FcInitLoadConfigAndFonts();
+        if (!g_fb_config) {  return NULL; }
+        for (int i = 0; i < X11_FB_CACHE; i++) {
+            if (g_fb_cache[i].f && g_fb_cache[i].dpy == dpy && g_fb_cache[i].cp == cp && g_fb_cache[i].px == px)
+                return g_fb_cache[i].f;
+        }
+        XftFont* fb = x11_open_fallback_at_locked(dpy, cp, px > 0 ? px : FontSize);
+        if (!fb) {  return NULL; }
+        if (g_fb_cache[g_fb_next].f) {
+            Display* odpy = g_fb_cache[g_fb_next].dpy;
+            XLockDisplay(odpy);
+            XftFontClose(odpy, g_fb_cache[g_fb_next].f);
+            XUnlockDisplay(odpy);
+        }
+        g_fb_cache[g_fb_next].dpy = dpy;
+        g_fb_cache[g_fb_next].cp = cp;
+        g_fb_cache[g_fb_next].px = px;
+        g_fb_cache[g_fb_next].f = fb;
+        g_fb_next = (g_fb_next + 1) % X11_FB_CACHE;
+        return fb;
 }
 
 static XftFont* x11_fallback_for(Display* dpy, FcChar32 cp, int px) {
-        
-pthread_mutex_lock(&g_fb_mtx);
+    pthread_mutex_lock(&g_fb_mtx);
     XftFont* f = x11_fallback_for_locked(dpy, cp, px);
     pthread_mutex_unlock(&g_fb_mtx);
-    {  return f; }
+    return f;
 }
 
 int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, int px) {
-        
-if (!xf || !s || n <= 0) {  return 0; }
-    px = x11_font_px(xf, px);
-    const unsigned char* b = (const unsigned char*)s;
-    const unsigned char* end = b + n;
-    bool all = true;
-    const unsigned char* p = b;
-    while (p < end) { int cl = 1; FcChar32 cp = x11_utf8_cp(p, end, &cl); if (!x11_font_has(xf, cp)) { all = false; break; } p += cl; }
-    if (all) {  return xft_width(dpy, xf, s, n); }
-    int total = 0;
-    p = b;
-    while (p < end) {
-        const unsigned char* runStart = p;
-        XftFont* runFont = xf;
+    if (!xf || !s || n <= 0) {  return 0; }
+        px = x11_font_px(xf, px);
+        const unsigned char* b = (const unsigned char*)s;
+        const unsigned char* end = b + n;
+        bool all = true;
+        const unsigned char* p = b;
+        while (p < end) { int cl = 1; FcChar32 cp = x11_utf8_cp(p, end, &cl); if (!x11_font_has(xf, cp)) { all = false; break; } p += cl; }
+        if (all) {  return xft_width(dpy, xf, s, n); }
+        int total = 0;
+        p = b;
         while (p < end) {
+            const unsigned char* runStart = p;
+            XftFont* runFont = xf;
+            while (p < end) {
+                int cl = 1;
+                FcChar32 cp = x11_utf8_cp(p, end, &cl);
+                if (!x11_font_has(runFont, cp)) break;
+                p += cl;
+            }
+            if (p > runStart) total += xft_width(dpy, runFont, (const char*)runStart, (int)(p - runStart));
+            if (p >= end) break;
             int cl = 1;
             FcChar32 cp = x11_utf8_cp(p, end, &cl);
-            if (!x11_font_has(runFont, cp)) break;
-            p += cl;
-        }
-        if (p > runStart) total += xft_width(dpy, runFont, (const char*)runStart, (int)(p - runStart));
-        if (p >= end) break;
-        int cl = 1;
-        FcChar32 cp = x11_utf8_cp(p, end, &cl);
-        XftFont* fb = x11_fallback_for(dpy, cp, px);
-        if (fb) {
-            const unsigned char* fs = p;
-            int covered = 0;
-            while (p < end) { int l2 = 1; FcChar32 c2 = x11_utf8_cp(p, end, &l2); if (!x11_font_has(fb, c2)) break; p += l2; covered += l2; }
-            if (covered > 0) total += xft_width(dpy, fb, (const char*)fs, covered);
-            else p += cl;
-        } else {
-            p += cl;
-        }
+            XftFont* fb = x11_fallback_for(dpy, cp, px);
+            if (fb) {
+                const unsigned char* fs = p;
+                int covered = 0;
+                while (p < end) { int l2 = 1; FcChar32 c2 = x11_utf8_cp(p, end, &l2); if (!x11_font_has(fb, c2)) break; p += l2; covered += l2; }
+                if (covered > 0) total += xft_width(dpy, fb, (const char*)fs, covered);
+                else p += cl;
+            } else {
+                p += cl;
+            }
     }
-    {  return total; }
+    return total;
 }
 
 int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
-        
-if (!text || !text[0] || fontsize <= 0) {  return fontsize > 0 ? fontsize : 0; }
+    if (!text || !text[0] || fontsize <= 0) return fontsize > 0 ? fontsize : 0;
     Display *dpy = get_display();
     if (!dpy) {  return fontsize; }
     FontHandle fh = Platform_CreateFontOnDisplay(dpy, fontsize, UsedFont);
@@ -265,55 +257,52 @@ if (!text || !text[0] || fontsize <= 0) {  return fontsize > 0 ? fontsize : 0; }
         if (h > 0) ink = h;
     }
     Platform_DestroyFont(fh);
-    {  return ink + PROMPT_GLYPH_INK_PAD; }
+    return ink + PROMPT_GLYPH_INK_PAD;
 }
 
 int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, int y, XftFont* xf, const char* s, int n, int px) {
-        
-if (!xf || !xd || !s || n <= 0) {  return 0; }
-    px = x11_font_px(xf, px);
-    const unsigned char* b = (const unsigned char*)s;
-    const unsigned char* end = b + n;
-    const unsigned char* p = b;
-    int cx = x;
-    while (p < end) {
-        const unsigned char* runStart = p;
-        XftFont* runFont = xf;
+    if (!xf || !xd || !s || n <= 0) {  return 0; }
+        px = x11_font_px(xf, px);
+        const unsigned char* b = (const unsigned char*)s;
+        const unsigned char* end = b + n;
+        const unsigned char* p = b;
+        int cx = x;
         while (p < end) {
+            const unsigned char* runStart = p;
+            XftFont* runFont = xf;
+            while (p < end) {
+                int cl = 1;
+                FcChar32 cp = x11_utf8_cp(p, end, &cl);
+                if (!x11_font_has(runFont, cp)) break;
+                p += cl;
+            }
+            if (p > runStart) {
+                int rl = (int)(p - runStart);
+                XftDrawStringUtf8(xd, color, runFont, cx, y, (FcChar8*)runStart, rl);
+                cx += xft_width(dpy, runFont, (const char*)runStart, rl);
+            }
+            if (p >= end) break;
             int cl = 1;
             FcChar32 cp = x11_utf8_cp(p, end, &cl);
-            if (!x11_font_has(runFont, cp)) break;
-            p += cl;
-        }
-        if (p > runStart) {
-            int rl = (int)(p - runStart);
-            XftDrawStringUtf8(xd, color, runFont, cx, y, (FcChar8*)runStart, rl);
-            cx += xft_width(dpy, runFont, (const char*)runStart, rl);
-        }
-        if (p >= end) break;
-        int cl = 1;
-        FcChar32 cp = x11_utf8_cp(p, end, &cl);
-        XftFont* fb = x11_fallback_for(dpy, cp, px);
-        if (fb) {
-            const unsigned char* fs = p;
-            int covered = 0;
-            while (p < end) { int l2 = 1; FcChar32 c2 = x11_utf8_cp(p, end, &l2); if (!x11_font_has(fb, c2)) break; p += l2; covered += l2; }
-            if (covered > 0) {
-                XftDrawStringUtf8(xd, color, fb, cx, y, (FcChar8*)fs, covered);
-                cx += xft_width(dpy, fb, (const char*)fs, covered);
+            XftFont* fb = x11_fallback_for(dpy, cp, px);
+            if (fb) {
+                const unsigned char* fs = p;
+                int covered = 0;
+                while (p < end) { int l2 = 1; FcChar32 c2 = x11_utf8_cp(p, end, &l2); if (!x11_font_has(fb, c2)) break; p += l2; covered += l2; }
+                if (covered > 0) {
+                    XftDrawStringUtf8(xd, color, fb, cx, y, (FcChar8*)fs, covered);
+                    cx += xft_width(dpy, fb, (const char*)fs, covered);
+                } else {
+                    p += cl;
+                }
             } else {
                 p += cl;
             }
-        } else {
-            p += cl;
-        }
     }
-    {  return cx - x; }
+    return cx - x;
 }
 
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY, char* centered_to, int xOffset, int boxWidth) {
-        
-
     if (!text) {  return; }
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) {  return; }
@@ -378,12 +367,9 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
 
         x11_draw_utf8_fallback(dpy, xd, color, drawX, y, xf, lineStart, (int)(p - lineStart), 0);
     }
-    
 }
 
 void x11_xft_alloc_color(Display* dpy, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha, XftColor* out) {
-        
-
     XRenderColor rc = {
         ((hex >> 16) & 0xFF) * 0x101,
         ((hex >> 8) & 0xFF) * 0x101,
@@ -391,51 +377,40 @@ void x11_xft_alloc_color(Display* dpy, Visual* vis, Colormap cmap, unsigned long
         alpha
     };
     XftColorAllocValue(dpy, vis, cmap, &rc, out);
-    
 }
-
 int x11_font_row_height(int font_size) {
-        
-{  return font_size + PROMPT_ROW_H_BONUS; }
+    return font_size + PROMPT_ROW_H_BONUS;
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
-        
-{  return font_size + PROMPT_LIST_TOP_BONUS; }
+    return font_size + PROMPT_LIST_TOP_BONUS;
 }
 
 int x11_font_row_height_of(FontHandle font) {
-        
-XftFont* xf = FH_TO_XFT(font);
-    {  return x11_font_row_height(FontSize); }
+    XftFont* xf = FH_TO_XFT(font);
+    return x11_font_row_height(FontSize);
 }
 
 int x11_font_list_top_of(FontHandle font) {
-        
-XftFont* xf = FH_TO_XFT(font);
-    {  return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize); }
+    XftFont* xf = FH_TO_XFT(font);
+    return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
 }
 
 int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top) {
-    
     int line_h = ascent + descent;
     if (line_h <= 0 || font_size <= 0) {  return box_top; }
-    {  return box_top + (line_h - font_size) / 2; }
+    return box_top + (line_h - font_size) / 2;
 }
 
 int x11_font_cursor_y_of(FontHandle font, int box_top) {
-        
-      XftFont* xf = FH_TO_XFT(font);
-    {  return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top); }
+    XftFont* xf = FH_TO_XFT(font);
+    return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top);
 }
 
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
-        
-
     const char* baseText = lb ? ListBoxInfo_Row(lb, idx) : NULL;
     snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
-    
-    {  return trunc; }
+    return trunc;
 }
 
 #define IMG_CACHE_SLOTS 256
@@ -474,55 +449,51 @@ pthread_mutex_lock(&g_img_cache_mtx);
 }
 
 static unsigned char* x11_img_cache_get(const char* key, int w, int h) {
-        
-long long now = x11_now_ms();
-for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
-        ImgCacheSlot* s = &g_img_cache[i];
-        if (!s->argb) continue;
-        if (s->w != w || s->h != h) continue;
-        if (strcmp(s->key, key) != 0) continue;
-        if (now - s->checked_ms >= X11_IMG_REVALIDATE_MS) {
-            struct stat st;
-            s->checked_ms = now;
-            if (stat(key, &st) != 0 || (long long)st.st_mtime != s->mtime || (long long)st.st_size != s->size) {
-                free(s->argb);
-                s->argb = NULL;
-                continue;
+    long long now = x11_now_ms();
+    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+            ImgCacheSlot* s = &g_img_cache[i];
+            if (!s->argb) continue;
+            if (s->w != w || s->h != h) continue;
+            if (strcmp(s->key, key) != 0) continue;
+            if (now - s->checked_ms >= X11_IMG_REVALIDATE_MS) {
+                struct stat st;
+                s->checked_ms = now;
+                if (stat(key, &st) != 0 || (long long)st.st_mtime != s->mtime || (long long)st.st_size != s->size) {
+                    free(s->argb);
+                    s->argb = NULL;
+                    continue;
+                }
             }
-        }
-        s->stamp = ++g_img_cache_tick;
-        return s->argb;
-}
-    {  return NULL; }
+            s->stamp = ++g_img_cache_tick;
+            return s->argb;
+    }
+    return NULL;
 }
 
 static void x11_img_cache_put(const char* key, int w, int h, long long mtime, long long size, unsigned char* argb) {
-        
-if (!argb) {  return ; }
-    int slot = -1;
-    unsigned long oldest = ~0UL;
-    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
-        ImgCacheSlot* s = &g_img_cache[i];
-        if (!s->argb) { slot = i; break; }
-        if (s->stamp < oldest) { oldest = s->stamp; slot = i; }
-    }
-    if (slot < 0) slot = 0;
-    ImgCacheSlot* s = &g_img_cache[slot];
-    if (s->argb) free(s->argb);
-    snprintf(s->key, sizeof(s->key), "%s", key);
-    s->w = w;
-    s->h = h;
-    s->mtime = mtime;
-    s->size = size;
-    s->argb = argb;
-    s->checked_ms = x11_now_ms();
-    s->stamp = ++g_img_cache_tick;
+    if (!argb) return;
+        int slot = -1;
+        unsigned long oldest = ~0UL;
+        for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+            ImgCacheSlot* s = &g_img_cache[i];
+            if (!s->argb) { slot = i; break; }
+            if (s->stamp < oldest) { oldest = s->stamp; slot = i; }
+        }
+        if (slot < 0) slot = 0;
+        ImgCacheSlot* s = &g_img_cache[slot];
+        if (s->argb) free(s->argb);
+        snprintf(s->key, sizeof(s->key), "%s", key);
+        s->w = w;
+        s->h = h;
+        s->mtime = mtime;
+        s->size = size;
+        s->argb = argb;
+        s->checked_ms = x11_now_ms();
+        s->stamp = ++g_img_cache_tick;
 }
 
 bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char* path, int x, int y, int tw, int th) {
-        
-
-    if (!dpy || !xd || !path || !path[0]) {  return false; }
+    if (!dpy || !xd || !path || !path[0]) return false;
     if (tw <= 0) tw = IconSize;
     if (th <= 0) th = IconSize;
     int cw = tw;
@@ -534,7 +505,6 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
         pthread_mutex_unlock(&g_img_cache_mtx);
         Drawable drw = XftDrawDrawable(xd);
         bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
-        
         return ok;
     }
     pthread_mutex_unlock(&g_img_cache_mtx);
@@ -547,13 +517,11 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
     pthread_mutex_unlock(&g_img_cache_mtx);
     Drawable drw = XftDrawDrawable(xd);
     bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
-    
-    {  return ok; }
+    return ok;
 }
 
 static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y) {
-        
-if (!dpy || !argb || w <= 0 || h <= 0) {  return false; }
+    if (!dpy || !argb || w <= 0 || h <= 0) return false;
     int first_opaque_row = -1;
     for (int ry = 0; ry < h && first_opaque_row < 0; ry++) {
         for (int rx = 0; rx < w; rx++) {
@@ -599,7 +567,7 @@ if (!dpy || !argb || w <= 0 || h <= 0) {  return false; }
         if (dst) XRenderFreePicture(dpy, dst);
     }
     XFreePixmap(dpy, pix);
-    {  return ok; }
+    return ok;
 }
 
 static unsigned char* xpm_load(const char* path, int* out_w, int* out_h) {
@@ -616,12 +584,8 @@ static unsigned char* xpm_load(const char* path, int* out_w, int* out_h) {
     buf[rd] = '\0';
     fclose(f);
 
-    /* find quoted strings */
-    /* parse header: "W H ncolors cpp" */
     int w=0,h=0,ncolors=0,cpp=1;
-    /* find first quoted line containing 4 ints */
     char* p = buf;
-    /* skip to first quote */
     while (*p && *p != '"') p++;
     if (*p == '"') {
         p++;
@@ -631,65 +595,50 @@ static unsigned char* xpm_load(const char* path, int* out_w, int* out_h) {
     }
     if (w <= 0 || h <= 0) { free(buf); return NULL; }
 
-    /* parse colormap: next ncolors lines "key c color" */
-    /* map key (cpp chars) -> RGBA */
-    /* store in arrays */
     char (*keys)[16] = (char(*)[16])calloc((size_t)ncolors, 16);
     unsigned char* colors = (unsigned char*)calloc((size_t)ncolors * 4, 1);
     if (!keys || !colors) { free(buf); free(keys); free(colors); return NULL; }
 
-    /* advance p past header line */
-    /* find end of first quoted string */
     char* q = strchr(p, '"');
     if (q) p = q + 1;
 
     int ci = 0;
     while (ci < ncolors) {
-        /* find next quote */
         while (*p && *p != '"') p++;
         if (!*p) break;
         p++;
-        /* read key */
         char keybuf[16] = {0};
         strncpy(keybuf, p, (size_t)cpp);
         keybuf[cpp] = '\0';
-        /* find "c" token */
         char* cp = p;
-        /* skip cpp chars */
         cp += cpp;
         while (*cp == ' ' || *cp == '\t') cp++;
-        /* expect 'c' */
         if (*cp == 'c') {
             cp++;
             while (*cp == ' ' || *cp == '\t') cp++;
         }
         char colorname[64] = {0};
-        /* read until quote or space */
         int ci2 = 0;
         while (cp[ci2] && cp[ci2] != '"' && cp[ci2] != ' ' && cp[ci2] != '\t' && ci2 < 63) { colorname[ci2] = cp[ci2]; ci2++; }
         colorname[ci2] = '\0';
-        /* if colorname empty or "None" */
         unsigned char r=0,g=0,b=0,a=255;
         if (strcasecmp(colorname, "None") == 0 || colorname[0] == '\0') {
             a = 0;
         } else if (colorname[0] == '#') {
-            /* hex */
             unsigned int val = 0;
             if (strlen(colorname) == 7) { sscanf(colorname+1, "%06x", &val); r=(val>>16)&0xff; g=(val>>8)&0xff; b=val&0xff; }
             else if (strlen(colorname) == 4) { sscanf(colorname+1, "%03x", &val); r=((val>>8)&0xf)*17; g=((val>>4)&0xf)*17; b=(val&0xf)*17; }
         }
         strncpy(keys[ci], keybuf, 15);
-        colors[ci*4+0] = b; /* XPM stored as BGRA? we'll store RGBA then convert later; store as RGBA here */
+        colors[ci*4+0] = b;
         colors[ci*4+1] = g;
         colors[ci*4+2] = r;
         colors[ci*4+3] = a;
-        /* advance p to end of this quoted string */
         char* endq = strchr(p, '"');
         if (endq) p = endq + 1;
         ci++;
     }
 
-    /* parse pixel rows */
     unsigned char* out = (unsigned char*)calloc((size_t)w * h * 4, 1);
     if (!out) { free(buf); free(keys); free(colors); return NULL; }
     int row = 0;
@@ -697,16 +646,10 @@ static unsigned char* xpm_load(const char* path, int* out_w, int* out_h) {
         while (*p && *p != '"') p++;
         if (!*p) break;
         p++;
-        /* check if this line has enough chars */
-        if ((int)strlen(p) < w * cpp) { 
-            /* maybe short; try */
-        }
-        /* read w pixels */
         for (int x = 0; x < w; x++) {
             char keybuf[16] = {0};
             strncpy(keybuf, p + x*cpp, (size_t)cpp);
             keybuf[cpp] = '\0';
-            /* find color index */
             int idx = -1;
             for (int c = 0; c < ncolors; c++) {
                 if (strcmp(keys[c], keybuf) == 0) { idx = c; break; }
@@ -722,7 +665,6 @@ static unsigned char* xpm_load(const char* path, int* out_w, int* out_h) {
         if (endq) p = endq + 1;
         row++;
     }
-
     free(buf);
     free(keys);
     free(colors);
@@ -744,7 +686,6 @@ static SvgSrcCacheSlot g_svg_src_cache[8];
 static int g_svg_src_count = 0;
 
 unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
-    
     if (!path || !path[0]) {  return NULL; }
     int dst_w = *out_w;
     int dst_h = *out_h;
@@ -852,7 +793,7 @@ unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
     }
 
     unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
-    if (!argb) {  return NULL; }
+    if (!argb) return NULL;
 
     for (int dy = 0; dy < dst_h; dy++) {
         int y0 = (int)((long long)dy * h / dst_h);
@@ -880,33 +821,27 @@ unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
             d[3] = (unsigned char)(sa / n);
         }
     }
-
     *out_w = dst_w;
     *out_h = dst_h;
-    
     return argb;
 }
 
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
                          XftColor* num_color, XftColor* body_color, XftColor* plain_color,
                          ListBoxInfo* lb,char* icon_path,int idx, int y, int text_x) {
-        
-
     XftFont* xf = FH_TO_XFT(font);
-    if (!xf) {  return; }
+    if (!xf) return;
     int XOffset = PROMPT_ITEM_TEXT_X;
     int row_h = x11_font_row_height_of(font);
     int pad_top = (row_h - (xf->ascent + xf->descent)) / 2;
     if (pad_top < 0) pad_top = 0;
     int text_y = y + pad_top;
-
     if (icon_path) {
         int iconX = XOffset;
         int iconY = y + (x11_font_row_height_of(font) - IconSize)/2;
         XOffset += IconSize + XOffset;
         Platform_DrawImageScaled(dpy, xd, vis, icon_path, iconX, iconY, IconSize, IconSize);
     }
-
     char trunc[512];
     ListBoxItemDisplayText(lb, idx, trunc, sizeof(trunc));
 
@@ -914,32 +849,22 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
     if (!pcol) pcol = rgb_to_hex(COLOR_TEXT);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     Platform_DrawTextRaw((PlDrawTextRawSpec){.x=XOffset, .y=text_y, .text=trunc, .color=pcol, .font=font, .align="LEFT", .pad=XOffset, .fontsize=FontSize});
-
-    
 }
 
 static int x11_error_occurred = 0;
-
 static int dummy_x_error_handler(Display *dpy, XErrorEvent *error) {
-        
-
     if (error->error_code == BadWindow) {
         x11_error_occurred = 1;
-        
         return 0;
     }
-    
-    {  return 0; }
+    return 0;
 }
-
 pid_t GetWindowPid(Display* dpy, Window w) {
-        
-
     if (w == 0) {  return -1; }
-
     Atom prop = XInternAtom(dpy, "_NET_WM_PID", True);
     Atom actual_type;
     int actual_format;
+
     unsigned long nitems, bytes_after;
     unsigned char* prop_data = NULL;
 
@@ -963,20 +888,15 @@ pid_t GetWindowPid(Display* dpy, Window w) {
     XSetErrorHandler(old_handler);
 
     if (x11_error_occurred) {
-        
         return -1;
     }
 
-    
-    {  return pid; }
+     return pid;
 }
 
 void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
-        
-
     if (pid <= 0) {
         strncpy(outExe, "unknown", maxLen);
-        
         return;
     }
 
@@ -993,24 +913,18 @@ void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
     } else {
         strncpy(outExe, "unknown", maxLen);
     }
-    
 }
 
 Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect);
 
 Window x11_create_window_ex(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {
-        
-
-    
-    {  return x11_create_window_ex_or(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false); }
+    return x11_create_window_ex_or(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false);
 }
 
 static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int radius);
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8);
 
 Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
-        
-
     int screen = DefaultScreen(dpy);
     XVisualInfo vinfo;
     Visual* visual = NULL;
@@ -1130,14 +1044,11 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
     if (RoundedCorners && !override_redirect && CornerRadius > 0) {
         x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
     }
-    
-    {  return win; }
+    return win;
 }
 
 static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int radius) {
-        
-
-    if (radius <= 0 || w <= 0 || h <= 0) {  return; }
+    if (radius <= 0 || w <= 0 || h <= 0) return;
     Pixmap mask = XCreatePixmap(dpy, win, w, h, 1);
     GC gc = XCreateGC(dpy, mask, 0, NULL);
     XSetForeground(dpy, gc, 0);
@@ -1161,20 +1072,16 @@ static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int 
     XSync(dpy, False);
     XFreePixmap(dpy, mask);
     XFreeGC(dpy, gc);
-    
 }
 
 static unsigned long x11_background_color_at(int x, int y, int w, int h);
 
 void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius, int win_w, int win_h) {
-        
-
     if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
         XftColor c;
         x11_xft_alloc_color(dpy, vis, cmap, hex, alpha16, &c);
         XftDrawRect(xd, &c, x, y, w, h);
         XftColorFree(dpy, vis, cmap, &c);
-        
         return;
     }
     if (radius > w/2) radius = w/2;
@@ -1237,7 +1144,7 @@ static unsigned int x11_bg_channel_at(float c, int x, int y) {
     int v = (int)(c);
     if (v < 0) v = 0;
     if (v > 255) v = 255;
-    {  return (unsigned int)v; }
+    return (unsigned int)v;
 }
 
 static unsigned long x11_background_color_at(int x, int y, int w, int h) {
