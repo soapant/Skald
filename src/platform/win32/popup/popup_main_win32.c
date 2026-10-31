@@ -350,9 +350,10 @@ case WM_CHAR: {
         g_win32_hMainFont = NULL;
       }
       g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
-      if (only_once) selection_feature = FlintContext_Get()->window.current_feature;
+      if (only_once)  {
         only_once = false;
-          break;
+        break;
+      }
     }
     case WM_SHOWWINDOW: {
       if (wParam && g_pending_navigate >= 0) {
@@ -703,7 +704,6 @@ case WM_CHAR: {
         last_index = 0;
         if (lb) lb->selected_index = 0;
       
-        selection_feature = FlintContext_Get()->window.current_feature;
         for (int i = 0; i < (int)ARRAY_LEN(held_modifiers); i++) {
           if (GetAsyncKeyState(held_modifiers[i]) & 0x8000) {
             INPUT up = {0};

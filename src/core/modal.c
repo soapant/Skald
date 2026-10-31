@@ -11,7 +11,6 @@
 
 static const char* g_mode_names[] = { "Normal", "Insert", "Visual" };
 int last_index = 0;
-char* selection_feature = "";
 
 static EditorMode ActiveMode(void) {
     WindowManager* wm = WindowManager_Get();
