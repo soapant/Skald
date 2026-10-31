@@ -24,7 +24,6 @@ static void free_history_list(void *v) {
 }
 
 int main() {
-
   srand((unsigned)time(NULL));
   if (!Platform_TryAcquireSingleInstance()) {
     fprintf(stderr, "Flint is already running, exiting.\n");
@@ -86,6 +85,5 @@ int main() {
     shfree(_ctx->item_index_map);
     _ctx->item_index_map = NULL;
   }
-
   return 0;
 }

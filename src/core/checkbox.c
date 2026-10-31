@@ -92,23 +92,18 @@ static CheckboxSpec *checkbox_intern(const char *name, bool seed) {
 }
 
 bool Checkbox_IsChecked(const char *name) {
-
   CheckboxSpec *cb = name ? checkbox_find(name) : NULL;
   bool r = cb ? cb->checked : false;
-
   return r;
 }
 
 bool Checkbox_IsHovered(const char *name) {
-
   CheckboxSpec *cb = name ? checkbox_find(name) : NULL;
   bool r = cb ? cb->hovered : false;
-
   return r;
 }
 
 void Checkbox_ResetAll(void) {
-
   for (int i = 0; i < g_checkbox_count; i++) {
     g_checkboxes[i].checked = false;
     g_checkboxes[i].clicked = false;
@@ -134,7 +129,6 @@ static int checkbox_line_height(int fontsize) {
 FontHandle s_font;
 
 void Checkbox_Draw(const CheckboxSpec *spec) {
-
   if (spec->render) {
     PlRect _r = {spec->x, spec->y,
                  spec->w > 0 ? spec->w : (spec->button ? 100 : 16),
@@ -258,9 +252,7 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
 }
 
 bool Checkbox_Place(const CheckboxSpec *spec) {
-
   if (!spec || !spec->name || !spec->name[0]) {
-
     return false;
   }
 
@@ -328,6 +320,5 @@ bool Checkbox_Place(const CheckboxSpec *spec) {
     cb->on_click();
   if (hover_changed && cb->on_hover)
     cb->on_hover();
-
   return true;
 }

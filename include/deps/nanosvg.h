@@ -321,7 +321,6 @@ int nsvg__parseXML(char *input,
       s++;
     }
   }
-
   return 1;
 }
 
@@ -623,7 +622,6 @@ static NSVGparser *nsvg__createParser(void) {
   p->attr[0].visible = 1;
   p->attr[0].paintOrder = nsvg__encodePaintOrder(
       NSVG_PAINT_FILL, NSVG_PAINT_STROKE, NSVG_PAINT_MARKERS);
-
   return p;
 
 error:
@@ -893,7 +891,6 @@ static NSVGgradient *nsvg__createGradient(NSVGparser *p, const char *id,
   grad->nstops = nstops;
 
   *paintType = data->type;
-
   return grad;
 }
 
@@ -1010,7 +1007,6 @@ static void nsvg__addShape(NSVGparser *p) {
   else
     p->shapesTail->next = shape;
   p->shapesTail = shape;
-
   return;
 
 error:
@@ -1067,7 +1063,6 @@ static void nsvg__addPath(NSVGparser *p, char closed) {
 
   path->next = p->plist;
   p->plist = path;
-
   return;
 
 error:
@@ -1126,7 +1121,6 @@ static double nsvg__atof(const char *s) {
       res *= pow(10.0, (double)expPart);
     }
   }
-
   return res * sign;
 }
 
@@ -1174,7 +1168,6 @@ static const char *nsvg__parseNumber(const char *s, char *it, const int size) {
     }
   }
   it[i] = '\0';
-
   return s;
 }
 
@@ -1207,7 +1200,6 @@ static const char *nsvg__getNextPathItem(const char *s, char *it) {
     it[1] = '\0';
     return s;
   }
-
   return s;
 }
 
@@ -1441,7 +1433,6 @@ static unsigned int nsvg__parseColorName(const char *str) {
       return nsvg__colors[i].color;
     }
   }
-
   return NSVG_RGB(128, 128, 128);
 }
 
@@ -1500,7 +1491,6 @@ static int nsvg__isCoordinate(const char *s) {
 
   if (*s == '-' || *s == '+')
     s++;
-
   return (nsvg__isdigit(*s) || *s == '.');
 }
 
@@ -1633,7 +1623,6 @@ static int nsvg__parseRotate(float *xform, const char *str) {
   }
 
   memcpy(xform, m, sizeof(float) * 6);
-
   return len;
 }
 
@@ -1688,7 +1677,6 @@ static char nsvg__parseLineCap(const char *str) {
     return NSVG_CAP_ROUND;
   else if (strcmp(str, "square") == 0)
     return NSVG_CAP_SQUARE;
-
   return NSVG_CAP_BUTT;
 }
 
@@ -1699,7 +1687,6 @@ static char nsvg__parseLineJoin(const char *str) {
     return NSVG_JOIN_ROUND;
   else if (strcmp(str, "bevel") == 0)
     return NSVG_JOIN_BEVEL;
-
   return NSVG_JOIN_MITER;
 }
 
@@ -1708,7 +1695,6 @@ static char nsvg__parseFillRule(const char *str) {
     return NSVG_FILLRULE_NONZERO;
   else if (strcmp(str, "evenodd") == 0)
     return NSVG_FILLRULE_EVENODD;
-
   return NSVG_FILLRULE_NONZERO;
 }
 
@@ -1731,7 +1717,6 @@ static unsigned char nsvg__parsePaintOrder(const char *str) {
   else if (strcmp(str, "stroke markers fill") == 0)
     return nsvg__encodePaintOrder(NSVG_PAINT_STROKE, NSVG_PAINT_MARKERS,
                                   NSVG_PAINT_FILL);
-
   return nsvg__encodePaintOrder(NSVG_PAINT_FILL, NSVG_PAINT_STROKE,
                                 NSVG_PAINT_MARKERS);
 }
@@ -1774,7 +1759,6 @@ static int nsvg__parseStrokeDashArray(NSVGparser *p, const char *str,
     sum += strokeDashArray[i];
   if (sum <= 1e-6f)
     count = 0;
-
   return count;
 }
 
@@ -1920,7 +1904,6 @@ static int nsvg__parseNameValue(NSVGparser *p, const char *start,
   if (n)
     memcpy(value, val, n);
   value[n] = 0;
-
   return nsvg__parseAttr(p, name, value);
 }
 
@@ -3034,7 +3017,6 @@ static float nsvg__viewAlign(float content, float container, int type) {
     return 0;
   else if (type == NSVG_ALIGN_MAX)
     return container - content;
-
   return (container - content) * 0.5f;
 }
 
@@ -3191,7 +3173,6 @@ NSVGimage *nsvgParse(char *input, const char *units, float dpi) {
   p->image = NULL;
 
   nsvg__deleteParser(p);
-
   return ret;
 }
 
@@ -3221,7 +3202,6 @@ NSVGimage *nsvgParseFromFile(const char *filename, const char *units,
   fclose(fp);
   image = nsvgParse(data, units, dpi);
   free(data);
-
   return image;
 
 error:
@@ -3254,7 +3234,6 @@ NSVGpath *nsvgDuplicatePath(NSVGpath *p) {
   memcpy(res->bounds, p->bounds, sizeof(p->bounds));
 
   res->closed = p->closed;
-
   return res;
 
 error:

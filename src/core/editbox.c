@@ -159,7 +159,6 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
 }
 
 void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
-
   if (!spec) {
     return;
   }
@@ -335,7 +334,6 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
 }
 
 void Editbox_Render(EditboxSpec *spec, EditboxLayout *out) {
-
   if (!spec) {
     return;
   }

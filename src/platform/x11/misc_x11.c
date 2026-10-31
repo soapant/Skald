@@ -35,12 +35,10 @@ static uid_t ProbeSessionUid(void) {
     struct stat st;
     if (stat(path, &st) == 0 && st.st_uid != 0) {
       closedir(d);
-
       return st.st_uid;
     }
   }
   closedir(d);
-
   return (uid_t)-1;
 }
 
@@ -105,7 +103,6 @@ const char *Platform_GetRealHome(void) {
 }
 
 bool Platform_IsRunningAsRoot(void) {
-
   log_info("Platform_IsRunningAsRoot completed");
   return getuid() == 0;
 }
@@ -142,7 +139,6 @@ const char *Platform_GetSessionDisplay(void) {
     closedir(d);
   }
   log_info("Platform_GetSessionDisplay completed");
-
   return buf[0] ? buf : ":0";
 }
 
@@ -193,7 +189,6 @@ const char *Platform_GetSessionXAuthority(void) {
     return buf;
   buf[0] = '\0';
   log_info("Platform_GetSessionXAuthority completed");
-
   return "";
 }
 
@@ -213,7 +208,6 @@ const char *Platform_GetRuntimeDir(void) {
   }
   snprintf(buf, sizeof(buf), "/run/user/%d", (int)getuid());
   log_info("Platform_GetRuntimeDir completed");
-
   return buf[0] ? buf : "/run/user/1000";
 }
 
@@ -245,7 +239,6 @@ bool Platform_ExpandPath(const char *template_path, char *out,
           out[i] = '\0';
         }
       }
-
       return true;
     }
   }
@@ -277,14 +270,11 @@ bool Platform_ExpandPath(const char *template_path, char *out,
       out[i] = '\0';
     }
   }
-
   return true;
 }
 
 int ConvertLinuxKeyToWindowsVK(int key_code) {
-
   if (key_code >= KEY_1 && key_code <= KEY_0) {
-
     return '1' + (key_code - KEY_1);
   }
 
@@ -429,7 +419,6 @@ long long Platform_GetWallClockMs(void) {
 }
 
 bool Platform_TerminateProcessByName(const char *exe_name) {
-
   if (!exe_name || !*exe_name)
     return false;
   char tmp[256];
@@ -450,7 +439,6 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   log_info("Platform_TerminateProcessByName exe_name='%s'",
            exe_name ? exe_name : "");
   ;
-
   return Platform_RunTerminalCommand(cmd, false);
 }
 
@@ -477,7 +465,6 @@ static bool x11_cmd_exists(const char *cmd) {
 }
 
 bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
-
   char command[2048];
   char full_url[2048];
   char browser_tok[512];
@@ -519,7 +506,6 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
                "\"%s\" > /dev/null 2>&1 &",
                display, xauthority, runtime_dir, UsedBrowser, full_url);
     }
-
     return Platform_RunTerminalCommand(command, false);
   } else {
     if (Platform_IsRunningAsRoot()) {
@@ -534,7 +520,6 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
                "/dev/null 2>&1 &",
                display, xauthority, runtime_dir, UsedBrowser, full_url);
     }
-
     return Platform_RunTerminalCommand(command, false);
   }
   log_info("Platform_LaunchBrowserAtfull_url full_url='%s' new_window=%d",
@@ -543,7 +528,6 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
 }
 
 bool Platform_QueryBrowser(char *query) {
-
   if (!query || !query[0])
     return false;
 
@@ -641,12 +625,10 @@ bool Platform_QueryBrowser(char *query) {
 
   log_info("Platform_QueryBrowser query='%s'", query ? query : "");
   ;
-
   return Platform_RunTerminalCommand(command, false);
 }
 
 char *Platform_GetClipboardEntry() {
-
   static long long next_in_ms = 0;
   static int fail_streak = 0;
   static unsigned long last_owner = 0;
@@ -687,7 +669,6 @@ char *Platform_GetClipboardEntry() {
 }
 
 bool Platform_PasteContent(char *content) {
-
   log_info("Platform_PasteContent content='%s'", content ? content : "");
   ;
   return Wm_Paste(content);

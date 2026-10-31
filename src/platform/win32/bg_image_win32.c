@@ -246,7 +246,6 @@ static void *bg_load_native(const char *native, int *out_w, int *out_h) {
       GdipDisposeImage((GpImage *)bmp);
     bmp = (GpBitmap *)bg_shell_icon_bitmap(native);
     if (!bmp) {
-
       return NULL;
     }
   }
@@ -254,7 +253,6 @@ static void *bg_load_native(const char *native, int *out_w, int *out_h) {
   if (GdipGetImageWidth((GpImage *)bmp, &gw) != Ok ||
       GdipGetImageHeight((GpImage *)bmp, &gh) != Ok || gw == 0 || gh == 0) {
     GdipDisposeImage((GpImage *)bmp);
-
     return NULL;
   }
   if (out_w)
@@ -291,7 +289,6 @@ static void bg_tile_drop(BgTileSlot *t) {
 }
 
 void win32_bg_image_purge(void) {
-
   bg_lock();
   for (int i = 0; i < BG_SRC_SLOTS; i++)
     bg_src_drop(&g_bg_srcs[i]);
@@ -352,7 +349,6 @@ static BgSrcSlot *bg_src_get(const char *native) {
   slot->stamp = ++g_bg_tick;
   if (!bmp) {
     slot->failed = true;
-
     return NULL;
   }
   FILETIME ft;
@@ -401,7 +397,6 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
     if (!s || !s->src) {
       DeleteDC(dc);
       DeleteObject(bmp);
-
       return NULL;
     }
     int sw = s->src_w;
@@ -413,7 +408,6 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
     if (scale <= 0.0) {
       DeleteDC(dc);
       DeleteObject(bmp);
-
       return NULL;
     }
     int dw = (int)((double)sw * scale + 0.5);
@@ -437,7 +431,6 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
       if (dst != Ok) {
         DeleteDC(dc);
         DeleteObject(bmp);
-
         return NULL;
       }
     }
@@ -469,7 +462,6 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
   slot->stamp = ++g_bg_tick;
   slot->checked_ms = GetTickCount();
   snprintf(slot->path, sizeof(slot->path), "%s", native);
-
   return slot;
 }
 
@@ -488,7 +480,6 @@ static BgTileSlot *bg_tile_get(HDC refDC, const char *path, int w, int h) {
       continue;
     if (now - t->checked_ms < BG_REVALIDATE_MS) {
       t->stamp = ++g_bg_tick;
-
       return t;
     }
     FILETIME ft;
@@ -500,7 +491,6 @@ static BgTileSlot *bg_tile_get(HDC refDC, const char *path, int w, int h) {
     }
     t->checked_ms = now;
     t->stamp = ++g_bg_tick;
-
     return t;
   }
 
@@ -509,15 +499,12 @@ static BgTileSlot *bg_tile_get(HDC refDC, const char *path, int w, int h) {
   bg_stat(native, &ft, &sz);
   BgTileSlot *made = bg_tile_compose(refDC, native, w, h, ft, sz);
   if (!made && stale) {
-
     return stale;
   }
-
   return made;
 }
 
 bool win32_bg_image_enabled(void) {
-
   const char *p = BackgroundImage;
   return p && p[0];
 }
@@ -541,7 +528,6 @@ bool win32_draw_bg_image_slice(HDC hdc, RECT *rc, int containerW,
   t = bg_tile_get(hdc, BackgroundImage, containerW, containerH);
   if (!t || !t->bmp || !t->dc) {
     bg_unlock();
-
     return false;
   }
 
@@ -571,12 +557,10 @@ bool win32_draw_bg_image_slice(HDC hdc, RECT *rc, int containerW,
   if (ok)
     BitBlt(hdc, dx, dy, sw, sh, t->dc, sx, sy, SRCCOPY);
   bg_unlock();
-
   return ok;
 }
 
 int win32_bg_image_prewarm(int containerW, int containerH) {
-
   if (!win32_bg_image_enabled() || containerW <= 0 || containerH <= 0)
     return 0;
   HDC screen = GetDC(NULL);
@@ -587,6 +571,5 @@ int win32_bg_image_prewarm(int containerW, int containerH) {
   bg_unlock();
   if (screen)
     ReleaseDC(NULL, screen);
-
   return t ? 1 : 0;
 }

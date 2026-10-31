@@ -88,14 +88,12 @@ static void hypr_ensure_sig(void) {
 bool get_title_hyprland(char *buffer, int buffer_size) { return false; }
 
 bool get_app_id_hyprland(char *buffer, int buffer_size) {
-
   (void)buffer;
   (void)buffer_size;
   return false;
 }
 
 char *paste_hyprland(char *content) {
-
   if (!content) {
     log_error("content is NULL");
     return NULL;
@@ -109,7 +107,6 @@ char *paste_hyprland(char *content) {
 }
 
 bool succeded_hypr(char *output) {
-
   if (!output) {
     log_error("output is NULL");
     return false;
@@ -158,7 +155,6 @@ static bool hypr_focus_lua_cmd(const char *title, char *out, size_t cap) {
 }
 
 bool focus_window_title_hyprland(char *title) {
-
   if (!title) {
     log_error("title is NULL");
     return false;
@@ -194,7 +190,6 @@ bool focus_window_title_hyprland(char *title) {
 }
 
 PlWindowList get_window_names_hyprland() {
-
   hypr_ensure_sig();
   char *output = Platform_RunTerminalCommand("hyprctl clients -j", false);
   PlWindowList list = {.windows = NULL, .count = 0};
@@ -227,7 +222,6 @@ PlWindowList get_window_names_hyprland() {
   return list;
 }
 PlWindowList get_window_titles_hyprland() {
-
   hypr_ensure_sig();
   char *output = Platform_RunTerminalCommand("hyprctl clients -j", false);
   PlWindowList list = {.windows = NULL, .count = 0};
@@ -260,7 +254,6 @@ PlWindowList get_window_titles_hyprland() {
 }
 
 bool close_active_window_hyprland(void) {
-
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
@@ -273,7 +266,6 @@ bool close_active_window_hyprland(void) {
 }
 
 bool toggle_fullscreen_active_hyprland(void) {
-
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
@@ -288,7 +280,6 @@ bool toggle_fullscreen_active_hyprland(void) {
 }
 
 bool move_active_window_to_monitor_hyprland(bool right) {
-
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
@@ -304,7 +295,6 @@ bool move_active_window_to_monitor_hyprland(bool right) {
 }
 
 bool minimize_active_window_hyprland(void) {
-
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
@@ -325,7 +315,6 @@ bool minimize_active_window_hyprland(void) {
 }
 
 bool focus_window_left_hyprland(void) {
-
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
@@ -338,7 +327,6 @@ bool focus_window_left_hyprland(void) {
 }
 
 bool focus_window_right_hyprland(void) {
-
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
@@ -351,12 +339,10 @@ bool focus_window_right_hyprland(void) {
 }
 
 bool move_active_window_left_hyprland(void) {
-
   return move_active_window_to_monitor_hyprland(false);
 }
 
 bool move_active_window_right_hyprland(void) {
-
   return move_active_window_to_monitor_hyprland(true);
 }
 
@@ -365,7 +351,6 @@ bool move_active_window_right_hyprland(void) {
 #include <unistd.h>
 
 bool get_mouse_pos_hyprland(int *x, int *y) {
-
   const char *rtd = getenv("XDG_RUNTIME_DIR");
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!rtd || !sig)

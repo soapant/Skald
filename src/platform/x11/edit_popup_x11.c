@@ -264,7 +264,6 @@ bool Platform_EditPopupOnKey(Popup *self, const PopupKeyEvent *key) {
     bool swallow = HotkeyText_ShouldSwallow(key);
     if (!swallow && HotkeyText_IsPrintable(key)) {
       EditPopup_InsertText(ed, key->text, key->text_len);
-
       return true;
     }
   }

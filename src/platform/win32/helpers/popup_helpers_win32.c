@@ -11,7 +11,6 @@ int g_pending_navigate = -1;
 extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
 
 ListBoxInfo *GetLBFromPopup(HWND hPopup) {
-
   if (hPopup && IsWindow(hPopup)) {
     PromptState *state = Platform_GetPromptStateForHWND(hPopup);
     if (state) {

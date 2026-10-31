@@ -342,7 +342,6 @@ static void widget_queue_click(void (*fn)(void)) {
 }
 
 void Platform_Widget_DrainClicks(void) {
-
   for (;;) {
     void (*fn)(void) = NULL;
     wclick_lock();
@@ -359,7 +358,6 @@ void Platform_Widget_DrainClicks(void) {
 }
 
 void Platform_Widget_FlushDestruction(void) {
-
   wdestroy_lock();
   for (int i = 0; i < g_wdestroy_count; i++) {
     widget_destroy_on_owner_thread(g_wdestroy[i]);
@@ -369,7 +367,6 @@ void Platform_Widget_FlushDestruction(void) {
 }
 
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -461,7 +458,6 @@ static void widget_destroy_on_owner_thread(void *ud) {
 }
 
 void Platform_Widget_Destroy(PlatformWidget *widget) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -476,7 +472,6 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
-
   return widget && !widget->dead;
 }
 
@@ -491,7 +486,6 @@ void Platform_Widget_SetFrameCallback(PlatformWidget *widget,
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-
   if (!widget || widget->dead || widget->mapped) {
     return;
   }
@@ -505,7 +499,6 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-
   if (!widget || widget->dead || !widget->mapped) {
     return;
   }
@@ -517,7 +510,6 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -534,7 +526,6 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -543,7 +534,6 @@ void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
 }
 
 void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -558,7 +548,6 @@ void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -568,7 +557,6 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-
   if (!widget || widget->dead) {
     return;
   }
@@ -591,11 +579,9 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
 }
 
 int Platform_Widget_Width(const PlatformWidget *widget) {
-
   return widget ? widget->w : 0;
 }
 
 int Platform_Widget_Height(const PlatformWidget *widget) {
-
   return widget ? widget->h : 0;
 }

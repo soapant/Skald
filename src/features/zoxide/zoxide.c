@@ -41,7 +41,6 @@ char *get_zoxide_match(char *query) {
     free(out);
     return NULL;
   }
-
   return out;
 }
 

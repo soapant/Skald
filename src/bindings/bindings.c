@@ -245,10 +245,8 @@ bool CheckVimMotion(int pressed_vk, int modifiers, VimMotion *out) {
         return true;
       }
     }
-
     return false;
   }
-
   return false;
 }
 

@@ -14,12 +14,10 @@
 #include "core/types/keys.h"
 
 bool EditPopup_DeleteSelection(WMEditPopupData *ed) {
-
   if (!ed || !ed->text)
     return false;
   int ss = 0, se = 0;
   if (!VimState_GetSelection(&ss, &se)) {
-
     return false;
   }
   if (se < ss) {
@@ -36,16 +34,13 @@ bool EditPopup_DeleteSelection(WMEditPopupData *ed) {
     memmove(ed->text + ss, ed->text + se, n - se + 1);
     ed->cursor = ss;
     VimState_EndSelection();
-
     return true;
   }
   VimState_EndSelection();
-
   return false;
 }
 
 void EditPopup_InsertText(WMEditPopupData *ed, const char *text, int len) {
-
   if (!ed || !ed->text || !text || len <= 0) {
     return;
   }
@@ -69,19 +64,16 @@ void EditPopup_InsertText(WMEditPopupData *ed, const char *text, int len) {
 }
 
 bool EditPopup_SelectAll(WMEditPopupData *ed) {
-
   if (!ed || !ed->text)
     return false;
   int len = (int)strlen(ed->text);
   VimState_BeginSelection(0);
   VimState_UpdateSelection(len);
   ed->cursor = len;
-
   return true;
 }
 
 bool EditPopup_CopySelection(WMEditPopupData *ed) {
-
   if (!ed || !ed->text)
     return false;
   int ss = 0, se = 0;
@@ -106,19 +98,16 @@ bool EditPopup_CopySelection(WMEditPopupData *ed) {
   memcpy(buf, ed->text + ss, n);
   buf[n] = '\0';
   Platform_CopyToClipboard(buf);
-
   return true;
 }
 
 bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
-
   if (!ed || !ed->text || !key)
     return false;
   int vk = key->vk;
   bool ctrl = key->ctrl;
 
   if (PromptController_TryVimMotion(vk, ctrl, key->shift, key->alt)) {
-
     return true;
   }
 
@@ -131,7 +120,6 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
 
   if (vk == VK_BACK) {
     if (EditPopup_DeleteSelection(ed)) {
-
       return true;
     }
     if (ctrl) {
@@ -146,7 +134,6 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
       }
       ed->cursor = (int)ecur;
     }
-
     return true;
   }
   if (vk == VK_ESCAPE) {
@@ -155,45 +142,38 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
     } else {
       FlintContext_Get()->window.selection_complete = true;
     }
-
     return true;
   }
   if (vk == VK_LEFT) {
     VimState_EndSelection();
     if (ed->cursor > 0)
       ed->cursor--;
-
     return true;
   }
   if (vk == VK_RIGHT) {
     VimState_EndSelection();
     if ((size_t)ed->cursor < n)
       ed->cursor++;
-
     return true;
   }
   if (vk == VK_HOME) {
     VimState_EndSelection();
     ed->cursor = 0;
-
     return true;
   }
   if (vk == VK_END) {
     VimState_EndSelection();
     ed->cursor = (int)n;
-
     return true;
   }
   if (vk == VK_DELETE) {
     if (EditPopup_DeleteSelection(ed)) {
-
       return true;
     }
     if ((size_t)ed->cursor < n) {
       memmove(ed->text + ed->cursor, ed->text + ed->cursor + 1,
               n - (size_t)ed->cursor);
     }
-
     return true;
   }
   if (vk == VK_RETURN) {
@@ -201,19 +181,16 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
       ed->on_confirm(ed->text, ed->user_data);
     ed->confirmed = true;
     FlintContext_Get()->window.selection_complete = true;
-
     return true;
   }
   if (vk == 'V' && ctrl) {
     char *clip = Platform_GetClipboardEntry();
     if (!clip) {
-
       return true;
     }
     clip[strcspn(clip, "\r\n")] = '\0';
     if (clip[0] == '\0') {
       free(clip);
-
       return true;
     }
     size_t clip_len = strlen(clip);
@@ -227,23 +204,19 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
       ed->cursor += (int)clip_len;
     }
     free(clip);
-
     return true;
   }
   if (ctrl) {
     if (vk == VK_OEM_MINUS) {
       Platform_AdjustFontSize(-1);
       Config_Save();
-
       return true;
     }
     if (vk == VK_OEM_PLUS) {
       Platform_AdjustFontSize(1);
       Config_Save();
-
       return true;
     }
   }
-
   return false;
 }

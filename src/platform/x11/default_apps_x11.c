@@ -66,7 +66,6 @@ static const char *match_in_applications_dir(const char *dir,
 }
 
 void x11_default_apps_free_cache(void) {
-
   for (int i = 0; i < APPDIR_CACHE_SLOTS; i++) {
     if (!g_ad_valid[i])
       continue;
@@ -244,7 +243,6 @@ const char *get_default_browser(int slot) {
       if (Platform_StringContainsCaseInsensitive(name, possible_browsers[j])) {
         snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s",
                  String_ToLower(possible_browsers[j]));
-
         return default_apps_x11[slot];
       }
     }
@@ -277,7 +275,6 @@ const char *get_default_browser(int slot) {
     break;
   }
   StringList_Free(&l);
-
   return default_apps_x11[slot];
 }
 
@@ -306,7 +303,6 @@ const char *Platform_GetDefaultApp(DefaultAppKind kind) {
 }
 
 int x11_default_apps_exec_token(const char *line, char *out, size_t cap) {
-
   const char *p = line + 5;
   while (*p == ' ' || *p == '\t')
     p++;

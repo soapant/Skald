@@ -2218,7 +2218,6 @@ int fl_get_pid();
  */
 #define FLINT_FEATURE_INIT                                                     \
   FLINT_FEATURE_EXPORT __attribute__((constructor)) void FlintFeatureInit(void)
-
 /**
  * @def Shutdown a Flint feature.
  */

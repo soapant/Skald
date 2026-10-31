@@ -20,7 +20,6 @@
 #include "config.h"
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
-
   POINT pt;
   if (!GetCursorPos(&pt))
     return false;
@@ -32,7 +31,6 @@ bool Platform_GetMousePos(int *out_x, int *out_y) {
 }
 
 void Platform_RegisterRawMouse(HWND hwnd) {
-
   if (!hwnd || !IsWindow(hwnd)) {
     return;
   }
@@ -48,7 +46,6 @@ void Platform_RegisterRawMouse(HWND hwnd) {
 }
 
 void Platform_HandleRawMouseInput(LPARAM lParam) {
-
   UINT size = 0;
   if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size,
                       sizeof(RAWINPUTHEADER)) != 0) {
@@ -66,7 +63,6 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
   RAWINPUT *raw = (RAWINPUT *)buf;
   if (!got || raw->header.dwType != RIM_TYPEMOUSE) {
     free(buf);
-
     return;
   }
   RAWMOUSE *rm = &raw->data.mouse;
@@ -276,7 +272,6 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
 }
 
 int Platform_CharForKey(int vk, int scancode, int mods) {
-
   BYTE state[256];
   memset(state, 0, sizeof(state));
   if (mods & HOTKEY_MOD_SHIFT)

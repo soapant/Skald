@@ -274,7 +274,6 @@ void RemoveTodoItemFromFile(const char *item_to_remove) {
 }
 
 void todo_refresh_callback(const char *filter, ListBoxInfo *lb) {
-
   FlStringList files = fl_load_file_list(TODO_FILE_PATH);
 
   fl_populate_listbox(lb, filter, (const char **)files.items, files.count);

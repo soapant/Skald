@@ -141,7 +141,6 @@ static void x11_queue_mouse_event(struct input_event *ev) {
 }
 
 bool x11_handle_evdev_mouse(struct input_event *ev) {
-
   if (!ev)
     return false;
   x11_queue_mouse_event(ev);
@@ -298,7 +297,6 @@ int x11_init_uinput(void) {
     fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
   if (fd < 0) {
     log_error("open failed: %s (swallow disabled)", strerror(errno));
-
     return -1;
   }
   if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0)
@@ -745,7 +743,6 @@ int x11_vk_to_linux_key(int vk) {
 }
 
 void x11_sync_held_from_phys(void) {
-
   int m = remap_current_mods();
   g_x11_ctrl_held = (m & HOTKEY_MOD_CTRL) != 0;
   g_x11_alt_held = (m & HOTKEY_MOD_ALT) != 0;
@@ -823,7 +820,6 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   if (ev->type != EV_KEY) {
     if (grabbed && g_x11_uinput_fd >= 0)
       x11_uinput_emit(ev);
-
     return false;
   }
   int code = ev->code;
@@ -833,7 +829,6 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   if (code < 0 || code > KEY_MAX) {
     if (grabbed && g_x11_uinput_fd >= 0)
       x11_uinput_emit(ev);
-
     return false;
   }
   if (remap_should_swallow_linux_key(code, val)) {
@@ -875,7 +870,6 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     }
     if (grabbed && g_x11_uinput_fd >= 0)
       x11_uinput_emit(ev);
-
     return false;
   }
   struct timeval now;
@@ -900,7 +894,6 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
           return false;
         x11_uinput_emit(ev);
       }
-
       return false;
     }
     if (val == 1) {

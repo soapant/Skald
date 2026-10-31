@@ -58,7 +58,6 @@ static const char *sm_lookup(int slot, const char *const possibilities[],
 }
 
 void win32_default_apps_free_cache(void) {
-
   if (g_sm_files.files) {
     free(g_sm_files.files);
     g_sm_files.files = NULL;
@@ -188,7 +187,6 @@ const char *Platform_GetDefaultApp(DefaultAppKind kind) {
     snprintf(default_apps_win32[kind], sizeof(default_apps_win32[kind]), "%s",
              fallback_name);
   }
-
   return default_apps_win32[kind];
 }
 

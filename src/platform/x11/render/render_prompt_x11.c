@@ -45,7 +45,6 @@ static void x11_pbuf_drop(void) {
 }
 
 void x11_release_prompt_buffer(Display *dpy, Window win) {
-
   if (g_pbuf_dpy == dpy && g_pbuf_win == win)
     x11_pbuf_drop();
 }
@@ -90,7 +89,6 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw *xd, Visual *vis,
 }
 
 void DrawPromptUserEditControl(Display *dpy, Window *win, PromptState *state) {
-
   XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;
@@ -111,7 +109,6 @@ void DrawPromptUserEditControl(Display *dpy, Window *win, PromptState *state) {
 }
 
 void DrawPromptUserListBox(Display *dpy, Window *win, PromptState *state) {
-
   XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;

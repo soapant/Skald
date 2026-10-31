@@ -1075,7 +1075,6 @@ static int ccx_find_in_keyword(const char *s) {
         tolower((unsigned char)s[i + 2]) == 'n') {
 
       if (i + 3 >= n || isspace((unsigned char)s[i + 3]) || s[i + 3] == '\0') {
-
         return i + 1;
       }
     }

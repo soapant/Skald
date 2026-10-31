@@ -26,7 +26,6 @@ extern void WindowManager_ProcessEventsWin32(WindowManager *wm);
 #include "platform/win32/win32_state.h"
 
 bool Platform_WM_InitDisplay(WindowManager *wm) {
-
   (void)wm;
   return true;
 }
@@ -36,19 +35,16 @@ int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunWin32(wm); }
 void Platform_WM_Quit(WindowManager *wm) { WindowManager_QuitWin32(wm); }
 
 void Platform_WM_ProcessEvents(WindowManager *wm) {
-
   WindowManager_ProcessEventsWin32(wm);
 }
 
 void Platform_WM_OnPopEmpty(WindowManager *wm) {
-
   (void)wm;
   remap_reset();
   Platform_InputState_Clear();
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
-
   int x = 0, y = 0, w = GetSystemMetrics(SM_CXSCREEN),
       h = GetSystemMetrics(SM_CYSCREEN);
   if (!w)
@@ -86,7 +82,6 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 }
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
-
   int lh = FontSize;
   int rh = PromptRowHeight();
   if (line_h)
@@ -109,14 +104,12 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
     if (s_subwindow_creating) {
       log_info("Platform_PromptUser subwindow REENTRANT blocked title=%s",
                spec->title ? spec->title : "(null)");
-
       return NULL;
     }
     if (wm && wm->popup_count > 1) {
       log_info("Platform_PromptUser subwindow BLOCKED (already open) title=%s "
                "popup_count=%d",
                spec->title ? spec->title : "(null)", wm->popup_count);
-
       return NULL;
     }
     s_subwindow_creating = true;
@@ -128,7 +121,6 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
     log_info("Platform_PromptUser subwindow EXIT created=%p popup_count=%d",
              (void *)_created, wm ? wm->popup_count : -1);
     s_subwindow_creating = false;
-
     return NULL;
   }
   long long last_tick = 0;

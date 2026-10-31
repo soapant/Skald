@@ -11,7 +11,6 @@
 #include "deps/log.h"
 
 char *Wm_GetActiveWindowTitle(void) {
-
   static char buffer[1024];
 
   buffer[0] = '\0';
@@ -43,7 +42,6 @@ char *Wm_GetActiveWindowTitle(void) {
 }
 
 char *Wm_GetActiveWindowAppId(void) {
-
   static char buffer[1024];
 
   buffer[0] = '\0';
@@ -74,7 +72,6 @@ char *Wm_GetActiveWindowAppId(void) {
 }
 
 bool Wm_FocusByTitle(const char *title) {
-
   if (getenv("WAYLAND_DISPLAY")) {
     if (focus_window_title_kwin((char *)title)) {
       return true;
@@ -93,12 +90,10 @@ bool Wm_FocusByTitle(const char *title) {
     return true;
   }
   log_error("Coulnt Focus By TItle %s", title);
-
   return NULL;
 }
 
 char *Wm_Paste(char *content) {
-
   char *result;
   if (getenv("WAYLAND_DISPLAY")) {
     if ((result = paste_kwin(content)))
@@ -117,7 +112,6 @@ char *Wm_Paste(char *content) {
 }
 
 PlWindowList Wm_GetWindowTitles() {
-
   PlWindowList result;
   PlWindowList empty = {.windows = NULL, .count = 0};
   if (getenv("WAYLAND_DISPLAY")) {
@@ -141,7 +135,6 @@ PlWindowList Wm_GetWindowTitles() {
   return empty;
 }
 PlWindowList Wm_GetWindowNames() {
-
   PlWindowList result;
   PlWindowList empty = {.windows = NULL, .count = 0};
   if (getenv("WAYLAND_DISPLAY")) {
@@ -166,7 +159,6 @@ PlWindowList Wm_GetWindowNames() {
 }
 
 bool Wm_CloseActiveWindow(void) {
-
   if (getenv("WAYLAND_DISPLAY")) {
     if (close_active_window_kwin())
       return true;
@@ -184,7 +176,6 @@ bool Wm_CloseActiveWindow(void) {
 }
 
 bool Wm_ToggleFullscreenActive(void) {
-
   if (getenv("WAYLAND_DISPLAY")) {
     if (toggle_fullscreen_active_kwin())
       return true;
@@ -202,7 +193,6 @@ bool Wm_ToggleFullscreenActive(void) {
 }
 
 bool Wm_MoveActiveWindowToMonitor(bool right) {
-
   if (getenv("WAYLAND_DISPLAY")) {
     if (move_active_window_to_monitor_kwin(right))
       return true;
@@ -220,7 +210,6 @@ bool Wm_MoveActiveWindowToMonitor(bool right) {
 }
 
 bool Wm_MoveActiveWindowLeft(void) {
-
   if (getenv("WAYLAND_DISPLAY")) {
     if (move_active_window_left_kwin())
       return true;
@@ -238,7 +227,6 @@ bool Wm_MoveActiveWindowLeft(void) {
 }
 
 bool Wm_MoveActiveWindowRight(void) {
-
   if (getenv("WAYLAND_DISPLAY")) {
     if (move_active_window_right_kwin())
       return true;
@@ -256,7 +244,6 @@ bool Wm_MoveActiveWindowRight(void) {
 }
 
 bool Wm_FocusWindowLeft(void) {
-
   if (getenv("WAYLAND_DISPLAY")) {
     if (focus_window_left_kwin())
       return true;
@@ -274,7 +261,6 @@ bool Wm_FocusWindowLeft(void) {
 }
 
 bool Wm_FocusWindowRight(void) {
-
   if (getenv("WAYLAND_DISPLAY")) {
     if (focus_window_right_kwin())
       return true;

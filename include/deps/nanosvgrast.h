@@ -144,7 +144,6 @@ NSVGrasterizer *nsvgCreateRasterizer(void) {
 
   r->tessTol = 0.25f;
   r->distTol = 0.01f;
-
   return r;
 
 error:
@@ -193,7 +192,6 @@ static NSVGmemPage *nsvg__nextPage(NSVGrasterizer *r, NSVGmemPage *cur) {
     cur->next = newp;
   else
     r->pages = newp;
-
   return newp;
 }
 
@@ -905,7 +903,6 @@ static NSVGactiveEdge *nsvg__addActive(NSVGrasterizer *r, NSVGedge *e,
   z->ey = e->y1;
   z->next = 0;
   z->dir = e->dir;
-
   return z;
 }
 

@@ -158,7 +158,6 @@ static bool win32_exec_shell(const char *file, const char *params,
 }
 
 bool fl_launch_with_args_platform(const char *path, const char *args) {
-
   if (!path)
     return false;
   char params[2048];
@@ -203,7 +202,6 @@ bool fl_launch_with_args_platform(const char *path, const char *args) {
 }
 
 bool fl_launch_with_args_as_admin_platform(const char *path, const char *args) {
-
   if (!path)
     return false;
   char expanded[MAX_PATH];
@@ -246,7 +244,6 @@ static HFONT g_fl_list_font;
 static bool g_fl_list_font_owned;
 
 bool fl_listbox_begin_platform(const FlListSpec *spec) {
-
   if (!spec)
     return false;
   ListBoxInfo *lb = spec->lb;
@@ -301,7 +298,6 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
 }
 
 bool fl_listbox_next_platform(FlListItemCtx *out) {
-
   if (!out || !g_fl_list_lb)
     return false;
   if (g_fl_list_cur >= g_fl_list_visible)
@@ -355,7 +351,6 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
 }
 
 void fl_listbox_end_platform(void) {
-
   if (PromptListBottomMargin() > 0 && g_fl_list_hdc) {
     Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
         .y = g_fl_list_y0 + g_fl_list_h, .width = g_fl_list_fw});
@@ -366,7 +361,6 @@ void fl_listbox_end_platform(void) {
 }
 
 int fl_listbox_get_count(void) {
-
   return g_fl_list_lb ? g_fl_list_lb->populated_count : 0;
 }
 
@@ -427,7 +421,6 @@ char *fl_search_file_in_dir_platform(const char *directory,
   return NULL;
 }
 bool fl_type_text_platform(const char *s) {
-
   if (!s)
     return false;
   char *old = Platform_GetClipboardEntry();
@@ -445,7 +438,6 @@ bool fl_type_text_platform(const char *s) {
 }
 
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
-
   if (!spec)
     return false;
   HDC hdc = NULL;
@@ -549,7 +541,6 @@ VOID CALLBACK TimerTrampoline(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
 }
 
 void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
-
   if (!callback || seconds < 0) {
     return;
   }
@@ -569,7 +560,6 @@ void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
   }
 }
 void fl_sleep_platform(double seconds) {
-
   if (seconds <= 0) {
     return;
   }
@@ -636,7 +626,6 @@ static bool net_resolve_adapter(FlNetAdapter *out) {
   }
   if (rc != NO_ERROR) {
     free(addrs);
-
     return false;
   }
   bool found = false;
@@ -667,7 +656,6 @@ static FlNetAdapter net_active_adapter(void) {
       (now - g_net_adapter.at_ms) < FL_NET_ADAPTER_TTL_MS) {
     FlNetAdapter cached = g_net_adapter;
     net_unlock();
-
     return cached;
   }
   net_unlock();
@@ -702,13 +690,11 @@ static void net_refresh(void) {
 }
 
 int fl_get_active_interface_platform(char out[], size_t max_len) {
-
   if (!out || max_len == 0)
     return 0;
   FlNetAdapter a = net_active_adapter();
   if (!a.valid || !a.guid[0]) {
     out[0] = '\0';
-
     return 0;
   }
   size_t len = strlen(a.guid);
@@ -730,7 +716,6 @@ unsigned long long fl_net_rx_bytes_platform() {
   if (GetIfEntry(&row) != NO_ERROR) {
     /* The interface went away or the index was recycled: resolve again. */
     net_invalidate_adapter();
-
     return 0;
   }
   unsigned long long rx = (unsigned long long)row.dwInOctets;
@@ -738,7 +723,6 @@ unsigned long long fl_net_rx_bytes_platform() {
 }
 
 FlNetStatus fl_net_status_platform(void) {
-
   DWORD now = GetTickCount();
   net_lock();
   bool fresh = g_net_ever && (now - g_net_cached_at) < FL_NET_TTL_MS;

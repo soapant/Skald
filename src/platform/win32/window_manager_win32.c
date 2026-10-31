@@ -12,7 +12,6 @@ int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
 
 int WindowManager_RunWin32(WindowManager *wm) {
-
   if (!wm)
     return -1;
   wm->running = true;
@@ -34,7 +33,6 @@ int WindowManager_RunWin32(WindowManager *wm) {
     if (!got)
       Sleep(10);
   }
-
   return 0;
 }
 
@@ -54,7 +52,6 @@ static void WindowManager_DrainSelectionComplete(WindowManager *wm) {
 }
 
 void WindowManager_ProcessEventsWin32(WindowManager *wm) {
-
   if (!wm) {
     return;
   }
@@ -78,7 +75,6 @@ void WindowManager_ProcessEventsWin32(WindowManager *wm) {
 }
 
 void WindowManager_QuitWin32(WindowManager *wm) {
-
   if (wm)
     wm->running = false;
   PostQuitMessage(0);

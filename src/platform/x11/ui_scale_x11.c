@@ -91,7 +91,6 @@ static float ui_scale_detect(void) {
 }
 
 float Platform_GetUIScale(void) {
-
   if (ui_scale <= 0.0f)
     ui_scale = ui_scale_detect();
   return ui_scale;
@@ -107,7 +106,6 @@ static void ui_scale_apply_locked(void) {
 }
 
 void Platform_ApplyUIScale(void) {
-
   if (ui_scale_applied) {
     return;
   }
@@ -117,12 +115,10 @@ void Platform_ApplyUIScale(void) {
 }
 
 int Platform_GetUnscaledFontSize(void) {
-
   return base_font_size > 0 ? base_font_size : FontSize;
 }
 
 void Platform_AdjustFontSize(int delta) {
-
   if (base_font_size <= 0)
     base_font_size = FontSize;
   base_font_size += delta;
@@ -132,7 +128,6 @@ void Platform_AdjustFontSize(int delta) {
 }
 
 void Platform_ResetUIScale(void) {
-
   base_font_size = FontSize;
   ui_scale_apply_locked();
 }

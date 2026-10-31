@@ -827,7 +827,6 @@ static void wl_drop_source(struct wl_proxy **slot) {
 }
 
 bool Platform_ClipboardAvailable(void) {
-
   return getenv("WAYLAND_DISPLAY") != NULL;
 }
 
@@ -863,7 +862,6 @@ static void wl_publish_locked(void) {
 }
 
 int Platform_ClipboardSetText(const char *text) {
-
   if (!text)
     return 0;
   wl_trace("API SetText", "len=%d text='%s'", (int)strlen(text), text);
@@ -908,7 +906,6 @@ int Platform_ClipboardSetText(const char *text) {
 }
 
 int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
-
   if (!png || len == 0)
     return 0;
   if (!wl_setup())
@@ -937,7 +934,6 @@ int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
 }
 
 int Platform_ClipboardSetFile(const char *path) {
-
   if (!path || path[0] == 0)
     return 0;
   char *uri = clipboard_path_to_uri_list(path);
@@ -976,7 +972,6 @@ static const char *wl_pick_mime_locked(void) {
 }
 
 char *Platform_ClipboardGetText(void) {
-
   wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
            (void *)g_wl_offer, g_wl_has_selection ? 1 : 0,
            g_wl_offer_mime_count);
@@ -1085,7 +1080,6 @@ char *Platform_ClipboardGetText(void) {
 }
 
 void Platform_ClipboardShutdown(void) {
-
   if (!g_wl_ready && !g_wl_handle) {
     return;
   }

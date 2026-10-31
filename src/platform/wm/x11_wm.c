@@ -280,7 +280,6 @@ static int x11_keycode_for(Display *dpy, KeySym ks, int *need_shift) {
 }
 
 bool get_title_x11(char *buffer, int buffer_size) {
-
   if (!buffer || buffer_size <= 0) {
     log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null",
               buffer_size);
@@ -320,7 +319,6 @@ bool get_title_x11(char *buffer, int buffer_size) {
 }
 
 bool get_app_id_x11(char *buffer, int buffer_size) {
-
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -358,7 +356,6 @@ bool get_app_id_x11(char *buffer, int buffer_size) {
 }
 
 char *paste_x11(char *content) {
-
   if (!content) {
     log_error("content is NULL");
     return NULL;
@@ -407,7 +404,6 @@ char *paste_x11(char *content) {
 }
 
 bool focus_window_title_x11(char *title) {
-
   if (!title || !title[0]) {
     log_error("title='%s'", title ? title : "null");
     return false;
@@ -441,7 +437,6 @@ bool focus_window_title_x11(char *title) {
 }
 
 PlWindowList get_window_names_x11() {
-
   PlWindowList list = {.windows = NULL, .count = 0};
   Display *display = get_display();
   if (!display) {
@@ -486,7 +481,6 @@ PlWindowList get_window_names_x11() {
 }
 
 PlWindowList get_window_titles_x11() {
-
   PlWindowList list = {.windows = NULL, .count = 0};
   Display *display = get_display();
   if (!display) {
@@ -528,7 +522,6 @@ PlWindowList get_window_titles_x11() {
 static Display *_x11_cursor_dpy = NULL;
 
 void x11_wm_cleanup_cursor_display(void) {
-
   if (_x11_cursor_dpy != NULL) {
     XCloseDisplay(_x11_cursor_dpy);
     _x11_cursor_dpy = NULL;
@@ -550,7 +543,6 @@ static Window x11_focused_window(Display *display) {
 }
 
 bool close_active_window_x11(void) {
-
   Display *display = get_display();
   if (!display)
     return false;
@@ -580,7 +572,6 @@ bool close_active_window_x11(void) {
 }
 
 bool toggle_fullscreen_active_x11(void) {
-
   Display *display = get_display();
   if (!display)
     return false;
@@ -662,7 +653,6 @@ static bool x11_activate_neighbor(bool right) {
 }
 
 bool move_active_window_to_monitor_x11(bool right) {
-
   Display *display = get_display();
   if (!display)
     return false;
@@ -808,7 +798,6 @@ static bool x11_is_hidden(Display *dpy, Window w) {
 }
 
 bool minimize_active_window_x11(void) {
-
   Display *display = get_display();
   if (!display)
     return false;

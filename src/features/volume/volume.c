@@ -234,7 +234,6 @@ cleanup:
   if (pEnumerator)
     pEnumerator->lpVtbl->Release(pEnumerator);
   CoUninitialize();
-
   return (int)(currentVolume * 100.0f + 0.5f);
 #elif defined(__linux__)
   pulse_sink();

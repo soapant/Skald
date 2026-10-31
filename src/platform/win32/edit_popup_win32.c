@@ -23,7 +23,6 @@
 #include <stdio.h>
 
 void win32_fill_popup_key_text(PopupKeyEvent *key) {
-
   if (!key) {
     return;
   }
@@ -64,7 +63,6 @@ void win32_fill_popup_key_text(PopupKeyEvent *key) {
 }
 
 bool Platform_EditPopupCreateWindow(Popup *self, int x, int y, int w, int h) {
-
   WMEditPopupData *data = (WMEditPopupData *)self;
   HINSTANCE hInst = GetModuleHandle(NULL);
   HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED,
@@ -75,12 +73,10 @@ bool Platform_EditPopupCreateWindow(Popup *self, int x, int y, int w, int h) {
   win32_apply_rounded_corners(hwnd, w, h);
   SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
   data->base.handle = WH_FROM_HWND(hwnd);
-
   return true;
 }
 
 void Platform_EditPopupShowWindow(Popup *self) {
-
   HWND hwnd = WH_TO_HWND(self->handle);
   if (hwnd && IsWindow(hwnd)) {
     ShowWindow(hwnd, SW_SHOWNA);
@@ -94,7 +90,6 @@ void Platform_EditPopupShowWindow(Popup *self) {
 }
 
 void Platform_EditPopupHideWindow(Popup *self) {
-
   HWND hwnd = WH_TO_HWND(self->handle);
   if (hwnd && IsWindow(hwnd))
     ShowWindow(hwnd, SW_HIDE);
@@ -111,7 +106,6 @@ void Platform_EditPopupHideWindow(Popup *self) {
 }
 
 void Platform_EditPopupRender(Popup *self) {
-
   WMEditPopupData *data = (WMEditPopupData *)self;
   HWND hwnd = WH_TO_HWND(self->handle);
   if (!data || !hwnd || !IsWindow(hwnd)) {
@@ -243,14 +237,12 @@ void Platform_EditPopupRender(Popup *self) {
 }
 
 void Platform_EditPopupDestroyWindow(Popup *self) {
-
   HWND hwnd = WH_TO_HWND(self->handle);
   if (hwnd && IsWindow(hwnd))
     DestroyWindow(hwnd);
 }
 
 bool Platform_EditPopupOnKey(Popup *self, const PopupKeyEvent *key) {
-
   WMEditPopupData *ed = (WMEditPopupData *)self;
   if (!ed || !ed->text || !key)
     return false;

@@ -173,7 +173,6 @@ static void x11_handle_key_release(Display *dpy, XKeyEvent *ev) {
 }
 
 void Linux_ProcessXEvent(Display *dpy, XEvent *ev, WindowManager *wm) {
-
   if (x11_clipboard_handle_event(dpy, ev)) {
     return;
   }
@@ -248,7 +247,6 @@ void Linux_ProcessXEvent(Display *dpy, XEvent *ev, WindowManager *wm) {
 }
 
 int WindowManager_RunLinux(WindowManager *wm) {
-
   XEvent xev;
 
   if (!wm)
@@ -412,12 +410,10 @@ int WindowManager_RunLinux(WindowManager *wm) {
   destroy_uinput();
   Platform_RenderThread_Stop();
   x11_set_window_manager(NULL);
-
   return 0;
 }
 
 void WindowManager_ProcessEventsLinux(WindowManager *wm) {
-
   if (!wm || !wm->display) {
     return;
   }
@@ -449,7 +445,6 @@ void WindowManager_ProcessEventsLinux(WindowManager *wm) {
 }
 
 void WindowManager_QuitLinux(WindowManager *wm) {
-
   if (wm)
     wm->running = false;
 }

@@ -5,7 +5,6 @@
 #include "config_values.h"
 
 void EditBufferBackspace(char *buf, size_t *cursor) {
-
   size_t n = strlen(buf);
   if (*cursor > 0) {
     memmove(buf + *cursor - 1, buf + *cursor, n - *cursor + 1);
@@ -14,19 +13,16 @@ void EditBufferBackspace(char *buf, size_t *cursor) {
 }
 
 bool EditBufferDeleteChar(char *buf, size_t *cursor) {
-
   size_t n = strlen(buf);
   if (*cursor >= n)
     return false;
   memmove(buf + *cursor, buf + *cursor + 1, n - *cursor);
-
   return true;
 }
 
 static bool edit_is_quote(char c) { return c == '"' || c == '\''; }
 
 static bool edit_is_closer(char c) {
-
   return c == '}' || c == ')' || c == ']' || edit_is_quote(c);
 }
 
@@ -47,7 +43,6 @@ static bool edit_quote_at_word_start(const char *buf, size_t cursor) {
 }
 
 char EditBufferPairFor(char c) {
-
   switch (c) {
   case '{':
     return '}';
@@ -77,7 +72,6 @@ size_t EditBufferInsertText(char *buf, size_t cap, size_t *cursor,
   if (EnableAutoPairing && len == 1) {
     if (edit_is_closer(text[0]) && *cursor < n && buf[*cursor] == text[0]) {
       (*cursor)++;
-
       return 0;
     }
     if (!edit_is_quote(text[0]) || edit_quote_at_word_start(buf, *cursor)) {
@@ -93,12 +87,10 @@ size_t EditBufferInsertText(char *buf, size_t cap, size_t *cursor,
   if (closer)
     buf[*cursor + len] = closer;
   *cursor += len;
-
   return total;
 }
 
 bool EditBufferBackspacePair(char *buf, size_t *cursor) {
-
   if (!buf || !cursor || !EnableAutoPairing)
     return false;
   size_t c = *cursor;
@@ -112,24 +104,19 @@ bool EditBufferBackspacePair(char *buf, size_t *cursor) {
     return false;
   memmove(buf + c - 1, buf + c + 1, n - c);
   (*cursor)--;
-
   return true;
 }
 
 bool CursorBack(size_t *cursor, size_t text_len) {
-
   if (*cursor == 0)
     return false;
   (*cursor)--;
-
   return true;
 }
 
 bool CursorForward(size_t *cursor, size_t text_len) {
-
   if (*cursor >= text_len)
     return false;
   (*cursor)++;
-
   return true;
 }

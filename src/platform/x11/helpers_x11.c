@@ -101,7 +101,6 @@ bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **visOut,
       *cmapOut = g_dblColormap;
     if (depthOut)
       *depthOut = g_dblDepth;
-
     return true;
   }
   return false;
@@ -546,7 +545,6 @@ static unsigned long g_img_cache_tick = 0;
 static pthread_mutex_t g_img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 void x11_img_cache_free_all(void) {
-
   pthread_mutex_lock(&g_img_cache_mtx);
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
     if (g_img_cache[i].argb)
@@ -974,13 +972,11 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
         unsigned char *raw_src = stbi_load(path, &w, &h, &comp, 4);
         if (!raw_src) {
           log_error("img: cannot decode '%s': %s", path, stbi_failure_reason());
-
           return NULL;
         }
         src = raw_src;
       }
       if (!src) {
-
         return NULL;
       }
       for (int i = 0; i < w * h; i++) {
@@ -1590,7 +1586,6 @@ Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h) {
 }
 
 void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h) {
-
   if (!dpy || w <= 0 || h <= 0)
     return;
   unsigned long base = Platform_GetDrawBgColor();

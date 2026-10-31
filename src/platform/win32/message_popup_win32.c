@@ -183,7 +183,6 @@ static FadeWindowData *s_msg_show_data = NULL;
 static bool s_msg_show_no_bg = false;
 
 bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
-
   (void)self;
   if (!s_msg_show_data) {
     log_error("MSG Platform_MessagePopupShowWindow null payload");
@@ -222,7 +221,6 @@ bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
 }
 
 void Platform_MessagePopupHideWindow(Popup *self) {
-
   (void)self;
   HWND hMsg = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
   if (hMsg != NULL && IsWindow(hMsg)) {
@@ -234,12 +232,10 @@ void Platform_MessagePopupHideWindow(Popup *self) {
 void Platform_MessagePopupRender(Popup *self) { (void)self; }
 
 void Platform_MessagePopupDestroyWindow(Popup *self) {
-
   Platform_MessagePopupHideWindow(self);
 }
 
 bool Platform_MessagePopupOnKey(Popup *self, const PopupKeyEvent *key) {
-
   (void)self;
   (void)key;
   return false;
@@ -297,7 +293,6 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
 }
 
 void Platform_DismissDisplayMessage(void) {
-
   HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
   if (h == NULL) {
     return;
@@ -305,7 +300,6 @@ void Platform_DismissDisplayMessage(void) {
   HWND tray = WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd);
   if (tray != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
     SendMessageA(tray, WM_DISMISS_MESSAGE, 0, 0);
-
     return;
   }
   KillTimer(h, 999);
@@ -314,11 +308,9 @@ void Platform_DismissDisplayMessage(void) {
 }
 
 bool Platform_DismissMessage(const char *name) {
-
   if (!name || !name[0]) {
     bool had = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL;
     Platform_DismissDisplayMessage();
-
     return had;
   }
   HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
@@ -328,12 +320,10 @@ bool Platform_DismissMessage(const char *name) {
   if (!data || strcmp(data->name, name) != 0)
     return false;
   Platform_DismissDisplayMessage();
-
   return true;
 }
 
 bool Platform_MessageActive(const char *name) {
-
   if (!name || !name[0])
     return false;
   HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
@@ -341,7 +331,6 @@ bool Platform_MessageActive(const char *name) {
     return false;
   FadeWindowData *data = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
   bool active = (data && strcmp(data->name, name) == 0);
-
   return active;
 }
 
@@ -545,7 +534,6 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
 }
 
 void Platform_HoverWidgetHide(const char *key) {
-
   if (!key || !key[0]) {
     return;
   }
@@ -583,7 +571,6 @@ void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
 }
 
 void Platform_HoverMessageRelease(const char *key) {
-
   if (!key || !key[0]) {
     return;
   }
