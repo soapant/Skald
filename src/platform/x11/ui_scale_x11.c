@@ -74,13 +74,13 @@ const char* ov = getenv("FLINT_SCALE");
             if (best > (float)max_int_scale) best = (float)max_int_scale;
         }
     }
-    {  return best; }
+    return best;
 }
 
 float Platform_GetUIScale(void) {
         
 if (ui_scale <= 0.0f) ui_scale = ui_scale_detect();
-    {  return ui_scale; }
+    return ui_scale;
 }
 
 static void ui_scale_apply_locked(void) {
@@ -100,7 +100,7 @@ if (ui_scale_applied) {  return ; }
 
 int Platform_GetUnscaledFontSize(void) {
         
-{  return base_font_size > 0 ? base_font_size : FontSize; }
+return base_font_size > 0 ? base_font_size : FontSize;
 }
 
 void Platform_AdjustFontSize(int delta) {

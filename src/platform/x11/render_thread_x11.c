@@ -58,7 +58,7 @@ if (!fn || !g_rt_running) {  return false; }
     g_rt_pending_count++;
     pthread_cond_signal(&g_rt_cond);
     pthread_mutex_unlock(&g_rt_lock);
-    {  return true; }
+    return true;
 }
 
 void Platform_RenderThread_Wake(void) {
@@ -71,12 +71,12 @@ if (!g_rt_running) {  return ; }
 
 void *Platform_RenderThread_Display(void) {
         
-{  return (void *)g_rt_dpy; }
+return (void *)g_rt_dpy;
 }
 
 bool Platform_RenderThread_IsRunning(void) {
         
-{  return g_rt_running; }
+return g_rt_running;
 }
 
 int Platform_RenderThread_CallbackCount(void) {
@@ -84,12 +84,12 @@ int Platform_RenderThread_CallbackCount(void) {
 pthread_mutex_lock(&g_rt_lock);
     int n = g_rt_count;
     pthread_mutex_unlock(&g_rt_lock);
-    {  return n; }
+    return n;
 }
 
 bool Platform_RenderThread_IsCurrentThread(void) {
         
-{  return g_rt_is_thread; }
+return g_rt_is_thread;
 }
 
 static void *rt_thread_func(void *arg) {
@@ -124,7 +124,7 @@ static void *rt_thread_func(void *arg) {
         }
         pthread_mutex_unlock(&g_rt_lock);
     }
-    {  return NULL; }
+    return NULL;
 }
 
 typedef struct { volatile int done; } RtSync;
@@ -176,7 +176,7 @@ if (fps > g_rt_fps) g_rt_fps = fps;
         return false;
     }
     g_rt_running = true;
-    {  return true; }
+    return true;
 }
 
 void Platform_RenderThread_Stop(void) {
@@ -212,7 +212,7 @@ if (!fn) {  return false; }
     g_rt_callbacks[g_rt_count].ud = ud;
     g_rt_count++;
     pthread_mutex_unlock(&g_rt_lock);
-    {  return true; }
+    return true;
 }
 
 bool Platform_RenderThread_RemoveFrameCallback(Platform_RenderFrameFn fn, void *ud) {
@@ -228,5 +228,5 @@ bool removed = false;
         }
     }
     pthread_mutex_unlock(&g_rt_lock);
-    {  return removed; }
+    return removed;
 }

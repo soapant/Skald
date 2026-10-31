@@ -43,7 +43,7 @@ if (!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args 
           return false;
       }
 log_info("Platform_LaunchTerminalAtPath working_dir='%s' extra_args='%s'", working_dir ? working_dir : "", extra_args ? extra_args : "");;
-      {  return true; }
+      return true;
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
@@ -166,7 +166,7 @@ if (open_terminal) {
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
-    {  return out; }
+    return out;
 }
 
 bool Platform_LaunchDetached(char* command) {
@@ -183,7 +183,7 @@ if (!command || !command[0]) {  return false; }
     if (!ok) {  return false; }
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-    {  return true; }
+    return true;
 }
 
 char* Platform_RunCommandAndGetOutput(char* command, int priority) {
@@ -228,7 +228,7 @@ BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, creation_flags, NULL, 
     CloseHandle(hRead);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-    {  return out; }
+    return out;
 }
 
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
@@ -282,31 +282,31 @@ if (out_status) *out_status = -1;
     if (out_status) *out_status = (int)code;
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
-    {  return strdup(""); }
+    return strdup("");
 }
 
 bool Platform_IsCtrlPressed(void) {
         
 log_info("Platform_IsCtrlPressed completed");
-    {  return (GetKeyState(VK_CONTROL) & 0x8000) != 0; }
+    return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
 bool Platform_IsShiftPressed(void) {
         
 log_info("Platform_IsShiftPressed completed");
-    {  return (GetKeyState(VK_SHIFT) & 0x8000) != 0; }
+    return (GetKeyState(VK_SHIFT) & 0x8000) != 0;
 }
 
 bool Platform_IsAltPressed(void) {
         
 log_info("Platform_IsAltPressed completed");
-    {  return (GetKeyState(VK_MENU) & 0x8000) != 0; }
+    return (GetKeyState(VK_MENU) & 0x8000) != 0;
 }
 
 bool Platform_IsSuperPressed(void) {
         
 log_info("Platform_IsSuperPressed completed");
-    {  return ((GetKeyState(VK_LWIN) & 0x8000) != 0) || ((GetKeyState(VK_RWIN) & 0x8000) != 0); }
+    return ((GetKeyState(VK_LWIN) & 0x8000) != 0) || ((GetKeyState(VK_RWIN) & 0x8000) != 0);
 }
 
 static ULONGLONG g_timer_start_ms = 0;
@@ -340,7 +340,7 @@ ULONGLONG current_ms = GetTickCount64();
     }
     
     ULONGLONG elapsed_ms = current_ms - g_timer_start_ms;
-    {  return (double)elapsed_ms / 1000.0; }
+    return (double)elapsed_ms / 1000.0;
 }
 
 FontHandle Platform_CreateFont(int size, const char* face_name) {
@@ -397,7 +397,7 @@ int h = -size;
             }
         }
     }
-    {  return FH_FROM_HFONT(hf); }
+    return FH_FROM_HFONT(hf);
 }
 
 void Platform_DestroyFont(FontHandle font) {
@@ -452,7 +452,7 @@ FILE *fp = fopen(filepath, "rb");
 
     fclose(fp);
     log_info("Platform_GetFileSize filepath=%p", filepath);;
-    {  return size; }
+    return size;
 }
 
 
@@ -478,7 +478,7 @@ FindWindowData* data = (FindWindowData*)lParam;
         return FALSE;
     }
 
-    {  return TRUE; }
+    return TRUE;
 }
 
 bool Platform_FocusWindow(const char* title) {
@@ -546,7 +546,7 @@ if (!title || !title[0]) { log_error("operation failed, returning error title='%
     FlashWindowEx(&fwi);
 
     log_info("Platform_FocusWindow title='%s' trimmed='%s' hwnd=%p", title ? title : "", trimmed, hwnd);
-    {  return true; }
+    return true;
 }
 
 static HWND win32_foreground_target(void) {
@@ -560,7 +560,7 @@ HWND hwnd = GetForegroundWindow();
     if (strcmp(cls, "DisplayMessageModalClass") == 0) {  return NULL; }
     if (strcmp(cls, "EditPopupClass") == 0) {  return NULL; }
     if (strcmp(cls, "SearchPopupClass") == 0) {  return NULL; }
-    {  return hwnd; }
+    return hwnd;
 }
 
 bool Platform_CloseActiveWindow(void) {
@@ -568,7 +568,7 @@ bool Platform_CloseActiveWindow(void) {
 HWND hwnd = win32_foreground_target();
     if (!hwnd) {  return false; }
     PostMessageA(hwnd, WM_CLOSE, 0, 0);
-    {  return true; }
+    return true;
 }
 
 static BOOL g_win32_fs_active = FALSE;
@@ -605,7 +605,7 @@ HWND hwnd = win32_foreground_target();
         g_win32_fs_rect.right - g_win32_fs_rect.left, g_win32_fs_rect.bottom - g_win32_fs_rect.top,
         SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
     g_win32_fs_active = FALSE;
-    {  return true; }
+    return true;
 }
 
 typedef struct {
@@ -619,7 +619,7 @@ static BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp
     win32_mon_list* out = (win32_mon_list*)lp;
     if (!out || out->count >= 16 || !rc) {  return TRUE; }
     out->rects[out->count++] = *rc;
-    {  return TRUE; }
+    return TRUE;
 }
 
 typedef struct {
@@ -658,7 +658,7 @@ win32_focus_search* s = (win32_focus_search*)lp;
         s->best_vdist = vdist;
         s->best = hwnd;
     }
-    {  return TRUE; }
+    return TRUE;
 }
 
 static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
@@ -689,7 +689,7 @@ win32_focus_search* s = (win32_focus_search*)lp;
         s->best_vdist = vdist;
         s->best = hwnd;
     }
-    {  return TRUE; }
+    return TRUE;
 }
 
 bool Platform_MoveActiveWindowToMonitor(bool right) {
@@ -734,17 +734,17 @@ HWND hwnd = win32_foreground_target();
     if (nx + w > list.rects[dst].right) nx = list.rects[dst].right - w;
     if (ny + h > list.rects[dst].bottom) ny = list.rects[dst].bottom - h;
     SetWindowPos(hwnd, HWND_TOP, nx, ny, w, h, SWP_SHOWWINDOW);
-    {  return true; }
+    return true;
 }
 
 bool Platform_MoveActiveWindowLeft(void) {
         
-{  return Platform_MoveActiveWindowToMonitor(false); }
+return Platform_MoveActiveWindowToMonitor(false);
 }
 
 bool Platform_MoveActiveWindowRight(void) {
         
-{  return Platform_MoveActiveWindowToMonitor(true); }
+return Platform_MoveActiveWindowToMonitor(true);
 }
 
 static bool win32_activate_hwnd(HWND h) {
@@ -765,7 +765,7 @@ if (!h || !IsWindow(h)) {  return false; }
     BringWindowToTop(h);
     if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, FALSE);
     if (tTid && tTid != curTid) AttachThreadInput(tTid, curTid, FALSE);
-    {  return GetForegroundWindow()==h; }
+    return GetForegroundWindow()==h;
 }
 bool Platform_FocusWindowLeft(void) {
         
@@ -785,7 +785,7 @@ HWND fg = win32_foreground_target();
     s.best_vdist = 1 << 30;
     EnumWindows(win32_focus_enum_left, (LPARAM)&s);
     if (!s.best) {  return false; }
-    {  return win32_activate_hwnd(s.best); }
+    return win32_activate_hwnd(s.best);
 }
 
 bool Platform_FocusWindowRight(void) {
@@ -806,7 +806,7 @@ HWND fg = win32_foreground_target();
     s.best_vdist = 1 << 30;
     EnumWindows(win32_focus_enum_right, (LPARAM)&s);
     if (!s.best) {  return false; }
-    {  return win32_activate_hwnd(s.best); }
+    return win32_activate_hwnd(s.best);
 }
 
 bool Platform_MinimizeActiveWindow(void) {
@@ -830,7 +830,7 @@ HWND hwnd = win32_foreground_target();
         return true;
     }
     g_win32_last_min = NULL;
-    {  return false; }
+    return false;
 }
 
 char* Platform_GetActiveWindowTitle(void) {
@@ -843,7 +843,7 @@ static char fgTitle[256];
     } else {
         fgTitle[0] = '\0';
     }
-    {  return fgTitle; }
+    return fgTitle;
 }
 
 char* Platform_GetActiveWindowAppId(void) {
@@ -868,7 +868,7 @@ static char appId[256];
         if (n > 4 && _stricmp(appId + n - 4, ".exe") == 0) appId[n - 4] = '\0';
     }
     CloseHandle(h);
-    {  return appId; }
+    return appId;
 }
 static bool win32_placeholder_icon(char* out, size_t out_len) {
         
@@ -888,7 +888,7 @@ char cand[MAX_PATH];
         if (!slash) break;
         *slash = '\0';
     }
-    {  return false; }
+    return false;
 }
 
 static ULONG_PTR g_gdiplusToken = 0;
@@ -1033,7 +1033,7 @@ if (!app_path || !app_path[0]) { log_error("operation failed, returning error ap
   log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
   char ph[MAX_PATH];
   if (win32_placeholder_icon(ph, sizeof(ph))) {  return _strdup(ph); }
-  {  return NULL; }
+  return NULL;
 }
 int Platform_GetIconSize(char* icon_path) {
         
@@ -1043,7 +1043,7 @@ int Platform_GetIconSize(char* icon_path) {
     if (s < 16) s = 16;
     if (s > 32) s = 32;
     log_info("Platform_GetIconSize icon_path='%s'", icon_path ? icon_path : "");;
-    {  return s; }
+    return s;
 }
 
 typedef struct { PlWindowList *titles; PlWindowList *names; } WinPair;
@@ -1112,7 +1112,7 @@ WinPair *pair = (WinPair*)lParam;
     pair->names->windows = t2;
     pair->titles->windows[pair->titles->count++] = strdup(title);
     pair->names->windows[pair->names->count++] = strdup(exe);
-    {  return TRUE; }
+    return TRUE;
 }
 
 static void win32_collect_pair(PlWindowList *out_titles, PlWindowList *out_names) {
@@ -1128,7 +1128,7 @@ PlWindowList titles={0}, names={0};
     for(int i=0;i<names.count;i++) free(names.windows[i]);
     free(names.windows);
     log_info("Platform_GetWindowTitles count=%d", titles.count);
-    {  return titles; }
+    return titles;
 }
 PlWindowList Platform_GetWindowNames() {
         
@@ -1137,7 +1137,7 @@ PlWindowList titles={0}, names={0};
     for(int i=0;i<titles.count;i++) free(titles.windows[i]);
     free(titles.windows);
     log_info("Platform_GetWindowNames count=%d", names.count);
-    {  return names; }
+    return names;
 }
 
 static HANDLE g_singleton_mtx = NULL;
@@ -1151,12 +1151,12 @@ g_singleton_mtx = CreateMutexA(NULL, TRUE, "flint_single_instance_mutex");
         g_singleton_mtx = NULL;
         return false;
     }
-    {  return true; }
+    return true;
 }
 
 bool Platform_InitDisplaySafe(void) {
         
-{  return true; }
+return true;
 }
 
 void Platform_CleanupDisplaySafe(void) {
@@ -1171,7 +1171,7 @@ g_win32_main_thread_id = GetCurrentThreadId();
 static int win32_dir_exists(const char* path) {
         
 DWORD attr = GetFileAttributesA(path);
-    {  return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY); }
+    return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 static int win32_is_project_root(const char* dir) {
@@ -1181,7 +1181,7 @@ char probe[MAX_PATH];
     if (!win32_dir_exists(probe)) {  return 0; }
     snprintf(probe, sizeof(probe), "%s\\build", dir);
     if (!win32_dir_exists(probe)) {  return 0; }
-    {  return 1; }
+    return 1;
 }
 
 void Platform_FixWorkingDirectory(void) {
@@ -1244,7 +1244,7 @@ PlColor Platform_GetPixelColor(int x, int y) {
     out.g = GetGValue(c);
     out.b = GetBValue(c);
     
-    {  return out; }
+    return out;
 }
 
 bool Platform_MoveToPos(int x, int y) {
@@ -1274,7 +1274,7 @@ bool Platform_MoveToPos(int x, int y) {
 
     log_info("Platform_MoveToPos x=%d y=%d", x, y);
     
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_ClickButton(int button) {
@@ -1291,7 +1291,7 @@ bool Platform_ClickButton(int button) {
     inputs[1].mi.dwFlags = up_flag;
     bool ok = (SendInput(2, inputs, sizeof(INPUT)) == 2);
     
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_Click(void) {
@@ -1309,7 +1309,7 @@ bool Platform_Click(void) {
 
     log_info("Platform_Click");
     
-    {  return ok; }
+    return ok;
 }
 
 static DWORD win32_button_flag(int button, bool down) {
@@ -1340,7 +1340,7 @@ bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
     if (out_w) *out_w = vw;
     if (out_h) *out_h = vh;
     
-    {  return true; }
+    return true;
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {
@@ -1354,7 +1354,7 @@ bool Platform_MouseButtonDown(int button, bool down) {
     in.mi.mouseData = (button == 5) ? XBUTTON2 : XBUTTON1;
     bool ok = SendInput(1, &in, sizeof(INPUT)) == 1;
     
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_MouseScroll(int notches) {
@@ -1367,12 +1367,12 @@ bool Platform_MouseScroll(int notches) {
     in.mi.mouseData = (DWORD)((notches > 0 ? notches : -notches) * WHEEL_DELTA);
     bool ok = SendInput(1, &in, sizeof(INPUT)) == 1;
     
-    {  return ok; }
+    return ok;
 }
 
 char* Platform_GetWorkingDir() {
     
-{  return Platform_RunTerminalCommand("cd",false); }
+return Platform_RunTerminalCommand("cd",false);
 }
 
 void Platform_InitDataFolder() {
@@ -1392,7 +1392,7 @@ if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) {  ret
     snprintf(feat_path,sizeof(feat_path),"%s\\%s",dir_path,feature);
     nob_mkdir_if_not_exists(feat_path);
     snprintf(out,out_len,"%s\\%s",feat_path,name);
-    {  return true; }
+    return true;
 }
 
 
@@ -1401,13 +1401,13 @@ if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) {  ret
 bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t out_len) {
     
     bool ok = FeaturePath_ResolveDataPath(caller, name, out, out_len);
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t out_len) {
         
     bool ok = FeaturePath_ResolveAssetPath(caller, name, out, out_len);
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_FeatureDataDirExists(const char* stem) {
@@ -1416,7 +1416,7 @@ bool Platform_FeatureDataDirExists(const char* stem) {
     char dir_path[256];
     snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint\\%s", Platform_GetRealHome(), stem);
     bool ok = (GetFileAttributesA(dir_path) != INVALID_FILE_ATTRIBUTES);
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, size_t out_len) {
@@ -1438,7 +1438,7 @@ bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, siz
         return false;
     }
     snprintf(out, out_len, "%s", full);
-    {  return true; }
+    return true;
 }
 
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
@@ -1462,14 +1462,14 @@ if (!name || !name[0] || !out_path || out_len == 0) {  return false; }
     if (len > 0 && fwrite(data, 1, len, f) != len) ok = false;
     if (fclose(f) != 0) ok = false;
     if (!ok) remove(out_path);
-    {  return ok; }
+    return ok;
 }
 
 void Platform_PrewarmBackgroundPixmap(void) {
     
 win32_bg_image_purge();
     win32_bg_image_prewarm(PROMPT_W, PROMPT_H);
-    {  }
+    
 }
 
 int Platform_InitializeTrayIcon() {
@@ -1499,7 +1499,7 @@ return -1;
     }
   }
 log_info("Platform_InitializeTrayIcon completed");
-  {  return 0; }
+  return 0;
 }
 
 void Platform_InitUI() {
@@ -1867,7 +1867,7 @@ PlTimer Platform_StartTimer(void) {
     LARGE_INTEGER c;
     QueryPerformanceCounter(&c);
     t.ticks = (uint64_t)c.QuadPart;
-    {  return t; }
+    return t;
 }
 
 double Platform_EndTimer(PlTimer t) {
@@ -1880,7 +1880,7 @@ double Platform_EndTimer(PlTimer t) {
     uint64_t start = t.ticks;
     uint64_t end = (uint64_t)now.QuadPart;
     if (end < start) {  return 0.0; }
-    {  return (double)(end - start) * 1000.0 / (double)freq.QuadPart; }
+    return (double)(end - start) * 1000.0 / (double)freq.QuadPart;
 }
 
 typedef struct {
@@ -1895,7 +1895,7 @@ static DWORD WINAPI win_thread_entry(LPVOID p) {
     void* arg = s->arg;
     free(s);
     fn(arg);
-    {  return 0; }
+    return 0;
 }
 
 void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
@@ -1907,7 +1907,7 @@ void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
     s->arg = arg;
     HANDLE h = CreateThread(NULL, 0, win_thread_entry, s, 0, NULL);
     if (!h) { free(s); return NULL; }
-    {  return (void*)h; }
+    return (void*)h;
 }
 
 void Platform_ThreadJoin(void* thread) {
@@ -1922,7 +1922,7 @@ void* Platform_MutexCreate(void) {
     CRITICAL_SECTION* cs = malloc(sizeof(*cs));
     if (!cs) {  return NULL; }
     InitializeCriticalSection(cs);
-    {  return cs; }
+    return cs;
 }
 
 void Platform_MutexDestroy(void* mutex) {
@@ -1948,6 +1948,6 @@ void Platform_MutexUnlock(void* mutex) {
 bool Platform_MutexTryLock(void* mutex) {
     
     if (!mutex) {  return false; }
-    {  return TryEnterCriticalSection((CRITICAL_SECTION*)mutex) != 0; }
+    return TryEnterCriticalSection((CRITICAL_SECTION*)mutex) != 0;
 }
 

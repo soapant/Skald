@@ -39,20 +39,20 @@ if (template_path == NULL || out_size == 0) { log_error("operation failed, retur
         out[o++] = *p++;
     }
     out[o] = '\0';
-    {  return true; }
+    return true;
 }
 
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
         
 if (!haystack || !needle) { log_error("operation failed, returning error haystack='%s' needle='%s'", haystack ? haystack : "null", needle ? needle : "null"); return false; }
-    {  return StrStrIA(haystack, needle) != NULL; }
+    return StrStrIA(haystack, needle) != NULL;
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
         
 if (!str || !prefix) { log_error("operation failed, returning error str='%s' prefix='%s'", str ? str : "null", prefix ? prefix : "null"); return false; }
-    {  return StrStrIA(str, prefix) == str; }
+    return StrStrIA(str, prefix) == str;
 }
 
 long long Platform_GetWallClockMs(void) {
@@ -62,7 +62,7 @@ FILETIME ft;
     ULARGE_INTEGER t;
     t.LowPart = ft.dwLowDateTime;
     t.HighPart = ft.dwHighDateTime;
-    {  return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL); }
+    return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL);
 }
 
 
@@ -85,7 +85,7 @@ if (!exe_name || !*exe_name) {
     Platform_RunTerminalCommand(cmd, false);
     log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
     
-    {  return true; }
+    return true;
 }
 
 static bool win32_default_browser_exe(char* out, size_t cap) {
@@ -122,7 +122,7 @@ HKEY key = NULL;
     if (len == 0) {  return false; }
     memcpy(out, p, len);
     out[len] = '\0';
-    {  return out[0] != '\0'; }
+    return out[0] != '\0';
 }
 
 static bool win32_launch_default_browser_blank(void) {
@@ -138,7 +138,7 @@ char exe[512];
         log_info("Platform_LaunchBrowserAtUrl ShellExecute failed for '%s'", exe);
         return false;
     }
-    {  return true; }
+    return true;
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
@@ -182,7 +182,7 @@ char full_url[2048] = {0};
     char command[2048];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", full_url);
     log_info("Platform_LaunchBrowserAtUrl fallback url='%s' new_window=%d", full_url, new_window);
-    {  return Platform_RunTerminalCommand(command,false); }
+    return Platform_RunTerminalCommand(command,false);
 }
 
 bool Platform_QueryBrowser(char* query) {
@@ -227,7 +227,7 @@ if (!query || !query[0]) { log_error("operation failed, returning error query='%
     char command[4096];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
 log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
-    {  return Platform_RunTerminalCommand(command,false); }
+    return Platform_RunTerminalCommand(command,false);
 }
 
 char* Platform_GetClipboardEntry(void) {
@@ -262,7 +262,7 @@ char* result = NULL;
     GlobalUnlock(hClipData);
     CloseClipboard();
 
-    {  return result; }
+    return result;
 }
 
 bool Platform_PasteContent(char* content) {
@@ -305,7 +305,7 @@ if (!content || !content[0]) { log_error("operation failed, returning error cont
 
     free(inputs);
     log_info("Platform_PasteContent content='%s'", content ? content : "");;
-    {  return success; }
+    return success;
 }
 const char* Platform_GetRealHome(void) {
         
@@ -332,7 +332,7 @@ static char buf[512] = {0};
         return buf;
     }
 
-    {  return buf; }
+    return buf;
 }
 
 bool Platform_IsRunningAsRoot(void) {

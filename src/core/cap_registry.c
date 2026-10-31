@@ -19,7 +19,7 @@ static unsigned g_cap_generation = 1;
 
 unsigned cap_generation(void) { 
     
-    {  return g_cap_generation; }
+    return g_cap_generation;
 }
 
 static void cap_add_provides(const char *owner, const char *key) {
@@ -48,7 +48,7 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     if (g_cap_count >= CAP_MAX) {
         
         log_error("cap table full, dropping '%s'", key);
-        {  return; }
+        return;
     }
     Cap *c = &g_caps[g_cap_count++];
     snprintf(c->key, CAP_KEY_LEN, "%s", key);
@@ -71,7 +71,7 @@ void *cap_resolve_abi(const char *key, unsigned abi) {
         if (g_caps[i].abi != abi) {
             
             log_warn("cap '%s' abi mismatch want=%u have=%u", key, abi, g_caps[i].abi);
-            {  return NULL; }
+            return NULL;
         }
         return g_caps[i].fn;
     }

@@ -15,7 +15,7 @@ struct passwd* pw = getpwuid(getuid());
     if (!pw || !pw->pw_shell || !pw->pw_shell[0]) {
         return NULL;
     }
-    {  return pw->pw_shell; } 
+    return pw->pw_shell;
 }
 
 char default_apps_x11[DEFAULT_APP_COUNT][256];
@@ -28,7 +28,7 @@ char* out = Platform_RunTerminalCommand((char*)command, false);
         sscanf(out, "%255s", default_apps_x11[slot]);
         free(out);
     }
-    {  return default_apps_x11[slot]; }
+    return default_apps_x11[slot];
 }
 
 #define APPDIR_CACHE_SLOTS 8
@@ -62,7 +62,7 @@ static int next_slot = 0;
     );
     snprintf(g_ad_path[slot], sizeof(g_ad_path[slot]), "%s", dir);
     g_ad_valid[slot] = true;
-    {  return &g_ad_cache[slot]; }
+    return &g_ad_cache[slot];
 }
 
 static const char* match_in_applications_dir(const char* dir, const char* const* names, size_t count) {
@@ -78,7 +78,7 @@ ListOfFiles* files = x11_applications_dir_files(dir);
             }
         }
     }
-    {  return found; }
+    return found;
 }
 
 void x11_default_apps_free_cache(void) {
@@ -113,7 +113,7 @@ char dir[1024];
         const char* hit = match_in_applications_dir(dir, names, count);
         if (hit) return hit;
     }
-    {  return match_in_applications_dir("/usr/share/applications", names, count); }
+    return match_in_applications_dir("/usr/share/applications", names, count);
 }
 
 
@@ -139,7 +139,7 @@ const char* const candidates[] = {
     if (!out) {
       out = x11_find_terminal_in_desktop_files(candidates, n);
     }
-    {  return out ? out : NULL; }
+    return out ? out : NULL;
 }
 
 
@@ -188,7 +188,7 @@ const char* const candidates[] = {
         }
     }
     if (trimmed[0]) {  return trimmed; }
-    {  return x11_find_terminal_in_desktop_files(candidates, n); }
+    return x11_find_terminal_in_desktop_files(candidates, n);
 }
 
 
@@ -219,7 +219,7 @@ default_apps_x11[slot][0] = '\0';
     }
 
     snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", term);
-    {  return default_apps_x11[slot]; }
+    return default_apps_x11[slot];
 }
 const char* get_default_browser(int slot) {
     
@@ -277,7 +277,7 @@ const char* get_default_browser(int slot) {
     }
     StringList_Free(&l);
 
-    {  return default_apps_x11[slot]; }
+    return default_apps_x11[slot];
 }
 
 const char* get_default_shell(int slot) {
@@ -287,7 +287,7 @@ const char* get_default_shell(int slot) {
     const char* shell = getenv("SHELL");
     const char* name = strrchr(shell, '/') ? strrchr(shell, '/') + 1 : shell;
     snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", name);
-    {  return default_apps_x11[slot]; }
+    return default_apps_x11[slot];
 }
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
@@ -297,7 +297,7 @@ if (kind < 0 || kind >= DEFAULT_APP_COUNT) {  return ""; }
     if (kind == DEFAULT_TERMINAL )    {  return get_default_terminal(DEFAULT_TERMINAL); }
     if (kind == DEFAULT_SHELL )       {  return get_default_shell(DEFAULT_SHELL); }
     default_apps_x11[kind][0] = '\0';
-    {  return default_apps_x11[kind]; }
+    return default_apps_x11[kind];
 }
 
 int x11_default_apps_exec_token(const char* line, char* out, size_t cap) {
@@ -313,7 +313,7 @@ const char* p = line + 5;
         out[n++] = *p++;
     }
     out[n] = '\0';
-    {  return n > 0; }
+    return n > 0;
 }
 
 bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_size) {
@@ -348,5 +348,5 @@ if (!desktop_id || !desktop_id[0] || !out || out_size == 0) {  return false; }
         if (found) return true;
         out[0] = '\0';
     }
-    {  return false; }
+    return false;
 }

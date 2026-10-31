@@ -117,7 +117,7 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
     log_info("Platform_LaunchTerminalAtPath At Path %s",working_dir);
 
     
-    {  return true; }
+    return true;
 }
 
 static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* title) {
@@ -144,14 +144,14 @@ static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* tit
         if (children) XFree(children);
     }
     
-    {  return None; }
+    return None;
 }
 
 static Window FindWindowByTitle(Display* dpy, const char* title) {
         
 
     
-    {  return FindWindowByTitleRecursive(dpy, DefaultRootWindow(dpy), title); }
+    return FindWindowByTitleRecursive(dpy, DefaultRootWindow(dpy), title);
 }
 
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command) {
@@ -177,7 +177,7 @@ bool Platform_SendX11Command(const char* window_title, const char* atom_name, lo
     log_info("Platform_SendX11Command Title %s Command %s ",window_title,command);
 
     
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value) {
@@ -197,7 +197,7 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
     log_info("Platform_SetX11Property Title %s value %i ",window_title,value);
 
     
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value) {
@@ -217,7 +217,7 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
     log_info("Platform_SetX11StringProperty Title %s value %i",window_title,value);
 
     
-    {  return ok; }
+    return ok;
 }
 
 char* Platform_RunCommandAndGetOutput(char* command, int priority) {
@@ -270,7 +270,7 @@ char* Platform_RunCommandAndGetOutput(char* command, int priority) {
     log_info("Platform_RunCommandAndGetOutput command='%s'", command ? command : "");;
 
     
-    {  return output; }
+    return output;
 }
 
 static char* Platform_RunCommandDetachedCapture(char* command) {
@@ -626,7 +626,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     Platform_LaunchTerminalAtPath(real_home, extra);
     log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
     
-    {  return strdup(""); }
+    return strdup("");
 }
 
 bool Platform_IsCtrlPressed(void) {
@@ -647,7 +647,7 @@ bool Platform_IsCtrlPressed(void) {
 
 
     
-    {  return (mask & ControlMask) != 0; }
+    return (mask & ControlMask) != 0;
 }
 
 bool Platform_IsShiftPressed(void) {
@@ -667,7 +667,7 @@ bool Platform_IsShiftPressed(void) {
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
     
-    {  return (mask & ShiftMask) != 0; }
+    return (mask & ShiftMask) != 0;
 }
 
 bool Platform_IsAltPressed(void) {
@@ -687,7 +687,7 @@ bool Platform_IsAltPressed(void) {
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
     
-    {  return (mask & Mod1Mask) != 0; }
+    return (mask & Mod1Mask) != 0;
 }
 
 bool Platform_IsSuperPressed(void) {
@@ -707,7 +707,7 @@ bool Platform_IsSuperPressed(void) {
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
     
-    {  return (mask & Mod4Mask) != 0; }
+    return (mask & Mod4Mask) != 0;
 }
 
 void Platform_StartUniversalTimer(void) {
@@ -736,7 +736,7 @@ double Platform_GetUniversalTimeSeconds(void) {
         
 
     
-    {  return 0.0; }
+    return 0.0;
 }
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
@@ -780,14 +780,14 @@ static bool x11_font_was_retired(Display* dpy, XftFont* xft) {
 for (int i = 0; i < X11_FONT_RETIRED; i++) {
         if (g_font_retired_xft[i] == xft && g_font_retired_dpy[i] == dpy) return true;
     }
-    {  return false; }
+    return false;
 }
 
 static bool x11_font_slot_matches(const X11FontSlot* s, Display* dpy, int size, const char* face_name) {
         
 if (!s->xft || s->dpy != dpy || s->size != size) {  return false; }
     if (!s->name || !face_name) {  return s->name == face_name; }
-    {  return strcmp(s->name, face_name) == 0; }
+    return strcmp(s->name, face_name) == 0;
 }
 
 static void x11_font_slot_clear(X11FontSlot* s) {
@@ -809,7 +809,7 @@ static bool x11_font_is_cached(Display* dpy, XftFont* xft) {
 for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
         if (g_font_slots[i].xft == xft && g_font_slots[i].dpy == dpy) return true;
     }
-    {  return false; }
+    return false;
 }
 
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
@@ -877,7 +877,7 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     FontHandle made = { .xfont = xf, .dpy = dpy };
     pthread_mutex_unlock(&g_font_cache_mtx);
     
-    {  return made; }
+    return made;
 }
 
 pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -901,7 +901,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
     log_info("Platform_CreateFont size=%d face_name='%s'", size, face_name ? face_name : "");;
  
     
-    {  return fh; }
+    return fh;
 }
 
 void Platform_DestroyFont(FontHandle font) {
@@ -922,7 +922,7 @@ static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) 
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
     
-    {  return ext.xOff; }
+    return ext.xOff;
 }
 
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
@@ -981,57 +981,57 @@ long Platform_GetFileSize(char *filepath) {
     log_info("Platform_GetFileSize filepath=%p", filepath);;
 
     
-    {  return size; }
+    return size;
 }
 
 bool Platform_FocusWindow(const char* title) {
     
-{  return Wm_FocusByTitle(title); }
+return Wm_FocusByTitle(title);
 }
 
 bool Platform_CloseActiveWindow(void) {
     
-{  return Wm_CloseActiveWindow(); }
+return Wm_CloseActiveWindow();
 }
 
 bool Platform_ToggleFullscreenActive(void) {
     
-{  return Wm_ToggleFullscreenActive(); }
+return Wm_ToggleFullscreenActive();
 }
 
 bool Platform_MoveActiveWindowToMonitor(bool right) {
     
-{  return Wm_MoveActiveWindowToMonitor(right); }
+return Wm_MoveActiveWindowToMonitor(right);
 }
 
 bool Platform_MoveActiveWindowLeft(void) {
     
-{  return Wm_MoveActiveWindowLeft(); }
+return Wm_MoveActiveWindowLeft();
 }
 
 bool Platform_MoveActiveWindowRight(void) {
     
-{  return Wm_MoveActiveWindowRight(); }
+return Wm_MoveActiveWindowRight();
 }
 
 bool Platform_FocusWindowLeft(void) {
     
-{  return Wm_FocusWindowLeft(); }
+return Wm_FocusWindowLeft();
 }
 
 bool Platform_FocusWindowRight(void) {
     
-{  return Wm_FocusWindowRight(); }
+return Wm_FocusWindowRight();
 }
 
 bool Platform_MinimizeActiveWindow(void) {
     
-{  return Wm_MinimizeActiveWindow(); }
+return Wm_MinimizeActiveWindow();
 }
 
 char* Platform_GetActiveWindowTitle() {
     
-{  return Wm_GetActiveWindowTitle(); }
+return Wm_GetActiveWindowTitle();
 }
 
 int Platform_GetIconSize(char* icon_path) {
@@ -1051,7 +1051,7 @@ if (strstr(icon_path, "32x32")){
     if (strstr(icon_path, "256x256")) {
       return 256;
     }
-    {  return 32; }
+    return 32;
 }
 typedef struct {
   char* name;
@@ -1070,7 +1070,7 @@ static int g_icon_cache_count=0;
 static bool g_icon_cache_loaded=false;
 static bool icon_cache_path(char* out, size_t n) {
         
-{  return Platform_GetFeaturePath("core", "icon_cache.txt", out, n); }
+return Platform_GetFeaturePath("core", "icon_cache.txt", out, n);
 }
 static void icon_cache_load(void){
         
@@ -1098,7 +1098,7 @@ static const char* icon_cache_get(const char* key){
         
 icon_cache_load();
     for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) {  return g_icon_cache[i].value; }
-    {  return NULL; }
+    return NULL;
 }
 static void icon_cache_set(const char* key, const char* value){
         
@@ -1119,7 +1119,7 @@ icon_cache_load();
 
 char* Platform_GetActiveWindowAppId(void) {
     
-{  return Wm_GetActiveWindowAppId(); }
+return Wm_GetActiveWindowAppId();
 }
 
 char* Platform_GetIconPath(char* app_path) {
@@ -1248,7 +1248,7 @@ if (!app_path) { log_error("operation failed, returning error app_path='%s'", ap
     snprintf(pix,sizeof(pix),"resources/Placeholder.png");
     if(access(pix,F_OK)==0) {  return strdup(pix); }
     log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
-    {  return strdup(bare[0] ? bare : "placeholder"); }
+    return strdup(bare[0] ? bare : "placeholder");
 }
 
 #include "platform/x11/clipboard_x11.h"
@@ -1276,7 +1276,7 @@ if (!text) {  return 0; }
     log_info("COPY step2 x11 ret=%d ms=%lld", xr, Platform_GetWallClockMs() - tx);
     if (!wr && !xr) log_warn("Platform_CopyToClipboard failed both backends");
     log_info("COPY END total_ms=%lld len=%d wr=%d xr=%d", Platform_GetWallClockMs() - t0, (int)strlen(text), wr, xr);
-    {  return (wr || xr); }
+    return (wr || xr);
 }
 
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
@@ -1291,7 +1291,7 @@ if (!png || len == 0) {  return 0; }
     xr = x11_clipboard_set_image(png, len);
     log_info("Platform_CopyImageToClipboard x11=%d", xr);
     if (!wr && !xr) log_warn("Platform_CopyImageToClipboard failed both backends");
-    {  return (wr || xr); }
+    return (wr || xr);
 }
 
 int Platform_SetFileToClipboard(const char* path) {
@@ -1305,7 +1305,7 @@ if (!path || path[0] == 0) {  return 0; }
     }
     xr = x11_clipboard_set_file(path);
     log_info("Platform_SetFileToClipboard x11=%d", xr);
-    {  return (wr || xr); }
+    return (wr || xr);
 }
 
 
@@ -1383,17 +1383,17 @@ if (out_status) *out_status = -1;
     int st = 0;
     while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
     if (out_status) *out_status = WIFEXITED(st) ? WEXITSTATUS(st) : -1;
-    {  return out; }
+    return out;
 }
 
 PlWindowList Platform_GetWindowTitles() {
   
-{  return Wm_GetWindowTitles(); }
+return Wm_GetWindowTitles();
 }
 
 PlWindowList Platform_GetWindowNames() {
     
-{  return Wm_GetWindowNames(); }
+return Wm_GetWindowNames();
 }
 
 static int g_singleton_lock_fd = -1;
@@ -1412,7 +1412,7 @@ g_singleton_lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
         return false;
     }
     fcntl(g_singleton_lock_fd, F_SETFD, FD_CLOEXEC);
-    {  return true; }
+    return true;
 }
 
 bool Platform_InitDisplaySafe(void) {
@@ -1465,7 +1465,7 @@ const char* dd = getenv("DISPLAY");
         log_info("Continuing without X11 display (headless mode)");
         return false;
     }
-    {  return true; }
+    return true;
 }
 
 void Platform_CleanupDisplaySafe(void) {
@@ -1507,7 +1507,7 @@ CleanupPerFeatureVimMap();
 
 int Platform_InitializeTrayIcon(void) {
     
-{  return 0; } 
+return 0;
 }
 void Platform_InitUI(void) {
     
@@ -1525,7 +1525,7 @@ if (!mask) {  return 0; }
     unsigned long v = (pixel >> shift) & ((1ul << bits) - 1ul);
     if (bits == 0) {  return 0; }
     if (bits >= 8) {  return (unsigned char)(v >> (bits - 8)); }
-    {  return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul)); }
+    return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
 }
 
 PlColor Platform_GetPixelColor(int x, int y) {
@@ -1548,7 +1548,7 @@ PlColor Platform_GetPixelColor(int x, int y) {
     out.b = x11_mask_extract(pixel, attr.visual->blue_mask);
     XDestroyImage(img);
     
-    {  return out; }
+    return out;
 }
 
 bool Platform_MoveToPos(int x, int y) {
@@ -1560,12 +1560,12 @@ bool Platform_MoveToPos(int x, int y) {
     XTestFakeMotionEvent(dpy, -1, x, y, CurrentTime);
     XSync(dpy, False);
     
-    {  return true; }
+    return true;
 #else
     XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, y);
     XSync(dpy, False);
     
-    {  return true; }
+    return true;
 #endif
 }
 
@@ -1586,10 +1586,10 @@ bool Platform_ClickButton(int button) {
     XTestFakeButtonEvent(dpy, (unsigned int)xb, False, CurrentTime);
     XSync(dpy, False);
     
-    {  return true; }
+    return true;
 #else
     
-    {  return false; }
+    return false;
 #endif
 }
 
@@ -1606,10 +1606,10 @@ bool Platform_Click(void) {
     XTestFakeButtonEvent(dpy, 1, False, CurrentTime);
     XSync(dpy, False);
     
-    {  return true; }
+    return true;
 #else
     
-    {  return false; }
+    return false;
 #endif
 }
 
@@ -1669,7 +1669,7 @@ bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
     if (out_w) *out_w = max_x - min_x;
     if (out_h) *out_h = max_y - min_y;
     
-    {  return true; }
+    return true;
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {
@@ -1683,10 +1683,10 @@ bool Platform_MouseButtonDown(int button, bool down) {
     XTestFakeButtonEvent(dpy, (unsigned int)xb, down, CurrentTime);
     XSync(dpy, False);
     
-    {  return true; }
+    return true;
 #else
     
-    {  return false; }
+    return false;
 #endif
 }
 
@@ -1705,10 +1705,10 @@ bool Platform_MouseScroll(int notches) {
         XSync(dpy, False);
     }
     
-    {  return true; }
+    return true;
 #else
     
-    {  return false; }
+    return false;
 #endif
 }
 
@@ -1722,7 +1722,7 @@ char* raw = Platform_RunTerminalCommand("pwd", false);
         raw[--len] = '\0';
     }
     
-    {  return raw; }
+    return raw;
 }
 
 void Platform_InitDataFolder() {
@@ -1742,7 +1742,7 @@ if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) {  ret
     snprintf(feat_path,sizeof(feat_path),"%s/%s",dir_path,feature);
     nob_mkdir_if_not_exists(feat_path);
     snprintf(out,out_len,"%s/%s",feat_path,name);
-    {  return true; }
+    return true;
 }
 
 
@@ -1751,13 +1751,13 @@ if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) {  ret
 bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t out_len) {
         
     bool ok = FeaturePath_ResolveDataPath(caller, name, out, out_len);
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t out_len) {
         
     bool ok = FeaturePath_ResolveAssetPath(caller, name, out, out_len);
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_FeatureDataDirExists(const char* stem) {
@@ -1767,7 +1767,7 @@ bool Platform_FeatureDataDirExists(const char* stem) {
     snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint/%s", Platform_GetRealHome(), stem);
     struct stat st;
     bool ok = (stat(dir_path, &st) == 0);
-    {  return ok; }
+    return ok;
 }
 
 bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, size_t out_len) {
@@ -1781,7 +1781,7 @@ bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, siz
         return false;
     }
     snprintf(out, out_len, "%s", full);
-    {  return true; }
+    return true;
 }
 
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
@@ -1802,7 +1802,7 @@ if (!name || !name[0] || !out_path || out_len == 0) {  return false; }
     if (len > 0 && fwrite(data, 1, len, f) != len) ok = false;
     if (fclose(f) != 0) ok = false;
     if (!ok) remove(out_path);
-    {  return ok; }
+    return ok;
 }
 
 
@@ -1984,7 +1984,7 @@ PlTimer Platform_StartTimer(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-    {  return t; }
+    return t;
 }
 
 double Platform_EndTimer(PlTimer t) {
@@ -1993,7 +1993,7 @@ double Platform_EndTimer(PlTimer t) {
     clock_gettime(CLOCK_MONOTONIC, &ts);
     uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
     if (now < t.ticks) {  return 0.0; }
-    {  return (double)(now - t.ticks) / 1000000.0; }
+    return (double)(now - t.ticks) / 1000000.0;
 }
 
 void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
@@ -2002,7 +2002,7 @@ void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
     pthread_t* t = malloc(sizeof(*t));
     if (!t) {  return NULL; }
     if (pthread_create(t, NULL, fn, arg) != 0) { free(t); return NULL; }
-    {  return t; }
+    return t;
 }
 
 void Platform_ThreadJoin(void* thread) {
@@ -2018,7 +2018,7 @@ void* Platform_MutexCreate(void) {
     pthread_mutex_t* m = malloc(sizeof(*m));
     if (!m) {  return NULL; }
     if (pthread_mutex_init(m, NULL) != 0) { free(m); return NULL; }
-    {  return m; }
+    return m;
 }
 
 void Platform_MutexDestroy(void* mutex) {
@@ -2044,6 +2044,6 @@ void Platform_MutexUnlock(void* mutex) {
 bool Platform_MutexTryLock(void* mutex) {
     
     if (!mutex) {  return false; }
-    {  return pthread_mutex_trylock((pthread_mutex_t*)mutex) == 0; }
+    return pthread_mutex_trylock((pthread_mutex_t*)mutex) == 0;
 }
 

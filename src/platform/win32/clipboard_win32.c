@@ -69,7 +69,7 @@ if (text == NULL) {  return 0; }
     }
     CloseClipboard();
     
-    {  return 1; }
+    return 1;
 }
 
 int Platform_SetFileToClipboard(const char* path) {
@@ -98,7 +98,7 @@ if (path == NULL || path[0] == 0) {  return 0; }
     if (!EmptyClipboard()) { GlobalFree(hMem); CloseClipboard(); return 0; }
     if (SetClipboardData(CF_HDROP, hMem) == NULL) { GlobalFree(hMem); CloseClipboard(); return 0; }
     CloseClipboard();
-    {  return 1; }
+    return 1;
 }
 
 int Platform_CopyImageToClipboard(const unsigned char* png, size_t len) {
@@ -151,5 +151,5 @@ if (!png || len == 0) {  return 0; }
     if (!SetClipboardData(CF_DIB, hDib)) { CloseClipboard(); GlobalFree(hDib); return 0; }
     CloseClipboard();
     log_info("Platform_CopyImageToClipboard ok %dx%d", width, height);
-    {  return 1; }
+    return 1;
 }

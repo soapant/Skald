@@ -25,12 +25,12 @@ bool Platform_WM_InitDisplay(WindowManager* wm) {
         
 if (!wm) {  return false; }
     wm->display = get_display();
-    {  return wm->display != NULL; }
+    return wm->display != NULL;
 }
 
 int Platform_WM_Run(WindowManager* wm) {
         
-{  return WindowManager_RunLinux(wm); }
+return WindowManager_RunLinux(wm);
 }
 
 void Platform_WM_Quit(WindowManager* wm) {
@@ -176,6 +176,6 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     }
     if (dpy) { XFlush(dpy); XSync(dpy, False); }
     FlintContext* _c = FlintContext_Get();
-    {  return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL; }
+    return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 }
 

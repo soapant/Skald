@@ -57,7 +57,7 @@ if (!key || !key[0]) {  return -1; }
     for (int i = 0; i < g_msg_slot_count; i++) {
         if (strcmp(g_msg_slots[i].key, key) == 0) return i;
     }
-    {  return -1; }
+    return -1;
 }
 
 static void MsgRemoveIndefiniteLocked(Display *dpy) {
@@ -95,7 +95,7 @@ MsgDismissPayload *p = (MsgDismissPayload *)arg;
         pthread_mutex_unlock(&g_msg_lock);
         XFlush(dpy);
     }
-    {  return NULL; }
+    return NULL;
 }
 
 #define MSG_MAX_LINES 64
@@ -115,7 +115,7 @@ if ((c & 0x80) == 0) {  return 1; }
     if ((c & 0xE0) == 0xC0) {  return 2; }
     if ((c & 0xF0) == 0xE0) {  return 3; }
     if ((c & 0xF8) == 0xF0) {  return 4; }
-    {  return 1; }
+    return 1;
 }
 
 static int MsgTextWidth(Display *dpy, XftFont *xf, const char *s, int n) {
@@ -123,7 +123,7 @@ static int MsgTextWidth(Display *dpy, XftFont *xf, const char *s, int n) {
 if (!s || n <= 0) {  return 0; }
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8 *)s, n, &ext);
-    {  return ext.xOff; }
+    return ext.xOff;
 }
 
 static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW, MsgLine *lines, int max_lines) {
@@ -212,7 +212,7 @@ int count = 0;
         }
         p = nl ? nl + 1 : pend;
     }
-    {  return count; }
+    return count;
 }
 
 static void x11_display_message_draw(Display *dpy, Window win, const char *message, unsigned long color, int w, int h, bool no_bg,void (*render)(void)) {
@@ -334,7 +334,7 @@ static int HoverWidgetFindLocked(const char *key) {
 for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
         if (g_hover_widgets[i].w && !g_hover_widgets[i].dead && strcmp(g_hover_widgets[i].key, key) == 0) return i;
     }
-    {  return -1; }
+    return -1;
 }
 
 static int HoverWidgetAllocLocked(const char *key) {
@@ -342,7 +342,7 @@ static int HoverWidgetAllocLocked(const char *key) {
 for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
         if (!g_hover_widgets[i].w) return i;
     }
-    {  return -1; }
+    return -1;
 }
 
 static void HoverWidgetFrame(void *ud) {
@@ -722,7 +722,7 @@ bool Platform_MessagePopupShowWindow(Popup* self, int x, int y, int w, int h) {
     (void)h;
     
     
-    {  return true; }
+    return true;
 }
 
 void Platform_MessagePopupHideWindow(Popup* self) {
@@ -750,7 +750,7 @@ bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
     
     (void)self;
     (void)key;
-    {  return false; }
+    return false;
 }
 
 void Platform_DismissDisplayMessage(void) {
