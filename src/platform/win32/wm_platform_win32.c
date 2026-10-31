@@ -95,9 +95,9 @@ void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
 
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     log_info("Platform_PromptUser started wm=%p spec=%p",wm,spec);
-    if (!wm || !spec) {  return NULL; }
+    if (!wm || !spec) return NULL;
     Popup* popup = PromptPopup_Create(wm, spec);
-    if (!popup) {  return NULL; }
+    if (!popup) return NULL;
     if (spec->subwindow) {
         static bool s_subwindow_creating = false;
         if (s_subwindow_creating) {

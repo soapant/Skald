@@ -27,11 +27,11 @@ static __thread int g_sizeFontSizes[WIN32_SIZE_FONT_SLOTS] = {0};
 static wchar_t* win32_widen(const char* in, int in_len, int* out_len) {
         
 if (out_len) *out_len = 0;
-    if (!in || in_len <= 0) {  return NULL; }
+    if (!in || in_len <= 0) return NULL;
     int n = MultiByteToWideChar(CP_UTF8, 0, in, in_len, NULL, 0);
-    if (n <= 0) {  return NULL; }
+    if (n <= 0) return NULL;
     wchar_t* w = (wchar_t*)malloc((size_t)n * sizeof(wchar_t) + sizeof(wchar_t));
-    if (!w) {  return NULL; }
+    if (!w) return NULL;
     if (MultiByteToWideChar(CP_UTF8, 0, in, in_len, w, n) <= 0) { free(w); return NULL; }
     w[n] = 0;
     if (out_len) *out_len = n;
@@ -54,7 +54,7 @@ for (int i = 0; i < len; i++) {
 
 static bool win32_font_covers(HFONT f, const wchar_t* wide, int len) {
         
-if (!f || !wide || len <= 0) {  return false; }
+if (!f || !wide || len <= 0) return false;
     HFONT old = (HFONT)SelectObject(g_draw_hdc, f);
     bool ok = true;
     for (int i = 0; i < len; i++) {
@@ -95,7 +95,7 @@ if (len > 8) len = 8;
         if (win32_font_covers(f, wide, len)) { found = f; break; }
         DeleteObject(f);
     }
-    if (!found) {  return NULL; }
+    if (!found) return NULL;
 
     int slot = -1;
     ULONGLONG oldest = ~(ULONGLONG)0;
@@ -262,7 +262,7 @@ if (out) *out = g_draw_hdc;
 }
 bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
         
-if (!spec.text || !g_draw_hdc) {  return false; }
+if (!spec.text || !g_draw_hdc) return false;
     int _ox = PlDrawState_Get()->off_x;
     int _oy = PlDrawState_Get()->off_y;
     int x = spec.x + _ox;
@@ -273,7 +273,7 @@ if (!spec.text || !g_draw_hdc) {  return false; }
     int tlen = (int)strlen(spec.text);
     int wlen = 0;
     wchar_t* wide = win32_widen(spec.text, tlen, &wlen);
-    if (!wide) {  return false; }
+    if (!wide) return false;
     int dy = 0;
     HFONT hfont = spec.font.hfont ? spec.font.hfont : win32_font_for_text(wide, wlen, spec.fontsize, &old, &dy);
     if (!hfont) hfont = win32_sized_font(spec.fontsize);
@@ -353,11 +353,11 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
 
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
         
-if (!spec.text || spec.len <= 0) {  return 0; }
-    if (!g_draw_hdc) {  return spec.len * (spec.fontsize > 0 ? spec.fontsize : 16) / 2; }
+if (!spec.text || spec.len <= 0) return 0;
+    if (!g_draw_hdc) return spec.len * (spec.fontsize > 0 ? spec.fontsize : 16) / 2;
     int wlen = 0;
     wchar_t* wide = win32_widen(spec.text, spec.len, &wlen);
-    if (!wide) {  return 0; }
+    if (!wide) return 0;
     HFONT old = NULL;
     HFONT hfont = win32_font_for_text(wide, wlen, spec.fontsize, &old, NULL);
     if (!hfont) hfont = win32_sized_font(spec.fontsize);
@@ -371,7 +371,7 @@ if (!spec.text || spec.len <= 0) {  return 0; }
 
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
         
-if (!spec.text || spec.len <= 0 || !g_draw_hdc) {  return false; }
+if (!spec.text || spec.len <= 0 || !g_draw_hdc) return false;
     int _ox = PlDrawState_Get()->off_x;
     int _oy = PlDrawState_Get()->off_y;
     int x = spec.x + _ox;
@@ -379,7 +379,7 @@ if (!spec.text || spec.len <= 0 || !g_draw_hdc) {  return false; }
     unsigned long color = spec.color != 0 ? rgb_to_hex(spec.color) : COLOR_TEXT;
     int wlen = 0;
     wchar_t* wide = win32_widen(spec.text, spec.len, &wlen);
-    if (!wide) {  return false; }
+    if (!wide) return false;
     HFONT hfont = win32_sized_font(spec.fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
     SetBkMode(g_draw_hdc, TRANSPARENT);
@@ -418,7 +418,7 @@ unsigned long r = hex & 0xFF;
 static COLORREF win32_resolve_color(unsigned long hex, bool opaque) {
         
 COLORREF c = win32_colorref(hex);
-    if (opaque) {  return c; }
+    if (opaque) return c;
     float t = WindowOpacity / 255.0f;
     if (t < 0.0f) t = 0.0f;
     if (t > 1.0f) t = 1.0f;
@@ -432,7 +432,7 @@ COLORREF c = win32_colorref(hex);
 
 static int win32_thickness_px(float thickness) {
         
-if (thickness <= 0.0f) {  return 0; }
+if (thickness <= 0.0f) return 0;
     int px = (int)(thickness + 0.5f);
     if (px < 1) px = 1;
     if (px > 255) px = 255;
@@ -520,11 +520,11 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
 
 int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
         
-if (!text || !text[0] || fontsize <= 0) {  return fontsize > 0 ? fontsize : 0; }
-    if (!g_draw_hdc) {  return fontsize; }
+if (!text || !text[0] || fontsize <= 0) return fontsize > 0 ? fontsize : 0;
+    if (!g_draw_hdc) return fontsize;
     int wlen = 0;
     wchar_t *wide = win32_widen(text, (int)strlen(text), &wlen);
-    if (!wide || wlen <= 0) {  return fontsize; }
+    if (!wide || wlen <= 0) return fontsize;
     FontHandle font = Platform_CreateFont(fontsize, UsedFont);
     HFONT old = font.hfont ? (HFONT)SelectObject(g_draw_hdc, font.hfont) : NULL;
     GLYPHMETRICS gm;
@@ -562,7 +562,7 @@ int t = win32_thickness_px(spec.thickness);
 
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
         
-if (spec.radius <= 0) {  return false; }
+if (spec.radius <= 0) return false;
     int t = win32_thickness_px(spec.thickness);
     int cx = spec.cx + PlDrawState_Get()->off_x;
     int cy = spec.cy + PlDrawState_Get()->off_y;
@@ -819,12 +819,12 @@ static GpBitmap* win32_load_shell_icon_bitmap(const char *path) {
         
 SHFILEINFOA sfi;
     ZeroMemory(&sfi, sizeof(sfi));
-    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON)) {  return NULL; }
-    if (!sfi.hIcon) {  return NULL; }
+    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON)) return NULL;
+    if (!sfi.hIcon) return NULL;
     GpBitmap* bmp = NULL;
     GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
     DestroyIcon(sfi.hIcon);
-    if (st != Ok || !bmp) {  return NULL; }
+    if (st != Ok || !bmp) return NULL;
     return bmp;
 }
 
@@ -832,7 +832,7 @@ static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
         
 win32_gdip_ensure();
     if (g_gdip_token == 0) { log_error("img: GdiplusStartup failed"); return NULL; }
-    if (w <= 0 || h <= 0) {  return NULL; }
+    if (w <= 0 || h <= 0) return NULL;
 
     GpBitmap *src = (GpBitmap *)win32_src_cache_get(path);
     if (!src) {
@@ -888,7 +888,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     
     
 
-    if (!path || !path[0]) {  return false; }
+    if (!path || !path[0]) return false;
     int _offx = PlDrawState_Get()->off_x;
     int _offy = PlDrawState_Get()->off_y;
     x += _offx;

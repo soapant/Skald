@@ -31,7 +31,7 @@ static void CALLBACK ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD t
 
 static bool is_popup_class(HWND hwnd) {
         
-if (!hwnd || !IsWindow(hwnd)) {  return false; }
+if (!hwnd || !IsWindow(hwnd)) return false;
     char cls[64] = {0};
     GetClassNameA(hwnd, cls, sizeof(cls));
     {  return strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0

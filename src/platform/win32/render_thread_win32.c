@@ -44,7 +44,7 @@ RtCallback pend[RT_MAX_PENDING];
 
 bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
         
-if (!fn || !g_rt_thread) {  return false; }
+if (!fn || !g_rt_thread) return false;
     EnterCriticalSection(&g_rt_lock);
     if (g_rt_pending_count >= RT_MAX_PENDING) {
         LeaveCriticalSection(&g_rt_lock);
@@ -70,7 +70,7 @@ return g_rt_thread != NULL;
 
 int Platform_RenderThread_CallbackCount(void) {
         
-if (!g_rt_lock_ready) {  return 0; }
+if (!g_rt_lock_ready) return 0;
     EnterCriticalSection(&g_rt_lock);
     int n = g_rt_count;
     LeaveCriticalSection(&g_rt_lock);
@@ -144,7 +144,7 @@ if (!g_rt_thread) {  return ; }
 bool Platform_RenderThread_EnsureStarted(int fps) {
         
 if (fps > g_rt_fps) g_rt_fps = fps;
-    if (g_rt_thread) {  return true; }
+    if (g_rt_thread) return true;
     if (!g_rt_lock_ready) {
         InitializeCriticalSection(&g_rt_lock);
         InitializeConditionVariable(&g_rt_cond);
@@ -177,8 +177,8 @@ if (!g_rt_thread) {  return ; }
 
 bool Platform_RenderThread_AddFrameCallback(Platform_RenderFrameFn fn, void *ud) {
         
-if (!fn) {  return false; }
-    if (!Platform_RenderThread_EnsureStarted(0)) {  return false; }
+if (!fn) return false;
+    if (!Platform_RenderThread_EnsureStarted(0)) return false;
     EnterCriticalSection(&g_rt_lock);
     if (g_rt_count >= RT_MAX_CALLBACKS) {
         LeaveCriticalSection(&g_rt_lock);

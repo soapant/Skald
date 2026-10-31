@@ -47,7 +47,7 @@ RtCallback pend[RT_MAX_PENDING];
 }
 
 bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
-if (!fn || !g_rt_running) {  return false; }
+if (!fn || !g_rt_running) return false;
     pthread_mutex_lock(&g_rt_lock);
     if (g_rt_pending_count >= RT_MAX_PENDING) {
         pthread_mutex_unlock(&g_rt_lock);
@@ -161,7 +161,7 @@ if (!g_rt_running) {  return ; }
 bool Platform_RenderThread_EnsureStarted(int fps) {
         
 if (fps > g_rt_fps) g_rt_fps = fps;
-    if (g_rt_running) {  return true; }
+    if (g_rt_running) return true;
     Display *dpy = XOpenDisplay(NULL);
     if (!dpy) {
         log_warn("render thread: XOpenDisplay failed, widget frames disabled");
@@ -200,8 +200,8 @@ if (!g_rt_running) {  return ; }
 
 bool Platform_RenderThread_AddFrameCallback(Platform_RenderFrameFn fn, void *ud) {
         
-if (!fn) {  return false; }
-    if (!Platform_RenderThread_EnsureStarted(0)) {  return false; }
+if (!fn) return false;
+    if (!Platform_RenderThread_EnsureStarted(0)) return false;
     pthread_mutex_lock(&g_rt_lock);
     if (g_rt_count >= RT_MAX_CALLBACKS) {
         pthread_mutex_unlock(&g_rt_lock);

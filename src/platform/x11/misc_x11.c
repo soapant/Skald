@@ -28,7 +28,7 @@ static uid_t ProbeSessionUid(void){
         
 
     DIR* d = opendir("/tmp/.X11-unix");
-    if (!d) {  return (uid_t)-1; }
+    if (!d) return (uid_t)-1;
     struct dirent* e;
     while ((e = readdir(d)) != NULL) {
         if (e->d_name[0] != 'X') continue;
@@ -154,7 +154,7 @@ const char* Platform_GetSessionXAuthority(void){
         if (best[0]) { snprintf(buf,sizeof(buf),"%s",best); return buf; }
     }
     snprintf(buf,sizeof(buf),"%s/.Xauthority",Platform_GetRealHome());
-    if(stat(buf,&xst)==0 && xst.st_size>0 && access(buf,R_OK)==0){  return buf; }
+    if(stat(buf,&xst)==0 && xst.st_size>0 && access(buf,R_OK)==0) return buf;
     buf[0]='\0';
         log_info("Platform_GetSessionXAuthority completed");
 
@@ -180,7 +180,7 @@ const char* Platform_GetRuntimeDir(void){
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
         
 
-    if (template_path == NULL || out_size == 0) {  return false; }
+    if (template_path == NULL || out_size == 0) return false;
 
     if (template_path[0] == '~' && (template_path[1] == '/' || template_path[1] == '\0')) {
         const char* home = Platform_GetRealHome();
@@ -309,15 +309,15 @@ int ConvertLinuxKeyToWindowsVK(int key_code) {
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
         
-if (!haystack || !needle) {  return false; }
+if (!haystack || !needle) return false;
     return strcasestr(haystack, needle) != NULL;
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
         
-if (!str || !prefix) {  return false; }
+if (!str || !prefix) return false;
     size_t plen = strlen(prefix);
-    if (plen == 0) {  return true; }
+    if (plen == 0) return true;
     return strncasecmp(str, prefix, plen) == 0;
 }
 
@@ -331,7 +331,7 @@ struct timespec ts;
 bool Platform_TerminateProcessByName(const char* exe_name) {
         
 
-    if (!exe_name || !*exe_name) {  return false; }
+    if (!exe_name || !*exe_name) return false;
     char tmp[256];
     strncpy(tmp, exe_name, sizeof(tmp)-1);
     tmp[sizeof(tmp)-1]='\0';
@@ -348,8 +348,8 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
 
 static bool x11_cmd_exists(const char* cmd) {
         
-if (!cmd || !cmd[0]) {  return false; }
-    if (strchr(cmd, '/')) {  return access(cmd, X_OK) == 0; }
+if (!cmd || !cmd[0]) return false;
+    if (strchr(cmd, '/')) return access(cmd, X_OK) == 0;
     const char* path = getenv("PATH");
     if (!path || !path[0]) path = "/usr/bin:/bin:/usr/local/bin";
     char buf[4096];
@@ -416,7 +416,7 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
 
 bool Platform_QueryBrowser(char* query) {
         
-if (!query || !query[0]) {  return false; }
+if (!query || !query[0]) return false;
 
     char browser_tok[512];
     size_t tok_len = UsedBrowser ? strcspn(UsedBrowser, " \t") : 0;
@@ -510,7 +510,7 @@ static long long next_in_ms = 0;
         fail_streak = 0;
         next_in_ms = 0;
     }
-    if (owner == 0) {  return NULL; }
+    if (owner == 0) return NULL;
     if (fail_streak > 0 && now < next_in_ms) {
         return NULL;
     }

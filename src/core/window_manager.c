@@ -14,7 +14,7 @@ static WindowManager* g_window_manager = NULL;
 WindowManager* WindowManager_Create(void) {
     
     WindowManager* wm = calloc(1, sizeof(WindowManager));
-    if (!wm) {  return NULL; }
+    if (!wm) return NULL;
     wm->popup_capacity = 8;
     wm->popups = calloc(wm->popup_capacity, sizeof(Popup*));
     if (!wm->popups) {
@@ -58,7 +58,7 @@ WindowManager* WindowManager_Get(void) {
 
 int WindowManager_Run(WindowManager* wm) {
     
-    if (!wm) {  return -1; }
+    if (!wm) return -1;
     int rc = Platform_WM_Run(wm);
     
     return rc;
@@ -69,12 +69,12 @@ static bool g_popup_push_in_progress = false;
 Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
     
     if (g_popup_push_in_progress) { log_info("PushPopup REENTRANT blocked");  return NULL; }
-    if (!wm || !popup) {  return NULL; }
+    if (!wm || !popup) return NULL;
     log_info("PushPopup wm=%p popup=%p count_before=%d", (void*)wm, (void*)popup, wm->popup_count);
     if (wm->popup_count >= wm->popup_capacity) {
         int new_cap = wm->popup_capacity * 2;
         Popup** new_popups = realloc(wm->popups, new_cap * sizeof(Popup*));
-        if (!new_popups) {  return NULL; }
+        if (!new_popups) return NULL;
         wm->popups = new_popups;
         wm->popup_capacity = new_cap;
     }
@@ -150,7 +150,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w, int *out_
 
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     log_info("WindowManager_ShowPrompt called wm=%p spec=%p title='%s'", (void*)wm, (void*)spec, spec && spec->title ? spec->title : "(null)");
-    if (!wm || !spec) { return NULL; }
+    if (!wm || !spec) return NULL;
     FlintContext_Get()->window.editbox_placed = false;
     CloseCallback on_close = spec->on_close;
     if (FlintContext_Get()->item_index_map) {

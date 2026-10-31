@@ -164,7 +164,7 @@ int PromptPopup_GetBounds(Popup* p, int* x, int* y, int* w, int* h) {
 
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     
-    if (!wm || !spec) {  return NULL; }
+    if (!wm || !spec) return NULL;
 
     int scale = (int)Platform_GetUIScale();
     if (scale <= 0) scale = 1;
@@ -226,7 +226,7 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     }
 
     PromptPopupData* data = calloc(1, sizeof(PromptPopupData));
-    if (!data) {  return NULL; }
+    if (!data) return NULL;
 
     data->base.vtable = &g_prompt_popup_vtable;
     data->base.manager = wm;

@@ -26,8 +26,8 @@ static bool g_sm_slot_done[SM_SLOTS];
 
 static const char* sm_lookup(int slot, const char* const possibilities[], size_t count) {
         
-    if (slot < 0 || slot >= SM_SLOTS) {  return NULL; }
-    if (g_sm_slot_done[slot]) {  return g_sm_match[slot][0] ? g_sm_match[slot] : NULL; }
+    if (slot < 0 || slot >= SM_SLOTS) return NULL;
+    if (g_sm_slot_done[slot]) return g_sm_match[slot][0] ? g_sm_match[slot] : NULL;
     g_sm_slot_done[slot] = true;
 
     if (!g_sm_scanned) {
@@ -140,7 +140,7 @@ int slot = DEFAULT_TERMINAL;
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
         
-if (kind < 0 || kind >= DEFAULT_APP_COUNT) {  return ""; }
+if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
 
     const char* progid = NULL;
     const char* fallback_name = NULL;

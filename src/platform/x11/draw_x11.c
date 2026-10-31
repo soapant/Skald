@@ -379,9 +379,9 @@ int x11_editbox_measure(const char* text, int len, void* user) {
 
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
     if (!spec.text || spec.len <= 0) return 0;
-    if (!g_draw_dpy) {  return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2; }
+    if (!g_draw_dpy) return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2;
     XftFont* xf = LineFont(g_draw_dpy, spec.fontsize);
-    if (!xf) {  return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2; }
+    if (!xf) return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2;
     return x11_measure_utf8_fallback(g_draw_dpy, xf, spec.text, spec.len, spec.fontsize > 0 ? spec.fontsize : FontSize);
 }
 

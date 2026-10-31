@@ -44,7 +44,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     (void)y;
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
     struct timespec _t0, _t1, _t2, _t3;
     clock_gettime(CLOCK_MONOTONIC, &_t0);
     ListBox_InvalidateMousePos();
@@ -148,8 +148,8 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
         
 
     PromptState* state = self ? (PromptState*)self->user_data : NULL;
-    if (!state) {  return true; }
-    if (Prompt_HandleKey(state, key)) {  return true; }
+    if (!state) return true;
+    if (Prompt_HandleKey(state, key)) return true;
 
     int wParam = key->vk;
     bool shift_pressed = key->shift;
