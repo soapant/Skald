@@ -1,8 +1,8 @@
 #include <stdbool.h>
 #include <string.h>
-#include "core/timer.h"
-#include "config.h"
+
 #include "platform/input.h"
+#include "config_values.h"
 
 void EditBufferBackspace(char *buf, size_t *cursor) {
 

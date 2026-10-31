@@ -1,50 +1,45 @@
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 #include <pthread.h>
-#include "deps/log.h"
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
+#include <X11/X.h>
+#include <X11/Xutil.h>
+#include <X11/extensions/Xrender.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <sys/types.h>
+
+#include "deps/log.h"
+#include "config_values.h"
+#include "core/types.h"
+#include "core/types/window.h"
 #if __has_include(<X11/extensions/Xrandr.h>)
 #include <X11/extensions/Xrandr.h>
 #endif
-#include "platform/x11/display_x11.h"
-
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include <sys/inotify.h>
 #include <poll.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
-#include <dirent.h>
-#include <sys/socket.h>
-#include <sys/un.h>
 #include <glob.h>
-#include "platform/platform.h"
-#include "config.h"
-#include "config.h"
-#include "platform/platform.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_text.h"
-#include "helpers/helpers_ui.h"
-#include "core/context.h"
-#include "core/feature_path.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "platform/lib.h"
 #include <time.h>
-#include <pthread.h>
-#include "core/timer.h"
-#include <linux/uinput.h>
-#include <linux/input.h>
 #include <errno.h>
 #include <sys/file.h>
 #include <fontconfig/fontconfig.h>
+#include <curl/curl.h>
+
+#include "platform/x11/display_x11.h"
+#include "platform/platform.h"
+#include "helpers/helpers_text.h"
+#include "core/feature_path.h"
 #include "platform/x11/env_helpers_x11.h"
 #include "wm/wm.h"
-#include <curl/curl.h>
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif

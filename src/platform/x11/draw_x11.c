@@ -1,24 +1,27 @@
+#include <X11/Xft/Xft.h>
+#include <X11/extensions/Xrender.h>
+#include <X11/Xlib.h>
+#include <string.h>
+#include <X11/X.h>
+#include <fontconfig/fontconfig.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "platform/draw.h"
 #include "platform/x11/display_x11.h"
 #include "platform/platform.h"
 #include "platform/ui.h"
-#include "config.h"
 #include "core/prompt_geometry.h"
 #include "helpers/helpers_ui.h"
-#include "core/timer.h"
 #include "core/draw_state.h"
-#include "deps/log.h"
 #include "core/listbox_hover.h"
 #include "core/editbox.h"
-#include <X11/Xft/Xft.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include "platform/x11/drawing_x11.h"
-#include <stdlib.h>
-#include <string.h>
 #include "core/modal.h"
-#include "bindings/vim_state.h"
+#include "config_values.h"
+#include "core/context.h"
+#include "core/types.h"
+#include "core/types/window.h"
 
 void Platform_SetTransparentWindow(bool on) {
   PlDrawState_Get()->transparent = on;

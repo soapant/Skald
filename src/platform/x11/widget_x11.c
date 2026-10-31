@@ -2,19 +2,21 @@
 #include <string.h>
 #include <time.h>
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
+#include <X11/X.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 #include "platform/widget.h"
 #include "platform/draw.h"
-#include "platform/ui.h"
-#include "platform/platform.h"
-#include "config.h"
 #include "helpers/helpers_ui.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/window_factory_x11.h"
 #include "deps/log.h"
-
-#include "core/timer.h"
+#include "config_values.h"
+#include "core/types/color.h"
+#include "core/types/window.h"
+#include "platform/render_thread.h"
 
 struct PlatformWidget {
   Display *dpy;

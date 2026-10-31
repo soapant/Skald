@@ -1,4 +1,8 @@
 #include "core/prompt_keys.h"
+
+#include <stdlib.h>
+#include <string.h>
+
 #include "config.h"
 #include "core/context.h"
 #include "deps/log.h"
@@ -6,7 +10,6 @@
 #include "core/modal.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_controller.h"
-#include "core/timer.h"
 #include "bindings/vim_helpers.h"
 #include "bindings/vim_state.h"
 #include "platform/input.h"
@@ -14,6 +17,8 @@
 #include "platform/ui.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_alias.h"
+#include "config_values.h"
+#include "core/types/keys.h"
 
 void Prompt_Refresh(PromptState *state) {
 

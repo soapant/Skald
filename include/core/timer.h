@@ -1,8 +1,11 @@
 #ifndef CORE_TIMER_H
 #define CORE_TIMER_H
 
+#include <stdint.h>
+
 #include "core/types.h"
 #include "platform/platform.h"
+#include "core/types/misc.h"
 
 #define TIMER_LOG_CAP 65536
 #define TIMER_BUF_LINES 8192

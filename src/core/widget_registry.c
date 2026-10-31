@@ -1,17 +1,21 @@
 #include "core/widget_registry.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "core/flapi.h"
 #include "deps/log.h"
 #include "platform/platform.h"
-#include "platform/ui.h"
 #include "platform/wm_platform.h"
 #include "platform/widget.h"
 #include "platform/render_thread.h"
 #include "platform/draw.h"
 #include "platform/lib.h"
 #include "platform/input_state.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "config_values.h"
+#include "core/types/flapi_types.h"
+#include "core/types/window.h"
 
 static FlWidget *g_widgets[FL_WIDGET_MAX];
 static int g_widget_count = 0;

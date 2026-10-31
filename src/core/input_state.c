@@ -1,9 +1,11 @@
 #include "platform/input_state.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
 #include "platform/platform.h"
 #include "core/types/keys.h"
 #include "core/timer.h"
-#include <stddef.h>
-#include <time.h>
 
 static bool g_down[256] = {0};
 static bool g_pressed[256] = {0};

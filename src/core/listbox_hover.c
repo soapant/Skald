@@ -1,10 +1,11 @@
 #include "core/listbox_hover.h"
-#include "deps/log.h"
+
 #include <stdlib.h>
+#include <stdint.h>
+
 #include "core/context.h"
 #include "core/timer.h"
 #include "core/window_manager.h"
-#include "config.h"
 #include "platform/draw.h"
 #include "platform/input_state.h"
 #include "platform/ui.h"

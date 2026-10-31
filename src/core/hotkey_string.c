@@ -1,12 +1,13 @@
 #include "core/hotkey_string.h"
-#include "core/timer.h"
-#include "platform/platform.h"
-#include "platform/input_state.h"
 
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+
+#include "platform/platform.h"
+#include "platform/input_state.h"
 
 static int hotkey_mouse_token_to_button(const char *token) {
   if (!token || !token[0])

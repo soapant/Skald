@@ -1,11 +1,11 @@
-#include "platform/platform.h"
-#include "config.h"
-#include "platform/x11/display_x11.h"
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <stdlib.h>
 
-#include "core/timer.h"
+#include "platform/platform.h"
+#include "platform/x11/display_x11.h"
+#include "config_values.h"
+
 static float ui_scale = 0.0f;
 static int ui_scale_applied = 0;
 static int base_font_size = 0;

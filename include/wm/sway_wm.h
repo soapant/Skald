@@ -1,8 +1,11 @@
 #ifndef SWAY_WM_H
 #define SWAY_WM_H
 #include <stdbool.h>
+
 #include "platform/platform.h"
 #include "core/types.h"
+#include "core/types/window.h"
+
 bool get_title_sway(char *buffer, int buffer_size);
 bool get_app_id_sway(char *buffer, int buffer_size);
 char *paste_sway(char *content);

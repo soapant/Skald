@@ -1,8 +1,11 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
+#include <stdbool.h>
+
 #include "core/types.h"
-#include "deps/stb_ds.h"
+#include "core/types/window.h"
+
 typedef struct {
   char *key;
   void *value;

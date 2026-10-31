@@ -2,10 +2,14 @@
 #include "platform/x11/input_x11.h"
 #include "platform/x11/display_x11.h"
 #include "deps/log.h"
+#include "core/types/keys.h"
 #include <linux/input.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+#include <linux/input-event-codes.h>
 #include <sys/time.h>
 #include <string.h>
-#include "core/timer.h"
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif
