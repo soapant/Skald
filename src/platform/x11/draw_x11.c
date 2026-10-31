@@ -386,7 +386,6 @@ int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
 }
 
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
-        
 if (!spec.text || spec.len <= 0 || !g_draw_dpy || !g_draw_xd) return false;
     int x = spec.x + PlDrawState_Get()->off_x;
     int y = spec.y + PlDrawState_Get()->off_y;

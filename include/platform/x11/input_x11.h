@@ -55,7 +55,6 @@ extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
-bool should_swallow_pending(int wParam, int mods);
 int x11_keysym_to_windows_vk(KeySym keysym);
 void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed);
 

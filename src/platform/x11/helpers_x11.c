@@ -396,17 +396,6 @@ int x11_font_list_top_of(FontHandle font) {
     return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
 }
 
-int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top) {
-    int line_h = ascent + descent;
-    if (line_h <= 0 || font_size <= 0) {  return box_top; }
-    return box_top + (line_h - font_size) / 2;
-}
-
-int x11_font_cursor_y_of(FontHandle font, int box_top) {
-    XftFont* xf = FH_TO_XFT(font);
-    return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top);
-}
-
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
     const char* baseText = lb ? ListBoxInfo_Row(lb, idx) : NULL;
     snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
@@ -1190,18 +1179,6 @@ static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int 
     if (inside <= 0) {  return 0; }
     if (inside >= total) {  return baseAlpha8; }
     return (unsigned int)((float)baseAlpha8 * ((float)inside / (float)total) + 0.5f);
-}
-
-void x11_free_cached_background(void) {
-    for (int i = 0; i < BG_SLOT_COUNT; i++) {
-        if (g_bg_slots[i].used && g_bg_slots[i].pm != None && g_bg_slots[i].dpy) {
-            XFreePixmap(g_bg_slots[i].dpy, g_bg_slots[i].pm);
-        }
-        g_bg_slots[i].used = false;
-        g_bg_slots[i].pm = None;
-        g_bg_slots[i].dpy = NULL;
-    }
-    g_bg_slot_next = 0;
 }
 
 static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_line, int w, int h, int R, unsigned int baseAlpha8, unsigned long base, unsigned long fill) {
