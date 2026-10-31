@@ -77,7 +77,7 @@ bool FeaturePath_LibBasenameStem(const char* base, char* out, size_t out_len) {
     if (len >= 3 && fp_strcasecmp(work + len - 3, ".so") == 0) len -= 3;
     else if (len >= 4 && fp_strcasecmp(work + len - 4, ".dll") == 0) len -= 4;
     else if (len >= 5 && fp_strcasecmp(work + len - 5, ".dylib") == 0) len -= 5;
-    else {  return false; }
+    else return false;
     if (len == 0 || len >= out_len) return false;
     memcpy(out, work, len);
     out[len] = '\0';

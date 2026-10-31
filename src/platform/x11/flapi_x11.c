@@ -269,7 +269,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             if (args && args[0]) snprintf(extra, sizeof(extra), "-e sh -c '%s %s; exec %s'", exec_line, args,UsedShell);
             else snprintf(extra, sizeof(extra), "-e sh -c '%s; exec %s'", exec_line,UsedShell);
             if(wd) return Platform_LaunchTerminalAtPath(wd, extra);
-            else {  return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra); }
+            else return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra);
         }
         if (exec_line[0] && args && args[0]) {
             char combined[2048];

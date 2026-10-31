@@ -1283,7 +1283,7 @@ bool Platform_ClickButton(int button) {
     DWORD down_flag, up_flag;
     if (button == 1) { down_flag = MOUSEEVENTF_LEFTDOWN; up_flag = MOUSEEVENTF_LEFTUP; }
     else if (button == 2) { down_flag = MOUSEEVENTF_RIGHTDOWN; up_flag = MOUSEEVENTF_RIGHTUP; }
-    else {  return false; }
+    else return false;
     INPUT inputs[2] = {0};
     inputs[0].type = INPUT_MOUSE;
     inputs[0].mi.dwFlags = down_flag;

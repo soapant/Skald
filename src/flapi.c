@@ -106,10 +106,10 @@ char* fl_search_file_in_dir(const char* directory, const char* search_string,cha
 bool fl_launch_with_args(const char* path, const char* args) {
     
     if (!path) {     
- {  return false; } }
+ return false;}
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {     
- {  return false; } }
+ return false;}
     bool r = fl_launch_with_args_platform(expanded, args);
     
     return r;
@@ -472,7 +472,7 @@ int fl_get_icon_size(const char* icon_path) {
 char* fl_run_terminal_command(char* command) {
   
   if (!command) {     
-   {  return NULL; } }
+   return NULL;}
   char* r = Platform_RunTerminalCommand(command,false);
   
   return r;
@@ -493,22 +493,17 @@ char* fl_run_terminal_command_blocking(char* command) {
 char* fl_run_terminal_command_and_open(char* command) {
   
   if (!command) {     
-   {  return NULL; } }
+   return NULL;}
   char* r = Platform_RunTerminalCommand(command,true);
   
   return r;
 }
 
 bool fl_launch_detached(char* command) {
-    
-
     if (!command) {
-        
         return false;
     }
-
     bool r = Platform_LaunchDetached(command);
-    
     return r;
 }
 
@@ -516,10 +511,10 @@ bool fl_launch_terminal_at_path(char* path,char* args) {
   
   bool r = false;
   if (!path) {     
-     {  return false; } }
+     return false;}
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {     
-     {  return false; } }
+     return false;}
     r = Platform_LaunchTerminalAtPath(expanded,args);
   
   return r;
@@ -537,29 +532,29 @@ bool fl_string_contains(const char* haystack, const char* needle) {
 }
 
 char* fl_string_cut_at(const char* str, char delim) {     
-{  return String_CutAt(str, delim); } }
+return String_CutAt(str, delim);}
 char* fl_string_cut_before(const char* str, char delim) {     
-{  return String_CutBefore(str, delim); } }
+return String_CutBefore(str, delim);}
 char* fl_string_cut_after(const char* str, char delim) {     
-{  return String_CutAfter(str, delim); } }
+return String_CutAfter(str, delim);}
 char* fl_string_between(const char* str, char open, char close) {     
-{  return String_Between(str, open, close); } }
+return String_Between(str, open, close);}
 char* fl_string_inside(const char* str, char delim) {     
-{  return String_Inside(str, delim); } }
+return String_Inside(str, delim);}
 char* fl_string_trim(const char* str) {     
-{  return String_Trim(str); } }
+return String_Trim(str);}
 char* fl_string_to_lower(const char* str) {     
-{  return String_ToLower(str); } }
+return String_ToLower(str);}
 char* fl_string_to_upper(const char* str) {     
-{  return String_ToUpper(str); } }
+return String_ToUpper(str);}
 bool fl_string_starts_with(const char* str, const char* prefix) {     
-{  return String_StartsWith(str, prefix); } }
+return String_StartsWith(str, prefix);}
 bool fl_string_ends_with(const char* str, const char* suffix) {     
-{  return String_EndsWith(str, suffix); } }
+return String_EndsWith(str, suffix);}
 char* fl_string_replace(const char* str, const char* from, const char* to) {     
-{  return String_Replace(str, from, to); } }
+return String_Replace(str, from, to);}
 char* fl_string_slice(const char* str, int start, int end) {     
-{  return String_Slice(str, start, end); } }
+return String_Slice(str, start, end);}
 
 StringList fl_string_split(const char* str, const char* delimiter) {
     
@@ -729,7 +724,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
 bool fl_launch_browser(char* url) {
     
     if (!url) {     
-     {  return false; } }
+     return false;}
     bool r = Platform_LaunchBrowserAtUrl(url,false);
     
     return r;
@@ -849,7 +844,7 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
 bool fl_focus_window_by_title(char* title) {
   
   if (!title) {     
-   {  return false; } }
+   return false;}
   bool r = Platform_FocusWindow(title);
   
   return r;
@@ -961,18 +956,18 @@ bool fl_draw_text_impl(const FlTextSpec *spec) {
     int x = spec->x ? spec->x : 0;
     int y = spec->y ? spec->y : 0;
     if (!spec) {     
-     {  return false; } }
+     return false;}
     const char *real_text = spec->text;
     char tmp[2] = {0};
     if ((uintptr_t)real_text < 256) {
         if (!real_text) {     
-         {  return false; } }
+         return false;}
         tmp[0] = (char)(uintptr_t)real_text;
         tmp[1] = '\0';
         real_text = tmp;
     }
     if (!real_text) {     
-     {  return false; } }
+     return false;}
     unsigned long col = spec->color;
     if (col == 0) {
         unsigned long cur = fl_listbox_get_current_standard_color();
@@ -1123,7 +1118,7 @@ static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
 int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
     
     if (!spec || !spec->text) {     
-     {  return 0; } }
+     return 0;}
     int fontsize = spec->fontsize;
     if (fontsize <= 0) fontsize = FontSize;
     int line_height = spec->line_height;
@@ -1140,7 +1135,7 @@ int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
 bool fl_place_editbox_impl(const FlEditSpec *spec) {
   
   if (!spec) {     
- {  return false; } }
+ return false;}
   FlintContext_Get()->window.editbox_placed = true;
   bool r = fl_place_editbox_platform(spec);
   
@@ -1150,7 +1145,7 @@ bool fl_place_editbox_impl(const FlEditSpec *spec) {
 bool fl_draw_image_impl(const FlImageSpec *spec) {
   
   if (!spec || !spec->path || !spec->path[0]) {     
- {  return false; } }
+ return false;}
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
   char asset[MAX_PATH];
@@ -1167,7 +1162,7 @@ bool fl_draw_image_impl(const FlImageSpec *spec) {
 bool fl_draw_rect_impl(const FlRectSpec *spec) {
   
   if (!spec) {     
-   {  return false; } }
+   return false;}
   unsigned long col = spec->color;
   bool transparent = spec->transparent ? spec->transparent : true;
   if (col == 0) col = COLOR_TEXT;
@@ -1252,7 +1247,7 @@ void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata) {
 bool fl_draw_line_impl(const FlLineSpec *spec) {
   
   if (!spec) {     
- {  return false; } }
+ return false;}
   unsigned long col = spec->color;
   col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
@@ -1264,7 +1259,7 @@ bool fl_draw_line_impl(const FlLineSpec *spec) {
 bool fl_draw_circle_impl(const FlCircleSpec *spec) {
   
   if (!spec) {     
- {  return false; } }
+ return false;}
   unsigned long col = spec->color;
   col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
@@ -1276,7 +1271,7 @@ bool fl_draw_circle_impl(const FlCircleSpec *spec) {
 bool fl_listbox_begin(const FlListSpec *spec) {
     
     if (!spec) {     
- {  return false; } }
+ return false;}
     bool r = fl_listbox_begin_platform(spec);
     
     return r;
@@ -1285,7 +1280,7 @@ bool fl_listbox_begin(const FlListSpec *spec) {
 bool fl_listbox_next(FlListItemCtx *out) {
     
     if (!out) {     
- {  return false; } }
+ return false;}
     bool r = fl_listbox_next_platform(out);
     
     return r;
@@ -1299,9 +1294,9 @@ void fl_listbox_end(void) {
 bool fl_place_listbox_impl(const FlListSpec *spec) {
     
     if (!spec) {     
- {  return false; } }
+ return false;}
     if (!fl_listbox_begin(spec)) {     
- {  return false; } }
+ return false;}
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
         fl_draw_text(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=ctx.x + 10);
@@ -1394,7 +1389,7 @@ bool fl_click_button_at(FlPos pos, int button) {
   bool moved = fl_move_to_pos(pos);
   bool down = moved && Platform_MouseButtonDown(button, true);
   if (!down) {     
- {  return false; } }
+ return false;}
   fl_sleep(0.02);
   bool up = Platform_MouseButtonDown(button, false);
   
@@ -1410,10 +1405,10 @@ bool fl_mouse_scroll(int notches) {
 static bool fl_rel_to_abs(int rx, int ry, FlPos *out) {
   
   if (!out) {     
- {  return false; } }
+ return false;}
   int vx = 0, vy = 0, vw = 0, vh = 0;
   if (!Platform_GetVirtualBounds(&vx, &vy, &vw, &vh)) {     
- {  return false; } }
+ return false;}
   out->x = vx + rx;
   out->y = vy + ry;
   
@@ -1424,7 +1419,7 @@ bool fl_move_to_pos_rel(int rx, int ry) {
   
   FlPos abs;
   if (!fl_rel_to_abs(rx, ry, &abs)) {     
- {  return false; } }
+ return false;}
   bool ok = fl_move_to_pos(abs);
   
   return ok;
@@ -1434,7 +1429,7 @@ bool fl_click_at_pos_rel(int rx, int ry) {
   
   FlPos abs;
   if (!fl_rel_to_abs(rx, ry, &abs)) {     
- {  return false; } }
+ return false;}
   bool ok = fl_click_at_pos(abs);
   
   return ok;
@@ -1444,7 +1439,7 @@ bool fl_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
   
   FlPos abs;
   if (!fl_rel_to_abs(rx, ry, &abs)) {     
- {  return false; } }
+ return false;}
   bool ok = fl_emit_mouse_button_at(abs, button, down);
   
   return ok;
@@ -1454,7 +1449,7 @@ bool fl_click_button_at_rel(int rx, int ry, int button) {
   
   FlPos abs;
   if (!fl_rel_to_abs(rx, ry, &abs)) {     
- {  return false; } }
+ return false;}
   bool ok = fl_click_button_at(abs, button);
   
   return ok;
@@ -1680,7 +1675,7 @@ int fl_char_for_key(int vk, int scancode, int mods) {
 }
 
 bool fl_is_flag_prefix(char c) {     
-{  return c == '-' || c == '/'; } }
+return c == '-' || c == '/';}
 
 size_t fl_extract_flag_name(char *p, char *out, size_t cap) {
     
@@ -1797,7 +1792,7 @@ char* fl_get_active_window_title(void) {
   
   char* title = Platform_GetActiveWindowTitle();
   if (!title || !title[0]) {     
-   {  return NULL; } }
+   return NULL;}
   char* r = strdup(title);
   
   return r;
@@ -1807,7 +1802,7 @@ char* fl_get_active_window_app_id(void) {
   
   char* id = Platform_GetActiveWindowAppId();
   if (!id || !id[0]) {     
-   {  return NULL; } }
+   return NULL;}
   char* r = strdup(id);
   
   return r;

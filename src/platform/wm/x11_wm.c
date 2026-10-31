@@ -600,7 +600,7 @@ Display* display = get_display();
     bool moved = false;
     if (g_ewmh_move_works != 0 && move_active_window_to_monitor_x11(right)) moved = true;
     else if (i3_move_to_output(right)) moved = true;
-    else {  return x11_activate_neighbor(right); }
+    else return x11_activate_neighbor(right);
     if (before != None) x11_activate_window(display, before);
     return true;
 }
