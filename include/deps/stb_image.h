@@ -1240,7 +1240,6 @@ static void *stbi__load_main(stbi__context *s, int *x, int *y, int *comp,
   if (stbi__tga_test(s))
     return stbi__tga_load(s, x, y, comp, req_comp, ri);
 #endif
-
   return stbi__errpuc("unknown image type",
                       "Image not of any known type, or corrupt");
 }
@@ -1347,7 +1346,6 @@ static unsigned char *stbi__load_and_postprocess_8bit(stbi__context *s, int *x,
     int channels = req_comp ? req_comp : *comp;
     stbi__vertical_flip(result, *x, *y, channels * sizeof(stbi_uc));
   }
-
   return (unsigned char *)result;
 }
 
@@ -1378,7 +1376,6 @@ static stbi__uint16 *stbi__load_and_postprocess_16bit(stbi__context *s, int *x,
     int channels = req_comp ? req_comp : *comp;
     stbi__vertical_flip(result, *x, *y, channels * sizeof(stbi__uint16));
   }
-
   return (stbi__uint16 *)result;
 }
 
@@ -1538,7 +1535,6 @@ STBIDEF stbi_uc *stbi_load_gif_from_memory(stbi_uc const *buffer, int len,
   if (stbi__vertically_flip_on_load) {
     stbi__vertical_flip_slices(result, *x, *y, *z, *comp);
   }
-
   return result;
 }
 #endif
@@ -1718,7 +1714,6 @@ stbi_inline static int stbi__at_eof(stbi__context *s) {
     if (s->read_from_callbacks == 0)
       return 1;
   }
-
   return s->img_buffer >= s->img_buffer_end;
 }
 #endif
@@ -3522,7 +3517,6 @@ static int stbi__process_marker(stbi__jpeg *z, int m) {
     stbi__skip(z->s, L);
     return 1;
   }
-
   return stbi__err("unknown marker", "Corrupt JPEG");
 }
 
@@ -3571,7 +3565,6 @@ static int stbi__process_scan_header(stbi__jpeg *z) {
       z->spec_end = 63;
     }
   }
-
   return 1;
 }
 
@@ -3719,7 +3712,6 @@ static int stbi__process_frame_header(stbi__jpeg *z, int scan) {
           (short *)(((size_t)z->img_comp[i].raw_coeff + 15) & ~15);
     }
   }
-
   return 1;
 }
 
@@ -3876,7 +3868,6 @@ static stbi_uc *stbi__resample_row_h_2(stbi_uc *out, stbi_uc *in_near,
 
   STBI_NOTUSED(in_far);
   STBI_NOTUSED(hs);
-
   return out;
 }
 
@@ -3902,7 +3893,6 @@ static stbi_uc *stbi__resample_row_hv_2(stbi_uc *out, stbi_uc *in_near,
   out[w * 2 - 1] = stbi__div4(t1 + 2);
 
   STBI_NOTUSED(hs);
-
   return out;
 }
 
@@ -4020,7 +4010,6 @@ static stbi_uc *stbi__resample_row_hv_2_simd(stbi_uc *out, stbi_uc *in_near,
   out[w * 2 - 1] = stbi__div4(t1 + 2);
 
   STBI_NOTUSED(hs);
-
   return out;
 }
 #endif
@@ -5005,7 +4994,6 @@ static int stbi__do_zlib(stbi__zbuf *a, char *obuf, int olen, int exp,
   a->zout = obuf;
   a->zout_end = obuf + olen;
   a->z_expandable = exp;
-
   return stbi__parse_zlib(a, parse_header);
 }
 
@@ -5369,7 +5357,6 @@ static int stbi__create_png_image_raw(stbi__png *a, stbi_uc *raw,
   STBI_FREE(filter_buf);
   if (!all_ok)
     return 0;
-
   return 1;
 }
 
@@ -5418,7 +5405,6 @@ static int stbi__create_png_image(stbi__png *a, stbi_uc *image_data,
     }
   }
   a->out = final;
-
   return 1;
 }
 
@@ -5505,7 +5491,6 @@ static int stbi__expand_png_palette(stbi__png *a, stbi_uc *palette, int len,
   a->out = temp_out;
 
   STBI_NOTUSED(len);
-
   return 1;
 }
 
@@ -5887,7 +5872,6 @@ static void *stbi__do_png(stbi__png *p, int *x, int *y, int *n, int req_comp,
   p->expanded = NULL;
   STBI_FREE(p->idata);
   p->idata = NULL;
-
   return result;
 }
 
@@ -6811,7 +6795,6 @@ static int stbi__psd_decode_rle(stbi__context *s, stbi_uc *p, int pixelCount) {
       }
     }
   }
-
   return 1;
 }
 
@@ -7023,7 +7006,6 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp,
     *comp = 4;
   *y = h;
   *x = w;
-
   return out;
 }
 #endif
@@ -7041,7 +7023,6 @@ static int stbi__pic_is4(stbi__context *s, const char *str) {
   for (i = 0; i < 4; ++i)
     if (stbi__get8(s) != (stbi_uc)str[i])
       return 0;
-
   return 1;
 }
 
@@ -7056,7 +7037,6 @@ static int stbi__pic_test_core(stbi__context *s) {
 
   if (!stbi__pic_is4(s, "PICT"))
     return 0;
-
   return 1;
 }
 
@@ -7074,7 +7054,6 @@ static stbi_uc *stbi__readval(stbi__context *s, int channel, stbi_uc *dest) {
       dest[i] = stbi__get8(s);
     }
   }
-
   return dest;
 }
 
@@ -7198,7 +7177,6 @@ static stbi_uc *stbi__pic_load_core(stbi__context *s, int width, int height,
       }
     }
   }
-
   return result;
 }
 
@@ -7246,7 +7224,6 @@ static void *stbi__pic_load(stbi__context *s, int *px, int *py, int *comp,
   if (req_comp == 0)
     req_comp = *comp;
   result = stbi__convert_format(result, 4, req_comp, x, y);
-
   return result;
 }
 
@@ -7351,7 +7328,6 @@ static int stbi__gif_header(stbi__context *s, stbi__gif *g, int *comp,
 
   if (g->flags & 0x80)
     stbi__gif_parse_colortable(s, g->pal, 2 << (g->flags & 7), -1);
-
   return 1;
 }
 
@@ -7634,7 +7610,6 @@ static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp,
           }
         }
       }
-
       return o;
     }
 
@@ -7811,7 +7786,6 @@ static void *stbi__gif_load(stbi__context *s, int *x, int *y, int *comp,
   // free buffers needed for multiple frame loading;
   STBI_FREE(g.history);
   STBI_FREE(g.background);
-
   return u;
 }
 
@@ -8051,7 +8025,6 @@ static float *stbi__hdr_load(stbi__context *s, int *x, int *y, int *comp,
     if (scanline)
       STBI_FREE(scanline);
   }
-
   return hdr_data;
 }
 
@@ -8251,7 +8224,6 @@ static int stbi__pic_info(stbi__context *s, int *x, int *y, int *comp) {
   } while (chained);
 
   *comp = (act_comp & 0x10 ? 4 : 3);
-
   return 1;
 }
 #endif
@@ -8359,7 +8331,6 @@ static int stbi__pnm_getinteger(stbi__context *s, char *c) {
           "integer parse overflow",
           "Parsing an integer in the PPM header overflowed a 32-bit int");
   }
-
   return value;
 }
 

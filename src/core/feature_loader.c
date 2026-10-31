@@ -795,7 +795,6 @@ void FeatureLoader_Unload(const char *name) {
 }
 
 void FeatureLoader_ReloadAll(void) {
-
   LOCK();
   for (int i = 0; i < g_feature_count; i++) {
     if (g_features[i].handle) {

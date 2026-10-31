@@ -443,7 +443,6 @@ static bool write_compile_commands(void) {
   }
   fprintf(f, "\n]\n");
   fclose(f);
-
   return true;
 }
 
@@ -990,6 +989,5 @@ int main(int argc, char **argv) {
   nob_log(NOB_INFO, "Built Successfully");
   if (do_test && !run_tests())
     return 1;
-
   return 0;
 }

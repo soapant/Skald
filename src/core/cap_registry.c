@@ -83,7 +83,6 @@ void *cap_resolve_abi(const char *key, unsigned abi) {
 }
 
 void cap_bind_declare(const char *key, void *consumer) {
-
   if (!key || !key[0] || !consumer) {
     return;
   }
@@ -109,13 +108,11 @@ void cap_bind_declare(const char *key, void *consumer) {
       return;
     }
     FeatureLoader_ManifestAddDepends(consumer_path, provider);
-
     return;
   }
 }
 
 void cap_purge_owner(const char *path_a, const char *path_b) {
-
   if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) {
     return;
   }

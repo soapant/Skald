@@ -65,7 +65,6 @@ void ListBox_InvalidateMousePos(void) {
 }
 
 bool ListBox_ClientMousePos(int *out_x, int *out_y) {
-
   if (!g_mouse_valid) {
     if (!Platform_GetMousePos(&g_mouse_x, &g_mouse_y)) {
       g_mouse_valid = false;
@@ -73,7 +72,6 @@ bool ListBox_ClientMousePos(int *out_x, int *out_y) {
         *out_x = 0;
       if (out_y)
         *out_y = 0;
-
       return false;
     }
     g_mouse_valid = true;
@@ -113,10 +111,8 @@ bool ListBox_ClientMousePos(int *out_x, int *out_y) {
   if (out_y)
     *out_y = my;
   if (!inside) {
-
     return false;
   }
-
   return true;
 }
 
@@ -124,7 +120,6 @@ int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,
                    int top_index, int visible_count, int mouse_y) {
 
   if (!lb || item_height <= 0 || visible_count <= 0) {
-
     return -1;
   }
   int rel = mouse_y - list_top;
@@ -152,7 +147,6 @@ bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
   int mx = 0, my = 0;
   if (!ListBox_ClientMousePos(&mx, &my)) {
     g_hover_pos_set = false;
-
     return false;
   }
   bool mouse_moved = !g_hover_pos_set || g_hover_x != mx || g_hover_y != my;
@@ -167,7 +161,6 @@ bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
   if (idx < 0 || idx == lb->selected_index)
     return false;
   UI_SetSelection(lb, idx);
-
   return true;
 }
 
@@ -180,7 +173,6 @@ int ListBox_TakeScroll(void) {
 }
 
 void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count) {
-
   if (!lb || rows == 0) {
     return;
   }

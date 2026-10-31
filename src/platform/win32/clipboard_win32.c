@@ -11,7 +11,6 @@
 
 #include "core/timer.h"
 int Platform_CopyToClipboard(const char *text) {
-
   if (text == NULL)
     return 0;
 
@@ -71,12 +70,10 @@ int Platform_CopyToClipboard(const char *text) {
     return 0;
   }
   CloseClipboard();
-
   return 1;
 }
 
 int Platform_SetFileToClipboard(const char *path) {
-
   if (path == NULL || path[0] == 0)
     return 0;
   wchar_t wpath[MAX_PATH * 2];
@@ -124,7 +121,6 @@ int Platform_SetFileToClipboard(const char *path) {
 }
 
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
-
   if (!png || len == 0)
     return 0;
   char tmp[MAX_PATH];

@@ -365,7 +365,6 @@ void Platform_GetDrawContext(Display **dpy, XftDraw **xd, Visual **vis,
     *cmap = g_draw_cmap;
 }
 bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
-
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return false;
   int _ox = PlDrawState_Get()->off_x;
@@ -433,7 +432,6 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
 }
 
 void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
-
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return;
   XftFont *xf = FH_TO_XFT(spec.font);
@@ -934,7 +932,6 @@ void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
 }
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
-
   Display *dpy = get_display();
   FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
   int lh = FontSize;

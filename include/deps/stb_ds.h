@@ -863,7 +863,6 @@ void *stbds_arrgrowf(void *a, size_t elemsize, size_t addlen, size_t min_cap) {
     STBDS_STATS(++stbds_array_grow);
   }
   stbds_header(b)->capacity = min_cap;
-
   return b;
 }
 
@@ -1092,7 +1091,6 @@ static stbds_hash_index *stbds_make_hash_index(size_t slot_count,
       }
     }
   }
-
   return t;
 }
 
@@ -1293,7 +1291,6 @@ size_t stbds_hash_bytes(void *p, size_t len, size_t seed) {
     //  deletes in 200M table
     //   15.58ms   //   14.79ms   //   15.52ms : 200,000 inserts creating 200K
     //   table with varying key spacing
-
     return (((size_t)hash << 16 << 16) | hash) ^ seed;
   } else if (len == 8 && sizeof(size_t) == 8) {
     size_t hash = d[0] | (d[1] << 8) | (d[2] << 16) | (d[3] << 24);
@@ -1691,7 +1688,6 @@ void *stbds_hmdel_key(void *a, size_t elemsize, void *key, size_t keysize,
           STBDS_FREE(NULL, table);
           STBDS_STATS(++stbds_hash_rebuild);
         }
-
         return a;
       }
     }

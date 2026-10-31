@@ -5,19 +5,16 @@
 
 #include "core/timer.h"
 LibHandle Platform_LoadLibrary(const char *path) {
-
   if (!path)
     return NULL;
   return (LibHandle)LoadLibraryA(path);
 }
 void *Platform_GetSymbol(LibHandle lib, const char *name) {
-
   if (!lib || !name)
     return NULL;
   return (void *)GetProcAddress((HMODULE)lib, name);
 }
 void Platform_UnloadLibrary(LibHandle lib) {
-
   if (lib)
     FreeLibrary((HMODULE)lib);
 }
@@ -38,7 +35,6 @@ const char *Platform_GetLoadError(void) {
 }
 
 bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n) {
-
   if (!out || n == 0)
     return false;
   out[0] = '\0';

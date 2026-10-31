@@ -44,7 +44,6 @@ static void rt_run_pending(void) {
 }
 
 bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
-
   if (!fn || !g_rt_thread)
     return false;
   EnterCriticalSection(&g_rt_lock);
@@ -65,7 +64,6 @@ void *Platform_RenderThread_Display(void) { return NULL; }
 bool Platform_RenderThread_IsRunning(void) { return g_rt_thread != NULL; }
 
 int Platform_RenderThread_CallbackCount(void) {
-
   if (!g_rt_lock_ready)
     return 0;
   EnterCriticalSection(&g_rt_lock);
@@ -120,7 +118,6 @@ static void rt_sync_mark(void *ud) {
 }
 
 void Platform_RenderThread_Wake(void) {
-
   if (!g_rt_lock_ready) {
     return;
   }
@@ -130,7 +127,6 @@ void Platform_RenderThread_Wake(void) {
 }
 
 void Platform_RenderThread_Sync(void) {
-
   if (!g_rt_thread) {
     return;
   }
@@ -152,7 +148,6 @@ void Platform_RenderThread_Sync(void) {
 }
 
 bool Platform_RenderThread_EnsureStarted(int fps) {
-
   if (fps > g_rt_fps)
     g_rt_fps = fps;
   if (g_rt_thread)
@@ -172,7 +167,6 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
 }
 
 void Platform_RenderThread_Stop(void) {
-
   if (!g_rt_thread) {
     return;
   }

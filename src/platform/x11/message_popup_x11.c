@@ -410,7 +410,6 @@ static void HoverWidgetFrame(void *ud) {
 }
 
 void Platform_HoverWidgetHide(const char *key) {
-
   if (!key || !key[0]) {
     return;
   }
@@ -585,7 +584,6 @@ static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
 }
 
 void Platform_HoverMessageRelease(const char *key) {
-
   Display *dpy = get_display();
   if (!dpy || !key || !key[0]) {
     return;
@@ -801,7 +799,6 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
 }
 
 bool Platform_DismissMessage(const char *name) {
-
   Display *dpy = get_display();
   if (!dpy)
     return false;
@@ -823,12 +820,10 @@ bool Platform_DismissMessage(const char *name) {
   }
   pthread_mutex_unlock(&g_msg_lock);
   XFlush(dpy);
-
   return removed;
 }
 
 bool Platform_MessageActive(const char *name) {
-
   if (!name || !name[0])
     return false;
   Display *dpy = get_display();
@@ -843,12 +838,10 @@ bool Platform_MessageActive(const char *name) {
     }
   }
   pthread_mutex_unlock(&g_msg_lock);
-
   return found;
 }
 
 void Platform_DismissIndefiniteMessage(void) {
-
   Display *dpy = get_display();
   if (!dpy) {
     return;
@@ -860,13 +853,11 @@ void Platform_DismissIndefiniteMessage(void) {
 }
 
 bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
-
   (void)self;
   (void)x;
   (void)y;
   (void)w;
   (void)h;
-
   return true;
 }
 
@@ -877,7 +868,6 @@ void Platform_MessagePopupRender(Popup *self) { (void)self; }
 void Platform_MessagePopupDestroyWindow(Popup *self) { (void)self; }
 
 bool Platform_MessagePopupOnKey(Popup *self, const PopupKeyEvent *key) {
-
   (void)self;
   (void)key;
   return false;
