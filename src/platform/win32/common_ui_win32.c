@@ -20,29 +20,8 @@ HFONT CreateCustomNerdFont(int height, const char* face_name) {
 return FH_TO_HFONT(Platform_CreateFont(height, face_name));
 }
 
-void win32_apply_listbox_bottom_corners(HWND hwnd, int w, int h, bool at_window_bottom) {
-    
-    if (!hwnd || !IsWindow(hwnd) || !RoundedCorners || !at_window_bottom) {  return ; }
-    int radius = CornerRadius;
-    if (radius < 0) radius = 0;
-    if (radius > 32) radius = 32;
-    if (radius * 2 > w) radius = w / 2;
-    if (radius * 2 > h) radius = h / 2;
-    if (radius <= 0) {  return ; }
-    HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius * 2, radius * 2);
-    if (!rgn) {  return ; }
-    HRGN top = CreateRectRgn(0, 0, w + 1, h - radius + 1);
-    if (top) {
-        CombineRgn(rgn, rgn, top, RGN_OR);
-        DeleteObject(top);
-    }
-    SetWindowRgn(hwnd, rgn, TRUE);
-    
-}
-
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
-    
-if (!hwnd || !IsWindow(hwnd)) {  return ; }
+  if (!hwnd || !IsWindow(hwnd)) return ;
   if (w <= 0 || h <= 0) {
     RECT rc; GetWindowRect(hwnd, &rc);
     w = rc.right - rc.left;
@@ -63,41 +42,24 @@ if (!hwnd || !IsWindow(hwnd)) {  return ; }
       }
       const int DWMWCP_DONOTROUND = 0;
       const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-      /* DWM rounds with its own fixed radius, which is tighter than
-         CornerRadius and would clip the 1px border arc away. The region
-         below owns the shape so the border can trace the same arc. */
       pDwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_DONOTROUND, sizeof(DWMWCP_DONOTROUND));
     }
     FreeLibrary(dwm);
   }
-  if (!RoundedCorners) {  return ; }
+  if (!RoundedCorners) return ;
 
   int radius = CornerRadius;
   if (radius < 0) radius = 0;
   if (radius > 32) radius = 32;
   if (radius * 2 > w) radius = w / 2;
   if (radius * 2 > h) radius = h / 2;
-  if (radius <= 0) {  return ; }
+  if (radius <= 0) return ;
   HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius*2, radius*2);
   if (rgn) SetWindowRgn(hwnd, rgn, TRUE);
 }
 
 static inline unsigned int win32_to_rgb(COLORREF c) {
-    
-return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c);
-}
-
-void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base) {
-    
-
-  int w = rc->right - rc->left;
-  int h = rc->bottom - rc->top;
-  if (w <= 0 || h <= 0) {  return; }
-  HBRUSH br = CreateSolidBrush(base);
-  FillRect(hdc, rc, br);
-  DeleteObject(br);
-  
-  return ;
+    return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c);
 }
 
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1, int ey1,

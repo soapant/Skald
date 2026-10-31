@@ -16,27 +16,7 @@ extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
 
-bool should_swallow_pending(int wParam, int mods) {
-        
-
-    if (pending_hotkey_vk == 0) {  return false; }
-    struct timeval tv; gettimeofday(&tv,NULL);
-    long now = tv.tv_sec*1000 + tv.tv_usec/1000;
-    if (now - pending_hotkey_timeMs > 800) {
-        pending_hotkey_vk = 0; pending_hotkey_mod = 0;  return false;
-    }
-    if (wParam == pending_hotkey_vk) {
-        pending_hotkey_vk = 0; pending_hotkey_mod = 0;
-        
-        return true;
-    }
-    
-    return false;
-}
-
 int x11_keysym_to_windows_vk(KeySym keysym) {
-        
-
     if (keysym >= XK_a && keysym <= XK_z) {  return 'A' + (keysym - XK_a); }
     if (keysym >= XK_A && keysym <= XK_Z) {  return 'A' + (keysym - XK_A); }
     if (keysym >= XK_0 && keysym <= XK_9) {  return '0' + (keysym - XK_0); }
