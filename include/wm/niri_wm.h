@@ -6,8 +6,8 @@
 bool niri_is_active(void);
 bool get_title_niri(char *buffer, int buffer_size);
 bool get_app_id_niri(char *buffer, int buffer_size);
-char* paste_niri(char* content);
-bool focus_window_title_niri(char* title);
+char *paste_niri(char *content);
+bool focus_window_title_niri(char *title);
 PlWindowList get_window_titles_niri();
 PlWindowList get_window_names_niri();
 bool close_active_window_niri(void);

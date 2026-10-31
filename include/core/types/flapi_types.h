@@ -20,12 +20,12 @@ typedef PlTimer FlTimer;
  */
 
 typedef enum {
-    /** @brief No active connection. */
-    FL_NET_OFFLINE,
-    /** @brief Wired Ethernet connection. */
-    FL_NET_ETHERNET,
-    /** @brief Wi-Fi connection. */
-    FL_NET_WIFI,
+  /** @brief No active connection. */
+  FL_NET_OFFLINE,
+  /** @brief Wired Ethernet connection. */
+  FL_NET_ETHERNET,
+  /** @brief Wi-Fi connection. */
+  FL_NET_WIFI,
 } FlNetStatus;
 
 /**
@@ -42,10 +42,13 @@ typedef enum {
  */
 
 typedef struct {
-    const char *buffer;
-    int x; int y; int w; int h;
-    unsigned long color;
-    FontHandle font;
+  const char *buffer;
+  int x;
+  int y;
+  int w;
+  int h;
+  unsigned long color;
+  FontHandle font;
 } FlEditSpec;
 
 /**
@@ -59,10 +62,13 @@ typedef struct {
  */
 
 typedef struct {
-    int idx;
-    bool selected;
-    int x; int y; int w; int h;
-    const char *text;
+  int idx;
+  bool selected;
+  int x;
+  int y;
+  int w;
+  int h;
+  const char *text;
 } FlListItemCtx;
 
 #endif

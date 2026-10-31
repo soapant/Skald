@@ -10,7 +10,7 @@
 #endif
 #include "platform/x11/display_x11.h"
 
-#include <sys/stat.h> 
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/inotify.h>
 #include <poll.h>
@@ -52,711 +52,756 @@
 #define NOB_NO_ECHO
 #include "../../../nob.h"
 
+bool Platform_LaunchTerminalAtPath(const char *working_dir,
+                                   const char *extra_args) {
 
-bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
-    
-    
-    if(!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null");  return false; }
-    if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'", working_dir ? working_dir : "null", extra_args ? extra_args : "null");  return false; }
+  if (!working_dir) {
+    log_error("working_dir is NULL extra_args='%s'",
+              extra_args ? extra_args : "null");
+    return false;
+  }
+  if (!UsedTerminal || !UsedTerminal[0]) {
+    log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'",
+              working_dir ? working_dir : "null",
+              extra_args ? extra_args : "null");
+    return false;
+  }
 
-    X11SessionEnv env; Env_GetSessionEnv(&env);
-    char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-    Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, wayland_env);
+  X11SessionEnv env;
+  Env_GetSessionEnv(&env);
+  char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
+  Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, wayland_env);
 
-    pid_t pid = fork();
-    if(pid < 0) { log_error("fork failed: %s", strerror(errno));  return false; }
+  pid_t pid = fork();
+  if (pid < 0) {
+    log_error("fork failed: %s", strerror(errno));
+    return false;
+  }
 
-    if(pid == 0){
-        setsid();
-        pid_t pid2 = fork();
-        if(pid2 < 0) _exit(1);
-        if(pid2 > 0) _exit(0);
+  if (pid == 0) {
+    setsid();
+    pid_t pid2 = fork();
+    if (pid2 < 0)
+      _exit(1);
+    if (pid2 > 0)
+      _exit(0);
 
-        if(Env_IsRunningAsRoot()){
-            if(extra_args && extra_args[0]){
-                char cmd[2048];
-                snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
-                char* const argv[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",cmd,NULL};
-                execvp(argv[0], argv);
-            } else {
-                char* const argv[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,(char*)UsedTerminal,"--working-directory",(char*)working_dir,NULL};
-                execvp(argv[0], argv);
-                char* const argv2[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,(char*)UsedTerminal,NULL};
-                execvp(argv2[0], argv2);
-            }
+    if (Env_IsRunningAsRoot()) {
+      if (extra_args && extra_args[0]) {
+        char cmd[2048];
+        snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s",
+                 UsedTerminal, working_dir, extra_args);
+        char *const argv[] = {"sudo",      "-u",        (char *)env.real_user,
+                              "env",       disp_env,    xauth_env,
+                              runtime_env, wayland_env, "sh",
+                              "-c",        cmd,         NULL};
+        execvp(argv[0], argv);
+      } else {
+        char *const argv[] = {"sudo",
+                              "-u",
+                              (char *)env.real_user,
+                              "env",
+                              disp_env,
+                              xauth_env,
+                              runtime_env,
+                              wayland_env,
+                              (char *)UsedTerminal,
+                              "--working-directory",
+                              (char *)working_dir,
+                              NULL};
+        execvp(argv[0], argv);
+        char *const argv2[] = {"sudo",      "-u",        (char *)env.real_user,
+                               "env",       disp_env,    xauth_env,
+                               runtime_env, wayland_env, (char *)UsedTerminal,
+                               NULL};
+        execvp(argv2[0], argv2);
+      }
+    } else {
+      Env_ApplyToCurrentProcess(&env);
+      if (extra_args && extra_args[0]) {
+        char cmd[2048];
+        if (strncmp(extra_args, "-e", 2) == 0) {
+          snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s",
+                   UsedTerminal, working_dir, extra_args);
         } else {
-            Env_ApplyToCurrentProcess(&env);
-            if(extra_args && extra_args[0]){
-                char cmd[2048];
-                if (strncmp(extra_args, "-e", 2) == 0) {
-                    snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
-                } else {
-                    snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" -e %s", UsedTerminal, working_dir, extra_args);
-                }
-                execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
-                if (strncmp(extra_args, "-e", 2) == 0) {
-                    snprintf(cmd, sizeof(cmd), "%s %s", UsedTerminal, extra_args);
-                } else {
-                    snprintf(cmd, sizeof(cmd), "%s -e %s", UsedTerminal, extra_args);
-                }
-                execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
-            } else {
-                execlp(UsedTerminal, UsedTerminal, "--working-directory", working_dir, (char*)NULL);
-            }
+          snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" -e %s",
+                   UsedTerminal, working_dir, extra_args);
         }
-        _exit(127);
-    }
-
-    int st = 0;
-    waitpid(pid, &st, 0);
-    if (WIFEXITED(st) && WEXITSTATUS(st)==127) {
-        log_error("failed to exec terminal '%s' (extra_args='%s', dir='%s') - check UsedTerminal config and PATH", UsedTerminal, extra_args ? extra_args : "", working_dir);
-    } else if (WIFEXITED(st) && WEXITSTATUS(st)!=0) {
-        log_warn("terminal '%s' exited with status %d", UsedTerminal, WEXITSTATUS(st));
-    }
-    log_info("Platform_LaunchTerminalAtPath At Path %s",working_dir);
-
-    
-    return true;
-}
-
-static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* title) {
-        
-
-    char* name = NULL;
-    if (XFetchName(dpy, w, &name) && name != NULL) {
-        bool match = (strcmp(name, title) == 0);
-        XFree(name);
-        if (match) return w;
-    }
-
-    Window root, parent, *children = NULL;
-    unsigned int n = 0;
-    if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
-        for (unsigned int i = 0; i < n; i++) {
-            Window found = FindWindowByTitleRecursive(dpy, children[i], title);
-            if (found != None) {
-                if (children) XFree(children);
-                
-                return found;
-            }
+        execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
+        if (strncmp(extra_args, "-e", 2) == 0) {
+          snprintf(cmd, sizeof(cmd), "%s %s", UsedTerminal, extra_args);
+        } else {
+          snprintf(cmd, sizeof(cmd), "%s -e %s", UsedTerminal, extra_args);
         }
-        if (children) XFree(children);
+        execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
+      } else {
+        execlp(UsedTerminal, UsedTerminal, "--working-directory", working_dir,
+               (char *)NULL);
+      }
     }
-    
-    return None;
+    _exit(127);
+  }
+
+  int st = 0;
+  waitpid(pid, &st, 0);
+  if (WIFEXITED(st) && WEXITSTATUS(st) == 127) {
+    log_error("failed to exec terminal '%s' (extra_args='%s', dir='%s') - "
+              "check UsedTerminal config and PATH",
+              UsedTerminal, extra_args ? extra_args : "", working_dir);
+  } else if (WIFEXITED(st) && WEXITSTATUS(st) != 0) {
+    log_warn("terminal '%s' exited with status %d", UsedTerminal,
+             WEXITSTATUS(st));
+  }
+  log_info("Platform_LaunchTerminalAtPath At Path %s", working_dir);
+
+  return true;
 }
 
-static Window FindWindowByTitle(Display* dpy, const char* title) {
-        
+static Window FindWindowByTitleRecursive(Display *dpy, Window w,
+                                         const char *title) {
 
-    
-    return FindWindowByTitleRecursive(dpy, DefaultRootWindow(dpy), title);
+  char *name = NULL;
+  if (XFetchName(dpy, w, &name) && name != NULL) {
+    bool match = (strcmp(name, title) == 0);
+    XFree(name);
+    if (match)
+      return w;
+  }
+
+  Window root, parent, *children = NULL;
+  unsigned int n = 0;
+  if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
+    for (unsigned int i = 0; i < n; i++) {
+      Window found = FindWindowByTitleRecursive(dpy, children[i], title);
+      if (found != None) {
+        if (children)
+          XFree(children);
+
+        return found;
+      }
+    }
+    if (children)
+      XFree(children);
+  }
+
+  return None;
 }
 
-bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command) {
-        
+static Window FindWindowByTitle(Display *dpy, const char *title) {
 
-    Display* dpy = get_display();
-    if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' command=%ld", window_title ? window_title : "null", atom_name ? atom_name : "null", command);  return false; }
-
-    Window win = FindWindowByTitle(dpy, window_title);
-    bool ok = false;
-    if (win != None) {
-        XEvent ev = {0};
-        ev.xclient.type = ClientMessage;
-        ev.xclient.window = win;
-        ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
-        ev.xclient.format = 32;
-        ev.xclient.data.l[0] = command;
-        if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
-            XFlush(dpy);
-            ok = true;
-        }
-    }
-    log_info("Platform_SendX11Command Title %s Command %s ",window_title,command);
-
-    
-    return ok;
+  return FindWindowByTitleRecursive(dpy, DefaultRootWindow(dpy), title);
 }
 
-bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value) {
-        
+bool Platform_SendX11Command(const char *window_title, const char *atom_name,
+                             long command) {
 
-    Display* dpy = get_display();
-    if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' value=%ld", window_title ? window_title : "null", atom_name ? atom_name : "null", value);  return false; }
+  Display *dpy = get_display();
+  if (!dpy) {
+    log_error("no X11 display window_title='%s' atom_name='%s' command=%ld",
+              window_title ? window_title : "null",
+              atom_name ? atom_name : "null", command);
+    return false;
+  }
 
-    Window win = FindWindowByTitle(dpy, window_title);
-    bool ok = false;
-    if (win != None) {
-        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_INTEGER, 32,
-                        PropModeReplace, (unsigned char*)&value, 1);
-        XFlush(dpy);
-        ok = true;
+  Window win = FindWindowByTitle(dpy, window_title);
+  bool ok = false;
+  if (win != None) {
+    XEvent ev = {0};
+    ev.xclient.type = ClientMessage;
+    ev.xclient.window = win;
+    ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
+    ev.xclient.format = 32;
+    ev.xclient.data.l[0] = command;
+    if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
+      XFlush(dpy);
+      ok = true;
     }
-    log_info("Platform_SetX11Property Title %s value %i ",window_title,value);
+  }
+  log_info("Platform_SendX11Command Title %s Command %s ", window_title,
+           command);
 
-    
-    return ok;
+  return ok;
 }
 
-bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value) {
-        
+bool Platform_SetX11Property(const char *window_title, const char *atom_name,
+                             long value) {
 
-    Display* dpy = get_display();
-    if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' value='%s'", window_title ? window_title : "null", atom_name ? atom_name : "null", value ? value : "null");  return false; }
+  Display *dpy = get_display();
+  if (!dpy) {
+    log_error("no X11 display window_title='%s' atom_name='%s' value=%ld",
+              window_title ? window_title : "null",
+              atom_name ? atom_name : "null", value);
+    return false;
+  }
 
-    Window win = FindWindowByTitle(dpy, window_title);
-    bool ok = false;
-    if (win != None && value != NULL) {
-        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8,
-                        PropModeReplace, (const unsigned char*)value, (int)strlen(value));
-        XFlush(dpy);
-        ok = true;
-    }
-    log_info("Platform_SetX11StringProperty Title %s value %i",window_title,value);
+  Window win = FindWindowByTitle(dpy, window_title);
+  bool ok = false;
+  if (win != None) {
+    XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_INTEGER,
+                    32, PropModeReplace, (unsigned char *)&value, 1);
+    XFlush(dpy);
+    ok = true;
+  }
+  log_info("Platform_SetX11Property Title %s value %i ", window_title, value);
 
-    
-    return ok;
+  return ok;
 }
 
-char* Platform_RunCommandAndGetOutput(char* command, int priority) {
-        
+bool Platform_SetX11StringProperty(const char *window_title,
+                                   const char *atom_name, const char *value) {
 
-(void)priority;
-    FILE* fp;
-    char buffer[8192];
-    size_t cap = 8192;
-    size_t total_size = 0;
-    char* output = malloc(cap);
+  Display *dpy = get_display();
+  if (!dpy) {
+    log_error("no X11 display window_title='%s' atom_name='%s' value='%s'",
+              window_title ? window_title : "null",
+              atom_name ? atom_name : "null", value ? value : "null");
+    return false;
+  }
 
-    if (output == NULL) {
-        log_error("malloc failed command='%s'", command ? command : "null");
+  Window win = FindWindowByTitle(dpy, window_title);
+  bool ok = false;
+  if (win != None && value != NULL) {
+    XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8,
+                    PropModeReplace, (const unsigned char *)value,
+                    (int)strlen(value));
+    XFlush(dpy);
+    ok = true;
+  }
+  log_info("Platform_SetX11StringProperty Title %s value %i", window_title,
+           value);
 
-        
-        return NULL;
-    }
+  return ok;
+}
 
-    fp = popen(command, "r");
-    if (fp == NULL) {
-        log_error("popen failed cmd='%s' err=%d", command ? command : "null", errno);
+char *Platform_RunCommandAndGetOutput(char *command, int priority) {
+
+  (void)priority;
+  FILE *fp;
+  char buffer[8192];
+  size_t cap = 8192;
+  size_t total_size = 0;
+  char *output = malloc(cap);
+
+  if (output == NULL) {
+    log_error("malloc failed command='%s'", command ? command : "null");
+
+    return NULL;
+  }
+
+  fp = popen(command, "r");
+  if (fp == NULL) {
+    log_error("popen failed cmd='%s' err=%d", command ? command : "null",
+              errno);
+    free(output);
+
+    return strdup("");
+  }
+
+  size_t len;
+  while ((len = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+    while (total_size + len > cap) {
+      cap *= 2;
+      char *new_output = realloc(output, cap);
+      if (!new_output) {
         free(output);
+        pclose(fp);
 
-        
         return strdup("");
+      }
+      output = new_output;
     }
+    memcpy(output + total_size, buffer, len);
+    total_size += len;
+  }
 
-    size_t len;
-    while ((len = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
-        while (total_size + len > cap) {
-            cap *= 2;
-            char* new_output = realloc(output, cap);
-            if (!new_output) {
-                free(output);
-                pclose(fp);
+  pclose(fp);
+  output[total_size] = '\0';
+  if (total_size == 0)
+    log_error("popen empty cmd='%s'", command ? command : "");
+  log_info("Platform_RunCommandAndGetOutput command='%s'",
+           command ? command : "");
+  ;
 
-                
-                return strdup("");
-            }
-            output = new_output;
-        }
-        memcpy(output + total_size, buffer, len);
-        total_size += len;
-    }
-
-    pclose(fp);
-    output[total_size] = '\0';
-    if (total_size == 0) log_error("popen empty cmd='%s'", command ? command : "");
-    log_info("Platform_RunCommandAndGetOutput command='%s'", command ? command : "");;
-
-    
-    return output;
+  return output;
 }
 
-static char* Platform_RunCommandDetachedCapture(char* command) {
-    
+static char *Platform_RunCommandDetachedCapture(char *command) {
 
-    if (!command || !*command) {
-        log_error("capture: null/empty command");
-        
-        return strdup("");
+  if (!command || !*command) {
+    log_error("capture: null/empty command");
+
+    return strdup("");
+  }
+
+  const char *real_user = Platform_GetRealUser();
+  const char *real_home = Platform_GetRealHome();
+
+  log_info("capture: original cmd='%s'", command);
+  log_info("capture: real_user='%s' real_home='%s' is_root=%d",
+           real_user ? real_user : "(null)", real_home ? real_home : "(null)",
+           Platform_IsRunningAsRoot());
+
+  char expanded[4096];
+  const char *final_cmd = command;
+
+  if (command[0] == '~' && (command[1] == '/' || command[1] == '\0') &&
+      real_home && real_home[0]) {
+    snprintf(expanded, sizeof(expanded), "%s%s", real_home, command + 1);
+    final_cmd = expanded;
+    log_info("capture: expanded cmd='%s'", final_cmd);
+  }
+
+  {
+    char test_path[4096];
+    const char *space = strchr(final_cmd, ' ');
+    size_t len = space ? (size_t)(space - final_cmd) : strlen(final_cmd);
+    if (len >= sizeof(test_path))
+      len = sizeof(test_path) - 1;
+    memcpy(test_path, final_cmd, len);
+    test_path[len] = '\0';
+
+    if (access(test_path, X_OK) != 0) {
+      log_error(
+          "capture: script not executable or not found: '%s' (errno=%d %s)",
+          test_path, errno, strerror(errno));
+    } else {
+      log_info("capture: script exists and is executable: '%s'", test_path);
     }
+  }
 
-    const char* real_user = Platform_GetRealUser();
-    const char* real_home = Platform_GetRealHome();
+  int pfd[2];
+  if (pipe(pfd) != 0) {
+    log_error("capture: pipe failed cmd='%s' err=%d %s", final_cmd, errno,
+              strerror(errno));
 
-    log_info("capture: original cmd='%s'", command);
-    log_info("capture: real_user='%s' real_home='%s' is_root=%d",
-             real_user ? real_user : "(null)",
-             real_home ? real_home : "(null)",
-             Platform_IsRunningAsRoot());
+    return strdup("");
+  }
 
-    char expanded[4096];
-    const char* final_cmd = command;
-
-    if (command[0] == '~' && (command[1] == '/' || command[1] == '\0') && real_home && real_home[0]) {
-        snprintf(expanded, sizeof(expanded), "%s%s", real_home, command + 1);
-        final_cmd = expanded;
-        log_info("capture: expanded cmd='%s'", final_cmd);
-    }
-
-    {
-        char test_path[4096];
-        const char* space = strchr(final_cmd, ' ');
-        size_t len = space ? (size_t)(space - final_cmd) : strlen(final_cmd);
-        if (len >= sizeof(test_path)) len = sizeof(test_path) - 1;
-        memcpy(test_path, final_cmd, len);
-        test_path[len] = '\0';
-
-        if (access(test_path, X_OK) != 0) {
-            log_error("capture: script not executable or not found: '%s' (errno=%d %s)",
-                      test_path, errno, strerror(errno));
-        } else {
-            log_info("capture: script exists and is executable: '%s'", test_path);
-        }
-    }
-
-    int pfd[2];
-    if (pipe(pfd) != 0) {
-        log_error("capture: pipe failed cmd='%s' err=%d %s", final_cmd, errno, strerror(errno));
-        
-        return strdup("");
-    }
-
-    pid_t pid = fork();
-    if (pid < 0) {
-        log_error("capture: fork failed cmd='%s' err=%d %s", final_cmd, errno, strerror(errno));
-        close(pfd[0]);
-        close(pfd[1]);
-        
-        return strdup("");
-    }
-
-    if (pid == 0) {  
-        if (real_home) setenv("HOME", real_home, 1);
-        if (real_user) {
-            setenv("USER", real_user, 1);
-            setenv("LOGNAME", real_user, 1);
-        }
-
-        close(pfd[0]);
-        signal(SIGPIPE, SIG_IGN);
-        dup2(pfd[1], STDOUT_FILENO);
-        dup2(pfd[1], STDERR_FILENO);
-        if (pfd[1] > 2) close(pfd[1]);
-
-        int fd = open("/dev/null", O_RDONLY);
-        if (fd >= 0) {
-            dup2(fd, STDIN_FILENO);
-            if (fd > 2) close(fd);
-        }
-
-        execl("/bin/sh", "sh", "-c", final_cmd, (char*)NULL);
-
-        const char* msg = "execl /bin/sh failed\n";
-        write(STDOUT_FILENO, msg, strlen(msg));
-        _exit(127);
-    }
-
+  pid_t pid = fork();
+  if (pid < 0) {
+    log_error("capture: fork failed cmd='%s' err=%d %s", final_cmd, errno,
+              strerror(errno));
+    close(pfd[0]);
     close(pfd[1]);
-    log_info("capture: forked child pid=%d for cmd='%s'", (int)pid, final_cmd);
 
-    int flags = fcntl(pfd[0], F_GETFL, 0);
-    if (flags >= 0) fcntl(pfd[0], F_SETFL, flags | O_NONBLOCK);
+    return strdup("");
+  }
 
-    size_t cap = 8192;
-    size_t total = 0;
-    char* out = malloc(cap);
-    if (!out) {
-        log_error("capture: malloc failed");
-        close(pfd[0]);
-        waitpid(pid, NULL, 0);
-        
-        return strdup("");
-    }
-
-    struct timespec start;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-
-    const long drain_ms = 8000;
-    const long start_ms = 30000;   
-    long deadline = start_ms;
-    bool got_data = false;
-    bool eof = false;
-    char buf[16096];
-    int poll_count = 0;
-
-    while (1) {
-        struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
-        long elapsed = (now.tv_sec - start.tv_sec) * 1000L +
-                       (now.tv_nsec - start.tv_nsec) / 1000000L;
-        long remain = deadline - elapsed;
-        if (remain <= 0) {
-            log_info("capture: deadline reached (elapsed=%ld ms, got_data=%d)", elapsed, got_data);
-            break;
-        }
-
-        struct pollfd p = { .fd = pfd[0], .events = POLLIN | POLLHUP | POLLERR };
-        int r = poll(&p, 1, (int)remain);
-        poll_count++;
-
-        if (r < 0) {
-            if (errno == EINTR) continue;
-            log_error("capture: poll error err=%d %s", errno, strerror(errno));
-            break;
-        }
-        if (r == 0) {
-            log_info("capture: poll timeout (elapsed=%ld)", elapsed);
-            break;
-        }
-
-        log_info("capture: poll ok revents=0x%x elapsed=%ld", p.revents, elapsed);
-
-        ssize_t n;
-        bool read_any = false;
-        while ((n = read(pfd[0], buf, sizeof(buf))) > 0) {
-            read_any = true;
-            if (!got_data) {
-                got_data = true;
-                deadline = elapsed + drain_ms;
-                log_info("capture: first data received (%zd bytes), new deadline=%ld", n, deadline);
-            }
-            while (total + (size_t)n + 1 > cap) {
-                cap *= 2;
-                char* no = realloc(out, cap);
-                if (!no) {
-                    log_error("capture: realloc failed");
-                    free(out);
-                    close(pfd[0]);
-                    waitpid(pid, NULL, 0);
-                    
-                    return strdup("");
-                }
-                out = no;
-            }
-            memcpy(out + total, buf, (size_t)n);
-            total += (size_t)n;
-
-            clock_gettime(CLOCK_MONOTONIC, &now);
-            elapsed = (now.tv_sec - start.tv_sec) * 1000L +
-                      (now.tv_nsec - start.tv_nsec) / 1000000L;
-            if (got_data) deadline = elapsed + drain_ms;
-        }
-
-        if (n == 0) {
-            log_info("capture: read returned 0 (EOF)");
-            eof = true;
-            break;
-        }
-        if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-            log_error("capture: read error n=%zd err=%d %s", n, errno, strerror(errno));
-            if (p.revents & POLLHUP) eof = true;
-            break;
-        }
-        if (!read_any && (p.revents & POLLHUP)) {
-            log_info("capture: POLLHUP with no data");
-            eof = true;
-            break;
-        }
+  if (pid == 0) {
+    if (real_home)
+      setenv("HOME", real_home, 1);
+    if (real_user) {
+      setenv("USER", real_user, 1);
+      setenv("LOGNAME", real_user, 1);
     }
 
     close(pfd[0]);
+    signal(SIGPIPE, SIG_IGN);
+    dup2(pfd[1], STDOUT_FILENO);
+    dup2(pfd[1], STDERR_FILENO);
+    if (pfd[1] > 2)
+      close(pfd[1]);
 
-    int status = 0;
-    pid_t waited = waitpid(pid, &status, 0);
-    log_info("capture: waitpid returned %d, status=0x%x", (int)waited, status);
-
-    if (WIFEXITED(status)) {
-        log_info("capture: child exited normally with code %d", WEXITSTATUS(status));
-    } else if (WIFSIGNALED(status)) {
-        log_error("capture: child killed by signal %d", WTERMSIG(status));
-    } else {
-        log_error("capture: child ended with unexpected status 0x%x", status);
+    int fd = open("/dev/null", O_RDONLY);
+    if (fd >= 0) {
+      dup2(fd, STDIN_FILENO);
+      if (fd > 2)
+        close(fd);
     }
 
-    if (total + 1 > cap) {
-        char* no = realloc(out, total + 1);
+    execl("/bin/sh", "sh", "-c", final_cmd, (char *)NULL);
+
+    const char *msg = "execl /bin/sh failed\n";
+    write(STDOUT_FILENO, msg, strlen(msg));
+    _exit(127);
+  }
+
+  close(pfd[1]);
+  log_info("capture: forked child pid=%d for cmd='%s'", (int)pid, final_cmd);
+
+  int flags = fcntl(pfd[0], F_GETFL, 0);
+  if (flags >= 0)
+    fcntl(pfd[0], F_SETFL, flags | O_NONBLOCK);
+
+  size_t cap = 8192;
+  size_t total = 0;
+  char *out = malloc(cap);
+  if (!out) {
+    log_error("capture: malloc failed");
+    close(pfd[0]);
+    waitpid(pid, NULL, 0);
+
+    return strdup("");
+  }
+
+  struct timespec start;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
+  const long drain_ms = 8000;
+  const long start_ms = 30000;
+  long deadline = start_ms;
+  bool got_data = false;
+  bool eof = false;
+  char buf[16096];
+  int poll_count = 0;
+
+  while (1) {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    long elapsed = (now.tv_sec - start.tv_sec) * 1000L +
+                   (now.tv_nsec - start.tv_nsec) / 1000000L;
+    long remain = deadline - elapsed;
+    if (remain <= 0) {
+      log_info("capture: deadline reached (elapsed=%ld ms, got_data=%d)",
+               elapsed, got_data);
+      break;
+    }
+
+    struct pollfd p = {.fd = pfd[0], .events = POLLIN | POLLHUP | POLLERR};
+    int r = poll(&p, 1, (int)remain);
+    poll_count++;
+
+    if (r < 0) {
+      if (errno == EINTR)
+        continue;
+      log_error("capture: poll error err=%d %s", errno, strerror(errno));
+      break;
+    }
+    if (r == 0) {
+      log_info("capture: poll timeout (elapsed=%ld)", elapsed);
+      break;
+    }
+
+    log_info("capture: poll ok revents=0x%x elapsed=%ld", p.revents, elapsed);
+
+    ssize_t n;
+    bool read_any = false;
+    while ((n = read(pfd[0], buf, sizeof(buf))) > 0) {
+      read_any = true;
+      if (!got_data) {
+        got_data = true;
+        deadline = elapsed + drain_ms;
+        log_info("capture: first data received (%zd bytes), new deadline=%ld",
+                 n, deadline);
+      }
+      while (total + (size_t)n + 1 > cap) {
+        cap *= 2;
+        char *no = realloc(out, cap);
         if (!no) {
-            free(out);
-            
-            return strdup("");
+          log_error("capture: realloc failed");
+          free(out);
+          close(pfd[0]);
+          waitpid(pid, NULL, 0);
+
+          return strdup("");
         }
         out = no;
-    }
-    out[total] = '\0';
+      }
+      memcpy(out + total, buf, (size_t)n);
+      total += (size_t)n;
 
-    log_info("capture: finished total_bytes=%zu eof=%d poll_count=%d", total, eof, poll_count);
-    if (total == 0) {
-        log_error("capture empty cmd='%s' eof=%d status=0x%x", final_cmd, eof, status);
-    } else {
-        char preview[201];
-        size_t plen = total < 200 ? total : 200;
-        memcpy(preview, out, plen);
-        preview[plen] = '\0';
-        log_info("capture: output preview: '%s'", preview);
+      clock_gettime(CLOCK_MONOTONIC, &now);
+      elapsed = (now.tv_sec - start.tv_sec) * 1000L +
+                (now.tv_nsec - start.tv_nsec) / 1000000L;
+      if (got_data)
+        deadline = elapsed + drain_ms;
     }
 
-    
-    return out;
+    if (n == 0) {
+      log_info("capture: read returned 0 (EOF)");
+      eof = true;
+      break;
+    }
+    if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+      log_error("capture: read error n=%zd err=%d %s", n, errno,
+                strerror(errno));
+      if (p.revents & POLLHUP)
+        eof = true;
+      break;
+    }
+    if (!read_any && (p.revents & POLLHUP)) {
+      log_info("capture: POLLHUP with no data");
+      eof = true;
+      break;
+    }
+  }
+
+  close(pfd[0]);
+
+  int status = 0;
+  pid_t waited = waitpid(pid, &status, 0);
+  log_info("capture: waitpid returned %d, status=0x%x", (int)waited, status);
+
+  if (WIFEXITED(status)) {
+    log_info("capture: child exited normally with code %d",
+             WEXITSTATUS(status));
+  } else if (WIFSIGNALED(status)) {
+    log_error("capture: child killed by signal %d", WTERMSIG(status));
+  } else {
+    log_error("capture: child ended with unexpected status 0x%x", status);
+  }
+
+  if (total + 1 > cap) {
+    char *no = realloc(out, total + 1);
+    if (!no) {
+      free(out);
+
+      return strdup("");
+    }
+    out = no;
+  }
+  out[total] = '\0';
+
+  log_info("capture: finished total_bytes=%zu eof=%d poll_count=%d", total, eof,
+           poll_count);
+  if (total == 0) {
+    log_error("capture empty cmd='%s' eof=%d status=0x%x", final_cmd, eof,
+              status);
+  } else {
+    char preview[201];
+    size_t plen = total < 200 ? total : 200;
+    memcpy(preview, out, plen);
+    preview[plen] = '\0';
+    log_info("capture: output preview: '%s'", preview);
+  }
+
+  return out;
 }
 
-bool Platform_LaunchDetached(char* command) {
-    
+bool Platform_LaunchDetached(char *command) {
 
-    if (!command || !command[0]) {
-        log_error("LaunchDetached: null or empty command");
-        
-        return false;
+  if (!command || !command[0]) {
+    log_error("LaunchDetached: null or empty command");
+
+    return false;
+  }
+
+  log_info("LaunchDetached: starting cmd='%s'", command);
+
+  pid_t pid = fork();
+  if (pid < 0) {
+    log_error("LaunchDetached: fork failed: %s", strerror(errno));
+
+    return false;
+  }
+
+  if (pid == 0) {
+    log_info("LaunchDetached: child pid=%d starting setsid", (int)getpid());
+
+    if (setsid() < 0) {
+      _exit(1);
     }
 
-    log_info("LaunchDetached: starting cmd='%s'", command);
-
-    pid_t pid = fork();
-    if (pid < 0) {
-        log_error("LaunchDetached: fork failed: %s", strerror(errno));
-        
-        return false;
+    pid_t pid2 = fork();
+    if (pid2 < 0) {
+      _exit(1);
+    }
+    if (pid2 > 0) {
+      _exit(0);
     }
 
-    if (pid == 0) {
-        log_info("LaunchDetached: child pid=%d starting setsid", (int)getpid());
-
-        if (setsid() < 0) {
-            _exit(1);
-        }
-
-        pid_t pid2 = fork();
-        if (pid2 < 0) {
-            _exit(1);
-        }
-        if (pid2 > 0) {
-            _exit(0);
-        }
-
-        int fd = open("/dev/null", O_RDWR);
-        if (fd >= 0) {
-            dup2(fd, STDIN_FILENO);
-            dup2(fd, STDOUT_FILENO);
-            dup2(fd, STDERR_FILENO);
-            if (fd > 2) close(fd);
-        }
-
-        const char* real_home = Platform_GetRealHome();
-        if (real_home) setenv("HOME", real_home, 1);
-
-        const char* display = getenv("DISPLAY");
-        if (display) setenv("DISPLAY", display, 1);
-
-        const char* xauth = getenv("XAUTHORITY");
-        if (xauth) setenv("XAUTHORITY", xauth, 1);
-
-        const char* dbus = getenv("DBUS_SESSION_BUS_ADDRESS");
-        if (dbus) setenv("DBUS_SESSION_BUS_ADDRESS", dbus, 1);
-
-        execl("/bin/sh", "sh", "-c", command, (char*)NULL);
-
-        _exit(127);
+    int fd = open("/dev/null", O_RDWR);
+    if (fd >= 0) {
+      dup2(fd, STDIN_FILENO);
+      dup2(fd, STDOUT_FILENO);
+      dup2(fd, STDERR_FILENO);
+      if (fd > 2)
+        close(fd);
     }
 
-    log_info("LaunchDetached: parent waiting for intermediate pid=%d", (int)pid);
+    const char *real_home = Platform_GetRealHome();
+    if (real_home)
+      setenv("HOME", real_home, 1);
 
-    int st = 0;
-    pid_t waited = waitpid(pid, &st, 0);
+    const char *display = getenv("DISPLAY");
+    if (display)
+      setenv("DISPLAY", display, 1);
 
-    if (waited < 0) {
-        log_error("LaunchDetached: waitpid failed: %s", strerror(errno));
+    const char *xauth = getenv("XAUTHORITY");
+    if (xauth)
+      setenv("XAUTHORITY", xauth, 1);
+
+    const char *dbus = getenv("DBUS_SESSION_BUS_ADDRESS");
+    if (dbus)
+      setenv("DBUS_SESSION_BUS_ADDRESS", dbus, 1);
+
+    execl("/bin/sh", "sh", "-c", command, (char *)NULL);
+
+    _exit(127);
+  }
+
+  log_info("LaunchDetached: parent waiting for intermediate pid=%d", (int)pid);
+
+  int st = 0;
+  pid_t waited = waitpid(pid, &st, 0);
+
+  if (waited < 0) {
+    log_error("LaunchDetached: waitpid failed: %s", strerror(errno));
+  } else {
+    if (WIFEXITED(st)) {
+      log_info("LaunchDetached: intermediate exited with code %d",
+               WEXITSTATUS(st));
+    } else if (WIFSIGNALED(st)) {
+      log_error("LaunchDetached: intermediate killed by signal %d",
+                WTERMSIG(st));
     } else {
-        if (WIFEXITED(st)) {
-            log_info("LaunchDetached: intermediate exited with code %d", WEXITSTATUS(st));
-        } else if (WIFSIGNALED(st)) {
-            log_error("LaunchDetached: intermediate killed by signal %d", WTERMSIG(st));
-        } else {
-            log_info("LaunchDetached: intermediate status=0x%x", st);
-        }
+      log_info("LaunchDetached: intermediate status=0x%x", st);
     }
+  }
 
-    log_info("LaunchDetached: returning true (should be instant)");
-    
-    return true;
+  log_info("LaunchDetached: returning true (should be instant)");
+
+  return true;
 }
 
-char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-        
+char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
 
-    char timer_text[300];
-    snprintf(timer_text,sizeof(timer_text),"platform_x11:Platform_RunTerminalCommand Command:%s",command);
+  char timer_text[300];
+  snprintf(timer_text, sizeof(timer_text),
+           "platform_x11:Platform_RunTerminalCommand Command:%s", command);
 
-    const char* real_user = Platform_GetRealUser();
-    const char* real_home = Platform_GetRealHome();
+  const char *real_user = Platform_GetRealUser();
+  const char *real_home = Platform_GetRealHome();
 
-    if (!open_terminal) {
-        char* result = Platform_RunCommandDetachedCapture(command);
-        
-        return result;
+  if (!open_terminal) {
+    char *result = Platform_RunCommandDetachedCapture(command);
+
+    return result;
+  }
+
+  char temp_file[MAX_PATH];
+  char cache_dir[MAX_PATH];
+  snprintf(cache_dir, sizeof(cache_dir), "%s/.cache", real_home);
+  snprintf(temp_file, sizeof(temp_file), "%s/.cache/temp_cmd.sh", real_home);
+
+  FILE *f = fopen(temp_file, "w");
+  if (f) {
+    fprintf(f, "#!/bin/%s\n", UsedShell);
+    fprintf(f, "%s\n", command);
+    fclose(f);
+    if (Platform_IsRunningAsRoot()) {
+      char chown_cmd[MAX_PATH + 64];
+      snprintf(chown_cmd, sizeof(chown_cmd),
+               "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user,
+               temp_file, temp_file);
+      Platform_RunTerminalCommand(chown_cmd, false);
+    } else {
+      chmod(temp_file, 0755);
     }
+  }
 
-    char temp_file[MAX_PATH];
-    char cache_dir[MAX_PATH];
-    snprintf(cache_dir, sizeof(cache_dir), "%s/.cache", real_home);
-    snprintf(temp_file, sizeof(temp_file), "%s/.cache/temp_cmd.sh", real_home);
+  char runtime_dir[256];
+  snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
+  char extra[1024];
 
-    FILE* f = fopen(temp_file, "w");
-    if (f) {
-        fprintf(f, "#!/bin/%s\n",UsedShell);
-        fprintf(f, "%s\n", command);
-        fclose(f);
-        if (Platform_IsRunningAsRoot()){
-            char chown_cmd[MAX_PATH + 64];
-            snprintf(chown_cmd, sizeof(chown_cmd), "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user, temp_file, temp_file);
-            Platform_RunTerminalCommand(chown_cmd,false);
-        } else {
-            chmod(temp_file, 0755);
-        }
-    }
+  snprintf(extra, sizeof(extra), "%s -c \"%s '%s'; exec %s\"", UsedShell,
+           UsedShell, temp_file, UsedShell);
 
-    char runtime_dir[256];
-    snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
-    char extra[1024];
+  Platform_LaunchTerminalAtPath(real_home, extra);
+  log_info("ran terminal command '%s' open_terminal=%d", command,
+           open_terminal);
 
-    snprintf(extra, sizeof(extra),
-             "%s -c \"%s '%s'; exec %s\"",
-             UsedShell, UsedShell, temp_file, UsedShell);
-
-    Platform_LaunchTerminalAtPath(real_home, extra);
-    log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
-    
-    return strdup("");
+  return strdup("");
 }
 
 bool Platform_IsCtrlPressed(void) {
-        
 
-    Display *display = get_display();
-    if (!display) {
- 
-        return false; 
-    }
+  Display *display = get_display();
+  if (!display) {
 
-    Window root, child;
-    int root_x, root_y, win_x, win_y;
-    unsigned int mask = 0;
+    return false;
+  }
 
-    XQueryPointer(display, DefaultRootWindow(display), 
-                  &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+  Window root, child;
+  int root_x, root_y, win_x, win_y;
+  unsigned int mask = 0;
 
+  XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
+                &root_y, &win_x, &win_y, &mask);
 
-    
-    return (mask & ControlMask) != 0;
+  return (mask & ControlMask) != 0;
 }
 
 bool Platform_IsShiftPressed(void) {
-        
 
-    Display *display = get_display();
-    if (!display) {
-        
-        return false;
-    }
+  Display *display = get_display();
+  if (!display) {
 
-    Window root, child;
-    int root_x, root_y, win_x, win_y;
-    unsigned int mask = 0;
+    return false;
+  }
 
-    XQueryPointer(display, DefaultRootWindow(display),
-                  &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+  Window root, child;
+  int root_x, root_y, win_x, win_y;
+  unsigned int mask = 0;
 
-    
-    return (mask & ShiftMask) != 0;
+  XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
+                &root_y, &win_x, &win_y, &mask);
+
+  return (mask & ShiftMask) != 0;
 }
 
 bool Platform_IsAltPressed(void) {
-        
 
-    Display *display = get_display();
-    if (!display) {
-        
-        return false;
-    }
+  Display *display = get_display();
+  if (!display) {
 
-    Window root, child;
-    int root_x, root_y, win_x, win_y;
-    unsigned int mask = 0;
+    return false;
+  }
 
-    XQueryPointer(display, DefaultRootWindow(display),
-                  &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+  Window root, child;
+  int root_x, root_y, win_x, win_y;
+  unsigned int mask = 0;
 
-    
-    return (mask & Mod1Mask) != 0;
+  XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
+                &root_y, &win_x, &win_y, &mask);
+
+  return (mask & Mod1Mask) != 0;
 }
 
 bool Platform_IsSuperPressed(void) {
-        
 
-    Display *display = get_display();
-    if (!display) {
-        
-        return false;
-    }
+  Display *display = get_display();
+  if (!display) {
 
-    Window root, child;
-    int root_x, root_y, win_x, win_y;
-    unsigned int mask = 0;
+    return false;
+  }
 
-    XQueryPointer(display, DefaultRootWindow(display),
-                  &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+  Window root, child;
+  int root_x, root_y, win_x, win_y;
+  unsigned int mask = 0;
 
-    
-    return (mask & Mod4Mask) != 0;
+  XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
+                &root_y, &win_x, &win_y, &mask);
+
+  return (mask & Mod4Mask) != 0;
 }
 
-void Platform_StartUniversalTimer(void) {
-        
+void Platform_StartUniversalTimer(void) { log_warn("not implemented yet"); }
 
-    log_warn("not implemented yet");
-    
-}
-
-void Platform_ResetUniversalTimer(void) {
-        
-
-    log_warn("not implemented yet");
-    
-}
+void Platform_ResetUniversalTimer(void) { log_warn("not implemented yet"); }
 
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
-        
 
-    (void)seconds_to_add;
-    log_warn("not implemented yet");
-    
+  (void)seconds_to_add;
+  log_warn("not implemented yet");
 }
 
-double Platform_GetUniversalTimeSeconds(void) {
-        
-
-    
-    return 0.0;
-}
+double Platform_GetUniversalTimeSeconds(void) { return 0.0; }
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
-        
 
-    (void)callback;
-    log_warn("not implemented yet");
-    
+  (void)callback;
+  log_warn("not implemented yet");
 }
-
-
 
 #define X11_FONT_CACHE_SLOTS 8
 
 typedef struct {
-    Display* dpy;
-    int size;
-    char* name;
-    XftFont* xft;
-    unsigned long last_used;
+  Display *dpy;
+  int size;
+  char *name;
+  XftFont *xft;
+  unsigned long last_used;
 } X11FontSlot;
 
 static X11FontSlot g_font_slots[X11_FONT_CACHE_SLOTS];
@@ -764,1286 +809,1584 @@ static unsigned long g_font_tick = 0;
 static pthread_mutex_t g_font_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 #define X11_FONT_RETIRED 16
-static Display* g_font_retired_dpy[X11_FONT_RETIRED];
-static XftFont* g_font_retired_xft[X11_FONT_RETIRED];
+static Display *g_font_retired_dpy[X11_FONT_RETIRED];
+static XftFont *g_font_retired_xft[X11_FONT_RETIRED];
 static int g_font_retired_next = 0;
 
-static void x11_font_retire(Display* dpy, XftFont* xft) {
-        
-g_font_retired_dpy[g_font_retired_next] = dpy;
-    g_font_retired_xft[g_font_retired_next] = xft;
-    g_font_retired_next = (g_font_retired_next + 1) % X11_FONT_RETIRED;
+static void x11_font_retire(Display *dpy, XftFont *xft) {
+
+  g_font_retired_dpy[g_font_retired_next] = dpy;
+  g_font_retired_xft[g_font_retired_next] = xft;
+  g_font_retired_next = (g_font_retired_next + 1) % X11_FONT_RETIRED;
 }
 
-static bool x11_font_was_retired(Display* dpy, XftFont* xft) {
-        
-for (int i = 0; i < X11_FONT_RETIRED; i++) {
-        if (g_font_retired_xft[i] == xft && g_font_retired_dpy[i] == dpy) return true;
-    }
+static bool x11_font_was_retired(Display *dpy, XftFont *xft) {
+
+  for (int i = 0; i < X11_FONT_RETIRED; i++) {
+    if (g_font_retired_xft[i] == xft && g_font_retired_dpy[i] == dpy)
+      return true;
+  }
+  return false;
+}
+
+static bool x11_font_slot_matches(const X11FontSlot *s, Display *dpy, int size,
+                                  const char *face_name) {
+
+  if (!s->xft || s->dpy != dpy || s->size != size)
     return false;
+  if (!s->name || !face_name)
+    return s->name == face_name;
+  return strcmp(s->name, face_name) == 0;
 }
 
-static bool x11_font_slot_matches(const X11FontSlot* s, Display* dpy, int size, const char* face_name) {
-        
-if (!s->xft || s->dpy != dpy || s->size != size) return false;
-    if (!s->name || !face_name) return s->name == face_name;
-    return strcmp(s->name, face_name) == 0;
+static void x11_font_slot_clear(X11FontSlot *s) {
+
+  if (s->xft) {
+    XftFontClose(s->dpy, s->xft);
+    x11_font_retire(s->dpy, s->xft);
+  }
+  if (s->name)
+    free(s->name);
+  s->dpy = NULL;
+  s->size = 0;
+  s->name = NULL;
+  s->xft = NULL;
+  s->last_used = 0;
 }
 
-static void x11_font_slot_clear(X11FontSlot* s) {
-        
-if (s->xft) {
-        XftFontClose(s->dpy, s->xft);
-        x11_font_retire(s->dpy, s->xft);
-    }
-    if (s->name) free(s->name);
-    s->dpy = NULL;
-    s->size = 0;
-    s->name = NULL;
-    s->xft = NULL;
-    s->last_used = 0;
+static bool x11_font_is_cached(Display *dpy, XftFont *xft) {
+
+  for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
+    if (g_font_slots[i].xft == xft && g_font_slots[i].dpy == dpy)
+      return true;
+  }
+  return false;
 }
 
-static bool x11_font_is_cached(Display* dpy, XftFont* xft) {
-        
-for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-        if (g_font_slots[i].xft == xft && g_font_slots[i].dpy == dpy) return true;
+FontHandle Platform_CreateFontOnDisplay(Display *dpy, int size,
+                                        const char *face_name) {
+
+  if (!dpy)
+    return FH_NULL;
+
+  pthread_mutex_lock(&g_font_cache_mtx);
+
+  for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
+    if (x11_font_slot_matches(&g_font_slots[i], dpy, size, face_name)) {
+      g_font_slots[i].last_used = ++g_font_tick;
+      FontHandle hit = {.xfont = g_font_slots[i].xft, .dpy = dpy};
+      pthread_mutex_unlock(&g_font_cache_mtx);
+
+      return hit;
     }
-    return false;
-}
+  }
 
-FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
-        
+  int screen = DefaultScreen(dpy);
+  XLockDisplay(dpy);
 
-    if (!dpy) return FH_NULL;
+  XftFont *xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, face_name,
+                            FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
+  if (!xf) {
+    xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, "sans",
+                     FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
+  }
+  if (!xf) {
+    xf = XftFontOpenName(dpy, screen, "fixed");
+  }
 
-    pthread_mutex_lock(&g_font_cache_mtx);
+  XUnlockDisplay(dpy);
 
-    for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-        if (x11_font_slot_matches(&g_font_slots[i], dpy, size, face_name)) {
-            g_font_slots[i].last_used = ++g_font_tick;
-            FontHandle hit = { .xfont = g_font_slots[i].xft, .dpy = dpy };
-            pthread_mutex_unlock(&g_font_cache_mtx);
-            
-            return hit;
-        }
-    }
-
-    int screen = DefaultScreen(dpy);
-    XLockDisplay(dpy);
-
-    XftFont* xf = XftFontOpen(dpy, screen,
-                            FC_FAMILY, FcTypeString, face_name,
-                            FC_PIXEL_SIZE, FcTypeDouble, (double)size,
-                            NULL);
-    if (!xf) {
-        xf = XftFontOpen(dpy, screen,
-                       FC_FAMILY, FcTypeString, "sans",
-                       FC_PIXEL_SIZE, FcTypeDouble, (double)size,
-                       NULL);
-    }
-    if (!xf) {
-        xf = XftFontOpenName(dpy, screen, "fixed");
-    }
-
-    XUnlockDisplay(dpy);
-
-    if (!xf) {
-        pthread_mutex_unlock(&g_font_cache_mtx);
-        
-        return FH_NULL;
-    }
-
-    int slot = -1;
-    unsigned long oldest = ~0UL;
-    for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-        if (!g_font_slots[i].xft) { slot = i; break; }
-        if (g_font_slots[i].last_used < oldest) { oldest = g_font_slots[i].last_used; slot = i; }
-    }
-    if (slot < 0) {
-        XftFontClose(dpy, xf);
-        pthread_mutex_unlock(&g_font_cache_mtx);
-        
-        return FH_NULL;
-    }
-    x11_font_slot_clear(&g_font_slots[slot]);
-
-    g_font_slots[slot].dpy = dpy;
-    g_font_slots[slot].size = size;
-    g_font_slots[slot].name = face_name ? strdup(face_name) : NULL;
-    g_font_slots[slot].xft = xf;
-    g_font_slots[slot].last_used = ++g_font_tick;
-
-    FontHandle made = { .xfont = xf, .dpy = dpy };
+  if (!xf) {
     pthread_mutex_unlock(&g_font_cache_mtx);
-    
-    return made;
+
+    return FH_NULL;
+  }
+
+  int slot = -1;
+  unsigned long oldest = ~0UL;
+  for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
+    if (!g_font_slots[i].xft) {
+      slot = i;
+      break;
+    }
+    if (g_font_slots[i].last_used < oldest) {
+      oldest = g_font_slots[i].last_used;
+      slot = i;
+    }
+  }
+  if (slot < 0) {
+    XftFontClose(dpy, xf);
+    pthread_mutex_unlock(&g_font_cache_mtx);
+
+    return FH_NULL;
+  }
+  x11_font_slot_clear(&g_font_slots[slot]);
+
+  g_font_slots[slot].dpy = dpy;
+  g_font_slots[slot].size = size;
+  g_font_slots[slot].name = face_name ? strdup(face_name) : NULL;
+  g_font_slots[slot].xft = xf;
+  g_font_slots[slot].last_used = ++g_font_tick;
+
+  FontHandle made = {.xfont = xf, .dpy = dpy};
+  pthread_mutex_unlock(&g_font_cache_mtx);
+
+  return made;
 }
 
 pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
 
-FontHandle Platform_CreateFont(int size, const char* face_name) {
-        
+FontHandle Platform_CreateFont(int size, const char *face_name) {
 
-    pthread_mutex_lock(&g_font_mtx); 
+  pthread_mutex_lock(&g_font_mtx);
 
-    Display* dpy = get_display();
-    if (!dpy) {
-        pthread_mutex_unlock(&g_font_mtx);
+  Display *dpy = get_display();
+  if (!dpy) {
+    pthread_mutex_unlock(&g_font_mtx);
 
-        
-        return FH_NULL;
-    }
+    return FH_NULL;
+  }
 
-    FontHandle fh = Platform_CreateFontOnDisplay(dpy, size, face_name);
+  FontHandle fh = Platform_CreateFontOnDisplay(dpy, size, face_name);
 
-    pthread_mutex_unlock(&g_font_mtx); 
-    log_info("Platform_CreateFont size=%d face_name='%s'", size, face_name ? face_name : "");;
- 
-    
-    return fh;
+  pthread_mutex_unlock(&g_font_mtx);
+  log_info("Platform_CreateFont size=%d face_name='%s'", size,
+           face_name ? face_name : "");
+  ;
+
+  return fh;
 }
 
 void Platform_DestroyFont(FontHandle font) {
-        
-XftFont* xf = FH_TO_XFT(font);
-    if (!xf) {  return ; }
-    pthread_mutex_lock(&g_font_cache_mtx);
-    bool cached = x11_font_is_cached(FH_TO_DPY(font), xf);
-    bool retired = cached ? false : x11_font_was_retired(FH_TO_DPY(font), xf);
-    pthread_mutex_unlock(&g_font_cache_mtx);
-    if (cached || retired) {  return ; }
-    XftFontClose(FH_TO_DPY(font), xf);
+
+  XftFont *xf = FH_TO_XFT(font);
+  if (!xf) {
+    return;
+  }
+  pthread_mutex_lock(&g_font_cache_mtx);
+  bool cached = x11_font_is_cached(FH_TO_DPY(font), xf);
+  bool retired = cached ? false : x11_font_was_retired(FH_TO_DPY(font), xf);
+  pthread_mutex_unlock(&g_font_cache_mtx);
+  if (cached || retired) {
+    return;
+  }
+  XftFontClose(FH_TO_DPY(font), xf);
 }
 
-static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {
-        
+static int xft_text_width(Display *dpy, XftFont *xf, const char *text,
+                          int len) {
 
-    XGlyphInfo ext;
-    XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
-    
-    return ext.xOff;
+  XGlyphInfo ext;
+  XftTextExtentsUtf8(dpy, xf, (FcChar8 *)text, len, &ext);
+
+  return ext.xOff;
 }
 
-void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
-        
+void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
+                             int *outWidth, int *outHeight) {
 
-    if (!FH_TO_XFT(font) || !text) {
-        *outWidth = 0;
-        *outHeight = 0;
-        log_info("Platform_GetTextExtents text='%s' maxWidth=%d", text ? text : "", maxWidth);
+  if (!FH_TO_XFT(font) || !text) {
+    *outWidth = 0;
+    *outHeight = 0;
+    log_info("Platform_GetTextExtents text='%s' maxWidth=%d", text ? text : "",
+             maxWidth);
 
-        
-        return;
+    return;
+  }
+  Display *dpy = FH_TO_DPY(font);
+  XftFont *xf = FH_TO_XFT(font);
+  int lineHeight = xf->ascent + xf->descent;
+  int spaceWidth = xft_text_width(dpy, xf, " ", 1);
+
+  int lineWidth = 0;
+  int totalHeight = lineHeight;
+  const char *p = text;
+  while (*p) {
+    const char *word_start = p;
+    while (*p && *p != ' ')
+      p++;
+    int wordWidth = xft_text_width(dpy, xf, word_start, p - word_start);
+    int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
+    if (lineWidth > 0 && lineWidth + add > maxWidth) {
+      totalHeight += lineHeight;
+      lineWidth = wordWidth;
+    } else {
+      lineWidth += add;
     }
-    Display* dpy = FH_TO_DPY(font);
-    XftFont* xf = FH_TO_XFT(font);
-    int lineHeight = xf->ascent + xf->descent;
-    int spaceWidth = xft_text_width(dpy, xf, " ", 1);
-
-    int lineWidth = 0;
-    int totalHeight = lineHeight;
-    const char* p = text;
-    while (*p) {
-        const char* word_start = p;
-        while (*p && *p != ' ') p++;
-        int wordWidth = xft_text_width(dpy, xf, word_start, p - word_start);
-        int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
-        if (lineWidth > 0 && lineWidth + add > maxWidth) {
-            totalHeight += lineHeight;
-            lineWidth = wordWidth;
-        } else {
-            lineWidth += add;
-        }
-        while (*p == ' ') p++;
-    }
-    *outWidth = lineWidth;
-    *outHeight = totalHeight;
-    
+    while (*p == ' ')
+      p++;
+  }
+  *outWidth = lineWidth;
+  *outHeight = totalHeight;
 }
 
 long Platform_GetFileSize(char *filepath) {
-        
 
-    FILE *fp = fopen(filepath, "rb"); 
-    if (fp == NULL) {
- 
-        return -1; 
-    }
+  FILE *fp = fopen(filepath, "rb");
+  if (fp == NULL) {
 
-    if (fseek(fp, 0L, SEEK_END) != 0) {
-        fclose(fp);  return -1;
-    }
+    return -1;
+  }
 
-    long size = ftell(fp);
-
+  if (fseek(fp, 0L, SEEK_END) != 0) {
     fclose(fp);
-    log_info("Platform_GetFileSize filepath=%p", filepath);;
+    return -1;
+  }
 
-    
-    return size;
+  long size = ftell(fp);
+
+  fclose(fp);
+  log_info("Platform_GetFileSize filepath=%p", filepath);
+  ;
+
+  return size;
 }
 
-bool Platform_FocusWindow(const char* title) {
-    
-return Wm_FocusByTitle(title);
-}
+bool Platform_FocusWindow(const char *title) { return Wm_FocusByTitle(title); }
 
-bool Platform_CloseActiveWindow(void) {
-    
-return Wm_CloseActiveWindow();
-}
+bool Platform_CloseActiveWindow(void) { return Wm_CloseActiveWindow(); }
 
 bool Platform_ToggleFullscreenActive(void) {
-    
-return Wm_ToggleFullscreenActive();
+
+  return Wm_ToggleFullscreenActive();
 }
 
 bool Platform_MoveActiveWindowToMonitor(bool right) {
-    
-return Wm_MoveActiveWindowToMonitor(right);
+
+  return Wm_MoveActiveWindowToMonitor(right);
 }
 
-bool Platform_MoveActiveWindowLeft(void) {
-    
-return Wm_MoveActiveWindowLeft();
-}
+bool Platform_MoveActiveWindowLeft(void) { return Wm_MoveActiveWindowLeft(); }
 
-bool Platform_MoveActiveWindowRight(void) {
-    
-return Wm_MoveActiveWindowRight();
-}
+bool Platform_MoveActiveWindowRight(void) { return Wm_MoveActiveWindowRight(); }
 
-bool Platform_FocusWindowLeft(void) {
-    
-return Wm_FocusWindowLeft();
-}
+bool Platform_FocusWindowLeft(void) { return Wm_FocusWindowLeft(); }
 
-bool Platform_FocusWindowRight(void) {
-    
-return Wm_FocusWindowRight();
-}
+bool Platform_FocusWindowRight(void) { return Wm_FocusWindowRight(); }
 
-bool Platform_MinimizeActiveWindow(void) {
-    
-return Wm_MinimizeActiveWindow();
-}
+bool Platform_MinimizeActiveWindow(void) { return Wm_MinimizeActiveWindow(); }
 
-char* Platform_GetActiveWindowTitle() {
-    
-return Wm_GetActiveWindowTitle();
-}
+char *Platform_GetActiveWindowTitle() { return Wm_GetActiveWindowTitle(); }
 
-int Platform_GetIconSize(char* icon_path) {
-        
-if (strstr(icon_path, "32x32")){
-      return 32;
-    }
-    if (strstr(icon_path, "48x48")) {
-      return 48;
-    }
-    if (strstr(icon_path, "64x64")) {
-      return 64;
-    }
-    if (strstr(icon_path, "128x128")) {
-      return 128;
-    }
-    if (strstr(icon_path, "256x256")) {
-      return 256;
-    }
+int Platform_GetIconSize(char *icon_path) {
+
+  if (strstr(icon_path, "32x32")) {
     return 32;
+  }
+  if (strstr(icon_path, "48x48")) {
+    return 48;
+  }
+  if (strstr(icon_path, "64x64")) {
+    return 64;
+  }
+  if (strstr(icon_path, "128x128")) {
+    return 128;
+  }
+  if (strstr(icon_path, "256x256")) {
+    return 256;
+  }
+  return 32;
 }
 typedef struct {
-  char* name;
-  char* path;
+  char *name;
+  char *path;
 } NameToPath;
 
-NameToPath supported_names_to_paths[] =  {
-  {"sway","/resources/Sway.svg"},
-  {"anki","/resources/Anki.png"},
-  {"xdg-desktop-portal-gtk","/resources/xdg-desktop-portal-gtk.png"},
+NameToPath supported_names_to_paths[] = {
+    {"sway", "/resources/Sway.svg"},
+    {"anki", "/resources/Anki.png"},
+    {"xdg-desktop-portal-gtk", "/resources/xdg-desktop-portal-gtk.png"},
 };
 
 #define MAX_ICON_CACHE 1024
-static struct { char key[512]; char value[1024]; } g_icon_cache[MAX_ICON_CACHE];
-static int g_icon_cache_count=0;
-static bool g_icon_cache_loaded=false;
-static bool icon_cache_path(char* out, size_t n) {
-        
-return Platform_GetFeaturePath("core", "icon_cache.txt", out, n);
+static struct {
+  char key[512];
+  char value[1024];
+} g_icon_cache[MAX_ICON_CACHE];
+static int g_icon_cache_count = 0;
+static bool g_icon_cache_loaded = false;
+static bool icon_cache_path(char *out, size_t n) {
+
+  return Platform_GetFeaturePath("core", "icon_cache.txt", out, n);
 }
-static void icon_cache_load(void){
-        
-if(g_icon_cache_loaded) {  return ; } g_icon_cache_loaded=true;
-    char cf[1024];
-    static char content[MAX_ICON_CACHE * 1600];
-    if (!icon_cache_path(cf, sizeof(cf))) {  return ; }
-    if (File_ReadAll(cf, content, (long)sizeof(content)) <= 0) {  return ; }
-    char* cur = content;
-    while (*cur && g_icon_cache_count < MAX_ICON_CACHE) {
-        char* nl = strchr(cur, '\n');
-        if (nl) *nl = '\0';
-        char* line = cur;
-        cur = nl ? nl + 1 : cur + strlen(cur);
-        line[strcspn(line,"\r\n")]='\0';
-        char* eq=strchr(line,'='); if(!eq) continue; *eq='\0';
-        strncpy(g_icon_cache[g_icon_cache_count].key, line, sizeof(g_icon_cache[0].key)-1);
-        g_icon_cache[g_icon_cache_count].key[sizeof(g_icon_cache[0].key)-1]='\0';
-        strncpy(g_icon_cache[g_icon_cache_count].value, eq+1, sizeof(g_icon_cache[0].value)-1);
-        g_icon_cache[g_icon_cache_count].value[sizeof(g_icon_cache[0].value)-1]='\0';
-        if(access(g_icon_cache[g_icon_cache_count].value,F_OK)==0) g_icon_cache_count++;
+static void icon_cache_load(void) {
+
+  if (g_icon_cache_loaded) {
+    return;
+  }
+  g_icon_cache_loaded = true;
+  char cf[1024];
+  static char content[MAX_ICON_CACHE * 1600];
+  if (!icon_cache_path(cf, sizeof(cf))) {
+    return;
+  }
+  if (File_ReadAll(cf, content, (long)sizeof(content)) <= 0) {
+    return;
+  }
+  char *cur = content;
+  while (*cur && g_icon_cache_count < MAX_ICON_CACHE) {
+    char *nl = strchr(cur, '\n');
+    if (nl)
+      *nl = '\0';
+    char *line = cur;
+    cur = nl ? nl + 1 : cur + strlen(cur);
+    line[strcspn(line, "\r\n")] = '\0';
+    char *eq = strchr(line, '=');
+    if (!eq)
+      continue;
+    *eq = '\0';
+    strncpy(g_icon_cache[g_icon_cache_count].key, line,
+            sizeof(g_icon_cache[0].key) - 1);
+    g_icon_cache[g_icon_cache_count].key[sizeof(g_icon_cache[0].key) - 1] =
+        '\0';
+    strncpy(g_icon_cache[g_icon_cache_count].value, eq + 1,
+            sizeof(g_icon_cache[0].value) - 1);
+    g_icon_cache[g_icon_cache_count].value[sizeof(g_icon_cache[0].value) - 1] =
+        '\0';
+    if (access(g_icon_cache[g_icon_cache_count].value, F_OK) == 0)
+      g_icon_cache_count++;
+  }
+}
+static const char *icon_cache_get(const char *key) {
+
+  icon_cache_load();
+  for (int i = 0; i < g_icon_cache_count; i++)
+    if (strcmp(g_icon_cache[i].key, key) == 0) {
+      return g_icon_cache[i].value;
     }
+  return NULL;
 }
-static const char* icon_cache_get(const char* key){
-        
-icon_cache_load();
-    for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) {  return g_icon_cache[i].value; }
+static void icon_cache_set(const char *key, const char *value) {
+
+  icon_cache_load();
+  for (int i = 0; i < g_icon_cache_count; i++)
+    if (strcmp(g_icon_cache[i].key, key) == 0) {
+      return;
+    }
+  if (g_icon_cache_count >= MAX_ICON_CACHE) {
+    return;
+  }
+  strncpy(g_icon_cache[g_icon_cache_count].key, key,
+          sizeof(g_icon_cache[0].key) - 1);
+  strncpy(g_icon_cache[g_icon_cache_count].value, value,
+          sizeof(g_icon_cache[0].value) - 1);
+  g_icon_cache_count++;
+  char cf[1024];
+  FILE *f = NULL;
+  if (icon_cache_path(cf, sizeof(cf)))
+    f = fopen(cf, "a");
+  if (!f) {
+    return;
+  }
+  fprintf(f, "%s=%s\n", key, value);
+  fclose(f);
+}
+
+char *Platform_GetActiveWindowAppId(void) { return Wm_GetActiveWindowAppId(); }
+
+char *Platform_GetIconPath(char *app_path) {
+
+  if (!app_path) {
+    log_error("operation failed, returning error app_path='%s'",
+              app_path ? app_path : "null");
     return NULL;
-}
-static void icon_cache_set(const char* key, const char* value){
-        
-icon_cache_load();
-    for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) {  return ; }
-    if(g_icon_cache_count>=MAX_ICON_CACHE) {  return ; }
-    strncpy(g_icon_cache[g_icon_cache_count].key, key, sizeof(g_icon_cache[0].key)-1);
-    strncpy(g_icon_cache[g_icon_cache_count].value, value, sizeof(g_icon_cache[0].value)-1);
-    g_icon_cache_count++;
-    char cf[1024];
-    FILE* f=NULL;
-    if (icon_cache_path(cf, sizeof(cf))) f=fopen(cf,"a");
-    if(!f) {  return ; }
-    fprintf(f,"%s=%s\n",key,value);
-    fclose(f);
-}
-
-
-char* Platform_GetActiveWindowAppId(void) {
-    
-return Wm_GetActiveWindowAppId();
-}
-
-char* Platform_GetIconPath(char* app_path) {
-        
-if (!app_path) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
-    for (int i = 0; i < (int)ARRAY_LEN(supported_names_to_paths); i++) {
-        if (Platform_StringContainsCaseInsensitive(app_path, supported_names_to_paths[i].name)) {
-            if (access(supported_names_to_paths[i].path, F_OK)==0) return strdup(supported_names_to_paths[i].path);
-        }
+  }
+  for (int i = 0; i < (int)ARRAY_LEN(supported_names_to_paths); i++) {
+    if (Platform_StringContainsCaseInsensitive(
+            app_path, supported_names_to_paths[i].name)) {
+      if (access(supported_names_to_paths[i].path, F_OK) == 0)
+        return strdup(supported_names_to_paths[i].path);
     }
-    if (app_path[0]=='/' && strchr(app_path, '.') && access(app_path, F_OK)==0) {
-        if (strstr(app_path, ".png") || strstr(app_path, ".svg") || strstr(app_path, ".xpm")) return strdup(app_path);
+  }
+  if (app_path[0] == '/' && strchr(app_path, '.') &&
+      access(app_path, F_OK) == 0) {
+    if (strstr(app_path, ".png") || strstr(app_path, ".svg") ||
+        strstr(app_path, ".xpm"))
+      return strdup(app_path);
+  }
+  char icon_name[512] = {0};
+  if (strstr(app_path, ".desktop")) {
+    FILE *f = fopen(app_path, "r");
+    if (f) {
+      char line[1024];
+      while (fgets(line, sizeof(line), f)) {
+        char *p = line;
+        while (*p == ' ' || *p == '\t')
+          p++;
+        if (Platform_StringContainsCaseInsensitive(p, "Icon=")) {
+          p = strchr(p, '=');
+          if (p) {
+            p++;
+            while (*p == ' ' || *p == '\t')
+              p++;
+          }
+          char *end = strpbrk(p, " \r\n#");
+          if (end)
+            *end = '\0';
+          strncpy(icon_name, p, sizeof(icon_name) - 1);
+          break;
+        }
+      }
+      fclose(f);
     }
-    char icon_name[512]={0};
-    if (strstr(app_path, ".desktop")) {
-        FILE* f=fopen(app_path,"r");
-        if (f) {
-            char line[1024];
-            while(fgets(line,sizeof(line),f)){
-                char* p = line;
-                while(*p==' ' || *p=='\t') p++;
-                if (Platform_StringContainsCaseInsensitive(p, "Icon=")) {
-                    p = strchr(p, '=');
-                    if (p) { p++; while(*p==' ' || *p=='\t') p++; }
-                    char* end = strpbrk(p, " \r\n#");
-                    if (end) *end = '\0';
-                    strncpy(icon_name, p, sizeof(icon_name)-1);
-                    break;
-                }
-            }
-            fclose(f);
-        }
-        if (!icon_name[0]) {
-            const char* home_ph0 = Platform_GetRealHome();
-            if (!home_ph0 || !home_ph0[0]) home_ph0 = getenv("HOME");
-            char ph_path[1024];
-            if (home_ph0 && home_ph0[0]) {
-                snprintf(ph_path,sizeof(ph_path),"%s/Programming/Projects/Flint/resources/Placeholder.png",home_ph0);
-                if(access(ph_path,F_OK)==0) return strdup(ph_path);
-            }
-        }
+    if (!icon_name[0]) {
+      const char *home_ph0 = Platform_GetRealHome();
+      if (!home_ph0 || !home_ph0[0])
+        home_ph0 = getenv("HOME");
+      char ph_path[1024];
+      if (home_ph0 && home_ph0[0]) {
+        snprintf(ph_path, sizeof(ph_path),
+                 "%s/Programming/Projects/Flint/resources/Placeholder.png",
+                 home_ph0);
+        if (access(ph_path, F_OK) == 0)
+          return strdup(ph_path);
+      }
+    }
+  } else {
+    strncpy(icon_name, app_path, sizeof(icon_name) - 1);
+  }
+  if (icon_name[0] == '/' && access(icon_name, F_OK) == 0) {
+    if (strstr(icon_name, ".png") || strstr(icon_name, ".svg") ||
+        strstr(icon_name, ".xpm"))
+      return strdup(icon_name);
+  }
+  char bare[512];
+  strncpy(bare, icon_name, sizeof(bare) - 1);
+  char *dot = strrchr(bare, '.');
+  if (dot && (strcmp(dot, ".png") == 0 || strcmp(dot, ".svg") == 0 ||
+              strcmp(dot, ".xpm") == 0))
+    *dot = '\0';
+  if (bare[0]) {
+    const char *cached = icon_cache_get(bare);
+    if (cached && access(cached, F_OK) == 0)
+      return strdup(cached);
+  }
+  const char *sizes[] = {"32x32",   "48x48",    "64x64", "128x128",
+                         "256x256", "scalable", NULL};
+  const char *bases[] = {"/usr/share/icons/hicolor", "/usr/share/pixmaps",
+                         "/usr/share/icons/Adwaita", "/usr/share/icons/breeze",
+                         NULL};
+  static char found[1024];
+  const char *home = Platform_GetRealHome();
+  if (!home || !home[0])
+    home = getenv("HOME");
+  if (home && home[0]) {
+    for (int s = 0; sizes[s]; s++) {
+      char path[1024];
+      const char *sz = sizes[s];
+      while (*sz == ' ')
+        sz++;
+      snprintf(path, sizeof(path),
+               "%s/.local/share/icons/hicolor/%s/apps/%s.png", home, sz, bare);
+      if (access(path, F_OK) == 0) {
+        strncpy(found, path, sizeof(found) - 1);
+        icon_cache_set(bare, found);
+        return strdup(found);
+      }
+      snprintf(path, sizeof(path),
+               "%s/.local/share/icons/hicolor/%s/apps/%s.svg", home, sz, bare);
+      if (access(path, F_OK) == 0) {
+        strncpy(found, path, sizeof(found) - 1);
+        icon_cache_set(bare, found);
+        return strdup(found);
+      }
+    }
+  }
+  {
+    const char *xdg = getenv("XDG_DATA_DIRS");
+    char xdg_dirs[1024] = {0};
+    if (xdg && xdg[0]) {
+      strncpy(xdg_dirs, xdg, sizeof(xdg_dirs) - 1);
     } else {
-        strncpy(icon_name, app_path, sizeof(icon_name)-1);
+      snprintf(xdg_dirs, sizeof(xdg_dirs), "/usr/local/share:/usr/share");
     }
-    if (icon_name[0]=='/' && access(icon_name, F_OK)==0) {
-        if (strstr(icon_name, ".png") || strstr(icon_name, ".svg") || strstr(icon_name, ".xpm")) return strdup(icon_name);
-    }
-    char bare[512]; strncpy(bare, icon_name, sizeof(bare)-1);
-    char* dot=strrchr(bare,'.'); if(dot && (strcmp(dot,".png")==0||strcmp(dot,".svg")==0||strcmp(dot,".xpm")==0)) *dot='\0';
-    if (bare[0]) {
-        const char* cached = icon_cache_get(bare);
-        if (cached && access(cached,F_OK)==0) return strdup(cached);
-    }
-    const char* sizes[]={"32x32","48x48","64x64","128x128","256x256","scalable",NULL};
-    const char* bases[]={"/usr/share/icons/hicolor","/usr/share/pixmaps","/usr/share/icons/Adwaita","/usr/share/icons/breeze",NULL};
-    static char found[1024];
-    const char* home = Platform_GetRealHome();
-    if (!home || !home[0]) home = getenv("HOME");
-    if (home && home[0]) {
-        for(int s=0;sizes[s];s++){
-            char path[1024];
-            const char* sz=sizes[s];
-            while(*sz==' ') sz++;
-            snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.png",home,sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-            snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.svg",home,sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+    for (char *dir = strtok(xdg_dirs, ":"); dir; dir = strtok(NULL, ":")) {
+      for (int s = 0; sizes[s]; s++) {
+        char path[1024];
+        const char *sz = sizes[s];
+        while (*sz == ' ')
+          sz++;
+        snprintf(path, sizeof(path), "%s/icons/hicolor/%s/apps/%s.png", dir, sz,
+                 bare);
+        if (access(path, F_OK) == 0) {
+          strncpy(found, path, sizeof(found) - 1);
+          icon_cache_set(bare, found);
+          return strdup(found);
         }
-    }
-    {
-        const char* xdg = getenv("XDG_DATA_DIRS");
-        char xdg_dirs[1024] = {0};
-        if (xdg && xdg[0]) { strncpy(xdg_dirs, xdg, sizeof(xdg_dirs)-1); }
-        else { snprintf(xdg_dirs, sizeof(xdg_dirs), "/usr/local/share:/usr/share"); }
-        for (char* dir = strtok(xdg_dirs, ":"); dir; dir = strtok(NULL, ":")) {
-            for(int s=0;sizes[s];s++){
-                char path[1024];
-                const char* sz=sizes[s];
-                while(*sz==' ') sz++;
-                snprintf(path,sizeof(path),"%s/icons/hicolor/%s/apps/%s.png",dir,sz,bare);
-                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-                snprintf(path,sizeof(path),"%s/icons/hicolor/%s/apps/%s.svg",dir,sz,bare);
-                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-                snprintf(path,sizeof(path),"%s/icons/hicolor/%s.svg",dir,bare);
-                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-                snprintf(path,sizeof(path),"%s/icons/hicolor/%s.png",dir,bare);
-                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-                snprintf(path,sizeof(path),"%s/pixmaps/%s.png",dir,bare);
-                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-                snprintf(path,sizeof(path),"%s/pixmaps/%s.svg",dir,bare);
-                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-            }
+        snprintf(path, sizeof(path), "%s/icons/hicolor/%s/apps/%s.svg", dir, sz,
+                 bare);
+        if (access(path, F_OK) == 0) {
+          strncpy(found, path, sizeof(found) - 1);
+          icon_cache_set(bare, found);
+          return strdup(found);
         }
-    }
-    for(int b=0;bases[b];b++){
-        for(int s=0;sizes[s];s++){
-            char path[1024];
-            const char* sz=sizes[s];
-            while(*sz==' ') sz++;
-            snprintf(path,sizeof(path),"%s/%s/apps/%s.png",bases[b],sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-            snprintf(path,sizeof(path),"%s/%s/apps/%s.svg",bases[b],sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-            snprintf(path,sizeof(path),"%s/%s.svg",bases[b],bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-            snprintf(path,sizeof(path),"%s/%s.png",bases[b],bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+        snprintf(path, sizeof(path), "%s/icons/hicolor/%s.svg", dir, bare);
+        if (access(path, F_OK) == 0) {
+          strncpy(found, path, sizeof(found) - 1);
+          icon_cache_set(bare, found);
+          return strdup(found);
         }
-        char direct[1024]; snprintf(direct,sizeof(direct),"%s/%s.png",bases[b],bare);
-        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-        snprintf(direct,sizeof(direct),"%s/%s.svg",bases[b],bare);
-        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+        snprintf(path, sizeof(path), "%s/icons/hicolor/%s.png", dir, bare);
+        if (access(path, F_OK) == 0) {
+          strncpy(found, path, sizeof(found) - 1);
+          icon_cache_set(bare, found);
+          return strdup(found);
+        }
+        snprintf(path, sizeof(path), "%s/pixmaps/%s.png", dir, bare);
+        if (access(path, F_OK) == 0) {
+          strncpy(found, path, sizeof(found) - 1);
+          icon_cache_set(bare, found);
+          return strdup(found);
+        }
+        snprintf(path, sizeof(path), "%s/pixmaps/%s.svg", dir, bare);
+        if (access(path, F_OK) == 0) {
+          strncpy(found, path, sizeof(found) - 1);
+          icon_cache_set(bare, found);
+          return strdup(found);
+        }
+      }
     }
-    char pix[1024]; snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.png",bare);
-    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-    snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
-    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-    snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.xpm",bare);
-    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-    const char* home_ph = Platform_GetRealHome();
-    if (!home_ph || !home_ph[0]) home_ph = getenv("HOME");
-    if (home_ph && home_ph[0]) {
-        snprintf(pix,sizeof(pix),"%s/Programming/Projects/Flint/resources/Placeholder.png", home_ph);
-        if(access(pix,F_OK)==0) return strdup(pix);
+  }
+  for (int b = 0; bases[b]; b++) {
+    for (int s = 0; sizes[s]; s++) {
+      char path[1024];
+      const char *sz = sizes[s];
+      while (*sz == ' ')
+        sz++;
+      snprintf(path, sizeof(path), "%s/%s/apps/%s.png", bases[b], sz, bare);
+      if (access(path, F_OK) == 0) {
+        strncpy(found, path, sizeof(found) - 1);
+        icon_cache_set(bare, found);
+        return strdup(found);
+      }
+      snprintf(path, sizeof(path), "%s/%s/apps/%s.svg", bases[b], sz, bare);
+      if (access(path, F_OK) == 0) {
+        strncpy(found, path, sizeof(found) - 1);
+        icon_cache_set(bare, found);
+        return strdup(found);
+      }
+      snprintf(path, sizeof(path), "%s/%s.svg", bases[b], bare);
+      if (access(path, F_OK) == 0) {
+        strncpy(found, path, sizeof(found) - 1);
+        icon_cache_set(bare, found);
+        return strdup(found);
+      }
+      snprintf(path, sizeof(path), "%s/%s.png", bases[b], bare);
+      if (access(path, F_OK) == 0) {
+        strncpy(found, path, sizeof(found) - 1);
+        icon_cache_set(bare, found);
+        return strdup(found);
+      }
     }
-    snprintf(pix,sizeof(pix),"resources/Placeholder.png");
-    if(access(pix,F_OK)==0) return strdup(pix);
-    log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
-    return strdup(bare[0] ? bare : "placeholder");
+    char direct[1024];
+    snprintf(direct, sizeof(direct), "%s/%s.png", bases[b], bare);
+    if (access(direct, F_OK) == 0) {
+      strncpy(found, direct, sizeof(found) - 1);
+      icon_cache_set(bare, found);
+      return strdup(found);
+    }
+    snprintf(direct, sizeof(direct), "%s/%s.svg", bases[b], bare);
+    if (access(direct, F_OK) == 0) {
+      strncpy(found, direct, sizeof(found) - 1);
+      icon_cache_set(bare, found);
+      return strdup(found);
+    }
+  }
+  char pix[1024];
+  snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.png", bare);
+  if (access(pix, F_OK) == 0) {
+    strncpy(found, pix, sizeof(found) - 1);
+    icon_cache_set(bare, found);
+    return strdup(found);
+  }
+  snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.svg", bare);
+  if (access(pix, F_OK) == 0) {
+    strncpy(found, pix, sizeof(found) - 1);
+    icon_cache_set(bare, found);
+    return strdup(found);
+  }
+  snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.xpm", bare);
+  if (access(pix, F_OK) == 0) {
+    strncpy(found, pix, sizeof(found) - 1);
+    icon_cache_set(bare, found);
+    return strdup(found);
+  }
+  const char *home_ph = Platform_GetRealHome();
+  if (!home_ph || !home_ph[0])
+    home_ph = getenv("HOME");
+  if (home_ph && home_ph[0]) {
+    snprintf(pix, sizeof(pix),
+             "%s/Programming/Projects/Flint/resources/Placeholder.png",
+             home_ph);
+    if (access(pix, F_OK) == 0)
+      return strdup(pix);
+  }
+  snprintf(pix, sizeof(pix), "resources/Placeholder.png");
+  if (access(pix, F_OK) == 0)
+    return strdup(pix);
+  log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");
+  ;
+  return strdup(bare[0] ? bare : "placeholder");
 }
 
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
 
 int Platform_CopyToClipboard(const char *text) {
-        
-if (!text) return 0;
-    long long t0 = Platform_GetWallClockMs();
-    int wr = 0;
-    int xr = 0;
-    log_info("COPY BEGIN pid=%d len=%d text='%s' WAYLAND_DISPLAY=%s HYPRLAND_INSTANCE_SIGNATURE=%s",
-        (int)getpid(), (int)strlen(text), text,
-        getenv("WAYLAND_DISPLAY") ? getenv("WAYLAND_DISPLAY") : "(unset)",
-        getenv("HYPRLAND_INSTANCE_SIGNATURE") ? "set" : "(unset)");
-    if (Platform_ClipboardAvailable()) {
-        long long tw = Platform_GetWallClockMs();
-        wr = Platform_ClipboardSetText(text);
-        log_info("COPY step1 wayland ret=%d ms=%lld", wr, Platform_GetWallClockMs() - tw);
-    } else {
-        log_info("COPY step1 wayland SKIPPED (no WAYLAND_DISPLAY)");
-    }
-    long long tx = Platform_GetWallClockMs();
-    xr = x11_clipboard_set_text(text);
-    log_info("COPY step2 x11 ret=%d ms=%lld", xr, Platform_GetWallClockMs() - tx);
-    if (!wr && !xr) log_warn("Platform_CopyToClipboard failed both backends");
-    log_info("COPY END total_ms=%lld len=%d wr=%d xr=%d", Platform_GetWallClockMs() - t0, (int)strlen(text), wr, xr);
-    return (wr || xr);
+
+  if (!text)
+    return 0;
+  long long t0 = Platform_GetWallClockMs();
+  int wr = 0;
+  int xr = 0;
+  log_info("COPY BEGIN pid=%d len=%d text='%s' WAYLAND_DISPLAY=%s "
+           "HYPRLAND_INSTANCE_SIGNATURE=%s",
+           (int)getpid(), (int)strlen(text), text,
+           getenv("WAYLAND_DISPLAY") ? getenv("WAYLAND_DISPLAY") : "(unset)",
+           getenv("HYPRLAND_INSTANCE_SIGNATURE") ? "set" : "(unset)");
+  if (Platform_ClipboardAvailable()) {
+    long long tw = Platform_GetWallClockMs();
+    wr = Platform_ClipboardSetText(text);
+    log_info("COPY step1 wayland ret=%d ms=%lld", wr,
+             Platform_GetWallClockMs() - tw);
+  } else {
+    log_info("COPY step1 wayland SKIPPED (no WAYLAND_DISPLAY)");
+  }
+  long long tx = Platform_GetWallClockMs();
+  xr = x11_clipboard_set_text(text);
+  log_info("COPY step2 x11 ret=%d ms=%lld", xr, Platform_GetWallClockMs() - tx);
+  if (!wr && !xr)
+    log_warn("Platform_CopyToClipboard failed both backends");
+  log_info("COPY END total_ms=%lld len=%d wr=%d xr=%d",
+           Platform_GetWallClockMs() - t0, (int)strlen(text), wr, xr);
+  return (wr || xr);
 }
 
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
-        
-if (!png || len == 0) return 0;
-    int wr = 0;
-    int xr = 0;
-    if (Platform_ClipboardAvailable()) {
-        wr = Platform_ClipboardSetImage(png, len);
-        log_info("Platform_CopyImageToClipboard wayland=%d", wr);
-    }
-    xr = x11_clipboard_set_image(png, len);
-    log_info("Platform_CopyImageToClipboard x11=%d", xr);
-    if (!wr && !xr) log_warn("Platform_CopyImageToClipboard failed both backends");
-    return (wr || xr);
+
+  if (!png || len == 0)
+    return 0;
+  int wr = 0;
+  int xr = 0;
+  if (Platform_ClipboardAvailable()) {
+    wr = Platform_ClipboardSetImage(png, len);
+    log_info("Platform_CopyImageToClipboard wayland=%d", wr);
+  }
+  xr = x11_clipboard_set_image(png, len);
+  log_info("Platform_CopyImageToClipboard x11=%d", xr);
+  if (!wr && !xr)
+    log_warn("Platform_CopyImageToClipboard failed both backends");
+  return (wr || xr);
 }
 
-int Platform_SetFileToClipboard(const char* path) {
-        
-if (!path || path[0] == 0) return 0;
-    int wr = 0;
-    int xr = 0;
-    if (Platform_ClipboardAvailable()) {
-        wr = Platform_ClipboardSetFile(path);
-        log_info("Platform_SetFileToClipboard wayland=%d", wr);
-    }
-    xr = x11_clipboard_set_file(path);
-    log_info("Platform_SetFileToClipboard x11=%d", xr);
-    return (wr || xr);
+int Platform_SetFileToClipboard(const char *path) {
+
+  if (!path || path[0] == 0)
+    return 0;
+  int wr = 0;
+  int xr = 0;
+  if (Platform_ClipboardAvailable()) {
+    wr = Platform_ClipboardSetFile(path);
+    log_info("Platform_SetFileToClipboard wayland=%d", wr);
+  }
+  xr = x11_clipboard_set_file(path);
+  log_info("Platform_SetFileToClipboard x11=%d", xr);
+  return (wr || xr);
 }
 
+char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
+                              int *out_status) {
 
-char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
-        
-if (out_status) *out_status = -1;
-    if (!argv || !argv[0]) return NULL;
-    int pin[2] = {-1, -1};
-    if (stdin_data && stdin_data[0]) {
-        if (pipe(pin) != 0) { log_error("Platform_RunArgvCapture pipe failed: %s", strerror(errno)); return NULL; }
+  if (out_status)
+    *out_status = -1;
+  if (!argv || !argv[0])
+    return NULL;
+  int pin[2] = {-1, -1};
+  if (stdin_data && stdin_data[0]) {
+    if (pipe(pin) != 0) {
+      log_error("Platform_RunArgvCapture pipe failed: %s", strerror(errno));
+      return NULL;
     }
-    int pout[2] = {-1, -1};
-    if (pipe(pout) != 0) {
-        log_error("Platform_RunArgvCapture pipe failed: %s", strerror(errno));
-        if (pin[0] >= 0) { close(pin[0]); close(pin[1]); }
-        return NULL;
+  }
+  int pout[2] = {-1, -1};
+  if (pipe(pout) != 0) {
+    log_error("Platform_RunArgvCapture pipe failed: %s", strerror(errno));
+    if (pin[0] >= 0) {
+      close(pin[0]);
+      close(pin[1]);
     }
-    pid_t pid = fork();
-    if (pid < 0) {
-        log_error("Platform_RunArgvCapture fork failed: %s", strerror(errno));
-        if (pin[0] >= 0) { close(pin[0]); close(pin[1]); }
-        close(pout[0]); close(pout[1]);
-        return NULL;
-    }
-    if (pid == 0) {
-        setsid();
-        if (pin[0] >= 0) { dup2(pin[0], STDIN_FILENO); close(pin[0]); close(pin[1]); }
-        else {
-            int devnull = open("/dev/null", O_RDONLY);
-            if (devnull >= 0) { dup2(devnull, STDIN_FILENO); if (devnull > 2) close(devnull); }
-        }
-        dup2(pout[1], STDOUT_FILENO);
-        dup2(pout[1], STDERR_FILENO);
-        close(pout[0]); close(pout[1]);
-        signal(SIGPIPE, SIG_DFL);
-        execvp(argv[0], (char* const*)argv);
-        _exit(127);
-    }
-    if (pin[0] >= 0) { close(pin[0]); pin[0] = -1; }
-    close(pout[1]);
-    if (pin[1] >= 0) {
-        signal(SIGPIPE, SIG_IGN);
-        size_t len = strlen(stdin_data);
-        size_t off = 0;
-        while (off < len) {
-            ssize_t w = write(pin[1], stdin_data + off, len - off);
-            if (w <= 0) { log_warn("stdin write stopped off=%d/%d err=%s", (int)off, (int)len, strerror(errno)); break; }
-            off += (size_t)w;
-        }
-        if (len == 0 || stdin_data[len - 1] != '\n') {
-            ssize_t w = write(pin[1], "\n", 1);
-            (void)w;
-        }
-        close(pin[1]);
-        pin[1] = -1;
-        signal(SIGPIPE, SIG_DFL);
-    }
-    size_t cap = 4096, len = 0;
-    char* out = malloc(cap);
-    if (!out) { close(pout[0]); waitpid(pid, NULL, 0); return NULL; }
-    for (;;) {
-        if (len + 1024 + 1 > cap) {
-            size_t ncap = cap * 2;
-            char* n = realloc(out, ncap);
-            if (!n) { free(out); close(pout[0]); waitpid(pid, NULL, 0); return NULL; }
-            out = n;
-            cap = ncap;
-        }
-        ssize_t r = read(pout[0], out + len, 1024);
-        if (r <= 0) break;
-        len += (size_t)r;
+    return NULL;
+  }
+  pid_t pid = fork();
+  if (pid < 0) {
+    log_error("Platform_RunArgvCapture fork failed: %s", strerror(errno));
+    if (pin[0] >= 0) {
+      close(pin[0]);
+      close(pin[1]);
     }
     close(pout[0]);
-    out[len] = '\0';
-    int st = 0;
-    while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
-    if (out_status) *out_status = WIFEXITED(st) ? WEXITSTATUS(st) : -1;
-    return out;
+    close(pout[1]);
+    return NULL;
+  }
+  if (pid == 0) {
+    setsid();
+    if (pin[0] >= 0) {
+      dup2(pin[0], STDIN_FILENO);
+      close(pin[0]);
+      close(pin[1]);
+    } else {
+      int devnull = open("/dev/null", O_RDONLY);
+      if (devnull >= 0) {
+        dup2(devnull, STDIN_FILENO);
+        if (devnull > 2)
+          close(devnull);
+      }
+    }
+    dup2(pout[1], STDOUT_FILENO);
+    dup2(pout[1], STDERR_FILENO);
+    close(pout[0]);
+    close(pout[1]);
+    signal(SIGPIPE, SIG_DFL);
+    execvp(argv[0], (char *const *)argv);
+    _exit(127);
+  }
+  if (pin[0] >= 0) {
+    close(pin[0]);
+    pin[0] = -1;
+  }
+  close(pout[1]);
+  if (pin[1] >= 0) {
+    signal(SIGPIPE, SIG_IGN);
+    size_t len = strlen(stdin_data);
+    size_t off = 0;
+    while (off < len) {
+      ssize_t w = write(pin[1], stdin_data + off, len - off);
+      if (w <= 0) {
+        log_warn("stdin write stopped off=%d/%d err=%s", (int)off, (int)len,
+                 strerror(errno));
+        break;
+      }
+      off += (size_t)w;
+    }
+    if (len == 0 || stdin_data[len - 1] != '\n') {
+      ssize_t w = write(pin[1], "\n", 1);
+      (void)w;
+    }
+    close(pin[1]);
+    pin[1] = -1;
+    signal(SIGPIPE, SIG_DFL);
+  }
+  size_t cap = 4096, len = 0;
+  char *out = malloc(cap);
+  if (!out) {
+    close(pout[0]);
+    waitpid(pid, NULL, 0);
+    return NULL;
+  }
+  for (;;) {
+    if (len + 1024 + 1 > cap) {
+      size_t ncap = cap * 2;
+      char *n = realloc(out, ncap);
+      if (!n) {
+        free(out);
+        close(pout[0]);
+        waitpid(pid, NULL, 0);
+        return NULL;
+      }
+      out = n;
+      cap = ncap;
+    }
+    ssize_t r = read(pout[0], out + len, 1024);
+    if (r <= 0)
+      break;
+    len += (size_t)r;
+  }
+  close(pout[0]);
+  out[len] = '\0';
+  int st = 0;
+  while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {
+  }
+  if (out_status)
+    *out_status = WIFEXITED(st) ? WEXITSTATUS(st) : -1;
+  return out;
 }
 
-PlWindowList Platform_GetWindowTitles() {
-  
-return Wm_GetWindowTitles();
-}
+PlWindowList Platform_GetWindowTitles() { return Wm_GetWindowTitles(); }
 
-PlWindowList Platform_GetWindowNames() {
-    
-return Wm_GetWindowNames();
-}
+PlWindowList Platform_GetWindowNames() { return Wm_GetWindowNames(); }
 
 static int g_singleton_lock_fd = -1;
 
 bool Platform_TryAcquireSingleInstance(void) {
-        
-g_singleton_lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
-    if (g_singleton_lock_fd < 0) {
-        log_error("Cannot open singleton lock /tmp/flint.lock (%s). If it is owned by another user, remove it: sudo rm /tmp/flint.lock", strerror(errno));
-        return false;
-    }
-    if (flock(g_singleton_lock_fd, LOCK_EX | LOCK_NB) != 0) {
-        log_info("Another instance is already running. Exiting.");
-        close(g_singleton_lock_fd);
-        g_singleton_lock_fd = -1;
-        return false;
-    }
-    fcntl(g_singleton_lock_fd, F_SETFD, FD_CLOEXEC);
-    return true;
+
+  g_singleton_lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
+  if (g_singleton_lock_fd < 0) {
+    log_error("Cannot open singleton lock /tmp/flint.lock (%s). If it is owned "
+              "by another user, remove it: sudo rm /tmp/flint.lock",
+              strerror(errno));
+    return false;
+  }
+  if (flock(g_singleton_lock_fd, LOCK_EX | LOCK_NB) != 0) {
+    log_info("Another instance is already running. Exiting.");
+    close(g_singleton_lock_fd);
+    g_singleton_lock_fd = -1;
+    return false;
+  }
+  fcntl(g_singleton_lock_fd, F_SETFD, FD_CLOEXEC);
+  return true;
 }
 
 bool Platform_InitDisplaySafe(void) {
-        
-const char* dd = getenv("DISPLAY");
-    if (!dd || !dd[0]) {
-        const char* live = Platform_GetSessionDisplay();
-        if (live && live[0]) setenv("DISPLAY", live, 1);
-    }
-    const char* xa = getenv("XAUTHORITY");
-    if (xa && xa[0] && access(xa, R_OK) != 0) unsetenv("XAUTHORITY");
-    const char* xa2 = getenv("XAUTHORITY");
-    if (!xa2 || !xa2[0]) {
-        const char* live = Platform_GetSessionXAuthority();
-        if (live && live[0]) setenv("XAUTHORITY", live, 1);
-    }
-    const char* wd = getenv("WAYLAND_DISPLAY");
-    if (wd && wd[0] && wd[0] != '/') {
-        const char* rtd = getenv("XDG_RUNTIME_DIR");
-        if (!rtd || !rtd[0]) rtd = Platform_GetRuntimeDir();
-        char sock[512];
-        snprintf(sock, sizeof(sock), "%s/%s", rtd ? rtd : "", wd);
-        struct stat st;
-        if (stat(sock, &st) != 0) unsetenv("WAYLAND_DISPLAY");
-    }
-    if (!getenv("WAYLAND_DISPLAY") || !getenv("WAYLAND_DISPLAY")[0]) {
-        const char* rtd2 = Platform_GetRuntimeDir();
-        if (rtd2 && rtd2[0]) {
-            char pat[512];
-            snprintf(pat, sizeof(pat), "%s/wayland-*", rtd2);
-            glob_t g;
-            memset(&g, 0, sizeof(g));
-            if (glob(pat, 0, NULL, &g) == 0) {
-                for (size_t i = 0; i < g.gl_pathc; i++) {
-                    const char* base = strrchr(g.gl_pathv[i], '/');
-                    base = base ? base + 1 : g.gl_pathv[i];
-                    size_t bl = strlen(base);
-                    if (bl > 5 && strcmp(base + bl - 5, ".lock") == 0) continue;
-                    struct stat st2;
-                    if (stat(g.gl_pathv[i], &st2) == 0) {
-                        setenv("WAYLAND_DISPLAY", base, 1);
-                        break;
-                    }
-                }
-            }
-            globfree(&g);
+
+  const char *dd = getenv("DISPLAY");
+  if (!dd || !dd[0]) {
+    const char *live = Platform_GetSessionDisplay();
+    if (live && live[0])
+      setenv("DISPLAY", live, 1);
+  }
+  const char *xa = getenv("XAUTHORITY");
+  if (xa && xa[0] && access(xa, R_OK) != 0)
+    unsetenv("XAUTHORITY");
+  const char *xa2 = getenv("XAUTHORITY");
+  if (!xa2 || !xa2[0]) {
+    const char *live = Platform_GetSessionXAuthority();
+    if (live && live[0])
+      setenv("XAUTHORITY", live, 1);
+  }
+  const char *wd = getenv("WAYLAND_DISPLAY");
+  if (wd && wd[0] && wd[0] != '/') {
+    const char *rtd = getenv("XDG_RUNTIME_DIR");
+    if (!rtd || !rtd[0])
+      rtd = Platform_GetRuntimeDir();
+    char sock[512];
+    snprintf(sock, sizeof(sock), "%s/%s", rtd ? rtd : "", wd);
+    struct stat st;
+    if (stat(sock, &st) != 0)
+      unsetenv("WAYLAND_DISPLAY");
+  }
+  if (!getenv("WAYLAND_DISPLAY") || !getenv("WAYLAND_DISPLAY")[0]) {
+    const char *rtd2 = Platform_GetRuntimeDir();
+    if (rtd2 && rtd2[0]) {
+      char pat[512];
+      snprintf(pat, sizeof(pat), "%s/wayland-*", rtd2);
+      glob_t g;
+      memset(&g, 0, sizeof(g));
+      if (glob(pat, 0, NULL, &g) == 0) {
+        for (size_t i = 0; i < g.gl_pathc; i++) {
+          const char *base = strrchr(g.gl_pathv[i], '/');
+          base = base ? base + 1 : g.gl_pathv[i];
+          size_t bl = strlen(base);
+          if (bl > 5 && strcmp(base + bl - 5, ".lock") == 0)
+            continue;
+          struct stat st2;
+          if (stat(g.gl_pathv[i], &st2) == 0) {
+            setenv("WAYLAND_DISPLAY", base, 1);
+            break;
+          }
         }
+      }
+      globfree(&g);
     }
-    if (!init_display()) {
-        log_info("Continuing without X11 display (headless mode)");
-        return false;
-    }
-    return true;
+  }
+  if (!init_display()) {
+    log_info("Continuing without X11 display (headless mode)");
+    return false;
+  }
+  return true;
 }
 
 void Platform_CleanupDisplaySafe(void) {
-        
-Platform_ClipboardShutdown();
-    x11_clipboard_shutdown();
-    cleanup_display();
+
+  Platform_ClipboardShutdown();
+  x11_clipboard_shutdown();
+  cleanup_display();
 }
 
-void Platform_InitMainThreadContext(void) {
-    
-}
+void Platform_InitMainThreadContext(void) {}
 
-void Platform_FixWorkingDirectory(void) {
-    
-}
-void CleanupPerFeatureVimMap(void) {
-    
-}
+void Platform_FixWorkingDirectory(void) {}
+void CleanupPerFeatureVimMap(void) {}
 
 void Platform_CleanupPlatformResources(void) {
-        
-CleanupPerFeatureVimMap();
-    {
-        extern void x11_default_apps_free_cache(void);
-        x11_default_apps_free_cache();
-    }
-    {
-        extern void x11_img_cache_free_all(void);
-        x11_img_cache_free_all();
-    }
-    {
-        extern void x11_wm_cleanup_cursor_display(void);
-        x11_wm_cleanup_cursor_display();
-    }
-    extern void FcFini(void);
-    FcFini();
+
+  CleanupPerFeatureVimMap();
+  {
+    extern void x11_default_apps_free_cache(void);
+    x11_default_apps_free_cache();
+  }
+  {
+    extern void x11_img_cache_free_all(void);
+    x11_img_cache_free_all();
+  }
+  {
+    extern void x11_wm_cleanup_cursor_display(void);
+    x11_wm_cleanup_cursor_display();
+  }
+  extern void FcFini(void);
+  FcFini();
 }
 
-int Platform_InitializeTrayIcon(void) {
-    
-return 0;
-}
-void Platform_InitUI(void) {
-    
-}
-void Platform_ShutdownUI(void) {
-    
-}
+int Platform_InitializeTrayIcon(void) { return 0; }
+void Platform_InitUI(void) {}
+void Platform_ShutdownUI(void) {}
 static unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
-        
-if (!mask) return 0;
-    int shift = 0;
-    while (!(mask & 1ul)) { mask >>= 1; shift++; }
-    unsigned long bits = 0;
-    for (unsigned long m = mask; m; m >>= 1) bits++;
-    unsigned long v = (pixel >> shift) & ((1ul << bits) - 1ul);
-    if (bits == 0) return 0;
-    if (bits >= 8) return (unsigned char)(v >> (bits - 8));
-    return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
+
+  if (!mask)
+    return 0;
+  int shift = 0;
+  while (!(mask & 1ul)) {
+    mask >>= 1;
+    shift++;
+  }
+  unsigned long bits = 0;
+  for (unsigned long m = mask; m; m >>= 1)
+    bits++;
+  unsigned long v = (pixel >> shift) & ((1ul << bits) - 1ul);
+  if (bits == 0)
+    return 0;
+  if (bits >= 8)
+    return (unsigned char)(v >> (bits - 8));
+  return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
 }
 
 PlColor Platform_GetPixelColor(int x, int y) {
-        
 
-    PlColor out = {0, 0, 0};
-    Display* dpy = get_display();
-    if (!dpy) return out;
-    Window root = DefaultRootWindow(dpy);
-    XWindowAttributes attr;
-    if (!XGetWindowAttributes(dpy, root, &attr) || !attr.visual) {
-        
-        return out;
-    }
-    XImage* img = XGetImage(dpy, root, x, y, 1, 1, AllPlanes, ZPixmap);
-    if (!img) return out;
-    unsigned long pixel = XGetPixel(img, 0, 0);
-    out.r = x11_mask_extract(pixel, attr.visual->red_mask);
-    out.g = x11_mask_extract(pixel, attr.visual->green_mask);
-    out.b = x11_mask_extract(pixel, attr.visual->blue_mask);
-    XDestroyImage(img);
-    
+  PlColor out = {0, 0, 0};
+  Display *dpy = get_display();
+  if (!dpy)
     return out;
+  Window root = DefaultRootWindow(dpy);
+  XWindowAttributes attr;
+  if (!XGetWindowAttributes(dpy, root, &attr) || !attr.visual) {
+
+    return out;
+  }
+  XImage *img = XGetImage(dpy, root, x, y, 1, 1, AllPlanes, ZPixmap);
+  if (!img)
+    return out;
+  unsigned long pixel = XGetPixel(img, 0, 0);
+  out.r = x11_mask_extract(pixel, attr.visual->red_mask);
+  out.g = x11_mask_extract(pixel, attr.visual->green_mask);
+  out.b = x11_mask_extract(pixel, attr.visual->blue_mask);
+  XDestroyImage(img);
+
+  return out;
 }
 
 bool Platform_MoveToPos(int x, int y) {
-        
 
-    Display* dpy = get_display();
-    if (!dpy) return false;
+  Display *dpy = get_display();
+  if (!dpy)
+    return false;
 #if __has_include(<X11/extensions/XTest.h>)
-    XTestFakeMotionEvent(dpy, -1, x, y, CurrentTime);
-    XSync(dpy, False);
-    
-    return true;
+  XTestFakeMotionEvent(dpy, -1, x, y, CurrentTime);
+  XSync(dpy, False);
+
+  return true;
 #else
-    XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, y);
-    XSync(dpy, False);
-    
-    return true;
+  XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, y);
+  XSync(dpy, False);
+
+  return true;
 #endif
 }
 
 static int x11_x11_button(int button);
 
 bool Platform_ClickButton(int button) {
-        
 
-    Display* dpy = get_display();
-    if (!dpy) return false;
-    int xb = x11_x11_button(button);
-    if (xb == 0) return false;
-#if __has_include(<X11/extensions/XTest.h>)
-    usleep(1000);
-    XTestFakeButtonEvent(dpy, (unsigned int)xb, True, CurrentTime);
-    XSync(dpy, False);
-    usleep(1000);
-    XTestFakeButtonEvent(dpy, (unsigned int)xb, False, CurrentTime);
-    XSync(dpy, False);
-    
-    return true;
-#else
-    
+  Display *dpy = get_display();
+  if (!dpy)
     return false;
+  int xb = x11_x11_button(button);
+  if (xb == 0)
+    return false;
+#if __has_include(<X11/extensions/XTest.h>)
+  usleep(1000);
+  XTestFakeButtonEvent(dpy, (unsigned int)xb, True, CurrentTime);
+  XSync(dpy, False);
+  usleep(1000);
+  XTestFakeButtonEvent(dpy, (unsigned int)xb, False, CurrentTime);
+  XSync(dpy, False);
+
+  return true;
+#else
+
+  return false;
 #endif
 }
 
 bool Platform_Click(void) {
-        
 
-    Display* dpy = get_display();
-    if (!dpy) return false;
-#if __has_include(<X11/extensions/XTest.h>)
-    usleep(60000);
-    XTestFakeButtonEvent(dpy, 1, True, CurrentTime);
-    XSync(dpy, False);
-    usleep(30000);
-    XTestFakeButtonEvent(dpy, 1, False, CurrentTime);
-    XSync(dpy, False);
-    
-    return true;
-#else
-    
+  Display *dpy = get_display();
+  if (!dpy)
     return false;
+#if __has_include(<X11/extensions/XTest.h>)
+  usleep(60000);
+  XTestFakeButtonEvent(dpy, 1, True, CurrentTime);
+  XSync(dpy, False);
+  usleep(30000);
+  XTestFakeButtonEvent(dpy, 1, False, CurrentTime);
+  XSync(dpy, False);
+
+  return true;
+#else
+
+  return false;
 #endif
 }
 
 static int x11_x11_button(int button) {
-        
-switch (button) {
-        case 1: return 1;
-        case 2: return 3;
-        case 3: return 2;
-        case 4: return 8;
-        case 5: return 9;
-        case 6: return 8;
-        case 7: return 9;
-        default: return 0;
-    }
+
+  switch (button) {
+  case 1:
+    return 1;
+  case 2:
+    return 3;
+  case 3:
+    return 2;
+  case 4:
+    return 8;
+  case 5:
+    return 9;
+  case 6:
+    return 8;
+  case 7:
+    return 9;
+  default:
+    return 0;
+  }
 }
 
-bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
-        
+bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
 
-    if (out_x) *out_x = 0;
-    if (out_y) *out_y = 0;
-    if (out_w) *out_w = 0;
-    if (out_h) *out_h = 0;
-    Display* dpy = get_display();
-    if (!dpy) return false;
-    Window root = DefaultRootWindow(dpy);
-    int min_x = 0, min_y = 0, max_x = 0, max_y = 0;
-    bool any = false;
+  if (out_x)
+    *out_x = 0;
+  if (out_y)
+    *out_y = 0;
+  if (out_w)
+    *out_w = 0;
+  if (out_h)
+    *out_h = 0;
+  Display *dpy = get_display();
+  if (!dpy)
+    return false;
+  Window root = DefaultRootWindow(dpy);
+  int min_x = 0, min_y = 0, max_x = 0, max_y = 0;
+  bool any = false;
 #if __has_include(<X11/extensions/Xrandr.h>)
-    XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
-    if (res) {
-        for (int c = 0; c < res->ncrtc; c++) {
-            XRRCrtcInfo* ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
-            if (!ci) continue;
-            if (ci->noutput > 0 && ci->width > 0 && ci->height > 0) {
-                if (!any) { min_x = ci->x; min_y = ci->y; max_x = ci->x + ci->width; max_y = ci->y + ci->height; any = true; }
-                else {
-                    if (ci->x < min_x) min_x = ci->x;
-                    if (ci->y < min_y) min_y = ci->y;
-                    if (ci->x + ci->width > max_x) max_x = ci->x + ci->width;
-                    if (ci->y + ci->height > max_y) max_y = ci->y + ci->height;
-                }
-            }
-            XRRFreeCrtcInfo(ci);
+  XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
+  if (res) {
+    for (int c = 0; c < res->ncrtc; c++) {
+      XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
+      if (!ci)
+        continue;
+      if (ci->noutput > 0 && ci->width > 0 && ci->height > 0) {
+        if (!any) {
+          min_x = ci->x;
+          min_y = ci->y;
+          max_x = ci->x + ci->width;
+          max_y = ci->y + ci->height;
+          any = true;
+        } else {
+          if (ci->x < min_x)
+            min_x = ci->x;
+          if (ci->y < min_y)
+            min_y = ci->y;
+          if (ci->x + ci->width > max_x)
+            max_x = ci->x + ci->width;
+          if (ci->y + ci->height > max_y)
+            max_y = ci->y + ci->height;
         }
-        XRRFreeScreenResources(res);
+      }
+      XRRFreeCrtcInfo(ci);
     }
+    XRRFreeScreenResources(res);
+  }
 #endif
-    if (!any) {
-        min_x = 0; min_y = 0;
-        max_x = DisplayWidth(dpy, DefaultScreen(dpy));
-        max_y = DisplayHeight(dpy, DefaultScreen(dpy));
-    }
-    if (out_x) *out_x = min_x;
-    if (out_y) *out_y = min_y;
-    if (out_w) *out_w = max_x - min_x;
-    if (out_h) *out_h = max_y - min_y;
-    
-    return true;
+  if (!any) {
+    min_x = 0;
+    min_y = 0;
+    max_x = DisplayWidth(dpy, DefaultScreen(dpy));
+    max_y = DisplayHeight(dpy, DefaultScreen(dpy));
+  }
+  if (out_x)
+    *out_x = min_x;
+  if (out_y)
+    *out_y = min_y;
+  if (out_w)
+    *out_w = max_x - min_x;
+  if (out_h)
+    *out_h = max_y - min_y;
+
+  return true;
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {
-        
 
-    Display* dpy = get_display();
-    if (!dpy) return false;
-    int xb = x11_x11_button(button);
-    if (xb == 0) return false;
-#if __has_include(<X11/extensions/XTest.h>)
-    XTestFakeButtonEvent(dpy, (unsigned int)xb, down, CurrentTime);
-    XSync(dpy, False);
-    
-    return true;
-#else
-    
+  Display *dpy = get_display();
+  if (!dpy)
     return false;
+  int xb = x11_x11_button(button);
+  if (xb == 0)
+    return false;
+#if __has_include(<X11/extensions/XTest.h>)
+  XTestFakeButtonEvent(dpy, (unsigned int)xb, down, CurrentTime);
+  XSync(dpy, False);
+
+  return true;
+#else
+
+  return false;
 #endif
 }
 
 bool Platform_MouseScroll(int notches) {
-        
 
-    if (notches == 0) return true;
-    Display* dpy = get_display();
-    if (!dpy) return false;
-#if __has_include(<X11/extensions/XTest.h>)
-    for (int i = 0; i < (notches > 0 ? notches : -notches); i++) {
-        XTestFakeButtonEvent(dpy, 4, True, CurrentTime);
-        XTestFakeButtonEvent(dpy, 4, False, CurrentTime);
-        XTestFakeButtonEvent(dpy, 5, True, CurrentTime);
-        XTestFakeButtonEvent(dpy, 5, False, CurrentTime);
-        XSync(dpy, False);
-    }
-    
+  if (notches == 0)
     return true;
-#else
-    
+  Display *dpy = get_display();
+  if (!dpy)
     return false;
+#if __has_include(<X11/extensions/XTest.h>)
+  for (int i = 0; i < (notches > 0 ? notches : -notches); i++) {
+    XTestFakeButtonEvent(dpy, 4, True, CurrentTime);
+    XTestFakeButtonEvent(dpy, 4, False, CurrentTime);
+    XTestFakeButtonEvent(dpy, 5, True, CurrentTime);
+    XTestFakeButtonEvent(dpy, 5, False, CurrentTime);
+    XSync(dpy, False);
+  }
+
+  return true;
+#else
+
+  return false;
 #endif
 }
 
-char* Platform_GetWorkingDir(void) {
-        
-char* raw = Platform_RunTerminalCommand("pwd", false);
-    if (!raw) return NULL;
-    
-    size_t len = strlen(raw);
-    while (len > 0 && (raw[len - 1] == '\n' || raw[len - 1] == '\r')) {
-        raw[--len] = '\0';
-    }
-    
-    return raw;
+char *Platform_GetWorkingDir(void) {
+
+  char *raw = Platform_RunTerminalCommand("pwd", false);
+  if (!raw)
+    return NULL;
+
+  size_t len = strlen(raw);
+  while (len > 0 && (raw[len - 1] == '\n' || raw[len - 1] == '\r')) {
+    raw[--len] = '\0';
+  }
+
+  return raw;
 }
 
 void Platform_InitDataFolder() {
-        
-char dir_path[300];
-    snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome());
-    nob_mkdir_if_not_exists(dir_path);
+
+  char dir_path[300];
+  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint",
+           Platform_GetRealHome());
+  nob_mkdir_if_not_exists(dir_path);
 }
 
-bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len) {
-        
-if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) return false;
-    char dir_path[512];
-    snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome());
-    nob_mkdir_if_not_exists(dir_path);
-    char feat_path[600];
-    snprintf(feat_path,sizeof(feat_path),"%s/%s",dir_path,feature);
-    nob_mkdir_if_not_exists(feat_path);
-    snprintf(out,out_len,"%s/%s",feat_path,name);
-    return true;
+bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
+                             size_t out_len) {
+
+  if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0)
+    return false;
+  char dir_path[512];
+  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint",
+           Platform_GetRealHome());
+  nob_mkdir_if_not_exists(dir_path);
+  char feat_path[600];
+  snprintf(feat_path, sizeof(feat_path), "%s/%s", dir_path, feature);
+  nob_mkdir_if_not_exists(feat_path);
+  snprintf(out, out_len, "%s/%s", feat_path, name);
+  return true;
 }
 
+bool Platform_ResolveDataPath(void *caller, const char *name, char *out,
+                              size_t out_len) {
 
-
-
-bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t out_len) {
-        
-    bool ok = FeaturePath_ResolveDataPath(caller, name, out, out_len);
-    return ok;
+  bool ok = FeaturePath_ResolveDataPath(caller, name, out, out_len);
+  return ok;
 }
 
-bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t out_len) {
-        
-    bool ok = FeaturePath_ResolveAssetPath(caller, name, out, out_len);
-    return ok;
+bool Platform_ResolveAssetPath(void *caller, const char *name, char *out,
+                               size_t out_len) {
+
+  bool ok = FeaturePath_ResolveAssetPath(caller, name, out, out_len);
+  return ok;
 }
 
-bool Platform_FeatureDataDirExists(const char* stem) {
-        
-    if (!stem || !stem[0]) return false;
-    char dir_path[512];
-    snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint/%s", Platform_GetRealHome(), stem);
-    struct stat st;
-    bool ok = (stat(dir_path, &st) == 0);
-    return ok;
+bool Platform_FeatureDataDirExists(const char *stem) {
+
+  if (!stem || !stem[0])
+    return false;
+  char dir_path[512];
+  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint/%s",
+           Platform_GetRealHome(), stem);
+  struct stat st;
+  bool ok = (stat(dir_path, &st) == 0);
+  return ok;
 }
 
-bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, size_t out_len) {
-        
-    if (!stem || !rel || !out || out_len == 0) return false;
-    char full[600];
-    snprintf(full, sizeof(full), "%s/%s/%s", FeaturePath, stem, rel);
-    struct stat st;
-    if (stat(full, &st) != 0 || !S_ISREG(st.st_mode)) {
-        
-        return false;
-    }
-    snprintf(out, out_len, "%s", full);
-    return true;
+bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
+                               size_t out_len) {
+
+  if (!stem || !rel || !out || out_len == 0)
+    return false;
+  char full[600];
+  snprintf(full, sizeof(full), "%s/%s/%s", FeaturePath, stem, rel);
+  struct stat st;
+  if (stat(full, &st) != 0 || !S_ISREG(st.st_mode)) {
+
+    return false;
+  }
+  snprintf(out, out_len, "%s", full);
+  return true;
 }
 
-bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
-        
-if (!name || !name[0] || !out_path || out_len == 0) return false;
-    if (!data && len > 0) return false;
-    for (const char* p = name; *p; p++) {
-        if (*p == '/' || *p == '\\') return false;
-    }
-    if (strstr(name, "..")) return false;
-    const char* dir = getenv("TMPDIR");
-    if (!dir || !dir[0]) dir = "/tmp";
-    snprintf(out_path, out_len, "%s/%s", dir, name);
-    out_path[out_len - 1] = '\0';
-    FILE* f = fopen(out_path, "wb");
-    if (!f) return false;
-    bool ok = true;
-    if (len > 0 && fwrite(data, 1, len, f) != len) ok = false;
-    if (fclose(f) != 0) ok = false;
-    if (!ok) remove(out_path);
-    return ok;
-}
+bool Platform_WriteTempFile(const char *name, const void *data, size_t len,
+                            char *out_path, size_t out_len) {
 
+  if (!name || !name[0] || !out_path || out_len == 0)
+    return false;
+  if (!data && len > 0)
+    return false;
+  for (const char *p = name; *p; p++) {
+    if (*p == '/' || *p == '\\')
+      return false;
+  }
+  if (strstr(name, ".."))
+    return false;
+  const char *dir = getenv("TMPDIR");
+  if (!dir || !dir[0])
+    dir = "/tmp";
+  snprintf(out_path, out_len, "%s/%s", dir, name);
+  out_path[out_len - 1] = '\0';
+  FILE *f = fopen(out_path, "wb");
+  if (!f)
+    return false;
+  bool ok = true;
+  if (len > 0 && fwrite(data, 1, len, f) != len)
+    ok = false;
+  if (fclose(f) != 0)
+    ok = false;
+  if (!ok)
+    remove(out_path);
+  return ok;
+}
 
 static size_t http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
-    HttpBuf *b = (HttpBuf *)userdata;
-    size_t n = sz * nm;
-    if (n == 0) return 0;
-    if (b->limit && b->len + n > b->limit) {
-        size_t room = b->limit > b->len ? b->limit - b->len : 0;
-        if (room > 0) { memcpy(b->buf + b->len, ptr, room); b->len += room; b->buf[b->len] = '\0'; }
-        b->overflow = 1;
-        return 0;
+  HttpBuf *b = (HttpBuf *)userdata;
+  size_t n = sz * nm;
+  if (n == 0)
+    return 0;
+  if (b->limit && b->len + n > b->limit) {
+    size_t room = b->limit > b->len ? b->limit - b->len : 0;
+    if (room > 0) {
+      memcpy(b->buf + b->len, ptr, room);
+      b->len += room;
+      b->buf[b->len] = '\0';
     }
-    size_t need = b->len + n + 1;
-    if (need > b->cap) {
-        size_t cap = b->cap ? b->cap : 4096;
-        while (cap < need) cap *= 2;
-        char *grown = (char *)realloc(b->buf, cap);
-        if (!grown) return 0;
-        b->buf = grown;
-        b->cap = cap;
-    }
-    memcpy(b->buf + b->len, ptr, n);
-    b->len += n;
-    b->buf[b->len] = '\0';
-    return n;
+    b->overflow = 1;
+    return 0;
+  }
+  size_t need = b->len + n + 1;
+  if (need > b->cap) {
+    size_t cap = b->cap ? b->cap : 4096;
+    while (cap < need)
+      cap *= 2;
+    char *grown = (char *)realloc(b->buf, cap);
+    if (!grown)
+      return 0;
+    b->buf = grown;
+    b->cap = cap;
+  }
+  memcpy(b->buf + b->len, ptr, n);
+  b->len += n;
+  b->buf[b->len] = '\0';
+  return n;
 }
 
 static void http_global_init(void) {
-    static int done = 0;
-    static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_lock(&mtx);
-    if (!done) { curl_global_init(CURL_GLOBAL_DEFAULT); done = 1; }
-    pthread_mutex_unlock(&mtx);
+  static int done = 0;
+  static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_lock(&mtx);
+  if (!done) {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    done = 1;
+  }
+  pthread_mutex_unlock(&mtx);
 }
 
 static CURL *http_new(const char *url, size_t limit, HttpBuf *buf) {
-    http_global_init();
-    CURL *c = curl_easy_init();
-    if (!c) return NULL;
-    memset(buf, 0, sizeof(*buf));
-    buf->limit = limit;
-    if (limit) {
-        buf->buf = (char *)malloc(limit + 1);
-        if (!buf->buf) { curl_easy_cleanup(c); return NULL; }
-        buf->buf[0] = '\0';
-        buf->cap = limit + 1;
+  http_global_init();
+  CURL *c = curl_easy_init();
+  if (!c)
+    return NULL;
+  memset(buf, 0, sizeof(*buf));
+  buf->limit = limit;
+  if (limit) {
+    buf->buf = (char *)malloc(limit + 1);
+    if (!buf->buf) {
+      curl_easy_cleanup(c);
+      return NULL;
     }
-    curl_easy_setopt(c, CURLOPT_URL, url);
-    curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, http_write_cb);
-    curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)buf);
-    curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
-    curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
-    curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
-    curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
-    curl_easy_setopt(c, CURLOPT_USERAGENT, "Flint/1.0");
-    curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
-    curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
-    curl_easy_setopt(c, CURLOPT_FAILONERROR, 0L);
-    return c;
+    buf->buf[0] = '\0';
+    buf->cap = limit + 1;
+  }
+  curl_easy_setopt(c, CURLOPT_URL, url);
+  curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, http_write_cb);
+  curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)buf);
+  curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
+  curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
+  curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
+  curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
+  curl_easy_setopt(c, CURLOPT_USERAGENT, "Flint/1.0");
+  curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
+  curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
+  curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
+  curl_easy_setopt(c, CURLOPT_FAILONERROR, 0L);
+  return c;
 }
 
 static char *http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
-    if (out_len) *out_len = buf->len;
-    if (res != CURLE_OK) {
-        log_warn("http transfer failed: %s", curl_easy_strerror(res));
-        curl_easy_cleanup(c);
-        free(buf->buf);
-        return NULL;
-    }
+  if (out_len)
+    *out_len = buf->len;
+  if (res != CURLE_OK) {
+    log_warn("http transfer failed: %s", curl_easy_strerror(res));
     curl_easy_cleanup(c);
-    if (!buf->buf) buf->buf = (char *)calloc(1, 1);
-    return buf->buf;
+    free(buf->buf);
+    return NULL;
+  }
+  curl_easy_cleanup(c);
+  if (!buf->buf)
+    buf->buf = (char *)calloc(1, 1);
+  return buf->buf;
 }
 
-char *Platform_HttpGetLimited(const char *url, size_t max_bytes, size_t *out_len) {
-    if (!url || !url[0]) { if (out_len) *out_len = 0; return NULL; }
-    HttpBuf buf;
-    CURL *c = http_new(url, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT, &buf);
-    if (!c) { if (out_len) *out_len = 0; return NULL; }
-    CURLcode res = curl_easy_perform(c);
-    char *out = http_finish(c, &buf, res, out_len);
-    if (out && buf.overflow) log_warn("http response exceeded %zu byte limit", max_bytes);
-    return out;
+char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
+                              size_t *out_len) {
+  if (!url || !url[0]) {
+    if (out_len)
+      *out_len = 0;
+    return NULL;
+  }
+  HttpBuf buf;
+  CURL *c = http_new(url, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT, &buf);
+  if (!c) {
+    if (out_len)
+      *out_len = 0;
+    return NULL;
+  }
+  CURLcode res = curl_easy_perform(c);
+  char *out = http_finish(c, &buf, res, out_len);
+  if (out && buf.overflow)
+    log_warn("http response exceeded %zu byte limit", max_bytes);
+  return out;
 }
 
 char *Platform_HttpGet(const char *url) {
-    return Platform_HttpGetLimited(url, HTTP_DEFAULT_LIMIT, NULL);
+  return Platform_HttpGetLimited(url, HTTP_DEFAULT_LIMIT, NULL);
 }
 
-char *Platform_HttpPost(const char *url, const char *content_type, const char *body) {
-    if (!url || !url[0]) return NULL;
-    HttpBuf buf;
-    CURL *c = http_new(url, HTTP_DEFAULT_LIMIT, &buf);
-    if (!c) return NULL;
-    curl_easy_setopt(c, CURLOPT_POST, 1L);
-    curl_easy_setopt(c, CURLOPT_POSTFIELDS, body ? body : "");
-    curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE, (long)(body ? strlen(body) : 0));
-    struct curl_slist *hdrs = curl_slist_append(NULL, content_type && content_type[0] ? content_type : "application/octet-stream");
-    curl_easy_setopt(c, CURLOPT_HTTPHEADER, hdrs);
-    CURLcode res = curl_easy_perform(c);
-    char *out = http_finish(c, &buf, res, NULL);
-    if (hdrs) curl_slist_free_all(hdrs);
-    return out;
+char *Platform_HttpPost(const char *url, const char *content_type,
+                        const char *body) {
+  if (!url || !url[0])
+    return NULL;
+  HttpBuf buf;
+  CURL *c = http_new(url, HTTP_DEFAULT_LIMIT, &buf);
+  if (!c)
+    return NULL;
+  curl_easy_setopt(c, CURLOPT_POST, 1L);
+  curl_easy_setopt(c, CURLOPT_POSTFIELDS, body ? body : "");
+  curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE, (long)(body ? strlen(body) : 0));
+  struct curl_slist *hdrs = curl_slist_append(
+      NULL, content_type && content_type[0] ? content_type
+                                            : "application/octet-stream");
+  curl_easy_setopt(c, CURLOPT_HTTPHEADER, hdrs);
+  CURLcode res = curl_easy_perform(c);
+  char *out = http_finish(c, &buf, res, NULL);
+  if (hdrs)
+    curl_slist_free_all(hdrs);
+  return out;
 }
 
-static size_t Platform_http_write_file_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
-    return fwrite(ptr, sz, nm, (FILE *)userdata);
+static size_t Platform_http_write_file_cb(char *ptr, size_t sz, size_t nm,
+                                          void *userdata) {
+  return fwrite(ptr, sz, nm, (FILE *)userdata);
 }
 
 bool Platform_HttpDownload(const char *url, const char *save_path) {
-    if (!url || !url[0] || !save_path || !save_path[0]) return false;
-    char tmp[MAX_PATH];
-    snprintf(tmp, sizeof(tmp), "%s.part", save_path);
-    FILE *f = fopen(tmp, "wb");
-    if (!f) return false;
-    http_global_init();
-    CURL *c = curl_easy_init();
-    if (!c) { fclose(f); remove(tmp); return false; }
-    curl_easy_setopt(c, CURLOPT_URL, url);
-    curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, (curl_write_callback)Platform_http_write_file_cb);
-    curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)f);
-    curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
-    curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
-    curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
-    curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
-    curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
-    curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
-    CURLcode res = curl_easy_perform(c);
-    curl_easy_cleanup(c);
+  if (!url || !url[0] || !save_path || !save_path[0])
+    return false;
+  char tmp[MAX_PATH];
+  snprintf(tmp, sizeof(tmp), "%s.part", save_path);
+  FILE *f = fopen(tmp, "wb");
+  if (!f)
+    return false;
+  http_global_init();
+  CURL *c = curl_easy_init();
+  if (!c) {
     fclose(f);
-    if (res != CURLE_OK) { log_warn("http download failed: %s", curl_easy_strerror(res)); remove(tmp); return false; }
-    remove(save_path);
-    if (rename(tmp, save_path) != 0) { log_warn("http download rename failed for %s", save_path); remove(tmp); return false; }
-    return true;
+    remove(tmp);
+    return false;
+  }
+  curl_easy_setopt(c, CURLOPT_URL, url);
+  curl_easy_setopt(c, CURLOPT_WRITEFUNCTION,
+                   (curl_write_callback)Platform_http_write_file_cb);
+  curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)f);
+  curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
+  curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
+  curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
+  curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
+  curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
+  curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
+  curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
+  CURLcode res = curl_easy_perform(c);
+  curl_easy_cleanup(c);
+  fclose(f);
+  if (res != CURLE_OK) {
+    log_warn("http download failed: %s", curl_easy_strerror(res));
+    remove(tmp);
+    return false;
+  }
+  remove(save_path);
+  if (rename(tmp, save_path) != 0) {
+    log_warn("http download rename failed for %s", save_path);
+    remove(tmp);
+    return false;
+  }
+  return true;
 }
 
-typedef struct { char *url; PlatformHttpCallback cb; void *userdata; } HttpAsyncJob;
+typedef struct {
+  char *url;
+  PlatformHttpCallback cb;
+  void *userdata;
+} HttpAsyncJob;
 
 static void *Platform_http_async_worker(void *arg) {
-    HttpAsyncJob *job = (HttpAsyncJob *)arg;
-    char *body = Platform_HttpGet(job->url);
-    job->cb(body ? body : "", body != NULL, job->userdata);
-    free(body);
+  HttpAsyncJob *job = (HttpAsyncJob *)arg;
+  char *body = Platform_HttpGet(job->url);
+  job->cb(body ? body : "", body != NULL, job->userdata);
+  free(body);
+  free(job->url);
+  free(job);
+  return NULL;
+}
+
+void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
+                           void *userdata) {
+  if (!url || !url[0] || !cb)
+    return;
+  HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
+  if (!job)
+    return;
+  job->url = strdup(url);
+  job->cb = cb;
+  job->userdata = userdata;
+  if (!job->url) {
+    free(job);
+    return;
+  }
+  pthread_t t;
+  if (pthread_create(&t, NULL, Platform_http_async_worker, job) != 0) {
+    log_warn("http async thread create failed");
     free(job->url);
     free(job);
-    return NULL;
+    return;
+  }
+  pthread_detach(t);
 }
 
-void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb, void *userdata) {
-    if (!url || !url[0] || !cb) return;
-    HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
-    if (!job) return;
-    job->url = strdup(url);
-    job->cb = cb;
-    job->userdata = userdata;
-    if (!job->url) { free(job); return; }
-    pthread_t t;
-    if (pthread_create(&t, NULL, Platform_http_async_worker, job) != 0) {
-        log_warn("http async thread create failed");
-        free(job->url);
-        free(job);
-        return;
-    }
-    pthread_detach(t);
-}
-
-bool Platform_FontInitalized(FontHandle font) {
-    return font.xfont != NULL;
-}
+bool Platform_FontInitalized(FontHandle font) { return font.xfont != NULL; }
 
 PlTimer Platform_StartTimer(void) {
-    
-    PlTimer t = {0};
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-    return t;
+
+  PlTimer t = {0};
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+  return t;
 }
 
 double Platform_EndTimer(PlTimer t) {
-    
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-    if (now < t.ticks) return 0.0;
-    return (double)(now - t.ticks) / 1000000.0;
+
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+  if (now < t.ticks)
+    return 0.0;
+  return (double)(now - t.ticks) / 1000000.0;
 }
 
-void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
-    
-    if (!fn) return NULL;
-    pthread_t* t = malloc(sizeof(*t));
-    if (!t) return NULL;
-    if (pthread_create(t, NULL, fn, arg) != 0) { free(t); return NULL; }
-    return t;
-}
+void *Platform_ThreadCreate(void *(*fn)(void *), void *arg) {
 
-void Platform_ThreadJoin(void* thread) {
-    
-    if (!thread) {  return ; }
-    pthread_t* t = (pthread_t*)thread;
-    pthread_join(*t, NULL);
+  if (!fn)
+    return NULL;
+  pthread_t *t = malloc(sizeof(*t));
+  if (!t)
+    return NULL;
+  if (pthread_create(t, NULL, fn, arg) != 0) {
     free(t);
+    return NULL;
+  }
+  return t;
 }
 
-void* Platform_MutexCreate(void) {
-    
-    pthread_mutex_t* m = malloc(sizeof(*m));
-    if (!m) return NULL;
-    if (pthread_mutex_init(m, NULL) != 0) { free(m); return NULL; }
-    return m;
+void Platform_ThreadJoin(void *thread) {
+
+  if (!thread) {
+    return;
+  }
+  pthread_t *t = (pthread_t *)thread;
+  pthread_join(*t, NULL);
+  free(t);
 }
 
-void Platform_MutexDestroy(void* mutex) {
-    
-    if (!mutex) {  return ; }
-    pthread_mutex_t* m = (pthread_mutex_t*)mutex;
-    pthread_mutex_destroy(m);
+void *Platform_MutexCreate(void) {
+
+  pthread_mutex_t *m = malloc(sizeof(*m));
+  if (!m)
+    return NULL;
+  if (pthread_mutex_init(m, NULL) != 0) {
     free(m);
+    return NULL;
+  }
+  return m;
 }
 
-void Platform_MutexLock(void* mutex) {
-    
-    if (!mutex) {  return ; }
-    pthread_mutex_lock((pthread_mutex_t*)mutex);
+void Platform_MutexDestroy(void *mutex) {
+
+  if (!mutex) {
+    return;
+  }
+  pthread_mutex_t *m = (pthread_mutex_t *)mutex;
+  pthread_mutex_destroy(m);
+  free(m);
 }
 
-void Platform_MutexUnlock(void* mutex) {
-    
-    if (!mutex) {  return ; }
-    pthread_mutex_unlock((pthread_mutex_t*)mutex);
+void Platform_MutexLock(void *mutex) {
+
+  if (!mutex) {
+    return;
+  }
+  pthread_mutex_lock((pthread_mutex_t *)mutex);
 }
 
-bool Platform_MutexTryLock(void* mutex) {
-    
-    if (!mutex) return false;
-    return pthread_mutex_trylock((pthread_mutex_t*)mutex) == 0;
+void Platform_MutexUnlock(void *mutex) {
+
+  if (!mutex) {
+    return;
+  }
+  pthread_mutex_unlock((pthread_mutex_t *)mutex);
 }
 
+bool Platform_MutexTryLock(void *mutex) {
+
+  if (!mutex)
+    return false;
+  return pthread_mutex_trylock((pthread_mutex_t *)mutex) == 0;
+}

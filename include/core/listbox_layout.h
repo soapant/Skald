@@ -5,17 +5,18 @@
 #include "core/types/flapi_types.h"
 
 typedef struct {
-    int bx;
-    int bw;
-    int fw;
-    int fh;
-    int y0;
-    int item_h;
-    int list_h;
-    int visible;
+  int bx;
+  int bw;
+  int fw;
+  int fh;
+  int y0;
+  int item_h;
+  int list_h;
+  int visible;
 } ListboxLayout;
 
-void Listbox_ComputeLayout(const PlListSpec* spec, int default_y0, int item_h,
-                           int popup_w, int popup_h, int count, ListboxLayout* out);
+void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
+                           int popup_w, int popup_h, int count,
+                           ListboxLayout *out);
 
 #endif

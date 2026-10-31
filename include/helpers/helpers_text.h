@@ -2,8 +2,8 @@
 #define HELPERS_TEXT_UI_H
 
 typedef struct {
-    char **items;
-    size_t count;
+  char **items;
+  size_t count;
 } StringList;
 
 StringList String_Split(const char *string, const char *delimiter);

@@ -10,191 +10,220 @@
 #if defined(__linux__)
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
-static Window video_find_window(Display* dpy, Window w, const char* title) {
-    char* name = NULL;
-    if (XFetchName(dpy, w, &name) && name != NULL) {
-        bool match = (strcmp(name, title) == 0);
-        XFree(name);
-        if (match) return w;
+static Window video_find_window(Display *dpy, Window w, const char *title) {
+  char *name = NULL;
+  if (XFetchName(dpy, w, &name) && name != NULL) {
+    bool match = (strcmp(name, title) == 0);
+    XFree(name);
+    if (match)
+      return w;
+  }
+  Window root, parent, *children = NULL;
+  unsigned int n = 0;
+  if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
+    for (unsigned int i = 0; i < n; i++) {
+      Window found = video_find_window(dpy, children[i], title);
+      if (found != None) {
+        if (children)
+          XFree(children);
+        return found;
+      }
     }
-    Window root, parent, *children = NULL;
-    unsigned int n = 0;
-    if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
-        for (unsigned int i = 0; i < n; i++) {
-            Window found = video_find_window(dpy, children[i], title);
-            if (found != None) {
-                if (children) XFree(children);
-                return found;
-            }
-        }
-        if (children) XFree(children);
-    }
-    return None;
+    if (children)
+      XFree(children);
+  }
+  return None;
 }
-static bool video_set_string(const char* window_title, const char* atom_name, const char* value) {
-    Display* dpy = XOpenDisplay(NULL);
-    if (!dpy || !window_title || !value) { if (dpy) XCloseDisplay(dpy); return false; }
-    bool ok = false;
-    Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
-    if (win != None) {
-        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8, PropModeReplace, (const unsigned char*)value, (int)strlen(value));
-        XFlush(dpy);
-        ok = true;
-    }
-    XCloseDisplay(dpy);
-    return ok;
+static bool video_set_string(const char *window_title, const char *atom_name,
+                             const char *value) {
+  Display *dpy = XOpenDisplay(NULL);
+  if (!dpy || !window_title || !value) {
+    if (dpy)
+      XCloseDisplay(dpy);
+    return false;
+  }
+  bool ok = false;
+  Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+  if (win != None) {
+    XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8,
+                    PropModeReplace, (const unsigned char *)value,
+                    (int)strlen(value));
+    XFlush(dpy);
+    ok = true;
+  }
+  XCloseDisplay(dpy);
+  return ok;
 }
-static bool video_send_command(const char* window_title, const char* atom_name, long command) {
-    Display* dpy = XOpenDisplay(NULL);
-    if (!dpy || !window_title) { if (dpy) XCloseDisplay(dpy); return false; }
-    bool ok = false;
-    Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
-    if (win != None) {
-        XEvent ev = {0};
-        ev.xclient.type = ClientMessage;
-        ev.xclient.window = win;
-        ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
-        ev.xclient.format = 32;
-        ev.xclient.data.l[0] = command;
-        if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
-            XFlush(dpy);
-            ok = true;
-        }
+static bool video_send_command(const char *window_title, const char *atom_name,
+                               long command) {
+  Display *dpy = XOpenDisplay(NULL);
+  if (!dpy || !window_title) {
+    if (dpy)
+      XCloseDisplay(dpy);
+    return false;
+  }
+  bool ok = false;
+  Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+  if (win != None) {
+    XEvent ev = {0};
+    ev.xclient.type = ClientMessage;
+    ev.xclient.window = win;
+    ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
+    ev.xclient.format = 32;
+    ev.xclient.data.l[0] = command;
+    if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
+      XFlush(dpy);
+      ok = true;
     }
-    XCloseDisplay(dpy);
-    return ok;
+  }
+  XCloseDisplay(dpy);
+  return ok;
 }
-static bool video_set_long(const char* window_title, const char* atom_name, long value) {
-    Display* dpy = XOpenDisplay(NULL);
-    if (!dpy || !window_title) { if (dpy) XCloseDisplay(dpy); return false; }
-    bool ok = false;
-    Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
-    if (win != None) {
-        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_INTEGER, 32, PropModeReplace, (unsigned char*)&value, 1);
-        XFlush(dpy);
-        ok = true;
-    }
-    XCloseDisplay(dpy);
-    return ok;
+static bool video_set_long(const char *window_title, const char *atom_name,
+                           long value) {
+  Display *dpy = XOpenDisplay(NULL);
+  if (!dpy || !window_title) {
+    if (dpy)
+      XCloseDisplay(dpy);
+    return false;
+  }
+  bool ok = false;
+  Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+  if (win != None) {
+    XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_INTEGER,
+                    32, PropModeReplace, (unsigned char *)&value, 1);
+    XFlush(dpy);
+    ok = true;
+  }
+  XCloseDisplay(dpy);
+  return ok;
 }
 #endif
 
 #if defined(_WIN32)
-const char* VideoViewerPath = "C:/Projects/Video Viewer/video_viewer.exe";
-#elif defined (__linux__)
-const char* VideoViewerPath = "~/Programming/Projects/Video Viewer/video_viewer";
+const char *VideoViewerPath = "C:/Projects/Video Viewer/video_viewer.exe";
+#elif defined(__linux__)
+const char *VideoViewerPath =
+    "~/Programming/Projects/Video Viewer/video_viewer";
 #endif
 #if defined(_WIN32)
-const char* VideosPath = "C:/Videos";
-#elif defined (__linux__)
-const char* VideosPath = "~/Videos";
+const char *VideosPath = "C:/Videos";
+#elif defined(__linux__)
+const char *VideosPath = "~/Videos";
 #endif
 
-char *allowed_video_formats[] = {"webm","mp4"};
+char *allowed_video_formats[] = {"webm", "mp4"};
 
 ListOfFiles video_files = {0};
-static const char* s_video_items[MAX_VISIBLE_ITEMS];
+static const char *s_video_items[MAX_VISIBLE_ITEMS];
 
-void video_refresh_callback(const char* filter, ListBoxInfo* lb) {
-    video_files.count = 0;
-    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL, true, FL_DIR_WALK_UNLIMITED);
-    
-    size_t n = video_files.count;
-    if (n > MAX_VISIBLE_ITEMS) n = MAX_VISIBLE_ITEMS;
-    for (size_t i = 0; i < n; i++) {
-        s_video_items[i] = video_files.files[i].name;
-    }
-    fl_populate_listbox(lb, filter, s_video_items, (int)n);
+void video_refresh_callback(const char *filter, ListBoxInfo *lb) {
+  video_files.count = 0;
+  fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files,
+                            NULL, true, FL_DIR_WALK_UNLIMITED);
+
+  size_t n = video_files.count;
+  if (n > MAX_VISIBLE_ITEMS)
+    n = MAX_VISIBLE_ITEMS;
+  for (size_t i = 0; i < n; i++) {
+    s_video_items[i] = video_files.files[i].name;
+  }
+  fl_populate_listbox(lb, filter, s_video_items, (int)n);
 }
 
-bool video_enter_callback(ListBoxInfo* lb) {
-    char* result = NULL;
-    for (size_t i = 0; i < video_files.count; i++) {
-        if (strcmp(video_files.files[i].name, lb->selected_text) == 0) {
-            result = video_files.files[i].path;
-            break;
-        }
+bool video_enter_callback(ListBoxInfo *lb) {
+  char *result = NULL;
+  for (size_t i = 0; i < video_files.count; i++) {
+    if (strcmp(video_files.files[i].name, lb->selected_text) == 0) {
+      result = video_files.files[i].path;
+      break;
     }
-    if (!result) {
-        ListOfFiles tmp = {0};
-        fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL, true, FL_DIR_WALK_UNLIMITED);
-        for (size_t i = 0; i < tmp.count; i++) {
-            if (strcmp(tmp.files[i].name, lb->selected_text) == 0) {
-                result = tmp.files[i].path;
-                break;
-            }
-        }
-        if (result) {
-            char found_path[MAX_PATH];
-            strncpy(found_path, result, sizeof(found_path)-1);
-            found_path[sizeof(found_path)-1] = '\0';
-            result = found_path;
-        }
-        free(tmp.files);
+  }
+  if (!result) {
+    ListOfFiles tmp = {0};
+    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL,
+                              true, FL_DIR_WALK_UNLIMITED);
+    for (size_t i = 0; i < tmp.count; i++) {
+      if (strcmp(tmp.files[i].name, lb->selected_text) == 0) {
+        result = tmp.files[i].path;
+        break;
+      }
     }
-    if (!result) return true;
-#if defined(_WIN32)
-    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
-    if (playerHwnd) {
-        COPYDATASTRUCT cds;
-        cds.dwData = 0;
-        cds.cbData = (DWORD)(strlen(result) + 1);
-        cds.lpData = (PVOID)result;
-        SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-        return true;
-    } else {
-        char quoted_result[MAX_PATH + 3] = {0};
-        snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-        fl_launch_with_args(VideoViewerPath, quoted_result);
+    if (result) {
+      char found_path[MAX_PATH];
+      strncpy(found_path, result, sizeof(found_path) - 1);
+      found_path[sizeof(found_path) - 1] = '\0';
+      result = found_path;
     }
-#elif defined (__linux__)
-    if (video_set_string("Video Viewer", "_MP_TRACK", result) &&
-        video_send_command("Video Viewer", "_MP_TRACK_CHANGED", 1)) {
-        return true;
-    }
-    if (strlen(VideoViewerPath) > 0) {
-        char quoted_result[MAX_PATH + 3] = {0};
-        snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-        fl_launch_with_args(VideoViewerPath, quoted_result);
-    }
-#endif
+    free(tmp.files);
+  }
+  if (!result)
     return true;
+#if defined(_WIN32)
+  HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+  if (playerHwnd) {
+    COPYDATASTRUCT cds;
+    cds.dwData = 0;
+    cds.cbData = (DWORD)(strlen(result) + 1);
+    cds.lpData = (PVOID)result;
+    SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
+    return true;
+  } else {
+    char quoted_result[MAX_PATH + 3] = {0};
+    snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
+    fl_launch_with_args(VideoViewerPath, quoted_result);
+  }
+#elif defined(__linux__)
+  if (video_set_string("Video Viewer", "_MP_TRACK", result) &&
+      video_send_command("Video Viewer", "_MP_TRACK_CHANGED", 1)) {
+    return true;
+  }
+  if (strlen(VideoViewerPath) > 0) {
+    char quoted_result[MAX_PATH + 3] = {0};
+    snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
+    fl_launch_with_args(VideoViewerPath, quoted_result);
+  }
+#endif
+  return true;
 }
 void video_cmd_1(void) {
 #if defined(_WIN32)
-    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
-    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
-#elif defined (__linux__)
-    video_set_long("Video Viewer", "_MP_CMD", 1);
+  HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+  if (playerHwnd)
+    PostMessage(playerHwnd, WM_USER + 1, 1, 0);
+#elif defined(__linux__)
+  video_set_long("Video Viewer", "_MP_CMD", 1);
 #endif
 }
 void video_cmd_5(void) {
 #if defined(_WIN32)
-    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
-    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
-#elif defined (__linux__)
-    video_set_long("Video Viewer", "_MP_CMD", 5);
+  HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+  if (playerHwnd)
+    PostMessage(playerHwnd, WM_USER + 1, 5, 0);
+#elif defined(__linux__)
+  video_set_long("Video Viewer", "_MP_CMD", 5);
 #endif
 }
 void video_cmd_6(void) {
 #if defined(_WIN32)
-    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
-    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
-#elif defined (__linux__)
-    video_set_long("Video Viewer", "_MP_CMD", 6);
+  HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+  if (playerHwnd)
+    PostMessage(playerHwnd, WM_USER + 1, 6, 0);
+#elif defined(__linux__)
+  video_set_long("Video Viewer", "_MP_CMD", 6);
 #endif
 }
 void video_prompt(void) {
-    fl_window(.title = "🎥 Viewer",
-           .refresh = video_refresh_callback,
-           .enter = video_enter_callback);
+  fl_window(.title = "🎥 Viewer", .refresh = video_refresh_callback,
+            .enter = video_enter_callback);
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+Shift+,", .cb=video_cmd_1);
-    fl_register_hotkey(.hotkey="Alt+Shift+.", .cb=video_cmd_5);
-    fl_register_hotkey(.hotkey="Alt+Shift+;", .cb=video_cmd_6);
-    fl_register_hotkey(.hotkey="Alt+V", .cb=video_prompt);
+  fl_register_hotkey(.hotkey = "Alt+Shift+,", .cb = video_cmd_1);
+  fl_register_hotkey(.hotkey = "Alt+Shift+.", .cb = video_cmd_5);
+  fl_register_hotkey(.hotkey = "Alt+Shift+;", .cb = video_cmd_6);
+  fl_register_hotkey(.hotkey = "Alt+V", .cb = video_prompt);
 
-    fl_add_to_cc(.display_name="Video Viewer",.on_action=video_prompt,.icon="/video.png");
+  fl_add_to_cc(.display_name = "Video Viewer", .on_action = video_prompt,
+               .icon = "/video.png");
 }

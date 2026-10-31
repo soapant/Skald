@@ -19,210 +19,253 @@
 #include "platform/win32/input_core_win32.h"
 #include "config.h"
 
-bool Platform_GetMousePos(int* out_x, int* out_y) {
-        
-    POINT pt;
-    if (!GetCursorPos(&pt)) return false;
-    if (out_x) *out_x = (int)pt.x;
-    if (out_y) *out_y = (int)pt.y;
-    return true;
+bool Platform_GetMousePos(int *out_x, int *out_y) {
+
+  POINT pt;
+  if (!GetCursorPos(&pt))
+    return false;
+  if (out_x)
+    *out_x = (int)pt.x;
+  if (out_y)
+    *out_y = (int)pt.y;
+  return true;
 }
 
 void Platform_RegisterRawMouse(HWND hwnd) {
-    
-    if (!hwnd || !IsWindow(hwnd)) {  return ; }
-    RAWINPUTDEVICE rid;
-    memset(&rid, 0, sizeof(rid));
-    rid.usUsagePage = 0x01;
-    rid.usUsage = 0x02;
-    rid.dwFlags = RIDEV_INPUTSINK;
-    rid.hwndTarget = hwnd;
-    if (!RegisterRawInputDevices(&rid, 1, sizeof(rid))) {
-        log_warn("RegisterRawInputDevices failed err=%lu", GetLastError());
-    }
-    
+
+  if (!hwnd || !IsWindow(hwnd)) {
+    return;
+  }
+  RAWINPUTDEVICE rid;
+  memset(&rid, 0, sizeof(rid));
+  rid.usUsagePage = 0x01;
+  rid.usUsage = 0x02;
+  rid.dwFlags = RIDEV_INPUTSINK;
+  rid.hwndTarget = hwnd;
+  if (!RegisterRawInputDevices(&rid, 1, sizeof(rid))) {
+    log_warn("RegisterRawInputDevices failed err=%lu", GetLastError());
+  }
 }
 
 void Platform_HandleRawMouseInput(LPARAM lParam) {
-    
-    UINT size = 0;
-    if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER)) != 0) {  return ; }
-    if (size == 0 || size > 4096) {  return ; }
-    BYTE *buf = (BYTE*)malloc(size);
-    if (!buf) {  return ; }
-    BOOL got = GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buf, &size, sizeof(RAWINPUTHEADER));
-    RAWINPUT *raw = (RAWINPUT*)buf;
-    if (!got || raw->header.dwType != RIM_TYPEMOUSE) {
-        free(buf);
-        
-        return ;
-    }
-    RAWMOUSE *rm = &raw->data.mouse;
-    POINT pt;
-    if (!GetCursorPos(&pt)) { free(buf);  return ; }
-    unsigned short flags = rm->usButtonFlags;
-    int btn = 0;
-    bool down = false;
-    bool is_btn = true;
-    if (flags & RI_MOUSE_LEFT_BUTTON_DOWN)       { btn = MOUSE_BTN_LEFT;   down = true;  }
-    else if (flags & RI_MOUSE_LEFT_BUTTON_UP)   { btn = MOUSE_BTN_LEFT;   down = false; }
-    else if (flags & RI_MOUSE_RIGHT_BUTTON_DOWN) { btn = MOUSE_BTN_RIGHT;  down = true;  }
-    else if (flags & RI_MOUSE_RIGHT_BUTTON_UP)  { btn = MOUSE_BTN_RIGHT;  down = false; }
-    else if (flags & RI_MOUSE_MIDDLE_BUTTON_DOWN){ btn = MOUSE_BTN_MIDDLE; down = true;  }
-    else if (flags & RI_MOUSE_MIDDLE_BUTTON_UP)  { btn = MOUSE_BTN_MIDDLE; down = false; }
-    else is_btn = false;
 
-    PlatformMouseEvent mev;
-    memset(&mev, 0, sizeof(mev));
-    mev.x = (int)pt.x;
-    mev.y = (int)pt.y;
-    mev.repeat = false;
-
-    if (is_btn) {
-        bool was_down = Platform_MouseStateDown(btn);
-        if (down && was_down) {
-            Platform_UpdateMouseButton(btn, false);
-            PlatformMouseEvent rev;
-            memset(&rev, 0, sizeof(rev));
-            rev.button = btn; rev.x = mev.x; rev.y = mev.y; rev.down = false; rev.repeat = false;
-            Platform_GlobalMouse_Push(&rev);
-        }
-        Platform_UpdateMouseButton(btn, down);
-        if (!down && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
-            hotkey_key_up(FL_MOUSE_VK(btn));
-        }
-        mev.button = btn;
-        mev.down = down;
-        if (GetKeyState(VK_CONTROL) & 0x8000) mev.mods |= HOTKEY_MOD_CTRL;
-        if (GetKeyState(VK_MENU) & 0x8000) mev.mods |= HOTKEY_MOD_ALT;
-        if (GetKeyState(VK_SHIFT) & 0x8000) mev.mods |= HOTKEY_MOD_SHIFT;
-        Platform_GlobalMouse_Push(&mev);
-        if (down && btn <= FL_MOUSE_BTN_MAX) {
-            static unsigned long long s_last_fire[FL_MOUSE_BTN_MAX + 1] = {0};
-            unsigned long long now = GetTickCount64();
-            bool rising = !was_down;
-            bool stale = (now - s_last_fire[btn]) > 200;
-            if (rising || stale) {
-                s_last_fire[btn] = now;
-                hotkey_process(FL_MOUSE_VK(btn), mev.mods);
-            }
-        }
-    } else {
-        static int s_last_mx = -1;
-        static int s_last_my = -1;
-        if (mev.x != s_last_mx || mev.y != s_last_my) {
-            s_last_mx = mev.x;
-            s_last_my = mev.y;
-            if (!Platform_GlobalMouse_Full()) {
-                mev.button = 0;
-                mev.down = false;
-                Platform_GlobalMouse_Push(&mev);
-            }
-        }
-    }
+  UINT size = 0;
+  if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size,
+                      sizeof(RAWINPUTHEADER)) != 0) {
+    return;
+  }
+  if (size == 0 || size > 4096) {
+    return;
+  }
+  BYTE *buf = (BYTE *)malloc(size);
+  if (!buf) {
+    return;
+  }
+  BOOL got = GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buf, &size,
+                             sizeof(RAWINPUTHEADER));
+  RAWINPUT *raw = (RAWINPUT *)buf;
+  if (!got || raw->header.dwType != RIM_TYPEMOUSE) {
     free(buf);
-    
+
+    return;
+  }
+  RAWMOUSE *rm = &raw->data.mouse;
+  POINT pt;
+  if (!GetCursorPos(&pt)) {
+    free(buf);
+    return;
+  }
+  unsigned short flags = rm->usButtonFlags;
+  int btn = 0;
+  bool down = false;
+  bool is_btn = true;
+  if (flags & RI_MOUSE_LEFT_BUTTON_DOWN) {
+    btn = MOUSE_BTN_LEFT;
+    down = true;
+  } else if (flags & RI_MOUSE_LEFT_BUTTON_UP) {
+    btn = MOUSE_BTN_LEFT;
+    down = false;
+  } else if (flags & RI_MOUSE_RIGHT_BUTTON_DOWN) {
+    btn = MOUSE_BTN_RIGHT;
+    down = true;
+  } else if (flags & RI_MOUSE_RIGHT_BUTTON_UP) {
+    btn = MOUSE_BTN_RIGHT;
+    down = false;
+  } else if (flags & RI_MOUSE_MIDDLE_BUTTON_DOWN) {
+    btn = MOUSE_BTN_MIDDLE;
+    down = true;
+  } else if (flags & RI_MOUSE_MIDDLE_BUTTON_UP) {
+    btn = MOUSE_BTN_MIDDLE;
+    down = false;
+  } else
+    is_btn = false;
+
+  PlatformMouseEvent mev;
+  memset(&mev, 0, sizeof(mev));
+  mev.x = (int)pt.x;
+  mev.y = (int)pt.y;
+  mev.repeat = false;
+
+  if (is_btn) {
+    bool was_down = Platform_MouseStateDown(btn);
+    if (down && was_down) {
+      Platform_UpdateMouseButton(btn, false);
+      PlatformMouseEvent rev;
+      memset(&rev, 0, sizeof(rev));
+      rev.button = btn;
+      rev.x = mev.x;
+      rev.y = mev.y;
+      rev.down = false;
+      rev.repeat = false;
+      Platform_GlobalMouse_Push(&rev);
+    }
+    Platform_UpdateMouseButton(btn, down);
+    if (!down && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
+      hotkey_key_up(FL_MOUSE_VK(btn));
+    }
+    mev.button = btn;
+    mev.down = down;
+    if (GetKeyState(VK_CONTROL) & 0x8000)
+      mev.mods |= HOTKEY_MOD_CTRL;
+    if (GetKeyState(VK_MENU) & 0x8000)
+      mev.mods |= HOTKEY_MOD_ALT;
+    if (GetKeyState(VK_SHIFT) & 0x8000)
+      mev.mods |= HOTKEY_MOD_SHIFT;
+    Platform_GlobalMouse_Push(&mev);
+    if (down && btn <= FL_MOUSE_BTN_MAX) {
+      static unsigned long long s_last_fire[FL_MOUSE_BTN_MAX + 1] = {0};
+      unsigned long long now = GetTickCount64();
+      bool rising = !was_down;
+      bool stale = (now - s_last_fire[btn]) > 200;
+      if (rising || stale) {
+        s_last_fire[btn] = now;
+        hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+      }
+    }
+  } else {
+    static int s_last_mx = -1;
+    static int s_last_my = -1;
+    if (mev.x != s_last_mx || mev.y != s_last_my) {
+      s_last_mx = mev.x;
+      s_last_my = mev.y;
+      if (!Platform_GlobalMouse_Full()) {
+        mev.button = 0;
+        mev.down = false;
+        Platform_GlobalMouse_Push(&mev);
+      }
+    }
+  }
+  free(buf);
 }
 
-LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam) {
-    
-if (nCode < 0) {
+LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
+                                         LPARAM lParam) {
+
+  if (nCode < 0) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
   }
 
   if (nCode == HC_ACTION) {
     bool _popupActive = false;
-    WindowManager* _wm = WindowManager_Get();
-    if (_wm && WindowManager_GetTopPopup(_wm)) _popupActive = true;
-    if (! _popupActive && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) _popupActive = true;
-    KBDLLHOOKSTRUCT* _rk = (KBDLLHOOKSTRUCT*)lParam;
-    if (_rk->flags & LLKHF_INJECTED) return CallNextHookEx(NULL, nCode, wParam, lParam);
+    WindowManager *_wm = WindowManager_Get();
+    if (_wm && WindowManager_GetTopPopup(_wm))
+      _popupActive = true;
+    if (!_popupActive && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) &&
+        IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd)))
+      _popupActive = true;
+    KBDLLHOOKSTRUCT *_rk = (KBDLLHOOKSTRUCT *)lParam;
+    if (_rk->flags & LLKHF_INJECTED)
+      return CallNextHookEx(NULL, nCode, wParam, lParam);
     {
-        bool _isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
-        bool _isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
-        if (_isDown || _isUp) {
-            int _vk = (int)_rk->vkCode;
-            int _val = _isDown ? 1 : 0;
-            PlatformKeyEvent _gev;
-            _gev.vk = _vk;
-            _gev.scancode = (int)_rk->scanCode;
-            _gev.mods = 0;
-            if (GetKeyState(VK_CONTROL) & 0x8000) _gev.mods |= HOTKEY_MOD_CTRL;
-            if (GetKeyState(VK_MENU) & 0x8000) _gev.mods |= HOTKEY_MOD_ALT;
-            if (GetKeyState(VK_SHIFT) & 0x8000) _gev.mods |= HOTKEY_MOD_SHIFT;
-            if (GetKeyState(VK_LWIN) & 0x8000 || GetKeyState(VK_RWIN) & 0x8000) _gev.mods |= HOTKEY_MOD_SUPER;
-            _gev.down = _isDown;
-            _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
-            Platform_GlobalKey_Push(&_gev);
-            if (_isUp) hotkey_key_up(_vk);
-            if (remap_should_swallow_vk(_vk, _val)) {
-                char* _t = Platform_GetActiveWindowTitle();
-                log_info("hook swallow=remap vk=0x%X val=%d title='%s'", _vk, _val, _t ? _t : "");
-                return 1;
-            }
+      bool _isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
+      bool _isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
+      if (_isDown || _isUp) {
+        int _vk = (int)_rk->vkCode;
+        int _val = _isDown ? 1 : 0;
+        PlatformKeyEvent _gev;
+        _gev.vk = _vk;
+        _gev.scancode = (int)_rk->scanCode;
+        _gev.mods = 0;
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+          _gev.mods |= HOTKEY_MOD_CTRL;
+        if (GetKeyState(VK_MENU) & 0x8000)
+          _gev.mods |= HOTKEY_MOD_ALT;
+        if (GetKeyState(VK_SHIFT) & 0x8000)
+          _gev.mods |= HOTKEY_MOD_SHIFT;
+        if (GetKeyState(VK_LWIN) & 0x8000 || GetKeyState(VK_RWIN) & 0x8000)
+          _gev.mods |= HOTKEY_MOD_SUPER;
+        _gev.down = _isDown;
+        _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
+        Platform_GlobalKey_Push(&_gev);
+        if (_isUp)
+          hotkey_key_up(_vk);
+        if (remap_should_swallow_vk(_vk, _val)) {
+          char *_t = Platform_GetActiveWindowTitle();
+          log_info("hook swallow=remap vk=0x%X val=%d title='%s'", _vk, _val,
+                   _t ? _t : "");
+          return 1;
         }
+      }
     }
-    if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
-    HWND hMsgWnd = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-    if (hMsgWnd && IsWindow(hMsgWnd)) {
-      FadeWindowData* fd = (FadeWindowData*)GetWindowLongPtrA(hMsgWnd, GWLP_USERDATA);
-      if (fd && fd->timeout == 6969.0) {
-        KillTimer(hMsgWnd, 999);
+    if (nCode == HC_ACTION &&
+        (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
+      HWND hMsgWnd = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+      if (hMsgWnd && IsWindow(hMsgWnd)) {
+        FadeWindowData *fd =
+            (FadeWindowData *)GetWindowLongPtrA(hMsgWnd, GWLP_USERDATA);
+        if (fd && fd->timeout == 6969.0) {
+          KillTimer(hMsgWnd, 999);
           DestroyWindow(hMsgWnd);
           FlintContext_Get()->window.hDisplayMessage = WH_NULL;
-      }
-    }
-    KBDLLHOOKSTRUCT* pKeyInfo = (KBDLLHOOKSTRUCT*)lParam;
-
-    bool alt_down   = (pKeyInfo->flags & LLKHF_ALTDOWN) || (GetAsyncKeyState(VK_MENU) & 0x8000);
-    bool ctrl_down  = (GetAsyncKeyState(VK_CONTROL) & 0x8000);
-    bool shift_down = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ||
-      (GetAsyncKeyState(VK_LSHIFT) & 0x8000) ||
-      (GetAsyncKeyState(VK_RSHIFT) & 0x8000);
-
-    int pressed_vk = (int)pKeyInfo->vkCode;
-    int modifiers = HOTKEY_MOD_NONE;
-    if (alt_down) modifiers |= HOTKEY_MOD_ALT;
-    if (shift_down) modifiers |= HOTKEY_MOD_SHIFT;
-    if (ctrl_down) modifiers |= HOTKEY_MOD_CTRL;
-
-    
-    if (! _popupActive && hotkey_process(pressed_vk, modifiers)) {
-      extern int pending_hotkey_vk;
-      extern int pending_hotkey_mod;
-      extern long pending_hotkey_timeMs;
-      pending_hotkey_vk = pressed_vk;
-      pending_hotkey_mod = modifiers;
-      pending_hotkey_timeMs = (long)GetTickCount();
-      char* _t2 = Platform_GetActiveWindowTitle();
-      log_info("hook swallow=hotkey vk=0x%X mods=%d title='%s'", pressed_vk, modifiers, _t2 ? _t2 : "");
-      return 1;
-    }
-    
-
-    
-
-    if (IsNormalMode()) {
-      if (g_win32_waiting_for_key) {
-        g_win32_waiting_for_key = false;
-        if (g_win32_key_callback) {
-          g_win32_key_callback(pKeyInfo->vkCode);
-          
         }
-        log_info("hook swallow=waiting_for_key vk=0x%X", pKeyInfo->vkCode);
+      }
+      KBDLLHOOKSTRUCT *pKeyInfo = (KBDLLHOOKSTRUCT *)lParam;
+
+      bool alt_down = (pKeyInfo->flags & LLKHF_ALTDOWN) ||
+                      (GetAsyncKeyState(VK_MENU) & 0x8000);
+      bool ctrl_down = (GetAsyncKeyState(VK_CONTROL) & 0x8000);
+      bool shift_down = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ||
+                        (GetAsyncKeyState(VK_LSHIFT) & 0x8000) ||
+                        (GetAsyncKeyState(VK_RSHIFT) & 0x8000);
+
+      int pressed_vk = (int)pKeyInfo->vkCode;
+      int modifiers = HOTKEY_MOD_NONE;
+      if (alt_down)
+        modifiers |= HOTKEY_MOD_ALT;
+      if (shift_down)
+        modifiers |= HOTKEY_MOD_SHIFT;
+      if (ctrl_down)
+        modifiers |= HOTKEY_MOD_CTRL;
+
+      if (!_popupActive && hotkey_process(pressed_vk, modifiers)) {
+        extern int pending_hotkey_vk;
+        extern int pending_hotkey_mod;
+        extern long pending_hotkey_timeMs;
+        pending_hotkey_vk = pressed_vk;
+        pending_hotkey_mod = modifiers;
+        pending_hotkey_timeMs = (long)GetTickCount();
+        char *_t2 = Platform_GetActiveWindowTitle();
+        log_info("hook swallow=hotkey vk=0x%X mods=%d title='%s'", pressed_vk,
+                 modifiers, _t2 ? _t2 : "");
         return 1;
       }
+
+      if (IsNormalMode()) {
+        if (g_win32_waiting_for_key) {
+          g_win32_waiting_for_key = false;
+          if (g_win32_key_callback) {
+            g_win32_key_callback(pKeyInfo->vkCode);
+          }
+          log_info("hook swallow=waiting_for_key vk=0x%X", pKeyInfo->vkCode);
+          return 1;
+        }
+      }
     }
-    
-
-
-  }
-
   }
   if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
-    WindowManager* wmx = WindowManager_Get();
+    WindowManager *wmx = WindowManager_Get();
     if (!wmx || !WindowManager_GetTopPopup(wmx)) {
-      KBDLLHOOKSTRUCT* rk = (KBDLLHOOKSTRUCT*)lParam;
+      KBDLLHOOKSTRUCT *rk = (KBDLLHOOKSTRUCT *)lParam;
       if (snippet_feed_vk((int)rk->vkCode, 1, true)) {
         log_info("hook swallow=snippet vk=0x%X", (int)rk->vkCode);
         return 1;
@@ -233,19 +276,25 @@ if (nCode < 0) {
 }
 
 int Platform_CharForKey(int vk, int scancode, int mods) {
-    
-BYTE state[256];
+
+  BYTE state[256];
   memset(state, 0, sizeof(state));
-  if (mods & HOTKEY_MOD_SHIFT) state[VK_SHIFT] = 0x80;
-  if (mods & HOTKEY_MOD_CTRL) state[VK_CONTROL] = 0x80;
-  if (mods & HOTKEY_MOD_ALT) state[VK_MENU] = 0x80;
+  if (mods & HOTKEY_MOD_SHIFT)
+    state[VK_SHIFT] = 0x80;
+  if (mods & HOTKEY_MOD_CTRL)
+    state[VK_CONTROL] = 0x80;
+  if (mods & HOTKEY_MOD_ALT)
+    state[VK_MENU] = 0x80;
   HKL layout = GetKeyboardLayout(0);
   wchar_t buf[8];
   int n = ToUnicodeEx((UINT)vk, (UINT)scancode, state, buf, 8, 0, layout);
-  if (n <= 0) return 0;
-  if (n == 1) return (int)buf[0];
+  if (n <= 0)
+    return 0;
+  if (n == 1)
+    return (int)buf[0];
   char mb[16];
   int m = WideCharToMultiByte(CP_UTF8, 0, buf, 1, mb, sizeof(mb), NULL, NULL);
-  if (m <= 0) return 0;
+  if (m <= 0)
+    return 0;
   return (int)(unsigned char)mb[0];
 }

@@ -3,7 +3,7 @@
 
 #include "core/types.h"
 
-int UI_LookupTrueIndex(const char* name);
-bool GetFromHistory(ListBoxInfo* lb);
+int UI_LookupTrueIndex(const char *name);
+bool GetFromHistory(ListBoxInfo *lb);
 
 #endif

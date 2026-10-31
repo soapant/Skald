@@ -2,10 +2,10 @@
 #include <stdio.h>
 
 void Testing() {
-    FlTimer p = fl_profile_start();
-    fl_profile_end(p);
+  FlTimer p = fl_profile_start();
+  fl_profile_end(p);
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey(.hotkey="Alt+Shift+V",.cb=Testing);
+  fl_register_hotkey(.hotkey = "Alt+Shift+V", .cb = Testing);
 }

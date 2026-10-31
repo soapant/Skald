@@ -27,67 +27,67 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h);
 
 typedef struct {
-    int x, y, w, h;
-    unsigned long color;
-    int radius;
-    bool rounded;
-    bool opaque;
-    float thickness;
-    bool filled;
+  int x, y, w, h;
+  unsigned long color;
+  int radius;
+  bool rounded;
+  bool opaque;
+  float thickness;
+  bool filled;
 } PlDrawRectRawSpec;
 
 typedef struct {
-    int x1, y1, x2, y2;
-    unsigned long color;
-    float thickness;
+  int x1, y1, x2, y2;
+  unsigned long color;
+  float thickness;
 } PlDrawLineRawSpec;
 
 typedef struct {
-    int cx, cy;
-    int radius;
-    unsigned long color;
-    float thickness;
+  int cx, cy;
+  int radius;
+  unsigned long color;
+  float thickness;
 } PlDrawCircleRawSpec;
 
 typedef struct {
-    int x, y;
-    const char *text;
-    unsigned long color;
-    FontHandle font;
-    const char *align;
-    int pad;
-    int fontsize;
+  int x, y;
+  const char *text;
+  unsigned long color;
+  FontHandle font;
+  const char *align;
+  int pad;
+  int fontsize;
 } PlDrawTextRawSpec;
 
 typedef struct {
-    int x, y, w, h;
-    const char *text;
-    unsigned long color;
-    FontHandle font;
-    int fontsize;
+  int x, y, w, h;
+  const char *text;
+  unsigned long color;
+  FontHandle font;
+  int fontsize;
 } PlDrawTextCenteredSpec;
 
 typedef struct {
-    int x, y;
-    const char *text;
-    int len;
-    unsigned long color;
-    int fontsize;
+  int x, y;
+  const char *text;
+  int len;
+  unsigned long color;
+  int fontsize;
 } PlDrawTextLineSpec;
 
 typedef struct {
-    int idx, count;
-    unsigned long *num_color, *body_color, *plain_color;
+  int idx, count;
+  unsigned long *num_color, *body_color, *plain_color;
 } PlGetItemColorsSpec;
 
 typedef struct {
-    int y, width;
+  int y, width;
 } PlDrawPromptSeparatorSpec;
 
 typedef struct {
-    const char *text;
-    int len;
-    int fontsize;
+  const char *text;
+  int len;
+  int fontsize;
 } PlMeasureTextWidthSpec;
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec);
@@ -101,15 +101,21 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
 void Platform_GetItemColors(PlGetItemColorsSpec spec);
 bool Platform_PreRender(void);
 
-void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top);
+void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetGlyphInkHeight(const char *text, int fontsize);
 
 #if defined(__linux__)
-void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap);
-void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap);
-void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
-void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected);
-bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char* path, int x, int y, int tw, int th);
+void Platform_GetDrawContext(Display **dpy, XftDraw **xd, Visual **vis,
+                             Colormap *cmap);
+void Platform_SetDrawContext(Display *dpy, XftDraw *xd, Visual *vis,
+                             Colormap cmap);
+void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
+                          Visual *vis, Colormap cmap);
+void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd,
+                                 Visual *vis, Colormap cmap, int y, int h,
+                                 bool selected);
+bool Platform_DrawImageScaled(Display *dpy, XftDraw *xd, Visual *vis,
+                              const char *path, int x, int y, int tw, int th);
 #endif
 
 #endif

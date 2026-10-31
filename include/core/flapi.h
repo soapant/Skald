@@ -16,8 +16,6 @@
 #include "config.h"
 #include "core/cc_registry.h"
 
-
-
 /**
  * @brief A list of strings.
  *
@@ -110,14 +108,14 @@ typedef ClipboardHistory FlClipboardHistory;
  * @param text  String to copy. Must not be NULL.
  * @return      True on success, false if unavailable.
  */
-bool fl_copy_to_clipboard(const char* text);
+bool fl_copy_to_clipboard(const char *text);
 
 /**
  * @brief Copy a file into the system clipboard.
  * @param path  File path to copy.
  * @return      True on success, false if unavailable.
  */
-bool fl_copy_file_path(const char* path);
+bool fl_copy_file_path(const char *path);
 
 /**
  * @brief Paste the current clipboard text into the focused window.
@@ -130,13 +128,13 @@ bool fl_paste_from_clipboard(void);
  * @param content  String to paste. Must not be NULL.
  * @return         True on success, false if could not paste.
  */
-bool fl_paste(char* content);
+bool fl_paste(char *content);
 
 /**
  * @brief Get the most recent text entry from the clipboard history.
  * @return Pointer to a string (caller must free), or NULL if empty/images only.
  */
-char* fl_get_last_clipboard_entry(void);
+char *fl_get_last_clipboard_entry(void);
 
 /**
  * @brief Number of entries in the clipboard history.
@@ -149,19 +147,18 @@ size_t fl_clipboard_history_count(void);
  * @param index  Index in range [0, fl_clipboard_history_count()).
  * @return       Borrowed pointer to `FlClipboardEntry`.
  */
-const FlClipboardEntry* fl_clipboard_history_get(size_t index);
+const FlClipboardEntry *fl_clipboard_history_get(size_t index);
 
 /**
  * @brief Get the most recent entry in the clipboard history.
  * @return Borrowed pointer to `FlClipboardEntry`, or NULL if empty.
  */
-const FlClipboardEntry* fl_clipboard_latest(void);
+const FlClipboardEntry *fl_clipboard_latest(void);
 
 /**
  * @brief Clear all entries from the clipboard history.
  */
 void fl_clipboard_clear_history(void);
-
 
 /**
  * @brief Current network connectivity state.
@@ -184,7 +181,6 @@ unsigned long long fl_net_rx_bytes_over(double seconds);
 
 /** @} */
 
-
 #define FL_DIR_WALK_UNLIMITED 0
 /**
  * @brief Search for a file within a directory.
@@ -193,7 +189,8 @@ unsigned long long fl_net_rx_bytes_over(double seconds);
  * @param output_path    Buffer to store the result.
  * @return               Pointer to output_path, or NULL if not found.
  */
-char* fl_search_file_in_dir(const char* directory, const char* search_string, char* output_path);
+char *fl_search_file_in_dir(const char *directory, const char *search_string,
+                            char *output_path);
 /**
  * @brief Get all files from a directory.
  * @param dir_path                Directory path.
@@ -204,14 +201,18 @@ char* fl_search_file_in_dir(const char* directory, const char* search_string, ch
  * @param max_depth               Maximum depth.
  * @return                        True on success, false otherwise.
  */
-bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore, bool strip_extension, int max_depth);
+bool fl_get_all_files_from_dir(const char *dir_path,
+                               char **list_of_allowed_extensions,
+                               ListOfFiles *list_of_files,
+                               char **list_of_names_to_ignore,
+                               bool strip_extension, int max_depth);
 
 /**
  * @brief Load a file list.
  * @param filepath  Path to the file.
  * @return          `FlStringList` of items. See `FlStringList`.
  */
-FlStringList fl_load_file_list(const char* filepath);
+FlStringList fl_load_file_list(const char *filepath);
 
 /**
  * @brief Load file content into a buffer.
@@ -220,7 +221,7 @@ FlStringList fl_load_file_list(const char* filepath);
  * @param buffer_size  Size of the buffer.
  * @return             Bytes loaded, or -1 on failure.
  */
-long fl_load_file(const char* filepath, char* buffer, long buffer_size);
+long fl_load_file(const char *filepath, char *buffer, long buffer_size);
 
 /**
  * @brief Read file to a newly allocated string.
@@ -228,7 +229,7 @@ long fl_load_file(const char* filepath, char* buffer, long buffer_size);
  * @param out_len  Pointer to store the length.
  * @return         String (caller must free), or NULL on failure.
  */
-char* fl_read_file_to_string(const char* path, size_t* out_len);
+char *fl_read_file_to_string(const char *path, size_t *out_len);
 
 /**
  * @brief Read entire file into a buffer.
@@ -237,7 +238,7 @@ char* fl_read_file_to_string(const char* path, size_t* out_len);
  * @param buffer_size  Size of the buffer.
  * @return             Bytes read.
  */
-long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size);
+long fl_read_entire_file(const char *full_path, char *buffer, long buffer_size);
 
 /**
  * @brief Write a string to a file.
@@ -245,14 +246,14 @@ long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size);
  * @param content  String content.
  * @return         True on success, false otherwise.
  */
-bool fl_write_string_to_file(const char* path, const char* content);
+bool fl_write_string_to_file(const char *path, const char *content);
 
 /**
  * @brief Check if a file exists.
  * @param path  Path to the file.
  * @return      True if it exists, false otherwise.
  */
-bool fl_file_exists(const char* path);
+bool fl_file_exists(const char *path);
 
 /**
  * @brief Append a line if it doesn't already exist.
@@ -260,7 +261,7 @@ bool fl_file_exists(const char* path);
  * @param line  The line content.
  * @return      True on success, false otherwise.
  */
-bool fl_append_unique_line(const char* path, const char* line);
+bool fl_append_unique_line(const char *path, const char *line);
 
 /**
  * @brief Remove a line from a file.
@@ -268,7 +269,7 @@ bool fl_append_unique_line(const char* path, const char* line);
  * @param line  The line content to remove.
  * @return      True on success, false otherwise.
  */
-bool fl_remove_line(const char* path, const char* line);
+bool fl_remove_line(const char *path, const char *line);
 
 /**
  * @brief Remove any line containing a substring.
@@ -276,7 +277,7 @@ bool fl_remove_line(const char* path, const char* line);
  * @param substr   Substring to match.
  * @return         True on success, false otherwise.
  */
-bool fl_remove_line_contains(const char* path, const char* substr);
+bool fl_remove_line_contains(const char *path, const char *substr);
 
 /**
  * @brief Parse a desktop file.
@@ -286,14 +287,15 @@ bool fl_remove_line_contains(const char* path, const char* substr);
  * @param out_nodisplay Pointer to store NoDisplay flag.
  * @return              True on success, false otherwise.
  */
-bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay);
+bool fl_parse_desktop_file(const char *path, char *out_name, size_t n,
+                           bool *out_nodisplay);
 
 /**
  * @brief Get the icon path for an application.
  * @param app_path_path  Path to the application.
  * @return               Icon path (caller must free), or NULL.
  */
-char* fl_get_icon_path(const char* app_path_path);
+char *fl_get_icon_path(const char *app_path_path);
 
 /**
  * @brief Append a line to a file.
@@ -301,7 +303,7 @@ char* fl_get_icon_path(const char* app_path_path);
  * @param line      Line content.
  * @return          True on success, false otherwise.
  */
-bool fl_append_to_file(const char* filepath, const char* line);
+bool fl_append_to_file(const char *filepath, const char *line);
 
 /**
  * @brief Write lines to a file.
@@ -310,7 +312,7 @@ bool fl_append_to_file(const char* filepath, const char* line);
  * @param count     Number of lines.
  * @return          True on success, false otherwise.
  */
-bool fl_write_to_file(const char* filepath, const char* lines[], int count);
+bool fl_write_to_file(const char *filepath, const char *lines[], int count);
 
 /**
  * @brief Write a temporary file.
@@ -321,20 +323,21 @@ bool fl_write_to_file(const char* filepath, const char* lines[], int count);
  * @param out_len   Length of out_path buffer.
  * @return          True on success, false otherwise.
  */
-bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len);
+bool fl_write_temp_file(const char *name, const void *data, size_t len,
+                        char *out_path, size_t out_len);
 
 /**
  * @brief Get the size of an icon.
  * @param icon_path  Path to the icon.
  * @return           Size, or 0 on failure.
  */
-int fl_get_icon_size(const char* icon_path);
+int fl_get_icon_size(const char *icon_path);
 
 /**
  * @brief Free a file list.
  * @param list  The list to free. See `FlStringList`.
  */
-void fl_free_file_list(FlStringList* list);
+void fl_free_file_list(FlStringList *list);
 
 /**
  * @brief Free a list of strings.
@@ -342,7 +345,7 @@ void fl_free_file_list(FlStringList* list);
  * @param count  Number of items.
  * @return       True.
  */
-bool fl_free_list(const char* list[], int count);
+bool fl_free_list(const char *list[], int count);
 
 /**
  * @brief Free a window list.
@@ -355,7 +358,7 @@ bool fl_free_window_list(FlWindowList *list);
  * @brief Free a StringList.
  * @param list  The string list to free. See `StringList`.
  */
-void fl_string_list_free(StringList* list);
+void fl_string_list_free(StringList *list);
 
 /**
  * @brief Format bytes into human-readable string.
@@ -363,8 +366,7 @@ void fl_string_list_free(StringList* list);
  * @param out_str  Buffer.
  * @param out_len  Buffer size.
  */
-void fl_format_bytes(unsigned long long bytes, char* out_str, size_t out_len);
-
+void fl_format_bytes(unsigned long long bytes, char *out_str, size_t out_len);
 
 /**
  * @brief Launch a process with arguments.
@@ -372,7 +374,7 @@ void fl_format_bytes(unsigned long long bytes, char* out_str, size_t out_len);
  * @param args  Arguments string.
  * @return      True on success, false on failure.
  */
-bool fl_launch_with_args(const char* path, const char* args);
+bool fl_launch_with_args(const char *path, const char *args);
 
 /**
  * @brief Launch a process with arguments as administrator.
@@ -380,7 +382,7 @@ bool fl_launch_with_args(const char* path, const char* args);
  * @param args  Arguments string.
  * @return      True on success, false on failure.
  */
-bool fl_launch_with_args_as_admin(const char* path, const char* args);
+bool fl_launch_with_args_as_admin(const char *path, const char *args);
 
 /**
  * @brief Launch a terminal at a specific path.
@@ -388,28 +390,28 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args);
  * @param args  Arguments for the terminal command.
  * @return      True on success, false on failure.
  */
-bool fl_launch_terminal_at_path(char* path,char* args);
+bool fl_launch_terminal_at_path(char *path, char *args);
 
 /**
  * @brief Run a terminal command.
  * @param command  The command to run.
  * @return         Output of the command (caller must free), or NULL.
  */
-char* fl_run_terminal_command(char* command);
+char *fl_run_terminal_command(char *command);
 
 /**
  * @brief Run a terminal command, blocking until it finishes.
  * @param command  The command to run.
  * @return         Output of the command (caller must free), or NULL.
  */
-char* fl_run_terminal_command_blocking(char* command);
+char *fl_run_terminal_command_blocking(char *command);
 
 /**
  * @brief Run a terminal command and open its output.
  * @param command  The command to run.
  * @return         Output of the command (caller must free), or NULL.
  */
-char* fl_run_terminal_command_and_open(char* command);
+char *fl_run_terminal_command_and_open(char *command);
 
 /**
  * @brief Run a command given an argument array.
@@ -418,21 +420,22 @@ char* fl_run_terminal_command_and_open(char* command);
  * @param out_status Pointer to store exit status.
  * @return           Output of the command (caller must free), or NULL.
  */
-char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status);
+char *fl_run_argv(const char *const argv[], const char *stdin_data,
+                  int *out_status);
 
 /**
  * @brief Launch a process detached from the current one.
  * @param command  Command to launch.
  * @return         True on success, false on failure.
  */
-bool fl_launch_detached(char* command);
+bool fl_launch_detached(char *command);
 
 /**
  * @brief Terminate a process by its executable name.
  * @param exe_name  Executable name to terminate.
  * @return          True on success, false on failure.
  */
-bool fl_terminate_process_by_name(const char* exe_name);
+bool fl_terminate_process_by_name(const char *exe_name);
 
 /**
  * @brief Get list of registered feature names.
@@ -441,7 +444,8 @@ bool fl_terminate_process_by_name(const char* exe_name);
  * @param max        Maximum number of features to retrieve.
  * @return           Number of features retrieved.
  */
-int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max);
+int fl_get_feature_list(const char **out_names, void (**out_cbs)(void),
+                        int max);
 
 /**
  * @brief Get list of registered features with icons.
@@ -451,7 +455,9 @@ int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max)
  * @param max        Maximum number of features to retrieve.
  * @return           Number of features retrieved.
  */
-int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max);
+int fl_get_feature_list_with_icons(const char **out_names,
+                                   void (**out_cbs)(void),
+                                   const char ***out_icons, int max);
 
 /**
  * @brief Initialize all configured hotkeys.
@@ -462,21 +468,21 @@ void fl_init_all_hotkeys(void);
  * @brief Trigger a hotkey by its string representation.
  * @param hotkey_string  The hotkey string (e.g., "Ctrl+C").
  */
-void fl_send_hotkey(const char* hotkey_string);
+void fl_send_hotkey(const char *hotkey_string);
 
 /**
  * @brief Convert a hotkey keycode to a string.
  * @param key  The hotkey keycode.
  * @return     String representation (caller must free).
  */
-char* fl_hotkey_to_string(FlKey key);
+char *fl_hotkey_to_string(FlKey key);
 
 /**
  * @brief Convert a string to a hotkey keycode.
  * @param str  The hotkey string.
  * @return     The hotkey keycode.
  */
-FlKey fl_hotkey_from_string(const char* str);
+FlKey fl_hotkey_from_string(const char *str);
 
 /**
  * @brief Check if a specific key combination is currently held down.
@@ -494,21 +500,21 @@ bool fl_hotkey_down(FlKey key);
  * @param url  The URL to open.
  * @return     True on success, false on failure.
  */
-bool fl_launch_browser(char* url);
+bool fl_launch_browser(char *url);
 
 /**
  * @brief Perform a browser search query.
  * @param query  The search query.
  * @return       True on success, false on failure.
  */
-bool fl_query_browser(const char* query);
+bool fl_query_browser(const char *query);
 
 /**
  * @brief Focus a window by its title.
  * @param title  The title of the window.
  * @return       True on success, false on failure.
  */
-bool fl_focus_window_by_title(char* title);
+bool fl_focus_window_by_title(char *title);
 
 /**
  * @brief Close the active window.
@@ -521,14 +527,14 @@ bool fl_close_active_window(void);
  * @param name  The name of the message popup.
  * @return      True on success, false on failure.
  */
-bool fl_dismiss_message(const char* name);
+bool fl_dismiss_message(const char *name);
 
 /**
  * @brief Check if a message popup is active.
  * @param name  The name of the message popup.
  * @return      True if active, false otherwise.
  */
-bool fl_message_active(const char* name);
+bool fl_message_active(const char *name);
 
 /**
  * @brief Toggle fullscreen mode for the active window.
@@ -587,7 +593,8 @@ int fl_get_screen_height(void);
 
 /**
  * @brief Get the monitor geometry.
- * @return  A `FlRect` containing the monitor coordinates and size. See `FlRect`.
+ * @return  A `FlRect` containing the monitor coordinates and size. See
+ * `FlRect`.
  */
 FlRect fl_get_monitor_geometry(void);
 
@@ -597,25 +604,28 @@ FlRect fl_get_monitor_geometry(void);
  * @brief Cut a string at the first occurrence of a delimiter.
  * @param str    The string to cut.
  * @param delim  The delimiter character.
- * @return       The part of the string before the delimiter (caller must free), or NULL.
+ * @return       The part of the string before the delimiter (caller must free),
+ * or NULL.
  */
-char* fl_string_cut_at(const char* str, char delim);
+char *fl_string_cut_at(const char *str, char delim);
 
 /**
  * @brief Cut a string before the last occurrence of a delimiter.
  * @param str    The string to cut.
  * @param delim  The delimiter character.
- * @return       The part of the string before the delimiter (caller must free), or NULL.
+ * @return       The part of the string before the delimiter (caller must free),
+ * or NULL.
  */
-char* fl_string_cut_before(const char* str, char delim);
+char *fl_string_cut_before(const char *str, char delim);
 
 /**
  * @brief Cut a string after the last occurrence of a delimiter.
  * @param str    The string to cut.
  * @param delim  The delimiter character.
- * @return       The part of the string after the delimiter (caller must free), or NULL.
+ * @return       The part of the string after the delimiter (caller must free),
+ * or NULL.
  */
-char* fl_string_cut_after(const char* str, char delim);
+char *fl_string_cut_after(const char *str, char delim);
 
 /**
  * @brief Get the string between two delimiter characters.
@@ -624,7 +634,7 @@ char* fl_string_cut_after(const char* str, char delim);
  * @param close  The closing delimiter.
  * @return       The string between the delimiters (caller must free), or NULL.
  */
-char* fl_string_between(const char* str, char open, char close);
+char *fl_string_between(const char *str, char open, char close);
 
 /**
  * @brief Get the string inside a specific delimiter.
@@ -632,28 +642,28 @@ char* fl_string_between(const char* str, char open, char close);
  * @param delim  The delimiter character.
  * @return       The string inside the delimiter (caller must free), or NULL.
  */
-char* fl_string_inside(const char* str, char delim);
+char *fl_string_inside(const char *str, char delim);
 
 /**
  * @brief Trim whitespace from a string.
  * @param str  The string to trim.
  * @return     A new trimmed string (caller must free), or NULL.
  */
-char* fl_string_trim(const char* str);
+char *fl_string_trim(const char *str);
 
 /**
  * @brief Convert a string to lowercase.
  * @param str  The string to convert.
  * @return     A new lowercase string (caller must free), or NULL.
  */
-char* fl_string_to_lower(const char* str);
+char *fl_string_to_lower(const char *str);
 
 /**
  * @brief Convert a string to uppercase.
  * @param str  The string to convert.
  * @return     A new uppercase string (caller must free), or NULL.
  */
-char* fl_string_to_upper(const char* str);
+char *fl_string_to_upper(const char *str);
 
 /**
  * @brief Check if a string starts with a prefix.
@@ -661,7 +671,7 @@ char* fl_string_to_upper(const char* str);
  * @param prefix  The prefix to look for.
  * @return        True if it starts with the prefix, false otherwise.
  */
-bool fl_string_starts_with(const char* str, const char* prefix);
+bool fl_string_starts_with(const char *str, const char *prefix);
 
 /**
  * @brief Check if a string ends with a suffix.
@@ -669,7 +679,7 @@ bool fl_string_starts_with(const char* str, const char* prefix);
  * @param suffix  The suffix to look for.
  * @return        True if it ends with the suffix, false otherwise.
  */
-bool fl_string_ends_with(const char* str, const char* suffix);
+bool fl_string_ends_with(const char *str, const char *suffix);
 
 /**
  * @brief Replace all occurrences of a substring.
@@ -678,7 +688,7 @@ bool fl_string_ends_with(const char* str, const char* suffix);
  * @param to    The replacement substring.
  * @return      A new string with replacements (caller must free), or NULL.
  */
-char* fl_string_replace(const char* str, const char* from, const char* to);
+char *fl_string_replace(const char *str, const char *from, const char *to);
 
 /**
  * @brief Slice a string.
@@ -687,7 +697,7 @@ char* fl_string_replace(const char* str, const char* from, const char* to);
  * @param end    End index.
  * @return       A new sliced string (caller must free), or NULL.
  */
-char* fl_string_slice(const char* str, int start, int end);
+char *fl_string_slice(const char *str, int start, int end);
 
 /**
  * @brief Split a string by a delimiter.
@@ -695,7 +705,7 @@ char* fl_string_slice(const char* str, int start, int end);
  * @param delimiter  The delimiter string.
  * @return           A `FlStringList` containing the parts. See `FlStringList`.
  */
-FlStringList fl_string_split(const char* str, const char* delimiter);
+FlStringList fl_string_split(const char *str, const char *delimiter);
 
 /**
  * @brief Populate a listbox widget.
@@ -704,7 +714,8 @@ FlStringList fl_string_split(const char* str, const char* delimiter);
  * @param items   Array of items.
  * @param count   Number of items.
  */
-void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items, int count);
+void fl_populate_listbox(ListBoxInfo *lb, const char *filter,
+                         const char **items, int count);
 
 /**
  * @brief Populate a listbox widget with a custom filter.
@@ -714,20 +725,23 @@ void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items
  * @param count         Number of items.
  * @param filter_match  Custom filter matching function.
  */
-void fl_populate_listbox_ex(ListBoxInfo* lb, const char* filter, const char** items, int count, bool (*filter_match)(const char* item, const char* filter));
+void fl_populate_listbox_ex(ListBoxInfo *lb, const char *filter,
+                            const char **items, int count,
+                            bool (*filter_match)(const char *item,
+                                                 const char *filter));
 
 /**
  * @brief Check if an item is selected in a listbox.
  * @param lb  Pointer to the listbox information. See `ListBoxInfo`.
  * @return    True if selected, false otherwise.
  */
-bool fl_is_selected(ListBoxInfo* lb);
+bool fl_is_selected(ListBoxInfo *lb);
 
 /**
  * @brief Set the text in the edit box.
  * @param text  The text to set.
  */
-void fl_set_edit_text(const char* text);
+void fl_set_edit_text(const char *text);
 
 /**
  * @brief Set the cursor position in the edit box.
@@ -739,14 +753,14 @@ void fl_set_edit_cursor(int position);
  * @brief Get the cursor position in the edit box.
  * @return  The current cursor position.
  */
-int  fl_get_edit_cursor(void);
+int fl_get_edit_cursor(void);
 
 /**
  * @brief Get the text from the edit box.
  * @param buffer  Destination buffer.
  * @param cap     Size of the buffer.
  */
-void fl_get_edit_text(char* buffer, size_t cap);
+void fl_get_edit_text(char *buffer, size_t cap);
 
 /**
  * @brief Edit popup specification.
@@ -760,28 +774,29 @@ void fl_get_edit_text(char* buffer, size_t cap);
  * - `out_index` — Index of selected item.
  */
 typedef struct {
-    const char* initial_text;
-    int x;
-    int y;
-    int w;
-    int h;
-    const char* align;
-    ListBoxInfo* lb;
-    int* out_index;
+  const char *initial_text;
+  int x;
+  int y;
+  int w;
+  int h;
+  const char *align;
+  ListBoxInfo *lb;
+  int *out_index;
 } FlEditPopupSpec;
 
 /**
  * @def Create and show an edit text popup.
  * @param ... Fields of `FlEditPopupSpec`. See `FlEditPopupSpec`.
  */
-#define fl_edit_text_popup(...) fl_edit_text_popup_impl(&(FlEditPopupSpec){__VA_ARGS__})
+#define fl_edit_text_popup(...)                                                \
+  fl_edit_text_popup_impl(&(FlEditPopupSpec){__VA_ARGS__})
 
 /**
  * @brief Implementation for creating an edit text popup.
  * @param spec  The specification. See `FlEditPopupSpec`.
  * @return      Resulting text (caller must free), or NULL.
  */
-char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec);
+char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec);
 
 /**
  * @brief Replace a line in a file.
@@ -790,7 +805,8 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec);
  * @param new_text    New text content.
  * @return            True on success, false on failure.
  */
-bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text);
+bool fl_replace_line_in_file(const char *filepath, int line_index,
+                             const char *new_text);
 
 /**
  * @def Create and show a generic popup.
@@ -803,7 +819,7 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
  * @param spec  The specification. See `PopupSpec`.
  * @return      Resulting text or NULL.
  */
-char* fl_popup_impl(const PopupSpec *spec);
+char *fl_popup_impl(const PopupSpec *spec);
 
 /**
  * @brief Per-frame state passed to a widget's render callback.
@@ -820,11 +836,11 @@ char* fl_popup_impl(const PopupSpec *spec);
  */
 
 typedef struct {
-    int width;
-    int height;
-    unsigned long frame;
-    double elapsed;
-    bool hovered;
+  int width;
+  int height;
+  unsigned long frame;
+  double elapsed;
+  bool hovered;
 } FlWidgetState;
 
 /**
@@ -840,7 +856,8 @@ typedef struct {
 typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
 
 /**
- * @brief Message popup specification. Automatically auto scales the window when w and h are 0 / NULL.
+ * @brief Message popup specification. Automatically auto scales the window when
+ * w and h are 0 / NULL.
  *
  * Fields:
  * - `message` — Message text.
@@ -851,39 +868,40 @@ typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
  * - `fps` — How many times the message window renders every second.
  * - `render` — Render callback (void void) callback.
  * - `timeout` — Auto-dismissal time.
- * - `close_on_keypress` — Close the message as soon as any key is pressed (overrides auto-dismissal).
+ * - `close_on_keypress` — Close the message as soon as any key is pressed
+ * (overrides auto-dismissal).
  * - `color_text` — Text color See `FlColor`.
  * - `color_bg` — Background color See `FlColor`.
  * - `name` — Unique identifier.
  */
 typedef struct {
-    const char* message;
-    MessageSlot slot;
-    int x;
-    int y;
-    int w;
-    int h;
-    int mw;
-    int mh;
-    double timeout;
-    int prompt_gap;
-    ColorRef color_text;
-    const char* hover_key;
-    void (*render)(void);
-    int fps;
-    bool no_bg;
-    ColorRef color_bg;
-    const char* name;
-    bool close_on_keypress;
+  const char *message;
+  MessageSlot slot;
+  int x;
+  int y;
+  int w;
+  int h;
+  int mw;
+  int mh;
+  double timeout;
+  int prompt_gap;
+  ColorRef color_text;
+  const char *hover_key;
+  void (*render)(void);
+  int fps;
+  bool no_bg;
+  ColorRef color_bg;
+  const char *name;
+  bool close_on_keypress;
 } FlMessageSpec;
 
 typedef struct {
-    void (*render)(void);
-    int w;
-    int h;
-    unsigned long frame;
-    FlTimer created_at;
-    int pad;
+  void (*render)(void);
+  int w;
+  int h;
+  unsigned long frame;
+  FlTimer created_at;
+  int pad;
 } FlHoverPopupCtx;
 
 /**
@@ -896,11 +914,11 @@ typedef struct {
  * @brief Implementation for creating a message popup.
  * @param spec  The specification. See `FlMessageSpec`.
  */
-void fl_message_impl(const FlMessageSpec* spec);
+void fl_message_impl(const FlMessageSpec *spec);
 
-#define fl_overlay(...) fl_message(__VA_ARGS__, .timeout=10000000.0)
+#define fl_overlay(...) fl_message(__VA_ARGS__, .timeout = 10000000.0)
 #define fl_dismiss_overlay(...) fl_dismiss_message(__VA_ARGS__)
-#define fl_subwindow(...) fl_window(__VA_ARGS__,.subwindow=true)
+#define fl_subwindow(...) fl_window(__VA_ARGS__, .subwindow = true)
 
 typedef PromptSpec FlPromptSpec;
 
@@ -914,20 +932,20 @@ typedef PromptSpec FlPromptSpec;
  * @brief Implementation for creating a window.
  * @param spec  The specification. See `FlPromptSpec`.
  */
-void fl_window_impl(const FlPromptSpec* spec);
+void fl_window_impl(const FlPromptSpec *spec);
 
 typedef enum {
-    FLANCHOR_TOP_LEFT,
-    FLANCHOR_TOP_CENTER,
-    FLANCHOR_TOP_RIGHT,
-    FLANCHOR_CENTER_LEFT,
-    FLANCHOR_CENTER,
-    FLANCHOR_CENTER_RIGHT,
-    FLANCHOR_BOTTOM_LEFT,
-    FLANCHOR_BOTTOM_CENTER,
-    FLANCHOR_BOTTOM_RIGHT,
-    FLANCHOR_FILL_WIDTH,
-    FLANCHOR_FILL_HEIGHT
+  FLANCHOR_TOP_LEFT,
+  FLANCHOR_TOP_CENTER,
+  FLANCHOR_TOP_RIGHT,
+  FLANCHOR_CENTER_LEFT,
+  FLANCHOR_CENTER,
+  FLANCHOR_CENTER_RIGHT,
+  FLANCHOR_BOTTOM_LEFT,
+  FLANCHOR_BOTTOM_CENTER,
+  FLANCHOR_BOTTOM_RIGHT,
+  FLANCHOR_FILL_WIDTH,
+  FLANCHOR_FILL_HEIGHT
 } FlAnchor;
 
 /**
@@ -940,19 +958,19 @@ typedef enum {
  * - `fontsize` — Font size.
  */
 typedef struct {
-    const char *text;
-    int x;
-    int y;
-    unsigned long color;
-    FontHandle font;
-    int fontsize;
-    const char *align;
-    int pad;
+  const char *text;
+  int x;
+  int y;
+  unsigned long color;
+  FontHandle font;
+  int fontsize;
+  const char *align;
+  int pad;
 } FlTextSpec;
 
 typedef struct {
-    int x;
-    int y;
+  int x;
+  int y;
 } FlCharPos;
 
 /**
@@ -967,7 +985,9 @@ typedef struct {
  * @param max_positions   Max positions to store.
  * @return                Height of drawn text.
  */
-int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const char *text, int fontsize, unsigned long color, FlCharPos *out_positions, int max_positions);
+int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height,
+                            const char *text, int fontsize, unsigned long color,
+                            FlCharPos *out_positions, int max_positions);
 
 /**
  * @brief Text measurement specification.
@@ -979,20 +999,21 @@ int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const 
  * - `fontsize` — Font size.
  */
 typedef struct {
-    int x;
-    int y;
-    int max_width;
-    int line_height;
-    const char *text;
-    int fontsize;
-    FlCharPos *out_positions;
+  int x;
+  int y;
+  int max_width;
+  int line_height;
+  const char *text;
+  int fontsize;
+  FlCharPos *out_positions;
 } FlMeasureSpec;
 
 /**
  * @def Measure wrapped text.
  * @param ... Fields of `FlMeasureSpec`. See `FlMeasureSpec`.
  */
-#define fl_measure_text_wrapped(...) fl_measure_text_wrapped_impl(&(FlMeasureSpec){__VA_ARGS__})
+#define fl_measure_text_wrapped(...)                                           \
+  fl_measure_text_wrapped_impl(&(FlMeasureSpec){__VA_ARGS__})
 
 /**
  * @brief Implementation for measuring wrapped text.
@@ -1004,8 +1025,11 @@ int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec);
 /** @} */
 
 typedef struct {
-    const char *path;
-    int x; int y; int w; int h;
+  const char *path;
+  int x;
+  int y;
+  int w;
+  int h;
 } FlImageSpec;
 
 bool fl_draw_text_impl(const FlTextSpec *spec);
@@ -1017,11 +1041,15 @@ bool fl_place_checkbox_impl(const FlCheckboxSpec *spec);
 bool fl_checkbox_is_checked(const char *name);
 bool fl_checkbox_is_hovered(const char *name);
 
-#define  fl_checkbox_hovered fl_checkbox_is_hovered
-#define  fl_checkbox_clicked fl_checkbox_is_clicked
+#define fl_checkbox_hovered fl_checkbox_is_hovered
+#define fl_checkbox_clicked fl_checkbox_is_clicked
 
-#define fl_place_button(...) fl_place_checkbox_impl(&(FlCheckboxSpec){.border=true, __VA_ARGS__,.button=true})
-#define fl_place_checkbox(...) fl_place_checkbox_impl(&(FlCheckboxSpec){.border=true, __VA_ARGS__,.checkbox=true})
+#define fl_place_button(...)                                                   \
+  fl_place_checkbox_impl(                                                      \
+      &(FlCheckboxSpec){.border = true, __VA_ARGS__, .button = true})
+#define fl_place_checkbox(...)                                                 \
+  fl_place_checkbox_impl(                                                      \
+      &(FlCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
 
 #define fl_button_is_clicked fl_checkbox_is_checked
 #define fl_button_is_hovered fl_checkbox_is_hovered
@@ -1037,17 +1065,21 @@ bool fl_listbox_begin(const FlListSpec *spec);
 bool fl_listbox_next(FlListItemCtx *out);
 void fl_listbox_end(void);
 
+bool fl_draw_text_anchored(FlAnchor anchor, int offset_x, int offset_y,
+                           const char *text);
+bool fl_place_editbox_anchored(FlAnchor anchor, int offset_x, int offset_y,
+                               int w, int h, const char *buffer);
+bool fl_place_listbox_anchored(FlAnchor anchor, int offset_x, int offset_y,
+                               int w, int h, const char **items, int count);
+bool fl_draw_image_anchored(FlAnchor anchor, int offset_x, int offset_y, int w,
+                            int h, const char *path);
 
-bool fl_draw_text_anchored(FlAnchor anchor, int offset_x, int offset_y, const char *text);
-bool fl_place_editbox_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *buffer);
-bool fl_place_listbox_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char **items, int count);
-bool fl_draw_image_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *path);
-
-
-void fl_layout_begin_column_anchored(FlAnchor anchor, int start_x, int start_y, int gap);
+void fl_layout_begin_column_anchored(FlAnchor anchor, int start_x, int start_y,
+                                     int gap);
 void fl_layout_begin_column(int start_x, int start_y, int gap);
 void fl_layout_end_column(void);
-void fl_layout_begin_row_anchored(FlAnchor anchor, int start_x, int start_y, int gap);
+void fl_layout_begin_row_anchored(FlAnchor anchor, int start_x, int start_y,
+                                  int gap);
 void fl_layout_begin_row(int start_x, int start_y, int gap);
 void fl_layout_end_row(void);
 bool fl_draw_text_auto(const char *text);
@@ -1058,29 +1090,29 @@ bool fl_draw_image_auto(int w, int h, const char *path);
 typedef struct FlWidget FlWidget;
 
 typedef enum {
-    FL_WIDGET_SLOT_TOP_LEFT,
-    FL_WIDGET_SLOT_TOP_RIGHT,
-    FL_WIDGET_SLOT_BOTTOM_LEFT,
-    FL_WIDGET_SLOT_BOTTOM_RIGHT,
-    FL_WIDGET_FREE
+  FL_WIDGET_SLOT_TOP_LEFT,
+  FL_WIDGET_SLOT_TOP_RIGHT,
+  FL_WIDGET_SLOT_BOTTOM_LEFT,
+  FL_WIDGET_SLOT_BOTTOM_RIGHT,
+  FL_WIDGET_FREE
 } FlWidgetSlot;
 
 typedef struct {
-    const char *name;
-    int w;
-    int h;
-    int slot;
-    int order;
-    int gap;
-    int pad;                       
-    int fps;
-    ColorRef color;
-    bool no_bg;
-    void (*on_click)(void);
-    void (*on_hover)(void);
-    FlWidgetRenderFn render;
-    int x;
-    int y;
+  const char *name;
+  int w;
+  int h;
+  int slot;
+  int order;
+  int gap;
+  int pad;
+  int fps;
+  ColorRef color;
+  bool no_bg;
+  void (*on_click)(void);
+  void (*on_hover)(void);
+  FlWidgetRenderFn render;
+  int x;
+  int y;
 } FlWidgetSpec;
 
 #define FL_WIDGET_MAX 32
@@ -1092,7 +1124,7 @@ typedef struct {
 /**
  * @brief Widget structure.
  *
- * Fields 
+ * Fields
  * - `name` — Widget identifier.
  * - `w`, `h` — Widget size.
  * - `slot` — Positioning slot See `FlWidgetSlot`.
@@ -1105,40 +1137,40 @@ typedef struct {
  * - `render` — Render callback function See `FlWidgetRenderFn`.
  */
 struct FlWidget {
-    char name[FL_WIDGET_NAME_MAX];
-    int w;
-    int h;
-    int gap_override;
-    int fps;
-    int slot;
-    int order;
-    int seq;
-    bool order_set;
-    bool free_pos;
-    int x;
-    int y;
-    bool auto_w;
-    bool auto_h;
-    int origin_x;
-    int origin_y;
-    ColorRef bg_color;
-    bool has_bg;
-    bool no_bg;
-    int pad;
-    bool mapped;
-    volatile bool dead;
-    bool hover_running;
-    void (*hover_thread)(void);
-    PlatformWidget *win;
-    FlWidgetRenderFn render;
-    unsigned long frame;
-    FlTimer created_at;
-    char *owner;
-    unsigned gen;
-    void (*on_click)(void);
-    void (*on_hover)(void);
-    bool clickable;
-    bool hovered;
+  char name[FL_WIDGET_NAME_MAX];
+  int w;
+  int h;
+  int gap_override;
+  int fps;
+  int slot;
+  int order;
+  int seq;
+  bool order_set;
+  bool free_pos;
+  int x;
+  int y;
+  bool auto_w;
+  bool auto_h;
+  int origin_x;
+  int origin_y;
+  ColorRef bg_color;
+  bool has_bg;
+  bool no_bg;
+  int pad;
+  bool mapped;
+  volatile bool dead;
+  bool hover_running;
+  void (*hover_thread)(void);
+  PlatformWidget *win;
+  FlWidgetRenderFn render;
+  unsigned long frame;
+  FlTimer created_at;
+  char *owner;
+  unsigned gen;
+  void (*on_click)(void);
+  void (*on_hover)(void);
+  bool clickable;
+  bool hovered;
 };
 
 /**
@@ -1192,7 +1224,7 @@ void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
  * @param path  Path to the image.
  * @return      Image handle (pointer), or NULL on failure.
  */
-void* fl_load_image(const char *path);
+void *fl_load_image(const char *path);
 
 /**
  * @brief Free a loaded image.
@@ -1217,13 +1249,16 @@ void fl_free_image(void *image);
  * - `rounded` — Whether the rectangle has rounded corners.
  */
 typedef struct {
-    int x; int y; int w; int h;
-    unsigned long color;
-    float thickness;
-    bool transparent;
-    bool filled;
-    int radius;
-    bool rounded;
+  int x;
+  int y;
+  int w;
+  int h;
+  unsigned long color;
+  float thickness;
+  bool transparent;
+  bool filled;
+  int radius;
+  bool rounded;
 } FlRectSpec;
 
 /**
@@ -1236,9 +1271,12 @@ typedef struct {
  * - `thickness` — Line thickness.
  */
 typedef struct {
-    int x1; int y1; int x2; int y2;
-    unsigned long color;
-    float thickness;
+  int x1;
+  int y1;
+  int x2;
+  int y2;
+  unsigned long color;
+  float thickness;
 } FlLineSpec;
 
 /**
@@ -1251,9 +1289,11 @@ typedef struct {
  * - `thickness` — Line thickness.
  */
 typedef struct {
-    int x; int y; int radius;
-    unsigned long color;
-    float thickness;
+  int x;
+  int y;
+  int radius;
+  unsigned long color;
+  float thickness;
 } FlCircleSpec;
 
 /**
@@ -1381,9 +1421,9 @@ void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata);
  * - `has_value` — True if flag has a value.
  */
 typedef struct {
-    char name[64];
-    char value[256];
-    bool has_value;
+  char name[64];
+  char value[256];
+  bool has_value;
 } FlFlag;
 
 /**
@@ -1394,8 +1434,8 @@ typedef struct {
  * - `count` — Number of flags.
  */
 typedef struct {
-    FlFlag* flags;
-    size_t count;
+  FlFlag *flags;
+  size_t count;
 } FlFlagList;
 
 /**
@@ -1403,13 +1443,13 @@ typedef struct {
  * @param input  Input string.
  * @return       The parsed flag list. See `FlFlagList`.
  */
-FlFlagList fl_parse_flags(const char* input);
+FlFlagList fl_parse_flags(const char *input);
 
 /**
  * @brief Free a flag list.
  * @param list  The flag list to free.
  */
-void fl_free_flags(FlFlagList* list);
+void fl_free_flags(FlFlagList *list);
 
 /**
  * @brief Start a timer.
@@ -1449,39 +1489,39 @@ void fl_run_after_time(double seconds, void (*callback)(void));
  * @param haystack  String to search in.
  * @return          True if found, false otherwise.
  */
-bool fl_string_contains(const char* needle, const char* haystack);
+bool fl_string_contains(const char *needle, const char *haystack);
 
 /**
  * @brief Get the working directory.
  * @return  Path string (caller must free), or NULL on failure.
  */
-char* fl_get_working_dir(void);
+char *fl_get_working_dir(void);
 
 /**
  * @brief Resolve a data path.
  * @param name  Name of the data.
  * @return      Resolved path (caller must free), or NULL on failure.
  */
-char* fl_resolve_data_path(const char* name);
+char *fl_resolve_data_path(const char *name);
 
 /**
  * @brief Resolve a feature path.
  * @param name  Name of the feature.
  * @return      Resolved path (caller must free), or NULL on failure.
  */
-char* fl_resolve_feature_path(const char* name);
+char *fl_resolve_feature_path(const char *name);
 
 /**
  * @brief Resolve the user path.
  * @return  User path string (caller must free), or NULL on failure.
  */
-char* fl_resolve_user_path(void);
+char *fl_resolve_user_path(void);
 
 /**
  * @brief Get the current username.
  * @return  Username string (caller must free), or NULL on failure.
  */
-char* fl_get_user_name(void);
+char *fl_get_user_name(void);
 
 /**
  * @brief Check if the process is running as root/admin.
@@ -1489,7 +1529,7 @@ char* fl_get_user_name(void);
  */
 bool fl_is_root(void);
 
-typedef void* FlLibrary;
+typedef void *FlLibrary;
 
 /**
  * @brief Open a dynamic library.
@@ -1518,7 +1558,7 @@ FlLibrary fl_library_get(const char *name);
  * @param name  Symbol name.
  * @return      Symbol pointer, or NULL on failure.
  */
-void* fl_library_symbol(FlLibrary lib, const char *name);
+void *fl_library_symbol(FlLibrary lib, const char *name);
 
 /**
  * @brief Close a library handle.
@@ -1532,9 +1572,9 @@ void fl_library_close(FlLibrary lib);
  */
 const char *fl_library_error(void);
 
-typedef void* FlThread;
-typedef void* FlMutex;
-typedef void* (*FlThreadFunc)(void* arg);
+typedef void *FlThread;
+typedef void *FlMutex;
+typedef void *(*FlThreadFunc)(void *arg);
 
 /**
  * @brief Create a new thread.
@@ -1542,7 +1582,7 @@ typedef void* (*FlThreadFunc)(void* arg);
  * @param arg  Argument to pass.
  * @return     Thread handle.
  */
-FlThread fl_thread_create(FlThreadFunc fn, void* arg);
+FlThread fl_thread_create(FlThreadFunc fn, void *arg);
 
 /**
  * @brief Join a thread.
@@ -1582,21 +1622,21 @@ void fl_mutex_unlock(FlMutex mutex);
  * - `value` — Value.
  */
 typedef struct {
-    char* key;
-    long value;
+  char *key;
+  long value;
 } FlHashMap;
 
 /**
  * @brief Initialize a hashmap.
  * @param map  Pointer to the hashmap pointer.
  */
-void fl_hashmap_init(FlHashMap** map);
+void fl_hashmap_init(FlHashMap **map);
 
 /**
  * @brief Free a hashmap.
  * @param map  Pointer to the hashmap pointer.
  */
-void fl_hashmap_free(FlHashMap** map);
+void fl_hashmap_free(FlHashMap **map);
 
 /**
  * @brief Put a value into the hashmap.
@@ -1604,7 +1644,7 @@ void fl_hashmap_free(FlHashMap** map);
  * @param key    Key string.
  * @param value  Value.
  */
-void fl_hashmap_put(FlHashMap** map, const char* key, long value);
+void fl_hashmap_put(FlHashMap **map, const char *key, long value);
 
 /**
  * @brief Add a value to an existing key (delta).
@@ -1612,7 +1652,7 @@ void fl_hashmap_put(FlHashMap** map, const char* key, long value);
  * @param key    Key string.
  * @param delta  Value to add.
  */
-void fl_hashmap_add(FlHashMap** map, const char* key, long delta);
+void fl_hashmap_add(FlHashMap **map, const char *key, long delta);
 
 /**
  * @brief Get a value from the hashmap.
@@ -1621,7 +1661,7 @@ void fl_hashmap_add(FlHashMap** map, const char* key, long delta);
  * @param def  Default value.
  * @return     Value.
  */
-long fl_hashmap_get(FlHashMap* map, const char* key, long def);
+long fl_hashmap_get(FlHashMap *map, const char *key, long def);
 
 /**
  * @brief Check if key exists.
@@ -1629,7 +1669,7 @@ long fl_hashmap_get(FlHashMap* map, const char* key, long def);
  * @param key  The key.
  * @return     True if exists, false otherwise.
  */
-bool fl_hashmap_has(FlHashMap* map, const char* key);
+bool fl_hashmap_has(FlHashMap *map, const char *key);
 
 /**
  * @brief Delete a key.
@@ -1637,14 +1677,14 @@ bool fl_hashmap_has(FlHashMap* map, const char* key);
  * @param key  Key to delete.
  * @return     True on success, false on failure.
  */
-bool fl_hashmap_del(FlHashMap** map, const char* key);
+bool fl_hashmap_del(FlHashMap **map, const char *key);
 
 /**
  * @brief Get hashmap size.
  * @param map  The hashmap.
  * @return     Number of elements.
  */
-size_t fl_hashmap_len(FlHashMap* map);
+size_t fl_hashmap_len(FlHashMap *map);
 
 /**
  * @brief Get hashmap element by index.
@@ -1652,7 +1692,7 @@ size_t fl_hashmap_len(FlHashMap* map);
  * @param index  The index.
  * @return       Borrowed pointer to `FlHashMap`. See `FlHashMap`.
  */
-const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index);
+const FlHashMap *fl_hashmap_at(FlHashMap *map, size_t index);
 
 /**
  * @brief Get all window titles.
@@ -1670,20 +1710,20 @@ FlWindowList fl_get_all_window_names(void);
  * @brief Get the title of the active window.
  * @return  The title string (caller must free), or NULL.
  */
-char* fl_get_active_window_title(void);
+char *fl_get_active_window_title(void);
 
 /**
  * @brief Get the application ID of the active window.
  * @return  The app ID string (caller must free), or NULL.
  */
-char* fl_get_active_window_app_id(void);
+char *fl_get_active_window_app_id(void);
 
 /**
  * @brief Check if a window is active.
  * @param title  The window title.
  * @return       True if active, false otherwise.
  */
-bool fl_is_window_active(char* title);
+bool fl_is_window_active(char *title);
 
 /**
  * @brief Get the color of a pixel at a position.
@@ -1872,49 +1912,49 @@ int fl_get_key_pressed(void);
  */
 char fl_get_char_pressed(void);
 
-#define fl_key_pressed        fl_is_key_pressed
-#define fl_key_released       fl_is_key_released
-#define fl_ctrl_down          fl_ctrl_pressed
-#define fl_shift_down         fl_shift_pressed
-#define fl_alt_down           fl_alt_pressed
-#define fl_super_down         fl_super_pressed
-#define fl_is_ctrl_pressed    fl_ctrl_pressed
-#define fl_is_shift_pressed   fl_shift_pressed
-#define fl_is_alt_pressed     fl_alt_pressed
-#define fl_is_super_pressed   fl_super_pressed
+#define fl_key_pressed fl_is_key_pressed
+#define fl_key_released fl_is_key_released
+#define fl_ctrl_down fl_ctrl_pressed
+#define fl_shift_down fl_shift_pressed
+#define fl_alt_down fl_alt_pressed
+#define fl_super_down fl_super_pressed
+#define fl_is_ctrl_pressed fl_ctrl_pressed
+#define fl_is_shift_pressed fl_shift_pressed
+#define fl_is_alt_pressed fl_alt_pressed
+#define fl_is_super_pressed fl_super_pressed
 
 /**
  * @brief Key event structure.
  */
 typedef struct {
-    int vk;
-    int scancode;
-    int mods;
-    bool down;
-    bool repeat;
-    unsigned long long t_us;
+  int vk;
+  int scancode;
+  int mods;
+  bool down;
+  bool repeat;
+  unsigned long long t_us;
 } FlKeyEvent;
 
-#define FL_MOUSE_LEFT    1
-#define FL_MOUSE_RIGHT   2
-#define FL_MOUSE_MIDDLE  3
-#define FL_MOUSE_SIDE1   4
-#define FL_MOUSE_SIDE2   5
-#define FL_MOUSE_BACK    6
+#define FL_MOUSE_LEFT 1
+#define FL_MOUSE_RIGHT 2
+#define FL_MOUSE_MIDDLE 3
+#define FL_MOUSE_SIDE1 4
+#define FL_MOUSE_SIDE2 5
+#define FL_MOUSE_BACK 6
 #define FL_MOUSE_FORWARD 7
-#define FL_MOUSE_WHEEL   8
+#define FL_MOUSE_WHEEL 8
 
 /**
  * @brief Mouse event structure.
  */
 typedef struct {
-    int button;
-    int x;
-    int y;
-    int mods;
-    bool down;
-    bool repeat;
-    unsigned long long t_us;
+  int button;
+  int x;
+  int y;
+  int mods;
+  bool down;
+  bool repeat;
+  unsigned long long t_us;
 } FlMouseEvent;
 
 /**
@@ -2013,8 +2053,8 @@ typedef CcEntrySpec FlCcEntrySpec;
 bool fl_add_to_cc_impl(const FlCcEntrySpec *spec);
 
 typedef struct {
-    const char *alias;
-    const char *target;
+  const char *alias;
+  const char *target;
 } FlAliasSpec;
 
 /**
@@ -2029,7 +2069,6 @@ typedef struct {
  * @return      True on success, false otherwise.
  */
 bool fl_add_alias_impl(const FlAliasSpec *spec);
-
 
 /**
  * @brief Get the alias for a target.
@@ -2074,19 +2113,20 @@ bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
  * - `swallow` — Whether to swallow the hotkey.
  */
 typedef struct {
-    const char *hotkey;
-    void (*cb)(void);
-    bool (*should_swallow)(void);
-    const char *whitelist[16];
-    const char *blacklist[16];
-    bool swallow;
+  const char *hotkey;
+  void (*cb)(void);
+  bool (*should_swallow)(void);
+  const char *whitelist[16];
+  const char *blacklist[16];
+  bool swallow;
 } FlHotkeySpec;
 
 /**
  * @def Register a hotkey.
  * @param ... Fields of `FlHotkeySpec`. See `FlHotkeySpec`.
  */
-#define fl_register_hotkey(...) fl_register_hotkey_impl(&(FlHotkeySpec){__VA_ARGS__})
+#define fl_register_hotkey(...)                                                \
+  fl_register_hotkey_impl(&(FlHotkeySpec){__VA_ARGS__})
 
 /**
  * @brief Register a hotkey (internal implementation).
@@ -2103,17 +2143,18 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec);
  * - `dst` — Destination hotkey.
  */
 typedef struct {
-    const char *src;
-    const char *dst;
-    const char *whitelist[8];
-    const char *blacklist[8];
+  const char *src;
+  const char *dst;
+  const char *whitelist[8];
+  const char *blacklist[8];
 } FlRemappingSpec;
 
 /**
  * @def Register a hotkey remapping.
  * @param ... Fields of `FlRemappingSpec`. See `FlRemappingSpec`.
  */
-#define fl_register_remapping(...) fl_register_remapping_impl(&(FlRemappingSpec){__VA_ARGS__})
+#define fl_register_remapping(...)                                             \
+  fl_register_remapping_impl(&(FlRemappingSpec){__VA_ARGS__})
 
 /**
  * @brief Register a hotkey remapping (internal implementation).
@@ -2141,18 +2182,19 @@ typedef void (*FlSnippetFunc)(void);
  * - `fn` — Callback function.
  */
 typedef struct {
-    const char *trigger;
-    const char *text;
-    FlSnippetFunc fn;
-    const char *whitelist[16];
-    const char *blacklist[16];
+  const char *trigger;
+  const char *text;
+  FlSnippetFunc fn;
+  const char *whitelist[16];
+  const char *blacklist[16];
 } FlSnippetSpec;
 
 /**
  * @def Register a snippet.
  * @param ... Fields of `FlSnippetSpec`. See `FlSnippetSpec`.
  */
-#define fl_register_snippet(...) fl_register_snippet_impl(&(FlSnippetSpec){__VA_ARGS__})
+#define fl_register_snippet(...)                                               \
+  fl_register_snippet_impl(&(FlSnippetSpec){__VA_ARGS__})
 
 /**
  * @brief Register a snippet (internal implementation).
@@ -2161,7 +2203,7 @@ typedef struct {
  */
 bool fl_register_snippet_impl(const FlSnippetSpec *spec);
 
-void fl_reload_feature(char* name);
+void fl_reload_feature(char *name);
 void fl_reload_all_features(void);
 int fl_get_pid();
 
@@ -2174,25 +2216,27 @@ int fl_get_pid();
 /**
  * @def Initialize a Flint feature.
  */
-#define FLINT_FEATURE_INIT FLINT_FEATURE_EXPORT __attribute__((constructor)) void FlintFeatureInit(void)
+#define FLINT_FEATURE_INIT                                                     \
+  FLINT_FEATURE_EXPORT __attribute__((constructor)) void FlintFeatureInit(void)
 
 /**
  * @def Shutdown a Flint feature.
  */
-#define FLINT_FEATURE_SHUTDOWN FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void)
+#define FLINT_FEATURE_SHUTDOWN                                                 \
+  FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void)
 
 /**
  * @def Register a capability.
  * @param key  Capability key.
  * @param fn   Capability function.
  */
-#define fl_cap_register(key, fn)  fl_cap_register_abi((key), CAP_ABI_V1, (fn))
+#define fl_cap_register(key, fn) fl_cap_register_abi((key), CAP_ABI_V1, (fn))
 
 /**
  * @def Resolve a capability.
  * @param key  Capability key.
  */
-#define fl_cap_resolve(key)       fl_cap_resolve_abi((key), CAP_ABI_V1)
+#define fl_cap_resolve(key) fl_cap_resolve_abi((key), CAP_ABI_V1)
 
 /**
  * @def Bind a capability function pointer.
@@ -2200,49 +2244,49 @@ int fl_get_pid();
  * @param key   Capability key.
  * @param type  Capability function type.
  */
-#define FL_CAP_BIND(var, key, type)                                   \
-    static type var##_fn;                                             \
-    static unsigned var##_gen;                                        \
-    type var = NULL;                                                  \
-    if (var##_gen != fl_cap_generation()) {                           \
-        fl_cap_bind_declare(key, (void*)&var##_fn);                   \
-        var##_fn = (type)fl_cap_resolve(key);                         \
-        var##_gen = fl_cap_generation();                              \
-    }                                                                 \
-    var = var##_fn
+#define FL_CAP_BIND(var, key, type)                                            \
+  static type var##_fn;                                                        \
+  static unsigned var##_gen;                                                   \
+  type var = NULL;                                                             \
+  if (var##_gen != fl_cap_generation()) {                                      \
+    fl_cap_bind_declare(key, (void *)&var##_fn);                               \
+    var##_fn = (type)fl_cap_resolve(key);                                      \
+    var##_gen = fl_cap_generation();                                           \
+  }                                                                            \
+  var = var##_fn
 
-#define FL_WHITE        RGB(255, 255, 255)
-#define FL_BLACK        RGB(1, 1, 1)
-#define FL_RED          RGB(255, 0, 0)
-#define FL_GREEN        RGB(0, 255, 0)
-#define FL_BLUE         RGB(0, 0, 255)
-#define FL_YELLOW       RGB(255, 255, 0)
-#define FL_CYAN         RGB(0, 255, 255)
-#define FL_MAGENTA      RGB(255, 0, 255)
-#define FL_ORANGE       RGB(255, 165, 0)
-#define FL_PURPLE       RGB(128, 0, 128)
-#define FL_PINK         RGB(255, 192, 203)
-#define FL_BROWN        RGB(139, 69, 19)
-#define FL_LIME         RGB(50, 205, 50)
-#define FL_TEAL         RGB(0, 128, 128)
-#define FL_NAVY         RGB(0, 0, 128)
-#define FL_MAROON       RGB(128, 0, 0)
-#define FL_OLIVE        RGB(128, 128, 0)
-#define FL_SILVER       RGB(192, 192, 192)
-#define FL_GOLD         RGB(255, 215, 0)
-#define FL_INDIGO       RGB(75, 0, 130)
-#define FL_VIOLET       RGB(238, 130, 238)
-#define FL_TURQUOISE    RGB(64, 224, 208)
-#define FL_SALMON       RGB(250, 128, 114)
-#define FL_CORAL        RGB(255, 127, 80)
-#define FL_CRIMSON      RGB(220, 20, 60)
-#define FL_CHOCOLATE    RGB(210, 105, 30)
-#define FL_GRAY         RGB(128, 128, 128)
-#define FL_GREY         RGB(128, 128, 128)
-#define FL_LIGHT_GRAY   RGB(211, 211, 211)
-#define FL_DARK_GRAY    RGB(14, 14, 14)
-#define FL_LIGHT_GREY   RGB(211, 211, 211)
-#define FL_DARK_GREY    RGB(14, 14, 14)
+#define FL_WHITE RGB(255, 255, 255)
+#define FL_BLACK RGB(1, 1, 1)
+#define FL_RED RGB(255, 0, 0)
+#define FL_GREEN RGB(0, 255, 0)
+#define FL_BLUE RGB(0, 0, 255)
+#define FL_YELLOW RGB(255, 255, 0)
+#define FL_CYAN RGB(0, 255, 255)
+#define FL_MAGENTA RGB(255, 0, 255)
+#define FL_ORANGE RGB(255, 165, 0)
+#define FL_PURPLE RGB(128, 0, 128)
+#define FL_PINK RGB(255, 192, 203)
+#define FL_BROWN RGB(139, 69, 19)
+#define FL_LIME RGB(50, 205, 50)
+#define FL_TEAL RGB(0, 128, 128)
+#define FL_NAVY RGB(0, 0, 128)
+#define FL_MAROON RGB(128, 0, 0)
+#define FL_OLIVE RGB(128, 128, 0)
+#define FL_SILVER RGB(192, 192, 192)
+#define FL_GOLD RGB(255, 215, 0)
+#define FL_INDIGO RGB(75, 0, 130)
+#define FL_VIOLET RGB(238, 130, 238)
+#define FL_TURQUOISE RGB(64, 224, 208)
+#define FL_SALMON RGB(250, 128, 114)
+#define FL_CORAL RGB(255, 127, 80)
+#define FL_CRIMSON RGB(220, 20, 60)
+#define FL_CHOCOLATE RGB(210, 105, 30)
+#define FL_GRAY RGB(128, 128, 128)
+#define FL_GREY RGB(128, 128, 128)
+#define FL_LIGHT_GRAY RGB(211, 211, 211)
+#define FL_DARK_GRAY RGB(14, 14, 14)
+#define FL_LIGHT_GREY RGB(211, 211, 211)
+#define FL_DARK_GREY RGB(14, 14, 14)
 
 /** @} */
 

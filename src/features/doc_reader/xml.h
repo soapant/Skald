@@ -39,8 +39,8 @@ Features:
 
 Usage:
 
-Define XML_H_IMPLEMENTATION in ONE file before including "xml.h" to include functions implementations.
-In other files just include "xml.h".
+Define XML_H_IMPLEMENTATION in ONE file before including "xml.h" to include
+functions implementations. In other files just include "xml.h".
 
 #define XML_H_IMPLEMENTATION
 #include "xml.h"
@@ -130,19 +130,21 @@ typedef struct XMLAttr {
 // The main object to interact with parsed XML nodes. Represents single XML tag.
 typedef struct XMLNode XMLNode;
 struct XMLNode {
-  char *tag;         // Tag string.
-  char *text;        // Inner text of the tag. NULL if tag has no inner text.
-  XMLList *attrs;    // List of tag attributes. Check "node->attrs->len" if it has items.
-  XMLNode *parent;   // Node's parent node. NULL for the root node.
-  XMLList *children; // List of tag's sub-tags. Check "node->children->len" if it has items.
+  char *tag;       // Tag string.
+  char *text;      // Inner text of the tag. NULL if tag has no inner text.
+  XMLList *attrs;  // List of tag attributes. Check "node->attrs->len" if it has
+                   // items.
+  XMLNode *parent; // Node's parent node. NULL for the root node.
+  XMLList *children; // List of tag's sub-tags. Check "node->children->len" if
+                     // it has items.
 };
 
 // Create new `XMLNode`.
-// `parent` can be NULL if node is root. If parent is not NULL, node will be added to parent's children list.
-// `tag` and `inner_text` can be NULL.
-// Returns `NULL` for error.
-// Free with `xml_node_free()`.
-XML_H_API XMLNode *xml_node_new(XMLNode *parent, const char *tag, const char *inner_text);
+// `parent` can be NULL if node is root. If parent is not NULL, node will be
+// added to parent's children list. `tag` and `inner_text` can be NULL. Returns
+// `NULL` for error. Free with `xml_node_free()`.
+XML_H_API XMLNode *xml_node_new(XMLNode *parent, const char *tag,
+                                const char *inner_text);
 // Parse XML string and return root XMLNode.
 // Returns NULL for error.
 // Free with `xml_node_free()`.
@@ -157,13 +159,16 @@ XML_H_API XMLNode *xml_node_child_at(XMLNode *node, size_t idx);
 // Get first matching tag in the tree.
 // It also can search tags by path in the format: `div/p/href`
 // If `exact` is `true` - tag names will be matched exactly.
-// If `exact` is `false` - tag names will be matched partially (containing sub-string).
-XML_H_API XMLNode *xml_node_find_tag(XMLNode *node, const char *tag, bool exact);
+// If `exact` is `false` - tag names will be matched partially (containing
+// sub-string).
+XML_H_API XMLNode *xml_node_find_tag(XMLNode *node, const char *tag,
+                                     bool exact);
 // Get value of the tag attribute.
 // Returns NULL if not found.
 XML_H_API const char *xml_node_attr(XMLNode *node, const char *attr_key);
 // Add attribute with `key` and `value` to the node's list of attributes.
-XML_H_API void xml_node_add_attr(XMLNode *node, const char *key, const char *value);
+XML_H_API void xml_node_add_attr(XMLNode *node, const char *key,
+                                 const char *value);
 // Serialize `XMLNode` into `XMLString`.
 XML_H_API void xml_node_serialize(XMLNode *node, XMLString *str);
 // Cleanup node and all it's children recursively.
@@ -185,14 +190,15 @@ XML_H_API void xml_node_free(XMLNode *node);
 #include <stdio.h>
 #include <string.h>
 
-#define XML_FREE(ptr)                                                                                                  \
-  if (ptr) {                                                                                                           \
-    XML_FREE_FUNC(ptr);                                                                                                \
-    ptr = NULL;                                                                                                        \
+#define XML_FREE(ptr)                                                          \
+  if (ptr) {                                                                   \
+    XML_FREE_FUNC(ptr);                                                        \
+    ptr = NULL;                                                                \
   }
 
 static inline void xml__skip_whitespace(const char *xml, size_t *idx) {
-  while (xml[*idx] != '\0' && isspace((unsigned char)xml[*idx])) (*idx)++;
+  while (xml[*idx] != '\0' && isspace((unsigned char)xml[*idx]))
+    (*idx)++;
 }
 
 static inline char *xml__strndup(const char *str, size_t n) {
@@ -201,7 +207,9 @@ static inline char *xml__strndup(const char *str, size_t n) {
   return dup;
 }
 
-static inline char *xml__strdup(const char *str) { return xml__strndup(str, strlen(str)); }
+static inline char *xml__strdup(const char *str) {
+  return xml__strndup(str, strlen(str));
+}
 
 static char *xml__decode_entities(const char *str, size_t len) {
   XMLString *decoded = xml_string_new();
@@ -250,7 +258,8 @@ XML_H_API XMLString *xml_string_new() {
 }
 
 XML_H_API void xml_string_append(XMLString *str, const char *append) {
-  if (!str || !append) return;
+  if (!str || !append)
+    return;
   size_t append_len = strlen(append);
   if (str->len + append_len + 1 > str->size) {
     str->size = (str->len + append_len + 1) * 2;
@@ -261,13 +270,15 @@ XML_H_API void xml_string_append(XMLString *str, const char *append) {
 }
 
 XML_H_API void xml_string_free(XMLString *str) {
-  if (!str) return;
+  if (!str)
+    return;
   XML_FREE(str->str);
   XML_FREE(str);
 }
 
 XML_H_API char *xml_string_steal(XMLString *str) {
-  if (!str) return NULL;
+  if (!str)
+    return NULL;
   char *stealed = str->str;
   XML_FREE(str);
   return stealed;
@@ -286,7 +297,8 @@ XML_H_API XMLList *xml_list_new() {
 
 // Add element to the end of the array. Grow if needed.
 XML_H_API void xml_list_add(XMLList *list, void *data) {
-  if (!list || !data) return;
+  if (!list || !data)
+    return;
   if (list->len >= list->size) {
     list->size *= 2;
     list->data = XML_REALLOC_FUNC(list->data, list->size * sizeof(void *));
@@ -296,18 +308,21 @@ XML_H_API void xml_list_add(XMLList *list, void *data) {
 
 // ---------- XMLNode ---------- //
 
-XML_H_API XMLNode *xml_node_new(XMLNode *parent, const char *tag, const char *inner_text) {
+XML_H_API XMLNode *xml_node_new(XMLNode *parent, const char *tag,
+                                const char *inner_text) {
   XMLNode *node = XML_CALLOC_FUNC(1, sizeof(XMLNode));
   node->parent = parent;
   node->tag = tag ? xml__strdup(tag) : NULL;
   node->text = inner_text ? xml__strdup(inner_text) : NULL;
   node->children = xml_list_new();
   node->attrs = xml_list_new();
-  if (parent) xml_list_add(parent->children, node);
+  if (parent)
+    xml_list_add(parent->children, node);
   return node;
 }
 
-XML_H_API void xml_node_add_attr(XMLNode *node, const char *key, const char *value) {
+XML_H_API void xml_node_add_attr(XMLNode *node, const char *key,
+                                 const char *value) {
   XMLAttr *attr = XML_CALLOC_FUNC(1, sizeof(XMLAttr));
   attr->key = xml__strdup(key);
   attr->value = xml__strdup(value);
@@ -315,36 +330,45 @@ XML_H_API void xml_node_add_attr(XMLNode *node, const char *key, const char *val
 }
 
 XML_H_API XMLNode *xml_node_child_at(XMLNode *node, size_t index) {
-  if (!node || !node->children) return NULL;
-  if (index >= node->children->len) return NULL;
+  if (!node || !node->children)
+    return NULL;
+  if (index >= node->children->len)
+    return NULL;
   return (XMLNode *)node->children->data[index];
 }
 
-XML_H_API XMLNode *xml_node_find_tag(XMLNode *node, const char *tag, bool exact) {
-  if (!node || !tag) return NULL;
+XML_H_API XMLNode *xml_node_find_tag(XMLNode *node, const char *tag,
+                                     bool exact) {
+  if (!node || !tag)
+    return NULL;
   // If tag doesn't contain any '/' then it's a single tag search
   if (!strchr(tag, '/')) {
     // Check if the current node matches the tag
-    if (node->tag && ((exact && strcmp(node->tag, tag) == 0) || (!exact && strstr(node->tag, tag) != NULL)))
+    if (node->tag && ((exact && strcmp(node->tag, tag) == 0) ||
+                      (!exact && strstr(node->tag, tag) != NULL)))
       return node;
     // Recursively search through the children of the node
     for (size_t i = 0; i < node->children->len; i++) {
       XMLNode *result = xml_node_find_tag(node->children->data[i], tag, exact);
-      if (result) return result; // Return the first match found
+      if (result)
+        return result; // Return the first match found
     }
     return NULL;
   }
   // Path tag search
   char *tokenized_path = xml__strdup(tag);
-  if (!tokenized_path) return NULL;
+  if (!tokenized_path)
+    return NULL;
   char *segment = strtok(tokenized_path, "/");
   XMLNode *current = node;
   while (segment && current) {
     bool found = false;
     for (size_t i = 0; i < current->children->len; i++) {
       XMLNode *child = (XMLNode *)current->children->data[i];
-      if (!child->tag) continue;
-      if ((exact && strcmp(child->tag, segment) == 0) || (!exact && strstr(child->tag, segment) != NULL)) {
+      if (!child->tag)
+        continue;
+      if ((exact && strcmp(child->tag, segment) == 0) ||
+          (!exact && strstr(child->tag, segment) != NULL)) {
         current = child;
         found = true;
         break;
@@ -361,10 +385,12 @@ XML_H_API XMLNode *xml_node_find_tag(XMLNode *node, const char *tag, bool exact)
 }
 
 XML_H_API const char *xml_node_attr(XMLNode *node, const char *attr_key) {
-  if (!node || !attr_key) return NULL;
+  if (!node || !attr_key)
+    return NULL;
   for (size_t i = 0; i < node->attrs->len; i++) {
     XMLAttr *attr = (XMLAttr *)node->attrs->data[i];
-    if (attr->key && strcmp(attr->key, attr_key) == 0) return attr->value;
+    if (attr->key && strcmp(attr->key, attr_key) == 0)
+      return attr->value;
   }
   return NULL;
 }
@@ -375,9 +401,12 @@ static bool xml__skip_tags(const char *xml, size_t *idx) {
   if (xml[*idx] == '!' || xml[*idx] == '?') {
     size_t open_braket_count = 0;
     while (xml[*idx] != '>' || (xml[*idx] == '>' && open_braket_count > 0)) {
-      if (xml[*idx] == '\0') return false;
-      if (xml[*idx] == '<') open_braket_count++;
-      if (xml[*idx] == '>') open_braket_count--;
+      if (xml[*idx] == '\0')
+        return false;
+      if (xml[*idx] == '<')
+        open_braket_count++;
+      if (xml[*idx] == '>')
+        open_braket_count--;
       (*idx)++;
     }
     (*idx)++; // Skip '>'
@@ -387,51 +416,65 @@ static bool xml__skip_tags(const char *xml, size_t *idx) {
 }
 
 // Parse end tag </tag>.
-static void xml__parse_end_tag(const char *xml, size_t *idx, XMLNode **curr_node) {
+static void xml__parse_end_tag(const char *xml, size_t *idx,
+                               XMLNode **curr_node) {
   (*idx)++; // Skip '/'
   xml__skip_whitespace(xml, idx);
-  while (xml[*idx] != '>' && xml[*idx] != '\0') (*idx)++;
-  if (xml[*idx] == '>') (*idx)++; // Skip '>'
+  while (xml[*idx] != '>' && xml[*idx] != '\0')
+    (*idx)++;
+  if (xml[*idx] == '>')
+    (*idx)++; // Skip '>'
   *curr_node = (*curr_node)->parent;
 }
 
 // Parse tag name <name ... >
-static void xml__parse_tag_name(const char *xml, size_t *idx, XMLNode **curr_node) {
+static void xml__parse_tag_name(const char *xml, size_t *idx,
+                                XMLNode **curr_node) {
   size_t tag_start = *idx;
-  while (!(isspace(xml[*idx]) || xml[*idx] == '>' || xml[*idx] == '/') && xml[*idx] != '\0') (*idx)++;
+  while (!(isspace(xml[*idx]) || xml[*idx] == '>' || xml[*idx] == '/') &&
+         xml[*idx] != '\0')
+    (*idx)++;
   (*curr_node)->tag = xml__strndup(xml + tag_start, *idx - tag_start);
 }
 
 // Parse tag attributes <tag attr="value" ... >
-static void xml__parse_tag_attributes(const char *xml, size_t *idx, XMLNode **curr_node) {
+static void xml__parse_tag_attributes(const char *xml, size_t *idx,
+                                      XMLNode **curr_node) {
   xml__skip_whitespace(xml, idx);
   while (xml[*idx] != '\0' && !(xml[*idx] == '>' || xml[*idx] == '/')) {
     size_t attr_start = *idx;
-    while (xml[*idx] != '\0' && xml[*idx] != '=' && !isspace(xml[*idx])) (*idx)++;
+    while (xml[*idx] != '\0' && xml[*idx] != '=' && !isspace(xml[*idx]))
+      (*idx)++;
     if (*idx == attr_start) {
-      while (xml[*idx] != '\0' && xml[*idx] != '>' && xml[*idx] != '/') { (*idx)++; }
+      while (xml[*idx] != '\0' && xml[*idx] != '>' && xml[*idx] != '/') {
+        (*idx)++;
+      }
       break;
     }
     size_t attr_len = *idx - attr_start;
-    char* attr_key = malloc(attr_len + 1);
+    char *attr_key = malloc(attr_len + 1);
     strncpy(attr_key, xml + attr_start, attr_len);
     attr_key[attr_len] = '\0';
     xml__skip_whitespace(xml, idx);
-    if (xml[*idx] != '=') break;
+    if (xml[*idx] != '=')
+      break;
     (*idx)++;
     xml__skip_whitespace(xml, idx);
     char quote = xml[*idx];
-    if (quote != '"' && quote != '\'') break;
+    if (quote != '"' && quote != '\'')
+      break;
     (*idx)++; // Skip opening quote
     size_t value_start = *idx;
     while (xml[*idx] != '\0') {
       if (xml[*idx] == quote)
-        if (*idx == 0 || xml[*idx - 1] != '\\') break;
+        if (*idx == 0 || xml[*idx - 1] != '\\')
+          break;
       (*idx)++;
     }
-    if (xml[*idx] == '\0') break;
+    if (xml[*idx] == '\0')
+      break;
     size_t value_len = *idx - value_start;
-    char* attr_value = malloc(value_len + 1);
+    char *attr_value = malloc(value_len + 1);
     strncpy(attr_value, xml + value_start, value_len);
     attr_value[value_len] = '\0';
     (*idx)++; // Skip closing quote
@@ -442,10 +485,14 @@ static void xml__parse_tag_attributes(const char *xml, size_t *idx, XMLNode **cu
   }
 }
 
-static void xml__parse_tag_inner_text(const char *xml, size_t *idx, XMLNode **curr_node) {
+static void xml__parse_tag_inner_text(const char *xml, size_t *idx,
+                                      XMLNode **curr_node) {
   size_t text_start = *idx;
-  while (xml[*idx] != '<' && xml[*idx] != '\0') (*idx)++;
-  if (*idx > text_start) (*curr_node)->text = xml__decode_entities(xml + text_start, *idx - text_start);
+  while (xml[*idx] != '<' && xml[*idx] != '\0')
+    (*idx)++;
+  if (*idx > text_start)
+    (*curr_node)->text =
+        xml__decode_entities(xml + text_start, *idx - text_start);
 }
 
 // Parse start tag.
@@ -453,7 +500,8 @@ static void xml__parse_tag_inner_text(const char *xml, size_t *idx, XMLNode **cu
 // Call continue if returns false.
 static bool xml__parse_tag(const char *xml, size_t *idx, XMLNode **curr_node) {
   xml__skip_whitespace(xml, idx);
-  if (xml__skip_tags(xml, idx)) return false;
+  if (xml__skip_tags(xml, idx))
+    return false;
   // End tag </tag>
   if (xml[*idx] == '/') {
     xml__parse_end_tag(xml, idx, curr_node);
@@ -464,12 +512,15 @@ static bool xml__parse_tag(const char *xml, size_t *idx, XMLNode **curr_node) {
   // Start tag <tag...>
   xml__parse_tag_name(xml, idx, curr_node);
   // Parse attributes
-  if (xml[*idx] != '\0' && isspace(xml[*idx])) xml__parse_tag_attributes(xml, idx, curr_node);
+  if (xml[*idx] != '\0' && isspace(xml[*idx]))
+    xml__parse_tag_attributes(xml, idx, curr_node);
   // Self-closing tag <tag ... />
   if (xml[*idx] == '/') {
     (*idx)++; // Skip '/'
-    while (xml[*idx] != '>' && xml[*idx] != '\0') (*idx)++;
-    if (xml[*idx] == '\0') return false;
+    while (xml[*idx] != '>' && xml[*idx] != '\0')
+      (*idx)++;
+    if (xml[*idx] == '\0')
+      return false;
     (*idx)++; // Consume '>'
     *curr_node = (*curr_node)->parent;
     return false;
@@ -496,13 +547,16 @@ XML_H_API XMLNode *xml_parse_string(const char *xml) {
   size_t idx = 0;
   while (xml[idx] != '\0') {
     xml__skip_whitespace(xml, &idx);
-    if (xml[idx] == '\0') break;
+    if (xml[idx] == '\0')
+      break;
     // Parse tag
     if (xml[idx] == '<') {
       idx++;
       xml__skip_whitespace(xml, &idx);
-      if (xml__skip_tags(xml, &idx)) continue;
-      if (!xml__parse_tag(xml, &idx, &curr_node)) continue;
+      if (xml__skip_tags(xml, &idx))
+        continue;
+      if (!xml__parse_tag(xml, &idx, &curr_node))
+        continue;
     }
     idx++;
   }
@@ -511,7 +565,8 @@ XML_H_API XMLNode *xml_parse_string(const char *xml) {
 
 XML_H_API XMLNode *xml_parse_file(const char *path) {
   FILE *file = fopen(path, "rb");
-  if (!file) return NULL;
+  if (!file)
+    return NULL;
   fseek(file, 0, SEEK_END);
   size_t file_size = ftell(file);
   fseek(file, 0, SEEK_SET);
@@ -534,7 +589,8 @@ XML_H_API XMLNode *xml_parse_file(const char *path) {
 }
 
 XML_H_API void xml_node_serialize(XMLNode *node, XMLString *str) {
-  if (!node || !str) return;
+  if (!node || !str)
+    return;
 
   if (node->tag) {
     xml_string_append(str, "<");
@@ -556,7 +612,8 @@ XML_H_API void xml_node_serialize(XMLNode *node, XMLString *str) {
     xml_string_append(str, ">");
   }
   // Text
-  if (node->text) xml_string_append(str, node->text);
+  if (node->text)
+    xml_string_append(str, node->text);
   // Children
   for (size_t i = 0; i < node->children->len; ++i) {
     XMLNode *child = node->children->data[i];
@@ -571,7 +628,8 @@ XML_H_API void xml_node_serialize(XMLNode *node, XMLString *str) {
 }
 
 XML_H_API void xml_node_free(XMLNode *node) {
-  if (!node) return;
+  if (!node)
+    return;
   // Free the text
   XML_FREE(node->text);
   // Free the attributes
@@ -584,7 +642,8 @@ XML_H_API void xml_node_free(XMLNode *node) {
   XML_FREE(node->attrs->data);
   XML_FREE(node->attrs);
   // Recursively free the children
-  for (size_t i = 0; i < node->children->len; i++) xml_node_free((XMLNode *)node->children->data[i]);
+  for (size_t i = 0; i < node->children->len; i++)
+    xml_node_free((XMLNode *)node->children->data[i]);
   XML_FREE(node->children->data);
   XML_FREE(node->children);
   // Free the tag
@@ -601,8 +660,10 @@ CHANGELOG:
 
 2.1:
     Removed:
-        - XML_STRDUP_FUNC (POSIX function. Replaced with xml__strdup() implementation)
-        - XML_STRNDUP_FUNC (POSIX function. Replaced with xml__strndup() implementation)
+        - XML_STRDUP_FUNC (POSIX function. Replaced with xml__strdup()
+implementation)
+        - XML_STRNDUP_FUNC (POSIX function. Replaced with xml__strndup()
+implementation)
         - Private trim_text() function.
 
     Added:
@@ -623,8 +684,9 @@ CHANGELOG:
 
 2.0:
     Breaking API changes:
-        `xml_node_find_by_path()` functionality merged into `xml_node_find_tag()`.
-        Use `xml_node_find_tag()` everywhere `xml_node_find_by_path()` is used.
+        `xml_node_find_by_path()` functionality merged into
+`xml_node_find_tag()`. Use `xml_node_find_tag()` everywhere
+`xml_node_find_by_path()` is used.
 
     Removed:
         - xml_node_find_by_path()

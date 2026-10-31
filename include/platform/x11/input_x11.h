@@ -6,16 +6,15 @@
 #include <X11/keysym.h>
 #include "core/types.h"
 #include <X11/X.h>
-#include <X11/Xlib.h>  
+#include <X11/Xlib.h>
 
 #define X11_MAX_KEYBOARDS 16
 #define X11_MAX_MICE 8
 
 typedef struct {
-    int fd;
-    char path[256];
+  int fd;
+  char path[256];
 } X11Keyboard;
-
 
 extern X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
 extern int g_x11_keyboard_count;
