@@ -22,7 +22,8 @@
 //         fl_sleep_platform(0.1);
 //     }
 //     ASSERT_EQ_INT(after.count, before.count + 1);
-//     if (after.count == before.count + 1) { const char* new_title = after.windows[after.count - 1]; Platform_FocusWindow(new_title);
+//     if (after.count == before.count + 1) { const char* new_title =
+//     after.windows[after.count - 1]; Platform_FocusWindow(new_title);
 //         Platform_CloseActiveWindow();
 //     }
 //     fl_free_window_list(&before);
@@ -43,7 +44,7 @@
 //     }
 //     ASSERT_EQ_INT(after.count, before.count + 1);
 //     if (after.count == before.count + 1) {
-//         const char* new_title = after.windows[after.count - 1]; 
+//         const char* new_title = after.windows[after.count - 1];
 //         Platform_FocusWindow(new_title);
 //         remap_send_combo("Alt+W");
 //         Platform_CloseActiveWindow();
@@ -53,7 +54,7 @@
 // }
 
 int main(void) {
-    // RUN(terminal_open);
-    // RUN(browser_open);
-    // return TEST_SUMMARY() != 0 ? 1 : 0;
+  // RUN(terminal_open);
+  // RUN(browser_open);
+  // return TEST_SUMMARY() != 0 ? 1 : 0;
 }

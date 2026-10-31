@@ -57,11 +57,21 @@
 #define PROMPT_CUSTOM_FALLBACK_LIST_W 650
 #define PROMPT_CUSTOM_EDIT_H_BONUS 28
 
-static inline int PromptRowHeight(void) { return FontSize + PROMPT_ROW_H_BONUS; }
-static inline int PromptListTop(void) { return FontSize + PROMPT_LIST_TOP_BONUS; }
-static inline int PromptNormalCaretWidth(void) { return FontSize / 2 + PROMPT_CARET_W_NORMAL_BONUS; }
-static inline int PromptCaretHeight(void) { return FontSize + PROMPT_CARET_H_BONUS; }
-static inline int PromptCustomEditHeight(void) { return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS; }
+static inline int PromptRowHeight(void) {
+  return FontSize + PROMPT_ROW_H_BONUS;
+}
+static inline int PromptListTop(void) {
+  return FontSize + PROMPT_LIST_TOP_BONUS;
+}
+static inline int PromptNormalCaretWidth(void) {
+  return FontSize / 2 + PROMPT_CARET_W_NORMAL_BONUS;
+}
+static inline int PromptCaretHeight(void) {
+  return FontSize + PROMPT_CARET_H_BONUS;
+}
+static inline int PromptCustomEditHeight(void) {
+  return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS;
+}
 static inline int PromptListBottomMargin(void) {
   return (WindowTitleText || VimModeText) ? PROMPT_LIST_BOTTOM_TITLE : 40;
 }

@@ -6,8 +6,8 @@
 bool kwin_is_active(void);
 bool get_title_kwin(char *buffer, int buffer_size);
 bool get_app_id_kwin(char *buffer, int buffer_size);
-char* paste_kwin(char* content);
-bool focus_window_title_kwin(char* title);
+char *paste_kwin(char *content);
+bool focus_window_title_kwin(char *title);
 PlWindowList get_window_titles_kwin();
 PlWindowList get_window_names_kwin();
 bool close_active_window_kwin(void);

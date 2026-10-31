@@ -6,53 +6,57 @@
 #include "core/types.h"
 
 unsigned long rgb_to_hex(unsigned long win_color);
-void eval_window_title_color(PromptState * state,unsigned long *window_title_color);
+void eval_window_title_color(PromptState *state,
+                             unsigned long *window_title_color);
 unsigned short OpacityAlpha16(void);
 
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
 unsigned long VimModeTextColor(void);
 
-void PopulateListBox(ListBoxInfo* lb, const char* filter,
-    const char** items, int item_count,
-    bool (*filter_match)(const char* item, const char* filter));
-
+void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
+                     int item_count,
+                     bool (*filter_match)(const char *item,
+                                          const char *filter));
 
 typedef enum {
-    AUTO = 0,
-    TOP_LEFT,
-    TOP_CENTER,
-    TOP_RIGHT,
-    LEFT,
-    CENTER,
-    RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_CENTER,
-    BOTTOM_RIGHT,
-    TOP_LEFT_RELATIVE,
-    TOP_CENTER_RELATIVE,
-    TOP_RIGHT_RELATIVE,
-    LEFT_RELATIVE,
-    CENTER_RELATIVE,
-    RIGHT_RELATIVE,
-    BOTTOM_LEFT_RELATIVE,
-    BOTTOM_CENTER_RELATIVE,
-    BOTTOM_RIGHT_RELATIVE,
-    FREE
+  AUTO = 0,
+  TOP_LEFT,
+  TOP_CENTER,
+  TOP_RIGHT,
+  LEFT,
+  CENTER,
+  RIGHT,
+  BOTTOM_LEFT,
+  BOTTOM_CENTER,
+  BOTTOM_RIGHT,
+  TOP_LEFT_RELATIVE,
+  TOP_CENTER_RELATIVE,
+  TOP_RIGHT_RELATIVE,
+  LEFT_RELATIVE,
+  CENTER_RELATIVE,
+  RIGHT_RELATIVE,
+  BOTTOM_LEFT_RELATIVE,
+  BOTTOM_CENTER_RELATIVE,
+  BOTTOM_RIGHT_RELATIVE,
+  FREE
 } MessageSlot;
 
-
 ColorRef GetRainbowColor(float t, float s, float v);
-bool UI_IsListBoxSelected(ListBoxInfo* lb);
+bool UI_IsListBoxSelected(ListBoxInfo *lb);
 void UpdateTextCaret(void);
-void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height);
+void CalculateWindowMetrics(WindowLayout *layout, int height, int width,
+                            int item_height);
 
 #define MSG_PROMPT_GAP_DEFAULT 300
 #define MSG_SCREEN_GAP_DEFAULT 20
 
-
 extern int MessageScreenGap;
 
-void MessageSlotToRect(MessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward);
-void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int max_h, int prompt_gap, double timeout, ColorRef color, void (*render)(void), const char* name);
+void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
+                       int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,
+                       int *out_gap, int *out_outward);
+void DisplayMessageSlot(const char *message, MessageSlot slot, int max_w,
+                        int max_h, int prompt_gap, double timeout,
+                        ColorRef color, void (*render)(void), const char *name);
 
 #endif

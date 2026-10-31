@@ -5,13 +5,12 @@
 
 static double timer_elapsed_us(WinTimer t) {
   int64_t end = TimerNowTicks();
-  if (t.frequency <= 0) return 0.0;
+  if (t.frequency <= 0)
+    return 0.0;
   return (double)(end - t.start) * 1000000.0 / (double)t.frequency;
 }
 
-double TimerElapsedUs(WinTimer t) {
-  return timer_elapsed_us(t);
-}
+double TimerElapsedUs(WinTimer t) { return timer_elapsed_us(t); }
 
 static void timer_print(double elapsed_us, const char *operation_name,
                         const char *file, int line) {
@@ -26,17 +25,19 @@ static void timer_print(double elapsed_us, const char *operation_name,
   printf("%s", line_buf);
 }
 
-void TimerPrintRaw(double elapsed_us, const char* operation_name,
+void TimerPrintRaw(double elapsed_us, const char *operation_name,
                    const char *file, int line) {
-  if (!DoTimeDebugs) return;
+  if (!DoTimeDebugs)
+    return;
   timer_print(elapsed_us, operation_name, file, line);
 }
 
-void TimerEnd(WinTimer t, const char* operation_name,
-              const char *file, int line) {
+void TimerEnd(WinTimer t, const char *operation_name, const char *file,
+              int line) {
   double elapsed_us = timer_elapsed_us(t);
   if (DoTimeDebugs) {
-    if (elapsed_us < 1000.0) return;
+    if (elapsed_us < 1000.0)
+      return;
     timer_print(elapsed_us, operation_name, file, line);
   }
 }

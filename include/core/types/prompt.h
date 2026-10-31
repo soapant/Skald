@@ -64,44 +64,45 @@ typedef void (*RenderCallback)(PromptState *state);
 #define LISTBOX_ROW_BYTES 512
 
 struct ListBoxInfo {
-    char (*populated_cache)[LISTBOX_ROW_BYTES];
-    int  populated_cache_cap;
-    int  populated_count;
-    int  matching_indices[MAX_VISIBLE_ITEMS];
-    int  total_matches;
-    int  selected_index;
-    char* selected_text;
-    int  view_offset;
-    int  last_item_count;
+  char (*populated_cache)[LISTBOX_ROW_BYTES];
+  int populated_cache_cap;
+  int populated_count;
+  int matching_indices[MAX_VISIBLE_ITEMS];
+  int total_matches;
+  int selected_index;
+  char *selected_text;
+  int view_offset;
+  int last_item_count;
 };
 
 struct PromptState {
-     char**      items;
-     size_t      item_count;
-     char        filter[512];
-     size_t      cursor;
-     int         sel_start;
-     int         sel_end;
-     int         scroll_offset;
-     int         width, height;
-     char*       window_title;
-     ListBoxInfo listbox;
-     bool        has_listbox;
-     bool        no_bg;
-     char*       placeholder;
-     RenderCallback render;
-     bool        editbox_placed;
+  char **items;
+  size_t item_count;
+  char filter[512];
+  size_t cursor;
+  int sel_start;
+  int sel_end;
+  int scroll_offset;
+  int width, height;
+  char *window_title;
+  ListBoxInfo listbox;
+  bool has_listbox;
+  bool no_bg;
+  char *placeholder;
+  RenderCallback render;
+  bool editbox_placed;
 };
 
 /**
  * @brief Callback invoked when the filter text changes.
  *
- * The implementation should repopulate `lb` based on `filter` using 'fl_populate_listbox'.
+ * The implementation should repopulate `lb` based on `filter` using
+ * 'fl_populate_listbox'.
  *
  * @param filter  Current filter string.
  * @param lb      Listbox to repopulate. See `ListBoxInfo`.
  */
-typedef void (*RefreshCallback)(const char* filter, ListBoxInfo* lb);
+typedef void (*RefreshCallback)(const char *filter, ListBoxInfo *lb);
 
 /**
  * @brief Callback invoked when Enter is pressed.
@@ -109,7 +110,7 @@ typedef void (*RefreshCallback)(const char* filter, ListBoxInfo* lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*EnterCallback)(ListBoxInfo* lb);
+typedef bool (*EnterCallback)(ListBoxInfo *lb);
 
 /**
  * @brief Callback invoked when Ctrl+Enter is pressed.
@@ -117,7 +118,7 @@ typedef bool (*EnterCallback)(ListBoxInfo* lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlEnterCallback)(ListBoxInfo* lb);
+typedef bool (*CtrlEnterCallback)(ListBoxInfo *lb);
 
 /**
  * @brief Callback invoked when Shift+Enter is pressed.
@@ -125,7 +126,7 @@ typedef bool (*CtrlEnterCallback)(ListBoxInfo* lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*ShiftEnterCallback)(ListBoxInfo* lb);
+typedef bool (*ShiftEnterCallback)(ListBoxInfo *lb);
 
 /**
  * @brief Callback invoked when Ctrl+Shift+Enter is pressed.
@@ -133,7 +134,7 @@ typedef bool (*ShiftEnterCallback)(ListBoxInfo* lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlShiftEnterCallback)(ListBoxInfo* lb);
+typedef bool (*CtrlShiftEnterCallback)(ListBoxInfo *lb);
 
 /**
  * @brief Callback invoked when Ctrl+Alt+Enter is pressed.
@@ -141,7 +142,7 @@ typedef bool (*CtrlShiftEnterCallback)(ListBoxInfo* lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlAltEnterCallback)(ListBoxInfo* lb);
+typedef bool (*CtrlAltEnterCallback)(ListBoxInfo *lb);
 
 /**
  * @brief Callback invoked when Shift+Alt+Enter is pressed.
@@ -149,21 +150,21 @@ typedef bool (*CtrlAltEnterCallback)(ListBoxInfo* lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*ShiftAltEnterCallback)(ListBoxInfo* lb);
+typedef bool (*ShiftAltEnterCallback)(ListBoxInfo *lb);
 
 /**
  * @brief Callback invoked when Tab is pressed.
  *
  * @param lb  Listbox state. See `ListBoxInfo`.
  */
-typedef void (*TabCallback)(ListBoxInfo* lb);
+typedef void (*TabCallback)(ListBoxInfo *lb);
 
 /**
  * @brief Callback invoked on text edit events.
  *
  * @param lb         Listbox state. See `ListBoxInfo`.
  */
-typedef void (*EditCallback)(ListBoxInfo* lb);
+typedef void (*EditCallback)(ListBoxInfo *lb);
 
 /**
  * @brief Callback used to filter listbox items.
@@ -171,7 +172,7 @@ typedef void (*EditCallback)(ListBoxInfo* lb);
  * @param item    Item text to test.
  * @param filter  Current filter string.
  */
-typedef void (*FilterCallback)(const char* item, const char* filter);
+typedef void (*FilterCallback)(const char *item, const char *filter);
 
 /**
  * @brief Callback invoked when the user requests help.
@@ -191,49 +192,61 @@ typedef void (*KeyCallback)(int vkCode);
 typedef void (*CloseCallback)(void);
 
 static inline void ListBoxInfo_Free(ListBoxInfo *lb) {
-    if (!lb) return;
-    free(lb->populated_cache);
-    lb->populated_cache = NULL;
-    lb->populated_cache_cap = 0;
-    lb->populated_count = 0;
+  if (!lb)
+    return;
+  free(lb->populated_cache);
+  lb->populated_cache = NULL;
+  lb->populated_cache_cap = 0;
+  lb->populated_count = 0;
 }
 
 static inline bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows) {
-    if (!lb || rows <= 0 || rows > MAX_VISIBLE_ITEMS) return false;
-    if (lb->populated_cache && rows <= lb->populated_cache_cap) return true;
-    int cap = lb->populated_cache_cap > 0 ? lb->populated_cache_cap : 64;
-    while (cap < rows) cap *= 2;
-    if (cap > MAX_VISIBLE_ITEMS) cap = MAX_VISIBLE_ITEMS;
-    if (cap < rows) return false;
-    char (*grown)[LISTBOX_ROW_BYTES] = (char (*)[LISTBOX_ROW_BYTES])realloc(
-        lb->populated_cache, (size_t)cap * LISTBOX_ROW_BYTES);
-    if (!grown) return false;
-    lb->populated_cache = grown;
-    lb->populated_cache_cap = cap;
+  if (!lb || rows <= 0 || rows > MAX_VISIBLE_ITEMS)
+    return false;
+  if (lb->populated_cache && rows <= lb->populated_cache_cap)
     return true;
+  int cap = lb->populated_cache_cap > 0 ? lb->populated_cache_cap : 64;
+  while (cap < rows)
+    cap *= 2;
+  if (cap > MAX_VISIBLE_ITEMS)
+    cap = MAX_VISIBLE_ITEMS;
+  if (cap < rows)
+    return false;
+  char (*grown)[LISTBOX_ROW_BYTES] = (char (*)[LISTBOX_ROW_BYTES])realloc(
+      lb->populated_cache, (size_t)cap * LISTBOX_ROW_BYTES);
+  if (!grown)
+    return false;
+  lb->populated_cache = grown;
+  lb->populated_cache_cap = cap;
+  return true;
 }
 
-static inline const char* ListBoxInfo_Row(ListBoxInfo *lb, int idx) {
-    if (!lb || !lb->populated_cache) return NULL;
-    if (idx < 0 || idx >= lb->populated_count) return NULL;
-    if (idx >= lb->populated_cache_cap) return NULL;
-    return lb->populated_cache[idx];
+static inline const char *ListBoxInfo_Row(ListBoxInfo *lb, int idx) {
+  if (!lb || !lb->populated_cache)
+    return NULL;
+  if (idx < 0 || idx >= lb->populated_count)
+    return NULL;
+  if (idx >= lb->populated_cache_cap)
+    return NULL;
+  return lb->populated_cache[idx];
 }
 
 static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
-    if (!lb) return;
-    ListBoxInfo_Free(lb);
-    lb->selected_index = -1;
-    lb->selected_text = "";
-    lb->total_matches = 0;
-    lb->view_offset = 0;
-    lb->last_item_count = 0;
+  if (!lb)
+    return;
+  ListBoxInfo_Free(lb);
+  lb->selected_index = -1;
+  lb->selected_text = "";
+  lb->total_matches = 0;
+  lb->view_offset = 0;
+  lb->last_item_count = 0;
 }
 
 /**
  * @brief Parameters for creating a prompt window.
  *
- * Passed to `fl_window`. One input callback is needed be it enter ctrl_enter does not matter.
+ * Passed to `fl_window`. One input callback is needed be it enter ctrl_enter
+ * does not matter.
  *
  * Fields:
  * - `title`          — Window title.
@@ -242,7 +255,8 @@ static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
  * - `enter`          — Called on Enter. See `EnterCallback`.
  * - `ctrl_enter`     — Called on Ctrl+Enter. See `CtrlEnterCallback`.
  * - `shift_enter`    — Called on Shift+Enter. See `ShiftEnterCallback`.
- * - `ctrl_shift_enter` — Called on Ctrl+Shift+Enter. See `CtrlShiftEnterCallback`.
+ * - `ctrl_shift_enter` — Called on Ctrl+Shift+Enter. See
+ * `CtrlShiftEnterCallback`.
  * - `ctrl_alt_enter` — Called on Ctrl+Alt+Enter. See `CtrlAltEnterCallback`.
  * - `shift_alt_enter`— Called on Shift+Alt+Enter. See `ShiftAltEnterCallback`.
  * - `tab`            — Called on Tab. See `TabCallback`.
@@ -253,38 +267,40 @@ static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
  * - `help`           — Called on help request. See `HelpCallback`.
  * - `on_close`       — Called when the prompt closes. See `CloseCallback`.
  * - `placeholder`    — Placeholder text appears in the editbox.
- * - `tick`           — If true, the prompt re-renders every frame instead of per keypress.
+ * - `tick`           — If true, the prompt re-renders every frame instead of
+ * per keypress.
  * - `auto_scale`     — If true, size(w,h) are scaled automatically.
  * - `no_bg`          — If true, no background is drawn.
  * - `w`, `h`         — Window width and height in pixels.
  * - `x`, `y`         — Window position in screen coordinates.
- * - `subwindow`      — If true, the prompt is a subwindow of an existing one not to be done manually if a subwindow is wanted call `fl_subwindow`.
+ * - `subwindow`      — If true, the prompt is a subwindow of an existing one
+ * not to be done manually if a subwindow is wanted call `fl_subwindow`.
  */
 typedef struct {
-    const char* title;
-    const char** items;
-    RefreshCallback refresh;
-    EnterCallback enter;
-    CtrlEnterCallback ctrl_enter;
-    ShiftEnterCallback shift_enter;
-    CtrlShiftEnterCallback ctrl_shift_enter;
-    CtrlAltEnterCallback ctrl_alt_enter;
-    ShiftAltEnterCallback shift_alt_enter;
-    TabCallback tab;
-    RenderCallback render;
-    EditCallback edit;
-    FilterCallback filter;
-    HelpCallback help;
-    CloseCallback on_close;
-    const char* placeholder;
-    bool tick;
-    bool auto_scale;
-    bool no_bg;
-    int w;
-    int h;
-    int x;
-    int y;
-    bool subwindow;
+  const char *title;
+  const char **items;
+  RefreshCallback refresh;
+  EnterCallback enter;
+  CtrlEnterCallback ctrl_enter;
+  ShiftEnterCallback shift_enter;
+  CtrlShiftEnterCallback ctrl_shift_enter;
+  CtrlAltEnterCallback ctrl_alt_enter;
+  ShiftAltEnterCallback shift_alt_enter;
+  TabCallback tab;
+  RenderCallback render;
+  EditCallback edit;
+  FilterCallback filter;
+  HelpCallback help;
+  CloseCallback on_close;
+  const char *placeholder;
+  bool tick;
+  bool auto_scale;
+  bool no_bg;
+  int w;
+  int h;
+  int x;
+  int y;
+  bool subwindow;
 } PromptSpec;
 
 /**
@@ -300,31 +316,31 @@ typedef struct {
  * - `w`, `h`       — Popup size in pixels.
  */
 typedef struct {
-    const char* initial_text;
-    const char* placeholder;
-    const char* title;
-    int x;
-    int y;
-    int w;
-    int h;
+  const char *initial_text;
+  const char *placeholder;
+  const char *title;
+  int x;
+  int y;
+  int w;
+  int h;
 } PopupSpec;
 
 typedef struct WindowManager WindowManager;
-WindowManager* WindowManager_Get(void);
-char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
+WindowManager *WindowManager_Get(void);
+char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
 typedef struct {
-    char keys[MAX_SEQUENCE_LEN];
-    int len;
-    int typed_count;
-    long long deadline_ms;
-    bool waiting;
-    bool timed_out;
+  char keys[MAX_SEQUENCE_LEN];
+  int len;
+  int typed_count;
+  long long deadline_ms;
+  bool waiting;
+  bool timed_out;
 } SequenceState;
 
 typedef struct {
-    const char* name;                         
-    void (*func)(const char** items, int count);
+  const char *name;
+  void (*func)(const char **items, int count);
 } SortOption;
 
 #endif

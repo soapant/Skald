@@ -19,113 +19,133 @@
 #include "platform/wm_platform.h"
 
 static bool s_edit_swallow_next_char = false;
-static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, const PopupKeyEvent* key) {
-        
-if (data->base.vtable && data->base.vtable->on_key && data->base.vtable->on_key(&data->base, key)) return true;
-    return false;
+static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData *data,
+                                  const PopupKeyEvent *key) {
+
+  if (data->base.vtable && data->base.vtable->on_key &&
+      data->base.vtable->on_key(&data->base, key))
+    return true;
+  return false;
 }
 
-LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    
-ListBoxInfo* lb = NULL;
-  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
-  WMEditPopupData* data = (WMEditPopupData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
+                               LPARAM lParam) {
 
-    switch (msg) {
-    case WM_NCCREATE: {
-      CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
-        SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
-        return DefWindowProcA(hwnd, msg, wParam, lParam);
-    }
+  ListBoxInfo *lb = NULL;
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) &&
+      IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd)))
+    lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+  WMEditPopupData *data =
+      (WMEditPopupData *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
-    case WM_CREATE: {
-      if (!data) break;
-        SetFocus(hwnd);
+  switch (msg) {
+  case WM_NCCREATE: {
+    CREATESTRUCTA *cs = (CREATESTRUCTA *)lParam;
+    SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+  }
+
+  case WM_CREATE: {
+    if (!data)
       break;
-    }
+    SetFocus(hwnd);
+    break;
+  }
 
-    case WM_CTLCOLOREDIT: {
-      HDC hdc = (HDC)wParam;
-      COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, GradientBrightness) : COLOR_TEXT;
-      SetTextColor(hdc, tc);
-      SetBkColor(hdc, COLOR_BG);
-      static HBRUSH hBrush = NULL;
-      if (!hBrush) hBrush = CreateSolidBrush(COLOR_BG);
-      return (LRESULT)hBrush;
+  case WM_CTLCOLOREDIT: {
+    HDC hdc = (HDC)wParam;
+    COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, GradientBrightness)
+                              : COLOR_TEXT;
+    SetTextColor(hdc, tc);
+    SetBkColor(hdc, COLOR_BG);
+    static HBRUSH hBrush = NULL;
+    if (!hBrush)
+      hBrush = CreateSolidBrush(COLOR_BG);
+    return (LRESULT)hBrush;
+  }
+
+  case WM_PAINT: {
+    Platform_EditPopupRender((Popup *)data);
+    return 0;
+  }
+
+  case WM_KEYDOWN:
+  case WM_SYSKEYDOWN: {
+    if (!data)
+      break;
+    s_edit_swallow_next_char = false;
+    PopupKeyEvent key;
+    memset(&key, 0, sizeof(key));
+    key.vk = (int)wParam;
+    key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+    key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+    key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+    {
+      extern void win32_fill_popup_key_text(PopupKeyEvent * key);
+      win32_fill_popup_key_text(&key);
     }
-           
-    case WM_PAINT: {
-      Platform_EditPopupRender((Popup*)data);
+    if (EditPopupWindow_OnKey(hwnd, data, &key)) {
+      s_edit_swallow_next_char = true;
+      InvalidateRect(hwnd, NULL, FALSE);
       return 0;
     }
+    if (msg == WM_SYSKEYDOWN)
+      return 0;
+    break;
+  }
 
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN: {
-      if (!data) break;
+  case WM_CHAR: {
+    if (s_edit_swallow_next_char) {
       s_edit_swallow_next_char = false;
+      return 0;
+    }
+    if (!data)
+      break;
+    if (wParam == 0x0D || wParam == 0x1B)
+      return 0;
+    if (wParam < 0x20 && wParam != 0x08 && wParam != 0x09)
+      return 0;
+    if (IsNormalMode())
+      return 0;
+    if (wParam >= 0x20 && wParam <= 0x7E) {
+      char ins[2] = {(char)wParam, '\0'};
       PopupKeyEvent key;
       memset(&key, 0, sizeof(key));
-      key.vk = (int)wParam;
+      key.vk = 0;
       key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
       key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
       key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-      {
-        extern void win32_fill_popup_key_text(PopupKeyEvent* key);
-        win32_fill_popup_key_text(&key);
-      }
-      if (EditPopupWindow_OnKey(hwnd, data, &key)) {
-        s_edit_swallow_next_char = true;
+      key.text[0] = ins[0];
+      key.text_len = 1;
+      if (data->base.vtable && data->base.vtable->on_key &&
+          data->base.vtable->on_key(&data->base, &key)) {
         InvalidateRect(hwnd, NULL, FALSE);
         return 0;
       }
-      if (msg == WM_SYSKEYDOWN) return 0;
-      break;
     }
+    break;
+  }
 
-    case WM_CHAR: {
-      if (s_edit_swallow_next_char) { s_edit_swallow_next_char = false; return 0; }
-      if (!data) break;
-      if (wParam == 0x0D || wParam == 0x1B) return 0;
-      if (wParam < 0x20 && wParam != 0x08 && wParam != 0x09) return 0;
-      if (IsNormalMode()) return 0;
-      if (wParam >= 0x20 && wParam <= 0x7E) {
-        char ins[2] = { (char)wParam, '\0' };
-        PopupKeyEvent key;
-        memset(&key, 0, sizeof(key));
-        key.vk = 0;
-        key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-        key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-        key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-        key.text[0] = ins[0];
-        key.text_len = 1;
-        if (data->base.vtable && data->base.vtable->on_key && data->base.vtable->on_key(&data->base, &key)) {
-          InvalidateRect(hwnd, NULL, FALSE);
-          return 0;
-        }
-      }
-      break;
+  case WM_KILLFOCUS: {
+    if (CloseOnLossOfFocus) {
+      FlintContext_Get()->window.selection_complete = true;
     }
+    break;
+  }
 
-    case WM_KILLFOCUS: {
-      if (CloseOnLossOfFocus) {
-            FlintContext_Get()->window.selection_complete = true;
-        }
-        break;
-    }
+  case WM_ERASEBKGND: {
+    return 1;
+  }
 
-    case WM_ERASEBKGND: {
-      return 1;
+  case WM_DESTROY: {
+    if (data) {
+      SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
     }
-
-    case WM_DESTROY: {
-        if (data) {
-              SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
-        }
-        ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
-        last_index = lb ? lb->selected_index : -1;
-        UpdateTextCaret();
-        break;
-    }
-    }
+    ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
+    last_index = lb ? lb->selected_index : -1;
+    UpdateTextCaret();
+    break;
+  }
+  }
   return DefWindowProcA(hwnd, msg, wParam, lParam);
 }

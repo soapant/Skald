@@ -6,21 +6,21 @@
 #include "core/types.h"
 
 typedef struct {
-    char name[256];
-    char path[MAX_PATH];
+  char name[256];
+  char path[MAX_PATH];
 } FileItem;
 
 typedef struct {
-    FileItem* files;
-    size_t count;
-    size_t capacity;
+  FileItem *files;
+  size_t count;
+  size_t capacity;
 } ListOfFiles;
 
 #if defined(_WIN32)
 typedef struct {
-     ListBoxInfo listbox;
-     bool        has_listbox;
-     WindowHandle hPopupWnd;
+  ListBoxInfo listbox;
+  bool has_listbox;
+  WindowHandle hPopupWnd;
 } WinPromptState;
 #endif
 

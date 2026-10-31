@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include "platform/platform.h"
 
-static HotkeyBinding* g_hotkeys = NULL;
+static HotkeyBinding *g_hotkeys = NULL;
 static int g_hotkey_count = 0;
 static int g_hotkey_capacity = 0;
 
@@ -25,353 +25,415 @@ static int g_pending_mods[HOTKEY_PENDING_MAX];
 static char g_pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
 static int g_pending_head = 0;
 static int g_pending_tail = 0;
-static void* g_q_mutex = NULL;
+static void *g_q_mutex = NULL;
 static void hotkey_queue_init(void) {
-    if (!g_q_mutex) g_q_mutex = Platform_MutexCreate();
+  if (!g_q_mutex)
+    g_q_mutex = Platform_MutexCreate();
 }
-#define HOTKEY_Q_LOCK() do { hotkey_queue_init(); Platform_MutexLock(g_q_mutex); } while (0)
+#define HOTKEY_Q_LOCK()                                                        \
+  do {                                                                         \
+    hotkey_queue_init();                                                       \
+    Platform_MutexLock(g_q_mutex);                                             \
+  } while (0)
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(g_q_mutex)
-static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle, const char* owner, int vk, int mods) {
-    if (!fn) return;
-    log_info("hotkey_enqueue: fn=%p is_toggle=%d", (void*)fn, (int)is_toggle);
-    HOTKEY_Q_LOCK();
-    int nxt = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
-    if (nxt != g_pending_head) {
-        g_pending_q[g_pending_tail] = fn;
-        g_pending_toggle[g_pending_tail] = is_toggle;
-        g_pending_vk[g_pending_tail] = vk;
-        g_pending_mods[g_pending_tail] = mods;
-        snprintf(g_pending_owner[g_pending_tail], OWNER_PATH_MAX, "%s", owner ? owner : "");
-        g_pending_tail = nxt;
-    }
-    HOTKEY_Q_UNLOCK();
+static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle, const char *owner,
+                           int vk, int mods) {
+  if (!fn)
+    return;
+  log_info("hotkey_enqueue: fn=%p is_toggle=%d", (void *)fn, (int)is_toggle);
+  HOTKEY_Q_LOCK();
+  int nxt = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
+  if (nxt != g_pending_head) {
+    g_pending_q[g_pending_tail] = fn;
+    g_pending_toggle[g_pending_tail] = is_toggle;
+    g_pending_vk[g_pending_tail] = vk;
+    g_pending_mods[g_pending_tail] = mods;
+    snprintf(g_pending_owner[g_pending_tail], OWNER_PATH_MAX, "%s",
+             owner ? owner : "");
+    g_pending_tail = nxt;
+  }
+  HOTKEY_Q_UNLOCK();
 }
 #define HOTKEY_HOLD_MAX 16
-static bool hotkey_toggle_blocked(HotkeyBinding* b);
+static bool hotkey_toggle_blocked(HotkeyBinding *b);
 typedef struct {
-    int vk;
-    int modifiers;
-    unsigned long long next_fire_ms;
-    bool active;
+  int vk;
+  int modifiers;
+  unsigned long long next_fire_ms;
+  bool active;
 } HotkeyHoldSlot;
 static HotkeyHoldSlot g_hold_slots[HOTKEY_HOLD_MAX];
 
 static unsigned long long hotkey_now_ms(void) {
-    return (unsigned long long)Platform_GetWallClockMs();
+  return (unsigned long long)Platform_GetWallClockMs();
 }
 
 static int hotkey_repeat_interval_ms(void) {
-    int ms = 50;
-    if (ms < HOTKEY_HOLD_MIN_INTERVAL_MS) ms = HOTKEY_HOLD_MIN_INTERVAL_MS;
-    return ms;
+  int ms = 50;
+  if (ms < HOTKEY_HOLD_MIN_INTERVAL_MS)
+    ms = HOTKEY_HOLD_MIN_INTERVAL_MS;
+  return ms;
 }
 
 static int hotkey_hold_delay_ms(void) {
-    int ms = HotkeyRepeatDelayMs;
-    if (ms < 0) ms = 0;
-    return ms;
+  int ms = HotkeyRepeatDelayMs;
+  if (ms < 0)
+    ms = 0;
+  return ms;
 }
 
 static void hotkey_hold_end(int vk) {
-    if (!vk) return;
-    HOTKEY_Q_LOCK();
-    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-        if (!g_hold_slots[i].active) continue;
-        bool match = false;
-        if (g_hold_slots[i].vk == vk) {
-            match = true;
-        } else {
-            int mods = g_hold_slots[i].modifiers;
-            if ((mods & HOTKEY_MOD_CTRL) && (vk == VK_LCONTROL || vk == VK_RCONTROL || vk == VK_CONTROL)) match = true;
-            else if ((mods & HOTKEY_MOD_ALT) && (vk == VK_LMENU || vk == VK_RMENU || vk == VK_MENU)) match = true;
-            else if ((mods & HOTKEY_MOD_SHIFT) && (vk == VK_LSHIFT || vk == VK_RSHIFT || vk == VK_SHIFT)) match = true;
-            else if ((mods & HOTKEY_MOD_SUPER) && (vk == VK_LWIN || vk == VK_RWIN)) match = true;
-        }
-        if (match) {
-            g_hold_slots[i].active = false;
-        }
+  if (!vk)
+    return;
+  HOTKEY_Q_LOCK();
+  for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+    if (!g_hold_slots[i].active)
+      continue;
+    bool match = false;
+    if (g_hold_slots[i].vk == vk) {
+      match = true;
+    } else {
+      int mods = g_hold_slots[i].modifiers;
+      if ((mods & HOTKEY_MOD_CTRL) &&
+          (vk == VK_LCONTROL || vk == VK_RCONTROL || vk == VK_CONTROL))
+        match = true;
+      else if ((mods & HOTKEY_MOD_ALT) &&
+               (vk == VK_LMENU || vk == VK_RMENU || vk == VK_MENU))
+        match = true;
+      else if ((mods & HOTKEY_MOD_SHIFT) &&
+               (vk == VK_LSHIFT || vk == VK_RSHIFT || vk == VK_SHIFT))
+        match = true;
+      else if ((mods & HOTKEY_MOD_SUPER) && (vk == VK_LWIN || vk == VK_RWIN))
+        match = true;
     }
-    HOTKEY_Q_UNLOCK();
+    if (match) {
+      g_hold_slots[i].active = false;
+    }
+  }
+  HOTKEY_Q_UNLOCK();
 }
 
 void hotkey_key_up(int vk_code) {
-    if (!vk_code) return;
-    hotkey_hold_end(vk_code);
+  if (!vk_code)
+    return;
+  hotkey_hold_end(vk_code);
 }
 
 static void hotkey_hold_begin(int vk, int modifiers) {
-    int interval_ms = hotkey_hold_delay_ms();
-    unsigned long long now = hotkey_now_ms();
-    HOTKEY_Q_LOCK();
-    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-        if (g_hold_slots[i].active && g_hold_slots[i].vk == vk) {
-            g_hold_slots[i].modifiers = modifiers;
-            g_hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
-            HOTKEY_Q_UNLOCK();
-            return;
-        }
+  int interval_ms = hotkey_hold_delay_ms();
+  unsigned long long now = hotkey_now_ms();
+  HOTKEY_Q_LOCK();
+  for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+    if (g_hold_slots[i].active && g_hold_slots[i].vk == vk) {
+      g_hold_slots[i].modifiers = modifiers;
+      g_hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
+      HOTKEY_Q_UNLOCK();
+      return;
     }
-    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-        if (!g_hold_slots[i].active) {
-            g_hold_slots[i].active = true;
-            g_hold_slots[i].vk = vk;
-            g_hold_slots[i].modifiers = modifiers;
-            g_hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
-            HOTKEY_Q_UNLOCK();
-            return;
-        }
+  }
+  for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+    if (!g_hold_slots[i].active) {
+      g_hold_slots[i].active = true;
+      g_hold_slots[i].vk = vk;
+      g_hold_slots[i].modifiers = modifiers;
+      g_hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
+      HOTKEY_Q_UNLOCK();
+      return;
     }
-    HOTKEY_Q_UNLOCK();
+  }
+  HOTKEY_Q_UNLOCK();
 }
 
 static void hotkey_tick_holds(void) {
-    unsigned long long now = hotkey_now_ms();
-    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-        if (!g_hold_slots[i].active) continue;
-        if ((long long)(now - g_hold_slots[i].next_fire_ms) < 0) continue;
+  unsigned long long now = hotkey_now_ms();
+  for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+    if (!g_hold_slots[i].active)
+      continue;
+    if ((long long)(now - g_hold_slots[i].next_fire_ms) < 0)
+      continue;
 
-        int vk = g_hold_slots[i].vk;
-        int mods = g_hold_slots[i].modifiers;
-        HotkeyBinding* b = NULL;
-        for (int k = 0; k < g_hotkey_count; k++) {
-            if (g_hotkeys[k].vk_code == vk && g_hotkeys[k].modifiers == mods && g_hotkeys[k].hold) {
-                b = &g_hotkeys[k];
-                break;
-            }
-        }
-        if (!b) {
-            g_hold_slots[i].active = false;
-            continue;
-        }
-        if (hotkey_toggle_blocked(b)) continue;
-
-        g_hold_slots[i].next_fire_ms = now + (unsigned long long)hotkey_repeat_interval_ms();
-        hotkey_enqueue(b->hotkey_callback, b->is_feature_toggle, b->owner, vk, mods);
+    int vk = g_hold_slots[i].vk;
+    int mods = g_hold_slots[i].modifiers;
+    HotkeyBinding *b = NULL;
+    for (int k = 0; k < g_hotkey_count; k++) {
+      if (g_hotkeys[k].vk_code == vk && g_hotkeys[k].modifiers == mods &&
+          g_hotkeys[k].hold) {
+        b = &g_hotkeys[k];
+        break;
+      }
     }
+    if (!b) {
+      g_hold_slots[i].active = false;
+      continue;
+    }
+    if (hotkey_toggle_blocked(b))
+      continue;
+
+    g_hold_slots[i].next_fire_ms =
+        now + (unsigned long long)hotkey_repeat_interval_ms();
+    hotkey_enqueue(b->hotkey_callback, b->is_feature_toggle, b->owner, vk,
+                   mods);
+  }
 }
 
 void hotkey_drain_pending(void) {
-    hotkey_tick_holds();
-    for (;;) {
-        HotkeyCallback fn = NULL;
-        bool is_toggle = false;
-        HOTKEY_Q_LOCK();
-        if (g_pending_head != g_pending_tail) {
-            fn = g_pending_q[g_pending_head];
-            is_toggle = g_pending_toggle[g_pending_head];
-            g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
-        }
-        HOTKEY_Q_UNLOCK();
-        if (!fn) break;
-        WindowManager* dwm = WindowManager_Get();
-        log_info("hotkey_drain_pending: dequeued fn=%p is_toggle=%d popup_count=%d", (void*)fn, (int)is_toggle, dwm ? dwm->popup_count : -1);
-        if (is_toggle) {
-            if (dwm && dwm->popup_count > 0) {
-                log_info("hotkey_drain_pending: skipped (toggle active popup_count=%d)", dwm->popup_count);
-                continue;
-            }
-        }
-        log_info("hotkey_drain_pending: calling fn=%p", (void*)fn);
-        fn();
-        log_info("hotkey_drain_pending: fn=%p finished", (void*)fn);
+  hotkey_tick_holds();
+  for (;;) {
+    HotkeyCallback fn = NULL;
+    bool is_toggle = false;
+    HOTKEY_Q_LOCK();
+    if (g_pending_head != g_pending_tail) {
+      fn = g_pending_q[g_pending_head];
+      is_toggle = g_pending_toggle[g_pending_head];
+      g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
     }
+    HOTKEY_Q_UNLOCK();
+    if (!fn)
+      break;
+    WindowManager *dwm = WindowManager_Get();
+    log_info("hotkey_drain_pending: dequeued fn=%p is_toggle=%d popup_count=%d",
+             (void *)fn, (int)is_toggle, dwm ? dwm->popup_count : -1);
+    if (is_toggle) {
+      if (dwm && dwm->popup_count > 0) {
+        log_info("hotkey_drain_pending: skipped (toggle active popup_count=%d)",
+                 dwm->popup_count);
+        continue;
+      }
+    }
+    log_info("hotkey_drain_pending: calling fn=%p", (void *)fn);
+    fn();
+    log_info("hotkey_drain_pending: fn=%p finished", (void *)fn);
+  }
 }
 
 bool hotkey_has_mouse_binding(void) {
-    for (int i = 0; i < g_hotkey_count; i++) {
-        int vk = g_hotkeys[i].vk_code;
-        if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + FL_MOUSE_BTN_MAX - 1) return true;
-    }
-    return false;
+  for (int i = 0; i < g_hotkey_count; i++) {
+    int vk = g_hotkeys[i].vk_code;
+    if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + FL_MOUSE_BTN_MAX - 1)
+      return true;
+  }
+  return false;
 }
 
 bool hotkey_mouse_button_bound(int btn) {
-    if (btn <= 0 || btn > FL_MOUSE_BTN_MAX) return false;
-    int vk = FL_MOUSE_VK(btn);
-    for (int i = 0; i < g_hotkey_count; i++) {
-        if (g_hotkeys[i].vk_code == vk && g_hotkeys[i].modifiers == 0) return true;
-    }
+  if (btn <= 0 || btn > FL_MOUSE_BTN_MAX)
     return false;
+  int vk = FL_MOUSE_VK(btn);
+  for (int i = 0; i < g_hotkey_count; i++) {
+    if (g_hotkeys[i].vk_code == vk && g_hotkeys[i].modifiers == 0)
+      return true;
+  }
+  return false;
 }
 
-static bool hotkey_toggle_blocked(HotkeyBinding* b) {
-    if (!b || !b->is_feature_toggle) return false;
-    WindowManager* wm = WindowManager_Get();
-    return wm && wm->popup_count > 0;
+static bool hotkey_toggle_blocked(HotkeyBinding *b) {
+  if (!b || !b->is_feature_toggle)
+    return false;
+  WindowManager *wm = WindowManager_Get();
+  return wm && wm->popup_count > 0;
 }
 
 bool hotkey_register_internal(HotkeyBinding binding) {
-    char owner[OWNER_PATH_MAX];
-    Owner_ResolveForFunc((void*)(uintptr_t)binding.hotkey_callback, owner, sizeof(owner));
-    if (!owner[0]) Owner_ResolveForFunc((void*)(uintptr_t)binding.hotkey_condition, owner, sizeof(owner));
-    snprintf(binding.owner, sizeof(binding.owner), "%s", owner);
+  char owner[OWNER_PATH_MAX];
+  Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_callback, owner,
+                       sizeof(owner));
+  if (!owner[0])
+    Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_condition, owner,
+                         sizeof(owner));
+  snprintf(binding.owner, sizeof(binding.owner), "%s", owner);
 
-    for (int i=0;i<g_hotkey_count;i++) {
-        if (g_hotkeys[i].vk_code == binding.vk_code && g_hotkeys[i].modifiers == binding.modifiers) {
-            bool keep_toggle = g_hotkeys[i].is_feature_toggle || binding.is_feature_toggle;
-            g_hotkeys[i] = binding;
-            g_hotkeys[i].is_feature_toggle = keep_toggle;
-            return true;
-        }
+  for (int i = 0; i < g_hotkey_count; i++) {
+    if (g_hotkeys[i].vk_code == binding.vk_code &&
+        g_hotkeys[i].modifiers == binding.modifiers) {
+      bool keep_toggle =
+          g_hotkeys[i].is_feature_toggle || binding.is_feature_toggle;
+      g_hotkeys[i] = binding;
+      g_hotkeys[i].is_feature_toggle = keep_toggle;
+      return true;
     }
-    if (g_hotkey_count >= g_hotkey_capacity) {
-        int new_cap = g_hotkey_capacity == 0 ? 16 : g_hotkey_capacity * 2;
-        HotkeyBinding* new_arr = realloc(g_hotkeys, new_cap * sizeof(HotkeyBinding));
-        if (!new_arr) return false;
-        g_hotkeys = new_arr;
-        g_hotkey_capacity = new_cap;
-    }
-    g_hotkeys[g_hotkey_count++] = binding;
-    return true;
+  }
+  if (g_hotkey_count >= g_hotkey_capacity) {
+    int new_cap = g_hotkey_capacity == 0 ? 16 : g_hotkey_capacity * 2;
+    HotkeyBinding *new_arr =
+        realloc(g_hotkeys, new_cap * sizeof(HotkeyBinding));
+    if (!new_arr)
+      return false;
+    g_hotkeys = new_arr;
+    g_hotkey_capacity = new_cap;
+  }
+  g_hotkeys[g_hotkey_count++] = binding;
+  return true;
 }
 
-void hotkey_purge_owner(const char* path_a, const char* path_b) {
-    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
+void hotkey_purge_owner(const char *path_a, const char *path_b) {
+  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+    return;
 
-    int n = 0;
-    for (int i = 0; i < g_hotkey_count; i++) {
-        if (Owner_ModuleMatches(g_hotkeys[i].owner, path_a, path_b)) {
-            log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)", g_hotkeys[i].vk_code, g_hotkeys[i].modifiers);
-            continue;
-        }
-        g_hotkeys[n++] = g_hotkeys[i];
+  int n = 0;
+  for (int i = 0; i < g_hotkey_count; i++) {
+    if (Owner_ModuleMatches(g_hotkeys[i].owner, path_a, path_b)) {
+      log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)",
+               g_hotkeys[i].vk_code, g_hotkeys[i].modifiers);
+      continue;
     }
-    int dropped = g_hotkey_count - n;
-    g_hotkey_count = n;
-    if (dropped > 0) log_info("hotkey purged %d binding%s", dropped, dropped == 1 ? "" : "s");
+    g_hotkeys[n++] = g_hotkeys[i];
+  }
+  int dropped = g_hotkey_count - n;
+  g_hotkey_count = n;
+  if (dropped > 0)
+    log_info("hotkey purged %d binding%s", dropped, dropped == 1 ? "" : "s");
 
-    HOTKEY_Q_LOCK();
-    for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-        if (!g_hold_slots[i].active) continue;
-        for (int k = 0; k < g_hotkey_count; k++) {
-            if (g_hotkeys[k].vk_code == g_hold_slots[i].vk &&
-                g_hotkeys[k].modifiers == g_hold_slots[i].modifiers &&
-                Owner_ModuleMatches(g_hotkeys[k].owner, path_a, path_b)) {
-                g_hold_slots[i].active = false;
-                break;
-            }
-        }
+  HOTKEY_Q_LOCK();
+  for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
+    if (!g_hold_slots[i].active)
+      continue;
+    for (int k = 0; k < g_hotkey_count; k++) {
+      if (g_hotkeys[k].vk_code == g_hold_slots[i].vk &&
+          g_hotkeys[k].modifiers == g_hold_slots[i].modifiers &&
+          Owner_ModuleMatches(g_hotkeys[k].owner, path_a, path_b)) {
+        g_hold_slots[i].active = false;
+        break;
+      }
     }
-    int qn = g_pending_head;
-    while (qn != g_pending_tail) {
-        if (Owner_ModuleMatches(g_pending_owner[qn], path_a, path_b)) {
-            log_info("hotkey pending entry dropped (owner unloaded)");
-            g_pending_q[qn] = NULL;
-        }
-        qn = (qn + 1) % HOTKEY_PENDING_MAX;
+  }
+  int qn = g_pending_head;
+  while (qn != g_pending_tail) {
+    if (Owner_ModuleMatches(g_pending_owner[qn], path_a, path_b)) {
+      log_info("hotkey pending entry dropped (owner unloaded)");
+      g_pending_q[qn] = NULL;
     }
-    HOTKEY_Q_UNLOCK();
+    qn = (qn + 1) % HOTKEY_PENDING_MAX;
+  }
+  HOTKEY_Q_UNLOCK();
 }
 
 bool hotkey_process(int vk_code, int modifiers) {
-    int eff_modifiers = modifiers;
-    if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT) eff_modifiers &= ~HOTKEY_MOD_SHIFT;
-    else if (vk_code == VK_LCONTROL || vk_code == VK_RCONTROL || vk_code == VK_CONTROL) eff_modifiers &= ~HOTKEY_MOD_CTRL;
-    else if (vk_code == VK_LMENU || vk_code == VK_RMENU || vk_code == VK_MENU) eff_modifiers &= ~HOTKEY_MOD_ALT;
-    else if (vk_code == VK_LWIN || vk_code == VK_RWIN) eff_modifiers &= ~HOTKEY_MOD_SUPER;
-    for (int i = 0; i < g_hotkey_count; i++) {
-        HotkeyBinding* b = &g_hotkeys[i];
-        
-        if (b->vk_code != vk_code) {
-            continue;
-        }
-        int b_eff = b->modifiers;
-        if (b->vk_code == VK_LSHIFT || b->vk_code == VK_RSHIFT || b->vk_code == VK_SHIFT) b_eff &= ~HOTKEY_MOD_SHIFT;
-        else if (b->vk_code == VK_LCONTROL || b->vk_code == VK_RCONTROL || b->vk_code == VK_CONTROL) b_eff &= ~HOTKEY_MOD_CTRL;
-        else if (b->vk_code == VK_LMENU || b->vk_code == VK_RMENU || b->vk_code == VK_MENU) b_eff &= ~HOTKEY_MOD_ALT;
-        else if (b->vk_code == VK_LWIN || b->vk_code == VK_RWIN) b_eff &= ~HOTKEY_MOD_SUPER;
-        if (b_eff != eff_modifiers) {
-            continue;
-        }
-        if (b_eff != 0 && !remap_check_strict_order(vk_code, b_eff)) {
-            continue;
-        }
+  int eff_modifiers = modifiers;
+  if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT)
+    eff_modifiers &= ~HOTKEY_MOD_SHIFT;
+  else if (vk_code == VK_LCONTROL || vk_code == VK_RCONTROL ||
+           vk_code == VK_CONTROL)
+    eff_modifiers &= ~HOTKEY_MOD_CTRL;
+  else if (vk_code == VK_LMENU || vk_code == VK_RMENU || vk_code == VK_MENU)
+    eff_modifiers &= ~HOTKEY_MOD_ALT;
+  else if (vk_code == VK_LWIN || vk_code == VK_RWIN)
+    eff_modifiers &= ~HOTKEY_MOD_SUPER;
+  for (int i = 0; i < g_hotkey_count; i++) {
+    HotkeyBinding *b = &g_hotkeys[i];
 
-        if (b->hotkey_condition) {
-            if (hotkey_toggle_blocked(b)) return true;
-            FeatureLoader_Lock();
-            bool cond_pass = b->hotkey_condition();
-            FeatureLoader_Unlock();
-            if (!cond_pass) {
-                continue;
-            }
-        }
-
-        const char* title = NULL;
-        bool title_fetched = false;
-
-        if (!b->whitelist) {
-            if (b->blacklist && b->blacklist_count > 0) {
-                bool blacklisted = false;
-                for (int j = 0; j < b->blacklist_count; j++) {
-                    if (b->blacklist[j][0] == '\0') {
-                        continue;
-                    }
-                    if (!title_fetched) {
-                        title = Platform_GetActiveWindowAppId();
-                        title_fetched = true;
-                    }
-                    bool match = Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
-                    
-                    if (match) {
-                        blacklisted = true;
-                        break;
-                    }
-                }
-                if (blacklisted) {
-                    continue; 
-                }
-            }
-        } 
-        else {
-            if (!b->blacklist || b->blacklist_count == 0) {
-                continue;
-            }
-
-            bool whitelisted = false;
-            for (int j = 0; j < b->blacklist_count; j++) {
-                if (b->blacklist[j][0] == '\0') {
-                    continue;
-                }
-                if (!title_fetched) {
-                    title = Platform_GetActiveWindowAppId();
-                    title_fetched = true;
-                }
-                bool match = Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
-                
-                if (match) {
-                    whitelisted = true;
-                    break;
-                } 
-            }
-            if (!whitelisted) {
-                continue;
-            }
-        }
-
-        HotkeyCallback cb = b->hotkey_callback;
-        bool blocked = hotkey_toggle_blocked(b);
-        if (blocked) return true;
-        bool swallow = true;
-        if (b->should_swallow) {
-            if (FeatureLoader_TryLock()) {
-                swallow = b->should_swallow();
-                FeatureLoader_Unlock();
-            } else {
-                swallow = false;
-            }
-        }
-        hotkey_enqueue(cb, b->is_feature_toggle, b->owner, vk_code, eff_modifiers);
-        char buf[2556];
-        char hotkey_buf[2422];
-        HotkeyString_Format((HotkeyKey){.vk_code=vk_code,.mods=eff_modifiers},hotkey_buf,sizeof(hotkey_buf));
-        if (MessageAfterEachHotkey) {
-            snprintf(buf,sizeof(buf),"Ran Hotkey %s",hotkey_buf);
-            DisplayMessageSlot(buf,BOTTOM_CENTER,400,400,20,TimeOutForMessages,COLOR_TEXT,NULL,NULL);
-        }
-        log_info("hotkey_process Hotkey %s Matches",hotkey_buf);
-        if (b->hold) hotkey_hold_begin(vk_code, b->modifiers);
-        return swallow;
+    if (b->vk_code != vk_code) {
+      continue;
     }
-    return false;
+    int b_eff = b->modifiers;
+    if (b->vk_code == VK_LSHIFT || b->vk_code == VK_RSHIFT ||
+        b->vk_code == VK_SHIFT)
+      b_eff &= ~HOTKEY_MOD_SHIFT;
+    else if (b->vk_code == VK_LCONTROL || b->vk_code == VK_RCONTROL ||
+             b->vk_code == VK_CONTROL)
+      b_eff &= ~HOTKEY_MOD_CTRL;
+    else if (b->vk_code == VK_LMENU || b->vk_code == VK_RMENU ||
+             b->vk_code == VK_MENU)
+      b_eff &= ~HOTKEY_MOD_ALT;
+    else if (b->vk_code == VK_LWIN || b->vk_code == VK_RWIN)
+      b_eff &= ~HOTKEY_MOD_SUPER;
+    if (b_eff != eff_modifiers) {
+      continue;
+    }
+    if (b_eff != 0 && !remap_check_strict_order(vk_code, b_eff)) {
+      continue;
+    }
+
+    if (b->hotkey_condition) {
+      if (hotkey_toggle_blocked(b))
+        return true;
+      FeatureLoader_Lock();
+      bool cond_pass = b->hotkey_condition();
+      FeatureLoader_Unlock();
+      if (!cond_pass) {
+        continue;
+      }
+    }
+
+    const char *title = NULL;
+    bool title_fetched = false;
+
+    if (!b->whitelist) {
+      if (b->blacklist && b->blacklist_count > 0) {
+        bool blacklisted = false;
+        for (int j = 0; j < b->blacklist_count; j++) {
+          if (b->blacklist[j][0] == '\0') {
+            continue;
+          }
+          if (!title_fetched) {
+            title = Platform_GetActiveWindowAppId();
+            title_fetched = true;
+          }
+          bool match =
+              Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
+
+          if (match) {
+            blacklisted = true;
+            break;
+          }
+        }
+        if (blacklisted) {
+          continue;
+        }
+      }
+    } else {
+      if (!b->blacklist || b->blacklist_count == 0) {
+        continue;
+      }
+
+      bool whitelisted = false;
+      for (int j = 0; j < b->blacklist_count; j++) {
+        if (b->blacklist[j][0] == '\0') {
+          continue;
+        }
+        if (!title_fetched) {
+          title = Platform_GetActiveWindowAppId();
+          title_fetched = true;
+        }
+        bool match =
+            Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
+
+        if (match) {
+          whitelisted = true;
+          break;
+        }
+      }
+      if (!whitelisted) {
+        continue;
+      }
+    }
+
+    HotkeyCallback cb = b->hotkey_callback;
+    bool blocked = hotkey_toggle_blocked(b);
+    if (blocked)
+      return true;
+    bool swallow = true;
+    if (b->should_swallow) {
+      if (FeatureLoader_TryLock()) {
+        swallow = b->should_swallow();
+        FeatureLoader_Unlock();
+      } else {
+        swallow = false;
+      }
+    }
+    hotkey_enqueue(cb, b->is_feature_toggle, b->owner, vk_code, eff_modifiers);
+    char buf[2556];
+    char hotkey_buf[2422];
+    HotkeyString_Format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},
+                        hotkey_buf, sizeof(hotkey_buf));
+    if (MessageAfterEachHotkey) {
+      snprintf(buf, sizeof(buf), "Ran Hotkey %s", hotkey_buf);
+      DisplayMessageSlot(buf, BOTTOM_CENTER, 400, 400, 20, TimeOutForMessages,
+                         COLOR_TEXT, NULL, NULL);
+    }
+    log_info("hotkey_process Hotkey %s Matches", hotkey_buf);
+    if (b->hold)
+      hotkey_hold_begin(vk_code, b->modifiers);
+    return swallow;
+  }
+  return false;
 }

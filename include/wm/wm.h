@@ -4,11 +4,10 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-
-char* Wm_GetActiveWindowTitle();
-char* Wm_GetActiveWindowAppId();
+char *Wm_GetActiveWindowTitle();
+char *Wm_GetActiveWindowAppId();
 bool Wm_FocusByTitle(const char *title);
-char* Wm_Paste(char* content);
+char *Wm_Paste(char *content);
 PlWindowList Wm_GetWindowTitles(void);
 PlWindowList Wm_GetWindowNames(void);
 bool Wm_CloseActiveWindow(void);

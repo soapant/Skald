@@ -5,8 +5,8 @@
 #include "core/types.h"
 bool get_title_hyprland(char *buffer, int buffer_size);
 bool get_app_id_hyprland(char *buffer, int buffer_size);
-char* paste_hyprland(char* content);
-bool focus_window_title_hyprland(char* title);
+char *paste_hyprland(char *content);
+bool focus_window_title_hyprland(char *title);
 PlWindowList get_window_titles_hyprland();
 PlWindowList get_window_names_hyprland();
 bool close_active_window_hyprland(void);

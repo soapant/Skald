@@ -8,26 +8,28 @@ typedef void (*HotkeyCallback)(void);
 typedef bool (*HotkeyCondition)(void);
 
 typedef struct {
-    int vk_code;
-    int modifiers;
-    const char** blacklist;
-    int blacklist_count;
-    bool whitelist;
-    HotkeyCallback hotkey_callback;
-    bool (*should_swallow)(void);
-    HotkeyCondition hotkey_condition;
-    bool is_feature_toggle;
-    bool hold;
-    char owner[512];
+  int vk_code;
+  int modifiers;
+  const char **blacklist;
+  int blacklist_count;
+  bool whitelist;
+  HotkeyCallback hotkey_callback;
+  bool (*should_swallow)(void);
+  HotkeyCondition hotkey_condition;
+  bool is_feature_toggle;
+  bool hold;
+  char owner[512];
 } HotkeyBinding;
 
 #define HOTKEY_HOLD_MIN_INTERVAL_MS 10
 
 bool AlwaysEnabled(void);
 bool AlwaysDisabled(void);
-HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist);
-void hotkey_purge_owner(const char* path_a, const char* path_b);
+HotkeyBinding convert_into_hotkey_binding(
+    char *hotkey_string, void (*on_hotkey_trigger)(void),
+    bool (*optional_condition_for_hotkey)(void),
+    const char **optional_blacklistedwindows, bool whitelist);
+void hotkey_purge_owner(const char *path_a, const char *path_b);
 void hotkey_key_up(int vk_code);
-
 
 #endif

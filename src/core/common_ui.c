@@ -11,82 +11,112 @@
 #include <ctype.h>
 #include <string.h>
 
-static bool FuzzyMatch(const char* text, const char* pattern) {
-    if (!pattern || !pattern[0]) return true;
-    if (!text || !text[0]) return false;
-    while (*pattern && *text) {
-        if (tolower((unsigned char)*pattern) == tolower((unsigned char)*text)) pattern++;
-        text++;
-    }
-    return *pattern == '\0';
-}
-static int Levenshtein(const char* a, const char* b) {
-    int la = (int)strlen(a), lb = (int)strlen(b);
-    if (abs(la - lb) > 2) return 100;
-    int dp[256][256];
-    for (int i=0;i<=la && i<256;i++) dp[i][0]=i;
-    for (int j=0;j<=lb && j<256;j++) dp[0][j]=j;
-    for (int i=1;i<=la && i<256;i++) for(int j=1;j<=lb && j<256;j++){
-        int cost = tolower((unsigned char)a[i-1])==tolower((unsigned char)b[j-1]) ? 0 : 1;
-        int v = dp[i-1][j]+1;
-        if (dp[i][j-1]+1 < v) v = dp[i][j-1]+1;
-        if (dp[i-1][j-1]+cost < v) v = dp[i-1][j-1]+cost;
-        if (i>1 && j>1 && tolower((unsigned char)a[i-1])==tolower((unsigned char)b[j-2]) && tolower((unsigned char)a[i-2])==tolower((unsigned char)b[j-1])) {
-            if (dp[i-2][j-2]+1 < v) v = dp[i-2][j-2]+1;
-        }
-        dp[i][j]=v;
-    }
-    return dp[la][lb];
-}
-static bool FuzzyMatchWithTypo(const char* text, const char* pattern) {
-    if (FuzzyMatch(text, pattern)) return true;
-    if (!text || !pattern) return false;
-    if (strlen(pattern) < 3) return false;
-    int dist = Levenshtein(text, pattern);
-    if (dist <= 1) return true;
-    if (strlen(pattern) >= 4 && dist == 2) return true;
+static bool FuzzyMatch(const char *text, const char *pattern) {
+  if (!pattern || !pattern[0])
+    return true;
+  if (!text || !text[0])
     return false;
+  while (*pattern && *text) {
+    if (tolower((unsigned char)*pattern) == tolower((unsigned char)*text))
+      pattern++;
+    text++;
+  }
+  return *pattern == '\0';
 }
-static int FuzzyScore(const char* text, const char* pattern) {
-    if (!pattern || !pattern[0]) return 0;
-    if (!text || !text[0]) return 1000000;
-    int score = 0;
-    int last = -1;
-    int consecutive = 0;
-    int pos = 0;
-    int tlen = (int)strlen(text);
-    for (int i=0; pattern[i]; i++) {
-        char pc = tolower((unsigned char)pattern[i]);
-        bool found = false;
-        for (int j=pos; text[j]; j++) {
-            if (tolower((unsigned char)text[j]) == pc) {
-                if (last >= 0) {
-                    int gap = j - last - 1;
-                    score += gap * 5;
-                    if (gap==0) consecutive++;
-                } else {
-                    score += j * 2;
-                }
-                if (j==0 || text[j-1]==' ' || text[j-1]=='/' || text[j-1]=='_' || text[j-1]=='-' || text[j-1]=='.') score -= 3;
-                last = j;
-                pos = j+1;
-                found = true;
-                break;
-            }
-        }
-        if (!found) return 1000000;
+static int Levenshtein(const char *a, const char *b) {
+  int la = (int)strlen(a), lb = (int)strlen(b);
+  if (abs(la - lb) > 2)
+    return 100;
+  int dp[256][256];
+  for (int i = 0; i <= la && i < 256; i++)
+    dp[i][0] = i;
+  for (int j = 0; j <= lb && j < 256; j++)
+    dp[0][j] = j;
+  for (int i = 1; i <= la && i < 256; i++)
+    for (int j = 1; j <= lb && j < 256; j++) {
+      int cost =
+          tolower((unsigned char)a[i - 1]) == tolower((unsigned char)b[j - 1])
+              ? 0
+              : 1;
+      int v = dp[i - 1][j] + 1;
+      if (dp[i][j - 1] + 1 < v)
+        v = dp[i][j - 1] + 1;
+      if (dp[i - 1][j - 1] + cost < v)
+        v = dp[i - 1][j - 1] + cost;
+      if (i > 1 && j > 1 &&
+          tolower((unsigned char)a[i - 1]) ==
+              tolower((unsigned char)b[j - 2]) &&
+          tolower((unsigned char)a[i - 2]) ==
+              tolower((unsigned char)b[j - 1])) {
+        if (dp[i - 2][j - 2] + 1 < v)
+          v = dp[i - 2][j - 2] + 1;
+      }
+      dp[i][j] = v;
     }
-    score -= consecutive * 4;
-    score += tlen / 8;
-    return score;
+  return dp[la][lb];
+}
+static bool FuzzyMatchWithTypo(const char *text, const char *pattern) {
+  if (FuzzyMatch(text, pattern))
+    return true;
+  if (!text || !pattern)
+    return false;
+  if (strlen(pattern) < 3)
+    return false;
+  int dist = Levenshtein(text, pattern);
+  if (dist <= 1)
+    return true;
+  if (strlen(pattern) >= 4 && dist == 2)
+    return true;
+  return false;
+}
+static int FuzzyScore(const char *text, const char *pattern) {
+  if (!pattern || !pattern[0])
+    return 0;
+  if (!text || !text[0])
+    return 1000000;
+  int score = 0;
+  int last = -1;
+  int consecutive = 0;
+  int pos = 0;
+  int tlen = (int)strlen(text);
+  for (int i = 0; pattern[i]; i++) {
+    char pc = tolower((unsigned char)pattern[i]);
+    bool found = false;
+    for (int j = pos; text[j]; j++) {
+      if (tolower((unsigned char)text[j]) == pc) {
+        if (last >= 0) {
+          int gap = j - last - 1;
+          score += gap * 5;
+          if (gap == 0)
+            consecutive++;
+        } else {
+          score += j * 2;
+        }
+        if (j == 0 || text[j - 1] == ' ' || text[j - 1] == '/' ||
+            text[j - 1] == '_' || text[j - 1] == '-' || text[j - 1] == '.')
+          score -= 3;
+        last = j;
+        pos = j + 1;
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+      return 1000000;
+  }
+  score -= consecutive * 4;
+  score += tlen / 8;
+  return score;
 }
 
-static void Populate_CaptureSelection(ListBoxInfo* lb, char* out_text, size_t out_size, int* out_sel) {
+static void Populate_CaptureSelection(ListBoxInfo *lb, char *out_text,
+                                      size_t out_size, int *out_sel) {
   int current_sel = lb->selected_index;
-  if (out_sel) *out_sel = current_sel;
+  if (out_sel)
+    *out_sel = current_sel;
   if (out_text && out_size > 0) {
     out_text[0] = '\0';
-    const char* cur = ListBoxInfo_Row(lb, current_sel);
+    const char *cur = ListBoxInfo_Row(lb, current_sel);
     lb->selected_text = cur;
     if (cur) {
       strncpy(out_text, cur, out_size - 1);
@@ -95,10 +125,13 @@ static void Populate_CaptureSelection(ListBoxInfo* lb, char* out_text, size_t ou
   }
 }
 
-static void Populate_CleanFilter(const char* filter, char* clean_filter, size_t size) {
+static void Populate_CleanFilter(const char *filter, char *clean_filter,
+                                 size_t size) {
   clean_filter[0] = '\0';
-  if (!filter) return;
-  while (*filter && isspace((unsigned char)*filter)) filter++;
+  if (!filter)
+    return;
+  while (*filter && isspace((unsigned char)*filter))
+    filter++;
   size_t j = 0;
   bool last_was_space = false;
   for (size_t i = 0; filter[i] && j + 1 < size; i++) {
@@ -113,40 +146,60 @@ static void Populate_CleanFilter(const char* filter, char* clean_filter, size_t 
       last_was_space = false;
     }
   }
-  while (j > 0 && clean_filter[j - 1] == ' ') j--;
+  while (j > 0 && clean_filter[j - 1] == ' ')
+    j--;
   clean_filter[j] = '\0';
 }
 
-static void NormalizeForMatch(const char* src, char* dst, size_t dst_size) {
-  if (!src || !dst || dst_size == 0) { if (dst && dst_size) dst[0]='\0'; return; }
-  while (*src && isspace((unsigned char)*src)) src++;
+static void NormalizeForMatch(const char *src, char *dst, size_t dst_size) {
+  if (!src || !dst || dst_size == 0) {
+    if (dst && dst_size)
+      dst[0] = '\0';
+    return;
+  }
+  while (*src && isspace((unsigned char)*src))
+    src++;
   size_t j = 0;
   bool last_was_space = false;
   for (size_t i = 0; src[i] && j + 1 < dst_size; i++) {
     char c = src[i];
     if (isspace((unsigned char)c)) {
-      if (!last_was_space) { dst[j++] = ' '; last_was_space = true; }
-    } else { dst[j++] = c; last_was_space = false; }
+      if (!last_was_space) {
+        dst[j++] = ' ';
+        last_was_space = true;
+      }
+    } else {
+      dst[j++] = c;
+      last_was_space = false;
+    }
   }
-  while (j > 0 && dst[j - 1] == ' ') j--;
+  while (j > 0 && dst[j - 1] == ' ')
+    j--;
   dst[j] = '\0';
 }
 
-static bool Populate_ItemMatches(const char* search_text, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
-  if (filter_match) return filter_match(search_text, clean_filter);
+static bool
+Populate_ItemMatches(const char *search_text, const char *clean_filter,
+                     bool (*filter_match)(const char *, const char *)) {
+  if (filter_match)
+    return filter_match(search_text, clean_filter);
   char norm_search[1024];
   NormalizeForMatch(search_text, norm_search, sizeof(norm_search));
-  if (Platform_StringStartsWithCaseInsensitive(FlintContext_Get()->window.current_feature, "center")) {
+  if (Platform_StringStartsWithCaseInsensitive(
+          FlintContext_Get()->window.current_feature, "center")) {
     return FuzzyMatchWithTypo(norm_search, clean_filter);
   }
   return Platform_StringContainsCaseInsensitive(norm_search, clean_filter);
 }
 
-static int Populate_Filter(ListBoxInfo* lb, const char** items, int item_count, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
+static int Populate_Filter(ListBoxInfo *lb, const char **items, int item_count,
+                           const char *clean_filter,
+                           bool (*filter_match)(const char *, const char *)) {
   int total_matches = 0;
   bool empty_filter = (clean_filter[0] == '\0');
   for (int i = 0; i < item_count && total_matches < MAX_VISIBLE_ITEMS; i++) {
-    if (!items[i]) continue;
+    if (!items[i])
+      continue;
     if (empty_filter) {
       lb->matching_indices[total_matches++] = i;
       continue;
@@ -158,24 +211,34 @@ static int Populate_Filter(ListBoxInfo* lb, const char** items, int item_count, 
   return total_matches;
 }
 
-
-
-static void Populate_RankMatches(ListBoxInfo* lb, const char** items, const char* clean_filter, int total_matches) {
-  if (clean_filter[0] == '\0' || total_matches <= 1) return;
+static void Populate_RankMatches(ListBoxInfo *lb, const char **items,
+                                 const char *clean_filter, int total_matches) {
+  if (clean_filter[0] == '\0' || total_matches <= 1)
+    return;
   int scores[MAX_VISIBLE_ITEMS];
   for (int i = 0; i < total_matches; i++) {
     int idx = lb->matching_indices[i];
-    const char* txt = items[idx] ? items[idx] : "";
-    if (FuzzyMatch(txt, clean_filter)) scores[i] = FuzzyScore(txt, clean_filter);
-    else scores[i] = 500 + Levenshtein(txt, clean_filter) * 20;
+    const char *txt = items[idx] ? items[idx] : "";
+    if (FuzzyMatch(txt, clean_filter))
+      scores[i] = FuzzyScore(txt, clean_filter);
+    else
+      scores[i] = 500 + Levenshtein(txt, clean_filter) * 20;
   }
-  for (int i = 0; i < total_matches - 1; i++) for (int j = i + 1; j < total_matches; j++) if (scores[j] < scores[i]) {
-    int ti = lb->matching_indices[i]; lb->matching_indices[i] = lb->matching_indices[j]; lb->matching_indices[j] = ti;
-    int ts = scores[i]; scores[i] = scores[j]; scores[j] = ts;
-  }
+  for (int i = 0; i < total_matches - 1; i++)
+    for (int j = i + 1; j < total_matches; j++)
+      if (scores[j] < scores[i]) {
+        int ti = lb->matching_indices[i];
+        lb->matching_indices[i] = lb->matching_indices[j];
+        lb->matching_indices[j] = ti;
+        int ts = scores[i];
+        scores[i] = scores[j];
+        scores[j] = ts;
+      }
 }
 
-static void Populate_EnsureMatches(ListBoxInfo* lb, int item_count, const char* clean_filter, int* total_matches) {
+static void Populate_EnsureMatches(ListBoxInfo *lb, int item_count,
+                                   const char *clean_filter,
+                                   int *total_matches) {
   if (*total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
     int force_count = (item_count < 30) ? item_count : 30;
     for (int i = 0; i < force_count; i++) {
@@ -184,36 +247,54 @@ static void Populate_EnsureMatches(ListBoxInfo* lb, int item_count, const char* 
     }
   }
   int pool_max = MAX_VISIBLE_ITEMS;
-  if (*total_matches > pool_max) *total_matches = pool_max;
+  if (*total_matches > pool_max)
+    *total_matches = pool_max;
 }
 
-static void Populate_BuildCache(ListBoxInfo* lb, const char** items, int total_matches) {
-  if (total_matches > MAX_VISIBLE_ITEMS) total_matches = MAX_VISIBLE_ITEMS;
+static void Populate_BuildCache(ListBoxInfo *lb, const char **items,
+                                int total_matches) {
+  if (total_matches > MAX_VISIBLE_ITEMS)
+    total_matches = MAX_VISIBLE_ITEMS;
   lb->populated_count = 0;
-  if (total_matches <= 0) return;
-  if (!ListBoxInfo_EnsureRows(lb, total_matches)) { lb->populated_count = 0; return; }
+  if (total_matches <= 0)
+    return;
+  if (!ListBoxInfo_EnsureRows(lb, total_matches)) {
+    lb->populated_count = 0;
+    return;
+  }
   for (int i = 0; i < total_matches; i++) {
     int raw_data_index = lb->matching_indices[i];
-    if (!items[raw_data_index]) continue;
-    strncpy(lb->populated_cache[lb->populated_count], items[raw_data_index], LISTBOX_ROW_BYTES - 1);
+    if (!items[raw_data_index])
+      continue;
+    strncpy(lb->populated_cache[lb->populated_count], items[raw_data_index],
+            LISTBOX_ROW_BYTES - 1);
     lb->populated_cache[lb->populated_count][LISTBOX_ROW_BYTES - 1] = '\0';
-    lb->populated_cache[lb->populated_count][strcspn(lb->populated_cache[lb->populated_count], "\r\n")] = '\0';
+    lb->populated_cache[lb->populated_count][strcspn(
+        lb->populated_cache[lb->populated_count], "\r\n")] = '\0';
     lb->populated_count++;
   }
 }
 
-static void Populate_UpdateUI(ListBoxInfo* lb, int total_matches, const char* filter) {
+static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
+                              const char *filter) {
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
-  if (SequenceIsWaiting()) { UI_LB_EndUpdate(); return; }
+  if (SequenceIsWaiting()) {
+    UI_LB_EndUpdate();
+    return;
+  }
   if (IsNormalMode()) {
     int keep;
     if (RememberLastIndex) {
       keep = lb->selected_index;
-      if (keep < 0 && last_index >= 0) keep = last_index;
-      if (total_matches == 0) keep = -1;
-      else if (keep < 0) keep = 0;
-      else if (keep >= total_matches) keep = total_matches - 1;
+      if (keep < 0 && last_index >= 0)
+        keep = last_index;
+      if (total_matches == 0)
+        keep = -1;
+      else if (keep < 0)
+        keep = 0;
+      else if (keep >= total_matches)
+        keep = total_matches - 1;
       UI_NavigateTo(lb, keep);
     } else {
       keep = (total_matches > 0) ? 0 : -1;
@@ -233,21 +314,25 @@ static void Populate_UpdateUI(ListBoxInfo* lb, int total_matches, const char* fi
   UI_LB_EndUpdate();
 }
 
-static void Populate_CommitState(ListBoxInfo* lb, int item_count, int total_matches) {
+static void Populate_CommitState(ListBoxInfo *lb, int item_count,
+                                 int total_matches) {
   lb->last_item_count = item_count;
   lb->total_matches = total_matches;
 }
 
-void PopulateListBox(ListBoxInfo* lb, const char* filter,
-    const char** items, int item_count,
-    bool (*filter_match)(const char* item, const char* filter)) {
-  if (!lb) return;
-  
+void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
+                     int item_count,
+                     bool (*filter_match)(const char *item,
+                                          const char *filter)) {
+  if (!lb)
+    return;
+
   if (SequenceHasPendingWait()) {
     log_info("PopulateListBox waiting filter='%s'", filter ? filter : "");
     return;
   }
-  if (!filter) filter = "";
+  if (!filter)
+    filter = "";
   if (items && item_count > 0) {
     if (FlintContext_Get()->item_index_map) {
       shfree(FlintContext_Get()->item_index_map);
@@ -255,49 +340,35 @@ void PopulateListBox(ListBoxInfo* lb, const char* filter,
     }
     FlintContext_Get()->item_index_map = NULL;
     sh_new_strdup(FlintContext_Get()->item_index_map);
-    for (int i = 0; i < item_count; i++) if (items[i]) shput(FlintContext_Get()->item_index_map, (char*)items[i], (void*)(size_t)(i + 1));
+    for (int i = 0; i < item_count; i++)
+      if (items[i])
+        shput(FlintContext_Get()->item_index_map, (char *)items[i],
+              (void *)(size_t)(i + 1));
   }
-  
 
-  
-
-  
   int current_sel;
   char current_text[256];
-  Populate_CaptureSelection(lb, current_text, sizeof(current_text), &current_sel);
-  
+  Populate_CaptureSelection(lb, current_text, sizeof(current_text),
+                            &current_sel);
 
-  
   char clean_filter[256];
   Populate_CleanFilter(filter, clean_filter, sizeof(clean_filter));
   int total_matches = 0;
-  
 
-  
-  total_matches = Populate_Filter(lb, items, item_count, clean_filter, filter_match);
-  
+  total_matches =
+      Populate_Filter(lb, items, item_count, clean_filter, filter_match);
+
   Populate_RankMatches(lb, items, clean_filter, total_matches);
 
-  
-  
   Populate_EnsureMatches(lb, item_count, clean_filter, &total_matches);
-  
-  
 
-  
   Populate_BuildCache(lb, items, total_matches);
-  
 
-  
   Populate_UpdateUI(lb, total_matches, filter);
-  
 
-  
   Populate_CommitState(lb, item_count, total_matches);
-  
 
   log_info("PopulateListBox completed for filter='%s'", filter ? filter : "");
-  
 }
 
 ColorRef GetRainbowColor(float t, float s, float v) {
@@ -311,12 +382,36 @@ ColorRef GetRainbowColor(float t, float s, float v) {
     float t_ = v * (1 - s * (1 - f));
     float r, g, b;
     switch (i) {
-      case 0: r = v; g = t_; b = p; break;
-      case 1: r = q; g = v; b = p; break;
-      case 2: r = p; g = v; b = t_; break;
-      case 3: r = p; g = q; b = v; break;
-      case 4: r = t_; g = p; b = v; break;
-      case 5: r = v; g = p; b = q; break;
+    case 0:
+      r = v;
+      g = t_;
+      b = p;
+      break;
+    case 1:
+      r = q;
+      g = v;
+      b = p;
+      break;
+    case 2:
+      r = p;
+      g = v;
+      b = t_;
+      break;
+    case 3:
+      r = p;
+      g = q;
+      b = v;
+      break;
+    case 4:
+      r = t_;
+      g = p;
+      b = v;
+      break;
+    case 5:
+      r = v;
+      g = p;
+      b = q;
+      break;
     }
     return RGB((uint8_t)(r * 255), (uint8_t)(g * 255), (uint8_t)(b * 255));
   } else {
@@ -324,6 +419,6 @@ ColorRef GetRainbowColor(float t, float s, float v) {
   }
 }
 
-bool UI_IsListBoxSelected(ListBoxInfo* lb) {
+bool UI_IsListBoxSelected(ListBoxInfo *lb) {
   return lb && lb->selected_index != -1;
 }

@@ -4,7 +4,8 @@
 #include <stdbool.h>
 #include "core/flapi.h"
 
-void widget_purge_owner(const char *path_a, const char *path_b, unsigned generation);
+void widget_purge_owner(const char *path_a, const char *path_b,
+                        unsigned generation);
 bool widget_owner_active(const char *path);
 unsigned widget_bump_generation(void);
 unsigned widget_current_generation(void);

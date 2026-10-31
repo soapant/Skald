@@ -4,12 +4,11 @@
 #include "core/types.h"
 #include "platform/win32/popup_helpers_win32.h"
 
-
 #define WM_DISPLAY_MESSAGE (WM_APP + 2)
 #define WM_DISMISS_MESSAGE (WM_APP + 3)
 
 typedef struct {
-  const char* message;
+  const char *message;
   FontHandle hFont;
   int alpha;
   ColorRef color;
@@ -21,7 +20,7 @@ typedef struct {
 } FadeWindowData;
 
 typedef struct {
-  const char* message;
+  const char *message;
   int centerX;
   int centerY;
   int maxWidth;
@@ -32,10 +31,14 @@ typedef struct {
   void (*render)(void);
 } DisplayMessageParams;
 
-LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
+                              LPARAM lParam);
+LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
+                                    LPARAM lParam);
+LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
+                               LPARAM lParam);
+LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
+                                 LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #endif

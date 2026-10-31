@@ -17,6 +17,6 @@
 #include "core/types/file.h"
 #include "core/types/misc.h"
 
-typedef void (*DirChangeCallback)(const char* full_path, int added);
+typedef void (*DirChangeCallback)(const char *full_path, int added);
 
 #endif

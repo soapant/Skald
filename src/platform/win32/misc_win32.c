@@ -16,355 +16,447 @@
 
 #include "core/timer.h"
 
-bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
-        
-if (template_path == NULL || out_size == 0) { log_error("operation failed, returning error template_path='%s' out='%s' out_size=%d", template_path ? template_path : "null", out ? out : "null", out_size); return false; }
+bool Platform_ExpandPath(const char *template_path, char *out,
+                         size_t out_size) {
 
-    size_t o = 0;
-    const char* p = template_path;
-    while (*p != '\0' && o < out_size - 1) {
-        if (*p == '{') {
-            const char* close = strchr(p + 1, '}');
-            if (close != NULL) {
-                size_t token_len = (size_t)(close - p - 1);
-                if (token_len > 0 && token_len < 64) {
-                    char token[64];
-                    memcpy(token, p + 1, token_len);
-                    token[token_len] = '\0';
-                    char resolved[1024];
-                    return false;
-                }
-            }
+  if (template_path == NULL || out_size == 0) {
+    log_error("operation failed, returning error template_path='%s' out='%s' "
+              "out_size=%d",
+              template_path ? template_path : "null", out ? out : "null",
+              out_size);
+    return false;
+  }
+
+  size_t o = 0;
+  const char *p = template_path;
+  while (*p != '\0' && o < out_size - 1) {
+    if (*p == '{') {
+      const char *close = strchr(p + 1, '}');
+      if (close != NULL) {
+        size_t token_len = (size_t)(close - p - 1);
+        if (token_len > 0 && token_len < 64) {
+          char token[64];
+          memcpy(token, p + 1, token_len);
+          token[token_len] = '\0';
+          char resolved[1024];
+          return false;
         }
-        out[o++] = *p++;
+      }
     }
-    out[o] = '\0';
-    return true;
+    out[o++] = *p++;
+  }
+  out[o] = '\0';
+  return true;
 }
 
+bool Platform_StringContainsCaseInsensitive(const char *haystack,
+                                            const char *needle) {
 
-bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
-        
-if (!haystack || !needle) { log_error("operation failed, returning error haystack='%s' needle='%s'", haystack ? haystack : "null", needle ? needle : "null"); return false; }
-    return StrStrIA(haystack, needle) != NULL;
+  if (!haystack || !needle) {
+    log_error("operation failed, returning error haystack='%s' needle='%s'",
+              haystack ? haystack : "null", needle ? needle : "null");
+    return false;
+  }
+  return StrStrIA(haystack, needle) != NULL;
 }
 
-bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
-        
-if (!str || !prefix) { log_error("operation failed, returning error str='%s' prefix='%s'", str ? str : "null", prefix ? prefix : "null"); return false; }
-    return StrStrIA(str, prefix) == str;
+bool Platform_StringStartsWithCaseInsensitive(const char *str,
+                                              const char *prefix) {
+
+  if (!str || !prefix) {
+    log_error("operation failed, returning error str='%s' prefix='%s'",
+              str ? str : "null", prefix ? prefix : "null");
+    return false;
+  }
+  return StrStrIA(str, prefix) == str;
 }
 
 long long Platform_GetWallClockMs(void) {
-        
-FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
-    ULARGE_INTEGER t;
-    t.LowPart = ft.dwLowDateTime;
-    t.HighPart = ft.dwHighDateTime;
-    return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL);
+
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft);
+  ULARGE_INTEGER t;
+  t.LowPart = ft.dwLowDateTime;
+  t.HighPart = ft.dwHighDateTime;
+  return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL);
 }
 
+bool Platform_TerminateProcessByName(const char *exe_name) {
 
-bool Platform_TerminateProcessByName(const char* exe_name) {
-        
-if (!exe_name || !*exe_name) {
-        log_error("operation failed, returning error exe_name='%s'", exe_name ? exe_name : "null");
-        return false;
-    }
+  if (!exe_name || !*exe_name) {
+    log_error("operation failed, returning error exe_name='%s'",
+              exe_name ? exe_name : "null");
+    return false;
+  }
 
-    char cmd[512];
-    const char *ext = strrchr(exe_name, '.');
-    
-    if (!ext) {
-        snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s.exe*\"", exe_name);
-    } else {
-        snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
-    }
+  char cmd[512];
+  const char *ext = strrchr(exe_name, '.');
 
-    Platform_RunTerminalCommand(cmd, false);
-    log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
-    
-    return true;
+  if (!ext) {
+    snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s.exe*\"", exe_name);
+  } else {
+    snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
+  }
+
+  Platform_RunTerminalCommand(cmd, false);
+  log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
+
+  return true;
 }
 
-static bool win32_default_browser_exe(char* out, size_t cap) {
-        
-HKEY key = NULL;
-    if (RegOpenKeyExA(HKEY_CURRENT_USER,
-            "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice",
-            0, KEY_READ, &key) != ERROR_SUCCESS) {  return false; }
+static bool win32_default_browser_exe(char *out, size_t cap) {
 
-    char prog[128] = {0};
-    DWORD sz = sizeof(prog) - 1;
-    LONG r = RegQueryValueExA(key, "ProgId", NULL, NULL, (LPBYTE)prog, &sz);
-    RegCloseKey(key);
-    if (r != ERROR_SUCCESS || !prog[0]) return false;
+  HKEY key = NULL;
+  if (RegOpenKeyExA(HKEY_CURRENT_USER,
+                    "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAsso"
+                    "ciations\\http\\UserChoice",
+                    0, KEY_READ, &key) != ERROR_SUCCESS)
+    return false;
 
-    char sub[256];
-    snprintf(sub, sizeof(sub), "%s\\shell\\open\\command", prog);
-    if (RegOpenKeyExA(HKEY_CLASSES_ROOT, sub, 0, KEY_READ, &key) != ERROR_SUCCESS) return false;
+  char prog[128] = {0};
+  DWORD sz = sizeof(prog) - 1;
+  LONG r = RegQueryValueExA(key, "ProgId", NULL, NULL, (LPBYTE)prog, &sz);
+  RegCloseKey(key);
+  if (r != ERROR_SUCCESS || !prog[0])
+    return false;
 
-    char cmd[1024] = {0};
-    sz = sizeof(cmd) - 1;
-    r = RegQueryValueExA(key, NULL, NULL, NULL, (LPBYTE)cmd, &sz);
-    RegCloseKey(key);
-    if (r != ERROR_SUCCESS || !cmd[0]) return false;
+  char sub[256];
+  snprintf(sub, sizeof(sub), "%s\\shell\\open\\command", prog);
+  if (RegOpenKeyExA(HKEY_CLASSES_ROOT, sub, 0, KEY_READ, &key) != ERROR_SUCCESS)
+    return false;
 
-    const char* p = cmd;
-    size_t len = 0;
-    if (*p == '"') {
-        p++;
-        while (p[len] && p[len] != '"' && len < cap - 1) len++;
-    } else {
-        while (p[len] && !isspace((unsigned char)p[len]) && len < cap - 1) len++;
-    }
-    if (len == 0) return false;
-    memcpy(out, p, len);
-    out[len] = '\0';
-    return out[0] != '\0';
+  char cmd[1024] = {0};
+  sz = sizeof(cmd) - 1;
+  r = RegQueryValueExA(key, NULL, NULL, NULL, (LPBYTE)cmd, &sz);
+  RegCloseKey(key);
+  if (r != ERROR_SUCCESS || !cmd[0])
+    return false;
+
+  const char *p = cmd;
+  size_t len = 0;
+  if (*p == '"') {
+    p++;
+    while (p[len] && p[len] != '"' && len < cap - 1)
+      len++;
+  } else {
+    while (p[len] && !isspace((unsigned char)p[len]) && len < cap - 1)
+      len++;
+  }
+  if (len == 0)
+    return false;
+  memcpy(out, p, len);
+  out[len] = '\0';
+  return out[0] != '\0';
 }
 
 static bool win32_launch_default_browser_blank(void) {
-        
-char exe[512];
-    if (!win32_default_browser_exe(exe, sizeof(exe))) {
-        log_info("Platform_LaunchBrowserAtUrl could not resolve default browser");
-        return false;
+
+  char exe[512];
+  if (!win32_default_browser_exe(exe, sizeof(exe))) {
+    log_info("Platform_LaunchBrowserAtUrl could not resolve default browser");
+    return false;
+  }
+  log_info("Platform_LaunchBrowserAtUrl default browser exe='%s'", exe);
+  HINSTANCE r = ShellExecuteA(NULL, "open", exe, NULL, NULL, SW_SHOWNORMAL);
+  if ((intptr_t)r <= 32) {
+    log_info("Platform_LaunchBrowserAtUrl ShellExecute failed for '%s'", exe);
+    return false;
+  }
+  return true;
+}
+
+bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
+
+  char full_url[2048] = {0};
+  if (!url || !url[0])
+    full_url[0] = '\0';
+  else if (strstr(url, "://"))
+    snprintf(full_url, sizeof(full_url), "%s", url);
+  else
+    snprintf(full_url, sizeof(full_url), "https://%s", url);
+  if (full_url[0] == '\0') {
+    if (UsedBrowser && UsedBrowser[0]) {
+      char browser_path[MAX_PATH] = {0};
+      char *exe = NULL;
+      if (SearchPathA(NULL, UsedBrowser, ".exe", MAX_PATH, browser_path,
+                      NULL) ||
+          SearchPathA(NULL, UsedBrowser, NULL, MAX_PATH, browser_path, NULL))
+        exe = browser_path;
+      else {
+        char with_exe[MAX_PATH];
+        snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser);
+        if (SearchPathA(NULL, with_exe, NULL, MAX_PATH, browser_path, NULL))
+          exe = browser_path;
+      }
+      if (exe && exe[0]) {
+        HINSTANCE r =
+            ShellExecuteA(NULL, "open", exe, NULL, NULL, SW_SHOWNORMAL);
+        if ((intptr_t)r > 32) {
+          log_info("Platform_LaunchBrowserAtUrl via %s (no url)", exe);
+          return true;
+        }
+      }
+      HINSTANCE r2 =
+          ShellExecuteA(NULL, "open", UsedBrowser, NULL, NULL, SW_SHOWNORMAL);
+      if ((intptr_t)r2 > 32) {
+        log_info("Platform_LaunchBrowserAtUrl via UsedBrowser (no url)");
+        return true;
+      }
     }
-    log_info("Platform_LaunchBrowserAtUrl default browser exe='%s'", exe);
-    HINSTANCE r = ShellExecuteA(NULL, "open", exe, NULL, NULL, SW_SHOWNORMAL);
-    if ((intptr_t)r <= 32) {
-        log_info("Platform_LaunchBrowserAtUrl ShellExecute failed for '%s'", exe);
-        return false;
+    if (win32_launch_default_browser_blank())
+      return true;
+    log_info(
+        "Platform_LaunchBrowserAtUrl no url, no browser could be launched");
+    return false;
+  }
+  if (new_window && UsedBrowser && UsedBrowser[0]) {
+    char browser_path[MAX_PATH] = {0};
+    char *exe = NULL;
+    if (SearchPathA(NULL, UsedBrowser, ".exe", MAX_PATH, browser_path, NULL) ||
+        SearchPathA(NULL, UsedBrowser, NULL, MAX_PATH, browser_path, NULL))
+      exe = browser_path;
+    else {
+      char with_exe[MAX_PATH];
+      snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser);
+      if (SearchPathA(NULL, with_exe, NULL, MAX_PATH, browser_path, NULL))
+        exe = browser_path;
     }
+    if (exe && exe[0]) {
+      char params[4096];
+      snprintf(params, sizeof(params), "--new-window \"%s\"", full_url);
+      HINSTANCE r =
+          ShellExecuteA(NULL, "open", exe, params, NULL, SW_SHOWNORMAL);
+      if ((intptr_t)r > 32) {
+        log_info("Platform_LaunchBrowserAtUrl via %s new_window url='%s'", exe,
+                 full_url);
+        return true;
+      }
+    }
+    char params2[4096];
+    snprintf(params2, sizeof(params2), "--new-window \"%s\"", full_url);
+    HINSTANCE r2 =
+        ShellExecuteA(NULL, "open", UsedBrowser, params2, NULL, SW_SHOWNORMAL);
+    if ((intptr_t)r2 > 32) {
+      log_info(
+          "Platform_LaunchBrowserAtUrl via UsedBrowser new_window url='%s'",
+          full_url);
+      return true;
+    }
+  }
+  HINSTANCE r3 =
+      ShellExecuteA(NULL, "open", full_url, NULL, NULL, SW_SHOWNORMAL);
+  if ((intptr_t)r3 > 32) {
+    log_info("Platform_LaunchBrowserAtUrl via default url='%s' new_window=%d",
+             full_url, new_window);
     return true;
+  }
+  char command[2048];
+  snprintf(command, sizeof(command), "start \"\" \"%s\"", full_url);
+  log_info("Platform_LaunchBrowserAtUrl fallback url='%s' new_window=%d",
+           full_url, new_window);
+  return Platform_RunTerminalCommand(command, false);
 }
 
-bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
-        
-char full_url[2048] = {0};
-    if (!url || !url[0]) full_url[0] = '\0';
-    else if (strstr(url, "://")) snprintf(full_url, sizeof(full_url), "%s", url);
-    else snprintf(full_url, sizeof(full_url), "https://%s", url);
-    if (full_url[0] == '\0') {
-        if (UsedBrowser && UsedBrowser[0]) {
-            char browser_path[MAX_PATH] = {0};
-            char* exe = NULL;
-            if (SearchPathA(NULL, UsedBrowser, ".exe", MAX_PATH, browser_path, NULL) || SearchPathA(NULL, UsedBrowser, NULL, MAX_PATH, browser_path, NULL)) exe = browser_path;
-            else { char with_exe[MAX_PATH]; snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser); if (SearchPathA(NULL, with_exe, NULL, MAX_PATH, browser_path, NULL)) exe = browser_path; }
-            if (exe && exe[0]) { HINSTANCE r = ShellExecuteA(NULL, "open", exe, NULL, NULL, SW_SHOWNORMAL); if ((intptr_t)r > 32) { log_info("Platform_LaunchBrowserAtUrl via %s (no url)", exe); return true; } }
-            HINSTANCE r2 = ShellExecuteA(NULL, "open", UsedBrowser, NULL, NULL, SW_SHOWNORMAL);
-            if ((intptr_t)r2 > 32) { log_info("Platform_LaunchBrowserAtUrl via UsedBrowser (no url)"); return true; }
-        }
-        if (win32_launch_default_browser_blank()) return true;
-        log_info("Platform_LaunchBrowserAtUrl no url, no browser could be launched");
-        return false;
-    }
-    if (new_window && UsedBrowser && UsedBrowser[0]) {
-        char browser_path[MAX_PATH] = {0};
-        char* exe = NULL;
-        if (SearchPathA(NULL, UsedBrowser, ".exe", MAX_PATH, browser_path, NULL) || SearchPathA(NULL, UsedBrowser, NULL, MAX_PATH, browser_path, NULL)) exe = browser_path;
-        else { char with_exe[MAX_PATH]; snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser); if (SearchPathA(NULL, with_exe, NULL, MAX_PATH, browser_path, NULL)) exe = browser_path; }
-        if (exe && exe[0]) {
-            char params[4096];
-            snprintf(params, sizeof(params), "--new-window \"%s\"", full_url);
-            HINSTANCE r = ShellExecuteA(NULL, "open", exe, params, NULL, SW_SHOWNORMAL);
-            if ((intptr_t)r > 32) { log_info("Platform_LaunchBrowserAtUrl via %s new_window url='%s'", exe, full_url); return true; }
-        }
-        char params2[4096];
-        snprintf(params2, sizeof(params2), "--new-window \"%s\"", full_url);
-        HINSTANCE r2 = ShellExecuteA(NULL, "open", UsedBrowser, params2, NULL, SW_SHOWNORMAL);
-        if ((intptr_t)r2 > 32) { log_info("Platform_LaunchBrowserAtUrl via UsedBrowser new_window url='%s'", full_url); return true; }
-    }
-    HINSTANCE r3 = ShellExecuteA(NULL, "open", full_url, NULL, NULL, SW_SHOWNORMAL);
-    if ((intptr_t)r3 > 32) { log_info("Platform_LaunchBrowserAtUrl via default url='%s' new_window=%d", full_url, new_window); return true; }
-    char command[2048];
-    snprintf(command, sizeof(command), "start \"\" \"%s\"", full_url);
-    log_info("Platform_LaunchBrowserAtUrl fallback url='%s' new_window=%d", full_url, new_window);
-    return Platform_RunTerminalCommand(command,false);
-}
+bool Platform_QueryBrowser(char *query) {
 
-bool Platform_QueryBrowser(char* query) {
-        
-if (!query || !query[0]) { log_error("operation failed, returning error query='%s'", query ? query : "null"); return false; }
-    
-    char encoded_query[2048] = {0};
-    char* src = query;
-    char* dst = encoded_query;
-    while (*src && (dst - encoded_query) < sizeof(encoded_query) - 1) {
-        if (*src == ' ') {
-            *dst++ = '%';
-            *dst++ = '2';
-            *dst++ = '0';
-        } else if (*src == '&') {
-            *dst++ = '%';
-            *dst++ = '2';
-            *dst++ = '6';
-        } else if (*src == '?') {
-            *dst++ = '%';
-            *dst++ = '3';
-            *dst++ = 'F';
-        } else {
-            *dst++ = *src;
-        }
-        src++;
-    }
-    *dst = '\0';
-    
-    char url[4096];
-    
-    if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "google")) {
-        snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", encoded_query);
-    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "duckduckgo")) {
-        snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
-    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "bing")) {
-        snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s", encoded_query);
+  if (!query || !query[0]) {
+    log_error("operation failed, returning error query='%s'",
+              query ? query : "null");
+    return false;
+  }
+
+  char encoded_query[2048] = {0};
+  char *src = query;
+  char *dst = encoded_query;
+  while (*src && (dst - encoded_query) < sizeof(encoded_query) - 1) {
+    if (*src == ' ') {
+      *dst++ = '%';
+      *dst++ = '2';
+      *dst++ = '0';
+    } else if (*src == '&') {
+      *dst++ = '%';
+      *dst++ = '2';
+      *dst++ = '6';
+    } else if (*src == '?') {
+      *dst++ = '%';
+      *dst++ = '3';
+      *dst++ = 'F';
     } else {
-        snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
+      *dst++ = *src;
     }
-    
-    char command[4096];
-    snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
-log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
-    return Platform_RunTerminalCommand(command,false);
+    src++;
+  }
+  *dst = '\0';
+
+  char url[4096];
+
+  if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "google")) {
+    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s",
+             encoded_query);
+  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
+                                                    "duckduckgo")) {
+    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
+  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "bing")) {
+    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s",
+             encoded_query);
+  } else {
+    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
+  }
+
+  char command[4096];
+  snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
+  log_info("Platform_QueryBrowser query='%s'", query ? query : "");
+  ;
+  return Platform_RunTerminalCommand(command, false);
 }
 
-char* Platform_GetClipboardEntry(void) {
-        
-char* result = NULL;
+char *Platform_GetClipboardEntry(void) {
 
-    if (!OpenClipboard(NULL)) { log_error("operation failed, returning error"); return NULL; }
+  char *result = NULL;
 
-    HANDLE hClipData = GetClipboardData(CF_UNICODETEXT);
-    if (hClipData == NULL) {
-        CloseClipboard();
-        return NULL;
-    }
+  if (!OpenClipboard(NULL)) {
+    log_error("operation failed, returning error");
+    return NULL;
+  }
 
-    wchar_t* pClipText = (wchar_t*)GlobalLock(hClipData);
-    if (pClipText == NULL) {
-        CloseClipboard();
-        return NULL;
-    }
-
-    int wideCharLen = wcslen(pClipText);
-    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, pClipText, wideCharLen, NULL, 0, NULL, NULL);
-
-    if (utf8Len > 0) {
-        result = (char*)malloc(utf8Len + 1);
-        if (result != NULL) {
-            WideCharToMultiByte(CP_UTF8, 0, pClipText, wideCharLen, result, utf8Len, NULL, NULL);
-            result[utf8Len] = '\0';
-        }
-    }
-
-    GlobalUnlock(hClipData);
+  HANDLE hClipData = GetClipboardData(CF_UNICODETEXT);
+  if (hClipData == NULL) {
     CloseClipboard();
+    return NULL;
+  }
 
-    return result;
+  wchar_t *pClipText = (wchar_t *)GlobalLock(hClipData);
+  if (pClipText == NULL) {
+    CloseClipboard();
+    return NULL;
+  }
+
+  int wideCharLen = wcslen(pClipText);
+  int utf8Len = WideCharToMultiByte(CP_UTF8, 0, pClipText, wideCharLen, NULL, 0,
+                                    NULL, NULL);
+
+  if (utf8Len > 0) {
+    result = (char *)malloc(utf8Len + 1);
+    if (result != NULL) {
+      WideCharToMultiByte(CP_UTF8, 0, pClipText, wideCharLen, result, utf8Len,
+                          NULL, NULL);
+      result[utf8Len] = '\0';
+    }
+  }
+
+  GlobalUnlock(hClipData);
+  CloseClipboard();
+
+  return result;
 }
 
-bool Platform_PasteContent(char* content) {
-        
-if (!content || !content[0]) { log_error("operation failed, returning error content='%s'", content ? content : "null"); return false; }
+bool Platform_PasteContent(char *content) {
 
-    size_t len = strlen(content);
-    INPUT* inputs = (INPUT*)calloc(len, sizeof(INPUT));
-    if (!inputs) return false;
+  if (!content || !content[0]) {
+    log_error("operation failed, returning error content='%s'",
+              content ? content : "null");
+    return false;
+  }
+
+  size_t len = strlen(content);
+  INPUT *inputs = (INPUT *)calloc(len, sizeof(INPUT));
+  if (!inputs)
+    return false;
+
+  for (size_t i = 0; i < len; i++) {
+    char c = content[i];
+    inputs[i].type = INPUT_KEYBOARD;
+    inputs[i].ki.wVk = 0;
+    inputs[i].ki.wScan = c;
+    inputs[i].ki.dwFlags = KEYEVENTF_SCANCODE;
+    inputs[i].ki.time = 0;
+    inputs[i].ki.dwExtraInfo = 0;
+  }
+
+  UINT result = SendInput((UINT)len, inputs, sizeof(INPUT));
+
+  bool success = (result == len);
+  if (success) {
+    INPUT *up_inputs = (INPUT *)calloc(len, sizeof(INPUT));
+    if (!up_inputs) {
+      free(inputs);
+      return false;
+    }
 
     for (size_t i = 0; i < len; i++) {
-        char c = content[i];
-        inputs[i].type = INPUT_KEYBOARD;
-        inputs[i].ki.wVk = 0;           
-        inputs[i].ki.wScan = c;         
-        inputs[i].ki.dwFlags = KEYEVENTF_SCANCODE;  
-        inputs[i].ki.time = 0;
-        inputs[i].ki.dwExtraInfo = 0;
+      up_inputs[i] = inputs[i];
+      up_inputs[i].ki.dwFlags |= KEYEVENTF_KEYUP;
     }
 
-    UINT result = SendInput((UINT)len, inputs, sizeof(INPUT));
+    result = SendInput((UINT)len, up_inputs, sizeof(INPUT));
+    success = (result == len);
+    free(up_inputs);
+  }
 
-    bool success = (result == len);
-    if (success) {
-        INPUT* up_inputs = (INPUT*)calloc(len, sizeof(INPUT));
-        if (!up_inputs) {
-            free(inputs);
-            return false;
-        }
-
-        for (size_t i = 0; i < len; i++) {
-            up_inputs[i] = inputs[i];
-            up_inputs[i].ki.dwFlags |= KEYEVENTF_KEYUP;
-        }
-
-        result = SendInput((UINT)len, up_inputs, sizeof(INPUT));
-        success = (result == len);
-        free(up_inputs);
-    }
-
-    free(inputs);
-    log_info("Platform_PasteContent content='%s'", content ? content : "");;
-    return success;
+  free(inputs);
+  log_info("Platform_PasteContent content='%s'", content ? content : "");
+  ;
+  return success;
 }
-const char* Platform_GetRealHome(void) {
-        
-static char buf[512] = {0};
+const char *Platform_GetRealHome(void) {
 
-    const char* profile = getenv("USERPROFILE");
-    if (profile && profile[0]) {
-        strncpy(buf, profile, sizeof(buf) - 1);
-        buf[sizeof(buf) - 1] = '\0';
-        return buf;
-    }
+  static char buf[512] = {0};
 
-    const char* drive = getenv("HOMEDRIVE");
-    const char* path  = getenv("HOMEPATH");
-    if (drive && drive[0] && path && path[0]) {
-        snprintf(buf, sizeof(buf), "%s%s", drive, path);
-        return buf;
-    }
-
-    char user_profile[MAX_PATH];
-    if (GetEnvironmentVariableA("USERPROFILE", user_profile, MAX_PATH) > 0) {
-        strncpy(buf, user_profile, sizeof(buf) - 1);
-        buf[sizeof(buf) - 1] = '\0';
-        return buf;
-    }
-
+  const char *profile = getenv("USERPROFILE");
+  if (profile && profile[0]) {
+    strncpy(buf, profile, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
     return buf;
+  }
+
+  const char *drive = getenv("HOMEDRIVE");
+  const char *path = getenv("HOMEPATH");
+  if (drive && drive[0] && path && path[0]) {
+    snprintf(buf, sizeof(buf), "%s%s", drive, path);
+    return buf;
+  }
+
+  char user_profile[MAX_PATH];
+  if (GetEnvironmentVariableA("USERPROFILE", user_profile, MAX_PATH) > 0) {
+    strncpy(buf, user_profile, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+    return buf;
+  }
+
+  return buf;
 }
 
 bool Platform_IsRunningAsRoot(void) {
-  //temporary
+  // temporary
   return false;
 }
-const char* Platform_GetRealUser(void) {
-  //temporary
+const char *Platform_GetRealUser(void) {
+  // temporary
   return false;
 }
 
-bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size) {
-    snprintf(cmd, cmd_size,
-        "gcc -I include  -pipe -shared -o \"%s\" \"%s\" \"build/main.lib.a\" 2>&1",
-        out_tmp, src);
-    return true;
+bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
+                                     char *cmd, size_t cmd_size) {
+  snprintf(cmd, cmd_size,
+           "gcc -I include  -pipe -shared -o \"%s\" \"%s\" "
+           "\"build/main.lib.a\" 2>&1",
+           out_tmp, src);
+  return true;
 }
 
-bool Platform_AtomicRename(const char* old_path, const char* new_path) {
-    remove(new_path);
-    return MoveFileExA(old_path, new_path, MOVEFILE_REPLACE_EXISTING) != 0;
+bool Platform_AtomicRename(const char *old_path, const char *new_path) {
+  remove(new_path);
+  return MoveFileExA(old_path, new_path, MOVEFILE_REPLACE_EXISTING) != 0;
 }
 
 int64_t Platform_TimerNowTicks(void) {
-    LARGE_INTEGER c;
-    QueryPerformanceCounter(&c);
-    return (int64_t)c.QuadPart;
+  LARGE_INTEGER c;
+  QueryPerformanceCounter(&c);
+  return (int64_t)c.QuadPart;
 }
 
 int64_t Platform_TimerTickFrequency(void) {
-    LARGE_INTEGER f;
-    QueryPerformanceFrequency(&f);
-    return (int64_t)f.QuadPart;
+  LARGE_INTEGER f;
+  QueryPerformanceFrequency(&f);
+  return (int64_t)f.QuadPart;
 }
-
