@@ -599,8 +599,17 @@ if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "raw_prepare"); return NULL; }
     { PROFILE_END_VAR(_pt, "raw_prepare"); return gc; }
 }
 
-bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, int radius, bool rounded, bool opaque,
-                             float thickness, bool filled) {
+bool Platform_DrawRectRaw_impl(PlDrawRectRawSpec spec) {
+    int x = spec.x;
+    int y = spec.y;
+    int w = spec.w;
+    int h = spec.h;
+    unsigned long color = spec.color;
+    int radius = spec.radius;
+    bool rounded = spec.rounded;
+    bool opaque = spec.opaque;
+    float thickness = spec.thickness;
+    bool filled = spec.filled;
     PROFILE_START(_pt);
 
     if (!raw_can_draw()) {

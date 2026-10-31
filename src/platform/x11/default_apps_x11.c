@@ -52,7 +52,14 @@ static int next_slot = 0;
         g_ad_cache[slot].count = 0;
         g_ad_cache[slot].capacity = 0;
     }
-    Platform_GetAllFilesFromDir(dir, NULL, &g_ad_cache[slot], NULL, true, 0);
+    Platform_GetAllFilesFromDir(
+        .dir_path = dir,
+        .list_of_allowed_extensions = NULL,
+        .list_of_files = &g_ad_cache[slot],
+        .list_of_names_to_ignore = NULL,
+        .strip_extension = true,
+        .max_depth = 0
+    );
     snprintf(g_ad_path[slot], sizeof(g_ad_path[slot]), "%s", dir);
     g_ad_valid[slot] = true;
     { PROFILE_END_VAR(_pt, "x11_applications_dir_files"); return &g_ad_cache[slot]; }
@@ -229,7 +236,14 @@ const char* get_default_browser(int slot) {
         "Pale Moon", "Internet Explorer","Zen"
     };
     ListOfFiles browser_files = {0};
-    Platform_GetAllFilesFromDir("/usr/share/applications", NULL, &browser_files, NULL, true, 0);
+    Platform_GetAllFilesFromDir(
+        .dir_path = "/usr/share/applications",
+        .list_of_allowed_extensions = NULL,
+        .list_of_files = &browser_files,
+        .list_of_names_to_ignore = NULL,
+        .strip_extension = true,
+        .max_depth = 0
+    );
     for (size_t i = 0; i < browser_files.count; i++) {
         const char* name = browser_files.files[i].name;
         for (size_t j = 0; j < sizeof(possible_browsers) / sizeof(possible_browsers[0]); j++) {
