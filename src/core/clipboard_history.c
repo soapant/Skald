@@ -116,8 +116,6 @@ static void clipboard_jpeg_dims(const unsigned char *buf, size_t len,
     }
     if (marker == 0xD9 || marker == 0xDA)
       return;
-    if (i + 3 >= len)
-      return;
     size_t seg = ((size_t)buf[i + 2] << 8) | buf[i + 3];
     if (seg < 2)
       return;

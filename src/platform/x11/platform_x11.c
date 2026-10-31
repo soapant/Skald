@@ -159,7 +159,6 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
 
 static Window FindWindowByTitleRecursive(Display *dpy, Window w,
                                          const char *title) {
-
   char *name = NULL;
   if (XFetchName(dpy, w, &name) && name != NULL) {
     bool match = (strcmp(name, title) == 0);
@@ -170,18 +169,15 @@ static Window FindWindowByTitleRecursive(Display *dpy, Window w,
 
   Window root, parent, *children = NULL;
   unsigned int n = 0;
-  if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
+  if (XQueryTree(dpy, w, &root, &parent, &children, &n) && n > 0 && children != NULL) {
     for (unsigned int i = 0; i < n; i++) {
       Window found = FindWindowByTitleRecursive(dpy, children[i], title);
       if (found != None) {
-        if (children)
-          XFree(children);
-
+        XFree(children);
         return found;
       }
     }
-    if (children)
-      XFree(children);
+    XFree(children);
   }
 
   return None;

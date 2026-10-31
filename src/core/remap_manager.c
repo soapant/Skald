@@ -17,7 +17,6 @@ typedef struct {
   int src_vk_count;
   int dst_mods;
   int dst_vk;
-  bool active;
   bool whitelist;
   char *windows[REMAP_MAX_WINDOWS];
   int window_count;
