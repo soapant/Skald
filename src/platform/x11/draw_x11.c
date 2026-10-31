@@ -599,7 +599,7 @@ if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "raw_prepare"); return NULL; }
     { PROFILE_END_VAR(_pt, "raw_prepare"); return gc; }
 }
 
-bool Platform_DrawRectRaw_impl(PlDrawRectRawSpec spec) {
+bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     int x = spec.x;
     int y = spec.y;
     int w = spec.w;

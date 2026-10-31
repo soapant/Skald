@@ -444,7 +444,7 @@ if (thickness <= 0.0f) { PROFILE_END_VAR(_pt, "win32_thickness_px"); return 0; }
     { PROFILE_END_VAR(_pt, "win32_thickness_px"); return px; }
 }
 
-bool Platform_DrawRectRaw_impl(PlDrawRectRawSpec spec) {
+bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     int x = spec.x;
     int y = spec.y;
     int w = spec.w;
@@ -963,10 +963,20 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
 }
 
 void Platform_DrawPromptSeparator(int y, int width) {
-        PROFILE_START(_pt);
+     PROFILE_START(_pt);
     if (!EnableBorders || width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
-    Platform_DrawRectRaw(0, y, width, PROMPT_SEP_W,
-                         rgb_to_hex(COLOR_BORDER), 0, false, true, 1, true);
+    Platform_DrawRectRaw((PlDrawRectRawSpec){
+        .x = 0,
+        .y = y,
+        .w = width,
+        .h = PROMPT_SEP_W,
+        .color = rgb_to_hex(COLOR_BORDER),
+        .radius = 0,
+        .rounded = false,
+        .opaque = true,
+        .thickness = 1,
+        .filled = true
+    });
     { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); }
 }
 

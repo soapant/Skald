@@ -61,7 +61,7 @@ void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int ma
     if (!message || !message[0]) return;
     int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
     MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap, &outward);
-    Platform_DisplayMessageAnchored(
+    Platform_DisplayMessageAnchored((PlAnchoredMessageSpec){
         .message = message,
         .x = x, .y = y, .w = w, .h = h,
         .h_slot = h_slot, .v_slot = v_slot,
@@ -73,5 +73,5 @@ void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int ma
         .no_bg = false,
         .render = render,
         .name = name
-    );
+    });
 }
