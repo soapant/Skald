@@ -171,11 +171,9 @@ void hotkey_drain_pending(void) {
                 continue;
             }
         }
-        FeatureLoader_Lock();
         log_info("hotkey_drain_pending: calling fn=%p", (void*)fn);
         fn();
         log_info("hotkey_drain_pending: fn=%p finished", (void*)fn);
-        FeatureLoader_Unlock();
     }
 }
 
