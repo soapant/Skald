@@ -1112,8 +1112,8 @@ static void cc_render(PromptState *state) {
     fl_listbox_end();
 }
 
-static bool cc_enter(const char *selection, ListBoxInfo *lb) {
-    if (selection && g_cc_calc_label[0] && strcmp(selection, g_cc_calc_label) == 0) {
+static bool cc_enter(ListBoxInfo *lb) {
+    if (lb->selected_text && g_cc_calc_label[0] && strcmp(lb->selected_text, g_cc_calc_label) == 0) {
         const char *eq = strchr(g_cc_calc_label, '=');
         if (eq) {
             char value[128];
@@ -1126,46 +1126,46 @@ static bool cc_enter(const char *selection, ListBoxInfo *lb) {
         return true;
     }
     if (!fl_is_selected(lb)) {
-        fl_query_browser(selection);
+        fl_query_browser(lb->selected_text);
     }
-    cc_stage(cc_find(selection), 0);
+    cc_stage(cc_find(lb->selected_text), 0);
     return true;
 }
 
-static bool cc_ctrl_enter(const char *selection, ListBoxInfo *lb) {
+static bool cc_ctrl_enter(ListBoxInfo *lb) {
     if (!fl_is_selected(lb)) {
-        fl_query_browser(selection);
+        fl_query_browser(lb->selected_text);
     }
-    cc_stage(cc_find(selection), 1);
+    cc_stage(cc_find(lb->selected_text), 1);
     return true;
 }
 
-static bool cc_shift_enter(const char *selection, ListBoxInfo *lb) {
+static bool cc_shift_enter(ListBoxInfo *lb) {
     if (!fl_is_selected(lb)) {
-        fl_query_browser(selection);
+        fl_query_browser(lb->selected_text);
     }
-    cc_stage(cc_find(selection), 2);
+    cc_stage(cc_find(lb->selected_text), 2);
     return true;
 }
-static bool cc_ctrl_shift_enter(const char *selection, ListBoxInfo *lb) {
+static bool cc_ctrl_shift_enter(ListBoxInfo *lb) {
     if (!fl_is_selected(lb)) {
-        fl_query_browser(selection);
+        fl_query_browser(lb->selected_text);
     }
-    cc_stage(cc_find(selection), 3);
+    cc_stage(cc_find(lb->selected_text), 3);
     return true;
 }
-static bool cc_ctrl_alt_enter(const char *selection, ListBoxInfo *lb) {
+static bool cc_ctrl_alt_enter(ListBoxInfo *lb) {
     if (!fl_is_selected(lb)) {
-        fl_query_browser(selection);
+        fl_query_browser(lb->selected_text);
     }
-    cc_stage(cc_find(selection), 4);
+    cc_stage(cc_find(lb->selected_text), 4);
     return true;
 }
-static bool cc_shift_alt_enter(const char *selection, ListBoxInfo *lb) {
+static bool cc_shift_alt_enter(ListBoxInfo *lb) {
     if (!fl_is_selected(lb)) {
-        fl_query_browser(selection);
+        fl_query_browser(lb->selected_text);
     }
-    cc_stage(cc_find(selection), 5);
+    cc_stage(cc_find(lb->selected_text), 5);
     return true;
 }
 
@@ -1174,7 +1174,7 @@ static void cc_on_close(void) {
 }
 
 static void cc_tab(ListBoxInfo *lb) {
-    const CcEntry *e = cc_find(ListBoxInfo_GetSelectedText(lb));
+    const CcEntry *e = cc_find(lb->selected_text);
     if (e && e->on_tab) e->on_tab();
 }
 

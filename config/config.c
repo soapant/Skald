@@ -19,7 +19,7 @@ void ConfigApply(void) {
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 19;
+    FontSize = 21;
     IconSize = 32;
     WidgetGap = 10;
     MaxFeatures = 1000;
@@ -32,7 +32,7 @@ void ConfigApply(void) {
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
     ControlHotkey = "Alt+Space";
-    ReloadFeaturesHotkey = "Ctrl+R";
+    ReloadFeaturesHotkey = "Alt+R";
     ActionsHotkey = "Ctrl+K";
     FullTextNeedsKeyPress = true;
     MessagesEnabled = true;
@@ -44,7 +44,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "rose-pine";
+    Theme = "cyberpunk";
     BackgroundImage = "";
     COLOR_BG = RGB(40, 40, 40);
     COLOR_TEXT = RGB(255, 255, 255);

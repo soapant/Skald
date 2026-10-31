@@ -48,19 +48,19 @@ static void zoxide_refresh(const char* filter, ListBoxInfo* lb) {
     fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
     fl_free_file_list(&files);
 }
-static void zoxide_edit(const char* selection, ListBoxInfo* lb) {
+static void zoxide_edit(ListBoxInfo* lb) {
     int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
+    char* edited = fl_edit_text_popup(.initial_text = lb->selected_text,.lb = lb, .out_index = &idx);
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(TerminalZoxideFilePath, idx, edited);
     free(edited);
     zoxide_refresh("", lb);
 }
-static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
-    char* path = get_zoxide_match((char*)selection);
+static bool zoxide_enter(ListBoxInfo* lb) {
+    char* path = get_zoxide_match((char*)lb->selected_text);
     if (!path) return false;
     fl_launch_terminal_at_path(path, NULL);
-    if (!fl_is_selected(lb)) fl_append_unique_line(TerminalZoxideFilePath, selection);
+    if (!fl_is_selected(lb)) fl_append_unique_line(TerminalZoxideFilePath, lb->selected_text);
     free(path);
     return true;
 }

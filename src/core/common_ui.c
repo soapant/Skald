@@ -87,6 +87,7 @@ static void Populate_CaptureSelection(ListBoxInfo* lb, char* out_text, size_t ou
   if (out_text && out_size > 0) {
     out_text[0] = '\0';
     const char* cur = ListBoxInfo_Row(lb, current_sel);
+    lb->selected_text = cur;
     if (cur) {
       strncpy(out_text, cur, out_size - 1);
       out_text[out_size - 1] = '\0';

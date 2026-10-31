@@ -79,7 +79,7 @@ void HandleVisualYank(FlintContext* ctx) {
             char sel[VIM_TEXT_BUF];
             int n = end - start;
             if (n >= (int)sizeof(sel)) n = (int)sizeof(sel) - 1;
-            memcpy(sel, text + start, (size_t)n);
+            memcpy(sel,text + start,(size_t)n);
             sel[n] = '\0';
             Platform_CopyToClipboard(sel);
         }
@@ -208,7 +208,7 @@ void HandleEnter(FlintContext* ctx) {
     if (lb && UI_IsListBoxSelected(lb)) {
         const char* sel = lb_selected_text(lb);
         if (ctx->prompt_callbacks.enter) {
-            bool should_close = ctx->prompt_callbacks.enter(sel, lb);
+            bool should_close = ctx->prompt_callbacks.enter( lb);
             ctx->window.selection_complete = should_close;
         } else {
             ctx->window.selection_complete = true;
@@ -249,7 +249,7 @@ void HandlePersistentDelete(FlintContext* ctx) {
     if (!UI_IsListBoxSelected(lb)) return;
     if (ctx->prompt_callbacks.ctrl_enter != NULL) {
         const char* txt = lb_selected_text(lb);
-        bool should_close = ctx->prompt_callbacks.ctrl_enter(txt, lb);
+        bool should_close = ctx->prompt_callbacks.ctrl_enter(lb);
         ctx->window.selection_complete = should_close;
     }
 }
@@ -330,7 +330,7 @@ void HandleInsertControlEnter(FlintContext* ctx) {
     Vim_GetText(ctx, text, sizeof(text));
   }
   if (ctx->prompt_callbacks.ctrl_enter != NULL) {
-    bool should_close = ctx->prompt_callbacks.ctrl_enter(text, lb);
+    bool should_close = ctx->prompt_callbacks.ctrl_enter(lb);
     ctx->window.selection_complete = should_close;
   } else {
     ctx->window.selection_complete = false;
@@ -422,7 +422,7 @@ void HandleSendEdit(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(_c);
     if (_c->prompt_callbacks.edit && lb && UI_IsListBoxSelected(lb)) {
         const char* sel = lb_selected_text(lb);
-        _c->prompt_callbacks.edit(sel, lb);
+        _c->prompt_callbacks.edit( lb);
     }
 }
 
@@ -430,15 +430,13 @@ void HandleSendCopyShift(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
     const char* sel = UI_IsListBoxSelected(lb) ? lb_selected_text(lb) : "";
-    if (ctx->prompt_callbacks.copy) ctx->prompt_callbacks.copy(sel, lb->selected_index, 0);
-    else Platform_CopyToClipboard(sel);
+    Platform_CopyToClipboard(sel);
 }
 void HandleSendCopyControl(FlintContext* ctx) {
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
     const char* sel = UI_IsListBoxSelected(lb) ? lb_selected_text(lb) : "";
-    if (ctx->prompt_callbacks.copy) ctx->prompt_callbacks.copy(sel, lb->selected_index, 1);
-    else Platform_CopyToClipboard(sel);
+    Platform_CopyToClipboard(sel);
 }
 void HandleCopyToSearch(FlintContext* ctx) {
   if (!ctx) return;

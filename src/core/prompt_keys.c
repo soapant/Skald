@@ -88,30 +88,30 @@ void Prompt_TriggerEnter(PromptState* state, bool ctrl, bool shift, bool alt) {
     bool should_close = true;
     if (ctrl && shift) {
         should_close = false;
-        if (ctx->prompt_callbacks.ctrl_shift_enter) should_close = ctx->prompt_callbacks.ctrl_shift_enter(sel, &state->listbox);
-        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+        if (ctx->prompt_callbacks.ctrl_shift_enter) should_close = ctx->prompt_callbacks.ctrl_shift_enter( &state->listbox);
+        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter( &state->listbox);
     } else if (ctrl && alt) {
         should_close = false;
-        if (ctx->prompt_callbacks.ctrl_alt_enter) should_close = ctx->prompt_callbacks.ctrl_alt_enter(sel, &state->listbox);
-        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+        if (ctx->prompt_callbacks.ctrl_alt_enter) should_close = ctx->prompt_callbacks.ctrl_alt_enter( &state->listbox);
+        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter( &state->listbox);
     } else if (shift && alt) {
         should_close = false;
-        if (ctx->prompt_callbacks.shift_alt_enter) should_close = ctx->prompt_callbacks.shift_alt_enter(sel, &state->listbox);
-        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+        if (ctx->prompt_callbacks.shift_alt_enter) should_close = ctx->prompt_callbacks.shift_alt_enter( &state->listbox);
+        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter( &state->listbox);
     } else if (shift) {
         should_close = false;
-        if (ctx->prompt_callbacks.shift_enter) should_close = ctx->prompt_callbacks.shift_enter(sel, &state->listbox);
-        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+        if (ctx->prompt_callbacks.shift_enter) should_close = ctx->prompt_callbacks.shift_enter( &state->listbox);
+        else if (ctx->prompt_callbacks.enter) should_close = ctx->prompt_callbacks.enter( &state->listbox);
     } else if (ctrl) {
         should_close = false;
         log_info("CTRL_ENTER_BRANCH: ctrl_enter=%p sel='%s'", (void*)ctx->prompt_callbacks.ctrl_enter, sel ? sel : "(null)");
         if (ctx->prompt_callbacks.ctrl_enter) {
             log_info("CTRL_ENTER_CALLBACK_CALLING");
-            should_close = ctx->prompt_callbacks.ctrl_enter(sel, &state->listbox);
+            should_close = ctx->prompt_callbacks.ctrl_enter(&state->listbox);
             log_info("CTRL_ENTER_CALLBACK_RETURNED should_close=%d", should_close);
         } else if (ctx->prompt_callbacks.enter) {
             log_info("ENTER_FALLBACK_CALLBACK_CALLING");
-            should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+            should_close = ctx->prompt_callbacks.enter(&state->listbox);
             log_info("ENTER_FALLBACK_CALLBACK_RETURNED should_close=%d", should_close);
         } else {
             log_info("CTRL_ENTER_CALLBACK_IS_NULL");
@@ -126,7 +126,7 @@ void Prompt_TriggerEnter(PromptState* state, bool ctrl, bool shift, bool alt) {
         if (ctx->prompt_callbacks.enter) {
             log_info("ENTER_CALLBACK_CALLING");
 
-            should_close = ctx->prompt_callbacks.enter(sel, &state->listbox);
+            should_close = ctx->prompt_callbacks.enter(&state->listbox);
 
             log_info("ENTER_CALLBACK_RETURNED should_close=%d",
                      should_close);
@@ -326,11 +326,7 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
             } else {
                 idx = UI_LookupTrueIndex(ctx->window.output_buffer);
             }
-            if (ctx->prompt_callbacks.copy) {
-                ctx->prompt_callbacks.copy(ctx->window.output_buffer, idx, type);
-            } else {
-                Platform_CopyToClipboard(ctx->window.output_buffer);
-            }
+            Platform_CopyToClipboard(ctx->window.output_buffer);
         }
         PROFILE_END_VAR(_pt, "Prompt_HandleKey");
         return true;

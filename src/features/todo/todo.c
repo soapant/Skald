@@ -253,37 +253,25 @@ void todo_refresh_callback(const char* filter, ListBoxInfo* lb) {
     fl_free_file_list(&files);
 }
 
-bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool todo_enter_callback(ListBoxInfo* lb) {
     if (fl_is_selected(lb)) {
-        RemoveTodoItemFromFile(selection);
+        RemoveTodoItemFromFile(lb->selected_text);
     } 
     else {
-        AddTodoToFile(selection);
+        AddTodoToFile(lb->selected_text);
     }
     return true;
 }
 
-bool todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+bool todo_ctrlenter_callback(ListBoxInfo* lb) {
     if (fl_is_selected(lb)) {
-        RemoveTodoItemFromFile(selection);
+        RemoveTodoItemFromFile(lb->selected_text);
     } else {
-        AddTodoToFile(selection);
+        AddTodoToFile(lb->selected_text);
         fl_set_edit_text("");
     }
     todo_refresh_callback("", lb);
     return false;
-}
-void todo_copy_callback(const char* selection,int true_index,int type) {
-    char buffer[512];
-    strncpy(buffer, selection, sizeof(buffer) - 1);
-    buffer[sizeof(buffer) - 1] = '\0';
-    
-    char* pipe = strchr(buffer, '|');
-    if (pipe) {
-        *pipe = '\0';
-    }
-    
-    fl_copy_to_clipboard(buffer);
 }
 
 void todo_render_callback(PromptState *state) {
@@ -324,9 +312,9 @@ void todo_render_callback(PromptState *state) {
     fl_listbox_end();
 }
 
-void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
+void todo_edit_callback(ListBoxInfo* lb) {
     int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
+    char* edited = fl_edit_text_popup(.initial_text = lb->selected_text,.lb = lb, .out_index = &idx);
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
     free(edited);
@@ -339,7 +327,6 @@ void TriggerTodo(void) {
         .refresh = todo_refresh_callback,
         .enter = todo_enter_callback,
         .ctrl_enter = todo_ctrlenter_callback,
-        .copy = todo_copy_callback,
         .render = todo_render_callback,
         .edit = todo_edit_callback);
 

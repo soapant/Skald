@@ -158,8 +158,8 @@ void clipboard_history_refresh(const char* filter, ListBoxInfo* lb) {
     fl_free_list(items, count);
 }
 
-bool clipboard_history_enter(const char* selection, ListBoxInfo* lb) {
-    (void)selection;
+bool clipboard_history_enter(ListBoxInfo* lb) {
+    (void)lb->selected_text;
     if (!fl_is_selected(lb)) return true;
     int sel = lb->selected_index;
     if (sel < 0 || sel >= lb->total_matches) return true;

@@ -20,7 +20,8 @@
  * - `populated_count`    — Number of cached rows (internal).
  * - `matching_indices`   — Indices of items that match the current filter.
  * - `total_matches`      — Total number of matches before the visible window.
- * - `selected_index`     — Index into `matching_indices` of the selected row,
+ * - `selected_index`     — Index into `matching_indices` of the selected row.
+ * - `selected_text`      — The currently selected text.
  *                          or -1 if nothing is selected.
  * - `view_offset`        — Scroll offset into `matching_indices`.
  * - `last_item_count`    — Total item count from the last populate call.
@@ -69,6 +70,7 @@ struct ListBoxInfo {
     int  matching_indices[MAX_VISIBLE_ITEMS];
     int  total_matches;
     int  selected_index;
+    char* selected_text;
     int  view_offset;
     int  last_item_count;
 };
@@ -104,56 +106,50 @@ typedef void (*RefreshCallback)(const char* filter, ListBoxInfo* lb);
 /**
  * @brief Callback invoked when Enter is pressed.
  *
- * @param selection  Currently selected item text (borrowed).
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*EnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*EnterCallback)(ListBoxInfo* lb);
 
 /**
  * @brief Callback invoked when Ctrl+Enter is pressed.
  *
- * @param selection  Currently selected item text (borrowed).
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*CtrlEnterCallback)(ListBoxInfo* lb);
 
 /**
  * @brief Callback invoked when Shift+Enter is pressed.
  *
- * @param selection  Currently selected item text (borrowed).
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*ShiftEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*ShiftEnterCallback)(ListBoxInfo* lb);
 
 /**
  * @brief Callback invoked when Ctrl+Shift+Enter is pressed.
  *
- * @param selection  Currently selected item text (borrowed).
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlShiftEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*CtrlShiftEnterCallback)(ListBoxInfo* lb);
 
 /**
  * @brief Callback invoked when Ctrl+Alt+Enter is pressed.
  *
- * @param selection  Currently selected item text (borrowed).
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlAltEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*CtrlAltEnterCallback)(ListBoxInfo* lb);
 
 /**
  * @brief Callback invoked when Shift+Alt+Enter is pressed.
  *
- * @param selection  Currently selected item text (borrowed).
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*ShiftAltEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*ShiftAltEnterCallback)(ListBoxInfo* lb);
 
 /**
  * @brief Callback invoked when Tab is pressed.
@@ -165,10 +161,9 @@ typedef void (*TabCallback)(ListBoxInfo* lb);
 /**
  * @brief Callback invoked on text edit events.
  *
- * @param selection  Currently selected item text (borrowed).
  * @param lb         Listbox state. See `ListBoxInfo`.
  */
-typedef void (*EditCallback)(const char* selection, ListBoxInfo* lb);
+typedef void (*EditCallback)(ListBoxInfo* lb);
 
 /**
  * @brief Callback used to filter listbox items.
@@ -177,15 +172,6 @@ typedef void (*EditCallback)(const char* selection, ListBoxInfo* lb);
  * @param filter  Current filter string.
  */
 typedef void (*FilterCallback)(const char* item, const char* filter);
-
-/**
- * @brief Callback invoked when the user copies a selection.
- *
- * @param selection   Selected text (borrowed).
- * @param true_index  Index of the selection in the original item array.
- * @param type        Copy type either be 0 or 1. 0 for standard copy 1 for explicit.
- */
-typedef void (*CopyCallback)(const char* selection, int true_index, int type);
 
 /**
  * @brief Callback invoked when the user requests help.
@@ -238,14 +224,10 @@ static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
     if (!lb) return;
     ListBoxInfo_Free(lb);
     lb->selected_index = -1;
+    lb->selected_text = "";
     lb->total_matches = 0;
     lb->view_offset = 0;
     lb->last_item_count = 0;
-}
-
-static inline const char* ListBoxInfo_GetSelectedText(ListBoxInfo *lb) {
-    if (!lb) return NULL;
-    return ListBoxInfo_Row(lb, lb->selected_index);
 }
 
 /**
@@ -289,7 +271,6 @@ typedef struct {
     CtrlAltEnterCallback ctrl_alt_enter;
     ShiftAltEnterCallback shift_alt_enter;
     TabCallback tab;
-    CopyCallback copy;
     RenderCallback render;
     EditCallback edit;
     FilterCallback filter;

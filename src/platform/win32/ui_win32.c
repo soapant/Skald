@@ -166,6 +166,7 @@ void UI_NavigateTo(ListBoxInfo* lb, int index) {
     int old_sel = lb->selected_index;
     if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     lb->selected_index = index;
+    // lb->selected_text = ListBoxInfo_Row(lb,index);
     ListBox_ScrollToSelection(lb);
     UI_RequestPopupRepaint();
     PROFILE_END_VAR(_pt, "UI_NavigateTo");
