@@ -3,11 +3,6 @@
 
 #include "core/types.h"
 
-typedef struct {
-    size_t index;
-    char original;
-} NewlineInfo;
-
 #define HTTP_CONNECT_TIMEOUT_S 10
 #define HTTP_TIMEOUT_S 30
 #define HTTP_MAX_REDIRECTS 10
@@ -39,13 +34,6 @@ int Platform_CopyToClipboard(const char* text);
 int Platform_CopyImageToClipboard(const unsigned char* png, size_t len);
 int Platform_SetFileToClipboard(const char* path);
 char* Platform_GetWorkingDir();
-
-int Platform_FileAppend(MappedFile *mf, const char *text);
-void Platform_FileClose(MappedFile *mf);
-Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount);
-char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo **outNewlines, size_t *outNewlineCount);
-void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineCount);
-int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text);
 
 void Platform_StartUniversalTimer(void);
 void Platform_ResetUniversalTimer(void);
