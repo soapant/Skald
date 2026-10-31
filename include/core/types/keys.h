@@ -116,15 +116,16 @@
 #define VK_RMENU 0xA5
 #endif
 
-#define HOTKEY_MOD_NONE         0x00
-#define HOTKEY_MOD_ALT          0x01
-#define HOTKEY_MOD_SHIFT        0x02
-#define HOTKEY_MOD_CTRL         0x04
-#define HOTKEY_MOD_SUPER         0x08
-#define HOTKEY_MOD_ALT_SHIFT    (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
-#define HOTKEY_MOD_ALT_CTRL     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
-#define HOTKEY_MOD_SHIFT_CTRL   (HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
-#define HOTKEY_MOD_ALT_SHIFT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
+#define HOTKEY_MOD_NONE 0x00
+#define HOTKEY_MOD_ALT 0x01
+#define HOTKEY_MOD_SHIFT 0x02
+#define HOTKEY_MOD_CTRL 0x04
+#define HOTKEY_MOD_SUPER 0x08
+#define HOTKEY_MOD_ALT_SHIFT (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
+#define HOTKEY_MOD_ALT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
+#define HOTKEY_MOD_SHIFT_CTRL (HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
+#define HOTKEY_MOD_ALT_SHIFT_CTRL                                              \
+  (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 
 #if !defined(FL_MOUSE_BTN_MAX)
 #define FL_MOUSE_BTN_MAX 24
@@ -135,8 +136,8 @@
 #define FL_MOUSE_VK(btn) (VK_MOUSE_BASE + (btn) - 1)
 
 typedef struct {
-    int vk_code;
-    int mods;
+  int vk_code;
+  int mods;
 } HotkeyKey;
 
 #endif

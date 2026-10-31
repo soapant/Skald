@@ -12,25 +12,25 @@ typedef struct _XftFont XftFont;
 
 typedef struct WindowHandle {
 #if defined(_WIN32)
-    void* hwnd;
+  void *hwnd;
 #elif defined(__linux__)
-    unsigned long xid;
+  unsigned long xid;
 #endif
 } WindowHandle;
 
 typedef struct FontHandle {
 #if defined(_WIN32)
-    void* hfont;
+  void *hfont;
 #elif defined(__linux__)
-    XftFont* xfont;
-    Display* dpy;
+  XftFont *xfont;
+  Display *dpy;
 #endif
 } FontHandle;
 
 #define WH_NULL ((WindowHandle){0})
 
 #if defined(_WIN32)
-#define WH_FROM_HWND(h) ((WindowHandle){ .hwnd = (void*)(h) })
+#define WH_FROM_HWND(h) ((WindowHandle){.hwnd = (void *)(h)})
 #define WH_TO_HWND(h) ((h).hwnd)
 #elif defined(__linux__)
 #define WH_FROM_HWND(h) ((void)(h), WH_NULL)
@@ -40,7 +40,7 @@ typedef struct FontHandle {
 #define FH_NULL ((FontHandle){0})
 
 #if defined(_WIN32)
-#define FH_FROM_HFONT(h) ((FontHandle){ .hfont = (void*)(h) })
+#define FH_FROM_HFONT(h) ((FontHandle){.hfont = (void *)(h)})
 #define FH_TO_HFONT(h) ((h).hfont)
 #elif defined(__linux__)
 #define FH_TO_XFT(h) ((h).xfont)
@@ -48,43 +48,47 @@ typedef struct FontHandle {
 #endif
 
 typedef struct {
-    int x, y, w, h;
-    int item_height;
+  int x, y, w, h;
+  int item_height;
 } WindowLayout;
 
 typedef struct {
-    WindowHandle hwnd;
-    char title[256];
-    char exe[256];
+  WindowHandle hwnd;
+  char title[256];
+  char exe[256];
 } WindowData;
 
 typedef struct {
-    size_t r, g, b;
+  size_t r, g, b;
 } PlColor;
 
 typedef struct {
-    int x, y, w, h;
+  int x, y, w, h;
 } PlRect;
 
 typedef struct {
-    int x,y;
+  int x, y;
 } PlPos;
 
 typedef struct {
-    char** windows;
-    int count;
+  char **windows;
+  int count;
 } PlWindowList;
 
-typedef struct { uint64_t ticks; } PlTimer;
+typedef struct {
+  uint64_t ticks;
+} PlTimer;
 
 typedef struct {
-    ListBoxInfo *lb;
-    const char **items;
-    int count;
-    int x; int y; int w; int h;
-    int item_height;
+  ListBoxInfo *lb;
+  const char **items;
+  int count;
+  int x;
+  int y;
+  int w;
+  int h;
+  int item_height;
 } PlListSpec;
-
 
 #define GAP 20
 #define ID_TRAY_ICON 1001

@@ -5,47 +5,51 @@
 #include <stdint.h>
 
 typedef enum {
-    CLIPBOARD_TEXT,
-    CLIPBOARD_IMAGE,
+  CLIPBOARD_TEXT,
+  CLIPBOARD_IMAGE,
 } ClipboardType;
 
 typedef struct {
-    ClipboardType type;
-    uint64_t timestamp;
-    char* text;
-    char* image_path;
-    uint32_t image_width;
-    uint32_t image_height;
+  ClipboardType type;
+  uint64_t timestamp;
+  char *text;
+  char *image_path;
+  uint32_t image_width;
+  uint32_t image_height;
 } ClipboardEntry;
 
 typedef struct {
-    ClipboardEntry* entries;
-    size_t count;
-    size_t capacity;
+  ClipboardEntry *entries;
+  size_t count;
+  size_t capacity;
 } ClipboardHistory;
 
 extern const unsigned char PNG_MAGIC[8];
 
 typedef enum {
-    CLIPBOARD_FMT_UNKNOWN = 0,
-    CLIPBOARD_FMT_PNG,
-    CLIPBOARD_FMT_JPEG,
-    CLIPBOARD_FMT_GIF,
-    CLIPBOARD_FMT_BMP,
+  CLIPBOARD_FMT_UNKNOWN = 0,
+  CLIPBOARD_FMT_PNG,
+  CLIPBOARD_FMT_JPEG,
+  CLIPBOARD_FMT_GIF,
+  CLIPBOARD_FMT_BMP,
 } ClipboardImageFormat;
 
-ClipboardImageFormat clipboard_image_format(const unsigned char* buf, size_t len);
-const char* clipboard_image_mime(ClipboardImageFormat fmt);
-char* clipboard_path_to_uri_list(const char* path);
+ClipboardImageFormat clipboard_image_format(const unsigned char *buf,
+                                            size_t len);
+const char *clipboard_image_mime(ClipboardImageFormat fmt);
+char *clipboard_path_to_uri_list(const char *path);
 
-void clipboard_png_dims(const unsigned char* png, size_t len, uint32_t* out_w, uint32_t* out_h);
-void clipboard_image_dims(const unsigned char* buf, size_t len, uint32_t* out_w, uint32_t* out_h);
+void clipboard_png_dims(const unsigned char *png, size_t len, uint32_t *out_w,
+                        uint32_t *out_h);
+void clipboard_image_dims(const unsigned char *buf, size_t len, uint32_t *out_w,
+                          uint32_t *out_h);
 
-bool clipboard_history_push_text_platform(const char* text);
-bool clipboard_history_push_image_platform(const char* path, unsigned int w, unsigned int h);
-bool clipboard_set_path_platform(const char* path);
+bool clipboard_history_push_text_platform(const char *text);
+bool clipboard_history_push_image_platform(const char *path, unsigned int w,
+                                           unsigned int h);
+bool clipboard_set_path_platform(const char *path);
 size_t clipboard_history_count_platform(void);
-const ClipboardEntry* clipboard_history_get_platform(size_t index);
+const ClipboardEntry *clipboard_history_get_platform(size_t index);
 void clipboard_clear_history_platform(void);
 
 #endif

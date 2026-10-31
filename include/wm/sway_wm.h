@@ -5,8 +5,8 @@
 #include "core/types.h"
 bool get_title_sway(char *buffer, int buffer_size);
 bool get_app_id_sway(char *buffer, int buffer_size);
-char* paste_sway(char* content);
-bool focus_window_title_sway(char* title);
+char *paste_sway(char *content);
+bool focus_window_title_sway(char *title);
 PlWindowList get_window_titles_sway();
 PlWindowList get_window_names_sway();
 bool close_active_window_sway(void);
@@ -20,4 +20,3 @@ bool minimize_active_window_sway(void);
 bool get_mouse_pos_sway(int *x, int *y);
 
 #endif
-

@@ -4,23 +4,23 @@
 #include <stdbool.h>
 
 typedef struct {
-    int off_x;
-    int off_y;
-    unsigned long bg_override;
-    bool transparent;
+  int off_x;
+  int off_y;
+  unsigned long bg_override;
+  bool transparent;
 
-    bool measuring;
-    int meas_x0;
-    int meas_y0;
-    int meas_x1;
-    int meas_y1;
-    int meas_origin_x;
-    int meas_origin_y;
+  bool measuring;
+  int meas_x0;
+  int meas_y0;
+  int meas_x1;
+  int meas_y1;
+  int meas_origin_x;
+  int meas_origin_y;
 } PlDrawState;
 
-PlDrawState* PlDrawState_Get(void);
+PlDrawState *PlDrawState_Get(void);
 void PlDrawState_BeginMeasure(void);
 void PlDrawState_TrackMeasure(int x, int y, int w, int h);
-void PlDrawState_EndMeasure(int* out_w, int* out_h);
+void PlDrawState_EndMeasure(int *out_w, int *out_h);
 
 #endif

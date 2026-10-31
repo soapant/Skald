@@ -8,9 +8,7 @@
 #define TIMER_BUF_LINES 8192
 #define TIMER_BUF_LINE 256
 
-static inline int64_t TimerNowTicks(void) {
-  return Platform_TimerNowTicks();
-}
+static inline int64_t TimerNowTicks(void) { return Platform_TimerNowTicks(); }
 
 static inline int64_t TimerTickFrequency(void) {
   return Platform_TimerTickFrequency();
@@ -23,9 +21,11 @@ static inline WinTimer TimerStart(void) {
   return t;
 }
 
-void TimerEnd(WinTimer t, const char* operation_name, const char* file, int line);
+void TimerEnd(WinTimer t, const char *operation_name, const char *file,
+              int line);
 void TimerFlush(void);
 double TimerElapsedUs(WinTimer t);
-void TimerPrintRaw(double elapsed_us, const char* operation_name, const char* file, int line);
+void TimerPrintRaw(double elapsed_us, const char *operation_name,
+                   const char *file, int line);
 
 #endif

@@ -11,31 +11,30 @@
 #include "core/history.h"
 #include "core/timer.h"
 
-static void free_history_list(void* v) {
-  char** list = (char**)v;
-  if (!list) return;
-  for (int k = 0; list[k]; k++) free(list[k]);
+static void free_history_list(void *v) {
+  char **list = (char **)v;
+  if (!list)
+    return;
+  for (int k = 0; list[k]; k++)
+    free(list[k]);
   free(list);
 }
 
 int main() {
-  
+
   srand((unsigned)time(NULL));
   if (!Platform_TryAcquireSingleInstance()) {
-      fprintf(stderr, "Flint is already running, exiting.\n");
-      return 1;
+    fprintf(stderr, "Flint is already running, exiting.\n");
+    return 1;
   }
   Platform_InitDataFolder();
   Platform_InitMainThreadContext();
   Platform_FixWorkingDirectory();
   Platform_InitDisplaySafe();
 
-  
   Config_Load();
   Config_ResolveDefaultApps();
-  
 
-  
   Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();
   FlintContext_Get()->feature_history = NULL;
@@ -43,21 +42,16 @@ int main() {
   History_Init();
   Platform_InitUI();
   Platform_PrewarmBackgroundPixmap();
-  
 
-  
   FeatureLoader_Init();
-  
 
-  
-  WindowManager* wm = WindowManager_Create();
-  
+  WindowManager *wm = WindowManager_Create();
+
   if (!wm) {
-      log_error("Failed to create WindowManager");
-      return 1;
+    log_error("Failed to create WindowManager");
+    return 1;
   }
 
-  
   log_info("entering main loop");
 
   WindowManager_Run(wm);
@@ -72,14 +66,16 @@ int main() {
   Platform_CleanupPlatformResources();
   History_Shutdown();
 
-  FlintContext* _ctx = FlintContext_Get();
+  FlintContext *_ctx = FlintContext_Get();
   if (_ctx->feature_history) {
-    for (ptrdiff_t i = 0; i < shlen(_ctx->feature_history); i++) free_history_list(_ctx->feature_history[i].value);
+    for (ptrdiff_t i = 0; i < shlen(_ctx->feature_history); i++)
+      free_history_list(_ctx->feature_history[i].value);
     shfree(_ctx->feature_history);
     _ctx->feature_history = NULL;
   }
   if (_ctx->history_indices) {
-    for (ptrdiff_t i = 0; i < shlen(_ctx->history_indices); i++) free(_ctx->history_indices[i].value);
+    for (ptrdiff_t i = 0; i < shlen(_ctx->history_indices); i++)
+      free(_ctx->history_indices[i].value);
     shfree(_ctx->history_indices);
     _ctx->history_indices = NULL;
   }
