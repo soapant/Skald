@@ -121,7 +121,7 @@ int x = 0, y = 0, w = 1920, h = 1080;
 }
 
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
-    
+    log_info("Platform_PromptUser started wm=%p spec=%p",wm,spec);
     if (!wm || !spec) {  return NULL; }
     if (spec->subwindow) {
         PromptSpec heap_spec = *spec;

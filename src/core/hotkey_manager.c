@@ -326,7 +326,6 @@ bool hotkey_process(int vk_code, int modifiers) {
                 if (blacklisted) {
                     continue; 
                 }
-            } else {
             }
         } 
         else {
@@ -368,13 +367,14 @@ bool hotkey_process(int vk_code, int modifiers) {
             }
         }
         hotkey_enqueue(cb, b->is_feature_toggle, b->owner, vk_code, eff_modifiers);
+        char buf[2556];
+        char hotkey_buf[2422];
+        HotkeyString_Format((HotkeyKey){.vk_code=vk_code,.mods=eff_modifiers},hotkey_buf,sizeof(hotkey_buf));
         if (MessageAfterEachHotkey) {
-            char buf[2556];
-            char hotkey_buf[2422];
-            HotkeyString_Format((HotkeyKey){.vk_code=vk_code,.mods=eff_modifiers},hotkey_buf,sizeof(hotkey_buf));
             snprintf(buf,sizeof(buf),"Ran Hotkey %s",hotkey_buf);
             DisplayMessageSlot(buf,BOTTOM_CENTER,400,400,20,TimeOutForMessages,COLOR_TEXT,NULL,NULL);
         }
+        log_info("hotkey_process Hotkey %s Matches",hotkey_buf);
         if (b->hold) hotkey_hold_begin(vk_code, b->modifiers);
         return swallow;
     }
