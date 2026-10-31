@@ -20,7 +20,6 @@ typedef struct {
 typedef struct {
      ListBoxInfo listbox;
      bool        has_listbox;
-     WindowHandle hListBox;
      WindowHandle hPopupWnd;
 } WinPromptState;
 #endif

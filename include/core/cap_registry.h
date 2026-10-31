@@ -12,11 +12,8 @@
 void  cap_register_abi(const char *key, unsigned abi, void *fn);
 void *cap_resolve_abi(const char *key, unsigned abi);
 
-void  cap_register(const char *key, void *fn);
-void *cap_resolve(const char *key);
 void  cap_bind_declare(const char *key, void *consumer);
 void  cap_purge_owner(const char *path_a, const char *path_b);
-void  cap_dump(void);
 
 unsigned cap_generation(void);
 

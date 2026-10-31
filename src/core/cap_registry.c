@@ -60,10 +60,6 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     if (owner[0]) cap_add_provides(owner, key);
 }
 
-void cap_register(const char *key, void *fn) {
-    cap_register_abi(key, CAP_ABI_V1, fn);
-}
-
 void *cap_resolve_abi(const char *key, unsigned abi) {
     if (!key || !key[0]) return NULL;
     for (int i = 0; i < g_cap_count; i++) {
@@ -76,10 +72,6 @@ void *cap_resolve_abi(const char *key, unsigned abi) {
         return g_caps[i].fn;
     }
     return NULL;
-}
-
-void *cap_resolve(const char *key) {
-    return cap_resolve_abi(key, CAP_ABI_V1);
 }
 
 void cap_bind_declare(const char *key, void *consumer) {
@@ -123,11 +115,3 @@ void cap_purge_owner(const char *path_a, const char *path_b) {
     
 }
 
-void cap_dump(void) {
-    
-    for (int i = 0; i < g_cap_count; i++) {
-        char ob[OWNER_PATH_MAX];
-        Owner_ModuleBasename(g_caps[i].owner, ob, sizeof(ob));
-    }
-    
-}

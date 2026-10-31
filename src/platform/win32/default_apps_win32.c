@@ -4,29 +4,7 @@
 #include <ctype.h>
 #include "platform/platform.h"
 #include "config.h"
-
-#include "core/timer.h"
 char default_apps_win32[DEFAULT_APP_COUNT][256];
-
-const char* win32_default_apps_read_sz(const char* subkey,
-                                             const char* value_name,
-                                             int slot) {
-        
-default_apps_win32[slot][0] = '\0';
-
-    DWORD size = (DWORD)sizeof(default_apps_win32[slot]);
-    LONG rc = RegGetValueA(HKEY_CURRENT_USER,
-                           subkey,
-                           value_name,
-                           RRF_RT_REG_SZ,
-                           NULL,
-                           default_apps_win32[slot],
-                           &size);
-    if (rc != ERROR_SUCCESS) {
-        default_apps_win32[slot][0] = '\0';
-    }
-    return default_apps_win32[slot];
-}
 
 const char* win32_terminal_name_from_guid(const char* console_guid, const char* terminal_guid) {
         
