@@ -39,7 +39,7 @@ if (exec_line) exec_line[0] = '\0';
             if (workdir) strncpy(workdir, v, 1024 - 1);
         }
     }
-    {  return true; }
+    return true;
 }
 
 void Desktop_CleanExec(char exec_line[1024]) {

@@ -34,7 +34,7 @@ static char buffer[1024];
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
     }
     log_error("Coulnt Get Active Window Title");
-    {  return NULL; }
+    return NULL;
 }
 
 char* Wm_GetActiveWindowAppId(void) {
@@ -60,7 +60,7 @@ static char buffer[1024];
     if (get_app_id_x11(buffer, sizeof(buffer))) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
     }
-    {  return NULL; }
+    return NULL;
 }
 
 bool Wm_FocusByTitle(const char *title) {
@@ -84,7 +84,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     log_error("Coulnt Focus By TItle %s",title);
     
-    {  return NULL; }
+    return NULL;
 }
 
 char* Wm_Paste(char* content) {
@@ -98,7 +98,7 @@ char* result;
     }
     if ((result = paste_x11(content))) {  return result; }
     log_error("content='%s'", content ? content : "null");
-    {  return NULL; }
+    return NULL;
 }
 
 PlWindowList Wm_GetWindowTitles() {
@@ -118,7 +118,7 @@ PlWindowList result;
     result = get_window_titles_x11();
     if (result.windows != NULL) {  return result; }
     log_error("GetWindowTitles Didnt Work");
-    {  return empty; }
+    return empty;
 }
 PlWindowList Wm_GetWindowNames() {
         
@@ -137,7 +137,7 @@ PlWindowList result;
     result = get_window_names_x11();
     if (result.windows != NULL) {  return result; }
     log_error("GetWindowNames Didnt Work");
-    {  return empty; }
+    return empty;
 }
 
 bool Wm_CloseActiveWindow(void) {
@@ -150,7 +150,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     if (close_active_window_x11()) {  return true; }
     log_error("CloseActiveWindow Didnt Work");
-    {  return false; }
+    return false;
 }
 
 bool Wm_ToggleFullscreenActive(void) {
@@ -163,7 +163,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     if (toggle_fullscreen_active_x11()) {  return true; }
     log_error("ToggleFullscreenActive Didnt Work");
-    {  return false; }
+    return false;
 }
 
 bool Wm_MoveActiveWindowToMonitor(bool right) {
@@ -176,7 +176,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     if (move_active_window_to_monitor_x11(right)) {  return true; }
     log_error("MoveActiveWindowToMonitor Didnt Work");
-    {  return false; }
+    return false;
 }
 
 bool Wm_MoveActiveWindowLeft(void) {
@@ -189,7 +189,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     if (move_active_window_left_x11()) {  return true; }
     log_error("MoveActiveWindowLeft Didnt Work");
-    {  return false; }
+    return false;
 }
 
 bool Wm_MoveActiveWindowRight(void) {
@@ -202,7 +202,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     if (move_active_window_right_x11()) {  return true; }
     log_error("MoveActiveWindowRight Didnt Work");
-    {  return false; }
+    return false;
 }
 
 bool Wm_FocusWindowLeft(void) {
@@ -215,7 +215,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     if (focus_window_left_x11()) {  return true; }
     log_error("FocusWindowLeft Didnt Work");
-    {  return false; }
+    return false;
 }
 
 bool Wm_FocusWindowRight(void) {
@@ -228,7 +228,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     if (focus_window_right_x11()) {  return true; }
     log_error("FocusWindowRight Didnt Work");
-    {  return false; }
+    return false;
 }
 
 bool Wm_MinimizeActiveWindow(void) {
@@ -241,7 +241,7 @@ if (getenv("WAYLAND_DISPLAY")) {
     }
     if (minimize_active_window_x11()) {  return true; }
     log_error("MinimizeActiveWindow Didnt Work");
-    {  return false; }
+    return false;
 }
 
 bool Wm_ScreenshotCopyArea(void) {
@@ -249,7 +249,7 @@ bool Wm_ScreenshotCopyArea(void) {
 if (getenv("WAYLAND_DISPLAY")) {
         if (screenshot_copy_area_kwin()) return true;
     }
-    {  return false; }
+    return false;
 }
 
 bool Wm_ScreenshotCopy(void) {
@@ -257,7 +257,7 @@ bool Wm_ScreenshotCopy(void) {
 if (getenv("WAYLAND_DISPLAY")) {
         if (screenshot_copy_kwin()) return true;
     }
-    {  return false; }
+    return false;
 }
 
 bool Wm_ScreenshotSaveArea(char* save_path) {
@@ -265,7 +265,7 @@ bool Wm_ScreenshotSaveArea(char* save_path) {
 if (getenv("WAYLAND_DISPLAY")) {
         if (screenshot_save_area_kwin(save_path)) return true;
     }
-    {  return false; }
+    return false;
 }
 
 bool Wm_ScreenshotSave(char* save_path) {
@@ -273,7 +273,7 @@ bool Wm_ScreenshotSave(char* save_path) {
 if (getenv("WAYLAND_DISPLAY")) {
         if (screenshot_save_kwin(save_path)) return true;
     }
-    {  return false; }
+    return false;
 }
 
 char* Wm_OcrArea(void) {
@@ -282,7 +282,7 @@ if (getenv("WAYLAND_DISPLAY")) {
         char* out = ocr_area_kwin();
         if (out) return out;
     }
-    {  return NULL; }
+    return NULL;
 }
 
 bool Wm_GetMousePos(int *x, int *y) {

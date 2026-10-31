@@ -7,12 +7,12 @@
 LibHandle Platform_LoadLibrary(const char* path) {
         
 if (!path) {  return NULL; }
-    {  return (LibHandle)LoadLibraryA(path); }
+    return (LibHandle)LoadLibraryA(path);
 }
 void* Platform_GetSymbol(LibHandle lib, const char* name) {
         
 if (!lib || !name) {  return NULL; }
-    {  return (void*)GetProcAddress((HMODULE)lib, name); }
+    return (void*)GetProcAddress((HMODULE)lib, name);
 }
 void Platform_UnloadLibrary(LibHandle lib) {
         
@@ -20,7 +20,7 @@ if (lib) FreeLibrary((HMODULE)lib);
 }
 const char* Platform_LibExtension(void) {
     
-{  return ".dll"; } 
+return ".dll";
 }
 const char* Platform_GetLoadError(void) {
     
@@ -31,7 +31,7 @@ static char buf[512];
   if (n == 0) {
     snprintf(buf, sizeof(buf), "error %lu", (unsigned long)err);
   }
-  {  return buf; }
+  return buf;
 }
 
 bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n) {
@@ -50,5 +50,5 @@ if (!out || n == 0) {  return false; }
         return false;
     }
     out[n - 1] = '\0';
-    {  return out[0] != '\0'; }
+    return out[0] != '\0';
 }

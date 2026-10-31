@@ -56,7 +56,7 @@ if (g_i3_probe != 0) {  return g_i3_probe == 1; }
         }
     }
     globfree(&g);
-    {  return g_i3_probe == 1; }
+    return g_i3_probe == 1;
 }
 
 static bool i3_exec(const char* command) {
@@ -66,14 +66,14 @@ if (!i3_ensure_sock()) {  return false; }
     if (!out || out[0] == '\0') { if (out) free(out); return false; }
     bool ok = !(strstr(out, "\"success\":false") || strstr(out, "\"error\""));
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 static bool i3_move_to_output(bool right) {
         
 char cmd[128];
     snprintf(cmd, sizeof(cmd), "i3-msg move container to output %s", right ? "right" : "left");
-    {  return i3_exec(cmd); }
+    return i3_exec(cmd);
 }
 static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
     
@@ -102,7 +102,7 @@ if (!dpy || w == None) {  return NULL; }
             XFree(data);
         }
     }
-    {  return out; }
+    return out;
 }
 
 static char* x11_get_res_class(Display* dpy, Window w) {
@@ -120,7 +120,7 @@ if (!dpy || w == None) {  return NULL; }
     if (ch->res_name) XFree(ch->res_name);
     if (ch->res_class) XFree(ch->res_class);
     XFree(ch);
-    {  return out; }
+    return out;
 }
 
 static Window* x11_client_list(Display* dpy, int* out_n) {
@@ -140,7 +140,7 @@ if (out_n) *out_n = 0;
         }
         XFree(data);
     }
-    {  return out; }
+    return out;
 }
 
 static bool x11_window_geom(Display* dpy, Window w, int* out_x, int* out_y, int* out_w, int* out_h) {
@@ -160,7 +160,7 @@ if (!dpy || w == None) {  return false; }
     if (out_y) *out_y = abs_y;
     if (out_w) *out_w = (int)gw;
     if (out_h) *out_h = (int)gh;
-    {  return true; }
+    return true;
 }
 
 static bool x11_moveresize_window(Display* dpy, Window w, int x, int y, int cw, int ch) {
@@ -186,7 +186,7 @@ if (!dpy || w == None) {  return false; }
     if (!_x11_err) {  return true; }
     XMoveResizeWindow(dpy, w, x, y, cw > 0 ? (unsigned)cw : 1, ch > 0 ? (unsigned)ch : 1);
     XSync(dpy, False);
-    {  return _x11_err == 0; }
+    return _x11_err == 0;
 }
 
 static bool x11_activate_window(Display* dpy, Window w) {
@@ -206,7 +206,7 @@ if (!dpy || w == None) {  return false; }
     XSendEvent(dpy, DefaultRootWindow(dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
     XSync(dpy, False);
     XSetErrorHandler(old);
-    {  return _x11_err == 0; }
+    return _x11_err == 0;
 }
 
 static int x11_keycode_for(Display* dpy, KeySym ks, int* need_shift) {
@@ -221,7 +221,7 @@ if (need_shift) *need_shift = 0;
             return kc;
         }
     }
-    {  return 0; }
+    return 0;
 }
 
 bool get_title_x11(char *buffer, int buffer_size) {
@@ -251,7 +251,7 @@ if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffe
     strncpy(buffer, name, buffer_size - 1);
     buffer[buffer_size - 1] = '\0';
     free(name);
-    {  return buffer[0] != '\0'; }
+    return buffer[0] != '\0';
 }
 
 bool get_app_id_x11(char *buffer, int buffer_size) {
@@ -284,7 +284,7 @@ if (!buffer || buffer_size <= 0) {  return false; }
     if (ch->res_name) XFree(ch->res_name);
     if (ch->res_class) XFree(ch->res_class);
     XFree(ch);
-    {  return buffer[0] != '\0'; }
+    return buffer[0] != '\0';
 }
 
 char* paste_x11(char* content) {
@@ -316,7 +316,7 @@ if (!content) { log_error("content is NULL"); return NULL; }
     XFlush(dpy);
   }
   XSync(dpy, False);
-  {  return strdup(""); }
+  return strdup("");
 }
 
 bool focus_window_title_x11(char* title) {
@@ -342,7 +342,7 @@ if (!title || !title[0]) { log_error("title='%s'", title ? title : "null"); retu
     }
     free(clients);
     if (!found) log_error("focus_window_title_x11: no match for title='%s'", title);
-    {  return found; }
+    return found;
 }
 
 PlWindowList get_window_names_x11() {
@@ -374,7 +374,7 @@ PlWindowList list = { .windows = NULL, .count = 0 };
         list.windows[list.count++] = cls;
     }
     free(clients);
-    {  return list; }
+    return list;
 }
 
 PlWindowList get_window_titles_x11() {
@@ -403,7 +403,7 @@ PlWindowList list = { .windows = NULL, .count = 0 };
         list.windows[list.count++] = wt;
     }
     free(clients);
-    {  return list; }
+    return list;
 }
 
 static Display *_x11_cursor_dpy = NULL;
@@ -413,7 +413,7 @@ static Display *_x11_cursor_display(void) {
 if (_x11_cursor_dpy == NULL) {
         _x11_cursor_dpy = XOpenDisplay(NULL);
     }
-    {  return _x11_cursor_dpy; }
+    return _x11_cursor_dpy;
 }
 
 void x11_wm_cleanup_cursor_display(void) {
@@ -435,7 +435,7 @@ Window focus = None;
     XSync(display, False);
     XSetErrorHandler(old);
     if (_x11_err || focus == None || focus == PointerRoot) {  return None; }
-    {  return focus; }
+    return focus;
 }
 
 bool close_active_window_x11(void) {
@@ -462,7 +462,7 @@ Display* display = get_display();
         XKillClient(display, focus);
         XSync(display, False);
     }
-    {  return true; }
+    return true;
 }
 
 bool toggle_fullscreen_active_x11(void) {
@@ -488,7 +488,7 @@ Display* display = get_display();
     XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
     XSync(display, False);
     XSetErrorHandler(old);
-    {  return _x11_err == 0; }
+    return _x11_err == 0;
 }
 
 static bool x11_activate_neighbor(bool right) {
@@ -529,7 +529,7 @@ static bool x11_activate_neighbor(bool right) {
     }
     free(clients);
     if (best == None) {  return false; }
-    {  return x11_activate_window(display, best); }
+    return x11_activate_window(display, best);
 }
 
 bool move_active_window_to_monitor_x11(bool right) {
@@ -597,7 +597,7 @@ Display* display = get_display();
         return true;
     }
     g_ewmh_move_works = 0;
-    {  return false; }
+    return false;
 }
 
 static bool x11_move_dir(bool right) {
@@ -610,27 +610,27 @@ Display* display = get_display();
     else if (i3_move_to_output(right)) moved = true;
     else {  return x11_activate_neighbor(right); }
     if (before != None) x11_activate_window(display, before);
-    {  return true; }
+    return true;
 }
 
 bool move_active_window_left_x11(void) {
         
-{  return x11_move_dir(false); }
+return x11_move_dir(false);
 }
 
 bool move_active_window_right_x11(void) {
         
-{  return x11_move_dir(true); }
+return x11_move_dir(true);
 }
 
 bool focus_window_left_x11(void) {
         
-{  return x11_activate_neighbor(false); }
+return x11_activate_neighbor(false);
 }
 
 bool focus_window_right_x11(void) {
         
-{  return x11_activate_neighbor(true); }
+return x11_activate_neighbor(true);
 }
 
 static bool x11_is_hidden(Display* dpy, Window w) {
@@ -642,7 +642,7 @@ XWindowAttributes at;
     XSync(dpy, False);
     XSetErrorHandler(old);
     if (_x11_err || !ok) {  return false; }
-    {  return at.map_state == IsUnmapped; }
+    return at.map_state == IsUnmapped;
 }
 
 bool minimize_active_window_x11(void) {
@@ -682,7 +682,7 @@ Display* display = get_display();
         _x11_last_min = focus;
         return true;
     }
-    {  return false; }
+    return false;
 }
 
 bool get_mouse_pos_x11(int *x, int *y) {

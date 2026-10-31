@@ -35,7 +35,7 @@ if (out_len) *out_len = 0;
     if (MultiByteToWideChar(CP_UTF8, 0, in, in_len, w, n) <= 0) { free(w); return NULL; }
     w[n] = 0;
     if (out_len) *out_len = n;
-    {  return w; }
+    return w;
 }
 
 static __thread HDC g_draw_hdc = NULL;
@@ -49,7 +49,7 @@ for (int i = 0; i < len; i++) {
         if (c == 0xFE0F || c == 0xFE0E) continue;
         if (c > 0x7F) return true;
     }
-    {  return false; }
+    return false;
 }
 
 static bool win32_font_covers(HFONT f, const wchar_t* wide, int len) {
@@ -67,7 +67,7 @@ if (!f || !wide || len <= 0) {  return false; }
         if (r == GDI_ERROR || gi == 0xFFFF || gi == 0) { ok = false; break; }
     }
     SelectObject(g_draw_hdc, old);
-    {  return ok; }
+    return ok;
 }
 
 #define WIN32_SYM_SLOTS 4
@@ -119,7 +119,7 @@ if (len > 8) len = 8;
     g_sym_len[slot] = len;
     for (int k = 0; k < len; k++) g_sym_cp[slot][k] = wide[k];
     g_sym_tick++;
-    {  return found; }
+    return found;
 }
 
 #define WIN32_SYMBOL_SIZE_NUM 5
@@ -134,7 +134,7 @@ for (int i = 0; i < len; i++) {
         if (c >= 0xD800 && c <= 0xDFFF) return true;
         if (c >= 0xE000 && c <= 0xF8FF) return true;
     }
-    {  return false; }
+    return false;
 }
 
 static HFONT win32_font_for_text(const wchar_t* wide, int len, int fontsize, HFONT* out_prev, int* out_dy) {
@@ -167,7 +167,7 @@ HFONT prev = NULL;
     if (!hfont) hfont = g_win32_hMainFont;
     if (hfont) prev = (HFONT)SelectObject(g_draw_hdc, hfont);
     if (out_prev) *out_prev = prev;
-    {  return hfont; }
+    return hfont;
 }
 
 static HFONT win32_sized_font(int size) {
@@ -189,7 +189,7 @@ if (size <= 0) size = FontSize;
   if (g_sizeFonts[slot]) DeleteObject(g_sizeFonts[slot]);
   g_sizeFonts[slot] = FH_TO_HFONT(Platform_CreateFont(size, UsedFont));
   g_sizeFontSizes[slot] = size;
-  {  return g_sizeFonts[slot]; }
+  return g_sizeFonts[slot];
 }
 
 
@@ -199,7 +199,7 @@ PlDrawState_Get()->transparent = on;
 }
 bool Platform_GetTransparentWindow(void) {
         
-{  return PlDrawState_Get()->transparent; }
+return PlDrawState_Get()->transparent;
 }
 
 void Platform_SetDrawBgColor(unsigned long hex) {
@@ -208,7 +208,7 @@ PlDrawState_Get()->bg_override = hex;
 }
 unsigned long Platform_GetDrawBgColor(void) {
         
-{  return PlDrawState_Get()->bg_override; }
+return PlDrawState_Get()->bg_override;
 }
 
 
@@ -330,7 +330,7 @@ if (!spec.text || !g_draw_hdc) {  return false; }
     TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
     free(wide);
     if (old) SelectObject(g_draw_hdc, old);
-    {  return true; }
+    return true;
 }
 
 void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
@@ -348,7 +348,7 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
     int ty = spec.y + (spec.h - lineHeight) / 2;
     Platform_DrawTextRaw((PlDrawTextRawSpec){.x=tx, .y=ty, .text=spec.text, .color=spec.color, .font=spec.font, .align="LEFT", .pad=0, .fontsize=spec.fontsize});
     if (old) SelectObject(g_draw_hdc, old);
-    {  }
+    
 }
 
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
@@ -366,7 +366,7 @@ if (!spec.text || spec.len <= 0) {  return 0; }
     GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &sz);
     if (old) SelectObject(g_draw_hdc, old);
     free(wide);
-    {  return sz.cx; }
+    return sz.cx;
 }
 
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
@@ -387,7 +387,7 @@ if (!spec.text || spec.len <= 0 || !g_draw_hdc) {  return false; }
     TextOutW(g_draw_hdc, x, y, wide, wlen);
     if (old) SelectObject(g_draw_hdc, old);
     free(wide);
-    {  return true; }
+    return true;
 }
 
 void Platform_GetItemColors(PlGetItemColorsSpec spec) {
@@ -412,7 +412,7 @@ static COLORREF win32_colorref(unsigned long hex) {
 unsigned long r = hex & 0xFF;
     unsigned long g = (hex >> 8) & 0xFF;
     unsigned long b = (hex >> 16) & 0xFF;
-    {  return (COLORREF)((b << 16) | (g << 8) | r); }
+    return (COLORREF)((b << 16) | (g << 8) | r);
 }
 
 static COLORREF win32_resolve_color(unsigned long hex, bool opaque) {
@@ -427,7 +427,7 @@ COLORREF c = win32_colorref(hex);
     int r = (int)((c & 0xFF) * t + br * (1.0f - t));
     int g = (int)(((c >> 8) & 0xFF) * t + bg_g * (1.0f - t));
     int b = (int)(((c >> 16) & 0xFF) * t + bb * (1.0f - t));
-    {  return (COLORREF)((b << 16) | (g << 8) | r); }
+    return (COLORREF)((b << 16) | (g << 8) | r);
 }
 
 static int win32_thickness_px(float thickness) {
@@ -436,7 +436,7 @@ if (thickness <= 0.0f) {  return 0; }
     int px = (int)(thickness + 0.5f);
     if (px < 1) px = 1;
     if (px > 255) px = 255;
-    {  return px; }
+    return px;
 }
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
@@ -535,7 +535,7 @@ if (!text || !text[0] || fontsize <= 0) {  return fontsize > 0 ? fontsize : 0; }
     free(wide);
     int ink = (int)(gm.gmBlackBoxY);
     if (ink <= 0) ink = fontsize;
-    {  return ink + PROMPT_GLYPH_INK_PAD; }
+    return ink + PROMPT_GLYPH_INK_PAD;
 }
 
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
@@ -557,7 +557,7 @@ int t = win32_thickness_px(spec.thickness);
     LineTo(g_draw_hdc, x2, y2);
     SelectObject(g_draw_hdc, old);
     DeleteObject(pen);
-    {  return true; }
+    return true;
 }
 
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
@@ -586,7 +586,7 @@ if (spec.radius <= 0) {  return false; }
         SelectObject(g_draw_hdc, old);
         DeleteObject(br);
     }
-    {  return true; }
+    return true;
 }
 
 #define WIN32_IMG_CACHE_SLOTS 128
@@ -644,7 +644,7 @@ static HDC win32_screen_dc(void) {
         
 static HDC dc = NULL;
     if (!dc) dc = GetDC(NULL);
-    {  return dc; }
+    return dc;
 }
 
 static void win32_img_cache_lock(void) {
@@ -702,7 +702,7 @@ static void* win32_img_cache_get(const char *path, HDC screen, int w, int h) {
         break;
     }
     win32_img_cache_unlock();
-    {  return found; }
+    return found;
 }
 
 static void win32_img_cache_put(const char *path, HDC screen, int w, int h, void* bmp) {
@@ -825,7 +825,7 @@ SHFILEINFOA sfi;
     GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
     DestroyIcon(sfi.hIcon);
     if (st != Ok || !bmp) {  return NULL; }
-    {  return bmp; }
+    return bmp;
 }
 
 static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
@@ -849,7 +849,7 @@ win32_gdip_ensure();
             src = win32_load_shell_icon_bitmap(native);
             if (!src) {
                 log_error("img: cannot decode '%s' st=%d and no shell icon", path, (int)_fs);
-                {  return NULL; }
+                return NULL;
             }
         }
         win32_src_cache_put(path, src);
@@ -857,7 +857,7 @@ win32_gdip_ensure();
 
     GpBitmap *out = NULL;
     if (GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppPARGB, NULL, &out) != Ok || !out) {
-        {  return NULL; }
+        return NULL;
     }
     GpGraphics *g = NULL;
     GpStatus _gs = GdipGetImageGraphicsContext(out, &g);
@@ -870,7 +870,7 @@ win32_gdip_ensure();
     } else {
         log_error("img: ctx st=%d", (int)_gs);
     }
-    {  return out; }
+    return out;
 }
 
 static HDC s_cached_hdc = NULL;
@@ -913,7 +913,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     void* bmp = win32_img_cache_get(path, screen, w, h);
     if (bmp == WIN32_IMG_FAILED) {
         
-        {  return false; }
+        return false;
     }
     if (!bmp) {
         bmp = win32_load_scaled_bitmap(path, w, h);
@@ -921,14 +921,14 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     }
     if (!bmp) {
         
-        {  return false; }
+        return false;
     }
 
     win32_gdip_ensure();
     if (g_gdip_token == 0) {
         log_error("img: Gdiplus unavailable");
         
-        {  return false; }
+        return false;
     }
 
     if (s_cached_hdc != g_draw_hdc || !s_cached_g) {
@@ -942,7 +942,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
             s_cached_hdc = NULL;
             s_cached_g = NULL;
             
-            {  return false; }
+            return false;
         }
         GdipSetInterpolationMode(s_cached_g, InterpolationModeNearestNeighbor);
         GdipSetPixelOffsetMode(s_cached_g, PixelOffsetModeHalf);
@@ -956,7 +956,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     }
 
     
-    {  return (status == Ok); }
+    return (status == Ok);
 }
 
 void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
@@ -974,7 +974,7 @@ void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
         .thickness = 1,
         .filled = true
     });
-    {  }
+    
 }
 
 static void win32_prompt_editbox_spec(PromptState* state, FontHandle font, EditboxSpec* eb) {

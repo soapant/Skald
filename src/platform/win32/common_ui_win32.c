@@ -17,7 +17,7 @@
 
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
     
-{  return FH_TO_HFONT(Platform_CreateFont(height, face_name)); }
+return FH_TO_HFONT(Platform_CreateFont(height, face_name));
 }
 
 void win32_apply_listbox_bottom_corners(HWND hwnd, int w, int h, bool at_window_bottom) {
@@ -84,7 +84,7 @@ if (!hwnd || !IsWindow(hwnd)) {  return ; }
 
 static inline unsigned int win32_to_rgb(COLORREF c) {
     
-{  return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c); }
+return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c);
 }
 
 void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base) {
@@ -97,7 +97,7 @@ void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base) {
   FillRect(hdc, rc, br);
   DeleteObject(br);
   
-  {  return ; }
+  return ;
 }
 
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1, int ey1,

@@ -65,14 +65,14 @@ for (int i = 0; i < WIDGET_REG_MAX; i++) {
         w->on_click();
         return true;
     }
-    {  return false; }
+    return false;
 }
 
 static long long widget_now_ms(void) {
         
 struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    {  return (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL; }
+    return (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
 }
 
 static void widget_frame(void *ud) {
@@ -184,7 +184,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     XFlush(dpy);
     widget->mapped = true;
     widget_registry_add(widget);
-    {  return widget; }
+    return widget;
 }
 
 void Platform_Widget_Destroy(PlatformWidget *widget) {
@@ -208,7 +208,7 @@ if (!widget || widget->dead) {  return ; }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
         
-{  return widget && !widget->dead; }
+return widget && !widget->dead;
 }
 
 void Platform_Widget_SetFrameCallback(PlatformWidget *widget, Platform_RenderFrameFn fn, void *ud) {
@@ -310,11 +310,11 @@ if (!widget || widget->dead) {  return ; }
 
 int Platform_Widget_Width(const PlatformWidget *widget) {
         
-{  return widget ? widget->w : 0; }
+return widget ? widget->w : 0;
 }
 
 int Platform_Widget_Height(const PlatformWidget *widget) {
-         {  return widget ? widget->h : 0; }
+         return widget ? widget->h : 0;
 }
 
 void Platform_Widget_FlushDestruction(void) {

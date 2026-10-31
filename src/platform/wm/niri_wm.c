@@ -15,7 +15,7 @@ static bool niri_sock_live(const char* sock) {
         
 if (!sock || !sock[0]) {  return false; }
     struct stat st;
-    {  return stat(sock, &st) == 0; }
+    return stat(sock, &st) == 0;
 }
 
 bool niri_is_active(void) {
@@ -50,7 +50,7 @@ const char* cur = getenv("NIRI_SOCKET");
         return true;
     }
     globfree(&g);
-    {  return false; }
+    return false;
 }
 
 static bool niri_succeded(char* output) {
@@ -60,7 +60,7 @@ if (!output) { log_error("output is NULL"); return false; }
         log_error("niri output='%s'", output);
         return false;
     }
-    {  return true; }
+    return true;
 }
 
 static size_t niri_copy_json_string(const char* s, char* out, size_t cap) {
@@ -72,7 +72,7 @@ size_t o = 0;
         out[o++] = *p;
     }
     out[o] = '\0';
-    {  return o; }
+    return o;
 }
 
 bool get_title_niri(char *buffer, int buffer_size) {
@@ -89,7 +89,7 @@ if (!buffer || buffer_size <= 0) {  return false; }
         ok = buffer[0] != '\0';
     }
     free(json);
-    {  return ok; }
+    return ok;
 }
 
 bool get_app_id_niri(char *buffer, int buffer_size) {
@@ -106,7 +106,7 @@ if (!buffer || buffer_size <= 0) {  return false; }
         ok = buffer[0] != '\0';
     }
     free(json);
-    {  return ok; }
+    return ok;
 }
 
 char* paste_niri(char* content) {
@@ -117,7 +117,7 @@ if (!content) { log_error("content is NULL"); return NULL; }
     snprintf(buffer, sizeof(buffer), "wtype %s", content);
     char* out = Platform_RunTerminalCommand(buffer, false);
     if (!out) log_error("content='%s'", content ? content : "null");
-    {  return out; }
+    return out;
 }
 
 bool focus_window_title_niri(char* title) {
@@ -151,7 +151,7 @@ if (!title || !*title) {  return false; }
     char* out = Platform_RunTerminalCommand(cmd, false);
     bool ok = niri_succeded(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 PlWindowList get_window_titles_niri() {
@@ -175,7 +175,7 @@ PlWindowList list = {0};
         list.windows[list.count++] = strdup(buf);
     }
     free(json);
-    {  return list; }
+    return list;
 }
 
 PlWindowList get_window_names_niri() {
@@ -200,7 +200,7 @@ PlWindowList list = {0};
         list.windows[list.count++] = strdup(buf);
     }
     free(json);
-    {  return list; }
+    return list;
 }
 
 
@@ -210,7 +210,7 @@ if (!niri_is_active()) {  return false; }
     char* out = Platform_RunTerminalCommand("niri msg action close-window", false);
     bool ok = niri_succeded(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool toggle_fullscreen_active_niri(void) {
@@ -219,7 +219,7 @@ if (!niri_is_active()) {  return false; }
     char* out = Platform_RunTerminalCommand("niri msg action fullscreen-window", false);
     bool ok = niri_succeded(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool move_active_window_to_monitor_niri(bool right) {
@@ -230,7 +230,7 @@ if (!niri_is_active()) {  return false; }
     char* out = Platform_RunTerminalCommand(cmd, false);
     bool ok = niri_succeded(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool move_active_window_left_niri(void) {
@@ -239,7 +239,7 @@ if (!niri_is_active()) {  return false; }
     char* out = Platform_RunTerminalCommand("niri msg action move-window-to-monitor-left", false);
     bool ok = niri_succeded(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool move_active_window_right_niri(void) {
@@ -248,7 +248,7 @@ if (!niri_is_active()) {  return false; }
     char* out = Platform_RunTerminalCommand("niri msg action move-window-to-monitor-right", false);
     bool ok = niri_succeded(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool focus_window_left_niri(void) {
@@ -257,7 +257,7 @@ if (!niri_is_active()) {  return false; }
     char* out = Platform_RunTerminalCommand("niri msg action focus-column-or-monitor-left", false);
     bool ok = niri_succeded(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool focus_window_right_niri(void) {
@@ -266,13 +266,13 @@ if (!niri_is_active()) {  return false; }
     char* out = Platform_RunTerminalCommand("niri msg action focus-column-or-monitor-right", false);
     bool ok = niri_succeded(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool minimize_active_window_niri(void) {
         
 if (!niri_is_active()) {  return false; }
-    {  return false; }
+    return false;
 }
 
 bool get_mouse_pos_niri(int *x, int *y) {

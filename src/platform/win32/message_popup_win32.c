@@ -18,7 +18,6 @@
 #include "platform/widget.h"
 #include "platform/render_thread.h"
 
-#include "core/timer.h"
 #define MSG_AUTO_WRAP_MAX_W 900
 #define MSG_AUTO_WRAP_MAX_H 600
 
@@ -39,7 +38,7 @@ if (out_len) *out_len = 0;
     if (!w) {  return NULL; }
     if (MultiByteToWideChar(CP_UTF8, 0, in, -1, w, need) <= 0) { free(w); return NULL; }
     if (out_len) *out_len = need - 1;
-    {  return w; }
+    return w;
 }
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -160,7 +159,7 @@ FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
       return 0;
     }
     }
-  {  return DefWindowProcA(hwnd, msg, wParam, lParam); }
+  return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
 static FadeWindowData* s_msg_show_data = NULL;
@@ -198,7 +197,7 @@ if (!s_msg_show_no_bg) {
              vr.left, vr.top, vr.right, vr.bottom,
              (unsigned long)GetWindowLongA(hPopupWnd, GWL_EXSTYLE));
   }
-  {  return true; }
+  return true;
 }
 
 void Platform_MessagePopupHideWindow(Popup* self) {
@@ -225,7 +224,7 @@ bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
     
 (void)self;
   (void)key;
-  {  return false; }
+  return false;
 }
 
 void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
@@ -343,7 +342,7 @@ static int HoverWidgetFindLocked(const char* key) {
 for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
     if (g_hover_widgets[i].w && !g_hover_widgets[i].dead && strcmp(g_hover_widgets[i].key, key) == 0) return i;
   }
-  {  return -1; }
+  return -1;
 }
 
 static void HoverWidgetFrame(void* ud) {
@@ -478,7 +477,7 @@ if (Platform_RenderThread_IsCurrentThread()) {
   r->release_ud = release_ud;
   if (Platform_RenderThread_Post(hover_widget_dispatch, r)) {  return true; }
   free(r);
-  {  return false; }
+  return false;
 }
 
 void Platform_HoverWidgetHide(const char* key) {
@@ -721,5 +720,5 @@ log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g no_bg=
     return;
   }
   log_info("MSG show ok text=(%d,%d) win=(%d,%d) at (%d,%d)", textWidth, textHeight, winWidth, winHeight, topLeftX, topLeftY);
-  {  return ; }
+  return ;
 }

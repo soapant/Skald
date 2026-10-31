@@ -97,7 +97,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     }
     XFlush(dpy);
     
-    {  return true; }
+    return true;
 }
 
 void Platform_PromptPopupHideWindow(Popup* self) {
@@ -120,7 +120,7 @@ void Platform_PromptPopupRender(Popup* self) {
             Platform_SetTransparentWindow(true);
             x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
             Platform_SetTransparentWindow(false);
-            {  return; }
+            return;
         }
         x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
     }
@@ -171,6 +171,6 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     }
 
     
-    {  return false; }
+    return false;
 }
 

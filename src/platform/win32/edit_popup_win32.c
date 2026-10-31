@@ -55,7 +55,7 @@ bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
     SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
     data->base.handle = WH_FROM_HWND(hwnd);
     
-    {  return true; }
+    return true;
 }
 
 void Platform_EditPopupShowWindow(Popup* self) {
@@ -249,5 +249,5 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     }
 
     
-    {  return false; }
+    return false;
 }

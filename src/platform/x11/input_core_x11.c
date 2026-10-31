@@ -128,7 +128,7 @@ bool Platform_GetMousePos(int* out_x, int* out_y) {
     if (getenv("WAYLAND_DISPLAY") && Wm_GetMousePos(&mx, &my)) {
         if (out_x) *out_x = mx;
         if (out_y) *out_y = my;
-        {  return true; }
+        return true;
     }
     Display* dpy = get_display();
     if (!dpy) {  return false; }

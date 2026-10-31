@@ -139,7 +139,7 @@ static bool prompt_win_no_bg(void) {
     extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
     PromptState* st = Platform_GetPromptStateForHWND(GetFocus());
     if (st && st->no_bg) {  return true; }
-    {  return false; }
+    return false;
 }
 
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -153,10 +153,10 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
       if (msg == WM_PAINT) {
           log_info("PopupWndProc SKIP PAINT hwnd=%p top=%p", (void*)hwnd, (void*)WH_TO_HWND(_top_guard->handle));
           PAINTSTRUCT _ps; BeginPaint(hwnd, &_ps); EndPaint(hwnd, &_ps);
-          {  return 0; }
+          return 0;
       }
       if (msg == WM_MOUSEMOVE || msg == WM_LBUTTONDOWN || msg == WM_MOUSEWHEEL) {
-          {  return DefWindowProcA(hwnd, msg, wParam, lParam); }
+          return DefWindowProcA(hwnd, msg, wParam, lParam);
       }
   }
   static HBRUSH s_bg_brush = NULL;
@@ -723,5 +723,5 @@ case WM_CHAR: {
             return DefWindowProcA(hwnd, msg, wParam, lParam);
               
     }
-  {  return 0; }
+  return 0;
 }

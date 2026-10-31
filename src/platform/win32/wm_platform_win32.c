@@ -28,12 +28,12 @@ extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
 bool Platform_WM_InitDisplay(WindowManager* wm) {
         
 (void)wm;
-    {  return true; }
+    return true;
 }
 
 int Platform_WM_Run(WindowManager* wm) {
         
-{  return WindowManager_RunWin32(wm); }
+return WindowManager_RunWin32(wm);
 }
 
 void Platform_WM_Quit(WindowManager* wm) {
@@ -159,5 +159,5 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
     FlintContext* _c = FlintContext_Get();
-    {  return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL; }
+    return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 }

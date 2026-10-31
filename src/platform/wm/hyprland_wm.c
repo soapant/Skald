@@ -21,7 +21,7 @@ if (!sig || !sig[0]) {  return false; }
     char path[512];
     snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", rtd, sig);
     struct stat st;
-    {  return stat(path, &st) == 0; }
+    return stat(path, &st) == 0;
 }
 
 static void hypr_ensure_sig(void) {
@@ -77,14 +77,14 @@ const char* cur = getenv("HYPRLAND_INSTANCE_SIGNATURE");
 }
 bool get_title_hyprland(char *buffer, int buffer_size) {
         
-{  return false; }
+return false;
 }
 
 bool get_app_id_hyprland(char *buffer, int buffer_size) {
         
 (void)buffer;
     (void)buffer_size;
-    {  return false; }
+    return false;
 }
 
 char* paste_hyprland(char* content) {
@@ -94,7 +94,7 @@ if (!content) { log_error("content is NULL"); return NULL; }
   snprintf(buffer,sizeof(buffer),"wtype %s",content);
   char* out = Platform_RunTerminalCommand(buffer,false);
   if (!out) log_error("content='%s'", content ? content : "null");
-  {  return out; }
+  return out;
 }
 
 
@@ -113,7 +113,7 @@ if (!output) { log_error("output is NULL"); return false; }
         log_error("hyprctl no ok output='%s'", output);
         return false;
     }
-    {  return true; }
+    return true;
 }
 
 static bool hypr_focus_lua_cmd(const char* title, char* out, size_t cap) {
@@ -137,7 +137,7 @@ char esc[1024];
     }
     esc[o] = '\0';
     snprintf(out, cap, "hyprctl dispatch 'hl.dsp.focus({ window = \"title:%s\" })'", esc);
-    {  return esc[0] != '\0'; }
+    return esc[0] != '\0';
 }
 
 bool focus_window_title_hyprland(char* title) {
@@ -161,7 +161,7 @@ if (!title) { log_error("title is NULL"); return false; }
       }
   }
   log_error("title='%s'", title ? title : "null");
-  {  return false; }
+  return false;
 }
 
 PlWindowList get_window_names_hyprland() {
@@ -189,7 +189,7 @@ hypr_ensure_sig();
    }
    StringList_Free(&lines);
    free(output);
-   {  return list; }
+   return list;
 }
 PlWindowList get_window_titles_hyprland() {
       
@@ -215,7 +215,7 @@ hypr_ensure_sig();
    }
    StringList_Free(&lines);
    free(output);
-   {  return list; }
+   return list;
 }
 
 
@@ -227,7 +227,7 @@ hypr_ensure_sig();
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.close()'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  {  return ok; }
+  return ok;
 }
 
 bool toggle_fullscreen_active_hyprland(void) {
@@ -238,7 +238,7 @@ hypr_ensure_sig();
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"fullscreen\", action = \"toggle\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  {  return ok; }
+  return ok;
 }
 
 bool move_active_window_to_monitor_hyprland(bool right) {
@@ -251,7 +251,7 @@ hypr_ensure_sig();
   char* out = Platform_RunTerminalCommand(cmd, false);
   bool ok = succeded_hypr(out);
   free(out);
-  {  return ok; }
+  return ok;
 }
 
 bool minimize_active_window_hyprland(void) {
@@ -266,7 +266,7 @@ hypr_ensure_sig();
   out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.workspace.toggle_special()'", false);
   ok = succeded_hypr(out);
   free(out);
-  {  return ok; }
+  return ok;
 }
 
 bool focus_window_left_hyprland(void) {
@@ -277,7 +277,7 @@ hypr_ensure_sig();
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.focus({ direction = \"l\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  {  return ok; }
+  return ok;
 }
 
 bool focus_window_right_hyprland(void) {
@@ -288,17 +288,17 @@ hypr_ensure_sig();
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.focus({ direction = \"r\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  {  return ok; }
+  return ok;
 }
 
 bool move_active_window_left_hyprland(void) {
     
-{  return move_active_window_to_monitor_hyprland(false); }
+return move_active_window_to_monitor_hyprland(false);
 }
 
 bool move_active_window_right_hyprland(void) {
     
-{  return move_active_window_to_monitor_hyprland(true); }
+return move_active_window_to_monitor_hyprland(true);
 }
 
 
@@ -321,11 +321,11 @@ bool get_mouse_pos_hyprland(int *x, int *y) {
     snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path);
     if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
         close(fd);
-        {  return false; }
+        return false;
     }
     if (send(fd, "cursorpos", 9, 0) < 0) {
         close(fd);
-        {  return false; }
+        return false;
     }
     shutdown(fd, SHUT_WR);
     char buf[64] = {0};
@@ -342,7 +342,7 @@ bool get_mouse_pos_hyprland(int *x, int *y) {
     if (sscanf(buf, "%d, %d", &px, &py) == 2) {
         if (x) *x = px;
         if (y) *y = py;
-        {  return true; }
+        return true;
     }
-    {  return false; }
+    return false;
 }

@@ -72,7 +72,7 @@ static CheckboxSpec* checkbox_find(const char* name) {
     for (int i = 0; i < g_checkbox_count; i++) {
         if (strcmp(g_checkboxes[i].name, name) == 0) {  return &g_checkboxes[i]; }
     }
-    {  return NULL; }
+    return NULL;
 }
 
 static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
@@ -87,7 +87,7 @@ static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
     cb->thickness = 1;
     cb->border = true;
     cb->name = strdup(name);
-    {  return cb; }
+    return cb;
 }
 
 bool Checkbox_IsChecked(const char* name) {
@@ -127,7 +127,7 @@ static int checkbox_line_height(int fontsize) {
     int ref_h = lh > 0 ? lh : FontSize;
     int ref_fs = FontSize > 0 ? FontSize : fontsize;
     if (ref_h <= 0 || ref_fs <= 0) {  return fontsize; }
-    {  return (int)((long)ref_h * fontsize / ref_fs); }
+    return (int)((long)ref_h * fontsize / ref_fs);
 }
 
 FontHandle s_font;

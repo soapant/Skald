@@ -44,12 +44,12 @@ long pending_hotkey_timeMs = 0;
 
 static bool should_use_grab(void) {
     
-{  return x11_should_use_grab(); } 
+return x11_should_use_grab();
 }
 
 static int init_uinput(void) {
     
-{  return x11_init_uinput(); } 
+return x11_init_uinput();
 }
 static void destroy_uinput(void) {
     
@@ -63,7 +63,7 @@ x11_scan_keyboards();
 
 static int XKeysymToVK(KeySym ks) {
     
-{  return x11_keysym_to_vk(ks); } 
+return x11_keysym_to_vk(ks);
 }
 
 static void* input_thread_func(void* arg) {
@@ -95,7 +95,7 @@ WindowManager* wm = (WindowManager*)arg;
         }
     }
     free(fds);
-    {  return NULL; }
+    return NULL;
 }
 
 static void x11_handle_key_press(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
@@ -378,7 +378,7 @@ XEvent xev;
     x11_set_window_manager(NULL);
 
     
-    {  return 0; }
+    return 0;
 }
 
 void WindowManager_ProcessEventsLinux(WindowManager* wm) {
