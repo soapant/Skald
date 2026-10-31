@@ -39,10 +39,6 @@ void UI_LB_SetItemHeight(int height) {}
 
 void UI_LB_SetCaretIndex(int index, bool scroll) {}
 
-void UI_LB_SetTopIndex(int index) {}
-
-int UI_LB_GetTopIndex(ListBoxInfo *lb) { return 0; }
-
 int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
 
 static int g_x11_lb_visible;
@@ -65,8 +61,6 @@ void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
     top_index = 0;
   lb->view_offset = top_index;
 }
-
-int UI_LB_GetItemHeight() { return 0; }
 
 void UI_NavigateTo(ListBoxInfo *lb, int index) {
 

@@ -79,10 +79,6 @@ void UI_LB_SetItemHeight(int height) {}
 
 void UI_LB_SetCaretIndex(int index, bool scroll) { UI_RequestPopupRepaint(); }
 
-void UI_LB_SetTopIndex(int index) { UI_RequestPopupRepaint(); }
-
-int UI_LB_GetTopIndex(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
-
 int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
 
 static int g_render_lb_visible = 0;
@@ -92,7 +88,7 @@ int UI_LB_GetVisibleCount(void) {
   if (FlintContext_Get()->prompt_callbacks.render != NULL &&
       g_render_lb_visible > 0)
     return g_render_lb_visible;
-  int itemHeight = UI_LB_GetItemHeight();
+  int itemHeight = 0;
   if (itemHeight <= 0)
     return 16;
   RECT rect;
@@ -120,8 +116,6 @@ void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
 
   UI_RequestPopupRepaint();
 }
-
-int UI_LB_GetItemHeight(void) { return 0; }
 
 void UI_NavigateTo(ListBoxInfo *lb, int index) {
   if (!lb) {
@@ -430,11 +424,7 @@ void UI_Redraw(ListBoxInfo *lb) {
 }
 
 char *Platform_SearchPopup(void) {
-  log_error("operation failed, returning error");
-  {
-    return NULL;
-  }
-  log_info("Platform_SearchPopup completed");
+  return NULL;
 }
 
 #include <gdiplus.h>

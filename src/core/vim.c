@@ -20,7 +20,7 @@ ListBoxInfo *Vim_GetListBox(FlintContext *ctx) {
         return NULL;
       if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState *s = (PromptState *)top->user_data;
-        if (s && s->has_listbox)
+        if (s->has_listbox)
           return &s->listbox;
       }
     }

@@ -733,7 +733,7 @@ static ULONGLONG g_img_cache_tick = 0;
 static CRITICAL_SECTION g_img_cache_cs;
 static BOOL g_img_cache_cs_ready = FALSE;
 
-#define WIN32_IMG_FAILED ((void *)1)
+#define WIN32_IMG_FAILED ((HBITMAP)-1)
 
 static ULONG_PTR g_gdip_token = 0;
 

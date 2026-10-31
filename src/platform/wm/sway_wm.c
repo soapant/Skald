@@ -258,7 +258,7 @@ bool focus_window_title_sway(char *title) {
 
   char escaped[1024];
   char *s = title, *d = escaped;
-  while (*s && d - escaped < (int)sizeof(escaped) - 2) {
+  while (d - escaped < (int)sizeof(escaped) - 2) {
     if (*s == '"' || *s == '\\') {
       *d++ = '\\';
       *d++ = *s++;

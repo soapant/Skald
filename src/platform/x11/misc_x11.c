@@ -263,8 +263,6 @@ bool Platform_ExpandPath(const char *template_path, char *out,
           char token[64];
           memcpy(token, p + 1, token_len);
           token[token_len] = '\0';
-          char resolved[1024];
-
           return false;
         }
       }

@@ -529,7 +529,7 @@ void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, int y, int h,
                                  bool selected) {
   if (selected) {
-    if (state && state->no_bg) {
+    if (state->no_bg) {
       x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
                                     rgb_to_hex(COLOR_SELECTED_TEXT));
     } else {

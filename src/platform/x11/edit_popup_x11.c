@@ -231,39 +231,40 @@ bool Platform_EditPopupOnKey(Popup *self, const PopupKeyEvent *key) {
 
   int wParam = key->vk;
   bool ctrl_pressed = key->ctrl;
-
-  if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
-    EditPopup_SelectAll(ed);
-    return true;
-  }
-  if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
-    EditPopup_CopySelection(ed);
-    return true;
-  }
-  if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
-    int ss = 0, se = 0;
-    if (VimState_GetSelection(&ss, &se)) {
-      if (se < ss) {
-        int t = ss;
-        ss = se;
-        se = t;
-      }
-      int len = (int)strlen(ed->text);
-      if (ss < 0)
-        ss = 0;
-      if (se > len)
-        se = len;
-      if (se > ss) {
-        char buf[1024];
-        int n = se - ss;
-        if (n >= (int)sizeof(buf))
-          n = (int)sizeof(buf) - 1;
-        memcpy(buf, ed->text + ss, n);
-        buf[n] = '\0';
-        Platform_CopyToClipboard(buf);
-      }
+  if (ctrl_pressed) {
+    if (wParam == 'A' || wParam == 'a') {
+      EditPopup_SelectAll(ed);
+      return true;
     }
-    return true;
+    if (wParam == 'C' || wParam == 'c') {
+      EditPopup_CopySelection(ed);
+      return true;
+    }
+    if (wParam == 'C' || wParam == 'c') {
+      int ss = 0, se = 0;
+      if (VimState_GetSelection(&ss, &se)) {
+        if (se < ss) {
+          int t = ss;
+          ss = se;
+          se = t;
+        }
+        int len = (int)strlen(ed->text);
+        if (ss < 0)
+          ss = 0;
+        if (se > len)
+          se = len;
+        if (se > ss) {
+          char buf[1024];
+          int n = se - ss;
+          if (n >= (int)sizeof(buf))
+            n = (int)sizeof(buf) - 1;
+          memcpy(buf, ed->text + ss, n);
+          buf[n] = '\0';
+          Platform_CopyToClipboard(buf);
+        }
+      }
+      return true;
+    }
   }
   if (IsInsertMode() && key->text_len > 0) {
     bool swallow = HotkeyText_ShouldSwallow(key);

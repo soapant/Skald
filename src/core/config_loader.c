@@ -237,20 +237,12 @@ static bool config_build_feature(const char *src, const char *out) {
 static bool config_build_load_store(void) {
 
   const char *out = config_out_path();
-  if (!out) {
-    log_error("config_out_path() returned NULL!");
-    return false;
-  }
-
   if (config_output_is_fresh(out)) {
     log_info("config .so is newer than source, skipping compile");
   } else {
-
     bool ok = config_build_feature(CONFIG_SRC, out);
-
     if (!ok) {
       log_error("config compile failed, keeping current");
-
       return false;
     }
   }
