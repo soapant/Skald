@@ -66,7 +66,7 @@ char p[64];
     }
     closedir(d);
     if (want && strcmp(want, "pipes") == 0) {  return pipes; }
-    {  return total; }
+    return total;
 }
 
 static int wl_find_pid(const char *name) {
@@ -90,7 +90,7 @@ DIR *d = opendir("/proc");
         fclose(f);
     }
     closedir(d);
-    {  return found; }
+    return found;
 }
 
 static void wl_hypr_refresh(void) {
@@ -116,7 +116,7 @@ if (g_wl_read_disabled) {  return g_wl_read_block_reason[0] ? g_wl_read_block_re
     if (offer == g_wl_dead_offer) {  return "offer already produced no data"; }
     if (g_wl_receive_calls >= WL_MAX_RECEIVE_CALLS) {  return "session receive cap reached"; }
     if (g_wl_hypr_fd > WL_HYPR_FD_ALARM) {  return "compositor fd count already elevated"; }
-    {  return NULL; }
+    return NULL;
 }
 
 struct WlFns {
@@ -532,7 +532,7 @@ if (g_wl_handle) {  return true; }
     }
     wl = t;
     g_wl_handle = h;
-    {  return true; }
+    return true;
 }
 
 static void *wl_thread_func(void *arg) {
@@ -583,7 +583,7 @@ static void *wl_thread_func(void *arg) {
                 iter, dpyfd, r, pfd.revents, re, dp, spin, wl.display_get_error(g_wl_dpy), g_wl_ev_count);
         }
     }
-    {  return NULL; }
+    return NULL;
 }
 
 static bool wl_setup(void) {
@@ -683,7 +683,7 @@ if (g_wl_ready) {  return true; }
         snprintf(g_wl_read_block_reason, sizeof(g_wl_read_block_reason),
             "hyprland pid %ld present (data-control receive crashes it)", g_wl_hypr_pid);
     }
-    {  return true; }
+    return true;
 }
 
 static struct wl_proxy *wl_make_source(void) {
@@ -706,7 +706,7 @@ struct wl_proxy *src = wl.proxy_marshal_constructor(g_wl_manager, 0, g_use_sourc
     if (has_uri) { wl.proxy_marshal_flags(src, 0, NULL, 0, 0, "text/uri-list"); g_wl_req_count++; }
     if (has_png) { wl.proxy_marshal_flags(src, 0, NULL, 0, 0, g_wl_png_mime); g_wl_req_count++; }
     wl.proxy_add_listener(src, (void (**)(void))g_src_listener, NULL);
-    {  return src; }
+    return src;
 }
 
 static void wl_drop_source(struct wl_proxy **slot) {
@@ -722,7 +722,7 @@ if (slot && *slot) {
 
 bool Platform_ClipboardAvailable(void) {
         
-{  return getenv("WAYLAND_DISPLAY") != NULL; }
+return getenv("WAYLAND_DISPLAY") != NULL;
 }
 
 static void wl_publish_locked(void) {
@@ -783,7 +783,7 @@ if (!text) {  return 0; }
     clock_gettime(CLOCK_MONOTONIC, &ts1);
     t0 = (ts1.tv_sec - ts0.tv_sec) * 1000 + (ts1.tv_nsec - ts0.tv_nsec) / 1000000;
     wl_trace("API SetText", "DONE lock+publish took %lldms", t0);
-    {  return 1; }
+    return 1;
 }
 
 int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
@@ -807,7 +807,7 @@ if (!png || len == 0) {  return 0; }
     pthread_mutex_lock(&g_wl_lock);
     wl_publish_locked();
     pthread_mutex_unlock(&g_wl_lock);
-    {  return 1; }
+    return 1;
 }
 
 int Platform_ClipboardSetFile(const char *path) {
@@ -828,7 +828,7 @@ if (!path || path[0] == 0) {  return 0; }
     pthread_mutex_lock(&g_wl_lock);
     wl_publish_locked();
     pthread_mutex_unlock(&g_wl_lock);
-    {  return 1; }
+    return 1;
 }
 
 static const char *wl_pick_mime_locked(void) {
@@ -839,7 +839,7 @@ static const char *prefs[] = { "text/plain;charset=utf-8", "text/plain", "UTF8_S
             if (strcmp(g_wl_offer_mimes[i], prefs[p]) == 0) return prefs[p];
         }
     }
-    {  return NULL; }
+    return NULL;
 }
 
 char *Platform_ClipboardGetText(void) {
@@ -921,7 +921,7 @@ wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
         return NULL;
     }
     out[len] = '\0';
-    {  return out; }
+    return out;
 }
 
 void Platform_ClipboardShutdown(void) {

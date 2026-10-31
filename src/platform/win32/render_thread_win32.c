@@ -55,17 +55,17 @@ if (!fn || !g_rt_thread) {  return false; }
     g_rt_pending_count++;
     WakeConditionVariable(&g_rt_cond);
     LeaveCriticalSection(&g_rt_lock);
-    {  return true; }
+    return true;
 }
 
 void *Platform_RenderThread_Display(void) {
         
-{  return NULL; }
+return NULL;
 }
 
 bool Platform_RenderThread_IsRunning(void) {
         
-{  return g_rt_thread != NULL; }
+return g_rt_thread != NULL;
 }
 
 int Platform_RenderThread_CallbackCount(void) {
@@ -74,12 +74,12 @@ if (!g_rt_lock_ready) {  return 0; }
     EnterCriticalSection(&g_rt_lock);
     int n = g_rt_count;
     LeaveCriticalSection(&g_rt_lock);
-    {  return n; }
+    return n;
 }
 
 bool Platform_RenderThread_IsCurrentThread(void) {
         
-{  return g_rt_is_thread; }
+return g_rt_is_thread;
 }
 
 static DWORD WINAPI rt_thread_func(LPVOID arg) {
@@ -107,7 +107,7 @@ static DWORD WINAPI rt_thread_func(LPVOID arg) {
         }
         LeaveCriticalSection(&g_rt_lock);
     }
-    {  return 0; }
+    return 0;
 }
 
 typedef struct { volatile LONG done; } RtSync;
@@ -156,7 +156,7 @@ if (fps > g_rt_fps) g_rt_fps = fps;
         log_warn("render thread: CreateThread failed, widget frames disabled");
         return false;
     }
-    {  return true; }
+    return true;
 }
 
 void Platform_RenderThread_Stop(void) {
@@ -189,7 +189,7 @@ if (!fn) {  return false; }
     g_rt_callbacks[g_rt_count].ud = ud;
     g_rt_count++;
     LeaveCriticalSection(&g_rt_lock);
-    {  return true; }
+    return true;
 }
 
 bool Platform_RenderThread_RemoveFrameCallback(Platform_RenderFrameFn fn, void *ud) {
@@ -205,5 +205,5 @@ BOOL removed = FALSE;
         }
     }
     LeaveCriticalSection(&g_rt_lock);
-    {  return removed; }
+    return removed;
 }

@@ -157,5 +157,5 @@ ListBoxInfo* lb = NULL;
         break;
     }
     }
-  {  return DefWindowProcA(hwnd, msg, wParam, lParam); }
+  return DefWindowProcA(hwnd, msg, wParam, lParam);
 }

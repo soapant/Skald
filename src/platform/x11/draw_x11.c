@@ -271,7 +271,7 @@ if (!path || !path[0] || !g_draw_dpy || !g_draw_xd) return false;
     if (w <= 0) w = IconSize;
     if (h <= 0) h = IconSize;
     measure_track(x, y, w, h);
-    {  return Platform_DrawImageScaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y, w, h); }
+    return Platform_DrawImageScaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y, w, h);
 }
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap) {
         
@@ -633,7 +633,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
                 { (short)x,           (short)y,           (unsigned short)(r*2), (unsigned short)(r*2),  90*64,  90*64 },
                 { (short)(x + w - r*2), (short)y,           (unsigned short)(r*2), (unsigned short)(r*2),   0*64,  90*64 },
                 { (short)(x + w - r*2), (short)(y + h - r*2), (unsigned short)(r*2), (unsigned short)(r*2), 270*64,  90*64 },
-                { (short)x,           (short)(y + h - r*2), (unsigned short)(r*2), (unsigned short)(r*2), 180*64,  90*64 }
+                (short)x,           (short)(y + h - r*2), (unsigned short)(r*2), (unsigned short)(r*2), 180*64,  90*64
             };
             XDrawArcs(g_draw_dpy, d, gc, arcs, 4);
 
@@ -641,7 +641,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
                 { x + r,     y,         x + w - r, y         },
                 { x + w,     y + r,     x + w,     y + h - r },
                 { x + r,     y + h,     x + w - r, y + h     },
-                { x,         y + r,     x,         y + h - r }
+                x,         y + r,     x,         y + h - r
             };
             XDrawSegments(g_draw_dpy, d, gc, segments, 4);
         } else {
@@ -710,7 +710,7 @@ void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
         .thickness = 1,
         .filled = true
     });
-    {  }
+    
 }
 
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {

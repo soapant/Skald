@@ -41,7 +41,7 @@ if (!hwnd || !IsWindow(hwnd)) {  return false; }
 HWND Platform_GetFlintPrevFg(void) {
         
 if (g_prev_fg && IsWindow(g_prev_fg)) {  return g_prev_fg; }
-    {  return NULL; }
+    return NULL;
 }
 void Platform_SetFlintPrevFg(HWND h) {
         
@@ -89,7 +89,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     UpdateWindow(hwnd);
     ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
     
-    {  return true; }
+    return true;
 }
 
 void Platform_PromptPopupHideWindow(Popup* self) {

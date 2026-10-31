@@ -40,19 +40,19 @@
 
 size_t fl_clipboard_history_count(void) {
     
-    {  return clipboard_history_count_platform(); }
+    return clipboard_history_count_platform();
 }
 
 const FlClipboardEntry* fl_clipboard_history_get(size_t index) {
     
-    {  return clipboard_history_get_platform(index); }
+    return clipboard_history_get_platform(index);
 }
 
 const FlClipboardEntry* fl_clipboard_latest(void) {
     
     size_t n = clipboard_history_count_platform();
     if (n == 0) {  return NULL; }
-    {  return clipboard_history_get_platform(n - 1); }
+    return clipboard_history_get_platform(n - 1);
 }
 
 void fl_clipboard_clear_history(void) {
@@ -65,13 +65,13 @@ bool fl_copy_to_clipboard(const char* text) {
     if (text == NULL) {  return 0; }
     bool ok = Platform_CopyToClipboard(text);
     if (ok) clipboard_history_push_text_platform(text);
-    {  return ok; }
+    return ok;
 }
 
 bool fl_copy_file_path(const char* path) {
     
     if (!path) {  return false; }
-    {  return clipboard_set_path_platform(path); }
+    return clipboard_set_path_platform(path);
 }
 
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension, int max_depth) {
@@ -100,7 +100,7 @@ char* fl_search_file_in_dir(const char* directory, const char* search_string,cha
     if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir))) {  return NULL; }
     directory = expanded_dir;
 
-    {  return fl_search_file_in_dir_platform(directory,search_string,output_path); }
+    return fl_search_file_in_dir_platform(directory,search_string,output_path);
 }
 
 bool fl_launch_with_args(const char* path, const char* args) {
@@ -120,7 +120,7 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
     if (!path) {  return false; }
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {  return false; }
-    {  return fl_launch_with_args_as_admin_platform(expanded, args); }
+    return fl_launch_with_args_as_admin_platform(expanded, args);
 }
 
 bool fl_add_dep_impl(const char *dep_name, const char *owner_file) {    
@@ -140,7 +140,7 @@ FlStringList fl_load_file_list(const char* filepath) {
     if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) {
     
         log_warn("fl_load_file_list resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
-        {  return list; }
+        return list;
     }
     long budget = (long)MAX_FILE_LINES * (long)(MAX_FILE_LINE_LENGTH + 2);
     list = File_ReadLines(full, budget);
@@ -158,7 +158,7 @@ long fl_load_file(const char* filepath, char* buffer, long buffer_size) {
     if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) {
     
         log_warn("fl_load_file resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
-        {  return -1; }
+        return -1;
     }
     return File_ReadAll(full, buffer, buffer_size);
 }
@@ -167,7 +167,7 @@ bool fl_free_list(const char* list[], int count) {
     
     if (!list || count <= 0) {  return false; }
     for (int i = 0; i < count; i++) free((void*)list[i]);
-    {  return true; }
+    return true;
 }
 
 void fl_free_file_list(FlStringList* list) {
@@ -189,7 +189,7 @@ bool fl_free_window_list(FlWindowList *list) {
         list->windows = NULL;
         list->count = 0;
     }
-    {  return true; }
+    return true;
 }
 
 bool fl_append_to_file(const char* filepath, const char* line) {
@@ -242,12 +242,12 @@ bool fl_write_to_file(const char* filepath, const char* lines[], int count) {
         else fprintf(f, "\n");
     }
     fclose(f);
-    {  return true; }
+    return true;
 }
 
 bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
     
-    {  return Platform_WriteTempFile(name, data, len, out_path, out_len); }
+    return Platform_WriteTempFile(name, data, len, out_path, out_len);
 }
 
 char* fl_read_file_to_string(const char* path, size_t* out_len) {
@@ -273,7 +273,7 @@ char* fl_read_file_to_string(const char* path, size_t* out_len) {
 
 long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size) {
     
-    {  return File_ReadAll(full_path, buffer, buffer_size); }
+    return File_ReadAll(full_path, buffer, buffer_size);
 }
 
 bool fl_write_string_to_file(const char* path, const char* content) {
@@ -291,7 +291,7 @@ bool fl_write_string_to_file(const char* path, const char* content) {
     if (!f) {  return false; }
     fputs(content, f);
     fclose(f);
-    {  return true; }
+    return true;
 }
 
 bool fl_file_exists(const char* path) {
@@ -310,7 +310,7 @@ bool fl_append_unique_line(const char* path, const char* line) {
     FlStringList files = fl_load_file_list(path);
     bool ok = fl_append_to_file(path, line);
     fl_free_file_list(&files);
-    {  return ok; }
+    return ok;
 }
 
 bool fl_remove_line(const char* path, const char* line) {
@@ -321,7 +321,7 @@ bool fl_remove_line(const char* path, const char* line) {
     for (int i=0;i<files.count && k<1024;i++) if (strcmp(files.items[i], line)!=0) kept[k++]=files.items[i]; else { free(files.items[i]); files.items[i]=NULL; }
     bool ok = fl_write_to_file(path, kept, k);
     fl_free_file_list(&files);
-    {  return ok; }
+    return ok;
 }
 
 bool fl_remove_line_contains(const char* path, const char* substr) {
@@ -332,7 +332,7 @@ bool fl_remove_line_contains(const char* path, const char* substr) {
     for (int i=0;i<files.count && k<1024;i++) if (!strstr(files.items[i], substr)) kept[k++]=files.items[i]; else { free(files.items[i]); files.items[i]=NULL; }
     bool ok = fl_write_to_file(path, kept, k);
     fl_free_file_list(&files);
-    {  return ok; }
+    return ok;
 }
 
 bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay) {
@@ -356,7 +356,7 @@ bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out
         }
     }
     fclose(f);
-    {  return found; }
+    return found;
 }
 
 bool fl_register_remapping_impl(const FlRemappingSpec *spec) {
@@ -366,7 +366,7 @@ bool fl_register_remapping_impl(const FlRemappingSpec *spec) {
     const char** bl = spec->blacklist;
     bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
     const char** windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
-    {  return remap_register_internal(spec->src, spec->dst, whitelist, windows); }
+    return remap_register_internal(spec->src, spec->dst, whitelist, windows);
 }
 
 static void fl_snippet_fire(int idx, int del) {
@@ -389,7 +389,7 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
     const char** bl = spec->blacklist;
     bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
     const char** windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
-    {  return snippet_register_internal(spec->trigger, spec->text, spec->fn, whitelist, windows, (void*)__builtin_return_address(0)); }
+    return snippet_register_internal(spec->trigger, spec->text, spec->fn, whitelist, windows, (void*)__builtin_return_address(0));
 }
 
 typedef struct { char *key; void *value; } HashMapEnt;
@@ -401,7 +401,7 @@ static int g_feature_order_count = 0;
 static HashMap* ensure_feature_map(void) {
     
     if (!g_feature_map) { g_feature_map = NULL; sh_new_strdup(g_feature_map); }
-    {  return g_feature_map; }
+    return g_feature_map;
 }
 
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
@@ -425,7 +425,7 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
         }
     }
     if (binding.is_feature_toggle) binding.hold = false;
-    {  return hotkey_register_internal(binding); }
+    return hotkey_register_internal(binding);
 }
 
 int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max) {
@@ -435,7 +435,7 @@ int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max)
         if (out_names) out_names[i] = g_feature_order[i]->name;
         if (out_cbs) out_cbs[i] = g_feature_order[i]->cb;
     }
-    {  return n; }
+    return n;
 }
 
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max) {
@@ -460,19 +460,19 @@ int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void
     } else {
         if (out_icons) *out_icons = NULL;
     }
-    {  return n; }
+    return n;
 }
 
 char* fl_get_icon_path(const char* app_path_path) {
     
     if (!app_path_path) {  return NULL; }
-    {  return Platform_GetIconPath((char*)app_path_path); }
+    return Platform_GetIconPath((char*)app_path_path);
 }
 
 int fl_get_icon_size(const char* icon_path) {
     
     if (!icon_path) {  return 20; }
-    {  return Platform_GetIconSize((char*)icon_path); }
+    return Platform_GetIconSize((char*)icon_path);
 }
 
 char* fl_run_terminal_command(char* command) {
@@ -487,13 +487,13 @@ char* fl_run_terminal_command(char* command) {
 char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status) {
   
   if (!argv || !argv[0]) {  return NULL; }
-  {  return Platform_RunArgvCapture(argv, stdin_data, out_status); }
+  return Platform_RunArgvCapture(argv, stdin_data, out_status);
 }
 
 char* fl_run_terminal_command_blocking(char* command) {
     
   if (!command) {  return NULL; }
-  {  return Platform_RunCommandAndGetOutput(command, PLATFORM_RUN_PRIO_NORMAL); }
+  return Platform_RunCommandAndGetOutput(command, PLATFORM_RUN_PRIO_NORMAL);
 }
 
 char* fl_run_terminal_command_and_open(char* command) {
@@ -534,12 +534,12 @@ bool fl_launch_terminal_at_path(char* path,char* args) {
 bool fl_terminate_process_by_name(const char* exe_name) {
     
     if (!exe_name) {  return false; }
-    {  return Platform_TerminateProcessByName(exe_name); }
+    return Platform_TerminateProcessByName(exe_name);
 }
 bool fl_string_contains(const char* haystack, const char* needle) {
     
     if (!needle || !haystack) {  return false; }
-    {  return Platform_StringContainsCaseInsensitive(needle,haystack); }
+    return Platform_StringContainsCaseInsensitive(needle,haystack);
 }
 
 char* fl_string_cut_at(const char* str, char delim) {     
@@ -571,7 +571,7 @@ StringList fl_string_split(const char* str, const char* delimiter) {
     
     StringList empty = {NULL, 0};
     if (!str || !delimiter || !delimiter[0]) {  return empty; }
-    {  return String_Split(str, delimiter); }
+    return String_Split(str, delimiter);
 }
 
 void fl_string_list_free(StringList* list) {
@@ -589,7 +589,7 @@ void fl_populate_listbox_ex(ListBoxInfo* lb, const char* filter, const char** it
 bool fl_is_selected(ListBoxInfo* lb) {
     
     if (!lb) {  return false; }
-    {  return UI_IsListBoxSelected(lb); }
+    return UI_IsListBoxSelected(lb);
 }
 
 void fl_set_edit_text(const char* text) {
@@ -655,7 +655,7 @@ static FlHoverPopupCtx *fl_hover_popup_ctx_new(const FlMessageSpec *spec) {
     p->h = spec->h > 0 ? spec->h : FL_WIDGET_PROVISIONAL_H;
     p->created_at = fl_start_timer();
     p->pad = FL_WIDGET_DEFAULT_PAD;
-    {  return p; }
+    return p;
 }
 
 static void fl_hover_popup_ctx_free(void *ud) {
@@ -744,7 +744,7 @@ bool fl_launch_browser(char* url) {
 bool fl_query_browser(const char* query) {
     
     if (!query) {  return false; }
-    {  return Platform_QueryBrowser(query); }
+    return Platform_QueryBrowser(query);
 }
 
 char* fl_get_last_clipboard_entry() {
@@ -762,19 +762,19 @@ char* fl_get_last_clipboard_entry() {
         const FlClipboardEntry* e = clipboard_history_get_platform(i - 1);
         if (e->type == CLIPBOARD_TEXT && e->text) return strdup(e->text);
     }
-    {  return NULL; }
+    return NULL;
 }
 
 bool fl_paste_from_clipboard() {
     
     char* content = Platform_GetClipboardEntry();
-   {  return Platform_PasteContent(content); }
+   return Platform_PasteContent(content);
 }
 
 bool fl_paste(char* content) {
     
     if (!content) {  return false; }
-   {  return Platform_PasteContent(content); }
+   return Platform_PasteContent(content);
 }
 
 typedef struct {
@@ -828,7 +828,7 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     }
     if (!ctx.text) {  return NULL; }
     if (out_index) *out_index = true_idx;
-    {  return ctx.text; }
+    return ctx.text;
 }
 
 bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text) {
@@ -837,7 +837,7 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
     if (line_index >= files.count) {
     
         fl_free_file_list(&files);
-        {  return false; }
+        return false;
     }
     free(files.items[line_index]);
     files.items[line_index] = NULL;
@@ -845,7 +845,7 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
     if (!files.items[line_index]) {
     
         fl_free_file_list(&files);
-        {  return false; }
+        return false;
     }
     bool ok = fl_write_to_file(filepath, (const char**)files.items, files.count);
     fl_free_file_list(&files);
@@ -1003,7 +1003,7 @@ static int FlUtf8LeadLen(unsigned char c) {
     if ((c & 0xE0) == 0xC0) {  return 2; }
     if ((c & 0xF0) == 0xE0) {  return 3; }
     if ((c & 0xF8) == 0xF0) {  return 4; }
-    {  return 1; }
+    return 1;
 }
 
 static void FlWrapRecord(FlCharPos* out, int maxout, int* count, int x, int y) {
@@ -1026,7 +1026,7 @@ static int FlWrapPlaceWord(FlWrapMeasureFn measure, FlWrapDrawFn draw, void* ctx
         i = j;
     }
     draw(ctx, wx, rowtop, text + ws, we - ws);
-    {  return measure(ctx, text + ws, we - ws); }
+    return measure(ctx, text + ws, we - ws);
 }
 
 static int FlWrapLayout(const char* text, int x0, int y0, int max_width, int line_height, FlWrapMeasureFn measure, FlWrapDrawFn draw, void* ctx, FlCharPos* out, int maxout) {
@@ -1109,7 +1109,7 @@ static int FlWrapLayout(const char* text, int x0, int y0, int max_width, int lin
         has = true;
         p = we;
     }
-    {  return count; }
+    return count;
 }
 
 static int FlWrapMeasureThunk(void* ctx, const char* s, int n) {
@@ -1205,7 +1205,7 @@ int fl_rand_num_between(int min, int max) {
   if (span > limit) {
     r = (r << 31) | (unsigned long)rand();
   }
-  {  return min + (int)(r % span); }
+  return min + (int)(r % span);
 }
 
 int fl_get_text_height(const char *text) {
@@ -1231,28 +1231,28 @@ int fl_get_glyph_ink_height(const char *text, int fontsize) {
 
 char *fl_http_get(const char *url) {
   
-  {  return Platform_HttpGet(url); }
+  return Platform_HttpGet(url);
 }
 
 char *fl_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
   
-  {  return Platform_HttpGetLimited(url, max_bytes, out_len); }
+  return Platform_HttpGetLimited(url, max_bytes, out_len);
 }
 
 bool fl_http_download(const char *url, const char *save_path) {
   
-  {  return Platform_HttpDownload(url, save_path); }
+  return Platform_HttpDownload(url, save_path);
 }
 
 char *fl_http_post(const char *url, const char *content_type, const char *body) {
   
-  {  return Platform_HttpPost(url, content_type, body); }
+  return Platform_HttpPost(url, content_type, body);
 }
 
 void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata) {
   
   Platform_HttpGetAsync(url, cb, userdata);
-  {  return ; }
+  return ;
 }
 
 bool fl_draw_line_impl(const FlLineSpec *spec) {
@@ -1480,7 +1480,7 @@ bool fl_replay_hotkey(int vk, int mods) {
 }
 bool fl_type_text(const char *s) {
     
-  {  return fl_type_text_platform(s); }
+  return fl_type_text_platform(s);
 }
 
 void fl_sleep(double seconds) {
@@ -1490,12 +1490,12 @@ fl_sleep_platform(seconds);
 
 FlLibrary fl_library_open(const char* path) {
     
-    {  return (FlLibrary)Platform_LoadLibrary(path); }
+    return (FlLibrary)Platform_LoadLibrary(path);
 }
 
 void* fl_library_symbol(FlLibrary lib, const char* name) {
     
-    {  return Platform_GetSymbol((LibHandle)lib, name); }
+    return Platform_GetSymbol((LibHandle)lib, name);
 }
 
 void fl_library_close(FlLibrary lib) {
@@ -1505,13 +1505,13 @@ void fl_library_close(FlLibrary lib) {
 
 const char* fl_library_error(void) {
     
-    {  return Platform_GetLoadError(); }
+    return Platform_GetLoadError();
 }
 
 FlThread fl_thread_create(FlThreadFunc fn, void* arg) {
     
   if (!fn) {  return NULL; }
-  {  return (FlThread)Platform_ThreadCreate((void* (*)(void*))fn, arg); }
+  return (FlThread)Platform_ThreadCreate((void* (*)(void*))fn, arg);
 }
 
 void fl_thread_join(FlThread thread) {
@@ -1522,7 +1522,7 @@ void fl_thread_join(FlThread thread) {
 
 FlMutex fl_mutex_create(void) {
     
-  {  return (FlMutex)Platform_MutexCreate(); }
+  return (FlMutex)Platform_MutexCreate();
 }
 
 void fl_mutex_destroy(FlMutex mutex) {
@@ -1570,31 +1570,31 @@ FlKey fl_hotkey_from_string(const char* str) {
 
 bool fl_is_key_down(int vk){
     
-  {  return Platform_IsKeyDown(vk); } 
+  return Platform_IsKeyDown(vk);
 }
 bool fl_is_key_pressed(int vk){
     
-  {  return Platform_WasKeyPressed(vk); } 
+  return Platform_WasKeyPressed(vk);
 }
 bool fl_is_key_released(int vk){
     
-  {  return Platform_WasKeyReleased(vk); } 
+  return Platform_WasKeyReleased(vk);
 }
 bool fl_ctrl_pressed(void){
     
-  {  return Platform_IsCtrlPressed(); }
+  return Platform_IsCtrlPressed();
 }
 bool fl_shift_pressed(void){
     
-  {  return Platform_IsShiftPressed(); }
+  return Platform_IsShiftPressed();
 }
 bool fl_alt_pressed(void){
     
-  {  return Platform_IsAltPressed(); }
+  return Platform_IsAltPressed();
 }
 bool fl_super_pressed(void){
     
-  {  return Platform_IsSuperPressed(); }
+  return Platform_IsSuperPressed();
 }
 void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
     
@@ -1602,11 +1602,11 @@ Platform_SetKeyCallback(cb,ud);
 }
 int fl_get_key_pressed(void){
     
-  {  return Platform_GetPressedKey(); }
+  return Platform_GetPressedKey();
 }
 char fl_get_char_pressed(void){
     
-  {  return Platform_GetPressedChar(); }
+  return Platform_GetPressedChar();
 }
 
 bool fl_poll_key(FlKeyEvent *out) {
@@ -1620,7 +1620,7 @@ bool fl_poll_key(FlKeyEvent *out) {
   out->down = ev.down;
   out->repeat = ev.repeat;
   out->t_us = ev.t_us;
-  {  return true; }
+  return true;
 }
 
 bool fl_poll_mouse(FlMouseEvent *out) {
@@ -1635,17 +1635,17 @@ bool fl_poll_mouse(FlMouseEvent *out) {
   out->down = ev.down;
   out->repeat = ev.repeat;
   out->t_us = ev.t_us;
-  {  return true; }
+  return true;
 }
 
 int fl_mouse_queue_len(void) {
     
-  {  return Platform_GlobalMouse_Pending(); }
+  return Platform_GlobalMouse_Pending();
 }
 
 unsigned long fl_mouse_queue_dropped(void) {
     
-  {  return Platform_GlobalMouse_Dropped(); }
+  return Platform_GlobalMouse_Dropped();
 }
 
 void fl_clear_mouse_queue(void) {
@@ -1662,17 +1662,17 @@ FlPos fl_get_cursor_pos() {
 
 bool fl_mouse_pressed(int button) {
     
-  {  return Platform_MouseStateDown(button); }
+  return Platform_MouseStateDown(button);
 }
 
 int fl_key_queue_len(void) {
     
-  {  return Platform_GlobalKey_Pending(); }
+  return Platform_GlobalKey_Pending();
 }
 
 unsigned long fl_key_queue_dropped(void) {
     
-  {  return Platform_GlobalKey_Dropped(); }
+  return Platform_GlobalKey_Dropped();
 }
 
 void fl_clear_key_queue(void) {
@@ -1682,7 +1682,7 @@ Platform_GlobalKey_Clear();
 
 int fl_char_for_key(int vk, int scancode, int mods) {
     
-  {  return Platform_CharForKey(vk, scancode, mods); }
+  return Platform_CharForKey(vk, scancode, mods);
 }
 
 bool fl_is_flag_prefix(char c) {     
@@ -1694,7 +1694,7 @@ size_t fl_extract_flag_name(char *p, char *out, size_t cap) {
     while (p[n] && !isspace((unsigned char)p[n]) && p[n] != '=') n++;
     if (n >= cap) n = cap - 1;
     memcpy(out, p, n); out[n] = '\0';
-    {  return n; }
+    return n;
 }
 
 bool fl_extract_quoted(char **pp, char *out, size_t cap) {
@@ -1708,7 +1708,7 @@ bool fl_extract_quoted(char **pp, char *out, size_t cap) {
     memcpy(out, s, len); out[len] = '\0';
     if (*p == q) p++;
     *pp = p;
-    {  return true; }
+    return true;
 }
 
 bool fl_extract_value(char **pp, char *out, size_t cap) {
@@ -1721,13 +1721,13 @@ bool fl_extract_value(char **pp, char *out, size_t cap) {
     if (len >= cap) len = cap - 1;
     memcpy(out, s, len); out[len] = '\0';
     *pp = p;
-    {  return len > 0; }
+    return len > 0;
 }
 
 bool fl_next_flag(char *p) {
     
     while (*p && isspace((unsigned char)*p)) p++;
-    {  return *p == '-' || *p == '/'; }
+    return *p == '-' || *p == '/';
 }
 
 FlFlagList fl_parse_flags(const char* input) {
@@ -1786,17 +1786,17 @@ void fl_free_flags(FlFlagList* list) {
 
 void fl_run_after_time(double seconds, void (*callback)(void)) {
     
-    {  return fl_run_after_time_platform(seconds,callback); }
+    return fl_run_after_time_platform(seconds,callback);
 }
 
 FlTimer fl_start_timer(void) {
     
-    {  return Platform_StartTimer(); }
+    return Platform_StartTimer();
 }
 
 double fl_end_timer(FlTimer t) {
     
-    {  return Platform_EndTimer(t); }
+    return Platform_EndTimer(t);
 }
 
 char* fl_get_active_window_title(void) {
@@ -1826,7 +1826,7 @@ bool fl_is_window_active(char* title) {
       if (Platform_StringContainsCaseInsensitive(l.windows[i],title)) {
     
         
-        {  return true; }
+        return true;
       }
   }
   
@@ -1835,7 +1835,7 @@ bool fl_is_window_active(char* title) {
 
 char* fl_get_working_dir() {
     
-    {  return Platform_GetWorkingDir(); }
+    return Platform_GetWorkingDir();
 }
 
 char* fl_resolve_data_path(const char* name) {
@@ -1846,7 +1846,7 @@ char* fl_resolve_data_path(const char* name) {
     char* r = (char*)malloc(strlen(full) + 1);
     if (!r) {  return NULL; }
     strcpy(r, full);
-    {  return r; }
+    return r;
 }
 
 char* fl_resolve_feature_path(const char* name) {
@@ -1901,36 +1901,36 @@ long fl_hashmap_get(FlHashMap* map, const char* key, long def) {
     if (!map || !key) {  return def; }
     ptrdiff_t idx = shgeti(map, (char*)key);
     if (idx < 0) {  return def; }
-    {  return map[idx].value; }
+    return map[idx].value;
 }
 
 bool fl_hashmap_has(FlHashMap* map, const char* key) {
     
     if (!map || !key) {  return false; }
-    {  return shgeti(map, (char*)key) >= 0; }
+    return shgeti(map, (char*)key) >= 0;
 }
 
 bool fl_hashmap_del(FlHashMap** map, const char* key) {
     
     if (!map || !*map || !key) {  return false; }
-    {  return shdel(*map, (char*)key) != 0; }
+    return shdel(*map, (char*)key) != 0;
 }
 
 size_t fl_hashmap_len(FlHashMap* map) {
     
     if (!map) {  return 0; }
-    {  return shlenu(map); }
+    return shlenu(map);
 }
 
 const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index) {
     
     if (!map || index >= shlenu(map)) {  return NULL; }
-    {  return &map[index]; }
+    return &map[index];
 }
 
 FlTimer fl_profile_start() {
     
-    {  return fl_start_timer(); }
+    return fl_start_timer();
 }
 
 void fl_profile_end(FlTimer timer) {
@@ -1998,12 +1998,12 @@ if (!g_mon_valid || fl_end_timer(g_mon_at) > 2000) {
 
 unsigned fl_widget_bump_generation(void) {
     
-    {  return ++g_fl_widget_gen; }
+    return ++g_fl_widget_gen;
 }
 
 unsigned fl_widget_current_generation(void) {
     
-    {  return g_fl_widget_gen; }
+    return g_fl_widget_gen;
 }
 
 static void fl_widget_relayout(void);
@@ -2018,7 +2018,7 @@ static void fl_widget_hover_poll(void) {
     if (g_fl_hover_valid && fl_end_timer(g_fl_hover_at) < 400.0) {
     
         
-        {  return ; }
+        return ;
     }
     g_fl_hover_pos = fl_get_cursor_pos();
     g_fl_hover_at = now;
@@ -2031,7 +2031,7 @@ static void *fl_widget_hover_worker(void *ud) {
     FlWidget *w = (FlWidget *)ud;
     if (w && w->on_hover) w->on_hover();
     if (w) w->hover_running = false;
-    {  return NULL; }
+    return NULL;
 }
 
 static void fl_widget_render_frame(void *ud) {
@@ -2214,21 +2214,21 @@ static void fl_widget_apply_geometry(FlWidget *widget, int x, int y) {
     if (Platform_RenderThread_IsCurrentThread()) {
     
         fl_widget_attach_window(widget);
-        {  return ; }
+        return ;
     }
     if (!Platform_RenderThread_EnsureStarted(widget->fps)) {
     
-        {  return ; }
+        return ;
     }
     if (!Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
     
-        {  return ; }
+        return ;
     }
 }
 
 static int fl_widget_sort_key(const FlWidget *widget) {
     
-    {  return widget->order_set ? widget->order : widget->seq; }
+    return widget->order_set ? widget->order : widget->seq;
 }
 
 static void fl_widget_relayout(void) {
@@ -2313,12 +2313,12 @@ const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
 }
 FlNetStatus fl_net_status(void) {
     
-    {  return fl_net_status_platform(); }
+    return fl_net_status_platform();
 }
 
 unsigned long long fl_net_rx_bytes() {
     
-    {  return fl_net_rx_bytes_platform(); }
+    return fl_net_rx_bytes_platform();
 }
 
 
@@ -2333,7 +2333,7 @@ unsigned long long fl_net_rx_bytes_over(double seconds) {
 
     unsigned long long after = fl_net_rx_bytes_platform();
     if (after < before) {  return 0; }
-    {  return after - before; }
+    return after - before;
 }
 
 FlRect fl_get_monitor_geometry() {
@@ -2347,14 +2347,14 @@ int fl_get_screen_width() {
     
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
-    {  return w; }
+    return w;
 }
 
 int fl_get_screen_height() {
     
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
-    {  return h; }
+    return h;
 }
 
 typedef struct {

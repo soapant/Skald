@@ -30,7 +30,7 @@ if (!wm) {  return -1; }
         if (!got) Sleep(10);
     }
 
-    {  return 0; }
+    return 0;
 }
 
 static void WindowManager_DrainSelectionComplete(WindowManager* wm) {
@@ -41,7 +41,7 @@ static void WindowManager_DrainSelectionComplete(WindowManager* wm) {
     WindowManager_PopPopup(wm);
     Popup* top_after = WindowManager_GetTopPopup(wm);
     if (top_after && top_after->vtable && top_after->vtable->on_render) top_after->vtable->on_render(top_after);
-    {  }
+    
 }
 
 void WindowManager_ProcessEventsWin32(WindowManager* wm) {

@@ -25,7 +25,7 @@ bool Platform_GetMousePos(int* out_x, int* out_y) {
     if (!GetCursorPos(&pt)) {  return false; }
     if (out_x) *out_x = (int)pt.x;
     if (out_y) *out_y = (int)pt.y;
-    {  return true; }
+    return true;
 }
 
 void Platform_RegisterRawMouse(HWND hwnd) {
@@ -229,7 +229,7 @@ if (nCode < 0) {
       }
     }
   }
-  {  return CallNextHookEx(NULL, nCode, wParam, lParam); }
+  return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
 int Platform_CharForKey(int vk, int scancode, int mods) {
@@ -247,5 +247,5 @@ BYTE state[256];
   char mb[16];
   int m = WideCharToMultiByte(CP_UTF8, 0, buf, 1, mb, sizeof(mb), NULL, NULL);
   if (m <= 0) {  return 0; }
-  {  return (int)(unsigned char)mb[0]; }
+  return (int)(unsigned char)mb[0];
 }

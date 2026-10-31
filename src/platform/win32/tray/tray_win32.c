@@ -9,9 +9,7 @@
 #include "platform/win32/win32_state.h"
 #include "platform/win32/input_core_win32.h"
 
-#include "core/timer.h"
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    
 switch (msg) {
   case WM_CREATE: {
     NOTIFYICONDATA nid = {0};
@@ -105,5 +103,5 @@ switch (msg) {
   default:
           return DefWindowProc(hwnd, msg, wParam, lParam);
   }
-  {  return 0; }
+  return 0;
 }

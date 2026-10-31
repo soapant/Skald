@@ -66,7 +66,7 @@ if (g_pbuf_xd && g_pbuf_pm && g_pbuf_dpy == dpy && g_pbuf_win == win &&
     g_pbuf_cmap = cmap;
     g_pbuf_pm = pm;
     g_pbuf_xd = xd;
-    {  return true; }
+    return true;
 }
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
@@ -194,6 +194,6 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     XFreeGC(dpy, gc);
     x11_draw_window_border(dpy, *win, w, h, state && state->no_bg);
     XFlush(dpy);
-    {  return true; }
+    return true;
 }
 

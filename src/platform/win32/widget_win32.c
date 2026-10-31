@@ -109,7 +109,7 @@ if (widget->layer_bits && widget->layer_w == widget->w && widget->layer_h == wid
     widget->layer_bits = bits;
     widget->layer_w = widget->w;
     widget->layer_h = widget->h;
-    {  return true; }
+    return true;
 }
 
 static void widget_push_layered(PlatformWidget *widget, unsigned long bg, unsigned char alpha) {
@@ -226,7 +226,7 @@ PlatformWidget *widget = (PlatformWidget *)GetWindowLongPtrA(hwnd, GWLP_USERDATA
         break;
     }
     }
-    {  return DefWindowProcA(hwnd, msg, wParam, lParam); }
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
 static void widget_frame(void *ud) {
@@ -391,7 +391,7 @@ widget->hwnd = CreateWindowExA(
     ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
     SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     widget->mapped = true;
-    {  return widget; }
+    return widget;
 }
 
 static void widget_destroy_on_owner_thread(void* ud) {
@@ -424,7 +424,7 @@ if (!widget || widget->dead) {  return ; }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
         
-{  return widget && !widget->dead; }
+return widget && !widget->dead;
 }
 
 void Platform_Widget_SetFrameCallback(PlatformWidget *widget, Platform_RenderFrameFn fn, void *ud) {
@@ -502,10 +502,10 @@ if (!widget || widget->dead) {  return ; }
 
 int Platform_Widget_Width(const PlatformWidget *widget) {
         
-{  return widget ? widget->w : 0; }
+return widget ? widget->w : 0;
 }
 
 int Platform_Widget_Height(const PlatformWidget *widget) {
         
-{  return widget ? widget->h : 0; }
+return widget ? widget->h : 0;
 }

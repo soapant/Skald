@@ -140,7 +140,7 @@ static int x11_font_px(XftFont* xf, int px) {
     if (px > 0) {  return px; }
         double d = 0;
         if (xf && xf->pattern && FcPatternGetDouble(xf->pattern, FC_PIXEL_SIZE, 0, &d) == FcResultMatch && d > 0)
-            {  return (int)(d + 0.5); }
+            return (int)(d + 0.5);
     return FontSize;
 }
 

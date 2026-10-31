@@ -43,7 +43,7 @@ static uid_t ProbeSessionUid(void){
     }
     closedir(d);
     
-    {  return (uid_t)-1; }
+    return (uid_t)-1;
 }
 
 const char* Platform_GetRealUser(void){
@@ -65,7 +65,7 @@ const char* Platform_GetRealUser(void){
     struct passwd* pw=getpwuid(getuid());
     if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1);  log_info("Platform_GetRealUser completed");
  return buf; }
-    {  return NULL; }
+    return NULL;
 }
 
 const char* Platform_GetRealHome(void){
@@ -80,14 +80,14 @@ const char* Platform_GetRealHome(void){
     const char* h=getenv("HOME");
     if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1);  return buf; }
     snprintf(buf,sizeof(buf),"/home/%s",u); log_info("Platform_GetRealHome completed");
- {  return buf; }
+ return buf;
 }
 
 bool Platform_IsRunningAsRoot(void){
         
 
         log_info("Platform_IsRunningAsRoot completed");
- {  return getuid()==0; }
+ return getuid()==0;
 }
 
 
@@ -120,7 +120,7 @@ const char* Platform_GetSessionDisplay(void){
     }
         log_info("Platform_GetSessionDisplay completed");
 
-    {  return buf[0]?buf:":0"; }
+    return buf[0]?buf:":0";
 }
 
 
@@ -158,7 +158,7 @@ const char* Platform_GetSessionXAuthority(void){
     buf[0]='\0';
         log_info("Platform_GetSessionXAuthority completed");
 
-    {  return ""; }
+    return "";
 }
 
 
@@ -174,7 +174,7 @@ const char* Platform_GetRuntimeDir(void){
     snprintf(buf,sizeof(buf),"/run/user/%d",(int)getuid());
         log_info("Platform_GetRuntimeDir completed");
 
-    {  return buf[0]?buf:"/run/user/1000"; }
+    return buf[0]?buf:"/run/user/1000";
 }
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
@@ -236,7 +236,7 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
         }
     }
     
-    {  return true; }
+    return true;
 }
 
 int ConvertLinuxKeyToWindowsVK(int key_code) {
@@ -310,7 +310,7 @@ int ConvertLinuxKeyToWindowsVK(int key_code) {
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
         
 if (!haystack || !needle) {  return false; }
-    {  return strcasestr(haystack, needle) != NULL; }
+    return strcasestr(haystack, needle) != NULL;
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
@@ -318,14 +318,14 @@ bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefi
 if (!str || !prefix) {  return false; }
     size_t plen = strlen(prefix);
     if (plen == 0) {  return true; }
-    {  return strncasecmp(str, prefix, plen) == 0; }
+    return strncasecmp(str, prefix, plen) == 0;
 }
 
 long long Platform_GetWallClockMs(void) {
         
 struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    {  return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL; }
+    return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL;
 }
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
@@ -343,7 +343,7 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
 
         log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name ? exe_name : "");;
 
-    {  return Platform_RunTerminalCommand(cmd,false); }
+    return Platform_RunTerminalCommand(cmd,false);
 }
 
 static bool x11_cmd_exists(const char* cmd) {
@@ -360,7 +360,7 @@ if (!cmd || !cmd[0]) {  return false; }
         snprintf(full, sizeof(full), "%s/%s", dir, cmd);
         if (access(full, X_OK) == 0) return true;
     }
-    {  return false; }
+    return false;
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
@@ -493,7 +493,7 @@ if (!query || !query[0]) {  return false; }
     
       log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
     
-    {  return Platform_RunTerminalCommand(command,false); }
+    return Platform_RunTerminalCommand(command,false);
 }
 
 char* Platform_GetClipboardEntry() {
@@ -532,13 +532,13 @@ static long long next_in_ms = 0;
         fail_streak = 0;
         next_in_ms = 0;
     }
-    {  return out; }
+    return out;
 }
 
 bool Platform_PasteContent(char* content) {
   
 log_info("Platform_PasteContent content='%s'", content ? content : "");;
-  {  return Wm_Paste(content); }
+  return Wm_Paste(content);
 }
 
 bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size) {

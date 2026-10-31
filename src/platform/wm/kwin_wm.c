@@ -20,13 +20,13 @@ const char* v = getenv("KDE_SESSION_VERSION");
     if (v && v[0]) {  return true; }
     const char* d = getenv("XDG_CURRENT_DESKTOP");
     if (d && d[0] && strstr(d, "KDE")) {  return true; }
-    {  return false; }
+    return false;
 }
 
 static bool kwin_has_error(char* output) {
         
 if (!output) {  return true; }
-    {  return Platform_StringContainsCaseInsensitive(output, "error"); }
+    return Platform_StringContainsCaseInsensitive(output, "error");
 }
 
 static void kwin_ensure_bus(void) {
@@ -57,7 +57,7 @@ kwin_ensure_bus();
     }
     char cmd[2048];
     snprintf(cmd, sizeof(cmd), "%s %s 2>/dev/null || echo error", g_kwin_qdbus, args);
-    {  return Platform_RunTerminalCommand(cmd, false); }
+    return Platform_RunTerminalCommand(cmd, false);
 }
 
 static bool kwin_run_script_inner(const char* body) {
@@ -84,7 +84,7 @@ FILE* f = fopen("/tmp/flint_kwin_do.js", "w");
     if (out2) free(out2);
     char* out3 = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flint");
     if (out3) free(out3);
-    {  return ok; }
+    return ok;
 }
 
 static bool kwin_run_script(const char* body) {
@@ -92,7 +92,7 @@ static bool kwin_run_script(const char* body) {
 pthread_mutex_lock(&g_kwin_mtx);
     bool ok = kwin_run_script_inner(body);
     pthread_mutex_unlock(&g_kwin_mtx);
-    {  return ok; }
+    return ok;
 }
 
 static char* g_kwin_records = NULL;
@@ -169,7 +169,7 @@ long long now = Platform_GetWallClockMs();
     }
     g_kwin_q_loaded = false;
     g_kwin_q_name[0] = '\0';
-    {  return false; }
+    return false;
 }
 
 static void kwin_snap_store(const char* blob) {
@@ -242,7 +242,7 @@ long long now = Platform_GetWallClockMs();
         g_kwin_q_loaded = false;
         return g_kwin_records != NULL;
     }
-    {  return g_kwin_records != NULL; }
+    return g_kwin_records != NULL;
 }
 
 static bool kwin_skip_caption(const char* cap) {
@@ -250,7 +250,7 @@ static bool kwin_skip_caption(const char* cap) {
 if (!cap || !cap[0]) {  return true; }
     if (!strncmp(cap, "flint-", 6)) {  return true; }
     if (!strcasecmp(cap, "window") || !strcasecmp(cap, "colored")) {  return true; }
-    {  return false; }
+    return false;
 }
 
 static void kwin_clean_copy(const char* src, size_t n, char* dst, size_t cap) {
@@ -273,7 +273,7 @@ if (!buffer || buffer_size <= 0) {  return false; }
     bool ok = kwin_snapshot_locked() && g_kwin_active_title && g_kwin_active_title[0];
     if (ok) kwin_clean_copy(g_kwin_active_title, strlen(g_kwin_active_title), buffer, (size_t)buffer_size);
     pthread_mutex_unlock(&g_kwin_mtx);
-    {  return ok && buffer[0] != '\0'; }
+    return ok && buffer[0] != '\0';
 }
 
 bool get_app_id_kwin(char *buffer, int buffer_size) {
@@ -285,7 +285,7 @@ if (!buffer || buffer_size <= 0) {  return false; }
     bool ok = kwin_snapshot_locked() && g_kwin_active_class && g_kwin_active_class[0];
     if (ok) kwin_clean_copy(g_kwin_active_class, strlen(g_kwin_active_class), buffer, (size_t)buffer_size);
     pthread_mutex_unlock(&g_kwin_mtx);
-    {  return ok && buffer[0] != '\0'; }
+    return ok && buffer[0] != '\0';
 }
 
 char* paste_kwin(char* content) {
@@ -296,7 +296,7 @@ if (!content) { log_error("content is NULL"); return NULL; }
     snprintf(buffer, sizeof(buffer), "wtype %s", content);
     char* out = Platform_RunTerminalCommand(buffer, false);
     if (!out) log_error("content='%s'", content ? content : "null");
-    {  return out; }
+    return out;
 }
 
 static bool kwin_focus_js_cmd(const char* title, char* out, size_t cap) {
@@ -320,7 +320,7 @@ char esc[1024];
     low[sizeof(low)-1] = '\0';
     if (low[0]) low[0] = tolower((unsigned char)low[0]);
     snprintf(out, cap, "var __t=\"%s\";var __l=\"%s\";var __ws=workspace.stackingOrder;for(var i=0;i<__ws.length;i++){var __c=__ws[i].caption;if(__c==__t||__c.toLowerCase()==__l){workspace.activeWindow=__ws[i];break;}}", esc, low);
-    {  return true; }
+    return true;
 }
 
 bool focus_window_title_kwin(char* title) {
@@ -333,7 +333,7 @@ if (!title) { log_error("title is NULL"); return false; }
     if (!*title) { log_error("title empty after trim"); return false; }
     char body[2300];
     if (!kwin_focus_js_cmd(title, body, sizeof(body))) {  return false; }
-    {  return kwin_run_script(body); }
+    return kwin_run_script(body);
 }
 
 PlWindowList get_window_titles_kwin() {
@@ -362,7 +362,7 @@ PlWindowList list = {0};
         p = rend ? rend + 1 : p + rlen;
     }
     pthread_mutex_unlock(&g_kwin_mtx);
-    {  return list; }
+    return list;
 }
 
 PlWindowList get_window_names_kwin() {
@@ -395,71 +395,71 @@ PlWindowList list = {0};
         p = rend ? rend + 1 : p + rlen;
     }
     pthread_mutex_unlock(&g_kwin_mtx);
-    {  return list; }
+    return list;
 }
 
 
 bool close_active_window_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
-    {  return kwin_run_script("workspace.slotWindowClose();"); }
+    return kwin_run_script("workspace.slotWindowClose();");
 }
 
 bool toggle_fullscreen_active_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
-    {  return kwin_run_script("workspace.slotWindowFullScreen();"); }
+    return kwin_run_script("workspace.slotWindowFullScreen();");
 }
 
 bool move_active_window_to_monitor_kwin(bool right) {
         
 if (!kwin_is_active()) {  return false; }
     if (right) {  return kwin_run_script("workspace.slotWindowToRightScreen();"); }
-    {  return kwin_run_script("workspace.slotWindowToLeftScreen();"); }
+    return kwin_run_script("workspace.slotWindowToLeftScreen();");
 }
 
 bool move_active_window_left_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
-    {  return kwin_run_script("workspace.slotWindowToLeftScreen();"); }
+    return kwin_run_script("workspace.slotWindowToLeftScreen();");
 }
 
 bool move_active_window_right_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
-    {  return kwin_run_script("workspace.slotWindowToRightScreen();"); }
+    return kwin_run_script("workspace.slotWindowToRightScreen();");
 }
 
 bool focus_window_left_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
-    {  return kwin_run_script("workspace.slotSwitchWindowLeft();"); }
+    return kwin_run_script("workspace.slotSwitchWindowLeft();");
 }
 
 bool focus_window_right_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
-    {  return kwin_run_script("workspace.slotSwitchWindowRight();"); }
+    return kwin_run_script("workspace.slotSwitchWindowRight();");
 }
 
 bool minimize_active_window_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
-    {  return kwin_run_script("workspace.slotWindowMinimize();"); }
+    return kwin_run_script("workspace.slotWindowMinimize();");
 }
 
 bool screenshot_copy_area_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
     free(Platform_RunTerminalCommand("spectacle -b -n -r -c", false));
-    {  return true; }
+    return true;
 }
 
 bool screenshot_copy_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
     free(Platform_RunTerminalCommand("spectacle -b -n -c", false));
-    {  return true; }
+    return true;
 }
 
 bool screenshot_save_area_kwin(char* save_path) {
@@ -468,7 +468,7 @@ if (!kwin_is_active() || !save_path || !save_path[0]) {  return false; }
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\"", save_path);
     free(Platform_RunTerminalCommand(cmd, false));
-    {  return true; }
+    return true;
 }
 
 bool screenshot_save_kwin(char* save_path) {
@@ -477,7 +477,7 @@ if (!kwin_is_active() || !save_path || !save_path[0]) {  return false; }
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -o \"%s\"", save_path);
     free(Platform_RunTerminalCommand(cmd, false));
-    {  return true; }
+    return true;
 }
 
 char* ocr_area_kwin(void) {
@@ -489,7 +489,7 @@ if (!kwin_is_active()) {  return NULL; }
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\" && tesseract \"%s\" stdout -l eng; rm -f \"%s\"", path, path, path);
     char* out = Platform_RunTerminalCommand(cmd, false);
     if (!out || !out[0]) { free(out); return NULL; }
-    {  return out; }
+    return out;
 }
 
 bool get_mouse_pos_kwin(int *x, int *y) {

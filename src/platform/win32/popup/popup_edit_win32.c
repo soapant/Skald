@@ -39,7 +39,7 @@ WindowManager* wm = WindowManager_Get();
 static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, const PopupKeyEvent* key) {
         
 if (data->base.vtable && data->base.vtable->on_key && data->base.vtable->on_key(&data->base, key)) {  return true; }
-    {  return false; }
+    return false;
 }
 
 LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -144,5 +144,5 @@ ListBoxInfo* lb = NULL;
         break;
     }
     }
-  {  return DefWindowProcA(hwnd, msg, wParam, lParam); }
+  return DefWindowProcA(hwnd, msg, wParam, lParam);
 }

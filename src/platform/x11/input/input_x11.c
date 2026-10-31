@@ -31,7 +31,7 @@ bool should_swallow_pending(int wParam, int mods) {
         return true;
     }
     
-    {  return false; }
+    return false;
 }
 
 int x11_keysym_to_windows_vk(KeySym keysym) {

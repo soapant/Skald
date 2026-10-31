@@ -14,7 +14,7 @@
 static bool sway_sock_live(const char* path) {
         
 struct stat st;
-    {  return path && path[0] && stat(path, &st) == 0; }
+    return path && path[0] && stat(path, &st) == 0;
 }
 
 static void sway_ensure_sock(void) {
@@ -75,7 +75,7 @@ if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffe
     free(output_name);
     StringList_Free(&lines);
     free(command_output);
-    {  return buffer[0] != '\0'; }
+    return buffer[0] != '\0';
 }
 
 bool get_app_id_sway(char *buffer, int buffer_size) {
@@ -109,7 +109,7 @@ if (!buffer || buffer_size <= 0) {  return false; }
     }
     StringList_Free(&lines);
     free(command_output);
-    {  return ok; }
+    return ok;
 }
 
 char* paste_sway(char* content) {
@@ -119,7 +119,7 @@ if (!content) { log_error("content is NULL"); return NULL; }
   snprintf(buffer,sizeof(buffer),"wtype %s",content);
   char* out = Platform_RunTerminalCommand(buffer,false);
   if (!out) log_error("content='%s'", content ? content : "null");
-  {  return out; }
+  return out;
 }
 bool succeded_sway(char* output) {
         
@@ -131,7 +131,7 @@ if (!output) { log_error("output is NULL"); return false; }
         return false;
       }
     }
-    {  return true; }
+    return true;
 }
 
 static bool sway_focus_by_con_id(int con_id) {
@@ -141,7 +141,7 @@ char cmd[128];
     char *out = Platform_RunTerminalCommand(cmd, false);
     bool ok = succeded_sway(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 static bool sway_json_string(const char *at, char *out, size_t cap, const char *limit);
 static bool sway_name_for_pid(const char *json, const char *pid_pos, const char *next_pid, char *out, size_t cap);
@@ -205,7 +205,7 @@ if (!title || !*title) { log_error("title is NULL"); return false; }
         if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
     }
     log_error("title='%s'", title ? title : "null");
-    {  return false; }
+    return false;
 }
 
 static bool sway_json_string(const char *at, char *out, size_t cap, const char *limit) {
@@ -230,7 +230,7 @@ if (!at || !out || cap == 0) {  return false; }
         } else out[o++] = s[i];
     }
     out[o] = '\0';
-    {  return o > 0; }
+    return o > 0;
 }
 
 static bool sway_name_for_pid(const char *json, const char *pid_pos, const char *next_pid, char *out, size_t cap) {
@@ -246,7 +246,7 @@ const char *search = pid_pos - 3000;
     if (!last) {  return false; }
     const char *colon = strchr(last, ':');
     if (!colon || (next_pid && colon > next_pid)) {  return false; }
-    {  return sway_json_string(colon, out, cap, next_pid); }
+    return sway_json_string(colon, out, cap, next_pid);
 }
 
 static bool sway_app_for_pid(const char *pid_pos, const char *next_pid, char *out, size_t cap) {
@@ -271,7 +271,7 @@ const char *app = strstr(pid_pos, "\"app_id\":");
         const char *c2 = strchr(cls, ':');
         return c2 ? sway_json_string(c2, out, cap, next_pid) : false;
     }
-    {  return false; }
+    return false;
 }
 
 PlWindowList get_window_names_sway() {
@@ -293,7 +293,7 @@ sway_ensure_sock();
         list.windows[list.count++] = strdup(buf);
     }
     free(json);
-    {  return list; }
+    return list;
 }
 
 PlWindowList get_window_titles_sway() {
@@ -314,7 +314,7 @@ sway_ensure_sock();
         list.windows[list.count++] = strdup(buf);
     }
     free(json);
-    {  return list; }
+    return list;
 }
 
 static int sway_json_depth(const char* base, const char* pos) {
@@ -330,7 +330,7 @@ int depth = 0;
         if (*s == '{' || *s == '[') depth++;
         else if (*s == '}' || *s == ']') depth--;
     }
-    {  return depth; }
+    return depth;
 }
 
 static char* sway_find_key(const char* base, const char* from, const char* end, const char* key, int want_depth) {
@@ -341,7 +341,7 @@ size_t kl = strlen(key);
         if (sway_json_depth(base, q) == want_depth) return q;
         q += kl;
     }
-    {  return NULL; }
+    return NULL;
 }
 
 static int sway_key_bool3(const char* base, const char* from, const char* end, const char* key, int depth) {
@@ -354,7 +354,7 @@ char* k = sway_find_key(base, from, end, key, depth);
     while (v < end && (*v == ' ' || *v == '\t')) v++;
     if (v + 4 <= end && strncmp(v, "true", 4) == 0) {  return 1; }
     if (v + 5 <= end && strncmp(v, "false", 5) == 0) {  return 0; }
-    {  return -1; }
+    return -1;
 }
 
 static int sway_key_int(const char* base, const char* from, const char* end, const char* key, int depth) {
@@ -363,7 +363,7 @@ char* k = sway_find_key(base, from, end, key, depth);
     if (!k) {  return 0; }
     char* c = strchr(k + strlen(key), ':');
     if (!c || c >= end) {  return 0; }
-    {  return atoi(c + 1); }
+    return atoi(c + 1);
 }
 
 static int sway_key_str(const char* base, const char* from, const char* end, const char* key, int depth, char* out, size_t cap) {
@@ -381,7 +381,7 @@ char* k = sway_find_key(base, from, end, key, depth);
     if (len == 0 || len >= cap) {  return 0; }
     memcpy(out, q + 1, len);
     out[len] = '\0';
-    {  return 1; }
+    return 1;
 }
 
 bool close_active_window_sway(void) {
@@ -393,7 +393,7 @@ sway_ensure_sock();
     char* out = Platform_RunTerminalCommand("swaymsg kill", false);
     bool ok = succeded_sway(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool toggle_fullscreen_active_sway(void) {
@@ -405,7 +405,7 @@ sway_ensure_sock();
     char* out = Platform_RunTerminalCommand("swaymsg fullscreen toggle", false);
     bool ok = succeded_sway(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool move_active_window_to_monitor_sway(bool right) {
@@ -520,7 +520,7 @@ sway_ensure_sock();
     char* out = Platform_RunTerminalCommand(cmd, false);
     bool ok = succeded_sway(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool minimize_active_window_sway(void) {
@@ -540,7 +540,7 @@ sway_ensure_sock();
         out = Platform_RunTerminalCommand("swaymsg floating disable", false);
         free(out);
     }
-    {  return ok; }
+    return ok;
 }
 
 bool focus_window_left_sway(void) {
@@ -552,7 +552,7 @@ sway_ensure_sock();
     char* out = Platform_RunTerminalCommand("swaymsg focus left", false);
     bool ok = succeded_sway(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool focus_window_right_sway(void) {
@@ -564,17 +564,17 @@ sway_ensure_sock();
     char* out = Platform_RunTerminalCommand("swaymsg focus right", false);
     bool ok = succeded_sway(out);
     free(out);
-    {  return ok; }
+    return ok;
 }
 
 bool move_active_window_left_sway(void) {
         
-{  return move_active_window_to_monitor_sway(false); }
+return move_active_window_to_monitor_sway(false);
 }
 
 bool move_active_window_right_sway(void) {
         
-{  return move_active_window_to_monitor_sway(true); }
+return move_active_window_to_monitor_sway(true);
 }
 
 bool get_mouse_pos_sway(int *x, int *y) {

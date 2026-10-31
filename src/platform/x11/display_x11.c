@@ -16,7 +16,7 @@ int x11_error_handler(Display *d, XErrorEvent *e) {
     XGetErrorText(d, e->error_code, error_text, sizeof(error_text));
     log_error("Request Code: %d, Error Code: %d (%s), Resource ID: %lu, Serial: %lu", e->request_code, e->error_code, error_text, e->resourceid, e->serial);
     
-    {  return 0; } 
+    return 0;
 }
 
 
@@ -40,7 +40,7 @@ static Display* OpenBestDisplay(void) {
     }
     closedir(dir);
     
-    {  return d; }
+    return d;
 }
 
 bool init_display(void) {
@@ -64,7 +64,7 @@ bool init_display(void) {
 
     g_display_initialized = true;
     
-    {  return true; }
+    return true;
 }
 
 Display* get_display(void) {
@@ -77,7 +77,7 @@ Display* get_display(void) {
         }
     }
     
-    {  return g_display; }
+    return g_display;
 }
 
 void cleanup_display(void) {

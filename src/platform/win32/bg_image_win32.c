@@ -65,13 +65,13 @@ if (!g_bg_cs_ready) {
         g_bg_cs_ready = TRUE;
     }
     EnterCriticalSection(&g_bg_cs);
-    {  }
+    
 }
 
 static void bg_unlock(void) {
     
 if (g_bg_cs_ready) LeaveCriticalSection(&g_bg_cs);
-    {  }
+    
 }
 
 static void bg_gdip_ensure(void) {
@@ -83,7 +83,7 @@ if (g_bg_gdip_token != 0) {  return; }
     gsi.SuppressBackgroundThread = FALSE;
     gsi.SuppressExternalCodecs = FALSE;
     GdiplusStartup(&g_bg_gdip_token, &gsi, NULL);
-    {  }
+    
 }
 
 static void bg_native_path(char* out, size_t cap, const char* path) {
@@ -100,7 +100,7 @@ if (!out || cap == 0) {  return; }
     }
     snprintf(out, cap, "%s", src);
     for (char* q = out; *q; q++) if (*q == '/') *q = '\\';
-    {  }
+    
 }
 
 static void bg_stat(const char* native, FILETIME* ft, DWORD* size) {
@@ -112,7 +112,7 @@ ft->dwLowDateTime = 0;
     if (!GetFileAttributesExA(native, GetFileExInfoStandard, &fad)) {  return; }
     *ft = fad.ftLastWriteTime;
     *size = (fad.nFileSizeHigh << 16) | (fad.nFileSizeLow);
-    {  }
+    
 }
 
 static void bg_widen(const char* in, wchar_t* out, int out_max) {
@@ -120,7 +120,7 @@ static void bg_widen(const char* in, wchar_t* out, int out_max) {
     out[0] = 0;
     if (!in || !in[0] || out_max <= 0) {  return; }
     if (MultiByteToWideChar(CP_UTF8, 0, in, -1, out, out_max) <= 0) out[0] = 0;
-    {  }
+    
 }
 
 static unsigned int bg_hash_str(const char* s) {
@@ -174,7 +174,7 @@ static bool bg_cache_store(const char* file, int w, int h, const void* bits, con
            && fwrite(&ih, sizeof(ih), 1, f) == 1
            && fwrite(bits, 4, (size_t)w * (size_t)h, f) == (size_t)w * (size_t)h;
     fclose(f);
-    {  return ok; }
+    return ok;
 }
 
 static bool bg_cache_load(const char* file, int w, int h, void* bits, const FILETIME* ft, DWORD sz) {
@@ -198,7 +198,7 @@ static bool bg_cache_load(const char* file, int w, int h, void* bits, const FILE
         ok = fread(bits, 4, (size_t)w * (size_t)h, f) == (size_t)w * (size_t)h;
     }
     fclose(f);
-    {  return ok; }
+    return ok;
 }
 
 
@@ -212,7 +212,7 @@ SHFILEINFOA sfi;
     GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
     DestroyIcon(sfi.hIcon);
     if (st != Ok || !bmp) {  return NULL; }
-    {  return bmp; }
+    return bmp;
 }
 
 static void* bg_load_native(const char* native, int* out_w, int* out_h) {
@@ -239,7 +239,7 @@ bg_gdip_ensure();
     }
     if (out_w) *out_w = (int)gw;
     if (out_h) *out_h = (int)gh;
-    {  return bmp; }
+    return bmp;
 }
 
 static void bg_src_drop(BgSrcSlot* s) {
@@ -247,7 +247,7 @@ static void bg_src_drop(BgSrcSlot* s) {
 if (!s) {  return; }
     if (s->src) GdipDisposeImage((GpImage*)s->src);
     memset(s, 0, sizeof(*s));
-    {  }
+    
 }
 
 static void bg_tile_drop(BgTileSlot* t) {
@@ -256,7 +256,7 @@ if (!t) {  return; }
     if (t->dc) { DeleteDC(t->dc); t->dc = NULL; }
     if (t->bmp) { DeleteObject(t->bmp); t->bmp = NULL; }
     memset(t, 0, sizeof(*t));
-    {  }
+    
 }
 
 void win32_bg_image_purge(void) {
@@ -265,7 +265,7 @@ bg_lock();
     for (int i = 0; i < BG_SRC_SLOTS; i++) bg_src_drop(&g_bg_srcs[i]);
     for (int i = 0; i < BG_TILE_SLOTS; i++) bg_tile_drop(&g_bg_tiles[i]);
     bg_unlock();
-    {  }
+    
 }
 
 static BgSrcSlot* bg_src_get(const char* native) {
@@ -316,7 +316,7 @@ DWORD now = GetTickCount();
     slot->mtime = ft;
     slot->size = sz;
     slot->src = bmp;
-    {  return slot; }
+    return slot;
 }
 
 static BgTileSlot* bg_tile_compose(HDC refDC, const char* native, int w, int h, FILETIME ft, DWORD sz) {
@@ -412,7 +412,7 @@ static BgTileSlot* bg_tile_compose(HDC refDC, const char* native, int w, int h, 
     slot->checked_ms = GetTickCount();
     snprintf(slot->path, sizeof(slot->path), "%s", native);
     
-    {  return slot; }
+    return slot;
 }
 
 static BgTileSlot* bg_tile_get(HDC refDC, const char* path, int w, int h) {
@@ -451,13 +451,13 @@ static BgTileSlot* bg_tile_get(HDC refDC, const char* path, int w, int h) {
         return stale;
     }
     
-    {  return made; }
+    return made;
 }
 
 bool win32_bg_image_enabled(void) {
     
 const char* p = BackgroundImage;
-    {  return p && p[0]; }
+    return p && p[0];
 }
 
 bool win32_draw_bg_image_slice(HDC hdc, RECT* rc, int containerW, int containerH, int originX, int originY) {
@@ -493,7 +493,7 @@ bool win32_draw_bg_image_slice(HDC hdc, RECT* rc, int containerW, int containerH
     if (ok) BitBlt(hdc, dx, dy, sw, sh, t->dc, sx, sy, SRCCOPY);
     bg_unlock();
     
-    {  return ok; }
+    return ok;
 }
 
 int win32_bg_image_prewarm(int containerW, int containerH) {
@@ -507,5 +507,5 @@ int win32_bg_image_prewarm(int containerW, int containerH) {
     bg_unlock();
     if (screen) ReleaseDC(NULL, screen);
     
-    {  return t ? 1 : 0; }
+    return t ? 1 : 0;
 }

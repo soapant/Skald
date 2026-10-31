@@ -126,7 +126,7 @@ int ListBox_RowAtY(const ListBoxInfo* lb, int list_top, int item_height,
     if (row >= visible_count) {  return -1; }
     int idx = top_index + row;
     if (idx < 0 || idx >= lb->populated_count) {  return -1; }
-    {  return idx; }
+    return idx;
 }
 
 bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,

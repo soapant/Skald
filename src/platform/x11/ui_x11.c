@@ -12,7 +12,7 @@ bool IsPopupActive(WindowHandle hPopupWnd) {
       
     (void)hPopupWnd;
     WindowManager* wm = WindowManager_Get();
-    {  return wm && wm->popup_count > 0; }
+    return wm && wm->popup_count > 0;
 }
 
 void UI_SetSelection(ListBoxInfo* lb, int index) {
@@ -58,14 +58,14 @@ int UI_LB_GetTopIndex(ListBoxInfo* lb) {
 
 int UI_LB_GetViewTop(ListBoxInfo* lb) {
         
-    {  return lb ? lb->view_offset : 0; }
+    return lb ? lb->view_offset : 0;
 }
 
 static int g_x11_lb_visible;
 
 int UI_LB_GetVisibleCount(void) {
         
-{  return g_x11_lb_visible; }
+return g_x11_lb_visible;
 }
 
 void UI_LB_SetVisibleCount(int count) {
@@ -88,7 +88,7 @@ void UI_LB_SetFont(void* hFont) {
 
 int UI_LB_GetItemHeight() {
       
-    {  return 0; }
+    return 0;
 }
 
 void UI_NavigateTo(ListBoxInfo* lb,int index) {
@@ -287,7 +287,7 @@ if (!ctx) {  return NULL; }
         PromptState* prompt = (PromptState*)top->user_data;
         return prompt->has_listbox ? &prompt->listbox : NULL;
     }
-    {  return NULL; }
+    return NULL;
 }
 
 void UI_SyncEditCursor(FlintContext* ctx, int pos) {
@@ -317,5 +317,5 @@ if (!ctx) {  return ; }
 bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
         
 (void)ctx;
-    {  return false; }
+    return false;
 }
