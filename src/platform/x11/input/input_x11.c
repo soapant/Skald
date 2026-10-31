@@ -17,10 +17,10 @@ extern long pending_hotkey_timeMs;
 extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
 
 int x11_keysym_to_windows_vk(KeySym keysym) {
-    if (keysym >= XK_a && keysym <= XK_z) {  return 'A' + (keysym - XK_a); }
-    if (keysym >= XK_A && keysym <= XK_Z) {  return 'A' + (keysym - XK_A); }
-    if (keysym >= XK_0 && keysym <= XK_9) {  return '0' + (keysym - XK_0); }
-    if (keysym >= XK_F1 && keysym <= XK_F12) {  return VK_F1 + (keysym - XK_F1); }
+    if (keysym >= XK_a && keysym <= XK_z) return 'A' + (keysym - XK_a);
+    if (keysym >= XK_A && keysym <= XK_Z) return 'A' + (keysym - XK_A);
+    if (keysym >= XK_0 && keysym <= XK_9) return '0' + (keysym - XK_0);
+    if (keysym >= XK_F1 && keysym <= XK_F12) return VK_F1 + (keysym - XK_F1);
 
     switch (keysym) {
         case XK_Escape:  return VK_ESCAPE;

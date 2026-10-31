@@ -127,7 +127,7 @@ static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* tit
     if (XFetchName(dpy, w, &name) && name != NULL) {
         bool match = (strcmp(name, title) == 0);
         XFree(name);
-        if (match) {  return w; }
+        if (match) return w;
     }
 
     Window root, parent, *children = NULL;
@@ -785,8 +785,8 @@ for (int i = 0; i < X11_FONT_RETIRED; i++) {
 
 static bool x11_font_slot_matches(const X11FontSlot* s, Display* dpy, int size, const char* face_name) {
         
-if (!s->xft || s->dpy != dpy || s->size != size) {  return false; }
-    if (!s->name || !face_name) {  return s->name == face_name; }
+if (!s->xft || s->dpy != dpy || s->size != size) return false;
+    if (!s->name || !face_name) return s->name == face_name;
     return strcmp(s->name, face_name) == 0;
 }
 
@@ -815,7 +815,7 @@ for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
         
 
-    if (!dpy) {  return FH_NULL; }
+    if (!dpy) return FH_NULL;
 
     pthread_mutex_lock(&g_font_cache_mtx);
 
@@ -1246,7 +1246,7 @@ if (!app_path) { log_error("operation failed, returning error app_path='%s'", ap
         if(access(pix,F_OK)==0) return strdup(pix);
     }
     snprintf(pix,sizeof(pix),"resources/Placeholder.png");
-    if(access(pix,F_OK)==0) {  return strdup(pix); }
+    if(access(pix,F_OK)==0) return strdup(pix);
     log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
     return strdup(bare[0] ? bare : "placeholder");
 }
@@ -1256,7 +1256,7 @@ if (!app_path) { log_error("operation failed, returning error app_path='%s'", ap
 
 int Platform_CopyToClipboard(const char *text) {
         
-if (!text) {  return 0; }
+if (!text) return 0;
     long long t0 = Platform_GetWallClockMs();
     int wr = 0;
     int xr = 0;
@@ -1281,7 +1281,7 @@ if (!text) {  return 0; }
 
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
         
-if (!png || len == 0) {  return 0; }
+if (!png || len == 0) return 0;
     int wr = 0;
     int xr = 0;
     if (Platform_ClipboardAvailable()) {
@@ -1296,7 +1296,7 @@ if (!png || len == 0) {  return 0; }
 
 int Platform_SetFileToClipboard(const char* path) {
         
-if (!path || path[0] == 0) {  return 0; }
+if (!path || path[0] == 0) return 0;
     int wr = 0;
     int xr = 0;
     if (Platform_ClipboardAvailable()) {
@@ -1312,7 +1312,7 @@ if (!path || path[0] == 0) {  return 0; }
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
         
 if (out_status) *out_status = -1;
-    if (!argv || !argv[0]) {  return NULL; }
+    if (!argv || !argv[0]) return NULL;
     int pin[2] = {-1, -1};
     if (stdin_data && stdin_data[0]) {
         if (pipe(pin) != 0) { log_error("Platform_RunArgvCapture pipe failed: %s", strerror(errno)); return NULL; }
@@ -1517,14 +1517,14 @@ void Platform_ShutdownUI(void) {
 }
 static unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
         
-if (!mask) {  return 0; }
+if (!mask) return 0;
     int shift = 0;
     while (!(mask & 1ul)) { mask >>= 1; shift++; }
     unsigned long bits = 0;
     for (unsigned long m = mask; m; m >>= 1) bits++;
     unsigned long v = (pixel >> shift) & ((1ul << bits) - 1ul);
-    if (bits == 0) {  return 0; }
-    if (bits >= 8) {  return (unsigned char)(v >> (bits - 8)); }
+    if (bits == 0) return 0;
+    if (bits >= 8) return (unsigned char)(v >> (bits - 8));
     return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
 }
 
@@ -1533,7 +1533,7 @@ PlColor Platform_GetPixelColor(int x, int y) {
 
     PlColor out = {0, 0, 0};
     Display* dpy = get_display();
-    if (!dpy) {  return out; }
+    if (!dpy) return out;
     Window root = DefaultRootWindow(dpy);
     XWindowAttributes attr;
     if (!XGetWindowAttributes(dpy, root, &attr) || !attr.visual) {
@@ -1541,7 +1541,7 @@ PlColor Platform_GetPixelColor(int x, int y) {
         return out;
     }
     XImage* img = XGetImage(dpy, root, x, y, 1, 1, AllPlanes, ZPixmap);
-    if (!img) {  return out; }
+    if (!img) return out;
     unsigned long pixel = XGetPixel(img, 0, 0);
     out.r = x11_mask_extract(pixel, attr.visual->red_mask);
     out.g = x11_mask_extract(pixel, attr.visual->green_mask);
@@ -1555,7 +1555,7 @@ bool Platform_MoveToPos(int x, int y) {
         
 
     Display* dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
 #if __has_include(<X11/extensions/XTest.h>)
     XTestFakeMotionEvent(dpy, -1, x, y, CurrentTime);
     XSync(dpy, False);
@@ -1575,9 +1575,9 @@ bool Platform_ClickButton(int button) {
         
 
     Display* dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
     int xb = x11_x11_button(button);
-    if (xb == 0) {  return false; }
+    if (xb == 0) return false;
 #if __has_include(<X11/extensions/XTest.h>)
     usleep(1000);
     XTestFakeButtonEvent(dpy, (unsigned int)xb, True, CurrentTime);
@@ -1597,7 +1597,7 @@ bool Platform_Click(void) {
         
 
     Display* dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
 #if __has_include(<X11/extensions/XTest.h>)
     usleep(60000);
     XTestFakeButtonEvent(dpy, 1, True, CurrentTime);
@@ -1635,7 +1635,7 @@ bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
     if (out_w) *out_w = 0;
     if (out_h) *out_h = 0;
     Display* dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
     Window root = DefaultRootWindow(dpy);
     int min_x = 0, min_y = 0, max_x = 0, max_y = 0;
     bool any = false;
@@ -1676,9 +1676,9 @@ bool Platform_MouseButtonDown(int button, bool down) {
         
 
     Display* dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
     int xb = x11_x11_button(button);
-    if (xb == 0) {  return false; }
+    if (xb == 0) return false;
 #if __has_include(<X11/extensions/XTest.h>)
     XTestFakeButtonEvent(dpy, (unsigned int)xb, down, CurrentTime);
     XSync(dpy, False);
@@ -1693,9 +1693,9 @@ bool Platform_MouseButtonDown(int button, bool down) {
 bool Platform_MouseScroll(int notches) {
         
 
-    if (notches == 0) {  return true; }
+    if (notches == 0) return true;
     Display* dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
 #if __has_include(<X11/extensions/XTest.h>)
     for (int i = 0; i < (notches > 0 ? notches : -notches); i++) {
         XTestFakeButtonEvent(dpy, 4, True, CurrentTime);
@@ -1715,7 +1715,7 @@ bool Platform_MouseScroll(int notches) {
 char* Platform_GetWorkingDir(void) {
         
 char* raw = Platform_RunTerminalCommand("pwd", false);
-    if (!raw) {  return NULL; }
+    if (!raw) return NULL;
     
     size_t len = strlen(raw);
     while (len > 0 && (raw[len - 1] == '\n' || raw[len - 1] == '\r')) {
@@ -1734,7 +1734,7 @@ char dir_path[300];
 
 bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len) {
         
-if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) {  return false; }
+if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) return false;
     char dir_path[512];
     snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome());
     nob_mkdir_if_not_exists(dir_path);
@@ -1762,7 +1762,7 @@ bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t
 
 bool Platform_FeatureDataDirExists(const char* stem) {
         
-    if (!stem || !stem[0]) {  return false; }
+    if (!stem || !stem[0]) return false;
     char dir_path[512];
     snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint/%s", Platform_GetRealHome(), stem);
     struct stat st;
@@ -1772,7 +1772,7 @@ bool Platform_FeatureDataDirExists(const char* stem) {
 
 bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, size_t out_len) {
         
-    if (!stem || !rel || !out || out_len == 0) {  return false; }
+    if (!stem || !rel || !out || out_len == 0) return false;
     char full[600];
     snprintf(full, sizeof(full), "%s/%s/%s", FeaturePath, stem, rel);
     struct stat st;
@@ -1786,18 +1786,18 @@ bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, siz
 
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
         
-if (!name || !name[0] || !out_path || out_len == 0) {  return false; }
-    if (!data && len > 0) {  return false; }
+if (!name || !name[0] || !out_path || out_len == 0) return false;
+    if (!data && len > 0) return false;
     for (const char* p = name; *p; p++) {
         if (*p == '/' || *p == '\\') return false;
     }
-    if (strstr(name, "..")) {  return false; }
+    if (strstr(name, "..")) return false;
     const char* dir = getenv("TMPDIR");
     if (!dir || !dir[0]) dir = "/tmp";
     snprintf(out_path, out_len, "%s/%s", dir, name);
     out_path[out_len - 1] = '\0';
     FILE* f = fopen(out_path, "wb");
-    if (!f) {  return false; }
+    if (!f) return false;
     bool ok = true;
     if (len > 0 && fwrite(data, 1, len, f) != len) ok = false;
     if (fclose(f) != 0) ok = false;
@@ -1992,15 +1992,15 @@ double Platform_EndTimer(PlTimer t) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-    if (now < t.ticks) {  return 0.0; }
+    if (now < t.ticks) return 0.0;
     return (double)(now - t.ticks) / 1000000.0;
 }
 
 void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
     
-    if (!fn) {  return NULL; }
+    if (!fn) return NULL;
     pthread_t* t = malloc(sizeof(*t));
-    if (!t) {  return NULL; }
+    if (!t) return NULL;
     if (pthread_create(t, NULL, fn, arg) != 0) { free(t); return NULL; }
     return t;
 }
@@ -2016,7 +2016,7 @@ void Platform_ThreadJoin(void* thread) {
 void* Platform_MutexCreate(void) {
     
     pthread_mutex_t* m = malloc(sizeof(*m));
-    if (!m) {  return NULL; }
+    if (!m) return NULL;
     if (pthread_mutex_init(m, NULL) != 0) { free(m); return NULL; }
     return m;
 }
@@ -2043,7 +2043,7 @@ void Platform_MutexUnlock(void* mutex) {
 
 bool Platform_MutexTryLock(void* mutex) {
     
-    if (!mutex) {  return false; }
+    if (!mutex) return false;
     return pthread_mutex_trylock((pthread_mutex_t*)mutex) == 0;
 }
 

@@ -50,7 +50,7 @@ bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
     WMEditPopupData* data = (WMEditPopupData*)self;
     HINSTANCE hInst = GetModuleHandle(NULL);
     HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, "EditPopupClass","", WS_POPUP | WS_CLIPCHILDREN, x, y, w, h, NULL, NULL, hInst, data);
-    if (!hwnd) {  return false; }
+    if (!hwnd) return false;
     win32_apply_rounded_corners(hwnd, w, h);
     SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
     data->base.handle = WH_FROM_HWND(hwnd);
@@ -209,8 +209,8 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
         
 
     WMEditPopupData* ed = (WMEditPopupData*)self;
-    if (!ed || !ed->text || !key) {  return false; }
-    if (EditPopup_HandleKey(ed, key)) {  return true; }
+    if (!ed || !ed->text || !key) return false;
+    if (EditPopup_HandleKey(ed, key)) return true;
 
     int wParam = key->vk;
     bool ctrl_pressed = key->ctrl;

@@ -51,7 +51,7 @@ const FlClipboardEntry* fl_clipboard_history_get(size_t index) {
 const FlClipboardEntry* fl_clipboard_latest(void) {
     
     size_t n = clipboard_history_count_platform();
-    if (n == 0) {  return NULL; }
+    if (n == 0) return NULL;
     return clipboard_history_get_platform(n - 1);
 }
 
@@ -62,7 +62,7 @@ clipboard_clear_history_platform();
 
 bool fl_copy_to_clipboard(const char* text) {
     
-    if (text == NULL) {  return 0; }
+    if (text == NULL) return 0;
     bool ok = Platform_CopyToClipboard(text);
     if (ok) clipboard_history_push_text_platform(text);
     return ok;
@@ -70,16 +70,16 @@ bool fl_copy_to_clipboard(const char* text) {
 
 bool fl_copy_file_path(const char* path) {
     
-    if (!path) {  return false; }
+    if (!path) return false;
     return clipboard_set_path_platform(path);
 }
 
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension, int max_depth) {
     
-    if (!dir_path || !list_of_files) {  return false; }
+    if (!dir_path || !list_of_files) return false;
 
     char expanded_dir[MAX_PATH];
-    if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) {  return false; }
+    if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) return false;
     dir_path = expanded_dir;
 
     {  return Platform_GetAllFilesFromDir(
@@ -94,10 +94,10 @@ bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_exte
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path){
     
-    if (!directory) {  return NULL; }
+    if (!directory) return NULL;
 
     char expanded_dir[MAX_PATH];
-    if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir))) {  return NULL; }
+    if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir))) return NULL;
     directory = expanded_dir;
 
     return fl_search_file_in_dir_platform(directory,search_string,output_path);
@@ -117,9 +117,9 @@ bool fl_launch_with_args(const char* path, const char* args) {
 
 bool fl_launch_with_args_as_admin(const char* path, const char* args) {
     
-    if (!path) {  return false; }
+    if (!path) return false;
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {  return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     return fl_launch_with_args_as_admin_platform(expanded, args);
 }
 
@@ -165,7 +165,7 @@ long fl_load_file(const char* filepath, char* buffer, long buffer_size) {
 
 bool fl_free_list(const char* list[], int count) {
     
-    if (!list || count <= 0) {  return false; }
+    if (!list || count <= 0) return false;
     for (int i = 0; i < count; i++) free((void*)list[i]);
     return true;
 }
@@ -182,7 +182,7 @@ void fl_free_file_list(FlStringList* list) {
 }
 bool fl_free_window_list(FlWindowList *list) {
     
-    if (!list) {  return false; }
+    if (!list) return false;
     if (list->windows) {
         for (int i = 0; i < list->count; i++) free(list->windows[i]);
         free(list->windows);
@@ -201,7 +201,7 @@ bool fl_append_to_file(const char* filepath, const char* line) {
     if (!f) {
     
         f = fopen(filepath, "w");
-        if (!f) {  return false; }
+        if (!f) return false;
     }
     fclose(f);
     f = fopen(filepath, "r");
@@ -229,14 +229,14 @@ bool fl_append_to_file(const char* filepath, const char* line) {
 
 bool fl_write_to_file(const char* filepath, const char* lines[], int count) {
     
-    if (!filepath) {  return false; }
-    if (count < 0) {  return false; }
-    if (count > 0 && !lines) {  return false; }
+    if (!filepath) return false;
+    if (count < 0) return false;
+    if (count > 0 && !lines) return false;
     char full[MAX_PATH];
-    if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) {  return false; }
+    if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) return false;
     filepath = full;
     FILE* f = fopen(filepath, "w");
-    if (!f) {  return false; }
+    if (!f) return false;
     for (int i = 0; i < count; i++) {
         if (lines[i]) fprintf(f, "%s\n", lines[i]);
         else fprintf(f, "\n");
@@ -278,7 +278,7 @@ long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size) 
 
 bool fl_write_string_to_file(const char* path, const char* content) {
     
-    if (!path || !content) {  return false; }
+    if (!path || !content) return false;
     char full[MAX_PATH];
     if (Platform_ResolveDataPath(__builtin_return_address(0), path, full, sizeof(full))) {
         path = full;
@@ -288,7 +288,7 @@ bool fl_write_string_to_file(const char* path, const char* content) {
         path = expanded;
     }
     FILE* f = fopen(path, "w");
-    if (!f) {  return false; }
+    if (!f) return false;
     fputs(content, f);
     fclose(f);
     return true;
@@ -306,7 +306,7 @@ fclose(f); {  return true; } }
 
 bool fl_append_unique_line(const char* path, const char* line) {
     
-    if (!path || !line) {  return false; }
+    if (!path || !line) return false;
     FlStringList files = fl_load_file_list(path);
     bool ok = fl_append_to_file(path, line);
     fl_free_file_list(&files);
@@ -315,7 +315,7 @@ bool fl_append_unique_line(const char* path, const char* line) {
 
 bool fl_remove_line(const char* path, const char* line) {
     
-    if (!path || !line) {  return false; }
+    if (!path || !line) return false;
     FlStringList files = fl_load_file_list(path);
     const char* kept[1024]; int k=0;
     for (int i=0;i<files.count && k<1024;i++) if (strcmp(files.items[i], line)!=0) kept[k++]=files.items[i]; else { free(files.items[i]); files.items[i]=NULL; }
@@ -326,7 +326,7 @@ bool fl_remove_line(const char* path, const char* line) {
 
 bool fl_remove_line_contains(const char* path, const char* substr) {
     
-    if (!path || !substr) {  return false; }
+    if (!path || !substr) return false;
     FlStringList files = fl_load_file_list(path);
     const char* kept[1024]; int k=0;
     for (int i=0;i<files.count && k<1024;i++) if (!strstr(files.items[i], substr)) kept[k++]=files.items[i]; else { free(files.items[i]); files.items[i]=NULL; }
@@ -337,11 +337,11 @@ bool fl_remove_line_contains(const char* path, const char* substr) {
 
 bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay) {
     
-    if (!path || !out_name) {  return false; }
+    if (!path || !out_name) return false;
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
     FILE* f = fopen(expanded, "r");
-    if (!f) {  return false; }
+    if (!f) return false;
     char line[1024]; bool found=false;
     if (out_nodisplay) *out_nodisplay=false;
     while(fgets(line,sizeof(line),f)){
@@ -361,7 +361,7 @@ bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out
 
 bool fl_register_remapping_impl(const FlRemappingSpec *spec) {
     
-    if (!spec || !spec->src || !spec->dst) {  return false; }
+    if (!spec || !spec->src || !spec->dst) return false;
     const char** wl = spec->whitelist;
     const char** bl = spec->blacklist;
     bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
@@ -383,7 +383,7 @@ static void fl_snippet_fire(int idx, int del) {
 
 bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
     
-    if (!spec || !spec->trigger || (!spec->text && !spec->fn)) {  return false; }
+    if (!spec || !spec->trigger || (!spec->text && !spec->fn)) return false;
     snippet_set_fire_fn(fl_snippet_fire);
     const char** wl = spec->whitelist;
     const char** bl = spec->blacklist;
@@ -400,7 +400,7 @@ static int g_feature_order_count = 0;
 
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
     
-    if (!spec || !spec->hotkey || !spec->cb) {  return false; }
+    if (!spec || !spec->hotkey || !spec->cb) return false;
     const char** wl = spec->whitelist;
     const char** bl = spec->blacklist;
     bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
@@ -459,13 +459,13 @@ int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void
 
 char* fl_get_icon_path(const char* app_path_path) {
     
-    if (!app_path_path) {  return NULL; }
+    if (!app_path_path) return NULL;
     return Platform_GetIconPath((char*)app_path_path);
 }
 
 int fl_get_icon_size(const char* icon_path) {
     
-    if (!icon_path) {  return 20; }
+    if (!icon_path) return 20;
     return Platform_GetIconSize((char*)icon_path);
 }
 
@@ -480,13 +480,13 @@ char* fl_run_terminal_command(char* command) {
 
 char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status) {
   
-  if (!argv || !argv[0]) {  return NULL; }
+  if (!argv || !argv[0]) return NULL;
   return Platform_RunArgvCapture(argv, stdin_data, out_status);
 }
 
 char* fl_run_terminal_command_blocking(char* command) {
     
-  if (!command) {  return NULL; }
+  if (!command) return NULL;
   return Platform_RunCommandAndGetOutput(command, PLATFORM_RUN_PRIO_NORMAL);
 }
 
@@ -527,12 +527,12 @@ bool fl_launch_terminal_at_path(char* path,char* args) {
 
 bool fl_terminate_process_by_name(const char* exe_name) {
     
-    if (!exe_name) {  return false; }
+    if (!exe_name) return false;
     return Platform_TerminateProcessByName(exe_name);
 }
 bool fl_string_contains(const char* haystack, const char* needle) {
     
-    if (!needle || !haystack) {  return false; }
+    if (!needle || !haystack) return false;
     return Platform_StringContainsCaseInsensitive(needle,haystack);
 }
 
@@ -564,7 +564,7 @@ char* fl_string_slice(const char* str, int start, int end) {
 StringList fl_string_split(const char* str, const char* delimiter) {
     
     StringList empty = {NULL, 0};
-    if (!str || !delimiter || !delimiter[0]) {  return empty; }
+    if (!str || !delimiter || !delimiter[0]) return empty;
     return String_Split(str, delimiter);
 }
 
@@ -582,7 +582,7 @@ void fl_populate_listbox_ex(ListBoxInfo* lb, const char* filter, const char** it
 
 bool fl_is_selected(ListBoxInfo* lb) {
     
-    if (!lb) {  return false; }
+    if (!lb) return false;
     return UI_IsListBoxSelected(lb);
 }
 
@@ -603,7 +603,7 @@ void fl_set_edit_cursor(int position) {
 int fl_get_edit_cursor(void) {
     
     FlintContext* ctx = FlintContext_Get();
-    if (!ctx) {  return 0; }
+    if (!ctx) return 0;
     int pos = UI_GetCursorPosition();
     
     return pos;
@@ -643,7 +643,7 @@ static void fl_hover_popup_frame(void *ud) {
 static FlHoverPopupCtx *fl_hover_popup_ctx_new(const FlMessageSpec *spec) {
     
     FlHoverPopupCtx *p = (FlHoverPopupCtx *)calloc(1, sizeof(*p));
-    if (!p) {  return NULL; }
+    if (!p) return NULL;
     p->render = spec->render;
     p->w = spec->w > 0 ? spec->w : FL_WIDGET_PROVISIONAL_W;
     p->h = spec->h > 0 ? spec->h : FL_WIDGET_PROVISIONAL_H;
@@ -737,7 +737,7 @@ bool fl_launch_browser(char* url) {
 
 bool fl_query_browser(const char* query) {
     
-    if (!query) {  return false; }
+    if (!query) return false;
     return Platform_QueryBrowser(query);
 }
 
@@ -767,7 +767,7 @@ bool fl_paste_from_clipboard() {
 
 bool fl_paste(char* content) {
     
-    if (!content) {  return false; }
+    if (!content) return false;
    return Platform_PasteContent(content);
 }
 
@@ -796,15 +796,15 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     ListBoxInfo* lb = spec ? spec->lb : NULL;
     int* out_index = spec ? spec->out_index : NULL;
     if (out_index) *out_index = -1;
-    if (!lb) {  return NULL; }
+    if (!lb) return NULL;
     if (!initial_text) initial_text = "";
     int idx = lb->selected_index;
     int true_idx = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     WindowManager* wm = WindowManager_Get();
-    if (!wm) {  return NULL; }
+    if (!wm) return NULL;
     PopupConfirmCtx ctx = {0};
     Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm_ctx, &ctx);
-    if (!popup) {  return NULL; }
+    if (!popup) return NULL;
     WindowManager_PushPopup(wm, popup);
     while (wm->running && popup->manager && !ctx.confirmed) {
         Platform_WM_ProcessEvents(wm);
@@ -820,7 +820,7 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
         free(ctx.text);
         ctx.text = NULL;
     }
-    if (!ctx.text) {  return NULL; }
+    if (!ctx.text) return NULL;
     if (out_index) *out_index = true_idx;
     return ctx.text;
 }
@@ -993,10 +993,10 @@ typedef struct { unsigned long color; int fontsize; } FlWrapCtx;
 
 static int FlUtf8LeadLen(unsigned char c) {
     
-    if ((c & 0x80) == 0) {  return 1; }
-    if ((c & 0xE0) == 0xC0) {  return 2; }
-    if ((c & 0xF0) == 0xE0) {  return 3; }
-    if ((c & 0xF8) == 0xF0) {  return 4; }
+    if ((c & 0x80) == 0) return 1;
+    if ((c & 0xE0) == 0xC0) return 2;
+    if ((c & 0xF0) == 0xE0) return 3;
+    if ((c & 0xF8) == 0xF0) return 4;
     return 1;
 }
 
@@ -1109,7 +1109,7 @@ static int FlWrapLayout(const char* text, int x0, int y0, int max_width, int lin
 static int FlWrapMeasureThunk(void* ctx, const char* s, int n) {
     
     FlWrapCtx* c = (FlWrapCtx*)ctx;
-    {  return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=s, .len=n, .fontsize=c->fontsize}); }
+    return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=s, .len=n, .fontsize=c->fontsize});
 }
 
 static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
@@ -1193,7 +1193,7 @@ int fl_rand_num_between(int min, int max) {
     
   if (max < min) { int t = min; min = max; max = t; }
   unsigned long span = (unsigned long)((long)max - (long)min) + 1UL;
-  if (span == 0UL) {  return min; }
+  if (span == 0UL) return min;
   unsigned long limit = (unsigned long)RAND_MAX + 1UL;
   unsigned long r = (unsigned long)rand();
   if (span > limit) {
@@ -1504,7 +1504,7 @@ const char* fl_library_error(void) {
 
 FlThread fl_thread_create(FlThreadFunc fn, void* arg) {
     
-  if (!fn) {  return NULL; }
+  if (!fn) return NULL;
   return (FlThread)Platform_ThreadCreate((void* (*)(void*))fn, arg);
 }
 
@@ -1605,9 +1605,9 @@ char fl_get_char_pressed(void){
 
 bool fl_poll_key(FlKeyEvent *out) {
     
-  if (!out) {  return false; }
+  if (!out) return false;
   PlatformKeyEvent ev;
-  if (!Platform_GlobalKey_Pop(&ev)) {  return false; }
+  if (!Platform_GlobalKey_Pop(&ev)) return false;
   out->vk = ev.vk;
   out->scancode = ev.scancode;
   out->mods = ev.mods;
@@ -1619,9 +1619,9 @@ bool fl_poll_key(FlKeyEvent *out) {
 
 bool fl_poll_mouse(FlMouseEvent *out) {
     
-  if (!out) {  return false; }
+  if (!out) return false;
   PlatformMouseEvent ev;
-  if (!Platform_GlobalMouse_Pop(&ev)) {  return false; }
+  if (!Platform_GlobalMouse_Pop(&ev)) return false;
   out->button = ev.button;
   out->x = ev.x;
   out->y = ev.y;
@@ -1651,7 +1651,7 @@ FlPos fl_get_cursor_pos() {
     
   int x, y;
   Platform_GetMousePos(&x, &y);
-  {  return (FlPos){x, y}; }
+  return (FlPos){x, y};
 }
 
 bool fl_mouse_pressed(int button) {
@@ -1708,7 +1708,7 @@ bool fl_extract_quoted(char **pp, char *out, size_t cap) {
 bool fl_extract_value(char **pp, char *out, size_t cap) {
     
     char *p = *pp;
-    if (*p == '"' || *p == '\'') {  return fl_extract_quoted(pp, out, cap); }
+    if (*p == '"' || *p == '\'') return fl_extract_quoted(pp, out, cap);
     char *s = p;
     while (*p && !isspace((unsigned char)*p)) p++;
     size_t len = p - s;
@@ -1834,11 +1834,11 @@ char* fl_get_working_dir() {
 
 char* fl_resolve_data_path(const char* name) {
     
-    if (!name || !name[0]) {  return NULL; }
+    if (!name || !name[0]) return NULL;
     char full[MAX_PATH];
-    if (!Platform_ResolveDataPath(__builtin_return_address(0), name, full, sizeof(full))) {  return NULL; }
+    if (!Platform_ResolveDataPath(__builtin_return_address(0), name, full, sizeof(full))) return NULL;
     char* r = (char*)malloc(strlen(full) + 1);
-    if (!r) {  return NULL; }
+    if (!r) return NULL;
     strcpy(r, full);
     return r;
 }
@@ -1892,33 +1892,33 @@ void fl_hashmap_add(FlHashMap** map, const char* key, long delta) {
 
 long fl_hashmap_get(FlHashMap* map, const char* key, long def) {
     
-    if (!map || !key) {  return def; }
+    if (!map || !key) return def;
     ptrdiff_t idx = shgeti(map, (char*)key);
-    if (idx < 0) {  return def; }
+    if (idx < 0) return def;
     return map[idx].value;
 }
 
 bool fl_hashmap_has(FlHashMap* map, const char* key) {
     
-    if (!map || !key) {  return false; }
+    if (!map || !key) return false;
     return shgeti(map, (char*)key) >= 0;
 }
 
 bool fl_hashmap_del(FlHashMap** map, const char* key) {
     
-    if (!map || !*map || !key) {  return false; }
+    if (!map || !*map || !key) return false;
     return shdel(*map, (char*)key) != 0;
 }
 
 size_t fl_hashmap_len(FlHashMap* map) {
     
-    if (!map) {  return 0; }
+    if (!map) return 0;
     return shlenu(map);
 }
 
 const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index) {
     
-    if (!map || index >= shlenu(map)) {  return NULL; }
+    if (!map || index >= shlenu(map)) return NULL;
     return &map[index];
 }
 
@@ -2216,15 +2216,15 @@ unsigned long long fl_net_rx_bytes() {
 
 unsigned long long fl_net_rx_bytes_over(double seconds) {
     
-    if (seconds <= 0) {  return 0; }
+    if (seconds <= 0) return 0;
 
     unsigned long long before = fl_net_rx_bytes_platform();
-    if (before == 0) {  return 0; }
+    if (before == 0) return 0;
 
     fl_sleep(seconds);
 
     unsigned long long after = fl_net_rx_bytes_platform();
-    if (after < before) {  return 0; }
+    if (after < before) return 0;
     return after - before;
 }
 
@@ -2232,7 +2232,7 @@ FlRect fl_get_monitor_geometry() {
     
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
-    {  return (PlRect){x,y,w,h}; }
+    return (PlRect){x,y,w,h};
 }
 
 int fl_get_screen_width() {

@@ -171,7 +171,7 @@ if (open_terminal) {
 
 bool Platform_LaunchDetached(char* command) {
         
-if (!command || !command[0]) {  return false; }
+if (!command || !command[0]) return false;
     char cmdLine[4096];
     snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
     STARTUPINFOA si;
@@ -180,7 +180,7 @@ if (!command || !command[0]) {  return false; }
     PROCESS_INFORMATION pi;
     memset(&pi, 0, sizeof(pi));
     BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &si, &pi);
-    if (!ok) {  return false; }
+    if (!ok) return false;
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     return true;
@@ -188,13 +188,13 @@ if (!command || !command[0]) {  return false; }
 
 char* Platform_RunCommandAndGetOutput(char* command, int priority) {
         
-if (command == NULL || strlen(command) == 0) {  return NULL; }
+if (command == NULL || strlen(command) == 0) return NULL;
 SECURITY_ATTRIBUTES sa;
 sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 sa.bInheritHandle = TRUE;
 sa.lpSecurityDescriptor = NULL;
 HANDLE hRead, hWrite;
-if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {  return strdup(""); }
+if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return strdup("");
 SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
 STARTUPINFOA si = {0};
 si.cb = sizeof(STARTUPINFOA);
@@ -234,13 +234,13 @@ BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, creation_flags, NULL, 
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
         
 if (out_status) *out_status = -1;
-    if (!argv || !argv[0]) {  return NULL; }
+    if (!argv || !argv[0]) return NULL;
     SECURITY_ATTRIBUTES sa;
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;
     HANDLE rd = NULL, wr = NULL;
-    if (!CreatePipe(&rd, &wr, &sa, 0)) {  return NULL; }
+    if (!CreatePipe(&rd, &wr, &sa, 0)) return NULL;
     SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
     STARTUPINFOA si;
     memset(&si, 0, sizeof(si));
@@ -470,8 +470,8 @@ FindWindowData* data = (FindWindowData*)lParam;
     }
 
     char window_title[512];
-    if (GetWindowTextA(hwnd, window_title, sizeof(window_title)) == 0) {  return TRUE; }
-    if (window_title[0] == '\0') {  return TRUE; }
+    if (GetWindowTextA(hwnd, window_title, sizeof(window_title)) == 0) return TRUE;
+    if (window_title[0] == '\0') return TRUE;
 
     if (Platform_StringContainsCaseInsensitive(window_title, data->target_title)) {
         data->found_hwnd = hwnd;
@@ -491,7 +491,7 @@ if (!title || !title[0]) { log_error("operation failed, returning error title='%
     const char* e = s + strlen(s);
     while (e > s && isspace((unsigned char)*(e - 1))) e--;
     size_t len = (size_t)(e - s);
-    if (len == 0) {  return false; }
+    if (len == 0) return false;
     if (len >= sizeof(trimmed)) len = sizeof(trimmed) - 1;
     memcpy(trimmed, s, len);
     trimmed[len] = '\0';
@@ -552,21 +552,21 @@ if (!title || !title[0]) { log_error("operation failed, returning error title='%
 static HWND win32_foreground_target(void) {
         
 HWND hwnd = GetForegroundWindow();
-    if (!hwnd || !IsWindow(hwnd)) {  return NULL; }
+    if (!hwnd || !IsWindow(hwnd)) return NULL;
     char cls[64];
     cls[0] = '\0';
     GetClassNameA(hwnd, cls, sizeof(cls));
-    if (strcmp(cls, "QuickSwitcherModalClass") == 0) {  return NULL; }
-    if (strcmp(cls, "DisplayMessageModalClass") == 0) {  return NULL; }
-    if (strcmp(cls, "EditPopupClass") == 0) {  return NULL; }
-    if (strcmp(cls, "SearchPopupClass") == 0) {  return NULL; }
+    if (strcmp(cls, "QuickSwitcherModalClass") == 0) return NULL;
+    if (strcmp(cls, "DisplayMessageModalClass") == 0) return NULL;
+    if (strcmp(cls, "EditPopupClass") == 0) return NULL;
+    if (strcmp(cls, "SearchPopupClass") == 0) return NULL;
     return hwnd;
 }
 
 bool Platform_CloseActiveWindow(void) {
         
 HWND hwnd = win32_foreground_target();
-    if (!hwnd) {  return false; }
+    if (!hwnd) return false;
     PostMessageA(hwnd, WM_CLOSE, 0, 0);
     return true;
 }
@@ -581,7 +581,7 @@ static LONG g_win32_fs_exstyle;
 bool Platform_ToggleFullscreenActive(void) {
         
 HWND hwnd = win32_foreground_target();
-    if (!hwnd) {  return false; }
+    if (!hwnd) return false;
     if (!g_win32_fs_active) {
         if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
         g_win32_fs_style = GetWindowLongA(hwnd, GWL_STYLE);
@@ -617,7 +617,7 @@ static BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp
         
 (void)hMon; (void)hdc;
     win32_mon_list* out = (win32_mon_list*)lp;
-    if (!out || out->count >= 16 || !rc) {  return TRUE; }
+    if (!out || out->count >= 16 || !rc) return TRUE;
     out->rects[out->count++] = *rc;
     return TRUE;
 }
@@ -633,24 +633,24 @@ typedef struct {
 static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
         
 win32_focus_search* s = (win32_focus_search*)lp;
-    if (!s) {  return TRUE; }
-    if (hwnd == GetForegroundWindow()) {  return TRUE; }
-    if (!IsWindowVisible(hwnd)) {  return TRUE; }
-    if (IsIconic(hwnd)) {  return TRUE; }
+    if (!s) return TRUE;
+    if (hwnd == GetForegroundWindow()) return TRUE;
+    if (!IsWindowVisible(hwnd)) return TRUE;
+    if (IsIconic(hwnd)) return TRUE;
     char cls[64]; if (GetClassNameA(hwnd, cls, sizeof(cls))>0) if (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0) {  return TRUE; }
     { int cloaked=0; HMODULE dwm=GetModuleHandleA("dwmapi.dll"); if(dwm){ HRESULT (WINAPI *p)(HWND,DWORD,PVOID,DWORD)=(void*)GetProcAddress(dwm,"DwmGetWindowAttribute"); if(p && SUCCEEDED(p(hwnd,14,&cloaked,sizeof(cloaked))) && cloaked) return TRUE; } }
     LONG ex=GetWindowLongA(hwnd,GWL_EXSTYLE); if((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) { HWND o=GetWindow(hwnd,GW_OWNER); if(o) return TRUE; }
     char title[256];
-    if (GetWindowTextA(hwnd, title, sizeof(title)) == 0) {  return TRUE; }
-    if (title[0] == '\0') {  return TRUE; }
+    if (GetWindowTextA(hwnd, title, sizeof(title)) == 0) return TRUE;
+    if (title[0] == '\0') return TRUE;
     RECT wr;
-    if (!GetWindowRect(hwnd, &wr)) {  return TRUE; }
+    if (!GetWindowRect(hwnd, &wr)) return TRUE;
     int w = wr.right - wr.left;
     int h = wr.bottom - wr.top;
-    if (w <= 0 || h <= 0) {  return TRUE; }
+    if (w <= 0 || h <= 0) return TRUE;
     int cx = wr.left + w / 2;
     int cy = wr.top + h / 2;
-    if (cx >= s->fcx) {  return TRUE; }
+    if (cx >= s->fcx) return TRUE;
     int gap = s->fcx - cx;
     int vdist = cy >= s->fcy ? cy - s->fcy : s->fcy - cy;
     if (gap < s->best_gap || (gap == s->best_gap && vdist < s->best_vdist)) {
@@ -664,24 +664,24 @@ win32_focus_search* s = (win32_focus_search*)lp;
 static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
         
 win32_focus_search* s = (win32_focus_search*)lp;
-    if (!s) {  return TRUE; }
-    if (hwnd == GetForegroundWindow()) {  return TRUE; }
-    if (!IsWindowVisible(hwnd)) {  return TRUE; }
-    if (IsIconic(hwnd)) {  return TRUE; }
+    if (!s) return TRUE;
+    if (hwnd == GetForegroundWindow()) return TRUE;
+    if (!IsWindowVisible(hwnd)) return TRUE;
+    if (IsIconic(hwnd)) return TRUE;
     char cls[64]; if (GetClassNameA(hwnd, cls, sizeof(cls))>0) if (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0) {  return TRUE; }
     { int cloaked=0; HMODULE dwm=GetModuleHandleA("dwmapi.dll"); if(dwm){ HRESULT (WINAPI *p)(HWND,DWORD,PVOID,DWORD)=(void*)GetProcAddress(dwm,"DwmGetWindowAttribute"); if(p && SUCCEEDED(p(hwnd,14,&cloaked,sizeof(cloaked))) && cloaked) return TRUE; } }
     LONG ex=GetWindowLongA(hwnd,GWL_EXSTYLE); if((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) { HWND o=GetWindow(hwnd,GW_OWNER); if(o) return TRUE; }
     char title[256];
-    if (GetWindowTextA(hwnd, title, sizeof(title)) == 0) {  return TRUE; }
-    if (title[0] == '\0') {  return TRUE; }
+    if (GetWindowTextA(hwnd, title, sizeof(title)) == 0) return TRUE;
+    if (title[0] == '\0') return TRUE;
     RECT wr;
-    if (!GetWindowRect(hwnd, &wr)) {  return TRUE; }
+    if (!GetWindowRect(hwnd, &wr)) return TRUE;
     int w = wr.right - wr.left;
     int h = wr.bottom - wr.top;
-    if (w <= 0 || h <= 0) {  return TRUE; }
+    if (w <= 0 || h <= 0) return TRUE;
     int cx = wr.left + w / 2;
     int cy = wr.top + h / 2;
-    if (cx <= s->fcx) {  return TRUE; }
+    if (cx <= s->fcx) return TRUE;
     int gap = cx - s->fcx;
     int vdist = cy >= s->fcy ? cy - s->fcy : s->fcy - cy;
     if (gap < s->best_gap || (gap == s->best_gap && vdist < s->best_vdist)) {
@@ -695,17 +695,17 @@ win32_focus_search* s = (win32_focus_search*)lp;
 bool Platform_MoveActiveWindowToMonitor(bool right) {
         
 HWND hwnd = win32_foreground_target();
-    if (!hwnd) {  return false; }
+    if (!hwnd) return false;
     if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
     if (IsZoomed(hwnd)) ShowWindow(hwnd, SW_RESTORE);
     RECT wr;
-    if (!GetWindowRect(hwnd, &wr)) {  return false; }
+    if (!GetWindowRect(hwnd, &wr)) return false;
     int cx = wr.left + (wr.right - wr.left) / 2;
     int cy = wr.top + (wr.bottom - wr.top) / 2;
     win32_mon_list list;
     list.count = 0;
     EnumDisplayMonitors(NULL, NULL, win32_mon_enum, (LPARAM)&list);
-    if (list.count < 2) {  return false; }
+    if (list.count < 2) return false;
     for (int i = 0; i < list.count - 1; i++) {
         for (int j = i + 1; j < list.count; j++) {
             if (list.rects[j].left < list.rects[i].left) {
@@ -720,7 +720,7 @@ HWND hwnd = win32_foreground_target();
         if (list.rects[i].left <= cx) cur = i;
     }
     int dst = right ? cur + 1 : cur - 1;
-    if (dst < 0 || dst >= list.count) {  return false; }
+    if (dst < 0 || dst >= list.count) return false;
     int w = wr.right - wr.left;
     int h = wr.bottom - wr.top;
     int nx = list.rects[dst].left + (cx - list.rects[cur].left);
@@ -749,7 +749,7 @@ return Platform_MoveActiveWindowToMonitor(true);
 
 static bool win32_activate_hwnd(HWND h) {
         
-if (!h || !IsWindow(h)) {  return false; }
+if (!h || !IsWindow(h)) return false;
     if (IsIconic(h)) ShowWindow(h, SW_RESTORE);
     ShowWindow(h, SW_SHOW);
     SetWindowPos(h, HWND_TOP, 0,0,0,0, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
@@ -774,9 +774,9 @@ HWND fg = win32_foreground_target();
     char cls[64]={0}; if(fg) GetClassNameA(fg,cls,sizeof(cls));
     if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0)) {
     }
-    if (!fg) {  return false; }
+    if (!fg) return false;
     RECT fr;
-    if (!GetWindowRect(fg, &fr)) {  return false; }
+    if (!GetWindowRect(fg, &fr)) return false;
     win32_focus_search s;
     s.fcx = fr.left + (fr.right - fr.left) / 2;
     s.fcy = fr.top + (fr.bottom - fr.top) / 2;
@@ -784,7 +784,7 @@ HWND fg = win32_foreground_target();
     s.best_gap = 1 << 30;
     s.best_vdist = 1 << 30;
     EnumWindows(win32_focus_enum_left, (LPARAM)&s);
-    if (!s.best) {  return false; }
+    if (!s.best) return false;
     return win32_activate_hwnd(s.best);
 }
 
@@ -795,9 +795,9 @@ HWND fg = win32_foreground_target();
     char cls[64]={0}; if(fg) GetClassNameA(fg,cls,sizeof(cls));
     if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0)) {
     }
-    if (!fg) {  return false; }
+    if (!fg) return false;
     RECT fr;
-    if (!GetWindowRect(fg, &fr)) {  return false; }
+    if (!GetWindowRect(fg, &fr)) return false;
     win32_focus_search s;
     s.fcx = fr.left + (fr.right - fr.left) / 2;
     s.fcy = fr.top + (fr.bottom - fr.top) / 2;
@@ -805,7 +805,7 @@ HWND fg = win32_foreground_target();
     s.best_gap = 1 << 30;
     s.best_vdist = 1 << 30;
     EnumWindows(win32_focus_enum_right, (LPARAM)&s);
-    if (!s.best) {  return false; }
+    if (!s.best) return false;
     return win32_activate_hwnd(s.best);
 }
 
@@ -851,12 +851,12 @@ char* Platform_GetActiveWindowAppId(void) {
 static char appId[256];
     appId[0] = '\0';
     HWND hForeground = GetForegroundWindow();
-    if (hForeground == NULL) {  return appId; }
+    if (hForeground == NULL) return appId;
     DWORD pid = 0;
     GetWindowThreadProcessId(hForeground, &pid);
-    if (pid == 0) {  return appId; }
+    if (pid == 0) return appId;
     HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
-    if (!h) {  return appId; }
+    if (!h) return appId;
     char exe[MAX_PATH];
     DWORD sz = sizeof(exe);
     if (QueryFullProcessImageNameA(h, 0, exe, &sz) && sz > 0) {
@@ -877,9 +877,9 @@ char cand[MAX_PATH];
     if (GetFileAttributesA(cand) != INVALID_FILE_ATTRIBUTES) { snprintf(out, out_len, "%s", cand); return true; }
     char exe[MAX_PATH];
     DWORD n = GetModuleFileNameA(NULL, exe, sizeof(exe));
-    if (n == 0 || n >= sizeof(exe)) {  return false; }
+    if (n == 0 || n >= sizeof(exe)) return false;
     char* slash = strrchr(exe, '\\');
-    if (!slash) {  return false; }
+    if (!slash) return false;
     *slash = '\0';
     for (int depth = 0; depth < 4; depth++) {
         snprintf(cand, sizeof(cand), "%s\\resources\\Placeholder.png", exe);
@@ -1002,7 +1002,7 @@ if (!app_path || !app_path[0]) { log_error("operation failed, returning error ap
   if (Platform_ExpandPath(app_path, expanded, sizeof(expanded))) {
       if (expanded[0]) src = expanded;
   }
-  if (strncmp(src, "shell:", 6)==0) {  return NULL; }
+  if (strncmp(src, "shell:", 6)==0) return NULL;
   char native[MAX_PATH];
   snprintf(native, sizeof(native), "%s", src);
   for (char* p = native; *p; p++) if (*p == '/') *p = '\\';
@@ -1032,7 +1032,7 @@ if (!app_path || !app_path[0]) { log_error("operation failed, returning error ap
   }
   log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
   char ph[MAX_PATH];
-  if (win32_placeholder_icon(ph, sizeof(ph))) {  return _strdup(ph); }
+  if (win32_placeholder_icon(ph, sizeof(ph))) return _strdup(ph);
   return NULL;
 }
 int Platform_GetIconSize(char* icon_path) {
@@ -1051,7 +1051,7 @@ typedef struct { PlWindowList *titles; PlWindowList *names; } WinPair;
 static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
         
 WinPair *pair = (WinPair*)lParam;
-    if (!IsWindowVisible(hwnd)) {  return TRUE; }
+    if (!IsWindowVisible(hwnd)) return TRUE;
     char cls[256];
     if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0) {
         if (strcmp(cls, "Progman") == 0 || strcmp(cls, "WorkerW") == 0) return TRUE;
@@ -1080,15 +1080,15 @@ WinPair *pair = (WinPair*)lParam;
         if (owner) return TRUE;
     }
     RECT wr;
-    if (!GetWindowRect(hwnd, &wr)) {  return TRUE; }
-    if (wr.right - wr.left <= 0 || wr.bottom - wr.top <= 0) {  return TRUE; }
+    if (!GetWindowRect(hwnd, &wr)) return TRUE;
+    if (wr.right - wr.left <= 0 || wr.bottom - wr.top <= 0) return TRUE;
     char title[512];
-    if (GetWindowTextA(hwnd, title, sizeof(title)) == 0 || title[0] == '\0') {  return TRUE; }
+    if (GetWindowTextA(hwnd, title, sizeof(title)) == 0 || title[0] == '\0') return TRUE;
     DWORD pid = 0; GetWindowThreadProcessId(hwnd, &pid);
-    if (pid == 0) {  return TRUE; }
+    if (pid == 0) return TRUE;
     HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
     if (!h) h = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
-    if (!h) {  return TRUE; }
+    if (!h) return TRUE;
     char exe[MAX_PATH] = {0};
     char exePath[MAX_PATH] = {0};
     DWORD sz = sizeof(exePath);
@@ -1101,9 +1101,9 @@ WinPair *pair = (WinPair*)lParam;
         len = GetModuleBaseNameA(h, NULL, exe, sizeof(exe));
     }
     CloseHandle(h);
-    if (len == 0 || exe[0] == '\0') {  return TRUE; }
-    if (_stricmp(exe, "SystemSettings.exe")==0) {  return TRUE; }
-    if (_stricmp(exe, "ApplicationFrameHost.exe")==0) {  return TRUE; }
+    if (len == 0 || exe[0] == '\0') return TRUE;
+    if (_stricmp(exe, "SystemSettings.exe")==0) return TRUE;
+    if (_stricmp(exe, "ApplicationFrameHost.exe")==0) return TRUE;
     for (int i=0;i<pair->titles->count;i++) if (pair->titles->windows[i] && _stricmp(pair->titles->windows[i], title)==0) {  return TRUE; }
     char **t1 = realloc(pair->titles->windows, (pair->titles->count + 1) * sizeof(char*));
     char **t2 = realloc(pair->names->windows, (pair->names->count + 1) * sizeof(char*));
@@ -1178,9 +1178,9 @@ static int win32_is_project_root(const char* dir) {
         
 char probe[MAX_PATH];
     snprintf(probe, sizeof(probe), "%s\\config", dir);
-    if (!win32_dir_exists(probe)) {  return 0; }
+    if (!win32_dir_exists(probe)) return 0;
     snprintf(probe, sizeof(probe), "%s\\build", dir);
-    if (!win32_dir_exists(probe)) {  return 0; }
+    if (!win32_dir_exists(probe)) return 0;
     return 1;
 }
 
@@ -1236,10 +1236,10 @@ PlColor Platform_GetPixelColor(int x, int y) {
 
     PlColor out = {0, 0, 0};
     HDC screen = GetDC(NULL);
-    if (!screen) {  return out; }
+    if (!screen) return out;
     COLORREF c = GetPixel(screen, x, y);
     ReleaseDC(NULL, screen);
-    if (c == CLR_INVALID) {  return out; }
+    if (c == CLR_INVALID) return out;
     out.r = GetRValue(c);
     out.g = GetGValue(c);
     out.b = GetBValue(c);
@@ -1255,7 +1255,7 @@ bool Platform_MoveToPos(int x, int y) {
     int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-    if (screenWidth <= 0 || screenHeight <= 0) {  return false; }
+    if (screenWidth <= 0 || screenHeight <= 0) return false;
 
     long rx = (long)x - vx;
     long ry = (long)y - vy;
@@ -1334,7 +1334,7 @@ bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
     int vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
     int vw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     int vh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-    if (vw <= 0 || vh <= 0) {  return false; }
+    if (vw <= 0 || vh <= 0) return false;
     if (out_x) *out_x = vx;
     if (out_y) *out_y = vy;
     if (out_w) *out_w = vw;
@@ -1347,7 +1347,7 @@ bool Platform_MouseButtonDown(int button, bool down) {
         
 
     DWORD flag = win32_button_flag(button, down);
-    if (flag == 0) {  return false; }
+    if (flag == 0) return false;
     INPUT in = {0};
     in.type = INPUT_MOUSE;
     in.mi.dwFlags = flag;
@@ -1360,7 +1360,7 @@ bool Platform_MouseButtonDown(int button, bool down) {
 bool Platform_MouseScroll(int notches) {
         
 
-    if (notches == 0) {  return true; }
+    if (notches == 0) return true;
     INPUT in = {0};
     in.type = INPUT_MOUSE;
     in.mi.dwFlags = MOUSEEVENTF_WHEEL;
@@ -1384,7 +1384,7 @@ char dir_path[200];
 
 bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len) {
         
-if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) {  return false; }
+if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) return false;
     char dir_path[256];
     snprintf(dir_path,sizeof(dir_path),"%s\\AppData\\Roaming\\Flint",Platform_GetRealHome());
     nob_mkdir_if_not_exists(dir_path);
@@ -1412,7 +1412,7 @@ bool Platform_ResolveAssetPath(void *caller, const char* name, char* out, size_t
 
 bool Platform_FeatureDataDirExists(const char* stem) {
         
-    if (!stem || !stem[0]) {  return false; }
+    if (!stem || !stem[0]) return false;
     char dir_path[256];
     snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint\\%s", Platform_GetRealHome(), stem);
     bool ok = (GetFileAttributesA(dir_path) != INVALID_FILE_ATTRIBUTES);
@@ -1421,7 +1421,7 @@ bool Platform_FeatureDataDirExists(const char* stem) {
 
 bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, size_t out_len) {
         
-    if (!stem || !rel || !out || out_len == 0) {  return false; }
+    if (!stem || !rel || !out || out_len == 0) return false;
     char feature_base[512];
     if (FeaturePath[0] && FeaturePath[1] == ':') {
         snprintf(feature_base, sizeof(feature_base), "%s", FeaturePath);
@@ -1443,21 +1443,21 @@ bool Platform_ResolveAssetFile(const char* stem, const char* rel, char* out, siz
 
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
         
-if (!name || !name[0] || !out_path || out_len == 0) {  return false; }
-    if (!data && len > 0) {  return false; }
+if (!name || !name[0] || !out_path || out_len == 0) return false;
+    if (!data && len > 0) return false;
     for (const char* p = name; *p; p++) {
         if (*p == '/' || *p == '\\') return false;
     }
-    if (strstr(name, "..")) {  return false; }
+    if (strstr(name, "..")) return false;
     char dir[MAX_PATH];
     DWORD n = GetTempPathA(sizeof(dir), dir);
-    if (n == 0 || n >= sizeof(dir)) {  return false; }
+    if (n == 0 || n >= sizeof(dir)) return false;
     size_t dl = strlen(dir);
     while (dl > 0 && (dir[dl - 1] == '\\' || dir[dl - 1] == '/')) dir[--dl] = '\0';
     snprintf(out_path, out_len, "%s\\%s", dir, name);
     out_path[out_len - 1] = '\0';
     FILE* f = fopen(out_path, "wb");
-    if (!f) {  return false; }
+    if (!f) return false;
     bool ok = true;
     if (len > 0 && fwrite(data, 1, len, f) != len) ok = false;
     if (fclose(f) != 0) ok = false;
@@ -1876,10 +1876,10 @@ double Platform_EndTimer(PlTimer t) {
     LARGE_INTEGER freq;
     QueryPerformanceCounter(&now);
     QueryPerformanceFrequency(&freq);
-    if (freq.QuadPart == 0) {  return 0.0; }
+    if (freq.QuadPart == 0) return 0.0;
     uint64_t start = t.ticks;
     uint64_t end = (uint64_t)now.QuadPart;
-    if (end < start) {  return 0.0; }
+    if (end < start) return 0.0;
     return (double)(end - start) * 1000.0 / (double)freq.QuadPart;
 }
 
@@ -1900,9 +1900,9 @@ static DWORD WINAPI win_thread_entry(LPVOID p) {
 
 void* Platform_ThreadCreate(void* (*fn)(void*), void* arg) {
     
-    if (!fn) {  return NULL; }
+    if (!fn) return NULL;
     WinThreadStart* s = malloc(sizeof(*s));
-    if (!s) {  return NULL; }
+    if (!s) return NULL;
     s->fn = fn;
     s->arg = arg;
     HANDLE h = CreateThread(NULL, 0, win_thread_entry, s, 0, NULL);
@@ -1920,7 +1920,7 @@ void Platform_ThreadJoin(void* thread) {
 void* Platform_MutexCreate(void) {
     
     CRITICAL_SECTION* cs = malloc(sizeof(*cs));
-    if (!cs) {  return NULL; }
+    if (!cs) return NULL;
     InitializeCriticalSection(cs);
     return cs;
 }
@@ -1947,7 +1947,7 @@ void Platform_MutexUnlock(void* mutex) {
 
 bool Platform_MutexTryLock(void* mutex) {
     
-    if (!mutex) {  return false; }
+    if (!mutex) return false;
     return TryEnterCriticalSection((CRITICAL_SECTION*)mutex) != 0;
 }
 

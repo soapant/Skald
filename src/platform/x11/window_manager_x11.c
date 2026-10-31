@@ -69,7 +69,7 @@ return x11_keysym_to_vk(ks);
 static void* input_thread_func(void* arg) {
         
 WindowManager* wm = (WindowManager*)arg;
-    if (g_x11_keyboard_count == 0 && g_x11_mouse_count == 0) {  return NULL; }
+    if (g_x11_keyboard_count == 0 && g_x11_mouse_count == 0) return NULL;
     int nfds = g_x11_keyboard_count + g_x11_mouse_count;
     struct pollfd *fds = calloc((size_t)nfds, sizeof(struct pollfd));
     for (int i=0;i<g_x11_keyboard_count;i++) { fds[i].fd = g_x11_keyboards[i].fd; fds[i].events = POLLIN; }
@@ -229,12 +229,12 @@ int WindowManager_RunLinux(WindowManager* wm) {
         
 XEvent xev;
     
-    if (!wm) {  return -1; }
+    if (!wm) return -1;
     wm->running = true;
     x11_set_window_manager(wm);
 
     Display* dpy = wm->display;
-    if (!dpy) {  return -1; }
+    if (!dpy) return -1;
 
     bool use_grab = should_use_grab();
     if (!use_grab) {

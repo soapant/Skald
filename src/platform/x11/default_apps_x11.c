@@ -22,7 +22,7 @@ static int next_slot = 0;
         if (g_ad_valid[i] && strcmp(g_ad_path[i], dir) == 0) return &g_ad_cache[i];
     }
     struct stat st;
-    if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) {  return NULL; }
+    if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) return NULL;
     int slot = next_slot;
     next_slot = (next_slot + 1) % APPDIR_CACHE_SLOTS;
     if (g_ad_valid[slot]) {
@@ -47,7 +47,7 @@ static int next_slot = 0;
 static const char* match_in_applications_dir(const char* dir, const char* const* names, size_t count) {
         
 ListOfFiles* files = x11_applications_dir_files(dir);
-    if (!files) {  return NULL; }
+    if (!files) return NULL;
     const char* found = NULL;
     for (size_t i = 0; i < files->count && !found; i++) {
         for (size_t j = 0; j < count; j++) {
@@ -166,7 +166,7 @@ const char* const candidates[] = {
             if (!isprint((unsigned char)trimmed[i])) trimmed[0] = '\0';
         }
     }
-    if (trimmed[0]) {  return trimmed; }
+    if (trimmed[0]) return trimmed;
     return x11_find_terminal_in_desktop_files(candidates, n);
 }
 
@@ -271,10 +271,10 @@ const char* get_default_shell(int slot) {
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
         
-if (kind < 0 || kind >= DEFAULT_APP_COUNT) {  return ""; }
-    if (kind == DEFAULT_BROWSER) {  return get_default_browser(DEFAULT_BROWSER); }
-    if (kind == DEFAULT_TERMINAL )    {  return get_default_terminal(DEFAULT_TERMINAL); }
-    if (kind == DEFAULT_SHELL )       {  return get_default_shell(DEFAULT_SHELL); }
+if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
+    if (kind == DEFAULT_BROWSER) return get_default_browser(DEFAULT_BROWSER);
+    if (kind == DEFAULT_TERMINAL ) return get_default_terminal(DEFAULT_TERMINAL);
+    if (kind == DEFAULT_SHELL ) return get_default_shell(DEFAULT_SHELL);
     default_apps_x11[kind][0] = '\0';
     return default_apps_x11[kind];
 }
@@ -297,8 +297,8 @@ const char* p = line + 5;
 
 bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_size) {
         
-if (!desktop_id || !desktop_id[0] || !out || out_size == 0) {  return false; }
-    if (strchr(desktop_id, '/')) {  return false; }
+if (!desktop_id || !desktop_id[0] || !out || out_size == 0) return false;
+    if (strchr(desktop_id, '/')) return false;
     out[0] = '\0';
     char dirs[1024];
     const char* data_home = getenv("XDG_DATA_HOME");

@@ -121,20 +121,20 @@ int ListBox_RowAtY(const ListBoxInfo* lb, int list_top, int item_height,
         return -1;
     }
     int rel = mouse_y - list_top;
-    if (rel < 0) {  return -1; }
+    if (rel < 0) return -1;
     int row = rel / item_height;
-    if (row >= visible_count) {  return -1; }
+    if (row >= visible_count) return -1;
     int idx = top_index + row;
-    if (idx < 0 || idx >= lb->populated_count) {  return -1; }
+    if (idx < 0 || idx >= lb->populated_count) return -1;
     return idx;
 }
 
 bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
                         int top_index, int visible_count) {
     
-    if (!lb || lb->populated_count <= 0) {  return false; }
-    if (!g_mouse_moved) {  return false; }
-    if (listbox_hover_throttled()) {  return false; }
+    if (!lb || lb->populated_count <= 0) return false;
+    if (!g_mouse_moved) return false;
+    if (listbox_hover_throttled()) return false;
     g_mouse_moved = false;
     int mx = 0, my = 0;
     if (!ListBox_ClientMousePos(&mx, &my)) {
@@ -146,10 +146,10 @@ bool ListBox_HoverFocus(ListBoxInfo* lb, int list_top, int item_height,
     g_hover_pos_set = true;
     g_hover_x = mx;
     g_hover_y = my;
-    if (!mouse_moved) {  return false; }
+    if (!mouse_moved) return false;
     ListBox_FocusByMouse();
     int idx = ListBox_RowAtY(lb, list_top, item_height, top_index, visible_count, my);
-    if (idx < 0 || idx == lb->selected_index) {  return false; }
+    if (idx < 0 || idx == lb->selected_index) return false;
     UI_SetSelection(lb,idx);
     
     return true;

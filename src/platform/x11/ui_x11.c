@@ -180,9 +180,9 @@ if (!text) text = "";
 int UI_GetCursorPosition(void) {
         
 WindowManager* wm = WindowManager_Get();
-    if (!wm) {  return 0; }
+    if (!wm) return 0;
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) {  return 0; }
+    if (!top) return 0;
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         
@@ -190,7 +190,7 @@ WindowManager* wm = WindowManager_Get();
     }
     if (top->type == POPUP_EDIT) {
         WMEditPopupData* ed = (WMEditPopupData*)top;
-        if (ed) {  return (int)ed->cursor; }
+        if (ed) return (int)ed->cursor;
     }
     
     return 0;
@@ -276,10 +276,10 @@ if (!ctx) {  return ; }
 
 ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx) {
         
-if (!ctx) {  return NULL; }
+if (!ctx) return NULL;
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-    if (!top) {  return NULL; }
+    if (!top) return NULL;
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         return prompt->has_listbox ? &prompt->listbox : NULL;

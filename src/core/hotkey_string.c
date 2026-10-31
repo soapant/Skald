@@ -185,7 +185,7 @@ static int hotkey_token_to_vk(const char* token, int* out_mods) {
 bool HotkeyString_Parse(const char* str, HotkeyKey* out) {
     
     if (out) { out->vk_code = 0; out->mods = 0; }
-    if (!str || !str[0]) {  return false; }
+    if (!str || !str[0]) return false;
 
     char buffer[256];
     strncpy(buffer, str, sizeof(buffer) - 1);
@@ -286,9 +286,9 @@ static int hotkey_vk_to_name(int vk, char* out, int out_size) {
 
 bool HotkeyString_Format(HotkeyKey key, char* out, int out_size) {
     
-    if (!out || out_size <= 0) {  return false; }
+    if (!out || out_size <= 0) return false;
     out[0] = '\0';
-    if (key.vk_code == 0) {  return false; }
+    if (key.vk_code == 0) return false;
 
     char key_name[32];
     if (hotkey_vk_to_name(key.vk_code, key_name, (int)sizeof(key_name)) == 0) {

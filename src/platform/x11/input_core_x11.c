@@ -118,7 +118,7 @@ if (!ev || ev->type != EV_KEY) {  return ; }
 bool x11_handle_evdev_mouse(struct input_event *ev) {
         
 
-    if (!ev) {  return false; }
+    if (!ev) return false;
     x11_queue_mouse_event(ev);
     return true;
 }
@@ -131,12 +131,12 @@ bool Platform_GetMousePos(int* out_x, int* out_y) {
         return true;
     }
     Display* dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
     Window root = DefaultRootWindow(dpy);
     Window rw = 0, cw = 0;
     int rx = 0, ry = 0, wx = 0, wy = 0;
     int mask = 0;
-    if (!XQueryPointer(dpy, root, &rw, &cw, &rx, &ry, &wx, &wy, &mask)) {  return false; }
+    if (!XQueryPointer(dpy, root, &rw, &cw, &rx, &ry, &wx, &wy, &mask)) return false;
     if (out_x) *out_x = rx;
     if (out_y) *out_y = ry;
      return true;
@@ -161,10 +161,10 @@ extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
 bool x11_should_use_grab(void) {
-    if (getenv("WAYLAND_DISPLAY")) {  return false; }
-    if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) {  return false; }
+    if (getenv("WAYLAND_DISPLAY")) return false;
+    if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) return false;
     const char* t = getenv("XDG_SESSION_TYPE");
-    if (t && strcmp(t, "wayland") == 0) {  return false; }
+    if (t && strcmp(t, "wayland") == 0) return false;
     return true;
 }
 
@@ -445,10 +445,10 @@ void x11_scan_keyboards(void) {
 }
 
 int x11_keysym_to_vk(KeySym ks) {
-  if (ks >= XK_a && ks <= XK_z) {  return 'A' + (ks - XK_a); }
-      if (ks >= XK_A && ks <= XK_Z) {  return 'A' + (ks - XK_A); }
-      if (ks >= XK_0 && ks <= XK_9) {  return '0' + (ks - XK_0); }
-      if (ks >= XK_F1 && ks <= XK_F12) {  return VK_F1 + (ks - XK_F1); }
+  if (ks >= XK_a && ks <= XK_z) return 'A' + (ks - XK_a);
+      if (ks >= XK_A && ks <= XK_Z) return 'A' + (ks - XK_A);
+      if (ks >= XK_0 && ks <= XK_9) return '0' + (ks - XK_0);
+      if (ks >= XK_F1 && ks <= XK_F12) return VK_F1 + (ks - XK_F1);
       switch (ks) {
           case XK_Escape: return VK_ESCAPE;
           case XK_Return: case XK_KP_Enter: return VK_RETURN;
@@ -496,27 +496,27 @@ int x11_vk_to_linux_key(int vk) {
             case 'U': return KEY_U; case 'V': return KEY_V; case 'W': return KEY_W; case 'X': return KEY_X;
             case 'Y': return KEY_Y; case 'Z': return KEY_Z;
         }
-        if (vk >= '0' && vk <= '9') {  return KEY_1 + (vk - '1'); }
-        if (vk == '0') {  return KEY_0; }
-        if (vk == VK_SPACE) {  return KEY_SPACE; }
-        if (vk == VK_RETURN) {  return KEY_ENTER; }
-        if (vk == VK_BACK) {  return KEY_BACKSPACE; }
-        if (vk == VK_TAB) {  return KEY_TAB; }
-        if (vk == VK_ESCAPE) {  return KEY_ESC; }
-        if (vk == VK_OEM_1) {  return KEY_SEMICOLON; }
-        if (vk == VK_OEM_2) {  return KEY_SLASH; }
-        if (vk == VK_OEM_4) {  return KEY_LEFTBRACE; }
-        if (vk == VK_OEM_6) {  return KEY_RIGHTBRACE; }
-        if (vk == VK_OEM_COMMA) {  return KEY_COMMA; }
-        if (vk == VK_OEM_PERIOD) {  return KEY_DOT; }
-        if (vk == VK_OEM_7) {  return KEY_APOSTROPHE; }
-        if (vk == VK_OEM_3) {  return KEY_GRAVE; }
-        if (vk == VK_OEM_PLUS) {  return KEY_EQUAL; }
-        if (vk == VK_OEM_MINUS) {  return KEY_MINUS; }
-        if (vk == VK_UP) {  return KEY_UP; }
-        if (vk == VK_DOWN) {  return KEY_DOWN; }
-        if (vk == VK_LEFT) {  return KEY_LEFT; }
-        if (vk == VK_RIGHT) {  return KEY_RIGHT; }
+        if (vk >= '0' && vk <= '9') return KEY_1 + (vk - '1');
+        if (vk == '0') return KEY_0;
+        if (vk == VK_SPACE) return KEY_SPACE;
+        if (vk == VK_RETURN) return KEY_ENTER;
+        if (vk == VK_BACK) return KEY_BACKSPACE;
+        if (vk == VK_TAB) return KEY_TAB;
+        if (vk == VK_ESCAPE) return KEY_ESC;
+        if (vk == VK_OEM_1) return KEY_SEMICOLON;
+        if (vk == VK_OEM_2) return KEY_SLASH;
+        if (vk == VK_OEM_4) return KEY_LEFTBRACE;
+        if (vk == VK_OEM_6) return KEY_RIGHTBRACE;
+        if (vk == VK_OEM_COMMA) return KEY_COMMA;
+        if (vk == VK_OEM_PERIOD) return KEY_DOT;
+        if (vk == VK_OEM_7) return KEY_APOSTROPHE;
+        if (vk == VK_OEM_3) return KEY_GRAVE;
+        if (vk == VK_OEM_PLUS) return KEY_EQUAL;
+        if (vk == VK_OEM_MINUS) return KEY_MINUS;
+        if (vk == VK_UP) return KEY_UP;
+        if (vk == VK_DOWN) return KEY_DOWN;
+        if (vk == VK_LEFT) return KEY_LEFT;
+        if (vk == VK_RIGHT) return KEY_RIGHT;
     return 0;
 }
 
@@ -560,7 +560,7 @@ bool x11_handle_global_key(int key_code, int value) {
     remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     x11_sync_held_from_phys();
     if (value == 0) { hotkey_key_up(ConvertLinuxKeyToWindowsVK(key_code));  return false; }
-    if (value != 1 && value != 2) {  return false; }
+    if (value != 1 && value != 2) return false;
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
     int modifiers = remap_current_mods();
     bool processed = hotkey_process(pressed_vk, modifiers);
@@ -580,7 +580,7 @@ bool remap_should_swallow_linux_key(int linux_code, int value) {
 }
 
 bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
-    if (!ev) {  return false; }
+    if (!ev) return false;
     if (ev->type != EV_KEY) {
         if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
         
@@ -616,7 +616,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
         Platform_GlobalKey_Push(&gev);
     }
     if (val == 0 && x11_is_suppressed(code)) { x11_set_suppress(code, false);  return true; }
-    if (val == 2 && x11_is_suppressed(code)) {  return true; }
+    if (val == 2 && x11_is_suppressed(code)) return true;
     if (has_popup) {
         bool hk_swallowed = (val==1) && x11_handle_global_key(code, val);
         if (hk_swallowed) { x11_set_suppress(code, true);  return true; }
@@ -634,7 +634,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
                 if (x11_handle_global_key(code, val)) { x11_set_suppress(code, true);  return true; }
             }
             if (grabbed && g_x11_uinput_fd>=0) {
-                if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true)) {  return false; }
+                if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true)) return false;
                 x11_uinput_emit(ev);
             }
             
@@ -648,8 +648,8 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     }
     if (grabbed) {
          if (g_x11_uinput_fd >= 0) {
-             if (hotkey_process(ConvertLinuxKeyToWindowsVK(code), remap_current_mods())) {  return true; }
-             if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true)) {  return false; }
+             if (hotkey_process(ConvertLinuxKeyToWindowsVK(code), remap_current_mods())) return true;
+             if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true)) return false;
              x11_uinput_emit(ev);
          }
         else { static bool warned=false; if(!warned){ log_warn("grabbed but no uinput - key %d lost", code); warned=true; } }
@@ -661,7 +661,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
 }
 int Platform_CharForKey(int vk, int scancode, int mods) {
   Display *dpy = get_display();
-  if (!dpy) {  return 0; }
+  if (!dpy) return 0;
   KeySym ks = 0;
   char buf[32];
   XKeyEvent xe;
@@ -673,6 +673,6 @@ int Platform_CharForKey(int vk, int scancode, int mods) {
   if (mods & HOTKEY_MOD_CTRL) xe.state |= ControlMask;
   if (mods & HOTKEY_MOD_ALT) xe.state |= Mod1Mask;
   int len = XLookupString(&xe, buf, sizeof(buf), &ks, NULL);
-  if (len <= 0) {  return 0; }
+  if (len <= 0) return 0;
   return (int)(unsigned char)buf[0];
 }

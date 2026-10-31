@@ -14,8 +14,8 @@ int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
 
 unsigned long VimModeTextColor(void) {
     
-    if (g_current_mode == MODE_NORMAL) {  return rgb_to_hex(COLOR_NORMAL_MODE_TEXT); }
-    if (g_current_mode == MODE_INSERT) {  return rgb_to_hex(COLOR_INSERT_MODE_TEXT); }
+    if (g_current_mode == MODE_NORMAL) return rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
+    if (g_current_mode == MODE_INSERT) return rgb_to_hex(COLOR_INSERT_MODE_TEXT);
     
     return rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
 }

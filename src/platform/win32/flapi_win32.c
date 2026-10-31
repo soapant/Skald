@@ -46,7 +46,7 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
 
     WIN32_FIND_DATAA find_data;
     HANDLE hFind = FindFirstFileA(search_path, &find_data);
-    if (hFind == INVALID_HANDLE_VALUE) {  return false; }
+    if (hFind == INVALID_HANDLE_VALUE) return false;
 
     do {
         if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
@@ -119,9 +119,9 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
 static const char* win32_host_for_system_file(const char* path) {
         
 const char* dot = strrchr(path, '.');
-    if (!dot) {  return NULL; }
-    if (_stricmp(dot, ".cpl") == 0) {  return "control.exe"; }
-    if (_stricmp(dot, ".msc") == 0) {  return "mmc.exe"; }
+    if (!dot) return NULL;
+    if (_stricmp(dot, ".cpl") == 0) return "control.exe";
+    if (_stricmp(dot, ".msc") == 0) return "mmc.exe";
     return NULL;
 }
 
@@ -136,14 +136,14 @@ SHELLEXECUTEINFOA sei;
     sei.lpParameters = (params && params[0]) ? params : NULL;
     sei.lpDirectory = working_dir;
     sei.nShow = SW_SHOWNORMAL;
-    if (!ShellExecuteExA(&sei)) {  return false; }
+    if (!ShellExecuteExA(&sei)) return false;
     if (sei.hProcess) CloseHandle(sei.hProcess);
     return true;
 }
 
 bool fl_launch_with_args_platform(const char* path, const char* args) {
         
-if (!path) {  return false; }
+if (!path) return false;
     char params[2048];
     params[0] = '\0';
     if (args && args[0] && strcmp(args, "0") != 0) {
@@ -158,7 +158,7 @@ if (!path) {  return false; }
         if (win32_exec_shell(host, hostParams, NULL, "open")) return true;
         log_warn("fl_launch host failed host='%s' params='%s' err=%lu", host, hostParams, GetLastError());
     }
-    if (win32_exec_shell(path, params[0] ? params : NULL, NULL, "open")) {  return true; }
+    if (win32_exec_shell(path, params[0] ? params : NULL, NULL, "open")) return true;
     log_warn("fl_launch ShellExecuteExA failed path='%s' args='%s' err=%lu", path, params, GetLastError());
     char cmd[2048];
     if (params[0]) snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, params);
@@ -174,10 +174,10 @@ if (!path) {  return false; }
 
 bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
         
-if (!path) {  return false; }
+if (!path) return false;
     char expanded[MAX_PATH];
     extern bool Platform_ExpandPath(const char* t, char* o, size_t s);
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {  return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     path = expanded;
     char params[2048] = {0};
     const char* host = win32_host_for_system_file(path);
@@ -211,14 +211,14 @@ static bool g_fl_list_font_owned;
 
 bool fl_listbox_begin_platform(const FlListSpec *spec) {
         
-if (!spec) {  return false; }
+if (!spec) return false;
     ListBoxInfo *lb = spec->lb;
     if (!lb) {
         if (!spec->items || spec->count <= 0) return false;
         return false;
     }
     Platform_GetDrawContextWin32(&g_fl_list_hdc);
-    if (!g_fl_list_hdc) {  return false; }
+    if (!g_fl_list_hdc) return false;
     g_fl_list_spec = *spec;
     g_fl_list_lb = lb;
     PromptState *st = NULL;
@@ -258,10 +258,10 @@ if (!spec) {  return false; }
 
 bool fl_listbox_next_platform(FlListItemCtx *out) {
         
-if (!out || !g_fl_list_lb) {  return false; }
-    if (g_fl_list_cur >= g_fl_list_visible) {  return false; }
+if (!out || !g_fl_list_lb) return false;
+    if (g_fl_list_cur >= g_fl_list_visible) return false;
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
-    if (idx < 0 || idx >= g_fl_list_lb->populated_count) {  return false; }
+    if (idx < 0 || idx >= g_fl_list_lb->populated_count) return false;
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     if (g_fl_list_cur == 0) Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y=g_fl_list_y0, .width=g_fl_list_fw});
     bool sel = (idx == g_fl_list_lb->selected_index);
@@ -312,9 +312,9 @@ return g_fl_list_lb ? g_fl_list_lb->populated_count : 0;
 
 unsigned long fl_listbox_get_current_standard_color(void) {
         
-if (!g_fl_list_lb || g_fl_list_cur == 0) {  return 0; }
+if (!g_fl_list_lb || g_fl_list_cur == 0) return 0;
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
-    if (idx < 0 || idx >= g_fl_list_lb->populated_count) {  return 0; }
+    if (idx < 0 || idx >= g_fl_list_lb->populated_count) return 0;
     int orig_idx = idx;
     int orig_cnt = g_fl_list_lb->populated_count;
     if (idx >= 0 && idx < g_fl_list_lb->populated_count) {
@@ -356,7 +356,7 @@ char search_path[MAX_PATH];
 }
 bool fl_type_text_platform(const char *s){
   
-if(!s) {  return false; }
+if(!s) return false;
  char* old = Platform_GetClipboardEntry();
  Platform_CopyToClipboard(s);
  Platform_EmitKey(VK_LCONTROL,1);
@@ -369,10 +369,10 @@ if(!s) {  return false; }
 
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
         
-if (!spec) {  return false; }
+if (!spec) return false;
     HDC hdc = NULL;
     Platform_GetDrawContextWin32(&hdc);
-    if (!hdc) {  return false; }
+    if (!hdc) return false;
     extern PromptState* Platform_GetWin32PromptState(void);
     PromptState *state = Platform_GetWin32PromptState();
     const char *buf = spec->buffer;
@@ -527,12 +527,12 @@ static bool net_resolve_adapter(FlNetAdapter* out) {
     
     ULONG size = 16 * 1024;
     IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
-    if (!addrs) {  return false; }
+    if (!addrs) return false;
     ULONG rc = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, addrs, &size);
     if (rc == ERROR_BUFFER_OVERFLOW) {
         free(addrs);
         addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
-        if (!addrs) {  return false; }
+        if (!addrs) return false;
         rc = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, addrs, &size);
     }
     if (rc != NO_ERROR) {
@@ -599,7 +599,7 @@ static void net_refresh(void) {
 
 int fl_get_active_interface_platform(char out[], size_t max_len) {
         
-    if (!out || max_len == 0) {  return 0; }
+    if (!out || max_len == 0) return 0;
     FlNetAdapter a = net_active_adapter();
     if (!a.valid || !a.guid[0]) {
         out[0] = '\0';
@@ -616,7 +616,7 @@ int fl_get_active_interface_platform(char out[], size_t max_len) {
 unsigned long long fl_net_rx_bytes_platform() {
         
     FlNetAdapter a = net_active_adapter();
-    if (!a.valid || !a.index) {  return 0; }
+    if (!a.valid || !a.index) return 0;
     MIB_IFROW row;
     memset(&row, 0, sizeof(row));
     row.dwIndex = a.index;

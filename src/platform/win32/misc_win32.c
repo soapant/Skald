@@ -99,17 +99,17 @@ HKEY key = NULL;
     DWORD sz = sizeof(prog) - 1;
     LONG r = RegQueryValueExA(key, "ProgId", NULL, NULL, (LPBYTE)prog, &sz);
     RegCloseKey(key);
-    if (r != ERROR_SUCCESS || !prog[0]) {  return false; }
+    if (r != ERROR_SUCCESS || !prog[0]) return false;
 
     char sub[256];
     snprintf(sub, sizeof(sub), "%s\\shell\\open\\command", prog);
-    if (RegOpenKeyExA(HKEY_CLASSES_ROOT, sub, 0, KEY_READ, &key) != ERROR_SUCCESS) {  return false; }
+    if (RegOpenKeyExA(HKEY_CLASSES_ROOT, sub, 0, KEY_READ, &key) != ERROR_SUCCESS) return false;
 
     char cmd[1024] = {0};
     sz = sizeof(cmd) - 1;
     r = RegQueryValueExA(key, NULL, NULL, NULL, (LPBYTE)cmd, &sz);
     RegCloseKey(key);
-    if (r != ERROR_SUCCESS || !cmd[0]) {  return false; }
+    if (r != ERROR_SUCCESS || !cmd[0]) return false;
 
     const char* p = cmd;
     size_t len = 0;
@@ -119,7 +119,7 @@ HKEY key = NULL;
     } else {
         while (p[len] && !isspace((unsigned char)p[len]) && len < cap - 1) len++;
     }
-    if (len == 0) {  return false; }
+    if (len == 0) return false;
     memcpy(out, p, len);
     out[len] = '\0';
     return out[0] != '\0';
@@ -271,7 +271,7 @@ if (!content || !content[0]) { log_error("operation failed, returning error cont
 
     size_t len = strlen(content);
     INPUT* inputs = (INPUT*)calloc(len, sizeof(INPUT));
-    if (!inputs) {  return false; }
+    if (!inputs) return false;
 
     for (size_t i = 0; i < len; i++) {
         char c = content[i];

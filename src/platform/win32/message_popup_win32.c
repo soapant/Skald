@@ -31,11 +31,11 @@ static int g_win32_msg_h = 0;
 static wchar_t* msg_widen(const char* in, int* out_len) {
         
 if (out_len) *out_len = 0;
-    if (!in || !in[0]) {  return NULL; }
+    if (!in || !in[0]) return NULL;
     int need = MultiByteToWideChar(CP_UTF8, 0, in, -1, NULL, 0);
-    if (need <= 0) {  return NULL; }
+    if (need <= 0) return NULL;
     wchar_t* w = (wchar_t*)malloc((size_t)need * sizeof(wchar_t));
-    if (!w) {  return NULL; }
+    if (!w) return NULL;
     if (MultiByteToWideChar(CP_UTF8, 0, in, -1, w, need) <= 0) { free(w); return NULL; }
     if (out_len) *out_len = need - 1;
     return w;
@@ -298,9 +298,9 @@ bool Platform_DismissMessage(const char* name) {
         return had;
     }
     HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-    if (h == NULL || !IsWindow(h)) {  return false; }
+    if (h == NULL || !IsWindow(h)) return false;
     FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(h, GWLP_USERDATA);
-    if (!data || strcmp(data->name, name) != 0) {  return false; }
+    if (!data || strcmp(data->name, name) != 0) return false;
     Platform_DismissDisplayMessage();
     
     return true;
@@ -308,9 +308,9 @@ bool Platform_DismissMessage(const char* name) {
 
 bool Platform_MessageActive(const char* name) {
     
-    if (!name || !name[0]) {  return false; }
+    if (!name || !name[0]) return false;
     HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-    if (h == NULL || !IsWindow(h)) {  return false; }
+    if (h == NULL || !IsWindow(h)) return false;
     FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(h, GWLP_USERDATA);
     bool active = (data && strcmp(data->name, name) == 0);
     
@@ -463,9 +463,9 @@ if (Platform_RenderThread_IsCurrentThread()) {
     else hover_widget_apply(key, render, ud, x, y, w, h, fps, no_bg, bg_hex, release, release_ud);
     return true;
   }
-  if (!Platform_RenderThread_IsRunning()) {  return false; }
+  if (!Platform_RenderThread_IsRunning()) return false;
   HoverWidgetRequest* r = (HoverWidgetRequest*)calloc(1, sizeof(*r));
-  if (!r) {  return false; }
+  if (!r) return false;
   snprintf(r->key, sizeof(r->key), "%s", key);
   r->op = op;
   r->render = render;
@@ -475,7 +475,7 @@ if (Platform_RenderThread_IsCurrentThread()) {
   r->bg_hex = bg_hex;
   r->release = release;
   r->release_ud = release_ud;
-  if (Platform_RenderThread_Post(hover_widget_dispatch, r)) {  return true; }
+  if (Platform_RenderThread_Post(hover_widget_dispatch, r)) return true;
   free(r);
   return false;
 }

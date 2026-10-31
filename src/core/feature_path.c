@@ -52,10 +52,10 @@ void FeaturePath_SanitizeStem(const char* src, char* out, size_t out_len) {
 
 bool FeaturePath_LibBasenameStem(const char* base, char* out, size_t out_len) {
     
-    if (!base || !out || out_len == 0) {  return false; }
+    if (!base || !out || out_len == 0) return false;
     char work[256];
     size_t len = strlen(base);
-    if (len == 0 || len >= sizeof(work)) {  return false; }
+    if (len == 0 || len >= sizeof(work)) return false;
     memcpy(work, base, len + 1);
     for (;;) {
         if (len < 4) break;
@@ -78,7 +78,7 @@ bool FeaturePath_LibBasenameStem(const char* base, char* out, size_t out_len) {
     else if (len >= 4 && fp_strcasecmp(work + len - 4, ".dll") == 0) len -= 4;
     else if (len >= 5 && fp_strcasecmp(work + len - 5, ".dylib") == 0) len -= 5;
     else {  return false; }
-    if (len == 0 || len >= out_len) {  return false; }
+    if (len == 0 || len >= out_len) return false;
     memcpy(out, work, len);
     out[len] = '\0';
     
@@ -87,7 +87,7 @@ bool FeaturePath_LibBasenameStem(const char* base, char* out, size_t out_len) {
 
 bool FeaturePath_StemFromCaller(void* caller, char* out, size_t out_len) {
     
-    if (!caller || !out || out_len == 0) {  return false; }
+    if (!caller || !out || out_len == 0) return false;
     out[0] = '\0';
     char mod_path[512];
     if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) {
@@ -127,7 +127,7 @@ bool FeaturePath_ResolveDataPath(void* caller, const char* name, char* out, size
         return false;
     }
 
-    if (strstr(filename, "..")) {  return false; }
+    if (strstr(filename, "..")) return false;
     
     size_t stemlen = strlen(filename);
     
@@ -165,10 +165,10 @@ bool FeaturePath_ResolveDataPath(void* caller, const char* name, char* out, size
     }
     
     const char* feat = FlintContext_Get()->window.current_feature;
-    if (!feat || !feat[0]) {  return false; }
+    if (!feat || !feat[0]) return false;
     char safe[128];
     FeaturePath_SanitizeStem(feat, safe, sizeof(safe));
-    if (safe[0] == '\0') {  return false; }
+    if (safe[0] == '\0') return false;
     
     
     return Platform_GetFeaturePath(safe, stem, out, out_len);
@@ -186,14 +186,14 @@ bool FeaturePath_ResolveAssetPath(void* caller, const char* name, char* out, siz
     }
     const char* rel = name;
     while (*rel == '/' || *rel == '\\') rel++;
-    if (!rel[0]) {  return false; }
+    if (!rel[0]) return false;
     for (const char* p = rel; *p; p++) {
         if (*p == '/' || *p == '\\') {
             
             return false;
         }
     }
-    if (strstr(rel, "..")) {  return false; }
+    if (strstr(rel, "..")) return false;
     char stem[128];
     if (!FeaturePath_StemFromCaller(caller, stem, sizeof(stem))) {
         

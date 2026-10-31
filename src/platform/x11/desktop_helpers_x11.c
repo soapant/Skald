@@ -11,9 +11,9 @@ bool Desktop_Parse(const char* desktop_path, char exec_line[1024], char workdir[
 if (exec_line) exec_line[0] = '\0';
     if (workdir) workdir[0] = '\0';
     if (is_terminal) *is_terminal = false;
-    if (!desktop_path) {  return false; }
+    if (!desktop_path) return false;
     static char content[16384];
-    if (File_ReadAll(desktop_path, content, (long)sizeof(content)) <= 0) {  return false; }
+    if (File_ReadAll(desktop_path, content, (long)sizeof(content)) <= 0) return false;
     char* cur = content;
     while (*cur) {
         char* nl = strchr(cur, '\n');

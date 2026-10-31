@@ -15,9 +15,9 @@
 #include "core/timer.h"
 static bool hypr_sock_live(const char* sig) {
         
-if (!sig || !sig[0]) {  return false; }
+if (!sig || !sig[0]) return false;
     const char* rtd = getenv("XDG_RUNTIME_DIR");
-    if (!rtd || !rtd[0]) {  return false; }
+    if (!rtd || !rtd[0]) return false;
     char path[512];
     snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", rtd, sig);
     struct stat st;
@@ -223,7 +223,7 @@ bool close_active_window_hyprland(void) {
     
 hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) {  return false; }
+  if (!sig || !sig[0]) return false;
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.close()'", false);
   bool ok = succeded_hypr(out);
   free(out);
@@ -234,7 +234,7 @@ bool toggle_fullscreen_active_hyprland(void) {
     
 hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) {  return false; }
+  if (!sig || !sig[0]) return false;
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"fullscreen\", action = \"toggle\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
@@ -245,7 +245,7 @@ bool move_active_window_to_monitor_hyprland(bool right) {
     
 hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) {  return false; }
+  if (!sig || !sig[0]) return false;
   char cmd[96];
   snprintf(cmd, sizeof(cmd), "hyprctl dispatch 'hl.dsp.window.move({ monitor = \"%c\" })'", right ? 'r' : 'l');
   char* out = Platform_RunTerminalCommand(cmd, false);
@@ -258,11 +258,11 @@ bool minimize_active_window_hyprland(void) {
     
 hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) {  return false; }
+  if (!sig || !sig[0]) return false;
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.move({ workspace = \"special\", follow = false })'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  if (ok) {  return true; }
+  if (ok) return true;
   out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.workspace.toggle_special()'", false);
   ok = succeded_hypr(out);
   free(out);
@@ -273,7 +273,7 @@ bool focus_window_left_hyprland(void) {
     
 hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) {  return false; }
+  if (!sig || !sig[0]) return false;
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.focus({ direction = \"l\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
@@ -284,7 +284,7 @@ bool focus_window_right_hyprland(void) {
     
 hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) {  return false; }
+  if (!sig || !sig[0]) return false;
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.focus({ direction = \"r\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
@@ -310,11 +310,11 @@ bool get_mouse_pos_hyprland(int *x, int *y) {
     
     const char *rtd = getenv("XDG_RUNTIME_DIR");
     const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-    if (!rtd || !sig) {  return false; }
+    if (!rtd || !sig) return false;
     char path[512];
     snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", rtd, sig);
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (fd < 0) {  return false; }
+    if (fd < 0) return false;
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;

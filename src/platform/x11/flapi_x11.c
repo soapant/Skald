@@ -268,7 +268,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             char extra[2048];
             if (args && args[0]) snprintf(extra, sizeof(extra), "-e sh -c '%s %s; exec %s'", exec_line, args,UsedShell);
             else snprintf(extra, sizeof(extra), "-e sh -c '%s; exec %s'", exec_line,UsedShell);
-            if(wd) {  return Platform_LaunchTerminalAtPath(wd, extra); }
+            if(wd) return Platform_LaunchTerminalAtPath(wd, extra);
             else {  return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra); }
         }
         if (exec_line[0] && args && args[0]) {
@@ -491,7 +491,7 @@ int fl_listbox_get_count(void) {
 unsigned long fl_listbox_get_current_standard_color(void) {
   if (!g_fl_list_lb || g_fl_list_cur == 0) return 0;
   int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
-  if (idx < 0 || idx >= g_fl_list_lb->populated_count) {  return 0; }
+  if (idx < 0 || idx >= g_fl_list_lb->populated_count) return 0;
   unsigned long ncol, bcol, pcol;
   Platform_GetItemColors((PlGetItemColorsSpec){.idx=idx, .count=g_fl_list_lb->populated_count, .num_color=&ncol, .body_color=&bcol, .plain_color=&pcol});
   return pcol;
@@ -500,7 +500,7 @@ unsigned long fl_listbox_get_current_standard_color(void) {
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
     if (!directory || !search_string || strlen(search_string) == 0) return NULL;
     DIR* dir = opendir(directory);
-    if (!dir) {  return NULL; }
+    if (!dir) return NULL;
     static char found_path[MAX_PATH];
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
@@ -631,7 +631,7 @@ typedef struct {
 static void* TimerThread(void* arg) {
         
 TimerPayload* payload = (TimerPayload*)arg;
-    if (!payload) {  return NULL; }
+    if (!payload) return NULL;
 
     useconds_t micros = (useconds_t)(payload->seconds * 1000000.0);
     usleep(micros);
@@ -705,7 +705,7 @@ unsigned long long fl_net_rx_bytes_platform() {
     char want[64];
     if (!fl_get_active_interface_platform(want, sizeof(want)) || !want[0]) return 0;
     FILE *f = fopen("/proc/net/dev", "r");
-    if (!f) {  return 0; }
+    if (!f) return 0;
     char buf[512];
     unsigned long long rx_bytes = 0;
 

@@ -10,7 +10,7 @@
 
 bool EditPopup_DeleteSelection(WMEditPopupData* ed) {
     
-    if (!ed || !ed->text) {  return false; }
+    if (!ed || !ed->text) return false;
     int ss = 0, se = 0;
     if (!VimState_GetSelection(&ss, &se)) {
         
@@ -56,7 +56,7 @@ void EditPopup_InsertText(WMEditPopupData* ed, const char* text, int len) {
 
 bool EditPopup_SelectAll(WMEditPopupData* ed) {
     
-    if (!ed || !ed->text) {  return false; }
+    if (!ed || !ed->text) return false;
     int len = (int)strlen(ed->text);
     VimState_BeginSelection(0);
     VimState_UpdateSelection(len);
@@ -67,14 +67,14 @@ bool EditPopup_SelectAll(WMEditPopupData* ed) {
 
 bool EditPopup_CopySelection(WMEditPopupData* ed) {
     
-    if (!ed || !ed->text) {  return false; }
+    if (!ed || !ed->text) return false;
     int ss = 0, se = 0;
-    if (!VimState_GetSelection(&ss, &se)) {  return false; }
+    if (!VimState_GetSelection(&ss, &se)) return false;
     if (se < ss) { int t = ss; ss = se; se = t; }
     int len = (int)strlen(ed->text);
     if (ss < 0) ss = 0;
     if (se > len) se = len;
-    if (se <= ss) {  return false; }
+    if (se <= ss) return false;
     char buf[1024];
     int n = se - ss;
     if (n >= (int)sizeof(buf)) n = (int)sizeof(buf) - 1;
@@ -87,7 +87,7 @@ bool EditPopup_CopySelection(WMEditPopupData* ed) {
 
 bool EditPopup_HandleKey(WMEditPopupData* ed, const PopupKeyEvent* key) {
     
-    if (!ed || !ed->text || !key) {  return false; }
+    if (!ed || !ed->text || !key) return false;
     int vk = key->vk;
     bool ctrl = key->ctrl;
 

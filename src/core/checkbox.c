@@ -70,7 +70,7 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
 static CheckboxSpec* checkbox_find(const char* name) {
     
     for (int i = 0; i < g_checkbox_count; i++) {
-        if (strcmp(g_checkboxes[i].name, name) == 0) {  return &g_checkboxes[i]; }
+        if (strcmp(g_checkboxes[i].name, name) == 0) return &g_checkboxes[i];
     }
     return NULL;
 }
@@ -78,8 +78,8 @@ static CheckboxSpec* checkbox_find(const char* name) {
 static CheckboxSpec* checkbox_intern(const char* name, bool seed) {
     
     CheckboxSpec* cb = checkbox_find(name);
-    if (cb) {  return cb; }
-    if (g_checkbox_count >= CHECKBOX_MAX) {  return NULL; }
+    if (cb) return cb;
+    if (g_checkbox_count >= CHECKBOX_MAX) return NULL;
     cb = &g_checkboxes[g_checkbox_count++];
     memset(cb, 0, sizeof(*cb));
     cb->name = name;
@@ -126,7 +126,7 @@ static int checkbox_line_height(int fontsize) {
     Platform_GetTextLayoutMetrics(&lh, &rh, &lt);
     int ref_h = lh > 0 ? lh : FontSize;
     int ref_fs = FontSize > 0 ? FontSize : fontsize;
-    if (ref_h <= 0 || ref_fs <= 0) {  return fontsize; }
+    if (ref_h <= 0 || ref_fs <= 0) return fontsize;
     return (int)((long)ref_h * fontsize / ref_fs);
 }
 
@@ -241,7 +241,7 @@ bool Checkbox_Place(const CheckboxSpec* spec) {
     }
 
     CheckboxSpec* cb = checkbox_intern(spec->name, spec->checked);
-    if (!cb) {  return false; }
+    if (!cb) return false;
     cb->on_click = spec->on_click;
     cb->on_hover = spec->on_hover;
     cb->checkbox = spec->checkbox;

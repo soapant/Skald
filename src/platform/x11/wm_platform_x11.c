@@ -23,7 +23,7 @@ extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 
 bool Platform_WM_InitDisplay(WindowManager* wm) {
         
-if (!wm) {  return false; }
+if (!wm) return false;
     wm->display = get_display();
     return wm->display != NULL;
 }
@@ -122,7 +122,7 @@ int x = 0, y = 0, w = 1920, h = 1080;
 
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     log_info("Platform_PromptUser started wm=%p spec=%p",wm,spec);
-    if (!wm || !spec) {  return NULL; }
+    if (!wm || !spec) return NULL;
     if (spec->subwindow) {
         PromptSpec heap_spec = *spec;
         heap_spec.subwindow = false;
@@ -131,7 +131,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
         return NULL;
     }
     Popup* popup = PromptPopup_Create(wm, spec);
-    if (!popup) {  return NULL; }
+    if (!popup) return NULL;
     Display* dpy = wm->display;
     long long last_tick = 0;
     int last_mx = 0, last_my = 0;

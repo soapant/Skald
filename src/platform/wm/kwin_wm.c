@@ -15,15 +15,15 @@ static pthread_mutex_t g_kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
 bool kwin_is_active(void) {
         
 const char* v = getenv("KDE_SESSION_VERSION");
-    if (v && v[0]) {  return true; }
+    if (v && v[0]) return true;
     const char* d = getenv("XDG_CURRENT_DESKTOP");
-    if (d && d[0] && strstr(d, "KDE")) {  return true; }
+    if (d && d[0] && strstr(d, "KDE")) return true;
     return false;
 }
 
 static bool kwin_has_error(char* output) {
         
-if (!output) {  return true; }
+if (!output) return true;
     return Platform_StringContainsCaseInsensitive(output, "error");
 }
 
@@ -61,7 +61,7 @@ kwin_ensure_bus();
 static bool kwin_run_script_inner(const char* body) {
         
 FILE* f = fopen("/tmp/flint_kwin_do.js", "w");
-    if (!f) {  return false; }
+    if (!f) return false;
     fputs(body, f);
     fclose(f);
     char* pre = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flint");
@@ -123,7 +123,7 @@ static const char g_kwin_q_body[] =
 static bool kwin_q_load(void) {
         
 long long now = Platform_GetWallClockMs();
-    if (now - g_kwin_q_load_tried_at < 2000 && g_kwin_q_load_tried_at != 0) {  return false; }
+    if (now - g_kwin_q_load_tried_at < 2000 && g_kwin_q_load_tried_at != 0) return false;
     g_kwin_q_load_tried_at = now;
     if (!g_kwin_q_legacy_cleared) {
         g_kwin_q_legacy_cleared = true;
@@ -138,7 +138,7 @@ long long now = Platform_GetWallClockMs();
         g_kwin_q_name[0] = '\0';
     }
     FILE* f = fopen("/tmp/flint_kwin_q.js", "w");
-    if (!f) {  return false; }
+    if (!f) return false;
     fputs(g_kwin_q_body, f);
     fclose(f);
     for (int round = 0; round < 3; round++) {
@@ -206,7 +206,7 @@ char* rec = NULL;
 static bool kwin_snapshot_locked(void) {
         
 long long now = Platform_GetWallClockMs();
-    if (g_kwin_records && now - g_kwin_snap_at < KWIN_SNAP_TTL_MS) {  return true; }
+    if (g_kwin_records && now - g_kwin_snap_at < KWIN_SNAP_TTL_MS) return true;
     for (int tries = 0; tries < 2; tries++) {
         if (!g_kwin_q_loaded && !kwin_q_load()) return false;
         char args[128];
@@ -245,9 +245,9 @@ long long now = Platform_GetWallClockMs();
 
 static bool kwin_skip_caption(const char* cap) {
         
-if (!cap || !cap[0]) {  return true; }
-    if (!strncmp(cap, "flint-", 6)) {  return true; }
-    if (!strcasecmp(cap, "window") || !strcasecmp(cap, "colored")) {  return true; }
+if (!cap || !cap[0]) return true;
+    if (!strncmp(cap, "flint-", 6)) return true;
+    if (!strcasecmp(cap, "window") || !strcasecmp(cap, "colored")) return true;
     return false;
 }
 
@@ -264,9 +264,9 @@ size_t o = 0;
 
 bool get_title_kwin(char *buffer, int buffer_size) {
         
-if (!buffer || buffer_size <= 0) {  return false; }
+if (!buffer || buffer_size <= 0) return false;
     buffer[0] = '\0';
-    if (!kwin_is_active()) {  return false; }
+    if (!kwin_is_active()) return false;
     pthread_mutex_lock(&g_kwin_mtx);
     bool ok = kwin_snapshot_locked() && g_kwin_active_title && g_kwin_active_title[0];
     if (ok) kwin_clean_copy(g_kwin_active_title, strlen(g_kwin_active_title), buffer, (size_t)buffer_size);
@@ -276,9 +276,9 @@ if (!buffer || buffer_size <= 0) {  return false; }
 
 bool get_app_id_kwin(char *buffer, int buffer_size) {
         
-if (!buffer || buffer_size <= 0) {  return false; }
+if (!buffer || buffer_size <= 0) return false;
     buffer[0] = '\0';
-    if (!kwin_is_active()) {  return false; }
+    if (!kwin_is_active()) return false;
     pthread_mutex_lock(&g_kwin_mtx);
     bool ok = kwin_snapshot_locked() && g_kwin_active_class && g_kwin_active_class[0];
     if (ok) kwin_clean_copy(g_kwin_active_class, strlen(g_kwin_active_class), buffer, (size_t)buffer_size);
@@ -289,7 +289,7 @@ if (!buffer || buffer_size <= 0) {  return false; }
 char* paste_kwin(char* content) {
         
 if (!content) { log_error("content is NULL"); return NULL; }
-    if (!kwin_is_active()) {  return NULL; }
+    if (!kwin_is_active()) return NULL;
     char buffer[100];
     snprintf(buffer, sizeof(buffer), "wtype %s", content);
     char* out = Platform_RunTerminalCommand(buffer, false);
@@ -312,7 +312,7 @@ char esc[1024];
         }
     }
     esc[o] = '\0';
-    if (!esc[0]) {  return false; }
+    if (!esc[0]) return false;
     char low[1024];
     strncpy(low, esc, sizeof(low)-1);
     low[sizeof(low)-1] = '\0';
@@ -324,20 +324,20 @@ char esc[1024];
 bool focus_window_title_kwin(char* title) {
         
 if (!title) { log_error("title is NULL"); return false; }
-    if (!kwin_is_active()) {  return false; }
+    if (!kwin_is_active()) return false;
     while (*title && (iscntrl((unsigned char)*title) || isspace((unsigned char)*title))) title++;
     char *end = title + strlen(title);
     while (end > title && (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1]))) *--end = '\0';
     if (!*title) { log_error("title empty after trim"); return false; }
     char body[2300];
-    if (!kwin_focus_js_cmd(title, body, sizeof(body))) {  return false; }
+    if (!kwin_focus_js_cmd(title, body, sizeof(body))) return false;
     return kwin_run_script(body);
 }
 
 PlWindowList get_window_titles_kwin() {
         
 PlWindowList list = {0};
-    if (!kwin_is_active()) {  return list; }
+    if (!kwin_is_active()) return list;
     pthread_mutex_lock(&g_kwin_mtx);
     if (!kwin_snapshot_locked() || !g_kwin_records) {
         pthread_mutex_unlock(&g_kwin_mtx);
@@ -366,7 +366,7 @@ PlWindowList list = {0};
 PlWindowList get_window_names_kwin() {
         
 PlWindowList list = {0};
-    if (!kwin_is_active()) {  return list; }
+    if (!kwin_is_active()) return list;
     pthread_mutex_lock(&g_kwin_mtx);
     if (!kwin_snapshot_locked() || !g_kwin_records) {
         pthread_mutex_unlock(&g_kwin_mtx);
@@ -399,50 +399,50 @@ PlWindowList list = {0};
 
 bool close_active_window_kwin(void) {
         
-if (!kwin_is_active()) {  return false; }
+if (!kwin_is_active()) return false;
     return kwin_run_script("workspace.slotWindowClose();");
 }
 
 bool toggle_fullscreen_active_kwin(void) {
         
-if (!kwin_is_active()) {  return false; }
+if (!kwin_is_active()) return false;
     return kwin_run_script("workspace.slotWindowFullScreen();");
 }
 
 bool move_active_window_to_monitor_kwin(bool right) {
         
-if (!kwin_is_active()) {  return false; }
+if (!kwin_is_active()) return false;
     if (right) {  return kwin_run_script("workspace.slotWindowToRightScreen();"); }
     return kwin_run_script("workspace.slotWindowToLeftScreen();");
 }
 
 bool move_active_window_left_kwin(void) {
         
-if (!kwin_is_active()) {  return false; }
+if (!kwin_is_active()) return false;
     return kwin_run_script("workspace.slotWindowToLeftScreen();");
 }
 
 bool move_active_window_right_kwin(void) {
         
-if (!kwin_is_active()) {  return false; }
+if (!kwin_is_active()) return false;
     return kwin_run_script("workspace.slotWindowToRightScreen();");
 }
 
 bool focus_window_left_kwin(void) {
         
-if (!kwin_is_active()) {  return false; }
+if (!kwin_is_active()) return false;
     return kwin_run_script("workspace.slotSwitchWindowLeft();");
 }
 
 bool focus_window_right_kwin(void) {
         
-if (!kwin_is_active()) {  return false; }
+if (!kwin_is_active()) return false;
     return kwin_run_script("workspace.slotSwitchWindowRight();");
 }
 
 bool minimize_active_window_kwin(void) {
         
-if (!kwin_is_active()) {  return false; }
+if (!kwin_is_active()) return false;
     return kwin_run_script("workspace.slotWindowMinimize();");
 }
 

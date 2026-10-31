@@ -13,7 +13,7 @@ long pending_hotkey_timeMs = 0;
 
 int WindowManager_RunWin32(WindowManager* wm) {
         
-if (!wm) {  return -1; }
+if (!wm) return -1;
     wm->running = true;
 
     MSG msg;

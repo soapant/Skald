@@ -24,10 +24,10 @@ static Display* OpenBestDisplay(void) {
         
 
     Display* d = XOpenDisplay(NULL);
-    if (d) {  return d; }
+    if (d) return d;
 
     DIR* dir = opendir("/tmp/.X11-unix");
-    if (!dir) {  return NULL; }
+    if (!dir) return NULL;
 
     char name[32];
     struct dirent* e;

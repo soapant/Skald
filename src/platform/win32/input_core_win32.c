@@ -22,7 +22,7 @@
 bool Platform_GetMousePos(int* out_x, int* out_y) {
         
     POINT pt;
-    if (!GetCursorPos(&pt)) {  return false; }
+    if (!GetCursorPos(&pt)) return false;
     if (out_x) *out_x = (int)pt.x;
     if (out_y) *out_y = (int)pt.y;
     return true;
@@ -242,10 +242,10 @@ BYTE state[256];
   HKL layout = GetKeyboardLayout(0);
   wchar_t buf[8];
   int n = ToUnicodeEx((UINT)vk, (UINT)scancode, state, buf, 8, 0, layout);
-  if (n <= 0) {  return 0; }
-  if (n == 1) {  return (int)buf[0]; }
+  if (n <= 0) return 0;
+  if (n == 1) return (int)buf[0];
   char mb[16];
   int m = WideCharToMultiByte(CP_UTF8, 0, buf, 1, mb, sizeof(mb), NULL, NULL);
-  if (m <= 0) {  return 0; }
+  if (m <= 0) return 0;
   return (int)(unsigned char)mb[0];
 }

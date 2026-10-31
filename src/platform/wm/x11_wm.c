@@ -30,7 +30,7 @@ static char g_i3_sock[512];
 
 static bool i3_ensure_sock(void) {
         
-if (g_i3_probe != 0) {  return g_i3_probe == 1; }
+if (g_i3_probe != 0) return g_i3_probe == 1;
     g_i3_probe = -1;
     const char* cur = getenv("I3SOCK");
     if (cur && cur[0]) {
@@ -42,7 +42,7 @@ if (g_i3_probe != 0) {  return g_i3_probe == 1; }
         }
     }
     const char* rtd = getenv("XDG_RUNTIME_DIR");
-    if (!rtd || !rtd[0]) {  return false; }
+    if (!rtd || !rtd[0]) return false;
     char pat[512];
     snprintf(pat, sizeof(pat), "%s/i3/ipc-socket.*", rtd);
     glob_t g;
@@ -61,7 +61,7 @@ if (g_i3_probe != 0) {  return g_i3_probe == 1; }
 
 static bool i3_exec(const char* command) {
         
-if (!i3_ensure_sock()) {  return false; }
+if (!i3_ensure_sock()) return false;
     char* out = Platform_RunTerminalCommand((char*)command, false);
     if (!out || out[0] == '\0') { if (out) free(out); return false; }
     bool ok = !(strstr(out, "\"success\":false") || strstr(out, "\"error\""));
@@ -82,7 +82,7 @@ static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
 
 static char* x11_get_text_prop(Display* dpy, Window w) {
         
-if (!dpy || w == None) {  return NULL; }
+if (!dpy || w == None) return NULL;
     Atom utf8 = XInternAtom(dpy, "UTF8_STRING", False);
     Atom net_name = XInternAtom(dpy, "_NET_WM_NAME", False);
     Atom wm_name = XInternAtom(dpy, "WM_NAME", False);
@@ -107,9 +107,9 @@ if (!dpy || w == None) {  return NULL; }
 
 static char* x11_get_res_class(Display* dpy, Window w) {
         
-if (!dpy || w == None) {  return NULL; }
+if (!dpy || w == None) return NULL;
     XClassHint* ch = XAllocClassHint();
-    if (!ch) {  return NULL; }
+    if (!ch) return NULL;
     char* out = NULL;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
@@ -126,7 +126,7 @@ if (!dpy || w == None) {  return NULL; }
 static Window* x11_client_list(Display* dpy, int* out_n) {
         
 if (out_n) *out_n = 0;
-    if (!dpy) {  return NULL; }
+    if (!dpy) return NULL;
     Atom a = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
     Atom type = None; int fmt = 0;
     unsigned long nitems = 0, after = 0; unsigned char* data = NULL;
@@ -145,7 +145,7 @@ if (out_n) *out_n = 0;
 
 static bool x11_window_geom(Display* dpy, Window w, int* out_x, int* out_y, int* out_w, int* out_h) {
         
-if (!dpy || w == None) {  return false; }
+if (!dpy || w == None) return false;
     int gx = 0, gy = 0, abs_x = 0, abs_y = 0;
     unsigned int gw = 0, gh = 0, border = 0, depth = 0;
     Window child = None;
@@ -155,7 +155,7 @@ if (!dpy || w == None) {  return false; }
     if (ok) ok = XTranslateCoordinates(dpy, w, DefaultRootWindow(dpy), 0, 0, &abs_x, &abs_y, &child);
     XSync(dpy, False);
     XSetErrorHandler(old);
-    if (_x11_err || !ok || gw == 0 || gh == 0) {  return false; }
+    if (_x11_err || !ok || gw == 0 || gh == 0) return false;
     if (out_x) *out_x = abs_x;
     if (out_y) *out_y = abs_y;
     if (out_w) *out_w = (int)gw;
@@ -165,7 +165,7 @@ if (!dpy || w == None) {  return false; }
 
 static bool x11_moveresize_window(Display* dpy, Window w, int x, int y, int cw, int ch) {
         
-if (!dpy || w == None) {  return false; }
+if (!dpy || w == None) return false;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     Atom mrs = XInternAtom(dpy, "_NET_MOVERESIZE_WINDOW", False);
@@ -183,7 +183,7 @@ if (!dpy || w == None) {  return false; }
     XSendEvent(dpy, DefaultRootWindow(dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
     XSync(dpy, False);
     XSetErrorHandler(old);
-    if (!_x11_err) {  return true; }
+    if (!_x11_err) return true;
     XMoveResizeWindow(dpy, w, x, y, cw > 0 ? (unsigned)cw : 1, ch > 0 ? (unsigned)ch : 1);
     XSync(dpy, False);
     return _x11_err == 0;
@@ -191,7 +191,7 @@ if (!dpy || w == None) {  return false; }
 
 static bool x11_activate_window(Display* dpy, Window w) {
         
-if (!dpy || w == None) {  return false; }
+if (!dpy || w == None) return false;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     Atom active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
@@ -256,10 +256,10 @@ if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffe
 
 bool get_app_id_x11(char *buffer, int buffer_size) {
         
-if (!buffer || buffer_size <= 0) {  return false; }
+if (!buffer || buffer_size <= 0) return false;
     buffer[0] = '\0';
     Display *display = get_display();
-    if (!display) {  return false; }
+    if (!display) return false;
     Window focus = None;
     int revert_to = 0;
     _x11_err = 0;
@@ -323,7 +323,7 @@ bool focus_window_title_x11(char* title) {
         
 if (!title || !title[0]) { log_error("title='%s'", title ? title : "null"); return false; }
     Display* display = get_display();
-    if (!display) {  return false; }
+    if (!display) return false;
     int nclients = 0;
     Window* clients = x11_client_list(display, &nclients);
     if (!clients || nclients <= 0) {
@@ -426,16 +426,16 @@ Window focus = None;
     XGetInputFocus(display, &focus, &revert_to);
     XSync(display, False);
     XSetErrorHandler(old);
-    if (_x11_err || focus == None || focus == PointerRoot) {  return None; }
+    if (_x11_err || focus == None || focus == PointerRoot) return None;
     return focus;
 }
 
 bool close_active_window_x11(void) {
         
 Display* display = get_display();
-    if (!display) {  return false; }
+    if (!display) return false;
     Window focus = x11_focused_window(display);
-    if (focus == None) {  return false; }
+    if (focus == None) return false;
     Atom close_atom = XInternAtom(display, "_NET_CLOSE_WINDOW", False);
     XEvent ev;
     memset(&ev, 0, sizeof(ev));
@@ -460,9 +460,9 @@ Display* display = get_display();
 bool toggle_fullscreen_active_x11(void) {
         
 Display* display = get_display();
-    if (!display) {  return false; }
+    if (!display) return false;
     Window focus = x11_focused_window(display);
-    if (focus == None) {  return false; }
+    if (focus == None) return false;
     Atom state_atom = XInternAtom(display, "_NET_WM_STATE", False);
     Atom fs_atom = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
     XEvent ev;
@@ -486,10 +486,10 @@ Display* display = get_display();
 static bool x11_activate_neighbor(bool right) {
     
     Display* display = get_display();
-    if (!display) {  return false; }
+    if (!display) return false;
     Window focus = x11_focused_window(display);
     int fcx = 0, fcy = 0, fw = 0, fh = 0;
-    if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh)) {  return false; }
+    if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh)) return false;
     fcx += fw / 2;
     fcy += fh / 2;
     int nclients = 0;
@@ -520,19 +520,19 @@ static bool x11_activate_neighbor(bool right) {
         }
     }
     free(clients);
-    if (best == None) {  return false; }
+    if (best == None) return false;
     return x11_activate_window(display, best);
 }
 
 bool move_active_window_to_monitor_x11(bool right) {
         
 Display* display = get_display();
-    if (!display) {  return false; }
+    if (!display) return false;
     Window focus = x11_focused_window(display);
-    if (focus == None) {  return false; }
+    if (focus == None) return false;
     Window root = DefaultRootWindow(display);
     XRRScreenResources* res = XRRGetScreenResourcesCurrent(display, root);
-    if (!res) {  return false; }
+    if (!res) return false;
     int n = 0;
     int ox[64], oy[64], ow[64], oh[64];
     for (int c = 0; c < res->ncrtc && n < 64; c++) {
@@ -549,7 +549,7 @@ Display* display = get_display();
         ox[n] = cx; oy[n] = cy; ow[n] = cw; oh[n] = chh; n++;
     }
     XRRFreeScreenResources(res);
-    if (n < 2) {  return false; }
+    if (n < 2) return false;
     for (int i = 0; i < n - 1; i++) {
         for (int j = i + 1; j < n; j++) {
             if (ox[j] < ox[i]) {
@@ -561,7 +561,7 @@ Display* display = get_display();
         }
     }
     int wx = 0, wy = 0, ww = 0, wh = 0;
-    if (!x11_window_geom(display, focus, &wx, &wy, &ww, &wh)) {  return false; }
+    if (!x11_window_geom(display, focus, &wx, &wy, &ww, &wh)) return false;
     int cx = wx + ww / 2;
     int cur = 0;
     for (int i = 0; i < n; i++) {
@@ -569,7 +569,7 @@ Display* display = get_display();
         if (ox[i] <= cx) cur = i;
     }
     int dst = right ? cur + 1 : cur - 1;
-    if (dst < 0 || dst >= n) {  return false; }
+    if (dst < 0 || dst >= n) return false;
     int nx = ox[dst] + (wx - ox[cur]);
     int ny = oy[dst] + (wy - oy[cur]);
     if (nx < ox[dst]) nx = ox[dst];
@@ -579,8 +579,8 @@ Display* display = get_display();
     if (nx < ox[dst]) nx = ox[dst];
     if (ny < oy[dst]) ny = oy[dst];
     bool sent = x11_moveresize_window(display, focus, nx, ny, ww, wh);
-    if (g_ewmh_move_works == 1) {  return sent; }
-    if (g_ewmh_move_works == 0) {  return false; }
+    if (g_ewmh_move_works == 1) return sent;
+    if (g_ewmh_move_works == 0) return false;
     XSync(display, False);
     usleep(12000);
     int vx = 0, vy = 0, vw = 0, vh = 0;
@@ -595,7 +595,7 @@ Display* display = get_display();
 static bool x11_move_dir(bool right) {
         
 Display* display = get_display();
-    if (!display) {  return false; }
+    if (!display) return false;
     Window before = x11_focused_window(display);
     bool moved = false;
     if (g_ewmh_move_works != 0 && move_active_window_to_monitor_x11(right)) moved = true;
@@ -633,14 +633,14 @@ XWindowAttributes at;
     int ok = XGetWindowAttributes(dpy, w, &at);
     XSync(dpy, False);
     XSetErrorHandler(old);
-    if (_x11_err || !ok) {  return false; }
+    if (_x11_err || !ok) return false;
     return at.map_state == IsUnmapped;
 }
 
 bool minimize_active_window_x11(void) {
         
 Display* display = get_display();
-    if (!display) {  return false; }
+    if (!display) return false;
     if (_x11_last_min != None) {
         Window target = _x11_last_min;
         _x11_last_min = None;
@@ -655,7 +655,7 @@ Display* display = get_display();
         }
     }
     Window focus = x11_focused_window(display);
-    if (focus == None) {  return false; }
+    if (focus == None) return false;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     XIconifyWindow(display, focus, DefaultScreen(display));
