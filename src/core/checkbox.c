@@ -151,9 +151,25 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         int w = spec->w > 0 ? spec->w : 16;
         int h = spec->h > 0 ? spec->h : 16;
         if (!spec->no_bg) {
-            Platform_DrawRectRaw(spec->x, spec->y, w, h, checkbox_body, 0, false, true, thick, true);
+            Platform_DrawRectRaw(
+                .x = spec->x, .y = spec->y, .w = w, .h = h,
+                .color = checkbox_body,
+                .radius = 0,
+                .rounded = false,
+                .opaque = true,
+                .thickness = thick,
+                .filled = true
+            );
             if (spec->border) {
-                Platform_DrawRectRaw(spec->x, spec->y, w, h, checkbox_border, CornerRadius / 3, true, true, thick, false);
+                Platform_DrawRectRaw(
+                    .x = spec->x, .y = spec->y, .w = w, .h = h,
+                    .color = checkbox_border,
+                    .radius = CornerRadius / 3,
+                    .rounded = true,
+                    .opaque = true,
+                    .thickness = thick,
+                    .filled = false
+                );
             }
         }
 
@@ -170,9 +186,25 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         int w = spec->w > 0 ? spec->w : 100;
         int h = spec->h > 0 ? spec->h : 24;
         if (!spec->no_bg) {
-            Platform_DrawRectRaw(spec->x, spec->y, w, h, button_body, CornerRadius / 2, true, true, thick, true);
+            Platform_DrawRectRaw(
+                .x = spec->x, .y = spec->y, .w = w, .h = h,
+                .color = button_body,
+                .radius = CornerRadius / 2,
+                .rounded = true,
+                .opaque = true,
+                .thickness = thick,
+                .filled = true
+            );
             if (spec->border) {
-                Platform_DrawRectRaw(spec->x, spec->y, w, h, button_border, CornerRadius / 2, true, true, thick, false);
+                Platform_DrawRectRaw(
+                    .x = spec->x, .y = spec->y, .w = w, .h = h,
+                    .color = button_border,
+                    .radius = CornerRadius / 2,
+                    .rounded = true,
+                    .opaque = true,
+                    .thickness = thick,
+                    .filled = false
+                );
             }
         }
         if (spec->text) {

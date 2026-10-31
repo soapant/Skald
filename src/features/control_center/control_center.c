@@ -1113,6 +1113,7 @@ static void cc_render(PromptState *state) {
 }
 
 static bool cc_enter(ListBoxInfo *lb) {
+    printf("%s \n",lb->selected_text);
     if (lb->selected_text && g_cc_calc_label[0] && strcmp(lb->selected_text, g_cc_calc_label) == 0) {
         const char *eq = strchr(g_cc_calc_label, '=');
         if (eq) {

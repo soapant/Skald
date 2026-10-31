@@ -228,29 +228,50 @@ bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
   { PROFILE_END_VAR(_pt, "Platform_MessagePopupOnKey"); return false; }
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void), const char* name) {
+void Platform_DisplayMessage_impl(PlDisplayMessageSpec spec) {
+    const char* message = spec.message;
+    int centerX = spec.x;
+    int centerY = spec.y;
+    bool no_bg = spec.no_bg;
+    int w = spec.w;
+    int h = spec.h;
+    int maxWidth = spec.max_width;
+    int maxHeight = spec.max_height;
+    double timeout = spec.timeout;
+    ColorRef color = spec.color;
+    void (*render)(void) = spec.render;
+    const char* name = spec.name;
     PROFILE_START(_pt);
-int useMaxW = maxWidth;
-  int useMaxH = maxHeight;
-  if (w > 0 && h > 0) {
-    if (useMaxW <= 0 || w > useMaxW) useMaxW = w;
-    if (useMaxH <= 0 || h > useMaxH) useMaxH = h;
-  }
-  if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
-    DisplayMessageParams params;
-    params.message = message;
-    params.centerX = centerX;
-    params.centerY = centerY;
-    params.maxWidth = useMaxW;
-    params.maxHeight = useMaxH;
-    params.timeout = timeout;
-    params.color = color;
-    params.no_bg = no_bg;
-    params.render = render;
-    SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
-    return;
-  }
-  Platform_CreateDisplayMessageWindow(message, centerX, centerY, useMaxW, useMaxH, timeout, color, no_bg, render, name);
+    int useMaxW = maxWidth;
+    int useMaxH = maxHeight;
+    if (w > 0 && h > 0) {
+      if (useMaxW <= 0 || w > useMaxW) useMaxW = w;
+      if (useMaxH <= 0 || h > useMaxH) useMaxH = h;
+    }
+    if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
+      DisplayMessageParams params;
+      params.message = message;
+      params.centerX = centerX;
+      params.centerY = centerY;
+      params.maxWidth = useMaxW;
+      params.maxHeight = useMaxH;
+      params.timeout = timeout;
+      params.color = color;
+      params.no_bg = no_bg;
+      params.render = render;
+      SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
+      return;
+    }
+    Platform_CreateDisplayMessageWindow(
+        .message = message,
+        .x = centerX, .y = centerY,
+        .max_width = useMaxW, .max_height = useMaxH,
+        .timeout = timeout,
+        .color = color,
+        .no_bg = no_bg,
+        .render = render,
+        .name = name
+    );
 }
 
 void Platform_DismissDisplayMessage(void) {
@@ -469,9 +490,19 @@ if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetHide"); return 
   }
 }
 
-void Platform_HoverWidgetShow(const char* key, void (*render)(void* ud), void* ud, int x, int y,
-                              int w, int h, int fps, bool no_bg, unsigned long bg_hex,
-                              void (*release)(void* ud), void* release_ud) {
+void Platform_HoverWidgetShow_impl(PlHoverWidgetShowSpec spec) {
+    const char *key = spec.key;
+    void (*render)(void* ud) = spec.render;
+    void* ud = spec.ud;
+    int x = spec.x;
+    int y = spec.y;
+    int w = spec.w;
+    int h = spec.h;
+    int fps = spec.fps;
+    bool no_bg = spec.no_bg;
+    unsigned long bg_hex = spec.bg_hex;
+    void (*release)(void* ud) = spec.release;
+    void* release_ud = spec.release_ud;
     PROFILE_START(_pt);
 if (!key || !key[0] || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetShow"); return ; }
   if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, x, y, w, h, fps, no_bg, bg_hex, release, release_ud)) {
@@ -492,7 +523,17 @@ if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverMessageRelease"); ret
   g_hover_key[0] = '\0';
 }
 
-void Platform_HoverMessage(const char* key, const char* message, int centerX, int centerY, int w, int h, int maxWidth, int maxHeight, ColorRef color,bool no_bg) {
+void Platform_HoverMessage_impl(PlHoverMessageSpec spec) {
+    const char* key = spec.key;
+    const char* message = spec.message;
+    int centerX = spec.x;
+    int centerY = spec.y;
+    int w = spec.w;
+    int h = spec.h;
+    int maxWidth = spec.max_width;
+    int maxHeight = spec.max_height;
+    ColorRef color = spec.color;
+    bool no_bg = spec.no_bg;
     PROFILE_START(_pt);
 HWND existing = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
   if (g_hover_key[0] && strcmp(g_hover_key, key) == 0 && existing && IsWindow(existing)) {
@@ -522,7 +563,16 @@ if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
   }
 
   Platform_HoverMessageRelease(g_hover_key);
-  Platform_CreateDisplayMessageWindow(message, centerX, centerY, winWidth, winHeight, 6969.0, color, no_bg, NULL, NULL);
+  Platform_CreateDisplayMessageWindow(
+      .message = message,
+      .x = centerX, .y = centerY,
+      .max_width = winWidth, .max_height = winHeight,
+      .timeout = 6969.0,
+      .color = color,
+      .no_bg = no_bg,
+      .render = NULL,
+      .name = NULL
+  );
   g_win32_msg_w = winWidth;
   g_win32_msg_h = winHeight;
   snprintf(g_hover_key, sizeof(g_hover_key), "%s", key);
@@ -536,7 +586,23 @@ if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
   }
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg,void (*render)(void),const char* name) {
+void Platform_DisplayMessageAnchored_impl(PlAnchoredMessageSpec spec) {
+    const char* message = spec.message;
+    int rect_x = spec.x;
+    int rect_y = spec.y;
+    int rect_w = spec.w;
+    int rect_h = spec.h;
+    int h_slot = spec.h_slot;
+    int v_slot = spec.v_slot;
+    int gap = spec.gap;
+    int outward = spec.outward;
+    int maxWidth = spec.max_width;
+    int maxHeight = spec.max_height;
+    double timeout = spec.timeout;
+    ColorRef color = spec.color;
+    bool no_bg = spec.no_bg;
+    void (*render)(void) = spec.render;
+    const char* name = spec.name;
     PROFILE_START(_pt);
 if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
   if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
@@ -564,10 +630,30 @@ if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnch
   log_info("MSG anchored msg='%s' rect=(%d,%d,%d,%d) slot=(%d,%d) gap=%d outward=%d -> center=(%d,%d) win=(%d,%d)",
            message, rect_x, rect_y, rect_w, rect_h, h_slot, v_slot, gap, outward, centerX, centerY, winWidth, winHeight);
 
-  Platform_DisplayMessage(message, centerX, centerY, no_bg, winWidth, winHeight, maxWidth, maxHeight, timeout, color, render, name);
+  Platform_DisplayMessage(
+      .message = message,
+      .x = centerX, .y = centerY,
+      .no_bg = no_bg,
+      .w = winWidth, .h = winHeight,
+      .max_width = maxWidth, .max_height = maxHeight,
+      .timeout = timeout,
+      .color = color,
+      .render = render,
+      .name = name
+  );
 }
 
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color, bool no_bg, void (*render)(void), const char* name) {
+void Platform_CreateDisplayMessageWindow_impl(PlCreateDisplayMessageWindowSpec spec) {
+    const char* message = spec.message;
+    int centerX = spec.x;
+    int centerY = spec.y;
+    int maxWidth = spec.max_width;
+    int maxHeight = spec.max_height;
+    double timeout = spec.timeout;
+    ColorRef color = spec.color;
+    bool no_bg = spec.no_bg;
+    void (*render)(void) = spec.render;
+    const char* name = spec.name;
     PROFILE_START(_pt);
 log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g no_bg=%d render=%p",
            message ? message : "(null)", centerX, centerY, maxWidth, maxHeight, timeout, no_bg ? 1 : 0, (void*)render);

@@ -41,11 +41,15 @@
 #include <pulse/pulseaudio.h>
 
 
-bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions,
-                                        ListOfFiles* list_of_files, char** list_of_names_to_ignore,
-                                        bool strip_extension, int max_depth) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
+    const char* dir_path = spec.dir_path;
+    char** list_of_allowed_extensions = spec.list_of_allowed_extensions;
+    ListOfFiles* list_of_files = spec.list_of_files;
+    char** list_of_names_to_ignore = spec.list_of_names_to_ignore;
+    bool strip_extension = spec.strip_extension;
+    int max_depth = spec.max_depth;
+    PROFILE_START(_pt);
+    PROFILE_START(timer);
 
     if (!dir_path || !list_of_files) {
         PROFILE_END_VAR(timer, "flapi_x11:Platform_GetAllFilesFromDir");

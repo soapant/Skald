@@ -32,7 +32,13 @@
 #include <time.h>
 #include "core/timer.h"
 
-bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension, int max_depth) {
+bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
+    const char* dir_path = spec.dir_path;
+    char** list_of_allowed_extensions = spec.list_of_allowed_extensions;
+    ListOfFiles* list_of_files = spec.list_of_files;
+    char** list_of_names_to_ignore = spec.list_of_names_to_ignore;
+    bool strip_extension = spec.strip_extension;
+    int max_depth = spec.max_depth;
     PROFILE_START(_pt);
 
     char search_path[MAX_PATH];

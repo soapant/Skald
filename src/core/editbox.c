@@ -201,11 +201,25 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
     if (parts & EDITBOX_PART_TINT) {
         unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
         if (layout->draw_selection) {
-            Platform_DrawRectRaw(layout->sel_x0, spec->caret_y, layout->sel_x1 - layout->sel_x0,
-                                 spec->caret_h, tint, 0, false, true, 1, true);
+            Platform_DrawRectRaw(
+                .x = layout->sel_x0, .y = spec->caret_y, .w = layout->sel_x1 - layout->sel_x0, .h = spec->caret_h,
+                .color = tint,
+                .radius = 0,
+                .rounded = false,
+                .opaque = true,
+                .thickness = 1,
+                .filled = true
+            );
         } else if (layout->draw_block) {
-            Platform_DrawRectRaw(layout->block_x, spec->caret_y, layout->block_w,
-                                 spec->caret_h, tint, 0, false, true, 1, true);
+            Platform_DrawRectRaw(
+                .x = layout->block_x, .y = spec->caret_y, .w = layout->block_w, .h = spec->caret_h,
+                .color = tint,
+                .radius = 0,
+                .rounded = false,
+                .opaque = true,
+                .thickness = 1,
+                .filled = true
+            );
         }
     }
 
@@ -223,8 +237,15 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
     }
 
     if ((parts & EDITBOX_PART_CARET) && layout->draw_insert_caret) {
-        Platform_DrawRectRaw(layout->insert_x, spec->caret_y, spec->caret_w_insert,
-                             spec->caret_h, rgb_to_hex(Modal_CursorColor()), 0, false, true, 1, true);
+        Platform_DrawRectRaw(
+            .x = layout->insert_x, .y = spec->caret_y, .w = spec->caret_w_insert, .h = spec->caret_h,
+            .color = rgb_to_hex(Modal_CursorColor()),
+            .radius = 0,
+            .rounded = false,
+            .opaque = true,
+            .thickness = 1,
+            .filled = true
+        );
     }
 
     PROFILE_END_VAR(_pt, "Editbox_Draw");
