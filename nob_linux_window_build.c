@@ -26,6 +26,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
                 return true;
             }
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "_macos.c")) return true;
             if (nob_sv_ends_with_cstr(path, "_wayland.c")) return true;
             if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
             bool is_feature = false;

@@ -16,6 +16,7 @@
 #include "core/prompt_controller.h"
 #include "platform/x11/window_factory_x11.h"
 #include "platform/x11/drawing_x11.h"
+#include "platform/x11/display_x11.h"
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include <X11/Xlib.h>

@@ -1,4 +1,5 @@
 #include "core/context.h"
+#include "platform/x11/display_x11.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
 #include "core/modal.h"

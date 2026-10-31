@@ -474,7 +474,7 @@ if (!out || !g_fl_list_lb) {  return false; }
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) {  return false; }
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
-    if (g_fl_list_cur == 0) Platform_DrawPromptSeparator(g_fl_list_y0, g_fl_list_fw);
+    if (g_fl_list_cur == 0) Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y = g_fl_list_y0, .width = g_fl_list_fw});
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
         int R=PROMPT_SEL_RADIUS; int t=PROMPT_SEL_INSET;
@@ -502,7 +502,7 @@ if (!out || !g_fl_list_lb) {  return false; }
 void fl_listbox_end_platform(void) {
         
     if (PromptListBottomMargin() > 0 && g_fl_list_y0 >= 0) {
-        Platform_DrawPromptSeparator(g_fl_list_y0 + g_fl_list_h, g_fl_list_fw);
+        Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y = g_fl_list_y0 + g_fl_list_h, .width = g_fl_list_fw});
     }
     if (g_fl_list_font_owned) { Platform_DestroyFont(g_fl_list_font); g_fl_list_font_owned = false; }
     g_fl_list_lb = NULL;
