@@ -151,7 +151,7 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         int w = spec->w > 0 ? spec->w : 16;
         int h = spec->h > 0 ? spec->h : 16;
         if (!spec->no_bg) {
-            Platform_DrawRectRaw(
+            Platform_DrawRectRaw((PlDrawRectRawSpec) {
                 .x = spec->x, .y = spec->y, .w = w, .h = h,
                 .color = checkbox_body,
                 .radius = 0,
@@ -159,9 +159,10 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
                 .opaque = true,
                 .thickness = thick,
                 .filled = true
+                }
             );
             if (spec->border) {
-                Platform_DrawRectRaw(
+                Platform_DrawRectRaw((PlDrawRectRawSpec) {
                     .x = spec->x, .y = spec->y, .w = w, .h = h,
                     .color = checkbox_border,
                     .radius = CornerRadius / 3,
@@ -169,6 +170,7 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
                     .opaque = true,
                     .thickness = thick,
                     .filled = false
+                    }
                 );
             }
         }
@@ -186,7 +188,7 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         int w = spec->w > 0 ? spec->w : 100;
         int h = spec->h > 0 ? spec->h : 24;
         if (!spec->no_bg) {
-            Platform_DrawRectRaw(
+            Platform_DrawRectRaw((PlDrawRectRawSpec) {
                 .x = spec->x, .y = spec->y, .w = w, .h = h,
                 .color = button_body,
                 .radius = CornerRadius / 2,
@@ -194,9 +196,11 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
                 .opaque = true,
                 .thickness = thick,
                 .filled = true
+                }
+
             );
             if (spec->border) {
-                Platform_DrawRectRaw(
+                Platform_DrawRectRaw((PlDrawRectRawSpec) {
                     .x = spec->x, .y = spec->y, .w = w, .h = h,
                     .color = button_border,
                     .radius = CornerRadius / 2,
@@ -204,6 +208,7 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
                     .opaque = true,
                     .thickness = thick,
                     .filled = false
+                    }
                 );
             }
         }

@@ -371,7 +371,7 @@ if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetHide"); return 
     if (!Platform_RenderThread_IsCurrentThread()) Platform_RenderThread_Sync();
 }
 
-void Platform_HoverWidgetShow_impl(PlHoverWidgetShowSpec spec) {
+void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
     const char *key = spec.key;
     void (*render)(void* ud) = spec.render;
     void* ud = spec.ud;
@@ -502,7 +502,7 @@ Display *dpy = get_display();
     XFlush(dpy);
 }
 
-void Platform_DisplayMessage_impl(PlDisplayMessageSpec spec) {
+void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     const char* message = spec.message;
     int centerX = spec.x;
     int centerY = spec.y;
@@ -584,7 +584,7 @@ static void MsgMeasure(Display *dpy, const char *message, int maxWidth, int maxH
     *outH = winH;
 }
 
-void Platform_HoverMessage_impl(PlHoverMessageSpec spec) {
+void Platform_HoverMessage(PlHoverMessageSpec spec) {
     const char* key = spec.key;
     const char* message = spec.message;
     int centerX = spec.x;
@@ -611,7 +611,7 @@ void Platform_HoverMessage_impl(PlHoverMessageSpec spec) {
     MsgHoverPresent(dpy, key, message, centerX, centerY, winW, winH, color,no_bg);
 }
 
-void Platform_DisplayMessageAnchored_impl(PlAnchoredMessageSpec spec) {
+void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     const char* message = spec.message;
     int rect_x = spec.x;
     int rect_y = spec.y;

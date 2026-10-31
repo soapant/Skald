@@ -109,26 +109,22 @@ double Platform_GetUniversalTimeSeconds(void);
 long long Platform_GetWallClockMs(void);
 
 void Platform_WaitForKeypressAsync(KeyCallback callback);
-void Platform_DisplayMessage_impl(PlDisplayMessageSpec spec);
-#define Platform_DisplayMessage(...) Platform_DisplayMessage_impl((PlDisplayMessageSpec){__VA_ARGS__})
-
-void Platform_DisplayMessageAnchored_impl(PlAnchoredMessageSpec spec);
-#define Platform_DisplayMessageAnchored(...) Platform_DisplayMessageAnchored_impl((PlAnchoredMessageSpec){__VA_ARGS__})
-
-void Platform_CreateDisplayMessageWindow_impl(PlCreateDisplayMessageWindowSpec spec);
-#define Platform_CreateDisplayMessageWindow(...) Platform_CreateDisplayMessageWindow_impl((PlCreateDisplayMessageWindowSpec){__VA_ARGS__})
-
 void Platform_DismissDisplayMessage(void);
 bool Platform_DismissMessage(const char* name);
 bool Platform_MessageActive(const char* name);
 
-void Platform_HoverMessage_impl(PlHoverMessageSpec spec);
-#define Platform_HoverMessage(...) Platform_HoverMessage_impl((PlHoverMessageSpec){__VA_ARGS__})
+void Platform_DisplayMessage(PlDisplayMessageSpec spec);
+
+void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec);
+
+void Platform_CreateDisplayMessageWindow(PlCreateDisplayMessageWindowSpec spec);
+
+
+void Platform_HoverMessage(PlHoverMessageSpec spec);
 
 void Platform_HoverMessageRelease(const char* key);
 
-void Platform_HoverWidgetShow_impl(PlHoverWidgetShowSpec spec);
-#define Platform_HoverWidgetShow(...) Platform_HoverWidgetShow_impl((PlHoverWidgetShowSpec){__VA_ARGS__})
+void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec);
 
 void Platform_HoverWidgetHide(const char* key);
 FontHandle Platform_CreateFont(int size, const char* face_name);

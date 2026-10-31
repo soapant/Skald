@@ -201,7 +201,7 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
     if (parts & EDITBOX_PART_TINT) {
         unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
         if (layout->draw_selection) {
-            Platform_DrawRectRaw(
+            Platform_DrawRectRaw((PlDrawRectRawSpec) {
                 .x = layout->sel_x0, .y = spec->caret_y, .w = layout->sel_x1 - layout->sel_x0, .h = spec->caret_h,
                 .color = tint,
                 .radius = 0,
@@ -209,9 +209,11 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
                 .opaque = true,
                 .thickness = 1,
                 .filled = true
+                }
+
             );
         } else if (layout->draw_block) {
-            Platform_DrawRectRaw(
+            Platform_DrawRectRaw((PlDrawRectRawSpec) {
                 .x = layout->block_x, .y = spec->caret_y, .w = layout->block_w, .h = spec->caret_h,
                 .color = tint,
                 .radius = 0,
@@ -219,6 +221,7 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
                 .opaque = true,
                 .thickness = 1,
                 .filled = true
+                }
             );
         }
     }
@@ -237,7 +240,7 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
     }
 
     if ((parts & EDITBOX_PART_CARET) && layout->draw_insert_caret) {
-        Platform_DrawRectRaw(
+        Platform_DrawRectRaw((PlDrawRectRawSpec) {
             .x = layout->insert_x, .y = spec->caret_y, .w = spec->caret_w_insert, .h = spec->caret_h,
             .color = rgb_to_hex(Modal_CursorColor()),
             .radius = 0,
@@ -245,6 +248,7 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
             .opaque = true,
             .thickness = 1,
             .filled = true
+             }
         );
     }
 

@@ -2,6 +2,7 @@
 #define PLATFORM_DRAW_H
 
 #include "core/types.h"
+#include "core/types/window.h"
 
 void Platform_SetDrawBgColor(unsigned long hex);
 unsigned long Platform_GetDrawBgColor(void);
@@ -30,8 +31,7 @@ typedef struct {
     bool filled;
 } PlDrawRectRawSpec;
 
-bool Platform_DrawRectRaw_impl(PlDrawRectRawSpec spec);
-#define Platform_DrawRectRaw(...) Platform_DrawRectRaw_impl((PlDrawRectRawSpec){__VA_ARGS__})
+bool Platform_DrawRectRaw(PlDrawRectRawSpec spec);
 void Platform_DrawPromptSeparator(int y, int width);
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness);
 bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness);
