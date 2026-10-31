@@ -21,8 +21,10 @@
  */
 
 #include "deps/log.h"
-#include "config.h"
+
 #include <time.h>
+
+#include "config_values.h"
 
 #define MAX_CALLBACKS 32
 

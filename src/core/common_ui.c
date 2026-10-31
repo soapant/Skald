@@ -1,15 +1,21 @@
+#include <ctype.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/modal.h"
-#include "config.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
-#include "core/timer.h"
 #include "core/listbox_hover.h"
-#include <ctype.h>
-#include <string.h>
+#include "config_values.h"
+#include "core/types.h"
+#include "core/types/color.h"
+#include "deps/stb_ds.h"
 
 static bool FuzzyMatch(const char *text, const char *pattern) {
   if (!pattern || !pattern[0])

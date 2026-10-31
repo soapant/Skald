@@ -1,6 +1,10 @@
+#include <stdbool.h>
+
 #include "core/context.h"
 #include "bindings/vim_bindings.h"
 #include "bindings/vim_motions.h"
+#include "config.h"
+#include "core/types/keys.h"
 
 const MotionBinding G_VIM_BINDINGS[] = {
 

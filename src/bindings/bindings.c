@@ -1,3 +1,7 @@
+#include <ctype.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 #include "core/context.h"
 #include "core/modal.h"
 #include "bindings/bindings.h"
@@ -5,9 +9,12 @@
 #include "core/vim.h"
 #include "core/window_manager.h"
 #include "platform/ui.h"
-#include "config.h"
 #include "deps/log.h"
-#include <ctype.h>
+#include "bindings/vim_motions.h"
+#include "config_values.h"
+#include "core/types.h"
+#include "core/types/keys.h"
+#include "core/types/window.h"
 
 static const MotionBinding *g_bindings;
 static int g_binding_count;

@@ -1,14 +1,12 @@
+#include <stdbool.h>
+
 #include "core/context.h"
 #include "core/modal.h"
-#include "core/timer.h"
 #include "config.h"
-#include "config.h"
-#include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
-#include "platform/ui.h"
 #include "platform/platform.h"
-#include "platform/wm_platform.h"
 #include "core/window_manager.h"
+#include "core/types/color.h"
 
 int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
 

@@ -1,12 +1,11 @@
 #include "core/feature_path.h"
+
+#include <string.h>
+
 #include "core/context.h"
-#include "core/timer.h"
 #include "platform/platform.h"
 #include "platform/lib.h"
-#include "config.h"
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
+#include "config_values.h"
 
 static int fp_lower(int c) {
   if (c >= 'A' && c <= 'Z')

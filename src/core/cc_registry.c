@@ -1,10 +1,9 @@
 #include "core/cc_registry.h"
-#include "deps/log.h"
-#include "platform/platform.h"
-#include "helpers/helpers_owner.h"
+
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
+
+#include "helpers/helpers_owner.h"
 #include "core/feature_loader.h"
 
 typedef struct {

@@ -1,12 +1,13 @@
 #include <pthread.h>
-#include <unistd.h>
 #include <time.h>
 #include <string.h>
 #include <X11/Xlib.h>
+#include <stdbool.h>
+
 #include "platform/render_thread.h"
 #include "deps/log.h"
+#include "core/types/window.h"
 
-#include "core/timer.h"
 #define RT_MAX_CALLBACKS 16
 #define RT_MAX_PENDING 16
 #define RT_IDLE_SLEEP_US 20000

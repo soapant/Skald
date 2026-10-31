@@ -1,18 +1,18 @@
-#include "core/context.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
-#include <X11/keysym.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
-#include <sys/time.h>
-#include "core/timer.h"
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "core/context.h"
 #include "core/checkbox.h"
 #include "platform/draw.h"
 #include "deps/log.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/bg_image_x11.h"
 #include "platform/x11/window_factory_x11.h"
+#include "core/types.h"
+#include "platform/platform.h"
 
 static Display *g_pbuf_dpy = NULL;
 static Window g_pbuf_win = None;

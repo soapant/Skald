@@ -1,27 +1,25 @@
 #define _GNU_SOURCE
-#include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pwd.h>
 #include <dirent.h>
-#include <ctype.h>
 #include <time.h>
-#include <linux/input.h>
+#include <linux/input-event-codes.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <strings.h>
+#include <sys/types.h>
 
-#include "config.h"
-#include "config.h"
 #include "platform/platform.h"
-#include "helpers/helpers_text.h"
-#include "platform/platform.h"
-#include "core/timer.h"
 #include "deps/log.h"
 #include "wm/wm.h"
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
+#include "config_values.h"
+#include "core/types/keys.h"
 
 static uid_t ProbeSessionUid(void) {
 

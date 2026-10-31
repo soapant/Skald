@@ -1,34 +1,28 @@
-#include "core/context.h"
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
+#include <string.h>
+#include <X11/X.h>
+#include <X11/extensions/Xrender.h>
+#include <fontconfig/fontconfig.h>
+#include <stdbool.h>
+
 #include "core/modal.h"
 #include "bindings/vim_state.h"
 #include "core/window_manager.h"
 #include "wm/wm.h"
 #include "platform/platform.h"
-#include "config.h"
 #include "core/prompt_geometry.h"
 #include "core/editbox.h"
 #include "core/hotkey_text.h"
 #include "core/edit_popup_keys.h"
 #include "platform/draw.h"
 #include "platform/wm_platform.h"
-#include "platform/input.h"
-#include "platform/x11/input_x11.h"
-#include "core/prompt_controller.h"
 #include "platform/x11/window_factory_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/display_x11.h"
 #include "helpers/helpers_ui.h"
-#include "core/timer.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/keysym.h>
-#include <X11/Xft/Xft.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include "config_values.h"
+#include "core/types/window.h"
 
 bool Platform_EditPopupCreateWindow(Popup *self, int x, int y, int w, int h) {
   WindowManager *wm = (WindowManager *)self->manager;

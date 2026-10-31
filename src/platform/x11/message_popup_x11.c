@@ -1,24 +1,29 @@
 #include <stdlib.h>
 #include <time.h>
-
 #include <pthread.h>
-#include <unistd.h>
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
+#include <X11/X.h>
+#include <X11/extensions/Xrender.h>
+#include <fontconfig/fontconfig.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "platform/x11/display_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/window_factory_x11.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
-#include "core/timer.h"
 #include "platform/wm_platform.h"
 #include "platform/widget.h"
 #include "platform/draw.h"
 #include "platform/render_thread.h"
-#include "deps/log.h"
-#include "config.h"
+#include "config_values.h"
+#include "core/context.h"
+#include "core/types/color.h"
+#include "core/types/window.h"
+#include "core/window_manager.h"
 
 #define MSG_MAX_ACTIVE 24
 #define MSG_HOVER_DEFAULT_W 900

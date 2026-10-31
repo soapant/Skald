@@ -1,14 +1,15 @@
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/modal.h"
-#include "config.h"
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "config.h"
-#include "platform/platform.h"
 #include "helpers/helpers_alias.h"
 #include "platform/ui.h"
+#include "core/types.h"
+#include "deps/stb_ds.h"
 
 int UI_LookupTrueIndex(const char *name) {
   if (!FlintContext_Get()->item_index_map || !name)

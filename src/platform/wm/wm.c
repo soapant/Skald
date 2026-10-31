@@ -1,13 +1,14 @@
 #include "wm/wm.h"
+
+#include <strings.h>
+#include <stdlib.h>
+
 #include "wm/kwin_wm.h"
 #include "wm/niri_wm.h"
 #include "wm/sway_wm.h"
 #include "wm/hyprland_wm.h"
 #include "wm/x11_wm.h"
 #include "deps/log.h"
-#include <string.h>
-#include <strings.h>
-#include <stdlib.h>
 
 char *Wm_GetActiveWindowTitle(void) {
 

@@ -1,41 +1,24 @@
-#include "core/context.h"
+#include <X11/Xlib.h>
+#include <time.h>
+#include <X11/X.h>
+#include <stdbool.h>
+
 #include "core/modal.h"
 #include "core/window_manager.h"
 #include "wm/wm.h"
-#include "platform/platform.h"
 #include "platform/draw.h"
-#include "platform/ui.h"
 #include "config.h"
 #include "platform/wm_platform.h"
 #include "platform/x11/subclasses_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/display_x11.h"
-#include "core/timer.h"
-#include "core/history.h"
-#include "core/prompt_controller.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "core/hotkey_text.h"
-#include "platform/x11/input_x11.h"
 #include "platform/x11/window_factory_x11.h"
-#include "platform/input.h"
-#include "bindings/vim_helpers.h"
-#include "bindings/vim_state.h"
-#include "helpers/helpers_alias.h"
-#include "platform/draw.h"
-#include "helpers/helpers_ui.h"
 #include "deps/log.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/keysym.h>
-#include <X11/Xft/Xft.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include "config_values.h"
+#include "core/types.h"
 
 bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
 

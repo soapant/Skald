@@ -1,7 +1,5 @@
 #include "wm/sway_wm.h"
-#include "deps/log.h"
-#include "platform/platform.h"
-#include "helpers/helpers_text.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +8,10 @@
 #include <strings.h>
 #include <sys/stat.h>
 
-#include "core/timer.h"
+#include "deps/log.h"
+#include "platform/platform.h"
+#include "helpers/helpers_text.h"
+
 static bool sway_sock_live(const char *path) {
 
   struct stat st;

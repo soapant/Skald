@@ -1,22 +1,23 @@
+#include <X11/Xlib.h>
+#include <X11/extensions/Xrandr.h>
+#include <malloc.h>
+#include <X11/X.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 #include "platform/wm_platform.h"
 #include "core/window_manager.h"
 #include "core/context.h"
 #include "platform/platform.h"
-#include "core/flapi.h"
 #include "core/prompt_controller.h"
 #include "deps/log.h"
 #include "platform/x11/input_x11.h"
 #include "platform/input_state.h"
 #include "core/remap_manager.h"
 #include "platform/x11/display_x11.h"
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/Xrandr.h>
-#include <malloc.h>
-#include <pthread.h>
-
-#include "core/timer.h"
 #include "core/listbox_hover.h"
+#include "core/types.h"
+
 extern int WindowManager_RunLinux(WindowManager *wm);
 extern void WindowManager_QuitLinux(WindowManager *wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager *wm);

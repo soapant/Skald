@@ -1,16 +1,14 @@
 #include "core/checkbox.h"
+
+#include <string.h>
+
 #include "core/window_manager.h"
-#include "core/timer.h"
-#include "core/types.h"
-#include "core/listbox_hover.h"
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"
 #include "platform/input_state.h"
 #include "platform/platform.h"
-#include "deps/log.h"
-#include "config.h"
-#include <stdio.h>
-#include <string.h>
+#include "config_values.h"
+#include "core/context.h"
 
 #define CHECKBOX_MAX 1024
 #define CHECKBOX_BASE 16

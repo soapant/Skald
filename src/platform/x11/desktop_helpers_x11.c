@@ -1,11 +1,10 @@
 #include "platform/x11/desktop_helpers_x11.h"
+
+#include <string.h>
+
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
-#include "core/timer.h"
 bool Desktop_Parse(const char *desktop_path, char exec_line[1024],
                    char workdir[1024], bool *is_terminal) {
 

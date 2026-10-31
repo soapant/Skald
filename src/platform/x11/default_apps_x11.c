@@ -1,12 +1,14 @@
-#include "platform/platform.h"
-#include "helpers/helpers_text.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pwd.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <stdbool.h>
+
+#include "platform/platform.h"
+#include "helpers/helpers_text.h"
+#include "core/types.h"
+#include "core/types/misc.h"
 
 char default_apps_x11[DEFAULT_APP_COUNT][256];
 

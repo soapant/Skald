@@ -1,8 +1,5 @@
 #include "wm/hyprland_wm.h"
-#include "deps/log.h"
-#include "platform/platform.h"
-#include "helpers/helpers_text.h"
-#include <stddef.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -12,7 +9,10 @@
 #include <time.h>
 #include <sys/stat.h>
 
-#include "core/timer.h"
+#include "deps/log.h"
+#include "platform/platform.h"
+#include "helpers/helpers_text.h"
+
 static bool hypr_sock_live(const char *sig) {
 
   if (!sig || !sig[0])

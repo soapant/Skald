@@ -1,12 +1,14 @@
 #include "core/prompt_controller.h"
+
+#include <stddef.h>
+
 #include "core/context.h"
 #include "core/vim.h"
 #include "core/window_manager.h"
 #include "deps/log.h"
 #include "bindings/bindings.h"
-#include "bindings/vim_motions.h"
-#include <sys/time.h>
-#include <stddef.h>
+#include "core/types.h"
+#include "core/types/keys.h"
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;

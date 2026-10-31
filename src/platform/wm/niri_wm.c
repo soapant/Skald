@@ -1,6 +1,5 @@
 #include "wm/niri_wm.h"
-#include "deps/log.h"
-#include "platform/platform.h"
+
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
@@ -10,7 +9,9 @@
 #include <time.h>
 #include <sys/stat.h>
 
-#include "core/timer.h"
+#include "deps/log.h"
+#include "platform/platform.h"
+
 static bool niri_sock_live(const char *sock) {
 
   if (!sock || !sock[0])

@@ -1,6 +1,5 @@
 #include "wm/x11_wm.h"
-#include "platform/x11/display_x11.h"
-#include "deps/log.h"
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -10,17 +9,18 @@
 #include <ctype.h>
 #include <strings.h>
 #include <string.h>
-#include "platform/platform.h"
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <unistd.h>
 #include <glob.h>
 #include <sys/stat.h>
-#include "platform/x11/display_x11.h"
+#include <X11/X.h>
+#include <X11/keysym.h>
 
-#include "core/timer.h"
+#include "platform/x11/display_x11.h"
+#include "deps/log.h"
+#include "platform/platform.h"
+
 static int _x11_err = 0;
 static Window _x11_last_min = None;
 static int g_ewmh_move_works = -1;

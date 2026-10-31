@@ -2,14 +2,13 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <stdio.h>
-#include <time.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 #include "core/context.h"
-#include "core/modal.h"
-#include "core/timer.h"
 #include "core/checkbox.h"
 #include "deps/log.h"
 #include "config.h"
@@ -37,6 +36,14 @@
 #include "platform/lib.h"
 #include "core/widget_registry.h"
 #include "deps/stb_ds.h"
+#include "config_values.h"
+#include "core/cc_registry.h"
+#include "core/flapi_input.h"
+#include "core/types.h"
+#include "core/types/color.h"
+#include "core/types/flapi_types.h"
+#include "core/types/keys.h"
+#include "core/types/window.h"
 
 size_t fl_clipboard_history_count(void) {
 

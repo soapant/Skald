@@ -1,13 +1,14 @@
 #include "core/vim.h"
+
+#include <string.h>
+#include <ctype.h>
+
 #include "platform/platform.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "platform/ui.h"
 #include "core/window_manager.h"
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <time.h>
+
 SequenceState seq_state = {0};
 
 ListBoxInfo *Vim_GetListBox(FlintContext *ctx) {

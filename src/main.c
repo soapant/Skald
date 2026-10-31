@@ -1,7 +1,11 @@
 #define STB_DS_IMPLEMENTATION
+#include "deps/stb_ds.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stddef.h>
+
 #include "core/context.h"
 #include "deps/log.h"
 #include "config.h"
@@ -9,7 +13,6 @@
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 #include "core/history.h"
-#include "core/timer.h"
 
 static void free_history_list(void *v) {
   char **list = (char **)v;

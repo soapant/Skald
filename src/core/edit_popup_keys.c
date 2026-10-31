@@ -1,12 +1,17 @@
 #include "core/edit_popup_keys.h"
+
+#include <stdlib.h>
+#include <string.h>
+
 #include "core/context.h"
 #include "core/modal.h"
 #include "core/prompt_controller.h"
-#include "core/timer.h"
 #include "bindings/vim_state.h"
 #include "config.h"
 #include "platform/input.h"
 #include "platform/platform.h"
+#include "config_values.h"
+#include "core/types/keys.h"
 
 bool EditPopup_DeleteSelection(WMEditPopupData *ed) {
 

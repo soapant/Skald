@@ -1,16 +1,17 @@
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
 #include "core/context.h"
 #include "core/modal.h"
 #include "core/window_manager.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
-#include "config.h"
 #include "core/history.h"
 #include "platform/wm_platform.h"
-#include "core/timer.h"
 #include "deps/log.h"
-#include <sys/time.h>
-#include <stdlib.h>
-#include <string.h>
+#include "core/types.h"
+#include "core/types/window.h"
 
 typedef struct {
   Popup base;

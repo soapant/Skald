@@ -1,9 +1,12 @@
 #include "core/theme.h"
-#include "config.h"
-#include "deps/log.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
+
+#include "deps/log.h"
+#include "config_values.h"
+#include "core/types/color.h"
 
 #ifndef CONFIG_SRC
 #define CONFIG_SRC "config/config.c"
