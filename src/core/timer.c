@@ -1,7 +1,8 @@
 #include "core/timer.h"
-#include "config.h"
+
 #include <stdio.h>
-#include <stdlib.h>
+
+#include "config_values.h"
 
 static double timer_elapsed_us(WinTimer t) {
   int64_t end = TimerNowTicks();

@@ -1,3 +1,9 @@
+#include <ctype.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "core/context.h"
 #include "core/modal.h"
 #include "bindings/vim_motions.h"
@@ -7,14 +13,11 @@
 #include "core/vim.h"
 #include "core/window_manager.h"
 #include "core/listbox_hover.h"
-#include "config.h"
 #include "platform/platform.h"
-#include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
-#include "helpers/helpers_ui.h"
 #include "bindings/vim_state.h"
-#include <ctype.h>
-#include <stdio.h>
+#include "config_values.h"
+#include "core/types.h"
 
 static char vim_pending_mark;
 

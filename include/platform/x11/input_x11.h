@@ -2,11 +2,15 @@
 #define PLATFORM_X11_INPUT_H
 
 #include <stdbool.h>
+#include <linux/input-event-codes.h>
 #include <linux/input.h>
 #include <X11/keysym.h>
-#include "core/types.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
+
+#include "core/types.h"
+
+struct input_event;
 
 #define X11_MAX_KEYBOARDS 16
 #define X11_MAX_MICE 8
@@ -36,6 +40,7 @@ void x11_set_suppress(int linux_code, bool v);
 bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed);
 bool x11_handle_evdev_mouse(struct input_event *ev);
 struct WindowManager;
+
 void x11_set_window_manager(struct WindowManager *wm);
 
 bool x11_should_use_grab(void);

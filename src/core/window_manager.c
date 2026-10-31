@@ -1,13 +1,14 @@
+#include <stdlib.h>
+#include <stdbool.h>
+
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
 #include "core/checkbox.h"
 #include "platform/platform.h"
-#include "core/timer.h"
 #include "platform/wm_platform.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include "core/types.h"
+#include "deps/stb_ds.h"
 
 static WindowManager *g_window_manager = NULL;
 

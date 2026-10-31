@@ -2,12 +2,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
+
 #include "platform/platform.h"
-#include "platform/input_state.h"
 #include "core/hotkey_string.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_text.h"
-#include "deps/log.h"
+#include "core/types/keys.h"
 
 HotkeyBinding convert_into_hotkey_binding(
     char *hotkey_string, void (*on_hotkey_trigger)(void),

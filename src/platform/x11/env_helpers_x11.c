@@ -1,12 +1,15 @@
 #include "platform/x11/env_helpers_x11.h"
-#include "platform/platform.h"
-#include "deps/log.h"
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <sys/types.h>
+
+#include "platform/platform.h"
+#include "deps/log.h"
 
 static bool env_sock_live(const char *path) {
   struct stat st;

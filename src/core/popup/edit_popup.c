@@ -1,12 +1,11 @@
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
 #include "core/context.h"
-#include "core/modal.h"
 #include "core/window_manager.h"
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
-#include "core/timer.h"
-#include <sys/time.h>
-#include <stdlib.h>
-#include <string.h>
 
 typedef WMEditPopupData EditPopupDataInternal;
 

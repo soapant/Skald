@@ -1,7 +1,8 @@
 #include "core/listbox_layout.h"
-#include "core/prompt_geometry.h"
-#include "core/timer.h"
+
 #include <string.h>
+
+#include "core/prompt_geometry.h"
 
 void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
                            int popup_w, int popup_h, int count,

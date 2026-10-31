@@ -1,9 +1,9 @@
 #include "platform/x11/display_x11.h"
-#include "deps/log.h"
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <dirent.h>
-#include "core/timer.h"
+
+#include "deps/log.h"
 
 static Display *g_display = NULL;
 static bool g_display_initialized = false;

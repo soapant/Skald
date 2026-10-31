@@ -1,5 +1,6 @@
+#include <stddef.h>
+
 #include "core/window_manager.h"
-#include "core/timer.h"
 
 Popup *SearchPopup_Create(WindowManager *wm, const char *title, int x, int y,
                           int w, int h, EditPopupConfirmCallback on_confirm,

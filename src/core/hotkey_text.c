@@ -1,8 +1,9 @@
 #include "core/hotkey_text.h"
-#include "core/timer.h"
-#include "core/types/keys.h"
+
 #include <stdio.h>
 #include <sys/time.h>
+
+#include "core/types/keys.h"
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;

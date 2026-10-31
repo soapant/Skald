@@ -1,10 +1,11 @@
 #include "core/cap_registry.h"
+
+#include <string.h>
+#include <stdio.h>
+
 #include "deps/log.h"
 #include "core/feature_loader.h"
 #include "helpers/helpers_owner.h"
-#include "core/timer.h"
-#include <string.h>
-#include <stdio.h>
 
 typedef struct {
   char key[CAP_KEY_LEN];

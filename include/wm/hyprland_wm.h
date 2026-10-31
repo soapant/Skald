@@ -1,8 +1,11 @@
 #ifndef HYPRLAND_WM_H
 #define HYPRLAND_WM_H
 #include <stdbool.h>
+
 #include "platform/platform.h"
 #include "core/types.h"
+#include "core/types/window.h"
+
 bool get_title_hyprland(char *buffer, int buffer_size);
 bool get_app_id_hyprland(char *buffer, int buffer_size);
 char *paste_hyprland(char *content);

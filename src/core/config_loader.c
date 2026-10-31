@@ -1,19 +1,22 @@
-#include "platform/platform.h"
-#include "platform/lib.h"
-#include "config.h"
-#include "core/theme.h"
-#include "deps/log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdbool.h>
+
+#include "platform/platform.h"
+#include "platform/lib.h"
+#include "config.h"
+#include "core/theme.h"
+#include "deps/log.h"
+#include "config_values.h"
+#include "core/types/color.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
 #include "core/window_manager.h"
-#include "core/timer.h"
 
 #define CONFIG_SRC "config/config.c"
 #define CONFIG_START_MARK "// <flint-config-generated>"

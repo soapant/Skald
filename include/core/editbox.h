@@ -2,7 +2,9 @@
 #define CORE_EDITBOX_H
 
 #include <stdbool.h>
+
 #include "core/types.h"
+#include "core/types/window.h"
 
 typedef int (*FlEditboxMeasureFn)(const char *text, int len, void *user);
 

@@ -1,15 +1,7 @@
-#include "core/context.h"
-#include "platform/x11/display_x11.h"
-#include "deps/log.h"
-#include "core/window_manager.h"
-#include "core/modal.h"
-#include "config.h"
-#include "platform/x11/bg_image_x11.h"
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
 #include <X11/Xlib.h>
-#include <X11/keysym.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
@@ -19,17 +11,36 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stdint.h>
-#include "config.h"
+#include <X11/X.h>
+#include <X11/extensions/Xrender.h>
+#include <X11/extensions/render.h>
+#include <X11/extensions/shapeconst.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
+#include <sys/stat.h>
+
+#include "platform/x11/display_x11.h"
+#include "deps/log.h"
+#include "core/window_manager.h"
+#include "platform/x11/bg_image_x11.h"
 #include "core/prompt_geometry.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
-#include "core/timer.h"
 #include "wm/niri_wm.h"
+#include "config_values.h"
+#include "core/types.h"
+#include "core/types/window.h"
+#include "freetype/freetype.h"
+
 #define NANOSVG_IMPLEMENTATION
 #include "deps/nanosvg.h"
+
 #define NANOSVGRAST_IMPLEMENTATION
 #include "deps/nanosvgrast.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"
 

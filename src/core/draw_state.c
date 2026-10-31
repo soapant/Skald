@@ -1,5 +1,4 @@
 #include "core/draw_state.h"
-#include "core/timer.h"
 
 static __thread PlDrawState g_draw_state;
 

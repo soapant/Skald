@@ -1,18 +1,20 @@
 #include "platform/x11/clipboard_x11.h"
-#include "platform/x11/display_x11.h"
-#include "deps/log.h"
-#include "config.h"
-#include "core/clipboard_history.h"
+
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/syscall.h>
 #include <time.h>
+#include <X11/X.h>
+#include <stdarg.h>
 
-#include "core/timer.h"
+#include "platform/x11/display_x11.h"
+#include "core/clipboard_history.h"
+#include "config_values.h"
+#include "core/types/window.h"
+
 #define CLIP_INCR_THRESHOLD (256u * 1024u)
 #define CLIP_INCR_CHUNK (64u * 1024u)
 #define CLIP_READ_TRIES 40

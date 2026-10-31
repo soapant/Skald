@@ -1,19 +1,21 @@
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysym.h>
+#include <X11/XKBlib.h>
+#include <X11/X.h>
+#include <X11/extensions/XKB.h>
+#include <linux/input-event-codes.h>
+
 #include "core/window_manager.h"
 #include "deps/log.h"
 #include "core/prompt_controller.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
-
 #include "platform/input_state.h"
 #include "platform/draw.h"
-#include "platform/x11/drawing_x11.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/keysym.h>
-#include <X11/XKBlib.h>
-#include <X11/Xft/Xft.h>
-#include <X11/extensions/Xrandr.h>
+#include "core/context.h"
+#include "core/types.h"
+#include "core/types/keys.h"
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif
@@ -21,19 +23,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <dirent.h>
 #include <poll.h>
 #include <stdbool.h>
-#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <linux/input.h>
-#include <linux/uinput.h>
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/input_x11.h"
 #include "platform/render_thread.h"
 #include "platform/widget.h"
-#include "core/timer.h"
 #include "core/remap_manager.h"
 #include "core/hotkey_manager.h"
 

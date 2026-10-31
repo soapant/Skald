@@ -1,3 +1,8 @@
+#include <ctype.h>
+#include <stdbool.h>
+#include <string.h>
+#include <strings.h>
+
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/modal.h"
@@ -5,7 +10,7 @@
 #include "platform/ui.h"
 #include "core/listbox_hover.h"
 #include "core/vim.h"
-#include <ctype.h>
+#include "core/types.h"
 
 static bool vim_is_space(char c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r';

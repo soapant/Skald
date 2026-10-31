@@ -2,7 +2,9 @@
 #define CORE_LISTBOX_LAYOUT_H
 
 #include <stdbool.h>
+
 #include "core/types/flapi_types.h"
+#include "core/types/window.h"
 
 typedef struct {
   int bx;

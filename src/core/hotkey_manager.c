@@ -1,4 +1,8 @@
-#include "config.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
 #include "platform/platform.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
@@ -8,10 +12,8 @@
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_owner.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "platform/platform.h"
+#include "config_values.h"
+#include "core/types/keys.h"
 
 static HotkeyBinding *g_hotkeys = NULL;
 static int g_hotkey_count = 0;

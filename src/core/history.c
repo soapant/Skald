@@ -1,10 +1,13 @@
 #include "core/history.h"
-#include "core/context.h"
-#include "platform/platform.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
+
+#include "core/context.h"
+#include "platform/platform.h"
+#include "core/types.h"
+#include "deps/stb_ds.h"
 
 typedef struct {
   char **items;

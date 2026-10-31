@@ -1,13 +1,16 @@
+#include <stdbool.h>
+#include <string.h>
+
 #include "core/context.h"
 #include "core/modal.h"
-#include "core/listbox_hover.h"
-#include "core/modal.h"
-#include "config.h"
 #include "platform/ui.h"
 #include "core/window_manager.h"
-#include "core/context.h"
 #include "core/vim.h"
 #include "helpers/helpers_ui.h"
+#include "config_values.h"
+#include "core/types.h"
+#include "core/types/color.h"
+#include "core/types/window.h"
 
 static const char *g_mode_names[] = {"Normal", "Insert", "Visual"};
 int last_index = 0;

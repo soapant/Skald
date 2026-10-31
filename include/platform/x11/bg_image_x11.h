@@ -4,6 +4,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <stdbool.h>
+#include <X11/X.h>
 
 unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h);
 

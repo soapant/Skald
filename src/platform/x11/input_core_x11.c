@@ -1,15 +1,4 @@
 #define _GNU_SOURCE
-#include "platform/x11/input_x11.h"
-#include "deps/log.h"
-#include "core/timer.h"
-#include "core/hotkey_manager.h"
-#include "helpers/helpers_hotkey.h"
-#include "core/remap_manager.h"
-#include "core/snippet_manager.h"
-#include "config.h"
-#include "platform/platform.h"
-#include "wm/wm.h"
-#include "platform/input_state.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,14 +7,31 @@
 #include <dirent.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#include <X11/X.h>
+#include <linux/input-event-codes.h>
+#include <linux/input.h>
+#include <stdbool.h>
+
+#include "platform/x11/input_x11.h"
+#include "deps/log.h"
+#include "core/hotkey_manager.h"
+#include "helpers/helpers_hotkey.h"
+#include "core/remap_manager.h"
+#include "core/snippet_manager.h"
+#include "platform/platform.h"
+#include "wm/wm.h"
+#include "platform/input_state.h"
+#include "core/types/keys.h"
 #include <linux/uinput.h>
 #include <errno.h>
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include "platform/x11/display_x11.h"
 #include <signal.h>
-#include <pthread.h>
+
+#include "platform/x11/display_x11.h"
+
+struct WindowManager;
 
 X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
 int g_x11_keyboard_count = 0;

@@ -1,18 +1,21 @@
 #include "core/feature_loader.h"
-#include "deps/log.h"
-#include "platform/lib.h"
-#include "platform/platform.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
-#include <sys/stat.h>
-#include <unistd.h>
+
+#include "deps/log.h"
+#include "platform/lib.h"
+#include "platform/platform.h"
 #include "core/timer.h"
-#include "config.h"
 #include "core/window_manager.h"
 #include "core/checkbox.h"
 #include "../../nob.h"
+#include "config_values.h"
+#include "core/types/misc.h"
+#include "helpers/helpers_hotkey.h"
+
 #undef copy_file
 #undef mkdir_if_not_exists
 #undef read_entire_dir
@@ -20,7 +23,6 @@
 #include "core/cc_registry.h"
 #include "core/widget_registry.h"
 #include "core/cap_registry.h"
-#include "core/hotkey_manager.h"
 #include "core/snippet_manager.h"
 
 #define MAX_FEATURES 130

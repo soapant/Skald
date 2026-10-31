@@ -3,7 +3,9 @@
 
 #include <X11/Xlib.h>
 #include <stdbool.h>
+
 #include "core/types.h"
+#include "core/types/window.h"
 
 Display *get_display(void);
 bool init_display(void);

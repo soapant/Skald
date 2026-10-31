@@ -1,6 +1,22 @@
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <time.h>
+#include <pthread.h>
+#include <X11/X.h>
+#include <X11/Xft/Xft.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/Xrender.h>
+#include <fontconfig/fontconfig.h>
+#include <stdbool.h>
+
 #include "platform/flapi_platform.h"
-#include "core/clipboard_history.h"
-#include "wm/wm.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
@@ -10,33 +26,19 @@
 #include "platform/x11/desktop_helpers_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "helpers/helpers_ui.h"
-#include "bindings/vim_state.h"
 #include "core/flapi.h"
-#include "config.h"
 #include "core/prompt_geometry.h"
 #include "core/listbox_hover.h"
 #include "core/listbox_layout.h"
 #include "core/editbox.h"
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include "core/timer.h"
-#include "core/remap_manager.h"
 #include "core/window_manager.h"
 #include "platform/wm_platform.h"
 #include "core/modal.h"
-#include <ctype.h>
-#include <time.h>
-#include <pthread.h>
-#include <linux/input.h>
-#include <glib.h>
+#include "config_values.h"
+#include "core/types.h"
+#include "core/types/flapi_types.h"
+#include "core/types/keys.h"
+#include "core/types/window.h"
 
 bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
   const char *dir_path = spec.dir_path;

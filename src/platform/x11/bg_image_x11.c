@@ -1,22 +1,21 @@
 #include "platform/x11/bg_image_x11.h"
-#include "platform/x11/display_x11.h"
-#include "core/timer.h"
-#include "config.h"
-#include "deps/log.h"
-#include "deps/nanosvg.h"
-#include "deps/stb_image.h"
+
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/extensions/Xrender.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 #include <sys/stat.h>
 #include <pwd.h>
 #include <unistd.h>
 #include <time.h>
+#include <X11/extensions/render.h>
+
+#include "deps/nanosvg.h"
+#include "deps/stb_image.h"
+#include "config_values.h"
+#include "core/types/window.h"
 
 #define BG_TILE_SLOTS 32
 #define BG_REVALIDATE_MS 1000

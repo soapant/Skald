@@ -1,15 +1,9 @@
 #include "platform/x11/input_x11.h"
-#include "core/prompt_controller.h"
+
 #include <X11/X.h>
-#include <X11/Xlib.h>
 #include <X11/keysym.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/Xft/Xft.h>
-#include <sys/time.h>
-#include "core/timer.h"
-#include "platform/x11/input_x11.h"
-#include "core/remap_manager.h"
+
+#include "core/types/keys.h"
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;

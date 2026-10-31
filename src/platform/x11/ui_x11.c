@@ -1,13 +1,16 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "platform/ui.h"
 #include "core/window_manager.h"
 #include "core/context.h"
-#include "config.h"
-#include <string.h>
-#include <stdio.h>
-
-#include "core/timer.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
+#include "core/types.h"
+#include "core/types/window.h"
+
 bool IsPopupActive(WindowHandle hPopupWnd) {
 
   (void)hPopupWnd;

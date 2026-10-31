@@ -1,4 +1,8 @@
-#include "config.h"
+
+#include <stdbool.h>
+
+#include "config_values.h"
+#include "core/types/color.h"
 
 bool Tray = true;
 bool EnableVimMode = true;
