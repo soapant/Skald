@@ -4,15 +4,12 @@
 void settings_refresh(const char* filter, ListBoxInfo* lb) {
 }
 
-bool settings_enter(const char* selection, ListBoxInfo* lb) {
+bool settings_enter(ListBoxInfo* lb) {
     return true;
 }
 
-bool settings_ctrl_enter(const char* selection, ListBoxInfo* lb) {
+bool settings_ctrl_enter(ListBoxInfo* lb) {
     return false;
-}
-
-void settings_copy(const char* selection, int true_index, int type) {
 }
 
 void settings_tab(ListBoxInfo* lb) {
@@ -27,7 +24,6 @@ void TriggerSettings(void) {
            .refresh = settings_refresh,
            .enter = settings_enter,
            .ctrl_enter = settings_ctrl_enter,
-           .copy = settings_copy,
            .tab = settings_tab,
            .render = settings_render);
 }

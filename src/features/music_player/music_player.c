@@ -91,42 +91,44 @@ void music_refresh_callback(const char* filter, ListBoxInfo* lb) {
     }
     fl_populate_listbox(lb, filter, s_music_items, (int)n);
 }
+bool play_music(char* name) {
+#if defined(_WIN32)
+        HWND playerHwnd = FindWindow(NULL, "Music Player");
+        if (playerHwnd) {
+            COPYDATASTRUCT cds;
+            cds.dwData = 0;
+            cds.cbData = (DWORD)(strlen(name) + 1);
+            cds.lpData = (PVOID)name;
+            SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
+            return true;
+        } else {
+            char quoted_name[MAX_PATH + 3] = {0};
+            snprintf(quoted_name, sizeof(quoted_name), "\"%s\"", name);
+            fl_launch_with_args(MusicPlayerPath, quoted_name);
+        }
+#elif defined (__linux__)
+        if (music_set_string("Music Player", "_MP_TRACK", name) &&
+            music_send_command("Music Player", "_MP_TRACK_CHANGED", 1)) {
+            return true;
+        }
+        if (strlen(MusicPlayerPath) > 0) {
+            char quoted_name[MAX_PATH + 3] = {0};
+            snprintf(quoted_name, sizeof(quoted_name), "\"%s\"", name);
+            fl_launch_with_args(MusicPlayerPath, quoted_name);
+        }
+#endif
+    return true;
+}
 
-bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool music_enter_callback(ListBoxInfo* lb) {
     char* result = NULL;
     for (size_t i = 0; i < s_music_files.count; i++) {
-        if (strcmp(s_music_files.files[i].name, selection) == 0) {
+        if (strcmp(s_music_files.files[i].name, lb->selected_text) == 0) {
             result = s_music_files.files[i].path;
             break;
         }
     }
-    
-#if defined(_WIN32)
-    HWND playerHwnd = FindWindow(NULL, "Music Player");
-    if (playerHwnd) {
-        COPYDATASTRUCT cds;
-        cds.dwData = 0;
-        cds.cbData = (DWORD)(strlen(result) + 1);
-        cds.lpData = (PVOID)result;
-        SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-        return true;
-    } else {
-        char quoted_result[MAX_PATH + 3] = {0};
-        snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-        fl_launch_with_args(MusicPlayerPath, quoted_result);
-    }
-#elif defined (__linux__)
-    if (music_set_string("Music Player", "_MP_TRACK", result) &&
-        music_send_command("Music Player", "_MP_TRACK_CHANGED", 1)) {
-        return true;
-    }
-    if (strlen(MusicPlayerPath) > 0) {
-        char quoted_result[MAX_PATH + 3] = {0};
-        snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-        fl_launch_with_args(MusicPlayerPath, quoted_result);
-    }
-#endif
-    return true;
+    return play_music(result);
 }
 
 void music_cmd_1(void) {
@@ -164,8 +166,7 @@ void music_cmd_2(void) {
 
 void random_music(void) {
     int idx = fl_rand_num_between(0, s_music_files.count - 1);
-    music_enter_callback(s_music_files.files[idx].name,NULL);
-
+    play_music(s_music_files.files[idx].path);
 }
 void music_prompt(void) {
     fl_window(.title = "🎵 Player",

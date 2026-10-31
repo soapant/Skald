@@ -273,12 +273,12 @@ static void pk_cycle_sort(void) {
     pk_collect_and_sort();
 }
 
-static bool pk_enter_callback(const char* selection, ListBoxInfo* lb) {
-    if (!selection || !*selection) return false;
+static bool pk_enter_callback(ListBoxInfo* lb) {
+    if (!lb->selected_text || !*lb->selected_text) return false;
     char name[PK_NAME_LEN];
     char mem[32];
     char cpu[24];
-    pk_split_row(selection, name, sizeof(name), mem, sizeof(mem), cpu, sizeof(cpu));
+    pk_split_row(lb->selected_text, name, sizeof(name), mem, sizeof(mem), cpu, sizeof(cpu));
     if (name[0] == '\0') return false;
     fl_terminate_process_by_name(name);
     return true;

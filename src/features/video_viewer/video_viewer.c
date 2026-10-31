@@ -107,10 +107,10 @@ void video_refresh_callback(const char* filter, ListBoxInfo* lb) {
     fl_populate_listbox(lb, filter, s_video_items, (int)n);
 }
 
-bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool video_enter_callback(ListBoxInfo* lb) {
     char* result = NULL;
     for (size_t i = 0; i < video_files.count; i++) {
-        if (strcmp(video_files.files[i].name, selection) == 0) {
+        if (strcmp(video_files.files[i].name, lb->selected_text) == 0) {
             result = video_files.files[i].path;
             break;
         }
@@ -119,7 +119,7 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
         ListOfFiles tmp = {0};
         fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL, true, FL_DIR_WALK_UNLIMITED);
         for (size_t i = 0; i < tmp.count; i++) {
-            if (strcmp(tmp.files[i].name, selection) == 0) {
+            if (strcmp(tmp.files[i].name, lb->selected_text) == 0) {
                 result = tmp.files[i].path;
                 break;
             }

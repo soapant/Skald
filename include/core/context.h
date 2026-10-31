@@ -21,7 +21,6 @@ typedef struct {
     ShiftAltEnterCallback shift_alt_enter;
     TabCallback tab;
     HelpCallback help;
-    CopyCallback copy;
     RenderCallback render;
     EditCallback edit;
     FilterCallback filter;

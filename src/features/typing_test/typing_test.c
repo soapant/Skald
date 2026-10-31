@@ -103,7 +103,7 @@ void typing_test_reset(void) {
 }
 
 
-bool typing_test_enter(const char* selection, ListBoxInfo* lb) {
+bool typing_test_enter(ListBoxInfo* lb) {
     typing_test_reset();
     text = typing_test_get_random_text(typing_test_word_count);
     return false;

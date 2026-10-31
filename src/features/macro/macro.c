@@ -339,15 +339,15 @@ static void macro_refresh(const char *filter, ListBoxInfo *lb) {
     fl_populate_listbox(lb, filter, macro_file_name_ptrs, n);
 }
 
-static bool macro_load_enter(const char *selection, ListBoxInfo *lb) {
+static bool macro_load_enter(ListBoxInfo *lb) {
     (void)lb;
-    if (selection) macro_load(selection);
+    if (lb->selected_text) macro_load(lb->selected_text);
     return true;
 }
 
-static bool macro_load_ctrlenter(const char *selection, ListBoxInfo *lb) {
-    if (selection && selection[0]) {
-        char *path = fl_resolve_data_path(selection);
+static bool macro_load_ctrlenter(ListBoxInfo *lb) {
+    if (lb->selected_text && lb->selected_text[0]) {
+        char *path = fl_resolve_data_path(lb->selected_text);
         if (path) {
             remove(path);
             free(path);
