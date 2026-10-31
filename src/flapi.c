@@ -677,7 +677,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
     PROFILE_START(_pt);
             FlHoverPopupCtx *ctx = fl_hover_popup_ctx_new(spec);
             if (ctx) {
-                Platform_HoverWidgetShow(
+                Platform_HoverWidgetShow((PlHoverWidgetShowSpec){
                     .key = spec->hover_key,
                     .render = fl_hover_popup_frame,
                     .ud = ctx,
@@ -690,11 +690,11 @@ void fl_message_impl(const FlMessageSpec* spec) {
                     .bg_hex = spec->color_bg ? rgb_to_hex(spec->color_bg) : 0UL,
                     .release = fl_hover_popup_ctx_free,
                     .release_ud = ctx
-                );
+                });
             }
             return ;
         }
-        Platform_HoverMessage(
+        Platform_HoverMessage((PlHoverMessageSpec){
             .key = spec->hover_key,
             .message = spec->message,
             .x = spec->x,
@@ -705,7 +705,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
             .max_height = mh,
             .color = color,
             .no_bg = spec->no_bg
-        );
+        });
         return;
     }
     MessageSlot slot = spec->slot;
@@ -713,7 +713,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
         PROFILE_START(_pt);
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : TOP_CENTER;
     } else if (slot == FREE) {
-        Platform_DisplayMessage(
+        Platform_DisplayMessage((PlDisplayMessageSpec){
             .message = spec->message,
             .x = spec->x,
             .y = spec->y,
@@ -726,7 +726,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
             .color = color,
             .render = spec->render ? spec->render : NULL,
             .name = spec->name
-        );
+        });
         return;
     }
     DisplayMessageSlot(spec->message, slot, mw, mh, spec->prompt_gap, timeout, color, spec->render, spec->name);
@@ -1178,7 +1178,7 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
   bool transparent = spec->transparent ? spec->transparent : true;
   if (col == 0) col = COLOR_TEXT;
   col = rgb_to_hex(col);
-  bool r = Platform_DrawRectRaw(
+  bool r = Platform_DrawRectRaw((PlDrawRectRawSpec){
       .x = spec->x,
       .y = spec->y,
       .w = spec->w,
@@ -1189,6 +1189,7 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
       .opaque = !transparent,
       .thickness = spec->thickness,
       .filled = spec->filled
+      }
   );
   PROFILE_END_VAR(_pt, "api:fl_draw_rect");
   return r;

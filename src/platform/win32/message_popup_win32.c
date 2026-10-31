@@ -228,7 +228,7 @@ bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
   { PROFILE_END_VAR(_pt, "Platform_MessagePopupOnKey"); return false; }
 }
 
-void Platform_DisplayMessage_impl(PlDisplayMessageSpec spec) {
+void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     const char* message = spec.message;
     int centerX = spec.x;
     int centerY = spec.y;
@@ -262,7 +262,7 @@ void Platform_DisplayMessage_impl(PlDisplayMessageSpec spec) {
       SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
       return;
     }
-    Platform_CreateDisplayMessageWindow(
+    Platform_CreateDisplayMessageWindow((PlCreateDisplayMessageWindowSpec){
         .message = message,
         .x = centerX, .y = centerY,
         .max_width = useMaxW, .max_height = useMaxH,
@@ -271,7 +271,7 @@ void Platform_DisplayMessage_impl(PlDisplayMessageSpec spec) {
         .no_bg = no_bg,
         .render = render,
         .name = name
-    );
+    });
 }
 
 void Platform_DismissDisplayMessage(void) {
@@ -490,7 +490,7 @@ if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetHide"); return 
   }
 }
 
-void Platform_HoverWidgetShow_impl(PlHoverWidgetShowSpec spec) {
+void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
     const char *key = spec.key;
     void (*render)(void* ud) = spec.render;
     void* ud = spec.ud;
@@ -523,7 +523,7 @@ if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverMessageRelease"); ret
   g_hover_key[0] = '\0';
 }
 
-void Platform_HoverMessage_impl(PlHoverMessageSpec spec) {
+void Platform_HoverMessage(PlHoverMessageSpec spec) {
     const char* key = spec.key;
     const char* message = spec.message;
     int centerX = spec.x;
@@ -563,7 +563,7 @@ if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
   }
 
   Platform_HoverMessageRelease(g_hover_key);
-  Platform_CreateDisplayMessageWindow(
+  Platform_CreateDisplayMessageWindow((PlCreateDisplayMessageWindowSpec){
       .message = message,
       .x = centerX, .y = centerY,
       .max_width = winWidth, .max_height = winHeight,
@@ -572,7 +572,7 @@ if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
       .no_bg = no_bg,
       .render = NULL,
       .name = NULL
-  );
+  });
   g_win32_msg_w = winWidth;
   g_win32_msg_h = winHeight;
   snprintf(g_hover_key, sizeof(g_hover_key), "%s", key);
@@ -586,7 +586,7 @@ if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
   }
 }
 
-void Platform_DisplayMessageAnchored_impl(PlAnchoredMessageSpec spec) {
+void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     const char* message = spec.message;
     int rect_x = spec.x;
     int rect_y = spec.y;
@@ -630,7 +630,7 @@ if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnch
   log_info("MSG anchored msg='%s' rect=(%d,%d,%d,%d) slot=(%d,%d) gap=%d outward=%d -> center=(%d,%d) win=(%d,%d)",
            message, rect_x, rect_y, rect_w, rect_h, h_slot, v_slot, gap, outward, centerX, centerY, winWidth, winHeight);
 
-  Platform_DisplayMessage(
+  Platform_DisplayMessage((PlDisplayMessageSpec){
       .message = message,
       .x = centerX, .y = centerY,
       .no_bg = no_bg,
@@ -640,10 +640,10 @@ if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnch
       .color = color,
       .render = render,
       .name = name
-  );
+  });
 }
 
-void Platform_CreateDisplayMessageWindow_impl(PlCreateDisplayMessageWindowSpec spec) {
+void Platform_CreateDisplayMessageWindow(PlCreateDisplayMessageWindowSpec spec) {
     const char* message = spec.message;
     int centerX = spec.x;
     int centerY = spec.y;

@@ -70,7 +70,7 @@ switch (msg) {
   case WM_DISPLAY_MESSAGE: {
     DisplayMessageParams* p = (DisplayMessageParams*)lParam;
       if (p != NULL) {
-        Platform_CreateDisplayMessageWindow(
+        Platform_CreateDisplayMessageWindow((PlCreateDisplayMessageWindowSpec){
             .message = p->message,
             .x = p->centerX, .y = p->centerY,
             .max_width = p->maxWidth, .max_height = p->maxHeight,
@@ -79,7 +79,7 @@ switch (msg) {
             .no_bg = p->no_bg,
             .render = p->render,
             .name = NULL
-        );
+        });
       }
     return 0;
   }
