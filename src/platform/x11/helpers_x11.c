@@ -1140,7 +1140,6 @@ void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
 }
 
 static unsigned int x11_bg_channel_at(float c, int x, int y) {
-    
     int v = (int)(c);
     if (v < 0) v = 0;
     if (v > 255) v = 255;
@@ -1148,7 +1147,6 @@ static unsigned int x11_bg_channel_at(float c, int x, int y) {
 }
 
 static unsigned long x11_background_color_at(int x, int y, int w, int h) {
-    
     unsigned long base = Platform_GetDrawBgColor();
     if (!base) base = rgb_to_hex(COLOR_BG);
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
@@ -1157,18 +1155,26 @@ static unsigned long x11_background_color_at(int x, int y, int w, int h) {
     unsigned int cg = x11_bg_channel_at((float)((col >> 8) & 0xFF), x, y);
     unsigned int cb = x11_bg_channel_at((float)(col & 0xFF), x, y);
     return ((unsigned long)cr << 16) | ((unsigned long)cg << 8) | (unsigned long)cb;
-    {  return ((col >> 16) & 0xFF) << 16 | ((col >> 8) & 0xFF) << 8 | (col & 0xFF); }
+    return ((col >> 16) & 0xFF) << 16 | ((col >> 8) & 0xFF) << 8 | (col & 0xFF);
 }
 
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8) {
-    
     float cx, cy;
-    if (x < R && y < R) { cx = (float)R; cy = (float)R; }
-    else if (x >= w - R && y < R) { cx = (float)(w - R - 1); cy = (float)R; }
-    else if (x < R && y >= h - R) { cx = (float)R; cy = (float)(h - R - 1); }
-    else if (x >= w - R && y >= h - R) { cx = (float)(w - R - 1); cy = (float)(h - R - 1); }
-    else {  return baseAlpha8; }
-
+    if (x < R && y < R) {
+        cx = (float)R;
+        cy = (float)R;
+    } else if (x >= w - R && y < R) {
+        cx = (float)(w - R - 1);
+        cy = (float)R;
+    } else if (x < R && y >= h - R) {
+        cx = (float)R;
+        cy = (float)(h - R - 1);
+    } else if (x >= w - R && y >= h - R) {
+        cx = (float)(w - R - 1);
+        cy = (float)(h - R - 1);
+    } else {
+        return baseAlpha8;
+    }
     const int SS = 16;
     int inside = 0;
     for (int sy = 0; sy < SS; sy++) {
@@ -1183,12 +1189,10 @@ static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int 
     const int total = SS * SS;
     if (inside <= 0) {  return 0; }
     if (inside >= total) {  return baseAlpha8; }
-    {  return (unsigned int)((float)baseAlpha8 * ((float)inside / (float)total) + 0.5f); }
+    return (unsigned int)((float)baseAlpha8 * ((float)inside / (float)total) + 0.5f);
 }
 
 void x11_free_cached_background(void) {
-        
-
     for (int i = 0; i < BG_SLOT_COUNT; i++) {
         if (g_bg_slots[i].used && g_bg_slots[i].pm != None && g_bg_slots[i].dpy) {
             XFreePixmap(g_bg_slots[i].dpy, g_bg_slots[i].pm);
@@ -1198,11 +1202,9 @@ void x11_free_cached_background(void) {
         g_bg_slots[i].dpy = NULL;
     }
     g_bg_slot_next = 0;
-    
 }
 
 static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_line, int w, int h, int R, unsigned int baseAlpha8, unsigned long base, unsigned long fill) {
-    
     uint32_t *row;
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     for (int y = 0; y < h; y++) {
@@ -1222,23 +1224,20 @@ typedef struct {
 } BgKey;
 
 static bool bg_slot_matches(const BgSlot* slot, const BgKey* k) {
-        
-  {  return slot->used && slot->dpy != NULL && slot->base == k->base
+  return slot->used && slot->dpy != NULL && slot->base == k->base
         && slot->radius == k->radius
         && slot->rounded == k->rounded
-        && slot->w == k->w && slot->h == k->h; }
+        && slot->w == k->w && slot->h == k->h;
 }
 
 static Pixmap bg_cache_find(Display* dpy, const BgKey* k) {
-        
-for (int i = 0; i < BG_SLOT_COUNT; i++) {
+    for (int i = 0; i < BG_SLOT_COUNT; i++) {
         if (g_bg_slots[i].dpy == dpy && bg_slot_matches(&g_bg_slots[i], k)) return g_bg_slots[i].pm;
     }
-    {  return None; }
+    return None;
 }
 
 static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
-    
     BgSlot* slot = &g_bg_slots[g_bg_slot_next];
     g_bg_slot_next = (g_bg_slot_next + 1) % BG_SLOT_COUNT;
     if (slot->used && slot->pm != None) XFreePixmap(slot->dpy, slot->pm);
@@ -1251,8 +1250,7 @@ static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
 }
 
 static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
-        
-Visual* vis = attrs->visual;
+    Visual* vis = attrs->visual;
     int depth = attrs->depth;
     if (depth != 32) {  return None; }
     bool hasAlpha = true;
@@ -1304,19 +1302,16 @@ Visual* vis = attrs->visual;
             XDestroyImage(img2);
         }
     }
-    {  return pm; }
+    return pm;
 }
 
 Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
-        
-
-    if (!dpy || w <= 0 || h <= 0) {  return None; }
+    if (!dpy || w <= 0 || h <= 0) return None;
     unsigned long base = Platform_GetDrawBgColor();
     if (!base) base = rgb_to_hex(COLOR_BG);
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
     if (!rounded && radius > 0 && !x11_bg_image_enabled()) {
-        
         return None;
     }
     BgKey k;
@@ -1325,7 +1320,6 @@ Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
     k.w = w; k.h = h;
     Pixmap hit = bg_cache_find(dpy, &k);
     if (hit) {
-        
         return hit;
     }
     XWindowAttributes attrs;
@@ -1335,13 +1329,12 @@ Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
     Pixmap pm = x11_create_background_pixmap(dpy, win, w, h, &attrs, base, baseAlpha8);
     if (!pm) {  return None; }
     bg_cache_store(dpy, pm, &k);
-    
-    {  return pm; }
+    return pm;
 }
 
 void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
         
-if (!dpy || w <= 0 || h <= 0) {  return ; }
+    if (!dpy || w <= 0 || h <= 0) return;
     unsigned long base = Platform_GetDrawBgColor();
     if (!base) base = rgb_to_hex(COLOR_BG);
     int radius = CornerRadius;
@@ -1366,7 +1359,7 @@ if (!dpy || w <= 0 || h <= 0) {  return ; }
         vis = DefaultVisual(dpy, screen);
         depth = DefaultDepth(dpy, screen);
     }
-bool hasAlpha = (depth == 32);
+    bool hasAlpha = (depth == 32);
     bool rded = rounded && radius > 0 && hasAlpha;
     int R = rded ? radius : 0;
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
@@ -1396,8 +1389,6 @@ bool hasAlpha = (depth == 32);
 }
 
 void x11_draw_background(Display* dpy, Window win, int w, int h) {
-    
-    
     Pixmap bg = x11_get_cached_background(dpy, win, w, h);
     if (bg) {
         GC gc = XCreateGC(dpy, win, 0, NULL);
@@ -1411,17 +1402,16 @@ void x11_draw_background(Display* dpy, Window win, int w, int h) {
 
 void x11_draw_selection_background(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, int x, int y, int w, int h, unsigned long baseHex) {
         
-if (w <= 0 || h <= 0) {  return ; }
+    if (w <= 0 || h <= 0) return;
     XftColor c; x11_xft_alloc_color(dpy, vis, cmap, baseHex, OpacityAlpha16(), &c);
     XftDrawRect(xd, &c, x, y, w, h);
     XftColorFree(dpy, vis, cmap, &c);
 }
 
 void x11_draw_window_border(Display* dpy, Drawable drw, int w, int h, bool no_bg) {
-        
-    if (!dpy || !drw || no_bg || !EnableBorders) {  return; }
+    if (!dpy || !drw || no_bg || !EnableBorders) return;
     int t = PROMPT_BORDER_W;
-    if (w <= 2 * t || h <= 2 * t) {  return; }
+    if (w <= 2 * t || h <= 2 * t) return;
     int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
     if (r > w / 2) r = w / 2;
     if (r > h / 2) r = h / 2;
@@ -1453,14 +1443,10 @@ void x11_draw_window_border(Display* dpy, Drawable drw, int w, int h, bool no_bg
         }
     }
     XFreeGC(dpy, gc);
-    {  }
 }
 
 Window x11_create_prompt_window(Display* dpy, int x, int y, int w, int h) {
-        
-
     unsigned long bg = rgb_to_hex(COLOR_BG);
-    
     Window win;
     if (niri_is_active()) {
         log_error("niri override_redirect prompt w=%d h=%d", w, h);
@@ -1484,11 +1470,10 @@ Window x11_create_prompt_window(Display* dpy, int x, int y, int w, int h) {
         XFree(sh);
     }
     if (RoundedCorners && CornerRadius > 0) x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
-    {  return win; }
+    return win;
 }
 
 void Platform_PrewarmBackgroundPixmap(void) {
-    
     Display* dpy = get_display();
     if (!dpy) {  return; }
     x11_bg_image_prewarm(dpy, PROMPT_W, PROMPT_H);
@@ -1497,14 +1482,10 @@ void Platform_PrewarmBackgroundPixmap(void) {
         x11_get_cached_background(dpy, _pw, PROMPT_W, PROMPT_H);
         XDestroyWindow(dpy, _pw);
     }
-    
 }
 
 Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
-    
-    
     unsigned long bg = rgb_to_hex(COLOR_BG);
-    
     if (niri_is_active()) {
         log_error("niri override_redirect edit w=%d h=%d", w, h);
         return x11_create_window_ex_or(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask, true);
@@ -1525,19 +1506,14 @@ Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
     sh->max_height = h;
     XSetWMNormalHints(dpy, win, sh);
     XFree(sh);
-    {  return win; }
+    return win;
 }
 void x11_apply_click_through(Display* dpy, Window win) {
-        
-
-    if (!dpy || win == None) {  return; }
+    if (!dpy || win == None) return;
     XShapeCombineRectangles(dpy, win, ShapeInput, 0, 0, NULL, 0, ShapeSet, Unsorted);
-    
 }
 
 Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h, bool clickable) {
-        
-
     unsigned long bg = 0;
     if (!Platform_GetTransparentWindow()) {
         bg = Platform_GetDrawBgColor();
@@ -1549,20 +1525,16 @@ Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int 
     if (win != None && !clickable) x11_apply_click_through(dpy, win);
     
     Platform_SetDrawContext(NULL,NULL,NULL,0);
-    {  return win; }
+    return win;
 }
 
 XftDraw* x11_create_xft_draw(Display* dpy, Window win) {
-        
-
     Visual* vis = NULL; Colormap cmap = 0; int depth = 0;
     if (x11_get_drawable_visual(dpy, win, &vis, &cmap, &depth)) {
-        
         return XftDrawCreate(dpy, win, vis, cmap);
     }
     int screen = DefaultScreen(dpy);
-    
-    {  return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen)); }
+    return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
 }
 
 gchar* FindPlayerBusName(GDBusConnection *conn) {
@@ -1585,15 +1557,12 @@ GVariant *reply = g_dbus_connection_call_sync(conn,
         g_variant_iter_free(iter);
         g_variant_unref(reply);
     }
-    {  return player_name; }
+    return player_name;
 }
 
 void UpdateTextCaret(void) {
-        
-
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
-    
 }
 

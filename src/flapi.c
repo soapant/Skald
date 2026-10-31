@@ -2491,6 +2491,7 @@ const char *fl_alias_for(const char *target) {
 }
 
 void fl_window_impl(const FlPromptSpec* spec) {
+    log_info("fl_window_impl called title='%s'", spec ? spec->title : "(null)");
     WindowManager_ShowPrompt(WindowManager_Get(), spec);
 }
 

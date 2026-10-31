@@ -33,6 +33,7 @@ static void hotkey_queue_init(void) {
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(g_q_mutex)
 static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle, const char* owner, int vk, int mods) {
     if (!fn) return;
+    log_info("hotkey_enqueue: fn=%p is_toggle=%d", (void*)fn, (int)is_toggle);
     HOTKEY_Q_LOCK();
     int nxt = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
     if (nxt != g_pending_head) {
@@ -162,12 +163,18 @@ void hotkey_drain_pending(void) {
         }
         HOTKEY_Q_UNLOCK();
         if (!fn) break;
+        WindowManager* dwm = WindowManager_Get();
+        log_info("hotkey_drain_pending: dequeued fn=%p is_toggle=%d popup_count=%d", (void*)fn, (int)is_toggle, dwm ? dwm->popup_count : -1);
         if (is_toggle) {
-            WindowManager* dwm = WindowManager_Get();
-            if (dwm && dwm->popup_count > 0) continue;
+            if (dwm && dwm->popup_count > 0) {
+                log_info("hotkey_drain_pending: skipped (toggle active popup_count=%d)", dwm->popup_count);
+                continue;
+            }
         }
         FeatureLoader_Lock();
+        log_info("hotkey_drain_pending: calling fn=%p", (void*)fn);
         fn();
+        log_info("hotkey_drain_pending: fn=%p finished", (void*)fn);
         FeatureLoader_Unlock();
     }
 }

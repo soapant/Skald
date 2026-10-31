@@ -31,18 +31,13 @@
 #include <stdio.h>
 
 bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
-      
-    
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     ((WMEditPopupData*)self)->base.handle.xid = x11_create_edit_popup_window(dpy, x, y, w, h);
-    
-    {  return true; }
+    return true;
 }
 
 void Platform_EditPopupShowWindow(Popup* self) {
-        
-
     Display* dpy = ((WindowManager*)self->manager)->display;
     x11_draw_background(dpy, self->handle.xid, ((WMEditPopupData*)self)->w, ((WMEditPopupData*)self)->h);
     XMapWindow(dpy, self->handle.xid);
@@ -72,12 +67,9 @@ void Platform_EditPopupShowWindow(Popup* self) {
         }
     }
     XFlush(dpy);
-    
 }
 
 void Platform_EditPopupHideWindow(Popup* self) {
-        
-
     Display* dpy = get_display();
     if (dpy) { XUnmapWindow(dpy, self->handle.xid); XFlush(dpy); }
     WindowManager* wm = WindowManager_Get();
@@ -93,12 +85,9 @@ void Platform_EditPopupHideWindow(Popup* self) {
             }
         }
     }
-    
 }
 
 void Platform_EditPopupRender(Popup* self) {
-        
-
     WMEditPopupData* data = (WMEditPopupData*)self;
     Display* dpy = get_display();
     if (!dpy) {  return; }
@@ -197,23 +186,17 @@ void Platform_EditPopupRender(Popup* self) {
     if (dbl) XFreePixmap(dpy, dbl);
     Platform_DestroyFont(font);
     XFlush(dpy);
-    
 }
 
 void Platform_EditPopupDestroyWindow(Popup* self) {
-        
-
     Display* dpy = get_display();
     if (dpy) XDestroyWindow(dpy, self->handle.xid);
-    
 }
 
 bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-        
-
     WMEditPopupData* ed = (WMEditPopupData*)self;
-    if (!ed || !ed->text || !key) {  return false; }
-    if (EditPopup_HandleKey(ed, key)) {  return true; }
+    if (!ed || !ed->text || !key) return false;
+    if (EditPopup_HandleKey(ed, key)) return true;
 
     int wParam = key->vk;
     bool ctrl_pressed = key->ctrl;
@@ -242,7 +225,6 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
         }
          return true;
     }
-
     if (IsInsertMode() && key->text_len > 0) {
         bool swallow = HotkeyText_ShouldSwallow(key);
         if (!swallow && HotkeyText_IsPrintable(key)) {
@@ -251,7 +233,5 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
             return true;
         }
     }
-
-    
-    {  return false; }
+    return false;
 }

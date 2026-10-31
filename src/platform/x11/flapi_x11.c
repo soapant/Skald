@@ -38,8 +38,6 @@
 #include <pthread.h>
 #include <linux/input.h>
 #include <glib.h>
-#include <pulse/pulseaudio.h>
-
 
 bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
     const char* dir_path = spec.dir_path;
@@ -48,9 +46,6 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
     char** list_of_names_to_ignore = spec.list_of_names_to_ignore;
     bool strip_extension = spec.strip_extension;
     int max_depth = spec.max_depth;
-    
-    
-
     if (!dir_path || !list_of_files) {
         
         return false;
@@ -59,7 +54,6 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
     DIR* dir = opendir(dir_path);
     if (!dir) {
         perror("opendir");
-        
         return false;
     }
 
@@ -159,15 +153,13 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
     }
 
     closedir(dir);
-    
-    {  return true; }
+    return true;
 }
 
 static bool platform_exe_in_path(const char* name) {
-        
-if (!name || !name[0]) {  return false; }
+    if (!name || !name[0]) return false;
     const char* path = getenv("PATH");
-    if (!path || !path[0]) {  return false; }
+    if (!path || !path[0]) return false;
     const char* p = path;
     while (*p) {
         const char* sep = strchr(p, ':');
@@ -179,13 +171,12 @@ if (!name || !name[0]) {  return false; }
         if (!sep) break;
         p = sep + 1;
     }
-    {  return false; }
+    return false;
 }
 
 static bool platform_resolve_desktop_exec(const char* exec_line, const char* desktop_dir,
                                           const char* workdir, char* out, size_t out_size) {
-        
-if (!exec_line || !out || out_size == 0) {  return false; }
+    if (!exec_line || !out || out_size == 0) return false;
     const char* p = exec_line;
     while (*p == ' ' || *p == '\t') p++;
 
@@ -207,7 +198,7 @@ if (!exec_line || !out || out_size == 0) {  return false; }
     }
     token[t] = '\0';
     while (*p == ' ' || *p == '\t') p++;
-    if (!token[0]) {  return false; }
+    if (!token[0]) return false;
 
     const char* base = (workdir && workdir[0]) ? workdir : desktop_dir;
     char prog[1024];
@@ -240,31 +231,28 @@ if (!exec_line || !out || out_size == 0) {  return false; }
     q[n] = '\0';
 
     snprintf(out, out_size, "%s%s%s", q, p[0] ? " " : "", p);
-    {  return true; }
+    return true;
 }
 
 static int platform_run_status(char* const argv[], const X11SessionEnv* env, bool apply_env) {
-        
-pid_t pid = fork();
-    if (pid < 0) {  return -1; }
+    pid_t pid = fork();
+    if (pid < 0) return -1;
     if (pid == 0) {
         if (apply_env && env) Env_ApplyToCurrentProcess(env);
         execvp(argv[0], argv);
         _exit(127);
     }
     int st = 0;
-    if (waitpid(pid, &st, 0) < 0) {  return -1; }
-    if (!WIFEXITED(st)) {  return -1; }
-    {  return WEXITSTATUS(st); }
+    if (waitpid(pid, &st, 0) < 0) return -1;
+    if (!WIFEXITED(st)) return -1;
+    return WEXITSTATUS(st);
 }
 
 bool fl_launch_with_args_platform(const char* path, const char* args) {
-        
-
     log_info("fl_launch path='%s' args='%s'", path ? path : "null", args ? args : "null");
-    if (!path) {  return false; }
+    if (!path) return false;
     char expanded[1024];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {  return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     log_info("fl_launch expanded='%s'", expanded);
     path = expanded;
     if (strstr(path, ".desktop") != NULL) {
@@ -319,14 +307,12 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         }
         log_info("gio launch '%s' exit=%d", expanded, gio_st);
         if (gio_st == 0) {
-            
             return true;
         }
 
         char cmd[4096];
         if (!platform_resolve_desktop_exec(exec_line, desktop_dir, workdir, cmd, sizeof(cmd))) {
             log_warn("desktop '%s': cannot resolve Exec '%s' via PATH or desktop dir '%s'", expanded, exec_line, desktop_dir);
-            
             return false;
         }
         char launch_cmd[4608];
@@ -336,18 +322,15 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         if (as_root) {
             char* const av_run[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",launch_cmd,NULL};
             if (!Env_DaemonExec(av_run)) {
-                
                 return false;
             }
         } else {
             X11SessionEnv env2 = env;
             char* const av_run2[] = {"sh","-c",launch_cmd,NULL};
             if (!Env_DaemonExecWithEnv(av_run2, &env2)) {
-                
                 return false;
             }
         }
-        
         return true;
     } else {
         X11SessionEnv env; Env_GetSessionEnv(&env);
@@ -358,8 +341,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         bool is_executable = (access(path, X_OK) == 0);
         if (is_regular_file && !is_executable) {
             char* const av_open2[] = {"gio","open",path,NULL};
-            if (!Env_DaemonExecWithEnv(av_open2, &env)) {  return false; }
-            
+            if (!Env_DaemonExecWithEnv(av_open2, &env)) return false;
             return true;
         }
         char cmd[2048];
@@ -367,11 +349,11 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         else snprintf(cmd, sizeof(cmd), "\"%s\"", path);
         if(Env_IsRunningAsRoot()){
             char* const argv[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
-            if (!Env_DaemonExec(argv)) {  return false; }
+            if (!Env_DaemonExec(argv)) return false;
              return true;
         } else {
             X11SessionEnv env2 = env;
-            pid_t pid=fork(); if(pid<0) {  return false; }
+            pid_t pid=fork(); if(pid<0) return false;
             if(pid==0){
                 setsid(); pid_t pid2=fork(); if(pid2<0) _exit(1); if(pid2>0) _exit(0);
                 int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
@@ -382,20 +364,17 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             int st=0; waitpid(pid,&st,0);  return true;
         }
     }
-    
 }
 
 bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
-        
-
-    if (!path) {  return false; }
+    if (!path) return false;
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {  return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     char cmd[2048];
     if (args && args[0]) snprintf(cmd, sizeof(cmd), "%s %s", expanded, args);
     else snprintf(cmd, sizeof(cmd), "%s", expanded);
     pid_t pid = fork();
-    if (pid < 0) {  return false; }
+    if (pid < 0) return false;
     if (pid == 0) {
         char *argv1[] = {"pkexec", cmd, NULL};
         execvp("pkexec", argv1);
@@ -403,8 +382,7 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
         execvp("sudo", argv2);
         _exit(1);
     }
-    
-    {  return true; }
+    return true;
 }
 
 static __thread FlListSpec g_fl_list_spec;
@@ -419,15 +397,14 @@ static __thread FontHandle g_fl_list_font;
 static __thread bool g_fl_list_font_owned;
 
 bool fl_listbox_begin_platform(const FlListSpec *spec) {
-        
-if (!spec) {  return false; }
+    if (!spec) return false;
     ListBoxInfo *lb = spec->lb;
     if (!lb) {
         if (!spec->items || spec->count <= 0) return false;
         return false;
     }
     Platform_GetDrawContext(&g_fl_list_dpy, &g_fl_list_xd, &g_fl_list_vis, &g_fl_list_cmap);
-    if (!g_fl_list_dpy || !g_fl_list_xd) {  return false; }
+    if (!g_fl_list_dpy || !g_fl_list_xd) return false;
     g_fl_list_spec = *spec;
     g_fl_list_lb = lb;
     g_fl_list_font = Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
@@ -464,15 +441,14 @@ if (!spec) {  return false; }
     ListBox_ApplyPendingScroll(g_fl_list_lb, lay.visible);
     ListBox_SetGeometry(g_fl_list_y0, g_fl_list_itemH, lay.visible);
     ListBox_HoverFocus(g_fl_list_lb, g_fl_list_y0, g_fl_list_itemH, g_fl_list_lb->view_offset, lay.visible);
-    {  return true; }
+    return true;
 }
 
 bool fl_listbox_next_platform(FlListItemCtx *out) {
-        
-if (!out || !g_fl_list_lb) {  return false; }
-    if (g_fl_list_cur >= g_fl_list_visible) {  return false; }
+    if (!out || !g_fl_list_lb) return false;
+    if (g_fl_list_cur >= g_fl_list_visible) return false;
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
-    if (idx < 0 || idx >= g_fl_list_lb->populated_count) {  return false; }
+    if (idx < 0 || idx >= g_fl_list_lb->populated_count) return false;
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     if (g_fl_list_cur == 0) Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y = g_fl_list_y0, .width = g_fl_list_fw});
     bool sel = (idx == g_fl_list_lb->selected_index);
@@ -496,11 +472,10 @@ if (!out || !g_fl_list_lb) {  return false; }
     out->h = g_fl_list_itemH;
     out->text = g_fl_list_lb->populated_cache[idx];
     g_fl_list_cur++;
-    {  return true; }
+    return true;
 }
 
 void fl_listbox_end_platform(void) {
-        
     if (PromptListBottomMargin() > 0 && g_fl_list_y0 >= 0) {
         Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y = g_fl_list_y0 + g_fl_list_h, .width = g_fl_list_fw});
     }
@@ -511,24 +486,20 @@ void fl_listbox_end_platform(void) {
 }
 
 int fl_listbox_get_count(void) {
-        
-{  return g_fl_list_lb ? g_fl_list_lb->populated_count : 0; }
+    return g_fl_list_lb ? g_fl_list_lb->populated_count : 0;
 }
 
 unsigned long fl_listbox_get_current_standard_color(void) {
-        
-if (!g_fl_list_lb || g_fl_list_cur == 0) {  return 0; }
-    int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
-    if (idx < 0 || idx >= g_fl_list_lb->populated_count) {  return 0; }
-    unsigned long ncol, bcol, pcol;
-    Platform_GetItemColors((PlGetItemColorsSpec){.idx=idx, .count=g_fl_list_lb->populated_count, .num_color=&ncol, .body_color=&bcol, .plain_color=&pcol});
-    {  return pcol; }
+  if (!g_fl_list_lb || g_fl_list_cur == 0) return 0;
+  int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
+  if (idx < 0 || idx >= g_fl_list_lb->populated_count) {  return 0; }
+  unsigned long ncol, bcol, pcol;
+  Platform_GetItemColors((PlGetItemColorsSpec){.idx=idx, .count=g_fl_list_lb->populated_count, .num_color=&ncol, .body_color=&bcol, .plain_color=&pcol});
+  return pcol;
 }
 
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
-        
-
-    if (!directory || !search_string || strlen(search_string) == 0) {  return NULL; }
+    if (!directory || !search_string || strlen(search_string) == 0) return NULL;
     DIR* dir = opendir(directory);
     if (!dir) {  return NULL; }
     static char found_path[MAX_PATH];
@@ -543,21 +514,18 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
         if (Platform_StringContainsCaseInsensitive(entry->d_name, search_string)) {
             snprintf(found_path, sizeof(found_path), "%s", full_path);
             closedir(dir);
-            
             return found_path;
         }
     }
     closedir(dir);
-    
-    {  return NULL; }
+    return NULL;
 }
 
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
-        
-if (!spec) {  return false; }
+    if (!spec) return false;
     Display *dpy; XftDraw *xd; Visual *vis; Colormap cmap;
     Platform_GetDrawContext(&dpy,&xd,&vis,&cmap);
-    if (!dpy || !xd) {  return false; }
+    if (!dpy || !xd) return false;
     WindowManager* wm = WindowManager_Get();
     PromptState *state = NULL;
     if (wm) {
@@ -640,21 +608,20 @@ if (!spec) {  return false; }
         }
     }
     if (needDestroy) Platform_DestroyFont(fh);
-    {  return true; }
+    return true;
 }
 
 bool fl_type_text_platform(const char *s){
-  
-if(!s) {  return false; }
- char* old = Platform_GetClipboardEntry();
- Platform_CopyToClipboard(s);
- Platform_EmitKey(VK_LCONTROL,1);
- Platform_EmitKey('V',1); Platform_EmitKey('V',0);
- Platform_EmitKey(VK_LCONTROL,0);
- WindowManager* wm = WindowManager_Get();
- for (int i=0;i<40;i++){ if (wm) Platform_WM_ProcessEvents(wm); usleep(5000); }
- if (old) { Platform_CopyToClipboard(old); free(old); }
- {  return true; }
+    if(!s) return false;
+    char* old = Platform_GetClipboardEntry();
+    Platform_CopyToClipboard(s);
+    Platform_EmitKey(VK_LCONTROL,1);
+    Platform_EmitKey('V',1); Platform_EmitKey('V',0);
+    Platform_EmitKey(VK_LCONTROL,0);
+    WindowManager* wm = WindowManager_Get();
+    for (int i=0;i<40;i++){ if (wm) Platform_WM_ProcessEvents(wm); usleep(5000); }
+    if (old) { Platform_CopyToClipboard(old); free(old); }
+    return true;
 }
 
 typedef struct {
@@ -675,13 +642,11 @@ TimerPayload* payload = (TimerPayload*)arg;
     }
 
     free(payload);
-    {  return NULL; }
+    return NULL;
 }
 
 void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
-        
-if (!callback || seconds < 0) {  return ; }
-
+    if (!callback || seconds < 0) return;
     TimerPayload* payload = (TimerPayload*)malloc(sizeof(TimerPayload));
     if (!payload) {  return ; }
     payload->seconds = seconds;
@@ -697,8 +662,7 @@ if (!callback || seconds < 0) {  return ; }
 }
 
 void fl_sleep_platform(double seconds) {
-        
-if (seconds <= 0) {  return ; }
+    if (seconds <= 0) return;
     struct timespec req;
     req.tv_sec = (time_t)seconds;
     req.tv_nsec = (long)((seconds - (double)req.tv_sec) * 1000000000.0);
@@ -711,9 +675,8 @@ struct MemoryStruct {
 };
 
 int fl_get_active_interface_platform(char out[], size_t max_len) {
-        
-static char content[16384];
-    if (File_ReadAll("/proc/net/route", content, (long)sizeof(content)) <= 0) {  return 0; }
+    static char content[16384];
+    if (File_ReadAll("/proc/net/route", content, (long)sizeof(content)) <= 0) return 0;
     int found = 0;
     char* cur = content;
     if (*cur) {
@@ -737,12 +700,11 @@ static char content[16384];
             }
         }
     }
-    {  return found; }
+    return found;
 }
 unsigned long long fl_net_rx_bytes_platform() {
-        
-char want[64];
-    if (!fl_get_active_interface_platform(want, sizeof(want)) || !want[0]) {  return 0; }
+    char want[64];
+    if (!fl_get_active_interface_platform(want, sizeof(want)) || !want[0]) return 0;
     FILE *f = fopen("/proc/net/dev", "r");
     if (!f) {  return 0; }
     char buf[512];
@@ -765,25 +727,24 @@ char want[64];
         }
     }
     fclose(f);
-    {  return rx_bytes; }
+    return rx_bytes;
 }
 
 FlNetStatus fl_net_status_platform(void) {
-        
-char iface[32] = {0};
+    char iface[32] = {0};
     int found = fl_get_active_interface_platform(iface, sizeof(iface));
 
-    if (!found) {  return FL_NET_OFFLINE; }
+    if (!found) return FL_NET_OFFLINE;
     char sysfs_path[128];
     snprintf(sysfs_path, sizeof(sysfs_path), "/sys/class/net/%s/carrier", iface);
 
     FILE* f = fopen(sysfs_path, "r");
-    if (!f) {  return FL_NET_OFFLINE; }
+    if (!f) return FL_NET_OFFLINE;
 
     char carrier = (char)fgetc(f);
     fclose(f);
 
-    if (carrier != '1') {  return FL_NET_OFFLINE; }
+    if (carrier != '1') return FL_NET_OFFLINE;
 
     if (strncmp(iface, "en", 2) == 0 || strncmp(iface, "eth", 3) == 0) {
         return FL_NET_ETHERNET;
@@ -791,7 +752,7 @@ char iface[32] = {0};
     if (strncmp(iface, "wl", 2) == 0) {
         return FL_NET_WIFI;
     }
-    {  return FL_NET_OFFLINE; }
+    return FL_NET_OFFLINE;
 }
 
 bool fl_dismiss_message_platform(const char* name) {
