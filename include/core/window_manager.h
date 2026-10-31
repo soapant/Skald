@@ -73,7 +73,6 @@ typedef struct {
 WindowManager* WindowManager_Create(void);
 void WindowManager_Destroy(WindowManager* wm);
 int WindowManager_Run(WindowManager* wm);
-void WindowManager_Quit(WindowManager* wm);
 WindowManager* WindowManager_Get(void);
 
 Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup);

@@ -10,8 +10,6 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include "core/timer.h"
 static pthread_mutex_t g_kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 bool kwin_is_active(void) {
@@ -446,50 +444,6 @@ bool minimize_active_window_kwin(void) {
         
 if (!kwin_is_active()) {  return false; }
     return kwin_run_script("workspace.slotWindowMinimize();");
-}
-
-bool screenshot_copy_area_kwin(void) {
-        
-if (!kwin_is_active()) {  return false; }
-    free(Platform_RunTerminalCommand("spectacle -b -n -r -c", false));
-    return true;
-}
-
-bool screenshot_copy_kwin(void) {
-        
-if (!kwin_is_active()) {  return false; }
-    free(Platform_RunTerminalCommand("spectacle -b -n -c", false));
-    return true;
-}
-
-bool screenshot_save_area_kwin(char* save_path) {
-        
-if (!kwin_is_active() || !save_path || !save_path[0]) {  return false; }
-    char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\"", save_path);
-    free(Platform_RunTerminalCommand(cmd, false));
-    return true;
-}
-
-bool screenshot_save_kwin(char* save_path) {
-        
-if (!kwin_is_active() || !save_path || !save_path[0]) {  return false; }
-    char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "spectacle -b -n -o \"%s\"", save_path);
-    free(Platform_RunTerminalCommand(cmd, false));
-    return true;
-}
-
-char* ocr_area_kwin(void) {
-        
-if (!kwin_is_active()) {  return NULL; }
-    char path[128];
-    snprintf(path, sizeof(path), "/tmp/flint_ocr_%d.png", (int)getpid());
-    char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\" && tesseract \"%s\" stdout -l eng; rm -f \"%s\"", path, path, path);
-    char* out = Platform_RunTerminalCommand(cmd, false);
-    if (!out || !out[0]) { free(out); return NULL; }
-    return out;
 }
 
 bool get_mouse_pos_kwin(int *x, int *y) {

@@ -137,19 +137,11 @@ void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
     
 }
 
-void UI_LB_SetFont(void* hFont) {
-    
-    
-}
-
 int UI_LB_GetItemHeight(void) {
-    
-    
     return 0;
 }
 
 void UI_NavigateTo(ListBoxInfo* lb, int index) {
-    
     if (!lb) {  return ; }
     int count = lb->populated_count;
     if (count <= 0) {
@@ -166,34 +158,19 @@ void UI_NavigateTo(ListBoxInfo* lb, int index) {
     int old_sel = lb->selected_index;
     if (old_sel == index) {  return ; }
     lb->selected_index = index;
-    // lb->selected_text = ListBoxInfo_Row(lb,index);
     ListBox_ScrollToSelection(lb);
     UI_RequestPopupRepaint();
     
 }
 
 void UI_NavigateUp(ListBoxInfo* lb) {
-    
     ListBox_NavigateUp(lb);
     UI_RequestPopupRepaint();
-    
 }
 
 void UI_NavigateDown(ListBoxInfo* lb) {
-    
     ListBox_NavigateDown(lb);
     UI_RequestPopupRepaint();
-    
-}
-
-int UI_LB_GetTextLen(WindowHandle hList) {
-        
-return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTEXTLEN, 0, 0);
-}
-
-int UI_LB_GetText(WindowHandle hList, int index, char* buffer) {
-        
-return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTEXT, index, (LPARAM)buffer);
 }
 
 typedef struct {
@@ -204,8 +181,7 @@ typedef struct {
 } Win32TextTarget;
 
 static int win32_target_cursor(const Win32TextTarget* t) {
-        
-if (t->cursor_i) {  return *t->cursor_i; }
+    if (t->cursor_i) {  return *t->cursor_i; }
     if (t->cursor_z) {  return (int)*t->cursor_z; }
     return 0;
 }
@@ -408,28 +384,7 @@ void UI_RedrawNow(ListBoxInfo* lb) {
     
 }
 
-static bool g_toggle_key_pending = false;
-static int g_toggle_skip_vk = 0;
-
-bool UI_ShouldSkipPopupKey(const void* msg) {
-        
-const MSG* m = (const MSG*)msg;
-    if (!g_toggle_key_pending) {  return false; }
-    if (m->message == WM_KEYDOWN || m->message == WM_SYSKEYDOWN || m->message == WM_KEYUP || m->message == WM_SYSKEYUP || m->message == WM_CHAR || m->message == WM_SYSCHAR) {
-        g_toggle_key_pending = false;
-        if (g_toggle_skip_vk != 0 &&
-            (m->message == WM_KEYDOWN || m->message == WM_SYSKEYDOWN || m->message == WM_KEYUP || m->message == WM_SYSKEYUP) &&
-            (int)m->wParam == g_toggle_skip_vk) {
-            g_toggle_skip_vk = 0;
-            return true;
-        }
-        return false;
-    }
-    return false;
-}
-
 void UI_Redraw(ListBoxInfo* lb) {
-        
     if (FlintContext_Get()->prompt_callbacks.render == NULL) {
         HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
         if (hPopup) KillTimer(hPopup, UI_DEBOUNCE_TIMER_ID);

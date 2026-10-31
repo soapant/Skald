@@ -26,10 +26,7 @@ typedef struct {
     const char *type;
 } CcEntrySpec;
 
-bool add_to_cc(const CcEntrySpec *spec);
 bool add_dep(const char *dep_name, const char *owner_file);
-int cc_entry_count(void);
-const CcEntrySpec *cc_entry_at(int index);
 void cc_registry_purge_owner(const char *path_a, const char *path_b);
 
 #endif

@@ -1944,7 +1944,6 @@ void fl_profile_end(FlTimer timer) {
 
 static FlWidget *g_fl_widgets[FL_WIDGET_MAX];
 static int g_fl_widget_count = 0;
-static unsigned g_fl_widget_gen = 1;
 
 typedef struct { char name[64]; FlLibrary handle; } LibraryEntry;
 static LibraryEntry g_library_registry[32];
@@ -2080,50 +2079,9 @@ static void fl_widget_render_frame(void *ud) {
     
 }
 
-static const char* fl_widget_owner_basename(const char* p, char* out, size_t n) {
-    if (!p || !p[0]) {     
-if (n) out[0] = '\0'; {  return out; } }
-    const char* s = p;
-    for (const char* q = p; *q; q++) if (*q == '/' || *q == '\\') s = q + 1;
-    snprintf(out, n, "%s", s);
-    return out;
-}
-
-static bool fl_widget_owner_matches(const FlWidget *widget, const char *a, const char *b) {
-    if (!widget->owner) return false;
-    if (a && a[0] && strcmp(widget->owner, a) == 0) return true;
-    if (b && b[0] && strcmp(widget->owner, b) == 0) return true;
-    char ab[512], bb[512], wb[512];
-    fl_widget_owner_basename(widget->owner, wb, sizeof(wb));
-    if (a && a[0]) {     
-fl_widget_owner_basename(a, ab, sizeof(ab)); if (strcmp(wb, ab) == 0) {  return true; } }
-    if (b && b[0]) {     
-fl_widget_owner_basename(b, bb, sizeof(bb)); if (strcmp(wb, bb) == 0) {  return true; } }
-    return false;
-}
-
-static void fl_widget_destroy_window(void *ud) {
-    
-    FlWidget *widget = (FlWidget *)ud;
-    if (!widget) {  return ; }
-    widget->hovered = false;
-    Platform_HoverMessageRelease(widget->name);
-    Platform_HoverWidgetHide(widget->name);
-    if (widget->hover_thread) {
-        fl_thread_join(widget->hover_thread);
-        widget->hover_thread = NULL;
-        widget->hover_running = false;
-    }
-    if (Platform_Widget_IsValid(widget->win)) {
-        Platform_Widget_Destroy(widget->win);
-    }
-    widget->win = NULL;
-}
 static void fl_widget_attach_window(void *ud) {
-    
     FlWidget *widget = (FlWidget *)ud;
-    if (!widget || widget->dead) {     
- {  return ; } }
+    if (!widget || widget->dead)  return;
     bool created = false;
     if (!Platform_Widget_IsValid(widget->win)) {
         Platform_SetDrawBgColor(widget->has_bg ? widget->bg_color : 0);
@@ -2383,17 +2341,6 @@ const FlCcEntrySpec *fl_cc_entry_at(int index) {
     return &g_cc_entries[index].pub;
 }
 
-void fl_cc_registry_purge_owner(const char *path_a, const char *path_b) {
-    if (!path_a && !path_b) return;
-    int out = 0;
-    for (int i = 0; i < g_cc_entry_count; i++) {
-        if (Owner_ModuleMatches(g_cc_entries[i].owner, path_a, path_b)) continue;
-        if (out != i) g_cc_entries[out] = g_cc_entries[i];
-        out++;
-    }
-    g_cc_entry_count = out;
-}
-
 #define FL_MAX_ALIASES 1024
 static char g_alias_alias[FL_MAX_ALIASES][128];
 static char g_alias_target[FL_MAX_ALIASES][256];
@@ -2413,8 +2360,6 @@ bool fl_add_alias_impl(const FlAliasSpec *spec) {
     g_alias_count++;
     return true;
 }
-
-int fl_alias_count(void) { return g_alias_count; }
 
 const char *fl_alias_for(const char *target) {
     if (!target) return NULL;

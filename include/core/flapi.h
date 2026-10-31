@@ -2030,11 +2030,6 @@ typedef struct {
  */
 bool fl_add_alias_impl(const FlAliasSpec *spec);
 
-/**
- * @brief Get the number of registered aliases.
- * @return  The count.
- */
-int fl_alias_count(void);
 
 /**
  * @brief Get the alias for a target.
@@ -2055,13 +2050,6 @@ int fl_cc_entry_count(void);
  * @return       Borrowed pointer to `FlCcEntrySpec`. See `FlCcEntrySpec`.
  */
 const CcEntrySpec *fl_cc_entry_at(int index);
-
-/**
- * @brief Purge all control center entries owned by specified paths.
- * @param path_a  Path A.
- * @param path_b  Path B.
- */
-void fl_cc_registry_purge_owner(const char *path_a, const char *path_b);
 
 /**
  * @brief Add dependency (internal).

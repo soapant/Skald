@@ -839,14 +839,6 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
     Platform_DrawTextRaw((PlDrawTextRawSpec){.x=XOffset, .y=text_y, .text=trunc, .color=pcol, .font=font, .align="LEFT", .pad=XOffset, .fontsize=FontSize});
 }
 
-static int x11_error_occurred = 0;
-static int dummy_x_error_handler(Display *dpy, XErrorEvent *error) {
-    if (error->error_code == BadWindow) {
-        x11_error_occurred = 1;
-        return 0;
-    }
-    return 0;
-}
 Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect);
 
 Window x11_create_window_ex(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {

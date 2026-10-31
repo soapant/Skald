@@ -23,7 +23,6 @@ int UI_LB_GetViewTop(ListBoxInfo* lb);
 int UI_LB_GetVisibleCount(void);
 void UI_LB_SetVisibleCount(int count);
 void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index);
-void UI_LB_SetFont(void* hFont);
 int UI_LB_GetItemHeight(void);
 void UI_NavigateTo(ListBoxInfo* lb, int index);
 void UI_NavigateUp(ListBoxInfo* lb);

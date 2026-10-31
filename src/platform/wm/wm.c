@@ -9,7 +9,6 @@
 #include <strings.h>
 #include <stdlib.h>
 
-#include "core/timer.h"
 char* Wm_GetActiveWindowTitle(void) {
         
 static char buffer[1024];
@@ -232,8 +231,7 @@ if (getenv("WAYLAND_DISPLAY")) {
 }
 
 bool Wm_MinimizeActiveWindow(void) {
-        
-if (getenv("WAYLAND_DISPLAY")) {
+    if (getenv("WAYLAND_DISPLAY")) {
         if (minimize_active_window_kwin()) return true;
         if (minimize_active_window_niri()) return true;
         if (minimize_active_window_hyprland()) return true;
@@ -242,47 +240,6 @@ if (getenv("WAYLAND_DISPLAY")) {
     if (minimize_active_window_x11()) {  return true; }
     log_error("MinimizeActiveWindow Didnt Work");
     return false;
-}
-
-bool Wm_ScreenshotCopyArea(void) {
-        
-if (getenv("WAYLAND_DISPLAY")) {
-        if (screenshot_copy_area_kwin()) return true;
-    }
-    return false;
-}
-
-bool Wm_ScreenshotCopy(void) {
-        
-if (getenv("WAYLAND_DISPLAY")) {
-        if (screenshot_copy_kwin()) return true;
-    }
-    return false;
-}
-
-bool Wm_ScreenshotSaveArea(char* save_path) {
-        
-if (getenv("WAYLAND_DISPLAY")) {
-        if (screenshot_save_area_kwin(save_path)) return true;
-    }
-    return false;
-}
-
-bool Wm_ScreenshotSave(char* save_path) {
-        
-if (getenv("WAYLAND_DISPLAY")) {
-        if (screenshot_save_kwin(save_path)) return true;
-    }
-    return false;
-}
-
-char* Wm_OcrArea(void) {
-        
-if (getenv("WAYLAND_DISPLAY")) {
-        char* out = ocr_area_kwin();
-        if (out) return out;
-    }
-    return NULL;
 }
 
 bool Wm_GetMousePos(int *x, int *y) {
