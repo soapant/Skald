@@ -60,7 +60,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     
     int wParam = key->vk;
 
-    if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {  return false; }
+    if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) return false;
 
     extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
     PromptState* state = Platform_GetPromptStateForHWND(hwnd);
@@ -80,7 +80,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     bool handled = false;
     if (state) handled = Prompt_HandleKey(state, key);
 
-    if (!handled) {  return false; }
+    if (!handled) return false;
 
     if (hide_popup && !FlintContext_Get()->window.selection_complete) {
         if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
@@ -138,7 +138,7 @@ static bool prompt_win_no_bg(void) {
         
     extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
     PromptState* st = Platform_GetPromptStateForHWND(GetFocus());
-    if (st && st->no_bg) {  return true; }
+    if (st && st->no_bg) return true;
     return false;
 }
 

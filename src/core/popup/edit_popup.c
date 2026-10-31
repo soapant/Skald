@@ -69,7 +69,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
                         EditPopupConfirmCallback on_confirm, void* user_data) {
     
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
-    if (!data) {  return NULL; }
+    if (!data) return NULL;
     w = (int)(w * Platform_GetUIScale());
     h = (int)(h * Platform_GetUIScale());
     WindowManager_GetCenteredPos(w, h, &x, &y);

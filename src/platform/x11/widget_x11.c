@@ -128,8 +128,8 @@ PlatformWidget *widget = (PlatformWidget *)ud;
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void), const char *name) {
         
 (void)name;
-    if (w <= 0 || h <= 0) {  return NULL; }
-    if (!Platform_RenderThread_EnsureStarted(fps)) {  return NULL; }
+    if (w <= 0 || h <= 0) return NULL;
+    if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
     Display *dpy = (Display *)Platform_RenderThread_Display();
     if (!dpy) {
         log_warn("widget: no render thread display");
@@ -137,7 +137,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     }
 
     PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
-    if (!widget) {  return NULL; }
+    if (!widget) return NULL;
     widget->dpy = dpy;
     widget->x = x;
     widget->y = y;

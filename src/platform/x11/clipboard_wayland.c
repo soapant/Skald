@@ -49,7 +49,7 @@ static int wl_dir_fd_count(const char *pid, const char *want) {
 char p[64];
     snprintf(p, sizeof(p), "/proc/%s/fd", pid);
     DIR *d = opendir(p);
-    if (!d) {  return -1; }
+    if (!d) return -1;
     int total = 0, pipes = 0;
     struct dirent *e;
     while ((e = readdir(d))) {
@@ -65,14 +65,14 @@ char p[64];
         }
     }
     closedir(d);
-    if (want && strcmp(want, "pipes") == 0) {  return pipes; }
+    if (want && strcmp(want, "pipes") == 0) return pipes;
     return total;
 }
 
 static int wl_find_pid(const char *name) {
         
 DIR *d = opendir("/proc");
-    if (!d) {  return -1; }
+    if (!d) return -1;
     int found = -1;
     struct dirent *e;
     while ((e = readdir(d))) {
@@ -104,8 +104,8 @@ g_wl_hypr_pid = wl_find_pid("Hyprland");
 
 static const char *wl_read_guard(const void *offer) {
         
-if (g_wl_read_disabled) {  return g_wl_read_block_reason[0] ? g_wl_read_block_reason : "read path disabled"; }
-    if (!offer) {  return "no offer"; }
+if (g_wl_read_disabled) return g_wl_read_block_reason[0] ? g_wl_read_block_reason : "read path disabled";
+    if (!offer) return "no offer";
     if (g_wl_hypr_pid <= 0) wl_hypr_refresh();
     if (g_wl_hypr_pid > 0) {
         snprintf(g_wl_read_block_reason, sizeof(g_wl_read_block_reason),
@@ -113,9 +113,9 @@ if (g_wl_read_disabled) {  return g_wl_read_block_reason[0] ? g_wl_read_block_re
         g_wl_read_disabled = true;
         return g_wl_read_block_reason;
     }
-    if (offer == g_wl_dead_offer) {  return "offer already produced no data"; }
-    if (g_wl_receive_calls >= WL_MAX_RECEIVE_CALLS) {  return "session receive cap reached"; }
-    if (g_wl_hypr_fd > WL_HYPR_FD_ALARM) {  return "compositor fd count already elevated"; }
+    if (offer == g_wl_dead_offer) return "offer already produced no data";
+    if (g_wl_receive_calls >= WL_MAX_RECEIVE_CALLS) return "session receive cap reached";
+    if (g_wl_hypr_fd > WL_HYPR_FD_ALARM) return "compositor fd count already elevated";
     return NULL;
 }
 
@@ -492,7 +492,7 @@ static void (*g_src_listener[])(void) = {
 
 static bool wl_load(void) {
         
-if (g_wl_handle) {  return true; }
+if (g_wl_handle) return true;
     dlerror();
     void *h = dlopen("libwayland-client.so.0", RTLD_NOW);
     if (!h) {
@@ -588,7 +588,7 @@ static void *wl_thread_func(void *arg) {
 
 static bool wl_setup(void) {
         
-if (g_wl_ready) {  return true; }
+if (g_wl_ready) return true;
     if (g_wl_dead) { wl_trace("SETUP", "already dead, refusing"); return false; }
     if (!wl_load()) {
         g_wl_dead = true;
@@ -751,7 +751,7 @@ g_wl_req_count += 2;
 
 int Platform_ClipboardSetText(const char *text) {
         
-if (!text) {  return 0; }
+if (!text) return 0;
     wl_trace("API SetText", "len=%d text='%s'", (int)strlen(text), text);
     pthread_mutex_lock(&g_wl_text_lock);
     bool same = g_wl_text != NULL && strcmp(g_wl_text, text) == 0 && g_wl_png == NULL;
@@ -773,7 +773,7 @@ if (!text) {  return 0; }
         g_wl_uri_list = NULL;
     }
     pthread_mutex_unlock(&g_wl_text_lock);
-    if (!nt) {  return 0; }
+    if (!nt) return 0;
     long long t0 = 0;
     struct timespec ts0, ts1;
     clock_gettime(CLOCK_MONOTONIC, &ts0);
@@ -788,11 +788,11 @@ if (!text) {  return 0; }
 
 int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
         
-if (!png || len == 0) {  return 0; }
-    if (!wl_setup()) {  return 0; }
+if (!png || len == 0) return 0;
+    if (!wl_setup()) return 0;
     unsigned char* np = malloc(len);
     if (np) memcpy(np, png, len);
-    if (!np) {  return 0; }
+    if (!np) return 0;
     const char* mime = clipboard_image_mime(clipboard_image_format(png, len));
     pthread_mutex_lock(&g_wl_text_lock);
     free(g_wl_png);
@@ -812,9 +812,9 @@ if (!png || len == 0) {  return 0; }
 
 int Platform_ClipboardSetFile(const char *path) {
         
-if (!path || path[0] == 0) {  return 0; }
+if (!path || path[0] == 0) return 0;
     char *uri = clipboard_path_to_uri_list(path);
-    if (!uri) {  return 0; }
+    if (!uri) return 0;
     if (!wl_setup()) { free(uri); return 0; }
     pthread_mutex_lock(&g_wl_text_lock);
     free(g_wl_text);

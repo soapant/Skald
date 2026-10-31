@@ -110,9 +110,9 @@ static int g_render_lb_visible = 0;
 
 int UI_LB_GetVisibleCount(void) {
     
-    if (FlintContext_Get()->prompt_callbacks.render != NULL && g_render_lb_visible > 0) {  return g_render_lb_visible; }
+    if (FlintContext_Get()->prompt_callbacks.render != NULL && g_render_lb_visible > 0) return g_render_lb_visible;
     int itemHeight = UI_LB_GetItemHeight();
-    if (itemHeight <= 0) {  return 16; }
+    if (itemHeight <= 0) return 16;
     RECT rect;
     int visible = rect.bottom / itemHeight;
     if (visible < 1) visible = 1;
@@ -181,8 +181,8 @@ typedef struct {
 } Win32TextTarget;
 
 static int win32_target_cursor(const Win32TextTarget* t) {
-    if (t->cursor_i) {  return *t->cursor_i; }
-    if (t->cursor_z) {  return (int)*t->cursor_z; }
+    if (t->cursor_i) return *t->cursor_i;
+    if (t->cursor_z) return (int)*t->cursor_z;
     return 0;
 }
 
@@ -272,7 +272,7 @@ void UI_SetText(const char* text) {
 int UI_GetCursorPosition(void) {
     
 Win32TextTarget t;
-    if (!win32_resolve_text_target(&t) || !t.text) {  return 0; }
+    if (!win32_resolve_text_target(&t) || !t.text) return 0;
     int pos = win32_target_cursor(&t);
     
     return pos;
@@ -292,12 +292,12 @@ s_pending_high_surrogate = 0;
 int UI_InsertText(const char* utf8, int len) {
         
 Win32TextTarget t;
-    if (!utf8 || len <= 0) {  return 0; }
-    if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) {  return 0; }
+    if (!utf8 || len <= 0) return 0;
+    if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) return 0;
     size_t cur = (size_t)win32_target_cursor(&t);
     size_t have = strlen(t.text);
     if (cur > have) cur = have;
-    if (have + (size_t)len + 1 > t.capacity) {  return 0; }
+    if (have + (size_t)len + 1 > t.capacity) return 0;
     memmove(t.text + cur + len, t.text + cur, have - cur + 1);
     memcpy(t.text + cur, utf8, (size_t)len);
     win32_target_set_cursor(&t, (int)(cur + len));
@@ -306,7 +306,7 @@ Win32TextTarget t;
 
 static int win32_prev_char_len(const char* text, size_t cur) {
         
-if (cur == 0) {  return 0; }
+if (cur == 0) return 0;
     size_t i = cur - 1;
     while (i > 0 && ((unsigned char)text[i] & 0xC0) == 0x80) i--;
     return (int)(cur - i);
@@ -314,7 +314,7 @@ if (cur == 0) {  return 0; }
 
 static int win32_next_char_len(const char* text, size_t len, size_t cur) {
         
-if (cur >= len) {  return 0; }
+if (cur >= len) return 0;
     size_t i = cur + 1;
     while (i < len && ((unsigned char)text[i] & 0xC0) == 0x80) i++;
     return (int)(i - cur);
@@ -370,7 +370,7 @@ wchar_t pair[2];
     }
     char utf8[8];
     int n = WideCharToMultiByte(CP_UTF8, 0, pair, pairlen, utf8, (int)sizeof(utf8), NULL, NULL);
-    if (n <= 0) {  return 0; }
+    if (n <= 0) return 0;
     return UI_InsertText(utf8, n);
 }
 
@@ -408,11 +408,11 @@ PromptState* Platform_GetPromptStateForHWND(HWND hwnd) {
     
     if (hwnd && IsWindow(hwnd)) {
         PromptState* st = (PromptState*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-        if (st) {  return st; }
+        if (st) return st;
         HWND parent = GetParent(hwnd);
         if (parent && IsWindow(parent)) {
             st = (PromptState*)GetWindowLongPtrA(parent, GWLP_USERDATA);
-            if (st) {  return st; }
+            if (st) return st;
         }
     }
     WindowManager* wm = WindowManager_Get();
@@ -482,7 +482,7 @@ ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx) {
         
 (void)ctx;
     PromptState* ws = g_win32_prompt_state;
-    if (ws && ws->has_listbox) {  return &ws->listbox; }
+    if (ws && ws->has_listbox) return &ws->listbox;
     HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     if (hPopup && IsWindow(hPopup)) {
         ListBoxInfo* lb = (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
@@ -511,13 +511,12 @@ if (!ctx) {  return ; }
 }
 
 bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
-        
-if (!ctx) {  return false; }
+    if (!ctx) return false;
     PromptState* ws = g_win32_prompt_state;
-    if (!ws) {  return false; }
+    if (!ws) return false;
     int len = (int)strlen(ctx->window.filter);
     int cur = ctx->window.filter_cursor;
-    if (cur <= 0 || len <= 0) {  return false; }
+    if (cur <= 0 || len <= 0) return false;
     int del = cur - 1;
     memmove(ctx->window.filter + del, ctx->window.filter + del + 1, len - del);
     ctx->window.filter_cursor = del;

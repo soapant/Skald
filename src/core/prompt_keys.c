@@ -27,7 +27,7 @@ void Prompt_Refresh(PromptState* state) {
 
 bool Prompt_DeleteSelection(PromptState* state) {
     
-    if (!state) {  return false; }
+    if (!state) return false;
     int ss = 0, se = 0;
     if (!VimState_GetSelection(&ss, &se)) {
         
@@ -140,15 +140,15 @@ void Prompt_TriggerEnter(PromptState* state, bool ctrl, bool shift, bool alt) {
 
 bool Prompt_HandleListClick(PromptState* state, bool ctrl, bool shift, bool alt) {
     
-    if (!state || !state->has_listbox) {  return false; }
+    if (!state || !state->has_listbox) return false;
     int list_top = 0, item_height = 0, visible_count = 0;
     ListBox_GetGeometry(&list_top, &item_height, &visible_count);
-    if (item_height <= 0 || visible_count <= 0) {  return false; }
+    if (item_height <= 0 || visible_count <= 0) return false;
     ListBoxInfo* lb = &state->listbox;
     int mx = 0, my = 0;
-    if (!ListBox_ClientMousePos(&mx, &my)) {  return false; }
+    if (!ListBox_ClientMousePos(&mx, &my)) return false;
     int idx = ListBox_RowAtY(lb, list_top, item_height, lb->view_offset, visible_count, my);
-    if (idx < 0) {  return false; }
+    if (idx < 0) return false;
     UI_SetSelection(lb,idx);
     Prompt_TriggerEnter(state, ctrl, shift, alt);
     
@@ -157,7 +157,7 @@ bool Prompt_HandleListClick(PromptState* state, bool ctrl, bool shift, bool alt)
 
 bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
     
-    if (!state || !key) {  return false; }
+    if (!state || !key) return false;
     int vk = key->vk;
     bool ctrl = key->ctrl;
     bool shift = key->shift;

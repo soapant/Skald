@@ -148,7 +148,7 @@ static uint64_t bg_mtime_key(const FILETIME* ft) {
 static bool bg_cache_store(const char* file, int w, int h, const void* bits, const FILETIME* ft, DWORD sz) {
     
     FILE* f = fopen(file, "wb");
-    if (!f) {  return false; }
+    if (!f) return false;
     BgCacheHeader ch;
     memset(&ch, 0, sizeof(ch));
     memcpy(ch.magic, BG_CACHE_MAGIC, 4);
@@ -180,7 +180,7 @@ static bool bg_cache_store(const char* file, int w, int h, const void* bits, con
 static bool bg_cache_load(const char* file, int w, int h, void* bits, const FILETIME* ft, DWORD sz) {
     
     FILE* f = fopen(file, "rb");
-    if (!f) {  return false; }
+    if (!f) return false;
     BgCacheHeader ch;
     BITMAPFILEHEADER fh;
     BITMAPINFOHEADER ih;
@@ -206,19 +206,19 @@ static void* bg_shell_icon_bitmap(const char* native) {
     
 SHFILEINFOA sfi;
     ZeroMemory(&sfi, sizeof(sfi));
-    if (!SHGetFileInfoA(native, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES)) {  return NULL; }
-    if (!sfi.hIcon) {  return NULL; }
+    if (!SHGetFileInfoA(native, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES)) return NULL;
+    if (!sfi.hIcon) return NULL;
     GpBitmap* bmp = NULL;
     GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
     DestroyIcon(sfi.hIcon);
-    if (st != Ok || !bmp) {  return NULL; }
+    if (st != Ok || !bmp) return NULL;
     return bmp;
 }
 
 static void* bg_load_native(const char* native, int* out_w, int* out_h) {
     
 bg_gdip_ensure();
-    if (g_bg_gdip_token == 0) {  return NULL; }
+    if (g_bg_gdip_token == 0) return NULL;
     wchar_t wpath[1024];
     bg_widen(native, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
     GpBitmap* bmp = NULL;
@@ -285,7 +285,7 @@ DWORD now = GetTickCount();
             break;
         }
         if (s->src) { s->stamp = ++g_bg_tick;  return s; }
-        if (s->failed && now - s->checked_ms < BG_RETRY_MS) {  return NULL; }
+        if (s->failed && now - s->checked_ms < BG_RETRY_MS) return NULL;
         slot = s;
         break;
     }
@@ -323,7 +323,7 @@ static BgTileSlot* bg_tile_compose(HDC refDC, const char* native, int w, int h, 
     
 
     HDC dc = CreateCompatibleDC(NULL);
-    if (!dc) {  return NULL; }
+    if (!dc) return NULL;
     BITMAPINFO bmi;
     ZeroMemory(&bmi, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -418,7 +418,7 @@ static BgTileSlot* bg_tile_compose(HDC refDC, const char* native, int w, int h, 
 static BgTileSlot* bg_tile_get(HDC refDC, const char* path, int w, int h) {
     
 
-    if (!path || !path[0] || w <= 0 || h <= 0) {  return NULL; }
+    if (!path || !path[0] || w <= 0 || h <= 0) return NULL;
     char native[512];
     bg_native_path(native, sizeof(native), path);
     DWORD now = GetTickCount();
@@ -463,12 +463,12 @@ const char* p = BackgroundImage;
 bool win32_draw_bg_image_slice(HDC hdc, RECT* rc, int containerW, int containerH, int originX, int originY) {
     
 
-    if (!hdc || !rc) {  return false; }
-    if (!win32_bg_image_enabled()) {  return false; }
+    if (!hdc || !rc) return false;
+    if (!win32_bg_image_enabled()) return false;
     int dw = rc->right - rc->left;
     int dh = rc->bottom - rc->top;
-    if (dw <= 0 || dh <= 0) {  return false; }
-    if (containerW <= 0 || containerH <= 0) {  return false; }
+    if (dw <= 0 || dh <= 0) return false;
+    if (containerW <= 0 || containerH <= 0) return false;
 
     BgTileSlot* t = NULL;
     bg_lock();
@@ -499,7 +499,7 @@ bool win32_draw_bg_image_slice(HDC hdc, RECT* rc, int containerW, int containerH
 int win32_bg_image_prewarm(int containerW, int containerH) {
     
 
-    if (!win32_bg_image_enabled() || containerW <= 0 || containerH <= 0) {  return 0; }
+    if (!win32_bg_image_enabled() || containerW <= 0 || containerH <= 0) return 0;
     HDC screen = GetDC(NULL);
     BgTileSlot* t = NULL;
     bg_lock();

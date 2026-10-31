@@ -54,7 +54,7 @@ if (g_pbuf_xd && g_pbuf_pm && g_pbuf_dpy == dpy && g_pbuf_win == win &&
     }
     x11_pbuf_drop();
     Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
-    if (!pm) {  return false; }
+    if (!pm) return false;
     XftDraw* xd = XftDrawCreate(dpy, pm, vis, cmap);
     if (!xd) { XFreePixmap(dpy, pm); return false; }
     g_pbuf_dpy = dpy;

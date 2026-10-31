@@ -53,7 +53,7 @@ for (int i = 0; i < g_msg_slot_count; i++) {
 
 static int MsgFindKeyLocked(const char *key) {
         
-if (!key || !key[0]) {  return -1; }
+if (!key || !key[0]) return -1;
     for (int i = 0; i < g_msg_slot_count; i++) {
         if (strcmp(g_msg_slots[i].key, key) == 0) return i;
     }
@@ -77,7 +77,7 @@ typedef struct {
 static void *MsgDismissThread(void *arg) {
         
 MsgDismissPayload *p = (MsgDismissPayload *)arg;
-    if (!p) {  return NULL; }
+    if (!p) return NULL;
     if (p->timeout > 0) {
         struct timespec ts;
         ts.tv_sec = (time_t)p->timeout;
@@ -111,16 +111,16 @@ typedef struct {
 
 static int MsgUtf8CharLen(unsigned char c) {
         
-if ((c & 0x80) == 0) {  return 1; }
-    if ((c & 0xE0) == 0xC0) {  return 2; }
-    if ((c & 0xF0) == 0xE0) {  return 3; }
-    if ((c & 0xF8) == 0xF0) {  return 4; }
+if ((c & 0x80) == 0) return 1;
+    if ((c & 0xE0) == 0xC0) return 2;
+    if ((c & 0xF0) == 0xE0) return 3;
+    if ((c & 0xF8) == 0xF0) return 4;
     return 1;
 }
 
 static int MsgTextWidth(Display *dpy, XftFont *xf, const char *s, int n) {
         
-if (!s || n <= 0) {  return 0; }
+if (!s || n <= 0) return 0;
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8 *)s, n, &ext);
     return ext.xOff;
@@ -671,7 +671,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
 bool Platform_DismissMessage(const char* name) {
         
     Display *dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
     bool removed = false;
     pthread_mutex_lock(&g_msg_lock);
     if (name && name[0]) {
@@ -690,9 +690,9 @@ bool Platform_DismissMessage(const char* name) {
 
 bool Platform_MessageActive(const char* name) {
         
-    if (!name || !name[0]) {  return false; }
+    if (!name || !name[0]) return false;
     Display *dpy = get_display();
-    if (!dpy) {  return false; }
+    if (!dpy) return false;
     bool found = false;
     pthread_mutex_lock(&g_msg_lock);
     for (int i = 0; i < g_msg_slot_count; i++) {

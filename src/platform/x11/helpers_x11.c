@@ -121,11 +121,11 @@ unsigned char c = *s;
 }
 
 static bool x11_font_has(XftFont* f, FcChar32 cp) {
-    if (!f || !f->pattern) {  return false; }
-        if (cp < 0x21 || cp == 0x7F) {  return true; }
+    if (!f || !f->pattern) return false;
+        if (cp < 0x21 || cp == 0x7F) return true;
         FcCharSet* cs = NULL;
-        if (FcPatternGetCharSet(f->pattern, FC_CHARSET, 0, &cs) != FcResultMatch || !cs) {  return true; }
-        if (!FcCharSetHasChar(cs, cp)) {  return false; }
+        if (FcPatternGetCharSet(f->pattern, FC_CHARSET, 0, &cs) != FcResultMatch || !cs) return true;
+        if (!FcCharSetHasChar(cs, cp)) return false;
         FT_Face face = XftLockFace(f);
         if (face) {
             bool ft = FcFreeTypeCharIndex(face, cp) != 0;
@@ -136,7 +136,7 @@ static bool x11_font_has(XftFont* f, FcChar32 cp) {
 }
 
 static int x11_font_px(XftFont* xf, int px) {
-    if (px > 0) {  return px; }
+    if (px > 0) return px;
         double d = 0;
         if (xf && xf->pattern && FcPatternGetDouble(xf->pattern, FC_PIXEL_SIZE, 0, &d) == FcResultMatch && d > 0)
             return (int)(d + 0.5);
@@ -170,13 +170,13 @@ static XftFont* x11_open_fallback_at_locked(Display* dpy, FcChar32 cp, int px) {
 
 static XftFont* x11_fallback_for_locked(Display* dpy, FcChar32 cp, int px) {
     if (!g_fb_config) g_fb_config = FcInitLoadConfigAndFonts();
-        if (!g_fb_config) {  return NULL; }
+        if (!g_fb_config) return NULL;
         for (int i = 0; i < X11_FB_CACHE; i++) {
             if (g_fb_cache[i].f && g_fb_cache[i].dpy == dpy && g_fb_cache[i].cp == cp && g_fb_cache[i].px == px)
                 return g_fb_cache[i].f;
         }
         XftFont* fb = x11_open_fallback_at_locked(dpy, cp, px > 0 ? px : FontSize);
-        if (!fb) {  return NULL; }
+        if (!fb) return NULL;
         if (g_fb_cache[g_fb_next].f) {
             Display* odpy = g_fb_cache[g_fb_next].dpy;
             XLockDisplay(odpy);
@@ -199,14 +199,14 @@ static XftFont* x11_fallback_for(Display* dpy, FcChar32 cp, int px) {
 }
 
 int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, int px) {
-    if (!xf || !s || n <= 0) {  return 0; }
+    if (!xf || !s || n <= 0) return 0;
         px = x11_font_px(xf, px);
         const unsigned char* b = (const unsigned char*)s;
         const unsigned char* end = b + n;
         bool all = true;
         const unsigned char* p = b;
         while (p < end) { int cl = 1; FcChar32 cp = x11_utf8_cp(p, end, &cl); if (!x11_font_has(xf, cp)) { all = false; break; } p += cl; }
-        if (all) {  return xft_width(dpy, xf, s, n); }
+        if (all) return xft_width(dpy, xf, s, n);
         int total = 0;
         p = b;
         while (p < end) {
@@ -239,10 +239,10 @@ int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, i
 int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
     if (!text || !text[0] || fontsize <= 0) return fontsize > 0 ? fontsize : 0;
     Display *dpy = get_display();
-    if (!dpy) {  return fontsize; }
+    if (!dpy) return fontsize;
     FontHandle fh = Platform_CreateFontOnDisplay(dpy, fontsize, UsedFont);
     XftFont *xf = FH_TO_XFT(fh);
-    if (!xf) {  return fontsize; }
+    if (!xf) return fontsize;
     const unsigned char *b = (const unsigned char *)text;
     const unsigned char *end = b + strlen(text);
     int clen = 1;
@@ -260,7 +260,7 @@ int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
 }
 
 int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, int y, XftFont* xf, const char* s, int n, int px) {
-    if (!xf || !xd || !s || n <= 0) {  return 0; }
+    if (!xf || !xd || !s || n <= 0) return 0;
         px = x11_font_px(xf, px);
         const unsigned char* b = (const unsigned char*)s;
         const unsigned char* end = b + n;
@@ -497,9 +497,9 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
     }
     pthread_mutex_unlock(&g_img_cache_mtx);
     struct stat st;
-    if (stat(path, &st) != 0) {  return false; }
+    if (stat(path, &st) != 0) return false;
     argb = x11_decode_image_argb(path, &cw, &ch);
-    if (!argb) {  return false; }
+    if (!argb) return false;
     pthread_mutex_lock(&g_img_cache_mtx);
     x11_img_cache_put(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size, argb);
     pthread_mutex_unlock(&g_img_cache_mtx);
@@ -535,9 +535,9 @@ static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char
     img.green_mask = vis->green_mask;
     img.blue_mask = vis->blue_mask;
     img.obdata = NULL;
-    if (!XInitImage(&img)) {  return false; }
+    if (!XInitImage(&img)) return false;
     Pixmap pix = XCreatePixmap(dpy, drw, w, h, 32);
-    if (!pix) {  return false; }
+    if (!pix) return false;
     GC gc = XCreateGC(dpy, pix, 0, NULL);
     XPutImage(dpy, pix, gc, &img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
@@ -674,7 +674,7 @@ static SvgSrcCacheSlot g_svg_src_cache[8];
 static int g_svg_src_count = 0;
 
 unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
-    if (!path || !path[0]) {  return NULL; }
+    if (!path || !path[0]) return NULL;
     int dst_w = *out_w;
     int dst_h = *out_h;
     if (dst_w <= 0) dst_w = 16;
@@ -705,7 +705,7 @@ unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
         bool _is_svg = _plen > 4 && Platform_StringContainsCaseInsensitive(path + _plen - 4, ".svg");
         if (_is_svg) {
             NSVGimage* image = nsvgParseFromFile(path, "px", 96.0f);
-            if (!image) {  return NULL; }
+            if (!image) return NULL;
             if (image->width <= 0 || image->height <= 0) { nsvgDelete(image);  return NULL; }
             w = (int)(image->width + 0.5f);
             h = (int)(image->height + 0.5f);
@@ -1111,8 +1111,8 @@ static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int 
         }
     }
     const int total = SS * SS;
-    if (inside <= 0) {  return 0; }
-    if (inside >= total) {  return baseAlpha8; }
+    if (inside <= 0) return 0;
+    if (inside >= total) return baseAlpha8;
     return (unsigned int)((float)baseAlpha8 * ((float)inside / (float)total) + 0.5f);
 }
 
@@ -1164,13 +1164,13 @@ static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
 static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
     Visual* vis = attrs->visual;
     int depth = attrs->depth;
-    if (depth != 32) {  return None; }
+    if (depth != 32) return None;
     bool hasAlpha = true;
     bool rounded = RoundedCorners && CornerRadius > 0 && hasAlpha;
     int R = rounded ? CornerRadius : 0;
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
     Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
-    if (!pm) {  return None; }
+    if (!pm) return None;
     size_t bpl = (((size_t)w * (size_t)depth + 7u) / 8u + 3u) & ~(size_t)3u;
     char* pixbuf = (char*)calloc(1, bpl * (size_t)h);
     if (!pixbuf) { XFreePixmap(dpy, pm); return None; }
@@ -1235,11 +1235,11 @@ Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
         return hit;
     }
     XWindowAttributes attrs;
-    if (!XGetWindowAttributes(dpy, win, &attrs)) {  return None; }
+    if (!XGetWindowAttributes(dpy, win, &attrs)) return None;
     unsigned int baseAlpha8 = (unsigned int)WindowOpacity;
     if (baseAlpha8 > 255) baseAlpha8 = 255;
     Pixmap pm = x11_create_background_pixmap(dpy, win, w, h, &attrs, base, baseAlpha8);
-    if (!pm) {  return None; }
+    if (!pm) return None;
     bg_cache_store(dpy, pm, &k);
     return pm;
 }

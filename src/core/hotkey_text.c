@@ -10,10 +10,10 @@ extern long pending_hotkey_timeMs;
 
 bool HotkeyText_IsPrintable(const PopupKeyEvent* key) {
     
-    if (!key || key->text_len <= 0) {  return false; }
+    if (!key || key->text_len <= 0) return false;
     for (int i = 0; i < key->text_len; i++) {
         unsigned char c = (unsigned char)key->text[i];
-        if (c < 0x20 || c == 0x7F) {  return false; }
+        if (c < 0x20 || c == 0x7F) return false;
     }
     
     return true;
@@ -21,7 +21,7 @@ bool HotkeyText_IsPrintable(const PopupKeyEvent* key) {
 
 bool HotkeyText_ShouldSwallow(const PopupKeyEvent* key) {
     
-    if (!key) {  return false; }
+    if (!key) return false;
     bool trigger_press = false;
     if (pending_hotkey_vk != 0 && key->text_len == 1) {
         struct timeval tv;

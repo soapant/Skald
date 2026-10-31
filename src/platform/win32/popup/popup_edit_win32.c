@@ -21,7 +21,7 @@
 static bool s_edit_swallow_next_char = false;
 static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, const PopupKeyEvent* key) {
         
-if (data->base.vtable && data->base.vtable->on_key && data->base.vtable->on_key(&data->base, key)) {  return true; }
+if (data->base.vtable && data->base.vtable->on_key && data->base.vtable->on_key(&data->base, key)) return true;
     return false;
 }
 

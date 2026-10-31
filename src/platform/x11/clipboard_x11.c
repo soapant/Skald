@@ -233,7 +233,7 @@ if (!g_incr_active || !g_clip_png) {
 
 bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
         
-if (!dpy || !ev) {  return false; }
+if (!dpy || !ev) return false;
     if (ev->type == SelectionRequest) {
         g_cl_selreq++;
         cl_trace("EVENT", "SelectionRequest n=%ld requestor=%lu sel=%lu target=%lu prop=%lu time=%lu",
@@ -291,13 +291,13 @@ Window prev = XGetSelectionOwner(dpy, g_clip_clipboard);
 
 int x11_clipboard_set_text(const char *text) {
         
-if (!text) {  return 0; }
+if (!text) return 0;
     cl_trace("SETTEXT", "begin len=%d text='%s'", (int)strlen(text), text);
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) { cl_trace("SETTEXT", "no display/win"); return 0; }
     char* nt = strdup(text);
-    if (!nt) {  return 0; }
+    if (!nt) return 0;
     free(g_clip_text);
     g_clip_text = nt;
     free(g_clip_png);
@@ -316,13 +316,13 @@ if (!text) {  return 0; }
 
 int x11_clipboard_set_file(const char *path) {
         
-if (!path || !path[0]) {  return 0; }
+if (!path || !path[0]) return 0;
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
-    if (!dpy || g_clip_win == None) {  return 0; }
+    if (!dpy || g_clip_win == None) return 0;
     x11_clipboard_abort_incr();
     char *uri = clipboard_path_to_uri_list(path);
-    if (!uri) {  return 0; }
+    if (!uri) return 0;
     size_t n = strlen(uri) + 8;
     char *gnome = (char*)malloc(n);
     if (!gnome) { free(uri); return 0; }
@@ -341,16 +341,16 @@ if (!path || !path[0]) {  return 0; }
 
 int x11_clipboard_set_image(const unsigned char *png, size_t len) {
         
-if (!png || len == 0) {  return 0; }
+if (!png || len == 0) return 0;
     
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
-    if (!dpy || g_clip_win == None) {  return 0; }
+    if (!dpy || g_clip_win == None) return 0;
     x11_clipboard_abort_incr();
     const char* mime = clipboard_image_mime(clipboard_image_format(png, len));
     g_clip_img_atom = XInternAtom(dpy, mime ? mime : "image/png", False);
     unsigned char* np = malloc(len);
-    if (!np) {  return 0; }
+    if (!np) return 0;
     memcpy(np, png, len);
     free(g_clip_png);
     g_clip_png = np;
@@ -434,7 +434,7 @@ Atom actual = None;
         if (data) XFree(data);
         return NULL;
     }
-    if (!data) {  return NULL; }
+    if (!data) return NULL;
     char *out = malloc(nitems + 1);
     if (!out) {
         XFree(data);
@@ -452,7 +452,7 @@ static char *ClipReadIncr(Display *dpy, Window win, Atom prop, ClipReadWait *w) 
 size_t cap = 65536;
     size_t len = 0;
     char *out = malloc(cap);
-    if (!out) {  return NULL; }
+    if (!out) return NULL;
     XEvent ev;
     for (;;) {
         if (!ClipReadWaitEvent(dpy, &ev, ClipReadPropPred, w, 400)) break;
@@ -488,7 +488,7 @@ size_t cap = 65536;
 
 static Display *x11_clipboard_read_display(void) {
         
-if (g_clip_rd_dpy) {  return g_clip_rd_dpy; }
+if (g_clip_rd_dpy) return g_clip_rd_dpy;
     Display *d = XOpenDisplay(NULL);
     if (!d) {
         Display *main_dpy = get_display();
@@ -557,7 +557,7 @@ unsigned long x11_clipboard_owner(void) {
         
 x11_clipboard_ensure_started();
     Display *dpy = get_display();
-    if (!dpy || g_clip_clipboard == None) {  return 0; }
+    if (!dpy || g_clip_clipboard == None) return 0;
     return (unsigned long)XGetSelectionOwner(dpy, g_clip_clipboard);
 }
 

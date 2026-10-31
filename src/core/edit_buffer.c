@@ -21,7 +21,7 @@ bool EditBufferDeleteChar(char* buf, size_t* cursor) {
         
 
     size_t n = strlen(buf);
-    if (*cursor >= n) {  return false; }
+    if (*cursor >= n) return false;
     memmove(buf + *cursor,
             buf + *cursor + 1,
             n - *cursor);
@@ -36,17 +36,17 @@ return c == '"' || c == '\'';
 
 static bool edit_is_closer(char c) {
         
-{  return c == '}' || c == ')' || c == ']' || edit_is_quote(c); }
+return c == '}' || c == ')' || c == ']' || edit_is_quote(c);
 }
 
 static bool edit_quote_at_word_start(const char* buf, size_t cursor) {
         
-if (cursor == 0) {  return true; }
+if (cursor == 0) return true;
     unsigned char prev = (unsigned char)buf[cursor - 1];
-    if (prev >= 0x80) {  return false; }
-    if (prev >= 'a' && prev <= 'z') {  return false; }
-    if (prev >= 'A' && prev <= 'Z') {  return false; }
-    if (prev >= '0' && prev <= '9') {  return false; }
+    if (prev >= 0x80) return false;
+    if (prev >= 'a' && prev <= 'z') return false;
+    if (prev >= 'A' && prev <= 'Z') return false;
+    if (prev >= '0' && prev <= '9') return false;
     return true;
 }
 
@@ -65,7 +65,7 @@ switch (c) {
 size_t EditBufferInsertText(char* buf, size_t cap, size_t* cursor, const char* text, size_t len) {
         
 
-    if (!buf || !cursor || !text || len == 0 || cap == 0) {  return 0; }
+    if (!buf || !cursor || !text || len == 0 || cap == 0) return 0;
     size_t n = strlen(buf);
     if (*cursor > n) *cursor = n;
 
@@ -82,7 +82,7 @@ size_t EditBufferInsertText(char* buf, size_t cap, size_t* cursor, const char* t
     }
 
     size_t total = len + (closer ? (size_t)1 : (size_t)0);
-    if (n + total >= cap) {  return 0; }
+    if (n + total >= cap) return 0;
     memmove(buf + *cursor + total, buf + *cursor, n - *cursor + 1);
     memcpy(buf + *cursor, text, len);
     if (closer) buf[*cursor + len] = closer;
@@ -94,13 +94,13 @@ size_t EditBufferInsertText(char* buf, size_t cap, size_t* cursor, const char* t
 bool EditBufferBackspacePair(char* buf, size_t* cursor) {
         
 
-    if (!buf || !cursor || !EnableAutoPairing) {  return false; }
+    if (!buf || !cursor || !EnableAutoPairing) return false;
     size_t c = *cursor;
     size_t n = strlen(buf);
-    if (c == 0 || c > n) {  return false; }
+    if (c == 0 || c > n) return false;
     char closer = buf[c];
-    if (closer == '\0' || !edit_is_closer(closer)) {  return false; }
-    if (EditBufferPairFor(buf[c - 1]) != closer) {  return false; }
+    if (closer == '\0' || !edit_is_closer(closer)) return false;
+    if (EditBufferPairFor(buf[c - 1]) != closer) return false;
     memmove(buf + c - 1, buf + c + 1, n - c);
     (*cursor)--;
     
@@ -110,7 +110,7 @@ bool EditBufferBackspacePair(char* buf, size_t* cursor) {
 bool CursorBack(size_t* cursor, size_t text_len) {
         
 
-    if (*cursor == 0) {  return false;  }
+    if (*cursor == 0) return false;
     (*cursor)--;
     
     return true;
@@ -119,7 +119,7 @@ bool CursorBack(size_t* cursor, size_t text_len) {
 bool CursorForward(size_t* cursor, size_t text_len) {
         
 
-    if (*cursor >= text_len) {  return false; }
+    if (*cursor >= text_len) return false;
     (*cursor)++;
     
     return true;

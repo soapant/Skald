@@ -83,7 +83,7 @@ if (widget->layer_dc) {
 
 static bool layer_acquire(PlatformWidget *widget) {
         
-if (widget->layer_bits && widget->layer_w == widget->w && widget->layer_h == widget->h) {  return true; }
+if (widget->layer_bits && widget->layer_w == widget->w && widget->layer_h == widget->h) return true;
     layer_release(widget);
     memset(&widget->layer_bi, 0, sizeof(widget->layer_bi));
     widget->layer_bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -93,10 +93,10 @@ if (widget->layer_bits && widget->layer_w == widget->w && widget->layer_h == wid
     widget->layer_bi.bmiHeader.biBitCount = 32;
     widget->layer_bi.bmiHeader.biCompression = BI_RGB;
     HDC screen = GetDC(NULL);
-    if (!screen) {  return false; }
+    if (!screen) return false;
     HDC dc = CreateCompatibleDC(screen);
     ReleaseDC(NULL, screen);
-    if (!dc) {  return false; }
+    if (!dc) return false;
     void *bits = NULL;
     HBITMAP bmp = CreateDIBSection(dc, &widget->layer_bi, DIB_RGB_COLORS, &bits, NULL, 0);
     if (!bmp) {
@@ -337,12 +337,12 @@ if (!widget || widget->dead) {  return ; }
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void), const char *name) {
         
-if (w <= 0 || h <= 0) {  return NULL; }
-    if (!Platform_RenderThread_EnsureStarted(fps)) {  return NULL; }
+if (w <= 0 || h <= 0) return NULL;
+    if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
     widget_register_class();
 
     PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
-    if (!widget) {  return NULL; }
+    if (!widget) return NULL;
     widget->x = x;
     widget->y = y;
     widget->w = w;
