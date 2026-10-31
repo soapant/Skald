@@ -260,25 +260,23 @@ void Platform_GetDrawContextWin32(HDC *out) {
     PROFILE_START(_pt);
 if (out) *out = g_draw_hdc; 
 }
-bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
+bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
         PROFILE_START(_pt);
-if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
+if (!spec.text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
     int _ox = PlDrawState_Get()->off_x;
     int _oy = PlDrawState_Get()->off_y;
-    int _iy = y;
-    x += _ox;
-    y += _oy;
-    if (color != 0) color = rgb_to_hex(color);
-    if (color == 0) color = COLOR_TEXT;
-    const char *a = align ? align : "CENTER";
+    int x = spec.x + _ox;
+    int y = spec.y + _oy;
+    unsigned long color = spec.color != 0 ? rgb_to_hex(spec.color) : COLOR_TEXT;
+    const char *a = spec.align ? spec.align : "CENTER";
     HFONT old = NULL;
-    int tlen = (int)strlen(text);
+    int tlen = (int)strlen(spec.text);
     int wlen = 0;
-    wchar_t* wide = win32_widen(text, tlen, &wlen);
+    wchar_t* wide = win32_widen(spec.text, tlen, &wlen);
     if (!wide) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
     int dy = 0;
-    HFONT hfont = font.hfont ? font.hfont : win32_font_for_text(wide, wlen, fontsize, &old, &dy);
-    if (!hfont) hfont = win32_sized_font(fontsize);
+    HFONT hfont = spec.font.hfont ? spec.font.hfont : win32_font_for_text(wide, wlen, spec.fontsize, &old, &dy);
+    if (!hfont) hfont = win32_sized_font(spec.fontsize);
     if (!hfont) hfont = g_win32_hMainFont;
     if (!old && hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
     TEXTMETRICW tm = {0};
@@ -295,7 +293,7 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     msz.cy = 0;
     if (measuring || centered || right) {
         if (dy != 0) {
-            HFONT nf = win32_sized_font(fontsize);
+            HFONT nf = win32_sized_font(spec.fontsize);
             if (!nf) nf = g_win32_hMainFont;
             if (nf) {
                 HFONT t2 = (HFONT)SelectObject(g_draw_hdc, nf);
@@ -315,19 +313,19 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
         measure_track(bx, y, msz.cx, msz.cy);
     }
     if (!centered && !right) {
-        int x0 = pad ? pad : x;
+        int x0 = spec.pad ? spec.pad : x;
         if (measuring) measure_track(x0, y, msz.cx, msz.cy);
         TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
         free(wide);
         if (old) SelectObject(g_draw_hdc, old);
         return true;
     }
-    int box = (pad == 0) ? x : 0;
+    int box = (spec.pad == 0) ? x : 0;
     int x0;
     if (centered) {
-        x0 = box > 0 ? (box - msz.cx) / 2 : pad + (PROMPT_WRAP_BOX_CENTER - msz.cx) / 2;
+        x0 = box > 0 ? (box - msz.cx) / 2 : spec.pad + (PROMPT_WRAP_BOX_CENTER - msz.cx) / 2;
     } else {
-        x0 = box > 0 ? box - msz.cx : PROMPT_WRAP_BOX_RIGHT - msz.cx - pad;
+        x0 = box > 0 ? box - msz.cx : PROMPT_WRAP_BOX_RIGHT - msz.cx - spec.pad;
     }
     TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
     free(wide);
@@ -335,34 +333,34 @@ if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return
     { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return true; }
 }
 
-void Platform_DrawTextCentered(int x, int y, int w, int h, const char *text, unsigned long color, FontHandle font, int fontsize) {
+void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
     PROFILE_START(_pt);
-    if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); return; }
-    HFONT hfont = font.hfont ? font.hfont : win32_sized_font(fontsize);
+    if (!spec.text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); return; }
+    HFONT hfont = spec.font.hfont ? spec.font.hfont : win32_sized_font(spec.fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
     TEXTMETRICW tm = {0};
     GetTextMetricsW(g_draw_hdc, &tm);
     int ascent = tm.tmAscent;
     int descent = tm.tmDescent;
     int lineHeight = ascent + descent;
-    int tw = Platform_MeasureTextWidth(text, (int)strlen(text), fontsize);
-    int tx = x + (w - tw) / 2;
-    int ty = y + (h - lineHeight) / 2;
-    Platform_DrawTextRaw(tx, ty, text, color, font, "LEFT", 0, fontsize);
+    int tw = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=spec.text, .len=(int)strlen(spec.text), .fontsize=spec.fontsize});
+    int tx = spec.x + (spec.w - tw) / 2;
+    int ty = spec.y + (spec.h - lineHeight) / 2;
+    Platform_DrawTextRaw((PlDrawTextRawSpec){.x=tx, .y=ty, .text=spec.text, .color=spec.color, .font=spec.font, .align="LEFT", .pad=0, .fontsize=spec.fontsize});
     if (old) SelectObject(g_draw_hdc, old);
     { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); }
 }
 
-int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
+int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
         PROFILE_START(_pt);
-if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
-    if (!g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return len * (fontsize > 0 ? fontsize : 16) / 2; }
+if (!spec.text || spec.len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
+    if (!g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return spec.len * (spec.fontsize > 0 ? spec.fontsize : 16) / 2; }
     int wlen = 0;
-    wchar_t* wide = win32_widen(text, len, &wlen);
+    wchar_t* wide = win32_widen(spec.text, spec.len, &wlen);
     if (!wide) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
     HFONT old = NULL;
-    HFONT hfont = win32_font_for_text(wide, wlen, fontsize, &old, NULL);
-    if (!hfont) hfont = win32_sized_font(fontsize);
+    HFONT hfont = win32_font_for_text(wide, wlen, spec.fontsize, &old, NULL);
+    if (!hfont) hfont = win32_sized_font(spec.fontsize);
     SIZE sz;
     sz.cx = 0;
     GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &sz);
@@ -371,20 +369,18 @@ if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); retu
     { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return sz.cx; }
 }
 
-bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
+bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
         PROFILE_START(_pt);
-if (!text || len <= 0 || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
+if (!spec.text || spec.len <= 0 || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
     int _ox = PlDrawState_Get()->off_x;
     int _oy = PlDrawState_Get()->off_y;
-    int _iy = y;
-    x += _ox;
-    y += _oy;
-    if (color != 0) color = rgb_to_hex(color);
-    if (color == 0) color = COLOR_TEXT;
+    int x = spec.x + _ox;
+    int y = spec.y + _oy;
+    unsigned long color = spec.color != 0 ? rgb_to_hex(spec.color) : COLOR_TEXT;
     int wlen = 0;
-    wchar_t* wide = win32_widen(text, len, &wlen);
+    wchar_t* wide = win32_widen(spec.text, spec.len, &wlen);
     if (!wide) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
-    HFONT hfont = win32_sized_font(fontsize);
+    HFONT hfont = win32_sized_font(spec.fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
     SetBkMode(g_draw_hdc, TRANSPARENT);
     SetTextColor(g_draw_hdc, color);
@@ -394,22 +390,21 @@ if (!text || len <= 0 || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextL
     { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return true; }
 }
 
-void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color) {
+void Platform_GetItemColors(PlGetItemColorsSpec spec) {
         PROFILE_START(_pt);
-(void)count;
     unsigned long col_text = COLOR_TEXT;
     unsigned long col_alt = COLOR_ALTERNATE;
-    float t = (GradientItems > 1) ? (float)(idx % GradientItems) / (float)(GradientItems - 1) : 0;
+    float t = (GradientItems > 1) ? (float)(spec.idx % GradientItems) / (float)(GradientItems - 1) : 0;
     unsigned long col_rainbow = GetRainbowColor(t, 0.85f, GradientBrightness);
     unsigned long n = col_text, b = col_text, p = col_rainbow;
     if (RainbowText) {
         n = b = p = col_rainbow;
-    } else if (AlternatingText && idx % 2 == 0) {
+    } else if (AlternatingText && spec.idx % 2 == 0) {
         n = b = p = col_alt;
     }
-    if (num_color) *num_color = n;
-    if (body_color) *body_color = b;
-    if (plain_color) *plain_color = p;
+    if (spec.num_color) *spec.num_color = n;
+    if (spec.body_color) *spec.body_color = b;
+    if (spec.plain_color) *spec.plain_color = p;
 }
 
 static COLORREF win32_colorref(unsigned long hex) {
@@ -543,18 +538,20 @@ if (!text || !text[0] || fontsize <= 0) { PROFILE_END_VAR(_pt, "Platform_GetGlyp
     { PROFILE_END_VAR(_pt, "Platform_GetGlyphInkHeight"); return ink + PROMPT_GLYPH_INK_PAD; }
 }
 
-bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
+bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
         PROFILE_START(_pt);
-int t = win32_thickness_px(thickness);
+int t = win32_thickness_px(spec.thickness);
     if (t < 1) t = 1;
-    x1 += PlDrawState_Get()->off_x; y1 += PlDrawState_Get()->off_y;
-    x2 += PlDrawState_Get()->off_x; y2 += PlDrawState_Get()->off_y;
+    int x1 = spec.x1 + PlDrawState_Get()->off_x;
+    int y1 = spec.y1 + PlDrawState_Get()->off_y;
+    int x2 = spec.x2 + PlDrawState_Get()->off_x;
+    int y2 = spec.y2 + PlDrawState_Get()->off_y;
     int bx = x1 < x2 ? x1 : x2;
     int by = y1 < y2 ? y1 : y2;
     int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
     int bh = (y1 > y2 ? y1 - y2 : y2 - y1) + t;
     measure_track(bx - t / 2, by - t / 2, bw, bh);
-    HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
+    HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(spec.color));
     HGDIOBJ old = SelectObject(g_draw_hdc, pen);
     MoveToEx(g_draw_hdc, x1, y1, NULL);
     LineTo(g_draw_hdc, x2, y2);
@@ -563,17 +560,17 @@ int t = win32_thickness_px(thickness);
     { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return true; }
 }
 
-bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness) {
+bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
         PROFILE_START(_pt);
-if (radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
-    int t = win32_thickness_px(thickness);
-    cx += PlDrawState_Get()->off_x;
-    cy += PlDrawState_Get()->off_y;
-    measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
-    int left = cx - radius, top = cy - radius;
-    int right = cx + radius, bottom = cy + radius;
+if (spec.radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
+    int t = win32_thickness_px(spec.thickness);
+    int cx = spec.cx + PlDrawState_Get()->off_x;
+    int cy = spec.cy + PlDrawState_Get()->off_y;
+    measure_track(cx - spec.radius, cy - spec.radius, spec.radius * 2, spec.radius * 2);
+    int left = cx - spec.radius, top = cy - spec.radius;
+    int right = cx + spec.radius, bottom = cy + spec.radius;
     if (t > 0) {
-        HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
+        HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(spec.color));
         HGDIOBJ old = SelectObject(g_draw_hdc, pen);
         HGDIOBJ old_br = SelectObject(g_draw_hdc, GetStockObject(NULL_BRUSH));
         Ellipse(g_draw_hdc, left, top, right, bottom);
@@ -581,7 +578,7 @@ if (radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false;
         SelectObject(g_draw_hdc, old);
         DeleteObject(pen);
     } else {
-        HBRUSH br = CreateSolidBrush(win32_colorref(color));
+        HBRUSH br = CreateSolidBrush(win32_colorref(spec.color));
         HGDIOBJ old = SelectObject(g_draw_hdc, br);
         HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
         Ellipse(g_draw_hdc, left, top, right, bottom);
@@ -962,13 +959,13 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return (status == Ok); }
 }
 
-void Platform_DrawPromptSeparator(int y, int width) {
+void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
      PROFILE_START(_pt);
-    if (!EnableBorders || width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
+    if (!EnableBorders || spec.width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
     Platform_DrawRectRaw((PlDrawRectRawSpec){
         .x = 0,
-        .y = y,
-        .w = width,
+        .y = spec.y,
+        .w = spec.width,
         .h = PROMPT_SEP_W,
         .color = rgb_to_hex(COLOR_BORDER),
         .radius = 0,

@@ -56,9 +56,9 @@ void Platform_SetPreRenderState(PromptState *state) {}
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) { if(out_x)*out_x=0; if(out_y)*out_y=0; return false; }
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) { return true; }
 bool Platform_DrawRectRaw_impl(PlDrawRectRawSpec spec) { return true; }
-void Platform_DrawPromptSeparator(int y, int width) {}
-bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) { return true; }
-bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness) { return true; }
+void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {}
+bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) { return true; }
+bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) { return true; }
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) { return true; }
 void Platform_DrawTextCentered(int x, int y, int w, int h, const char *text, unsigned long color, FontHandle font, int fontsize) {}
 int Platform_MeasureTextWidth(const char *text, int len, int fontsize) { return len * 8; }

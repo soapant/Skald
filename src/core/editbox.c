@@ -11,7 +11,7 @@
 static int editbox_measure(const EditboxSpec* spec, const char* text, int len) {
     if (!text || len <= 0) return 0;
     if (spec->measure) return spec->measure(text, len, spec->measure_user);
-    return Platform_MeasureTextWidth(text, len, FontSize);
+    return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=text, .len=len, .fontsize=FontSize});
 }
 
 void Editbox_BuildSpec(EditboxSpec* out, const EditboxInit* in) {
@@ -105,10 +105,10 @@ static void editbox_draw_rainbow(const EditboxSpec* spec, const EditboxLayout* l
         char buf[8];
         memcpy(buf, spec->text + pos, cl);
         buf[cl] = '\0';
-        int tx = layout->draw_x + Platform_MeasureTextWidth(spec->text, (int)pos, FontSize);
+        int tx = layout->draw_x + Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=spec->text, .len=(int)pos, .fontsize=FontSize});
         if (spec->rainbow_limit_x >= 0 && tx >= spec->rainbow_limit_x) break;
         unsigned long col = GetRainbowColor(nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, GradientBrightness);
-        Platform_DrawTextRaw(tx, spec->text_y, buf, col, spec->font, "", 0, 0);
+        Platform_DrawTextRaw((PlDrawTextRawSpec){.x=tx, .y=spec->text_y, .text=buf, .color=col, .font=spec->font, .align="", .pad=0, .fontsize=0});
         pos += cl;
         ci++;
     }
@@ -231,11 +231,11 @@ void Editbox_Draw(const EditboxSpec* spec, const EditboxLayout* layout, int part
             if (RainbowText) {
                 editbox_draw_rainbow(spec, layout);
             } else {
-                Platform_DrawTextRaw(layout->draw_x, spec->text_y, spec->text, spec->text_color, spec->font, "", 0, 0);
+                Platform_DrawTextRaw((PlDrawTextRawSpec){.x=layout->draw_x, .y=spec->text_y, .text=spec->text, .color=spec->text_color, .font=spec->font, .align="", .pad=0, .fontsize=0});
             }
         } else if (spec->placeholder && spec->placeholder[0]) {
             unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
-            Platform_DrawTextRaw(layout->draw_x, spec->text_y + spec->placeholder_dy, spec->placeholder, ph, spec->font, "", 0, 0);
+            Platform_DrawTextRaw((PlDrawTextRawSpec){.x=layout->draw_x, .y=spec->text_y + spec->placeholder_dy, .text=spec->placeholder, .color=ph, .font=spec->font, .align="", .pad=0, .fontsize=0});
         }
     }
 

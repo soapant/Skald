@@ -129,7 +129,7 @@ PROFILE_START(timer);
     XftFont* xf = FH_TO_XFT(font);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (xf && VimModeText) {
-        Platform_DrawTextRaw(PROMPT_EDITPOPUP_MODE_X, PROMPT_EDITPOPUP_MODE_Y, g_vim_mode, VimModeTextColor(), font, "LEFT", PROMPT_EDITPOPUP_MODE_PAD, FontSize);
+        Platform_DrawTextRaw((PlDrawTextRawSpec){.x=PROMPT_EDITPOPUP_MODE_X, .y=PROMPT_EDITPOPUP_MODE_Y, .text=g_vim_mode, .color=VimModeTextColor(), .font=font, .align="LEFT", .pad=PROMPT_EDITPOPUP_MODE_PAD, .fontsize=FontSize});
     }
     int text_len = data->text ? strlen(data->text) : 0;
     int cursor_x = 0;

@@ -263,7 +263,7 @@ if (!out || !g_fl_list_lb) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); r
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); return false; }
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
-    if (g_fl_list_cur == 0) Platform_DrawPromptSeparator(g_fl_list_y0, g_fl_list_fw);
+    if (g_fl_list_cur == 0) Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y=g_fl_list_y0, .width=g_fl_list_fw});
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
         int R=PROMPT_SEL_RADIUS; if (R > CornerRadius) R = CornerRadius;
@@ -298,7 +298,7 @@ if (!out || !g_fl_list_lb) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); r
 void fl_listbox_end_platform(void) {
         PROFILE_START(_pt);
     if (PromptListBottomMargin() > 0 && g_fl_list_hdc) {
-        Platform_DrawPromptSeparator(g_fl_list_y0 + g_fl_list_h, g_fl_list_fw);
+        Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y=g_fl_list_y0 + g_fl_list_h, .width=g_fl_list_fw});
     }
     g_fl_list_lb = NULL;
     g_fl_list_visible = 0;
@@ -322,7 +322,7 @@ if (!g_fl_list_lb || g_fl_list_cur == 0) { PROFILE_END_VAR(_pt, "fl_listbox_get_
         orig_cnt = g_fl_list_lb->last_item_count > 0 ? g_fl_list_lb->last_item_count : g_fl_list_lb->populated_count;
     }
     unsigned long ncol, bcol, pcol;
-    Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
+    Platform_GetItemColors((PlGetItemColorsSpec){.idx=orig_idx, .count=orig_cnt, .num_color=&ncol, .body_color=&bcol, .plain_color=&pcol});
     { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return rgb_to_hex(pcol); }
 }
 
