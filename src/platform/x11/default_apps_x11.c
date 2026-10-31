@@ -8,28 +8,7 @@
 #include <sys/stat.h>
 #include <ctype.h>
 
-#include "core/timer.h"
-const char* x11_get_login_shell(void) {
-        
-struct passwd* pw = getpwuid(getuid());
-    if (!pw || !pw->pw_shell || !pw->pw_shell[0]) {
-        return NULL;
-    }
-    return pw->pw_shell;
-}
-
 char default_apps_x11[DEFAULT_APP_COUNT][256];
-
-const char* x11_default_apps_run(const char* command, int slot) {
-        
-char* out = Platform_RunTerminalCommand((char*)command, false);
-    default_apps_x11[slot][0] = '\0';
-    if (out) {
-        sscanf(out, "%255s", default_apps_x11[slot]);
-        free(out);
-    }
-    return default_apps_x11[slot];
-}
 
 #define APPDIR_CACHE_SLOTS 8
 static ListOfFiles g_ad_cache[APPDIR_CACHE_SLOTS];

@@ -398,12 +398,6 @@ static HashMap* g_feature_map = NULL;
 static FeatureReg** g_feature_order = NULL;
 static int g_feature_order_count = 0;
 
-static HashMap* ensure_feature_map(void) {
-    
-    if (!g_feature_map) { g_feature_map = NULL; sh_new_strdup(g_feature_map); }
-    return g_feature_map;
-}
-
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
     
     if (!spec || !spec->hotkey || !spec->cb) {  return false; }
@@ -1996,16 +1990,6 @@ if (!g_mon_valid || fl_end_timer(g_mon_at) > 2000) {
     *h = g_mon_h;
 }
 
-unsigned fl_widget_bump_generation(void) {
-    
-    return ++g_fl_widget_gen;
-}
-
-unsigned fl_widget_current_generation(void) {
-    
-    return g_fl_widget_gen;
-}
-
 static void fl_widget_relayout(void);
 
 static FlPos g_fl_hover_pos = {0, 0};
@@ -2135,56 +2119,6 @@ static void fl_widget_destroy_window(void *ud) {
     }
     widget->win = NULL;
 }
-void fl_widget_purge_owner(const char *path_a, const char *path_b, unsigned generation) {
-    
-    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) {     
- {  return ; } }
-
-    for (int i = 0; i < g_fl_widget_count; i++) {
-        FlWidget *w = g_fl_widgets[i];
-        if (!w) continue;
-        if (!fl_widget_owner_matches(w, path_a, path_b)) continue;
-        if (w->gen > generation) continue;
-        w->dead = true;
-        Platform_HoverMessageRelease(w->name);
-        Platform_HoverWidgetHide(w->name);
-        Platform_RenderThread_RemoveFrameCallback(fl_widget_render_frame, w);
-        Platform_RenderThread_Post(fl_widget_destroy_window, w);
-        log_info("fl_widget '%s' purged (owner unloaded)", w->name);
-    }
-
-    Platform_RenderThread_Sync();
-
-    int n = 0;
-    for (int i = 0; i < g_fl_widget_count; i++) {
-        FlWidget *w = g_fl_widgets[i];
-        if (!w) continue;
-        if (fl_widget_owner_matches(w, path_a, path_b) && w->gen <= generation) {
-            if (w->owner) free(w->owner);
-            free(w);
-            continue;
-        }
-        g_fl_widgets[n++] = w;
-    }
-    g_fl_widget_count = n;
-    if (g_fl_widget_count > 0) fl_widget_relayout();
-    Platform_Widget_FlushDestruction();
-    
-}
-
-bool fl_widget_owner_active(const char *path) {
-    
-    if (!path || !path[0]) {     
- {  return false; } }
-    for (int i = 0; i < g_fl_widget_count; i++) {
-        FlWidget *w = g_fl_widgets[i];
-        if (w && fl_widget_owner_matches(w, path, NULL)) {     
- {  return true; } }
-    }
-    
-    return false;
-}
-
 static void fl_widget_attach_window(void *ud) {
     
     FlWidget *widget = (FlWidget *)ud;

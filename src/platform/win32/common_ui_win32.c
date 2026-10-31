@@ -58,10 +58,6 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
   if (rgn) SetWindowRgn(hwnd, rgn, TRUE);
 }
 
-static inline unsigned int win32_to_rgb(COLORREF c) {
-    return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c);
-}
-
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1, int ey1,
                                int ox, int oy, int rx0, int ry0, int rx1, int ry1) {
   int ix0 = ex0 > rx0 ? ex0 : rx0;

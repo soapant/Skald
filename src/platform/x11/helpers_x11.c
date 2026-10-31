@@ -24,7 +24,6 @@
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
-#include "platform/x11/audio_x11.h"
 #include "core/timer.h"
 #include "wm/niri_wm.h"
 #define NANOSVG_IMPLEMENTATION
@@ -848,62 +847,6 @@ static int dummy_x_error_handler(Display *dpy, XErrorEvent *error) {
     }
     return 0;
 }
-pid_t GetWindowPid(Display* dpy, Window w) {
-    if (w == 0) {  return -1; }
-    Atom prop = XInternAtom(dpy, "_NET_WM_PID", True);
-    Atom actual_type;
-    int actual_format;
-
-    unsigned long nitems, bytes_after;
-    unsigned char* prop_data = NULL;
-
-    x11_error_occurred = 0;
-    int (*old_handler)(Display*, XErrorEvent*) = XSetErrorHandler(dummy_x_error_handler);
-
-    pid_t pid = -1;
-    if (prop != None) {
-        int status = XGetWindowProperty(dpy, w, prop, 0, 1, False, XA_CARDINAL,
-                                        &actual_type, &actual_format, &nitems,
-                                        &bytes_after, &prop_data);
-        if (status == Success && !x11_error_occurred && prop_data && nitems > 0) {
-            pid = *((pid_t*)prop_data);
-        }
-    }
-
-    if (prop_data) {
-        XFree(prop_data);
-    }
-
-    XSetErrorHandler(old_handler);
-
-    if (x11_error_occurred) {
-        return -1;
-    }
-
-     return pid;
-}
-
-void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
-    if (pid <= 0) {
-        strncpy(outExe, "unknown", maxLen);
-        return;
-    }
-
-    char path[64];
-    snprintf(path, sizeof(path), "/proc/%d/exe", pid);
-    
-    ssize_t len = readlink(path, outExe, maxLen - 1);
-    if (len != -1) {
-        outExe[len] = '\0';
-        char* basename = strrchr(outExe, '/');
-        if (basename) {
-            memmove(outExe, basename + 1, strlen(basename));
-        }
-    } else {
-        strncpy(outExe, "unknown", maxLen);
-    }
-}
-
 Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect);
 
 Window x11_create_window_ex(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {
@@ -1512,29 +1455,6 @@ XftDraw* x11_create_xft_draw(Display* dpy, Window win) {
     }
     int screen = DefaultScreen(dpy);
     return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
-}
-
-gchar* FindPlayerBusName(GDBusConnection *conn) {
-        
-GVariant *reply = g_dbus_connection_call_sync(conn,
-        "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
-        "ListNames", NULL, G_VARIANT_TYPE("(as)"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL);
-    
-    gchar* player_name = NULL;
-    if (reply) {
-        GVariantIter *iter;
-        const gchar *name;
-        g_variant_get(reply, "(as)", &iter);
-        while (g_variant_iter_next(iter, "&s", &name)) {
-            if (g_str_has_prefix(name, "org.mpris.MediaPlayer2.")) {
-                player_name = g_strdup(name);
-                break;
-            }
-        }
-        g_variant_iter_free(iter);
-        g_variant_unref(reply);
-    }
-    return player_name;
 }
 
 void UpdateTextCaret(void) {

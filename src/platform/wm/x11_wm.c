@@ -408,14 +408,6 @@ PlWindowList list = { .windows = NULL, .count = 0 };
 
 static Display *_x11_cursor_dpy = NULL;
 
-static Display *_x11_cursor_display(void) {
-        
-if (_x11_cursor_dpy == NULL) {
-        _x11_cursor_dpy = XOpenDisplay(NULL);
-    }
-    return _x11_cursor_dpy;
-}
-
 void x11_wm_cleanup_cursor_display(void) {
         
 if (_x11_cursor_dpy != NULL) {

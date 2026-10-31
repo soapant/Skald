@@ -196,11 +196,6 @@ int UI_LB_GetText(WindowHandle hList, int index, char* buffer) {
 return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTEXT, index, (LPARAM)buffer);
 }
 
-void UI_Edit_SetFont(HFONT hFont) {
-        
-(void)hFont;
-}
-
 typedef struct {
     char* text;
     size_t capacity;
