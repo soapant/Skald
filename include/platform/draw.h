@@ -31,15 +31,69 @@ typedef struct {
     bool filled;
 } PlDrawRectRawSpec;
 
+typedef struct {
+    int x1, y1, x2, y2;
+    unsigned long color;
+    float thickness;
+} PlDrawLineRawSpec;
+
+typedef struct {
+    int cx, cy;
+    int radius;
+    unsigned long color;
+    float thickness;
+} PlDrawCircleRawSpec;
+
+typedef struct {
+    int x, y;
+    const char *text;
+    unsigned long color;
+    FontHandle font;
+    const char *align;
+    int pad;
+    int fontsize;
+} PlDrawTextRawSpec;
+
+typedef struct {
+    int x, y, w, h;
+    const char *text;
+    unsigned long color;
+    FontHandle font;
+    int fontsize;
+} PlDrawTextCenteredSpec;
+
+typedef struct {
+    int x, y;
+    const char *text;
+    int len;
+    unsigned long color;
+    int fontsize;
+} PlDrawTextLineSpec;
+
+typedef struct {
+    int idx, count;
+    unsigned long *num_color, *body_color, *plain_color;
+} PlGetItemColorsSpec;
+
+typedef struct {
+    int y, width;
+} PlDrawPromptSeparatorSpec;
+
+typedef struct {
+    const char *text;
+    int len;
+    int fontsize;
+} PlMeasureTextWidthSpec;
+
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec);
-void Platform_DrawPromptSeparator(int y, int width);
-bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness);
-bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness);
-bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad, int fontsize);
-void Platform_DrawTextCentered(int x, int y, int w, int h, const char *text, unsigned long color, FontHandle font, int fontsize);
-int Platform_MeasureTextWidth(const char *text, int len, int fontsize);
-bool Platform_DrawTextLine(int x, int y, const char *text, int len, unsigned long color, int fontsize);
-void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color);
+void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec);
+bool Platform_DrawLineRaw(PlDrawLineRawSpec spec);
+bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec);
+bool Platform_DrawTextRaw(PlDrawTextRawSpec spec);
+void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec);
+int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec);
+bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
+void Platform_GetItemColors(PlGetItemColorsSpec spec);
 bool Platform_PreRender(void);
 
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top);
