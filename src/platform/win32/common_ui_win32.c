@@ -251,10 +251,3 @@ ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);
     AttachThreadInput(currentThreadID, targetThreadID, FALSE);
 }
 
-void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb) {
-  PROFILE_START(_pt);
-
-  HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
-
-  UI_Edit_SetFont(hFont);
-}

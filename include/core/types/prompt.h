@@ -247,6 +247,7 @@ static inline const char* ListBoxInfo_GetSelectedText(ListBoxInfo *lb) {
     if (!lb) return NULL;
     return ListBoxInfo_Row(lb, lb->selected_index);
 }
+
 /**
  * @brief Parameters for creating a prompt window.
  *
