@@ -130,7 +130,7 @@ PROFILE_START(timer);
     if (font.hfont) SelectObject(paint, font.hfont);
 
     if (g_vim_mode != NULL && VimModeText) {
-        Platform_DrawTextRaw(PROMPT_EDITPOPUP_MODE_X, PROMPT_EDITPOPUP_MODE_Y, g_vim_mode, VimModeTextColor(), font, "LEFT", PROMPT_EDITPOPUP_MODE_PAD, FontSize);
+        Platform_DrawTextRaw((PlDrawTextRawSpec){.x=PROMPT_EDITPOPUP_MODE_X, .y=PROMPT_EDITPOPUP_MODE_Y, .text=g_vim_mode, .color=VimModeTextColor(), .font=font, .align="LEFT", .pad=PROMPT_EDITPOPUP_MODE_PAD, .fontsize=FontSize});
     }
 
     int cursor_x = 0;
@@ -144,8 +144,8 @@ PROFILE_START(timer);
         GetTextMetrics(paint, &tm);
         ascent = tm.tmAscent;
         descent = tm.tmDescent;
-        if (data->cursor > 0) cursor_x = Platform_MeasureTextWidth(data->text ? data->text : "", data->cursor, FontSize);
-        if (text_len > 0) text_w = Platform_MeasureTextWidth(data->text, text_len, FontSize);
+        if (data->cursor > 0) cursor_x = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=data->text ? data->text : "", .len=data->cursor, .fontsize=FontSize});
+        if (text_len > 0) text_w = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=data->text, .len=text_len, .fontsize=FontSize});
     }
     int draw_y = h / 2 + PROMPT_EDITPOPUP_CENTER_OFFSET_Y;
     int sel_start = 0, sel_end = 0;

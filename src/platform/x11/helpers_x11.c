@@ -926,7 +926,7 @@ PROFILE_START(timer);
     unsigned long pcol = plain_color ? plain_color->pixel : 0;
     if (!pcol) pcol = rgb_to_hex(COLOR_TEXT);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    Platform_DrawTextRaw(XOffset, text_y, trunc, pcol, font, "LEFT", XOffset, FontSize);
+    Platform_DrawTextRaw((PlDrawTextRawSpec){.x=XOffset, .y=text_y, .text=trunc, .color=pcol, .font=font, .align="LEFT", .pad=XOffset, .fontsize=FontSize});
 
     PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText");
 }

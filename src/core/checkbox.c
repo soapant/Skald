@@ -178,11 +178,11 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         if (spec->checked) {
             int fontsize = w * 3 / 4;
             if (fontsize < 1) fontsize = 1;
-            int tw = Platform_MeasureTextWidth(CHECKBOX_GLYPH, (int)strlen(CHECKBOX_GLYPH), fontsize);
+            int tw = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=CHECKBOX_GLYPH, .len=(int)strlen(CHECKBOX_GLYPH), .fontsize=fontsize});
             int th = checkbox_line_height(fontsize);
             int tx = spec->x + (w - tw) / 2;
             int ty = spec->y + (h - th) / 2;
-            Platform_DrawTextRaw(tx, ty - 2, CHECKBOX_GLYPH, rgb_to_hex(CHECKBOX_WHITE), FH_NULL, "LEFT", 0, fontsize);
+            Platform_DrawTextRaw((PlDrawTextRawSpec){.x=tx, .y=ty - 2, .text=CHECKBOX_GLYPH, .color=rgb_to_hex(CHECKBOX_WHITE), .font=FH_NULL, .align="LEFT", .pad=0, .fontsize=fontsize});
         }
     } else if (spec->button) {
         int w = spec->w > 0 ? spec->w : 100;
@@ -215,7 +215,7 @@ void Checkbox_Draw(const CheckboxSpec* spec) {
         if (spec->text) {
             int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
             if (!Platform_FontInitalized(s_font)) s_font = Platform_CreateFont(fontsize, UsedFont);
-            Platform_DrawTextCentered(spec->x, spec->y, w, h, spec->text, spec->text_color, s_font, fontsize);
+            Platform_DrawTextCentered((PlDrawTextCenteredSpec){.x=spec->x, .y=spec->y, .w=w, .h=h, .text=spec->text, .color=spec->text_color, .font=s_font, .fontsize=fontsize});
         }
     }
 

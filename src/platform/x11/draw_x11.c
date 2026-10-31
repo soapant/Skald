@@ -293,33 +293,32 @@ if (dpy) *dpy = g_draw_dpy;
     if (vis) *vis = g_draw_vis;
     if (cmap) *cmap = g_draw_cmap;
 }
-bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
+bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     PROFILE_START(_pt);
-    if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
+    if (!spec.text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
     int _ox = PlDrawState_Get()->off_x;
     int _oy = PlDrawState_Get()->off_y;
-    int _iy = y;
-    x += _ox;
-    y += _oy;
-    FontHandle fh = font;
+    int x = spec.x + _ox;
+    int y = spec.y + _oy;
+    FontHandle fh = spec.font;
     bool needDestroy = false;
     if (!FH_TO_XFT(fh)) {
-        if (fontsize) {
-          fh = Platform_CreateFontOnDisplay(g_draw_dpy, fontsize, UsedFont);
+        if (spec.fontsize) {
+          fh = Platform_CreateFontOnDisplay(g_draw_dpy, spec.fontsize, UsedFont);
         } else {
           fh = Platform_CreateFontOnDisplay(g_draw_dpy, FontSize, UsedFont);
         }
         needDestroy = true;
     }
-    if (color == 0) color = rgb_to_hex(COLOR_TEXT);
-    const char *a = align ? align : "CENTER";
+    unsigned long color = spec.color == 0 ? rgb_to_hex(COLOR_TEXT) : spec.color;
+    const char *a = spec.align ? spec.align : "CENTER";
     if (PlDrawState_Get()->measuring) {
         XftFont *mf = FH_TO_XFT(fh);
         int tw = 0;
         if (mf) {
-            tw = x11_measure_utf8_fallback(g_draw_dpy, mf, text, (int)strlen(text), fontsize > 0 ? fontsize : FontSize);
+            tw = x11_measure_utf8_fallback(g_draw_dpy, mf, spec.text, (int)strlen(spec.text), spec.fontsize > 0 ? spec.fontsize : FontSize);
         }
-        int th = mf ? (mf->ascent + mf->descent) : (fontsize > 0 ? fontsize : FontSize);
+        int th = mf ? (mf->ascent + mf->descent) : (spec.fontsize > 0 ? spec.fontsize : FontSize);
         int bx = x;
         if (Platform_StringContainsCaseInsensitive(a, "CENTER")) bx = x - tw / 2;
         else if (Platform_StringContainsCaseInsensitive(a, "RIGHT")) bx = x - tw;
@@ -329,16 +328,16 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
     if (Platform_StringContainsCaseInsensitive(a, "CENTER") || Platform_StringContainsCaseInsensitive(a, "LEFT") || Platform_StringContainsCaseInsensitive(a, "RIGHT")) {
         int box = 0;
-        if (pad == 0 && !Platform_StringContainsCaseInsensitive(a, "LEFT")) box = x;
-        draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, text, y, (char*)a, pad ? pad : x, box);
+        if (spec.pad == 0 && !Platform_StringContainsCaseInsensitive(a, "LEFT")) box = x;
+        draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, spec.text, y, (char*)a, spec.pad ? spec.pad : x, box);
     } else {
         XftFont *xf = FH_TO_XFT(fh);
-        int len = (int)strlen(text);
-        if (len == 1 && xf && RawLine_Push(x, y, text[0], color, fh, needDestroy, fontsize)) {
+        int len = (int)strlen(spec.text);
+        if (len == 1 && xf && RawLine_Push(x, y, spec.text[0], color, fh, needDestroy, spec.fontsize)) {
             needDestroy = false;
         } else {
             RawLine_Flush();
-            if (xf) x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + (xf->ascent), xf, text, len, fontsize > 0 ? fontsize : FontSize);
+            if (xf) x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + (xf->ascent), xf, spec.text, len, spec.fontsize > 0 ? spec.fontsize : FontSize);
         }
     }
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
@@ -346,17 +345,17 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return true; }
 }
 
-void Platform_DrawTextCentered(int x, int y, int w, int h, const char *text, unsigned long color, FontHandle font, int fontsize) {
+void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
     PROFILE_START(_pt);
-    if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); return; }
-    XftFont *xf = FH_TO_XFT(font);
-    int ascent = xf ? xf->ascent : (fontsize * 3 / 4);
-    int descent = xf ? xf->descent : (fontsize / 4);
+    if (!spec.text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); return; }
+    XftFont *xf = FH_TO_XFT(spec.font);
+    int ascent = xf ? xf->ascent : (spec.fontsize * 3 / 4);
+    int descent = xf ? xf->descent : (spec.fontsize / 4);
     int lineHeight = ascent + descent;
-    int tw = Platform_MeasureTextWidth(text, (int)strlen(text), fontsize);
-    int tx = x + (w - tw) / 2;
-    int ty = y + (h - lineHeight) / 2;
-    Platform_DrawTextRaw(tx, ty, text, color, font, "LEFT", 0, fontsize);
+    int tw = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=spec.text, .len=(int)strlen(spec.text), .fontsize=spec.fontsize});
+    int tx = spec.x + (spec.w - tw) / 2;
+    int ty = spec.y + (spec.h - lineHeight) / 2;
+    Platform_DrawTextRaw((PlDrawTextRawSpec){.x=tx, .y=ty, .text=spec.text, .color=spec.color, .font=spec.font, .align="LEFT", .pad=0, .fontsize=spec.fontsize});
     { PROFILE_END_VAR(_pt, "Platform_DrawTextCentered"); }
 }
 
@@ -393,26 +392,26 @@ int x11_editbox_measure(const char* text, int len, void* user) {
     { PROFILE_END_VAR(_pt, "x11_editbox_measure"); return ext.xOff; }
 }
 
-int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
+int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
         PROFILE_START(_pt);
-if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
-    if (!g_draw_dpy) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return len * (fontsize > 0 ? fontsize : FontSize) / 2; }
-    XftFont* xf = LineFont(g_draw_dpy, fontsize);
-    if (!xf) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return len * (fontsize > 0 ? fontsize : FontSize) / 2; }
-    { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return x11_measure_utf8_fallback(g_draw_dpy, xf, text, len, fontsize > 0 ? fontsize : FontSize); }
+if (!spec.text || spec.len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
+    if (!g_draw_dpy) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2; }
+    XftFont* xf = LineFont(g_draw_dpy, spec.fontsize);
+    if (!xf) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2; }
+    { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return x11_measure_utf8_fallback(g_draw_dpy, xf, spec.text, spec.len, spec.fontsize > 0 ? spec.fontsize : FontSize); }
 }
 
-bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
+bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
         PROFILE_START(_pt);
-if (!text || len <= 0 || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
-    x += PlDrawState_Get()->off_x;
-    y += PlDrawState_Get()->off_y;
-    XftFont* xf = LineFont(g_draw_dpy, fontsize);
+if (!spec.text || spec.len <= 0 || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
+    int x = spec.x + PlDrawState_Get()->off_x;
+    int y = spec.y + PlDrawState_Get()->off_y;
+    XftFont* xf = LineFont(g_draw_dpy, spec.fontsize);
     if (!xf) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
-    if (color == 0) color = rgb_to_hex(COLOR_TEXT);
+    unsigned long color = spec.color == 0 ? rgb_to_hex(COLOR_TEXT) : spec.color;
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
-    x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf, text, len, fontsize > 0 ? fontsize : FontSize);
+    x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf, spec.text, spec.len, spec.fontsize > 0 ? spec.fontsize : FontSize);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return true; }
 }
@@ -428,21 +427,21 @@ if (selected) {
 }
 }
 
-void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color) {
+void Platform_GetItemColors(PlGetItemColorsSpec spec) {
         PROFILE_START(_pt);
 unsigned long col_text = rgb_to_hex(COLOR_TEXT);
     unsigned long col_alt = rgb_to_hex(COLOR_ALTERNATE);
-    float t = (count > 1) ? (float)idx / (float)(count - 1) : (float)idx / (float)GradientItems;
+    float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1) : (float)spec.idx / (float)GradientItems;
     unsigned long col_rainbow = rgb_to_hex(GetRainbowColor(t, 0.55f, GradientBrightness));
     unsigned long n = col_text, b = col_text, p = col_rainbow;
     if (RainbowText) {
         n = b = p = col_rainbow;
-    } else if (AlternatingText && idx % 2 == 0) {
+    } else if (AlternatingText && spec.idx % 2 == 0) {
         n = b = p = col_alt;
     }
-    if (num_color) *num_color = n;
-    if (body_color) *body_color = b;
-    if (plain_color) *plain_color = p;
+    if (spec.num_color) *spec.num_color = n;
+    if (spec.body_color) *spec.body_color = b;
+    if (spec.plain_color) *spec.plain_color = p;
 }
 
 void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font, ListBoxInfo *lb, int idx, int y, int text_x, const char *icon_path) {
@@ -450,7 +449,7 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual
 (void)state;
     if (!lb) { PROFILE_END_VAR(_pt, "Platform_DrawListItem"); return ; }
     unsigned long ncol, bcol, pcol;
-    Platform_GetItemColors(idx, lb->populated_count, &ncol, &bcol, &pcol);
+    Platform_GetItemColors((PlGetItemColorsSpec){.idx=idx, .count=lb->populated_count, .num_color=&ncol, .body_color=&bcol, .plain_color=&pcol});
     XftColor ncolor, bcolor, pcolor;
     x11_xft_alloc_color(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
     x11_xft_alloc_color(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
@@ -466,8 +465,8 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, 
 unsigned long window_title_text_color_map;
     eval_window_title_color(state,&window_title_text_color_map);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    if (WindowTitleText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, state->window_title, window_title_text_color_map, font, "LEFT", PROMPT_FOOTER_PAD, FontSize);
-    if (VimModeText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), font, "RIGHT", PROMPT_FOOTER_PAD, FontSize);
+    if (WindowTitleText) Platform_DrawTextRaw((PlDrawTextRawSpec){.x=PROMPT_FOOTER_X, .y=state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, .text=state->window_title, .color=window_title_text_color_map, .font=font, .align="LEFT", .pad=PROMPT_FOOTER_PAD, .fontsize=FontSize});
+    if (VimModeText) Platform_DrawTextRaw((PlDrawTextRawSpec){.x=PROMPT_FOOTER_X, .y=state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, .text=g_vim_mode, .color=VimModeTextColor(), .font=font, .align="RIGHT", .pad=PROMPT_FOOTER_PAD, .fontsize=FontSize});
 }
 static void x11_prompt_editbox_spec(PromptState* state, FontHandle font, EditboxSpec* eb, EditboxX11Metrics* metrics) {
     XftFont* xf = FH_TO_XFT(font);
@@ -706,48 +705,58 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     return true;
 }
 
-bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
+bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
         PROFILE_START(_pt);
 if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return false; }
-    int t = raw_thickness_px(thickness);
+    int t = raw_thickness_px(spec.thickness);
     if (t < 1) t = 1;
-    x1 += PlDrawState_Get()->off_x;
-    y1 += PlDrawState_Get()->off_y;
-    x2 += PlDrawState_Get()->off_x;
-    y2 += PlDrawState_Get()->off_y;
+    int x1 = spec.x1 + PlDrawState_Get()->off_x;
+    int y1 = spec.y1 + PlDrawState_Get()->off_y;
+    int x2 = spec.x2 + PlDrawState_Get()->off_x;
+    int y2 = spec.y2 + PlDrawState_Get()->off_y;
     int bx = x1 < x2 ? x1 : x2;
     int by = y1 < y2 ? y1 : y2;
     int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
     int bh = (y1 > y2 ? y1 - y2 : y2 - y1) + t;
     measure_track(bx - t / 2, by - t / 2, bw, bh);
-    GC gc = raw_prepare(color, t);
+    GC gc = raw_prepare(spec.color, t);
     if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return false; }
     Drawable d = XftDrawDrawable(g_draw_xd);
     XDrawLine(g_draw_dpy, d, gc, x1, y1, x2, y2);
     { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return true; }
 }
 
-bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness) {
+bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
         PROFILE_START(_pt);
-if (!raw_can_draw() || radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
-    int t = raw_thickness_px(thickness);
-    cx += PlDrawState_Get()->off_x;
-    cy += PlDrawState_Get()->off_y;
-    measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
-    GC gc = raw_prepare(color, t);
+if (!raw_can_draw() || spec.radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
+    int t = raw_thickness_px(spec.thickness);
+    int cx = spec.cx + PlDrawState_Get()->off_x;
+    int cy = spec.cy + PlDrawState_Get()->off_y;
+    measure_track(cx - spec.radius, cy - spec.radius, spec.radius * 2, spec.radius * 2);
+    GC gc = raw_prepare(spec.color, t);
     if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
     Drawable d = XftDrawDrawable(g_draw_xd);
-    unsigned dd = (unsigned)(radius * 2);
-    if (t > 0) XDrawArc(g_draw_dpy, d, gc, cx - radius, cy - radius, dd, dd, 0, 360 * 64);
-    else XFillArc(g_draw_dpy, d, gc, cx - radius, cy - radius, dd, dd, 0, 360 * 64);
+    unsigned dd = (unsigned)(spec.radius * 2);
+    if (t > 0) XDrawArc(g_draw_dpy, d, gc, cx - spec.radius, cy - spec.radius, dd, dd, 0, 360 * 64);
+    else XFillArc(g_draw_dpy, d, gc, cx - spec.radius, cy - spec.radius, dd, dd, 0, 360 * 64);
     { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return true; }
 }
 
-void Platform_DrawPromptSeparator(int y, int width) {
+void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
         PROFILE_START(_pt);
-    if (!EnableBorders || width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
-    Platform_DrawRectRaw(0, y, width, PROMPT_SEP_W,
-                         rgb_to_hex(COLOR_BORDER), 0, false, true, 1, true);
+    if (!EnableBorders || spec.width <= 0) { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); return; }
+    Platform_DrawRectRaw((PlDrawRectRawSpec){
+        .x = 0,
+        .y = spec.y,
+        .w = spec.width,
+        .h = PROMPT_SEP_W,
+        .color = rgb_to_hex(COLOR_BORDER),
+        .radius = 0,
+        .rounded = false,
+        .opaque = true,
+        .thickness = 1,
+        .filled = true
+    });
     { PROFILE_END_VAR(_pt, "api:Platform_DrawPromptSeparator"); }
 }
 
@@ -790,7 +799,7 @@ PROFILE_START(timer);
 
     int itemH = x11_font_row_height_of(font);
     int y0 = x11_font_list_top_of(font);
-    Platform_DrawPromptSeparator(y0, state->width);
+    Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y=y0, .width=state->width});
     int yOffset = PROMPT_LIST_BOTTOM_TITLE;
     if (!WindowTitleText && !VimModeText) yOffset = 0;
     int visible = (state->height - y0 - yOffset) / itemH;
@@ -820,7 +829,7 @@ PROFILE_START(timer);
     }
 
     if (PromptListBottomMargin() > 0) {
-        Platform_DrawPromptSeparator(y0 + visible * itemH, state->width);
+        Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y=y0 + visible * itemH, .width=state->width});
     }
 
     Platform_DestroyFont(font);

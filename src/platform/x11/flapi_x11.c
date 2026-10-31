@@ -521,7 +521,7 @@ if (!g_fl_list_lb || g_fl_list_cur == 0) { PROFILE_END_VAR(_pt, "fl_listbox_get_
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return 0; }
     unsigned long ncol, bcol, pcol;
-    Platform_GetItemColors(idx, g_fl_list_lb->populated_count, &ncol, &bcol, &pcol);
+    Platform_GetItemColors((PlGetItemColorsSpec){.idx=idx, .count=g_fl_list_lb->populated_count, .num_color=&ncol, .body_color=&bcol, .plain_color=&pcol});
     { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return pcol; }
 }
 
@@ -632,11 +632,11 @@ if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
             unsigned long title_col = 0;
             eval_window_title_color(state, &title_col);
             Platform_SetDrawContext(dpy, xd, vis, cmap);
-            Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, state->window_title, title_col, fh, "LEFT", PROMPT_FOOTER_PAD, FontSize);
+            Platform_DrawTextRaw((PlDrawTextRawSpec){.x=PROMPT_FOOTER_X, .y=state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, .text=state->window_title, .color=title_col, .font=fh, .align="LEFT", .pad=PROMPT_FOOTER_PAD, .fontsize=FontSize});
         }
         if (VimModeText) {
             Platform_SetDrawContext(dpy, xd, vis, cmap);
-            Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), fh, "RIGHT", PROMPT_FOOTER_PAD, FontSize);
+            Platform_DrawTextRaw((PlDrawTextRawSpec){.x=PROMPT_FOOTER_X, .y=state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, .text=g_vim_mode, .color=VimModeTextColor(), .font=fh, .align="RIGHT", .pad=PROMPT_FOOTER_PAD, .fontsize=FontSize});
         }
     }
     if (needDestroy) Platform_DestroyFont(fh);

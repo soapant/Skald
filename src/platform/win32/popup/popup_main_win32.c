@@ -522,7 +522,7 @@ case WM_CHAR: {
                   orig_idx = lb->matching_indices[pdis->itemID];
                   orig_cnt = lb->last_item_count > 0 ? lb->last_item_count : lb->populated_count;
                 }
-                Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
+                Platform_GetItemColors((PlGetItemColorsSpec){.idx=orig_idx, .count=orig_cnt, .num_color=&ncol, .body_color=&bcol, .plain_color=&pcol});
                 SetTextColor(pdis->hDC, ncol);
                 DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
               SelectObject(pdis->hDC, hOldMainFont);
@@ -595,7 +595,7 @@ case WM_CHAR: {
                 extern void Platform_DrawPromptEditbox(PromptState* state);
                 Platform_DrawPromptEditbox(estate);
                 
-                Platform_DrawPromptSeparator(PromptListTop() - 2, rect.right - rect.left);
+                Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y=PromptListTop() - 2, .width=rect.right - rect.left});
 
                 if (estate->has_listbox) {
                     int list_top = PromptListTop();
@@ -619,13 +619,13 @@ case WM_CHAR: {
                         unsigned long ncol, bcol, pcol;
                         int orig_idx = estate->listbox.matching_indices[list_idx];
                         int orig_cnt = estate->listbox.last_item_count > 0 ? estate->listbox.last_item_count : estate->listbox.populated_count;
-                        Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
+                        Platform_GetItemColors((PlGetItemColorsSpec){.idx=orig_idx, .count=orig_cnt, .num_color=&ncol, .body_color=&bcol, .plain_color=&pcol});
                         
-                        Platform_DrawTextRaw(14, y, text, ncol, FH_NULL, "LEFT", 0, FontSize);
+                        Platform_DrawTextRaw((PlDrawTextRawSpec){.x=14, .y=y, .text=text, .color=ncol, .font=FH_NULL, .align="LEFT", .pad=0, .fontsize=FontSize});
                     }
                 }
                 
-                Platform_DrawPromptSeparator(rect.bottom - PromptListBottomMargin(), rect.right - rect.left);
+                Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y=rect.bottom - PromptListBottomMargin(), .width=rect.right - rect.left});
                 Platform_SetDrawContextWin32(NULL);
             }
         }

@@ -988,7 +988,7 @@ bool fl_draw_text_impl(const FlTextSpec *spec) {
     }
     const char *align = spec->align ? spec->align : "CENTER";
     FontHandle fh = spec->font;
-    bool r = Platform_DrawTextRaw(spec->x, spec->y, real_text, col, fh, align, spec->pad,spec->fontsize);
+    bool r = Platform_DrawTextRaw((PlDrawTextRawSpec){.x=spec->x, .y=spec->y, .text=real_text, .color=col, .font=fh, .align=(char*)align, .pad=spec->pad, .fontsize=spec->fontsize});
     PROFILE_END_VAR(_pt, "api:fl_draw_text");
     return r;
 }
@@ -1115,7 +1115,7 @@ static int FlWrapLayout(const char* text, int x0, int y0, int max_width, int lin
 static int FlWrapMeasureThunk(void* ctx, const char* s, int n) {
     PROFILE_START(_pt);
     FlWrapCtx* c = (FlWrapCtx*)ctx;
-    { PROFILE_END_VAR(_pt, "FlWrapMeasureThunk"); return Platform_MeasureTextWidth(s, n, c->fontsize); }
+    { PROFILE_END_VAR(_pt, "FlWrapMeasureThunk"); return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=s, .len=n, .fontsize=c->fontsize}); }
 }
 
 static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
@@ -1219,7 +1219,7 @@ int fl_get_text_height(const char *text) {
 }
 
 int fl_get_text_width(const char *text,int fontsize) {
-    return Platform_MeasureTextWidth(text,strlen(text), fontsize);
+    return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){.text=text, .len=(int)strlen(text), .fontsize=fontsize});
 }
 
 int fl_get_glyph_ink_height(const char *text, int fontsize) {
@@ -1262,7 +1262,7 @@ PROFILE_END_VAR(_pt, "api:fl_draw_line"); { PROFILE_END_VAR(_pt, "f"); return fa
   unsigned long col = spec->color;
   col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
-  bool r = Platform_DrawLineRaw(spec->x1, spec->y1, spec->x2, spec->y2, col, spec->thickness);
+  bool r = Platform_DrawLineRaw((PlDrawLineRawSpec){.x1=spec->x1, .y1=spec->y1, .x2=spec->x2, .y2=spec->y2, .color=col, .thickness=spec->thickness});
   PROFILE_END_VAR(_pt, "api:fl_draw_line");
   return r;
 }
@@ -1274,7 +1274,7 @@ PROFILE_END_VAR(_pt, "api:fl_draw_circle"); { PROFILE_END_VAR(_pt, "f"); return 
   unsigned long col = spec->color;
   col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
-  bool r = Platform_DrawCircleRaw(spec->x, spec->y, spec->radius, col, spec->thickness);
+  bool r = Platform_DrawCircleRaw((PlDrawCircleRawSpec){.cx=spec->x, .cy=spec->y, .radius=spec->radius, .color=col, .thickness=spec->thickness});
   PROFILE_END_VAR(_pt, "api:fl_draw_circle");
   return r;
 }
