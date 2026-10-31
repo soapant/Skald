@@ -16,33 +16,33 @@
 #include <string.h>
 
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
-    PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "CreateCustomNerdFont"); return FH_TO_HFONT(Platform_CreateFont(height, face_name)); }
+    
+{  return FH_TO_HFONT(Platform_CreateFont(height, face_name)); }
 }
 
 void win32_apply_listbox_bottom_corners(HWND hwnd, int w, int h, bool at_window_bottom) {
-    PROFILE_START(_pt);
-    if (!hwnd || !IsWindow(hwnd) || !RoundedCorners || !at_window_bottom) { PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners"); return ; }
+    
+    if (!hwnd || !IsWindow(hwnd) || !RoundedCorners || !at_window_bottom) {  return ; }
     int radius = CornerRadius;
     if (radius < 0) radius = 0;
     if (radius > 32) radius = 32;
     if (radius * 2 > w) radius = w / 2;
     if (radius * 2 > h) radius = h / 2;
-    if (radius <= 0) { PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners"); return ; }
+    if (radius <= 0) {  return ; }
     HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius * 2, radius * 2);
-    if (!rgn) { PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners"); return ; }
+    if (!rgn) {  return ; }
     HRGN top = CreateRectRgn(0, 0, w + 1, h - radius + 1);
     if (top) {
         CombineRgn(rgn, rgn, top, RGN_OR);
         DeleteObject(top);
     }
     SetWindowRgn(hwnd, rgn, TRUE);
-    PROFILE_END_VAR(_pt, "win32_apply_listbox_bottom_corners");
+    
 }
 
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
-    PROFILE_START(_pt);
-if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corners"); return ; }
+    
+if (!hwnd || !IsWindow(hwnd)) {  return ; }
   if (w <= 0 || h <= 0) {
     RECT rc; GetWindowRect(hwnd, &rc);
     w = rc.right - rc.left;
@@ -70,34 +70,34 @@ if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corner
     }
     FreeLibrary(dwm);
   }
-  if (!RoundedCorners) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corners"); return ; }
+  if (!RoundedCorners) {  return ; }
 
   int radius = CornerRadius;
   if (radius < 0) radius = 0;
   if (radius > 32) radius = 32;
   if (radius * 2 > w) radius = w / 2;
   if (radius * 2 > h) radius = h / 2;
-  if (radius <= 0) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corners"); return ; }
+  if (radius <= 0) {  return ; }
   HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius*2, radius*2);
   if (rgn) SetWindowRgn(hwnd, rgn, TRUE);
 }
 
 static inline unsigned int win32_to_rgb(COLORREF c) {
-    PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "win32_to_rgb"); return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c); }
+    
+{  return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c); }
 }
 
 void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base) {
-    PROFILE_START(_pt);
-PROFILE_START(timer);
+    
+
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
-  if (w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "WinSel solid"); return; }
+  if (w <= 0 || h <= 0) {  return; }
   HBRUSH br = CreateSolidBrush(base);
   FillRect(hdc, rc, br);
   DeleteObject(br);
-  PROFILE_END_VAR(timer, "sel-solid");
-  { PROFILE_END_VAR(_pt, "win32_draw_selection_background"); return ; }
+  
+  {  return ; }
 }
 
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1, int ey1,
@@ -162,7 +162,7 @@ void win32_draw_window_border(HDC hdc, int ox, int oy, int ww, int wh, const REC
 }
 
 void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius) {
-    PROFILE_START(_pt);
+    
 if (!RoundedCorners || radius <= 0) {
     HBRUSH br = CreateSolidBrush(col);
     FillRect(hdc, rc, br);
@@ -184,13 +184,13 @@ if (!RoundedCorners || radius <= 0) {
 
 void UpdateTextCaret(void)
 {
-    PROFILE_START(_pt);
+    
 HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (popup && IsWindow(popup)) InvalidateRect(popup, NULL, FALSE);
 }
 
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height) {
-    PROFILE_START(_pt);
+    
 POINT pt = { 0, 0 };
   GetCursorPos(&pt);
   HMONITOR hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
@@ -219,7 +219,7 @@ POINT pt = { 0, 0 };
       layout->x, layout->y, layout->w, layout->h);
 }
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
-    PROFILE_START(_pt);
+    
 ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);
 
   SetWindowPos(WH_TO_HWND(hwndTarget), HWND_TOPMOST, 0, 0, 0, 0,

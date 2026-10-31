@@ -5,10 +5,10 @@
 
 void Listbox_ComputeLayout(const PlListSpec* spec, int default_y0, int item_h,
                            int popup_w, int popup_h, int count, ListboxLayout* out) {
-        PROFILE_START(_pt);
-    if (!out) { PROFILE_END_VAR(_pt, "Listbox_ComputeLayout"); return; }
+        
+    if (!out) {  return; }
     memset(out, 0, sizeof(*out));
-    if (!spec) { PROFILE_END_VAR(_pt, "Listbox_ComputeLayout"); return; }
+    if (!spec) {  return; }
 
     out->y0 = spec->y ? spec->y : default_y0;
     out->item_h = item_h > 0 ? item_h : 1;
@@ -30,5 +30,5 @@ void Listbox_ComputeLayout(const PlListSpec* spec, int default_y0, int item_h,
     if (visible < 1) visible = 1;
     if (count > 0 && visible > count) visible = count;
     out->visible = visible;
-    PROFILE_END_VAR(_pt, "Listbox_ComputeLayout");
+    
 }

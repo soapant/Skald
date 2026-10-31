@@ -25,10 +25,10 @@
 
 
 static uid_t ProbeSessionUid(void){
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     DIR* d = opendir("/tmp/.X11-unix");
-    if (!d) { PROFILE_END_VAR(timer, "misc_x11:ProbeSessionUid"); return (uid_t)-1; }
+    if (!d) {  return (uid_t)-1; }
     struct dirent* e;
     while ((e = readdir(d)) != NULL) {
         if (e->d_name[0] != 'X') continue;
@@ -37,67 +37,67 @@ PROFILE_START(timer);
         struct stat st;
         if (stat(path, &st) == 0 && st.st_uid != 0) {
             closedir(d);
-            PROFILE_END_VAR(timer, "misc_x11:ProbeSessionUid");
+            
             return st.st_uid;
         }
     }
     closedir(d);
-    PROFILE_END_VAR(timer, "misc_x11:ProbeSessionUid");
-    { PROFILE_END_VAR(_pt, "ProbeSessionUid"); return (uid_t)-1; }
+    
+    {  return (uid_t)-1; }
 }
 
 const char* Platform_GetRealUser(void){
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     static char buf[256]={0};
     const char* u=getenv("SUDO_USER");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1);  return buf; }
     u=getenv("USER");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1);  return buf; }
     u=getenv("LOGNAME");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1);  return buf; }
     
     uid_t suid = ProbeSessionUid();
     if (suid != (uid_t)-1) {
         struct passwd* spw = getpwuid(suid);
-        if (spw && spw->pw_name) { strncpy(buf,spw->pw_name,sizeof(buf)-1);  PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+        if (spw && spw->pw_name) { strncpy(buf,spw->pw_name,sizeof(buf)-1);   return buf; }
     }
     struct passwd* pw=getpwuid(getuid());
     if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1);  log_info("Platform_GetRealUser completed");
-PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
-    { PROFILE_END_VAR(_pt, "Platform_GetRealUser"); return NULL; }
+ return buf; }
+    {  return NULL; }
 }
 
 const char* Platform_GetRealHome(void){
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     static char buf[512]={0};
     const char* u=Platform_GetRealUser();
     struct passwd* pw=getpwnam(u);
-    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
+    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1);  return buf; }
     pw=getpwuid(getuid());
-    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
+    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1);  return buf; }
     const char* h=getenv("HOME");
-    if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
+    if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1);  return buf; }
     snprintf(buf,sizeof(buf),"/home/%s",u); log_info("Platform_GetRealHome completed");
-PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); { PROFILE_END_VAR(_pt, "Platform_GetRealHome"); return buf; }
+ {  return buf; }
 }
 
 bool Platform_IsRunningAsRoot(void){
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
         log_info("Platform_IsRunningAsRoot completed");
-PROFILE_END_VAR(timer, "misc_x11:Platform_IsRunningAsRoot"); { PROFILE_END_VAR(_pt, "Platform_IsRunningAsRoot"); return getuid()==0; }
+ {  return getuid()==0; }
 }
 
 
 
 const char* Platform_GetSessionDisplay(void){
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     static char buf[64]={0};
     const char* env=getenv("DISPLAY");
-    if(env && env[0]){ snprintf(buf,sizeof(buf),"%s",env);PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay"); return buf; }
+    if(env && env[0]){ snprintf(buf,sizeof(buf),"%s",env); return buf; }
     DIR* d = opendir("/tmp/.X11-unix");
     if (d) {
         struct dirent* e;
@@ -119,19 +119,19 @@ PROFILE_START(timer);
         closedir(d);
     }
         log_info("Platform_GetSessionDisplay completed");
-PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay");
-    { PROFILE_END_VAR(_pt, "Platform_GetSessionDisplay"); return buf[0]?buf:":0"; }
+
+    {  return buf[0]?buf:":0"; }
 }
 
 
 
 const char* Platform_GetSessionXAuthority(void){
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     static char buf[512]={0};
     struct stat xst;
     const char* xa=getenv("XAUTHORITY");
-    if(xa && xa[0] && stat(xa,&xst)==0 && xst.st_size>0 && access(xa,R_OK)==0){ snprintf(buf,sizeof(buf),"%s",xa);PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
+    if(xa && xa[0] && stat(xa,&xst)==0 && xst.st_size>0 && access(xa,R_OK)==0){ snprintf(buf,sizeof(buf),"%s",xa); return buf; }
     char rtd[256];
     const char* rt=getenv("XDG_RUNTIME_DIR");
     if(rt && rt[0]) snprintf(rtd,sizeof(rtd),"%s",rt);
@@ -151,36 +151,36 @@ PROFILE_START(timer);
             if (st.st_mtime >= best_mtime) { best_mtime = st.st_mtime; snprintf(best, sizeof(best), "%s", path); }
         }
         closedir(d);
-        if (best[0]) { snprintf(buf,sizeof(buf),"%s",best);PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
+        if (best[0]) { snprintf(buf,sizeof(buf),"%s",best); return buf; }
     }
     snprintf(buf,sizeof(buf),"%s/.Xauthority",Platform_GetRealHome());
-    if(stat(buf,&xst)==0 && xst.st_size>0 && access(buf,R_OK)==0){ PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
+    if(stat(buf,&xst)==0 && xst.st_size>0 && access(buf,R_OK)==0){  return buf; }
     buf[0]='\0';
         log_info("Platform_GetSessionXAuthority completed");
-PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority");
-    { PROFILE_END_VAR(_pt, "Platform_GetSessionXAuthority"); return ""; }
+
+    {  return ""; }
 }
 
 
 const char* Platform_GetRuntimeDir(void){
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     static char buf[256]={0};
     const char* rt=getenv("XDG_RUNTIME_DIR");
-    if(rt && rt[0]){ snprintf(buf,sizeof(buf),"%s",rt); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
+    if(rt && rt[0]){ snprintf(buf,sizeof(buf),"%s",rt);  return buf; }
     const char* u=Platform_GetRealUser();
     struct passwd* pw=getpwnam(u);
-    if(pw){ snprintf(buf,sizeof(buf),"/run/user/%d",(int)pw->pw_uid); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
+    if(pw){ snprintf(buf,sizeof(buf),"/run/user/%d",(int)pw->pw_uid);  return buf; }
     snprintf(buf,sizeof(buf),"/run/user/%d",(int)getuid());
         log_info("Platform_GetRuntimeDir completed");
-PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir");
-    { PROFILE_END_VAR(_pt, "Platform_GetRuntimeDir"); return buf[0]?buf:"/run/user/1000"; }
+
+    {  return buf[0]?buf:"/run/user/1000"; }
 }
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    if (template_path == NULL || out_size == 0) { PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath"); return false; }
+        
+
+    if (template_path == NULL || out_size == 0) {  return false; }
 
     if (template_path[0] == '~' && (template_path[1] == '/' || template_path[1] == '\0')) {
         const char* home = Platform_GetRealHome();
@@ -200,7 +200,7 @@ PROFILE_START(timer);
                     out[i] = '\0';
                 }
             }
-            PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath");
+            
             return true;
         }
     }
@@ -217,7 +217,7 @@ PROFILE_START(timer);
                     memcpy(token, p + 1, token_len);
                     token[token_len] = '\0';
                     char resolved[1024];
-                    PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath");
+                    
                     return false;
                 }
             }
@@ -235,103 +235,103 @@ PROFILE_START(timer);
             out[i] = '\0';
         }
     }
-    PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath");
-    { PROFILE_END_VAR(_pt, "Platform_ExpandPath"); return true; }
+    
+    {  return true; }
 }
 
 int ConvertLinuxKeyToWindowsVK(int key_code) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     if (key_code >= KEY_1 && key_code <= KEY_0) {
-        PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK");
+        
         return '1' + (key_code - KEY_1);
     }
 
     switch (key_code) {
-        case KEY_A: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'A';
-        case KEY_B: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'B';
-        case KEY_C: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'C';
-        case KEY_D: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'D';
-        case KEY_E: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'E';
-        case KEY_F: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'F';
-        case KEY_G: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'G';
-        case KEY_H: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'H';
-        case KEY_I: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'I';
-        case KEY_J: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'J';
-        case KEY_K: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'K';
-        case KEY_L: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'L';
-        case KEY_M: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'M';
-        case KEY_N: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'N';
-        case KEY_O: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'O';
-        case KEY_P: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'P';
-        case KEY_Q: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'Q';
-        case KEY_R: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'R';
-        case KEY_S: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'S';
-        case KEY_T: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'T';
-        case KEY_U: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'U';
-        case KEY_V: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'V';
-        case KEY_W: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'W';
-        case KEY_X: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'X';
-        case KEY_Y: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'Y';
-        case KEY_Z: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'Z';
-        case KEY_SPACE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_SPACE;
-        case KEY_ENTER: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RETURN;
-        case KEY_BACKSPACE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_BACK;
-        case KEY_TAB: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_TAB;
-        case KEY_ESC: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_ESCAPE;
-        case KEY_LEFT: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LEFT;
-        case KEY_UP: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_UP;
-        case KEY_RIGHT: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RIGHT;
-        case KEY_DOWN: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_DOWN;
-        case KEY_LEFTCTRL: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LCONTROL;
-        case KEY_RIGHTCTRL: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RCONTROL;
-        case KEY_LEFTALT: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LMENU;
-        case KEY_RIGHTALT: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RMENU;
-        case KEY_LEFTSHIFT: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LSHIFT;
-        case KEY_RIGHTSHIFT: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RSHIFT;
-        case KEY_LEFTMETA: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LWIN;
-        case KEY_RIGHTMETA: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RWIN;
-        case KEY_SEMICOLON: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_1;
-        case KEY_SLASH: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_2;
-        case KEY_LEFTBRACE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_4;
-        case KEY_RIGHTBRACE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_6;
-        case KEY_COMMA: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_COMMA;
-        case KEY_DOT: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_PERIOD;
-        case KEY_APOSTROPHE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_7;
-        case KEY_MINUS: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_MINUS;
-        case KEY_EQUAL: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_PLUS;
-        case KEY_GRAVE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_3;
-        case KEY_BACKSLASH: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_5;
-        default: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 0;
+        case KEY_A:  return 'A';
+        case KEY_B:  return 'B';
+        case KEY_C:  return 'C';
+        case KEY_D:  return 'D';
+        case KEY_E:  return 'E';
+        case KEY_F:  return 'F';
+        case KEY_G:  return 'G';
+        case KEY_H:  return 'H';
+        case KEY_I:  return 'I';
+        case KEY_J:  return 'J';
+        case KEY_K:  return 'K';
+        case KEY_L:  return 'L';
+        case KEY_M:  return 'M';
+        case KEY_N:  return 'N';
+        case KEY_O:  return 'O';
+        case KEY_P:  return 'P';
+        case KEY_Q:  return 'Q';
+        case KEY_R:  return 'R';
+        case KEY_S:  return 'S';
+        case KEY_T:  return 'T';
+        case KEY_U:  return 'U';
+        case KEY_V:  return 'V';
+        case KEY_W:  return 'W';
+        case KEY_X:  return 'X';
+        case KEY_Y:  return 'Y';
+        case KEY_Z:  return 'Z';
+        case KEY_SPACE:  return VK_SPACE;
+        case KEY_ENTER:  return VK_RETURN;
+        case KEY_BACKSPACE:  return VK_BACK;
+        case KEY_TAB:  return VK_TAB;
+        case KEY_ESC:  return VK_ESCAPE;
+        case KEY_LEFT:  return VK_LEFT;
+        case KEY_UP:  return VK_UP;
+        case KEY_RIGHT:  return VK_RIGHT;
+        case KEY_DOWN:  return VK_DOWN;
+        case KEY_LEFTCTRL:  return VK_LCONTROL;
+        case KEY_RIGHTCTRL:  return VK_RCONTROL;
+        case KEY_LEFTALT:  return VK_LMENU;
+        case KEY_RIGHTALT:  return VK_RMENU;
+        case KEY_LEFTSHIFT:  return VK_LSHIFT;
+        case KEY_RIGHTSHIFT:  return VK_RSHIFT;
+        case KEY_LEFTMETA:  return VK_LWIN;
+        case KEY_RIGHTMETA:  return VK_RWIN;
+        case KEY_SEMICOLON:  return VK_OEM_1;
+        case KEY_SLASH:  return VK_OEM_2;
+        case KEY_LEFTBRACE:  return VK_OEM_4;
+        case KEY_RIGHTBRACE:  return VK_OEM_6;
+        case KEY_COMMA:  return VK_OEM_COMMA;
+        case KEY_DOT:  return VK_OEM_PERIOD;
+        case KEY_APOSTROPHE:  return VK_OEM_7;
+        case KEY_MINUS:  return VK_OEM_MINUS;
+        case KEY_EQUAL:  return VK_OEM_PLUS;
+        case KEY_GRAVE:  return VK_OEM_3;
+        case KEY_BACKSLASH:  return VK_OEM_5;
+        default:  return 0;
     }
-    PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK");
+    
 }
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
-        PROFILE_START(_pt);
-if (!haystack || !needle) { PROFILE_END_VAR(_pt, "Platform_StringContainsCaseInsensitive"); return false; }
-    { PROFILE_END_VAR(_pt, "Platform_StringContainsCaseInsensitive"); return strcasestr(haystack, needle) != NULL; }
+        
+if (!haystack || !needle) {  return false; }
+    {  return strcasestr(haystack, needle) != NULL; }
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
-        PROFILE_START(_pt);
-if (!str || !prefix) { PROFILE_END_VAR(_pt, "Platform_StringStartsWithCaseInsensitive"); return false; }
+        
+if (!str || !prefix) {  return false; }
     size_t plen = strlen(prefix);
-    if (plen == 0) { PROFILE_END_VAR(_pt, "Platform_StringStartsWithCaseInsensitive"); return true; }
-    { PROFILE_END_VAR(_pt, "Platform_StringStartsWithCaseInsensitive"); return strncasecmp(str, prefix, plen) == 0; }
+    if (plen == 0) {  return true; }
+    {  return strncasecmp(str, prefix, plen) == 0; }
 }
 
 long long Platform_GetWallClockMs(void) {
-        PROFILE_START(_pt);
+        
 struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    { PROFILE_END_VAR(_pt, "Platform_GetWallClockMs"); return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL; }
+    {  return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL; }
 }
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
-    if (!exe_name || !*exe_name) { PROFILE_END_VAR(timer, "misc_x11:Platform_TerminateProcessByName"); return false; }
+        
+
+    if (!exe_name || !*exe_name) {  return false; }
     char tmp[256];
     strncpy(tmp, exe_name, sizeof(tmp)-1);
     tmp[sizeof(tmp)-1]='\0';
@@ -342,14 +342,14 @@ PROFILE_START(timer);
     snprintf(cmd, sizeof(cmd), "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null; pkill -9 -f \"build/[f]lint\" 2>/dev/null; pkill \"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &", tmp, tmp, tmp, tmp, tmp, tmp);
 
         log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name ? exe_name : "");;
-PROFILE_END_VAR(timer, "misc_x11:Platform_TerminateProcessByName");
-    { PROFILE_END_VAR(_pt, "Platform_TerminateProcessByName"); return Platform_RunTerminalCommand(cmd,false); }
+
+    {  return Platform_RunTerminalCommand(cmd,false); }
 }
 
 static bool x11_cmd_exists(const char* cmd) {
-        PROFILE_START(_pt);
-if (!cmd || !cmd[0]) { PROFILE_END_VAR(_pt, "x11_cmd_exists"); return false; }
-    if (strchr(cmd, '/')) { PROFILE_END_VAR(_pt, "x11_cmd_exists"); return access(cmd, X_OK) == 0; }
+        
+if (!cmd || !cmd[0]) {  return false; }
+    if (strchr(cmd, '/')) {  return access(cmd, X_OK) == 0; }
     const char* path = getenv("PATH");
     if (!path || !path[0]) path = "/usr/bin:/bin:/usr/local/bin";
     char buf[4096];
@@ -360,12 +360,12 @@ if (!cmd || !cmd[0]) { PROFILE_END_VAR(_pt, "x11_cmd_exists"); return false; }
         snprintf(full, sizeof(full), "%s/%s", dir, cmd);
         if (access(full, X_OK) == 0) return true;
     }
-    { PROFILE_END_VAR(_pt, "x11_cmd_exists"); return false; }
+    {  return false; }
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     char command[2048];
     char full_url[2048];
     char browser_tok[512];
@@ -399,7 +399,7 @@ PROFILE_START(timer);
                    display, xauthority, runtime_dir, UsedBrowser, full_url);
       }
       
-      PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
+      
       return Platform_RunTerminalCommand(command,false);
     } else {
     if (Platform_IsRunningAsRoot()) {
@@ -407,23 +407,23 @@ PROFILE_START(timer);
     } else {
         snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir,UsedBrowser,full_url);
     }
-    PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
+    
     return Platform_RunTerminalCommand(command,false);
     }
     log_info("Platform_LaunchBrowserAtfull_url full_url='%s' new_window=%d",full_url, new_window);;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
+    
 }
 
 bool Platform_QueryBrowser(char* query) {
-        PROFILE_START(_pt);
-if (!query || !query[0]) { PROFILE_END_VAR(_pt, "Platform_QueryBrowser"); return false; }
+        
+if (!query || !query[0]) {  return false; }
 
     char browser_tok[512];
     size_t tok_len = UsedBrowser ? strcspn(UsedBrowser, " \t") : 0;
     if (tok_len >= sizeof(browser_tok)) tok_len = sizeof(browser_tok) - 1;
     if (UsedBrowser) memcpy(browser_tok, UsedBrowser, tok_len);
     browser_tok[tok_len] = '\0';
-    PROFILE_START(timer);
+    
     char command[2048];
     char url[2048];
     
@@ -492,12 +492,12 @@ if (!query || !query[0]) { PROFILE_END_VAR(_pt, "Platform_QueryBrowser"); return
     }
     
       log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
-    { PROFILE_END_VAR(_pt, "Platform_QueryBrowser"); return Platform_RunTerminalCommand(command,false); }
+    
+    {  return Platform_RunTerminalCommand(command,false); }
 }
 
 char* Platform_GetClipboardEntry() {
-        PROFILE_START(_pt);
+        
 static long long next_in_ms = 0;
     static int fail_streak = 0;
     static unsigned long last_owner = 0;
@@ -510,7 +510,7 @@ static long long next_in_ms = 0;
         fail_streak = 0;
         next_in_ms = 0;
     }
-    if (owner == 0) { PROFILE_END_VAR(_pt, "Platform_GetClipboardEntry"); return NULL; }
+    if (owner == 0) {  return NULL; }
     if (fail_streak > 0 && now < next_in_ms) {
         return NULL;
     }
@@ -532,13 +532,13 @@ static long long next_in_ms = 0;
         fail_streak = 0;
         next_in_ms = 0;
     }
-    { PROFILE_END_VAR(_pt, "Platform_GetClipboardEntry"); return out; }
+    {  return out; }
 }
 
 bool Platform_PasteContent(char* content) {
-  PROFILE_START(_pt);
+  
 log_info("Platform_PasteContent content='%s'", content ? content : "");;
-  { PROFILE_END_VAR(_pt, "Platform_PasteContent"); return Wm_Paste(content); }
+  {  return Wm_Paste(content); }
 }
 
 bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size) {

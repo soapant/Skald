@@ -130,7 +130,7 @@ static bool config_build_feature(const char* src, const char* out) {
 }
 
 static bool config_build_load_store(void) {
-    PROFILE_START(timer);
+    
     const char* out = config_out_path();
     if (!out) {
         log_error("config_out_path() returned NULL!");
@@ -140,12 +140,12 @@ static bool config_build_load_store(void) {
     if (config_output_is_fresh(out)) {
         log_info("config .so is newer than source, skipping compile");
     } else {
-        PROFILE_START(t_cfgcompile);
+        
         bool ok = config_build_feature(CONFIG_SRC, out);
-        PROFILE_END_VAR(t_cfgcompile, "config:compile_config_c");
+        
         if (!ok) {
             log_error("config compile failed, keeping current");
-            PROFILE_END_VAR(timer, "config:build_load_store");
+            
             return false;
         }
     }
@@ -157,23 +157,23 @@ static bool config_build_load_store(void) {
     }
     snprintf(uniq, sizeof(uniq), "build/config.hot%d%s", ++g_cfg_seq, lib_ext);
     {
-        PROFILE_START(t_cfgcopy);
+        
         bool ok = config_copy_file(out, uniq);
-        PROFILE_END_VAR(t_cfgcopy, "config:copy_to_hot");
+        
         if (!ok) {
             log_error("config copy failed, keeping current");
-            PROFILE_END_VAR(timer, "config:build_load_store");
+            
             return false;
         }
     }
     LibHandle h = 0;
     {
-        PROFILE_START(t_cfgdl);
+        
         bool ok = config_load_copy(uniq, &h);
-        PROFILE_END_VAR(t_cfgdl, "config:dlopen_apply");
+        
         if (!ok) {
             remove(uniq);
-            PROFILE_END_VAR(timer, "config:build_load_store");
+            
             return false;
         }
     }
@@ -187,14 +187,14 @@ static bool config_build_load_store(void) {
     strncpy(g_cfg_libs[g_cfg_count].uniq, uniq, sizeof(g_cfg_libs[g_cfg_count].uniq) - 1);
     g_cfg_libs[g_cfg_count].uniq[sizeof(g_cfg_libs[g_cfg_count].uniq) - 1] = '\0';
     g_cfg_count++;
-    PROFILE_END_VAR(timer, "config:build_load_store TOTAL");
+    
     return true;
 }
 
 bool Config_Load(void) {
-    PROFILE_START(timer);
+    
     bool ok = config_build_load_store();
-    PROFILE_END_VAR(timer, "config:Config_Load");
+    
     if (!ok) {
         log_error("config load failed, running on built-in defaults");
         return false;

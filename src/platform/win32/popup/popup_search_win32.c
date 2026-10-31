@@ -17,7 +17,7 @@
 
 #include "core/timer.h"
 LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    PROFILE_START(_pt);
+    
 ListBoxInfo* lb = NULL;
   if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
@@ -157,5 +157,5 @@ ListBoxInfo* lb = NULL;
         break;
     }
     }
-  { PROFILE_END_VAR(_pt, "SearchPopupProc"); return DefWindowProcA(hwnd, msg, wParam, lParam); }
+  {  return DefWindowProcA(hwnd, msg, wParam, lParam); }
 }

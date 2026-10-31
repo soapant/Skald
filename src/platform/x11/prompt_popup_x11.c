@@ -38,13 +38,13 @@
 #include <stdio.h>
 
 bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     (void)x;
     (void)y;
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
-    if (!dpy) { PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow"); return false; }
+    if (!dpy) {  return false; }
     struct timespec _t0, _t1, _t2, _t3;
     clock_gettime(CLOCK_MONOTONIC, &_t0);
     ListBox_InvalidateMousePos();
@@ -96,23 +96,23 @@ PROFILE_START(timer);
         }
     }
     XFlush(dpy);
-    PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
-    { PROFILE_END_VAR(_pt, "Platform_PromptPopupShowWindow"); return true; }
+    
+    {  return true; }
 }
 
 void Platform_PromptPopupHideWindow(Popup* self) {
-    PROFILE_START(_pt);
-    PROFILE_START(timer);
+    
+    
     Display* dpy = get_display();
     if (dpy) {
         XUnmapWindow(dpy, self->handle.xid);
         XFlush(dpy);
     }
-    PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupHideWindow");
+    
 }
 
 void Platform_PromptPopupRender(Popup* self) {
-        PROFILE_START(_pt);
+        
 WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     if (dpy) {
@@ -121,36 +121,36 @@ WindowManager* wm = (WindowManager*)self->manager;
             Platform_SetTransparentWindow(true);
             x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
             Platform_SetTransparentWindow(false);
-            { PROFILE_END_VAR(_pt, "Platform_PromptPopupRender"); return; }
+            {  return; }
         }
         x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
     }
 }
 
 void Platform_PromptPopupDestroyWindow(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     Display* dpy = get_display();
     if (dpy) {
         x11_release_prompt_buffer(dpy, self->handle.xid);
         XDestroyWindow(dpy, self->handle.xid);
     }
-    PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupDestroyWindow");
+    
 }
 
 
 static void command_confirm(const char* new_text, void* user_data) {
-        PROFILE_START(_pt);
+        
 PromptState* state = (PromptState*)user_data;
     ListBox_CommandExecute(&state->listbox, new_text);
 }
 
 bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     PromptState* state = self ? (PromptState*)self->user_data : NULL;
-    if (!state) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
-    if (Prompt_HandleKey(state, key)) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
+    if (!state) {  return true; }
+    if (Prompt_HandleKey(state, key)) {  return true; }
 
     int wParam = key->vk;
     bool shift_pressed = key->shift;
@@ -166,12 +166,12 @@ PROFILE_START(timer);
         bool swallow = HotkeyText_ShouldSwallow(key);
         if (!swallow && HotkeyText_IsPrintable(key)) {
             Prompt_InsertText(state, key->text, key->text_len);
-            PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
+            
             return true;
         }
     }
 
-    PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-    { PROFILE_END_VAR(_pt, "Platform_PromptPopupOnKey"); return false; }
+    
+    {  return false; }
 }
 

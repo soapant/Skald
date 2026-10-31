@@ -24,7 +24,7 @@ static Pixmap g_pbuf_pm = None;
 static XftDraw* g_pbuf_xd = NULL;
 
 static void x11_pbuf_drop(void) {
-        PROFILE_START(_pt);
+        
 if (g_pbuf_xd) { XftDrawDestroy(g_pbuf_xd); g_pbuf_xd = NULL; }
     if (g_pbuf_pm) {
         if (g_pbuf_dpy) XFreePixmap(g_pbuf_dpy, g_pbuf_pm);
@@ -40,12 +40,12 @@ if (g_pbuf_xd) { XftDrawDestroy(g_pbuf_xd); g_pbuf_xd = NULL; }
 }
 
 void x11_release_prompt_buffer(Display* dpy, Window win) {
-        PROFILE_START(_pt);
+        
 if (g_pbuf_dpy == dpy && g_pbuf_win == win) x11_pbuf_drop();
 }
 
 static bool x11_pbuf_acquire(Display* dpy, Window win, int w, int h, int depth, Visual* vis, Colormap cmap) {
-        PROFILE_START(_pt);
+        
 if (g_pbuf_xd && g_pbuf_pm && g_pbuf_dpy == dpy && g_pbuf_win == win &&
         g_pbuf_w == w && g_pbuf_h == h && g_pbuf_depth == depth &&
         g_pbuf_vis == vis && g_pbuf_cmap == cmap) {
@@ -53,7 +53,7 @@ if (g_pbuf_xd && g_pbuf_pm && g_pbuf_dpy == dpy && g_pbuf_win == win &&
     }
     x11_pbuf_drop();
     Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
-    if (!pm) { PROFILE_END_VAR(_pt, "x11_pbuf_acquire"); return false; }
+    if (!pm) {  return false; }
     XftDraw* xd = XftDrawCreate(dpy, pm, vis, cmap);
     if (!xd) { XFreePixmap(dpy, pm); return false; }
     g_pbuf_dpy = dpy;
@@ -65,22 +65,22 @@ if (g_pbuf_xd && g_pbuf_pm && g_pbuf_dpy == dpy && g_pbuf_win == win &&
     g_pbuf_cmap = cmap;
     g_pbuf_pm = pm;
     g_pbuf_xd = xd;
-    { PROFILE_END_VAR(_pt, "x11_pbuf_acquire"); return true; }
+    {  return true; }
 }
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-        PROFILE_START(_pt);
+        
 Platform_DrawEditBox(state, dpy, xd, vis, cmap);
 }
 
 void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-        PROFILE_START(_pt);
+        
 Platform_DrawListBox(state, dpy, xd, vis, cmap);
 }
 
 void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     XWindowAttributes attrs;
     Visual* vis = NULL;
     Colormap cmap = 0;
@@ -92,15 +92,15 @@ PROFILE_START(timer);
         cmap = DefaultColormap(dpy, screen);
     }
     XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
-    if (!xd) { PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserEditControl"); return; }
+    if (!xd) {  return; }
     DrawPromptUserEditControlOnDraw(dpy, xd, vis, cmap, state);
     XftDrawDestroy(xd);
-    PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserEditControl");
+    
 }
 
 void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
-            PROFILE_START(_pt);
-PROFILE_START(timer);
+            
+
       XWindowAttributes attrs;
       Visual* vis = NULL;
       Colormap cmap = 0;
@@ -112,14 +112,14 @@ PROFILE_START(timer);
           cmap = DefaultColormap(dpy, screen);
       }
       XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
-      if (!xd) { PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserListBox"); return; }
+      if (!xd) {  return; }
       DrawPromptUserListBoxOnDraw(dpy, xd, vis, cmap, state);
       XftDrawDestroy(xd);
-      PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserListBox");
+      
 }
 
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
-        PROFILE_START(_pt);
+        
     FlintContext_Get()->window.editbox_placed = false;
     int w = state->width;
     int h = state->height;
@@ -192,6 +192,6 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     XFreeGC(dpy, gc);
     x11_draw_window_border(dpy, *win, w, h, state && state->no_bg);
     XFlush(dpy);
-    { PROFILE_END_VAR(_pt, "x11_render_prompt_user"); return true; }
+    {  return true; }
 }
 

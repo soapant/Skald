@@ -9,10 +9,10 @@
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
-      PROFILE_START(_pt);
+      
     (void)hPopupWnd;
     WindowManager* wm = WindowManager_Get();
-    { PROFILE_END_VAR(_pt, "IsPopupActive"); return wm && wm->popup_count > 0; }
+    {  return wm && wm->popup_count > 0; }
 }
 
 void UI_SetSelection(ListBoxInfo* lb, int index) {
@@ -34,13 +34,13 @@ void UI_LB_EndUpdate() {
 }
 
 void UI_RequestPopupRepaint(void) {
-    PROFILE_START(_pt);
-    PROFILE_END_VAR(_pt, "UI_RequestPopupRepaint");
+    
+    
 }
 
 void UI_LegacySyncRepaint(void) {
-    PROFILE_START(_pt);
-    PROFILE_END_VAR(_pt, "UI_LegacySyncRepaint");
+    
+    
 }
 
 void UI_LB_SetItemHeight(int height) {
@@ -57,25 +57,25 @@ int UI_LB_GetTopIndex(ListBoxInfo* lb) {
 }
 
 int UI_LB_GetViewTop(ListBoxInfo* lb) {
-        PROFILE_START(_pt);
-    { PROFILE_END_VAR(_pt, "UI_LB_GetViewTop"); return lb ? lb->view_offset : 0; }
+        
+    {  return lb ? lb->view_offset : 0; }
 }
 
 static int g_x11_lb_visible;
 
 int UI_LB_GetVisibleCount(void) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return g_x11_lb_visible; }
+        
+{  return g_x11_lb_visible; }
 }
 
 void UI_LB_SetVisibleCount(int count) {
-        PROFILE_START(_pt);
+        
 g_x11_lb_visible = count;
 }
 
 void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
-        PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop"); return ; }
+        
+if (!lb) {  return ; }
     if (top_index < 0) top_index = 0;
     if (g_x11_lb_visible > 0 && top_index + g_x11_lb_visible > lb->populated_count)
         top_index = lb->populated_count - g_x11_lb_visible;
@@ -87,13 +87,13 @@ void UI_LB_SetFont(void* hFont) {
 }
 
 int UI_LB_GetItemHeight() {
-      PROFILE_START(_pt);
-    { PROFILE_END_VAR(_pt, "UI_LB_GetItemHeight"); return 0; }
+      
+    {  return 0; }
 }
 
 void UI_NavigateTo(ListBoxInfo* lb,int index) {
-        PROFILE_START(_pt);
-if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
+        
+if (!lb) {  return ; }
     int count = lb->populated_count;
     if (count <= 0) {
         lb->selected_index = -1;
@@ -108,43 +108,43 @@ if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     }
     int old_sel = lb->selected_index;
     ListBox_FocusByKeyboard();
-    if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
+    if (old_sel == index) {  return ; }
     lb->selected_index = index;
     UI_LB_SetCaretIndex(index, false);
     ListBox_ScrollToSelection(lb);
 }
 
 void UI_NavigateUp(ListBoxInfo* lb) {
-        PROFILE_START(_pt);
+        
     ListBox_NavigateUp(lb);
-    PROFILE_END_VAR(_pt, "UI_NavigateUp");
+    
 }
 
 void UI_NavigateDown(ListBoxInfo* lb) {
-    PROFILE_START(_pt);
+    
     ListBox_NavigateDown(lb);
-    PROFILE_END_VAR(_pt, "UI_NavigateDown");
+    
 }
 
 void UI_Edit_SetSel(uint32_t start, uint32_t end) {
-        PROFILE_START(_pt);
+        
 (void)start; (void)end;
 }
 
 void UI_Edit_GetSel(uint32_t* start, uint32_t* end) {
-        PROFILE_START(_pt);
+        
 if (start) *start = 0;
     if (end) *end = 0;
 }
 
 void UI_GetCurrentTextEdit(char* buffer, size_t cap) {
-        PROFILE_START(_pt);
-if (!buffer || cap == 0) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return ; }
+        
+if (!buffer || cap == 0) {  return ; }
     buffer[0] = '\0';
     WindowManager* wm = WindowManager_Get();
-    if (!wm) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return ; }
+    if (!wm) {  return ; }
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return ; }
+    if (!top) {  return ; }
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         snprintf(buffer, cap, "%s", prompt->filter);
@@ -158,12 +158,12 @@ if (!buffer || cap == 0) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return
 }
 
 void UI_SetText(const char* text) {
-        PROFILE_START(_pt);
+        
 if (!text) text = "";
     WindowManager* wm = WindowManager_Get();
-    if (!wm) { PROFILE_END_VAR(_pt, "UI_SetText"); return ; }
+    if (!wm) {  return ; }
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) { PROFILE_END_VAR(_pt, "UI_SetText"); return ; }
+    if (!top) {  return ; }
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         strncpy(prompt->filter, text, sizeof(prompt->filter)-1);
@@ -181,30 +181,30 @@ if (!text) text = "";
 }
 
 int UI_GetCursorPosition(void) {
-        PROFILE_START(_pt);
+        
 WindowManager* wm = WindowManager_Get();
-    if (!wm) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return 0; }
+    if (!wm) {  return 0; }
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return 0; }
+    if (!top) {  return 0; }
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
-        PROFILE_END_VAR(_pt, "UI_GetCursorPosition");
+        
         return (int)prompt->cursor;
     }
     if (top->type == POPUP_EDIT) {
         WMEditPopupData* ed = (WMEditPopupData*)top;
-        if (ed) { PROFILE_END_VAR(_pt, "UI_GetCursorPosition"); return (int)ed->cursor; }
+        if (ed) {  return (int)ed->cursor; }
     }
-    PROFILE_END_VAR(_pt, "UI_GetCursorPosition");
+    
     return 0;
 }
 
 void UI_SetCursorPosition(int position) {
-        PROFILE_START(_pt);
+        
 WindowManager* wm = WindowManager_Get();
-    if (!wm) { PROFILE_END_VAR(_pt, "UI_SetCursorPosition"); return ; }
+    if (!wm) {  return ; }
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) { PROFILE_END_VAR(_pt, "UI_SetCursorPosition"); return ; }
+    if (!top) {  return ; }
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         int len = (int)strlen(prompt->filter);
@@ -223,22 +223,22 @@ WindowManager* wm = WindowManager_Get();
 }
 
 void UI_RedrawNow(ListBoxInfo* lb) {
-        PROFILE_START(_pt);
+        
     Prompt_RedrawNow(lb);
-    PROFILE_END_VAR(_pt, "UI_RedrawNow");
+    
 }
 
 void UI_Redraw(ListBoxInfo* lb) {
-        PROFILE_START(_pt);
+        
         UI_RedrawNow(lb);
 }
 
 void UI_SyncFilterFromEdit(FlintContext* ctx) {
-        PROFILE_START(_pt);
-if (!ctx) { PROFILE_END_VAR(_pt, "UI_SyncFilterFromEdit"); return ; }
+        
+if (!ctx) {  return ; }
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-    if (!top) { PROFILE_END_VAR(_pt, "UI_SyncFilterFromEdit"); return ; }
+    if (!top) {  return ; }
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         strncpy(ctx->window.filter, prompt->filter, sizeof(ctx->window.filter) - 1);
@@ -257,11 +257,11 @@ if (!ctx) { PROFILE_END_VAR(_pt, "UI_SyncFilterFromEdit"); return ; }
 }
 
 void UI_ApplyFilterToEdit(FlintContext* ctx) {
-        PROFILE_START(_pt);
-if (!ctx) { PROFILE_END_VAR(_pt, "UI_ApplyFilterToEdit"); return ; }
+        
+if (!ctx) {  return ; }
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-    if (!top) { PROFILE_END_VAR(_pt, "UI_ApplyFilterToEdit"); return ; }
+    if (!top) {  return ; }
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         strncpy(prompt->filter, ctx->window.filter, sizeof(prompt->filter) - 1);
@@ -278,24 +278,24 @@ if (!ctx) { PROFILE_END_VAR(_pt, "UI_ApplyFilterToEdit"); return ; }
 }
 
 ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx) {
-        PROFILE_START(_pt);
-if (!ctx) { PROFILE_END_VAR(_pt, "UI_GetPopupListBox"); return NULL; }
+        
+if (!ctx) {  return NULL; }
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-    if (!top) { PROFILE_END_VAR(_pt, "UI_GetPopupListBox"); return NULL; }
+    if (!top) {  return NULL; }
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         return prompt->has_listbox ? &prompt->listbox : NULL;
     }
-    { PROFILE_END_VAR(_pt, "UI_GetPopupListBox"); return NULL; }
+    {  return NULL; }
 }
 
 void UI_SyncEditCursor(FlintContext* ctx, int pos) {
-        PROFILE_START(_pt);
-if (!ctx) { PROFILE_END_VAR(_pt, "UI_SyncEditCursor"); return ; }
+        
+if (!ctx) {  return ; }
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-    if (!top) { PROFILE_END_VAR(_pt, "UI_SyncEditCursor"); return ; }
+    if (!top) {  return ; }
     if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState* prompt = (PromptState*)top->user_data;
         int len = (int)strlen(prompt->filter);
@@ -315,7 +315,7 @@ if (!ctx) { PROFILE_END_VAR(_pt, "UI_SyncEditCursor"); return ; }
 }
 
 bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
-        PROFILE_START(_pt);
+        
 (void)ctx;
-    { PROFILE_END_VAR(_pt, "UI_ApplyBackspaceToPopup"); return false; }
+    {  return false; }
 }

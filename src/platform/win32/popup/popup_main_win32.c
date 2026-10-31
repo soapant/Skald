@@ -50,17 +50,17 @@ static void popup_request_repaint(HWND hwnd) {
 static bool prompt_win_no_bg(void);
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
-    PROFILE_START(_pt);
+    
     WindowManager* wm = WindowManager_Get();
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top || WH_TO_HWND(top->handle) != hwnd) {
-        PROFILE_END_VAR(_pt, "PromptWindow_OnKey");
+        
         return false;
     }
     
     int wParam = key->vk;
 
-    if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
+    if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {  return false; }
 
     extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
     PromptState* state = Platform_GetPromptStateForHWND(hwnd);
@@ -80,7 +80,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     bool handled = false;
     if (state) handled = Prompt_HandleKey(state, key);
 
-    if (!handled) { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
+    if (!handled) {  return false; }
 
     if (hide_popup && !FlintContext_Get()->window.selection_complete) {
         if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
@@ -97,7 +97,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     } else {
         InvalidateRect(hwnd, NULL, FALSE);
     }
-    PROFILE_END_VAR(_pt, "PromptWindow_OnKey");
+    
     return true;
 }
 
@@ -135,15 +135,15 @@ static HDC popup_back_buffer(HDC hdc, int w, int h, HBITMAP* out_prev) {
 }
 
 static bool prompt_win_no_bg(void) {
-        PROFILE_START(_pt);
+        
     extern PromptState* Platform_GetPromptStateForHWND(HWND hwnd);
     PromptState* st = Platform_GetPromptStateForHWND(GetFocus());
-    if (st && st->no_bg) { PROFILE_END_VAR(_pt, "prompt_win_no_bg"); return true; }
-    { PROFILE_END_VAR(_pt, "prompt_win_no_bg"); return false; }
+    if (st && st->no_bg) {  return true; }
+    {  return false; }
 }
 
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    PROFILE_START(_pt);
+    
 if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
   if(msg==WM_KEYUP){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,false,mods); }
   ListBoxInfo* lb = GetLBFromPopup(hwnd);
@@ -153,10 +153,10 @@ if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY
       if (msg == WM_PAINT) {
           log_info("PopupWndProc SKIP PAINT hwnd=%p top=%p", (void*)hwnd, (void*)WH_TO_HWND(_top_guard->handle));
           PAINTSTRUCT _ps; BeginPaint(hwnd, &_ps); EndPaint(hwnd, &_ps);
-          { PROFILE_END_VAR(_pt, "PopupWndProc"); return 0; }
+          {  return 0; }
       }
       if (msg == WM_MOUSEMOVE || msg == WM_LBUTTONDOWN || msg == WM_MOUSEWHEEL) {
-          { PROFILE_END_VAR(_pt, "PopupWndProc"); return DefWindowProcA(hwnd, msg, wParam, lParam); }
+          {  return DefWindowProcA(hwnd, msg, wParam, lParam); }
       }
   }
   static HBRUSH s_bg_brush = NULL;
@@ -723,5 +723,5 @@ case WM_CHAR: {
             return DefWindowProcA(hwnd, msg, wParam, lParam);
               
     }
-  { PROFILE_END_VAR(_pt, "PopupWndProc"); return 0; }
+  {  return 0; }
 }

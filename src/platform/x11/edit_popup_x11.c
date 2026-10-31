@@ -30,18 +30,18 @@
 #include <stdio.h>
 
 bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
-      PROFILE_START(_pt);
-    PROFILE_START(timer);
+      
+    
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     ((WMEditPopupData*)self)->base.handle.xid = x11_create_edit_popup_window(dpy, x, y, w, h);
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupCreateWindow");
-    { PROFILE_END_VAR(_pt, "Platform_EditPopupCreateWindow"); return true; }
+    
+    {  return true; }
 }
 
 void Platform_EditPopupShowWindow(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     Display* dpy = ((WindowManager*)self->manager)->display;
     x11_draw_background(dpy, self->handle.xid, ((WMEditPopupData*)self)->w, ((WMEditPopupData*)self)->h);
     XMapWindow(dpy, self->handle.xid);
@@ -71,12 +71,12 @@ PROFILE_START(timer);
         }
     }
     XFlush(dpy);
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupShowWindow");
+    
 }
 
 void Platform_EditPopupHideWindow(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     Display* dpy = get_display();
     if (dpy) { XUnmapWindow(dpy, self->handle.xid); XFlush(dpy); }
     WindowManager* wm = WindowManager_Get();
@@ -92,17 +92,17 @@ PROFILE_START(timer);
             }
         }
     }
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupHideWindow");
+    
 }
 
 void Platform_EditPopupRender(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     WMEditPopupData* data = (WMEditPopupData*)self;
     Display* dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupRender"); return; }
+    if (!dpy) {  return; }
     XWindowAttributes attrs;
-    if (!XGetWindowAttributes(dpy, self->handle.xid, &attrs)) { PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupRender"); return; }
+    if (!XGetWindowAttributes(dpy, self->handle.xid, &attrs)) {  return; }
     Visual* vis = attrs.visual;
     int depth = attrs.depth;
     Colormap cmap = attrs.colormap;
@@ -123,7 +123,7 @@ PROFILE_START(timer);
         if (dbl) { XFreePixmap(dpy, dbl); dbl = None; }
         x11_draw_background(dpy, self->handle.xid, data->w, data->h);
         xd = x11_create_xft_draw(dpy, self->handle.xid);
-        if (!xd) { PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupRender"); return; }
+        if (!xd) {  return; }
     }
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
@@ -196,23 +196,23 @@ PROFILE_START(timer);
     if (dbl) XFreePixmap(dpy, dbl);
     Platform_DestroyFont(font);
     XFlush(dpy);
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupRender");
+    
 }
 
 void Platform_EditPopupDestroyWindow(Popup* self) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     Display* dpy = get_display();
     if (dpy) XDestroyWindow(dpy, self->handle.xid);
-    PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupDestroyWindow");
+    
 }
 
 bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-        PROFILE_START(_pt);
-PROFILE_START(timer);
+        
+
     WMEditPopupData* ed = (WMEditPopupData*)self;
-    if (!ed || !ed->text || !key) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return false; }
-    if (EditPopup_HandleKey(ed, key)) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
+    if (!ed || !ed->text || !key) {  return false; }
+    if (EditPopup_HandleKey(ed, key)) {  return true; }
 
     int wParam = key->vk;
     bool ctrl_pressed = key->ctrl;
@@ -220,11 +220,11 @@ PROFILE_START(timer);
 
     if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
         EditPopup_SelectAll(ed);
-        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true;
+         return true;
     }
     if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
         EditPopup_CopySelection(ed);
-        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true;
+         return true;
     }
     if (ctrl_pressed && (wParam == 'C' || wParam == 'c')) {
         int ss=0, se=0;
@@ -239,18 +239,18 @@ PROFILE_START(timer);
                 Platform_CopyToClipboard(buf);
             }
         }
-        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true;
+         return true;
     }
 
     if (IsInsertMode() && key->text_len > 0) {
         bool swallow = HotkeyText_ShouldSwallow(key);
         if (!swallow && HotkeyText_IsPrintable(key)) {
             EditPopup_InsertText(ed, key->text, key->text_len);
-            PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+            
             return true;
         }
     }
 
-    PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
-    { PROFILE_END_VAR(_pt, "Platform_EditPopupOnKey"); return false; }
+    
+    {  return false; }
 }

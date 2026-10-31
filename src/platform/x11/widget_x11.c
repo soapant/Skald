@@ -43,20 +43,20 @@ struct PlatformWidget {
 static PlatformWidget* s_widgets[WIDGET_REG_MAX];
 
 static void widget_registry_add(PlatformWidget* w) {
-        PROFILE_START(_pt);
+        
 for (int i = 0; i < WIDGET_REG_MAX; i++) {
         if (!s_widgets[i]) { s_widgets[i] = w; return; }
     }
 }
 static void widget_registry_remove(PlatformWidget* w) {
-        PROFILE_START(_pt);
+        
 for (int i = 0; i < WIDGET_REG_MAX; i++) {
         if (s_widgets[i] == w) { s_widgets[i] = NULL; return; }
     }
 }
 
 bool Platform_Widget_DispatchClick(long window_id) {
-        PROFILE_START(_pt);
+        
 for (int i = 0; i < WIDGET_REG_MAX; i++) {
         PlatformWidget* w = s_widgets[i];
         if (!w || w->dead) continue;
@@ -65,23 +65,23 @@ for (int i = 0; i < WIDGET_REG_MAX; i++) {
         w->on_click();
         return true;
     }
-    { PROFILE_END_VAR(_pt, "Platform_Widget_DispatchClick"); return false; }
+    {  return false; }
 }
 
 static long long widget_now_ms(void) {
-        PROFILE_START(_pt);
+        
 struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    { PROFILE_END_VAR(_pt, "widget_now_ms"); return (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL; }
+    {  return (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL; }
 }
 
 static void widget_frame(void *ud) {
-        PROFILE_START(_pt);
+        
 PlatformWidget *widget = (PlatformWidget *)ud;
-    if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "widget_frame"); return ; }
+    if (!widget || widget->dead) {  return ; }
     Display *dpy = widget->dpy;
-    if (!dpy || widget->win == None) { PROFILE_END_VAR(_pt, "widget_frame"); return ; }
-    if (widget->w <= 0 || widget->h <= 0) { PROFILE_END_VAR(_pt, "widget_frame"); return ; }
+    if (!dpy || widget->win == None) {  return ; }
+    if (widget->w <= 0 || widget->h <= 0) {  return ; }
 
     long long now = widget_now_ms();
     long long interval = widget->fps > 0 ? 1000LL / widget->fps : 1000LL;
@@ -126,10 +126,10 @@ PlatformWidget *widget = (PlatformWidget *)ud;
 }
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void), const char *name) {
-        PROFILE_START(_pt);
+        
 (void)name;
-    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_Widget_Create"); return NULL; }
-    if (!Platform_RenderThread_EnsureStarted(fps)) { PROFILE_END_VAR(_pt, "Platform_Widget_Create"); return NULL; }
+    if (w <= 0 || h <= 0) {  return NULL; }
+    if (!Platform_RenderThread_EnsureStarted(fps)) {  return NULL; }
     Display *dpy = (Display *)Platform_RenderThread_Display();
     if (!dpy) {
         log_warn("widget: no render thread display");
@@ -137,7 +137,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     }
 
     PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
-    if (!widget) { PROFILE_END_VAR(_pt, "Platform_Widget_Create"); return NULL; }
+    if (!widget) {  return NULL; }
     widget->dpy = dpy;
     widget->x = x;
     widget->y = y;
@@ -184,12 +184,12 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     XFlush(dpy);
     widget->mapped = true;
     widget_registry_add(widget);
-    { PROFILE_END_VAR(_pt, "Platform_Widget_Create"); return widget; }
+    {  return widget; }
 }
 
 void Platform_Widget_Destroy(PlatformWidget *widget) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Destroy"); return ; }
+        
+if (!widget || widget->dead) {  return ; }
     widget->dead = true;
     widget_registry_remove(widget);
     Platform_RenderThread_RemoveFrameCallback(widget_frame, widget);
@@ -207,40 +207,40 @@ if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Destroy"); 
 }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_Widget_IsValid"); return widget && !widget->dead; }
+        
+{  return widget && !widget->dead; }
 }
 
 void Platform_Widget_SetFrameCallback(PlatformWidget *widget, Platform_RenderFrameFn fn, void *ud) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFrameCallback"); return ; }
+        
+if (!widget || widget->dead) {  return ; }
     widget->fn = fn;
     widget->ud = ud;
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead || widget->mapped) { PROFILE_END_VAR(_pt, "Platform_Widget_Show"); return ; }
-    if (!widget->dpy || widget->win == None) { PROFILE_END_VAR(_pt, "Platform_Widget_Show"); return ; }
+        
+if (!widget || widget->dead || widget->mapped) {  return ; }
+    if (!widget->dpy || widget->win == None) {  return ; }
     XMapRaised(widget->dpy, widget->win);
     XFlush(widget->dpy);
     widget->mapped = true;
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead || !widget->mapped) { PROFILE_END_VAR(_pt, "Platform_Widget_Hide"); return ; }
-    if (!widget->dpy || widget->win == None) { PROFILE_END_VAR(_pt, "Platform_Widget_Hide"); return ; }
+        
+if (!widget || widget->dead || !widget->mapped) {  return ; }
+    if (!widget->dpy || widget->win == None) {  return ; }
     XUnmapWindow(widget->dpy, widget->win);
     XFlush(widget->dpy);
     widget->mapped = false;
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Move"); return ; }
-    if (!widget->dpy || widget->win == None) { PROFILE_END_VAR(_pt, "Platform_Widget_Move"); return ; }
-    if (widget->x == x && widget->y == y) { PROFILE_END_VAR(_pt, "Platform_Widget_Move"); return ; }
+        
+if (!widget || widget->dead) {  return ; }
+    if (!widget->dpy || widget->win == None) {  return ; }
+    if (widget->x == x && widget->y == y) {  return ; }
     widget->x = x;
     widget->y = y;
     XMoveWindow(widget->dpy, widget->win, x, y);
@@ -248,18 +248,18 @@ if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Move"); ret
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetNoBg"); return ; }
+        
+if (!widget || widget->dead) {  return ; }
     widget->no_bg = no_bg;
     widget->dirty = true;
     Platform_RenderThread_Wake();
 }
 
 void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFps"); return ; }
+        
+if (!widget || widget->dead) {  return ; }
     if (fps <= 0) fps = 1;
-    if (widget->fps == fps) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFps"); return ; }
+    if (widget->fps == fps) {  return ; }
     widget->fps = fps;
     widget->last_draw_ms = 0;
     Platform_RenderThread_EnsureStarted(fps);
@@ -268,11 +268,11 @@ if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFps"); r
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
-        PROFILE_START(_pt);
-    if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetBgColor"); return ; }
+        
+    if (!widget || widget->dead) {  return ; }
     widget->has_bg = bg_color != 0;
     widget->bg_color = bg_color;
-    if (!widget->dpy || widget->win == None) { PROFILE_END_VAR(_pt, "Platform_Widget_SetBgColor"); return ; }
+    if (!widget->dpy || widget->win == None) {  return ; }
     unsigned int a = (RoundedCorners || widget->no_bg) ? 0 : (unsigned int)WindowOpacity;
     unsigned long bg = widget->no_bg ? 0UL : (widget->has_bg ?  rgb_to_hex(bg_color) : rgb_to_hex(COLOR_BG));
     unsigned int r = (unsigned int)((bg >> 16) & 0xFF);
@@ -288,18 +288,18 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
 }
 
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Invalidate"); return ; }
+        
+if (!widget || widget->dead) {  return ; }
     widget->dirty = true;
     Platform_RenderThread_Wake();
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-        PROFILE_START(_pt);
-if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
-    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
-    if (!widget->dpy || widget->win == None) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
-    if (widget->w == w && widget->h == h) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
+        
+if (!widget || widget->dead) {  return ; }
+    if (w <= 0 || h <= 0) {  return ; }
+    if (!widget->dpy || widget->win == None) {  return ; }
+    if (widget->w == w && widget->h == h) {  return ; }
     widget->w = w;
     widget->h = h;
     XMoveResizeWindow(widget->dpy, widget->win, widget->x, widget->y, w, h);
@@ -309,12 +309,12 @@ if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); r
 }
 
 int Platform_Widget_Width(const PlatformWidget *widget) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_Widget_Width"); return widget ? widget->w : 0; }
+        
+{  return widget ? widget->w : 0; }
 }
 
 int Platform_Widget_Height(const PlatformWidget *widget) {
-        PROFILE_START(_pt); { PROFILE_END_VAR(_pt, "Platform_Widget_Height"); return widget ? widget->h : 0; }
+         {  return widget ? widget->h : 0; }
 }
 
 void Platform_Widget_FlushDestruction(void) {

@@ -11,7 +11,7 @@ static int ui_scale_applied = 0;
 static int base_font_size = 0;
 
 static float ui_scale_detect(void) {
-        PROFILE_START(_pt);
+        
 const char* ov = getenv("FLINT_SCALE");
     if (!ov || !ov[0]) ov = getenv("FLINT_UISCALE");
     if (ov && ov[0]) {
@@ -74,37 +74,37 @@ const char* ov = getenv("FLINT_SCALE");
             if (best > (float)max_int_scale) best = (float)max_int_scale;
         }
     }
-    { PROFILE_END_VAR(_pt, "ui_scale_detect"); return best; }
+    {  return best; }
 }
 
 float Platform_GetUIScale(void) {
-        PROFILE_START(_pt);
+        
 if (ui_scale <= 0.0f) ui_scale = ui_scale_detect();
-    { PROFILE_END_VAR(_pt, "Platform_GetUIScale"); return ui_scale; }
+    {  return ui_scale; }
 }
 
 static void ui_scale_apply_locked(void) {
-        PROFILE_START(_pt);
+        
 float s = Platform_GetUIScale();
     if (s > 1.0f) FontSize = (int)(base_font_size * s + 0.5f);
     else FontSize = base_font_size;
 }
 
 void Platform_ApplyUIScale(void) {
-        PROFILE_START(_pt);
-if (ui_scale_applied) { PROFILE_END_VAR(_pt, "Platform_ApplyUIScale"); return ; }
+        
+if (ui_scale_applied) {  return ; }
     ui_scale_applied = 1;
     base_font_size = FontSize;
     ui_scale_apply_locked();
 }
 
 int Platform_GetUnscaledFontSize(void) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_GetUnscaledFontSize"); return base_font_size > 0 ? base_font_size : FontSize; }
+        
+{  return base_font_size > 0 ? base_font_size : FontSize; }
 }
 
 void Platform_AdjustFontSize(int delta) {
-        PROFILE_START(_pt);
+        
 if (base_font_size <= 0) base_font_size = FontSize;
     base_font_size += delta;
     if (base_font_size < 8) base_font_size = 8;
@@ -112,7 +112,7 @@ if (base_font_size <= 0) base_font_size = FontSize;
 }
 
 void Platform_ResetUIScale(void) {
-        PROFILE_START(_pt);
+        
 base_font_size = FontSize;
     ui_scale_apply_locked();
 }

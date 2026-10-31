@@ -9,19 +9,19 @@ extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
 bool HotkeyText_IsPrintable(const PopupKeyEvent* key) {
-    PROFILE_START(_pt);
-    if (!key || key->text_len <= 0) { PROFILE_END_VAR(_pt, "HotkeyText_IsPrintable"); return false; }
+    
+    if (!key || key->text_len <= 0) {  return false; }
     for (int i = 0; i < key->text_len; i++) {
         unsigned char c = (unsigned char)key->text[i];
-        if (c < 0x20 || c == 0x7F) { PROFILE_END_VAR(_pt, "HotkeyText_IsPrintable"); return false; }
+        if (c < 0x20 || c == 0x7F) {  return false; }
     }
-    PROFILE_END_VAR(_pt, "HotkeyText_IsPrintable");
+    
     return true;
 }
 
 bool HotkeyText_ShouldSwallow(const PopupKeyEvent* key) {
-    PROFILE_START(_pt);
-    if (!key) { PROFILE_END_VAR(_pt, "HotkeyText_ShouldSwallow"); return false; }
+    
+    if (!key) {  return false; }
     bool trigger_press = false;
     if (pending_hotkey_vk != 0 && key->text_len == 1) {
         struct timeval tv;
@@ -43,6 +43,6 @@ bool HotkeyText_ShouldSwallow(const PopupKeyEvent* key) {
         pending_hotkey_mod = 0;
     }
     bool swallow = !trigger_press && (key->ctrl || key->alt);
-    PROFILE_END_VAR(_pt, "HotkeyText_ShouldSwallow");
+    
     return swallow;
 }

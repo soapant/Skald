@@ -242,7 +242,7 @@ void PopulateListBox(ListBoxInfo* lb, const char* filter,
     const char** items, int item_count,
     bool (*filter_match)(const char* item, const char* filter)) {
   if (!lb) return;
-  PROFILE_START(timer_index);
+  
   if (SequenceHasPendingWait()) {
     log_info("PopulateListBox waiting filter='%s'", filter ? filter : "");
     return;
@@ -257,47 +257,47 @@ void PopulateListBox(ListBoxInfo* lb, const char* filter,
     sh_new_strdup(FlintContext_Get()->item_index_map);
     for (int i = 0; i < item_count; i++) if (items[i]) shput(FlintContext_Get()->item_index_map, (char*)items[i], (void*)(size_t)(i + 1));
   }
-  PROFILE_END_VAR(timer_index, "PopulateListBox - ItemIndexMap");
+  
 
-  PROFILE_START(timer_total);
+  
 
-  PROFILE_START(timer_current_sel);
+  
   int current_sel;
   char current_text[256];
   Populate_CaptureSelection(lb, current_text, sizeof(current_text), &current_sel);
-  PROFILE_END_VAR(timer_current_sel, "  PopulateListBox - Get current selection");
+  
 
-  PROFILE_START(timer_clean_filter);
+  
   char clean_filter[256];
   Populate_CleanFilter(filter, clean_filter, sizeof(clean_filter));
   int total_matches = 0;
-  PROFILE_END_VAR(timer_clean_filter, "  PopulateListBox - Clean filter");
+  
 
-  PROFILE_START(timer_filter);
+  
   total_matches = Populate_Filter(lb, items, item_count, clean_filter, filter_match);
-  PROFILE_END_VAR(timer_filter, "  PopulateListBox - Filtering");
+  
   Populate_RankMatches(lb, items, clean_filter, total_matches);
 
-  PROFILE_START(timer_matches);
-  PROFILE_START(timer_pool);
+  
+  
   Populate_EnsureMatches(lb, item_count, clean_filter, &total_matches);
-  PROFILE_END_VAR(timer_matches, " PopulateListBox - Matches");
-  PROFILE_END_VAR(timer_pool, "  PopulateListBox - Pool adjust");
+  
+  
 
-  PROFILE_START(timer_cache);
+  
   Populate_BuildCache(lb, items, total_matches);
-  PROFILE_END_VAR(timer_cache, "  PopulateListBox - Cache build");
+  
 
-  PROFILE_START(timer_ui);
+  
   Populate_UpdateUI(lb, total_matches, filter);
-  PROFILE_END_VAR(timer_ui, "  PopulateListBox - UI update");
+  
 
-  PROFILE_START(timer_cleanup);
+  
   Populate_CommitState(lb, item_count, total_matches);
-  PROFILE_END_VAR(timer_cleanup, "  PopulateListBox - Cleanup");
+  
 
   log_info("PopulateListBox completed for filter='%s'", filter ? filter : "");
-  PROFILE_END_VAR(timer_total, "PopulateListBox TOTAL");
+  
 }
 
 ColorRef GetRainbowColor(float t, float s, float v) {
