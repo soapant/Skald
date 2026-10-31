@@ -41,13 +41,11 @@ bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 #define X11_REJECTED_MAX 128
 static int g_x11_rejected_fds[X11_REJECTED_MAX];
 static int g_x11_rejected_count = 0;
-
 static int x11_linux_button_to_mouse_impl(int code);
 
 static int x11_linux_button_to_mouse(int code) {
-        
-int btn = x11_linux_button_to_mouse_impl(code);
-{  return btn; }
+    int btn = x11_linux_button_to_mouse_impl(code);
+    return btn;
 }
 
 static int x11_linux_button_to_mouse_impl(int code) {
@@ -122,12 +120,10 @@ bool x11_handle_evdev_mouse(struct input_event *ev) {
 
     if (!ev) {  return false; }
     x11_queue_mouse_event(ev);
-    
-    {  return true; }
+    return true;
 }
 
 bool Platform_GetMousePos(int* out_x, int* out_y) {
-    
     int mx = 0, my = 0;
     if (getenv("WAYLAND_DISPLAY") && Wm_GetMousePos(&mx, &my)) {
         if (out_x) *out_x = mx;
@@ -143,19 +139,18 @@ bool Platform_GetMousePos(int* out_x, int* out_y) {
     if (!XQueryPointer(dpy, root, &rw, &cw, &rx, &ry, &wx, &wy, &mask)) {  return false; }
     if (out_x) *out_x = rx;
     if (out_y) *out_y = ry;
-    {  return true; }
+     return true;
 }
 
 static void x11_release_rejected_devices(void) {
-        
-for (int i = 0; i < g_x11_rejected_count; i++) {
-        if (g_x11_rejected_fds[i] >= 0) {
-            close(g_x11_rejected_fds[i]);
-            g_x11_rejected_fds[i] = -1;
+    for (int i = 0; i < g_x11_rejected_count; i++) {
+            if (g_x11_rejected_fds[i] >= 0) {
+                close(g_x11_rejected_fds[i]);
+                g_x11_rejected_fds[i] = -1;
+            }
         }
+        g_x11_rejected_count = 0;
     }
-    g_x11_rejected_count = 0;
-}
 
 bool g_x11_ctrl_held = false;
 bool g_x11_alt_held = false;
@@ -166,20 +161,17 @@ extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
 bool x11_should_use_grab(void) {
-        
-
     if (getenv("WAYLAND_DISPLAY")) {  return false; }
     if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) {  return false; }
     const char* t = getenv("XDG_SESSION_TYPE");
     if (t && strcmp(t, "wayland") == 0) {  return false; }
-    
-    {  return true; }
+    return true;
 }
 
 static struct WindowManager *g_x11_wm = NULL;
+
 void x11_set_window_manager(struct WindowManager *wm) {
-    
-g_x11_wm = wm; 
+    g_x11_wm = wm; 
 }
 
 static void x11_force_cleanup(void);
@@ -188,16 +180,12 @@ void x11_mouse_grab_end(void);
 static volatile sig_atomic_t g_x11_cleanup_done = 0;
 
 static void x11_sig_handler(int sig) {
-        
-(void)sig;
     x11_force_cleanup();
     signal(sig, SIG_DFL);
     raise(sig);
 }
 
 static void x11_term_handler(int sig) {
-        
-(void)sig;
     x11_force_cleanup();
     if (g_x11_wm) {
         extern void WindowManager_QuitLinux(struct WindowManager *wm);
@@ -208,7 +196,7 @@ static void x11_term_handler(int sig) {
 
 static void x11_force_cleanup(void) {
         
-if (g_x11_cleanup_done) {  return ; }
+    if (g_x11_cleanup_done) return;
     g_x11_cleanup_done = 1;
     for (int i=0;i<g_x11_keyboard_count;i++) {
         if (g_x11_keyboards[i].fd >= 0) {
@@ -244,8 +232,7 @@ if (g_x11_cleanup_done) {  return ; }
 }
 
 static void x11_atexit_handler(void) {
-    
-x11_force_cleanup(); 
+    x11_force_cleanup(); 
 }
 
 static void x11_install_cleanup_handlers(void) {
@@ -271,8 +258,6 @@ static bool installed = false;
 }
 
 int x11_init_uinput(void) {
-        
-
     x11_install_cleanup_handlers();
     int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
     if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
@@ -303,8 +288,7 @@ int x11_init_uinput(void) {
         if (ioctl(fd, UI_DEV_CREATE) < 0) { perror("[UINPUT] UI_DEV_CREATE legacy"); close(fd);  return -1; }
     }
     log_info("virtual keyboard created (fd=%d)", fd);
-    
-    {  return fd; }
+    return fd;
 }
 
 void x11_mouse_grab_end(void) {
@@ -322,10 +306,7 @@ void x11_mouse_grab_end(void) {
 }
 
 void x11_destroy_uinput(void) {
-        
-
     if (g_x11_uinput_fd >= 0) { ioctl(g_x11_uinput_fd, UI_DEV_DESTROY); close(g_x11_uinput_fd); g_x11_uinput_fd = -1; }
-    
 }
 
 static int x11_init_uinput_mouse(void) {
@@ -400,18 +381,13 @@ void x11_mouse_forward(const struct input_event *ev, int grabbed) {
 }
 
 void x11_uinput_emit(const struct input_event *ev) {
-        
-
     if (g_x11_uinput_fd < 0) {  return; }
     if (write(g_x11_uinput_fd, ev, sizeof(*ev)) < 0) { if (errno != EAGAIN) perror("[UINPUT] write");  return; }
     struct input_event syn; memset(&syn, 0, sizeof(syn)); gettimeofday(&syn.time, NULL); syn.type = EV_SYN; syn.code = SYN_REPORT; syn.value = 0;
     if (write(g_x11_uinput_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN) perror("[UINPUT] write syn");
-    
 }
 
 void x11_scan_keyboards(void) {
-        
-
     x11_install_cleanup_handlers();
     x11_release_rejected_devices();
     DIR *dir = opendir("/dev/input");
@@ -469,81 +445,79 @@ void x11_scan_keyboards(void) {
 }
 
 int x11_keysym_to_vk(KeySym ks) {
-        
-if (ks >= XK_a && ks <= XK_z) {  return 'A' + (ks - XK_a); }
-    if (ks >= XK_A && ks <= XK_Z) {  return 'A' + (ks - XK_A); }
-    if (ks >= XK_0 && ks <= XK_9) {  return '0' + (ks - XK_0); }
-    if (ks >= XK_F1 && ks <= XK_F12) {  return VK_F1 + (ks - XK_F1); }
-    switch (ks) {
-        case XK_Escape: return VK_ESCAPE;
-        case XK_Return: case XK_KP_Enter: return VK_RETURN;
-        case XK_Tab: return VK_TAB;
-        case XK_BackSpace: return VK_BACK;
-        case XK_Up: return VK_UP;
-        case XK_Down: return VK_DOWN;
-        case XK_Left: return VK_LEFT;
-        case XK_Right: return VK_RIGHT;
-        case XK_Delete: return VK_DELETE;
-        case XK_Home: return VK_HOME;
-        case XK_End: return VK_END;
-        case XK_Page_Up: return VK_PRIOR;
-        case XK_Page_Down: return VK_NEXT;
-        case XK_space: return VK_SPACE;
-        case XK_Control_L: return VK_LCONTROL;
-        case XK_Control_R: return VK_RCONTROL;
-        case XK_Shift_L: return VK_LSHIFT;
-        case XK_Shift_R: return VK_RSHIFT;
-        case XK_Alt_L: return VK_LMENU;
-        case XK_Alt_R: return VK_RMENU;
-        case XK_Super_L: return VK_LWIN;
-        case XK_Super_R: return VK_RWIN;
-        case XK_semicolon: case XK_colon: return VK_OEM_1;
-        case XK_slash: case XK_question: return VK_OEM_2;
-        case XK_comma: case XK_less: return VK_OEM_COMMA;
-        case XK_period: case XK_greater: return VK_OEM_PERIOD;
-        case XK_apostrophe: case XK_quotedbl: return VK_OEM_7;
-        case XK_bracketleft: case XK_braceleft: return VK_OEM_4;
-        case XK_bracketright: case XK_braceright: return VK_OEM_6;
-        case XK_grave: case XK_asciitilde: return VK_OEM_3;
-        case XK_minus: case XK_underscore: return VK_OEM_MINUS;
-        case XK_equal: case XK_plus: return VK_OEM_PLUS;
-        default: return 0;
+  if (ks >= XK_a && ks <= XK_z) {  return 'A' + (ks - XK_a); }
+      if (ks >= XK_A && ks <= XK_Z) {  return 'A' + (ks - XK_A); }
+      if (ks >= XK_0 && ks <= XK_9) {  return '0' + (ks - XK_0); }
+      if (ks >= XK_F1 && ks <= XK_F12) {  return VK_F1 + (ks - XK_F1); }
+      switch (ks) {
+          case XK_Escape: return VK_ESCAPE;
+          case XK_Return: case XK_KP_Enter: return VK_RETURN;
+          case XK_Tab: return VK_TAB;
+          case XK_BackSpace: return VK_BACK;
+          case XK_Up: return VK_UP;
+          case XK_Down: return VK_DOWN;
+          case XK_Left: return VK_LEFT;
+          case XK_Right: return VK_RIGHT;
+          case XK_Delete: return VK_DELETE;
+          case XK_Home: return VK_HOME;
+          case XK_End: return VK_END;
+          case XK_Page_Up: return VK_PRIOR;
+          case XK_Page_Down: return VK_NEXT;
+          case XK_space: return VK_SPACE;
+          case XK_Control_L: return VK_LCONTROL;
+          case XK_Control_R: return VK_RCONTROL;
+          case XK_Shift_L: return VK_LSHIFT;
+          case XK_Shift_R: return VK_RSHIFT;
+          case XK_Alt_L: return VK_LMENU;
+          case XK_Alt_R: return VK_RMENU;
+          case XK_Super_L: return VK_LWIN;
+          case XK_Super_R: return VK_RWIN;
+          case XK_semicolon: case XK_colon: return VK_OEM_1;
+          case XK_slash: case XK_question: return VK_OEM_2;
+          case XK_comma: case XK_less: return VK_OEM_COMMA;
+          case XK_period: case XK_greater: return VK_OEM_PERIOD;
+          case XK_apostrophe: case XK_quotedbl: return VK_OEM_7;
+          case XK_bracketleft: case XK_braceleft: return VK_OEM_4;
+          case XK_bracketright: case XK_braceright: return VK_OEM_6;
+          case XK_grave: case XK_asciitilde: return VK_OEM_3;
+          case XK_minus: case XK_underscore: return VK_OEM_MINUS;
+          case XK_equal: case XK_plus: return VK_OEM_PLUS;
+          default: return 0;
     }
 }
 
 int x11_vk_to_linux_key(int vk) {
-        
-switch(vk){
-        case 'A': return KEY_A; case 'B': return KEY_B; case 'C': return KEY_C; case 'D': return KEY_D;
-        case 'E': return KEY_E; case 'F': return KEY_F; case 'G': return KEY_G; case 'H': return KEY_H;
-        case 'I': return KEY_I; case 'J': return KEY_J; case 'K': return KEY_K; case 'L': return KEY_L;
-        case 'M': return KEY_M; case 'N': return KEY_N; case 'O': return KEY_O; case 'P': return KEY_P;
-        case 'Q': return KEY_Q; case 'R': return KEY_R; case 'S': return KEY_S; case 'T': return KEY_T;
-        case 'U': return KEY_U; case 'V': return KEY_V; case 'W': return KEY_W; case 'X': return KEY_X;
-        case 'Y': return KEY_Y; case 'Z': return KEY_Z;
-    }
-    if (vk >= '0' && vk <= '9') {  return KEY_1 + (vk - '1'); }
-    if (vk == '0') {  return KEY_0; }
-    if (vk == VK_SPACE) {  return KEY_SPACE; }
-    if (vk == VK_RETURN) {  return KEY_ENTER; }
-    if (vk == VK_BACK) {  return KEY_BACKSPACE; }
-    if (vk == VK_TAB) {  return KEY_TAB; }
-    if (vk == VK_ESCAPE) {  return KEY_ESC; }
-    if (vk == VK_OEM_1) {  return KEY_SEMICOLON; }
-    if (vk == VK_OEM_2) {  return KEY_SLASH; }
-    if (vk == VK_OEM_4) {  return KEY_LEFTBRACE; }
-    if (vk == VK_OEM_6) {  return KEY_RIGHTBRACE; }
-    if (vk == VK_OEM_COMMA) {  return KEY_COMMA; }
-    if (vk == VK_OEM_PERIOD) {  return KEY_DOT; }
-    if (vk == VK_OEM_7) {  return KEY_APOSTROPHE; }
-    if (vk == VK_OEM_3) {  return KEY_GRAVE; }
-    if (vk == VK_OEM_PLUS) {  return KEY_EQUAL; }
-    if (vk == VK_OEM_MINUS) {  return KEY_MINUS; }
-    if (vk == VK_UP) {  return KEY_UP; }
-    if (vk == VK_DOWN) {  return KEY_DOWN; }
-    if (vk == VK_LEFT) {  return KEY_LEFT; }
-    if (vk == VK_RIGHT) {  return KEY_RIGHT; }
-    {  return 0; }
+    switch(vk){
+            case 'A': return KEY_A; case 'B': return KEY_B; case 'C': return KEY_C; case 'D': return KEY_D;
+            case 'E': return KEY_E; case 'F': return KEY_F; case 'G': return KEY_G; case 'H': return KEY_H;
+            case 'I': return KEY_I; case 'J': return KEY_J; case 'K': return KEY_K; case 'L': return KEY_L;
+            case 'M': return KEY_M; case 'N': return KEY_N; case 'O': return KEY_O; case 'P': return KEY_P;
+            case 'Q': return KEY_Q; case 'R': return KEY_R; case 'S': return KEY_S; case 'T': return KEY_T;
+            case 'U': return KEY_U; case 'V': return KEY_V; case 'W': return KEY_W; case 'X': return KEY_X;
+            case 'Y': return KEY_Y; case 'Z': return KEY_Z;
+        }
+        if (vk >= '0' && vk <= '9') {  return KEY_1 + (vk - '1'); }
+        if (vk == '0') {  return KEY_0; }
+        if (vk == VK_SPACE) {  return KEY_SPACE; }
+        if (vk == VK_RETURN) {  return KEY_ENTER; }
+        if (vk == VK_BACK) {  return KEY_BACKSPACE; }
+        if (vk == VK_TAB) {  return KEY_TAB; }
+        if (vk == VK_ESCAPE) {  return KEY_ESC; }
+        if (vk == VK_OEM_1) {  return KEY_SEMICOLON; }
+        if (vk == VK_OEM_2) {  return KEY_SLASH; }
+        if (vk == VK_OEM_4) {  return KEY_LEFTBRACE; }
+        if (vk == VK_OEM_6) {  return KEY_RIGHTBRACE; }
+        if (vk == VK_OEM_COMMA) {  return KEY_COMMA; }
+        if (vk == VK_OEM_PERIOD) {  return KEY_DOT; }
+        if (vk == VK_OEM_7) {  return KEY_APOSTROPHE; }
+        if (vk == VK_OEM_3) {  return KEY_GRAVE; }
+        if (vk == VK_OEM_PLUS) {  return KEY_EQUAL; }
+        if (vk == VK_OEM_MINUS) {  return KEY_MINUS; }
+        if (vk == VK_UP) {  return KEY_UP; }
+        if (vk == VK_DOWN) {  return KEY_DOWN; }
+        if (vk == VK_LEFT) {  return KEY_LEFT; }
+        if (vk == VK_RIGHT) {  return KEY_RIGHT; }
+    return 0;
 }
 
 void x11_sync_held_from_phys(void) {
@@ -555,40 +529,34 @@ int m = remap_current_mods();
 }
 
 void x11_clear_suppress(void) {
-        
-for (int i=0;i<=KEY_MAX;i++) { g_x11_suppress_release[i]=false; g_x11_suppress_ms[i]=0; }
+    for (int i=0;i<=KEY_MAX;i++) { g_x11_suppress_release[i]=false; g_x11_suppress_ms[i]=0; }
 }
 
 static long x11_now_ms(void) {
-        
-struct timeval tv;
+    struct timeval tv;
     gettimeofday(&tv, NULL);
-    {  return tv.tv_sec*1000L + tv.tv_usec/1000L; }
+    return tv.tv_sec*1000L + tv.tv_usec/1000L;
 }
 
 bool x11_is_suppressed(int linux_code) {
-        
-if (linux_code<0 || linux_code>KEY_MAX) {  return false; }
-    if (!g_x11_suppress_release[linux_code]) {  return false; }
-    long now = x11_now_ms();
-    if (now - g_x11_suppress_ms[linux_code] > 5000) {
-        g_x11_suppress_release[linux_code]=false;
-        g_x11_suppress_ms[linux_code]=0;
-        return false;
-    }
-    {  return true; }
+    if (linux_code<0 || linux_code>KEY_MAX) return false;
+        if (!g_x11_suppress_release[linux_code]) return false;
+        long now = x11_now_ms();
+        if (now - g_x11_suppress_ms[linux_code] > 5000) {
+            g_x11_suppress_release[linux_code]=false;
+            g_x11_suppress_ms[linux_code]=0;
+            return false;
+        }
+    return true;
 }
 
 void x11_set_suppress(int linux_code, bool v) {
-        
-if (linux_code<0 || linux_code>KEY_MAX) {  return ; }
-    g_x11_suppress_release[linux_code]=v;
-    g_x11_suppress_ms[linux_code]= v ? x11_now_ms() : 0;
+    if (linux_code<0 || linux_code>KEY_MAX) return ;
+        g_x11_suppress_release[linux_code]=v;
+        g_x11_suppress_ms[linux_code]= v ? x11_now_ms() : 0;
 }
 
 bool x11_handle_global_key(int key_code, int value) {
-        
-
     remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     x11_sync_held_from_phys();
     if (value == 0) { hotkey_key_up(ConvertLinuxKeyToWindowsVK(key_code));  return false; }
@@ -598,12 +566,9 @@ bool x11_handle_global_key(int key_code, int value) {
     bool processed = hotkey_process(pressed_vk, modifiers);
     if (pressed_vk && processed) {
         pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
-        
         return true;
     }
-
-    
-    {  return false; }
+    return false;
 }
 
 bool remap_should_swallow_linux_key(int linux_code, int value) {
@@ -615,8 +580,6 @@ bool remap_should_swallow_linux_key(int linux_code, int value) {
 }
 
 bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
-    
-    
     if (!ev) {  return false; }
     if (ev->type != EV_KEY) {
         if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
@@ -636,8 +599,6 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
         if (val == 1) x11_set_suppress(code, true);
         else if (val == 0) x11_set_suppress(code, false);
         log_info("x11_handle_evdev remap swallowed code=%d val=%d popup=%d", code, val, has_popup);
-        log_warn("x11_handle_evdev remap swallowed code=%d val=%d popup=%d", code, val, has_popup);
-        
         return true;
     }
     if (val == 0) hotkey_key_up(ConvertLinuxKeyToWindowsVK(code));
@@ -683,7 +644,6 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     }
     if (x11_handle_global_key(code, val)) {
         if (val==1) x11_set_suppress(code, true);
-        
         return true;
     }
     if (grabbed) {
@@ -697,16 +657,9 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     else {
         snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, false);
     }
-
-    
-    {  return false; }
+    return false;
 }
-
-
-
 int Platform_CharForKey(int vk, int scancode, int mods) {
-    
-(void)vk;
   Display *dpy = get_display();
   if (!dpy) {  return 0; }
   KeySym ks = 0;
@@ -721,5 +674,5 @@ int Platform_CharForKey(int vk, int scancode, int mods) {
   if (mods & HOTKEY_MOD_ALT) xe.state |= Mod1Mask;
   int len = XLookupString(&xe, buf, sizeof(buf), &ks, NULL);
   if (len <= 0) {  return 0; }
-  {  return (int)(unsigned char)buf[0]; }
+  return (int)(unsigned char)buf[0];
 }

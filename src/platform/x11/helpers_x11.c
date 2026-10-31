@@ -54,38 +54,29 @@ static __thread int g_dblDepth = 0;
 static __thread Display* g_dblDpy = NULL;
 
 void x11_set_dbl_visual(Display* dpy, Visual* vis, Colormap cmap, int depth) {
-        
-
     g_dblVisual = vis;
     g_dblColormap = cmap;
     g_dblDepth = depth;
     g_dblDpy = dpy;
-    
 }
 void x11_clear_dbl_visual(void) {
-        
-
     g_dblVisual = NULL;
     g_dblColormap = None;
     g_dblDepth = 0;
     g_dblDpy = NULL;
-    
 }
 
 bool x11_is_own_window_name(const char* name) {
-        
-if (!name) {  return false; }
-    {  return strncmp(name, "flint-", 6) == 0; }
+      if (!name) return false;
+      return strncmp(name, "flint-", 6) == 0;
 }
-bool x11_get_drawable_visual(Display* dpy, Drawable d, Visual** visOut, Colormap* cmapOut, int* depthOut) {
-        
 
+bool x11_get_drawable_visual(Display* dpy, Drawable d, Visual** visOut, Colormap* cmapOut, int* depthOut) {
     XWindowAttributes attrs;
     if (XGetWindowAttributes(dpy, d, &attrs)) {
         if (visOut) *visOut = attrs.visual;
         if (cmapOut) *cmapOut = attrs.colormap;
         if (depthOut) *depthOut = attrs.depth;
-        
         return true;
     }
     if (g_dblVisual && g_dblDpy == dpy) {
@@ -95,17 +86,13 @@ bool x11_get_drawable_visual(Display* dpy, Drawable d, Visual** visOut, Colormap
         
         return true;
     }
-    
-    {  return false; }
+    return false;
 }
 
 static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
-        
-
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
-    
-    {  return ext.xOff; }
+    return ext.xOff;
 }
 
 #define X11_FB_CACHE 24
@@ -131,23 +118,22 @@ unsigned char c = *s;
         cp = (cp << 6) | (FcChar32)(s[i] & 0x3F);
     }
     *clen = n;
-    {  return cp; }
+    return cp;
 }
 
 static bool x11_font_has(XftFont* f, FcChar32 cp) {
-        
-if (!f || !f->pattern) {  return false; }
-    if (cp < 0x21 || cp == 0x7F) {  return true; }
-    FcCharSet* cs = NULL;
-    if (FcPatternGetCharSet(f->pattern, FC_CHARSET, 0, &cs) != FcResultMatch || !cs) {  return true; }
-    if (!FcCharSetHasChar(cs, cp)) {  return false; }
-    FT_Face face = XftLockFace(f);
-    if (face) {
-        bool ft = FcFreeTypeCharIndex(face, cp) != 0;
-        XftUnlockFace(f);
-        return ft;
-    }
-    {  return true; }
+    if (!f || !f->pattern) {  return false; }
+        if (cp < 0x21 || cp == 0x7F) {  return true; }
+        FcCharSet* cs = NULL;
+        if (FcPatternGetCharSet(f->pattern, FC_CHARSET, 0, &cs) != FcResultMatch || !cs) {  return true; }
+        if (!FcCharSetHasChar(cs, cp)) {  return false; }
+        FT_Face face = XftLockFace(f);
+        if (face) {
+            bool ft = FcFreeTypeCharIndex(face, cp) != 0;
+            XftUnlockFace(f);
+            return ft;
+        }
+    return true;
 }
 
 static int x11_font_px(XftFont* xf, int px) {

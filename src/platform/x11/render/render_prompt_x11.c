@@ -9,6 +9,7 @@
 #include "core/timer.h"
 #include "core/checkbox.h"
 #include "platform/draw.h"
+#include "deps/log.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/bg_image_x11.h"
 #include "platform/x11/window_factory_x11.h"
@@ -117,7 +118,10 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 }
 
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
-        
+    log_info("x11_render_prompt_user started dpy=%p win=%p state=%p",dpy,win,state);
+    if (!state || !win || *win == None || !dpy) {
+        return false;
+    }
     FlintContext_Get()->window.editbox_placed = false;
     int w = state->width;
     int h = state->height;
