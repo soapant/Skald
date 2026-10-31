@@ -40,11 +40,6 @@ if (strstr(console_guid,  "2EACA947-7F5F-4CFA-BA87-8F7FBEEFBE69") ||
     return NULL;
 }
 
-const char* win32_default_apps_progid(const char* subkey, int slot) {
-        
-return win32_default_apps_read_sz(subkey, "ProgId", slot);
-}
-
 static ListOfFiles g_sm_files;
 static bool g_sm_scanned = false;
 #define SM_SLOTS 8

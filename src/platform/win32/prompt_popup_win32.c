@@ -38,14 +38,8 @@ if (!hwnd || !IsWindow(hwnd)) {  return false; }
         || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0; }
 }
 
-HWND Platform_GetFlintPrevFg(void) {
-        
-if (g_prev_fg && IsWindow(g_prev_fg)) {  return g_prev_fg; }
-    return NULL;
-}
 void Platform_SetFlintPrevFg(HWND h) {
-        
-if (h && IsWindow(h)) g_prev_fg = h;
+    if (h && IsWindow(h)) g_prev_fg = h;
 }
 
 bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {

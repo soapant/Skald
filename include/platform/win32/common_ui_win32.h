@@ -16,7 +16,6 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h);
 void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius);
 int UI_LB_GetTextLen(WindowHandle hList);
 int UI_LB_GetText(WindowHandle hList, int index, char* buffer);
-void UI_Edit_SetFont(HFONT hFont);
 int UI_InsertChar(wchar_t wc);
 bool UI_ShouldSkipPopupKey(const void* msg);
 

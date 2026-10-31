@@ -9,7 +9,6 @@
 #include "platform/x11/env_helpers_x11.h"
 #include "platform/x11/desktop_helpers_x11.h"
 #include "platform/x11/drawing_x11.h"
-#include "platform/x11/audio_x11.h"
 #include "helpers/helpers_ui.h"
 #include "bindings/vim_state.h"
 #include "core/flapi.h"

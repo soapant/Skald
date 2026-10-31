@@ -81,13 +81,3 @@ int x11_keysym_to_windows_vk(KeySym keysym) {
     
 }
 
-void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed) {
-        
-
-    int m = remap_current_mods();
-    *ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || (m & HOTKEY_MOD_CTRL);
-    *shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || (m & HOTKEY_MOD_SHIFT);
-    *alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || (m & HOTKEY_MOD_ALT);
-    
-}
-
