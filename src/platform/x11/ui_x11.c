@@ -83,9 +83,6 @@ if (!lb) {  return ; }
     lb->view_offset = top_index;
 }
 
-void UI_LB_SetFont(void* hFont) {
-}
-
 int UI_LB_GetItemHeight() {
       
     return 0;

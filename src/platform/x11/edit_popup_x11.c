@@ -200,7 +200,6 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
 
     int wParam = key->vk;
     bool ctrl_pressed = key->ctrl;
-    bool alt_pressed = key->alt;
 
     if (ctrl_pressed && (wParam == 'A' || wParam == 'a')) {
         EditPopup_SelectAll(ed);

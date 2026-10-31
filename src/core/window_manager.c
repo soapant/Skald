@@ -64,13 +64,6 @@ int WindowManager_Run(WindowManager* wm) {
     return rc;
 }
 
-void WindowManager_Quit(WindowManager* wm) {
-    
-    if (!wm) {  return; }
-    Platform_WM_Quit(wm);
-    
-}
-
 static bool g_popup_push_in_progress = false;
 
 Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
