@@ -672,7 +672,7 @@ log_info("FeatureLoader_Unload completed");
 }
 
 void FeatureLoader_ReloadAll(void) {
-    PROFILE_START(timer1);
+    
 
     LOCK();
     for (int i = 0; i < g_feature_count; i++) {
@@ -708,7 +708,7 @@ void FeatureLoader_ReloadAll(void) {
     UNLOCK();
 
         log_info("FeatureLoader_ReloadAll completed");
-PROFILE_END_VAR(timer1, "Hot Reload");
+
 }
 
 void FeatureLoader_Lock(void) {

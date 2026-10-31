@@ -12,32 +12,32 @@
 static WindowManager* g_window_manager = NULL;
 
 WindowManager* WindowManager_Create(void) {
-    PROFILE_START(timer);
+    
     WindowManager* wm = calloc(1, sizeof(WindowManager));
-    if (!wm) { PROFILE_END_VAR(timer, "window_manager:WindowManager_Create"); return NULL; }
+    if (!wm) {  return NULL; }
     wm->popup_capacity = 8;
     wm->popups = calloc(wm->popup_capacity, sizeof(Popup*));
     if (!wm->popups) {
         free(wm);
-        PROFILE_END_VAR(timer, "window_manager:WindowManager_Create");
+        
         return NULL;
     }
     if (!Platform_WM_InitDisplay(wm)) {
         free(wm->popups);
         free(wm);
-        PROFILE_END_VAR(timer, "window_manager:WindowManager_Create");
+        
         return NULL;
     }
     Platform_ApplyUIScale();
     wm->ctx = FlintContext_Get();
     g_window_manager = wm;
-    PROFILE_END_VAR(timer, "window_manager:WindowManager_Create");
+    
     return wm;
 }
 
 void WindowManager_Destroy(WindowManager* wm) {
-    PROFILE_START(timer);
-    if (!wm) { PROFILE_END_VAR(timer, "window_manager:WindowManager_Destroy"); return; }
+    
+    if (!wm) {  return; }
     for (int i = 0; i < wm->popup_count; i++) {
         if (wm->popups[i] && wm->popups[i]->vtable && wm->popups[i]->vtable->destroy) {
             wm->popups[i]->vtable->destroy(wm->popups[i]);
@@ -47,41 +47,41 @@ void WindowManager_Destroy(WindowManager* wm) {
     if (g_window_manager == wm) g_window_manager = NULL;
     free(wm);
     log_info("WindowManager_Destroy completed");
-    PROFILE_END_VAR(timer, "window_manager:WindowManager_Destroy");
+    
 }
 
 WindowManager* WindowManager_Get(void) {
-    PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "window_manager:WindowManager_Get");
+    
+    
     return g_window_manager;
 }
 
 int WindowManager_Run(WindowManager* wm) {
-    PROFILE_START(timer);
-    if (!wm) { PROFILE_END_VAR(timer, "window_manager:WindowManager_Run"); return -1; }
+    
+    if (!wm) {  return -1; }
     int rc = Platform_WM_Run(wm);
-    PROFILE_END_VAR(timer, "window_manager:WindowManager_Run");
+    
     return rc;
 }
 
 void WindowManager_Quit(WindowManager* wm) {
-    PROFILE_START(timer);
-    if (!wm) { PROFILE_END_VAR(timer, "window_manager:WindowManager_Quit"); return; }
+    
+    if (!wm) {  return; }
     Platform_WM_Quit(wm);
-    PROFILE_END_VAR(timer, "window_manager:WindowManager_Quit");
+    
 }
 
 static bool g_popup_push_in_progress = false;
 
 Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
-    PROFILE_START(timer);
-    if (g_popup_push_in_progress) { log_info("PushPopup REENTRANT blocked"); PROFILE_END_VAR(timer, "window_manager:WindowManager_PushPopup"); return NULL; }
-    if (!wm || !popup) { PROFILE_END_VAR(timer, "window_manager:WindowManager_PushPopup"); return NULL; }
+    
+    if (g_popup_push_in_progress) { log_info("PushPopup REENTRANT blocked");  return NULL; }
+    if (!wm || !popup) {  return NULL; }
     log_info("PushPopup wm=%p popup=%p count_before=%d", (void*)wm, (void*)popup, wm->popup_count);
     if (wm->popup_count >= wm->popup_capacity) {
         int new_cap = wm->popup_capacity * 2;
         Popup** new_popups = realloc(wm->popups, new_cap * sizeof(Popup*));
-        if (!new_popups) { PROFILE_END_VAR(timer, "window_manager:WindowManager_PushPopup"); return NULL; }
+        if (!new_popups) {  return NULL; }
         wm->popups = new_popups;
         wm->popup_capacity = new_cap;
     }
@@ -93,7 +93,7 @@ Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
         popup->vtable->on_show(popup);
     }
     g_popup_push_in_progress = false;
-    PROFILE_END_VAR(timer, "window_manager:WindowManager_PushPopup");
+    
     return popup;
 }
 

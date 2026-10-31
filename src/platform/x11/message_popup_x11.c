@@ -38,30 +38,30 @@ static MsgSlot g_msg_slots[MSG_MAX_ACTIVE];
 static int g_msg_slot_count = 0;
 
 static void MsgRemoveSlotLocked(Display *dpy, int idx) {
-        PROFILE_START(_pt);
+        
 XDestroyWindow(dpy, g_msg_slots[idx].win);
     for (int i = idx; i < g_msg_slot_count - 1; i++) g_msg_slots[i] = g_msg_slots[i + 1];
     g_msg_slot_count--;
 }
 
 static void MsgRemoveWindowLocked(Display *dpy, Window win) {
-        PROFILE_START(_pt);
+        
 for (int i = 0; i < g_msg_slot_count; i++) {
         if (g_msg_slots[i].win == win) { MsgRemoveSlotLocked(dpy, i); return; }
     }
 }
 
 static int MsgFindKeyLocked(const char *key) {
-        PROFILE_START(_pt);
-if (!key || !key[0]) { PROFILE_END_VAR(_pt, "MsgFindKeyLocked"); return -1; }
+        
+if (!key || !key[0]) {  return -1; }
     for (int i = 0; i < g_msg_slot_count; i++) {
         if (strcmp(g_msg_slots[i].key, key) == 0) return i;
     }
-    { PROFILE_END_VAR(_pt, "MsgFindKeyLocked"); return -1; }
+    {  return -1; }
 }
 
 static void MsgRemoveIndefiniteLocked(Display *dpy) {
-        PROFILE_START(_pt);
+        
 for (int i = 0; i < g_msg_slot_count; ) {
         if (g_msg_slots[i].indefinite) MsgRemoveSlotLocked(dpy, i);
         else i++;
@@ -75,9 +75,9 @@ typedef struct {
 } MsgDismissPayload;
 
 static void *MsgDismissThread(void *arg) {
-        PROFILE_START(_pt);
+        
 MsgDismissPayload *p = (MsgDismissPayload *)arg;
-    if (!p) { PROFILE_END_VAR(_pt, "MsgDismissThread"); return NULL; }
+    if (!p) {  return NULL; }
     if (p->timeout > 0) {
         struct timespec ts;
         ts.tv_sec = (time_t)p->timeout;
@@ -95,7 +95,7 @@ MsgDismissPayload *p = (MsgDismissPayload *)arg;
         pthread_mutex_unlock(&g_msg_lock);
         XFlush(dpy);
     }
-    { PROFILE_END_VAR(_pt, "MsgDismissThread"); return NULL; }
+    {  return NULL; }
 }
 
 #define MSG_MAX_LINES 64
@@ -110,24 +110,24 @@ typedef struct {
 } MsgLine;
 
 static int MsgUtf8CharLen(unsigned char c) {
-        PROFILE_START(_pt);
-if ((c & 0x80) == 0) { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 1; }
-    if ((c & 0xE0) == 0xC0) { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 2; }
-    if ((c & 0xF0) == 0xE0) { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 3; }
-    if ((c & 0xF8) == 0xF0) { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 4; }
-    { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 1; }
+        
+if ((c & 0x80) == 0) {  return 1; }
+    if ((c & 0xE0) == 0xC0) {  return 2; }
+    if ((c & 0xF0) == 0xE0) {  return 3; }
+    if ((c & 0xF8) == 0xF0) {  return 4; }
+    {  return 1; }
 }
 
 static int MsgTextWidth(Display *dpy, XftFont *xf, const char *s, int n) {
-        PROFILE_START(_pt);
-if (!s || n <= 0) { PROFILE_END_VAR(_pt, "MsgTextWidth"); return 0; }
+        
+if (!s || n <= 0) {  return 0; }
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8 *)s, n, &ext);
-    { PROFILE_END_VAR(_pt, "MsgTextWidth"); return ext.xOff; }
+    {  return ext.xOff; }
 }
 
 static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW, MsgLine *lines, int max_lines) {
-        PROFILE_START(_pt);
+        
 int count = 0;
     int spaceW = MsgTextWidth(dpy, xf, " ", 1);
     const char *p = text;
@@ -212,13 +212,13 @@ int count = 0;
         }
         p = nl ? nl + 1 : pend;
     }
-    { PROFILE_END_VAR(_pt, "MsgWrapText"); return count; }
+    {  return count; }
 }
 
 static void x11_display_message_draw(Display *dpy, Window win, const char *message, unsigned long color, int w, int h, bool no_bg,void (*render)(void)) {
-        PROFILE_START(_pt);
+        
 XWindowAttributes attrs;
-    if (!XGetWindowAttributes(dpy, win, &attrs)) { PROFILE_END_VAR(_pt, "x11_display_message_draw"); return ; }
+    if (!XGetWindowAttributes(dpy, win, &attrs)) {  return ; }
 
     if (!no_bg) {
         Pixmap bg = x11_get_cached_background(dpy, win, w, h);
@@ -234,7 +234,7 @@ XWindowAttributes attrs;
     }
 
     XftDraw *xd = XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
-    if (!xd) { PROFILE_END_VAR(_pt, "x11_display_message_draw"); return ; }
+    if (!xd) {  return ; }
 
 
     if (render != NULL) {
@@ -271,13 +271,13 @@ XWindowAttributes attrs;
 }
 
 static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW, int winH,double timeout, ColorRef color,bool no_bg,void (*render)(void),const char *name) {
-        PROFILE_START(_pt);
+        
 int ax,ay,aw,ah;
     WindowManager_GetMainMonitorGeometry(&ax,&ay,&aw,&ah);
     Platform_SetTransparentWindow(no_bg);
     Window win = x11_create_display_message_window(dpy, x + ax, y + ay, winW, winH, false);
     Platform_SetTransparentWindow(false);
-    if (!win) { PROFILE_END_VAR(_pt, "MsgPresent"); return ; }
+    if (!win) {  return ; }
     XMapWindow(dpy, win);
     XFlush(dpy);
     x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,no_bg,render);
@@ -330,31 +330,31 @@ static HoverWidgetSlot g_hover_widgets[HOVER_WIDGET_MAX];
 static pthread_mutex_t g_hover_widget_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static int HoverWidgetFindLocked(const char *key) {
-        PROFILE_START(_pt);
+        
 for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
         if (g_hover_widgets[i].w && !g_hover_widgets[i].dead && strcmp(g_hover_widgets[i].key, key) == 0) return i;
     }
-    { PROFILE_END_VAR(_pt, "HoverWidgetFindLocked"); return -1; }
+    {  return -1; }
 }
 
 static int HoverWidgetAllocLocked(const char *key) {
-        PROFILE_START(_pt);
+        
 for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
         if (!g_hover_widgets[i].w) return i;
     }
-    { PROFILE_END_VAR(_pt, "HoverWidgetAllocLocked"); return -1; }
+    {  return -1; }
 }
 
 static void HoverWidgetFrame(void *ud) {
-        PROFILE_START(_pt);
+        
 HoverWidgetSlot *s = (HoverWidgetSlot *)ud;
-    if (!s || !s->w || s->dead) { PROFILE_END_VAR(_pt, "HoverWidgetFrame"); return ; }
+    if (!s || !s->w || s->dead) {  return ; }
     if (s->render) s->render(s->ud);
 }
 
 void Platform_HoverWidgetHide(const char *key) {
-        PROFILE_START(_pt);
-if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetHide"); return ; }
+        
+if (!key || !key[0]) {  return ; }
     pthread_mutex_lock(&g_hover_widget_lock);
     int idx = HoverWidgetFindLocked(key);
     if (idx < 0) { pthread_mutex_unlock(&g_hover_widget_lock); return; }
@@ -384,8 +384,8 @@ void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
     unsigned long bg_hex = spec.bg_hex;
     void (*release)(void* ud) = spec.release;
     void* release_ud = spec.release_ud;
-    PROFILE_START(_pt);
-    if (!key || !key[0] || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetShow"); return ; }
+    
+    if (!key || !key[0] || w <= 0 || h <= 0) {  return ; }
 
 
     pthread_mutex_lock(&g_hover_widget_lock);
@@ -452,9 +452,9 @@ void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
 
 static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
                             int centerX, int centerY, int winW, int winH, ColorRef color,bool no_bg) {
-        PROFILE_START(_pt);
-if (!dpy || !key || !key[0] || !message || !message[0]) { PROFILE_END_VAR(_pt, "MsgHoverPresent"); return ; }
-    if (winW <= 0 || winH <= 0) { PROFILE_END_VAR(_pt, "MsgHoverPresent"); return ; }
+        
+if (!dpy || !key || !key[0] || !message || !message[0]) {  return ; }
+    if (winW <= 0 || winH <= 0) {  return ; }
     pthread_mutex_lock(&g_msg_lock);
     int idx = MsgFindKeyLocked(key);
     if (idx >= 0) {
@@ -472,7 +472,7 @@ if (!dpy || !key || !key[0] || !message || !message[0]) { PROFILE_END_VAR(_pt, "
 
     Window win = x11_create_display_message_window(dpy, centerX - winW / 2, centerY - winH / 2,
                                                     winW, winH, false);
-    if (win == None) { PROFILE_END_VAR(_pt, "MsgHoverPresent"); return ; }
+    if (win == None) {  return ; }
     XMapRaised(dpy, win);
     XFlush(dpy);
     x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,no_bg,NULL);
@@ -492,9 +492,9 @@ if (!dpy || !key || !key[0] || !message || !message[0]) { PROFILE_END_VAR(_pt, "
 }
 
 void Platform_HoverMessageRelease(const char *key) {
-        PROFILE_START(_pt);
+        
 Display *dpy = get_display();
-    if (!dpy || !key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverMessageRelease"); return ; }
+    if (!dpy || !key || !key[0]) {  return ; }
     pthread_mutex_lock(&g_msg_lock);
     int idx = MsgFindKeyLocked(key);
     if (idx >= 0) MsgRemoveSlotLocked(dpy, idx);
@@ -515,9 +515,9 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     ColorRef color = spec.color;
     void (*render)(void) = spec.render;
     const char* name = spec.name;
-    PROFILE_START(_pt);
+    
     Display *dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DisplayMessage"); return ; }
+    if (!dpy) {  return ; }
 
     int winW = 0;
     int winH = 0;
@@ -560,7 +560,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
 
 static void MsgMeasure(Display *dpy, const char *message, int maxWidth, int maxHeight,
                        int *outW, int *outH) {
-        PROFILE_START(_pt);
+        
 *outW = 0;
     *outH = 0;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
@@ -595,9 +595,9 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
     int maxHeight = spec.max_height;
     ColorRef color = spec.color;
     bool no_bg = spec.no_bg;
-    PROFILE_START(_pt);
+    
     Display *dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_HoverMessage"); return ; }
+    if (!dpy) {  return ; }
 
     if (maxWidth <= 0) maxWidth = MSG_HOVER_DEFAULT_W;
     if (maxHeight <= 0) maxHeight = MSG_HOVER_DEFAULT_H;
@@ -628,10 +628,10 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     bool no_bg = spec.no_bg;
     void (*render)(void) = spec.render;
     const char* name = spec.name;
-    PROFILE_START(_pt);
-    if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
+    
+    if (!message || !message[0]) {  return ; }
     Display *dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
+    if (!dpy) {  return ; }
 
     if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
     if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
@@ -669,9 +669,9 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
 }
 
 bool Platform_DismissMessage(const char* name) {
-        PROFILE_START(_pt);
+        
     Display *dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DismissMessage"); return false; }
+    if (!dpy) {  return false; }
     bool removed = false;
     pthread_mutex_lock(&g_msg_lock);
     if (name && name[0]) {
@@ -684,29 +684,29 @@ bool Platform_DismissMessage(const char* name) {
     }
     pthread_mutex_unlock(&g_msg_lock);
     XFlush(dpy);
-    PROFILE_END_VAR(_pt, "Platform_DismissMessage");
+    
     return removed;
 }
 
 bool Platform_MessageActive(const char* name) {
-        PROFILE_START(_pt);
-    if (!name || !name[0]) { PROFILE_END_VAR(_pt, "Platform_MessageActive"); return false; }
+        
+    if (!name || !name[0]) {  return false; }
     Display *dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_MessageActive"); return false; }
+    if (!dpy) {  return false; }
     bool found = false;
     pthread_mutex_lock(&g_msg_lock);
     for (int i = 0; i < g_msg_slot_count; i++) {
         if (strcmp(g_msg_slots[i].name, name) == 0) { found = true; break; }
     }
     pthread_mutex_unlock(&g_msg_lock);
-    PROFILE_END_VAR(_pt, "Platform_MessageActive");
+    
     return found;
 }
 
 void Platform_DismissIndefiniteMessage(void) {
-        PROFILE_START(_pt);
+        
 Display *dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DismissIndefiniteMessage"); return ; }
+    if (!dpy) {  return ; }
     pthread_mutex_lock(&g_msg_lock);
     MsgRemoveIndefiniteLocked(dpy);
     pthread_mutex_unlock(&g_msg_lock);
@@ -714,43 +714,43 @@ Display *dpy = get_display();
 }
 
 bool Platform_MessagePopupShowWindow(Popup* self, int x, int y, int w, int h) {
-        PROFILE_START(_pt);
+        
 (void)self;
     (void)x;
     (void)y;
     (void)w;
     (void)h;
-    PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupShowWindow");
-    { PROFILE_END_VAR(_pt, "Platform_MessagePopupShowWindow"); return true; }
+    
+    
+    {  return true; }
 }
 
 void Platform_MessagePopupHideWindow(Popup* self) {
-        PROFILE_START(_pt);
+        
 (void)self;
-    PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupHideWindow");
+    
+    
 }
 
 void Platform_MessagePopupRender(Popup* self) {
-        PROFILE_START(_pt);
+        
 (void)self;
-    PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupRender");
+    
+    
 }
 
 void Platform_MessagePopupDestroyWindow(Popup* self) {
-        PROFILE_START(_pt);
+        
 (void)self;
-    PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupDestroyWindow");
+    
+    
 }
 
 bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
-    PROFILE_START(_pt);
+    
     (void)self;
     (void)key;
-    { PROFILE_END_VAR(_pt, "Platform_MessagePopupOnKey"); return false; }
+    {  return false; }
 }
 
 void Platform_DismissDisplayMessage(void) {

@@ -27,7 +27,7 @@ static int g_rt_fps = RT_DEFAULT_FPS;
 static __thread bool g_rt_is_thread = false;
 
 static void rt_run_pending(void) {
-        PROFILE_START(_pt);
+        
 RtCallback pend[RT_MAX_PENDING];
     int pn = 0;
     EnterCriticalSection(&g_rt_lock);
@@ -43,8 +43,8 @@ RtCallback pend[RT_MAX_PENDING];
 }
 
 bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
-        PROFILE_START(_pt);
-if (!fn || !g_rt_thread) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Post"); return false; }
+        
+if (!fn || !g_rt_thread) {  return false; }
     EnterCriticalSection(&g_rt_lock);
     if (g_rt_pending_count >= RT_MAX_PENDING) {
         LeaveCriticalSection(&g_rt_lock);
@@ -55,35 +55,35 @@ if (!fn || !g_rt_thread) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Post"); r
     g_rt_pending_count++;
     WakeConditionVariable(&g_rt_cond);
     LeaveCriticalSection(&g_rt_lock);
-    { PROFILE_END_VAR(_pt, "Platform_RenderThread_Post"); return true; }
+    {  return true; }
 }
 
 void *Platform_RenderThread_Display(void) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_RenderThread_Display"); return NULL; }
+        
+{  return NULL; }
 }
 
 bool Platform_RenderThread_IsRunning(void) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_RenderThread_IsRunning"); return g_rt_thread != NULL; }
+        
+{  return g_rt_thread != NULL; }
 }
 
 int Platform_RenderThread_CallbackCount(void) {
-        PROFILE_START(_pt);
-if (!g_rt_lock_ready) { PROFILE_END_VAR(_pt, "Platform_RenderThread_CallbackCount"); return 0; }
+        
+if (!g_rt_lock_ready) {  return 0; }
     EnterCriticalSection(&g_rt_lock);
     int n = g_rt_count;
     LeaveCriticalSection(&g_rt_lock);
-    { PROFILE_END_VAR(_pt, "Platform_RenderThread_CallbackCount"); return n; }
+    {  return n; }
 }
 
 bool Platform_RenderThread_IsCurrentThread(void) {
-        PROFILE_START(_pt);
-{ PROFILE_END_VAR(_pt, "Platform_RenderThread_IsCurrentThread"); return g_rt_is_thread; }
+        
+{  return g_rt_is_thread; }
 }
 
 static DWORD WINAPI rt_thread_func(LPVOID arg) {
-        PROFILE_START(_pt);
+        
 (void)arg;
     g_rt_is_thread = true;
     while (!g_rt_quit) {
@@ -107,32 +107,32 @@ static DWORD WINAPI rt_thread_func(LPVOID arg) {
         }
         LeaveCriticalSection(&g_rt_lock);
     }
-    { PROFILE_END_VAR(_pt, "rt_thread_func"); return 0; }
+    {  return 0; }
 }
 
 typedef struct { volatile LONG done; } RtSync;
 
 static void rt_sync_mark(void *ud) {
-        PROFILE_START(_pt);
+        
 RtSync *s = (RtSync *)ud;
     if (s) InterlockedExchange(&s->done, 1);
 }
 
 void Platform_RenderThread_Wake(void) {
-        PROFILE_START(_pt);
-if (!g_rt_lock_ready) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Wake"); return ; }
+        
+if (!g_rt_lock_ready) {  return ; }
     EnterCriticalSection(&g_rt_lock);
     WakeConditionVariable(&g_rt_cond);
     LeaveCriticalSection(&g_rt_lock);
 }
 
 void Platform_RenderThread_Sync(void) {
-        PROFILE_START(_pt);
-if (!g_rt_thread) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Sync"); return ; }
-    if (Platform_RenderThread_IsCurrentThread()) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Sync"); return ; }
+        
+if (!g_rt_thread) {  return ; }
+    if (Platform_RenderThread_IsCurrentThread()) {  return ; }
     RtSync s;
     s.done = 0;
-    if (!Platform_RenderThread_Post(rt_sync_mark, &s)) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Sync"); return ; }
+    if (!Platform_RenderThread_Post(rt_sync_mark, &s)) {  return ; }
     DWORD waited = 0;
     while (!s.done && waited < 5000) {
         Sleep(1);
@@ -142,9 +142,9 @@ if (!g_rt_thread) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Sync"); return ;
 }
 
 bool Platform_RenderThread_EnsureStarted(int fps) {
-        PROFILE_START(_pt);
+        
 if (fps > g_rt_fps) g_rt_fps = fps;
-    if (g_rt_thread) { PROFILE_END_VAR(_pt, "Platform_RenderThread_EnsureStarted"); return true; }
+    if (g_rt_thread) {  return true; }
     if (!g_rt_lock_ready) {
         InitializeCriticalSection(&g_rt_lock);
         InitializeConditionVariable(&g_rt_cond);
@@ -156,12 +156,12 @@ if (fps > g_rt_fps) g_rt_fps = fps;
         log_warn("render thread: CreateThread failed, widget frames disabled");
         return false;
     }
-    { PROFILE_END_VAR(_pt, "Platform_RenderThread_EnsureStarted"); return true; }
+    {  return true; }
 }
 
 void Platform_RenderThread_Stop(void) {
-        PROFILE_START(_pt);
-if (!g_rt_thread) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Stop"); return ; }
+        
+if (!g_rt_thread) {  return ; }
     InterlockedExchange(&g_rt_quit, 1);
     WakeConditionVariable(&g_rt_cond);
     WaitForSingleObject(g_rt_thread, INFINITE);
@@ -176,9 +176,9 @@ if (!g_rt_thread) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Stop"); return ;
 }
 
 bool Platform_RenderThread_AddFrameCallback(Platform_RenderFrameFn fn, void *ud) {
-        PROFILE_START(_pt);
-if (!fn) { PROFILE_END_VAR(_pt, "Platform_RenderThread_AddFrameCallback"); return false; }
-    if (!Platform_RenderThread_EnsureStarted(0)) { PROFILE_END_VAR(_pt, "Platform_RenderThread_AddFrameCallback"); return false; }
+        
+if (!fn) {  return false; }
+    if (!Platform_RenderThread_EnsureStarted(0)) {  return false; }
     EnterCriticalSection(&g_rt_lock);
     if (g_rt_count >= RT_MAX_CALLBACKS) {
         LeaveCriticalSection(&g_rt_lock);
@@ -189,11 +189,11 @@ if (!fn) { PROFILE_END_VAR(_pt, "Platform_RenderThread_AddFrameCallback"); retur
     g_rt_callbacks[g_rt_count].ud = ud;
     g_rt_count++;
     LeaveCriticalSection(&g_rt_lock);
-    { PROFILE_END_VAR(_pt, "Platform_RenderThread_AddFrameCallback"); return true; }
+    {  return true; }
 }
 
 bool Platform_RenderThread_RemoveFrameCallback(Platform_RenderFrameFn fn, void *ud) {
-        PROFILE_START(_pt);
+        
 BOOL removed = FALSE;
     EnterCriticalSection(&g_rt_lock);
     for (int i = 0; i < g_rt_count; i++) {
@@ -205,5 +205,5 @@ BOOL removed = FALSE;
         }
     }
     LeaveCriticalSection(&g_rt_lock);
-    { PROFILE_END_VAR(_pt, "Platform_RenderThread_RemoveFrameCallback"); return removed; }
+    {  return removed; }
 }

@@ -16,21 +16,21 @@
 #include "helpers/helpers_alias.h"
 
 void Prompt_Refresh(PromptState* state) {
-    PROFILE_START(_pt);
-    if (!state) { PROFILE_END_VAR(_pt, "Prompt_Refresh"); return; }
+    
+    if (!state) {  return; }
     FlintContext* ctx = FlintContext_Get();
     if (ctx && ctx->prompt_callbacks.refresh) {
         ctx->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
     }
-    PROFILE_END_VAR(_pt, "Prompt_Refresh");
+    
 }
 
 bool Prompt_DeleteSelection(PromptState* state) {
-    PROFILE_START(_pt);
-    if (!state) { PROFILE_END_VAR(_pt, "Prompt_DeleteSelection"); return false; }
+    
+    if (!state) {  return false; }
     int ss = 0, se = 0;
     if (!VimState_GetSelection(&ss, &se)) {
-        PROFILE_END_VAR(_pt, "Prompt_DeleteSelection");
+        
         return false;
     }
     if (se < ss) { int t = ss; ss = se; se = t; }
@@ -41,28 +41,28 @@ bool Prompt_DeleteSelection(PromptState* state) {
         memmove(state->filter + ss, state->filter + se, len - se + 1);
         state->cursor = ss;
         VimState_EndSelection();
-        PROFILE_END_VAR(_pt, "Prompt_DeleteSelection");
+        
         return true;
     }
     VimState_EndSelection();
-    PROFILE_END_VAR(_pt, "Prompt_DeleteSelection");
+    
     return false;
 }
 
 void Prompt_InsertText(PromptState* state, const char* text, int len) {
-    PROFILE_START(_pt);
-    if (!state || !text || len <= 0) { PROFILE_END_VAR(_pt, "Prompt_InsertText"); return; }
+    
+    if (!state || !text || len <= 0) {  return; }
     Prompt_DeleteSelection(state);
     size_t fcur = (size_t)state->cursor;
     EditBufferInsertText(state->filter, sizeof(state->filter), &fcur, text, (size_t)len);
     state->cursor = (int)fcur;
     History_ResetCursor(FlintContext_Get()->window.current_feature);
     Prompt_Refresh(state);
-    PROFILE_END_VAR(_pt, "Prompt_InsertText");
+    
 }
 
 void Prompt_TriggerEnter(PromptState* state, bool ctrl, bool shift, bool alt) {
-    PROFILE_START(_pt);
+    
     const char* sel = NULL;
     char filter_copy[sizeof(state->filter)];
     if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
@@ -135,29 +135,29 @@ void Prompt_TriggerEnter(PromptState* state, bool ctrl, bool shift, bool alt) {
         }
     }
     ctx->window.selection_complete = should_close;
-    PROFILE_END_VAR(_pt, "Prompt_TriggerEnter");
+    
 }
 
 bool Prompt_HandleListClick(PromptState* state, bool ctrl, bool shift, bool alt) {
-    PROFILE_START(_pt);
-    if (!state || !state->has_listbox) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
+    
+    if (!state || !state->has_listbox) {  return false; }
     int list_top = 0, item_height = 0, visible_count = 0;
     ListBox_GetGeometry(&list_top, &item_height, &visible_count);
-    if (item_height <= 0 || visible_count <= 0) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
+    if (item_height <= 0 || visible_count <= 0) {  return false; }
     ListBoxInfo* lb = &state->listbox;
     int mx = 0, my = 0;
-    if (!ListBox_ClientMousePos(&mx, &my)) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
+    if (!ListBox_ClientMousePos(&mx, &my)) {  return false; }
     int idx = ListBox_RowAtY(lb, list_top, item_height, lb->view_offset, visible_count, my);
-    if (idx < 0) { PROFILE_END_VAR(_pt, "Prompt_HandleListClick"); return false; }
+    if (idx < 0) {  return false; }
     UI_SetSelection(lb,idx);
     Prompt_TriggerEnter(state, ctrl, shift, alt);
-    PROFILE_END_VAR(_pt, "Prompt_HandleListClick");
+    
     return true;
 }
 
 bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
-    PROFILE_START(_pt);
-    if (!state || !key) { PROFILE_END_VAR(_pt, "Prompt_HandleKey"); return false; }
+    
+    if (!state || !key) {  return false; }
     int vk = key->vk;
     bool ctrl = key->ctrl;
     bool shift = key->shift;
@@ -170,7 +170,7 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
         VimState_UpdateSelection(len);
         state->cursor = len;
         Prompt_Refresh(state);
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (ctrl && (vk == 'C' || vk == 'c')) {
@@ -189,17 +189,17 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
                 Platform_CopyToClipboard(buf);
             }
         }
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (PromptController_TryVimMotion(vk, ctrl, shift, alt)) {
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_BACK) {
         if (Prompt_DeleteSelection(state)) {
             Prompt_Refresh(state);
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
         if (ctrl) {
@@ -214,14 +214,14 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
         }
         History_ResetCursor(ctx->window.current_feature);
         Prompt_Refresh(state);
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_ESCAPE) {
         WindowManager* wm = WindowManager_Get();
         if (wm && wm->popup_count > 1) {
             WindowManager_PopPopup(wm);
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
         if (ctx->window.editbox_placed) {
@@ -233,37 +233,37 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
         } else {
             ctx->window.selection_complete = true;
         }
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_RIGHT) {
         VimState_EndSelection();
         CursorForward(&state->cursor, strlen(state->filter));
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_LEFT) {
         VimState_EndSelection();
         CursorBack(&state->cursor, strlen(state->filter));
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_HOME) {
         VimState_EndSelection();
         SetCursorToStartOfText(ctx);
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_END) {
         VimState_EndSelection();
         SetCursorToEndOfText(ctx);
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_UP) {
         if (ctrl) {
             SetCursorToStartOfText(ctx);
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
         if (state->has_listbox) {
@@ -275,46 +275,46 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
                     state->filter[sizeof(state->filter) - 1] = '\0';
                     state->cursor = (int)strlen(state->filter);
                     Prompt_Refresh(state);
-                    PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+                    
                     return true;
                 }
             }
             UI_NavigateUp(&state->listbox);
         }
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_DOWN) {
         if (ctrl) {
             SetCursorToEndOfText(ctx);
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
         if (state->has_listbox) UI_NavigateDown(&state->listbox);
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_DELETE) {
         if (Prompt_DeleteSelection(state)) {
             Prompt_Refresh(state);
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
         if (EditBufferDeleteChar(state->filter, &state->cursor)) {
             History_ResetCursor(ctx->window.current_feature);
             Prompt_Refresh(state);
         }
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_TAB) {
         if (ctx->prompt_callbacks.tab) ctx->prompt_callbacks.tab(&state->listbox);
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == VK_RETURN) {
         Prompt_TriggerEnter(state, ctrl, shift, alt);
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == COPY_SELECTION_KEY && !IsInsertMode()) {
@@ -328,24 +328,24 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
             }
             Platform_CopyToClipboard(ctx->window.output_buffer);
         }
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == HELP_SCREEN_KEY && ctrl) {
         if (ctx->prompt_callbacks.help) ctx->prompt_callbacks.help();
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (vk == 'V' && ctrl) {
         char* clip = Platform_GetClipboardEntry();
         if (!clip) {
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
         clip[strcspn(clip, "\r\n")] = '\0';
         if (clip[0] == '\0') {
             free(clip);
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
         size_t cur_len = strlen(state->filter);
@@ -361,35 +361,35 @@ bool Prompt_HandleKey(PromptState* state, const PopupKeyEvent* key) {
         }
         free(clip);
         Prompt_Refresh(state);
-        PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+        
         return true;
     }
     if (ctrl) {
         if (vk == VK_OEM_MINUS) {
             Platform_AdjustFontSize(-1);
             Config_Save();
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
         if (vk == VK_OEM_PLUS) {
             Platform_AdjustFontSize(1);
             Config_Save();
-            PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+            
             return true;
         }
     }
-    PROFILE_END_VAR(_pt, "Prompt_HandleKey");
+    
     return false;
 }
 
 void Prompt_RedrawNow(ListBoxInfo* lb) {
-    PROFILE_START(_pt);
+    
     FlintContext* ctx = FlintContext_Get();
-    if (!ctx) { PROFILE_END_VAR(_pt, "Prompt_RedrawNow"); return; }
+    if (!ctx) {  return; }
     if (ctx->prompt_callbacks.refresh != NULL) {
         char buffer[MaxFeatures];
         UI_GetCurrentTextEdit(buffer, sizeof(buffer));
         ctx->prompt_callbacks.refresh(buffer, lb);
     }
-    PROFILE_END_VAR(_pt, "Prompt_RedrawNow");
+    
 }
