@@ -112,8 +112,7 @@ void Platform_PromptPopupHideWindow(Popup* self) {
 }
 
 void Platform_PromptPopupRender(Popup* self) {
-        
-WindowManager* wm = (WindowManager*)self->manager;
+    WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     if (dpy) {
         PromptState* psr = (PromptState*)self->user_data;
