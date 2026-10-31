@@ -90,7 +90,6 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->prompt_callbacks.ctrl_alt_enter = data->spec.ctrl_alt_enter ? data->spec.ctrl_alt_enter : data->saved_callbacks.ctrl_alt_enter;
     ctx2->prompt_callbacks.shift_alt_enter = data->spec.shift_alt_enter ? data->spec.shift_alt_enter : data->saved_callbacks.shift_alt_enter;
     ctx2->prompt_callbacks.tab = data->spec.tab ? data->spec.tab : data->saved_callbacks.tab;
-    ctx2->prompt_callbacks.copy = data->spec.copy ? data->spec.copy : data->saved_callbacks.copy;
     ctx2->prompt_callbacks.render = data->spec.render ? data->spec.render : data->saved_callbacks.render;
     data->state->render = ctx2->prompt_callbacks.render;
     ctx2->prompt_callbacks.edit = data->spec.edit ? data->spec.edit : data->saved_callbacks.edit;
