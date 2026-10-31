@@ -60,6 +60,9 @@ static void *input_thread_func(void *arg) {
     return NULL;
   int nfds = g_x11_keyboard_count + g_x11_mouse_count;
   struct pollfd *fds = calloc((size_t)nfds, sizeof(struct pollfd));
+  if (!fds) {
+    return;
+  }
   for (int i = 0; i < g_x11_keyboard_count; i++) {
     fds[i].fd = g_x11_keyboards[i].fd;
     fds[i].events = POLLIN;

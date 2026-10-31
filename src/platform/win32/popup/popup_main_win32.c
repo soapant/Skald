@@ -334,7 +334,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         UI_SetCursorPosition(ps->cursor);
       }
       if (UI_InsertChar((wchar_t)wParam) > 0) {
-        PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
+        ps = Platform_GetPromptStateForHWND(hwnd);
         if (ps) {
           strncpy(FlintContext_Get()->window.filter, ps->filter,
                   sizeof(FlintContext_Get()->window.filter) - 1);
@@ -833,7 +833,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       SelectObject(memDC, oldBmp);
     }
     EndPaint(hwnd, &ps);
-    break;
   } break;
   case WM_ERASEBKGND: {
     return TRUE;

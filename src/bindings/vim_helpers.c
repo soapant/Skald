@@ -533,14 +533,12 @@ bool Vim_WordRange(FlintContext *ctx, bool bigword, bool around, int *out_start,
     cursor = len;
 
   int word_start = cursor;
+  int word_end = cursor;
   while (word_start > 0 && !vim_word_boundary(text[word_start - 1], bigword))
     word_start--;
-  int word_end = cursor;
   while (word_end < len && !vim_word_boundary(text[word_end], bigword))
     word_end++;
-
   if (word_start == cursor && word_end == cursor) {
-    word_end = cursor;
     while (word_end < len && vim_word_boundary(text[word_end], bigword))
       word_end++;
     if (word_end >= len)
@@ -553,10 +551,8 @@ bool Vim_WordRange(FlintContext *ctx, bool bigword, bool around, int *out_start,
     word_end = temp;
   }
   if (word_start == cursor && word_end == cursor) {
-    word_start = cursor;
     while (word_start > 0 && !vim_word_boundary(text[word_start - 1], bigword))
-      word_start--;
-    word_end = cursor;
+    word_start--;
     while (word_end < len && !vim_word_boundary(text[word_end], bigword))
       word_end++;
   }
@@ -590,10 +586,9 @@ void DeleteInnerWord(FlintContext *ctx, bool keep_mode) {
   if (!Vim_WordRange(ctx, false, false, &word_start, &word_end))
     return;
   if (word_start > 0 && word_end < len && text[word_start - 1] == ' ' &&
-      text[word_end] == ' ') {
+    text[word_end] == ' ') {
     word_end++;
-    if (word_end > len)
-      word_end = len;
+    word_end = len;
   }
   if (word_start >= 0 && word_end <= len && word_start < word_end) {
     memmove(&text[word_start], &text[word_end], len - word_end + 1);

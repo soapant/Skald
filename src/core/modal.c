@@ -17,8 +17,7 @@ static EditorMode ActiveMode(void) {
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (top && top->type == POPUP_EDIT) {
     WMEditPopupData *e = (WMEditPopupData *)top;
-    if (e)
-      return e->mode;
+    return e->mode;
   }
   return FlintContext_Get()->vim_mode;
 }
@@ -72,12 +71,10 @@ void SetMode(EditorMode mode) {
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (top && top->type == POPUP_EDIT) {
     WMEditPopupData *e = (WMEditPopupData *)top;
-    if (e) {
-      e->mode = mode;
-      clamp_cursor_for_mode(mode);
-      UpdateTextCaret();
-      return;
-    }
+    e->mode = mode;
+    clamp_cursor_for_mode(mode);
+    UpdateTextCaret();
+    return;
   }
   SetModeWithListBox(mode, NULL);
 }

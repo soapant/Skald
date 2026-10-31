@@ -12,6 +12,7 @@ unsigned long rgb_to_hex(unsigned long win_color) {
 #elif defined(_WIN32)
   return win_color;
 #endif
+  return 0;
 }
 
 void eval_window_title_color(PromptState *state,

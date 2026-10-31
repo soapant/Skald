@@ -847,11 +847,6 @@ void fl_sleep_platform(double seconds) {
   nanosleep(&req, NULL);
 }
 
-struct MemoryStruct {
-  char *memory;
-  size_t size;
-};
-
 int fl_get_active_interface_platform(char out[], size_t max_len) {
   static char content[16384];
   if (File_ReadAll("/proc/net/route", content, (long)sizeof(content)) <= 0)

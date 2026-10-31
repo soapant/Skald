@@ -1375,8 +1375,6 @@ static unsigned long x11_background_color_at(int x, int y, int w, int h) {
   unsigned int cr = x11_bg_channel_at((float)((col >> 16) & 0xFF), x, y);
   unsigned int cg = x11_bg_channel_at((float)((col >> 8) & 0xFF), x, y);
   unsigned int cb = x11_bg_channel_at((float)(col & 0xFF), x, y);
-  return ((unsigned long)cr << 16) | ((unsigned long)cg << 8) |
-         (unsigned long)cb;
   return ((col >> 16) & 0xFF) << 16 | ((col >> 8) & 0xFF) << 8 | (col & 0xFF);
 }
 

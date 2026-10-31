@@ -542,7 +542,7 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
 }
 
 long Platform_GetFileSize(char *filepath) {
-
+  if (!filepath) return -1;
   FILE *fp = fopen(filepath, "rb");
   if (fp == NULL) {
     log_error("operation failed, returning error filepath='%s'",
@@ -606,7 +606,7 @@ bool Platform_FocusWindow(const char *title) {
     s++;
   const char *e = s + strlen(s);
   while (e > s && isspace((unsigned char)*(e - 1)))
-    e--;
+  e--;
   size_t len = (size_t)(e - s);
   if (len == 0)
     return false;
@@ -1202,8 +1202,7 @@ static bool win32_icon_file_ok(const char *path) {
 
 static bool win32_icon_png_path(const char *src, char *out, size_t n) {
   char dir[MAX_PATH];
-  if (!win32_icon_cache_dir(dir, sizeof(dir)))
-    return false;
+  win32_icon_cache_dir(dir, sizeof(dir));
   snprintf(out, n, "%s\\%08x_v2.png", dir, win32_icon_hash(src));
   return true;
 }

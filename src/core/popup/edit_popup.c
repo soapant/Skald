@@ -48,8 +48,6 @@ void EditPopup_SetPlaceholder(Popup *popup, const char *placeholder) {
   if (!popup || popup->type != POPUP_EDIT)
     return;
   EditPopupDataInternal *data = (EditPopupDataInternal *)popup;
-  if (!data)
-    return;
   char *np = placeholder ? strdup(placeholder) : NULL;
   if (placeholder && !np)
     return;

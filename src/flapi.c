@@ -89,16 +89,12 @@ bool fl_get_all_files_from_dir(const char *dir_path,
     return false;
   dir_path = expanded_dir;
 
-  {
-    return Platform_GetAllFilesFromDir(.dir_path = dir_path,
-                                       .list_of_allowed_extensions =
-                                           list_of_allowed_extensions,
-                                       .list_of_files = list_of_files,
-                                       .list_of_names_to_ignore =
-                                           list_of_names_to_ignore,
-                                       .strip_extension = strip_extension,
-                                       .max_depth = max_depth);
-  }
+  return Platform_GetAllFilesFromDir(.dir_path = dir_path,
+                                     .list_of_allowed_extensions = list_of_allowed_extensions,
+                                     .list_of_files = list_of_files,
+                                     .list_of_names_to_ignore =    list_of_names_to_ignore,
+                                     .strip_extension = strip_extension,
+                                     .max_depth = max_depth);
 }
 
 char *fl_search_file_in_dir(const char *directory, const char *search_string,

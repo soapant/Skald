@@ -206,7 +206,7 @@ void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count) {
     lb->selected_index = sel;
     UI_LB_SetCaretIndex(sel, false);
   }
-  UI_LB_SetTopIndex(off);
+  UI_RequestPopupRepaint();
 }
 
 void ListBox_ApplyPendingScroll(ListBoxInfo *lb, int visible_count) {
