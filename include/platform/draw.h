@@ -4,6 +4,11 @@
 #include "core/types.h"
 #include "core/types/window.h"
 
+#if defined(__linux__)
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
+#endif
+
 void Platform_SetDrawBgColor(unsigned long hex);
 unsigned long Platform_GetDrawBgColor(void);
 void Platform_SetTransparentWindow(bool on);
@@ -98,5 +103,13 @@ bool Platform_PreRender(void);
 
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top);
 int Platform_GetGlyphInkHeight(const char *text, int fontsize);
+
+#if defined(__linux__)
+void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap);
+void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap);
+void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
+void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected);
+bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char* path, int x, int y, int tw, int th);
+#endif
 
 #endif

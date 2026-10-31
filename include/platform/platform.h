@@ -3,6 +3,11 @@
 
 #include "core/types.h"
 
+#ifndef _WIN32
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
+#endif
+
 typedef struct {
     const char* message;
     int x, y, w, h;
@@ -83,6 +88,9 @@ typedef struct {
     int overflow;
 } HttpBuf;
 
+#if defined(__linux__)
+void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
+#endif
 bool Platform_IsCtrlPressed(void);
 bool Platform_IsShiftPressed(void);
 bool Platform_IsAltPressed(void);
@@ -114,21 +122,14 @@ bool Platform_DismissMessage(const char* name);
 bool Platform_MessageActive(const char* name);
 
 void Platform_DisplayMessage(PlDisplayMessageSpec spec);
-
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec);
-
 void Platform_CreateDisplayMessageWindow(PlCreateDisplayMessageWindowSpec spec);
-
-
 void Platform_HoverMessage(PlHoverMessageSpec spec);
-
-void Platform_HoverMessageRelease(const char* key);
-
 void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec);
-
+void Platform_HoverMessageRelease(const char* key);
 void Platform_HoverWidgetHide(const char* key);
-FontHandle Platform_CreateFont(int size, const char* face_name);
 
+FontHandle Platform_CreateFont(int size, const char* face_name);
 void Platform_DestroyFont(FontHandle font);
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight);
 int Platform_InitializeTrayIcon(void);
@@ -215,5 +216,12 @@ bool Platform_MutexTryLock(void* mutex);
 
 bool Platform_GetFeatureBuildCommand(const char* src, const char* out_tmp, char* cmd, size_t cmd_size);
 bool Platform_AtomicRename(const char* old_path, const char* new_path);
+#if defined(__linux__)
+FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
+void Platform_DismissIndefiniteMessage(void);
+const char* Platform_GetSessionDisplay(void);
+const char* Platform_GetSessionXAuthority(void);
+const char* Platform_GetRuntimeDir(void);
+#endif
 
 #endif

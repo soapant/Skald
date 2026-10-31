@@ -69,14 +69,12 @@ if (g_pbuf_xd && g_pbuf_pm && g_pbuf_dpy == dpy && g_pbuf_win == win &&
 }
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-        
-Platform_DrawEditBox(state, dpy, xd, vis, cmap);
+    Platform_DrawEditBox(state, dpy, xd, vis, cmap);
 }
 
 void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-        
-Platform_DrawListBox(state, dpy, xd, vis, cmap);
-}
+    Platform_DrawListBox(state, dpy, xd, vis, cmap);
+  }
 
 void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
         

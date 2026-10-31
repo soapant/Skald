@@ -1,4 +1,5 @@
 #include "platform/draw.h"
+#include "platform/x11/display_x11.h"
 #include "platform/platform.h"
 #include "platform/ui.h"
 #include "config.h"
@@ -761,8 +762,6 @@ void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
 }
 
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
-        
-
     if (!state) {  return; }
     FlintContext_Get()->window.editbox_placed = true;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
@@ -771,7 +770,6 @@ void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual 
     Platform_DrawEditText(state, dpy, xd, vis, cmap, font);
     Platform_DrawEditCursor(state, dpy, xd, vis, cmap, font);
     Platform_DestroyFont(font);
-    
 }
 
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
