@@ -566,33 +566,11 @@ bool Platform_QueryBrowser(char *query) {
   *dst = '\0';
 
   if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "google")) {
-    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s",
-             encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
-                                                    "duckduckgo")) {
+    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s",encoded_query);
+  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,"duckduckgo")) {
     snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
   } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "bing")) {
-    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s",
-             encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
-                                                    "brave")) {
-    snprintf(url, sizeof(url), "https://search.brave.com/search?q=%s",
-             encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
-                                                    "startpage")) {
-    snprintf(url, sizeof(url), "https://www.startpage.com/sp/search?query=%s",
-             encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
-                                                    "yandex")) {
-    snprintf(url, sizeof(url), "https://yandex.com/search/?text=%s",
-             encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
-                                                    "ecosia")) {
-    snprintf(url, sizeof(url), "https://www.ecosia.org/search?q=%s",
-             encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
-                                                    "qwant")) {
-    snprintf(url, sizeof(url), "https://www.qwant.com/?q=%s", encoded_query);
+    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%",encoded_query);
   } else {
     snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
   }
@@ -624,7 +602,6 @@ bool Platform_QueryBrowser(char *query) {
   }
 
   log_info("Platform_QueryBrowser query='%s'", query ? query : "");
-  ;
   return Platform_RunTerminalCommand(command, false);
 }
 
