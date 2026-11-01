@@ -1944,23 +1944,6 @@ void Platform_ShutdownUI() {
   log_info("Platform_ShutdownUI completed");
 }
 
-void Platform_WaitForKeypressAsync(KeyCallback callback) {
-  FlintContext_Get()->waiting_for_key = true;
-  FlintContext_Get()->key_callback = callback;
-  log_info("Platform_WaitForKeypressAsync callback=%p", callback);
-  ;
-}
-
-bool Platform_HandleWaitingForKey(unsigned int vk) {
-  if (!FlintContext_Get()->waiting_for_key)
-    return false;
-  FlintContext_Get()->waiting_for_key = false;
-  KeyCallback cb = FlintContext_Get()->key_callback;
-  FlintContext_Get()->key_callback = NULL;
-  if (cb)
-    cb((int)vk);
-  return true;
-}
 
 static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
   memset(buf, 0, sizeof(*buf));
