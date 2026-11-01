@@ -12,11 +12,7 @@ int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
 
 unsigned long EditModeTextColor(void) {
 
-  if (MODE_INSERT == MODE_NORMAL)
-    return rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
-  if (MODE_INSERT == MODE_INSERT)
-    return rgb_to_hex(COLOR_INSERT_MODE_TEXT);
-  return rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
+  return rgb_to_hex(COLOR_INSERT_MODE_TEXT);
 }
 
 void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,

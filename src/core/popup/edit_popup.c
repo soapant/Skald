@@ -11,7 +11,6 @@ typedef WMEditPopupData EditPopupDataInternal;
 
 static void EditPopup_OnShow(Popup *self) {
   EditPopupDataInternal *data = (EditPopupDataInternal *)self;
-  data->mode = MODE_INSERT;
   Platform_EditPopupShowWindow(self);
 }
 

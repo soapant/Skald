@@ -60,7 +60,6 @@ typedef struct {
   void *user_data;
   int x, y, w, h;
   bool confirmed;
-  EditorMode mode;
 } WMEditPopupData;
 
 WindowManager *WindowManager_Create(void);

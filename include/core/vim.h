@@ -16,18 +16,6 @@ void Edit_SetCursor(FlintContext *ctx, int pos);
 ListBoxInfo *Edit_GetListBox(FlintContext *ctx);
 PromptState* Edit_GetPromptState();
 
-void SequenceAddKey(char key, bool was_typed);
-void SequenceReset(void);
-int SequenceTypedCount(void);
-int SequenceLength(void);
-bool SequenceMatches(const char *pattern);
-bool SequenceStartsWith(const char *pattern);
-void SequenceStartTimer(void);
-bool SequenceIsWaiting(void);
-bool SequenceTimedOut(void);
-bool SequenceHasPendingWait(void);
-bool SequenceConsumeTimeout(void);
-
 void DeleteLastTypedChar(FlintContext *ctx);
 
 #endif

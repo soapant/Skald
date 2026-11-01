@@ -154,7 +154,6 @@ typedef struct {
   int modifiers;
   MotionAction action_id;
   void (*handler)(FlintContext *ctx);
-  EditorMode mode;
   EditScope scope;
 } MotionBinding;
 
@@ -163,8 +162,6 @@ typedef struct {
   MotionAction action_id;
   void (*handler)(FlintContext *ctx);
   bool is_prefix;
-  EditorMode mode;
-  EditScope scope;
 } SequenceBinding;
 
 void HandleEnterNormal(FlintContext *ctx);
