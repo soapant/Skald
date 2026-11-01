@@ -65,14 +65,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
       HFONT hOldFont = hMainFont ? (HFONT)SelectObject(hdc, hMainFont) : NULL;
       SetBkMode(hdc, TRANSPARENT);
 
-      COLORREF modeColor;
-      if (MODE_INSERT == MODE_NORMAL) {
-        modeColor = RGB(100, 255, 255);
-      } else if (MODE_INSERT == MODE_INSERT) {
-        modeColor = RGB(50, 255, 50);
-      } else {
-        modeColor = RGB(200, 3, 222);
-      }
+      COLORREF modeColor = RGB(50, 255, 50);
       SetTextColor(hdc, modeColor);
 
       RECT modeRect;
