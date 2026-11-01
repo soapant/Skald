@@ -11,12 +11,6 @@ typedef struct {
   void *value;
 } HashMap;
 
-typedef enum {
-  MODE_NORMAL,
-  MODE_INSERT,
-  MODE_VISUAL,
-} EditorMode;
-
 typedef struct {
   RefreshCallback refresh;
   EnterCallback enter;
@@ -48,8 +42,6 @@ typedef struct {
 } WindowContext;
 
 typedef struct {
-  EditorMode vim_mode;
-  const char *vim_mode_str;
   WindowContext window;
   PromptCallbacks prompt_callbacks;
   HashMap *feature_history;

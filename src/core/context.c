@@ -3,8 +3,6 @@
 #include <stddef.h>
 
 static FlintContext g_ctx = {
-    .vim_mode = MODE_INSERT,
-    .vim_mode_str = "INSERT",
     .window =
         {
             .hPopupWnd = {0},
