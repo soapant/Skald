@@ -2110,7 +2110,9 @@ bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
  * Fields:
  * - `hotkey` — Hotkey string.
  * - `cb` — Callback function.
- * - `swallow` — Whether to swallow the hotkey.
+ * - `swallow` — Callback Functoin Determining whether to swallow the hotkey or not false to not swallow true to swallow.
+ * - `whitelist` — List of whitelisted windows that hotkey works in
+ * - `blacklist` — List of blacklisted windows that hotkey works in
  */
 typedef struct {
   const char *hotkey;
@@ -2141,12 +2143,14 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec);
  * Fields:
  * - `src` — Source hotkey.
  * - `dst` — Destination hotkey.
+ * - `whitelist` — List of whitelisted windows that remap works in
+ * - `blacklist` — List of blacklisted windows that remap works in
  */
 typedef struct {
   const char *src;
   const char *dst;
-  const char *whitelist[8];
-  const char *blacklist[8];
+  const char *whitelist[16];
+  const char *blacklist[16];
 } FlRemappingSpec;
 
 /**
@@ -2180,6 +2184,8 @@ typedef void (*FlSnippetFunc)(void);
  * - `trigger` — Trigger string.
  * - `text` — Text content.
  * - `fn` — Callback function.
+ * - `whitelist` — List of whitelisted windows that snippet works in
+ * - `blacklist` — List of blacklisted windows that snippet works in
  */
 typedef struct {
   const char *trigger;
