@@ -188,7 +188,7 @@ void Platform_EditPopupRender(Popup *self) {
   eb.placeholder_dy = 0;
   eb.rainbow_limit_x = data->w - PROMPT_EDITPOPUP_INSET;
   eb.placeholder = data->placeholder;
-  eb.text_color = rgb_to_hex(COLOR_TEXT);
+  eb.text_color = COLOR_TEXT;
   eb.font = font;
   eb.measure = x11_editbox_measure;
   eb.measure_user = &metrics;
