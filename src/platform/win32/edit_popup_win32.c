@@ -14,7 +14,6 @@
 #include "core/editbox.h"
 #include "core/hotkey_text.h"
 #include "core/edit_popup_keys.h"
-#include "core/prompt_controller.h"
 #include "helpers/helpers_ui.h"
 #include "deps/log.h"
 #include "config.h"

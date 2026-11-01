@@ -15,7 +15,6 @@
 #include "wingdi.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
-#include "core/prompt_controller.h"
 #include "platform/wm_platform.h"
 
 static bool s_edit_swallow_next_char = false;

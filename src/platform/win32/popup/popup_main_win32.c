@@ -20,7 +20,6 @@
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
-#include "core/prompt_controller.h"
 
 #include "core/timer.h"
 #include "core/listbox_hover.h"
@@ -439,7 +438,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       return 0;
     }
     if (wParam == UI_TICK_TIMER_ID) {
-      if (PromptController_PollSequenceTimeout()) {
         UI_Redraw(lb);
       }
       if (FlintContext_Get()->prompt_callbacks.render != NULL)
