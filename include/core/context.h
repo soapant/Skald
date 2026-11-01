@@ -50,7 +50,6 @@ typedef struct {
 typedef struct {
   EditorMode vim_mode;
   const char *vim_mode_str;
-  uint32_t main_thread_id;
   WindowContext window;
   PromptCallbacks prompt_callbacks;
   HashMap *feature_history;
