@@ -140,11 +140,7 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_ESCAPE) {
-    if (EnableVimMode && IsInsertMode()) {
-      SetMode(MODE_NORMAL);
-    } else {
-      FlintContext_Get()->window.selection_complete = true;
-    }
+    FlintContext_Get()->window.selection_complete = true;
     return true;
   }
   if (vk == VK_LEFT) {

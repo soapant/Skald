@@ -171,7 +171,6 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
     DeleteObject(hFont);
     SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
     ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
-    SetModeWithListBox(MODE_NORMAL, lb);
     UpdateTextCaret();
     break;
   }

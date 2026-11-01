@@ -452,10 +452,6 @@ void DeleteInsideDelimiter(FlintContext *ctx, char open_char, char close_char,
   memmove(&text[delete_start], &text[delete_end], len - delete_end + 1);
   Vim_SetText(ctx, text);
   Vim_SetCursor(ctx, delete_start);
-  if (keep_mode)
-    SetMode(MODE_INSERT);
-  else
-    SetMode(MODE_NORMAL);
 }
 
 void DeleteSelectionRange(FlintContext *ctx, int start, int end) {
@@ -490,10 +486,6 @@ void DeleteWordForward(FlintContext *ctx, bool keep_mode) {
   int len = (int)strlen(text);
   int cursor = Vim_GetCursor(ctx);
   if (len == 0 || cursor >= len) {
-    if (keep_mode)
-      SetMode(MODE_INSERT);
-    else
-      SetMode(MODE_NORMAL);
     return;
   }
 
@@ -512,10 +504,6 @@ void DeleteWordForward(FlintContext *ctx, bool keep_mode) {
   memmove(&text[start], &text[end], (size_t)(len - end + 1));
   Vim_SetText(ctx, text);
   Vim_SetCursor(ctx, start);
-  if (keep_mode)
-    SetMode(MODE_INSERT);
-  else
-    SetMode(MODE_NORMAL);
 }
 
 static bool vim_word_boundary(char c, bool bigword) {
@@ -599,9 +587,5 @@ void DeleteInnerWord(FlintContext *ctx, bool keep_mode) {
     memmove(&text[word_start], &text[word_end], len - word_end + 1);
     Vim_SetText(ctx, text);
     Vim_SetCursor(ctx, word_start);
-    if (keep_mode)
-      SetMode(MODE_INSERT);
-    else
-      SetMode(MODE_NORMAL);
   }
 }
