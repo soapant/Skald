@@ -140,4 +140,13 @@ typedef struct {
   int mods;
 } HotkeyKey;
 
+typedef struct {
+  int vk;
+  bool ctrl;
+  bool shift;
+  bool alt;
+  char text[32];
+  int text_len;
+} PopupKeyEvent;
+
 #endif
