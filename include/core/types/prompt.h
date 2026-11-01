@@ -330,15 +330,6 @@ WindowManager *WindowManager_Get(void);
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
 typedef struct {
-  char keys[MAX_SEQUENCE_LEN];
-  int len;
-  int typed_count;
-  long long deadline_ms;
-  bool waiting;
-  bool timed_out;
-} SequenceState;
-
-typedef struct {
   const char *name;
   void (*func)(const char **items, int count);
 } SortOption;

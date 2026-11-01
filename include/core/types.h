@@ -5,9 +5,6 @@
 #include <stdint.h>
 
 #define MAX_VISIBLE_ITEMS 10000
-#define MAX_SEQUENCE_LEN 8
-#define SEQUENCE_TIMEOUT_MS 200
-
 #define MAX_PATH 260
 
 #include "core/types/keys.h"
