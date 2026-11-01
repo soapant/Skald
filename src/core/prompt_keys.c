@@ -180,6 +180,9 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   bool ctrl = key->ctrl;
   bool shift = key->shift;
   bool alt = key->alt;
+
+  if (Platform_InvokeKeyInterceptor(vk, ctrl, shift, alt))
+    return true;
   FlintContext *ctx = FlintContext_Get();
 
   if (ctrl && (vk == 'A' || vk == 'a')) {

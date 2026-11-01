@@ -2293,6 +2293,18 @@ int fl_get_pid();
 #define FL_LIGHT_GREY RGB(211, 211, 211)
 #define FL_DARK_GREY RGB(14, 14, 14)
 
+/**
+ * @brief Global key interceptor callback for features.
+ *
+ * Return true to swallow the key, false to let normal handling proceed.
+ */
+typedef bool (*FlKeyInterceptorFn)(int vk, bool ctrl, bool shift, bool alt);
+
+/**
+ * @brief Register a global key interceptor for all prompts/edit popups.
+ */
+void fl_register_key_interceptor(FlKeyInterceptorFn fn);
+
 /** @} */
 
 #endif
