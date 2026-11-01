@@ -6,7 +6,6 @@
 
 #include "core/context.h"
 #include "core/modal.h"
-#include "core/prompt_controller.h"
 #include "config.h"
 #include "platform/input.h"
 #include "platform/platform.h"
@@ -110,7 +109,7 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
   if (Platform_InvokeKeyInterceptor(key))
     return true;
 
-  if (PromptController_TryEditMotion(vk, ctrl, key->shift, key->alt)) {
+  if (false) {
     return true;
   }
 

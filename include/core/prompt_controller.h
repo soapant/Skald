@@ -1,9 +1,0 @@
-#ifndef PROMPT_CONTROLLER_H
-#define PROMPT_CONTROLLER_H
-
-#include <stdbool.h>
-
-bool PromptController_TryEditMotion(int wParam, bool ctrl, bool shift, bool alt);
-bool PromptController_PollSequenceTimeout(void);
-
-#endif

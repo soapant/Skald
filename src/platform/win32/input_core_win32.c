@@ -12,7 +12,6 @@
 #include "core/remap_manager.h"
 #include "core/timer.h"
 #include "platform/input_state.h"
-#include "bindings/bindings.h"
 #include "platform/win32/win32_state.h"
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/input_core_win32.h"

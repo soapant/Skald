@@ -9,7 +9,6 @@
 #include "core/window_manager.h"
 #include "core/context.h"
 #include "platform/platform.h"
-#include "core/prompt_controller.h"
 #include "deps/log.h"
 #include "platform/x11/input_x11.h"
 #include "platform/input_state.h"
@@ -192,14 +191,6 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
     long long now = Platform_GetWallClockMs();
     if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
       last_tick = now;
-      Popup *top = WindowManager_GetTopPopup(wm);
-      if (top && top->vtable && top->vtable->on_render) {
-        top->vtable->on_render(top);
-      }
-      if (dpy)
-        XFlush(dpy);
-    }
-    if (PromptController_PollSequenceTimeout()) {
       Popup *top = WindowManager_GetTopPopup(wm);
       if (top && top->vtable && top->vtable->on_render) {
         top->vtable->on_render(top);

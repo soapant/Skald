@@ -8,7 +8,6 @@
 
 #include "core/window_manager.h"
 #include "deps/log.h"
-#include "core/prompt_controller.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "platform/input_state.h"
@@ -389,12 +388,6 @@ int WindowManager_RunLinux(WindowManager *wm) {
       }
     }
     hotkey_drain_pending();
-    if (PromptController_PollSequenceTimeout()) {
-      Popup *top = WindowManager_GetTopPopup(wm);
-      if (top && top->vtable && top->vtable->on_render)
-        top->vtable->on_render(top);
-      XFlush(dpy);
-    }
   }
 
   if (input_started)
