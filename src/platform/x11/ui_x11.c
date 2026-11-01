@@ -86,6 +86,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
     return;
   }
   lb->selected_index = index;
+  lb->selected_text = ListBoxInfo_Row(lb,index);
   UI_LB_SetCaretIndex(index, false);
   ListBox_ScrollToSelection(lb);
 }
