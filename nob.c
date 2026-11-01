@@ -45,7 +45,7 @@
       "-Wno-sign-compare", "-Wno-discarded-qualifiers",                        \
       "-Wno-stringop-truncation", "-Wno-sign-compare",                         \
       "-Wno-unused-parameter", "-Wno-misleading-indentation", "-Wno-format",   \
-      "-Wno-unused-variable","-g"
+      "-Wno-unused-variable"
 #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
 #define PKG_CFLAGS_PKGS_STR                                                    \
   "libcurl x11 xft fontconfig freetype2 gio-unix-2.0 xext xrandr xrender "     \
