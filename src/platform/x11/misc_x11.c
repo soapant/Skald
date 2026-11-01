@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <strings.h>
 #include <sys/types.h>
-
 #include "platform/platform.h"
 #include "deps/log.h"
 #include "wm/wm.h"
@@ -574,7 +573,6 @@ bool Platform_QueryBrowser(char *query) {
   } else {
     snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
   }
-
   const char *real_user = Platform_GetRealUser();
   const char *display = getenv("DISPLAY");
   if (!display)
