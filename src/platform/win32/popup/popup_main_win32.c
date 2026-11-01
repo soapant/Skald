@@ -233,7 +233,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (FlintContext_Get()->prompt_callbacks.render == NULL) {
       PromptState *hst = Platform_GetPromptStateForHWND(hwnd);
       if (hst && hst->has_listbox) {
-        ListBoxInfo *hlb = &hst->listbox;
+        ListBoxInfo *hlb = &hst->lb;
         int list_top = PromptListTop();
         int item_h = PromptRowHeight();
         int visible =
@@ -280,8 +280,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
             '\0';
         FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
         if (FlintContext_Get()->prompt_callbacks.refresh) {
-          FlintContext_Get()->prompt_callbacks.refresh(
-              ps->filter, ps->has_listbox ? &ps->listbox : NULL);
+          FlintContext_Get()->prompt_callbacks.refresh(ps);
         }
       }
     }
@@ -300,8 +299,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
 
         if (FlintContext_Get()->prompt_callbacks.refresh) {
-          FlintContext_Get()->prompt_callbacks.refresh(
-              ps->filter, ps->has_listbox ? &ps->listbox : NULL);
+          FlintContext_Get()->prompt_callbacks.refresh(ps);
         }
       }
       UI_Redraw(lb);
@@ -342,8 +340,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
           FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
 
           if (FlintContext_Get()->prompt_callbacks.refresh) {
-            FlintContext_Get()->prompt_callbacks.refresh(
-                ps->filter, ps->has_listbox ? &ps->listbox : NULL);
+            FlintContext_Get()->prompt_callbacks.refresh(ps);
           }
         }
         UI_Redraw(lb);
@@ -714,30 +711,30 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         if (estate->has_listbox) {
           int list_top = PromptListTop();
           int row_height = PromptRowHeight();
-          int count = estate->listbox.populated_count;
+          int count = estate->lb.populated_count;
           int visible_count =
               (rect.bottom - PromptListBottomMargin() - list_top) / row_height;
-          int view_offset = estate->listbox.view_offset;
+          int view_offset = estate->lb.view_offset;
 
           for (int i = 0; i < visible_count && (i + view_offset) < count; i++) {
             int list_idx = i + view_offset;
             int y = list_top + i * row_height;
 
-            if (list_idx == estate->listbox.selected_index) {
+            if (list_idx == estate->lb.selected_index) {
               RECT itemRect = {10, y + 1, rect.right - 10, y + row_height - 1};
               win32_fill_rounded_rect(paintDC, &itemRect, COLOR_SELECTED_TEXT,
                                       PROMPT_SEL_RADIUS);
             }
 
-            const char *text = ListBoxInfo_Row(&estate->listbox, list_idx);
+            const char *text = ListBoxInfo_Row(&estate->lb, list_idx);
             if (!text)
               continue;
 
             unsigned long ncol, bcol, pcol;
-            int orig_idx = estate->listbox.matching_indices[list_idx];
-            int orig_cnt = estate->listbox.last_item_count > 0
-                               ? estate->listbox.last_item_count
-                               : estate->listbox.populated_count;
+            int orig_idx = estate->lb.matching_indices[list_idx];
+            int orig_cnt = estate->lb.last_item_count > 0
+                               ? estate->lb.last_item_count
+                               : estate->lb.populated_count;
             Platform_GetItemColors((PlGetItemColorsSpec){.idx = orig_idx,
                                                          .count = orig_cnt,
                                                          .num_color = &ncol,
