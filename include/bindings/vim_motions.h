@@ -1,6 +1,6 @@
 
-#ifndef VIM_MOTIONS_H
-#define VIM_MOTIONS_H
+#ifndef EDIT_MOTIONS_H
+#define EDIT_MOTIONS_H
 
 #include <stdbool.h>
 #include "core/modal.h"
@@ -144,10 +144,10 @@ typedef enum {
 } MotionAction;
 
 typedef enum {
-  VIM_SCOPE_ALL = 0,
-  VIM_SCOPE_MODAL,
-  VIM_SCOPE_POPUP,
-} VimScope;
+  EDIT_SCOPE_ALL = 0,
+  EDIT_SCOPE_MODAL,
+  EDIT_SCOPE_POPUP,
+} EditScope;
 
 typedef struct {
   int vk_code;
@@ -155,7 +155,7 @@ typedef struct {
   MotionAction action_id;
   void (*handler)(FlintContext *ctx);
   EditorMode mode;
-  VimScope scope;
+  EditScope scope;
 } MotionBinding;
 
 typedef struct {
@@ -164,7 +164,7 @@ typedef struct {
   void (*handler)(FlintContext *ctx);
   bool is_prefix;
   EditorMode mode;
-  VimScope scope;
+  EditScope scope;
 } SequenceBinding;
 
 void HandleEnterNormal(FlintContext *ctx);
@@ -280,7 +280,7 @@ void HandleScrollLineUp(FlintContext *ctx);
 void HandleJumpPrevContext(FlintContext *ctx);
 void HandleJumpBack(FlintContext *ctx);
 void HandleJumpForward(FlintContext *ctx);
-void Vim_SearchCancel(int key);
+void Edit_SearchCancel(int key);
 void HandlePasteAtCursor(FlintContext *ctx);
 
 #endif

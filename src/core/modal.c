@@ -12,18 +12,8 @@
 #include "core/types/color.h"
 #include "core/types/window.h"
 
-static const char *g_mode_names[] = {"Normal", "Insert", "Visual"};
 int last_index = 0;
 
-static EditorMode ActiveMode(void) {
-  WindowManager *wm = WindowManager_Get();
-  Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-  if (top && top->type == POPUP_EDIT) {
-    WMEditPopupData *e = (WMEditPopupData *)top;
-    return e->mode;
-  }
-  return FlintContext_Get()->vim_mode;
-}
 
 static void clamp_cursor_for_mode(EditorMode mode) {
   if (mode != MODE_NORMAL)
@@ -32,11 +22,119 @@ static void clamp_cursor_for_mode(EditorMode mode) {
   if (!ctx)
     return;
   char text[1024];
-  Vim_GetText(ctx, text, sizeof(text));
+  Edit_GetText(ctx, text, sizeof(text));
   int len = (int)strlen(text);
   if (len <= 0)
     return;
-  if (Vim_GetCursor(ctx) > len - 1)
-    Vim_SetCursor(ctx, len - 1);
+  if (Edit_GetCursor(ctx) > len - 1)
+    Edit_SetCursor(ctx, len - 1);
 }
+
+#include "bindings/vim_state.h"
+#include <string.h>
+
+static EditFindState g_find;
+static EditMark g_marks[EDIT_MARK_SLOTS];
+static EditJumpEntry g_jumps[EDIT_JUMP_STACK];
+static EditSelection g_sel;
+
+static int MarkIndex(char name) {
+  if (name >= 'a' && name <= 'z')
+    return name - 'a';
+  if (name >= 'A' && name <= 'Z')
+    return name - 'A';
+  if (name == EDIT_MARK_PREV)
+    return EDIT_MARK_PREV;
+  return -1;
+}
+
+void EditState_Reset(void) {
+  memset(&g_find, 0, sizeof(g_find));
+  memset(g_marks, 0, sizeof(g_marks));
+  g_sel.active = false;
+  g_sel.anchor = 0;
+  g_sel.head = 0;
+}
+
+void EditState_BeginSelection(int cursor) {
+  g_sel.active = true;
+  g_sel.anchor = cursor;
+  g_sel.head = cursor;
+}
+
+void EditState_UpdateSelection(int cursor) {
+  if (!g_sel.active)
+    return;
+  g_sel.head = cursor;
+}
+
+void EditState_EndSelection(void) {
+  g_sel.active = false;
+  g_sel.anchor = 0;
+  g_sel.head = 0;
+}
+
+bool EditState_GetSelection(int *out_start, int *out_end) {
+  if (!g_sel.active)
+    return false;
+  if (g_sel.anchor == g_sel.head)
+    return false;
+  int a = g_sel.anchor < g_sel.head ? g_sel.anchor : g_sel.head;
+  int b = g_sel.anchor < g_sel.head ? g_sel.head : g_sel.anchor;
+  if (out_start)
+    *out_start = a;
+  if (out_end)
+    *out_end = b;
+  return true;
+}
+
+bool EditState_HasSelection(void) { return g_sel.active; }
+
+void EditState_SetFind(char target, EditFindDir dir) {
+  g_find.valid = true;
+  g_find.target = target;
+  g_find.dir = dir;
+}
+
+bool EditState_GetFind(EditFindState *out) {
+  if (!g_find.valid || !out)
+    return false;
+  *out = g_find;
+  return true;
+}
+
+
+
+void EditState_SetMark(char name, int cursor, int selection) {
+  int idx = MarkIndex(name);
+  if (idx < 0)
+    return;
+  g_marks[idx].valid = true;
+  g_marks[idx].cursor = cursor;
+  g_marks[idx].selection = selection;
+}
+
+bool EditState_MarkIsSet(char name) {
+  int idx = MarkIndex(name);
+  if (idx < 0)
+    return false;
+  return g_marks[idx].valid;
+}
+
+bool EditState_GetMark(char name, int *out_cursor, int *out_selection) {
+  int idx = MarkIndex(name);
+  if (idx < 0 || !g_marks[idx].valid)
+    return false;
+  if (out_cursor)
+    *out_cursor = g_marks[idx].cursor;
+  if (out_selection)
+    *out_selection = g_marks[idx].selection;
+  return true;
+}
+
+
+
+
+
+
 

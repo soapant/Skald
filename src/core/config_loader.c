@@ -401,8 +401,8 @@ static size_t config_emit_region(char *buf, size_t cap) {
   size_t off = 0;
   cfg_put(buf, cap, &off, "void ConfigApply(void) {\n");
   cfg_put(buf, cap, &off, "    Tray = %s;\n", Tray ? "true" : "false");
-  cfg_put(buf, cap, &off, "    EnableVimMode = %s;\n",
-          EnableVimMode ? "true" : "false");
+  cfg_put(buf, cap, &off, "    EnableEditMode = %s;\n",
+          EnableEditMode ? "true" : "false");
   cfg_put(buf, cap, &off, "    EnableAutoPairing = %s;\n",
           EnableAutoPairing ? "true" : "false");
   cfg_put(buf, cap, &off, "    RememberLastIndex = %s;\n",
@@ -435,7 +435,7 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, "    IconSize = %d;\n", IconSize);
   cfg_put(buf, cap, &off, "    WidgetGap = %d;\n", WidgetGap);
   cfg_put(buf, cap, &off, "    MaxFeatures = %d;\n", MaxFeatures);
-  cfg_put(buf, cap, &off, "    VimFontSize = %d;\n", VimFontSize);
+  cfg_put(buf, cap, &off, "    EditFontSize = %d;\n", EditFontSize);
   cfg_put(buf, cap, &off, "    PaddingForScrolling = %d;\n",
           PaddingForScrolling);
   cfg_put_str_var(buf, cap, &off, "UsedTerminal", UsedTerminal);
@@ -467,12 +467,12 @@ static size_t config_emit_region(char *buf, size_t cap) {
           RainbowText ? "true" : "false");
   cfg_put(buf, cap, &off, "    AlternatingText = %s;\n",
           AlternatingText ? "true" : "false");
-  cfg_put(buf, cap, &off, "    VimModeText = %s;\n",
-          VimModeText ? "true" : "false");
+  cfg_put(buf, cap, &off, "    EditModeText = %s;\n",
+          EditModeText ? "true" : "false");
   cfg_put(buf, cap, &off, "    WindowTitleText = %s;\n",
           WindowTitleText ? "true" : "false");
-  cfg_put(buf, cap, &off, "    ColoredVimModeText = %s;\n",
-          ColoredVimModeText ? "true" : "false");
+  cfg_put(buf, cap, &off, "    ColoredEditModeText = %s;\n",
+          ColoredEditModeText ? "true" : "false");
   cfg_put(buf, cap, &off, "    GradientItems = %d;\n", GradientItems);
   cfg_put_float(buf, cap, &off, "GradientBrightness", GradientBrightness);
   cfg_put(buf, cap, &off, "    CloseOnLossOfFocus = %s;\n",

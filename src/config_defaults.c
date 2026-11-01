@@ -5,7 +5,7 @@
 #include "core/types/color.h"
 
 bool Tray = true;
-bool EnableVimMode = true;
+bool EnableEditMode = true;
 bool RememberLastIndex = true;
 bool MessageAfterEachHotkey = false;
 int TimeOutForMessages = 1;
@@ -25,7 +25,7 @@ int FontSize = 20;
 int IconSize = 32;
 int WidgetGap = 10;
 int MaxFeatures = 1000;
-int VimFontSize = 18;
+int EditFontSize = 18;
 int PaddingForScrolling = 3;
 const char *UsedTerminal = "";
 const char *UsedShell = "nu";
@@ -45,9 +45,9 @@ bool EnableAutoPairing = false;
 bool EnableBorders = true;
 bool RainbowText = false;
 bool AlternatingText = false;
-bool VimModeText = false;
+bool EditModeText = false;
 bool WindowTitleText = false;
-bool ColoredVimModeText = true;
+bool ColoredEditModeText = true;
 int GradientItems = 30;
 float GradientBrightness = 1.0f;
 bool CloseOnLossOfFocus = false;

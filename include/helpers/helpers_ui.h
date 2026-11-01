@@ -11,7 +11,7 @@ void eval_window_title_color(PromptState *state,
 unsigned short OpacityAlpha16(void);
 
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
-unsigned long VimModeTextColor(void);
+unsigned long EditModeTextColor(void);
 
 void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,

@@ -152,11 +152,11 @@ void Platform_EditPopupRender(Popup *self) {
   if (font.hfont)
     SelectObject(paint, font.hfont);
 
-  if ("Insert" != NULL && VimModeText) {
+  if ("Insert" != NULL && EditModeText) {
     Platform_DrawTextRaw((PlDrawTextRawSpec){.x = PROMPT_EDITPOPUP_MODE_X,
                                              .y = PROMPT_EDITPOPUP_MODE_Y,
                                              .text = "Insert",
-                                             .color = VimModeTextColor(),
+                                             .color = EditModeTextColor(),
                                              .font = font,
                                              .align = "LEFT",
                                              .pad = PROMPT_EDITPOPUP_MODE_PAD,
@@ -263,7 +263,7 @@ bool Platform_EditPopupOnKey(Popup *self, const PopupKeyEvent *key) {
   }
   if (wParam == 'C' || wParam == 'c') {
       int ss = 0, se = 0;
-      if (VimState_GetSelection(&ss, &se)) {
+      if (EditState_GetSelection(&ss, &se)) {
         if (se < ss) {
           int t = ss;
           ss = se;

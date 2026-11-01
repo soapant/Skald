@@ -721,7 +721,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   ebi.text = buf;
   ebi.text_len = text_len;
   ebi.cursor = cursor;
-  ebi.insert_mode = true || !EnableVimMode;
+  ebi.insert_mode = true || !EnableEditMode;
   ebi.x = x;
   ebi.y = y_raw;
   ebi.w = w;
@@ -756,13 +756,13 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
                               .pad = PROMPT_FOOTER_PAD,
                               .fontsize = FontSize});
     }
-    if (VimModeText) {
+    if (EditModeText) {
       Platform_SetDrawContext(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
           (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
                               .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
                               .text = "Insert",
-                              .color = VimModeTextColor(),
+                              .color = EditModeTextColor(),
                               .font = fh,
                               .align = "RIGHT",
                               .pad = PROMPT_FOOTER_PAD,

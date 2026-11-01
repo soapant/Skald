@@ -3,7 +3,7 @@
 // <flint-config-generated>
 void ConfigApply(void) {
   Tray = true;
-  EnableVimMode = true;
+  EnableEditMode = true;
   EnableAutoPairing = false;
   RememberLastIndex = true;
   MessageAfterEachHotkey = false;
@@ -23,7 +23,7 @@ void ConfigApply(void) {
   IconSize = 32;
   WidgetGap = 10;
   MaxFeatures = 1000;
-  VimFontSize = 18;
+  EditFontSize = 18;
   PaddingForScrolling = 3;
   UsedTerminal = "";
   UsedShell = "nu";
@@ -38,9 +38,9 @@ void ConfigApply(void) {
   MessagesEnabled = true;
   RainbowText = false;
   AlternatingText = false;
-  VimModeText = false;
+  EditModeText = false;
   WindowTitleText = false;
-  ColoredVimModeText = true;
+  ColoredEditModeText = true;
   GradientItems = 30;
   GradientBrightness = 1.0f;
   CloseOnLossOfFocus = false;
