@@ -2298,7 +2298,7 @@ int fl_get_pid();
  *
  * Return true to swallow the key, false to let normal handling proceed.
  */
-typedef bool (*FlKeyInterceptorFn)(int vk, bool ctrl, bool shift, bool alt);
+typedef bool (*FlKeyInterceptorFn)(const PopupKeyEvent *key);
 
 /**
  * @brief Register a global key interceptor for all prompts/edit popups.

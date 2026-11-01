@@ -181,7 +181,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   bool shift = key->shift;
   bool alt = key->alt;
 
-  if (Platform_InvokeKeyInterceptor(vk, ctrl, shift, alt))
+  if (Platform_InvokeKeyInterceptor(key))
     return true;
   FlintContext *ctx = FlintContext_Get();
 
