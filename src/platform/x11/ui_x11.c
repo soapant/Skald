@@ -208,7 +208,7 @@ void UI_SetCursorPosition(int position) {
 
 void UI_RedrawNow() { }
 
-void UI_Redraw(PromptState* state) { UI_RedrawNow(state); }
+void UI_Redraw(ListBoxInfo *lb) { UI_RedrawNow(); }
 
 void UI_SyncFilterFromEdit(FlintContext *ctx) {
   if (!ctx) {
