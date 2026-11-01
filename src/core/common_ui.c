@@ -10,7 +10,6 @@
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
-#include "core/vim.h"
 #include "core/listbox_hover.h"
 #include "config_values.h"
 #include "core/types.h"
