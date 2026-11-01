@@ -494,7 +494,7 @@ ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
   (void)ctx;
   PromptState *ws = g_win32_prompt_state;
   if (ws && ws->has_listbox)
-    return &ws->listbox;
+    return &ws->lb;
   HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     ListBoxInfo *lb = (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
@@ -545,7 +545,7 @@ bool UI_ApplyBackspaceToPopup(FlintContext *ctx) {
   ws->filter[sizeof(ws->filter) - 1] = '\0';
   if (ctx->prompt_callbacks.refresh) {
     ListBoxInfo *lb = Vim_GetListBox(ctx);
-    ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
+    ctx->prompt_callbacks.refresh(ws);
   }
   UI_ApplyFilterToEdit(ctx);
   return true;

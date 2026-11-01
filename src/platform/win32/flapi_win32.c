@@ -264,7 +264,7 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
       Popup *_p = _wm_lb->popups[_i];
       if (_p && _p->user_data) {
         PromptState *_ps = (PromptState *)_p->user_data;
-        if (&_ps->listbox == lb) {
+        if (&_ps->lb == lb) {
           st = _ps;
           break;
         }
