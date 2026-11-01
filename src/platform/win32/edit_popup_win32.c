@@ -1,6 +1,6 @@
+#include "core/edit_state.h"
 #include "core/context.h"
 #include "core/modal.h"
-#include "bindings/vim_state.h"
 #include "core/window_manager.h"
 #include "core/timer.h"
 #include "platform/wm_platform.h"

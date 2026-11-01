@@ -3,8 +3,6 @@
 #define BINDINGS_H
 
 #include <stdbool.h>
-#include "bindings/vim_motions.h"
-#include "bindings/vim_bindings.h"
 
 typedef struct {
   EditMotionHandler handler;

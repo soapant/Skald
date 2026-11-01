@@ -4,7 +4,6 @@
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/types.h"
-#include "core/vim.h"
 #include "core/hotkey_manager.h"
 #include "helpers/helpers_hotkey.h"
 #include "platform/platform.h"

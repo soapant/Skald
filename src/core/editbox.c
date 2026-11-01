@@ -1,10 +1,10 @@
+#include "core/edit_state.h"
 #include "core/editbox.h"
 
 #include <string.h>
 
 #include "core/modal.h"
 #include "core/prompt_geometry.h"
-#include "bindings/vim_state.h"
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"
 #include "platform/platform.h"

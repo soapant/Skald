@@ -24,7 +24,6 @@
 #include "core/listbox_layout.h"
 #include "core/editbox.h"
 #include "core/prompt_geometry.h"
-#include "bindings/vim_state.h"
 #include "platform/win32/common_ui_win32.h"
 #include "helpers/helpers_ui.h"
 #include <stdio.h>

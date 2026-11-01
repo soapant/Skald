@@ -1,3 +1,4 @@
+#include "core/edit_state.h"
 #include <stdbool.h>
 #include <string.h>
 
@@ -5,7 +6,6 @@
 #include "core/modal.h"
 #include "platform/ui.h"
 #include "core/window_manager.h"
-#include "core/vim.h"
 #include "helpers/helpers_ui.h"
 #include "config_values.h"
 #include "core/types.h"
@@ -14,7 +14,6 @@
 
 int last_index = 0;
 
-#include "bindings/vim_state.h"
 #include <string.h>
 
 static EditSelection g_sel;
