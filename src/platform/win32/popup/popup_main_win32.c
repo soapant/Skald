@@ -445,7 +445,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       return 0;
     }
     break;
-  }
   case WM_MEASUREITEM: {
     MEASUREITEMSTRUCT *pmis = (MEASUREITEMSTRUCT *)lParam;
     if (pmis->CtlID == IDC_LIST_BOX) {
@@ -753,13 +752,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
       HFONT hOldFont = hMainFont ? (HFONT)SelectObject(paintDC, hMainFont) : NULL;
       SetBkMode(paintDC, TRANSPARENT);
-      if (MODE_INSERT == MODE_NORMAL) {
-        SetTextColor(paintDC, COLOR_NORMAL_MODE_TEXT);
-      } else if (MODE_INSERT == MODE_INSERT) {
-        SetTextColor(paintDC, COLOR_INSERT_MODE_TEXT);
-      } else {
-        SetTextColor(paintDC, COLOR_VISUAL_MODE_TEXT);
-      }
+      SetTextColor(paintDC, COLOR_INSERT_MODE_TEXT);
       SIZE sz;
       GetTextExtentPoint32W(paintDC, wmode, (int)wcslen(wmode), &sz);
       RECT modeRect;

@@ -147,6 +147,7 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
     long long now = Platform_GetWallClockMs();
     if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
       last_tick = now;
+    }
   }
   if (popup->manager == NULL) {
     if (popup->vtable && popup->vtable->destroy)

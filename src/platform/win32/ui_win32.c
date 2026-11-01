@@ -508,7 +508,7 @@ bool UI_ApplyBackspaceToPopup(FlintContext *ctx) {
   strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter) - 1);
   ws->filter[sizeof(ws->filter) - 1] = '\0';
   if (ctx->prompt_callbacks.refresh) {
-    ListBoxInfo *lb = Edit_GetListBox(ctx);
+    ListBoxInfo *lb = NULL; (void)lb;
     ctx->prompt_callbacks.refresh(ws);
   }
   UI_ApplyFilterToEdit(ctx);
