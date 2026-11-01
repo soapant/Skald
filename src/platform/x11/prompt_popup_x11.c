@@ -144,7 +144,7 @@ bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
     return true;
   }
 
-  if (IsInsertMode() && key->text_len > 0) {
+  if (true && key->text_len > 0) {
     bool swallow = HotkeyText_ShouldSwallow(key);
     if (!swallow && HotkeyText_IsPrintable(key)) {
       Prompt_InsertText(state, key->text, key->text_len);

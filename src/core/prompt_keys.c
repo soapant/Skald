@@ -231,7 +231,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       state->cursor = 0;
     } else {
       size_t fcur = (size_t)state->cursor;
-      if (!EditBufferBackspacePair(state->filter, &fcur) && IsInsertMode()) {
+      if (!EditBufferBackspacePair(state->filter, &fcur) && true) {
         EditBufferBackspace(state->filter, &fcur);
       }
       state->cursor = (int)fcur;
@@ -319,7 +319,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     Prompt_TriggerEnter(state, ctrl, shift, alt);
     return true;
   }
-  if (vk == COPY_SELECTION_KEY && !IsInsertMode()) {
+  if (vk == COPY_SELECTION_KEY && !true) {
     if (shift || ctrl) {
       int type = shift ? 0 : 1;
       int idx = -1;
