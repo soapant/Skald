@@ -2570,3 +2570,7 @@ bool fl_hotkey_down(FlKey key) {
     return false;
   return true;
 }
+
+void fl_register_key_interceptor(FlKeyInterceptorFn fn) {
+  Platform_RegisterKeyInterceptor((PlatformKeyInterceptorFn)fn);
+}

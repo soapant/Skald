@@ -107,6 +107,9 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
   int vk = key->vk;
   bool ctrl = key->ctrl;
 
+  if (Platform_InvokeKeyInterceptor(vk, ctrl, key->shift, key->alt))
+    return true;
+
   if (PromptController_TryVimMotion(vk, ctrl, key->shift, key->alt)) {
     return true;
   }
