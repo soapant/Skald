@@ -75,7 +75,6 @@ static void PromptPopup_OnShow(Popup *self) {
   ListBoxInfo_Init(&data->state->lb);
   data->state->no_bg = data->spec.no_bg;
   data->state->lb.selected_index = -1;
-  SetModeWithListBox(MODE_INSERT, &data->state->lb);
   self->user_data = data->state;
   data->state->no_bg = data->spec.no_bg;
 
