@@ -7,5 +7,4 @@
 
 extern int last_index;
 
-
 #endif

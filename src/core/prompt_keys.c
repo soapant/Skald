@@ -1,3 +1,4 @@
+#include "core/vim.h"
 #include "core/prompt_keys.h"
 
 #include <stdlib.h>
@@ -261,17 +262,17 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   }
   if (vk == VK_HOME) {
     VimState_EndSelection();
-    SetCursorToStartOfText(ctx);
+    state->cursor = 0;
     return true;
   }
   if (vk == VK_END) {
     VimState_EndSelection();
-    SetCursorToEndOfText(ctx);
+    state->cursor = (int)strlen(state->filter);
     return true;
   }
   if (vk == VK_UP) {
     if (ctrl) {
-      SetCursorToStartOfText(ctx);
+      state->cursor = 0;
       return true;
     }
     if (state->has_listbox) {
@@ -292,7 +293,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   }
   if (vk == VK_DOWN) {
     if (ctrl) {
-      SetCursorToEndOfText(ctx);
+      state->cursor = (int)strlen(state->filter);
       return true;
     }
     if (state->has_listbox)
