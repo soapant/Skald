@@ -7,12 +7,12 @@
 #include "bindings/vim_bindings.h"
 
 typedef struct {
-  VimMotionHandler handler;
+  EditMotionHandler handler;
   const char *sequence;
   int typed_count;
-} VimMotion;
+} EditMotion;
 
-bool CheckVimMotion(int pressed_vk, int modifiers, VimMotion *out);
-void ExecuteMotion(const VimMotion *motion);
+bool CheckEditMotion(int pressed_vk, int modifiers, EditMotion *out);
+void ExecuteMotion(const EditMotion *motion);
 
 #endif

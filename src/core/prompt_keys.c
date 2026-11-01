@@ -35,7 +35,7 @@ bool Prompt_DeleteSelection(PromptState *state) {
   if (!state)
     return false;
   int ss = 0, se = 0;
-  if (!VimState_GetSelection(&ss, &se)) {
+  if (!EditState_GetSelection(&ss, &se)) {
     return false;
   }
   if (se < ss) {
@@ -51,10 +51,10 @@ bool Prompt_DeleteSelection(PromptState *state) {
   if (se > ss) {
     memmove(state->filter + ss, state->filter + se, len - se + 1);
     state->cursor = ss;
-    VimState_EndSelection();
+    EditState_EndSelection();
     return true;
   }
-  VimState_EndSelection();
+  EditState_EndSelection();
   return false;
 }
 
@@ -188,15 +188,15 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
 
   if (ctrl && (vk == 'A' || vk == 'a')) {
     int len = (int)strlen(state->filter);
-    VimState_BeginSelection(0);
-    VimState_UpdateSelection(len);
+    EditState_BeginSelection(0);
+    EditState_UpdateSelection(len);
     state->cursor = len;
     Prompt_Refresh(state);
     return true;
   }
   if (ctrl && (vk == 'C' || vk == 'c')) {
     int ss = 0, se = 0;
-    if (VimState_GetSelection(&ss, &se)) {
+    if (EditState_GetSelection(&ss, &se)) {
       if (se < ss) {
         int t = ss;
         ss = se;
@@ -219,7 +219,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     }
     return true;
   }
-  if (PromptController_TryVimMotion(vk, ctrl, shift, alt)) {
+  if (PromptController_TryEditMotion(vk, ctrl, shift, alt)) {
     return true;
   }
   if (vk == VK_BACK) {
@@ -251,22 +251,22 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_RIGHT) {
-    VimState_EndSelection();
+    EditState_EndSelection();
     CursorForward(&state->cursor, strlen(state->filter));
     return true;
   }
   if (vk == VK_LEFT) {
-    VimState_EndSelection();
+    EditState_EndSelection();
     CursorBack(&state->cursor, strlen(state->filter));
     return true;
   }
   if (vk == VK_HOME) {
-    VimState_EndSelection();
+    EditState_EndSelection();
     state->cursor = 0;
     return true;
   }
   if (vk == VK_END) {
-    VimState_EndSelection();
+    EditState_EndSelection();
     state->cursor = (int)strlen(state->filter);
     return true;
   }

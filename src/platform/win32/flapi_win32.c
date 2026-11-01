@@ -505,7 +505,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   ebi.text = buf;
   ebi.text_len = text_len;
   ebi.cursor = cursor;
-  ebi.insert_mode = true || !EnableVimMode;
+  ebi.insert_mode = true || !EnableEditMode;
   ebi.x = x;
   ebi.y = y_raw;
   ebi.w = w;

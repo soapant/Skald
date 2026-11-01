@@ -8,7 +8,7 @@
 #include "core/types.h"
 #include "core/types/keys.h"
 
-bool PromptController_TryVimMotion(int wParam, bool ctrl, bool shift,
+bool PromptController_TryEditMotion(int wParam, bool ctrl, bool shift,
                                     bool alt) {
   (void)wParam;
   (void)ctrl;

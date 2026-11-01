@@ -1611,10 +1611,10 @@ void Platform_CleanupDisplaySafe(void) {
 void Platform_InitMainThreadContext(void) {}
 
 void Platform_FixWorkingDirectory(void) {}
-void CleanupPerFeatureVimMap(void) {}
+void CleanupPerFeatureEditMap(void) {}
 
 void Platform_CleanupPlatformResources(void) {
-  CleanupPerFeatureVimMap();
+  CleanupPerFeatureEditMap();
   {
     extern void x11_default_apps_free_cache(void);
     x11_default_apps_free_cache();

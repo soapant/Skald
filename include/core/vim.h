@@ -1,5 +1,5 @@
-#ifndef VIM_H
-#define VIM_H
+#ifndef EDIT_H
+#define EDIT_H
 #include "core/types.h"
 #include "core/context.h"
 #include <stddef.h>
@@ -7,14 +7,14 @@
 
 typedef struct {
   ListBoxInfo *lb;
-} VimContext;
+} EditContext;
 
-void Vim_GetText(FlintContext *ctx, char *buf, size_t cap);
-void Vim_SetText(FlintContext *ctx, const char *text);
-int Vim_GetCursor(FlintContext *ctx);
-void Vim_SetCursor(FlintContext *ctx, int pos);
-ListBoxInfo *Vim_GetListBox(FlintContext *ctx);
-PromptState* Vim_GetPromptState();
+void Edit_GetText(FlintContext *ctx, char *buf, size_t cap);
+void Edit_SetText(FlintContext *ctx, const char *text);
+int Edit_GetCursor(FlintContext *ctx);
+void Edit_SetCursor(FlintContext *ctx, int pos);
+ListBoxInfo *Edit_GetListBox(FlintContext *ctx);
+PromptState* Edit_GetPromptState();
 
 void SequenceAddKey(char key, bool was_typed);
 void SequenceReset(void);

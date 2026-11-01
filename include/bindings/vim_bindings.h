@@ -1,16 +1,16 @@
 
-#ifndef VIM_BINDINGS_H
-#define VIM_BINDINGS_H
+#ifndef EDIT_BINDINGS_H
+#define EDIT_BINDINGS_H
 
 #include "bindings/vim_motions.h"
 #include "config.h"
 
-typedef void (*VimMotionHandler)(FlintContext *);
+typedef void (*EditMotionHandler)(FlintContext *);
 
-extern const MotionBinding G_VIM_BINDINGS[];
-extern const SequenceBinding G_VIM_SEQUENCE_BINDINGS[];
+extern const MotionBinding G_EDIT_BINDINGS[];
+extern const SequenceBinding G_EDIT_SEQUENCE_BINDINGS[];
 
-int VimBindings_Get(const MotionBinding **out);
-int VimSequenceBindings_Get(const SequenceBinding **out);
+int EditBindings_Get(const MotionBinding **out);
+int EditSequenceBindings_Get(const SequenceBinding **out);
 
 #endif

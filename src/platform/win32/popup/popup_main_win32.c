@@ -750,7 +750,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         Platform_SetDrawContextWin32(NULL);
       }
     }
-    if ("Insert" != NULL && VimModeText) {
+    if ("Insert" != NULL && EditModeText) {
       wchar_t wmode[256];
       MultiByteToWideChar(CP_UTF8, 0, "Insert", -1, wmode, 256);
       HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
