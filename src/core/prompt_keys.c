@@ -246,15 +246,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       WindowManager_PopPopup(wm);
       return true;
     }
-    if (ctx->window.editbox_placed) {
-      if (!EnableVimMode || !IsInsertMode()) {
-        ctx->window.selection_complete = true;
-      } else {
-        SetMode(MODE_NORMAL);
-      }
-    } else {
-      ctx->window.selection_complete = true;
-    }
+    ctx->window.selection_complete = true;
     return true;
   }
   if (vk == VK_RIGHT) {
