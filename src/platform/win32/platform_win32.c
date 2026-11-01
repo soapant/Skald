@@ -2343,3 +2343,15 @@ bool Platform_MutexTryLock(void *mutex) {
     return false;
   return TryEnterCriticalSection((CRITICAL_SECTION *)mutex) != 0;
 }
+
+static PlatformKeyInterceptorFn g_platform_key_interceptor = NULL;
+
+void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn) {
+  g_platform_key_interceptor = fn;
+}
+
+bool Platform_InvokeKeyInterceptor(int vk, bool ctrl, bool shift, bool alt) {
+  if (!g_platform_key_interceptor)
+    return false;
+  return g_platform_key_interceptor(vk, ctrl, shift, alt);
+}

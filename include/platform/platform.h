@@ -96,6 +96,10 @@ bool Platform_IsCtrlPressed(void);
 bool Platform_IsShiftPressed(void);
 bool Platform_IsAltPressed(void);
 bool Platform_IsSuperPressed(void);
+
+typedef bool (*PlatformKeyInterceptorFn)(int vk, bool ctrl, bool shift, bool alt);
+void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn);
+bool Platform_InvokeKeyInterceptor(int vk, bool ctrl, bool shift, bool alt);
 bool Platform_ExpandPath(const char *template_path, char *out, size_t out_size);
 bool Platform_StringContainsCaseInsensitive(const char *haystack,
                                             const char *needle);
