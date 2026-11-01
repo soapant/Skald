@@ -53,8 +53,6 @@ typedef struct {
   uint32_t main_thread_id;
   WindowContext window;
   PromptCallbacks prompt_callbacks;
-  void *win32_keyboard_hook;
-  void *win32_mouse_hook;
   HashMap *feature_history;
   HashMap *item_index_map;
   HashMap *history_indices;

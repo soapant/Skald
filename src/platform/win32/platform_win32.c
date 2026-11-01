@@ -1485,6 +1485,9 @@ bool Platform_TryAcquireSingleInstance(void) {
   return true;
 }
 
+static HHOOK s_win32_keyboard_hook = NULL;
+static HHOOK s_win32_mouse_hook = NULL;
+
 bool Platform_InitDisplaySafe(void) { return true; }
 
 void Platform_CleanupDisplaySafe(void) {}
@@ -1905,18 +1908,18 @@ void Platform_InitUI() {
   searchPopupWc.lpszClassName = "SearchPopupClass";
   RegisterClassA(&searchPopupWc);
 
-  FlintContext_Get()->win32_keyboard_hook =
+  s_win32_keyboard_hook =
       SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, NULL, 0);
-  if (!FlintContext_Get()->win32_keyboard_hook) {
+  if (!s_win32_keyboard_hook) {
     log_warn("WH_KEYBOARD_LL hook FAILED to install err=%lu", GetLastError());
   } else {
     log_warn("WH_KEYBOARD_LL hook installed handle=%p",
-             (void *)FlintContext_Get()->win32_keyboard_hook);
+             (void *)s_win32_keyboard_hook);
   }
 
   Platform_RegisterRawMouse(
       WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd));
-  FlintContext_Get()->win32_mouse_hook = NULL;
+  s_win32_mouse_hook = NULL;
 
   FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
   log_warn("warm font size=%d face='%s' created=%d", FontSize,
@@ -1930,13 +1933,13 @@ void Platform_ShutdownUI() {
     extern void win32_img_cache_free_all(void);
     win32_img_cache_free_all();
   }
-  if (FlintContext_Get()->win32_keyboard_hook) {
-    UnhookWindowsHookEx((HHOOK)FlintContext_Get()->win32_keyboard_hook);
-    FlintContext_Get()->win32_keyboard_hook = NULL;
+  if (s_win32_keyboard_hook) {
+    UnhookWindowsHookEx((HHOOK)s_win32_keyboard_hook);
+    s_win32_keyboard_hook = NULL;
   }
-  if (FlintContext_Get()->win32_mouse_hook) {
-    UnhookWindowsHookEx((HHOOK)FlintContext_Get()->win32_mouse_hook);
-    FlintContext_Get()->win32_mouse_hook = NULL;
+  if (s_win32_mouse_hook) {
+    UnhookWindowsHookEx((HHOOK)s_win32_mouse_hook);
+    s_win32_mouse_hook = NULL;
   }
   if (g_gdiplusToken != 0) {
     GdiplusShutdown(g_gdiplusToken);
