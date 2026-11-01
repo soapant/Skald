@@ -2268,8 +2268,8 @@ void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn) {
   g_platform_key_interceptor = fn;
 }
 
-bool Platform_InvokeKeyInterceptor(int vk, bool ctrl, bool shift, bool alt) {
+bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key) {
   if (!g_platform_key_interceptor)
     return false;
-  return g_platform_key_interceptor(vk, ctrl, shift, alt);
+  return g_platform_key_interceptor(key);
 }

@@ -1,8 +1,8 @@
 #include "core/flapi.h"
 #include <stdio.h>
 
-static bool vim_key_interceptor(int vk, bool ctrl, bool shift, bool alt) {
-  if (vk == 'K' || vk == 'k') {
+static bool vim_key_interceptor(const PopupKeyEvent *key) {
+  if (key && (key->vk == 'K' || key->vk == 'k')) {
     printf("vim: swallowed K\n");
     return true;
   }
