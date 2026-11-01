@@ -218,10 +218,8 @@ void Platform_EditPopupDestroyWindow(Popup *self) {
 
 bool Platform_EditPopupOnKey(Popup *self, const PopupKeyEvent *key) {
   WMEditPopupData *ed = (WMEditPopupData *)self;
-  if (!ed || !ed->text || !key)
-    return false;
-  if (EditPopup_HandleKey(ed, key))
-    return true;
+  if (!ed || !ed->text || !key)  return false;
+  if (EditPopup_HandleKey(ed, key)) return true;
 
   int wParam = key->vk;
   bool ctrl_pressed = key->ctrl;
