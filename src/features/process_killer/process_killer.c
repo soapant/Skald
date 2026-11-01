@@ -362,7 +362,7 @@ static void pk_render_callback(PromptState *state) {
     }
   }
 
-  if (fl_ctrl_pressed() && fl_is_key_pressed('L')) {
+  if (fl_hotkey_down(fl_hotkey_from_string("Ctrl+L"))) {
     pk_cycle_sort();
     fl_populate_listbox(&state->lb, NULL, g_pk_items, g_pk_count);
   }
