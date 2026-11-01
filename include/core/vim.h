@@ -14,6 +14,7 @@ void Vim_SetText(FlintContext *ctx, const char *text);
 int Vim_GetCursor(FlintContext *ctx);
 void Vim_SetCursor(FlintContext *ctx, int pos);
 ListBoxInfo *Vim_GetListBox(FlintContext *ctx);
+PromptState* Vim_GetPromptState();
 
 void SequenceAddKey(char key, bool was_typed);
 void SequenceReset(void);

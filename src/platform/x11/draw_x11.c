@@ -952,7 +952,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
   if (!state || !state->has_listbox)
     return;
   FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-  ListBoxInfo *lb = &state->listbox;
+  ListBoxInfo *lb = &state->lb;
   if (!lb->populated_count) {
     Platform_DestroyFont(font);
     return;

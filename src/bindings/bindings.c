@@ -254,13 +254,11 @@ void ExecuteMotion(const VimMotion *motion) {
   if (!motion || !motion->handler)
     return;
   FlintContext *ctx = FlintContext_Get();
+  PromptState *state = Vim_GetPromptState();
   if (motion->typed_count > 0 && motion->sequence &&
-      motion->sequence[0] != '\0' && IsInsertMode()) {
+    motion->sequence[0] != '\0' && IsInsertMode()) {
     DeleteLastTypedChar(ctx);
-    if (ctx->prompt_callbacks.refresh) {
-      ListBoxInfo *lb = Vim_GetListBox(ctx);
-      ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
-    }
   }
   motion->handler(ctx);
+  ctx->prompt_callbacks.refresh(state);
 }

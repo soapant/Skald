@@ -379,7 +379,7 @@ int UI_InsertChar(wchar_t wc) {
 }
 
 PromptState *g_win32_prompt_state = NULL;
-void UI_RedrawNow(ListBoxInfo *lb) {
+void UI_RedrawNow() {
   HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     UI_RequestPopupRepaint();
@@ -391,7 +391,7 @@ void UI_Redraw(ListBoxInfo *lb) {
     HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     if (hPopup)
       KillTimer(hPopup, UI_DEBOUNCE_TIMER_ID);
-    UI_RedrawNow(lb);
+    UI_RedrawNow();
     return;
   }
   if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {

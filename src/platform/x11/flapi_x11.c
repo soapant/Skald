@@ -510,7 +510,7 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
       Popup *_p = wmgr->popups[_i];
       if (_p && _p->user_data && _p->type == POPUP_PROMPT) {
         PromptState *_ps = (PromptState *)_p->user_data;
-        if (&_ps->listbox == lb) {
+        if (&_ps->lb == lb) {
           st = _ps;
           break;
         }

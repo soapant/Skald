@@ -12,7 +12,6 @@
 SequenceState seq_state = {0};
 
 ListBoxInfo *Vim_GetListBox(FlintContext *ctx) {
-  (void)ctx;
   WindowManager *wm = WindowManager_Get();
   if (wm) {
     Popup *top = WindowManager_GetTopPopup(wm);
@@ -22,11 +21,25 @@ ListBoxInfo *Vim_GetListBox(FlintContext *ctx) {
       if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState *s = (PromptState *)top->user_data;
         if (s->has_listbox)
-          return &s->listbox;
+          return &s->lb;
       }
     }
   }
   return UI_GetPopupListBox(ctx);
+}
+
+PromptState *Vim_GetPromptState() {
+  WindowManager *wm = WindowManager_Get();
+  if (wm) {
+    Popup *top = WindowManager_GetTopPopup(wm);
+    if (top) {
+      if (top->type == POPUP_PROMPT) {
+        PromptState *state = (PromptState*)top->user_data;
+        return state;
+      }
+    }
+  }
+  return NULL;
 }
 
 void Vim_GetText(FlintContext *ctx, char *buf, size_t cap) {
@@ -83,7 +96,7 @@ void Vim_SetText(FlintContext *ctx, const char *text) {
   SyncFilterToActiveState(ctx);
   if (ctx->prompt_callbacks.refresh) {
     ListBoxInfo *lb = Vim_GetListBox(ctx);
-    ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
+    // ctx->prompt_callbacks.refresh(s);
   }
   UI_ApplyFilterToEdit(ctx);
 }
@@ -256,8 +269,8 @@ void DeleteLastTypedChar(FlintContext *ctx) {
     }
     return;
   }
+  PromptState *s = (PromptState *)top->user_data;
   if (top && top->user_data && top->type == POPUP_PROMPT) {
-    PromptState *s = (PromptState *)top->user_data;
     int len = (int)strlen(s->filter);
     int cur = s->cursor;
     if (cur > 0 && len > 0) {
@@ -269,7 +282,7 @@ void DeleteLastTypedChar(FlintContext *ctx) {
       ctx->window.filter_cursor = s->cursor;
       if (ctx->prompt_callbacks.refresh) {
         ListBoxInfo *lb = Vim_GetListBox(ctx);
-        ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
+        ctx->prompt_callbacks.refresh(s);
       }
       UI_ApplyFilterToEdit(ctx);
       return;
@@ -291,7 +304,7 @@ void DeleteLastTypedChar(FlintContext *ctx) {
   SyncFilterToActiveState(ctx);
   if (ctx->prompt_callbacks.refresh) {
     ListBoxInfo *lb = Vim_GetListBox(ctx);
-    ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
+    ctx->prompt_callbacks.refresh(s);
   }
   UI_ApplyFilterToEdit(ctx);
 }

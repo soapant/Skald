@@ -45,29 +45,29 @@ char *get_zoxide_match(char *query) {
 }
 
 const char *TerminalZoxideFilePath = "TerminalZoxide.txt";
-static void zoxide_refresh(const char *filter, ListBoxInfo *lb) {
+static void zoxide_refresh(PromptState *state) {
   FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
-  fl_populate_listbox(lb, filter, (const char **)files.items, files.count);
+  fl_populate_listbox(&state->lb,state->filter, (const char **)files.items, files.count);
   fl_free_file_list(&files);
 }
-static void zoxide_edit(ListBoxInfo *lb) {
+static void zoxide_edit(PromptState *state) {
   int idx = -1;
-  char *edited = fl_edit_text_popup(.initial_text = lb->selected_text, .lb = lb,
+  char *edited = fl_edit_text_popup(.initial_text = state->lb.selected_text, .lb = &state->lb,
                                     .out_index = &idx);
   if (!edited)
     return;
   if (idx >= 0)
     fl_replace_line_in_file(TerminalZoxideFilePath, idx, edited);
   free(edited);
-  zoxide_refresh("", lb);
+  zoxide_refresh(state);
 }
-static bool zoxide_enter(ListBoxInfo *lb) {
-  char *path = get_zoxide_match((char *)lb->selected_text);
+static bool zoxide_enter(PromptState *state) {
+  char *path = get_zoxide_match((char *)state->lb.selected_text);
   if (!path)
     return false;
   fl_launch_terminal_at_path(path, NULL);
-  if (!fl_is_selected(lb))
-    fl_append_unique_line(TerminalZoxideFilePath, lb->selected_text);
+  if (!fl_is_selected(&state->lb))
+      fl_append_unique_line(TerminalZoxideFilePath, state->lb.selected_text);
   free(path);
   return true;
 }
