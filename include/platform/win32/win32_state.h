@@ -1,6 +1,9 @@
 #ifndef WIN32_STATE_H
 #define WIN32_STATE_H
 #include <windows.h>
+#include <stdint.h>
+
+extern uint32_t g_win32_main_thread_id;
 #include <stdbool.h>
 #include <stdint.h>
 #include "core/types.h"
