@@ -1488,12 +1488,14 @@ bool Platform_TryAcquireSingleInstance(void) {
 static HHOOK s_win32_keyboard_hook = NULL;
 static HHOOK s_win32_mouse_hook = NULL;
 
+uint32_t g_win32_main_thread_id = 0;
+
 bool Platform_InitDisplaySafe(void) { return true; }
 
 void Platform_CleanupDisplaySafe(void) {}
 
 void Platform_InitMainThreadContext(void) {
-  FlintContext_Get()->main_thread_id = GetCurrentThreadId();
+  g_win32_main_thread_id = GetCurrentThreadId();
 }
 
 static int win32_dir_exists(const char *path) {
