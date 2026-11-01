@@ -7,7 +7,6 @@
 #include "config.h"
 #include "core/context.h"
 #include "core/window_manager.h"
-#include "core/vim.h"
 #include "platform/win32/win32_state.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"

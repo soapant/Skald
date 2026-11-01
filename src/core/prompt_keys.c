@@ -1,4 +1,4 @@
-#include "core/vim.h"
+#include "core/edit_state.h"
 #include "core/prompt_keys.h"
 
 #include <stdlib.h>
@@ -11,8 +11,6 @@
 #include "core/modal.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_controller.h"
-#include "bindings/vim_helpers.h"
-#include "bindings/vim_state.h"
 #include "platform/input.h"
 #include "platform/platform.h"
 #include "platform/ui.h"

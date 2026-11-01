@@ -1,3 +1,4 @@
+#include "core/edit_state.h"
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 #include <string.h>
@@ -7,7 +8,6 @@
 #include <stdbool.h>
 
 #include "core/modal.h"
-#include "bindings/vim_state.h"
 #include "core/window_manager.h"
 #include "wm/wm.h"
 #include "platform/platform.h"
