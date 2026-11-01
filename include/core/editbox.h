@@ -53,7 +53,7 @@ typedef struct {
   int rainbow_limit_x;
 
   const char *placeholder;
-  unsigned long text_color;
+  ColorRef text_color;
   FontHandle font;
 
   FlEditboxMeasureFn measure;
