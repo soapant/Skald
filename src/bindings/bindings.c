@@ -260,5 +260,7 @@ void ExecuteMotion(const VimMotion *motion) {
     DeleteLastTypedChar(ctx);
   }
   motion->handler(ctx);
-  ctx->prompt_callbacks.refresh(state);
+  if (state) {
+    ctx->prompt_callbacks.refresh(state);
+  }
 }

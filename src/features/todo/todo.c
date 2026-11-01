@@ -344,9 +344,7 @@ void todo_edit_callback(PromptState *state) {
                                     .out_index = &idx);
   if (!edited)
     return;
-  if (idx >= 0)
-    fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
-  free(edited);
+  if (idx >= 0)  fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
   todo_refresh_callback(state);
 }
 

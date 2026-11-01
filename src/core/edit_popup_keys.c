@@ -177,10 +177,8 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_RETURN) {
-    if (ed->on_confirm)
-      ed->on_confirm(ed->text, ed->user_data);
+    if (ed->on_confirm)  ed->on_confirm(ed->text, ed->user_data);
     ed->confirmed = true;
-    FlintContext_Get()->window.selection_complete = true;
     return true;
   }
   if (vk == 'V' && ctrl) {

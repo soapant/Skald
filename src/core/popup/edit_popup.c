@@ -10,25 +10,22 @@
 typedef WMEditPopupData EditPopupDataInternal;
 
 static void EditPopup_OnShow(Popup *self) {
-
   EditPopupDataInternal *data = (EditPopupDataInternal *)self;
   data->mode = MODE_INSERT;
   Platform_EditPopupShowWindow(self);
 }
 
 static void EditPopup_OnHide(Popup *self) {
-
   Platform_EditPopupHideWindow(self);
 }
 
 static void EditPopup_OnRender(Popup *self) { Platform_EditPopupRender(self); }
 
 static bool EditPopup_OnKey(Popup *self, const PopupKeyEvent *key) {
-  return Platform_EditPopupOnKey(self, key);
+    return Platform_EditPopupOnKey(self, key);
 }
 
 static void EditPopup_Destroy(Popup *self) {
-
   EditPopupDataInternal *data = (EditPopupDataInternal *)self;
   free(data->text);
   free(data->align);
