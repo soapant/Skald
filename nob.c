@@ -1,5 +1,4 @@
 #define NOB_IMPLEMENTATION
-#define NOB_NO_ECHO
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #include "nob.h"
 #if !defined(_WIN32)

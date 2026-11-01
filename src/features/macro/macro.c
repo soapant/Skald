@@ -396,7 +396,6 @@ static void macro_refresh(PromptState *state) {
 }
 
 static bool macro_load_enter(PromptState *state) {
-  (void)&state->lb;
   if (state->lb.selected_text)
     macro_load(state->lb.selected_text);
   return true;

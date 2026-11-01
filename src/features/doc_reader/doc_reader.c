@@ -289,8 +289,10 @@ static void get_doc_details(const char *name, char *out, size_t cap) {
 
 bool doc_enter(PromptState *state) {
   char details[1024];
-  get_doc_details(state->lb.selected_text, details, sizeof(details));
-  fl_message(.message = details, .slot = CENTER, .close_on_keypress = true);
+  if (fl_is_selected(&state->lb)) {
+    get_doc_details(state->lb.selected_text, details, sizeof(details));
+    fl_message(.message = details, .slot = CENTER, .close_on_keypress = true);
+  }
   return false;
 }
 
