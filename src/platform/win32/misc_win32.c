@@ -295,7 +295,7 @@ bool Platform_QueryBrowser(char *query) {
     snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s",
              encoded_query);
   } else {
-    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
+    snprintf(url, sizeof(url), "https://google.com/?q=%s", encoded_query);
   }
 
   char command[4096];

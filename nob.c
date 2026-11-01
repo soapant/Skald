@@ -49,10 +49,10 @@
 #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
 #define PKG_CFLAGS_PKGS_STR                                                    \
   "libcurl x11 xft fontconfig freetype2 gio-unix-2.0 xext xrandr xrender "     \
-  "xtst xi libpulse"
+  "xtst xi"
 #define PKG_LIBS_PKGS_STR                                                      \
   " libcurl x11 xft fontconfig xext xrandr xrender xtst xi gio-2.0 "           \
-  "gobject-2.0 libpulse"
+  "gobject-2.0"
 #endif
 
 static Nob_File_Paths sources = {0};
@@ -216,14 +216,10 @@ static char *run_capture(const char *cmdline) {
 }
 
 static void augment_pkg_config_path(void) {
-  if (system("pkg-config --exists glib-2.0 2>/dev/null") == 0) {
-    return;
-  }
   const char *need[] = {"x11",
                         "xft",
                         "fontconfig",
                         "freetype2",
-                        "glib-2.0",
                         "gio-2.0",
                         "gio-unix-2.0",
                         "gobject-2.0",
@@ -328,8 +324,7 @@ static void discover_dep_flags(void) {
     append_ws_split(&dep_cflags, cflags);
   } else {
     const char *fb[] = {
-        "-I/usr/include/freetype2",    "-I/usr/include/glib-2.0",
-        "-I/usr/lib/glib-2.0/include", "-I/usr/include/gio-unix-2.0",
+        "-I/usr/include/freetype2",    "-I/usr/include/gio-unix-2.0",
         "-I/usr/include/X11",          "-I/usr/include/freetype2",
     };
     for (size_t i = 0; i < sizeof(fb) / sizeof(fb[0]); i++)
@@ -351,7 +346,7 @@ static void discover_dep_flags(void) {
   } else {
     const char *fb[] = {
         "-lX11",  "-lXft",  "-lfontconfig", "-lXrender",  "-lXrandr",
-        "-lXext", "-lXtst", "-lgio-2.0",    "-lglib-2.0", "-lgobject-2.0",
+        "-lXext", "-lXtst", "-lgio-2.0","-lgobject-2.0",
     };
     for (size_t i = 0; i < sizeof(fb) / sizeof(fb[0]); i++)
       nob_da_append(&dep_ldflags, nob_temp_strdup(fb[i]));
