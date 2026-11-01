@@ -384,31 +384,32 @@ static void macro_refresh_cache(void) {
   }
 }
 
-static void macro_refresh(const char *filter, ListBoxInfo *lb) {
+static void macro_refresh(PromptState *state) {
   macro_refresh_cache();
   int n = (int)macro_load_files.count;
   if (n > MAX_VISIBLE_ITEMS)
     n = MAX_VISIBLE_ITEMS;
-  for (int i = 0; i < n; i++)
+  for (int i = 0; i < n; i++) {
     macro_file_name_ptrs[i] = macro_load_files.files[i].name;
-  fl_populate_listbox(lb, filter, macro_file_name_ptrs, n);
+    fl_populate_listbox(&state->lb,state->filter, macro_file_name_ptrs, n);
+  }
 }
 
-static bool macro_load_enter(ListBoxInfo *lb) {
-  (void)lb;
-  if (lb->selected_text)
-    macro_load(lb->selected_text);
+static bool macro_load_enter(PromptState *state) {
+  (void)&state->lb;
+  if (state->lb.selected_text)
+    macro_load(state->lb.selected_text);
   return true;
 }
 
-static bool macro_load_ctrlenter(ListBoxInfo *lb) {
-  if (lb->selected_text && lb->selected_text[0]) {
-    char *path = fl_resolve_data_path(lb->selected_text);
+static bool macro_load_ctrlenter(PromptState *state) {
+  if (state->lb.selected_text && state->lb.selected_text[0]) {
+    char *path = fl_resolve_data_path(state->lb.selected_text);
     if (path) {
       remove(path);
       free(path);
     }
-    macro_refresh("", lb);
+    macro_refresh(state);
   }
   return false;
 }

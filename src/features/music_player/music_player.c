@@ -99,14 +99,14 @@ char *allowed_audio_formats[] = {"mp3", "ogg", "flac", NULL};
 ListOfFiles s_music_files = {0};
 static const char *s_music_items[MAX_VISIBLE_ITEMS];
 
-void music_refresh_callback(const char *filter, ListBoxInfo *lb) {
+void music_refresh_callback(PromptState *state) {
   size_t n = s_music_files.count;
   if (n > MAX_VISIBLE_ITEMS)
     n = MAX_VISIBLE_ITEMS;
   for (size_t i = 0; i < n; i++) {
     s_music_items[i] = s_music_files.files[i].name;
   }
-  fl_populate_listbox(lb, filter, s_music_items, (int)n);
+  fl_populate_listbox(&state->lb,state->filter, s_music_items, (int)n);
 }
 bool play_music(char *name) {
 #if defined(_WIN32)
@@ -137,10 +137,10 @@ bool play_music(char *name) {
   return true;
 }
 
-bool music_enter_callback(ListBoxInfo *lb) {
+bool music_enter_callback(PromptState *state) {
   char *result = NULL;
   for (size_t i = 0; i < s_music_files.count; i++) {
-    if (strcmp(s_music_files.files[i].name, lb->selected_text) == 0) {
+    if (strcmp(s_music_files.files[i].name, state->lb.selected_text) == 0) {
       result = s_music_files.files[i].path;
       break;
     }

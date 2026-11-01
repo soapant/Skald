@@ -175,7 +175,7 @@ static void *ch_sampler(void *arg) {
   return NULL;
 }
 
-void clipboard_history_refresh(const char *filter, ListBoxInfo *lb) {
+void clipboard_history_refresh(PromptState *state) {
   fl_mutex_lock(ch_lock);
   int count = ch_count;
   const char **items = NULL;
@@ -190,18 +190,18 @@ void clipboard_history_refresh(const char *filter, ListBoxInfo *lb) {
     }
   }
   fl_mutex_unlock(ch_lock);
-  fl_populate_listbox(lb, filter, items, count);
+  fl_populate_listbox(&state->lb,state->filter, items, count);
   fl_free_list(items, count);
 }
 
-bool clipboard_history_enter(ListBoxInfo *lb) {
-  (void)lb->selected_text;
-  if (!fl_is_selected(lb))
+bool clipboard_history_enter(PromptState *state) {
+  (void)state->lb.selected_text;
+  if (!fl_is_selected(&state->lb))
     return true;
-  int sel = lb->selected_index;
-  if (sel < 0 || sel >= lb->total_matches)
+  int sel = state->lb.selected_index;
+  if (sel < 0 || sel >= state->lb.total_matches)
     return true;
-  int idx = lb->matching_indices[sel];
+  int idx = state->lb.matching_indices[sel];
   char *copy = NULL;
   fl_mutex_lock(ch_lock);
   if (idx >= 0 && idx < ch_count && ch_items[ch_count - 1 - idx]) {

@@ -206,9 +206,9 @@ void UI_SetCursorPosition(int position) {
   }
 }
 
-void UI_RedrawNow(ListBoxInfo *lb) { Prompt_RedrawNow(lb); }
+void UI_RedrawNow() { }
 
-void UI_Redraw(ListBoxInfo *lb) { UI_RedrawNow(lb); }
+void UI_Redraw(PromptState* state) { UI_RedrawNow(state); }
 
 void UI_SyncFilterFromEdit(FlintContext *ctx) {
   if (!ctx) {
@@ -269,7 +269,7 @@ ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
     return NULL;
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    return prompt->has_listbox ? &prompt->listbox : NULL;
+    return prompt->has_listbox ? &prompt->lb : NULL;
   }
   return NULL;
 }

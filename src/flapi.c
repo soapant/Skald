@@ -794,14 +794,11 @@ void fl_message_impl(const FlMessageSpec *spec) {
   int h = spec->h > 0 ? spec->h : 0;
   int mw = spec->mw > 0 ? spec->mw : 0;
   int mh = spec->mh > 0 ? spec->mh : 0;
-  double timeout =
-      spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
-  if (spec->close_on_keypress)
-    timeout = 6969.0;
+  double timeout =  spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
+  if (spec->close_on_keypress)  timeout = 6969.0;
   ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
   if (spec->hover_key && spec->hover_key[0]) {
     if (spec->render) {
-
       FlHoverPopupCtx *ctx = fl_hover_popup_ctx_new(spec);
       if (ctx) {
         Platform_HoverWidgetShow((PlHoverWidgetShowSpec){
@@ -820,21 +817,20 @@ void fl_message_impl(const FlMessageSpec *spec) {
       }
       return;
     }
-    Platform_HoverMessage((PlHoverMessageSpec){.key = spec->hover_key,
-                                               .message = spec->message,
-                                               .x = spec->x,
-                                               .y = spec->y,
-                                               .w = w,
-                                               .h = h,
-                                               .max_width = mw,
-                                               .max_height = mh,
-                                               .color = color,
-                                               .no_bg = spec->no_bg});
+  Platform_HoverMessage((PlHoverMessageSpec){.key = spec->hover_key,
+                                             .message = spec->message,
+                                             .x = spec->x,
+                                             .y = spec->y,
+                                             .w = w,
+                                             .h = h,
+                                             .max_width = mw,
+                                             .max_height = mh,
+                                             .color = color,
+                                             .no_bg = spec->no_bg});
     return;
   }
-  MessageSlot slot = spec->slot;
+  MessageSlot slot = spec->slot ? spec->slot : FREE;
   if (slot == AUTO) {
-
     slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : TOP_CENTER;
   } else if (slot == FREE) {
     Platform_DisplayMessage(

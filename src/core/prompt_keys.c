@@ -26,8 +26,7 @@ void Prompt_Refresh(PromptState *state) {
   }
   FlintContext *ctx = FlintContext_Get();
   if (ctx && ctx->prompt_callbacks.refresh) {
-    ctx->prompt_callbacks.refresh(state->filter,
-                                  state->has_listbox ? &state->listbox : NULL);
+    ctx->prompt_callbacks.refresh(state);
   }
 }
 
@@ -74,8 +73,8 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
 void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   const char *sel = NULL;
   char filter_copy[sizeof(state->filter)];
-  if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
-    sel = ListBoxInfo_Row(&state->listbox, state->listbox.selected_index);
+  if (state->has_listbox && UI_IsListBoxSelected(&state->lb)) {
+    sel = ListBoxInfo_Row(&state->lb, state->lb.selected_index);
   } else {
     strncpy(filter_copy, state->filter, sizeof(filter_copy) - 1);
     filter_copy[sizeof(filter_copy) - 1] = '\0';
@@ -96,38 +95,38 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   if (ctrl && shift) {
     should_close = false;
     if (ctx->prompt_callbacks.ctrl_shift_enter)
-      should_close = ctx->prompt_callbacks.ctrl_shift_enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.ctrl_shift_enter(state);
     else if (ctx->prompt_callbacks.enter)
-      should_close = ctx->prompt_callbacks.enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.enter(state);
   } else if (ctrl && alt) {
     should_close = false;
     if (ctx->prompt_callbacks.ctrl_alt_enter)
-      should_close = ctx->prompt_callbacks.ctrl_alt_enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.ctrl_alt_enter(state);
     else if (ctx->prompt_callbacks.enter)
-      should_close = ctx->prompt_callbacks.enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.enter(state);
   } else if (shift && alt) {
     should_close = false;
     if (ctx->prompt_callbacks.shift_alt_enter)
-      should_close = ctx->prompt_callbacks.shift_alt_enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.shift_alt_enter(state);
     else if (ctx->prompt_callbacks.enter)
-      should_close = ctx->prompt_callbacks.enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.enter(state);
   } else if (shift) {
     should_close = false;
     if (ctx->prompt_callbacks.shift_enter)
-      should_close = ctx->prompt_callbacks.shift_enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.shift_enter(state);
     else if (ctx->prompt_callbacks.enter)
-      should_close = ctx->prompt_callbacks.enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.enter(state);
   } else if (ctrl) {
     should_close = false;
     log_info("CTRL_ENTER_BRANCH: ctrl_enter=%p sel='%s'",
              (void *)ctx->prompt_callbacks.ctrl_enter, sel ? sel : "(null)");
     if (ctx->prompt_callbacks.ctrl_enter) {
       log_info("CTRL_ENTER_CALLBACK_CALLING");
-      should_close = ctx->prompt_callbacks.ctrl_enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.ctrl_enter(state);
       log_info("CTRL_ENTER_CALLBACK_RETURNED should_close=%d", should_close);
     } else if (ctx->prompt_callbacks.enter) {
       log_info("ENTER_FALLBACK_CALLBACK_CALLING");
-      should_close = ctx->prompt_callbacks.enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.enter(state);
       log_info("ENTER_FALLBACK_CALLBACK_RETURNED should_close=%d",
                should_close);
     } else {
@@ -142,7 +141,7 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     if (ctx->prompt_callbacks.enter) {
       log_info("ENTER_CALLBACK_CALLING");
 
-      should_close = ctx->prompt_callbacks.enter(&state->listbox);
+      should_close = ctx->prompt_callbacks.enter(state);
 
       log_info("ENTER_CALLBACK_RETURNED should_close=%d", should_close);
     } else {
@@ -161,7 +160,7 @@ bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,
   ListBox_GetGeometry(&list_top, &item_height, &visible_count);
   if (item_height <= 0 || visible_count <= 0)
     return false;
-  ListBoxInfo *lb = &state->listbox;
+  ListBoxInfo *lb = &state->lb;
   int mx = 0, my = 0;
   if (!ListBox_ClientMousePos(&mx, &my))
     return false;
@@ -281,7 +280,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       return true;
     }
     if (state->has_listbox) {
-      if (state->listbox.selected_index == -1) {
+      if (state->lb.selected_index == -1) {
         char hist[512];
         const char *feat = ctx->window.current_feature;
         if (feat && History_CycleUp(feat, hist, sizeof(hist))) {
@@ -292,7 +291,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
           return true;
         }
       }
-      UI_NavigateUp(&state->listbox);
+      UI_NavigateUp(&state->lb);
     }
     return true;
   }
@@ -302,7 +301,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       return true;
     }
     if (state->has_listbox)
-      UI_NavigateDown(&state->listbox);
+      UI_NavigateDown(&state->lb);
     return true;
   }
   if (vk == VK_DELETE) {
@@ -318,7 +317,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   }
   if (vk == VK_TAB) {
     if (ctx->prompt_callbacks.tab)
-      ctx->prompt_callbacks.tab(&state->listbox);
+      ctx->prompt_callbacks.tab(state);
     return true;
   }
   if (vk == VK_RETURN) {
@@ -329,9 +328,9 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     if (shift || ctrl) {
       int type = shift ? 0 : 1;
       int idx = -1;
-      if (state->has_listbox && state->listbox.selected_index >= 0 &&
-          state->listbox.selected_index < state->listbox.populated_count) {
-        idx = state->listbox.matching_indices[state->listbox.selected_index];
+      if (state->has_listbox && state->lb.selected_index >= 0 &&
+          state->lb.selected_index < state->lb.populated_count) {
+        idx = state->lb.matching_indices[state->lb.selected_index];
       } else {
         idx = UI_LookupTrueIndex(ctx->window.output_buffer);
       }
@@ -382,16 +381,4 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     }
   }
   return false;
-}
-
-void Prompt_RedrawNow(ListBoxInfo *lb) {
-  FlintContext *ctx = FlintContext_Get();
-  if (!ctx) {
-    return;
-  }
-  if (ctx->prompt_callbacks.refresh != NULL) {
-    char buffer[MaxFeatures];
-    UI_GetCurrentTextEdit(buffer, sizeof(buffer));
-    ctx->prompt_callbacks.refresh(buffer, lb);
-  }
 }

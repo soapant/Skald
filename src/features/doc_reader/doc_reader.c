@@ -138,7 +138,7 @@ DocItem doc_item(const char *name) {
   return (DocItem){0};
 }
 
-void doc_refresh(const char *filter, ListBoxInfo *lb) {
+void doc_refresh(PromptState *state) {
   const char **names = malloc(g_doc_item_count * sizeof(const char *));
   for (int i = 0; i < g_doc_item_count; i++) {
     if (fl_string_contains("_impl", g_doc_items[i].name)) {
@@ -148,7 +148,7 @@ void doc_refresh(const char *filter, ListBoxInfo *lb) {
       names[i] = g_doc_items[i].name;
     }
   }
-  fl_populate_listbox(lb, filter, names, g_doc_item_count);
+  fl_populate_listbox(&state->lb,state->filter, names, g_doc_item_count);
 }
 
 static void collect_text(XMLNode *node, char *out, size_t cap, size_t *used) {
@@ -287,17 +287,16 @@ static void get_doc_details(const char *name, char *out, size_t cap) {
   free(content);
 }
 
-bool doc_enter(ListBoxInfo *lb) {
+bool doc_enter(PromptState *state) {
   char details[1024];
-  get_doc_details(lb->selected_text, details, sizeof(details));
+  get_doc_details(state->lb.selected_text, details, sizeof(details));
   fl_message(.message = details, .slot = CENTER, .close_on_keypress = true);
   return false;
 }
 
 void doc_render(PromptState *state) {
-  ListBoxInfo *lb = &state->listbox;
   FlListSpec spec = {
-      .lb = lb,
+      .lb = &state->lb,
   };
   if (!fl_listbox_begin(&spec))
     return;

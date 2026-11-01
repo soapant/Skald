@@ -1251,7 +1251,7 @@ void typing_test_reset(void) {
   text = typing_test_get_random_text(typing_test_word_count);
 }
 
-bool typing_test_enter(ListBoxInfo *lb) {
+bool typing_test_enter(PromptState *state) {
   typing_test_reset();
   text = typing_test_get_random_text(typing_test_word_count);
   return false;

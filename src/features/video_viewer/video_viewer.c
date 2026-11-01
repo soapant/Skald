@@ -117,7 +117,7 @@ char *allowed_video_formats[] = {"webm", "mp4"};
 ListOfFiles video_files = {0};
 static const char *s_video_items[MAX_VISIBLE_ITEMS];
 
-void video_refresh_callback(const char *filter, ListBoxInfo *lb) {
+void video_refresh_callback(PromptState *state) {
   video_files.count = 0;
   fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files,
                             NULL, true, FL_DIR_WALK_UNLIMITED);
@@ -128,13 +128,13 @@ void video_refresh_callback(const char *filter, ListBoxInfo *lb) {
   for (size_t i = 0; i < n; i++) {
     s_video_items[i] = video_files.files[i].name;
   }
-  fl_populate_listbox(lb, filter, s_video_items, (int)n);
+  fl_populate_listbox(&state->lb,state->filter, s_video_items, (int)n);
 }
 
-bool video_enter_callback(ListBoxInfo *lb) {
+bool video_enter_callback(PromptState *state) {
   char *result = NULL;
   for (size_t i = 0; i < video_files.count; i++) {
-    if (strcmp(video_files.files[i].name, lb->selected_text) == 0) {
+    if (strcmp(video_files.files[i].name, state->lb.selected_text) == 0) {
       result = video_files.files[i].path;
       break;
     }
@@ -144,7 +144,7 @@ bool video_enter_callback(ListBoxInfo *lb) {
     fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL,
                               true, FL_DIR_WALK_UNLIMITED);
     for (size_t i = 0; i < tmp.count; i++) {
-      if (strcmp(tmp.files[i].name, lb->selected_text) == 0) {
+      if (strcmp(tmp.files[i].name, state->lb.selected_text) == 0) {
         result = tmp.files[i].path;
         break;
       }

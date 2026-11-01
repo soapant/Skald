@@ -1,13 +1,13 @@
 #include "core/flapi.h"
 #include <stdio.h>
 
-void settings_refresh(const char *filter, ListBoxInfo *lb) {}
+void settings_refresh(PromptState *state) {}
 
-bool settings_enter(ListBoxInfo *lb) { return true; }
+bool settings_enter(PromptState *state) { return true; }
 
-bool settings_ctrl_enter(ListBoxInfo *lb) { return false; }
+bool settings_ctrl_enter(PromptState *state) { return false; }
 
-void settings_tab(ListBoxInfo *lb) {}
+void settings_tab(PromptState *state) {}
 
 void settings_render(PromptState *state) {
   fl_place_button(.name = "Checkbox", .x = state->width / 2,

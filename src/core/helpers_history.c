@@ -45,9 +45,6 @@ bool GetFromHistory(ListBoxInfo *lb) {
       UI_SetText(HistoryList[idx]);
       UI_SetCursorPosition(strlen(HistoryList[idx]));
 
-      if (!IsNormalMode()) {
-        UI_Redraw(lb);
-      }
       if (!idx_ptr) {
         idx_ptr = malloc(sizeof(int));
         if (!idx_ptr)

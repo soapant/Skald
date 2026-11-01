@@ -273,37 +273,36 @@ void RemoveTodoItemFromFile(const char *item_to_remove) {
   fl_free_file_list(&lines);
 }
 
-void todo_refresh_callback(const char *filter, ListBoxInfo *lb) {
+void todo_refresh_callback(PromptState *state) {
   FlStringList files = fl_load_file_list(TODO_FILE_PATH);
 
-  fl_populate_listbox(lb, filter, (const char **)files.items, files.count);
+  fl_populate_listbox(&state->lb,state->filter, (const char **)files.items, files.count);
   fl_free_file_list(&files);
 }
 
-bool todo_enter_callback(ListBoxInfo *lb) {
-  if (fl_is_selected(lb)) {
-    RemoveTodoItemFromFile(lb->selected_text);
+bool todo_enter_callback(PromptState *state) {
+  if (fl_is_selected(&state->lb)) {
+    RemoveTodoItemFromFile(state->lb.selected_text);
   } else {
-    AddTodoToFile(lb->selected_text);
+    AddTodoToFile(state->lb.selected_text);
   }
   return true;
 }
 
-bool todo_ctrlenter_callback(ListBoxInfo *lb) {
-  if (fl_is_selected(lb)) {
-    RemoveTodoItemFromFile(lb->selected_text);
+bool todo_ctrlenter_callback(PromptState *state) {
+  if (fl_is_selected(&state->lb)) {
+    RemoveTodoItemFromFile(state->lb.selected_text);
   } else {
-    AddTodoToFile(lb->selected_text);
+    AddTodoToFile(state->lb.selected_text);
     fl_set_edit_text("");
   }
-  todo_refresh_callback("", lb);
+  todo_refresh_callback(state);
   return false;
 }
 
 void todo_render_callback(PromptState *state) {
-  ListBoxInfo *lb = &state->listbox;
   int line_h = fl_get_text_height(NULL);
-  FlListSpec spec = {.lb = lb, .item_height = line_h * 3 + 3};
+  FlListSpec spec = {.lb = &state->lb, .item_height = line_h * 3 + 3};
   fl_place_editbox();
   if (!fl_listbox_begin(&spec))
     return;
@@ -339,16 +338,16 @@ void todo_render_callback(PromptState *state) {
   fl_listbox_end();
 }
 
-void todo_edit_callback(ListBoxInfo *lb) {
+void todo_edit_callback(PromptState *state) {
   int idx = -1;
-  char *edited = fl_edit_text_popup(.initial_text = lb->selected_text, .lb = lb,
+  char *edited = fl_edit_text_popup(.initial_text = state->lb.selected_text, .lb = &state->lb,
                                     .out_index = &idx);
   if (!edited)
     return;
   if (idx >= 0)
     fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
   free(edited);
-  todo_refresh_callback("", lb);
+  todo_refresh_callback(state);
 }
 
 void TriggerTodo(void) {

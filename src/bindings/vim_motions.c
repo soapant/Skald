@@ -305,10 +305,11 @@ void HandleEnter(FlintContext *ctx) {
   if (!ctx)
     return;
   ListBoxInfo *lb = Vim_GetListBox(ctx);
+  PromptState *state = Vim_GetPromptState();
   if (lb && UI_IsListBoxSelected(lb)) {
     const char *sel = lb_selected_text(lb);
     if (ctx->prompt_callbacks.enter) {
-      bool should_close = ctx->prompt_callbacks.enter(lb);
+      bool should_close = ctx->prompt_callbacks.enter(state);
       ctx->window.selection_complete = should_close;
     } else {
       ctx->window.selection_complete = true;
@@ -351,13 +352,14 @@ void HandleMoveDown(FlintContext *ctx) {
 
 void HandlePersistentDelete(FlintContext *ctx) {
   ListBoxInfo *lb = Vim_GetListBox(ctx);
+  PromptState *state = Vim_GetPromptState();
   if (!ctx || !lb)
     return;
   if (!UI_IsListBoxSelected(lb))
     return;
   if (ctx->prompt_callbacks.ctrl_enter != NULL) {
     const char *txt = lb_selected_text(lb);
-    bool should_close = ctx->prompt_callbacks.ctrl_enter(lb);
+    bool should_close = ctx->prompt_callbacks.ctrl_enter(state);
     ctx->window.selection_complete = should_close;
   }
 }
@@ -427,6 +429,7 @@ void HandleYankLine(FlintContext *ctx) {
 
 void HandleInsertControlEnter(FlintContext *ctx) {
   ListBoxInfo *lb = Vim_GetListBox(ctx);
+  PromptState *state = Vim_GetPromptState();
   if (!ctx || !lb)
     return;
   char text[256];
@@ -436,7 +439,7 @@ void HandleInsertControlEnter(FlintContext *ctx) {
     Vim_GetText(ctx, text, sizeof(text));
   }
   if (ctx->prompt_callbacks.ctrl_enter != NULL) {
-    bool should_close = ctx->prompt_callbacks.ctrl_enter(lb);
+    bool should_close = ctx->prompt_callbacks.ctrl_enter(state);
     ctx->window.selection_complete = should_close;
   } else {
     ctx->window.selection_complete = false;
@@ -528,9 +531,10 @@ void HandleChangeWordForward(FlintContext *ctx) {
 void HandleSendEdit(FlintContext *ctx) {
   FlintContext *_c = FlintContext_Get();
   ListBoxInfo *lb = Vim_GetListBox(_c);
+  PromptState *state = Vim_GetPromptState();
   if (_c->prompt_callbacks.edit && lb && UI_IsListBoxSelected(lb)) {
     const char *sel = lb_selected_text(lb);
-    _c->prompt_callbacks.edit(lb);
+    _c->prompt_callbacks.edit(state);
   }
 }
 

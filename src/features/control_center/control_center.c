@@ -1126,7 +1126,7 @@ static bool cc_calc_strict_number(const char *str, double *out) {
   return true;
 }
 
-static bool cc_calc_result_for(const char *filter, char *out_value,
+static bool cc_calc_result_for(char *out_value, const char* filter,
                                size_t cap) {
   if (!filter || !filter[0])
     return false;
@@ -1217,7 +1217,7 @@ static bool cc_calc_result_for(const char *filter, char *out_value,
   return false;
 }
 
-static bool cc_calc_build_label(const char *filter) {
+static bool cc_calc_build_label(const char* filter) {
   g_cc_calc_label[0] = '\0';
   if (!filter || !filter[0])
     return false;
@@ -1255,7 +1255,7 @@ static bool cc_contains_ci(const char *hay, const char *needle) {
   return false;
 }
 
-static bool cc_filter_match(const char *item, const char *filter) {
+static bool cc_filter_match(const char *item,const char* filter) {
   if (!item || !filter || !filter[0])
     return true;
   if (cc_contains_ci(item, filter))
@@ -1266,7 +1266,7 @@ static bool cc_filter_match(const char *item, const char *filter) {
   return false;
 }
 
-static void cc_refresh(const char *filter, ListBoxInfo *lb) {
+static void cc_refresh(PromptState *state) {
   cc_build();
   (void)g_no_results;
   int n = g_entry_count;
@@ -1274,18 +1274,18 @@ static void cc_refresh(const char *filter, ListBoxInfo *lb) {
     n = MAX_VISIBLE_ITEMS;
   for (int i = 0; i < n; i++)
     g_names[i] = g_entries[i].label;
-  if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(filter)) {
+  if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(state->filter)) {
     g_names[n] = g_cc_calc_label;
     n++;
   }
-  fl_populate_listbox_ex(lb, filter, g_names, n, cc_filter_match);
-  if (lb->total_matches > 0)
+  fl_populate_listbox_ex(&state->lb, state->filter, g_names, n, cc_filter_match);
+  if (state->lb.total_matches > 0)
     g_cc_fallback_active = false;
-  if (lb->total_matches == 0) {
+  if (state->lb.total_matches == 0) {
     CcEntry *fallback = cc_add_fallback();
     if (fallback && n < MAX_VISIBLE_ITEMS) {
       g_names[n] = fallback->label;
-      fl_populate_listbox(lb, "", &g_names[n], 1);
+      fl_populate_listbox(&state->lb, "", &g_names[n], 1);
       g_cc_fallback_active = true;
     }
   }
@@ -1317,17 +1317,16 @@ static bool cc_icon_is_glyph(const char *icon) {
   return false;
 }
 
-static void cc_subwindow_refresh(const char *filter, ListBoxInfo *lb) {
+static void cc_subwindow_refresh(PromptState *state) {
   const char *items[] = {"Action 1", "Action 2", "Action 3", NULL};
-  fl_populate_listbox(lb, filter, (const char **)items, 3);
+  fl_populate_listbox(&state->lb, state->filter, (const char **)items, 3);
 }
 
 static int g_cc_width = 0, g_cc_height = 0;
 static void cc_subwindow_render(PromptState *state) {
   g_cc_width = state->width;
   g_cc_height = state->height;
-  ListBoxInfo *lb = &state->listbox;
-  FlListSpec spec = {.lb = lb};
+  FlListSpec spec = {.lb = &state->lb};
   if (!fl_listbox_begin(&spec))
     return;
   FlListItemCtx ctx;
@@ -1362,8 +1361,7 @@ static void cc_on_actions_render(FlRect rect) {
 static void cc_render(PromptState *state) {
   g_cc_width = state->width;
   g_cc_height = state->height;
-  ListBoxInfo *lb = &state->listbox;
-  FlListSpec spec = {.lb = lb, .item_height = FontSize * 2};
+  FlListSpec spec = {.lb = &state->lb, .item_height = FontSize * 2};
   fl_place_editbox();
   fl_place_button(.name = "Actions", .x = state->width - 200,
                   .y = state->height - 30, .w = 180,
@@ -1439,10 +1437,10 @@ static void cc_render(PromptState *state) {
   fl_listbox_end();
 }
 
-static bool cc_enter(ListBoxInfo *lb) {
-  printf("%s \n", lb->selected_text);
-  if (lb->selected_text && g_cc_calc_label[0] &&
-      strcmp(lb->selected_text, g_cc_calc_label) == 0) {
+static bool cc_enter(PromptState *state) {
+  printf("%s \n", state->lb.selected_text);
+  if (state->lb.selected_text && g_cc_calc_label[0] &&
+      strcmp(state->lb.selected_text, g_cc_calc_label) == 0) {
     const char *eq = strchr(g_cc_calc_label, '=');
     if (eq) {
       char value[128];
@@ -1455,54 +1453,54 @@ static bool cc_enter(ListBoxInfo *lb) {
     }
     return true;
   }
-  if (!fl_is_selected(lb)) {
-    fl_query_browser(lb->selected_text);
+  if (!fl_is_selected(&state->lb)) {
+    fl_query_browser(state->lb.selected_text);
   }
-  cc_stage(cc_find(lb->selected_text), 0);
+  cc_stage(cc_find(state->lb.selected_text), 0);
   return true;
 }
 
-static bool cc_ctrl_enter(ListBoxInfo *lb) {
-  if (!fl_is_selected(lb)) {
-    fl_query_browser(lb->selected_text);
+static bool cc_ctrl_enter(PromptState *state) {
+  if (!fl_is_selected(&state->lb)) {
+    fl_query_browser(state->lb.selected_text);
   }
-  cc_stage(cc_find(lb->selected_text), 1);
+  cc_stage(cc_find(state->lb.selected_text), 1);
   return true;
 }
 
-static bool cc_shift_enter(ListBoxInfo *lb) {
-  if (!fl_is_selected(lb)) {
-    fl_query_browser(lb->selected_text);
+static bool cc_shift_enter(PromptState *state) {
+  if (!fl_is_selected(&state->lb)) {
+    fl_query_browser(state->lb.selected_text);
   }
-  cc_stage(cc_find(lb->selected_text), 2);
+  cc_stage(cc_find(state->lb.selected_text), 2);
   return true;
 }
-static bool cc_ctrl_shift_enter(ListBoxInfo *lb) {
-  if (!fl_is_selected(lb)) {
-    fl_query_browser(lb->selected_text);
+static bool cc_ctrl_shift_enter(PromptState *state) {
+  if (!fl_is_selected(&state->lb)) {
+    fl_query_browser(state->lb.selected_text);
   }
-  cc_stage(cc_find(lb->selected_text), 3);
+  cc_stage(cc_find(state->lb.selected_text), 3);
   return true;
 }
-static bool cc_ctrl_alt_enter(ListBoxInfo *lb) {
-  if (!fl_is_selected(lb)) {
-    fl_query_browser(lb->selected_text);
+static bool cc_ctrl_alt_enter(PromptState *state) {
+  if (!fl_is_selected(&state->lb)) {
+    fl_query_browser(state->lb.selected_text);
   }
-  cc_stage(cc_find(lb->selected_text), 4);
+  cc_stage(cc_find(state->lb.selected_text), 4);
   return true;
 }
-static bool cc_shift_alt_enter(ListBoxInfo *lb) {
-  if (!fl_is_selected(lb)) {
-    fl_query_browser(lb->selected_text);
+static bool cc_shift_alt_enter(PromptState *state) {
+  if (!fl_is_selected(&state->lb)) {
+    fl_query_browser(state->lb.selected_text);
   }
-  cc_stage(cc_find(lb->selected_text), 5);
+  cc_stage(cc_find(state->lb.selected_text), 5);
   return true;
 }
 
 static void cc_on_close(void) { cc_run_pending(); }
 
-static void cc_tab(ListBoxInfo *lb) {
-  const CcEntry *e = cc_find(lb->selected_text);
+static void cc_tab(PromptState *state) {
+  const CcEntry *e = cc_find(state->lb.selected_text);
   if (e && e->on_tab)
     e->on_tab();
 }

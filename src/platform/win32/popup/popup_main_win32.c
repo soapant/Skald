@@ -446,7 +446,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_TIMER: {
     if (wParam == UI_DEBOUNCE_TIMER_ID) {
       KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
-      UI_RedrawNow(lb);
+      UI_RedrawNow();
       if (FlintContext_Get()->prompt_callbacks.render != NULL)
         InvalidateRect(hwnd, NULL, FALSE);
       else
