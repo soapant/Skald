@@ -1,4 +1,4 @@
-# Flint Development Guide
+# Flint Development
 
 **Note:** The `flapi.h` API is currently unstable and changing rapidly. If you write a feature today, be prepared to update it as the API matures.
 
@@ -15,13 +15,13 @@ If you prefer a structured overview, read on. You can also browse `flapi.h` dire
 ## The Framework Structure
 You control everything in Flint using callbacks, making the UI more like a framework. You start by creating a main UI window using `fl_window()`:
 
+
 ```c
 fl_window(
     .title = "Whatever",
     .refresh = whatever_refresh,
     .enter = whatever_enter,
     .ctrl_enter = whatever_ctrl_enter,
-    .copy = whatever_copy,
     .tab = whatever_tab,
     .render = whatever_render
 );
@@ -33,7 +33,7 @@ You don't have to pass a context to drawing functions (like fl_draw_text or fl_d
 
 For example, if you call a draw function inside the render callback of a button, Flint automatically knows to draw everything relative to that button.
 
-    Note: The UI is still early in development and some parts may be buggy or unpolished.
+Note: The UI is still early in development and some parts may be buggy or unpolished.
 
 Icons
 
