@@ -69,7 +69,7 @@ void Editbox_ResolveSelection(PromptState *state, int text_len,
     sel_end = state->sel_end;
     has = true;
   } else {
-    has = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+    has = EditState_GetSelection(&sel_start, &sel_end) && text_len > 0;
   }
   if (out_start)
     *out_start = sel_start;

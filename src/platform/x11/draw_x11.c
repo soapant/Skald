@@ -597,12 +597,12 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                             .align = "LEFT",
                             .pad = PROMPT_FOOTER_PAD,
                             .fontsize = FontSize});
-  if (VimModeText)
+  if (EditModeText)
     Platform_DrawTextRaw(
         (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
                             .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
                             .text = "Insert",
-                            .color = VimModeTextColor(),
+                            .color = EditModeTextColor(),
                             .font = font,
                             .align = "RIGHT",
                             .pad = PROMPT_FOOTER_PAD,
@@ -963,7 +963,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
   Platform_DrawPromptSeparator(
       (PlDrawPromptSeparatorSpec){.y = y0, .width = state->width});
   int yOffset = PROMPT_LIST_BOTTOM_TITLE;
-  if (!WindowTitleText && !VimModeText)
+  if (!WindowTitleText && !EditModeText)
     yOffset = 0;
   int visible = (state->height - y0 - yOffset) / itemH;
   if (visible < 1)
