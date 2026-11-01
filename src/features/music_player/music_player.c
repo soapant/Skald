@@ -140,7 +140,7 @@ bool play_music(char *name) {
 bool music_enter_callback(PromptState *state) {
   char *result = NULL;
   for (size_t i = 0; i < s_music_files.count; i++) {
-    if (strcmp(s_music_files.files[i].name, state->lb.selected_text) == 0) {
+    if (strcmp(s_music_files.files[i].name, state->filter) == 0) {
       result = s_music_files.files[i].path;
       break;
     }

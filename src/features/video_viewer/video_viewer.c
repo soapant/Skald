@@ -134,7 +134,7 @@ void video_refresh_callback(PromptState *state) {
 bool video_enter_callback(PromptState *state) {
   char *result = NULL;
   for (size_t i = 0; i < video_files.count; i++) {
-    if (strcmp(video_files.files[i].name, state->lb.selected_text) == 0) {
+    if (strcmp(video_files.files[i].name, state->filter) == 0) {
       result = video_files.files[i].path;
       break;
     }

@@ -324,7 +324,7 @@ static void pk_cycle_sort(void) {
 }
 
 static bool pk_enter_callback(PromptState *state) {
-  if (!state->lb.selected_text || !*state->lb.selected_text)
+  if (!state->lb.selected_text)
     return false;
   char name[PK_NAME_LEN];
   char mem[32];

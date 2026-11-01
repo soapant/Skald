@@ -284,7 +284,7 @@ bool todo_enter_callback(PromptState *state) {
   if (fl_is_selected(&state->lb)) {
     RemoveTodoItemFromFile(state->lb.selected_text);
   } else {
-    AddTodoToFile(state->lb.selected_text);
+    AddTodoToFile(state->filter);
   }
   return true;
 }
@@ -293,7 +293,7 @@ bool todo_ctrlenter_callback(PromptState *state) {
   if (fl_is_selected(&state->lb)) {
     RemoveTodoItemFromFile(state->lb.selected_text);
   } else {
-    AddTodoToFile(state->lb.selected_text);
+    AddTodoToFile(state->filter);
     fl_set_edit_text("");
   }
   todo_refresh_callback(state);

@@ -1438,9 +1438,7 @@ static void cc_render(PromptState *state) {
 }
 
 static bool cc_enter(PromptState *state) {
-  printf("%s \n", state->lb.selected_text);
-  if (state->lb.selected_text && g_cc_calc_label[0] &&
-      strcmp(state->lb.selected_text, g_cc_calc_label) == 0) {
+  if (g_cc_calc_label[0] && strcmp(state->filter, g_cc_calc_label) == 0) {
     const char *eq = strchr(g_cc_calc_label, '=');
     if (eq) {
       char value[128];
@@ -1453,10 +1451,11 @@ static bool cc_enter(PromptState *state) {
     }
     return true;
   }
-  if (!fl_is_selected(&state->lb)) {
-    fl_query_browser(state->lb.selected_text);
+  if (fl_is_selected(&state->lb)) {
+    cc_stage(cc_find(state->lb.selected_text), 0);
+  } else {
+    fl_query_browser(state->filter);
   }
-  cc_stage(cc_find(state->lb.selected_text), 0);
   return true;
 }
 

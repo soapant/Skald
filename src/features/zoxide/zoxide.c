@@ -62,12 +62,12 @@ static void zoxide_edit(PromptState *state) {
   zoxide_refresh(state);
 }
 static bool zoxide_enter(PromptState *state) {
-  char *path = get_zoxide_match((char *)state->lb.selected_text);
-  if (!path)
-    return false;
+  char* text = state->lb.selected_text ? state->lb.selected_text : state->filter;
+  if (!fl_is_selected(&state->lb)) {
+      fl_append_unique_line(TerminalZoxideFilePath, text);
+  }
+  char* path = get_zoxide_match(text);
   fl_launch_terminal_at_path(path, NULL);
-  if (!fl_is_selected(&state->lb))
-      fl_append_unique_line(TerminalZoxideFilePath, state->lb.selected_text);
   free(path);
   return true;
 }
