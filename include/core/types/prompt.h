@@ -85,7 +85,7 @@ struct PromptState {
   int scroll_offset;
   int width, height;
   char *window_title;
-  ListBoxInfo listbox;
+  ListBoxInfo lb;
   bool has_listbox;
   bool no_bg;
   char *placeholder;
@@ -102,7 +102,7 @@ struct PromptState {
  * @param filter  Current filter string.
  * @param lb      Listbox to repopulate. See `ListBoxInfo`.
  */
-typedef void (*RefreshCallback)(const char *filter, ListBoxInfo *lb);
+typedef void (*RefreshCallback)(PromptState* state);
 
 /**
  * @brief Callback invoked when Enter is pressed.
@@ -110,7 +110,7 @@ typedef void (*RefreshCallback)(const char *filter, ListBoxInfo *lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*EnterCallback)(ListBoxInfo *lb);
+typedef bool (*EnterCallback)(PromptState* state);
 
 /**
  * @brief Callback invoked when Ctrl+Enter is pressed.
@@ -118,7 +118,7 @@ typedef bool (*EnterCallback)(ListBoxInfo *lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlEnterCallback)(ListBoxInfo *lb);
+typedef bool (*CtrlEnterCallback)(PromptState* state);
 
 /**
  * @brief Callback invoked when Shift+Enter is pressed.
@@ -126,7 +126,7 @@ typedef bool (*CtrlEnterCallback)(ListBoxInfo *lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*ShiftEnterCallback)(ListBoxInfo *lb);
+typedef bool (*ShiftEnterCallback)(PromptState* state);
 
 /**
  * @brief Callback invoked when Ctrl+Shift+Enter is pressed.
@@ -134,7 +134,7 @@ typedef bool (*ShiftEnterCallback)(ListBoxInfo *lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlShiftEnterCallback)(ListBoxInfo *lb);
+typedef bool (*CtrlShiftEnterCallback)(PromptState* state);
 
 /**
  * @brief Callback invoked when Ctrl+Alt+Enter is pressed.
@@ -142,7 +142,7 @@ typedef bool (*CtrlShiftEnterCallback)(ListBoxInfo *lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*CtrlAltEnterCallback)(ListBoxInfo *lb);
+typedef bool (*CtrlAltEnterCallback)(PromptState* state);
 
 /**
  * @brief Callback invoked when Shift+Alt+Enter is pressed.
@@ -150,21 +150,21 @@ typedef bool (*CtrlAltEnterCallback)(ListBoxInfo *lb);
  * @param lb         Listbox state. See `ListBoxInfo`.
  * @return           True to close the prompt, false to keep it open.
  */
-typedef bool (*ShiftAltEnterCallback)(ListBoxInfo *lb);
+typedef bool (*ShiftAltEnterCallback)(PromptState* state);
 
 /**
  * @brief Callback invoked when Tab is pressed.
  *
  * @param lb  Listbox state. See `ListBoxInfo`.
  */
-typedef void (*TabCallback)(ListBoxInfo *lb);
+typedef void (*TabCallback)(PromptState* state);
 
 /**
  * @brief Callback invoked on text edit events.
  *
  * @param lb         Listbox state. See `ListBoxInfo`.
  */
-typedef void (*EditCallback)(ListBoxInfo *lb);
+typedef void (*EditCallback)(PromptState* state);
 
 /**
  * @brief Callback used to filter listbox items.

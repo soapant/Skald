@@ -72,10 +72,10 @@ static void PromptPopup_OnShow(Popup *self) {
   } else {
     data->state->has_listbox = false;
   }
-  ListBoxInfo_Init(&data->state->listbox);
+  ListBoxInfo_Init(&data->state->lb);
   data->state->no_bg = data->spec.no_bg;
-  data->state->listbox.selected_index = -1;
-  SetModeWithListBox(MODE_INSERT, &data->state->listbox);
+  data->state->lb.selected_index = -1;
+  SetModeWithListBox(MODE_INSERT, &data->state->lb);
   self->user_data = data->state;
   data->state->no_bg = data->spec.no_bg;
 
@@ -128,8 +128,7 @@ static void PromptPopup_OnShow(Popup *self) {
   History_ResetCursor(ctx2->window.current_feature);
   ctx2->window.editbox_placed = true;
   if (data->spec.refresh)
-    data->spec.refresh(data->state->filter,
-                       data->state->has_listbox ? &data->state->listbox : NULL);
+    data->spec.refresh(data->state);
 }
 
 static void PromptPopup_OnHide(Popup *self) {
@@ -141,7 +140,7 @@ static void PromptPopup_OnHide(Popup *self) {
   if (data->state) {
     last_index = 0;
     if (data->state->has_listbox)
-      data->state->listbox.selected_index = 0;
+      data->state->lb.selected_index = 0;
     FlintContext *_c3 = FlintContext_Get();
     _c3->window.current_feature = NULL;
     _c3->prompt_callbacks = data->saved_callbacks;
@@ -166,7 +165,7 @@ static void PromptPopup_Destroy(Popup *self) {
   PromptPopupData *data = (PromptPopupData *)self;
   Platform_PromptPopupDestroyWindow(self);
   if (data->state) {
-    ListBoxInfo_Free(&data->state->listbox);
+    ListBoxInfo_Free(&data->state->lb);
     free(data->state->placeholder);
     free(data->state);
   }
