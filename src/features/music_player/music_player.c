@@ -138,6 +138,7 @@ bool play_music(char *name) {
 }
 
 bool music_enter_callback(PromptState *state) {
+   printf("%s \n",state->lb.selected_text);
   char *result = NULL;
   if (!fl_is_selected(&state->lb)) {
     return false;
