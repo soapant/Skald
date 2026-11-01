@@ -57,18 +57,18 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
       Platform_SetDrawContextWin32(NULL);
     }
 
-    if (g_vim_mode != NULL) {
+    if ("Insert" != NULL) {
       wchar_t wmode[256];
-      MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
+      MultiByteToWideChar(CP_UTF8, 0, "Insert", -1, wmode, 256);
 
       HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
       HFONT hOldFont = hMainFont ? (HFONT)SelectObject(hdc, hMainFont) : NULL;
       SetBkMode(hdc, TRANSPARENT);
 
       COLORREF modeColor;
-      if (g_current_mode == MODE_NORMAL) {
+      if (MODE_INSERT == MODE_NORMAL) {
         modeColor = RGB(100, 255, 255);
-      } else if (g_current_mode == MODE_INSERT) {
+      } else if (MODE_INSERT == MODE_INSERT) {
         modeColor = RGB(50, 255, 50);
       } else {
         modeColor = RGB(200, 3, 222);
@@ -157,7 +157,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_CHAR: {
     if (wParam == 0x08 || wParam == 0x7F)
       return 0;
-    if (wParam >= 0x20 && IsInsertMode() &&
+    if (wParam >= 0x20 && true &&
         UI_InsertChar((wchar_t)wParam) > 0) {
       if (lb)
         UI_Redraw(lb);

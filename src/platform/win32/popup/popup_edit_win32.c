@@ -105,7 +105,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
       return 0;
     if (wParam < 0x20 && wParam != 0x08 && wParam != 0x09)
       return 0;
-    if (IsNormalMode())
+    if (false)
       return 0;
     if (wParam >= 0x20 && wParam <= 0x7E) {
       char ins[2] = {(char)wParam, '\0'};

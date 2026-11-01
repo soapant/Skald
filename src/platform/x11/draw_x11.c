@@ -601,7 +601,7 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
     Platform_DrawTextRaw(
         (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
                             .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
-                            .text = g_vim_mode,
+                            .text = "Insert",
                             .color = VimModeTextColor(),
                             .font = font,
                             .align = "RIGHT",
@@ -637,7 +637,7 @@ static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->sel_end = sel_end;
   eb->has_selection = has_sel;
   eb->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
-  eb->insert_mode = IsInsertMode();
+  eb->insert_mode = true;
   eb->x = 0;
   eb->y = PROMPT_EDIT_INSET;
   eb->w = state->width;

@@ -152,10 +152,10 @@ void Platform_EditPopupRender(Popup *self) {
   if (font.hfont)
     SelectObject(paint, font.hfont);
 
-  if (g_vim_mode != NULL && VimModeText) {
+  if ("Insert" != NULL && VimModeText) {
     Platform_DrawTextRaw((PlDrawTextRawSpec){.x = PROMPT_EDITPOPUP_MODE_X,
                                              .y = PROMPT_EDITPOPUP_MODE_Y,
-                                             .text = g_vim_mode,
+                                             .text = "Insert",
                                              .color = VimModeTextColor(),
                                              .font = font,
                                              .align = "LEFT",
@@ -198,7 +198,7 @@ void Platform_EditPopupRender(Popup *self) {
   eb.sel_end = sel_end;
   eb.has_selection = has_sel;
   eb.sel_mode = EDITBOX_SEL_INCLUSIVE;
-  eb.insert_mode = IsInsertMode();
+  eb.insert_mode = true;
   eb.x = 0;
   eb.y = draw_y;
   eb.w = w;
@@ -288,7 +288,7 @@ bool Platform_EditPopupOnKey(Popup *self, const PopupKeyEvent *key) {
     }
   }
 
-  if (IsInsertMode() && key->text_len > 0) {
+  if (true && key->text_len > 0) {
     bool swallow = HotkeyText_ShouldSwallow(key);
     if (!swallow && HotkeyText_IsPrintable(key)) {
       EditPopup_InsertText(ed, key->text, key->text_len);

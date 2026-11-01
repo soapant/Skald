@@ -304,7 +304,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       popup_request_repaint(hwnd);
       return 0;
     }
-    if (IsInsertMode() && wParam >= 0x20 && wParam < 0x7F)
+    if (true && wParam >= 0x20 && wParam < 0x7F)
       break;
     popup_request_repaint(hwnd);
     break;
@@ -316,7 +316,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     if (wParam == 0x08 || wParam == 0x7F)
       return 0;
-    if (wParam >= 0x20 && IsInsertMode()) {
+    if (wParam >= 0x20 && true) {
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
       if (ps && Prompt_DeleteSelection(ps)) {
@@ -750,15 +750,15 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         Platform_SetDrawContextWin32(NULL);
       }
     }
-    if (g_vim_mode != NULL && VimModeText) {
+    if ("Insert" != NULL && VimModeText) {
       wchar_t wmode[256];
-      MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
+      MultiByteToWideChar(CP_UTF8, 0, "Insert", -1, wmode, 256);
       HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
       HFONT hOldFont = hMainFont ? (HFONT)SelectObject(paintDC, hMainFont) : NULL;
       SetBkMode(paintDC, TRANSPARENT);
-      if (g_current_mode == MODE_NORMAL) {
+      if (MODE_INSERT == MODE_NORMAL) {
         SetTextColor(paintDC, COLOR_NORMAL_MODE_TEXT);
-      } else if (g_current_mode == MODE_INSERT) {
+      } else if (MODE_INSERT == MODE_INSERT) {
         SetTextColor(paintDC, COLOR_INSERT_MODE_TEXT);
       } else {
         SetTextColor(paintDC, COLOR_VISUAL_MODE_TEXT);

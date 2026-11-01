@@ -289,7 +289,7 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
     UI_LB_EndUpdate();
     return;
   }
-  if (IsNormalMode()) {
+  if (false) {
     int keep;
     if (RememberLastIndex) {
       keep = lb->selected_index;
