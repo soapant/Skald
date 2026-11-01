@@ -281,7 +281,6 @@ void DeleteLastTypedChar(FlintContext *ctx) {
       ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
       ctx->window.filter_cursor = s->cursor;
       if (ctx->prompt_callbacks.refresh) {
-        ListBoxInfo *lb = Vim_GetListBox(ctx);
         ctx->prompt_callbacks.refresh(s);
       }
       UI_ApplyFilterToEdit(ctx);
@@ -302,9 +301,5 @@ void DeleteLastTypedChar(FlintContext *ctx) {
   ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
   ctx->window.filter_cursor = delete_pos;
   SyncFilterToActiveState(ctx);
-  if (ctx->prompt_callbacks.refresh) {
-    ListBoxInfo *lb = Vim_GetListBox(ctx);
-    ctx->prompt_callbacks.refresh(s);
-  }
   UI_ApplyFilterToEdit(ctx);
 }
