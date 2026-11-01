@@ -10,7 +10,6 @@
 #include "core/history.h"
 #include "core/modal.h"
 #include "core/listbox_hover.h"
-#include "core/prompt_controller.h"
 #include "platform/input.h"
 #include "platform/platform.h"
 #include "platform/ui.h"
@@ -217,7 +216,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     }
     return true;
   }
-  if (PromptController_TryEditMotion(vk, ctrl, shift, alt)) {
+  if (false) {
     return true;
   }
   if (vk == VK_BACK) {

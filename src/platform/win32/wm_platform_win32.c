@@ -4,7 +4,6 @@
 #include "platform/input_state.h"
 #include "core/window_manager.h"
 #include "core/remap_manager.h"
-#include "core/prompt_controller.h"
 #include "deps/log.h"
 #include <windows.h>
 #include <string.h>
@@ -148,17 +147,6 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
     long long now = Platform_GetWallClockMs();
     if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
       last_tick = now;
-      Popup *top = WindowManager_GetTopPopup(wm);
-      if (top && top->vtable && top->vtable->on_render) {
-        top->vtable->on_render(top);
-      }
-    }
-    if (PromptController_PollSequenceTimeout()) {
-      Popup *top = WindowManager_GetTopPopup(wm);
-      if (top && top->vtable && top->vtable->on_render) {
-        top->vtable->on_render(top);
-      }
-    }
   }
   if (popup->manager == NULL) {
     if (popup->vtable && popup->vtable->destroy)
