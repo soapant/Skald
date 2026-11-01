@@ -8,6 +8,7 @@
 #include "config.h"
 #include "platform/ui.h"
 #include "platform/win32/common_ui_win32.h"
+#include "platform/win32/win32_state.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
 #include "helpers/helpers_ui.h"
@@ -51,8 +52,8 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
 
     {
       Platform_SetDrawContextWin32(hdc);
-      Platform_DrawPromptEditText(g_win32_prompt_state);
-      Platform_DrawPromptEditCursor(g_win32_prompt_state);
+      Platform_DrawPromptEditText(NULL);
+      Platform_DrawPromptEditCursor(NULL);
       Platform_SetDrawContextWin32(NULL);
     }
 
@@ -60,7 +61,8 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
       wchar_t wmode[256];
       MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
 
-      HFONT hOldFont = (HFONT)SelectObject(hdc, g_win32_hMainFont);
+      HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+      HFONT hOldFont = hMainFont ? (HFONT)SelectObject(hdc, hMainFont) : NULL;
       SetBkMode(hdc, TRANSPARENT);
 
       COLORREF modeColor;
@@ -82,6 +84,8 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
       DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
 
       SelectObject(hdc, hOldFont);
+      if (hMainFont)
+        DeleteObject(hMainFont);
 
       HPEN hPen = CreatePen(PS_SOLID, 1, RGB(60, 65, 75));
       HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
@@ -111,7 +115,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     if (wParam == VK_BACK) {
       bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-      PromptState *ps = g_win32_prompt_state;
+      PromptState *ps = NULL;
       if (ctrl) {
         UI_SetText("");
       } else if (ps) {
@@ -131,7 +135,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
       return 0;
     }
     if (wParam == VK_DELETE) {
-      PromptState *ps = g_win32_prompt_state;
+      PromptState *ps = NULL;
       if (ps) {
         size_t len = strlen(ps->filter);
         size_t cur = ps->cursor;

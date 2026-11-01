@@ -247,11 +247,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
       }
 
       if (IsNormalMode()) {
-        if (g_win32_waiting_for_key) {
-          g_win32_waiting_for_key = false;
-          if (g_win32_key_callback) {
-            g_win32_key_callback(pKeyInfo->vkCode);
-          }
+        if (Platform_HandleWaitingForKey(pKeyInfo->vkCode)) {
           log_info("hook swallow=waiting_for_key vk=0x%X", pKeyInfo->vkCode);
           return 1;
         }

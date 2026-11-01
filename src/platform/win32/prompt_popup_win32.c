@@ -8,6 +8,7 @@
 #include "platform/wm_platform.h"
 #include "platform/ui.h"
 #include "platform/win32/common_ui_win32.h"
+#include "platform/win32/win32_state.h"
 #include "platform/draw.h"
 #include "config.h"
 #include "deps/log.h"
@@ -86,8 +87,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   if (self)
     self->handle = FlintContext_Get()->window.hPopupWnd;
   SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
-  extern PromptState *g_win32_prompt_state;
-  if (!(g_win32_prompt_state && g_win32_prompt_state->no_bg)) {
+  if (true) {
     win32_apply_rounded_corners(hwnd, w, h);
   }
   ShowWindow(hwnd, SW_SHOW);

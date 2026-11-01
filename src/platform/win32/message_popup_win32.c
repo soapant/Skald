@@ -264,7 +264,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
       useMaxH = h;
   }
   if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL &&
-      GetCurrentThreadId() != g_win32_main_thread_id) {
+      GetCurrentThreadId() != (DWORD)FlintContext_Get()->main_thread_id) {
     DisplayMessageParams params;
     params.message = message;
     params.centerX = centerX;
@@ -298,7 +298,7 @@ void Platform_DismissDisplayMessage(void) {
     return;
   }
   HWND tray = WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd);
-  if (tray != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
+  if (tray != NULL && GetCurrentThreadId() != (DWORD)FlintContext_Get()->main_thread_id) {
     SendMessageA(tray, WM_DISMISS_MESSAGE, 0, 0);
     return;
   }

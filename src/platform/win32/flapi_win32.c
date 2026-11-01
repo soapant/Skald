@@ -18,6 +18,7 @@
 #include "platform/draw.h"
 #include "platform/ui.h"
 #include "core/modal.h"
+#include "core/context.h"
 #include "config.h"
 #include "core/listbox_hover.h"
 #include "core/listbox_layout.h"
@@ -461,9 +462,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
   if (h <= 0)
     h = PromptCustomEditHeight();
+  HFONT hfont_created = NULL;
   HFONT hfont = spec->font.hfont
                     ? spec->font.hfont
-                    : (g_win32_hMainFont ? g_win32_hMainFont : NULL);
+                    : FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+  if (hfont && !spec->font.hfont)
+    hfont_created = hfont;
   HFONT old = NULL;
   if (hfont)
     old = (HFONT)SelectObject(hdc, hfont);
@@ -522,6 +526,8 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
 
   if (old)
     SelectObject(hdc, old);
+  if (hfont_created)
+    DeleteObject(hfont_created);
   return true;
 }
 
