@@ -55,8 +55,6 @@ typedef struct {
   PromptCallbacks prompt_callbacks;
   void *win32_keyboard_hook;
   void *win32_mouse_hook;
-  bool waiting_for_key;
-  KeyCallback key_callback;
   HashMap *feature_history;
   HashMap *item_index_map;
   HashMap *history_indices;

@@ -25,7 +25,6 @@ static void vim_get_text(FlintContext *ctx, char *buf, int cap);
 static void vim_clamp_cursor(FlintContext *ctx, int pos);
 
 void vim_clamp_cursor(FlintContext *ctx, int pos);
-void vim_find_record(char target, bool till, bool backward);
 void vim_mark_set(char name, int cursor);
 void vim_mark_jump(char name);
 
@@ -582,68 +581,7 @@ void HandleShowFullText(FlintContext *ctx) {
   }
 }
 
-void SearchTextForward(int key) {
-  FlintContext *ctx = FlintContext_Get();
-  if (!ctx)
-    return;
-  char text[VIM_TEXT_BUF];
-  vim_get_text(ctx, text, sizeof(text));
-  int len = (int)strlen(text);
-  int cursor = Vim_GetCursor(ctx);
-  for (int i = cursor + 1; i < len; i++) {
-    if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
-      vim_clamp_cursor(ctx, i);
-      VimState_SetFind((char)key, VIM_FIND_F);
-      return;
-    }
-  }
-  for (int i = 0; i <= cursor && i < len; i++) {
-    if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
-      vim_clamp_cursor(ctx, i);
-      VimState_SetFind((char)key, VIM_FIND_F);
-      return;
-    }
-  }
-}
-void SearchTextBackward(int key) {
-  FlintContext *ctx = FlintContext_Get();
-  if (!ctx)
-    return;
-  char text[VIM_TEXT_BUF];
-  vim_get_text(ctx, text, sizeof(text));
-  int len = (int)strlen(text);
-  int cursor = Vim_GetCursor(ctx);
-  for (int i = cursor - 1; i >= 0; i--) {
-    if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
-      vim_clamp_cursor(ctx, i);
-      VimState_SetFind((char)key, VIM_FIND_BACKWARD);
-      return;
-    }
-  }
-  for (int i = len - 1; i >= 0; i--) {
-    if (i >= cursor)
-      continue;
-    if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
-      vim_clamp_cursor(ctx, i);
-      VimState_SetFind((char)key, VIM_FIND_BACKWARD);
-      return;
-    }
-  }
-}
 
-void HandleSearchTextForward(FlintContext *ctx) {
-  ListBoxInfo *lb = Vim_GetListBox(ctx);
-  if (lb && UI_IsListBoxSelected(lb))
-    return;
-  Platform_WaitForKeypressAsync(SearchTextForward);
-}
-
-void HandleSearchTextBackward(FlintContext *ctx) {
-  ListBoxInfo *lb = Vim_GetListBox(ctx);
-  if (lb && UI_IsListBoxSelected(lb))
-    return;
-  Platform_WaitForKeypressAsync(SearchTextBackward);
-}
 void HandleDeleteTillEnd(FlintContext *ctx) {
   if (!ctx)
     return;
@@ -878,25 +816,6 @@ void HandleGotoLastInsert(FlintContext *ctx) {
   SetMode(MODE_INSERT);
 }
 
-void vim_find_record(char target, bool till, bool backward) {
-  VimState_SetFind(target, backward ? VIM_FIND_BACKWARD
-                                    : (till ? VIM_FIND_T : VIM_FIND_F));
-}
-
-static void vim_find_with(FlintContext *ctx, char target, bool till,
-                          bool backward) {
-  if (!ctx)
-    return;
-  char text[VIM_TEXT_BUF];
-  vim_get_text(ctx, text, sizeof(text));
-  int pos = Vim_FindChar(text, (int)strlen(text), Vim_GetCursor(ctx), target,
-                         till, backward);
-  if (pos < 0)
-    return;
-  vim_clamp_cursor(ctx, pos);
-  VimState_SetFind(target, backward ? VIM_FIND_BACKWARD
-                                    : (till ? VIM_FIND_T : VIM_FIND_F));
-}
 
 static void vim_show_pending(const char *prefix) {
   char buf[64];
@@ -910,55 +829,6 @@ static void vim_clear_pending(void) {
                      NULL);
 }
 
-static void vim_till_forward_cb(int key) {
-  vim_clear_pending();
-  vim_find_with(FlintContext_Get(), (char)key, true, false);
-}
-
-static void vim_till_backward_cb(int key) {
-  vim_clear_pending();
-  vim_find_with(FlintContext_Get(), (char)key, true, true);
-}
-
-void HandleFindTillForward(FlintContext *ctx) {
-  if (!ctx)
-    return;
-  ListBoxInfo *lb = Vim_GetListBox(ctx);
-  if (lb && UI_IsListBoxSelected(lb))
-    return;
-  vim_show_pending("t");
-  Platform_WaitForKeypressAsync(vim_till_forward_cb);
-}
-
-void HandleFindTillBackward(FlintContext *ctx) {
-  if (!ctx)
-    return;
-  ListBoxInfo *lb = Vim_GetListBox(ctx);
-  if (lb && UI_IsListBoxSelected(lb))
-    return;
-  vim_show_pending("T");
-  Platform_WaitForKeypressAsync(vim_till_backward_cb);
-}
-
-static void vim_repeat_find(bool invert) {
-  VimFindState fs;
-  if (!VimState_GetFind(&fs))
-    return;
-  bool backward = (fs.dir == VIM_FIND_BACKWARD);
-  if (invert)
-    backward = !backward;
-  vim_find_with(FlintContext_Get(), fs.target, fs.dir == VIM_FIND_T, backward);
-}
-
-void HandleRepeatFindSame(FlintContext *ctx) {
-  (void)ctx;
-  vim_repeat_find(false);
-}
-
-void HandleRepeatFindOpp(FlintContext *ctx) {
-  (void)ctx;
-  vim_repeat_find(true);
-}
 
 static bool vim_repeat_pattern(bool backward) {
   char pattern[VIM_TEXT_BUF];
@@ -1099,48 +969,8 @@ void HandleScrollLineUp(FlintContext *ctx) {
   vim_move_lines(-1);
 }
 
-static void vim_mark_position(bool set) {
-  FlintContext *ctx = FlintContext_Get();
-  if (!ctx)
-    return;
-  ListBoxInfo *lb = Vim_GetListBox(ctx);
-  char name = vim_pending_mark;
-  vim_pending_mark = 0;
-  if (set) {
-    vim_mark_set(name, Vim_GetCursor(ctx));
-    return;
-  }
-  int mcursor = 0, msel = 0;
-  if (!VimState_GetMark(name, &mcursor, &msel))
-    return;
-  if (msel >= 0 && lb && msel < lb->populated_count)
-    UI_NavigateTo(lb, msel);
-  vim_clamp_cursor(ctx, mcursor);
-}
 
-static void vim_mark_set_cb(int key) {
-  vim_clear_pending();
-  vim_pending_mark = (char)key;
-  vim_mark_position(true);
-}
 
-static void vim_mark_jump_cb(int key) {
-  vim_clear_pending();
-  vim_pending_mark = (char)key;
-  vim_mark_position(false);
-}
-
-void HandleSetMark(FlintContext *ctx) {
-  (void)ctx;
-  vim_show_pending("m");
-  Platform_WaitForKeypressAsync(vim_mark_set_cb);
-}
-
-void HandleJumpToMark(FlintContext *ctx) {
-  (void)ctx;
-  vim_show_pending("`");
-  Platform_WaitForKeypressAsync(vim_mark_jump_cb);
-}
 
 void HandleJumpPrevContext(FlintContext *ctx) {
   (void)ctx;
@@ -1197,46 +1027,6 @@ static void vim_run_search(bool backward) {
   VimState_SetLastPattern(pattern);
 }
 
-static void vim_collect_cb(int key);
-static void vim_collect_backward_cb(int key);
-
-void HandleSearchForward(FlintContext *ctx) {
-  (void)ctx;
-  VimState_BeginSearchPattern();
-  Platform_WaitForKeypressAsync(vim_collect_cb);
-}
-
-void HandleSearchBackward(FlintContext *ctx) {
-  (void)ctx;
-  VimState_BeginSearchPattern();
-  Platform_WaitForKeypressAsync(vim_collect_backward_cb);
-}
-
-static void vim_collect_cb(int key) {
-  if (key == 13 || key == 10) {
-    vim_run_search(false);
-    return;
-  }
-  if (key == 27) {
-    Vim_SearchCancel(key);
-    return;
-  }
-  VimState_AppendSearchPattern((char)key);
-  Platform_WaitForKeypressAsync(vim_collect_cb);
-}
-
-static void vim_collect_backward_cb(int key) {
-  if (key == 13 || key == 10) {
-    vim_run_search(true);
-    return;
-  }
-  if (key == 27) {
-    Vim_SearchCancel(key);
-    return;
-  }
-  VimState_AppendSearchPattern((char)key);
-  Platform_WaitForKeypressAsync(vim_collect_backward_cb);
-}
 
 void Vim_SearchCancel(int key) {
   (void)key;

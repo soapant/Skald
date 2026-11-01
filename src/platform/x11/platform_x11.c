@@ -740,10 +740,6 @@ void Platform_ModifyUniversalTimer(double seconds_to_add) {
 
 double Platform_GetUniversalTimeSeconds(void) { return 0.0; }
 
-void Platform_WaitForKeypressAsync(KeyCallback callback) {
-  (void)callback;
-  log_warn("not implemented yet");
-}
 
 #define X11_FONT_CACHE_SLOTS 8
 

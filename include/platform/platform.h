@@ -119,8 +119,7 @@ void Platform_ModifyUniversalTimer(double seconds_to_add);
 double Platform_GetUniversalTimeSeconds(void);
 long long Platform_GetWallClockMs(void);
 
-void Platform_WaitForKeypressAsync(KeyCallback callback);
-bool Platform_HandleWaitingForKey(unsigned int vk);
+
 void Platform_DismissDisplayMessage(void);
 bool Platform_DismissMessage(const char *name);
 bool Platform_MessageActive(const char *name);
