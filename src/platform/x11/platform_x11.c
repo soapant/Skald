@@ -1022,16 +1022,6 @@ int Platform_GetIconSize(char *icon_path) {
   }
   return 32;
 }
-typedef struct {
-  char *name;
-  char *path;
-} NameToPath;
-
-NameToPath supported_names_to_paths[] = {
-    {"sway", "/resources/Sway.svg"},
-    {"anki", "/resources/Anki.png"},
-    {"xdg-desktop-portal-gtk", "/resources/xdg-desktop-portal-gtk.png"},
-};
 
 #define MAX_ICON_CACHE 1024
 static struct {
@@ -1123,13 +1113,6 @@ char *Platform_GetIconPath(char *app_path) {
     log_error("operation failed, returning error app_path='%s'",
               app_path ? app_path : "null");
     return NULL;
-  }
-  for (int i = 0; i < (int)ARRAY_LEN(supported_names_to_paths); i++) {
-    if (Platform_StringContainsCaseInsensitive(
-            app_path, supported_names_to_paths[i].name)) {
-      if (access(supported_names_to_paths[i].path, F_OK) == 0)
-        return strdup(supported_names_to_paths[i].path);
-    }
   }
   if (app_path[0] == '/' && strchr(app_path, '.') &&
       access(app_path, F_OK) == 0) {
