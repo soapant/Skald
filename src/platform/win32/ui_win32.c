@@ -198,12 +198,6 @@ static bool win32_resolve_text_target(Win32TextTarget *out) {
     out->cursor_z = &prompt->cursor;
     return true;
   }
-  if (g_win32_prompt_state) {
-    out->text = g_win32_prompt_state->filter;
-    out->capacity = sizeof(g_win32_prompt_state->filter);
-    out->cursor_z = &g_win32_prompt_state->cursor;
-    return true;
-  }
   return false;
 }
 
@@ -378,7 +372,6 @@ int UI_InsertChar(wchar_t wc) {
   return UI_InsertText(utf8, n);
 }
 
-PromptState *g_win32_prompt_state = NULL;
 void UI_RedrawNow() {
   HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
@@ -435,7 +428,7 @@ PromptState *Platform_GetPromptStateForHWND(HWND hwnd) {
       return (PromptState *)top->user_data;
     }
   }
-  return g_win32_prompt_state;
+  return NULL;
 }
 
 PromptState *Platform_GetWin32PromptState(void) {
@@ -446,15 +439,6 @@ PromptState *Platform_GetWin32PromptState(void) {
 void UI_SyncFilterFromEdit(FlintContext *ctx) {
   if (!ctx) {
     return;
-  }
-  if (ctx->prompt_callbacks.render != NULL) {
-    PromptState *ws = g_win32_prompt_state;
-    if (ws) {
-      strncpy(ctx->window.filter, ws->filter, sizeof(ctx->window.filter) - 1);
-      ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
-      ctx->window.filter_cursor = (int)ws->cursor;
-      return;
-    }
   }
   Win32TextTarget t;
   if (!win32_resolve_text_target(&t) || !t.text) {
@@ -468,12 +452,6 @@ void UI_SyncFilterFromEdit(FlintContext *ctx) {
 void UI_ApplyFilterToEdit(FlintContext *ctx) {
   if (!ctx) {
     return;
-  }
-  PromptState *ws = g_win32_prompt_state;
-  if (ws) {
-    strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter) - 1);
-    ws->filter[sizeof(ws->filter) - 1] = '\0';
-    ws->cursor = ctx->window.filter_cursor;
   }
   int pos = ctx->window.filter_cursor;
   int len = (int)strlen(ctx->window.filter);
@@ -492,9 +470,6 @@ void UI_ApplyFilterToEdit(FlintContext *ctx) {
 
 ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
   (void)ctx;
-  PromptState *ws = g_win32_prompt_state;
-  if (ws && ws->has_listbox)
-    return &ws->lb;
   HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     ListBoxInfo *lb = (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
@@ -508,17 +483,6 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
   if (!ctx) {
     return;
   }
-  PromptState *ws = g_win32_prompt_state;
-  if (ws) {
-    strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter) - 1);
-    ws->filter[sizeof(ws->filter) - 1] = '\0';
-    int len = (int)strlen(ws->filter);
-    if (pos < 0)
-      pos = 0;
-    if (pos > len)
-      pos = len;
-    ws->cursor = pos;
-  }
   UI_SetCursorPosition(pos);
   if (ctx->prompt_callbacks.render != NULL) {
     HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
@@ -530,7 +494,7 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
 bool UI_ApplyBackspaceToPopup(FlintContext *ctx) {
   if (!ctx)
     return false;
-  PromptState *ws = g_win32_prompt_state;
+  PromptState *ws = NULL;
   if (!ws)
     return false;
   int len = (int)strlen(ctx->window.filter);

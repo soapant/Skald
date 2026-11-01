@@ -1490,7 +1490,7 @@ bool Platform_InitDisplaySafe(void) { return true; }
 void Platform_CleanupDisplaySafe(void) {}
 
 void Platform_InitMainThreadContext(void) {
-  g_win32_main_thread_id = GetCurrentThreadId();
+  FlintContext_Get()->main_thread_id = GetCurrentThreadId();
 }
 
 static int win32_dir_exists(const char *path) {
@@ -1551,10 +1551,7 @@ void Platform_FixWorkingDirectory(void) {
 }
 
 void Platform_CleanupPlatformResources(void) {
-  if (g_win32_hMainFont) {
-    DeleteObject(g_win32_hMainFont);
-    g_win32_hMainFont = NULL;
-  }
+
   {
     extern void win32_default_apps_free_cache(void);
     win32_default_apps_free_cache();
@@ -1908,18 +1905,18 @@ void Platform_InitUI() {
   searchPopupWc.lpszClassName = "SearchPopupClass";
   RegisterClassA(&searchPopupWc);
 
-  g_win32_hKeyboardHook =
+  FlintContext_Get()->win32_keyboard_hook =
       SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, NULL, 0);
-  if (!g_win32_hKeyboardHook) {
+  if (!FlintContext_Get()->win32_keyboard_hook) {
     log_warn("WH_KEYBOARD_LL hook FAILED to install err=%lu", GetLastError());
   } else {
     log_warn("WH_KEYBOARD_LL hook installed handle=%p",
-             (void *)g_win32_hKeyboardHook);
+             (void *)FlintContext_Get()->win32_keyboard_hook);
   }
 
   Platform_RegisterRawMouse(
       WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd));
-  g_win32_hMouseHook = NULL;
+  FlintContext_Get()->win32_mouse_hook = NULL;
 
   FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
   log_warn("warm font size=%d face='%s' created=%d", FontSize,
@@ -1933,13 +1930,13 @@ void Platform_ShutdownUI() {
     extern void win32_img_cache_free_all(void);
     win32_img_cache_free_all();
   }
-  if (g_win32_hKeyboardHook) {
-    UnhookWindowsHookEx(g_win32_hKeyboardHook);
-    g_win32_hKeyboardHook = NULL;
+  if (FlintContext_Get()->win32_keyboard_hook) {
+    UnhookWindowsHookEx((HHOOK)FlintContext_Get()->win32_keyboard_hook);
+    FlintContext_Get()->win32_keyboard_hook = NULL;
   }
-  if (g_win32_hMouseHook) {
-    UnhookWindowsHookEx(g_win32_hMouseHook);
-    g_win32_hMouseHook = NULL;
+  if (FlintContext_Get()->win32_mouse_hook) {
+    UnhookWindowsHookEx((HHOOK)FlintContext_Get()->win32_mouse_hook);
+    FlintContext_Get()->win32_mouse_hook = NULL;
   }
   if (g_gdiplusToken != 0) {
     GdiplusShutdown(g_gdiplusToken);
@@ -1948,10 +1945,21 @@ void Platform_ShutdownUI() {
 }
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
-  g_win32_waiting_for_key = true;
-  g_win32_key_callback = callback;
+  FlintContext_Get()->waiting_for_key = true;
+  FlintContext_Get()->key_callback = callback;
   log_info("Platform_WaitForKeypressAsync callback=%p", callback);
   ;
+}
+
+bool Platform_HandleWaitingForKey(unsigned int vk) {
+  if (!FlintContext_Get()->waiting_for_key)
+    return false;
+  FlintContext_Get()->waiting_for_key = false;
+  KeyCallback cb = FlintContext_Get()->key_callback;
+  FlintContext_Get()->key_callback = NULL;
+  if (cb)
+    cb((int)vk);
+  return true;
 }
 
 static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {

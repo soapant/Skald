@@ -3,6 +3,7 @@
 #include <shellapi.h>
 #include "config.h"
 #include "core/types.h"
+#include "core/context.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
 #include "platform/platform.h"
@@ -92,10 +93,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     nid.hWnd = hwnd;
     nid.uID = ID_TRAY_ICON;
     Shell_NotifyIcon(NIM_DELETE, &nid);
-    if (g_win32_hMainFont) {
-      DeleteObject(g_win32_hMainFont);
-      g_win32_hMainFont = NULL;
-    }
+
     PostQuitMessage(0);
     break;
   }

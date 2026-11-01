@@ -94,11 +94,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
       ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
   }
   if (FontSize != old_font) {
-    if (g_win32_hMainFont) {
-      DeleteObject(g_win32_hMainFont);
-      g_win32_hMainFont = NULL;
-    }
-    g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
     HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   }
   if (FlintContext_Get()->prompt_callbacks.render != NULL) {
@@ -112,7 +107,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   return true;
 }
 
-extern PromptState *g_win32_prompt_state;
 
 static HDC s_bb_dc = NULL;
 static HBITMAP s_bb_bmp = NULL;
@@ -413,11 +407,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     return (LRESULT)s_bg_brush;
   }
   case WM_CREATE: {
-    if (g_win32_hMainFont) {
-      DeleteObject(g_win32_hMainFont);
-      g_win32_hMainFont = NULL;
-    }
-    g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
     if (only_once) {
       only_once = false;
       break;
@@ -615,7 +604,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       if (FlintContext_Get()->prompt_callbacks.render != NULL) {
         return TRUE;
       } else {
-        HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_win32_hMainFont);
+        HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+        HFONT hOldMainFont = hMainFont ? (HFONT)SelectObject(pdis->hDC, hMainFont) : NULL;
         unsigned long ncol, bcol, pcol;
         int orig_idx = (int)pdis->itemID;
         int orig_cnt = lb ? lb->populated_count : 0;
@@ -634,6 +624,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         DrawTextA(pdis->hDC, textBuffer, -1, &textRect,
                   DT_SINGLELINE | DT_VCENTER);
         SelectObject(pdis->hDC, hOldMainFont);
+        if (hMainFont)
+          DeleteObject(hMainFont);
       }
       return TRUE;
     }
@@ -761,7 +753,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (g_vim_mode != NULL && VimModeText) {
       wchar_t wmode[256];
       MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
-      HFONT hOldFont = (HFONT)SelectObject(paintDC, g_win32_hMainFont);
+      HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+      HFONT hOldFont = hMainFont ? (HFONT)SelectObject(paintDC, hMainFont) : NULL;
       SetBkMode(paintDC, TRANSPARENT);
       if (g_current_mode == MODE_NORMAL) {
         SetTextColor(paintDC, COLOR_NORMAL_MODE_TEXT);
@@ -780,13 +773,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       DrawTextW(paintDC, wmode, -1, &modeRect,
                 DT_LEFT | DT_TOP | DT_SINGLELINE);
       SelectObject(paintDC, hOldFont);
+      if (hMainFont)
+        DeleteObject(hMainFont);
     }
     if (FlintContext_Get()->window.title != NULL &&
         strlen(FlintContext_Get()->window.title) > 0 && WindowTitleText) {
       wchar_t wtitle[256];
       MultiByteToWideChar(CP_UTF8, 0, FlintContext_Get()->window.title, -1,
                           wtitle, 256);
-      HFONT hOldFont = (HFONT)SelectObject(paintDC, g_win32_hMainFont);
+      HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+      HFONT hOldFont = hMainFont ? (HFONT)SelectObject(paintDC, hMainFont) : NULL;
       SetBkMode(paintDC, TRANSPARENT);
       SIZE sz;
       GetTextExtentPoint32W(paintDC, wtitle, (int)wcslen(wtitle), &sz);
@@ -818,6 +814,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       SetTextColor(paintDC, titleColor);
       DrawTextW(paintDC, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
       SelectObject(paintDC, hOldFont);
+      if (hMainFont)
+        DeleteObject(hMainFont);
     }
     if (useRenderBuf) {
       BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
