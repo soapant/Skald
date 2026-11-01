@@ -260,7 +260,7 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
 
   if (parts & EDITBOX_PART_TINT) {
     unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG),
-                                    rgb_to_hex(Modal_CursorColor()), 0.72f);
+                                    rgb_to_hex(COLOR_CURSOR), 0.72f);
     if (layout->draw_selection) {
       Platform_DrawRectRaw(
           (PlDrawRectRawSpec){.x = layout->sel_x0,
@@ -324,7 +324,7 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
                             .y = spec->caret_y,
                             .w = spec->caret_w_insert,
                             .h = spec->caret_h,
-                            .color = rgb_to_hex(Modal_CursorColor()),
+                            .color = rgb_to_hex(COLOR_CURSOR),
                             .radius = 0,
                             .rounded = false,
                             .opaque = true,

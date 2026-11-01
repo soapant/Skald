@@ -5,7 +5,6 @@
 #include "helpers/helpers_ui.h"
 
 TEST(populate_normal_mode_selects_first) {
-  SetMode(MODE_NORMAL);
   static ListBoxInfo lb;
   ListBoxInfo_Init(&lb);
   const char *items[] = {"apple", "banana", "apricot"};
@@ -17,7 +16,6 @@ TEST(populate_normal_mode_selects_first) {
 }
 
 TEST(populate_insert_mode_empty_filter_no_selection) {
-  SetMode(MODE_INSERT);
   static ListBoxInfo lb;
   ListBoxInfo_Init(&lb);
   const char *items[] = {"apple", "banana", "apricot"};
