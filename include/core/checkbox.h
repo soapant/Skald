@@ -11,7 +11,6 @@ typedef struct {
   const char *name;
   char *text;
   int fontsize;
-  unsigned long text_color;
   int x;
   int y;
   int w;
@@ -23,8 +22,10 @@ typedef struct {
   bool was_down;
   bool clicked;
   int thickness;
+  ColorRef text_color;
   ColorRef hovered_color;
   ColorRef clicked_color;
+  ColorRef bg_color;
   bool border;
   bool no_bg;
   void (*on_click)(void);

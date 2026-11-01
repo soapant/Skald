@@ -137,20 +137,18 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
     return;
   }
   unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
-  unsigned long def_btn_border =
-      (spec->checked || spec->clicked || spec->hovered) ? CHECKBOX_WHITE
-                                                        : CHECKBOX_GRAY;
-  unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : COLOR_BG;
-  unsigned long def_btn_body = (spec->checked || spec->clicked || spec->hovered)
-                                   ? CHECKBOX_GRAY
-                                   : COLOR_BG;
+  unsigned long def_btn_border = (spec->clicked || spec->hovered) ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+
+  unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : (spec->bg_color ? spec->bg_color : COLOR_BG);
+  unsigned long def_btn_body = (spec->clicked || spec->hovered) ? CHECKBOX_GRAY : spec->bg_color ? spec->bg_color : COLOR_BG;
 
   unsigned long checkbox_border =
       spec->hovered_color ? spec->hovered_color : def_cb_border;
-  unsigned long button_border =
-      spec->clicked_color ? spec->clicked_color : def_btn_border;
   unsigned long checkbox_body =
       spec->hovered_color ? spec->hovered_color : def_cb_body;
+
+  unsigned long button_border =
+      spec->clicked_color ? spec->clicked_color : def_btn_border;
   unsigned long button_body =
       spec->clicked_color ? spec->clicked_color : def_btn_body;
 
@@ -199,7 +197,7 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
           (PlDrawTextRawSpec){.x = tx,
                               .y = ty - 2,
                               .text = CHECKBOX_GLYPH,
-                              .color = rgb_to_hex(CHECKBOX_WHITE),
+                              .color = spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
                               .font = FH_NULL,
                               .align = "LEFT",
                               .pad = 0,
@@ -244,7 +242,7 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
                                    .w = w,
                                    .h = h,
                                    .text = spec->text,
-                                   .color = spec->text_color,
+                                   .color = spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
                                    .font = s_font,
                                    .fontsize = fontsize});
     }
