@@ -285,7 +285,7 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
                               const char *filter) {
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
-  if (SequenceIsWaiting()) {
+  if (false) {
     UI_LB_EndUpdate();
     return;
   }
@@ -333,7 +333,7 @@ void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
   if (!lb)
     return;
 
-  if (SequenceHasPendingWait()) {
+  if (false) {
     log_info("PopulateListBox waiting filter='%s'", filter ? filter : "");
     return;
   }
