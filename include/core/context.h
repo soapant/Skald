@@ -50,8 +50,13 @@ typedef struct {
 typedef struct {
   EditorMode vim_mode;
   const char *vim_mode_str;
+  uint32_t main_thread_id;
   WindowContext window;
   PromptCallbacks prompt_callbacks;
+  void *win32_keyboard_hook;
+  void *win32_mouse_hook;
+  bool waiting_for_key;
+  KeyCallback key_callback;
   HashMap *feature_history;
   HashMap *item_index_map;
   HashMap *history_indices;

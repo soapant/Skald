@@ -192,7 +192,7 @@ static HFONT win32_font_for_text(const wchar_t *wide, int len, int fontsize,
     if (sf) {
       HFONT nf = win32_sized_font(fontsize);
       if (!nf)
-        nf = g_win32_hMainFont;
+        nf = win32_sized_font(fontsize);
       HFONT tmp = nf ? (HFONT)SelectObject(g_draw_hdc, nf) : NULL;
       TEXTMETRICW ts;
       ts.tmAscent = 0;
@@ -214,7 +214,7 @@ static HFONT win32_font_for_text(const wchar_t *wide, int len, int fontsize,
   }
   HFONT hfont = win32_sized_font(fontsize);
   if (!hfont)
-    hfont = g_win32_hMainFont;
+    hfont = win32_sized_font(fontsize);
   if (hfont)
     prev = (HFONT)SelectObject(g_draw_hdc, hfont);
   if (out_prev)
@@ -330,8 +330,6 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
                     : win32_font_for_text(wide, wlen, spec.fontsize, &old, &dy);
   if (!hfont)
     hfont = win32_sized_font(spec.fontsize);
-  if (!hfont)
-    hfont = g_win32_hMainFont;
   if (!old && hfont)
     old = (HFONT)SelectObject(g_draw_hdc, hfont);
   TEXTMETRICW tm = {0};
@@ -350,7 +348,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     if (dy != 0) {
       HFONT nf = win32_sized_font(spec.fontsize);
       if (!nf)
-        nf = g_win32_hMainFont;
+        nf = win32_sized_font(spec.fontsize);
       if (nf) {
         HFONT t2 = (HFONT)SelectObject(g_draw_hdc, nf);
         GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
