@@ -2355,3 +2355,23 @@ bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key) {
     return false;
   return g_platform_key_interceptor(key);
 }
+
+PlMetrics *Platform_GetMetrics(void) {
+  static PlMetrics m = {0};
+  static int init = 0;
+  if (!init) {
+    m.edit_cursor_width = 0;
+    m.edit_cursor_height = PromptCaretHeight();
+    m.editbox_padding = PROMPT_EDIT_INSET;
+    m.listbox_padding = PromptListBottomMargin();
+    m.listbox_item_height = PromptRowHeight();
+    init = 1;
+  }
+  return &m;
+}
+
+void Platform_InvalidatePrompt(void) {
+  HWND hwnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  if (hwnd)
+    InvalidateRect(hwnd, NULL, FALSE);
+}
