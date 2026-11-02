@@ -2581,3 +2581,15 @@ FlMetrics *fl_get_metrics(void) {
 void fl_invalidate_prompt(void) {
   Platform_InvalidatePrompt();
 }
+
+#include "core/window_manager.h"
+#include "core/types/prompt.h"
+
+void *fl_get_active_prompt(void) {
+  WindowManager *wm = WindowManager_Get();
+  Popup *top = WindowManager_GetTopPopup(wm);
+  if (top && top->user_data && top->type == POPUP_PROMPT) {
+    return top->user_data;
+  }
+  return NULL;
+}

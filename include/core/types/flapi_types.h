@@ -47,7 +47,7 @@ typedef struct {
   int y;
   int w;
   int h;
-  unsigned long color;
+  ColorRef color;
   FontHandle font;
 } FlEditSpec;
 
