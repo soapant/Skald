@@ -1118,7 +1118,7 @@ void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
 
 static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
                                       EditboxSpec *eb) {
-  int text_len = (int)strlen(state->editbox.filter);
+  int text_len = (int)strlen(state->editbox->filter);
   int cursor_x = 0;
   int text_w = 0;
   int ascent = 0;
@@ -1135,11 +1135,11 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   ascent = tm.tmAscent;
   descent = tm.tmDescent;
   SIZE szCur;
-  GetTextExtentPoint32A(g_draw_hdc, state->editbox.filter, (int)state->editbox.cursor, &szCur);
+  GetTextExtentPoint32A(g_draw_hdc, state->editbox->filter, (int)state->editbox->cursor, &szCur);
   cursor_x = szCur.cx;
   if (text_len > 0) {
     SIZE szText;
-    GetTextExtentPoint32A(g_draw_hdc, state->editbox.filter, text_len, &szText);
+    GetTextExtentPoint32A(g_draw_hdc, state->editbox->filter, text_len, &szText);
     text_w = szText.cx;
   }
   if (told)
@@ -1149,9 +1149,9 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   Editbox_ResolveSelection(state, text_len, false, &sel_start, &sel_end,
                            &has_sel);
   memset(eb, 0, sizeof(*eb));
-  eb->text = state->editbox.filter;
+  eb->text = state->editbox->filter;
   eb->text_len = text_len;
-  eb->editbox.cursor = state->editbox.cursor;
+  eb->editbox.cursor = state->editbox->cursor;
   eb->sel_start = sel_start;
   eb->sel_end = sel_end;
   eb->has_selection = has_sel;
@@ -1162,7 +1162,7 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->w = state->width;
   eb->inset = PROMPT_EDIT_INSET;
   eb->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
-  eb->scroll = state->editbox.scroll_offset;
+  eb->scroll = state->editbox->scroll_offset;
   eb->editbox.cursor_x = cursor_x;
   eb->text_w = text_w;
   eb->text_y = PROMPT_EDIT_INSET;
@@ -1172,7 +1172,7 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->caret_w_insert = PROMPT_CARET_W_INSERT;
   eb->editbox.placeholder_dy = 2;
   eb->rainbow_limit_x = -1;
-  eb->editbox.placeholder = state->editbox.placeholder;
+  eb->editbox.placeholder = state->editbox->placeholder;
   eb->text_color = rgb_to_hex(COLOR_TEXT);
   eb->font = font;
 }
@@ -1186,7 +1186,7 @@ void Platform_DrawPromptEditText(PromptState *state) {
   EditboxLayout lay;
   win32_prompt_editbox_spec(state, font, &eb);
   Editbox_Layout(&eb, &lay);
-  state->editbox.scroll_offset = eb.scroll;
+  state->editbox->scroll_offset = eb.scroll;
   Editbox_Draw(&eb, &lay, EDITBOX_PART_TINT | EDITBOX_PART_TEXT);
   Platform_DestroyFont(font);
 }
@@ -1200,7 +1200,7 @@ void Platform_DrawPromptEditbox(PromptState *state) {
   EditboxLayout lay;
   win32_prompt_editbox_spec(state, font, &eb);
   Editbox_Layout(&eb, &lay);
-  state->editbox.scroll_offset = eb.scroll;
+  state->editbox->scroll_offset = eb.scroll;
   Editbox_Draw(&eb, &lay, EDITBOX_PART_ALL);
   Platform_DestroyFont(font);
 }

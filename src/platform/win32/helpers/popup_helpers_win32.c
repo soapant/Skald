@@ -14,7 +14,7 @@ ListBoxInfo *GetLBFromPopup(HWND hPopup) {
   if (hPopup && IsWindow(hPopup)) {
     PromptState *state = Platform_GetPromptStateForHWND(hPopup);
     if (state) {
-      return &state->listbox;
+      return state->listbox;
     }
     return (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
   }

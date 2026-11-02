@@ -4,6 +4,8 @@
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
+#include "core/flapi.h"
+
 #include "core/checkbox.h"
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
@@ -160,6 +162,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
 }
 
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
+  EventBus_Trigger(EVENT_PROMPT_OPEN);
   log_info("WindowManager_ShowPrompt called wm=%p spec=%p title='%s'",
            (void *)wm, (void *)spec,
            spec && spec->title ? spec->title : "(null)");

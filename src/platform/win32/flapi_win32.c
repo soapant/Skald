@@ -246,7 +246,7 @@ static bool g_fl_list_font_owned;
 bool fl_listbox_begin_platform(const FlListSpec *spec) {
   if (!spec)
     return false;
-  ListBoxInfo *lb = spec->listbox;
+  ListBoxInfo *lb = spec;
   if (!lb) {
     if (!spec->items || spec->count <= 0)
       return false;
@@ -449,7 +449,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   const char *buf = spec->buffer;
   if (!buf) {
     if (state)
-      buf = state->editbox->editbox.filter;
+      buf = state->editbox->filter;
     else
       buf = "";
   }
@@ -472,7 +472,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     old = (HFONT)SelectObject(hdc, hfont);
   SetBkMode(hdc, TRANSPARENT);
   int text_len = (int)strlen(buf);
-  int cursor = state ? state->editbox->editbox.cursor : text_len;
+  int cursor = state ? state->editbox->cursor : text_len;
   if (cursor < 0)
     cursor = 0;
   if (cursor > text_len)

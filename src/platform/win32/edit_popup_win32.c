@@ -151,17 +151,6 @@ void Platform_EditPopupRender(Popup *self) {
   if (font.hfont)
     SelectObject(paint, font.hfont);
 
-  if ("Insert" != NULL && EditModeText) {
-    Platform_DrawTextRaw((PlDrawTextRawSpec){.x = PROMPT_EDITPOPUP_MODE_X,
-                                             .y = PROMPT_EDITPOPUP_MODE_Y,
-                                             .text = "Insert",
-                                             .color = EditModeTextColor(),
-                                             .font = font,
-                                             .align = "LEFT",
-                                             .pad = PROMPT_EDITPOPUP_MODE_PAD,
-                                             .fontsize = FontSize});
-  }
-
   int cursor_x = 0;
   int text_len = data->text ? (int)strlen(data->text) : 0;
   int text_w = 0;
