@@ -36,6 +36,8 @@
 
 #include "platform/x11/display_x11.h"
 #include "platform/platform.h"
+#include "core/context.h"
+#include "core/prompt_geometry.h"
 #include "helpers/helpers_text.h"
 #include "core/feature_path.h"
 #include "platform/x11/env_helpers_x11.h"
@@ -2272,4 +2274,27 @@ bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key) {
   if (!g_platform_key_interceptor)
     return false;
   return g_platform_key_interceptor(key);
+}
+
+PlMetrics *Platform_GetMetrics(void) {
+  static PlMetrics m = {0};
+  static int init = 0;
+  if (!init) {
+    m.edit_cursor_width = 0;
+    m.edit_cursor_height = PromptCaretHeight();
+    m.editbox_padding = PROMPT_EDIT_INSET;
+    m.listbox_padding = PromptListBottomMargin();
+    m.listbox_item_height = PromptRowHeight();
+    init = 1;
+  }
+  return &m;
+}
+
+void Platform_InvalidatePrompt(void) {
+  Display *dpy = get_display();
+  Window win = (Window)FlintContext_Get()->window.hPopupWnd.xid;
+  if (dpy && win) {
+    XClearArea(dpy, win, 0, 0, 0, 0, True);
+    XFlush(dpy);
+  }
 }

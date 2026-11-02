@@ -1156,7 +1156,7 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->sel_end = sel_end;
   eb->has_selection = has_sel;
   eb->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
-  eb->insert_mode = true;
+  eb->insert_mode = (Platform_GetMetrics()->edit_cursor_width == 0);
   eb->x = 0;
   eb->y = PROMPT_EDIT_INSET;
   eb->w = state->width;
@@ -1168,7 +1168,7 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->text_y = PROMPT_EDIT_INSET;
   eb->caret_y = Editbox_CaretY(PROMPT_EDIT_INSET, ascent, descent);
   eb->caret_h = PromptCaretHeight();
-  eb->caret_w_normal = PromptNormalCaretWidth();
+  eb->caret_w_normal = Platform_GetMetrics()->edit_cursor_width ? Platform_GetMetrics()->edit_cursor_width : PromptNormalCaretWidth();
   eb->caret_w_insert = PROMPT_CARET_W_INSERT;
   eb->placeholder_dy = 2;
   eb->rainbow_limit_x = -1;
