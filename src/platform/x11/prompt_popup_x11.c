@@ -123,7 +123,7 @@ void Platform_PromptPopupDestroyWindow(Popup *self) {
 static void command_confirm(const char *new_text, void *user_data) {
 
   PromptState *state = (PromptState *)user_data;
-  ListBox_CommandExecute(&state->listbox, new_text);
+  ListBox_CommandExecute(state->listbox, new_text);
 }
 
 bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
