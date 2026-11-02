@@ -190,6 +190,21 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
           _gev.mods |= HOTKEY_MOD_SUPER;
         _gev.down = _isDown;
         _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
+        static unsigned long long s_last_keydown_ms[256] = {0};
+        static bool s_key_is_down[256] = {0};
+        unsigned long long now_ms = GetTickCount64();
+        if (_isDown) {
+          if (!s_key_is_down[_vk & 0xFF] ||
+              (now_ms - s_last_keydown_ms[_vk & 0xFF]) >=
+                  (unsigned long long)HotkeyRepeatDelayMs) {
+            s_key_is_down[_vk & 0xFF] = true;
+            s_last_keydown_ms[_vk & 0xFF] = now_ms;
+            Platform_InputState_Update(_vk, true, _gev.mods);
+          }
+        } else {
+          s_key_is_down[_vk & 0xFF] = false;
+          Platform_InputState_Update(_vk, false, _gev.mods);
+        }
         Platform_GlobalKey_Push(&_gev);
         if (_isUp)
           hotkey_key_up(_vk);

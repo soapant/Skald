@@ -302,9 +302,19 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       popup_request_repaint(hwnd);
       return 0;
     }
-    if (true && wParam >= 0x20 && wParam < 0x7F)
+    if (true && wParam >= 0x20 && wParam < 0x7F &&
+        !(GetKeyState(VK_CONTROL) & 0x8000) &&
+        !(GetKeyState(VK_MENU) & 0x8000) &&
+        !(GetKeyState(VK_LWIN) & 0x8000) &&
+        !(GetKeyState(VK_RWIN) & 0x8000))
       break;
-    popup_request_repaint(hwnd);
+    if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+      InvalidateRect(hwnd, NULL, FALSE);
+      UpdateWindow(hwnd);
+      Platform_InputState_Update((int)wParam, false, 0);
+    } else {
+      popup_request_repaint(hwnd);
+    }
     break;
   }
   case WM_CHAR: {
