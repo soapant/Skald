@@ -734,6 +734,11 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
 
   EditboxSpec eb;
   Editbox_BuildSpec(&eb, &ebi);
+  PlMetrics *m = Platform_GetMetrics();
+  if (m->edit_cursor_width > 0) {
+    eb.caret_w_normal = m->edit_cursor_width;
+    eb.insert_mode = false;
+  }
   eb.measure = x11_editbox_measure;
   eb.measure_user = &metrics;
 
