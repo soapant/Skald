@@ -2302,6 +2302,7 @@ int fl_get_pid();
  */
 FlMetrics *fl_get_metrics(void);
 void fl_invalidate_prompt(void);
+void *fl_get_active_prompt(void);
 
 typedef bool (*FlKeyInterceptorFn)(const PopupKeyEvent *key);
 
