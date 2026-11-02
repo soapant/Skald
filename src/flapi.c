@@ -2574,3 +2574,10 @@ bool fl_hotkey_down(FlKey key) {
 void fl_register_key_interceptor(FlKeyInterceptorFn fn) {
   Platform_RegisterKeyInterceptor((PlatformKeyInterceptorFn)fn);
 }
+
+FlMetrics *fl_get_metrics(void) {
+  return (FlMetrics *)Platform_GetMetrics();
+}
+void fl_invalidate_prompt(void) {
+  Platform_InvalidatePrompt();
+}
