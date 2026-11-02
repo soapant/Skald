@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "core/types.h"
+#include "platform/platform.h"
 #include "core/types/prompt.h"
 #include "core/types/flapi_types.h"
 #include "core/checkbox.h"
@@ -38,6 +39,7 @@ typedef struct PlatformWidget PlatformWidget;
  * Construct with `RGB(r, g, b)` or `HEX(0xRRGGBB)`.
  */
 typedef PlColor FlColor;
+typedef PlMetrics FlMetrics;
 
 /**
  * @brief A rectangle in screen coordinates.
@@ -2298,6 +2300,9 @@ int fl_get_pid();
  *
  * Return true to swallow the key, false to let normal handling proceed.
  */
+FlMetrics *fl_get_metrics(void);
+void fl_invalidate_prompt(void);
+
 typedef bool (*FlKeyInterceptorFn)(const PopupKeyEvent *key);
 
 /**
