@@ -54,16 +54,16 @@ static void PromptPopup_OnShow(Popup *self) {
     return;
   }
 
-  data->state->items = (char **)data->spec.items;
-  data->state->item_count = 0;
-  data->state->cursor = 0;
+  data->state->listbox.items = (char **)data->spec.items;
+  data->state->listbox.item_count = 0;
+  data->state->editbox.cursor = 0;
   data->state->width = data->w;
   data->state->height = data->h;
   const char *title = data->spec.title ? data->spec.title : "Flint";
   data->state->window_title = (char *)prompt_feature_name(title);
-  data->state->filter[0] = '\0';
+  data->state->editbox.filter[0] = '\0';
   if (data->spec.placeholder && data->spec.placeholder[0]) {
-    data->state->placeholder = strdup(data->spec.placeholder);
+    data->state->editbox.placeholder = strdup(data->spec.placeholder);
   }
   FlintContext_Get()->window.filter[0] = '\0';
   FlintContext_Get()->window.filter_cursor = 0;
@@ -72,9 +72,9 @@ static void PromptPopup_OnShow(Popup *self) {
   } else {
     data->state->has_listbox = false;
   }
-  ListBoxInfo_Init(&data->state->lb);
+  ListBoxInfo_Init(&data->state->listbox);
   data->state->no_bg = data->spec.no_bg;
-  data->state->lb.selected_index = -1;
+  data->state->listbox.selected_index = -1;
   self->user_data = data->state;
   data->state->no_bg = data->spec.no_bg;
 
@@ -139,7 +139,7 @@ static void PromptPopup_OnHide(Popup *self) {
   if (data->state) {
     last_index = 0;
     if (data->state->has_listbox)
-      data->state->lb.selected_index = 0;
+      data->state->listbox.selected_index = 0;
     FlintContext *_c3 = FlintContext_Get();
     _c3->window.current_feature = NULL;
     _c3->prompt_callbacks = data->saved_callbacks;
@@ -164,8 +164,8 @@ static void PromptPopup_Destroy(Popup *self) {
   PromptPopupData *data = (PromptPopupData *)self;
   Platform_PromptPopupDestroyWindow(self);
   if (data->state) {
-    ListBoxInfo_Free(&data->state->lb);
-    free(data->state->placeholder);
+    ListBoxInfo_Free(&data->state->listbox);
+    free(data->state->editbox.placeholder);
     free(data->state);
   }
   free(data);
