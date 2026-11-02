@@ -597,16 +597,6 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                             .align = "LEFT",
                             .pad = PROMPT_FOOTER_PAD,
                             .fontsize = FontSize});
-  if (EditModeText)
-    Platform_DrawTextRaw(
-        (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
-                            .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
-                            .text = "Insert",
-                            .color = EditModeTextColor(),
-                            .font = font,
-                            .align = "RIGHT",
-                            .pad = PROMPT_FOOTER_PAD,
-                            .fontsize = FontSize});
 }
 static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
                                     EditboxSpec *eb,
@@ -963,8 +953,6 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
   Platform_DrawPromptSeparator(
       (PlDrawPromptSeparatorSpec){.y = y0, .width = state->width});
   int yOffset = PROMPT_LIST_BOTTOM_TITLE;
-  if (!WindowTitleText && !EditModeText)
-    yOffset = 0;
   int visible = (state->height - y0 - yOffset) / itemH;
   if (visible < 1)
     visible = 1;
