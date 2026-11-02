@@ -128,16 +128,16 @@ void video_refresh_callback(PromptState *state) {
   for (size_t i = 0; i < n; i++) {
     s_video_items[i] = video_files.files[i].name;
   }
-  fl_populate_listbox(&state->listbox,state->editbox.filter, s_video_items, (int)n);
+  fl_populate_listbox(state->listbox,state->editbox->filter, s_video_items, (int)n);
 }
 
 bool video_enter_callback(PromptState *state) {
   char *result = NULL;
-  if (!fl_is_selected(&state->listbox)) {
+  if (!fl_is_selected(state->listbox)) {
     return false;
   }
   for (size_t i = 0; i < video_files.count; i++) {
-    if (strcmp(video_files.files[i].name, state->listbox.selected_text) == 0) {
+    if (strcmp(video_files.files[i].name, state->listbox->selected_text) == 0) {
       result = video_files.files[i].path;
       break;
     }
@@ -147,7 +147,7 @@ bool video_enter_callback(PromptState *state) {
     fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL,
                               true, FL_DIR_WALK_UNLIMITED);
     for (size_t i = 0; i < tmp.count; i++) {
-      if (strcmp(tmp.files[i].name, state->listbox.selected_text) == 0) {
+      if (strcmp(tmp.files[i].name, state->listbox->selected_text) == 0) {
         result = tmp.files[i].path;
         break;
       }

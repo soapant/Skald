@@ -47,12 +47,12 @@ char *get_zoxide_match(char *query) {
 const char *TerminalZoxideFilePath = "TerminalZoxide.txt";
 static void zoxide_refresh(PromptState *state) {
   FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
-  fl_populate_listbox(&state->listbox,state->editbox.filter, (const char **)files.items, files.count);
+  fl_populate_listbox(state->listbox,state->editbox->filter, (const char **)files.items, files.count);
   fl_free_file_list(&files);
 }
 static void zoxide_edit(PromptState *state) {
   int idx = -1;
-  char *edited = fl_edit_text_popup(.initial_text = state->listbox.selected_text, .lb = &state->listbox,
+  char *edited = fl_edit_text_popup(.initial_text = state->listbox->selected_text, .lb = state->listbox,
                                     .out_index = &idx);
   if (!edited)
     return;
@@ -62,8 +62,8 @@ static void zoxide_edit(PromptState *state) {
   zoxide_refresh(state);
 }
 static bool zoxide_enter(PromptState *state) {
-  char* text = state->listbox.selected_text ? state->listbox.selected_text : state->editbox.filter;
-  if (!fl_is_selected(&state->listbox)) {
+  char* text = state->listbox->selected_text ? state->listbox->selected_text : state->editbox->filter;
+  if (!fl_is_selected(state->listbox)) {
       fl_append_unique_line(TerminalZoxideFilePath, text);
   }
   char* path = get_zoxide_match(text);

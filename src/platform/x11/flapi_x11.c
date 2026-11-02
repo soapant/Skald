@@ -674,7 +674,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   const char *buf = spec->buffer;
   if (!buf) {
     if (state)
-      buf = state->editbox.filter;
+      buf = state->editbox->filter;
     else
       buf = "";
   }
@@ -695,7 +695,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   Platform_SetDrawContext(dpy, xd, vis, cmap);
 
   int text_len = (int)strlen(buf);
-  int cursor = state ? state->editbox.cursor : text_len;
+  int cursor = state ? state->editbox->cursor : text_len;
   if (cursor < 0)
     cursor = 0;
   if (cursor > text_len)
@@ -744,7 +744,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
 
   Editbox_Render(&eb, NULL);
   if (state)
-    state->editbox.scroll_offset = eb.scroll;
+    state->editbox->scroll_offset = eb.scroll;
 
   if (state) {
     if (WindowTitleText && state->window_title) {

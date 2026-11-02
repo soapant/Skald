@@ -190,18 +190,18 @@ void clipboard_history_refresh(PromptState *state) {
     }
   }
   fl_mutex_unlock(ch_lock);
-  fl_populate_listbox(&state->listbox,state->editbox.filter, items, count);
+  fl_populate_listbox(state->listbox,state->editbox->filter, items, count);
   fl_free_list(items, count);
 }
 
 bool clipboard_history_enter(PromptState *state) {
-  (void)state->listbox.selected_text;
-  if (!fl_is_selected(&state->listbox))
+  (void)state->listbox->selected_text;
+  if (!fl_is_selected(state->listbox))
     return true;
-  int sel = state->listbox.selected_index;
-  if (sel < 0 || sel >= state->listbox.total_matches)
+  int sel = state->listbox->selected_index;
+  if (sel < 0 || sel >= state->listbox->total_matches)
     return true;
-  int idx = state->listbox.matching_indices[sel];
+  int idx = state->listbox->matching_indices[sel];
   char *copy = NULL;
   fl_mutex_lock(ch_lock);
   if (idx >= 0 && idx < ch_count && ch_items[ch_count - 1 - idx]) {

@@ -146,7 +146,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
       Platform_SetDrawContext(dpy, NULL, NULL, 0);
       state->render(state);
     } else {
-      if (state->has_listbox)
+      if (state->listbox)
         DrawPromptUserListBox(dpy, win, state);
       DrawPromptUserEditControl(dpy, win, state);
     }
@@ -163,7 +163,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
       Checkbox_FrameBegin();
       state->render(state);
     } else {
-      if (state->has_listbox)
+      if (state->listbox)
         DrawPromptUserListBox(dpy, win, state);
       DrawPromptUserEditControl(dpy, win, state);
     }
@@ -196,7 +196,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     Checkbox_FrameBegin();
     state->render(state);
   } else {
-    if (state->has_listbox) {
+    if (state->listbox) {
       DrawPromptUserListBoxOnDraw(dpy, xdDbl, vis, cmap, state);
     }
     DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
