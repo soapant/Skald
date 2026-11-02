@@ -148,7 +148,7 @@ void doc_refresh(PromptState *state) {
       names[i] = g_doc_items[i].name;
     }
   }
-  fl_populate_listbox(&state->lb,state->filter, names, g_doc_item_count);
+  fl_populate_listbox(&state->listbox,state->editbox.filter, names, g_doc_item_count);
 }
 
 static void collect_text(XMLNode *node, char *out, size_t cap, size_t *used) {
@@ -289,8 +289,8 @@ static void get_doc_details(const char *name, char *out, size_t cap) {
 
 bool doc_enter(PromptState *state) {
   char details[1024];
-  if (fl_is_selected(&state->lb)) {
-    get_doc_details(state->lb.selected_text, details, sizeof(details));
+  if (fl_is_selected(&state->listbox)) {
+    get_doc_details(state->listbox.selected_text, details, sizeof(details));
     fl_message(.message = details, .slot = CENTER, .close_on_keypress = true);
   }
   return false;
@@ -298,7 +298,7 @@ bool doc_enter(PromptState *state) {
 
 void doc_render(PromptState *state) {
   FlListSpec spec = {
-      .lb = &state->lb,
+      .lb = &state->listbox,
   };
   if (!fl_listbox_begin(&spec))
     return;

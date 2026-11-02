@@ -63,6 +63,15 @@ typedef void (*RenderCallback)(PromptState *state);
 
 #define LISTBOX_ROW_BYTES 512
 
+typedef struct {
+  char filter[512];
+  size_t cursor;
+  int sel_start;
+  int sel_end;
+  int scroll_offset;
+  char *placeholder;
+} EditBoxInfo;
+
 struct ListBoxInfo {
   char (*populated_cache)[LISTBOX_ROW_BYTES];
   int populated_cache_cap;
@@ -73,24 +82,19 @@ struct ListBoxInfo {
   char *selected_text;
   int view_offset;
   int last_item_count;
+  char **items;
+  size_t item_count;
 };
 
 struct PromptState {
-  char **items;
-  size_t item_count;
-  char filter[512];
-  size_t cursor;
-  int sel_start;
-  int sel_end;
-  int scroll_offset;
   int width, height;
   char *window_title;
-  ListBoxInfo lb;
+  EditBoxInfo editbox;
+  ListBoxInfo listbox;
   bool has_listbox;
+  bool has_editbox;
   bool no_bg;
-  char *placeholder;
   RenderCallback render;
-  bool editbox_placed;
 };
 
 /**

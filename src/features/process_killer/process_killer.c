@@ -324,12 +324,12 @@ static void pk_cycle_sort(void) {
 }
 
 static bool pk_enter_callback(PromptState *state) {
-  if (!state->lb.selected_text)
+  if (!state->listbox.selected_text)
     return false;
   char name[PK_NAME_LEN];
   char mem[32];
   char cpu[24];
-  pk_split_row(state->lb.selected_text, name, sizeof(name), mem, sizeof(mem), cpu,
+  pk_split_row(state->listbox.selected_text, name, sizeof(name), mem, sizeof(mem), cpu,
                sizeof(cpu));
   if (name[0] == '\0')
     return false;
@@ -341,7 +341,7 @@ static void pk_refresh_callback(PromptState *state) {
   g_pk_last_collect = fl_start_timer();
   g_pk_collect_started = true;
   pk_collect_and_sort();
-  fl_populate_listbox(&state->lb,state->filter, g_pk_items, g_pk_count);
+  fl_populate_listbox(&state->listbox,state->editbox.filter, g_pk_items, g_pk_count);
 }
 
 #define PK_COL_MEM 430
@@ -354,17 +354,17 @@ static void pk_render_callback(PromptState *state) {
   if (since >= 1000.0) {
     g_pk_last_collect = fl_start_timer();
     g_pk_collect_started = true;
-    int keep = state->lb.selected_index;
+    int keep = state->listbox.selected_index;
     pk_collect_and_sort();
-    fl_populate_listbox(&state->lb, state->filter, g_pk_items, g_pk_count);
-    if (keep >= 0 && keep < state->lb.populated_count) {
-      state->lb.selected_index = keep;
+    fl_populate_listbox(&state->listbox, state->editbox.filter, g_pk_items, g_pk_count);
+    if (keep >= 0 && keep < state->listbox.populated_count) {
+      state->listbox.selected_index = keep;
     }
   }
 
   if (fl_hotkey_down(fl_hotkey_from_string("Ctrl+L"))) {
     pk_cycle_sort();
-    fl_populate_listbox(&state->lb, NULL, g_pk_items, g_pk_count);
+    fl_populate_listbox(&state->listbox, NULL, g_pk_items, g_pk_count);
   }
 
   fl_draw_text(.text = "memory", .x = PK_COL_MEM, .y = 8, .fontsize = 13,
@@ -378,7 +378,7 @@ static void pk_render_callback(PromptState *state) {
                .align = "RIGHT", .color = RGB(160, 160, 190));
 
   FlListSpec spec = {
-      .lb = &state->lb,
+      .lb = &state->listbox,
       .item_height = fl_get_text_height(NULL) + 20,
   };
   fl_place_editbox();
