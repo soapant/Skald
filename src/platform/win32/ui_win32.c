@@ -193,9 +193,9 @@ static bool win32_resolve_text_target(Win32TextTarget *out) {
   }
   if (top && top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    out->text = prompt->filter;
-    out->capacity = sizeof(prompt->filter);
-    out->cursor_z = &prompt->cursor;
+    out->text = prompt->editbox.filter;
+    out->capacity = sizeof(prompt->editbox.filter);
+    out->cursor_z = &prompt->editbox.cursor;
     return true;
   }
   return false;

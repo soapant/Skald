@@ -391,19 +391,19 @@ static void macro_refresh(PromptState *state) {
     n = MAX_VISIBLE_ITEMS;
   for (int i = 0; i < n; i++) {
     macro_file_name_ptrs[i] = macro_load_files.files[i].name;
-    fl_populate_listbox(&state->listbox,state->editbox.filter, macro_file_name_ptrs, n);
+    fl_populate_listbox(state->listbox,state->editbox->filter, macro_file_name_ptrs, n);
   }
 }
 
 static bool macro_load_enter(PromptState *state) {
-  if (state->listbox.selected_text)
-    macro_load(state->listbox.selected_text);
+  if (state->listbox->selected_text)
+    macro_load(state->listbox->selected_text);
   return true;
 }
 
 static bool macro_load_ctrlenter(PromptState *state) {
-  if (state->listbox.selected_text && state->listbox.selected_text[0]) {
-    char *path = fl_resolve_data_path(state->listbox.selected_text);
+  if (state->listbox->selected_text && state->listbox->selected_text[0]) {
+    char *path = fl_resolve_data_path(state->listbox->selected_text);
     if (path) {
       remove(path);
       free(path);

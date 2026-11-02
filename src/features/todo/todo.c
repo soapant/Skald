@@ -276,24 +276,24 @@ void RemoveTodoItemFromFile(const char *item_to_remove) {
 void todo_refresh_callback(PromptState *state) {
   FlStringList files = fl_load_file_list(TODO_FILE_PATH);
 
-  fl_populate_listbox(&state->listbox,state->editbox.filter, (const char **)files.items, files.count);
+  fl_populate_listbox(state->listbox,state->editbox->filter, (const char **)files.items, files.count);
   fl_free_file_list(&files);
 }
 
 bool todo_enter_callback(PromptState *state) {
-  if (fl_is_selected(&state->listbox)) {
-    RemoveTodoItemFromFile(state->listbox.selected_text);
+  if (fl_is_selected(state->listbox)) {
+    RemoveTodoItemFromFile(state->listbox->selected_text);
   } else {
-    AddTodoToFile(state->editbox.filter);
+    AddTodoToFile(state->editbox->filter);
   }
   return true;
 }
 
 bool todo_ctrlenter_callback(PromptState *state) {
-  if (fl_is_selected(&state->listbox)) {
-    RemoveTodoItemFromFile(state->listbox.selected_text);
+  if (fl_is_selected(state->listbox)) {
+    RemoveTodoItemFromFile(state->listbox->selected_text);
   } else {
-    AddTodoToFile(state->editbox.filter);
+    AddTodoToFile(state->editbox->filter);
     fl_set_edit_text("");
   }
   todo_refresh_callback(state);
@@ -302,7 +302,7 @@ bool todo_ctrlenter_callback(PromptState *state) {
 
 void todo_render_callback(PromptState *state) {
   int line_h = fl_get_text_height(NULL);
-  FlListSpec spec = {.lb = &state->listbox, .item_height = line_h * 3 + 3};
+  FlListSpec spec = {.lb = state->listbox, .item_height = line_h * 3 + 3};
   fl_place_editbox();
   if (!fl_listbox_begin(&spec))
     return;
@@ -340,7 +340,7 @@ void todo_render_callback(PromptState *state) {
 
 void todo_edit_callback(PromptState *state) {
   int idx = -1;
-  char *edited = fl_edit_text_popup(.initial_text = state->listbox.selected_text, .lb = &state->listbox,
+  char *edited = fl_edit_text_popup(.initial_text = state->listbox->selected_text, .lb = state->listbox,
                                     .out_index = &idx);
   if (!edited)
     return;

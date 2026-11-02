@@ -89,10 +89,8 @@ struct ListBoxInfo {
 struct PromptState {
   int width, height;
   char *window_title;
-  EditBoxInfo editbox;
-  ListBoxInfo listbox;
-  bool has_listbox;
-  bool has_editbox;
+  EditBoxInfo *editbox;
+  ListBoxInfo *listbox;
   bool no_bg;
   RenderCallback render;
 };
