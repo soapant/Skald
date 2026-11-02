@@ -112,14 +112,14 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
       if (ctrl) {
         UI_SetText("");
       } else if (ps) {
-        size_t len = strlen(ps->editbox.filter);
-        size_t cur = ps->editbox.cursor;
+        size_t len = strlen(ps->editbox->filter);
+        size_t cur = ps->editbox->cursor;
         if (cur > len)
           cur = len;
-        if (cur >= 2 && ps->editbox.filter[cur - 1] == '\n' &&
-            ps->editbox.filter[cur - 2] == '\r') {
-          memmove(ps->editbox.filter + cur - 2, ps->editbox.filter + cur, len - cur + 1);
-          ps->editbox.cursor = cur - 2;
+        if (cur >= 2 && ps->editbox->filter[cur - 1] == '\n' &&
+            ps->editbox->filter[cur - 2] == '\r') {
+          memmove(ps->editbox->filter + cur - 2, ps->editbox->filter + cur, len - cur + 1);
+          ps->editbox->cursor = cur - 2;
         } else {
           UI_Backspace();
         }
@@ -130,13 +130,13 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == VK_DELETE) {
       PromptState *ps = NULL;
       if (ps) {
-        size_t len = strlen(ps->editbox.filter);
-        size_t cur = ps->editbox.cursor;
+        size_t len = strlen(ps->editbox->filter);
+        size_t cur = ps->editbox->cursor;
         if (cur > len)
           cur = len;
-        if (cur + 1 < len && ps->editbox.filter[cur] == '\r' &&
-            ps->editbox.filter[cur + 1] == '\n') {
-          memmove(ps->editbox.filter + cur, ps->editbox.filter + cur + 2, len - cur - 1);
+        if (cur + 1 < len && ps->editbox->filter[cur] == '\r' &&
+            ps->editbox->filter[cur + 1] == '\n') {
+          memmove(ps->editbox->filter + cur, ps->editbox->filter + cur + 2, len - cur - 1);
         } else {
           UI_DeleteForward();
         }

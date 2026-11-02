@@ -761,18 +761,6 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
                               .pad = PROMPT_FOOTER_PAD,
                               .fontsize = FontSize});
     }
-    if (EditModeText) {
-      Platform_SetDrawContext(dpy, xd, vis, cmap);
-      Platform_DrawTextRaw(
-          (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
-                              .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
-                              .text = "Insert",
-                              .color = EditModeTextColor(),
-                              .font = fh,
-                              .align = "RIGHT",
-                              .pad = PROMPT_FOOTER_PAD,
-                              .fontsize = FontSize});
-    }
   }
   if (needDestroy)
     Platform_DestroyFont(fh);
