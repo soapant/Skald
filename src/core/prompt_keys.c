@@ -182,8 +182,10 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   FlintContext *ctx = FlintContext_Get();
   bool invoke_interceptor = (ctx->prompt_callbacks.render == NULL ||
                              ctx->window.editbox_placed);
-  if (invoke_interceptor && Platform_InvokeKeyInterceptor(key))
+  if (invoke_interceptor && Platform_InvokeKeyInterceptor(key)) {
+    Platform_InvalidatePrompt();
     return true;
+  }
 
   if (ctrl && (vk == 'A' || vk == 'a')) {
     int len = (int)strlen(state->filter);

@@ -246,4 +246,14 @@ const char *Platform_GetSessionXAuthority(void);
 const char *Platform_GetRuntimeDir(void);
 #endif
 
+typedef struct {
+  int edit_cursor_width;
+  int edit_cursor_height;
+  int editbox_padding;
+  int listbox_padding;
+  int listbox_item_height;
+} PlMetrics;
+
+PlMetrics *Platform_GetMetrics(void);
+void Platform_InvalidatePrompt(void);
 #endif
