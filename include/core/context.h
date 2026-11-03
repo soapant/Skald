@@ -5,26 +5,12 @@
 
 #include "core/types.h"
 #include "core/types/window.h"
+#include "core/types/prompt.h"
 
 typedef struct {
   char *key;
   void *value;
 } HashMap;
-
-typedef struct {
-  RefreshCallback refresh;
-  EnterCallback enter;
-  CtrlEnterCallback ctrl_enter;
-  ShiftEnterCallback shift_enter;
-  CtrlShiftEnterCallback ctrl_shift_enter;
-  CtrlAltEnterCallback ctrl_alt_enter;
-  ShiftAltEnterCallback shift_alt_enter;
-  TabCallback tab;
-  HelpCallback help;
-  RenderCallback render;
-  EditCallback edit;
-  FilterCallback filter;
-} PromptCallbacks;
 
 typedef struct {
   WindowHandle hGlobalTrayWnd;
