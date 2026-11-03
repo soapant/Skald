@@ -28,7 +28,4 @@ void TimerEnd(WinTimer t, const char *operation_name, const char *file,
               int line);
 void TimerFlush(void);
 double TimerElapsedUs(WinTimer t);
-void TimerPrintRaw(double elapsed_us, const char *operation_name,
-                   const char *file, int line);
-
 #endif

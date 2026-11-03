@@ -11,7 +11,6 @@ extern bool EnableEditMode;
 extern bool MessageAfterEachHotkey;
 extern int TimeOutForMessages;
 extern int HotkeyRepeatDelayMs;
-extern bool DoTimeDebugs;
 extern bool DebugMode;
 extern bool RoundedCorners;
 extern int CornerRadius;
