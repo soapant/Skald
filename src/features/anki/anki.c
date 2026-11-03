@@ -61,7 +61,7 @@ static int (*p_sqlite3_column_int)(sqlite3_stmt *, int) = NULL;
 static FlThread anki_thread = NULL;
 static FlMutex anki_lock = NULL;
 static bool anki_running = false;
-static int time_between_qs = 10;
+static int time_between_qs = 20;
 
 static char *safe_strdup(const char *s) {
   if (!s)
@@ -573,9 +573,9 @@ FLINT_FEATURE_SHUTDOWN {
 }
 
 FLINT_FEATURE_INIT {
-  // anki_lock = fl_mutex_create();
-  // anki_running = true;
-  // anki_thread = fl_thread_create(anki_timer_thread, NULL);
+  anki_lock = fl_mutex_create();
+  anki_running = true;
+  anki_thread = fl_thread_create(anki_timer_thread, NULL);
   fl_register_hotkey(.hotkey = "Shift+Space", .cb = handle_anki,
                      .should_swallow = should_swallow_anki);
 }
