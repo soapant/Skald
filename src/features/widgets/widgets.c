@@ -421,23 +421,23 @@ void on_internet_hover(void) {
 
 FLINT_FEATURE_INIT {
   g_disk = fl_widget(.name = "disk_usage", .fps = FPS, .no_bg = NO_BG,
-                     .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
+                     .slot = WIDGET_SLOT_BOTTOM_LEFT,
                      .render = widgets_disk_usage_render);
 
   g_mem = fl_widget(.name = "memory_usage", .fps = FPS, .no_bg = NO_BG,
-                    .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
+                    .slot = WIDGET_SLOT_BOTTOM_LEFT,
                     .render = widgets_memory_usage_render);
 
   g_cpu = fl_widget(.name = "cpu_usage", .fps = FPS, .no_bg = NO_BG,
-                    .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
+                    .slot = WIDGET_SLOT_BOTTOM_LEFT,
                     .render = widgets_cpu_usage_render);
 
   fl_widget(.name = "date_and_time", .fps = FPS, .no_bg = NO_BG,
-            .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
+            .slot = WIDGET_SLOT_BOTTOM_RIGHT,
             .render = widgets_date_and_time_render);
 
   g_internet = fl_widget(.name = "internet", .fps = FPS, .no_bg = NO_BG,
                          .on_hover = on_internet_hover,
-                         .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
+                         .slot = WIDGET_SLOT_BOTTOM_RIGHT,
                          .render = widgets_internet_render);
 }
