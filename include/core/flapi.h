@@ -213,6 +213,8 @@ void fl_init_all_hotkeys(void);
 
 void fl_send_hotkey(const char *hotkey_string);
 
+#define fl_send_key fl_send_hotkey
+
 
 char *fl_hotkey_to_string(FlKey key);
 
@@ -1129,7 +1131,6 @@ typedef bool (*FlKeyInterceptorFn)(const PopupKeyEvent *key);
 void fl_register_key_interceptor(FlKeyInterceptorFn fn);
 
 void fl_close_window();
-
 
 
 #endif

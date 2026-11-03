@@ -357,7 +357,7 @@ static void vim_go_to_bottom(void) {
     PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
     if (!ps || !ps->listbox)
         return;
-    ps->listbox->selected_index = ps->listbox->item_count - 1;
+    ps->listbox->selected_index = ps->listbox->populated_count - 1;
 }
 static void vim_go_to_top(void) {
     PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
