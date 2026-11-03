@@ -10,7 +10,6 @@ bool RememberLastIndex = true;
 bool MessageAfterEachHotkey = false;
 int TimeOutForMessages = 1;
 int HotkeyRepeatDelayMs = 300;
-bool DoTimeDebugs = false;
 bool DebugMode = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
