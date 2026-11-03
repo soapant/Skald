@@ -342,7 +342,7 @@ static void vim_enter_normal_mode(void) {
 }
 
 static void vim_close_window(void) {
-   fl_close_active_window();
+    fl_close_window();
 }
 
 

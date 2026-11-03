@@ -2614,3 +2614,6 @@ void fl_register_event(FlEvent event, FlEventCallback cb) {
 void fl_unregister_event(FlEvent event, FlEventCallback cb) {
   EventBus_Unregister(event, cb);
 }
+void fl_close_window() {
+   FlintContext_Get()->window.selection_complete = true;
+}

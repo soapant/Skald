@@ -3,14 +3,7 @@
 
 #include <stdbool.h>
 
-/**
- * @brief Control center entry specification.
- *
- * Fields:
- * - `display_name` — Display name.
- * - `internal_name` — Internal unique name.
- * - `icon` — Icon path.
- */
+
 typedef struct {
   const char *display_name;
   const char *internal_name;
