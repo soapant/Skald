@@ -56,8 +56,6 @@ static void PromptPopup_OnShow(Popup *self) {
     return;
   }
 
-  data->state->listbox->items = (char **)data->spec.items;
-  data->state->listbox->item_count = 0;
   data->state->editbox->cursor = 0;
   data->state->width = data->w;
   data->state->height = data->h;
