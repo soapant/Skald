@@ -31,10 +31,8 @@
 #include "core/hotkey_string.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
-#include "platform/widget.h"
 #include "platform/render_thread.h"
 #include "platform/lib.h"
-#include "core/widget_registry.h"
 #include "deps/stb_ds.h"
 #include "config_values.h"
 #include "core/cc_registry.h"
@@ -774,10 +772,10 @@ static FlHoverPopupCtx *fl_hover_popup_ctx_new(const FlMessageSpec *spec) {
   if (!p)
     return NULL;
   p->render = spec->render;
-  p->w = spec->w > 0 ? spec->w : FL_WIDGET_PROVISIONAL_W;
-  p->h = spec->h > 0 ? spec->h : FL_WIDGET_PROVISIONAL_H;
+  p->w = spec->w > 0 ? spec->w : WIDGET_PROVISIONAL_W;
+  p->h = spec->h > 0 ? spec->h : WIDGET_PROVISIONAL_H;
   p->created_at = fl_start_timer();
-  p->pad = FL_WIDGET_DEFAULT_PAD;
+  p->pad = WIDGET_DEFAULT_PAD;
   return p;
 }
 
@@ -2033,7 +2031,7 @@ void fl_profile_end(FlTimer timer) {
   }
 }
 
-static FlWidget *g_fl_widgets[FL_WIDGET_MAX];
+static FlWidget *g_fl_widgets[WIDGET_MAX];
 static int g_fl_widget_count = 0;
 
 typedef struct {
@@ -2233,7 +2231,7 @@ static void fl_widget_relayout(void) {
   int mx = 0, my = 0, mw = 1920, mh = 1080;
   fl_widget_monitor_geometry(&mx, &my, &mw, &mh);
 
-  FlWidget *sorted[FL_WIDGET_MAX];
+  FlWidget *sorted[WIDGET_MAX];
   int n = 0;
   for (int i = 0; i < g_fl_widget_count; i++) {
     if (g_fl_widgets[i] && !g_fl_widgets[i]->free_pos)
@@ -2251,9 +2249,9 @@ static void fl_widget_relayout(void) {
 
   for (int s = 0; s < 4; s++) {
     bool from_right =
-        (s == FL_WIDGET_SLOT_TOP_RIGHT || s == FL_WIDGET_SLOT_BOTTOM_RIGHT);
+        (s == WIDGET_SLOT_TOP_RIGHT || s == WIDGET_SLOT_BOTTOM_RIGHT);
     bool from_top =
-        (s == FL_WIDGET_SLOT_TOP_LEFT || s == FL_WIDGET_SLOT_TOP_RIGHT);
+        (s == WIDGET_SLOT_TOP_LEFT || s == WIDGET_SLOT_TOP_RIGHT);
     int cursor = from_right ? mx + mw : mx;
     for (int i = 0; i < n; i++) {
       FlWidget *w = sorted[i];
@@ -2281,7 +2279,7 @@ void fl_widget_show(FlWidget *widget) { widget_show(widget); }
 void fl_widget_hide(FlWidget *widget) { widget_hide(widget); }
 
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
-  widget_set_render(widget, render);
+    widget_set_render(widget, render);
 }
 
 void fl_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
