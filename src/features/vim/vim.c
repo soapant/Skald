@@ -1,6 +1,4 @@
 #include "core/flapi.h"
-#include "core/types/keys.h"
-#include "core/context.h"
 
 typedef enum { VIM_MODE_INSERT, VIM_MODE_NORMAL, VIM_MODE_ANY } VimMode;
 static void vim_enter_normal_mode(void);
@@ -32,12 +30,9 @@ static void vim_reset_buffer(void) {
 }
 
 static void vim_refresh_prompt(void) {
-  PromptCallbacks *pcb = &FlintContext_Get()->prompt_callbacks;
-  if (pcb->refresh) {
-    PromptState *aps = fl_get_active_prompt();
-    if (aps)
-      pcb->refresh(aps);
-  }
+  PromptState *aps = fl_get_active_prompt();
+  if (aps && aps->callbacks && aps->callbacks->refresh)
+    aps->callbacks->refresh(aps);
 }
 
 static void vim_insert_char_silent(char ch) {
@@ -261,12 +256,9 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
       vim_reset_buffer();
       if (m->cb)
         m->cb();
-      PromptCallbacks *pcb = &FlintContext_Get()->prompt_callbacks;
-      if (pcb->refresh) {
-        PromptState *aps = fl_get_active_prompt();
-        if (aps)
-          pcb->refresh(aps);
-      }
+      PromptState *aps = fl_get_active_prompt();
+      if (aps && aps->callbacks && aps->callbacks->refresh)
+        aps->callbacks->refresh(aps);
       return true;
     }
   }

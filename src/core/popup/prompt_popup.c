@@ -116,7 +116,7 @@ static void PromptPopup_OnShow(Popup *self) {
       data->spec.tab ? data->spec.tab : data->saved_callbacks.tab;
   ctx2->prompt_callbacks.render =
       data->spec.render ? data->spec.render : data->saved_callbacks.render;
-  data->state->render = ctx2->prompt_callbacks.render;
+  data->state->callbacks = &FlintContext_Get()->prompt_callbacks;
   ctx2->prompt_callbacks.edit =
       data->spec.edit ? data->spec.edit : data->saved_callbacks.edit;
   ctx2->prompt_callbacks.filter =

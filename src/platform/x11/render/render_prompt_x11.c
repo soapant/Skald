@@ -141,10 +141,10 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   if (!XGetWindowAttributes(dpy, *win, &attrs)) {
     x11_draw_background(dpy, *win, w, h);
     Platform_SetDrawContext(dpy, NULL, NULL, 0);
-    if (state->render != NULL) {
+    if (state->callbacks->render != NULL) {
       Checkbox_FrameBegin();
       Platform_SetDrawContext(dpy, NULL, NULL, 0);
-      state->render(state);
+      state->callbacks->render(state);
     } else {
       if (state->listbox)
         DrawPromptUserListBox(dpy, win, state);
@@ -159,9 +159,9 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   if (!x11_pbuf_acquire(dpy, *win, w, h, depth, vis, cmap)) {
     x11_draw_background(dpy, *win, w, h);
     Platform_SetDrawContext(dpy, NULL, NULL, 0);
-    if (state->render != NULL) {
+    if (state->callbacks->render != NULL) {
       Checkbox_FrameBegin();
-      state->render(state);
+      state->callbacks->render(state);
     } else {
       if (state->listbox)
         DrawPromptUserListBox(dpy, win, state);
@@ -192,9 +192,9 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     XFreeGC(dpy, clear_gc);
   }
   Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
-  if (state->render != NULL) {
+  if (state->callbacks->render != NULL) {
     Checkbox_FrameBegin();
-    state->render(state);
+    state->callbacks->render(state);
   } else {
     if (state->listbox) {
       DrawPromptUserListBoxOnDraw(dpy, xdDbl, vis, cmap, state);
