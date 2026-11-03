@@ -1,7 +1,6 @@
 #include "core/flapi.h"
 #include "core/types/keys.h"
 #include "core/context.h"
-#include <pthread.h>
 
 typedef enum { VIM_MODE_INSERT, VIM_MODE_NORMAL, VIM_MODE_ANY } VimMode;
 static void vim_enter_normal_mode(void);
@@ -26,7 +25,7 @@ static char g_key_buffer[VIM_BUFFER_TOKENS][32];
 static int g_key_buffer_count = 0;
 static volatile int g_pending_active = 0;
 static char g_pending_char = 0;
-static pthread_mutex_t g_pending_mutex = PTHREAD_MUTEX_INITIALIZER;
+static FlMutex g_pending_mutex = NULL;
 
 static void vim_reset_buffer(void) {
   g_key_buffer_count = 0;
@@ -41,35 +40,50 @@ static void vim_refresh_prompt(void) {
   }
 }
 
+static void vim_insert_char_silent(char ch) {
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->editbox)
+    return;
+  size_t len = strlen(ps->editbox->filter);
+  if (len + 1 >= sizeof(ps->editbox->filter))
+    return;
+  if (ps->editbox->cursor > len)
+    ps->editbox->cursor = len;
+  memmove(ps->editbox->filter + ps->editbox->cursor + 1,
+          ps->editbox->filter + ps->editbox->cursor,
+          len - ps->editbox->cursor + 1);
+  ps->editbox->filter[ps->editbox->cursor] = ch;
+  ps->editbox->cursor++;
+  fl_invalidate_prompt();
+}
+
 static void *vim_pending_thread(void *arg) {
   fl_sleep(0.3);
-  pthread_mutex_lock(&g_pending_mutex);
+  fl_mutex_lock(g_pending_mutex);
   char pc = g_pending_char;
   if (g_pending_active) {
     g_pending_active = 0;
     g_pending_char = 0;
-    pthread_mutex_unlock(&g_pending_mutex);
+    fl_mutex_unlock(g_pending_mutex);
     vim_refresh_prompt();
   } else {
-    pthread_mutex_unlock(&g_pending_mutex);
+    fl_mutex_unlock(g_pending_mutex);
   }
   return NULL;
 }
 
 static void vim_cancel_pending(void) {
-  pthread_mutex_lock(&g_pending_mutex);
+  fl_mutex_lock(g_pending_mutex);
   g_pending_active = 0;
-  pthread_mutex_unlock(&g_pending_mutex);
+  fl_mutex_unlock(g_pending_mutex);
 }
 
 static void vim_start_pending(char ch) {
-  pthread_mutex_lock(&g_pending_mutex);
+  fl_mutex_lock(g_pending_mutex);
   g_pending_active = 1;
   g_pending_char = ch;
-  pthread_mutex_unlock(&g_pending_mutex);
-  pthread_t t;
-  pthread_create(&t, NULL, vim_pending_thread, NULL);
-  pthread_detach(t);
+  fl_mutex_unlock(g_pending_mutex);
+  fl_thread_create(vim_pending_thread, NULL);
 }
 
 static void vim_delete_last(int n) {
@@ -162,10 +176,10 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
     char token[32];
     int has_token = vim_key_to_token(key, token, sizeof(token));
 
-    pthread_mutex_lock(&g_pending_mutex);
+    fl_mutex_lock(g_pending_mutex);
     int was_pending = g_pending_active;
     char pending_char = g_pending_char;
-    pthread_mutex_unlock(&g_pending_mutex);
+    fl_mutex_unlock(g_pending_mutex);
 
     if (was_pending) {
       int continues = 0;
@@ -211,9 +225,9 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
         if (m->token_count < 2)
           continue;
         if (strcmp(m->tokens[0], token) == 0) {
+          vim_insert_char_silent(token[0]);
           vim_start_pending(token[0]);
-          /* do not swallow j; let it insert normally */
-          break;
+          return true;
         }
       }
     }
@@ -289,6 +303,7 @@ static void vim_on_prompt_open(void) {
 }
 
 FLINT_FEATURE_INIT {
+  g_pending_mutex = fl_mutex_create();
   fl_get_metrics()->edit_cursor_width = 0;
   vim_motion("jk", VIM_MODE_INSERT, vim_enter_normal_mode);
   fl_register_key_interceptor(vim_key_interceptor);
