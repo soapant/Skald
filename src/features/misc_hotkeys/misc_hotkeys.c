@@ -128,6 +128,13 @@ void start_auto_click(void) {
       break;
   }
 }
+void anki_hit_space(void) {
+    fl_focus_window_left();
+    fl_focus_window_left();
+    fl_send_key("Space");
+    fl_focus_window_right();
+    fl_focus_window_right();
+}
 
 FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "MouseButton4", .cb = start_auto_click,
@@ -143,4 +150,5 @@ FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "K", .cb = medium, .whitelist = {"anki"});
   fl_register_hotkey(.hotkey = "L", .cb = hard, .whitelist = {"anki"});
   fl_register_hotkey(.hotkey = ";", .cb = fuckme, .whitelist = {"anki"});
+  fl_register_hotkey(.hotkey = "Alt+I", .cb = anki_hit_space);
 }
