@@ -193,9 +193,9 @@ static bool win32_resolve_text_target(Win32TextTarget *out) {
   }
   if (top && top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    out->text = prompt->filter;
-    out->capacity = sizeof(prompt->filter);
-    out->cursor_z = &prompt->cursor;
+    out->text = prompt->editbox->filter;
+    out->capacity = sizeof(prompt->editbox->filter);
+    out->cursor_z = &prompt->editbox->cursor;
     return true;
   }
   return false;
@@ -504,9 +504,9 @@ bool UI_ApplyBackspaceToPopup(FlintContext *ctx) {
   int del = cur - 1;
   memmove(ctx->window.filter + del, ctx->window.filter + del + 1, len - del);
   ctx->window.filter_cursor = del;
-  ws->cursor = (size_t)del;
-  strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter) - 1);
-  ws->filter[sizeof(ws->filter) - 1] = '\0';
+  ws->editbox->cursor = (size_t)del;
+  strncpy(ws->editbox->filter, ctx->window.filter, sizeof(ws->editbox->filter) - 1);
+  ws->editbox->filter[sizeof(ws->editbox->filter) - 1] = '\0';
   if (ctx->prompt_callbacks.refresh) {
     ListBoxInfo *lb = NULL; (void)lb;
     ctx->prompt_callbacks.refresh(ws);

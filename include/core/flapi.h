@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "core/types.h"
+#include "core/window_manager.h"
+#include "platform/widget.h"
+#include "core/widget_registry.h"
 #include "platform/platform.h"
 #include "core/types/prompt.h"
 #include "core/types/flapi_types.h"
@@ -39,7 +42,14 @@ typedef struct PlatformWidget PlatformWidget;
  * Construct with `RGB(r, g, b)` or `HEX(0xRRGGBB)`.
  */
 typedef PlColor FlColor;
+
 typedef PlMetrics FlMetrics;
+typedef PlEvent FlEvent;
+typedef PlEventCallback FlEventCallback;
+typedef Widget FlWidget;
+typedef WidgetSpec FlWidgetSpec;
+typedef WidgetState FlWidgetState;
+typedef WidgetRenderFn FlWidgetRenderFn;
 
 /**
  * @brief A rectangle in screen coordinates.
@@ -837,25 +847,6 @@ char *fl_popup_impl(const PopupSpec *spec);
  * Passed by pointer to `FlWidgetRenderFn` once per frame.
  */
 
-typedef struct {
-  int width;
-  int height;
-  unsigned long frame;
-  double elapsed;
-  bool hovered;
-} FlWidgetState;
-
-/**
- * @brief Render callback for a widget.
- *
- * Called once per frame to draw the widget's contents. The callback
- * receives the widget's current state See `FlWidgetState`.
- * Drawing is clipped to the widget's bounds; content outside the
- * widget's width and height will not appear.
- *
- * @param state  Current state of the widget. See `FlWidgetState`.
- */
-typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
 
 /**
  * @brief Message popup specification. Automatically auto scales the window when
@@ -1089,91 +1080,6 @@ bool fl_place_editbox_auto(int w, int h, const char *buffer);
 bool fl_place_listbox_auto(int w, int h, const char **items, int count);
 bool fl_draw_image_auto(int w, int h, const char *path);
 
-typedef struct FlWidget FlWidget;
-
-typedef enum {
-  FL_WIDGET_SLOT_TOP_LEFT,
-  FL_WIDGET_SLOT_TOP_RIGHT,
-  FL_WIDGET_SLOT_BOTTOM_LEFT,
-  FL_WIDGET_SLOT_BOTTOM_RIGHT,
-  FL_WIDGET_FREE
-} FlWidgetSlot;
-
-typedef struct {
-  const char *name;
-  int w;
-  int h;
-  int slot;
-  int order;
-  int gap;
-  int pad;
-  int fps;
-  ColorRef color;
-  bool no_bg;
-  void (*on_click)(void);
-  void (*on_hover)(void);
-  FlWidgetRenderFn render;
-  int x;
-  int y;
-} FlWidgetSpec;
-
-#define FL_WIDGET_MAX 32
-#define FL_WIDGET_NAME_MAX 64
-#define FL_WIDGET_DEFAULT_PAD 12
-#define FL_WIDGET_PROVISIONAL_W 160
-#define FL_WIDGET_PROVISIONAL_H 48
-
-/**
- * @brief Widget structure.
- *
- * Fields
- * - `name` — Widget identifier.
- * - `w`, `h` — Widget size.
- * - `slot` — Positioning slot See `FlWidgetSlot`.
- * - `fps` — How many times the widget runs every second.
- * - `bg_color` — Color of background See 'FlColor'.
- * - `no_bg` — Determines if background is drawn at all.
- * - `x`, `y` — Widget position.
- * - `on_click` — Click callback function (void void).
- * - `on_hover` — Hover callback function (void void).
- * - `render` — Render callback function See `FlWidgetRenderFn`.
- */
-struct FlWidget {
-  char name[FL_WIDGET_NAME_MAX];
-  int w;
-  int h;
-  int gap_override;
-  int fps;
-  int slot;
-  int order;
-  int seq;
-  bool order_set;
-  bool free_pos;
-  int x;
-  int y;
-  bool auto_w;
-  bool auto_h;
-  int origin_x;
-  int origin_y;
-  ColorRef bg_color;
-  bool has_bg;
-  bool no_bg;
-  int pad;
-  bool mapped;
-  volatile bool dead;
-  bool hover_running;
-  void (*hover_thread)(void);
-  PlatformWidget *win;
-  FlWidgetRenderFn render;
-  unsigned long frame;
-  FlTimer created_at;
-  char *owner;
-  unsigned gen;
-  void (*on_click)(void);
-  void (*on_hover)(void);
-  bool clickable;
-  bool hovered;
-};
 
 /**
  * @def Create a new widget.
@@ -2301,7 +2207,17 @@ int fl_get_pid();
  * Return true to swallow the key, false to let normal handling proceed.
  */
 FlMetrics *fl_get_metrics(void);
-void fl_invalidate_prompt(void);
+
+void *fl_get_active_prompt(void);
+
+typedef PlMetrics FlMetrics;
+FlMetrics *fl_get_metrics(void);
+
+#define FL_EVENT_PROMPT_OPEN EVENT_PROMPT_OPEN
+#define FL_EVENT_PROMPT_CLOSE EVENT_PROMPT_CLOSE
+
+void fl_register_event(FlEvent event, FlEventCallback cb);
+void fl_unregister_event(FlEvent event, FlEventCallback cb);
 
 typedef bool (*FlKeyInterceptorFn)(const PopupKeyEvent *key);
 

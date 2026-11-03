@@ -264,7 +264,7 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
       Popup *_p = _wm_lb->popups[_i];
       if (_p && _p->user_data) {
         PromptState *_ps = (PromptState *)_p->user_data;
-        if (&_ps->lb == lb) {
+        if (_ps->listbox == lb) {
           st = _ps;
           break;
         }
@@ -449,7 +449,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   const char *buf = spec->buffer;
   if (!buf) {
     if (state)
-      buf = state->filter;
+      buf = state->editbox->filter;
     else
       buf = "";
   }
@@ -472,7 +472,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     old = (HFONT)SelectObject(hdc, hfont);
   SetBkMode(hdc, TRANSPARENT);
   int text_len = (int)strlen(buf);
-  int cursor = state ? state->cursor : text_len;
+  int cursor = state ? state->editbox->cursor : text_len;
   if (cursor < 0)
     cursor = 0;
   if (cursor > text_len)
@@ -518,10 +518,15 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
 
   EditboxSpec eb;
   Editbox_BuildSpec(&eb, &ebi);
+  PlMetrics *m = Platform_GetMetrics();
+  if (m->edit_cursor_width > 0) {
+    eb.caret_w_normal = m->edit_cursor_width;
+    eb.insert_mode = false;
+  }
 
   Editbox_Render(&eb, NULL);
   if (state)
-    state->scroll_offset = eb.scroll;
+    state->editbox->scroll_offset = eb.scroll;
 
   if (old)
     SelectObject(hdc, old);

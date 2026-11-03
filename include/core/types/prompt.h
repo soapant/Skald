@@ -50,6 +50,7 @@ typedef struct ListBoxInfo ListBoxInfo;
  * - `editbox_placed` — True if the editbox has been placed this frame.
  */
 typedef struct PromptState PromptState;
+typedef struct PromptCallbacks PromptCallbacks;
 /**
  * @brief Render callback for a prompt.
  *
@@ -63,6 +64,15 @@ typedef void (*RenderCallback)(PromptState *state);
 
 #define LISTBOX_ROW_BYTES 512
 
+typedef struct {
+  char filter[512];
+  size_t cursor;
+  int sel_start;
+  int sel_end;
+  int scroll_offset;
+  char *placeholder;
+} EditBoxInfo;
+
 struct ListBoxInfo {
   char (*populated_cache)[LISTBOX_ROW_BYTES];
   int populated_cache_cap;
@@ -73,24 +83,17 @@ struct ListBoxInfo {
   char *selected_text;
   int view_offset;
   int last_item_count;
+  char **items;
+  size_t item_count;
 };
 
 struct PromptState {
-  char **items;
-  size_t item_count;
-  char filter[512];
-  size_t cursor;
-  int sel_start;
-  int sel_end;
-  int scroll_offset;
   int width, height;
   char *window_title;
-  ListBoxInfo lb;
-  bool has_listbox;
+  EditBoxInfo *editbox;
+  ListBoxInfo *listbox;
+  PromptCallbacks *callbacks;
   bool no_bg;
-  char *placeholder;
-  RenderCallback render;
-  bool editbox_placed;
 };
 
 /**
@@ -178,6 +181,22 @@ typedef void (*FilterCallback)(const char *item, const char *filter);
  * @brief Callback invoked when the user requests help.
  */
 typedef void (*HelpCallback)(void);
+
+typedef struct PromptCallbacks {
+  RefreshCallback refresh;
+  EnterCallback enter;
+  CtrlEnterCallback ctrl_enter;
+  ShiftEnterCallback shift_enter;
+  CtrlShiftEnterCallback ctrl_shift_enter;
+  CtrlAltEnterCallback ctrl_alt_enter;
+  ShiftAltEnterCallback shift_alt_enter;
+  TabCallback tab;
+  HelpCallback help;
+  RenderCallback render;
+  EditCallback edit;
+  FilterCallback filter;
+} PromptCallbacks;
+
 
 /**
  * @brief Callback invoked on key events.

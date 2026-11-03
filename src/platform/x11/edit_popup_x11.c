@@ -129,16 +129,6 @@ void Platform_EditPopupRender(Popup *self) {
   FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
   XftFont *xf = FH_TO_XFT(font);
   Platform_SetDrawContext(dpy, xd, vis, cmap);
-  if (xf && EditModeText) {
-    Platform_DrawTextRaw((PlDrawTextRawSpec){.x = PROMPT_EDITPOPUP_MODE_X,
-                                             .y = PROMPT_EDITPOPUP_MODE_Y,
-                                             .text = "Insert",
-                                             .color = EditModeTextColor(),
-                                             .font = font,
-                                             .align = "LEFT",
-                                             .pad = PROMPT_EDITPOPUP_MODE_PAD,
-                                             .fontsize = FontSize});
-  }
   int text_len = data->text ? strlen(data->text) : 0;
   int cursor_x = 0;
   int text_w = 0;

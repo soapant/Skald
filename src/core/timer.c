@@ -26,19 +26,7 @@ static void timer_print(double elapsed_us, const char *operation_name,
   printf("%s", line_buf);
 }
 
-void TimerPrintRaw(double elapsed_us, const char *operation_name,
-                   const char *file, int line) {
-  if (!DoTimeDebugs)
-    return;
-  timer_print(elapsed_us, operation_name, file, line);
-}
-
 void TimerEnd(WinTimer t, const char *operation_name, const char *file,
               int line) {
   double elapsed_us = timer_elapsed_us(t);
-  if (DoTimeDebugs) {
-    if (elapsed_us < 1000.0)
-      return;
-    timer_print(elapsed_us, operation_name, file, line);
-  }
 }
