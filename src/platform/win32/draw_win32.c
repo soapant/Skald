@@ -1151,7 +1151,7 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   memset(eb, 0, sizeof(*eb));
   eb->text = state->editbox->filter;
   eb->text_len = text_len;
-  eb->editbox.cursor = state->editbox->cursor;
+  eb->cursor = state->editbox->cursor;
   eb->sel_start = sel_start;
   eb->sel_end = sel_end;
   eb->has_selection = has_sel;
@@ -1163,16 +1163,16 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->inset = PROMPT_EDIT_INSET;
   eb->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
   eb->scroll = state->editbox->scroll_offset;
-  eb->editbox.cursor_x = cursor_x;
+  eb->cursor_x = cursor_x;
   eb->text_w = text_w;
   eb->text_y = PROMPT_EDIT_INSET;
   eb->caret_y = Editbox_CaretY(PROMPT_EDIT_INSET, ascent, descent);
   eb->caret_h = PromptCaretHeight();
   eb->caret_w_normal = Platform_GetMetrics()->edit_cursor_width ? Platform_GetMetrics()->edit_cursor_width : PromptNormalCaretWidth();
   eb->caret_w_insert = PROMPT_CARET_W_INSERT;
-  eb->editbox.placeholder_dy = 2;
+  eb->placeholder_dy = 2;
   eb->rainbow_limit_x = -1;
-  eb->editbox.placeholder = state->editbox->placeholder;
+  eb->placeholder = state->editbox->placeholder;
   eb->text_color = rgb_to_hex(COLOR_TEXT);
   eb->font = font;
 }

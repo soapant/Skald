@@ -162,10 +162,10 @@ void Platform_EditPopupRender(Popup *self) {
     GetTextMetrics(paint, &tm);
     ascent = tm.tmAscent;
     descent = tm.tmDescent;
-    if (data->editbox.cursor > 0)
+    if (data->cursor > 0)
       cursor_x = Platform_MeasureTextWidth(
           (PlMeasureTextWidthSpec){.text = data->text ? data->text : "",
-                                   .len = data->editbox.cursor,
+                                   .len = data->cursor,
                                    .fontsize = FontSize});
     if (text_len > 0)
       text_w = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
@@ -181,7 +181,7 @@ void Platform_EditPopupRender(Popup *self) {
   memset(&eb, 0, sizeof(eb));
   eb.text = data->text ? data->text : "";
   eb.text_len = text_len;
-  eb.cursor = data->editbox.cursor;
+  eb.cursor = data->cursor;
   eb.sel_start = sel_start;
   eb.sel_end = sel_end;
   eb.has_selection = has_sel;
@@ -203,7 +203,7 @@ void Platform_EditPopupRender(Popup *self) {
   eb.align = data->align;
   eb.placeholder_dy = 0;
   eb.rainbow_limit_x = w - PROMPT_EDITPOPUP_INSET;
-  eb.placeholder = data->editbox.placeholder;
+  eb.placeholder = data->placeholder;
   eb.text_color = rgb_to_hex(COLOR_TEXT);
   eb.font = font;
 
