@@ -241,7 +241,7 @@ bool fl_dismiss_message(const char *name);
 bool fl_message_active(const char *name);
 
 
-;ool fl_toggle_fullscreen_active(void);
+bool fl_toggle_fullscreen_active(void);
 
 
 bool fl_move_active_window_to_monitor(bool right);
@@ -1127,6 +1127,8 @@ typedef bool (*FlKeyInterceptorFn)(const PopupKeyEvent *key);
 
 
 void fl_register_key_interceptor(FlKeyInterceptorFn fn);
+
+void fl_close_window();
 
 
 

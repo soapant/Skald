@@ -240,8 +240,6 @@ bool clipboard_history_push_image_platform(const char *path, unsigned int w,
   e.image_path = path ? strdup(path) : NULL;
   if (path && !e.image_path)
     return false;
-  e.image_width = w;
-  e.image_height = h;
   if (!clipboard_history_push(e))
     return false;
   return true;

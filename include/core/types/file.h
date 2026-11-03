@@ -19,7 +19,6 @@ typedef struct {
 #if defined(_WIN32)
 typedef struct {
   ListBoxInfo listbox;
-  bool has_listbox;
   WindowHandle hPopupWnd;
 } WinPromptState;
 #endif
