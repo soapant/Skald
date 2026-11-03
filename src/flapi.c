@@ -928,7 +928,7 @@ char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
     initial_text = "";
   int idx = lb->selected_index;
   int true_idx =
-      (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
+      (idx >= 0 && idx < lb->item_count) ? lb->matching_indices[idx] : idx;
   WindowManager *wm = WindowManager_Get();
   if (!wm)
     return NULL;
@@ -945,7 +945,7 @@ char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
     WindowManager_PopPopup(wm);
   }
   if (lb && idx >= 0) {
-    int keep_idx = idx < lb->populated_count ? idx : lb->populated_count - 1;
+    int keep_idx = idx < lb->item_count ? idx : lb->item_count - 1;
     if (keep_idx >= 0)
       lb->selected_index = keep_idx;
   }

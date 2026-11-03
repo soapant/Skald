@@ -525,7 +525,7 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
   ListboxLayout lay;
   Listbox_ComputeLayout(spec, x11_font_list_top_of(g_fl_list_font),
                         g_fl_list_itemH, st ? st->width : 0,
-                        st ? st->height : 0, lb->populated_count, &lay);
+                        st ? st->height : 0, lb->item_count, &lay);
   g_fl_list_y0 = lay.y0;
   g_fl_list_bx = lay.bx;
   g_fl_list_bw = lay.bw;
@@ -551,7 +551,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
   if (g_fl_list_cur >= g_fl_list_visible)
     return false;
   int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
-  if (idx < 0 || idx >= g_fl_list_lb->populated_count)
+  if (idx < 0 || idx >= g_fl_list_lb->item_count)
     return false;
   int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
   if (g_fl_list_cur == 0)
@@ -583,7 +583,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
   out->y = y;
   out->w = g_fl_list_spec.w;
   out->h = g_fl_list_itemH;
-  out->text = g_fl_list_lb->populated_cache[idx];
+  out->text = g_fl_list_lb->items[idx];
   g_fl_list_cur++;
   return true;
 }
@@ -603,19 +603,19 @@ void fl_listbox_end_platform(void) {
 }
 
 int fl_listbox_get_count(void) {
-  return g_fl_list_lb ? g_fl_list_lb->populated_count : 0;
+  return g_fl_list_lb ? g_fl_list_lb->item_count : 0;
 }
 
 unsigned long fl_listbox_get_current_standard_color(void) {
   if (!g_fl_list_lb || g_fl_list_cur == 0)
     return 0;
   int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
-  if (idx < 0 || idx >= g_fl_list_lb->populated_count)
+  if (idx < 0 || idx >= g_fl_list_lb->item_count)
     return 0;
   unsigned long ncol, bcol, pcol;
   Platform_GetItemColors(
       (PlGetItemColorsSpec){.idx = idx,
-                            .count = g_fl_list_lb->populated_count,
+                            .count = g_fl_list_lb->item_count,
                             .num_color = &ncol,
                             .body_color = &bcol,
                             .plain_color = &pcol});

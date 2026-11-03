@@ -26,17 +26,14 @@ typedef struct {
 } EditBoxInfo;
 
 struct ListBoxInfo {
-  char (*populated_cache)[LISTBOX_ROW_BYTES];
-  int populated_cache_cap;
-  int populated_count;
+  char (*items)[LISTBOX_ROW_BYTES];
+  int items_cap;
+  int item_count;
   int matching_indices[MAX_VISIBLE_ITEMS];
   int total_matches;
   int selected_index;
   char *selected_text;
   int view_offset;
-  int last_item_count;
-  char **items;
-  size_t item_count;
 };
 
 struct PromptState {
@@ -106,18 +103,18 @@ typedef void (*CloseCallback)(void);
 static inline void ListBoxInfo_Free(ListBoxInfo *lb) {
   if (!lb)
     return;
-  free(lb->populated_cache);
-  lb->populated_cache = NULL;
-  lb->populated_cache_cap = 0;
-  lb->populated_count = 0;
+  free(lb->items);
+  lb->items = NULL;
+  lb->items_cap = 0;
+  lb->item_count = 0;
 }
 
 static inline bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows) {
   if (!lb || rows <= 0 || rows > MAX_VISIBLE_ITEMS)
     return false;
-  if (lb->populated_cache && rows <= lb->populated_cache_cap)
+  if (lb->items && rows <= lb->items_cap)
     return true;
-  int cap = lb->populated_cache_cap > 0 ? lb->populated_cache_cap : 64;
+  int cap = lb->items_cap > 0 ? lb->items_cap : 64;
   while (cap < rows)
     cap *= 2;
   if (cap > MAX_VISIBLE_ITEMS)
@@ -125,22 +122,22 @@ static inline bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows) {
   if (cap < rows)
     return false;
   char (*grown)[LISTBOX_ROW_BYTES] = (char (*)[LISTBOX_ROW_BYTES])realloc(
-      lb->populated_cache, (size_t)cap * LISTBOX_ROW_BYTES);
+      lb->items, (size_t)cap * LISTBOX_ROW_BYTES);
   if (!grown)
     return false;
-  lb->populated_cache = grown;
-  lb->populated_cache_cap = cap;
+  lb->items = grown;
+  lb->items_cap = cap;
   return true;
 }
 
 static inline const char *ListBoxInfo_Row(ListBoxInfo *lb, int idx) {
-  if (!lb || !lb->populated_cache)
+  if (!lb || !lb->items)
     return NULL;
-  if (idx < 0 || idx >= lb->populated_count)
+  if (idx < 0 || idx >= lb->item_count)
     return NULL;
-  if (idx >= lb->populated_cache_cap)
+  if (idx >= lb->items_cap)
     return NULL;
-  return lb->populated_cache[idx];
+  return lb->items[idx];
 }
 
 static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
@@ -151,7 +148,6 @@ static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
   lb->selected_text = "";
   lb->total_matches = 0;
   lb->view_offset = 0;
-  lb->last_item_count = 0;
 }
 
 

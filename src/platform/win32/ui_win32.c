@@ -64,7 +64,7 @@ void UI_LB_EndUpdate(void) {
 
 void UI_LB_SetCount(ListBoxInfo *lb, int count) {
   if (lb)
-    lb->populated_count = count;
+    lb->item_count = count;
   UI_RequestPopupRepaint();
 }
 
@@ -99,8 +99,8 @@ void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
   int visible = UI_LB_GetVisibleCount();
   if (top_index < 0)
     top_index = 0;
-  if (visible > 0 && top_index + visible > lb->populated_count)
-    top_index = lb->populated_count - visible;
+  if (visible > 0 && top_index + visible > lb->item_count)
+    top_index = lb->item_count - visible;
   if (top_index < 0)
     top_index = 0;
   lb->view_offset = top_index;
@@ -112,7 +112,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   if (!lb) {
     return;
   }
-  int count = lb->populated_count;
+  int count = lb->item_count;
   if (count <= 0) {
     lb->selected_index = -1;
     UI_RequestPopupRepaint();

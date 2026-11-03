@@ -10,7 +10,7 @@ TEST(populate_normal_mode_selects_first) {
   const char *items[] = {"apple", "banana", "apricot"};
   PopulateListBox(&lb, "", items, 3, NULL);
   ASSERT_EQ_INT(lb.total_matches, 3);
-  ASSERT_EQ_INT(lb.populated_count, 3);
+  ASSERT_EQ_INT(lb.item_count, 3);
   ASSERT_EQ_INT(lb.selected_index, 0);
   ASSERT_TRUE(UI_IsListBoxSelected(&lb));
 }
@@ -31,7 +31,7 @@ TEST(populate_filter_narrows) {
   const char *items[] = {"apple", "banana", "apricot"};
   PopulateListBox(&lb, "ap", items, 3, NULL);
   ASSERT_EQ_INT(lb.total_matches, 2);
-  ASSERT_EQ_INT(lb.populated_count, 2);
+  ASSERT_EQ_INT(lb.item_count, 2);
 }
 
 TEST(populate_no_match) {
@@ -40,7 +40,7 @@ TEST(populate_no_match) {
   const char *items[] = {"apple", "banana"};
   PopulateListBox(&lb, "zzz", items, 2, NULL);
   ASSERT_EQ_INT(lb.total_matches, 0);
-  ASSERT_EQ_INT(lb.populated_count, 0);
+  ASSERT_EQ_INT(lb.item_count, 0);
   ASSERT_FALSE(UI_IsListBoxSelected(&lb));
 }
 
@@ -49,7 +49,7 @@ TEST(populate_empty_items) {
   ListBoxInfo_Init(&lb);
   PopulateListBox(&lb, "", NULL, 0, NULL);
   ASSERT_EQ_INT(lb.total_matches, 0);
-  ASSERT_EQ_INT(lb.populated_count, 0);
+  ASSERT_EQ_INT(lb.item_count, 0);
 }
 
 TEST(filter_handles_double_spaces) {
