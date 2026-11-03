@@ -2207,13 +2207,11 @@ int fl_get_pid();
  * Return true to swallow the key, false to let normal handling proceed.
  */
 FlMetrics *fl_get_metrics(void);
-void fl_invalidate_prompt(void);
-void *fl_get_active_prompt(void);
 
+void *fl_get_active_prompt(void);
 
 typedef PlMetrics FlMetrics;
 FlMetrics *fl_get_metrics(void);
-void fl_invalidate_prompt(void);
 
 #define FL_EVENT_PROMPT_OPEN EVENT_PROMPT_OPEN
 #define FL_EVENT_PROMPT_CLOSE EVENT_PROMPT_CLOSE

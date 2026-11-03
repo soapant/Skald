@@ -2576,10 +2576,6 @@ void fl_register_key_interceptor(FlKeyInterceptorFn fn) {
 FlMetrics *fl_get_metrics(void) {
   return Platform_GetMetrics();
 }
-void fl_invalidate_prompt(void) {
-  Platform_InvalidatePrompt();
-}
-
 void *fl_get_active_prompt(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = WindowManager_GetTopPopup(wm);
