@@ -16,7 +16,7 @@
 
 #if defined(_WIN32)
 #define CC_FLAGS                                                               \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-O3",         \
+  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",
       "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare",        \
       "-Wno-discarded-qualifiers", "-Wno-stringop-truncation",                 \
       "-Wno-sign-compare", "-Wno-unused-parameter",                            \
@@ -28,7 +28,7 @@
       "-Lbuild/winlibs", "-liphlpapi"
 #elif defined(__APPLE__)
 #define CC_FLAGS                                                               \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-O3",         \
+  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",
       "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare",        \
       "-Wno-discarded-qualifiers", "-Wno-stringop-truncation",                 \
       "-Wno-sign-compare", "-Wno-unused-parameter",                            \
@@ -40,7 +40,7 @@
 #define PKG_LIBS_PKGS_STR " libcurl"
 #else
 #define CC_FLAGS                                                               \
-  "-I", "include", "-MMD", "-MP", "-O3", "-Wall", "-Wextra", "-Wformat",       \
+  "-I", "include", "-MMD", "-MP","-Wall", "-Wextra", "-Wformat",       \
       "-Wno-error=format-security", "-Wno-unused-parameter",                   \
       "-Wno-sign-compare", "-Wno-discarded-qualifiers",                        \
       "-Wno-stringop-truncation", "-Wno-sign-compare",                         \

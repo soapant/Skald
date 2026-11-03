@@ -289,8 +289,13 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
       vim_refresh_prompt();
       return true;
     }
-    vim_refresh_prompt();
-    return true;
+    if (!key->ctrl && !key->alt &&
+        ((key->vk >= 'A' && key->vk <= 'Z') ||
+         (key->vk >= 'a' && key->vk <= 'z'))) {
+      vim_refresh_prompt();
+      return true;
+    }
+    return false;
   }
 
   return false;
