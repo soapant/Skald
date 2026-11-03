@@ -18,12 +18,6 @@ int last_index = 0;
 
 static EditSelection g_sel;
 
-void EditState_Reset(void) {
-  g_sel.active = false;
-  g_sel.anchor = 0;
-  g_sel.head = 0;
-}
-
 void EditState_BeginSelection(int cursor) {
   g_sel.active = true;
   g_sel.anchor = cursor;
@@ -55,19 +49,4 @@ bool EditState_GetSelection(int *out_start, int *out_end) {
     *out_end = b;
   return true;
 }
-
-bool EditState_HasSelection(void) { return g_sel.active; }
-
-
-
-
-
-
-
-
-
-
-
-
-
 

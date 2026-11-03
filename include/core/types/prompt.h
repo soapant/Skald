@@ -6,60 +6,12 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-/**
- * @brief Internal listbox state.
- *
- * Owned and managed by the prompt/window that displays the listbox.
- * Do not construct or modify this directly; use the listbox functions
- * (`fl_populate_listbox`, `fl_listbox_begin`, etc.) and read the
- * fields below if needed.
- *
- * Fields:
- * - `populated_cache`    — Cached row strings (internal).
- * - `populated_cache_cap`— Capacity of `populated_cache` (internal).
- * - `populated_count`    — Number of cached rows (internal).
- * - `matching_indices`   — Indices of items that match the current filter.
- * - `total_matches`      — Total number of matches before the visible window.
- * - `selected_index`     — Index into `matching_indices` of the selected row.
- * - `selected_text`      — The currently selected text.
- *                          or -1 if nothing is selected.
- * - `view_offset`        — Scroll offset into `matching_indices`.
- * - `last_item_count`    — Total item count from the last populate call.
- */
+
 typedef struct ListBoxInfo ListBoxInfo;
-/**
- * @brief Internal prompt state.
- *
- * Passed to `RenderCallback` during a prompt render.
- *
- * Fields:
- * - `items`          — Item array (borrowed from the caller).
- * - `item_count`     — Number of items in `items`.
- * - `filter`         — Current filter string in the editbox.
- * - `cursor`         — Cursor position in `filter`.
- * - `sel_start`      — Selection start offset in `filter`, or -1.
- * - `sel_end`        — Selection end offset in `filter`, or -1.
- * - `scroll_offset`  — Horizontal scroll offset of the edit field.
- * - `width`, `height`— Prompt window size in pixels.
- * - `window_title`   — Window title string (borrowed).
- * - `listbox`        — Associated listbox state. See `ListBoxInfo`.
- * - `has_listbox`    — True if the prompt has a listbox.
- * - `no_bg`          — True if the prompt background should not be drawn.
- * - `placeholder`    — Placeholder text shown when `filter` is empty.
- * - `render`         — Optional custom render callback. See `RenderCallback`.
- * - `editbox_placed` — True if the editbox has been placed this frame.
- */
+
 typedef struct PromptState PromptState;
 typedef struct PromptCallbacks PromptCallbacks;
-/**
- * @brief Render callback for a prompt.
- *
- * Called once per frame while the prompt is open. Draw using the
- * `fl_draw_*` and `fl_place_*` functions. The callback receives the
- * prompt's current state.
- *
- * @param state  Current prompt state. See `PromptState`.
- */
+
 typedef void (*RenderCallback)(PromptState *state);
 
 #define LISTBOX_ROW_BYTES 512
@@ -96,90 +48,37 @@ struct PromptState {
   bool no_bg;
 };
 
-/**
- * @brief Callback invoked when the filter text changes.
- *
- * The implementation should repopulate `lb` based on `filter` using
- * 'fl_populate_listbox'.
- *
- * @param filter  Current filter string.
- * @param lb      Listbox to repopulate. See `ListBoxInfo`.
- */
+
 typedef void (*RefreshCallback)(PromptState* state);
 
-/**
- * @brief Callback invoked when Enter is pressed.
- *
- * @param lb         Listbox state. See `ListBoxInfo`.
- * @return           True to close the prompt, false to keep it open.
- */
+
 typedef bool (*EnterCallback)(PromptState* state);
 
-/**
- * @brief Callback invoked when Ctrl+Enter is pressed.
- *
- * @param lb         Listbox state. See `ListBoxInfo`.
- * @return           True to close the prompt, false to keep it open.
- */
+
 typedef bool (*CtrlEnterCallback)(PromptState* state);
 
-/**
- * @brief Callback invoked when Shift+Enter is pressed.
- *
- * @param lb         Listbox state. See `ListBoxInfo`.
- * @return           True to close the prompt, false to keep it open.
- */
+
 typedef bool (*ShiftEnterCallback)(PromptState* state);
 
-/**
- * @brief Callback invoked when Ctrl+Shift+Enter is pressed.
- *
- * @param lb         Listbox state. See `ListBoxInfo`.
- * @return           True to close the prompt, false to keep it open.
- */
+
 typedef bool (*CtrlShiftEnterCallback)(PromptState* state);
 
-/**
- * @brief Callback invoked when Ctrl+Alt+Enter is pressed.
- *
- * @param lb         Listbox state. See `ListBoxInfo`.
- * @return           True to close the prompt, false to keep it open.
- */
+
 typedef bool (*CtrlAltEnterCallback)(PromptState* state);
 
-/**
- * @brief Callback invoked when Shift+Alt+Enter is pressed.
- *
- * @param lb         Listbox state. See `ListBoxInfo`.
- * @return           True to close the prompt, false to keep it open.
- */
+
 typedef bool (*ShiftAltEnterCallback)(PromptState* state);
 
-/**
- * @brief Callback invoked when Tab is pressed.
- *
- * @param lb  Listbox state. See `ListBoxInfo`.
- */
+
 typedef void (*TabCallback)(PromptState* state);
 
-/**
- * @brief Callback invoked on text edit events.
- *
- * @param lb         Listbox state. See `ListBoxInfo`.
- */
+
 typedef void (*EditCallback)(PromptState* state);
 
-/**
- * @brief Callback used to filter listbox items.
- *
- * @param item    Item text to test.
- * @param filter  Current filter string.
- */
+
 typedef void (*FilterCallback)(const char *item, const char *filter);
 
-/**
- * @brief Callback invoked when the user requests help.
- */
+
 typedef void (*HelpCallback)(void);
 
 typedef struct PromptCallbacks {
@@ -198,16 +97,10 @@ typedef struct PromptCallbacks {
 } PromptCallbacks;
 
 
-/**
- * @brief Callback invoked on key events.
- *
- * @param vkCode  Virtual key code.
- */
+
 typedef void (*KeyCallback)(int vkCode);
 
-/**
- * @brief Callback invoked when the prompt closes.
- */
+
 typedef void (*CloseCallback)(void);
 
 static inline void ListBoxInfo_Free(ListBoxInfo *lb) {
@@ -261,40 +154,7 @@ static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
   lb->last_item_count = 0;
 }
 
-/**
- * @brief Parameters for creating a prompt window.
- *
- * Passed to `fl_window`. One input callback is needed be it enter ctrl_enter
- * does not matter.
- *
- * Fields:
- * - `title`          — Window title.
- * - `items`          — Initial item array for the listbox.
- * - `refresh`        — Called when the filter changes. See `RefreshCallback`.
- * - `enter`          — Called on Enter. See `EnterCallback`.
- * - `ctrl_enter`     — Called on Ctrl+Enter. See `CtrlEnterCallback`.
- * - `shift_enter`    — Called on Shift+Enter. See `ShiftEnterCallback`.
- * - `ctrl_shift_enter` — Called on Ctrl+Shift+Enter. See
- * `CtrlShiftEnterCallback`.
- * - `ctrl_alt_enter` — Called on Ctrl+Alt+Enter. See `CtrlAltEnterCallback`.
- * - `shift_alt_enter`— Called on Shift+Alt+Enter. See `ShiftAltEnterCallback`.
- * - `tab`            — Called on Tab. See `TabCallback`.
- * - `copy`           — Called on copy. See `CopyCallback`.
- * - `render`         — Custom render callback. See `RenderCallback`.
- * - `edit`           — Called on listboxtext edit. See `EditCallback`.
- * - `filter`         — Item filter callback. See `FilterCallback`.
- * - `help`           — Called on help request. See `HelpCallback`.
- * - `on_close`       — Called when the prompt closes. See `CloseCallback`.
- * - `placeholder`    — Placeholder text appears in the editbox.
- * - `tick`           — If true, the prompt re-renders every frame instead of
- * per keypress.
- * - `auto_scale`     — If true, size(w,h) are scaled automatically.
- * - `no_bg`          — If true, no background is drawn.
- * - `w`, `h`         — Window width and height in pixels.
- * - `x`, `y`         — Window position in screen coordinates.
- * - `subwindow`      — If true, the prompt is a subwindow of an existing one
- * not to be done manually if a subwindow is wanted call `fl_subwindow`.
- */
+
 typedef struct {
   const char *title;
   const char **items;
@@ -322,18 +182,7 @@ typedef struct {
   bool subwindow;
 } PromptSpec;
 
-/**
- * @brief Parameters for creating a simple text-input popup.
- *
- * Passed to `fl_popup`.
- *
- * Fields:
- * - `initial_text` — Starting text in the input field.
- * - `placeholder`  — Placeholder text when the field is empty.
- * - `title`        — Popup title.
- * - `x`, `y`       — Popup position in screen coordinates.
- * - `w`, `h`       — Popup size in pixels.
- */
+
 typedef struct {
   const char *initial_text;
   const char *placeholder;
