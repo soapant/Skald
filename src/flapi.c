@@ -2573,6 +2573,28 @@ void fl_register_key_interceptor(FlKeyInterceptorFn fn) {
   Platform_RegisterKeyInterceptor((PlatformKeyInterceptorFn)fn);
 }
 
+typedef struct {
+  double seconds;
+  void (*callback)(void);
+} FlRunEveryArgs;
+
+static void *fl_run_every_thread(void *arg) {
+  FlRunEveryArgs *args = (FlRunEveryArgs *)arg;
+  while (true) {
+    fl_sleep(args->seconds);
+    args->callback();
+  }
+  free(args);
+  return NULL;
+}
+
+void fl_run_every(double seconds, void (*callback)(void)) {
+  FlRunEveryArgs *args = malloc(sizeof(FlRunEveryArgs));
+  args->seconds = seconds;
+  args->callback = callback;
+  fl_thread_create(fl_run_every_thread, args);
+}
+
 FlMetrics *fl_get_metrics(void) {
   return Platform_GetMetrics();
 }
