@@ -353,6 +353,18 @@ static void vim_on_prompt_open(void) {
   vim_reset_buffer();
   vim_cancel_pending();
 }
+static void vim_go_to_bottom(void) {
+    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+    if (!ps || !ps->listbox)
+        return;
+    ps->listbox->selected_index = ps->listbox->item_count - 1;
+}
+static void vim_go_to_top(void) {
+    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+    if (!ps || !ps->listbox)
+        return;
+    ps->listbox->selected_index = 0;
+}
 
 FLINT_FEATURE_INIT {
   g_pending_mutex = fl_mutex_create();
@@ -364,6 +376,8 @@ FLINT_FEATURE_INIT {
   vim_motion("r", "shift", VIM_MODE_NORMAL, vim_move_up5);
   vim_motion("u", "shift", VIM_MODE_NORMAL, vim_move_down5);
   vim_motion("q", "", VIM_MODE_NORMAL, vim_close_window);
+  vim_motion("gg", "", VIM_MODE_NORMAL, vim_go_to_top);
+  vim_motion("g", "shift", VIM_MODE_NORMAL, vim_go_to_bottom);
   fl_register_key_interceptor(vim_key_interceptor);
   fl_register_event(EVENT_PROMPT_OPEN, vim_on_prompt_open);
 }
