@@ -809,7 +809,9 @@ void fl_message_impl(const FlMessageSpec *spec) {
             .h = ctx->h,
             .fps = spec->fps > 0 ? spec->fps : 1,
             .no_bg = spec->no_bg,
-            .bg_hex = spec->color_bg ? rgb_to_hex(spec->color_bg) : 0UL,
+            .bg_hex = spec->color_bg
+                          ? rgb_to_hex(spec->color_bg)
+                          : (spec->no_bg ? 0UL : rgb_to_hex(COLOR_BG)),
             .release = fl_hover_popup_ctx_free,
             .release_ud = ctx});
       }
