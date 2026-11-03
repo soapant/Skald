@@ -326,7 +326,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       int type = shift ? 0 : 1;
       int idx = -1;
       if (state->listbox && state->listbox->selected_index >= 0 &&
-          state->listbox->selected_index < state->listbox->populated_count) {
+          state->listbox->selected_index < state->listbox->item_count) {
         idx = state->listbox->matching_indices[state->listbox->selected_index];
       } else {
         idx = UI_LookupTrueIndex(ctx->window.output_buffer);
