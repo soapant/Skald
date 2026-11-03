@@ -533,8 +533,8 @@ static char *Platform_RunCommandDetachedCapture(char *command) {
     log_error("capture empty cmd='%s' eof=%d status=0x%x", final_cmd, eof,
               status);
   } else {
-    char preview[201];
-    size_t plen = total < 200 ? total : 200;
+    char preview[2001];
+    size_t plen = total < 2000 ? total : 2000;
     memcpy(preview, out, plen);
     preview[plen] = '\0';
     log_info("capture: output preview: '%s'", preview);
