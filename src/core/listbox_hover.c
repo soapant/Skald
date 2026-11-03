@@ -129,7 +129,7 @@ int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,
   if (row >= visible_count)
     return -1;
   int idx = top_index + row;
-  if (idx < 0 || idx >= lb->populated_count)
+  if (idx < 0 || idx >= lb->item_count)
     return -1;
   return idx;
 }
@@ -137,7 +137,7 @@ int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,
 bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
                         int top_index, int visible_count) {
 
-  if (!lb || lb->populated_count <= 0)
+  if (!lb || lb->item_count <= 0)
     return false;
   if (!g_mouse_moved)
     return false;
@@ -176,7 +176,7 @@ void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count) {
   if (!lb || rows == 0) {
     return;
   }
-  int max_off = lb->populated_count - visible_count;
+  int max_off = lb->item_count - visible_count;
   if (max_off < 0)
     max_off = 0;
   int off = lb->view_offset + rows;
@@ -194,8 +194,8 @@ void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count) {
     int sel = old_sel + delta;
     if (sel < 0)
       sel = 0;
-    if (sel >= lb->populated_count)
-      sel = lb->populated_count - 1;
+    if (sel >= lb->item_count)
+      sel = lb->item_count - 1;
     lb->selected_index = sel;
     UI_LB_SetCaretIndex(sel, false);
   }
@@ -223,14 +223,14 @@ int ListBox_ScrollTopFor(int index, int visible_count, int count) {
 }
 
 void ListBox_ScrollToSelection(ListBoxInfo *lb) {
-  if (!lb || lb->selected_index < 0 || lb->populated_count <= 0)
+  if (!lb || lb->selected_index < 0 || lb->item_count <= 0)
     return;
   int visible = UI_LB_GetVisibleCount();
   if (visible <= 0)
     visible = 16;
   int old_top = UI_LB_GetViewTop(lb);
   int new_top =
-      ListBox_ScrollTopFor(lb->selected_index, visible, lb->populated_count);
+      ListBox_ScrollTopFor(lb->selected_index, visible, lb->item_count);
   if (new_top != old_top)
     UI_LB_ScrollToTop(lb, new_top);
 }
@@ -265,7 +265,7 @@ void ListBox_NavigateUp(ListBoxInfo *lb) {
 void ListBox_NavigateDown(ListBoxInfo *lb) {
   if (!lb)
     return;
-  int count = lb->populated_count;
+  int count = lb->item_count;
   if (count <= 0)
     return;
   int sel = lb->selected_index;

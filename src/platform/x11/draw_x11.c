@@ -567,7 +567,7 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
                            const char *icon_path) {
   unsigned long ncol, bcol, pcol;
   Platform_GetItemColors((PlGetItemColorsSpec){.idx = idx,
-                                               .count = lb->populated_count,
+                                               .count = lb->item_count,
                                                .num_color = &ncol,
                                                .body_color = &bcol,
                                                .plain_color = &pcol});
@@ -943,7 +943,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
     return;
   FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
   ListBoxInfo *lb = state->listbox;
-  if (!lb->populated_count) {
+  if (!lb->item_count) {
     Platform_DestroyFont(font);
     return;
   }
@@ -956,8 +956,8 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
   int visible = (state->height - y0 - yOffset) / itemH;
   if (visible < 1)
     visible = 1;
-  if (visible > lb->populated_count)
-    visible = lb->populated_count;
+  if (visible > lb->item_count)
+    visible = lb->item_count;
   UI_LB_SetVisibleCount(visible);
 
   ListBox_ApplyPendingScroll(lb, visible);

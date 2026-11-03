@@ -468,7 +468,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     DRAWITEMSTRUCT *pdis = (DRAWITEMSTRUCT *)lParam;
     if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
       BOOL isSelected = (pdis->itemID == (lb ? lb->selected_index : -1));
-      if (pdis->itemID >= (lb ? lb->populated_count : 0)) {
+      if (pdis->itemID >= (lb ? lb->item_count : 0)) {
         return TRUE;
       }
       if (RoundedCorners && CornerRadius > 0) {
@@ -551,7 +551,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (UI_IsListBoxSelected(lb)) {
         char measureBuffer[512];
-        strncpy(measureBuffer, lb->populated_cache[pdis->itemID],
+        strncpy(measureBuffer, lb->items[pdis->itemID],
                 sizeof(measureBuffer) - 1);
         measureBuffer[sizeof(measureBuffer) - 1] = '\0';
         char *pos = strchr(measureBuffer, '|');
@@ -590,12 +590,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       }
 
       const char *textBuffer = "";
-      if (pdis->itemID < (lb ? lb->populated_count : 0)) {
-        textBuffer = lb->populated_cache[pdis->itemID];
+      if (pdis->itemID < (lb ? lb->item_count : 0)) {
+        textBuffer = lb->items[pdis->itemID];
       }
 
       if (pdis->itemID == -1 ||
-          pdis->itemID >= (lb ? lb->populated_count : 0)) {
+          pdis->itemID >= (lb ? lb->item_count : 0)) {
         return TRUE;
       }
 
@@ -611,12 +611,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         HFONT hOldMainFont = hMainFont ? (HFONT)SelectObject(pdis->hDC, hMainFont) : NULL;
         unsigned long ncol, bcol, pcol;
         int orig_idx = (int)pdis->itemID;
-        int orig_cnt = lb ? lb->populated_count : 0;
+        int orig_cnt = lb ? lb->item_count : 0;
         if (lb && (int)pdis->itemID >= 0 &&
-            pdis->itemID < (UINT)lb->populated_count) {
+            pdis->itemID < (UINT)lb->item_count) {
           orig_idx = lb->matching_indices[pdis->itemID];
-          orig_cnt = lb->last_item_count > 0 ? lb->last_item_count
-                                             : lb->populated_count;
+          orig_cnt = lb->item_count;
         }
         Platform_GetItemColors((PlGetItemColorsSpec){.idx = orig_idx,
                                                      .count = orig_cnt,
@@ -706,7 +705,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         if (estate->listbox) {
           int list_top = PromptListTop();
           int row_height = PromptRowHeight();
-          int count = estate->listbox->populated_count;
+          int count = estate->listbox->item_count;
           int visible_count =
               (rect.bottom - PromptListBottomMargin() - list_top) / row_height;
           int view_offset = estate->listbox->view_offset;
@@ -727,9 +726,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
 
             unsigned long ncol, bcol, pcol;
             int orig_idx = estate->listbox->matching_indices[list_idx];
-            int orig_cnt = estate->listbox->last_item_count > 0
-                               ? estate->listbox->last_item_count
-                               : estate->listbox->populated_count;
+            int orig_cnt = estate->listbox->item_count;
             Platform_GetItemColors((PlGetItemColorsSpec){.idx = orig_idx,
                                                          .count = orig_cnt,
                                                          .num_color = &ncol,
@@ -769,21 +766,21 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       titleRect.right = titleRect.left + sz.cx + PROMPT_FOOTER_PAD;
       titleRect.bottom = titleRect.top + sz.cy;
       COLORREF titleColor;
-      if ((lb ? lb->populated_count : 0) < 25) {
+      if ((lb ? lb->item_count : 0) < 25) {
         titleColor = RGB(0, 255, 0);
-      } else if ((lb ? lb->populated_count : 0) < 50) {
+      } else if ((lb ? lb->item_count : 0) < 50) {
         titleColor = RGB(100, 255, 0);
-      } else if ((lb ? lb->populated_count : 0) < 75) {
+      } else if ((lb ? lb->item_count : 0) < 75) {
         titleColor = RGB(200, 255, 0);
-      } else if ((lb ? lb->populated_count : 0) < 100) {
+      } else if ((lb ? lb->item_count : 0) < 100) {
         titleColor = RGB(255, 255, 0);
-      } else if ((lb ? lb->populated_count : 0) < 125) {
+      } else if ((lb ? lb->item_count : 0) < 125) {
         titleColor = RGB(255, 200, 0);
-      } else if ((lb ? lb->populated_count : 0) < 150) {
+      } else if ((lb ? lb->item_count : 0) < 150) {
         titleColor = RGB(255, 150, 0);
-      } else if ((lb ? lb->populated_count : 0) < 175) {
+      } else if ((lb ? lb->item_count : 0) < 175) {
         titleColor = RGB(255, 100, 0);
-      } else if ((lb ? lb->populated_count : 0) < 200) {
+      } else if ((lb ? lb->item_count : 0) < 200) {
         titleColor = RGB(255, 50, 0);
       } else {
         titleColor = RGB(255, 0, 0);

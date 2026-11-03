@@ -260,23 +260,23 @@ static void Populate_BuildCache(ListBoxInfo *lb, const char **items,
                                 int total_matches) {
   if (total_matches > MAX_VISIBLE_ITEMS)
     total_matches = MAX_VISIBLE_ITEMS;
-  lb->populated_count = 0;
+  lb->item_count = 0;
   if (total_matches <= 0)
     return;
   if (!ListBoxInfo_EnsureRows(lb, total_matches)) {
-    lb->populated_count = 0;
+    lb->item_count = 0;
     return;
   }
   for (int i = 0; i < total_matches; i++) {
     int raw_data_index = lb->matching_indices[i];
     if (!items[raw_data_index])
       continue;
-    strncpy(lb->populated_cache[lb->populated_count], items[raw_data_index],
+    strncpy(lb->items[lb->item_count], items[raw_data_index],
             LISTBOX_ROW_BYTES - 1);
-    lb->populated_cache[lb->populated_count][LISTBOX_ROW_BYTES - 1] = '\0';
-    lb->populated_cache[lb->populated_count][strcspn(
-        lb->populated_cache[lb->populated_count], "\r\n")] = '\0';
-    lb->populated_count++;
+    lb->items[lb->item_count][LISTBOX_ROW_BYTES - 1] = '\0';
+    lb->items[lb->item_count][strcspn(
+        lb->items[lb->item_count], "\r\n")] = '\0';
+    lb->item_count++;
   }
 }
 
@@ -321,7 +321,6 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
 
 static void Populate_CommitState(ListBoxInfo *lb, int item_count,
                                  int total_matches) {
-  lb->last_item_count = item_count;
   lb->total_matches = total_matches;
 }
 

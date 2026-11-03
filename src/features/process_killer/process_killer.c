@@ -357,7 +357,7 @@ static void pk_render_callback(PromptState *state) {
     int keep = state->listbox->selected_index;
     pk_collect_and_sort();
     fl_populate_listbox(state->listbox, state->editbox->filter, g_pk_items, g_pk_count);
-    if (keep >= 0 && keep < state->listbox->populated_count) {
+    if (keep >= 0 && keep < state->listbox->item_count) {
       state->listbox->selected_index = keep;
     }
   }

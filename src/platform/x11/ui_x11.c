@@ -26,7 +26,7 @@ void UI_SetHorizontalExtent(int width) {}
 
 void UI_LB_SetCount(ListBoxInfo *lb, int count) {
   if (lb)
-    lb->populated_count = count;
+    lb->item_count = count;
 }
 
 void UI_LB_BeginUpdate() {}
@@ -56,8 +56,8 @@ void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
   if (top_index < 0)
     top_index = 0;
   if (g_x11_lb_visible > 0 &&
-      top_index + g_x11_lb_visible > lb->populated_count)
-    top_index = lb->populated_count - g_x11_lb_visible;
+      top_index + g_x11_lb_visible > lb->item_count)
+    top_index = lb->item_count - g_x11_lb_visible;
   if (top_index < 0)
     top_index = 0;
   lb->view_offset = top_index;
@@ -67,7 +67,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   if (!lb) {
     return;
   }
-  int count = lb->populated_count;
+  int count = lb->item_count;
   if (count <= 0) {
     lb->selected_index = -1;
     UI_LB_SetCaretIndex(-1, false);
