@@ -14,8 +14,6 @@ typedef struct {
   uint64_t timestamp;
   char *text;
   char *image_path;
-  uint32_t image_width;
-  uint32_t image_height;
 } ClipboardEntry;
 
 typedef struct {
