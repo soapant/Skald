@@ -92,8 +92,8 @@ struct PromptState {
   char *window_title;
   EditBoxInfo *editbox;
   ListBoxInfo *listbox;
-  bool no_bg;
   PromptCallbacks *callbacks;
+  bool no_bg;
 };
 
 /**

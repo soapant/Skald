@@ -1,17 +1,19 @@
 #include "core/flapi.h"
+#include <stdio.h>
 
 typedef enum { VIM_MODE_INSERT, VIM_MODE_NORMAL, VIM_MODE_ANY } VimMode;
 static void vim_enter_normal_mode(void);
 
 typedef void (*VimMotionCallback)(void);
 
-#define VIM_MAX_MOTIONS 320
+#define VIM_MAX_MOTIONS 420
 #define VIM_MAX_TOKENS 8
 #define VIM_BUFFER_TOKENS 16
 
 typedef struct {
   char tokens[VIM_MAX_TOKENS][32];
   int token_count;
+  char mods[32];
   VimMode mode;
   VimMotionCallback cb;
 } VimMotion;
@@ -95,7 +97,7 @@ static void vim_delete_last(int n) {
     ps->editbox->cursor = len - n;
 }
 
-static void vim_motion(const char *seq, VimMode mode, VimMotionCallback cb) {
+static void vim_motion(const char *seq, const char *mods, VimMode mode, VimMotionCallback cb) {
   if (!seq || !cb || g_motion_count >= VIM_MAX_MOTIONS)
     return;
   VimMotion *m = &g_motions[g_motion_count++];
@@ -125,6 +127,21 @@ static void vim_motion(const char *seq, VimMode mode, VimMotionCallback cb) {
       m->token_count++;
     }
   }
+
+  if (mods)
+    strncpy(m->mods, mods, 31);
+  else
+    m->mods[0] = '\0';
+  m->mods[31] = '\0';
+
+  if (m->mods[0]) {
+    for (int i = 0; i < m->token_count; i++) {
+      char tmp[32];
+      snprintf(tmp, sizeof(tmp), "%s+%s", m->mods, m->tokens[i]);
+      strncpy(m->tokens[i], tmp, 31);
+      m->tokens[i][31] = '\0';
+    }
+  }
 }
 
 static bool vim_key_to_token(const PopupKeyEvent *key, char *out, size_t outsz) {
@@ -132,7 +149,7 @@ static bool vim_key_to_token(const PopupKeyEvent *key, char *out, size_t outsz) 
     return false;
   char ch = 0;
   if (key->vk >= 'A' && key->vk <= 'Z')
-    ch = (char)(key->shift ? key->vk : key->vk + 32);
+    ch = (char)(key->vk + 32);
   else if (key->vk >= 'a' && key->vk <= 'z')
     ch = (char)key->vk;
   else
@@ -142,7 +159,7 @@ static bool vim_key_to_token(const PopupKeyEvent *key, char *out, size_t outsz) 
     memcpy(out + pos, "ctrl+", 5);
     pos += 5;
   }
-  if (key->shift && !(key->vk >= 'A' && key->vk <= 'Z')) {
+  if (key->shift) {
     memcpy(out + pos, "shift+", 6);
     pos += 6;
   }
@@ -279,28 +296,55 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
   return false;
 }
 
+static void vim_move(int amount, bool up) {
+    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+    if (!ps || !ps->listbox)
+        return;
+    
+    if (up) {
+        if (ps->listbox->selected_index >= amount) {
+            ps->listbox->selected_index -= amount;
+        } else {
+            ps->listbox->selected_index = 0; 
+        }
+    } else {
+        int max_index = ps->listbox->populated_count - 1;
+        if (max_index < 0) max_index = 0;
+
+        if (ps->listbox->selected_index + amount <= max_index) {
+            ps->listbox->selected_index += amount;
+        } else {
+            ps->listbox->selected_index = max_index; 
+        }
+    }
+    vim_refresh_prompt();
+}
+
 static void vim_move_down(void) {
-  PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-  if (!ps || !ps->listbox)
-    return;
-  if (ps->listbox->selected_index + 1 < ps->listbox->populated_count)
-    ps->listbox->selected_index++;
-  vim_refresh_prompt();
+   vim_move(1, false); 
+}
+
+static void vim_move_down5(void) {
+   vim_move(5, false);
 }
 
 static void vim_move_up(void) {
-  PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-  if (!ps || !ps->listbox)
-    return;
-  if (ps->listbox->selected_index > 0)
-    ps->listbox->selected_index--;
-  vim_refresh_prompt();
+   vim_move(1, true);
+}
+
+static void vim_move_up5(void) {
+   vim_move(5, true);
 }
 
 static void vim_enter_normal_mode(void) {
   g_vim_mode = VIM_MODE_NORMAL;
   fl_get_metrics()->edit_cursor_width = 12;
 }
+
+static void vim_close_window(void) {
+   fl_close_active_window();
+}
+
 
 static void vim_on_prompt_open(void) {
   g_active_prompt = fl_get_active_prompt();
@@ -313,9 +357,13 @@ static void vim_on_prompt_open(void) {
 FLINT_FEATURE_INIT {
   g_pending_mutex = fl_mutex_create();
   fl_get_metrics()->edit_cursor_width = 0;
-  vim_motion("jk", VIM_MODE_INSERT, vim_enter_normal_mode);
-  vim_motion("j", VIM_MODE_NORMAL, vim_move_down);
-  vim_motion("k", VIM_MODE_NORMAL, vim_move_up);
+  vim_motion("jk", "", VIM_MODE_INSERT, vim_enter_normal_mode);
+  vim_motion("jq", "", VIM_MODE_INSERT, vim_close_window);
+  vim_motion("j", "", VIM_MODE_NORMAL, vim_move_down);
+  vim_motion("k", "", VIM_MODE_NORMAL, vim_move_up);
+  vim_motion("r", "shift", VIM_MODE_NORMAL, vim_move_up5);
+  vim_motion("u", "shift", VIM_MODE_NORMAL, vim_move_down5);
+  vim_motion("q", "", VIM_MODE_NORMAL, vim_close_window);
   fl_register_key_interceptor(vim_key_interceptor);
   fl_register_event(EVENT_PROMPT_OPEN, vim_on_prompt_open);
 }
