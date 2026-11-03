@@ -15,5 +15,4 @@ double TimerElapsedUs(WinTimer t) { return timer_elapsed_us(t); }
 
 void TimerEnd(WinTimer t, const char *operation_name, const char *file,
               int line) {
-  double elapsed_us = timer_elapsed_us(t);
 }

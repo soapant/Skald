@@ -174,7 +174,6 @@ static bool ends_with(const char *str, const char *suffix) {
   return strcmp(str + sl - su, suffix) == 0;
 }
 
-static double g_feature_init_us = 0.0;
 static int g_feature_init_count = 0;
 
 #define FLINT_MANIFEST_LIST_MAX 32
@@ -482,11 +481,6 @@ static bool load_single(const char *dir, const char *filename) {
   WinTimer t_dlopen = TimerStart();
   LibHandle h = Platform_LoadLibrary(full);
   double init_us = TimerElapsedUs(t_dlopen);
-  {
-    char label[96];
-    snprintf(label, sizeof(label), "feature_dlopen: %s", name);
-    TimerEnd(t_dlopen, label, __FILE__, __LINE__);
-  }
   if (!h) {
     log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
     return false;
@@ -496,7 +490,6 @@ static bool load_single(const char *dir, const char *filename) {
   if (!init)
     init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
   if (init) {
-    g_feature_init_us += init_us;
     g_feature_init_count++;
   } else {
     log_warn("feature %s has no FlintFeatureInit/Reload symbol", name);
@@ -623,7 +616,6 @@ bool FeatureLoader_Init(void) {
   LOCK();
   g_feature_count = 0;
   UNLOCK();
-  g_feature_init_us = 0.0;
   g_feature_init_count = 0;
   FeatureLoader_LoadAllFromDir("build/features");
   LOCK();
