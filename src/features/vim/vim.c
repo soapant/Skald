@@ -50,7 +50,6 @@ static void vim_insert_char_silent(char ch) {
           len - ps->editbox->cursor + 1);
   ps->editbox->filter[ps->editbox->cursor] = ch;
   ps->editbox->cursor++;
-  fl_invalidate_prompt();
 }
 
 static void *vim_pending_thread(void *arg) {
@@ -94,7 +93,6 @@ static void vim_delete_last(int n) {
   ps->editbox->filter[len - n] = '\0';
   if (ps->editbox->cursor > len - n)
     ps->editbox->cursor = len - n;
-  fl_invalidate_prompt();
 }
 
 static void vim_motion(const char *seq, VimMode mode, VimMotionCallback cb) {
@@ -162,7 +160,6 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
     if (g_vim_mode == VIM_MODE_INSERT) {
       g_vim_mode = VIM_MODE_NORMAL;
       fl_get_metrics()->edit_cursor_width = 12;
-      fl_invalidate_prompt();
       vim_reset_buffer();
       return true;
     }
@@ -271,12 +268,10 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
     if (key->vk == 'I' || key->vk == 'i') {
       g_vim_mode = VIM_MODE_INSERT;
       fl_get_metrics()->edit_cursor_width = 0;
-      fl_invalidate_prompt();
       vim_reset_buffer();
       vim_refresh_prompt();
       return true;
     }
-    fl_invalidate_prompt();
     vim_refresh_prompt();
     return true;
   }
@@ -290,7 +285,6 @@ static void vim_move_down(void) {
     return;
   if (ps->listbox->selected_index + 1 < ps->listbox->populated_count)
     ps->listbox->selected_index++;
-  fl_invalidate_prompt();
   vim_refresh_prompt();
 }
 
@@ -300,21 +294,18 @@ static void vim_move_up(void) {
     return;
   if (ps->listbox->selected_index > 0)
     ps->listbox->selected_index--;
-  fl_invalidate_prompt();
   vim_refresh_prompt();
 }
 
 static void vim_enter_normal_mode(void) {
   g_vim_mode = VIM_MODE_NORMAL;
   fl_get_metrics()->edit_cursor_width = 12;
-  fl_invalidate_prompt();
 }
 
 static void vim_on_prompt_open(void) {
   g_active_prompt = fl_get_active_prompt();
   g_vim_mode = VIM_MODE_INSERT;
   fl_get_metrics()->edit_cursor_width = 0;
-  fl_invalidate_prompt();
   vim_reset_buffer();
   vim_cancel_pending();
 }
