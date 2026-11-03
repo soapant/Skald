@@ -73,7 +73,7 @@ static inline int PromptCustomEditHeight(void) {
   return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS;
 }
 static inline int PromptListBottomMargin(void) {
-  return (WindowTitleText || EditModeText) ? PROMPT_LIST_BOTTOM_TITLE : 40;
+  return 40;
 }
 
 #endif

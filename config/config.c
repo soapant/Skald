@@ -8,7 +8,6 @@ void ConfigApply(void) {
   RememberLastIndex = true;
   MessageAfterEachHotkey = false;
   TimeOutForMessages = 1;
-  DoTimeDebugs = false;
   DebugMode = false;
   RoundedCorners = true;
   EnableBorders = true;
@@ -38,9 +37,7 @@ void ConfigApply(void) {
   MessagesEnabled = true;
   RainbowText = false;
   AlternatingText = false;
-  EditModeText = false;
   WindowTitleText = false;
-  ColoredEditModeText = true;
   GradientItems = 30;
   GradientBrightness = 1.0f;
   CloseOnLossOfFocus = false;

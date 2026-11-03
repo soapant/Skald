@@ -510,7 +510,7 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
       Popup *_p = wmgr->popups[_i];
       if (_p && _p->user_data && _p->type == POPUP_PROMPT) {
         PromptState *_ps = (PromptState *)_p->user_data;
-        if (&_ps->lb == lb) {
+        if (&_ps->listbox == lb) {
           st = _ps;
           break;
         }
@@ -674,7 +674,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   const char *buf = spec->buffer;
   if (!buf) {
     if (state)
-      buf = state->filter;
+      buf = state->editbox->filter;
     else
       buf = "";
   }
@@ -695,7 +695,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   Platform_SetDrawContext(dpy, xd, vis, cmap);
 
   int text_len = (int)strlen(buf);
-  int cursor = state ? state->cursor : text_len;
+  int cursor = state ? state->editbox->cursor : text_len;
   if (cursor < 0)
     cursor = 0;
   if (cursor > text_len)
@@ -734,12 +734,17 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
 
   EditboxSpec eb;
   Editbox_BuildSpec(&eb, &ebi);
+  PlMetrics *m = Platform_GetMetrics();
+  if (m->edit_cursor_width > 0) {
+    eb.caret_w_normal = m->edit_cursor_width;
+    eb.insert_mode = false;
+  }
   eb.measure = x11_editbox_measure;
   eb.measure_user = &metrics;
 
   Editbox_Render(&eb, NULL);
   if (state)
-    state->scroll_offset = eb.scroll;
+    state->editbox->scroll_offset = eb.scroll;
 
   if (state) {
     if (WindowTitleText && state->window_title) {
@@ -753,18 +758,6 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
                               .color = title_col,
                               .font = fh,
                               .align = "LEFT",
-                              .pad = PROMPT_FOOTER_PAD,
-                              .fontsize = FontSize});
-    }
-    if (EditModeText) {
-      Platform_SetDrawContext(dpy, xd, vis, cmap);
-      Platform_DrawTextRaw(
-          (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
-                              .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
-                              .text = "Insert",
-                              .color = EditModeTextColor(),
-                              .font = fh,
-                              .align = "RIGHT",
                               .pad = PROMPT_FOOTER_PAD,
                               .fontsize = FontSize});
     }
