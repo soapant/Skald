@@ -682,9 +682,16 @@ static HWND win32_foreground_target(void) {
 }
 
 bool Platform_CloseActiveWindow(void) {
-  HWND hwnd = win32_foreground_target();
-  if (!hwnd)
+  HWND hwnd = GetForegroundWindow();
+  if (!hwnd || !IsWindow(hwnd))
     return false;
+  char cls[64];
+  cls[0] = '\0';
+  GetClassNameA(hwnd, cls, sizeof(cls));
+  if (strcmp(cls, "QuickSwitcherModalClass") == 0) {
+    FlintContext_Get()->window.selection_complete = true;
+    return true;
+  }
   PostMessageA(hwnd, WM_CLOSE, 0, 0);
   return true;
 }
