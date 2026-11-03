@@ -1437,6 +1437,13 @@ char *fl_get_user_name(void);
  */
 bool fl_is_root(void);
 
+/**
+ * @brief Execute a callback periodically.
+ * @param seconds   Delay in seconds between calls.
+ * @param callback  Callback function.
+ */
+void fl_run_every(double seconds, void (*callback)(void));
+
 typedef void *FlLibrary;
 
 /**

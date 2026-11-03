@@ -413,10 +413,10 @@ static bool macro_load_ctrlenter(PromptState *state) {
   return false;
 }
 
-bool SaveMacro(void) {
+void SaveMacro(void) {
   if (g_event_count == 0) {
     fl_message(.message = "No recording in memory", .timeout = 3.0);
-    return true;
+    return;
   }
   char *name = fl_popup(.placeholder = "Macro file name");
   char chosen[256];
@@ -429,14 +429,12 @@ bool SaveMacro(void) {
     snprintf(chosen, sizeof(chosen), "%s", "last.macro");
   }
   macro_save(chosen);
-  return true;
 }
 
-bool LoadMacro(void) {
+void LoadMacro(void) {
   fl_window(.title = "Macro Load", .refresh = macro_refresh,
             .enter = macro_load_enter, .ctrl_enter = macro_load_ctrlenter,
             .auto_scale = true);
-  return true;
 }
 
 static void macro_show_overlay(void (*render)(void)) {
@@ -462,7 +460,7 @@ void PlayMacro(void) {
   release_everything();
 }
 
-bool InfinitePlaybackToggle(void) {
+void InfinitePlaybackToggle(void) {
   g_macro_infinite = !g_macro_infinite;
   if (g_macro_infinite)
     fl_message(.message = "Infinite playback enabled", .timeout = 1.0,
@@ -470,10 +468,9 @@ bool InfinitePlaybackToggle(void) {
   else
     fl_message(.message = "Infinite playback disabled", .timeout = 1.0,
                .slot = BOTTOM_CENTER);
-  return true;
 }
 
-bool RemoveDeadTimeToggle(void) {
+void RemoveDeadTimeToggle(void) {
   g_macro_remove_dead = !g_macro_remove_dead;
   if (g_macro_remove_dead)
     fl_message(.message = "Remove dead time enabled", .timeout = 1.0,
@@ -481,7 +478,6 @@ bool RemoveDeadTimeToggle(void) {
   else
     fl_message(.message = "Remove dead time disabled", .timeout = 1.0,
                .slot = BOTTOM_CENTER);
-  return true;
 }
 
 void RecordToggle(void) {
@@ -498,20 +494,27 @@ void RecordToggle(void) {
   fl_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_recording = false;
 }
+void crosshair_render(void) {
+    int size = 5;
+
+    fl_draw_line(.x1 = WIDTH / 2 - size, .y1 = HEIGHT / 2, .x2 = WIDTH / 2 + size, .y2 = HEIGHT / 2, .color = FL_RED);
+
+    fl_draw_line(.x1 = WIDTH / 2, .y1 = HEIGHT / 2 - size, .x2 = WIDTH / 2, .y2 = HEIGHT / 2 + size, .color = FL_RED);
+}
 
 FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "Ctrl+Alt+R", .cb = RecordToggle);
   fl_register_hotkey(.hotkey = "Ctrl+Alt+P", .cb = PlayMacro);
   fl_add_to_cc(.display_name = "SaveMacro",
-               .on_enter = (bool (*)(void))SaveMacro, .type = "Macro",
+               .on_action = SaveMacro, .type = "Macro",
                .icon = "/save.png");
   fl_add_to_cc(.display_name = "LoadMacro",
-               .on_enter = (bool (*)(void))LoadMacro, .type = "Macro",
+               .on_action = LoadMacro, .type = "Macro",
                .icon = "/load.png");
   fl_add_to_cc(.display_name = "InfinitePlayback",
-               .on_enter = (bool (*)(void))InfinitePlaybackToggle,
+               .on_action = InfinitePlaybackToggle,
                .type = "Macro", .icon = "/repeat.png");
   fl_add_to_cc(.display_name = "RemoveDeadTime",
-               .on_enter = (bool (*)(void))RemoveDeadTimeToggle,
+               .on_action = RemoveDeadTimeToggle,
                .type = "Macro", .icon = "/clock-off.png");
 }
