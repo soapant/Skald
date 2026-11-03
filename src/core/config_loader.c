@@ -410,8 +410,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, "    MessageAfterEachHotkey = %s;\n",
           MessageAfterEachHotkey ? "true" : "false");
   cfg_put(buf, cap, &off, "    TimeOutForMessages = %d;\n", TimeOutForMessages);
-  cfg_put(buf, cap, &off, "    DoTimeDebugs = %s;\n",
-          DoTimeDebugs ? "true" : "false");
   cfg_put(buf, cap, &off, "    DebugMode = %s;\n",
           DebugMode ? "true" : "false");
   cfg_put(buf, cap, &off, "    RoundedCorners = %s;\n",

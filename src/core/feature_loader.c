@@ -631,12 +631,6 @@ bool FeatureLoader_Init(void) {
   UNLOCK();
   log_info("init done, %d features loaded (hot reload dir: build/features)",
            cnt);
-  if (DoTimeDebugs) {
-    char label[96];
-    snprintf(label, sizeof(label), "feature_init: TOTAL (%d features)",
-             g_feature_init_count);
-    TimerPrintRaw(g_feature_init_us, label, __FILE__, __LINE__);
-  }
   return true;
 }
 

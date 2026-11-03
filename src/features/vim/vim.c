@@ -17,6 +17,7 @@ typedef struct {
 } VimMotion;
 
 static VimMode g_vim_mode = VIM_MODE_INSERT;
+static PromptState *g_active_prompt = NULL;
 static VimMotion g_motions[VIM_MAX_MOTIONS];
 static int g_motion_count = 0;
 static char g_key_buffer[VIM_BUFFER_TOKENS][32];
@@ -272,12 +273,35 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
       fl_get_metrics()->edit_cursor_width = 0;
       fl_invalidate_prompt();
       vim_reset_buffer();
+      vim_refresh_prompt();
       return true;
     }
-    return false;
+    fl_invalidate_prompt();
+    vim_refresh_prompt();
+    return true;
   }
 
   return false;
+}
+
+static void vim_move_down(void) {
+  PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+  if (!ps || !ps->listbox)
+    return;
+  if (ps->listbox->selected_index + 1 < ps->listbox->populated_count)
+    ps->listbox->selected_index++;
+  fl_invalidate_prompt();
+  vim_refresh_prompt();
+}
+
+static void vim_move_up(void) {
+  PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+  if (!ps || !ps->listbox)
+    return;
+  if (ps->listbox->selected_index > 0)
+    ps->listbox->selected_index--;
+  fl_invalidate_prompt();
+  vim_refresh_prompt();
 }
 
 static void vim_enter_normal_mode(void) {
@@ -287,6 +311,7 @@ static void vim_enter_normal_mode(void) {
 }
 
 static void vim_on_prompt_open(void) {
+  g_active_prompt = fl_get_active_prompt();
   g_vim_mode = VIM_MODE_INSERT;
   fl_get_metrics()->edit_cursor_width = 0;
   fl_invalidate_prompt();
@@ -298,6 +323,8 @@ FLINT_FEATURE_INIT {
   g_pending_mutex = fl_mutex_create();
   fl_get_metrics()->edit_cursor_width = 0;
   vim_motion("jk", VIM_MODE_INSERT, vim_enter_normal_mode);
+  vim_motion("j", VIM_MODE_NORMAL, vim_move_down);
+  vim_motion("k", VIM_MODE_NORMAL, vim_move_up);
   fl_register_key_interceptor(vim_key_interceptor);
   fl_register_event(EVENT_PROMPT_OPEN, vim_on_prompt_open);
 }
