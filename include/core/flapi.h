@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "core/types.h"
+#include "core/window_manager.h"
+
+
 #include "platform/platform.h"
 #include "platform/platform.h"
 #include "core/types/prompt.h"
@@ -40,7 +43,10 @@ typedef struct PlatformWidget PlatformWidget;
  * Construct with `RGB(r, g, b)` or `HEX(0xRRGGBB)`.
  */
 typedef PlColor FlColor;
+
 typedef PlMetrics FlMetrics;
+typedef PlEvent FlEvent;
+typedef PlEventCallback FlEventCallback;
 
 /**
  * @brief A rectangle in screen coordinates.
@@ -2310,20 +2316,11 @@ typedef PlMetrics FlMetrics;
 FlMetrics *fl_get_metrics(void);
 void fl_invalidate_prompt(void);
 
-typedef enum {
-  EVENT_PROMPT_OPEN,
-  EVENT_PROMPT_CLOSE,
-} FlEvent;
-
 #define FL_EVENT_PROMPT_OPEN EVENT_PROMPT_OPEN
 #define FL_EVENT_PROMPT_CLOSE EVENT_PROMPT_CLOSE
 
-
-typedef void (*FlEventCallback)(void);
-
 void fl_register_event(FlEvent event, FlEventCallback cb);
 void fl_unregister_event(FlEvent event, FlEventCallback cb);
-void EventBus_Trigger(FlEvent event);
 
 typedef bool (*FlKeyInterceptorFn)(const PopupKeyEvent *key);
 

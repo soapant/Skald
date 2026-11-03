@@ -2582,9 +2582,6 @@ void fl_invalidate_prompt(void) {
   Platform_InvalidatePrompt();
 }
 
-#include "core/window_manager.h"
-#include "core/types/prompt.h"
-
 void *fl_get_active_prompt(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = WindowManager_GetTopPopup(wm);
@@ -2594,34 +2591,10 @@ void *fl_get_active_prompt(void) {
   return NULL;
 }
 
-#define MAX_EVENT_CALLBACKS 16
-static FlEventCallback g_event_registry[2][MAX_EVENT_CALLBACKS] = {0};
-
 void fl_register_event(FlEvent event, FlEventCallback cb) {
-  if (event < 0 || event >= 2) return;
-  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i] == NULL) {
-      g_event_registry[event][i] = cb;
-      return;
-    }
-  }
+  EventBus_Register(event, cb);
 }
 
 void fl_unregister_event(FlEvent event, FlEventCallback cb) {
-  if (event < 0 || event >= 2) return;
-  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i] == cb) {
-      g_event_registry[event][i] = NULL;
-      return;
-    }
-  }
-}
-
-void EventBus_Trigger(FlEvent event) {
-  if (event < 0 || event >= 2) return;
-  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i]) {
-      g_event_registry[event][i]();
-    }
-  }
+  EventBus_Unregister(event, cb);
 }
