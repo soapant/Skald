@@ -246,7 +246,7 @@ static bool g_fl_list_font_owned;
 bool fl_listbox_begin_platform(const FlListSpec *spec) {
   if (!spec)
     return false;
-  ListBoxInfo *lb = spec;
+  ListBoxInfo *lb = spec->lb;
   if (!lb) {
     if (!spec->items || spec->count <= 0)
       return false;
@@ -264,7 +264,7 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
       Popup *_p = _wm_lb->popups[_i];
       if (_p && _p->user_data) {
         PromptState *_ps = (PromptState *)_p->user_data;
-        if (&_ps->listbox == lb) {
+        if (_ps->listbox == lb) {
           st = _ps;
           break;
         }
@@ -526,7 +526,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
 
   Editbox_Render(&eb, NULL);
   if (state)
-    state->editbox->editbox.scroll_offset = eb.scroll;
+    state->editbox->scroll_offset = eb.scroll;
 
   if (old)
     SelectObject(hdc, old);

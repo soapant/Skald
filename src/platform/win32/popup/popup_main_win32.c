@@ -225,7 +225,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (FlintContext_Get()->prompt_callbacks.render == NULL) {
       PromptState *hst = Platform_GetPromptStateForHWND(hwnd);
       if (hst && hst->listbox != NULL) {
-        ListBoxInfo *hlb = &hst->listbox;
+        ListBoxInfo *hlb = hst->listbox;
         int list_top = PromptListTop();
         int item_h = PromptRowHeight();
         int visible =
@@ -486,11 +486,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
           POINT lbOrigin2 = {0, 0};
           ClientToScreen(pdis->hwndItem, &lbOrigin2);
           ScreenToClient(hwnd, &lbOrigin2);
-          int gx = lbOrigin2.x + pdis->rcItem.left;
-          int gy = lbOrigin2.y + pdis->rcItem.top;
-          if (!win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, winW, winH,
-                                         lbOrigin2.x, lbOrigin2.y)) {
-          }
+          win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, winW, winH,
+                                         lbOrigin2.x, lbOrigin2.y);
         }
         if (isSelected) {
           win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_SELECTED_TEXT,
@@ -714,7 +711,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
                                       PROMPT_SEL_RADIUS);
             }
 
-            const char *text = ListBoxInfo_Row(&estate->listbox, list_idx);
+            const char *text = ListBoxInfo_Row(estate->listbox, list_idx);
             if (!text)
               continue;
 
