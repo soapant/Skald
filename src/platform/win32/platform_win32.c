@@ -141,14 +141,15 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
     return strdup("");
   }
   ULONGLONG startMs = GetTickCount64();
-  ULONGLONG deadline = startMs + 350;
-  bool got_data = false;
+  ULONGLONG deadline = startMs + 30000;
   bool exited = false;
   for (;;) {
     ULONGLONG now = GetTickCount64();
     if (now >= deadline)
       break;
     DWORD waitSlice = (DWORD)(deadline - now);
+    if (waitSlice > 100)
+      waitSlice = 100;
     DWORD w = WaitForSingleObject(pi.hProcess, waitSlice);
     if (w == WAIT_OBJECT_0)
       exited = true;
@@ -179,9 +180,6 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
       len += bytesRead;
       read_any = true;
     }
-    if (read_any && !got_data) {
-      got_data = true;
-    }
     if (read_any) {
       deadline = GetTickCount64() + 5000;
     }
@@ -211,11 +209,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
           break;
         len += bytesRead;
       }
-      DWORD avail = 0;
-      if (PeekNamedPipe(hRead, NULL, 0, NULL, &avail, NULL) && avail == 0)
-        break;
-      if (!read_any)
-        break;
+      break;
     }
   }
   out[len] = '\0';
