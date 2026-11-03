@@ -61,7 +61,7 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   return true;
 }
-bool Platform_DrawRectRaw_impl(PlDrawRectRawSpec spec) { return true; }
+bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) { return true; }
 void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {}
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) { return true; }
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) { return true; }
