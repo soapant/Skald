@@ -13,18 +13,7 @@ If you already know how to program in C, the best way to learn is to read the co
 If you prefer a structured overview, read on. You can also browse `flapi.h` directly for the full list of available functions, though the auto-generated documentation is currently incomplete. 
 
 ## The Framework Structure
-You control everything in Flint using callbacks, making the UI more like a framework. You start by creating a main UI window using `fl_window()`:
-
-
-```c
-fl_window(
-    .title = "Whatever",
-    .refresh = whatever_refresh,
-    .enter = whatever_enter,
-    .ctrl_enter = whatever_ctrl_enter,
-    .tab = whatever_tab,
-    .render = whatever_render
-);
+You control everything in Flint using callbacks, making the UI more like a framework. You start by creating a main UI window using `fl_window()`
 
 After setting up the window, you simply fill out those callbacks.
 UI Contexts
