@@ -7,6 +7,13 @@
 typedef struct Popup Popup;
 typedef struct WindowManager WindowManager;
 
+typedef enum {
+  EVENT_PROMPT_OPEN,
+  EVENT_PROMPT_CLOSE,
+} PlEvent;
+
+typedef void (*PlEventCallback)(void);
+
 typedef void (*EditPopupConfirmCallback)(const char *text, void *user_data);
 
 typedef struct {
@@ -17,7 +24,6 @@ typedef struct {
   void (*on_focus_lost)(Popup *self);
   void (*destroy)(Popup *self);
 } PopupVTable;
-
 typedef enum {
   POPUP_PROMPT,
   POPUP_EDIT,
@@ -88,5 +94,8 @@ void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
 void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
                                    int *out_h);
 bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x, int root_y);
+void EventBus_Register(PlEvent event, PlEventCallback cb);
+void EventBus_Unregister(PlEvent event, PlEventCallback cb);
+void EventBus_Trigger(PlEvent event);
 
 #endif

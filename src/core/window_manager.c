@@ -4,6 +4,7 @@
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
+
 #include "core/checkbox.h"
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
@@ -160,6 +161,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
 }
 
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
+  EventBus_Trigger(EVENT_PROMPT_OPEN);
   log_info("WindowManager_ShowPrompt called wm=%p spec=%p title='%s'",
            (void *)wm, (void *)spec,
            spec && spec->title ? spec->title : "(null)");
@@ -187,4 +189,37 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   }
   char *res = Platform_PromptUser(wm, spec);
   return res;
+}
+
+
+#define MAX_EVENT_CALLBACKS 16
+static PlEventCallback g_event_registry[2][MAX_EVENT_CALLBACKS] = {0};
+
+void EventBus_Register(PlEvent event, PlEventCallback cb) {
+  if (event < 0 || event >= 2) return;
+  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
+    if (g_event_registry[event][i] == NULL) {
+      g_event_registry[event][i] = cb;
+      return;
+    }
+  }
+}
+
+void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
+  if (event < 0 || event >= 2) return;
+  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
+    if (g_event_registry[event][i] == cb) {
+      g_event_registry[event][i] = NULL;
+      return;
+    }
+  }
+}
+
+void EventBus_Trigger(PlEvent event) {
+  if (event < 0 || event >= 2) return;
+  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
+    if (g_event_registry[event][i]) {
+      g_event_registry[event][i]();
+    }
+  }
 }

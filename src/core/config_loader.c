@@ -410,8 +410,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, "    MessageAfterEachHotkey = %s;\n",
           MessageAfterEachHotkey ? "true" : "false");
   cfg_put(buf, cap, &off, "    TimeOutForMessages = %d;\n", TimeOutForMessages);
-  cfg_put(buf, cap, &off, "    DoTimeDebugs = %s;\n",
-          DoTimeDebugs ? "true" : "false");
   cfg_put(buf, cap, &off, "    DebugMode = %s;\n",
           DebugMode ? "true" : "false");
   cfg_put(buf, cap, &off, "    RoundedCorners = %s;\n",
@@ -467,12 +465,8 @@ static size_t config_emit_region(char *buf, size_t cap) {
           RainbowText ? "true" : "false");
   cfg_put(buf, cap, &off, "    AlternatingText = %s;\n",
           AlternatingText ? "true" : "false");
-  cfg_put(buf, cap, &off, "    EditModeText = %s;\n",
-          EditModeText ? "true" : "false");
   cfg_put(buf, cap, &off, "    WindowTitleText = %s;\n",
           WindowTitleText ? "true" : "false");
-  cfg_put(buf, cap, &off, "    ColoredEditModeText = %s;\n",
-          ColoredEditModeText ? "true" : "false");
   cfg_put(buf, cap, &off, "    GradientItems = %d;\n", GradientItems);
   cfg_put_float(buf, cap, &off, "GradientBrightness", GradientBrightness);
   cfg_put(buf, cap, &off, "    CloseOnLossOfFocus = %s;\n",

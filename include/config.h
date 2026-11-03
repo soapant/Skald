@@ -10,13 +10,6 @@
 #define COMMAND_MODE_KEY VK_OEM_1
 #define SEARCH_PROGRAM_KEY VK_OEM_2
 
-#define COLOR_INSERT_MODE_TEXT                                                 \
-  (ColoredEditModeText ? COLOR_INSERT_MODE : COLOR_TEXT)
-#define COLOR_NORMAL_MODE_TEXT                                                 \
-  (ColoredEditModeText ? COLOR_NORMAL_MODE : COLOR_TEXT)
-#define COLOR_VISUAL_MODE_TEXT                                                 \
-  (ColoredEditModeText ? COLOR_VISUAL_MODE : COLOR_TEXT)
-
 #define MAX_FILE_LINES 10000
 #define MAX_FILE_LINE_LENGTH 1024
 

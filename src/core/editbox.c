@@ -33,7 +33,7 @@ void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
   out->w = in->w;
   out->inset = PROMPT_EDIT_INSET;
   out->visible_w = in->w - PROMPT_EDIT_SCROLL_PAD;
-  out->scroll = in->state ? in->state->scroll_offset : 0;
+  out->scroll = in->state ? in->state->editbox->scroll_offset : 0;
   out->cursor_x = in->cursor_x;
   out->text_w = in->text_w;
   out->text_y = in->y;
@@ -41,7 +41,7 @@ void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
   out->caret_h = PromptCaretHeight();
   out->caret_w_normal = PromptNormalCaretWidth();
   out->caret_w_insert = PROMPT_CARET_W_INSERT;
-  out->placeholder = in->state ? in->state->placeholder : NULL;
+  out->placeholder = in->state ? in->state->editbox->placeholder : NULL;
   out->placeholder_dy = 2;
   out->rainbow_limit_x = -1;
   out->text_color = in->text_color;
@@ -63,10 +63,10 @@ void Editbox_ResolveSelection(PromptState *state, int text_len,
   int sel_start = 0;
   int sel_end = 0;
   bool has = false;
-  if (prefer_state && state && state->sel_start >= 0 &&
-      state->sel_end > state->sel_start) {
-    sel_start = state->sel_start;
-    sel_end = state->sel_end;
+  if (prefer_state && state && state->editbox->sel_start >= 0 &&
+      state->editbox->sel_end > state->editbox->sel_start) {
+    sel_start = state->editbox->sel_start;
+    sel_end = state->editbox->sel_end;
     has = true;
   } else {
     has = EditState_GetSelection(&sel_start, &sel_end) && text_len > 0;

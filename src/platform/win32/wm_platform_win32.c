@@ -1,6 +1,5 @@
 #include "platform/wm_platform.h"
 #include "platform/platform.h"
-#include "core/flapi.h"
 #include "platform/input_state.h"
 #include "core/window_manager.h"
 #include "core/remap_manager.h"

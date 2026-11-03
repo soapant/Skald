@@ -1,10 +1,7 @@
-#include "core/widget_registry.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "core/flapi.h"
+#include "core/widget_registry.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
@@ -14,15 +11,14 @@
 #include "platform/lib.h"
 #include "platform/input_state.h"
 #include "config_values.h"
-#include "core/types/flapi_types.h"
 #include "core/types/window.h"
 
-static FlWidget *g_widgets[FL_WIDGET_MAX];
+static Widget *g_widgets[WIDGET_MAX];
 static int g_widget_count = 0;
 static int g_widget_seq = 0;
 static unsigned g_widget_gen = 1;
 
-static FlTimer mon_at_timer;
+static PlTimer mon_at_timer;
 static bool mon_valid = false;
 static int mon_x, mon_y, mon_w, mon_h;
 
@@ -42,7 +38,7 @@ unsigned widget_bump_generation(void) { return ++g_widget_gen; }
 
 unsigned widget_current_generation(void) { return g_widget_gen; }
 
-static FlWidget *widget_find_by_name(const char *name) {
+static Widget *widget_find_by_name(const char *name) {
   if (!name || !name[0])
     return NULL;
   for (int i = 0; i < g_widget_count; i++) {
@@ -65,13 +61,13 @@ static void widget_hover_poll(void) {
   }
   int mx, my;
   Platform_GetMousePos(&mx, &my);
-  hover_pos = (FlPos){mx, my};
+  hover_pos = (PlPos){mx, my};
   hover_at_timer = now;
   hover_valid = true;
 }
 
 static void *widget_hover_worker(void *ud) {
-  FlWidget *w = (FlWidget *)ud;
+  Widget *w = (Widget *)ud;
   if (w && w->on_hover)
     w->on_hover();
   if (w)
@@ -80,7 +76,7 @@ static void *widget_hover_worker(void *ud) {
 }
 
 static void widget_render_frame(void *ud) {
-  FlWidget *widget = (FlWidget *)ud;
+  Widget *widget = (Widget *)ud;
   if (!widget || !widget->render || widget->dead)
     return;
   widget->frame++;
@@ -106,7 +102,7 @@ static void widget_render_frame(void *ud) {
       Platform_HoverWidgetHide(widget->name);
     }
   }
-  FlWidgetState st;
+  WidgetState st;
   st.width = widget->w;
   st.height = widget->h;
   st.frame = widget->frame;
@@ -160,7 +156,7 @@ static const char *widget_owner_basename(const char *p, char *out, size_t n) {
   return out;
 }
 
-static bool widget_owner_matches(const FlWidget *widget, const char *a,
+static bool widget_owner_matches(const Widget *widget, const char *a,
                                  const char *b) {
   if (!widget->owner)
     return false;
@@ -184,7 +180,7 @@ static bool widget_owner_matches(const FlWidget *widget, const char *a,
 }
 
 static void widget_destroy_window(void *ud) {
-  FlWidget *widget = (FlWidget *)ud;
+  Widget *widget = (Widget *)ud;
   if (!widget)
     return;
   widget->hovered = false;
@@ -207,7 +203,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     return;
 
   for (int i = 0; i < g_widget_count; i++) {
-    FlWidget *w = g_widgets[i];
+    Widget *w = g_widgets[i];
     if (!w)
       continue;
     if (!widget_owner_matches(w, path_a, path_b))
@@ -226,7 +222,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
 
   int n = 0;
   for (int i = 0; i < g_widget_count; i++) {
-    FlWidget *w = g_widgets[i];
+    Widget *w = g_widgets[i];
     if (!w)
       continue;
     if (widget_owner_matches(w, path_a, path_b) && w->gen <= generation) {
@@ -247,7 +243,7 @@ bool widget_owner_active(const char *path) {
   if (!path || !path[0])
     return false;
   for (int i = 0; i < g_widget_count; i++) {
-    FlWidget *w = g_widgets[i];
+    Widget *w = g_widgets[i];
     if (w && widget_owner_matches(w, path, NULL))
       return true;
   }
@@ -255,7 +251,7 @@ bool widget_owner_active(const char *path) {
 }
 
 static void widget_attach_window(void *ud) {
-  FlWidget *widget = (FlWidget *)ud;
+  Widget *widget = (Widget *)ud;
   if (!widget || widget->dead)
     return;
   bool created = false;
@@ -280,7 +276,7 @@ static void widget_attach_window(void *ud) {
   }
 }
 
-static void widget_apply_geometry(FlWidget *widget, int x, int y) {
+static void widget_apply_geometry(Widget *widget, int x, int y) {
   widget->x = x;
   widget->y = y;
   if (Platform_RenderThread_IsCurrentThread()) {
@@ -293,7 +289,7 @@ static void widget_apply_geometry(FlWidget *widget, int x, int y) {
     return;
 }
 
-static int widget_sort_key(const FlWidget *widget) {
+static int widget_sort_key(const Widget *widget) {
   return widget->order_set ? widget->order : widget->seq;
 }
 
@@ -301,14 +297,14 @@ static void widget_relayout(void) {
   int mx = 0, my = 0, mw = 1920, mh = 1080;
   widget_monitor_geometry(&mx, &my, &mw, &mh);
 
-  FlWidget *sorted[FL_WIDGET_MAX];
+  Widget *sorted[WIDGET_MAX];
   int n = 0;
   for (int i = 0; i < g_widget_count; i++) {
     if (g_widgets[i] && !g_widgets[i]->free_pos)
       sorted[n++] = g_widgets[i];
   }
   for (int i = 1; i < n; i++) {
-    FlWidget *key = sorted[i];
+    Widget *key = sorted[i];
     int k = i - 1;
     while (k >= 0 && widget_sort_key(sorted[k]) > widget_sort_key(key)) {
       sorted[k + 1] = sorted[k];
@@ -319,12 +315,12 @@ static void widget_relayout(void) {
 
   for (int s = 0; s < 4; s++) {
     bool from_right =
-        (s == FL_WIDGET_SLOT_TOP_RIGHT || s == FL_WIDGET_SLOT_BOTTOM_RIGHT);
+        (s == WIDGET_SLOT_TOP_RIGHT || s == WIDGET_SLOT_BOTTOM_RIGHT);
     bool from_top =
-        (s == FL_WIDGET_SLOT_TOP_LEFT || s == FL_WIDGET_SLOT_TOP_RIGHT);
+        (s == WIDGET_SLOT_TOP_LEFT || s == WIDGET_SLOT_TOP_RIGHT);
     int cursor = from_right ? mx + mw : mx;
     for (int i = 0; i < n; i++) {
-      FlWidget *w = sorted[i];
+      Widget *w = sorted[i];
       if (w->slot != s)
         continue;
       int g = w->gap_override > 0 ? w->gap_override : WidgetGap;
@@ -336,22 +332,22 @@ static void widget_relayout(void) {
   }
 }
 
-FlWidget *widget_create(const FlWidgetSpec *spec) {
+Widget *widget_create(const WidgetSpec *spec) {
   if (!spec || !spec->name || !spec->name[0]) {
     log_warn("widget_create: name is required");
     return NULL;
   }
-  FlWidget *widget = widget_find_by_name(spec->name);
+  Widget *widget = widget_find_by_name(spec->name);
   bool fresh = (widget == NULL);
   if (fresh) {
-    if (g_widget_count >= FL_WIDGET_MAX) {
+    if (g_widget_count >= WIDGET_MAX) {
       log_warn("widget_create: widget table full");
       return NULL;
     }
-    widget = (FlWidget *)calloc(1, sizeof(*widget));
+    widget = (Widget *)calloc(1, sizeof(*widget));
     if (!widget)
       return NULL;
-    snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
+    snprintf(widget->name, WIDGET_NAME_MAX, "%s", spec->name);
     widget->seq = g_widget_seq++;
     g_widgets[g_widget_count++] = widget;
   }
@@ -373,23 +369,23 @@ FlWidget *widget_create(const FlWidgetSpec *spec) {
   widget->no_bg = spec->no_bg;
   widget->auto_w = spec->w <= 0;
   widget->auto_h = spec->h <= 0;
-  widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
+  widget->pad = spec->pad > 0 ? spec->pad : WIDGET_DEFAULT_PAD;
   if (fresh || !widget->auto_w)
-    widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
+    widget->w = widget->auto_w ? WIDGET_PROVISIONAL_W : spec->w;
   if (fresh || !widget->auto_h)
-    widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
+    widget->h = widget->auto_h ? WIDGET_PROVISIONAL_H : spec->h;
   widget->gap_override = spec->gap > 0 ? spec->gap : 0;
   widget->fps = spec->fps ? spec->fps : 1;
-  widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT &&
-                  spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT)
+  widget->slot = (spec->slot >= WIDGET_SLOT_TOP_LEFT &&
+                  spec->slot <= WIDGET_SLOT_BOTTOM_RIGHT)
                      ? spec->slot
-                     : FL_WIDGET_SLOT_BOTTOM_LEFT;
+                     : WIDGET_SLOT_BOTTOM_LEFT;
   widget->order = spec->order;
   widget->order_set = spec->order > 0;
   widget->render = spec->render;
   widget->on_click = spec->on_click;
   widget->on_hover = spec->on_hover;
-  widget->free_pos = (spec->slot == FL_WIDGET_FREE);
+  widget->free_pos = (spec->slot == WIDGET_FREE);
   widget->frame = 0;
   widget->created_at = Platform_StartTimer();
 
@@ -411,11 +407,11 @@ FlWidget *widget_create(const FlWidgetSpec *spec) {
   return widget;
 }
 
-bool widget_valid(FlWidget *widget) { return widget != NULL; }
+bool widget_valid(Widget *widget) { return widget != NULL; }
 
-FlPos widget_get_pos(const char *name) {
-  FlPos r = {0, 0};
-  FlWidget *w = widget_find_by_name(name);
+PlPos widget_get_pos(const char *name) {
+  PlPos r = {0, 0};
+  Widget *w = widget_find_by_name(name);
   if (w && w->x < 0x7fffffff) {
     r.x = w->x + w->w / 2;
     r.y = w->y + w->h / 2;
@@ -424,18 +420,18 @@ FlPos widget_get_pos(const char *name) {
 }
 
 static void widget_apply_show(void *ud) {
-  FlWidget *widget = (FlWidget *)ud;
+  Widget *widget = (Widget *)ud;
   if (widget)
     Platform_Widget_Show(widget->win);
 }
 
 static void widget_apply_hide(void *ud) {
-  FlWidget *widget = (FlWidget *)ud;
+  Widget *widget = (Widget *)ud;
   if (widget)
     Platform_Widget_Hide(widget->win);
 }
 
-void widget_show(FlWidget *widget) {
+void widget_show(Widget *widget) {
   if (!widget_valid(widget))
     return;
   if (widget->mapped)
@@ -444,7 +440,7 @@ void widget_show(FlWidget *widget) {
   Platform_RenderThread_Post(widget_apply_show, widget);
 }
 
-void widget_hide(FlWidget *widget) {
+void widget_hide(Widget *widget) {
   if (!widget_valid(widget))
     return;
   if (!widget->mapped)
@@ -453,7 +449,7 @@ void widget_hide(FlWidget *widget) {
   Platform_RenderThread_Post(widget_apply_hide, widget);
 }
 
-void widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
+void widget_set_render(Widget *widget, WidgetRenderFn render) {
   if (!widget_valid(widget))
     return;
   widget->render = render;
