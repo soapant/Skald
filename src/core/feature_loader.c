@@ -656,7 +656,7 @@ void FeatureLoader_Shutdown(void) {
   log_info("FeatureLoader_Shutdown completed");
 }
 
-void FeatureLoader_Reload(const char *name) {
+void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
   if (!name)
     return FeatureLoader_ReloadAll();
   LOCK();
@@ -666,11 +666,12 @@ void FeatureLoader_Reload(const char *name) {
       char path_copy[512];
       strncpy(path_copy, g_features[i].path, sizeof(path_copy) - 1);
       path_copy[sizeof(path_copy) - 1] = '\0';
+      const char *src = (src_path && src_path[0]) ? src_path : path_copy;
       LibHandle old = g_features[i].handle;
       char uniquepath[1024];
       snprintf(uniquepath, sizeof(uniquepath), "%s.hot%d", path_copy,
                ++g_reload_seq);
-      if (!copy_file(path_copy, uniquepath)) {
+      if (!copy_file(src, uniquepath)) {
         log_error("reload %s: copy failed (keeping old)", name);
         UNLOCK();
         return;
@@ -713,7 +714,7 @@ void FeatureLoader_Reload(const char *name) {
       widget_bump_generation();
       log_info("feature_reload: %s (constructor ran at dlopen)", name);
       g_features[i].handle = h;
-      strncpy(g_features[i].path, path_copy, sizeof(g_features[i].path) - 1);
+      strncpy(g_features[i].path, uniquepath, sizeof(g_features[i].path) - 1);
       g_features[i].path[sizeof(g_features[i].path) - 1] = '\0';
       strncpy(g_features[i].uniq, uniquepath, sizeof(g_features[i].uniq) - 1);
       g_features[i].uniq[sizeof(g_features[i].uniq) - 1] = '\0';
@@ -833,3 +834,7 @@ bool FeatureLoader_TryLock(void) {
 }
 
 void FeatureLoader_Unlock(void) { UNLOCK(); }
+
+void FeatureLoader_Reload(const char *name) {
+  FeatureLoader_ReloadFrom(name, NULL);
+}

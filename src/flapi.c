@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <utime.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -2502,6 +2503,7 @@ void fl_reload_all_features(void) {
   DIR *dir = opendir(FeaturePath);
   if (!dir)
     return;
+  const char *ext = Platform_LibExtension();
   struct dirent *ent;
   int reloaded = 0;
   while ((ent = readdir(dir)) != NULL) {
@@ -2514,7 +2516,7 @@ void fl_reload_all_features(void) {
       continue;
     char src[512], dll[512];
     snprintf(src, sizeof(src), "%s/%s.c", subpath, ent->d_name);
-    snprintf(dll, sizeof(dll), "build/features/%s.so", ent->d_name);
+    snprintf(dll, sizeof(dll), "build/features/%s%s", ent->d_name, ext);
     struct stat st_src, st_dll;
     bool should_build = false;
     if (stat(src, &st_src) == 0) {
@@ -2526,10 +2528,11 @@ void fl_reload_all_features(void) {
       continue;
     char tmp[1024];
     snprintf(tmp, sizeof(tmp), "%s.tmp.%d", dll, fl_get_pid());
-    char cmd[2048];
-    snprintf(cmd, sizeof(cmd),
-             "gcc -I include -pipe -fPIC -shared -o \"%s\" \"%s\" 2>&1", tmp,
-             src);
+    char cmd[4096];
+    if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd))) {
+      remove(tmp);
+      continue;
+    }
     char *outStr = fl_run_terminal_command(cmd);
     bool ok = false;
     if (outStr) {
@@ -2546,9 +2549,12 @@ void fl_reload_all_features(void) {
       remove(tmp);
       continue;
     }
-    remove(dll);
-    rename(tmp, dll);
-    fl_reload_feature(ent->d_name);
+    struct utimbuf times;
+    times.actime = st_src.st_mtime;
+    times.modtime = st_src.st_mtime;
+    utime(dll, &times);
+    FeatureLoader_ReloadFrom(ent->d_name, tmp);
+    remove(tmp);
     reloaded++;
   }
   closedir(dir);
