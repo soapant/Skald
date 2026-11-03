@@ -677,10 +677,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       FlintContext_Get()->window.editbox_placed = false;
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *state = Platform_GetPromptStateForHWND(hwnd);
-      if (state && state->render) {
+      if (state && state->callbacks && state->callbacks->render) {
         Checkbox_FrameBegin();
         Platform_SetDrawContextWin32(paintDC);
-        state->render(state);
+        state->callbacks->render(state);
       }
     } else {
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);

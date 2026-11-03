@@ -50,6 +50,7 @@ typedef struct ListBoxInfo ListBoxInfo;
  * - `editbox_placed` — True if the editbox has been placed this frame.
  */
 typedef struct PromptState PromptState;
+typedef struct PromptCallbacks PromptCallbacks;
 /**
  * @brief Render callback for a prompt.
  *
@@ -92,7 +93,7 @@ struct PromptState {
   EditBoxInfo *editbox;
   ListBoxInfo *listbox;
   bool no_bg;
-  RenderCallback render;
+  PromptCallbacks *callbacks;
 };
 
 /**
@@ -180,6 +181,22 @@ typedef void (*FilterCallback)(const char *item, const char *filter);
  * @brief Callback invoked when the user requests help.
  */
 typedef void (*HelpCallback)(void);
+
+typedef struct PromptCallbacks {
+  RefreshCallback refresh;
+  EnterCallback enter;
+  CtrlEnterCallback ctrl_enter;
+  ShiftEnterCallback shift_enter;
+  CtrlShiftEnterCallback ctrl_shift_enter;
+  CtrlAltEnterCallback ctrl_alt_enter;
+  ShiftAltEnterCallback shift_alt_enter;
+  TabCallback tab;
+  HelpCallback help;
+  RenderCallback render;
+  EditCallback edit;
+  FilterCallback filter;
+} PromptCallbacks;
+
 
 /**
  * @brief Callback invoked on key events.

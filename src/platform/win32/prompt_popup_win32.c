@@ -133,8 +133,8 @@ void Platform_PromptPopupRender(Popup *self) {
   PromptState *state = (PromptState *)self->user_data;
   if (!state)
     return;
-  if (state->render) {
-    state->render(state);
+  if (state->callbacks->render) {
+    state->callbacks->render(state);
   }
 }
 
