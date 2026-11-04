@@ -413,7 +413,6 @@ static void internet_hover_render() {
 
 void on_internet_hover(void) {
   PlPos pos = fl_get_widget_pos("internet");
-
   fl_message(.x = pos.x, .y = pos.y - 70, .w = NET_POPUP_W, .h = NET_POPUP_H,
              .render = internet_hover_render, .hover_key = "internet");
 }

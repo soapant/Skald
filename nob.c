@@ -16,7 +16,7 @@
 
 #if defined(_WIN32)
 #define CC_FLAGS                                                               \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",
+  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",                \
       "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare",        \
       "-Wno-discarded-qualifiers", "-Wno-stringop-truncation",                 \
       "-Wno-sign-compare", "-Wno-unused-parameter",                            \
@@ -28,7 +28,7 @@
       "-Lbuild/winlibs", "-liphlpapi"
 #elif defined(__APPLE__)
 #define CC_FLAGS                                                               \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",
+  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",                \
       "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare",        \
       "-Wno-discarded-qualifiers", "-Wno-stringop-truncation",                 \
       "-Wno-sign-compare", "-Wno-unused-parameter",                            \
