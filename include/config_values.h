@@ -7,7 +7,6 @@
 
 extern bool Tray;
 extern bool RememberLastIndex;
-extern bool EnableEditMode;
 extern bool MessageAfterEachHotkey;
 extern int TimeOutForMessages;
 extern int HotkeyRepeatDelayMs;
@@ -55,10 +54,6 @@ extern ColorRef COLOR_SELECTED_TEXT;
 extern ColorRef COLOR_ERROR;
 extern ColorRef COLOR_NORMAL;
 extern ColorRef COLOR_TIP;
-extern ColorRef COLOR_INSERT_MODE;
-extern ColorRef COLOR_NORMAL_MODE;
-extern ColorRef COLOR_VISUAL_CURSOR;
-extern ColorRef COLOR_VISUAL_MODE;
 extern ColorRef COLOR_BORDER;
 
 #endif

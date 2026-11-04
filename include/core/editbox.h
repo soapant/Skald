@@ -30,8 +30,6 @@ typedef struct {
   bool has_selection;
   EditboxSelMode sel_mode;
 
-  bool insert_mode;
-
   int x;
   int y;
   int w;
@@ -45,8 +43,6 @@ typedef struct {
   int text_y;
   int caret_y;
   int caret_h;
-  int caret_w_normal;
-  int caret_w_insert;
 
   const char *align;
   int placeholder_dy;
@@ -64,14 +60,11 @@ typedef struct {
   int scroll;
   int draw_x;
   int cursor_draw_x;
-  int block_x;
-  int block_w;
-  bool draw_block;
   int sel_x0;
   int sel_x1;
   bool draw_selection;
-  int insert_x;
-  bool draw_insert_caret;
+  int caret_x;
+  int caret_w;
 } EditboxLayout;
 
 typedef struct {
@@ -79,7 +72,6 @@ typedef struct {
   const char *text;
   int text_len;
   int cursor;
-  bool insert_mode;
   int x;
   int y;
   int w;

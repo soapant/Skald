@@ -27,7 +27,6 @@ void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
   out->text_len = in->text_len;
   out->cursor = in->cursor;
   out->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
-  out->insert_mode = in->insert_mode;
   out->x = in->x;
   out->y = in->y;
   out->w = in->w;
@@ -39,8 +38,6 @@ void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
   out->text_y = in->y;
   out->caret_y = Editbox_CaretY(in->y, in->ascent, in->descent);
   out->caret_h = PromptCaretHeight();
-  out->caret_w_normal = PromptNormalCaretWidth();
-  out->caret_w_insert = PROMPT_CARET_W_INSERT;
   out->placeholder = in->state ? in->state->editbox->placeholder : NULL;
   out->placeholder_dy = 2;
   out->rainbow_limit_x = -1;
@@ -186,66 +183,50 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
 
   int lo = spec->x + PROMPT_CARET_LO_CLAMP;
   int hi = spec->x + spec->w - PROMPT_CARET_HI_CLAMP;
+  int caret_w = 1;
+  PlMetrics *metrics = Platform_GetMetrics();
+  if (metrics && metrics->edit_cursor_width > 0)
+    caret_w = metrics->edit_cursor_width;
 
-  int tint_x = draw_x + spec->cursor_x;
-  if (tint_x < lo)
-    tint_x = lo;
-  if (tint_x > hi)
-    tint_x = hi;
-
-  if (!spec->insert_mode || spec->has_selection) {
-    if (spec->has_selection) {
-      int sel_start = spec->sel_start < 0 ? 0 : spec->sel_start;
-      int sel_end = spec->sel_end;
-      if (spec->sel_mode == EDITBOX_SEL_EXCLUSIVE) {
-        if (sel_end > spec->text_len)
-          sel_end = spec->text_len;
-      } else {
-        if (sel_end >= spec->text_len)
-          sel_end = spec->text_len - 1;
-      }
-      if (sel_start <= sel_end && sel_start < spec->text_len) {
-        int sx0 = draw_x;
-        int sx1 = draw_x;
-        if (sel_start > 0)
-          sx0 = draw_x + editbox_measure(spec, spec->text, sel_start);
-        if (spec->sel_mode == EDITBOX_SEL_INCLUSIVE) {
-          sx1 = draw_x + editbox_measure(spec, spec->text, sel_end + 1);
-        } else if (spec->sel_mode == EDITBOX_SEL_INCLUSIVE_CARET) {
-          sx1 = draw_x + editbox_measure(spec, spec->text, sel_end) +
-                spec->caret_w_normal;
-        } else {
-          sx1 = draw_x + editbox_measure(spec, spec->text, sel_end);
-        }
-        if (sx0 < lo)
-          sx0 = lo;
-        if (sx1 > hi)
-          sx1 = hi;
-        int cx = tint_x;
-        if (cx < sx0)
-          cx = sx0;
-        if (cx > sx1)
-          cx = sx1;
-        layout.draw_selection = true;
-        layout.sel_x0 = sx0;
-        layout.sel_x1 = sx1;
-        layout.block_x = cx;
-        layout.block_w = sx1 - sx0;
-      }
+  if (spec->has_selection) {
+    int sel_start = spec->sel_start < 0 ? 0 : spec->sel_start;
+    int sel_end = spec->sel_end;
+    if (spec->sel_mode == EDITBOX_SEL_EXCLUSIVE) {
+      if (sel_end > spec->text_len)
+        sel_end = spec->text_len;
     } else {
-      layout.draw_block = true;
-      layout.block_x = tint_x;
-      layout.block_w = spec->caret_w_normal;
+      if (sel_end >= spec->text_len)
+        sel_end = spec->text_len - 1;
+    }
+    if (sel_start <= sel_end && sel_start < spec->text_len) {
+      int sx0 = draw_x;
+      int sx1 = draw_x;
+      if (sel_start > 0)
+        sx0 = draw_x + editbox_measure(spec, spec->text, sel_start);
+      if (spec->sel_mode == EDITBOX_SEL_INCLUSIVE) {
+        sx1 = draw_x + editbox_measure(spec, spec->text, sel_end + 1);
+      } else if (spec->sel_mode == EDITBOX_SEL_INCLUSIVE_CARET) {
+        sx1 = draw_x + editbox_measure(spec, spec->text, sel_end) + caret_w;
+      } else {
+        sx1 = draw_x + editbox_measure(spec, spec->text, sel_end);
+      }
+      if (sx0 < lo)
+        sx0 = lo;
+      if (sx1 > hi)
+        sx1 = hi;
+      layout.draw_selection = true;
+      layout.sel_x0 = sx0;
+      layout.sel_x1 = sx1;
     }
   }
 
-  int insert_x = cursor_draw_x;
-  if (insert_x < lo)
-    insert_x = lo;
-  if (insert_x > hi)
-    insert_x = hi;
-  layout.insert_x = insert_x;
-  layout.draw_insert_caret = spec->insert_mode;
+  int caret_x = cursor_draw_x;
+  if (caret_x < lo)
+    caret_x = lo;
+  if (caret_x > hi)
+    caret_x = hi;
+  layout.caret_x = caret_x;
+  layout.caret_w = caret_w;
 
   if (out)
     *out = layout;
@@ -275,17 +256,6 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
                               .filled = true}
 
       );
-    } else if (layout->draw_block) {
-      Platform_DrawRectRaw((PlDrawRectRawSpec){.x = layout->block_x,
-                                               .y = spec->caret_y,
-                                               .w = layout->block_w,
-                                               .h = spec->caret_h,
-                                               .color = tint,
-                                               .radius = 0,
-                                               .rounded = false,
-                                               .opaque = true,
-                                               .thickness = 1,
-                                               .filled = true});
     }
   }
 
@@ -318,11 +288,11 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
     }
   }
 
-  if ((parts & EDITBOX_PART_CARET) && layout->draw_insert_caret) {
+  if (parts & EDITBOX_PART_CARET) {
     Platform_DrawRectRaw(
-        (PlDrawRectRawSpec){.x = layout->insert_x,
+        (PlDrawRectRawSpec){.x = layout->caret_x,
                             .y = spec->caret_y,
-                            .w = spec->caret_w_insert,
+                             .w = layout->caret_w,
                             .h = spec->caret_h,
                             .color = rgb_to_hex(COLOR_CURSOR),
                             .radius = 0,

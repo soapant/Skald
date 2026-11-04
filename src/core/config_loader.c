@@ -401,8 +401,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
   size_t off = 0;
   cfg_put(buf, cap, &off, "void ConfigApply(void) {\n");
   cfg_put(buf, cap, &off, "    Tray = %s;\n", Tray ? "true" : "false");
-  cfg_put(buf, cap, &off, "    EnableEditMode = %s;\n",
-          EnableEditMode ? "true" : "false");
   cfg_put(buf, cap, &off, "    EnableAutoPairing = %s;\n",
           EnableAutoPairing ? "true" : "false");
   cfg_put(buf, cap, &off, "    RememberLastIndex = %s;\n",
@@ -484,10 +482,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
                      COLOR_ERROR,
                      COLOR_NORMAL,
                      COLOR_TIP,
-                     COLOR_INSERT_MODE,
-                     COLOR_NORMAL_MODE,
-                     COLOR_VISUAL_MODE,
-                     COLOR_VISUAL_CURSOR,
                      COLOR_CURSOR,
                      COLOR_BORDER};
   const char *names[] = {"COLOR_BG",
@@ -497,10 +491,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
                          "COLOR_ERROR",
                          "COLOR_NORMAL",
                          "COLOR_TIP",
-                         "COLOR_INSERT_MODE",
-                         "COLOR_NORMAL_MODE",
-                         "COLOR_VISUAL_MODE",
-                         "COLOR_VISUAL_CURSOR",
                          "COLOR_CURSOR",
                          "COLOR_BORDER"};
   for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
