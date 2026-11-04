@@ -250,7 +250,7 @@ static void widgets_internet_render(FlWidgetState *state) {
   }
   if (!icon)
     return;
-  fl_draw_image(.path = icon, .x = 40, .y = 8, .w = NET_ICON_SIZE,
+  fl_draw_image(.path = icon, .x = 40, .y = 2, .w = NET_ICON_SIZE,
                 .h = NET_ICON_SIZE);
 }
 
