@@ -159,7 +159,6 @@ void Platform_EditPopupRender(Popup *self) {
   eb.sel_end = sel_end;
   eb.has_selection = has_sel;
   eb.sel_mode = EDITBOX_SEL_INCLUSIVE;
-  eb.insert_mode = true;
   eb.x = 0;
   eb.y = draw_y;
   eb.w = data->w;
@@ -172,8 +171,6 @@ void Platform_EditPopupRender(Popup *self) {
   eb.caret_y =
       Editbox_CaretY(draw_y, xf ? xf->ascent : 0, xf ? xf->descent : 0);
   eb.caret_h = PromptCaretHeight();
-  eb.caret_w_normal = PROMPT_EDITPOPUP_CARET_W_NORMAL;
-  eb.caret_w_insert = PROMPT_CARET_W_INSERT;
   eb.align = data->align;
   eb.placeholder_dy = 0;
   eb.rainbow_limit_x = data->w - PROMPT_EDITPOPUP_INSET;

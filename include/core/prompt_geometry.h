@@ -15,8 +15,6 @@
 
 #define PROMPT_CARET_LO_CLAMP 2
 #define PROMPT_CARET_HI_CLAMP 4
-#define PROMPT_CARET_W_INSERT 2
-#define PROMPT_CARET_W_NORMAL_BONUS 2
 #define PROMPT_CARET_H_BONUS 4
 #define PROMPT_EDIT_H_BONUS 12
 
@@ -40,11 +38,6 @@
 
 #define PROMPT_EDITPOPUP_INSET 10
 #define PROMPT_EDITPOPUP_CENTER_OFFSET_Y -15
-#define PROMPT_EDITPOPUP_MODE_X 5
-#define PROMPT_EDITPOPUP_MODE_Y 5
-#define PROMPT_EDITPOPUP_MODE_PAD 5
-#define PROMPT_EDITPOPUP_CARET_W_NORMAL 12
-#define PROMPT_EDITPOPUP_CARET_X_NUDGE 2
 
 #define PROMPT_DEADCURSOR_CLAMP 10
 #define PROMPT_DEADCURSOR_Y 2
@@ -62,9 +55,6 @@ static inline int PromptRowHeight(void) {
 }
 static inline int PromptListTop(void) {
   return FontSize + PROMPT_LIST_TOP_BONUS;
-}
-static inline int PromptNormalCaretWidth(void) {
-  return FontSize / 2 + PROMPT_CARET_W_NORMAL_BONUS;
 }
 static inline int PromptCaretHeight(void) {
   return FontSize + PROMPT_CARET_H_BONUS;

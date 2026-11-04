@@ -3,7 +3,6 @@
 // <flint-config-generated>
 void ConfigApply(void) {
   Tray = true;
-  EnableEditMode = true;
   EnableAutoPairing = false;
   RememberLastIndex = true;
   MessageAfterEachHotkey = false;
@@ -50,10 +49,6 @@ void ConfigApply(void) {
   COLOR_ERROR = RGB(180, 0, 0);
   COLOR_NORMAL = RGB(200, 200, 0);
   COLOR_TIP = RGB(0, 160, 0);
-  COLOR_INSERT_MODE = RGB(50, 255, 50);
-  COLOR_NORMAL_MODE = RGB(100, 255, 255);
-  COLOR_VISUAL_MODE = RGB(200, 3, 222);
-  COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
   COLOR_CURSOR = RGB(255, 255, 255);
   COLOR_BORDER = RGB(128, 128, 128);
 }

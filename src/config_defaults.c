@@ -5,7 +5,6 @@
 #include "core/types/color.h"
 
 bool Tray = true;
-bool EnableEditMode = true;
 bool RememberLastIndex = true;
 bool MessageAfterEachHotkey = false;
 int TimeOutForMessages = 1;
@@ -57,8 +56,4 @@ ColorRef COLOR_CURSOR = RGB(255, 255, 255);
 ColorRef COLOR_ERROR = RGB(180, 0, 0);
 ColorRef COLOR_NORMAL = RGB(200, 200, 0);
 ColorRef COLOR_TIP = RGB(0, 160, 0);
-ColorRef COLOR_INSERT_MODE = RGB(50, 255, 50);
-ColorRef COLOR_NORMAL_MODE = RGB(100, 255, 255);
-ColorRef COLOR_VISUAL_MODE = RGB(200, 3, 222);
-ColorRef COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
 ColorRef COLOR_BORDER = RGB(128, 128, 128);
