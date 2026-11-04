@@ -376,6 +376,12 @@ static void vim_ctrlenter(void) {
         return;
     if (ps->callbacks->ctrl_enter)  ps->callbacks->ctrl_enter(ps);
 }
+static void vim_edit_text(void) {
+    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+    if (!ps || !ps->listbox)
+        return;
+    if (ps->callbacks->edit)  ps->callbacks->edit(ps);
+}
 
 FLINT_FEATURE_INIT {
   g_pending_mutex = fl_mutex_create();
@@ -383,8 +389,9 @@ FLINT_FEATURE_INIT {
   vim_motion("jk", "", VIM_MODE_INSERT, vim_enter_normal_mode);
   vim_motion("jq", "", VIM_MODE_INSERT, vim_close_window);
   vim_motion("jc", "", VIM_MODE_INSERT, vim_ctrlenter);
-  vim_motion("L", "shift", VIM_MODE_NORMAL, vim_ctrlenter);
+  vim_motion("l", "shift", VIM_MODE_NORMAL, vim_ctrlenter);
   vim_motion("j", "", VIM_MODE_NORMAL, vim_move_down);
+  vim_motion("e", "", VIM_MODE_NORMAL, vim_edit_text);
   vim_motion("k", "", VIM_MODE_NORMAL, vim_move_up);
   vim_motion("r", "shift", VIM_MODE_NORMAL, vim_move_up5);
   vim_motion("u", "shift", VIM_MODE_NORMAL, vim_move_down5);
