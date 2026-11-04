@@ -106,13 +106,6 @@ bool EditPopup_HandleKey(WMEditPopupData *ed, const PopupKeyEvent *key) {
   int vk = key->vk;
   bool ctrl = key->ctrl;
 
-  if (Platform_InvokeKeyInterceptor(key))
-    return true;
-
-  if (false) {
-    return true;
-  }
-
   size_t cap = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
   size_t n = strlen(ed->text);
   if (ed->cursor < 0)
