@@ -147,6 +147,9 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
   Platform_SetDrawContextWin32(widget->layer_dc);
   if (widget->fn)
     widget->fn(widget->ud);
+  if (!widget->no_bg)
+    win32_draw_window_border(widget->layer_dc, 0, 0, widget->layer_w,
+                             widget->layer_h, NULL);
   GdiFlush();
 
   {
