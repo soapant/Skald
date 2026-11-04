@@ -17,7 +17,7 @@ void ConfigApply(void) {
   EditPopUpPos = "middle";
   EditPopUpWidthMin = 400;
   PageUpDownLen = 6;
-  UsedFont = "0xProto Nerd Font";
+  UsedFont = "";
   FontSize = 21;
   IconSize = 32;
   WidgetGap = 10;

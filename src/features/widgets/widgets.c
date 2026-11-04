@@ -12,7 +12,7 @@
 #endif
 
 #define FPS 1
-#define NO_BG true
+#define NO_BG false
 #define FONTSIZE 14
 
 static bool read_disk(unsigned long long *used_out,

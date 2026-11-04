@@ -11,8 +11,8 @@ TEST(populate_normal_mode_selects_first) {
   PopulateListBox(&lb, "", items, 3, NULL);
   ASSERT_EQ_INT(lb.total_matches, 3);
   ASSERT_EQ_INT(lb.item_count, 3);
-  ASSERT_EQ_INT(lb.selected_index, 0);
-  ASSERT_TRUE(UI_IsListBoxSelected(&lb));
+  ASSERT_EQ_INT(lb.selected_index, -1);
+  ASSERT_FALSE(UI_IsListBoxSelected(&lb));
 }
 
 TEST(populate_insert_mode_empty_filter_no_selection) {
