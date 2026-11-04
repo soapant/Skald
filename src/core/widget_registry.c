@@ -325,7 +325,7 @@ static void widget_relayout(void) {
         continue;
       int g = w->gap_override > 0 ? w->gap_override : WidgetGap;
       int x = from_right ? cursor - w->w : cursor;
-      int y = from_top ? my : my + mh - WIDGET_PROVISIONAL_H;
+      int y = from_top ? my : my + mh - w->h;
       widget_apply_geometry(w, x, y);
       cursor += from_right ? -(w->w + g) : (w->w + g);
     }
