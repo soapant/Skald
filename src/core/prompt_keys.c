@@ -180,8 +180,15 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   bool alt = key->alt;
 
   FlintContext *ctx = FlintContext_Get();
-  bool invoke_interceptor = (ctx->prompt_callbacks.render == NULL ||
-                             ctx->window.editbox_placed);
+  Popup *top = WindowManager_GetTopPopup(NULL);
+  bool invoke_interceptor = false;
+  if (top && top->type == POPUP_PROMPT) {
+    invoke_interceptor = (ctx->prompt_callbacks.render == NULL ||
+                               ctx->window.editbox_placed);
+  } else {
+    invoke_interceptor = true;
+  }
+
   if (invoke_interceptor && Platform_InvokeKeyInterceptor(key)) {
     Platform_InvalidatePrompt();
     return true;
