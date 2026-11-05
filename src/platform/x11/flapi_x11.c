@@ -77,11 +77,61 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
       continue;
     }
 
-    if (S_ISDIR(st.st_mode)) {
+  static const char *builtin_ignored_names[] = {
+      ".git",
+      ".hg",
+      ".svn",
+      ".bzr",
+      ".fossil",
+      ".idea",
+      ".vscode",
+      ".cache",
+      ".local",
+      ".next",
+      ".nuxt",
+      ".output",
+      ".wrangler",
+      ".DS_Store",
+      "node_modules",
+      "__pycache__",
+      ".venv",
+      "venv",
+      "env",
+      ".env",
+      ".tox",
+      "target",
+      "build",
+      "dist",
+      "out",
+      "bin",
+      "obj",
+      "cmake-build-debug",
+      "cmake-build-release",
+      ".gradle",
+      ".mvn",
+      ".terraform",
+      ".stack-work",
+      ".cargo",
+      ".rustup",
+      "vendor",
+      NULL
+  };
+
+  if (S_ISDIR(st.st_mode)) {
       bool should_ignore = false;
+      const char *dir_name = entry->d_name;
+      for (int i = 0; builtin_ignored_names[i] != NULL; i++) {
+        if (Platform_StringContainsCaseInsensitive(
+                dir_name, builtin_ignored_names[i]) ||
+            strcmp(dir_name, builtin_ignored_names[i]) == 0) {
+          should_ignore = true;
+          break;
+        }
+      }
       if (list_of_names_to_ignore) {
         for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
-          if (Platform_StringContainsCaseInsensitive(
+          if (!should_ignore &&
+              Platform_StringContainsCaseInsensitive(
                   entry->d_name, list_of_names_to_ignore[i])) {
             should_ignore = true;
             break;
