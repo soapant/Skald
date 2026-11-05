@@ -47,20 +47,13 @@ static uid_t ProbeSessionUid(void) {
 const char *Platform_GetRealUser(void) {
 
   static char buf[256] = {0};
-  const char *u = getenv("SUDO_USER");
-  if (u && u[0] && strcmp(u, "root") != 0) {
-    strncpy(buf, u, sizeof(buf) - 1);
-    return buf;
-  }
-  u = getenv("USER");
-  if (u && u[0] && strcmp(u, "root") != 0) {
-    strncpy(buf, u, sizeof(buf) - 1);
-    return buf;
-  }
-  u = getenv("LOGNAME");
-  if (u && u[0] && strcmp(u, "root") != 0) {
-    strncpy(buf, u, sizeof(buf) - 1);
-    return buf;
+  static const char *const env_names[] = {"SUDO_USER", "USER", "LOGNAME", NULL};
+  for (int i = 0; env_names[i]; i++) {
+    const char *u = getenv(env_names[i]);
+    if (u && u[0] && strcmp(u, "root") != 0) {
+      strncpy(buf, u, sizeof(buf) - 1);
+      return buf;
+    }
   }
 
   uid_t suid = ProbeSessionUid();
@@ -469,35 +462,27 @@ static bool x11_cmd_exists(const char *cmd) {
   const char *path = getenv("PATH");
   if (!path || !path[0])
     path = "/usr/bin:/bin:/usr/local/bin";
-  char buf[4096];
-  snprintf(buf, sizeof(buf), "%s", path);
-  char *save = NULL;
-  for (char *dir = strtok_r(buf, ":", &save); dir;
-       dir = strtok_r(NULL, ":", &save)) {
+  StringList dirs = String_Split(path, ":");
+  for (size_t i = 0; i < dirs.count; i++) {
+    char *dir = dirs.items[i];
+    if (!dir || !dir[0])
+      continue;
     char full[4352];
     snprintf(full, sizeof(full), "%s/%s", dir, cmd);
-    if (access(full, X_OK) == 0)
+    if (access(full, X_OK) == 0) {
+      StringList_Free(&dirs);
       return true;
+    }
   }
+  StringList_Free(&dirs);
   return false;
 }
 
-bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
+static bool x11_launch_browser(const char *browser_path, const char *url,
+                               bool new_window) {
+  if (!browser_path || !browser_path[0] || !url || !url[0])
+    return false;
   char command[2048];
-  char full_url[2048];
-  char browser_tok[512];
-  size_t tok_len = UsedBrowser ? strcspn(UsedBrowser, " \t") : 0;
-  if (tok_len >= sizeof(browser_tok))
-    tok_len = sizeof(browser_tok) - 1;
-  if (UsedBrowser)
-    memcpy(browser_tok, UsedBrowser, tok_len);
-  browser_tok[tok_len] = '\0';
-  bool have_browser = tok_len > 0 && x11_cmd_exists(browser_tok);
-  if (Platform_StringStartsWithCaseInsensitive(url, "https://")) {
-    snprintf(full_url, sizeof(full_url), "%s", url);
-  } else {
-    snprintf(full_url, sizeof(full_url), "https://%s", url);
-  }
   const char *real_user = Platform_GetRealUser();
   const char *display = getenv("DISPLAY");
   if (!display)
@@ -511,38 +496,50 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
     snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
   else
     snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-  if (new_window && have_browser) {
-    if (Platform_IsRunningAsRoot()) {
+  if (Platform_IsRunningAsRoot()) {
+    if (new_window)
       snprintf(command, sizeof(command),
                "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s "
                "--new-window \"%s\" > /dev/null 2>&1 &",
-               real_user, display, xauthority, runtime_dir, UsedBrowser,
-               full_url);
-    } else {
-      snprintf(command, sizeof(command),
-               "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window "
-               "\"%s\" > /dev/null 2>&1 &",
-               display, xauthority, runtime_dir, UsedBrowser, full_url);
-    }
-    return Platform_RunTerminalCommand(command, false);
-  } else {
-    if (Platform_IsRunningAsRoot()) {
+               real_user, display, xauthority, runtime_dir, browser_path, url);
+    else
       snprintf(command, sizeof(command),
                "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s "
                "\"%s\" > /dev/null 2>&1 &",
-               real_user, display, xauthority, runtime_dir, UsedBrowser,
-               full_url);
-    } else {
+               real_user, display, xauthority, runtime_dir, browser_path, url);
+  } else {
+    if (new_window)
+      snprintf(command, sizeof(command),
+               "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window "
+               "\"%s\" > /dev/null 2>&1 &",
+               display, xauthority, runtime_dir, browser_path, url);
+    else
       snprintf(command, sizeof(command),
                "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s \"%s\" > "
                "/dev/null 2>&1 &",
-               display, xauthority, runtime_dir, UsedBrowser, full_url);
-    }
-    return Platform_RunTerminalCommand(command, false);
+               display, xauthority, runtime_dir, browser_path, url);
   }
-  log_info("Platform_LaunchBrowserAtfull_url full_url='%s' new_window=%d",
-           full_url, new_window);
-  ;
+  return Platform_RunTerminalCommand(command, false);
+}
+
+bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
+  char full_url[2048];
+  char browser_tok[512];
+  size_t tok_len = UsedBrowser ? strcspn(UsedBrowser, " \t") : 0;
+  if (tok_len >= sizeof(browser_tok))
+    tok_len = sizeof(browser_tok) - 1;
+  if (UsedBrowser)
+    memcpy(browser_tok, UsedBrowser, tok_len);
+  browser_tok[tok_len] = '\0';
+  bool have_browser = tok_len > 0 && x11_cmd_exists(browser_tok);
+  if (!have_browser)
+    return false;
+  if (Platform_StringStartsWithCaseInsensitive(url, "https://")) {
+    snprintf(full_url, sizeof(full_url), "%s", url);
+  } else {
+    snprintf(full_url, sizeof(full_url), "https://%s", url);
+  }
+  return x11_launch_browser(UsedBrowser, full_url, new_window);
 }
 
 bool Platform_QueryBrowser(char *query) {
@@ -557,7 +554,6 @@ bool Platform_QueryBrowser(char *query) {
     memcpy(browser_tok, UsedBrowser, tok_len);
   browser_tok[tok_len] = '\0';
 
-  char command[2048];
   char url[2048];
 
   char encoded_query[2048] = {0};
@@ -592,34 +588,9 @@ bool Platform_QueryBrowser(char *query) {
   } else {
     snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
   }
-  const char *real_user = Platform_GetRealUser();
-  const char *display = getenv("DISPLAY");
-  if (!display)
-    display = ":0";
-  const char *xauthority = getenv("XAUTHORITY");
-  if (!xauthority)
-    xauthority = "";
-  const char *env_runtime = Env_XdgRuntimeDir();
-  char runtime_dir[256];
-  if (env_runtime)
-    snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-  else
-    snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-
-  if (Platform_IsRunningAsRoot()) {
-    snprintf(command, sizeof(command),
-             "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s\"%s\" "
-             "> /dev/null 2>&1 &",
-             real_user, display, xauthority, runtime_dir, UsedBrowser, url);
-  } else {
-    snprintf(command, sizeof(command),
-             "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s \"%s\" > "
-             "/dev/null 2>&1 &",
-             display, xauthority, runtime_dir, UsedBrowser, url);
-  }
-
+  bool ok = x11_launch_browser(UsedBrowser, url, false);
   log_info("Platform_QueryBrowser query='%s'", query ? query : "");
-  return Platform_RunTerminalCommand(command, false);
+  return ok;
 }
 
 char *Platform_GetClipboardEntry() {

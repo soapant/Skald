@@ -18,6 +18,7 @@
 #include <X11/keysym.h>
 
 #include "platform/x11/display_x11.h"
+#include "platform/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 
@@ -42,7 +43,7 @@ static bool i3_ensure_sock(void) {
       return true;
     }
   }
-  const char *rtd = getenv("XDG_RUNTIME_DIR");
+  const char *rtd = Env_XdgRuntimeDir();
   if (!rtd || !rtd[0])
     return false;
   char pat[512];
