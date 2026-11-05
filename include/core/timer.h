@@ -18,5 +18,4 @@ static inline int64_t TimerTickFrequency(void) {
 }
 
 void TimerFlush(void);
-double TimerElapsedUs(WinTimer t);
 #endif
