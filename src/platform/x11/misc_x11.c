@@ -14,6 +14,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #include "platform/platform.h"
+#include "platform/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "wm/wm.h"
 #include "platform/x11/clipboard_x11.h"
@@ -93,7 +94,7 @@ const char *Platform_GetRealHome(void) {
     strncpy(buf, pw->pw_dir, sizeof(buf) - 1);
     return buf;
   }
-  const char *h = getenv("HOME");
+  const char *h = Env_HomeDir();
   if (h && h[0]) {
     strncpy(buf, h, sizeof(buf) - 1);
     return buf;
@@ -154,7 +155,7 @@ const char *Platform_GetSessionXAuthority(void) {
     return buf;
   }
   char rtd[256];
-  const char *rt = getenv("XDG_RUNTIME_DIR");
+  const char *rt = Env_XdgRuntimeDir();
   if (rt && rt[0])
     snprintf(rtd, sizeof(rtd), "%s", rt);
   else
@@ -196,7 +197,7 @@ const char *Platform_GetSessionXAuthority(void) {
 const char *Platform_GetRuntimeDir(void) {
 
   static char buf[256] = {0};
-  const char *rt = getenv("XDG_RUNTIME_DIR");
+  const char *rt = Env_XdgRuntimeDir();
   if (rt && rt[0]) {
     snprintf(buf, sizeof(buf), "%s", rt);
     return buf;
@@ -504,7 +505,7 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   const char *xauthority = getenv("XAUTHORITY");
   if (!xauthority)
     xauthority = "";
-  const char *env_runtime = getenv("XDG_RUNTIME_DIR");
+  const char *env_runtime = Env_XdgRuntimeDir();
   char runtime_dir[256];
   if (env_runtime)
     snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
@@ -598,7 +599,7 @@ bool Platform_QueryBrowser(char *query) {
   const char *xauthority = getenv("XAUTHORITY");
   if (!xauthority)
     xauthority = "";
-  const char *env_runtime = getenv("XDG_RUNTIME_DIR");
+  const char *env_runtime = Env_XdgRuntimeDir();
   char runtime_dir[256];
   if (env_runtime)
     snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
