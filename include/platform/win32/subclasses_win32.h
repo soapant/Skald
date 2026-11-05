@@ -23,18 +23,8 @@ typedef struct {
   const char *name;
 } DismissMessageParams;
 
-typedef struct {
-  const char *message;
-  int centerX;
-  int centerY;
-  int maxWidth;
-  int maxHeight;
-  double timeout;
-  ColorRef color;
-  bool no_bg;
-  void (*render)(void);
-  const char *name;
-} DisplayMessageParams;
+#include "platform/platform.h"
+typedef PlCreateDisplayMessageWindowSpec DisplayMessageParams;
 
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
                               LPARAM lParam);

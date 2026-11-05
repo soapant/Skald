@@ -1210,7 +1210,9 @@ char *Platform_GetIconPath(char *app_path) {
     } else {
       snprintf(xdg_dirs, sizeof(xdg_dirs), "/usr/local/share:/usr/share");
     }
-    for (char *dir = strtok(xdg_dirs, ":"); dir; dir = strtok(NULL, ":")) {
+    char *save = NULL;
+    for (char *dir = strtok_r(xdg_dirs, ":", &save); dir;
+         dir = strtok_r(NULL, ":", &save)) {
       for (int s = 0; sizes[s]; s++) {
         char path[1024];
         const char *sz = sizes[s];

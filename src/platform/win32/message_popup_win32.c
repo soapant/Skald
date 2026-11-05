@@ -335,10 +335,10 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
       GetCurrentThreadId() != g_win32_main_thread_id) {
     DisplayMessageParams params;
     params.message = message;
-    params.centerX = centerX;
-    params.centerY = centerY;
-    params.maxWidth = useMaxW;
-    params.maxHeight = useMaxH;
+    params.x = centerX;
+    params.y = centerY;
+    params.max_width = useMaxW;
+    params.max_height = useMaxH;
     params.timeout = timeout;
     params.color = color;
     params.no_bg = no_bg;

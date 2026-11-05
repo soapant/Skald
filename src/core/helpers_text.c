@@ -416,7 +416,8 @@ char *String_Replace(const char *str, const char *from, const char *to) {
     dst += lt;
     src = p + lf;
   }
-  strcpy(dst, src);
+  size_t sl = strlen(src);
+  memcpy(dst, src, sl + 1);
   return out;
 }
 

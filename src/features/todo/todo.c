@@ -103,7 +103,8 @@ void ParseTodoInput(const char *input, TodoAliasEntry *alias_out,
   strncpy(input_copy, input, sizeof(input_copy) - 1);
   input_copy[sizeof(input_copy) - 1] = '\0';
   char clean[512] = {0};
-  char *token = strtok(input_copy, " ");
+  char *save = NULL;
+  char *token = strtok_r(input_copy, " ", &save);
   bool first = true;
 
   while (token != NULL) {
@@ -123,7 +124,7 @@ void ParseTodoInput(const char *input, TodoAliasEntry *alias_out,
     }
     if (is_flag) {
       if (flag_has_val)
-        token = strtok(NULL, " ");
+        token = strtok_r(NULL, " ", &save);
     } else if (token[0] != '-') {
       size_t used = strlen(clean);
       size_t avail = sizeof(clean) - 1 - used;
@@ -139,7 +140,7 @@ void ParseTodoInput(const char *input, TodoAliasEntry *alias_out,
       first = false;
     }
 
-    token = strtok(NULL, " ");
+    token = strtok_r(NULL, " ", &save);
   }
   fl_free_flags(&flist);
   strncpy(clean_text, clean, 511);
@@ -162,12 +163,13 @@ void ParseTodoLine(const char *line, char *clean_text, char tags_out[][64],
     clean_text[511] = '\0';
 
     char *tag_part = delimiter + strlen(TODO_ENTRY_DELIMITER);
-    char *tag_token = strtok(tag_part, TODO_TAG_SEPARATOR);
+    char *tag_save = NULL;
+    char *tag_token = strtok_r(tag_part, TODO_TAG_SEPARATOR, &tag_save);
     while (tag_token && *tag_count < 10) {
       strncpy(tags_out[*tag_count], tag_token, 63);
       tags_out[*tag_count][63] = '\0';
       (*tag_count)++;
-      tag_token = strtok(NULL, TODO_TAG_SEPARATOR);
+      tag_token = strtok_r(NULL, TODO_TAG_SEPARATOR, &tag_save);
     }
   } else {
     strncpy(clean_text, line_copy, 511);

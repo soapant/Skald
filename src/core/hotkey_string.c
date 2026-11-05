@@ -264,12 +264,13 @@ bool HotkeyString_Parse(const char *str, HotkeyKey *out) {
   int out_key = 0;
   int mods = 0;
 
-  char *token = strtok(buffer, "+");
+  char *save = NULL;
+  char *token = strtok_r(buffer, "+", &save);
   while (token != NULL) {
     int vk = hotkey_token_to_vk(token, &mods);
     if (vk != 0)
       out_key = vk;
-    token = strtok(NULL, "+");
+    token = strtok_r(NULL, "+", &save);
   }
 
   if (ends_with_plus)
