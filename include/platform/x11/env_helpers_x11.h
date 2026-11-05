@@ -13,6 +13,10 @@ typedef struct {
 } X11SessionEnv;
 
 void Env_GetSessionEnv(X11SessionEnv *out);
+const char *Env_HomeDir(void);
+const char *Env_XdgRuntimeDir(void);
+bool Env_IsWayland(void);
+bool Env_IsCompositor(void);
 void Env_BuildEnvStrings(const X11SessionEnv *env, char disp_env[256],
                          char xauth_env[512], char runtime_env[512],
                          char wayland_env[512]);
