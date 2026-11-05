@@ -7,14 +7,12 @@
 #include "config.h"
 #include "core/context.h"
 #include "deps/log.h"
-#include "core/history.h"
 #include "core/modal.h"
 #include "core/listbox_hover.h"
 #include "platform/input.h"
 #include "platform/platform.h"
 #include "platform/ui.h"
 #include "helpers/helpers_ui.h"
-#include "helpers/helpers_alias.h"
 #include "config_values.h"
 #include "core/types/keys.h"
 
@@ -64,7 +62,6 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
   EditBufferInsertText(state->eb->filter, sizeof(state->eb->filter), &fcur, text,
                        (size_t)len);
   state->eb->cursor = (int)fcur;
-  History_ResetCursor(FlintContext_Get()->window.current_feature);
   Prompt_Refresh(state);
 }
 
@@ -78,9 +75,6 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     filter_copy[sizeof(filter_copy) - 1] = '\0';
     sel = filter_copy;
   }
-  const char *feat = FlintContext_Get()->window.current_feature;
-  if (feat && sel && sel[0])
-    History_Add(feat, sel);
   FlintContext *ctx = FlintContext_Get();
   log_info("ENTER_DISPATCH: ctx=%p current_feature=%s "
            "enter=%p ctrl_enter=%p window_enter=%p",
@@ -245,7 +239,6 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       }
       state->eb->cursor = (int)fcur;
     }
-    History_ResetCursor(ctx->window.current_feature);
     Prompt_Refresh(state);
     return true;
   }
@@ -284,17 +277,6 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       return true;
     }
     if (state->lb) {
-      if (state->lb->selected_index == -1) {
-        char hist[512];
-        const char *feat = ctx->window.current_feature;
-        if (feat && History_CycleUp(feat, hist, sizeof(hist))) {
-          strncpy(state->eb->filter, hist, sizeof(state->eb->filter) - 1);
-          state->eb->filter[sizeof(state->eb->filter) - 1] = '\0';
-          state->eb->cursor = (int)strlen(state->eb->filter);
-          Prompt_Refresh(state);
-          return true;
-        }
-      }
       UI_NavigateUp(state->lb);
     }
     return true;
@@ -314,7 +296,6 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       return true;
     }
     if (EditBufferDeleteChar(state->eb->filter, &state->eb->cursor)) {
-      History_ResetCursor(ctx->window.current_feature);
       Prompt_Refresh(state);
     }
     return true;
@@ -330,14 +311,6 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   }
   if (vk == COPY_SELECTION_KEY && !true) {
     if (shift || ctrl) {
-      int type = shift ? 0 : 1;
-      int idx = -1;
-      if (state->lb && state->lb->selected_index >= 0 &&
-          state->lb->selected_index < state->lb->item_count) {
-        idx = state->lb->matching_indices[state->lb->selected_index];
-      } else {
-        idx = UI_LookupTrueIndex(ctx->window.output_buffer);
-      }
       Platform_CopyToClipboard(ctx->window.output_buffer);
     }
     return true;
