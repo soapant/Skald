@@ -400,7 +400,7 @@ char *paste_x11(char *content) {
     XFlush(dpy);
   }
   XSync(dpy, False);
-  return strdup("");
+  return NULL;
 }
 
 bool focus_window_title_x11(char *title) {

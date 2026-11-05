@@ -273,7 +273,7 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
     log_error("popen failed cmd='%s' err=%d", command ? command : "null",
               errno);
     free(output);
-    return strdup("");
+    return NULL;
   }
 
   size_t len;
@@ -284,7 +284,7 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
       if (!new_output) {
         free(output);
         pclose(fp);
-        return strdup("");
+        return NULL;
       }
       output = new_output;
     }
@@ -306,7 +306,7 @@ static char *Platform_RunCommandDetachedCapture(char *command) {
 
   if (!command || !*command) {
     log_error("capture: null/empty command");
-    return strdup("");
+    return NULL;
   }
 
   const char *real_user = Platform_GetRealUser();
@@ -349,7 +349,7 @@ static char *Platform_RunCommandDetachedCapture(char *command) {
   if (pipe(pfd) != 0) {
     log_error("capture: pipe failed cmd='%s' err=%d %s", final_cmd, errno,
               strerror(errno));
-    return strdup("");
+    return NULL;
   }
 
   pid_t pid = fork();
@@ -358,7 +358,7 @@ static char *Platform_RunCommandDetachedCapture(char *command) {
               strerror(errno));
     close(pfd[0]);
     close(pfd[1]);
-    return strdup("");
+    return NULL;
   }
 
   if (pid == 0) {
@@ -404,7 +404,7 @@ static char *Platform_RunCommandDetachedCapture(char *command) {
     log_error("capture: malloc failed");
     close(pfd[0]);
     waitpid(pid, NULL, 0);
-    return strdup("");
+    return NULL;
   }
 
   struct timespec start;
@@ -465,7 +465,7 @@ static char *Platform_RunCommandDetachedCapture(char *command) {
           free(out);
           close(pfd[0]);
           waitpid(pid, NULL, 0);
-          return strdup("");
+          return NULL;
         }
         out = no;
       }
@@ -517,7 +517,7 @@ static char *Platform_RunCommandDetachedCapture(char *command) {
     char *no = realloc(out, total + 1);
     if (!no) {
       free(out);
-      return strdup("");
+      return NULL;
     }
     out = no;
   }
@@ -664,7 +664,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   Platform_LaunchTerminalAtPath(real_home, extra);
   log_info("ran terminal command '%s' open_terminal=%d", command,
            open_terminal);
-  return strdup("");
+  return NULL;
 }
 
 bool Platform_IsCtrlPressed(void) {
