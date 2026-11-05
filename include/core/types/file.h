@@ -16,11 +16,4 @@ typedef struct {
   size_t capacity;
 } ListOfFiles;
 
-#if defined(_WIN32)
-typedef struct {
-  ListBoxInfo listbox;
-  WindowHandle hPopupWnd;
-} WinPromptState;
-#endif
-
 #endif

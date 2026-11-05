@@ -86,9 +86,6 @@ Popup *EditPopup_Create(WindowManager *wm, const char *initial_text, int x,
 void EditPopup_SetPlaceholder(Popup *popup, const char *placeholder);
 Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec);
 CloseCallback PromptPopup_TakeOnClose(Popup *p);
-Popup *SearchPopup_Create(WindowManager *wm, const char *title, int x, int y,
-                          int w, int h, EditPopupConfirmCallback on_confirm,
-                          void *user_data);
 void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
 void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,

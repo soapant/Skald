@@ -5,11 +5,6 @@
 #include "core/types.h"
 
 typedef struct {
-  int64_t start;
-  int64_t frequency;
-} WinTimer;
-
-typedef struct {
   char *initial_text;
   char *result;
   void *hFont;
