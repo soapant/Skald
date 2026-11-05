@@ -382,6 +382,24 @@ static void vim_edit_text(void) {
         return;
     if (ps->callbacks->edit)  ps->callbacks->edit(ps);
 }
+static void vim_move_left(void) {
+    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+    if (!ps || !ps->editbox)
+        return;
+    ps->editbox->cursor --;
+}
+static void vim_move_right(void) {
+    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+    if (!ps || !ps->editbox)
+        return;
+    ps->editbox->cursor ++;
+}
+static void vim_delete_line(void) {
+    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
+    if (!ps || !ps->listbox)
+        return;
+    ps->editbox->filter[0] = '\0';
+}
 
 FLINT_FEATURE_INIT {
   g_pending_mutex = fl_mutex_create();
@@ -393,10 +411,13 @@ FLINT_FEATURE_INIT {
   vim_motion("j", "", VIM_MODE_NORMAL, vim_move_down);
   vim_motion("e", "", VIM_MODE_NORMAL, vim_edit_text);
   vim_motion("k", "", VIM_MODE_NORMAL, vim_move_up);
+  vim_motion("h", "", VIM_MODE_NORMAL, vim_move_left);
+  vim_motion("l", "", VIM_MODE_NORMAL, vim_move_right);
   vim_motion("r", "shift", VIM_MODE_NORMAL, vim_move_up5);
   vim_motion("u", "shift", VIM_MODE_NORMAL, vim_move_down5);
   vim_motion("q", "", VIM_MODE_NORMAL, vim_close_window);
   vim_motion("gg", "", VIM_MODE_NORMAL, vim_go_to_top);
+  vim_motion("dd", "", VIM_MODE_NORMAL, vim_delete_line);
   vim_motion("g", "shift", VIM_MODE_NORMAL, vim_go_to_bottom);
   fl_register_key_interceptor(vim_key_interceptor);
   fl_register_event(EVENT_PROMPT_OPEN, vim_on_prompt_open);
