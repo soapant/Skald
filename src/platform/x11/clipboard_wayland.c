@@ -2,6 +2,7 @@
 #include <time.h>
 #if defined(FLINT_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
+#include "platform/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "core/clipboard_history.h"
 #include <wayland-client-core.h>
@@ -827,7 +828,7 @@ static void wl_drop_source(struct wl_proxy **slot) {
 }
 
 bool Platform_ClipboardAvailable(void) {
-  return getenv("WAYLAND_DISPLAY") != NULL;
+  return Env_IsWayland();
 }
 
 static void wl_publish_locked(void) {

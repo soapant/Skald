@@ -16,6 +16,25 @@ static bool env_sock_live(const char *path) {
   return path && path[0] && stat(path, &st) == 0;
 }
 
+static const char *env_or_null(const char *value) {
+  return value && value[0] ? value : NULL;
+}
+
+const char *Env_HomeDir(void) { return env_or_null(getenv("HOME")); }
+
+const char *Env_XdgRuntimeDir(void) {
+  return env_or_null(getenv("XDG_RUNTIME_DIR"));
+}
+
+bool Env_IsWayland(void) { return env_or_null(getenv("WAYLAND_DISPLAY")) != NULL; }
+
+bool Env_IsCompositor(void) {
+  return getenv("WAYLAND_DISPLAY") != NULL ||
+         getenv("SWAYSOCK") != NULL || getenv("I3SOCK") != NULL ||
+         getenv("HYPRLAND_INSTANCE_SIGNATURE") != NULL ||
+         getenv("NIRI_SOCKET") != NULL || getenv("KDE_FULL_SESSION") != NULL;
+}
+
 void Env_GetSessionEnv(X11SessionEnv *out) {
   if (!out)
     return;
@@ -30,7 +49,7 @@ void Env_GetSessionEnv(X11SessionEnv *out) {
     sock[0] = '\0';
     const char *rtd = (out->runtime_dir && out->runtime_dir[0])
                           ? out->runtime_dir
-                          : getenv("XDG_RUNTIME_DIR");
+                          : Env_XdgRuntimeDir();
     if (out->wayland_display[0] == '/')
       snprintf(sock, sizeof(sock), "%s", out->wayland_display);
     else if (rtd && rtd[0])

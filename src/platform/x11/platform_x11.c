@@ -1142,7 +1142,7 @@ char *Platform_GetIconPath(char *app_path) {
     if (!icon_name[0]) {
       const char *home_ph0 = Platform_GetRealHome();
       if (!home_ph0 || !home_ph0[0])
-        home_ph0 = getenv("HOME");
+        home_ph0 = Env_HomeDir();
       char ph_path[1024];
       if (home_ph0 && home_ph0[0]) {
         snprintf(ph_path, sizeof(ph_path),
@@ -1179,7 +1179,7 @@ char *Platform_GetIconPath(char *app_path) {
   static char found[1024];
   const char *home = Platform_GetRealHome();
   if (!home || !home[0])
-    home = getenv("HOME");
+    home = Env_HomeDir();
   if (home && home[0]) {
     for (int s = 0; sizes[s]; s++) {
       char path[1024];
@@ -1323,7 +1323,7 @@ char *Platform_GetIconPath(char *app_path) {
   }
   const char *home_ph = Platform_GetRealHome();
   if (!home_ph || !home_ph[0])
-    home_ph = getenv("HOME");
+    home_ph = Env_HomeDir();
   if (home_ph && home_ph[0]) {
     snprintf(pix, sizeof(pix),
              "%s/Programming/Projects/Flint/resources/Placeholder.png",
@@ -1560,7 +1560,7 @@ bool Platform_InitDisplaySafe(void) {
   }
   const char *wd = getenv("WAYLAND_DISPLAY");
   if (wd && wd[0] && wd[0] != '/') {
-    const char *rtd = getenv("XDG_RUNTIME_DIR");
+    const char *rtd = Env_XdgRuntimeDir();
     if (!rtd || !rtd[0])
       rtd = Platform_GetRuntimeDir();
     char sock[512];
@@ -1569,7 +1569,7 @@ bool Platform_InitDisplaySafe(void) {
     if (stat(sock, &st) != 0)
       unsetenv("WAYLAND_DISPLAY");
   }
-  if (!getenv("WAYLAND_DISPLAY") || !getenv("WAYLAND_DISPLAY")[0]) {
+  if (!Env_IsWayland()) {
     const char *rtd2 = Platform_GetRuntimeDir();
     if (rtd2 && rtd2[0]) {
       char pat[512];

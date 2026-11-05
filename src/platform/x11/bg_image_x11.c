@@ -15,6 +15,7 @@
 #include "deps/nanosvg.h"
 #include "deps/stb_image.h"
 #include "config_values.h"
+#include "platform/x11/env_helpers_x11.h"
 #include "core/types/window.h"
 
 #define BG_TILE_SLOTS 32
@@ -65,7 +66,7 @@ static const char *bg_resolve(const char *in, char *out, size_t cap) {
     return in;
   if (in[1] != 0 && in[1] != '/' && in[1] != '\\')
     return in;
-  const char *home = getenv("HOME");
+  const char *home = Env_HomeDir();
   if (!home || !home[0])
     home = getenv("USERPROFILE");
   if (!home || !home[0]) {

@@ -19,6 +19,7 @@
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "platform/platform.h"
+#include "platform/x11/env_helpers_x11.h"
 #include "wm/wm.h"
 #include "platform/input_state.h"
 #include "core/types/keys.h"
@@ -149,7 +150,7 @@ bool x11_handle_evdev_mouse(struct input_event *ev) {
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   int mx = 0, my = 0;
-  if (getenv("WAYLAND_DISPLAY") && Wm_GetMousePos(&mx, &my)) {
+  if (Env_IsWayland() && Wm_GetMousePos(&mx, &my)) {
     if (out_x)
       *out_x = mx;
     if (out_y)
@@ -191,9 +192,9 @@ extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
 bool x11_should_use_grab(void) {
-  if (getenv("WAYLAND_DISPLAY"))
+  if (Env_IsWayland())
     return false;
-  if (getenv("HYPRLAND_INSTANCE_SIGNATURE"))
+  if (Env_IsCompositor())
     return false;
   const char *t = getenv("XDG_SESSION_TYPE");
   if (t && strcmp(t, "wayland") == 0)

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 #include "platform/platform.h"
+#include "platform/x11/env_helpers_x11.h"
 #include "helpers/helpers_text.h"
 #include "core/types.h"
 #include "core/types/misc.h"
@@ -78,7 +79,7 @@ const char *x11_find_terminal_in_desktop_files(const char *const *names,
                                                size_t count) {
 
   char dir[1024];
-  const char *home = getenv("HOME");
+  const char *home = Env_HomeDir();
   if (home && home[0]) {
     snprintf(dir, sizeof(dir), "%s/.local/share/applications", home);
     const char *hit = match_in_applications_dir(dir, names, count);
@@ -186,12 +187,8 @@ const char *get_default_terminal(int slot) {
 
   if (!term) {
     const char *st = getenv("XDG_SESSION_TYPE");
-    bool is_wayland = (st && strcmp(st, "wayland") == 0) ||
-                      getenv("WAYLAND_DISPLAY") != NULL ||
-                      getenv("SWAYSOCK") != NULL || getenv("I3SOCK") != NULL ||
-                      getenv("HYPRLAND_INSTANCE_SIGNATURE") != NULL ||
-                      getenv("NIRI_SOCKET") != NULL ||
-                      getenv("KDE_FULL_SESSION") != NULL;
+    bool is_wayland =
+        (st && strcmp(st, "wayland") == 0) || Env_IsCompositor();
     term = is_wayland ? x11_get_default_terminal_wayland()
                       : x11_get_default_terminal_x11();
   }
@@ -331,7 +328,7 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
     snprintf(dirs, sizeof(dirs), "%s:%s", data_home, data_dirs);
   else
     snprintf(dirs, sizeof(dirs), "%s/.local/share:%s",
-             getenv("HOME") ? getenv("HOME") : "/root", data_dirs);
+             Env_HomeDir() ? Env_HomeDir() : "/root", data_dirs);
   char *save = NULL;
   for (char *d = strtok_r(dirs, ":", &save); d;
        d = strtok_r(NULL, ":", &save)) {
