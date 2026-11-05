@@ -569,7 +569,7 @@ static void cc_scan_app_dirs(void) {
   }
   for (size_t i = 0; i < tmp.count; i++) {
     for (size_t j = i + 1; j < tmp.count;) {
-      if (fl_string_contains(tmp.files[i].name, tmp.files[j].name)) {
+      if (fl_string_contains(tmp.files[j].name,tmp.files[i].name)) {
         for (size_t k = j; k + 1 < tmp.count; k++)
           tmp.files[k] = tmp.files[k + 1];
         tmp.count--;
@@ -810,7 +810,7 @@ static CcCalcUnit *ccx_find_unit_fuzzy(const char *input) {
 
   for (size_t i = 0; i < CC_CALC_UNIT_COUNT; i++)
     for (int j = 0; j < CC_CALC_UNITS[i].alias_count; j++) {
-      if (fl_string_contains(CC_CALC_UNITS[i].aliases[j], s) ||
+      if (fl_string_contains(s,CC_CALC_UNITS[i].aliases[j]) ||
           fl_string_contains(s, CC_CALC_UNITS[i].aliases[j]))
         return &CC_CALC_UNITS[i];
     }

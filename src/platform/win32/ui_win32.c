@@ -394,10 +394,6 @@ void UI_Redraw(ListBoxInfo *lb) {
   }
 }
 
-char *Platform_SearchPopup(void) {
-  return NULL;
-}
-
 #include <gdiplus.h>
 
 PromptState *Platform_GetPromptStateForHWND(HWND hwnd) {

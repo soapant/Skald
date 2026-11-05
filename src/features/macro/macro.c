@@ -497,9 +497,31 @@ void RecordToggle(void) {
 void crosshair_render(void) {
     int size = 5;
 
-    fl_draw_line(.x1 = WIDTH / 2 - size, .y1 = HEIGHT / 2, .x2 = WIDTH / 2 + size, .y2 = HEIGHT / 2, .color = FL_RED);
+    fl_draw_line(.x1 = 15 - size, .y1 = 15, .x2 = 15 + size, .y2 = 15, .color = FL_RED,.thickness=3);
 
-    fl_draw_line(.x1 = WIDTH / 2, .y1 = HEIGHT / 2 - size, .x2 = WIDTH / 2, .y2 = HEIGHT / 2 + size, .color = FL_RED);
+    fl_draw_line(.x1 = 15, .y1 = 15 - size, .x2 = 15, .y2 = 15 + size, .color = FL_RED,.thickness=3);
+}
+
+void crosshair_fn(void) {
+    char* title = fl_get_active_window_title();
+    bool is_fortnite = (title && fl_string_contains(title, "Fortnite"));
+    free(title);
+    if (is_fortnite) {
+        if (!fl_overlay_active("crosshair")) {
+            printf("ACTIVATING \n");
+            fl_overlay(.name = "crosshair", 
+                       .render = crosshair_render, 
+                       .w = 30, .h = 30, 
+                       .x = WIDTH / 2, .y = HEIGHT / 2, 
+                       .no_bg = true);
+        }
+    } 
+    else {
+        if (fl_overlay_active("crosshair")) {
+            printf("DISMISSING \n");
+            fl_dismiss_overlay("crosshair");
+        }
+    }
 }
 
 FLINT_FEATURE_INIT {
@@ -517,4 +539,5 @@ FLINT_FEATURE_INIT {
   fl_add_to_cc(.display_name = "RemoveDeadTime",
                .on_action = RemoveDeadTimeToggle,
                .type = "Macro", .icon = "/clock-off.png");
+  fl_run_every(1.0,crosshair_fn);
 }

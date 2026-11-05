@@ -367,10 +367,6 @@ bool fl_replace_line_in_file(const char *filepath, int line_index,
 
 char *fl_popup_impl(const PopupSpec *spec);
 
-
-
-
-
 typedef struct {
   const char *message;
   MessageSlot slot;
@@ -404,11 +400,11 @@ typedef struct {
 
 #define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
 
-
 void fl_message_impl(const FlMessageSpec *spec);
 
 #define fl_overlay(...) fl_message(__VA_ARGS__, .timeout = 10000000.0)
 #define fl_dismiss_overlay(...) fl_dismiss_message(__VA_ARGS__)
+#define fl_overlay_active(...) fl_message_active(__VA_ARGS__)
 #define fl_subwindow(...) fl_window(__VA_ARGS__, .subwindow = true)
 
 typedef PromptSpec FlPromptSpec;
@@ -685,7 +681,7 @@ void fl_profile_end(FlTimer timer);
 void fl_run_after_time(double seconds, void (*callback)(void));
 
 
-bool fl_string_contains(const char *needle, const char *haystack);
+bool fl_string_contains(const char *haystack, const char *needle);
 
 
 char *fl_get_working_dir(void);
