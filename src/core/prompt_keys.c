@@ -40,14 +40,14 @@ bool Prompt_DeleteSelection(PromptState *state) {
     ss = se;
     se = t;
   }
-  int len = (int)strlen(state->editbox->filter);
+  int len = (int)strlen(state->eb->filter);
   if (ss < 0)
     ss = 0;
   if (se > len)
     se = len;
   if (se > ss) {
-    memmove(state->editbox->filter + ss, state->editbox->filter + se, len - se + 1);
-    state->editbox->cursor = ss;
+    memmove(state->eb->filter + ss, state->eb->filter + se, len - se + 1);
+    state->eb->cursor = ss;
     EditState_EndSelection();
     return true;
   }
@@ -60,21 +60,21 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
     return;
   }
   Prompt_DeleteSelection(state);
-  size_t fcur = (size_t)state->editbox->cursor;
-  EditBufferInsertText(state->editbox->filter, sizeof(state->editbox->filter), &fcur, text,
+  size_t fcur = (size_t)state->eb->cursor;
+  EditBufferInsertText(state->eb->filter, sizeof(state->eb->filter), &fcur, text,
                        (size_t)len);
-  state->editbox->cursor = (int)fcur;
+  state->eb->cursor = (int)fcur;
   History_ResetCursor(FlintContext_Get()->window.current_feature);
   Prompt_Refresh(state);
 }
 
 void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   const char *sel = NULL;
-  char filter_copy[sizeof(state->editbox->filter)];
-  if (state->listbox && UI_IsListBoxSelected(state->listbox)) {
-    sel = ListBoxInfo_Row(state->listbox, state->listbox->selected_index);
+  char filter_copy[sizeof(state->eb->filter)];
+  if (state->lb && UI_IsListBoxSelected(state->lb)) {
+    sel = ListBoxInfo_Row(state->lb, state->lb->selected_index);
   } else {
-    strncpy(filter_copy, state->editbox->filter, sizeof(filter_copy) - 1);
+    strncpy(filter_copy, state->eb->filter, sizeof(filter_copy) - 1);
     filter_copy[sizeof(filter_copy) - 1] = '\0';
     sel = filter_copy;
   }
@@ -152,13 +152,13 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
 bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,
                             bool alt) {
 
-  if (!state || !state->listbox)
+  if (!state || !state->lb)
     return false;
   int list_top = 0, item_height = 0, visible_count = 0;
   ListBox_GetGeometry(&list_top, &item_height, &visible_count);
   if (item_height <= 0 || visible_count <= 0)
     return false;
-  ListBoxInfo *lb = state->listbox;
+  ListBoxInfo *lb = state->lb;
   int mx = 0, my = 0;
   if (!ListBox_ClientMousePos(&mx, &my))
     return false;
@@ -195,10 +195,10 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   }
 
   if (ctrl && (vk == 'A' || vk == 'a')) {
-    int len = (int)strlen(state->editbox->filter);
+    int len = (int)strlen(state->eb->filter);
     EditState_BeginSelection(0);
     EditState_UpdateSelection(len);
-    state->editbox->cursor = len;
+    state->eb->cursor = len;
     Prompt_Refresh(state);
     return true;
   }
@@ -210,7 +210,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
         ss = se;
         se = t;
       }
-      int len = (int)strlen(state->editbox->filter);
+      int len = (int)strlen(state->eb->filter);
       if (ss < 0)
         ss = 0;
       if (se > len)
@@ -220,7 +220,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
         int n = se - ss;
         if (n >= (int)sizeof(buf))
           n = (int)sizeof(buf) - 1;
-        memcpy(buf, state->editbox->filter + ss, n);
+        memcpy(buf, state->eb->filter + ss, n);
         buf[n] = '\0';
         Platform_CopyToClipboard(buf);
       }
@@ -236,14 +236,14 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       return true;
     }
     if (ctrl) {
-      state->editbox->filter[0] = '\0';
-      state->editbox->cursor = 0;
+      state->eb->filter[0] = '\0';
+      state->eb->cursor = 0;
     } else {
-      size_t fcur = (size_t)state->editbox->cursor;
-      if (!EditBufferBackspacePair(state->editbox->filter, &fcur) && true) {
-        EditBufferBackspace(state->editbox->filter, &fcur);
+      size_t fcur = (size_t)state->eb->cursor;
+      if (!EditBufferBackspacePair(state->eb->filter, &fcur) && true) {
+        EditBufferBackspace(state->eb->filter, &fcur);
       }
-      state->editbox->cursor = (int)fcur;
+      state->eb->cursor = (int)fcur;
     }
     History_ResetCursor(ctx->window.current_feature);
     Prompt_Refresh(state);
@@ -260,52 +260,52 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   }
   if (vk == VK_RIGHT) {
     EditState_EndSelection();
-    CursorForward(&state->editbox->cursor, strlen(state->editbox->filter));
+    CursorForward(&state->eb->cursor, strlen(state->eb->filter));
     return true;
   }
   if (vk == VK_LEFT) {
     EditState_EndSelection();
-    CursorBack(&state->editbox->cursor, strlen(state->editbox->filter));
+    CursorBack(&state->eb->cursor, strlen(state->eb->filter));
     return true;
   }
   if (vk == VK_HOME) {
     EditState_EndSelection();
-    state->editbox->cursor = 0;
+    state->eb->cursor = 0;
     return true;
   }
   if (vk == VK_END) {
     EditState_EndSelection();
-    state->editbox->cursor = (int)strlen(state->editbox->filter);
+    state->eb->cursor = (int)strlen(state->eb->filter);
     return true;
   }
   if (vk == VK_UP) {
     if (ctrl) {
-      state->editbox->cursor = 0;
+      state->eb->cursor = 0;
       return true;
     }
-    if (state->listbox) {
-      if (state->listbox->selected_index == -1) {
+    if (state->lb) {
+      if (state->lb->selected_index == -1) {
         char hist[512];
         const char *feat = ctx->window.current_feature;
         if (feat && History_CycleUp(feat, hist, sizeof(hist))) {
-          strncpy(state->editbox->filter, hist, sizeof(state->editbox->filter) - 1);
-          state->editbox->filter[sizeof(state->editbox->filter) - 1] = '\0';
-          state->editbox->cursor = (int)strlen(state->editbox->filter);
+          strncpy(state->eb->filter, hist, sizeof(state->eb->filter) - 1);
+          state->eb->filter[sizeof(state->eb->filter) - 1] = '\0';
+          state->eb->cursor = (int)strlen(state->eb->filter);
           Prompt_Refresh(state);
           return true;
         }
       }
-      UI_NavigateUp(state->listbox);
+      UI_NavigateUp(state->lb);
     }
     return true;
   }
   if (vk == VK_DOWN) {
     if (ctrl) {
-      state->editbox->cursor = (int)strlen(state->editbox->filter);
+      state->eb->cursor = (int)strlen(state->eb->filter);
       return true;
     }
-    if (state->listbox)
-      UI_NavigateDown(state->listbox);
+    if (state->lb)
+      UI_NavigateDown(state->lb);
     return true;
   }
   if (vk == VK_DELETE) {
@@ -313,7 +313,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       Prompt_Refresh(state);
       return true;
     }
-    if (EditBufferDeleteChar(state->editbox->filter, &state->editbox->cursor)) {
+    if (EditBufferDeleteChar(state->eb->filter, &state->eb->cursor)) {
       History_ResetCursor(ctx->window.current_feature);
       Prompt_Refresh(state);
     }
@@ -332,9 +332,9 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     if (shift || ctrl) {
       int type = shift ? 0 : 1;
       int idx = -1;
-      if (state->listbox && state->listbox->selected_index >= 0 &&
-          state->listbox->selected_index < state->listbox->item_count) {
-        idx = state->listbox->matching_indices[state->listbox->selected_index];
+      if (state->lb && state->lb->selected_index >= 0 &&
+          state->lb->selected_index < state->lb->item_count) {
+        idx = state->lb->matching_indices[state->lb->selected_index];
       } else {
         idx = UI_LookupTrueIndex(ctx->window.output_buffer);
       }
@@ -357,16 +357,16 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       free(clip);
       return true;
     }
-    size_t cur_len = strlen(state->editbox->filter);
+    size_t cur_len = strlen(state->eb->filter);
     size_t clip_len = strlen(clip);
-    size_t avail = sizeof(state->editbox->filter) - cur_len - 1;
+    size_t avail = sizeof(state->eb->filter) - cur_len - 1;
     if (clip_len > avail)
       clip_len = avail;
     if (clip_len > 0) {
-      memmove(state->editbox->filter + state->editbox->cursor + clip_len,
-              state->editbox->filter + state->editbox->cursor, cur_len - state->editbox->cursor + 1);
-      memcpy(state->editbox->filter + state->editbox->cursor, clip, clip_len);
-      state->editbox->cursor += (int)clip_len;
+      memmove(state->eb->filter + state->eb->cursor + clip_len,
+              state->eb->filter + state->eb->cursor, cur_len - state->eb->cursor + 1);
+      memcpy(state->eb->filter + state->eb->cursor, clip, clip_len);
+      state->eb->cursor += (int)clip_len;
     }
     free(clip);
     Prompt_Refresh(state);
