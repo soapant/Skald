@@ -120,6 +120,7 @@ long long Platform_GetWallClockMs(void);
 void Platform_DismissDisplayMessage(void);
 bool Platform_DismissMessage(const char *name);
 bool Platform_MessageActive(const char *name);
+void Platform_DismissIndefiniteMessage(void);
 
 void Platform_DisplayMessage(PlDisplayMessageSpec spec);
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec);
@@ -235,7 +236,6 @@ bool Platform_AtomicRename(const char *old_path, const char *new_path);
 #if defined(__linux__)
 FontHandle Platform_CreateFontOnDisplay(Display *dpy, int size,
                                         const char *face_name);
-void Platform_DismissIndefiniteMessage(void);
 const char *Platform_GetSessionDisplay(void);
 const char *Platform_GetSessionXAuthority(void);
 const char *Platform_GetRuntimeDir(void);

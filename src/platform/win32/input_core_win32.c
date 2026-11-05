@@ -218,16 +218,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
     }
     if (nCode == HC_ACTION &&
         (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
-      HWND hMsgWnd = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-      if (hMsgWnd && IsWindow(hMsgWnd)) {
-        FadeWindowData *fd =
-            (FadeWindowData *)GetWindowLongPtrA(hMsgWnd, GWLP_USERDATA);
-        if (fd && fd->timeout == 6969.0) {
-          KillTimer(hMsgWnd, 999);
-          DestroyWindow(hMsgWnd);
-          FlintContext_Get()->window.hDisplayMessage = WH_NULL;
-        }
-      }
+      Platform_DismissIndefiniteMessage();
       KBDLLHOOKSTRUCT *pKeyInfo = (KBDLLHOOKSTRUCT *)lParam;
 
       bool alt_down = (pKeyInfo->flags & LLKHF_ALTDOWN) ||
