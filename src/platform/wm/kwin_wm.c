@@ -1,6 +1,7 @@
 #include "wm/kwin_wm.h"
 #include "deps/log.h"
 #include "platform/platform.h"
+#include "platform/x11/env_helpers_x11.h"
 #include <time.h>
 #include <string.h>
 #include <strings.h>
@@ -35,7 +36,7 @@ static void kwin_ensure_bus(void) {
   if (cur && cur[0]) {
     return;
   }
-  const char *rtd = getenv("XDG_RUNTIME_DIR");
+  const char *rtd = Env_XdgRuntimeDir();
   if (!rtd || !rtd[0]) {
     return;
   }

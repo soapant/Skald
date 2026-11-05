@@ -10,6 +10,7 @@
 
 #include "deps/log.h"
 #include "platform/platform.h"
+#include "platform/x11/env_helpers_x11.h"
 #include "helpers/helpers_text.h"
 
 static bool sway_sock_live(const char *path) {
@@ -27,9 +28,8 @@ static void sway_ensure_sock(void) {
     return;
   }
   if (cur)
-    unsetenv(getenv("SWAYSOCK") && getenv("SWAYSOCK")[0] ? "SWAYSOCK"
-                                                         : "I3SOCK");
-  const char *rtd = getenv("XDG_RUNTIME_DIR");
+    unsetenv(cur == getenv("SWAYSOCK") ? "SWAYSOCK" : "I3SOCK");
+  const char *rtd = Env_XdgRuntimeDir();
   if (!rtd || !rtd[0]) {
     return;
   }

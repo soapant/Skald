@@ -11,6 +11,7 @@
 
 #include "deps/log.h"
 #include "platform/platform.h"
+#include "platform/x11/env_helpers_x11.h"
 
 static bool niri_sock_live(const char *sock) {
 
@@ -26,7 +27,7 @@ bool niri_is_active(void) {
     return true;
   if (cur && cur[0])
     unsetenv("NIRI_SOCKET");
-  const char *rtd = getenv("XDG_RUNTIME_DIR");
+  const char *rtd = Env_XdgRuntimeDir();
   if (!rtd || !rtd[0])
     return false;
   char pat[512];

@@ -89,16 +89,19 @@ const char *x11_find_terminal_in_desktop_files(const char *const *names,
   const char *data_dirs = getenv("XDG_DATA_DIRS");
   if (!data_dirs || !data_dirs[0])
     data_dirs = "/usr/local/share:/usr/share";
-  char buf[4096];
-  snprintf(buf, sizeof(buf), "%s", data_dirs);
-  char *save = buf;
-  for (char *tok = strtok_r(buf, ":", &save); tok;
-       tok = strtok_r(NULL, ":", &save)) {
+  StringList dirs = String_Split(data_dirs, ":");
+  for (size_t i = 0; i < dirs.count; i++) {
+    const char *tok = dirs.items[i];
+    if (!tok || !tok[0])
+      continue;
     snprintf(dir, sizeof(dir), "%s/applications", tok);
     const char *hit = match_in_applications_dir(dir, names, count);
-    if (hit)
+    if (hit) {
+      StringList_Free(&dirs);
       return hit;
+    }
   }
+  StringList_Free(&dirs);
   return match_in_applications_dir("/usr/share/applications", names, count);
 }
 
@@ -329,9 +332,11 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
   else
     snprintf(dirs, sizeof(dirs), "%s/.local/share:%s",
              Env_HomeDir() ? Env_HomeDir() : "/root", data_dirs);
-  char *save = NULL;
-  for (char *d = strtok_r(dirs, ":", &save); d;
-       d = strtok_r(NULL, ":", &save)) {
+  StringList dir_list = String_Split(dirs, ":");
+  for (size_t i = 0; i < dir_list.count; i++) {
+    char *d = dir_list.items[i];
+    if (!d || !d[0])
+      continue;
     char path[1024];
     snprintf(path, sizeof(path), "%s/applications/%s", d, desktop_id);
     static char content[16384];
@@ -350,9 +355,12 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
         break;
       }
     }
-    if (found)
+    if (found) {
+      StringList_Free(&dir_list);
       return true;
+    }
     out[0] = '\0';
   }
+  StringList_Free(&dir_list);
   return false;
 }

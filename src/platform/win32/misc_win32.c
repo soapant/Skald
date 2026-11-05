@@ -410,25 +410,19 @@ const char *Platform_GetRealHome(void) {
 
   static char buf[512] = {0};
 
-  const char *profile = getenv("USERPROFILE");
-  if (profile && profile[0]) {
-    strncpy(buf, profile, sizeof(buf) - 1);
-    buf[sizeof(buf) - 1] = '\0';
-    return buf;
-  }
-
-  const char *drive = getenv("HOMEDRIVE");
-  const char *path = getenv("HOMEPATH");
-  if (drive && drive[0] && path && path[0]) {
-    snprintf(buf, sizeof(buf), "%s%s", drive, path);
-    return buf;
-  }
-
   char user_profile[MAX_PATH];
   if (GetEnvironmentVariableA("USERPROFILE", user_profile, MAX_PATH) > 0) {
     strncpy(buf, user_profile, sizeof(buf) - 1);
     buf[sizeof(buf) - 1] = '\0';
     return buf;
+  }
+  char drive[MAX_PATH];
+  if (GetEnvironmentVariableA("HOMEDRIVE", drive, MAX_PATH) > 0) {
+    char path[MAX_PATH];
+    if (GetEnvironmentVariableA("HOMEPATH", path, MAX_PATH) > 0) {
+      snprintf(buf, sizeof(buf), "%s%s", drive, path);
+      return buf;
+    }
   }
   return buf;
 }
