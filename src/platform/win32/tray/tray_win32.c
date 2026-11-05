@@ -83,8 +83,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return 0;
   }
   case WM_DISMISS_MESSAGE: {
+    if (lParam != 0) {
+      DismissMessageParams *p = (DismissMessageParams *)lParam;
+      return Platform_DismissMessage(p ? p->name : NULL) ? 1 : 0;
+    }
     Platform_DismissDisplayMessage();
-    return 0;
+    return 1;
   }
 
   case WM_DESTROY: {

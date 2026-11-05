@@ -27,6 +27,76 @@
 
 static int g_win32_msg_w = 0;
 static int g_win32_msg_h = 0;
+static HWND g_hover_msg_hwnd = NULL;
+static HWND g_last_created_msg_hwnd = NULL;
+
+#define MSG_SLOT_MAX 24
+static HWND g_msg_slots[MSG_SLOT_MAX];
+static int g_msg_slot_count = 0;
+
+static int MsgSlotFind(HWND hwnd) {
+  for (int i = 0; i < g_msg_slot_count; i++) {
+    if (g_msg_slots[i] == hwnd)
+      return i;
+  }
+  return -1;
+}
+
+static void MsgSlotUnregister(HWND hwnd) {
+  int idx = MsgSlotFind(hwnd);
+  if (idx < 0)
+    return;
+  for (int i = idx; i < g_msg_slot_count - 1; i++)
+    g_msg_slots[i] = g_msg_slots[i + 1];
+  g_msg_slot_count--;
+  if (hwnd == g_hover_msg_hwnd)
+    g_hover_msg_hwnd = NULL;
+  if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) == hwnd) {
+    FlintContext_Get()->window.hDisplayMessage =
+        g_msg_slot_count > 0 ? WH_FROM_HWND(g_msg_slots[g_msg_slot_count - 1])
+                             : WH_NULL;
+  }
+}
+
+static void MsgSlotRegister(HWND hwnd) {
+  if (g_msg_slot_count >= MSG_SLOT_MAX) {
+    HWND oldest = g_msg_slots[0];
+    KillTimer(oldest, 999);
+    DestroyWindow(oldest);
+  }
+  if (g_msg_slot_count >= MSG_SLOT_MAX)
+    return;
+  g_msg_slots[g_msg_slot_count++] = hwnd;
+  g_last_created_msg_hwnd = hwnd;
+  FlintContext_Get()->window.hDisplayMessage = WH_FROM_HWND(hwnd);
+}
+
+enum {
+  MSG_DESTROY_ALL,
+  MSG_DESTROY_INDEFINITE,
+  MSG_DESTROY_NAMED
+};
+
+static int MsgSlotDestroyWhere(int mode, const char *name) {
+  int destroyed = 0;
+  for (int i = g_msg_slot_count - 1; i >= 0; i--) {
+    HWND h = g_msg_slots[i];
+    FadeWindowData *fd =
+        (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
+    bool indefinite = fd && (fd->timeout == 6969.0 || fd->timeout <= 0.0);
+    const char *fdname = fd ? fd->name : "";
+    bool match = (mode == MSG_DESTROY_ALL) ||
+                 (mode == MSG_DESTROY_INDEFINITE && indefinite) ||
+                 (mode == MSG_DESTROY_NAMED && name && name[0] &&
+                  strcmp(fdname, name) == 0);
+    if (!match)
+      continue;
+    KillTimer(h, 999);
+    DestroyWindow(h);
+    destroyed++;
+  }
+  return destroyed;
+}
 
 static wchar_t *msg_widen(const char *in, int *out_len) {
 
@@ -54,7 +124,6 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
 
   FadeWindowData *data =
       (FadeWindowData *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-  FlintContext_Get()->window.hDisplayMessage = WH_FROM_HWND(hwnd);
 
   switch (msg) {
   case WM_NCCREATE: {
@@ -151,7 +220,6 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
 
       if (data->alpha <= 0) {
         KillTimer(hwnd, 999);
-        FlintContext_Get()->window.hDisplayMessage = WH_NULL;
         DestroyWindow(hwnd);
       } else {
         SetLayeredWindowAttributes(hwnd, 0, (BYTE)data->alpha, LWA_ALPHA);
@@ -172,7 +240,9 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
     break;
   }
   case WM_DESTROY: {
-    log_info("MSG WM_DESTROY hwnd=%p", (void *)hwnd);
+    HWND dead = hwnd;
+    log_info("MSG WM_DESTROY hwnd=%p", (void *)dead);
+    MsgSlotUnregister(dead);
     return 0;
   }
   }
@@ -208,6 +278,7 @@ bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
   ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
   UpdateWindow(hPopupWnd);
   SetTimer(hPopupWnd, 999, 16, NULL);
+  MsgSlotRegister(hPopupWnd);
   {
     RECT vr;
     GetWindowRect(hPopupWnd, &vr);
@@ -222,11 +293,8 @@ bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
 
 void Platform_MessagePopupHideWindow(Popup *self) {
   (void)self;
-  HWND hMsg = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-  if (hMsg != NULL && IsWindow(hMsg)) {
-    DestroyWindow(hMsg);
-    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
-  }
+  MsgSlotDestroyWhere(MSG_DESTROY_ALL, NULL);
+  FlintContext_Get()->window.hDisplayMessage = WH_NULL;
 }
 
 void Platform_MessagePopupRender(Popup *self) { (void)self; }
@@ -294,45 +362,43 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
 }
 
 void Platform_DismissDisplayMessage(void) {
-  HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-  if (h == NULL) {
-    return;
-  }
   HWND tray = WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd);
   if (tray != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
     SendMessageA(tray, WM_DISMISS_MESSAGE, 0, 0);
     return;
   }
-  KillTimer(h, 999);
-  DestroyWindow(h);
+  MsgSlotDestroyWhere(MSG_DESTROY_ALL, NULL);
   FlintContext_Get()->window.hDisplayMessage = WH_NULL;
 }
 
 bool Platform_DismissMessage(const char *name) {
-  if (!name || !name[0]) {
-    bool had = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL;
-    Platform_DismissDisplayMessage();
-    return had;
+  HWND tray = WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd);
+  if (tray != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
+    DismissMessageParams params;
+    params.name = name;
+    return SendMessageA(tray, WM_DISMISS_MESSAGE, 0, (LPARAM)&params) != 0;
   }
-  HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-  if (h == NULL || !IsWindow(h))
-    return false;
-  FadeWindowData *data = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
-  if (!data || strcmp(data->name, name) != 0)
-    return false;
-  Platform_DismissDisplayMessage();
-  return true;
+  if (!name || !name[0])
+    return MsgSlotDestroyWhere(MSG_DESTROY_ALL, NULL) > 0;
+  return MsgSlotDestroyWhere(MSG_DESTROY_NAMED, name) > 0;
+}
+
+void Platform_DismissIndefiniteMessage(void) {
+  MsgSlotDestroyWhere(MSG_DESTROY_INDEFINITE, NULL);
 }
 
 bool Platform_MessageActive(const char *name) {
   if (!name || !name[0])
     return false;
-  HWND h = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-  if (h == NULL || !IsWindow(h))
-    return false;
-  FadeWindowData *data = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
-  bool active = (data && strcmp(data->name, name) == 0);
-  return active;
+  for (int i = 0; i < g_msg_slot_count; i++) {
+    HWND h = g_msg_slots[i];
+    if (!h || !IsWindow(h))
+      continue;
+    FadeWindowData *data = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
+    if (data && strcmp(data->name, name) == 0)
+      return true;
+  }
+  return false;
 }
 
 static char g_hover_key[64] = {0};
@@ -578,12 +644,12 @@ void Platform_HoverMessageRelease(const char *key) {
   if (strcmp(g_hover_key, key) != 0) {
     return;
   }
-  HWND hw = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  HWND hw = g_hover_msg_hwnd;
   if (hw && IsWindow(hw)) {
     KillTimer(hw, 999);
-    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
     DestroyWindow(hw);
   }
+  g_hover_msg_hwnd = NULL;
   g_hover_key[0] = '\0';
 }
 
@@ -599,7 +665,7 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
   ColorRef color = spec.color;
   bool no_bg = spec.no_bg;
 
-  HWND existing = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  HWND existing = g_hover_msg_hwnd;
   if (g_hover_key[0] && strcmp(g_hover_key, key) == 0 && existing &&
       IsWindow(existing)) {
     SetWindowPos(existing, HWND_TOPMOST, centerX - g_win32_msg_w / 2,
@@ -648,8 +714,9 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
   g_win32_msg_w = winWidth;
   g_win32_msg_h = winHeight;
   snprintf(g_hover_key, sizeof(g_hover_key), "%s", key);
+  g_hover_msg_hwnd = g_last_created_msg_hwnd;
 
-  HWND hw = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  HWND hw = g_hover_msg_hwnd;
   if (hw && IsWindow(hw)) {
     KillTimer(hw, 999);
     SetWindowPos(hw, HWND_TOPMOST, centerX - winWidth / 2,
@@ -752,9 +819,8 @@ void Platform_CreateDisplayMessageWindow(
   log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g "
            "no_bg=%d render=%p",
            message ? message : "(null)", centerX, centerY, maxWidth, maxHeight,
-           timeout, no_bg ? 1 : 0, (void *)render);
-  DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-  KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+            timeout, no_bg ? 1 : 0, (void *)render);
+  g_last_created_msg_hwnd = NULL;
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
   int textWidth = 0, textHeight = 0;

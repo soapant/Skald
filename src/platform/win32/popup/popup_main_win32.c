@@ -583,7 +583,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
                         999);
               DestroyWindow(
                   WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-              FlintContext_Get()->window.hDisplayMessage = WH_NULL;
             }
           }
         }

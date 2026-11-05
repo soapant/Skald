@@ -20,6 +20,10 @@ typedef struct {
 } FadeWindowData;
 
 typedef struct {
+  const char *name;
+} DismissMessageParams;
+
+typedef struct {
   const char *message;
   int centerX;
   int centerY;
