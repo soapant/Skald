@@ -410,6 +410,13 @@ bool Platform_StringStartsWithCaseInsensitive(const char *str,
   return strncasecmp(str, prefix, plen) == 0;
 }
 
+bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b) {
+
+  if (!a || !b)
+    return false;
+  return strcasecmp(a, b) == 0;
+}
+
 long long Platform_GetWallClockMs(void) {
 
   struct timespec ts;

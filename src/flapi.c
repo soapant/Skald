@@ -646,7 +646,7 @@ bool fl_terminate_process_by_name(const char *exe_name) {
 bool fl_string_contains(const char *haystack, const char *needle) {
   if (!needle || !haystack)
     return false;
-  return Platform_StringContainsCaseInsensitive(needle, haystack);
+  return Platform_StringContainsCaseInsensitive(haystack,needle);
 }
 
 char *fl_string_cut_at(const char *str, char delim) {
@@ -2450,6 +2450,22 @@ const FlCcEntrySpec *fl_cc_entry_at(int index) {
   if (index < 0 || index >= g_cc_entry_count)
     return NULL;
   return &g_cc_entries[index].pub;
+}
+
+void cc_registry_purge_owner(const char *path_a, const char *path_b) {
+  if (!path_a && !path_b)
+    return;
+  int out = 0;
+  for (int i = 0; i < g_cc_entry_count; i++) {
+    if (Owner_ModuleMatches(g_cc_entries[i].owner, path_a, path_b))
+      continue;
+    if (out != i)
+      g_cc_entries[out] = g_cc_entries[i];
+    out++;
+  }
+  for (int i = out; i < g_cc_entry_count; i++)
+    memset(&g_cc_entries[i], 0, sizeof(g_cc_entries[i]));
+  g_cc_entry_count = out;
 }
 
 #define FL_MAX_ALIASES 1024

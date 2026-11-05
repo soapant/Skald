@@ -105,6 +105,7 @@ bool Platform_StringContainsCaseInsensitive(const char *haystack,
                                             const char *needle);
 bool Platform_StringStartsWithCaseInsensitive(const char *str,
                                               const char *prefix);
+bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b);
 bool Platform_TerminateProcessByName(const char *exe_name);
 bool Platform_FocusWindow(const char *window_name);
 PlWindowList Platform_GetWindowTitles();

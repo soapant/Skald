@@ -102,9 +102,8 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
       bool should_ignore = false;
       const char *dir_name = find_data.cFileName;
       for (int i = 0; builtin_ignored_names[i] != NULL; i++) {
-        if (Platform_StringContainsCaseInsensitive(
-                dir_name, builtin_ignored_names[i]) ||
-            strcmp(dir_name, builtin_ignored_names[i]) == 0) {
+        if (Platform_StringEqualsCaseInsensitive(dir_name,
+                                                 builtin_ignored_names[i])) {
           should_ignore = true;
           break;
         }
@@ -112,8 +111,8 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
       if (list_of_names_to_ignore) {
         for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
           if (!should_ignore &&
-              Platform_StringContainsCaseInsensitive(
-                  find_data.cFileName, list_of_names_to_ignore[i])) {
+              Platform_StringEqualsCaseInsensitive(find_data.cFileName,
+                                                   list_of_names_to_ignore[i])) {
             should_ignore = true;
             break;
           }
@@ -136,7 +135,7 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
             const char *want = list_of_allowed_extensions[i];
             if (want && want[0] == '.')
               want++;
-            if (Platform_StringContainsCaseInsensitive(ext, want)) {
+            if (Platform_StringEqualsCaseInsensitive(ext, want)) {
               allowed = true;
               break;
             }
@@ -146,10 +145,16 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
 
       if (allowed) {
         if (list_of_files->count >= list_of_files->capacity) {
-          list_of_files->capacity =
+          size_t new_capacity =
               list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
-          list_of_files->files = realloc(
-              list_of_files->files, list_of_files->capacity * sizeof(FileItem));
+          FileItem *new_items =
+              realloc(list_of_files->files, new_capacity * sizeof(FileItem));
+          if (!new_items) {
+            FindClose(hFind);
+            return false;
+          }
+          list_of_files->files = new_items;
+          list_of_files->capacity = new_capacity;
         }
 
         FileItem *item = &list_of_files->files[list_of_files->count];
