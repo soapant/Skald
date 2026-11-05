@@ -7,6 +7,12 @@ Every function in `flapi.h` is designed to be cross-platform. It currently works
 
 It is highly recommended that you only use the API for basic system control. This way, you do not need to use `#ifdef` blocks in your feature code to handle different operating systems.
 
+## Where `Platform_*` Code Lives
+
+`flapi_x11.c` and `flapi_win32.c` are **only** for `fl_*_platform` functions — the platform implementations of the public `flapi.h` API (e.g. `fl_listbox_begin_platform`). General `Platform_*` helpers live in `platform_x11.c` / `platform_win32.c` or in the `misc_*`/`draw_*`/`ui_*` files for that platform — never in `flapi_x11.c` / `flapi_win32.c`.
+
+Along with that, the platform files must not `#include "core/flapi.h"`. They use `platform.h` and the `core/types/*` headers instead. If removing the include breaks the build, treat it as a bug: the platform layer is not supposed to depend on the public feature API.
+
 ## How to Learn the API
 If you already know how to program in C, the best way to learn is to read the code itself. **Code is documentation.** You can skip the rest of this file and dive straight into the source code of the core features.
 

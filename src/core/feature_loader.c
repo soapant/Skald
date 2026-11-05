@@ -11,15 +11,10 @@
 #include "core/timer.h"
 #include "core/window_manager.h"
 #include "core/checkbox.h"
-#include "../../nob.h"
 #include "config_values.h"
 #include "core/types/misc.h"
 #include "helpers/helpers_hotkey.h"
 
-#undef copy_file
-#undef mkdir_if_not_exists
-#undef read_entire_dir
-#undef copy_directory_recursively
 #include "core/cc_registry.h"
 #include "core/widget_registry.h"
 #include "core/cap_registry.h"
@@ -241,7 +236,7 @@ static void manifest_write_baseline(const char *name) {
   char dir[512];
   if (!flint_feature_dir(name, dir, sizeof(dir)))
     return;
-  nob_mkdir_if_not_exists(dir);
+  Platform_MkdirIfNotExists(dir);
   f = fopen(path, "wb");
   if (!f)
     return;

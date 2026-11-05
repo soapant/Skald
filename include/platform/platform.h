@@ -66,15 +66,6 @@ typedef struct {
   const char *name;
 } PlDisplayMessageSpec;
 
-typedef struct {
-  const char *dir_path;
-  char **list_of_allowed_extensions;
-  ListOfFiles *list_of_files;
-  char **list_of_names_to_ignore;
-  bool strip_extension;
-  int max_depth;
-} PlGetAllFilesFromDirSpec;
-
 #define HTTP_CONNECT_TIMEOUT_S 10
 #define HTTP_TIMEOUT_S 30
 #define HTTP_MAX_REDIRECTS 10
@@ -106,6 +97,7 @@ bool Platform_StringContainsCaseInsensitive(const char *haystack,
 bool Platform_StringStartsWithCaseInsensitive(const char *str,
                                               const char *prefix);
 bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b);
+bool Platform_MkdirIfNotExists(const char *path);
 bool Platform_TerminateProcessByName(const char *exe_name);
 bool Platform_FocusWindow(const char *window_name);
 PlWindowList Platform_GetWindowTitles();
@@ -193,9 +185,11 @@ bool Platform_LaunchDetached(char *command);
 const char *Platform_GetDefaultApp(DefaultAppKind kind);
 bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
                                  size_t out_size);
-bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec);
-#define Platform_GetAllFilesFromDir(...)                                       \
-  Platform_GetAllFilesFromDir_impl((PlGetAllFilesFromDirSpec){__VA_ARGS__})
+typedef struct PlDirIter PlDirIter;
+PlDirIter *Platform_DirOpen(const char *dir_path);
+bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
+                      bool *is_dir_out);
+void Platform_DirClose(PlDirIter *it);
 const char *Platform_GetRealUser(void);
 const char *Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
