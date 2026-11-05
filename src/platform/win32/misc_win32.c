@@ -77,6 +77,15 @@ bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b) {
   return StrCmpIA(a, b) == 0;
 }
 
+bool Platform_MkdirIfNotExists(const char *path) {
+
+  if (!path)
+    return false;
+  if (CreateDirectoryA(path, NULL))
+    return true;
+  return GetLastError() == ERROR_ALREADY_EXISTS;
+}
+
 long long Platform_GetWallClockMs(void) {
 
   FILETIME ft;
@@ -458,4 +467,57 @@ int64_t Platform_TimerTickFrequency(void) {
   LARGE_INTEGER f;
   QueryPerformanceFrequency(&f);
   return (int64_t)f.QuadPart;
+}
+
+struct PlDirIter {
+  HANDLE hFind;
+  WIN32_FIND_DATAA fd;
+  bool first_pending;
+};
+
+PlDirIter *Platform_DirOpen(const char *dir_path) {
+  if (!dir_path)
+    return NULL;
+  char search_path[MAX_PATH];
+  snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
+  WIN32_FIND_DATAA fd;
+  HANDLE h = FindFirstFileA(search_path, &fd);
+  if (h == INVALID_HANDLE_VALUE)
+    return NULL;
+  PlDirIter *it = calloc(1, sizeof(*it));
+  if (!it) {
+    FindClose(h);
+    return NULL;
+  }
+  it->hFind = h;
+  it->fd = fd;
+  it->first_pending = true;
+  return it;
+}
+
+bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
+                      bool *is_dir_out) {
+  if (!it || !name_out || name_cap == 0 || !is_dir_out)
+    return false;
+  for (;;) {
+    if (!it->first_pending) {
+      if (!FindNextFileA(it->hFind, &it->fd))
+        return false;
+    }
+    it->first_pending = false;
+    if (strcmp(it->fd.cFileName, ".") == 0 ||
+        strcmp(it->fd.cFileName, "..") == 0)
+      continue;
+    snprintf(name_out, name_cap, "%s", it->fd.cFileName);
+    *is_dir_out = (it->fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+    return true;
+  }
+}
+
+void Platform_DirClose(PlDirIter *it) {
+  if (!it)
+    return;
+  if (it->hFind != INVALID_HANDLE_VALUE)
+    FindClose(it->hFind);
+  free(it);
 }

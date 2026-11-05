@@ -9,6 +9,8 @@
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_text.h"
 #include "core/types/keys.h"
+#include "core/types/file.h"
+#include "deps/log.h"
 
 HotkeyBinding convert_into_hotkey_binding(
     char *hotkey_string, void (*on_hotkey_trigger)(void),
@@ -491,4 +493,172 @@ StringList File_ReadLines(const char *path, long buffer_size) {
   result.count = kept;
   result.items[kept] = NULL;
   return result;
+}
+
+static const char *file_walk_builtin_ignored_names[] = {
+    ".git",
+    ".hg",
+    ".svn",
+    ".bzr",
+    ".fossil",
+    ".idea",
+    ".vscode",
+    ".cache",
+    ".local",
+    ".next",
+    ".nuxt",
+    ".output",
+    ".wrangler",
+    ".DS_Store",
+    "node_modules",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "env",
+    ".env",
+    ".tox",
+    "target",
+    "build",
+    "dist",
+    "out",
+    "bin",
+    "obj",
+    "cmake-build-debug",
+    "cmake-build-release",
+    ".gradle",
+    ".mvn",
+    ".terraform",
+    ".stack-work",
+    ".cargo",
+    ".rustup",
+    "vendor",
+    NULL
+};
+
+static bool file_walk_ignored_dir(const char *dir_name,
+                                  char **names_to_ignore) {
+  for (int i = 0; file_walk_builtin_ignored_names[i] != NULL; i++)
+    if (Platform_StringEqualsCaseInsensitive(
+            dir_name, file_walk_builtin_ignored_names[i]))
+      return true;
+  if (names_to_ignore) {
+    for (int i = 0; names_to_ignore[i] != NULL; i++)
+      if (Platform_StringEqualsCaseInsensitive(dir_name, names_to_ignore[i]))
+        return true;
+  }
+  return false;
+}
+
+static bool file_walk_extension_allowed(const char *filename,
+                                        char **allowed_extensions) {
+  if (!allowed_extensions)
+    return true;
+  const char *ext = strrchr(filename, '.');
+  if (!ext)
+    return false;
+  ext++;
+  for (int i = 0; allowed_extensions[i] != NULL; i++) {
+    const char *want = allowed_extensions[i];
+    if (want && want[0] == '.')
+      want++;
+    if (Platform_StringEqualsCaseInsensitive(ext, want))
+      return true;
+  }
+  return false;
+}
+
+static bool file_walk_push(ListOfFiles *list_of_files, const char *full_path,
+                           const char *entry_name, bool strip_extension) {
+  if (list_of_files->count >= list_of_files->capacity) {
+    size_t new_capacity =
+        list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
+    FileItem *new_items =
+        realloc(list_of_files->files, new_capacity * sizeof(FileItem));
+    if (!new_items)
+      return false;
+    list_of_files->files = new_items;
+    list_of_files->capacity = new_capacity;
+  }
+
+  FileItem *item = &list_of_files->files[list_of_files->count];
+
+  size_t plen = strlen(full_path);
+  if (plen >= sizeof(item->path))
+    plen = sizeof(item->path) - 1;
+  memcpy(item->path, full_path, plen);
+  item->path[plen] = '\0';
+
+  char clean_name[256];
+  size_t nlen = strlen(entry_name);
+  if (nlen >= sizeof(clean_name))
+    nlen = sizeof(clean_name) - 1;
+  memcpy(clean_name, entry_name, nlen);
+  clean_name[nlen] = '\0';
+
+  if (strip_extension) {
+    char *dot = strrchr(clean_name, '.');
+    if (dot)
+      *dot = '\0';
+  }
+
+  size_t clen = strlen(clean_name);
+  if (clen >= sizeof(item->name))
+    clen = sizeof(item->name) - 1;
+  memcpy(item->name, clean_name, clen);
+  item->name[clen] = '\0';
+
+  list_of_files->count++;
+  return true;
+}
+
+static bool file_walk_dir(const char *dir_path,
+                          char **list_of_allowed_extensions,
+                          ListOfFiles *list_of_files,
+                          char **list_of_names_to_ignore, bool strip_extension,
+                          int max_depth) {
+  PlDirIter *it = Platform_DirOpen(dir_path);
+  if (!it) {
+    log_warn("file walk cannot open directory name='%s'", dir_path);
+    return false;
+  }
+
+  char entry_name[512];
+  bool is_dir = false;
+  while (Platform_DirNext(it, entry_name, sizeof(entry_name), &is_dir)) {
+    char full_path[MAX_PATH];
+    snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry_name);
+
+    if (is_dir) {
+      if (!file_walk_ignored_dir(entry_name, list_of_names_to_ignore) &&
+          (max_depth == 0 || max_depth > 1)) {
+        file_walk_dir(full_path, list_of_allowed_extensions, list_of_files,
+                      list_of_names_to_ignore, strip_extension,
+                      max_depth > 0 ? max_depth - 1 : 0);
+      }
+      continue;
+    }
+
+    if (!file_walk_extension_allowed(entry_name, list_of_allowed_extensions))
+      continue;
+
+    if (!file_walk_push(list_of_files, full_path, entry_name,
+                        strip_extension)) {
+      Platform_DirClose(it);
+      return false;
+    }
+  }
+
+  Platform_DirClose(it);
+  return true;
+}
+
+bool FileWalk_AllFilesFromDir(const char *dir_path,
+                              char **list_of_allowed_extensions,
+                              ListOfFiles *list_of_files,
+                              char **list_of_names_to_ignore,
+                              bool strip_extension, int max_depth) {
+  if (!dir_path || !list_of_files)
+    return false;
+  return file_walk_dir(dir_path, list_of_allowed_extensions, list_of_files,
+                       list_of_names_to_ignore, strip_extension, max_depth);
 }

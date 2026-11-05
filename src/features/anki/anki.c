@@ -61,7 +61,7 @@ static int (*p_sqlite3_column_int)(sqlite3_stmt *, int) = NULL;
 static FlThread anki_thread = NULL;
 static FlMutex anki_lock = NULL;
 static bool anki_running = false;
-static int time_between_qs = 20;
+static int time_between_qs = 10;
 
 static char *safe_strdup(const char *s) {
   if (!s)

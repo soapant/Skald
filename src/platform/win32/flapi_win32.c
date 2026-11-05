@@ -12,7 +12,6 @@
 #include <shlwapi.h>
 #include "core/clipboard_history.h"
 #include "platform/flapi_platform.h"
-#include "core/flapi.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
 #include "platform/draw.h"
@@ -31,155 +30,6 @@
 #include <string.h>
 #include <time.h>
 #include "core/timer.h"
-
-bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
-  const char *dir_path = spec.dir_path;
-  char **list_of_allowed_extensions = spec.list_of_allowed_extensions;
-  ListOfFiles *list_of_files = spec.list_of_files;
-  char **list_of_names_to_ignore = spec.list_of_names_to_ignore;
-  bool strip_extension = spec.strip_extension;
-  int max_depth = spec.max_depth;
-
-  char search_path[MAX_PATH];
-  snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
-
-  WIN32_FIND_DATAA find_data;
-  HANDLE hFind = FindFirstFileA(search_path, &find_data);
-  if (hFind == INVALID_HANDLE_VALUE)
-    return false;
-
-  do {
-    if (strcmp(find_data.cFileName, ".") == 0 ||
-        strcmp(find_data.cFileName, "..") == 0) {
-      continue;
-    }
-
-    char full_path[MAX_PATH];
-    snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path,
-             find_data.cFileName);
-
-  static const char *builtin_ignored_names[] = {
-      ".git",
-      ".hg",
-      ".svn",
-      ".bzr",
-      ".fossil",
-      ".idea",
-      ".vscode",
-      ".cache",
-      ".local",
-      ".next",
-      ".nuxt",
-      ".output",
-      ".wrangler",
-      ".DS_Store",
-      "node_modules",
-      "__pycache__",
-      ".venv",
-      "venv",
-      "env",
-      ".env",
-      ".tox",
-      "target",
-      "build",
-      "dist",
-      "out",
-      "bin",
-      "obj",
-      "cmake-build-debug",
-      "cmake-build-release",
-      ".gradle",
-      ".mvn",
-      ".terraform",
-      ".stack-work",
-      ".cargo",
-      ".rustup",
-      "vendor",
-      NULL
-  };
-
-    if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-      bool should_ignore = false;
-      const char *dir_name = find_data.cFileName;
-      for (int i = 0; builtin_ignored_names[i] != NULL; i++) {
-        if (Platform_StringEqualsCaseInsensitive(dir_name,
-                                                 builtin_ignored_names[i])) {
-          should_ignore = true;
-          break;
-        }
-      }
-      if (list_of_names_to_ignore) {
-        for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
-          if (!should_ignore &&
-              Platform_StringEqualsCaseInsensitive(find_data.cFileName,
-                                                   list_of_names_to_ignore[i])) {
-            should_ignore = true;
-            break;
-          }
-        }
-      }
-      if (!should_ignore && (max_depth == 0 || max_depth > 1)) {
-        Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions,
-                                    list_of_files, list_of_names_to_ignore,
-                                    strip_extension,
-                                    max_depth > 0 ? max_depth - 1 : 0);
-      }
-    } else {
-      bool allowed = true;
-      if (list_of_allowed_extensions) {
-        allowed = false;
-        const char *ext = strrchr(find_data.cFileName, '.');
-        if (ext) {
-          ext++;
-          for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
-            const char *want = list_of_allowed_extensions[i];
-            if (want && want[0] == '.')
-              want++;
-            if (Platform_StringEqualsCaseInsensitive(ext, want)) {
-              allowed = true;
-              break;
-            }
-          }
-        }
-      }
-
-      if (allowed) {
-        if (list_of_files->count >= list_of_files->capacity) {
-          size_t new_capacity =
-              list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
-          FileItem *new_items =
-              realloc(list_of_files->files, new_capacity * sizeof(FileItem));
-          if (!new_items) {
-            FindClose(hFind);
-            return false;
-          }
-          list_of_files->files = new_items;
-          list_of_files->capacity = new_capacity;
-        }
-
-        FileItem *item = &list_of_files->files[list_of_files->count];
-        strncpy(item->path, full_path, sizeof(item->path) - 1);
-        item->path[sizeof(item->path) - 1] = '\0';
-
-        char clean_name[256];
-        strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
-        clean_name[sizeof(clean_name) - 1] = '\0';
-        if (strip_extension) {
-          char *dot = strrchr(clean_name, '.');
-          if (dot)
-            *dot = '\0';
-        }
-        strncpy(item->name, clean_name, sizeof(item->name) - 1);
-        item->name[sizeof(item->name) - 1] = '\0';
-
-        list_of_files->count++;
-      }
-    }
-  } while (FindNextFileA(hFind, &find_data));
-
-  FindClose(hFind);
-  return true;
-}
 
 static const char *win32_host_for_system_file(const char *path) {
 
@@ -290,7 +140,7 @@ bool fl_launch_with_args_as_admin_platform(const char *path, const char *args) {
 #include "config.h"
 #include "core/window_manager.h"
 
-static FlListSpec g_fl_list_spec;
+static PlListSpec g_fl_list_spec;
 static ListBoxInfo *g_fl_list_lb;
 static int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
 static int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw, g_fl_list_h;
@@ -298,7 +148,7 @@ static HDC g_fl_list_hdc;
 static HFONT g_fl_list_font;
 static bool g_fl_list_font_owned;
 
-bool fl_listbox_begin_platform(const FlListSpec *spec) {
+bool fl_listbox_begin_platform(const PlListSpec *spec) {
   if (!spec)
     return false;
   ListBoxInfo *lb = spec->lb;

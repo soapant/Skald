@@ -27,9 +27,6 @@
 #include <gdiplus.h>
 #include <ctype.h>
 #pragma comment(lib, "winhttp.lib")
-#define NOB_IMPLEMENTATION
-#define NOB_NO_ECHO
-#include "../../../nob.h"
 
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
@@ -1158,9 +1155,9 @@ static bool win32_icon_cache_dir(char *out, size_t n) {
   char base[MAX_PATH];
   snprintf(base, sizeof(base), "%s\\AppData\\Roaming\\Flint",
            Platform_GetRealHome());
-  nob_mkdir_if_not_exists(base);
+  Platform_MkdirIfNotExists(base);
   snprintf(out, n, "%s\\icon_cache", base);
-  nob_mkdir_if_not_exists(out);
+  Platform_MkdirIfNotExists(out);
   return true;
 }
 
@@ -1719,7 +1716,7 @@ void Platform_InitDataFolder() {
   char dir_path[200];
   snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint",
            Platform_GetRealHome());
-  nob_mkdir_if_not_exists(dir_path);
+  Platform_MkdirIfNotExists(dir_path);
 }
 
 bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
@@ -1730,10 +1727,10 @@ bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
   char dir_path[256];
   snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint",
            Platform_GetRealHome());
-  nob_mkdir_if_not_exists(dir_path);
+  Platform_MkdirIfNotExists(dir_path);
   char feat_path[320];
   snprintf(feat_path, sizeof(feat_path), "%s\\%s", dir_path, feature);
-  nob_mkdir_if_not_exists(feat_path);
+  Platform_MkdirIfNotExists(feat_path);
   snprintf(out, out_len, "%s\\%s", feat_path, name);
   return true;
 }
