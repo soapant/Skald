@@ -30,9 +30,7 @@ typedef struct {
 typedef struct {
   WindowContext window;
   PromptCallbacks prompt_callbacks;
-  HashMap *feature_history;
   HashMap *item_index_map;
-  HashMap *history_indices;
 } FlintContext;
 
 FlintContext *FlintContext_Get(void);

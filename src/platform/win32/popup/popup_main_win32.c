@@ -17,7 +17,6 @@
 #include "platform/input_state.h"
 #include "wingdi.h"
 #include "platform/platform.h"
-#include "helpers/helpers_alias.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
 

@@ -12,16 +12,6 @@
 #include "platform/platform.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
-#include "core/history.h"
-
-static void free_history_list(void *v) {
-  char **list = (char **)v;
-  if (!list)
-    return;
-  for (int k = 0; list[k]; k++)
-    free(list[k]);
-  free(list);
-}
 
 int main() {
   srand((unsigned)time(NULL));
@@ -39,9 +29,6 @@ int main() {
 
   Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();
-  FlintContext_Get()->feature_history = NULL;
-  sh_new_strdup(FlintContext_Get()->feature_history);
-  History_Init();
   Platform_InitUI();
   Platform_PrewarmBackgroundPixmap();
 
@@ -66,21 +53,8 @@ int main() {
   Platform_CleanupDisplaySafe();
 
   Platform_CleanupPlatformResources();
-  History_Shutdown();
 
   FlintContext *_ctx = FlintContext_Get();
-  if (_ctx->feature_history) {
-    for (ptrdiff_t i = 0; i < shlen(_ctx->feature_history); i++)
-      free_history_list(_ctx->feature_history[i].value);
-    shfree(_ctx->feature_history);
-    _ctx->feature_history = NULL;
-  }
-  if (_ctx->history_indices) {
-    for (ptrdiff_t i = 0; i < shlen(_ctx->history_indices); i++)
-      free(_ctx->history_indices[i].value);
-    shfree(_ctx->history_indices);
-    _ctx->history_indices = NULL;
-  }
   if (_ctx->item_index_map) {
     shfree(_ctx->item_index_map);
     _ctx->item_index_map = NULL;
