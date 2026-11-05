@@ -508,7 +508,6 @@ void crosshair_fn(void) {
     free(title);
     if (is_fortnite) {
         if (!fl_overlay_active("crosshair")) {
-            printf("ACTIVATING \n");
             fl_overlay(.name = "crosshair", 
                        .render = crosshair_render, 
                        .w = 30, .h = 30, 
@@ -518,7 +517,6 @@ void crosshair_fn(void) {
     } 
     else {
         if (fl_overlay_active("crosshair")) {
-            printf("DISMISSING \n");
             fl_dismiss_overlay("crosshair");
         }
     }
