@@ -478,9 +478,7 @@ static bool load_single(const char *dir, const char *filename) {
     if (strcmp(g_features[i].name, name) == 0)
       return true;
 
-  WinTimer t_dlopen = TimerStart();
   LibHandle h = Platform_LoadLibrary(full);
-  double init_us = TimerElapsedUs(t_dlopen);
   if (!h) {
     log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
     return false;

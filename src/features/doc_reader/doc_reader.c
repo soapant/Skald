@@ -141,7 +141,7 @@ DocItem doc_item(const char *name) {
 void doc_refresh(PromptState *state) {
   const char **names = malloc(g_doc_item_count * sizeof(const char *));
   for (int i = 0; i < g_doc_item_count; i++) {
-    if (fl_string_contains("_impl", g_doc_items[i].name)) {
+    if (fl_string_contains(g_doc_items[i].name,"_impl")) {
       g_doc_items[i].name[strlen(g_doc_items[i].name) - 5] = '\0';
       names[i] = g_doc_items[i].name;
     } else {

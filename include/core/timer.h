@@ -17,15 +17,6 @@ static inline int64_t TimerTickFrequency(void) {
   return Platform_TimerTickFrequency();
 }
 
-static inline WinTimer TimerStart(void) {
-  WinTimer t;
-  t.frequency = TimerTickFrequency();
-  t.start = TimerNowTicks();
-  return t;
-}
-
-void TimerEnd(WinTimer t, const char *operation_name, const char *file,
-              int line);
 void TimerFlush(void);
 double TimerElapsedUs(WinTimer t);
 #endif

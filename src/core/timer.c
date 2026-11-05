@@ -2,8 +2,6 @@
 
 #include <stdio.h>
 
-#include "config_values.h"
-
 static double timer_elapsed_us(WinTimer t) {
   int64_t end = TimerNowTicks();
   if (t.frequency <= 0)
@@ -13,6 +11,3 @@ static double timer_elapsed_us(WinTimer t) {
 
 double TimerElapsedUs(WinTimer t) { return timer_elapsed_us(t); }
 
-void TimerEnd(WinTimer t, const char *operation_name, const char *file,
-              int line) {
-}
