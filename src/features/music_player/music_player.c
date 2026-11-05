@@ -106,7 +106,7 @@ void music_refresh_callback(PromptState *state) {
   for (size_t i = 0; i < n; i++) {
     s_music_items[i] = s_music_files.files[i].name;
   }
-  fl_populate_listbox(state->listbox,state->editbox->filter, s_music_items, (int)n);
+  fl_populate_listbox(state->lb,state->eb->filter, s_music_items, (int)n);
 }
 bool play_music(char *name) {
 #if defined(_WIN32)
@@ -139,11 +139,11 @@ bool play_music(char *name) {
 
 bool music_enter_callback(PromptState *state) {
   char *result = NULL;
-  if (!fl_is_selected(state->listbox)) {
+  if (!fl_is_selected(state->lb)) {
     return false;
   }
   for (size_t i = 0; i < s_music_files.count; i++) {
-    if (strcmp(s_music_files.files[i].name, state->listbox->selected_text) == 0) {
+    if (strcmp(s_music_files.files[i].name, state->lb->selected_text) == 0) {
       result = s_music_files.files[i].path;
       break;
     }

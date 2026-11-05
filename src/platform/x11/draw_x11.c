@@ -602,16 +602,16 @@ static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
                                     EditboxSpec *eb,
                                     EditboxX11Metrics *metrics) {
   XftFont *xf = FH_TO_XFT(font);
-  int text_len = (int)strlen(state->editbox->filter);
+  int text_len = (int)strlen(state->eb->filter);
   int cursor_x = 0;
   int text_w = 0;
   if (xf) {
     XGlyphInfo cext;
-    XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8 *)state->editbox->filter,
-                       state->editbox->cursor, &cext);
+    XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8 *)state->eb->filter,
+                       state->eb->cursor, &cext);
     cursor_x = cext.xOff;
     XGlyphInfo textExt;
-    XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8 *)state->editbox->filter, text_len,
+    XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8 *)state->eb->filter, text_len,
                        &textExt);
     text_w = textExt.xOff;
   }
@@ -620,9 +620,9 @@ static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   Editbox_ResolveSelection(state, text_len, false, &sel_start, &sel_end,
                            &has_sel);
   memset(eb, 0, sizeof(*eb));
-  eb->text = state->editbox->filter;
+  eb->text = state->eb->filter;
   eb->text_len = text_len;
-  eb->cursor = state->editbox->cursor;
+  eb->cursor = state->eb->cursor;
   eb->sel_start = sel_start;
   eb->sel_end = sel_end;
   eb->has_selection = has_sel;
@@ -632,7 +632,7 @@ static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->w = state->width;
   eb->inset = PROMPT_EDIT_INSET;
   eb->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
-  eb->scroll = state->editbox->scroll_offset;
+  eb->scroll = state->eb->scroll_offset;
   eb->cursor_x = cursor_x;
   eb->text_w = text_w;
   eb->text_y = PROMPT_EDIT_INSET;
@@ -641,7 +641,7 @@ static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->caret_h = PromptCaretHeight();
   eb->placeholder_dy = 2;
   eb->rainbow_limit_x = -1;
-  eb->placeholder = state->editbox->placeholder;
+  eb->placeholder = state->eb->placeholder;
   eb->text_color = rgb_to_hex(COLOR_TEXT);
   eb->font = font;
   eb->measure = x11_editbox_measure;
@@ -658,7 +658,7 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
   EditboxLayout lay;
   x11_prompt_editbox_spec(state, font, &eb, &metrics);
   Editbox_Layout(&eb, &lay);
-  state->editbox->scroll_offset = eb.scroll;
+  state->eb->scroll_offset = eb.scroll;
   Editbox_Draw(&eb, &lay, EDITBOX_PART_TEXT);
 }
 
@@ -936,10 +936,10 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
 void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap) {
 
-  if (!state || !state->listbox)
+  if (!state || !state->lb)
     return;
   FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-  ListBoxInfo *lb = state->listbox;
+  ListBoxInfo *lb = state->lb;
   if (!lb->item_count) {
     Platform_DestroyFont(font);
     return;

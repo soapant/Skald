@@ -19,7 +19,6 @@ typedef struct {
 } VimMotion;
 
 static VimMode g_vim_mode = VIM_MODE_INSERT;
-static PromptState *g_active_prompt = NULL;
 static VimMotion g_motions[VIM_MAX_MOTIONS];
 static int g_motion_count = 0;
 static char g_key_buffer[VIM_BUFFER_TOKENS][32];
@@ -40,18 +39,18 @@ static void vim_refresh_prompt(void) {
 
 static void vim_insert_char_silent(char ch) {
   PromptState *ps = fl_get_active_prompt();
-  if (!ps || !ps->editbox)
+  if (!ps || !ps->eb)
     return;
-  size_t len = strlen(ps->editbox->filter);
-  if (len + 1 >= sizeof(ps->editbox->filter))
+  size_t len = strlen(ps->eb->filter);
+  if (len + 1 >= sizeof(ps->eb->filter))
     return;
-  if (ps->editbox->cursor > len)
-    ps->editbox->cursor = len;
-  memmove(ps->editbox->filter + ps->editbox->cursor + 1,
-          ps->editbox->filter + ps->editbox->cursor,
-          len - ps->editbox->cursor + 1);
-  ps->editbox->filter[ps->editbox->cursor] = ch;
-  ps->editbox->cursor++;
+  if (ps->eb->cursor > len)
+    ps->eb->cursor = len;
+  memmove(ps->eb->filter + ps->eb->cursor + 1,
+          ps->eb->filter + ps->eb->cursor,
+          len - ps->eb->cursor + 1);
+  ps->eb->filter[ps->eb->cursor] = ch;
+  ps->eb->cursor++;
 }
 
 static void *vim_pending_thread(void *arg) {
@@ -85,16 +84,16 @@ static void vim_start_pending(char ch) {
 
 static void vim_delete_last(int n) {
   PromptState *ps = fl_get_active_prompt();
-  if (!ps || !ps->editbox)
+  if (!ps || !ps->eb)
     return;
-  int len = (int)strlen(ps->editbox->filter);
+  int len = (int)strlen(ps->eb->filter);
   if (n > len)
     n = len;
   if (n <= 0)
     return;
-  ps->editbox->filter[len - n] = '\0';
-  if (ps->editbox->cursor > len - n)
-    ps->editbox->cursor = len - n;
+  ps->eb->filter[len - n] = '\0';
+  if (ps->eb->cursor > len - n)
+    ps->eb->cursor = len - n;
 }
 
 static void vim_motion(const char *seq, const char *mods, VimMode mode, VimMotionCallback cb) {
@@ -302,24 +301,24 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
 }
 
 static void vim_move(int amount, bool up) {
-    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-    if (!ps || !ps->listbox)
+    PromptState *ps = fl_get_active_prompt();
+    if (!ps || !ps->lb)
         return;
     
     if (up) {
-        if (ps->listbox->selected_index >= amount) {
-            ps->listbox->selected_index -= amount;
+        if (ps->lb->selected_index >= amount) {
+            ps->lb->selected_index -= amount;
         } else {
-            ps->listbox->selected_index = 0; 
+            ps->lb->selected_index = 0; 
         }
     } else {
-        int max_index = ps->listbox->item_count - 1;
+        int max_index = ps->lb->item_count - 1;
         if (max_index < 0) max_index = 0;
 
-        if (ps->listbox->selected_index + amount <= max_index) {
-            ps->listbox->selected_index += amount;
+        if (ps->lb->selected_index + amount <= max_index) {
+            ps->lb->selected_index += amount;
         } else {
-            ps->listbox->selected_index = max_index; 
+            ps->lb->selected_index = max_index; 
         }
     }
     vim_refresh_prompt();
@@ -352,53 +351,53 @@ static void vim_close_window(void) {
 
 
 static void vim_on_prompt_open(void) {
-  g_active_prompt = fl_get_active_prompt();
   g_vim_mode = VIM_MODE_INSERT;
   fl_get_metrics()->edit_cursor_width = 0;
   vim_reset_buffer();
   vim_cancel_pending();
 }
 static void vim_go_to_bottom(void) {
-    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-    if (!ps || !ps->listbox)
+    PromptState *ps = fl_get_active_prompt();
+    if (!ps || !ps->lb)
         return;
-    ps->listbox->selected_index = ps->listbox->item_count - 1;
+    ps->lb->selected_index = ps->lb->item_count - 1;
 }
 static void vim_go_to_top(void) {
-    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-    if (!ps || !ps->listbox)
+    PromptState *ps = fl_get_active_prompt();
+    if (!ps || !ps->lb)
         return;
-    ps->listbox->selected_index = 0;
+    ps->lb->selected_index = 0;
 }
 static void vim_ctrlenter(void) {
-    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-    if (!ps || !ps->listbox)
+    PromptState *ps = fl_get_active_prompt();
+    if (!ps || !ps->lb)
         return;
     if (ps->callbacks->ctrl_enter)  ps->callbacks->ctrl_enter(ps);
 }
 static void vim_edit_text(void) {
-    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-    if (!ps || !ps->listbox)
+    PromptState *ps = fl_get_active_prompt();
+    if (!ps || !ps->lb)
         return;
     if (ps->callbacks->edit)  ps->callbacks->edit(ps);
 }
 static void vim_move_left(void) {
-    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-    if (!ps || !ps->editbox)
+    PromptState *ps = fl_get_active_prompt();
+    if (!ps || !ps->eb)
         return;
-    ps->editbox->cursor --;
+    if (ps->eb->cursor != 0) ps->eb->cursor--;
 }
 static void vim_move_right(void) {
-    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-    if (!ps || !ps->editbox)
+    PromptState *ps = fl_get_active_prompt();
+    if (!ps || !ps->eb)
         return;
-    ps->editbox->cursor ++;
+    if (ps->eb->cursor != strlen(ps->eb->filter - 1)) ps->eb->cursor ++;
 }
 static void vim_delete_line(void) {
-    PromptState *ps = g_active_prompt ? g_active_prompt : fl_get_active_prompt();
-    if (!ps || !ps->listbox)
+    PromptState *ps = fl_get_active_prompt();
+    if (!ps || !ps->lb)
         return;
-    ps->editbox->filter[0] = '\0';
+    ps->eb->filter[0] = '\0';
+    ps->eb->cursor = 0;
 }
 
 FLINT_FEATURE_INIT {
