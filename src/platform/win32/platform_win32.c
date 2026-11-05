@@ -79,7 +79,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
                   "failed for '%s' err=%ld - check UsedTerminal",
                   terminal_exe, (long)(intptr_t)res2);
       }
-      return strdup("");
+      return NULL;
     }
     char temp_file[MAX_PATH];
     GetTempPathA(MAX_PATH, temp_file);
@@ -99,7 +99,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
                 "failed for '%s' args='%s' err=%ld - check UsedTerminal",
                 terminal_exe, args, (long)(intptr_t)res2);
     }
-    return strdup("");
+    return NULL;
   }
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -108,7 +108,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   HANDLE hRead, hWrite;
   if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
     log_error("CreatePipe failed err=%lu", GetLastError());
-    return strdup("");
+    return NULL;
   }
   SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
   STARTUPINFOA si = {0};
@@ -125,7 +125,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   if (!ok) {
     log_error("CreateProcess failed for '%s' err=%lu", cmdLine, GetLastError());
     CloseHandle(hRead);
-    return strdup("");
+    return NULL;
   }
   char *out = NULL;
   size_t cap = 8192;
@@ -135,7 +135,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
     CloseHandle(hRead);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-    return strdup("");
+    return NULL;
   }
   ULONGLONG startMs = GetTickCount64();
   ULONGLONG deadline = startMs + 30000;
@@ -247,7 +247,7 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
   sa.lpSecurityDescriptor = NULL;
   HANDLE hRead, hWrite;
   if (!CreatePipe(&hRead, &hWrite, &sa, 0))
-    return strdup("");
+    return NULL;
   SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
   STARTUPINFOA si = {0};
   si.cb = sizeof(STARTUPINFOA);
@@ -265,7 +265,7 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
   CloseHandle(hWrite);
   if (!ok) {
     CloseHandle(hRead);
-    return strdup("");
+    return NULL;
   }
   WaitForSingleObject(pi.hProcess, INFINITE);
   size_t cap = 8192;
@@ -275,7 +275,7 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
     CloseHandle(hRead);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-    return strdup("");
+    return NULL;
   }
   DWORD bytesRead = 0;
   while (ReadFile(hRead, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) &&
@@ -359,7 +359,7 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
     *out_status = (int)code;
   CloseHandle(pi.hThread);
   CloseHandle(pi.hProcess);
-  return strdup("");
+  return NULL;
 }
 
 bool Platform_IsCtrlPressed(void) {
