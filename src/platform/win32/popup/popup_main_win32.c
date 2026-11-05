@@ -558,31 +558,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         if (pos) {
           *pos = '\0';
         }
-        if (!FullTextNeedsKeyPress) {
+        {
           if (isSelected && strlen(measureBuffer) >= 70) {
             if (g_last_selected_index != pdis->itemID ||
                 WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) ==
                     NULL) {
               g_last_selected_index = pdis->itemID;
-              PostMessageA(hwnd, WM_PREVIEW_SELECTION, 0, (LPARAM)pdis->itemID);
             }
           } else {
             if (g_last_selected_index == pdis->itemID) {
               g_last_selected_index = -1;
-              PostMessageA(hwnd, WM_PREVIEW_SELECTION, 0, (LPARAM)-1);
-            }
-          }
-        } else {
-          if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
-            FadeWindowData *msgData = (FadeWindowData *)GetWindowLongPtrA(
-                WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage),
-                GWLP_USERDATA);
-            bool isIndefinite = msgData && msgData->timeout == 6969.0;
-            if (!isIndefinite) {
-              KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage),
-                        999);
-              DestroyWindow(
-                  WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
             }
           }
         }

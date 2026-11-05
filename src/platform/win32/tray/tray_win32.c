@@ -67,19 +67,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   }
   case WM_DISPLAY_MESSAGE: {
     DisplayMessageParams *p = (DisplayMessageParams *)lParam;
-    if (p != NULL) {
-      Platform_CreateDisplayMessageWindow(
-          (PlCreateDisplayMessageWindowSpec){.message = p->message,
-                                             .x = p->centerX,
-                                             .y = p->centerY,
-                                             .max_width = p->maxWidth,
-                                             .max_height = p->maxHeight,
-                                             .timeout = p->timeout,
-                                             .color = p->color,
-                                             .no_bg = p->no_bg,
-                                             .render = p->render,
-                                             .name = p->name});
-    }
+    if (p != NULL)
+      Platform_CreateDisplayMessageWindow(*p);
     return 0;
   }
   case WM_DISMISS_MESSAGE: {

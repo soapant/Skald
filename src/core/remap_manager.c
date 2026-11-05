@@ -142,7 +142,8 @@ static bool parse_mods_and_vks(const char *str, int *out_mods, int *out_vks,
   char buf[256];
   strncpy(buf, str, sizeof(buf) - 1);
   buf[sizeof(buf) - 1] = '\0';
-  char *token = strtok(buf, "+");
+  char *save = NULL;
+  char *token = strtok_r(buf, "+", &save);
   while (token) {
     while (*token == ' ' || *token == '\t')
       token++;
@@ -307,7 +308,7 @@ static bool parse_mods_and_vks(const char *str, int *out_mods, int *out_vks,
         }
       }
     }
-    token = strtok(NULL, "+");
+    token = strtok_r(NULL, "+", &save);
   }
   return true;
 }

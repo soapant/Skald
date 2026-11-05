@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-#define WM_PREVIEW_SELECTION (WM_APP + 1)
 #define WM_SYNC_TEXT_CARET (WM_APP + 3)
 
 ListBoxInfo *GetLBFromPopup(HWND hPopup);

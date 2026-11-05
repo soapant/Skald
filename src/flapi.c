@@ -1923,11 +1923,7 @@ char *fl_resolve_data_path(const char *name) {
   if (!Platform_ResolveDataPath(__builtin_return_address(0), name, full,
                                 sizeof(full)))
     return NULL;
-  char *r = (char *)malloc(strlen(full) + 1);
-  if (!r)
-    return NULL;
-  strcpy(r, full);
-  return r;
+  return strdup(full);
 }
 
 char *fl_resolve_feature_path(const char *name) {
@@ -1938,13 +1934,7 @@ char *fl_resolve_feature_path(const char *name) {
     return NULL;
   }
 
-  char *res = (char *)malloc(len + 1);
-  if (!res) {
-    return NULL;
-  }
-
-  strcpy(res, buf);
-  return res;
+  return strdup(buf);
 }
 
 char *fl_resolve_user_path() { return Platform_GetRealHome(); }
