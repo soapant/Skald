@@ -45,10 +45,6 @@
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif
-#define NOB_IMPLEMENTATION
-#define NOB_NO_ECHO
-#include "../../../nob.h"
-
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
   if (!working_dir) {
@@ -1867,7 +1863,7 @@ void Platform_InitDataFolder() {
   char dir_path[300];
   snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint",
            Platform_GetRealHome());
-  nob_mkdir_if_not_exists(dir_path);
+  Platform_MkdirIfNotExists(dir_path);
 }
 
 bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
@@ -1878,10 +1874,10 @@ bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
   char dir_path[512];
   snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint",
            Platform_GetRealHome());
-  nob_mkdir_if_not_exists(dir_path);
+  Platform_MkdirIfNotExists(dir_path);
   char feat_path[600];
   snprintf(feat_path, sizeof(feat_path), "%s/%s", dir_path, feature);
-  nob_mkdir_if_not_exists(feat_path);
+  Platform_MkdirIfNotExists(feat_path);
   snprintf(out, out_len, "%s/%s", feat_path, name);
   return true;
 }

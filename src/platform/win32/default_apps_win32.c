@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "platform/platform.h"
+#include "helpers/helpers_text.h"
 #include "config.h"
 char default_apps_win32[DEFAULT_APP_COUNT][256];
 
@@ -36,12 +37,9 @@ static const char *sm_lookup(int slot, const char *const possibilities[],
 
   if (!g_sm_scanned) {
     g_sm_scanned = true;
-    Platform_GetAllFilesFromDir(
-            .dir_path =
-                "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
-            .list_of_allowed_extensions = NULL, .list_of_files = &g_sm_files,
-            .list_of_names_to_ignore = NULL, .strip_extension = true,
-            .max_depth = 0);
+    FileWalk_AllFilesFromDir(
+        "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", NULL,
+        &g_sm_files, NULL, true, 0);
   }
   for (size_t j = 0; j < count; j++) {
     for (int i = 0; i < g_sm_files.count; i++) {

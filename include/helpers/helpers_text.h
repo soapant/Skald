@@ -1,6 +1,8 @@
 #ifndef HELPERS_TEXT_UI_H
 #define HELPERS_TEXT_UI_H
 
+#include "core/types/file.h"
+
 typedef struct {
   char **items;
   size_t count;
@@ -11,6 +13,12 @@ void StringList_Free(StringList *list);
 
 long File_ReadAll(const char *path, char *buffer, long buffer_size);
 StringList File_ReadLines(const char *path, long buffer_size);
+
+bool FileWalk_AllFilesFromDir(const char *dir_path,
+                              char **list_of_allowed_extensions,
+                              ListOfFiles *list_of_files,
+                              char **list_of_names_to_ignore,
+                              bool strip_extension, int max_depth);
 
 char *String_CutAt(const char *str, char delim);
 char *String_CutBefore(const char *str, char delim);

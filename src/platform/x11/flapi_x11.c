@@ -26,7 +26,6 @@
 #include "platform/x11/desktop_helpers_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "helpers/helpers_ui.h"
-#include "core/flapi.h"
 #include "core/prompt_geometry.h"
 #include "core/listbox_hover.h"
 #include "core/listbox_layout.h"
@@ -39,179 +38,6 @@
 #include "core/types/flapi_types.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
-
-bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
-  const char *dir_path = spec.dir_path;
-  char **list_of_allowed_extensions = spec.list_of_allowed_extensions;
-  ListOfFiles *list_of_files = spec.list_of_files;
-  char **list_of_names_to_ignore = spec.list_of_names_to_ignore;
-  bool strip_extension = spec.strip_extension;
-  int max_depth = spec.max_depth;
-  if (!dir_path || !list_of_files) {
-    return false;
-  }
-
-  DIR *dir = opendir(dir_path);
-  if (!dir) {
-    perror("opendir");
-    return false;
-  }
-
-  struct dirent *entry;
-  int entry_count = 0;
-
-  while ((entry = readdir(dir)) != NULL) {
-    entry_count++;
-
-    if (entry->d_name[0] == '.' &&
-        (entry->d_name[1] == '\0' ||
-         (entry->d_name[1] == '.' && entry->d_name[2] == '\0'))) {
-      continue;
-    }
-
-    char full_path[MAX_PATH];
-    snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
-
-    struct stat st;
-    if (stat(full_path, &st) != 0) {
-      continue;
-    }
-
-  static const char *builtin_ignored_names[] = {
-      ".git",
-      ".hg",
-      ".svn",
-      ".bzr",
-      ".fossil",
-      ".idea",
-      ".vscode",
-      ".cache",
-      ".local",
-      ".next",
-      ".nuxt",
-      ".output",
-      ".wrangler",
-      ".DS_Store",
-      "node_modules",
-      "__pycache__",
-      ".venv",
-      "venv",
-      "env",
-      ".env",
-      ".tox",
-      "target",
-      "build",
-      "dist",
-      "out",
-      "bin",
-      "obj",
-      "cmake-build-debug",
-      "cmake-build-release",
-      ".gradle",
-      ".mvn",
-      ".terraform",
-      ".stack-work",
-      ".cargo",
-      ".rustup",
-      "vendor",
-      NULL
-  };
-
-  if (S_ISDIR(st.st_mode)) {
-      bool should_ignore = false;
-      const char *dir_name = entry->d_name;
-      for (int i = 0; builtin_ignored_names[i] != NULL; i++) {
-        if (Platform_StringEqualsCaseInsensitive(dir_name,
-                                                 builtin_ignored_names[i])) {
-          should_ignore = true;
-          break;
-        }
-      }
-      if (list_of_names_to_ignore) {
-        for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
-          if (!should_ignore &&
-              Platform_StringEqualsCaseInsensitive(entry->d_name,
-                                                   list_of_names_to_ignore[i])) {
-            should_ignore = true;
-            break;
-          }
-        }
-      }
-      if (!should_ignore && (max_depth == 0 || max_depth > 1)) {
-        Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions,
-                                    list_of_files, list_of_names_to_ignore,
-                                    strip_extension,
-                                    max_depth > 0 ? max_depth - 1 : 0);
-      }
-    } else {
-      bool allowed = true;
-      if (list_of_allowed_extensions) {
-        allowed = false;
-        const char *ext = strrchr(entry->d_name, '.');
-        if (ext) {
-          ext++;
-          for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
-            const char *want = list_of_allowed_extensions[i];
-            if (want && want[0] == '.')
-              want++;
-            if (Platform_StringEqualsCaseInsensitive(ext, want)) {
-              allowed = true;
-              break;
-            }
-          }
-        }
-      }
-
-      if (allowed) {
-        if (list_of_files->count >= list_of_files->capacity) {
-          size_t new_capacity =
-              list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
-
-          FileItem *new_items =
-              realloc(list_of_files->files, new_capacity * sizeof(FileItem));
-          if (!new_items) {
-            closedir(dir);
-            return false;
-          }
-          list_of_files->files = new_items;
-          list_of_files->capacity = new_capacity;
-        }
-
-        FileItem *item = &list_of_files->files[list_of_files->count];
-
-        size_t plen = strlen(full_path);
-        if (plen >= sizeof(item->path))
-          plen = sizeof(item->path) - 1;
-        memcpy(item->path, full_path, plen);
-        item->path[plen] = '\0';
-
-        char clean_name[256];
-        size_t nlen = strlen(entry->d_name);
-        if (nlen >= sizeof(clean_name))
-          nlen = sizeof(clean_name) - 1;
-        memcpy(clean_name, entry->d_name, nlen);
-        clean_name[nlen] = '\0';
-
-        if (strip_extension) {
-          char *dot = strrchr(clean_name, '.');
-          if (dot)
-            *dot = '\0';
-        }
-
-        size_t clen = strlen(clean_name);
-        if (clen >= sizeof(item->name))
-          clen = sizeof(item->name) - 1;
-        memcpy(item->name, clean_name, clen);
-        item->name[clen] = '\0';
-
-        list_of_files->count++;
-      }
-    }
-  }
-
-  closedir(dir);
-  return true;
-}
 
 static bool platform_exe_in_path(const char *name) {
   if (!name || !name[0])
@@ -521,7 +347,7 @@ bool fl_launch_with_args_as_admin_platform(const char *path, const char *args) {
   return true;
 }
 
-static __thread FlListSpec g_fl_list_spec;
+static __thread PlListSpec g_fl_list_spec;
 static __thread ListBoxInfo *g_fl_list_lb;
 static __thread int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible,
     g_fl_list_cur, g_fl_list_h;
@@ -533,7 +359,7 @@ static __thread Colormap g_fl_list_cmap;
 static __thread FontHandle g_fl_list_font;
 static __thread bool g_fl_list_font_owned;
 
-bool fl_listbox_begin_platform(const FlListSpec *spec) {
+bool fl_listbox_begin_platform(const PlListSpec *spec) {
   if (!spec)
     return false;
   ListBoxInfo *lb = spec->lb;

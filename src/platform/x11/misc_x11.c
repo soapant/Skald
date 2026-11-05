@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <sys/stat.h>
+#include <errno.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -18,6 +19,7 @@
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
 #include "config_values.h"
+#include "core/types.h"
 #include "core/types/keys.h"
 
 static uid_t ProbeSessionUid(void) {
@@ -417,6 +419,15 @@ bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b) {
   return strcasecmp(a, b) == 0;
 }
 
+bool Platform_MkdirIfNotExists(const char *path) {
+
+  if (!path)
+    return false;
+  if (mkdir(path, 0755) == 0)
+    return true;
+  return errno == EEXIST;
+}
+
 long long Platform_GetWallClockMs(void) {
 
   struct timespec ts;
@@ -675,3 +686,50 @@ int64_t Platform_TimerNowTicks(void) {
 }
 
 int64_t Platform_TimerTickFrequency(void) { return 1000000000LL; }
+
+struct PlDirIter {
+  char dir[MAX_PATH];
+  DIR *dh;
+};
+
+PlDirIter *Platform_DirOpen(const char *dir_path) {
+  if (!dir_path)
+    return NULL;
+  DIR *dh = opendir(dir_path);
+  if (!dh)
+    return NULL;
+  PlDirIter *it = calloc(1, sizeof(*it));
+  if (!it) {
+    closedir(dh);
+    return NULL;
+  }
+  snprintf(it->dir, sizeof(it->dir), "%s", dir_path);
+  it->dh = dh;
+  return it;
+}
+
+bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
+                      bool *is_dir_out) {
+  if (!it || !name_out || name_cap == 0 || !is_dir_out)
+    return false;
+  struct dirent *ent;
+  while ((ent = readdir(it->dh)) != NULL) {
+    if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+      continue;
+    snprintf(name_out, name_cap, "%s", ent->d_name);
+    char full[MAX_PATH];
+    snprintf(full, sizeof(full), "%s/%s", it->dir, ent->d_name);
+    struct stat st;
+    *is_dir_out = (stat(full, &st) == 0 && S_ISDIR(st.st_mode));
+    return true;
+  }
+  return false;
+}
+
+void Platform_DirClose(PlDirIter *it) {
+  if (!it)
+    return;
+  if (it->dh)
+    closedir(it->dh);
+  free(it);
+}
