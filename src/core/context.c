@@ -14,9 +14,7 @@ static FlintContext g_ctx = {
             .last_index = 0,
         },
     .prompt_callbacks = {0},
-    .feature_history = NULL,
     .item_index_map = NULL,
-    .history_indices = NULL,
 };
 
 FlintContext *FlintContext_Get(void) { return &g_ctx; }
