@@ -29,6 +29,7 @@ typedef struct {
   ColorRef color;
   bool no_bg;
   void (*render)(void);
+  const char *name;
 } DisplayMessageParams;
 
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,

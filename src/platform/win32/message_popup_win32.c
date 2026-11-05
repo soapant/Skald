@@ -275,6 +275,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     params.color = color;
     params.no_bg = no_bg;
     params.render = render;
+    params.name = name;
     SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd),
                  WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
     return;

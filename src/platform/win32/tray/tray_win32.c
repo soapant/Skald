@@ -78,7 +78,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                              .color = p->color,
                                              .no_bg = p->no_bg,
                                              .render = p->render,
-                                             .name = NULL});
+                                             .name = p->name});
     }
     return 0;
   }
