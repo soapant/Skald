@@ -1274,18 +1274,18 @@ static void cc_refresh(PromptState *state) {
     n = MAX_VISIBLE_ITEMS;
   for (int i = 0; i < n; i++)
     g_names[i] = g_entries[i].label;
-  if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(state->editbox->filter)) {
+  if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(state->eb->filter)) {
     g_names[n] = g_cc_calc_label;
     n++;
   }
-  fl_populate_listbox_ex(state->listbox, state->editbox->filter, g_names, n, cc_filter_match);
-  if (state->listbox->total_matches > 0)
+  fl_populate_listbox_ex(state->lb, state->eb->filter, g_names, n, cc_filter_match);
+  if (state->lb->total_matches > 0)
     g_cc_fallback_active = false;
-  if (state->listbox->total_matches == 0) {
+  if (state->lb->total_matches == 0) {
     CcEntry *fallback = cc_add_fallback();
     if (fallback && n < MAX_VISIBLE_ITEMS) {
       g_names[n] = fallback->label;
-      fl_populate_listbox(state->listbox, "", &g_names[n], 1);
+      fl_populate_listbox(state->lb, "", &g_names[n], 1);
       g_cc_fallback_active = true;
     }
   }
@@ -1319,14 +1319,14 @@ static bool cc_icon_is_glyph(const char *icon) {
 
 static void cc_subwindow_refresh(PromptState *state) {
   const char *items[] = {"Action 1", "Action 2", "Action 3", NULL};
-  fl_populate_listbox(state->listbox, state->editbox->filter, (const char **)items, 3);
+  fl_populate_listbox(state->lb, state->eb->filter, (const char **)items, 3);
 }
 
 static int g_cc_width = 0, g_cc_height = 0;
 static void cc_subwindow_render(PromptState *state) {
   g_cc_width = state->width;
   g_cc_height = state->height;
-  FlListSpec spec = {.lb = state->listbox};
+  FlListSpec spec = {.lb = state->lb};
   if (!fl_listbox_begin(&spec))
     return;
   FlListItemCtx ctx;
@@ -1361,7 +1361,7 @@ static void cc_on_actions_render(FlRect rect) {
 static void cc_render(PromptState *state) {
   g_cc_width = state->width;
   g_cc_height = state->height;
-  FlListSpec spec = {.lb = state->listbox, .item_height = FontSize * 2};
+  FlListSpec spec = {.lb = state->lb, .item_height = FontSize * 2};
   fl_place_editbox();
   fl_place_button(.name = "Actions", .x = state->width - 200,
                   .y = state->height - 30, .w = 180,
@@ -1438,7 +1438,7 @@ static void cc_render(PromptState *state) {
 }
 
 static bool cc_enter(PromptState *state) {
-  if (g_cc_calc_label[0] && strcmp(state->editbox->filter, g_cc_calc_label) == 0) {
+  if (g_cc_calc_label[0] && strcmp(state->eb->filter, g_cc_calc_label) == 0) {
     const char *eq = strchr(g_cc_calc_label, '=');
     if (eq) {
       char value[128];
@@ -1451,55 +1451,55 @@ static bool cc_enter(PromptState *state) {
     }
     return true;
   }
-  if (fl_is_selected(state->listbox)) {
-    cc_stage(cc_find(state->listbox->selected_text), 0);
+  if (fl_is_selected(state->lb)) {
+    cc_stage(cc_find(state->lb->selected_text), 0);
   } else {
-    fl_query_browser(state->editbox->filter);
+    fl_query_browser(state->eb->filter);
   }
   return true;
 }
 
 static bool cc_ctrl_enter(PromptState *state) {
-  if (!fl_is_selected(state->listbox)) {
-    fl_query_browser(state->listbox->selected_text);
+  if (!fl_is_selected(state->lb)) {
+    fl_query_browser(state->lb->selected_text);
   }
-  cc_stage(cc_find(state->listbox->selected_text), 1);
+  cc_stage(cc_find(state->lb->selected_text), 1);
   return true;
 }
 
 static bool cc_shift_enter(PromptState *state) {
-  if (!fl_is_selected(state->listbox)) {
-    fl_query_browser(state->listbox->selected_text);
+  if (!fl_is_selected(state->lb)) {
+    fl_query_browser(state->lb->selected_text);
   }
-  cc_stage(cc_find(state->listbox->selected_text), 2);
+  cc_stage(cc_find(state->lb->selected_text), 2);
   return true;
 }
 static bool cc_ctrl_shift_enter(PromptState *state) {
-  if (!fl_is_selected(state->listbox)) {
-    fl_query_browser(state->listbox->selected_text);
+  if (!fl_is_selected(state->lb)) {
+    fl_query_browser(state->lb->selected_text);
   }
-  cc_stage(cc_find(state->listbox->selected_text), 3);
+  cc_stage(cc_find(state->lb->selected_text), 3);
   return true;
 }
 static bool cc_ctrl_alt_enter(PromptState *state) {
-  if (!fl_is_selected(state->listbox)) {
-    fl_query_browser(state->listbox->selected_text);
+  if (!fl_is_selected(state->lb)) {
+    fl_query_browser(state->lb->selected_text);
   }
-  cc_stage(cc_find(state->listbox->selected_text), 4);
+  cc_stage(cc_find(state->lb->selected_text), 4);
   return true;
 }
 static bool cc_shift_alt_enter(PromptState *state) {
-  if (!fl_is_selected(state->listbox)) {
-    fl_query_browser(state->listbox->selected_text);
+  if (!fl_is_selected(state->lb)) {
+    fl_query_browser(state->lb->selected_text);
   }
-  cc_stage(cc_find(state->listbox->selected_text), 5);
+  cc_stage(cc_find(state->lb->selected_text), 5);
   return true;
 }
 
 static void cc_on_close(void) { cc_run_pending(); }
 
 static void cc_tab(PromptState *state) {
-  const CcEntry *e = cc_find(state->listbox->selected_text);
+  const CcEntry *e = cc_find(state->lb->selected_text);
   if (e && e->on_tab)
     e->on_tab();
 }

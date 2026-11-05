@@ -39,8 +39,8 @@ struct ListBoxInfo {
 struct PromptState {
   int width, height;
   char *window_title;
-  EditBoxInfo *editbox;
-  ListBoxInfo *listbox;
+  EditBoxInfo *eb;
+  ListBoxInfo *lb;
   PromptCallbacks *callbacks;
   bool no_bg;
 };

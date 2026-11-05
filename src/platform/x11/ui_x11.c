@@ -122,7 +122,7 @@ void UI_GetCurrentTextEdit(char *buffer, size_t cap) {
   }
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    snprintf(buffer, cap, "%s", prompt->editbox->filter);
+    snprintf(buffer, cap, "%s", prompt->eb->filter);
     buffer[cap - 1] = '\0';
   } else if (top->type == POPUP_EDIT) {
     WMEditPopupData *ed = (WMEditPopupData *)top;
@@ -145,9 +145,9 @@ void UI_SetText(const char *text) {
   }
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    strncpy(prompt->editbox->filter, text, sizeof(prompt->editbox->filter) - 1);
-    prompt->editbox->filter[sizeof(prompt->editbox->filter) - 1] = '\0';
-    prompt->editbox->cursor = (int)strlen(prompt->editbox->filter);
+    strncpy(prompt->eb->filter, text, sizeof(prompt->eb->filter) - 1);
+    prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
+    prompt->eb->cursor = (int)strlen(prompt->eb->filter);
   } else if (top->type == POPUP_EDIT) {
     WMEditPopupData *ed = (WMEditPopupData *)top;
     if (ed && ed->text) {
@@ -167,7 +167,7 @@ int UI_GetCursorPosition(void) {
     return 0;
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    return (int)prompt->editbox->cursor;
+    return (int)prompt->eb->cursor;
   }
   if (top->type == POPUP_EDIT) {
     WMEditPopupData *ed = (WMEditPopupData *)top;
@@ -188,12 +188,12 @@ void UI_SetCursorPosition(int position) {
   }
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    int len = (int)strlen(prompt->editbox->filter);
+    int len = (int)strlen(prompt->eb->filter);
     if (position < 0)
       position = 0;
     if (position > len)
       position = len;
-    prompt->editbox->cursor = position;
+    prompt->eb->cursor = position;
   } else if (top->type == POPUP_EDIT) {
     WMEditPopupData *ed = (WMEditPopupData *)top;
     if (!ed || !ed->text)
@@ -222,9 +222,9 @@ void UI_SyncFilterFromEdit(FlintContext *ctx) {
   }
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    strncpy(ctx->window.filter, prompt->editbox->filter, sizeof(ctx->window.filter) - 1);
+    strncpy(ctx->window.filter, prompt->eb->filter, sizeof(ctx->window.filter) - 1);
     ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
-    ctx->window.filter_cursor = prompt->editbox->cursor;
+    ctx->window.filter_cursor = prompt->eb->cursor;
     return;
   }
   if (top->type == POPUP_EDIT) {
@@ -248,8 +248,8 @@ void UI_ApplyFilterToEdit(FlintContext *ctx) {
   }
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    strncpy(prompt->editbox->filter, ctx->window.filter, sizeof(prompt->editbox->filter) - 1);
-    prompt->editbox->filter[sizeof(prompt->editbox->filter) - 1] = '\0';
+    strncpy(prompt->eb->filter, ctx->window.filter, sizeof(prompt->eb->filter) - 1);
+    prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
     return;
   }
   if (top->type == POPUP_EDIT) {
@@ -270,7 +270,7 @@ ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
     return NULL;
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    return prompt->listbox != NULL ? prompt->listbox : NULL;
+    return prompt->lb != NULL ? prompt->lb : NULL;
   }
   return NULL;
 }
@@ -286,12 +286,12 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
   }
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    int len = (int)strlen(prompt->editbox->filter);
+    int len = (int)strlen(prompt->eb->filter);
     if (pos < 0)
       pos = 0;
     if (pos > len)
       pos = len;
-    prompt->editbox->cursor = pos;
+    prompt->eb->cursor = pos;
   } else if (top->type == POPUP_EDIT) {
     WMEditPopupData *ed = (WMEditPopupData *)top;
     if (!ed || !ed->text)
