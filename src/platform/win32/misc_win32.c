@@ -70,6 +70,13 @@ bool Platform_StringStartsWithCaseInsensitive(const char *str,
   return StrStrIA(str, prefix) == str;
 }
 
+bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b) {
+
+  if (!a || !b)
+    return false;
+  return StrCmpIA(a, b) == 0;
+}
+
 long long Platform_GetWallClockMs(void) {
 
   FILETIME ft;

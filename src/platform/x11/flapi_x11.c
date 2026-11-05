@@ -121,9 +121,8 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
       bool should_ignore = false;
       const char *dir_name = entry->d_name;
       for (int i = 0; builtin_ignored_names[i] != NULL; i++) {
-        if (Platform_StringContainsCaseInsensitive(
-                dir_name, builtin_ignored_names[i]) ||
-            strcmp(dir_name, builtin_ignored_names[i]) == 0) {
+        if (Platform_StringEqualsCaseInsensitive(dir_name,
+                                                 builtin_ignored_names[i])) {
           should_ignore = true;
           break;
         }
@@ -131,8 +130,8 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
       if (list_of_names_to_ignore) {
         for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
           if (!should_ignore &&
-              Platform_StringContainsCaseInsensitive(
-                  entry->d_name, list_of_names_to_ignore[i])) {
+              Platform_StringEqualsCaseInsensitive(entry->d_name,
+                                                   list_of_names_to_ignore[i])) {
             should_ignore = true;
             break;
           }
@@ -155,7 +154,7 @@ bool Platform_GetAllFilesFromDir_impl(PlGetAllFilesFromDirSpec spec) {
             const char *want = list_of_allowed_extensions[i];
             if (want && want[0] == '.')
               want++;
-            if (Platform_StringContainsCaseInsensitive(ext, want)) {
+            if (Platform_StringEqualsCaseInsensitive(ext, want)) {
               allowed = true;
               break;
             }
