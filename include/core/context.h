@@ -17,11 +17,11 @@ typedef struct {
   char *current_feature;
   const char *title;
   int last_index;
+  PromptCallbacks prompt_callbacks;
 } WindowContext;
 
 typedef struct {
   WindowContext window;
-  PromptCallbacks prompt_callbacks;
 } FlintContext;
 
 FlintContext *FlintContext_Get(void);
