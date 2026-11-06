@@ -8,29 +8,21 @@
 #include "core/types/prompt.h"
 
 typedef struct {
-  char *key;
-  void *value;
-} HashMap;
-
-typedef struct {
   WindowHandle hGlobalTrayWnd;
   WindowHandle hPopupWnd;
   WindowHandle hDisplayMessage;
   bool selection_complete;
+  PromptCallbacks callbacks;
   bool editbox_placed;
   char output_buffer[1024];
-  char filter[1024];
-  int filter_cursor;
   char *current_feature;
   const char *title;
   int last_index;
-  PromptCallbacks callbacks;
 } WindowContext;
 
 typedef struct {
   WindowContext window;
   PromptCallbacks prompt_callbacks;
-  HashMap *item_index_map;
 } FlintContext;
 
 FlintContext *FlintContext_Get(void);

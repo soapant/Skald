@@ -191,9 +191,6 @@ void UI_SyncFilterFromEdit(FlintContext *ctx) {
   }
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    strncpy(ctx->window.filter, prompt->eb->filter, sizeof(ctx->window.filter) - 1);
-    ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
-    ctx->window.filter_cursor = prompt->eb->cursor;
     return;
   }
 }
@@ -209,7 +206,6 @@ void UI_ApplyFilterToEdit(FlintContext *ctx) {
   }
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    strncpy(prompt->eb->filter, ctx->window.filter, sizeof(prompt->eb->filter) - 1);
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
     return;
   }

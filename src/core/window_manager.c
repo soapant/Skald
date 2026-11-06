@@ -167,24 +167,6 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
     return NULL;
   FlintContext_Get()->window.editbox_placed = false;
   CloseCallback on_close = spec->on_close;
-  if (FlintContext_Get()->item_index_map) {
-    shfree(FlintContext_Get()->item_index_map);
-    FlintContext_Get()->item_index_map = NULL;
-  }
-  if (spec->items) {
-    int count = 0;
-    for (count = 0; count < MAX_VISIBLE_ITEMS && spec->items[count]; count++) {
-    }
-    if (count > 0) {
-      FlintContext_Get()->item_index_map = NULL;
-      sh_new_strdup(FlintContext_Get()->item_index_map);
-      for (int i = 0; i < count; i++) {
-        if (spec->items[i])
-          shput(FlintContext_Get()->item_index_map, (char *)spec->items[i],
-                (void *)(size_t)(i + 1));
-      }
-    }
-  }
   char *res = Platform_PromptUser(wm, spec);
   return res;
 }
