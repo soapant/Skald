@@ -300,6 +300,26 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
                             .opaque = true,
                             .thickness = 1,
                             .filled = true});
+    if (layout->caret_w > 1 && spec->text && spec->cursor >= 0 &&
+        spec->cursor < spec->text_len) {
+      int cl = 1;
+      while (spec->cursor + cl < spec->text_len &&
+             ((unsigned char)spec->text[spec->cursor + cl] & 0xC0) == 0x80)
+        cl++;
+      if (cl > 7)
+        cl = 7;
+      char ch[8];
+      memcpy(ch, spec->text + spec->cursor, (size_t)cl);
+      ch[cl] = '\0';
+      Platform_DrawTextRaw((PlDrawTextRawSpec){.x = layout->caret_x,
+                                               .y = spec->text_y,
+                                               .text = ch,
+                                               .color = rgb_to_hex(COLOR_BG),
+                                               .font = spec->font,
+                                               .align = "",
+                                               .pad = 0,
+                                               .fontsize = 0});
+    }
   }
 }
 
