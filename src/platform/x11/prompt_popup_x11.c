@@ -120,12 +120,6 @@ void Platform_PromptPopupDestroyWindow(Popup *self) {
   }
 }
 
-static void command_confirm(const char *new_text, void *user_data) {
-
-  PromptState *state = (PromptState *)user_data;
-  ListBox_CommandExecute(state->lb, new_text);
-}
-
 bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
   PromptState *state = self ? (PromptState *)self->user_data : NULL;
   if (!state)
@@ -136,13 +130,6 @@ bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
   int wParam = key->vk;
   bool shift_pressed = key->shift;
 
-  if (wParam == COMMAND_MODE_KEY && shift_pressed) {
-    WindowManager *wm = WindowManager_Get();
-    Popup *popup = EditPopup_Create(wm, "Command Mode", 960, 540, 1000, 100,
-                                    "LEFT", command_confirm, state);
-    WindowManager_PushPopup(wm, popup);
-    return true;
-  }
 
   if (true && key->text_len > 0) {
     bool swallow = HotkeyText_ShouldSwallow(key);
