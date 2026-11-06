@@ -882,9 +882,17 @@ bool Platform_MoveActiveWindowLeft(void) { return Wm_MoveActiveWindowLeft(); }
 
 bool Platform_MoveActiveWindowRight(void) { return Wm_MoveActiveWindowRight(); }
 
+bool Platform_MoveActiveWindowUp(void) { return Wm_MoveActiveWindowUp(); }
+
+bool Platform_MoveActiveWindowDown(void) { return Wm_MoveActiveWindowDown(); }
+
 bool Platform_FocusWindowLeft(void) { return Wm_FocusWindowLeft(); }
 
 bool Platform_FocusWindowRight(void) { return Wm_FocusWindowRight(); }
+
+bool Platform_FocusWindowUp(void) { return Wm_FocusWindowUp(); }
+
+bool Platform_FocusWindowDown(void) { return Wm_FocusWindowDown(); }
 
 bool Platform_MinimizeActiveWindow(void) { return Wm_MinimizeActiveWindow(); }
 
