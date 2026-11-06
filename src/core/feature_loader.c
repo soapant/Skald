@@ -20,7 +20,6 @@
 #include "core/cap_registry.h"
 #include "core/snippet_manager.h"
 
-#define MAX_FEATURES 130
 #define MAX_RETIRED 64
 #define MAX_PINS 16
 
@@ -61,8 +60,24 @@ static bool copy_file(const char *src, const char *dst) {
   return ok;
 }
 
-static LoadedFeature g_features[MAX_FEATURES];
+static LoadedFeature *g_features = NULL;
 static int g_feature_count = 0;
+static int g_feature_cap = 0;
+
+static bool ensure_feature_capacity(int needed) {
+  if (needed <= g_feature_cap)
+    return true;
+  int cap = g_feature_cap > 0 ? g_feature_cap : 16;
+  while (cap < needed)
+    cap *= 2;
+  LoadedFeature *grown =
+      (LoadedFeature *)realloc(g_features, (size_t)cap * sizeof(*g_features));
+  if (!grown)
+    return false;
+  g_features = grown;
+  g_feature_cap = cap;
+  return true;
+}
 
 typedef struct {
   LibHandle handle;
@@ -458,7 +473,7 @@ static void manifest_parse(const char *name, FeatureManifest *m) {
 }
 
 static bool load_single(const char *dir, const char *filename) {
-  if (g_feature_count >= MAX_FEATURES)
+  if (!ensure_feature_capacity(g_feature_count + 1))
     return false;
   char full[1024];
   snprintf(full, sizeof(full), "%s/%s", dir, filename);
@@ -510,7 +525,8 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
     return false;
   }
 
-  char names[MAX_FEATURES][64];
+  char (*names)[64] = NULL;
+  int names_cap = 0;
   int n_names = 0;
   struct dirent *e;
   while ((e = readdir(d)) != NULL) {
@@ -518,8 +534,14 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
       continue;
     if (!ends_with(e->d_name, ext))
       continue;
-    if (n_names >= MAX_FEATURES)
-      break;
+    if (n_names >= names_cap) {
+      int cap = names_cap > 0 ? names_cap * 2 : 32;
+      char (*grown)[64] = (char (*)[64])realloc(names, (size_t)cap * 64);
+      if (!grown)
+        break;
+      names = grown;
+      names_cap = cap;
+    }
 
     char nm[64];
     snprintf(nm, sizeof(nm), "%s", e->d_name);
@@ -600,6 +622,7 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
 
   free(mans);
   free(loaded);
+  free(names);
   UNLOCK();
   log_info("FeatureLoader_LoadAllFromDir completed");
   return true;
@@ -645,6 +668,9 @@ void FeatureLoader_Shutdown(void) {
   }
   g_retired_count = 0;
   g_feature_count = 0;
+  free(g_features);
+  g_features = NULL;
+  g_feature_cap = 0;
   UNLOCK();
   log_info("FeatureLoader_Shutdown completed");
 }
@@ -722,7 +748,7 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       return;
     }
   }
-  char file[MaxFeatures];
+  char file[512];
   snprintf(file, sizeof(file), "%s%s", name, Platform_LibExtension());
   bool ok = load_single("build/features", file);
   (void)ok;

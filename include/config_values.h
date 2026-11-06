@@ -18,7 +18,6 @@ extern int FontSize;
 extern const char *UsedFont;
 extern int IconSize;
 extern int WidgetGap;
-extern int MaxFeatures;
 extern bool CloseOnLossOfFocus;
 extern const char *UsedTerminal;
 extern const char *UsedShell;
