@@ -1038,6 +1038,11 @@ bool fl_toggle_minimized_active(void) {
   return r;
 }
 
+static bool fl_popup_enter(PromptState *state) {
+  (void)state;
+  return true;
+}
+
 char *fl_popup_impl(const PopupSpec *spec) {
   if (!spec)
     return NULL;
@@ -1046,12 +1051,12 @@ char *fl_popup_impl(const PopupSpec *spec) {
     return NULL;
   PromptSpec pspec = {0};
   pspec.initial_text = spec->initial_text;
+  pspec.enter = fl_popup_enter;
   pspec.x = spec->x;
   pspec.y = spec->y;
   pspec.w = spec->w ? spec->w : 600;
   pspec.h = spec->h ? spec->h : 70;
   char* r = WindowManager_ShowPrompt(wm, &pspec);
-  printf("%s \n",r);
   return r;
 }
 
