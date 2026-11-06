@@ -15,10 +15,6 @@
 #include <shlwapi.h>
 #include <string.h>
 
-HFONT CreateCustomNerdFont(int height, const char *face_name) {
-  return FH_TO_HFONT(Platform_CreateFont(height, face_name));
-}
-
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
   if (!hwnd || !IsWindow(hwnd))
     return;

@@ -276,10 +276,3 @@ void ListBox_NavigateDown(ListBoxInfo *lb) {
   UI_NavigateTo(lb, sel);
 }
 
-void ListBox_CommandExecute(ListBoxInfo *lb, const char *string) {
-  if (!lb || !string)
-    return;
-  int num = atoi(string);
-  UI_NavigateTo(lb, num - 1);
-  ListBox_ScrollToSelection(lb);
-}
