@@ -7,10 +7,7 @@
 #define EDIT_TEXT_KEY 'E'
 #define HELP_SCREEN_KEY 'H'
 #define COPY_SELECTION_KEY 'Y'
-#define COMMAND_MODE_KEY VK_OEM_1
 
-#define MAX_FILE_LINES 10000
-#define MAX_FILE_LINE_LENGTH 1024
 
 void Config_ResolveDefaultApps(void);
 bool Config_IsAutoResolvedApp(const char *name);

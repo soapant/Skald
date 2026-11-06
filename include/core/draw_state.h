@@ -8,7 +8,6 @@ typedef struct {
   int off_y;
   unsigned long bg_override;
   bool transparent;
-
   bool measuring;
   int meas_x0;
   int meas_y0;

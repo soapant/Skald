@@ -12,7 +12,7 @@ StringList String_Split(const char *string, const char *delimiter);
 void StringList_Free(StringList *list);
 
 long File_ReadAll(const char *path, char *buffer, long buffer_size);
-StringList File_ReadLines(const char *path, long buffer_size);
+StringList File_ReadLines(const char *path);
 
 bool FileWalk_AllFilesFromDir(const char *dir_path,
                               char **list_of_allowed_extensions,

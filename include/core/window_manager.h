@@ -14,7 +14,6 @@ typedef enum {
 
 typedef void (*PlEventCallback)(void);
 
-
 typedef struct {
   void (*on_show)(Popup *self);
   void (*on_hide)(Popup *self);
