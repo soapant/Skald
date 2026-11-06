@@ -50,7 +50,7 @@ void Platform_SetTransparentWindow(bool on) { g_transparent_window = on; }
 bool Platform_GetTransparentWindow(void) { return g_transparent_window; }
 
 void Platform_FlushDraw(void) {}
-void Platform_SetPreRenderState(PromptState *state) {}
+
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   if (out_x)
     *out_x = 0;

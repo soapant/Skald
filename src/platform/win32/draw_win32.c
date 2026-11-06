@@ -469,7 +469,6 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
 
 void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long col_text = COLOR_TEXT;
-  unsigned long col_alt = COLOR_ALTERNATE;
   float t = (GradientItems > 1)
                 ? (float)(spec.idx % GradientItems) / (float)(GradientItems - 1)
                 : 0;

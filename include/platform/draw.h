@@ -14,7 +14,6 @@ unsigned long Platform_GetDrawBgColor(void);
 void Platform_SetTransparentWindow(bool on);
 bool Platform_GetTransparentWindow(void);
 void Platform_FlushDraw(void);
-void Platform_SetPreRenderState(PromptState *state);
 void Platform_GetLastMeasureOrigin(int *out_x, int *out_y);
 void Platform_SetDrawOffset(int dx, int dy);
 void Platform_BeginMeasure(void);
