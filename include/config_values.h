@@ -33,7 +33,6 @@ extern bool EnableAutoPairing;
 extern bool EnableBorders;
 extern bool RainbowText;
 extern bool WindowTitleText;
-extern bool AlternatingText;
 extern int GradientItems;
 extern float GradientBrightness;
 extern const char *Theme;
