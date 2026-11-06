@@ -278,16 +278,6 @@ int UI_InsertText(const char *utf8, int len) {
   return len;
 }
 
-static int win32_prev_char_len(const char *text, size_t cur) {
-
-  if (cur == 0)
-    return 0;
-  size_t i = cur - 1;
-  while (i > 0 && ((unsigned char)text[i] & 0xC0) == 0x80)
-    i--;
-  return (int)(cur - i);
-}
-
 static int win32_next_char_len(const char *text, size_t len, size_t cur) {
 
   if (cur >= len)
@@ -296,24 +286,6 @@ static int win32_next_char_len(const char *text, size_t len, size_t cur) {
   while (i < len && ((unsigned char)text[i] & 0xC0) == 0x80)
     i++;
   return (int)(i - cur);
-}
-
-void UI_Backspace(void) {
-  s_pending_high_surrogate = 0;
-  Win32TextTarget t;
-  if (!win32_resolve_text_target(&t) || !t.text) {
-    return;
-  }
-  size_t have = strlen(t.text);
-  size_t cur = (size_t)win32_target_cursor(&t);
-  if (cur > have)
-    cur = have;
-  int n = win32_prev_char_len(t.text, cur);
-  if (n <= 0) {
-    return;
-  }
-  memmove(t.text + cur - n, t.text + cur, have - cur + 1);
-  win32_target_set_cursor(&t, (int)(cur - n));
 }
 
 void UI_DeleteForward(void) {

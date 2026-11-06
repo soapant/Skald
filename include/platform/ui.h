@@ -31,7 +31,6 @@ void UI_SetText(const char *text);
 void UI_SetCursorPosition(int position);
 int UI_GetCursorPosition(void);
 int UI_InsertText(const char *utf8, int len);
-void UI_Backspace(void);
 void UI_DeleteForward(void);
 void UI_Redraw(ListBoxInfo *lb);
 void UI_RedrawNow();

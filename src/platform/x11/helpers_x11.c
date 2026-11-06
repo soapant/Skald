@@ -1773,36 +1773,6 @@ void Platform_PrewarmBackgroundPixmap(void) {
   }
 }
 
-Window x11_create_edit_popup_window(Display *dpy, int x, int y, int w, int h) {
-  unsigned long bg = rgb_to_hex(COLOR_BG);
-  if (niri_is_active()) {
-    log_error("niri override_redirect edit w=%d h=%d", w, h);
-    return x11_create_window_ex_or(
-        dpy, x, y, w, h, bg, "colored", "colored",
-        KeyPressMask | ExposureMask | FocusChangeMask, true);
-  }
-  Window win =
-      x11_create_window_ex(dpy, x, y, w, h, bg, "colored", "colored",
-                           KeyPressMask | ExposureMask | FocusChangeMask);
-  Window focus_win = None;
-  int revert_to = 0;
-  XGetInputFocus(dpy, &focus_win, &revert_to);
-  if (focus_win != None && focus_win != PointerRoot && focus_win != win)
-    XSetTransientForHint(dpy, win, focus_win);
-  char unique_title[64];
-  snprintf(unique_title, sizeof(unique_title), "flint-%lu-%d",
-           (unsigned long)win, (int)getpid());
-  XStoreName(dpy, win, unique_title);
-  XSizeHints *sh = XAllocSizeHints();
-  sh->flags = PMinSize | PMaxSize;
-  sh->min_width = w;
-  sh->min_height = h;
-  sh->max_width = w;
-  sh->max_height = h;
-  XSetWMNormalHints(dpy, win, sh);
-  XFree(sh);
-  return win;
-}
 void x11_apply_click_through(Display *dpy, Window win) {
   if (!dpy || win == None)
     return;
