@@ -176,8 +176,13 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
         stem[i] = (c >= 'A' && c <= 'Z') ? (char)(c + 32) : c;
       }
       stem[stemlen] = '\0';
-      if (Platform_FeatureDataDirExists(stem)) {
-        return Platform_GetFeaturePath(stem, stem, out, out_len);
+      char stemdir[64];
+      snprintf(stemdir, sizeof(stemdir), "%s", stem);
+      char *dot = strrchr(stemdir, '.');
+      if (dot)
+        *dot = '\0';
+      if (stemdir[0] && Platform_FeatureDataDirExists(stemdir)) {
+        return Platform_GetFeaturePath(stemdir, stem, out, out_len);
       }
     }
   } else {
