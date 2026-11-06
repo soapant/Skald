@@ -101,6 +101,7 @@ void WindowManager_PopPopup(WindowManager *wm) {
   }
   if (popup->vtable && popup->vtable->destroy) {
     popup->vtable->destroy(popup);
+    popup->manager = NULL;
   } else {
     popup->visible = false;
     popup->manager = NULL;
