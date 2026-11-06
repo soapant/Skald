@@ -15,7 +15,6 @@ void FeatureLoader_Reload(const char *name);
 void FeatureLoader_ReloadFrom(const char *name, const char *src_path);
 void FeatureLoader_ReloadAll(void);
 bool FeatureLoader_LoadAllFromDir(const char *dir);
-void FeatureLoader_Unload(const char *name);
 
 void FeatureLoader_Lock(void);
 bool FeatureLoader_TryLock(void);
