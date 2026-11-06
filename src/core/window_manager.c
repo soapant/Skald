@@ -99,12 +99,10 @@ void WindowManager_PopPopup(WindowManager *wm) {
   if (popup->vtable && popup->vtable->on_hide) {
     popup->vtable->on_hide(popup);
   }
+  popup->visible = false;
+  popup->manager = NULL;
   if (popup->vtable && popup->vtable->destroy) {
     popup->vtable->destroy(popup);
-    popup->manager = NULL;
-  } else {
-    popup->visible = false;
-    popup->manager = NULL;
   }
   if (wm->popup_count == 0) {
     Platform_WM_OnPopEmpty(wm);

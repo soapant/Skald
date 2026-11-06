@@ -182,9 +182,6 @@ static bool win32_resolve_text_target(Win32TextTarget *out) {
   out->cursor_z = NULL;
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-  if (top) {
-    return true;
-  }
   if (top && top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
     out->text = prompt->eb->filter;
