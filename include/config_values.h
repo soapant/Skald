@@ -13,7 +13,6 @@ extern int HotkeyRepeatDelayMs;
 extern bool DebugMode;
 extern bool RoundedCorners;
 extern int CornerRadius;
-extern int PageUpDownLen;
 extern float WindowOpacity;
 extern int FontSize;
 extern const char *UsedFont;

@@ -412,7 +412,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, "    HotkeyRepeatDelayMs = %d;\n",
           HotkeyRepeatDelayMs);
   cfg_put_float(buf, cap, &off, "WindowOpacity", WindowOpacity);
-  cfg_put(buf, cap, &off, "    PageUpDownLen = %d;\n", PageUpDownLen);
   cfg_put(buf, cap, &off, "    UsedFont = ");
   cfg_put_escaped(buf, cap, &off, UsedFont);
   cfg_put(buf, cap, &off, ";\n");
