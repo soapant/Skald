@@ -12,12 +12,6 @@ void Platform_DestroyFont(FontHandle font);
 FontHandle Platform_CreateFontOnDisplay(Display *dpy, int size,
                                         const char *face_name);
 void Platform_DismissIndefiniteMessage(void);
-bool Platform_SendX11Command(const char *window_title, const char *atom_name,
-                             long command);
-bool Platform_SetX11Property(const char *window_title, const char *atom_name,
-                             long value);
-bool Platform_SetX11StringProperty(const char *window_title,
-                                   const char *atom_name, const char *value);
 const char *Platform_GetSessionDisplay(void);
 const char *Platform_GetSessionXAuthority(void);
 const char *Platform_GetRuntimeDir(void);
