@@ -17,7 +17,6 @@ void ConfigApply(void) {
     FontSize = 21;
     IconSize = 32;
     WidgetGap = 10;
-    MaxFeatures = 1000;
     UsedTerminal = "";
     UsedShell = "nu";
     UsedBrowser = "";

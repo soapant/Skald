@@ -419,7 +419,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
           Platform_GetUnscaledFontSize());
   cfg_put(buf, cap, &off, "    IconSize = %d;\n", IconSize);
   cfg_put(buf, cap, &off, "    WidgetGap = %d;\n", WidgetGap);
-  cfg_put(buf, cap, &off, "    MaxFeatures = %d;\n", MaxFeatures);
   cfg_put_str_var(buf, cap, &off, "UsedTerminal", UsedTerminal);
   cfg_put_str_var(buf, cap, &off, "UsedShell", UsedShell);
   cfg_put_str_var(buf, cap, &off, "UsedBrowser", UsedBrowser);

@@ -18,7 +18,6 @@ const char *UsedFont = "0xProto Nerd Font";
 int FontSize = 20;
 int IconSize = 32;
 int WidgetGap = 10;
-int MaxFeatures = 1000;
 const char *UsedTerminal = "";
 const char *UsedShell = "nu";
 const char *UsedBrowser = "";
