@@ -6,8 +6,6 @@
 #include "core/types.h"
 
 unsigned long rgb_to_hex(unsigned long win_color);
-void eval_window_title_color(PromptState *state,
-                             unsigned long *window_title_color);
 unsigned short OpacityAlpha16(void);
 
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);

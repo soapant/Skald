@@ -29,8 +29,6 @@ void ConfigApply(void) {
   MessagesEnabled = true;
   RainbowText = false;
   WindowTitleText = false;
-  GradientItems = 30;
-  GradientBrightness = 1.0f;
   CloseOnLossOfFocus = false;
   Theme = "rose-pine";
   BackgroundImage = "";

@@ -197,11 +197,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     }
   }
   static HBRUSH s_bg_brush = NULL;
-  static HBRUSH s_bg_gradient_brushes[128] = {0};
-  static bool s_bg_gradient_ready = false;
   static HBRUSH s_sel_brush = NULL;
-  (void)s_bg_gradient_brushes;
-  (void)s_bg_gradient_ready;
 
   switch (msg) {
   case WM_LBUTTONDOWN: {
@@ -359,7 +355,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_CTLCOLOREDIT: {
     HDC hdc = (HDC)wParam;
-    COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, GradientBrightness)
+    COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, 1.0f)
                               : COLOR_TEXT;
     if (prompt_win_no_bg()) {
       SetTextColor(hdc, tc);

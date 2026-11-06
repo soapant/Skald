@@ -35,8 +35,6 @@ bool EnableAutoPairing = false;
 bool EnableBorders = true;
 bool RainbowText = false;
 bool WindowTitleText = false;
-int GradientItems = 30;
-float GradientBrightness = 1.0f;
 bool CloseOnLossOfFocus = false;
 
 ColorRef COLOR_BG = RGB(40, 40, 40);
