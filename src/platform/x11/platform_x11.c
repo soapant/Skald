@@ -2196,3 +2196,5 @@ void Platform_InvalidatePrompt(void) {
     XFlush(dpy);
   }
 }
+
+bool Platform_InjectKey(int vk, int down) { return Wm_InjectKey(vk, down); }

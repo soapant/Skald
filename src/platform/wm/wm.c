@@ -346,6 +346,20 @@ bool Wm_FocusWindowDown(void) {
   return false;
 }
 
+bool Wm_InjectKey(int vk, int down) {
+  if (Env_IsWayland()) {
+    if (inject_key_kwin(vk, down))
+      return true;
+    if (inject_key_niri(vk, down))
+      return true;
+    if (inject_key_hyprland(vk, down))
+      return true;
+    if (inject_key_sway(vk, down))
+      return true;
+  }
+  return false;
+}
+
 bool Wm_MinimizeActiveWindow(void) {
   if (Env_IsWayland()) {
     if (minimize_active_window_kwin())
