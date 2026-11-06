@@ -213,13 +213,13 @@ Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec) {
     if (mw > 0) {
       if (layout_w > mw - 40)
         layout_w = mw - 40;
-      if (layout_w < 100)
+      if (layout_w < 1)
         layout_w = mw > 140 ? mw - 40 : mw;
     }
     if (mh > 0) {
       if (layout_h > mh - 40)
         layout_h = mh - 40;
-      if (layout_h < 100)
+      if (layout_h < 1)
         layout_h = mh > 140 ? mh - 40 : mh;
     }
     if (layout_w <= 0)
