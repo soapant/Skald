@@ -98,10 +98,6 @@ bool ListBox_ClientMousePos(int *out_x, int *out_y) {
       PromptState *s = (PromptState *)top->user_data;
       pw = s->width;
       ph = s->height;
-    } else if (top->type == POPUP_EDIT) {
-      WMEditPopupData *e = (WMEditPopupData *)top;
-      pw = e->w;
-      ph = e->h;
     }
   }
   bool inside =

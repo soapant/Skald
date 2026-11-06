@@ -14,7 +14,6 @@ typedef enum {
 
 typedef void (*PlEventCallback)(void);
 
-typedef void (*EditPopupConfirmCallback)(const char *text, void *user_data);
 
 typedef struct {
   void (*on_show)(Popup *self);
@@ -26,7 +25,6 @@ typedef struct {
 } PopupVTable;
 typedef enum {
   POPUP_PROMPT,
-  POPUP_EDIT,
   POPUP_MESSAGE,
   POPUP_SEARCH
 } PopupType;
@@ -54,20 +52,6 @@ struct WindowManager {
 #endif
 };
 
-typedef struct {
-  Popup base;
-  char *text;
-  int text_capacity;
-  int cursor;
-  char *title;
-  char *align;
-  char *placeholder;
-  EditPopupConfirmCallback on_confirm;
-  void *user_data;
-  int x, y, w, h;
-  bool confirmed;
-} WMEditPopupData;
-
 WindowManager *WindowManager_Create(void);
 void WindowManager_Destroy(WindowManager *wm);
 int WindowManager_Run(WindowManager *wm);
@@ -80,10 +64,6 @@ bool WindowManager_TopPopupWantsTick(WindowManager *wm);
 
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
-Popup *EditPopup_Create(WindowManager *wm, const char *initial_text, int x,
-                        int y, int w, int h, const char *align,
-                        EditPopupConfirmCallback on_confirm, void *user_data);
-void EditPopup_SetPlaceholder(Popup *popup, const char *placeholder);
 Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec);
 CloseCallback PromptPopup_TakeOnClose(Popup *p);
 void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);

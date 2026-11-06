@@ -25,7 +25,6 @@ void UI_NavigateTo(ListBoxInfo *lb, int index);
 void UI_NavigateUp(ListBoxInfo *lb);
 void UI_NavigateDown(ListBoxInfo *lb);
 
-void UI_Edit_SetSel(uint32_t start, uint32_t end);
 void UI_Edit_GetSel(uint32_t *start, uint32_t *end);
 void UI_GetCurrentTextEdit(char *buffer, size_t cap);
 void UI_SetText(const char *text);

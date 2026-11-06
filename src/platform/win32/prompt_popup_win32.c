@@ -43,7 +43,6 @@ static bool is_popup_class(HWND hwnd) {
   {
     return strcmp(cls, "QuickSwitcherModalClass") == 0 ||
            strcmp(cls, "DisplayMessageModalClass") == 0 ||
-           strcmp(cls, "EditPopupClass") == 0 ||
            strcmp(cls, "SearchPopupClass") == 0;
   }
 }

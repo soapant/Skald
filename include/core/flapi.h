@@ -345,11 +345,9 @@ typedef struct {
   int y;
   int w;
   int h;
-  const char *align;
   ListBoxInfo *lb;
   int *out_index;
 } FlEditPopupSpec;
-
 
 #define fl_edit_text_popup(...)                                                \
   fl_edit_text_popup_impl(&(FlEditPopupSpec){__VA_ARGS__})
