@@ -1,6 +1,7 @@
 #include "core/edit_state.h"
 #include "core/editbox.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "core/modal.h"
@@ -37,6 +38,13 @@ void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
   out->text_w = in->text_w;
   out->text_y = in->y;
   out->caret_y = Editbox_CaretY(in->y, in->ascent, in->descent);
+  static int _diag_edit_build_cnt = 0;
+  if (++_diag_edit_build_cnt <= 100)
+  fprintf(stderr,
+          "[EDITBOX_BUILD] y=%d h=%d text_y=%d caret_y=%d caret_h=%d "
+          "ascent=%d descent=%d line_h=%d FontSize=%d\n",
+          in->y, in->h, out->text_y, out->caret_y, out->caret_h, in->ascent,
+          in->descent, in->ascent + in->descent, FontSize);
   out->caret_h = PromptCaretHeight();
   out->placeholder = in->state ? in->state->eb->placeholder : NULL;
   out->placeholder_dy = 2;
@@ -234,6 +242,11 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
 
 void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
                   int parts) {
+
+  static int _diag_edit_draw_cnt = 0;
+  if (++_diag_edit_draw_cnt <= 100)
+  fprintf(stderr, "[EDITBOX_DRAW] parts=%d text_y=%d caret_y=%d caret_h=%d draw_x=%d caret_x=%d FontSize=%d\n",
+          parts, spec->text_y, spec->caret_y, spec->caret_h, layout->draw_x, layout->caret_x, FontSize);
 
   if (!spec || !layout) {
     return;

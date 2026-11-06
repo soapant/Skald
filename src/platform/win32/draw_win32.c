@@ -335,6 +335,15 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   GetTextMetricsW(g_draw_hdc, &tm);
 
   int y_draw = y + dy + (tm.tmHeight - tm.tmAscent) / 2;
+  static int _diag_raw_cnt = 0;
+  if (++_diag_raw_cnt <= 300)
+    fprintf(stderr,
+            "[WIDGET_TEXT_WIN32] text='%s' y=%d y_draw=%d dy=%d x=%d "
+          "align='%s' fontsize=%d tmHeight=%d tmAscent=%d tmDescent=%d "
+          "tmIntLead=%d tmExtLead=%d FontSize=%d\n",
+          spec.text, y, y_draw, dy, x, a, spec.fontsize, (int)tm.tmHeight,
+          (int)tm.tmAscent, (int)tm.tmDescent, (int)tm.tmInternalLeading,
+          (int)tm.tmExternalLeading, FontSize);
   SetBkMode(g_draw_hdc, TRANSPARENT);
   SetTextColor(g_draw_hdc, color);
   bool centered = Platform_StringContainsCaseInsensitive(a, "CENTER");
@@ -410,6 +419,14 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
                                .fontsize = spec.fontsize});
   int tx = spec.x + (spec.w - tw) / 2;
   int ty = spec.y + (spec.h - lineHeight) / 2;
+  static int _diag_centered_win_cnt = 0;
+  if (++_diag_centered_win_cnt <= 100)
+  fprintf(stderr,
+          "[CENTERED_WIN32] text='%s' spec.y=%d spec.h=%d spec.x=%d "
+          "spec.w=%d tx=%d ty=%d lineHeight=%d ascent=%d descent=%d "
+          "tmHeight=%d fontsize=%d FontSize=%d\n",
+          spec.text, spec.y, spec.h, spec.x, spec.w, tx, ty, lineHeight, ascent,
+          descent, (int)tm.tmHeight, spec.fontsize, FontSize);
   Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
                                            .y = ty,
                                            .text = spec.text,
@@ -619,6 +636,10 @@ int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
   Platform_DestroyFont(font);
   free(wide);
   int ink = (int)(gm.gmBlackBoxY);
+  static int _diag_ink_win_cnt = 0;
+  if (++_diag_ink_win_cnt <= 100)
+  fprintf(stderr, "[INK_WIN32] text='%s' fontsize=%d ink=%d ret=%d\n", text,
+          fontsize, ink, ink + PROMPT_GLYPH_INK_PAD);
   if (ink <= 0)
     ink = fontsize;
   return ink + PROMPT_GLYPH_INK_PAD;
@@ -1163,6 +1184,14 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->text_w = text_w;
   eb->text_y = PROMPT_EDIT_INSET;
   eb->caret_y = Editbox_CaretY(PROMPT_EDIT_INSET, ascent, descent);
+  static int _diag_edit_win_cnt = 0;
+  if (++_diag_edit_win_cnt <= 100)
+  fprintf(stderr,
+          "[EDITBOX_SPEC_WIN32] text_y=%d caret_y=%d caret_h=%d ascent=%d "
+          "descent=%d tmHeight=%d tmExtLead=%d tmIntLead=%d FontSize=%d\n",
+          eb->text_y, eb->caret_y, PromptCaretHeight(), ascent, descent,
+          (int)tm.tmHeight, (int)tm.tmExternalLeading,
+          (int)tm.tmInternalLeading, FontSize);
   eb->caret_h = PromptCaretHeight();
   eb->placeholder_dy = 2;
   eb->rainbow_limit_x = -1;
