@@ -54,10 +54,5 @@ int main() {
 
   Platform_CleanupPlatformResources();
 
-  FlintContext *_ctx = FlintContext_Get();
-  if (_ctx->item_index_map) {
-    shfree(_ctx->item_index_map);
-    _ctx->item_index_map = NULL;
-  }
   return 0;
 }

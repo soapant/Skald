@@ -312,19 +312,6 @@ void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
 
   if (!filter)
     filter = "";
-  if (items && item_count > 0) {
-    if (FlintContext_Get()->item_index_map) {
-      shfree(FlintContext_Get()->item_index_map);
-      FlintContext_Get()->item_index_map = NULL;
-    }
-    FlintContext_Get()->item_index_map = NULL;
-    sh_new_strdup(FlintContext_Get()->item_index_map);
-    for (int i = 0; i < item_count; i++)
-      if (items[i])
-        shput(FlintContext_Get()->item_index_map, (char *)items[i],
-              (void *)(size_t)(i + 1));
-  }
-
   int current_sel;
   char current_text[256];
   Populate_CaptureSelection(lb, current_text, sizeof(current_text),
