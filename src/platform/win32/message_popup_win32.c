@@ -254,8 +254,8 @@ bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
     return false;
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  DWORD exStyle =
-      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
+  DWORD exStyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED |
+                  WS_EX_NOACTIVATE | WS_EX_TRANSPARENT;
   HWND hPopupWnd =
       CreateWindowExA(exStyle, "DisplayMessageModalClass", NULL, WS_POPUP, x, y,
                       w, h, NULL, NULL, hInstance, s_msg_show_data);
