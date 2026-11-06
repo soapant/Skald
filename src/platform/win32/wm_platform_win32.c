@@ -124,7 +124,16 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   long long last_tick = 0;
   int last_mx = 0, last_my = 0;
   int last_btn = -1;
-  while (wm->running && popup->manager) {
+  while (wm->running) {
+    bool _still_open = false;
+    for (int _i = 0; _i < wm->popup_count; _i++) {
+      if (wm->popups[_i] == popup) {
+        _still_open = true;
+        break;
+      }
+    }
+    if (!_still_open)
+      break;
     Platform_WM_ProcessEvents(wm);
     bool mouse_changed = false;
     int mx = 0, my = 0;
@@ -148,13 +157,16 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
       last_tick = now;
     }
   }
-  if (popup->manager == NULL) {
-    if (popup->vtable && popup->vtable->destroy)
-      popup->vtable->destroy(popup);
-  } else {
-    WindowManager_PopPopup(wm);
-    if (popup->vtable && popup->vtable->destroy)
-      popup->vtable->destroy(popup);
+  {
+    bool _still_open = false;
+    for (int _i = 0; _i < wm->popup_count; _i++) {
+      if (wm->popups[_i] == popup) {
+        _still_open = true;
+        break;
+      }
+    }
+    if (_still_open)
+      WindowManager_PopPopup(wm);
   }
   FlintContext *_c = FlintContext_Get();
   return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
