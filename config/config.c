@@ -7,7 +7,7 @@ void ConfigApply(void) {
     RememberLastIndex = true;
     MessageAfterEachHotkey = false;
     TimeOutForMessages = 1;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
@@ -15,7 +15,7 @@ void ConfigApply(void) {
     WindowOpacity = 235.0f;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 23;
+    FontSize = 24;
     IconSize = 32;
     WidgetGap = 10;
     MaxFeatures = 1000;

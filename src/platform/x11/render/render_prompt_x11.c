@@ -129,8 +129,6 @@ void DrawPromptUserListBox(Display *dpy, Window *win, PromptState *state) {
 }
 
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
-  log_info("x11_render_prompt_user started dpy=%p win=%p state=%p", dpy, win,
-           state);
   if (!state || !win || *win == None || !dpy) {
     return false;
   }

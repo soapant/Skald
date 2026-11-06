@@ -91,7 +91,7 @@ void Platform_PromptPopupHideWindow(Popup *self) {
   Display *dpy = get_display();
   if (dpy) {
     XUnmapWindow(dpy, self->handle.xid);
-    XFlush(dpy);
+    XSync(dpy, False);
   }
 }
 
@@ -117,6 +117,7 @@ void Platform_PromptPopupDestroyWindow(Popup *self) {
   if (dpy) {
     x11_release_prompt_buffer(dpy, self->handle.xid);
     XDestroyWindow(dpy, self->handle.xid);
+    XSync(dpy, False);
   }
 }
 
