@@ -520,7 +520,8 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
 }
 
 long Platform_GetFileSize(char *filepath) {
-  if (!filepath) return -1;
+  if (!filepath)
+    return -1;
   FILE *fp = fopen(filepath, "rb");
   if (fp == NULL) {
     log_error("operation failed, returning error filepath='%s'",
@@ -582,7 +583,7 @@ bool Platform_FocusWindow(const char *title) {
     s++;
   const char *e = s + strlen(s);
   while (e > s && isspace((unsigned char)*(e - 1)))
-  e--;
+    e--;
   size_t len = (size_t)(e - s);
   if (len == 0)
     return false;
@@ -1896,8 +1897,7 @@ void Platform_InitUI() {
              (void *)s_win32_keyboard_hook);
   }
 
-  Platform_RegisterRawMouse(
-      WH_TO_HWND(g_win32_tray_wnd));
+  Platform_RegisterRawMouse(WH_TO_HWND(g_win32_tray_wnd));
   s_win32_mouse_hook = NULL;
 
   FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
@@ -1925,7 +1925,6 @@ void Platform_ShutdownUI() {
   }
   log_info("Platform_ShutdownUI completed");
 }
-
 
 static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
   memset(buf, 0, sizeof(*buf));

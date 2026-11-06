@@ -62,7 +62,8 @@ static void PromptPopup_OnShow(Popup *self) {
   data->state->window_title = (char *)prompt_feature_name(title);
   data->state->eb->filter[0] = '\0';
   if (data->spec.initial_text && data->spec.initial_text[0]) {
-    strncpy(data->state->eb->filter, data->spec.initial_text, sizeof(data->state->eb->filter) - 1);
+    strncpy(data->state->eb->filter, data->spec.initial_text,
+            sizeof(data->state->eb->filter) - 1);
     data->state->eb->filter[sizeof(data->state->eb->filter) - 1] = '\0';
     data->state->eb->cursor = (int)strlen(data->state->eb->filter);
   }
@@ -72,7 +73,8 @@ static void PromptPopup_OnShow(Popup *self) {
   if (data->spec.items || data->spec.refresh || data->spec.render) {
     data->state->lb = calloc(1, sizeof(ListBoxInfo));
   } else {
-    free(data->state->lb); data->state->lb = NULL;
+    free(data->state->lb);
+    data->state->lb = NULL;
   }
   ListBoxInfo_Init(data->state->lb);
   data->state->no_bg = data->spec.no_bg;
@@ -98,12 +100,12 @@ static void PromptPopup_OnShow(Popup *self) {
       data->spec.refresh ? data->spec.refresh : data->saved_callbacks.refresh;
   ctx2->window.prompt_callbacks.enter =
       data->spec.enter ? data->spec.enter : data->saved_callbacks.enter;
-  ctx2->window.prompt_callbacks.ctrl_enter = data->spec.ctrl_enter
-                                          ? data->spec.ctrl_enter
-                                          : data->saved_callbacks.ctrl_enter;
-  ctx2->window.prompt_callbacks.shift_enter = data->spec.shift_enter
-                                           ? data->spec.shift_enter
-                                           : data->saved_callbacks.shift_enter;
+  ctx2->window.prompt_callbacks.ctrl_enter =
+      data->spec.ctrl_enter ? data->spec.ctrl_enter
+                            : data->saved_callbacks.ctrl_enter;
+  ctx2->window.prompt_callbacks.shift_enter =
+      data->spec.shift_enter ? data->spec.shift_enter
+                             : data->saved_callbacks.shift_enter;
   ctx2->window.prompt_callbacks.ctrl_shift_enter =
       data->spec.ctrl_shift_enter ? data->spec.ctrl_shift_enter
                                   : data->saved_callbacks.ctrl_shift_enter;

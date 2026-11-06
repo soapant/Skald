@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-
 typedef struct ListBoxInfo ListBoxInfo;
 
 typedef struct PromptState PromptState;
@@ -45,36 +44,25 @@ struct PromptState {
   bool no_bg;
 };
 
+typedef void (*RefreshCallback)(PromptState *state);
 
-typedef void (*RefreshCallback)(PromptState* state);
+typedef bool (*EnterCallback)(PromptState *state);
 
+typedef bool (*CtrlEnterCallback)(PromptState *state);
 
-typedef bool (*EnterCallback)(PromptState* state);
+typedef bool (*ShiftEnterCallback)(PromptState *state);
 
+typedef bool (*CtrlShiftEnterCallback)(PromptState *state);
 
-typedef bool (*CtrlEnterCallback)(PromptState* state);
+typedef bool (*CtrlAltEnterCallback)(PromptState *state);
 
+typedef bool (*ShiftAltEnterCallback)(PromptState *state);
 
-typedef bool (*ShiftEnterCallback)(PromptState* state);
+typedef void (*TabCallback)(PromptState *state);
 
-
-typedef bool (*CtrlShiftEnterCallback)(PromptState* state);
-
-
-typedef bool (*CtrlAltEnterCallback)(PromptState* state);
-
-
-typedef bool (*ShiftAltEnterCallback)(PromptState* state);
-
-
-typedef void (*TabCallback)(PromptState* state);
-
-
-typedef void (*EditCallback)(PromptState* state);
-
+typedef void (*EditCallback)(PromptState *state);
 
 typedef void (*FilterCallback)(const char *item, const char *filter);
-
 
 typedef void (*HelpCallback)(void);
 
@@ -93,10 +81,7 @@ typedef struct PromptCallbacks {
   FilterCallback filter;
 } PromptCallbacks;
 
-
-
 typedef void (*KeyCallback)(int vkCode);
-
 
 typedef void (*CloseCallback)(void);
 
@@ -150,7 +135,6 @@ static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
   lb->view_offset = 0;
 }
 
-
 typedef struct {
   const char *title;
   const char **items;
@@ -178,7 +162,6 @@ typedef struct {
   int y;
   bool subwindow;
 } PromptSpec;
-
 
 typedef struct {
   const char *initial_text;

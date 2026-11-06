@@ -143,7 +143,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
   Popup *top = WindowManager_GetTopPopup(NULL);
   int pw = 0, ph = 0, px = -1, py = -1;
   if (top && top->type == POPUP_PROMPT)
-      PromptPopup_GetBounds(top, &px, &py, &pw, &ph);
+    PromptPopup_GetBounds(top, &px, &py, &pw, &ph);
   if (pw <= 0 || ph <= 0) {
     pw = (int)(900 * Platform_GetUIScale());
     ph = (int)(640 * Platform_GetUIScale());
@@ -171,12 +171,12 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   return res;
 }
 
-
 #define MAX_EVENT_CALLBACKS 16
 static PlEventCallback g_event_registry[2][MAX_EVENT_CALLBACKS] = {0};
 
 void EventBus_Register(PlEvent event, PlEventCallback cb) {
-  if (event < 0 || event >= 2) return;
+  if (event < 0 || event >= 2)
+    return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
     if (g_event_registry[event][i] == NULL) {
       g_event_registry[event][i] = cb;
@@ -186,7 +186,8 @@ void EventBus_Register(PlEvent event, PlEventCallback cb) {
 }
 
 void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
-  if (event < 0 || event >= 2) return;
+  if (event < 0 || event >= 2)
+    return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
     if (g_event_registry[event][i] == cb) {
       g_event_registry[event][i] = NULL;
@@ -196,7 +197,8 @@ void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
 }
 
 void EventBus_Trigger(PlEvent event) {
-  if (event < 0 || event >= 2) return;
+  if (event < 0 || event >= 2)
+    return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
     if (g_event_registry[event][i]) {
       g_event_registry[event][i]();
