@@ -866,15 +866,17 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
 
 typedef struct {
   char path[512];
-  unsigned char *src;
+  unsigned char *argb;
   int w;
   int h;
+  int dst_w;
+  int dst_h;
   struct stat st;
   bool has_stat;
-} SvgSrcCacheSlot;
+} DecodedCacheSlot;
 
-static SvgSrcCacheSlot g_svg_src_cache[8];
-static int g_svg_src_count = 0;
+static DecodedCacheSlot g_decoded_cache[32];
+static int g_decoded_count = 0;
 
 unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   if (!path || !path[0])
@@ -889,167 +891,166 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   struct stat st;
   bool has_stat = (stat(path, &st) == 0);
 
-  unsigned char *src = NULL;
-  int w = 0, h = 0;
-
-  int cached_idx = -1;
-  for (int i = 0; i < g_svg_src_count; i++) {
-    if (strcmp(g_svg_src_cache[i].path, path) == 0) {
-      if (!has_stat || (g_svg_src_cache[i].has_stat &&
-                        g_svg_src_cache[i].st.st_mtime == st.st_mtime &&
-                        g_svg_src_cache[i].st.st_size == st.st_size)) {
-        cached_idx = i;
-      }
-      break;
+  for (int i = 0; i < g_decoded_count; i++) {
+    DecodedCacheSlot *slot = &g_decoded_cache[i];
+    if (slot->dst_w == dst_w && slot->dst_h == dst_h &&
+        strcmp(slot->path, path) == 0) {
+      bool fresh = !has_stat ||
+                   (slot->has_stat &&
+                    slot->st.st_mtime == st.st_mtime &&
+                    slot->st.st_size == st.st_size);
+      if (!fresh)
+        continue;
+      size_t bytes = (size_t)dst_w * dst_h * 4;
+      unsigned char *copy = (unsigned char *)malloc(bytes);
+      if (!copy)
+        return NULL;
+      memcpy(copy, slot->argb, bytes);
+      *out_w = dst_w;
+      *out_h = dst_h;
+      return copy;
     }
   }
 
-  if (cached_idx >= 0) {
-    src = g_svg_src_cache[cached_idx].src;
-    w = g_svg_src_cache[cached_idx].w;
-    h = g_svg_src_cache[cached_idx].h;
-  } else {
-    size_t _plen = strlen(path);
-    bool _is_svg = _plen > 4 && Platform_StringContainsCaseInsensitive(
-                                    path + _plen - 4, ".svg");
-    if (_is_svg) {
-      NSVGimage *image = nsvgParseFromFile(path, "px", 96.0f);
-      if (!image)
-        return NULL;
-      if (image->width <= 0 || image->height <= 0) {
-        nsvgDelete(image);
-        return NULL;
-      }
-      w = (int)(image->width + 0.5f);
-      h = (int)(image->height + 0.5f);
-      if (w < 256)
-        w = 256;
-      if (h < 256)
-        h = 256;
-      NSVGrasterizer *rast = nsvgCreateRasterizer();
-      if (!rast) {
-        nsvgDelete(image);
-        return NULL;
-      }
-      unsigned char *svg_data = (unsigned char *)calloc((size_t)w * h * 4, 1);
-      if (!svg_data) {
-        nsvgDeleteRasterizer(rast);
-        nsvgDelete(image);
-        return NULL;
-      }
-      nsvgRasterize(rast, image, 0, 0, (float)w / image->width, svg_data, w, h,
-                    w * 4);
-      src = (unsigned char *)malloc((size_t)w * h * 4);
-      if (!src) {
-        free(svg_data);
-        nsvgDeleteRasterizer(rast);
-        nsvgDelete(image);
-        return NULL;
-      }
-      for (int i = 0; i < w * h; i++) {
-        unsigned char r = svg_data[i * 4 + 0];
-        unsigned char g = svg_data[i * 4 + 1];
-        unsigned char b = svg_data[i * 4 + 2];
-        unsigned char a = svg_data[i * 4 + 3];
-        unsigned int pr = (unsigned int)r * a / 255;
-        unsigned int pg = (unsigned int)g * a / 255;
-        unsigned int pb = (unsigned int)b * a / 255;
-        src[i * 4 + 0] = (unsigned char)pb;
-        src[i * 4 + 1] = (unsigned char)pg;
-        src[i * 4 + 2] = (unsigned char)pr;
-        src[i * 4 + 3] = a;
-      }
-      free(svg_data);
+  size_t _plen = strlen(path);
+  bool _is_svg = _plen > 4 && Platform_StringContainsCaseInsensitive(
+                                  path + _plen - 4, ".svg");
+
+  unsigned char *argb = NULL;
+  if (_is_svg) {
+    NSVGimage *image = nsvgParseFromFile(path, "px", 96.0f);
+    if (!image)
+      return NULL;
+    if (image->width <= 0 || image->height <= 0) {
+      nsvgDelete(image);
+      return NULL;
+    }
+    NSVGrasterizer *rast = nsvgCreateRasterizer();
+    if (!rast) {
+      nsvgDelete(image);
+      return NULL;
+    }
+    argb = (unsigned char *)calloc((size_t)dst_w * dst_h * 4, 1);
+    if (!argb) {
       nsvgDeleteRasterizer(rast);
       nsvgDelete(image);
+      return NULL;
+    }
+    nsvgRasterize(rast, image, 0, 0, (float)dst_w / image->width, argb,
+                  dst_w, dst_h, dst_w * 4);
+    for (int i = 0; i < dst_w * dst_h; i++) {
+      unsigned char r = argb[i * 4 + 0];
+      unsigned char g = argb[i * 4 + 1];
+      unsigned char b = argb[i * 4 + 2];
+      unsigned char a = argb[i * 4 + 3];
+      unsigned int pr = (unsigned int)r * a / 255;
+      unsigned int pg = (unsigned int)g * a / 255;
+      unsigned int pb = (unsigned int)b * a / 255;
+      argb[i * 4 + 0] = (unsigned char)pb;
+      argb[i * 4 + 1] = (unsigned char)pg;
+      argb[i * 4 + 2] = (unsigned char)pr;
+      argb[i * 4 + 3] = a;
+    }
+    nsvgDeleteRasterizer(rast);
+    nsvgDelete(image);
+  } else {
+    bool _is_xpm = _plen > 4 && Platform_StringContainsCaseInsensitive(
+                                    path + _plen - 4, ".xpm");
+    int w = 0, h = 0;
+    int comp = 0;
+    unsigned char *src = NULL;
+    if (_is_xpm) {
+      src = xpm_load(path, &w, &h);
     } else {
-      bool _is_xpm = _plen > 4 && Platform_StringContainsCaseInsensitive(
-                                      path + _plen - 4, ".xpm");
-      int comp = 0;
-      if (_is_xpm) {
-        src = xpm_load(path, &w, &h);
-      } else {
-        unsigned char *raw_src = stbi_load(path, &w, &h, &comp, 4);
-        if (!raw_src) {
-          log_error("img: cannot decode '%s': %s", path, stbi_failure_reason());
-          return NULL;
-        }
-        src = raw_src;
-      }
+      src = stbi_load(path, &w, &h, &comp, 4);
       if (!src) {
+        log_error("img: cannot decode '%s': %s", path, stbi_failure_reason());
         return NULL;
       }
-      for (int i = 0; i < w * h; i++) {
-        unsigned char r = src[i * 4 + 0];
-        unsigned char g = src[i * 4 + 1];
-        unsigned char b = src[i * 4 + 2];
-        unsigned char a = src[i * 4 + 3];
-        src[i * 4 + 0] = (unsigned char)((unsigned int)b * a / 255);
-        src[i * 4 + 1] = (unsigned char)((unsigned int)g * a / 255);
-        src[i * 4 + 2] = (unsigned char)((unsigned int)r * a / 255);
-        src[i * 4 + 3] = a;
-      }
+    }
+    if (!src)
+      return NULL;
+
+    for (int i = 0; i < w * h; i++) {
+      unsigned char r = src[i * 4 + 0];
+      unsigned char g = src[i * 4 + 1];
+      unsigned char b = src[i * 4 + 2];
+      unsigned char a = src[i * 4 + 3];
+      src[i * 4 + 0] = (unsigned char)((unsigned int)b * a / 255);
+      src[i * 4 + 1] = (unsigned char)((unsigned int)g * a / 255);
+      src[i * 4 + 2] = (unsigned char)((unsigned int)r * a / 255);
+      src[i * 4 + 3] = a;
     }
 
-    int idx = g_svg_src_count;
-    if (idx >= 8) {
-      free(g_svg_src_cache[0].src);
-      for (int i = 0; i < 7; i++)
-        g_svg_src_cache[i] = g_svg_src_cache[i + 1];
-      idx = 7;
-    } else {
-      g_svg_src_count++;
+    argb = (unsigned char *)malloc((size_t)dst_w * dst_h * 4);
+    if (!argb) {
+      free(src);
+      return NULL;
     }
-    snprintf(g_svg_src_cache[idx].path, sizeof(g_svg_src_cache[idx].path), "%s",
-             path);
-    g_svg_src_cache[idx].src = src;
-    g_svg_src_cache[idx].w = w;
-    g_svg_src_cache[idx].h = h;
-    g_svg_src_cache[idx].st = st;
-    g_svg_src_cache[idx].has_stat = has_stat;
-  }
 
-  unsigned char *argb = (unsigned char *)malloc((size_t)dst_w * dst_h * 4);
-  if (!argb)
-    return NULL;
-
-  for (int dy = 0; dy < dst_h; dy++) {
-    int y0 = (int)((long long)dy * h / dst_h);
-    int y1 = (int)((long long)(dy + 1) * h / dst_h);
-    if (y1 <= y0)
-      y1 = y0 + 1;
-    if (y1 > h)
-      y1 = h;
-    unsigned char *dst_row = argb + (size_t)dy * dst_w * 4;
-    for (int dx = 0; dx < dst_w; dx++) {
-      int x0 = (int)((long long)dx * w / dst_w);
-      int x1 = (int)((long long)(dx + 1) * w / dst_w);
-      if (x1 <= x0)
-        x1 = x0 + 1;
-      if (x1 > w)
-        x1 = w;
-      long long sr = 0, sg = 0, sb = 0, sa = 0, n = 0;
-      for (int sy = y0; sy < y1; sy++) {
-        const unsigned char *src_row = src + (size_t)sy * w * 4;
-        for (int sx = x0; sx < x1; sx++) {
-          const unsigned char *s = src_row + (size_t)sx * 4;
-          sb += s[0];
-          sg += s[1];
-          sr += s[2];
-          sa += s[3];
-          n++;
+    for (int dy = 0; dy < dst_h; dy++) {
+      int y0 = (int)((long long)dy * h / dst_h);
+      int y1 = (int)((long long)(dy + 1) * h / dst_h);
+      if (y1 <= y0)
+        y1 = y0 + 1;
+      if (y1 > h)
+        y1 = h;
+      unsigned char *dst_row = argb + (size_t)dy * dst_w * 4;
+      for (int dx = 0; dx < dst_w; dx++) {
+        int x0 = (int)((long long)dx * w / dst_w);
+        int x1 = (int)((long long)(dx + 1) * w / dst_w);
+        if (x1 <= x0)
+          x1 = x0 + 1;
+        if (x1 > w)
+          x1 = w;
+        long long sr = 0, sg = 0, sb = 0, sa = 0, n = 0;
+        for (int sy = y0; sy < y1; sy++) {
+          const unsigned char *src_row = src + (size_t)sy * w * 4;
+          for (int sx = x0; sx < x1; sx++) {
+            const unsigned char *s = src_row + (size_t)sx * 4;
+            sb += s[0];
+            sg += s[1];
+            sr += s[2];
+            sa += s[3];
+            n++;
+          }
         }
+        unsigned char *d = dst_row + (size_t)dx * 4;
+        d[0] = (unsigned char)(sb / n);
+        d[1] = (unsigned char)(sg / n);
+        d[2] = (unsigned char)(sr / n);
+        d[3] = (unsigned char)(sa / n);
       }
-      unsigned char *d = dst_row + (size_t)dx * 4;
-      d[0] = (unsigned char)(sb / n);
-      d[1] = (unsigned char)(sg / n);
-      d[2] = (unsigned char)(sr / n);
-      d[3] = (unsigned char)(sa / n);
     }
+    free(src);
   }
+
+  int idx = g_decoded_count;
+  if (idx >= 32) {
+    free(g_decoded_cache[0].argb);
+    for (int i = 0; i < 31; i++)
+      g_decoded_cache[i] = g_decoded_cache[i + 1];
+    idx = 31;
+  } else {
+    g_decoded_count++;
+  }
+  snprintf(g_decoded_cache[idx].path, sizeof(g_decoded_cache[idx].path), "%s",
+           path);
+  g_decoded_cache[idx].argb = argb;
+  g_decoded_cache[idx].w = dst_w;
+  g_decoded_cache[idx].h = dst_h;
+  g_decoded_cache[idx].dst_w = dst_w;
+  g_decoded_cache[idx].dst_h = dst_h;
+  g_decoded_cache[idx].st = st;
+  g_decoded_cache[idx].has_stat = has_stat;
+
+  unsigned char *copy = (unsigned char *)malloc((size_t)dst_w * dst_h * 4);
+  if (!copy)
+    return NULL;
+  memcpy(copy, argb, (size_t)dst_w * dst_h * 4);
   *out_w = dst_w;
   *out_h = dst_h;
-  return argb;
+  return copy;
 }
 
 void DrawListBoxItemText(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
