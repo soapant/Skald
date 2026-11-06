@@ -444,8 +444,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
           RainbowText ? "true" : "false");
   cfg_put(buf, cap, &off, "    WindowTitleText = %s;\n",
           WindowTitleText ? "true" : "false");
-  cfg_put(buf, cap, &off, "    GradientItems = %d;\n", GradientItems);
-  cfg_put_float(buf, cap, &off, "GradientBrightness", GradientBrightness);
   cfg_put(buf, cap, &off, "    CloseOnLossOfFocus = %s;\n",
           CloseOnLossOfFocus ? "true" : "false");
   cfg_put(buf, cap, &off, "    Theme = ");

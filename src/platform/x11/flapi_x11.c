@@ -617,8 +617,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
 
   if (state) {
     if (WindowTitleText && state->window_title) {
-      unsigned long title_col = 0;
-      eval_window_title_color(state, &title_col);
+      unsigned long title_col = rgb_to_hex(COLOR_TEXT);
       Platform_SetDrawContext(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
           (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
