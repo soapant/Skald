@@ -21,8 +21,8 @@ void Prompt_Refresh(PromptState *state) {
     return;
   }
   FlintContext *ctx = FlintContext_Get();
-  if (ctx && ctx->prompt_callbacks.refresh) {
-    ctx->prompt_callbacks.refresh(state);
+  if (ctx && ctx->window.prompt_callbacks.refresh) {
+    ctx->window.prompt_callbacks.refresh(state);
   }
 }
 
@@ -79,39 +79,39 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   bool should_close = true;
   if (ctrl && shift) {
     should_close = false;
-    if (ctx->prompt_callbacks.ctrl_shift_enter)
-      should_close = ctx->prompt_callbacks.ctrl_shift_enter(state);
-    else if (ctx->prompt_callbacks.enter)
-      should_close = ctx->prompt_callbacks.enter(state);
+    if (ctx->window.prompt_callbacks.ctrl_shift_enter)
+      should_close = ctx->window.prompt_callbacks.ctrl_shift_enter(state);
+    else if (ctx->window.prompt_callbacks.enter)
+      should_close = ctx->window.prompt_callbacks.enter(state);
   } else if (ctrl && alt) {
     should_close = false;
-    if (ctx->prompt_callbacks.ctrl_alt_enter)
-      should_close = ctx->prompt_callbacks.ctrl_alt_enter(state);
-    else if (ctx->prompt_callbacks.enter)
-      should_close = ctx->prompt_callbacks.enter(state);
+    if (ctx->window.prompt_callbacks.ctrl_alt_enter)
+      should_close = ctx->window.prompt_callbacks.ctrl_alt_enter(state);
+    else if (ctx->window.prompt_callbacks.enter)
+      should_close = ctx->window.prompt_callbacks.enter(state);
   } else if (shift && alt) {
     should_close = false;
-    if (ctx->prompt_callbacks.shift_alt_enter)
-      should_close = ctx->prompt_callbacks.shift_alt_enter(state);
-    else if (ctx->prompt_callbacks.enter)
-      should_close = ctx->prompt_callbacks.enter(state);
+    if (ctx->window.prompt_callbacks.shift_alt_enter)
+      should_close = ctx->window.prompt_callbacks.shift_alt_enter(state);
+    else if (ctx->window.prompt_callbacks.enter)
+      should_close = ctx->window.prompt_callbacks.enter(state);
   } else if (shift) {
     should_close = false;
-    if (ctx->prompt_callbacks.shift_enter)
-      should_close = ctx->prompt_callbacks.shift_enter(state);
-    else if (ctx->prompt_callbacks.enter)
-      should_close = ctx->prompt_callbacks.enter(state);
+    if (ctx->window.prompt_callbacks.shift_enter)
+      should_close = ctx->window.prompt_callbacks.shift_enter(state);
+    else if (ctx->window.prompt_callbacks.enter)
+      should_close = ctx->window.prompt_callbacks.enter(state);
   } else if (ctrl) {
     should_close = false;
     log_info("CTRL_ENTER_BRANCH: ctrl_enter=%p sel='%s'",
-             (void *)ctx->prompt_callbacks.ctrl_enter, sel ? sel : "(null)");
-    if (ctx->prompt_callbacks.ctrl_enter) {
+             (void *)ctx->window.prompt_callbacks.ctrl_enter, sel ? sel : "(null)");
+    if (ctx->window.prompt_callbacks.ctrl_enter) {
       log_info("CTRL_ENTER_CALLBACK_CALLING");
-      should_close = ctx->prompt_callbacks.ctrl_enter(state);
+      should_close = ctx->window.prompt_callbacks.ctrl_enter(state);
       log_info("CTRL_ENTER_CALLBACK_RETURNED should_close=%d", should_close);
-    } else if (ctx->prompt_callbacks.enter) {
+    } else if (ctx->window.prompt_callbacks.enter) {
       log_info("ENTER_FALLBACK_CALLBACK_CALLING");
-      should_close = ctx->prompt_callbacks.enter(state);
+      should_close = ctx->window.prompt_callbacks.enter(state);
       log_info("ENTER_FALLBACK_CALLBACK_RETURNED should_close=%d",
                should_close);
     } else {
@@ -121,12 +121,12 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     should_close = true;
 
     log_info("ENTER_BRANCH: enter=%p sel='%s'",
-             (void *)ctx->prompt_callbacks.enter, sel ? sel : "(null)");
+             (void *)ctx->window.prompt_callbacks.enter, sel ? sel : "(null)");
 
-    if (ctx->prompt_callbacks.enter) {
+    if (ctx->window.prompt_callbacks.enter) {
       log_info("ENTER_CALLBACK_CALLING");
 
-      should_close = ctx->prompt_callbacks.enter(state);
+      should_close = ctx->window.prompt_callbacks.enter(state);
 
       log_info("ENTER_CALLBACK_RETURNED should_close=%d", should_close);
     } else {
@@ -294,8 +294,8 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_TAB) {
-    if (ctx->prompt_callbacks.tab)
-      ctx->prompt_callbacks.tab(state);
+    if (ctx->window.prompt_callbacks.tab)
+      ctx->window.prompt_callbacks.tab(state);
     return true;
   }
   if (vk == VK_RETURN) {
@@ -309,8 +309,8 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == HELP_SCREEN_KEY && ctrl) {
-    if (ctx->prompt_callbacks.help)
-      ctx->prompt_callbacks.help();
+    if (ctx->window.prompt_callbacks.help)
+      ctx->window.prompt_callbacks.help();
     return true;
   }
   if (vk == 'V' && ctrl) {

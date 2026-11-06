@@ -77,7 +77,7 @@ int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
 static int g_render_lb_visible = 0;
 
 int UI_LB_GetVisibleCount(void) {
-  if (FlintContext_Get()->prompt_callbacks.render != NULL &&
+  if (FlintContext_Get()->window.prompt_callbacks.render != NULL &&
       g_render_lb_visible > 0)
     return g_render_lb_visible;
   int itemHeight = 0;
@@ -229,7 +229,7 @@ void UI_SetText(const char *text) {
   strncpy(t.text, text, t.capacity - 1);
   t.text[t.capacity - 1] = '\0';
   UI_SetCursorPosition((int)strlen(t.text));
-  if (FlintContext_Get()->prompt_callbacks.render == NULL) {
+  if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
     UI_RequestPopupRepaint();
     return;
   }
@@ -341,7 +341,7 @@ void UI_RedrawNow() {
 }
 
 void UI_Redraw(ListBoxInfo *lb) {
-  if (FlintContext_Get()->prompt_callbacks.render == NULL) {
+  if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
     HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     if (hPopup)
       KillTimer(hPopup, UI_DEBOUNCE_TIMER_ID);
@@ -424,7 +424,7 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
     return;
   }
   UI_SetCursorPosition(pos);
-  if (ctx->prompt_callbacks.render != NULL) {
+  if (ctx->window.prompt_callbacks.render != NULL) {
     HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
     if (hPopup && IsWindow(hPopup))
       UI_RequestPopupRepaint();

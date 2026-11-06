@@ -39,7 +39,7 @@ void win32_popup_request_repaint(HWND hPopup) {
 }
 
 static void popup_request_repaint(HWND hwnd) {
-  if (FlintContext_Get()->prompt_callbacks.render == NULL) {
+  if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
     UI_LegacySyncRepaint();
     return;
   }
@@ -93,7 +93,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   if (FontSize != old_font) {
     HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   }
-  if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+  if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
     HWND hPar = GetParent(hwnd);
     if (hPar && IsWindow(hPar)) {
       InvalidateRect(hPar, NULL, FALSE);
@@ -221,7 +221,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       ListBox_PublishMousePos(pt.x, pt.y);
     }
 
-    if (FlintContext_Get()->prompt_callbacks.render == NULL) {
+    if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
       PromptState *hst = Platform_GetPromptStateForHWND(hwnd);
       if (hst && hst->lb != NULL) {
         ListBoxInfo *hlb = hst->lb;
@@ -263,8 +263,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == VK_BACK) {
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
-      if (ps && FlintContext_Get()->prompt_callbacks.refresh) {
-        FlintContext_Get()->prompt_callbacks.refresh(ps);
+      if (ps && FlintContext_Get()->window.prompt_callbacks.refresh) {
+        FlintContext_Get()->window.prompt_callbacks.refresh(ps);
       }
     }
     if (!consumed)
@@ -273,8 +273,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       UI_DeleteForward();
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
-      if (ps && FlintContext_Get()->prompt_callbacks.refresh) {
-        FlintContext_Get()->prompt_callbacks.refresh(ps);
+      if (ps && FlintContext_Get()->window.prompt_callbacks.refresh) {
+        FlintContext_Get()->window.prompt_callbacks.refresh(ps);
       }
       UI_Redraw(lb);
       InvalidateRect(hwnd, NULL, FALSE);
@@ -290,7 +290,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         !(GetKeyState(VK_LWIN) & 0x8000) &&
         !(GetKeyState(VK_RWIN) & 0x8000))
       break;
-    if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+    if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
       InvalidateRect(hwnd, NULL, FALSE);
       UpdateWindow(hwnd);
       Platform_InputState_Update((int)wParam, false, 0);
@@ -315,8 +315,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (UI_InsertChar((wchar_t)wParam) > 0) {
         ps = Platform_GetPromptStateForHWND(hwnd);
-        if (ps && FlintContext_Get()->prompt_callbacks.refresh) {
-          FlintContext_Get()->prompt_callbacks.refresh(ps);
+        if (ps && FlintContext_Get()->window.prompt_callbacks.refresh) {
+          FlintContext_Get()->window.prompt_callbacks.refresh(ps);
         }
         UI_Redraw(lb);
         popup_request_repaint(hwnd);
@@ -414,7 +414,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == UI_DEBOUNCE_TIMER_ID) {
       KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
       UI_RedrawNow();
-      if (FlintContext_Get()->prompt_callbacks.render != NULL)
+      if (FlintContext_Get()->window.prompt_callbacks.render != NULL)
         InvalidateRect(hwnd, NULL, FALSE);
       else
         UI_LegacySyncRepaint();
@@ -423,7 +423,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == UI_TICK_TIMER_ID) {
         UI_Redraw(lb);
       }
-      if (FlintContext_Get()->prompt_callbacks.render != NULL)
+      if (FlintContext_Get()->window.prompt_callbacks.render != NULL)
         InvalidateRect(hwnd, NULL, FALSE);
       return 0;
     }
@@ -561,7 +561,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       textRect.left += PROMPT_ITEM_TEXT_X;
 
       Platform_SetDrawContextWin32(pdis->hDC);
-      if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+      if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
         return TRUE;
       } else {
         HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
@@ -592,7 +592,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_APP + 41: {
     s_repaint_queued = false;
-    if (FlintContext_Get()->prompt_callbacks.render == NULL) {
+    if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
       UI_LegacySyncRepaint();
       return 0;
     }
@@ -639,7 +639,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
     }
-    if (FlintContext_Get()->prompt_callbacks.render) {
+    if (FlintContext_Get()->window.prompt_callbacks.render) {
       FlintContext_Get()->window.editbox_placed = false;
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *state = Platform_GetPromptStateForHWND(hwnd);

@@ -12,8 +12,8 @@ static FlintContext g_ctx = {
             .current_feature = NULL,
             .title = NULL,
             .last_index = 0,
+            .prompt_callbacks = {0},
         },
-    .prompt_callbacks = {0},
 };
 
 FlintContext *FlintContext_Get(void) { return &g_ctx; }
