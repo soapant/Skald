@@ -229,9 +229,6 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     }
     return true;
   }
-  if (false) {
-    return true;
-  }
   if (vk == VK_BACK) {
     if (Prompt_DeleteSelection(state)) {
       Prompt_Refresh(state);
