@@ -13,9 +13,8 @@ void ConfigApply(void) {
     CornerRadius = 14;
     HotkeyRepeatDelayMs = 300;
     WindowOpacity = 235.0f;
-    PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 24;
+    FontSize = 21;
     IconSize = 32;
     WidgetGap = 10;
     MaxFeatures = 1000;

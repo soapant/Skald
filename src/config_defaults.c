@@ -14,8 +14,6 @@ bool RoundedCorners = true;
 int CornerRadius = 14;
 float WindowOpacity = 235.0;
 
-int PageUpDownLen = 6;
-
 const char *UsedFont = "0xProto Nerd Font";
 int FontSize = 20;
 int IconSize = 32;

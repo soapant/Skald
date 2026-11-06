@@ -3,6 +3,10 @@
 
 typedef enum { VIM_MODE_INSERT, VIM_MODE_NORMAL, VIM_MODE_ANY } VimMode;
 static void vim_enter_normal_mode(void);
+static void vim_set_insert_mode(void);
+static void vim_set_normal_mode(void);
+static void vim_line_start(void);
+static void vim_line_end(void);
 
 typedef void (*VimMotionCallback)(void);
 
@@ -87,13 +91,16 @@ static void vim_delete_last(int n) {
   if (!ps || !ps->eb)
     return;
   int len = (int)strlen(ps->eb->filter);
-  if (n > len)
-    n = len;
+  int cur = ps->eb->cursor;
+  if (cur > len)
+    cur = len;
+  if (n > cur)
+    n = cur;
   if (n <= 0)
     return;
-  ps->eb->filter[len - n] = '\0';
-  if (ps->eb->cursor > len - n)
-    ps->eb->cursor = len - n;
+  int start = cur - n;
+  memmove(ps->eb->filter + start, ps->eb->filter + cur, len - cur + 1);
+  ps->eb->cursor = start;
 }
 
 static void vim_motion(const char *seq, const char *mods, VimMode mode, VimMotionCallback cb) {
@@ -174,8 +181,7 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
     return false;
   if (key->vk == VK_ESCAPE) {
     if (g_vim_mode == VIM_MODE_INSERT) {
-      g_vim_mode = VIM_MODE_NORMAL;
-      fl_get_metrics()->edit_cursor_width = 12;
+      vim_set_normal_mode();
       vim_reset_buffer();
       return true;
     }
@@ -282,10 +288,20 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
 
   if (g_vim_mode == VIM_MODE_NORMAL) {
     if (key->vk == 'I' || key->vk == 'i') {
-      g_vim_mode = VIM_MODE_INSERT;
-      fl_get_metrics()->edit_cursor_width = 0;
+      PromptState *ps = fl_get_active_prompt();
+      if (ps && ps->eb && key->shift)
+        ps->eb->cursor = 0;
+      vim_set_insert_mode();
       vim_reset_buffer();
       vim_refresh_prompt();
+      return true;
+    }
+    if (key->vk == '0') {
+      vim_line_start();
+      return true;
+    }
+    if (key->vk == '$') {
+      vim_line_end();
       return true;
     }
     if (!key->ctrl && !key->alt &&
@@ -340,9 +356,18 @@ static void vim_move_up5(void) {
    vim_move(5, true);
 }
 
-static void vim_enter_normal_mode(void) {
+static void vim_set_insert_mode(void) {
+  g_vim_mode = VIM_MODE_INSERT;
+  fl_get_metrics()->edit_cursor_width = 0;
+}
+
+static void vim_set_normal_mode(void) {
   g_vim_mode = VIM_MODE_NORMAL;
-  fl_get_metrics()->edit_cursor_width = 12;
+  fl_get_metrics()->edit_cursor_width = 14;
+}
+
+static void vim_enter_normal_mode(void) {
+  vim_set_normal_mode();
 }
 
 static void vim_close_window(void) {
@@ -351,8 +376,7 @@ static void vim_close_window(void) {
 
 
 static void vim_on_prompt_open(void) {
-  g_vim_mode = VIM_MODE_INSERT;
-  fl_get_metrics()->edit_cursor_width = 0;
+  vim_set_insert_mode();
   vim_reset_buffer();
   vim_cancel_pending();
 }
@@ -399,15 +423,124 @@ static void vim_move_right(void) {
 }
 static void vim_delete_line(void) {
     PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->lb)
+    if (!ps || !ps->eb)
         return;
     ps->eb->filter[0] = '\0';
     ps->eb->cursor = 0;
 }
 
+static int vim_is_word_char(char c) {
+  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
+         (c >= 'A' && c <= 'Z') || c == '_';
+}
+
+static void vim_word_forward(void) {
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->eb)
+    return;
+  const char *s = ps->eb->filter;
+  int len = (int)strlen(s);
+  int i = ps->eb->cursor;
+  if (i > len)
+    i = len;
+  while (i < len && vim_is_word_char(s[i]))
+    i++;
+  while (i < len && !vim_is_word_char(s[i]))
+    i++;
+  ps->eb->cursor = i;
+  vim_refresh_prompt();
+}
+
+static void vim_word_backward(void) {
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->eb)
+    return;
+  const char *s = ps->eb->filter;
+  int len = (int)strlen(s);
+  int i = ps->eb->cursor;
+  if (i > len)
+    i = len;
+  if (i > 0)
+    i--;
+  while (i > 0 && !vim_is_word_char(s[i]))
+    i--;
+  while (i > 0 && vim_is_word_char(s[i - 1]))
+    i--;
+  ps->eb->cursor = i;
+  vim_refresh_prompt();
+}
+
+static void vim_line_start(void) {
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->eb)
+    return;
+  ps->eb->cursor = 0;
+  vim_refresh_prompt();
+}
+
+static void vim_line_end(void) {
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->eb)
+    return;
+  ps->eb->cursor = (int)strlen(ps->eb->filter);
+  vim_refresh_prompt();
+}
+
+static void vim_delete_to_end(void) {
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->eb)
+    return;
+  int len = (int)strlen(ps->eb->filter);
+  if (ps->eb->cursor > len)
+    ps->eb->cursor = len;
+  ps->eb->filter[ps->eb->cursor] = '\0';
+  vim_refresh_prompt();
+}
+
+static void vim_delete_char(void) {
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->eb)
+    return;
+  int len = (int)strlen(ps->eb->filter);
+  if (ps->eb->cursor < 0 || ps->eb->cursor >= len)
+    return;
+  memmove(ps->eb->filter + ps->eb->cursor,
+          ps->eb->filter + ps->eb->cursor + 1,
+          len - ps->eb->cursor);
+  vim_refresh_prompt();
+}
+
+static void vim_append(void) {
+  PromptState *ps = fl_get_active_prompt();
+  if (ps && ps->eb) {
+    int len = (int)strlen(ps->eb->filter);
+    if (ps->eb->cursor < len)
+      ps->eb->cursor++;
+  }
+  vim_set_insert_mode();
+  vim_reset_buffer();
+  vim_refresh_prompt();
+}
+
+static void vim_append_end(void) {
+  PromptState *ps = fl_get_active_prompt();
+  if (ps && ps->eb)
+    ps->eb->cursor = (int)strlen(ps->eb->filter);
+  vim_set_insert_mode();
+  vim_reset_buffer();
+  vim_refresh_prompt();
+}
+
+static void vim_change_to_end(void) {
+  vim_delete_to_end();
+  vim_set_insert_mode();
+  vim_reset_buffer();
+  vim_refresh_prompt();
+}
+
 FLINT_FEATURE_INIT {
   g_pending_mutex = fl_mutex_create();
-  fl_get_metrics()->edit_cursor_width = 0;
+  vim_set_insert_mode();
   vim_motion("jk", "", VIM_MODE_INSERT, vim_enter_normal_mode);
   vim_motion("jq", "", VIM_MODE_INSERT, vim_close_window);
   vim_motion("jc", "", VIM_MODE_INSERT, vim_ctrlenter);
@@ -423,6 +556,13 @@ FLINT_FEATURE_INIT {
   vim_motion("gg", "", VIM_MODE_NORMAL, vim_go_to_top);
   vim_motion("dd", "", VIM_MODE_NORMAL, vim_delete_line);
   vim_motion("g", "shift", VIM_MODE_NORMAL, vim_go_to_bottom);
+  vim_motion("a", "", VIM_MODE_NORMAL, vim_append);
+  vim_motion("a", "shift", VIM_MODE_NORMAL, vim_append_end);
+  vim_motion("w", "", VIM_MODE_NORMAL, vim_word_forward);
+  vim_motion("b", "", VIM_MODE_NORMAL, vim_word_backward);
+  vim_motion("d", "shift", VIM_MODE_NORMAL, vim_delete_to_end);
+  vim_motion("c", "shift", VIM_MODE_NORMAL, vim_change_to_end);
+  vim_motion("x", "", VIM_MODE_NORMAL, vim_delete_char);
   fl_register_key_interceptor(vim_key_interceptor);
   fl_register_event(EVENT_PROMPT_OPEN, vim_on_prompt_open);
 }
