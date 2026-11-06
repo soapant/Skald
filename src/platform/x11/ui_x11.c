@@ -95,11 +95,6 @@ void UI_NavigateUp(ListBoxInfo *lb) { ListBox_NavigateUp(lb); }
 
 void UI_NavigateDown(ListBoxInfo *lb) { ListBox_NavigateDown(lb); }
 
-void UI_Edit_SetSel(uint32_t start, uint32_t end) {
-  (void)start;
-  (void)end;
-}
-
 void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
   if (start)
     *start = 0;
@@ -124,10 +119,6 @@ void UI_GetCurrentTextEdit(char *buffer, size_t cap) {
     PromptState *prompt = (PromptState *)top->user_data;
     snprintf(buffer, cap, "%s", prompt->eb->filter);
     buffer[cap - 1] = '\0';
-  } else if (top->type == POPUP_EDIT) {
-    WMEditPopupData *ed = (WMEditPopupData *)top;
-    if (ed && ed->text)
-      snprintf(buffer, cap, "%s", ed->text);
     buffer[cap - 1] = '\0';
   }
 }
@@ -148,13 +139,6 @@ void UI_SetText(const char *text) {
     strncpy(prompt->eb->filter, text, sizeof(prompt->eb->filter) - 1);
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
     prompt->eb->cursor = (int)strlen(prompt->eb->filter);
-  } else if (top->type == POPUP_EDIT) {
-    WMEditPopupData *ed = (WMEditPopupData *)top;
-    if (ed && ed->text) {
-      strncpy(ed->text, text, ed->text_capacity - 1);
-      ed->text[ed->text_capacity - 1] = '\0';
-      ed->cursor = (int)strlen(ed->text);
-    }
   }
 }
 
@@ -168,11 +152,6 @@ int UI_GetCursorPosition(void) {
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
     return (int)prompt->eb->cursor;
-  }
-  if (top->type == POPUP_EDIT) {
-    WMEditPopupData *ed = (WMEditPopupData *)top;
-    if (ed)
-      return (int)ed->cursor;
   }
   return 0;
 }
@@ -194,16 +173,6 @@ void UI_SetCursorPosition(int position) {
     if (position > len)
       position = len;
     prompt->eb->cursor = position;
-  } else if (top->type == POPUP_EDIT) {
-    WMEditPopupData *ed = (WMEditPopupData *)top;
-    if (!ed || !ed->text)
-      return;
-    int len = (int)strlen(ed->text);
-    if (position < 0)
-      position = 0;
-    if (position > len)
-      position = len;
-    ed->cursor = position;
   }
 }
 
@@ -227,14 +196,6 @@ void UI_SyncFilterFromEdit(FlintContext *ctx) {
     ctx->window.filter_cursor = prompt->eb->cursor;
     return;
   }
-  if (top->type == POPUP_EDIT) {
-    WMEditPopupData *ed = (WMEditPopupData *)top;
-    if (ed && ed->text) {
-      strncpy(ctx->window.filter, ed->text, sizeof(ctx->window.filter) - 1);
-      ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
-      ctx->window.filter_cursor = ed->cursor;
-    }
-  }
 }
 
 void UI_ApplyFilterToEdit(FlintContext *ctx) {
@@ -251,13 +212,6 @@ void UI_ApplyFilterToEdit(FlintContext *ctx) {
     strncpy(prompt->eb->filter, ctx->window.filter, sizeof(prompt->eb->filter) - 1);
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
     return;
-  }
-  if (top->type == POPUP_EDIT) {
-    WMEditPopupData *ed = (WMEditPopupData *)top;
-    if (ed && ed->text && ed->text_capacity > 1) {
-      strncpy(ed->text, ctx->window.filter, ed->text_capacity - 1);
-      ed->text[ed->text_capacity - 1] = '\0';
-    }
   }
 }
 
@@ -292,16 +246,6 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
     if (pos > len)
       pos = len;
     prompt->eb->cursor = pos;
-  } else if (top->type == POPUP_EDIT) {
-    WMEditPopupData *ed = (WMEditPopupData *)top;
-    if (!ed || !ed->text)
-      return;
-    int len = (int)strlen(ed->text);
-    if (pos < 0)
-      pos = 0;
-    if (pos > len)
-      pos = len;
-    ed->cursor = pos;
   }
   UI_SetCursorPosition(pos);
 }

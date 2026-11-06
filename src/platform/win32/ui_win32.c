@@ -182,14 +182,8 @@ static bool win32_resolve_text_target(Win32TextTarget *out) {
   out->cursor_z = NULL;
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-  if (top && top->type == POPUP_EDIT) {
-    WMEditPopupData *ed = (WMEditPopupData *)top;
-    if (ed && ed->text) {
-      out->text = ed->text;
-      out->capacity = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
-      out->cursor_i = &ed->cursor;
+  if (top) {
       return true;
-    }
   }
   if (top && top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
@@ -199,11 +193,6 @@ static bool win32_resolve_text_target(Win32TextTarget *out) {
     return true;
   }
   return false;
-}
-
-void UI_Edit_SetSel(uint32_t start, uint32_t end) {
-  (void)end;
-  UI_SetCursorPosition((int)start);
 }
 
 void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
