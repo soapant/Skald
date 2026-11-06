@@ -126,7 +126,6 @@ static void PromptPopup_OnShow(Popup *self) {
       data->spec.help ? data->spec.help : data->saved_callbacks.help;
   ctx2->window.current_feature = (char *)prompt_feature_name(title);
   ctx2->window.title = title;
-  ctx2->window.callbacks = ctx2->prompt_callbacks;
   ctx2->window.editbox_placed = true;
   if (data->spec.refresh)
     data->spec.refresh(data->state);
@@ -145,7 +144,6 @@ static void PromptPopup_OnHide(Popup *self) {
     FlintContext *_c3 = FlintContext_Get();
     _c3->window.current_feature = NULL;
     _c3->prompt_callbacks = data->saved_callbacks;
-    _c3->window.callbacks = data->saved_callbacks;
     _c3->window.hPopupWnd = data->prev_hPopupWnd;
   }
 }

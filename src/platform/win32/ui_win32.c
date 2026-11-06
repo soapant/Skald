@@ -397,32 +397,15 @@ void UI_SyncFilterFromEdit(FlintContext *ctx) {
   if (!ctx) {
     return;
   }
-  Win32TextTarget t;
-  if (!win32_resolve_text_target(&t) || !t.text) {
-    return;
-  }
-  strncpy(ctx->window.filter, t.text, sizeof(ctx->window.filter) - 1);
-  ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
-  ctx->window.filter_cursor = win32_target_cursor(&t);
 }
 
 void UI_ApplyFilterToEdit(FlintContext *ctx) {
   if (!ctx) {
     return;
   }
-  int pos = ctx->window.filter_cursor;
-  int len = (int)strlen(ctx->window.filter);
-  if (pos < 0)
-    pos = 0;
-  if (pos > len)
-    pos = len;
-  UI_SetText(ctx->window.filter);
-  UI_SetCursorPosition(pos);
-  if (ctx->prompt_callbacks.render != NULL) {
-    HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
-    if (hPopup && IsWindow(hPopup))
-      UI_RequestPopupRepaint();
-  }
+  PromptState *prompt = Platform_GetWin32PromptState();
+  if (prompt && prompt->eb)
+    prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
 }
 
 ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
@@ -449,25 +432,6 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
 }
 
 bool UI_ApplyBackspaceToPopup(FlintContext *ctx) {
-  if (!ctx)
-    return false;
-  PromptState *ws = NULL;
-  if (!ws)
-    return false;
-  int len = (int)strlen(ctx->window.filter);
-  int cur = ctx->window.filter_cursor;
-  if (cur <= 0 || len <= 0)
-    return false;
-  int del = cur - 1;
-  memmove(ctx->window.filter + del, ctx->window.filter + del + 1, len - del);
-  ctx->window.filter_cursor = del;
-  ws->eb->cursor = (size_t)del;
-  strncpy(ws->eb->filter, ctx->window.filter, sizeof(ws->eb->filter) - 1);
-  ws->eb->filter[sizeof(ws->eb->filter) - 1] = '\0';
-  if (ctx->prompt_callbacks.refresh) {
-    ListBoxInfo *lb = NULL; (void)lb;
-    ctx->prompt_callbacks.refresh(ws);
-  }
-  UI_ApplyFilterToEdit(ctx);
-  return true;
+  (void)ctx;
+  return false;
 }

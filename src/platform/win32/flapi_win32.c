@@ -652,8 +652,6 @@ bool fl_dismiss_message_platform(const char *name) {
   return Platform_DismissMessage(name);
 }
 
-/* ---- HTTP (WinHTTP) ---- */
-
 #define FL_HTTP_CONNECT_TIMEOUT_S 10
 #define FL_HTTP_TIMEOUT_S 30
 #define FL_HTTP_MAX_REDIRECTS 10

@@ -12,7 +12,6 @@ typedef struct {
   WindowHandle hPopupWnd;
   WindowHandle hDisplayMessage;
   bool selection_complete;
-  PromptCallbacks callbacks;
   bool editbox_placed;
   char output_buffer[1024];
   char *current_feature;
