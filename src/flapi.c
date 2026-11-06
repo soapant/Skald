@@ -1027,6 +1027,10 @@ bool fl_toggle_minimized_active(void) {
   return r;
 }
 
+bool fl_reload_config(void) {
+  return Config_Reload();
+}
+
 static bool fl_popup_enter(PromptState *state) {
   (void)state;
   return true;

@@ -195,6 +195,8 @@ bool fl_focus_window_right(void);
 
 bool fl_toggle_minimized_active(void);
 
+bool fl_reload_config(void);
+
 int fl_get_screen_width(void);
 
 int fl_get_screen_height(void);
