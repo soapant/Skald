@@ -894,6 +894,8 @@ bool fl_paste(char *content) {
   return Platform_PasteContent(content);
 }
 
+static bool fl_popup_enter(PromptState *state);
+
 char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
   const char *initial_text = spec ? spec->initial_text : NULL;
   int x = spec->x ? spec->x : 0;
@@ -912,6 +914,7 @@ char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
     return NULL;
   PromptSpec pspec = {0};
   pspec.initial_text = initial_text;
+  pspec.enter = fl_popup_enter;
   pspec.x = x;
   pspec.y = y;
   pspec.w = w;
@@ -1010,6 +1013,11 @@ bool fl_toggle_minimized_active(void) {
   return r;
 }
 
+static bool fl_popup_enter(PromptState *state) {
+  (void)state;
+  return true;
+}
+
 char *fl_popup_impl(const PopupSpec *spec) {
   if (!spec)
     return NULL;
@@ -1018,6 +1026,7 @@ char *fl_popup_impl(const PopupSpec *spec) {
     return NULL;
   PromptSpec pspec = {0};
   pspec.initial_text = spec->initial_text;
+  pspec.enter = fl_popup_enter;
   pspec.x = spec->x;
   pspec.y = spec->y;
   pspec.w = spec->w ? spec->w : 600;
