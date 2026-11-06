@@ -24,6 +24,7 @@ bool Wm_FocusWindowUp(void);
 bool Wm_FocusWindowDown(void);
 bool Wm_FocusWindowRight(void);
 bool Wm_MinimizeActiveWindow(void);
+bool Wm_InjectKey(int vk, int down);
 bool Wm_GetMousePos(int *x, int *y);
 
 #endif

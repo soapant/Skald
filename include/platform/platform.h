@@ -177,6 +177,7 @@ bool Platform_CloseActiveWindow(void);
 bool Platform_ToggleFullscreenActive(void);
 bool Platform_MoveActiveWindowToMonitor(bool right);
 bool Platform_MoveActiveWindowLeft(void);
+bool Platform_InjectKey(int vk, int down);
 bool Platform_MoveActiveWindowUp(void);
 bool Platform_MoveActiveWindowDown(void);
 bool Platform_MoveActiveWindowRight(void);

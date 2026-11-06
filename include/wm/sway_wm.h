@@ -24,6 +24,7 @@ bool focus_window_up_sway(void);
 bool focus_window_down_sway(void);
 bool focus_window_right_sway(void);
 bool minimize_active_window_sway(void);
+bool inject_key_sway(int vk, int down);
 bool get_mouse_pos_sway(int *x, int *y);
 
 #endif

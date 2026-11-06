@@ -25,6 +25,7 @@ bool focus_window_up_niri(void);
 bool focus_window_down_niri(void);
 bool focus_window_right_niri(void);
 bool minimize_active_window_niri(void);
+bool inject_key_niri(int vk, int down);
 bool get_mouse_pos_niri(int *x, int *y);
 
 #endif
