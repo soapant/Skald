@@ -167,7 +167,16 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   long long last_tick = 0;
   int last_mx = 0, last_my = 0;
   int last_btn = -1;
-  while (wm->running && popup->manager) {
+  while (wm->running) {
+    bool _still_open = false;
+    for (int _i = 0; _i < wm->popup_count; _i++) {
+      if (wm->popups[_i] == popup) {
+        _still_open = true;
+        break;
+      }
+    }
+    if (!_still_open)
+      break;
     Platform_WM_ProcessEvents(wm);
     bool mouse_changed = false;
     int mx = 0, my = 0;
@@ -199,8 +208,16 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
         XFlush(dpy);
     }
   }
-  if (popup->manager != NULL) {
-    WindowManager_PopPopup(wm);
+  {
+    bool _still_open = false;
+    for (int _i = 0; _i < wm->popup_count; _i++) {
+      if (wm->popups[_i] == popup) {
+        _still_open = true;
+        break;
+      }
+    }
+    if (_still_open)
+      WindowManager_PopPopup(wm);
   }
   if (dpy) {
     XFlush(dpy);
