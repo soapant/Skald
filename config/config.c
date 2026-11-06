@@ -28,7 +28,6 @@ void ConfigApply(void) {
     ActionsHotkey = "Ctrl+K";
     MessagesEnabled = true;
     RainbowText = false;
-    AlternatingText = false;
     WindowTitleText = false;
     GradientItems = 30;
     GradientBrightness = 1.0f;

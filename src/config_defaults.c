@@ -34,7 +34,6 @@ bool MessagesEnabled = true;
 bool EnableAutoPairing = false;
 bool EnableBorders = true;
 bool RainbowText = false;
-bool AlternatingText = false;
 bool WindowTitleText = false;
 int GradientItems = 30;
 float GradientBrightness = 1.0f;
