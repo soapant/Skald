@@ -222,8 +222,41 @@ bool hotkey_mouse_button_bound(int btn) {
     return false;
   int vk = FL_MOUSE_VK(btn);
   for (int i = 0; i < g_hotkey_count; i++) {
-    if (g_hotkeys[i].vk_code == vk && g_hotkeys[i].modifiers == 0)
-      return true;
+    if (g_hotkeys[i].vk_code != vk || g_hotkeys[i].modifiers != 0)
+      continue;
+    HotkeyBinding *b = &g_hotkeys[i];
+    if (b->whitelist) {
+      if (!b->blacklist || b->blacklist_count == 0)
+        continue;
+      const char *title = Platform_GetActiveWindowAppId();
+      bool ok = false;
+      for (int j = 0; j < b->blacklist_count; j++) {
+        if (b->blacklist[j][0] == '\0')
+          continue;
+        if (title && Platform_StringContainsCaseInsensitive(title, b->blacklist[j])) {
+          ok = true;
+          break;
+        }
+      }
+      if (!ok)
+        continue;
+    } else {
+      if (b->blacklist && b->blacklist_count > 0) {
+        const char *title = Platform_GetActiveWindowAppId();
+        bool blocked = false;
+        for (int j = 0; j < b->blacklist_count; j++) {
+          if (b->blacklist[j][0] == '\0')
+            continue;
+          if (title && Platform_StringContainsCaseInsensitive(title, b->blacklist[j])) {
+            blocked = true;
+            break;
+          }
+        }
+        if (blocked)
+          continue;
+      }
+    }
+    return true;
   }
   return false;
 }
