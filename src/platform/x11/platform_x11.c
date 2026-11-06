@@ -8,6 +8,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrender.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -763,6 +764,7 @@ FontHandle Platform_CreateFontOnDisplay(Display *dpy, int size,
   g_font_slots[slot].last_used = ++g_font_tick;
 
   FontHandle made = {.xfont = xf, .dpy = dpy};
+  fprintf(stderr, "[FONT_X11] size=%d face='%s' ascent=%d descent=%d height=%d ips=%d\n", size, face_name?face_name:"", xf->ascent, xf->descent, xf->height, xf->spacing);
   pthread_mutex_unlock(&g_font_cache_mtx);
   return made;
 }
