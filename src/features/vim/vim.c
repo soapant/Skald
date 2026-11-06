@@ -384,13 +384,18 @@ static void vim_move_left(void) {
     PromptState *ps = fl_get_active_prompt();
     if (!ps || !ps->eb)
         return;
-    if (ps->eb->cursor != 0) ps->eb->cursor--;
+    if (ps->eb->cursor > 0) 
+        ps->eb->cursor--;
 }
+
 static void vim_move_right(void) {
     PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->eb)
+    if (!ps || !ps->eb || !ps->eb->filter)
         return;
-    if (ps->eb->cursor != strlen(ps->eb->filter - 1)) ps->eb->cursor ++;
+    
+    if (ps->eb->cursor < strlen(ps->eb->filter)) {
+        ps->eb->cursor++;
+    }
 }
 static void vim_delete_line(void) {
     PromptState *ps = fl_get_active_prompt();
