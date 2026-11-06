@@ -244,6 +244,40 @@ bool Wm_MoveActiveWindowRight(void) {
   return false;
 }
 
+bool Wm_MoveActiveWindowUp(void) {
+  if (Env_IsWayland()) {
+    if (move_active_window_up_kwin())
+      return true;
+    if (move_active_window_up_niri())
+      return true;
+    if (move_active_window_up_hyprland())
+      return true;
+    if (move_active_window_up_sway())
+      return true;
+  }
+  if (move_active_window_up_x11())
+    return true;
+  log_error("MoveActiveWindowUp Didnt Work");
+  return false;
+}
+
+bool Wm_MoveActiveWindowDown(void) {
+  if (Env_IsWayland()) {
+    if (move_active_window_down_kwin())
+      return true;
+    if (move_active_window_down_niri())
+      return true;
+    if (move_active_window_down_hyprland())
+      return true;
+    if (move_active_window_down_sway())
+      return true;
+  }
+  if (move_active_window_down_x11())
+    return true;
+  log_error("MoveActiveWindowDown Didnt Work");
+  return false;
+}
+
 bool Wm_FocusWindowLeft(void) {
   if (Env_IsWayland()) {
     if (focus_window_left_kwin())
@@ -275,6 +309,40 @@ bool Wm_FocusWindowRight(void) {
   if (focus_window_right_x11())
     return true;
   log_error("FocusWindowRight Didnt Work");
+  return false;
+}
+
+bool Wm_FocusWindowUp(void) {
+  if (Env_IsWayland()) {
+    if (focus_window_up_kwin())
+      return true;
+    if (focus_window_up_niri())
+      return true;
+    if (focus_window_up_hyprland())
+      return true;
+    if (focus_window_up_sway())
+      return true;
+  }
+  if (focus_window_up_x11())
+    return true;
+  log_error("FocusWindowUp Didnt Work");
+  return false;
+}
+
+bool Wm_FocusWindowDown(void) {
+  if (Env_IsWayland()) {
+    if (focus_window_down_kwin())
+      return true;
+    if (focus_window_down_niri())
+      return true;
+    if (focus_window_down_hyprland())
+      return true;
+    if (focus_window_down_sway())
+      return true;
+  }
+  if (focus_window_down_x11())
+    return true;
+  log_error("FocusWindowDown Didnt Work");
   return false;
 }
 

@@ -182,10 +182,14 @@ bool fl_toggle_fullscreen_active(void);
 bool fl_move_active_window_to_monitor(bool right);
 
 bool fl_move_active_window_left(void);
+bool fl_move_active_window_up(void);
+bool fl_move_active_window_down(void);
 
 bool fl_move_active_window_right(void);
 
 bool fl_focus_window_left(void);
+bool fl_focus_window_up(void);
+bool fl_focus_window_down(void);
 
 bool fl_focus_window_right(void);
 

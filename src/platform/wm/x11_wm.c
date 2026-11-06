@@ -653,6 +653,58 @@ static bool x11_activate_neighbor(bool right) {
   return x11_activate_window(display, best);
 }
 
+static bool x11_activate_neighbor_vertical(bool down) {
+  Display *display = get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  int fcx = 0, fcy = 0, fw = 0, fh = 0;
+  if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh))
+    return false;
+  fcx += fw / 2;
+  fcy += fh / 2;
+  int nclients = 0;
+  Window *clients = x11_client_list(display, &nclients);
+  if (!clients || nclients <= 0) {
+    if (clients)
+      free(clients);
+    return false;
+  }
+  Window best = None;
+  int best_gap = 1 << 30;
+  int best_hdist = 1 << 30;
+  for (int i = 0; i < nclients; i++) {
+    Window w = clients[i];
+    if (w == focus || w == None)
+      continue;
+    int x = 0, y = 0, ww = 0, wh = 0;
+    if (!x11_window_geom(display, w, &x, &y, &ww, &wh))
+      continue;
+    if (ww <= 1 || wh <= 1)
+      continue;
+    int cx = x + ww / 2;
+    int cy = y + wh / 2;
+    if (down) {
+      if (cy <= fcy)
+        continue;
+    } else {
+      if (cy >= fcy)
+        continue;
+    }
+    int gap = down ? (cy - fcy) : (fcy - cy);
+    int hdist = cx >= fcx ? cx - fcx : fcx - cx;
+    if (gap < best_gap || (gap == best_gap && hdist < best_hdist)) {
+      best_gap = gap;
+      best_hdist = hdist;
+      best = w;
+    }
+  }
+  free(clients);
+  if (best == None)
+    return false;
+  return x11_activate_window(display, best);
+}
+
 bool move_active_window_to_monitor_x11(bool right) {
   Display *display = get_display();
   if (!display)
@@ -781,9 +833,17 @@ bool move_active_window_left_x11(void) { return x11_move_dir(false); }
 
 bool move_active_window_right_x11(void) { return x11_move_dir(true); }
 
+bool move_active_window_up_x11(void) { return x11_activate_neighbor_vertical(false); }
+
+bool move_active_window_down_x11(void) { return x11_activate_neighbor_vertical(true); }
+
 bool focus_window_left_x11(void) { return x11_activate_neighbor(false); }
 
 bool focus_window_right_x11(void) { return x11_activate_neighbor(true); }
+
+bool focus_window_up_x11(void) { return x11_activate_neighbor_vertical(false); }
+
+bool focus_window_down_x11(void) { return x11_activate_neighbor_vertical(true); }
 
 static bool x11_is_hidden(Display *dpy, Window w) {
 

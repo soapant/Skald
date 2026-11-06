@@ -1002,6 +1002,26 @@ bool fl_focus_window_right(void) {
   return r;
 }
 
+bool fl_move_active_window_up(void) {
+  bool r = Platform_MoveActiveWindowUp();
+  return r;
+}
+
+bool fl_move_active_window_down(void) {
+  bool r = Platform_MoveActiveWindowDown();
+  return r;
+}
+
+bool fl_focus_window_up(void) {
+  bool r = Platform_FocusWindowUp();
+  return r;
+}
+
+bool fl_focus_window_down(void) {
+  bool r = Platform_FocusWindowDown();
+  return r;
+}
+
 bool fl_toggle_minimized_active(void) {
   bool r = Platform_MinimizeActiveWindow();
   return r;

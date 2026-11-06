@@ -336,6 +336,12 @@ bool focus_window_right_niri(void) {
   return ok;
 }
 
+
+bool focus_window_up_niri(void) { return false; }
+bool focus_window_down_niri(void) { return false; }
+bool move_active_window_up_niri(void) { return false; }
+bool move_active_window_down_niri(void) { return false; }
+
 bool minimize_active_window_niri(void) {
   if (!niri_is_active())
     return false;

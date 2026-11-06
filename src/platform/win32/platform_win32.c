@@ -878,6 +878,127 @@ static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
   return TRUE;
 }
 
+
+static BOOL CALLBACK win32_focus_enum_up(HWND hwnd, LPARAM lp) {
+  win32_focus_search *s = (win32_focus_search *)lp;
+  if (!s)
+    return TRUE;
+  if (hwnd == GetForegroundWindow())
+    return TRUE;
+  if (!IsWindowVisible(hwnd))
+    return TRUE;
+  if (IsIconic(hwnd))
+    return TRUE;
+  char cls[64];
+  if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
+    if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
+        strcmp(cls, "DisplayMessageModalClass") == 0 ||
+        strcmp(cls, "SearchPopupClass") == 0 ||
+        strcmp(cls, "FlintWidgetClass") == 0) {
+      return TRUE;
+    }
+  {
+    int cloaked = 0;
+    HMODULE dwm = GetModuleHandleA("dwmapi.dll");
+    if (dwm) {
+      HRESULT(WINAPI * p)(HWND, DWORD, PVOID, DWORD) =
+          (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
+      if (p && SUCCEEDED(p(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked)
+        return TRUE;
+    }
+  }
+  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
+  if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
+    HWND o = GetWindow(hwnd, GW_OWNER);
+    if (o)
+      return TRUE;
+  }
+  char title[256];
+  if (GetWindowTextA(hwnd, title, sizeof(title)) == 0)
+    return TRUE;
+  if (title[0] == '\0')
+    return TRUE;
+  RECT wr;
+  if (!GetWindowRect(hwnd, &wr))
+    return TRUE;
+  int w = wr.right - wr.left;
+  int h = wr.bottom - wr.top;
+  if (w <= 0 || h <= 0)
+    return TRUE;
+  int cx = wr.left + w / 2;
+  int cy = wr.top + h / 2;
+  if (cy >= s->fcy)
+    return TRUE;
+  int gap = s->fcy - cy;
+  int hdist = cx >= s->fcx ? cx - s->fcx : s->fcx - cx;
+  if (gap < s->best_gap || (gap == s->best_gap && hdist < s->best_vdist)) {
+    s->best_gap = gap;
+    s->best_vdist = hdist;
+    s->best = hwnd;
+  }
+  return TRUE;
+}
+
+static BOOL CALLBACK win32_focus_enum_down(HWND hwnd, LPARAM lp) {
+  win32_focus_search *s = (win32_focus_search *)lp;
+  if (!s)
+    return TRUE;
+  if (hwnd == GetForegroundWindow())
+    return TRUE;
+  if (!IsWindowVisible(hwnd))
+    return TRUE;
+  if (IsIconic(hwnd))
+    return TRUE;
+  char cls[64];
+  if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
+    if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
+        strcmp(cls, "DisplayMessageModalClass") == 0 ||
+        strcmp(cls, "SearchPopupClass") == 0 ||
+        strcmp(cls, "FlintWidgetClass") == 0) {
+      return TRUE;
+    }
+  {
+    int cloaked = 0;
+    HMODULE dwm = GetModuleHandleA("dwmapi.dll");
+    if (dwm) {
+      HRESULT(WINAPI * p)(HWND, DWORD, PVOID, DWORD) =
+          (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
+      if (p && SUCCEEDED(p(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked)
+        return TRUE;
+    }
+  }
+  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
+  if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
+    HWND o = GetWindow(hwnd, GW_OWNER);
+    if (o)
+      return TRUE;
+  }
+  char title[256];
+  if (GetWindowTextA(hwnd, title, sizeof(title)) == 0)
+    return TRUE;
+  if (title[0] == '\0')
+    return TRUE;
+  RECT wr;
+  if (!GetWindowRect(hwnd, &wr))
+    return TRUE;
+  int w = wr.right - wr.left;
+  int h = wr.bottom - wr.top;
+  if (w <= 0 || h <= 0)
+    return TRUE;
+  int cx = wr.left + w / 2;
+  int cy = wr.top + h / 2;
+  if (cy <= s->fcy)
+    return TRUE;
+  int gap = cy - s->fcy;
+  int hdist = cx >= s->fcx ? cx - s->fcx : s->fcx - cx;
+  if (gap < s->best_gap || (gap == s->best_gap && hdist < s->best_vdist)) {
+    s->best_gap = gap;
+    s->best_vdist = hdist;
+    s->best = hwnd;
+  }
+  return TRUE;
+}
+
 bool Platform_MoveActiveWindowToMonitor(bool right) {
   HWND hwnd = win32_foreground_target();
   if (!hwnd)
@@ -1032,6 +1153,58 @@ bool Platform_FocusWindowRight(void) {
     return false;
   return win32_activate_hwnd(s.best);
 }
+
+
+bool Platform_FocusWindowUp(void) {
+  HWND fg = win32_foreground_target();
+  if (!fg)
+    fg = GetForegroundWindow();
+  char cls[64] = {0};
+  if (fg)
+    GetClassNameA(fg, cls, sizeof(cls));
+  if (!fg)
+    return false;
+  RECT fr;
+  if (!GetWindowRect(fg, &fr))
+    return false;
+  win32_focus_search s;
+  s.fcx = fr.left + (fr.right - fr.left) / 2;
+  s.fcy = fr.top + (fr.bottom - fr.top) / 2;
+  s.best = NULL;
+  s.best_gap = 1 << 30;
+  s.best_vdist = 1 << 30;
+  EnumWindows(win32_focus_enum_up, (LPARAM)&s);
+  if (!s.best)
+    return false;
+  return win32_activate_hwnd(s.best);
+}
+
+bool Platform_FocusWindowDown(void) {
+  HWND fg = win32_foreground_target();
+  if (!fg)
+    fg = GetForegroundWindow();
+  char cls[64] = {0};
+  if (fg)
+    GetClassNameA(fg, cls, sizeof(cls));
+  if (!fg)
+    return false;
+  RECT fr;
+  if (!GetWindowRect(fg, &fr))
+    return false;
+  win32_focus_search s;
+  s.fcx = fr.left + (fr.right - fr.left) / 2;
+  s.fcy = fr.top + (fr.bottom - fr.top) / 2;
+  s.best = NULL;
+  s.best_gap = 1 << 30;
+  s.best_vdist = 1 << 30;
+  EnumWindows(win32_focus_enum_down, (LPARAM)&s);
+  if (!s.best)
+    return false;
+  return win32_activate_hwnd(s.best);
+}
+
+bool Platform_MoveActiveWindowUp(void) { return false; }
+bool Platform_MoveActiveWindowDown(void) { return false; }
 
 bool Platform_MinimizeActiveWindow(void) {
   HWND hwnd = win32_foreground_target();

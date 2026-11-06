@@ -18,8 +18,12 @@ bool toggle_fullscreen_active_x11(void);
 bool move_active_window_to_monitor_x11(bool right);
 bool move_active_window_left_x11(void);
 bool move_active_window_right_x11(void);
+bool move_active_window_up_x11(void);
+bool move_active_window_down_x11(void);
 bool focus_window_left_x11(void);
 bool focus_window_right_x11(void);
+bool focus_window_up_x11(void);
+bool focus_window_down_x11(void);
 bool minimize_active_window_x11(void);
 bool get_mouse_pos_x11(int *x, int *y);
 #endif
