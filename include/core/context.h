@@ -8,9 +8,7 @@
 #include "core/types/prompt.h"
 
 typedef struct {
-  WindowHandle hGlobalTrayWnd;
   WindowHandle hPopupWnd;
-  WindowHandle hDisplayMessage;
   bool selection_complete;
   bool editbox_placed;
   char output_buffer[1024];

@@ -1480,6 +1480,8 @@ static HHOOK s_win32_keyboard_hook = NULL;
 static HHOOK s_win32_mouse_hook = NULL;
 
 uint32_t g_win32_main_thread_id = 0;
+WindowHandle g_win32_tray_wnd = {0};
+WindowHandle g_win32_message_wnd = {0};
 
 bool Platform_InitDisplaySafe(void) { return true; }
 
@@ -1829,11 +1831,11 @@ int Platform_InitializeTrayIcon() {
       return -1;
     }
 
-    FlintContext_Get()->window.hGlobalTrayWnd = WH_FROM_HWND(
+    g_win32_tray_wnd = WH_FROM_HWND(
         CreateWindowExA(WS_EX_TOOLWINDOW, wc.lpszClassName, "TrayApp", WS_POPUP,
                         0, 0, 0, 0, NULL, NULL, hInstance, NULL));
 
-    if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) == NULL) {
+    if (WH_TO_HWND(g_win32_tray_wnd) == NULL) {
       return -1;
     }
   }
@@ -1895,7 +1897,7 @@ void Platform_InitUI() {
   }
 
   Platform_RegisterRawMouse(
-      WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd));
+      WH_TO_HWND(g_win32_tray_wnd));
   s_win32_mouse_hook = NULL;
 
   FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
