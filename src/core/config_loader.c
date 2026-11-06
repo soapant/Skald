@@ -421,9 +421,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, "    IconSize = %d;\n", IconSize);
   cfg_put(buf, cap, &off, "    WidgetGap = %d;\n", WidgetGap);
   cfg_put(buf, cap, &off, "    MaxFeatures = %d;\n", MaxFeatures);
-  cfg_put(buf, cap, &off, "    EditFontSize = %d;\n", EditFontSize);
-  cfg_put(buf, cap, &off, "    PaddingForScrolling = %d;\n",
-          PaddingForScrolling);
   cfg_put_str_var(buf, cap, &off, "UsedTerminal", UsedTerminal);
   cfg_put_str_var(buf, cap, &off, "UsedShell", UsedShell);
   cfg_put_str_var(buf, cap, &off, "UsedBrowser", UsedBrowser);
@@ -445,8 +442,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, "    ActionsHotkey = ");
   cfg_put_escaped(buf, cap, &off, ActionsHotkey);
   cfg_put(buf, cap, &off, ";\n");
-  cfg_put(buf, cap, &off, "    FullTextNeedsKeyPress = %s;\n",
-          FullTextNeedsKeyPress ? "true" : "false");
   cfg_put(buf, cap, &off, "    MessagesEnabled = %s;\n",
           MessagesEnabled ? "true" : "false");
   cfg_put(buf, cap, &off, "    RainbowText = %s;\n",
@@ -469,18 +464,12 @@ static size_t config_emit_region(char *buf, size_t cap) {
                      COLOR_TEXT,
                      COLOR_ALTERNATE,
                      COLOR_SELECTED_TEXT,
-                     COLOR_ERROR,
-                     COLOR_NORMAL,
-                     COLOR_TIP,
                      COLOR_CURSOR,
                      COLOR_BORDER};
   const char *names[] = {"COLOR_BG",
                          "COLOR_TEXT",
                          "COLOR_ALTERNATE",
                          "COLOR_SELECTED_TEXT",
-                         "COLOR_ERROR",
-                         "COLOR_NORMAL",
-                         "COLOR_TIP",
                          "COLOR_CURSOR",
                          "COLOR_BORDER"};
   for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {

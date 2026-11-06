@@ -7,7 +7,7 @@ void ConfigApply(void) {
     RememberLastIndex = true;
     MessageAfterEachHotkey = false;
     TimeOutForMessages = 1;
-    DebugMode = true;
+    DebugMode = false;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
@@ -19,18 +19,15 @@ void ConfigApply(void) {
     IconSize = 32;
     WidgetGap = 10;
     MaxFeatures = 1000;
-    EditFontSize = 18;
-    PaddingForScrolling = 3;
     UsedTerminal = "";
     UsedShell = "nu";
     UsedBrowser = "";
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
-    IconPath = "{MISC}/switch_window.ico";
+    IconPath = "{MISC}/flint.ico";
     ControlHotkey = "Alt+Space";
     ReloadFeaturesHotkey = "Alt+R";
     ActionsHotkey = "Ctrl+K";
-    FullTextNeedsKeyPress = true;
     MessagesEnabled = true;
     RainbowText = false;
     AlternatingText = false;
@@ -44,9 +41,6 @@ void ConfigApply(void) {
     COLOR_TEXT = RGB(255, 255, 255);
     COLOR_ALTERNATE = RGB(57, 255, 20);
     COLOR_SELECTED_TEXT = RGB(0, 0, 0);
-    COLOR_ERROR = RGB(180, 0, 0);
-    COLOR_NORMAL = RGB(200, 200, 0);
-    COLOR_TIP = RGB(0, 160, 0);
     COLOR_CURSOR = RGB(255, 255, 255);
     COLOR_BORDER = RGB(128, 128, 128);
 }
