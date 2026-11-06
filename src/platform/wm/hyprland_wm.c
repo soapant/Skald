@@ -86,12 +86,58 @@ static void hypr_ensure_sig(void) {
   }
   globfree(&g);
 }
-bool get_title_hyprland(char *buffer, int buffer_size) { return false; }
+static bool hypr_parse_activewindow_field(const char *field,
+                                            char *buffer,
+                                            int buffer_size) {
+  if (!field || !buffer || buffer_size <= 0)
+    return false;
+  buffer[0] = '\0';
+  hypr_ensure_sig();
+  char *output =
+      Platform_RunTerminalCommand("hyprctl activewindow -j", false);
+  if (!output || output[0] == '\0') {
+    log_error("hypr activewindow empty for field='%s'", field);
+    free(output);
+    return false;
+  }
+  StringList lines = String_Split(output, "\n");
+  bool ok = false;
+  char needle[64];
+  snprintf(needle, sizeof(needle), "\"%s\"", field);
+  for (size_t i = 0; i < lines.count && !ok; i++) {
+    if (!lines.items[i])
+      continue;
+    char *match = strstr(lines.items[i], needle);
+    if (!match)
+      continue;
+    char tmp[1024];
+    if (sscanf(match, "\"%63[^\"]\": \"%1023[^\"]\"", tmp, buffer) != 2) {
+      if (sscanf(match, "\"%63[^\"]\":\"%1023[^\"]\"", tmp, buffer) != 2)
+        continue;
+    }
+    if (buffer[0] == '\0')
+      continue;
+    if (strcmp(buffer, "null") == 0)
+      continue;
+    buffer[buffer_size - 1] = '\0';
+    ok = true;
+  }
+  if (!ok) {
+    log_error("hypr activewindow no '%s' in output='%s'", field, output);
+  } else {
+    log_info("hypr activewindow %s='%s'", field, buffer);
+  }
+  StringList_Free(&lines);
+  free(output);
+  return ok;
+}
+
+bool get_title_hyprland(char *buffer, int buffer_size) {
+  return hypr_parse_activewindow_field("title", buffer, buffer_size);
+}
 
 bool get_app_id_hyprland(char *buffer, int buffer_size) {
-  (void)buffer;
-  (void)buffer_size;
-  return false;
+  return hypr_parse_activewindow_field("class", buffer, buffer_size);
 }
 
 char *paste_hyprland(char *content) {
