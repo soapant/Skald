@@ -83,7 +83,6 @@ bool Platform_DrawTextLine(int x, int y, const char *text, int len,
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color,
                             unsigned long *body_color,
                             unsigned long *plain_color) {}
-bool Platform_PreRender(void) { return true; }
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   if (line_h)
     *line_h = 16;

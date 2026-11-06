@@ -982,7 +982,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
 
   if (PromptListBottomMargin() > 0) {
     Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-        .y = y0 + visible * itemH, .width = state->width});
+        .y = state->height - PROMPT_LIST_BOTTOM_TITLE, .width = state->width});
   }
 
   Platform_DestroyFont(font);

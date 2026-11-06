@@ -373,7 +373,6 @@ char *paste_x11(char *content) {
   }
   int shift_unused = 0;
   int shift_kc = x11_keycode_for(dpy, XK_Shift_L, &shift_unused);
-  int typed = 0;
   for (const unsigned char *p = (const unsigned char *)content; *p; p++) {
     KeySym ks;
     if (*p == '\n')
