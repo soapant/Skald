@@ -2452,7 +2452,11 @@ void Platform_ThreadJoin(void *thread) {
   if (!thread) {
     return;
   }
-  WaitForSingleObject((HANDLE)thread, INFINITE);
+  DWORD w = WaitForSingleObject((HANDLE)thread, 250);
+  if (w == WAIT_TIMEOUT) {
+    TerminateThread((HANDLE)thread, 0);
+    WaitForSingleObject((HANDLE)thread, INFINITE);
+  }
   CloseHandle((HANDLE)thread);
 }
 
