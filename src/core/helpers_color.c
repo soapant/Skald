@@ -18,7 +18,9 @@ unsigned long rgb_to_hex(unsigned long win_color) {
 void eval_window_title_color(PromptState *state,
                              unsigned long *window_title_color) {
   unsigned long final_color;
-  if (state->lb->item_count > 1000) {
+  if (!state->lb) {
+    final_color = rgb_to_hex(RGB(30, 255, 30));
+  } else if (state->lb->item_count > 1000) {
     final_color = rgb_to_hex(RGB(255, 0, 0));
   } else if (state->lb->item_count > 500) {
     final_color = rgb_to_hex(RGB(255, 165, 0));

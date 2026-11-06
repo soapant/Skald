@@ -162,9 +162,6 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
 
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   EventBus_Trigger(EVENT_PROMPT_OPEN);
-  log_info("WindowManager_ShowPrompt called wm=%p spec=%p title='%s'",
-           (void *)wm, (void *)spec,
-           spec && spec->title ? spec->title : "(null)");
   if (!wm || !spec)
     return NULL;
   FlintContext_Get()->window.editbox_placed = false;
