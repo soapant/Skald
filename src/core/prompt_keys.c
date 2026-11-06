@@ -76,13 +76,6 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     sel = filter_copy;
   }
   FlintContext *ctx = FlintContext_Get();
-  log_info("ENTER_DISPATCH: ctx=%p current_feature=%s "
-           "enter=%p ctrl_enter=%p window_enter=%p",
-           (void *)ctx,
-           ctx->window.current_feature ? ctx->window.current_feature : "(null)",
-           (void *)ctx->prompt_callbacks.enter,
-           (void *)ctx->prompt_callbacks.ctrl_enter,
-           (void *)ctx->window.callbacks.enter);
   bool should_close = true;
   if (ctrl && shift) {
     should_close = false;

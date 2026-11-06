@@ -263,16 +263,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == VK_BACK) {
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
-      if (ps) {
-        strncpy(FlintContext_Get()->window.filter, ps->eb->filter,
-                sizeof(FlintContext_Get()->window.filter) - 1);
-        FlintContext_Get()
-            ->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] =
-            '\0';
-        FlintContext_Get()->window.filter_cursor = (int)ps->eb->cursor;
-        if (FlintContext_Get()->prompt_callbacks.refresh) {
-          FlintContext_Get()->prompt_callbacks.refresh(ps);
-        }
+      if (ps && FlintContext_Get()->prompt_callbacks.refresh) {
+        FlintContext_Get()->prompt_callbacks.refresh(ps);
       }
     }
     if (!consumed)
@@ -281,17 +273,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       UI_DeleteForward();
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
-      if (ps) {
-        strncpy(FlintContext_Get()->window.filter, ps->eb->filter,
-                sizeof(FlintContext_Get()->window.filter) - 1);
-        FlintContext_Get()
-            ->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] =
-            '\0';
-        FlintContext_Get()->window.filter_cursor = (int)ps->eb->cursor;
-
-        if (FlintContext_Get()->prompt_callbacks.refresh) {
-          FlintContext_Get()->prompt_callbacks.refresh(ps);
-        }
+      if (ps && FlintContext_Get()->prompt_callbacks.refresh) {
+        FlintContext_Get()->prompt_callbacks.refresh(ps);
       }
       UI_Redraw(lb);
       InvalidateRect(hwnd, NULL, FALSE);
@@ -332,17 +315,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (UI_InsertChar((wchar_t)wParam) > 0) {
         ps = Platform_GetPromptStateForHWND(hwnd);
-        if (ps) {
-          strncpy(FlintContext_Get()->window.filter, ps->eb->filter,
-                  sizeof(FlintContext_Get()->window.filter) - 1);
-          FlintContext_Get()
-              ->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] =
-              '\0';
-          FlintContext_Get()->window.filter_cursor = (int)ps->eb->cursor;
-
-          if (FlintContext_Get()->prompt_callbacks.refresh) {
-            FlintContext_Get()->prompt_callbacks.refresh(ps);
-          }
+        if (ps && FlintContext_Get()->prompt_callbacks.refresh) {
+          FlintContext_Get()->prompt_callbacks.refresh(ps);
         }
         UI_Redraw(lb);
         popup_request_repaint(hwnd);
