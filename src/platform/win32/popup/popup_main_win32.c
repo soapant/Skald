@@ -66,9 +66,9 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   int old_font = FontSize;
 
   if (wParam == VK_ESCAPE) {
-    if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
-      KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
-      DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+    if (WH_TO_HWND(g_win32_message_wnd) != NULL) {
+      KillTimer(WH_TO_HWND(g_win32_message_wnd), 999);
+      DestroyWindow(WH_TO_HWND(g_win32_message_wnd));
     }
   }
 
@@ -534,7 +534,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         {
           if (isSelected && strlen(measureBuffer) >= 70) {
             if (g_last_selected_index != pdis->itemID ||
-                WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) ==
+                WH_TO_HWND(g_win32_message_wnd) ==
                     NULL) {
               g_last_selected_index = pdis->itemID;
             }

@@ -873,6 +873,4 @@ bool Platform_MessagePopupOnKey(Popup *self, const PopupKeyEvent *key) {
   return false;
 }
 
-void Platform_DismissDisplayMessage(void) {
-  FlintContext_Get()->window.hDisplayMessage = WH_NULL;
-}
+void Platform_DismissDisplayMessage(void) {}

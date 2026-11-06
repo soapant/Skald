@@ -646,7 +646,7 @@ FlNetStatus fl_net_status_platform(void) {
 }
 
 bool fl_dismiss_message_platform(const char *name) {
-  if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) == NULL) {
+  if (WH_TO_HWND(g_win32_message_wnd) == NULL) {
     return false;
   }
   return Platform_DismissMessage(name);
