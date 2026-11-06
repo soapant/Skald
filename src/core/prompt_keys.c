@@ -184,12 +184,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   FlintContext *ctx = FlintContext_Get();
   Popup *top = WindowManager_GetTopPopup(NULL);
   bool invoke_interceptor = false;
-  if (top && top->type == POPUP_PROMPT) {
-    invoke_interceptor = (ctx->prompt_callbacks.render == NULL ||
-                               ctx->window.editbox_placed);
-  } else {
-    invoke_interceptor = true;
-  }
+  invoke_interceptor = ctx->window.editbox_placed;
 
   if (invoke_interceptor && Platform_InvokeKeyInterceptor(key)) {
     Platform_InvalidatePrompt();

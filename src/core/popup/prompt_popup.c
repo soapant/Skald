@@ -69,8 +69,6 @@ static void PromptPopup_OnShow(Popup *self) {
   if (data->spec.placeholder && data->spec.placeholder[0]) {
     data->state->eb->placeholder = strdup(data->spec.placeholder);
   }
-  FlintContext_Get()->window.filter[0] = '\0';
-  FlintContext_Get()->window.filter_cursor = 0;
   if (data->spec.items || data->spec.refresh || data->spec.render) {
     data->state->lb = calloc(1, sizeof(ListBoxInfo));
   } else {

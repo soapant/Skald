@@ -487,15 +487,10 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
 }
 
 typedef struct {
-  char *key;
-  void *value;
-} HashMapEnt;
-typedef struct {
   char name[128];
   void (*cb)(void);
   char icon[512];
 } FeatureReg;
-static HashMap *g_feature_map = NULL;
 static FeatureReg **g_feature_order = NULL;
 static int g_feature_order_count = 0;
 
@@ -511,7 +506,7 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
   binding.is_feature_toggle = false;
   binding.hold = true;
   binding.should_swallow = spec->should_swallow;
-  if (spec->cb && g_feature_map) {
+  if (spec->cb) {
     for (int i = 0; i < g_feature_order_count; i++) {
       if (g_feature_order[i] &&
           (void *)g_feature_order[i]->cb == (void *)spec->cb) {
