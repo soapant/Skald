@@ -1,6 +1,9 @@
 #include "wm/hyprland_wm.h"
 
 #include <stdio.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -390,7 +393,78 @@ bool move_active_window_down_hyprland(void) {
   return ok;
 }
 
-bool inject_key_hyprland(int vk, int down) { (void)vk; (void)down; return false; }
+bool inject_key_hyprland(int vk, int down) {
+  if (!down)
+    return true;
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  const char *runtime = Env_XdgRuntimeDir();
+  if (!sig || !sig[0] || !runtime || !runtime[0])
+    return false;
+
+  char keyname[32];
+  const char *name = NULL;
+  if (vk >= 'A' && vk <= 'Z') {
+    keyname[0] = (char)(vk + 32);
+    keyname[1] = '\0';
+    name = keyname;
+  } else if (vk >= '0' && vk <= '9') {
+    keyname[0] = (char)vk;
+    keyname[1] = '\0';
+    name = keyname;
+  } else {
+    switch (vk) {
+      case VK_RETURN: name = "Return"; break;
+      case VK_SPACE: name = "space"; break;
+      case VK_TAB: name = "Tab"; break;
+      case VK_ESCAPE: name = "Escape"; break;
+      case VK_UP: name = "Up"; break;
+      case VK_DOWN: name = "Down"; break;
+      case VK_LEFT: name = "Left"; break;
+      case VK_RIGHT: name = "Right"; break;
+      default: name = NULL;
+    }
+  }
+  if (!name)
+    return false;
+
+  char path[512];
+  snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", runtime, sig);
+
+  int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (fd < 0)
+    return false;
+
+  struct sockaddr_un addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sun_family = AF_UNIX;
+  strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+
+  if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    close(fd);
+    return false;
+  }
+
+  char cmd[256];
+  snprintf(cmd, sizeof(cmd), "dispatch sendshortcut ,%s,active", name);
+
+  struct timeval tv;
+  tv.tv_sec = 0;
+  tv.tv_usec = 100000;
+  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+  if (write(fd, cmd, strlen(cmd)) < 0) {
+    close(fd);
+    return false;
+  }
+  write(fd, "\n", 1);
+
+  char buf[256];
+  recv(fd, buf, sizeof(buf) - 1, 0);
+  close(fd);
+  return true;
+}
+
 
 bool minimize_active_window_hyprland(void) {
   hypr_ensure_sig();
@@ -444,9 +518,6 @@ bool move_active_window_right_hyprland(void) {
   return move_active_window_to_monitor_hyprland(true);
 }
 
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
 
 bool get_mouse_pos_hyprland(int *x, int *y) {
   const char *rtd = Env_XdgRuntimeDir();
