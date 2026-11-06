@@ -25,6 +25,7 @@ bool focus_window_up_kwin(void);
 bool focus_window_down_kwin(void);
 bool focus_window_right_kwin(void);
 bool minimize_active_window_kwin(void);
+bool inject_key_kwin(int vk, int down);
 bool get_mouse_pos_kwin(int *x, int *y);
 
 #endif

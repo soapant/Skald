@@ -390,6 +390,8 @@ bool move_active_window_down_hyprland(void) {
   return ok;
 }
 
+bool inject_key_hyprland(int vk, int down) { (void)vk; (void)down; return false; }
+
 bool minimize_active_window_hyprland(void) {
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");

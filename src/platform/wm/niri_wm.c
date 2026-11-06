@@ -342,6 +342,8 @@ bool focus_window_down_niri(void) { return false; }
 bool move_active_window_up_niri(void) { return false; }
 bool move_active_window_down_niri(void) { return false; }
 
+bool inject_key_niri(int vk, int down) { (void)vk; (void)down; return false; }
+
 bool minimize_active_window_niri(void) {
   if (!niri_is_active())
     return false;
