@@ -333,6 +333,7 @@ int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
   XftFont *use =
       x11_font_has(xf, cp) ? xf : x11_fallback_for(dpy, cp, fontsize);
   int ink = fontsize;
+  fprintf(stderr, "[INK_X11] text='%s' fontsize=%d\n", text, fontsize);
   if (use) {
     XGlyphInfo e;
     XftTextExtentsUtf8(dpy, use, (FcChar8 *)b, clen, &e);
@@ -341,6 +342,7 @@ int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
       ink = h;
   }
   Platform_DestroyFont(fh);
+  fprintf(stderr, "[INK_X11_RET] text='%s' fontsize=%d ink=%d ret=%d\n", text, fontsize, ink, ink + PROMPT_GLYPH_INK_PAD);
   return ink + PROMPT_GLYPH_INK_PAD;
 }
 
