@@ -18,7 +18,7 @@ typedef struct {
   WindowHandle hDisplayMessage;
   bool selection_complete;
   bool editbox_placed;
-  char output_buffer[256];
+  char output_buffer[1024];
   char filter[1024];
   int filter_cursor;
   char *current_feature;

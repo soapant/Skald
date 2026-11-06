@@ -61,6 +61,11 @@ static void PromptPopup_OnShow(Popup *self) {
   const char *title = data->spec.title ? data->spec.title : "Flint";
   data->state->window_title = (char *)prompt_feature_name(title);
   data->state->eb->filter[0] = '\0';
+  if (data->spec.initial_text && data->spec.initial_text[0]) {
+    strncpy(data->state->eb->filter, data->spec.initial_text, sizeof(data->state->eb->filter) - 1);
+    data->state->eb->filter[sizeof(data->state->eb->filter) - 1] = '\0';
+    data->state->eb->cursor = (int)strlen(data->state->eb->filter);
+  }
   if (data->spec.placeholder && data->spec.placeholder[0]) {
     data->state->eb->placeholder = strdup(data->spec.placeholder);
   }
@@ -73,7 +78,8 @@ static void PromptPopup_OnShow(Popup *self) {
   }
   ListBoxInfo_Init(data->state->lb);
   data->state->no_bg = data->spec.no_bg;
-  data->state->lb->selected_index = -1;
+  if (data->state->lb)
+    data->state->lb->selected_index = -1;
   self->user_data = data->state;
   data->state->no_bg = data->spec.no_bg;
 
