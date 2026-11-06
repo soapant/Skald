@@ -98,7 +98,6 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec);
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec);
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
 void Platform_GetItemColors(PlGetItemColorsSpec spec);
-bool Platform_PreRender(void);
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetGlyphInkHeight(const char *text, int fontsize);

@@ -21,10 +21,10 @@ const GUID flint_IID_IAudioEndpointVolume = {
 #define VOLUME_G_DBUS_FLAGS_NONE 0
 
 typedef struct {
-  unsigned int domain;
   int code;
   char *message;
 } GlError;
+
 typedef struct _GDBusConnection GlDbConnection;
 typedef struct _GDBusProxy GlDbProxy;
 typedef struct _GVariant GlVariant;
