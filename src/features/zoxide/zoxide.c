@@ -37,7 +37,7 @@ char *get_zoxide_match(char *query) {
     snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path",
              query);
     DisplayMessageSlot(buffer, TOP_CENTER_RELATIVE, 0, 0, 0, TimeOutForMessages,
-                       COLOR_ERROR, NULL, NULL);
+                       FL_RED, NULL, NULL);
     free(out);
     return NULL;
   }
