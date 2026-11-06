@@ -20,8 +20,6 @@ extern const char *UsedFont;
 extern int IconSize;
 extern int WidgetGap;
 extern int MaxFeatures;
-extern int EditFontSize;
-extern int PaddingForScrolling;
 extern bool CloseOnLossOfFocus;
 extern const char *UsedTerminal;
 extern const char *UsedShell;
@@ -32,7 +30,6 @@ extern const char *IconPath;
 extern const char *ControlHotkey;
 extern const char *ReloadFeaturesHotkey;
 extern const char *ActionsHotkey;
-extern bool FullTextNeedsKeyPress;
 extern bool MessagesEnabled;
 extern bool EnableAutoPairing;
 extern bool EnableBorders;
@@ -49,9 +46,6 @@ extern ColorRef COLOR_CURSOR;
 extern ColorRef COLOR_TEXT;
 extern ColorRef COLOR_ALTERNATE;
 extern ColorRef COLOR_SELECTED_TEXT;
-extern ColorRef COLOR_ERROR;
-extern ColorRef COLOR_NORMAL;
-extern ColorRef COLOR_TIP;
 extern ColorRef COLOR_BORDER;
 
 #endif
