@@ -284,34 +284,6 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
                               const char *filter) {
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
-  if (false) {
-    UI_LB_EndUpdate();
-    return;
-  }
-  if (false) {
-    int keep;
-    if (RememberLastIndex) {
-      keep = lb->selected_index;
-      if (keep < 0 && last_index >= 0)
-        keep = last_index;
-      if (total_matches == 0)
-        keep = -1;
-      else if (keep < 0)
-        keep = 0;
-      else if (keep >= total_matches)
-        keep = total_matches - 1;
-      UI_NavigateTo(lb, keep);
-    } else {
-      keep = (total_matches > 0) ? 0 : -1;
-      UI_SetSelection(lb, keep);
-    }
-  } else if (total_matches != 0 && strlen(filter) > 0) {
-    UI_SetSelection(lb, 0);
-  } else if (lb->selected_index >= 0) {
-    UI_NavigateTo(lb, lb->selected_index);
-  } else {
-    UI_SetSelection(lb, -1);
-  }
   ListBox_ScrollToSelection(lb);
   if (total_matches == 0) {
     Platform_DismissDisplayMessage();
@@ -331,10 +303,6 @@ void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
   if (!lb)
     return;
 
-  if (false) {
-    log_info("PopulateListBox waiting filter='%s'", filter ? filter : "");
-    return;
-  }
   if (!filter)
     filter = "";
   if (items && item_count > 0) {
