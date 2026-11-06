@@ -894,71 +894,43 @@ bool fl_paste(char *content) {
   return Platform_PasteContent(content);
 }
 
-typedef struct {
-  char *text;
-  bool confirmed;
-} PopupConfirmCtx;
-
-static void fl_edit_blocking_confirm_ctx(const char *text, void *user_data) {
-  PopupConfirmCtx *ctx = (PopupConfirmCtx *)user_data;
-  if (ctx && text) {
-    free(ctx->text);
-    ctx->text = strdup(text);
-    ctx->confirmed = true;
-  }
-}
-
 char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
   const char *initial_text = spec ? spec->initial_text : NULL;
-  int x = spec->x ? spec->x : 960;
-  int y = spec->y ? spec->y : 540;
-  int w = spec->w > 0 ? spec->w : 1000;
-  int h = spec->h > 0 ? spec->h : 50;
-  const char *align = spec->align ? spec->align : "LEFT";
+  int x = spec->x ? spec->x : 0;
+  int y = spec->y ? spec->y : 0;
+  int w = spec->w ? spec->w : 1000;
+  int h = spec->h ? spec->h : 70;
   ListBoxInfo *lb = spec ? spec->lb : NULL;
   int *out_index = spec ? spec->out_index : NULL;
+  int idx = lb ? lb->selected_index : -1;
+  int true_idx =
+      (lb && idx >= 0 && idx < lb->item_count) ? lb->matching_indices[idx] : idx;
   if (out_index)
     *out_index = -1;
-  if (!lb)
-    return NULL;
-  if (!initial_text)
-    initial_text = "";
-  int idx = lb->selected_index;
-  int true_idx =
-      (idx >= 0 && idx < lb->item_count) ? lb->matching_indices[idx] : idx;
   WindowManager *wm = WindowManager_Get();
   if (!wm)
     return NULL;
-  PopupConfirmCtx ctx = {0};
-  Popup *popup = EditPopup_Create(wm, initial_text, x, y, w, h, align,
-                                  fl_edit_blocking_confirm_ctx, &ctx);
-  if (!popup)
-    return NULL;
-  WindowManager_PushPopup(wm, popup);
-  while (wm->running && popup->manager && !ctx.confirmed) {
-    Platform_WM_ProcessEvents(wm);
-  }
-  if (popup->manager != NULL) {
-    WindowManager_PopPopup(wm);
-  }
+  PromptSpec pspec = {0};
+  pspec.initial_text = initial_text;
+  pspec.x = x;
+  pspec.y = y;
+  pspec.w = w;
+  pspec.h = h;
+  char *r = WindowManager_ShowPrompt(wm, &pspec);
+  if (r && out_index)
+    *out_index = true_idx;
   if (lb && idx >= 0) {
     int keep_idx = idx < lb->item_count ? idx : lb->item_count - 1;
     if (keep_idx >= 0)
       lb->selected_index = keep_idx;
   }
-  if (!ctx.confirmed) {
-    free(ctx.text);
-    ctx.text = NULL;
-  }
-  if (!ctx.text)
-    return NULL;
-  if (out_index)
-    *out_index = true_idx;
-  return ctx.text;
+  return r;
 }
 
 bool fl_replace_line_in_file(const char *filepath, int line_index,
                              const char *new_text) {
+  char _full[1024] = {0};
+  bool _ok = Platform_ResolveDataPath(__builtin_return_address(0), filepath, _full, sizeof(_full));
   if (!filepath || !new_text || line_index < 0)
     return false;
   FlStringList files = fl_load_file_list(filepath);
@@ -1038,11 +1010,6 @@ bool fl_toggle_minimized_active(void) {
   return r;
 }
 
-static bool fl_popup_enter(PromptState *state) {
-  (void)state;
-  return true;
-}
-
 char *fl_popup_impl(const PopupSpec *spec) {
   if (!spec)
     return NULL;
@@ -1051,7 +1018,6 @@ char *fl_popup_impl(const PopupSpec *spec) {
     return NULL;
   PromptSpec pspec = {0};
   pspec.initial_text = spec->initial_text;
-  pspec.enter = fl_popup_enter;
   pspec.x = spec->x;
   pspec.y = spec->y;
   pspec.w = spec->w ? spec->w : 600;
