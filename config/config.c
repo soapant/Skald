@@ -13,8 +13,6 @@ void ConfigApply(void) {
     CornerRadius = 14;
     HotkeyRepeatDelayMs = 300;
     WindowOpacity = 235.0f;
-    EditPopUpPos = "middle";
-    EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
     FontSize = 23;
