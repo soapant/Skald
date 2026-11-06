@@ -284,6 +284,13 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
                               const char *filter) {
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
+  if (total_matches != 0 && strlen(filter) > 0) {
+    UI_SetSelection(lb, 0);
+  } else if (lb->selected_index >= 0) {
+    UI_NavigateTo(lb, lb->selected_index);
+  } else {
+    UI_SetSelection(lb, -1);
+  }
   ListBox_ScrollToSelection(lb);
   if (total_matches == 0) {
     Platform_DismissDisplayMessage();
