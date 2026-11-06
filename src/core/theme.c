@@ -65,7 +65,7 @@ static const ThemeEntry g_themes[] = {
     {"neon-green", RGB(0, 12, 0), RGB(175, 255, 175), RGB(0, 220, 0), RGB(0, 26, 0), RGB(175, 255, 175), RGB(0, 90, 0)},
     {"hotdog", RGB(60, 20, 10), RGB(255, 244, 200), RGB(255, 165, 0), RGB(45, 15, 8), RGB(255, 244, 200), RGB(120, 55, 30)},
     {"pastel", RGB(38, 36, 48), RGB(238, 236, 245), RGB(196, 227, 161), RGB(30, 29, 40), RGB(238, 236, 245), RGB(96, 93, 112)},
-    {"mono-warm", RGB(45, 40, 38), RGB(226, 216, 206), RGB(180, 172, 165), RGB(32, 29, 27), RGB(196, 106, 96), RGB(210, 180, 140), RGB(180, 172, 165), RGB(226, 216, 206), RGB(88, 80, 76)}
+    {"mono-warm", RGB(45, 40, 38), RGB(226, 216, 206), RGB(180, 172, 165), RGB(32, 29, 27), RGB(196, 106, 96), RGB(210, 180, 140)}
 };
 
 static bool theme_name_eq(const char *a, const char *b) {
@@ -83,8 +83,6 @@ static bool theme_name_eq(const char *a, const char *b) {
   return *a == *b;
 }
 
-/* Maps each theme slot to the config global it drives, so a per-colour
-   config value can win over the theme. Order must match ThemeEntry. */
 static const struct {
   const char *name;
   size_t off;
