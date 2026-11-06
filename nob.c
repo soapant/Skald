@@ -326,7 +326,7 @@ static void discover_dep_flags(void) {
     for (size_t i = 0; i < sizeof(fb) / sizeof(fb[0]); i++)
       nob_da_append(&dep_cflags, nob_temp_strdup(fb[i]));
   }
-  snprintf(cmdline, sizeof(cmdline), "pkg-config --libs %s 2>/dev/null",
+  snprintf(cmdline, sizeof(cmdline), "pkg-config --static --libs %s 2>/dev/null",
            PKG_LIBS_PKGS_STR);
   const char *ldflags = run_capture(cmdline);
   if (ldflags && ldflags[0]) {
@@ -356,8 +356,16 @@ static void append_dep_cflags(Nob_Cmd *cmd) {
 }
 
 static void append_dep_ldflags(Nob_Cmd *cmd) {
-  for (size_t i = 0; i < dep_ldflags.count; ++i)
+  nob_cmd_append(cmd, "-Wl,-Bstatic");
+  for (size_t i = 0; i < dep_ldflags.count; ++i) {
+    if (strcmp(dep_ldflags.items[i], "-lm") == 0 ||
+        strcmp(dep_ldflags.items[i], "-ldl") == 0 ||
+        strcmp(dep_ldflags.items[i], "-lpthread") == 0 ||
+        strcmp(dep_ldflags.items[i], "-lrt") == 0)
+      continue;
     nob_cmd_append(cmd, dep_ldflags.items[i]);
+  }
+  nob_cmd_append(cmd, "-Wl,-Bdynamic");
 }
 #else
 static void append_dep_cflags(Nob_Cmd *cmd) { (void)cmd; }
@@ -875,7 +883,7 @@ int main(int argc, char **argv) {
   }
 #endif
   stop_running_instance();
-#if !defined(_WIN32)
+#if 0
   {
     Nob_Cmd bundle = {0};
     nob_cmd_append(&bundle, "sh", "-c",
