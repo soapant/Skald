@@ -241,7 +241,7 @@ const char *get_default_browser(int slot) {
     }
     break;
   }
-  StringList l = File_ReadLines("~/.config/mimeapps.list", 65536);
+  StringList l = File_ReadLines("~/.config/mimeapps.list");
   for (size_t i = 0; i < l.count; i++) {
     const char *line = l.items[i];
     if (!Platform_StringContainsCaseInsensitive(line, "text/html"))

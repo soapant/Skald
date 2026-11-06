@@ -123,6 +123,74 @@ void StringList_Free(StringList *list) {
   list->count = 0;
 }
 
+static const char *resolve_home_path(const char *path, char *expanded,
+                                     size_t cap) {
+  if (!(path[0] == '~' && (path[1] == '/' || path[1] == '\0')))
+    return path;
+
+  const char *home = Platform_GetRealHome();
+
+  if (!home || !home[0])
+    return NULL;
+
+  size_t hn = strlen(home);
+
+  if (hn >= cap)
+    return NULL;
+
+  memcpy(expanded, home, hn);
+  size_t total = hn;
+
+  const char *rest = path + 1;
+
+  while (*rest && total < cap - 1)
+    expanded[total++] = *rest++;
+
+  expanded[total] = '\0';
+  return expanded;
+}
+
+static char *read_all_dynamic(const char *path) {
+  char expanded[4096];
+  path = resolve_home_path(path, expanded, sizeof(expanded));
+  if (!path)
+    return NULL;
+
+  FILE *f = fopen(path, "rb");
+  if (!f)
+    return NULL;
+
+  size_t cap = 8192;
+  size_t len = 0;
+  char *buf = (char *)malloc(cap);
+  if (!buf) {
+    fclose(f);
+    return NULL;
+  }
+
+  for (;;) {
+    if (len + 1 >= cap) {
+      size_t ncap = cap * 2;
+      char *grown = (char *)realloc(buf, ncap);
+      if (!grown) {
+        free(buf);
+        fclose(f);
+        return NULL;
+      }
+      buf = grown;
+      cap = ncap;
+    }
+    size_t got = fread(buf + len, 1, cap - len - 1, f);
+    if (got == 0)
+      break;
+    len += got;
+  }
+
+  fclose(f);
+  buf[len] = '\0';
+  return buf;
+}
+
 long File_ReadAll(const char *path, char *buffer, long buffer_size) {
   if (!path || !buffer || buffer_size <= 0)
     return -1;
@@ -130,30 +198,9 @@ long File_ReadAll(const char *path, char *buffer, long buffer_size) {
   buffer[0] = '\0';
 
   char expanded[4096];
-
-  if (path[0] == '~' && (path[1] == '/' || path[1] == '\0')) {
-    const char *home = Platform_GetRealHome();
-
-    if (!home || !home[0])
-      return -1;
-
-    size_t total = 0;
-    size_t hn = strlen(home);
-
-    if (hn >= sizeof(expanded))
-      return -1;
-
-    memcpy(expanded, home, hn);
-    total = hn;
-
-    const char *rest = path + 1;
-
-    while (*rest && total < sizeof(expanded) - 1)
-      expanded[total++] = *rest++;
-
-    expanded[total] = '\0';
-    path = expanded;
-  }
+  path = resolve_home_path(path, expanded, sizeof(expanded));
+  if (!path)
+    return -1;
 
   FILE *f = fopen(path, "rb");
   if (!f)
@@ -444,21 +491,16 @@ char *String_Slice(const char *str, int start, int end) {
   return out;
 }
 
-StringList File_ReadLines(const char *path, long buffer_size) {
+StringList File_ReadLines(const char *path) {
   StringList result = {NULL, 0};
 
-  if (!path || buffer_size <= 0)
+  if (!path)
     return result;
 
-  char *content = malloc((size_t)buffer_size);
+  char *content = read_all_dynamic(path);
 
   if (!content)
     return result;
-
-  if (File_ReadAll(path, content, buffer_size) <= 0) {
-    free(content);
-    return result;
-  }
 
   StringList all = String_Split(content, "\n");
 
