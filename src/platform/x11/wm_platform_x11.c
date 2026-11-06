@@ -199,13 +199,8 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
         XFlush(dpy);
     }
   }
-  if (popup->manager == NULL) {
-    if (popup->vtable && popup->vtable->destroy)
-      popup->vtable->destroy(popup);
-  } else {
+  if (popup->manager != NULL) {
     WindowManager_PopPopup(wm);
-    if (popup->vtable && popup->vtable->destroy)
-      popup->vtable->destroy(popup);
   }
   if (dpy) {
     XFlush(dpy);
