@@ -91,7 +91,7 @@ static void heapify_config(void) {
   char *n_hotk = heap_dup(ControlHotkey),
        *n_reload_hotk = heap_dup(ReloadFeaturesHotkey),
        *n_actions_hotk = heap_dup(ActionsHotkey),
-       *n_pos = heap_dup(EditPopUpPos), *n_theme = heap_dup(Theme),
+       *n_theme = heap_dup(Theme),
        *n_bgimg = heap_dup(BackgroundImage);
   char *old_font = g_heap_used_font, *old_term = g_heap_used_terminal,
        *old_shell = g_heap_used_shell, *old_browser = g_heap_used_browser,
@@ -99,7 +99,7 @@ static void heapify_config(void) {
        *old_icon = g_heap_icon_path, *old_hotk = g_heap_control_hotkey,
        *old_reload_hotk = g_heap_reload_features_hotkey,
        *old_actions_hotk = g_heap_actions_hotkey,
-       *old_pos = g_heap_edit_popup_pos, *old_theme = g_heap_theme,
+       *old_theme = g_heap_theme,
        *old_bgimg = g_heap_background_image;
   if (n_font) {
     UsedFont = n_font;
@@ -151,11 +151,6 @@ static void heapify_config(void) {
     g_heap_actions_hotkey = n_actions_hotk;
   } else
     g_heap_actions_hotkey = old_actions_hotk, old_actions_hotk = NULL;
-  if (n_pos) {
-    EditPopUpPos = n_pos;
-    g_heap_edit_popup_pos = n_pos;
-  } else
-    g_heap_edit_popup_pos = old_pos, old_pos = NULL;
   if (n_theme) {
     Theme = n_theme;
     g_heap_theme = n_theme;
@@ -175,7 +170,6 @@ static void heapify_config(void) {
   (void)old_icon;
   (void)old_hotk;
   (void)old_reload_hotk;
-  (void)old_pos;
   (void)old_theme;
   (void)old_bgimg;
 }
@@ -418,10 +412,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, "    HotkeyRepeatDelayMs = %d;\n",
           HotkeyRepeatDelayMs);
   cfg_put_float(buf, cap, &off, "WindowOpacity", WindowOpacity);
-  cfg_put(buf, cap, &off, "    EditPopUpPos = ");
-  cfg_put_escaped(buf, cap, &off, EditPopUpPos);
-  cfg_put(buf, cap, &off, ";\n");
-  cfg_put(buf, cap, &off, "    EditPopUpWidthMin = %d;\n", EditPopUpWidthMin);
   cfg_put(buf, cap, &off, "    PageUpDownLen = %d;\n", PageUpDownLen);
   cfg_put(buf, cap, &off, "    UsedFont = ");
   cfg_put_escaped(buf, cap, &off, UsedFont);
