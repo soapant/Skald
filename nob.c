@@ -1,5 +1,6 @@
 #define NOB_IMPLEMENTATION
 #define NOB_EXPERIMENTAL_DELETE_OLD
+#define NOB_NO_ECHO
 #include "nob.h"
 #if !defined(_WIN32)
 #include <glob.h>
@@ -14,38 +15,24 @@
 #define CONSOLE_OUTPUT BUILD_FOLDER "/flint"
 #endif
 
+#define CC_COMMON_FLAGS                                                        \
+  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall","-Wextra","-Wno-unused-parameter"
 #if defined(_WIN32)
-#define CC_FLAGS                                                               \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",                \
-      "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare",        \
-      "-Wno-discarded-qualifiers", "-Wno-stringop-truncation",                 \
-      "-Wno-sign-compare", "-Wno-unused-parameter",                            \
-      "-Wno-misleading-indentation", "-Wno-format", "-Wno-unused-variable"
+#define CC_FLAGS CC_COMMON_FLAGS
 #define LINK_FLAGS                                                             \
   "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm",   \
       "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32",    \
       "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp",          \
       "-Lbuild/winlibs", "-liphlpapi"
 #elif defined(__APPLE__)
-#define CC_FLAGS                                                               \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",                \
-      "-Wall", "-Wextra", "-Wno-unused-parameter", "-Wno-sign-compare",        \
-      "-Wno-discarded-qualifiers", "-Wno-stringop-truncation",                 \
-      "-Wno-sign-compare", "-Wno-unused-parameter",                            \
-      "-Wno-misleading-indentation", "-Wno-format", "-Wno-unused-variable"
+#define CC_FLAGS CC_COMMON_FLAGS
 #define LINK_FLAGS                                                             \
   "-lm", "-ldl", "-Wl,-undefined,dynamic_lookup", "-framework", "Cocoa",       \
       "-framework", "CoreGraphics"
 #define PKG_CFLAGS_PKGS_STR "libcurl"
 #define PKG_LIBS_PKGS_STR " libcurl"
 #else
-#define CC_FLAGS                                                               \
-  "-I", "include", "-MMD", "-MP","-Wall", "-Wextra", "-Wformat",       \
-      "-Wno-error=format-security", "-Wno-unused-parameter",                   \
-      "-Wno-sign-compare", "-Wno-discarded-qualifiers",                        \
-      "-Wno-stringop-truncation", "-Wno-sign-compare",                         \
-      "-Wno-unused-parameter", "-Wno-misleading-indentation", "-Wno-format",   \
-      "-Wno-unused-variable"
+#define CC_FLAGS CC_COMMON_FLAGS, "-Wformat", "-Wno-error=format-security"
 #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
 #define PKG_CFLAGS_PKGS_STR                                                    \
   "libcurl x11 xft fontconfig freetype2 gio-unix-2.0 xext xrandr xrender "     \
@@ -112,7 +99,17 @@ static bool collect_source(Nob_Walk_Entry entry) {
   return true;
 }
 
-static const char *feature_so_path(const char *src) {
+static const char *feature_ext(void) {
+#if defined(_WIN32)
+  return ".dll";
+#elif defined(__APPLE__)
+  return ".dylib";
+#else
+  return ".so";
+#endif
+}
+
+static const char *feature_base(const char *src) {
   const char *base = nob_path_name(src);
   size_t len = strlen(base);
   char *no_ext = malloc(len + 1);
@@ -120,37 +117,29 @@ static const char *feature_so_path(const char *src) {
   char *dot = strrchr(no_ext, '.');
   if (dot)
     *dot = '\0';
-#if defined(_WIN32)
-  const char *ext = ".dll";
-#elif defined(__APPLE__)
-  const char *ext = ".dylib";
-#else
-  const char *ext = ".so";
-#endif
-  return nob_temp_sprintf("build/features/%s%s", no_ext, ext);
+  const char *result = nob_temp_sprintf("build/features/%s", no_ext);
+  free(no_ext);
+  return result;
+}
+
+static const char *feature_so_path(const char *src) {
+  return nob_temp_sprintf("%s%s", feature_base(src), feature_ext());
 }
 
 static const char *feature_dep_path(const char *src) {
-  const char *base = nob_path_name(src);
-  size_t len = strlen(base);
-  char *no_ext = malloc(len + 1);
-  strcpy(no_ext, base);
-  char *dot = strrchr(no_ext, '.');
-  if (dot)
-    *dot = '\0';
-  return nob_temp_sprintf("build/features/%s.d", no_ext);
+  return nob_temp_sprintf("%s.d", feature_base(src));
 }
 
-static const char *obj_path(const char *src) {
-  return nob_temp_sprintf(OBJ_FOLDER "/%s.o", nob_path_name(src));
+static const char *obj_file_path(const char *src, const char *ext) {
+  return nob_temp_sprintf(OBJ_FOLDER "/%s%s", nob_path_name(src), ext);
 }
 
-static const char *dep_path(const char *src) {
-  return nob_temp_sprintf(OBJ_FOLDER "/%s.d", nob_path_name(src));
-}
+static const char *obj_path(const char *src) { return obj_file_path(src, ".o"); }
+
+static const char *dep_path(const char *src) { return obj_file_path(src, ".d"); }
 
 static const char *err_path(const char *src) {
-  return nob_temp_sprintf(OBJ_FOLDER "/%s.err", nob_path_name(src));
+  return obj_file_path(src, ".err");
 }
 
 #if !defined(_WIN32)
@@ -496,6 +485,48 @@ static bool stale(const char *src, const char *obj) {
   return stale_with_dep(src, obj, dep_path(src));
 }
 
+static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
+  const char *so = feature_so_path(src);
+  nob_cc(cmd);
+  nob_cc_flags(cmd);
+#if defined(_WIN32)
+  nob_cmd_append(cmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a",
+                 "-MF", feature_dep_path(src), LINK_FLAGS);
+#else
+  nob_cmd_append(cmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF",
+                 feature_dep_path(src));
+  append_dep_cflags(cmd);
+#if defined(__APPLE__)
+  nob_cmd_append(cmd, LINK_FLAGS);
+#endif
+#endif
+}
+
+static bool build_features(void) {
+  size_t max_procs = (size_t)nob_nprocs();
+  if (max_procs == 0)
+    max_procs = 6;
+  max_procs += 1;
+
+  bool ok = true;
+  Nob_Procs procs = {0};
+  for (size_t i = 0; i < feature_sources.count; ++i) {
+    const char *src = feature_sources.items[i];
+    const char *so = feature_so_path(src);
+    if (nob_file_exists(so) &&
+        !stale_with_dep(src, so, feature_dep_path(src)))
+      continue;
+    Nob_Cmd cmd = {0};
+    append_feature_build_cmd(&cmd, src);
+    if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs))
+      ok = false;
+  }
+  if (!nob_procs_wait_and_reset(&procs))
+    ok = false;
+  return ok;
+}
+
+
 static Nob_File_Paths to_build = {0};
 static Nob_File_Paths err_paths = {0};
 static Nob_File_Paths printed_sigs = {0};
@@ -628,6 +659,13 @@ static void stop_running_instance(void) {
   if (nob_cmd_run(&cmd)) {
     nob_log(NOB_INFO, "Stopped previously running flint instance");
   }
+}
+
+static bool run_output(const char *output) {
+  stop_running_instance();
+  Nob_Cmd cmd = {0};
+  nob_cmd_append(&cmd, output);
+  return nob_cmd_run_async_and_reset(&cmd) != NOB_INVALID_PROC;
 }
 
 static bool run_tests(void) {
@@ -773,83 +811,34 @@ int main(int argc, char **argv) {
 #else
   const char *output = CONSOLE_OUTPUT;
 #endif
-  Nob_File_Paths all_objs = {0};
+  Nob_File_Paths objs = {0};
   for (size_t i = 0; i < sources.count; ++i) {
-    nob_da_append(&all_objs, strdup(obj_path(sources.items[i])));
+    nob_da_append(&objs, strdup(obj_path(sources.items[i])));
   }
-  bool needs_link = any_compiled || !nob_file_exists(output) ||
-                    nob_needs_rebuild(output, (const char **)all_objs.items,
-                                      all_objs.count) != 0;
+
+  bool needs_link =
+      any_compiled || !nob_file_exists(output) ||
+      nob_needs_rebuild(output, (const char **)objs.items, objs.count) != 0;
 #if defined(_WIN32)
   {
     const char *other = do_actual ? "build/debug/flint.exe" : "build/flint.exe";
     if (nob_file_exists(other) &&
-        nob_needs_rebuild(other, (const char **)all_objs.items,
-                          all_objs.count) != 0) {
+        nob_needs_rebuild(other, (const char **)objs.items, objs.count) != 0) {
       needs_link = true;
     }
   }
 #endif
-  nob_da_free(all_objs);
+
   if (!needs_link) {
     nob_log(NOB_INFO, "No changes, skipping link");
-    {
-      Nob_Procs fprocs = {0};
-      size_t _fmax = (size_t)nob_nprocs();
-      if (_fmax == 0)
-        _fmax = 6;
-      _fmax += 1;
-      bool fok = true;
-      for (size_t i = 0; i < feature_sources.count; ++i) {
-        const char *src = feature_sources.items[i];
-        const char *so = feature_so_path(src);
-        bool need_so = !nob_file_exists(so) ||
-                       stale_with_dep(src, so, feature_dep_path(src));
-        if (!need_so)
-          continue;
-        Nob_Cmd fcmd = {0};
-        nob_cc(&fcmd);
-        nob_cc_flags(&fcmd);
-#if defined(_WIN32)
-        nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src,
-                       "build/main.lib.a", "-MF", feature_dep_path(src),
-                       LINK_FLAGS);
-#elif defined(__APPLE__)
-        nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src,
-                       "-MF", feature_dep_path(src), LINK_FLAGS);
-        append_dep_cflags(&fcmd);
-#else
-        nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src,
-                       "-MF", feature_dep_path(src));
-        append_dep_cflags(&fcmd);
-#endif
-        if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax)) {
-          fok = false;
-        }
-      }
-      if (!nob_procs_wait_and_reset(&fprocs))
-        fok = false;
-      if (!fok)
-        return 1;
-      for (size_t i = 0; i < feature_sources.count; ++i) {
-        const char *so = feature_so_path(feature_sources.items[i]);
-      }
-    }
-    if (do_run) {
-      stop_running_instance();
-      Nob_Cmd cmd = {0};
-      nob_cmd_append(&cmd, output);
-      if (!nob_cmd_run_async_and_reset(&cmd))
-        return 1;
-    }
+    nob_da_free(objs);
+    if (!build_features())
+      return 1;
+    if (do_run && !run_output(output))
+      return 1;
     if (do_test && !run_tests())
       return 1;
     return 0;
-  }
-
-  Nob_File_Paths objs = {0};
-  for (size_t i = 0; i < sources.count; ++i) {
-    nob_da_append(&objs, strdup(obj_path(sources.items[i])));
   }
 
   Nob_Cmd cmd = {0};
@@ -866,51 +855,12 @@ int main(int argc, char **argv) {
 #endif
   append_dep_ldflags(&cmd);
   nob_cmd_append(&cmd, LINK_FLAGS);
-  if (!nob_cmd_run(&cmd)) {
+  bool linked = nob_cmd_run(&cmd);
+  nob_da_free(objs);
+  if (!linked)
     return 1;
-  }
-  {
-    Nob_Procs fprocs = {0};
-    size_t _fmax2 = (size_t)nob_nprocs();
-    if (_fmax2 == 0)
-      _fmax2 = 6;
-    _fmax2 += 1;
-    bool fok = true;
-    for (size_t i = 0; i < feature_sources.count; ++i) {
-      const char *src = feature_sources.items[i];
-      const char *so = feature_so_path(src);
-      bool need_so = !nob_file_exists(so) ||
-                     stale_with_dep(src, so, feature_dep_path(src));
-      if (!need_so)
-        continue;
-      Nob_Cmd fcmd = {0};
-      nob_cc(&fcmd);
-      nob_cc_flags(&fcmd);
-#if defined(_WIN32)
-      nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src,
-                     "build/main.lib.a", "-MF", feature_dep_path(src),
-                     LINK_FLAGS);
-#elif defined(__APPLE__)
-      nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF",
-                     feature_dep_path(src), LINK_FLAGS);
-      append_dep_cflags(&fcmd);
-#else
-      nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF",
-                     feature_dep_path(src));
-      append_dep_cflags(&fcmd);
-#endif
-      if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax2)) {
-        fok = false;
-      }
-    }
-    if (!nob_procs_wait_and_reset(&fprocs))
-      fok = false;
-    if (!fok)
-      return 1;
-    for (size_t i = 0; i < feature_sources.count; ++i) {
-      const char *so = feature_so_path(feature_sources.items[i]);
-    }
-  }
+  if (!build_features())
+    return 1;
 
 #if !defined(_WIN32)
   {
@@ -974,12 +924,8 @@ int main(int argc, char **argv) {
     nob_cmd_run(&extrpath);
   }
 #endif
-  if (do_run) {
-    Nob_Cmd run = {0};
-    nob_cmd_append(&run, output);
-    if (nob_cmd_run_async_and_reset(&run) == NOB_INVALID_PROC)
-      return 1;
-  }
+  if (do_run && !run_output(output))
+    return 1;
   nob_log(NOB_INFO, "Built Successfully");
   if (do_test && !run_tests())
     return 1;

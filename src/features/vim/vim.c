@@ -60,7 +60,6 @@ static void vim_insert_char_silent(char ch) {
 static void *vim_pending_thread(void *arg) {
   fl_sleep(0.3);
   fl_mutex_lock(g_pending_mutex);
-  char pc = g_pending_char;
   if (g_pending_active) {
     g_pending_active = 0;
     g_pending_char = 0;
@@ -142,7 +141,7 @@ static void vim_motion(const char *seq, const char *mods, VimMode mode, VimMotio
 
   if (m->mods[0]) {
     for (int i = 0; i < m->token_count; i++) {
-      char tmp[32];
+      char tmp[64];
       snprintf(tmp, sizeof(tmp), "%s+%s", m->mods, m->tokens[i]);
       strncpy(m->tokens[i], tmp, 31);
       m->tokens[i][31] = '\0';
@@ -414,9 +413,6 @@ static void vim_move_left(void) {
 
 static void vim_move_right(void) {
     PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->eb || !ps->eb->filter)
-        return;
-    
     if (ps->eb->cursor < strlen(ps->eb->filter)) {
         ps->eb->cursor++;
     }
@@ -490,7 +486,7 @@ static void vim_delete_to_end(void) {
   PromptState *ps = fl_get_active_prompt();
   if (!ps || !ps->eb)
     return;
-  int len = (int)strlen(ps->eb->filter);
+  size_t len = strlen(ps->eb->filter);
   if (ps->eb->cursor > len)
     ps->eb->cursor = len;
   ps->eb->filter[ps->eb->cursor] = '\0';
@@ -501,8 +497,8 @@ static void vim_delete_char(void) {
   PromptState *ps = fl_get_active_prompt();
   if (!ps || !ps->eb)
     return;
-  int len = (int)strlen(ps->eb->filter);
-  if (ps->eb->cursor < 0 || ps->eb->cursor >= len)
+  size_t len = strlen(ps->eb->filter);
+  if (ps->eb->cursor >= len)
     return;
   memmove(ps->eb->filter + ps->eb->cursor,
           ps->eb->filter + ps->eb->cursor + 1,
@@ -513,7 +509,7 @@ static void vim_delete_char(void) {
 static void vim_append(void) {
   PromptState *ps = fl_get_active_prompt();
   if (ps && ps->eb) {
-    int len = (int)strlen(ps->eb->filter);
+    size_t len = strlen(ps->eb->filter);
     if (ps->eb->cursor < len)
       ps->eb->cursor++;
   }

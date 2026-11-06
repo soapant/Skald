@@ -11,7 +11,7 @@ void settings_tab(PromptState *state) {}
 
 void settings_render(PromptState *state) {
   fl_place_button(.name = "Checkbox", .x = state->width / 2,
-                  .y = state->height / 2, .border = false, .text = "Button",
+                  .y = state->height / 2,.text = "Button",
                   .fontsize = 20,.bg_color=RGB(100,100,0));
 
 }
