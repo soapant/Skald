@@ -665,8 +665,6 @@ static HWND win32_foreground_target(void) {
     return NULL;
   if (strcmp(cls, "DisplayMessageModalClass") == 0)
     return NULL;
-  if (strcmp(cls, "EditPopupClass") == 0)
-    return NULL;
   if (strcmp(cls, "SearchPopupClass") == 0)
     return NULL;
   return hwnd;
@@ -772,7 +770,6 @@ static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
   if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "EditPopupClass") == 0 ||
         strcmp(cls, "SearchPopupClass") == 0 ||
         strcmp(cls, "FlintWidgetClass") == 0) {
       return TRUE;
@@ -834,7 +831,6 @@ static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
   if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "EditPopupClass") == 0 ||
         strcmp(cls, "SearchPopupClass") == 0 ||
         strcmp(cls, "FlintWidgetClass") == 0) {
       return TRUE;
@@ -987,7 +983,6 @@ bool Platform_FocusWindowLeft(void) {
     GetClassNameA(fg, cls, sizeof(cls));
   if (fg && (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
              strcmp(cls, "DisplayMessageModalClass") == 0 ||
-             strcmp(cls, "EditPopupClass") == 0 ||
              strcmp(cls, "SearchPopupClass") == 0 ||
              strcmp(cls, "FlintWidgetClass") == 0)) {
   }
@@ -1017,7 +1012,6 @@ bool Platform_FocusWindowRight(void) {
     GetClassNameA(fg, cls, sizeof(cls));
   if (fg && (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
              strcmp(cls, "DisplayMessageModalClass") == 0 ||
-             strcmp(cls, "EditPopupClass") == 0 ||
              strcmp(cls, "SearchPopupClass") == 0 ||
              strcmp(cls, "FlintWidgetClass") == 0)) {
   }
@@ -1349,7 +1343,6 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
       return TRUE;
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "EditPopupClass") == 0 ||
         strcmp(cls, "SearchPopupClass") == 0 ||
         strcmp(cls, "FlintWidgetClass") == 0)
       return TRUE;
@@ -1891,22 +1884,6 @@ void Platform_InitUI() {
   wcFade.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
   wcFade.lpszClassName = "DisplayMessageModalClass";
   RegisterClassA(&wcFade);
-
-  WNDCLASSA editPopupWc = {0};
-  editPopupWc.lpfnWndProc = EditPopupProc;
-  editPopupWc.hInstance = GetModuleHandle(NULL);
-  editPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
-  editPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
-  editPopupWc.lpszClassName = "EditPopupClass";
-  RegisterClassA(&editPopupWc);
-
-  WNDCLASSA searchPopupWc = {0};
-  searchPopupWc.lpfnWndProc = SearchPopupProc;
-  searchPopupWc.hInstance = GetModuleHandle(NULL);
-  searchPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
-  searchPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
-  searchPopupWc.lpszClassName = "SearchPopupClass";
-  RegisterClassA(&searchPopupWc);
 
   s_win32_keyboard_hook =
       SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, NULL, 0);

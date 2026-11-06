@@ -6,6 +6,7 @@
 #include "platform/platform.h"
 #include "platform/lib.h"
 #include "config_values.h"
+#include <stdio.h>
 
 static int fp_lower(int c) {
   if (c >= 'A' && c <= 'Z')
