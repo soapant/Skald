@@ -633,7 +633,7 @@ bool fl_terminate_process_by_name(const char *exe_name) {
 bool fl_string_contains(const char *haystack, const char *needle) {
   if (!needle || !haystack)
     return false;
-  return Platform_StringContainsCaseInsensitive(haystack,needle);
+  return Platform_StringContainsCaseInsensitive(haystack, needle);
 }
 
 char *fl_string_cut_at(const char *str, char delim) {
@@ -780,8 +780,10 @@ void fl_message_impl(const FlMessageSpec *spec) {
   int h = spec->h > 0 ? spec->h : 0;
   int mw = spec->mw > 0 ? spec->mw : 0;
   int mh = spec->mh > 0 ? spec->mh : 0;
-  double timeout =  spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
-  if (spec->close_on_keypress)  timeout = 6969.0;
+  double timeout =
+      spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
+  if (spec->close_on_keypress)
+    timeout = 6969.0;
   ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
   if (spec->hover_key && spec->hover_key[0]) {
     if (spec->render) {
@@ -805,16 +807,16 @@ void fl_message_impl(const FlMessageSpec *spec) {
       }
       return;
     }
-  Platform_HoverMessage((PlHoverMessageSpec){.key = spec->hover_key,
-                                             .message = spec->message,
-                                             .x = spec->x,
-                                             .y = spec->y,
-                                             .w = w,
-                                             .h = h,
-                                             .max_width = mw,
-                                             .max_height = mh,
-                                             .color = color,
-                                             .no_bg = spec->no_bg});
+    Platform_HoverMessage((PlHoverMessageSpec){.key = spec->hover_key,
+                                               .message = spec->message,
+                                               .x = spec->x,
+                                               .y = spec->y,
+                                               .w = w,
+                                               .h = h,
+                                               .max_width = mw,
+                                               .max_height = mh,
+                                               .color = color,
+                                               .no_bg = spec->no_bg});
     return;
   }
   MessageSlot slot = spec->slot ? spec->slot : FREE;
@@ -895,8 +897,9 @@ char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
   ListBoxInfo *lb = spec ? spec->lb : NULL;
   int *out_index = spec ? spec->out_index : NULL;
   int idx = lb ? lb->selected_index : -1;
-  int true_idx =
-      (lb && idx >= 0 && idx < lb->item_count) ? lb->matching_indices[idx] : idx;
+  int true_idx = (lb && idx >= 0 && idx < lb->item_count)
+                     ? lb->matching_indices[idx]
+                     : idx;
   if (out_index)
     *out_index = -1;
   WindowManager *wm = WindowManager_Get();
@@ -923,7 +926,8 @@ char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
 bool fl_replace_line_in_file(const char *filepath, int line_index,
                              const char *new_text) {
   char _full[1024] = {0};
-  bool _ok = Platform_ResolveDataPath(__builtin_return_address(0), filepath, _full, sizeof(_full));
+  bool _ok = Platform_ResolveDataPath(__builtin_return_address(0), filepath,
+                                      _full, sizeof(_full));
   if (!filepath || !new_text || line_index < 0)
     return false;
   FlStringList files = fl_load_file_list(filepath);
@@ -2190,8 +2194,7 @@ static void fl_widget_relayout(void) {
   for (int s = 0; s < 4; s++) {
     bool from_right =
         (s == WIDGET_SLOT_TOP_RIGHT || s == WIDGET_SLOT_BOTTOM_RIGHT);
-    bool from_top =
-        (s == WIDGET_SLOT_TOP_LEFT || s == WIDGET_SLOT_TOP_RIGHT);
+    bool from_top = (s == WIDGET_SLOT_TOP_LEFT || s == WIDGET_SLOT_TOP_RIGHT);
     int cursor = from_right ? mx + mw : mx;
     for (int i = 0; i < n; i++) {
       FlWidget *w = sorted[i];
@@ -2219,7 +2222,7 @@ void fl_widget_show(FlWidget *widget) { widget_show(widget); }
 void fl_widget_hide(FlWidget *widget) { widget_hide(widget); }
 
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
-    widget_set_render(widget, render);
+  widget_set_render(widget, render);
 }
 
 void fl_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
@@ -2556,9 +2559,7 @@ void fl_run_every(double seconds, void (*callback)(void)) {
   fl_thread_create(fl_run_every_thread, args);
 }
 
-FlMetrics *fl_get_metrics(void) {
-  return Platform_GetMetrics();
-}
+FlMetrics *fl_get_metrics(void) { return Platform_GetMetrics(); }
 void *fl_get_active_prompt(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = WindowManager_GetTopPopup(wm);
@@ -2575,6 +2576,4 @@ void fl_register_event(FlEvent event, FlEventCallback cb) {
 void fl_unregister_event(FlEvent event, FlEventCallback cb) {
   EventBus_Unregister(event, cb);
 }
-void fl_close_window() {
-   FlintContext_Get()->window.selection_complete = true;
-}
+void fl_close_window() { FlintContext_Get()->window.selection_complete = true; }

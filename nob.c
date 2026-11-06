@@ -16,7 +16,8 @@
 #endif
 
 #define CC_COMMON_FLAGS                                                        \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall","-Wextra","-Wno-unused-parameter"
+  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
+      "-Wextra", "-Wno-unused-parameter"
 #if defined(_WIN32)
 #define CC_FLAGS CC_COMMON_FLAGS
 #define LINK_FLAGS                                                             \
@@ -134,9 +135,13 @@ static const char *obj_file_path(const char *src, const char *ext) {
   return nob_temp_sprintf(OBJ_FOLDER "/%s%s", nob_path_name(src), ext);
 }
 
-static const char *obj_path(const char *src) { return obj_file_path(src, ".o"); }
+static const char *obj_path(const char *src) {
+  return obj_file_path(src, ".o");
+}
 
-static const char *dep_path(const char *src) { return obj_file_path(src, ".d"); }
+static const char *dep_path(const char *src) {
+  return obj_file_path(src, ".d");
+}
 
 static const char *err_path(const char *src) {
   return obj_file_path(src, ".err");
@@ -313,8 +318,10 @@ static void discover_dep_flags(void) {
     append_ws_split(&dep_cflags, cflags);
   } else {
     const char *fb[] = {
-        "-I/usr/include/freetype2",    "-I/usr/include/gio-unix-2.0",
-        "-I/usr/include/X11",          "-I/usr/include/freetype2",
+        "-I/usr/include/freetype2",
+        "-I/usr/include/gio-unix-2.0",
+        "-I/usr/include/X11",
+        "-I/usr/include/freetype2",
     };
     for (size_t i = 0; i < sizeof(fb) / sizeof(fb[0]); i++)
       nob_da_append(&dep_cflags, nob_temp_strdup(fb[i]));
@@ -334,8 +341,8 @@ static void discover_dep_flags(void) {
     }
   } else {
     const char *fb[] = {
-        "-lX11",  "-lXft",  "-lfontconfig", "-lXrender",  "-lXrandr",
-        "-lXext", "-lXtst", "-lgio-2.0","-lgobject-2.0",
+        "-lX11",  "-lXft",  "-lfontconfig", "-lXrender",     "-lXrandr",
+        "-lXext", "-lXtst", "-lgio-2.0",    "-lgobject-2.0",
     };
     for (size_t i = 0; i < sizeof(fb) / sizeof(fb[0]); i++)
       nob_da_append(&dep_ldflags, nob_temp_strdup(fb[i]));
@@ -513,8 +520,7 @@ static bool build_features(void) {
   for (size_t i = 0; i < feature_sources.count; ++i) {
     const char *src = feature_sources.items[i];
     const char *so = feature_so_path(src);
-    if (nob_file_exists(so) &&
-        !stale_with_dep(src, so, feature_dep_path(src)))
+    if (nob_file_exists(so) && !stale_with_dep(src, so, feature_dep_path(src)))
       continue;
     Nob_Cmd cmd = {0};
     append_feature_build_cmd(&cmd, src);
@@ -525,7 +531,6 @@ static bool build_features(void) {
     ok = false;
   return ok;
 }
-
 
 static Nob_File_Paths to_build = {0};
 static Nob_File_Paths err_paths = {0};

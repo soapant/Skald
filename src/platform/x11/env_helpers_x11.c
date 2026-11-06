@@ -26,11 +26,13 @@ const char *Env_XdgRuntimeDir(void) {
   return env_or_null(getenv("XDG_RUNTIME_DIR"));
 }
 
-bool Env_IsWayland(void) { return env_or_null(getenv("WAYLAND_DISPLAY")) != NULL; }
+bool Env_IsWayland(void) {
+  return env_or_null(getenv("WAYLAND_DISPLAY")) != NULL;
+}
 
 bool Env_IsCompositor(void) {
-  return getenv("WAYLAND_DISPLAY") != NULL ||
-         getenv("SWAYSOCK") != NULL || getenv("I3SOCK") != NULL ||
+  return getenv("WAYLAND_DISPLAY") != NULL || getenv("SWAYSOCK") != NULL ||
+         getenv("I3SOCK") != NULL ||
          getenv("HYPRLAND_INSTANCE_SIGNATURE") != NULL ||
          getenv("NIRI_SOCKET") != NULL || getenv("KDE_FULL_SESSION") != NULL;
 }

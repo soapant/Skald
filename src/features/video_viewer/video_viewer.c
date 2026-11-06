@@ -128,7 +128,7 @@ void video_refresh_callback(PromptState *state) {
   for (size_t i = 0; i < n; i++) {
     s_video_items[i] = video_files.files[i].name;
   }
-  fl_populate_listbox(state->lb,state->eb->filter, s_video_items, (int)n);
+  fl_populate_listbox(state->lb, state->eb->filter, s_video_items, (int)n);
 }
 
 bool video_enter_callback(PromptState *state) {

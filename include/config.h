@@ -8,7 +8,6 @@
 #define HELP_SCREEN_KEY 'H'
 #define COPY_SELECTION_KEY 'Y'
 
-
 void Config_ResolveDefaultApps(void);
 bool Config_IsAutoResolvedApp(const char *name);
 bool Config_Load(void);

@@ -391,7 +391,7 @@ static void macro_refresh(PromptState *state) {
     n = MAX_VISIBLE_ITEMS;
   for (int i = 0; i < n; i++) {
     macro_file_name_ptrs[i] = macro_load_files.files[i].name;
-    fl_populate_listbox(state->lb,state->eb->filter, macro_file_name_ptrs, n);
+    fl_populate_listbox(state->lb, state->eb->filter, macro_file_name_ptrs, n);
   }
 }
 
@@ -495,47 +495,43 @@ void RecordToggle(void) {
   g_recording = false;
 }
 void crosshair_render(void) {
-    int size = 5;
+  int size = 5;
 
-    fl_draw_line(.x1 = 15 - size, .y1 = 15, .x2 = 15 + size, .y2 = 15, .color = FL_RED,.thickness=3);
+  fl_draw_line(.x1 = 15 - size, .y1 = 15, .x2 = 15 + size, .y2 = 15,
+               .color = FL_RED, .thickness = 3);
 
-    fl_draw_line(.x1 = 15, .y1 = 15 - size, .x2 = 15, .y2 = 15 + size, .color = FL_RED,.thickness=3);
+  fl_draw_line(.x1 = 15, .y1 = 15 - size, .x2 = 15, .y2 = 15 + size,
+               .color = FL_RED, .thickness = 3);
 }
 
 void crosshair_fn(void) {
-    char* title = fl_get_active_window_title();
-    bool is_fortnite = (title && fl_string_contains(title, "Fortnite"));
-    free(title);
-    if (is_fortnite) {
-        if (!fl_overlay_active("crosshair")) {
-            fl_overlay(.name = "crosshair", 
-                       .render = crosshair_render, 
-                       .w = 30, .h = 30, 
-                       .x = WIDTH / 2, .y = HEIGHT / 2, 
-                       .no_bg = true);
-        }
-    } 
-    else {
-        if (fl_overlay_active("crosshair")) {
-            fl_dismiss_overlay("crosshair");
-        }
+  char *title = fl_get_active_window_title();
+  bool is_fortnite = (title && fl_string_contains(title, "Fortnite"));
+  free(title);
+  if (is_fortnite) {
+    if (!fl_overlay_active("crosshair")) {
+      fl_overlay(.name = "crosshair", .render = crosshair_render, .w = 30,
+                 .h = 30, .x = WIDTH / 2, .y = HEIGHT / 2, .no_bg = true);
     }
+  } else {
+    if (fl_overlay_active("crosshair")) {
+      fl_dismiss_overlay("crosshair");
+    }
+  }
 }
 
 FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "Ctrl+Alt+R", .cb = RecordToggle);
   fl_register_hotkey(.hotkey = "Ctrl+Alt+P", .cb = PlayMacro);
-  fl_add_to_cc(.display_name = "SaveMacro",
-               .on_action = SaveMacro, .type = "Macro",
-               .icon = "/save.png");
-  fl_add_to_cc(.display_name = "LoadMacro",
-               .on_action = LoadMacro, .type = "Macro",
-               .icon = "/load.png");
+  fl_add_to_cc(.display_name = "SaveMacro", .on_action = SaveMacro,
+               .type = "Macro", .icon = "/save.png");
+  fl_add_to_cc(.display_name = "LoadMacro", .on_action = LoadMacro,
+               .type = "Macro", .icon = "/load.png");
   fl_add_to_cc(.display_name = "InfinitePlayback",
-               .on_action = InfinitePlaybackToggle,
-               .type = "Macro", .icon = "/repeat.png");
+               .on_action = InfinitePlaybackToggle, .type = "Macro",
+               .icon = "/repeat.png");
   fl_add_to_cc(.display_name = "RemoveDeadTime",
-               .on_action = RemoveDeadTimeToggle,
-               .type = "Macro", .icon = "/clock-off.png");
-  fl_run_every(1.0,crosshair_fn);
+               .on_action = RemoveDeadTimeToggle, .type = "Macro",
+               .icon = "/clock-off.png");
+  fl_run_every(1.0, crosshair_fn);
 }

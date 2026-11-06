@@ -827,9 +827,7 @@ static void wl_drop_source(struct wl_proxy **slot) {
   }
 }
 
-bool Platform_ClipboardAvailable(void) {
-  return Env_IsWayland();
-}
+bool Platform_ClipboardAvailable(void) { return Env_IsWayland(); }
 
 static void wl_publish_locked(void) {
 

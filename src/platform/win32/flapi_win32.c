@@ -183,8 +183,8 @@ bool fl_listbox_begin_platform(const PlListSpec *spec) {
   g_fl_list_itemH = spec->item_height ? spec->item_height : PromptRowHeight();
   ListboxLayout lay;
   Listbox_ComputeLayout(spec, PromptListTop(), g_fl_list_itemH,
-                        st ? st->width : 0, st ? st->height : 0,
-                        lb->item_count, &lay);
+                        st ? st->width : 0, st ? st->height : 0, lb->item_count,
+                        &lay);
   g_fl_list_y0 = lay.y0;
   g_fl_list_bx = lay.bx;
   g_fl_list_bw = lay.bw;

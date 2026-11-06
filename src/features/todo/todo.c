@@ -278,7 +278,8 @@ void RemoveTodoItemFromFile(const char *item_to_remove) {
 void todo_refresh_callback(PromptState *state) {
   FlStringList files = fl_load_file_list(TODO_FILE_PATH);
 
-  fl_populate_listbox(state->lb,state->eb->filter, (const char **)files.items, files.count);
+  fl_populate_listbox(state->lb, state->eb->filter, (const char **)files.items,
+                      files.count);
   fl_free_file_list(&files);
 }
 
@@ -342,11 +343,12 @@ void todo_render_callback(PromptState *state) {
 
 void todo_edit_callback(PromptState *state) {
   int idx = -1;
-  char *edited = fl_edit_text_popup(.initial_text = state->lb->selected_text, .lb = state->lb,
-                                    .out_index = &idx);
+  char *edited = fl_edit_text_popup(.initial_text = state->lb->selected_text,
+                                    .lb = state->lb, .out_index = &idx);
   if (!edited)
     return;
-  if (idx >= 0)  fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
+  if (idx >= 0)
+    fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
   todo_refresh_callback(state);
 }
 

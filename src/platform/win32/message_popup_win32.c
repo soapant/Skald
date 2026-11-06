@@ -52,9 +52,9 @@ static void MsgSlotUnregister(HWND hwnd) {
   if (hwnd == g_hover_msg_hwnd)
     g_hover_msg_hwnd = NULL;
   if (WH_TO_HWND(g_win32_message_wnd) == hwnd) {
-    g_win32_message_wnd =
-        g_msg_slot_count > 0 ? WH_FROM_HWND(g_msg_slots[g_msg_slot_count - 1])
-                             : WH_NULL;
+    g_win32_message_wnd = g_msg_slot_count > 0
+                              ? WH_FROM_HWND(g_msg_slots[g_msg_slot_count - 1])
+                              : WH_NULL;
   }
 }
 
@@ -71,18 +71,13 @@ static void MsgSlotRegister(HWND hwnd) {
   g_win32_message_wnd = WH_FROM_HWND(hwnd);
 }
 
-enum {
-  MSG_DESTROY_ALL,
-  MSG_DESTROY_INDEFINITE,
-  MSG_DESTROY_NAMED
-};
+enum { MSG_DESTROY_ALL, MSG_DESTROY_INDEFINITE, MSG_DESTROY_NAMED };
 
 static int MsgSlotDestroyWhere(int mode, const char *name) {
   int destroyed = 0;
   for (int i = g_msg_slot_count - 1; i >= 0; i--) {
     HWND h = g_msg_slots[i];
-    FadeWindowData *fd =
-        (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
+    FadeWindowData *fd = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
     bool indefinite = fd && (fd->timeout == 6969.0 || fd->timeout <= 0.0);
     const char *fdname = fd ? fd->name : "";
     bool match = (mode == MSG_DESTROY_ALL) ||
@@ -344,8 +339,8 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     params.no_bg = no_bg;
     params.render = render;
     params.name = name;
-    SendMessageA(WH_TO_HWND(g_win32_tray_wnd),
-                 WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
+    SendMessageA(WH_TO_HWND(g_win32_tray_wnd), WM_DISPLAY_MESSAGE, 0,
+                 (LPARAM)&params);
     return;
   }
   Platform_CreateDisplayMessageWindow(
@@ -394,7 +389,8 @@ bool Platform_MessageActive(const char *name) {
     HWND h = g_msg_slots[i];
     if (!h || !IsWindow(h))
       continue;
-    FadeWindowData *data = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
+    FadeWindowData *data =
+        (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
     if (data && strcmp(data->name, name) == 0)
       return true;
   }
@@ -819,7 +815,7 @@ void Platform_CreateDisplayMessageWindow(
   log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g "
            "no_bg=%d render=%p",
            message ? message : "(null)", centerX, centerY, maxWidth, maxHeight,
-            timeout, no_bg ? 1 : 0, (void *)render);
+           timeout, no_bg ? 1 : 0, (void *)render);
   g_last_created_msg_hwnd = NULL;
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);

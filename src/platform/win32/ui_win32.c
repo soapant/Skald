@@ -130,7 +130,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
     return;
   }
   lb->selected_index = index;
-  lb->selected_text = ListBoxInfo_Row(lb,index);
+  lb->selected_text = ListBoxInfo_Row(lb, index);
   ListBox_ScrollToSelection(lb);
   UI_RequestPopupRepaint();
 }
@@ -183,7 +183,7 @@ static bool win32_resolve_text_target(Win32TextTarget *out) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (top) {
-      return true;
+    return true;
   }
   if (top && top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;

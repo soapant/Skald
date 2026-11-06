@@ -240,8 +240,8 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
   }
 
   if (parts & EDITBOX_PART_TINT) {
-    unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG),
-                                    rgb_to_hex(COLOR_CURSOR), 0.72f);
+    unsigned long tint =
+        Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_CURSOR), 0.72f);
     if (layout->draw_selection) {
       Platform_DrawRectRaw(
           (PlDrawRectRawSpec){.x = layout->sel_x0,
@@ -289,17 +289,16 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
   }
 
   if (parts & EDITBOX_PART_CARET) {
-    Platform_DrawRectRaw(
-        (PlDrawRectRawSpec){.x = layout->caret_x,
-                            .y = spec->caret_y,
-                             .w = layout->caret_w,
-                            .h = spec->caret_h,
-                            .color = rgb_to_hex(COLOR_CURSOR),
-                            .radius = 0,
-                            .rounded = false,
-                            .opaque = true,
-                            .thickness = 1,
-                            .filled = true});
+    Platform_DrawRectRaw((PlDrawRectRawSpec){.x = layout->caret_x,
+                                             .y = spec->caret_y,
+                                             .w = layout->caret_w,
+                                             .h = spec->caret_h,
+                                             .color = rgb_to_hex(COLOR_CURSOR),
+                                             .radius = 0,
+                                             .rounded = false,
+                                             .opaque = true,
+                                             .thickness = 1,
+                                             .filled = true});
     if (layout->caret_w > 1 && spec->text && spec->cursor >= 0 &&
         spec->cursor < spec->text_len) {
       int cl = 1;

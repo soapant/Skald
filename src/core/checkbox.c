@@ -137,10 +137,15 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
     return;
   }
   unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
-  unsigned long def_btn_border = (spec->clicked || spec->hovered) ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+  unsigned long def_btn_border =
+      (spec->clicked || spec->hovered) ? CHECKBOX_WHITE : CHECKBOX_GRAY;
 
-  unsigned long def_cb_body = spec->hovered ? CHECKBOX_GRAY : (spec->bg_color ? spec->bg_color : COLOR_BG);
-  unsigned long def_btn_body = (spec->clicked || spec->hovered) ? CHECKBOX_GRAY : spec->bg_color ? spec->bg_color : COLOR_BG;
+  unsigned long def_cb_body =
+      spec->hovered ? CHECKBOX_GRAY
+                    : (spec->bg_color ? spec->bg_color : COLOR_BG);
+  unsigned long def_btn_body = (spec->clicked || spec->hovered) ? CHECKBOX_GRAY
+                               : spec->bg_color                 ? spec->bg_color
+                                                                : COLOR_BG;
 
   unsigned long checkbox_border =
       spec->hovered_color ? spec->hovered_color : def_cb_border;
@@ -193,15 +198,16 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
       int th = checkbox_line_height(fontsize);
       int tx = spec->x + (w - tw) / 2;
       int ty = spec->y + (h - th) / 2;
-      Platform_DrawTextRaw(
-          (PlDrawTextRawSpec){.x = tx,
-                              .y = ty - 2,
-                              .text = CHECKBOX_GLYPH,
-                              .color = spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
-                              .font = FH_NULL,
-                              .align = "LEFT",
-                              .pad = 0,
-                              .fontsize = fontsize});
+      Platform_DrawTextRaw((PlDrawTextRawSpec){
+          .x = tx,
+          .y = ty - 2,
+          .text = CHECKBOX_GLYPH,
+          .color =
+              spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
+          .font = FH_NULL,
+          .align = "LEFT",
+          .pad = 0,
+          .fontsize = fontsize});
     }
   } else if (spec->button) {
     int w = spec->w > 0 ? spec->w : 100;
@@ -236,15 +242,16 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
       int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
       if (!Platform_FontInitalized(s_font))
         s_font = Platform_CreateFont(fontsize, UsedFont);
-      Platform_DrawTextCentered(
-          (PlDrawTextCenteredSpec){.x = spec->x,
-                                   .y = spec->y,
-                                   .w = w,
-                                   .h = h,
-                                   .text = spec->text,
-                                   .color = spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
-                                   .font = s_font,
-                                   .fontsize = fontsize});
+      Platform_DrawTextCentered((PlDrawTextCenteredSpec){
+          .x = spec->x,
+          .y = spec->y,
+          .w = w,
+          .h = h,
+          .text = spec->text,
+          .color =
+              spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
+          .font = s_font,
+          .fontsize = fontsize});
     }
   }
 }

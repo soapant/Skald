@@ -25,7 +25,7 @@ void next_image(void) {
     char *title = fl_get_active_window_title();
     if (!title)
       title = "";
-    if (fl_string_contains(title,"feh")) {
+    if (fl_string_contains(title, "feh")) {
       fl_close_active_window();
     }
     char cmd[512];
@@ -46,7 +46,7 @@ void next_image(void) {
     char *title = fl_get_active_window_title();
     if (!title)
       title = "";
-    if (fl_string_contains(title,"feh")) {
+    if (fl_string_contains(title, "feh")) {
       fl_close_active_window();
     }
     snprintf(cmd, sizeof(cmd),
@@ -63,7 +63,7 @@ void last_image(void) {
   char *title = fl_get_active_window_title();
   if (!title)
     title = "";
-  if (fl_string_contains(title,"feh")) {
+  if (fl_string_contains(title, "feh")) {
     fl_close_active_window();
   }
   char cmd[512];
@@ -129,11 +129,11 @@ void start_auto_click(void) {
   }
 }
 void anki_hit_space(void) {
-    fl_focus_window_left();
-    fl_focus_window_left();
-    fl_send_key("Space");
-    fl_focus_window_right();
-    fl_focus_window_right();
+  fl_focus_window_left();
+  fl_focus_window_left();
+  fl_send_key("Space");
+  fl_focus_window_right();
+  fl_focus_window_right();
 }
 
 FLINT_FEATURE_INIT {

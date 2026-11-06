@@ -316,8 +316,7 @@ static void widget_relayout(void) {
   for (int s = 0; s < 4; s++) {
     bool from_right =
         (s == WIDGET_SLOT_TOP_RIGHT || s == WIDGET_SLOT_BOTTOM_RIGHT);
-    bool from_top =
-        (s == WIDGET_SLOT_TOP_LEFT || s == WIDGET_SLOT_TOP_RIGHT);
+    bool from_top = (s == WIDGET_SLOT_TOP_LEFT || s == WIDGET_SLOT_TOP_RIGHT);
     int cursor = from_right ? mx + mw : mx;
     for (int i = 0; i < n; i++) {
       Widget *w = sorted[i];

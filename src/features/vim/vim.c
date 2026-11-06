@@ -31,9 +31,7 @@ static volatile int g_pending_active = 0;
 static char g_pending_char = 0;
 static FlMutex g_pending_mutex = NULL;
 
-static void vim_reset_buffer(void) {
-  g_key_buffer_count = 0;
-}
+static void vim_reset_buffer(void) { g_key_buffer_count = 0; }
 
 static void vim_refresh_prompt(void) {
   PromptState *aps = fl_get_active_prompt();
@@ -50,8 +48,7 @@ static void vim_insert_char_silent(char ch) {
     return;
   if (ps->eb->cursor > len)
     ps->eb->cursor = len;
-  memmove(ps->eb->filter + ps->eb->cursor + 1,
-          ps->eb->filter + ps->eb->cursor,
+  memmove(ps->eb->filter + ps->eb->cursor + 1, ps->eb->filter + ps->eb->cursor,
           len - ps->eb->cursor + 1);
   ps->eb->filter[ps->eb->cursor] = ch;
   ps->eb->cursor++;
@@ -102,7 +99,8 @@ static void vim_delete_last(int n) {
   ps->eb->cursor = start;
 }
 
-static void vim_motion(const char *seq, const char *mods, VimMode mode, VimMotionCallback cb) {
+static void vim_motion(const char *seq, const char *mods, VimMode mode,
+                       VimMotionCallback cb) {
   if (!seq || !cb || g_motion_count >= VIM_MAX_MOTIONS)
     return;
   VimMotion *m = &g_motions[g_motion_count++];
@@ -149,7 +147,8 @@ static void vim_motion(const char *seq, const char *mods, VimMode mode, VimMotio
   }
 }
 
-static bool vim_key_to_token(const PopupKeyEvent *key, char *out, size_t outsz) {
+static bool vim_key_to_token(const PopupKeyEvent *key, char *out,
+                             size_t outsz) {
   if (!key || !out || outsz == 0)
     return false;
   char ch = 0;
@@ -264,23 +263,23 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
       bool match = true;
       for (int t = 0; t < m->token_count; t++) {
         if (strcmp(g_key_buffer[g_key_buffer_count - m->token_count + t],
-                    m->tokens[t]) != 0) {
+                   m->tokens[t]) != 0) {
           match = false;
           break;
         }
       }
       if (match) {
-      if (g_vim_mode == VIM_MODE_INSERT)
-        vim_delete_last(m->token_count);
-      vim_reset_buffer();
-      if (m->cb)
-        m->cb();
-      PromptState *aps = fl_get_active_prompt();
-      if (aps && aps->callbacks && aps->callbacks->refresh)
-        aps->callbacks->refresh(aps);
-      return true;
+        if (g_vim_mode == VIM_MODE_INSERT)
+          vim_delete_last(m->token_count);
+        vim_reset_buffer();
+        if (m->cb)
+          m->cb();
+        PromptState *aps = fl_get_active_prompt();
+        if (aps && aps->callbacks && aps->callbacks->refresh)
+          aps->callbacks->refresh(aps);
+        return true;
+      }
     }
-  }
   } else {
     vim_reset_buffer();
   }
@@ -316,44 +315,37 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
 }
 
 static void vim_move(int amount, bool up) {
-    PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->lb)
-        return;
-    
-    if (up) {
-        if (ps->lb->selected_index >= amount) {
-            ps->lb->selected_index -= amount;
-        } else {
-            ps->lb->selected_index = 0; 
-        }
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->lb)
+    return;
+
+  if (up) {
+    if (ps->lb->selected_index >= amount) {
+      ps->lb->selected_index -= amount;
     } else {
-        int max_index = ps->lb->item_count - 1;
-        if (max_index < 0) max_index = 0;
-
-        if (ps->lb->selected_index + amount <= max_index) {
-            ps->lb->selected_index += amount;
-        } else {
-            ps->lb->selected_index = max_index; 
-        }
+      ps->lb->selected_index = 0;
     }
-    vim_refresh_prompt();
+  } else {
+    int max_index = ps->lb->item_count - 1;
+    if (max_index < 0)
+      max_index = 0;
+
+    if (ps->lb->selected_index + amount <= max_index) {
+      ps->lb->selected_index += amount;
+    } else {
+      ps->lb->selected_index = max_index;
+    }
+  }
+  vim_refresh_prompt();
 }
 
-static void vim_move_down(void) {
-   vim_move(1, false); 
-}
+static void vim_move_down(void) { vim_move(1, false); }
 
-static void vim_move_down5(void) {
-   vim_move(5, false);
-}
+static void vim_move_down5(void) { vim_move(5, false); }
 
-static void vim_move_up(void) {
-   vim_move(1, true);
-}
+static void vim_move_up(void) { vim_move(1, true); }
 
-static void vim_move_up5(void) {
-   vim_move(5, true);
-}
+static void vim_move_up5(void) { vim_move(5, true); }
 
 static void vim_set_insert_mode(void) {
   g_vim_mode = VIM_MODE_INSERT;
@@ -365,14 +357,9 @@ static void vim_set_normal_mode(void) {
   fl_get_metrics()->edit_cursor_width = 14;
 }
 
-static void vim_enter_normal_mode(void) {
-  vim_set_normal_mode();
-}
+static void vim_enter_normal_mode(void) { vim_set_normal_mode(); }
 
-static void vim_close_window(void) {
-    fl_close_window();
-}
-
+static void vim_close_window(void) { fl_close_window(); }
 
 static void vim_on_prompt_open(void) {
   vim_set_insert_mode();
@@ -380,49 +367,51 @@ static void vim_on_prompt_open(void) {
   vim_cancel_pending();
 }
 static void vim_go_to_bottom(void) {
-    PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->lb)
-        return;
-    ps->lb->selected_index = ps->lb->item_count - 1;
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->lb)
+    return;
+  ps->lb->selected_index = ps->lb->item_count - 1;
 }
 static void vim_go_to_top(void) {
-    PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->lb)
-        return;
-    ps->lb->selected_index = 0;
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->lb)
+    return;
+  ps->lb->selected_index = 0;
 }
 static void vim_ctrlenter(void) {
-    PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->lb)
-        return;
-    if (ps->callbacks->ctrl_enter)  ps->callbacks->ctrl_enter(ps);
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->lb)
+    return;
+  if (ps->callbacks->ctrl_enter)
+    ps->callbacks->ctrl_enter(ps);
 }
 static void vim_edit_text(void) {
-    PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->lb)
-        return;
-    if (ps->callbacks->edit)  ps->callbacks->edit(ps);
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->lb)
+    return;
+  if (ps->callbacks->edit)
+    ps->callbacks->edit(ps);
 }
 static void vim_move_left(void) {
-    PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->eb)
-        return;
-    if (ps->eb->cursor > 0) 
-        ps->eb->cursor--;
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->eb)
+    return;
+  if (ps->eb->cursor > 0)
+    ps->eb->cursor--;
 }
 
 static void vim_move_right(void) {
-    PromptState *ps = fl_get_active_prompt();
-    if (ps->eb->cursor < strlen(ps->eb->filter)) {
-        ps->eb->cursor++;
-    }
+  PromptState *ps = fl_get_active_prompt();
+  if (ps->eb->cursor < strlen(ps->eb->filter)) {
+    ps->eb->cursor++;
+  }
 }
 static void vim_delete_line(void) {
-    PromptState *ps = fl_get_active_prompt();
-    if (!ps || !ps->eb)
-        return;
-    ps->eb->filter[0] = '\0';
-    ps->eb->cursor = 0;
+  PromptState *ps = fl_get_active_prompt();
+  if (!ps || !ps->eb)
+    return;
+  ps->eb->filter[0] = '\0';
+  ps->eb->cursor = 0;
 }
 
 static int vim_is_word_char(char c) {
@@ -500,8 +489,7 @@ static void vim_delete_char(void) {
   size_t len = strlen(ps->eb->filter);
   if (ps->eb->cursor >= len)
     return;
-  memmove(ps->eb->filter + ps->eb->cursor,
-          ps->eb->filter + ps->eb->cursor + 1,
+  memmove(ps->eb->filter + ps->eb->cursor, ps->eb->filter + ps->eb->cursor + 1,
           len - ps->eb->cursor);
   vim_refresh_prompt();
 }

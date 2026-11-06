@@ -106,7 +106,7 @@ void music_refresh_callback(PromptState *state) {
   for (size_t i = 0; i < n; i++) {
     s_music_items[i] = s_music_files.files[i].name;
   }
-  fl_populate_listbox(state->lb,state->eb->filter, s_music_items, (int)n);
+  fl_populate_listbox(state->lb, state->eb->filter, s_music_items, (int)n);
 }
 bool play_music(char *name) {
 #if defined(_WIN32)
@@ -202,23 +202,28 @@ void reload_music(void) {
                             NULL, true, FL_DIR_WALK_UNLIMITED);
 }
 void add_music(void) {
-    char* url = fl_popup(.placeholder="Enter youtube url for the video");
-    char* name = fl_popup(.placeholder="Enter a custom name for this song (or leave blank for default)");
-    if (!url) return;
-    char cmd[512];
-    
-    if (name && strlen(name) > 0) {
-        snprintf(cmd, sizeof(cmd), 
-                 "yt-dlp -f \"ba\" -x --audio-format mp3 --audio-quality 0 -o \"%s/%s.%%(ext)s\" \"%s\"", 
-                 MusicPath, name, url);
-    } else {
-        snprintf(cmd, sizeof(cmd), 
-                 "yt-dlp -f \"ba\" -x --audio-format mp3 --audio-quality 0 -o \"%s/%%(title)s.%%(ext)s\" \"%s\"", 
-                 MusicPath, url);
-    }
-    free(name);
-    free(url);
-    fl_run_terminal_command(cmd);
+  char *url = fl_popup(.placeholder = "Enter youtube url for the video");
+  char *name = fl_popup(
+          .placeholder =
+              "Enter a custom name for this song (or leave blank for default)");
+  if (!url)
+    return;
+  char cmd[512];
+
+  if (name && strlen(name) > 0) {
+    snprintf(cmd, sizeof(cmd),
+             "yt-dlp -f \"ba\" -x --audio-format mp3 --audio-quality 0 -o "
+             "\"%s/%s.%%(ext)s\" \"%s\"",
+             MusicPath, name, url);
+  } else {
+    snprintf(cmd, sizeof(cmd),
+             "yt-dlp -f \"ba\" -x --audio-format mp3 --audio-quality 0 -o "
+             "\"%s/%%(title)s.%%(ext)s\" \"%s\"",
+             MusicPath, url);
+  }
+  free(name);
+  free(url);
+  fl_run_terminal_command(cmd);
 }
 
 FLINT_FEATURE_INIT {

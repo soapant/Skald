@@ -26,7 +26,8 @@ bool Platform_QueryBrowser(char *query) { return false; }
 bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
                                      char *cmd, size_t cmd_size) {
   snprintf(cmd, cmd_size,
-           "gcc -std=gnu17 -I include -I/usr/include/freetype2 -I/usr/include/libpng16 -pipe -fPIC -shared -o %s %s 2>&1",
+           "gcc -std=gnu17 -I include -I/usr/include/freetype2 "
+           "-I/usr/include/libpng16 -pipe -fPIC -shared -o %s %s 2>&1",
            out_tmp, src);
   return true;
 }

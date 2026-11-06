@@ -329,8 +329,8 @@ static bool pk_enter_callback(PromptState *state) {
   char name[PK_NAME_LEN];
   char mem[32];
   char cpu[24];
-  pk_split_row(state->lb->selected_text, name, sizeof(name), mem, sizeof(mem), cpu,
-               sizeof(cpu));
+  pk_split_row(state->lb->selected_text, name, sizeof(name), mem, sizeof(mem),
+               cpu, sizeof(cpu));
   if (name[0] == '\0')
     return false;
   fl_terminate_process_by_name(name);
@@ -341,7 +341,7 @@ static void pk_refresh_callback(PromptState *state) {
   g_pk_last_collect = fl_start_timer();
   g_pk_collect_started = true;
   pk_collect_and_sort();
-  fl_populate_listbox(state->lb,state->eb->filter, g_pk_items, g_pk_count);
+  fl_populate_listbox(state->lb, state->eb->filter, g_pk_items, g_pk_count);
 }
 
 #define PK_COL_MEM 430

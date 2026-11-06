@@ -55,8 +55,7 @@ void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
   }
   if (top_index < 0)
     top_index = 0;
-  if (g_x11_lb_visible > 0 &&
-      top_index + g_x11_lb_visible > lb->item_count)
+  if (g_x11_lb_visible > 0 && top_index + g_x11_lb_visible > lb->item_count)
     top_index = lb->item_count - g_x11_lb_visible;
   if (top_index < 0)
     top_index = 0;
@@ -86,7 +85,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
     return;
   }
   lb->selected_index = index;
-  lb->selected_text = ListBoxInfo_Row(lb,index);
+  lb->selected_text = ListBoxInfo_Row(lb, index);
   UI_LB_SetCaretIndex(index, false);
   ListBox_ScrollToSelection(lb);
 }
@@ -176,7 +175,7 @@ void UI_SetCursorPosition(int position) {
   }
 }
 
-void UI_RedrawNow() { }
+void UI_RedrawNow() {}
 
 void UI_Redraw(ListBoxInfo *lb) { UI_RedrawNow(); }
 

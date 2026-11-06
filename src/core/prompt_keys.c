@@ -59,8 +59,8 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
   }
   Prompt_DeleteSelection(state);
   size_t fcur = (size_t)state->eb->cursor;
-  EditBufferInsertText(state->eb->filter, sizeof(state->eb->filter), &fcur, text,
-                       (size_t)len);
+  EditBufferInsertText(state->eb->filter, sizeof(state->eb->filter), &fcur,
+                       text, (size_t)len);
   state->eb->cursor = (int)fcur;
   Prompt_Refresh(state);
 }
@@ -104,7 +104,8 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   } else if (ctrl) {
     should_close = false;
     log_info("CTRL_ENTER_BRANCH: ctrl_enter=%p sel='%s'",
-             (void *)ctx->window.prompt_callbacks.ctrl_enter, sel ? sel : "(null)");
+             (void *)ctx->window.prompt_callbacks.ctrl_enter,
+             sel ? sel : "(null)");
     if (ctx->window.prompt_callbacks.ctrl_enter) {
       log_info("CTRL_ENTER_CALLBACK_CALLING");
       should_close = ctx->window.prompt_callbacks.ctrl_enter(state);
@@ -135,7 +136,8 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   }
   if (should_close) {
     if (sel) {
-      strncpy(ctx->window.output_buffer, sel, sizeof(ctx->window.output_buffer) - 1);
+      strncpy(ctx->window.output_buffer, sel,
+              sizeof(ctx->window.output_buffer) - 1);
       ctx->window.output_buffer[sizeof(ctx->window.output_buffer) - 1] = '\0';
     } else {
       ctx->window.output_buffer[0] = '\0';
@@ -335,7 +337,8 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       clip_len = avail;
     if (clip_len > 0) {
       memmove(state->eb->filter + state->eb->cursor + clip_len,
-              state->eb->filter + state->eb->cursor, cur_len - state->eb->cursor + 1);
+              state->eb->filter + state->eb->cursor,
+              cur_len - state->eb->cursor + 1);
       memcpy(state->eb->filter + state->eb->cursor, clip, clip_len);
       state->eb->cursor += (int)clip_len;
     }

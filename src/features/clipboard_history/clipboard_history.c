@@ -138,7 +138,7 @@ static void ch_save(void) {
 static void ch_load(void) {
   FlStringList lines = fl_load_file_list(CH_FILE);
   fl_mutex_lock(ch_lock);
-  for (int i = 0; i < lines.count; i++) {
+  for (size_t i = 0; i < lines.count; i++) {
     if (!lines.items[i] || !lines.items[i][0])
       continue;
     char buf[CH_MAX_TEXT];
@@ -190,7 +190,7 @@ void clipboard_history_refresh(PromptState *state) {
     }
   }
   fl_mutex_unlock(ch_lock);
-  fl_populate_listbox(state->lb,state->eb->filter, items, count);
+  fl_populate_listbox(state->lb, state->eb->filter, items, count);
   fl_free_list(items, count);
 }
 

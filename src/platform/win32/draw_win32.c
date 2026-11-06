@@ -477,7 +477,7 @@ void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;
-  } 
+  }
   if (spec.num_color)
     *spec.num_color = n;
   if (spec.body_color)
@@ -709,7 +709,7 @@ static ULONGLONG g_img_cache_tick = 0;
 static CRITICAL_SECTION g_img_cache_cs;
 static BOOL g_img_cache_cs_ready = FALSE;
 
-#define WIN32_IMG_FAILED ((HBITMAP)-1)
+#define WIN32_IMG_FAILED ((HBITMAP) - 1)
 
 static ULONG_PTR g_gdip_token = 0;
 
@@ -1133,7 +1133,8 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   ascent = tm.tmAscent;
   descent = tm.tmDescent;
   SIZE szCur;
-  GetTextExtentPoint32A(g_draw_hdc, state->eb->filter, (int)state->eb->cursor, &szCur);
+  GetTextExtentPoint32A(g_draw_hdc, state->eb->filter, (int)state->eb->cursor,
+                        &szCur);
   cursor_x = szCur.cx;
   if (text_len > 0) {
     SIZE szText;
