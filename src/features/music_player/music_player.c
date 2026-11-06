@@ -202,6 +202,25 @@ void reload_music(void) {
   fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files,
                             NULL, true, FL_DIR_WALK_UNLIMITED);
 }
+void add_music(void) {
+    char* url = fl_popup(.placeholder="Enter youtube url for the video");
+    char* name = fl_popup(.placeholder="Enter a custom name for this song (or leave blank for default)");
+    if (!url) return;
+    char cmd[512];
+    
+    if (name && strlen(name) > 0) {
+        snprintf(cmd, sizeof(cmd), 
+                 "yt-dlp -f \"ba\" -x --audio-format mp3 --audio-quality 0 -o \"%s/%s.%%(ext)s\" \"%s\"", 
+                 MusicPath, name, url);
+    } else {
+        snprintf(cmd, sizeof(cmd), 
+                 "yt-dlp -f \"ba\" -x --audio-format mp3 --audio-quality 0 -o \"%s/%%(title)s.%%(ext)s\" \"%s\"", 
+                 MusicPath, url);
+    }
+    free(name);
+    free(url);
+    fl_run_terminal_command(cmd);
+}
 
 FLINT_FEATURE_INIT {
   reload_music();
@@ -214,5 +233,7 @@ FLINT_FEATURE_INIT {
   fl_add_to_cc(.display_name = "Force Reload Music", .on_action = reload_music,
                .icon = "/music.png");
   fl_add_to_cc(.display_name = "Music Player", .on_action = music_prompt,
+               .icon = "/music.png");
+  fl_add_to_cc(.display_name = "Add Music", .on_action = add_music,
                .icon = "/music.png");
 }

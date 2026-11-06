@@ -927,7 +927,7 @@ char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
     if (keep_idx >= 0)
       lb->selected_index = keep_idx;
   }
-  return r;
+  return r ? strdup(r) : NULL;
 }
 
 bool fl_replace_line_in_file(const char *filepath, int line_index,
@@ -1025,14 +1025,14 @@ char *fl_popup_impl(const PopupSpec *spec) {
   if (!wm)
     return NULL;
   PromptSpec pspec = {0};
-  pspec.initial_text = spec->initial_text;
+  pspec.placeholder = spec->placeholder;
   pspec.enter = fl_popup_enter;
   pspec.x = spec->x;
   pspec.y = spec->y;
   pspec.w = spec->w ? spec->w : 600;
   pspec.h = spec->h ? spec->h : 70;
-  char* r = WindowManager_ShowPrompt(wm, &pspec);
-  return r;
+  char *r = WindowManager_ShowPrompt(wm, &pspec);
+  return r ? strdup(r) : NULL;
 }
 
 unsigned long fl_listbox_get_current_standard_color(void);
