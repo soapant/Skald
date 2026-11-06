@@ -415,7 +415,7 @@ static bool cc_load_app_cache(void) {
       return false;
     }
   }
-  for (int i = 1; i < lines.count; i++) {
+  for (size_t i = 1; i < lines.count; i++) {
     char *entry = lines.items[i];
     if (!entry)
       continue;
@@ -1097,7 +1097,7 @@ static void ccx_trim_copy(const char *src, char *dst, size_t cap) {
 
 #define CC_CALC_ROW_ICON "\xEF\x87\xAC"
 
-static char g_cc_calc_label[256] = {0};
+static char g_cc_calc_label[512] = {0};
 
 static bool cc_calc_strict_number(const char *str, double *out) {
   if (!str || !*str)
@@ -1342,7 +1342,6 @@ static void cc_open_actions_subwindow(void) {
                .render = cc_subwindow_render, .refresh = cc_subwindow_refresh);
 }
 static void cc_on_actions_render(FlRect rect) {
-  char buf[200];
   char *hotkey_str = strdup(ActionsHotkey);
   char *plus = strchr(hotkey_str, '+');
   *plus = ' ';

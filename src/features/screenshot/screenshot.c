@@ -75,7 +75,7 @@ static void pk_screenshot_copy_area(void) {
 
 static void pk_ocr_area_to_clipboard(void) {
   char env[SHOT_BUF];
-  char cmd[SHOT_BUF * 2];
+  char cmd[SHOT_BUF * 6];
   shot_env(env, sizeof(env));
 
   if (getenv("WAYLAND_DISPLAY")) {

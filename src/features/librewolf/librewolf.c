@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <dirent.h>
 
-static char g_db_path[512] = {0};
+static char g_db_path[4096] = {0};
 static char g_exec_name[64] = "librewolf";
 
 static FlLibrary g_sqlite_lib = NULL;
@@ -83,7 +83,7 @@ static void browser_scan(void) {
   while ((e = readdir(d)) != NULL) {
     if (e->d_name[0] == '.')
       continue;
-    char subdir[1024];
+    char subdir[2048];
     snprintf(subdir, sizeof(subdir), "%s/%s", path, e->d_name);
     DIR *d2 = opendir(subdir);
     if (!d2)
@@ -92,7 +92,7 @@ static void browser_scan(void) {
     while ((e2 = readdir(d2)) != NULL) {
       if (e2->d_name[0] == '.')
         continue;
-      char full[1024];
+      char full[4096];
       snprintf(full, sizeof(full), "%s/%s/places.sqlite", subdir, e2->d_name);
       if (fl_file_exists(full)) {
         snprintf(g_db_path, sizeof(g_db_path), "%s", full);
