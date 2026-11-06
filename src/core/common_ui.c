@@ -274,8 +274,8 @@ static void Populate_BuildCache(ListBoxInfo *lb, const char **items,
     strncpy(lb->items[lb->item_count], items[raw_data_index],
             LISTBOX_ROW_BYTES - 1);
     lb->items[lb->item_count][LISTBOX_ROW_BYTES - 1] = '\0';
-    lb->items[lb->item_count][strcspn(
-        lb->items[lb->item_count], "\r\n")] = '\0';
+    lb->items[lb->item_count][strcspn(lb->items[lb->item_count], "\r\n")] =
+        '\0';
     lb->item_count++;
   }
 }

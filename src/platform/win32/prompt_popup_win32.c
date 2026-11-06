@@ -86,7 +86,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   if (self)
     self->handle = FlintContext_Get()->window.hPopupWnd;
   SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
-    win32_apply_rounded_corners(hwnd, w, h);
+  win32_apply_rounded_corners(hwnd, w, h);
   ShowWindow(hwnd, SW_SHOW);
   UpdateWindow(hwnd);
   ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);

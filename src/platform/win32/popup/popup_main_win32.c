@@ -104,7 +104,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   return true;
 }
 
-
 static HDC s_bb_dc = NULL;
 static HBITMAP s_bb_bmp = NULL;
 static HBITMAP s_bb_prev = NULL;
@@ -286,8 +285,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     if (true && wParam >= 0x20 && wParam < 0x7F &&
         !(GetKeyState(VK_CONTROL) & 0x8000) &&
-        !(GetKeyState(VK_MENU) & 0x8000) &&
-        !(GetKeyState(VK_LWIN) & 0x8000) &&
+        !(GetKeyState(VK_MENU) & 0x8000) && !(GetKeyState(VK_LWIN) & 0x8000) &&
         !(GetKeyState(VK_RWIN) & 0x8000))
       break;
     if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
@@ -421,13 +419,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       return 0;
     }
     if (wParam == UI_TICK_TIMER_ID) {
-        UI_Redraw(lb);
-      }
-      if (FlintContext_Get()->window.prompt_callbacks.render != NULL)
-        InvalidateRect(hwnd, NULL, FALSE);
-      return 0;
+      UI_Redraw(lb);
     }
-    break;
+    if (FlintContext_Get()->window.prompt_callbacks.render != NULL)
+      InvalidateRect(hwnd, NULL, FALSE);
+    return 0;
+  } break;
   case WM_MEASUREITEM: {
     MEASUREITEMSTRUCT *pmis = (MEASUREITEMSTRUCT *)lParam;
     if (pmis->CtlID == IDC_LIST_BOX) {
@@ -470,7 +467,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
           ClientToScreen(pdis->hwndItem, &lbOrigin2);
           ScreenToClient(hwnd, &lbOrigin2);
           win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, winW, winH,
-                                         lbOrigin2.x, lbOrigin2.y);
+                                    lbOrigin2.x, lbOrigin2.y);
         }
         if (isSelected) {
           win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_SELECTED_TEXT,
@@ -534,8 +531,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         {
           if (isSelected && strlen(measureBuffer) >= 70) {
             if (g_last_selected_index != pdis->itemID ||
-                WH_TO_HWND(g_win32_message_wnd) ==
-                    NULL) {
+                WH_TO_HWND(g_win32_message_wnd) == NULL) {
               g_last_selected_index = pdis->itemID;
             }
           } else {
@@ -551,8 +547,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         textBuffer = lb->items[pdis->itemID];
       }
 
-      if (pdis->itemID == -1 ||
-          pdis->itemID >= (lb ? lb->item_count : 0)) {
+      if (pdis->itemID == -1 || pdis->itemID >= (lb ? lb->item_count : 0)) {
         return TRUE;
       }
 
@@ -565,7 +560,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         return TRUE;
       } else {
         HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
-        HFONT hOldMainFont = hMainFont ? (HFONT)SelectObject(pdis->hDC, hMainFont) : NULL;
+        HFONT hOldMainFont =
+            hMainFont ? (HFONT)SelectObject(pdis->hDC, hMainFont) : NULL;
         unsigned long ncol, bcol, pcol;
         int orig_idx = (int)pdis->itemID;
         int orig_cnt = lb ? lb->item_count : 0;
@@ -713,7 +709,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       MultiByteToWideChar(CP_UTF8, 0, FlintContext_Get()->window.title, -1,
                           wtitle, 256);
       HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
-      HFONT hOldFont = hMainFont ? (HFONT)SelectObject(paintDC, hMainFont) : NULL;
+      HFONT hOldFont =
+          hMainFont ? (HFONT)SelectObject(paintDC, hMainFont) : NULL;
       SetBkMode(paintDC, TRANSPARENT);
       SIZE sz;
       GetTextExtentPoint32W(paintDC, wtitle, (int)wcslen(wtitle), &sz);

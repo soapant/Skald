@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 
-
 typedef struct {
   const char *display_name;
   const char *internal_name;

@@ -439,8 +439,8 @@ const char *Platform_GetRealUser(void) {
 bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
                                      char *cmd, size_t cmd_size) {
   snprintf(cmd, cmd_size,
-            "gcc -std=gnu17 -I include  -pipe -shared -o \"%s\" \"%s\" "
-            "\"build/main.lib.a\" 2>&1",
+           "gcc -std=gnu17 -I include  -pipe -shared -o \"%s\" \"%s\" "
+           "\"build/main.lib.a\" 2>&1",
 
            out_tmp, src);
   return true;

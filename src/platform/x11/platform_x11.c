@@ -160,7 +160,8 @@ static Window FindWindowByTitleRecursive(Display *dpy, Window w,
 
   Window root, parent, *children = NULL;
   unsigned int n = 0;
-  if (XQueryTree(dpy, w, &root, &parent, &children, &n) && n > 0 && children != NULL) {
+  if (XQueryTree(dpy, w, &root, &parent, &children, &n) && n > 0 &&
+      children != NULL) {
     for (unsigned int i = 0; i < n; i++) {
       Window found = FindWindowByTitleRecursive(dpy, children[i], title);
       if (found != None) {
@@ -737,7 +738,6 @@ void Platform_ModifyUniversalTimer(double seconds_to_add) {
 }
 
 double Platform_GetUniversalTimeSeconds(void) { return 0.0; }
-
 
 #define X11_FONT_CACHE_SLOTS 8
 

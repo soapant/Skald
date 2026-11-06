@@ -581,11 +581,14 @@ bool Platform_QueryBrowser(char *query) {
   *dst = '\0';
 
   if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "google")) {
-    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s",encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,"duckduckgo")) {
+    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s",
+             encoded_query);
+  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
+                                                    "duckduckgo")) {
     snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
   } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "bing")) {
-    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%",encoded_query);
+    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%",
+             encoded_query);
   } else {
     snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
   }
@@ -643,7 +646,9 @@ bool Platform_PasteContent(char *content) {
 bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
                                      char *cmd, size_t cmd_size) {
   snprintf(cmd, cmd_size,
-           "gcc -std=gnu17 -I include -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gio-unix-2.0 -I/usr/include/X11 -pipe -fPIC -shared -o %s %s 2>&1",
+           "gcc -std=gnu17 -I include -I/usr/include/freetype2 "
+           "-I/usr/include/libpng16 -I/usr/include/gio-unix-2.0 "
+           "-I/usr/include/X11 -pipe -fPIC -shared -o %s %s 2>&1",
            out_tmp, src);
   return true;
 }

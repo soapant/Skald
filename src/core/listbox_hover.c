@@ -275,4 +275,3 @@ void ListBox_NavigateDown(ListBoxInfo *lb) {
     return;
   UI_NavigateTo(lb, sel);
 }
-

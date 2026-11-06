@@ -434,8 +434,8 @@ FLINT_FEATURE_INIT {
             .slot = WIDGET_SLOT_BOTTOM_RIGHT,
             .render = widgets_date_and_time_render);
 
-  g_internet = fl_widget(.name = "internet", .fps = FPS, .no_bg = NO_BG,
-                         .on_hover = on_internet_hover,
-                         .slot = WIDGET_SLOT_BOTTOM_RIGHT,
-                         .render = widgets_internet_render);
+  g_internet =
+      fl_widget(.name = "internet", .fps = FPS, .no_bg = NO_BG,
+                .on_hover = on_internet_hover, .slot = WIDGET_SLOT_BOTTOM_RIGHT,
+                .render = widgets_internet_render);
 }

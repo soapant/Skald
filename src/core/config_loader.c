@@ -90,16 +90,14 @@ static void heapify_config(void) {
        *n_browser = heap_dup(UsedBrowser), *n_icon = heap_dup(IconPath);
   char *n_hotk = heap_dup(ControlHotkey),
        *n_reload_hotk = heap_dup(ReloadFeaturesHotkey),
-       *n_actions_hotk = heap_dup(ActionsHotkey),
-       *n_theme = heap_dup(Theme),
+       *n_actions_hotk = heap_dup(ActionsHotkey), *n_theme = heap_dup(Theme),
        *n_bgimg = heap_dup(BackgroundImage);
   char *old_font = g_heap_used_font, *old_term = g_heap_used_terminal,
        *old_shell = g_heap_used_shell, *old_browser = g_heap_used_browser,
        *old_search = g_heap_used_search, *old_feat = g_heap_feature_path,
        *old_icon = g_heap_icon_path, *old_hotk = g_heap_control_hotkey,
        *old_reload_hotk = g_heap_reload_features_hotkey,
-       *old_actions_hotk = g_heap_actions_hotkey,
-       *old_theme = g_heap_theme,
+       *old_actions_hotk = g_heap_actions_hotkey, *old_theme = g_heap_theme,
        *old_bgimg = g_heap_background_image;
   if (n_font) {
     UsedFont = n_font;
@@ -456,18 +454,12 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, "    BackgroundImage = ");
   cfg_put_escaped(buf, cap, &off, BackgroundImage ? BackgroundImage : "");
   cfg_put(buf, cap, &off, ";\n");
-  ColorRef cols[] = {COLOR_BG,
-                     COLOR_TEXT,
-                     COLOR_ALTERNATE,
-                     COLOR_SELECTED_TEXT,
-                     COLOR_CURSOR,
-                     COLOR_BORDER};
-  const char *names[] = {"COLOR_BG",
-                         "COLOR_TEXT",
-                         "COLOR_ALTERNATE",
-                         "COLOR_SELECTED_TEXT",
-                         "COLOR_CURSOR",
-                         "COLOR_BORDER"};
+  ColorRef cols[] = {COLOR_BG,        COLOR_TEXT,
+                     COLOR_ALTERNATE, COLOR_SELECTED_TEXT,
+                     COLOR_CURSOR,    COLOR_BORDER};
+  const char *names[] = {"COLOR_BG",        "COLOR_TEXT",
+                         "COLOR_ALTERNATE", "COLOR_SELECTED_TEXT",
+                         "COLOR_CURSOR",    "COLOR_BORDER"};
   for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
     cfg_put(buf, cap, &off, "    %s = RGB(%u, %u, %u);\n", names[i],
             cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);

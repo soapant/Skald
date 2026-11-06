@@ -249,8 +249,6 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
                  modifiers, _t2 ? _t2 : "");
         return 1;
       }
-
-
     }
   }
   if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {

@@ -569,7 +569,7 @@ static void cc_scan_app_dirs(void) {
   }
   for (size_t i = 0; i < tmp.count; i++) {
     for (size_t j = i + 1; j < tmp.count;) {
-      if (fl_string_contains(tmp.files[j].name,tmp.files[i].name)) {
+      if (fl_string_contains(tmp.files[j].name, tmp.files[i].name)) {
         for (size_t k = j; k + 1 < tmp.count; k++)
           tmp.files[k] = tmp.files[k + 1];
         tmp.count--;
@@ -810,7 +810,7 @@ static CcCalcUnit *ccx_find_unit_fuzzy(const char *input) {
 
   for (size_t i = 0; i < CC_CALC_UNIT_COUNT; i++)
     for (int j = 0; j < CC_CALC_UNITS[i].alias_count; j++) {
-      if (fl_string_contains(s,CC_CALC_UNITS[i].aliases[j]) ||
+      if (fl_string_contains(s, CC_CALC_UNITS[i].aliases[j]) ||
           fl_string_contains(s, CC_CALC_UNITS[i].aliases[j]))
         return &CC_CALC_UNITS[i];
     }
@@ -1126,7 +1126,7 @@ static bool cc_calc_strict_number(const char *str, double *out) {
   return true;
 }
 
-static bool cc_calc_result_for(char *out_value, const char* filter,
+static bool cc_calc_result_for(char *out_value, const char *filter,
                                size_t cap) {
   if (!filter || !filter[0])
     return false;
@@ -1217,7 +1217,7 @@ static bool cc_calc_result_for(char *out_value, const char* filter,
   return false;
 }
 
-static bool cc_calc_build_label(const char* filter) {
+static bool cc_calc_build_label(const char *filter) {
   g_cc_calc_label[0] = '\0';
   if (!filter || !filter[0])
     return false;
@@ -1255,7 +1255,7 @@ static bool cc_contains_ci(const char *hay, const char *needle) {
   return false;
 }
 
-static bool cc_filter_match(const char *item,const char* filter) {
+static bool cc_filter_match(const char *item, const char *filter) {
   if (!item || !filter || !filter[0])
     return true;
   if (cc_contains_ci(item, filter))
@@ -1278,7 +1278,8 @@ static void cc_refresh(PromptState *state) {
     g_names[n] = g_cc_calc_label;
     n++;
   }
-  fl_populate_listbox_ex(state->lb, state->eb->filter, g_names, n, cc_filter_match);
+  fl_populate_listbox_ex(state->lb, state->eb->filter, g_names, n,
+                         cc_filter_match);
   if (state->lb->total_matches > 0)
     g_cc_fallback_active = false;
   if (state->lb->total_matches == 0) {

@@ -49,4 +49,3 @@ bool EditState_GetSelection(int *out_start, int *out_end) {
     *out_end = b;
   return true;
 }
-

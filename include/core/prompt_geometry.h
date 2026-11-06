@@ -59,8 +59,6 @@ static inline int PromptCaretHeight(void) {
 static inline int PromptCustomEditHeight(void) {
   return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS;
 }
-static inline int PromptListBottomMargin(void) {
-  return 40;
-}
+static inline int PromptListBottomMargin(void) { return 40; }
 
 #endif

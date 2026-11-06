@@ -190,8 +190,7 @@ const char *get_default_terminal(int slot) {
 
   if (!term) {
     const char *st = getenv("XDG_SESSION_TYPE");
-    bool is_wayland =
-        (st && strcmp(st, "wayland") == 0) || Env_IsCompositor();
+    bool is_wayland = (st && strcmp(st, "wayland") == 0) || Env_IsCompositor();
     term = is_wayland ? x11_get_default_terminal_wayland()
                       : x11_get_default_terminal_x11();
   }

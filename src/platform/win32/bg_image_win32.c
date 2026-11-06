@@ -381,7 +381,7 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
   if (screenRef)
     ReleaseDC(NULL, screenRef);
   if (!bmp || !bits) {
-      DeleteDC(dc);
+    DeleteDC(dc);
     if (bmp)
       DeleteObject(bmp);
     return NULL;

@@ -5,21 +5,16 @@
 #include <stdint.h>
 #include "core/types.h"
 
-
 typedef PlTimer FlTimer;
 
-
-
 typedef enum {
-  
+
   FL_NET_OFFLINE,
-  
+
   FL_NET_ETHERNET,
-  
+
   FL_NET_WIFI,
 } FlNetStatus;
-
-
 
 typedef struct {
   const char *buffer;
@@ -30,8 +25,6 @@ typedef struct {
   ColorRef color;
   FontHandle font;
 } FlEditSpec;
-
-
 
 typedef struct {
   int idx;
