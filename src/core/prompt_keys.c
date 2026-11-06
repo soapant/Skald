@@ -302,7 +302,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     Prompt_TriggerEnter(state, ctrl, shift, alt);
     return true;
   }
-  if (vk == COPY_SELECTION_KEY && !true) {
+  if (vk == COPY_SELECTION_KEY) {
     if (shift || ctrl) {
       Platform_CopyToClipboard(ctx->window.output_buffer);
     }
@@ -311,6 +311,11 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   if (vk == HELP_SCREEN_KEY && ctrl) {
     if (ctx->window.prompt_callbacks.help)
       ctx->window.prompt_callbacks.help();
+    return true;
+  }
+  if (vk == EDIT_TEXT_KEY && ctrl) {
+    if (ctx->window.prompt_callbacks.edit)
+      ctx->window.prompt_callbacks.edit(state);
     return true;
   }
   if (vk == 'V' && ctrl) {
