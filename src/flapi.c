@@ -1041,38 +1041,16 @@ bool fl_toggle_minimized_active(void) {
 char *fl_popup_impl(const PopupSpec *spec) {
   if (!spec)
     return NULL;
-  const char *initial_text = spec->initial_text ? spec->initial_text : "";
-  int x = spec->x ? spec->x : 0;
-  int y = spec->y ? spec->y : 0;
-  int w = spec->w > 0 ? spec->w : 500;
-  int h = spec->h > 0 ? spec->h : 70;
-  const char *align = "LEFT";
   WindowManager *wm = WindowManager_Get();
-  if (!wm) {
-    ;
+  if (!wm)
     return NULL;
-  }
-  PopupConfirmCtx ctx = {0};
-  Popup *popup = EditPopup_Create(wm, initial_text, x, y, w, h, align,
-                                  fl_edit_blocking_confirm_ctx, &ctx);
-  if (!popup) {
-    ;
-    return NULL;
-  }
-  EditPopup_SetPlaceholder(popup, spec->placeholder);
-
-  WindowManager_PushPopup(wm, popup);
-  while (wm->running && popup->manager && !ctx.confirmed) {
-    Platform_WM_ProcessEvents(wm);
-  }
-  if (popup->manager != NULL) {
-    WindowManager_PopPopup(wm);
-  }
-  if (!ctx.confirmed) {
-    free(ctx.text);
-    ctx.text = NULL;
-  }
-  return ctx.text;
+  PromptSpec pspec = {0};
+  pspec.initial_text = spec->initial_text;
+  pspec.x = spec->x;
+  pspec.y = spec->y;
+  pspec.w = spec->w ? spec->w : 200;
+  pspec.h = spec->h ? spec->h : 100;
+  return WindowManager_ShowPrompt(wm, &pspec);
 }
 
 unsigned long fl_listbox_get_current_standard_color(void);

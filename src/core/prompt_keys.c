@@ -140,6 +140,14 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
       log_info("ENTER_CALLBACK_IS_NULL");
     }
   }
+  if (should_close) {
+    if (sel) {
+      strncpy(ctx->window.output_buffer, sel, sizeof(ctx->window.output_buffer) - 1);
+      ctx->window.output_buffer[sizeof(ctx->window.output_buffer) - 1] = '\0';
+    } else {
+      ctx->window.output_buffer[0] = '\0';
+    }
+  }
   ctx->window.selection_complete = should_close;
 }
 

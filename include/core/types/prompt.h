@@ -168,6 +168,7 @@ typedef struct {
   HelpCallback help;
   CloseCallback on_close;
   const char *placeholder;
+  const char *initial_text;
   bool tick;
   bool auto_scale;
   bool no_bg;

@@ -197,6 +197,8 @@ void music_prompt(void) {
             .enter = music_enter_callback);
 }
 void reload_music(void) {
+  s_music_files.count = 0;
+  s_music_files.files = NULL;
   fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files,
                             NULL, true, FL_DIR_WALK_UNLIMITED);
 }
