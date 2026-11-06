@@ -1048,9 +1048,11 @@ char *fl_popup_impl(const PopupSpec *spec) {
   pspec.initial_text = spec->initial_text;
   pspec.x = spec->x;
   pspec.y = spec->y;
-  pspec.w = spec->w ? spec->w : 200;
-  pspec.h = spec->h ? spec->h : 100;
-  return WindowManager_ShowPrompt(wm, &pspec);
+  pspec.w = spec->w ? spec->w : 600;
+  pspec.h = spec->h ? spec->h : 70;
+  char* r = WindowManager_ShowPrompt(wm, &pspec);
+  printf("%s \n",r);
+  return r;
 }
 
 unsigned long fl_listbox_get_current_standard_color(void);
