@@ -25,4 +25,5 @@ FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "Alt+D", .cb = TriggerSettings);
   fl_add_to_cc(.display_name = "Settings", .on_action = TriggerSettings,
                .icon = "/settings.png");
+
 }
