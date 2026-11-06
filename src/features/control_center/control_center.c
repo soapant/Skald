@@ -1504,6 +1504,8 @@ static void cc_tab(PromptState *state) {
     e->on_tab();
 }
 
+static void reload_features_and_config(void) { fl_reload_all_features(); fl_reload_config(); }
+
 static void TriggerControl(void) {
   cc_build_xdg_paths();
 
@@ -1525,7 +1527,7 @@ FLINT_FEATURE_INIT {
   cc_register_type("Feature", cc_fill_features);
   fl_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = TriggerControl);
   fl_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey,
-                     .cb = fl_reload_all_features);
+                     .cb = reload_features_and_config);
   fl_add_alias(.alias = "brw", .target = "Brawlhalla");
 }
 
