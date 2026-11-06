@@ -27,6 +27,5 @@ void ListBox_GetGeometry(int *out_list_top, int *out_item_height,
                          int *out_visible_count);
 void ListBox_NavigateUp(ListBoxInfo *lb);
 void ListBox_NavigateDown(ListBoxInfo *lb);
-void ListBox_CommandExecute(ListBoxInfo *lb, const char *string);
 
 #endif
