@@ -469,10 +469,9 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
 
 void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long col_text = COLOR_TEXT;
-  float t = (GradientItems > 1)
-                ? (float)(spec.idx % GradientItems) / (float)(GradientItems - 1)
-                : 0;
-  unsigned long col_rainbow = GetRainbowColor(t, 0.85f, GradientBrightness);
+  float t = (spec.count > 1) ? (float)(spec.idx % spec.count) / (float)(spec.count - 1)
+                              : 0;
+  unsigned long col_rainbow = GetRainbowColor(t, 0.85f, 1.0f);
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;

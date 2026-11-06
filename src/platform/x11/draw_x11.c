@@ -543,9 +543,9 @@ void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd,
 void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long col_text = rgb_to_hex(COLOR_TEXT);
   float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
-                             : (float)spec.idx / (float)GradientItems;
+                             : (float)spec.idx / 10.0f;
   unsigned long col_rainbow =
-      rgb_to_hex(GetRainbowColor(t, 0.55f, GradientBrightness));
+      rgb_to_hex(GetRainbowColor(t, 0.55f, 1.0f));
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;
@@ -581,15 +581,13 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
 
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, FontHandle font) {
-  unsigned long window_title_text_color_map;
-  eval_window_title_color(state, &window_title_text_color_map);
   Platform_SetDrawContext(dpy, xd, vis, cmap);
   if (WindowTitleText)
     Platform_DrawTextRaw(
         (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
                             .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
                             .text = state->window_title,
-                            .color = window_title_text_color_map,
+                            .color = rgb_to_hex(COLOR_TEXT),
                             .font = font,
                             .align = "LEFT",
                             .pad = PROMPT_FOOTER_PAD,
