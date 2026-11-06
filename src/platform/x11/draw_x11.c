@@ -542,7 +542,6 @@ void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd,
 
 void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long col_text = rgb_to_hex(COLOR_TEXT);
-  unsigned long col_alt = rgb_to_hex(COLOR_ALTERNATE);
   float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
                              : (float)spec.idx / (float)GradientItems;
   unsigned long col_rainbow =
@@ -550,8 +549,6 @@ void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;
-  } else if (AlternatingText && spec.idx % 2 == 0) {
-    n = b = p = col_alt;
   }
   if (spec.num_color)
     *spec.num_color = n;

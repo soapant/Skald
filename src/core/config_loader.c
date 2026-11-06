@@ -444,8 +444,6 @@ static size_t config_emit_region(char *buf, size_t cap) {
           MessagesEnabled ? "true" : "false");
   cfg_put(buf, cap, &off, "    RainbowText = %s;\n",
           RainbowText ? "true" : "false");
-  cfg_put(buf, cap, &off, "    AlternatingText = %s;\n",
-          AlternatingText ? "true" : "false");
   cfg_put(buf, cap, &off, "    WindowTitleText = %s;\n",
           WindowTitleText ? "true" : "false");
   cfg_put(buf, cap, &off, "    GradientItems = %d;\n", GradientItems);

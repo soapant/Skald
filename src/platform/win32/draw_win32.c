@@ -477,9 +477,7 @@ void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;
-  } else if (AlternatingText && spec.idx % 2 == 0) {
-    n = b = p = col_alt;
-  }
+  } 
   if (spec.num_color)
     *spec.num_color = n;
   if (spec.body_color)
