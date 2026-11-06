@@ -341,6 +341,55 @@ bool move_active_window_to_monitor_hyprland(bool right) {
   return ok;
 }
 
+
+bool focus_window_up_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out = Platform_RunTerminalCommand(
+      "hyprctl dispatch movefocus u", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool focus_window_down_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out = Platform_RunTerminalCommand(
+      "hyprctl dispatch movefocus d", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_up_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out = Platform_RunTerminalCommand(
+      "hyprctl dispatch movewindow u", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_down_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out = Platform_RunTerminalCommand(
+      "hyprctl dispatch movewindow d", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
 bool minimize_active_window_hyprland(void) {
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");

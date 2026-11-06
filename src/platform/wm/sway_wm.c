@@ -688,6 +688,59 @@ bool move_active_window_to_monitor_sway(bool right) {
   return ok;
 }
 
+
+bool focus_window_up_sway(void) {
+  sway_ensure_sock();
+  const char *sock = getenv("SWAYSOCK");
+  if (!sock || !sock[0])
+    sock = getenv("I3SOCK");
+  if (!sway_sock_live(sock))
+    return false;
+  char *out = Platform_RunTerminalCommand("swaymsg focus up", false);
+  bool ok = succeded_sway(out);
+  free(out);
+  return ok;
+}
+
+bool focus_window_down_sway(void) {
+  sway_ensure_sock();
+  const char *sock = getenv("SWAYSOCK");
+  if (!sock || !sock[0])
+    sock = getenv("I3SOCK");
+  if (!sway_sock_live(sock))
+    return false;
+  char *out = Platform_RunTerminalCommand("swaymsg focus down", false);
+  bool ok = succeded_sway(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_up_sway(void) {
+  sway_ensure_sock();
+  const char *sock = getenv("SWAYSOCK");
+  if (!sock || !sock[0])
+    sock = getenv("I3SOCK");
+  if (!sway_sock_live(sock))
+    return false;
+  char *out = Platform_RunTerminalCommand("swaymsg move up", false);
+  bool ok = succeded_sway(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_down_sway(void) {
+  sway_ensure_sock();
+  const char *sock = getenv("SWAYSOCK");
+  if (!sock || !sock[0])
+    sock = getenv("I3SOCK");
+  if (!sway_sock_live(sock))
+    return false;
+  char *out = Platform_RunTerminalCommand("swaymsg move down", false);
+  bool ok = succeded_sway(out);
+  free(out);
+  return ok;
+}
+
 bool minimize_active_window_sway(void) {
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
