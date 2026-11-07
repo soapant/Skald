@@ -222,7 +222,7 @@ static bool config_build_feature(const char *src, const char *out) {
     unlink(tmp);
     return false;
   }
-  if (rename(tmp, out) != 0) {
+  if (!Platform_AtomicRename(tmp, out)) {
     unlink(tmp);
     return false;
   }
