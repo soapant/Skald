@@ -424,7 +424,10 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   EditboxSpec eb;
   Editbox_BuildSpec(&eb, &ebi);
 
+  bool prev_lb = PlDrawState_Get()->win32_listbox_surface;
+  PlDrawState_Get()->win32_listbox_surface = false;
   Editbox_Render(&eb, NULL);
+  PlDrawState_Get()->win32_listbox_surface = prev_lb;
   if (state)
     state->eb->scroll_offset = eb.scroll;
 

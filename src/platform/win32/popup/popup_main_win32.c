@@ -639,7 +639,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       if (state && state->callbacks && state->callbacks->render) {
         Checkbox_FrameBegin();
         Platform_SetDrawContextWin32(paintDC);
+        PlDrawState_Get()->win32_listbox_surface = true;
         state->callbacks->render(state);
+        PlDrawState_Get()->win32_listbox_surface = false;
       }
     } else {
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);

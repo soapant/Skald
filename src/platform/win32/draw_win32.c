@@ -1169,17 +1169,26 @@ static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->sel_start = sel_start;
   eb->sel_end = sel_end;
   eb->has_selection = has_sel;
+  int edit_y = PROMPT_EDIT_INSET;
+  if (!state->lb && state->height > 0) {
+    int line_h = ascent + descent;
+    if (line_h <= 0)
+      line_h = FontSize > 0 ? FontSize : 16;
+    edit_y = (state->height - line_h) / 2;
+    if (edit_y < 2)
+      edit_y = 2;
+  }
   eb->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
   eb->x = 0;
-  eb->y = PROMPT_EDIT_INSET;
+  eb->y = edit_y;
   eb->w = state->width;
   eb->inset = PROMPT_EDIT_INSET;
   eb->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
   eb->scroll = state->eb->scroll_offset;
   eb->cursor_x = cursor_x;
   eb->text_w = text_w;
-  eb->text_y = PROMPT_EDIT_INSET;
-  eb->caret_y = Editbox_CaretY(PROMPT_EDIT_INSET, ascent, descent);
+  eb->text_y = edit_y;
+  eb->caret_y = Editbox_CaretY(edit_y, ascent, descent);
   eb->caret_h = PromptCaretHeight();
   eb->placeholder_dy = 2;
   eb->rainbow_limit_x = -1;
@@ -1192,6 +1201,8 @@ void Platform_DrawPromptEditText(PromptState *state) {
   if (!state || !g_draw_hdc) {
     return;
   }
+  bool prev_lb = PlDrawState_Get()->win32_listbox_surface;
+  PlDrawState_Get()->win32_listbox_surface = false;
   FontHandle font = Platform_CreateFont(FontSize, UsedFont);
   EditboxSpec eb;
   EditboxLayout lay;
@@ -1200,12 +1211,15 @@ void Platform_DrawPromptEditText(PromptState *state) {
   state->eb->scroll_offset = eb.scroll;
   Editbox_Draw(&eb, &lay, EDITBOX_PART_TINT | EDITBOX_PART_TEXT);
   Platform_DestroyFont(font);
+  PlDrawState_Get()->win32_listbox_surface = prev_lb;
 }
 
 void Platform_DrawPromptEditbox(PromptState *state) {
   if (!state || !g_draw_hdc) {
     return;
   }
+  bool prev_lb = PlDrawState_Get()->win32_listbox_surface;
+  PlDrawState_Get()->win32_listbox_surface = false;
   FontHandle font = Platform_CreateFont(FontSize, UsedFont);
   EditboxSpec eb;
   EditboxLayout lay;
@@ -1214,12 +1228,15 @@ void Platform_DrawPromptEditbox(PromptState *state) {
   state->eb->scroll_offset = eb.scroll;
   Editbox_Draw(&eb, &lay, EDITBOX_PART_ALL);
   Platform_DestroyFont(font);
+  PlDrawState_Get()->win32_listbox_surface = prev_lb;
 }
 
 void Platform_DrawPromptEditCursor(PromptState *state) {
   if (!state || !g_draw_hdc) {
     return;
   }
+  bool prev_lb = PlDrawState_Get()->win32_listbox_surface;
+  PlDrawState_Get()->win32_listbox_surface = false;
   FontHandle font = Platform_CreateFont(FontSize, UsedFont);
   EditboxSpec eb;
   EditboxLayout lay;
@@ -1227,4 +1244,5 @@ void Platform_DrawPromptEditCursor(PromptState *state) {
   Editbox_Layout(&eb, &lay);
   Editbox_Draw(&eb, &lay, EDITBOX_PART_CARET);
   Platform_DestroyFont(font);
+  PlDrawState_Get()->win32_listbox_surface = prev_lb;
 }
