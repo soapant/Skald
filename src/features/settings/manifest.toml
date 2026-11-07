@@ -2,6 +2,7 @@ name = "settings"
 description = ""
 
 [provides]
+settings
 
 [depends]
 control_center
