@@ -776,6 +776,14 @@ int main(int argc, char **argv) {
   int do_actual = 0;
   int do_test = 0;
   for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
+      printf("Usage: %s [-run] [-actual] [-test] [-help]\n", argv[0]);
+      printf("  -run    Run flint after build\n");
+      printf("  -actual Build flint.exe instead of debug build (Windows)\n");
+      printf("  -test   Run test suite\n");
+      printf("  -help   Show this help\n");
+      return 0;
+    }
     if (strcmp(argv[i], "-run") == 0)
       do_run = 1;
     if (strcmp(argv[i], "-actual") == 0)
