@@ -5,8 +5,8 @@ Flint is a native C project. To keep the codebase fast, maintainable, and consis
 ## The Golden Rules
 
 1. **No Unrequested Refactors:** Do not rewrite existing functions, reformat entire files, or change the build system (`nob`) unless the specific task explicitly requires it.
-2. **No New Dependencies:** Flint is designed to have zero external runtime dependencies(on linux some are forced). Do not add new third-party libraries without explicit permission.
-3. **Follow Existing Patterns:** Match the existing code style (4 spaces, snake_case for variables/functions, PascalCase for types). for platform functoins its Platform_ then PascalCase.
+2. **No New Dependencies:** Flint is designed to have zero external runtime dependencies. Do not add new third-party libraries without explicit permission.
+3. **Follow Existing Patterns:** Match the existing code style (4 spaces, snake_case for variables/functions, PascalCase for types). for platform functions or similar its Platform_ then PascalCase.
 
 ## Architecture Rules
 * **Separation of Layers:** 
@@ -19,7 +19,7 @@ Flint is a native C project. To keep the codebase fast, maintainable, and consis
 ## Workflow
 1. **Read the code:** If you are an AI agent, read the surrounding files to understand the context before making changes.
 2. **Make atomic changes:** Solve one specific problem. Do not fix a bug and refactor a file in the same commit.
-3. **Test:** Ensure the code compiles using `./nob` and if you are on linux with mingw you can use `./nob_linux_window_build` to test windwos build from linux before submitting in the future it will be replaces with just nob with flags like -linux -win32 -macos later on .
+3. **Test:** Ensure the code compiles using `./nob` and if you are on linux with mingw you can use `./nob -win32` to test windows build from linux before submitting.
 
 ## Pull Requests
 

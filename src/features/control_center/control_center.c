@@ -274,7 +274,7 @@ static const CcScanPath ListOfProgramPaths[] = {
     {"C:\\Program Files\\Steam\\steamapps\\common", 5},
 #elif defined(__linux__)
     {"/usr/share/applications", FL_DIR_WALK_UNLIMITED},
-    {"/home/win", 6},
+    {"~", 6},
 #endif
 };
 

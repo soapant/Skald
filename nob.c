@@ -7,7 +7,7 @@
 
 #define CC_COMMON_FLAGS                                                        \
   "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
-      "-Wextra", "-Wno-unused-parameter"
+      "-Wextra", "-Wno-unused-parameter","-O3","-ggdb"
 
 #if defined(_WIN32)
 #define CC_FLAGS CC_COMMON_FLAGS
