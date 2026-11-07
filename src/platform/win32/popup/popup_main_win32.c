@@ -659,6 +659,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
               (rect.bottom - PromptListBottomMargin() - list_top) / row_height;
           int view_offset = estate->lb->view_offset;
 
+          PlDrawState_Get()->win32_listbox_surface = true;
           for (int i = 0; i < visible_count && (i + view_offset) < count; i++) {
             int list_idx = i + view_offset;
             int y = list_top + i * row_height;
@@ -691,6 +692,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
                                                      .pad = 0,
                                                      .fontsize = FontSize});
           }
+          PlDrawState_Get()->win32_listbox_surface = false;
 
           Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
               .y = rect.bottom - PromptListBottomMargin(),
