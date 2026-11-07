@@ -1,6 +1,5 @@
 #include "core/flapi.h"
 #include "core/context.h"
-#include "helpers/helpers_ui.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -227,7 +226,6 @@ void add_music(void) {
 }
 
 FLINT_FEATURE_INIT {
-  reload_music();
   fl_register_hotkey(.hotkey = "Alt+,", .cb = music_cmd_1);
   fl_register_hotkey(.hotkey = "Alt+/", .cb = music_cmd_5);
   fl_register_hotkey(.hotkey = "Alt+;", .cb = music_cmd_6);
@@ -240,4 +238,5 @@ FLINT_FEATURE_INIT {
                .icon = "/music.png");
   fl_add_to_cc(.display_name = "Add Music", .on_action = add_music,
                .icon = "/music.png");
+  reload_music();
 }
