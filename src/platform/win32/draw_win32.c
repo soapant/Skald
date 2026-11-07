@@ -334,7 +334,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   TEXTMETRICW tm = {0};
   GetTextMetricsW(g_draw_hdc, &tm);
 
-  int y_draw = y + dy + (tm.tmHeight - tm.tmAscent) / 2;
+  int y_draw = y + dy;
   static int _diag_raw_cnt = 0;
   if (++_diag_raw_cnt <= 300)
     fprintf(stderr,
