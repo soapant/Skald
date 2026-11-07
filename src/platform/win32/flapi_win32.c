@@ -23,6 +23,7 @@
 #include "core/listbox_layout.h"
 #include "core/editbox.h"
 #include "core/prompt_geometry.h"
+#include "core/draw_state.h"
 #include "platform/win32/common_ui_win32.h"
 #include "helpers/helpers_ui.h"
 #include <stdio.h>
@@ -195,6 +196,7 @@ bool fl_listbox_begin_platform(const PlListSpec *spec) {
   g_fl_list_cur = 0;
   g_fl_list_font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
   g_fl_list_font_owned = false;
+  PlDrawState_Get()->win32_listbox_surface = true;
   ListBox_ApplyPendingScroll(g_fl_list_lb, lay.visible);
   ListBox_SetGeometry(g_fl_list_y0, g_fl_list_itemH, lay.visible);
   ListBox_HoverFocus(g_fl_list_lb, g_fl_list_y0, g_fl_list_itemH,
@@ -260,6 +262,7 @@ void fl_listbox_end_platform(void) {
     Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
         .y = g_fl_list_y0 + g_fl_list_h, .width = g_fl_list_fw});
   }
+  PlDrawState_Get()->win32_listbox_surface = false;
   g_fl_list_lb = NULL;
   g_fl_list_visible = 0;
   g_fl_list_cur = 0;
