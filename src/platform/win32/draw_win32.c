@@ -335,6 +335,8 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   GetTextMetricsW(g_draw_hdc, &tm);
 
   int y_draw = y + dy;
+  if (PlDrawState_Get()->win32_widget_surface)
+    y_draw -= (int)tm.tmInternalLeading;
   SetBkMode(g_draw_hdc, TRANSPARENT);
   SetTextColor(g_draw_hdc, color);
   bool centered = Platform_StringContainsCaseInsensitive(a, "CENTER");
@@ -1039,6 +1041,21 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     w = (IconSize > 0) ? IconSize : 16;
   if (h <= 0)
     h = (IconSize > 0) ? IconSize : 16;
+  if (w == h && w == FontSize && g_draw_hdc) {
+    HFONT hf = win32_sized_font(FontSize);
+    if (hf) {
+      HFONT told = (HFONT)SelectObject(g_draw_hdc, hf);
+      TEXTMETRICW itm;
+      memset(&itm, 0, sizeof(itm));
+      GetTextMetricsW(g_draw_hdc, &itm);
+      int nudge = (int)itm.tmInternalLeading * 2 / 3;
+      if (nudge < 1)
+        nudge = 1;
+      y -= nudge;
+      if (told)
+        SelectObject(g_draw_hdc, told);
+    }
+  }
   measure_track(x, y, w, h);
 
   if (!g_draw_hdc) {

@@ -4,6 +4,7 @@
 #include <string.h>
 #include "platform/widget.h"
 #include "platform/draw.h"
+#include "core/draw_state.h"
 #include "platform/win32/win32_state.h"
 #include "platform/render_thread.h"
 #include "platform/ui.h"
@@ -145,8 +146,16 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
   Platform_SetDrawBgColor(0);
   SetBkMode(widget->layer_dc, TRANSPARENT);
   Platform_SetDrawContextWin32(widget->layer_dc);
+  {
+    PlDrawState *ds = PlDrawState_Get();
+    ds->win32_widget_surface = true;
+  }
   if (widget->fn)
     widget->fn(widget->ud);
+  {
+    PlDrawState *ds = PlDrawState_Get();
+    ds->win32_widget_surface = false;
+  }
   if (!widget->no_bg)
     win32_draw_window_border(widget->layer_dc, 0, 0, widget->layer_w,
                              widget->layer_h, NULL);
