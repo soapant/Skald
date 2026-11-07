@@ -1,6 +1,7 @@
 /tags
 build/
 *.py
+*.txt
 nob
 nob.exe
 nob.exe.old
