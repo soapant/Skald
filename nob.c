@@ -1,9 +1,6 @@
 #define NOB_IMPLEMENTATION
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #include "nob.h"
-#if !defined(_WIN32)
-#include <glob.h>
-#endif
 
 #define SRC_FOLDER "src"
 #define BUILD_FOLDER "build"
@@ -169,14 +166,6 @@ static const char *err_path(const char *src) {
   return obj_file_path(src, ".err");
 }
 
-static void unset_include_env(void) {
-  unsetenv("CPATH");
-  unsetenv("C_INCLUDE_PATH");
-  unsetenv("CPLUS_INCLUDE_PATH");
-  unsetenv("OBJC_INCLUDE_PATH");
-  unsetenv("LIBRARY_PATH");
-}
-
 #if !defined(_WIN32)
 static Nob_File_Paths dep_cflags = {0};
 static Nob_File_Paths dep_ldflags = {0};
@@ -239,102 +228,6 @@ static char *run_capture(const char *cmdline) {
   return out;
 }
 
-static void augment_pkg_config_path(void) {
-  const char *need[] = {"x11",
-                        "xft",
-                        "fontconfig",
-                        "freetype2",
-                        "gio-2.0",
-                        "gio-unix-2.0",
-                        "gobject-2.0",
-                        "xext",
-                        "xrandr",
-                        "xrender",
-                        "xtst",
-                        "xi",
-                        "wayland-client",
-                        "xproto",
-                        "kbproto",
-                        "xextproto",
-                        "xcb",
-                        "xau",
-                        "xdmcp",
-                        "sm",
-                        "ice",
-                        NULL};
-  const char *patterns[] = {"/nix/store/*/lib/pkgconfig",
-                            "/nix/store/*/share/pkgconfig", NULL};
-  char **found = NULL;
-  size_t found_n = 0;
-  size_t found_cap = 0;
-  for (int p = 0; patterns[p]; ++p) {
-    glob_t g;
-    memset(&g, 0, sizeof(g));
-    if (glob(patterns[p], 0, NULL, &g) != 0) {
-      globfree(&g);
-      continue;
-    }
-    for (size_t i = 0; i < g.gl_pathc; ++i) {
-      for (int n = 0; need[n]; ++n) {
-        char probe[1024];
-        snprintf(probe, sizeof(probe), "%s/%s.pc", g.gl_pathv[i], need[n]);
-        if (!nob_file_exists(probe))
-          continue;
-        bool dup = false;
-        for (size_t f = 0; f < found_n; ++f)
-          if (strcmp(found[f], g.gl_pathv[i]) == 0) {
-            dup = true;
-            break;
-          }
-        if (!dup) {
-          if (found_n == found_cap) {
-            size_t ncap = found_cap ? found_cap * 2 : 64;
-            char **nfound = realloc(found, ncap * sizeof(char *));
-            if (!nfound) {
-              globfree(&g);
-              free(found);
-              return;
-            }
-            found = nfound;
-            found_cap = ncap;
-          }
-          found[found_n++] = nob_temp_strdup(g.gl_pathv[i]);
-        }
-        break;
-      }
-    }
-    globfree(&g);
-  }
-  if (found_n == 0) {
-    free(found);
-    return;
-  }
-  size_t total = 1;
-  for (size_t f = 0; f < found_n; ++f)
-    total += strlen(found[f]) + 1;
-  const char *cur = getenv("PKG_CONFIG_PATH");
-  if (cur && cur[0])
-    total += strlen(cur) + 1;
-  char *full = malloc(total);
-  if (!full) {
-    free(found);
-    return;
-  }
-  full[0] = '\0';
-  for (size_t f = 0; f < found_n; ++f) {
-    if (full[0])
-      strcat(full, ":");
-    strcat(full, found[f]);
-  }
-  if (cur && cur[0]) {
-    strcat(full, ":");
-    strcat(full, cur);
-  }
-  setenv("PKG_CONFIG_PATH", full, 1);
-  free(full);
-  free(found);
-}
-
 static void discover_dep_flags(void) {
 #if defined(__APPLE__)
   return;
@@ -342,7 +235,6 @@ static void discover_dep_flags(void) {
   if (target_win32)
     return;
   char cmdline[512];
-  augment_pkg_config_path();
   snprintf(cmdline, sizeof(cmdline), "pkg-config --cflags %s 2>/dev/null",
            PKG_CFLAGS_PKGS_STR);
   const char *cflags = run_capture(cmdline);
@@ -353,7 +245,6 @@ static void discover_dep_flags(void) {
         "-I/usr/include/freetype2",
         "-I/usr/include/gio-unix-2.0",
         "-I/usr/include/X11",
-        "-I/usr/include/freetype2",
     };
     for (size_t i = 0; i < sizeof(fb) / sizeof(fb[0]); i++)
       nob_da_append(&dep_cflags, nob_temp_strdup(fb[i]));
@@ -579,75 +470,6 @@ static Nob_File_Paths to_build = {0};
 static Nob_File_Paths err_paths = {0};
 static Nob_File_Paths printed_sigs = {0};
 
-static char *err_signature(const char *err) {
-  Nob_String_Builder sb = {0};
-  if (!nob_read_entire_file(err, &sb) || sb.count == 0)
-    return NULL;
-  nob_sb_append_null(&sb);
-
-  Nob_String_Builder sig = {0};
-  char *save = NULL;
-  char *line = strtok_r(sb.items, "\n", &save);
-  while (line) {
-    if (strstr(line, "error:")) {
-      nob_sb_append_buf(&sig, line, strlen(line));
-      nob_sb_append(&sig, '\n');
-    }
-    line = strtok_r(NULL, "\n", &save);
-  }
-  if (sig.count == 0)
-    return NULL;
-  nob_sb_append_null(&sig);
-  return strdup(sig.items);
-}
-
-static bool print_failures(void) {
-  Nob_String_Builder failed_names = {0};
-  size_t failed_count = 0;
-
-  for (size_t i = 0; i < to_build.count; ++i) {
-    char *sig = err_signature(err_paths.items[i]);
-    if (!sig)
-      continue;
-
-    failed_count++;
-    if (failed_names.count > 0)
-      nob_sb_append_buf(&failed_names, ", ", 2);
-    nob_sb_append_buf(&failed_names, to_build.items[i],
-                      strlen(to_build.items[i]));
-
-    bool already_printed = false;
-    for (size_t k = 0; k < printed_sigs.count; ++k) {
-      if (strcmp(printed_sigs.items[k], sig) == 0) {
-        already_printed = true;
-        break;
-      }
-    }
-    if (!already_printed) {
-      nob_da_append(&printed_sigs, sig);
-      Nob_String_Builder block = {0};
-      if (nob_read_entire_file(err_paths.items[i], &block)) {
-        if (target_win32)
-          nob_log(NOB_ERROR, "%s:", to_build.items[i]);
-        fwrite(block.items, 1, block.count, stdout);
-        printf("\n");
-      }
-    } else {
-      free(sig);
-    }
-  }
-
-  if (failed_count > 0) {
-    nob_sb_append_null(&failed_names);
-    if (target_win32) {
-      nob_log(NOB_ERROR, "Compilation failed (%zu file%s): %s", failed_count,
-              failed_count == 1 ? "" : "s", failed_names.items);
-    }
-    return false;
-  }
-  return true;
-}
-
 static bool compile_all(bool *any_compiled) {
   *any_compiled = to_build.count > 0;
   if (to_build.count == 0)
@@ -682,7 +504,7 @@ static bool compile_all(bool *any_compiled) {
 
   if (!nob_procs_wait_and_reset(&procs))
     ok = false;
-  return print_failures() && ok;
+  return ok;
 }
 
 static bool instance_running(void) {
@@ -913,7 +735,6 @@ int main(int argc, char **argv) {
   }
 
   if (target_win32) {
-    unset_include_env();
     obj_dir = BUILD_FOLDER "/win_obj";
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER))
       return 1;
@@ -923,10 +744,9 @@ int main(int argc, char **argv) {
       return 1;
     Nob_Cmd sh = {0};
     nob_cmd_append(&sh, "sh", "-c",
-                   "set -- /usr/x86_64-w64-mingw32/lib/libmcfgthread.a "
-                   "/nix/store/*mcfgthread*mingw32*/lib/libmcfgthread.a; "
-                   "for f in \"$@\"; do [ -f \"$f\" ] && ln -sf \"$f\" "
-                   "build/winlibs/libmcfgthread.a && exit 0; done; "
+                   "f=/usr/x86_64-w64-mingw32/lib/libmcfgthread.a; "
+                   "[ -f \"$f\" ] && ln -sf \"$f\" "
+                   "build/winlibs/libmcfgthread.a; "
                    "exit 0");
     if (!nob_cmd_run(&sh))
       nob_log(NOB_ERROR, "Failed to stage libmcfgthread");
