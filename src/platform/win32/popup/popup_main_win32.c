@@ -648,10 +648,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         extern void Platform_DrawPromptEditbox(PromptState * state);
         Platform_DrawPromptEditbox(estate);
 
-        Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-            .y = PromptListTop() - 2, .width = rect.right - rect.left});
-
         if (estate->lb) {
+          Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
+              .y = PromptListTop() - 2, .width = rect.right - rect.left});
+
           int list_top = PromptListTop();
           int row_height = PromptRowHeight();
           int count = estate->lb->item_count;
@@ -691,11 +691,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
                                                      .pad = 0,
                                                      .fontsize = FontSize});
           }
-        }
 
-        Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-            .y = rect.bottom - PromptListBottomMargin(),
-            .width = rect.right - rect.left});
+          Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
+              .y = rect.bottom - PromptListBottomMargin(),
+              .width = rect.right - rect.left});
+        }
         Platform_SetDrawContextWin32(NULL);
       }
     }
