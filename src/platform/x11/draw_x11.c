@@ -384,9 +384,6 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   }
   unsigned long color = spec.color == 0 ? rgb_to_hex(COLOR_TEXT) : spec.color;
   const char *a = spec.align ? spec.align : "CENTER";
-  static int _diag_raw_x_cnt = 0;
-  if (++_diag_raw_x_cnt <= 300)
-  { XftFont *xf_dbg = FH_TO_XFT(fh); fprintf(stderr, "[WIDGET_TEXT_X11] text='%s' y=%d x=%d align='%s' fontsize=%d ascent=%d descent=%d line_h=%d FontSize=%d baseline=%d\n", spec.text, y, x, a, spec.fontsize, xf_dbg?xf_dbg->ascent:0, xf_dbg?xf_dbg->descent:0, xf_dbg?xf_dbg->ascent+xf_dbg->descent:0, FontSize, y+(xf_dbg?xf_dbg->ascent:0)); }
   if (PlDrawState_Get()->measuring) {
     XftFont *mf = FH_TO_XFT(fh);
     int tw = 0;
@@ -448,9 +445,6 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
                                .fontsize = spec.fontsize});
   int tx = spec.x + (spec.w - tw) / 2;
   int ty = spec.y + (spec.h - lineHeight) / 2;
-  static int _diag_centered_x_cnt = 0;
-  if (++_diag_centered_x_cnt <= 100)
-  fprintf(stderr, "[CENTERED_X11] text='%s' spec.y=%d spec.h=%d spec.x=%d spec.w=%d tx=%d ty=%d lineHeight=%d ascent=%d descent=%d fontsize=%d FontSize=%d\n", spec.text, spec.y, spec.h, spec.x, spec.w, tx, ty, lineHeight, ascent, descent, spec.fontsize, FontSize);
   Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
                                            .y = ty,
                                            .text = spec.text,
@@ -640,9 +634,6 @@ static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->text_y = PROMPT_EDIT_INSET;
   eb->caret_y = Editbox_CaretY(PROMPT_EDIT_INSET, xf ? xf->ascent : 0,
                                xf ? xf->descent : 0);
-  static int _diag_edit_x_cnt = 0;
-  if (++_diag_edit_x_cnt <= 100)
-  fprintf(stderr, "[EDITBOX_SPEC_X11] text_y=%d caret_y=%d caret_h=%d ascent=%d descent=%d line_h=%d FontSize=%d baseline=%d\n", eb->text_y, eb->caret_y, PromptCaretHeight(), xf?xf->ascent:0, xf?xf->descent:0, xf?xf->ascent+xf->descent:0, FontSize, eb->text_y+(xf?xf->ascent:0));
   eb->caret_h = PromptCaretHeight();
   eb->placeholder_dy = 2;
   eb->rainbow_limit_x = -1;
