@@ -149,6 +149,7 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
   {
     PlDrawState *ds = PlDrawState_Get();
     ds->win32_widget_surface = true;
+    ds->win32_listbox_surface = false;
   }
   if (widget->fn)
     widget->fn(widget->ud);

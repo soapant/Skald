@@ -336,7 +336,9 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
 
   int y_draw = y + dy;
   if (PlDrawState_Get()->win32_widget_surface)
-    y_draw -= (int)tm.tmInternalLeading;
+    y_draw -= (int)tm.tmInternalLeading - 1;
+  else if (PlDrawState_Get()->win32_listbox_surface)
+    y_draw += 2;
   SetBkMode(g_draw_hdc, TRANSPARENT);
   SetTextColor(g_draw_hdc, color);
   bool centered = Platform_StringContainsCaseInsensitive(a, "CENTER");
