@@ -304,10 +304,8 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     Prompt_TriggerEnter(state, ctrl, shift, alt);
     return true;
   }
-  if (vk == COPY_SELECTION_KEY) {
-    if (shift || ctrl) {
-      Platform_CopyToClipboard(ctx->window.output_buffer);
-    }
+  if ((shift || ctrl) && vk == COPY_SELECTION_KEY) {
+    Platform_CopyToClipboard(ctx->window.output_buffer);
     return true;
   }
   if (vk == HELP_SCREEN_KEY && ctrl) {
