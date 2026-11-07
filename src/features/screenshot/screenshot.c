@@ -73,6 +73,25 @@ static void pk_screenshot_copy_area(void) {
   fl_copy_file_path(path);
 }
 
+static void pk_screenshot_copy_screen(void) {
+  char env[SHOT_BUF];
+  char path[SHOT_BUF];
+  char cmd[SHOT_BUF * 3];
+  shot_env(env, sizeof(env));
+  shot_clip_path(path, sizeof(path));
+
+  if (getenv("WAYLAND_DISPLAY")) {
+    snprintf(cmd, sizeof(cmd), "%s%s/grim -g \"$(%s/slurp)\" -t png %s", env,
+             shot_working_dir(), shot_working_dir(), path);
+  } else {
+    snprintf(cmd, sizeof(cmd), "%s%s/scrot %s", env, shot_working_dir(),
+             path);
+  }
+
+  free(fl_run_terminal_command_blocking(cmd));
+  fl_copy_file_path(path);
+}
+
 static void pk_ocr_area_to_clipboard(void) {
   char env[SHOT_BUF];
   char cmd[SHOT_BUF * 6];
@@ -615,6 +634,22 @@ static void pk_screenshot_copy_area(void) {
   shot_capture_release();
 }
 
+static void pk_screenshot_copy_screen(void) {
+  RECT r;
+  r->x = 0;
+  r->y = 0;
+  r->w = 1920;
+  r->h = 1080;
+  char path[MAX_PATH * 2];
+  shot_stage_path(path, sizeof(path), "flint_clip.png");
+  if (!pk_capture_rect(&r, path))
+    return;
+  printf("screenshot: captured %dx%d at (%ld,%ld)\n", (int)(r.right - r.left),
+         (int)(r.bottom - r.top), (long)r.left, (long)r.top);
+  fl_copy_file_path(path);
+  shot_capture_release();
+}
+
 static void pk_ocr_area_to_clipboard(void) {
   RECT full;
   HDC sc = GetDC(NULL);
@@ -655,6 +690,7 @@ static void pk_ocr_area_to_clipboard(void) {
 
 FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "Ctrl+Shift+X", .cb = pk_screenshot_copy_area);
+  fl_register_hotkey(.hotkey = "Ctrl+Alt+X", .cb = pk_screenshot_copy_screen);
   fl_register_hotkey(.hotkey = "X", .cb = pk_screenshot_copy_area,
                      .whitelist = {"zathura"});
   fl_register_hotkey(.hotkey = "Alt+Shift+C", .cb = pk_ocr_area_to_clipboard);
