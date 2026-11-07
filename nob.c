@@ -511,6 +511,7 @@ static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
   nob_cmd_append(cmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF",
                  feature_dep_path(src));
   append_dep_cflags(cmd);
+  nob_cmd_append(cmd, "-lX11");
 #if defined(__APPLE__)
   nob_cmd_append(cmd, LINK_FLAGS);
 #endif
