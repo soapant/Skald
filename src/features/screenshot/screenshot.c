@@ -636,10 +636,10 @@ static void pk_screenshot_copy_area(void) {
 
 static void pk_screenshot_copy_screen(void) {
   RECT r;
-  r->x = 0;
-  r->y = 0;
-  r->w = 1920;
-  r->h = 1080;
+  // r.x = 0;
+  // r.y = 0;
+  // r.w = 1920;
+  // r.h = 1080;
   char path[MAX_PATH * 2];
   shot_stage_path(path, sizeof(path), "flint_clip.png");
   if (!pk_capture_rect(&r, path))
