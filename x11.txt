@@ -1,0 +1,1708 @@
+01:58:52 [33mWARN [0m [90msrc/platform/x11/platform_x11.c:624:[0m not implemented yet
+01:58:52 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:52 [31mERROR[0m [90msrc/core/feature_loader.c:493:[0m dlopen build/features/music_player.so failed: build/features/music_player.so: undefined symbol: XQueryTree
+01:58:52 [31mERROR[0m [90msrc/core/feature_loader.c:493:[0m dlopen build/features/video_viewer.so failed: build/features/video_viewer.so: undefined symbol: XQueryTree
+01:58:52 [32mINFO [0m [90msrc/core/feature_loader.c:627:[0m FeatureLoader_LoadAllFromDir completed
+01:58:52 [32mINFO [0m [90msrc/core/feature_loader.c:640:[0m init done, 20 features loaded (hot reload dir: build/features)
+01:58:52 [32mINFO [0m [90msrc/main.c:44:[0m entering main loop
+01:58:52 [33mWARN [0m [90msrc/platform/x11/input_core_x11.c:552:[0m x11_scan_keyboards found 8 keyboards 5 mice held=8
+01:58:52 [32mINFO [0m [90msrc/platform/x11/input_core_x11.c:416:[0m virtual mouse created (fd=7)
+01:58:52 [33mWARN [0m [90msrc/platform/x11/window_manager_x11.c:278:[0m remap forcing uinput init despite use_grab=0
+01:58:52 [32mINFO [0m [90msrc/platform/x11/input_core_x11.c:338:[0m virtual keyboard created (fd=30)
+01:58:52 [33mWARN [0m [90msrc/platform/x11/window_manager_x11.c:281:[0m remap uinput forced fd=30
+[FONT_X11] size=14 face='0xProto Nerd Font' ascent=16 descent=7 height=22[WIDGET_TEXT_X11] text='Disk Usage:178.4 GB/221.3 GB' y=6 x=10 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='Disk Usage:178.4 GB/221.3 GB' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='Mem Usage:911.6 MB/15.0 GB' y=6 x=10 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='CPU Usage:  0%' y=6 x=10 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='Saturday November 07 01:58:52' y=6 x=10 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='Disk Usage:178.4 GB/221.3 GB' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='Mem Usage:911.3 MB/15.0 GB' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='CPU Usage:  8%' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='Saturday November 07 01:58:52' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+01:58:52 [32mINFO [0m [90msrc/core/hotkey_manager.c:45:[0m hotkey_enqueue: fn=0x7ff86d2cb618 is_toggle=0
+01:58:52 [32mINFO [0m [90msrc/core/hotkey_manager.c:468:[0m hotkey_process Hotkey Alt+W Matches
+01:58:52 [32mINFO [0m [90msrc/core/hotkey_manager.c:196:[0m hotkey_drain_pending: dequeued fn=0x7ff86d2cb618 is_toggle=0 popup_count=0
+01:58:52 [32mINFO [0m [90msrc/core/hotkey_manager.c:205:[0m hotkey_drain_pending: calling fn=0x7ff86d2cb618
+01:58:52 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:154:[0m Platform_PromptUser started wm=0x55a2a76d8760 spec=0x7fff10fbdcf0
+01:58:52 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:52 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:52 [32mINFO [0m [90msrc/core/window_manager.c:72:[0m PushPopup wm=0x55a2a76d8760 popup=0x55a2a7647ea0 count_before=0
+01:58:52 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:45:[0m PromptPopup_OnShow title=⌨️ Zoxide x=510 y=220 popup_count=1
+01:58:52 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:43:[0m prompt show: create=5.06ms bg=0.00ms first_render=0.00ms rounded=1 radius=14 opacity=235
+01:58:52 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:55:[0m prompt mapped req=(510,220 900x640) actual=(510,220 900x640) state=0
+01:58:52 [31mERROR[0m [90msrc/platform/x11/display_x11.c:14:[0m Request Code: 42, Error Code: 8 (BadMatch (invalid parameter attributes)), Resource ID: 8388619, Serial: 150
+01:58:52 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:76:[0m prompt focus win=8388619 want=8388619 ok=1
+01:58:52 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:89:[0m BEFORE SAVE: ctx=0x55a2a5579e60 enter=(nil) ctrl_enter=(nil)
+01:58:52 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:93:[0m DEBUG_SAVE_CALLBACKS title='⌨️ Zoxide' saved_enter=(nil) saved_ctrl_enter=(nil) spec_enter=0x7ff86d2cb577 spec_ctrl_enter=(nil)
+01:58:52 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter=''
+[FONT_X11] size=21 face='0xProto Nerd Font' ascent=24 descent=10 height=33[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='Disk Usage:178.4 GB/221.3 GB' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='Mem Usage:905.0 MB/15.0 GB' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='CPU Usage:  0%' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+[WIDGET_TEXT_X11] text='Saturday November 07 01:58:53' y=6 x=0 align='LEFT' fontsize=14 ascent=16 descent=7 line_h=23 FontSize=21 baseline=22
+01:58:53 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x6a len=1 buf0=106 vk=106 mods=0 state=0x0
+[WIDGET_TEXT_X11] text='flint' y=59 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=83
+[WIDGET_TEXT_X11] text='books' y=92 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=116
+[WIDGET_TEXT_X11] text='misc' y=125 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=149
+[WIDGET_TEXT_X11] text='indie' y=158 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=182
+[WIDGET_TEXT_X11] text='voxel' y=191 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=215
+[WIDGET_TEXT_X11] text='rand' y=224 x=10 align='LEFT' fontsize=21 ascent=24 descent=10 line_h=34 FontSize=21 baseline=248
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=1 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=27 FontSize=21
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=2 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=27 FontSize=21
+[WIDGET_TEXT_X11] text='j' y=14 x=14 align='' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_SPEC_X11] text_y=14 caret_y=20 caret_h=25 ascent=24 descent=10 line_h=34 FontSize=21 baseline=38
+[EDITBOX_DRAW] parts=4 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=27 FontSize=21
+01:58:53 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x71 len=1 buf0=113 vk=113 mods=0 state=0x0
+01:58:53 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter=''
+01:58:53 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:139:[0m DEBUG_ON_HIDE title='⌨️ Zoxide'
+01:58:53 [32mINFO [0m [90msrc/core/hotkey_manager.c:207:[0m hotkey_drain_pending: fn=0x7ff86d2cb618 finished
+01:58:53 [32mINFO [0m [90msrc/core/hotkey_manager.c:45:[0m hotkey_enqueue: fn=0x7ff86eb238d7 is_toggle=0
+01:58:53 [32mINFO [0m [90msrc/core/hotkey_manager.c:468:[0m hotkey_process Hotkey Alt+Space Matches
+01:58:53 [32mINFO [0m [90msrc/core/hotkey_manager.c:196:[0m hotkey_drain_pending: dequeued fn=0x7ff86eb238d7 is_toggle=0 popup_count=0
+01:58:53 [32mINFO [0m [90msrc/core/hotkey_manager.c:205:[0m hotkey_drain_pending: calling fn=0x7ff86eb238d7
+01:58:53 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:154:[0m Platform_PromptUser started wm=0x55a2a76d8760 spec=0x7fff10fbdcf0
+01:58:53 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:53 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:53 [32mINFO [0m [90msrc/core/window_manager.c:72:[0m PushPopup wm=0x55a2a76d8760 popup=0x55a2a7647ea0 count_before=0
+01:58:53 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:45:[0m PromptPopup_OnShow title=⚡ Control x=510 y=220 popup_count=1
+01:58:53 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:43:[0m prompt show: create=6.11ms bg=0.00ms first_render=0.00ms rounded=1 radius=14 opacity=235
+01:58:53 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:55:[0m prompt mapped req=(510,220 900x640) actual=(510,220 900x640) state=0
+01:58:53 [31mERROR[0m [90msrc/platform/x11/display_x11.c:14:[0m Request Code: 42, Error Code: 8 (BadMatch (invalid parameter attributes)), Resource ID: 8388685, Serial: 696
+01:58:53 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:76:[0m prompt focus win=8388685 want=8388685 ok=1
+01:58:53 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:89:[0m BEFORE SAVE: ctx=0x55a2a5579e60 enter=(nil) ctrl_enter=(nil)
+01:58:53 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:93:[0m DEBUG_SAVE_CALLBACKS title='⚡ Control' saved_enter=(nil) saved_ctrl_enter=(nil) spec_enter=0x7ff86eb234e1 spec_ctrl_enter=0x7ff86eb23673
+01:58:53 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter=''
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='Search For Something...' y=16 x=14 align='' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=40
+[FONT_X11] size=16 face='0xProto Nerd Font' ascent=19 descent=7 height=25[WIDGET_TEXT_X11] text='Actions' y=606 x=720 align='LEFT' fontsize=16 ascent=19 descent=7 line_h=26 FontSize=21 baseline=625
+[FONT_X11] size=20 face='0xProto Nerd Font' ascent=23 descent=9 height=31[WIDGET_TEXT_X11] text='Ctrl K' y=603 x=800 align='LEFT' fontsize=20 ascent=23 descent=9 line_h=32 FontSize=21 baseline=626
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='gimp' y=63 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[WIDGET_TEXT_X11] text='Application' y=63 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.kde.dolphin' y=105 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[WIDGET_TEXT_X11] text='Application' y=105 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='i3' y=147 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[WIDGET_TEXT_X11] text='Application' y=147 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='xterm' y=189 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[WIDGET_TEXT_X11] text='Application' y=189 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='Alacritty' y=231 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[WIDGET_TEXT_X11] text='Application' y=231 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='yazi' y=273 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[WIDGET_TEXT_X11] text='Application' y=273 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='librewolf' y=315 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[WIDGET_TEXT_X11] text='Application' y=315 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='tesseract' y=357 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[WIDGET_TEXT_X11] text='Application' y=357 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='android-file-transfer' y=399 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[WIDGET_TEXT_X11] text='Application' y=399 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='audacity' y=441 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[WIDGET_TEXT_X11] text='Application' y=441 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='nvim' y=483 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[WIDGET_TEXT_X11] text='Application' y=483 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.pwmt.zathura' y=525 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[WIDGET_TEXT_X11] text='Application' y=525 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='Search For Something...' y=16 x=14 align='' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=40
+[WIDGET_TEXT_X11] text='Actions' y=606 x=720 align='LEFT' fontsize=16 ascent=19 descent=7 line_h=26 FontSize=21 baseline=625
+[WIDGET_TEXT_X11] text='Ctrl K' y=603 x=800 align='LEFT' fontsize=20 ascent=23 descent=9 line_h=32 FontSize=21 baseline=626
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='gimp' y=63 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[WIDGET_TEXT_X11] text='Application' y=63 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.kde.dolphin' y=105 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[WIDGET_TEXT_X11] text='Application' y=105 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='i3' y=147 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[WIDGET_TEXT_X11] text='Application' y=147 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='xterm' y=189 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[WIDGET_TEXT_X11] text='Application' y=189 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='Alacritty' y=231 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[WIDGET_TEXT_X11] text='Application' y=231 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='yazi' y=273 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[WIDGET_TEXT_X11] text='Application' y=273 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='librewolf' y=315 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[WIDGET_TEXT_X11] text='Application' y=315 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='tesseract' y=357 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[WIDGET_TEXT_X11] text='Application' y=357 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='android-file-transfer' y=399 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[WIDGET_TEXT_X11] text='Application' y=399 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='audacity' y=441 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[WIDGET_TEXT_X11] text='Application' y=441 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='nvim' y=483 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[WIDGET_TEXT_X11] text='Application' y=483 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.pwmt.zathura' y=525 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[WIDGET_TEXT_X11] text='Application' y=525 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='Search For Something...' y=16 x=14 align='' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=40
+[WIDGET_TEXT_X11] text='Actions' y=606 x=720 align='LEFT' fontsize=16 ascent=19 descent=7 line_h=26 FontSize=21 baseline=625
+[WIDGET_TEXT_X11] text='Ctrl K' y=603 x=800 align='LEFT' fontsize=20 ascent=23 descent=9 line_h=32 FontSize=21 baseline=626
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='gimp' y=63 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[WIDGET_TEXT_X11] text='Application' y=63 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.kde.dolphin' y=105 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[WIDGET_TEXT_X11] text='Application' y=105 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='i3' y=147 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[WIDGET_TEXT_X11] text='Application' y=147 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='xterm' y=189 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[WIDGET_TEXT_X11] text='Application' y=189 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='Alacritty' y=231 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[WIDGET_TEXT_X11] text='Application' y=231 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='yazi' y=273 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[WIDGET_TEXT_X11] text='Application' y=273 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='librewolf' y=315 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[WIDGET_TEXT_X11] text='Application' y=315 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='tesseract' y=357 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[WIDGET_TEXT_X11] text='Application' y=357 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='android-file-transfer' y=399 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[WIDGET_TEXT_X11] text='Application' y=399 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='audacity' y=441 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[WIDGET_TEXT_X11] text='Application' y=441 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='nvim' y=483 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[WIDGET_TEXT_X11] text='Application' y=483 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.pwmt.zathura' y=525 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[WIDGET_TEXT_X11] text='Application' y=525 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='Search For Something...' y=16 x=14 align='' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=40
+[WIDGET_TEXT_X11] text='Actions' y=606 x=720 align='LEFT' fontsize=16 ascent=19 descent=7 line_h=26 FontSize=21 baseline=625
+[WIDGET_TEXT_X11] text='Ctrl K' y=603 x=800 align='LEFT' fontsize=20 ascent=23 descent=9 line_h=32 FontSize=21 baseline=626
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='gimp' y=63 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[WIDGET_TEXT_X11] text='Application' y=63 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.kde.dolphin' y=105 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[WIDGET_TEXT_X11] text='Application' y=105 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='i3' y=147 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[WIDGET_TEXT_X11] text='Application' y=147 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='xterm' y=189 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[WIDGET_TEXT_X11] text='Application' y=189 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='Alacritty' y=231 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[WIDGET_TEXT_X11] text='Application' y=231 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='yazi' y=273 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[WIDGET_TEXT_X11] text='Application' y=273 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='librewolf' y=315 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[WIDGET_TEXT_X11] text='Application' y=315 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='tesseract' y=357 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[WIDGET_TEXT_X11] text='Application' y=357 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='android-file-transfer' y=399 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[WIDGET_TEXT_X11] text='Application' y=399 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='audacity' y=441 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[WIDGET_TEXT_X11] text='Application' y=441 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='nvim' y=483 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[WIDGET_TEXT_X11] text='Application' y=483 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.pwmt.zathura' y=525 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[WIDGET_TEXT_X11] text='Application' y=525 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='Search For Something...' y=16 x=14 align='' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=40
+[WIDGET_TEXT_X11] text='Actions' y=606 x=720 align='LEFT' fontsize=16 ascent=19 descent=7 line_h=26 FontSize=21 baseline=625
+[WIDGET_TEXT_X11] text='Ctrl K' y=603 x=800 align='LEFT' fontsize=20 ascent=23 descent=9 line_h=32 FontSize=21 baseline=626
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='gimp' y=63 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[WIDGET_TEXT_X11] text='Application' y=63 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.kde.dolphin' y=105 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[WIDGET_TEXT_X11] text='Application' y=105 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='i3' y=147 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[WIDGET_TEXT_X11] text='Application' y=147 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='xterm' y=189 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[WIDGET_TEXT_X11] text='Application' y=189 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='Alacritty' y=231 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[WIDGET_TEXT_X11] text='Application' y=231 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='yazi' y=273 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[WIDGET_TEXT_X11] text='Application' y=273 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='librewolf' y=315 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[WIDGET_TEXT_X11] text='Application' y=315 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='tesseract' y=357 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[WIDGET_TEXT_X11] text='Application' y=357 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='android-file-transfer' y=399 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[WIDGET_TEXT_X11] text='Application' y=399 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='audacity' y=441 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[WIDGET_TEXT_X11] text='Application' y=441 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='nvim' y=483 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[WIDGET_TEXT_X11] text='Application' y=483 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.pwmt.zathura' y=525 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[WIDGET_TEXT_X11] text='Application' y=525 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='Search For Something...' y=16 x=14 align='' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=40
+[WIDGET_TEXT_X11] text='Actions' y=606 x=720 align='LEFT' fontsize=16 ascent=19 descent=7 line_h=26 FontSize=21 baseline=625
+[WIDGET_TEXT_X11] text='Ctrl K' y=603 x=800 align='LEFT' fontsize=20 ascent=23 descent=9 line_h=32 FontSize=21 baseline=626
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='gimp' y=63 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[WIDGET_TEXT_X11] text='Application' y=63 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.kde.dolphin' y=105 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[WIDGET_TEXT_X11] text='Application' y=105 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='i3' y=147 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[WIDGET_TEXT_X11] text='Application' y=147 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='xterm' y=189 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[WIDGET_TEXT_X11] text='Application' y=189 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='Alacritty' y=231 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[WIDGET_TEXT_X11] text='Application' y=231 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=255
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='yazi' y=273 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[WIDGET_TEXT_X11] text='Application' y=273 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=297
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='librewolf' y=315 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[WIDGET_TEXT_X11] text='Application' y=315 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=339
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='tesseract' y=357 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[WIDGET_TEXT_X11] text='Application' y=357 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=381
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='android-file-transfer' y=399 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[WIDGET_TEXT_X11] text='Application' y=399 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=423
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='audacity' y=441 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[WIDGET_TEXT_X11] text='Application' y=441 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=465
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='nvim' y=483 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[WIDGET_TEXT_X11] text='Application' y=483 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=507
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.pwmt.zathura' y=525 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[WIDGET_TEXT_X11] text='Application' y=525 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=549
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[WIDGET_TEXT_X11] text='Search For Something...' y=16 x=14 align='' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=40
+[WIDGET_TEXT_X11] text='Actions' y=606 x=720 align='LEFT' fontsize=16 ascent=19 descent=7 line_h=26 FontSize=21 baseline=625
+[WIDGET_TEXT_X11] text='Ctrl K' y=603 x=800 align='LEFT' fontsize=20 ascent=23 descent=9 line_h=32 FontSize=21 baseline=626
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='gimp' y=63 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[WIDGET_TEXT_X11] text='Application' y=63 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=87
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='org.kde.dolphin' y=105 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[WIDGET_TEXT_X11] text='Application' y=105 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=129
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='i3' y=147 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[WIDGET_TEXT_X11] text='Application' y=147 x=890 align='RIGHT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=171
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[WIDGET_TEXT_X11] text='xterm' y=189 x=39 align='LEFT' fontsize=0 ascent=24 descent=10 line_h=34 FontSize=21 baseline=213
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+01:58:54 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x6a len=1 buf0=106 vk=106 mods=0 state=0x0
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=27 FontSize=21
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/gimp.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/xterm-color_48x48.xpm' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/Alacritty.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/pixmaps/yazi.png' fontsize=21
+[INK_X11_RET] text='/usr/share/pixmaps/yazi.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/librewolf.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/tesseract.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21
+[INK_X11_RET] text='/home/win/Programming/Projects/Flint/resources/Placeholder.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/scalable/apps/audacity.svg' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/128x128/apps/nvim.png' fontsize=21 ink=19 ret=29
+[INK_X11] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21
+[INK_X11_RET] text='/usr/share/icons/hicolor/32x32/apps/org.pwmt.zathura.png' fontsize=21 ink=19 ret=29
+01:58:54 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x71 len=1 buf0=113 vk=113 mods=0 state=0x0
+01:58:54 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter=''
+01:58:54 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:139:[0m DEBUG_ON_HIDE title='⚡ Control'
+01:58:54 [32mINFO [0m [90msrc/core/hotkey_manager.c:207:[0m hotkey_drain_pending: fn=0x7ff86eb238d7 finished
+01:58:54 [32mINFO [0m [90msrc/core/hotkey_manager.c:45:[0m hotkey_enqueue: fn=0x7ff86d2b7805 is_toggle=0
+01:58:54 [32mINFO [0m [90msrc/core/hotkey_manager.c:468:[0m hotkey_process Hotkey Alt+T Matches
+01:58:54 [32mINFO [0m [90msrc/core/hotkey_manager.c:196:[0m hotkey_drain_pending: dequeued fn=0x7ff86d2b7805 is_toggle=0 popup_count=0
+01:58:54 [32mINFO [0m [90msrc/core/hotkey_manager.c:205:[0m hotkey_drain_pending: calling fn=0x7ff86d2b7805
+01:58:54 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:154:[0m Platform_PromptUser started wm=0x55a2a76d8760 spec=0x7fff10fbdcf0
+01:58:54 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:54 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:54 [32mINFO [0m [90msrc/core/window_manager.c:72:[0m PushPopup wm=0x55a2a76d8760 popup=0x55a2a73feaa0 count_before=0
+01:58:54 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:45:[0m PromptPopup_OnShow title=📝 Todo x=510 y=220 popup_count=1
+01:58:54 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:43:[0m prompt show: create=5.12ms bg=0.00ms first_render=0.00ms rounded=1 radius=14 opacity=235
+01:58:54 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:55:[0m prompt mapped req=(510,220 900x640) actual=(510,220 900x640) state=0
+01:58:54 [31mERROR[0m [90msrc/platform/x11/display_x11.c:14:[0m Request Code: 42, Error Code: 8 (BadMatch (invalid parameter attributes)), Resource ID: 8389590, Serial: 4836
+01:58:54 [31mERROR[0m [90msrc/platform/x11/display_x11.c:14:[0m Request Code: 42, Error Code: 8 (BadMatch (invalid parameter attributes)), Resource ID: 8389590, Serial: 4839
+01:58:54 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:76:[0m prompt focus win=20971523 want=8389590 ok=0
+01:58:54 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:89:[0m BEFORE SAVE: ctx=0x55a2a5579e60 enter=(nil) ctrl_enter=(nil)
+01:58:54 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:93:[0m DEBUG_SAVE_CALLBACKS title='📝 Todo' saved_enter=(nil) saved_ctrl_enter=(nil) spec_enter=0x7ff86d2b7257 spec_ctrl_enter=0x7ff86d2b72a7
+01:58:54 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter=''
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+01:58:55 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x6a len=1 buf0=106 vk=106 mods=0 state=0x0
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=27 FontSize=21
+01:58:55 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x71 len=1 buf0=113 vk=113 mods=0 state=0x0
+01:58:55 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter=''
+01:58:55 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:139:[0m DEBUG_ON_HIDE title='📝 Todo'
+01:58:55 [32mINFO [0m [90msrc/core/hotkey_manager.c:207:[0m hotkey_drain_pending: fn=0x7ff86d2b7805 finished
+01:58:55 [32mINFO [0m [90msrc/core/hotkey_manager.c:45:[0m hotkey_enqueue: fn=0x7ff86d11d321 is_toggle=0
+01:58:55 [32mINFO [0m [90msrc/core/hotkey_manager.c:468:[0m hotkey_process Hotkey Alt+U Matches
+01:58:55 [32mINFO [0m [90msrc/core/hotkey_manager.c:196:[0m hotkey_drain_pending: dequeued fn=0x7ff86d11d321 is_toggle=0 popup_count=0
+01:58:55 [32mINFO [0m [90msrc/core/hotkey_manager.c:205:[0m hotkey_drain_pending: calling fn=0x7ff86d11d321
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:209:[0m capture: original cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:55 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:102:[0m Platform_IsRunningAsRoot completed
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:210:[0m capture: real_user='win' real_home='/home/win' is_root=0
+01:58:55 [31mERROR[0m [90msrc/platform/x11/platform_x11.c:234:[0m capture: script not executable or not found: 'ps' (errno=2 No such file or directory)
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:288:[0m capture: forked child pid=1882 for cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=0
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:351:[0m capture: first data received (4096 bytes), new deadline=8000
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=25
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x10 elapsed=25
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:377:[0m capture: read returned 0 (EOF)
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:399:[0m capture: waitpid returned 1882, status=0x0
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:402:[0m capture: child exited normally with code 0
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:420:[0m capture: finished total_bytes=8478 eof=1 poll_count=3
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:430:[0m capture: output preview: 'runit             612  0.5
+kthreadd            0  0.0
+pool_workqueue_     0  0.0
+kworker/R-rcu_g     0  0.0
+kworker/R-sync_     0  0.0
+kworker/R-kvfre     0  0.0
+kworker/R-slub_     0  0.0
+kworker/R-netns     0  0.0
+kworker/0:0-eve     0  0.0
+kworker/0:1-mm_     0  0.0
+kworker/0:0H-ev     0  0.0
+kworker/u48:0-e     0  0.0
+kworker/u48:1-c     0  0.1
+kworker/R-mm_pe     0  0.0
+ksoftirqd/0         0  0.0
+rcu_preempt         0  0.0
+rcu_exp_par_gp_     0  0.0
+rcu_exp_gp_kthr     0  0.0
+migration/0         0  0.0
+idle_inject/0       0  0.0
+cpuhp/0             0  0.0
+cpuhp/2             0  0.0
+idle_inject/2       0  0.0
+migration/2         0  0.3
+ksoftirqd/2         0  0.0
+kworker/2:0-pm      0  0.0
+kworker/2:0H-ev     0  0.0
+cpuhp/4             0  0.0
+idle_inject/4       0  0.0
+migration/4         0  0.3
+ksoftirqd/4         0  0.0
+kworker/4:0-eve     0  0.0
+kworker/4:0H-ev     0  0.0
+cpuhp/6             0  0.0
+idle_inject/6       0  0.0
+migration/6         0  0.3
+ksoftirqd/6         0  0.0
+kworker/6:0-rcu     0  0.0
+kworker/6:0H-ev     0  0.0
+cpuhp/8             0  0.0
+idle_inject/8       0  0.0
+migration/8         0  0.3
+ksoftirqd/8         0  0.0
+kworker/8:0-pm      0  0.0
+kworker/8:0H-ev     0  0.0
+cpuhp/10            0  0.0
+idle_inject/10      0  0.0
+migration/10        0  0.3
+ksoftirqd/10        0  0.0
+kworker/10:0-ev     0  0.0
+kworker/10:0H-e     0  0.0
+cpuhp/1             0  0.0
+idle_inject/1       0  0.0
+migration/1         0  0.3
+ksoftirqd/1         0  0.0
+kworker/1:0-slu     0  0.0
+kworker/1:0H-ev     0  0.0
+cpuhp/3             0  0.0
+idle_inject/3       0  0.0
+migration/3         0  0.3
+ksoftirqd/3         0  0.0
+kworker/3:0-eve     0  0.0
+kworker/3:0H-ev     0  0.0
+cpuhp/5             0  0.0
+idle_inject/5       0  0.0
+migration/5         0  0.3
+ksoftirqd/5         0  0.0
+kworker/5:0-eve     0  0.0
+kworker/5:0H-ev     0  0.0
+cpuhp/7             0  0.0
+idle_inject/7       0  0.0
+migration/7         0  0.3
+ksoftirqd/7         0  0.0
+kworker/7:0-eve     0  0.0
+kw'
+01:58:55 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:154:[0m Platform_PromptUser started wm=0x55a2a76d8760 spec=0x7fff10fbdcf0
+01:58:55 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:55 [32mINFO [0m [90msrc/platform/x11/wm_platform_x11.c:140:[0m monitor ptr=(1693,532) geom=(0,0 1920x1080)
+01:58:55 [32mINFO [0m [90msrc/core/window_manager.c:72:[0m PushPopup wm=0x55a2a76d8760 popup=0x55a2a73feaa0 count_before=0
+01:58:55 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:45:[0m PromptPopup_OnShow title=💀 ProcessKiller x=510 y=220 popup_count=1
+01:58:55 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:43:[0m prompt show: create=3.79ms bg=0.00ms first_render=0.00ms rounded=1 radius=14 opacity=235
+01:58:55 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:55:[0m prompt mapped req=(510,220 900x640) actual=(510,220 900x640) state=0
+01:58:55 [31mERROR[0m [90msrc/platform/x11/display_x11.c:14:[0m Request Code: 42, Error Code: 8 (BadMatch (invalid parameter attributes)), Resource ID: 8389656, Serial: 5682
+01:58:55 [31mERROR[0m [90msrc/platform/x11/display_x11.c:14:[0m Request Code: 42, Error Code: 8 (BadMatch (invalid parameter attributes)), Resource ID: 8389656, Serial: 5685
+01:58:55 [32mINFO [0m [90msrc/platform/x11/prompt_popup_x11.c:76:[0m prompt focus win=8389656 want=8389656 ok=1
+01:58:55 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:89:[0m BEFORE SAVE: ctx=0x55a2a5579e60 enter=(nil) ctrl_enter=(nil)
+01:58:55 [32mINFO [0m [90msrc/core/popup/prompt_popup.c:93:[0m DEBUG_SAVE_CALLBACKS title='💀 ProcessKiller' saved_enter=(nil) saved_ctrl_enter=(nil) spec_enter=0x7ff86d11ccdd spec_ctrl_enter=(nil)
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:209:[0m capture: original cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:55 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:102:[0m Platform_IsRunningAsRoot completed
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:210:[0m capture: real_user='win' real_home='/home/win' is_root=0
+01:58:55 [31mERROR[0m [90msrc/platform/x11/platform_x11.c:234:[0m capture: script not executable or not found: 'ps' (errno=2 No such file or directory)
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:288:[0m capture: forked child pid=1884 for cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=0
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:351:[0m capture: first data received (4096 bytes), new deadline=8000
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=12
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=12
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x10 elapsed=12
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:377:[0m capture: read returned 0 (EOF)
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:399:[0m capture: waitpid returned 1884, status=0x0
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:402:[0m capture: child exited normally with code 0
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:420:[0m capture: finished total_bytes=8478 eof=1 poll_count=4
+01:58:55 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:430:[0m capture: output preview: 'runit             612  0.5
+kthreadd            0  0.0
+pool_workqueue_     0  0.0
+kworker/R-rcu_g     0  0.0
+kworker/R-sync_     0  0.0
+kworker/R-kvfre     0  0.0
+kworker/R-slub_     0  0.0
+kworker/R-netns     0  0.0
+kworker/0:0-eve     0  0.0
+kworker/0:1-mm_     0  0.0
+kworker/0:0H-ev     0  0.0
+kworker/u48:0-e     0  0.0
+kworker/u48:1-c     0  0.1
+kworker/R-mm_pe     0  0.0
+ksoftirqd/0         0  0.0
+rcu_preempt         0  0.0
+rcu_exp_par_gp_     0  0.0
+rcu_exp_gp_kthr     0  0.0
+migration/0         0  0.0
+idle_inject/0       0  0.0
+cpuhp/0             0  0.0
+cpuhp/2             0  0.0
+idle_inject/2       0  0.0
+migration/2         0  0.3
+ksoftirqd/2         0  0.0
+kworker/2:0-pm      0  0.0
+kworker/2:0H-ev     0  0.0
+cpuhp/4             0  0.0
+idle_inject/4       0  0.0
+migration/4         0  0.3
+ksoftirqd/4         0  0.0
+kworker/4:0-eve     0  0.0
+kworker/4:0H-ev     0  0.0
+cpuhp/6             0  0.0
+idle_inject/6       0  0.0
+migration/6         0  0.3
+ksoftirqd/6         0  0.0
+kworker/6:0-rcu     0  0.0
+kworker/6:0H-ev     0  0.0
+cpuhp/8             0  0.0
+idle_inject/8       0  0.0
+migration/8         0  0.3
+ksoftirqd/8         0  0.0
+kworker/8:0-pm      0  0.0
+kworker/8:0H-ev     0  0.0
+cpuhp/10            0  0.0
+idle_inject/10      0  0.0
+migration/10        0  0.3
+ksoftirqd/10        0  0.0
+kworker/10:0-ev     0  0.0
+kworker/10:0H-e     0  0.0
+cpuhp/1             0  0.0
+idle_inject/1       0  0.0
+migration/1         0  0.3
+ksoftirqd/1         0  0.0
+kworker/1:0-slu     0  0.0
+kworker/1:0H-ev     0  0.0
+cpuhp/3             0  0.0
+idle_inject/3       0  0.0
+migration/3         0  0.3
+ksoftirqd/3         0  0.0
+kworker/3:0-eve     0  0.0
+kworker/3:0H-ev     0  0.0
+cpuhp/5             0  0.0
+idle_inject/5       0  0.0
+migration/5         0  0.3
+ksoftirqd/5         0  0.0
+kworker/5:0-eve     0  0.0
+kworker/5:0H-ev     0  0.0
+cpuhp/7             0  0.0
+idle_inject/7       0  0.0
+migration/7         0  0.3
+ksoftirqd/7         0  0.0
+kworker/7:0-eve     0  0.0
+kw'
+01:58:55 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter=''
+[FONT_X11] size=13 face='0xProto Nerd Font' ascent=15 descent=6 height=20[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_DRAW] parts=7 text_y=14 caret_y=20 caret_h=25 draw_x=14 caret_x=14 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+01:58:56 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x66 len=1 buf0=102 vk=102 mods=0 state=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:209:[0m capture: original cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:102:[0m Platform_IsRunningAsRoot completed
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:210:[0m capture: real_user='win' real_home='/home/win' is_root=0
+01:58:56 [31mERROR[0m [90msrc/platform/x11/platform_x11.c:234:[0m capture: script not executable or not found: 'ps' (errno=2 No such file or directory)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:288:[0m capture: forked child pid=1886 for cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:351:[0m capture: first data received (4096 bytes), new deadline=8000
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=17
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=17
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x10 elapsed=17
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:377:[0m capture: read returned 0 (EOF)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:399:[0m capture: waitpid returned 1886, status=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:402:[0m capture: child exited normally with code 0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:420:[0m capture: finished total_bytes=8478 eof=1 poll_count=4
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:430:[0m capture: output preview: 'runit             612  0.5
+kthreadd            0  0.0
+pool_workqueue_     0  0.0
+kworker/R-rcu_g     0  0.0
+kworker/R-sync_     0  0.0
+kworker/R-kvfre     0  0.0
+kworker/R-slub_     0  0.0
+kworker/R-netns     0  0.0
+kworker/0:0-eve     0  0.0
+kworker/0:1-mm_     0  0.0
+kworker/0:0H-ev     0  0.0
+kworker/u48:0-e     0  0.0
+kworker/u48:1-c     0  0.1
+kworker/R-mm_pe     0  0.0
+ksoftirqd/0         0  0.0
+rcu_preempt         0  0.0
+rcu_exp_par_gp_     0  0.0
+rcu_exp_gp_kthr     0  0.0
+migration/0         0  0.0
+idle_inject/0       0  0.0
+cpuhp/0             0  0.0
+cpuhp/2             0  0.0
+idle_inject/2       0  0.0
+migration/2         0  0.3
+ksoftirqd/2         0  0.0
+kworker/2:0-pm      0  0.0
+kworker/2:0H-ev     0  0.0
+cpuhp/4             0  0.0
+idle_inject/4       0  0.0
+migration/4         0  0.3
+ksoftirqd/4         0  0.0
+kworker/4:0-eve     0  0.0
+kworker/4:0H-ev     0  0.0
+cpuhp/6             0  0.0
+idle_inject/6       0  0.0
+migration/6         0  0.3
+ksoftirqd/6         0  0.0
+kworker/6:0-rcu     0  0.0
+kworker/6:0H-ev     0  0.0
+cpuhp/8             0  0.0
+idle_inject/8       0  0.0
+migration/8         0  0.3
+ksoftirqd/8         0  0.0
+kworker/8:0-pm      0  0.0
+kworker/8:0H-ev     0  0.0
+cpuhp/10            0  0.0
+idle_inject/10      0  0.0
+migration/10        0  0.3
+ksoftirqd/10        0  0.0
+kworker/10:0-ev     0  0.0
+kworker/10:0H-e     0  0.0
+cpuhp/1             0  0.0
+idle_inject/1       0  0.0
+migration/1         0  0.3
+ksoftirqd/1         0  0.0
+kworker/1:0-slu     0  0.0
+kworker/1:0H-ev     0  0.0
+cpuhp/3             0  0.0
+idle_inject/3       0  0.0
+migration/3         0  0.3
+ksoftirqd/3         0  0.0
+kworker/3:0-eve     0  0.0
+kworker/3:0H-ev     0  0.0
+cpuhp/5             0  0.0
+idle_inject/5       0  0.0
+migration/5         0  0.3
+ksoftirqd/5         0  0.0
+kworker/5:0-eve     0  0.0
+kworker/5:0H-ev     0  0.0
+cpuhp/7             0  0.0
+idle_inject/7       0  0.0
+migration/7         0  0.3
+ksoftirqd/7         0  0.0
+kworker/7:0-eve     0  0.0
+kw'
+01:58:56 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter='f'
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+01:58:56 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x6c len=1 buf0=108 vk=108 mods=0 state=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:209:[0m capture: original cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:102:[0m Platform_IsRunningAsRoot completed
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:210:[0m capture: real_user='win' real_home='/home/win' is_root=0
+01:58:56 [31mERROR[0m [90msrc/platform/x11/platform_x11.c:234:[0m capture: script not executable or not found: 'ps' (errno=2 No such file or directory)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:288:[0m capture: forked child pid=1888 for cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:351:[0m capture: first data received (4096 bytes), new deadline=8000
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=16
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=16
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x10 elapsed=16
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:377:[0m capture: read returned 0 (EOF)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:399:[0m capture: waitpid returned 1888, status=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:402:[0m capture: child exited normally with code 0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:420:[0m capture: finished total_bytes=8478 eof=1 poll_count=4
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:430:[0m capture: output preview: 'runit             612  0.5
+kthreadd            0  0.0
+pool_workqueue_     0  0.0
+kworker/R-rcu_g     0  0.0
+kworker/R-sync_     0  0.0
+kworker/R-kvfre     0  0.0
+kworker/R-slub_     0  0.0
+kworker/R-netns     0  0.0
+kworker/0:0-eve     0  0.0
+kworker/0:1-mm_     0  0.0
+kworker/0:0H-ev     0  0.0
+kworker/u48:0-e     0  0.0
+kworker/u48:1-c     0  0.1
+kworker/R-mm_pe     0  0.0
+ksoftirqd/0         0  0.0
+rcu_preempt         0  0.0
+rcu_exp_par_gp_     0  0.0
+rcu_exp_gp_kthr     0  0.0
+migration/0         0  0.0
+idle_inject/0       0  0.0
+cpuhp/0             0  0.0
+cpuhp/2             0  0.0
+idle_inject/2       0  0.0
+migration/2         0  0.3
+ksoftirqd/2         0  0.0
+kworker/2:0-pm      0  0.0
+kworker/2:0H-ev     0  0.0
+cpuhp/4             0  0.0
+idle_inject/4       0  0.0
+migration/4         0  0.3
+ksoftirqd/4         0  0.0
+kworker/4:0-eve     0  0.0
+kworker/4:0H-ev     0  0.0
+cpuhp/6             0  0.0
+idle_inject/6       0  0.0
+migration/6         0  0.3
+ksoftirqd/6         0  0.0
+kworker/6:0-rcu     0  0.0
+kworker/6:0H-ev     0  0.0
+cpuhp/8             0  0.0
+idle_inject/8       0  0.0
+migration/8         0  0.3
+ksoftirqd/8         0  0.0
+kworker/8:0-pm      0  0.0
+kworker/8:0H-ev     0  0.0
+cpuhp/10            0  0.0
+idle_inject/10      0  0.0
+migration/10        0  0.3
+ksoftirqd/10        0  0.0
+kworker/10:0-ev     0  0.0
+kworker/10:0H-e     0  0.0
+cpuhp/1             0  0.0
+idle_inject/1       0  0.0
+migration/1         0  0.3
+ksoftirqd/1         0  0.0
+kworker/1:0-slu     0  0.0
+kworker/1:0H-ev     0  0.0
+cpuhp/3             0  0.0
+idle_inject/3       0  0.0
+migration/3         0  0.3
+ksoftirqd/3         0  0.0
+kworker/3:0-eve     0  0.0
+kworker/3:0H-ev     0  0.0
+cpuhp/5             0  0.0
+idle_inject/5       0  0.0
+migration/5         0  0.3
+ksoftirqd/5         0  0.0
+kworker/5:0-eve     0  0.0
+kworker/5:0H-ev     0  0.0
+cpuhp/7             0  0.0
+idle_inject/7       0  0.0
+migration/7         0  0.3
+ksoftirqd/7         0  0.0
+kworker/7:0-eve     0  0.0
+kw'
+01:58:56 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter='fl'
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+01:58:56 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x69 len=1 buf0=105 vk=105 mods=0 state=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:209:[0m capture: original cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:102:[0m Platform_IsRunningAsRoot completed
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:210:[0m capture: real_user='win' real_home='/home/win' is_root=0
+01:58:56 [31mERROR[0m [90msrc/platform/x11/platform_x11.c:234:[0m capture: script not executable or not found: 'ps' (errno=2 No such file or directory)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:288:[0m capture: forked child pid=1890 for cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:351:[0m capture: first data received (4096 bytes), new deadline=8000
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=15
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=15
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x10 elapsed=15
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:377:[0m capture: read returned 0 (EOF)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:399:[0m capture: waitpid returned 1890, status=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:402:[0m capture: child exited normally with code 0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:420:[0m capture: finished total_bytes=8478 eof=1 poll_count=4
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:430:[0m capture: output preview: 'runit             612  0.5
+kthreadd            0  0.0
+pool_workqueue_     0  0.0
+kworker/R-rcu_g     0  0.0
+kworker/R-sync_     0  0.0
+kworker/R-kvfre     0  0.0
+kworker/R-slub_     0  0.0
+kworker/R-netns     0  0.0
+kworker/0:0-eve     0  0.0
+kworker/0:1-mm_     0  0.0
+kworker/0:0H-ev     0  0.0
+kworker/u48:0-e     0  0.0
+kworker/u48:1-c     0  0.1
+kworker/R-mm_pe     0  0.0
+ksoftirqd/0         0  0.0
+rcu_preempt         0  0.0
+rcu_exp_par_gp_     0  0.0
+rcu_exp_gp_kthr     0  0.0
+migration/0         0  0.0
+idle_inject/0       0  0.0
+cpuhp/0             0  0.0
+cpuhp/2             0  0.0
+idle_inject/2       0  0.0
+migration/2         0  0.3
+ksoftirqd/2         0  0.0
+kworker/2:0-pm      0  0.0
+kworker/2:0H-ev     0  0.0
+cpuhp/4             0  0.0
+idle_inject/4       0  0.0
+migration/4         0  0.3
+ksoftirqd/4         0  0.0
+kworker/4:0-eve     0  0.0
+kworker/4:0H-ev     0  0.0
+cpuhp/6             0  0.0
+idle_inject/6       0  0.0
+migration/6         0  0.3
+ksoftirqd/6         0  0.0
+kworker/6:0-rcu     0  0.0
+kworker/6:0H-ev     0  0.0
+cpuhp/8             0  0.0
+idle_inject/8       0  0.0
+migration/8         0  0.3
+ksoftirqd/8         0  0.0
+kworker/8:0-pm      0  0.0
+kworker/8:0H-ev     0  0.0
+cpuhp/10            0  0.0
+idle_inject/10      0  0.0
+migration/10        0  0.3
+ksoftirqd/10        0  0.0
+kworker/10:0-ev     0  0.0
+kworker/10:0H-e     0  0.0
+cpuhp/1             0  0.0
+idle_inject/1       0  0.0
+migration/1         0  0.3
+ksoftirqd/1         0  0.0
+kworker/1:0-slu     0  0.0
+kworker/1:0H-ev     0  0.0
+cpuhp/3             0  0.0
+idle_inject/3       0  0.0
+migration/3         0  0.3
+ksoftirqd/3         0  0.0
+kworker/3:0-eve     0  0.0
+kworker/3:0H-ev     0  0.0
+cpuhp/5             0  0.0
+idle_inject/5       0  0.0
+migration/5         0  0.3
+ksoftirqd/5         0  0.0
+kworker/5:0-eve     0  0.0
+kworker/5:0H-ev     0  0.0
+cpuhp/7             0  0.0
+idle_inject/7       0  0.0
+migration/7         0  0.3
+ksoftirqd/7         0  0.0
+kworker/7:0-eve     0  0.0
+kw'
+01:58:56 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter='fli'
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+01:58:56 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x6e len=1 buf0=110 vk=110 mods=0 state=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:209:[0m capture: original cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:102:[0m Platform_IsRunningAsRoot completed
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:210:[0m capture: real_user='win' real_home='/home/win' is_root=0
+01:58:56 [31mERROR[0m [90msrc/platform/x11/platform_x11.c:234:[0m capture: script not executable or not found: 'ps' (errno=2 No such file or directory)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:288:[0m capture: forked child pid=1892 for cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:351:[0m capture: first data received (4096 bytes), new deadline=8000
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=16
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=16
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x10 elapsed=16
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:377:[0m capture: read returned 0 (EOF)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:399:[0m capture: waitpid returned 1892, status=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:402:[0m capture: child exited normally with code 0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:420:[0m capture: finished total_bytes=8478 eof=1 poll_count=4
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:430:[0m capture: output preview: 'runit             612  0.5
+kthreadd            0  0.0
+pool_workqueue_     0  0.0
+kworker/R-rcu_g     0  0.0
+kworker/R-sync_     0  0.0
+kworker/R-kvfre     0  0.0
+kworker/R-slub_     0  0.0
+kworker/R-netns     0  0.0
+kworker/0:0-eve     0  0.0
+kworker/0:1-mm_     0  0.0
+kworker/0:0H-ev     0  0.0
+kworker/u48:0-e     0  0.0
+kworker/u48:1-c     0  0.1
+kworker/R-mm_pe     0  0.0
+ksoftirqd/0         0  0.0
+rcu_preempt         0  0.0
+rcu_exp_par_gp_     0  0.0
+rcu_exp_gp_kthr     0  0.0
+migration/0         0  0.0
+idle_inject/0       0  0.0
+cpuhp/0             0  0.0
+cpuhp/2             0  0.0
+idle_inject/2       0  0.0
+migration/2         0  0.3
+ksoftirqd/2         0  0.0
+kworker/2:0-pm      0  0.0
+kworker/2:0H-ev     0  0.0
+cpuhp/4             0  0.0
+idle_inject/4       0  0.0
+migration/4         0  0.3
+ksoftirqd/4         0  0.0
+kworker/4:0-eve     0  0.0
+kworker/4:0H-ev     0  0.0
+cpuhp/6             0  0.0
+idle_inject/6       0  0.0
+migration/6         0  0.3
+ksoftirqd/6         0  0.0
+kworker/6:0-rcu     0  0.0
+kworker/6:0H-ev     0  0.0
+cpuhp/8             0  0.0
+idle_inject/8       0  0.0
+migration/8         0  0.3
+ksoftirqd/8         0  0.0
+kworker/8:0-pm      0  0.0
+kworker/8:0H-ev     0  0.0
+cpuhp/10            0  0.0
+idle_inject/10      0  0.0
+migration/10        0  0.3
+ksoftirqd/10        0  0.0
+kworker/10:0-ev     0  0.0
+kworker/10:0H-e     0  0.0
+cpuhp/1             0  0.0
+idle_inject/1       0  0.0
+migration/1         0  0.3
+ksoftirqd/1         0  0.0
+kworker/1:0-slu     0  0.0
+kworker/1:0H-ev     0  0.0
+cpuhp/3             0  0.0
+idle_inject/3       0  0.0
+migration/3         0  0.3
+ksoftirqd/3         0  0.0
+kworker/3:0-eve     0  0.0
+kworker/3:0H-ev     0  0.0
+cpuhp/5             0  0.0
+idle_inject/5       0  0.0
+migration/5         0  0.3
+ksoftirqd/5         0  0.0
+kworker/5:0-eve     0  0.0
+kworker/5:0H-ev     0  0.0
+cpuhp/7             0  0.0
+idle_inject/7       0  0.0
+migration/7         0  0.3
+ksoftirqd/7         0  0.0
+kworker/7:0-eve     0  0.0
+kw'
+01:58:56 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter='flin'
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+01:58:56 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0x74 len=1 buf0=116 vk=116 mods=0 state=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:209:[0m capture: original cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:102:[0m Platform_IsRunningAsRoot completed
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:210:[0m capture: real_user='win' real_home='/home/win' is_root=0
+01:58:56 [31mERROR[0m [90msrc/platform/x11/platform_x11.c:234:[0m capture: script not executable or not found: 'ps' (errno=2 No such file or directory)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:288:[0m capture: forked child pid=1894 for cmd='ps -eo comm=,rss=,%cpu= --no-headers'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:351:[0m capture: first data received (4096 bytes), new deadline=8000
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=17
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x1 elapsed=17
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:342:[0m capture: poll ok revents=0x10 elapsed=17
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:377:[0m capture: read returned 0 (EOF)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:399:[0m capture: waitpid returned 1894, status=0x0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:402:[0m capture: child exited normally with code 0
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:420:[0m capture: finished total_bytes=8478 eof=1 poll_count=4
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:430:[0m capture: output preview: 'runit             612  0.5
+kthreadd            0  0.0
+pool_workqueue_     0  0.0
+kworker/R-rcu_g     0  0.0
+kworker/R-sync_     0  0.0
+kworker/R-kvfre     0  0.0
+kworker/R-slub_     0  0.0
+kworker/R-netns     0  0.0
+kworker/0:0-eve     0  0.0
+kworker/0:1-mm_     0  0.0
+kworker/0:0H-ev     0  0.0
+kworker/u48:0-e     0  0.0
+kworker/u48:1-c     0  0.1
+kworker/R-mm_pe     0  0.0
+ksoftirqd/0         0  0.0
+rcu_preempt         0  0.0
+rcu_exp_par_gp_     0  0.0
+rcu_exp_gp_kthr     0  0.0
+migration/0         0  0.0
+idle_inject/0       0  0.0
+cpuhp/0             0  0.0
+cpuhp/2             0  0.0
+idle_inject/2       0  0.0
+migration/2         0  0.3
+ksoftirqd/2         0  0.0
+kworker/2:0-pm      0  0.0
+kworker/2:0H-ev     0  0.0
+cpuhp/4             0  0.0
+idle_inject/4       0  0.0
+migration/4         0  0.3
+ksoftirqd/4         0  0.0
+kworker/4:0-eve     0  0.0
+kworker/4:0H-ev     0  0.0
+cpuhp/6             0  0.0
+idle_inject/6       0  0.0
+migration/6         0  0.3
+ksoftirqd/6         0  0.0
+kworker/6:0-rcu     0  0.0
+kworker/6:0H-ev     0  0.0
+cpuhp/8             0  0.0
+idle_inject/8       0  0.0
+migration/8         0  0.3
+ksoftirqd/8         0  0.0
+kworker/8:0-pm      0  0.0
+kworker/8:0H-ev     0  0.0
+cpuhp/10            0  0.0
+idle_inject/10      0  0.0
+migration/10        0  0.3
+ksoftirqd/10        0  0.0
+kworker/10:0-ev     0  0.0
+kworker/10:0H-e     0  0.0
+cpuhp/1             0  0.0
+idle_inject/1       0  0.0
+migration/1         0  0.3
+ksoftirqd/1         0  0.0
+kworker/1:0-slu     0  0.0
+kworker/1:0H-ev     0  0.0
+cpuhp/3             0  0.0
+idle_inject/3       0  0.0
+migration/3         0  0.3
+ksoftirqd/3         0  0.0
+kworker/3:0-eve     0  0.0
+kworker/3:0H-ev     0  0.0
+cpuhp/5             0  0.0
+idle_inject/5       0  0.0
+migration/5         0  0.3
+ksoftirqd/5         0  0.0
+kworker/5:0-eve     0  0.0
+kworker/5:0H-ev     0  0.0
+cpuhp/7             0  0.0
+idle_inject/7       0  0.0
+migration/7         0  0.3
+ksoftirqd/7         0  0.0
+kworker/7:0-eve     0  0.0
+kw'
+01:58:56 [32mINFO [0m [90msrc/core/common_ui.c:337:[0m PopulateListBox completed for filter='flint'
+[EDITBOX_BUILD] y=14 h=0 text_y=14 caret_y=20 caret_h=0 ascent=24 descent=10 line_h=34 FontSize=21
+01:58:56 [32mINFO [0m [90msrc/platform/x11/window_manager_x11.c:125:[0m xkey ks=0xff0d len=1 buf0=13 vk=13 mods=0 state=0x0
+01:58:56 [32mINFO [0m [90msrc/core/prompt_keys.c:124:[0m ENTER_BRANCH: enter=0x7ff86d11ccdd sel='flint            | 20.7 MB | 0.5'
+01:58:56 [32mINFO [0m [90msrc/core/prompt_keys.c:128:[0m ENTER_CALLBACK_CALLING
+01:58:56 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:451:[0m Platform_TerminateProcessByName exe_name='flint'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:209:[0m capture: original cmd='sh -c 'pkill -9 "flint" 2>/dev/null; pkill -9 -f "flint" 2>/dev/null; pkill -9 -f "build/[f]lint" 2>/dev/null; pkill "flint" 2>/dev/null; killall -9 "flint" 2>/dev/null; killall -9 -r "flint" 2>/dev/null; killall "flint" 2>/dev/null' &'
+01:58:56 [32mINFO [0m [90msrc/platform/x11/misc_x11.c:102:[0m Platform_IsRunningAsRoot completed
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:210:[0m capture: real_user='win' real_home='/home/win' is_root=0
+01:58:56 [31mERROR[0m [90msrc/platform/x11/platform_x11.c:234:[0m capture: script not executable or not found: 'sh' (errno=2 No such file or directory)
+01:58:56 [32mINFO [0m [90msrc/platform/x11/platform_x11.c:288:[0m capture: forked child pid=1903 for cmd='sh -c 'pkill -9 "flint" 2>/dev/null; pkill -9 -f "flint" 2>/dev/null; pkill -9 -f "build/[f]lint" 2>/dev/null; pkill "flint" 2>/dev/null; killall -9 "flint" 2>/dev/null; killall -9 -r "flint" 2>/dev/null; killall "flint" 2>/dev/null' &'
