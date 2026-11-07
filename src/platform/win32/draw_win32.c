@@ -571,8 +571,6 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     if (corner_w > 0 && corner_h > 0) {
       RoundRect(g_draw_hdc, x, y, x + w, y + h, corner_w, corner_h);
     } else {
-      /* RoundRect renders nothing when the rect is 1px thin, which
-         silently killed the 1px prompt separator. */
       RECT rc;
       rc.left = x;
       rc.top = y;
