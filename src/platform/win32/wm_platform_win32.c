@@ -96,9 +96,6 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   log_info("Platform_PromptUser started wm=%p spec=%p", wm, spec);
   if (!wm || !spec)
     return NULL;
-  Popup *popup = PromptPopup_Create(wm, spec);
-  if (!popup)
-    return NULL;
   if (spec->subwindow) {
     FlintContext *_c = FlintContext_Get();
     if (_c && _c->window.subwindow.in_enter) {
@@ -116,6 +113,9 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
     (void)PromptPopup_Create(wm, &heap_spec);
     return NULL;
   }
+  Popup *popup = PromptPopup_Create(wm, spec);
+  if (!popup)
+    return NULL;
   long long last_tick = 0;
   int last_mx = 0, last_my = 0;
   int last_btn = -1;
@@ -180,5 +180,6 @@ void Platform_ProcessPendingSubwindow(void) {
   WindowManager *wm = WindowManager_Get();
   if (wm && wm->popup_count > 1)
     WindowManager_PopPopup(wm);
+  _c->window.selection_complete = false;
   (void)PromptPopup_Create(wm, &_c->window.subwindow.pending_subwindow);
 }
