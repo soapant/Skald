@@ -206,7 +206,6 @@ static void cc_run_pending(void);
 
 static void cc_run_entry_by_label(const char *label) {
   const CcEntry *e = cc_find(label);
-  printf("CC: hotkey fired for '%s' -> %p\n", label ? label : "(null)", (const void *)e);
   if (!e)
     return;
   cc_stage(e, 0);
@@ -1432,18 +1431,13 @@ static int reg_last_key = 0;
 static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   if (!name || !name[0] || !hotkey || !hotkey[0])
     return;
-  printf("CC: cc_register_selected_hotkey name='%s' hotkey='%s' g_action_count=%d\n", name, hotkey, g_action_count);
   const CcEntry *e = cc_find(name);
   void (*cb)(void) = cc_entry_hotkey_cb(e);
-  printf("CC: cc_find('%s') -> %p cb=%p (on_action=%p on_enter=%p)\n", name, (const void *)e, (void *)cb, e ? (void *)e->on_action : NULL, e ? (void *)e->on_enter : NULL);
   if (cb) {
-    printf("CC: registering hotkey '%s' for '%s'\n", hotkey, name);
     bool ok = fl_register_hotkey(.hotkey = hotkey, .cb = cb);
-    printf("CC: fl_register_hotkey returned %d\n", (int)ok);
     char line[320];
     snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
     bool wrote = fl_append_to_file(CC_HOTKEY_FILE, line);
-    printf("CC: fl_append_to_file returned %d (line='%s')\n", (int)wrote, line);
     return;
   }
 }
@@ -1488,7 +1482,6 @@ static void cc_subwindow_reg_render(PromptState *state) {
     }
 
     if (buf[0] && k != 0 && k != reg_last_key) {
-        printf("CC: key=%d buf='%s' current_reg_action='%s'\n", k, buf, current_reg_action);
         cc_register_selected_hotkey(current_reg_action, buf);
         snprintf(current_hotkey_reg, sizeof(current_hotkey_reg), "%s", buf);
         reg_flashing = true;
@@ -1516,9 +1509,7 @@ static void cc_subwindow_reg_onclose() {
 static bool cc_subwindow_enter(PromptState *state) {
   switch (state->lb->selected_index) {
     case 0: {
-      printf("CC: subwindow enter using main selection='%s'\n", g_cc_main_selected);
       snprintf(current_reg_action, sizeof(current_reg_action), "%s", g_cc_main_selected);
-      printf("CC: current_reg_action='%s'\n", current_reg_action);
       fl_disable_global_hotkeys();
       fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
@@ -1537,9 +1528,7 @@ static int g_persisted_count;
 
 static void cc_load_persisted_hotkeys(void) {
   FlStringList lines = fl_load_file_list(CC_HOTKEY_FILE);
-  printf("CC: load_persisted_hotkeys loaded %d lines\n", lines.count);
   for (int li = 0; li < lines.count && g_persisted_count < CC_PERSIST_MAX; li++) {
-    printf("CC: load line %d = '%s'\n", li, lines.items[li] ? lines.items[li] : "(null)");
     char copy[512];
     snprintf(copy, sizeof(copy), "%s", lines.items[li] ? lines.items[li] : "");
     char *tab = strchr(copy, '\t');
@@ -1558,7 +1547,6 @@ static void cc_register_persisted_hotkeys(void) {
     const char *action = g_persisted_actions[li];
     const CcEntry *e = cc_find(action);
     void (*cb)(void) = cc_entry_hotkey_cb(e);
-    printf("CC: reloading persisted hotkey '%s' -> '%s' found=%p cb=%p\n", hotkey, action, (const void *)e, (void *)cb);
     if (cb)
       fl_register_hotkey(.hotkey = hotkey, .cb = cb);
   }

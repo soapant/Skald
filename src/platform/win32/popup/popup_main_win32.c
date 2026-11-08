@@ -156,30 +156,6 @@ static bool prompt_win_no_bg(void) {
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
                               LPARAM lParam) {
 
-  if (msg == WM_KEYDOWN) {
-    int mods = 0;
-    if (GetKeyState(VK_CONTROL) & 0x8000)
-      mods |= HOTKEY_MOD_CTRL;
-    if (GetKeyState(VK_MENU) & 0x8000)
-      mods |= HOTKEY_MOD_ALT;
-    if (GetKeyState(VK_SHIFT) & 0x8000)
-      mods |= HOTKEY_MOD_SHIFT;
-    if (GetKeyState(VK_LWIN) & 0x8000 || GetKeyState(VK_RWIN) & 0x8000)
-      mods |= HOTKEY_MOD_SUPER;
-    Platform_InputState_Update((int)wParam, true, mods);
-  }
-  if (msg == WM_KEYUP) {
-    int mods = 0;
-    if (GetKeyState(VK_CONTROL) & 0x8000)
-      mods |= HOTKEY_MOD_CTRL;
-    if (GetKeyState(VK_MENU) & 0x8000)
-      mods |= HOTKEY_MOD_ALT;
-    if (GetKeyState(VK_SHIFT) & 0x8000)
-      mods |= HOTKEY_MOD_SHIFT;
-    if (GetKeyState(VK_LWIN) & 0x8000 || GetKeyState(VK_RWIN) & 0x8000)
-      mods |= HOTKEY_MOD_SUPER;
-    Platform_InputState_Update((int)wParam, false, mods);
-  }
   ListBoxInfo *lb = GetLBFromPopup(hwnd);
   WindowManager *_wm_guard = WindowManager_Get();
   Popup *_top_guard = _wm_guard ? WindowManager_GetTopPopup(_wm_guard) : NULL;
@@ -289,7 +265,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
       InvalidateRect(hwnd, NULL, FALSE);
       UpdateWindow(hwnd);
-      Platform_InputState_Update((int)wParam, false, 0);
     } else {
       popup_request_repaint(hwnd);
     }

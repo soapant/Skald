@@ -6,6 +6,7 @@
 #include "platform/platform.h"
 #include "core/types/keys.h"
 #include "core/timer.h"
+#include "deps/log.h"
 
 static bool g_down[256] = {0};
 static bool g_pressed[256] = {0};
@@ -48,10 +49,16 @@ void Platform_InputState_Update(int vk, bool down, int mods) {
     }
     if (ch) {
       int nxt = (g_char_tail + 1) % 32;
+      log_info("input push vk=%d orig=%d mods=%d ch=%d('%c') down=%d", nv,
+               orig, mods, (int)ch, (ch >= 32 && ch < 127) ? ch : '.', down);
       if (nxt != g_char_head) {
         g_char_queue[g_char_tail] = ch;
         g_char_tail = nxt;
+      } else {
+        log_info("input queue full, dropping ch=%d", (int)ch);
       }
+    } else if (down) {
+      log_info("input no-char vk=%d orig=%d mods=%d", nv, orig, mods);
     }
   } else {
     if (was) {
@@ -121,6 +128,8 @@ char Platform_GetPressedChar(void) {
   if (g_char_head != g_char_tail) {
     char c = g_char_queue[g_char_head];
     g_char_head = (g_char_head + 1) % 32;
+    log_info("input drain ch=%d('%c')", (int)c,
+             (c >= 32 && c < 127) ? c : '.');
     return c;
   }
   return 0;
