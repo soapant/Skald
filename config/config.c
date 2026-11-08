@@ -26,6 +26,8 @@ void ConfigApply(void) {
     ControlHotkey = "Alt+Space";
     ReloadFeaturesHotkey = "Alt+R";
     ActionsHotkey = "Ctrl+K";
+    RegHotkey = "Ctrl+Shift+E";
+    RegAliasHotkey = "Ctrl+Shift+A";
     MessagesEnabled = true;
     RainbowText = false;
     WindowTitleText = false;

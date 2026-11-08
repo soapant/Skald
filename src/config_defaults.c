@@ -27,6 +27,8 @@ const char *IconPath = "{MISC}/switch_window.ico";
 const char *ControlHotkey = "Alt+Space";
 const char *ReloadFeaturesHotkey = "Alt+R";
 const char *ActionsHotkey = "Ctrl+K";
+const char *RegHotkey = "Ctrl+Shift+E";
+const char *RegAliasHotkey = "Ctrl+Shift+A";
 const char *Theme = "rose-pine";
 const char *BackgroundImage = "";
 

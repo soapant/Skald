@@ -81,7 +81,8 @@ static char *g_heap_used_search = NULL, *g_heap_feature_path = NULL,
             *g_heap_icon_path = NULL;
 static char *g_heap_control_hotkey = NULL,
             *g_heap_reload_features_hotkey = NULL,
-            *g_heap_actions_hotkey = NULL, *g_heap_edit_popup_pos = NULL,
+            *g_heap_actions_hotkey = NULL, *g_heap_reg_hotk = NULL,
+            *g_heap_reg_alias_hotk = NULL, *g_heap_edit_popup_pos = NULL,
             *g_heap_theme = NULL, *g_heap_background_image = NULL;
 static void heapify_config(void) {
   char *n_font = heap_dup(UsedFont), *n_term = heap_dup(UsedTerminal),
@@ -90,14 +91,17 @@ static void heapify_config(void) {
        *n_browser = heap_dup(UsedBrowser), *n_icon = heap_dup(IconPath);
   char *n_hotk = heap_dup(ControlHotkey),
        *n_reload_hotk = heap_dup(ReloadFeaturesHotkey),
-       *n_actions_hotk = heap_dup(ActionsHotkey), *n_theme = heap_dup(Theme),
+       *n_actions_hotk = heap_dup(ActionsHotkey),
+       *n_reg_hotk = heap_dup(RegHotkey),
+       *n_reg_alias_hotk = heap_dup(RegAliasHotkey), *n_theme = heap_dup(Theme),
        *n_bgimg = heap_dup(BackgroundImage);
   char *old_font = g_heap_used_font, *old_term = g_heap_used_terminal,
        *old_shell = g_heap_used_shell, *old_browser = g_heap_used_browser,
        *old_search = g_heap_used_search, *old_feat = g_heap_feature_path,
        *old_icon = g_heap_icon_path, *old_hotk = g_heap_control_hotkey,
        *old_reload_hotk = g_heap_reload_features_hotkey,
-       *old_actions_hotk = g_heap_actions_hotkey, *old_theme = g_heap_theme,
+       *old_actions_hotk = g_heap_actions_hotkey,
+       *old_reg_hotk = g_heap_reg_hotk, *old_reg_alias_hotk = g_heap_reg_alias_hotk, *old_theme = g_heap_theme,
        *old_bgimg = g_heap_background_image;
   if (n_font) {
     UsedFont = n_font;
@@ -149,6 +153,16 @@ static void heapify_config(void) {
     g_heap_actions_hotkey = n_actions_hotk;
   } else
     g_heap_actions_hotkey = old_actions_hotk, old_actions_hotk = NULL;
+  if (n_reg_hotk) {
+    RegHotkey = n_reg_hotk;
+    g_heap_reg_hotk = n_reg_hotk;
+  } else
+    g_heap_reg_hotk = old_reg_hotk, old_reg_hotk = NULL;
+  if (n_reg_alias_hotk) {
+    RegAliasHotkey = n_reg_alias_hotk;
+    g_heap_reg_alias_hotk = n_reg_alias_hotk;
+  } else
+    g_heap_reg_alias_hotk = old_reg_alias_hotk, old_reg_alias_hotk = NULL;
   if (n_theme) {
     Theme = n_theme;
     g_heap_theme = n_theme;
@@ -437,6 +451,12 @@ static size_t config_emit_region(char *buf, size_t cap) {
   cfg_put(buf, cap, &off, ";\n");
   cfg_put(buf, cap, &off, "    ActionsHotkey = ");
   cfg_put_escaped(buf, cap, &off, ActionsHotkey);
+  cfg_put(buf, cap, &off, ";\n");
+  cfg_put(buf, cap, &off, "    RegHotkey = ");
+  cfg_put_escaped(buf, cap, &off, RegHotkey);
+  cfg_put(buf, cap, &off, ";\n");
+  cfg_put(buf, cap, &off, "    RegAliasHotkey = ");
+  cfg_put_escaped(buf, cap, &off, RegAliasHotkey);
   cfg_put(buf, cap, &off, ";\n");
   cfg_put(buf, cap, &off, "    MessagesEnabled = %s;\n",
           MessagesEnabled ? "true" : "false");
