@@ -6,7 +6,6 @@
 #include "platform/platform.h"
 #include "core/types/keys.h"
 #include "core/timer.h"
-#include "deps/log.h"
 
 static bool g_down[256] = {0};
 static bool g_pressed[256] = {0};
@@ -21,8 +20,7 @@ static int norm_vk(int vk) {
     return vk - 'a' + 'A';
   return vk;
 }
-void Platform_InputState_Update(int vk, bool down, int mods) {
-  int orig = vk;
+void Platform_InputState_Update(int vk, bool down, int mods, int char_hint) {
   int nv = norm_vk(vk);
   if (nv < 0 || nv >= 256)
     return;
@@ -31,34 +29,13 @@ void Platform_InputState_Update(int vk, bool down, int mods) {
     g_down[nv] = true;
     g_pressed[nv] = true;
     g_released[nv] = false;
-    char ch = 0;
-    if (nv >= 'A' && nv <= 'Z') {
-      ch = (mods & HOTKEY_MOD_SHIFT) ? (char)nv : (char)(nv - 'A' + 'a');
-    } else if (nv >= '0' && nv <= '9') {
-      if (mods & HOTKEY_MOD_SHIFT) {
-        const char *shiftDigits = ")!@#$%^&*(";
-        ch = shiftDigits[nv - '0'];
-      } else
-        ch = (char)nv;
-    } else if (nv >= 32 && nv <= 126) {
-      ch = (char)orig;
-      if ((mods & HOTKEY_MOD_SHIFT) && ch >= 'a' && ch <= 'z')
-        ch = ch - 'a' + 'A';
-      else if (!(mods & HOTKEY_MOD_SHIFT) && ch >= 'A' && ch <= 'Z')
-        ch = ch - 'A' + 'a';
-    }
+    char ch = (char)char_hint;
     if (ch) {
       int nxt = (g_char_tail + 1) % 32;
-      log_info("input push vk=%d orig=%d mods=%d ch=%d('%c') down=%d", nv,
-               orig, mods, (int)ch, (ch >= 32 && ch < 127) ? ch : '.', down);
       if (nxt != g_char_head) {
         g_char_queue[g_char_tail] = ch;
         g_char_tail = nxt;
-      } else {
-        log_info("input queue full, dropping ch=%d", (int)ch);
       }
-    } else if (down) {
-      log_info("input no-char vk=%d orig=%d mods=%d", nv, orig, mods);
     }
   } else {
     if (was) {
@@ -111,6 +88,8 @@ void Platform_InputState_Clear(void) {
   }
   g_char_head = g_char_tail = 0;
 }
+
+void Platform_InputState_ClearQueue(void) { g_char_head = g_char_tail = 0; }
 int Platform_GetPressedKey(void) {
   for (int i = 0; i < 256; i++) {
     if (g_pressed[i]) {
@@ -128,8 +107,6 @@ char Platform_GetPressedChar(void) {
   if (g_char_head != g_char_tail) {
     char c = g_char_queue[g_char_head];
     g_char_head = (g_char_head + 1) % 32;
-    log_info("input drain ch=%d('%c')", (int)c,
-             (c >= 32 && c < 127) ? c : '.');
     return c;
   }
   return 0;
