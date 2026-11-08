@@ -83,9 +83,6 @@ void get_current_keyword(void) {
   }
 }
 
-void open_terminal(void) { fl_run_terminal_command_and_open(""); }
-void open_browser(void) { fl_launch_detached("librewolf"); }
-
 void easy(void) {
   fl_send_hotkey("1");
   fl_send_hotkey("Space");
@@ -137,8 +134,6 @@ FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "E", .cb = next_image, .whitelist = {"feh"});
   fl_register_hotkey(.hotkey = "Q", .cb = last_image, .whitelist = {"feh"});
   fl_register_hotkey(.hotkey = "Alt+Shift+D", .cb = get_current_keyword);
-  fl_register_hotkey(.hotkey = "Alt+Q", .cb = open_terminal);
-  // fl_register_hotkey(.hotkey = "Ctrl+Shift+B", .cb = open_browser);
   fl_register_hotkey(.hotkey = "J", .cb = easy, .whitelist = {"anki"});
   fl_register_hotkey(.hotkey = "K", .cb = medium, .whitelist = {"anki"});
   fl_register_hotkey(.hotkey = "L", .cb = hard, .whitelist = {"anki"});
