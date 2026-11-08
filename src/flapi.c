@@ -481,6 +481,10 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
                                    (void *)__builtin_return_address(0));
 }
 
+bool fl_unregister_snippet_impl(const char *trigger) {
+  return snippet_unregister_internal(trigger);
+}
+
 typedef struct {
   char name[128];
   void (*cb)(void);

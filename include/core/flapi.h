@@ -802,6 +802,8 @@ typedef struct {
   fl_register_snippet_impl(&(FlSnippetSpec){__VA_ARGS__})
 
 bool fl_register_snippet_impl(const FlSnippetSpec *spec);
+bool fl_unregister_snippet_impl(const char *trigger);
+#define fl_unregister_snippet(trigger) fl_unregister_snippet_impl((trigger))
 
 void fl_reload_feature(char *name);
 void fl_reload_all_features(void);
