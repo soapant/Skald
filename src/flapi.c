@@ -1660,7 +1660,7 @@ static void *fl_thread_trampoline(void *p) {
   return ret;
 }
 
-FlThread fl_thread_create(FlThreadFunc fn, void *arg) {
+static FlThread fl_thread_create_ex(FlThreadFunc fn, void *arg, void *owner_src) {
   if (!fn)
     return NULL;
   FlThreadCtx *ctx = malloc(sizeof(*ctx));
@@ -1669,8 +1669,8 @@ FlThread fl_thread_create(FlThreadFunc fn, void *arg) {
   ctx->fn = fn;
   ctx->arg = arg;
   ctx->owner[0] = '\0';
-  Platform_GetModuleOwnerPath((void *)(uintptr_t)fn, ctx->owner,
-                              sizeof(ctx->owner));
+  Platform_GetModuleOwnerPath(owner_src ? owner_src : (void *)(uintptr_t)fn,
+                              ctx->owner, sizeof(ctx->owner));
   ThreadRegistry_Add(ctx, ctx->owner);
   void *thread = Platform_ThreadCreate(fl_thread_trampoline, ctx);
   if (!thread) {
@@ -1679,6 +1679,10 @@ FlThread fl_thread_create(FlThreadFunc fn, void *arg) {
     return NULL;
   }
   return (FlThread)thread;
+}
+
+FlThread fl_thread_create(FlThreadFunc fn, void *arg) {
+  return fl_thread_create_ex(fn, arg, NULL);
 }
 
 void fl_thread_join(FlThread thread) {
@@ -2691,7 +2695,7 @@ void fl_run_every(double seconds, void (*callback)(void)) {
   FlRunEveryArgs *args = malloc(sizeof(FlRunEveryArgs));
   args->seconds = seconds;
   args->callback = callback;
-  fl_thread_create(fl_run_every_thread, args);
+  fl_thread_create_ex(fl_run_every_thread, args, (void *)(uintptr_t)callback);
 }
 
 FlMetrics *fl_get_metrics(void) { return Platform_GetMetrics(); }

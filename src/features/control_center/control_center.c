@@ -1654,9 +1654,15 @@ static void cc_render(PromptState *state) {
       const char *hk = cc_hotkey_for_label(ctx.text);
       if (hk && hk[0]) {
         int type_w = fl_get_text_width(right_text, FontSize);
-        fl_draw_text(.x = type_x - type_w - CC_TYPE_GAP,
-                     .y = ctx.y + 8, .text = hk,
-                     .align = "RIGHT", .pad = 0, .color = FL_GRAY,.fontsize=FontSize-6);
+        int hk_fs = FontSize - 6;
+        int hk_w = fl_get_text_width(hk, hk_fs);
+        int hk_x = type_x - type_w - CC_TYPE_GAP;
+        fl_draw_rect(.x = hk_x - hk_w - 8,
+                     .y = ctx.y + 12, .w = hk_w + 10, .h = hk_fs + 4,
+                     .radius = 4, .filled = true, .color = FL_DARK_GRAY);
+        fl_draw_text(.x = hk_x - 4,
+                     .y = ctx.y + 10, .text = hk,
+                     .align = "RIGHT", .pad = 0, .color = FL_GRAY,.fontsize=hk_fs);
       }
     }
     if (plain_type) {
