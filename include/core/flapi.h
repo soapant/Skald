@@ -437,6 +437,7 @@ FlPos fl_get_widget_pos(const char *name);
 void fl_widget_show(FlWidget *widget);
 
 void fl_widget_hide(FlWidget *widget);
+void fl_widget_destroy(FlWidget *widget);
 
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
 

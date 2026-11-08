@@ -2257,6 +2257,8 @@ void fl_widget_show(FlWidget *widget) { widget_show(widget); }
 
 void fl_widget_hide(FlWidget *widget) { widget_hide(widget); }
 
+void fl_widget_destroy(FlWidget *widget) { widget_destroy(widget); }
+
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
   widget_set_render(widget, render);
 }

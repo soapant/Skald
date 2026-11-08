@@ -197,6 +197,32 @@ static void widget_destroy_window(void *ud) {
   widget->win = NULL;
 }
 
+void widget_destroy(Widget *widget) {
+  if (!widget)
+    return;
+  widget->dead = true;
+  Platform_HoverMessageRelease(widget->name);
+  Platform_HoverWidgetHide(widget->name);
+  Platform_RenderThread_RemoveFrameCallback(widget_render_frame, widget);
+  Platform_RenderThread_Post(widget_destroy_window, widget);
+  Platform_RenderThread_Sync();
+
+  int n = 0;
+  for (int i = 0; i < g_widget_count; i++) {
+    if (g_widgets[i] == widget) {
+      if (widget->owner)
+        free(widget->owner);
+      free(widget);
+      continue;
+    }
+    g_widgets[n++] = g_widgets[i];
+  }
+  g_widget_count = n;
+  if (g_widget_count > 0)
+    widget_relayout();
+  Platform_Widget_FlushDestruction();
+}
+
 void widget_purge_owner(const char *path_a, const char *path_b,
                         unsigned generation) {
   if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
