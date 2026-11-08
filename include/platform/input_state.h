@@ -11,13 +11,14 @@ typedef struct {
   unsigned long long t_us;
 } PlatformKeyEvent;
 
-void Platform_InputState_Update(int vk, bool down, int mods);
+void Platform_InputState_Update(int vk, bool down, int mods, int char_hint);
 bool Platform_IsKeyDown(int vk);
 bool Platform_WasKeyPressed(int vk);
 bool Platform_WasKeyReleased(int vk);
 void Platform_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud),
                              void *ud);
 void Platform_InputState_Clear(void);
+void Platform_InputState_ClearQueue(void);
 int Platform_GetPressedKey(void);
 char Platform_GetPressedChar(void);
 

@@ -114,14 +114,16 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
     mods |= HOTKEY_MOD_SHIFT;
 
   int vk_code = 0;
+  int char_hint = 0;
   if (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126) {
     vk_code = (unsigned char)buf[0];
+    char_hint = (unsigned char)buf[0];
   } else {
     vk_code = XKeysymToVK(ks);
   }
   int modifiers = mods;
   if (vk_code)
-    Platform_InputState_Update(vk_code, true, modifiers);
+    Platform_InputState_Update(vk_code, true, modifiers, char_hint);
   log_info("xkey ks=0x%lx len=%d buf0=%d vk=%d mods=%d state=0x%x",
            (unsigned long)ks, len, len > 0 ? (int)(unsigned char)buf[0] : -1,
            vk_code, modifiers, ev->state);
@@ -168,7 +170,7 @@ static void x11_handle_key_release(Display *dpy, XKeyEvent *ev) {
     vk = XKeysymToVK(ks);
   int mods = remap_current_mods();
   if (vk)
-    Platform_InputState_Update(vk, false, mods);
+    Platform_InputState_Update(vk, false, mods, 0);
 }
 
 void Linux_ProcessXEvent(Display *dpy, XEvent *ev, WindowManager *wm) {
