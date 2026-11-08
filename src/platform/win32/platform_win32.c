@@ -26,6 +26,7 @@
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <ctype.h>
+#include "platform/input_state.h"
 #pragma comment(lib, "winhttp.lib")
 
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
@@ -362,19 +363,41 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
   return NULL;
 }
 
+static bool win32_mods_inhibited(void) {
+  if (!Platform_InputState_ModsInhibited())
+    return false;
+  int down = (GetAsyncKeyState(VK_CONTROL) & 0x8000) |
+             (GetAsyncKeyState(VK_SHIFT) & 0x8000) |
+             (GetAsyncKeyState(VK_MENU) & 0x8000) |
+             (GetAsyncKeyState(VK_LWIN) & 0x8000) |
+             (GetAsyncKeyState(VK_RWIN) & 0x8000);
+  if (down)
+    return true;
+  Platform_InputState_UninhibitMods();
+  return false;
+}
+
 bool Platform_IsCtrlPressed(void) {
+  if (win32_mods_inhibited())
+    return false;
   return (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
 bool Platform_IsShiftPressed(void) {
+  if (win32_mods_inhibited())
+    return false;
   return (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
 }
 
 bool Platform_IsAltPressed(void) {
+  if (win32_mods_inhibited())
+    return false;
   return (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
 }
 
 bool Platform_IsSuperPressed(void) {
+  if (win32_mods_inhibited())
+    return false;
   return ((GetAsyncKeyState(VK_LWIN) & 0x8000) != 0) ||
          ((GetAsyncKeyState(VK_RWIN) & 0x8000) != 0);
 }
