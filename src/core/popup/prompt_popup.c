@@ -78,10 +78,12 @@ static void PromptPopup_OnShow(Popup *self) {
   }
   ListBoxInfo_Init(data->state->lb);
   data->state->no_bg = data->spec.no_bg;
+  data->state->bg_color = data->spec.bg_color;
   if (data->state->lb)
     data->state->lb->selected_index = -1;
   self->user_data = data->state;
   data->state->no_bg = data->spec.no_bg;
+  data->state->bg_color = data->spec.bg_color;
 
   FlintContext *ctx2 = FlintContext_Get();
   if (!wm->ctx)
