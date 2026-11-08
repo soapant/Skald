@@ -1780,11 +1780,11 @@ FLINT_FEATURE_INIT {
   g_cc_stopping = 0;
   cc_load_persisted_hotkeys();
   g_app_cache_mtx = fl_mutex_create();
-  if (g_app_cache_mtx)
-    g_prewarm_thread = fl_thread_create(cc_prewarm_app_cache, NULL);
   cc_register_type("Application", cc_fill_applications);
   cc_register_type("Feature", cc_fill_features);
   cc_build();
+  if (g_app_cache_mtx)
+    g_prewarm_thread = fl_thread_create(cc_prewarm_app_cache, NULL);
   fl_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = TriggerControl);
   fl_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey,
                      .cb = reload_features_and_config);
