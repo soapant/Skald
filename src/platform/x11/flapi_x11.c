@@ -391,16 +391,11 @@ bool fl_listbox_begin_platform(const PlListSpec *spec) {
         }
       }
     }
-    if (!st && wmgr->popup_count > 0) {
-      Popup *top = WindowManager_GetTopPopup(wmgr);
-      if (top && top->user_data && top->type == POPUP_PROMPT)
-        st = (PromptState *)top->user_data;
-    }
   }
   ListboxLayout lay;
   Listbox_ComputeLayout(spec, x11_font_list_top_of(g_fl_list_font),
-                        g_fl_list_itemH, st ? st->width : 0,
-                        st ? st->height : 0, lb->item_count, &lay);
+                        g_fl_list_itemH, st ? st->width : 900,
+                        st ? st->height : 640, lb->item_count, &lay);
   g_fl_list_y0 = lay.y0;
   g_fl_list_bx = lay.bx;
   g_fl_list_bw = lay.bw;
