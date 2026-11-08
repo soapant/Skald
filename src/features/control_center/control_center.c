@@ -116,6 +116,8 @@ static CcEntry *cc_add_fallback(void) {
   return fallback;
 }
 
+static void cc_register_persisted_hotkeys(void);
+
 static void cc_build(void) {
   g_entry_count = 0;
   for (int i = 0; i < g_type_count; i++)
@@ -152,6 +154,86 @@ static void cc_build(void) {
   }
   if (g_cc_fallback_active)
     cc_add_fallback();
+  cc_register_persisted_hotkeys();
+}
+
+static void cc_run_entry_by_label(const char *label);
+
+#define CC_HK_SLOTS 64
+static char g_cc_hotkey_targets[CC_HK_SLOTS][256];
+static void cc_hotkey_dispatch_0(void);
+
+#define CC_HK_DISPATCH(n) static void cc_hotkey_dispatch_##n(void) { cc_run_entry_by_label(g_cc_hotkey_targets[n]); }
+#define CC_HK_DISPATCH_LIST \
+  CC_HK_DISPATCH(0) CC_HK_DISPATCH(1) CC_HK_DISPATCH(2) CC_HK_DISPATCH(3) \
+  CC_HK_DISPATCH(4) CC_HK_DISPATCH(5) CC_HK_DISPATCH(6) CC_HK_DISPATCH(7) \
+  CC_HK_DISPATCH(8) CC_HK_DISPATCH(9) CC_HK_DISPATCH(10) CC_HK_DISPATCH(11) \
+  CC_HK_DISPATCH(12) CC_HK_DISPATCH(13) CC_HK_DISPATCH(14) CC_HK_DISPATCH(15) \
+  CC_HK_DISPATCH(16) CC_HK_DISPATCH(17) CC_HK_DISPATCH(18) CC_HK_DISPATCH(19) \
+  CC_HK_DISPATCH(20) CC_HK_DISPATCH(21) CC_HK_DISPATCH(22) CC_HK_DISPATCH(23) \
+  CC_HK_DISPATCH(24) CC_HK_DISPATCH(25) CC_HK_DISPATCH(26) CC_HK_DISPATCH(27) \
+  CC_HK_DISPATCH(28) CC_HK_DISPATCH(29) CC_HK_DISPATCH(30) CC_HK_DISPATCH(31) \
+  CC_HK_DISPATCH(32) CC_HK_DISPATCH(33) CC_HK_DISPATCH(34) CC_HK_DISPATCH(35) \
+  CC_HK_DISPATCH(36) CC_HK_DISPATCH(37) CC_HK_DISPATCH(38) CC_HK_DISPATCH(39) \
+  CC_HK_DISPATCH(40) CC_HK_DISPATCH(41) CC_HK_DISPATCH(42) CC_HK_DISPATCH(43) \
+  CC_HK_DISPATCH(44) CC_HK_DISPATCH(45) CC_HK_DISPATCH(46) CC_HK_DISPATCH(47) \
+  CC_HK_DISPATCH(48) CC_HK_DISPATCH(49) CC_HK_DISPATCH(50) CC_HK_DISPATCH(51) \
+  CC_HK_DISPATCH(52) CC_HK_DISPATCH(53) CC_HK_DISPATCH(54) CC_HK_DISPATCH(55) \
+  CC_HK_DISPATCH(56) CC_HK_DISPATCH(57) CC_HK_DISPATCH(58) CC_HK_DISPATCH(59) \
+  CC_HK_DISPATCH(60) CC_HK_DISPATCH(61) CC_HK_DISPATCH(62) CC_HK_DISPATCH(63)
+CC_HK_DISPATCH_LIST
+#undef CC_HK_DISPATCH
+
+static void (*const cc_hotkey_dispatchers[CC_HK_SLOTS])(void) = {
+#define CC_HK_FN(n) cc_hotkey_dispatch_##n,
+  CC_HK_FN(0) CC_HK_FN(1) CC_HK_FN(2) CC_HK_FN(3) CC_HK_FN(4) CC_HK_FN(5)
+  CC_HK_FN(6) CC_HK_FN(7) CC_HK_FN(8) CC_HK_FN(9) CC_HK_FN(10) CC_HK_FN(11)
+  CC_HK_FN(12) CC_HK_FN(13) CC_HK_FN(14) CC_HK_FN(15) CC_HK_FN(16) CC_HK_FN(17)
+  CC_HK_FN(18) CC_HK_FN(19) CC_HK_FN(20) CC_HK_FN(21) CC_HK_FN(22) CC_HK_FN(23)
+  CC_HK_FN(24) CC_HK_FN(25) CC_HK_FN(26) CC_HK_FN(27) CC_HK_FN(28) CC_HK_FN(29)
+  CC_HK_FN(30) CC_HK_FN(31) CC_HK_FN(32) CC_HK_FN(33) CC_HK_FN(34) CC_HK_FN(35)
+  CC_HK_FN(36) CC_HK_FN(37) CC_HK_FN(38) CC_HK_FN(39) CC_HK_FN(40) CC_HK_FN(41)
+  CC_HK_FN(42) CC_HK_FN(43) CC_HK_FN(44) CC_HK_FN(45) CC_HK_FN(46) CC_HK_FN(47)
+  CC_HK_FN(48) CC_HK_FN(49) CC_HK_FN(50) CC_HK_FN(51) CC_HK_FN(52) CC_HK_FN(53)
+  CC_HK_FN(54) CC_HK_FN(55) CC_HK_FN(56) CC_HK_FN(57) CC_HK_FN(58) CC_HK_FN(59)
+  CC_HK_FN(60) CC_HK_FN(61) CC_HK_FN(62) CC_HK_FN(63)
+#undef CC_HK_FN
+};
+
+static const CcEntry *cc_find(const char *label);
+static void cc_stage(const CcEntry *e, int mode);
+static void cc_run_pending(void);
+
+static void cc_run_entry_by_label(const char *label) {
+  const CcEntry *e = cc_find(label);
+  printf("CC: hotkey fired for '%s' -> %p\n", label ? label : "(null)", (const void *)e);
+  if (!e)
+    return;
+  cc_stage(e, 0);
+  cc_run_pending();
+}
+
+static void (*cc_entry_hotkey_cb(const CcEntry *e))(void) {
+  if (!e)
+    return NULL;
+  const char *name = e->label;
+  int slot = -1;
+  for (int i = 0; i < CC_HK_SLOTS; i++)
+    if (g_cc_hotkey_targets[i][0] && strcmp(g_cc_hotkey_targets[i], name) == 0) {
+      slot = i;
+      break;
+    }
+  if (slot < 0) {
+    for (int i = 0; i < CC_HK_SLOTS; i++)
+      if (!g_cc_hotkey_targets[i][0]) {
+        slot = i;
+        break;
+      }
+  }
+  if (slot < 0)
+    return NULL;
+  snprintf(g_cc_hotkey_targets[slot], sizeof(g_cc_hotkey_targets[slot]), "%s", name);
+  return cc_hotkey_dispatchers[slot];
 }
 
 static const CcEntry *cc_find(const char *label) {
@@ -1342,6 +1424,7 @@ static void cc_subwindow_render(PromptState *state) {
 
 static char current_hotkey_reg[128];
 static char current_reg_action[128];
+static char g_cc_main_selected[256];
 static FlTimer reg_flash_timer;
 static bool reg_flashing = false;
 static int reg_last_key = 0;
@@ -1349,17 +1432,19 @@ static int reg_last_key = 0;
 static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   if (!name || !name[0] || !hotkey || !hotkey[0])
     return;
-  for (int i = 0; i < g_action_count; i++) {
-    if (g_actions[i].label && strcmp(g_actions[i].label, name) == 0 &&
-        g_actions[i].fn) {
-      fl_register_hotkey(.hotkey = hotkey, .cb = g_actions[i].fn);
-      FILE *hf = fopen(CC_HOTKEY_FILE, "a");
-      if (hf) {
-        fprintf(hf, "%s\t%s\n", hotkey, name);
-        fclose(hf);
-      }
-      return;
-    }
+  printf("CC: cc_register_selected_hotkey name='%s' hotkey='%s' g_action_count=%d\n", name, hotkey, g_action_count);
+  const CcEntry *e = cc_find(name);
+  void (*cb)(void) = cc_entry_hotkey_cb(e);
+  printf("CC: cc_find('%s') -> %p cb=%p (on_action=%p on_enter=%p)\n", name, (const void *)e, (void *)cb, e ? (void *)e->on_action : NULL, e ? (void *)e->on_enter : NULL);
+  if (cb) {
+    printf("CC: registering hotkey '%s' for '%s'\n", hotkey, name);
+    bool ok = fl_register_hotkey(.hotkey = hotkey, .cb = cb);
+    printf("CC: fl_register_hotkey returned %d\n", (int)ok);
+    char line[320];
+    snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
+    bool wrote = fl_append_to_file(CC_HOTKEY_FILE, line);
+    printf("CC: fl_append_to_file returned %d (line='%s')\n", (int)wrote, line);
+    return;
   }
 }
 
@@ -1403,10 +1488,12 @@ static void cc_subwindow_reg_render(PromptState *state) {
     }
 
     if (buf[0] && k != 0 && k != reg_last_key) {
+        printf("CC: key=%d buf='%s' current_reg_action='%s'\n", k, buf, current_reg_action);
         cc_register_selected_hotkey(current_reg_action, buf);
         snprintf(current_hotkey_reg, sizeof(current_hotkey_reg), "%s", buf);
         reg_flashing = true;
         reg_flash_timer = fl_start_timer();
+        fl_enable_global_hotkeys();
     }
     if (k == 0) reg_last_key = 0; else reg_last_key = k;
     if (reg_flashing && fl_end_timer(reg_flash_timer) >= 1.0)
@@ -1429,8 +1516,10 @@ static void cc_subwindow_reg_onclose() {
 static bool cc_subwindow_enter(PromptState *state) {
   switch (state->lb->selected_index) {
     case 0: {
-      const char *sel = state->lb ? ListBoxInfo_Row(state->lb, state->lb->selected_index) : NULL;
-      if (sel) snprintf(current_reg_action, sizeof(current_reg_action), "%s", sel);
+      printf("CC: subwindow enter using main selection='%s'\n", g_cc_main_selected);
+      snprintf(current_reg_action, sizeof(current_reg_action), "%s", g_cc_main_selected);
+      printf("CC: current_reg_action='%s'\n", current_reg_action);
+      fl_disable_global_hotkeys();
       fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
                .render = cc_subwindow_reg_render,.on_close=cc_subwindow_reg_onclose);
@@ -1441,29 +1530,38 @@ static bool cc_subwindow_enter(PromptState *state) {
   return true;
 }
 
+#define CC_PERSIST_MAX 64
+static char g_persisted_hotkeys[CC_PERSIST_MAX][64];
+static char g_persisted_actions[CC_PERSIST_MAX][256];
+static int g_persisted_count;
+
 static void cc_load_persisted_hotkeys(void) {
-  static bool loaded = false;
-  if (loaded) return;
-  loaded = true;
-  FILE *f = fopen(CC_HOTKEY_FILE, "r");
-  if (!f) return;
-  char line[512];
-  while (fgets(line, sizeof(line), f)) {
-    char *tab = strchr(line, '\t');
+  FlStringList lines = fl_load_file_list(CC_HOTKEY_FILE);
+  printf("CC: load_persisted_hotkeys loaded %d lines\n", lines.count);
+  for (int li = 0; li < lines.count && g_persisted_count < CC_PERSIST_MAX; li++) {
+    printf("CC: load line %d = '%s'\n", li, lines.items[li] ? lines.items[li] : "(null)");
+    char copy[512];
+    snprintf(copy, sizeof(copy), "%s", lines.items[li] ? lines.items[li] : "");
+    char *tab = strchr(copy, '\t');
     if (!tab) continue;
     *tab = '\0';
-    char *hotkey = line;
-    char *action = tab + 1;
-    char *nl = strchr(action, '\n');
-    if (nl) *nl = '\0';
-    for (int i = 0; i < g_action_count; i++) {
-      if (g_actions[i].label && strcmp(g_actions[i].label, action) == 0 && g_actions[i].fn) {
-        fl_register_hotkey(.hotkey = hotkey, .cb = g_actions[i].fn);
-        break;
-      }
-    }
+    snprintf(g_persisted_hotkeys[g_persisted_count], sizeof(g_persisted_hotkeys[0]), "%s", copy);
+    snprintf(g_persisted_actions[g_persisted_count], sizeof(g_persisted_actions[0]), "%s", tab + 1);
+    g_persisted_count++;
   }
-  fclose(f);
+  fl_free_file_list(&lines);
+}
+
+static void cc_register_persisted_hotkeys(void) {
+  for (int li = 0; li < g_persisted_count; li++) {
+    const char *hotkey = g_persisted_hotkeys[li];
+    const char *action = g_persisted_actions[li];
+    const CcEntry *e = cc_find(action);
+    void (*cb)(void) = cc_entry_hotkey_cb(e);
+    printf("CC: reloading persisted hotkey '%s' -> '%s' found=%p cb=%p\n", hotkey, action, (const void *)e, (void *)cb);
+    if (cb)
+      fl_register_hotkey(.hotkey = hotkey, .cb = cb);
+  }
 }
 
 static void cc_open_actions_subwindow(void) {
@@ -1490,8 +1588,12 @@ static void cc_on_actions_render(FlRect rect) {
 }
 
 static void cc_render(PromptState *state) {
-  static bool hotkeys_loaded = false;
-  if (!hotkeys_loaded) { hotkeys_loaded = true; cc_load_persisted_hotkeys(); }
+  if (state->lb && UI_IsListBoxSelected(state->lb)) {
+    const char *cur = ListBoxInfo_Row(state->lb, state->lb->selected_index);
+    if (cur) snprintf(g_cc_main_selected, sizeof(g_cc_main_selected), "%s", cur);
+  } else if (state->eb) {
+    snprintf(g_cc_main_selected, sizeof(g_cc_main_selected), "%s", state->eb->filter);
+  }
   g_cc_width = state->width;
   g_cc_height = state->height;
   FlListSpec spec = {.lb = state->lb, .item_height = FontSize * 2};
@@ -1656,6 +1758,7 @@ static void TriggerControl(void) {
 
 FLINT_FEATURE_INIT {
   g_cc_stopping = 0;
+  cc_load_persisted_hotkeys();
   g_app_cache_mtx = fl_mutex_create();
   if (g_app_cache_mtx)
     g_prewarm_thread = fl_thread_create(cc_prewarm_app_cache, NULL);
