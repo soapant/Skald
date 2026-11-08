@@ -1733,11 +1733,11 @@ Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
   if (niri_is_active()) {
     log_error("niri override_redirect prompt w=%d h=%d", w, h);
     win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "colored", "colored",
-                                  KeyPressMask | ExposureMask | FocusChangeMask,
+                                  KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask,
                                   true);
   } else {
     win = x11_create_window_ex(dpy, x, y, w, h, bg, "colored", "colored",
-                               KeyPressMask | ExposureMask | FocusChangeMask);
+                               KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask);
     Window focus_win = None;
     int revert_to = 0;
     XGetInputFocus(dpy, &focus_win, &revert_to);
