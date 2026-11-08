@@ -68,7 +68,7 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
 
 void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   FlintContext *ctx = FlintContext_Get();
-  if (ctx) ctx->window.in_enter = true;
+  if (ctx) ctx->window.subwindow.in_enter = true;
   const char *sel = NULL;
   char filter_copy[sizeof(state->eb->filter)];
   if (state->lb && UI_IsListBoxSelected(state->lb)) {
@@ -146,7 +146,7 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     }
   }
   ctx->window.selection_complete = should_close;
-  if (ctx) ctx->window.in_enter = false;
+  if (ctx) ctx->window.subwindow.in_enter = false;
   Platform_ProcessPendingSubwindow();
 }
 

@@ -8,6 +8,13 @@
 #include "core/types/prompt.h"
 
 typedef struct {
+  bool in_enter;
+  bool pending;
+  bool created;
+  PromptSpec pending_subwindow;
+} SubwindowInfo;
+
+typedef struct {
   WindowHandle hPopupWnd;
   bool selection_complete;
   bool editbox_placed;
@@ -16,10 +23,7 @@ typedef struct {
   const char *title;
   int last_index;
   PromptCallbacks prompt_callbacks;
-  bool in_enter;
-  bool subwindow_pending;
-  bool subwindow_created;
-  PromptSpec pending_subwindow;
+  SubwindowInfo subwindow;
 } WindowContext;
 
 typedef struct {

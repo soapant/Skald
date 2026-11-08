@@ -504,6 +504,15 @@ static bool compile_all(bool *any_compiled) {
 
   if (!nob_procs_wait_and_reset(&procs))
     ok = false;
+  if (!ok) {
+    for (size_t i = 0; i < err_paths.count; i++) {
+      Nob_String_Builder sb = {0};
+      if (nob_read_entire_file(err_paths.items[i], &sb)) {
+        nob_log(NOB_ERROR, "%s", sb.items);
+        nob_sb_free(sb);
+      }
+    }
+  }
   return ok;
 }
 
