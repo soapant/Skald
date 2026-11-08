@@ -1378,9 +1378,10 @@ static void cc_subwindow_reg_render(PromptState *state) {
         buf[len - 1] = '\0';
     }
 
-    fl_draw_text(.x = (state->width / 2) + 25, .y = 20, .text = "Hold A Key Sequence",.fontsize=15,.color=FL_GRAY);
+    fl_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence",.fontsize=15,.color=FL_GRAY,.align="LEFT");
+    fl_draw_rect(.x = 10, .y = state->height/2,.h=40,.w=180,.radius=6,.color=FL_DARK_GRAY,.filled=true);
     if (buf[0]) {
-        fl_draw_text(.x = (state->width / 2) + 25, .y = state->height/2, .text = buf,.fontsize=25);
+        fl_draw_text(.x = 17, .y = state->height/2, .text = buf,.fontsize=22,.align="LEFT");
         snprintf(buf, sizeof(buf), "%s", current_hotkey_reg);
     }
 }
@@ -1392,7 +1393,7 @@ static bool cc_subwindow_enter(PromptState *state) {
   switch (state->lb->selected_index) {
     case 0: 
       fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
-               .y = (g_cc_height / 2) - 50, .w = 200, .h = 300,
+               .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
                .render = cc_subwindow_reg_render,.enter=cc_subwindow_reg_enter);
       break;
     case 1: break;
