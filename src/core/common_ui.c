@@ -284,13 +284,24 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
                               const char *filter) {
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
-  if (total_matches != 0 && strlen(filter) > 0) {
+  bool has_filter = filter && filter[0] != '\0';
+  bool same_filter =
+      has_filter &&
+      strncmp(lb->last_filter, filter, sizeof(lb->last_filter)) == 0;
+  if (total_matches != 0 && has_filter && !same_filter) {
     UI_SetSelection(lb, 0);
+  } else if (lb->selected_index >= total_matches) {
+    UI_SetSelection(lb, total_matches > 0 ? total_matches - 1 : -1);
   } else if (lb->selected_index >= 0) {
     UI_NavigateTo(lb, lb->selected_index);
   } else {
     UI_SetSelection(lb, -1);
   }
+  if (filter)
+    strncpy(lb->last_filter, filter, sizeof(lb->last_filter) - 1);
+  else
+    lb->last_filter[0] = '\0';
+  lb->last_filter[sizeof(lb->last_filter) - 1] = '\0';
   ListBox_ScrollToSelection(lb);
   if (total_matches == 0) {
     Platform_DismissDisplayMessage();
