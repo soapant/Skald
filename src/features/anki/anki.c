@@ -56,7 +56,6 @@ static int (*p_sqlite3_bind_text)(sqlite3_stmt *, int, const char *, int,
                                   void (*)(void *)) = NULL;
 static int (*p_sqlite3_close)(sqlite3 *) = NULL;
 static int (*p_sqlite3_bind_int64)(sqlite3_stmt *, int, sqlite3_int64) = NULL;
-static int (*p_sqlite3_column_int)(sqlite3_stmt *, int) = NULL;
 
 static FlThread anki_thread = NULL;
 static FlMutex anki_lock = NULL;
@@ -488,7 +487,7 @@ void print_due_card(void) {
   snprintf(buf, sizeof(buf), "%s/.local/share/Anki2/User 1/collection.anki2",
            fl_resolve_user_path());
 #endif
-  CardList list = get_cards_in_deck(buf, "Physics");
+  CardList list = get_cards_in_deck(buf, "Chemistry");
   long long now = (long long)time(NULL);
   size_t *due = malloc(list.count * sizeof(size_t));
   size_t due_count = 0;
@@ -573,9 +572,9 @@ FLINT_FEATURE_SHUTDOWN {
 }
 
 FLINT_FEATURE_INIT {
-  anki_lock = fl_mutex_create();
-  anki_running = true;
-  anki_thread = fl_thread_create(anki_timer_thread, NULL);
+  // anki_lock = fl_mutex_create();
+  // anki_running = true;
+  // anki_thread = fl_thread_create(anki_timer_thread, NULL);
   fl_register_hotkey(.hotkey = "Shift+Space", .cb = handle_anki,
                      .should_swallow = should_swallow_anki);
 

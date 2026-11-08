@@ -1186,7 +1186,7 @@ static void ccx_trim_copy(const char *src, char *dst, size_t cap) {
   dst[len] = '\0';
 }
 
-#define CC_CALC_ROW_ICON "\xEF\x87\xAC"
+#define CC_CALC_ROW_ICON "/calculator.png"
 
 static char g_cc_calc_label[512] = {0};
 
@@ -1326,7 +1326,7 @@ static bool cc_calc_build_label(const char *filter) {
   if (!has_digit)
     return false;
   char value[128] = {0};
-  if (!cc_calc_result_for(trimmed, value, sizeof(value)))
+  if (!cc_calc_result_for(value,trimmed, sizeof(value)))
     return false;
   snprintf(g_cc_calc_label, sizeof(g_cc_calc_label), "%s = %s", trimmed, value);
   return true;
@@ -1630,25 +1630,15 @@ static void cc_render(PromptState *state) {
     int icon_size = FontSize;
     int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
     if (!row_icon && g_cc_calc_label[0] &&
-        strcmp(ctx.text, g_cc_calc_label) == 0) {
+      strcmp(ctx.text, g_cc_calc_label) == 0) {
       row_icon = CC_CALC_ROW_ICON;
     }
-    int gh = fl_get_glyph_ink_height(row_icon, icon_size);
-    if (gh <= 0)
-      gh = icon_size;
     if (row_icon) {
       int icon_x = ctx.x + CC_ITEM_TEXT_X;
       int icon_y = ctx.y + (ctx.h - icon_size) / 2;
-      if (cc_icon_is_glyph(row_icon)) {
-        int gw = fl_get_text_width(row_icon, icon_size);
-        fl_draw_text(.x = icon_x + (icon_size - gw) / 2,
-                     .y = ctx.y + (ctx.h - gh) / 2 + 1, .text = row_icon,
-                     .align = "LEFT", .pad = 0, .fontsize = icon_size);
-      } else {
         fl_draw_image(.path = row_icon, .x = icon_x, .y = icon_y,
                       .w = icon_size, .h = icon_size);
       }
-    }
 
     fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = ctx.text,
                  .align = "LEFT", .pad = 0);
