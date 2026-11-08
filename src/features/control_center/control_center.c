@@ -1388,10 +1388,11 @@ static bool cc_subwindow_reg_enter(PromptState *state) {
 
 static bool cc_subwindow_enter(PromptState *state) {
   switch (state->lb->selected_index) {
-    case 0: fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
+    case 0: 
+      fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) - 50, .w = 200, .h = 300,
                .render = cc_subwindow_reg_render,.enter=cc_subwindow_reg_enter);
-;
+      break;
     case 1: break;
   }
   return true;
