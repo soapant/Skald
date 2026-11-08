@@ -279,6 +279,7 @@ static const CcScanPath ListOfProgramPaths[] = {
 };
 
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
+#define CC_HOTKEY_FILE "hotkeys.txt"
 #define CC_APPCACHE_VERSION "#cc4"
 
 static bool cc_icon_is_shell_only(const char *icon) {
@@ -1352,6 +1353,11 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
     if (g_actions[i].label && strcmp(g_actions[i].label, name) == 0 &&
         g_actions[i].fn) {
       fl_register_hotkey(.hotkey = hotkey, .cb = g_actions[i].fn);
+      FILE *hf = fopen(CC_HOTKEY_FILE, "a");
+      if (hf) {
+        fprintf(hf, "%s\t%s\n", hotkey, name);
+        fclose(hf);
+      }
       return;
     }
   }
@@ -1430,6 +1436,31 @@ static bool cc_subwindow_enter(PromptState *state) {
   return true;
 }
 
+static void cc_load_persisted_hotkeys(void) {
+  static bool loaded = false;
+  if (loaded) return;
+  loaded = true;
+  FILE *f = fopen(CC_HOTKEY_FILE, "r");
+  if (!f) return;
+  char line[512];
+  while (fgets(line, sizeof(line), f)) {
+    char *tab = strchr(line, '\t');
+    if (!tab) continue;
+    *tab = '\0';
+    char *hotkey = line;
+    char *action = tab + 1;
+    char *nl = strchr(action, '\n');
+    if (nl) *nl = '\0';
+    for (int i = 0; i < g_action_count; i++) {
+      if (g_actions[i].label && strcmp(g_actions[i].label, action) == 0 && g_actions[i].fn) {
+        fl_register_hotkey(.hotkey = hotkey, .cb = g_actions[i].fn);
+        break;
+      }
+    }
+  }
+  fclose(f);
+}
+
 static void cc_open_actions_subwindow(void) {
   fl_subwindow(.title = "Actions", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) - 50, .w = 200, .h = 300,
@@ -1454,6 +1485,8 @@ static void cc_on_actions_render(FlRect rect) {
 }
 
 static void cc_render(PromptState *state) {
+  static bool hotkeys_loaded = false;
+  if (!hotkeys_loaded) { hotkeys_loaded = true; cc_load_persisted_hotkeys(); }
   g_cc_width = state->width;
   g_cc_height = state->height;
   FlListSpec spec = {.lb = state->lb, .item_height = FontSize * 2};
