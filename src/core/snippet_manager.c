@@ -140,6 +140,25 @@ bool snippet_register_internal(const char *trigger, const char *text,
   return true;
 }
 
+bool snippet_unregister_internal(const char *trigger) {
+  if (!trigger || !trigger[0])
+    return false;
+  int n = 0;
+  bool found = false;
+  for (int i = 0; i < g_snippet_count; i++) {
+    if (g_snippets[i].trigger && strcmp(g_snippets[i].trigger, trigger) == 0) {
+      snippet_free_binding(&g_snippets[i]);
+      found = true;
+      continue;
+    }
+    if (n != i)
+      g_snippets[n] = g_snippets[i];
+    n++;
+  }
+  g_snippet_count = n;
+  return found;
+}
+
 void snippet_purge_owner(const char *path_a, const char *path_b) {
   if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
     return;
