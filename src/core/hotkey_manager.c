@@ -283,6 +283,15 @@ const HotkeyBinding *hotkey_get(int index) {
   return &g_hotkeys[index];
 }
 
+const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb) {
+  if (!cb)
+    return NULL;
+  for (int i = 0; i < g_hotkey_count; i++)
+    if (g_hotkeys[i].hotkey_callback == cb)
+      return &g_hotkeys[i];
+  return NULL;
+}
+
 bool hotkey_is_taken(int vk_code, int modifiers) {
   for (int i = 0; i < g_hotkey_count; i++)
     if (g_hotkeys[i].vk_code == vk_code && g_hotkeys[i].modifiers == modifiers)
