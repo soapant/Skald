@@ -18,6 +18,11 @@
 static HotkeyBinding *g_hotkeys = NULL;
 static int g_hotkey_count = 0;
 static int g_hotkey_capacity = 0;
+static bool g_hotkeys_suspended = false;
+
+void hotkey_set_suspended(bool suspended) {
+  g_hotkeys_suspended = suspended;
+}
 
 #define HOTKEY_PENDING_MAX 64
 static HotkeyCallback g_pending_q[HOTKEY_PENDING_MAX];
@@ -179,6 +184,8 @@ static void hotkey_tick_holds(void) {
 }
 
 void hotkey_drain_pending(void) {
+  if (g_hotkeys_suspended)
+    return;
   hotkey_tick_holds();
   for (;;) {
     HotkeyCallback fn = NULL;
@@ -373,6 +380,8 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
 }
 
 bool hotkey_process(int vk_code, int modifiers) {
+  if (g_hotkeys_suspended)
+    return false;
   int eff_modifiers = modifiers;
   if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT)
     eff_modifiers &= ~HOTKEY_MOD_SHIFT;
