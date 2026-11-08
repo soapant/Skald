@@ -781,6 +781,7 @@ void fl_enable_global_hotkeys(void);
 int fl_hotkey_count(void);
 const char *fl_hotkey_string_at(int index);
 bool fl_hotkey_taken(const char *hotkey);
+const char *fl_hotkey_for_callback(void (*cb)(void));
 
 typedef struct {
   const char *src;

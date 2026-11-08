@@ -548,6 +548,19 @@ const char *fl_hotkey_string_at(int index) {
   return g_fl_hotkey_list_string;
 }
 
+static char g_fl_hotkey_cb_string[HOTKEY_STRING_MAX_LEN];
+
+const char *fl_hotkey_for_callback(void (*cb)(void)) {
+  const HotkeyBinding *b = hotkey_find_by_callback((HotkeyCallback)cb);
+  if (!b)
+    return NULL;
+  HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
+  if (!HotkeyString_Format(key, g_fl_hotkey_cb_string,
+                           (int)sizeof(g_fl_hotkey_cb_string)))
+    g_fl_hotkey_cb_string[0] = '\0';
+  return g_fl_hotkey_cb_string;
+}
+
 bool fl_hotkey_taken(const char *hotkey) {
   if (!hotkey)
     return false;

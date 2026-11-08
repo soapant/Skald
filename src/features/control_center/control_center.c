@@ -204,6 +204,15 @@ static const CcEntry *cc_find(const char *label);
 static void cc_stage(const CcEntry *e, int mode);
 static void cc_run_pending(void);
 
+static const char *cc_hotkey_for_label(const char *label) {
+  if (!label)
+    return NULL;
+  for (int i = 0; i < CC_HK_SLOTS; i++)
+    if (g_cc_hotkey_targets[i][0] && strcmp(g_cc_hotkey_targets[i], label) == 0)
+      return fl_hotkey_for_callback(cc_hotkey_dispatchers[i]);
+  return NULL;
+}
+
 static void cc_run_entry_by_label(const char *label) {
   const CcEntry *e = cc_find(label);
   if (!e)
@@ -1640,6 +1649,16 @@ static void cc_render(PromptState *state) {
 
     bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
                             strcmp(e->type, "Feature") == 0);
+    if (e) {
+      const char *right_text = plain_type ? e->type : CC_TYPE_LABEL;
+      const char *hk = cc_hotkey_for_label(ctx.text);
+      if (hk && hk[0]) {
+        int type_w = fl_get_text_width(right_text, FontSize);
+        fl_draw_text(.x = type_x - type_w - CC_TYPE_GAP,
+                     .y = ctx.y + 8, .text = hk,
+                     .align = "RIGHT", .pad = 0, .color = FL_GRAY,.fontsize=FontSize-6);
+      }
+    }
     if (plain_type) {
       fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = e->type,
                    .align = "RIGHT", .color = cc_type_color());
