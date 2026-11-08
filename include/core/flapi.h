@@ -258,16 +258,16 @@ typedef struct {
 } FlEditPopupSpec;
 
 #define fl_edit_text_popup(...)                                                \
-  fl_edit_text_popup_impl(&(FlEditPopupSpec){__VA_ARGS__})
+  fli_edit_text_popup(&(FlEditPopupSpec){__VA_ARGS__})
 
-char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec);
+char *fli_edit_text_popup(const FlEditPopupSpec *spec);
 
 bool fl_replace_line_in_file(const char *filepath, int line_index,
                              const char *new_text);
 
-#define fl_popup(...) fl_popup_impl(&(PopupSpec){__VA_ARGS__})
+#define fl_popup(...) fli_popup(&(PopupSpec){__VA_ARGS__})
 
-char *fl_popup_impl(const PopupSpec *spec);
+char *fli_popup(const PopupSpec *spec);
 
 typedef struct {
   const char *message;
@@ -299,9 +299,9 @@ typedef struct {
   int pad;
 } FlHoverPopupCtx;
 
-#define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
+#define fl_message(...) fli_message(&(FlMessageSpec){__VA_ARGS__})
 
-void fl_message_impl(const FlMessageSpec *spec);
+void fli_message(const FlMessageSpec *spec);
 
 #define fl_overlay(...) fl_message(__VA_ARGS__, .timeout = 10000000.0)
 #define fl_dismiss_overlay(...) fl_dismiss_message(__VA_ARGS__)
@@ -310,9 +310,9 @@ void fl_message_impl(const FlMessageSpec *spec);
 
 typedef PromptSpec FlPromptSpec;
 
-#define fl_window(...) fl_window_impl(&(FlPromptSpec){__VA_ARGS__})
+#define fl_window(...) fli_window(&(FlPromptSpec){__VA_ARGS__})
 
-void fl_window_impl(const FlPromptSpec *spec);
+void fli_window(const FlPromptSpec *spec);
 
 typedef enum {
   FLANCHOR_TOP_LEFT,
@@ -359,9 +359,9 @@ typedef struct {
 } FlMeasureSpec;
 
 #define fl_measure_text_wrapped(...)                                           \
-  fl_measure_text_wrapped_impl(&(FlMeasureSpec){__VA_ARGS__})
+  fli_measure_text_wrapped(&(FlMeasureSpec){__VA_ARGS__})
 
-int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec);
+int fli_measure_text_wrapped(const FlMeasureSpec *spec);
 
 typedef struct {
   const char *path;
@@ -371,11 +371,11 @@ typedef struct {
   int h;
 } FlImageSpec;
 
-bool fl_draw_text_impl(const FlTextSpec *spec);
-bool fl_draw_image_impl(const FlImageSpec *spec);
-bool fl_place_editbox_impl(const FlEditSpec *spec);
-bool fl_place_listbox_impl(const FlListSpec *spec);
-bool fl_place_checkbox_impl(const FlCheckboxSpec *spec);
+bool fli_draw_text(const FlTextSpec *spec);
+bool fli_draw_image(const FlImageSpec *spec);
+bool fli_place_editbox(const FlEditSpec *spec);
+bool fli_place_listbox(const FlListSpec *spec);
+bool fli_place_checkbox(const FlCheckboxSpec *spec);
 
 bool fl_checkbox_is_checked(const char *name);
 bool fl_checkbox_is_hovered(const char *name);
@@ -384,10 +384,10 @@ bool fl_checkbox_is_hovered(const char *name);
 #define fl_checkbox_clicked fl_checkbox_is_clicked
 
 #define fl_place_button(...)                                                   \
-  fl_place_checkbox_impl(                                                      \
+  fli_place_checkbox(                                                      \
       &(FlCheckboxSpec){.border = true, __VA_ARGS__, .button = true})
 #define fl_place_checkbox(...)                                                 \
-  fl_place_checkbox_impl(                                                      \
+  fli_place_checkbox(                                                      \
       &(FlCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
 
 #define fl_button_is_clicked fl_checkbox_is_checked
@@ -395,10 +395,10 @@ bool fl_checkbox_is_hovered(const char *name);
 #define fl_button_clicked fl_checkbox_checked
 #define fl_button_hovered fl_checkbox_hovered
 
-#define fl_draw_text(...) fl_draw_text_impl(&(FlTextSpec){__VA_ARGS__})
-#define fl_draw_image(...) fl_draw_image_impl(&(FlImageSpec){__VA_ARGS__})
-#define fl_place_editbox(...) fl_place_editbox_impl(&(FlEditSpec){__VA_ARGS__})
-#define fl_place_listbox(...) fl_place_listbox_impl(&(FlListSpec){__VA_ARGS__})
+#define fl_draw_text(...) fli_draw_text(&(FlTextSpec){__VA_ARGS__})
+#define fl_draw_image(...) fli_draw_image(&(FlImageSpec){__VA_ARGS__})
+#define fl_place_editbox(...) fli_place_editbox(&(FlEditSpec){__VA_ARGS__})
+#define fl_place_listbox(...) fli_place_listbox(&(FlListSpec){__VA_ARGS__})
 
 bool fl_listbox_begin(const FlListSpec *spec);
 bool fl_listbox_next(FlListItemCtx *out);
@@ -478,17 +478,17 @@ typedef struct {
   float thickness;
 } FlCircleSpec;
 
-bool fl_draw_rect_impl(const FlRectSpec *spec);
+bool fli_draw_rect(const FlRectSpec *spec);
 
-bool fl_draw_line_impl(const FlLineSpec *spec);
+bool fli_draw_line(const FlLineSpec *spec);
 
-bool fl_draw_circle_impl(const FlCircleSpec *spec);
+bool fli_draw_circle(const FlCircleSpec *spec);
 
-#define fl_draw_rect(...) fl_draw_rect_impl(&(FlRectSpec){__VA_ARGS__})
+#define fl_draw_rect(...) fli_draw_rect(&(FlRectSpec){__VA_ARGS__})
 
-#define fl_draw_line(...) fl_draw_line_impl(&(FlLineSpec){__VA_ARGS__})
+#define fl_draw_line(...) fli_draw_line(&(FlLineSpec){__VA_ARGS__})
 
-#define fl_draw_circle(...) fl_draw_circle_impl(&(FlCircleSpec){__VA_ARGS__})
+#define fl_draw_circle(...) fli_draw_circle(&(FlCircleSpec){__VA_ARGS__})
 
 int fl_rand_num_between(int min, int max);
 
@@ -734,20 +734,20 @@ int fl_char_for_key(int vk, int scancode, int mods);
 
 typedef CcEntrySpec FlCcEntrySpec;
 
-#define fl_add_to_cc(...) fl_add_to_cc_impl(&(FlCcEntrySpec){__VA_ARGS__})
+#define fl_add_to_cc(...) fli_add_to_cc(&(FlCcEntrySpec){__VA_ARGS__})
 
-bool fl_add_to_cc_impl(const FlCcEntrySpec *spec);
+bool fli_add_to_cc(const FlCcEntrySpec *spec);
 
 typedef struct {
   const char *alias;
   const char *target;
 } FlAliasSpec;
 
-#define fl_add_alias(...) fl_add_alias_impl(&(FlAliasSpec){__VA_ARGS__})
+#define fl_add_alias(...) fli_add_alias(&(FlAliasSpec){__VA_ARGS__})
 
-bool fl_add_alias_impl(const FlAliasSpec *spec);
-bool fl_remove_alias_impl(const char *alias);
-#define fl_remove_alias(alias) fl_remove_alias_impl((alias))
+bool fli_add_alias(const FlAliasSpec *spec);
+bool fli_remove_alias(const char *alias);
+#define fl_remove_alias(alias) fli_remove_alias((alias))
 
 const char *fl_alias_for(const char *target);
 
@@ -755,9 +755,9 @@ int fl_cc_entry_count(void);
 
 const CcEntrySpec *fl_cc_entry_at(int index);
 
-bool fl_add_dep_impl(const char *dep_name, const char *owner_file);
+bool fli_add_dep(const char *dep_name, const char *owner_file);
 
-#define fl_add_dep(...) fl_add_dep_impl(__VA_ARGS__, __FILE__)
+#define fl_add_dep(...) fli_add_dep(__VA_ARGS__, __FILE__)
 
 typedef struct {
   const char *hotkey;
@@ -770,11 +770,11 @@ typedef struct {
 } FlHotkeySpec;
 
 #define fl_register_hotkey(...)                                                \
-  fl_register_hotkey_impl(&(FlHotkeySpec){__VA_ARGS__})
+  fli_register_hotkey(&(FlHotkeySpec){__VA_ARGS__})
 
-bool fl_register_hotkey_impl(const FlHotkeySpec *spec);
-bool fl_unregister_hotkey_impl(const char *hotkey);
-#define fl_unregister_hotkey(hk) fl_unregister_hotkey_impl((hk))
+bool fli_register_hotkey(const FlHotkeySpec *spec);
+bool fli_unregister_hotkey(const char *hotkey);
+#define fl_unregister_hotkey(hk) fli_unregister_hotkey((hk))
 
 void fl_disable_global_hotkeys(void);
 void fl_enable_global_hotkeys(void);
@@ -794,9 +794,9 @@ typedef struct {
 } FlRemappingSpec;
 
 #define fl_register_remapping(...)                                             \
-  fl_register_remapping_impl(&(FlRemappingSpec){__VA_ARGS__})
+  fli_register_remapping(&(FlRemappingSpec){__VA_ARGS__})
 
-bool fl_register_remapping_impl(const FlRemappingSpec *spec);
+bool fli_register_remapping(const FlRemappingSpec *spec);
 
 bool fl_replay_hotkey(int vk, int mods);
 
@@ -811,11 +811,11 @@ typedef struct {
 } FlSnippetSpec;
 
 #define fl_register_snippet(...)                                               \
-  fl_register_snippet_impl(&(FlSnippetSpec){__VA_ARGS__})
+  fli_register_snippet(&(FlSnippetSpec){__VA_ARGS__})
 
-bool fl_register_snippet_impl(const FlSnippetSpec *spec);
-bool fl_unregister_snippet_impl(const char *trigger);
-#define fl_unregister_snippet(trigger) fl_unregister_snippet_impl((trigger))
+bool fli_register_snippet(const FlSnippetSpec *spec);
+bool fli_unregister_snippet(const char *trigger);
+#define fl_unregister_snippet(trigger) fli_unregister_snippet((trigger))
 
 void fl_reload_feature(char *name);
 void fl_reload_all_features(void);

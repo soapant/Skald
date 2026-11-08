@@ -133,7 +133,7 @@ bool fl_launch_with_args_as_admin(const char *path, const char *args) {
   return fl_launch_with_args_as_admin_platform(expanded, args);
 }
 
-bool fl_add_dep_impl(const char *dep_name, const char *owner_file) {
+bool fli_add_dep(const char *dep_name, const char *owner_file) {
   return add_dep(dep_name, owner_file);
 }
 
@@ -446,7 +446,7 @@ bool fl_parse_desktop_file(const char *path, char *out_name, size_t n,
   return found;
 }
 
-bool fl_register_remapping_impl(const FlRemappingSpec *spec) {
+bool fli_register_remapping(const FlRemappingSpec *spec) {
   if (!spec || !spec->src || !spec->dst)
     return false;
   const char **wl = spec->whitelist;
@@ -472,7 +472,7 @@ static void fl_snippet_fire(int idx, int del) {
     b->func();
 }
 
-bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
+bool fli_register_snippet(const FlSnippetSpec *spec) {
   if (!spec || !spec->trigger || (!spec->text && !spec->fn))
     return false;
   snippet_set_fire_fn(fl_snippet_fire);
@@ -485,7 +485,7 @@ bool fl_register_snippet_impl(const FlSnippetSpec *spec) {
                                    (void *)__builtin_return_address(0));
 }
 
-bool fl_unregister_snippet_impl(const char *trigger) {
+bool fli_unregister_snippet(const char *trigger) {
   return snippet_unregister_internal(trigger);
 }
 
@@ -497,7 +497,7 @@ typedef struct {
 static FeatureReg **g_feature_order = NULL;
 static int g_feature_order_count = 0;
 
-bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
+bool fli_register_hotkey(const FlHotkeySpec *spec) {
   if (!spec || !spec->hotkey || !spec->cb)
     return false;
   const char **wl = spec->whitelist;
@@ -523,7 +523,7 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
   return hotkey_register_internal(binding);
 }
 
-bool fl_unregister_hotkey_impl(const char *hotkey) {
+bool fli_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
   HotkeyBinding binding =
@@ -844,7 +844,7 @@ static void fl_hover_popup_ctx_free(void *ud) {
     free(p);
 }
 
-void fl_message_impl(const FlMessageSpec *spec) {
+void fli_message(const FlMessageSpec *spec) {
   if (!MessagesEnabled)
     return;
   int w = spec->w > 0 ? spec->w : 0;
@@ -959,7 +959,7 @@ bool fl_paste(char *content) {
 
 static bool fl_popup_enter(PromptState *state);
 
-char *fl_edit_text_popup_impl(const FlEditPopupSpec *spec) {
+char *fli_edit_text_popup(const FlEditPopupSpec *spec) {
   const char *initial_text = spec ? spec->initial_text : NULL;
   int x = spec->x ? spec->x : 0;
   int y = spec->y ? spec->y : 0;
@@ -1107,7 +1107,7 @@ static bool fl_popup_enter(PromptState *state) {
   return true;
 }
 
-char *fl_popup_impl(const PopupSpec *spec) {
+char *fli_popup(const PopupSpec *spec) {
   if (!spec)
     return NULL;
   WindowManager *wm = WindowManager_Get();
@@ -1126,7 +1126,7 @@ char *fl_popup_impl(const PopupSpec *spec) {
 
 unsigned long fl_listbox_get_current_standard_color(void);
 
-bool fl_draw_text_impl(const FlTextSpec *spec) {
+bool fli_draw_text(const FlTextSpec *spec) {
   int x = spec->x ? spec->x : 0;
   int y = spec->y ? spec->y : 0;
   if (!spec) {
@@ -1327,7 +1327,7 @@ static void FlWrapNoDraw(void *ctx, int x, int y, const char *s, int n) {
   (void)n;
 }
 
-int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
+int fli_measure_text_wrapped(const FlMeasureSpec *spec) {
   if (!spec || !spec->text) {
     return 0;
   }
@@ -1347,7 +1347,7 @@ int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
   return r;
 }
 
-bool fl_place_editbox_impl(const FlEditSpec *spec) {
+bool fli_place_editbox(const FlEditSpec *spec) {
   if (!spec) {
     return false;
   }
@@ -1356,7 +1356,7 @@ bool fl_place_editbox_impl(const FlEditSpec *spec) {
   return r;
 }
 
-bool fl_draw_image_impl(const FlImageSpec *spec) {
+bool fli_draw_image(const FlImageSpec *spec) {
   if (!spec || !spec->path || !spec->path[0]) {
     return false;
   }
@@ -1373,7 +1373,7 @@ bool fl_draw_image_impl(const FlImageSpec *spec) {
   return r;
 }
 
-bool fl_draw_rect_impl(const FlRectSpec *spec) {
+bool fli_draw_rect(const FlRectSpec *spec) {
   if (!spec) {
     return false;
   }
@@ -1451,7 +1451,7 @@ void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata) {
   return;
 }
 
-bool fl_draw_line_impl(const FlLineSpec *spec) {
+bool fli_draw_line(const FlLineSpec *spec) {
   if (!spec) {
     return false;
   }
@@ -1469,7 +1469,7 @@ bool fl_draw_line_impl(const FlLineSpec *spec) {
   return r;
 }
 
-bool fl_draw_circle_impl(const FlCircleSpec *spec) {
+bool fli_draw_circle(const FlCircleSpec *spec) {
   if (!spec) {
     return false;
   }
@@ -1503,7 +1503,7 @@ bool fl_listbox_next(FlListItemCtx *out) {
 }
 
 void fl_listbox_end(void) { fl_listbox_end_platform(); }
-bool fl_place_listbox_impl(const FlListSpec *spec) {
+bool fli_place_listbox(const FlListSpec *spec) {
   if (!spec) {
     return false;
   }
@@ -1529,7 +1529,7 @@ bool fl_checkbox_is_hovered(const char *name) {
   return r;
 }
 
-bool fl_place_checkbox_impl(const FlCheckboxSpec *spec) {
+bool fli_place_checkbox(const FlCheckboxSpec *spec) {
   bool r = Checkbox_Place(spec);
   return r;
 }
@@ -2452,7 +2452,7 @@ static const char *fl_cc_dup(char *dst, size_t cap, const char *src) {
   return dst;
 }
 
-bool fl_add_to_cc_impl(const FlCcEntrySpec *spec) {
+bool fli_add_to_cc(const FlCcEntrySpec *spec) {
   if (!spec)
     return false;
   int slot = -1;
@@ -2548,7 +2548,7 @@ static char g_alias_alias[FL_MAX_ALIASES][128];
 static char g_alias_target[FL_MAX_ALIASES][256];
 static int g_alias_count = 0;
 
-bool fl_add_alias_impl(const FlAliasSpec *spec) {
+bool fli_add_alias(const FlAliasSpec *spec) {
   if (!spec || !spec->alias || !spec->target)
     return false;
   if (g_alias_count >= FL_MAX_ALIASES)
@@ -2567,7 +2567,7 @@ bool fl_add_alias_impl(const FlAliasSpec *spec) {
   return true;
 }
 
-bool fl_remove_alias_impl(const char *alias) {
+bool fli_remove_alias(const char *alias) {
   if (!alias)
     return false;
   int n = 0;
@@ -2597,7 +2597,7 @@ const char *fl_alias_for(const char *target) {
   return NULL;
 }
 
-void fl_window_impl(const FlPromptSpec *spec) {
+void fli_window(const FlPromptSpec *spec) {
   WindowManager_ShowPrompt(WindowManager_Get(), spec);
 }
 
