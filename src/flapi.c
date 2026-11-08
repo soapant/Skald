@@ -1373,7 +1373,7 @@ bool fli_draw_image(const FlImageSpec *spec) {
   return r;
 }
 
-bool fli_draw_rect(const FlRectSpec *spec) {
+bool fli_draw_rect(const PlRect *spec) {
   if (!spec) {
     return false;
   }
@@ -1468,7 +1468,7 @@ void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata) {
   return;
 }
 
-bool fli_draw_line(const FlLineSpec *spec) {
+bool fli_draw_line(const PlLine *spec) {
   if (!spec) {
     return false;
   }
@@ -1486,7 +1486,7 @@ bool fli_draw_line(const FlLineSpec *spec) {
   return r;
 }
 
-bool fli_draw_circle(const FlCircleSpec *spec) {
+bool fli_draw_circle(const PlCircle *spec) {
   if (!spec) {
     return false;
   }
