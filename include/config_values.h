@@ -28,6 +28,8 @@ extern const char *IconPath;
 extern const char *ControlHotkey;
 extern const char *ReloadFeaturesHotkey;
 extern const char *ActionsHotkey;
+extern const char *RegHotkey;
+extern const char *RegAliasHotkey;
 extern bool MessagesEnabled;
 extern bool EnableAutoPairing;
 extern bool EnableBorders;
