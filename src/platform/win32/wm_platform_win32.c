@@ -91,6 +91,8 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
 }
 
 char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
+  FlintContext *_ctx = FlintContext_Get();
+  if (_ctx) _ctx->window.subwindow.created = false;
   log_info("Platform_PromptUser started wm=%p spec=%p", wm, spec);
   if (!wm || !spec)
     return NULL;
@@ -98,27 +100,20 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   if (!popup)
     return NULL;
   if (spec->subwindow) {
-    static bool s_subwindow_creating = false;
-    if (s_subwindow_creating) {
-      log_info("Platform_PromptUser subwindow REENTRANT blocked title=%s",
-               spec->title ? spec->title : "(null)");
+    FlintContext *_c = FlintContext_Get();
+    if (_c && _c->window.subwindow.in_enter) {
+      _c->window.subwindow.pending = true;
+      _c->window.subwindow.pending_subwindow = *spec;
+      _c->window.subwindow.pending_subwindow.subwindow = false;
+      _c->window.subwindow.created = false;
       return NULL;
     }
     if (wm && wm->popup_count > 1) {
-      log_info("Platform_PromptUser subwindow BLOCKED (already open) title=%s "
-               "popup_count=%d",
-               spec->title ? spec->title : "(null)", wm->popup_count);
       return NULL;
     }
-    s_subwindow_creating = true;
-    log_info("Platform_PromptUser subwindow ENTER title=%s popup_count=%d",
-             spec->title ? spec->title : "(null)", wm ? wm->popup_count : -1);
     PromptSpec heap_spec = *spec;
     heap_spec.subwindow = false;
-    Popup *_created = PromptPopup_Create(wm, &heap_spec);
-    log_info("Platform_PromptUser subwindow EXIT created=%p popup_count=%d",
-             (void *)_created, wm ? wm->popup_count : -1);
-    s_subwindow_creating = false;
+    (void)PromptPopup_Create(wm, &heap_spec);
     return NULL;
   }
   long long last_tick = 0;
@@ -165,9 +160,25 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
         break;
       }
     }
-    if (_still_open)
-      WindowManager_PopPopup(wm);
+    if (_still_open) {
+      FlintContext *_ctx2 = FlintContext_Get();
+      if (!_ctx2 || !_ctx2->window.subwindow.created)
+        WindowManager_PopPopup(wm);
+    }
   }
   FlintContext *_c = FlintContext_Get();
   return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
+}
+
+
+void Platform_ProcessPendingSubwindow(void) {
+  FlintContext *_c = FlintContext_Get();
+  if (!_c || !_c->window.subwindow.pending)
+    return;
+  _c->window.subwindow.pending = false;
+  _c->window.subwindow.created = true;
+  WindowManager *wm = WindowManager_Get();
+  if (wm && wm->popup_count > 1)
+    WindowManager_PopPopup(wm);
+  (void)PromptPopup_Create(wm, &_c->window.subwindow.pending_subwindow);
 }

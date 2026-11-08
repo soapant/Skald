@@ -152,17 +152,17 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 
 char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   FlintContext *_ctx = FlintContext_Get();
-  if (_ctx) _ctx->window.subwindow_created = false;
+  if (_ctx) _ctx->window.subwindow.created = false;
   log_info("Platform_PromptUser started wm=%p spec=%p", wm, spec);
   if (!wm || !spec)
     return NULL;
   if (spec->subwindow) {
     FlintContext *_c = FlintContext_Get();
-    if (_c && _c->window.in_enter) {
-      _c->window.subwindow_pending = true;
-      _c->window.pending_subwindow = *spec;
-      _c->window.pending_subwindow.subwindow = false;
-      _c->window.subwindow_created = false;
+    if (_c && _c->window.subwindow.in_enter) {
+      _c->window.subwindow.pending = true;
+      _c->window.subwindow.pending_subwindow = *spec;
+      _c->window.subwindow.pending_subwindow.subwindow = false;
+      _c->window.subwindow.created = false;
       return NULL;
     }
     PromptSpec heap_spec = *spec;
@@ -228,7 +228,7 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
     }
     if (_still_open) {
       FlintContext *_ctx2 = FlintContext_Get();
-      if (!_ctx2 || !_ctx2->window.subwindow_created)
+      if (!_ctx2 || !_ctx2->window.subwindow.created)
         WindowManager_PopPopup(wm);
     }
   }
@@ -242,14 +242,14 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
 
 void Platform_ProcessPendingSubwindow(void) {
   FlintContext *_c = FlintContext_Get();
-  if (!_c || !_c->window.subwindow_pending)
+  if (!_c || !_c->window.subwindow.pending)
     return;
-  _c->window.subwindow_pending = false;
-  _c->window.subwindow_created = true;
+  _c->window.subwindow.pending = false;
+  _c->window.subwindow.created = true;
   WindowManager *wm = WindowManager_Get();
   if (wm && wm->popup_count > 1)
     WindowManager_PopPopup(wm);
-  Popup *p = PromptPopup_Create(wm, &_c->window.pending_subwindow);
+  Popup *p = PromptPopup_Create(wm, &_c->window.subwindow.pending_subwindow);
   if (p && p->vtable && p->vtable->on_render)
     p->vtable->on_render(p);
   if (wm && wm->display) {
