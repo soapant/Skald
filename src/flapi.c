@@ -20,6 +20,9 @@
 #include "platform/input_state.h"
 #include "platform/ui.h"
 #include "core/window_manager.h"
+#include "core/thread_registry.h"
+#include "platform/lib.h"
+#include "platform/platform.h"
 #include "core/clipboard_history.h"
 #include "core/flapi.h"
 #include "core/feature_loader.h"
@@ -1628,10 +1631,41 @@ void fl_library_close(FlLibrary lib) { Platform_UnloadLibrary((LibHandle)lib); }
 
 const char *fl_library_error(void) { return Platform_GetLoadError(); }
 
+typedef struct {
+  FlThreadFunc fn;
+  void *arg;
+  char owner[512];
+} FlThreadCtx;
+
+static void *fl_thread_trampoline(void *p) {
+  FlThreadCtx *ctx = (FlThreadCtx *)p;
+  FlThreadFunc fn = ctx->fn;
+  void *arg = ctx->arg;
+  void *ret = fn ? fn(arg) : NULL;
+  ThreadRegistry_Finish(ctx);
+  free(ctx);
+  return ret;
+}
+
 FlThread fl_thread_create(FlThreadFunc fn, void *arg) {
   if (!fn)
     return NULL;
-  return (FlThread)Platform_ThreadCreate((void *(*)(void *))fn, arg);
+  FlThreadCtx *ctx = malloc(sizeof(*ctx));
+  if (!ctx)
+    return NULL;
+  ctx->fn = fn;
+  ctx->arg = arg;
+  ctx->owner[0] = '\0';
+  Platform_GetModuleOwnerPath((void *)(uintptr_t)fn, ctx->owner,
+                              sizeof(ctx->owner));
+  ThreadRegistry_Add(ctx, ctx->owner);
+  void *thread = Platform_ThreadCreate(fl_thread_trampoline, ctx);
+  if (!thread) {
+    ThreadRegistry_Finish(ctx);
+    free(ctx);
+    return NULL;
+  }
+  return (FlThread)thread;
 }
 
 void fl_thread_join(FlThread thread) {

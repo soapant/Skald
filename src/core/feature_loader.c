@@ -14,6 +14,7 @@
 #include "config_values.h"
 #include "core/types/misc.h"
 #include "helpers/helpers_hotkey.h"
+#include "core/thread_registry.h"
 
 #include "core/cc_registry.h"
 #include "core/widget_registry.h"
@@ -136,6 +137,9 @@ static void sweep_retired_libs(void) {
   for (int i = 0; i < g_retired_count; i++) {
     bool alive = false;
     if (g_retired[i].owner[0] && widget_owner_active(g_retired[i].owner)) {
+      alive = true;
+    } else if (g_retired[i].owner[0] &&
+               ThreadRegistry_OwnerActive(g_retired[i].owner)) {
       alive = true;
     } else if (wm && g_retired[i].npins >= 0) {
       for (int a = 0; a < g_retired[i].npins && !alive; a++) {
@@ -633,6 +637,32 @@ bool FeatureLoader_Init(void) {
   g_feature_count = 0;
   UNLOCK();
   g_feature_init_count = 0;
+  {
+    DIR *d = opendir("build/features");
+    if (d) {
+      struct dirent *e;
+      while ((e = readdir(d)) != NULL) {
+        const char *dot = strstr(e->d_name, ".hot");
+        if (!dot)
+          continue;
+        const char *end = dot + 4;
+        bool digits = true;
+        for (const char *p = end; *p; p++)
+          if (*p < '0' || *p > '9') {
+            digits = false;
+            break;
+          }
+        if (!digits || !*end)
+          continue;
+        char junk[512];
+        snprintf(junk, sizeof(junk), "build/features/%s", e->d_name);
+        if (remove(junk) == 0)
+          log_info("FeatureLoader_Init: removed stale hot-reload lib %s",
+                   e->d_name);
+      }
+      closedir(d);
+    }
+  }
   FeatureLoader_LoadAllFromDir("build/features");
   LOCK();
   int cnt = g_feature_count;
@@ -656,15 +686,13 @@ void FeatureLoader_Shutdown(void) {
       snippet_purge_owner(NULL, g_features[i].path);
       widget_purge_owner(NULL, g_features[i].path, widget_bump_generation());
       cc_registry_purge_owner(NULL, g_features[i].path);
-      Platform_UnloadLibrary(g_features[i].handle);
-      if (g_features[i].uniq[0])
-        remove(g_features[i].uniq);
+      g_features[i].uniq[0] = '\0';
+      g_features[i].handle = 0;
     }
   }
   for (int i = 0; i < g_retired_count; i++) {
-    Platform_UnloadLibrary(g_retired[i].handle);
-    if (g_retired[i].uniq[0])
-      remove(g_retired[i].uniq);
+    g_retired[i].uniq[0] = '\0';
+    g_retired[i].handle = 0;
   }
   g_retired_count = 0;
   g_feature_count = 0;
