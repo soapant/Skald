@@ -75,7 +75,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
 
   bool hide_popup = (wParam == VK_RETURN);
   HWND popup_wnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-  if (hide_popup && popup_wnd != NULL)
+  if (hide_popup && popup_wnd != NULL && IsWindow(popup_wnd))
     ShowWindow(popup_wnd, SW_HIDE);
 
   bool handled = false;
@@ -86,9 +86,10 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
     return false;
 
   if (hide_popup && !FlintContext_Get()->window.selection_complete) {
-    if (popup_wnd != NULL)
+    if (popup_wnd != NULL && IsWindow(popup_wnd))
       ShowWindow(popup_wnd, SW_SHOW);
-    if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL)
+    if (popup_wnd && IsWindow(popup_wnd) &&
+        WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL)
       ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
   }
   if (FontSize != old_font) {
@@ -326,7 +327,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       if (_wm && _wm->popup_count > 1) {
         Popup *_top = WindowManager_GetTopPopup(_wm);
         if (_top && WH_TO_HWND(_top->handle) == hwnd) {
-          WindowManager_PopPopup(_wm);
+          FlintContext_Get()->window.selection_complete = true;
           return 0;
         }
         return 0;
@@ -343,7 +344,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (_wm && _wm->popup_count > 1) {
       Popup *_top = WindowManager_GetTopPopup(_wm);
       if (_top && WH_TO_HWND(_top->handle) == hwnd) {
-        WindowManager_PopPopup(_wm);
+        FlintContext_Get()->window.selection_complete = true;
         return 0;
       }
       return 0;
