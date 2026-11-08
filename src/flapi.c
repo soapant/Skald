@@ -46,6 +46,7 @@
 #include "core/types/flapi_types.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
+#include "core/deferred_init.h"
 
 size_t fl_clipboard_history_count(void) {
   return clipboard_history_count_platform();
@@ -504,7 +505,7 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
   bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
   const char **bw = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
   HotkeyBinding binding = convert_into_hotkey_binding(
-      (char *)spec->hotkey, spec->cb, NULL, bw, whitelist);
+      (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
   binding.is_feature_toggle = false;
   binding.hold = true;
   binding.should_swallow = spec->should_swallow;
@@ -525,8 +526,8 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
 bool fl_unregister_hotkey_impl(const char *hotkey) {
   if (!hotkey)
     return false;
-  HotkeyBinding binding = convert_into_hotkey_binding((char *)hotkey, NULL, NULL,
-                                                      NULL, false);
+  HotkeyBinding binding =
+      convert_into_hotkey_binding((char *)hotkey, NULL, NULL, NULL, false, NULL);
   return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
 }
 
@@ -549,6 +550,21 @@ const char *fl_hotkey_string_at(int index) {
 }
 
 static char g_fl_hotkey_cb_string[HOTKEY_STRING_MAX_LEN];
+
+const char *fl_hotkey_for_ud(void *ud) {
+  const HotkeyBinding *b = hotkey_find_by_ud(ud);
+  if (!b)
+    return NULL;
+  HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
+  if (!HotkeyString_Format(key, g_fl_hotkey_cb_string,
+                           (int)sizeof(g_fl_hotkey_cb_string)))
+    g_fl_hotkey_cb_string[0] = '\0';
+  return g_fl_hotkey_cb_string;
+}
+
+void fl_register_deferred_init(void (*cb)(void)) {
+  DeferredInit_Register(cb);
+}
 
 const char *fl_hotkey_for_callback(void (*cb)(void)) {
   const HotkeyBinding *b = hotkey_find_by_callback((HotkeyCallback)cb);

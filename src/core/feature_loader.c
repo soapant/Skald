@@ -17,6 +17,7 @@
 #include "core/thread_registry.h"
 
 #include "core/cc_registry.h"
+#include "core/deferred_init.h"
 #include "core/widget_registry.h"
 #include "core/cap_registry.h"
 #include "core/snippet_manager.h"
@@ -658,6 +659,7 @@ bool FeatureLoader_Init(void) {
     }
   }
   FeatureLoader_LoadAllFromDir("build/features");
+  DeferredInit_RunAll();
   LOCK();
   int cnt = g_feature_count;
   UNLOCK();
@@ -765,6 +767,9 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       widget_purge_owner(retire_owner, path_copy, retire_gen);
       cc_registry_purge_owner(retire_owner, path_copy);
       sweep_retired_libs();
+      UNLOCK();
+      DeferredInit_RunAll();
+      LOCK();
       log_info("reloaded %s", name);
       UNLOCK();
       return;

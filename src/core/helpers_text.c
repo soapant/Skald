@@ -15,7 +15,7 @@
 HotkeyBinding convert_into_hotkey_binding(
     char *hotkey_string, void (*on_hotkey_trigger)(void),
     bool (*optional_condition_for_hotkey)(void),
-    const char **optional_blacklistedwindows, bool whitelist) {
+    const char **optional_blacklistedwindows, bool whitelist, void *user_ud) {
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 
@@ -26,6 +26,7 @@ HotkeyBinding convert_into_hotkey_binding(
   output.hotkey_callback = on_hotkey_trigger;
   output.hotkey_condition = optional_condition_for_hotkey;
   output.whitelist = whitelist;
+  output.user_ud = user_ud;
 
   if (optional_blacklistedwindows) {
     int cnt = 0;

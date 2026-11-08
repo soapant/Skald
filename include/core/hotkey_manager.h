@@ -9,6 +9,7 @@ int hotkey_count(void);
 const HotkeyBinding *hotkey_get(int index);
 bool hotkey_is_taken(int vk_code, int modifiers);
 const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb);
+const HotkeyBinding *hotkey_find_by_ud(void *ud);
 bool hotkey_process(int vk_code, int modifiers);
 void hotkey_drain_pending(void);
 void hotkey_set_suspended(bool suspended);
