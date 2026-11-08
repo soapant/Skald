@@ -1,3 +1,4 @@
+#include "helpers/helpers_ui.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
@@ -172,7 +173,12 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   XftDraw *xdDbl = g_pbuf_xd;
   x11_set_dbl_visual(dpy, vis, cmap, depth);
   PromptState *pss = state;
-  if (!(pss && pss->no_bg)) {
+  if (state && state->bg_color != 0) {
+    GC gc = XCreateGC(dpy, dbl, 0, NULL);
+    XSetForeground(dpy, gc, rgb_to_hex(state->bg_color));
+    XFillRectangle(dpy, dbl, gc, 0, 0, w, h);
+    XFreeGC(dpy, gc);
+  } else if (!(pss && pss->no_bg)) {
     if (!x11_bg_image_blit(dpy, dbl, vis, depth, w, h)) {
       Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
       if (bg) {

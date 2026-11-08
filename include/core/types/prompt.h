@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "core/types.h"
+#include "core/types/color.h"
 
 typedef struct ListBoxInfo ListBoxInfo;
 
@@ -42,6 +43,7 @@ struct PromptState {
   ListBoxInfo *lb;
   PromptCallbacks *callbacks;
   bool no_bg;
+  ColorRef bg_color;
 };
 
 typedef void (*RefreshCallback)(PromptState *state);
@@ -156,6 +158,7 @@ typedef struct {
   bool tick;
   bool auto_scale;
   bool no_bg;
+  ColorRef bg_color;
   int w;
   int h;
   int x;
