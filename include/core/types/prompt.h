@@ -34,6 +34,7 @@ struct ListBoxInfo {
   int selected_index;
   char *selected_text;
   int view_offset;
+  char last_filter[256];
 };
 
 struct PromptState {
