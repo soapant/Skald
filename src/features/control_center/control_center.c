@@ -1324,10 +1324,11 @@ static void cc_subwindow_refresh(PromptState *state) {
 }
 
 static int g_cc_width = 0, g_cc_height = 0;
+static int g_actions_width = 0, g_actions_height = 0;
 
 static void cc_subwindow_render(PromptState *state) {
-  g_cc_width = state->width;
-  g_cc_height = state->height;
+  g_actions_width = state->width;
+  g_actions_height = state->height;
   FlListSpec spec = {.lb = state->lb};
   if (!fl_listbox_begin(&spec))
     return;
@@ -1377,8 +1378,9 @@ static void cc_subwindow_reg_render(PromptState *state) {
         buf[len - 1] = '\0';
     }
 
+    fl_draw_text(.x = (state->width / 2) + 25, .y = 20, .text = "Hold A Key Sequence",.fontsize=15,.color=FL_GRAY);
     if (buf[0]) {
-        fl_draw_text(.x = 10, .y = 10, .text = buf, .align = "LEFT");
+        fl_draw_text(.x = (state->width / 2) + 25, .y = state->height/2, .text = buf,.fontsize=25);
         snprintf(buf, sizeof(buf), "%s", current_hotkey_reg);
     }
 }
