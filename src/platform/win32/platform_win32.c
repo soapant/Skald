@@ -363,22 +363,18 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
 }
 
 bool Platform_IsCtrlPressed(void) {
-  log_info("Platform_IsCtrlPressed completed");
   return (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
 bool Platform_IsShiftPressed(void) {
-  log_info("Platform_IsShiftPressed completed");
   return (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
 }
 
 bool Platform_IsAltPressed(void) {
-  log_info("Platform_IsAltPressed completed");
   return (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
 }
 
 bool Platform_IsSuperPressed(void) {
-  log_info("Platform_IsSuperPressed completed");
   return ((GetAsyncKeyState(VK_LWIN) & 0x8000) != 0) ||
          ((GetAsyncKeyState(VK_RWIN) & 0x8000) != 0);
 }

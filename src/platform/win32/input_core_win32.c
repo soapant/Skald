@@ -180,30 +180,32 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         _gev.vk = _vk;
         _gev.scancode = (int)_rk->scanCode;
         _gev.mods = 0;
-        if (GetKeyState(VK_CONTROL) & 0x8000)
+        if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
           _gev.mods |= HOTKEY_MOD_CTRL;
-        if (GetKeyState(VK_MENU) & 0x8000)
+        if (GetAsyncKeyState(VK_MENU) & 0x8000)
           _gev.mods |= HOTKEY_MOD_ALT;
-        if (GetKeyState(VK_SHIFT) & 0x8000)
+        if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
           _gev.mods |= HOTKEY_MOD_SHIFT;
-        if (GetKeyState(VK_LWIN) & 0x8000 || GetKeyState(VK_RWIN) & 0x8000)
+        if (GetAsyncKeyState(VK_LWIN) & 0x8000 || GetAsyncKeyState(VK_RWIN) & 0x8000)
           _gev.mods |= HOTKEY_MOD_SUPER;
         _gev.down = _isDown;
         _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
         static unsigned long long s_last_keydown_ms[256] = {0};
         static bool s_key_is_down[256] = {0};
         unsigned long long now_ms = GetTickCount64();
-        if (_isDown) {
-          if (!s_key_is_down[_vk & 0xFF] ||
-              (now_ms - s_last_keydown_ms[_vk & 0xFF]) >=
-                  (unsigned long long)HotkeyRepeatDelayMs) {
-            s_key_is_down[_vk & 0xFF] = true;
-            s_last_keydown_ms[_vk & 0xFF] = now_ms;
-            Platform_InputState_Update(_vk, true, _gev.mods);
+        if (_popupActive) {
+          if (_isDown) {
+            if (!s_key_is_down[_vk & 0xFF] ||
+                (now_ms - s_last_keydown_ms[_vk & 0xFF]) >=
+                    (unsigned long long)HotkeyRepeatDelayMs) {
+              s_key_is_down[_vk & 0xFF] = true;
+              s_last_keydown_ms[_vk & 0xFF] = now_ms;
+              Platform_InputState_Update(_vk, true, _gev.mods);
+            }
+          } else {
+            s_key_is_down[_vk & 0xFF] = false;
+            Platform_InputState_Update(_vk, false, _gev.mods);
           }
-        } else {
-          s_key_is_down[_vk & 0xFF] = false;
-          Platform_InputState_Update(_vk, false, _gev.mods);
         }
         Platform_GlobalKey_Push(&_gev);
         if (_isUp)
