@@ -194,17 +194,45 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         static bool s_key_is_down[256] = {0};
         unsigned long long now_ms = GetTickCount64();
         if (_popupActive) {
+          int _hint = 0;
+          if (_isDown) {
+            if (_vk == 0x20)
+              _hint = ' ';
+            else if (_vk >= '0' && _vk <= '9') {
+              if (_gev.mods & HOTKEY_MOD_SHIFT) {
+                const char *sd = ")!@#$%^&*(";
+                _hint = sd[_vk - '0'];
+              } else
+                _hint = _vk;
+            } else if (_vk >= 'A' && _vk <= 'Z')
+              _hint =
+                  (_gev.mods & HOTKEY_MOD_SHIFT) ? _vk : _vk - 'A' + 'a';
+            else if (_vk >= 0x60 && _vk <= 0x69)
+              _hint = '0' + (_vk - 0x60);
+            else if (_vk == 0x6A)
+              _hint = '*';
+            else if (_vk == 0x6B)
+              _hint = '+';
+            else if (_vk == 0x6C)
+              _hint = ',';
+            else if (_vk == 0x6D)
+              _hint = '-';
+            else if (_vk == 0x6E)
+              _hint = '.';
+            else if (_vk == 0x6F)
+              _hint = '/';
+          }
           if (_isDown) {
             if (!s_key_is_down[_vk & 0xFF] ||
                 (now_ms - s_last_keydown_ms[_vk & 0xFF]) >=
                     (unsigned long long)HotkeyRepeatDelayMs) {
               s_key_is_down[_vk & 0xFF] = true;
               s_last_keydown_ms[_vk & 0xFF] = now_ms;
-              Platform_InputState_Update(_vk, true, _gev.mods);
+              Platform_InputState_Update(_vk, true, _gev.mods, _hint);
             }
           } else {
             s_key_is_down[_vk & 0xFF] = false;
-            Platform_InputState_Update(_vk, false, _gev.mods);
+            Platform_InputState_Update(_vk, false, _gev.mods, 0);
           }
         }
         Platform_GlobalKey_Push(&_gev);
