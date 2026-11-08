@@ -64,7 +64,25 @@ typedef struct {
 
 typedef struct {
   int x, y, w, h;
+  unsigned long color;
+  float thickness;
+  bool transparent;
+  bool filled;
+  int radius;
+  bool rounded;
 } PlRect;
+
+typedef struct {
+  int x1, y1, x2, y2;
+  unsigned long color;
+  float thickness;
+} PlLine;
+
+typedef struct {
+  int x, y, radius;
+  unsigned long color;
+  float thickness;
+} PlCircle;
 
 typedef struct {
   int x, y;
