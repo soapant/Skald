@@ -20,8 +20,6 @@ void Platform_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud),
 void Platform_InputState_Clear(void);
 void Platform_InputState_ClearQueue(void);
 void Platform_InputState_InhibitMods(void);
-bool Platform_InputState_ModsInhibited(void);
-void Platform_InputState_UninhibitMods(void);
 int Platform_GetPressedKey(void);
 char Platform_GetPressedChar(void);
 

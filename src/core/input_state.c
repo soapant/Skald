@@ -10,29 +10,25 @@
 static bool g_down[256] = {0};
 static bool g_pressed[256] = {0};
 static bool g_released[256] = {0};
-static bool g_mods_inhibited = false;
 static void (*g_cb)(int vk, bool down, int mods, void *ud) = NULL;
 static void *g_ud = NULL;
 static char g_char_queue[32] = {0};
 static int g_char_head = 0, g_char_tail = 0;
 
 #define FL_INHIBIT_MOD_COUNT 11
-static const int kInhibitMods[FL_INHIBIT_MOD_COUNT] = {VK_SHIFT,   VK_CONTROL,
+static const int kInhibitMods[FL_INHIBIT_MOD_COUNT] = {VK_SHIFT,  VK_CONTROL,
                                                       VK_MENU,    VK_LWIN,
                                                       VK_RWIN,
                                                       VK_LSHIFT,  VK_RSHIFT,
                                                       VK_LCONTROL, VK_RCONTROL,
                                                       VK_LMENU,   VK_RMENU};
 void Platform_InputState_InhibitMods(void) {
-  g_mods_inhibited = true;
   for (int i = 0; i < FL_INHIBIT_MOD_COUNT; i++) {
     int nv = kInhibitMods[i];
     if (nv >= 0 && nv < 256)
       g_down[nv] = false;
   }
 }
-bool Platform_InputState_ModsInhibited(void) { return g_mods_inhibited; }
-void Platform_InputState_UninhibitMods(void) { g_mods_inhibited = false; }
 
 static int norm_vk(int vk) {
   if (vk >= 'a' && vk <= 'z')
