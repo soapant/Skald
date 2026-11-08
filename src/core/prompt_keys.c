@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "core/context.h"
+#include "platform/wm_platform.h"
 #include "deps/log.h"
 #include "core/modal.h"
 #include "core/listbox_hover.h"
@@ -66,6 +67,8 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
 }
 
 void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
+  FlintContext *ctx = FlintContext_Get();
+  if (ctx) ctx->window.in_enter = true;
   const char *sel = NULL;
   char filter_copy[sizeof(state->eb->filter)];
   if (state->lb && UI_IsListBoxSelected(state->lb)) {
@@ -75,7 +78,6 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     filter_copy[sizeof(filter_copy) - 1] = '\0';
     sel = filter_copy;
   }
-  FlintContext *ctx = FlintContext_Get();
   bool should_close = true;
   if (ctrl && shift) {
     should_close = false;
@@ -144,6 +146,8 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     }
   }
   ctx->window.selection_complete = should_close;
+  if (ctx) ctx->window.in_enter = false;
+  Platform_ProcessPendingSubwindow();
 }
 
 bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,
