@@ -1514,9 +1514,8 @@ static void cc_subwindow_reg_render(PromptState *state) {
 static void cc_subwindow_reg_onclose() {
     fl_enable_global_hotkeys();
 }
-
-static bool cc_subwindow_enter(PromptState *state) {
-  switch (state->lb->selected_index) {
+static bool cc_reg_select(int type) {
+  switch (type) {
     case 0: {
       snprintf(current_reg_action, sizeof(current_reg_action), "%s", g_cc_main_selected);
       fl_disable_global_hotkeys();
@@ -1530,6 +1529,10 @@ static bool cc_subwindow_enter(PromptState *state) {
   return true;
 }
 
+static bool cc_subwindow_enter(PromptState *state) {
+  return cc_reg_select(state->lb->selected_index);
+}
+
 #define CC_PERSIST_MAX 64
 static char g_persisted_hotkeys[CC_PERSIST_MAX][64];
 static char g_persisted_actions[CC_PERSIST_MAX][256];
@@ -1537,7 +1540,7 @@ static int g_persisted_count;
 
 static void cc_load_persisted_hotkeys(void) {
   FlStringList lines = fl_load_file_list(CC_HOTKEY_FILE);
-  for (int li = 0; li < lines.count && g_persisted_count < CC_PERSIST_MAX; li++) {
+  for (size_t li = 0; li < lines.count && g_persisted_count < CC_PERSIST_MAX; li++) {
     char copy[512];
     snprintf(copy, sizeof(copy), "%s", lines.items[li] ? lines.items[li] : "");
     char *tab = strchr(copy, '\t');
@@ -1551,7 +1554,7 @@ static void cc_load_persisted_hotkeys(void) {
 }
 
 static void cc_register_persisted_hotkeys(void) {
-  for (int li = 0; li < g_persisted_count; li++) {
+  for (size_t li = 0; li < g_persisted_count; li++) {
     const char *hotkey = g_persisted_hotkeys[li];
     const char *action = g_persisted_actions[li];
     const CcEntry *e = cc_find(action);
@@ -1604,6 +1607,12 @@ static void cc_render(PromptState *state) {
     return;
   if (fl_hotkey_down(fl_hotkey_from_string(ActionsHotkey))) {
       cc_open_actions_subwindow();
+  }
+  if (fl_hotkey_down(fl_hotkey_from_string(RegHotkey))) {
+      cc_reg_select(0);
+  }
+  if (fl_hotkey_down(fl_hotkey_from_string(RegAliasHotkey))) {
+      cc_reg_select(1);
   }
   int type_x = state->width - CC_ITEM_TEXT_X;
   FlListItemCtx ctx;
