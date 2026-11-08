@@ -775,6 +775,9 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec);
 bool fl_unregister_hotkey_impl(const char *hotkey);
 #define fl_unregister_hotkey(hk) fl_unregister_hotkey_impl((hk))
 
+void fl_disable_global_hotkeys(void);
+void fl_enable_global_hotkeys(void);
+
 int fl_hotkey_count(void);
 const char *fl_hotkey_string_at(int index);
 bool fl_hotkey_taken(const char *hotkey);
