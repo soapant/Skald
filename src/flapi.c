@@ -1421,14 +1421,31 @@ int fl_get_text_height(const char *text) {
   return r;
 }
 
+FlRect fli_text_bounds(const FlTextBoundsSpec *spec) {
+  FlRect r = {0, 0, 0, 0};
+  if (!spec || !spec->text || !spec->text[0])
+    return r;
+  int fs = spec->fontsize > 0 ? spec->fontsize : FontSize;
+  const char *a = spec->align ? spec->align : "CENTER";
+  int w = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
+      .text = spec->text, .len = (int)strlen(spec->text), .fontsize = fs});
+  int h = Platform_GetTextLineHeight(fs);
+  int base = spec->pad > 0 ? spec->pad : spec->x;
+  if (Platform_StringContainsCaseInsensitive(a, "LEFT"))
+    r.x = base;
+  else if (Platform_StringContainsCaseInsensitive(a, "RIGHT"))
+    r.x = base - w;
+  else
+    r.x = base - w / 2;
+  r.y = spec->y;
+  r.w = w;
+  r.h = h;
+  return r;
+}
+
 int fl_get_text_width(const char *text, int fontsize) {
   return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
       .text = text, .len = (int)strlen(text), .fontsize = fontsize});
-}
-
-int fl_get_glyph_ink_height(const char *text, int fontsize) {
-  int r = Platform_GetGlyphInkHeight(text, fontsize);
-  return r;
 }
 
 char *fl_http_get(const char *url) { return Platform_HttpGet(url); }

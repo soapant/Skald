@@ -364,6 +364,19 @@ typedef struct {
 int fli_measure_text_wrapped(const FlMeasureSpec *spec);
 
 typedef struct {
+  int x;
+  int y;
+  const char *text;
+  int fontsize;
+  const char *align;
+  int pad;
+} FlTextBoundsSpec;
+
+FlRect fli_text_bounds(const FlTextBoundsSpec *spec);
+
+#define fl_text_bounds(...) fli_text_bounds(&(FlTextBoundsSpec){__VA_ARGS__})
+
+typedef struct {
   const char *path;
   int x;
   int y;
@@ -496,7 +509,6 @@ int fl_get_text_width(const char *text, int fontsize);
 
 int fl_get_text_height(const char *text);
 
-int fl_get_glyph_ink_height(const char *text, int fontsize);
 
 char *fl_http_get(const char *url);
 

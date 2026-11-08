@@ -316,33 +316,19 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
   return total;
 }
 
-int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
-  if (!text || !text[0] || fontsize <= 0)
-    return fontsize > 0 ? fontsize : 0;
+int Platform_GetTextLineHeight(int fontsize) {
+  if (fontsize <= 0)
+    fontsize = FontSize;
   Display *dpy = get_display();
   if (!dpy)
     return fontsize;
-  FontHandle fh = Platform_CreateFontOnDisplay(dpy, fontsize, UsedFont);
-  XftFont *xf = FH_TO_XFT(fh);
-  if (!xf)
-    return fontsize;
-  const unsigned char *b = (const unsigned char *)text;
-  const unsigned char *end = b + strlen(text);
-  int clen = 1;
-  FcChar32 cp = x11_utf8_cp(b, end, &clen);
-  XftFont *use =
-      x11_font_has(xf, cp) ? xf : x11_fallback_for(dpy, cp, fontsize);
-  int ink = fontsize;
-  if (use) {
-    XGlyphInfo e;
-    XftTextExtentsUtf8(dpy, use, (FcChar8 *)b, clen, &e);
-    int h = e.height;
-    if (h > 0)
-      ink = h;
-  }
-  Platform_DestroyFont(fh);
-  return ink + PROMPT_GLYPH_INK_PAD;
+  FontHandle font = Platform_CreateFontOnDisplay(dpy, fontsize, UsedFont);
+  XftFont *xf = FH_TO_XFT(font);
+  int r = xf ? xf->ascent + xf->descent : fontsize;
+  Platform_DestroyFont(font);
+  return r;
 }
+
 
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
                            int y, XftFont *xf, const char *s, int n, int px) {
