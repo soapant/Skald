@@ -161,55 +161,26 @@ static void cc_run_entry_by_label(const char *label);
 
 #define CC_HK_SLOTS 64
 static char g_cc_hotkey_targets[CC_HK_SLOTS][256];
-static void cc_hotkey_dispatch_0(void);
+static void cc_build(void);
 
-#define CC_HK_DISPATCH(n) static void cc_hotkey_dispatch_##n(void) { cc_run_entry_by_label(g_cc_hotkey_targets[n]); }
-#define CC_HK_DISPATCH_LIST \
-  CC_HK_DISPATCH(0) CC_HK_DISPATCH(1) CC_HK_DISPATCH(2) CC_HK_DISPATCH(3) \
-  CC_HK_DISPATCH(4) CC_HK_DISPATCH(5) CC_HK_DISPATCH(6) CC_HK_DISPATCH(7) \
-  CC_HK_DISPATCH(8) CC_HK_DISPATCH(9) CC_HK_DISPATCH(10) CC_HK_DISPATCH(11) \
-  CC_HK_DISPATCH(12) CC_HK_DISPATCH(13) CC_HK_DISPATCH(14) CC_HK_DISPATCH(15) \
-  CC_HK_DISPATCH(16) CC_HK_DISPATCH(17) CC_HK_DISPATCH(18) CC_HK_DISPATCH(19) \
-  CC_HK_DISPATCH(20) CC_HK_DISPATCH(21) CC_HK_DISPATCH(22) CC_HK_DISPATCH(23) \
-  CC_HK_DISPATCH(24) CC_HK_DISPATCH(25) CC_HK_DISPATCH(26) CC_HK_DISPATCH(27) \
-  CC_HK_DISPATCH(28) CC_HK_DISPATCH(29) CC_HK_DISPATCH(30) CC_HK_DISPATCH(31) \
-  CC_HK_DISPATCH(32) CC_HK_DISPATCH(33) CC_HK_DISPATCH(34) CC_HK_DISPATCH(35) \
-  CC_HK_DISPATCH(36) CC_HK_DISPATCH(37) CC_HK_DISPATCH(38) CC_HK_DISPATCH(39) \
-  CC_HK_DISPATCH(40) CC_HK_DISPATCH(41) CC_HK_DISPATCH(42) CC_HK_DISPATCH(43) \
-  CC_HK_DISPATCH(44) CC_HK_DISPATCH(45) CC_HK_DISPATCH(46) CC_HK_DISPATCH(47) \
-  CC_HK_DISPATCH(48) CC_HK_DISPATCH(49) CC_HK_DISPATCH(50) CC_HK_DISPATCH(51) \
-  CC_HK_DISPATCH(52) CC_HK_DISPATCH(53) CC_HK_DISPATCH(54) CC_HK_DISPATCH(55) \
-  CC_HK_DISPATCH(56) CC_HK_DISPATCH(57) CC_HK_DISPATCH(58) CC_HK_DISPATCH(59) \
-  CC_HK_DISPATCH(60) CC_HK_DISPATCH(61) CC_HK_DISPATCH(62) CC_HK_DISPATCH(63)
-CC_HK_DISPATCH_LIST
-#undef CC_HK_DISPATCH
-
-static void (*const cc_hotkey_dispatchers[CC_HK_SLOTS])(void) = {
-#define CC_HK_FN(n) cc_hotkey_dispatch_##n,
-  CC_HK_FN(0) CC_HK_FN(1) CC_HK_FN(2) CC_HK_FN(3) CC_HK_FN(4) CC_HK_FN(5)
-  CC_HK_FN(6) CC_HK_FN(7) CC_HK_FN(8) CC_HK_FN(9) CC_HK_FN(10) CC_HK_FN(11)
-  CC_HK_FN(12) CC_HK_FN(13) CC_HK_FN(14) CC_HK_FN(15) CC_HK_FN(16) CC_HK_FN(17)
-  CC_HK_FN(18) CC_HK_FN(19) CC_HK_FN(20) CC_HK_FN(21) CC_HK_FN(22) CC_HK_FN(23)
-  CC_HK_FN(24) CC_HK_FN(25) CC_HK_FN(26) CC_HK_FN(27) CC_HK_FN(28) CC_HK_FN(29)
-  CC_HK_FN(30) CC_HK_FN(31) CC_HK_FN(32) CC_HK_FN(33) CC_HK_FN(34) CC_HK_FN(35)
-  CC_HK_FN(36) CC_HK_FN(37) CC_HK_FN(38) CC_HK_FN(39) CC_HK_FN(40) CC_HK_FN(41)
-  CC_HK_FN(42) CC_HK_FN(43) CC_HK_FN(44) CC_HK_FN(45) CC_HK_FN(46) CC_HK_FN(47)
-  CC_HK_FN(48) CC_HK_FN(49) CC_HK_FN(50) CC_HK_FN(51) CC_HK_FN(52) CC_HK_FN(53)
-  CC_HK_FN(54) CC_HK_FN(55) CC_HK_FN(56) CC_HK_FN(57) CC_HK_FN(58) CC_HK_FN(59)
-  CC_HK_FN(60) CC_HK_FN(61) CC_HK_FN(62) CC_HK_FN(63)
-#undef CC_HK_FN
-};
+static void cc_deferred_entry_build(void) { cc_build(); }
 
 static const CcEntry *cc_find(const char *label);
 static void cc_stage(const CcEntry *e, int mode);
 static void cc_run_pending(void);
+
+static void cc_entry_hotkey_cb(void *ud) {
+  int slot = (int)(uintptr_t)ud;
+  if (slot >= 0 && slot < CC_HK_SLOTS)
+    cc_run_entry_by_label(g_cc_hotkey_targets[slot]);
+}
 
 static const char *cc_hotkey_for_label(const char *label) {
   if (!label)
     return NULL;
   for (int i = 0; i < CC_HK_SLOTS; i++)
     if (g_cc_hotkey_targets[i][0] && strcmp(g_cc_hotkey_targets[i], label) == 0)
-      return fl_hotkey_for_callback(cc_hotkey_dispatchers[i]);
+      return fl_hotkey_for_ud((void *)(uintptr_t)i);
   return NULL;
 }
 
@@ -221,9 +192,9 @@ static void cc_run_entry_by_label(const char *label) {
   cc_run_pending();
 }
 
-static void (*cc_entry_hotkey_cb(const CcEntry *e))(void) {
+static int cc_hotkey_slot_for(const CcEntry *e) {
   if (!e)
-    return NULL;
+    return -1;
   const char *name = e->label;
   int slot = -1;
   for (int i = 0; i < CC_HK_SLOTS; i++)
@@ -239,9 +210,9 @@ static void (*cc_entry_hotkey_cb(const CcEntry *e))(void) {
       }
   }
   if (slot < 0)
-    return NULL;
+    return -1;
   snprintf(g_cc_hotkey_targets[slot], sizeof(g_cc_hotkey_targets[slot]), "%s", name);
-  return cc_hotkey_dispatchers[slot];
+  return slot;
 }
 
 static const CcEntry *cc_find(const char *label) {
@@ -1441,9 +1412,11 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   if (!name || !name[0] || !hotkey || !hotkey[0])
     return;
   const CcEntry *e = cc_find(name);
-  void (*cb)(void) = cc_entry_hotkey_cb(e);
-  if (cb) {
-    bool ok = fl_register_hotkey(.hotkey = hotkey, .cb = cb);
+  int slot = cc_hotkey_slot_for(e);
+  if (slot >= 0) {
+    bool ok = fl_register_hotkey(.hotkey = hotkey,
+                                 .cb = (void (*)(void))cc_entry_hotkey_cb,
+                                 .ud = (void *)(uintptr_t)slot);
     char line[320];
     snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
     bool wrote = fl_append_to_file(CC_HOTKEY_FILE, line);
@@ -1566,9 +1539,11 @@ static void cc_register_persisted_hotkeys(void) {
     const char *hotkey = g_persisted_hotkeys[li];
     const char *action = g_persisted_actions[li];
     const CcEntry *e = cc_find(action);
-    void (*cb)(void) = cc_entry_hotkey_cb(e);
-    if (cb)
-      fl_register_hotkey(.hotkey = hotkey, .cb = cb);
+    int slot = cc_hotkey_slot_for(e);
+    if (slot >= 0)
+      fl_register_hotkey(.hotkey = hotkey,
+                         .cb = (void (*)(void))cc_entry_hotkey_cb,
+                         .ud = (void *)(uintptr_t)slot);
   }
 }
 
@@ -1789,6 +1764,7 @@ FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey,
                      .cb = reload_features_and_config);
   fl_add_alias(.alias = "brw", .target = "Brawlhalla");
+  fl_register_deferred_init(cc_deferred_entry_build);
 }
 
 FLINT_FEATURE_SHUTDOWN {

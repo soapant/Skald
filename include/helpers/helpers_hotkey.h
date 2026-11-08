@@ -18,6 +18,7 @@ typedef struct {
   HotkeyCondition hotkey_condition;
   bool is_feature_toggle;
   bool hold;
+  void *user_ud;
   char owner[512];
 } HotkeyBinding;
 
@@ -28,7 +29,7 @@ bool AlwaysDisabled(void);
 HotkeyBinding convert_into_hotkey_binding(
     char *hotkey_string, void (*on_hotkey_trigger)(void),
     bool (*optional_condition_for_hotkey)(void),
-    const char **optional_blacklistedwindows, bool whitelist);
+    const char **optional_blacklistedwindows, bool whitelist, void *user_ud);
 void hotkey_purge_owner(const char *path_a, const char *path_b);
 void hotkey_key_up(int vk_code);
 

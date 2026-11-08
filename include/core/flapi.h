@@ -766,6 +766,7 @@ typedef struct {
   const char *whitelist[16];
   const char *blacklist[16];
   bool swallow;
+  void *ud;
 } FlHotkeySpec;
 
 #define fl_register_hotkey(...)                                                \
@@ -782,6 +783,8 @@ int fl_hotkey_count(void);
 const char *fl_hotkey_string_at(int index);
 bool fl_hotkey_taken(const char *hotkey);
 const char *fl_hotkey_for_callback(void (*cb)(void));
+const char *fl_hotkey_for_ud(void *ud);
+void fl_register_deferred_init(void (*cb)(void));
 
 typedef struct {
   const char *src;
