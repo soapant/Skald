@@ -121,9 +121,7 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
     cap_purge_owner(g_retired[0].owner, NULL);
     hotkey_purge_owner(g_retired[0].owner, NULL);
     snippet_purge_owner(g_retired[0].owner, NULL);
-    Platform_UnloadLibrary(g_retired[0].handle);
-    if (g_retired[0].uniq[0])
-      remove(g_retired[0].uniq);
+    log_info("retired lib %s left loaded (never unloaded)", g_retired[0].owner);
     for (int k = 0; k + 1 < g_retired_count; k++)
       g_retired[k] = g_retired[k + 1];
     g_retired_count--;
@@ -136,32 +134,28 @@ static void sweep_retired_libs(void) {
   int n = 0;
   for (int i = 0; i < g_retired_count; i++) {
     bool alive = false;
-    if (g_retired[i].owner[0] && widget_owner_active(g_retired[i].owner)) {
+    if (g_retired[i].owner[0] && widget_owner_active(g_retired[i].owner))
       alive = true;
-    } else if (g_retired[i].owner[0] &&
-               ThreadRegistry_OwnerActive(g_retired[i].owner)) {
+    else if (g_retired[i].owner[0] &&
+             ThreadRegistry_OwnerActive(g_retired[i].owner))
       alive = true;
-    } else if (wm && g_retired[i].npins >= 0) {
+    else if (wm && g_retired[i].npins >= 0) {
       for (int a = 0; a < g_retired[i].npins && !alive; a++) {
-        for (int b = 0; b < wm->popup_count; b++) {
+        for (int b = 0; b < wm->popup_count; b++)
           if (wm->popups[b] == g_retired[i].pins[a]) {
             alive = true;
             break;
           }
-        }
       }
-    } else if (wm && wm->popup_count > 0) {
+    } else if (wm && wm->popup_count > 0)
       alive = true;
-    }
     if (alive) {
       g_retired[n++] = g_retired[i];
     } else {
       cap_purge_owner(g_retired[i].owner, NULL);
       hotkey_purge_owner(g_retired[i].owner, NULL);
       snippet_purge_owner(g_retired[i].owner, NULL);
-      Platform_UnloadLibrary(g_retired[i].handle);
-      if (g_retired[i].uniq[0])
-        remove(g_retired[i].uniq);
+      log_info("retired lib %s left loaded (never unloaded)", g_retired[i].owner);
     }
   }
   g_retired_count = n;
