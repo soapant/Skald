@@ -1444,6 +1444,9 @@ static void cc_render(PromptState *state) {
 
   if (!fl_listbox_begin(&spec))
     return;
+  if (fl_hotkey_down(fl_hotkey_from_string(ActionsHotkey))) {
+      cc_open_actions_subwindow();
+  }
   int type_x = state->width - CC_ITEM_TEXT_X;
   FlListItemCtx ctx;
   while (fl_listbox_next(&ctx)) {
