@@ -1480,17 +1480,25 @@ static void cc_subwindow_reg_render(PromptState *state) {
         }
     }
 
-    int k = fl_get_char_pressed();
-    if (k >= 'A' && k <= 'Z' && rem > 1) {
+    int k = 0;
+    for (int c = 'A'; c <= 'Z'; c++) {
+        if (fl_is_key_pressed(c)) {
+            k = c;
+            break;
+        }
+    }
+    if (k && rem > 1) {
         snprintf(buf + pos, rem, "%c", (char)k);
     }
+    bool has_mod = fl_ctrl_pressed() || fl_alt_pressed() ||
+                   fl_shift_pressed() || fl_super_pressed();
 
     size_t len = strlen(buf);
     if (len > 0 && buf[len - 1] == '+') {
         buf[len - 1] = '\0';
     }
 
-    if (buf[0] && k != 0 && k != reg_last_key) {
+    if (buf[0] && k != 0 && k != reg_last_key && has_mod) {
         cc_register_selected_hotkey(current_reg_action, buf);
         snprintf(current_hotkey_reg, sizeof(current_hotkey_reg), "%s", buf);
         reg_flashing = true;
