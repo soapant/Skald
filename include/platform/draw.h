@@ -100,7 +100,7 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
 void Platform_GetItemColors(PlGetItemColorsSpec spec);
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
-int Platform_GetGlyphInkHeight(const char *text, int fontsize);
+int Platform_GetTextLineHeight(int fontsize);
 
 #if defined(__linux__)
 void Platform_GetDrawContext(Display **dpy, XftDraw **xd, Visual **vis,
