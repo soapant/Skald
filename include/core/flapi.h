@@ -745,6 +745,8 @@ typedef struct {
 #define fl_add_alias(...) fl_add_alias_impl(&(FlAliasSpec){__VA_ARGS__})
 
 bool fl_add_alias_impl(const FlAliasSpec *spec);
+bool fl_remove_alias_impl(const char *alias);
+#define fl_remove_alias(alias) fl_remove_alias_impl((alias))
 
 const char *fl_alias_for(const char *target);
 
@@ -769,6 +771,8 @@ typedef struct {
   fl_register_hotkey_impl(&(FlHotkeySpec){__VA_ARGS__})
 
 bool fl_register_hotkey_impl(const FlHotkeySpec *spec);
+bool fl_unregister_hotkey_impl(const char *hotkey);
+#define fl_unregister_hotkey(hk) fl_unregister_hotkey_impl((hk))
 
 typedef struct {
   const char *src;

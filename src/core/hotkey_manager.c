@@ -300,6 +300,21 @@ bool hotkey_register_internal(HotkeyBinding binding) {
   return true;
 }
 
+bool hotkey_unregister_internal(int vk_code, int modifiers) {
+  int n = 0;
+  bool found = false;
+  for (int i = 0; i < g_hotkey_count; i++) {
+    if (g_hotkeys[i].vk_code == vk_code &&
+        g_hotkeys[i].modifiers == modifiers) {
+      found = true;
+      continue;
+    }
+    g_hotkeys[n++] = g_hotkeys[i];
+  }
+  g_hotkey_count = n;
+  return found;
+}
+
 void hotkey_purge_owner(const char *path_a, const char *path_b) {
   if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
     return;
