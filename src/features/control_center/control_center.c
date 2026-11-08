@@ -1319,11 +1319,12 @@ static bool cc_icon_is_glyph(const char *icon) {
 }
 
 static void cc_subwindow_refresh(PromptState *state) {
-  const char *items[] = {"Action 1", "Action 2", "Action 3", NULL};
-  fl_populate_listbox(state->lb, state->eb->filter, (const char **)items, 3);
+  const char *items[] = {"Register Hotkey","Register Alias"};
+  fl_populate_listbox(state->lb, state->eb->filter, (const char **)items, ARRAY_LEN(items));
 }
 
 static int g_cc_width = 0, g_cc_height = 0;
+
 static void cc_subwindow_render(PromptState *state) {
   g_cc_width = state->width;
   g_cc_height = state->height;
@@ -1332,15 +1333,86 @@ static void cc_subwindow_render(PromptState *state) {
     return;
   FlListItemCtx ctx;
   while (fl_listbox_next(&ctx)) {
-    fl_draw_text(.x = 14, .y = ctx.y, .text = ctx.text, .align = "LEFT");
+    fl_draw_text(.x = 14, .y = ctx.y, .text = ctx.text, .align = "LEFT",.fontsize=18);
   }
   fl_listbox_end();
+}
+
+static char current_hotkey_reg[128];
+
+static void cc_subwindow_reg_render(PromptState *state) {
+    char buf[128] = {0};
+    int pos = 0;
+    int rem = (int)sizeof(buf);
+
+    if (fl_ctrl_pressed()) {
+        int written = snprintf(buf + pos, rem, "Ctrl+");
+        if (written > 0 && written < rem) {
+            pos += written;
+            rem -= written;
+        }
+    }
+    if (fl_alt_pressed()) {
+        int written = snprintf(buf + pos, rem, "Alt+");
+        if (written > 0 && written < rem) {
+            pos += written;
+            rem -= written;
+        }
+    }
+    if (fl_shift_pressed()) {
+        int written = snprintf(buf + pos, rem, "Shift+");
+        if (written > 0 && written < rem) {
+            pos += written;
+            rem -= written;
+        }
+    }
+
+    int k = fl_get_char_pressed();
+    if (k >= 'A' && k <= 'Z' && rem > 1) {
+        snprintf(buf + pos, rem, "%c", (char)k);
+    }
+
+    size_t len = strlen(buf);
+    if (len > 0 && buf[len - 1] == '+') {
+        buf[len - 1] = '\0';
+    }
+
+    if (buf[0]) {
+        fl_draw_text(.x = 10, .y = 10, .text = buf, .align = "LEFT");
+        snprintf(buf, sizeof(buf), "%s", current_hotkey_reg);
+    }
+}
+static bool cc_subwindow_reg_enter(PromptState *state) {
+  printf("%s \n",current_hotkey_reg);
+}
+
+static bool cc_subwindow_enter(PromptState *state) {
+  switch (state->lb->selected_index) {
+    case 0: fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
+               .y = (g_cc_height / 2) - 50, .w = 200, .h = 300,
+               .render = cc_subwindow_reg_render,.enter=cc_subwindow_reg_enter);
+;
+    case 1: break;
+  }
+  return true;
+}
+
+static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
+  if (!name || !name[0] || !hotkey || !hotkey[0])
+    return;
+  for (int i = 0; i < g_action_count; i++) {
+    if (g_actions[i].label && strcmp(g_actions[i].label, name) == 0 &&
+        g_actions[i].fn) {
+      fl_register_hotkey(.hotkey = hotkey, .cb = g_actions[i].fn);
+      return;
+    }
+  }
 }
 
 static void cc_open_actions_subwindow(void) {
   fl_subwindow(.title = "Actions", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) - 50, .w = 200, .h = 300,
-               .render = cc_subwindow_render, .refresh = cc_subwindow_refresh);
+               .render = cc_subwindow_render, .refresh = cc_subwindow_refresh,.enter=cc_subwindow_enter);
 }
 static void cc_on_actions_render(FlRect rect) {
   char *hotkey_str = strdup(ActionsHotkey);
