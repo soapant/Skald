@@ -527,6 +527,9 @@ bool fl_unregister_hotkey_impl(const char *hotkey) {
   return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
 }
 
+void fl_disable_global_hotkeys(void) { hotkey_set_suspended(true); }
+void fl_enable_global_hotkeys(void) { hotkey_set_suspended(false); }
+
 int fl_hotkey_count(void) { return hotkey_count(); }
 
 static char g_fl_hotkey_list_string[HOTKEY_STRING_MAX_LEN];

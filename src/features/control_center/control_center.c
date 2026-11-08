@@ -1368,6 +1368,7 @@ static void cc_subwindow_reg_render(PromptState *state) {
     char buf[128] = {0};
     int pos = 0;
     int rem = (int)sizeof(buf);
+    fl_disable_global_hotkeys();
 
     if (fl_ctrl_pressed()) {
         int written = snprintf(buf + pos, rem, "Ctrl+");
@@ -1421,6 +1422,10 @@ static void cc_subwindow_reg_render(PromptState *state) {
     }
 }
 
+static void cc_subwindow_reg_onclose() {
+    fl_enable_global_hotkeys();
+}
+
 static bool cc_subwindow_enter(PromptState *state) {
   switch (state->lb->selected_index) {
     case 0: {
@@ -1428,7 +1433,7 @@ static bool cc_subwindow_enter(PromptState *state) {
       if (sel) snprintf(current_reg_action, sizeof(current_reg_action), "%s", sel);
       fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
-               .render = cc_subwindow_reg_render);
+               .render = cc_subwindow_reg_render,.on_close=cc_subwindow_reg_onclose);
       break;
     }
     case 1: break;
