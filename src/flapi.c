@@ -527,6 +527,30 @@ bool fl_unregister_hotkey_impl(const char *hotkey) {
   return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
 }
 
+int fl_hotkey_count(void) { return hotkey_count(); }
+
+static char g_fl_hotkey_list_string[HOTKEY_STRING_MAX_LEN];
+
+const char *fl_hotkey_string_at(int index) {
+  const HotkeyBinding *b = hotkey_get(index);
+  if (!b)
+    return NULL;
+  HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
+  if (!HotkeyString_Format(key, g_fl_hotkey_list_string,
+                           (int)sizeof(g_fl_hotkey_list_string)))
+    g_fl_hotkey_list_string[0] = '\0';
+  return g_fl_hotkey_list_string;
+}
+
+bool fl_hotkey_taken(const char *hotkey) {
+  if (!hotkey)
+    return false;
+  HotkeyKey key = {0};
+  if (!HotkeyString_Parse(hotkey, &key))
+    return false;
+  return hotkey_is_taken(key.vk_code, key.mods);
+}
+
 int fl_get_feature_list(const char **out_names, void (**out_cbs)(void),
                         int max) {
 

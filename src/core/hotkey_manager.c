@@ -268,6 +268,21 @@ static bool hotkey_toggle_blocked(HotkeyBinding *b) {
   return wm && wm->popup_count > 0;
 }
 
+int hotkey_count(void) { return g_hotkey_count; }
+
+const HotkeyBinding *hotkey_get(int index) {
+  if (index < 0 || index >= g_hotkey_count)
+    return NULL;
+  return &g_hotkeys[index];
+}
+
+bool hotkey_is_taken(int vk_code, int modifiers) {
+  for (int i = 0; i < g_hotkey_count; i++)
+    if (g_hotkeys[i].vk_code == vk_code && g_hotkeys[i].modifiers == modifiers)
+      return true;
+  return false;
+}
+
 bool hotkey_register_internal(HotkeyBinding binding) {
   char owner[OWNER_PATH_MAX];
   Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_callback, owner,
