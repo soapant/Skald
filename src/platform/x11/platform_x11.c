@@ -562,68 +562,23 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   return NULL;
 }
 
-static unsigned int x11_current_mod_mask(bool *ok) {
-  Display *display = get_display();
-  Window root, child;
-  int root_x, root_y, win_x, win_y;
-  unsigned int mask = 0;
-  *ok = false;
-  if (!display)
-    return 0;
-  XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
-                &root_y, &win_x, &win_y, &mask);
-  *ok = true;
-  return mask;
-}
-
-#define FL_X11_ALL_MODS (ControlMask | ShiftMask | Mod1Mask | Mod4Mask)
-static bool x11_mods_inhibited(unsigned int mask) {
-  if (!Platform_InputState_ModsInhibited())
-    return false;
-  if (mask & FL_X11_ALL_MODS)
-    return true;
-  Platform_InputState_UninhibitMods();
-  return false;
-}
-
 bool Platform_IsCtrlPressed(void) {
-  bool ok;
-  unsigned int mask = x11_current_mod_mask(&ok);
-  if (!ok)
-    return false;
-  if (x11_mods_inhibited(mask))
-    return false;
-  return (mask & ControlMask) != 0;
+  return Platform_IsKeyDown(VK_LCONTROL) || Platform_IsKeyDown(VK_RCONTROL) ||
+         Platform_IsKeyDown(VK_CONTROL);
 }
 
 bool Platform_IsShiftPressed(void) {
-  bool ok;
-  unsigned int mask = x11_current_mod_mask(&ok);
-  if (!ok)
-    return false;
-  if (x11_mods_inhibited(mask))
-    return false;
-  return (mask & ShiftMask) != 0;
+  return Platform_IsKeyDown(VK_LSHIFT) || Platform_IsKeyDown(VK_RSHIFT) ||
+         Platform_IsKeyDown(VK_SHIFT);
 }
 
 bool Platform_IsAltPressed(void) {
-  bool ok;
-  unsigned int mask = x11_current_mod_mask(&ok);
-  if (!ok)
-    return false;
-  if (x11_mods_inhibited(mask))
-    return false;
-  return (mask & Mod1Mask) != 0;
+  return Platform_IsKeyDown(VK_LMENU) || Platform_IsKeyDown(VK_RMENU) ||
+         Platform_IsKeyDown(VK_MENU);
 }
 
 bool Platform_IsSuperPressed(void) {
-  bool ok;
-  unsigned int mask = x11_current_mod_mask(&ok);
-  if (!ok)
-    return false;
-  if (x11_mods_inhibited(mask))
-    return false;
-  return (mask & Mod4Mask) != 0;
+  return Platform_IsKeyDown(VK_LWIN) || Platform_IsKeyDown(VK_RWIN);
 }
 
 void Platform_StartUniversalTimer(void) { log_warn("not implemented yet"); }
