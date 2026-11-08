@@ -14,7 +14,7 @@ void ConfigApply(void) {
     HotkeyRepeatDelayMs = 300;
     WindowOpacity = 235.0f;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 19;
+    FontSize = 21;
     IconSize = 32;
     WidgetGap = 10;
     UsedTerminal = "";
@@ -32,5 +32,11 @@ void ConfigApply(void) {
     CloseOnLossOfFocus = false;
     Theme = "rose-pine";
     BackgroundImage = "";
+    COLOR_BG = RGB(25, 23, 36);
+    COLOR_TEXT = RGB(255, 255, 255);
+    COLOR_ALTERNATE = RGB(57, 255, 20);
+    COLOR_SELECTED_TEXT = RGB(19, 21, 23);
+    COLOR_CURSOR = RGB(82, 79, 103);
+    COLOR_BORDER = RGB(88, 86, 114);
 }
 // </flint-config-generated>

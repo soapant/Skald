@@ -1346,15 +1346,16 @@ static void cc_on_actions_render(FlRect rect) {
   char *hotkey_str = strdup(ActionsHotkey);
   char *plus = strchr(hotkey_str, '+');
   *plus = ' ';
-  fl_draw_rect(.x = rect.x + 20, .y = rect.y - 2, .w = rect.w - 25, .h = rect.h,
+  fl_draw_rect(.x = rect.x + 95, .y = rect.y - 2, .w = rect.w - 95, .h = rect.h,
                .filled = true,
-               .color = fl_button_hovered("Actions") ? RGB(60, 60, 60)
-                                                     : FL_DARK_GRAY,
+               .color = fl_button_hovered("Actions") ? FL_GRAY : FL_DARK_GRAY,
                .radius = 6);
+
   fl_draw_text(.x = rect.x + 20, .y = rect.y - 4, .text = "Actions",
                .align = "LEFT", .color = FL_GRAY, .fontsize = 16);
   fl_draw_text(.x = rect.x + 100, .y = rect.y - 7, .text = hotkey_str,
                .align = "LEFT", .fontsize = 20);
+
   free(hotkey_str);
 }
 
