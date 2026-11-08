@@ -32,7 +32,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   ListBox_InvalidateMousePos();
   self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
   XSelectInput(dpy, self->handle.xid,
-               KeyPressMask | ExposureMask | FocusChangeMask | ButtonPressMask);
+               KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask | ButtonPressMask);
   clock_gettime(CLOCK_MONOTONIC, &_t1);
   Popup *popup = self;
   (void)popup;

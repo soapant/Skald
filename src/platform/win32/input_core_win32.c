@@ -193,7 +193,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         static unsigned long long s_last_keydown_ms[256] = {0};
         static bool s_key_is_down[256] = {0};
         unsigned long long now_ms = GetTickCount64();
-        if (_popupActive) {
+        {
           int _hint = 0;
           if (_isDown) {
             if (_vk == 0x20)
