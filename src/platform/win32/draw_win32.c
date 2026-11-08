@@ -601,30 +601,21 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   return true;
 }
 
-int Platform_GetGlyphInkHeight(const char *text, int fontsize) {
-  if (!text || !text[0] || fontsize <= 0)
-    return fontsize > 0 ? fontsize : 0;
+int Platform_GetTextLineHeight(int fontsize) {
+  if (fontsize <= 0)
+    fontsize = FontSize;
   if (!g_draw_hdc)
-    return fontsize;
-  int wlen = 0;
-  wchar_t *wide = win32_widen(text, (int)strlen(text), &wlen);
-  if (!wide || wlen <= 0)
     return fontsize;
   FontHandle font = Platform_CreateFont(fontsize, UsedFont);
   HFONT old = font.hfont ? (HFONT)SelectObject(g_draw_hdc, font.hfont) : NULL;
-  GLYPHMETRICS gm;
-  memset(&gm, 0, sizeof(gm));
-  GetGlyphOutlineW(g_draw_hdc, (UINT)(wide[0] & 0xFFFF), GGO_METRICS, &gm, 0,
-                   NULL, NULL);
+  TEXTMETRICW tm = {0};
+  GetTextMetricsW(g_draw_hdc, &tm);
   if (old)
     SelectObject(g_draw_hdc, old);
   Platform_DestroyFont(font);
-  free(wide);
-  int ink = (int)(gm.gmBlackBoxY);
-  if (ink <= 0)
-    ink = fontsize;
-  return ink + PROMPT_GLYPH_INK_PAD;
+  return tm.tmHeight > 0 ? (int)tm.tmHeight : fontsize;
 }
+
 
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int t = win32_thickness_px(spec.thickness);
