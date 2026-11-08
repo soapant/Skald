@@ -37,17 +37,13 @@ typedef WidgetState FlWidgetState;
 typedef WidgetRenderFn FlWidgetRenderFn;
 
 typedef PlRect FlRect;
-
+typedef PlLine FlLine;
+typedef PlCircle FlCircle;
 typedef PlPos FlPos;
-
 typedef PlListSpec FlListSpec;
-
 typedef PlWindowList FlWindowList;
-
 typedef CheckboxSpec FlCheckboxSpec;
-
 typedef ClipboardEntry FlClipboardEntry;
-
 typedef ClipboardHistory FlClipboardHistory;
 
 bool fl_copy_to_clipboard(const char *text);
@@ -461,47 +457,18 @@ void fl_free_image(void *image);
 #define FL_DRAW_ALPHA_OPAQUE 255
 #define FL_DRAW_ALPHA_TRANSPARENT 128
 
-typedef struct {
-  int x;
-  int y;
-  int w;
-  int h;
-  unsigned long color;
-  float thickness;
-  bool transparent;
-  bool filled;
-  int radius;
-  bool rounded;
-} FlRectSpec;
 
-typedef struct {
-  int x1;
-  int y1;
-  int x2;
-  int y2;
-  unsigned long color;
-  float thickness;
-} FlLineSpec;
+bool fli_draw_rect(const FlRect *spec);
 
-typedef struct {
-  int x;
-  int y;
-  int radius;
-  unsigned long color;
-  float thickness;
-} FlCircleSpec;
+bool fli_draw_line(const FlLine *spec);
 
-bool fli_draw_rect(const FlRectSpec *spec);
+bool fli_draw_circle(const FlCircle *spec);
 
-bool fli_draw_line(const FlLineSpec *spec);
+#define fl_draw_rect(...) fli_draw_rect(&(PlRect){__VA_ARGS__})
 
-bool fli_draw_circle(const FlCircleSpec *spec);
+#define fl_draw_line(...) fli_draw_line(&(PlLine){__VA_ARGS__})
 
-#define fl_draw_rect(...) fli_draw_rect(&(FlRectSpec){__VA_ARGS__})
-
-#define fl_draw_line(...) fli_draw_line(&(FlLineSpec){__VA_ARGS__})
-
-#define fl_draw_circle(...) fli_draw_circle(&(FlCircleSpec){__VA_ARGS__})
+#define fl_draw_circle(...) fli_draw_circle(&(PlCircle){__VA_ARGS__})
 
 int fl_rand_num_between(int min, int max);
 

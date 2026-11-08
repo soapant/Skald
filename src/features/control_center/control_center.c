@@ -5,6 +5,7 @@
 #include <strings.h>
 #include <stdlib.h>
 #include <math.h>
+static size_t ccx_strcpy_trunc(char *dst, size_t dst_size, const char *src);
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -81,10 +82,10 @@ static CcEntry *cc_entry_add_icon(const char *label, const char *type,
   CcEntry *e = cc_entry_new();
   if (!e)
     return NULL;
-  snprintf(e->label, sizeof(e->label), "%s", label);
-  snprintf(e->type, sizeof(e->type), "%s", type ? type : "");
-  snprintf(e->payload, sizeof(e->payload), "%s", payload ? payload : "");
-  snprintf(e->icon, sizeof(e->icon), "%s", icon ? icon : "");
+  ccx_strcpy_trunc(e->label, sizeof(e->label), label);
+  ccx_strcpy_trunc(e->type, sizeof(e->type), type ? type : "");
+  ccx_strcpy_trunc(e->payload, sizeof(e->payload), payload ? payload : "");
+  ccx_strcpy_trunc(e->icon, sizeof(e->icon), icon ? icon : "");
   return e;
 }
 
@@ -111,7 +112,7 @@ static CcEntry *cc_add_fallback(void) {
   char buffer[256];
   snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
   buffer[0] = toupper((unsigned char)buffer[0]);
-  snprintf(fallback->label, sizeof(fallback->label), "%s", buffer);
+  ccx_strcpy_trunc(fallback->label, sizeof(fallback->label), buffer);
   snprintf(fallback->icon, sizeof(fallback->icon), "/%s.png", UsedSearchEngine);
   return fallback;
 }
@@ -169,8 +170,17 @@ static const CcEntry *cc_find(const char *label);
 static void cc_stage(const CcEntry *e, int mode);
 static void cc_run_pending(void);
 
-static void cc_entry_hotkey_cb(void *ud) {
+static void *cc_hotkey_ud(int slot) {
+  return (void *)(uintptr_t)(slot + 1);
+}
+
+static int cc_hotkey_slot_from_ud(void *ud) {
   int slot = (int)(uintptr_t)ud;
+  return slot > 0 ? slot - 1 : -1;
+}
+
+static void cc_entry_hotkey_cb(void *ud) {
+  int slot = cc_hotkey_slot_from_ud(ud);
   if (slot >= 0 && slot < CC_HK_SLOTS)
     cc_run_entry_by_label(g_cc_hotkey_targets[slot]);
 }
@@ -180,7 +190,7 @@ static const char *cc_hotkey_for_label(const char *label) {
     return NULL;
   for (int i = 0; i < CC_HK_SLOTS; i++)
     if (g_cc_hotkey_targets[i][0] && strcmp(g_cc_hotkey_targets[i], label) == 0)
-      return fl_hotkey_for_ud((void *)(uintptr_t)i);
+      return fl_hotkey_for_ud(cc_hotkey_ud(i));
   return NULL;
 }
 
@@ -211,7 +221,7 @@ static int cc_hotkey_slot_for(const CcEntry *e) {
   }
   if (slot < 0)
     return -1;
-  snprintf(g_cc_hotkey_targets[slot], sizeof(g_cc_hotkey_targets[slot]), "%s", name);
+  ccx_strcpy_trunc(g_cc_hotkey_targets[slot], sizeof(g_cc_hotkey_targets[slot]), name);
   return slot;
 }
 
@@ -240,56 +250,56 @@ static void cc_stage(const CcEntry *e, int mode) {
   if (mode == 1) {
     if (e->on_ctrl_enter) {
       g_pending_fn = e->on_ctrl_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     }
     return;
   }
   if (mode == 2) {
     if (e->on_shift_enter) {
       g_pending_fn = e->on_shift_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     } else if (e->on_enter) {
       g_pending_fn = e->on_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     }
     return;
   }
   if (mode == 3) {
     if (e->on_ctrl_shift_enter) {
       g_pending_fn = e->on_ctrl_shift_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     } else if (e->on_ctrl_enter) {
       g_pending_fn = e->on_ctrl_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     }
     return;
   }
   if (mode == 4) {
     if (e->on_ctrl_alt_enter) {
       g_pending_fn = e->on_ctrl_alt_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     } else if (e->on_ctrl_enter) {
       g_pending_fn = e->on_ctrl_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     }
     return;
   }
   if (mode == 5) {
     if (e->on_shift_alt_enter) {
       g_pending_fn = e->on_shift_alt_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     } else if (e->on_enter) {
       g_pending_fn = e->on_enter;
-      snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+      ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
     }
     return;
   }
   if (e->on_action) {
     g_pending_action = e->on_action;
-    snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+    ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
   } else if (e->on_enter) {
     g_pending_fn = e->on_enter;
-    snprintf(g_pending_label, sizeof(g_pending_label), "%s", e->label);
+    ccx_strcpy_trunc(g_pending_label, sizeof(g_pending_label), e->label);
   }
 }
 
@@ -570,7 +580,7 @@ static void cc_build_xdg_paths(void) {
   if (!data_dirs || !data_dirs[0])
     data_dirs = "/usr/local/share:/usr/share";
   char buf[4096];
-  snprintf(buf, sizeof(buf), "%s", data_dirs);
+  ccx_strcpy_trunc(buf, sizeof(buf), data_dirs);
   char *save = buf;
   for (char *tok = strtok_r(buf, ":", &save); tok;
        tok = strtok_r(NULL, ":", &save)) {
@@ -707,10 +717,8 @@ static void cc_app_map_put(const char *name, const char *path) {
     unsigned slot = (i + n) % CC_APP_MAP_SLOTS;
     if (g_cc_app_map_key[slot][0] == '\0' ||
         strcmp(g_cc_app_map_key[slot], name) == 0) {
-      snprintf(g_cc_app_map_key[slot], sizeof(g_cc_app_map_key[slot]), "%s",
-               name);
-      snprintf(g_cc_app_map_path[slot], sizeof(g_cc_app_map_path[slot]), "%s",
-               path);
+      ccx_strcpy_trunc(g_cc_app_map_key[slot], sizeof(g_cc_app_map_key[slot]), name);
+      ccx_strcpy_trunc(g_cc_app_map_path[slot], sizeof(g_cc_app_map_path[slot]), path);
       return;
     }
   }
@@ -934,8 +942,11 @@ static double ccx_parse_number_with_suffix(const char *str) {
   if (suffix == 'k' || suffix == 'm') {
 
     char num_part[64];
-    strncpy(num_part, p, len - 1);
-    num_part[len - 1] = '\0';
+    size_t num_len = strnlen(p, sizeof(num_part) - 1);
+    if (num_len > 0)
+      num_len -= 1;
+    memcpy(num_part, p, num_len);
+    num_part[num_len] = '\0';
     char *end = NULL;
     double v = strtod(num_part, &end);
     if (end && *end == '\0') {
@@ -946,6 +957,18 @@ static double ccx_parse_number_with_suffix(const char *str) {
     }
   }
   return atof(p);
+}
+
+static size_t ccx_strcpy_trunc(char *dst, size_t dst_size, const char *src) {
+  if (dst_size == 0)
+    return 0;
+  const char *s = src ? src : "";
+  size_t n = strlen(s);
+  if (n >= dst_size)
+    n = dst_size - 1;
+  memcpy(dst, s, n);
+  dst[n] = '\0';
+  return n;
 }
 
 static void ccx_trim_trailinspaces(char *str) {
@@ -1193,11 +1216,11 @@ static bool cc_calc_result_for(char *out_value, const char *filter,
   if (!filter || !filter[0])
     return false;
   char clean[512];
-  snprintf(clean, sizeof(clean), "%s", filter);
+  ccx_strcpy_trunc(clean, sizeof(clean), filter);
   int in_pos = ccx_find_in_keyword(clean);
   if (in_pos >= 0) {
     char target_unit[64] = {0};
-    snprintf(target_unit, sizeof(target_unit), "%s", clean + in_pos + 2);
+    ccx_strcpy_trunc(target_unit, sizeof(target_unit), clean + in_pos + 2);
     ccx_trim_trailinspaces(target_unit);
     char *tp = target_unit;
     while (*tp && isspace((unsigned char)*tp))
@@ -1236,13 +1259,13 @@ static bool cc_calc_result_for(char *out_value, const char *filter,
       if (p >= L - 1)
         return false;
       char unit_cand[64] = {0};
-      snprintf(unit_cand, sizeof(unit_cand), "%s", left_trim + p + 1);
+      ccx_strcpy_trunc(unit_cand, sizeof(unit_cand), left_trim + p + 1);
       CcCalcUnit *u = ccx_find_unit_fuzzy(unit_cand);
       if (!u)
         return false;
       fromU = u;
       char numpart[256] = {0};
-      snprintf(numpart, sizeof(numpart), "%s", left_trim);
+      ccx_strcpy_trunc(numpart, sizeof(numpart), left_trim);
       numpart[p + 1] = '\0';
       ccx_trim_copy(numpart, expr_part, sizeof(expr_part));
       if (expr_part[0] == '\0')
@@ -1414,12 +1437,12 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   const CcEntry *e = cc_find(name);
   int slot = cc_hotkey_slot_for(e);
   if (slot >= 0) {
-    bool ok = fl_register_hotkey(.hotkey = hotkey,
+    fl_register_hotkey(.hotkey = hotkey,
                                  .cb = (void (*)(void))cc_entry_hotkey_cb,
-                                 .ud = (void *)(uintptr_t)slot);
+                                 .ud = cc_hotkey_ud(slot));
     char line[320];
     snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
-    bool wrote = fl_append_to_file(CC_HOTKEY_FILE, line);
+    fl_append_to_file(CC_HOTKEY_FILE, line);
     return;
   }
 }
@@ -1473,7 +1496,7 @@ static void cc_subwindow_reg_render(PromptState *state) {
 
     if (buf[0] && k != 0 && k != reg_last_key && has_mod) {
         cc_register_selected_hotkey(current_reg_action, buf);
-        snprintf(current_hotkey_reg, sizeof(current_hotkey_reg), "%s", buf);
+        ccx_strcpy_trunc(current_hotkey_reg, sizeof(current_hotkey_reg), buf);
         reg_flashing = true;
         reg_flash_timer = fl_start_timer();
         fl_enable_global_hotkeys();
@@ -1498,7 +1521,7 @@ static void cc_subwindow_reg_onclose() {
 static bool cc_reg_select(int type) {
   switch (type) {
     case 0: {
-      snprintf(current_reg_action, sizeof(current_reg_action), "%s", g_cc_main_selected);
+      ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action), g_cc_main_selected);
       fl_disable_global_hotkeys();
       fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
@@ -1517,18 +1540,18 @@ static bool cc_subwindow_enter(PromptState *state) {
 #define CC_PERSIST_MAX 64
 static char g_persisted_hotkeys[CC_PERSIST_MAX][64];
 static char g_persisted_actions[CC_PERSIST_MAX][256];
-static int g_persisted_count;
+static size_t g_persisted_count;
 
 static void cc_load_persisted_hotkeys(void) {
   FlStringList lines = fl_load_file_list(CC_HOTKEY_FILE);
   for (size_t li = 0; li < lines.count && g_persisted_count < CC_PERSIST_MAX; li++) {
     char copy[512];
-    snprintf(copy, sizeof(copy), "%s", lines.items[li] ? lines.items[li] : "");
+    ccx_strcpy_trunc(copy, sizeof(copy), lines.items[li] ? lines.items[li] : "");
     char *tab = strchr(copy, '\t');
     if (!tab) continue;
     *tab = '\0';
-    snprintf(g_persisted_hotkeys[g_persisted_count], sizeof(g_persisted_hotkeys[0]), "%s", copy);
-    snprintf(g_persisted_actions[g_persisted_count], sizeof(g_persisted_actions[0]), "%s", tab + 1);
+    ccx_strcpy_trunc(g_persisted_hotkeys[g_persisted_count], sizeof(g_persisted_hotkeys[0]), copy);
+    ccx_strcpy_trunc(g_persisted_actions[g_persisted_count], sizeof(g_persisted_actions[0]), tab + 1);
     g_persisted_count++;
   }
   fl_free_file_list(&lines);
@@ -1543,7 +1566,7 @@ static void cc_register_persisted_hotkeys(void) {
     if (slot >= 0)
       fl_register_hotkey(.hotkey = hotkey,
                          .cb = (void (*)(void))cc_entry_hotkey_cb,
-                         .ud = (void *)(uintptr_t)slot);
+                         .ud = cc_hotkey_ud(slot));
   }
 }
 
@@ -1573,9 +1596,9 @@ static void cc_on_actions_render(FlRect rect) {
 static void cc_render(PromptState *state) {
   if (state->lb && UI_IsListBoxSelected(state->lb)) {
     const char *cur = ListBoxInfo_Row(state->lb, state->lb->selected_index);
-    if (cur) snprintf(g_cc_main_selected, sizeof(g_cc_main_selected), "%s", cur);
+    if (cur) ccx_strcpy_trunc(g_cc_main_selected, sizeof(g_cc_main_selected), cur);
   } else if (state->eb) {
-    snprintf(g_cc_main_selected, sizeof(g_cc_main_selected), "%s", state->eb->filter);
+    ccx_strcpy_trunc(g_cc_main_selected, sizeof(g_cc_main_selected), state->eb->filter);
   }
   g_cc_width = state->width;
   g_cc_height = state->height;
@@ -1637,11 +1660,13 @@ static void cc_render(PromptState *state) {
       if (hk && hk[0]) {
         int type_w = fl_get_text_width(right_text, FontSize);
         int hk_fs = FontSize - 6;
-        int hk_w = fl_get_text_width(hk, hk_fs);
         int hk_x = type_x - type_w - CC_TYPE_GAP;
-        fl_draw_rect(.x = hk_x - hk_w - 8,
-                     .y = ctx.y + 12, .w = hk_w + 10, .h = hk_fs + 4,
-                     .radius = 4, .filled = true, .color = FL_DARK_GRAY);
+        FlRect r = fl_text_bounds(.text=hk,.fontsize=hk_fs,.x=hk_x - 4,.y=ctx.y+10,.align="RIGHT");
+        r.filled=true;
+        r.radius=4;
+        r.color=FL_DARK_GRAY;
+        fli_draw_rect(&r);
+
         fl_draw_text(.x = hk_x - 4,
                      .y = ctx.y + 10, .text = hk,
                      .align = "RIGHT", .pad = 0, .color = FL_GRAY,.fontsize=hk_fs);
@@ -1675,7 +1700,7 @@ static bool cc_enter(PromptState *state) {
     const char *eq = strchr(g_cc_calc_label, '=');
     if (eq) {
       char value[128];
-      snprintf(value, sizeof(value), "%s", eq + 1);
+      ccx_strcpy_trunc(value, sizeof(value), eq + 1);
       char *v = value;
       while (*v && isspace((unsigned char)*v))
         v++;
