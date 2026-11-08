@@ -515,6 +515,14 @@ bool fl_register_hotkey_impl(const FlHotkeySpec *spec) {
   return hotkey_register_internal(binding);
 }
 
+bool fl_unregister_hotkey_impl(const char *hotkey) {
+  if (!hotkey)
+    return false;
+  HotkeyBinding binding = convert_into_hotkey_binding((char *)hotkey, NULL, NULL,
+                                                      NULL, false);
+  return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
+}
+
 int fl_get_feature_list(const char **out_names, void (**out_cbs)(void),
                         int max) {
 
@@ -2454,6 +2462,26 @@ bool fl_add_alias_impl(const FlAliasSpec *spec) {
            "%s", spec->target);
   g_alias_count++;
   return true;
+}
+
+bool fl_remove_alias_impl(const char *alias) {
+  if (!alias)
+    return false;
+  int n = 0;
+  bool found = false;
+  for (int i = 0; i < g_alias_count; i++) {
+    if (strcmp(g_alias_alias[i], alias) == 0) {
+      found = true;
+      continue;
+    }
+    if (n != i) {
+      snprintf(g_alias_alias[n], sizeof(g_alias_alias[n]), "%s", g_alias_alias[i]);
+      snprintf(g_alias_target[n], sizeof(g_alias_target[n]), "%s", g_alias_target[i]);
+    }
+    n++;
+  }
+  g_alias_count = n;
+  return found;
 }
 
 const char *fl_alias_for(const char *target) {
