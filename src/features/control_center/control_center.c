@@ -1340,6 +1340,23 @@ static void cc_subwindow_render(PromptState *state) {
 }
 
 static char current_hotkey_reg[128];
+static char current_reg_action[128];
+static FlTimer reg_flash_timer;
+static bool reg_flashing = false;
+static int reg_last_key = 0;
+
+static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
+  if (!name || !name[0] || !hotkey || !hotkey[0])
+    return;
+  for (int i = 0; i < g_action_count; i++) {
+    if (g_actions[i].label && strcmp(g_actions[i].label, name) == 0 &&
+        g_actions[i].fn) {
+      fl_register_hotkey(.hotkey = hotkey, .cb = g_actions[i].fn);
+      return;
+    }
+  }
+}
+
 
 static void cc_subwindow_reg_render(PromptState *state) {
     char buf[128] = {0};
@@ -1378,39 +1395,39 @@ static void cc_subwindow_reg_render(PromptState *state) {
         buf[len - 1] = '\0';
     }
 
-    fl_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence",.fontsize=15,.color=FL_GRAY,.align="LEFT");
-    fl_draw_rect(.x = 10, .y = state->height/2,.h=40,.w=180,.radius=6,.color=FL_DARK_GRAY,.filled=true);
-    if (buf[0]) {
-        fl_draw_text(.x = 17, .y = state->height/2, .text = buf,.fontsize=22,.align="LEFT");
-        snprintf(buf, sizeof(buf), "%s", current_hotkey_reg);
+    if (buf[0] && k != 0 && k != reg_last_key) {
+        cc_register_selected_hotkey(current_reg_action, buf);
+        snprintf(current_hotkey_reg, sizeof(current_hotkey_reg), "%s", buf);
+        reg_flashing = true;
+        reg_flash_timer = fl_start_timer();
     }
-}
-static bool cc_subwindow_reg_enter(PromptState *state) {
-  printf("%s \n",current_hotkey_reg);
+    if (k == 0) reg_last_key = 0; else reg_last_key = k;
+    if (reg_flashing && fl_end_timer(reg_flash_timer) >= 1.0)
+        reg_flashing = false;
+
+    unsigned long rect_color = reg_flashing ? FL_GRAY : FL_DARK_GRAY;
+    unsigned long text_color = reg_flashing ? FL_DARK_GREEN : FL_GREY;
+
+    fl_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence",.fontsize=15,.color=FL_GRAY,.align="LEFT");
+    fl_draw_rect(.x = 10, .y = state->height/2,.h=40,.w=180,.radius=6,.color=rect_color,.filled=true);
+    if (buf[0] || reg_flashing) {
+        fl_draw_text(.x = 17, .y = state->height/2, .text = buf[0] ? buf : current_hotkey_reg,.fontsize=22,.color=text_color,.align="LEFT");
+    }
 }
 
 static bool cc_subwindow_enter(PromptState *state) {
   switch (state->lb->selected_index) {
-    case 0: 
+    case 0: {
+      const char *sel = state->lb ? ListBoxInfo_Row(state->lb, state->lb->selected_index) : NULL;
+      if (sel) snprintf(current_reg_action, sizeof(current_reg_action), "%s", sel);
       fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
-               .render = cc_subwindow_reg_render,.enter=cc_subwindow_reg_enter);
+               .render = cc_subwindow_reg_render);
       break;
+    }
     case 1: break;
   }
   return true;
-}
-
-static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
-  if (!name || !name[0] || !hotkey || !hotkey[0])
-    return;
-  for (int i = 0; i < g_action_count; i++) {
-    if (g_actions[i].label && strcmp(g_actions[i].label, name) == 0 &&
-        g_actions[i].fn) {
-      fl_register_hotkey(.hotkey = hotkey, .cb = g_actions[i].fn);
-      return;
-    }
-  }
 }
 
 static void cc_open_actions_subwindow(void) {
@@ -1418,6 +1435,7 @@ static void cc_open_actions_subwindow(void) {
                .y = (g_cc_height / 2) - 50, .w = 200, .h = 300,
                .render = cc_subwindow_render, .refresh = cc_subwindow_refresh,.enter=cc_subwindow_enter);
 }
+
 static void cc_on_actions_render(FlRect rect) {
   char *hotkey_str = strdup(ActionsHotkey);
   char *plus = strchr(hotkey_str, '+');
