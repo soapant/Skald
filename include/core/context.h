@@ -16,6 +16,10 @@ typedef struct {
   const char *title;
   int last_index;
   PromptCallbacks prompt_callbacks;
+  bool in_enter;
+  bool subwindow_pending;
+  bool subwindow_created;
+  PromptSpec pending_subwindow;
 } WindowContext;
 
 typedef struct {

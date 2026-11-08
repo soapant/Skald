@@ -151,10 +151,20 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 }
 
 char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
+  FlintContext *_ctx = FlintContext_Get();
+  if (_ctx) _ctx->window.subwindow_created = false;
   log_info("Platform_PromptUser started wm=%p spec=%p", wm, spec);
   if (!wm || !spec)
     return NULL;
   if (spec->subwindow) {
+    FlintContext *_c = FlintContext_Get();
+    if (_c && _c->window.in_enter) {
+      _c->window.subwindow_pending = true;
+      _c->window.pending_subwindow = *spec;
+      _c->window.pending_subwindow.subwindow = false;
+      _c->window.subwindow_created = false;
+      return NULL;
+    }
     PromptSpec heap_spec = *spec;
     heap_spec.subwindow = false;
     (void)PromptPopup_Create(wm, &heap_spec);
@@ -216,8 +226,11 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
         break;
       }
     }
-    if (_still_open)
-      WindowManager_PopPopup(wm);
+    if (_still_open) {
+      FlintContext *_ctx2 = FlintContext_Get();
+      if (!_ctx2 || !_ctx2->window.subwindow_created)
+        WindowManager_PopPopup(wm);
+    }
   }
   if (dpy) {
     XFlush(dpy);
@@ -225,4 +238,22 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   }
   FlintContext *_c = FlintContext_Get();
   return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
+}
+
+void Platform_ProcessPendingSubwindow(void) {
+  FlintContext *_c = FlintContext_Get();
+  if (!_c || !_c->window.subwindow_pending)
+    return;
+  _c->window.subwindow_pending = false;
+  _c->window.subwindow_created = true;
+  WindowManager *wm = WindowManager_Get();
+  if (wm && wm->popup_count > 1)
+    WindowManager_PopPopup(wm);
+  Popup *p = PromptPopup_Create(wm, &_c->window.pending_subwindow);
+  if (p && p->vtable && p->vtable->on_render)
+    p->vtable->on_render(p);
+  if (wm && wm->display) {
+    XFlush(wm->display);
+    XSync(wm->display, False);
+  }
 }
