@@ -7,14 +7,14 @@ void ConfigApply(void) {
     RememberLastIndex = true;
     MessageAfterEachHotkey = false;
     TimeOutForMessages = 1;
-    DebugMode = true;
+    DebugMode = false;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
     HotkeyRepeatDelayMs = 300;
     WindowOpacity = 235.0f;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 21;
+    FontSize = 20;
     IconSize = 32;
     WidgetGap = 10;
     UsedTerminal = "";
