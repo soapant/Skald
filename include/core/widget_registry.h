@@ -98,6 +98,7 @@ unsigned widget_bump_generation(void);
 unsigned widget_current_generation(void);
 
 Widget *widget_create(const WidgetSpec *spec);
+void widget_destroy(Widget *widget);
 bool widget_valid(Widget *widget);
 PlPos widget_get_pos(const char *name);
 void widget_show(Widget *widget);
