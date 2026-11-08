@@ -612,7 +612,7 @@ char *fl_get_active_window_title(void);
 
 char *fl_get_active_window_app_id(void);
 
-bool fl_is_window_active(char *title);
+bool fl_is_window_open(const char *title);
 
 FlColor fl_get_pixel_color(FlPos pos);
 

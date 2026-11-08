@@ -1955,14 +1955,17 @@ char *fl_get_active_window_app_id(void) {
   return r;
 }
 
-bool fl_is_window_active(char *title) {
+bool fl_is_window_open(const char *title) {
   FlWindowList l = Platform_GetWindowTitles();
+  bool found = false;
   for (int i = 0; i < l.count; i++) {
     if (Platform_StringContainsCaseInsensitive(l.windows[i], title)) {
-      return true;
+      found = true;
+      break;
     }
   }
-  return false;
+  fl_free_window_list(&l);
+  return found;
 }
 
 char *fl_get_working_dir() { return Platform_GetWorkingDir(); }
