@@ -13,6 +13,7 @@
 #include <sys/types.h>
 
 #include "deps/log.h"
+#include "platform/input_state.h"
 #include "config_values.h"
 #include "core/types.h"
 #include "core/types/window.h"
@@ -561,63 +562,67 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   return NULL;
 }
 
-bool Platform_IsCtrlPressed(void) {
+static unsigned int x11_current_mod_mask(bool *ok) {
   Display *display = get_display();
-  if (!display) {
-    return false;
-  }
-
   Window root, child;
   int root_x, root_y, win_x, win_y;
   unsigned int mask = 0;
-
+  *ok = false;
+  if (!display)
+    return 0;
   XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
                 &root_y, &win_x, &win_y, &mask);
+  *ok = true;
+  return mask;
+}
+
+#define FL_X11_ALL_MODS (ControlMask | ShiftMask | Mod1Mask | Mod4Mask)
+static bool x11_mods_inhibited(unsigned int mask) {
+  if (!Platform_InputState_ModsInhibited())
+    return false;
+  if (mask & FL_X11_ALL_MODS)
+    return true;
+  Platform_InputState_UninhibitMods();
+  return false;
+}
+
+bool Platform_IsCtrlPressed(void) {
+  bool ok;
+  unsigned int mask = x11_current_mod_mask(&ok);
+  if (!ok)
+    return false;
+  if (x11_mods_inhibited(mask))
+    return false;
   return (mask & ControlMask) != 0;
 }
 
 bool Platform_IsShiftPressed(void) {
-  Display *display = get_display();
-  if (!display) {
+  bool ok;
+  unsigned int mask = x11_current_mod_mask(&ok);
+  if (!ok)
     return false;
-  }
-
-  Window root, child;
-  int root_x, root_y, win_x, win_y;
-  unsigned int mask = 0;
-
-  XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
-                &root_y, &win_x, &win_y, &mask);
+  if (x11_mods_inhibited(mask))
+    return false;
   return (mask & ShiftMask) != 0;
 }
 
 bool Platform_IsAltPressed(void) {
-  Display *display = get_display();
-  if (!display) {
+  bool ok;
+  unsigned int mask = x11_current_mod_mask(&ok);
+  if (!ok)
     return false;
-  }
-
-  Window root, child;
-  int root_x, root_y, win_x, win_y;
-  unsigned int mask = 0;
-
-  XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
-                &root_y, &win_x, &win_y, &mask);
+  if (x11_mods_inhibited(mask))
+    return false;
   return (mask & Mod1Mask) != 0;
 }
 
 bool Platform_IsSuperPressed(void) {
-  Display *display = get_display();
-  if (!display) {
+  bool ok;
+  unsigned int mask = x11_current_mod_mask(&ok);
+  if (!ok)
     return false;
-  }
-
-  Window root, child;
-  int root_x, root_y, win_x, win_y;
-  unsigned int mask = 0;
-
-  XQueryPointer(display, DefaultRootWindow(display), &root, &child, &root_x,
-                &root_y, &win_x, &win_y, &mask);
+  if (x11_mods_inhibited(mask))
+    return false;
   return (mask & Mod4Mask) != 0;
 }
 
