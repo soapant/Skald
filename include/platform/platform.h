@@ -26,6 +26,7 @@ typedef struct {
   const char *key;
   void (*render)(void *ud);
   void *ud;
+  void *owner_src;
   int x, y, w, h;
   int fps;
   bool no_bg;
@@ -91,6 +92,7 @@ bool Platform_IsSuperPressed(void);
 typedef bool (*PlatformKeyInterceptorFn)(const PopupKeyEvent *key);
 void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn);
 bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key);
+void Platform_KeyInterceptor_PurgeOwner(const char *path_a, const char *path_b);
 bool Platform_ExpandPath(const char *template_path, char *out, size_t out_size);
 bool Platform_StringContainsCaseInsensitive(const char *haystack,
                                             const char *needle);
@@ -129,6 +131,8 @@ void Platform_HoverMessage(PlHoverMessageSpec spec);
 void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec);
 void Platform_HoverMessageRelease(const char *key);
 void Platform_HoverWidgetHide(const char *key);
+void Platform_HoverWidget_PurgeOwner(const char *path_a, const char *path_b);
+void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 
 FontHandle Platform_CreateFont(int size, const char *face_name);
 void Platform_DestroyFont(FontHandle font);

@@ -13,6 +13,8 @@
 #include "platform/wm_platform.h"
 #include "platform/input_state.h"
 #include "deps/stb_ds.h"
+#include "helpers/helpers_owner.h"
+#include "core/feature_loader.h"
 
 static WindowManager *g_window_manager = NULL;
 
@@ -114,6 +116,7 @@ void WindowManager_PopPopup(WindowManager *wm) {
   if (on_close) {
     on_close();
   }
+  FeatureLoader_SweepRetired();
 }
 
 Popup *WindowManager_GetTopPopup(WindowManager *wm) {
@@ -175,14 +178,21 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
 }
 
 #define MAX_EVENT_CALLBACKS 16
-static PlEventCallback g_event_registry[2][MAX_EVENT_CALLBACKS] = {0};
+struct EventSlot {
+  PlEventCallback cb;
+  char owner[OWNER_PATH_MAX];
+};
+static struct EventSlot g_event_registry[2][MAX_EVENT_CALLBACKS] = {0};
 
 void EventBus_Register(PlEvent event, PlEventCallback cb) {
-  if (event < 0 || event >= 2)
+  if (event < 0 || event >= 2 || !cb)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i] == NULL) {
-      g_event_registry[event][i] = cb;
+    if (g_event_registry[event][i].cb == NULL) {
+      g_event_registry[event][i].cb = cb;
+      g_event_registry[event][i].owner[0] = '\0';
+      Owner_ResolveForFunc((void *)cb, g_event_registry[event][i].owner,
+                           sizeof(g_event_registry[event][i].owner));
       return;
     }
   }
@@ -192,9 +202,24 @@ void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
   if (event < 0 || event >= 2)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i] == cb) {
-      g_event_registry[event][i] = NULL;
+    if (g_event_registry[event][i].cb == cb) {
+      g_event_registry[event][i].cb = NULL;
+      g_event_registry[event][i].owner[0] = '\0';
       return;
+    }
+  }
+}
+
+void EventBus_PurgeOwner(const char *path_a, const char *path_b) {
+  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+    return;
+  for (int e = 0; e < 2; ++e) {
+    for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
+      if (g_event_registry[e][i].cb &&
+          Owner_ModuleMatches(g_event_registry[e][i].owner, path_a, path_b)) {
+        g_event_registry[e][i].cb = NULL;
+        g_event_registry[e][i].owner[0] = '\0';
+      }
     }
   }
 }
@@ -203,8 +228,8 @@ void EventBus_Trigger(PlEvent event) {
   if (event < 0 || event >= 2)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i]) {
-      g_event_registry[event][i]();
+    if (g_event_registry[event][i].cb) {
+      g_event_registry[event][i].cb();
     }
   }
 }

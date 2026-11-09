@@ -228,6 +228,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
   if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
     return;
 
+  bool matched = false;
   for (int i = 0; i < g_widget_count; i++) {
     Widget *w = g_widgets[i];
     if (!w)
@@ -237,12 +238,15 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     if (w->gen > generation)
       continue;
     w->dead = true;
-    Platform_HoverMessageRelease(w->name);
+    matched = true;
     Platform_HoverWidgetHide(w->name);
     Platform_RenderThread_RemoveFrameCallback(widget_render_frame, w);
     Platform_RenderThread_Post(widget_destroy_window, w);
     log_info("widget '%s' purged (owner unloaded)", w->name);
   }
+
+  if (!matched)
+    return;
 
   Platform_RenderThread_Sync();
 
