@@ -47,6 +47,60 @@
 
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
+static bool sanitize = false;
+static const char *sanitize_cc = NULL;
+static const char *sanitize_bin = NULL;
+
+static void pick_sanitize_cc(void) {
+  const char *over = getenv("SKALD_SANITIZE_CC");
+  if (over && over[0]) {
+    sanitize_cc = over;
+  } else {
+#if defined(_WIN32)
+    static char buf[2048];
+    const char *up = getenv("USERPROFILE");
+    if (up && up[0]) {
+      snprintf(buf, sizeof(buf),
+               "%s/scoop/apps/msys2/current/clang64/bin/clang.exe", up);
+      if (nob_file_exists(buf))
+        sanitize_cc = buf;
+    }
+    if (!sanitize_cc)
+      sanitize_cc = "clang64/bin/clang.exe";
+#else
+    sanitize_cc = "clang";
+#endif
+  }
+  const char *slash = strrchr(sanitize_cc, '/');
+  if (!slash)
+    slash = strrchr(sanitize_cc, '\\');
+  static char bin[2048];
+  if (slash) {
+    size_t n = (size_t)(slash - sanitize_cc);
+    if (n >= sizeof(bin))
+      n = sizeof(bin) - 1;
+    memcpy(bin, sanitize_cc, n);
+    bin[n] = '\0';
+    sanitize_bin = bin;
+  } else {
+    sanitize_bin = ".";
+  }
+  nob_log(NOB_INFO, "sanitizer CC: %s (runtime dir %s)", sanitize_cc,
+          sanitize_bin);
+}
+
+static void append_cc(Nob_Cmd *cmd) {
+  if (sanitize)
+    return (void)nob_cmd_append(cmd, sanitize_cc);
+  nob_cc(cmd);
+}
+
+static void append_san_flags(Nob_Cmd *cmd) {
+  if (sanitize)
+    nob_cmd_append(cmd, "-fsanitize=address,undefined",
+                   "-fno-omit-frame-pointer");
+}
+
 static bool target_win32 = false;
 static const char *obj_dir = BUILD_FOLDER "/obj";
 
@@ -327,7 +381,7 @@ static bool write_compile_commands(void) {
       nob_cmd_append(&cmd, CROSS_CC);
       nob_cmd_append(&cmd, WIN_CC_FLAGS, "-c", sources.items[i]);
     } else {
-      nob_cc(&cmd);
+      append_cc(&cmd);
       nob_cc_flags(&cmd);
       append_wayland_session_flags(&cmd);
       nob_cmd_append(&cmd, CC_FLAGS, "-c", sources.items[i]);
@@ -416,8 +470,9 @@ static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
     nob_cmd_append(cmd, CROSS_CC, WIN_CC_FLAGS, "-shared", "-o", so, src,
                    "build/win_obj/main.lib.a", WIN_LINK_FLAGS);
   } else {
-    nob_cc(cmd);
+    append_cc(cmd);
     nob_cc_flags(cmd);
+    append_san_flags(cmd);
 #if defined(_WIN32)
     nob_cmd_append(cmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a",
                    "-MF", feature_dep_path(src), LINK_FLAGS);
@@ -490,12 +545,13 @@ static bool compile_all(bool *any_compiled) {
       nob_cmd_append(&cmd, WIN_CC_FLAGS, "-c", to_build.items[i], "-o",
                      obj_path(to_build.items[i]));
     } else {
-      nob_cc(&cmd);
+      append_cc(&cmd);
       nob_cc_flags(&cmd);
       append_wayland_session_flags(&cmd);
       nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o",
                      obj_path(to_build.items[i]));
       append_dep_cflags(&cmd);
+      append_san_flags(&cmd);
     }
     if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs,
                      .stderr_path = err_paths.items[i])) {
@@ -554,13 +610,28 @@ static void stop_running_instance(void) {
 static bool run_output(const char *output) {
   stop_running_instance();
   Nob_Cmd cmd = {0};
+#if defined(_WIN32)
+  if (sanitize) {
+    char wrapper[2048];
+    char out_win[2048];
+    snprintf(out_win, sizeof(out_win), "%s", output);
+    for (char *p = out_win; *p; p++)
+      if (*p == '/')
+        *p = '\\';
+    snprintf(wrapper, sizeof(wrapper), "set PATH=%s;%%PATH%% && %s",
+             sanitize_bin, out_win);
+    nob_cmd_append(&cmd, "cmd.exe", "/c", wrapper);
+    return nob_cmd_run(&cmd);
+  }
+#endif
   nob_cmd_append(&cmd, output);
   return nob_cmd_run_async_and_reset(&cmd) != NOB_INVALID_PROC;
 }
 
 static bool run_tests(void) {
   const char *test_build_folder =
-      target_win32 ? "build/win_tests" : "build/tests";
+      sanitize ? "build/san_tests" : target_win32 ? "build/win_tests"
+                                           : "build/tests";
   if (!nob_mkdir_if_not_exists(test_build_folder))
     return false;
   if (test_sources.count == 0) {
@@ -570,13 +641,14 @@ static bool run_tests(void) {
   const char *support_obj = NULL;
   if (nob_file_exists("tests/support.c")) {
     support_obj =
-        target_win32 ? "build/win_tests/support.o" : "build/tests/support.o";
+        nob_temp_sprintf("%s/support.o", test_build_folder);
     Nob_Cmd scmd = {0};
     if (target_win32) {
       nob_cmd_append(&scmd, CROSS_CC);
     } else {
-      nob_cc(&scmd);
+      append_cc(&scmd);
     }
+    append_san_flags(&scmd);
     nob_cmd_append(&scmd, "-I", "include", "-I", "tests", "-O2", "-c",
                    "tests/support.c", "-o", support_obj);
     if (!nob_cmd_run(&scmd)) {
@@ -586,28 +658,32 @@ static bool run_tests(void) {
   }
 
   if (!target_win32) {
-    if (!nob_mkdir_if_not_exists("build/tests/fixture"))
+    char fixture_dir[512];
+    snprintf(fixture_dir, sizeof(fixture_dir), "%s/fixture",
+             test_build_folder);
+    if (!nob_mkdir_if_not_exists(fixture_dir))
       return false;
-    if (nob_file_exists("build/tests/fixture/reload_probe.dll"))
-      nob_delete_file("build/tests/fixture/reload_probe.dll");
-    if (nob_file_exists("build/tests/fixture/reload_probe.so"))
-      nob_delete_file("build/tests/fixture/reload_probe.so");
-    if (nob_file_exists("build/tests/fixture/reload_probe.dylib"))
-      nob_delete_file("build/tests/fixture/reload_probe.dylib");
+    if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.dll", fixture_dir)))
+      nob_delete_file(nob_temp_sprintf("%s/reload_probe.dll", fixture_dir));
+    if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.so", fixture_dir)))
+      nob_delete_file(nob_temp_sprintf("%s/reload_probe.so", fixture_dir));
+    if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.dylib",
+                                         fixture_dir)))
+      nob_delete_file(nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir));
     Nob_Cmd fcmd = {0};
-    nob_cc(&fcmd);
+    append_cc(&fcmd);
 #if defined(__APPLE__)
     nob_cmd_append(&fcmd, "-dynamiclib", "-I", "include",
                    "tests/fixtures/reload_probe.c", "-o",
-                   "build/tests/fixture/reload_probe.dylib");
+                   nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir));
 #elif defined(_WIN32)
     nob_cmd_append(&fcmd, "-shared", "-I", "include",
                    "tests/fixtures/reload_probe.c", "-o",
-                   "build/tests/fixture/reload_probe.dll");
+                   nob_temp_sprintf("%s/reload_probe.dll", fixture_dir));
 #else
     nob_cmd_append(&fcmd, "-shared", "-fPIC", "-I", "include",
                    "tests/fixtures/reload_probe.c", "-o",
-                   "build/tests/fixture/reload_probe.so");
+                   nob_temp_sprintf("%s/reload_probe.so", fixture_dir));
 #endif
     if (!nob_cmd_run(&fcmd)) {
       nob_log(NOB_ERROR, "Failed to build reload_probe fixture");
@@ -670,14 +746,15 @@ static bool run_tests(void) {
     char *dot = strrchr(name, '.');
     if (dot)
       *dot = '\0';
-    const char *out = nob_temp_sprintf("build/tests/%s", name);
+    const char *out = nob_temp_sprintf("%s/%s", test_build_folder, name);
 #if defined(_WIN32)
     if (!nob_sv_ends_with_cstr(nob_sv_from_cstr(out), ".exe"))
       out = nob_temp_sprintf("%s.exe", out);
 #endif
     Nob_Cmd cmd = {0};
-    nob_cc(&cmd);
+    append_cc(&cmd);
     nob_cmd_append(&cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src);
+    append_san_flags(&cmd);
     append_dep_cflags(&cmd);
     if (support_obj)
       nob_cmd_append(&cmd, support_obj);
@@ -691,6 +768,7 @@ static bool run_tests(void) {
     nob_cmd_append(&cmd, "-Wl,--export-all-symbols");
 #endif
     append_dep_ldflags(&cmd);
+    append_san_flags(&cmd);
     nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
     snprintf(suite_names[t], sizeof(suite_names[t]), "%s", name);
     if (!nob_cmd_run(&cmd)) {
@@ -701,7 +779,22 @@ static bool run_tests(void) {
       continue;
     }
     Nob_Cmd run = {0};
-    nob_cmd_append(&run, out);
+#if defined(_WIN32)
+    if (sanitize) {
+      char wrapper[2048];
+      char out_win[2048];
+      snprintf(out_win, sizeof(out_win), "%s", out);
+      for (char *p = out_win; *p; p++)
+        if (*p == '/')
+          *p = '\\';
+      snprintf(wrapper, sizeof(wrapper), "set PATH=%s;%%PATH%% && %s",
+               sanitize_bin, out_win);
+      nob_cmd_append(&run, "cmd.exe", "/c", wrapper);
+    } else
+#endif
+    {
+      nob_cmd_append(&run, out);
+    }
     suite_ok[t] = nob_cmd_run(&run);
     if (!suite_ok[t])
       failed++;
@@ -759,11 +852,12 @@ int main(int argc, char **argv) {
   int do_test = 0;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
-      printf("Usage: %s [-win32] [-run] [-actual] [-test] [-help]\n", argv[0]);
+      printf("Usage: %s [-win32] [-run] [-actual] [-test] [-asan] [-help]\n", argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");
       printf("  -actual Build skald.exe instead of debug build (Windows)\n");
       printf("  -test   Run test suite\n");
+      printf("  -asan   Build with clang -fsanitize=address,undefined\n");
       printf("  -help   Show this help\n");
       return 0;
     }
@@ -775,6 +869,13 @@ int main(int argc, char **argv) {
       do_actual = 1;
     if (strcmp(argv[i], "-test") == 0)
       do_test = 1;
+    if (strcmp(argv[i], "-asan") == 0)
+      sanitize = true;
+  }
+
+  if (sanitize) {
+    pick_sanitize_cc();
+    obj_dir = BUILD_FOLDER "/san_obj";
   }
 
   if (target_win32) {
@@ -842,7 +943,9 @@ int main(int argc, char **argv) {
     output = BUILD_FOLDER "/skald_win.exe";
   } else {
 #if defined(_WIN32)
-    output = do_actual ? "build/skald.exe" : "build/debug/skald.exe";
+    output = sanitize ? "build/debug/skald_san.exe"
+             : do_actual ? "build/skald.exe"
+                        : "build/debug/skald.exe";
 #else
     output = BUILD_FOLDER "/skald";
 #endif
@@ -903,7 +1006,7 @@ int main(int argc, char **argv) {
                    "-Wl,--out-implib,build/win_obj/main.lib.a");
     nob_cmd_append(&cmd, WIN_LINK_FLAGS);
   } else {
-    nob_cc(&cmd);
+    append_cc(&cmd);
     nob_cmd_append(&cmd, "-o", output);
     for (size_t i = 0; i < objs.count; ++i) {
       nob_cmd_append(&cmd, objs.items[i]);
@@ -915,6 +1018,7 @@ int main(int argc, char **argv) {
                    "-Wl,--out-implib,build/main.lib.a");
 #endif
     append_dep_ldflags(&cmd);
+    append_san_flags(&cmd);
     nob_cmd_append(&cmd, LINK_FLAGS);
   }
 
