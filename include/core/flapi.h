@@ -141,6 +141,7 @@ char *fl_run_argv(const char *const argv[], const char *stdin_data,
 bool fl_launch_detached(char *command);
 
 bool fl_terminate_process_by_name(const char *exe_name);
+bool fl_process_running(const char *name);
 
 int fl_get_feature_list(const char **out_names, void (**out_cbs)(void),
                         int max);

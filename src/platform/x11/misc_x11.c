@@ -430,6 +430,36 @@ long long Platform_GetWallClockMs(void) {
   return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL;
 }
 
+bool Platform_ProcessRunning(const char *name) {
+  if (!name || !*name)
+    return false;
+  DIR *d = opendir("/proc");
+  if (!d)
+    return false;
+  bool found = false;
+  struct dirent *e;
+  while (!found && (e = readdir(d)) != NULL) {
+    if (e->d_name[0] < '0' || e->d_name[0] > '9')
+      continue;
+    char path[512];
+    snprintf(path, sizeof(path), "/proc/%s/comm", e->d_name);
+    FILE *f = fopen(path, "r");
+    if (!f)
+      continue;
+    char comm[256] = {0};
+    if (fgets(comm, sizeof(comm), f)) {
+      char *nl = strchr(comm, '\n');
+      if (nl)
+        *nl = '\0';
+      if (strcasestr(comm, name))
+        found = true;
+    }
+    fclose(f);
+  }
+  closedir(d);
+  return found;
+}
+
 bool Platform_TerminateProcessByName(const char *exe_name) {
   if (!exe_name || !*exe_name)
     return false;

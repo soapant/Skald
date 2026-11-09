@@ -43,3 +43,24 @@ int64_t Platform_TimerNowTicks(void) {
 }
 
 int64_t Platform_TimerTickFrequency(void) { return 1000000000LL; }
+
+bool Platform_ProcessRunning(const char *name) {
+  if (!name || !*name)
+    return false;
+  FILE *fp = popen("ps -A -o comm=", "r");
+  if (!fp)
+    return false;
+  bool found = false;
+  char line[512];
+  while (fgets(line, sizeof(line), fp)) {
+    char *nl = strchr(line, '\n');
+    if (nl)
+      *nl = '\0';
+    if (strcasestr(line, name)) {
+      found = true;
+      break;
+    }
+  }
+  pclose(fp);
+  return found;
+}
