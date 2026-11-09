@@ -34,11 +34,11 @@ int UI_InsertText(const char *utf8, int len);
 void UI_DeleteForward(void);
 void UI_Redraw(ListBoxInfo *lb);
 void UI_RedrawNow();
-void UI_SyncFilterFromEdit(SkaldContext *ctx);
-void UI_ApplyFilterToEdit(SkaldContext *ctx);
-ListBoxInfo *UI_GetPopupListBox(SkaldContext *ctx);
-void UI_SyncEditCursor(SkaldContext *ctx, int pos);
-bool UI_ApplyBackspaceToPopup(SkaldContext *ctx);
+void UI_SyncFilterFromEdit(void);
+void UI_ApplyFilterToEdit(void);
+ListBoxInfo *UI_GetPopupListBox(void);
+void UI_SyncEditCursor(int pos);
+bool UI_ApplyBackspaceToPopup(void);
 
 #define UI_DEBOUNCE_MS 40
 #define UI_DEBOUNCE_TIMER_ID 998

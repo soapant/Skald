@@ -179,10 +179,7 @@ void UI_RedrawNow() {}
 
 void UI_Redraw(ListBoxInfo *lb) { UI_RedrawNow(); }
 
-void UI_SyncFilterFromEdit(SkaldContext *ctx) {
-  if (!ctx) {
-    return;
-  }
+void UI_SyncFilterFromEdit(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (!top) {
@@ -194,10 +191,7 @@ void UI_SyncFilterFromEdit(SkaldContext *ctx) {
   }
 }
 
-void UI_ApplyFilterToEdit(SkaldContext *ctx) {
-  if (!ctx) {
-    return;
-  }
+void UI_ApplyFilterToEdit(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (!top) {
@@ -210,9 +204,7 @@ void UI_ApplyFilterToEdit(SkaldContext *ctx) {
   }
 }
 
-ListBoxInfo *UI_GetPopupListBox(SkaldContext *ctx) {
-  if (!ctx)
-    return NULL;
+ListBoxInfo *UI_GetPopupListBox(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (!top)
@@ -224,10 +216,7 @@ ListBoxInfo *UI_GetPopupListBox(SkaldContext *ctx) {
   return NULL;
 }
 
-void UI_SyncEditCursor(SkaldContext *ctx, int pos) {
-  if (!ctx) {
-    return;
-  }
+void UI_SyncEditCursor(int pos) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (!top) {
@@ -245,7 +234,6 @@ void UI_SyncEditCursor(SkaldContext *ctx, int pos) {
   UI_SetCursorPosition(pos);
 }
 
-bool UI_ApplyBackspaceToPopup(SkaldContext *ctx) {
-  (void)ctx;
+bool UI_ApplyBackspaceToPopup(void) {
   return false;
 }
