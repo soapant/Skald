@@ -168,6 +168,7 @@ static void sweep_retired_libs(void) {
       snippet_purge_owner(g_retired[i].owner, NULL);
       widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen);
       cc_registry_purge_owner(g_retired[i].owner, NULL);
+      feature_list_purge_owner(g_retired[i].owner, NULL);
       Platform_KeyCallback_PurgeOwner(g_retired[i].owner, NULL);
       Platform_KeyInterceptor_PurgeOwner(g_retired[i].owner, NULL);
       EventBus_PurgeOwner(g_retired[i].owner, NULL);
@@ -702,6 +703,7 @@ void FeatureLoader_Shutdown(void) {
       snippet_purge_owner(NULL, g_features[i].path);
       widget_purge_owner(NULL, g_features[i].path, widget_bump_generation());
       cc_registry_purge_owner(NULL, g_features[i].path);
+      feature_list_purge_owner(NULL, g_features[i].path);
       g_features[i].uniq[0] = '\0';
       g_features[i].handle = 0;
     }
@@ -718,9 +720,11 @@ void FeatureLoader_Shutdown(void) {
   log_info("FeatureLoader_Shutdown completed");
 }
 
-void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
-  if (!name)
-    return FeatureLoader_ReloadAll();
+bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
+  if (!name) {
+    FeatureLoader_ReloadAll();
+    return true;
+  }
   LOCK();
   sweep_retired_libs();
   for (int i = 0; i < g_feature_count; i++) {
@@ -736,7 +740,7 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       if (!copy_file(src, uniquepath)) {
         log_error("reload %s: copy failed (keeping old)", name);
         UNLOCK();
-        return;
+        return false;
       }
       LibHandle h = Platform_LoadLibrary(uniquepath);
       if (!h) {
@@ -744,7 +748,7 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
                   Platform_GetLoadError());
         remove(uniquepath);
         UNLOCK();
-        return;
+        return false;
       }
       typedef void (*InitFn)(void);
       InitFn init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureInit");
@@ -755,7 +759,7 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
         Platform_UnloadLibrary(h);
         remove(uniquepath);
         UNLOCK();
-        return;
+        return false;
       }
       typedef void (*ShutdownFn)(void);
       ShutdownFn shut =
@@ -785,6 +789,7 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       snippet_purge_owner(retire_owner, path_copy);
       widget_purge_owner(retire_owner, path_copy, retire_gen);
       cc_registry_purge_owner(retire_owner, path_copy);
+      feature_list_purge_owner(retire_owner, path_copy);
       Platform_KeyCallback_PurgeOwner(retire_owner, path_copy);
       Platform_KeyInterceptor_PurgeOwner(retire_owner, path_copy);
       EventBus_PurgeOwner(retire_owner, path_copy);
@@ -796,16 +801,15 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       LOCK();
       log_info("reloaded %s", name);
       UNLOCK();
-      return;
+      return true;
     }
   }
   char file[512];
   snprintf(file, sizeof(file), "%s%s", name, Platform_LibExtension());
   bool ok = load_single("build/features", file);
-  (void)ok;
   UNLOCK();
   log_info("FeatureLoader_Reload completed");
-  return;
+  return ok;
 }
 
 void FeatureLoader_ReloadAll(void) {
@@ -862,5 +866,5 @@ bool FeatureLoader_TryLock(void) {
 void FeatureLoader_Unlock(void) { UNLOCK(); }
 
 void FeatureLoader_Reload(const char *name) {
-  FeatureLoader_ReloadFrom(name, NULL);
+  (void)FeatureLoader_ReloadFrom(name, NULL);
 }

@@ -426,7 +426,7 @@ bool remap_handle_vk(int vk_code, int value) {
     allowed[i] = true;
   bool need_title = false;
   for (int i = 0; i < g_remap_count; i++) {
-    if (g_remaps[i].window_count > 0 && (active_before[i] != active_after[i])) {
+    if (g_remaps[i].window_count > 0) {
       need_title = true;
       break;
     }
