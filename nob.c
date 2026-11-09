@@ -7,7 +7,7 @@
 
 #define CC_COMMON_FLAGS                                                        \
   "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
-      "-Wextra", "-Wno-unused-parameter","-O3","-ggdb"
+      "-Wextra", "-Wno-unused-parameter", "-O3", "-ggdb"
 
 #if defined(_WIN32)
 #define CC_FLAGS CC_COMMON_FLAGS
@@ -102,7 +102,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
             return true;
       }
       bool is_feature = false;
-      //hardcoded until flint releases
+      // hardcoded until flint releases
       if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
           nob_sv_starts_with(path, nob_sv_from_cstr("src\\features\\"))) {
         is_feature = true;
@@ -249,8 +249,8 @@ static void discover_dep_flags(void) {
     for (size_t i = 0; i < sizeof(fb) / sizeof(fb[0]); i++)
       nob_da_append(&dep_cflags, nob_temp_strdup(fb[i]));
   }
-  snprintf(cmdline, sizeof(cmdline), "pkg-config --static --libs %s 2>/dev/null",
-           PKG_LIBS_PKGS_STR);
+  snprintf(cmdline, sizeof(cmdline),
+           "pkg-config --static --libs %s 2>/dev/null", PKG_LIBS_PKGS_STR);
   const char *ldflags = run_capture(cmdline);
   if (ldflags && ldflags[0]) {
     append_ws_split(&dep_ldflags, ldflags);
@@ -447,9 +447,10 @@ static bool build_features(void) {
     bool need_rebuild = !nob_file_exists(so);
     if (!need_rebuild) {
       if (target_win32) {
-        need_rebuild = nob_needs_rebuild1(so, src) != 0 ||
-                       (nob_file_exists("build/win_obj/main.lib.a") &&
-                        nob_needs_rebuild1(so, "build/win_obj/main.lib.a") != 0);
+        need_rebuild =
+            nob_needs_rebuild1(so, src) != 0 ||
+            (nob_file_exists("build/win_obj/main.lib.a") &&
+             nob_needs_rebuild1(so, "build/win_obj/main.lib.a") != 0);
       } else {
         need_rebuild = stale_with_dep(src, so, feature_dep_path(src));
       }
@@ -568,8 +569,8 @@ static bool run_tests(void) {
   }
   const char *support_obj = NULL;
   if (nob_file_exists("tests/support.c")) {
-    support_obj = target_win32 ? "build/win_tests/support.o"
-                               : "build/tests/support.o";
+    support_obj =
+        target_win32 ? "build/win_tests/support.o" : "build/tests/support.o";
     Nob_Cmd scmd = {0};
     if (target_win32) {
       nob_cmd_append(&scmd, CROSS_CC);
@@ -830,16 +831,16 @@ int main(int argc, char **argv) {
         break;
       }
     }
-    needs_link = any_compiled || features_stale || !nob_file_exists(output) ||
-                 nob_needs_rebuild(output, (const char **)objs.items,
-                                   objs.count) != 0;
+    needs_link =
+        any_compiled || features_stale || !nob_file_exists(output) ||
+        nob_needs_rebuild(output, (const char **)objs.items, objs.count) != 0;
     if (!needs_link) {
       nob_log(NOB_INFO, "No changes to core, skipping link");
     }
   } else {
-    needs_link = any_compiled || !nob_file_exists(output) ||
-                 nob_needs_rebuild(output, (const char **)objs.items,
-                                   objs.count) != 0;
+    needs_link =
+        any_compiled || !nob_file_exists(output) ||
+        nob_needs_rebuild(output, (const char **)objs.items, objs.count) != 0;
 #if defined(_WIN32)
     const char *other = do_actual ? "build/debug/flint.exe" : "build/flint.exe";
     if (nob_file_exists(other) &&

@@ -16,12 +16,9 @@ static char g_char_queue[32] = {0};
 static int g_char_head = 0, g_char_tail = 0;
 
 #define FL_INHIBIT_MOD_COUNT 11
-static const int kInhibitMods[FL_INHIBIT_MOD_COUNT] = {VK_SHIFT,  VK_CONTROL,
-                                                      VK_MENU,    VK_LWIN,
-                                                      VK_RWIN,
-                                                      VK_LSHIFT,  VK_RSHIFT,
-                                                      VK_LCONTROL, VK_RCONTROL,
-                                                      VK_LMENU,   VK_RMENU};
+static const int kInhibitMods[FL_INHIBIT_MOD_COUNT] = {
+    VK_SHIFT,  VK_CONTROL,  VK_MENU,     VK_LWIN,  VK_RWIN, VK_LSHIFT,
+    VK_RSHIFT, VK_LCONTROL, VK_RCONTROL, VK_LMENU, VK_RMENU};
 void Platform_InputState_InhibitMods(void) {
   for (int i = 0; i < FL_INHIBIT_MOD_COUNT; i++) {
     int nv = kInhibitMods[i];

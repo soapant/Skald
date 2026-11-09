@@ -228,14 +228,14 @@ void add_music(void) {
 typedef void (*toggle_play_pause)(void);
 
 static void pause() {
-    fl_cap_bind(playpause, "toggle.playpause", toggle_play_pause);
-    if (playpause) {
-       if (fl_process_running("music_player")) {
-          music_cmd_1();
-       } else {
-         playpause();
-       }
+  fl_cap_bind(playpause, "toggle.playpause", toggle_play_pause);
+  if (playpause) {
+    if (fl_process_running("music_player")) {
+      music_cmd_1();
+    } else {
+      playpause();
     }
+  }
 }
 
 FLINT_FEATURE_INIT {

@@ -48,14 +48,9 @@ bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 #define X11_REJECTED_MAX 128
 static int g_x11_rejected_fds[X11_REJECTED_MAX];
 static int g_x11_rejected_count = 0;
-static int x11_linux_button_to_mouse_impl(int code);
+static int x11_linux_button_to_mouse(int code);
 
 static int x11_linux_button_to_mouse(int code) {
-  int btn = x11_linux_button_to_mouse_impl(code);
-  return btn;
-}
-
-static int x11_linux_button_to_mouse_impl(int code) {
   switch (code) {
   case BTN_LEFT:
     return MOUSE_BTN_LEFT;
@@ -441,7 +436,7 @@ void x11_mouse_forward(const struct input_event *ev, int grabbed) {
   if (!grabbed || g_x11_uinput_mouse_fd < 0)
     return;
   if (ev->type == EV_KEY) {
-    int btn = x11_linux_button_to_mouse_impl(ev->code);
+    int btn = x11_linux_button_to_mouse(ev->code);
     if (btn > 0 && hotkey_mouse_button_bound(btn))
       return;
   }

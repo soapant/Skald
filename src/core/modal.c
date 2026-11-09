@@ -1,7 +1,6 @@
 #include "core/edit_state.h"
 #include <stdbool.h>
 
-
 static EditSelection g_sel;
 
 void EditState_BeginSelection(int cursor) {

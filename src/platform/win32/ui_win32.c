@@ -349,7 +349,6 @@ void UI_Redraw(ListBoxInfo *lb) {
   }
 }
 
-
 PromptState *Platform_GetPromptStateForHWND(HWND hwnd) {
   if (hwnd && IsWindow(hwnd)) {
     PromptState *st = (PromptState *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);

@@ -14,10 +14,12 @@
 #include "core/types/file.h"
 #include "deps/log.h"
 
-HotkeyBinding convert_into_hotkey_binding(
-    char *hotkey_string, void (*on_hotkey_trigger)(void),
-    bool (*optional_condition_for_hotkey)(void),
-    const char *const *optional_blacklistedwindows, bool whitelist, void *user_ud) {
+HotkeyBinding
+convert_into_hotkey_binding(char *hotkey_string,
+                            void (*on_hotkey_trigger)(void),
+                            bool (*optional_condition_for_hotkey)(void),
+                            const char *const *optional_blacklistedwindows,
+                            bool whitelist, void *user_ud) {
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 

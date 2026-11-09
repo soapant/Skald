@@ -832,9 +832,13 @@ bool move_active_window_left_x11(void) { return x11_move_dir(false); }
 
 bool move_active_window_right_x11(void) { return x11_move_dir(true); }
 
-bool move_active_window_up_x11(void) { return x11_activate_neighbor_vertical(false); }
+bool move_active_window_up_x11(void) {
+  return x11_activate_neighbor_vertical(false);
+}
 
-bool move_active_window_down_x11(void) { return x11_activate_neighbor_vertical(true); }
+bool move_active_window_down_x11(void) {
+  return x11_activate_neighbor_vertical(true);
+}
 
 bool focus_window_left_x11(void) { return x11_activate_neighbor(false); }
 
@@ -842,7 +846,9 @@ bool focus_window_right_x11(void) { return x11_activate_neighbor(true); }
 
 bool focus_window_up_x11(void) { return x11_activate_neighbor_vertical(false); }
 
-bool focus_window_down_x11(void) { return x11_activate_neighbor_vertical(true); }
+bool focus_window_down_x11(void) {
+  return x11_activate_neighbor_vertical(true);
+}
 
 static bool x11_is_hidden(Display *dpy, Window w) {
 

@@ -89,15 +89,13 @@ static void hypr_ensure_sig(void) {
   }
   globfree(&g);
 }
-static bool hypr_parse_activewindow_field(const char *field,
-                                            char *buffer,
-                                            int buffer_size) {
+static bool hypr_parse_activewindow_field(const char *field, char *buffer,
+                                          int buffer_size) {
   if (!field || !buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
   hypr_ensure_sig();
-  char *output =
-      Platform_RunTerminalCommand("hyprctl activewindow -j", false);
+  char *output = Platform_RunTerminalCommand("hyprctl activewindow -j", false);
   if (!output || output[0] == '\0') {
     log_error("hypr activewindow empty for field='%s'", field);
     free(output);
@@ -344,14 +342,13 @@ bool move_active_window_to_monitor_hyprland(bool right) {
   return ok;
 }
 
-
 bool focus_window_up_hyprland(void) {
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
     return false;
-  char *out = Platform_RunTerminalCommand(
-      "hyprctl dispatch movefocus u", false);
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch movefocus u", false);
   bool ok = succeded_hypr(out);
   free(out);
   return ok;
@@ -362,8 +359,8 @@ bool focus_window_down_hyprland(void) {
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
     return false;
-  char *out = Platform_RunTerminalCommand(
-      "hyprctl dispatch movefocus d", false);
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch movefocus d", false);
   bool ok = succeded_hypr(out);
   free(out);
   return ok;
@@ -374,8 +371,8 @@ bool move_active_window_up_hyprland(void) {
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
     return false;
-  char *out = Platform_RunTerminalCommand(
-      "hyprctl dispatch movewindow u", false);
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch movewindow u", false);
   bool ok = succeded_hypr(out);
   free(out);
   return ok;
@@ -386,8 +383,8 @@ bool move_active_window_down_hyprland(void) {
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!sig || !sig[0])
     return false;
-  char *out = Platform_RunTerminalCommand(
-      "hyprctl dispatch movewindow d", false);
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch movewindow d", false);
   bool ok = succeded_hypr(out);
   free(out);
   return ok;
@@ -414,15 +411,32 @@ bool inject_key_hyprland(int vk, int down) {
     name = keyname;
   } else {
     switch (vk) {
-      case VK_RETURN: name = "Return"; break;
-      case VK_SPACE: name = "space"; break;
-      case VK_TAB: name = "Tab"; break;
-      case VK_ESCAPE: name = "Escape"; break;
-      case VK_UP: name = "Up"; break;
-      case VK_DOWN: name = "Down"; break;
-      case VK_LEFT: name = "Left"; break;
-      case VK_RIGHT: name = "Right"; break;
-      default: name = NULL;
+    case VK_RETURN:
+      name = "Return";
+      break;
+    case VK_SPACE:
+      name = "space";
+      break;
+    case VK_TAB:
+      name = "Tab";
+      break;
+    case VK_ESCAPE:
+      name = "Escape";
+      break;
+    case VK_UP:
+      name = "Up";
+      break;
+    case VK_DOWN:
+      name = "Down";
+      break;
+    case VK_LEFT:
+      name = "Left";
+      break;
+    case VK_RIGHT:
+      name = "Right";
+      break;
+    default:
+      name = NULL;
     }
   }
   if (!name)
@@ -464,7 +478,6 @@ bool inject_key_hyprland(int vk, int down) {
   close(fd);
   return true;
 }
-
 
 bool minimize_active_window_hyprland(void) {
   hypr_ensure_sig();
@@ -517,7 +530,6 @@ bool move_active_window_left_hyprland(void) {
 bool move_active_window_right_hyprland(void) {
   return move_active_window_to_monitor_hyprland(true);
 }
-
 
 bool get_mouse_pos_hyprland(int *x, int *y) {
   const char *rtd = Env_XdgRuntimeDir();

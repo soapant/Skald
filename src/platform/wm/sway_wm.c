@@ -688,7 +688,6 @@ bool move_active_window_to_monitor_sway(bool right) {
   return ok;
 }
 
-
 bool focus_window_up_sway(void) {
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
@@ -741,7 +740,11 @@ bool move_active_window_down_sway(void) {
   return ok;
 }
 
-bool inject_key_sway(int vk, int down) { (void)vk; (void)down; return false; }
+bool inject_key_sway(int vk, int down) {
+  (void)vk;
+  (void)down;
+  return false;
+}
 
 bool minimize_active_window_sway(void) {
   sway_ensure_sock();

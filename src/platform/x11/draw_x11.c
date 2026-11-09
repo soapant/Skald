@@ -542,8 +542,7 @@ void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long col_text = rgb_to_hex(COLOR_TEXT);
   float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
                              : (float)spec.idx / 10.0f;
-  unsigned long col_rainbow =
-      rgb_to_hex(GetRainbowColor(t, 0.55f, 1.0f));
+  unsigned long col_rainbow = rgb_to_hex(GetRainbowColor(t, 0.55f, 1.0f));
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;

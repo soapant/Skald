@@ -184,7 +184,8 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
           _gev.mods |= HOTKEY_MOD_ALT;
         if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
           _gev.mods |= HOTKEY_MOD_SHIFT;
-        if (GetAsyncKeyState(VK_LWIN) & 0x8000 || GetAsyncKeyState(VK_RWIN) & 0x8000)
+        if (GetAsyncKeyState(VK_LWIN) & 0x8000 ||
+            GetAsyncKeyState(VK_RWIN) & 0x8000)
           _gev.mods |= HOTKEY_MOD_SUPER;
         _gev.down = _isDown;
         _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
@@ -203,8 +204,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
               } else
                 _hint = _vk;
             } else if (_vk >= 'A' && _vk <= 'Z')
-              _hint =
-                  (_gev.mods & HOTKEY_MOD_SHIFT) ? _vk : _vk - 'A' + 'a';
+              _hint = (_gev.mods & HOTKEY_MOD_SHIFT) ? _vk : _vk - 'A' + 'a';
             else if (_vk >= 0x60 && _vk <= 0x69)
               _hint = '0' + (_vk - 0x60);
             else if (_vk == 0x6A)
