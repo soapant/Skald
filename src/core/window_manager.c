@@ -167,12 +167,14 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
 }
 
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
-  EventBus_Trigger(EVENT_PROMPT_OPEN);
   if (!wm || !spec)
     return NULL;
   if (!spec->subwindow && wm->popup_count > 0)
     return NULL;
-  SkaldContext_Get()->window.editbox_placed = false;
+  SkaldContext *ctx = SkaldContext_Get();
+  if (ctx)
+    ctx->window.editbox_placed = false;
+  EventBus_Trigger(EVENT_PROMPT_OPEN);
   char *res = Platform_PromptUser(wm, spec);
   return res;
 }
@@ -189,10 +191,14 @@ void EventBus_Register(PlEvent event, PlEventCallback cb) {
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
     if (g_event_registry[event][i].cb == NULL) {
-      g_event_registry[event][i].cb = cb;
       g_event_registry[event][i].owner[0] = '\0';
       Owner_ResolveForFunc((void *)cb, g_event_registry[event][i].owner,
                            sizeof(g_event_registry[event][i].owner));
+      if (g_event_registry[event][i].owner[0] == '\0') {
+        log_warn("EventBus_Register: cannot resolve owner, dropping callback");
+        return;
+      }
+      g_event_registry[event][i].cb = cb;
       return;
     }
   }

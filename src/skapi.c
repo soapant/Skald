@@ -1028,7 +1028,9 @@ bool sk_paste(char *content) {
 static bool sk_popup_enter(PromptState *state);
 
 char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
-  const char *initial_text = spec ? spec->initial_text : NULL;
+  if (!spec)
+    return NULL;
+  const char *initial_text = spec->initial_text;
   int x = spec->x ? spec->x : 0;
   int y = spec->y ? spec->y : 0;
   int w = spec->w ? spec->w : 600;
@@ -1051,8 +1053,12 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   pspec.y = y;
   pspec.w = w;
   pspec.h = h;
+  {
+    SkaldContext *ctx = SkaldContext_Get();
+    if (ctx)
+      ctx->window.editbox_placed = false;
+  }
   EventBus_Trigger(EVENT_PROMPT_OPEN);
-  SkaldContext_Get()->window.editbox_placed = false;
   char *r = Platform_PromptUser(wm, &pspec);
   if (r && out_index)
     *out_index = true_idx;

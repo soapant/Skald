@@ -223,15 +223,15 @@ static bool binding_active(RemapBinding *b) {
   if (b->src_mods == 0 && b->src_vk_count == 0)
     return false;
   if (b->src_mods & HOTKEY_MOD_CTRL) {
-    if (!(g_phys_vk[VK_LCONTROL] || g_phys_vk[VK_RCONTROL]))
+    if (!(g_phys_vk[VK_LCONTROL] || g_phys_vk[VK_RCONTROL] || g_phys_vk[VK_CONTROL]))
       return false;
   }
   if (b->src_mods & HOTKEY_MOD_ALT) {
-    if (!(g_phys_vk[VK_LMENU] || g_phys_vk[VK_RMENU]))
+    if (!(g_phys_vk[VK_LMENU] || g_phys_vk[VK_RMENU] || g_phys_vk[VK_MENU]))
       return false;
   }
   if (b->src_mods & HOTKEY_MOD_SHIFT) {
-    if (!(g_phys_vk[VK_LSHIFT] || g_phys_vk[VK_RSHIFT]))
+    if (!(g_phys_vk[VK_LSHIFT] || g_phys_vk[VK_RSHIFT] || g_phys_vk[VK_SHIFT]))
       return false;
   }
   if (b->src_mods & HOTKEY_MOD_SUPER) {
