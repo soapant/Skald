@@ -715,6 +715,8 @@ typedef CcEntrySpec SkCcEntrySpec;
 
 #define sk_add_to_cc(...) ski_add_to_cc(&(SkCcEntrySpec){__VA_ARGS__})
 
+#define sk_add_feature(...) sk_add_to_cc(.type = "Feature", __VA_ARGS__)
+
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 
 typedef struct {

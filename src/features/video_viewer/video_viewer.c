@@ -227,6 +227,6 @@ SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = "Alt+Shift+;", .cb = video_cmd_6);
   sk_register_hotkey(.hotkey = "Alt+V", .cb = video_prompt);
 
-  sk_add_to_cc(.display_name = "Video Viewer", .on_action = video_prompt,
-               .icon = "/video.png");
+  sk_add_feature(.display_name = "Video Viewer", .on_action = video_prompt,
+                 .icon = "/video.png");
 }

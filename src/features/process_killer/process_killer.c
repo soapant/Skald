@@ -411,6 +411,6 @@ static void TriggerProcessKiller(void) {
 
 SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = "Alt+U", .cb = TriggerProcessKiller);
-  sk_add_to_cc(.display_name = "Process Killer",
-               .on_action = TriggerProcessKiller, .icon = "/skull.png");
+  sk_add_feature(.display_name = "Process Killer",
+                 .on_action = TriggerProcessKiller, .icon = "/skull.png");
 }

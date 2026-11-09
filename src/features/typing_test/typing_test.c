@@ -1433,6 +1433,6 @@ void TriggerTypingTest(void) {
 SKALD_FEATURE_INIT {
   text = typing_test_get_random_text(typing_test_word_count);
   sk_register_hotkey(.hotkey = "Alt+B", .cb = TriggerTypingTest);
-  sk_add_to_cc(.display_name = "Typing Test", .on_action = TriggerTypingTest,
-               .icon = "/keyboard.png");
+  sk_add_feature(.display_name = "Typing Test", .on_action = TriggerTypingTest,
+                 .icon = "/keyboard.png");
 }

@@ -245,6 +245,6 @@ SKALD_FEATURE_INIT {
   ch_running = true;
   ch_thread = sk_thread_create(ch_sampler, NULL);
   sk_register_hotkey(.hotkey = "Alt+Shift+R", .cb = TriggerClipboardHistory);
-  sk_add_to_cc(.display_name = "Clipboard History",
-               .on_action = TriggerClipboardHistory, .icon = "/clipboard.png");
+  sk_add_feature(.display_name = "Clipboard History",
+                 .on_action = TriggerClipboardHistory, .icon = "/clipboard.png");
 }

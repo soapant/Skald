@@ -16,7 +16,6 @@ typedef struct {
   HotkeyCallback hotkey_callback;
   bool (*should_swallow)(void);
   HotkeyCondition hotkey_condition;
-  bool is_feature_toggle;
   bool hold;
   void *user_ud;
   char owner[512];

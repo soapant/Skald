@@ -12,7 +12,7 @@ void FeatureLoader_ManifestAddDepends(const char *owner_path,
 void FeatureLoader_OwnerFeatureName(const char *owner_path, char *out,
                                     size_t n);
 void FeatureLoader_Reload(const char *name);
-void FeatureLoader_ReloadFrom(const char *name, const char *src_path);
+bool FeatureLoader_ReloadFrom(const char *name, const char *src_path);
 void FeatureLoader_ReloadAll(void);
 bool FeatureLoader_LoadAllFromDir(const char *dir);
 
