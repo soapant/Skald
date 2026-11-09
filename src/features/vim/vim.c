@@ -141,8 +141,8 @@ static void vim_motion(const char *seq, const char *mods, VimMode mode,
     for (int i = 0; i < m->token_count; i++) {
       char tmp[64];
       snprintf(tmp, sizeof(tmp), "%s+%s", m->mods, m->tokens[i]);
-      strncpy(m->tokens[i], tmp, 31);
-      m->tokens[i][31] = '\0';
+      snprintf(m->tokens[i], sizeof(m->tokens[i]), "%.*s",
+               (int)sizeof(m->tokens[i]) - 1, tmp);
     }
   }
 }
@@ -250,8 +250,8 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
   if (vim_key_to_token(key, token, sizeof(token))) {
     if (g_key_buffer_count >= VIM_BUFFER_TOKENS)
       g_key_buffer_count = 0;
-    strncpy(g_key_buffer[g_key_buffer_count], token, 31);
-    g_key_buffer[g_key_buffer_count][31] = '\0';
+    snprintf(g_key_buffer[g_key_buffer_count],
+             sizeof(g_key_buffer[g_key_buffer_count]), "%s", token);
     g_key_buffer_count++;
 
     for (int i = 0; i < g_motion_count; i++) {

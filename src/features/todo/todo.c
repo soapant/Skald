@@ -210,7 +210,7 @@ void AddTodoToFile(const char *text) {
 
   char new_entry[512];
   new_entry[0] = '\0';
-  strncpy(new_entry, clean_text, sizeof(new_entry) - 1);
+  snprintf(new_entry, sizeof(new_entry), "%s", clean_text);
 
   if (tag_count > 0) {
     strcat(new_entry, TODO_ENTRY_DELIMITER);

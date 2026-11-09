@@ -22,8 +22,11 @@ typedef struct {
   int y;
   int w;
   int h;
-  ColorRef color;
+  const char *placeholder;
+  ColorRef color_bg;
+  ColorRef color_text;
   FontHandle font;
+  int fontsize;
 } FlEditSpec;
 
 typedef struct {

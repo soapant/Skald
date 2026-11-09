@@ -50,7 +50,9 @@ typedef struct {
 
   const char *placeholder;
   ColorRef text_color;
+  ColorRef bg_color;
   FontHandle font;
+  int fontsize;
 
   FlEditboxMeasureFn measure;
   void *measure_user;
@@ -81,11 +83,14 @@ typedef struct {
   int ascent;
   int descent;
   unsigned long text_color;
+  unsigned long bg_color;
+  const char *placeholder;
   FontHandle font;
+  int fontsize;
 } EditboxInit;
 
 void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in);
-int Editbox_CaretY(int box_top, int ascent, int descent);
+int Editbox_CaretY(int box_top, int ascent, int descent, int fontsize);
 void Editbox_ResolveSelection(PromptState *state, int text_len,
                               bool prefer_state, int *out_start, int *out_end,
                               bool *out_has);
