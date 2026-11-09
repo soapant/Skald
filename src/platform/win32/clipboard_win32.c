@@ -122,8 +122,13 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
   if (!png || len == 0)
     return 0;
   char tmp[MAX_PATH];
-  GetTempPathA(MAX_PATH, tmp);
-  strcat(tmp, "clip_up.png");
+  DWORD n = GetTempPathA(MAX_PATH, tmp);
+  if (n == 0 || n >= MAX_PATH) {
+    log_error("Platform_CopyImageToClipboard: GetTempPathA failed err=%lu",
+              GetLastError());
+    return 0;
+  }
+  snprintf(tmp + strlen(tmp), MAX_PATH - strlen(tmp), "clip_up.png");
   FILE *f = fopen(tmp, "wb");
   if (!f)
     return 0;

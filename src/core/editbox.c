@@ -145,6 +145,8 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
                                   : 1;
     if (cl < 1)
       cl = 1;
+    if (pos + (size_t)cl > (size_t)text_len)
+      cl = (int)((size_t)text_len - pos);
     char buf[8];
     memcpy(buf, spec->text + pos, cl);
     buf[cl] = '\0';

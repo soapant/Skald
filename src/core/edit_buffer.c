@@ -6,6 +6,8 @@
 
 void EditBufferBackspace(char *buf, size_t *cursor) {
   size_t n = strlen(buf);
+  if (*cursor > n)
+    *cursor = n;
   if (*cursor > 0) {
     memmove(buf + *cursor - 1, buf + *cursor, n - *cursor + 1);
     (*cursor)--;

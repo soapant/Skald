@@ -720,6 +720,10 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
     }
     if (cpp < 1)
       cpp = 1;
+    if (cpp > 15) {
+      free(buf);
+      return NULL;
+    }
     if (ncolors < 1) {
       free(buf);
       return NULL;

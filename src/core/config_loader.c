@@ -175,17 +175,20 @@ static void heapify_config(void) {
     g_heap_background_image = n_bgimg;
   } else
     g_heap_background_image = old_bgimg, old_bgimg = NULL;
-  (void)old_font;
-  (void)old_term;
-  (void)old_shell;
-  (void)old_browser;
-  (void)old_search;
-  (void)old_feat;
-  (void)old_icon;
-  (void)old_hotk;
-  (void)old_reload_hotk;
-  (void)old_theme;
-  (void)old_bgimg;
+  free(old_font);
+  free(old_term);
+  free(old_shell);
+  free(old_browser);
+  free(old_search);
+  free(old_feat);
+  free(old_icon);
+  free(old_hotk);
+  free(old_reload_hotk);
+  free(old_actions_hotk);
+  free(old_reg_hotk);
+  free(old_reg_alias_hotk);
+  free(old_theme);
+  free(old_bgimg);
 }
 static bool config_load_copy(const char *uniq, LibHandle *out) {
   LibHandle h = Platform_LoadLibrary(uniq);
@@ -518,6 +521,12 @@ void Config_Save(void) {
   }
   size_t got = fread(orig, 1, (size_t)fsize, f);
   fclose(f);
+  if (got != (size_t)fsize) {
+    free(orig);
+    log_error("config read short (%zu/%lld), not touching file", got,
+              (long long)fsize);
+    return;
+  }
   orig[got] = '\0';
   char *start = strstr(orig, CONFIG_START_MARK);
   char *end = start ? strstr(start, CONFIG_END_MARK) : NULL;

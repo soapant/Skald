@@ -34,6 +34,7 @@ bool Platform_ExpandPath(const char *template_path, char *out,
           char token[64];
           memcpy(token, p + 1, token_len);
           token[token_len] = '\0';
+          out[0] = '\0';
           return false;
         }
       }
@@ -359,8 +360,10 @@ char *Platform_GetClipboardEntry(void) {
     CloseClipboard();
     return NULL;
   }
-
-  int wideCharLen = wcslen(pClipText);
+  size_t clipBytes = GlobalSize(hClipData);
+  DWORD wideCharBuf = (DWORD)(clipBytes / sizeof(wchar_t));
+  wchar_t *clipEnd = (wchar_t *)memchr(pClipText, 0, wideCharBuf * sizeof(wchar_t));
+  int wideCharLen = clipEnd ? (int)(clipEnd - pClipText) : (int)wideCharBuf;
   int utf8Len = WideCharToMultiByte(CP_UTF8, 0, pClipText, wideCharLen, NULL, 0,
                                     NULL, NULL);
 

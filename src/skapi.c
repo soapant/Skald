@@ -914,6 +914,8 @@ static void sk_hover_popup_ctx_free(void *ud) {
 void ski_message(const SkMessageSpec *spec) {
   if (!MessagesEnabled)
     return;
+  if (!spec)
+    return;
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
   int mw = spec->mw > 0 ? spec->mw : 0;

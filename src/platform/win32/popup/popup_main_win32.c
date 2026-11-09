@@ -677,8 +677,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (SkaldContext_Get()->window.title != NULL &&
         strlen(SkaldContext_Get()->window.title) > 0 && WindowTitleText) {
       wchar_t wtitle[256];
-      MultiByteToWideChar(CP_UTF8, 0, SkaldContext_Get()->window.title, -1,
-                          wtitle, 256);
+      if (MultiByteToWideChar(CP_UTF8, 0, SkaldContext_Get()->window.title, -1,
+                              wtitle, 256) == 0)
+        wtitle[0] = L'\0';
       HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
       HFONT hOldFont =
           hMainFont ? (HFONT)SelectObject(paintDC, hMainFont) : NULL;

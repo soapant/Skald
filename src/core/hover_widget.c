@@ -112,7 +112,8 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
       Platform_Widget_SetNoBg(pw, no_bg);
     }
     Platform_Widget_Invalidate(pw);
-    if (old_release && old_release != release)
+    if (old_release &&
+        (old_release != release || old_release_ud != release_ud))
       old_release(old_release_ud);
     return;
   }
@@ -275,6 +276,8 @@ void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
   void *owner_src = spec.owner_src;
 
   if (!key || !key[0] || w <= 0 || h <= 0) {
+    if (release)
+      release(release_ud);
     return;
   }
   if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, owner_src, x, y, w,

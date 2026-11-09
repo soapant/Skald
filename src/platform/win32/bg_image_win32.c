@@ -115,7 +115,7 @@ static void bg_stat(const char *native, FILETIME *ft, DWORD *size) {
     return;
   }
   *ft = fad.ftLastWriteTime;
-  *size = (fad.nFileSizeHigh << 16) | (fad.nFileSizeLow);
+  *size = fad.nFileSizeLow ^ (fad.nFileSizeHigh * 2654435761u);
 }
 
 static void bg_widen(const char *in, wchar_t *out, int out_max) {

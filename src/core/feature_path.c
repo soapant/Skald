@@ -156,7 +156,7 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
 
   size_t stemlen = strlen(filename);
 
-  char stem[64];
+  char stem[64] = {0};
   if (stemlen > 0 && stemlen < 64) {
     int stemok = 1;
     for (size_t i = 0; i < stemlen; i++) {

@@ -27,6 +27,11 @@ static void cap_add_provides(const char *owner, const char *key) {
 void cap_register_abi(const char *key, unsigned abi, void *fn) {
   if (!key || !key[0] || !fn)
     return;
+  if (strlen(key) >= CAP_KEY_LEN) {
+    log_error("cap key too long (max %d), refusing registration",
+              CAP_KEY_LEN - 1);
+    return;
+  }
 
   char owner[OWNER_PATH_MAX];
   Owner_ResolveForFunc(fn, owner, sizeof(owner));
