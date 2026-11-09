@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "helpers/helpers_fs.h"
 #include <winreg.h>
 #include <ctype.h>
 #include "config_values.h"
@@ -11,39 +12,6 @@
 #include <stdlib.h>
 #include "platform/platform.h"
 #include <time.h>
-
-bool Platform_ExpandPath(const char *template_path, char *out,
-                         size_t out_size) {
-
-  if (template_path == NULL || out_size == 0) {
-    log_error("operation failed, returning error template_path='%s' out='%s' "
-              "out_size=%d",
-              template_path ? template_path : "null", out ? out : "null",
-              out_size);
-    return false;
-  }
-
-  size_t o = 0;
-  const char *p = template_path;
-  while (*p != '\0' && o < out_size - 1) {
-    if (*p == '{') {
-      const char *close = strchr(p + 1, '}');
-      if (close != NULL) {
-        size_t token_len = (size_t)(close - p - 1);
-        if (token_len > 0 && token_len < 64) {
-          char token[64];
-          memcpy(token, p + 1, token_len);
-          token[token_len] = '\0';
-          out[0] = '\0';
-          return false;
-        }
-      }
-    }
-    out[o++] = *p++;
-  }
-  out[o] = '\0';
-  return true;
-}
 
 bool Platform_StringContainsCaseInsensitive(const char *haystack,
                                             const char *needle) {

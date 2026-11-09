@@ -1,4 +1,5 @@
 #include <winsock2.h>
+#include "helpers/helpers_fs.h"
 #include <windows.h>
 #include <winhttp.h>
 #include <iphlpapi.h>
@@ -110,8 +111,7 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
-  extern bool Platform_ExpandPath(const char *t, char *o, size_t s);
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
+  if (!ExpandPath(path, expanded, sizeof(expanded)))
     return false;
   path = expanded;
   char params[2048] = {0};

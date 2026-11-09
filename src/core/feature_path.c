@@ -1,4 +1,5 @@
 #include "core/feature_path.h"
+#include "helpers/helpers_fs.h"
 
 #include <string.h>
 
@@ -182,8 +183,8 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
       char *dot = strrchr(stemdir, '.');
       if (dot)
         *dot = '\0';
-      if (stemdir[0] && Platform_FeatureDataDirExists(stemdir)) {
-        return Platform_GetFeaturePath(stemdir, stem, out, out_len);
+      if (stemdir[0] && FeaturePath_DataDirExists(stemdir)) {
+        return FeaturePath_Get(stemdir, stem, out, out_len);
       }
     }
   } else {
@@ -192,7 +193,7 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
 
   char from_caller[128];
   if (FeaturePath_StemFromCaller(caller, from_caller, sizeof(from_caller))) {
-    return Platform_GetFeaturePath(from_caller, stem, out, out_len);
+    return FeaturePath_Get(from_caller, stem, out, out_len);
   }
 
   const char *feat = SkaldContext_Get()->window.current_feature;
@@ -202,7 +203,7 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
   FeaturePath_SanitizeStem(feat, safe, sizeof(safe));
   if (safe[0] == '\0')
     return false;
-  return Platform_GetFeaturePath(safe, stem, out, out_len);
+  return FeaturePath_Get(safe, stem, out, out_len);
 }
 
 bool FeaturePath_ResolveAssetPath(void *caller, const char *name, char *out,

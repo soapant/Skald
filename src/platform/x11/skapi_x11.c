@@ -1,4 +1,5 @@
 #include <string.h>
+#include "helpers/helpers_fs.h"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -166,7 +167,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[1024];
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
+  if (!ExpandPath(path, expanded, sizeof(expanded)))
     return false;
   log_info("sk_launch expanded='%s'", expanded);
   path = expanded;
@@ -328,7 +329,7 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
+  if (!ExpandPath(path, expanded, sizeof(expanded)))
     return false;
   char cmd[2048];
   if (args && args[0])

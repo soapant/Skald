@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 #include <pthread.h>
+#include "helpers/helpers_fs.h"
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
@@ -887,7 +888,7 @@ static struct {
 static int g_icon_cache_count = 0;
 static bool g_icon_cache_loaded = false;
 static bool icon_cache_path(char *out, size_t n) {
-  return Platform_GetFeaturePath("core", "icon_cache.txt", out, n);
+  return FeaturePath_Get("core", "icon_cache.txt", out, n);
 }
 static void icon_cache_load(void) {
 
@@ -1730,22 +1731,6 @@ void Platform_InitDataFolder() {
   Platform_MkdirIfNotExists(dir_path);
 }
 
-bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
-                             size_t out_len) {
-
-  if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0)
-    return false;
-  char dir_path[512];
-  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/skald",
-           Platform_GetRealHome());
-  Platform_MkdirIfNotExists(dir_path);
-  char feat_path[600];
-  snprintf(feat_path, sizeof(feat_path), "%s/%s", dir_path, feature);
-  Platform_MkdirIfNotExists(feat_path);
-  snprintf(out, out_len, "%s/%s", feat_path, name);
-  return true;
-}
-
 bool Platform_ResolveDataPath(void *caller, const char *name, char *out,
                               size_t out_len) {
 
@@ -1757,17 +1742,6 @@ bool Platform_ResolveAssetPath(void *caller, const char *name, char *out,
                                size_t out_len) {
 
   bool ok = FeaturePath_ResolveAssetPath(caller, name, out, out_len);
-  return ok;
-}
-
-bool Platform_FeatureDataDirExists(const char *stem) {
-  if (!stem || !stem[0])
-    return false;
-  char dir_path[512];
-  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/skald/%s",
-           Platform_GetRealHome(), stem);
-  struct stat st;
-  bool ok = (stat(dir_path, &st) == 0);
   return ok;
 }
 

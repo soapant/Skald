@@ -106,17 +106,6 @@ static DWORD WINAPI rt_thread_func(LPVOID arg) {
   return 0;
 }
 
-typedef struct {
-  volatile LONG done;
-} RtSync;
-
-static void rt_sync_mark(void *ud) {
-
-  RtSync *s = (RtSync *)ud;
-  if (s)
-    InterlockedExchange(&s->done, 1);
-}
-
 void Platform_RenderThread_Wake(void) {
   if (!g_rt_lock_ready) {
     return;
@@ -124,30 +113,6 @@ void Platform_RenderThread_Wake(void) {
   EnterCriticalSection(&g_rt_lock);
   WakeConditionVariable(&g_rt_cond);
   LeaveCriticalSection(&g_rt_lock);
-}
-
-void Platform_RenderThread_Sync(void) {
-  if (!g_rt_thread) {
-    return;
-  }
-  if (Platform_RenderThread_IsCurrentThread()) {
-    return;
-  }
-  RtSync *s = (RtSync *)malloc(sizeof(*s));
-  if (!s)
-    return;
-  s->done = 0;
-  if (!Platform_RenderThread_Post(rt_sync_mark, s)) {
-    free(s);
-    return;
-  }
-  DWORD waited = 0;
-  while (!s->done && waited < 5000) {
-    Sleep(1);
-    waited++;
-  }
-  if (!s->done)
-    log_warn("render thread sync timed out after 5s");
 }
 
 bool Platform_RenderThread_EnsureStarted(int fps) {

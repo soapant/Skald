@@ -205,7 +205,7 @@ void widget_destroy(Widget *widget) {
   Platform_HoverWidgetHide(widget->name);
   Platform_RenderThread_RemoveFrameCallback(widget_render_frame, widget);
   Platform_RenderThread_Post(widget_destroy_window, widget);
-  Platform_RenderThread_Sync();
+  RenderThread_Sync();
 
   int n = 0;
   for (int i = 0; i < g_widget_count; i++) {
@@ -248,7 +248,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
   if (!matched)
     return;
 
-  Platform_RenderThread_Sync();
+  RenderThread_Sync();
 
   int n = 0;
   for (int i = 0; i < g_widget_count; i++) {
