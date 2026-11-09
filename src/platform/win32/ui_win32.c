@@ -352,7 +352,6 @@ void UI_Redraw(ListBoxInfo *lb) {
   }
 }
 
-#include <gdiplus.h>
 
 PromptState *Platform_GetPromptStateForHWND(HWND hwnd) {
   if (hwnd && IsWindow(hwnd)) {

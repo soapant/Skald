@@ -25,7 +25,6 @@
 #include "core/prompt_keys.h"
 #include "core/checkbox.h"
 #include "core/draw_state.h"
-#include "core/listbox_hover.h"
 static bool s_swallow_next_char = false;
 
 static bool s_repaint_queued = false;
