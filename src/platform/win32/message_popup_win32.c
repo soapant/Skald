@@ -522,7 +522,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   void (*render)(void) = spec.render;
   const char *name = spec.name;
 
-  if (!message || !message[0]) {
+  if (!message && !render) {
     return;
   }
   if (maxWidth <= 0)
