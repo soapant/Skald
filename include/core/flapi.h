@@ -394,10 +394,10 @@ bool fl_checkbox_is_hovered(const char *name);
 #define fl_checkbox_clicked fl_checkbox_is_clicked
 
 #define fl_place_button(...)                                                   \
-  fli_place_checkbox(                                                      \
+  fli_place_checkbox(                                                          \
       &(FlCheckboxSpec){.border = true, __VA_ARGS__, .button = true})
 #define fl_place_checkbox(...)                                                 \
-  fli_place_checkbox(                                                      \
+  fli_place_checkbox(                                                          \
       &(FlCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
 
 #define fl_button_is_clicked fl_checkbox_is_checked
@@ -458,7 +458,6 @@ void fl_free_image(void *image);
 #define FL_DRAW_ALPHA_OPAQUE 255
 #define FL_DRAW_ALPHA_TRANSPARENT 128
 
-
 bool fli_draw_rect(const FlRect *spec);
 
 bool fli_draw_line(const FlLine *spec);
@@ -476,7 +475,6 @@ int fl_rand_num_between(int min, int max);
 int fl_get_text_width(const char *text, int fontsize);
 
 int fl_get_text_height(const char *text);
-
 
 char *fl_http_get(const char *url);
 

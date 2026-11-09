@@ -325,8 +325,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_CTLCOLOREDIT: {
     HDC hdc = (HDC)wParam;
-    COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, 1.0f)
-                              : COLOR_TEXT;
+    COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, 1.0f) : COLOR_TEXT;
     if (prompt_win_no_bg()) {
       SetTextColor(hdc, tc);
       SetBkMode(hdc, TRANSPARENT);
@@ -514,7 +513,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         textBuffer = lb->items[pdis->itemID];
       }
 
-      if ((int)pdis->itemID == -1 || (int)pdis->itemID >= (lb ? lb->item_count : 0)) {
+      if ((int)pdis->itemID == -1 ||
+          (int)pdis->itemID >= (lb ? lb->item_count : 0)) {
         return TRUE;
       }
 

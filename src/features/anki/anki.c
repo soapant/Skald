@@ -577,5 +577,4 @@ FLINT_FEATURE_INIT {
   // anki_thread = fl_thread_create(anki_timer_thread, NULL);
   fl_register_hotkey(.hotkey = "Shift+Space", .cb = handle_anki,
                      .should_swallow = should_swallow_anki);
-
 }

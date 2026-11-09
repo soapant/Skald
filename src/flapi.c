@@ -143,9 +143,11 @@ unsigned fl_cap_generation(void) { return cap_generation(); }
 void fli_cap_register(const char *key, void *fn) {
   cap_register_abi(key, CAP_ABI_V1, fn);
 }
-void *fli_cap_resolve(const char *key) { return cap_resolve_abi(key, CAP_ABI_V1); }
+void *fli_cap_resolve(const char *key) {
+  return cap_resolve_abi(key, CAP_ABI_V1);
+}
 void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
-  cap_register_abi(key, abi,(void *)fn);
+  cap_register_abi(key, abi, (void *)fn);
 }
 void *fl_cap_resolve_abi(const char *key, unsigned abi) {
   return cap_resolve_abi(key, abi);
@@ -532,8 +534,8 @@ bool fli_register_hotkey(const FlHotkeySpec *spec) {
 bool fli_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
-  HotkeyBinding binding =
-      convert_into_hotkey_binding((char *)hotkey, NULL, NULL, NULL, false, NULL);
+  HotkeyBinding binding = convert_into_hotkey_binding((char *)hotkey, NULL,
+                                                      NULL, NULL, false, NULL);
   return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
 }
 
@@ -568,9 +570,7 @@ const char *fl_hotkey_for_ud(void *ud) {
   return g_fl_hotkey_cb_string;
 }
 
-void fl_register_deferred_init(void (*cb)(void)) {
-  DeferredInit_Register(cb);
-}
+void fl_register_deferred_init(void (*cb)(void)) { DeferredInit_Register(cb); }
 
 const char *fl_hotkey_for_callback(void (*cb)(void)) {
   const HotkeyBinding *b = hotkey_find_by_callback((HotkeyCallback)cb);
@@ -1101,9 +1101,7 @@ bool fl_toggle_minimized_active(void) {
   return r;
 }
 
-bool fl_reload_config(void) {
-  return Config_Reload();
-}
+bool fl_reload_config(void) { return Config_Reload(); }
 
 static bool fl_popup_enter(PromptState *state) {
   (void)state;
@@ -1694,7 +1692,8 @@ static void *fl_thread_trampoline(void *p) {
   return ret;
 }
 
-static FlThread fl_thread_create_ex(FlThreadFunc fn, void *arg, void *owner_src) {
+static FlThread fl_thread_create_ex(FlThreadFunc fn, void *arg,
+                                    void *owner_src) {
   if (!fn)
     return NULL;
   FlThreadCtx *ctx = malloc(sizeof(*ctx));
@@ -2146,7 +2145,8 @@ void fl_library_register(const char *name, FlLibrary handle) {
     }
   }
   if (g_registry_count < 32) {
-    snprintf(g_library_registry[g_registry_count].name, sizeof(g_library_registry[g_registry_count].name), "%s", name);
+    snprintf(g_library_registry[g_registry_count].name,
+             sizeof(g_library_registry[g_registry_count].name), "%s", name);
     g_library_registry[g_registry_count].handle = handle;
     g_registry_count++;
   }
@@ -2596,8 +2596,10 @@ bool fli_remove_alias(const char *alias) {
       continue;
     }
     if (n != i) {
-      snprintf(g_alias_alias[n], sizeof(g_alias_alias[n]), "%s", g_alias_alias[i]);
-      snprintf(g_alias_target[n], sizeof(g_alias_target[n]), "%s", g_alias_target[i]);
+      snprintf(g_alias_alias[n], sizeof(g_alias_alias[n]), "%s",
+               g_alias_alias[i]);
+      snprintf(g_alias_target[n], sizeof(g_alias_target[n]), "%s",
+               g_alias_target[i]);
     }
     n++;
   }

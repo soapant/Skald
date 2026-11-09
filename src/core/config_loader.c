@@ -83,8 +83,8 @@ static char *g_heap_used_search = NULL, *g_heap_feature_path = NULL,
 static char *g_heap_control_hotkey = NULL,
             *g_heap_reload_features_hotkey = NULL,
             *g_heap_actions_hotkey = NULL, *g_heap_reg_hotk = NULL,
-            *g_heap_reg_alias_hotk = NULL,
-            *g_heap_theme = NULL, *g_heap_background_image = NULL;
+            *g_heap_reg_alias_hotk = NULL, *g_heap_theme = NULL,
+            *g_heap_background_image = NULL;
 static void heapify_config(void) {
   char *n_font = heap_dup(UsedFont), *n_term = heap_dup(UsedTerminal),
        *n_shell = heap_dup(UsedShell);
@@ -102,7 +102,8 @@ static void heapify_config(void) {
        *old_icon = g_heap_icon_path, *old_hotk = g_heap_control_hotkey,
        *old_reload_hotk = g_heap_reload_features_hotkey,
        *old_actions_hotk = g_heap_actions_hotkey,
-       *old_reg_hotk = g_heap_reg_hotk, *old_reg_alias_hotk = g_heap_reg_alias_hotk, *old_theme = g_heap_theme,
+       *old_reg_hotk = g_heap_reg_hotk,
+       *old_reg_alias_hotk = g_heap_reg_alias_hotk, *old_theme = g_heap_theme,
        *old_bgimg = g_heap_background_image;
   if (n_font) {
     UsedFont = n_font;
@@ -289,7 +290,8 @@ static bool config_build_load_store(void) {
     g_cfg_count = 1;
   }
   g_cfg_libs[g_cfg_count].handle = h;
-  snprintf(g_cfg_libs[g_cfg_count].uniq, sizeof(g_cfg_libs[g_cfg_count].uniq), "%s", uniq);
+  snprintf(g_cfg_libs[g_cfg_count].uniq, sizeof(g_cfg_libs[g_cfg_count].uniq),
+           "%s", uniq);
   g_cfg_count++;
   return true;
 }

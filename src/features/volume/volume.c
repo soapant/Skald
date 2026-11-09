@@ -369,9 +369,11 @@ void set_volume_to_100() { set_volume(100); }
 void set_volume_to_0() { set_volume(0); }
 
 FLINT_FEATURE_INIT {
-  fl_add_to_cc(.type = "VolumeControl", .display_name = "Increment Volume By 10",
+  fl_add_to_cc(.type = "VolumeControl",
+               .display_name = "Increment Volume By 10",
                .on_action = increment_volume, .icon = "/volume.png");
-  fl_add_to_cc(.type = "VolumeControl", .display_name = "Decrement Volume By 10",
+  fl_add_to_cc(.type = "VolumeControl",
+               .display_name = "Decrement Volume By 10",
                .on_action = decrement_volume, .icon = "/volume.png");
   fl_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 0%",
                .on_action = set_volume_to_0, .icon = "/volume.png");
@@ -385,5 +387,5 @@ FLINT_FEATURE_INIT {
                .on_action = set_volume_to_100, .icon = "/volume.png");
   fl_add_to_cc(.type = "VolumeControl", .display_name = "Toggle Play/Pause",
                .on_action = toggle_play_pause, .icon = "/volume.png");
-  fl_cap_register("toggle.playpause",toggle_play_pause);
+  fl_cap_register("toggle.playpause", toggle_play_pause);
 }

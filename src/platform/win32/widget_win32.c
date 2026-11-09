@@ -53,7 +53,7 @@ static void layer_fill(PlatformWidget *widget, unsigned int argb) {
 }
 
 static LRESULT CALLBACK WidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
-                                        LPARAM lParam);
+                                   LPARAM lParam);
 static void widget_queue_click(void (*fn)(void));
 static void widget_destroy_on_owner_thread(void *ud);
 
@@ -141,8 +141,8 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
     RECT full = {0, 0, widget->layer_w, widget->layer_h};
     if (!win32_draw_bg_image_slice(widget->layer_dc, &full, widget->layer_w,
                                    widget->layer_h, 0, 0)) {
-      layer_fill(widget, widget_dib_color(widget->has_bg ? widget->bg_color
-                                                         : 0u));
+      layer_fill(widget,
+                 widget_dib_color(widget->has_bg ? widget->bg_color : 0u));
     }
   } else {
     layer_fill(widget, widget_dib_color(bg));
@@ -231,7 +231,7 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
 }
 
 static LRESULT CALLBACK WidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
-                                        LPARAM lParam) {
+                                   LPARAM lParam) {
 
   PlatformWidget *widget =
       (PlatformWidget *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
@@ -420,8 +420,8 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
   if (!on_click)
     exstyle |= WS_EX_TRANSPARENT;
-  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP, x,
-                                 y, w, h, NULL, NULL, hInstance, widget);
+  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP, x, y, w,
+                                 h, NULL, NULL, hInstance, widget);
   if (!widget->hwnd) {
     log_warn("widget: CreateWindowExA failed err=%lu", GetLastError());
     free(widget);

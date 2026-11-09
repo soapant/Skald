@@ -84,8 +84,7 @@ static void pk_screenshot_copy_screen(void) {
     snprintf(cmd, sizeof(cmd), "%s%s/grim -g \"$(%s/slurp)\" -t png %s", env,
              shot_working_dir(), shot_working_dir(), path);
   } else {
-    snprintf(cmd, sizeof(cmd), "%s%s/scrot %s", env, shot_working_dir(),
-             path);
+    snprintf(cmd, sizeof(cmd), "%s%s/scrot %s", env, shot_working_dir(), path);
   }
 
   free(fl_run_terminal_command_blocking(cmd));

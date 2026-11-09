@@ -132,7 +132,8 @@ FontHandle s_font;
 
 void Checkbox_Draw(const CheckboxSpec *spec) {
   if (spec->render) {
-    PlRect _r = {.x = spec->x, .y = spec->y,
+    PlRect _r = {.x = spec->x,
+                 .y = spec->y,
                  .w = spec->w > 0 ? spec->w : (spec->button ? 100 : 16),
                  .h = spec->h > 0 ? spec->h : (spec->button ? 24 : 16),
                  .color = COLOR_TEXT};

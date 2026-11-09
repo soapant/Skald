@@ -84,7 +84,8 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
 
 char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   FlintContext *_ctx = FlintContext_Get();
-  if (_ctx) _ctx->window.subwindow.created = false;
+  if (_ctx)
+    _ctx->window.subwindow.created = false;
   log_info("Platform_PromptUser started wm=%p spec=%p", wm, spec);
   if (!wm || !spec)
     return NULL;
@@ -161,7 +162,6 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   FlintContext *_c = FlintContext_Get();
   return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 }
-
 
 void Platform_ProcessPendingSubwindow(void) {
   FlintContext *_c = FlintContext_Get();

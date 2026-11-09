@@ -163,8 +163,8 @@ static void hover_widget_dispatch(void *ud) {
   if (r->op == HOVER_OP_HIDE) {
     hover_widget_hide_apply(r->key);
   } else {
-    hover_widget_apply(r->key, r->render, r->ud, r->x, r->y, r->w, r->h,
-                       r->fps, r->no_bg, r->bg_hex, r->release, r->release_ud);
+    hover_widget_apply(r->key, r->render, r->ud, r->x, r->y, r->w, r->h, r->fps,
+                       r->no_bg, r->bg_hex, r->release, r->release_ud);
   }
   free(r);
 }
@@ -235,8 +235,8 @@ void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
   if (!key || !key[0] || w <= 0 || h <= 0) {
     return;
   }
-  if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, x, y, w, h, fps,
-                         no_bg, bg_hex, release, release_ud)) {
+  if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, x, y, w, h, fps, no_bg,
+                         bg_hex, release, release_ud)) {
     if (release)
       release(release_ud);
   }

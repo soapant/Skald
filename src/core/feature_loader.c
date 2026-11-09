@@ -154,7 +154,8 @@ static void sweep_retired_libs(void) {
       cap_purge_owner(g_retired[i].owner, NULL);
       hotkey_purge_owner(g_retired[i].owner, NULL);
       snippet_purge_owner(g_retired[i].owner, NULL);
-      log_info("retired lib %s left loaded (never unloaded)", g_retired[i].owner);
+      log_info("retired lib %s left loaded (never unloaded)",
+               g_retired[i].owner);
     }
   }
   g_retired_count = n;

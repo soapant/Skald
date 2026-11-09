@@ -170,9 +170,7 @@ static const CcEntry *cc_find(const char *label);
 static void cc_stage(const CcEntry *e, int mode);
 static void cc_run_pending(void);
 
-static void *cc_hotkey_ud(int slot) {
-  return (void *)(uintptr_t)(slot + 1);
-}
+static void *cc_hotkey_ud(int slot) { return (void *)(uintptr_t)(slot + 1); }
 
 static int cc_hotkey_slot_from_ud(void *ud) {
   int slot = (int)(uintptr_t)ud;
@@ -208,7 +206,8 @@ static int cc_hotkey_slot_for(const CcEntry *e) {
   const char *name = e->label;
   int slot = -1;
   for (int i = 0; i < CC_HK_SLOTS; i++)
-    if (g_cc_hotkey_targets[i][0] && strcmp(g_cc_hotkey_targets[i], name) == 0) {
+    if (g_cc_hotkey_targets[i][0] &&
+        strcmp(g_cc_hotkey_targets[i], name) == 0) {
       slot = i;
       break;
     }
@@ -221,7 +220,8 @@ static int cc_hotkey_slot_for(const CcEntry *e) {
   }
   if (slot < 0)
     return -1;
-  ccx_strcpy_trunc(g_cc_hotkey_targets[slot], sizeof(g_cc_hotkey_targets[slot]), name);
+  ccx_strcpy_trunc(g_cc_hotkey_targets[slot], sizeof(g_cc_hotkey_targets[slot]),
+                   name);
   return slot;
 }
 
@@ -717,8 +717,10 @@ static void cc_app_map_put(const char *name, const char *path) {
     unsigned slot = (i + n) % CC_APP_MAP_SLOTS;
     if (g_cc_app_map_key[slot][0] == '\0' ||
         strcmp(g_cc_app_map_key[slot], name) == 0) {
-      ccx_strcpy_trunc(g_cc_app_map_key[slot], sizeof(g_cc_app_map_key[slot]), name);
-      ccx_strcpy_trunc(g_cc_app_map_path[slot], sizeof(g_cc_app_map_path[slot]), path);
+      ccx_strcpy_trunc(g_cc_app_map_key[slot], sizeof(g_cc_app_map_key[slot]),
+                       name);
+      ccx_strcpy_trunc(g_cc_app_map_path[slot], sizeof(g_cc_app_map_path[slot]),
+                       path);
       return;
     }
   }
@@ -1320,7 +1322,7 @@ static bool cc_calc_build_label(const char *filter) {
   if (!has_digit)
     return false;
   char value[128] = {0};
-  if (!cc_calc_result_for(value,trimmed, sizeof(value)))
+  if (!cc_calc_result_for(value, trimmed, sizeof(value)))
     return false;
   snprintf(g_cc_calc_label, sizeof(g_cc_calc_label), "%s = %s", trimmed, value);
   return true;
@@ -1384,8 +1386,9 @@ static unsigned long cc_type_color(void) {
 }
 
 static void cc_subwindow_refresh(PromptState *state) {
-  const char *items[] = {"Register Hotkey","Register Alias"};
-  fl_populate_listbox(state->lb, state->eb->filter, (const char **)items, ARRAY_LEN(items));
+  const char *items[] = {"Register Hotkey", "Register Alias"};
+  fl_populate_listbox(state->lb, state->eb->filter, (const char **)items,
+                      ARRAY_LEN(items));
 }
 
 static int g_cc_width = 0, g_cc_height = 0;
@@ -1401,14 +1404,18 @@ static void cc_subwindow_render(PromptState *state) {
   FlListItemCtx ctx;
 
   while (fl_listbox_next(&ctx)) {
-    fl_draw_text(.x = 14, .y = ctx.y + 4, .text = ctx.text, .align = "LEFT",.fontsize=12);
+    fl_draw_text(.x = 14, .y = ctx.y + 4, .text = ctx.text, .align = "LEFT",
+                 .fontsize = 12);
     const char *hk = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
-    FlRect r = fl_text_bounds(.text=hk,.fontsize=10,.x=g_actions_width - 6,.y=ctx.y+6,.align="RIGHT");
-    r.filled=true;
-    r.radius=4;
-    r.color=FL_DARK_GRAY;
+    FlRect r =
+        fl_text_bounds(.text = hk, .fontsize = 10, .x = g_actions_width - 6,
+                       .y = ctx.y + 6, .align = "RIGHT");
+    r.filled = true;
+    r.radius = 4;
+    r.color = FL_DARK_GRAY;
     fli_draw_rect(&r);
-    fl_draw_text(.x = g_actions_width - 6, .y = ctx.y + 6, .text = hk, .align = "RIGHT", .fontsize = 10,.color=FL_GRAY);
+    fl_draw_text(.x = g_actions_width - 6, .y = ctx.y + 6, .text = hk,
+                 .align = "RIGHT", .fontsize = 10, .color = FL_GRAY);
   }
   fl_listbox_end();
 }
@@ -1427,8 +1434,8 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   int slot = cc_hotkey_slot_for(e);
   if (slot >= 0) {
     fl_register_hotkey(.hotkey = hotkey,
-                                 .cb = (void (*)(void))cc_entry_hotkey_cb,
-                                 .ud = cc_hotkey_ud(slot));
+                       .cb = (void (*)(void))cc_entry_hotkey_cb,
+                       .ud = cc_hotkey_ud(slot));
     char line[320];
     snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
     fl_append_to_file(CC_HOTKEY_FILE, line);
@@ -1436,111 +1443,117 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   }
 }
 
-
 static const struct {
   int vk;
   const char *name;
 } kCapturableKeys[] = {
-    {VK_OEM_1, ";"}, {VK_OEM_2, "/"}, {VK_OEM_3, "`"}, {VK_OEM_4, "["},
-    {VK_OEM_5, "\\"}, {VK_OEM_6, "]"}, {VK_OEM_7, "'"}, {VK_OEM_COMMA, ","},
-    {VK_OEM_PERIOD, "."}, {VK_OEM_MINUS, "-"}, {VK_OEM_PLUS, "="},
+    {VK_OEM_1, ";"},     {VK_OEM_2, "/"},     {VK_OEM_3, "`"},
+    {VK_OEM_4, "["},     {VK_OEM_5, "\\"},    {VK_OEM_6, "]"},
+    {VK_OEM_7, "'"},     {VK_OEM_COMMA, ","}, {VK_OEM_PERIOD, "."},
+    {VK_OEM_MINUS, "-"}, {VK_OEM_PLUS, "="},
 };
 
 static void cc_subwindow_reg_render(PromptState *state) {
-    char buf[128] = {0};
-    int pos = 0;
-    int rem = (int)sizeof(buf);
-    fl_disable_global_hotkeys();
+  char buf[128] = {0};
+  int pos = 0;
+  int rem = (int)sizeof(buf);
+  fl_disable_global_hotkeys();
 
-    if (fl_ctrl_pressed()) {
-        int written = snprintf(buf + pos, rem, "Ctrl+");
-        if (written > 0 && written < rem) {
-            pos += written;
-            rem -= written;
-        }
+  if (fl_ctrl_pressed()) {
+    int written = snprintf(buf + pos, rem, "Ctrl+");
+    if (written > 0 && written < rem) {
+      pos += written;
+      rem -= written;
     }
-    if (fl_alt_pressed()) {
-        int written = snprintf(buf + pos, rem, "Alt+");
-        if (written > 0 && written < rem) {
-            pos += written;
-            rem -= written;
-        }
+  }
+  if (fl_alt_pressed()) {
+    int written = snprintf(buf + pos, rem, "Alt+");
+    if (written > 0 && written < rem) {
+      pos += written;
+      rem -= written;
     }
-    if (fl_shift_pressed()) {
-        int written = snprintf(buf + pos, rem, "Shift+");
-        if (written > 0 && written < rem) {
-            pos += written;
-            rem -= written;
-        }
+  }
+  if (fl_shift_pressed()) {
+    int written = snprintf(buf + pos, rem, "Shift+");
+    if (written > 0 && written < rem) {
+      pos += written;
+      rem -= written;
     }
+  }
 
-    int k = 0;
-    char kname[8] = {0};
-    for (int c = 'A'; c <= 'Z' && !k; c++) {
-        if (fl_is_key_pressed(c)) {
-            k = c;
-            snprintf(kname, sizeof(kname), "%c", c);
-        }
+  int k = 0;
+  char kname[8] = {0};
+  for (int c = 'A'; c <= 'Z' && !k; c++) {
+    if (fl_is_key_pressed(c)) {
+      k = c;
+      snprintf(kname, sizeof(kname), "%c", c);
     }
-    for (int c = '0'; c <= '9' && !k; c++) {
-        if (fl_is_key_pressed(c)) {
-            k = c;
-            snprintf(kname, sizeof(kname), "%c", c);
-        }
+  }
+  for (int c = '0'; c <= '9' && !k; c++) {
+    if (fl_is_key_pressed(c)) {
+      k = c;
+      snprintf(kname, sizeof(kname), "%c", c);
     }
-    for (size_t i = 0; i < ARRAY_LEN(kCapturableKeys) && !k; i++) {
-        if (fl_is_key_pressed(kCapturableKeys[i].vk)) {
-            k = kCapturableKeys[i].vk;
-            snprintf(kname, sizeof(kname), "%s", kCapturableKeys[i].name);
-        }
+  }
+  for (size_t i = 0; i < ARRAY_LEN(kCapturableKeys) && !k; i++) {
+    if (fl_is_key_pressed(kCapturableKeys[i].vk)) {
+      k = kCapturableKeys[i].vk;
+      snprintf(kname, sizeof(kname), "%s", kCapturableKeys[i].name);
     }
-    if (k && rem > 1) {
-        snprintf(buf + pos, rem, "%s", kname);
-    }
-    bool has_mod = fl_ctrl_pressed() || fl_alt_pressed() ||
-                   fl_shift_pressed() || fl_super_pressed();
+  }
+  if (k && rem > 1) {
+    snprintf(buf + pos, rem, "%s", kname);
+  }
+  bool has_mod = fl_ctrl_pressed() || fl_alt_pressed() || fl_shift_pressed() ||
+                 fl_super_pressed();
 
-    size_t len = strlen(buf);
-    if (len > 0 && buf[len - 1] == '+') {
-        buf[len - 1] = '\0';
-    }
+  size_t len = strlen(buf);
+  if (len > 0 && buf[len - 1] == '+') {
+    buf[len - 1] = '\0';
+  }
 
-    if (buf[0] && k != 0 && k != reg_last_key && has_mod) {
-        cc_register_selected_hotkey(current_reg_action, buf);
-        ccx_strcpy_trunc(current_hotkey_reg, sizeof(current_hotkey_reg), buf);
-        reg_flashing = true;
-        reg_flash_timer = fl_start_timer();
-        fl_enable_global_hotkeys();
-    }
-    if (k == 0) reg_last_key = 0; else reg_last_key = k;
-    if (reg_flashing && fl_end_timer(reg_flash_timer) >= 1.0)
-        reg_flashing = false;
-
-    unsigned long rect_color = reg_flashing ? FL_GRAY : FL_DARK_GRAY;
-    unsigned long text_color = reg_flashing ? FL_DARK_GREEN : FL_GREY;
-
-    fl_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence",.fontsize=15,.color=FL_GRAY,.align="LEFT");
-    fl_draw_rect(.x = 10, .y = state->height/2,.h=40,.w=180,.radius=6,.color=rect_color,.filled=true);
-    if (buf[0] || reg_flashing) {
-        fl_draw_text(.x = 17, .y = state->height/2, .text = buf[0] ? buf : current_hotkey_reg,.fontsize=22,.color=text_color,.align="LEFT");
-    }
-}
-
-static void cc_subwindow_reg_onclose() {
+  if (buf[0] && k != 0 && k != reg_last_key && has_mod) {
+    cc_register_selected_hotkey(current_reg_action, buf);
+    ccx_strcpy_trunc(current_hotkey_reg, sizeof(current_hotkey_reg), buf);
+    reg_flashing = true;
+    reg_flash_timer = fl_start_timer();
     fl_enable_global_hotkeys();
+  }
+  if (k == 0)
+    reg_last_key = 0;
+  else
+    reg_last_key = k;
+  if (reg_flashing && fl_end_timer(reg_flash_timer) >= 1.0)
+    reg_flashing = false;
+
+  unsigned long rect_color = reg_flashing ? FL_GRAY : FL_DARK_GRAY;
+  unsigned long text_color = reg_flashing ? FL_DARK_GREEN : FL_GREY;
+
+  fl_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
+               .color = FL_GRAY, .align = "LEFT");
+  fl_draw_rect(.x = 10, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
+               .color = rect_color, .filled = true);
+  if (buf[0] || reg_flashing) {
+    fl_draw_text(.x = 17, .y = state->height / 2,
+                 .text = buf[0] ? buf : current_hotkey_reg, .fontsize = 22,
+                 .color = text_color, .align = "LEFT");
+  }
 }
+
+static void cc_subwindow_reg_onclose() { fl_enable_global_hotkeys(); }
 
 static char g_alias_target[256];
 
 static void cc_alias_reg_render(PromptState *state) {
   char label[284];
   snprintf(label, sizeof(label), "Alias For: %s", g_alias_target);
-  fl_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 11,
-               .color = FL_GRAY, .align = "LEFT", .pad = 0);
+  fl_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 11, .color = FL_GRAY,
+               .align = "LEFT", .pad = 0);
 
-  fl_place_editbox(.x = (state->width - 160) / 2, .y = (state->height - 30) / 2 + 6,
-                   .w = 160, .h = 26, .placeholder = "alias name",.caret_height=14,.caret_width=1,.caret_y=47,
-                   .fontsize = 14);
+  fl_place_editbox(.x = (state->width - 160) / 2,
+                   .y = (state->height - 30) / 2 + 6, .w = 160, .h = 26,
+                   .placeholder = "alias name", .caret_height = 14,
+                   .caret_width = 1, .caret_y = 47, .fontsize = 14);
 }
 
 static bool cc_alias_reg_enter(PromptState *state) {
@@ -1548,37 +1561,43 @@ static bool cc_alias_reg_enter(PromptState *state) {
   char alias[256];
   ccx_strcpy_trunc(alias, sizeof(alias), input ? input : "");
   char *p = alias;
-  while (*p == ' ') p++;
+  while (*p == ' ')
+    p++;
   char *end = alias + strlen(alias) - 1;
-  while (end > alias && *end == ' ') { *end = '\0'; end--; }
+  while (end > alias && *end == ' ') {
+    *end = '\0';
+    end--;
+  }
   if (alias[0])
     fl_add_alias(.alias = alias, .target = g_alias_target);
   return true;
 }
 
-static void cc_alias_reg_onclose() {
-    fl_enable_global_hotkeys();
-}
+static void cc_alias_reg_onclose() { fl_enable_global_hotkeys(); }
 static bool cc_reg_select(int type) {
   switch (type) {
-    case 0: {
-      ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action), g_cc_main_selected);
-      fl_disable_global_hotkeys();
-      fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
-               .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
-               .render = cc_subwindow_reg_render,.on_close=cc_subwindow_reg_onclose);
-      break;
-    }
-    case 1: {
-      ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action), g_cc_main_selected);
-      ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target), g_cc_main_selected);
-      fl_disable_global_hotkeys();
-      fl_subwindow(.title = "Alias Reg", .x = (g_cc_width / 2) + 240,
-               .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
-               .render = cc_alias_reg_render, .enter = cc_alias_reg_enter,
-               .on_close = cc_alias_reg_onclose);
-      break;
-    }
+  case 0: {
+    ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action),
+                     g_cc_main_selected);
+    fl_disable_global_hotkeys();
+    fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
+                 .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
+                 .render = cc_subwindow_reg_render,
+                 .on_close = cc_subwindow_reg_onclose);
+    break;
+  }
+  case 1: {
+    ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action),
+                     g_cc_main_selected);
+    ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target),
+                     g_cc_main_selected);
+    fl_disable_global_hotkeys();
+    fl_subwindow(.title = "Alias Reg", .x = (g_cc_width / 2) + 240,
+                 .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
+                 .render = cc_alias_reg_render, .enter = cc_alias_reg_enter,
+                 .on_close = cc_alias_reg_onclose);
+    break;
+  }
   }
   return true;
 }
@@ -1595,14 +1614,19 @@ static size_t g_persisted_count;
 
 static void cc_load_persisted_hotkeys(void) {
   FlStringList lines = fl_load_file_list(CC_HOTKEY_FILE);
-  for (size_t li = 0; li < lines.count && g_persisted_count < CC_PERSIST_MAX; li++) {
+  for (size_t li = 0; li < lines.count && g_persisted_count < CC_PERSIST_MAX;
+       li++) {
     char copy[512];
-    ccx_strcpy_trunc(copy, sizeof(copy), lines.items[li] ? lines.items[li] : "");
+    ccx_strcpy_trunc(copy, sizeof(copy),
+                     lines.items[li] ? lines.items[li] : "");
     char *tab = strchr(copy, '\t');
-    if (!tab) continue;
+    if (!tab)
+      continue;
     *tab = '\0';
-    ccx_strcpy_trunc(g_persisted_hotkeys[g_persisted_count], sizeof(g_persisted_hotkeys[0]), copy);
-    ccx_strcpy_trunc(g_persisted_actions[g_persisted_count], sizeof(g_persisted_actions[0]), tab + 1);
+    ccx_strcpy_trunc(g_persisted_hotkeys[g_persisted_count],
+                     sizeof(g_persisted_hotkeys[0]), copy);
+    ccx_strcpy_trunc(g_persisted_actions[g_persisted_count],
+                     sizeof(g_persisted_actions[0]), tab + 1);
     g_persisted_count++;
   }
   fl_free_file_list(&lines);
@@ -1624,7 +1648,8 @@ static void cc_register_persisted_hotkeys(void) {
 static void cc_open_actions_subwindow(void) {
   fl_subwindow(.title = "Actions", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) - 50, .w = 200, .h = 300,
-               .render = cc_subwindow_render, .refresh = cc_subwindow_refresh,.enter=cc_subwindow_enter);
+               .render = cc_subwindow_render, .refresh = cc_subwindow_refresh,
+               .enter = cc_subwindow_enter);
 }
 
 static void cc_on_actions_render(FlRect rect) {
@@ -1647,9 +1672,11 @@ static void cc_on_actions_render(FlRect rect) {
 static void cc_render(PromptState *state) {
   if (state->lb && UI_IsListBoxSelected(state->lb)) {
     const char *cur = ListBoxInfo_Row(state->lb, state->lb->selected_index);
-    if (cur) ccx_strcpy_trunc(g_cc_main_selected, sizeof(g_cc_main_selected), cur);
+    if (cur)
+      ccx_strcpy_trunc(g_cc_main_selected, sizeof(g_cc_main_selected), cur);
   } else if (state->eb) {
-    ccx_strcpy_trunc(g_cc_main_selected, sizeof(g_cc_main_selected), state->eb->filter);
+    ccx_strcpy_trunc(g_cc_main_selected, sizeof(g_cc_main_selected),
+                     state->eb->filter);
   }
   g_cc_width = state->width;
   g_cc_height = state->height;
@@ -1663,13 +1690,13 @@ static void cc_render(PromptState *state) {
   if (!fl_listbox_begin(&spec))
     return;
   if (fl_hotkey_down(fl_hotkey_from_string(ActionsHotkey))) {
-      cc_open_actions_subwindow();
+    cc_open_actions_subwindow();
   }
   if (fl_hotkey_down(fl_hotkey_from_string(RegHotkey))) {
-      cc_reg_select(0);
+    cc_reg_select(0);
   }
   if (fl_hotkey_down(fl_hotkey_from_string(RegAliasHotkey))) {
-      cc_reg_select(1);
+    cc_reg_select(1);
   }
   int type_x = state->width - CC_ITEM_TEXT_X;
   FlListItemCtx ctx;
@@ -1679,15 +1706,15 @@ static void cc_render(PromptState *state) {
     int icon_size = FontSize;
     int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
     if (!row_icon && g_cc_calc_label[0] &&
-      strcmp(ctx.text, g_cc_calc_label) == 0) {
+        strcmp(ctx.text, g_cc_calc_label) == 0) {
       row_icon = CC_CALC_ROW_ICON;
     }
     if (row_icon) {
       int icon_x = ctx.x + CC_ITEM_TEXT_X;
       int icon_y = ctx.y + (ctx.h - icon_size) / 2;
-        fl_draw_image(.path = row_icon, .x = icon_x, .y = icon_y,
-                      .w = icon_size, .h = icon_size);
-      }
+      fl_draw_image(.path = row_icon, .x = icon_x, .y = icon_y, .w = icon_size,
+                    .h = icon_size);
+    }
 
     fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = ctx.text,
                  .align = "LEFT", .pad = 0);
@@ -1712,15 +1739,16 @@ static void cc_render(PromptState *state) {
         int type_w = fl_get_text_width(right_text, FontSize);
         int hk_fs = FontSize - 6;
         int hk_x = type_x - type_w - CC_TYPE_GAP;
-        FlRect r = fl_text_bounds(.text=hk,.fontsize=hk_fs,.x=hk_x - 4,.y=ctx.y+10,.align="RIGHT");
-        r.filled=true;
-        r.radius=4;
-        r.color=FL_DARK_GRAY;
+        FlRect r = fl_text_bounds(.text = hk, .fontsize = hk_fs, .x = hk_x - 4,
+                                  .y = ctx.y + 10, .align = "RIGHT");
+        r.filled = true;
+        r.radius = 4;
+        r.color = FL_DARK_GRAY;
         fli_draw_rect(&r);
 
-        fl_draw_text(.x = hk_x - 4,
-                     .y = ctx.y + 10, .text = hk,
-                     .align = "RIGHT", .pad = 0, .color = FL_GRAY,.fontsize=hk_fs);
+        fl_draw_text(.x = hk_x - 4, .y = ctx.y + 10, .text = hk,
+                     .align = "RIGHT", .pad = 0, .color = FL_GRAY,
+                     .fontsize = hk_fs);
       }
     }
     if (plain_type) {
@@ -1813,7 +1841,10 @@ static void cc_tab(PromptState *state) {
     e->on_tab();
 }
 
-static void reload_features_and_config(void) { fl_reload_all_features(); fl_reload_config(); }
+static void reload_features_and_config(void) {
+  fl_reload_all_features();
+  fl_reload_config();
+}
 
 static void TriggerControl(void) {
   cc_build_xdg_paths();

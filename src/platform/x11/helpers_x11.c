@@ -323,7 +323,6 @@ int Platform_GetTextLineHeight(int fontsize) {
   return r;
 }
 
-
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
                            int y, XftFont *xf, const char *s, int n, int px) {
   if (!xf || !xd || !s || n <= 0)
@@ -875,10 +874,9 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
     DecodedCacheSlot *slot = &g_decoded_cache[i];
     if (slot->dst_w == dst_w && slot->dst_h == dst_h &&
         strcmp(slot->path, path) == 0) {
-      bool fresh = !has_stat ||
-                   (slot->has_stat &&
-                    slot->st.st_mtime == st.st_mtime &&
-                    slot->st.st_size == st.st_size);
+      bool fresh =
+          !has_stat || (slot->has_stat && slot->st.st_mtime == st.st_mtime &&
+                        slot->st.st_size == st.st_size);
       if (!fresh)
         continue;
       size_t bytes = (size_t)dst_w * dst_h * 4;
@@ -916,8 +914,8 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
       nsvgDelete(image);
       return NULL;
     }
-    nsvgRasterize(rast, image, 0, 0, (float)dst_w / image->width, argb,
-                  dst_w, dst_h, dst_w * 4);
+    nsvgRasterize(rast, image, 0, 0, (float)dst_w / image->width, argb, dst_w,
+                  dst_h, dst_w * 4);
     for (int i = 0; i < dst_w * dst_h; i++) {
       unsigned char r = argb[i * 4 + 0];
       unsigned char g = argb[i * 4 + 1];
@@ -1712,12 +1710,13 @@ Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
   Window win;
   if (niri_is_active()) {
     log_error("niri override_redirect prompt w=%d h=%d", w, h);
-    win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "colored", "colored",
-                                  KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask,
-                                  true);
+    win = x11_create_window_ex_or(
+        dpy, x, y, w, h, bg, "colored", "colored",
+        KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask, true);
   } else {
     win = x11_create_window_ex(dpy, x, y, w, h, bg, "colored", "colored",
-                               KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask);
+                               KeyPressMask | KeyReleaseMask | ExposureMask |
+                                   FocusChangeMask);
     Window focus_win = None;
     int revert_to = 0;
     XGetInputFocus(dpy, &focus_win, &revert_to);
