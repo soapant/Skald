@@ -24,6 +24,8 @@
 #include "core/draw_state.h"
 #include "platform/win32/common_ui_win32.h"
 #include "helpers/helpers_ui.h"
+#include "core/thread_registry.h"
+#include "helpers/helpers_owner.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -445,6 +447,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
 
 typedef struct {
   void (*callback)(void);
+  char owner[OWNER_PATH_MAX];
 } TimerPayload;
 
 VOID CALLBACK TimerTrampoline(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
@@ -454,6 +457,7 @@ VOID CALLBACK TimerTrampoline(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
     if (payload->callback) {
       payload->callback();
     }
+    ThreadRegistry_Finish(payload);
     free(payload);
   }
 }
@@ -468,11 +472,16 @@ void sk_run_after_time_platform(double seconds, void (*callback)(void)) {
     return;
   }
   payload->callback = callback;
+  payload->owner[0] = '\0';
+  Owner_ResolveForFunc((void *)callback, payload->owner,
+                       sizeof(payload->owner));
+  ThreadRegistry_Add(payload, payload->owner);
 
   DWORD delay_ms = (DWORD)(seconds * 1000.0);
   HANDLE hTimer = NULL;
   if (!CreateTimerQueueTimer(&hTimer, NULL, TimerTrampoline, payload, delay_ms,
                              0, WT_EXECUTEONLYONCE)) {
+    ThreadRegistry_Finish(payload);
     free(payload);
     return;
   }
