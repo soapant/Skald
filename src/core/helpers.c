@@ -1,7 +1,5 @@
 #include <stdbool.h>
 
-#include "core/context.h"
-#include "config.h"
 #include "helpers/helpers_ui.h"
 #include "platform/platform.h"
 #include "core/window_manager.h"

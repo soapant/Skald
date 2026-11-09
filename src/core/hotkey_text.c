@@ -1,6 +1,5 @@
 #include "core/hotkey_text.h"
 
-#include <stdio.h>
 #include <sys/time.h>
 
 #include "core/types/keys.h"

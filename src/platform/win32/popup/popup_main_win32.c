@@ -17,13 +17,11 @@
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/common_ui_win32.h"
 #include "platform/win32/bg_image_win32.h"
-#include "platform/input_state.h"
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
 
-#include "core/timer.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "core/checkbox.h"

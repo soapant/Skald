@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <windows.h>
 
-#include "core/timer.h"
 LibHandle Platform_LoadLibrary(const char *path) {
   if (!path)
     return NULL;

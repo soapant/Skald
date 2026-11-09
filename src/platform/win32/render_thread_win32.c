@@ -2,7 +2,6 @@
 #include "platform/render_thread.h"
 #include "deps/log.h"
 
-#include "core/timer.h"
 #define RT_MAX_CALLBACKS 16
 #define RT_MAX_PENDING 16
 #define RT_IDLE_SLEEP_MS 20

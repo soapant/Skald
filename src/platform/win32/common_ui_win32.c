@@ -3,19 +3,12 @@
 #include "core/types/color.h"
 #include "core/types/window.h"
 #include "deps/log.h"
-#include "config.h"
 #include "core/prompt_geometry.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
-#include "platform/ui.h"
 #include "platform/win32/common_ui_win32.h"
-#include "platform/win32/subclasses_win32.h"
-#include "core/timer.h"
-#include <math.h>
 #include <windows.h>
 #include <commctrl.h>
-#include <shlwapi.h>
-#include <string.h>
 
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
   if (!hwnd || !IsWindow(hwnd))

@@ -1,6 +1,5 @@
 #include "config_values.h"
 #include "core/types/prompt.h"
-#include "core/types/window.h"
 #include "platform/wm_platform.h"
 #include "platform/platform.h"
 #include "platform/input_state.h"
@@ -8,22 +7,13 @@
 #include "core/remap_manager.h"
 #include "deps/log.h"
 #include <windows.h>
-#include <string.h>
-#include <stdlib.h>
-#include "config.h"
 #include "core/prompt_geometry.h"
 #include "core/context.h"
-#include "core/timer.h"
 #include "core/listbox_hover.h"
-#include "helpers/helpers_ui.h"
-#include "platform/ui.h"
-#include "platform/win32/common_ui_win32.h"
-#include "platform/win32/popup_helpers_win32.h"
 
 extern int WindowManager_RunWin32(WindowManager *wm);
 extern void WindowManager_QuitWin32(WindowManager *wm);
 extern void WindowManager_ProcessEventsWin32(WindowManager *wm);
-#include "platform/win32/win32_state.h"
 
 bool Platform_WM_InitDisplay(WindowManager *wm) {
   (void)wm;

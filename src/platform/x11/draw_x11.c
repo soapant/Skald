@@ -5,11 +5,9 @@
 #include <X11/X.h>
 #include <fontconfig/fontconfig.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdint.h>
 
 #include "platform/draw.h"
-#include "platform/x11/display_x11.h"
 #include "platform/platform.h"
 #include "platform/ui.h"
 #include "core/prompt_geometry.h"
@@ -20,7 +18,6 @@
 #include "platform/x11/drawing_x11.h"
 #include "config_values.h"
 #include "core/context.h"
-#include "core/types.h"
 #include "core/types/window.h"
 
 void Platform_SetTransparentWindow(bool on) {

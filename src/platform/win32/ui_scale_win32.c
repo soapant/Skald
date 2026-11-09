@@ -1,8 +1,6 @@
 #include "config_values.h"
 #include "platform/platform.h"
-#include "config.h"
 
-#include "core/timer.h"
 float Platform_GetUIScale(void) { return 1.0f; }
 
 void Platform_ApplyUIScale(void) {}

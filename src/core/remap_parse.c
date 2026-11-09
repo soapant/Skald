@@ -4,7 +4,6 @@
 
 #include <ctype.h>
 #include <string.h>
-#include <strings.h>
 
 static int remap_vk_from_token(const char *tok) {
   if (!tok || !tok[0])

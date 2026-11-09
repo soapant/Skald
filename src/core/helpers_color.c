@@ -1,7 +1,5 @@
 #include "helpers/helpers_ui.h"
 #include "config_values.h"
-#include "core/types.h"
-#include "core/types/color.h"
 
 unsigned long rgb_to_hex(unsigned long win_color) {
 #if defined(__linux__)

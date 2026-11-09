@@ -1,10 +1,7 @@
 #include "platform/win32/bg_image_win32.h"
-#include "config.h"
 #include "core/types.h"
 #include "config_values.h"
 #include "platform/platform.h"
-#include "deps/log.h"
-#include "core/timer.h"
 #include <windows.h>
 #include <shellapi.h>
 #include <gdiplus/gdiplus.h>

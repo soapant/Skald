@@ -8,7 +8,6 @@
 #include "platform/input_state.h"
 #include <windows.h>
 
-#include "core/timer.h"
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;

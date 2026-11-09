@@ -7,20 +7,14 @@
 #include "core/editbox.h"
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
-#include "platform/win32/common_ui_win32.h"
-#include "config.h"
-#include "platform/ui.h"
-#include "core/context.h"
 #include "helpers/helpers_ui.h"
-#include "core/timer.h"
 #include "core/draw_state.h"
 #include "deps/log.h"
 #include <stdio.h>
 #include <string.h>
 #include <objidl.h>
-#include <gdiplus/gdiplus.h>
-#include <shlwapi.h>
 #include <shellapi.h>
+#include <gdiplus/gdiplus.h>
 
 #define WIN32_SIZE_FONT_SLOTS 8
 static __thread HFONT g_sizeFonts[WIN32_SIZE_FONT_SLOTS] = {NULL};
