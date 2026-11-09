@@ -95,7 +95,6 @@ static const ThemeEntry g_themes[] = {
     {"mono-warm", RGB(45, 40, 38), RGB(226, 216, 206), RGB(180, 172, 165),
      RGB(32, 29, 27), RGB(196, 106, 96), RGB(210, 180, 140)}};
 
-
 static bool theme_name_eq(const char *a, const char *b) {
   if (!a || !b)
     return false;

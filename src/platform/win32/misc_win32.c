@@ -12,7 +12,6 @@
 #include "platform/platform.h"
 #include <time.h>
 
-
 bool Platform_ExpandPath(const char *template_path, char *out,
                          size_t out_size) {
 

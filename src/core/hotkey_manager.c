@@ -21,9 +21,7 @@ static int g_hotkey_count = 0;
 static int g_hotkey_capacity = 0;
 static bool g_hotkeys_suspended = false;
 
-void hotkey_set_suspended(bool suspended) {
-  g_hotkeys_suspended = suspended;
-}
+void hotkey_set_suspended(bool suspended) { g_hotkeys_suspended = suspended; }
 
 #define HOTKEY_PENDING_MAX 64
 static HotkeyCallback g_pending_q[HOTKEY_PENDING_MAX];
@@ -245,7 +243,8 @@ bool hotkey_mouse_button_bound(int btn) {
       for (int j = 0; j < b->blacklist_count; j++) {
         if (b->blacklist[j][0] == '\0')
           continue;
-        if (title && Platform_StringContainsCaseInsensitive(title, b->blacklist[j])) {
+        if (title &&
+            Platform_StringContainsCaseInsensitive(title, b->blacklist[j])) {
           ok = true;
           break;
         }
@@ -259,7 +258,8 @@ bool hotkey_mouse_button_bound(int btn) {
         for (int j = 0; j < b->blacklist_count; j++) {
           if (b->blacklist[j][0] == '\0')
             continue;
-          if (title && Platform_StringContainsCaseInsensitive(title, b->blacklist[j])) {
+          if (title &&
+              Platform_StringContainsCaseInsensitive(title, b->blacklist[j])) {
             blocked = true;
             break;
           }

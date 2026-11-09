@@ -285,9 +285,8 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
   bool has_filter = filter && filter[0] != '\0';
-  bool same_filter =
-      has_filter &&
-      strncmp(lb->last_filter, filter, sizeof(lb->last_filter)) == 0;
+  bool same_filter = has_filter && strncmp(lb->last_filter, filter,
+                                           sizeof(lb->last_filter)) == 0;
   if (total_matches != 0 && has_filter && !same_filter) {
     UI_SetSelection(lb, 0);
   } else if (lb->selected_index >= total_matches) {

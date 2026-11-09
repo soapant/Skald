@@ -470,8 +470,9 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
 
 void Platform_GetItemColors(PlGetItemColorsSpec spec) {
   unsigned long col_text = COLOR_TEXT;
-  float t = (spec.count > 1) ? (float)(spec.idx % spec.count) / (float)(spec.count - 1)
-                              : 0;
+  float t = (spec.count > 1)
+                ? (float)(spec.idx % spec.count) / (float)(spec.count - 1)
+                : 0;
   unsigned long col_rainbow = GetRainbowColor(t, 0.85f, 1.0f);
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
@@ -612,7 +613,6 @@ int Platform_GetTextLineHeight(int fontsize) {
   Platform_DestroyFont(font);
   return tm.tmHeight > 0 ? (int)tm.tmHeight : fontsize;
 }
-
 
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int t = win32_thickness_px(spec.thickness);

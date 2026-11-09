@@ -876,7 +876,6 @@ static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
   return TRUE;
 }
 
-
 static BOOL CALLBACK win32_focus_enum_up(HWND hwnd, LPARAM lp) {
   win32_focus_search *s = (win32_focus_search *)lp;
   if (!s)
@@ -1151,7 +1150,6 @@ bool Platform_FocusWindowRight(void) {
     return false;
   return win32_activate_hwnd(s.best);
 }
-
 
 bool Platform_FocusWindowUp(void) {
   HWND fg = win32_foreground_target();
@@ -1515,8 +1513,7 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
       return TRUE;
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "WidgetClass") == 0)
+        strcmp(cls, "SearchPopupClass") == 0 || strcmp(cls, "WidgetClass") == 0)
       return TRUE;
     if (strcmp(cls, "ApplicationFrameWindow") == 0) {
       int cloaked = 0;

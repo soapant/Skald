@@ -152,7 +152,8 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 
 char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
   FlintContext *_ctx = FlintContext_Get();
-  if (_ctx) _ctx->window.subwindow.created = false;
+  if (_ctx)
+    _ctx->window.subwindow.created = false;
   log_info("Platform_PromptUser started wm=%p spec=%p", wm, spec);
   if (!wm || !spec)
     return NULL;
