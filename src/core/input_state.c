@@ -1,17 +1,19 @@
 #include "platform/input_state.h"
-
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "platform/platform.h"
 #include "core/types/keys.h"
 #include "core/timer.h"
+#include "helpers/helpers_owner.h"
 
 static bool g_down[256] = {0};
 static bool g_pressed[256] = {0};
 static bool g_released[256] = {0};
 static void (*g_cb)(int vk, bool down, int mods, void *ud) = NULL;
 static void *g_ud = NULL;
+static char g_cb_owner[OWNER_PATH_MAX] = {0};
 static char g_char_queue[32] = {0};
 static int g_char_head = 0, g_char_tail = 0;
 
@@ -90,6 +92,17 @@ void Platform_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud),
                              void *ud) {
   g_cb = cb;
   g_ud = ud;
+  g_cb_owner[0] = '\0';
+  if (cb)
+    Owner_ResolveForFunc((void *)cb, g_cb_owner, sizeof(g_cb_owner));
+}
+
+void Platform_KeyCallback_PurgeOwner(const char *path_a, const char *path_b) {
+  if (g_cb && Owner_ModuleMatches(g_cb_owner, path_a, path_b)) {
+    g_cb = NULL;
+    g_ud = NULL;
+    g_cb_owner[0] = '\0';
+  }
 }
 
 void Platform_InputState_Clear(void) {

@@ -17,6 +17,7 @@ bool Platform_WasKeyPressed(int vk);
 bool Platform_WasKeyReleased(int vk);
 void Platform_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud),
                              void *ud);
+void Platform_KeyCallback_PurgeOwner(const char *path_a, const char *path_b);
 void Platform_InputState_Clear(void);
 void Platform_InputState_ClearQueue(void);
 void Platform_InputState_InhibitMods(void);
