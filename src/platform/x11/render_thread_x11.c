@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 #include <X11/Xlib.h>
 #include <stdbool.h>
 
@@ -145,16 +146,19 @@ void Platform_RenderThread_Sync(void) {
   if (Platform_RenderThread_IsCurrentThread()) {
     return;
   }
-  RtSync s;
-  s.done = 0;
-  if (!Platform_RenderThread_Post(rt_sync_mark, &s)) {
+  RtSync *s = (RtSync *)malloc(sizeof(*s));
+  if (!s)
+    return;
+  s->done = 0;
+  if (!Platform_RenderThread_Post(rt_sync_mark, s)) {
+    free(s);
     return;
   }
   struct timespec deadline;
   clock_gettime(CLOCK_REALTIME, &deadline);
   deadline.tv_sec += 5;
   for (;;) {
-    if (s.done)
+    if (s->done)
       return;
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
