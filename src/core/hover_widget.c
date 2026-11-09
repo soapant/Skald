@@ -187,7 +187,7 @@ void Platform_HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
   if (!any) {
     return;
   }
-  Platform_RenderThread_Sync();
+  RenderThread_Sync();
   for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
     if (g_hover_widgets[i].dead) {
       hover_widget_destroy_slot(&g_hover_widgets[i]);

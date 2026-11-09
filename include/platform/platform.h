@@ -93,7 +93,6 @@ typedef bool (*PlatformKeyInterceptorFn)(const PopupKeyEvent *key);
 void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn);
 bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key);
 void Platform_KeyInterceptor_PurgeOwner(const char *path_a, const char *path_b);
-bool Platform_ExpandPath(const char *template_path, char *out, size_t out_size);
 bool Platform_StringContainsCaseInsensitive(const char *haystack,
                                             const char *needle);
 bool Platform_StringStartsWithCaseInsensitive(const char *str,
@@ -142,9 +141,6 @@ int Platform_InitializeTrayIcon(void);
 void Platform_PrewarmBackgroundPixmap(void);
 void Platform_InitUI(void);
 void Platform_InitDataFolder(void);
-bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
-                             size_t out_len);
-bool Platform_FeatureDataDirExists(const char *stem);
 bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
                                size_t out_len);
 bool Platform_ResolveDataPath(void *caller, const char *name, char *out,

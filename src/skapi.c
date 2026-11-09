@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "helpers/helpers_fs.h"
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -93,7 +94,7 @@ bool sk_get_all_files_from_dir(const char *dir_path,
     return false;
 
   char expanded_dir[MAX_PATH];
-  if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir)))
+  if (!ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir)))
     return false;
   dir_path = expanded_dir;
   return FileWalk_AllFilesFromDir(dir_path, list_of_allowed_extensions,
@@ -108,7 +109,7 @@ char *sk_search_file_in_dir(const char *directory, const char *search_string,
     return NULL;
 
   char expanded_dir[MAX_PATH];
-  if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir)))
+  if (!ExpandPath(directory, expanded_dir, sizeof(expanded_dir)))
     return NULL;
   directory = expanded_dir;
   return sk_search_file_in_dir_platform(directory, search_string, output_path);
@@ -119,7 +120,7 @@ bool sk_launch_with_args(const char *path, const char *args) {
     return false;
   }
   char expanded[MAX_PATH];
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {
+  if (!ExpandPath(path, expanded, sizeof(expanded))) {
     return false;
   }
   bool r = sk_launch_with_args_platform(expanded, args);
@@ -130,7 +131,7 @@ bool sk_launch_with_args_as_admin(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
+  if (!ExpandPath(path, expanded, sizeof(expanded)))
     return false;
   return sk_launch_with_args_as_admin_platform(expanded, args);
 }
@@ -301,7 +302,7 @@ char *sk_read_file_to_string(const char *path, size_t *out_len) {
   if (!path)
     return NULL;
   char expanded[MAX_PATH];
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
+  if (!ExpandPath(path, expanded, sizeof(expanded)))
     strncpy(expanded, path, sizeof(expanded) - 1);
   FILE *f = fopen(expanded, "rb");
   if (!f)
@@ -345,7 +346,7 @@ bool sk_write_string_to_file(const char *path, const char *content) {
     path = full;
   } else {
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
+    if (!ExpandPath(path, expanded, sizeof(expanded)))
       strncpy(expanded, path, sizeof(expanded) - 1);
     path = expanded;
   }
@@ -361,7 +362,7 @@ bool sk_file_exists(const char *path) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
+  if (!ExpandPath(path, expanded, sizeof(expanded)))
     strncpy(expanded, path, sizeof(expanded) - 1);
   FILE *f = fopen(expanded, "rb");
   if (f) {
@@ -441,7 +442,7 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
   if (!path || !out_name)
     return false;
   char expanded[MAX_PATH];
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
+  if (!ExpandPath(path, expanded, sizeof(expanded)))
     strncpy(expanded, path, sizeof(expanded) - 1);
   FILE *f = fopen(expanded, "r");
   if (!f)
@@ -758,7 +759,7 @@ bool sk_launch_terminal_at_path(char *path, char *args) {
     return false;
   }
   char expanded[MAX_PATH];
-  if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {
+  if (!ExpandPath(path, expanded, sizeof(expanded))) {
     return false;
   }
   r = Platform_LaunchTerminalAtPath(expanded, args);
