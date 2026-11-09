@@ -1,6 +1,5 @@
 #include "core/listbox_hover.h"
 
-#include <stdlib.h>
 #include <stdint.h>
 
 #include "core/context.h"

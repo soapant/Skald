@@ -8,11 +8,9 @@
 #include "deps/log.h"
 #include "platform/lib.h"
 #include "platform/platform.h"
-#include "core/timer.h"
 #include "core/window_manager.h"
 #include "core/checkbox.h"
 #include "config_values.h"
-#include "core/types/misc.h"
 #include "helpers/helpers_hotkey.h"
 #include "core/thread_registry.h"
 

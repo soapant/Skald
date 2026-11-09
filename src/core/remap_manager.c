@@ -6,8 +6,6 @@
 #include "deps/log.h"
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <strings.h>
 
 #define MAX_REMAPS 64
 #define MAX_SRC_VKS 8

@@ -12,7 +12,6 @@
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
 #include "platform/input_state.h"
-#include "core/types.h"
 #include "deps/stb_ds.h"
 
 static WindowManager *g_window_manager = NULL;

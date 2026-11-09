@@ -7,7 +7,6 @@
 #include "platform/platform.h"
 #include "platform/widget.h"
 #include "platform/render_thread.h"
-#include "platform/draw.h"
 
 #define HOVER_WIDGET_MAX 8
 

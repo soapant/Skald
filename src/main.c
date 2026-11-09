@@ -6,7 +6,6 @@
 #include <time.h>
 #include <stddef.h>
 
-#include "core/context.h"
 #include "deps/log.h"
 #include "config.h"
 #include "platform/platform.h"
