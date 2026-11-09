@@ -34,11 +34,5 @@ void ConfigApply(void) {
   CloseOnLossOfFocus = false;
   Theme = "rose-pine";
   BackgroundImage = "";
-  COLOR_BG = RGB(25, 23, 36);
-  COLOR_TEXT = RGB(255, 255, 255);
-  COLOR_ALTERNATE = RGB(57, 255, 20);
-  COLOR_SELECTED_TEXT = RGB(19, 21, 23);
-  COLOR_CURSOR = RGB(82, 79, 103);
-  COLOR_BORDER = RGB(88, 86, 114);
 }
 // </skald-config-generated>
