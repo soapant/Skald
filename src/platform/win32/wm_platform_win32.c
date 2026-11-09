@@ -83,14 +83,14 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
 }
 
 char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
-  FlintContext *_ctx = FlintContext_Get();
+  SkaldContext *_ctx = SkaldContext_Get();
   if (_ctx)
     _ctx->window.subwindow.created = false;
   log_info("Platform_PromptUser started wm=%p spec=%p", wm, spec);
   if (!wm || !spec)
     return NULL;
   if (spec->subwindow) {
-    FlintContext *_c = FlintContext_Get();
+    SkaldContext *_c = SkaldContext_Get();
     if (_c && _c->window.subwindow.in_enter) {
       _c->window.subwindow.pending = true;
       _c->window.subwindow.pending_subwindow = *spec;
@@ -154,17 +154,17 @@ char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
       }
     }
     if (_still_open) {
-      FlintContext *_ctx2 = FlintContext_Get();
+      SkaldContext *_ctx2 = SkaldContext_Get();
       if (!_ctx2 || !_ctx2->window.subwindow.created)
         WindowManager_PopPopup(wm);
     }
   }
-  FlintContext *_c = FlintContext_Get();
+  SkaldContext *_c = SkaldContext_Get();
   return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 }
 
 void Platform_ProcessPendingSubwindow(void) {
-  FlintContext *_c = FlintContext_Get();
+  SkaldContext *_c = SkaldContext_Get();
   if (!_c || !_c->window.subwindow.pending)
     return;
   _c->window.subwindow.pending = false;

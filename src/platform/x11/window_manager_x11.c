@@ -146,8 +146,8 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   if (top->vtable && top->vtable->on_key)
     top->vtable->on_key(top, &key);
 
-  if (FlintContext_Get()->window.selection_complete) {
-    FlintContext_Get()->window.selection_complete = false;
+  if (SkaldContext_Get()->window.selection_complete) {
+    SkaldContext_Get()->window.selection_complete = false;
     WindowManager_PopPopup(wm);
   }
 

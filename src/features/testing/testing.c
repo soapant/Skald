@@ -1,11 +1,11 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <stdio.h>
 
 void Testing() {
-  FlTimer p = fl_profile_start();
-  fl_profile_end(p);
+  SkTimer p = sk_profile_start();
+  sk_profile_end(p);
 }
 
-FLINT_FEATURE_INIT {
-  fl_register_hotkey(.hotkey = "Alt+Shift+V", .cb = Testing);
+SKALD_FEATURE_INIT {
+  sk_register_hotkey(.hotkey = "Alt+Shift+V", .cb = Testing);
 }

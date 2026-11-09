@@ -22,7 +22,7 @@ void Prompt_Refresh(PromptState *state) {
   if (!state) {
     return;
   }
-  FlintContext *ctx = FlintContext_Get();
+  SkaldContext *ctx = SkaldContext_Get();
   if (ctx && ctx->window.prompt_callbacks.refresh) {
     ctx->window.prompt_callbacks.refresh(state);
   }
@@ -68,7 +68,7 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
 }
 
 void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
-  FlintContext *ctx = FlintContext_Get();
+  SkaldContext *ctx = SkaldContext_Get();
   if (ctx)
     ctx->window.subwindow.in_enter = true;
   const char *sel = NULL;
@@ -183,7 +183,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   bool shift = key->shift;
   bool alt = key->alt;
 
-  FlintContext *ctx = FlintContext_Get();
+  SkaldContext *ctx = SkaldContext_Get();
   bool invoke_interceptor = false;
   invoke_interceptor = ctx->window.editbox_placed;
 

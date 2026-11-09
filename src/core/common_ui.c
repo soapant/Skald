@@ -191,7 +191,7 @@ Populate_ItemMatches(const char *search_text, const char *clean_filter,
   char norm_search[1024];
   NormalizeForMatch(search_text, norm_search, sizeof(norm_search));
   if (Platform_StringStartsWithCaseInsensitive(
-          FlintContext_Get()->window.current_feature, "center")) {
+          SkaldContext_Get()->window.current_feature, "center")) {
     return FuzzyMatchWithTypo(norm_search, clean_filter);
   }
   return Platform_StringContainsCaseInsensitive(norm_search, clean_filter);

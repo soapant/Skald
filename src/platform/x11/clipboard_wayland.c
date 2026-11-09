@@ -1,6 +1,6 @@
 #include "core/timer.h"
 #include <time.h>
-#if defined(FLINT_WAYLAND_SESSION)
+#if defined(SKALD_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
 #include "platform/x11/env_helpers_x11.h"
 #include "deps/log.h"

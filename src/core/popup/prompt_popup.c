@@ -26,7 +26,7 @@ static void PromptPopup_OnShow(Popup *self) {
 
   PromptPopupData *data = (PromptPopupData *)self;
   WindowManager *wm = (WindowManager *)self->manager;
-  FlintContext *ctx = FlintContext_Get();
+  SkaldContext *ctx = SkaldContext_Get();
   ctx->window.selection_complete = false;
   ctx->window.output_buffer[0] = '\0';
   data->prev_hPopupWnd = ctx->window.hPopupWnd;
@@ -47,7 +47,7 @@ static void PromptPopup_OnShow(Popup *self) {
   data->state->eb->cursor = 0;
   data->state->width = data->w;
   data->state->height = data->h;
-  const char *title = data->spec.title ? data->spec.title : "Flint";
+  const char *title = data->spec.title ? data->spec.title : "Skald";
   data->state->window_title = (char *)title;
   data->state->eb->filter[0] = '\0';
   if (data->spec.initial_text && data->spec.initial_text[0]) {
@@ -74,7 +74,7 @@ static void PromptPopup_OnShow(Popup *self) {
   data->state->no_bg = data->spec.no_bg;
   data->state->bg_color = data->spec.bg_color;
 
-  FlintContext *ctx2 = FlintContext_Get();
+  SkaldContext *ctx2 = SkaldContext_Get();
   if (!wm->ctx)
     wm->ctx = ctx2;
   log_info("BEFORE SAVE: ctx=%p enter=%p ctrl_enter=%p", (void *)ctx2,
@@ -110,7 +110,7 @@ static void PromptPopup_OnShow(Popup *self) {
       data->spec.tab ? data->spec.tab : data->saved_callbacks.tab;
   ctx2->window.prompt_callbacks.render =
       data->spec.render ? data->spec.render : data->saved_callbacks.render;
-  data->state->callbacks = &FlintContext_Get()->window.prompt_callbacks;
+  data->state->callbacks = &SkaldContext_Get()->window.prompt_callbacks;
   ctx2->window.prompt_callbacks.edit =
       data->spec.edit ? data->spec.edit : data->saved_callbacks.edit;
   ctx2->window.prompt_callbacks.filter =
@@ -133,7 +133,7 @@ static void PromptPopup_OnHide(Popup *self) {
   if (data->state) {
     if (data->state->lb)
       data->state->lb->selected_index = 0;
-    FlintContext *_c3 = FlintContext_Get();
+    SkaldContext *_c3 = SkaldContext_Get();
     _c3->window.current_feature = NULL;
     _c3->window.prompt_callbacks = data->saved_callbacks;
     _c3->window.hPopupWnd = data->prev_hPopupWnd;
@@ -257,7 +257,7 @@ Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec) {
     if (top)
       have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
     if (!have_origin) {
-      WindowHandle hMain = FlintContext_Get()->window.hPopupWnd;
+      WindowHandle hMain = SkaldContext_Get()->window.hPopupWnd;
       have_origin = Platform_WindowToRoot(hMain, &wx, &wy);
     }
     if (have_origin) {

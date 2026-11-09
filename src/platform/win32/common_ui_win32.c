@@ -171,7 +171,7 @@ void win32_fill_rounded_rect(HDC hdc, RECT *rc, COLORREF col, int radius) {
 }
 
 void UpdateTextCaret(void) {
-  HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND popup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (popup && IsWindow(popup))
     InvalidateRect(popup, NULL, FALSE);
 }

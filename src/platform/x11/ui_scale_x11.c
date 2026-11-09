@@ -12,9 +12,9 @@ static int base_font_size = 0;
 
 static float ui_scale_detect(void) {
 
-  const char *ov = getenv("FLINT_SCALE");
+  const char *ov = getenv("SKALD_SCALE");
   if (!ov || !ov[0])
-    ov = getenv("FLINT_UISCALE");
+    ov = getenv("SKALD_UISCALE");
   if (ov && ov[0]) {
     float v = (float)atof(ov);
     if (v >= 1.0f && v <= 3.0f)

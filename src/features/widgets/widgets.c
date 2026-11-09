@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
-#include "core/flapi.h"
+#include "core/skapi.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -180,42 +180,42 @@ static void draw_usage(const char *label, unsigned long long used,
   } else {
     char used_str[32];
     char total_str[32];
-    fl_format_bytes(used, used_str, sizeof(used_str));
-    fl_format_bytes(total, total_str, sizeof(total_str));
+    sk_format_bytes(used, used_str, sizeof(used_str));
+    sk_format_bytes(total, total_str, sizeof(total_str));
     snprintf(buf, sizeof(buf), "%s%s/%s", label, used_str, total_str);
   }
-  fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
+  sk_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                .color = usage_color(used, total), .align = "LEFT");
 }
 
-static void widgets_disk_usage_render(FlWidgetState *state) {
+static void widgets_disk_usage_render(SkWidgetState *state) {
   unsigned long long used = 0, total = 0;
   read_disk(&used, &total);
   draw_usage("Disk Usage:", used, total);
 }
 
-static void widgets_memory_usage_render(FlWidgetState *state) {
+static void widgets_memory_usage_render(SkWidgetState *state) {
   unsigned long long used = 0, total = 0;
   read_mem(&used, &total);
   draw_usage("Mem Usage:", used, total);
 }
 
-static void widgets_cpu_usage_render(FlWidgetState *state) {
+static void widgets_cpu_usage_render(SkWidgetState *state) {
   unsigned long long used = 0, total = 0;
   read_cpu(&used, &total);
   char buf[128];
   if (total == 0) {
     snprintf(buf, sizeof(buf), "CPU Usage:??");
-    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
+    sk_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = RGB(255, 255, 255), .align = "LEFT");
     return;
   }
   snprintf(buf, sizeof(buf), "CPU Usage:%3llu%%", (used * 100ULL) / total);
-  fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
+  sk_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                .color = usage_color(used, total), .align = "LEFT");
 }
 
-static void widgets_date_and_time_render(FlWidgetState *state) {
+static void widgets_date_and_time_render(SkWidgetState *state) {
   char buf[128];
   time_t t = time(NULL);
   struct tm *tm = localtime(&t);
@@ -224,7 +224,7 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
 
   strftime(buf, sizeof(buf), "%A %B %d %H:%M:%S", tm);
 
-  fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
+  sk_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                .color = RGB(220, 220, 220), .align = "LEFT");
 }
 
@@ -232,32 +232,32 @@ static void net_usage_tick(void);
 
 #define NET_ICON_SIZE 16
 
-static void widgets_internet_render(FlWidgetState *state) {
+static void widgets_internet_render(SkWidgetState *state) {
   net_usage_tick();
 
-  FlNetStatus status = fl_net_status();
+  SkNetStatus status = sk_net_status();
   const char *icon = NULL;
   switch (status) {
-  case FL_NET_OFFLINE:
+  case SK_NET_OFFLINE:
     icon = "/net_offline.png";
     break;
-  case FL_NET_ETHERNET:
+  case SK_NET_ETHERNET:
     icon = "/net_ethernet.png";
     break;
-  case FL_NET_WIFI:
+  case SK_NET_WIFI:
     icon = "/net_wifi.png";
     break;
   }
   if (!icon)
     return;
-  fl_draw_image(.path = icon, .x = 40, .y = 2, .w = NET_ICON_SIZE,
+  sk_draw_image(.path = icon, .x = 40, .y = 2, .w = NET_ICON_SIZE,
                 .h = NET_ICON_SIZE);
 }
 
-static FlWidget *g_disk = NULL;
-static FlWidget *g_mem = NULL;
-static FlWidget *g_cpu = NULL;
-static FlWidget *g_internet = NULL;
+static SkWidget *g_disk = NULL;
+static SkWidget *g_mem = NULL;
+static SkWidget *g_cpu = NULL;
+static SkWidget *g_internet = NULL;
 
 #define NET_POPUP_W 300
 #define NET_POPUP_H 100
@@ -277,8 +277,8 @@ typedef struct {
 } NetUsage;
 
 static NetUsage g_net;
-static FlTimer g_net_last_save;
-static FlTimer g_net_last_sample;
+static SkTimer g_net_last_save;
+static SkTimer g_net_last_sample;
 static bool g_net_persist_loaded;
 
 static void net_localtime(time_t t, struct tm *out) {
@@ -312,7 +312,7 @@ static void net_usage_load(void) {
   g_net.month_index = tm_now.tm_mon;
 
   char body[512];
-  if (fl_load_file(NET_STATE_FILE, body, sizeof(body)) <= 0)
+  if (sk_load_file(NET_STATE_FILE, body, sizeof(body)) <= 0)
     return;
 
   char *cursor = body;
@@ -338,12 +338,12 @@ static void net_usage_save(void) {
   char line[128];
   snprintf(line, sizeof(line), "%d %d %llu %llu", g_net.today_day,
            g_net.month_index, g_net.today_bytes, g_net.month_bytes);
-  fl_write_string_to_file(NET_STATE_FILE, line);
+  sk_write_string_to_file(NET_STATE_FILE, line);
 }
 
 static void net_usage_sample(void) {
-  unsigned long long total_rx = fl_net_rx_bytes();
-  double elapsed = fl_end_timer(g_net_last_sample);
+  unsigned long long total_rx = sk_net_rx_bytes();
+  double elapsed = sk_end_timer(g_net_last_sample);
   if (g_net.have_baseline && total_rx >= g_net.last_total_rx &&
       elapsed > 0.05) {
     double delta = (double)(total_rx - g_net.last_total_rx);
@@ -360,17 +360,17 @@ static void net_usage_sample(void) {
   }
   g_net.last_total_rx = total_rx;
   g_net.have_baseline = 1;
-  g_net_last_sample = fl_start_timer();
+  g_net_last_sample = sk_start_timer();
 }
 
 #define NET_SAMPLE_INTERVAL_MS 500.0
 
-static FlTimer g_net_last_tick;
+static SkTimer g_net_last_tick;
 
 static void net_usage_tick(void) {
-  if (fl_end_timer(g_net_last_tick) < NET_SAMPLE_INTERVAL_MS)
+  if (sk_end_timer(g_net_last_tick) < NET_SAMPLE_INTERVAL_MS)
     return;
-  g_net_last_tick = fl_start_timer();
+  g_net_last_tick = sk_start_timer();
   net_usage_load();
 
   time_t now = time(NULL);
@@ -379,26 +379,26 @@ static void net_usage_tick(void) {
   net_usage_reset_day(&g_net, tm_now.tm_mday, tm_now.tm_mon);
   net_usage_sample();
 
-  if (fl_end_timer(g_net_last_save) >= (double)NET_SAVE_EVERY_SEC * 1000.0) {
+  if (sk_end_timer(g_net_last_save) >= (double)NET_SAVE_EVERY_SEC * 1000.0) {
     net_usage_save();
-    g_net_last_save = fl_start_timer();
+    g_net_last_save = sk_start_timer();
   }
 }
 
 static void net_row(int y, const char *label, const char *value,
                     unsigned long color) {
-  fl_draw_text(.text = label, .x = NET_PAD, .y = y, .fontsize = FONTSIZE,
+  sk_draw_text(.text = label, .x = NET_PAD, .y = y, .fontsize = FONTSIZE,
                .color = color, .align = "LEFT");
-  fl_draw_text(.text = value, .x = NET_POPUP_W - NET_PAD, .y = y,
+  sk_draw_text(.text = value, .x = NET_POPUP_W - NET_PAD, .y = y,
                .fontsize = FONTSIZE, .color = RGB(235, 235, 245),
                .align = "RIGHT");
 }
 
 static void internet_hover_render() {
   char today[32], month[32], rate[32];
-  fl_format_bytes(g_net.today_bytes, today, sizeof(today));
-  fl_format_bytes(g_net.month_bytes, month, sizeof(month));
-  fl_format_bytes(g_net.rate_bps * 1024, rate, sizeof(rate));
+  sk_format_bytes(g_net.today_bytes, today, sizeof(today));
+  sk_format_bytes(g_net.month_bytes, month, sizeof(month));
+  sk_format_bytes(g_net.rate_bps * 1024, rate, sizeof(rate));
 
   int y = NET_PAD;
   net_row(y, "rate now", rate, RGB(160, 220, 255));
@@ -412,30 +412,30 @@ static void internet_hover_render() {
 }
 
 void on_internet_hover(void) {
-  PlPos pos = fl_get_widget_pos("internet");
-  fl_message(.x = pos.x, .y = pos.y - 70, .w = NET_POPUP_W, .h = NET_POPUP_H,
+  PlPos pos = sk_get_widget_pos("internet");
+  sk_message(.x = pos.x, .y = pos.y - 70, .w = NET_POPUP_W, .h = NET_POPUP_H,
              .render = internet_hover_render, .hover_key = "internet");
 }
 
-FLINT_FEATURE_INIT {
-  g_disk = fl_widget(.name = "disk_usage", .fps = FPS, .no_bg = NO_BG,
+SKALD_FEATURE_INIT {
+  g_disk = sk_widget(.name = "disk_usage", .fps = FPS, .no_bg = NO_BG,
                      .slot = WIDGET_SLOT_BOTTOM_LEFT,
                      .render = widgets_disk_usage_render);
 
-  g_mem = fl_widget(.name = "memory_usage", .fps = FPS, .no_bg = NO_BG,
+  g_mem = sk_widget(.name = "memory_usage", .fps = FPS, .no_bg = NO_BG,
                     .slot = WIDGET_SLOT_BOTTOM_LEFT,
                     .render = widgets_memory_usage_render);
 
-  g_cpu = fl_widget(.name = "cpu_usage", .fps = FPS, .no_bg = NO_BG,
+  g_cpu = sk_widget(.name = "cpu_usage", .fps = FPS, .no_bg = NO_BG,
                     .slot = WIDGET_SLOT_BOTTOM_LEFT,
                     .render = widgets_cpu_usage_render);
 
-  fl_widget(.name = "date_and_time", .fps = FPS, .no_bg = NO_BG,
+  sk_widget(.name = "date_and_time", .fps = FPS, .no_bg = NO_BG,
             .slot = WIDGET_SLOT_BOTTOM_RIGHT,
             .render = widgets_date_and_time_render);
 
   g_internet =
-      fl_widget(.name = "internet", .fps = FPS, .no_bg = NO_BG,
+      sk_widget(.name = "internet", .fps = FPS, .no_bg = NO_BG,
                 .on_hover = on_internet_hover, .slot = WIDGET_SLOT_BOTTOM_RIGHT,
                 .render = widgets_internet_render);
 }

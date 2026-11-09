@@ -40,7 +40,7 @@ void win32_popup_request_repaint(HWND hPopup) {
 }
 
 static void popup_request_repaint(HWND hwnd) {
-  if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
+  if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
     UI_LegacySyncRepaint();
     return;
   }
@@ -72,7 +72,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   }
 
   bool hide_popup = (wParam == VK_RETURN);
-  HWND popup_wnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND popup_wnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hide_popup && popup_wnd != NULL && IsWindow(popup_wnd))
     ShowWindow(popup_wnd, SW_HIDE);
 
@@ -83,14 +83,14 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   if (!handled)
     return false;
 
-  if (hide_popup && !FlintContext_Get()->window.selection_complete) {
+  if (hide_popup && !SkaldContext_Get()->window.selection_complete) {
     if (popup_wnd != NULL && IsWindow(popup_wnd))
       ShowWindow(popup_wnd, SW_SHOW);
     if (popup_wnd && IsWindow(popup_wnd) &&
-        WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL)
-      ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
+        WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) != NULL)
+      ForceWindowFocus(SkaldContext_Get()->window.hPopupWnd, WH_NULL);
   }
-  if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
+  if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
     HWND hPar = GetParent(hwnd);
     if (hPar && IsWindow(hPar)) {
       InvalidateRect(hPar, NULL, FALSE);
@@ -189,7 +189,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       ListBox_PublishMousePos(pt.x, pt.y);
     }
 
-    if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
+    if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
       PromptState *hst = Platform_GetPromptStateForHWND(hwnd);
       if (hst && hst->lb != NULL) {
         ListBoxInfo *hlb = hst->lb;
@@ -229,8 +229,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == VK_BACK) {
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
-      if (ps && FlintContext_Get()->window.prompt_callbacks.refresh) {
-        FlintContext_Get()->window.prompt_callbacks.refresh(ps);
+      if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
+        SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
       }
     }
     if (!consumed)
@@ -239,8 +239,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       UI_DeleteForward();
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
-      if (ps && FlintContext_Get()->window.prompt_callbacks.refresh) {
-        FlintContext_Get()->window.prompt_callbacks.refresh(ps);
+      if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
+        SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
       }
       UI_Redraw(lb);
       InvalidateRect(hwnd, NULL, FALSE);
@@ -255,7 +255,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         !(GetKeyState(VK_MENU) & 0x8000) && !(GetKeyState(VK_LWIN) & 0x8000) &&
         !(GetKeyState(VK_RWIN) & 0x8000))
       break;
-    if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
+    if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
       InvalidateRect(hwnd, NULL, FALSE);
       UpdateWindow(hwnd);
     } else {
@@ -279,8 +279,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (UI_InsertChar((wchar_t)wParam) > 0) {
         ps = Platform_GetPromptStateForHWND(hwnd);
-        if (ps && FlintContext_Get()->window.prompt_callbacks.refresh) {
-          FlintContext_Get()->window.prompt_callbacks.refresh(ps);
+        if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
+          SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
         }
         UI_Redraw(lb);
         popup_request_repaint(hwnd);
@@ -295,14 +295,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       if (_wm && _wm->popup_count > 1) {
         Popup *_top = WindowManager_GetTopPopup(_wm);
         if (_top && WH_TO_HWND(_top->handle) == hwnd) {
-          FlintContext_Get()->window.selection_complete = true;
+          SkaldContext_Get()->window.selection_complete = true;
           return 0;
         }
         return 0;
       }
       if (CloseOnLossOfFocus) {
-        FlintContext_Get()->window.output_buffer[0] = '\0';
-        FlintContext_Get()->window.selection_complete = true;
+        SkaldContext_Get()->window.output_buffer[0] = '\0';
+        SkaldContext_Get()->window.selection_complete = true;
       }
     }
     break;
@@ -312,14 +312,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (_wm && _wm->popup_count > 1) {
       Popup *_top = WindowManager_GetTopPopup(_wm);
       if (_top && WH_TO_HWND(_top->handle) == hwnd) {
-        FlintContext_Get()->window.selection_complete = true;
+        SkaldContext_Get()->window.selection_complete = true;
         return 0;
       }
       return 0;
     }
     if (CloseOnLossOfFocus) {
-      FlintContext_Get()->window.output_buffer[0] = '\0';
-      FlintContext_Get()->window.selection_complete = true;
+      SkaldContext_Get()->window.output_buffer[0] = '\0';
+      SkaldContext_Get()->window.selection_complete = true;
     }
     break;
   }
@@ -378,7 +378,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == UI_DEBOUNCE_TIMER_ID) {
       KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
       UI_RedrawNow();
-      if (FlintContext_Get()->window.prompt_callbacks.render != NULL)
+      if (SkaldContext_Get()->window.prompt_callbacks.render != NULL)
         InvalidateRect(hwnd, NULL, FALSE);
       else
         UI_LegacySyncRepaint();
@@ -387,7 +387,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == UI_TICK_TIMER_ID) {
       UI_Redraw(lb);
     }
-    if (FlintContext_Get()->window.prompt_callbacks.render != NULL)
+    if (SkaldContext_Get()->window.prompt_callbacks.render != NULL)
       InvalidateRect(hwnd, NULL, FALSE);
     return 0;
   } break;
@@ -523,7 +523,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       textRect.left += PROMPT_ITEM_TEXT_X;
 
       Platform_SetDrawContextWin32(pdis->hDC);
-      if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
+      if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
         return TRUE;
       } else {
         HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
@@ -555,7 +555,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_APP + 41: {
     s_repaint_queued = false;
-    if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
+    if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
       UI_LegacySyncRepaint();
       return 0;
     }
@@ -602,8 +602,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
     }
-    if (FlintContext_Get()->window.prompt_callbacks.render) {
-      FlintContext_Get()->window.editbox_placed = false;
+    if (SkaldContext_Get()->window.prompt_callbacks.render) {
+      SkaldContext_Get()->window.editbox_placed = false;
       extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
       PromptState *state = Platform_GetPromptStateForHWND(hwnd);
       if (state && state->callbacks && state->callbacks->render) {
@@ -674,10 +674,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         Platform_SetDrawContextWin32(NULL);
       }
     }
-    if (FlintContext_Get()->window.title != NULL &&
-        strlen(FlintContext_Get()->window.title) > 0 && WindowTitleText) {
+    if (SkaldContext_Get()->window.title != NULL &&
+        strlen(SkaldContext_Get()->window.title) > 0 && WindowTitleText) {
       wchar_t wtitle[256];
-      MultiByteToWideChar(CP_UTF8, 0, FlintContext_Get()->window.title, -1,
+      MultiByteToWideChar(CP_UTF8, 0, SkaldContext_Get()->window.title, -1,
                           wtitle, 256);
       HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
       HFONT hOldFont =

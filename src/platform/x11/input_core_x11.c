@@ -73,16 +73,16 @@ static int x11_linux_button_to_mouse(int code) {
   }
   if (code >= BTN_0 && code <= BTN_9) {
     int n = MOUSE_BTN_EXTRA1 + (code - BTN_0);
-    return n <= FL_MOUSE_BTN_MAX ? n : 0;
+    return n <= MOUSE_BTN_MAX ? n : 0;
   }
   if (code >= 0x14e && code <= 0x159) {
     int n = 0x13 + (code - 0x14e);
-    return (n > 0 && n <= FL_MOUSE_BTN_MAX) ? n : 0;
+    return (n > 0 && n <= MOUSE_BTN_MAX) ? n : 0;
   }
   return 0;
 }
 
-static long long x11_mouse_last_fire_ms[FL_MOUSE_BTN_MAX + 1] = {0};
+static long long x11_mouse_last_fire_ms[MOUSE_BTN_MAX + 1] = {0};
 static void x11_queue_mouse_event(struct input_event *ev) {
 
   if (!ev || ev->type != EV_KEY) {
@@ -110,8 +110,8 @@ static void x11_queue_mouse_event(struct input_event *ev) {
     Platform_GlobalMouse_Push(&rev);
   }
   Platform_UpdateMouseButton(btn, down);
-  if (!down && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
-    hotkey_key_up(FL_MOUSE_VK(btn));
+  if (!down && btn > 0 && btn <= MOUSE_BTN_MAX) {
+    hotkey_key_up(MOUSE_VK(btn));
   }
   int mx = 0, my = 0;
   Platform_GetMousePos(&mx, &my);
@@ -124,14 +124,14 @@ static void x11_queue_mouse_event(struct input_event *ev) {
   mev.repeat = repeat;
   mev.t_us = 0;
   Platform_GlobalMouse_Push(&mev);
-  if (down && !repeat && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
+  if (down && !repeat && btn > 0 && btn <= MOUSE_BTN_MAX) {
     long long now_ms =
         (long long)ev->time.tv_sec * 1000LL + ev->time.tv_usec / 1000LL;
     bool rising = !was_down;
     bool stale = (now_ms - x11_mouse_last_fire_ms[btn]) > 200;
     if (rising || stale) {
       x11_mouse_last_fire_ms[btn] = now_ms;
-      hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+      hotkey_process(MOUSE_VK(btn), mev.mods);
     }
   }
 }
@@ -308,7 +308,7 @@ int x11_init_uinput(void) {
   setup.id.bustype = BUS_USB;
   setup.id.vendor = 0x1234;
   setup.id.product = 0x5678;
-  snprintf(setup.name, sizeof(setup.name), "flint-virtual-keyboard");
+  snprintf(setup.name, sizeof(setup.name), "skald-virtual-keyboard");
   if (ioctl(fd, UI_DEV_SETUP, &setup) == 0) {
     if (ioctl(fd, UI_DEV_CREATE) < 0) {
       perror("[UINPUT] UI_DEV_CREATE");
@@ -318,7 +318,7 @@ int x11_init_uinput(void) {
   } else {
     struct uinput_user_dev uud;
     memset(&uud, 0, sizeof(uud));
-    snprintf(uud.name, sizeof(uud.name), "flint-virtual-keyboard");
+    snprintf(uud.name, sizeof(uud.name), "skald-virtual-keyboard");
     uud.id.bustype = BUS_USB;
     uud.id.vendor = 0x1234;
     uud.id.product = 0x5678;
@@ -386,7 +386,7 @@ static int x11_init_uinput_mouse(void) {
   setup.id.bustype = BUS_USB;
   setup.id.vendor = 0x1234;
   setup.id.product = 0x5679;
-  snprintf(setup.name, sizeof(setup.name), "flint-virtual-mouse");
+  snprintf(setup.name, sizeof(setup.name), "skald-virtual-mouse");
   if (ioctl(fd, UI_DEV_SETUP, &setup) == 0) {
     if (ioctl(fd, UI_DEV_CREATE) < 0) {
       perror("[UINPUT-M] UI_DEV_CREATE");
@@ -396,7 +396,7 @@ static int x11_init_uinput_mouse(void) {
   } else {
     struct uinput_user_dev uud;
     memset(&uud, 0, sizeof(uud));
-    snprintf(uud.name, sizeof(uud.name), "flint-virtual-mouse");
+    snprintf(uud.name, sizeof(uud.name), "skald-virtual-mouse");
     uud.id.bustype = BUS_USB;
     uud.id.vendor = 0x1234;
     uud.id.product = 0x5679;

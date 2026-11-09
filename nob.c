@@ -102,7 +102,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
             return true;
       }
       bool is_feature = false;
-      // hardcoded until flint releases
+      // hardcoded until skald releases
       if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
           nob_sv_starts_with(path, nob_sv_from_cstr("src\\features\\"))) {
         is_feature = true;
@@ -300,7 +300,7 @@ static void append_wayland_session_flags(Nob_Cmd *cmd) {
     return;
 #if !defined(_WIN32)
   if (getenv("WAYLAND_DISPLAY"))
-    nob_cmd_append(cmd, "-DFLINT_WAYLAND_SESSION");
+    nob_cmd_append(cmd, "-DSKALD_WAYLAND_SESSION");
 #else
   (void)cmd;
 #endif
@@ -518,12 +518,12 @@ static bool compile_all(bool *any_compiled) {
 }
 
 static bool instance_running(void) {
-  const char *marker = "/tmp/flint_nob_check";
+  const char *marker = "/tmp/skald_nob_check";
   Nob_Cmd chk = {0};
   nob_cmd_append(
       &chk, "sh", "-c",
-      "if systemctl --user is-active --quiet flint.service 2>/dev/null "
-      "|| pgrep -f 'build/[f]lint' >/dev/null 2>&1; then echo running; fi; "
+      "if systemctl --user is-active --quiet skald.service 2>/dev/null "
+      "|| pgrep -f 'build/[s]kald' >/dev/null 2>&1; then echo running; fi; "
       "exit 0");
   if (!nob_cmd_run(&chk, .stdout_path = marker))
     return false;
@@ -543,11 +543,11 @@ static void stop_running_instance(void) {
 
   Nob_Cmd cmd = {0};
   nob_cmd_append(&cmd, "sh", "-c",
-                 "systemctl --user stop flint.service 2>/dev/null; "
-                 "pkill -f 'build/[f]lint' 2>/dev/null; "
+                 "systemctl --user stop skald.service 2>/dev/null; "
+                 "pkill -f 'build/[s]kald' 2>/dev/null; "
                  "exit 0");
   if (nob_cmd_run(&cmd)) {
-    nob_log(NOB_INFO, "Stopped previously running flint instance");
+    nob_log(NOB_INFO, "Stopped previously running skald instance");
   }
 }
 
@@ -728,8 +728,8 @@ int main(int argc, char **argv) {
     if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
       printf("Usage: %s [-win32] [-run] [-actual] [-test] [-help]\n", argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
-      printf("  -run    Run flint after build\n");
-      printf("  -actual Build flint.exe instead of debug build (Windows)\n");
+      printf("  -run    Run skald after build\n");
+      printf("  -actual Build skald.exe instead of debug build (Windows)\n");
       printf("  -test   Run test suite\n");
       printf("  -help   Show this help\n");
       return 0;
@@ -806,12 +806,12 @@ int main(int argc, char **argv) {
 
   const char *output = NULL;
   if (target_win32) {
-    output = BUILD_FOLDER "/flint_win.exe";
+    output = BUILD_FOLDER "/skald_win.exe";
   } else {
 #if defined(_WIN32)
-    output = do_actual ? "build/flint.exe" : "build/debug/flint.exe";
+    output = do_actual ? "build/skald.exe" : "build/debug/skald.exe";
 #else
-    output = BUILD_FOLDER "/flint";
+    output = BUILD_FOLDER "/skald";
 #endif
   }
 
@@ -842,7 +842,7 @@ int main(int argc, char **argv) {
         any_compiled || !nob_file_exists(output) ||
         nob_needs_rebuild(output, (const char **)objs.items, objs.count) != 0;
 #if defined(_WIN32)
-    const char *other = do_actual ? "build/debug/flint.exe" : "build/flint.exe";
+    const char *other = do_actual ? "build/debug/skald.exe" : "build/skald.exe";
     if (nob_file_exists(other) &&
         nob_needs_rebuild(other, (const char **)objs.items, objs.count) != 0) {
       needs_link = true;

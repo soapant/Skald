@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +10,7 @@
 #include <glob.h>
 
 static const char *shot_working_dir(void) {
-  char *wd = fl_resolve_feature_path("screenshot");
+  char *wd = sk_resolve_feature_path("screenshot");
   return (wd && wd[0]) ? wd : ".";
 }
 
@@ -51,7 +51,7 @@ static void shot_env(char *buf, size_t n) {
 }
 
 static void shot_clip_path(char *buf, size_t n) {
-  snprintf(buf, n, "%s/flint_clip.png", shot_working_dir());
+  snprintf(buf, n, "%s/skald_clip.png", shot_working_dir());
 }
 
 static void pk_screenshot_copy_area(void) {
@@ -69,8 +69,8 @@ static void pk_screenshot_copy_area(void) {
              path);
   }
 
-  free(fl_run_terminal_command_blocking(cmd));
-  fl_copy_file_path(path);
+  free(sk_run_terminal_command_blocking(cmd));
+  sk_copy_file_path(path);
 }
 
 static void pk_screenshot_copy_screen(void) {
@@ -87,8 +87,8 @@ static void pk_screenshot_copy_screen(void) {
     snprintf(cmd, sizeof(cmd), "%s%s/scrot %s", env, shot_working_dir(), path);
   }
 
-  free(fl_run_terminal_command_blocking(cmd));
-  fl_copy_file_path(path);
+  free(sk_run_terminal_command_blocking(cmd));
+  sk_copy_file_path(path);
 }
 
 static void pk_ocr_area_to_clipboard(void) {
@@ -103,13 +103,13 @@ static void pk_ocr_area_to_clipboard(void) {
              env, shot_working_dir(), shot_working_dir());
   } else {
     char temp_path[SHOT_BUF];
-    snprintf(temp_path, sizeof(temp_path), "/tmp/flint_ocr_%d", (int)getpid());
+    snprintf(temp_path, sizeof(temp_path), "/tmp/skald_ocr_%d", (int)getpid());
     snprintf(cmd, sizeof(cmd),
              "%s%s/scrot -s %s && tesseract-ocr %s stdout -l eng; rm -f %s",
              env, shot_working_dir(), temp_path, temp_path, temp_path);
   }
 
-  char *out = fl_run_terminal_command_blocking(cmd);
+  char *out = sk_run_terminal_command_blocking(cmd);
   if (!out || !out[0]) {
     free(out);
     return;
@@ -119,7 +119,7 @@ static void pk_ocr_area_to_clipboard(void) {
   while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r'))
     out[--n] = '\0';
   if (out[0])
-    fl_copy_to_clipboard(out);
+    sk_copy_to_clipboard(out);
   free(out);
 }
 
@@ -151,7 +151,7 @@ static bool shot_gdiplus_start(void) {
 
 static void shot_ov_release(void);
 
-#define SHOT_SEL_CLASS "FlintShotSelClass"
+#define SHOT_SEL_CLASS "SkaldShotSelClass"
 #define SHOT_SEL_FRAME 2
 
 #define SEL_DIM 0x6E000000u
@@ -598,7 +598,7 @@ static bool shot_dir_ok(const char *dir) {
 }
 
 static void shot_stage_path(char *out, size_t cap, const char *leaf) {
-  char *wd = fl_get_working_dir();
+  char *wd = sk_get_working_dir();
   if (wd && wd[0] && shot_dir_ok(wd)) {
     snprintf(out, cap, "%s/%s", wd, leaf);
     free(wd);
@@ -624,12 +624,12 @@ static void pk_screenshot_copy_area(void) {
     return;
   }
   char path[MAX_PATH * 2];
-  shot_stage_path(path, sizeof(path), "flint_clip.png");
+  shot_stage_path(path, sizeof(path), "skald_clip.png");
   if (!pk_capture_rect(&r, path))
     return;
   printf("screenshot: captured %dx%d at (%ld,%ld)\n", (int)(r.right - r.left),
          (int)(r.bottom - r.top), (long)r.left, (long)r.top);
-  fl_copy_file_path(path);
+  sk_copy_file_path(path);
   shot_capture_release();
 }
 
@@ -640,12 +640,12 @@ static void pk_screenshot_copy_screen(void) {
   // r.w = 1920;
   // r.h = 1080;
   char path[MAX_PATH * 2];
-  shot_stage_path(path, sizeof(path), "flint_clip.png");
+  shot_stage_path(path, sizeof(path), "skald_clip.png");
   if (!pk_capture_rect(&r, path))
     return;
   printf("screenshot: captured %dx%d at (%ld,%ld)\n", (int)(r.right - r.left),
          (int)(r.bottom - r.top), (long)r.left, (long)r.top);
-  fl_copy_file_path(path);
+  sk_copy_file_path(path);
   shot_capture_release();
 }
 
@@ -664,13 +664,13 @@ static void pk_ocr_area_to_clipboard(void) {
   printf("screenshot: ocr capture %dx%d\n", vw, vh);
 
   char png[MAX_PATH * 2];
-  shot_stage_path(png, sizeof(png), "flint_ocr.png");
+  shot_stage_path(png, sizeof(png), "skald_ocr.png");
   if (!pk_capture_rect(&full, png))
     return;
 
   char cmd[2 * MAX_PATH + 64];
   snprintf(cmd, sizeof(cmd), "tesseract \"%s\" stdout -l eng", png);
-  char *out = fl_run_terminal_command_blocking(cmd);
+  char *out = sk_run_terminal_command_blocking(cmd);
   remove(png);
   if (!out || !out[0]) {
     free(out);
@@ -681,22 +681,22 @@ static void pk_ocr_area_to_clipboard(void) {
   while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r'))
     out[--n] = '\0';
   if (out[0])
-    fl_copy_to_clipboard(out);
+    sk_copy_to_clipboard(out);
   free(out);
 }
 
 #endif
 
-FLINT_FEATURE_INIT {
-  fl_register_hotkey(.hotkey = "Ctrl+Shift+X", .cb = pk_screenshot_copy_area);
-  fl_register_hotkey(.hotkey = "Ctrl+Alt+X", .cb = pk_screenshot_copy_screen);
-  fl_register_hotkey(.hotkey = "X", .cb = pk_screenshot_copy_area,
+SKALD_FEATURE_INIT {
+  sk_register_hotkey(.hotkey = "Ctrl+Shift+X", .cb = pk_screenshot_copy_area);
+  sk_register_hotkey(.hotkey = "Ctrl+Alt+X", .cb = pk_screenshot_copy_screen);
+  sk_register_hotkey(.hotkey = "X", .cb = pk_screenshot_copy_area,
                      .whitelist = {"zathura"});
-  fl_register_hotkey(.hotkey = "Alt+Shift+C", .cb = pk_ocr_area_to_clipboard);
-  fl_add_to_cc(.display_name = "Screenshot Region",
+  sk_register_hotkey(.hotkey = "Alt+Shift+C", .cb = pk_ocr_area_to_clipboard);
+  sk_add_to_cc(.display_name = "Screenshot Region",
                .on_enter = (bool (*)(void))pk_screenshot_copy_area,
                .type = "Screenshot", .icon = "/camera.png");
-  fl_add_to_cc(.display_name = "OCR Region ",
+  sk_add_to_cc(.display_name = "OCR Region ",
                .on_enter = (bool (*)(void))pk_ocr_area_to_clipboard,
                .type = "Screenshot", .icon = "/scan-text.png");
 }

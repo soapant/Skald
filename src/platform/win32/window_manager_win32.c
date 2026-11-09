@@ -42,10 +42,10 @@ static void WindowManager_DrainSelectionComplete(WindowManager *wm) {
   if (!wm || wm->popup_count == 0) {
     return;
   }
-  if (!FlintContext_Get()->window.selection_complete) {
+  if (!SkaldContext_Get()->window.selection_complete) {
     return;
   }
-  FlintContext_Get()->window.selection_complete = false;
+  SkaldContext_Get()->window.selection_complete = false;
   WindowManager_PopPopup(wm);
   Popup *top_after = WindowManager_GetTopPopup(wm);
   if (top_after && top_after->vtable && top_after->vtable->on_render)

@@ -221,16 +221,16 @@ void hotkey_drain_pending(void) {
 bool hotkey_has_mouse_binding(void) {
   for (int i = 0; i < g_hotkey_count; i++) {
     int vk = g_hotkeys[i].vk_code;
-    if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + FL_MOUSE_BTN_MAX - 1)
+    if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1)
       return true;
   }
   return false;
 }
 
 bool hotkey_mouse_button_bound(int btn) {
-  if (btn <= 0 || btn > FL_MOUSE_BTN_MAX)
+  if (btn <= 0 || btn > MOUSE_BTN_MAX)
     return false;
-  int vk = FL_MOUSE_VK(btn);
+  int vk = MOUSE_VK(btn);
   for (int i = 0; i < g_hotkey_count; i++) {
     if (g_hotkeys[i].vk_code != vk || g_hotkeys[i].modifiers != 0)
       continue;

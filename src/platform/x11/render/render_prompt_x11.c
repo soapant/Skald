@@ -133,7 +133,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   if (!state || !win || *win == None || !dpy) {
     return false;
   }
-  FlintContext_Get()->window.editbox_placed = false;
+  SkaldContext_Get()->window.editbox_placed = false;
   int w = state->width;
   int h = state->height;
   XWindowAttributes attrs;

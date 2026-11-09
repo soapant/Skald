@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 
-#include "core/types/flapi_types.h"
 #include "core/types/window.h"
 
 typedef struct {

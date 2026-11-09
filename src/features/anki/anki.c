@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include "sqlite3.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,9 +39,9 @@ typedef enum {
 
 static TYPE_NAME g_current_card = {0};
 static AnkiState g_anki_state = ANKI_STATE_IDLE;
-static FlTimer g_q_timer = {0};
+static SkTimer g_q_timer = {0};
 
-static FlLibrary g_sqlite_lib = NULL;
+static SkLibrary g_sqlite_lib = NULL;
 static int (*p_sqlite3_open_v2)(const char *, sqlite3 **, int,
                                 const char *) = NULL;
 static const char *(*p_sqlite3_errmsg)(sqlite3 *) = NULL;
@@ -57,8 +57,8 @@ static int (*p_sqlite3_bind_text)(sqlite3_stmt *, int, const char *, int,
 static int (*p_sqlite3_close)(sqlite3 *) = NULL;
 static int (*p_sqlite3_bind_int64)(sqlite3_stmt *, int, sqlite3_int64) = NULL;
 
-static FlThread anki_thread = NULL;
-static FlMutex anki_lock = NULL;
+static SkThread anki_thread = NULL;
+static SkMutex anki_lock = NULL;
 static bool anki_running = false;
 static int time_between_qs = 20;
 
@@ -100,42 +100,42 @@ static int sqlite_init(void) {
   if (g_sqlite_lib)
     return 1;
   char buf[1024] = {0};
-  char *dir = fl_resolve_feature_path("anki");
+  char *dir = sk_resolve_feature_path("anki");
 #if defined(_WIN32)
   snprintf(buf, sizeof(buf), "%s/sqlite3.dll", dir);
 #elif defined(__linux__)
   snprintf(buf, sizeof(buf), "%s/libsqlite3.so", dir);
 #endif
-  g_sqlite_lib = fl_library_open(buf);
+  g_sqlite_lib = sk_library_open(buf);
   if (g_sqlite_lib)
-    fl_library_register("sqlite", g_sqlite_lib);
+    sk_library_register("sqlite", g_sqlite_lib);
   if (!g_sqlite_lib)
     return 0;
   p_sqlite3_open_v2 =
-      (int (*)(const char *, sqlite3 **, int, const char *))fl_library_symbol(
+      (int (*)(const char *, sqlite3 **, int, const char *))sk_library_symbol(
           g_sqlite_lib, "sqlite3_open_v2");
-  p_sqlite3_errmsg = (const char *(*)(sqlite3 *))fl_library_symbol(
+  p_sqlite3_errmsg = (const char *(*)(sqlite3 *))sk_library_symbol(
       g_sqlite_lib, "sqlite3_errmsg");
   p_sqlite3_prepare_v2 =
       (int (*)(sqlite3 *, const char *, int, sqlite3_stmt **, const char **))
-          fl_library_symbol(g_sqlite_lib, "sqlite3_prepare_v2");
+          sk_library_symbol(g_sqlite_lib, "sqlite3_prepare_v2");
   p_sqlite3_step =
-      (int (*)(sqlite3_stmt *))fl_library_symbol(g_sqlite_lib, "sqlite3_step");
+      (int (*)(sqlite3_stmt *))sk_library_symbol(g_sqlite_lib, "sqlite3_step");
   p_sqlite3_column_text =
-      (const unsigned char *(*)(sqlite3_stmt *, int))fl_library_symbol(
+      (const unsigned char *(*)(sqlite3_stmt *, int))sk_library_symbol(
           g_sqlite_lib, "sqlite3_column_text");
   p_sqlite3_column_int64 =
-      (long long (*)(sqlite3_stmt *, int))fl_library_symbol(
+      (long long (*)(sqlite3_stmt *, int))sk_library_symbol(
           g_sqlite_lib, "sqlite3_column_int64");
-  p_sqlite3_finalize = (int (*)(sqlite3_stmt *))fl_library_symbol(
+  p_sqlite3_finalize = (int (*)(sqlite3_stmt *))sk_library_symbol(
       g_sqlite_lib, "sqlite3_finalize");
   p_sqlite3_bind_text =
       (int (*)(sqlite3_stmt *, int, const char *, int, void (*)(void *)))
-          fl_library_symbol(g_sqlite_lib, "sqlite3_bind_text");
+          sk_library_symbol(g_sqlite_lib, "sqlite3_bind_text");
   p_sqlite3_close =
-      (int (*)(sqlite3 *))fl_library_symbol(g_sqlite_lib, "sqlite3_close");
+      (int (*)(sqlite3 *))sk_library_symbol(g_sqlite_lib, "sqlite3_close");
   p_sqlite3_bind_int64 =
-      (int (*)(sqlite3_stmt *, int, long long))fl_library_symbol(
+      (int (*)(sqlite3_stmt *, int, long long))sk_library_symbol(
           g_sqlite_lib, "sqlite3_bind_int64");
   return p_sqlite3_open_v2 && p_sqlite3_errmsg && p_sqlite3_prepare_v2 &&
          p_sqlite3_step;
@@ -310,8 +310,8 @@ void display_card_question(TYPE_NAME card) {
     }
     question[o] = '\0';
   }
-  g_q_timer = fl_start_timer();
-  fl_message(.name = "question", .message = question, .slot = TOP_CENTER,
+  g_q_timer = sk_start_timer();
+  sk_message(.name = "question", .message = question, .slot = TOP_CENTER,
              .timeout = 10000.0);
 }
 
@@ -324,10 +324,10 @@ void anki_apply_elapsed(double elapsed_ms) {
   char buf[300];
 #if defined(_WIN32)
   snprintf(buf, sizeof(buf), "%s/AppData/Roaming/Anki2/User 1/collection.anki2",
-           fl_resolve_user_path());
+           sk_resolve_user_path());
 #elif defined(__linux__)
   snprintf(buf, sizeof(buf), "%s/.local/share/Anki2/User 1/collection.anki2",
-           fl_resolve_user_path());
+           sk_resolve_user_path());
 #endif
 
   if (!sqlite_init())
@@ -414,9 +414,9 @@ void display_card_answer(void) {
   char answer[1024];
   answer[0] = '\0';
 
-  fl_mutex_lock(anki_lock);
+  sk_mutex_lock(anki_lock);
   TYPE_NAME card = g_current_card;
-  fl_mutex_unlock(anki_lock);
+  sk_mutex_unlock(anki_lock);
 
   if (card.type == CARD_TYPE_BASIC) {
     snprintf(answer, sizeof(answer), "%s\n---\n%s", card.data.basic.front,
@@ -461,31 +461,31 @@ void display_card_answer(void) {
     answer[o] = '\0';
   }
 
-  double elapsed_ms = fl_end_timer(g_q_timer);
+  double elapsed_ms = sk_end_timer(g_q_timer);
   fflush(stdout);
   anki_apply_elapsed(elapsed_ms);
 
-  fl_mutex_lock(anki_lock);
+  sk_mutex_lock(anki_lock);
   g_anki_state = ANKI_STATE_ANSWER;
-  fl_mutex_unlock(anki_lock);
+  sk_mutex_unlock(anki_lock);
 
-  fl_dismiss_message("question");
-  fl_message(.name = "answer", .message = answer, .slot = TOP_CENTER,
+  sk_dismiss_message("question");
+  sk_message(.name = "answer", .message = answer, .slot = TOP_CENTER,
              .timeout = 1000.0);
 }
 
 void print_due_card(void) {
-  if (fl_string_contains(fl_get_active_window_title(), "Anki"))
+  if (sk_string_contains(sk_get_active_window_title(), "Anki"))
     return;
-  fl_dismiss_message("question");
-  fl_dismiss_message("answer");
+  sk_dismiss_message("question");
+  sk_dismiss_message("answer");
   char buf[300];
 #if defined(_WIN32)
   snprintf(buf, sizeof(buf), "%s/AppData/Roaming/Anki2/User 1/collection.anki2",
-           fl_resolve_user_path());
+           sk_resolve_user_path());
 #elif defined(__linux__)
   snprintf(buf, sizeof(buf), "%s/.local/share/Anki2/User 1/collection.anki2",
-           fl_resolve_user_path());
+           sk_resolve_user_path());
 #endif
   CardList list = get_cards_in_deck(buf, "Chemistry");
   long long now = (long long)time(NULL);
@@ -502,15 +502,15 @@ void print_due_card(void) {
     free_card_list(&list);
     return;
   }
-  int random = fl_rand_num_between(0, (int)(due_count - 1));
+  int random = sk_rand_num_between(0, (int)(due_count - 1));
   size_t pick = due[random];
   TYPE_NAME card = list.items[pick];
 
-  fl_mutex_lock(anki_lock);
+  sk_mutex_lock(anki_lock);
   free_card_contents(&g_current_card);
   g_current_card = card_clone(list.items[pick]);
   g_anki_state = ANKI_STATE_QUESTION;
-  fl_mutex_unlock(anki_lock);
+  sk_mutex_unlock(anki_lock);
 
   display_card_question(card);
   free(due);
@@ -520,7 +520,7 @@ void print_due_card(void) {
 static void *anki_timer_thread(void *arg) {
   srand((unsigned int)(time(NULL) ^ (uintptr_t)&anki_running));
   while (anki_running) {
-    fl_sleep(time_between_qs);
+    sk_sleep(time_between_qs);
     if (anki_running) {
       print_due_card();
     }
@@ -529,52 +529,52 @@ static void *anki_timer_thread(void *arg) {
 }
 
 void handle_anki(void) {
-  fl_mutex_lock(anki_lock);
+  sk_mutex_lock(anki_lock);
   AnkiState current_state = g_anki_state;
-  fl_mutex_unlock(anki_lock);
+  sk_mutex_unlock(anki_lock);
 
   if (current_state == ANKI_STATE_QUESTION) {
-    fl_mutex_lock(anki_lock);
-    fl_mutex_unlock(anki_lock);
+    sk_mutex_lock(anki_lock);
+    sk_mutex_unlock(anki_lock);
 
     display_card_answer();
   } else if (current_state == ANKI_STATE_ANSWER) {
-    fl_mutex_lock(anki_lock);
+    sk_mutex_lock(anki_lock);
     g_anki_state = ANKI_STATE_IDLE;
-    fl_mutex_unlock(anki_lock);
-    fl_dismiss_message("answer");
+    sk_mutex_unlock(anki_lock);
+    sk_dismiss_message("answer");
   }
 }
 
 bool should_swallow_anki(void) {
-  fl_mutex_lock(anki_lock);
+  sk_mutex_lock(anki_lock);
   bool active = (g_anki_state != ANKI_STATE_IDLE);
-  fl_mutex_unlock(anki_lock);
+  sk_mutex_unlock(anki_lock);
   return active;
 }
 
-FLINT_FEATURE_SHUTDOWN {
+SKALD_FEATURE_SHUTDOWN {
   // temporary: for now this is needed in the future we should automate handling
   // of thread joins
   if (anki_lock)
-    fl_mutex_lock(anki_lock);
+    sk_mutex_lock(anki_lock);
   anki_running = false;
   if (anki_lock)
-    fl_mutex_unlock(anki_lock);
+    sk_mutex_unlock(anki_lock);
   if (anki_thread) {
-    fl_thread_join(anki_thread);
+    sk_thread_join(anki_thread);
     anki_thread = NULL;
   }
   if (anki_lock) {
-    fl_mutex_destroy(anki_lock);
+    sk_mutex_destroy(anki_lock);
     anki_lock = NULL;
   }
 }
 
-FLINT_FEATURE_INIT {
-  // anki_lock = fl_mutex_create();
+SKALD_FEATURE_INIT {
+  // anki_lock = sk_mutex_create();
   // anki_running = true;
-  // anki_thread = fl_thread_create(anki_timer_thread, NULL);
-  fl_register_hotkey(.hotkey = "Shift+Space", .cb = handle_anki,
+  // anki_thread = sk_thread_create(anki_timer_thread, NULL);
+  sk_register_hotkey(.hotkey = "Shift+Space", .cb = handle_anki,
                      .should_swallow = should_swallow_anki);
 }

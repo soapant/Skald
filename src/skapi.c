@@ -26,11 +26,11 @@
 #include "core/thread_registry.h"
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include "core/feature_loader.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
-#include "platform/flapi_platform.h"
+#include "platform/skapi_platform.h"
 #include "platform/widget.h"
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
@@ -42,23 +42,23 @@
 #include "deps/stb_ds.h"
 #include "config_values.h"
 #include "core/cc_registry.h"
-#include "core/flapi_input.h"
+#include "core/skapi_input.h"
 #include "core/types.h"
 #include "core/types/color.h"
-#include "core/types/flapi_types.h"
+#include "core/types/skapi_types.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
 #include "core/deferred_init.h"
 
-size_t fl_clipboard_history_count(void) {
+size_t sk_clipboard_history_count(void) {
   return clipboard_history_count_platform();
 }
 
-const FlClipboardEntry *fl_clipboard_history_get(size_t index) {
+const SkClipboardEntry *sk_clipboard_history_get(size_t index) {
   return clipboard_history_get_platform(index);
 }
 
-const FlClipboardEntry *fl_clipboard_latest(void) {
+const SkClipboardEntry *sk_clipboard_latest(void) {
 
   size_t n = clipboard_history_count_platform();
   if (n == 0)
@@ -66,9 +66,9 @@ const FlClipboardEntry *fl_clipboard_latest(void) {
   return clipboard_history_get_platform(n - 1);
 }
 
-void fl_clipboard_clear_history(void) { clipboard_clear_history_platform(); }
+void sk_clipboard_clear_history(void) { clipboard_clear_history_platform(); }
 
-bool fl_copy_to_clipboard(const char *text) {
+bool sk_copy_to_clipboard(const char *text) {
   if (text == NULL)
     return 0;
   bool ok = Platform_CopyToClipboard(text);
@@ -77,13 +77,13 @@ bool fl_copy_to_clipboard(const char *text) {
   return ok;
 }
 
-bool fl_copy_file_path(const char *path) {
+bool sk_copy_file_path(const char *path) {
   if (!path)
     return false;
   return clipboard_set_path_platform(path);
 }
 
-bool fl_get_all_files_from_dir(const char *dir_path,
+bool sk_get_all_files_from_dir(const char *dir_path,
                                char **list_of_allowed_extensions,
                                ListOfFiles *list_of_files,
                                char **list_of_names_to_ignore,
@@ -101,7 +101,7 @@ bool fl_get_all_files_from_dir(const char *dir_path,
                                   strip_extension, max_depth);
 }
 
-char *fl_search_file_in_dir(const char *directory, const char *search_string,
+char *sk_search_file_in_dir(const char *directory, const char *search_string,
                             char *output_path) {
 
   if (!directory)
@@ -111,10 +111,10 @@ char *fl_search_file_in_dir(const char *directory, const char *search_string,
   if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir)))
     return NULL;
   directory = expanded_dir;
-  return fl_search_file_in_dir_platform(directory, search_string, output_path);
+  return sk_search_file_in_dir_platform(directory, search_string, output_path);
 }
 
-bool fl_launch_with_args(const char *path, const char *args) {
+bool sk_launch_with_args(const char *path, const char *args) {
   if (!path) {
     return false;
   }
@@ -122,52 +122,52 @@ bool fl_launch_with_args(const char *path, const char *args) {
   if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) {
     return false;
   }
-  bool r = fl_launch_with_args_platform(expanded, args);
+  bool r = sk_launch_with_args_platform(expanded, args);
   return r;
 }
 
-bool fl_launch_with_args_as_admin(const char *path, const char *args) {
+bool sk_launch_with_args_as_admin(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
   if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
     return false;
-  return fl_launch_with_args_as_admin_platform(expanded, args);
+  return sk_launch_with_args_as_admin_platform(expanded, args);
 }
 
-bool fli_add_dep(const char *dep_name, const char *owner_file) {
+bool ski_add_dep(const char *dep_name, const char *owner_file) {
   return add_dep(dep_name, owner_file);
 }
 
-unsigned fl_cap_generation(void) { return cap_generation(); }
-void fli_cap_register(const char *key, void *fn) {
+unsigned sk_cap_generation(void) { return cap_generation(); }
+void ski_cap_register(const char *key, void *fn) {
   cap_register_abi(key, CAP_ABI_V1, fn);
 }
-void *fli_cap_resolve(const char *key) {
+void *ski_cap_resolve(const char *key) {
   return cap_resolve_abi(key, CAP_ABI_V1);
 }
-void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
+void sk_cap_register_abi(const char *key, unsigned abi, void *fn) {
   cap_register_abi(key, abi, (void *)fn);
 }
-void *fl_cap_resolve_abi(const char *key, unsigned abi) {
+void *sk_cap_resolve_abi(const char *key, unsigned abi) {
   return cap_resolve_abi(key, abi);
 }
-void fl_cap_bind_declare(const char *key, void *consumer) {
+void sk_cap_bind_declare(const char *key, void *consumer) {
   cap_bind_declare(key, consumer);
 }
 
-FlStringList fl_load_file_list(const char *filepath) {
-  FlStringList list = {0};
+SkStringList sk_load_file_list(const char *filepath) {
+  SkStringList list = {0};
   if (!filepath)
     return list;
   char full[MAX_PATH];
   if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full,
                                 sizeof(full))) {
 
-    log_warn("fl_load_file_list resolve failed name='%s' feature='%s'",
+    log_warn("sk_load_file_list resolve failed name='%s' feature='%s'",
              filepath,
-             FlintContext_Get()->window.current_feature
-                 ? FlintContext_Get()->window.current_feature
+             SkaldContext_Get()->window.current_feature
+                 ? SkaldContext_Get()->window.current_feature
                  : "(null)");
     return list;
   }
@@ -175,7 +175,7 @@ FlStringList fl_load_file_list(const char *filepath) {
   return list;
 }
 
-long fl_load_file(const char *filepath, char *buffer, long buffer_size) {
+long sk_load_file(const char *filepath, char *buffer, long buffer_size) {
   if (!filepath || !buffer || buffer_size <= 0)
     return -1;
   buffer[0] = '\0';
@@ -183,16 +183,16 @@ long fl_load_file(const char *filepath, char *buffer, long buffer_size) {
   if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full,
                                 sizeof(full))) {
 
-    log_warn("fl_load_file resolve failed name='%s' feature='%s'", filepath,
-             FlintContext_Get()->window.current_feature
-                 ? FlintContext_Get()->window.current_feature
+    log_warn("sk_load_file resolve failed name='%s' feature='%s'", filepath,
+             SkaldContext_Get()->window.current_feature
+                 ? SkaldContext_Get()->window.current_feature
                  : "(null)");
     return -1;
   }
   return File_ReadAll(full, buffer, buffer_size);
 }
 
-bool fl_free_list(const char *list[], int count) {
+bool sk_free_list(const char *list[], int count) {
   if (!list || count <= 0)
     return false;
   for (int i = 0; i < count; i++)
@@ -200,7 +200,7 @@ bool fl_free_list(const char *list[], int count) {
   return true;
 }
 
-void fl_free_file_list(FlStringList *list) {
+void sk_free_file_list(SkStringList *list) {
   if (!list) {
     return;
   }
@@ -212,7 +212,7 @@ void fl_free_file_list(FlStringList *list) {
   }
   list->count = 0;
 }
-bool fl_free_window_list(FlWindowList *list) {
+bool sk_free_window_list(SkWindowList *list) {
   if (!list)
     return false;
   if (list->windows) {
@@ -225,7 +225,7 @@ bool fl_free_window_list(FlWindowList *list) {
   return true;
 }
 
-bool fl_append_to_file(const char *filepath, const char *line) {
+bool sk_append_to_file(const char *filepath, const char *line) {
   if (!filepath || !line)
     return false;
   char full[MAX_PATH];
@@ -267,7 +267,7 @@ bool fl_append_to_file(const char *filepath, const char *line) {
   return true;
 }
 
-bool fl_write_to_file(const char *filepath, const char *lines[], int count) {
+bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   if (!filepath)
     return false;
   if (count < 0)
@@ -292,12 +292,12 @@ bool fl_write_to_file(const char *filepath, const char *lines[], int count) {
   return true;
 }
 
-bool fl_write_temp_file(const char *name, const void *data, size_t len,
+bool sk_write_temp_file(const char *name, const void *data, size_t len,
                         char *out_path, size_t out_len) {
   return Platform_WriteTempFile(name, data, len, out_path, out_len);
 }
 
-char *fl_read_file_to_string(const char *path, size_t *out_len) {
+char *sk_read_file_to_string(const char *path, size_t *out_len) {
   if (!path)
     return NULL;
   char expanded[MAX_PATH];
@@ -331,12 +331,12 @@ char *fl_read_file_to_string(const char *path, size_t *out_len) {
   return buf;
 }
 
-long fl_read_entire_file(const char *full_path, char *buffer,
+long sk_read_entire_file(const char *full_path, char *buffer,
                          long buffer_size) {
   return File_ReadAll(full_path, buffer, buffer_size);
 }
 
-bool fl_write_string_to_file(const char *path, const char *content) {
+bool sk_write_string_to_file(const char *path, const char *content) {
   if (!path || !content)
     return false;
   char full[MAX_PATH];
@@ -357,7 +357,7 @@ bool fl_write_string_to_file(const char *path, const char *content) {
   return true;
 }
 
-bool fl_file_exists(const char *path) {
+bool sk_file_exists(const char *path) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
@@ -371,19 +371,19 @@ bool fl_file_exists(const char *path) {
   return false;
 }
 
-bool fl_append_unique_line(const char *path, const char *line) {
+bool sk_append_unique_line(const char *path, const char *line) {
   if (!path || !line)
     return false;
-  FlStringList files = fl_load_file_list(path);
-  bool ok = fl_append_to_file(path, line);
-  fl_free_file_list(&files);
+  SkStringList files = sk_load_file_list(path);
+  bool ok = sk_append_to_file(path, line);
+  sk_free_file_list(&files);
   return ok;
 }
 
-bool fl_remove_line(const char *path, const char *line) {
+bool sk_remove_line(const char *path, const char *line) {
   if (!path || !line)
     return false;
-  FlStringList files = fl_load_file_list(path);
+  SkStringList files = sk_load_file_list(path);
   const char *kept[1024];
   int k = 0;
   for (size_t i = 0; i < files.count && k < 1024; i++)
@@ -393,15 +393,15 @@ bool fl_remove_line(const char *path, const char *line) {
       free(files.items[i]);
       files.items[i] = NULL;
     }
-  bool ok = fl_write_to_file(path, kept, k);
-  fl_free_file_list(&files);
+  bool ok = sk_write_to_file(path, kept, k);
+  sk_free_file_list(&files);
   return ok;
 }
 
-bool fl_remove_line_contains(const char *path, const char *substr) {
+bool sk_remove_line_contains(const char *path, const char *substr) {
   if (!path || !substr)
     return false;
-  FlStringList files = fl_load_file_list(path);
+  SkStringList files = sk_load_file_list(path);
   const char *kept[1024];
   int k = 0;
   for (size_t i = 0; i < files.count && k < 1024; i++)
@@ -411,12 +411,12 @@ bool fl_remove_line_contains(const char *path, const char *substr) {
       free(files.items[i]);
       files.items[i] = NULL;
     }
-  bool ok = fl_write_to_file(path, kept, k);
-  fl_free_file_list(&files);
+  bool ok = sk_write_to_file(path, kept, k);
+  sk_free_file_list(&files);
   return ok;
 }
 
-bool fl_parse_desktop_file(const char *path, char *out_name, size_t n,
+bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
                            bool *out_nodisplay) {
 
   if (!path || !out_name)
@@ -454,7 +454,7 @@ bool fl_parse_desktop_file(const char *path, char *out_name, size_t n,
   return found;
 }
 
-bool fli_register_remapping(const FlRemappingSpec *spec) {
+bool ski_register_remapping(const SkRemappingSpec *spec) {
   if (!spec || !spec->src || !spec->dst)
     return false;
   const char *const *wl = spec->whitelist;
@@ -464,7 +464,7 @@ bool fli_register_remapping(const FlRemappingSpec *spec) {
   return remap_register_internal(spec->src, spec->dst, whitelist, windows);
 }
 
-static void fl_snippet_fire(int idx, int del) {
+static void sk_snippet_fire(int idx, int del) {
 
   const SnippetBinding *b = snippet_get_binding(idx);
   if (!b || !b->trigger) {
@@ -475,15 +475,15 @@ static void fl_snippet_fire(int idx, int del) {
     Platform_EmitKey(VK_BACK, 0);
   }
   if (b->text)
-    fl_type_text(b->text);
+    sk_type_text(b->text);
   else if (b->func)
     b->func();
 }
 
-bool fli_register_snippet(const FlSnippetSpec *spec) {
+bool ski_register_snippet(const SkSnippetSpec *spec) {
   if (!spec || !spec->trigger || (!spec->text && !spec->fn))
     return false;
-  snippet_set_fire_fn(fl_snippet_fire);
+  snippet_set_fire_fn(sk_snippet_fire);
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
   bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
@@ -493,7 +493,7 @@ bool fli_register_snippet(const FlSnippetSpec *spec) {
                                    (void *)__builtin_return_address(0));
 }
 
-bool fli_unregister_snippet(const char *trigger) {
+bool ski_unregister_snippet(const char *trigger) {
   return snippet_unregister_internal(trigger);
 }
 
@@ -505,7 +505,7 @@ typedef struct {
 static FeatureReg **g_feature_order = NULL;
 static int g_feature_order_count = 0;
 
-bool fli_register_hotkey(const FlHotkeySpec *spec) {
+bool ski_register_hotkey(const SkHotkeySpec *spec) {
   if (!spec || !spec->hotkey || !spec->cb)
     return false;
   const char *const *wl = spec->whitelist;
@@ -531,7 +531,7 @@ bool fli_register_hotkey(const FlHotkeySpec *spec) {
   return hotkey_register_internal(binding);
 }
 
-bool fli_unregister_hotkey(const char *hotkey) {
+bool ski_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
   HotkeyBinding binding = convert_into_hotkey_binding((char *)hotkey, NULL,
@@ -539,51 +539,51 @@ bool fli_unregister_hotkey(const char *hotkey) {
   return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
 }
 
-void fl_disable_global_hotkeys(void) { hotkey_set_suspended(true); }
-void fl_enable_global_hotkeys(void) { hotkey_set_suspended(false); }
+void sk_disable_global_hotkeys(void) { hotkey_set_suspended(true); }
+void sk_enable_global_hotkeys(void) { hotkey_set_suspended(false); }
 
-int fl_hotkey_count(void) { return hotkey_count(); }
+int sk_hotkey_count(void) { return hotkey_count(); }
 
-static char g_fl_hotkey_list_string[HOTKEY_STRING_MAX_LEN];
+static char g_sk_hotkey_list_string[HOTKEY_STRING_MAX_LEN];
 
-const char *fl_hotkey_string_at(int index) {
+const char *sk_hotkey_string_at(int index) {
   const HotkeyBinding *b = hotkey_get(index);
   if (!b)
     return NULL;
   HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
-  if (!HotkeyString_Format(key, g_fl_hotkey_list_string,
-                           (int)sizeof(g_fl_hotkey_list_string)))
-    g_fl_hotkey_list_string[0] = '\0';
-  return g_fl_hotkey_list_string;
+  if (!HotkeyString_Format(key, g_sk_hotkey_list_string,
+                           (int)sizeof(g_sk_hotkey_list_string)))
+    g_sk_hotkey_list_string[0] = '\0';
+  return g_sk_hotkey_list_string;
 }
 
-static char g_fl_hotkey_cb_string[HOTKEY_STRING_MAX_LEN];
+static char g_sk_hotkey_cb_string[HOTKEY_STRING_MAX_LEN];
 
-const char *fl_hotkey_for_ud(void *ud) {
+const char *sk_hotkey_for_ud(void *ud) {
   const HotkeyBinding *b = hotkey_find_by_ud(ud);
   if (!b)
     return NULL;
   HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
-  if (!HotkeyString_Format(key, g_fl_hotkey_cb_string,
-                           (int)sizeof(g_fl_hotkey_cb_string)))
-    g_fl_hotkey_cb_string[0] = '\0';
-  return g_fl_hotkey_cb_string;
+  if (!HotkeyString_Format(key, g_sk_hotkey_cb_string,
+                           (int)sizeof(g_sk_hotkey_cb_string)))
+    g_sk_hotkey_cb_string[0] = '\0';
+  return g_sk_hotkey_cb_string;
 }
 
-void fl_register_deferred_init(void (*cb)(void)) { DeferredInit_Register(cb); }
+void sk_register_deferred_init(void (*cb)(void)) { DeferredInit_Register(cb); }
 
-const char *fl_hotkey_for_callback(void (*cb)(void)) {
+const char *sk_hotkey_for_callback(void (*cb)(void)) {
   const HotkeyBinding *b = hotkey_find_by_callback((HotkeyCallback)cb);
   if (!b)
     return NULL;
   HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
-  if (!HotkeyString_Format(key, g_fl_hotkey_cb_string,
-                           (int)sizeof(g_fl_hotkey_cb_string)))
-    g_fl_hotkey_cb_string[0] = '\0';
-  return g_fl_hotkey_cb_string;
+  if (!HotkeyString_Format(key, g_sk_hotkey_cb_string,
+                           (int)sizeof(g_sk_hotkey_cb_string)))
+    g_sk_hotkey_cb_string[0] = '\0';
+  return g_sk_hotkey_cb_string;
 }
 
-bool fl_hotkey_taken(const char *hotkey) {
+bool sk_hotkey_taken(const char *hotkey) {
   if (!hotkey)
     return false;
   HotkeyKey key = {0};
@@ -592,7 +592,7 @@ bool fl_hotkey_taken(const char *hotkey) {
   return hotkey_is_taken(key.vk_code, key.mods);
 }
 
-int fl_get_feature_list(const char **out_names, void (**out_cbs)(void),
+int sk_get_feature_list(const char **out_names, void (**out_cbs)(void),
                         int max) {
 
   int n = g_feature_order_count < max ? g_feature_order_count : max;
@@ -605,7 +605,7 @@ int fl_get_feature_list(const char **out_names, void (**out_cbs)(void),
   return n;
 }
 
-int fl_get_feature_list_with_icons(const char **out_names,
+int sk_get_feature_list_with_icons(const char **out_names,
                                    void (**out_cbs)(void),
                                    const char ***out_icons, int max) {
 
@@ -639,19 +639,19 @@ int fl_get_feature_list_with_icons(const char **out_names,
   return n;
 }
 
-char *fl_get_icon_path(const char *app_path_path) {
+char *sk_get_icon_path(const char *app_path_path) {
   if (!app_path_path)
     return NULL;
   return Platform_GetIconPath((char *)app_path_path);
 }
 
-int fl_get_icon_size(const char *icon_path) {
+int sk_get_icon_size(const char *icon_path) {
   if (!icon_path)
     return 20;
   return Platform_GetIconSize((char *)icon_path);
 }
 
-char *fl_run_terminal_command(char *command) {
+char *sk_run_terminal_command(char *command) {
   if (!command) {
     return NULL;
   }
@@ -659,7 +659,7 @@ char *fl_run_terminal_command(char *command) {
   return r;
 }
 
-char *fl_run_argv(const char *const argv[], const char *stdin_data,
+char *sk_run_argv(const char *const argv[], const char *stdin_data,
                   int *out_status) {
 
   if (!argv || !argv[0])
@@ -667,13 +667,13 @@ char *fl_run_argv(const char *const argv[], const char *stdin_data,
   return Platform_RunArgvCapture(argv, stdin_data, out_status);
 }
 
-char *fl_run_terminal_command_blocking(char *command) {
+char *sk_run_terminal_command_blocking(char *command) {
   if (!command)
     return NULL;
   return Platform_RunCommandAndGetOutput(command, PLATFORM_RUN_PRIO_NORMAL);
 }
 
-char *fl_run_terminal_command_and_open(char *command) {
+char *sk_run_terminal_command_and_open(char *command) {
   if (!command) {
     return NULL;
   }
@@ -681,7 +681,7 @@ char *fl_run_terminal_command_and_open(char *command) {
   return r;
 }
 
-bool fl_launch_detached(char *command) {
+bool sk_launch_detached(char *command) {
   if (!command) {
     return false;
   }
@@ -689,7 +689,7 @@ bool fl_launch_detached(char *command) {
   return r;
 }
 
-bool fl_launch_terminal_at_path(char *path, char *args) {
+bool sk_launch_terminal_at_path(char *path, char *args) {
   bool r = false;
   if (!path) {
     return false;
@@ -702,118 +702,118 @@ bool fl_launch_terminal_at_path(char *path, char *args) {
   return r;
 }
 
-bool fl_process_running(const char *name) {
+bool sk_process_running(const char *name) {
   return Platform_ProcessRunning(name);
 }
 
-bool fl_terminate_process_by_name(const char *exe_name) {
+bool sk_terminate_process_by_name(const char *exe_name) {
   if (!exe_name)
     return false;
   return Platform_TerminateProcessByName(exe_name);
 }
-bool fl_string_contains(const char *haystack, const char *needle) {
+bool sk_string_contains(const char *haystack, const char *needle) {
   if (!needle || !haystack)
     return false;
   return Platform_StringContainsCaseInsensitive(haystack, needle);
 }
 
-char *fl_string_cut_at(const char *str, char delim) {
+char *sk_string_cut_at(const char *str, char delim) {
   return String_CutAt(str, delim);
 }
-char *fl_string_cut_before(const char *str, char delim) {
+char *sk_string_cut_before(const char *str, char delim) {
   return String_CutBefore(str, delim);
 }
-char *fl_string_cut_after(const char *str, char delim) {
+char *sk_string_cut_after(const char *str, char delim) {
   return String_CutAfter(str, delim);
 }
-char *fl_string_between(const char *str, char open, char close) {
+char *sk_string_between(const char *str, char open, char close) {
   return String_Between(str, open, close);
 }
-char *fl_string_inside(const char *str, char delim) {
+char *sk_string_inside(const char *str, char delim) {
   return String_Inside(str, delim);
 }
-char *fl_string_trim(const char *str) { return String_Trim(str); }
-char *fl_string_to_lower(const char *str) { return String_ToLower(str); }
-char *fl_string_to_upper(const char *str) { return String_ToUpper(str); }
-bool fl_string_starts_with(const char *str, const char *prefix) {
+char *sk_string_trim(const char *str) { return String_Trim(str); }
+char *sk_string_to_lower(const char *str) { return String_ToLower(str); }
+char *sk_string_to_upper(const char *str) { return String_ToUpper(str); }
+bool sk_string_starts_with(const char *str, const char *prefix) {
   return String_StartsWith(str, prefix);
 }
-bool fl_string_ends_with(const char *str, const char *suffix) {
+bool sk_string_ends_with(const char *str, const char *suffix) {
   return String_EndsWith(str, suffix);
 }
-char *fl_string_replace(const char *str, const char *from, const char *to) {
+char *sk_string_replace(const char *str, const char *from, const char *to) {
   return String_Replace(str, from, to);
 }
-char *fl_string_slice(const char *str, int start, int end) {
+char *sk_string_slice(const char *str, int start, int end) {
   return String_Slice(str, start, end);
 }
 
-StringList fl_string_split(const char *str, const char *delimiter) {
+StringList sk_string_split(const char *str, const char *delimiter) {
   StringList empty = {NULL, 0};
   if (!str || !delimiter || !delimiter[0])
     return empty;
   return String_Split(str, delimiter);
 }
 
-void fl_string_list_free(StringList *list) { StringList_Free(list); }
+void sk_string_list_free(StringList *list) { StringList_Free(list); }
 
-void fl_populate_listbox(ListBoxInfo *lb, const char *filter,
+void sk_populate_listbox(ListBoxInfo *lb, const char *filter,
                          const char **items, int count) {
   PopulateListBox(lb, filter, items, count, NULL);
 }
 
-void fl_populate_listbox_ex(ListBoxInfo *lb, const char *filter,
+void sk_populate_listbox_ex(ListBoxInfo *lb, const char *filter,
                             const char **items, int count,
                             bool (*filter_match)(const char *item,
                                                  const char *filter)) {
   PopulateListBox(lb, filter, items, count, filter_match);
 }
 
-bool fl_is_selected(ListBoxInfo *lb) {
+bool sk_is_selected(ListBoxInfo *lb) {
   if (!lb)
     return false;
   return UI_IsListBoxSelected(lb);
 }
 
-void fl_set_edit_text(const char *text) {
-  FlintContext *ctx = FlintContext_Get();
+void sk_set_edit_text(const char *text) {
+  SkaldContext *ctx = SkaldContext_Get();
   if (!ctx) {
     return;
   }
   UI_SetText(text ? text : "");
 }
 
-void fl_set_edit_cursor(int position) {
-  FlintContext *ctx = FlintContext_Get();
+void sk_set_edit_cursor(int position) {
+  SkaldContext *ctx = SkaldContext_Get();
   if (!ctx) {
     return;
   }
   UI_SetCursorPosition(position);
 }
 
-int fl_get_edit_cursor(void) {
-  FlintContext *ctx = FlintContext_Get();
+int sk_get_edit_cursor(void) {
+  SkaldContext *ctx = SkaldContext_Get();
   if (!ctx)
     return 0;
   int pos = UI_GetCursorPosition();
   return pos;
 }
 
-void fl_get_edit_text(char *buffer, size_t cap) {
+void sk_get_edit_text(char *buffer, size_t cap) {
   if (!buffer || cap == 0) {
     return;
   }
   buffer[0] = '\0';
-  FlintContext *ctx = FlintContext_Get();
+  SkaldContext *ctx = SkaldContext_Get();
   if (!ctx) {
     return;
   }
   UI_GetCurrentTextEdit(buffer, cap);
 }
 
-static void fl_hover_popup_frame(void *ud) {
+static void sk_hover_popup_frame(void *ud) {
 
-  FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
+  SkHoverPopupCtx *p = (SkHoverPopupCtx *)ud;
   if (!p || !p->render) {
     return;
   }
@@ -829,26 +829,26 @@ static void fl_hover_popup_frame(void *ud) {
   }
 }
 
-static FlHoverPopupCtx *fl_hover_popup_ctx_new(const FlMessageSpec *spec) {
+static SkHoverPopupCtx *sk_hover_popup_ctx_new(const SkMessageSpec *spec) {
 
-  FlHoverPopupCtx *p = (FlHoverPopupCtx *)calloc(1, sizeof(*p));
+  SkHoverPopupCtx *p = (SkHoverPopupCtx *)calloc(1, sizeof(*p));
   if (!p)
     return NULL;
   p->render = spec->render;
   p->w = spec->w > 0 ? spec->w : WIDGET_PROVISIONAL_W;
   p->h = spec->h > 0 ? spec->h : WIDGET_PROVISIONAL_H;
-  p->created_at = fl_start_timer();
+  p->created_at = sk_start_timer();
   p->pad = WIDGET_DEFAULT_PAD;
   return p;
 }
 
-static void fl_hover_popup_ctx_free(void *ud) {
-  FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
+static void sk_hover_popup_ctx_free(void *ud) {
+  SkHoverPopupCtx *p = (SkHoverPopupCtx *)ud;
   if (p)
     free(p);
 }
 
-void fli_message(const FlMessageSpec *spec) {
+void ski_message(const SkMessageSpec *spec) {
   if (!MessagesEnabled)
     return;
   int w = spec->w > 0 ? spec->w : 0;
@@ -862,11 +862,11 @@ void fli_message(const FlMessageSpec *spec) {
   ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
   if (spec->hover_key && spec->hover_key[0]) {
     if (spec->render) {
-      FlHoverPopupCtx *ctx = fl_hover_popup_ctx_new(spec);
+      SkHoverPopupCtx *ctx = sk_hover_popup_ctx_new(spec);
       if (ctx) {
         Platform_HoverWidgetShow((PlHoverWidgetShowSpec){
             .key = spec->hover_key,
-            .render = fl_hover_popup_frame,
+            .render = sk_hover_popup_frame,
             .ud = ctx,
             .x = spec->x,
             .y = spec->y,
@@ -877,7 +877,7 @@ void fli_message(const FlMessageSpec *spec) {
             .bg_hex = spec->color_bg
                           ? rgb_to_hex(spec->color_bg)
                           : (spec->no_bg ? 0UL : rgb_to_hex(COLOR_BG)),
-            .release = fl_hover_popup_ctx_free,
+            .release = sk_hover_popup_ctx_free,
             .release_ud = ctx});
       }
       return;
@@ -917,7 +917,7 @@ void fli_message(const FlMessageSpec *spec) {
                      color, spec->render, spec->name);
 }
 
-bool fl_launch_browser(char *url) {
+bool sk_launch_browser(char *url) {
   if (!url) {
     return false;
   }
@@ -925,17 +925,17 @@ bool fl_launch_browser(char *url) {
   return r;
 }
 
-bool fl_query_browser(const char *query) {
+bool sk_query_browser(const char *query) {
   if (!query)
     return false;
   return Platform_QueryBrowser(query);
 }
 
-char *fl_get_last_clipboard_entry() {
+char *sk_get_last_clipboard_entry() {
   char *current = Platform_GetClipboardEntry();
   if (current) {
     if (current[0]) {
-      const FlClipboardEntry *latest = fl_clipboard_latest();
+      const SkClipboardEntry *latest = sk_clipboard_latest();
       if (!latest || latest->type != CLIPBOARD_TEXT || !latest->text ||
           strcmp(latest->text, current) != 0)
         clipboard_history_push_text_platform(current);
@@ -943,27 +943,27 @@ char *fl_get_last_clipboard_entry() {
     free(current);
   }
   for (size_t i = clipboard_history_count_platform(); i > 0; i--) {
-    const FlClipboardEntry *e = clipboard_history_get_platform(i - 1);
+    const SkClipboardEntry *e = clipboard_history_get_platform(i - 1);
     if (e->type == CLIPBOARD_TEXT && e->text)
       return strdup(e->text);
   }
   return NULL;
 }
 
-bool fl_paste_from_clipboard() {
+bool sk_paste_from_clipboard() {
   char *content = Platform_GetClipboardEntry();
   return Platform_PasteContent(content);
 }
 
-bool fl_paste(char *content) {
+bool sk_paste(char *content) {
   if (!content)
     return false;
   return Platform_PasteContent(content);
 }
 
-static bool fl_popup_enter(PromptState *state);
+static bool sk_popup_enter(PromptState *state);
 
-char *fli_edit_text_popup(const FlEditPopupSpec *spec) {
+char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   const char *initial_text = spec ? spec->initial_text : NULL;
   int x = spec->x ? spec->x : 0;
   int y = spec->y ? spec->y : 0;
@@ -982,13 +982,13 @@ char *fli_edit_text_popup(const FlEditPopupSpec *spec) {
     return NULL;
   PromptSpec pspec = {0};
   pspec.initial_text = initial_text;
-  pspec.enter = fl_popup_enter;
+  pspec.enter = sk_popup_enter;
   pspec.x = x;
   pspec.y = y;
   pspec.w = w;
   pspec.h = h;
   EventBus_Trigger(EVENT_PROMPT_OPEN);
-  FlintContext_Get()->window.editbox_placed = false;
+  SkaldContext_Get()->window.editbox_placed = false;
   char *r = Platform_PromptUser(wm, &pspec);
   if (r && out_index)
     *out_index = true_idx;
@@ -1000,14 +1000,14 @@ char *fli_edit_text_popup(const FlEditPopupSpec *spec) {
   return r ? strdup(r) : NULL;
 }
 
-bool fl_replace_line_in_file(const char *filepath, int line_index,
+bool sk_replace_line_in_file(const char *filepath, int line_index,
                              const char *new_text) {
   if (!filepath || !new_text || line_index < 0)
     return false;
-  FlStringList files = fl_load_file_list(filepath);
+  SkStringList files = sk_load_file_list(filepath);
   if ((size_t)line_index >= files.count) {
 
-    fl_free_file_list(&files);
+    sk_free_file_list(&files);
     return false;
   }
   free(files.items[line_index]);
@@ -1015,15 +1015,15 @@ bool fl_replace_line_in_file(const char *filepath, int line_index,
   files.items[line_index] = strdup(new_text);
   if (!files.items[line_index]) {
 
-    fl_free_file_list(&files);
+    sk_free_file_list(&files);
     return false;
   }
-  bool ok = fl_write_to_file(filepath, (const char **)files.items, files.count);
-  fl_free_file_list(&files);
+  bool ok = sk_write_to_file(filepath, (const char **)files.items, files.count);
+  sk_free_file_list(&files);
   return ok;
 }
 
-bool fl_focus_window_by_title(char *title) {
+bool sk_focus_window_by_title(char *title) {
   if (!title) {
     return false;
   }
@@ -1031,84 +1031,84 @@ bool fl_focus_window_by_title(char *title) {
   return r;
 }
 
-bool fl_close_active_window(void) {
+bool sk_close_active_window(void) {
   bool r = Platform_CloseActiveWindow();
   return r;
 }
 
-bool fl_dismiss_message(const char *name) {
-  bool r = fl_dismiss_message_platform(name);
+bool sk_dismiss_message(const char *name) {
+  bool r = sk_dismiss_message_platform(name);
   return r;
 }
 
-bool fl_message_active(const char *name) {
+bool sk_message_active(const char *name) {
   bool r = Platform_MessageActive(name);
   return r;
 }
 
-bool fl_toggle_fullscreen_active(void) {
+bool sk_toggle_fullscreen_active(void) {
   bool r = Platform_ToggleFullscreenActive();
   return r;
 }
 
-bool fl_move_active_window_to_monitor(bool right) {
+bool sk_move_active_window_to_monitor(bool right) {
   bool r = Platform_MoveActiveWindowToMonitor(right);
   return r;
 }
 
-bool fl_move_active_window_left(void) {
+bool sk_move_active_window_left(void) {
   bool r = Platform_MoveActiveWindowLeft();
   return r;
 }
 
-bool fl_move_active_window_right(void) {
+bool sk_move_active_window_right(void) {
   bool r = Platform_MoveActiveWindowRight();
   return r;
 }
 
-bool fl_focus_window_left(void) {
+bool sk_focus_window_left(void) {
   bool r = Platform_FocusWindowLeft();
   return r;
 }
 
-bool fl_focus_window_right(void) {
+bool sk_focus_window_right(void) {
   bool r = Platform_FocusWindowRight();
   return r;
 }
 
-bool fl_move_active_window_up(void) {
+bool sk_move_active_window_up(void) {
   bool r = Platform_MoveActiveWindowUp();
   return r;
 }
 
-bool fl_move_active_window_down(void) {
+bool sk_move_active_window_down(void) {
   bool r = Platform_MoveActiveWindowDown();
   return r;
 }
 
-bool fl_focus_window_up(void) {
+bool sk_focus_window_up(void) {
   bool r = Platform_FocusWindowUp();
   return r;
 }
 
-bool fl_focus_window_down(void) {
+bool sk_focus_window_down(void) {
   bool r = Platform_FocusWindowDown();
   return r;
 }
 
-bool fl_toggle_minimized_active(void) {
+bool sk_toggle_minimized_active(void) {
   bool r = Platform_MinimizeActiveWindow();
   return r;
 }
 
-bool fl_reload_config(void) { return Config_Reload(); }
+bool sk_reload_config(void) { return Config_Reload(); }
 
-static bool fl_popup_enter(PromptState *state) {
+static bool sk_popup_enter(PromptState *state) {
   (void)state;
   return true;
 }
 
-char *fli_popup(const PopupSpec *spec) {
+char *ski_popup(const PopupSpec *spec) {
   if (!spec)
     return NULL;
   WindowManager *wm = WindowManager_Get();
@@ -1116,7 +1116,7 @@ char *fli_popup(const PopupSpec *spec) {
     return NULL;
   PromptSpec pspec = {0};
   pspec.placeholder = spec->placeholder;
-  pspec.enter = fl_popup_enter;
+  pspec.enter = sk_popup_enter;
   pspec.x = spec->x;
   pspec.y = spec->y;
   pspec.w = spec->w ? spec->w : 600;
@@ -1125,9 +1125,9 @@ char *fli_popup(const PopupSpec *spec) {
   return r ? strdup(r) : NULL;
 }
 
-unsigned long fl_listbox_get_current_standard_color(void);
+unsigned long sk_listbox_get_current_standard_color(void);
 
-bool fli_draw_text(const FlTextSpec *spec) {
+bool ski_draw_text(const SkTextSpec *spec) {
   if (!spec) {
     return false;
   }
@@ -1146,7 +1146,7 @@ bool fli_draw_text(const FlTextSpec *spec) {
   }
   unsigned long col = spec->color;
   if (col == 0) {
-    unsigned long cur = fl_listbox_get_current_standard_color();
+    unsigned long cur = sk_listbox_get_current_standard_color();
     col = cur ? cur : rgb_to_hex(COLOR_TEXT);
   } else {
     col = rgb_to_hex(col);
@@ -1165,14 +1165,14 @@ bool fli_draw_text(const FlTextSpec *spec) {
   return r;
 }
 
-typedef int (*FlWrapMeasureFn)(void *ctx, const char *s, int n);
-typedef void (*FlWrapDrawFn)(void *ctx, int x, int y, const char *s, int n);
+typedef int (*SkWrapMeasureFn)(void *ctx, const char *s, int n);
+typedef void (*SkWrapDrawFn)(void *ctx, int x, int y, const char *s, int n);
 typedef struct {
   unsigned long color;
   int fontsize;
-} FlWrapCtx;
+} SkWrapCtx;
 
-static int FlUtf8LeadLen(unsigned char c) {
+static int SkUtf8LeadLen(unsigned char c) {
 
   if ((c & 0x80) == 0)
     return 1;
@@ -1185,7 +1185,7 @@ static int FlUtf8LeadLen(unsigned char c) {
   return 1;
 }
 
-static void FlWrapRecord(FlCharPos *out, int maxout, int *count, int x, int y) {
+static void SkWrapRecord(SkCharPos *out, int maxout, int *count, int x, int y) {
   int i = *count;
   (*count)++;
   if (out && i < maxout) {
@@ -1194,27 +1194,27 @@ static void FlWrapRecord(FlCharPos *out, int maxout, int *count, int x, int y) {
   }
 }
 
-static int FlWrapPlaceWord(FlWrapMeasureFn measure, FlWrapDrawFn draw,
+static int SkWrapPlaceWord(SkWrapMeasureFn measure, SkWrapDrawFn draw,
                            void *ctx, const char *text, int ws, int we, int wx,
-                           int rowtop, FlCharPos *out, int maxout, int *count) {
+                           int rowtop, SkCharPos *out, int maxout, int *count) {
 
   int i = ws;
   while (i < we) {
-    int j = i + FlUtf8LeadLen((unsigned char)text[i]);
+    int j = i + SkUtf8LeadLen((unsigned char)text[i]);
     if (j > we)
       j = we;
     int px = wx + measure(ctx, text + ws, i - ws);
     for (int m = i; m < j; m++)
-      FlWrapRecord(out, maxout, count, px, rowtop);
+      SkWrapRecord(out, maxout, count, px, rowtop);
     i = j;
   }
   draw(ctx, wx, rowtop, text + ws, we - ws);
   return measure(ctx, text + ws, we - ws);
 }
 
-static int FlWrapLayout(const char *text, int x0, int y0, int max_width,
-                        int line_height, FlWrapMeasureFn measure,
-                        FlWrapDrawFn draw, void *ctx, FlCharPos *out,
+static int SkWrapLayout(const char *text, int x0, int y0, int max_width,
+                        int line_height, SkWrapMeasureFn measure,
+                        SkWrapDrawFn draw, void *ctx, SkCharPos *out,
                         int maxout) {
 
   int count = 0;
@@ -1229,7 +1229,7 @@ static int FlWrapLayout(const char *text, int x0, int y0, int max_width,
   bool has = false;
   while (p < len) {
     if (text[p] == '\n') {
-      FlWrapRecord(out, maxout, &count, x0, y0 + (row + 1) * line_height);
+      SkWrapRecord(out, maxout, &count, x0, y0 + (row + 1) * line_height);
       row++;
       lw = 0;
       has = false;
@@ -1240,7 +1240,7 @@ static int FlWrapLayout(const char *text, int x0, int y0, int max_width,
     while (ws < len && (text[ws] == ' ' || text[ws] == '\t'))
       ws++;
     for (int m = p; m < ws; m++)
-      FlWrapRecord(out, maxout, &count, x0 + (has ? lw : 0),
+      SkWrapRecord(out, maxout, &count, x0 + (has ? lw : 0),
                    y0 + row * line_height);
     if (ws >= len)
       break;
@@ -1274,18 +1274,18 @@ static int FlWrapLayout(const char *text, int x0, int y0, int max_width,
         while (n > 0 && (((unsigned char)text[c + n] & 0xC0) == 0x80))
           n--;
         if (n <= 0) {
-          n = FlUtf8LeadLen((unsigned char)text[c]);
+          n = SkUtf8LeadLen((unsigned char)text[c]);
           if (n > we - c)
             n = we - c;
         }
         if (c + n >= we) {
-          lw = FlWrapPlaceWord(measure, draw, ctx, text, c, we, x0, rowtop, out,
+          lw = SkWrapPlaceWord(measure, draw, ctx, text, c, we, x0, rowtop, out,
                                maxout, &count);
           has = true;
           c = we;
           break;
         }
-        FlWrapPlaceWord(measure, draw, ctx, text, c, c + n, x0, rowtop, out,
+        SkWrapPlaceWord(measure, draw, ctx, text, c, c + n, x0, rowtop, out,
                         maxout, &count);
         row++;
         rowtop = y0 + row * line_height;
@@ -1302,7 +1302,7 @@ static int FlWrapLayout(const char *text, int x0, int y0, int max_width,
       has = false;
     }
     int wx = x0 + (has ? lw + spaceW : 0);
-    int pxw = FlWrapPlaceWord(measure, draw, ctx, text, ws, we, wx, rowtop, out,
+    int pxw = SkWrapPlaceWord(measure, draw, ctx, text, ws, we, wx, rowtop, out,
                               maxout, &count);
     lw = has ? lw + spaceW + pxw : pxw;
     has = true;
@@ -1311,14 +1311,14 @@ static int FlWrapLayout(const char *text, int x0, int y0, int max_width,
   return count;
 }
 
-static int FlWrapMeasureThunk(void *ctx, const char *s, int n) {
+static int SkWrapMeasureThunk(void *ctx, const char *s, int n) {
 
-  FlWrapCtx *c = (FlWrapCtx *)ctx;
+  SkWrapCtx *c = (SkWrapCtx *)ctx;
   return Platform_MeasureTextWidth(
       (PlMeasureTextWidthSpec){.text = s, .len = n, .fontsize = c->fontsize});
 }
 
-static void FlWrapNoDraw(void *ctx, int x, int y, const char *s, int n) {
+static void SkWrapNoDraw(void *ctx, int x, int y, const char *s, int n) {
   (void)ctx;
   (void)x;
   (void)y;
@@ -1326,7 +1326,7 @@ static void FlWrapNoDraw(void *ctx, int x, int y, const char *s, int n) {
   (void)n;
 }
 
-int fli_measure_text_wrapped(const FlMeasureSpec *spec) {
+int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
   if (!spec || !spec->text) {
     return 0;
   }
@@ -1336,26 +1336,26 @@ int fli_measure_text_wrapped(const FlMeasureSpec *spec) {
   int line_height = spec->line_height;
   if (line_height <= 0)
     line_height = fontsize + 4;
-  FlWrapCtx ctx;
+  SkWrapCtx ctx;
   ctx.color = 0;
   ctx.fontsize = fontsize;
   int cap = (int)strlen(spec->text) + 1;
-  int r = FlWrapLayout(spec->text, spec->x, spec->y, spec->max_width,
-                       line_height, FlWrapMeasureThunk, FlWrapNoDraw, &ctx,
+  int r = SkWrapLayout(spec->text, spec->x, spec->y, spec->max_width,
+                       line_height, SkWrapMeasureThunk, SkWrapNoDraw, &ctx,
                        spec->out_positions, cap);
   return r;
 }
 
-bool fli_place_editbox(const FlEditSpec *spec) {
+bool ski_place_editbox(const SkEditSpec *spec) {
   if (!spec) {
     return false;
   }
-  FlintContext_Get()->window.editbox_placed = true;
-  bool r = fl_place_editbox_platform(spec);
+  SkaldContext_Get()->window.editbox_placed = true;
+  bool r = sk_place_editbox_platform(spec);
   return r;
 }
 
-bool fli_draw_image(const FlImageSpec *spec) {
+bool ski_draw_image(const SkImageSpec *spec) {
   if (!spec || !spec->path || !spec->path[0]) {
     return false;
   }
@@ -1372,7 +1372,7 @@ bool fli_draw_image(const FlImageSpec *spec) {
   return r;
 }
 
-bool fli_draw_rect(const PlRect *spec) {
+bool ski_draw_rect(const PlRect *spec) {
   if (!spec) {
     return false;
   }
@@ -1395,7 +1395,7 @@ bool fli_draw_rect(const PlRect *spec) {
   return r;
 }
 
-int fl_rand_num_between(int min, int max) {
+int sk_rand_num_between(int min, int max) {
   if (max < min) {
     int t = min;
     min = max;
@@ -1412,7 +1412,7 @@ int fl_rand_num_between(int min, int max) {
   return min + (int)(r % span);
 }
 
-int fl_get_text_height(const char *text) {
+int sk_get_text_height(const char *text) {
   (void)text;
   int lh = 0, rh = 0, lt = 0;
   Platform_GetTextLayoutMetrics(&lh, &rh, &lt);
@@ -1420,8 +1420,8 @@ int fl_get_text_height(const char *text) {
   return r;
 }
 
-FlRect fli_text_bounds(const FlTextBoundsSpec *spec) {
-  FlRect r = {.x = 0, .y = 0, .w = 0, .h = 0, .color = 0};
+SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
+  SkRect r = {.x = 0, .y = 0, .w = 0, .h = 0, .color = 0};
   if (!spec || !spec->text || !spec->text[0])
     return r;
   int fs = spec->fontsize > 0 ? spec->fontsize : FontSize;
@@ -1442,32 +1442,32 @@ FlRect fli_text_bounds(const FlTextBoundsSpec *spec) {
   return r;
 }
 
-int fl_get_text_width(const char *text, int fontsize) {
+int sk_get_text_width(const char *text, int fontsize) {
   return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
       .text = text, .len = (int)strlen(text), .fontsize = fontsize});
 }
 
-char *fl_http_get(const char *url) { return Platform_HttpGet(url); }
+char *sk_http_get(const char *url) { return Platform_HttpGet(url); }
 
-char *fl_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
+char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
   return Platform_HttpGetLimited(url, max_bytes, out_len);
 }
 
-bool fl_http_download(const char *url, const char *save_path) {
+bool sk_http_download(const char *url, const char *save_path) {
   return Platform_HttpDownload(url, save_path);
 }
 
-char *fl_http_post(const char *url, const char *content_type,
+char *sk_http_post(const char *url, const char *content_type,
                    const char *body) {
   return Platform_HttpPost(url, content_type, body);
 }
 
-void fl_http_get_async(const char *url, FlHttpCallback cb, void *userdata) {
+void sk_http_get_async(const char *url, SkHttpCallback cb, void *userdata) {
   Platform_HttpGetAsync(url, cb, userdata);
   return;
 }
 
-bool fli_draw_line(const PlLine *spec) {
+bool ski_draw_line(const PlLine *spec) {
   if (!spec) {
     return false;
   }
@@ -1485,7 +1485,7 @@ bool fli_draw_line(const PlLine *spec) {
   return r;
 }
 
-bool fli_draw_circle(const PlCircle *spec) {
+bool ski_draw_circle(const PlCircle *spec) {
   if (!spec) {
     return false;
   }
@@ -1502,109 +1502,109 @@ bool fli_draw_circle(const PlCircle *spec) {
   return r;
 }
 
-bool fl_listbox_begin(const FlListSpec *spec) {
+bool sk_listbox_begin(const SkListSpec *spec) {
   if (!spec) {
     return false;
   }
-  bool r = fl_listbox_begin_platform(spec);
+  bool r = sk_listbox_begin_platform(spec);
   return r;
 }
 
-bool fl_listbox_next(FlListItemCtx *out) {
+bool sk_listbox_next(SkListItemCtx *out) {
   if (!out) {
     return false;
   }
-  bool r = fl_listbox_next_platform(out);
+  bool r = sk_listbox_next_platform(out);
   return r;
 }
 
-void fl_listbox_end(void) { fl_listbox_end_platform(); }
-bool fli_place_listbox(const FlListSpec *spec) {
+void sk_listbox_end(void) { sk_listbox_end_platform(); }
+bool ski_place_listbox(const SkListSpec *spec) {
   if (!spec) {
     return false;
   }
-  if (!fl_listbox_begin(spec)) {
+  if (!sk_listbox_begin(spec)) {
     return false;
   }
-  FlListItemCtx ctx;
-  while (fl_listbox_next(&ctx)) {
-    fl_draw_text(.x = ctx.x + 10, .y = ctx.y + 4, .text = ctx.text,
+  SkListItemCtx ctx;
+  while (sk_listbox_next(&ctx)) {
+    sk_draw_text(.x = ctx.x + 10, .y = ctx.y + 4, .text = ctx.text,
                  .align = "LEFT", .pad = ctx.x + 10);
   }
-  fl_listbox_end();
+  sk_listbox_end();
   return true;
 }
 
-bool fl_checkbox_is_checked(const char *name) {
+bool sk_checkbox_is_checked(const char *name) {
   bool r = Checkbox_IsChecked(name);
   return r;
 }
 
-bool fl_checkbox_is_hovered(const char *name) {
+bool sk_checkbox_is_hovered(const char *name) {
   bool r = Checkbox_IsHovered(name);
   return r;
 }
 
-bool fli_place_checkbox(const FlCheckboxSpec *spec) {
+bool ski_place_checkbox(const SkCheckboxSpec *spec) {
   bool r = Checkbox_Place(spec);
   return r;
 }
 
-FlWindowList fl_get_all_window_titles() {
-  FlWindowList l = Platform_GetWindowTitles();
+SkWindowList sk_get_all_window_titles() {
+  SkWindowList l = Platform_GetWindowTitles();
   return l;
 }
 
-FlWindowList fl_get_all_window_names() {
-  FlWindowList l = Platform_GetWindowNames();
+SkWindowList sk_get_all_window_names() {
+  SkWindowList l = Platform_GetWindowNames();
   return l;
 }
 
-PlColor fl_get_pixel_color(FlPos pos) {
+PlColor sk_get_pixel_color(SkPos pos) {
   PlColor c = Platform_GetPixelColor(pos.x, pos.y);
   return c;
 }
-bool fl_move_to_pos(FlPos pos) {
+bool sk_move_to_pos(SkPos pos) {
   bool ok = Platform_MoveToPos(pos.x, pos.y);
   return ok;
 }
-bool fl_click_at_pos(FlPos pos) {
-  bool ok = fl_move_to_pos(pos) && fl_click();
+bool sk_click_at_pos(SkPos pos) {
+  bool ok = sk_move_to_pos(pos) && sk_click();
   return ok;
 }
-bool fl_left_click(void) {
+bool sk_left_click(void) {
   bool ok = Platform_ClickButton(1);
   return ok;
 }
-bool fl_right_click(void) {
+bool sk_right_click(void) {
   bool ok = Platform_ClickButton(2);
   return ok;
 }
-bool fl_emit_mouse_button(int button, bool down) {
+bool sk_emit_mouse_button(int button, bool down) {
   bool ok = Platform_MouseButtonDown(button, down);
   return ok;
 }
-bool fl_emit_mouse_button_at(FlPos pos, int button, bool down) {
-  bool moved = fl_move_to_pos(pos);
+bool sk_emit_mouse_button_at(SkPos pos, int button, bool down) {
+  bool moved = sk_move_to_pos(pos);
   bool ok = moved && Platform_MouseButtonDown(button, down);
   return ok;
 }
-bool fl_click_button_at(FlPos pos, int button) {
-  bool moved = fl_move_to_pos(pos);
+bool sk_click_button_at(SkPos pos, int button) {
+  bool moved = sk_move_to_pos(pos);
   bool down = moved && Platform_MouseButtonDown(button, true);
   if (!down) {
     return false;
   }
-  fl_sleep(0.02);
+  sk_sleep(0.02);
   bool up = Platform_MouseButtonDown(button, false);
   return up;
 }
-bool fl_mouse_scroll(int notches) {
+bool sk_mouse_scroll(int notches) {
   bool ok = Platform_MouseScroll(notches);
   return ok;
 }
 
-static bool fl_rel_to_abs(int rx, int ry, FlPos *out) {
+static bool sk_rel_to_abs(int rx, int ry, SkPos *out) {
 
   if (!out) {
     return false;
@@ -1618,73 +1618,73 @@ static bool fl_rel_to_abs(int rx, int ry, FlPos *out) {
   return true;
 }
 
-bool fl_move_to_pos_rel(int rx, int ry) {
-  FlPos abs;
-  if (!fl_rel_to_abs(rx, ry, &abs)) {
+bool sk_move_to_pos_rel(int rx, int ry) {
+  SkPos abs;
+  if (!sk_rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  bool ok = fl_move_to_pos(abs);
+  bool ok = sk_move_to_pos(abs);
   return ok;
 }
 
-bool fl_click_at_pos_rel(int rx, int ry) {
-  FlPos abs;
-  if (!fl_rel_to_abs(rx, ry, &abs)) {
+bool sk_click_at_pos_rel(int rx, int ry) {
+  SkPos abs;
+  if (!sk_rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  bool ok = fl_click_at_pos(abs);
+  bool ok = sk_click_at_pos(abs);
   return ok;
 }
 
-bool fl_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
-  FlPos abs;
-  if (!fl_rel_to_abs(rx, ry, &abs)) {
+bool sk_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
+  SkPos abs;
+  if (!sk_rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  bool ok = fl_emit_mouse_button_at(abs, button, down);
+  bool ok = sk_emit_mouse_button_at(abs, button, down);
   return ok;
 }
 
-bool fl_click_button_at_rel(int rx, int ry, int button) {
-  FlPos abs;
-  if (!fl_rel_to_abs(rx, ry, &abs)) {
+bool sk_click_button_at_rel(int rx, int ry, int button) {
+  SkPos abs;
+  if (!sk_rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  bool ok = fl_click_button_at(abs, button);
+  bool ok = sk_click_button_at(abs, button);
   return ok;
 }
 
-void fl_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
+void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
 
-bool fl_replay_hotkey(int vk, int mods) {
+bool sk_replay_hotkey(int vk, int mods) {
   bool matched = hotkey_process(vk, mods);
   return matched;
 }
-bool fl_type_text(const char *s) { return fl_type_text_platform(s); }
+bool sk_type_text(const char *s) { return sk_type_text_platform(s); }
 
-void fl_sleep(double seconds) { fl_sleep_platform(seconds); }
+void sk_sleep(double seconds) { sk_sleep_platform(seconds); }
 
-FlLibrary fl_library_open(const char *path) {
-  return (FlLibrary)Platform_LoadLibrary(path);
+SkLibrary sk_library_open(const char *path) {
+  return (SkLibrary)Platform_LoadLibrary(path);
 }
 
-void *fl_library_symbol(FlLibrary lib, const char *name) {
+void *sk_library_symbol(SkLibrary lib, const char *name) {
   return Platform_GetSymbol((LibHandle)lib, name);
 }
 
-void fl_library_close(FlLibrary lib) { Platform_UnloadLibrary((LibHandle)lib); }
+void sk_library_close(SkLibrary lib) { Platform_UnloadLibrary((LibHandle)lib); }
 
-const char *fl_library_error(void) { return Platform_GetLoadError(); }
+const char *sk_library_error(void) { return Platform_GetLoadError(); }
 
 typedef struct {
-  FlThreadFunc fn;
+  SkThreadFunc fn;
   void *arg;
   char owner[512];
-} FlThreadCtx;
+} SkThreadCtx;
 
-static void *fl_thread_trampoline(void *p) {
-  FlThreadCtx *ctx = (FlThreadCtx *)p;
-  FlThreadFunc fn = ctx->fn;
+static void *sk_thread_trampoline(void *p) {
+  SkThreadCtx *ctx = (SkThreadCtx *)p;
+  SkThreadFunc fn = ctx->fn;
   void *arg = ctx->arg;
   void *ret = fn ? fn(arg) : NULL;
   ThreadRegistry_Finish(ctx);
@@ -1692,11 +1692,11 @@ static void *fl_thread_trampoline(void *p) {
   return ret;
 }
 
-static FlThread fl_thread_create_ex(FlThreadFunc fn, void *arg,
+static SkThread sk_thread_create_ex(SkThreadFunc fn, void *arg,
                                     void *owner_src) {
   if (!fn)
     return NULL;
-  FlThreadCtx *ctx = malloc(sizeof(*ctx));
+  SkThreadCtx *ctx = malloc(sizeof(*ctx));
   if (!ctx)
     return NULL;
   ctx->fn = fn;
@@ -1705,86 +1705,86 @@ static FlThread fl_thread_create_ex(FlThreadFunc fn, void *arg,
   Platform_GetModuleOwnerPath(owner_src ? owner_src : (void *)(uintptr_t)fn,
                               ctx->owner, sizeof(ctx->owner));
   ThreadRegistry_Add(ctx, ctx->owner);
-  void *thread = Platform_ThreadCreate(fl_thread_trampoline, ctx);
+  void *thread = Platform_ThreadCreate(sk_thread_trampoline, ctx);
   if (!thread) {
     ThreadRegistry_Finish(ctx);
     free(ctx);
     return NULL;
   }
-  return (FlThread)thread;
+  return (SkThread)thread;
 }
 
-FlThread fl_thread_create(FlThreadFunc fn, void *arg) {
-  return fl_thread_create_ex(fn, arg, NULL);
+SkThread sk_thread_create(SkThreadFunc fn, void *arg) {
+  return sk_thread_create_ex(fn, arg, NULL);
 }
 
-void fl_thread_join(FlThread thread) {
+void sk_thread_join(SkThread thread) {
   if (!thread) {
     return;
   }
   Platform_ThreadJoin((void *)thread);
 }
 
-FlMutex fl_mutex_create(void) { return (FlMutex)Platform_MutexCreate(); }
+SkMutex sk_mutex_create(void) { return (SkMutex)Platform_MutexCreate(); }
 
-void fl_mutex_destroy(FlMutex mutex) {
+void sk_mutex_destroy(SkMutex mutex) {
   if (!mutex) {
     return;
   }
   Platform_MutexDestroy((void *)mutex);
 }
 
-void fl_mutex_lock(FlMutex mutex) {
+void sk_mutex_lock(SkMutex mutex) {
   if (!mutex) {
     return;
   }
   Platform_MutexLock((void *)mutex);
 }
 
-void fl_mutex_unlock(FlMutex mutex) {
+void sk_mutex_unlock(SkMutex mutex) {
   if (!mutex) {
     return;
   }
   Platform_MutexUnlock((void *)mutex);
 }
 
-void fl_send_hotkey(const char *hotkey_string) {
+void sk_send_hotkey(const char *hotkey_string) {
   if (!hotkey_string) {
     return;
   }
   remap_send_combo(hotkey_string);
 }
 
-static char g_fl_hotkey_string[HOTKEY_STRING_MAX_LEN];
+static char g_sk_hotkey_string[HOTKEY_STRING_MAX_LEN];
 
-char *fl_hotkey_to_string(FlKey key) {
-  if (!HotkeyString_Format(key, g_fl_hotkey_string,
-                           (int)sizeof(g_fl_hotkey_string))) {
-    g_fl_hotkey_string[0] = '\0';
+char *sk_hotkey_to_string(SkKey key) {
+  if (!HotkeyString_Format(key, g_sk_hotkey_string,
+                           (int)sizeof(g_sk_hotkey_string))) {
+    g_sk_hotkey_string[0] = '\0';
   }
-  return g_fl_hotkey_string;
+  return g_sk_hotkey_string;
 }
 
-FlKey fl_hotkey_from_string(const char *str) {
-  FlKey key = {0};
+SkKey sk_hotkey_from_string(const char *str) {
+  SkKey key = {0};
   HotkeyString_Parse(str, &key);
   return key;
 }
 
-bool fl_is_key_down(int vk) { return Platform_IsKeyDown(vk); }
-bool fl_is_key_pressed(int vk) { return Platform_WasKeyPressed(vk); }
-bool fl_is_key_released(int vk) { return Platform_WasKeyReleased(vk); }
-bool fl_ctrl_pressed(void) { return Platform_IsCtrlPressed(); }
-bool fl_shift_pressed(void) { return Platform_IsShiftPressed(); }
-bool fl_alt_pressed(void) { return Platform_IsAltPressed(); }
-bool fl_super_pressed(void) { return Platform_IsSuperPressed(); }
-void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud) {
+bool sk_is_key_down(int vk) { return Platform_IsKeyDown(vk); }
+bool sk_is_key_pressed(int vk) { return Platform_WasKeyPressed(vk); }
+bool sk_is_key_released(int vk) { return Platform_WasKeyReleased(vk); }
+bool sk_ctrl_pressed(void) { return Platform_IsCtrlPressed(); }
+bool sk_shift_pressed(void) { return Platform_IsShiftPressed(); }
+bool sk_alt_pressed(void) { return Platform_IsAltPressed(); }
+bool sk_super_pressed(void) { return Platform_IsSuperPressed(); }
+void sk_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud) {
   Platform_SetKeyCallback(cb, ud);
 }
-int fl_get_key_pressed(void) { return Platform_GetPressedKey(); }
-char fl_get_char_pressed(void) { return Platform_GetPressedChar(); }
+int sk_get_key_pressed(void) { return Platform_GetPressedKey(); }
+char sk_get_char_pressed(void) { return Platform_GetPressedChar(); }
 
-bool fl_poll_key(FlKeyEvent *out) {
+bool sk_poll_key(SkKeyEvent *out) {
   if (!out)
     return false;
   PlatformKeyEvent ev;
@@ -1799,7 +1799,7 @@ bool fl_poll_key(FlKeyEvent *out) {
   return true;
 }
 
-bool fl_poll_mouse(FlMouseEvent *out) {
+bool sk_poll_mouse(SkMouseEvent *out) {
   if (!out)
     return false;
   PlatformMouseEvent ev;
@@ -1815,37 +1815,37 @@ bool fl_poll_mouse(FlMouseEvent *out) {
   return true;
 }
 
-int fl_mouse_queue_len(void) { return Platform_GlobalMouse_Pending(); }
+int sk_mouse_queue_len(void) { return Platform_GlobalMouse_Pending(); }
 
-unsigned long fl_mouse_queue_dropped(void) {
+unsigned long sk_mouse_queue_dropped(void) {
   return Platform_GlobalMouse_Dropped();
 }
 
-void fl_clear_mouse_queue(void) { Platform_GlobalMouse_Clear(); }
+void sk_clear_mouse_queue(void) { Platform_GlobalMouse_Clear(); }
 
-FlPos fl_get_cursor_pos() {
+SkPos sk_get_cursor_pos() {
   int x, y;
   Platform_GetMousePos(&x, &y);
-  return (FlPos){x, y};
+  return (SkPos){x, y};
 }
 
-bool fl_mouse_pressed(int button) { return Platform_MouseStateDown(button); }
+bool sk_mouse_pressed(int button) { return Platform_MouseStateDown(button); }
 
-int fl_key_queue_len(void) { return Platform_GlobalKey_Pending(); }
+int sk_key_queue_len(void) { return Platform_GlobalKey_Pending(); }
 
-unsigned long fl_key_queue_dropped(void) {
+unsigned long sk_key_queue_dropped(void) {
   return Platform_GlobalKey_Dropped();
 }
 
-void fl_clear_key_queue(void) { Platform_GlobalKey_Clear(); }
+void sk_clear_key_queue(void) { Platform_GlobalKey_Clear(); }
 
-int fl_char_for_key(int vk, int scancode, int mods) {
+int sk_char_for_key(int vk, int scancode, int mods) {
   return Platform_CharForKey(vk, scancode, mods);
 }
 
-bool fl_is_flag_prefix(char c) { return c == '-' || c == '/'; }
+bool sk_is_flag_prefix(char c) { return c == '-' || c == '/'; }
 
-size_t fl_extract_flag_name(char *p, char *out, size_t cap) {
+size_t sk_extract_flag_name(char *p, char *out, size_t cap) {
   size_t n = 0;
   while (p[n] && !isspace((unsigned char)p[n]) && p[n] != '=')
     n++;
@@ -1856,7 +1856,7 @@ size_t fl_extract_flag_name(char *p, char *out, size_t cap) {
   return n;
 }
 
-bool fl_extract_quoted(char **pp, char *out, size_t cap) {
+bool sk_extract_quoted(char **pp, char *out, size_t cap) {
   char *p = *pp;
   char q = *p++;
   char *s = p;
@@ -1873,10 +1873,10 @@ bool fl_extract_quoted(char **pp, char *out, size_t cap) {
   return true;
 }
 
-bool fl_extract_value(char **pp, char *out, size_t cap) {
+bool sk_extract_value(char **pp, char *out, size_t cap) {
   char *p = *pp;
   if (*p == '"' || *p == '\'')
-    return fl_extract_quoted(pp, out, cap);
+    return sk_extract_quoted(pp, out, cap);
   char *s = p;
   while (*p && !isspace((unsigned char)*p))
     p++;
@@ -1889,21 +1889,21 @@ bool fl_extract_value(char **pp, char *out, size_t cap) {
   return len > 0;
 }
 
-bool fl_next_flag(char *p) {
+bool sk_next_flag(char *p) {
   while (*p && isspace((unsigned char)*p))
     p++;
   return *p == '-' || *p == '/';
 }
 
-FlFlagList fl_parse_flags(const char *input) {
-  FlFlagList out = {0};
+SkFlagList sk_parse_flags(const char *input) {
+  SkFlagList out = {0};
   if (!input || !*input)
     return out;
   char *copy = strdup(input);
   if (!copy)
     return out;
   size_t cap = 8;
-  FlFlag *arr = (FlFlag *)calloc(cap, sizeof(FlFlag));
+  SkFlag *arr = (SkFlag *)calloc(cap, sizeof(SkFlag));
   if (!arr) {
     free(copy);
     {
@@ -1916,7 +1916,7 @@ FlFlagList fl_parse_flags(const char *input) {
       p++;
     if (!*p)
       break;
-    if (!fl_is_flag_prefix(*p)) {
+    if (!sk_is_flag_prefix(*p)) {
       while (*p && !isspace((unsigned char)*p))
         p++;
       continue;
@@ -1925,20 +1925,20 @@ FlFlagList fl_parse_flags(const char *input) {
     if (*p == '-')
       p++;
     char name[64] = {0};
-    size_t nlen = fl_extract_flag_name(p, name, sizeof(name));
+    size_t nlen = sk_extract_flag_name(p, name, sizeof(name));
     p += nlen;
     char valbuf[256] = {0};
     bool has_val = false;
     if (*p == '=') {
       p++;
-      has_val = fl_extract_value(&p, valbuf, sizeof(valbuf));
+      has_val = sk_extract_value(&p, valbuf, sizeof(valbuf));
     } else {
       char *save = p;
       while (*p && isspace((unsigned char)*p))
         p++;
-      if (*p && !fl_is_flag_prefix(*p)) {
-        has_val = fl_extract_value(&p, valbuf, sizeof(valbuf));
-        if (has_val && fl_next_flag(p)) {
+      if (*p && !sk_is_flag_prefix(*p)) {
+        has_val = sk_extract_value(&p, valbuf, sizeof(valbuf));
+        if (has_val && sk_next_flag(p)) {
           has_val = false;
           p = save;
           while (*p && isspace((unsigned char)*p))
@@ -1948,12 +1948,12 @@ FlFlagList fl_parse_flags(const char *input) {
     }
     if (out.count >= cap) {
       cap *= 2;
-      FlFlag *narr = (FlFlag *)realloc(arr, cap * sizeof(FlFlag));
+      SkFlag *narr = (SkFlag *)realloc(arr, cap * sizeof(SkFlag));
       if (!narr)
         break;
       arr = narr;
     }
-    FlFlag *f = &arr[out.count++];
+    SkFlag *f = &arr[out.count++];
     memset(f, 0, sizeof(*f));
     snprintf(f->name, sizeof(f->name), "%s", name);
     if (has_val) {
@@ -1970,7 +1970,7 @@ FlFlagList fl_parse_flags(const char *input) {
   return out;
 }
 
-void fl_free_flags(FlFlagList *list) {
+void sk_free_flags(SkFlagList *list) {
   if (!list) {
     return;
   }
@@ -1979,15 +1979,15 @@ void fl_free_flags(FlFlagList *list) {
   list->count = 0;
 }
 
-void fl_run_after_time(double seconds, void (*callback)(void)) {
-  return fl_run_after_time_platform(seconds, callback);
+void sk_run_after_time(double seconds, void (*callback)(void)) {
+  return sk_run_after_time_platform(seconds, callback);
 }
 
-FlTimer fl_start_timer(void) { return Platform_StartTimer(); }
+SkTimer sk_start_timer(void) { return Platform_StartTimer(); }
 
-double fl_end_timer(FlTimer t) { return Platform_EndTimer(t); }
+double sk_end_timer(SkTimer t) { return Platform_EndTimer(t); }
 
-char *fl_get_active_window_title(void) {
+char *sk_get_active_window_title(void) {
   char *title = Platform_GetActiveWindowTitle();
   if (!title || !title[0]) {
     return NULL;
@@ -1996,7 +1996,7 @@ char *fl_get_active_window_title(void) {
   return r;
 }
 
-char *fl_get_active_window_app_id(void) {
+char *sk_get_active_window_app_id(void) {
   char *id = Platform_GetActiveWindowAppId();
   if (!id || !id[0]) {
     return NULL;
@@ -2005,8 +2005,8 @@ char *fl_get_active_window_app_id(void) {
   return r;
 }
 
-bool fl_is_window_open(const char *title) {
-  FlWindowList l = Platform_GetWindowTitles();
+bool sk_is_window_open(const char *title) {
+  SkWindowList l = Platform_GetWindowTitles();
   bool found = false;
   for (int i = 0; i < l.count; i++) {
     if (Platform_StringContainsCaseInsensitive(l.windows[i], title)) {
@@ -2014,13 +2014,13 @@ bool fl_is_window_open(const char *title) {
       break;
     }
   }
-  fl_free_window_list(&l);
+  sk_free_window_list(&l);
   return found;
 }
 
-char *fl_get_working_dir() { return Platform_GetWorkingDir(); }
+char *sk_get_working_dir() { return Platform_GetWorkingDir(); }
 
-char *fl_resolve_data_path(const char *name) {
+char *sk_resolve_data_path(const char *name) {
   if (!name || !name[0])
     return NULL;
   char full[MAX_PATH];
@@ -2030,7 +2030,7 @@ char *fl_resolve_data_path(const char *name) {
   return strdup(full);
 }
 
-char *fl_resolve_feature_path(const char *name) {
+char *sk_resolve_feature_path(const char *name) {
   char buf[340];
   int len = snprintf(buf, sizeof(buf), "%s/%s", FeaturePath, name);
 
@@ -2041,30 +2041,30 @@ char *fl_resolve_feature_path(const char *name) {
   return strdup(buf);
 }
 
-const char *fl_resolve_user_path(void) { return Platform_GetRealHome(); }
+const char *sk_resolve_user_path(void) { return Platform_GetRealHome(); }
 
-void fl_hashmap_init(FlHashMap **map) {
+void sk_hashmap_init(SkHashMap **map) {
   if (!map) {
     return;
   }
   sh_new_strdup(*map);
 }
 
-void fl_hashmap_free(FlHashMap **map) {
+void sk_hashmap_free(SkHashMap **map) {
   if (!map) {
     return;
   }
   shfree(*map);
 }
 
-void fl_hashmap_put(FlHashMap **map, const char *key, long value) {
+void sk_hashmap_put(SkHashMap **map, const char *key, long value) {
   if (!map || !key) {
     return;
   }
   shput(*map, (char *)key, value);
 }
 
-void fl_hashmap_add(FlHashMap **map, const char *key, long delta) {
+void sk_hashmap_add(SkHashMap **map, const char *key, long delta) {
   if (!map || !key) {
     return;
   }
@@ -2075,7 +2075,7 @@ void fl_hashmap_add(FlHashMap **map, const char *key, long delta) {
     shput(*map, (char *)key, delta);
 }
 
-long fl_hashmap_get(FlHashMap *map, const char *key, long def) {
+long sk_hashmap_get(SkHashMap *map, const char *key, long def) {
   if (!map || !key)
     return def;
   ptrdiff_t idx = shgeti(map, (char *)key);
@@ -2084,35 +2084,35 @@ long fl_hashmap_get(FlHashMap *map, const char *key, long def) {
   return map[idx].value;
 }
 
-bool fl_hashmap_has(FlHashMap *map, const char *key) {
+bool sk_hashmap_has(SkHashMap *map, const char *key) {
   if (!map || !key)
     return false;
   return shgeti(map, (char *)key) >= 0;
 }
 
-bool fl_hashmap_del(FlHashMap **map, const char *key) {
+bool sk_hashmap_del(SkHashMap **map, const char *key) {
   if (!map || !*map || !key)
     return false;
   return shdel(*map, (char *)key) != 0;
 }
 
-size_t fl_hashmap_len(FlHashMap *map) {
+size_t sk_hashmap_len(SkHashMap *map) {
   if (!map)
     return 0;
   return shlenu(map);
 }
 
-const FlHashMap *fl_hashmap_at(FlHashMap *map, size_t index) {
+const SkHashMap *sk_hashmap_at(SkHashMap *map, size_t index) {
 
   if (!map || index >= shlenu(map))
     return NULL;
   return &map[index];
 }
 
-FlTimer fl_profile_start() { return fl_start_timer(); }
+SkTimer sk_profile_start() { return sk_start_timer(); }
 
-void fl_profile_end(FlTimer timer) {
-  double ms = fl_end_timer(timer);
+void sk_profile_end(SkTimer timer) {
+  double ms = sk_end_timer(timer);
   if (ms < 0.0)
     ms = 0.0;
 
@@ -2125,17 +2125,17 @@ void fl_profile_end(FlTimer timer) {
   }
 }
 
-static FlWidget *g_fl_widgets[WIDGET_MAX];
-static int g_fl_widget_count = 0;
+static SkWidget *g_sk_widgets[WIDGET_MAX];
+static int g_sk_widget_count = 0;
 
 typedef struct {
   char name[64];
-  FlLibrary handle;
+  SkLibrary handle;
 } LibraryEntry;
 static LibraryEntry g_library_registry[32];
 static int g_registry_count = 0;
 
-void fl_library_register(const char *name, FlLibrary handle) {
+void sk_library_register(const char *name, SkLibrary handle) {
   if (!name || !handle)
     return;
   for (int i = 0; i < g_registry_count; ++i) {
@@ -2152,7 +2152,7 @@ void fl_library_register(const char *name, FlLibrary handle) {
   }
 }
 
-FlLibrary fl_library_get(const char *name) {
+SkLibrary sk_library_get(const char *name) {
   if (!name)
     return NULL;
   for (int i = 0; i < g_registry_count; ++i) {
@@ -2162,15 +2162,15 @@ FlLibrary fl_library_get(const char *name) {
   return NULL;
 }
 
-static FlTimer g_mon_at;
+static SkTimer g_mon_at;
 static bool g_mon_valid = false;
 static int g_mon_x, g_mon_y, g_mon_w, g_mon_h;
 
-static void fl_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
+static void sk_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
 
-  if (!g_mon_valid || fl_end_timer(g_mon_at) > 2000) {
+  if (!g_mon_valid || sk_end_timer(g_mon_at) > 2000) {
     Platform_WM_GetMonitorGeometry(&g_mon_x, &g_mon_y, &g_mon_w, &g_mon_h);
-    g_mon_at = fl_start_timer();
+    g_mon_at = sk_start_timer();
     g_mon_valid = true;
   }
   *x = g_mon_x;
@@ -2179,26 +2179,26 @@ static void fl_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
   *h = g_mon_h;
 }
 
-static void fl_widget_relayout(void);
+static void sk_widget_relayout(void);
 
-static FlPos g_fl_hover_pos = {0, 0};
-static FlTimer g_fl_hover_at = {0};
-static bool g_fl_hover_valid = false;
+static SkPos g_sk_hover_pos = {0, 0};
+static SkTimer g_sk_hover_at = {0};
+static bool g_sk_hover_valid = false;
 
-static void fl_widget_hover_poll(void) {
+static void sk_widget_hover_poll(void) {
 
-  FlTimer now = fl_start_timer();
-  if (g_fl_hover_valid && fl_end_timer(g_fl_hover_at) < 400.0) {
+  SkTimer now = sk_start_timer();
+  if (g_sk_hover_valid && sk_end_timer(g_sk_hover_at) < 400.0) {
     return;
   }
-  g_fl_hover_pos = fl_get_cursor_pos();
-  g_fl_hover_at = now;
-  g_fl_hover_valid = true;
+  g_sk_hover_pos = sk_get_cursor_pos();
+  g_sk_hover_at = now;
+  g_sk_hover_valid = true;
 }
 
-static void *fl_widget_hover_worker(void *ud) {
+static void *sk_widget_hover_worker(void *ud) {
 
-  FlWidget *w = (FlWidget *)ud;
+  SkWidget *w = (SkWidget *)ud;
   if (w && w->on_hover)
     w->on_hover();
   if (w)
@@ -2206,9 +2206,9 @@ static void *fl_widget_hover_worker(void *ud) {
   return NULL;
 }
 
-static void fl_widget_render_frame(void *ud) {
+static void sk_widget_render_frame(void *ud) {
 
-  FlWidget *widget = (FlWidget *)ud;
+  SkWidget *widget = (SkWidget *)ud;
   if (!widget || !widget->render || widget->dead) {
     {
       return;
@@ -2217,17 +2217,17 @@ static void fl_widget_render_frame(void *ud) {
   widget->frame++;
   bool hoverable = (widget->on_hover != NULL);
   if (hoverable) {
-    fl_widget_hover_poll();
+    sk_widget_hover_poll();
     bool inside = (widget->x >= 0x7fffffff)
                       ? false
-                      : (g_fl_hover_pos.x >= widget->x &&
-                         g_fl_hover_pos.x < widget->x + widget->w &&
-                         g_fl_hover_pos.y >= widget->y &&
-                         g_fl_hover_pos.y < widget->y + widget->h);
+                      : (g_sk_hover_pos.x >= widget->x &&
+                         g_sk_hover_pos.x < widget->x + widget->w &&
+                         g_sk_hover_pos.y >= widget->y &&
+                         g_sk_hover_pos.y < widget->y + widget->h);
     if (inside && !widget->hovered && widget->on_hover &&
         !widget->hover_running) {
       widget->hover_running = true;
-      widget->hover_thread = fl_thread_create(fl_widget_hover_worker, widget);
+      widget->hover_thread = sk_thread_create(sk_widget_hover_worker, widget);
       if (!widget->hover_thread)
         widget->hover_running = false;
     }
@@ -2237,11 +2237,11 @@ static void fl_widget_render_frame(void *ud) {
       Platform_HoverWidgetHide(widget->name);
     }
   }
-  FlWidgetState st;
+  SkWidgetState st;
   st.width = widget->w;
   st.height = widget->h;
   st.frame = widget->frame;
-  st.elapsed = fl_end_timer(widget->created_at);
+  st.elapsed = sk_end_timer(widget->created_at);
   st.hovered = widget->hovered;
 
   Platform_SetDrawOffset(-widget->origin_x, 0);
@@ -2268,15 +2268,15 @@ static void fl_widget_render_frame(void *ud) {
       if (Platform_Widget_IsValid(widget->win)) {
         Platform_Widget_Resize(widget->win, nw, nh);
       }
-      fl_widget_relayout();
+      sk_widget_relayout();
     }
   }
   char prof_label[80];
-  snprintf(prof_label, sizeof(prof_label), "flapi:widget[%s]", widget->name);
+  snprintf(prof_label, sizeof(prof_label), "skapi:widget[%s]", widget->name);
 }
 
-static void fl_widget_attach_window(void *ud) {
-  FlWidget *widget = (FlWidget *)ud;
+static void sk_widget_attach_window(void *ud) {
+  SkWidget *widget = (SkWidget *)ud;
   if (!widget || widget->dead)
     return;
   bool created = false;
@@ -2296,46 +2296,46 @@ static void fl_widget_attach_window(void *ud) {
     Platform_Widget_SetNoBg(widget->win, widget->no_bg);
     Platform_Widget_SetFps(widget->win, widget->fps);
     if (created)
-      Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame,
+      Platform_Widget_SetFrameCallback(widget->win, sk_widget_render_frame,
                                        widget);
   }
 }
 
-static void fl_widget_apply_geometry(FlWidget *widget, int x, int y) {
+static void sk_widget_apply_geometry(SkWidget *widget, int x, int y) {
   widget->x = x;
   widget->y = y;
   if (Platform_RenderThread_IsCurrentThread()) {
 
-    fl_widget_attach_window(widget);
+    sk_widget_attach_window(widget);
     return;
   }
   if (!Platform_RenderThread_EnsureStarted(widget->fps)) {
     return;
   }
-  if (!Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
+  if (!Platform_RenderThread_Post(sk_widget_attach_window, widget)) {
     return;
   }
 }
 
-static int fl_widget_sort_key(const FlWidget *widget) {
+static int sk_widget_sort_key(const SkWidget *widget) {
   return widget->order_set ? widget->order : widget->seq;
 }
 
-static void fl_widget_relayout(void) {
+static void sk_widget_relayout(void) {
 
   int mx = 0, my = 0, mw = 1920, mh = 1080;
-  fl_widget_monitor_geometry(&mx, &my, &mw, &mh);
+  sk_widget_monitor_geometry(&mx, &my, &mw, &mh);
 
-  FlWidget *sorted[WIDGET_MAX];
+  SkWidget *sorted[WIDGET_MAX];
   int n = 0;
-  for (int i = 0; i < g_fl_widget_count; i++) {
-    if (g_fl_widgets[i] && !g_fl_widgets[i]->free_pos)
-      sorted[n++] = g_fl_widgets[i];
+  for (int i = 0; i < g_sk_widget_count; i++) {
+    if (g_sk_widgets[i] && !g_sk_widgets[i]->free_pos)
+      sorted[n++] = g_sk_widgets[i];
   }
   for (int i = 1; i < n; i++) {
-    FlWidget *key = sorted[i];
+    SkWidget *key = sorted[i];
     int k = i - 1;
-    while (k >= 0 && fl_widget_sort_key(sorted[k]) > fl_widget_sort_key(key)) {
+    while (k >= 0 && sk_widget_sort_key(sorted[k]) > sk_widget_sort_key(key)) {
       sorted[k + 1] = sorted[k];
       k--;
     }
@@ -2348,37 +2348,37 @@ static void fl_widget_relayout(void) {
     bool from_top = (s == WIDGET_SLOT_TOP_LEFT || s == WIDGET_SLOT_TOP_RIGHT);
     int cursor = from_right ? mx + mw : mx;
     for (int i = 0; i < n; i++) {
-      FlWidget *w = sorted[i];
+      SkWidget *w = sorted[i];
       if (w->slot != s)
         continue;
       int g = w->gap_override > 0 ? w->gap_override : WidgetGap;
       int x = from_right ? cursor - w->w : cursor;
       int y = from_top ? my : my + mh - w->h;
-      fl_widget_apply_geometry(w, x, y);
+      sk_widget_apply_geometry(w, x, y);
       cursor += from_right ? -(w->w + g) : (w->w + g);
     }
   }
 }
 
-FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
+SkWidget *sk_widget_create(const SkWidgetSpec *spec) {
   return widget_create(spec);
 }
 
-bool fl_widget_valid(FlWidget *widget) { return widget_valid(widget); }
+bool sk_widget_valid(SkWidget *widget) { return widget_valid(widget); }
 
-FlPos fl_get_widget_pos(const char *name) { return widget_get_pos(name); }
+SkPos sk_get_widget_pos(const char *name) { return widget_get_pos(name); }
 
-void fl_widget_show(FlWidget *widget) { widget_show(widget); }
+void sk_widget_show(SkWidget *widget) { widget_show(widget); }
 
-void fl_widget_hide(FlWidget *widget) { widget_hide(widget); }
+void sk_widget_hide(SkWidget *widget) { widget_hide(widget); }
 
-void fl_widget_destroy(FlWidget *widget) { widget_destroy(widget); }
+void sk_widget_destroy(SkWidget *widget) { widget_destroy(widget); }
 
-void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
+void sk_widget_set_render(SkWidget *widget, SkWidgetRenderFn render) {
   widget_set_render(widget, render);
 }
 
-void fl_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
+void sk_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
   const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB"};
   const int count = sizeof(units) / sizeof(units[0]);
 
@@ -2396,81 +2396,81 @@ void fl_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
     snprintf(buf, buflen, "%.1f %s", value, units[i]);
   }
 }
-FlNetStatus fl_net_status(void) { return fl_net_status_platform(); }
+SkNetStatus sk_net_status(void) { return sk_net_status_platform(); }
 
-unsigned long long fl_net_rx_bytes() { return fl_net_rx_bytes_platform(); }
+unsigned long long sk_net_rx_bytes() { return sk_net_rx_bytes_platform(); }
 
-unsigned long long fl_net_rx_bytes_over(double seconds) {
+unsigned long long sk_net_rx_bytes_over(double seconds) {
 
   if (seconds <= 0)
     return 0;
 
-  unsigned long long before = fl_net_rx_bytes_platform();
+  unsigned long long before = sk_net_rx_bytes_platform();
   if (before == 0)
     return 0;
 
-  fl_sleep(seconds);
+  sk_sleep(seconds);
 
-  unsigned long long after = fl_net_rx_bytes_platform();
+  unsigned long long after = sk_net_rx_bytes_platform();
   if (after < before)
     return 0;
   return after - before;
 }
 
-FlRect fl_get_monitor_geometry() {
+SkRect sk_get_monitor_geometry() {
   int x, y, w, h;
   WindowManager_GetMainMonitorGeometry(&x, &y, &w, &h);
   return (PlRect){.x = x, .y = y, .w = w, .h = h, .color = 0};
 }
 
-int fl_get_screen_width() {
+int sk_get_screen_width() {
   int x, y, w, h;
   WindowManager_GetMainMonitorGeometry(&x, &y, &w, &h);
   return w;
 }
 
-int fl_get_screen_height() {
+int sk_get_screen_height() {
   int x, y, w, h;
   WindowManager_GetMainMonitorGeometry(&x, &y, &w, &h);
   return h;
 }
 
 typedef struct {
-  FlCcEntrySpec pub;
+  SkCcEntrySpec pub;
   char display_name[1024];
   char internal_name[1024];
   char icon[1024];
   char type[128];
   char owner[OWNER_PATH_MAX];
-} FlCcEntry;
+} SkCcEntry;
 
 static int g_cc_entry_count = 0;
-static FlCcEntry g_cc_entries[4096];
+static SkCcEntry g_cc_entries[4096];
 
-#define FL_CC_DEP_OWNERS 256
-static char g_cc_dep_owners[FL_CC_DEP_OWNERS][OWNER_PATH_MAX];
+#define SK_CC_DEP_OWNERS 256
+static char g_cc_dep_owners[SK_CC_DEP_OWNERS][OWNER_PATH_MAX];
 static int g_cc_dep_owner_count = 0;
 
-static bool fl_cc_dep_seen(const char *owner) {
+static bool sk_cc_dep_seen(const char *owner) {
   for (int i = 0; i < g_cc_dep_owner_count; i++)
     if (strcmp(g_cc_dep_owners[i], owner) == 0)
       return true;
   return false;
 }
 
-static void fl_cc_dep_mark(const char *owner) {
-  if (g_cc_dep_owner_count >= FL_CC_DEP_OWNERS)
+static void sk_cc_dep_mark(const char *owner) {
+  if (g_cc_dep_owner_count >= SK_CC_DEP_OWNERS)
     return;
   snprintf(g_cc_dep_owners[g_cc_dep_owner_count++], OWNER_PATH_MAX, "%s",
            owner);
 }
 
-static const char *fl_cc_dup(char *dst, size_t cap, const char *src) {
+static const char *sk_cc_dup(char *dst, size_t cap, const char *src) {
   snprintf(dst, cap, "%s", src ? src : "");
   return dst;
 }
 
-bool fli_add_to_cc(const FlCcEntrySpec *spec) {
+bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   if (!spec)
     return false;
   int slot = -1;
@@ -2486,7 +2486,7 @@ bool fli_add_to_cc(const FlCcEntrySpec *spec) {
       return false;
     slot = g_cc_entry_count++;
   }
-  FlCcEntry *e = &g_cc_entries[slot];
+  SkCcEntry *e = &g_cc_entries[slot];
   memset(e, 0, sizeof(*e));
   e->pub.on_enter = spec->on_enter;
   e->pub.on_ctrl_enter = spec->on_ctrl_enter;
@@ -2497,21 +2497,21 @@ bool fli_add_to_cc(const FlCcEntrySpec *spec) {
   e->pub.on_tab = spec->on_tab;
   e->pub.on_action = spec->on_action;
   e->pub.display_name =
-      fl_cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
+      sk_cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
   char icon_asset[MAX_PATH];
   if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
       Platform_ResolveAssetPath(__builtin_return_address(0), spec->icon,
                                 icon_asset, sizeof(icon_asset))) {
-    e->pub.icon = fl_cc_dup(e->icon, sizeof(e->icon), icon_asset);
+    e->pub.icon = sk_cc_dup(e->icon, sizeof(e->icon), icon_asset);
   } else {
-    e->pub.icon = fl_cc_dup(e->icon, sizeof(e->icon), spec->icon);
+    e->pub.icon = sk_cc_dup(e->icon, sizeof(e->icon), spec->icon);
   }
-  e->pub.type = fl_cc_dup(e->type, sizeof(e->type), spec->type);
+  e->pub.type = sk_cc_dup(e->type, sizeof(e->type), spec->type);
   if (spec->internal_name) {
-    e->pub.internal_name = fl_cc_dup(e->internal_name, sizeof(e->internal_name),
+    e->pub.internal_name = sk_cc_dup(e->internal_name, sizeof(e->internal_name),
                                      spec->internal_name);
   } else {
-    e->pub.internal_name = fl_cc_dup(e->internal_name, sizeof(e->internal_name),
+    e->pub.internal_name = sk_cc_dup(e->internal_name, sizeof(e->internal_name),
                                      spec->display_name);
   }
   void *anchor = (void *)(uintptr_t)spec->on_enter;
@@ -2530,16 +2530,16 @@ bool fli_add_to_cc(const FlCcEntrySpec *spec) {
   if (!anchor)
     anchor = (void *)(uintptr_t)spec->on_action;
   Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
-  if (e->owner[0] && !fl_cc_dep_seen(e->owner)) {
-    fl_cc_dep_mark(e->owner);
+  if (e->owner[0] && !sk_cc_dep_seen(e->owner)) {
+    sk_cc_dep_mark(e->owner);
     add_dep("control_center.c", e->owner);
   }
   return true;
 }
 
-int fl_cc_entry_count(void) { return g_cc_entry_count; }
+int sk_cc_entry_count(void) { return g_cc_entry_count; }
 
-const FlCcEntrySpec *fl_cc_entry_at(int index) {
+const SkCcEntrySpec *sk_cc_entry_at(int index) {
   if (index < 0 || index >= g_cc_entry_count)
     return NULL;
   return &g_cc_entries[index].pub;
@@ -2561,15 +2561,15 @@ void cc_registry_purge_owner(const char *path_a, const char *path_b) {
   g_cc_entry_count = out;
 }
 
-#define FL_MAX_ALIASES 1024
-static char g_alias_alias[FL_MAX_ALIASES][128];
-static char g_alias_target[FL_MAX_ALIASES][256];
+#define SK_MAX_ALIASES 1024
+static char g_alias_alias[SK_MAX_ALIASES][128];
+static char g_alias_target[SK_MAX_ALIASES][256];
 static int g_alias_count = 0;
 
-bool fli_add_alias(const FlAliasSpec *spec) {
+bool ski_add_alias(const SkAliasSpec *spec) {
   if (!spec || !spec->alias || !spec->target)
     return false;
-  if (g_alias_count >= FL_MAX_ALIASES)
+  if (g_alias_count >= SK_MAX_ALIASES)
     return false;
   for (int i = 0; i < g_alias_count; i++) {
     if (strcmp(g_alias_target[i], spec->target) == 0) {
@@ -2585,7 +2585,7 @@ bool fli_add_alias(const FlAliasSpec *spec) {
   return true;
 }
 
-bool fli_remove_alias(const char *alias) {
+bool ski_remove_alias(const char *alias) {
   if (!alias)
     return false;
   int n = 0;
@@ -2607,7 +2607,7 @@ bool fli_remove_alias(const char *alias) {
   return found;
 }
 
-const char *fl_alias_for(const char *target) {
+const char *sk_alias_for(const char *target) {
   if (!target)
     return NULL;
   for (int i = 0; i < g_alias_count; i++) {
@@ -2617,18 +2617,18 @@ const char *fl_alias_for(const char *target) {
   return NULL;
 }
 
-void fli_window(const FlPromptSpec *spec) {
+void ski_window(const SkPromptSpec *spec) {
   WindowManager_ShowPrompt(WindowManager_Get(), spec);
 }
 
-const char *fl_get_user_name(void) { return Platform_GetRealUser(); }
+const char *sk_get_user_name(void) { return Platform_GetRealUser(); }
 
-bool fl_is_root() { return Platform_IsRunningAsRoot(); }
-void fl_reload_feature(char *name) { FeatureLoader_Reload(name); }
+bool sk_is_root() { return Platform_IsRunningAsRoot(); }
+void sk_reload_feature(char *name) { FeatureLoader_Reload(name); }
 
-int fl_get_pid() { return fl_get_pid_platform(); }
+int sk_get_pid() { return sk_get_pid_platform(); }
 
-void fl_reload_all_features(void) {
+void sk_reload_all_features(void) {
   if (!FeaturePath || !FeaturePath[0])
     return;
   DIR *dir = opendir(FeaturePath);
@@ -2658,13 +2658,13 @@ void fl_reload_all_features(void) {
     if (!should_build)
       continue;
     char tmp[1024];
-    snprintf(tmp, sizeof(tmp), "%s.tmp.%d", dll, fl_get_pid());
+    snprintf(tmp, sizeof(tmp), "%s.tmp.%d", dll, sk_get_pid());
     char cmd[4096];
     if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd))) {
       remove(tmp);
       continue;
     }
-    char *outStr = fl_run_terminal_command(cmd);
+    char *outStr = sk_run_terminal_command(cmd);
     bool ok = false;
     if (outStr) {
       if (strlen(outStr) == 0 || (!strstr(outStr, "error:") &&
@@ -2691,51 +2691,51 @@ void fl_reload_all_features(void) {
   closedir(dir);
   char msg[128];
   snprintf(msg, sizeof(msg), "Reloaded %d feature(s)!", reloaded);
-  fl_message(.message = msg, .slot = BOTTOM_CENTER, .timeout = 1.0);
+  sk_message(.message = msg, .slot = BOTTOM_CENTER, .timeout = 1.0);
 }
 
-bool fl_hotkey_down(FlKey key) {
-  if (!fl_is_key_down(key.vk_code))
+bool sk_hotkey_down(SkKey key) {
+  if (!sk_is_key_down(key.vk_code))
     return false;
-  if ((key.mods & FL_CTRL) && !fl_ctrl_pressed())
+  if ((key.mods & SK_CTRL) && !sk_ctrl_pressed())
     return false;
-  if ((key.mods & FL_SHIFT) && !fl_shift_pressed())
+  if ((key.mods & SK_SHIFT) && !sk_shift_pressed())
     return false;
-  if ((key.mods & FL_ALT) && !fl_alt_pressed())
+  if ((key.mods & SK_ALT) && !sk_alt_pressed())
     return false;
-  if ((key.mods & FL_SUPER) && !fl_super_pressed())
+  if ((key.mods & SK_SUPER) && !sk_super_pressed())
     return false;
   return true;
 }
 
-void fl_register_key_interceptor(FlKeyInterceptorFn fn) {
+void sk_register_key_interceptor(SkKeyInterceptorFn fn) {
   Platform_RegisterKeyInterceptor((PlatformKeyInterceptorFn)fn);
 }
 
 typedef struct {
   double seconds;
   void (*callback)(void);
-} FlRunEveryArgs;
+} SkRunEveryArgs;
 
-static void *fl_run_every_thread(void *arg) {
-  FlRunEveryArgs *args = (FlRunEveryArgs *)arg;
+static void *sk_run_every_thread(void *arg) {
+  SkRunEveryArgs *args = (SkRunEveryArgs *)arg;
   while (true) {
-    fl_sleep(args->seconds);
+    sk_sleep(args->seconds);
     args->callback();
   }
   free(args);
   return NULL;
 }
 
-void fl_run_every(double seconds, void (*callback)(void)) {
-  FlRunEveryArgs *args = malloc(sizeof(FlRunEveryArgs));
+void sk_run_every(double seconds, void (*callback)(void)) {
+  SkRunEveryArgs *args = malloc(sizeof(SkRunEveryArgs));
   args->seconds = seconds;
   args->callback = callback;
-  fl_thread_create_ex(fl_run_every_thread, args, (void *)(uintptr_t)callback);
+  sk_thread_create_ex(sk_run_every_thread, args, (void *)(uintptr_t)callback);
 }
 
-FlMetrics *fl_get_metrics(void) { return Platform_GetMetrics(); }
-void *fl_get_active_prompt(void) {
+SkMetrics *sk_get_metrics(void) { return Platform_GetMetrics(); }
+void *sk_get_active_prompt(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = WindowManager_GetTopPopup(wm);
   if (top && top->user_data && top->type == POPUP_PROMPT) {
@@ -2744,11 +2744,11 @@ void *fl_get_active_prompt(void) {
   return NULL;
 }
 
-void fl_register_event(FlEvent event, FlEventCallback cb) {
+void sk_register_event(SkEvent event, SkEventCallback cb) {
   EventBus_Register(event, cb);
 }
 
-void fl_unregister_event(FlEvent event, FlEventCallback cb) {
+void sk_unregister_event(SkEvent event, SkEventCallback cb) {
   EventBus_Unregister(event, cb);
 }
-void fl_close_window() { FlintContext_Get()->window.selection_complete = true; }
+void sk_close_window() { SkaldContext_Get()->window.selection_complete = true; }

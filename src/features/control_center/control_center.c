@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -128,8 +128,8 @@ static void cc_build(void) {
     if (e)
       e->on_action = g_actions[i].fn;
   }
-  for (int i = 0; i < fl_cc_entry_count(); i++) {
-    const FlCcEntrySpec *s = fl_cc_entry_at(i);
+  for (int i = 0; i < sk_cc_entry_count(); i++) {
+    const SkCcEntrySpec *s = sk_cc_entry_at(i);
     if (!s || !s->display_name || !s->display_name[0])
       continue;
     CcEntry *e = cc_entry_add_icon(s->display_name, s->type ? s->type : "", "",
@@ -188,7 +188,7 @@ static const char *cc_hotkey_for_label(const char *label) {
     return NULL;
   for (int i = 0; i < CC_HK_SLOTS; i++)
     if (g_cc_hotkey_targets[i][0] && strcmp(g_cc_hotkey_targets[i], label) == 0)
-      return fl_hotkey_for_ud(cc_hotkey_ud(i));
+      return sk_hotkey_for_ud(cc_hotkey_ud(i));
   return NULL;
 }
 
@@ -331,11 +331,11 @@ typedef struct {
 static const CcScanPath ListOfProgramPaths[] = {
 #if defined(_WIN32)
     {"C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
-     FL_DIR_WALK_UNLIMITED},
+     SK_DIR_WALK_UNLIMITED},
     {"C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
-     FL_DIR_WALK_UNLIMITED},
-    {"C:\\miscellaneous", FL_DIR_WALK_UNLIMITED},
-    {"shell:AppsFolder", FL_DIR_WALK_UNLIMITED},
+     SK_DIR_WALK_UNLIMITED},
+    {"C:\\miscellaneous", SK_DIR_WALK_UNLIMITED},
+    {"shell:AppsFolder", SK_DIR_WALK_UNLIMITED},
     {"C:\\Program Files\\Epic Games", 5},
     {"C:\\Program Files (x86)\\Epic Games", 5},
     {"D:\\Epic Games", 5},
@@ -344,7 +344,7 @@ static const CcScanPath ListOfProgramPaths[] = {
     {"C:\\Program Files (x86)\\Steam\\steamapps\\common", 5},
     {"C:\\Program Files\\Steam\\steamapps\\common", 5},
 #elif defined(__linux__)
-    {"/usr/share/applications", FL_DIR_WALK_UNLIMITED},
+    {"/usr/share/applications", SK_DIR_WALK_UNLIMITED},
     {"~", 6},
 #endif
 };
@@ -394,7 +394,7 @@ static void cc_resolve_app_icon(size_t idx) {
   if (idx >= g_app_icons_cap)
     return;
   g_app_icons[idx][0] = '\0';
-  char *icon = fl_get_icon_path(g_apps.files[idx].path);
+  char *icon = sk_get_icon_path(g_apps.files[idx].path);
   if (!icon)
     return;
   snprintf(g_app_icons[idx], MAX_PATH, "%s", icon);
@@ -458,7 +458,7 @@ static void cc_save_app_cache(void) {
     lines[written++] = store + off;
     off += (size_t)k + 1;
   }
-  fl_write_to_file(CC_APPCACHE_FILE, lines, (int)written);
+  sk_write_to_file(CC_APPCACHE_FILE, lines, (int)written);
   free(store);
   free(lines);
 }
@@ -466,14 +466,14 @@ static void cc_save_app_cache(void) {
 static bool g_cc_reexported = false;
 
 static bool cc_load_app_cache(void) {
-  FlStringList lines = fl_load_file_list(CC_APPCACHE_FILE);
+  SkStringList lines = sk_load_file_list(CC_APPCACHE_FILE);
   if (!lines.items || lines.count <= 0) {
     if (lines.items)
-      fl_free_file_list(&lines);
+      sk_free_file_list(&lines);
     return false;
   }
   if (strcmp(lines.items[0], CC_APPCACHE_VERSION) != 0) {
-    fl_free_file_list(&lines);
+    sk_free_file_list(&lines);
     return false;
   }
   ListOfFiles tmp = {0};
@@ -483,7 +483,7 @@ static bool cc_load_app_cache(void) {
     icons_cap = 64;
     icons = (char (*)[MAX_PATH])calloc(icons_cap, MAX_PATH);
     if (!icons) {
-      fl_free_file_list(&lines);
+      sk_free_file_list(&lines);
       return false;
     }
   }
@@ -528,7 +528,7 @@ static bool cc_load_app_cache(void) {
     snprintf(icons[tmp.count], MAX_PATH, "%s", icon);
     tmp.count++;
   }
-  fl_free_file_list(&lines);
+  sk_free_file_list(&lines);
   if (tmp.count == 0) {
     free(tmp.files);
     free(icons);
@@ -538,7 +538,7 @@ static bool cc_load_app_cache(void) {
   g_cc_reexported = false;
   for (size_t i = 0; i < tmp.count; i++) {
     if (icons[i][0] == '\0' || cc_icon_is_shell_only(icons[i])) {
-      char *resolved = fl_get_icon_path(tmp.files[i].path);
+      char *resolved = sk_get_icon_path(tmp.files[i].path);
       if (resolved) {
         if (strcmp(resolved, icons[i]) != 0)
           reexported = true;
@@ -589,7 +589,7 @@ static void cc_build_xdg_paths(void) {
       continue;
     snprintf(dir, strlen(tok) + 16, "%s/applications", tok);
     g_xdg_paths[g_xdg_path_count] = dir;
-    g_xdg_depths[g_xdg_path_count] = FL_DIR_WALK_UNLIMITED;
+    g_xdg_depths[g_xdg_path_count] = SK_DIR_WALK_UNLIMITED;
     g_xdg_path_count++;
   }
 #endif
@@ -612,7 +612,7 @@ static void cc_scan_app_dirs(void) {
     const char *p = g_xdg_paths[i];
     if (!p || p[0] == '\0')
       continue;
-    fl_get_all_files_from_dir((char *)p, allowed, &tmp,
+    sk_get_all_files_from_dir((char *)p, allowed, &tmp,
                               (char **)ListOfShitToIgnore, true,
                               g_xdg_depths[i]);
   }
@@ -626,7 +626,7 @@ static void cc_scan_app_dirs(void) {
     char display_name[256] = {0};
     if (strstr(tmp.files[i].path, ".desktop")) {
       bool nodisplay = false;
-      fl_parse_desktop_file(tmp.files[i].path, display_name,
+      sk_parse_desktop_file(tmp.files[i].path, display_name,
                             sizeof(display_name), &nodisplay);
       if (nodisplay)
         skip = true;
@@ -641,7 +641,7 @@ static void cc_scan_app_dirs(void) {
   }
   for (size_t i = 0; i < tmp.count; i++) {
     for (size_t j = i + 1; j < tmp.count;) {
-      if (fl_string_contains(tmp.files[j].name, tmp.files[i].name)) {
+      if (sk_string_contains(tmp.files[j].name, tmp.files[i].name)) {
         for (size_t k = j; k + 1 < tmp.count; k++)
           tmp.files[k] = tmp.files[k + 1];
         tmp.count--;
@@ -660,17 +660,17 @@ static void cc_scan_app_dirs(void) {
   }
 }
 
-static FlMutex g_app_cache_mtx = NULL;
+static SkMutex g_app_cache_mtx = NULL;
 static bool g_app_cache_ready = false;
-static FlThread g_prewarm_thread = NULL;
+static SkThread g_prewarm_thread = NULL;
 
 static void cc_ensure_app_cache(void) {
   if (!g_app_cache_mtx)
     return;
-  fl_mutex_lock(g_app_cache_mtx);
+  sk_mutex_lock(g_app_cache_mtx);
   if (!g_app_cache_ready) {
     if (g_cc_stopping) {
-      fl_mutex_unlock(g_app_cache_mtx);
+      sk_mutex_unlock(g_app_cache_mtx);
       return;
     }
     int loaded = cc_load_app_cache();
@@ -682,7 +682,7 @@ static void cc_ensure_app_cache(void) {
     }
     g_app_cache_ready = true;
   }
-  fl_mutex_unlock(g_app_cache_mtx);
+  sk_mutex_unlock(g_app_cache_mtx);
 }
 
 static void *cc_prewarm_app_cache(void *arg) {
@@ -744,7 +744,7 @@ static bool cc_launch_app(void) {
   const char *path =
       g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
   if (path && path[0])
-    fl_launch_with_args((char *)path, NULL);
+    sk_launch_with_args((char *)path, NULL);
   return true;
 }
 
@@ -752,7 +752,7 @@ static bool cc_launch_app_as_admin(void) {
   const char *path =
       g_cc_staged_label ? cc_app_map_get(g_cc_staged_label) : NULL;
   if (path && path[0])
-    fl_launch_with_args_as_admin((char *)path, NULL);
+    sk_launch_with_args_as_admin((char *)path, NULL);
   return true;
 }
 
@@ -775,7 +775,7 @@ static void (*cc_feature_cbs[CC_FEATURE_MAX])(void);
 
 static void cc_fill_features(void) {
   const char **cc_feature_icons = NULL;
-  int n = fl_get_feature_list_with_icons(cc_feature_names, cc_feature_cbs,
+  int n = sk_get_feature_list_with_icons(cc_feature_names, cc_feature_cbs,
                                          &cc_feature_icons, CC_FEATURE_MAX);
   for (int i = 0; i < n; i++) {
     const char *icon =
@@ -882,8 +882,8 @@ static CcCalcUnit *ccx_find_unit_fuzzy(const char *input) {
 
   for (size_t i = 0; i < CC_CALC_UNIT_COUNT; i++)
     for (int j = 0; j < CC_CALC_UNITS[i].alias_count; j++) {
-      if (fl_string_contains(s, CC_CALC_UNITS[i].aliases[j]) ||
-          fl_string_contains(s, CC_CALC_UNITS[i].aliases[j]))
+      if (sk_string_contains(s, CC_CALC_UNITS[i].aliases[j]) ||
+          sk_string_contains(s, CC_CALC_UNITS[i].aliases[j]))
         return &CC_CALC_UNITS[i];
     }
 
@@ -1347,7 +1347,7 @@ static bool cc_filter_match(const char *item, const char *filter) {
     return true;
   if (cc_contains_ci(item, filter))
     return true;
-  const char *al = fl_alias_for(item);
+  const char *al = sk_alias_for(item);
   if (al && cc_contains_ci(al, filter))
     return true;
   return false;
@@ -1365,7 +1365,7 @@ static void cc_refresh(PromptState *state) {
     g_names[n] = g_cc_calc_label;
     n++;
   }
-  fl_populate_listbox_ex(state->lb, state->eb->filter, g_names, n,
+  sk_populate_listbox_ex(state->lb, state->eb->filter, g_names, n,
                          cc_filter_match);
   if (state->lb->total_matches > 0)
     g_cc_fallback_active = false;
@@ -1373,7 +1373,7 @@ static void cc_refresh(PromptState *state) {
     CcEntry *fallback = cc_add_fallback();
     if (fallback && n < MAX_VISIBLE_ITEMS) {
       g_names[n] = fallback->label;
-      fl_populate_listbox(state->lb, "", &g_names[n], 1);
+      sk_populate_listbox(state->lb, "", &g_names[n], 1);
       g_cc_fallback_active = true;
     }
   }
@@ -1387,7 +1387,7 @@ static unsigned long cc_type_color(void) {
 
 static void cc_subwindow_refresh(PromptState *state) {
   const char *items[] = {"Register Hotkey", "Register Alias"};
-  fl_populate_listbox(state->lb, state->eb->filter, (const char **)items,
+  sk_populate_listbox(state->lb, state->eb->filter, (const char **)items,
                       ARRAY_LEN(items));
 }
 
@@ -1397,33 +1397,33 @@ static int g_actions_width = 0, g_actions_height = 0;
 static void cc_subwindow_render(PromptState *state) {
   g_actions_width = state->width;
   g_actions_height = state->height;
-  FlListSpec spec = {.lb = state->lb};
-  fl_place_editbox();
-  if (!fl_listbox_begin(&spec))
+  SkListSpec spec = {.lb = state->lb};
+  sk_place_editbox();
+  if (!sk_listbox_begin(&spec))
     return;
-  FlListItemCtx ctx;
+  SkListItemCtx ctx;
 
-  while (fl_listbox_next(&ctx)) {
-    fl_draw_text(.x = 14, .y = ctx.y + 4, .text = ctx.text, .align = "LEFT",
+  while (sk_listbox_next(&ctx)) {
+    sk_draw_text(.x = 14, .y = ctx.y + 4, .text = ctx.text, .align = "LEFT",
                  .fontsize = 12);
     const char *hk = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
-    FlRect r =
-        fl_text_bounds(.text = hk, .fontsize = 10, .x = g_actions_width - 6,
+    SkRect r =
+        sk_text_bounds(.text = hk, .fontsize = 10, .x = g_actions_width - 6,
                        .y = ctx.y + 6, .align = "RIGHT");
     r.filled = true;
     r.radius = 4;
-    r.color = FL_DARK_GRAY;
-    fli_draw_rect(&r);
-    fl_draw_text(.x = g_actions_width - 6, .y = ctx.y + 6, .text = hk,
-                 .align = "RIGHT", .fontsize = 10, .color = FL_GRAY);
+    r.color = SK_DARK_GRAY;
+    ski_draw_rect(&r);
+    sk_draw_text(.x = g_actions_width - 6, .y = ctx.y + 6, .text = hk,
+                 .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
   }
-  fl_listbox_end();
+  sk_listbox_end();
 }
 
 static char current_hotkey_reg[128];
 static char current_reg_action[128];
 static char g_cc_main_selected[256];
-static FlTimer reg_flash_timer;
+static SkTimer reg_flash_timer;
 static bool reg_flashing = false;
 static int reg_last_key = 0;
 
@@ -1433,12 +1433,12 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   const CcEntry *e = cc_find(name);
   int slot = cc_hotkey_slot_for(e);
   if (slot >= 0) {
-    fl_register_hotkey(.hotkey = hotkey,
+    sk_register_hotkey(.hotkey = hotkey,
                        .cb = (void (*)(void))cc_entry_hotkey_cb,
                        .ud = cc_hotkey_ud(slot));
     char line[320];
     snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
-    fl_append_to_file(CC_HOTKEY_FILE, line);
+    sk_append_to_file(CC_HOTKEY_FILE, line);
     return;
   }
 }
@@ -1457,23 +1457,23 @@ static void cc_subwindow_reg_render(PromptState *state) {
   char buf[128] = {0};
   int pos = 0;
   int rem = (int)sizeof(buf);
-  fl_disable_global_hotkeys();
+  sk_disable_global_hotkeys();
 
-  if (fl_ctrl_pressed()) {
+  if (sk_ctrl_pressed()) {
     int written = snprintf(buf + pos, rem, "Ctrl+");
     if (written > 0 && written < rem) {
       pos += written;
       rem -= written;
     }
   }
-  if (fl_alt_pressed()) {
+  if (sk_alt_pressed()) {
     int written = snprintf(buf + pos, rem, "Alt+");
     if (written > 0 && written < rem) {
       pos += written;
       rem -= written;
     }
   }
-  if (fl_shift_pressed()) {
+  if (sk_shift_pressed()) {
     int written = snprintf(buf + pos, rem, "Shift+");
     if (written > 0 && written < rem) {
       pos += written;
@@ -1484,19 +1484,19 @@ static void cc_subwindow_reg_render(PromptState *state) {
   int k = 0;
   char kname[8] = {0};
   for (int c = 'A'; c <= 'Z' && !k; c++) {
-    if (fl_is_key_pressed(c)) {
+    if (sk_is_key_pressed(c)) {
       k = c;
       snprintf(kname, sizeof(kname), "%c", c);
     }
   }
   for (int c = '0'; c <= '9' && !k; c++) {
-    if (fl_is_key_pressed(c)) {
+    if (sk_is_key_pressed(c)) {
       k = c;
       snprintf(kname, sizeof(kname), "%c", c);
     }
   }
   for (size_t i = 0; i < ARRAY_LEN(kCapturableKeys) && !k; i++) {
-    if (fl_is_key_pressed(kCapturableKeys[i].vk)) {
+    if (sk_is_key_pressed(kCapturableKeys[i].vk)) {
       k = kCapturableKeys[i].vk;
       snprintf(kname, sizeof(kname), "%s", kCapturableKeys[i].name);
     }
@@ -1504,8 +1504,8 @@ static void cc_subwindow_reg_render(PromptState *state) {
   if (k && rem > 1) {
     snprintf(buf + pos, rem, "%s", kname);
   }
-  bool has_mod = fl_ctrl_pressed() || fl_alt_pressed() || fl_shift_pressed() ||
-                 fl_super_pressed();
+  bool has_mod = sk_ctrl_pressed() || sk_alt_pressed() || sk_shift_pressed() ||
+                 sk_super_pressed();
 
   size_t len = strlen(buf);
   if (len > 0 && buf[len - 1] == '+') {
@@ -1516,41 +1516,41 @@ static void cc_subwindow_reg_render(PromptState *state) {
     cc_register_selected_hotkey(current_reg_action, buf);
     ccx_strcpy_trunc(current_hotkey_reg, sizeof(current_hotkey_reg), buf);
     reg_flashing = true;
-    reg_flash_timer = fl_start_timer();
-    fl_enable_global_hotkeys();
+    reg_flash_timer = sk_start_timer();
+    sk_enable_global_hotkeys();
   }
   if (k == 0)
     reg_last_key = 0;
   else
     reg_last_key = k;
-  if (reg_flashing && fl_end_timer(reg_flash_timer) >= 1.0)
+  if (reg_flashing && sk_end_timer(reg_flash_timer) >= 1.0)
     reg_flashing = false;
 
-  unsigned long rect_color = reg_flashing ? FL_GRAY : FL_DARK_GRAY;
-  unsigned long text_color = reg_flashing ? FL_DARK_GREEN : FL_GREY;
+  unsigned long rect_color = reg_flashing ? SK_GRAY : SK_DARK_GRAY;
+  unsigned long text_color = reg_flashing ? SK_DARK_GREEN : SK_GREY;
 
-  fl_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
-               .color = FL_GRAY, .align = "LEFT");
-  fl_draw_rect(.x = 10, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
+  sk_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
+               .color = SK_GRAY, .align = "LEFT");
+  sk_draw_rect(.x = 10, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
                .color = rect_color, .filled = true);
   if (buf[0] || reg_flashing) {
-    fl_draw_text(.x = 17, .y = state->height / 2,
+    sk_draw_text(.x = 17, .y = state->height / 2,
                  .text = buf[0] ? buf : current_hotkey_reg, .fontsize = 22,
                  .color = text_color, .align = "LEFT");
   }
 }
 
-static void cc_subwindow_reg_onclose() { fl_enable_global_hotkeys(); }
+static void cc_subwindow_reg_onclose() { sk_enable_global_hotkeys(); }
 
 static char g_alias_target[256];
 
 static void cc_alias_reg_render(PromptState *state) {
   char label[284];
   snprintf(label, sizeof(label), "Alias For: %s", g_alias_target);
-  fl_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 11, .color = FL_GRAY,
+  sk_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 11, .color = SK_GRAY,
                .align = "LEFT", .pad = 0);
 
-  fl_place_editbox(.x = (state->width - 160) / 2,
+  sk_place_editbox(.x = (state->width - 160) / 2,
                    .y = (state->height - 30) / 2 + 6, .w = 160, .h = 26,
                    .placeholder = "alias name", .caret_height = 14,
                    .caret_width = 1, .caret_y = 47, .fontsize = 14);
@@ -1569,18 +1569,18 @@ static bool cc_alias_reg_enter(PromptState *state) {
     end--;
   }
   if (alias[0])
-    fl_add_alias(.alias = alias, .target = g_alias_target);
+    sk_add_alias(.alias = alias, .target = g_alias_target);
   return true;
 }
 
-static void cc_alias_reg_onclose() { fl_enable_global_hotkeys(); }
+static void cc_alias_reg_onclose() { sk_enable_global_hotkeys(); }
 static bool cc_reg_select(int type) {
   switch (type) {
   case 0: {
     ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action),
                      g_cc_main_selected);
-    fl_disable_global_hotkeys();
-    fl_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
+    sk_disable_global_hotkeys();
+    sk_subwindow(.title = "Hotkey Reg", .x = (g_cc_width / 2) + 240,
                  .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
                  .render = cc_subwindow_reg_render,
                  .on_close = cc_subwindow_reg_onclose);
@@ -1591,8 +1591,8 @@ static bool cc_reg_select(int type) {
                      g_cc_main_selected);
     ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target),
                      g_cc_main_selected);
-    fl_disable_global_hotkeys();
-    fl_subwindow(.title = "Alias Reg", .x = (g_cc_width / 2) + 240,
+    sk_disable_global_hotkeys();
+    sk_subwindow(.title = "Alias Reg", .x = (g_cc_width / 2) + 240,
                  .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
                  .render = cc_alias_reg_render, .enter = cc_alias_reg_enter,
                  .on_close = cc_alias_reg_onclose);
@@ -1613,7 +1613,7 @@ static char g_persisted_actions[CC_PERSIST_MAX][256];
 static size_t g_persisted_count;
 
 static void cc_load_persisted_hotkeys(void) {
-  FlStringList lines = fl_load_file_list(CC_HOTKEY_FILE);
+  SkStringList lines = sk_load_file_list(CC_HOTKEY_FILE);
   for (size_t li = 0; li < lines.count && g_persisted_count < CC_PERSIST_MAX;
        li++) {
     char copy[512];
@@ -1629,7 +1629,7 @@ static void cc_load_persisted_hotkeys(void) {
                      sizeof(g_persisted_actions[0]), tab + 1);
     g_persisted_count++;
   }
-  fl_free_file_list(&lines);
+  sk_free_file_list(&lines);
 }
 
 static void cc_register_persisted_hotkeys(void) {
@@ -1639,31 +1639,31 @@ static void cc_register_persisted_hotkeys(void) {
     const CcEntry *e = cc_find(action);
     int slot = cc_hotkey_slot_for(e);
     if (slot >= 0)
-      fl_register_hotkey(.hotkey = hotkey,
+      sk_register_hotkey(.hotkey = hotkey,
                          .cb = (void (*)(void))cc_entry_hotkey_cb,
                          .ud = cc_hotkey_ud(slot));
   }
 }
 
 static void cc_open_actions_subwindow(void) {
-  fl_subwindow(.title = "Actions", .x = (g_cc_width / 2) + 240,
+  sk_subwindow(.title = "Actions", .x = (g_cc_width / 2) + 240,
                .y = (g_cc_height / 2) - 50, .w = 200, .h = 300,
                .render = cc_subwindow_render, .refresh = cc_subwindow_refresh,
                .enter = cc_subwindow_enter);
 }
 
-static void cc_on_actions_render(FlRect rect) {
+static void cc_on_actions_render(SkRect rect) {
   char *hotkey_str = strdup(ActionsHotkey);
   char *plus = strchr(hotkey_str, '+');
   *plus = ' ';
-  fl_draw_rect(.x = rect.x + 95, .y = rect.y - 2, .w = rect.w - 95, .h = rect.h,
+  sk_draw_rect(.x = rect.x + 95, .y = rect.y - 2, .w = rect.w - 95, .h = rect.h,
                .filled = true,
-               .color = fl_button_hovered("Actions") ? FL_GRAY : FL_DARK_GRAY,
+               .color = sk_button_hovered("Actions") ? SK_GRAY : SK_DARK_GRAY,
                .radius = 6);
 
-  fl_draw_text(.x = rect.x + 20, .y = rect.y - 4, .text = "Actions",
-               .align = "LEFT", .color = FL_GRAY, .fontsize = 16);
-  fl_draw_text(.x = rect.x + 100, .y = rect.y - 7, .text = hotkey_str,
+  sk_draw_text(.x = rect.x + 20, .y = rect.y - 4, .text = "Actions",
+               .align = "LEFT", .color = SK_GRAY, .fontsize = 16);
+  sk_draw_text(.x = rect.x + 100, .y = rect.y - 7, .text = hotkey_str,
                .align = "LEFT", .fontsize = 20);
 
   free(hotkey_str);
@@ -1680,27 +1680,27 @@ static void cc_render(PromptState *state) {
   }
   g_cc_width = state->width;
   g_cc_height = state->height;
-  FlListSpec spec = {.lb = state->lb, .item_height = FontSize * 2};
-  fl_place_editbox();
-  fl_place_button(.name = "Actions", .x = state->width - 200,
+  SkListSpec spec = {.lb = state->lb, .item_height = FontSize * 2};
+  sk_place_editbox();
+  sk_place_button(.name = "Actions", .x = state->width - 200,
                   .y = state->height - 30, .w = 180,
                   .render = cc_on_actions_render,
                   .on_click = cc_open_actions_subwindow);
 
-  if (!fl_listbox_begin(&spec))
+  if (!sk_listbox_begin(&spec))
     return;
-  if (fl_hotkey_down(fl_hotkey_from_string(ActionsHotkey))) {
+  if (sk_hotkey_down(sk_hotkey_from_string(ActionsHotkey))) {
     cc_open_actions_subwindow();
   }
-  if (fl_hotkey_down(fl_hotkey_from_string(RegHotkey))) {
+  if (sk_hotkey_down(sk_hotkey_from_string(RegHotkey))) {
     cc_reg_select(0);
   }
-  if (fl_hotkey_down(fl_hotkey_from_string(RegAliasHotkey))) {
+  if (sk_hotkey_down(sk_hotkey_from_string(RegAliasHotkey))) {
     cc_reg_select(1);
   }
   int type_x = state->width - CC_ITEM_TEXT_X;
-  FlListItemCtx ctx;
-  while (fl_listbox_next(&ctx)) {
+  SkListItemCtx ctx;
+  while (sk_listbox_next(&ctx)) {
     const CcEntry *e = cc_find(ctx.text);
     const char *row_icon = (e && e->icon[0]) ? e->icon : NULL;
     int icon_size = FontSize;
@@ -1712,21 +1712,21 @@ static void cc_render(PromptState *state) {
     if (row_icon) {
       int icon_x = ctx.x + CC_ITEM_TEXT_X;
       int icon_y = ctx.y + (ctx.h - icon_size) / 2;
-      fl_draw_image(.path = row_icon, .x = icon_x, .y = icon_y, .w = icon_size,
+      sk_draw_image(.path = row_icon, .x = icon_x, .y = icon_y, .w = icon_size,
                     .h = icon_size);
     }
 
-    fl_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = ctx.text,
+    sk_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = ctx.text,
                  .align = "LEFT", .pad = 0);
 
-    const char *al = fl_alias_for(ctx.text);
+    const char *al = sk_alias_for(ctx.text);
     if (al) {
       char abuf[160];
       snprintf(abuf, sizeof(abuf), "[%s]", al);
-      int name_w = fl_get_text_width(ctx.text, FontSize);
-      fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
+      int name_w = sk_get_text_width(ctx.text, FontSize);
+      sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
                    .y = ctx.y + CC_ITEM_TEXT_Y + 2, .text = abuf,
-                   .align = "LEFT", .pad = 0, .color = FL_GRAY,
+                   .align = "LEFT", .pad = 0, .color = SK_GRAY,
                    .fontsize = FontSize - 3);
     }
 
@@ -1736,23 +1736,23 @@ static void cc_render(PromptState *state) {
       const char *right_text = plain_type ? e->type : CC_TYPE_LABEL;
       const char *hk = cc_hotkey_for_label(ctx.text);
       if (hk && hk[0]) {
-        int type_w = fl_get_text_width(right_text, FontSize);
+        int type_w = sk_get_text_width(right_text, FontSize);
         int hk_fs = FontSize - 6;
         int hk_x = type_x - type_w - CC_TYPE_GAP;
-        FlRect r = fl_text_bounds(.text = hk, .fontsize = hk_fs, .x = hk_x - 4,
+        SkRect r = sk_text_bounds(.text = hk, .fontsize = hk_fs, .x = hk_x - 4,
                                   .y = ctx.y + 10, .align = "RIGHT");
         r.filled = true;
         r.radius = 4;
-        r.color = FL_DARK_GRAY;
-        fli_draw_rect(&r);
+        r.color = SK_DARK_GRAY;
+        ski_draw_rect(&r);
 
-        fl_draw_text(.x = hk_x - 4, .y = ctx.y + 10, .text = hk,
-                     .align = "RIGHT", .pad = 0, .color = FL_GRAY,
+        sk_draw_text(.x = hk_x - 4, .y = ctx.y + 10, .text = hk,
+                     .align = "RIGHT", .pad = 0, .color = SK_GRAY,
                      .fontsize = hk_fs);
       }
     }
     if (plain_type) {
-      fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = e->type,
+      sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = e->type,
                    .align = "RIGHT", .color = cc_type_color());
     } else if (e) {
       int type_sz = FontSize - CC_TYPE_SIZE_DELTA;
@@ -1760,18 +1760,18 @@ static void cc_render(PromptState *state) {
         type_sz = FontSize;
       unsigned long meta_col = cc_type_color();
       if (e->type[0]) {
-        int name_w = fl_get_text_width(ctx.text, FontSize);
-        fl_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
+        int name_w = sk_get_text_width(ctx.text, FontSize);
+        sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
                      .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
                      .text = e->type, .align = "LEFT", .pad = 0,
                      .fontsize = type_sz, .color = meta_col);
       }
-      fl_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
+      sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                    .text = CC_TYPE_LABEL, .align = "RIGHT", .pad = 0,
                    .color = meta_col);
     }
   }
-  fl_listbox_end();
+  sk_listbox_end();
 }
 
 static bool cc_enter(PromptState *state) {
@@ -1784,50 +1784,50 @@ static bool cc_enter(PromptState *state) {
       while (*v && isspace((unsigned char)*v))
         v++;
       ccx_trim_trailinspaces(v);
-      fl_copy_to_clipboard(v);
+      sk_copy_to_clipboard(v);
     }
     return true;
   }
-  if (fl_is_selected(state->lb)) {
+  if (sk_is_selected(state->lb)) {
     cc_stage(cc_find(state->lb->selected_text), 0);
   } else {
-    fl_query_browser(state->eb->filter);
+    sk_query_browser(state->eb->filter);
   }
   return true;
 }
 
 static bool cc_ctrl_enter(PromptState *state) {
-  if (!fl_is_selected(state->lb)) {
-    fl_query_browser(state->lb->selected_text);
+  if (!sk_is_selected(state->lb)) {
+    sk_query_browser(state->lb->selected_text);
   }
   cc_stage(cc_find(state->lb->selected_text), 1);
   return true;
 }
 
 static bool cc_shift_enter(PromptState *state) {
-  if (!fl_is_selected(state->lb)) {
-    fl_query_browser(state->lb->selected_text);
+  if (!sk_is_selected(state->lb)) {
+    sk_query_browser(state->lb->selected_text);
   }
   cc_stage(cc_find(state->lb->selected_text), 2);
   return true;
 }
 static bool cc_ctrl_shift_enter(PromptState *state) {
-  if (!fl_is_selected(state->lb)) {
-    fl_query_browser(state->lb->selected_text);
+  if (!sk_is_selected(state->lb)) {
+    sk_query_browser(state->lb->selected_text);
   }
   cc_stage(cc_find(state->lb->selected_text), 3);
   return true;
 }
 static bool cc_ctrl_alt_enter(PromptState *state) {
-  if (!fl_is_selected(state->lb)) {
-    fl_query_browser(state->lb->selected_text);
+  if (!sk_is_selected(state->lb)) {
+    sk_query_browser(state->lb->selected_text);
   }
   cc_stage(cc_find(state->lb->selected_text), 4);
   return true;
 }
 static bool cc_shift_alt_enter(PromptState *state) {
-  if (!fl_is_selected(state->lb)) {
-    fl_query_browser(state->lb->selected_text);
+  if (!sk_is_selected(state->lb)) {
+    sk_query_browser(state->lb->selected_text);
   }
   cc_stage(cc_find(state->lb->selected_text), 5);
   return true;
@@ -1842,14 +1842,14 @@ static void cc_tab(PromptState *state) {
 }
 
 static void reload_features_and_config(void) {
-  fl_reload_all_features();
-  fl_reload_config();
+  sk_reload_all_features();
+  sk_reload_config();
 }
 
 static void TriggerControl(void) {
   cc_build_xdg_paths();
 
-  fl_window(.title = "Control", .placeholder = "Search For Something...",
+  sk_window(.title = "Control", .placeholder = "Search For Something...",
             .refresh = cc_refresh, .enter = cc_enter,
             .ctrl_enter = cc_ctrl_enter, .shift_enter = cc_shift_enter,
             .ctrl_shift_enter = cc_ctrl_shift_enter,
@@ -1858,25 +1858,25 @@ static void TriggerControl(void) {
             .render = cc_render, .on_close = cc_on_close);
 }
 
-FLINT_FEATURE_INIT {
+SKALD_FEATURE_INIT {
   g_cc_stopping = 0;
   cc_load_persisted_hotkeys();
-  g_app_cache_mtx = fl_mutex_create();
+  g_app_cache_mtx = sk_mutex_create();
   cc_register_type("Application", cc_fill_applications);
   cc_register_type("Feature", cc_fill_features);
   cc_build();
   if (g_app_cache_mtx)
-    g_prewarm_thread = fl_thread_create(cc_prewarm_app_cache, NULL);
-  fl_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = TriggerControl);
-  fl_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey,
+    g_prewarm_thread = sk_thread_create(cc_prewarm_app_cache, NULL);
+  sk_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = TriggerControl);
+  sk_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey,
                      .cb = reload_features_and_config);
-  fl_register_deferred_init(cc_deferred_entry_build);
+  sk_register_deferred_init(cc_deferred_entry_build);
 }
 
-FLINT_FEATURE_SHUTDOWN {
+SKALD_FEATURE_SHUTDOWN {
   g_cc_stopping = 1;
   if (g_prewarm_thread) {
-    fl_thread_join(g_prewarm_thread);
+    sk_thread_join(g_prewarm_thread);
     g_prewarm_thread = NULL;
   }
 }

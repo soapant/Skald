@@ -15,7 +15,7 @@
 int main() {
   srand((unsigned)time(NULL));
   if (!Platform_TryAcquireSingleInstance()) {
-    fprintf(stderr, "Flint is already running, exiting.\n");
+    fprintf(stderr, "Skald is already running, exiting.\n");
     return 1;
   }
   Platform_InitDataFolder();

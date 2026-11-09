@@ -1,6 +1,6 @@
 #include "config_values.h"
 
-// <flint-config-generated>
+// <skald-config-generated>
 void ConfigApply(void) {
   Tray = true;
   EnableAutoPairing = true;
@@ -22,7 +22,7 @@ void ConfigApply(void) {
   UsedBrowser = "";
   UsedSearchEngine = "google";
   FeaturePath = "src/features";
-  IconPath = "{MISC}/flint.ico";
+  IconPath = "{MISC}/skald.ico";
   ControlHotkey = "Alt+Space";
   ReloadFeaturesHotkey = "Alt+R";
   ActionsHotkey = "Ctrl+K";
@@ -41,4 +41,4 @@ void ConfigApply(void) {
   COLOR_CURSOR = RGB(82, 79, 103);
   COLOR_BORDER = RGB(88, 86, 114);
 }
-// </flint-config-generated>
+// </skald-config-generated>

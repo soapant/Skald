@@ -79,7 +79,7 @@ TEST(parse_lshift_is_key_not_modifier) {
 TEST(parse_mouse_button) {
   HotkeyKey k;
   ASSERT_TRUE(HotkeyString_Parse("Mouse3", &k));
-  ASSERT_EQ_INT(k.vk_code, FL_MOUSE_VK(3));
+  ASSERT_EQ_INT(k.vk_code, MOUSE_VK(3));
 }
 
 TEST(parse_function_keys) {

@@ -1,20 +1,20 @@
-#ifndef CORE_TYPES_FLAPI_TYPES_H
-#define CORE_TYPES_FLAPI_TYPES_H
+#ifndef CORE_TYPES_SKAPI_TYPES_H
+#define CORE_TYPES_SKAPI_TYPES_H
 
 #include <stdbool.h>
 #include <stdint.h>
 #include "core/types.h"
 
-typedef PlTimer FlTimer;
+typedef PlTimer SkTimer;
 
 typedef enum {
 
-  FL_NET_OFFLINE,
+  SK_NET_OFFLINE,
 
-  FL_NET_ETHERNET,
+  SK_NET_ETHERNET,
 
-  FL_NET_WIFI,
-} FlNetStatus;
+  SK_NET_WIFI,
+} SkNetStatus;
 
 typedef struct {
   const char *buffer;
@@ -32,7 +32,7 @@ typedef struct {
   int caret_x;
   int caret_y;
   int caret_pos;
-} FlEditSpec;
+} SkEditSpec;
 
 typedef struct {
   int idx;
@@ -42,6 +42,6 @@ typedef struct {
   int w;
   int h;
   const char *text;
-} FlListItemCtx;
+} SkListItemCtx;
 
 #endif

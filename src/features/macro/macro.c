@@ -1,13 +1,13 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 static bool g_recording = false;
-static FlThread g_thread = NULL;
+static SkThread g_thread = NULL;
 
-#define WIDTH fl_get_screen_width()
-#define HEIGHT fl_get_screen_height()
+#define WIDTH sk_get_screen_width()
+#define HEIGHT sk_get_screen_height()
 
 #define MACRO_MAX_EVENTS 32768 * 2
 
@@ -40,36 +40,36 @@ static void recording_render() {
   int max_x = WIDTH - 1;
   int max_y = HEIGHT - 1;
 
-  fl_draw_line(.x1 = 0, .y1 = 0, .x2 = max_x, .y2 = 0, .color = FL_RED);
-  fl_draw_line(.x1 = max_x, .y1 = 0, .x2 = max_x, .y2 = max_y, .color = FL_RED);
-  fl_draw_line(.x1 = max_x, .y1 = max_y, .x2 = 0, .y2 = max_y, .color = FL_RED);
-  fl_draw_line(.x1 = 0, .y1 = max_y, .x2 = 0, .y2 = 0, .color = FL_RED);
+  sk_draw_line(.x1 = 0, .y1 = 0, .x2 = max_x, .y2 = 0, .color = SK_RED);
+  sk_draw_line(.x1 = max_x, .y1 = 0, .x2 = max_x, .y2 = max_y, .color = SK_RED);
+  sk_draw_line(.x1 = max_x, .y1 = max_y, .x2 = 0, .y2 = max_y, .color = SK_RED);
+  sk_draw_line(.x1 = 0, .y1 = max_y, .x2 = 0, .y2 = 0, .color = SK_RED);
 }
 
 static void playback_render() {
   int max_x = WIDTH - 1;
   int max_y = HEIGHT - 1;
 
-  fl_draw_line(.x1 = 0, .y1 = 0, .x2 = max_x, .y2 = 0, .color = FL_BLUE);
-  fl_draw_line(.x1 = max_x, .y1 = 0, .x2 = max_x, .y2 = max_y,
-               .color = FL_BLUE);
-  fl_draw_line(.x1 = max_x, .y1 = max_y, .x2 = 0, .y2 = max_y,
-               .color = FL_BLUE);
-  fl_draw_line(.x1 = 0, .y1 = max_y, .x2 = 0, .y2 = 0, .color = FL_BLUE);
+  sk_draw_line(.x1 = 0, .y1 = 0, .x2 = max_x, .y2 = 0, .color = SK_BLUE);
+  sk_draw_line(.x1 = max_x, .y1 = 0, .x2 = max_x, .y2 = max_y,
+               .color = SK_BLUE);
+  sk_draw_line(.x1 = max_x, .y1 = max_y, .x2 = 0, .y2 = max_y,
+               .color = SK_BLUE);
+  sk_draw_line(.x1 = 0, .y1 = max_y, .x2 = 0, .y2 = 0, .color = SK_BLUE);
 }
 
-static FlTimer g_macro_clock;
+static SkTimer g_macro_clock;
 static bool g_macro_clock_valid = false;
 
 static void macro_clock_reset(void) {
-  g_macro_clock = fl_start_timer();
+  g_macro_clock = sk_start_timer();
   g_macro_clock_valid = true;
 }
 
 static unsigned long long macro_now_us(void) {
   if (!g_macro_clock_valid)
     macro_clock_reset();
-  double ms = fl_end_timer(g_macro_clock);
+  double ms = sk_end_timer(g_macro_clock);
   if (ms < 0.0)
     ms = 0.0;
   return (unsigned long long)(ms * 1000.0);
@@ -83,7 +83,7 @@ static void record_push(const MacroEvent *m) {
   g_events[g_event_count++] = *m;
 }
 
-static void record_push_key(const FlKeyEvent *e) {
+static void record_push_key(const SkKeyEvent *e) {
   MacroEvent m;
   memset(&m, 0, sizeof(m));
   m.type = EVT_KEY;
@@ -96,7 +96,7 @@ static void record_push_key(const FlKeyEvent *e) {
   record_push(&m);
 }
 
-static void record_push_mouse(const FlMouseEvent *e) {
+static void record_push_mouse(const SkMouseEvent *e) {
   MacroEvent m;
   memset(&m, 0, sizeof(m));
   if (e->button == 0) {
@@ -136,18 +136,18 @@ static int g_macro_last_mx = -1, g_macro_last_my = -1;
 
 static void *recorder_loop(void *arg) {
   while (g_recording) {
-    FlKeyEvent ke;
-    while (fl_poll_key(&ke))
+    SkKeyEvent ke;
+    while (sk_poll_key(&ke))
       record_push_key(&ke);
 
-    FlMouseEvent me;
-    while (fl_poll_mouse(&me))
+    SkMouseEvent me;
+    while (sk_poll_mouse(&me))
       record_push_mouse(&me);
 
     {
-      FlPos _mp = fl_get_cursor_pos();
+      SkPos _mp = sk_get_cursor_pos();
       if (_mp.x != g_macro_last_mx || _mp.y != g_macro_last_my) {
-        FlMouseEvent _me;
+        SkMouseEvent _me;
         memset(&_me, 0, sizeof(_me));
         _me.button = 0;
         _me.x = _mp.x;
@@ -158,7 +158,7 @@ static void *recorder_loop(void *arg) {
         g_macro_last_my = _mp.y;
       }
     }
-    fl_sleep(0.005);
+    sk_sleep(0.005);
   }
 
   g_thread = NULL;
@@ -174,7 +174,7 @@ static void reset_recording(void) {
 }
 
 static bool g_playing = false;
-static FlThread g_play_thread = NULL;
+static SkThread g_play_thread = NULL;
 static bool g_macro_infinite = false;
 static bool g_macro_remove_dead = false;
 
@@ -203,15 +203,15 @@ static void held_remove(int vk) {
 
 static void release_everything(void) {
   for (int i = 0; i < g_held_count; i++)
-    fl_emit_key(g_held_keys[i], false);
+    sk_emit_key(g_held_keys[i], false);
   g_held_count = 0;
-  fl_emit_key(VK_SHIFT, false);
-  fl_emit_key(VK_CONTROL, false);
-  fl_emit_key(VK_MENU, false);
-  fl_emit_key(VK_LWIN, false);
-  fl_emit_key(VK_RWIN, false);
+  sk_emit_key(VK_SHIFT, false);
+  sk_emit_key(VK_CONTROL, false);
+  sk_emit_key(VK_MENU, false);
+  sk_emit_key(VK_LWIN, false);
+  sk_emit_key(VK_RWIN, false);
   for (int b = 1; b <= 5; b++)
-    fl_emit_mouse_button(b, false);
+    sk_emit_mouse_button(b, false);
 }
 
 static bool is_macro_control_chord(int vk, int mods) {
@@ -232,35 +232,35 @@ static void *playback_loop(void *arg) {
     if (g_event_count == 0)
       break;
     unsigned long long t0 = g_events[0].t_us;
-    FlTimer start = fl_start_timer();
+    SkTimer start = sk_start_timer();
     g_held_count = 0;
     for (int i = 0; i < g_event_count && g_playing; i++) {
       const MacroEvent *m = &g_events[i];
       double target_ms = (double)(m->t_us - t0) / 1000.0;
-      double cur_ms = fl_end_timer(start);
+      double cur_ms = sk_end_timer(start);
       double wait_ms = target_ms - cur_ms;
       if (g_macro_remove_dead && wait_ms > 500.0)
         wait_ms = 0.0;
       if (wait_ms > 0.0)
-        fl_sleep(wait_ms / 1000.0);
+        sk_sleep(wait_ms / 1000.0);
       if (m->type == EVT_KEY) {
         if (m->repeat)
           continue;
         if (m->down && is_macro_control_chord(m->a, m->mods))
           continue;
-        if (m->down && fl_replay_hotkey(m->a, m->mods))
+        if (m->down && sk_replay_hotkey(m->a, m->mods))
           continue;
-        fl_emit_key(m->a, m->down);
+        sk_emit_key(m->a, m->down);
         if (m->down)
           held_add(m->a);
         else
           held_remove(m->a);
       } else if (m->type == EVT_MOUSE) {
         if (m->a != 0)
-          fl_emit_mouse_button(m->a, m->down);
+          sk_emit_mouse_button(m->a, m->down);
       } else {
-        FlPos p = {m->x, m->y};
-        fl_move_to_pos(p);
+        SkPos p = {m->x, m->y};
+        sk_move_to_pos(p);
       }
     }
     release_everything();
@@ -269,7 +269,7 @@ static void *playback_loop(void *arg) {
     break;
   }
   release_everything();
-  fl_dismiss_overlay(MACRO_OVERLAY_NAME);
+  sk_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_playing = false;
   g_play_thread = NULL;
   return NULL;
@@ -308,7 +308,7 @@ static bool macro_save(const char *name) {
         g_events[i].y, g_events[i].mods, g_events[i].down ? 1 : 0,
         g_events[i].repeat ? 1 : 0, g_events[i].t_us);
   }
-  bool ok = fl_write_string_to_file(filename, buf);
+  bool ok = sk_write_string_to_file(filename, buf);
   free(buf);
   return ok;
 }
@@ -326,11 +326,11 @@ static int macro_load(const char *name) {
     if (ln + 4 < sizeof(filename))
       strcat(filename, ".txt");
   }
-  char *path = fl_resolve_data_path(filename);
+  char *path = sk_resolve_data_path(filename);
   if (!path)
     return 0;
   size_t len = 0;
-  char *data = fl_read_file_to_string(path, &len);
+  char *data = sk_read_file_to_string(path, &len);
   free(path);
   if (!data)
     return 0;
@@ -369,7 +369,7 @@ static int macro_load(const char *name) {
 
 static void macro_refresh_cache(void) {
   macro_load_files.count = 0;
-  char *resolved = fl_resolve_data_path("last.macro");
+  char *resolved = sk_resolve_data_path("last.macro");
   if (resolved) {
     char dir[1024];
     snprintf(dir, sizeof(dir), "%s", resolved);
@@ -379,7 +379,7 @@ static void macro_refresh_cache(void) {
       slash = back;
     if (slash)
       *slash = '\0';
-    fl_get_all_files_from_dir(dir, NULL, &macro_load_files, NULL, false, 1);
+    sk_get_all_files_from_dir(dir, NULL, &macro_load_files, NULL, false, 1);
     free(resolved);
   }
 }
@@ -391,7 +391,7 @@ static void macro_refresh(PromptState *state) {
     n = MAX_VISIBLE_ITEMS;
   for (int i = 0; i < n; i++) {
     macro_file_name_ptrs[i] = macro_load_files.files[i].name;
-    fl_populate_listbox(state->lb, state->eb->filter, macro_file_name_ptrs, n);
+    sk_populate_listbox(state->lb, state->eb->filter, macro_file_name_ptrs, n);
   }
 }
 
@@ -403,7 +403,7 @@ static bool macro_load_enter(PromptState *state) {
 
 static bool macro_load_ctrlenter(PromptState *state) {
   if (state->lb->selected_text && state->lb->selected_text[0]) {
-    char *path = fl_resolve_data_path(state->lb->selected_text);
+    char *path = sk_resolve_data_path(state->lb->selected_text);
     if (path) {
       remove(path);
       free(path);
@@ -415,10 +415,10 @@ static bool macro_load_ctrlenter(PromptState *state) {
 
 void SaveMacro(void) {
   if (g_event_count == 0) {
-    fl_message(.message = "No recording in memory", .timeout = 3.0);
+    sk_message(.message = "No recording in memory", .timeout = 3.0);
     return;
   }
-  char *name = fl_popup(.placeholder = "Macro file name");
+  char *name = sk_popup(.placeholder = "Macro file name");
   char chosen[256];
   if (name && name[0]) {
     snprintf(chosen, sizeof(chosen), "%s", name);
@@ -432,30 +432,30 @@ void SaveMacro(void) {
 }
 
 void LoadMacro(void) {
-  fl_window(.title = "Macro Load", .refresh = macro_refresh,
+  sk_window(.title = "Macro Load", .refresh = macro_refresh,
             .enter = macro_load_enter, .ctrl_enter = macro_load_ctrlenter,
             .auto_scale = true);
 }
 
 static void macro_show_overlay(void (*render)(void)) {
-  fl_overlay(.name = MACRO_OVERLAY_NAME, .render = render, .w = WIDTH,
+  sk_overlay(.name = MACRO_OVERLAY_NAME, .render = render, .w = WIDTH,
              .h = HEIGHT, .x = WIDTH / 2, .y = HEIGHT / 2, .no_bg = true);
 }
 
 void PlayMacro(void) {
   if (!g_playing) {
     if (g_event_count == 0) {
-      fl_message(.message = "No macro loaded", .timeout = 3.0);
+      sk_message(.message = "No macro loaded", .timeout = 3.0);
     }
     macro_show_overlay(playback_render);
-    fl_clear_key_queue();
-    fl_clear_mouse_queue();
+    sk_clear_key_queue();
+    sk_clear_mouse_queue();
     g_playing = true;
     if (!g_play_thread)
-      g_play_thread = fl_thread_create(playback_loop, NULL);
+      g_play_thread = sk_thread_create(playback_loop, NULL);
     return;
   }
-  fl_dismiss_overlay(MACRO_OVERLAY_NAME);
+  sk_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_playing = false;
   release_everything();
 }
@@ -463,75 +463,75 @@ void PlayMacro(void) {
 void InfinitePlaybackToggle(void) {
   g_macro_infinite = !g_macro_infinite;
   if (g_macro_infinite)
-    fl_message(.message = "Infinite playback enabled", .timeout = 1.0,
+    sk_message(.message = "Infinite playback enabled", .timeout = 1.0,
                .slot = BOTTOM_CENTER);
   else
-    fl_message(.message = "Infinite playback disabled", .timeout = 1.0,
+    sk_message(.message = "Infinite playback disabled", .timeout = 1.0,
                .slot = BOTTOM_CENTER);
 }
 
 void RemoveDeadTimeToggle(void) {
   g_macro_remove_dead = !g_macro_remove_dead;
   if (g_macro_remove_dead)
-    fl_message(.message = "Remove dead time enabled", .timeout = 1.0,
+    sk_message(.message = "Remove dead time enabled", .timeout = 1.0,
                .slot = BOTTOM_CENTER);
   else
-    fl_message(.message = "Remove dead time disabled", .timeout = 1.0,
+    sk_message(.message = "Remove dead time disabled", .timeout = 1.0,
                .slot = BOTTOM_CENTER);
 }
 
 void RecordToggle(void) {
   if (!g_recording) {
     macro_show_overlay(recording_render);
-    fl_clear_key_queue();
-    fl_clear_mouse_queue();
+    sk_clear_key_queue();
+    sk_clear_mouse_queue();
     reset_recording();
     g_recording = true;
     if (!g_thread)
-      g_thread = fl_thread_create(recorder_loop, NULL);
+      g_thread = sk_thread_create(recorder_loop, NULL);
     return;
   }
-  fl_dismiss_overlay(MACRO_OVERLAY_NAME);
+  sk_dismiss_overlay(MACRO_OVERLAY_NAME);
   g_recording = false;
 }
 void crosshair_render(void) {
   int size = 5;
 
-  fl_draw_line(.x1 = 15 - size, .y1 = 15, .x2 = 15 + size, .y2 = 15,
-               .color = FL_CRIMSON, .thickness = 3);
+  sk_draw_line(.x1 = 15 - size, .y1 = 15, .x2 = 15 + size, .y2 = 15,
+               .color = SK_CRIMSON, .thickness = 3);
 
-  fl_draw_line(.x1 = 15, .y1 = 15 - size, .x2 = 15, .y2 = 15 + size,
-               .color = FL_CRIMSON, .thickness = 3);
+  sk_draw_line(.x1 = 15, .y1 = 15 - size, .x2 = 15, .y2 = 15 + size,
+               .color = SK_CRIMSON, .thickness = 3);
 }
 
 void crosshair_fn(void) {
-  char *title = fl_get_active_window_title();
-  bool is_fortnite = (title && fl_string_contains(title, "Fortnite"));
+  char *title = sk_get_active_window_title();
+  bool is_fortnite = (title && sk_string_contains(title, "Fortnite"));
   free(title);
   if (is_fortnite) {
-    if (!fl_overlay_active("crosshair")) {
-      fl_overlay(.name = "crosshair", .render = crosshair_render, .w = 30,
+    if (!sk_overlay_active("crosshair")) {
+      sk_overlay(.name = "crosshair", .render = crosshair_render, .w = 30,
                  .h = 30, .x = WIDTH / 2, .y = HEIGHT / 2, .no_bg = true);
     }
   } else {
-    if (fl_overlay_active("crosshair")) {
-      fl_dismiss_overlay("crosshair");
+    if (sk_overlay_active("crosshair")) {
+      sk_dismiss_overlay("crosshair");
     }
   }
 }
 
-FLINT_FEATURE_INIT {
-  fl_register_hotkey(.hotkey = "Ctrl+Alt+R", .cb = RecordToggle);
-  fl_register_hotkey(.hotkey = "Ctrl+Alt+P", .cb = PlayMacro);
-  fl_add_to_cc(.display_name = "SaveMacro", .on_action = SaveMacro,
+SKALD_FEATURE_INIT {
+  sk_register_hotkey(.hotkey = "Ctrl+Alt+R", .cb = RecordToggle);
+  sk_register_hotkey(.hotkey = "Ctrl+Alt+P", .cb = PlayMacro);
+  sk_add_to_cc(.display_name = "SaveMacro", .on_action = SaveMacro,
                .type = "Macro", .icon = "/save.png");
-  fl_add_to_cc(.display_name = "LoadMacro", .on_action = LoadMacro,
+  sk_add_to_cc(.display_name = "LoadMacro", .on_action = LoadMacro,
                .type = "Macro", .icon = "/load.png");
-  fl_add_to_cc(.display_name = "InfinitePlayback",
+  sk_add_to_cc(.display_name = "InfinitePlayback",
                .on_action = InfinitePlaybackToggle, .type = "Macro",
                .icon = "/repeat.png");
-  fl_add_to_cc(.display_name = "RemoveDeadTime",
+  sk_add_to_cc(.display_name = "RemoveDeadTime",
                .on_action = RemoveDeadTimeToggle, .type = "Macro",
                .icon = "/clock-off.png");
-  fl_run_every(1.0, crosshair_fn);
+  sk_run_every(1.0, crosshair_fn);
 }

@@ -5,7 +5,7 @@
 
 #if !defined(VK_BACK)
 #define VK_BACK 0x08
-#endif
+#endif 
 #if !defined(VK_TAB)
 #define VK_TAB 0x09
 #endif
@@ -129,13 +129,13 @@
 #define HOTKEY_MOD_ALT_SHIFT_CTRL                                              \
   (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 
-#if !defined(FL_MOUSE_BTN_MAX)
-#define FL_MOUSE_BTN_MAX 24
+#if !defined(MOUSE_BTN_MAX)
+#define MOUSE_BTN_MAX 24
 #endif
 #if !defined(VK_MOUSE_BASE)
 #define VK_MOUSE_BASE 0xE3
 #endif
-#define FL_MOUSE_VK(btn) (VK_MOUSE_BASE + (btn) - 1)
+#define MOUSE_VK(btn) (VK_MOUSE_BASE + (btn) - 1)
 
 typedef struct {
   int vk_code;

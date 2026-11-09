@@ -28,9 +28,9 @@ typedef struct {
 
 typedef struct {
   WindowContext window;
-} FlintContext;
+} SkaldContext;
 
-FlintContext *FlintContext_Get(void);
-void FlintContext_Clear(void);
+SkaldContext *SkaldContext_Get(void);
+void SkaldContext_Clear(void);
 
 #endif

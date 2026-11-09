@@ -14,12 +14,12 @@
 #include "core/listbox_hover.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
   (void)hPopupWnd;
-  return WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL &&
-         IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+  return WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) != NULL &&
+         IsWindow(WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd));
 }
 
 void UI_RequestPopupRepaint(void) {
-  HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (!hPopup || !IsWindow(hPopup)) {
     return;
   }
@@ -28,7 +28,7 @@ void UI_RequestPopupRepaint(void) {
 }
 
 void UI_LegacySyncRepaint(void) {
-  HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     RedrawWindow(hPopup, NULL, NULL,
                  RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
@@ -74,7 +74,7 @@ int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
 static int g_render_lb_visible = 0;
 
 int UI_LB_GetVisibleCount(void) {
-  if (FlintContext_Get()->window.prompt_callbacks.render != NULL &&
+  if (SkaldContext_Get()->window.prompt_callbacks.render != NULL &&
       g_render_lb_visible > 0)
     return g_render_lb_visible;
   int itemHeight = 0;
@@ -223,11 +223,11 @@ void UI_SetText(const char *text) {
   strncpy(t.text, text, t.capacity - 1);
   t.text[t.capacity - 1] = '\0';
   UI_SetCursorPosition((int)strlen(t.text));
-  if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
+  if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
     UI_RequestPopupRepaint();
     return;
   }
-  HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND popup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (popup && IsWindow(popup))
     UI_RequestPopupRepaint();
 }
@@ -328,22 +328,22 @@ int UI_InsertChar(wchar_t wc) {
 }
 
 void UI_RedrawNow() {
-  HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     UI_RequestPopupRepaint();
   }
 }
 
 void UI_Redraw(ListBoxInfo *lb) {
-  if (FlintContext_Get()->window.prompt_callbacks.render == NULL) {
-    HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
+    HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
     if (hPopup)
       KillTimer(hPopup, UI_DEBOUNCE_TIMER_ID);
     UI_RedrawNow();
     return;
   }
-  if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
-    SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd),
+  if (IsPopupActive(SkaldContext_Get()->window.hPopupWnd)) {
+    SetTimer(WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd),
              UI_DEBOUNCE_TIMER_ID, UI_DEBOUNCE_MS, NULL);
     return;
   }
@@ -385,13 +385,13 @@ PromptState *Platform_GetWin32PromptState(void) {
                                                    : GetForegroundWindow());
 }
 
-void UI_SyncFilterFromEdit(FlintContext *ctx) {
+void UI_SyncFilterFromEdit(SkaldContext *ctx) {
   if (!ctx) {
     return;
   }
 }
 
-void UI_ApplyFilterToEdit(FlintContext *ctx) {
+void UI_ApplyFilterToEdit(SkaldContext *ctx) {
   if (!ctx) {
     return;
   }
@@ -400,9 +400,9 @@ void UI_ApplyFilterToEdit(FlintContext *ctx) {
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
 }
 
-ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
+ListBoxInfo *UI_GetPopupListBox(SkaldContext *ctx) {
   (void)ctx;
-  HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     ListBoxInfo *lb = (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
     if (lb)
@@ -411,7 +411,7 @@ ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
   return NULL;
 }
 
-void UI_SyncEditCursor(FlintContext *ctx, int pos) {
+void UI_SyncEditCursor(SkaldContext *ctx, int pos) {
   if (!ctx) {
     return;
   }
@@ -423,7 +423,7 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
   }
 }
 
-bool UI_ApplyBackspaceToPopup(FlintContext *ctx) {
+bool UI_ApplyBackspaceToPopup(SkaldContext *ctx) {
   (void)ctx;
   return false;
 }
