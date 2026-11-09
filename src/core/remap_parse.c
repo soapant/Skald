@@ -140,33 +140,41 @@ bool Remap_ParseTriggers(const char *str, int *out_mods, int *out_vks,
     } else if (strcasecmp(token, "LeftCtrl") == 0 ||
                strcasecmp(token, "LCtrl") == 0 ||
                strcasecmp(token, "LControl") == 0) {
-      out_vks[(*out_count)++] = VK_LCONTROL;
+      if (*out_count < REMAP_PARSE_MAX_VKS)
+        out_vks[(*out_count)++] = VK_LCONTROL;
     } else if (strcasecmp(token, "RightCtrl") == 0 ||
                strcasecmp(token, "RCtrl") == 0 ||
                strcasecmp(token, "RControl") == 0) {
-      out_vks[(*out_count)++] = VK_RCONTROL;
+      if (*out_count < REMAP_PARSE_MAX_VKS)
+        out_vks[(*out_count)++] = VK_RCONTROL;
     } else if (strcasecmp(token, "LeftShift") == 0 ||
                strcasecmp(token, "LShift") == 0) {
-      out_vks[(*out_count)++] = VK_LSHIFT;
+      if (*out_count < REMAP_PARSE_MAX_VKS)
+        out_vks[(*out_count)++] = VK_LSHIFT;
     } else if (strcasecmp(token, "RightShift") == 0 ||
                strcasecmp(token, "RShift") == 0) {
-      out_vks[(*out_count)++] = VK_RSHIFT;
+      if (*out_count < REMAP_PARSE_MAX_VKS)
+        out_vks[(*out_count)++] = VK_RSHIFT;
     } else if (strcasecmp(token, "LeftAlt") == 0 ||
                strcasecmp(token, "LAlt") == 0 ||
                strcasecmp(token, "LMenu") == 0) {
-      out_vks[(*out_count)++] = VK_LMENU;
+      if (*out_count < REMAP_PARSE_MAX_VKS)
+        out_vks[(*out_count)++] = VK_LMENU;
     } else if (strcasecmp(token, "RightAlt") == 0 ||
                strcasecmp(token, "RAlt") == 0 ||
                strcasecmp(token, "RMenu") == 0) {
-      out_vks[(*out_count)++] = VK_RMENU;
+      if (*out_count < REMAP_PARSE_MAX_VKS)
+        out_vks[(*out_count)++] = VK_RMENU;
     } else if (strcasecmp(token, "LeftSuper") == 0 ||
                strcasecmp(token, "LWin") == 0 ||
                strcasecmp(token, "LSuper") == 0) {
-      out_vks[(*out_count)++] = VK_LWIN;
+      if (*out_count < REMAP_PARSE_MAX_VKS)
+        out_vks[(*out_count)++] = VK_LWIN;
     } else if (strcasecmp(token, "RightSuper") == 0 ||
                strcasecmp(token, "RWin") == 0 ||
                strcasecmp(token, "RSuper") == 0) {
-      out_vks[(*out_count)++] = VK_RWIN;
+      if (*out_count < REMAP_PARSE_MAX_VKS)
+        out_vks[(*out_count)++] = VK_RWIN;
     } else {
       int vk = 0;
       bool need_shift = false;

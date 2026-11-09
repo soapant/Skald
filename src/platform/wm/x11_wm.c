@@ -499,12 +499,20 @@ PlWindowList get_window_titles_x11() {
     char *wt = x11_get_text_prop(display, clients[i]);
     if (!wt)
       continue;
-    while (*wt == ' ' || *wt == '\t')
-      wt++;
-    if (wt[0] == '\0' || !strcasecmp(wt, "window") ||
-        !strcasecmp(wt, "colored")) {
+    char *trimmed = wt;
+    while (*trimmed == ' ' || *trimmed == '\t')
+      trimmed++;
+    if (trimmed[0] == '\0' || !strcasecmp(trimmed, "window") ||
+        !strcasecmp(trimmed, "colored")) {
       free(wt);
       continue;
+    }
+    if (trimmed != wt) {
+      char *dup = strdup(trimmed);
+      free(wt);
+      if (!dup)
+        continue;
+      wt = dup;
     }
     char **grown = (char **)realloc(list.windows,
                                     (size_t)(list.count + 1) * sizeof(char *));
