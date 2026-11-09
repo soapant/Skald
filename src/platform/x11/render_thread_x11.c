@@ -128,49 +128,6 @@ static void *rt_thread_func(void *arg) {
   return NULL;
 }
 
-typedef struct {
-  volatile int done;
-} RtSync;
-
-static void rt_sync_mark(void *ud) {
-
-  RtSync *s = (RtSync *)ud;
-  if (s)
-    s->done = 1;
-}
-
-void Platform_RenderThread_Sync(void) {
-  if (!g_rt_running) {
-    return;
-  }
-  if (Platform_RenderThread_IsCurrentThread()) {
-    return;
-  }
-  RtSync *s = (RtSync *)malloc(sizeof(*s));
-  if (!s)
-    return;
-  s->done = 0;
-  if (!Platform_RenderThread_Post(rt_sync_mark, s)) {
-    free(s);
-    return;
-  }
-  struct timespec deadline;
-  clock_gettime(CLOCK_REALTIME, &deadline);
-  deadline.tv_sec += 5;
-  for (;;) {
-    if (s->done)
-      return;
-    struct timespec now;
-    clock_gettime(CLOCK_REALTIME, &now);
-    if (now.tv_sec > deadline.tv_sec) {
-      log_warn("render thread sync timed out after 5s");
-      return;
-    }
-    struct timespec nap = {0, 200000};
-    nanosleep(&nap, NULL);
-  }
-}
-
 bool Platform_RenderThread_EnsureStarted(int fps) {
   if (fps > g_rt_fps)
     g_rt_fps = fps;

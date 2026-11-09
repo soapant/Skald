@@ -4,7 +4,6 @@
 #include "core/types.h"
 #include <X11/Xlib.h>
 
-bool Platform_ExpandPath(const char *template_path, char *out, size_t out_size);
 void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
                              int *outWidth, int *outHeight);
 FontHandle Platform_CreateFont(int size, const char *face_name);

@@ -3,7 +3,6 @@
 
 #include "core/types.h"
 
-bool Platform_ExpandPath(const char *template_path, char *out, size_t out_size);
 void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
                              int *outWidth, int *outHeight);
 void Platform_DestroyFont(FontHandle font);

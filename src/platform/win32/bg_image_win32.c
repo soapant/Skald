@@ -1,4 +1,5 @@
 #include "platform/win32/bg_image_win32.h"
+#include "helpers/helpers_fs.h"
 #include "core/types.h"
 #include "config_values.h"
 #include "platform/platform.h"
@@ -140,9 +141,9 @@ static unsigned int bg_hash_str(const char *s) {
 static bool bg_cache_file(char *out, size_t cap, const char *native, int w,
                           int h) {
   char dir[MAX_PATH];
-  if (!Platform_GetFeaturePath("core", BG_CACHE_DIR, dir, sizeof(dir)))
+  if (!FeaturePath_Get("core", BG_CACHE_DIR, dir, sizeof(dir)))
     return false;
-  /* Platform_GetFeaturePath only creates the feature dir, not the leaf. */
+  /* FeaturePath_Get only creates the feature dir, not the leaf. */
   CreateDirectoryA(dir, NULL);
   snprintf(out, cap, "%s\\%08x_%dx%d.bmp", dir, bg_hash_str(native), w, h);
   return true;

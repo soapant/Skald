@@ -1,0 +1,126 @@
+#include "helpers/helpers_fs.h"
+
+#include "platform/platform.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <sys/stat.h>
+#endif
+
+#if defined(_WIN32)
+#define SK_FEAT_SEP '\\'
+#else
+#define SK_FEAT_SEP '/'
+#endif
+
+static bool feature_base_dir(char *out, size_t out_len) {
+  const char *home = Platform_GetRealHome();
+  if (!out || out_len == 0 || !home || !home[0])
+    return false;
+#if defined(_WIN32)
+  snprintf(out, out_len, "%s\\AppData\\Roaming\\Skald", home);
+#else
+  snprintf(out, out_len, "%s/.local/share/skald", home);
+#endif
+  return true;
+}
+
+static void path_fold_exe(char *out) {
+#if !defined(_WIN32)
+  size_t total = strlen(out);
+  if (total >= 4) {
+    size_t i = total - 4;
+    if (out[i] == '.' && (out[i + 1] == 'e' || out[i + 1] == 'E') &&
+        (out[i + 2] == 'x' || out[i + 2] == 'X') &&
+        (out[i + 3] == 'e' || out[i + 3] == 'E'))
+      out[i] = '\0';
+  }
+#endif
+}
+
+bool ExpandPath(const char *template_path, char *out, size_t out_size) {
+
+  if (!template_path || !out || out_size == 0)
+    return false;
+
+  if (template_path[0] == '~' &&
+      (template_path[1] == '/' || template_path[1] == '\0')) {
+    const char *home = Platform_GetRealHome();
+    if (home && home[0]) {
+      size_t hn = strlen(home);
+      size_t total = 0;
+      if (hn < out_size) {
+        memcpy(out, home, hn);
+        total = hn;
+      }
+      const char *rest = template_path + 1;
+      while (*rest && total < out_size - 1)
+        out[total++] = *rest++;
+      out[total] = '\0';
+      path_fold_exe(out);
+      return true;
+    }
+  }
+
+  size_t o = 0;
+  const char *p = template_path;
+  while (*p != '\0' && o < out_size - 1) {
+    if (*p == '{') {
+      const char *close = strchr(p + 1, '}');
+      if (close != NULL) {
+        size_t token_len = (size_t)(close - p - 1);
+        if (token_len > 0 && token_len < 64) {
+          out[0] = '\0';
+          return false;
+        }
+      }
+    }
+    out[o++] = *p++;
+  }
+  out[o] = '\0';
+  path_fold_exe(out);
+  return true;
+}
+
+bool FeaturePath_Get(const char *feature, const char *name, char *out,
+                     size_t out_len) {
+
+  if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0)
+    return false;
+  char dir_path[512];
+  if (!feature_base_dir(dir_path, sizeof(dir_path)))
+    return false;
+  Platform_MkdirIfNotExists(dir_path);
+  char feat_path[720];
+  snprintf(feat_path, sizeof(feat_path), "%s%c%s", dir_path, SK_FEAT_SEP,
+           feature);
+  Platform_MkdirIfNotExists(feat_path);
+  snprintf(out, out_len, "%s%c%s", feat_path, SK_FEAT_SEP, name);
+  return true;
+}
+
+bool FeaturePath_DataDirExists(const char *stem) {
+
+  if (!stem || !stem[0])
+    return false;
+  char dir_path[512];
+  if (!feature_base_dir(dir_path, sizeof(dir_path)))
+    return false;
+  char stemdir[720];
+  snprintf(stemdir, sizeof(stemdir), "%s%c%s", dir_path, SK_FEAT_SEP, stem);
+#if defined(_WIN32)
+  DWORD attrs = GetFileAttributesA(stemdir);
+  return attrs != INVALID_FILE_ATTRIBUTES &&
+         (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
+#else
+  struct stat st;
+  return stat(stemdir, &st) == 0 && S_ISDIR(st.st_mode);
+#endif
+}

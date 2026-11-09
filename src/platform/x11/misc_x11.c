@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <sys/stat.h>
+#include "helpers/helpers_fs.h"
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
@@ -205,69 +206,6 @@ const char *Platform_GetRuntimeDir(void) {
   snprintf(buf, sizeof(buf), "/run/user/%d", (int)getuid());
   log_info("Platform_GetRuntimeDir completed");
   return buf[0] ? buf : "/run/user/1000";
-}
-
-bool Platform_ExpandPath(const char *template_path, char *out,
-                         size_t out_size) {
-
-  if (template_path == NULL || out_size == 0)
-    return false;
-
-  if (template_path[0] == '~' &&
-      (template_path[1] == '/' || template_path[1] == '\0')) {
-    const char *home = Platform_GetRealHome();
-    if (home && home[0]) {
-      size_t hn = strlen(home);
-      size_t total = 0;
-      if (hn < out_size) {
-        memcpy(out, home, hn);
-        total = hn;
-      }
-      const char *rest = template_path + 1;
-      while (*rest && total < out_size - 1)
-        out[total++] = *rest++;
-      out[total] = '\0';
-      if (total >= 4) {
-        size_t i = total - 4;
-        if (out[i] == '.' && (out[i + 1] == 'e' || out[i + 1] == 'E') &&
-            (out[i + 2] == 'x' || out[i + 2] == 'X') &&
-            (out[i + 3] == 'e' || out[i + 3] == 'E')) {
-          out[i] = '\0';
-        }
-      }
-      return true;
-    }
-  }
-
-  size_t o = 0;
-  const char *p = template_path;
-  while (*p != '\0' && o < out_size - 1) {
-    if (*p == '{') {
-      const char *close = strchr(p + 1, '}');
-      if (close != NULL) {
-        size_t token_len = (size_t)(close - p - 1);
-        if (token_len > 0 && token_len < 64) {
-          char token[64];
-          memcpy(token, p + 1, token_len);
-          token[token_len] = '\0';
-          out[0] = '\0';
-          return false;
-        }
-      }
-    }
-    out[o++] = *p++;
-  }
-  out[o] = '\0';
-
-  if (o >= 4) {
-    size_t i = o - 4;
-    if (out[i] == '.' && (out[i + 1] == 'e' || out[i + 1] == 'E') &&
-        (out[i + 2] == 'x' || out[i + 2] == 'X') &&
-        (out[i + 3] == 'e' || out[i + 3] == 'E')) {
-      out[i] = '\0';
-    }
-  }
-  return true;
 }
 
 int ConvertLinuxKeyToWindowsVK(int key_code) {

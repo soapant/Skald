@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "helpers/helpers_fs.h"
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
@@ -20,7 +21,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     nid.uCallbackMessage = WM_TRAYICON;
 
     char expanded_icon[MAX_PATH];
-    if (!Platform_ExpandPath(IconPath, expanded_icon, sizeof(expanded_icon)))
+    if (!ExpandPath(IconPath, expanded_icon, sizeof(expanded_icon)))
       expanded_icon[0] = '\0';
 
     nid.hIcon = (HICON)LoadImageA(NULL, expanded_icon, IMAGE_ICON, 0, 0,
