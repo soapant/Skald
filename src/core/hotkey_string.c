@@ -4,9 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdbool.h>
 #include "core/types/keys.h"
-#include "core/types/window.h"
 #include "platform/platform.h"
 #include "platform/input_state.h"
 

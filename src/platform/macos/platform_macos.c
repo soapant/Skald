@@ -21,7 +21,7 @@ const char *Platform_GetRealUser(void) {
   return user ? user : "user";
 }
 
-bool Platform_QueryBrowser(char *query) { return false; }
+bool Platform_QueryBrowser(const char *query) { return false; }
 
 bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
                                      char *cmd, size_t cmd_size) {

@@ -62,9 +62,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU)
     return false;
 
-  extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
   PromptState *state = Platform_GetPromptStateForHWND(hwnd);
-  int old_font = FontSize;
 
   if (wParam == VK_ESCAPE) {
     if (WH_TO_HWND(g_win32_message_wnd) != NULL) {
@@ -91,9 +89,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
     if (popup_wnd && IsWindow(popup_wnd) &&
         WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL)
       ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
-  }
-  if (FontSize != old_font) {
-    HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   }
   if (FlintContext_Get()->window.prompt_callbacks.render != NULL) {
     HWND hPar = GetParent(hwnd);
@@ -212,12 +207,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     return 0;
   }
   case WM_MOUSEWHEEL: {
-    extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
     short delta = (short)HIWORD(wParam);
     int rows = (delta > 0) ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS;
     ListBox_PublishMousePos((short)(lParam & 0xFFFF),
                             (short)((lParam >> 16) & 0xFFFF));
-    PromptState *hst = Platform_GetPromptStateForHWND(hwnd);
     ListBox_QueueScroll(rows);
     InvalidateRect(hwnd, NULL, FALSE);
     return 0;
@@ -364,6 +357,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       break;
     }
   }
+    /* fall through */
   case WM_SHOWWINDOW: {
     if (wParam && g_pending_navigate >= 0) {
       int idx = g_pending_navigate;
@@ -409,9 +403,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_DRAWITEM: {
     DRAWITEMSTRUCT *pdis = (DRAWITEMSTRUCT *)lParam;
-    if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-      BOOL isSelected = (pdis->itemID == (lb ? lb->selected_index : -1));
-      if (pdis->itemID >= (lb ? lb->item_count : 0)) {
+    if (pdis->CtlID == IDC_LIST_BOX && (int)pdis->itemID != -1) {
+      BOOL isSelected = ((int)pdis->itemID == (lb ? lb->selected_index : -1));
+      if ((int)pdis->itemID >= (lb ? lb->item_count : 0)) {
         return TRUE;
       }
       if (RoundedCorners && CornerRadius > 0) {
@@ -503,12 +497,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         }
         {
           if (isSelected && strlen(measureBuffer) >= 70) {
-            if (g_last_selected_index != pdis->itemID ||
+            if (g_last_selected_index != (int)pdis->itemID ||
                 WH_TO_HWND(g_win32_message_wnd) == NULL) {
-              g_last_selected_index = pdis->itemID;
+              g_last_selected_index = (int)pdis->itemID;
             }
           } else {
-            if (g_last_selected_index == pdis->itemID) {
+            if (g_last_selected_index == (int)pdis->itemID) {
               g_last_selected_index = -1;
             }
           }
@@ -516,11 +510,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       }
 
       const char *textBuffer = "";
-      if (pdis->itemID < (lb ? lb->item_count : 0)) {
+      if ((int)pdis->itemID < (lb ? lb->item_count : 0)) {
         textBuffer = lb->items[pdis->itemID];
       }
 
-      if (pdis->itemID == -1 || pdis->itemID >= (lb ? lb->item_count : 0)) {
+      if ((int)pdis->itemID == -1 || (int)pdis->itemID >= (lb ? lb->item_count : 0)) {
         return TRUE;
       }
 
@@ -539,7 +533,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         int orig_idx = (int)pdis->itemID;
         int orig_cnt = lb ? lb->item_count : 0;
         if (lb && (int)pdis->itemID >= 0 &&
-            pdis->itemID < (UINT)lb->item_count) {
+            (UINT)pdis->itemID < (UINT)lb->item_count) {
           orig_idx = lb->matching_indices[pdis->itemID];
           orig_cnt = lb->item_count;
         }

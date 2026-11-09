@@ -573,7 +573,7 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   return x11_launch_browser(UsedBrowser, full_url, new_window);
 }
 
-bool Platform_QueryBrowser(char *query) {
+bool Platform_QueryBrowser(const char *query) {
   if (!query || !query[0])
     return false;
 

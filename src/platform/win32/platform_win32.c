@@ -24,7 +24,9 @@
 #include <gdiplus.h>
 #include <ctype.h>
 #include "platform/input_state.h"
+#ifdef _MSC_VER
 #pragma comment(lib, "winhttp.lib")
+#endif
 
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
@@ -1570,10 +1572,10 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
   if (QueryFullProcessImageNameA(h, 0, exePath, &sz) && sz > 0) {
     char *base = strrchr(exePath, '\\');
     if (base) {
-      strncpy(exe, base + 1, sizeof(exe) - 1);
+      snprintf(exe, sizeof(exe), "%s", base + 1);
       len = strlen(exe);
     } else {
-      strncpy(exe, exePath, sizeof(exe) - 1);
+      snprintf(exe, sizeof(exe), "%s", exePath);
       len = strlen(exe);
     }
   } else {

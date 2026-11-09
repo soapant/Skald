@@ -501,8 +501,8 @@ static bool load_single(const char *dir, const char *filename) {
   }
 
   LoadedFeature *f = &g_features[g_feature_count++];
-  strncpy(f->name, name, sizeof(f->name) - 1);
-  strncpy(f->path, full, sizeof(f->path) - 1);
+  snprintf(f->name, sizeof(f->name), "%s", name);
+  snprintf(f->path, sizeof(f->path), "%s", full);
   f->handle = h;
   return true;
 }
