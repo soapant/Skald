@@ -40,6 +40,11 @@ struct PlatformWidget {
   char name[64];
 };
 
+static unsigned int widget_dib_color(unsigned long colorref) {
+  return 0xFF000000u | ((colorref & 0x000000FFu) << 16) |
+         (colorref & 0x0000FF00u) | ((colorref >> 16) & 0x000000FFu);
+}
+
 static void layer_fill(PlatformWidget *widget, unsigned int argb) {
 
   unsigned int *px = (unsigned int *)widget->layer_bits;
@@ -137,11 +142,11 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
     RECT full = {0, 0, widget->layer_w, widget->layer_h};
     if (!win32_draw_bg_image_slice(widget->layer_dc, &full, widget->layer_w,
                                    widget->layer_h, 0, 0)) {
-      layer_fill(widget,
-                 0xFF000000u | (widget->has_bg ? widget->bg_color : 0u));
+      layer_fill(widget, widget_dib_color(widget->has_bg ? widget->bg_color
+                                                         : 0u));
     }
   } else {
-    layer_fill(widget, bg);
+    layer_fill(widget, widget_dib_color(bg));
   }
   Platform_SetDrawBgColor(0);
   SetBkMode(widget->layer_dc, TRANSPARENT);
@@ -222,8 +227,7 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
 
   (void)hdc;
   (void)rect;
-  widget_push_layered(widget,
-                      0xFF000000u | (widget->has_bg ? widget->bg_color : 0u),
+  widget_push_layered(widget, widget->has_bg ? widget->bg_color : 0u,
                       (unsigned char)WindowOpacity);
 }
 
