@@ -26,7 +26,6 @@ void hotkey_set_suspended(bool suspended) { g_hotkeys_suspended = suspended; }
 #define HOTKEY_PENDING_MAX 64
 static HotkeyCallback g_pending_q[HOTKEY_PENDING_MAX];
 static void *g_pending_ud[HOTKEY_PENDING_MAX];
-static bool g_pending_toggle[HOTKEY_PENDING_MAX];
 static int g_pending_vk[HOTKEY_PENDING_MAX];
 static int g_pending_mods[HOTKEY_PENDING_MAX];
 static char g_pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
@@ -43,17 +42,16 @@ static void hotkey_queue_init(void) {
     Platform_MutexLock(g_q_mutex);                                             \
   } while (0)
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(g_q_mutex)
-static void hotkey_enqueue(HotkeyCallback fn, void *ud, bool is_toggle,
-                           const char *owner, int vk, int mods) {
+static void hotkey_enqueue(HotkeyCallback fn, void *ud, const char *owner,
+                           int vk, int mods) {
   if (!fn)
     return;
-  log_info("hotkey_enqueue: fn=%p is_toggle=%d", (void *)fn, (int)is_toggle);
+  log_info("hotkey_enqueue: fn=%p", (void *)fn);
   HOTKEY_Q_LOCK();
   int nxt = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
   if (nxt != g_pending_head) {
     g_pending_q[g_pending_tail] = fn;
     g_pending_ud[g_pending_tail] = ud;
-    g_pending_toggle[g_pending_tail] = is_toggle;
     g_pending_vk[g_pending_tail] = vk;
     g_pending_mods[g_pending_tail] = mods;
     snprintf(g_pending_owner[g_pending_tail], OWNER_PATH_MAX, "%s",
@@ -63,7 +61,6 @@ static void hotkey_enqueue(HotkeyCallback fn, void *ud, bool is_toggle,
   HOTKEY_Q_UNLOCK();
 }
 #define HOTKEY_HOLD_MAX 16
-static bool hotkey_toggle_blocked(HotkeyBinding *b);
 typedef struct {
   int vk;
   int modifiers;
@@ -174,13 +171,9 @@ static void hotkey_tick_holds(void) {
       g_hold_slots[i].active = false;
       continue;
     }
-    if (hotkey_toggle_blocked(b))
-      continue;
-
     g_hold_slots[i].next_fire_ms =
         now + (unsigned long long)hotkey_repeat_interval_ms();
-    hotkey_enqueue(b->hotkey_callback, b->user_ud, b->is_feature_toggle,
-                   b->owner, vk, mods);
+    hotkey_enqueue(b->hotkey_callback, b->user_ud, b->owner, vk, mods);
   }
 }
 
@@ -191,27 +184,18 @@ void hotkey_drain_pending(void) {
   for (;;) {
     HotkeyCallback fn = NULL;
     void *ud = NULL;
-    bool is_toggle = false;
     HOTKEY_Q_LOCK();
     if (g_pending_head != g_pending_tail) {
       fn = g_pending_q[g_pending_head];
       ud = g_pending_ud[g_pending_head];
-      is_toggle = g_pending_toggle[g_pending_head];
       g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
     }
     HOTKEY_Q_UNLOCK();
     if (!fn)
       break;
     WindowManager *dwm = WindowManager_Get();
-    log_info("hotkey_drain_pending: dequeued fn=%p is_toggle=%d popup_count=%d",
-             (void *)fn, (int)is_toggle, dwm ? dwm->popup_count : -1);
-    if (is_toggle) {
-      if (dwm && dwm->popup_count > 0) {
-        log_info("hotkey_drain_pending: skipped (toggle active popup_count=%d)",
-                 dwm->popup_count);
-        continue;
-      }
-    }
+    log_info("hotkey_drain_pending: dequeued fn=%p popup_count=%d", (void *)fn,
+             dwm ? dwm->popup_count : -1);
     log_info("hotkey_drain_pending: calling fn=%p", (void *)fn);
     ((void (*)(void *))fn)(ud);
     log_info("hotkey_drain_pending: fn=%p finished", (void *)fn);
@@ -273,13 +257,6 @@ bool hotkey_mouse_button_bound(int btn) {
   return false;
 }
 
-static bool hotkey_toggle_blocked(HotkeyBinding *b) {
-  if (!b || !b->is_feature_toggle)
-    return false;
-  WindowManager *wm = WindowManager_Get();
-  return wm && wm->popup_count > 0;
-}
-
 int hotkey_count(void) { return g_hotkey_count; }
 
 const HotkeyBinding *hotkey_get(int index) {
@@ -325,10 +302,7 @@ bool hotkey_register_internal(HotkeyBinding binding) {
   for (int i = 0; i < g_hotkey_count; i++) {
     if (g_hotkeys[i].vk_code == binding.vk_code &&
         g_hotkeys[i].modifiers == binding.modifiers) {
-      bool keep_toggle =
-          g_hotkeys[i].is_feature_toggle || binding.is_feature_toggle;
       g_hotkeys[i] = binding;
-      g_hotkeys[i].is_feature_toggle = keep_toggle;
       return true;
     }
   }
@@ -441,8 +415,6 @@ bool hotkey_process(int vk_code, int modifiers) {
     }
 
     if (b->hotkey_condition) {
-      if (hotkey_toggle_blocked(b))
-        return true;
       FeatureLoader_Lock();
       bool cond_pass = b->hotkey_condition();
       FeatureLoader_Unlock();
@@ -505,9 +477,6 @@ bool hotkey_process(int vk_code, int modifiers) {
     }
 
     HotkeyCallback cb = b->hotkey_callback;
-    bool blocked = hotkey_toggle_blocked(b);
-    if (blocked)
-      return true;
     bool swallow = true;
     if (b->should_swallow) {
       if (FeatureLoader_TryLock()) {
@@ -517,8 +486,7 @@ bool hotkey_process(int vk_code, int modifiers) {
         swallow = false;
       }
     }
-    hotkey_enqueue(cb, b->user_ud, b->is_feature_toggle, b->owner, vk_code,
-                   eff_modifiers);
+    hotkey_enqueue(cb, b->user_ud, b->owner, vk_code, eff_modifiers);
     char buf[2556];
     char hotkey_buf[2422];
     HotkeyString_Format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},

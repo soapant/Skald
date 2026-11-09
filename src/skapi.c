@@ -375,6 +375,11 @@ bool sk_append_unique_line(const char *path, const char *line) {
   if (!path || !line)
     return false;
   SkStringList files = sk_load_file_list(path);
+  for (size_t i = 0; i < files.count; i++)
+    if (files.items[i] && strcmp(files.items[i], line) == 0) {
+      sk_free_file_list(&files);
+      return true;
+    }
   bool ok = sk_append_to_file(path, line);
   sk_free_file_list(&files);
   return ok;
@@ -440,7 +445,7 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
       if (out_nodisplay)
         *out_nodisplay = true;
     }
-    if (!found && Platform_StringContainsCaseInsensitive(p, "Name=")) {
+    if (!found && Platform_StringStartsWithCaseInsensitive(p, "Name=")) {
       p += 5;
       while (*p == ' ' || *p == '\t')
         p++;
@@ -501,9 +506,65 @@ typedef struct {
   char name[128];
   void (*cb)(void);
   char icon[512];
+  char owner[OWNER_PATH_MAX];
 } FeatureReg;
 static FeatureReg **g_feature_order = NULL;
 static int g_feature_order_count = 0;
+static int g_feature_order_cap = 0;
+
+static int feature_list_find(const char *name, void (*cb)(void)) {
+  for (int i = 0; i < g_feature_order_count; i++) {
+    if (cb && g_feature_order[i]->cb == cb)
+      return i;
+    if (name && g_feature_order[i]->name[0] &&
+        strcmp(g_feature_order[i]->name, name) == 0)
+      return i;
+  }
+  return -1;
+}
+
+static bool feature_list_add(const char *name, void (*cb)(void),
+                             const char *icon, const char *owner) {
+  if (!name || !name[0])
+    return false;
+  int idx = feature_list_find(name, cb);
+  if (idx < 0) {
+    if (g_feature_order_count >= g_feature_order_cap) {
+      int ncap = g_feature_order_cap ? g_feature_order_cap * 2 : 32;
+      FeatureReg **grown =
+          (FeatureReg **)realloc(g_feature_order, (size_t)ncap * sizeof(*grown));
+      if (!grown)
+        return false;
+      g_feature_order = grown;
+      g_feature_order_cap = ncap;
+    }
+    idx = g_feature_order_count;
+    g_feature_order[idx] = (FeatureReg *)calloc(1, sizeof(**g_feature_order));
+    if (!g_feature_order[idx])
+      return false;
+    g_feature_order_count++;
+  }
+  FeatureReg *reg = g_feature_order[idx];
+  snprintf(reg->name, sizeof(reg->name), "%s", name);
+  reg->cb = cb;
+  snprintf(reg->icon, sizeof(reg->icon), "%s", icon ? icon : "");
+  snprintf(reg->owner, sizeof(reg->owner), "%s", owner ? owner : "");
+  return true;
+}
+
+void feature_list_purge_owner(const char *path_a, const char *path_b) {
+  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+    return;
+  int n = 0;
+  for (int i = 0; i < g_feature_order_count; i++) {
+    if (Owner_ModuleMatches(g_feature_order[i]->owner, path_a, path_b)) {
+      free(g_feature_order[i]);
+      continue;
+    }
+    g_feature_order[n++] = g_feature_order[i];
+  }
+  g_feature_order_count = n;
+}
 
 bool ski_register_hotkey(const SkHotkeySpec *spec) {
   if (!spec || !spec->hotkey || !spec->cb)
@@ -514,20 +575,8 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   const char *const *bw = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
   HotkeyBinding binding = convert_into_hotkey_binding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
-  binding.is_feature_toggle = false;
   binding.hold = true;
   binding.should_swallow = spec->should_swallow;
-  if (spec->cb) {
-    for (int i = 0; i < g_feature_order_count; i++) {
-      if (g_feature_order[i] &&
-          (void *)g_feature_order[i]->cb == (void *)spec->cb) {
-        binding.is_feature_toggle = true;
-        break;
-      }
-    }
-  }
-  if (binding.is_feature_toggle)
-    binding.hold = false;
   return hotkey_register_internal(binding);
 }
 
@@ -620,7 +669,7 @@ int sk_get_feature_list_with_icons(const char **out_names,
   static int icon_ptrs_cap = 0;
   if (n > icon_ptrs_cap) {
     const char **new_ptrs =
-        (const char **)realloc(icon_ptrs, n * sizeof(const char *));
+        (const char **)realloc(icon_ptrs, (size_t)n * sizeof(const char *));
     if (new_ptrs) {
       icon_ptrs = new_ptrs;
       icon_ptrs_cap = n;
@@ -1378,7 +1427,7 @@ bool ski_draw_rect(const PlRect *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  bool transparent = spec->transparent ? spec->transparent : true;
+  bool transparent = spec->transparent;
   if (col == 0)
     col = COLOR_TEXT;
   col = rgb_to_hex(col);
@@ -2535,6 +2584,9 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
     sk_cc_dep_mark(e->owner);
     add_dep("control_center.c", e->owner);
   }
+  if (spec->type && strcmp(spec->type, "Feature") == 0)
+    feature_list_add(spec->display_name, spec->on_action, spec->icon,
+                     e->owner);
   return true;
 }
 
@@ -2668,11 +2720,11 @@ void sk_reload_all_features(void) {
     char *outStr = sk_run_terminal_command(cmd);
     bool ok = false;
     if (outStr) {
-      if (strlen(outStr) == 0 || (!strstr(outStr, "error:") &&
-                                  !strstr(outStr, "undefined reference") &&
-                                  !strstr(outStr, "failed"))) {
-        ok = true;
-      }
+      bool failed = strstr(outStr, "error:") || strstr(outStr, "error C") ||
+                    strstr(outStr, "error LNK") ||
+                    strstr(outStr, "undefined reference") ||
+                    strstr(outStr, "failed");
+      ok = !failed;
       free(outStr);
     } else {
       ok = true;
@@ -2681,12 +2733,14 @@ void sk_reload_all_features(void) {
       remove(tmp);
       continue;
     }
+    bool reloaded_ok = FeatureLoader_ReloadFrom(ent->d_name, tmp);
+    remove(tmp);
+    if (!reloaded_ok)
+      continue;
     struct utimbuf times;
     times.actime = st_src.st_mtime;
     times.modtime = st_src.st_mtime;
     utime(dll, &times);
-    FeatureLoader_ReloadFrom(ent->d_name, tmp);
-    remove(tmp);
     reloaded++;
   }
   closedir(dir);

@@ -23,6 +23,6 @@ void TriggerSettings(void) {
 
 SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = "Alt+D", .cb = TriggerSettings);
-  sk_add_to_cc(.display_name = "Settings", .on_action = TriggerSettings,
-               .icon = "/settings.png");
+  sk_add_feature(.display_name = "Settings", .on_action = TriggerSettings,
+                 .icon = "/settings.png");
 }

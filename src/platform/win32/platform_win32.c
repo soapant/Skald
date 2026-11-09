@@ -1740,17 +1740,23 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     }
   char **t1 = realloc(pair->titles->windows,
                       (pair->titles->count + 1) * sizeof(char *));
-  char **t2 =
-      realloc(pair->names->windows, (pair->names->count + 1) * sizeof(char *));
-  if (!t1 || !t2) {
-    free(t1);
-    free(t2);
+  if (!t1)
+    return TRUE;
+  pair->titles->windows = t1;
+  char **t2 = realloc(pair->names->windows,
+                      (pair->names->count + 1) * sizeof(char *));
+  if (!t2)
+    return TRUE;
+  pair->names->windows = t2;
+  char *title_dup = strdup(title);
+  char *exe_dup = strdup(exe);
+  if (!title_dup || !exe_dup) {
+    free(title_dup);
+    free(exe_dup);
     return TRUE;
   }
-  pair->titles->windows = t1;
-  pair->names->windows = t2;
-  pair->titles->windows[pair->titles->count++] = strdup(title);
-  pair->names->windows[pair->names->count++] = strdup(exe);
+  pair->titles->windows[pair->titles->count++] = title_dup;
+  pair->names->windows[pair->names->count++] = exe_dup;
   return TRUE;
 }
 
@@ -2604,10 +2610,12 @@ void Platform_ThreadJoin(void *thread) {
   if (!thread) {
     return;
   }
-  DWORD w = WaitForSingleObject((HANDLE)thread, 250);
+  DWORD w = WaitForSingleObject((HANDLE)thread, 5000);
   if (w == WAIT_TIMEOUT) {
-    TerminateThread((HANDLE)thread, 0);
-    WaitForSingleObject((HANDLE)thread, INFINITE);
+    log_error("Platform_ThreadJoin: thread %p still running after 5s, "
+              "leaking handle instead of terminating",
+              thread);
+    return;
   }
   CloseHandle((HANDLE)thread);
 }

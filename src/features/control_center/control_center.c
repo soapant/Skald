@@ -28,7 +28,6 @@ typedef struct {
 
 #define CC_MAX_TYPES 16
 #define CC_MAX_ACTIONS 64
-#define CC_FEATURE_MAX 130
 #define CC_MAYBE_UNUSED __attribute__((unused))
 
 static volatile int g_cc_stopping = 0;
@@ -768,24 +767,6 @@ static void cc_fill_applications(void) {
     cc_app_map_put(g_apps.files[i].name, g_apps.files[i].path);
     e->on_enter = cc_launch_app;
     e->on_ctrl_enter = cc_launch_app_as_admin;
-  }
-}
-
-static const char *cc_feature_names[CC_FEATURE_MAX];
-static void (*cc_feature_cbs[CC_FEATURE_MAX])(void);
-
-static void cc_fill_features(void) {
-  const char **cc_feature_icons = NULL;
-  int n = sk_get_feature_list_with_icons(cc_feature_names, cc_feature_cbs,
-                                         &cc_feature_icons, CC_FEATURE_MAX);
-  for (int i = 0; i < n; i++) {
-    const char *icon =
-        (cc_feature_icons && cc_feature_icons[i]) ? cc_feature_icons[i] : NULL;
-    CcEntry *e =
-        cc_entry_add_icon(cc_feature_names[i], "Feature", "", icon ? icon : "");
-    if (!e)
-      break;
-    e->on_action = cc_feature_cbs[i];
   }
 }
 
@@ -1864,7 +1845,6 @@ SKALD_FEATURE_INIT {
   cc_load_persisted_hotkeys();
   g_app_cache_mtx = sk_mutex_create();
   cc_register_type("Application", cc_fill_applications);
-  cc_register_type("Feature", cc_fill_features);
   cc_build();
   if (g_app_cache_mtx)
     g_prewarm_thread = sk_thread_create(cc_prewarm_app_cache, NULL);

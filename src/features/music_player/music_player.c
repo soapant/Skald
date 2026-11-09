@@ -248,8 +248,8 @@ SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = "RShift", .cb = pause);
   sk_add_to_cc(.display_name = "Force Reload Music", .on_action = reload_music,
                .icon = "/music.png");
-  sk_add_to_cc(.display_name = "Music Player", .on_action = music_prompt,
-               .icon = "/music.png");
+  sk_add_feature(.display_name = "Music Player", .on_action = music_prompt,
+                 .icon = "/music.png");
   sk_add_to_cc(.display_name = "Add Music", .on_action = add_music,
                .icon = "/music.png");
 

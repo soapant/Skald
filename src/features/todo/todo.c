@@ -360,6 +360,6 @@ void TriggerTodo(void) {
 
 SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = "Alt+T", .cb = TriggerTodo);
-  sk_add_to_cc(.display_name = "Todo", .on_action = TriggerTodo,
-               .icon = "/list-check.png");
+  sk_add_feature(.display_name = "Todo", .on_action = TriggerTodo,
+                 .icon = "/list-check.png");
 }
