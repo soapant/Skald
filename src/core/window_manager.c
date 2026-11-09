@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include "core/context.h"
+#include "core/types/window.h"
+#include "core/types/prompt.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
 

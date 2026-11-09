@@ -1,3 +1,6 @@
+#include "config_values.h"
+#include "core/types/prompt.h"
+#include "core/types/window.h"
 #include "platform/wm_platform.h"
 #include "platform/platform.h"
 #include "platform/input_state.h"

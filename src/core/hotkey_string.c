@@ -6,6 +6,8 @@
 #include <string.h>
 #include <strings.h>
 
+#include "core/types/keys.h"
+#include "core/types/window.h"
 #include "platform/platform.h"
 #include "platform/input_state.h"
 

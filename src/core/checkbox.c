@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include "core/types/color.h"
+#include "core/types/window.h"
 #include "core/window_manager.h"
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"

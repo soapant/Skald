@@ -1,4 +1,5 @@
 #include "core/theme.h"
+#include "core/types/color.h"
 
 #include <stddef.h>
 

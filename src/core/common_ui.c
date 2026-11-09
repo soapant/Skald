@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "core/context.h"
+#include "core/types/prompt.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"

@@ -1,6 +1,10 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <string.h>
+#include "config_values.h"
+#include "core/types/keys.h"
+#include "core/types/color.h"
+#include "core/types/window.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/window_manager.h"

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/types/window.h"
 #include "platform/platform.h"
 #include "platform/widget.h"
 #include "platform/render_thread.h"
