@@ -21,7 +21,6 @@ typedef struct {
   char output_buffer[1024];
   char *current_feature;
   const char *title;
-  int last_index;
   PromptCallbacks prompt_callbacks;
   SubwindowInfo subwindow;
 } WindowContext;
