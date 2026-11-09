@@ -250,7 +250,7 @@ PlWindowList get_window_names_hyprland() {
   for (size_t i = 0; i < lines.count; i++) {
     char *match = strstr(lines.items[i], "\"class\"");
     if (match) {
-      if (sscanf(match, "\"class\": \"%2048[^\"]\"", buffer) == 1) {
+      if (sscanf(match, "\"class\": \"%511[^\"]\"", buffer) == 1) {
         if (strlen(buffer) == 0)
           continue;
         if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored"))
@@ -282,7 +282,7 @@ PlWindowList get_window_titles_hyprland() {
   for (size_t i = 0; i < lines.count; i++) {
     char *match = strstr(lines.items[i], "\"title\"");
     if (match) {
-      if (sscanf(match, "\"title\": \"%2048[^\"]\"", buffer) == 1) {
+      if (sscanf(match, "\"title\": \"%511[^\"]\"", buffer) == 1) {
         if (strlen(buffer) == 0)
           continue;
         if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored"))

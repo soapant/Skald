@@ -71,48 +71,33 @@ bool get_title_sway(char *buffer, int buffer_size) {
     return false;
   }
   StringList lines = String_Split(command_output, "\n");
-  char *name = NULL;
-  char *app_id = NULL;
+  bool ok = false;
   for (size_t i = 0; i < lines.count; i++) {
     if (!lines.items[i])
       continue;
-    if (!name &&
-        Platform_StringContainsCaseInsensitive(lines.items[i], "\"name\"")) {
-      name = lines.items[i];
-    } else if (Platform_StringContainsCaseInsensitive(lines.items[i],
-                                                      "\"app_id\"")) {
-      app_id = lines.items[i];
-      break;
-    }
+    const char *p = strstr(lines.items[i], "\"name\"");
+    if (!p)
+      continue;
+    p = strchr(p, ':');
+    if (!p)
+      continue;
+    p++;
+    while (*p && (isspace((unsigned char)*p) || *p == '"'))
+      p++;
+    size_t n = 0;
+    while (p[n] && p[n] != '"' && p[n] != ',' && n < (size_t)(buffer_size - 1))
+      n++;
+    if (n == 0 || (n == 4 && strncmp(p, "null", 4) == 0))
+      continue;
+    memcpy(buffer, p, n);
+    buffer[n] = '\0';
+    ok = true;
+    break;
   }
-  if (!name)
-    name = (char *)"";
-  if (!app_id)
-    app_id = (char *)"";
-  size_t nlen = strlen(name);
-  size_t alen = strlen(app_id);
-  size_t size = nlen + alen + 2;
-  char *output_name = malloc(size);
-  if (!output_name) {
-    log_error("malloc failed size=%d buffer='%s' buffer_size=%d", (int)size,
-              buffer ? buffer : "null", buffer_size);
-    StringList_Free(&lines);
-    free(command_output);
-    return false;
-  }
-  output_name[0] = '\0';
-  if (nlen)
-    strncpy(output_name, name, size - 1);
-  if (alen)
-    strncat(output_name, app_id, size - 1 - strlen(output_name));
-  strncpy(buffer, output_name, buffer_size - 1);
-  buffer[buffer_size - 1] = '\0';
-  free(output_name);
   StringList_Free(&lines);
   free(command_output);
-  return buffer[0] != '\0';
+  return ok;
 }
-
 bool get_app_id_sway(char *buffer, int buffer_size) {
   if (!buffer || buffer_size <= 0)
     return false;

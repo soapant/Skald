@@ -693,10 +693,10 @@ int x11_vk_to_linux_key(int vk) {
   case 'Z':
     return KEY_Z;
   }
-  if (vk >= '0' && vk <= '9')
-    return KEY_1 + (vk - '1');
   if (vk == '0')
     return KEY_0;
+  if (vk >= '0' && vk <= '9')
+    return KEY_1 + (vk - '1');
   if (vk == VK_SPACE)
     return KEY_SPACE;
   if (vk == VK_RETURN)

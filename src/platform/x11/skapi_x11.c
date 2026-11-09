@@ -339,9 +339,9 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   if (pid < 0)
     return false;
   if (pid == 0) {
-    char *argv1[] = {"pkexec", cmd, NULL};
+    char *argv1[] = {"pkexec", "sh", "-c", cmd, NULL};
     execvp("pkexec", argv1);
-    char *argv2[] = {"sudo", cmd, NULL};
+    char *argv2[] = {"sudo", "sh", "-c", cmd, NULL};
     execvp("sudo", argv2);
     _exit(1);
   }

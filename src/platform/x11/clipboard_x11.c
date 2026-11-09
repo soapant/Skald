@@ -71,6 +71,7 @@ static Atom g_clip_gnome_files = None;
 static char *g_clip_file_uri = NULL;
 static char *g_clip_gnome_payload = NULL;
 static Atom g_clip_incr = None;
+static Atom g_clip_rd_incr = None;
 
 static bool g_incr_active = false;
 static Window g_incr_req = None;
@@ -489,7 +490,7 @@ static char *ClipReadProperty(Display *dpy, Window win, Atom prop,
   if (XGetWindowProperty(dpy, win, prop, 0, (~0L), True, AnyPropertyType,
                          &actual, &format, &nitems, &after, &data) != Success)
     return NULL;
-  if (actual == g_clip_incr) {
+  if (actual == g_clip_rd_incr) {
     if (data)
       XFree(data);
     return NULL;
@@ -577,7 +578,7 @@ static Display *x11_clipboard_read_display(void) {
   g_clip_rd_win = XCreateWindow(d, root, 0, 0, 1, 1, 0, 0, InputOutput,
                                 CopyFromParent, CWOverrideRedirect, &attrs);
   g_clip_rd_prop = XInternAtom(d, "CLIP_READ", False);
-  g_clip_incr = XInternAtom(d, "INCR", False);
+  g_clip_rd_incr = XInternAtom(d, "INCR", False);
   XFlush(d);
   g_clip_rd_dpy = d;
   return g_clip_rd_dpy;
@@ -620,7 +621,7 @@ static char *ClipReadTarget(Atom target) {
   }
   if (data)
     XFree(data);
-  if (actual == g_clip_incr) {
+  if (actual == g_clip_rd_incr) {
     XDeleteProperty(dpy, win, prop);
     XFlush(dpy);
     return ClipReadIncr(dpy, win, prop, &w);

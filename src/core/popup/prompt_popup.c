@@ -38,9 +38,12 @@ static void PromptPopup_OnShow(Popup *self) {
   Platform_PromptPopupShowWindow(self, data->x, data->y, data->w, data->h);
 
   data->state = calloc(1, sizeof(PromptState));
+  if (!data->state)
+    return;
   data->state->eb = calloc(1, sizeof(EditBoxInfo));
-  data->state->lb = calloc(1, sizeof(ListBoxInfo));
-  if (!data->state) {
+  if (!data->state->eb) {
+    free(data->state);
+    data->state = NULL;
     return;
   }
 
@@ -62,7 +65,6 @@ static void PromptPopup_OnShow(Popup *self) {
   if (data->spec.items || data->spec.refresh || data->spec.render) {
     data->state->lb = calloc(1, sizeof(ListBoxInfo));
   } else {
-    free(data->state->lb);
     data->state->lb = NULL;
   }
   ListBoxInfo_Init(data->state->lb);
@@ -158,6 +160,7 @@ static void PromptPopup_Destroy(Popup *self) {
   if (data->state) {
     ListBoxInfo_Free(data->state->lb);
     free(data->state->eb->placeholder);
+    free(data->state->eb);
     free(data->state);
   }
   free(data);

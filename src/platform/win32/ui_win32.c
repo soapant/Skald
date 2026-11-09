@@ -77,14 +77,7 @@ int UI_LB_GetVisibleCount(void) {
   if (SkaldContext_Get()->window.prompt_callbacks.render != NULL &&
       g_render_lb_visible > 0)
     return g_render_lb_visible;
-  int itemHeight = 0;
-  if (itemHeight <= 0)
-    return 16;
-  RECT rect;
-  int visible = rect.bottom / itemHeight;
-  if (visible < 1)
-    visible = 1;
-  return visible;
+  return 16;
 }
 
 void UI_LB_SetVisibleCount(int count) { g_render_lb_visible = count; }
