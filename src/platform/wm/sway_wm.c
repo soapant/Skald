@@ -1,4 +1,5 @@
 #include "wm/sway_wm.h"
+#include "wm/wm_util.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -44,7 +45,7 @@ static void sway_ensure_sock(void) {
   globfree(&g);
 }
 
-bool get_title_sway(char *buffer, int buffer_size) {
+static bool sway_tree_field(char *buffer, int buffer_size, const char *key) {
   if (!buffer || buffer_size <= 0) {
     log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null",
               buffer_size);
@@ -75,7 +76,7 @@ bool get_title_sway(char *buffer, int buffer_size) {
   for (size_t i = 0; i < lines.count; i++) {
     if (!lines.items[i])
       continue;
-    const char *p = strstr(lines.items[i], "\"name\"");
+    const char *p = strstr(lines.items[i], key);
     if (!p)
       continue;
     p = strchr(p, ':');
@@ -98,46 +99,13 @@ bool get_title_sway(char *buffer, int buffer_size) {
   free(command_output);
   return ok;
 }
+
+bool get_title_sway(char *buffer, int buffer_size) {
+  return sway_tree_field(buffer, buffer_size, "\"name\"");
+}
+
 bool get_app_id_sway(char *buffer, int buffer_size) {
-  if (!buffer || buffer_size <= 0)
-    return false;
-  buffer[0] = '\0';
-  sway_ensure_sock();
-  if (!getenv("SWAYSOCK") && !getenv("I3SOCK"))
-    return false;
-  char *command_output = Platform_RunTerminalCommand(
-      "swaymsg -t get_tree --raw | grep -A 40 '\"focused\": true'", false);
-  if (!command_output || command_output[0] == '\0') {
-    free(command_output);
-    return false;
-  }
-  bool ok = false;
-  StringList lines = String_Split(command_output, "\n");
-  for (size_t i = 0; i < lines.count; i++) {
-    if (!lines.items[i])
-      continue;
-    const char *p = strstr(lines.items[i], "\"app_id\"");
-    if (!p)
-      continue;
-    p = strchr(p, ':');
-    if (!p)
-      continue;
-    p++;
-    while (*p && (isspace((unsigned char)*p) || *p == '"'))
-      p++;
-    size_t n = 0;
-    while (p[n] && p[n] != '"' && p[n] != ',' && n < (size_t)(buffer_size - 1))
-      n++;
-    if (n == 0 || (n == 4 && strncmp(p, "null", 4) == 0))
-      continue;
-    memcpy(buffer, p, n);
-    buffer[n] = '\0';
-    ok = true;
-    break;
-  }
-  StringList_Free(&lines);
-  free(command_output);
-  return ok;
+  return sway_tree_field(buffer, buffer_size, "\"app_id\"");
 }
 
 char *paste_sway(char *content) {
@@ -187,13 +155,7 @@ bool focus_window_title_sway(char *title) {
     return false;
   }
   sway_ensure_sock();
-  while (*title &&
-         (iscntrl((unsigned char)*title) || isspace((unsigned char)*title)))
-    title++;
-  char *end = title + strlen(title);
-  while (end > title &&
-         (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1])))
-    *--end = '\0';
+  title = wm_trim_focus_title(title);
   if (!*title) {
     log_error("title empty after trim");
     return false;

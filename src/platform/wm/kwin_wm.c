@@ -1,4 +1,5 @@
 #include "wm/kwin_wm.h"
+#include "wm/wm_util.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "platform/x11/env_helpers_x11.h"
@@ -434,13 +435,7 @@ bool focus_window_title_kwin(char *title) {
   }
   if (!kwin_is_active())
     return false;
-  while (*title &&
-         (iscntrl((unsigned char)*title) || isspace((unsigned char)*title)))
-    title++;
-  char *end = title + strlen(title);
-  while (end > title &&
-         (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1])))
-    *--end = '\0';
+  title = wm_trim_focus_title(title);
   if (!*title) {
     log_error("title empty after trim");
     return false;

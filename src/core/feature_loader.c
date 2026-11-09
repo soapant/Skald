@@ -21,6 +21,13 @@
 #include "core/snippet_manager.h"
 #include "platform/input_state.h"
 
+static void fl_copy(char *dst, size_t dst_size, const char *src) {
+  if (dst_size == 0)
+    return;
+  strncpy(dst, src ? src : "", dst_size - 1);
+  dst[dst_size - 1] = '\0';
+}
+
 #define MAX_PINS 16
 
 typedef struct {
@@ -114,16 +121,12 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
   RetiredLib r;
   r.handle = handle;
   r.uniq[0] = '\0';
-  if (uniq && uniq[0]) {
-    strncpy(r.uniq, uniq, sizeof(r.uniq) - 1);
-    r.uniq[sizeof(r.uniq) - 1] = '\0';
-  }
+  if (uniq && uniq[0])
+    fl_copy(r.uniq, sizeof(r.uniq), uniq);
   r.owner_gen = widget_current_generation();
   r.owner[0] = '\0';
-  if (owner && owner[0]) {
-    strncpy(r.owner, owner, sizeof(r.owner) - 1);
-    r.owner[sizeof(r.owner) - 1] = '\0';
-  }
+  if (owner && owner[0])
+    fl_copy(r.owner, sizeof(r.owner), owner);
   r.npins = 0;
   if (wm && wm->popup_count > MAX_PINS) {
     r.npins = -1;
@@ -498,8 +501,7 @@ static bool load_single(const char *dir, const char *filename) {
   char full[1024];
   snprintf(full, sizeof(full), "%s/%s", dir, filename);
   char name[64];
-  strncpy(name, filename, sizeof(name) - 1);
-  name[sizeof(name) - 1] = '\0';
+  fl_copy(name, sizeof(name), filename);
   char *dot = strrchr(name, '.');
   if (dot)
     *dot = '\0';
@@ -731,8 +733,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
   for (int i = 0; i < g_feature_count; i++) {
     if (strcmp(g_features[i].name, name) == 0) {
       char path_copy[512];
-      strncpy(path_copy, g_features[i].path, sizeof(path_copy) - 1);
-      path_copy[sizeof(path_copy) - 1] = '\0';
+      fl_copy(path_copy, sizeof(path_copy), g_features[i].path);
       const char *src = (src_path && src_path[0]) ? src_path : path_copy;
       LibHandle old = g_features[i].handle;
       char uniquepath[1024];
@@ -770,21 +771,14 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       Checkbox_ResetAll();
       unsigned retire_gen = widget_current_generation();
       char retire_owner[512];
-      retire_owner[0] = '\0';
-      if (g_features[i].uniq[0]) {
-        strncpy(retire_owner, g_features[i].uniq, sizeof(retire_owner) - 1);
-      } else {
-        strncpy(retire_owner, g_features[i].path, sizeof(retire_owner) - 1);
-      }
-      retire_owner[sizeof(retire_owner) - 1] = '\0';
+      fl_copy(retire_owner, sizeof(retire_owner),
+              g_features[i].uniq[0] ? g_features[i].uniq : g_features[i].path);
       retire_old_lib(old, g_features[i].uniq, retire_owner);
       widget_bump_generation();
       log_info("feature_reload: %s (constructor ran at dlopen)", name);
       g_features[i].handle = h;
-      strncpy(g_features[i].path, uniquepath, sizeof(g_features[i].path) - 1);
-      g_features[i].path[sizeof(g_features[i].path) - 1] = '\0';
-      strncpy(g_features[i].uniq, uniquepath, sizeof(g_features[i].uniq) - 1);
-      g_features[i].uniq[sizeof(g_features[i].uniq) - 1] = '\0';
+      fl_copy(g_features[i].path, sizeof(g_features[i].path), uniquepath);
+      fl_copy(g_features[i].uniq, sizeof(g_features[i].uniq), uniquepath);
       cap_purge_owner(retire_owner, path_copy);
       hotkey_purge_owner(retire_owner, path_copy);
       snippet_purge_owner(retire_owner, path_copy);
@@ -824,13 +818,9 @@ void FeatureLoader_ReloadAll(void) {
         shut();
       {
         char loaded[512];
-        loaded[0] = '\0';
-        if (g_features[i].uniq[0]) {
-          strncpy(loaded, g_features[i].uniq, sizeof(loaded) - 1);
-        } else {
-          strncpy(loaded, g_features[i].path, sizeof(loaded) - 1);
-        }
-        loaded[sizeof(loaded) - 1] = '\0';
+        fl_copy(loaded, sizeof(loaded),
+                g_features[i].uniq[0] ? g_features[i].uniq
+                                      : g_features[i].path);
         retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
       }
       g_features[i].handle = 0;
