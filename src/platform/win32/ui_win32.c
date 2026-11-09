@@ -385,23 +385,16 @@ PromptState *Platform_GetWin32PromptState(void) {
                                                    : GetForegroundWindow());
 }
 
-void UI_SyncFilterFromEdit(SkaldContext *ctx) {
-  if (!ctx) {
-    return;
-  }
+void UI_SyncFilterFromEdit(void) {
 }
 
-void UI_ApplyFilterToEdit(SkaldContext *ctx) {
-  if (!ctx) {
-    return;
-  }
+void UI_ApplyFilterToEdit(void) {
   PromptState *prompt = Platform_GetWin32PromptState();
   if (prompt && prompt->eb)
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
 }
 
-ListBoxInfo *UI_GetPopupListBox(SkaldContext *ctx) {
-  (void)ctx;
+ListBoxInfo *UI_GetPopupListBox(void) {
   HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     ListBoxInfo *lb = (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
@@ -411,19 +404,16 @@ ListBoxInfo *UI_GetPopupListBox(SkaldContext *ctx) {
   return NULL;
 }
 
-void UI_SyncEditCursor(SkaldContext *ctx, int pos) {
-  if (!ctx) {
-    return;
-  }
+void UI_SyncEditCursor(int pos) {
   UI_SetCursorPosition(pos);
-  if (ctx->window.prompt_callbacks.render != NULL) {
-    HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
+  SkaldContext *c = SkaldContext_Get();
+  if (c && c->window.prompt_callbacks.render != NULL) {
+    HWND hPopup = WH_TO_HWND(c->window.hPopupWnd);
     if (hPopup && IsWindow(hPopup))
       UI_RequestPopupRepaint();
   }
 }
 
-bool UI_ApplyBackspaceToPopup(SkaldContext *ctx) {
-  (void)ctx;
+bool UI_ApplyBackspaceToPopup(void) {
   return false;
 }
