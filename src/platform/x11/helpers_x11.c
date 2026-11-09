@@ -76,12 +76,6 @@ void x11_clear_dbl_visual(void) {
   g_dblDpy = NULL;
 }
 
-bool x11_is_own_window_name(const char *name) {
-  if (!name)
-    return false;
-  return strncmp(name, "flint-", 6) == 0;
-}
-
 bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **visOut,
                              Colormap *cmapOut, int *depthOut) {
   XWindowAttributes attrs;
