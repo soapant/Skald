@@ -16,7 +16,6 @@
 #include <mmdeviceapi.h>
 #include "platform/draw.h"
 #include "platform/ui.h"
-#include "core/modal.h"
 #include "core/context.h"
 #include "config.h"
 #include "core/listbox_hover.h"

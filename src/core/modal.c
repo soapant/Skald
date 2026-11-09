@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "core/context.h"
-#include "core/modal.h"
 #include "platform/ui.h"
 #include "core/window_manager.h"
 #include "helpers/helpers_ui.h"
@@ -11,9 +10,6 @@
 #include "core/types.h"
 #include "core/types/color.h"
 #include "core/types/window.h"
-
-int last_index = 0;
-
 
 static EditSelection g_sel;
 
@@ -39,7 +35,6 @@ void EditState_Reset(void) {
   g_sel.active = false;
   g_sel.anchor = 0;
   g_sel.head = 0;
-  last_index = 0;
 }
 
 bool EditState_GetSelection(int *out_start, int *out_end) {

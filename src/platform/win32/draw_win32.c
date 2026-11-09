@@ -1,7 +1,6 @@
 #include "platform/draw.h"
 #include "core/prompt_geometry.h"
 #include "core/editbox.h"
-#include "core/modal.h"
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 #include "platform/win32/common_ui_win32.h"

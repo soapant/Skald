@@ -10,7 +10,6 @@
 #include "config.h"
 #include "core/prompt_geometry.h"
 #include "core/context.h"
-#include "core/modal.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"
 #include "helpers/helpers_ui.h"
