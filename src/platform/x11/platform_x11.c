@@ -1698,11 +1698,11 @@ bool Platform_MouseScroll(int notches) {
   if (!dpy)
     return false;
 #if __has_include(<X11/extensions/XTest.h>)
-  for (int i = 0; i < (notches > 0 ? notches : -notches); i++) {
-    XTestFakeButtonEvent(dpy, 4, True, CurrentTime);
-    XTestFakeButtonEvent(dpy, 4, False, CurrentTime);
-    XTestFakeButtonEvent(dpy, 5, True, CurrentTime);
-    XTestFakeButtonEvent(dpy, 5, False, CurrentTime);
+  int button = notches > 0 ? 4 : 5;
+  int n = notches > 0 ? notches : -notches;
+  for (int i = 0; i < n; i++) {
+    XTestFakeButtonEvent(dpy, (unsigned int)button, True, CurrentTime);
+    XTestFakeButtonEvent(dpy, (unsigned int)button, False, CurrentTime);
     XSync(dpy, False);
   }
   return true;
