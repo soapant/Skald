@@ -32,6 +32,8 @@ static int Levenshtein(const char *a, const char *b) {
   int la = (int)strlen(a), lb = (int)strlen(b);
   if (abs(la - lb) > 2)
     return 100;
+  if (la > 255 || lb > 255)
+    return 100;
   int dp[256][256];
   for (int i = 0; i <= la && i < 256; i++)
     dp[i][0] = i;

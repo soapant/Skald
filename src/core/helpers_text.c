@@ -454,7 +454,7 @@ char *String_Replace(const char *str, const char *from, const char *to) {
     p += lf;
   }
   size_t ls = strlen(str);
-  size_t lo = ls + count * (lt - lf);
+  size_t lo = lt >= lf ? ls + count * (lt - lf) : ls - count * (lf - lt);
   char *out = (char *)malloc(lo + 1);
   if (!out)
     return NULL;

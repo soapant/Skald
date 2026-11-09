@@ -329,7 +329,7 @@ typedef struct {
 
 static const CcScanPath ListOfProgramPaths[] = {
 #if defined(_WIN32)
-    {"C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
+    {"~\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
      SK_DIR_WALK_UNLIMITED},
     {"C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
      SK_DIR_WALK_UNLIMITED},
