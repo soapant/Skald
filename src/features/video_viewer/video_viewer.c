@@ -217,7 +217,7 @@ void video_cmd_6(void) {
 #endif
 }
 void video_prompt(void) {
-  fl_window(.title = "🎥 Viewer", .refresh = video_refresh_callback,
+  fl_window(.title = "Viewer", .refresh = video_refresh_callback,
             .enter = video_enter_callback);
 }
 

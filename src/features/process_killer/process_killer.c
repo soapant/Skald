@@ -405,7 +405,7 @@ static void pk_render_callback(PromptState *state) {
 
 static void TriggerProcessKiller(void) {
   pk_collect_and_sort();
-  fl_window(.title = "💀 ProcessKiller", .refresh = pk_refresh_callback,
+  fl_window(.title = "ProcessKiller", .refresh = pk_refresh_callback,
             .enter = pk_enter_callback, .render = pk_render_callback);
 }
 
