@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include "core/types.h"
-#include "core/types.h"
 
 unsigned long rgb_to_hex(unsigned long win_color);
 unsigned short OpacityAlpha16(void);
