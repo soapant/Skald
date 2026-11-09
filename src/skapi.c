@@ -1513,6 +1513,8 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
 }
 
 int sk_get_text_width(const char *text, int fontsize) {
+  if (!text)
+    return 0;
   return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
       .text = text, .len = (int)strlen(text), .fontsize = fontsize});
 }
