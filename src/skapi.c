@@ -389,16 +389,23 @@ bool sk_remove_line(const char *path, const char *line) {
   if (!path || !line)
     return false;
   SkStringList files = sk_load_file_list(path);
-  const char *kept[1024];
+  const char **kept = (const char **)malloc(sizeof(char *) *
+                                            (files.count ? files.count : 1));
+  if (!kept) {
+    sk_free_file_list(&files);
+    return false;
+  }
   int k = 0;
-  for (size_t i = 0; i < files.count && k < 1024; i++)
+  for (size_t i = 0; i < files.count; i++) {
     if (strcmp(files.items[i], line) != 0)
       kept[k++] = files.items[i];
     else {
       free(files.items[i]);
       files.items[i] = NULL;
     }
+  }
   bool ok = sk_write_to_file(path, kept, k);
+  free(kept);
   sk_free_file_list(&files);
   return ok;
 }
@@ -407,16 +414,23 @@ bool sk_remove_line_contains(const char *path, const char *substr) {
   if (!path || !substr)
     return false;
   SkStringList files = sk_load_file_list(path);
-  const char *kept[1024];
+  const char **kept = (const char **)malloc(sizeof(char *) *
+                                            (files.count ? files.count : 1));
+  if (!kept) {
+    sk_free_file_list(&files);
+    return false;
+  }
   int k = 0;
-  for (size_t i = 0; i < files.count && k < 1024; i++)
+  for (size_t i = 0; i < files.count; i++) {
     if (!strstr(files.items[i], substr))
       kept[k++] = files.items[i];
     else {
       free(files.items[i]);
       files.items[i] = NULL;
     }
+  }
   bool ok = sk_write_to_file(path, kept, k);
+  free(kept);
   sk_free_file_list(&files);
   return ok;
 }
@@ -2605,8 +2619,13 @@ void cc_registry_purge_owner(const char *path_a, const char *path_b) {
   for (int i = 0; i < g_cc_entry_count; i++) {
     if (Owner_ModuleMatches(g_cc_entries[i].owner, path_a, path_b))
       continue;
-    if (out != i)
+    if (out != i) {
       g_cc_entries[out] = g_cc_entries[i];
+      g_cc_entries[out].pub.display_name = g_cc_entries[out].display_name;
+      g_cc_entries[out].pub.internal_name = g_cc_entries[out].internal_name;
+      g_cc_entries[out].pub.icon = g_cc_entries[out].icon;
+      g_cc_entries[out].pub.type = g_cc_entries[out].type;
+    }
     out++;
   }
   for (int i = out; i < g_cc_entry_count; i++)
