@@ -7,6 +7,7 @@
 #include "platform/platform.h"
 #include "platform/widget.h"
 #include "platform/render_thread.h"
+#include "helpers/helpers_owner.h"
 
 #define HOVER_WIDGET_MAX 8
 
@@ -17,6 +18,7 @@ typedef struct {
   void *ud;
   void (*release)(void *ud);
   void *release_ud;
+  char owner[OWNER_PATH_MAX];
   int fps;
   bool no_bg;
   unsigned long bg_hex;
@@ -48,6 +50,7 @@ typedef struct {
   char key[64];
   void (*render)(void *ud);
   void *ud;
+  void *owner_src;
   int x, y, w, h, fps;
   bool no_bg;
   unsigned long bg_hex;
@@ -59,9 +62,23 @@ typedef struct {
 #define HOVER_OP_SHOW 1
 #define HOVER_OP_HIDE 2
 
+static void hover_widget_destroy_slot(HoverWidgetSlot *s) {
+  PlatformWidget *w = s->w;
+  void (*release)(void *) = s->release;
+  void *release_ud = s->release_ud;
+  memset(s, 0, sizeof(*s));
+  if (w) {
+    Platform_Widget_SetFrameCallback(w, NULL, NULL);
+    Platform_Widget_Destroy(w);
+    Platform_Widget_FlushDestruction();
+  }
+  if (release)
+    release(release_ud);
+}
+
 static void hover_widget_apply(const char *key, void (*render)(void *ud),
-                               void *ud, int x, int y, int w, int h, int fps,
-                               bool no_bg, unsigned long bg_hex,
+                               void *ud, void *owner_src, int x, int y, int w,
+                               int h, int fps, bool no_bg, unsigned long bg_hex,
                                void (*release)(void *ud), void *release_ud) {
   int idx = HoverWidgetFind(key);
   if (idx >= 0) {
@@ -72,6 +89,9 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
     s->ud = ud;
     s->release = release;
     s->release_ud = release_ud;
+    s->owner[0] = '\0';
+    Owner_ResolveForFunc(owner_src ? owner_src : (void *)render, s->owner,
+                         sizeof(s->owner));
     bool geom_changed =
         (s->x != x || s->y != y || s->w_px != w || s->h_px != h);
     s->x = x;
@@ -135,6 +155,9 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
   Platform_Widget_SetNoBg(pw, no_bg);
   Platform_Widget_SetFrameCallback(pw, HoverWidgetFrame, s);
+  s->owner[0] = '\0';
+  Owner_ResolveForFunc(owner_src ? owner_src : (void *)render, s->owner,
+                       sizeof(s->owner));
 }
 
 static void hover_widget_hide_apply(const char *key) {
@@ -142,17 +165,33 @@ static void hover_widget_hide_apply(const char *key) {
   if (idx < 0) {
     return;
   }
-  PlatformWidget *w = g_hover_widgets[idx].w;
-  void (*release)(void *) = g_hover_widgets[idx].release;
-  void *release_ud = g_hover_widgets[idx].release_ud;
-  memset(&g_hover_widgets[idx], 0, sizeof(g_hover_widgets[idx]));
-  if (w) {
-    Platform_Widget_SetFrameCallback(w, NULL, NULL);
-    Platform_Widget_Destroy(w);
-    Platform_Widget_FlushDestruction();
+  hover_widget_destroy_slot(&g_hover_widgets[idx]);
+}
+
+void Platform_HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
+  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) {
+    return;
   }
-  if (release)
-    release(release_ud);
+  bool any = false;
+  for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
+    HoverWidgetSlot *s = &g_hover_widgets[i];
+    if (!s->w || s->dead) {
+      continue;
+    }
+    if (Owner_ModuleMatches(s->owner, path_a, path_b)) {
+      s->dead = true;
+      any = true;
+    }
+  }
+  if (!any) {
+    return;
+  }
+  Platform_RenderThread_Sync();
+  for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
+    if (g_hover_widgets[i].dead) {
+      hover_widget_destroy_slot(&g_hover_widgets[i]);
+    }
+  }
 }
 
 static void hover_widget_dispatch(void *ud) {
@@ -163,22 +202,23 @@ static void hover_widget_dispatch(void *ud) {
   if (r->op == HOVER_OP_HIDE) {
     hover_widget_hide_apply(r->key);
   } else {
-    hover_widget_apply(r->key, r->render, r->ud, r->x, r->y, r->w, r->h, r->fps,
-                       r->no_bg, r->bg_hex, r->release, r->release_ud);
+    hover_widget_apply(r->key, r->render, r->ud, r->owner_src, r->x, r->y,
+                       r->w, r->h, r->fps, r->no_bg, r->bg_hex, r->release,
+                       r->release_ud);
   }
   free(r);
 }
 
 static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
-                              void *ud, int x, int y, int w, int h, int fps,
-                              bool no_bg, unsigned long bg_hex,
+                              void *ud, void *owner_src, int x, int y, int w,
+                              int h, int fps, bool no_bg, unsigned long bg_hex,
                               void (*release)(void *ud), void *release_ud) {
   if (Platform_RenderThread_IsCurrentThread()) {
     if (op == HOVER_OP_HIDE)
       hover_widget_hide_apply(key);
     else
-      hover_widget_apply(key, render, ud, x, y, w, h, fps, no_bg, bg_hex,
-                         release, release_ud);
+      hover_widget_apply(key, render, ud, owner_src, x, y, w, h, fps, no_bg,
+                         bg_hex, release, release_ud);
     return true;
   }
   if (!Platform_RenderThread_IsRunning())
@@ -190,6 +230,7 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
   r->op = op;
   r->render = render;
   r->ud = ud;
+  r->owner_src = owner_src;
   r->x = x;
   r->y = y;
   r->w = w;
@@ -212,8 +253,8 @@ void Platform_HoverWidgetHide(const char *key) {
   if (HoverWidgetFind(key) < 0) {
     return;
   }
-  if (!hover_widget_post(HOVER_OP_HIDE, key, NULL, NULL, 0, 0, 0, 0, 0, false,
-                         0, NULL, NULL)) {
+  if (!hover_widget_post(HOVER_OP_HIDE, key, NULL, NULL, NULL, 0, 0, 0, 0,
+                         0, false, 0, NULL, NULL)) {
     hover_widget_hide_apply(key);
   }
 }
@@ -231,12 +272,13 @@ void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
   unsigned long bg_hex = spec.bg_hex;
   void (*release)(void *ud) = spec.release;
   void *release_ud = spec.release_ud;
+  void *owner_src = spec.owner_src;
 
   if (!key || !key[0] || w <= 0 || h <= 0) {
     return;
   }
-  if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, x, y, w, h, fps, no_bg,
-                         bg_hex, release, release_ud)) {
+  if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, owner_src, x, y, w,
+                         h, fps, no_bg, bg_hex, release, release_ud)) {
     if (release)
       release(release_ud);
   }

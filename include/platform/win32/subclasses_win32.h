@@ -3,6 +3,7 @@
 
 #include "core/types.h"
 #include "platform/win32/popup_helpers_win32.h"
+#include "helpers/helpers_owner.h"
 
 #define WM_DISPLAY_MESSAGE (WM_APP + 2)
 #define WM_DISMISS_MESSAGE (WM_APP + 3)
@@ -14,6 +15,7 @@ typedef struct {
   ColorRef color;
   bool no_bg;
   void (*render)(void);
+  char render_owner[OWNER_PATH_MAX];
   double timeout;
   ULONGLONG deadline_ms;
   char name[64];

@@ -868,6 +868,7 @@ void ski_message(const SkMessageSpec *spec) {
             .key = spec->hover_key,
             .render = sk_hover_popup_frame,
             .ud = ctx,
+            .owner_src = (void *)spec->render,
             .x = spec->x,
             .y = spec->y,
             .w = ctx->w,

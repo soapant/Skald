@@ -24,6 +24,8 @@
 #include <gdiplus.h>
 #include <ctype.h>
 #include "platform/input_state.h"
+#include "helpers/helpers_owner.h"
+#include "core/thread_registry.h"
 #ifdef _MSC_VER
 #pragma comment(lib, "winhttp.lib")
 #endif
@@ -2351,16 +2353,21 @@ typedef struct {
   char *url;
   PlatformHttpCallback cb;
   void *userdata;
+  char owner[OWNER_PATH_MAX];
 } HttpAsyncJob;
 
 static DWORD WINAPI http_async_worker(LPVOID arg) {
   HttpAsyncJob *job = (HttpAsyncJob *)arg;
+  if (!job)
+    return 0;
+
   char *body = Platform_HttpGet(job->url);
   if (job->cb) {
     job->cb(body ? body : "", body != NULL, job->userdata);
   }
   free(body);
   free(job->url);
+  ThreadRegistry_Finish(job);
   free(job);
   return 0;
 }
@@ -2379,9 +2386,13 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
     free(job);
     return;
   }
+  job->owner[0] = '\0';
+  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
+  ThreadRegistry_Add(job, job->owner);
 
   HANDLE t = CreateThread(NULL, 0, http_async_worker, job, 0, NULL);
   if (!t) {
+    ThreadRegistry_Finish(job);
     free(job->url);
     free(job);
     return;
@@ -2493,9 +2504,23 @@ bool Platform_MutexTryLock(void *mutex) {
 }
 
 static PlatformKeyInterceptorFn g_platform_key_interceptor = NULL;
+static char g_platform_key_interceptor_owner[OWNER_PATH_MAX] = {0};
 
 void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn) {
   g_platform_key_interceptor = fn;
+  g_platform_key_interceptor_owner[0] = '\0';
+  if (fn)
+    Owner_ResolveForFunc((void *)fn, g_platform_key_interceptor_owner,
+                         sizeof(g_platform_key_interceptor_owner));
+}
+
+void Platform_KeyInterceptor_PurgeOwner(const char *path_a,
+                                        const char *path_b) {
+  if (g_platform_key_interceptor &&
+      Owner_ModuleMatches(g_platform_key_interceptor_owner, path_a, path_b)) {
+    g_platform_key_interceptor = NULL;
+    g_platform_key_interceptor_owner[0] = '\0';
+  }
 }
 
 bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key) {

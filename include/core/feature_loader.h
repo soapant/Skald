@@ -19,5 +19,6 @@ bool FeatureLoader_LoadAllFromDir(const char *dir);
 void FeatureLoader_Lock(void);
 bool FeatureLoader_TryLock(void);
 void FeatureLoader_Unlock(void);
+void FeatureLoader_SweepRetired(void);
 
 #endif

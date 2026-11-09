@@ -15,6 +15,7 @@
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
+#include "helpers/helpers_owner.h"
 
 #define MSG_AUTO_WRAP_MAX_W 900
 #define MSG_AUTO_WRAP_MAX_H 600
@@ -89,6 +90,23 @@ static int MsgSlotDestroyWhere(int mode, const char *name) {
     destroyed++;
   }
   return destroyed;
+}
+
+void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
+  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+    return;
+  for (int i = g_msg_slot_count - 1; i >= 0; i--) {
+    HWND h = g_msg_slots[i];
+    FadeWindowData *fd = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
+    if (!fd || fd->render_owner[0] == '\0')
+      continue;
+    if (!Owner_ModuleMatches(fd->render_owner, path_a, path_b))
+      continue;
+    fd->render = NULL;
+    fd->render_owner[0] = '\0';
+    KillTimer(h, 999);
+    DestroyWindow(h);
+  }
 }
 
 static wchar_t *msg_widen(const char *in, int *out_len) {
@@ -614,6 +632,10 @@ void Platform_CreateDisplayMessageWindow(
   pWndData->color = color;
   pWndData->no_bg = no_bg;
   pWndData->render = render;
+  pWndData->render_owner[0] = '\0';
+  if (render)
+    Owner_ResolveForFunc((void *)render, pWndData->render_owner,
+                         sizeof(pWndData->render_owner));
   if (name && name[0])
     snprintf(pWndData->name, sizeof(pWndData->name), "%s", name);
   else

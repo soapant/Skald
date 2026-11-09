@@ -141,6 +141,7 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
 
 static void sweep_retired_libs(void) {
   WindowManager *wm = WindowManager_Get();
+  Checkbox_ResetAll();
   int n = 0;
   for (int i = 0; i < g_retired_count; i++) {
     bool alive = false;
@@ -168,6 +169,10 @@ static void sweep_retired_libs(void) {
       widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen);
       cc_registry_purge_owner(g_retired[i].owner, NULL);
       Platform_KeyCallback_PurgeOwner(g_retired[i].owner, NULL);
+      Platform_KeyInterceptor_PurgeOwner(g_retired[i].owner, NULL);
+      EventBus_PurgeOwner(g_retired[i].owner, NULL);
+      Platform_HoverWidget_PurgeOwner(g_retired[i].owner, NULL);
+      Platform_MessagePopup_PurgeOwner(g_retired[i].owner, NULL);
       log_info("unloading retired lib %s", g_retired[i].owner);
       Platform_UnloadLibrary(g_retired[i].handle);
       if (g_retired[i].uniq[0])
@@ -781,6 +786,10 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       widget_purge_owner(retire_owner, path_copy, retire_gen);
       cc_registry_purge_owner(retire_owner, path_copy);
       Platform_KeyCallback_PurgeOwner(retire_owner, path_copy);
+      Platform_KeyInterceptor_PurgeOwner(retire_owner, path_copy);
+      EventBus_PurgeOwner(retire_owner, path_copy);
+      Platform_HoverWidget_PurgeOwner(retire_owner, path_copy);
+      Platform_MessagePopup_PurgeOwner(retire_owner, path_copy);
       sweep_retired_libs();
       UNLOCK();
       DeferredInit_RunAll();
@@ -836,6 +845,14 @@ void FeatureLoader_ReloadAll(void) {
 }
 
 void FeatureLoader_Lock(void) { LOCK(); }
+
+void FeatureLoader_SweepRetired(void) {
+  feature_mutex_init();
+  if (!Platform_MutexTryLock(g_feature_mutex))
+    return;
+  sweep_retired_libs();
+  Platform_MutexUnlock(g_feature_mutex);
+}
 
 bool FeatureLoader_TryLock(void) {
   feature_mutex_init();
