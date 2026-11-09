@@ -86,6 +86,12 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
   int tmp_count = 0;
   int tmp_mods = 0;
   Remap_ParseTriggers(src, &tmp_mods, tmp_vks, &tmp_count);
+  if (tmp_count == 0 && tmp_mods == 0) {
+    log_warn("remap '%s' -> '%s': no trigger keys parsed, refusing", src, dst);
+    for (int k = 0; k < b.window_count; k++)
+      free(b.windows[k]);
+    return false;
+  }
   b.src_mods = tmp_mods;
   b.src_vk_count = tmp_count;
   for (int i = 0; i < tmp_count; i++)
@@ -95,6 +101,13 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
   int dst_vks[MAX_SRC_VKS];
   int dst_count = 0;
   Remap_ParseTriggers(dst, &dst_mods, dst_vks, &dst_count);
+  if (dst_count == 0 && dst_mods == 0) {
+    log_warn("remap '%s' -> '%s': no destination keys parsed, refusing", src,
+             dst);
+    for (int k = 0; k < b.window_count; k++)
+      free(b.windows[k]);
+    return false;
+  }
   b.dst_mods = dst_mods;
   if (dst_count > 0)
     b.dst_vk = dst_vks[0];

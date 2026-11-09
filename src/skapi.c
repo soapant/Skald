@@ -958,7 +958,7 @@ void ski_message(const SkMessageSpec *spec) {
                                                .no_bg = spec->no_bg});
     return;
   }
-  MessageSlot slot = spec->slot ? spec->slot : FREE;
+  MessageSlot slot = spec->slot;
   if (slot == AUTO) {
     slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : TOP_CENTER;
   } else if (slot == FREE) {
