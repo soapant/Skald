@@ -138,8 +138,12 @@ bool fli_add_dep(const char *dep_name, const char *owner_file) {
 }
 
 unsigned fl_cap_generation(void) { return cap_generation(); }
+void fli_cap_register(const char *key, void *fn) {
+  cap_register_abi(key, CAP_ABI_V1, fn);
+}
+void *fli_cap_resolve(const char *key) { return cap_resolve_abi(key, CAP_ABI_V1); }
 void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
-  cap_register_abi(key, abi, fn);
+  cap_register_abi(key, abi,(void *)fn);
 }
 void *fl_cap_resolve_abi(const char *key, unsigned abi) {
   return cap_resolve_abi(key, abi);

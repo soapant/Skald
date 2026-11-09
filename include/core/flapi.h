@@ -592,6 +592,7 @@ char *fl_get_active_window_title(void);
 char *fl_get_active_window_app_id(void);
 
 bool fl_is_window_open(const char *title);
+#define fl_window_open fl_is_window_open
 
 FlColor fl_get_pixel_color(FlPos pos);
 
@@ -812,9 +813,14 @@ int fl_get_pid();
 #define FLINT_FEATURE_SHUTDOWN                                                 \
   FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void)
 
-#define fl_cap_register(key, fn) fl_cap_register_abi((key), CAP_ABI_V1, (fn))
+void fli_cap_register(const char *key, void *fn);
+void *fli_cap_resolve(const char *key);
+unsigned fl_cap_generation(void);
+void fl_cap_bind_declare(const char *key, void *consumer);
 
-#define fl_cap_resolve(key) fl_cap_resolve_abi((key), CAP_ABI_V1)
+#define fl_cap_register(key, fn) fli_cap_register((key), (void *)(fn))
+
+#define fl_cap_resolve(key) fli_cap_resolve((key))
 
 #define FL_CAP_BIND(var, key, type)                                            \
   static type var##_fn;                                                        \
