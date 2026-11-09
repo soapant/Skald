@@ -125,7 +125,7 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
     return 0;
   char tmp[MAX_PATH];
   GetTempPathA(MAX_PATH, tmp);
-  strcat(tmp, "flint_clip_up.png");
+  strcat(tmp, "clip_up.png");
   FILE *f = fopen(tmp, "wb");
   if (!f)
     return 0;

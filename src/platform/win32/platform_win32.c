@@ -771,7 +771,7 @@ static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
         strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "FlintWidgetClass") == 0) {
+        strcmp(cls, "WidgetClass") == 0) {
       return TRUE;
     }
   {
@@ -832,7 +832,7 @@ static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
         strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "FlintWidgetClass") == 0) {
+        strcmp(cls, "WidgetClass") == 0) {
       return TRUE;
     }
   {
@@ -893,7 +893,7 @@ static BOOL CALLBACK win32_focus_enum_up(HWND hwnd, LPARAM lp) {
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
         strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "FlintWidgetClass") == 0) {
+        strcmp(cls, "WidgetClass") == 0) {
       return TRUE;
     }
   {
@@ -953,7 +953,7 @@ static BOOL CALLBACK win32_focus_enum_down(HWND hwnd, LPARAM lp) {
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
         strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "FlintWidgetClass") == 0) {
+        strcmp(cls, "WidgetClass") == 0) {
       return TRUE;
     }
   {
@@ -1105,7 +1105,7 @@ bool Platform_FocusWindowLeft(void) {
   if (fg && (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
              strcmp(cls, "DisplayMessageModalClass") == 0 ||
              strcmp(cls, "SearchPopupClass") == 0 ||
-             strcmp(cls, "FlintWidgetClass") == 0)) {
+             strcmp(cls, "WidgetClass") == 0)) {
   }
   if (!fg)
     return false;
@@ -1134,7 +1134,7 @@ bool Platform_FocusWindowRight(void) {
   if (fg && (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
              strcmp(cls, "DisplayMessageModalClass") == 0 ||
              strcmp(cls, "SearchPopupClass") == 0 ||
-             strcmp(cls, "FlintWidgetClass") == 0)) {
+             strcmp(cls, "WidgetClass") == 0)) {
   }
   if (!fg)
     return false;
@@ -1517,7 +1517,7 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
         strcmp(cls, "DisplayMessageModalClass") == 0 ||
         strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "FlintWidgetClass") == 0)
+        strcmp(cls, "WidgetClass") == 0)
       return TRUE;
     if (strcmp(cls, "ApplicationFrameWindow") == 0) {
       int cloaked = 0;

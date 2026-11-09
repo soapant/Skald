@@ -7,14 +7,13 @@
 #include "core/draw_state.h"
 #include "platform/win32/win32_state.h"
 #include "platform/render_thread.h"
-#include "platform/ui.h"
 #include "platform/win32/common_ui_win32.h"
 #include "deps/log.h"
 #include "config.h"
 #include "platform/win32/bg_image_win32.h"
 
 #include "core/timer.h"
-#define FLINT_WIDGET_CLASS "FlintWidgetClass"
+#define WIDGET_CLASS "WidgetClass"
 
 struct PlatformWidget {
   HWND hwnd;
@@ -53,7 +52,7 @@ static void layer_fill(PlatformWidget *widget, unsigned int argb) {
     px[i] = argb;
 }
 
-static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
+static LRESULT CALLBACK WidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
                                         LPARAM lParam);
 static void widget_queue_click(void (*fn)(void));
 static void widget_destroy_on_owner_thread(void *ud);
@@ -65,11 +64,11 @@ static void widget_register_class(void) {
     return;
   }
   WNDCLASSA wc = {0};
-  wc.lpfnWndProc = FlintWidgetProc;
+  wc.lpfnWndProc = WidgetProc;
   wc.hInstance = GetModuleHandle(NULL);
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = NULL;
-  wc.lpszClassName = FLINT_WIDGET_CLASS;
+  wc.lpszClassName = WIDGET_CLASS;
   if (!RegisterClassA(&wc) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
     log_warn("widget: RegisterClassA failed err=%lu", GetLastError());
   }
@@ -231,7 +230,7 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
                       (unsigned char)WindowOpacity);
 }
 
-static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
+static LRESULT CALLBACK WidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
                                         LPARAM lParam) {
 
   PlatformWidget *widget =
@@ -421,7 +420,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
   if (!on_click)
     exstyle |= WS_EX_TRANSPARENT;
-  widget->hwnd = CreateWindowExA(exstyle, FLINT_WIDGET_CLASS, NULL, WS_POPUP, x,
+  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP, x,
                                  y, w, h, NULL, NULL, hInstance, widget);
   if (!widget->hwnd) {
     log_warn("widget: CreateWindowExA failed err=%lu", GetLastError());

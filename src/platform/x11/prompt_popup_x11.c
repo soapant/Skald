@@ -77,9 +77,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
              (unsigned long)self->handle.xid, _fw == self->handle.xid);
     char *_nm = NULL;
     if (XFetchName(dpy, self->handle.xid, &_nm) && _nm) {
-      if (!x11_is_own_window_name(_nm)) {
-        Wm_FocusByTitle(_nm);
-      }
+      Wm_FocusByTitle(_nm);
       XFree(_nm);
     }
   }
