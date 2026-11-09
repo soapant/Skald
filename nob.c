@@ -672,6 +672,8 @@ static bool run_tests(void) {
       nob_delete_file(nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir));
     Nob_Cmd fcmd = {0};
     append_cc(&fcmd);
+    nob_cc_flags(&fcmd);
+    append_dep_cflags(&fcmd);
 #if defined(__APPLE__)
     nob_cmd_append(&fcmd, "-dynamiclib", "-I", "include",
                    "tests/fixtures/reload_probe.c", "-o",

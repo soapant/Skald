@@ -575,7 +575,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   void (*render)(void) = spec.render;
   const char *name = spec.name;
 
-  if ((!message && !render) {
+  if (!message && !render) {
     return;
   }
   Display *dpy = get_display();
