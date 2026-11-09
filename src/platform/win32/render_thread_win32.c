@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdlib.h>
 #include "platform/render_thread.h"
 #include "deps/log.h"
 
@@ -132,17 +133,20 @@ void Platform_RenderThread_Sync(void) {
   if (Platform_RenderThread_IsCurrentThread()) {
     return;
   }
-  RtSync s;
-  s.done = 0;
-  if (!Platform_RenderThread_Post(rt_sync_mark, &s)) {
+  RtSync *s = (RtSync *)malloc(sizeof(*s));
+  if (!s)
+    return;
+  s->done = 0;
+  if (!Platform_RenderThread_Post(rt_sync_mark, s)) {
+    free(s);
     return;
   }
   DWORD waited = 0;
-  while (!s.done && waited < 5000) {
+  while (!s->done && waited < 5000) {
     Sleep(1);
     waited++;
   }
-  if (!s.done)
+  if (!s->done)
     log_warn("render thread sync timed out after 5s");
 }
 
