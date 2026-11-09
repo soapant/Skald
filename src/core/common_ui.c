@@ -6,7 +6,6 @@
 
 #include "core/context.h"
 #include "deps/log.h"
-#include "core/modal.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"

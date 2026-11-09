@@ -3,7 +3,6 @@
 
 #include <string.h>
 
-#include "core/modal.h"
 #include "core/prompt_geometry.h"
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"

@@ -3,7 +3,6 @@
 #include <stdbool.h>
 
 #include "core/context.h"
-#include "core/modal.h"
 #include "core/window_manager.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
@@ -131,7 +130,6 @@ static void PromptPopup_OnHide(Popup *self) {
            data->spec.title ? data->spec.title : "(null)");
   Platform_PromptPopupHideWindow(self);
   if (data->state) {
-    last_index = 0;
     if (data->state->lb)
       data->state->lb->selected_index = 0;
     FlintContext *_c3 = FlintContext_Get();
