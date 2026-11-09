@@ -3,6 +3,7 @@
 #include "platform/win32/popup_helpers_win32.h"
 
 #include "core/timer.h"
+#include "core/types/prompt.h"
 bool only_once = true;
 bool rainbow_init = false;
 int g_last_selected_index = -1;

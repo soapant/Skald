@@ -9,8 +9,8 @@
 
 #include "core/types/keys.h"
 #include "core/types/color.h"
-#include "core/types/window.h"
 #include "core/types/prompt.h"
+#include "core/types/window.h"
 #include "core/types/file.h"
 #include "core/types/misc.h"
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "core/types/window.h"
 #include "platform/platform.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"

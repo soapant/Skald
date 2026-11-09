@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <winreg.h>
 #include <ctype.h>
+#include "config_values.h"
+#include "core/types.h"
 #include "deps/log.h"
 #include <tlhelp32.h>
 #include <shlobj.h>

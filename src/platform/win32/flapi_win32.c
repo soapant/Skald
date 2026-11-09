@@ -6,6 +6,11 @@
 #include <netioapi.h>
 #include <netlistmgr.h>
 #include <initguid.h>
+#include "core/types.h"
+#include "core/types/window.h"
+#include "core/types/prompt.h"
+#include "core/types/flapi_types.h"
+#include "config_values.h"
 #include "platform/win32/win32_state.h"
 #include <ctype.h>
 #include "deps/log.h"

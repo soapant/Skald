@@ -1,6 +1,9 @@
 #include <windows.h>
 #include <stdbool.h>
 #include <string.h>
+#include "core/types/keys.h"
+#include "core/types/window.h"
+#include "config_values.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/types.h"

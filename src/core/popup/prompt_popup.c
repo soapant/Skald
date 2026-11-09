@@ -3,6 +3,8 @@
 #include <stdbool.h>
 
 #include "core/context.h"
+#include "core/types/prompt.h"
+#include "core/types/keys.h"
 #include "core/window_manager.h"
 #include "platform/platform.h"
 #include "platform/draw.h"

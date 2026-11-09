@@ -1,5 +1,9 @@
 #include <windows.h>
 #include <string.h>
+#include "core/types/keys.h"
+#include "core/types/window.h"
+#include "core/types/prompt.h"
+#include "config_values.h"
 #include "platform/win32/win32_state.h"
 #include "deps/log.h"
 #include "core/context.h"

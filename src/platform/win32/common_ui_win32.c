@@ -1,4 +1,7 @@
+#include "config_values.h"
 #include "core/context.h"
+#include "core/types/color.h"
+#include "core/types/window.h"
 #include "deps/log.h"
 #include "config.h"
 #include "core/prompt_geometry.h"

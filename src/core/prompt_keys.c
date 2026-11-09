@@ -6,6 +6,9 @@
 
 #include "config.h"
 #include "core/context.h"
+#include "core/types/prompt.h"
+#include "core/types/window.h"
+#include "core/window_manager.h"
 #include "platform/wm_platform.h"
 #include "deps/log.h"
 #include "core/listbox_hover.h"
