@@ -424,6 +424,11 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   ebi.bg_color =
       spec->color_bg ? rgb_to_hex(spec->color_bg) : rgb_to_hex(COLOR_BG);
   ebi.placeholder = spec->placeholder;
+  ebi.caret_height = spec->caret_height;
+  ebi.caret_width = spec->caret_width;
+  ebi.caret_x = spec->caret_x;
+  ebi.caret_y = spec->caret_y;
+  ebi.caret_pos = spec->caret_pos;
   ebi.fontsize = fs;
   ebi.font = spec->font;
 

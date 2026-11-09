@@ -53,6 +53,10 @@ typedef struct {
   ColorRef bg_color;
   FontHandle font;
   int fontsize;
+  int caret_height;
+  int caret_width;
+  int caret_x;
+  int caret_pos;
 
   FlEditboxMeasureFn measure;
   void *measure_user;
@@ -87,6 +91,11 @@ typedef struct {
   const char *placeholder;
   FontHandle font;
   int fontsize;
+  int caret_height;
+  int caret_width;
+  int caret_x;
+  int caret_y;
+  int caret_pos;
 } EditboxInit;
 
 void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in);

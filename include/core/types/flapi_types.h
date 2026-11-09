@@ -27,6 +27,11 @@ typedef struct {
   ColorRef color_text;
   FontHandle font;
   int fontsize;
+  int caret_height;
+  int caret_width;
+  int caret_x;
+  int caret_y;
+  int caret_pos;
 } FlEditSpec;
 
 typedef struct {

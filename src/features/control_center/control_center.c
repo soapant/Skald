@@ -1535,7 +1535,12 @@ static char g_alias_target[256];
 static void cc_alias_reg_render(PromptState *state) {
   char label[284];
   snprintf(label, sizeof(label), "Alias For: %s", g_alias_target);
-  fl_place_editbox(.x=0,.y=(state->height / 2) - 15,.placeholder=label,.fontsize=12);
+  fl_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 11,
+               .color = FL_GRAY, .align = "LEFT", .pad = 0);
+
+  fl_place_editbox(.x = (state->width - 160) / 2, .y = (state->height - 30) / 2 + 6,
+                   .w = 160, .h = 26, .placeholder = "alias name",.caret_height=14,.caret_width=1,.caret_y=47,
+                   .fontsize = 14);
 }
 
 static bool cc_alias_reg_enter(PromptState *state) {
@@ -1569,7 +1574,7 @@ static bool cc_reg_select(int type) {
       ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target), g_cc_main_selected);
       fl_disable_global_hotkeys();
       fl_subwindow(.title = "Alias Reg", .x = (g_cc_width / 2) + 240,
-               .y = (g_cc_height / 2) + 200, .w = 200, .h = 50,
+               .y = (g_cc_height / 2) + 150, .w = 200, .h = 100,
                .render = cc_alias_reg_render, .enter = cc_alias_reg_enter,
                .on_close = cc_alias_reg_onclose);
       break;

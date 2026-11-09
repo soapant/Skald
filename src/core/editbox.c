@@ -37,10 +37,16 @@ void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
   out->cursor_x = in->cursor_x;
   out->text_w = in->text_w;
   out->text_y = in->y;
-  out->caret_y = Editbox_CaretY(in->y, in->ascent, in->descent,
-                               in->fontsize > 0 ? in->fontsize : FontSize);
+  int caret_auto_y = Editbox_CaretY(in->y, in->ascent, in->descent,
+                                    in->fontsize > 0 ? in->fontsize : FontSize);
+  out->caret_y = in->caret_y > 0 ? in->caret_y : caret_auto_y;
   out->fontsize = in->fontsize > 0 ? in->fontsize : FontSize;
-  out->caret_h = PromptCaretHeight();
+  out->caret_height =
+      in->caret_height > 0 ? in->caret_height : PromptCaretHeight();
+  out->caret_width = in->caret_width;
+  out->caret_x = in->caret_x;
+  out->caret_pos = in->caret_pos;
+  out->caret_h = out->caret_height;
   out->placeholder =
       in->placeholder ? in->placeholder
                       : (in->state ? in->state->eb->placeholder : NULL);
@@ -190,9 +196,10 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
 
   int lo = spec->x + PROMPT_CARET_LO_CLAMP;
   int hi = spec->x + spec->w - PROMPT_CARET_HI_CLAMP;
-  int caret_w = 1;
+  int caret_w = spec->caret_width > 0 ? spec->caret_width
+                                      : 1;
   PlMetrics *metrics = Platform_GetMetrics();
-  if (metrics && metrics->edit_cursor_width > 0)
+  if (spec->caret_width <= 0 && metrics && metrics->edit_cursor_width > 0)
     caret_w = metrics->edit_cursor_width;
 
   if (spec->has_selection) {
@@ -227,7 +234,10 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
     }
   }
 
-  int caret_x = cursor_draw_x;
+  int caret_x = spec->caret_x > 0 ? spec->caret_x
+                : spec->caret_pos > 0
+                    ? draw_x + spec->caret_pos
+                : cursor_draw_x;
   if (caret_x < lo)
     caret_x = lo;
   if (caret_x > hi)
