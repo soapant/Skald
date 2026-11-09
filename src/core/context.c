@@ -1,6 +1,7 @@
 #include "core/context.h"
 
 #include <stddef.h>
+#include <string.h>
 
 static FlintContext g_ctx = {
     .window =
@@ -16,3 +17,8 @@ static FlintContext g_ctx = {
 };
 
 FlintContext *FlintContext_Get(void) { return &g_ctx; }
+
+void FlintContext_Clear(void) {
+  FlintContext *ctx = FlintContext_Get();
+  memset(&ctx->window, 0, sizeof(ctx->window));
+}
