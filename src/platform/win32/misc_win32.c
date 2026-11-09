@@ -96,6 +96,29 @@ long long Platform_GetWallClockMs(void) {
   return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL);
 }
 
+bool Platform_ProcessRunning(const char *name) {
+  if (!name || !*name) {
+    return false;
+  }
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snap == INVALID_HANDLE_VALUE) {
+    return false;
+  }
+  PROCESSENTRY32 pe = {0};
+  pe.dwSize = sizeof(pe);
+  bool found = false;
+  if (Process32First(snap, &pe)) {
+    do {
+      if (Platform_StringContainsCaseInsensitive(pe.szExeFile, name)) {
+        found = true;
+        break;
+      }
+    } while (Process32Next(snap, &pe));
+  }
+  CloseHandle(snap);
+  return found;
+}
+
 bool Platform_TerminateProcessByName(const char *exe_name) {
   if (!exe_name || !*exe_name) {
     log_error("operation failed, returning error exe_name='%s'",
