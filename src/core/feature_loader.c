@@ -524,6 +524,7 @@ static bool load_single(const char *dir, const char *filename) {
   }
 
   LoadedFeature *f = &g_features[g_feature_count++];
+  memset(f, 0, sizeof(*f));
   snprintf(f->name, sizeof(f->name), "%s", name);
   snprintf(f->path, sizeof(f->path), "%s", full);
   f->handle = h;

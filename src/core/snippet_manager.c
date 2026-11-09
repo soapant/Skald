@@ -68,6 +68,8 @@ bool snippet_register_internal(const char *trigger, const char *text,
       snippet_free_binding(&g_snippets[i]);
       g_snippets[i].trigger = nt;
       g_snippets[i].text = text ? strdup(text) : NULL;
+      if (text && !g_snippets[i].text)
+        log_warn("snippet '%s': text strdup failed", trigger);
       g_snippets[i].func = func;
       g_snippets[i].whitelist = whitelist;
       g_snippets[i].windows = NULL;
@@ -310,7 +312,10 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
   const char *title = NULL;
   if (g_snippets[idx].window_count > 0)
     title = Platform_GetActiveWindowTitle();
-  if (!snippet_window_allowed(&g_snippets[idx], title))
+  bool allowed = snippet_window_allowed(&g_snippets[idx], title);
+  if (title)
+    free((void *)title);
+  if (!allowed)
     return false;
   size_t tlen = strlen(g_snippets[idx].trigger);
   int del = (int)tlen - (can_swallow ? 1 : 0);
