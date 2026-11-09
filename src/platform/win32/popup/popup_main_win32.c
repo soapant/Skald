@@ -3,7 +3,6 @@
 #include "platform/win32/win32_state.h"
 #include "deps/log.h"
 #include "core/context.h"
-#include "core/modal.h"
 #include "core/window_manager.h"
 #include <commctrl.h>
 #include <shellapi.h>
@@ -737,7 +736,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     static const WORD held_modifiers[] = {VK_LSHIFT,   VK_RSHIFT, VK_LCONTROL,
                                           VK_RCONTROL, VK_LMENU,  VK_RMENU,
                                           VK_LWIN,     VK_RWIN};
-    last_index = 0;
     if (lb)
       lb->selected_index = 0;
 

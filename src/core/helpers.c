@@ -1,7 +1,6 @@
 #include <stdbool.h>
 
 #include "core/context.h"
-#include "core/modal.h"
 #include "config.h"
 #include "helpers/helpers_ui.h"
 #include "platform/platform.h"

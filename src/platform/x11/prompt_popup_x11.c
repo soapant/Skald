@@ -3,7 +3,6 @@
 #include <X11/X.h>
 #include <stdbool.h>
 
-#include "core/modal.h"
 #include "core/window_manager.h"
 #include "wm/wm.h"
 #include "platform/draw.h"

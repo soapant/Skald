@@ -8,7 +8,6 @@
 #include "core/context.h"
 #include "platform/wm_platform.h"
 #include "deps/log.h"
-#include "core/modal.h"
 #include "core/listbox_hover.h"
 #include "platform/input.h"
 #include "platform/platform.h"

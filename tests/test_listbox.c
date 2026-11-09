@@ -1,6 +1,5 @@
 #include "test.h"
 #include "core/context.h"
-#include "core/modal.h"
 #include "core/types/prompt.h"
 #include "helpers/helpers_ui.h"
 

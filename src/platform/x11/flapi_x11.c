@@ -32,7 +32,6 @@
 #include "core/editbox.h"
 #include "core/window_manager.h"
 #include "platform/wm_platform.h"
-#include "core/modal.h"
 #include "config_values.h"
 #include "core/types.h"
 #include "core/types/flapi_types.h"

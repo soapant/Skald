@@ -18,7 +18,6 @@
 #include "core/listbox_hover.h"
 #include "core/editbox.h"
 #include "platform/x11/drawing_x11.h"
-#include "core/modal.h"
 #include "config_values.h"
 #include "core/context.h"
 #include "core/types.h"
