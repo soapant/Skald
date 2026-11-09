@@ -492,13 +492,13 @@ static bool load_single(const char *dir, const char *filename) {
     return false;
   }
   typedef void (*InitFn)(void);
-  InitFn init = (InitFn)Platform_GetSymbol(h, "FlintFeatureInit");
+  InitFn init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureInit");
   if (!init)
-    init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
+    init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
   if (init) {
     g_feature_init_count++;
   } else {
-    log_warn("feature %s has no FlintFeatureInit/Reload symbol", name);
+    log_warn("feature %s has no SkaldFeatureInit/Reload symbol", name);
   }
 
   LoadedFeature *f = &g_features[g_feature_count++];
@@ -577,7 +577,7 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
         missing = mans[i].deps[k];
     }
     if (missing) {
-      printf("flint: skipping feature '%s' - missing dependency '%s'\n",
+      printf("skald: skipping feature '%s' - missing dependency '%s'\n",
              names[i], missing);
       log_warn("feature '%s' skipped, dep '%s' not found", names[i], missing);
       continue;
@@ -673,7 +673,7 @@ void FeatureLoader_Shutdown(void) {
     if (g_features[i].handle) {
       typedef void (*ShutdownFn)(void);
       ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle,
-                                                       "FlintFeatureShutdown");
+                                                       "SkaldFeatureShutdown");
       if (shut)
         shut();
       cap_purge_owner(NULL, g_features[i].path);
@@ -727,9 +727,9 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
         return;
       }
       typedef void (*InitFn)(void);
-      InitFn init = (InitFn)Platform_GetSymbol(h, "FlintFeatureInit");
+      InitFn init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureInit");
       if (!init)
-        init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
+        init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
       if (!init) {
         log_error("reload %s: no init symbol, keeping old", name);
         Platform_UnloadLibrary(h);
@@ -739,7 +739,7 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       }
       typedef void (*ShutdownFn)(void);
       ShutdownFn shut =
-          (ShutdownFn)Platform_GetSymbol(old, "FlintFeatureShutdown");
+          (ShutdownFn)Platform_GetSymbol(old, "SkaldFeatureShutdown");
       if (shut)
         shut();
       Checkbox_ResetAll();
@@ -789,7 +789,7 @@ void FeatureLoader_ReloadAll(void) {
     if (g_features[i].handle) {
       typedef void (*ShutdownFn)(void);
       ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle,
-                                                       "FlintFeatureShutdown");
+                                                       "SkaldFeatureShutdown");
       if (shut)
         shut();
       {

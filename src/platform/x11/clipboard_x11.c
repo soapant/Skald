@@ -658,7 +658,7 @@ char *x11_clipboard_get_text(void) {
   return out;
 }
 
-#if !defined(FLINT_WAYLAND_SESSION)
+#if !defined(SKALD_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
 
 bool Platform_ClipboardAvailable(void) { return true; }

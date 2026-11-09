@@ -1723,7 +1723,7 @@ Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
     if (focus_win != None && focus_win != PointerRoot && focus_win != win)
       XSetTransientForHint(dpy, win, focus_win);
     char unique_title[64];
-    snprintf(unique_title, sizeof(unique_title), "flint-%lu-%d",
+    snprintf(unique_title, sizeof(unique_title), "skald-%lu-%d",
              (unsigned long)win, (int)getpid());
     XStoreName(dpy, win, unique_title);
     XSizeHints *sh = XAllocSizeHints();

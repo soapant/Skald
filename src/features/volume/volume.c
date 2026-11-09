@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +8,7 @@
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
 
-const GUID flint_IID_IAudioEndpointVolume = {
+const GUID skald_IID_IAudioEndpointVolume = {
     0x5cdf2c82,
     0x841e,
     0x4546,
@@ -53,7 +53,7 @@ typedef void (*pfn_g_free)(void *);
 
 static struct {
   bool ready;
-  FlLibrary handle;
+  SkLibrary handle;
   pfn_g_bus_get_sync bus_get_sync;
   pfn_g_dbus_connection_call_sync dbus_connection_call_sync;
   pfn_g_dbus_proxy_new_sync dbus_proxy_new_sync;
@@ -70,15 +70,15 @@ static struct {
 } gio;
 
 #define GIO_RESOLVE(handle, field, symbol)                                     \
-  gio.field = (pfn_##symbol)fl_library_symbol((handle), #symbol)
+  gio.field = (pfn_##symbol)sk_library_symbol((handle), #symbol)
 
 static bool gio_load(void) {
   if (gio.ready)
     return true;
-  FlLibrary handle = fl_library_open(VOLUME_GIO_PATH);
+  SkLibrary handle = sk_library_open(VOLUME_GIO_PATH);
   if (!handle) {
     printf("volume: cannot open %s: %s\n", VOLUME_GIO_PATH,
-           fl_library_error() ? fl_library_error() : "not found");
+           sk_library_error() ? sk_library_error() : "not found");
     return false;
   }
   GIO_RESOLVE(handle, bus_get_sync, g_bus_get_sync);
@@ -100,8 +100,8 @@ static bool gio_load(void) {
       !gio.variant_unref || !gio.object_unref || !gio.error_free ||
       !gio.strdup || !gio.str_has_prefix || !gio.free) {
     printf("volume: gio symbols missing: %s\n",
-           fl_library_error() ? fl_library_error() : "null");
-    fl_library_close(handle);
+           sk_library_error() ? sk_library_error() : "null");
+    sk_library_close(handle);
     memset(&gio, 0, sizeof(gio));
     return false;
   }
@@ -184,7 +184,7 @@ static int parse_fraction(const char *text) {
 }
 
 static int run_parse(const char *cmd) {
-  char *output = fl_run_terminal_command_blocking((char *)cmd);
+  char *output = sk_run_terminal_command_blocking((char *)cmd);
   if (!output)
     return -1;
   int volume = parse_fraction(output);
@@ -219,7 +219,7 @@ int get_current_volume(void) {
   if (FAILED(hr))
     goto cleanup;
 
-  hr = pDevice->lpVtbl->Activate(pDevice, &flint_IID_IAudioEndpointVolume,
+  hr = pDevice->lpVtbl->Activate(pDevice, &skald_IID_IAudioEndpointVolume,
                                  CLSCTX_ALL, NULL, (void **)&pVolume);
   if (FAILED(hr))
     goto cleanup;
@@ -265,7 +265,7 @@ void set_volume(int volume) {
   if (FAILED(hr))
     goto cleanup;
 
-  hr = pDevice->lpVtbl->Activate(pDevice, &flint_IID_IAudioEndpointVolume,
+  hr = pDevice->lpVtbl->Activate(pDevice, &skald_IID_IAudioEndpointVolume,
                                  CLSCTX_ALL, NULL, (void **)&pVolume);
   if (FAILED(hr))
     goto cleanup;
@@ -287,19 +287,19 @@ cleanup:
   char cmd[512];
   snprintf(cmd, sizeof(cmd), "pactl set-sink-volume @DEFAULT_SINK@ %d%%",
            volume);
-  char *out = fl_run_terminal_command_blocking(cmd);
+  char *out = sk_run_terminal_command_blocking(cmd);
   bool ok = out && !out[0];
   if (out)
     free(out);
   if (!ok) {
     snprintf(cmd, sizeof(cmd), "wpctl set-volume @DEFAULT_AUDIO_SINK@ %d%%",
              volume);
-    out = fl_run_terminal_command_blocking(cmd);
+    out = sk_run_terminal_command_blocking(cmd);
     if (out)
       free(out);
   }
   if (volume > 0) {
-    out = fl_run_terminal_command_blocking(
+    out = sk_run_terminal_command_blocking(
         "pactl set-sink-mute @DEFAULT_SINK@ 0");
     if (out)
       free(out);
@@ -368,24 +368,24 @@ void set_volume_to_75() { set_volume(75); }
 void set_volume_to_100() { set_volume(100); }
 void set_volume_to_0() { set_volume(0); }
 
-FLINT_FEATURE_INIT {
-  fl_add_to_cc(.type = "VolumeControl",
+SKALD_FEATURE_INIT {
+  sk_add_to_cc(.type = "VolumeControl",
                .display_name = "Increment Volume By 10",
                .on_action = increment_volume, .icon = "/volume.png");
-  fl_add_to_cc(.type = "VolumeControl",
+  sk_add_to_cc(.type = "VolumeControl",
                .display_name = "Decrement Volume By 10",
                .on_action = decrement_volume, .icon = "/volume.png");
-  fl_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 0%",
+  sk_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 0%",
                .on_action = set_volume_to_0, .icon = "/volume.png");
-  fl_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 25%",
+  sk_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 25%",
                .on_action = set_volume_to_25, .icon = "/volume.png");
-  fl_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 50%",
+  sk_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 50%",
                .on_action = set_volume_to_50, .icon = "/volume.png");
-  fl_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 75%",
+  sk_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 75%",
                .on_action = set_volume_to_75, .icon = "/volume.png");
-  fl_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 100%",
+  sk_add_to_cc(.type = "VolumeControl", .display_name = "Set Volume To 100%",
                .on_action = set_volume_to_100, .icon = "/volume.png");
-  fl_add_to_cc(.type = "VolumeControl", .display_name = "Toggle Play/Pause",
+  sk_add_to_cc(.type = "VolumeControl", .display_name = "Toggle Play/Pause",
                .on_action = toggle_play_pause, .icon = "/volume.png");
-  fl_cap_register("toggle.playpause", toggle_play_pause);
+  sk_cap_register("toggle.playpause", toggle_play_pause);
 }

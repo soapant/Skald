@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <stdio.h>
 
 typedef enum { VIM_MODE_INSERT, VIM_MODE_NORMAL, VIM_MODE_ANY } VimMode;
@@ -29,18 +29,18 @@ static char g_key_buffer[VIM_BUFFER_TOKENS][32];
 static int g_key_buffer_count = 0;
 static volatile int g_pending_active = 0;
 static char g_pending_char = 0;
-static FlMutex g_pending_mutex = NULL;
+static SkMutex g_pending_mutex = NULL;
 
 static void vim_reset_buffer(void) { g_key_buffer_count = 0; }
 
 static void vim_refresh_prompt(void) {
-  PromptState *aps = fl_get_active_prompt();
+  PromptState *aps = sk_get_active_prompt();
   if (aps && aps->callbacks && aps->callbacks->refresh)
     aps->callbacks->refresh(aps);
 }
 
 static void vim_insert_char_silent(char ch) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   size_t len = strlen(ps->eb->filter);
@@ -55,35 +55,35 @@ static void vim_insert_char_silent(char ch) {
 }
 
 static void *vim_pending_thread(void *arg) {
-  fl_sleep(0.3);
-  fl_mutex_lock(g_pending_mutex);
+  sk_sleep(0.3);
+  sk_mutex_lock(g_pending_mutex);
   if (g_pending_active) {
     g_pending_active = 0;
     g_pending_char = 0;
-    fl_mutex_unlock(g_pending_mutex);
+    sk_mutex_unlock(g_pending_mutex);
     vim_refresh_prompt();
   } else {
-    fl_mutex_unlock(g_pending_mutex);
+    sk_mutex_unlock(g_pending_mutex);
   }
   return NULL;
 }
 
 static void vim_cancel_pending(void) {
-  fl_mutex_lock(g_pending_mutex);
+  sk_mutex_lock(g_pending_mutex);
   g_pending_active = 0;
-  fl_mutex_unlock(g_pending_mutex);
+  sk_mutex_unlock(g_pending_mutex);
 }
 
 static void vim_start_pending(char ch) {
-  fl_mutex_lock(g_pending_mutex);
+  sk_mutex_lock(g_pending_mutex);
   g_pending_active = 1;
   g_pending_char = ch;
-  fl_mutex_unlock(g_pending_mutex);
-  fl_thread_create(vim_pending_thread, NULL);
+  sk_mutex_unlock(g_pending_mutex);
+  sk_thread_create(vim_pending_thread, NULL);
 }
 
 static void vim_delete_last(int n) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   int len = (int)strlen(ps->eb->filter);
@@ -189,10 +189,10 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
     char token[32];
     int has_token = vim_key_to_token(key, token, sizeof(token));
 
-    fl_mutex_lock(g_pending_mutex);
+    sk_mutex_lock(g_pending_mutex);
     int was_pending = g_pending_active;
     char pending_char = g_pending_char;
-    fl_mutex_unlock(g_pending_mutex);
+    sk_mutex_unlock(g_pending_mutex);
 
     if (was_pending) {
       int continues = 0;
@@ -274,7 +274,7 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
         vim_reset_buffer();
         if (m->cb)
           m->cb();
-        PromptState *aps = fl_get_active_prompt();
+        PromptState *aps = sk_get_active_prompt();
         if (aps && aps->callbacks && aps->callbacks->refresh)
           aps->callbacks->refresh(aps);
         return true;
@@ -286,7 +286,7 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
 
   if (g_vim_mode == VIM_MODE_NORMAL) {
     if (key->vk == 'I' || key->vk == 'i') {
-      PromptState *ps = fl_get_active_prompt();
+      PromptState *ps = sk_get_active_prompt();
       if (ps && ps->eb && key->shift)
         ps->eb->cursor = 0;
       vim_set_insert_mode();
@@ -315,7 +315,7 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
 }
 
 static void vim_move(int amount, bool up) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->lb)
     return;
 
@@ -349,17 +349,17 @@ static void vim_move_up5(void) { vim_move(5, true); }
 
 static void vim_set_insert_mode(void) {
   g_vim_mode = VIM_MODE_INSERT;
-  fl_get_metrics()->edit_cursor_width = 0;
+  sk_get_metrics()->edit_cursor_width = 0;
 }
 
 static void vim_set_normal_mode(void) {
   g_vim_mode = VIM_MODE_NORMAL;
-  fl_get_metrics()->edit_cursor_width = 14;
+  sk_get_metrics()->edit_cursor_width = 14;
 }
 
 static void vim_enter_normal_mode(void) { vim_set_normal_mode(); }
 
-static void vim_close_window(void) { fl_close_window(); }
+static void vim_close_window(void) { sk_close_window(); }
 
 static void vim_on_prompt_open(void) {
   vim_set_insert_mode();
@@ -367,33 +367,33 @@ static void vim_on_prompt_open(void) {
   vim_cancel_pending();
 }
 static void vim_go_to_bottom(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->lb)
     return;
   ps->lb->selected_index = ps->lb->item_count - 1;
 }
 static void vim_go_to_top(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->lb)
     return;
   ps->lb->selected_index = 0;
 }
 static void vim_ctrlenter(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->lb)
     return;
   if (ps->callbacks->ctrl_enter)
     ps->callbacks->ctrl_enter(ps);
 }
 static void vim_edit_text(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->lb)
     return;
   if (ps->callbacks->edit)
     ps->callbacks->edit(ps);
 }
 static void vim_move_left(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   if (ps->eb->cursor > 0)
@@ -401,13 +401,13 @@ static void vim_move_left(void) {
 }
 
 static void vim_move_right(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (ps->eb->cursor < strlen(ps->eb->filter)) {
     ps->eb->cursor++;
   }
 }
 static void vim_delete_line(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   ps->eb->filter[0] = '\0';
@@ -420,7 +420,7 @@ static int vim_is_word_char(char c) {
 }
 
 static void vim_word_forward(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   const char *s = ps->eb->filter;
@@ -437,7 +437,7 @@ static void vim_word_forward(void) {
 }
 
 static void vim_word_backward(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   const char *s = ps->eb->filter;
@@ -456,7 +456,7 @@ static void vim_word_backward(void) {
 }
 
 static void vim_line_start(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   ps->eb->cursor = 0;
@@ -464,7 +464,7 @@ static void vim_line_start(void) {
 }
 
 static void vim_line_end(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   ps->eb->cursor = (int)strlen(ps->eb->filter);
@@ -472,7 +472,7 @@ static void vim_line_end(void) {
 }
 
 static void vim_delete_to_end(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   size_t len = strlen(ps->eb->filter);
@@ -483,7 +483,7 @@ static void vim_delete_to_end(void) {
 }
 
 static void vim_delete_char(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (!ps || !ps->eb)
     return;
   size_t len = strlen(ps->eb->filter);
@@ -495,7 +495,7 @@ static void vim_delete_char(void) {
 }
 
 static void vim_append(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (ps && ps->eb) {
     size_t len = strlen(ps->eb->filter);
     if (ps->eb->cursor < len)
@@ -507,7 +507,7 @@ static void vim_append(void) {
 }
 
 static void vim_append_end(void) {
-  PromptState *ps = fl_get_active_prompt();
+  PromptState *ps = sk_get_active_prompt();
   if (ps && ps->eb)
     ps->eb->cursor = (int)strlen(ps->eb->filter);
   vim_set_insert_mode();
@@ -522,8 +522,8 @@ static void vim_change_to_end(void) {
   vim_refresh_prompt();
 }
 
-FLINT_FEATURE_INIT {
-  g_pending_mutex = fl_mutex_create();
+SKALD_FEATURE_INIT {
+  g_pending_mutex = sk_mutex_create();
   vim_set_insert_mode();
   vim_motion("jk", "", VIM_MODE_INSERT, vim_enter_normal_mode);
   vim_motion("jq", "", VIM_MODE_INSERT, vim_close_window);
@@ -547,6 +547,6 @@ FLINT_FEATURE_INIT {
   vim_motion("d", "shift", VIM_MODE_NORMAL, vim_delete_to_end);
   vim_motion("c", "shift", VIM_MODE_NORMAL, vim_change_to_end);
   vim_motion("x", "", VIM_MODE_NORMAL, vim_delete_char);
-  fl_register_key_interceptor(vim_key_interceptor);
-  fl_register_event(EVENT_PROMPT_OPEN, vim_on_prompt_open);
+  sk_register_key_interceptor(vim_key_interceptor);
+  sk_register_event(EVENT_PROMPT_OPEN, vim_on_prompt_open);
 }

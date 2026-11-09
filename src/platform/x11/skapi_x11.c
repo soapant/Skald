@@ -16,7 +16,7 @@
 #include <fontconfig/fontconfig.h>
 #include <stdbool.h>
 
-#include "platform/flapi_platform.h"
+#include "platform/skapi_platform.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
@@ -34,7 +34,7 @@
 #include "platform/wm_platform.h"
 #include "config_values.h"
 #include "core/types.h"
-#include "core/types/flapi_types.h"
+#include "core/types/skapi_types.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
 
@@ -158,18 +158,18 @@ static int platform_run_status(char *const argv[], const X11SessionEnv *env,
   return WEXITSTATUS(st);
 }
 
-bool fl_launch_with_args_platform(const char *path, const char *args) {
-  log_info("fl_launch path='%s' args='%s'", path ? path : "null",
+bool sk_launch_with_args_platform(const char *path, const char *args) {
+  log_info("sk_launch path='%s' args='%s'", path ? path : "null",
            args ? args : "null");
   if (!path)
     return false;
   char expanded[1024];
   if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))
     return false;
-  log_info("fl_launch expanded='%s'", expanded);
+  log_info("sk_launch expanded='%s'", expanded);
   path = expanded;
   if (strstr(path, ".desktop") != NULL) {
-    log_info("fl_launch desktop detected expanded='%s'", expanded);
+    log_info("sk_launch desktop detected expanded='%s'", expanded);
     bool is_terminal = false;
     char exec_line[1024] = {0};
     char workdir[1024] = {0};
@@ -322,7 +322,7 @@ bool fl_launch_with_args_platform(const char *path, const char *args) {
   }
 }
 
-bool fl_launch_with_args_as_admin_platform(const char *path, const char *args) {
+bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
@@ -346,19 +346,19 @@ bool fl_launch_with_args_as_admin_platform(const char *path, const char *args) {
   return true;
 }
 
-static __thread PlListSpec g_fl_list_spec;
-static __thread ListBoxInfo *g_fl_list_lb;
-static __thread int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible,
-    g_fl_list_cur, g_fl_list_h;
-static __thread int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw, g_fl_list_fh;
-static __thread Display *g_fl_list_dpy;
-static __thread XftDraw *g_fl_list_xd;
-static __thread Visual *g_fl_list_vis;
-static __thread Colormap g_fl_list_cmap;
-static __thread FontHandle g_fl_list_font;
-static __thread bool g_fl_list_font_owned;
+static __thread PlListSpec g_sk_list_spec;
+static __thread ListBoxInfo *g_sk_list_lb;
+static __thread int g_sk_list_y0, g_sk_list_itemH, g_sk_list_visible,
+    g_sk_list_cur, g_sk_list_h;
+static __thread int g_sk_list_bx, g_sk_list_bw, g_sk_list_fw, g_sk_list_fh;
+static __thread Display *g_sk_list_dpy;
+static __thread XftDraw *g_sk_list_xd;
+static __thread Visual *g_sk_list_vis;
+static __thread Colormap g_sk_list_cmap;
+static __thread FontHandle g_sk_list_font;
+static __thread bool g_sk_list_font_owned;
 
-bool fl_listbox_begin_platform(const PlListSpec *spec) {
+bool sk_listbox_begin_platform(const PlListSpec *spec) {
   if (!spec)
     return false;
   ListBoxInfo *lb = spec->lb;
@@ -367,16 +367,16 @@ bool fl_listbox_begin_platform(const PlListSpec *spec) {
       return false;
     return false;
   }
-  Platform_GetDrawContext(&g_fl_list_dpy, &g_fl_list_xd, &g_fl_list_vis,
-                          &g_fl_list_cmap);
-  if (!g_fl_list_dpy || !g_fl_list_xd)
+  Platform_GetDrawContext(&g_sk_list_dpy, &g_sk_list_xd, &g_sk_list_vis,
+                          &g_sk_list_cmap);
+  if (!g_sk_list_dpy || !g_sk_list_xd)
     return false;
-  g_fl_list_spec = *spec;
-  g_fl_list_lb = lb;
-  g_fl_list_font =
-      Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
-  g_fl_list_itemH = spec->item_height ? spec->item_height
-                                      : x11_font_row_height_of(g_fl_list_font);
+  g_sk_list_spec = *spec;
+  g_sk_list_lb = lb;
+  g_sk_list_font =
+      Platform_CreateFontOnDisplay(g_sk_list_dpy, FontSize, UsedFont);
+  g_sk_list_itemH = spec->item_height ? spec->item_height
+                                      : x11_font_row_height_of(g_sk_list_font);
   WindowManager *wmgr = WindowManager_Get();
   PromptState *st = NULL;
   if (wmgr) {
@@ -392,106 +392,106 @@ bool fl_listbox_begin_platform(const PlListSpec *spec) {
     }
   }
   ListboxLayout lay;
-  Listbox_ComputeLayout(spec, x11_font_list_top_of(g_fl_list_font),
-                        g_fl_list_itemH, st ? st->width : 900,
+  Listbox_ComputeLayout(spec, x11_font_list_top_of(g_sk_list_font),
+                        g_sk_list_itemH, st ? st->width : 900,
                         st ? st->height : 640, lb->item_count, &lay);
-  g_fl_list_y0 = lay.y0;
-  g_fl_list_bx = lay.bx;
-  g_fl_list_bw = lay.bw;
-  g_fl_list_fw = lay.fw;
-  g_fl_list_fh = lay.fh;
-  g_fl_list_h = lay.list_h;
-  g_fl_list_visible = lay.visible;
+  g_sk_list_y0 = lay.y0;
+  g_sk_list_bx = lay.bx;
+  g_sk_list_bw = lay.bw;
+  g_sk_list_fw = lay.fw;
+  g_sk_list_fh = lay.fh;
+  g_sk_list_h = lay.list_h;
+  g_sk_list_visible = lay.visible;
   UI_LB_SetVisibleCount(lay.visible);
-  g_fl_list_cur = 0;
-  g_fl_list_font =
-      Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
-  g_fl_list_font_owned = true;
-  ListBox_ApplyPendingScroll(g_fl_list_lb, lay.visible);
-  ListBox_SetGeometry(g_fl_list_y0, g_fl_list_itemH, lay.visible);
-  ListBox_HoverFocus(g_fl_list_lb, g_fl_list_y0, g_fl_list_itemH,
-                     g_fl_list_lb->view_offset, lay.visible);
+  g_sk_list_cur = 0;
+  g_sk_list_font =
+      Platform_CreateFontOnDisplay(g_sk_list_dpy, FontSize, UsedFont);
+  g_sk_list_font_owned = true;
+  ListBox_ApplyPendingScroll(g_sk_list_lb, lay.visible);
+  ListBox_SetGeometry(g_sk_list_y0, g_sk_list_itemH, lay.visible);
+  ListBox_HoverFocus(g_sk_list_lb, g_sk_list_y0, g_sk_list_itemH,
+                     g_sk_list_lb->view_offset, lay.visible);
   return true;
 }
 
-bool fl_listbox_next_platform(FlListItemCtx *out) {
-  if (!out || !g_fl_list_lb)
+bool sk_listbox_next_platform(SkListItemCtx *out) {
+  if (!out || !g_sk_list_lb)
     return false;
-  if (g_fl_list_cur >= g_fl_list_visible)
+  if (g_sk_list_cur >= g_sk_list_visible)
     return false;
-  int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
-  if (idx < 0 || idx >= g_fl_list_lb->item_count)
+  int idx = g_sk_list_lb->view_offset + g_sk_list_cur;
+  if (idx < 0 || idx >= g_sk_list_lb->item_count)
     return false;
-  int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
-  if (g_fl_list_cur == 0)
+  int y = g_sk_list_y0 + g_sk_list_cur * g_sk_list_itemH;
+  if (g_sk_list_cur == 0)
     Platform_DrawPromptSeparator(
-        (PlDrawPromptSeparatorSpec){.y = g_fl_list_y0, .width = g_fl_list_fw});
-  bool sel = (idx == g_fl_list_lb->selected_index);
+        (PlDrawPromptSeparatorSpec){.y = g_sk_list_y0, .width = g_sk_list_fw});
+  bool sel = (idx == g_sk_list_lb->selected_index);
   if (RoundedCorners && CornerRadius > 0) {
     int R = PROMPT_SEL_RADIUS;
     int t = PROMPT_SEL_INSET;
-    int bx = g_fl_list_bx, bw = g_fl_list_bw;
+    int bx = g_sk_list_bx, bw = g_sk_list_bw;
     if (sel) {
-      x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis,
-                            g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT),
+      x11_fill_rounded_rect(g_sk_list_dpy, g_sk_list_xd, g_sk_list_vis,
+                            g_sk_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT),
                             0xFFFF, bx + t, y + PROMPT_SEL_TOP_INSET + t,
-                            bw - 2 * t, g_fl_list_itemH - 2 - 2 * t, R - 1,
-                            g_fl_list_fw, g_fl_list_fh);
+                            bw - 2 * t, g_sk_list_itemH - 2 - 2 * t, R - 1,
+                            g_sk_list_fw, g_sk_list_fh);
     }
   } else {
     PromptState tmp = {0};
-    tmp.width = g_fl_list_fw;
-    tmp.height = g_fl_list_y0 + g_fl_list_visible * g_fl_list_itemH;
-    Platform_DrawListBackground(&tmp, g_fl_list_dpy, g_fl_list_xd,
-                                g_fl_list_vis, g_fl_list_cmap, y,
-                                g_fl_list_itemH, sel);
+    tmp.width = g_sk_list_fw;
+    tmp.height = g_sk_list_y0 + g_sk_list_visible * g_sk_list_itemH;
+    Platform_DrawListBackground(&tmp, g_sk_list_dpy, g_sk_list_xd,
+                                g_sk_list_vis, g_sk_list_cmap, y,
+                                g_sk_list_itemH, sel);
   }
   out->idx = idx;
   out->selected = sel;
-  out->x = g_fl_list_spec.x;
+  out->x = g_sk_list_spec.x;
   out->y = y;
-  out->w = g_fl_list_spec.w;
-  out->h = g_fl_list_itemH;
-  out->text = g_fl_list_lb->items[idx];
-  g_fl_list_cur++;
+  out->w = g_sk_list_spec.w;
+  out->h = g_sk_list_itemH;
+  out->text = g_sk_list_lb->items[idx];
+  g_sk_list_cur++;
   return true;
 }
 
-void fl_listbox_end_platform(void) {
-  if (PromptListBottomMargin() > 0 && g_fl_list_y0 >= 0) {
+void sk_listbox_end_platform(void) {
+  if (PromptListBottomMargin() > 0 && g_sk_list_y0 >= 0) {
     Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-        .y = g_fl_list_y0 + g_fl_list_h, .width = g_fl_list_fw});
+        .y = g_sk_list_y0 + g_sk_list_h, .width = g_sk_list_fw});
   }
-  if (g_fl_list_font_owned) {
-    Platform_DestroyFont(g_fl_list_font);
-    g_fl_list_font_owned = false;
+  if (g_sk_list_font_owned) {
+    Platform_DestroyFont(g_sk_list_font);
+    g_sk_list_font_owned = false;
   }
-  g_fl_list_lb = NULL;
-  g_fl_list_visible = 0;
-  g_fl_list_cur = 0;
+  g_sk_list_lb = NULL;
+  g_sk_list_visible = 0;
+  g_sk_list_cur = 0;
 }
 
-int fl_listbox_get_count(void) {
-  return g_fl_list_lb ? g_fl_list_lb->item_count : 0;
+int sk_listbox_get_count(void) {
+  return g_sk_list_lb ? g_sk_list_lb->item_count : 0;
 }
 
-unsigned long fl_listbox_get_current_standard_color(void) {
-  if (!g_fl_list_lb || g_fl_list_cur == 0)
+unsigned long sk_listbox_get_current_standard_color(void) {
+  if (!g_sk_list_lb || g_sk_list_cur == 0)
     return 0;
-  int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
-  if (idx < 0 || idx >= g_fl_list_lb->item_count)
+  int idx = g_sk_list_lb->view_offset + g_sk_list_cur - 1;
+  if (idx < 0 || idx >= g_sk_list_lb->item_count)
     return 0;
   unsigned long ncol, bcol, pcol;
   Platform_GetItemColors(
       (PlGetItemColorsSpec){.idx = idx,
-                            .count = g_fl_list_lb->item_count,
+                            .count = g_sk_list_lb->item_count,
                             .num_color = &ncol,
                             .body_color = &bcol,
                             .plain_color = &pcol});
   return pcol;
 }
 
-char *fl_search_file_in_dir_platform(const char *directory,
+char *sk_search_file_in_dir_platform(const char *directory,
                                      const char *search_string,
                                      char *output_path) {
   if (!directory || !search_string || strlen(search_string) == 0)
@@ -523,7 +523,7 @@ char *fl_search_file_in_dir_platform(const char *directory,
   return NULL;
 }
 
-bool fl_place_editbox_platform(const FlEditSpec *spec) {
+bool sk_place_editbox_platform(const SkEditSpec *spec) {
   if (!spec)
     return false;
   Display *dpy;
@@ -640,7 +640,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   return true;
 }
 
-bool fl_type_text_platform(const char *s) {
+bool sk_type_text_platform(const char *s) {
   if (!s)
     return false;
   char *old = Platform_GetClipboardEntry();
@@ -684,7 +684,7 @@ static void *TimerThread(void *arg) {
   return NULL;
 }
 
-void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
+void sk_run_after_time_platform(double seconds, void (*callback)(void)) {
   if (!callback || seconds < 0)
     return;
   TimerPayload *payload = (TimerPayload *)malloc(sizeof(TimerPayload));
@@ -703,7 +703,7 @@ void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
   pthread_detach(thread);
 }
 
-void fl_sleep_platform(double seconds) {
+void sk_sleep_platform(double seconds) {
   if (seconds <= 0)
     return;
   struct timespec req;
@@ -712,7 +712,7 @@ void fl_sleep_platform(double seconds) {
   nanosleep(&req, NULL);
 }
 
-int fl_get_active_interface_platform(char out[], size_t max_len) {
+int sk_get_active_interface_platform(char out[], size_t max_len) {
   static char content[16384];
   if (File_ReadAll("/proc/net/route", content, (long)sizeof(content)) <= 0)
     return 0;
@@ -744,9 +744,9 @@ int fl_get_active_interface_platform(char out[], size_t max_len) {
   }
   return found;
 }
-unsigned long long fl_net_rx_bytes_platform() {
+unsigned long long sk_net_rx_bytes_platform() {
   char want[64];
-  if (!fl_get_active_interface_platform(want, sizeof(want)) || !want[0])
+  if (!sk_get_active_interface_platform(want, sizeof(want)) || !want[0])
     return 0;
   FILE *f = fopen("/proc/net/dev", "r");
   if (!f)
@@ -777,37 +777,37 @@ unsigned long long fl_net_rx_bytes_platform() {
   return rx_bytes;
 }
 
-FlNetStatus fl_net_status_platform(void) {
+SkNetStatus sk_net_status_platform(void) {
   char iface[32] = {0};
-  int found = fl_get_active_interface_platform(iface, sizeof(iface));
+  int found = sk_get_active_interface_platform(iface, sizeof(iface));
 
   if (!found)
-    return FL_NET_OFFLINE;
+    return SK_NET_OFFLINE;
   char sysfs_path[128];
   snprintf(sysfs_path, sizeof(sysfs_path), "/sys/class/net/%s/carrier", iface);
 
   FILE *f = fopen(sysfs_path, "r");
   if (!f)
-    return FL_NET_OFFLINE;
+    return SK_NET_OFFLINE;
 
   char carrier = (char)fgetc(f);
   fclose(f);
 
   if (carrier != '1')
-    return FL_NET_OFFLINE;
+    return SK_NET_OFFLINE;
 
   if (strncmp(iface, "en", 2) == 0 || strncmp(iface, "eth", 3) == 0) {
-    return FL_NET_ETHERNET;
+    return SK_NET_ETHERNET;
   }
   if (strncmp(iface, "wl", 2) == 0) {
-    return FL_NET_WIFI;
+    return SK_NET_WIFI;
   }
-  return FL_NET_OFFLINE;
+  return SK_NET_OFFLINE;
 }
 
-bool fl_dismiss_message_platform(const char *name) {
+bool sk_dismiss_message_platform(const char *name) {
   Platform_DismissIndefiniteMessage();
   return Platform_DismissMessage(name);
 }
 
-int fl_get_pid_platform() { return (int)getpid(); }
+int sk_get_pid_platform() { return (int)getpid(); }

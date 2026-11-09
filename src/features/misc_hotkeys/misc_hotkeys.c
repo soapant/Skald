@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
@@ -9,10 +9,10 @@ static int current_image_id = 0;
 static int previous_image_id = 0;
 
 void GoogleMeaning(void) {
-  char *clip = fl_get_last_clipboard_entry();
+  char *clip = sk_get_last_clipboard_entry();
   char search[50];
   snprintf(search, sizeof(search), "what is %s", clip);
-  fl_query_browser(search);
+  sk_query_browser(search);
 }
 
 void next_image(void) {
@@ -21,38 +21,38 @@ void next_image(void) {
     snprintf(cmd1, sizeof(cmd1),
              "python ~/Programming/RandomShit/shit/get_ids.py %s --random",
              current_keyword);
-    char *output = fl_run_terminal_command(cmd1);
-    char *title = fl_get_active_window_title();
+    char *output = sk_run_terminal_command(cmd1);
+    char *title = sk_get_active_window_title();
     if (!title)
       title = "";
-    if (fl_string_contains(title, "feh")) {
-      fl_close_active_window();
+    if (sk_string_contains(title, "feh")) {
+      sk_close_active_window();
     }
     char cmd[512];
-    FlStringList list = fl_string_split(output, "\n");
+    SkStringList list = sk_string_split(output, "\n");
     snprintf(cmd, sizeof(cmd),
              "feh ~/Programming/RandomShit/shit/images/%s --zoom 65",
              list.items[0]);
-    fl_launch_detached(cmd);
+    sk_launch_detached(cmd);
     previous_image_id = current_image_id;
     current_image_id = atoi(list.items[0]);
     free(output);
   } else {
     char cmd[400];
     char *output =
-        fl_run_terminal_command("ls ~/Programming/RandomShit/shit/images");
-    FlStringList list = fl_string_split(output, "\n");
-    int idx = fl_rand_num_between(0, list.count - 1);
-    char *title = fl_get_active_window_title();
+        sk_run_terminal_command("ls ~/Programming/RandomShit/shit/images");
+    SkStringList list = sk_string_split(output, "\n");
+    int idx = sk_rand_num_between(0, list.count - 1);
+    char *title = sk_get_active_window_title();
     if (!title)
       title = "";
-    if (fl_string_contains(title, "feh")) {
-      fl_close_active_window();
+    if (sk_string_contains(title, "feh")) {
+      sk_close_active_window();
     }
     snprintf(cmd, sizeof(cmd),
              "feh ~/Programming/RandomShit/shit/images/%s --zoom 65",
              list.items[idx]);
-    fl_launch_detached(cmd);
+    sk_launch_detached(cmd);
     previous_image_id = current_image_id;
     current_image_id = atoi(list.items[0]);
     free(output);
@@ -60,21 +60,21 @@ void next_image(void) {
 }
 
 void last_image(void) {
-  char *title = fl_get_active_window_title();
+  char *title = sk_get_active_window_title();
   if (!title)
     title = "";
-  if (fl_string_contains(title, "feh")) {
-    fl_close_active_window();
+  if (sk_string_contains(title, "feh")) {
+    sk_close_active_window();
   }
   char cmd[512];
   snprintf(cmd, sizeof(cmd),
            "feh ~/Programming/RandomShit/shit/images/%i --zoom 65",
            previous_image_id);
-  fl_launch_detached(cmd);
+  sk_launch_detached(cmd);
 }
 
 void get_current_keyword(void) {
-  char *popup_res = fl_popup();
+  char *popup_res = sk_popup();
   if (popup_res) {
     strncpy(current_keyword, popup_res, sizeof(current_keyword) - 1);
     current_keyword[sizeof(current_keyword) - 1] = '\0';
@@ -84,40 +84,40 @@ void get_current_keyword(void) {
 }
 
 void easy(void) {
-  fl_send_hotkey("1");
-  fl_send_hotkey("Space");
-  fl_sleep(0.1);
-  fl_send_hotkey("1");
+  sk_send_hotkey("1");
+  sk_send_hotkey("Space");
+  sk_sleep(0.1);
+  sk_send_hotkey("1");
 }
 
 void medium(void) {
-  fl_send_hotkey("2");
-  fl_send_hotkey("Space");
-  fl_sleep(0.1);
-  fl_send_hotkey("2");
+  sk_send_hotkey("2");
+  sk_send_hotkey("Space");
+  sk_sleep(0.1);
+  sk_send_hotkey("2");
 }
 void hard(void) {
-  fl_send_hotkey("3");
-  fl_send_hotkey("Space");
-  fl_sleep(0.1);
-  fl_send_hotkey("3");
+  sk_send_hotkey("3");
+  sk_send_hotkey("Space");
+  sk_sleep(0.1);
+  sk_send_hotkey("3");
 }
 void fuckme(void) {
-  fl_send_hotkey("4");
-  fl_send_hotkey("Space");
-  fl_sleep(0.1);
-  fl_send_hotkey("4");
+  sk_send_hotkey("4");
+  sk_send_hotkey("Space");
+  sk_sleep(0.1);
+  sk_send_hotkey("4");
 }
 
 void start_auto_click(void) {
-  FlMouseEvent ev;
-  while (fl_poll_mouse(&ev)) {
+  SkMouseEvent ev;
+  while (sk_poll_mouse(&ev)) {
   }
   while (1) {
-    fl_click();
-    fl_sleep(0.01);
+    sk_click();
+    sk_sleep(0.01);
     bool stop = false;
-    while (fl_poll_mouse(&ev)) {
+    while (sk_poll_mouse(&ev)) {
       if (ev.down)
         stop = true;
     }
@@ -126,16 +126,16 @@ void start_auto_click(void) {
   }
 }
 
-FLINT_FEATURE_INIT {
-  fl_register_hotkey(.hotkey = "MouseButton4", .cb = start_auto_click,
+SKALD_FEATURE_INIT {
+  sk_register_hotkey(.hotkey = "MouseButton4", .cb = start_auto_click,
                      .blacklist = {"Fortnite", "Librewolf"});
-  fl_register_hotkey(.hotkey = "Alt+Shift+G", .cb = GoogleMeaning);
-  fl_register_hotkey(.hotkey = "Alt+Shift+F", .cb = next_image);
-  fl_register_hotkey(.hotkey = "E", .cb = next_image, .whitelist = {"feh"});
-  fl_register_hotkey(.hotkey = "Q", .cb = last_image, .whitelist = {"feh"});
-  fl_register_hotkey(.hotkey = "Alt+Shift+D", .cb = get_current_keyword);
-  fl_register_hotkey(.hotkey = "J", .cb = easy, .whitelist = {"anki"});
-  fl_register_hotkey(.hotkey = "K", .cb = medium, .whitelist = {"anki"});
-  fl_register_hotkey(.hotkey = "L", .cb = hard, .whitelist = {"anki"});
-  fl_register_hotkey(.hotkey = ";", .cb = fuckme, .whitelist = {"anki"});
+  sk_register_hotkey(.hotkey = "Alt+Shift+G", .cb = GoogleMeaning);
+  sk_register_hotkey(.hotkey = "Alt+Shift+F", .cb = next_image);
+  sk_register_hotkey(.hotkey = "E", .cb = next_image, .whitelist = {"feh"});
+  sk_register_hotkey(.hotkey = "Q", .cb = last_image, .whitelist = {"feh"});
+  sk_register_hotkey(.hotkey = "Alt+Shift+D", .cb = get_current_keyword);
+  sk_register_hotkey(.hotkey = "J", .cb = easy, .whitelist = {"anki"});
+  sk_register_hotkey(.hotkey = "K", .cb = medium, .whitelist = {"anki"});
+  sk_register_hotkey(.hotkey = "L", .cb = hard, .whitelist = {"anki"});
+  sk_register_hotkey(.hotkey = ";", .cb = fuckme, .whitelist = {"anki"});
 }

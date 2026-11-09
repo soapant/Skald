@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include "core/context.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -105,7 +105,7 @@ void music_refresh_callback(PromptState *state) {
   for (size_t i = 0; i < n; i++) {
     s_music_items[i] = s_music_files.files[i].name;
   }
-  fl_populate_listbox(state->lb, state->eb->filter, s_music_items, (int)n);
+  sk_populate_listbox(state->lb, state->eb->filter, s_music_items, (int)n);
 }
 bool play_music(char *name) {
 #if defined(_WIN32)
@@ -120,7 +120,7 @@ bool play_music(char *name) {
   } else {
     char quoted_name[MAX_PATH + 3] = {0};
     snprintf(quoted_name, sizeof(quoted_name), "\"%s\"", name);
-    fl_launch_with_args(MusicPlayerPath, quoted_name);
+    sk_launch_with_args(MusicPlayerPath, quoted_name);
   }
 #elif defined(__linux__)
   if (music_set_string("Music Player", "_MP_TRACK", name) &&
@@ -130,7 +130,7 @@ bool play_music(char *name) {
   if (strlen(MusicPlayerPath) > 0) {
     char quoted_name[MAX_PATH + 3] = {0};
     snprintf(quoted_name, sizeof(quoted_name), "\"%s\"", name);
-    fl_launch_with_args(MusicPlayerPath, quoted_name);
+    sk_launch_with_args(MusicPlayerPath, quoted_name);
   }
 #endif
   return true;
@@ -138,7 +138,7 @@ bool play_music(char *name) {
 
 bool music_enter_callback(PromptState *state) {
   char *result = NULL;
-  if (!fl_is_selected(state->lb)) {
+  if (!sk_is_selected(state->lb)) {
     return false;
   }
   for (size_t i = 0; i < s_music_files.count; i++) {
@@ -188,21 +188,21 @@ void music_cmd_2(void) {
 }
 
 void random_music(void) {
-  int idx = fl_rand_num_between(0, s_music_files.count - 1);
+  int idx = sk_rand_num_between(0, s_music_files.count - 1);
   play_music(s_music_files.files[idx].path);
 }
 void music_prompt(void) {
-  fl_window(.title = "Player", .refresh = music_refresh_callback,
+  sk_window(.title = "Player", .refresh = music_refresh_callback,
             .enter = music_enter_callback);
 }
 void reload_music(void) {
   s_music_files.count = 0;
-  fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files,
-                            NULL, true, FL_DIR_WALK_UNLIMITED);
+  sk_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files,
+                            NULL, true, SK_DIR_WALK_UNLIMITED);
 }
 void add_music(void) {
-  char *url = fl_popup(.placeholder = "Enter youtube url for the video");
-  char *name = fl_popup(
+  char *url = sk_popup(.placeholder = "Enter youtube url for the video");
+  char *name = sk_popup(
           .placeholder =
               "Enter a custom name for this song (or leave blank for default)");
   if (!url)
@@ -222,15 +222,15 @@ void add_music(void) {
   }
   free(name);
   free(url);
-  fl_run_terminal_command(cmd);
+  sk_run_terminal_command(cmd);
 }
 
 typedef void (*toggle_play_pause)(void);
 
 static void pause() {
-  fl_cap_bind(playpause, "toggle.playpause", toggle_play_pause);
+  sk_cap_bind(playpause, "toggle.playpause", toggle_play_pause);
   if (playpause) {
-    if (fl_process_running("music_player")) {
+    if (sk_process_running("music_player")) {
       music_cmd_1();
     } else {
       playpause();
@@ -238,19 +238,19 @@ static void pause() {
   }
 }
 
-FLINT_FEATURE_INIT {
-  fl_register_hotkey(.hotkey = "Alt+,", .cb = music_cmd_1);
-  fl_register_hotkey(.hotkey = "Alt+/", .cb = music_cmd_5);
-  fl_register_hotkey(.hotkey = "Alt+;", .cb = music_cmd_6);
-  fl_register_hotkey(.hotkey = "Alt+'", .cb = music_cmd_2);
-  fl_register_hotkey(.hotkey = "Alt+P", .cb = music_prompt);
-  fl_register_hotkey(.hotkey = "Alt+Shift+P", .cb = random_music);
-  fl_register_hotkey(.hotkey = "RShift", .cb = pause);
-  fl_add_to_cc(.display_name = "Force Reload Music", .on_action = reload_music,
+SKALD_FEATURE_INIT {
+  sk_register_hotkey(.hotkey = "Alt+,", .cb = music_cmd_1);
+  sk_register_hotkey(.hotkey = "Alt+/", .cb = music_cmd_5);
+  sk_register_hotkey(.hotkey = "Alt+;", .cb = music_cmd_6);
+  sk_register_hotkey(.hotkey = "Alt+'", .cb = music_cmd_2);
+  sk_register_hotkey(.hotkey = "Alt+P", .cb = music_prompt);
+  sk_register_hotkey(.hotkey = "Alt+Shift+P", .cb = random_music);
+  sk_register_hotkey(.hotkey = "RShift", .cb = pause);
+  sk_add_to_cc(.display_name = "Force Reload Music", .on_action = reload_music,
                .icon = "/music.png");
-  fl_add_to_cc(.display_name = "Music Player", .on_action = music_prompt,
+  sk_add_to_cc(.display_name = "Music Player", .on_action = music_prompt,
                .icon = "/music.png");
-  fl_add_to_cc(.display_name = "Add Music", .on_action = add_music,
+  sk_add_to_cc(.display_name = "Add Music", .on_action = add_music,
                .icon = "/music.png");
 
   reload_music();

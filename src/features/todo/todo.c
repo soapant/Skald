@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,7 +27,7 @@ typedef struct {
 #define TODO_ENTRY_DELIMITER "||"
 
 #define TODO_CONFIG_MASTER                                                     \
-  X("-pf", "Flint", "Flint", RGB(137, 180, 250), true)                         \
+  X("-pf", "Skald", "Skald", RGB(137, 180, 250), true)                         \
   X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true)   \
   X("-pb", "CocBot", "CocBot", RGB(249, 226, 175), true)                       \
   X("-pi", "IndieGame", "IndieGame", RGB(19, 26, 105), true)                   \
@@ -44,7 +44,7 @@ typedef struct {
   X("-ne", NULL, "NotImplementedYet", RGB(155, 255, 35), false)                \
   X("-ft", NULL, "Feature", RGB(250, 205, 102), false)                         \
   X("-c", NULL, "Change", RGB(150, 105, 12), false)                            \
-  X("-fl", NULL, "FlApi", RGB(10, 105, 12), false)
+  X("-fl", NULL, "SkApi", RGB(10, 105, 12), false)
 
 #define X(flag, internal, label, color, is_alias) {flag, NULL},
 const GenericFlagEntry TODO_CONFIG_FLAGS[] = {TODO_CONFIG_MASTER};
@@ -81,9 +81,9 @@ void ParseTodoInput(const char *input, TodoAliasEntry *alias_out,
   clean_text[0] = '\0';
   *tag_count = 0;
 
-  FlFlagList flist = fl_parse_flags(input);
+  SkFlagList flist = sk_parse_flags(input);
   for (size_t i = 0; i < flist.count && *tag_count < 10; i++) {
-    FlFlag *f = &flist.flags[i];
+    SkFlag *f = &flist.flags[i];
     for (size_t j = 0; j < TODO_CONFIG_FLAGS_COUNT; j++) {
       const char *flag = TODO_CONFIG_FLAGS[j].flag;
       const char *bare = flag[0] == '-' ? flag + 1 : flag;
@@ -111,7 +111,7 @@ void ParseTodoInput(const char *input, TodoAliasEntry *alias_out,
     bool is_flag = false;
     bool flag_has_val = false;
     for (size_t i = 0; i < flist.count; i++) {
-      FlFlag *f = &flist.flags[i];
+      SkFlag *f = &flist.flags[i];
       char withdash[68];
       snprintf(withdash, sizeof(withdash), "-%s", f->name);
       char withdash2[68];
@@ -142,7 +142,7 @@ void ParseTodoInput(const char *input, TodoAliasEntry *alias_out,
 
     token = strtok_r(NULL, " ", &save);
   }
-  fl_free_flags(&flist);
+  sk_free_flags(&flist);
   strncpy(clean_text, clean, 511);
   clean_text[511] = '\0';
 }
@@ -181,7 +181,7 @@ void AddTodoToFile(const char *text) {
   if (!text || strlen(text) == 0)
     return;
 
-  FlStringList lines = fl_load_file_list(TODO_FILE_PATH);
+  SkStringList lines = sk_load_file_list(TODO_FILE_PATH);
   int count = lines.count;
 
   char input_copy[512];
@@ -203,7 +203,7 @@ void AddTodoToFile(const char *text) {
     ParseTodoLine(lines.items[i], existing_clean, existing_tags,
                   &existing_tag_count);
     if (strcmp(existing_clean, clean_text) == 0) {
-      fl_free_file_list(&lines);
+      sk_free_file_list(&lines);
       return;
     }
   }
@@ -225,23 +225,23 @@ void AddTodoToFile(const char *text) {
   char **grown =
       (char **)realloc(lines.items, (size_t)(count + 1) * sizeof(char *));
   if (!grown) {
-    fl_free_file_list(&lines);
+    sk_free_file_list(&lines);
     return;
   }
   lines.items = grown;
   lines.items[count] = new_entry;
-  fl_write_to_file(TODO_FILE_PATH, (const char **)lines.items, count + 1);
+  sk_write_to_file(TODO_FILE_PATH, (const char **)lines.items, count + 1);
   lines.items[count] = NULL;
-  fl_free_file_list(&lines);
+  sk_free_file_list(&lines);
 }
 
 void RemoveTodoItemFromFile(const char *item_to_remove) {
   if (!item_to_remove)
     return;
-  FlStringList lines = fl_load_file_list(TODO_FILE_PATH);
+  SkStringList lines = sk_load_file_list(TODO_FILE_PATH);
   int count = lines.count;
   if (count == 0) {
-    fl_free_file_list(&lines);
+    sk_free_file_list(&lines);
     return;
   }
   int kept_count = 0;
@@ -269,22 +269,22 @@ void RemoveTodoItemFromFile(const char *item_to_remove) {
     }
     lines.items[kept_count++] = lines.items[i];
   }
-  fl_write_to_file(TODO_FILE_PATH, (const char **)lines.items, kept_count);
+  sk_write_to_file(TODO_FILE_PATH, (const char **)lines.items, kept_count);
   for (int i = kept_count; i < count; i++)
     lines.items[i] = NULL;
-  fl_free_file_list(&lines);
+  sk_free_file_list(&lines);
 }
 
 void todo_refresh_callback(PromptState *state) {
-  FlStringList files = fl_load_file_list(TODO_FILE_PATH);
+  SkStringList files = sk_load_file_list(TODO_FILE_PATH);
 
-  fl_populate_listbox(state->lb, state->eb->filter, (const char **)files.items,
+  sk_populate_listbox(state->lb, state->eb->filter, (const char **)files.items,
                       files.count);
-  fl_free_file_list(&files);
+  sk_free_file_list(&files);
 }
 
 bool todo_enter_callback(PromptState *state) {
-  if (fl_is_selected(state->lb)) {
+  if (sk_is_selected(state->lb)) {
     RemoveTodoItemFromFile(state->lb->selected_text);
   } else {
     AddTodoToFile(state->eb->filter);
@@ -293,73 +293,73 @@ bool todo_enter_callback(PromptState *state) {
 }
 
 bool todo_ctrlenter_callback(PromptState *state) {
-  if (fl_is_selected(state->lb)) {
+  if (sk_is_selected(state->lb)) {
     RemoveTodoItemFromFile(state->lb->selected_text);
   } else {
     AddTodoToFile(state->eb->filter);
-    fl_set_edit_text("");
+    sk_set_edit_text("");
   }
   todo_refresh_callback(state);
   return false;
 }
 
 void todo_render_callback(PromptState *state) {
-  int line_h = fl_get_text_height(NULL);
-  FlListSpec spec = {.lb = state->lb, .item_height = line_h * 3 + 3};
-  fl_place_editbox();
-  if (!fl_listbox_begin(&spec))
+  int line_h = sk_get_text_height(NULL);
+  SkListSpec spec = {.lb = state->lb, .item_height = line_h * 3 + 3};
+  sk_place_editbox();
+  if (!sk_listbox_begin(&spec))
     return;
-  FlListItemCtx ctx;
-  while (fl_listbox_next(&ctx)) {
+  SkListItemCtx ctx;
+  while (sk_listbox_next(&ctx)) {
     char text_buf[256];
     snprintf(text_buf, sizeof(text_buf), "%s", ctx.text);
     char main_text[512] = {0};
     char tags[10][64];
     int tag_count = 0;
     ParseTodoLine(text_buf, main_text, tags, &tag_count);
-    fl_draw_text(.x = ctx.x + 11, .y = ctx.y + 4, .text = main_text,
+    sk_draw_text(.x = ctx.x + 11, .y = ctx.y + 4, .text = main_text,
                  .align = "LEFT");
     if (tag_count > 0) {
       int tag_y = ctx.y + line_h + 10;
       if (tag_count == 1) {
         for (int t = 0; t < tag_count; t++) {
           unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
-          fl_draw_text(.x = 14, .y = tag_y, .text = tags[t], .color = tag_rgb,
+          sk_draw_text(.x = 14, .y = tag_y, .text = tags[t], .color = tag_rgb,
                        .align = "LEFT");
         }
       } else {
         int x_offset = 0;
         for (int t = 0; t < tag_count; t++) {
           unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
-          fl_draw_text(.x = 14 + x_offset, .y = tag_y, .text = tags[t],
+          sk_draw_text(.x = 14 + x_offset, .y = tag_y, .text = tags[t],
                        .color = tag_rgb, .align = "LEFT", .pad = x_offset);
           x_offset += (int)(strlen(tags[t]) * (float)FontSize / 2.0f) + 34;
         }
       }
     }
   }
-  fl_listbox_end();
+  sk_listbox_end();
 }
 
 void todo_edit_callback(PromptState *state) {
   int idx = -1;
-  char *edited = fl_edit_text_popup(.initial_text = state->lb->selected_text,
+  char *edited = sk_edit_text_popup(.initial_text = state->lb->selected_text,
                                     .lb = state->lb, .out_index = &idx);
   if (!edited)
     return;
   if (idx >= 0)
-    fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
+    sk_replace_line_in_file(TODO_FILE_PATH, idx, edited);
   todo_refresh_callback(state);
 }
 
 void TriggerTodo(void) {
-  fl_window(.title = "Todo", .refresh = todo_refresh_callback,
+  sk_window(.title = "Todo", .refresh = todo_refresh_callback,
             .enter = todo_enter_callback, .ctrl_enter = todo_ctrlenter_callback,
             .render = todo_render_callback, .edit = todo_edit_callback);
 }
 
-FLINT_FEATURE_INIT {
-  fl_register_hotkey(.hotkey = "Alt+T", .cb = TriggerTodo);
-  fl_add_to_cc(.display_name = "Todo", .on_action = TriggerTodo,
+SKALD_FEATURE_INIT {
+  sk_register_hotkey(.hotkey = "Alt+T", .cb = TriggerTodo);
+  sk_add_to_cc(.display_name = "Todo", .on_action = TriggerTodo,
                .icon = "/list-check.png");
 }

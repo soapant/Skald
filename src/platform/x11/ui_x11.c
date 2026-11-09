@@ -179,7 +179,7 @@ void UI_RedrawNow() {}
 
 void UI_Redraw(ListBoxInfo *lb) { UI_RedrawNow(); }
 
-void UI_SyncFilterFromEdit(FlintContext *ctx) {
+void UI_SyncFilterFromEdit(SkaldContext *ctx) {
   if (!ctx) {
     return;
   }
@@ -194,7 +194,7 @@ void UI_SyncFilterFromEdit(FlintContext *ctx) {
   }
 }
 
-void UI_ApplyFilterToEdit(FlintContext *ctx) {
+void UI_ApplyFilterToEdit(SkaldContext *ctx) {
   if (!ctx) {
     return;
   }
@@ -210,7 +210,7 @@ void UI_ApplyFilterToEdit(FlintContext *ctx) {
   }
 }
 
-ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
+ListBoxInfo *UI_GetPopupListBox(SkaldContext *ctx) {
   if (!ctx)
     return NULL;
   WindowManager *wm = WindowManager_Get();
@@ -224,7 +224,7 @@ ListBoxInfo *UI_GetPopupListBox(FlintContext *ctx) {
   return NULL;
 }
 
-void UI_SyncEditCursor(FlintContext *ctx, int pos) {
+void UI_SyncEditCursor(SkaldContext *ctx, int pos) {
   if (!ctx) {
     return;
   }
@@ -245,7 +245,7 @@ void UI_SyncEditCursor(FlintContext *ctx, int pos) {
   UI_SetCursorPosition(pos);
 }
 
-bool UI_ApplyBackspaceToPopup(FlintContext *ctx) {
+bool UI_ApplyBackspaceToPopup(SkaldContext *ctx) {
   (void)ctx;
   return false;
 }

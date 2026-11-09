@@ -83,7 +83,7 @@ bool ListBox_ClientMousePos(int *out_x, int *out_y) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   bool have_origin =
-      Platform_WindowToRoot(FlintContext_Get()->window.hPopupWnd, &wx, &wy);
+      Platform_WindowToRoot(SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
   if (!have_origin && top)
     have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
   if (have_origin) {

@@ -8,11 +8,11 @@
 #include "core/types.h"
 #include "core/types/window.h"
 #include "core/types/prompt.h"
-#include "core/types/flapi_types.h"
+#include "core/types/skapi_types.h"
 #include "config_values.h"
 #include "platform/win32/win32_state.h"
 #include "deps/log.h"
-#include "platform/flapi_platform.h"
+#include "platform/skapi_platform.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
 #include "platform/draw.h"
@@ -60,7 +60,7 @@ static bool win32_exec_shell(const char *file, const char *params,
   return true;
 }
 
-bool fl_launch_with_args_platform(const char *path, const char *args) {
+bool sk_launch_with_args_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char params[2048];
@@ -78,12 +78,12 @@ bool fl_launch_with_args_platform(const char *path, const char *args) {
       snprintf(hostParams, sizeof(hostParams), "\"%s\"", path);
     if (win32_exec_shell(host, hostParams, NULL, "open"))
       return true;
-    log_warn("fl_launch host failed host='%s' params='%s' err=%lu", host,
+    log_warn("sk_launch host failed host='%s' params='%s' err=%lu", host,
              hostParams, GetLastError());
   }
   if (win32_exec_shell(path, params[0] ? params : NULL, NULL, "open"))
     return true;
-  log_warn("fl_launch ShellExecuteExA failed path='%s' args='%s' err=%lu", path,
+  log_warn("sk_launch ShellExecuteExA failed path='%s' args='%s' err=%lu", path,
            params, GetLastError());
   char cmd[2048];
   if (params[0])
@@ -99,12 +99,12 @@ bool fl_launch_with_args_platform(const char *path, const char *args) {
     CloseHandle(pi.hThread);
     return true;
   }
-  log_warn("fl_launch CreateProcessA failed cmd='%s' err=%lu", cmd,
+  log_warn("sk_launch CreateProcessA failed cmd='%s' err=%lu", cmd,
            GetLastError());
   return false;
 }
 
-bool fl_launch_with_args_as_admin_platform(const char *path, const char *args) {
+bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
@@ -129,21 +129,21 @@ bool fl_launch_with_args_as_admin_platform(const char *path, const char *args) {
   sei.nShow = SW_SHOWNORMAL;
   BOOL ok = ShellExecuteExA(&sei);
   if (!ok)
-    log_warn("fl_launch_admin failed path='%s' err=%lu", path, GetLastError());
+    log_warn("sk_launch_admin failed path='%s' err=%lu", path, GetLastError());
   return ok;
 }
 
 #include "core/window_manager.h"
 
-static PlListSpec g_fl_list_spec;
-static ListBoxInfo *g_fl_list_lb;
-static int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
-static int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw, g_fl_list_h;
-static HDC g_fl_list_hdc;
-static HFONT g_fl_list_font;
-static bool g_fl_list_font_owned;
+static PlListSpec g_sk_list_spec;
+static ListBoxInfo *g_sk_list_lb;
+static int g_sk_list_y0, g_sk_list_itemH, g_sk_list_visible, g_sk_list_cur;
+static int g_sk_list_bx, g_sk_list_bw, g_sk_list_fw, g_sk_list_h;
+static HDC g_sk_list_hdc;
+static HFONT g_sk_list_font;
+static bool g_sk_list_font_owned;
 
-bool fl_listbox_begin_platform(const PlListSpec *spec) {
+bool sk_listbox_begin_platform(const PlListSpec *spec) {
   if (!spec)
     return false;
   ListBoxInfo *lb = spec->lb;
@@ -152,11 +152,11 @@ bool fl_listbox_begin_platform(const PlListSpec *spec) {
       return false;
     return false;
   }
-  Platform_GetDrawContextWin32(&g_fl_list_hdc);
-  if (!g_fl_list_hdc)
+  Platform_GetDrawContextWin32(&g_sk_list_hdc);
+  if (!g_sk_list_hdc)
     return false;
-  g_fl_list_spec = *spec;
-  g_fl_list_lb = lb;
+  g_sk_list_spec = *spec;
+  g_sk_list_lb = lb;
   PromptState *st = NULL;
   WindowManager *_wm_lb = WindowManager_Get();
   if (_wm_lb) {
@@ -175,109 +175,109 @@ bool fl_listbox_begin_platform(const PlListSpec *spec) {
     extern PromptState *Platform_GetWin32PromptState(void);
     st = Platform_GetWin32PromptState();
   }
-  g_fl_list_itemH = spec->item_height ? spec->item_height : PromptRowHeight();
+  g_sk_list_itemH = spec->item_height ? spec->item_height : PromptRowHeight();
   ListboxLayout lay;
-  Listbox_ComputeLayout(spec, PromptListTop(), g_fl_list_itemH,
+  Listbox_ComputeLayout(spec, PromptListTop(), g_sk_list_itemH,
                         st ? st->width : 0, st ? st->height : 0, lb->item_count,
                         &lay);
-  g_fl_list_y0 = lay.y0;
-  g_fl_list_bx = lay.bx;
-  g_fl_list_bw = lay.bw;
-  g_fl_list_fw = lay.fw;
-  g_fl_list_h = lay.list_h;
-  g_fl_list_visible = lay.visible;
+  g_sk_list_y0 = lay.y0;
+  g_sk_list_bx = lay.bx;
+  g_sk_list_bw = lay.bw;
+  g_sk_list_fw = lay.fw;
+  g_sk_list_h = lay.list_h;
+  g_sk_list_visible = lay.visible;
   UI_LB_SetVisibleCount(lay.visible);
-  g_fl_list_cur = 0;
-  g_fl_list_font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-  g_fl_list_font_owned = false;
+  g_sk_list_cur = 0;
+  g_sk_list_font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+  g_sk_list_font_owned = false;
   PlDrawState_Get()->win32_listbox_surface = true;
-  ListBox_ApplyPendingScroll(g_fl_list_lb, lay.visible);
-  ListBox_SetGeometry(g_fl_list_y0, g_fl_list_itemH, lay.visible);
-  ListBox_HoverFocus(g_fl_list_lb, g_fl_list_y0, g_fl_list_itemH,
-                     g_fl_list_lb->view_offset, lay.visible);
+  ListBox_ApplyPendingScroll(g_sk_list_lb, lay.visible);
+  ListBox_SetGeometry(g_sk_list_y0, g_sk_list_itemH, lay.visible);
+  ListBox_HoverFocus(g_sk_list_lb, g_sk_list_y0, g_sk_list_itemH,
+                     g_sk_list_lb->view_offset, lay.visible);
   return true;
 }
 
-bool fl_listbox_next_platform(FlListItemCtx *out) {
-  if (!out || !g_fl_list_lb)
+bool sk_listbox_next_platform(SkListItemCtx *out) {
+  if (!out || !g_sk_list_lb)
     return false;
-  if (g_fl_list_cur >= g_fl_list_visible)
+  if (g_sk_list_cur >= g_sk_list_visible)
     return false;
-  int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
-  if (idx < 0 || idx >= g_fl_list_lb->item_count)
+  int idx = g_sk_list_lb->view_offset + g_sk_list_cur;
+  if (idx < 0 || idx >= g_sk_list_lb->item_count)
     return false;
-  int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
-  if (g_fl_list_cur == 0)
+  int y = g_sk_list_y0 + g_sk_list_cur * g_sk_list_itemH;
+  if (g_sk_list_cur == 0)
     Platform_DrawPromptSeparator(
-        (PlDrawPromptSeparatorSpec){.y = g_fl_list_y0, .width = g_fl_list_fw});
-  bool sel = (idx == g_fl_list_lb->selected_index);
+        (PlDrawPromptSeparatorSpec){.y = g_sk_list_y0, .width = g_sk_list_fw});
+  bool sel = (idx == g_sk_list_lb->selected_index);
   if (RoundedCorners && CornerRadius > 0) {
     int R = PROMPT_SEL_RADIUS;
     if (R > CornerRadius)
       R = CornerRadius;
     int t = PROMPT_SEL_INSET;
-    int bx = g_fl_list_bx;
-    int bw = g_fl_list_bw;
+    int bx = g_sk_list_bx;
+    int bw = g_sk_list_bw;
     RECT inner = {bx + t, y + PROMPT_SEL_TOP_INSET + t, bx + bw - t,
-                  y + g_fl_list_itemH - 1 - t};
+                  y + g_sk_list_itemH - 1 - t};
     int innerR = R - 1;
     if (innerR < 0)
       innerR = 0;
     if (inner.right <= inner.left || inner.bottom <= inner.top) {
-      inner = (RECT){bx, y, bx + bw, y + g_fl_list_itemH};
+      inner = (RECT){bx, y, bx + bw, y + g_sk_list_itemH};
       innerR = R;
     }
     if (sel) {
-      win32_fill_rounded_rect(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT,
+      win32_fill_rounded_rect(g_sk_list_hdc, &inner, COLOR_SELECTED_TEXT,
                               innerR);
     }
   } else {
-    RECT rc = {g_fl_list_bx, y, g_fl_list_bx + g_fl_list_bw,
-               y + g_fl_list_itemH};
+    RECT rc = {g_sk_list_bx, y, g_sk_list_bx + g_sk_list_bw,
+               y + g_sk_list_itemH};
     if (sel) {
       HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
-      FillRect(g_fl_list_hdc, &rc, br);
+      FillRect(g_sk_list_hdc, &rc, br);
       DeleteObject(br);
     }
   }
   out->idx = idx;
   out->selected = sel;
-  out->x = g_fl_list_spec.x;
+  out->x = g_sk_list_spec.x;
   out->y = y;
-  out->w = g_fl_list_spec.w;
-  out->h = g_fl_list_itemH;
-  out->text = g_fl_list_lb->items[idx];
-  g_fl_list_cur++;
+  out->w = g_sk_list_spec.w;
+  out->h = g_sk_list_itemH;
+  out->text = g_sk_list_lb->items[idx];
+  g_sk_list_cur++;
   return true;
 }
 
-void fl_listbox_end_platform(void) {
-  if (PromptListBottomMargin() > 0 && g_fl_list_hdc) {
+void sk_listbox_end_platform(void) {
+  if (PromptListBottomMargin() > 0 && g_sk_list_hdc) {
     Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-        .y = g_fl_list_y0 + g_fl_list_h, .width = g_fl_list_fw});
+        .y = g_sk_list_y0 + g_sk_list_h, .width = g_sk_list_fw});
   }
   PlDrawState_Get()->win32_listbox_surface = false;
-  g_fl_list_lb = NULL;
-  g_fl_list_visible = 0;
-  g_fl_list_cur = 0;
+  g_sk_list_lb = NULL;
+  g_sk_list_visible = 0;
+  g_sk_list_cur = 0;
 }
 
-int fl_listbox_get_count(void) {
-  return g_fl_list_lb ? g_fl_list_lb->item_count : 0;
+int sk_listbox_get_count(void) {
+  return g_sk_list_lb ? g_sk_list_lb->item_count : 0;
 }
 
-unsigned long fl_listbox_get_current_standard_color(void) {
+unsigned long sk_listbox_get_current_standard_color(void) {
 
-  if (!g_fl_list_lb || g_fl_list_cur == 0)
+  if (!g_sk_list_lb || g_sk_list_cur == 0)
     return 0;
-  int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
-  if (idx < 0 || idx >= g_fl_list_lb->item_count)
+  int idx = g_sk_list_lb->view_offset + g_sk_list_cur - 1;
+  if (idx < 0 || idx >= g_sk_list_lb->item_count)
     return 0;
   int orig_idx = idx;
-  int orig_cnt = g_fl_list_lb->item_count;
-  if (idx >= 0 && idx < g_fl_list_lb->item_count) {
-    orig_idx = g_fl_list_lb->matching_indices[idx];
-    orig_cnt = g_fl_list_lb->item_count;
+  int orig_cnt = g_sk_list_lb->item_count;
+  if (idx >= 0 && idx < g_sk_list_lb->item_count) {
+    orig_idx = g_sk_list_lb->matching_indices[idx];
+    orig_cnt = g_sk_list_lb->item_count;
   }
   unsigned long ncol, bcol, pcol;
   Platform_GetItemColors((PlGetItemColorsSpec){.idx = orig_idx,
@@ -288,7 +288,7 @@ unsigned long fl_listbox_get_current_standard_color(void) {
   return rgb_to_hex(pcol);
 }
 
-char *fl_search_file_in_dir_platform(const char *directory,
+char *sk_search_file_in_dir_platform(const char *directory,
                                      const char *search_string,
                                      char *output_path) {
 
@@ -320,7 +320,7 @@ char *fl_search_file_in_dir_platform(const char *directory,
   FindClose(hFind);
   return NULL;
 }
-bool fl_type_text_platform(const char *s) {
+bool sk_type_text_platform(const char *s) {
   if (!s)
     return false;
   char *old = Platform_GetClipboardEntry();
@@ -337,7 +337,7 @@ bool fl_type_text_platform(const char *s) {
   return true;
 }
 
-bool fl_place_editbox_platform(const FlEditSpec *spec) {
+bool sk_place_editbox_platform(const SkEditSpec *spec) {
   if (!spec)
     return false;
   HDC hdc = NULL;
@@ -458,7 +458,7 @@ VOID CALLBACK TimerTrampoline(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
   }
 }
 
-void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
+void sk_run_after_time_platform(double seconds, void (*callback)(void)) {
   if (!callback || seconds < 0) {
     return;
   }
@@ -477,7 +477,7 @@ void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
     return;
   }
 }
-void fl_sleep_platform(double seconds) {
+void sk_sleep_platform(double seconds) {
   if (seconds <= 0) {
     return;
   }
@@ -492,7 +492,7 @@ void fl_sleep_platform(double seconds) {
    sample. The active adapter changes rarely, so resolve it once and reuse
    the interface index for a few seconds. GetIfEntry on that index is then a
    ~0.08ms single-interface query instead of two full GetIfTable sweeps. */
-#define FL_NET_ADAPTER_TTL_MS 5000
+#define SK_NET_ADAPTER_TTL_MS 5000
 
 typedef struct {
   ULONG index;   /* MIB interface index */
@@ -500,16 +500,16 @@ typedef struct {
   char guid[64]; /* adapter GUID, as GetIfTable reports it */
   DWORD at_ms;
   bool valid;
-} FlNetAdapter;
+} SkNetAdapter;
 
 static CRITICAL_SECTION g_net_cs;
 static BOOL g_net_cs_ready = FALSE;
-static FlNetStatus g_net_cached = FL_NET_OFFLINE;
+static SkNetStatus g_net_cached = SK_NET_OFFLINE;
 static DWORD g_net_cached_at = 0;
 static DWORD g_net_ever = 0;
-static FlNetAdapter g_net_adapter = {0};
+static SkNetAdapter g_net_adapter = {0};
 
-#define FL_NET_TTL_MS 5000
+#define SK_NET_TTL_MS 5000
 
 static void net_lock(void) {
 
@@ -526,7 +526,7 @@ static void net_unlock(void) {
     LeaveCriticalSection(&g_net_cs);
 }
 
-static bool net_resolve_adapter(FlNetAdapter *out) {
+static bool net_resolve_adapter(SkNetAdapter *out) {
 
   ULONG size = 16 * 1024;
   IP_ADAPTER_ADDRESSES *addrs = (IP_ADAPTER_ADDRESSES *)malloc(size);
@@ -566,24 +566,24 @@ static bool net_resolve_adapter(FlNetAdapter *out) {
   return found;
 }
 
-static FlNetAdapter net_active_adapter(void) {
+static SkNetAdapter net_active_adapter(void) {
 
   net_lock();
   DWORD now = GetTickCount();
   if (g_net_adapter.valid &&
-      (now - g_net_adapter.at_ms) < FL_NET_ADAPTER_TTL_MS) {
-    FlNetAdapter cached = g_net_adapter;
+      (now - g_net_adapter.at_ms) < SK_NET_ADAPTER_TTL_MS) {
+    SkNetAdapter cached = g_net_adapter;
     net_unlock();
     return cached;
   }
   net_unlock();
-  FlNetAdapter a;
+  SkNetAdapter a;
   memset(&a, 0, sizeof(a));
   a.valid = net_resolve_adapter(&a);
   a.at_ms = now;
   net_lock();
   g_net_adapter = a;
-  FlNetAdapter result = g_net_adapter;
+  SkNetAdapter result = g_net_adapter;
   net_unlock();
   return result;
 }
@@ -597,20 +597,20 @@ static void net_invalidate_adapter(void) {
 
 static void net_refresh(void) {
 
-  g_net_cached = FL_NET_OFFLINE;
-  FlNetAdapter a = net_active_adapter();
+  g_net_cached = SK_NET_OFFLINE;
+  SkNetAdapter a = net_active_adapter();
   if (a.valid) {
     if (a.if_type == IF_TYPE_IEEE80211)
-      g_net_cached = FL_NET_WIFI;
+      g_net_cached = SK_NET_WIFI;
     else if (a.if_type == IF_TYPE_ETHERNET_CSMACD)
-      g_net_cached = FL_NET_ETHERNET;
+      g_net_cached = SK_NET_ETHERNET;
   }
 }
 
-int fl_get_active_interface_platform(char out[], size_t max_len) {
+int sk_get_active_interface_platform(char out[], size_t max_len) {
   if (!out || max_len == 0)
     return 0;
-  FlNetAdapter a = net_active_adapter();
+  SkNetAdapter a = net_active_adapter();
   if (!a.valid || !a.guid[0]) {
     out[0] = '\0';
     return 0;
@@ -623,9 +623,9 @@ int fl_get_active_interface_platform(char out[], size_t max_len) {
   return 1;
 }
 
-unsigned long long fl_net_rx_bytes_platform() {
+unsigned long long sk_net_rx_bytes_platform() {
 
-  FlNetAdapter a = net_active_adapter();
+  SkNetAdapter a = net_active_adapter();
   if (!a.valid || !a.index)
     return 0;
   MIB_IFROW row;
@@ -640,10 +640,10 @@ unsigned long long fl_net_rx_bytes_platform() {
   return rx;
 }
 
-FlNetStatus fl_net_status_platform(void) {
+SkNetStatus sk_net_status_platform(void) {
   DWORD now = GetTickCount();
   net_lock();
-  bool fresh = g_net_ever && (now - g_net_cached_at) < FL_NET_TTL_MS;
+  bool fresh = g_net_ever && (now - g_net_cached_at) < SK_NET_TTL_MS;
   if (!fresh) {
     net_unlock();
     net_refresh();
@@ -651,16 +651,16 @@ FlNetStatus fl_net_status_platform(void) {
     g_net_cached_at = GetTickCount();
     g_net_ever = 1;
   }
-  FlNetStatus st = g_net_cached;
+  SkNetStatus st = g_net_cached;
   net_unlock();
   return st;
 }
 
-bool fl_dismiss_message_platform(const char *name) {
+bool sk_dismiss_message_platform(const char *name) {
   if (WH_TO_HWND(g_win32_message_wnd) == NULL) {
     return false;
   }
   return Platform_DismissMessage(name);
 }
 
-int fl_get_pid_platform() { return (int)GetCurrentProcessId(); }
+int sk_get_pid_platform() { return (int)GetCurrentProcessId(); }

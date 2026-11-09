@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,7 +22,7 @@ typedef struct {
 static PkProc g_pk[PK_MAX];
 static int g_pk_count = 0;
 static int g_pk_sort = 0;
-static FlTimer g_pk_last_collect;
+static SkTimer g_pk_last_collect;
 static bool g_pk_collect_started = false;
 static char g_pk_rows[PK_MAX][PK_ROW_LEN];
 static const char *g_pk_items[PK_MAX];
@@ -118,7 +118,7 @@ static void pk_parse_line(char *line) {
 
 static void pk_collect_running_processes(void) {
   g_pk_count = 0;
-  char *out = fl_run_terminal_command("ps -eo comm=,rss=,%cpu= --no-headers");
+  char *out = sk_run_terminal_command("ps -eo comm=,rss=,%cpu= --no-headers");
   if (!out)
     return;
   char *p = out;
@@ -304,7 +304,7 @@ static void pk_split_row(const char *row, char *name, size_t name_len,
 static void pk_build_rows(void) {
   for (int i = 0; i < g_pk_count; i++) {
     char mem[24];
-    fl_format_bytes((unsigned long long)g_pk[i].rss_kb * 1024ULL, mem,
+    sk_format_bytes((unsigned long long)g_pk[i].rss_kb * 1024ULL, mem,
                     sizeof(mem));
     snprintf(g_pk_rows[i], PK_ROW_LEN, "%.48s | %.20s | %.1f", g_pk[i].name,
              mem, g_pk[i].cpu);
@@ -333,15 +333,15 @@ static bool pk_enter_callback(PromptState *state) {
                cpu, sizeof(cpu));
   if (name[0] == '\0')
     return false;
-  fl_terminate_process_by_name(name);
+  sk_terminate_process_by_name(name);
   return true;
 }
 
 static void pk_refresh_callback(PromptState *state) {
-  g_pk_last_collect = fl_start_timer();
+  g_pk_last_collect = sk_start_timer();
   g_pk_collect_started = true;
   pk_collect_and_sort();
-  fl_populate_listbox(state->lb, state->eb->filter, g_pk_items, g_pk_count);
+  sk_populate_listbox(state->lb, state->eb->filter, g_pk_items, g_pk_count);
 }
 
 #define PK_COL_MEM 430
@@ -350,43 +350,43 @@ static void pk_refresh_callback(PromptState *state) {
 static void pk_render_callback(PromptState *state) {
   if (!state)
     return;
-  double since = g_pk_collect_started ? fl_end_timer(g_pk_last_collect) : 1e9;
+  double since = g_pk_collect_started ? sk_end_timer(g_pk_last_collect) : 1e9;
   if (since >= 1000.0) {
-    g_pk_last_collect = fl_start_timer();
+    g_pk_last_collect = sk_start_timer();
     g_pk_collect_started = true;
     int keep = state->lb->selected_index;
     pk_collect_and_sort();
-    fl_populate_listbox(state->lb, state->eb->filter, g_pk_items, g_pk_count);
+    sk_populate_listbox(state->lb, state->eb->filter, g_pk_items, g_pk_count);
     if (keep >= 0 && keep < state->lb->item_count) {
       state->lb->selected_index = keep;
     }
   }
 
-  if (fl_hotkey_down(fl_hotkey_from_string("Ctrl+L"))) {
+  if (sk_hotkey_down(sk_hotkey_from_string("Ctrl+L"))) {
     pk_cycle_sort();
-    fl_populate_listbox(state->lb, NULL, g_pk_items, g_pk_count);
+    sk_populate_listbox(state->lb, NULL, g_pk_items, g_pk_count);
   }
 
-  fl_draw_text(.text = "memory", .x = PK_COL_MEM, .y = 8, .fontsize = 13,
+  sk_draw_text(.text = "memory", .x = PK_COL_MEM, .y = 8, .fontsize = 13,
                .align = "LEFT", .color = RGB(130, 130, 160));
-  fl_draw_text(.text = "cpu", .x = PK_COL_CPU, .y = 8, .fontsize = 13,
+  sk_draw_text(.text = "cpu", .x = PK_COL_CPU, .y = 8, .fontsize = 13,
                .align = "LEFT", .color = RGB(130, 130, 160));
   char sort_label[64];
   snprintf(sort_label, sizeof(sort_label), "current sort: %s",
            pk_sort_label(g_pk_sort));
-  fl_draw_text(.text = sort_label, .x = 880, .y = 8, .fontsize = 13,
+  sk_draw_text(.text = sort_label, .x = 880, .y = 8, .fontsize = 13,
                .align = "RIGHT", .color = RGB(160, 160, 190));
 
-  FlListSpec spec = {
+  SkListSpec spec = {
       .lb = state->lb,
-      .item_height = fl_get_text_height(NULL) + 20,
+      .item_height = sk_get_text_height(NULL) + 20,
   };
-  fl_place_editbox();
-  if (!fl_listbox_begin(&spec))
+  sk_place_editbox();
+  if (!sk_listbox_begin(&spec))
     return;
 
-  FlListItemCtx ctx;
-  while (fl_listbox_next(&ctx)) {
+  SkListItemCtx ctx;
+  while (sk_listbox_next(&ctx)) {
     char name[PK_NAME_LEN];
     char mem[32];
     char cpu[24];
@@ -395,22 +395,22 @@ static void pk_render_callback(PromptState *state) {
     if (name[0] == '\0')
       continue;
 
-    fl_draw_text(.text = name, .x = ctx.x + 14, .y = ctx.y + 4, .align = "LEFT",
+    sk_draw_text(.text = name, .x = ctx.x + 14, .y = ctx.y + 4, .align = "LEFT",
                  .pad = ctx.x + 14);
-    fl_draw_text(.text = mem, .x = PK_COL_MEM, .y = ctx.y + 4, .align = "LEFT");
-    fl_draw_text(.text = cpu, .x = PK_COL_CPU, .y = ctx.y + 4, .align = "LEFT");
+    sk_draw_text(.text = mem, .x = PK_COL_MEM, .y = ctx.y + 4, .align = "LEFT");
+    sk_draw_text(.text = cpu, .x = PK_COL_CPU, .y = ctx.y + 4, .align = "LEFT");
   }
-  fl_listbox_end();
+  sk_listbox_end();
 }
 
 static void TriggerProcessKiller(void) {
   pk_collect_and_sort();
-  fl_window(.title = "ProcessKiller", .refresh = pk_refresh_callback,
+  sk_window(.title = "ProcessKiller", .refresh = pk_refresh_callback,
             .enter = pk_enter_callback, .render = pk_render_callback);
 }
 
-FLINT_FEATURE_INIT {
-  fl_register_hotkey(.hotkey = "Alt+U", .cb = TriggerProcessKiller);
-  fl_add_to_cc(.display_name = "Process Killer",
+SKALD_FEATURE_INIT {
+  sk_register_hotkey(.hotkey = "Alt+U", .cb = TriggerProcessKiller);
+  sk_add_to_cc(.display_name = "Process Killer",
                .on_action = TriggerProcessKiller, .icon = "/skull.png");
 }

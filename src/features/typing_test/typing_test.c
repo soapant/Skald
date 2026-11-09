@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -10,11 +10,11 @@
 
 static int typing_test_position = 0;
 static int typing_test_states[1000] = {0};
-static FlTimer current_timer;
+static SkTimer current_timer;
 static bool timer_running = false;
 static int current_index = 0;
 static double last_duration = 0.0;
-static FlTimer session_timer;
+static SkTimer session_timer;
 static bool session_running = false;
 static double total_typed = 0;
 static double total_correct = 0;
@@ -1214,7 +1214,7 @@ char *typing_test_get_random_text(int word_count) {
   int indices[target_count];
   size_t total_len = 1;
   for (int i = 0; i < target_count; i++) {
-    indices[i] = fl_rand_num_between(0, num_words - 1);
+    indices[i] = sk_rand_num_between(0, num_words - 1);
     total_len += strlen(words[indices[i]]);
     if (i < target_count - 1)
       total_len += 1;
@@ -1257,10 +1257,10 @@ bool typing_test_enter(PromptState *state) {
   return false;
 }
 
-static int typing_test_measure_lines(FlCharPos *pos, int count, const char *txt,
+static int typing_test_measure_lines(SkCharPos *pos, int count, const char *txt,
                                      int y, int max_width, int line_height,
                                      int fs) {
-  fl_measure_text_wrapped(.x = 0, .y = y, .max_width = max_width,
+  sk_measure_text_wrapped(.x = 0, .y = y, .max_width = max_width,
                           .line_height = line_height, .fontsize = fs,
                           .text = txt, .out_positions = pos);
   int lines = 0;
@@ -1299,27 +1299,27 @@ void typing_test_render(PromptState *state) {
   int avail = limit_y - text_y;
 
   int text_len = text ? (int)strlen(text) : 0;
-  int c = fl_get_char_pressed();
-  int key = fl_get_key_pressed();
+  int c = sk_get_char_pressed();
+  int key = sk_get_key_pressed();
   if (text && typing_test_position < text_len) {
     int current_text = text[typing_test_position];
 
-    if (key == FL_KEY_BACKSPACE) {
+    if (key == SK_KEY_BACKSPACE) {
       if (typing_test_position > 0) {
         typing_test_position--;
         typing_test_states[typing_test_position] = CHAR_UNTYPED;
       }
     } else if (c != 0) {
       if (!session_running) {
-        session_timer = fl_start_timer();
+        session_timer = sk_start_timer();
         session_running = true;
       }
 
       if (!timer_running) {
-        current_timer = fl_start_timer();
+        current_timer = sk_start_timer();
         timer_running = true;
       } else {
-        current_timer = fl_start_timer();
+        current_timer = sk_start_timer();
       }
 
       total_typed++;
@@ -1359,18 +1359,18 @@ void typing_test_render(PromptState *state) {
     }
   }
 
-  FlCharPos *positions = NULL;
+  SkCharPos *positions = NULL;
   if (text_len > 0) {
-    positions = (FlCharPos *)malloc(sizeof(FlCharPos) * (size_t)(text_len + 1));
+    positions = (SkCharPos *)malloc(sizeof(SkCharPos) * (size_t)(text_len + 1));
   }
 
   if (positions) {
-    memset(positions, 0, sizeof(FlCharPos) * (size_t)(text_len + 1));
+    memset(positions, 0, sizeof(SkCharPos) * (size_t)(text_len + 1));
     typing_test_measure_lines(positions, text_len, text, text_y, W - margin * 2,
                               line_height, body);
 
     if (draw_cursor && typing_test_position < text_len) {
-      fl_draw_rect(.x = positions[typing_test_position].x + margin + 2,
+      sk_draw_rect(.x = positions[typing_test_position].x + margin + 2,
                    .y = positions[typing_test_position].y + base / 4 + 2,
                    .w = body / 2, .h = body + 4);
     }
@@ -1385,7 +1385,7 @@ void typing_test_render(PromptState *state) {
         col = NULL;
       }
       char single[2] = {text[i], '\0'};
-      fl_draw_text(.x = positions[i].x + margin, .y = positions[i].y,
+      sk_draw_text(.x = positions[i].x + margin, .y = positions[i].y,
                    .fontsize = body, .align = "Left", .text = single,
                    .color = col);
     }
@@ -1399,7 +1399,7 @@ void typing_test_render(PromptState *state) {
     if (session_running) {
       session_running = false;
 
-      double elapsed_ms = fl_end_timer(session_timer);
+      double elapsed_ms = sk_end_timer(session_timer);
       double elapsed = elapsed_ms / 1000.0;
       double minutes = elapsed / 60.0;
       double accuracy = total_typed > 0 ? total_correct / total_typed : 0.0;
@@ -1410,15 +1410,15 @@ void typing_test_render(PromptState *state) {
       snprintf(typing_test_wpm, sizeof(typing_test_wpm), "WPM: %.2f", wpm);
     }
     if (typing_test_wpm[0]) {
-      fl_draw_text(.x = W, .y = status_y, .text = typing_test_wpm,
+      sk_draw_text(.x = W, .y = status_y, .text = typing_test_wpm,
                    .fontsize = base, .align = "Center");
     }
   }
-  fl_draw_text(.x = margin, .y = hints_y, .text = "Press Enter to restart",
+  sk_draw_text(.x = margin, .y = hints_y, .text = "Press Enter to restart",
                .fontsize = base, .color = RGB(180, 180, 180), .align = "Left");
-  fl_draw_text(.x = W - margin, .y = hints_y, .text = "Press Escape to exit",
+  sk_draw_text(.x = W - margin, .y = hints_y, .text = "Press Escape to exit",
                .fontsize = base, .color = RGB(180, 180, 180), .align = "Right");
-  fl_draw_text(.x = W, .y = title_y, .text = "Typing Speed Test",
+  sk_draw_text(.x = W, .y = title_y, .text = "Typing Speed Test",
                .fontsize = base, .color = RGB(210, 210, 210),
                .align = "Center");
 
@@ -1426,13 +1426,13 @@ void typing_test_render(PromptState *state) {
 }
 
 void TriggerTypingTest(void) {
-  fl_window(.enter = typing_test_enter, .render = typing_test_render,
+  sk_window(.enter = typing_test_enter, .render = typing_test_render,
             .on_close = typing_test_reset);
 }
 
-FLINT_FEATURE_INIT {
+SKALD_FEATURE_INIT {
   text = typing_test_get_random_text(typing_test_word_count);
-  fl_register_hotkey(.hotkey = "Alt+B", .cb = TriggerTypingTest);
-  fl_add_to_cc(.display_name = "Typing Test", .on_action = TriggerTypingTest,
+  sk_register_hotkey(.hotkey = "Alt+B", .cb = TriggerTypingTest);
+  sk_add_to_cc(.display_name = "Typing Test", .on_action = TriggerTypingTest,
                .icon = "/keyboard.png");
 }

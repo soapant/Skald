@@ -5,5 +5,5 @@ build/
 nob
 nob.exe
 nob.exe.old
-flint.service
+skald.service
 compile_commands.json

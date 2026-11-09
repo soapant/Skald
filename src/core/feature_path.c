@@ -195,7 +195,7 @@ bool FeaturePath_ResolveDataPath(void *caller, const char *name, char *out,
     return Platform_GetFeaturePath(from_caller, stem, out, out_len);
   }
 
-  const char *feat = FlintContext_Get()->window.current_feature;
+  const char *feat = SkaldContext_Get()->window.current_feature;
   if (!feat || !feat[0])
     return false;
   char safe[128];

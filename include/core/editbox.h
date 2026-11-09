@@ -6,7 +6,7 @@
 #include "core/types.h"
 #include "core/types/window.h"
 
-typedef int (*FlEditboxMeasureFn)(const char *text, int len, void *user);
+typedef int (*EditboxMeasureFn)(const char *text, int len, void *user);
 
 typedef enum {
   EDITBOX_SEL_EXCLUSIVE = 0,
@@ -58,7 +58,7 @@ typedef struct {
   int caret_x;
   int caret_pos;
 
-  FlEditboxMeasureFn measure;
+  EditboxMeasureFn measure;
   void *measure_user;
 } EditboxSpec;
 

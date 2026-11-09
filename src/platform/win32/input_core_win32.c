@@ -112,8 +112,8 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
       Platform_GlobalMouse_Push(&rev);
     }
     Platform_UpdateMouseButton(btn, down);
-    if (!down && btn > 0 && btn <= FL_MOUSE_BTN_MAX) {
-      hotkey_key_up(FL_MOUSE_VK(btn));
+    if (!down && btn > 0 && btn <= MOUSE_BTN_MAX) {
+      hotkey_key_up(MOUSE_VK(btn));
     }
     mev.button = btn;
     mev.down = down;
@@ -124,14 +124,14 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
     if (GetKeyState(VK_SHIFT) & 0x8000)
       mev.mods |= HOTKEY_MOD_SHIFT;
     Platform_GlobalMouse_Push(&mev);
-    if (down && btn <= FL_MOUSE_BTN_MAX) {
-      static unsigned long long s_last_fire[FL_MOUSE_BTN_MAX + 1] = {0};
+    if (down && btn <= MOUSE_BTN_MAX) {
+      static unsigned long long s_last_fire[MOUSE_BTN_MAX + 1] = {0};
       unsigned long long now = GetTickCount64();
       bool rising = !was_down;
       bool stale = (now - s_last_fire[btn]) > 200;
       if (rising || stale) {
         s_last_fire[btn] = now;
-        hotkey_process(FL_MOUSE_VK(btn), mev.mods);
+        hotkey_process(MOUSE_VK(btn), mev.mods);
       }
     }
   } else {
@@ -162,8 +162,8 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
     WindowManager *_wm = WindowManager_Get();
     if (_wm && WindowManager_GetTopPopup(_wm))
       _popupActive = true;
-    if (!_popupActive && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) &&
-        IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd)))
+    if (!_popupActive && WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) &&
+        IsWindow(WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd)))
       _popupActive = true;
     KBDLLHOOKSTRUCT *_rk = (KBDLLHOOKSTRUCT *)lParam;
     if (_rk->flags & LLKHF_INJECTED)

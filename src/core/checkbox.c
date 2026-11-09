@@ -44,7 +44,7 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
         have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
       if (!have_origin) {
         have_origin = Platform_WindowToRoot(
-            FlintContext_Get()->window.hPopupWnd, &wx, &wy);
+            SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
       }
       if (have_origin) {
         mx -= wx;

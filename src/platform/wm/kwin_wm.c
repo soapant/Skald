@@ -71,18 +71,18 @@ static char *kwin_qdbus_call(const char *args) {
 
 static bool kwin_run_script_inner(const char *body) {
 
-  FILE *f = fopen("/tmp/flint_kwin_do.js", "w");
+  FILE *f = fopen("/tmp/skald_kwin_do.js", "w");
   if (!f)
     return false;
   fputs(body, f);
   fclose(f);
   char *pre = kwin_qdbus_call(
-      "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flint");
+      "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript skald");
   if (pre)
     free(pre);
   char *out = kwin_qdbus_call(
       "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "
-      "/tmp/flint_kwin_do.js flint");
+      "/tmp/skald_kwin_do.js skald");
   if (!out || kwin_has_error(out)) {
     if (out)
       free(out);
@@ -101,7 +101,7 @@ static bool kwin_run_script_inner(const char *body) {
   if (out2)
     free(out2);
   char *out3 = kwin_qdbus_call(
-      "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flint");
+      "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript skald");
   if (out3)
     free(out3);
   return ok;
@@ -141,10 +141,10 @@ static const char g_kwin_q_body[] =
     "for(var "
     "i=0;i<ws.length;i++){if(o){o+=\"\\x1f\";}o+=cf(ws[i])+\"\\x1e\"+cc(ws[i]);"
     "}"
-    "print(\"FLINTQR \"+o);"
-    "print(\"FLINTQA "
+    "print(\"SKALDQR \"+o);"
+    "print(\"SKALDQA "
     "\"+(workspace.activeWindow?cf(workspace.activeWindow):\"\"));"
-    "print(\"FLINTQC "
+    "print(\"SKALDQC "
     "\"+(workspace.activeWindow?cc(workspace.activeWindow):\"\"));"
     "})();";
 
@@ -157,7 +157,7 @@ static bool kwin_q_load(void) {
   if (!g_kwin_q_legacy_cleared) {
     g_kwin_q_legacy_cleared = true;
     char *leg = kwin_qdbus_call(
-        "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flintq");
+        "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript skaldq");
     if (leg)
       free(leg);
   }
@@ -171,18 +171,18 @@ static bool kwin_q_load(void) {
       free(pre);
     g_kwin_q_name[0] = '\0';
   }
-  FILE *f = fopen("/tmp/flint_kwin_q.js", "w");
+  FILE *f = fopen("/tmp/skald_kwin_q.js", "w");
   if (!f)
     return false;
   fputs(g_kwin_q_body, f);
   fclose(f);
   for (int round = 0; round < 3; round++) {
-    snprintf(g_kwin_q_name, sizeof(g_kwin_q_name), "flintq_%d_%u",
+    snprintf(g_kwin_q_name, sizeof(g_kwin_q_name), "skaldq_%d_%u",
              (int)getpid(), ++g_kwin_q_seq);
     char load[256];
     snprintf(load, sizeof(load),
              "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "
-             "/tmp/flint_kwin_q.js %s",
+             "/tmp/skald_kwin_q.js %s",
              g_kwin_q_name);
     char *out = kwin_qdbus_call(load);
     if (!out || kwin_has_error(out)) {
@@ -222,15 +222,15 @@ static void kwin_snap_store(const char *blob) {
     const char *val = NULL;
     size_t vlen = 0;
     char which = 0;
-    if (len > 8 && !strncmp(p, "FLINTQR ", 8)) {
+    if (len > 8 && !strncmp(p, "SKALDQR ", 8)) {
       which = 'r';
       val = p + 8;
       vlen = len - 8;
-    } else if (len > 8 && !strncmp(p, "FLINTQA ", 8)) {
+    } else if (len > 8 && !strncmp(p, "SKALDQA ", 8)) {
       which = 'a';
       val = p + 8;
       vlen = len - 8;
-    } else if (len > 8 && !strncmp(p, "FLINTQC ", 8)) {
+    } else if (len > 8 && !strncmp(p, "SKALDQC ", 8)) {
       which = 'c';
       val = p + 8;
       vlen = len - 8;
@@ -303,10 +303,10 @@ static bool kwin_snapshot_locked(void) {
       }
       char *log = Platform_RunTerminalCommand(
           "journalctl --user -o cat --since=\"-5s\" 2>/dev/null | grep -a -e "
-          "\"FLINTQR \" -e \"FLINTQA \" -e \"FLINTQC \" | tail -6",
+          "\"SKALDQR \" -e \"SKALDQA \" -e \"SKALDQC \" | tail -6",
           false);
       if (log && log[0] &&
-          (strstr(log, "FLINTQR ") || strstr(log, "FLINTQA "))) {
+          (strstr(log, "SKALDQR ") || strstr(log, "SKALDQA "))) {
         kwin_snap_store(log);
         free(log);
         g_kwin_snap_at = Platform_GetWallClockMs();
@@ -330,7 +330,7 @@ static bool kwin_skip_caption(const char *cap) {
 
   if (!cap || !cap[0])
     return true;
-  if (!strncmp(cap, "flint-", 6))
+  if (!strncmp(cap, "skald-", 6))
     return true;
   if (!strcasecmp(cap, "window") || !strcasecmp(cap, "colored"))
     return true;

@@ -20,8 +20,8 @@
 #include "core/window_manager.h"
 
 #define CONFIG_SRC "config/config.c"
-#define CONFIG_START_MARK "// <flint-config-generated>"
-#define CONFIG_END_MARK "// </flint-config-generated>"
+#define CONFIG_START_MARK "// <skald-config-generated>"
+#define CONFIG_END_MARK "// </skald-config-generated>"
 
 static const char *config_out_path(void) {
   static char path[256];

@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+#include "core/skapi.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -119,8 +119,8 @@ static const char *s_video_items[MAX_VISIBLE_ITEMS];
 
 void video_refresh_callback(PromptState *state) {
   video_files.count = 0;
-  fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files,
-                            NULL, true, FL_DIR_WALK_UNLIMITED);
+  sk_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files,
+                            NULL, true, SK_DIR_WALK_UNLIMITED);
 
   size_t n = video_files.count;
   if (n > MAX_VISIBLE_ITEMS)
@@ -128,12 +128,12 @@ void video_refresh_callback(PromptState *state) {
   for (size_t i = 0; i < n; i++) {
     s_video_items[i] = video_files.files[i].name;
   }
-  fl_populate_listbox(state->lb, state->eb->filter, s_video_items, (int)n);
+  sk_populate_listbox(state->lb, state->eb->filter, s_video_items, (int)n);
 }
 
 bool video_enter_callback(PromptState *state) {
   char *result = NULL;
-  if (!fl_is_selected(state->lb)) {
+  if (!sk_is_selected(state->lb)) {
     return false;
   }
   for (size_t i = 0; i < video_files.count; i++) {
@@ -144,8 +144,8 @@ bool video_enter_callback(PromptState *state) {
   }
   if (!result) {
     ListOfFiles tmp = {0};
-    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL,
-                              true, FL_DIR_WALK_UNLIMITED);
+    sk_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL,
+                              true, SK_DIR_WALK_UNLIMITED);
     for (size_t i = 0; i < tmp.count; i++) {
       if (strcmp(tmp.files[i].name, state->lb->selected_text) == 0) {
         result = tmp.files[i].path;
@@ -174,7 +174,7 @@ bool video_enter_callback(PromptState *state) {
   } else {
     char quoted_result[MAX_PATH + 3] = {0};
     snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-    fl_launch_with_args(VideoViewerPath, quoted_result);
+    sk_launch_with_args(VideoViewerPath, quoted_result);
   }
 #elif defined(__linux__)
   if (video_set_string("Video Viewer", "_MP_TRACK", result) &&
@@ -184,7 +184,7 @@ bool video_enter_callback(PromptState *state) {
   if (strlen(VideoViewerPath) > 0) {
     char quoted_result[MAX_PATH + 3] = {0};
     snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-    fl_launch_with_args(VideoViewerPath, quoted_result);
+    sk_launch_with_args(VideoViewerPath, quoted_result);
   }
 #endif
   return true;
@@ -217,16 +217,16 @@ void video_cmd_6(void) {
 #endif
 }
 void video_prompt(void) {
-  fl_window(.title = "Viewer", .refresh = video_refresh_callback,
+  sk_window(.title = "Viewer", .refresh = video_refresh_callback,
             .enter = video_enter_callback);
 }
 
-FLINT_FEATURE_INIT {
-  fl_register_hotkey(.hotkey = "Alt+Shift+,", .cb = video_cmd_1);
-  fl_register_hotkey(.hotkey = "Alt+Shift+.", .cb = video_cmd_5);
-  fl_register_hotkey(.hotkey = "Alt+Shift+;", .cb = video_cmd_6);
-  fl_register_hotkey(.hotkey = "Alt+V", .cb = video_prompt);
+SKALD_FEATURE_INIT {
+  sk_register_hotkey(.hotkey = "Alt+Shift+,", .cb = video_cmd_1);
+  sk_register_hotkey(.hotkey = "Alt+Shift+.", .cb = video_cmd_5);
+  sk_register_hotkey(.hotkey = "Alt+Shift+;", .cb = video_cmd_6);
+  sk_register_hotkey(.hotkey = "Alt+V", .cb = video_prompt);
 
-  fl_add_to_cc(.display_name = "Video Viewer", .on_action = video_prompt,
+  sk_add_to_cc(.display_name = "Video Viewer", .on_action = video_prompt,
                .icon = "/video.png");
 }
