@@ -758,7 +758,7 @@ static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
     return;
   }
   *ft = fad.ftLastWriteTime;
-  *size = (fad.nFileSizeHigh << 16) | fad.nFileSizeLow;
+  *size = fad.nFileSizeLow ^ (fad.nFileSizeHigh * 2654435761u);
 }
 
 static void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {

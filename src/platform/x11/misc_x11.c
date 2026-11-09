@@ -78,7 +78,7 @@ const char *Platform_GetRealHome(void) {
 
   static char buf[512] = {0};
   const char *u = Platform_GetRealUser();
-  struct passwd *pw = getpwnam(u);
+  struct passwd *pw = u ? getpwnam(u) : NULL;
   if (pw && pw->pw_dir) {
     strncpy(buf, pw->pw_dir, sizeof(buf) - 1);
     return buf;
@@ -197,7 +197,7 @@ const char *Platform_GetRuntimeDir(void) {
     return buf;
   }
   const char *u = Platform_GetRealUser();
-  struct passwd *pw = getpwnam(u);
+  struct passwd *pw = u ? getpwnam(u) : NULL;
   if (pw) {
     snprintf(buf, sizeof(buf), "/run/user/%d", (int)pw->pw_uid);
     return buf;
@@ -250,6 +250,7 @@ bool Platform_ExpandPath(const char *template_path, char *out,
           char token[64];
           memcpy(token, p + 1, token_len);
           token[token_len] = '\0';
+          out[0] = '\0';
           return false;
         }
       }
@@ -617,7 +618,7 @@ bool Platform_QueryBrowser(const char *query) {
                                                     "duckduckgo")) {
     snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
   } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "bing")) {
-    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%",
+    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s",
              encoded_query);
   } else {
     snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);

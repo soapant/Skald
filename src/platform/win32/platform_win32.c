@@ -63,6 +63,10 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
 }
 
 char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
+  if (!command) {
+    log_error("Platform_RunTerminalCommand: NULL command");
+    return NULL;
+  }
   if (open_terminal) {
     char clean_cmd[512];
     strncpy(clean_cmd, command ? command : "", sizeof(clean_cmd) - 1);
@@ -84,8 +88,13 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
       return NULL;
     }
     char temp_file[MAX_PATH];
-    GetTempPathA(MAX_PATH, temp_file);
-    strcat(temp_file, "temp_cmd.sh");
+    DWORD n = GetTempPathA(MAX_PATH, temp_file);
+    if (n == 0 || n >= MAX_PATH) {
+      log_error("open_terminal: GetTempPathA failed err=%lu", GetLastError());
+      return NULL;
+    }
+    snprintf(temp_file + strlen(temp_file), MAX_PATH - strlen(temp_file),
+             "temp_cmd.sh");
     FILE *f = fopen(temp_file, "w");
     if (f) {
       fprintf(f, "#!/bin/%s\n", UsedShell);
@@ -545,7 +554,7 @@ void Platform_ModifyUniversalTimer(double seconds_to_add) {
   LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
   g_timer_start_ms -= ms_offset;
   log_info("Modified baseline by %.2f seconds.", seconds_to_add);
-  log_info("Platform_ModifyUniversalTimer seconds_to_add=%p", seconds_to_add);
+  log_info("Platform_ModifyUniversalTimer seconds_to_add=%f", seconds_to_add);
   ;
 }
 
@@ -1568,10 +1577,10 @@ static bool win32_export_shell_icon_png(const char *native_path) {
     DeleteFileA(png);
   } else {
     WIN32_FILE_ATTRIBUTE_DATA fad;
-    DWORD sz = 0;
+    ULONGLONG sz = 0;
     if (GetFileAttributesExA(png, GetFileExInfoStandard, &fad))
-      sz = (fad.nFileSizeHigh << 16) | fad.nFileSizeLow;
-    log_info("win32_export_shell_icon_png saved='%s' size=%u", png, sz);
+      sz = ((ULONGLONG)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
+    log_info("win32_export_shell_icon_png saved='%s' size=%llu", png, sz);
   }
 
   GdipDisposeImage(flat);
@@ -1859,7 +1868,7 @@ void Platform_FixWorkingDirectory(void) {
     *slash = '\0';
   }
 
-  char cwd[MAX_PATH];
+  char cwd[MAX_PATH] = {0};
   DWORD cwd_len = GetCurrentDirectoryA(sizeof(cwd), cwd);
   if (cwd_len == 0 || cwd_len >= MAX_PATH || !win32_is_project_root(cwd)) {
     log_warn("could not locate project root from '%s', staying in '%s'",

@@ -174,7 +174,7 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
 
   size_t len;
   while ((len = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
-    while (total_size + len > cap) {
+    while (total_size + len + 1 > cap) {
       cap *= 2;
       char *new_output = realloc(output, cap);
       if (!new_output) {

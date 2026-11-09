@@ -326,13 +326,7 @@ static void wclick_lock(void) {
   }
   EnterCriticalSection(&g_wclick_cs);
 }
-static void wclick_unlock(void) {
-
-  if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
-    InitializeCriticalSection(&g_wclick_cs);
-  }
-  LeaveCriticalSection(&g_wclick_cs);
-}
+static void wclick_unlock(void) { LeaveCriticalSection(&g_wclick_cs); }
 
 static void wdestroy_lock(void) {
   if (InterlockedCompareExchange(&g_wdestroy_cs_ready, 1, 0) == 0) {

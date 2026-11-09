@@ -85,11 +85,14 @@ static CheckboxSpec *checkbox_intern(const char *name, bool seed) {
     return NULL;
   cb = &g_checkboxes[g_checkbox_count++];
   memset(cb, 0, sizeof(*cb));
-  cb->name = name;
   cb->checked = seed;
   cb->thickness = 1;
   cb->border = true;
   cb->name = strdup(name);
+  if (!cb->name) {
+    g_checkbox_count--;
+    return NULL;
+  }
   return cb;
 }
 
