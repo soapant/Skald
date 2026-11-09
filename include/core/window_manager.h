@@ -69,6 +69,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
 bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x, int root_y);
 void EventBus_Register(PlEvent event, PlEventCallback cb);
 void EventBus_Unregister(PlEvent event, PlEventCallback cb);
+void EventBus_PurgeOwner(const char *path_a, const char *path_b);
 void EventBus_Trigger(PlEvent event);
 
 #endif

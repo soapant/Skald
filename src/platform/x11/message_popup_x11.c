@@ -705,3 +705,8 @@ bool Platform_MessagePopupOnKey(Popup *self, const PopupKeyEvent *key) {
 }
 
 void Platform_DismissDisplayMessage(void) {}
+
+void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
+  (void)path_a;
+  (void)path_b;
+}

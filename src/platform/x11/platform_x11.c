@@ -38,6 +38,8 @@
 #include "platform/x11/display_x11.h"
 #include "platform/platform.h"
 #include "core/context.h"
+#include "helpers/helpers_owner.h"
+#include "core/thread_registry.h"
 #include "core/prompt_geometry.h"
 #include "helpers/helpers_text.h"
 #include "core/feature_path.h"
@@ -2005,14 +2007,21 @@ typedef struct {
   char *url;
   PlatformHttpCallback cb;
   void *userdata;
+  char owner[OWNER_PATH_MAX];
 } HttpAsyncJob;
 
 static void *Platform_http_async_worker(void *arg) {
   HttpAsyncJob *job = (HttpAsyncJob *)arg;
+  if (!job)
+    return NULL;
+
   char *body = Platform_HttpGet(job->url);
-  job->cb(body ? body : "", body != NULL, job->userdata);
+  if (job->cb) {
+    job->cb(body ? body : "", body != NULL, job->userdata);
+  }
   free(body);
   free(job->url);
+  ThreadRegistry_Finish(job);
   free(job);
   return NULL;
 }
@@ -2031,9 +2040,13 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
     free(job);
     return;
   }
+  job->owner[0] = '\0';
+  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
+  ThreadRegistry_Add(job, job->owner);
   pthread_t t;
   if (pthread_create(&t, NULL, Platform_http_async_worker, job) != 0) {
     log_warn("http async thread create failed");
+    ThreadRegistry_Finish(job);
     free(job->url);
     free(job);
     return;
@@ -2123,9 +2136,23 @@ bool Platform_MutexTryLock(void *mutex) {
 }
 
 static PlatformKeyInterceptorFn g_platform_key_interceptor = NULL;
+static char g_platform_key_interceptor_owner[OWNER_PATH_MAX] = {0};
 
 void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn) {
   g_platform_key_interceptor = fn;
+  g_platform_key_interceptor_owner[0] = '\0';
+  if (fn)
+    Owner_ResolveForFunc((void *)fn, g_platform_key_interceptor_owner,
+                         sizeof(g_platform_key_interceptor_owner));
+}
+
+void Platform_KeyInterceptor_PurgeOwner(const char *path_a,
+                                        const char *path_b) {
+  if (g_platform_key_interceptor &&
+      Owner_ModuleMatches(g_platform_key_interceptor_owner, path_a, path_b)) {
+    g_platform_key_interceptor = NULL;
+    g_platform_key_interceptor_owner[0] = '\0';
+  }
 }
 
 bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key) {
