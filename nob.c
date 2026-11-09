@@ -800,10 +800,8 @@ int main(int argc, char **argv) {
   if (!compile_all(&any_compiled))
     return 1;
 
-  if (target_win32 && do_test && !run_tests())
-    return 1;
-  if (target_win32 && do_test)
-    return 0;
+  if (do_test)
+    return run_tests() ? 0 : 1;
 
   const char *output = NULL;
   if (target_win32) {
@@ -858,8 +856,6 @@ int main(int argc, char **argv) {
       return 1;
     if (do_run && !run_output(output))
       return 1;
-    if (do_test && !run_tests())
-      return 1;
     return 0;
   }
 
@@ -909,8 +905,6 @@ int main(int argc, char **argv) {
     if (do_run && !run_output(output))
       return 1;
     nob_log(NOB_INFO, "Built Successfully");
-    if (do_test && !run_tests())
-      return 1;
   } else {
     nob_log(NOB_INFO, "Done: %s (copy to a Windows machine and run)", output);
   }
