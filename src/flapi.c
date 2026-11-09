@@ -971,8 +971,8 @@ char *fli_edit_text_popup(const FlEditPopupSpec *spec) {
   const char *initial_text = spec ? spec->initial_text : NULL;
   int x = spec->x ? spec->x : 0;
   int y = spec->y ? spec->y : 0;
-  int w = spec->w ? spec->w : 1000;
-  int h = spec->h ? spec->h : 70;
+  int w = spec->w ? spec->w : 600;
+  int h = spec->h ? spec->h : 50;
   ListBoxInfo *lb = spec ? spec->lb : NULL;
   int *out_index = spec ? spec->out_index : NULL;
   int idx = lb ? lb->selected_index : -1;
@@ -991,7 +991,9 @@ char *fli_edit_text_popup(const FlEditPopupSpec *spec) {
   pspec.y = y;
   pspec.w = w;
   pspec.h = h;
-  char *r = WindowManager_ShowPrompt(wm, &pspec);
+  EventBus_Trigger(EVENT_PROMPT_OPEN);
+  FlintContext_Get()->window.editbox_placed = false;
+  char *r = Platform_PromptUser(wm, &pspec);
   if (r && out_index)
     *out_index = true_idx;
   if (lb && idx >= 0) {
