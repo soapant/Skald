@@ -11,10 +11,8 @@
 #include "platform/render_thread.h"
 #include "platform/win32/common_ui_win32.h"
 #include "deps/log.h"
-#include "config.h"
 #include "platform/win32/bg_image_win32.h"
 
-#include "core/timer.h"
 #define WIDGET_CLASS "WidgetClass"
 
 struct PlatformWidget {

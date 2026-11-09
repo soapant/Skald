@@ -3,7 +3,6 @@
 #include <winhttp.h>
 #include <iphlpapi.h>
 #include <iptypes.h>
-#include <netioapi.h>
 #include <netlistmgr.h>
 #include <initguid.h>
 #include "core/types.h"
@@ -12,17 +11,12 @@
 #include "core/types/flapi_types.h"
 #include "config_values.h"
 #include "platform/win32/win32_state.h"
-#include <ctype.h>
 #include "deps/log.h"
-#include <shlwapi.h>
-#include "core/clipboard_history.h"
 #include "platform/flapi_platform.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
 #include "platform/draw.h"
 #include "platform/ui.h"
-#include "core/context.h"
-#include "config.h"
 #include "core/listbox_hover.h"
 #include "core/listbox_layout.h"
 #include "core/editbox.h"
@@ -34,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "core/timer.h"
 
 static const char *win32_host_for_system_file(const char *path) {
 

@@ -5,18 +5,13 @@
 #include <stdio.h>
 #include "core/types/window.h"
 #include "core/types/prompt.h"
-#include "deps/log.h"
-#include "config.h"
 #include "core/context.h"
 #include "core/window_manager.h"
 #include "platform/win32/win32_state.h"
-#include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "platform/win32/common_ui_win32.h"
 
-#include "core/timer.h"
 #include "core/listbox_hover.h"
-#include "core/prompt_keys.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
   (void)hPopupWnd;
   return WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL &&

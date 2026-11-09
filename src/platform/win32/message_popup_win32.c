@@ -6,12 +6,9 @@
 #include "core/types/color.h"
 #include "core/types/window.h"
 #include "deps/log.h"
-#include "core/context.h"
 #include "core/window_manager.h"
 #include <commctrl.h>
 #include <shellapi.h>
-#include "config.h"
-#include "platform/ui.h"
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/common_ui_win32.h"
 #include "platform/win32/bg_image_win32.h"

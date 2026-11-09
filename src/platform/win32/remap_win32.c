@@ -2,7 +2,6 @@
 #include "deps/log.h"
 #include <windows.h>
 
-#include "core/timer.h"
 void Platform_EmitKey(int vk_code, int down) {
   log_warn("Platform_EmitKey win32 vk=%d down=%d", vk_code, down);
   INPUT inp = {0};

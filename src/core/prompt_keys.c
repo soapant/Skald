@@ -16,7 +16,6 @@
 #include "platform/platform.h"
 #include "platform/ui.h"
 #include "helpers/helpers_ui.h"
-#include "config_values.h"
 #include "core/types/keys.h"
 
 void Prompt_Refresh(PromptState *state) {

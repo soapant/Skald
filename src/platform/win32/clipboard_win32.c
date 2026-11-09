@@ -6,11 +6,8 @@
 #include <stdlib.h>
 #include "core/types.h"
 #include "deps/log.h"
-#include "config.h"
 #include "platform/platform.h"
-#include "helpers/helpers_hotkey.h"
 
-#include "core/timer.h"
 int Platform_CopyToClipboard(const char *text) {
   if (text == NULL)
     return 0;

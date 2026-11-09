@@ -11,7 +11,6 @@
 #include "platform/wm_platform.h"
 #include "platform/input_state.h"
 #include "deps/log.h"
-#include "core/types.h"
 #include "core/types/window.h"
 
 typedef struct {

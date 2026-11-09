@@ -5,16 +5,13 @@
 #include "core/types.h"
 #include "deps/log.h"
 #include <tlhelp32.h>
-#include <shlobj.h>
 #include <shlwapi.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "config.h"
 #include "platform/platform.h"
 #include <time.h>
 
-#include "core/timer.h"
 
 bool Platform_ExpandPath(const char *template_path, char *out,
                          size_t out_size) {
