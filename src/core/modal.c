@@ -35,6 +35,13 @@ void EditState_EndSelection(void) {
   g_sel.head = 0;
 }
 
+void EditState_Reset(void) {
+  g_sel.active = false;
+  g_sel.anchor = 0;
+  g_sel.head = 0;
+  last_index = 0;
+}
+
 bool EditState_GetSelection(int *out_start, int *out_end) {
   if (!g_sel.active)
     return false;

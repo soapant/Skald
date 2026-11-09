@@ -1,8 +1,12 @@
 #include "core/draw_state.h"
 
+#include <string.h>
+
 static __thread PlDrawState g_draw_state;
 
 PlDrawState *PlDrawState_Get(void) { return &g_draw_state; }
+
+void PlDrawState_Reset(void) { memset(PlDrawState_Get(), 0, sizeof(PlDrawState)); }
 
 void PlDrawState_BeginMeasure(void) {
   PlDrawState *ds = PlDrawState_Get();

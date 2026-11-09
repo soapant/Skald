@@ -51,6 +51,7 @@ WindowManager *WindowManager_Create(void);
 void WindowManager_Destroy(WindowManager *wm);
 int WindowManager_Run(WindowManager *wm);
 WindowManager *WindowManager_Get(void);
+void WindowManager_Reset(void);
 
 Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup);
 void WindowManager_PopPopup(WindowManager *wm);
