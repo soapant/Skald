@@ -292,7 +292,7 @@ void FeatureLoader_OwnerFeatureName(const char *owner_path, char *out,
     return;
   const char *base = strrchr(owner_path, '/');
   const char *bslash = strrchr(owner_path, '\\');
-  if (bslash > base)
+  if (bslash && (!base || bslash > base))
     base = bslash;
   base = base ? base + 1 : owner_path;
   snprintf(out, n, "%s", base);

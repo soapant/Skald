@@ -145,7 +145,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
                                    int *out_h) {
   int mox = 0, moy = 0, mow = 0, moh = 0;
   WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
-  Popup *top = WindowManager_GetTopPopup(NULL);
+  Popup *top = WindowManager_GetTopPopup(WindowManager_Get());
   int pw = 0, ph = 0, px = -1, py = -1;
   if (top && top->type == POPUP_PROMPT)
     PromptPopup_GetBounds(top, &px, &py, &pw, &ph);
