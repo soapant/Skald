@@ -607,10 +607,10 @@ bool Platform_FocusWindow(const char *title) {
     return false;
   }
 
-  extern void Platform_SetFlintPrevFg(HWND h);
-  HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  extern void Platform_SetSkaldPrevFg(HWND h);
+  HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
-    Platform_SetFlintPrevFg(hwnd);
+    Platform_SetSkaldPrevFg(hwnd);
     log_info("Platform_FocusWindow deferred via g_prev_fg hwnd=%p title='%s'",
              hwnd, trimmed);
     return true;
@@ -677,7 +677,7 @@ bool Platform_CloseActiveWindow(void) {
   cls[0] = '\0';
   GetClassNameA(hwnd, cls, sizeof(cls));
   if (strcmp(cls, "QuickSwitcherModalClass") == 0) {
-    FlintContext_Get()->window.selection_complete = true;
+    SkaldContext_Get()->window.selection_complete = true;
     return true;
   }
   PostMessageA(hwnd, WM_CLOSE, 0, 0);
@@ -1317,7 +1317,7 @@ static unsigned win32_icon_hash(const char *s) {
 
 static bool win32_icon_cache_dir(char *out, size_t n) {
   char base[MAX_PATH];
-  snprintf(base, sizeof(base), "%s\\AppData\\Roaming\\Flint",
+  snprintf(base, sizeof(base), "%s\\AppData\\Roaming\\Skald",
            Platform_GetRealHome());
   Platform_MkdirIfNotExists(base);
   snprintf(out, n, "%s\\icon_cache", base);
@@ -1635,7 +1635,7 @@ PlWindowList Platform_GetWindowNames() {
 static HANDLE g_singleton_mtx = NULL;
 
 bool Platform_TryAcquireSingleInstance(void) {
-  g_singleton_mtx = CreateMutexA(NULL, TRUE, "flint_single_instance_mutex");
+  g_singleton_mtx = CreateMutexA(NULL, TRUE, "skald_single_instance_mutex");
   if (g_singleton_mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
     log_info("Another instance is already running. Exiting.");
     CloseHandle(g_singleton_mtx);
@@ -1878,7 +1878,7 @@ char *Platform_GetWorkingDir() {
 
 void Platform_InitDataFolder() {
   char dir_path[200];
-  snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint",
+  snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Skald",
            Platform_GetRealHome());
   Platform_MkdirIfNotExists(dir_path);
 }
@@ -1889,7 +1889,7 @@ bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
   if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0)
     return false;
   char dir_path[256];
-  snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint",
+  snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Skald",
            Platform_GetRealHome());
   Platform_MkdirIfNotExists(dir_path);
   char feat_path[320];
@@ -1917,7 +1917,7 @@ bool Platform_FeatureDataDirExists(const char *stem) {
   if (!stem || !stem[0])
     return false;
   char dir_path[256];
-  snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint\\%s",
+  snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Skald\\%s",
            Platform_GetRealHome(), stem);
   bool ok = (GetFileAttributesA(dir_path) != INVALID_FILE_ATTRIBUTES);
   return ok;
@@ -2519,7 +2519,7 @@ PlMetrics *Platform_GetMetrics(void) {
 }
 
 void Platform_InvalidatePrompt(void) {
-  HWND hwnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hwnd)
     InvalidateRect(hwnd, NULL, FALSE);
 }

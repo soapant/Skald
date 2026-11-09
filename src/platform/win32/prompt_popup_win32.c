@@ -43,7 +43,7 @@ static bool is_popup_class(HWND hwnd) {
   }
 }
 
-void Platform_SetFlintPrevFg(HWND h) {
+void Platform_SetSkaldPrevFg(HWND h) {
   if (h && IsWindow(h))
     g_prev_fg = h;
 }
@@ -71,35 +71,35 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
     }
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
+  SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       WS_EX_TOOLWINDOW | WS_EX_COMPOSITED | WS_EX_LAYERED,
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, x, y, w, h,
       NULL, NULL, hInstance, NULL));
-  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
+  if (WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) == NULL) {
     return false;
   }
-  HWND hwnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  HWND hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (self)
-    self->handle = FlintContext_Get()->window.hPopupWnd;
+    self->handle = SkaldContext_Get()->window.hPopupWnd;
   SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
   win32_apply_rounded_corners(hwnd, w, h);
   ShowWindow(hwnd, SW_SHOW);
   UpdateWindow(hwnd);
-  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
+  ForceWindowFocus(SkaldContext_Get()->window.hPopupWnd, WH_NULL);
   return true;
 }
 
 void Platform_PromptPopupHideWindow(Popup *self) {
   HWND hwnd = (self && WH_TO_HWND(self->handle) != NULL)
                   ? WH_TO_HWND(self->handle)
-                  : WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+                  : WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
 
   if (hwnd != NULL && IsWindow(hwnd)) {
     KillTimer(hwnd, 999);
     KillTimer(hwnd, UI_TICK_TIMER_ID);
     DestroyWindow(hwnd);
-    if (hwnd == WH_TO_HWND(FlintContext_Get()->window.hPopupWnd)) {
-      FlintContext_Get()->window.hPopupWnd = WH_NULL;
+    if (hwnd == WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd)) {
+      SkaldContext_Get()->window.hPopupWnd = WH_NULL;
     }
   }
 

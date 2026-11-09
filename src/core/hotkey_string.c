@@ -40,11 +40,11 @@ static int hotkey_mouse_token_to_button(const char *token) {
     for (const char *p = token; *p; p++) {
       if (*p >= '0' && *p <= '9') {
         n = n * 10 + (*p - '0');
-        if (n > FL_MOUSE_BTN_MAX)
+        if (n > MOUSE_BTN_MAX)
           return 0;
       }
     }
-    if (n >= 1 && n <= FL_MOUSE_BTN_MAX)
+    if (n >= 1 && n <= MOUSE_BTN_MAX)
       return n;
   }
   return 0;
@@ -235,7 +235,7 @@ static int hotkey_token_to_vk(const char *token, int *out_mods) {
 
   int mouse_btn = hotkey_mouse_token_to_button(token);
   if (mouse_btn > 0)
-    return FL_MOUSE_VK(mouse_btn);
+    return MOUSE_VK(mouse_btn);
 
   int named_vk = hotkey_named_key_to_vk(token);
   if (named_vk != 0)
@@ -407,7 +407,7 @@ static int hotkey_vk_to_name(int vk, char *out, int out_size) {
   }
 
   if (!name && vk >= VK_MOUSE_BASE &&
-      vk <= VK_MOUSE_BASE + FL_MOUSE_BTN_MAX - 1) {
+      vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1) {
     snprintf(tmp, sizeof(tmp), "Mouse%d", vk - VK_MOUSE_BASE + 1);
     name = tmp;
   }

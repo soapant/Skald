@@ -911,7 +911,7 @@ void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap) {
   if (!state)
     return;
-  FlintContext_Get()->window.editbox_placed = true;
+  SkaldContext_Get()->window.editbox_placed = true;
   FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
   Platform_DrawEditBackground(state, dpy, xd, vis, cmap, font);
   Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);

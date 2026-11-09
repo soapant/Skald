@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Flint includes the following third-party software. The original copyright and license text for each is reproduced below.
+Skald includes the following third-party software. The original copyright and license text for each is reproduced below.
 
 ## stb_image.h
 

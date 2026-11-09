@@ -1006,7 +1006,7 @@ char *Platform_GetIconPath(char *app_path) {
       char ph_path[1024];
       if (home_ph0 && home_ph0[0]) {
         snprintf(ph_path, sizeof(ph_path),
-                 "%s/Programming/Projects/Flint/resources/Placeholder.png",
+                 "%s/Programming/Projects/Skald/resources/Placeholder.png",
                  home_ph0);
         if (access(ph_path, F_OK) == 0)
           return strdup(ph_path);
@@ -1188,7 +1188,7 @@ char *Platform_GetIconPath(char *app_path) {
     home_ph = Env_HomeDir();
   if (home_ph && home_ph[0]) {
     snprintf(pix, sizeof(pix),
-             "%s/Programming/Projects/Flint/resources/Placeholder.png",
+             "%s/Programming/Projects/Skald/resources/Placeholder.png",
              home_ph);
     if (access(pix, F_OK) == 0)
       return strdup(pix);
@@ -1387,10 +1387,10 @@ PlWindowList Platform_GetWindowNames() { return Wm_GetWindowNames(); }
 static int g_singleton_lock_fd = -1;
 
 bool Platform_TryAcquireSingleInstance(void) {
-  g_singleton_lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
+  g_singleton_lock_fd = open("/tmp/skald.lock", O_RDWR | O_CREAT, 0666);
   if (g_singleton_lock_fd < 0) {
-    log_error("Cannot open singleton lock /tmp/flint.lock (%s). If it is owned "
-              "by another user, remove it: sudo rm /tmp/flint.lock",
+    log_error("Cannot open singleton lock /tmp/skald.lock (%s). If it is owned "
+              "by another user, remove it: sudo rm /tmp/skald.lock",
               strerror(errno));
     return false;
   }
@@ -1723,7 +1723,7 @@ char *Platform_GetWorkingDir(void) {
 
 void Platform_InitDataFolder() {
   char dir_path[300];
-  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint",
+  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/skald",
            Platform_GetRealHome());
   Platform_MkdirIfNotExists(dir_path);
 }
@@ -1734,7 +1734,7 @@ bool Platform_GetFeaturePath(const char *feature, const char *name, char *out,
   if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0)
     return false;
   char dir_path[512];
-  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint",
+  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/skald",
            Platform_GetRealHome());
   Platform_MkdirIfNotExists(dir_path);
   char feat_path[600];
@@ -1762,7 +1762,7 @@ bool Platform_FeatureDataDirExists(const char *stem) {
   if (!stem || !stem[0])
     return false;
   char dir_path[512];
-  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/flint/%s",
+  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/skald/%s",
            Platform_GetRealHome(), stem);
   struct stat st;
   bool ok = (stat(dir_path, &st) == 0);
@@ -1882,7 +1882,7 @@ static CURL *http_new(const char *url, size_t limit, HttpBuf *buf) {
   curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
   curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
   curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
-  curl_easy_setopt(c, CURLOPT_USERAGENT, "Flint/1.0");
+  curl_easy_setopt(c, CURLOPT_USERAGENT, "Skald/1.0");
   curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
   curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
@@ -2150,7 +2150,7 @@ PlMetrics *Platform_GetMetrics(void) {
 
 void Platform_InvalidatePrompt(void) {
   Display *dpy = get_display();
-  Window win = (Window)FlintContext_Get()->window.hPopupWnd.xid;
+  Window win = (Window)SkaldContext_Get()->window.hPopupWnd.xid;
   if (dpy && win) {
     XClearArea(dpy, win, 0, 0, 0, 0, True);
     XFlush(dpy);

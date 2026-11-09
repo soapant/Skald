@@ -32,7 +32,7 @@ WindowManager *WindowManager_Create(void) {
     return NULL;
   }
   Platform_ApplyUIScale();
-  wm->ctx = FlintContext_Get();
+  wm->ctx = SkaldContext_Get();
   g_window_manager = wm;
   return wm;
 }
@@ -169,7 +169,7 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
     return NULL;
   if (!spec->subwindow && wm->popup_count > 0)
     return NULL;
-  FlintContext_Get()->window.editbox_placed = false;
+  SkaldContext_Get()->window.editbox_placed = false;
   char *res = Platform_PromptUser(wm, spec);
   return res;
 }

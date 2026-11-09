@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
-static FlintContext g_ctx = {
+static SkaldContext g_ctx = {
     .window =
         {
             .hPopupWnd = {0},
@@ -16,9 +16,9 @@ static FlintContext g_ctx = {
         },
 };
 
-FlintContext *FlintContext_Get(void) { return &g_ctx; }
+SkaldContext *SkaldContext_Get(void) { return &g_ctx; }
 
-void FlintContext_Clear(void) {
-  FlintContext *ctx = FlintContext_Get();
+void SkaldContext_Clear(void) {
+  SkaldContext *ctx = SkaldContext_Get();
   memset(&ctx->window, 0, sizeof(ctx->window));
 }

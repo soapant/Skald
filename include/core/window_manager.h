@@ -38,7 +38,7 @@ struct WindowManager {
   int popup_count;
   int popup_capacity;
   bool running;
-  FlintContext *ctx;
+  SkaldContext *ctx;
 
 #if defined(__linux__)
   Display *display;

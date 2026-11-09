@@ -15,12 +15,12 @@ static void *g_ud = NULL;
 static char g_char_queue[32] = {0};
 static int g_char_head = 0, g_char_tail = 0;
 
-#define FL_INHIBIT_MOD_COUNT 11
-static const int kInhibitMods[FL_INHIBIT_MOD_COUNT] = {
+#define SK_INHIBIT_MOD_COUNT 11
+static const int kInhibitMods[SK_INHIBIT_MOD_COUNT] = {
     VK_SHIFT,  VK_CONTROL,  VK_MENU,     VK_LWIN,  VK_RWIN, VK_LSHIFT,
     VK_RSHIFT, VK_LCONTROL, VK_RCONTROL, VK_LMENU, VK_RMENU};
 void Platform_InputState_InhibitMods(void) {
-  for (int i = 0; i < FL_INHIBIT_MOD_COUNT; i++) {
+  for (int i = 0; i < SK_INHIBIT_MOD_COUNT; i++) {
     int nv = kInhibitMods[i];
     if (nv >= 0 && nv < 256)
       g_down[nv] = false;
@@ -208,7 +208,7 @@ unsigned long Platform_GlobalKey_Dropped(void) {
 static PlatformMouseEvent g_gmice[GLOBAL_MOUSE_RING];
 static int g_gmouse_head = 0, g_gmouse_tail = 0;
 static unsigned long g_gmouse_dropped = 0;
-static bool g_mbtn_down[FL_MOUSE_BTN_MAX] = {0};
+static bool g_mbtn_down[MOUSE_BTN_MAX] = {0};
 static void *g_gmouse_mutex = NULL;
 static void gmouse_lock_init(void) {
   if (!g_gmouse_mutex)

@@ -32,7 +32,7 @@ TEST(list_never_starts_above_the_bottom_of_the_edit_text) {
       printf(
           "  (font size %d: list top %d collides with edit text bottom %d)\n",
           size, lt, text_bottom);
-      flint_test_fails++;
+      skald_test_fails++;
     }
   }
   FontSize = g_saved_font_size;
@@ -47,7 +47,7 @@ TEST(row_height_is_taller_than_the_line_box) {
     if (rh <= lh) {
       printf("  (font size %d: row height %d does not exceed line height %d)\n",
              size, rh, lh);
-      flint_test_fails++;
+      skald_test_fails++;
     }
   }
   FontSize = g_saved_font_size;
@@ -63,7 +63,7 @@ TEST(line_height_grows_with_font_size) {
     if (lh < prev) {
       printf("  (font size %d: line height %d shrank from %d)\n", size, lh,
              prev);
-      flint_test_fails++;
+      skald_test_fails++;
     }
     prev = lh;
   }
@@ -80,7 +80,7 @@ TEST(list_top_grows_with_font_size) {
     if (prev >= 0 && lt <= prev) {
       printf("  (font size %d: list top %d did not grow past %d)\n", size, lt,
              prev);
-      flint_test_fails++;
+      skald_test_fails++;
     }
     prev = lt;
   }
