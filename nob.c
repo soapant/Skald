@@ -585,6 +585,36 @@ static bool run_tests(void) {
     }
   }
 
+  if (!target_win32) {
+    if (!nob_mkdir_if_not_exists("build/tests/fixture"))
+      return false;
+    if (nob_file_exists("build/tests/fixture/reload_probe.dll"))
+      nob_delete_file("build/tests/fixture/reload_probe.dll");
+    if (nob_file_exists("build/tests/fixture/reload_probe.so"))
+      nob_delete_file("build/tests/fixture/reload_probe.so");
+    if (nob_file_exists("build/tests/fixture/reload_probe.dylib"))
+      nob_delete_file("build/tests/fixture/reload_probe.dylib");
+    Nob_Cmd fcmd = {0};
+    nob_cc(&fcmd);
+#if defined(__APPLE__)
+    nob_cmd_append(&fcmd, "-dynamiclib", "-I", "include",
+                   "tests/fixtures/reload_probe.c", "-o",
+                   "build/tests/fixture/reload_probe.dylib");
+#elif defined(_WIN32)
+    nob_cmd_append(&fcmd, "-shared", "-I", "include",
+                   "tests/fixtures/reload_probe.c", "-o",
+                   "build/tests/fixture/reload_probe.dll");
+#else
+    nob_cmd_append(&fcmd, "-shared", "-fPIC", "-I", "include",
+                   "tests/fixtures/reload_probe.c", "-o",
+                   "build/tests/fixture/reload_probe.so");
+#endif
+    if (!nob_cmd_run(&fcmd)) {
+      nob_log(NOB_ERROR, "Failed to build reload_probe fixture");
+      return false;
+    }
+  }
+
   size_t failed = 0;
   size_t suite_count = test_sources.count;
 
@@ -657,6 +687,9 @@ static bool run_tests(void) {
         continue;
       nob_cmd_append(&cmd, obj_path(sources.items[i]));
     }
+#if defined(_WIN32)
+    nob_cmd_append(&cmd, "-Wl,--export-all-symbols");
+#endif
     append_dep_ldflags(&cmd);
     nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
     snprintf(suite_names[t], sizeof(suite_names[t]), "%s", name);
