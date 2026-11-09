@@ -14,7 +14,6 @@
 
 int last_index = 0;
 
-#include <string.h>
 
 static EditSelection g_sel;
 

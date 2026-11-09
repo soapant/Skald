@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include "config.h"
 #include "platform/platform.h"
-#include "platform/platform.h"
-#include "config.h"
 #include <time.h>
 
 #include "core/timer.h"
