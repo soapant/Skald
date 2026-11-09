@@ -537,7 +537,8 @@ static bool cc_load_app_cache(void) {
   bool reexported = false;
   g_cc_reexported = false;
   for (size_t i = 0; i < tmp.count; i++) {
-    if (icons[i][0] == '\0' || cc_icon_is_shell_only(icons[i])) {
+    if (icons[i][0] == '\0' || cc_icon_is_shell_only(icons[i]) ||
+        !sk_file_exists(icons[i])) {
       char *resolved = sk_get_icon_path(tmp.files[i].path);
       if (resolved) {
         if (strcmp(resolved, icons[i]) != 0)
