@@ -1,4 +1,5 @@
 #include "wm/niri_wm.h"
+#include "wm/wm_util.h"
 
 #include <string.h>
 #include <strings.h>
@@ -153,13 +154,7 @@ bool focus_window_title_niri(char *title) {
     return false;
   if (!niri_is_active())
     return false;
-  while (*title &&
-         (iscntrl((unsigned char)*title) || isspace((unsigned char)*title)))
-    title++;
-  char *end = title + strlen(title);
-  while (end > title &&
-         (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1])))
-    *--end = '\0';
+  title = wm_trim_focus_title(title);
   if (!*title)
     return false;
   char *json = Platform_RunTerminalCommand("niri msg --json windows", false);
