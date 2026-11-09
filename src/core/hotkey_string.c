@@ -169,7 +169,8 @@ static int hotkey_named_key_to_vk(const char *token) {
 
   if (strcasecmp(token, "F1") == 0)
     return VK_F1;
-  if (token[0] == 'F' && isdigit((unsigned char)token[1])) {
+  if (toupper((unsigned char)token[0]) == 'F' &&
+      isdigit((unsigned char)token[1])) {
     int n = atoi(token + 1);
     if (n >= 1 && n <= 12)
       return VK_F1 + (n - 1);
