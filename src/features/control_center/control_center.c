@@ -1383,26 +1383,6 @@ static unsigned long cc_type_color(void) {
   return RGB((h >> 16) & 0xFF, (h >> 8) & 0xFF, h & 0xFF);
 }
 
-static bool cc_icon_is_glyph(const char *icon) {
-  if (!icon || !icon[0])
-    return false;
-  unsigned char c = (unsigned char)icon[0];
-  int len = c < 0x80             ? 1
-            : (c & 0xE0) == 0xC0 ? 2
-            : (c & 0xF0) == 0xE0 ? 3
-            : (c & 0xF8) == 0xF0 ? 4
-                                 : 0;
-  if (len <= 0)
-    return false;
-  const char *tail = icon + len;
-  if (tail[0] == '\0')
-    return true;
-  if ((unsigned char)tail[0] == 0xEF && (unsigned char)tail[1] == 0xB8 &&
-      (unsigned char)tail[2] == 0x8F && tail[3] == '\0')
-    return true;
-  return false;
-}
-
 static void cc_subwindow_refresh(PromptState *state) {
   const char *items[] = {"Register Hotkey","Register Alias"};
   fl_populate_listbox(state->lb, state->eb->filter, (const char **)items, ARRAY_LEN(items));
@@ -1415,11 +1395,20 @@ static void cc_subwindow_render(PromptState *state) {
   g_actions_width = state->width;
   g_actions_height = state->height;
   FlListSpec spec = {.lb = state->lb};
+  fl_place_editbox();
   if (!fl_listbox_begin(&spec))
     return;
   FlListItemCtx ctx;
+
   while (fl_listbox_next(&ctx)) {
-    fl_draw_text(.x = 14, .y = ctx.y, .text = ctx.text, .align = "LEFT",.fontsize=18);
+    fl_draw_text(.x = 14, .y = ctx.y + 4, .text = ctx.text, .align = "LEFT",.fontsize=12);
+    const char *hk = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
+    FlRect r = fl_text_bounds(.text=hk,.fontsize=10,.x=g_actions_width - 6,.y=ctx.y+6,.align="RIGHT");
+    r.filled=true;
+    r.radius=4;
+    r.color=FL_DARK_GRAY;
+    fli_draw_rect(&r);
+    fl_draw_text(.x = g_actions_width - 6, .y = ctx.y + 6, .text = hk, .align = "RIGHT", .fontsize = 10,.color=FL_GRAY);
   }
   fl_listbox_end();
 }
@@ -1447,6 +1436,15 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   }
 }
 
+
+static const struct {
+  int vk;
+  const char *name;
+} kCapturableKeys[] = {
+    {VK_OEM_1, ";"}, {VK_OEM_2, "/"}, {VK_OEM_3, "`"}, {VK_OEM_4, "["},
+    {VK_OEM_5, "\\"}, {VK_OEM_6, "]"}, {VK_OEM_7, "'"}, {VK_OEM_COMMA, ","},
+    {VK_OEM_PERIOD, "."}, {VK_OEM_MINUS, "-"}, {VK_OEM_PLUS, "="},
+};
 
 static void cc_subwindow_reg_render(PromptState *state) {
     char buf[128] = {0};
@@ -1477,14 +1475,27 @@ static void cc_subwindow_reg_render(PromptState *state) {
     }
 
     int k = 0;
-    for (int c = 'A'; c <= 'Z'; c++) {
+    char kname[8] = {0};
+    for (int c = 'A'; c <= 'Z' && !k; c++) {
         if (fl_is_key_pressed(c)) {
             k = c;
-            break;
+            snprintf(kname, sizeof(kname), "%c", c);
+        }
+    }
+    for (int c = '0'; c <= '9' && !k; c++) {
+        if (fl_is_key_pressed(c)) {
+            k = c;
+            snprintf(kname, sizeof(kname), "%c", c);
+        }
+    }
+    for (size_t i = 0; i < ARRAY_LEN(kCapturableKeys) && !k; i++) {
+        if (fl_is_key_pressed(kCapturableKeys[i].vk)) {
+            k = kCapturableKeys[i].vk;
+            snprintf(kname, sizeof(kname), "%s", kCapturableKeys[i].name);
         }
     }
     if (k && rem > 1) {
-        snprintf(buf + pos, rem, "%c", (char)k);
+        snprintf(buf + pos, rem, "%s", kname);
     }
     bool has_mod = fl_ctrl_pressed() || fl_alt_pressed() ||
                    fl_shift_pressed() || fl_super_pressed();

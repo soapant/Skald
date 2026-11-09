@@ -4,5 +4,6 @@ description = ""
 [provides]
 
 [depends]
+volume
 control_center
 

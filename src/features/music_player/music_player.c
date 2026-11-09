@@ -225,6 +225,19 @@ void add_music(void) {
   fl_run_terminal_command(cmd);
 }
 
+typedef void (*toggle_play_pause)(void);
+
+static void pause() {
+    FL_CAP_BIND(playpause, "toggle.playpause", toggle_play_pause);
+    if (playpause) {
+       if (fl_window_open("Music Player")) {
+          music_cmd_1();
+       } else {
+         playpause();
+       }
+    }
+}
+
 FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "Alt+,", .cb = music_cmd_1);
   fl_register_hotkey(.hotkey = "Alt+/", .cb = music_cmd_5);
@@ -232,6 +245,7 @@ FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = "Alt+'", .cb = music_cmd_2);
   fl_register_hotkey(.hotkey = "Alt+P", .cb = music_prompt);
   fl_register_hotkey(.hotkey = "Alt+Shift+P", .cb = random_music);
+  fl_register_hotkey(.hotkey = "RShift", .cb = pause);
   fl_add_to_cc(.display_name = "Force Reload Music", .on_action = reload_music,
                .icon = "/music.png");
   fl_add_to_cc(.display_name = "Music Player", .on_action = music_prompt,
