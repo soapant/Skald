@@ -352,6 +352,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     return false;
   extern PromptState *Platform_GetWin32PromptState(void);
   PromptState *state = Platform_GetWin32PromptState();
+  int fs = spec->fontsize > 0 ? spec->fontsize : FontSize;
   const char *buf = spec->buffer;
   if (!buf) {
     if (state)
@@ -370,7 +371,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   HFONT hfont_created = NULL;
   HFONT hfont = spec->font.hfont
                     ? spec->font.hfont
-                    : FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+                    : FH_TO_HFONT(Platform_CreateFont(fs, UsedFont));
   if (hfont && !spec->font.hfont)
     hfont_created = hfont;
   HFONT old = NULL;
@@ -418,7 +419,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   ebi.text_w = text_w;
   ebi.ascent = ascent;
   ebi.descent = descent;
-  ebi.text_color = rgb_to_hex(COLOR_TEXT);
+  ebi.text_color =
+      spec->color_text ? rgb_to_hex(spec->color_text) : rgb_to_hex(COLOR_TEXT);
+  ebi.bg_color =
+      spec->color_bg ? rgb_to_hex(spec->color_bg) : rgb_to_hex(COLOR_BG);
+  ebi.placeholder = spec->placeholder;
+  ebi.fontsize = fs;
   ebi.font = spec->font;
 
   EditboxSpec eb;

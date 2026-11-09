@@ -1529,6 +1529,31 @@ static void cc_subwindow_reg_render(PromptState *state) {
 static void cc_subwindow_reg_onclose() {
     fl_enable_global_hotkeys();
 }
+
+static char g_alias_target[256];
+
+static void cc_alias_reg_render(PromptState *state) {
+  char label[284];
+  snprintf(label, sizeof(label), "Alias For: %s", g_alias_target);
+  fl_place_editbox(.x=0,.y=(state->height / 2) - 15,.placeholder=label,.fontsize=12);
+}
+
+static bool cc_alias_reg_enter(PromptState *state) {
+  const char *input = state->eb->filter;
+  char alias[256];
+  ccx_strcpy_trunc(alias, sizeof(alias), input ? input : "");
+  char *p = alias;
+  while (*p == ' ') p++;
+  char *end = alias + strlen(alias) - 1;
+  while (end > alias && *end == ' ') { *end = '\0'; end--; }
+  if (alias[0])
+    fl_add_alias(.alias = alias, .target = g_alias_target);
+  return true;
+}
+
+static void cc_alias_reg_onclose() {
+    fl_enable_global_hotkeys();
+}
 static bool cc_reg_select(int type) {
   switch (type) {
     case 0: {
@@ -1539,7 +1564,16 @@ static bool cc_reg_select(int type) {
                .render = cc_subwindow_reg_render,.on_close=cc_subwindow_reg_onclose);
       break;
     }
-    case 1: break;
+    case 1: {
+      ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action), g_cc_main_selected);
+      ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target), g_cc_main_selected);
+      fl_disable_global_hotkeys();
+      fl_subwindow(.title = "Alias Reg", .x = (g_cc_width / 2) + 240,
+               .y = (g_cc_height / 2) + 200, .w = 200, .h = 50,
+               .render = cc_alias_reg_render, .enter = cc_alias_reg_enter,
+               .on_close = cc_alias_reg_onclose);
+      break;
+    }
   }
   return true;
 }

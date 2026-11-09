@@ -228,9 +228,9 @@ void add_music(void) {
 typedef void (*toggle_play_pause)(void);
 
 static void pause() {
-    FL_CAP_BIND(playpause, "toggle.playpause", toggle_play_pause);
+    fl_cap_bind(playpause, "toggle.playpause", toggle_play_pause);
     if (playpause) {
-       if (fl_window_open("Music Player")) {
+       if (fl_process_running("music_player")) {
           music_cmd_1();
        } else {
          playpause();
@@ -252,5 +252,6 @@ FLINT_FEATURE_INIT {
                .icon = "/music.png");
   fl_add_to_cc(.display_name = "Add Music", .on_action = add_music,
                .icon = "/music.png");
+
   reload_music();
 }

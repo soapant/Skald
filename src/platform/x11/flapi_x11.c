@@ -541,6 +541,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (top && top->user_data && top->type == POPUP_PROMPT)
       state = (PromptState *)top->user_data;
   }
+  int fs = spec->fontsize > 0 ? spec->fontsize : FontSize;
   const char *buf = spec->buffer;
   if (!buf) {
     if (state)
@@ -558,7 +559,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   FontHandle fh = spec->font;
   bool needDestroy = false;
   if (!FH_TO_XFT(fh)) {
-    fh = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+    fh = Platform_CreateFontOnDisplay(dpy, fs, UsedFont);
     needDestroy = true;
   }
   XftFont *xf = FH_TO_XFT(fh);
@@ -598,7 +599,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
   ebi.text_w = text_w;
   ebi.ascent = xf ? xf->ascent : 0;
   ebi.descent = xf ? xf->descent : 0;
-  ebi.text_color = rgb_to_hex(COLOR_TEXT);
+  ebi.text_color =
+      spec->color_text ? rgb_to_hex(spec->color_text) : rgb_to_hex(COLOR_TEXT);
+  ebi.bg_color =
+      spec->color_bg ? rgb_to_hex(spec->color_bg) : rgb_to_hex(COLOR_BG);
+  ebi.placeholder = spec->placeholder;
+  ebi.fontsize = fs;
   ebi.font = fh;
 
   EditboxSpec eb;

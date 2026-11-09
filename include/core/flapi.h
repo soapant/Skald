@@ -823,7 +823,7 @@ void fl_cap_bind_declare(const char *key, void *consumer);
 
 #define fl_cap_resolve(key) fli_cap_resolve((key))
 
-#define FL_CAP_BIND(var, key, type)                                            \
+#define fl_cap_bind(var, key, type)                                            \
   static type var##_fn;                                                        \
   static unsigned var##_gen;                                                   \
   type var = NULL;                                                             \

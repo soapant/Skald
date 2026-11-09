@@ -643,7 +643,7 @@ static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->cursor_x = cursor_x;
   eb->text_w = text_w;
   eb->text_y = edit_y;
-  eb->caret_y = Editbox_CaretY(edit_y, asc, desc);
+  eb->caret_y = Editbox_CaretY(edit_y, asc, desc, FontSize);
   eb->caret_h = PromptCaretHeight();
   eb->placeholder_dy = 2;
   eb->rainbow_limit_x = -1;
