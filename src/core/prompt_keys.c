@@ -182,7 +182,6 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   bool alt = key->alt;
 
   FlintContext *ctx = FlintContext_Get();
-  Popup *top = WindowManager_GetTopPopup(NULL);
   bool invoke_interceptor = false;
   invoke_interceptor = ctx->window.editbox_placed;
 

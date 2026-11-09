@@ -523,9 +523,9 @@ char *fl_resolve_data_path(const char *name);
 
 char *fl_resolve_feature_path(const char *name);
 
-char *fl_resolve_user_path(void);
+const char *fl_resolve_user_path(void);
 
-char *fl_get_user_name(void);
+const char *fl_get_user_name(void);
 
 bool fl_is_root(void);
 

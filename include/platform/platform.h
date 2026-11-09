@@ -103,7 +103,7 @@ bool Platform_ProcessRunning(const char *name);
 bool Platform_FocusWindow(const char *window_name);
 PlWindowList Platform_GetWindowTitles();
 PlWindowList Platform_GetWindowNames();
-bool Platform_QueryBrowser(char *query);
+bool Platform_QueryBrowser(const char *query);
 char *Platform_GetClipboardEntry();
 bool Platform_PasteContent(char *content);
 int Platform_CopyToClipboard(const char *text);

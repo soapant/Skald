@@ -64,7 +64,7 @@ static bool remap_window_allowed(RemapBinding *b, const char *title) {
 }
 
 bool remap_register_internal(const char *src, const char *dst, bool whitelist,
-                             const char **windows) {
+                             const char *const *windows) {
   if (!src || !dst)
     return false;
   if (g_remap_count >= MAX_REMAPS)

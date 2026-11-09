@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char *get_zoxide_match(char *query) {
+char *get_zoxide_match(const char *query) {
   char clean_query[512];
   strncpy(clean_query, query, sizeof(clean_query) - 1);
   clean_query[sizeof(clean_query) - 1] = '\0';
@@ -63,7 +63,7 @@ static void zoxide_edit(PromptState *state) {
   zoxide_refresh(state);
 }
 static bool zoxide_enter(PromptState *state) {
-  char *text =
+  const char *text =
       state->lb->selected_text ? state->lb->selected_text : state->eb->filter;
   if (!fl_is_selected(state->lb)) {
     fl_append_unique_line(TerminalZoxideFilePath, text);

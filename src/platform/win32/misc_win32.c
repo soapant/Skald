@@ -289,7 +289,7 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   return Platform_RunTerminalCommand(command, false);
 }
 
-bool Platform_QueryBrowser(char *query) {
+bool Platform_QueryBrowser(const char *query) {
   if (!query || !query[0]) {
     log_error("operation failed, returning error query='%s'",
               query ? query : "null");
@@ -299,7 +299,7 @@ bool Platform_QueryBrowser(char *query) {
   char encoded_query[2048] = {0};
   char *src = query;
   char *dst = encoded_query;
-  while (*src && (dst - encoded_query) < sizeof(encoded_query) - 1) {
+  while (*src && (size_t)(dst - encoded_query) < sizeof(encoded_query) - 1) {
     if (*src == ' ') {
       *dst++ = '%';
       *dst++ = '2';
