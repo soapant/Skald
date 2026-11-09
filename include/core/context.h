@@ -31,5 +31,6 @@ typedef struct {
 } FlintContext;
 
 FlintContext *FlintContext_Get(void);
+void FlintContext_Clear(void);
 
 #endif

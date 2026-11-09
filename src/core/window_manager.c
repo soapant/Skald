@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "core/context.h"
 #include "deps/log.h"
@@ -206,4 +207,10 @@ void EventBus_Trigger(PlEvent event) {
       g_event_registry[event][i]();
     }
   }
+}
+
+void WindowManager_Reset(void) {
+  g_popup_push_in_progress = false;
+  g_window_manager = NULL;
+  memset(g_event_registry, 0, sizeof(g_event_registry));
 }
