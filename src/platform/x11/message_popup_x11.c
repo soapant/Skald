@@ -429,6 +429,8 @@ void Platform_HoverMessageRelease(const char *key) {
 
 void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
   const char *message = spec.message;
+  if (!message)
+    message = "";
   int centerX = spec.x;
   int centerY = spec.y;
   bool no_bg = spec.no_bg;
@@ -573,7 +575,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   void (*render)(void) = spec.render;
   const char *name = spec.name;
 
-  if (!message || !message[0]) {
+  if ((!message && !render) {
     return;
   }
   Display *dpy = get_display();

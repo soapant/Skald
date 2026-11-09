@@ -498,10 +498,10 @@ void crosshair_render(void) {
   int size = 5;
 
   sk_draw_line(.x1 = 15 - size, .y1 = 15, .x2 = 15 + size, .y2 = 15,
-               .color = SK_CRIMSON, .thickness = 3);
+               .color = SK_BLUE, .thickness = 3);
 
   sk_draw_line(.x1 = 15, .y1 = 15 - size, .x2 = 15, .y2 = 15 + size,
-               .color = SK_CRIMSON, .thickness = 3);
+               .color = SK_BLUE, .thickness = 3);
 }
 
 void crosshair_fn(void) {
