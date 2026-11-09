@@ -269,7 +269,6 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
     CloseHandle(hRead);
     return NULL;
   }
-  WaitForSingleObject(pi.hProcess, INFINITE);
   size_t cap = 8192;
   size_t len = 0;
   char *out = (char *)malloc(cap);
@@ -279,23 +278,110 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
     CloseHandle(pi.hThread);
     return NULL;
   }
-  DWORD bytesRead = 0;
-  while (ReadFile(hRead, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) &&
-         bytesRead > 0) {
-    len += bytesRead;
-    if (len + 1024 > cap) {
-      cap *= 2;
-      char *n = (char *)realloc(out, cap);
-      if (!n)
+  for (;;) {
+    if (len + 1024 + 1 > cap) {
+      size_t ncap = cap * 2;
+      char *n = (char *)realloc(out, ncap);
+      if (!n) {
+        free(out);
+        out = NULL;
         break;
+      }
       out = n;
+      cap = ncap;
     }
+    DWORD bytesRead = 0;
+    if (!ReadFile(hRead, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) ||
+        bytesRead == 0)
+      break;
+    len += bytesRead;
+  }
+  WaitForSingleObject(pi.hProcess, INFINITE);
+  if (!out) {
+    CloseHandle(hRead);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return NULL;
   }
   out[len] = '\0';
   CloseHandle(hRead);
   CloseHandle(pi.hProcess);
   CloseHandle(pi.hThread);
   return out;
+}
+
+typedef struct {
+  HANDLE pipe_write;
+  const char *data;
+  size_t len;
+} StdinWriteCtx;
+
+static DWORD WINAPI win32_stdin_writer(LPVOID arg) {
+  StdinWriteCtx *ctx = (StdinWriteCtx *)arg;
+  size_t off = 0;
+  while (off < ctx->len) {
+    DWORD written = 0;
+    DWORD chunk = (DWORD)(ctx->len - off > 16384 ? 16384 : ctx->len - off);
+    if (!WriteFile(ctx->pipe_write, ctx->data + off, chunk, &written, NULL) ||
+        written == 0)
+      break;
+    off += written;
+  }
+  CloseHandle(ctx->pipe_write);
+  free(ctx);
+  return 0;
+}
+
+static bool win32_cmdline_append_arg(char *cmd, size_t cap, size_t *off,
+                                     const char *arg) {
+  size_t pos = *off;
+  size_t alen = strlen(arg);
+  bool needs_quotes = alen == 0 || strpbrk(arg, " \t\"\n\v") != NULL;
+  if (!needs_quotes) {
+    if (pos + alen >= cap)
+      return false;
+    memcpy(cmd + pos, arg, alen);
+    *off = pos + alen;
+    return true;
+  }
+  if (pos >= cap)
+    return false;
+  cmd[pos++] = '"';
+  const char *p = arg;
+  while (*p) {
+    int slashes = 0;
+    while (*p == '\\') {
+      slashes++;
+      p++;
+    }
+    if (*p == '\0') {
+      size_t need = (size_t)slashes * 2;
+      if (pos + need + 2 > cap)
+        return false;
+      for (size_t i = 0; i < need; i++)
+        cmd[pos++] = '\\';
+      break;
+    } else if (*p == '"') {
+      size_t need = (size_t)slashes * 2 + 1;
+      if (pos + need + 2 > cap)
+        return false;
+      for (size_t i = 0; i < need; i++)
+        cmd[pos++] = '\\';
+      cmd[pos++] = '"';
+      p++;
+    } else {
+      if (pos + (size_t)slashes + 2 > cap)
+        return false;
+      for (int i = 0; i < slashes; i++)
+        cmd[pos++] = '\\';
+      cmd[pos++] = *p++;
+    }
+  }
+  if (pos + 2 > cap)
+    return false;
+  cmd[pos++] = '"';
+  *off = pos;
+  return true;
 }
 
 char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
@@ -305,55 +391,112 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
     *out_status = -1;
   if (!argv || !argv[0])
     return NULL;
+  char cmdline[4096];
+  size_t off = 0;
+  cmdline[0] = '\0';
+  for (int i = 0; argv[i]; i++) {
+    if (off > 0) {
+      if (off + 1 >= sizeof(cmdline)) {
+        log_error("Platform_RunArgvCapture command line too long");
+        return NULL;
+      }
+      cmdline[off++] = ' ';
+    }
+    if (!win32_cmdline_append_arg(cmdline, sizeof(cmdline), &off, argv[i])) {
+      log_error("Platform_RunArgvCapture command line too long");
+      return NULL;
+    }
+  }
+  cmdline[off] = '\0';
+
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
-  HANDLE rd = NULL, wr = NULL;
-  if (!CreatePipe(&rd, &wr, &sa, 0))
+  sa.lpSecurityDescriptor = NULL;
+  HANDLE rd_in = NULL, wr_in = NULL, rd_out = NULL, wr_out = NULL;
+  if (!CreatePipe(&rd_in, &wr_in, &sa, 0))
     return NULL;
-  SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
+  SetHandleInformation(wr_in, HANDLE_FLAG_INHERIT, 0);
+  if (!CreatePipe(&rd_out, &wr_out, &sa, 0)) {
+    CloseHandle(rd_in);
+    CloseHandle(wr_in);
+    return NULL;
+  }
+  SetHandleInformation(rd_out, HANDLE_FLAG_INHERIT, 0);
+
   STARTUPINFOA si;
   memset(&si, 0, sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_USESTDHANDLES;
-  si.hStdInput = rd;
-  si.hStdOutput = wr;
-  si.hStdError = wr;
+  si.hStdInput = rd_in;
+  si.hStdOutput = wr_out;
+  si.hStdError = wr_out;
   PROCESS_INFORMATION pi;
   memset(&pi, 0, sizeof(pi));
-  char cmdline[4096];
-  size_t off = 0;
-  cmdline[0] = '\0';
-  for (int i = 0; argv[i] && i < 128; i++) {
-    size_t need = strlen(argv[i]) * 2 + 3;
-    if (off + need >= sizeof(cmdline))
-      break;
-    if (i > 0)
-      cmdline[off++] = ' ';
-    cmdline[off++] = '"';
-    for (const char *p = argv[i]; *p; p++) {
-      if (*p == '"' || *p == '\\')
-        cmdline[off++] = '\\';
-      cmdline[off++] = *p;
-    }
-    cmdline[off++] = '"';
-  }
-  cmdline[off] = '\0';
-  CloseHandle(wr);
-  HANDLE child_in = si.hStdInput;
   BOOL ok = CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, CREATE_NO_WINDOW,
                            NULL, NULL, &si, &pi);
-  CloseHandle(rd);
+  CloseHandle(rd_in);
+  CloseHandle(wr_out);
   if (!ok) {
     log_error("Platform_RunArgvCapture CreateProcess failed for '%s'", argv[0]);
+    CloseHandle(wr_in);
+    CloseHandle(rd_out);
     return NULL;
   }
+
+  HANDLE stdin_thread = NULL;
   if (stdin_data && stdin_data[0]) {
-    DWORD written = 0;
-    WriteFile(child_in, stdin_data, (DWORD)strlen(stdin_data), &written, NULL);
+    StdinWriteCtx *ctx = (StdinWriteCtx *)malloc(sizeof(*ctx));
+    if (ctx) {
+      ctx->pipe_write = wr_in;
+      ctx->data = stdin_data;
+      ctx->len = strlen(stdin_data);
+      stdin_thread = CreateThread(NULL, 0, win32_stdin_writer, ctx, 0, NULL);
+      if (!stdin_thread)
+        free(ctx);
+    }
+    if (!stdin_thread)
+      CloseHandle(wr_in);
+  } else {
+    CloseHandle(wr_in);
   }
-  CloseHandle(child_in);
+
+  size_t cap = 4096, len = 0;
+  char *out = (char *)malloc(cap);
+  if (!out) {
+    if (stdin_thread) {
+      WaitForSingleObject(stdin_thread, INFINITE);
+      CloseHandle(stdin_thread);
+    }
+    CloseHandle(rd_out);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return NULL;
+  }
+  for (;;) {
+    if (len + 1024 + 1 > cap) {
+      size_t ncap = cap * 2;
+      char *n = (char *)realloc(out, ncap);
+      if (!n) {
+        free(out);
+        out = NULL;
+        break;
+      }
+      out = n;
+      cap = ncap;
+    }
+    DWORD bytesRead = 0;
+    if (!ReadFile(rd_out, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) ||
+        bytesRead == 0)
+      break;
+    len += bytesRead;
+  }
+  CloseHandle(rd_out);
+  if (stdin_thread) {
+    WaitForSingleObject(stdin_thread, INFINITE);
+    CloseHandle(stdin_thread);
+  }
   WaitForSingleObject(pi.hProcess, INFINITE);
   DWORD code = 0;
   GetExitCodeProcess(pi.hProcess, &code);
@@ -361,7 +504,10 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
     *out_status = (int)code;
   CloseHandle(pi.hThread);
   CloseHandle(pi.hProcess);
-  return NULL;
+  if (!out)
+    return NULL;
+  out[len] = '\0';
+  return out;
 }
 
 bool Platform_IsCtrlPressed(void) {
@@ -1869,7 +2015,7 @@ bool Platform_MouseScroll(int notches) {
   INPUT in = {0};
   in.type = INPUT_MOUSE;
   in.mi.dwFlags = MOUSEEVENTF_WHEEL;
-  in.mi.mouseData = (DWORD)((notches > 0 ? notches : -notches) * WHEEL_DELTA);
+  in.mi.mouseData = (DWORD)((long)notches * WHEEL_DELTA);
   bool ok = SendInput(1, &in, sizeof(INPUT)) == 1;
   return ok;
 }
