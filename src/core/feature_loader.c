@@ -19,8 +19,8 @@
 #include "core/widget_registry.h"
 #include "core/cap_registry.h"
 #include "core/snippet_manager.h"
+#include "platform/input_state.h"
 
-#define MAX_RETIRED 64
 #define MAX_PINS 16
 
 typedef struct {
@@ -87,8 +87,24 @@ typedef struct {
   Popup *pins[MAX_PINS];
   int npins;
 } RetiredLib;
-static RetiredLib g_retired[MAX_RETIRED];
+static RetiredLib *g_retired = NULL;
 static int g_retired_count = 0;
+static int g_retired_cap = 0;
+
+static bool ensure_retired_capacity(int needed) {
+  if (needed <= g_retired_cap)
+    return true;
+  int cap = g_retired_cap > 0 ? g_retired_cap : 16;
+  while (cap < needed)
+    cap *= 2;
+  RetiredLib *grown =
+      (RetiredLib *)realloc(g_retired, (size_t)cap * sizeof(*g_retired));
+  if (!grown)
+    return false;
+  g_retired = grown;
+  g_retired_cap = cap;
+  return true;
+}
 
 static void retire_old_lib(LibHandle handle, const char *uniq,
                            const char *owner) {
@@ -115,15 +131,10 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
     for (int i = 0; i < wm->popup_count; i++)
       r.pins[r.npins++] = wm->popups[i];
   }
-  if (g_retired_count >= MAX_RETIRED) {
-    log_error("retired lib overflow, force unloading oldest");
-    cap_purge_owner(g_retired[0].owner, NULL);
-    hotkey_purge_owner(g_retired[0].owner, NULL);
-    snippet_purge_owner(g_retired[0].owner, NULL);
-    log_info("retired lib %s left loaded (never unloaded)", g_retired[0].owner);
-    for (int k = 0; k + 1 < g_retired_count; k++)
-      g_retired[k] = g_retired[k + 1];
-    g_retired_count--;
+  if (!ensure_retired_capacity(g_retired_count + 1)) {
+    log_error("retire: cannot track lib %s, leaving it loaded",
+              owner ? owner : "?");
+    return;
   }
   g_retired[g_retired_count++] = r;
 }
@@ -154,8 +165,13 @@ static void sweep_retired_libs(void) {
       cap_purge_owner(g_retired[i].owner, NULL);
       hotkey_purge_owner(g_retired[i].owner, NULL);
       snippet_purge_owner(g_retired[i].owner, NULL);
-      log_info("retired lib %s left loaded (never unloaded)",
-               g_retired[i].owner);
+      widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen);
+      cc_registry_purge_owner(g_retired[i].owner, NULL);
+      Platform_KeyCallback_PurgeOwner(g_retired[i].owner, NULL);
+      log_info("unloading retired lib %s", g_retired[i].owner);
+      Platform_UnloadLibrary(g_retired[i].handle);
+      if (g_retired[i].uniq[0])
+        remove(g_retired[i].uniq);
     }
   }
   g_retired_count = n;
@@ -685,11 +701,10 @@ void FeatureLoader_Shutdown(void) {
       g_features[i].handle = 0;
     }
   }
-  for (int i = 0; i < g_retired_count; i++) {
-    g_retired[i].uniq[0] = '\0';
-    g_retired[i].handle = 0;
-  }
+  free(g_retired);
+  g_retired = NULL;
   g_retired_count = 0;
+  g_retired_cap = 0;
   g_feature_count = 0;
   free(g_features);
   g_features = NULL;
@@ -765,6 +780,7 @@ void FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       snippet_purge_owner(retire_owner, path_copy);
       widget_purge_owner(retire_owner, path_copy, retire_gen);
       cc_registry_purge_owner(retire_owner, path_copy);
+      Platform_KeyCallback_PurgeOwner(retire_owner, path_copy);
       sweep_retired_libs();
       UNLOCK();
       DeferredInit_RunAll();
@@ -813,15 +829,6 @@ void FeatureLoader_ReloadAll(void) {
   widget_bump_generation();
   FeatureLoader_Init();
   LOCK();
-  for (int i = 0; i < g_retired_count; i++) {
-    if (g_retired[i].owner[0]) {
-      cap_purge_owner(g_retired[i].owner, NULL);
-      hotkey_purge_owner(g_retired[i].owner, NULL);
-      snippet_purge_owner(g_retired[i].owner, NULL);
-      widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen);
-      cc_registry_purge_owner(g_retired[i].owner, NULL);
-    }
-  }
   sweep_retired_libs();
   UNLOCK();
 

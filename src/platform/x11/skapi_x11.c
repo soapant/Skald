@@ -37,6 +37,8 @@
 #include "core/types/skapi_types.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
+#include "core/thread_registry.h"
+#include "helpers/helpers_owner.h"
 
 static bool platform_exe_in_path(const char *name) {
   if (!name || !name[0])
@@ -665,6 +667,7 @@ bool sk_type_text_platform(const char *s) {
 typedef struct {
   double seconds;
   void (*callback)(void);
+  char owner[OWNER_PATH_MAX];
 } TimerPayload;
 
 static void *TimerThread(void *arg) {
@@ -679,7 +682,7 @@ static void *TimerThread(void *arg) {
   if (payload->callback) {
     payload->callback();
   }
-
+  ThreadRegistry_Finish(payload);
   free(payload);
   return NULL;
 }
@@ -693,9 +696,14 @@ void sk_run_after_time_platform(double seconds, void (*callback)(void)) {
   }
   payload->seconds = seconds;
   payload->callback = callback;
+  payload->owner[0] = '\0';
+  Owner_ResolveForFunc((void *)callback, payload->owner,
+                       sizeof(payload->owner));
+  ThreadRegistry_Add(payload, payload->owner);
 
   pthread_t thread;
   if (pthread_create(&thread, NULL, TimerThread, payload) != 0) {
+    ThreadRegistry_Finish(payload);
     free(payload);
     return;
   }
