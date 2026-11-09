@@ -10,7 +10,7 @@ typedef bool (*HotkeyCondition)(void);
 typedef struct {
   int vk_code;
   int modifiers;
-  const char **blacklist;
+  char **blacklist;
   int blacklist_count;
   bool whitelist;
   HotkeyCallback hotkey_callback;
@@ -29,7 +29,7 @@ bool AlwaysDisabled(void);
 HotkeyBinding convert_into_hotkey_binding(
     char *hotkey_string, void (*on_hotkey_trigger)(void),
     bool (*optional_condition_for_hotkey)(void),
-    const char **optional_blacklistedwindows, bool whitelist, void *user_ud);
+    const char *const *optional_blacklistedwindows, bool whitelist, void *user_ud);
 void hotkey_purge_owner(const char *path_a, const char *path_b);
 void hotkey_key_up(int vk_code);
 

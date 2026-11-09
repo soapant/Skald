@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 bool remap_register_internal(const char *src, const char *dst, bool whitelist,
-                             const char **windows);
+                             const char *const *windows);
 void remap_send_combo(const char *combo);
 bool remap_handle_vk(int vk_code, int value);
 void remap_update_phys(int vk_code, int value);

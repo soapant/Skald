@@ -170,7 +170,6 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   if (!spec->subwindow && wm->popup_count > 0)
     return NULL;
   FlintContext_Get()->window.editbox_placed = false;
-  CloseCallback on_close = spec->on_close;
   char *res = Platform_PromptUser(wm, spec);
   return res;
 }

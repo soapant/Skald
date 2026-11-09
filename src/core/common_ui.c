@@ -357,7 +357,7 @@ ColorRef GetRainbowColor(float t, float s, float v) {
     float p = v * (1 - s);
     float q = v * (1 - s * f);
     float t_ = v * (1 - s * (1 - f));
-    float r, g, b;
+    float r = 0.0f, g = 0.0f, b = 0.0f;
     switch (i) {
     case 0:
       r = v;

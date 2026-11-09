@@ -32,7 +32,7 @@ struct ListBoxInfo {
   int matching_indices[MAX_VISIBLE_ITEMS];
   int total_matches;
   int selected_index;
-  char *selected_text;
+  const char *selected_text;
   int view_offset;
   char last_filter[256];
 };

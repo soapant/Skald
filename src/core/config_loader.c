@@ -83,7 +83,7 @@ static char *g_heap_used_search = NULL, *g_heap_feature_path = NULL,
 static char *g_heap_control_hotkey = NULL,
             *g_heap_reload_features_hotkey = NULL,
             *g_heap_actions_hotkey = NULL, *g_heap_reg_hotk = NULL,
-            *g_heap_reg_alias_hotk = NULL, *g_heap_edit_popup_pos = NULL,
+            *g_heap_reg_alias_hotk = NULL,
             *g_heap_theme = NULL, *g_heap_background_image = NULL;
 static void heapify_config(void) {
   char *n_font = heap_dup(UsedFont), *n_term = heap_dup(UsedTerminal),
@@ -289,9 +289,7 @@ static bool config_build_load_store(void) {
     g_cfg_count = 1;
   }
   g_cfg_libs[g_cfg_count].handle = h;
-  strncpy(g_cfg_libs[g_cfg_count].uniq, uniq,
-          sizeof(g_cfg_libs[g_cfg_count].uniq) - 1);
-  g_cfg_libs[g_cfg_count].uniq[sizeof(g_cfg_libs[g_cfg_count].uniq) - 1] = '\0';
+  snprintf(g_cfg_libs[g_cfg_count].uniq, sizeof(g_cfg_libs[g_cfg_count].uniq), "%s", uniq);
   g_cfg_count++;
   return true;
 }
