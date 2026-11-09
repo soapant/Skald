@@ -11,6 +11,9 @@
 
 #include "core/context.h"
 #include "core/checkbox.h"
+#include "core/types/file.h"
+#include "core/types/prompt.h"
+#include "core/widget_registry.h"
 #include "deps/log.h"
 #include "config.h"
 #include "platform/platform.h"
@@ -28,6 +31,7 @@
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
 #include "platform/flapi_platform.h"
+#include "platform/widget.h"
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"

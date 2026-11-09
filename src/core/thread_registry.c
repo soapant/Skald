@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "core/types/window.h"
 #include "platform/platform.h"
 
 typedef struct {

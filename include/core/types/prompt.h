@@ -4,13 +4,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "core/types.h"
-#include "core/types/color.h"
 
 typedef struct ListBoxInfo ListBoxInfo;
-
 typedef struct PromptState PromptState;
 typedef struct PromptCallbacks PromptCallbacks;
+
+#include "core/types.h"
+#include "core/types/color.h"
 
 typedef void (*RenderCallback)(PromptState *state);
 

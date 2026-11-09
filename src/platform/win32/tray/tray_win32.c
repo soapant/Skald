@@ -2,8 +2,10 @@
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
+#include "config_values.h"
 #include "core/types.h"
 #include "core/context.h"
+#include "core/types/window.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
 #include "platform/platform.h"

@@ -1,4 +1,7 @@
+#include "config_values.h"
 #include "core/context.h"
+#include "core/types/color.h"
+#include "core/types/keys.h"
 #include "core/window_manager.h"
 #include "core/timer.h"
 #include "core/listbox_hover.h"

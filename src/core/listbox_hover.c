@@ -5,6 +5,8 @@
 
 #include "core/context.h"
 #include "core/timer.h"
+#include "core/types/window.h"
+#include "core/types/prompt.h"
 #include "core/window_manager.h"
 #include "platform/draw.h"
 #include "platform/input_state.h"

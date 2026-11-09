@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "core/types.h"
 #include "deps/log.h"
 #include "config.h"
 #include "platform/platform.h"

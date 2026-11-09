@@ -1,3 +1,5 @@
+#include "core/types/window.h"
+#include "core/types/color.h"
 #include "core/window_manager.h"
 #include "core/hotkey_manager.h"
 #include "core/context.h"

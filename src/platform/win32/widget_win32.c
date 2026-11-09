@@ -2,6 +2,8 @@
 #include <wingdi.h>
 #include <stdlib.h>
 #include <string.h>
+#include "core/types/color.h"
+#include "config_values.h"
 #include "platform/widget.h"
 #include "platform/draw.h"
 #include "core/draw_state.h"

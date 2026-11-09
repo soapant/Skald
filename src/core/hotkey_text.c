@@ -4,6 +4,7 @@
 #include <sys/time.h>
 
 #include "core/types/keys.h"
+#include "core/types/window.h"
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;

@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "core/types/window.h"
+#include "core/types.h"
 #include "platform/platform.h"
 #include "core/hotkey_string.h"
 #include "helpers/helpers_hotkey.h"

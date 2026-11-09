@@ -1,3 +1,4 @@
+#include "config_values.h"
 #include "platform/platform.h"
 #include "config.h"
 

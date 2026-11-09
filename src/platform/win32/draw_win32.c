@@ -1,3 +1,7 @@
+#include "config_values.h"
+#include "core/types/window.h"
+#include "core/types/color.h"
+#include "core/types/prompt.h"
 #include "platform/draw.h"
 #include "core/prompt_geometry.h"
 #include "core/editbox.h"

@@ -1,6 +1,7 @@
 #include "core/remap_manager.h"
 #include "core/remap_parse.h"
 #include "core/types/keys.h"
+#include "core/types/window.h"
 #include "platform/platform.h"
 #include "deps/log.h"
 #include <string.h>

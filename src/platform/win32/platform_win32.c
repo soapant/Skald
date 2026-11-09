@@ -2,6 +2,10 @@
 #include <winhttp.h>
 #include <psapi.h>
 #include <dwmapi.h>
+#include "config_values.h"
+#include "core/types.h"
+#include "core/types/window.h"
+#include "core/types/keys.h"
 #include "deps/log.h"
 #include <fileapi.h>
 #include <handleapi.h>

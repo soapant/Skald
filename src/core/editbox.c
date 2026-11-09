@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "core/prompt_geometry.h"
+#include "core/types/window.h"
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"
 #include "platform/platform.h"

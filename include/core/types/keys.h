@@ -1,6 +1,8 @@
 #ifndef TYPES_KEYS_H
 #define TYPES_KEYS_H
 
+#include <stdbool.h>
+
 #if !defined(VK_BACK)
 #define VK_BACK 0x08
 #endif

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#include "core/types/window.h"
 #include "platform/platform.h"
 #include "platform/lib.h"
 #include "config.h"
