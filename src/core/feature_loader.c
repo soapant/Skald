@@ -185,9 +185,9 @@ static bool ends_with(const char *str, const char *suffix) {
 
 static int g_feature_init_count = 0;
 
-#define FLINT_MANIFEST_LIST_MAX 32
+#define MANIFEST_LIST_MAX 32
 
-static bool flint_feature_dir(const char *name, char *out, size_t n) {
+static bool feature_dir(const char *name, char *out, size_t n) {
   if (!FeaturePath || !FeaturePath[0] || !name || !name[0])
     return false;
   snprintf(out, n, "%s/%s", FeaturePath, name);
@@ -196,9 +196,9 @@ static bool flint_feature_dir(const char *name, char *out, size_t n) {
 
 typedef struct {
   char name[64];
-  char deps[FLINT_MANIFEST_LIST_MAX][64];
+  char deps[MANIFEST_LIST_MAX][64];
   int dep_count;
-  char provides[FLINT_MANIFEST_LIST_MAX][96];
+  char provides[MANIFEST_LIST_MAX][96];
   int provide_count;
   bool valid;
 } FeatureManifest;
@@ -231,7 +231,7 @@ static void manifest_unquote(char *s) {
 
 static bool manifest_path(const char *name, char *out, size_t n) {
   char dir[512];
-  if (!flint_feature_dir(name, dir, sizeof(dir)))
+  if (!feature_dir(name, dir, sizeof(dir)))
     return false;
   snprintf(out, n, "%s/manifest.toml", dir);
   return true;
@@ -248,7 +248,7 @@ static void manifest_write_baseline(const char *name) {
   }
 
   char dir[512];
-  if (!flint_feature_dir(name, dir, sizeof(dir)))
+  if (!feature_dir(name, dir, sizeof(dir)))
     return;
   Platform_MkdirIfNotExists(dir);
   f = fopen(path, "wb");
@@ -460,10 +460,10 @@ static void manifest_parse(const char *name, FeatureManifest *m) {
     manifest_unquote(work);
     if (work[0] == '\0')
       continue;
-    if (section == 1 && m->provide_count < FLINT_MANIFEST_LIST_MAX) {
+    if (section == 1 && m->provide_count < MANIFEST_LIST_MAX) {
       snprintf(m->provides[m->provide_count++], sizeof(m->provides[0]), "%s",
                work);
-    } else if (section == 2 && m->dep_count < FLINT_MANIFEST_LIST_MAX) {
+    } else if (section == 2 && m->dep_count < MANIFEST_LIST_MAX) {
       snprintf(m->deps[m->dep_count++], sizeof(m->deps[0]), "%s", work);
     }
   }

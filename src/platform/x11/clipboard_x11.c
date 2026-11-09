@@ -576,7 +576,7 @@ static Display *x11_clipboard_read_display(void) {
   attrs.override_redirect = True;
   g_clip_rd_win = XCreateWindow(d, root, 0, 0, 1, 1, 0, 0, InputOutput,
                                 CopyFromParent, CWOverrideRedirect, &attrs);
-  g_clip_rd_prop = XInternAtom(d, "FLINT_CLIP_READ", False);
+  g_clip_rd_prop = XInternAtom(d, "CLIP_READ", False);
   g_clip_incr = XInternAtom(d, "INCR", False);
   XFlush(d);
   g_clip_rd_dpy = d;

@@ -40,7 +40,6 @@ void x11_draw_selection_background(Display *dpy, XftDraw *xd, Visual *vis,
 Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h);
 void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h);
 void x11_release_prompt_buffer(Display *dpy, Window win);
-bool x11_is_own_window_name(const char *name);
 
 int x11_font_row_height(int ascent, int descent, int font_size);
 int x11_font_list_top(int ascent, int descent, int font_size);
