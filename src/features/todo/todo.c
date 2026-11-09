@@ -353,7 +353,7 @@ void todo_edit_callback(PromptState *state) {
 }
 
 void TriggerTodo(void) {
-  fl_window(.title = "📝 Todo", .refresh = todo_refresh_callback,
+  fl_window(.title = "Todo", .refresh = todo_refresh_callback,
             .enter = todo_enter_callback, .ctrl_enter = todo_ctrlenter_callback,
             .render = todo_render_callback, .edit = todo_edit_callback);
 }

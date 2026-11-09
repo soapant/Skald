@@ -22,19 +22,6 @@ typedef struct {
   int x, y, w, h;
 } PromptPopupData;
 
-static const char *prompt_feature_name(const char *title) {
-  if (!title || !title[0])
-    return title;
-  const char *p = strchr(title, ' ');
-  if (!p)
-    return title;
-  for (const char *q = title; q < p; q++) {
-    if ((unsigned char)*q >= 0x80)
-      return p + 1;
-  }
-  return title;
-}
-
 static void PromptPopup_OnShow(Popup *self) {
 
   PromptPopupData *data = (PromptPopupData *)self;
@@ -61,7 +48,7 @@ static void PromptPopup_OnShow(Popup *self) {
   data->state->width = data->w;
   data->state->height = data->h;
   const char *title = data->spec.title ? data->spec.title : "Flint";
-  data->state->window_title = (char *)prompt_feature_name(title);
+  data->state->window_title = (char *)title;
   data->state->eb->filter[0] = '\0';
   if (data->spec.initial_text && data->spec.initial_text[0]) {
     strncpy(data->state->eb->filter, data->spec.initial_text,
@@ -130,7 +117,7 @@ static void PromptPopup_OnShow(Popup *self) {
       data->spec.filter ? data->spec.filter : data->saved_callbacks.filter;
   ctx2->window.prompt_callbacks.help =
       data->spec.help ? data->spec.help : data->saved_callbacks.help;
-  ctx2->window.current_feature = (char *)prompt_feature_name(title);
+  ctx2->window.current_feature = (char *)title;
   ctx2->window.title = title;
   ctx2->window.editbox_placed = true;
   if (data->spec.refresh)

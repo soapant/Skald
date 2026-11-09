@@ -1588,6 +1588,7 @@ static bool cc_subwindow_enter(PromptState *state) {
 }
 
 #define CC_PERSIST_MAX 64
+
 static char g_persisted_hotkeys[CC_PERSIST_MAX][64];
 static char g_persisted_actions[CC_PERSIST_MAX][256];
 static size_t g_persisted_count;
@@ -1817,7 +1818,7 @@ static void reload_features_and_config(void) { fl_reload_all_features(); fl_relo
 static void TriggerControl(void) {
   cc_build_xdg_paths();
 
-  fl_window(.title = "⚡ Control", .placeholder = "Search For Something...",
+  fl_window(.title = "Control", .placeholder = "Search For Something...",
             .refresh = cc_refresh, .enter = cc_enter,
             .ctrl_enter = cc_ctrl_enter, .shift_enter = cc_shift_enter,
             .ctrl_shift_enter = cc_ctrl_shift_enter,
@@ -1838,7 +1839,6 @@ FLINT_FEATURE_INIT {
   fl_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = TriggerControl);
   fl_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey,
                      .cb = reload_features_and_config);
-  fl_add_alias(.alias = "brw", .target = "Brawlhalla");
   fl_register_deferred_init(cc_deferred_entry_build);
 }
 

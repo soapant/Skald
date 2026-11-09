@@ -75,7 +75,7 @@ static bool zoxide_enter(PromptState *state) {
 }
 static void TriggerZoxide(void) {
   FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
-  fl_window(.title = "⌨️ Zoxide", .items = (const char **)files.items,
+  fl_window(.title = "Zoxide", .items = (const char **)files.items,
             .refresh = zoxide_refresh, .enter = zoxide_enter,
             .edit = zoxide_edit);
   fl_free_file_list(&files);

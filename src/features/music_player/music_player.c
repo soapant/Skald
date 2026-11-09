@@ -192,7 +192,7 @@ void random_music(void) {
   play_music(s_music_files.files[idx].path);
 }
 void music_prompt(void) {
-  fl_window(.title = "🎵 Player", .refresh = music_refresh_callback,
+  fl_window(.title = "Player", .refresh = music_refresh_callback,
             .enter = music_enter_callback);
 }
 void reload_music(void) {
