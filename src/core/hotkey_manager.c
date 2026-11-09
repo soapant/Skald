@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#if !defined(_WIN32)
+#include <sys/eventfd.h>
+#include <unistd.h>
+#include <fcntl.h>
+#endif
 
 #include "core/types/window.h"
 #include "platform/platform.h"
@@ -32,9 +37,35 @@ static char g_pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
 static int g_pending_head = 0;
 static int g_pending_tail = 0;
 static void *g_q_mutex = NULL;
+
+static int g_wake_fd = -1;
+int hotkey_wake_fd(void) {
+  if (g_wake_fd < 0) {
+#if defined(_WIN32)
+    g_wake_fd = 0;
+#else
+    g_wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+#endif
+  }
+  return g_wake_fd;
+}
+
+static void hotkey_wake(void) {
+  if (g_wake_fd < 0)
+    return;
+#if defined(_WIN32)
+  return;
+#else
+  unsigned long long one = 1;
+  ssize_t wr = write(g_wake_fd, &one, sizeof(one));
+  (void)wr;
+#endif
+}
+
 static void hotkey_queue_init(void) {
   if (!g_q_mutex)
     g_q_mutex = Platform_MutexCreate();
+  hotkey_wake_fd();
 }
 #define HOTKEY_Q_LOCK()                                                        \
   do {                                                                         \
@@ -56,6 +87,7 @@ static void hotkey_enqueue(HotkeyCallback fn, void *ud, const char *owner,
     snprintf(g_pending_owner[g_pending_tail], OWNER_PATH_MAX, "%s",
              owner ? owner : "");
     g_pending_tail = nxt;
+    hotkey_wake();
   }
   HOTKEY_Q_UNLOCK();
 }

@@ -5,6 +5,7 @@
 #include <X11/X.h>
 #include <X11/extensions/XKB.h>
 #include <linux/input-event-codes.h>
+#include "core/hotkey_manager.h"
 
 #include "core/window_manager.h"
 #include "deps/log.h"
@@ -351,9 +352,17 @@ int WindowManager_RunLinux(WindowManager *wm) {
 
   while (wm->running) {
     Display *rdpy = (Display *)Platform_RenderThread_Display();
-    struct pollfd xfds[2];
+    struct pollfd xfds[3];
     int nfds = 0;
-    int main_idx = -1, render_idx = -1;
+    int main_idx = -1, render_idx = -1, wake_idx = -1;
+    int hk_fd = hotkey_wake_fd();
+    if (hk_fd >= 0) {
+      wake_idx = nfds;
+      xfds[nfds].fd = hk_fd;
+      xfds[nfds].events = POLLIN;
+      xfds[nfds].revents = 0;
+      nfds++;
+    }
     if (rdpy && rdpy != dpy) {
       main_idx = nfds;
       xfds[nfds].fd = ConnectionNumber(dpy);
@@ -373,6 +382,11 @@ int WindowManager_RunLinux(WindowManager *wm) {
       nfds = 1;
     }
     int poll_res = poll(xfds, (nfds_t)nfds, 50);
+    if (wake_idx >= 0 && (xfds[wake_idx].revents & POLLIN)) {
+      unsigned long long v;
+      ssize_t rd = read(hk_fd, &v, sizeof(v));
+      (void)rd;
+    }
     if (poll_res < 0)
       break;
     if (main_idx >= 0 && (xfds[main_idx].revents & POLLIN)) {

@@ -524,7 +524,6 @@ static bool build_features(void) {
 
 static Nob_File_Paths to_build = {0};
 static Nob_File_Paths err_paths = {0};
-static Nob_File_Paths printed_sigs = {0};
 
 static bool compile_all(bool *any_compiled) {
   *any_compiled = to_build.count > 0;
