@@ -700,6 +700,10 @@ bool fl_launch_terminal_at_path(char *path, char *args) {
   return r;
 }
 
+bool fl_process_running(const char *name) {
+  return Platform_ProcessRunning(name);
+}
+
 bool fl_terminate_process_by_name(const char *exe_name) {
   if (!exe_name)
     return false;

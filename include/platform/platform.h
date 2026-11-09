@@ -99,6 +99,7 @@ bool Platform_StringStartsWithCaseInsensitive(const char *str,
 bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b);
 bool Platform_MkdirIfNotExists(const char *path);
 bool Platform_TerminateProcessByName(const char *exe_name);
+bool Platform_ProcessRunning(const char *name);
 bool Platform_FocusWindow(const char *window_name);
 PlWindowList Platform_GetWindowTitles();
 PlWindowList Platform_GetWindowNames();
