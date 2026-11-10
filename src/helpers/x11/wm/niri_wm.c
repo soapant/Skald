@@ -13,7 +13,7 @@
 
 #include "deps/log.h"
 #include "platform/platform.h"
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 
 static bool niri_sock_live(const char *sock) {
 
@@ -29,7 +29,7 @@ bool niri_is_active(void) {
     return true;
   if (cur && cur[0])
     unsetenv("NIRI_SOCKET");
-  const char *rtd = Env_XdgRuntimeDir();
+  const char *rtd = x11_env_xdg_runtime_dir();
   if (!rtd || !rtd[0])
     return false;
   char pat[512];

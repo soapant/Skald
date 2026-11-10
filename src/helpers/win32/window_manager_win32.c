@@ -6,6 +6,7 @@
 #include "core/listbox_hover.h"
 #include "platform/widget.h"
 #include "helpers/helpers_input_state.h"
+#include "platform/platform.h"
 #include <windows.h>
 
 #include "core/hotkey_pending.h"

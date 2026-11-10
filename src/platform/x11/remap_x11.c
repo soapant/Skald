@@ -1,6 +1,6 @@
 #include "platform/platform.h"
-#include "platform/x11/input_x11.h"
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/input_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "deps/log.h"
 #include "core/types/keys.h"
 #include <linux/input.h>
@@ -168,7 +168,7 @@ static bool inject_xdotool(int vk_code, int down) {
 
 static bool inject_xtest(int vk_code, int down) {
 #if __has_include(<X11/extensions/XTest.h>)
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   KeySym ks = 0;

@@ -1,4 +1,4 @@
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 
 #include <stdio.h>
 #include <dirent.h>
@@ -17,7 +17,7 @@ int x11_error_handler(Display *d, XErrorEvent *e) {
   return 0;
 }
 
-static Display *OpenBestDisplay(void) {
+static Display *x11_open_best_display(void) {
 
   Display *d = XOpenDisplay(NULL);
   if (d)
@@ -41,7 +41,7 @@ static Display *OpenBestDisplay(void) {
   return d;
 }
 
-bool init_display(void) {
+bool x11_init_display(void) {
   if (g_display_initialized) {
     return true;
   }
@@ -50,7 +50,7 @@ bool init_display(void) {
 
   XSetErrorHandler(x11_error_handler);
 
-  g_display = OpenBestDisplay();
+  g_display = x11_open_best_display();
   if (g_display == NULL) {
     log_error("Failed to open X11 display.");
     return false;
@@ -60,16 +60,16 @@ bool init_display(void) {
   return true;
 }
 
-Display *get_display(void) {
+Display *x11_get_display(void) {
   if (!g_display_initialized) {
-    if (!init_display()) {
+    if (!x11_init_display()) {
       return NULL;
     }
   }
   return g_display;
 }
 
-void cleanup_display(void) {
+void x11_cleanup_display(void) {
   if (g_display_initialized && g_display != NULL) {
     XCloseDisplay(g_display);
     g_display = NULL;

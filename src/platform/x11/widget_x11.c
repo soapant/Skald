@@ -12,7 +12,7 @@
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
 #include "platform/x11/drawing_x11.h"
-#include "platform/x11/window_factory_x11.h"
+#include "helpers/x11/window_factory_x11.h"
 #include "deps/log.h"
 #include "config_values.h"
 #include "core/types/color.h"

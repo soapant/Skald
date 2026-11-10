@@ -13,7 +13,7 @@
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"
 #include "helpers/helpers_input_state.h"
-#include "platform/win32/input_core_win32.h"
+#include "helpers/win32/input_core_win32.h"
 #include "core/hotkey_pending.h"
 
 
@@ -28,7 +28,7 @@ bool Platform_GetMousePos(int *out_x, int *out_y) {
   return true;
 }
 
-void Platform_RegisterRawMouse(HWND hwnd) {
+void win32_register_raw_mouse(HWND hwnd) {
   if (!hwnd || !IsWindow(hwnd)) {
     return;
   }
@@ -43,7 +43,7 @@ void Platform_RegisterRawMouse(HWND hwnd) {
   }
 }
 
-void Platform_HandleRawMouseInput(LPARAM lParam) {
+void win32_handle_raw_mouse_input(LPARAM lParam) {
   UINT size = 0;
   if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size,
                       sizeof(RAWINPUTHEADER)) != 0) {

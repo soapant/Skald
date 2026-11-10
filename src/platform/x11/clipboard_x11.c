@@ -1,4 +1,4 @@
-#include "platform/x11/clipboard_x11.h"
+#include "helpers/x11/clipboard_x11.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -10,7 +10,7 @@
 #include <X11/X.h>
 #include <stdarg.h>
 
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "core/clipboard_history.h"
 #include "config_values.h"
 #include "core/types/window.h"
@@ -82,7 +82,7 @@ static long g_incr_old_mask = 0;
 void x11_clipboard_ensure_started(void) {
   if (g_cl_t0 == 0)
     g_cl_t0 = cl_ms_since();
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy) {
     return;
   }
@@ -116,7 +116,7 @@ void x11_clipboard_ensure_started(void) {
 static void x11_clipboard_abort_incr(void) {
 
   if (g_incr_active && g_incr_req != None && g_incr_old_mask) {
-    Display *adpy = get_display();
+    Display *adpy = x11_get_display();
     if (adpy)
       XSelectInput(adpy, g_incr_req, g_incr_old_mask);
   }
@@ -336,7 +336,7 @@ int x11_clipboard_set_text(const char *text) {
     return 0;
   cl_trace("SETTEXT", "begin len=%d text='%s'", (int)strlen(text), text);
   x11_clipboard_ensure_started();
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy || g_clip_win == None) {
     cl_trace("SETTEXT", "no display/win");
     return 0;
@@ -364,7 +364,7 @@ int x11_clipboard_set_file(const char *path) {
   if (!path || !path[0])
     return 0;
   x11_clipboard_ensure_started();
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy || g_clip_win == None)
     return 0;
   x11_clipboard_abort_incr();
@@ -395,7 +395,7 @@ int x11_clipboard_set_image(const unsigned char *png, size_t len) {
     return 0;
 
   x11_clipboard_ensure_started();
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy || g_clip_win == None)
     return 0;
   x11_clipboard_abort_incr();
@@ -418,7 +418,7 @@ int x11_clipboard_set_image(const unsigned char *png, size_t len) {
 }
 
 void x11_clipboard_shutdown(void) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (dpy && g_clip_win != None)
     XDestroyWindow(dpy, g_clip_win);
   g_clip_win = None;
@@ -446,7 +446,7 @@ typedef struct {
   Atom property;
 } ClipReadWait;
 
-static Bool ClipReadNotifyPred(Display *dpy, XEvent *ev, XPointer arg) {
+static Bool x11_clip_read_notify_pred(Display *dpy, XEvent *ev, XPointer arg) {
 
   (void)dpy;
   ClipReadWait *w = (ClipReadWait *)arg;
@@ -456,7 +456,7 @@ static Bool ClipReadNotifyPred(Display *dpy, XEvent *ev, XPointer arg) {
   return False;
 }
 
-static Bool ClipReadPropPred(Display *dpy, XEvent *ev, XPointer arg) {
+static Bool x11_clip_read_prop_pred(Display *dpy, XEvent *ev, XPointer arg) {
 
   (void)dpy;
   ClipReadWait *w = (ClipReadWait *)arg;
@@ -467,7 +467,7 @@ static Bool ClipReadPropPred(Display *dpy, XEvent *ev, XPointer arg) {
   return False;
 }
 
-static int ClipReadWaitEvent(Display *dpy, XEvent *ev,
+static int x11_clip_read_wait_event(Display *dpy, XEvent *ev,
                              Bool (*pred)(Display *, XEvent *, XPointer),
                              ClipReadWait *w, int tries) {
 
@@ -479,7 +479,7 @@ static int ClipReadWaitEvent(Display *dpy, XEvent *ev,
   return 0;
 }
 
-static char *ClipReadProperty(Display *dpy, Window win, Atom prop,
+static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
                               size_t *out_len) {
 
   Atom actual = None;
@@ -510,7 +510,7 @@ static char *ClipReadProperty(Display *dpy, Window win, Atom prop,
   return out;
 }
 
-static char *ClipReadIncr(Display *dpy, Window win, Atom prop,
+static char *x11_clip_read_incr(Display *dpy, Window win, Atom prop,
                           ClipReadWait *w) {
 
   size_t cap = 65536;
@@ -520,7 +520,7 @@ static char *ClipReadIncr(Display *dpy, Window win, Atom prop,
     return NULL;
   XEvent ev;
   for (;;) {
-    if (!ClipReadWaitEvent(dpy, &ev, ClipReadPropPred, w, 400))
+    if (!x11_clip_read_wait_event(dpy, &ev, x11_clip_read_prop_pred, w, 400))
       break;
     Atom actual = None;
     int format = 0;
@@ -560,7 +560,7 @@ static Display *x11_clipboard_read_display(void) {
     return g_clip_rd_dpy;
   Display *d = XOpenDisplay(NULL);
   if (!d) {
-    Display *main_dpy = get_display();
+    Display *main_dpy = x11_get_display();
     if (main_dpy) {
       char *ds = XDisplayString(main_dpy);
       if (ds) {
@@ -584,7 +584,7 @@ static Display *x11_clipboard_read_display(void) {
   return g_clip_rd_dpy;
 }
 
-static char *ClipReadTarget(Atom target) {
+static char *x11_clip_read_target(Atom target) {
   Display *dpy = x11_clipboard_read_display();
   if (!dpy || g_clip_rd_win == None) {
     cl_trace("READ", "no read display/win");
@@ -604,7 +604,7 @@ static char *ClipReadTarget(Atom target) {
   XFlush(dpy);
   ClipReadWait w = {win, g_clip_clipboard, prop};
   XEvent ev;
-  if (!ClipReadWaitEvent(dpy, &ev, ClipReadNotifyPred, &w, CLIP_READ_TRIES)) {
+  if (!x11_clip_read_wait_event(dpy, &ev, x11_clip_read_notify_pred, &w, CLIP_READ_TRIES)) {
     return NULL;
   }
   if (ev.xselection.property == None) {
@@ -624,16 +624,16 @@ static char *ClipReadTarget(Atom target) {
   if (actual == g_clip_rd_incr) {
     XDeleteProperty(dpy, win, prop);
     XFlush(dpy);
-    return ClipReadIncr(dpy, win, prop, &w);
+    return x11_clip_read_incr(dpy, win, prop, &w);
   }
-  char *res = ClipReadProperty(dpy, win, prop, NULL);
+  char *res = x11_clip_read_property(dpy, win, prop, NULL);
   return res;
 }
 
 unsigned long x11_clipboard_owner(void) {
 
   x11_clipboard_ensure_started();
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy || g_clip_clipboard == None)
     return 0;
   return (unsigned long)XGetSelectionOwner(dpy, g_clip_clipboard);
@@ -642,7 +642,7 @@ unsigned long x11_clipboard_owner(void) {
 char *x11_clipboard_get_text(void) {
   g_cl_reads++;
   x11_clipboard_ensure_started();
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy || g_clip_win == None) {
     cl_trace("GETTEXT", "no display, read#%ld", g_cl_reads);
     return NULL;
@@ -650,9 +650,9 @@ char *x11_clipboard_get_text(void) {
   if (XGetSelectionOwner(dpy, g_clip_clipboard) == g_clip_win && g_clip_text) {
     return strdup(g_clip_text);
   }
-  char *out = ClipReadTarget(g_clip_utf8);
+  char *out = x11_clip_read_target(g_clip_utf8);
   if (!out) {
-    out = ClipReadTarget(XA_STRING);
+    out = x11_clip_read_target(XA_STRING);
   }
   if (!out)
     g_cl_read_fail++;
@@ -662,19 +662,5 @@ char *x11_clipboard_get_text(void) {
 #if !defined(SKALD_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
 
-bool Platform_ClipboardAvailable(void) { return true; }
-
-int Platform_ClipboardSetText(const char *text) {
-  return x11_clipboard_set_text(text);
-}
-
-int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
-  return x11_clipboard_set_image(png, len);
-}
-
-int Platform_ClipboardSetFile(const char *path) { return x11_clipboard_set_file(path); }
-
-char *Platform_ClipboardGetText(void) { return x11_clipboard_get_text(); }
-
-void Platform_ClipboardShutdown(void) { x11_clipboard_shutdown(); }
+bool x11_clipboard_available(void) { return true; }
 #endif

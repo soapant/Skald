@@ -8,7 +8,7 @@
 #include "core/types/window.h"
 #include "platform/wm_platform.h"
 #include "helpers/helpers_ui.h"
-#include "platform/win32/common_ui_win32.h"
+#include "helpers/win32/common_ui_win32.h"
 #include <windows.h>
 
 static HWND g_prev_fg = NULL;
@@ -16,7 +16,7 @@ static BOOL g_old_track = FALSE;
 static BOOL g_track_saved = FALSE;
 static HWND g_pending_restore = NULL;
 
-static void CALLBACK ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id,
+static void CALLBACK win32_reenable_track_proc(HWND hwnd, UINT msg, UINT_PTR id,
                                        DWORD time) {
 
   (void)hwnd;
@@ -85,7 +85,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   win32_apply_rounded_corners(hwnd, w, h);
   ShowWindow(hwnd, SW_SHOW);
   UpdateWindow(hwnd);
-  ForceWindowFocus(SkaldContext_Get()->window.hPopupWnd, WH_NULL);
+  win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd, WH_NULL);
   return true;
 }
 
@@ -110,13 +110,13 @@ void Platform_PromptPopupHideWindow(Popup *self) {
     HWND target = g_prev_fg;
     g_pending_restore = target;
     if (g_track_saved && g_old_track)
-      SetTimer(NULL, 0xC0DF, 800, ReenableTrackProc);
+      SetTimer(NULL, 0xC0DF, 800, win32_reenable_track_proc);
     else
       g_track_saved = FALSE;
     g_prev_fg = NULL;
   } else {
     if (g_track_saved && g_old_track)
-      SetTimer(NULL, 0xC0DF, 800, ReenableTrackProc);
+      SetTimer(NULL, 0xC0DF, 800, win32_reenable_track_proc);
     else
       g_track_saved = FALSE;
   }

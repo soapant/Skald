@@ -17,8 +17,8 @@
 #include <X11/X.h>
 #include <X11/keysym.h>
 
-#include "platform/x11/display_x11.h"
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/display_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 
@@ -43,7 +43,7 @@ static bool i3_ensure_sock(void) {
       return true;
     }
   }
-  const char *rtd = Env_XdgRuntimeDir();
+  const char *rtd = x11_env_xdg_runtime_dir();
   if (!rtd || !rtd[0])
     return false;
   char pat[512];
@@ -287,7 +287,7 @@ bool get_title_x11(char *buffer, int buffer_size) {
     return false;
   }
   buffer[0] = '\0';
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display) {
     log_error("display is NULL buffer='%s' buffer_size=%d",
               buffer ? buffer : "null", buffer_size);
@@ -323,7 +323,7 @@ bool get_app_id_x11(char *buffer, int buffer_size) {
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   Window focus = None;
@@ -361,7 +361,7 @@ char *paste_x11(char *content) {
     log_error("content is NULL");
     return NULL;
   }
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy) {
     log_error("no display");
     return NULL;
@@ -408,7 +408,7 @@ bool focus_window_title_x11(char *title) {
     log_error("title='%s'", title ? title : "null");
     return false;
   }
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   int nclients = 0;
@@ -438,7 +438,7 @@ bool focus_window_title_x11(char *title) {
 
 PlWindowList get_window_names_x11() {
   PlWindowList list = {.windows = NULL, .count = 0};
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display) {
     log_error("no display");
     return list;
@@ -482,7 +482,7 @@ PlWindowList get_window_names_x11() {
 
 PlWindowList get_window_titles_x11() {
   PlWindowList list = {.windows = NULL, .count = 0};
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display) {
     log_error("no display");
     return list;
@@ -551,7 +551,7 @@ static Window x11_focused_window(Display *display) {
 }
 
 bool close_active_window_x11(void) {
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   Window focus = x11_focused_window(display);
@@ -580,7 +580,7 @@ bool close_active_window_x11(void) {
 }
 
 bool toggle_fullscreen_active_x11(void) {
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   Window focus = x11_focused_window(display);
@@ -609,7 +609,7 @@ bool toggle_fullscreen_active_x11(void) {
 
 static bool x11_activate_neighbor(bool right) {
 
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   Window focus = x11_focused_window(display);
@@ -661,7 +661,7 @@ static bool x11_activate_neighbor(bool right) {
 }
 
 static bool x11_activate_neighbor_vertical(bool down) {
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   Window focus = x11_focused_window(display);
@@ -713,7 +713,7 @@ static bool x11_activate_neighbor_vertical(bool down) {
 }
 
 bool move_active_window_to_monitor_x11(bool right) {
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   Window focus = x11_focused_window(display);
@@ -820,7 +820,7 @@ bool move_active_window_to_monitor_x11(bool right) {
 
 static bool x11_move_dir(bool right) {
 
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   Window before = x11_focused_window(display);
@@ -872,7 +872,7 @@ static bool x11_is_hidden(Display *dpy, Window w) {
 }
 
 bool minimize_active_window_x11(void) {
-  Display *display = get_display();
+  Display *display = x11_get_display();
   if (!display)
     return false;
   if (_x11_last_min != None) {
@@ -913,7 +913,7 @@ bool minimize_active_window_x11(void) {
 }
 
 bool get_mouse_pos_x11(int *x, int *y) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   Window root = DefaultRootWindow(dpy);

@@ -29,8 +29,6 @@ bool GlobalKey_Pop(PlatformKeyEvent *out);
 void GlobalKey_Clear(void);
 int GlobalKey_Pending(void);
 unsigned long GlobalKey_Dropped(void);
-int Platform_CharForKey(int vk, int scancode, int mods);
-
 #define MOUSE_BTN_LEFT 0x01
 #define MOUSE_BTN_RIGHT 0x02
 #define MOUSE_BTN_MIDDLE 0x03
@@ -59,5 +57,4 @@ int GlobalMouse_Pending(void);
 unsigned long GlobalMouse_Dropped(void);
 bool Input_MouseStateDown(int button);
 void Input_UpdateMouseButton(int button, bool down);
-bool Platform_GetMousePos(int *out_x, int *out_y);
 #endif

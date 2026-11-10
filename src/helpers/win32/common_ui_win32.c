@@ -6,7 +6,7 @@
 #include "core/prompt_geometry.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
-#include "platform/win32/common_ui_win32.h"
+#include "helpers/win32/common_ui_win32.h"
 #include <windows.h>
 #include <commctrl.h>
 
@@ -170,7 +170,7 @@ void win32_fill_rounded_rect(HDC hdc, RECT *rc, COLORREF col, int radius) {
   DeleteObject(rgn);
 }
 
-void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
+void win32_force_window_focus(WindowHandle hwndTarget, WindowHandle hwndInput) {
   ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);
 
   SetWindowPos(WH_TO_HWND(hwndTarget), HWND_TOPMOST, 0, 0, 0, 0,

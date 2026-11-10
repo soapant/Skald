@@ -10,8 +10,8 @@
 #include "platform/draw.h"
 #include "deps/log.h"
 #include "platform/x11/drawing_x11.h"
-#include "platform/x11/bg_image_x11.h"
-#include "platform/x11/window_factory_x11.h"
+#include "helpers/x11/bg_image_x11.h"
+#include "helpers/x11/window_factory_x11.h"
 #include "core/types.h"
 #include "platform/platform.h"
 
@@ -79,17 +79,17 @@ static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
   return true;
 }
 
-void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw *xd, Visual *vis,
+void x11_draw_prompt_user_edit_control_on_draw(Display *dpy, XftDraw *xd, Visual *vis,
                                      Colormap cmap, PromptState *state) {
   x11_draw_editbox(state, dpy, xd, vis, cmap);
 }
 
-void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw *xd, Visual *vis,
+void x11_draw_prompt_user_listbox_on_draw(Display *dpy, XftDraw *xd, Visual *vis,
                                  Colormap cmap, PromptState *state) {
   x11_draw_listbox(state, dpy, xd, vis, cmap);
 }
 
-void DrawPromptUserEditControl(Display *dpy, Window *win, PromptState *state) {
+void x11_draw_prompt_user_edit_control(Display *dpy, Window *win, PromptState *state) {
   XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;
@@ -105,11 +105,11 @@ void DrawPromptUserEditControl(Display *dpy, Window *win, PromptState *state) {
   if (!xd) {
     return;
   }
-  DrawPromptUserEditControlOnDraw(dpy, xd, vis, cmap, state);
+  x11_draw_prompt_user_edit_control_on_draw(dpy, xd, vis, cmap, state);
   XftDrawDestroy(xd);
 }
 
-void DrawPromptUserListBox(Display *dpy, Window *win, PromptState *state) {
+void x11_draw_prompt_user_listbox(Display *dpy, Window *win, PromptState *state) {
   XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;
@@ -125,7 +125,7 @@ void DrawPromptUserListBox(Display *dpy, Window *win, PromptState *state) {
   if (!xd) {
     return;
   }
-  DrawPromptUserListBoxOnDraw(dpy, xd, vis, cmap, state);
+  x11_draw_prompt_user_listbox_on_draw(dpy, xd, vis, cmap, state);
   XftDrawDestroy(xd);
 }
 
@@ -146,8 +146,8 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
       state->callbacks->render(state);
     } else {
       if (state->lb)
-        DrawPromptUserListBox(dpy, win, state);
-      DrawPromptUserEditControl(dpy, win, state);
+        x11_draw_prompt_user_listbox(dpy, win, state);
+      x11_draw_prompt_user_edit_control(dpy, win, state);
     }
     XFlush(dpy);
     return true;
@@ -163,8 +163,8 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
       state->callbacks->render(state);
     } else {
       if (state->lb)
-        DrawPromptUserListBox(dpy, win, state);
-      DrawPromptUserEditControl(dpy, win, state);
+        x11_draw_prompt_user_listbox(dpy, win, state);
+      x11_draw_prompt_user_edit_control(dpy, win, state);
     }
     XFlush(dpy);
     return true;
@@ -201,9 +201,9 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     state->callbacks->render(state);
   } else {
     if (state->lb) {
-      DrawPromptUserListBoxOnDraw(dpy, xdDbl, vis, cmap, state);
+      x11_draw_prompt_user_listbox_on_draw(dpy, xdDbl, vis, cmap, state);
     }
-    DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
+    x11_draw_prompt_user_edit_control_on_draw(dpy, xdDbl, vis, cmap, state);
   }
   x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();

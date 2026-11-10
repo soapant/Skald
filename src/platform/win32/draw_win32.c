@@ -7,7 +7,7 @@
 #include "core/prompt_geometry.h"
 #include "core/editbox.h"
 #include "platform/platform.h"
-#include "platform/win32/win32_state.h"
+#include "helpers/win32/win32_state.h"
 #include "helpers/helpers_ui.h"
 #include "core/draw_state.h"
 #include "deps/log.h"
