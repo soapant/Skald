@@ -17,7 +17,6 @@
 #include <fontconfig/fontconfig.h>
 #include <stdbool.h>
 
-#include "platform/skapi_platform.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
@@ -64,22 +63,22 @@ static bool Desktop_Parse(const char *desktop_path, char exec_line[1024],
     char *p = line;
     while (*p == ' ' || *p == '\t')
       p++;
-    if (Platform_StringStartsWithCaseInsensitive(p, "Terminal=")) {
+    if (String_StartsWithCI(p, "Terminal=")) {
       char *v = p + 9;
       while (*v == ' ' || *v == '\t')
         v++;
       v[strcspn(v, "\r\n")] = '\0';
-      if (is_terminal && (Platform_StringContainsCaseInsensitive(v, "true") ||
+      if (is_terminal && (String_ContainsCI(v, "true") ||
                           strcmp(v, "1") == 0))
         *is_terminal = true;
-    } else if (Platform_StringStartsWithCaseInsensitive(p, "Exec=")) {
+    } else if (String_StartsWithCI(p, "Exec=")) {
       char *v = p + 5;
       while (*v == ' ' || *v == '\t')
         v++;
       v[strcspn(v, "\r\n")] = '\0';
       if (exec_line)
         strncpy(exec_line, v, 1024 - 1);
-    } else if (Platform_StringStartsWithCaseInsensitive(p, "Path=")) {
+    } else if (String_StartsWithCI(p, "Path=")) {
       char *v = p + 5;
       while (*v == ' ' || *v == '\t')
         v++;
@@ -480,18 +479,7 @@ void ListboxBackend_End(void) {
 }
 
 PromptState *ListboxBackend_PromptState(const ListBoxInfo *lb) {
-  WindowManager *wm = WindowManager_Get();
-  if (wm) {
-    for (int i = wm->popup_count - 1; i >= 0; i--) {
-      Popup *p = wm->popups[i];
-      if (p && p->user_data && p->type == POPUP_PROMPT) {
-        PromptState *ps = (PromptState *)p->user_data;
-        if (ps->lb == lb)
-          return ps;
-      }
-    }
-  }
-  return NULL;
+  return PromptPopup_FindState(lb);
 }
 
 char *sk_search_file_in_dir_platform(const char *directory,
@@ -516,7 +504,7 @@ char *sk_search_file_in_dir_platform(const char *directory,
       continue;
     if (S_ISDIR(st.st_mode))
       continue;
-    if (Platform_StringContainsCaseInsensitive(entry->d_name, search_string)) {
+    if (String_ContainsCI(entry->d_name, search_string)) {
       snprintf(found_path, sizeof(found_path), "%s", full_path);
       closedir(dir);
       return found_path;
@@ -543,21 +531,17 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     if (top && top->user_data && top->type == POPUP_PROMPT)
       state = (PromptState *)top->user_data;
   }
-  int fs = spec->fontsize > 0 ? spec->fontsize : FontSize;
-  const char *buf = spec->buffer;
-  if (!buf) {
-    if (state)
-      buf = state->eb->filter;
-    else
-      buf = "";
-  }
-  int x = spec->x;
-  int w = spec->w;
-  int h = spec->h;
-  if (w <= 0)
-    w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
-  if (h <= 0)
-    h = PromptCustomEditHeight();
+  EditboxPlace place;
+  Editbox_ResolvePlace(spec->buffer, spec->x, spec->y, spec->w, spec->h,
+                       spec->fontsize, state, &place);
+  int fs = place.fontsize;
+  const char *buf = place.buf;
+  int x = place.x;
+  int y_raw = place.y_raw;
+  int w = place.w;
+  int h = place.h;
+  int text_len = place.text_len;
+  int cursor = place.cursor;
   FontHandle fh = spec->font;
   bool needDestroy = false;
   if (!FH_TO_XFT(fh)) {
@@ -566,13 +550,6 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   }
   XftFont *xf = FH_TO_XFT(fh);
   Platform_SetDrawContext(dpy, xd, vis, cmap);
-
-  int text_len = (int)strlen(buf);
-  int cursor = state ? state->eb->cursor : text_len;
-  if (cursor < 0)
-    cursor = 0;
-  if (cursor > text_len)
-    cursor = text_len;
 
   EditboxX11Metrics metrics = {dpy, xf};
   int cursor_x = 0;
@@ -586,33 +563,31 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     text_w = te.xOff;
   }
 
-  int y_raw = (spec->y == 0) ? PROMPT_EDIT_INSET : spec->y;
 
   EditboxInit ebi;
-  memset(&ebi, 0, sizeof(ebi));
-  ebi.state = state;
-  ebi.text = buf;
-  ebi.text_len = text_len;
-  ebi.cursor = cursor;
-  ebi.x = x;
-  ebi.y = y_raw;
-  ebi.w = w;
-  ebi.cursor_x = cursor_x;
-  ebi.text_w = text_w;
-  ebi.ascent = xf ? xf->ascent : 0;
-  ebi.descent = xf ? xf->descent : 0;
-  ebi.text_color =
-      spec->color_text ? rgb_to_hex(spec->color_text) : rgb_to_hex(COLOR_TEXT);
-  ebi.bg_color =
-      spec->color_bg ? rgb_to_hex(spec->color_bg) : rgb_to_hex(COLOR_BG);
-  ebi.placeholder = spec->placeholder;
-  ebi.caret_height = spec->caret_height;
-  ebi.caret_width = spec->caret_width;
-  ebi.caret_x = spec->caret_x;
-  ebi.caret_y = spec->caret_y;
-  ebi.caret_pos = spec->caret_pos;
-  ebi.fontsize = fs;
-  ebi.font = fh;
+  EditboxInitFromSpec init_args = {.state = state,
+                                   .buf = buf,
+                                   .text_len = text_len,
+                                   .cursor = cursor,
+                                   .x = x,
+                                   .y = y_raw,
+                                   .w = w,
+                                   .h = h,
+                                   .cursor_x = cursor_x,
+                                   .text_w = text_w,
+                                   .ascent = xf ? xf->ascent : 0,
+                                   .descent = xf ? xf->descent : 0,
+                                   .fontsize = fs,
+                                   .font = fh,
+                                   .text_color = spec->color_text,
+                                   .bg_color = spec->color_bg,
+                                   .placeholder = spec->placeholder,
+                                   .caret_height = spec->caret_height,
+                                   .caret_width = spec->caret_width,
+                                   .caret_x = spec->caret_x,
+                                   .caret_y = spec->caret_y,
+                                   .caret_pos = spec->caret_pos};
+  Editbox_InitFromSpec(&ebi, &init_args);
 
   EditboxSpec eb;
   Editbox_BuildSpec(&eb, &ebi);

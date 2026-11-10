@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include "core/edit_state.h"
 #include "core/editbox.h"
 
@@ -19,6 +20,67 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
       .text = text,
       .len = len,
       .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
+}
+
+void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
+                          int fontsize, PromptState *state,
+                          EditboxPlace *out) {
+  if (!out)
+    return;
+  memset(out, 0, sizeof(*out));
+  out->state = state;
+  int fs = fontsize > 0 ? fontsize : FontSize;
+  const char *buf = buffer;
+  if (!buf)
+    buf = state ? state->eb->filter : "";
+  if (w <= 0)
+    w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
+  if (h <= 0)
+    h = PromptCustomEditHeight();
+  out->x = x;
+  out->w = w;
+  out->h = h;
+  out->fontsize = fs;
+  out->buf = buf;
+  out->text_len = (int)strlen(buf);
+  out->cursor = state && state->eb ? (int)state->eb->cursor : out->text_len;
+  if (out->cursor < 0)
+    out->cursor = 0;
+  if (out->cursor > out->text_len)
+    out->cursor = out->text_len;
+  out->y = y;
+  out->y_raw = y == 0 ? PROMPT_EDIT_INSET : y;
+}
+
+void Editbox_InitFromSpec(EditboxInit *out,
+                          const EditboxInitFromSpec *args) {
+  if (!out || !args)
+    return;
+  memset(out, 0, sizeof(*out));
+  out->state = args->state;
+  out->text = args->buf;
+  out->text_len = args->text_len;
+  out->cursor = args->cursor;
+  out->x = args->x;
+  out->y = args->y;
+  out->w = args->w;
+  out->h = args->h;
+  out->cursor_x = args->cursor_x;
+  out->text_w = args->text_w;
+  out->ascent = args->ascent;
+  out->descent = args->descent;
+  out->text_color = args->text_color ? rgb_to_hex(args->text_color)
+                                     : rgb_to_hex(COLOR_TEXT);
+  out->bg_color =
+      args->bg_color ? rgb_to_hex(args->bg_color) : rgb_to_hex(COLOR_BG);
+  out->placeholder = args->placeholder;
+  out->caret_height = args->caret_height;
+  out->caret_width = args->caret_width;
+  out->caret_x = args->caret_x;
+  out->caret_y = args->caret_y;
+  out->caret_pos = args->caret_pos;
+  out->fontsize = args->fontsize;
+  out->font = args->font;
 }
 
 void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
@@ -187,10 +249,10 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
   int draw_x = spec->x + spec->inset - scroll;
   int cursor_draw_x = spec->x + spec->inset + spec->cursor_x - scroll;
   if (spec->align && spec->text_w > 0 && spec->text_w <= spec->w - 20) {
-    if (Platform_StringContainsCaseInsensitive(spec->align, "CENTER")) {
+    if (String_ContainsCI(spec->align, "CENTER")) {
       draw_x = (spec->w - spec->text_w) / 2;
       cursor_draw_x = draw_x + spec->cursor_x;
-    } else if (Platform_StringContainsCaseInsensitive(spec->align, "RIGHT")) {
+    } else if (String_ContainsCI(spec->align, "RIGHT")) {
       draw_x = spec->w - spec->inset - spec->text_w;
       cursor_draw_x = draw_x + spec->cursor_x;
     }

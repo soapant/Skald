@@ -39,7 +39,6 @@
 #include "core/feature_path.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
-#include "platform/skapi_platform.h"
 #include "platform/widget.h"
 #include "core/hover_widget.h"
 #include "platform/wm_platform.h"
@@ -478,12 +477,12 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
     char *p = line;
     while (*p == ' ' || *p == '\t')
       p++;
-    if (Platform_StringContainsCaseInsensitive(p, "NoDisplay=true") ||
-        Platform_StringContainsCaseInsensitive(p, "Hidden=true")) {
+    if (String_ContainsCI(p, "NoDisplay=true") ||
+        String_ContainsCI(p, "Hidden=true")) {
       if (out_nodisplay)
         *out_nodisplay = true;
     }
-    if (!found && Platform_StringStartsWithCaseInsensitive(p, "Name=")) {
+    if (!found && String_StartsWithCI(p, "Name=")) {
       p += 5;
       while (*p == ' ' || *p == '\t')
         p++;
@@ -790,7 +789,7 @@ bool sk_terminate_process_by_name(const char *exe_name) {
 bool sk_string_contains(const char *haystack, const char *needle) {
   if (!needle || !haystack)
     return false;
-  return Platform_StringContainsCaseInsensitive(haystack, needle);
+  return String_ContainsCI(haystack, needle);
 }
 
 char *sk_string_cut_at(const char *str, char delim) {
@@ -1536,9 +1535,9 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
       .text = spec->text, .len = (int)strlen(spec->text), .fontsize = fs});
   int h = Platform_GetTextLineHeight(fs);
   int base = spec->pad > 0 ? spec->pad : spec->x;
-  if (Platform_StringContainsCaseInsensitive(a, "LEFT"))
+  if (String_ContainsCI(a, "LEFT"))
     r.x = base;
-  else if (Platform_StringContainsCaseInsensitive(a, "RIGHT"))
+  else if (String_ContainsCI(a, "RIGHT"))
     r.x = base - w;
   else
     r.x = base - w / 2;
@@ -2231,7 +2230,7 @@ bool sk_is_window_open(const char *title) {
   SkWindowList l = Platform_GetWindowTitles();
   bool found = false;
   for (int i = 0; i < l.count; i++) {
-    if (Platform_StringContainsCaseInsensitive(l.windows[i], title)) {
+    if (String_ContainsCI(l.windows[i], title)) {
       found = true;
       break;
     }

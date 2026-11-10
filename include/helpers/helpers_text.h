@@ -1,6 +1,7 @@
 #ifndef HELPERS_TEXT_UI_H
 #define HELPERS_TEXT_UI_H
 
+#include "helpers/helpers_text.h"
 #include "core/types/file.h"
 #include "core/types/keys.h"
 
@@ -14,6 +15,8 @@ void StringList_Free(StringList *list);
 
 long File_ReadAll(const char *path, char *buffer, long buffer_size);
 StringList File_ReadLines(const char *path);
+void Url_BuildSearchUrl(const char *engine, const char *query, char *out,
+                        size_t cap);
 
 bool FileWalk_AllFilesFromDir(const char *dir_path,
                               char **list_of_allowed_extensions,
@@ -36,4 +39,7 @@ char *String_Slice(const char *str, int start, int end);
 
 bool HotkeyText_IsPrintable(const PopupKeyEvent *key);
 bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key);
+bool String_ContainsCI(const char *haystack, const char *needle);
+bool String_StartsWithCI(const char *str, const char *prefix);
+bool String_EqualsCI(const char *a, const char *b);
 #endif

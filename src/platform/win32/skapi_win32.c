@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include <winsock2.h>
 #include "helpers/helpers_fs.h"
 #include <windows.h>
@@ -13,7 +14,6 @@
 #include "config_values.h"
 #include "platform/win32/win32_state.h"
 #include "deps/log.h"
-#include "platform/skapi_platform.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
 #include "platform/draw.h"
@@ -186,17 +186,9 @@ void ListboxBackend_End(void) {
 }
 
 PromptState *ListboxBackend_PromptState(const ListBoxInfo *lb) {
-  WindowManager *wm = WindowManager_Get();
-  if (wm) {
-    for (int i = wm->popup_count - 1; i >= 0; i--) {
-      Popup *p = wm->popups[i];
-      if (p && p->user_data) {
-        PromptState *ps = (PromptState *)p->user_data;
-        if (ps->lb == lb)
-          return ps;
-      }
-    }
-  }
+  PromptState *ps = PromptPopup_FindState(lb);
+  if (ps)
+    return ps;
   {
     extern PromptState *Platform_GetWin32PromptState(void);
     return Platform_GetWin32PromptState();
@@ -223,7 +215,7 @@ char *sk_search_file_in_dir_platform(const char *directory,
     if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
       continue;
     }
-    if (Platform_StringContainsCaseInsensitive(find_data.cFileName,
+    if (String_ContainsCI(find_data.cFileName,
                                                search_string)) {
       snprintf(found_path, sizeof(found_path), "%s\\%s", directory,
                find_data.cFileName);
@@ -245,22 +237,18 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     return false;
   extern PromptState *Platform_GetWin32PromptState(void);
   PromptState *state = Platform_GetWin32PromptState();
-  int fs = spec->fontsize > 0 ? spec->fontsize : FontSize;
-  const char *buf = spec->buffer;
-  if (!buf) {
-    if (state)
-      buf = state->eb->filter;
-    else
-      buf = "";
-  }
-  int x = spec->x;
-  int y = spec->y;
-  int w = spec->w;
-  int h = spec->h;
-  if (w <= 0)
-    w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
-  if (h <= 0)
-    h = PromptCustomEditHeight();
+  EditboxPlace place;
+  Editbox_ResolvePlace(spec->buffer, spec->x, spec->y, spec->w, spec->h,
+                       spec->fontsize, state, &place);
+  int fs = place.fontsize;
+  const char *buf = place.buf;
+  int x = place.x;
+  int y = place.y;
+  int w = place.w;
+  int h = place.h;
+  int text_len = place.text_len;
+  int cursor = place.cursor;
+  int y_raw = place.y_raw;
   HFONT hfont_created = NULL;
   HFONT hfont = spec->font.hfont
                     ? spec->font.hfont
@@ -271,15 +259,8 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   if (hfont)
     old = (HFONT)SelectObject(hdc, hfont);
   SetBkMode(hdc, TRANSPARENT);
-  int text_len = (int)strlen(buf);
-  int cursor = state ? (int)state->eb->cursor : text_len;
-  if (cursor < 0)
-    cursor = 0;
-  if (cursor > text_len)
-    cursor = text_len;
   int cursor_x = 0;
   int text_w = 0;
-  int y_raw = (spec->y == 0) ? PROMPT_EDIT_INSET : spec->y;
   int ascent = 0;
   int descent = 0;
   if (hfont) {
@@ -299,31 +280,29 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
   }
   EditboxInit ebi;
-  memset(&ebi, 0, sizeof(ebi));
-  ebi.state = state;
-  ebi.text = buf;
-  ebi.text_len = text_len;
-  ebi.cursor = cursor;
-  ebi.x = x;
-  ebi.y = y_raw;
-  ebi.w = w;
-  ebi.h = h;
-  ebi.cursor_x = cursor_x;
-  ebi.text_w = text_w;
-  ebi.ascent = ascent;
-  ebi.descent = descent;
-  ebi.text_color =
-      spec->color_text ? rgb_to_hex(spec->color_text) : rgb_to_hex(COLOR_TEXT);
-  ebi.bg_color =
-      spec->color_bg ? rgb_to_hex(spec->color_bg) : rgb_to_hex(COLOR_BG);
-  ebi.placeholder = spec->placeholder;
-  ebi.caret_height = spec->caret_height;
-  ebi.caret_width = spec->caret_width;
-  ebi.caret_x = spec->caret_x;
-  ebi.caret_y = spec->caret_y;
-  ebi.caret_pos = spec->caret_pos;
-  ebi.fontsize = fs;
-  ebi.font = spec->font;
+  EditboxInitFromSpec init_args = {.state = state,
+                                   .buf = buf,
+                                   .text_len = text_len,
+                                   .cursor = cursor,
+                                   .x = x,
+                                   .y = y_raw,
+                                   .w = w,
+                                   .h = h,
+                                   .cursor_x = cursor_x,
+                                   .text_w = text_w,
+                                   .ascent = ascent,
+                                   .descent = descent,
+                                   .fontsize = fs,
+                                   .font = spec->font,
+                                   .text_color = spec->color_text,
+                                   .bg_color = spec->color_bg,
+                                   .placeholder = spec->placeholder,
+                                   .caret_height = spec->caret_height,
+                                   .caret_width = spec->caret_width,
+                                   .caret_x = spec->caret_x,
+                                   .caret_y = spec->caret_y,
+                                   .caret_pos = spec->caret_pos};
+  Editbox_InitFromSpec(&ebi, &init_args);
 
   EditboxSpec eb;
   Editbox_BuildSpec(&eb, &ebi);

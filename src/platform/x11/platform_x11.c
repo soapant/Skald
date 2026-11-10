@@ -949,7 +949,7 @@ char *Platform_GetIconPath(char *app_path) {
         char *p = line;
         while (*p == ' ' || *p == '\t')
           p++;
-        if (Platform_StringContainsCaseInsensitive(p, "Icon=")) {
+        if (String_ContainsCI(p, "Icon=")) {
           p = strchr(p, '=');
           if (p) {
             p++;

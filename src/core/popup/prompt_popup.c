@@ -310,3 +310,18 @@ CloseCallback PromptPopup_TakeOnClose(Popup *p) {
   data->spec.on_close = NULL;
   return cb;
 }
+
+PromptState *PromptPopup_FindState(const ListBoxInfo *lb) {
+  WindowManager *wm = WindowManager_Get();
+  if (wm) {
+    for (int i = wm->popup_count - 1; i >= 0; i--) {
+      Popup *p = wm->popups[i];
+      if (!p || p->type != POPUP_PROMPT || !p->user_data)
+        continue;
+      PromptState *ps = (PromptState *)p->user_data;
+      if (ps->lb == lb)
+        return ps;
+    }
+  }
+  return NULL;
+}
