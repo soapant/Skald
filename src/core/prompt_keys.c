@@ -389,12 +389,14 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   }
   if (ctrl) {
     if (vk == VK_OEM_MINUS) {
-      Platform_AdjustFontSize(-1);
+      FontSize -= 1;
+      Platform_ResetUIScale();
       Config_Save();
       return true;
     }
     if (vk == VK_OEM_PLUS) {
-      Platform_AdjustFontSize(1);
+      FontSize += 1;
+      Platform_ResetUIScale();
       Config_Save();
       return true;
     }
