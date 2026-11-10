@@ -235,22 +235,6 @@ char *sk_search_file_in_dir_platform(const char *directory,
   FindClose(hFind);
   return NULL;
 }
-bool sk_type_text_platform(const char *s) {
-  if (!s)
-    return false;
-  char *old = Platform_GetClipboardEntry();
-  Platform_CopyToClipboard(s);
-  Platform_EmitKey(VK_LCONTROL, 1);
-  Platform_EmitKey('V', 1);
-  Platform_EmitKey('V', 0);
-  Platform_EmitKey(VK_LCONTROL, 0);
-  Sleep(100);
-  if (old) {
-    Platform_CopyToClipboard(old);
-    free(old);
-  }
-  return true;
-}
 
 bool sk_place_editbox_platform(const SkEditSpec *spec) {
   if (!spec)

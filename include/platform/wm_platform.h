@@ -12,9 +12,9 @@ void Platform_WM_ProcessEvents(WindowManager *wm);
 void Platform_WM_OnPopEmpty(WindowManager *wm);
 void Platform_WM_GetMonitorGeometry(int *x, int *y, int *w, int *h);
 
-char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec);
 void Platform_ProcessPendingSubwindow(void);
 
+void Prompt_FlushDisplay(WindowManager *wm);
 bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h);
 void Platform_PromptPopupHideWindow(Popup *self);
 void Platform_PromptPopupRender(Popup *self);

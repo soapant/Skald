@@ -17,6 +17,55 @@
 #include "deps/stb_ds.h"
 #include "core/window_manager.h"
 #include "core/prompt_geometry.h"
+#include "platform/draw.h"
+#include "platform/input_state.h"
+#include "platform/wm_platform.h"
+
+PlMetrics *Metrics_Get(void) {
+  static PlMetrics m = {0};
+  static int init = 0;
+  if (!init) {
+    m.edit_cursor_width = 0;
+    m.edit_cursor_height = PromptCaretHeight();
+    m.editbox_padding = PROMPT_EDIT_INSET;
+    m.listbox_padding = PromptListBottomMargin();
+    m.listbox_item_height = PromptRowHeight();
+    init = 1;
+  }
+  return &m;
+}
+
+void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
+  if (!EnableBorders || spec.width <= 0)
+    return;
+  Platform_DrawRectRaw((PlDrawRectRawSpec){.x = 0,
+                                           .y = spec.y,
+                                           .w = spec.width,
+                                           .h = PROMPT_SEP_W,
+                                           .color = rgb_to_hex(COLOR_BORDER),
+                                           .radius = 0,
+                                           .rounded = false,
+                                           .opaque = true,
+                                           .thickness = 0,
+                                           .filled = true});
+}
+
+void Item_GetColors(PlGetItemColorsSpec spec) {
+  unsigned long col_text = rgb_to_hex(COLOR_TEXT);
+  float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
+                             : (float)spec.idx / 10.0f;
+  unsigned long col_rainbow = rgb_to_hex(GetRainbowColor(t, 0.55f, 1.0f));
+  unsigned long n = col_text, b = col_text, p = col_rainbow;
+  if (RainbowText) {
+    n = b = p = col_rainbow;
+  }
+  if (spec.num_color)
+    *spec.num_color = n;
+  if (spec.body_color)
+    *spec.body_color = b;
+  if (spec.plain_color)
+    *spec.plain_color = p;
+}
 
 static bool FuzzyMatch(const char *text, const char *pattern) {
   if (!pattern || !pattern[0])
@@ -524,4 +573,92 @@ void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
   if (count > 0 && visible > count)
     visible = count;
   out->visible = visible;
+}
+
+char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
+  SkaldContext *_ctx = SkaldContext_Get();
+  if (_ctx)
+    _ctx->window.subwindow.created = false;
+  log_info("PromptUserRun started wm=%p spec=%p", wm, spec);
+  if (!wm || !spec)
+    return NULL;
+  if (spec->subwindow) {
+    SkaldContext *_c = SkaldContext_Get();
+    if (_c && _c->window.subwindow.in_enter) {
+      _c->window.subwindow.pending = true;
+      _c->window.subwindow.pending_subwindow = *spec;
+      _c->window.subwindow.pending_subwindow.subwindow = false;
+      _c->window.subwindow.created = false;
+      return NULL;
+    }
+    if (wm && wm->popup_count > 1) {
+      return NULL;
+    }
+    PromptSpec heap_spec = *spec;
+    heap_spec.subwindow = false;
+    (void)PromptPopup_Create(wm, &heap_spec);
+    return NULL;
+  }
+  Popup *popup = PromptPopup_Create(wm, spec);
+  if (!popup)
+    return NULL;
+  long long last_tick = 0;
+  int last_mx = 0, last_my = 0;
+  int last_btn = -1;
+  while (wm->running) {
+    bool _still_open = false;
+    for (int _i = 0; _i < wm->popup_count; _i++) {
+      if (wm->popups[_i] == popup) {
+        _still_open = true;
+        break;
+      }
+    }
+    if (!_still_open)
+      break;
+    Platform_WM_ProcessEvents(wm);
+    bool mouse_changed = false;
+    int mx = 0, my = 0;
+    if (Platform_GetMousePos(&mx, &my)) {
+      ListBox_PublishMousePos(mx, my);
+      int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
+      if (mx != last_mx || my != last_my || btn != last_btn) {
+        last_mx = mx;
+        last_my = my;
+        last_btn = btn;
+        mouse_changed = true;
+      }
+    }
+    Popup *mouse_top = WindowManager_GetTopPopup(wm);
+    if (mouse_changed && mouse_top && mouse_top->vtable &&
+        mouse_top->vtable->on_render) {
+      mouse_top->vtable->on_render(mouse_top);
+      Prompt_FlushDisplay(wm);
+    }
+    long long now = Platform_GetWallClockMs();
+    if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
+      last_tick = now;
+      Popup *top = WindowManager_GetTopPopup(wm);
+      if (top && top->vtable && top->vtable->on_render) {
+        top->vtable->on_render(top);
+        Prompt_FlushDisplay(wm);
+      }
+    }
+  }
+  {
+    bool _still_open = false;
+    for (int _i = 0; _i < wm->popup_count; _i++) {
+      if (wm->popups[_i] == popup) {
+        _still_open = true;
+        break;
+      }
+    }
+    if (_still_open) {
+      SkaldContext *_ctx2 = SkaldContext_Get();
+      if (!_ctx2 || !_ctx2->window.subwindow.created)
+        WindowManager_PopPopup(wm);
+    }
+  }
+  Prompt_FlushDisplay(wm);
+  SkaldContext *_c = SkaldContext_Get();
+  return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 }

@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include "core/types.h"
 #include "core/types/window.h"
+#include "platform/draw.h"
+#include "platform/platform.h"
 
 unsigned long rgb_to_hex(unsigned long win_color);
 unsigned short OpacityAlpha16(void);
@@ -60,6 +62,10 @@ typedef struct {
   int visible;
 } ListboxLayout;
 
+char *PromptUserRun(WindowManager *wm, const PromptSpec *spec);
+PlMetrics *Metrics_Get(void);
+void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec);
+void Item_GetColors(PlGetItemColorsSpec spec);
 void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
                            int popup_w, int popup_h, int count,
                            ListboxLayout *out);

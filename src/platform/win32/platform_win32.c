@@ -1860,40 +1860,6 @@ bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
   return true;
 }
 
-bool Platform_WriteTempFile(const char *name, const void *data, size_t len,
-                            char *out_path, size_t out_len) {
-
-  if (!name || !name[0] || !out_path || out_len == 0)
-    return false;
-  if (!data && len > 0)
-    return false;
-  for (const char *p = name; *p; p++) {
-    if (*p == '/' || *p == '\\')
-      return false;
-  }
-  if (strstr(name, ".."))
-    return false;
-  char dir[MAX_PATH];
-  DWORD n = GetTempPathA(sizeof(dir), dir);
-  if (n == 0 || n >= sizeof(dir))
-    return false;
-  size_t dl = strlen(dir);
-  while (dl > 0 && (dir[dl - 1] == '\\' || dir[dl - 1] == '/'))
-    dir[--dl] = '\0';
-  snprintf(out_path, out_len, "%s\\%s", dir, name);
-  out_path[out_len - 1] = '\0';
-  FILE *f = fopen(out_path, "wb");
-  if (!f)
-    return false;
-  bool ok = true;
-  if (len > 0 && fwrite(data, 1, len, f) != len)
-    ok = false;
-  if (fclose(f) != 0)
-    ok = false;
-  if (!ok)
-    remove(out_path);
-  return ok;
-}
 
 void Platform_PrewarmBackgroundPixmap(void) {
   win32_bg_image_purge();
@@ -2260,56 +2226,15 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
 typedef void (*PlatformHttpCallback)(const char *body, bool success,
                                      void *userdata);
 
-typedef struct {
-  char *url;
-  PlatformHttpCallback cb;
-  void *userdata;
-  char owner[OWNER_PATH_MAX];
-} HttpAsyncJob;
-
-static DWORD WINAPI http_async_worker(LPVOID arg) {
-  HttpAsyncJob *job = (HttpAsyncJob *)arg;
-  if (!job)
-    return 0;
-
-  char *body = Platform_HttpGet(job->url);
-  if (job->cb) {
-    job->cb(body ? body : "", body != NULL, job->userdata);
-  }
-  free(body);
-  free(job->url);
-  ThreadRegistry_Finish(job);
-  free(job);
-  return 0;
-}
-
-void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
-                           void *userdata) {
-  if (!url || !url[0] || !cb)
-    return;
-  HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
-  if (!job)
-    return;
-  job->url = _strdup(url);
-  job->cb = cb;
-  job->userdata = userdata;
-  if (!job->url) {
-    free(job);
-    return;
-  }
-  job->owner[0] = '\0';
-  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
-  ThreadRegistry_Add(job, job->owner);
-
-  HANDLE t = CreateThread(NULL, 0, http_async_worker, job, 0, NULL);
-  if (!t) {
-    ThreadRegistry_Finish(job);
-    free(job->url);
-    free(job);
-    return;
-  }
+bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
+  HANDLE t =
+      CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, ud, 0, NULL);
+  if (!t)
+    return false;
   CloseHandle(t);
+  return true;
 }
+
 bool Platform_FontInitalized(FontHandle font) { return font.hfont != NULL; }
 
 PlTimer Platform_StartTimer(void) {
@@ -2416,19 +2341,6 @@ bool Platform_MutexTryLock(void *mutex) {
   return TryEnterCriticalSection((CRITICAL_SECTION *)mutex) != 0;
 }
 
-PlMetrics *Platform_GetMetrics(void) {
-  static PlMetrics m = {0};
-  static int init = 0;
-  if (!init) {
-    m.edit_cursor_width = 0;
-    m.edit_cursor_height = PromptCaretHeight();
-    m.editbox_padding = PROMPT_EDIT_INSET;
-    m.listbox_padding = PromptListBottomMargin();
-    m.listbox_item_height = PromptRowHeight();
-    init = 1;
-  }
-  return &m;
-}
 
 void Platform_InvalidatePrompt(void) {
   HWND hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
