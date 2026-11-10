@@ -9,7 +9,7 @@
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
-#include "platform/ui.h"
+#include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
 #include "config_values.h"
 #include "core/types.h"
@@ -19,7 +19,7 @@
 #include "core/prompt_geometry.h"
 #include "core/draw_state.h"
 #include "platform/draw.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "platform/wm_platform.h"
 
 PlMetrics *Metrics_Get(void) {
@@ -633,7 +633,7 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
     if (mouse_changed && mouse_top && mouse_top->vtable &&
         mouse_top->vtable->on_render) {
       mouse_top->vtable->on_render(mouse_top);
-      Prompt_FlushDisplay(wm);
+      Platform_PromptFlushDisplay(wm);
     }
     long long now = Platform_GetWallClockMs();
     if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
@@ -641,7 +641,7 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
       Popup *top = WindowManager_GetTopPopup(wm);
       if (top && top->vtable && top->vtable->on_render) {
         top->vtable->on_render(top);
-        Prompt_FlushDisplay(wm);
+        Platform_PromptFlushDisplay(wm);
       }
     }
   }
@@ -659,7 +659,7 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
         WindowManager_PopPopup(wm);
     }
   }
-  Prompt_FlushDisplay(wm);
+  Platform_PromptFlushDisplay(wm);
   SkaldContext *_c = SkaldContext_Get();
   return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 }
@@ -685,7 +685,7 @@ void UpdateTextCaret(void) {
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (top && top->vtable && top->vtable->on_render) {
     top->vtable->on_render(top);
-    Prompt_FlushDisplay(wm);
+    Platform_PromptFlushDisplay(wm);
   }
 }
 

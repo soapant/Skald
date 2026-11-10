@@ -14,7 +14,7 @@
 #include <sys/types.h>
 
 #include "deps/log.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "config_values.h"
 #include "core/types.h"
 #include "core/types/window.h"

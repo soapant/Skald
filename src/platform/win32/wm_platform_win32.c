@@ -3,7 +3,7 @@
 #include "platform/wm_platform.h"
 #include "helpers/helpers_monitor.h"
 #include "platform/platform.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "core/window_manager.h"
 #include "core/remap_manager.h"
 #include "deps/log.h"
@@ -23,7 +23,7 @@ bool Platform_WM_InitDisplay(WindowManager *wm) {
 
 int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunWin32(wm); }
 
-void Prompt_FlushDisplay(WindowManager *wm) {
+void Platform_PromptFlushDisplay(WindowManager *wm) {
   (void)wm;
 }
 

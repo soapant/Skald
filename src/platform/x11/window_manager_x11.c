@@ -12,7 +12,7 @@
 #include "deps/log.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "platform/draw.h"
 #include "core/context.h"
 #include "core/types.h"

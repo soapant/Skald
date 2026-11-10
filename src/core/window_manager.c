@@ -11,7 +11,7 @@
 #include "core/checkbox.h"
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "deps/stb_ds.h"
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_ui.h"

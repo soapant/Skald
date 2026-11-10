@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "platform/input.h"
+#include "helpers/helpers_edit_buffer.h"
 #include "config_values.h"
 
 void EditBufferBackspace(char *buf, size_t *cursor) {

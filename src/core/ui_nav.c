@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "platform/ui.h"
+#include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
 #include "core/types.h"
 #include "core/types/prompt.h"

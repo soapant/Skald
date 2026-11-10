@@ -7,7 +7,7 @@
 #include "core/window_manager.h"
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "platform/platform.h"
 #include "config_values.h"
 #include "core/context.h"

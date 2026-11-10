@@ -10,8 +10,8 @@
 #include "core/window_manager.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
-#include "platform/input_state.h"
-#include "platform/ui.h"
+#include "helpers/helpers_input_state.h"
+#include "helpers/helpers_ui.h"
 
 static bool mouse_valid = false;
 static int mouse_x = 0;

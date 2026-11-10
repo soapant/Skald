@@ -9,6 +9,7 @@
 #include "core/draw_state.h"
 #include "platform/win32/win32_state.h"
 #include "helpers/helpers_render_thread.h"
+#include "helpers/helpers_ui.h"
 #include "platform/win32/common_ui_win32.h"
 #include "core/widget_registry.h"
 #include "deps/log.h"

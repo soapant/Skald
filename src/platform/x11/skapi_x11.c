@@ -22,7 +22,7 @@
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
 #include "platform/draw.h"
-#include "platform/ui.h"
+#include "helpers/helpers_ui.h"
 #include "platform/x11/env_helpers_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "helpers/helpers_ui.h"

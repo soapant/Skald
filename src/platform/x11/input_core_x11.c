@@ -20,8 +20,9 @@
 #include "core/snippet_manager.h"
 #include "platform/platform.h"
 #include "platform/x11/env_helpers_x11.h"
+#include "platform/x11/misc_x11.h"
 #include "wm/wm.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "core/types/keys.h"
 #include <linux/uinput.h>
 #include <errno.h>
@@ -82,6 +83,125 @@ static int x11_linux_button_to_mouse(int code) {
     return (n > 0 && n <= MOUSE_BTN_MAX) ? n : 0;
   }
   return 0;
+}
+
+int x11_convert_key_to_windows_vk(int key_code) {
+  if (key_code >= KEY_1 && key_code <= KEY_0) {
+    return '1' + (key_code - KEY_1);
+  }
+
+  switch (key_code) {
+  case KEY_A:
+    return 'A';
+  case KEY_B:
+    return 'B';
+  case KEY_C:
+    return 'C';
+  case KEY_D:
+    return 'D';
+  case KEY_E:
+    return 'E';
+  case KEY_F:
+    return 'F';
+  case KEY_G:
+    return 'G';
+  case KEY_H:
+    return 'H';
+  case KEY_I:
+    return 'I';
+  case KEY_J:
+    return 'J';
+  case KEY_K:
+    return 'K';
+  case KEY_L:
+    return 'L';
+  case KEY_M:
+    return 'M';
+  case KEY_N:
+    return 'N';
+  case KEY_O:
+    return 'O';
+  case KEY_P:
+    return 'P';
+  case KEY_Q:
+    return 'Q';
+  case KEY_R:
+    return 'R';
+  case KEY_S:
+    return 'S';
+  case KEY_T:
+    return 'T';
+  case KEY_U:
+    return 'U';
+  case KEY_V:
+    return 'V';
+  case KEY_W:
+    return 'W';
+  case KEY_X:
+    return 'X';
+  case KEY_Y:
+    return 'Y';
+  case KEY_Z:
+    return 'Z';
+  case KEY_SPACE:
+    return VK_SPACE;
+  case KEY_ENTER:
+    return VK_RETURN;
+  case KEY_BACKSPACE:
+    return VK_BACK;
+  case KEY_TAB:
+    return VK_TAB;
+  case KEY_ESC:
+    return VK_ESCAPE;
+  case KEY_LEFT:
+    return VK_LEFT;
+  case KEY_UP:
+    return VK_UP;
+  case KEY_RIGHT:
+    return VK_RIGHT;
+  case KEY_DOWN:
+    return VK_DOWN;
+  case KEY_LEFTCTRL:
+    return VK_LCONTROL;
+  case KEY_RIGHTCTRL:
+    return VK_RCONTROL;
+  case KEY_LEFTALT:
+    return VK_LMENU;
+  case KEY_RIGHTALT:
+    return VK_RMENU;
+  case KEY_LEFTSHIFT:
+    return VK_LSHIFT;
+  case KEY_RIGHTSHIFT:
+    return VK_RSHIFT;
+  case KEY_LEFTMETA:
+    return VK_LWIN;
+  case KEY_RIGHTMETA:
+    return VK_RWIN;
+  case KEY_SEMICOLON:
+    return VK_OEM_1;
+  case KEY_SLASH:
+    return VK_OEM_2;
+  case KEY_LEFTBRACE:
+    return VK_OEM_4;
+  case KEY_RIGHTBRACE:
+    return VK_OEM_6;
+  case KEY_COMMA:
+    return VK_OEM_COMMA;
+  case KEY_DOT:
+    return VK_OEM_PERIOD;
+  case KEY_APOSTROPHE:
+    return VK_OEM_7;
+  case KEY_MINUS:
+    return VK_OEM_MINUS;
+  case KEY_EQUAL:
+    return VK_OEM_PLUS;
+  case KEY_GRAVE:
+    return VK_OEM_3;
+  case KEY_BACKSLASH:
+    return VK_OEM_5;
+  default:
+    return 0;
+  }
 }
 
 static long long x11_mouse_last_fire_ms[MOUSE_BTN_MAX + 1] = {0};
@@ -808,14 +928,14 @@ void x11_set_suppress(int linux_code, bool v) {
 }
 
 bool x11_handle_global_key(int key_code, int value) {
-  remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
+  remap_update_phys(x11_convert_key_to_windows_vk(key_code), value);
   if (value == 0) {
-    hotkey_key_up(ConvertLinuxKeyToWindowsVK(key_code));
+    hotkey_key_up(x11_convert_key_to_windows_vk(key_code));
     return false;
   }
   if (value != 1 && value != 2)
     return false;
-  int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
+  int pressed_vk = x11_convert_key_to_windows_vk(key_code);
   int modifiers = remap_current_mods();
   bool processed = hotkey_process(pressed_vk, modifiers);
   if (pressed_vk && processed) {
@@ -830,7 +950,7 @@ bool x11_handle_global_key(int key_code, int value) {
 }
 
 bool remap_should_swallow_linux_key(int linux_code, int value) {
-  int vk = ConvertLinuxKeyToWindowsVK(linux_code);
+  int vk = x11_convert_key_to_windows_vk(linux_code);
   if (!vk) {
     return false;
   }
@@ -864,13 +984,13 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     return true;
   }
   if (val == 0)
-    hotkey_key_up(ConvertLinuxKeyToWindowsVK(code));
+    hotkey_key_up(x11_convert_key_to_windows_vk(code));
   if (val != 2) {
-    remap_update_phys(ConvertLinuxKeyToWindowsVK(code), val);
+    remap_update_phys(x11_convert_key_to_windows_vk(code), val);
     }
   {
     PlatformKeyEvent gev;
-    gev.vk = ConvertLinuxKeyToWindowsVK(code);
+    gev.vk = x11_convert_key_to_windows_vk(code);
     gev.scancode = code;
     gev.mods = remap_current_mods();
     gev.down = val != 0;
@@ -911,7 +1031,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
         }
       }
       if (grabbed && g_x11_uinput_fd >= 0) {
-        if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true))
+        if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
           return false;
         x11_uinput_emit(ev);
       }
@@ -930,10 +1050,10 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   }
   if (grabbed) {
     if (g_x11_uinput_fd >= 0) {
-      if (hotkey_process(ConvertLinuxKeyToWindowsVK(code),
+      if (hotkey_process(x11_convert_key_to_windows_vk(code),
                          remap_current_mods()))
         return true;
-      if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true))
+      if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
         return false;
       x11_uinput_emit(ev);
     } else {
@@ -944,7 +1064,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       }
     }
   } else {
-    snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, false);
+    snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, false);
   }
   return false;
 }

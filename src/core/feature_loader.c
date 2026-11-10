@@ -18,9 +18,10 @@
 
 #include "core/cc_registry.h"
 #include "core/widget_registry.h"
+#include "core/hover_widget.h"
 #include "core/cap_registry.h"
 #include "core/snippet_manager.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 
 #define DEFERRED_INIT_MAX 32
 static void (*g_deferred_inits[DEFERRED_INIT_MAX])(void);
