@@ -16,17 +16,17 @@
 #include <sys/types.h>
 #include "platform/platform.h"
 #include "platform/x11/misc_x11.h"
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "wm/wm.h"
-#include "platform/x11/clipboard_x11.h"
+#include "helpers/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
 #include "helpers/helpers_text.h"
 #include "config_values.h"
 #include "core/types.h"
 #include "core/types/keys.h"
 
-static uid_t ProbeSessionUid(void) {
+static uid_t x11_probe_session_uid(void) {
 
   DIR *d = opendir("/tmp/.X11-unix");
   if (!d)
@@ -59,7 +59,7 @@ const char *Platform_GetRealUser(void) {
     }
   }
 
-  uid_t suid = ProbeSessionUid();
+  uid_t suid = x11_probe_session_uid();
   if (suid != (uid_t)-1) {
     struct passwd *spw = getpwuid(suid);
     if (spw && spw->pw_name) {
@@ -90,7 +90,7 @@ const char *Platform_GetRealHome(void) {
     strncpy(buf, pw->pw_dir, sizeof(buf) - 1);
     return buf;
   }
-  const char *h = Env_HomeDir();
+  const char *h = x11_env_home_dir();
   if (h && h[0]) {
     strncpy(buf, h, sizeof(buf) - 1);
     return buf;
@@ -105,7 +105,7 @@ bool Platform_IsRunningAsRoot(void) {
   return getuid() == 0;
 }
 
-const char *Platform_GetSessionDisplay(void) {
+const char *x11_get_session_display(void) {
 
   static char buf[64] = {0};
   const char *env = getenv("DISPLAY");
@@ -136,11 +136,11 @@ const char *Platform_GetSessionDisplay(void) {
     }
     closedir(d);
   }
-  log_info("Platform_GetSessionDisplay completed");
+  log_info("x11_get_session_display completed");
   return buf[0] ? buf : ":0";
 }
 
-const char *Platform_GetSessionXAuthority(void) {
+const char *x11_get_session_xauthority(void) {
 
   static char buf[512] = {0};
   struct stat xst;
@@ -151,7 +151,7 @@ const char *Platform_GetSessionXAuthority(void) {
     return buf;
   }
   char rtd[256];
-  const char *rt = Env_XdgRuntimeDir();
+  const char *rt = x11_env_xdg_runtime_dir();
   if (rt && rt[0])
     snprintf(rtd, sizeof(rtd), "%s", rt);
   else
@@ -186,14 +186,14 @@ const char *Platform_GetSessionXAuthority(void) {
   if (stat(buf, &xst) == 0 && xst.st_size > 0 && access(buf, R_OK) == 0)
     return buf;
   buf[0] = '\0';
-  log_info("Platform_GetSessionXAuthority completed");
+  log_info("x11_get_session_xauthority completed");
   return "";
 }
 
-const char *Platform_GetRuntimeDir(void) {
+const char *x11_get_runtime_dir(void) {
 
   static char buf[256] = {0};
-  const char *rt = Env_XdgRuntimeDir();
+  const char *rt = x11_env_xdg_runtime_dir();
   if (rt && rt[0]) {
     snprintf(buf, sizeof(buf), "%s", rt);
     return buf;
@@ -205,7 +205,7 @@ const char *Platform_GetRuntimeDir(void) {
     return buf;
   }
   snprintf(buf, sizeof(buf), "/run/user/%d", (int)getuid());
-  log_info("Platform_GetRuntimeDir completed");
+  log_info("x11_get_runtime_dir completed");
   return buf[0] ? buf : "/run/user/1000";
 }
 
@@ -319,7 +319,7 @@ static bool x11_launch_browser(const char *browser_path, const char *url,
   const char *xauthority = getenv("XAUTHORITY");
   if (!xauthority)
     xauthority = "";
-  const char *env_runtime = Env_XdgRuntimeDir();
+  const char *env_runtime = x11_env_xdg_runtime_dir();
   char runtime_dir[256];
   if (env_runtime)
     snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
@@ -401,8 +401,8 @@ char *Platform_GetClipboardEntry() {
     return NULL;
   }
   char *out = NULL;
-  if (Platform_ClipboardAvailable()) {
-    out = Platform_ClipboardGetText();
+  if (x11_clipboard_available()) {
+    out = x11_clipboard_get_text();
     if (out) {
       fail_streak = 0;
       next_in_ms = 0;

@@ -8,14 +8,14 @@
 #include "platform/draw.h"
 #include "config.h"
 #include "platform/wm_platform.h"
-#include "platform/x11/subclasses_x11.h"
+#include "helpers/x11/subclasses_x11.h"
 #include "platform/x11/drawing_x11.h"
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "helpers/helpers_text.h"
-#include "platform/x11/window_factory_x11.h"
+#include "helpers/x11/window_factory_x11.h"
 #include "deps/log.h"
 #include "config_values.h"
 #include "core/types.h"
@@ -87,7 +87,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
 }
 
 void Platform_PromptPopupHideWindow(Popup *self) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (dpy) {
     XUnmapWindow(dpy, self->handle.xid);
     XSync(dpy, False);
@@ -112,7 +112,7 @@ void Platform_PromptPopupRender(Popup *self) {
 }
 
 void Platform_PromptPopupDestroyWindow(Popup *self) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (dpy) {
     x11_release_prompt_buffer(dpy, self->handle.xid);
     XDestroyWindow(dpy, self->handle.xid);

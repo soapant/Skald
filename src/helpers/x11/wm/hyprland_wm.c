@@ -1,0 +1,578 @@
+#include "wm/hyprland_wm.h"
+
+#include <stdio.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <glob.h>
+#include <strings.h>
+#include <time.h>
+#include <sys/stat.h>
+
+#include "deps/log.h"
+#include "platform/platform.h"
+#include "helpers/x11/env_helpers_x11.h"
+#include "helpers/helpers_text.h"
+
+static bool hypr_sock_live(const char *sig) {
+
+  if (!sig || !sig[0])
+    return false;
+  const char *rtd = x11_env_xdg_runtime_dir();
+  if (!rtd || !rtd[0])
+    return false;
+  char path[512];
+  snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", rtd, sig);
+  struct stat st;
+  return stat(path, &st) == 0;
+}
+
+static void hypr_ensure_sig(void) {
+
+  const char *cur = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (hypr_sock_live(cur)) {
+    return;
+  }
+  if (cur && cur[0])
+    unsetenv("HYPRLAND_INSTANCE_SIGNATURE");
+  const char *rtd = x11_env_xdg_runtime_dir();
+  if (!rtd || !rtd[0]) {
+    log_error("hypr discovery no XDG_RUNTIME_DIR");
+    return;
+  }
+  char pat[512];
+  snprintf(pat, sizeof(pat), "%s/hypr/*/.socket.sock", rtd);
+  glob_t g;
+  memset(&g, 0, sizeof(g));
+  if (glob(pat, 0, NULL, &g) != 0 || g.gl_pathc == 0) {
+    log_error("hypr discovery no match pat='%s'", pat);
+    globfree(&g);
+    return;
+  }
+  const char *best = NULL;
+  const char *best_p = NULL;
+  size_t best_n = 0;
+  time_t best_mtime = 0;
+  for (size_t i = 0; i < g.gl_pathc; i++) {
+    const char *cand = g.gl_pathv[i];
+    const char *end = strrchr(cand, '/');
+    if (!end || end <= cand)
+      continue;
+    const char *p = end - 1;
+    while (p > cand && *(p - 1) != '/')
+      p--;
+    size_t n = (size_t)(end - p);
+    if (n == 0 || n >= 128)
+      continue;
+    struct stat st;
+    if (stat(cand, &st) != 0)
+      continue;
+    if (!best || st.st_mtime >= best_mtime) {
+      best = cand;
+      best_p = p;
+      best_n = n;
+      best_mtime = st.st_mtime;
+    }
+  }
+  if (best && best_p) {
+    char signame[128];
+    memcpy(signame, best_p, best_n);
+    signame[best_n] = '\0';
+    setenv("HYPRLAND_INSTANCE_SIGNATURE", signame, 1);
+    log_error("hypr discovery sig='%s' sock='%s'", signame, best);
+  } else {
+    log_error("hypr discovery no live sock pat='%s' count=%d", pat,
+              (int)g.gl_pathc);
+  }
+  globfree(&g);
+}
+static bool hypr_parse_activewindow_field(const char *field, char *buffer,
+                                          int buffer_size) {
+  if (!field || !buffer || buffer_size <= 0)
+    return false;
+  buffer[0] = '\0';
+  hypr_ensure_sig();
+  char *output = Platform_RunTerminalCommand("hyprctl activewindow -j", false);
+  if (!output || output[0] == '\0') {
+    log_error("hypr activewindow empty for field='%s'", field);
+    free(output);
+    return false;
+  }
+  StringList lines = String_Split(output, "\n");
+  bool ok = false;
+  char needle[64];
+  snprintf(needle, sizeof(needle), "\"%s\"", field);
+  for (size_t i = 0; i < lines.count && !ok; i++) {
+    if (!lines.items[i])
+      continue;
+    char *match = strstr(lines.items[i], needle);
+    if (!match)
+      continue;
+    char tmp[1024];
+    if (sscanf(match, "\"%63[^\"]\": \"%1023[^\"]\"", tmp, buffer) != 2) {
+      if (sscanf(match, "\"%63[^\"]\":\"%1023[^\"]\"", tmp, buffer) != 2)
+        continue;
+    }
+    if (buffer[0] == '\0')
+      continue;
+    if (strcmp(buffer, "null") == 0)
+      continue;
+    buffer[buffer_size - 1] = '\0';
+    ok = true;
+  }
+  if (!ok) {
+    log_error("hypr activewindow no '%s' in output='%s'", field, output);
+  } else {
+    log_info("hypr activewindow %s='%s'", field, buffer);
+  }
+  StringList_Free(&lines);
+  free(output);
+  return ok;
+}
+
+bool get_title_hyprland(char *buffer, int buffer_size) {
+  return hypr_parse_activewindow_field("title", buffer, buffer_size);
+}
+
+bool get_app_id_hyprland(char *buffer, int buffer_size) {
+  return hypr_parse_activewindow_field("class", buffer, buffer_size);
+}
+
+char *paste_hyprland(char *content) {
+  if (!content) {
+    log_error("content is NULL");
+    return NULL;
+  }
+  char buffer[100];
+  snprintf(buffer, sizeof(buffer), "wtype %s", content);
+  char *out = Platform_RunTerminalCommand(buffer, false);
+  if (!out)
+    log_error("content='%s'", content ? content : "null");
+  return out;
+}
+
+bool succeded_hypr(char *output) {
+  if (!output) {
+    log_error("output is NULL");
+    return false;
+  }
+  if (!output[0]) {
+    log_error("hyprctl empty output");
+    return false;
+  }
+  StringList lines = String_Split(output, "\n");
+  for (size_t i = 0; i < lines.count; i++) {
+    if (String_ContainsCI(lines.items[i], "running")) {
+      log_error("hyprctl output='%s'", output);
+      return false;
+    }
+  }
+  if (!String_ContainsCI(output, "ok")) {
+    log_error("hyprctl no ok output='%s'", output);
+    return false;
+  }
+  return true;
+}
+
+static bool hypr_focus_lua_cmd(const char *title, char *out, size_t cap) {
+
+  char esc[1024];
+  size_t o = 0;
+  for (const char *s = title; *s && o + 4 < sizeof(esc); s++) {
+    if (*s == '\\' || *s == '"') {
+      esc[o++] = '\\';
+      esc[o++] = *s;
+    } else if (*s == '\'') {
+      esc[o++] = '\'';
+      esc[o++] = '\\';
+      esc[o++] = '\'';
+      esc[o++] = '\'';
+    } else if (*s == '\n' || *s == '\r') {
+      continue;
+    } else {
+      esc[o++] = *s;
+    }
+  }
+  esc[o] = '\0';
+  snprintf(out, cap,
+           "hyprctl dispatch 'hl.dsp.focus({ window = \"title:%s\" })'", esc);
+  return esc[0] != '\0';
+}
+
+bool focus_window_title_hyprland(char *title) {
+  if (!title) {
+    log_error("title is NULL");
+    return false;
+  }
+  hypr_ensure_sig();
+  char cmd[1280];
+  if (!hypr_focus_lua_cmd(title, cmd, sizeof(cmd))) {
+    log_error("title='%s'", title ? title : "null");
+    return false;
+  }
+  char *out = Platform_RunTerminalCommand(cmd, false);
+  if (succeded_hypr(out)) {
+    free(out);
+    return true;
+  }
+  free(out);
+  if (title[0] != '\0') {
+    char alt[1024];
+    strncpy(alt, title, sizeof(alt) - 1);
+    alt[sizeof(alt) - 1] = '\0';
+    alt[0] = toupper((unsigned char)alt[0]);
+    if (hypr_focus_lua_cmd(alt, cmd, sizeof(cmd))) {
+      out = Platform_RunTerminalCommand(cmd, false);
+      if (succeded_hypr(out)) {
+        free(out);
+        return true;
+      }
+      free(out);
+    }
+  }
+  log_error("title='%s'", title ? title : "null");
+  return false;
+}
+
+PlWindowList get_window_names_hyprland() {
+  hypr_ensure_sig();
+  char *output = Platform_RunTerminalCommand("hyprctl clients -j", false);
+  PlWindowList list = {.windows = NULL, .count = 0};
+  char buffer[512];
+  if (output == NULL || strlen(output) == 0) {
+    log_error("output is NULL or empty");
+    return list;
+  }
+  StringList lines = String_Split(output, "\n");
+  for (size_t i = 0; i < lines.count; i++) {
+    char *match = strstr(lines.items[i], "\"class\"");
+    if (match) {
+      if (sscanf(match, "\"class\": \"%511[^\"]\"", buffer) == 1) {
+        if (strlen(buffer) == 0)
+          continue;
+        if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored"))
+          continue;
+        buffer[0] = toupper((unsigned char)buffer[0]);
+        char **temp = realloc(list.windows, (list.count + 1) * sizeof(char *));
+        if (temp == NULL)
+          break;
+        list.windows = temp;
+        list.windows[list.count] = strdup(buffer);
+        list.count++;
+      }
+    }
+  }
+  StringList_Free(&lines);
+  free(output);
+  return list;
+}
+PlWindowList get_window_titles_hyprland() {
+  hypr_ensure_sig();
+  char *output = Platform_RunTerminalCommand("hyprctl clients -j", false);
+  PlWindowList list = {.windows = NULL, .count = 0};
+  char buffer[512];
+  if (output == NULL || strlen(output) == 0) {
+    log_error("output is NULL or empty");
+    return list;
+  }
+  StringList lines = String_Split(output, "\n");
+  for (size_t i = 0; i < lines.count; i++) {
+    char *match = strstr(lines.items[i], "\"title\"");
+    if (match) {
+      if (sscanf(match, "\"title\": \"%511[^\"]\"", buffer) == 1) {
+        if (strlen(buffer) == 0)
+          continue;
+        if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored"))
+          continue;
+        char **temp = realloc(list.windows, (list.count + 1) * sizeof(char *));
+        if (temp == NULL)
+          break;
+        list.windows = temp;
+        list.windows[list.count] = strdup(buffer);
+        list.count++;
+      }
+    }
+  }
+  StringList_Free(&lines);
+  free(output);
+  return list;
+}
+
+bool close_active_window_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out = Platform_RunTerminalCommand(
+      "hyprctl dispatch 'hl.dsp.window.close()'", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool toggle_fullscreen_active_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out = Platform_RunTerminalCommand(
+      "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"fullscreen\", "
+      "action = \"toggle\" })'",
+      false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_to_monitor_hyprland(bool right) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char cmd[96];
+  snprintf(cmd, sizeof(cmd),
+           "hyprctl dispatch 'hl.dsp.window.move({ monitor = \"%c\" })'",
+           right ? 'r' : 'l');
+  char *out = Platform_RunTerminalCommand(cmd, false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool focus_window_up_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch movefocus u", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool focus_window_down_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch movefocus d", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_up_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch movewindow u", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_down_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch movewindow d", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool inject_key_hyprland(int vk, int down) {
+  if (!down)
+    return true;
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  const char *runtime = x11_env_xdg_runtime_dir();
+  if (!sig || !sig[0] || !runtime || !runtime[0])
+    return false;
+
+  char keyname[32];
+  const char *name = NULL;
+  if (vk >= 'A' && vk <= 'Z') {
+    keyname[0] = (char)(vk + 32);
+    keyname[1] = '\0';
+    name = keyname;
+  } else if (vk >= '0' && vk <= '9') {
+    keyname[0] = (char)vk;
+    keyname[1] = '\0';
+    name = keyname;
+  } else {
+    switch (vk) {
+    case VK_RETURN:
+      name = "Return";
+      break;
+    case VK_SPACE:
+      name = "space";
+      break;
+    case VK_TAB:
+      name = "Tab";
+      break;
+    case VK_ESCAPE:
+      name = "Escape";
+      break;
+    case VK_UP:
+      name = "Up";
+      break;
+    case VK_DOWN:
+      name = "Down";
+      break;
+    case VK_LEFT:
+      name = "Left";
+      break;
+    case VK_RIGHT:
+      name = "Right";
+      break;
+    default:
+      name = NULL;
+    }
+  }
+  if (!name)
+    return false;
+
+  char path[512];
+  snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", runtime, sig);
+
+  int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (fd < 0)
+    return false;
+
+  struct sockaddr_un addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sun_family = AF_UNIX;
+  strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+
+  if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    close(fd);
+    return false;
+  }
+
+  char cmd[256];
+  snprintf(cmd, sizeof(cmd), "dispatch sendshortcut ,%s,active", name);
+
+  struct timeval tv;
+  tv.tv_sec = 0;
+  tv.tv_usec = 100000;
+  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+  if (write(fd, cmd, strlen(cmd)) < 0) {
+    close(fd);
+    return false;
+  }
+  write(fd, "\n", 1);
+
+  char buf[256];
+  recv(fd, buf, sizeof(buf) - 1, 0);
+  close(fd);
+  return true;
+}
+
+bool minimize_active_window_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out =
+      Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.move({ "
+                                  "workspace = \"special\", follow = false })'",
+                                  false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  if (ok)
+    return true;
+  out = Platform_RunTerminalCommand(
+      "hyprctl dispatch 'hl.dsp.workspace.toggle_special()'", false);
+  ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool focus_window_left_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out = Platform_RunTerminalCommand(
+      "hyprctl dispatch 'hl.dsp.focus({ direction = \"l\" })'", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool focus_window_right_hyprland(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0])
+    return false;
+  char *out = Platform_RunTerminalCommand(
+      "hyprctl dispatch 'hl.dsp.focus({ direction = \"r\" })'", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_left_hyprland(void) {
+  return move_active_window_to_monitor_hyprland(false);
+}
+
+bool move_active_window_right_hyprland(void) {
+  return move_active_window_to_monitor_hyprland(true);
+}
+
+bool get_mouse_pos_hyprland(int *x, int *y) {
+  const char *rtd = x11_env_xdg_runtime_dir();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!rtd || !sig)
+    return false;
+  char path[512];
+  snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", rtd, sig);
+  int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (fd < 0)
+    return false;
+  struct sockaddr_un addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sun_family = AF_UNIX;
+  snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path);
+  if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
+    close(fd);
+    return false;
+  }
+  if (send(fd, "cursorpos", 9, 0) < 0) {
+    close(fd);
+    return false;
+  }
+  shutdown(fd, SHUT_WR);
+  char buf[64] = {0};
+  int total = 0;
+  for (;;) {
+    int r = recv(fd, buf + total, sizeof(buf) - 1 - total, 0);
+    if (r <= 0)
+      break;
+    total += r;
+    if (total >= (int)sizeof(buf) - 1)
+      break;
+  }
+  close(fd);
+  buf[total] = '\0';
+  int px = 0, py = 0;
+  if (sscanf(buf, "%d, %d", &px, &py) == 2) {
+    if (x)
+      *x = px;
+    if (y)
+      *y = py;
+    return true;
+  }
+  return false;
+}

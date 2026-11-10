@@ -9,12 +9,12 @@
 #include "core/window_manager.h"
 #include <commctrl.h>
 #include <shellapi.h>
-#include "platform/win32/subclasses_win32.h"
-#include "platform/win32/common_ui_win32.h"
-#include "platform/win32/bg_image_win32.h"
+#include "helpers/win32/subclasses_win32.h"
+#include "helpers/win32/common_ui_win32.h"
+#include "helpers/win32/bg_image_win32.h"
 #include "wingdi.h"
 #include "platform/platform.h"
-#include "platform/win32/win32_state.h"
+#include "helpers/win32/win32_state.h"
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_ui.h"
 
@@ -34,7 +34,7 @@ static HWND g_last_created_msg_hwnd = NULL;
 static HWND g_msg_slots[MSG_SLOT_MAX];
 static int g_msg_slot_count = 0;
 
-static int MsgSlotFind(HWND hwnd) {
+static int win32_msg_slot_find(HWND hwnd) {
   for (int i = 0; i < g_msg_slot_count; i++) {
     if (g_msg_slots[i] == hwnd)
       return i;
@@ -42,8 +42,8 @@ static int MsgSlotFind(HWND hwnd) {
   return -1;
 }
 
-static void MsgSlotUnregister(HWND hwnd) {
-  int idx = MsgSlotFind(hwnd);
+static void win32_msg_slot_unregister(HWND hwnd) {
+  int idx = win32_msg_slot_find(hwnd);
   if (idx < 0)
     return;
   for (int i = idx; i < g_msg_slot_count - 1; i++)
@@ -53,7 +53,7 @@ static void MsgSlotUnregister(HWND hwnd) {
     g_hover_msg_hwnd = NULL;
 }
 
-static void MsgSlotRegister(HWND hwnd) {
+static void win32_msg_slot_register(HWND hwnd) {
   if (g_msg_slot_count >= MSG_SLOT_MAX) {
     HWND oldest = g_msg_slots[0];
     KillTimer(oldest, 999);
@@ -69,7 +69,7 @@ bool win32_message_popup_any_open(void) { return g_msg_slot_count > 0; }
 
 enum { MSG_DESTROY_ALL, MSG_DESTROY_INDEFINITE, MSG_DESTROY_NAMED };
 
-static int MsgSlotDestroyWhere(int mode, const char *name) {
+static int win32_msg_slot_destroy_where(int mode, const char *name) {
   int destroyed = 0;
   for (int i = g_msg_slot_count - 1; i >= 0; i--) {
     HWND h = g_msg_slots[i];
@@ -127,7 +127,7 @@ static wchar_t *msg_widen(const char *in, int *out_len) {
   return w;
 }
 
-LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
+LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                     LPARAM lParam) {
 
   FadeWindowData *data =
@@ -250,7 +250,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_DESTROY: {
     HWND dead = hwnd;
     log_info("MSG WM_DESTROY hwnd=%p", (void *)dead);
-    MsgSlotUnregister(dead);
+    win32_msg_slot_unregister(dead);
     return 0;
   }
   }
@@ -285,7 +285,7 @@ static bool message_popup_create(int x, int y, int w, int h) {
   ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
   UpdateWindow(hPopupWnd);
   SetTimer(hPopupWnd, 999, 16, NULL);
-  MsgSlotRegister(hPopupWnd);
+  win32_msg_slot_register(hPopupWnd);
   {
     RECT vr;
     GetWindowRect(hPopupWnd, &vr);
@@ -357,7 +357,7 @@ void Platform_DismissDisplayMessage(void) {
     SendMessageA(tray, WM_DISMISS_MESSAGE, 0, 0);
     return;
   }
-  MsgSlotDestroyWhere(MSG_DESTROY_ALL, NULL);
+  win32_msg_slot_destroy_where(MSG_DESTROY_ALL, NULL);
 }
 
 bool Platform_DismissMessage(const char *name) {
@@ -368,12 +368,12 @@ bool Platform_DismissMessage(const char *name) {
     return SendMessageA(tray, WM_DISMISS_MESSAGE, 0, (LPARAM)&params) != 0;
   }
   if (!name || !name[0])
-    return MsgSlotDestroyWhere(MSG_DESTROY_ALL, NULL) > 0;
-  return MsgSlotDestroyWhere(MSG_DESTROY_NAMED, name) > 0;
+    return win32_msg_slot_destroy_where(MSG_DESTROY_ALL, NULL) > 0;
+  return win32_msg_slot_destroy_where(MSG_DESTROY_NAMED, name) > 0;
 }
 
 void Platform_DismissIndefiniteMessage(void) {
-  MsgSlotDestroyWhere(MSG_DESTROY_INDEFINITE, NULL);
+  win32_msg_slot_destroy_where(MSG_DESTROY_INDEFINITE, NULL);
 }
 
 bool Platform_MessageActive(const char *name) {

@@ -13,10 +13,10 @@
 #include "core/context.h"
 #include "platform/platform.h"
 #include "deps/log.h"
-#include "platform/x11/input_x11.h"
+#include "helpers/x11/input_x11.h"
 #include "helpers/helpers_input_state.h"
 #include "core/remap_manager.h"
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "core/listbox_hover.h"
 #include "core/types.h"
 
@@ -27,14 +27,14 @@ extern void WindowManager_ProcessEventsLinux(WindowManager *wm);
 bool Platform_WM_InitDisplay(WindowManager *wm) {
   if (!wm)
     return false;
-  wm->display = get_display();
+  wm->display = x11_get_display();
   return wm->display != NULL;
 }
 
 int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunLinux(wm); }
 
 void Platform_PromptFlushDisplay(WindowManager *wm) {
-  Display *dpy = (wm && wm->display) ? wm->display : get_display();
+  Display *dpy = (wm && wm->display) ? wm->display : x11_get_display();
   if (dpy) {
     XFlush(dpy);
     XSync(dpy, False);
@@ -62,7 +62,7 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
   if (wm)
     dpy = wm->display;
   if (!dpy)
-    dpy = get_display();
+    dpy = x11_get_display();
   if (dpy) {
     Window root = DefaultRootWindow(dpy);
     w = DisplayWidth(dpy, DefaultScreen(dpy));
@@ -179,13 +179,13 @@ void Platform_ProcessPendingSubwindow(void) {
   }
 }
 
-int MonitorFill(MonitorEntry *out, int max_entries) {
+int Monitor_Fill(MonitorEntry *out, int max_entries) {
   Display *dpy = NULL;
   WindowManager *wm = WindowManager_Get();
   if (wm)
     dpy = wm->display;
   if (!dpy)
-    dpy = get_display();
+    dpy = x11_get_display();
   if (!dpy)
     return 0;
   Window root = DefaultRootWindow(dpy);

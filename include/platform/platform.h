@@ -170,6 +170,9 @@ int64_t Platform_TimerTickFrequency(void);
 
 void Platform_EmitKey(int vk_code, int down);
 
+int Platform_CharForKey(int vk, int scancode, int mods);
+bool Platform_GetMousePos(int *out_x, int *out_y);
+
 bool Platform_TryAcquireSingleInstance(void);
 bool Platform_InitDisplaySafe(void);
 void Platform_CleanupDisplaySafe(void);

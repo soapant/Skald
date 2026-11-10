@@ -8,13 +8,13 @@
 #include "core/widget_registry.h"
 #include "platform/draw.h"
 #include "core/draw_state.h"
-#include "platform/win32/win32_state.h"
+#include "helpers/win32/win32_state.h"
 #include "helpers/helpers_render_thread.h"
 #include "helpers/helpers_ui.h"
-#include "platform/win32/common_ui_win32.h"
+#include "helpers/win32/common_ui_win32.h"
 #include "core/widget_registry.h"
 #include "deps/log.h"
-#include "platform/win32/bg_image_win32.h"
+#include "helpers/win32/bg_image_win32.h"
 
 struct PlatformWidget {
   PlatformWidgetBase base;
@@ -41,7 +41,7 @@ static void layer_fill(PlatformWidget *widget, unsigned int argb) {
     px[i] = argb;
 }
 
-static LRESULT CALLBACK WidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
+static LRESULT CALLBACK win32_widget_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                    LPARAM lParam);
 static void widget_queue_click(void (*fn)(void));
 static void widget_destroy_on_owner_thread(void *ud);
@@ -53,7 +53,7 @@ static void widget_register_class(void) {
     return;
   }
   WNDCLASSA wc = {0};
-  wc.lpfnWndProc = WidgetProc;
+  wc.lpfnWndProc = win32_widget_proc;
   wc.hInstance = GetModuleHandle(NULL);
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = NULL;
@@ -219,7 +219,7 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
                       (unsigned char)WindowOpacity);
 }
 
-static LRESULT CALLBACK WidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
+static LRESULT CALLBACK win32_widget_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                    LPARAM lParam) {
 
   PlatformWidget *widget =

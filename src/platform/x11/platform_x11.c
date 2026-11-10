@@ -36,7 +36,7 @@
 #include <fontconfig/fontconfig.h>
 #include <curl/curl.h>
 
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "platform/platform.h"
 #include "platform/x11/misc_x11.h"
 #include "core/context.h"
@@ -45,7 +45,7 @@
 #include "core/prompt_geometry.h"
 #include "helpers/helpers_text.h"
 #include "core/feature_path.h"
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 #include "wm/wm.h"
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
@@ -65,9 +65,9 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
   }
 
   X11SessionEnv env;
-  Env_GetSessionEnv(&env);
+  x11_env_get_session_env(&env);
   char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-  Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, wayland_env);
+  x11_env_build_env_strings(&env, disp_env, xauth_env, runtime_env, wayland_env);
 
   pid_t pid = fork();
   if (pid < 0) {
@@ -83,7 +83,7 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
     if (pid2 > 0)
       _exit(0);
 
-    if (Env_IsRunningAsRoot()) {
+    if (x11_env_is_running_as_root()) {
       if (extra_args && extra_args[0]) {
         char cmd[2048];
         snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s",
@@ -114,7 +114,7 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
         execvp(argv2[0], argv2);
       }
     } else {
-      Env_ApplyToCurrentProcess(&env);
+      x11_env_apply_to_current_process(&env);
       if (extra_args && extra_args[0]) {
         char cmd[2048];
         if (strncmp(extra_args, "-e", 2) == 0) {
@@ -553,7 +553,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   }
 
   char runtime_dir[256];
-  snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
+  snprintf(runtime_dir, sizeof(runtime_dir), "%s", x11_get_runtime_dir());
   char extra[1024];
 
   snprintf(extra, sizeof(extra), "%s -c \"%s '%s'; exec %s\"", UsedShell,
@@ -717,7 +717,7 @@ pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
 FontHandle Platform_CreateFont(int size, const char *face_name) {
   pthread_mutex_lock(&g_font_mtx);
 
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy) {
     pthread_mutex_unlock(&g_font_mtx);
     return FH_NULL;
@@ -969,7 +969,7 @@ char *Platform_GetIconPath(char *app_path) {
     if (!icon_name[0]) {
       const char *home_ph0 = Platform_GetRealHome();
       if (!home_ph0 || !home_ph0[0])
-        home_ph0 = Env_HomeDir();
+        home_ph0 = x11_env_home_dir();
       char ph_path[1024];
       if (home_ph0 && home_ph0[0]) {
         snprintf(ph_path, sizeof(ph_path),
@@ -1006,7 +1006,7 @@ char *Platform_GetIconPath(char *app_path) {
   static char found[1024];
   const char *home = Platform_GetRealHome();
   if (!home || !home[0])
-    home = Env_HomeDir();
+    home = x11_env_home_dir();
   if (home && home[0]) {
     for (int s = 0; sizes[s]; s++) {
       char path[1024];
@@ -1152,7 +1152,7 @@ char *Platform_GetIconPath(char *app_path) {
   }
   const char *home_ph = Platform_GetRealHome();
   if (!home_ph || !home_ph[0])
-    home_ph = Env_HomeDir();
+    home_ph = x11_env_home_dir();
   if (home_ph && home_ph[0]) {
     snprintf(pix, sizeof(pix),
              "%s/Programming/Projects/Skald/resources/Placeholder.png",
@@ -1168,7 +1168,7 @@ char *Platform_GetIconPath(char *app_path) {
   return strdup(bare[0] ? bare : "placeholder");
 }
 
-#include "platform/x11/clipboard_x11.h"
+#include "helpers/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
 
 int Platform_CopyToClipboard(const char *text) {
@@ -1182,9 +1182,9 @@ int Platform_CopyToClipboard(const char *text) {
            (int)getpid(), (int)strlen(text), text,
            getenv("WAYLAND_DISPLAY") ? getenv("WAYLAND_DISPLAY") : "(unset)",
            getenv("HYPRLAND_INSTANCE_SIGNATURE") ? "set" : "(unset)");
-  if (Platform_ClipboardAvailable()) {
+  if (x11_clipboard_available()) {
     long long tw = Platform_GetWallClockMs();
-    wr = Platform_ClipboardSetText(text);
+    wr = x11_clipboard_set_text(text);
     log_info("COPY step1 wayland ret=%d ms=%lld", wr,
              Platform_GetWallClockMs() - tw);
   } else {
@@ -1205,8 +1205,8 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
     return 0;
   int wr = 0;
   int xr = 0;
-  if (Platform_ClipboardAvailable()) {
-    wr = Platform_ClipboardSetImage(png, len);
+  if (x11_clipboard_available()) {
+    wr = x11_clipboard_set_image(png, len);
     log_info("Platform_CopyImageToClipboard wayland=%d", wr);
   }
   xr = x11_clipboard_set_image(png, len);
@@ -1221,8 +1221,8 @@ int Platform_SetFileToClipboard(const char *path) {
     return 0;
   int wr = 0;
   int xr = 0;
-  if (Platform_ClipboardAvailable()) {
-    wr = Platform_ClipboardSetFile(path);
+  if (x11_clipboard_available()) {
+    wr = x11_clipboard_set_file(path);
     log_info("Platform_SetFileToClipboard wayland=%d", wr);
   }
   xr = x11_clipboard_set_file(path);
@@ -1374,7 +1374,7 @@ bool Platform_TryAcquireSingleInstance(void) {
 bool Platform_InitDisplaySafe(void) {
   const char *dd = getenv("DISPLAY");
   if (!dd || !dd[0]) {
-    const char *live = Platform_GetSessionDisplay();
+    const char *live = x11_get_session_display();
     if (live && live[0])
       setenv("DISPLAY", live, 1);
   }
@@ -1383,23 +1383,23 @@ bool Platform_InitDisplaySafe(void) {
     unsetenv("XAUTHORITY");
   const char *xa2 = getenv("XAUTHORITY");
   if (!xa2 || !xa2[0]) {
-    const char *live = Platform_GetSessionXAuthority();
+    const char *live = x11_get_session_xauthority();
     if (live && live[0])
       setenv("XAUTHORITY", live, 1);
   }
   const char *wd = getenv("WAYLAND_DISPLAY");
   if (wd && wd[0] && wd[0] != '/') {
-    const char *rtd = Env_XdgRuntimeDir();
+    const char *rtd = x11_env_xdg_runtime_dir();
     if (!rtd || !rtd[0])
-      rtd = Platform_GetRuntimeDir();
+      rtd = x11_get_runtime_dir();
     char sock[512];
     snprintf(sock, sizeof(sock), "%s/%s", rtd ? rtd : "", wd);
     struct stat st;
     if (stat(sock, &st) != 0)
       unsetenv("WAYLAND_DISPLAY");
   }
-  if (!Env_IsWayland()) {
-    const char *rtd2 = Platform_GetRuntimeDir();
+  if (!x11_env_is_wayland()) {
+    const char *rtd2 = x11_get_runtime_dir();
     if (rtd2 && rtd2[0]) {
       char pat[512];
       snprintf(pat, sizeof(pat), "%s/wayland-*", rtd2);
@@ -1422,7 +1422,7 @@ bool Platform_InitDisplaySafe(void) {
       globfree(&g);
     }
   }
-  if (!init_display()) {
+  if (!x11_init_display()) {
     log_info("Continuing without X11 display (headless mode)");
     return false;
   }
@@ -1430,18 +1430,18 @@ bool Platform_InitDisplaySafe(void) {
 }
 
 void Platform_CleanupDisplaySafe(void) {
-  Platform_ClipboardShutdown();
   x11_clipboard_shutdown();
-  cleanup_display();
+  x11_clipboard_shutdown();
+  x11_cleanup_display();
 }
 
 void Platform_InitMainThreadContext(void) {}
 
 void Platform_FixWorkingDirectory(void) {}
-void CleanupPerFeatureEditMap(void) {}
+void x11_cleanup_per_feature_edit_map(void) {}
 
 void Platform_CleanupPlatformResources(void) {
-  CleanupPerFeatureEditMap();
+  x11_cleanup_per_feature_edit_map();
   {
     extern void x11_default_apps_free_cache(void);
     x11_default_apps_free_cache();
@@ -1483,7 +1483,7 @@ static unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
 
 PlColor Platform_GetPixelColor(int x, int y) {
   PlColor out = {0, 0, 0};
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return out;
   Window root = DefaultRootWindow(dpy);
@@ -1503,7 +1503,7 @@ PlColor Platform_GetPixelColor(int x, int y) {
 }
 
 bool Platform_MoveToPos(int x, int y) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
 #if __has_include(<X11/extensions/XTest.h>)
@@ -1520,7 +1520,7 @@ bool Platform_MoveToPos(int x, int y) {
 static int x11_x11_button(int button);
 
 bool Platform_ClickButton(int button) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   int xb = x11_x11_button(button);
@@ -1540,7 +1540,7 @@ bool Platform_ClickButton(int button) {
 }
 
 bool Platform_Click(void) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
 #if __has_include(<X11/extensions/XTest.h>)
@@ -1587,7 +1587,7 @@ bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
     *out_w = 0;
   if (out_h)
     *out_h = 0;
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   Window root = DefaultRootWindow(dpy);
@@ -1641,7 +1641,7 @@ bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   int xb = x11_x11_button(button);
@@ -1659,7 +1659,7 @@ bool Platform_MouseButtonDown(int button, bool down) {
 bool Platform_MouseScroll(int notches) {
   if (notches == 0)
     return true;
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
 #if __has_include(<X11/extensions/XTest.h>)
@@ -1990,7 +1990,7 @@ bool Platform_MutexTryLock(void *mutex) {
 
 
 void Platform_InvalidatePrompt(void) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   Window win = (Window)SkaldContext_Get()->window.hPopupWnd.xid;
   if (dpy && win) {
     XClearArea(dpy, win, 0, 0, 0, 0, True);

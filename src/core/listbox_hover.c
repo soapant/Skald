@@ -11,6 +11,7 @@
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_input_state.h"
+#include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 
 static bool mouse_valid = false;

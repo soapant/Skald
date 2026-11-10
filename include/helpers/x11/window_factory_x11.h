@@ -1,0 +1,19 @@
+#ifndef PLATFORM_X11_WINDOW_FACTORY_H
+#define PLATFORM_X11_WINDOW_FACTORY_H
+
+#include "core/types.h"
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
+#include <sys/types.h>
+
+Window x11_create_window_ex(Display *dpy, int x, int y, int w, int h,
+                            unsigned long bg_color, const char *res_name,
+                            const char *res_class, long event_mask);
+Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h);
+void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
+                            bool no_bg);
+Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
+                                         int h, bool clickable);
+void x11_apply_click_through(Display *dpy, Window win);
+XftDraw *x11_create_xft_draw(Display *dpy, Window win);
+#endif

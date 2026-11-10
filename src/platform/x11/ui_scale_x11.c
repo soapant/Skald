@@ -2,7 +2,7 @@
 #include <X11/Xresource.h>
 #include <stdlib.h>
 #include "platform/platform.h"
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "config_values.h"
 
 static float ui_scale = 0.0f;
@@ -11,7 +11,7 @@ static int base_font_size = 0;
 
 static float ui_scale_detect(void) {
   float best = 1.0f;
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (dpy) {
     XrmInitialize();
     char *rms = XResourceManagerString(dpy);

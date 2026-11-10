@@ -17,12 +17,12 @@
 #include "core/context.h"
 #include "core/feature_path.h"
 #include "platform/platform.h"
-#include "platform/win32/win32_state.h"
-#include "platform/win32/subclasses_win32.h"
-#include "platform/win32/common_ui_win32.h"
-#include "platform/win32/bg_image_win32.h"
+#include "helpers/win32/win32_state.h"
+#include "helpers/win32/subclasses_win32.h"
+#include "helpers/win32/common_ui_win32.h"
+#include "helpers/win32/bg_image_win32.h"
 #include "core/prompt_geometry.h"
-#include "platform/win32/input_core_win32.h"
+#include "helpers/win32/input_core_win32.h"
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <ctype.h>
@@ -665,7 +665,7 @@ typedef struct {
   HWND found_hwnd;
 } FindWindowData;
 
-static BOOL CALLBACK EnumWindowsProcTitle(HWND hwnd, LPARAM lParam) {
+static BOOL CALLBACK win32_enum_windows_proc_title(HWND hwnd, LPARAM lParam) {
 
   FindWindowData *data = (FindWindowData *)lParam;
 
@@ -716,7 +716,7 @@ bool Platform_FocusWindow(const char *title) {
     data.target_title = trimmed;
     data.found_hwnd = NULL;
 
-    EnumWindows(EnumWindowsProcTitle, (LPARAM)&data);
+    EnumWindows(win32_enum_windows_proc_title, (LPARAM)&data);
     hwnd = data.found_hwnd;
   }
 
@@ -1411,7 +1411,7 @@ typedef struct {
   PlWindowList *names;
 } WinPair;
 
-static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
+static BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam) {
 
   WinPair *pair = (WinPair *)lParam;
   if (!IsWindowVisible(hwnd))
@@ -1525,7 +1525,7 @@ static void win32_collect_pair(PlWindowList *out_titles,
                                PlWindowList *out_names) {
 
   WinPair p = {out_titles, out_names};
-  EnumWindows(EnumWindowsProcPair, (LPARAM)&p);
+  EnumWindows(win32_enum_windows_proc_pair, (LPARAM)&p);
 }
 
 PlWindowList Platform_GetWindowTitles() {
@@ -1836,7 +1836,7 @@ int Platform_InitializeTrayIcon() {
   HINSTANCE hInstance = GetModuleHandle(NULL);
   if (Tray) {
     WNDCLASS wc = {0};
-    wc.lpfnWndProc = WndProc;
+    wc.lpfnWndProc = win32_wnd_proc;
     wc.hInstance = hInstance;
     wc.lpszClassName = "TrayAppClass";
 
@@ -1880,7 +1880,7 @@ void Platform_InitUI() {
   }
 
   WNDCLASSA wc = {0};
-  wc.lpfnWndProc = PopupWndProc;
+  wc.lpfnWndProc = win32_popup_wnd_proc;
   wc.hInstance = GetModuleHandle(NULL);
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = GetStockObject(NULL_BRUSH);
@@ -1894,7 +1894,7 @@ void Platform_InitUI() {
   }
 
   WNDCLASSA wcFade = {0};
-  wcFade.lpfnWndProc = DisplayMessageProc;
+  wcFade.lpfnWndProc = win32_display_message_proc;
   wcFade.hInstance = GetModuleHandle(NULL);
   wcFade.hCursor = LoadCursor(NULL, IDC_ARROW);
   wcFade.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
@@ -1910,7 +1910,7 @@ void Platform_InitUI() {
              (void *)s_win32_keyboard_hook);
   }
 
-  Platform_RegisterRawMouse(WH_TO_HWND(s_tray_wnd));
+  win32_register_raw_mouse(WH_TO_HWND(s_tray_wnd));
   s_win32_mouse_hook = NULL;
 
   FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
