@@ -7,7 +7,6 @@
 #include <fontconfig/fontconfig.h>
 #include <stdbool.h>
 #include <stdint.h>
-
 #include "platform/draw.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
@@ -18,9 +17,60 @@
 #include "core/editbox.h"
 #include "platform/x11/drawing_x11.h"
 #include "helpers/x11/display_x11.h"
+#include "helpers/x11/draw_x11.h"
 #include "config_values.h"
 #include "core/context.h"
 #include "core/types/window.h"
+#define RAW_LINE_CAP 4096
+
+#include "helpers/helpers_text.h"
+
+#include <X11/Xft/Xft.h>
+
+#include <X11/extensions/Xrender.h>
+
+#include <X11/Xlib.h>
+
+#include <string.h>
+
+#include <X11/X.h>
+
+#include <fontconfig/fontconfig.h>
+
+#include <stdbool.h>
+
+#include <stdint.h>
+
+
+
+#include "platform/draw.h"
+
+#include "platform/platform.h"
+
+#include "helpers/helpers_ui.h"
+
+#include "core/prompt_geometry.h"
+
+#include "helpers/helpers_ui.h"
+
+#include "core/draw_state.h"
+
+#include "core/listbox_hover.h"
+
+#include "core/editbox.h"
+
+#include "platform/x11/drawing_x11.h"
+
+#include "helpers/x11/display_x11.h"
+#include "helpers/x11/draw_x11.h"
+
+#include "config_values.h"
+
+#include "core/context.h"
+
+#include "core/types/window.h"
+
+
 
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   Display *dpy = x11_get_display();
@@ -41,261 +91,18 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   return true;
 }
 
-static __thread Display *g_draw_dpy = NULL;
-static __thread XftDraw *g_draw_xd = NULL;
-static __thread Visual *g_draw_vis = NULL;
-static __thread Colormap g_draw_cmap = 0;
+
+
 #define RAW_LINE_CAP 4096
-typedef struct {
-  char ch;
-  unsigned long color;
-} RawCell;
-static __thread RawCell g_raw_cells[RAW_LINE_CAP];
-static __thread char g_raw_text[RAW_LINE_CAP + 1];
-static __thread int g_raw_map_x[RAW_LINE_CAP];
-static __thread int g_raw_map_top[RAW_LINE_CAP];
-static __thread int g_raw_count = 0;
-static __thread int g_raw_y = 0;
-static __thread int g_raw_x0 = 0;
-static __thread int g_raw_pitch = 0;
-static __thread int g_raw_fontsize = 0;
-static __thread FontHandle g_raw_font;
-static __thread bool g_raw_font_owned = false;
-static __thread Display *g_raw_dpy = NULL;
-static __thread XftDraw *g_raw_xd = NULL;
-static __thread Visual *g_raw_vis = NULL;
-static __thread Colormap g_raw_cmap = 0;
-static __thread int g_raw_map_count = 0;
-static __thread int g_raw_map_y = 0;
-static __thread int g_raw_map_x0 = 0;
-static __thread int g_raw_map_pitch = 0;
-static __thread XftDraw *g_raw_map_xd = NULL;
-static int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
-  return x11_measure_utf8_fallback(dpy, xf, s, n, 0);
-}
-static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
-                        unsigned long *ucols, int nu, int ls, int le, int drawX,
-                        int baseline, int rowTop) {
-  int cx = drawX;
-  int i = ls;
-  while (i < le) {
-    int j = i + 1;
-    while (j < le && g_raw_cells[j].color == g_raw_cells[i].color)
-      j++;
-    int w = x11_raw_measure(dpy, xf, g_raw_text + i, j - i);
-    int k = 0;
-    while (k < nu && ucols[k] != g_raw_cells[i].color)
-      k++;
-    if (k >= nu)
-      k = 0;
-    x11_draw_utf8_fallback(dpy, xd, &xcols[k], cx, baseline, xf, g_raw_text + i,
-                           j - i, 0);
-    for (int m = i; m < j; m++) {
-      g_raw_map_x[m] = cx;
-      g_raw_map_top[m] = rowTop;
-    }
-    cx += w;
-    i = j;
-  }
-}
 
-static void x11_raw_line_flush(void) {
-  int count = g_raw_count;
-  g_raw_count = 0;
-  if (count <= 0)
-    return;
-  Display *dpy = g_raw_dpy;
-  XftDraw *xd = g_raw_xd;
-  Visual *vis = g_raw_vis;
-  Colormap cmap = g_raw_cmap;
-  XftFont *xf = FH_TO_XFT(g_raw_font);
-  int x0 = g_raw_x0;
-  int y = g_raw_y;
-  int pitch = g_raw_pitch;
-  bool owned = g_raw_font_owned;
-  g_raw_font_owned = false;
-  if (!dpy || !xd || !xf) {
-    if (owned)
-      Platform_DestroyFont(g_raw_font);
-    return;
-  }
-  for (int i = 0; i < count; i++)
-    g_raw_text[i] = g_raw_cells[i].ch;
-  g_raw_text[count] = '\0';
-  int avail = 900 - x0 - 10;
-  if (avail < 40)
-    avail = 40;
-  int ascent = xf->ascent;
-  int lineH = ascent + xf->descent;
-  int spaceW = x11_raw_measure(dpy, xf, " ", 1);
-  unsigned long ucols[64];
-  int nu = 0;
-  for (int i = 0; i < count && nu < 64; i++) {
-    int k = 0;
-    while (k < nu && ucols[k] != g_raw_cells[i].color)
-      k++;
-    if (k >= nu)
-      ucols[nu++] = g_raw_cells[i].color;
-  }
-  XftColor xcols[64];
-  for (int k = 0; k < nu; k++)
-    x11_xft_alloc_color(dpy, vis, cmap, ucols[k], 0xFFFF, &xcols[k]);
-  int row = 0;
-  int p = 0;
-  int ls = 0;
-  int le = 0;
-  int lw = 0;
-  while (p < count) {
-    int ws = p;
-    while (ws < count && g_raw_text[ws] == ' ')
-      ws++;
-    if (ws >= count) {
-      for (int m = p; m < count; m++) {
-        g_raw_map_x[m] = x0 + lw;
-        g_raw_map_top[m] = y + row * lineH;
-      }
-      break;
-    }
-    for (int m = p; m < ws; m++) {
-      g_raw_map_x[m] = x0;
-      g_raw_map_top[m] = y + row * lineH;
-    }
-    int we = ws;
-    while (we < count && g_raw_text[we] != ' ')
-      we++;
-    int ww = x11_raw_measure(dpy, xf, g_raw_text + ws, we - ws);
-    if (ww > avail) {
-      if (le > ls) {
-        x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                    y + ascent + row * lineH, y + row * lineH);
-        row++;
-      }
-      int c = ws;
-      while (c < we) {
-        int lo = 0, hi = we - c;
-        while (lo < hi) {
-          int mid = (lo + hi + 1) / 2;
-          if (x11_raw_measure(dpy, xf, g_raw_text + c, mid) <= avail)
-            lo = mid;
-          else
-            hi = mid - 1;
-        }
-        int n = lo;
-        while (n > 0 && (((unsigned char)g_raw_text[c + n] & 0xC0) == 0x80))
-          n--;
-        if (n <= 0) {
-          unsigned char lc = (unsigned char)g_raw_text[c];
-          if ((lc & 0x80) == 0)
-            n = 1;
-          else if ((lc & 0xE0) == 0xC0)
-            n = 2;
-          else if ((lc & 0xF0) == 0xE0)
-            n = 3;
-          else if ((lc & 0xF8) == 0xF0)
-            n = 4;
-          else
-            n = 1;
-          if (n > we - c)
-            n = we - c;
-        }
-        if (c + n >= we) {
-          ls = c;
-          le = we;
-          lw = x11_raw_measure(dpy, xf, g_raw_text + c, we - c);
-          c = we;
-          break;
-        }
-        x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, c, c + n, x0,
-                    y + ascent + row * lineH, y + row * lineH);
-        row++;
-        c += n;
-      }
-      p = we;
-      continue;
-    }
-    int add = ww + (le > ls ? spaceW : 0);
-    if (le > ls && lw + add > avail) {
-      x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                  y + ascent + row * lineH, y + row * lineH);
-      row++;
-      ls = ws;
-      le = we;
-      lw = ww;
-    } else {
-      if (le <= ls)
-        ls = ws;
-      le = we;
-      lw += add;
-    }
-    p = we;
-  }
-  if (le > ls) {
-    x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                y + ascent + row * lineH, y + row * lineH);
-  }
-  g_raw_map_count = count;
-  g_raw_map_y = y;
-  g_raw_map_x0 = x0;
-  g_raw_map_pitch = pitch;
-  g_raw_map_xd = xd;
-  for (int k = 0; k < nu; k++)
-    XftColorFree(dpy, vis, cmap, &xcols[k]);
-  if (owned)
-    Platform_DestroyFont(g_raw_font);
-}
-static bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
-                         FontHandle fh, bool owned, int fontsize) {
-  if (g_raw_count > 0) {
-    bool same = (y == g_raw_y) && (fontsize == g_raw_fontsize) &&
-                (g_raw_xd == g_draw_xd);
-    if (same && g_raw_count >= 2)
-      same = (x == g_raw_x0 + g_raw_count * g_raw_pitch);
-    if (same && g_raw_count == 1) {
-      int p = x - g_raw_x0;
-      if (p <= 0)
-        same = false;
-      else
-        g_raw_pitch = p;
-    }
-    if (same && owned && !g_raw_font_owned)
-      same = false;
-    if (same && !owned)
-      same = (FH_TO_XFT(fh) == FH_TO_XFT(g_raw_font));
-    if (!same)
-      x11_raw_line_flush();
-  }
-  if (g_raw_count >= RAW_LINE_CAP)
-    return false;
-  if (g_raw_count == 0) {
-    g_raw_x0 = x;
-    g_raw_y = y;
-    g_raw_pitch = 0;
-    g_raw_fontsize = fontsize;
-    g_raw_font = fh;
-    g_raw_font_owned = owned;
-    g_raw_dpy = g_draw_dpy;
-    g_raw_xd = g_draw_xd;
-    g_raw_vis = g_draw_vis;
-    g_raw_cmap = g_draw_cmap;
-  } else if (owned) {
-    Platform_DestroyFont(fh);
-  }
-  g_raw_cells[g_raw_count].ch = ch;
-  g_raw_cells[g_raw_count].color = color;
-  g_raw_count++;
-  return true;
-}
 
-void x11_set_draw_context(Display *dpy, XftDraw *xd, Visual *vis,
-                             Colormap cmap) {
-  x11_raw_line_flush();
-  g_draw_dpy = dpy;
-  g_draw_xd = xd;
-  g_draw_vis = vis;
-  g_draw_cmap = cmap;
-}
+
+
+
+
 
 void Platform_FlushDraw(void) { x11_raw_line_flush(); }
+
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   if (!path || !path[0] || !g_draw_dpy || !g_draw_xd)
     return false;
@@ -311,18 +118,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   return x11_draw_image_scaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y,
                                   w, h);
 }
-void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
-                             Colormap *cmap) {
 
-  if (dpy)
-    *dpy = g_draw_dpy;
-  if (xd)
-    *xd = g_draw_xd;
-  if (vis)
-    *vis = g_draw_vis;
-  if (cmap)
-    *cmap = g_draw_cmap;
-}
 bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return false;
@@ -390,6 +186,8 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   return true;
 }
 
+
+
 void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return;
@@ -413,46 +211,13 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
                                            .fontsize = spec.fontsize});
 }
 
-static Display *g_line_dpy = NULL;
-static int g_line_size = 0;
-static XftFont *g_line_font = NULL;
 
-static XftFont *x11_line_font(Display *dpy, int size) {
-  if (size <= 0)
-    size = FontSize;
-  if (!g_line_font || g_line_dpy != dpy || g_line_size != size) {
-    if (g_line_font && g_line_dpy)
-      XftFontClose(g_line_dpy, g_line_font);
-    g_line_font = NULL;
-    g_line_dpy = NULL;
-    g_line_size = 0;
-    if (!dpy)
-      return NULL;
-    int screen = DefaultScreen(dpy);
-    XftFont *xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, UsedFont,
-                              FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
-    if (!xf)
-      xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, "sans",
-                       FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
-    if (!xf)
-      xf = XftFontOpenName(dpy, screen, "fixed");
-    if (!xf)
-      return NULL;
-    g_line_font = xf;
-    g_line_dpy = dpy;
-    g_line_size = size;
-  }
-  return g_line_font;
-}
 
-int x11_editbox_measure(const char *text, int len, void *user) {
-  EditboxX11Metrics *m = (EditboxX11Metrics *)user;
-  if (!m || !m->dpy || !m->xf || !text || len <= 0)
-    return 0;
-  XGlyphInfo ext;
-  XftTextExtentsUtf8(m->dpy, m->xf, (FcChar8 *)text, len, &ext);
-  return ext.xOff;
-}
+
+
+
+
+
 
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
   if (!spec.text || spec.len <= 0)
@@ -466,6 +231,8 @@ int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
                                    spec.fontsize > 0 ? spec.fontsize
                                                      : FontSize);
 }
+
+
 
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   if (!spec.text || spec.len <= 0 || !g_draw_dpy || !g_draw_xd)
@@ -485,19 +252,10 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   return true;
 }
 
-void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
-                                 Visual *vis, Colormap cmap, int y, int h,
-                                 bool selected) {
-  if (selected) {
-    if (state->no_bg) {
-      x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                    rgb_to_hex(COLOR_SELECTED_TEXT));
-    } else {
-      x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                    rgb_to_hex(COLOR_SELECTED_TEXT));
-    }
-  }
-}
+
+
+
+
 
 
 void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
@@ -521,6 +279,8 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
   XftColorFree(dpy, vis, cmap, &pcolor);
 }
 
+
+
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, FontHandle font) {
   x11_set_draw_context(dpy, xd, vis, cmap);
@@ -535,65 +295,8 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                             .pad = PROMPT_FOOTER_PAD,
                             .fontsize = FontSize});
 }
-static void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
-                                    EditboxSpec *eb,
-                                    EditboxX11Metrics *metrics) {
-  XftFont *xf = FH_TO_XFT(font);
-  int text_len = (int)strlen(state->eb->filter);
-  int cursor_x = 0;
-  int text_w = 0;
-  if (xf) {
-    XGlyphInfo cext;
-    XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8 *)state->eb->filter,
-                       state->eb->cursor, &cext);
-    cursor_x = cext.xOff;
-    XGlyphInfo textExt;
-    XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8 *)state->eb->filter, text_len,
-                       &textExt);
-    text_w = textExt.xOff;
-  }
-  int sel_start = 0, sel_end = 0;
-  bool has_sel = false;
-  Editbox_ResolveSelection(state, text_len, false, &sel_start, &sel_end,
-                           &has_sel);
-  memset(eb, 0, sizeof(*eb));
-  eb->text = state->eb->filter;
-  eb->text_len = text_len;
-  eb->cursor = state->eb->cursor;
-  eb->sel_start = sel_start;
-  eb->sel_end = sel_end;
-  eb->has_selection = has_sel;
-  int asc = xf ? xf->ascent : 0;
-  int desc = xf ? xf->descent : 0;
-  int edit_y = PROMPT_EDIT_INSET;
-  if (!state->lb && state->height > 0) {
-    int line_h = asc + desc;
-    if (line_h <= 0)
-      line_h = FontSize > 0 ? FontSize : 16;
-    edit_y = (state->height - line_h) / 2;
-    if (edit_y < 2)
-      edit_y = 2;
-  }
-  eb->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
-  eb->x = 0;
-  eb->y = edit_y;
-  eb->w = state->width;
-  eb->inset = PROMPT_EDIT_INSET;
-  eb->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
-  eb->scroll = state->eb->scroll_offset;
-  eb->cursor_x = cursor_x;
-  eb->text_w = text_w;
-  eb->text_y = edit_y;
-  eb->caret_y = Editbox_CaretY(edit_y, asc, desc, FontSize);
-  eb->caret_h = PromptCaretHeight();
-  eb->placeholder_dy = 2;
-  eb->rainbow_limit_x = -1;
-  eb->placeholder = state->eb->placeholder;
-  eb->text_color = rgb_to_hex(COLOR_TEXT);
-  eb->font = font;
-  eb->measure = x11_editbox_measure;
-  eb->measure_user = metrics;
-}
+
+
 
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
@@ -609,6 +312,8 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
   Editbox_Draw(&eb, &lay, EDITBOX_PART_TEXT);
 }
 
+
+
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
   x11_set_draw_context(dpy, xd, vis, cmap);
@@ -619,6 +324,7 @@ void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
   Editbox_Layout(&eb, &lay);
   Editbox_Draw(&eb, &lay, EDITBOX_PART_TINT);
 }
+
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd,
                              Visual *vis, Colormap cmap, FontHandle font) {
   x11_set_draw_context(dpy, xd, vis, cmap);
@@ -630,43 +336,17 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd,
   Editbox_Draw(&eb, &lay, EDITBOX_PART_CARET);
 }
 
-static GC raw_gc_for(Display *dpy, Drawable d);
 
 
-static bool raw_can_draw(void) {
-  return g_draw_dpy != NULL && g_draw_xd != NULL;
-}
 
-static GC raw_gc_for(Display *dpy, Drawable d) {
-  static GC gc = NULL;
-  static Drawable gc_owner = 0;
-  if (gc != NULL && gc_owner == (Drawable)(uintptr_t)d)
-    return gc;
-  if (gc != NULL)
-    XFreeGC(dpy, gc);
-  gc = XCreateGC(dpy, d, 0, NULL);
-  if (!gc)
-    return NULL;
-  gc_owner = (Drawable)(uintptr_t)d;
-  return gc;
-}
 
-static GC raw_prepare(unsigned long color, int thickness) {
-  if (!raw_can_draw())
-    return NULL;
-  Drawable d = XftDrawDrawable(g_draw_xd);
-  GC gc = raw_gc_for(g_draw_dpy, d);
-  if (!gc)
-    return NULL;
-  XftColor col;
-  x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
-                      OpacityAlpha16(), &col);
-  XSetForeground(g_draw_dpy, gc, col.pixel);
-  XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
-  XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid,
-                     CapButt, JoinMiter);
-  return gc;
-}
+
+
+
+
+
+
+
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   int x = spec.x;
@@ -782,6 +462,8 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   return true;
 }
 
+
+
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   if (!raw_can_draw())
     return false;
@@ -804,6 +486,8 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   XDrawLine(g_draw_dpy, d, gc, x1, y1, x2, y2);
   return true;
 }
+
+
 
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   if (!raw_can_draw() || spec.radius <= 0)
@@ -828,18 +512,10 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
 }
 
 
-void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
-                          Visual *vis, Colormap cmap) {
-  if (!state)
-    return;
-  SkaldContext_Get()->window.editbox_placed = true;
-  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
-  Platform_DrawEditBackground(state, dpy, xd, vis, cmap, font);
-  Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);
-  Platform_DrawEditText(state, dpy, xd, vis, cmap, font);
-  Platform_DrawEditCursor(state, dpy, xd, vis, cmap, font);
-  Platform_DestroyFont(font);
-}
+
+
+
+
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   Display *dpy = x11_get_display();
@@ -856,60 +532,5 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
     *list_top = lt;
 }
 
-void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
-                          Visual *vis, Colormap cmap) {
 
-  if (!state || !state->lb)
-    return;
-  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
-  ListBoxInfo *lb = state->lb;
-  if (!lb->item_count) {
-    Platform_DestroyFont(font);
-    return;
-  }
 
-  int itemH = x11_font_row_height_of(font);
-  int y0 = x11_font_list_top_of(font);
-  DrawPromptSeparator(
-      (PlDrawPromptSeparatorSpec){.y = y0, .width = state->width});
-  int yOffset = PROMPT_LIST_BOTTOM_TITLE;
-  int visible = (state->height - y0 - yOffset) / itemH;
-  if (visible < 1)
-    visible = 1;
-  if (visible > lb->item_count)
-    visible = lb->item_count;
-  UI_LB_SetVisibleCount(visible);
-
-  ListBox_ApplyPendingScroll(lb, visible);
-
-  ListBox_SetGeometry(y0, itemH, visible);
-  ListBox_HoverFocus(lb, y0, itemH, lb->view_offset, visible);
-
-  for (int i = 0; i < visible; i++) {
-    int idx = lb->view_offset + i;
-    int y = y0 + i * itemH;
-    bool sel = (idx == lb->selected_index);
-    if (RoundedCorners && CornerRadius > 0) {
-      int R = PROMPT_SEL_RADIUS;
-      int t = PROMPT_SEL_INSET;
-      int bx = PROMPT_SEL_X, bw = state->width - PROMPT_SEL_W_SHRINK;
-      if (sel) {
-        x11_fill_rounded_rect(
-            dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
-            y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t, itemH - 2 - 2 * t, R - 1,
-            state->width, state->height);
-      }
-    } else {
-      x11_draw_list_background(state, dpy, xd, vis, cmap, y, itemH, sel);
-    }
-    Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y,
-                          PROMPT_ITEM_TEXT_X, NULL);
-  }
-
-  if (PromptListBottomMargin() > 0) {
-    DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-        .y = state->height - PROMPT_LIST_BOTTOM_TITLE, .width = state->width});
-  }
-
-  Platform_DestroyFont(font);
-}
