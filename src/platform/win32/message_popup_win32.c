@@ -50,11 +50,6 @@ static void MsgSlotUnregister(HWND hwnd) {
   g_msg_slot_count--;
   if (hwnd == g_hover_msg_hwnd)
     g_hover_msg_hwnd = NULL;
-  if (WH_TO_HWND(g_win32_message_wnd) == hwnd) {
-    g_win32_message_wnd = g_msg_slot_count > 0
-                              ? WH_FROM_HWND(g_msg_slots[g_msg_slot_count - 1])
-                              : WH_NULL;
-  }
 }
 
 static void MsgSlotRegister(HWND hwnd) {
@@ -67,8 +62,9 @@ static void MsgSlotRegister(HWND hwnd) {
     return;
   g_msg_slots[g_msg_slot_count++] = hwnd;
   g_last_created_msg_hwnd = hwnd;
-  g_win32_message_wnd = WH_FROM_HWND(hwnd);
 }
+
+bool MessagePopup_AnyOpen(void) { return g_msg_slot_count > 0; }
 
 enum { MSG_DESTROY_ALL, MSG_DESTROY_INDEFINITE, MSG_DESTROY_NAMED };
 
@@ -305,7 +301,6 @@ bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
 void Platform_MessagePopupHideWindow(Popup *self) {
   (void)self;
   MsgSlotDestroyWhere(MSG_DESTROY_ALL, NULL);
-  g_win32_message_wnd = WH_NULL;
 }
 
 void Platform_MessagePopupRender(Popup *self) { (void)self; }
@@ -342,8 +337,8 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     if (useMaxH <= 0 || h > useMaxH)
       useMaxH = h;
   }
-  if (WH_TO_HWND(g_win32_tray_wnd) != NULL &&
-      GetCurrentThreadId() != g_win32_main_thread_id) {
+  if (WH_TO_HWND(Platform_TrayWindow()) != NULL &&
+      !Platform_IsMainThread()) {
     DisplayMessageParams params;
     params.message = message;
     params.x = centerX;
@@ -355,7 +350,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     params.no_bg = no_bg;
     params.render = render;
     params.name = name;
-    SendMessageA(WH_TO_HWND(g_win32_tray_wnd), WM_DISPLAY_MESSAGE, 0,
+    SendMessageA(WH_TO_HWND(Platform_TrayWindow()), WM_DISPLAY_MESSAGE, 0,
                  (LPARAM)&params);
     return;
   }
@@ -373,18 +368,17 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
 }
 
 void Platform_DismissDisplayMessage(void) {
-  HWND tray = WH_TO_HWND(g_win32_tray_wnd);
-  if (tray != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
+  HWND tray = WH_TO_HWND(Platform_TrayWindow());
+  if (tray != NULL && !Platform_IsMainThread()) {
     SendMessageA(tray, WM_DISMISS_MESSAGE, 0, 0);
     return;
   }
   MsgSlotDestroyWhere(MSG_DESTROY_ALL, NULL);
-  g_win32_message_wnd = WH_NULL;
 }
 
 bool Platform_DismissMessage(const char *name) {
-  HWND tray = WH_TO_HWND(g_win32_tray_wnd);
-  if (tray != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
+  HWND tray = WH_TO_HWND(Platform_TrayWindow());
+  if (tray != NULL && !Platform_IsMainThread()) {
     DismissMessageParams params;
     params.name = name;
     return SendMessageA(tray, WM_DISMISS_MESSAGE, 0, (LPARAM)&params) != 0;

@@ -666,7 +666,7 @@ SkNetStatus sk_net_status_platform(void) {
 }
 
 bool sk_dismiss_message_platform(const char *name) {
-  if (WH_TO_HWND(g_win32_message_wnd) == NULL) {
+  if (!MessagePopup_AnyOpen()) {
     return false;
   }
   return Platform_DismissMessage(name);
