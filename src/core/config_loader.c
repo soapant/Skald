@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <errno.h>
 #include <stdbool.h>
 
@@ -69,6 +70,41 @@ typedef struct {
 static ConfigLib g_cfg_libs[2];
 static int g_cfg_count = 0;
 static int g_cfg_seq = 0;
+static bool g_cfg_culled = false;
+
+static void cfg_cull_stale_libs(void) {
+  if (g_cfg_culled)
+    return;
+  g_cfg_culled = true;
+  DIR *d = opendir("build");
+  if (!d)
+    return;
+  const char *lib_ext = Platform_LibExtension();
+  struct dirent *e;
+  int nremoved = 0;
+  while ((e = readdir(d)) != NULL) {
+    const char *name = e->d_name;
+    size_t len = strlen(name);
+    if (strncmp(name, "config.hot", 10) != 0)
+      continue;
+    const char *p = name + 10;
+    while (*p >= '0' && *p <= '9')
+      p++;
+    if (*p == '\0')
+      continue;
+    if (p == name + 10)
+      continue;
+    if (!lib_ext || strcmp(p, lib_ext) != 0)
+      continue;
+    char junk[512];
+    snprintf(junk, sizeof(junk), "build/%s", name);
+    if (remove(junk) == 0)
+      nremoved++;
+  }
+  closedir(d);
+  if (nremoved > 0)
+    log_info("config: removed %d stale hot-reload libs", nremoved);
+}
 
 static char *heap_dup(const char *s) {
   if (!s)
@@ -306,6 +342,7 @@ static bool config_build_load_store(void) {
 }
 
 bool Config_Load(void) {
+  cfg_cull_stale_libs();
   bool ok = config_build_load_store();
 
   if (!ok) {
