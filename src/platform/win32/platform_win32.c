@@ -658,29 +658,6 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
   *outHeight = height;
 }
 
-long Platform_GetFileSize(char *filepath) {
-  if (!filepath)
-    return -1;
-  FILE *fp = fopen(filepath, "rb");
-  if (fp == NULL) {
-    log_error("operation failed, returning error filepath='%s'",
-              filepath ? filepath : "null");
-    return -1;
-  }
-
-  if (fseek(fp, 0L, SEEK_END) != 0) {
-    log_error("fseek failed for '%s' err=%s", filepath, strerror(errno));
-    fclose(fp);
-    return -1;
-  }
-
-  long size = ftell(fp);
-
-  fclose(fp);
-  log_info("Platform_GetFileSize filepath=%p", filepath);
-  ;
-  return size;
-}
 
 typedef struct {
   const char *target_title;

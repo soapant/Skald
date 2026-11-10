@@ -644,15 +644,9 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
 }
 
 
-typedef struct {
-  double seconds;
-  void (*callback)(void);
-  char owner[OWNER_PATH_MAX];
-} TimerPayload;
-
 static void *TimerThread(void *arg) {
 
-  TimerPayload *payload = (TimerPayload *)arg;
+  SkRunAfterPayload *payload = (SkRunAfterPayload *)arg;
   if (!payload)
     return NULL;
 
@@ -667,28 +661,13 @@ static void *TimerThread(void *arg) {
   return NULL;
 }
 
-void sk_run_after_time_platform(double seconds, void (*callback)(void)) {
-  if (!callback || seconds < 0)
-    return;
-  TimerPayload *payload = (TimerPayload *)malloc(sizeof(TimerPayload));
-  if (!payload) {
-    return;
-  }
-  payload->seconds = seconds;
-  payload->callback = callback;
-  payload->owner[0] = '\0';
-  Owner_ResolveForFunc((void *)callback, payload->owner,
-                       sizeof(payload->owner));
-  ThreadRegistry_Add(payload, payload->owner);
+bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload) {
 
   pthread_t thread;
-  if (pthread_create(&thread, NULL, TimerThread, payload) != 0) {
-    ThreadRegistry_Finish(payload);
-    free(payload);
-    return;
-  }
-
+  if (pthread_create(&thread, NULL, TimerThread, payload) != 0)
+    return false;
   pthread_detach(thread);
+  return true;
 }
 
 void sk_sleep_platform(double seconds) {

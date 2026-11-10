@@ -296,10 +296,6 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
     *out_y = (int)pt.y;
   return true;
 }
-static void measure_track(int x, int y, int w, int h) {
-
-  PlDrawState_TrackMeasure(x, y, w, h);
-}
 void Platform_SetDrawContextWin32(HDC hdc) { g_draw_hdc = hdc; }
 void Platform_GetDrawContextWin32(HDC *out) {
   if (out)
@@ -366,12 +362,12 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
       bx = x - msz.cx / 2;
     else if (right)
       bx = x - msz.cx;
-    measure_track(bx, y, msz.cx, msz.cy);
+    DrawMeasureTrack(bx, y, msz.cx, msz.cy);
   }
   if (!centered && !right) {
     int x0 = spec.pad ? spec.pad : x;
     if (measuring)
-      measure_track(x0, y, msz.cx, msz.cy);
+      DrawMeasureTrack(x0, y, msz.cx, msz.cy);
     TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
     free(wide);
     if (old)
@@ -495,17 +491,6 @@ static COLORREF win32_resolve_color(unsigned long hex, bool opaque) {
   return (COLORREF)((b << 16) | (g << 8) | r);
 }
 
-static int win32_thickness_px(float thickness) {
-
-  if (thickness <= 0.0f)
-    return 0;
-  int px = (int)(thickness + 0.5f);
-  if (px < 1)
-    px = 1;
-  if (px > 255)
-    px = 255;
-  return px;
-}
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   int x = spec.x;
@@ -542,9 +527,9 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   if (filled || thickness <= 0.0f) {
     int fill_t = filled ? 0 : 1;
     if (filled)
-      measure_track(x, y, w, h);
+      DrawMeasureTrack(x, y, w, h);
     else
-      measure_track(x - fill_t, y - fill_t, w + 2 * fill_t, h + 2 * fill_t);
+      DrawMeasureTrack(x - fill_t, y - fill_t, w + 2 * fill_t, h + 2 * fill_t);
     HBRUSH brush = CreateSolidBrush(win32_resolve_color(color, opaque));
     HGDIOBJ old_brush = SelectObject(g_draw_hdc, brush);
     HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
@@ -566,9 +551,9 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     return true;
   }
 
-  int t = win32_thickness_px(thickness);
+  int t = DrawThicknessPx(thickness);
 
-  measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+  DrawMeasureTrack(x - t, y - t, w + 2 * t, h + 2 * t);
 
   HPEN pen = CreatePen(PS_SOLID, t, win32_resolve_color(color, opaque));
   HGDIOBJ old_pen = SelectObject(g_draw_hdc, pen);
@@ -598,7 +583,7 @@ int Platform_GetTextLineHeight(int fontsize) {
 }
 
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
-  int t = win32_thickness_px(spec.thickness);
+  int t = DrawThicknessPx(spec.thickness);
   if (t < 1)
     t = 1;
   int x1 = spec.x1 + PlDrawState_Get()->off_x;
@@ -609,7 +594,7 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int by = y1 < y2 ? y1 : y2;
   int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
   int bh = (y1 > y2 ? y1 - y2 : y2 - y1) + t;
-  measure_track(bx - t / 2, by - t / 2, bw, bh);
+  DrawMeasureTrack(bx - t / 2, by - t / 2, bw, bh);
   HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(spec.color));
   HGDIOBJ old = SelectObject(g_draw_hdc, pen);
   MoveToEx(g_draw_hdc, x1, y1, NULL);
@@ -622,10 +607,10 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   if (spec.radius <= 0)
     return false;
-  int t = win32_thickness_px(spec.thickness);
+  int t = DrawThicknessPx(spec.thickness);
   int cx = spec.cx + PlDrawState_Get()->off_x;
   int cy = spec.cy + PlDrawState_Get()->off_y;
-  measure_track(cx - spec.radius, cy - spec.radius, spec.radius * 2,
+  DrawMeasureTrack(cx - spec.radius, cy - spec.radius, spec.radius * 2,
                 spec.radius * 2);
   int left = cx - spec.radius, top = cy - spec.radius;
   int right = cx + spec.radius, bottom = cy + spec.radius;
@@ -1027,7 +1012,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         SelectObject(g_draw_hdc, told);
     }
   }
-  measure_track(x, y, w, h);
+  DrawMeasureTrack(x, y, w, h);
 
   if (!g_draw_hdc) {
     log_error("img: no draw context (g_draw_hdc NULL)");

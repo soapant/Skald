@@ -170,45 +170,6 @@ void win32_fill_rounded_rect(HDC hdc, RECT *rc, COLORREF col, int radius) {
   DeleteObject(rgn);
 }
 
-void UpdateTextCaret(void) {
-  HWND popup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
-  if (popup && IsWindow(popup))
-    InvalidateRect(popup, NULL, FALSE);
-}
-
-void CalculateWindowMetrics(WindowLayout *layout, int height, int width,
-                            int item_height) {
-
-  POINT pt = {0, 0};
-  GetCursorPos(&pt);
-  HMONITOR hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
-
-  MONITORINFO mi = {0};
-  mi.cbSize = sizeof(MONITORINFO);
-  GetMonitorInfoA(hMonitor, &mi);
-
-  int monitorWidth = mi.rcMonitor.right - mi.rcMonitor.left;
-  int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
-
-  float ui_scale = Platform_GetUIScale();
-
-  layout->w = (int)(PROMPT_W * ui_scale);
-  layout->item_height = item_height;
-
-  layout->h = (int)(PROMPT_H * ui_scale);
-
-  if (layout->h < height)
-    layout->h = height;
-  if (layout->h > width)
-    layout->h = width;
-
-  layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
-  layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
-  log_info("CalculateWindowMetrics cursor=(%ld,%ld) mon=(%ld,%ld %ldx%ld) "
-           "layout=(%d,%d %dx%d)",
-           pt.x, pt.y, mi.rcMonitor.left, mi.rcMonitor.top, monitorWidth,
-           monitorHeight, layout->x, layout->y, layout->w, layout->h);
-}
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
   ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);
 

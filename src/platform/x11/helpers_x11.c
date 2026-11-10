@@ -1803,9 +1803,3 @@ XftDraw *x11_create_xft_draw(Display *dpy, Window win) {
                        DefaultColormap(dpy, screen));
 }
 
-void UpdateTextCaret(void) {
-  WindowManager *wm = WindowManager_Get();
-  Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-  if (top && top->vtable && top->vtable->on_render)
-    top->vtable->on_render(top);
-}
