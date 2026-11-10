@@ -1,7 +1,5 @@
 #ifndef SKAPI_H
 #define SKAPI_H
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wint-conversion"
 
 #include <stdbool.h>
 #include <stddef.h>

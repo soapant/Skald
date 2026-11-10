@@ -927,7 +927,7 @@ void ski_message(const SkMessageSpec *spec) {
   double timeout =
       spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
   if (spec->close_on_keypress)
-    timeout = 6969.0;
+    timeout = MSG_TIMEOUT_INDEFINITE;
   ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
   if (spec->hover_key && spec->hover_key[0]) {
     if (spec->render) {

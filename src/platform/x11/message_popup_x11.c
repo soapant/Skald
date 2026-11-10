@@ -327,7 +327,7 @@ static void MsgPresent(Display *dpy, const char *message, int x, int y,
   XFlush(dpy);
   x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,
                            no_bg, render);
-  bool indefinite = !(timeout != 6969.0 && timeout > 0.0);
+  bool indefinite = MsgTimeoutIsIndefinite(timeout);
   pthread_mutex_lock(&g_msg_lock);
   if (g_msg_slot_count >= MSG_MAX_ACTIVE)
     MsgRemoveSlotLocked(dpy, 0);
@@ -685,28 +685,7 @@ void Platform_DismissIndefiniteMessage(void) {
   XFlush(dpy);
 }
 
-bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
-  (void)self;
-  (void)x;
-  (void)y;
-  (void)w;
-  (void)h;
-  return true;
-}
-
-void Platform_MessagePopupHideWindow(Popup *self) { (void)self; }
-
-void Platform_MessagePopupRender(Popup *self) { (void)self; }
-
-void Platform_MessagePopupDestroyWindow(Popup *self) { (void)self; }
-
-bool Platform_MessagePopupOnKey(Popup *self, const PopupKeyEvent *key) {
-  (void)self;
-  (void)key;
-  return false;
-}
-
-void Platform_DismissDisplayMessage(void) {}
+void Platform_DismissDisplayMessage(void) { Platform_DismissMessage(NULL); }
 
 void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
   (void)path_a;

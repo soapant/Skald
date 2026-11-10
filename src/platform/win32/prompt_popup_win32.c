@@ -37,9 +37,9 @@ static bool is_popup_class(HWND hwnd) {
   char cls[64] = {0};
   GetClassNameA(hwnd, cls, sizeof(cls));
   {
-    return strcmp(cls, "QuickSwitcherModalClass") == 0 ||
-           strcmp(cls, "DisplayMessageModalClass") == 0 ||
-           strcmp(cls, "SearchPopupClass") == 0;
+    return strcmp(cls, QUICKSWITCHER_CLASS) == 0 ||
+           strcmp(cls, MESSAGE_CLASS) == 0 ||
+           strcmp(cls, SEARCH_POPUP_CLASS) == 0;
   }
 }
 
@@ -73,7 +73,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   HINSTANCE hInstance = GetModuleHandle(NULL);
   SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       WS_EX_TOOLWINDOW | WS_EX_COMPOSITED | WS_EX_LAYERED,
-      "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, x, y, w, h,
+      QUICKSWITCHER_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN, x, y, w, h,
       NULL, NULL, hInstance, NULL));
   if (WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) == NULL) {
     return false;
@@ -131,7 +131,9 @@ void Platform_PromptPopupRender(Popup *self) {
   }
 }
 
-void Platform_PromptPopupDestroyWindow(Popup *self) {}
+void Platform_PromptPopupDestroyWindow(Popup *self) {
+  Platform_PromptPopupHideWindow(self);
+}
 
 bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
   return false;
