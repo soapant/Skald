@@ -325,3 +325,27 @@ PromptState *PromptPopup_FindState(const ListBoxInfo *lb) {
   }
   return NULL;
 }
+
+Popup *PromptPopup_FindPopupByHandle(WindowHandle handle) {
+  if (WH_EQUALS(handle, WH_NULL))
+    return NULL;
+  WindowManager *wm = WindowManager_Get();
+  if (wm) {
+    for (int i = wm->popup_count - 1; i >= 0; i--) {
+      Popup *p = wm->popups[i];
+      if (!p || p->type != POPUP_PROMPT || !p->user_data)
+        continue;
+      if (WH_EQUALS(p->handle, handle))
+        return p;
+    }
+  }
+  return NULL;
+}
+
+PromptState *PromptPopup_GetTopPromptState(void) {
+  WindowManager *wm = WindowManager_Get();
+  Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+  if (top && top->type == POPUP_PROMPT && top->user_data)
+    return (PromptState *)top->user_data;
+  return NULL;
+}

@@ -32,9 +32,11 @@ typedef struct FontHandle {
 #if defined(_WIN32)
 #define WH_FROM_HWND(h) ((WindowHandle){.hwnd = (void *)(h)})
 #define WH_TO_HWND(h) ((h).hwnd)
+#define WH_EQUALS(a, b) ((a).hwnd == (b).hwnd)
 #elif defined(__linux__)
 #define WH_FROM_HWND(h) ((void)(h), WH_NULL)
 #define WH_TO_HWND(h) ((h).xid)
+#define WH_EQUALS(a, b) ((a).xid == (b).xid)
 #endif
 
 #define FH_NULL ((FontHandle){0})
