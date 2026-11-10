@@ -30,6 +30,7 @@ void hotkey_set_suspended(bool suspended) { g_hotkeys_suspended = suspended; }
 
 #define HOTKEY_PENDING_MAX 64
 static HotkeyCallback g_pending_q[HOTKEY_PENDING_MAX];
+static HotkeyCallbackUd g_pending_cb_ud[HOTKEY_PENDING_MAX];
 static void *g_pending_ud[HOTKEY_PENDING_MAX];
 static int g_pending_vk[HOTKEY_PENDING_MAX];
 static int g_pending_mods[HOTKEY_PENDING_MAX];
@@ -73,14 +74,15 @@ static void hotkey_queue_init(void) {
     Platform_MutexLock(g_q_mutex);                                             \
   } while (0)
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(g_q_mutex)
-static void hotkey_enqueue(HotkeyCallback fn, void *ud, const char *owner,
-                           int vk, int mods) {
-  if (!fn)
+static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud,
+                           void *ud, const char *owner, int vk, int mods) {
+  if (!fn && !fn_ud)
     return;
   HOTKEY_Q_LOCK();
   int nxt = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
   if (nxt != g_pending_head) {
     g_pending_q[g_pending_tail] = fn;
+    g_pending_cb_ud[g_pending_tail] = fn_ud;
     g_pending_ud[g_pending_tail] = ud;
     g_pending_vk[g_pending_tail] = vk;
     g_pending_mods[g_pending_tail] = mods;
@@ -204,7 +206,8 @@ static void hotkey_tick_holds(void) {
     }
     g_hold_slots[i].next_fire_ms =
         now + (unsigned long long)hotkey_repeat_interval_ms();
-    hotkey_enqueue(b->hotkey_callback, b->user_ud, b->owner, vk, mods);
+    hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud,
+                   b->user_ud, b->owner, vk, mods);
   }
 }
 
@@ -214,18 +217,22 @@ void hotkey_drain_pending(void) {
   hotkey_tick_holds();
   for (;;) {
     HotkeyCallback fn = NULL;
+    HotkeyCallbackUd fn_ud = NULL;
     void *ud = NULL;
     HOTKEY_Q_LOCK();
     if (g_pending_head != g_pending_tail) {
       fn = g_pending_q[g_pending_head];
+      fn_ud = g_pending_cb_ud[g_pending_head];
       ud = g_pending_ud[g_pending_head];
       g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
     }
     HOTKEY_Q_UNLOCK();
-    if (!fn)
+    if (!fn && !fn_ud)
       break;
-    if (ud)
-      ((void (*)(void *))fn)(ud);
+    if (fn_ud)
+      fn_ud(ud);
+    else if (ud)
+      ((HotkeyCallbackUd)fn)(ud); /* legacy raw sk_register casts */
     else
       fn();
   }
@@ -515,7 +522,8 @@ bool hotkey_process(int vk_code, int modifiers) {
         swallow = false;
       }
     }
-    hotkey_enqueue(cb, b->user_ud, b->owner, vk_code, eff_modifiers);
+    hotkey_enqueue(cb, b->hotkey_callback_ud, b->user_ud, b->owner,
+                   vk_code, eff_modifiers);
     char buf[2556];
     char hotkey_buf[2422];
     HotkeyString_Format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},

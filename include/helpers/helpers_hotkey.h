@@ -5,6 +5,7 @@
 #include "core/types.h"
 
 typedef void (*HotkeyCallback)(void);
+typedef void (*HotkeyCallbackUd)(void *);
 typedef bool (*HotkeyCondition)(void);
 
 typedef struct {
@@ -14,6 +15,7 @@ typedef struct {
   int blacklist_count;
   bool whitelist;
   HotkeyCallback hotkey_callback;
+  HotkeyCallbackUd hotkey_callback_ud;
   bool (*should_swallow)(void);
   HotkeyCondition hotkey_condition;
   bool hold;
