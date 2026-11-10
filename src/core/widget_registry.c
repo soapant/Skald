@@ -7,11 +7,12 @@
 #include "platform/wm_platform.h"
 #include "helpers/helpers_monitor.h"
 #include "platform/widget.h"
+#include "core/hover_widget.h"
 #include "helpers/helpers_render_thread.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
 #include "platform/lib.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "config_values.h"
 #include "core/types/window.h"
 

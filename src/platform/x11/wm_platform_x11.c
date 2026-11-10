@@ -14,7 +14,7 @@
 #include "platform/platform.h"
 #include "deps/log.h"
 #include "platform/x11/input_x11.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "core/remap_manager.h"
 #include "platform/x11/display_x11.h"
 #include "core/listbox_hover.h"
@@ -33,7 +33,7 @@ bool Platform_WM_InitDisplay(WindowManager *wm) {
 
 int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunLinux(wm); }
 
-void Prompt_FlushDisplay(WindowManager *wm) {
+void Platform_PromptFlushDisplay(WindowManager *wm) {
   Display *dpy = (wm && wm->display) ? wm->display : get_display();
   if (dpy) {
     XFlush(dpy);

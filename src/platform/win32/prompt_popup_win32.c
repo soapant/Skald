@@ -7,7 +7,7 @@
 #include "core/types/prompt.h"
 #include "core/types/window.h"
 #include "platform/wm_platform.h"
-#include "platform/ui.h"
+#include "helpers/helpers_ui.h"
 #include "platform/win32/common_ui_win32.h"
 #include <windows.h>
 

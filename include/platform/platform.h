@@ -23,19 +23,6 @@ typedef struct {
 } PlAnchoredMessageSpec;
 
 typedef struct {
-  const char *key;
-  void (*render)(void *ud);
-  void *ud;
-  void *owner_src;
-  int x, y, w, h;
-  int fps;
-  bool no_bg;
-  unsigned long bg_hex;
-  void (*release)(void *ud);
-  void *release_ud;
-} PlHoverWidgetShowSpec;
-
-typedef struct {
   const char *message;
   int x, y;
   int max_width, max_height;
@@ -125,10 +112,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec);
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec);
 void Platform_CreateDisplayMessageWindow(PlCreateDisplayMessageWindowSpec spec);
 void Platform_HoverMessage(PlHoverMessageSpec spec);
-void HoverWidgetShow(PlHoverWidgetShowSpec spec);
 void Platform_HoverMessageRelease(const char *key);
-void HoverWidgetHide(const char *key);
-void HoverWidget_PurgeOwner(const char *path_a, const char *path_b);
 void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 
 FontHandle Platform_CreateFont(int size, const char *face_name);
@@ -152,7 +136,6 @@ char *Platform_GetActiveWindowTitle();
 char *Platform_GetActiveWindowAppId();
 char *Platform_GetIconPath(char *app_path);
 int Platform_GetIconSize(char *icon_path);
-int ConvertLinuxKeyToWindowsVK(int key_code);
 PlColor Platform_GetPixelColor(int x, int y);
 bool Platform_MoveToPos(int x, int y);
 bool Platform_Click(void);

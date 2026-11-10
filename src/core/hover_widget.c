@@ -6,6 +6,7 @@
 #include "core/types/window.h"
 #include "platform/platform.h"
 #include "platform/widget.h"
+#include "core/hover_widget.h"
 #include "core/widget_registry.h"
 #include "helpers/helpers_render_thread.h"
 #include "helpers/helpers_owner.h"
