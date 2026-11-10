@@ -41,8 +41,12 @@ static bool s_swallow_next_char = false;
 
 static bool s_repaint_queued = false;
 
+static bool s_in_render = false;
+
 void win32_popup_request_repaint(HWND hPopup) {
   if (!hPopup || !IsWindow(hPopup))
+    return;
+  if (s_in_render)
     return;
   if (s_repaint_queued)
     return;
@@ -592,7 +596,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         Checkbox_FrameBegin();
         win32_set_draw_context(paintDC);
         PlDrawState_Get()->win32_listbox_surface = true;
+        s_in_render = true;
         state->callbacks->render(state);
+        s_in_render = false;
         PlDrawState_Get()->win32_listbox_surface = false;
       }
     } else {
