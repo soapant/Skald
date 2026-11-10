@@ -31,6 +31,12 @@ typedef PlEvent SkEvent;
 typedef PlEventCallback SkEventCallback;
 typedef Widget SkWidget;
 typedef WidgetSpec SkWidgetSpec;
+typedef struct {
+  int index;
+  char name[128];
+  int x, y, w, h;
+  bool is_primary;
+} SkMonitorInfo;
 typedef WidgetState SkWidgetState;
 typedef WidgetRenderFn SkWidgetRenderFn;
 
@@ -437,6 +443,8 @@ bool sk_draw_image_auto(int w, int h, const char *path);
 #define sk_widget(...) sk_widget_create(&(SkWidgetSpec){__VA_ARGS__})
 
 SkWidget *sk_widget_create(const SkWidgetSpec *spec);
+int sk_monitor_count(void);
+bool sk_monitor_at(int index, SkMonitorInfo *out);
 
 bool sk_widget_valid(SkWidget *widget);
 

@@ -30,20 +30,13 @@ static void widget_mutex_init(void) {
   } while (0)
 #define W_UNLOCK() Platform_MutexUnlock(g_widget_mutex)
 
-static PlTimer mon_at_timer;
-static bool mon_valid = false;
-static int mon_x, mon_y, mon_w, mon_h;
-
-static void widget_monitor_geometry(int *x, int *y, int *w, int *h) {
-  if (!mon_valid || Platform_EndTimer(mon_at_timer) > 2000) {
-    Platform_WM_GetMonitorGeometry(&mon_x, &mon_y, &mon_w, &mon_h);
-    mon_at_timer = Platform_StartTimer();
-    mon_valid = true;
-  }
-  *x = mon_x;
-  *y = mon_y;
-  *w = mon_w;
-  *h = mon_h;
+static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
+                                     int *h) {
+  int count = Platform_WM_GetMonitorCount();
+  int idx = (monitor > 0 && monitor <= count) ? monitor : 0;
+  if (Platform_WM_GetMonitorGeometryAt(idx, x, y, w, h))
+    return;
+  Platform_WM_GetMonitorGeometry(x, y, w, h);
 }
 
 unsigned widget_bump_generation(void) { return ++g_widget_gen; }
@@ -351,9 +344,6 @@ static int widget_sort_key(const Widget *widget) {
 }
 
 static void widget_relayout(void) {
-  int mx = 0, my = 0, mw = 1920, mh = 1080;
-  widget_monitor_geometry(&mx, &my, &mw, &mh);
-
   Widget *sorted[WIDGET_MAX];
   int n = 0;
   W_LOCK();
@@ -372,21 +362,36 @@ static void widget_relayout(void) {
     sorted[k + 1] = key;
   }
 
-  for (int s = 0; s < 4; s++) {
+  typedef struct {
+    int x, y, w, h;
+    int cursor;
+    bool known;
+  } MonSlot;
+  MonSlot ms[WIDGET_SLOT_COUNT][WIDGET_MAX_MONITORS] = {{{0}}};
+
+  for (int i = 0; i < n; i++) {
+    Widget *w = sorted[i];
+    if (w->slot < 0 || w->slot >= WIDGET_SLOT_COUNT)
+      continue;
     bool from_right =
-        (s == WIDGET_SLOT_TOP_RIGHT || s == WIDGET_SLOT_BOTTOM_RIGHT);
-    bool from_top = (s == WIDGET_SLOT_TOP_LEFT || s == WIDGET_SLOT_TOP_RIGHT);
-    int cursor = from_right ? mx + mw : mx;
-    for (int i = 0; i < n; i++) {
-      Widget *w = sorted[i];
-      if (w->slot != s)
-        continue;
-      int g = w->gap_override > 0 ? w->gap_override : WidgetGap;
-      int x = from_right ? cursor - w->w : cursor;
-      int y = from_top ? my : my + mh - w->h;
-      widget_apply_geometry(w, x, y);
-      cursor += from_right ? -(w->w + g) : (w->w + g);
+        (w->slot == WIDGET_SLOT_TOP_RIGHT || w->slot == WIDGET_SLOT_BOTTOM_RIGHT);
+    bool from_top =
+        (w->slot == WIDGET_SLOT_TOP_LEFT || w->slot == WIDGET_SLOT_TOP_RIGHT);
+    int m = (w->monitor > 0 && w->monitor < WIDGET_MAX_MONITORS) ? w->monitor
+                                                                  : 0;
+    MonSlot *st = &ms[w->slot][m];
+    if (!st->known) {
+      if (!Platform_WM_GetMonitorGeometryAt(m, &st->x, &st->y, &st->w,
+                                            &st->h))
+        Platform_WM_GetMonitorGeometry(&st->x, &st->y, &st->w, &st->h);
+      st->cursor = from_right ? st->x + st->w : st->x;
+      st->known = true;
     }
+    int g = w->gap_override > 0 ? w->gap_override : WidgetGap;
+    int px = from_right ? st->cursor - w->w : st->cursor;
+    int py = from_top ? st->y : st->y + st->h - w->h;
+    widget_apply_geometry(w, px, py);
+    st->cursor = from_right ? px - g : px + w->w + g;
   }
 }
 
@@ -443,6 +448,8 @@ Widget *widget_create(const WidgetSpec *spec) {
                   spec->slot <= WIDGET_SLOT_BOTTOM_RIGHT)
                      ? spec->slot
                      : WIDGET_SLOT_BOTTOM_LEFT;
+  widget->monitor = spec->monitor > 0 ? spec->monitor : 0;
+  (void)spec->monitor_name;
   widget->order = spec->order;
   widget->order_set = spec->order > 0;
   widget->render = spec->render;
@@ -457,7 +464,7 @@ Widget *widget_create(const WidgetSpec *spec) {
     int y = spec->y;
     if (x < 0 && y < 0) {
       int mx = 0, my = 0, mw = 1920, mh = 1080;
-      widget_monitor_geometry(&mx, &my, &mw, &mh);
+      widget_monitor_geometry(widget->monitor, &mx, &my, &mw, &mh);
       x = mx + (mw - widget->w) / 2;
       y = my + (mh - widget->h) / 2;
     }

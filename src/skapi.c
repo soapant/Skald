@@ -2438,8 +2438,41 @@ static void sk_widget_relayout(void) {
   }
 }
 
+static bool monitor_name_matches(const char *a, const char *b) {
+  if (!a || !b)
+    return false;
+  size_t la = strlen(a), lb = strlen(b);
+  if (la == 0 || lb == 0)
+    return false;
+  for (size_t i = 0; i + lb <= la; i++)
+    if (strncasecmp(a + i, b, lb) == 0)
+      return true;
+  return false;
+}
+
 SkWidget *sk_widget_create(const SkWidgetSpec *spec) {
-  return widget_create(spec);
+  if (!spec)
+    return NULL;
+  SkWidgetSpec copy = *spec;
+  if (copy.monitor_name && copy.monitor_name[0]) {
+    int n = sk_monitor_count();
+    int found = -1;
+    for (int i = 0; i < n; i++) {
+      SkMonitorInfo info;
+      if (!sk_monitor_at(i, &info))
+        continue;
+      if (monitor_name_matches(info.name, copy.monitor_name)) {
+        found = i;
+        break;
+      }
+    }
+    if (found >= 0)
+      copy.monitor = found;
+    else
+      log_warn("sk_widget: monitor '%s' not found, using primary",
+               copy.monitor_name);
+  }
+  return widget_create(&copy);
 }
 
 bool sk_widget_valid(SkWidget *widget) { return widget_valid(widget); }
@@ -2477,6 +2510,25 @@ void sk_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
 SkNetStatus sk_net_status(void) { return sk_net_status_platform(); }
 
 unsigned long long sk_net_rx_bytes() { return sk_net_rx_bytes_platform(); }
+
+int sk_monitor_count(void) { return Platform_WM_GetMonitorCount(); }
+
+bool sk_monitor_at(int index, SkMonitorInfo *out) {
+  if (!out)
+    return false;
+  WMMonitorInfo info;
+  if (!Platform_WM_GetMonitorInfo(index, &info))
+    return false;
+  memset(out, 0, sizeof(*out));
+  out->index = info.index;
+  out->x = info.x;
+  out->y = info.y;
+  out->w = info.w;
+  out->h = info.h;
+  out->is_primary = info.is_primary;
+  snprintf(out->name, sizeof(out->name), "%s", info.name);
+  return true;
+}
 
 unsigned long long sk_net_rx_bytes_over(double seconds) {
 
