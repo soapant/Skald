@@ -5,7 +5,7 @@
 
 #if !defined(VK_BACK)
 #define VK_BACK 0x08
-#endif 
+#endif
 #if !defined(VK_TAB)
 #define VK_TAB 0x09
 #endif

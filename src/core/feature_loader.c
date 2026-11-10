@@ -39,7 +39,6 @@ void DeferredInit_RunAll(void) {
   g_deferred_count = 0;
 }
 
-
 static void fl_copy(char *dst, size_t dst_size, const char *src) {
   if (dst_size == 0)
     return;

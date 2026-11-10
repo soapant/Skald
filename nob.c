@@ -628,9 +628,9 @@ static bool run_output(const char *output) {
 }
 
 static bool run_tests(void) {
-  const char *test_build_folder =
-      sanitize ? "build/san_tests" : target_win32 ? "build/win_tests"
-                                           : "build/tests";
+  const char *test_build_folder = sanitize       ? "build/san_tests"
+                                  : target_win32 ? "build/win_tests"
+                                                 : "build/tests";
   if (!nob_mkdir_if_not_exists(test_build_folder))
     return false;
   if (test_sources.count == 0) {
@@ -639,8 +639,7 @@ static bool run_tests(void) {
   }
   const char *support_obj = NULL;
   if (nob_file_exists("tests/support.c")) {
-    support_obj =
-        nob_temp_sprintf("%s/support.o", test_build_folder);
+    support_obj = nob_temp_sprintf("%s/support.o", test_build_folder);
     Nob_Cmd scmd = {0};
     if (target_win32) {
       nob_cmd_append(&scmd, CROSS_CC);
@@ -658,16 +657,14 @@ static bool run_tests(void) {
 
   if (!target_win32) {
     char fixture_dir[512];
-    snprintf(fixture_dir, sizeof(fixture_dir), "%s/fixture",
-             test_build_folder);
+    snprintf(fixture_dir, sizeof(fixture_dir), "%s/fixture", test_build_folder);
     if (!nob_mkdir_if_not_exists(fixture_dir))
       return false;
     if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.dll", fixture_dir)))
       nob_delete_file(nob_temp_sprintf("%s/reload_probe.dll", fixture_dir));
     if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.so", fixture_dir)))
       nob_delete_file(nob_temp_sprintf("%s/reload_probe.so", fixture_dir));
-    if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.dylib",
-                                         fixture_dir)))
+    if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir)))
       nob_delete_file(nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir));
     Nob_Cmd fcmd = {0};
     append_cc(&fcmd);
@@ -853,7 +850,8 @@ int main(int argc, char **argv) {
   int do_test = 0;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
-      printf("Usage: %s [-win32] [-run] [-actual] [-test] [-asan] [-help]\n", argv[0]);
+      printf("Usage: %s [-win32] [-run] [-actual] [-test] [-asan] [-help]\n",
+             argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");
       printf("  -actual Build skald.exe instead of debug build (Windows)\n");
@@ -944,9 +942,9 @@ int main(int argc, char **argv) {
     output = BUILD_FOLDER "/skald_win.exe";
   } else {
 #if defined(_WIN32)
-    output = sanitize ? "build/debug/skald_san.exe"
+    output = sanitize    ? "build/debug/skald_san.exe"
              : do_actual ? "build/skald.exe"
-                        : "build/debug/skald.exe";
+                         : "build/debug/skald.exe";
 #else
     output = BUILD_FOLDER "/skald";
 #endif

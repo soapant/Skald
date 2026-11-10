@@ -497,7 +497,8 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
       cap = ncap;
     }
     DWORD bytesRead = 0;
-    if (!ReadFile(rd_out, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) ||
+    if (!ReadFile(rd_out, out + len, (DWORD)(cap - len - 1), &bytesRead,
+                  NULL) ||
         bytesRead == 0)
       break;
     len += bytesRead;
@@ -1753,8 +1754,8 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
   if (!t1)
     return TRUE;
   pair->titles->windows = t1;
-  char **t2 = realloc(pair->names->windows,
-                      (pair->names->count + 1) * sizeof(char *));
+  char **t2 =
+      realloc(pair->names->windows, (pair->names->count + 1) * sizeof(char *));
   if (!t2)
     return TRUE;
   pair->names->windows = t2;

@@ -290,8 +290,8 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
   UI_LB_SetCount(lb, total_matches);
   bool has_filter = filter && filter[0] != '\0';
   size_t flen = filter ? strlen(filter) : 0;
-  size_t cmp = flen + 1 < sizeof(lb->last_filter) ? flen + 1
-                                                  : sizeof(lb->last_filter);
+  size_t cmp =
+      flen + 1 < sizeof(lb->last_filter) ? flen + 1 : sizeof(lb->last_filter);
   bool same_filter = has_filter && strncmp(lb->last_filter, filter, cmp) == 0;
   if (total_matches != 0 && has_filter && !same_filter) {
     UI_SetSelection(lb, 0);

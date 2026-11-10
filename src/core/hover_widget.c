@@ -112,8 +112,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
       Platform_Widget_SetNoBg(pw, no_bg);
     }
     Platform_Widget_Invalidate(pw);
-    if (old_release &&
-        (old_release != release || old_release_ud != release_ud))
+    if (old_release && (old_release != release || old_release_ud != release_ud))
       old_release(old_release_ud);
     return;
   }
@@ -203,8 +202,8 @@ static void hover_widget_dispatch(void *ud) {
   if (r->op == HOVER_OP_HIDE) {
     hover_widget_hide_apply(r->key);
   } else {
-    hover_widget_apply(r->key, r->render, r->ud, r->owner_src, r->x, r->y,
-                       r->w, r->h, r->fps, r->no_bg, r->bg_hex, r->release,
+    hover_widget_apply(r->key, r->render, r->ud, r->owner_src, r->x, r->y, r->w,
+                       r->h, r->fps, r->no_bg, r->bg_hex, r->release,
                        r->release_ud);
   }
   free(r);
@@ -254,8 +253,8 @@ void Platform_HoverWidgetHide(const char *key) {
   if (HoverWidgetFind(key) < 0) {
     return;
   }
-  if (!hover_widget_post(HOVER_OP_HIDE, key, NULL, NULL, NULL, 0, 0, 0, 0,
-                         0, false, 0, NULL, NULL)) {
+  if (!hover_widget_post(HOVER_OP_HIDE, key, NULL, NULL, NULL, 0, 0, 0, 0, 0,
+                         false, 0, NULL, NULL)) {
     hover_widget_hide_apply(key);
   }
 }
@@ -280,8 +279,8 @@ void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
       release(release_ud);
     return;
   }
-  if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, owner_src, x, y, w,
-                         h, fps, no_bg, bg_hex, release, release_ud)) {
+  if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, owner_src, x, y, w, h,
+                         fps, no_bg, bg_hex, release, release_ud)) {
     if (release)
       release(release_ud);
   }

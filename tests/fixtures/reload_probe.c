@@ -20,8 +20,7 @@ typedef void (*ski_cap_register_fn)(const char *key, void *fn);
 static bool reload_probe_cap_fn(void) { return true; }
 
 SKALD_FEATURE_INIT {
-  ski_cap_register_fn reg =
-      (ski_cap_register_fn)host_sym("ski_cap_register");
+  ski_cap_register_fn reg = (ski_cap_register_fn)host_sym("ski_cap_register");
   if (reg)
     reg("test.reload_probe.cap", (void *)&reload_probe_cap_fn);
 }
