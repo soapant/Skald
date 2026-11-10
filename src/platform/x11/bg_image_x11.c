@@ -1,5 +1,4 @@
 #include "platform/x11/bg_image_x11.h"
-
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
 #include <pthread.h>
@@ -11,7 +10,6 @@
 #include <unistd.h>
 #include <time.h>
 #include <X11/extensions/render.h>
-
 #include "deps/nanosvg.h"
 #include "deps/stb_image.h"
 #include "config_values.h"

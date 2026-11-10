@@ -18,6 +18,18 @@ static int g_widget_count = 0;
 static int g_widget_seq = 0;
 static unsigned g_widget_gen = 1;
 
+static void *g_widget_mutex = NULL;
+static void widget_mutex_init(void) {
+  if (!g_widget_mutex)
+    g_widget_mutex = Platform_MutexCreate();
+}
+#define W_LOCK()                                       \
+  do {                                                 \
+    widget_mutex_init();                               \
+    Platform_MutexLock(g_widget_mutex);                \
+  } while (0)
+#define W_UNLOCK() Platform_MutexUnlock(g_widget_mutex)
+
 static PlTimer mon_at_timer;
 static bool mon_valid = false;
 static int mon_x, mon_y, mon_w, mon_h;
@@ -38,7 +50,7 @@ unsigned widget_bump_generation(void) { return ++g_widget_gen; }
 
 unsigned widget_current_generation(void) { return g_widget_gen; }
 
-static Widget *widget_find_by_name(const char *name) {
+static Widget *widget_find_by_name_locked(const char *name) {
   if (!name || !name[0])
     return NULL;
   for (int i = 0; i < g_widget_count; i++) {
@@ -46,6 +58,13 @@ static Widget *widget_find_by_name(const char *name) {
       return g_widgets[i];
   }
   return NULL;
+}
+
+static Widget *widget_find_by_name(const char *name) {
+  W_LOCK();
+  Widget *found = widget_find_by_name_locked(name);
+  W_UNLOCK();
+  return found;
 }
 
 static void widget_relayout(void);
@@ -208,16 +227,18 @@ void widget_destroy(Widget *widget) {
   RenderThread_Sync();
 
   int n = 0;
+  W_LOCK();
   for (int i = 0; i < g_widget_count; i++) {
     if (g_widgets[i] == widget) {
       if (widget->owner)
         free(widget->owner);
-      free(widget);
+      widget->owner = NULL;
       continue;
     }
     g_widgets[n++] = g_widgets[i];
   }
   g_widget_count = n;
+  W_UNLOCK();
   if (g_widget_count > 0)
     widget_relayout();
   Platform_Widget_FlushDestruction();
@@ -251,6 +272,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
   RenderThread_Sync();
 
   int n = 0;
+  W_LOCK();
   for (int i = 0; i < g_widget_count; i++) {
     Widget *w = g_widgets[i];
     if (!w)
@@ -258,12 +280,13 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     if (widget_owner_matches(w, path_a, path_b) && w->gen <= generation) {
       if (w->owner)
         free(w->owner);
-      free(w);
+      w->owner = NULL;
       continue;
     }
     g_widgets[n++] = w;
   }
   g_widget_count = n;
+  W_UNLOCK();
   if (g_widget_count > 0)
     widget_relayout();
   Platform_Widget_FlushDestruction();
@@ -272,11 +295,15 @@ void widget_purge_owner(const char *path_a, const char *path_b,
 bool widget_owner_active(const char *path) {
   if (!path || !path[0])
     return false;
+  W_LOCK();
   for (int i = 0; i < g_widget_count; i++) {
     Widget *w = g_widgets[i];
-    if (w && widget_owner_matches(w, path, NULL))
+    if (w && widget_owner_matches(w, path, NULL)) {
+      W_UNLOCK();
       return true;
+    }
   }
+  W_UNLOCK();
   return false;
 }
 
@@ -329,10 +356,12 @@ static void widget_relayout(void) {
 
   Widget *sorted[WIDGET_MAX];
   int n = 0;
+  W_LOCK();
   for (int i = 0; i < g_widget_count; i++) {
     if (g_widgets[i] && !g_widgets[i]->free_pos)
       sorted[n++] = g_widgets[i];
   }
+  W_UNLOCK();
   for (int i = 1; i < n; i++) {
     Widget *key = sorted[i];
     int k = i - 1;
@@ -366,20 +395,25 @@ Widget *widget_create(const WidgetSpec *spec) {
     log_warn("widget_create: name is required");
     return NULL;
   }
-  Widget *widget = widget_find_by_name(spec->name);
+  W_LOCK();
+  Widget *widget = widget_find_by_name_locked(spec->name);
   bool fresh = (widget == NULL);
   if (fresh) {
     if (g_widget_count >= WIDGET_MAX) {
+      W_UNLOCK();
       log_warn("widget_create: widget table full");
       return NULL;
     }
     widget = (Widget *)calloc(1, sizeof(*widget));
-    if (!widget)
-      return NULL;
-    snprintf(widget->name, WIDGET_NAME_MAX, "%s", spec->name);
-    widget->seq = g_widget_seq++;
-    g_widgets[g_widget_count++] = widget;
+    if (widget) {
+      snprintf(widget->name, WIDGET_NAME_MAX, "%s", spec->name);
+      widget->seq = g_widget_seq++;
+      g_widgets[g_widget_count++] = widget;
+    }
   }
+  W_UNLOCK();
+  if (!widget)
+    return NULL;
 
   {
     char owner_path[512];
