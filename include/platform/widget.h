@@ -5,6 +5,13 @@
 #include "helpers/helpers_render_thread.h"
 #include "config.h"
 
+typedef struct PlatformWidgetBase {
+  bool dead;
+  int fps;
+  bool dirty;
+  long long last_draw_ms;
+} PlatformWidgetBase;
+
 typedef struct PlatformWidget PlatformWidget;
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
@@ -20,7 +27,6 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y);
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h);
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color);
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg);
-void Platform_Widget_SetFps(PlatformWidget *widget, int fps);
 void Platform_Widget_Invalidate(PlatformWidget *widget);
 int Platform_Widget_Width(const PlatformWidget *widget);
 int Platform_Widget_Height(const PlatformWidget *widget);

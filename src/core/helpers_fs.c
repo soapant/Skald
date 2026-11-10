@@ -1,6 +1,7 @@
 #include "helpers/helpers_fs.h"
 
 #include "platform/platform.h"
+#include "deps/log.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -164,4 +165,23 @@ bool FeaturePath_DataDirExists(const char *stem) {
   struct stat st;
   return stat(stemdir, &st) == 0 && S_ISDIR(st.st_mode);
 #endif
+}
+
+long File_GetSize(const char *filepath) {
+  if (!filepath)
+    return -1;
+  FILE *fp = fopen(filepath, "rb");
+  if (!fp) {
+    log_error("operation failed, returning error filepath='%s'",
+              filepath ? filepath : "null");
+    return -1;
+  }
+  if (fseek(fp, 0L, SEEK_END) != 0) {
+    log_error("fseek failed for '%s'", filepath);
+    fclose(fp);
+    return -1;
+  }
+  long size = ftell(fp);
+  fclose(fp);
+  return size;
 }

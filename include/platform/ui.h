@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "core/context.h"
+#include <wchar.h>
 
 bool IsPopupActive(WindowHandle hPopupWnd);
 
@@ -39,6 +40,7 @@ void UI_ApplyFilterToEdit(void);
 ListBoxInfo *UI_GetPopupListBox(void);
 void UI_SyncEditCursor(int pos);
 bool UI_ApplyBackspaceToPopup(void);
+int UI_InsertChar(wchar_t wc);
 
 #define UI_DEBOUNCE_MS 40
 #define UI_DEBOUNCE_TIMER_ID 998

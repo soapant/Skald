@@ -342,14 +342,10 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   return true;
 }
 
-typedef struct {
-  void (*callback)(void);
-  char owner[OWNER_PATH_MAX];
-} TimerPayload;
+static VOID CALLBACK TimerTrampoline(PVOID lpParam,
+                                      BOOLEAN TimerOrWaitFired) {
 
-VOID CALLBACK TimerTrampoline(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
-
-  TimerPayload *payload = (TimerPayload *)lpParam;
+  SkRunAfterPayload *payload = (SkRunAfterPayload *)lpParam;
   if (payload) {
     if (payload->callback) {
       payload->callback();
@@ -359,30 +355,17 @@ VOID CALLBACK TimerTrampoline(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
   }
 }
 
-void sk_run_after_time_platform(double seconds, void (*callback)(void)) {
-  if (!callback || seconds < 0) {
-    return;
-  }
+bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload) {
 
-  TimerPayload *payload = (TimerPayload *)malloc(sizeof(TimerPayload));
-  if (!payload) {
-    return;
-  }
-  payload->callback = callback;
-  payload->owner[0] = '\0';
-  Owner_ResolveForFunc((void *)callback, payload->owner,
-                       sizeof(payload->owner));
-  ThreadRegistry_Add(payload, payload->owner);
-
-  DWORD delay_ms = (DWORD)(seconds * 1000.0);
+  DWORD delay_ms = (DWORD)(payload->seconds * 1000.0);
   HANDLE hTimer = NULL;
   if (!CreateTimerQueueTimer(&hTimer, NULL, TimerTrampoline, payload, delay_ms,
                              0, WT_EXECUTEONLYONCE)) {
-    ThreadRegistry_Finish(payload);
-    free(payload);
-    return;
+    return false;
   }
+  return true;
 }
+
 void sk_sleep_platform(double seconds) {
   if (seconds <= 0) {
     return;

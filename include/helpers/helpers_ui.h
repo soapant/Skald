@@ -12,6 +12,8 @@ unsigned short OpacityAlpha16(void);
 
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
 
+int DrawThicknessPx(float thickness);
+void DrawMeasureTrack(int x, int y, int w, int h);
 void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,
                      bool (*filter_match)(const char *item,
@@ -43,8 +45,6 @@ typedef enum {
 ColorRef GetRainbowColor(float t, float s, float v);
 bool UI_IsListBoxSelected(ListBoxInfo *lb);
 void UpdateTextCaret(void);
-void CalculateWindowMetrics(WindowLayout *layout, int height, int width,
-                            int item_height);
 
 #define MSG_PROMPT_GAP_DEFAULT 300
 #define MSG_TIMEOUT_INDEFINITE 6969.0

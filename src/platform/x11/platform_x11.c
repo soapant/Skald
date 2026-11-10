@@ -791,24 +791,6 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
   *outHeight = totalHeight;
 }
 
-long Platform_GetFileSize(char *filepath) {
-  FILE *fp = fopen(filepath, "rb");
-  if (fp == NULL) {
-    return -1;
-  }
-
-  if (fseek(fp, 0L, SEEK_END) != 0) {
-    fclose(fp);
-    return -1;
-  }
-
-  long size = ftell(fp);
-
-  fclose(fp);
-  log_info("Platform_GetFileSize filepath=%p", filepath);
-  ;
-  return size;
-}
 
 bool Platform_FocusWindow(const char *title) { return Wm_FocusByTitle(title); }
 

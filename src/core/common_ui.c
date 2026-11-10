@@ -17,6 +17,7 @@
 #include "deps/stb_ds.h"
 #include "core/window_manager.h"
 #include "core/prompt_geometry.h"
+#include "core/draw_state.h"
 #include "platform/draw.h"
 #include "platform/input_state.h"
 #include "platform/wm_platform.h"
@@ -661,4 +662,29 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
   Prompt_FlushDisplay(wm);
   SkaldContext *_c = SkaldContext_Get();
   return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
+}
+
+int DrawThicknessPx(float thickness) {
+  if (thickness <= 0.0f)
+    return 0;
+  int px = (int)(thickness + 0.5f);
+  if (px < 1)
+    px = 1;
+  if (px > 255)
+    px = 255;
+  return px;
+}
+
+void DrawMeasureTrack(int x, int y, int w, int h) {
+  PlDrawState_TrackMeasure(x, y, w, h);
+}
+
+
+void UpdateTextCaret(void) {
+  WindowManager *wm = WindowManager_Get();
+  Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+  if (top && top->vtable && top->vtable->on_render) {
+    top->vtable->on_render(top);
+    Prompt_FlushDisplay(wm);
+  }
 }
