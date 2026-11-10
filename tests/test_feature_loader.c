@@ -76,9 +76,47 @@ TEST(load_reload_unload) {
   ASSERT_TRUE(has_file(hot2));
 
   FeaturePath = orig_feature_path;
+  FeatureLoader_DrainRetiredUnloads();
+  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
 }
 
+TEST(reload_defers_unload_until_drain) {
+  const char *orig_feature_path = FeaturePath;
+  FeaturePath = MANIFEST_DIR;
+  Platform_MkdirIfNotExists(MANIFEST_DIR);
+  Platform_MkdirIfNotExists(FIXTURE_DIR);
+  remove_hot_artifacts();
+  FeatureLoader_DrainRetiredUnloads();
+
+  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
+
+  bool loaded = FeatureLoader_LoadAllFromDir(FIXTURE_DIR);
+  ASSERT_TRUE(loaded);
+  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
+
+  const char *ext = Platform_LibExtension();
+  char fixture[512];
+  snprintf(fixture, sizeof(fixture), "%s/%s%s", FIXTURE_DIR, FIXTURE_NAME, ext);
+
+  FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
+  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 1);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+
+  FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
+  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 2);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+
+  FeatureLoader_DrainRetiredUnloads();
+  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+
+  FeatureLoader_DrainRetiredUnloads();
+  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
+
+  FeaturePath = orig_feature_path;
+}
 int main(void) {
   RUN(load_reload_unload);
+  RUN(reload_defers_unload_until_drain);
   return TEST_SUMMARY();
 }
