@@ -7,7 +7,6 @@
 #include <X11/Xft/Xft.h>
 #include <X11/Xlib.h>
 
-#include "helpers/helpers_listbox_backend.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "platform/x11/drawing_x11.h"
@@ -24,7 +23,7 @@ static __thread XftDraw *g_b_xd = NULL;
 static __thread Visual *g_b_vis = NULL;
 static __thread Colormap g_b_cmap = 0;
 
-bool ListboxBackend_Begin(int item_height_override, ListboxBackendInit *out) {
+bool Platform_ListboxBackendBegin(int item_height_override, ListboxBackendInit *out) {
   x11_get_draw_context(&g_b_dpy, &g_b_xd, &g_b_vis, &g_b_cmap);
   if (!g_b_dpy || !g_b_xd)
     return false;
@@ -35,7 +34,7 @@ bool ListboxBackend_Begin(int item_height_override, ListboxBackendInit *out) {
   return true;
 }
 
-void ListboxBackend_DrawSelection(int bx, int bw, int y, int item_h, int fw,
+void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h, int fw,
                                   int frame_h, bool sel) {
   if (RoundedCorners && CornerRadius > 0) {
     if (sel) {
@@ -55,7 +54,7 @@ void ListboxBackend_DrawSelection(int bx, int bw, int y, int item_h, int fw,
   }
 }
 
-void ListboxBackend_End(void) {
+void Platform_ListboxBackendEnd(void) {
   if (g_b_font.xfont) {
     Platform_DestroyFont(g_b_font);
     g_b_font = FH_NULL;
@@ -66,6 +65,6 @@ void ListboxBackend_End(void) {
   g_b_cmap = 0;
 }
 
-PromptState *ListboxBackend_PromptState(const ListBoxInfo *lb) {
+PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb) {
   return PromptPopup_FindState(lb);
 }

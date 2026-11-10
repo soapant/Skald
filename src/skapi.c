@@ -32,7 +32,6 @@
 #include "helpers/helpers_monitor.h"
 #include "helpers/helpers_key.h"
 #include "helpers/helpers_http.h"
-#include "helpers/helpers_listbox_backend.h"
 #include "helpers/helpers_ui.h"
 #include "core/prompt_geometry.h"
 #include "core/feature_loader.h"
@@ -1619,10 +1618,10 @@ static bool sk_listbox_begin_common(const PlListSpec *spec) {
   }
   int item_h = spec->item_height ? spec->item_height : 0;
   ListboxBackendInit bi;
-  if (!ListboxBackend_Begin(item_h, &bi))
+  if (!Platform_ListboxBackendBegin(item_h, &bi))
     return false;
   int itemH = item_h > 0 ? item_h : bi.item_h;
-  PromptState *st = ListboxBackend_PromptState(lb);
+  PromptState *st = Platform_ListboxBackendPromptState(lb);
   ListboxLayout lay;
   Listbox_ComputeLayout(spec, bi.list_top, itemH, st ? st->width : 900,
                         st ? st->height : 640, lb->item_count, &lay);
@@ -1658,7 +1657,7 @@ static bool sk_listbox_next_common(SkListItemCtx *out) {
     DrawPromptSeparator(
         (PlDrawPromptSeparatorSpec){.y = g_sk_list_y0, .width = g_sk_list_fw});
   bool sel = (idx == g_sk_list_lb->selected_index);
-  ListboxBackend_DrawSelection(g_sk_list_bx, g_sk_list_bw, y, g_sk_list_itemH,
+  Platform_ListboxBackendDrawSelection(g_sk_list_bx, g_sk_list_bw, y, g_sk_list_itemH,
                                g_sk_list_fw, g_sk_list_fh, sel);
   ListBox_SetRowHScroll(sel ? g_sk_list_lb->text_hscroll : 0);
   out->idx = idx;
@@ -1678,7 +1677,7 @@ void sk_listbox_end(void) {
     DrawPromptSeparator((PlDrawPromptSeparatorSpec){
         .y = g_sk_list_y0 + g_sk_list_h, .width = g_sk_list_fw});
   }
-  ListboxBackend_End();
+  Platform_ListboxBackendEnd();
   g_sk_list_lb = NULL;
   g_sk_list_visible = 0;
   g_sk_list_cur = 0;

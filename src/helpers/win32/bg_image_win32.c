@@ -154,8 +154,6 @@ static uint64_t bg_mtime_key(const FILETIME *ft) {
   return ((uint64_t)ft->dwHighDateTime << 32) | (uint64_t)ft->dwLowDateTime;
 }
 
-/* The tile is stored as the raw DIB pixels, so the cache is byte exact and
-   costs a plain file read on the way back in. */
 static bool bg_cache_store(const char *file, int w, int h, const void *bits,
                            const FILETIME *ft, DWORD sz) {
 
