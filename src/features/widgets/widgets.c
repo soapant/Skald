@@ -401,13 +401,13 @@ static void internet_hover_render() {
   sk_format_bytes(g_net.rate_bps * 1024, rate, sizeof(rate));
 
   int y = NET_PAD;
-  net_row(y, "rate now", rate, RGB(160, 220, 255));
+  net_row(y, "rate now:", rate, RGB(160, 220, 255));
   y += NET_ROW_H;
 
-  net_row(y, "today", today, RGB(200, 200, 220));
+  net_row(y, "today:", today, RGB(200, 200, 220));
   y += NET_ROW_H;
 
-  net_row(y, "this month", month, RGB(200, 200, 220));
+  net_row(y, "this month:", month, RGB(200, 200, 220));
   y += NET_ROW_H + 4;
 }
 

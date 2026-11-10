@@ -27,7 +27,7 @@ typedef struct {
 #define TODO_ENTRY_DELIMITER "||"
 
 #define TODO_CONFIG_MASTER                                                     \
-  X("-pf", "Skald", "Skald", RGB(137, 180, 250), true)                         \
+  X("-s", "Skald", "Skald", RGB(137, 180, 250), true)                         \
   X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true)   \
   X("-pb", "CocBot", "CocBot", RGB(249, 226, 175), true)                       \
   X("-pi", "IndieGame", "IndieGame", RGB(19, 26, 105), true)                   \
@@ -44,7 +44,7 @@ typedef struct {
   X("-ne", NULL, "NotImplementedYet", RGB(155, 255, 35), false)                \
   X("-ft", NULL, "Feature", RGB(250, 205, 102), false)                         \
   X("-c", NULL, "Change", RGB(150, 105, 12), false)                            \
-  X("-fl", NULL, "SkApi", RGB(10, 105, 12), false)
+  X("-sk", NULL, "SkApi", RGB(10, 105, 12), false)
 
 #define X(flag, internal, label, color, is_alias) {flag, NULL},
 const GenericFlagEntry TODO_CONFIG_FLAGS[] = {TODO_CONFIG_MASTER};
@@ -360,6 +360,7 @@ void TriggerTodo(void) {
 
 SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = "Alt+T", .cb = TriggerTodo);
+
   sk_add_feature(.display_name = "Todo", .on_action = TriggerTodo,
                  .icon = "/list-check.png");
 }

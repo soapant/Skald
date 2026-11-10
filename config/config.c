@@ -7,7 +7,7 @@ void ConfigApply(void) {
     RememberLastIndex = true;
     MessageAfterEachHotkey = false;
     TimeOutForMessages = 3;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
