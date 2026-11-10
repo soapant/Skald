@@ -31,6 +31,8 @@
 #include <signal.h>
 
 #include "platform/x11/display_x11.h"
+#include "core/hotkey_pending.h"
+
 
 struct WindowManager;
 
@@ -182,9 +184,6 @@ bool g_x11_ctrl_held = false;
 bool g_x11_alt_held = false;
 bool g_x11_shift_held = false;
 
-extern int pending_hotkey_vk;
-extern int pending_hotkey_mod;
-extern long pending_hotkey_timeMs;
 
 bool x11_should_use_grab(void) {
   if (Env_IsWayland())

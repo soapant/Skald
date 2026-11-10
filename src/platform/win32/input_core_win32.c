@@ -14,6 +14,8 @@
 #include "core/remap_manager.h"
 #include "platform/input_state.h"
 #include "platform/win32/input_core_win32.h"
+#include "core/hotkey_pending.h"
+
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   POINT pt;
@@ -266,9 +268,6 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         modifiers |= HOTKEY_MOD_CTRL;
 
       if (!_popupActive && hotkey_process(pressed_vk, modifiers)) {
-        extern int pending_hotkey_vk;
-        extern int pending_hotkey_mod;
-        extern long pending_hotkey_timeMs;
         pending_hotkey_vk = pressed_vk;
         pending_hotkey_mod = modifiers;
         pending_hotkey_timeMs = (long)GetTickCount();
