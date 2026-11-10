@@ -1671,8 +1671,6 @@ static void cc_render(PromptState *state) {
                   .render = cc_on_actions_render,
                   .on_click = cc_open_actions_subwindow);
 
-  if (!sk_listbox_begin(&spec))
-    return;
   if (sk_hotkey_down(sk_hotkey_from_string(ActionsHotkey))) {
     cc_open_actions_subwindow();
   }
@@ -1682,6 +1680,8 @@ static void cc_render(PromptState *state) {
   if (sk_hotkey_down(sk_hotkey_from_string(RegAliasHotkey))) {
     cc_reg_select(1);
   }
+  if (!sk_listbox_begin(&spec))
+    return;
   int type_x = state->width - CC_ITEM_TEXT_X;
   SkListItemCtx ctx;
   while (sk_listbox_next(&ctx)) {

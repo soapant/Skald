@@ -7,7 +7,7 @@
 
 #define CC_COMMON_FLAGS                                                        \
   "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
-      "-Wextra", "-Wno-unused-parameter", "-O3", "-ggdb"
+      "-Wextra", "-Wno-unused-parameter","-ggdb"
 
 #if defined(_WIN32)
 #define CC_FLAGS CC_COMMON_FLAGS
@@ -846,15 +846,15 @@ int main(int argc, char **argv) {
   NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
   int do_run = 0;
-  int do_actual = 0;
+  int do_release = 0;
   int do_test = 0;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
-      printf("Usage: %s [-win32] [-run] [-actual] [-test] [-asan] [-help]\n",
+      printf("Usage: %s [-win32] [-run] [-release] [-test] [-asan] [-help]\n",
              argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");
-      printf("  -actual Build skald.exe instead of debug build (Windows)\n");
+      printf("  -release Build skald.exe instead of debug build (Windows) and add -O3\n");
       printf("  -test   Run test suite\n");
       printf("  -asan   Build with clang -fsanitize=address,undefined\n");
       printf("  -help   Show this help\n");
@@ -864,8 +864,8 @@ int main(int argc, char **argv) {
       target_win32 = true;
     if (strcmp(argv[i], "-run") == 0)
       do_run = 1;
-    if (strcmp(argv[i], "-actual") == 0)
-      do_actual = 1;
+    if (strcmp(argv[i], "-release") == 0)
+      do_release = 1;
     if (strcmp(argv[i], "-test") == 0)
       do_test = 1;
     if (strcmp(argv[i], "-asan") == 0)
@@ -943,7 +943,7 @@ int main(int argc, char **argv) {
   } else {
 #if defined(_WIN32)
     output = sanitize    ? "build/debug/skald_san.exe"
-             : do_actual ? "build/skald.exe"
+             : do_release ? "build/skald.exe"
                          : "build/debug/skald.exe";
 #else
     output = BUILD_FOLDER "/skald";
@@ -977,7 +977,7 @@ int main(int argc, char **argv) {
         any_compiled || !nob_file_exists(output) ||
         nob_needs_rebuild(output, (const char **)objs.items, objs.count) != 0;
 #if defined(_WIN32)
-    const char *other = do_actual ? "build/debug/skald.exe" : "build/skald.exe";
+    const char *other = do_release ? "build/debug/skald.exe" : "build/skald.exe";
     if (nob_file_exists(other) &&
         nob_needs_rebuild(other, (const char **)objs.items, objs.count) != 0) {
       needs_link = true;
@@ -1010,8 +1010,9 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < objs.count; ++i) {
       nob_cmd_append(&cmd, objs.items[i]);
     }
+    if (do_release)
+      nob_cmd_append(&cmd, "-O3");
 #if defined(_WIN32)
-    if (do_actual)
       nob_cmd_append(&cmd, "-mwindows");
     nob_cmd_append(&cmd, "-Wl,--export-all-symbols",
                    "-Wl,--out-implib,build/main.lib.a");
