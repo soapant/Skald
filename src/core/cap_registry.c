@@ -1,8 +1,6 @@
 #include "core/cap_registry.h"
-
 #include <string.h>
 #include <stdio.h>
-
 #include "deps/log.h"
 #include "core/feature_loader.h"
 #include "helpers/helpers_owner.h"
