@@ -584,8 +584,7 @@ static const char *file_walk_builtin_ignored_names[] = {".git",
 static bool file_walk_ignored_dir(const char *dir_name,
                                   char **names_to_ignore) {
   for (int i = 0; file_walk_builtin_ignored_names[i] != NULL; i++)
-    if (String_EqualsCI(
-            dir_name, file_walk_builtin_ignored_names[i]))
+    if (String_EqualsCI(dir_name, file_walk_builtin_ignored_names[i]))
       return true;
   if (names_to_ignore) {
     for (int i = 0; names_to_ignore[i] != NULL; i++)
@@ -715,8 +714,6 @@ bool FileWalk_AllFilesFromDir(const char *dir_path,
 #include "core/types/window.h"
 #include "core/hotkey_pending.h"
 
-
-
 bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
   if (!key || key->text_len <= 0)
     return false;
@@ -772,9 +769,8 @@ bool String_ContainsCI(const char *haystack, const char *needle) {
   size_t hlen = strlen(haystack);
   for (size_t i = 0; i + nlen <= hlen; i++) {
     size_t k = 0;
-    while (k < nlen &&
-           tolower((unsigned char)haystack[i + k]) ==
-               tolower((unsigned char)needle[k]))
+    while (k < nlen && tolower((unsigned char)haystack[i + k]) ==
+                           tolower((unsigned char)needle[k]))
       k++;
     if (k == nlen)
       return true;

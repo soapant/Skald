@@ -7,7 +7,7 @@
 
 #define CC_COMMON_FLAGS                                                        \
   "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
-      "-Wextra", "-Wno-unused-parameter","-ggdb"
+      "-Wextra", "-Wno-unused-parameter", "-ggdb"
 
 #if defined(_WIN32)
 #define CC_FLAGS CC_COMMON_FLAGS
@@ -858,7 +858,8 @@ int main(int argc, char **argv) {
              argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");
-      printf("  -release Build skald.exe instead of debug build (Windows) and add -O3\n");
+      printf("  -release Build skald.exe instead of debug build (Windows) and "
+             "add -O3\n");
       printf("  -test   Run test suite\n");
       printf("  -asan   Build with clang -fsanitize=address,undefined\n");
       printf("  -help   Show this help\n");
@@ -946,9 +947,9 @@ int main(int argc, char **argv) {
     output = BUILD_FOLDER "/skald_win.exe";
   } else {
 #if defined(_WIN32)
-    output = sanitize    ? "build/debug/skald_san.exe"
+    output = sanitize     ? "build/debug/skald_san.exe"
              : do_release ? "build/skald.exe"
-                         : "build/debug/skald.exe";
+                          : "build/debug/skald.exe";
 #else
     output = BUILD_FOLDER "/skald";
 #endif
@@ -981,7 +982,8 @@ int main(int argc, char **argv) {
         any_compiled || !nob_file_exists(output) ||
         nob_needs_rebuild(output, (const char **)objs.items, objs.count) != 0;
 #if defined(_WIN32)
-    const char *other = do_release ? "build/debug/skald.exe" : "build/skald.exe";
+    const char *other =
+        do_release ? "build/debug/skald.exe" : "build/skald.exe";
     if (nob_file_exists(other) &&
         nob_needs_rebuild(other, (const char **)objs.items, objs.count) != 0) {
       needs_link = true;
@@ -1017,7 +1019,7 @@ int main(int argc, char **argv) {
     if (do_release)
       nob_cmd_append(&cmd, "-O3");
 #if defined(_WIN32)
-      nob_cmd_append(&cmd, "-mwindows");
+    nob_cmd_append(&cmd, "-mwindows");
     nob_cmd_append(&cmd, "-Wl,--export-all-symbols",
                    "-Wl,--out-implib,build/main.lib.a");
 #endif

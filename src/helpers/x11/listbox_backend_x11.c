@@ -42,17 +42,16 @@ void ListboxBackend_DrawSelection(int bx, int bw, int y, int item_h, int fw,
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
       x11_fill_rounded_rect(g_b_dpy, g_b_xd, g_b_vis, g_b_cmap,
-                            rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF,
-                            bx + t, y + PROMPT_SEL_TOP_INSET + t,
-                            bw - 2 * t, item_h - 2 - 2 * t, R - 1,
-                            fw, frame_h);
+                            rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
+                            y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t,
+                            item_h - 2 - 2 * t, R - 1, fw, frame_h);
     }
   } else {
     PromptState tmp = {0};
     tmp.width = fw;
     tmp.height = frame_h;
-    x11_draw_list_background(&tmp, g_b_dpy, g_b_xd, g_b_vis, g_b_cmap,
-                                y, item_h, sel);
+    x11_draw_list_background(&tmp, g_b_dpy, g_b_xd, g_b_vis, g_b_cmap, y,
+                             item_h, sel);
   }
 }
 

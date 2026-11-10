@@ -17,7 +17,7 @@ static BOOL g_track_saved = FALSE;
 static HWND g_pending_restore = NULL;
 
 static void CALLBACK win32_reenable_track_proc(HWND hwnd, UINT msg, UINT_PTR id,
-                                       DWORD time) {
+                                               DWORD time) {
 
   (void)hwnd;
   (void)msg;
@@ -71,10 +71,10 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
     }
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
-      WS_EX_TOOLWINDOW | WS_EX_COMPOSITED | WS_EX_LAYERED,
-      QUICKSWITCHER_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN, x, y, w, h,
-      NULL, NULL, hInstance, NULL));
+  SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(
+      CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_COMPOSITED | WS_EX_LAYERED,
+                      QUICKSWITCHER_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN, x,
+                      y, w, h, NULL, NULL, hInstance, NULL));
   if (WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) == NULL) {
     return false;
   }

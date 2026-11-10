@@ -103,5 +103,4 @@ void UI_NavigateDown(ListBoxInfo *lb) {
   UI_RequestPopupRepaint();
 }
 
-
 bool UI_ApplyBackspaceToPopup(void) { return false; }

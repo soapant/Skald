@@ -10,7 +10,8 @@
 #include "platform/platform.h"
 #include "helpers/win32/input_core_win32.h"
 
-LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
+                                LPARAM lParam) {
   switch (msg) {
   case WM_CREATE: {
     NOTIFYICONDATA nid = {0};

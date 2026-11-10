@@ -17,46 +17,6 @@
 #include "helpers/win32/bg_image_win32.h"
 #include "helpers/win32/widget_win32.h"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void Platform_Widget_DrainClicks(void) {
   for (;;) {
     void (*fn)(void) = NULL;
@@ -73,8 +33,6 @@ void Platform_Widget_DrainClicks(void) {
   }
 }
 
-
-
 void Platform_Widget_FlushDestruction(void) {
   wdestroy_lock();
   for (int i = 0; i < g_wdestroy_count; i++) {
@@ -83,10 +41,6 @@ void Platform_Widget_FlushDestruction(void) {
   g_wdestroy_count = 0;
   wdestroy_unlock();
 }
-
-
-
-
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
                                        bool no_bg, void (*on_click)(void),
@@ -144,10 +98,6 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   return widget;
 }
 
-
-
-
-
 void Platform_Widget_Destroy(PlatformWidget *widget) {
   if (!widget || widget->base.dead) {
     return;
@@ -162,12 +112,6 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
   wdestroy_unlock();
 }
 
-
-
-
-
-
-
 void Platform_Widget_Show(PlatformWidget *widget) {
   if (!widget || widget->base.dead || widget->base.mapped) {
     return;
@@ -181,8 +125,6 @@ void Platform_Widget_Show(PlatformWidget *widget) {
   widget->base.mapped = true;
 }
 
-
-
 void Platform_Widget_Hide(PlatformWidget *widget) {
   if (!widget || widget->base.dead || !widget->base.mapped) {
     return;
@@ -193,8 +135,6 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
   ShowWindow(widget->hwnd, SW_HIDE);
   widget->base.mapped = false;
 }
-
-
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
   if (!widget || widget->base.dead) {
@@ -212,8 +152,6 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
                SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
-
-
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
   if (!widget || widget->base.dead) {
     return;
@@ -221,10 +159,6 @@ void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
   widget->base.no_bg = no_bg;
   widget_invalidate(widget);
 }
-
-
-
-
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
   if (!widget || widget->base.dead) {
@@ -234,8 +168,6 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
   widget->base.bg_color = color;
   widget_invalidate(widget);
 }
-
-
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
   if (!widget || widget->base.dead) {
@@ -258,8 +190,3 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
                SWP_NOACTIVATE);
   widget_invalidate(widget);
 }
-
-
-
-
-

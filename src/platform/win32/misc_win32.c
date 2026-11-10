@@ -15,8 +15,6 @@
 #include "helpers/win32/misc_win32.h"
 #include <time.h>
 
-
-
 bool Platform_MkdirIfNotExists(const char *path) {
 
   if (!path)

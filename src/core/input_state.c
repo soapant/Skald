@@ -90,7 +90,7 @@ bool Input_WasKeyReleased(int vk) {
 }
 
 void Input_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud),
-                             void *ud) {
+                          void *ud) {
   g_cb = cb;
   g_ud = ud;
   g_cb_owner[0] = '\0';

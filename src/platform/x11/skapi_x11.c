@@ -16,7 +16,6 @@
 #include <X11/extensions/Xrender.h>
 #include <fontconfig/fontconfig.h>
 #include <stdbool.h>
-
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
@@ -39,206 +38,6 @@
 #include "core/thread_registry.h"
 #include "helpers/helpers_owner.h"
 
-static bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
-                          char workdir[1024], bool *is_terminal) {
-
-  if (exec_line)
-    exec_line[0] = '\0';
-  if (workdir)
-    workdir[0] = '\0';
-  if (is_terminal)
-    *is_terminal = false;
-  if (!desktop_path)
-    return false;
-  static char content[16384];
-  if (File_ReadAll(desktop_path, content, (long)sizeof(content)) <= 0)
-    return false;
-  char *cur = content;
-  while (*cur) {
-    char *nl = strchr(cur, '\n');
-    if (nl)
-      *nl = '\0';
-    char *line = cur;
-    cur = nl ? nl + 1 : cur + strlen(cur);
-    char *p = line;
-    while (*p == ' ' || *p == '\t')
-      p++;
-    if (String_StartsWithCI(p, "Terminal=")) {
-      char *v = p + 9;
-      while (*v == ' ' || *v == '\t')
-        v++;
-      v[strcspn(v, "\r\n")] = '\0';
-      if (is_terminal && (String_ContainsCI(v, "true") ||
-                          strcmp(v, "1") == 0))
-        *is_terminal = true;
-    } else if (String_StartsWithCI(p, "Exec=")) {
-      char *v = p + 5;
-      while (*v == ' ' || *v == '\t')
-        v++;
-      v[strcspn(v, "\r\n")] = '\0';
-      if (exec_line)
-        strncpy(exec_line, v, 1024 - 1);
-    } else if (String_StartsWithCI(p, "Path=")) {
-      char *v = p + 5;
-      while (*v == ' ' || *v == '\t')
-        v++;
-      v[strcspn(v, "\r\n")] = '\0';
-      if (workdir)
-        strncpy(workdir, v, 1024 - 1);
-    }
-  }
-  return true;
-}
-
-static void x11_desktop_clean_exec(char exec_line[1024]) {
-  if (!exec_line || !exec_line[0]) {
-    return;
-  }
-  char cleaned[1024] = {0};
-  size_t o = 0;
-  for (size_t i = 0; exec_line[i] && o < sizeof(cleaned) - 1; i++) {
-    if (exec_line[i] == '%' && exec_line[i + 1]) {
-      char c = exec_line[i + 1];
-      if (c == 'f' || c == 'F' || c == 'u' || c == 'U' || c == 'i' ||
-          c == 'c' || c == 'k' || c == 'v' || c == 'm') {
-        i++;
-        while (exec_line[i + 1] == ' ')
-          i++;
-        continue;
-      }
-    }
-    cleaned[o++] = exec_line[i];
-  }
-  cleaned[o] = '\0';
-  char *s = cleaned;
-  while (*s == ' ' || *s == '\t')
-    s++;
-  char *e = s + strlen(s) - 1;
-  while (e > s && (*e == ' ' || *e == '\t'))
-    *e-- = '\0';
-  strncpy(exec_line, s, 1024 - 1);
-}
-
-static bool platform_exe_in_path(const char *name) {
-  if (!name || !name[0])
-    return false;
-  const char *path = getenv("PATH");
-  if (!path || !path[0])
-    return false;
-  const char *p = path;
-  while (*p) {
-    const char *sep = strchr(p, ':');
-    size_t len = sep ? (size_t)(sep - p) : strlen(p);
-    char cand[1024];
-    if (len == 0)
-      snprintf(cand, sizeof(cand), "./%s", name);
-    else
-      snprintf(cand, sizeof(cand), "%.*s/%s", (int)len, p, name);
-    if (access(cand, X_OK) == 0)
-      return true;
-    if (!sep)
-      break;
-    p = sep + 1;
-  }
-  return false;
-}
-
-static bool platform_resolve_desktop_exec(const char *exec_line,
-                                          const char *desktop_dir,
-                                          const char *workdir, char *out,
-                                          size_t out_size) {
-  if (!exec_line || !out || out_size == 0)
-    return false;
-  const char *p = exec_line;
-  while (*p == ' ' || *p == '\t')
-    p++;
-
-  char token[1024];
-  size_t t = 0;
-  if (*p == '"') {
-    p++;
-    while (*p) {
-      if (*p == '\\' && (p[1] == '"' || p[1] == '\\'))
-        p++;
-      else if (*p == '"') {
-        p++;
-        break;
-      }
-      if (t + 1 < sizeof(token))
-        token[t++] = *p;
-      p++;
-    }
-  } else {
-    while (*p && *p != ' ' && *p != '\t') {
-      if (t + 1 < sizeof(token))
-        token[t++] = *p;
-      p++;
-    }
-  }
-  token[t] = '\0';
-  while (*p == ' ' || *p == '\t')
-    p++;
-  if (!token[0])
-    return false;
-
-  const char *base = (workdir && workdir[0]) ? workdir : desktop_dir;
-  char prog[1024];
-  if (strchr(token, '/')) {
-    if (token[0] == '/')
-      snprintf(prog, sizeof(prog), "%s", token);
-    else
-      snprintf(prog, sizeof(prog), "%s/%s", base, token);
-  } else if (platform_exe_in_path(token)) {
-    snprintf(prog, sizeof(prog), "%s", token);
-  } else {
-    snprintf(prog, sizeof(prog), "%s/%s", desktop_dir, token);
-  }
-
-  if (strchr(prog, '/')) {
-    if (access(prog, X_OK) != 0) {
-      log_info("desktop exec resolve: '%s' not executable", prog);
-      return false;
-    }
-  } else if (!platform_exe_in_path(prog)) {
-    return false;
-  }
-
-  char q[2200];
-  size_t n = 0;
-  q[n++] = '\'';
-  for (const char *s = prog; *s && n + 5 < sizeof(q); s++) {
-    if (*s == '\'') {
-      memcpy(q + n, "'\\''", 4);
-      n += 4;
-    } else
-      q[n++] = *s;
-  }
-  q[n++] = '\'';
-  q[n] = '\0';
-
-  snprintf(out, out_size, "%s%s%s", q, p[0] ? " " : "", p);
-  return true;
-}
-
-static int platform_run_status(char *const argv[], const X11SessionEnv *env,
-                               bool apply_env) {
-  pid_t pid = fork();
-  if (pid < 0)
-    return -1;
-  if (pid == 0) {
-    if (apply_env && env)
-      x11_env_apply_to_current_process(env);
-    execvp(argv[0], argv);
-    _exit(127);
-  }
-  int st = 0;
-  if (waitpid(pid, &st, 0) < 0)
-    return -1;
-  if (!WIFEXITED(st))
-    return -1;
-  return WEXITSTATUS(st);
-}
-
 bool sk_launch_with_args_platform(const char *path, const char *args) {
   log_info("sk_launch path='%s' args='%s'", path ? path : "null",
            args ? args : "null");
@@ -255,8 +54,8 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     char exec_line[1024] = {0};
     char workdir[1024] = {0};
     x11_desktop_parse(path, exec_line, workdir, &is_terminal);
-    log_info("x11_desktop_parse exec='%s' workdir='%s' is_terminal=%d", exec_line,
-             workdir, is_terminal);
+    log_info("x11_desktop_parse exec='%s' workdir='%s' is_terminal=%d",
+             exec_line, workdir, is_terminal);
     x11_desktop_clean_exec(exec_line);
     log_info("x11_desktop_clean_exec exec='%s'", exec_line);
     if (is_terminal && exec_line[0]) {
@@ -296,7 +95,8 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     X11SessionEnv env;
     x11_env_get_session_env(&env);
     char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-    x11_env_build_env_strings(&env, disp_env, xauth_env, runtime_env, wayland_env);
+    x11_env_build_env_strings(&env, disp_env, xauth_env, runtime_env,
+                              wayland_env);
     bool as_root = x11_env_is_running_as_root();
     log_info("desktop '%s' exec='%s' workdir='%s' run_dir='%s' as_root=%d",
              expanded, exec_line, workdir, run_dir, as_root);
@@ -307,10 +107,10 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
                               "env",       disp_env,    xauth_env,
                               runtime_env, wayland_env, "gio",
                               "launch",    expanded,    NULL};
-      gio_st = platform_run_status(av_gio, NULL, false);
+      gio_st = x11_run_status(av_gio, NULL, false);
     } else {
       char *const av_gio2[] = {"gio", "launch", expanded, NULL};
-      gio_st = platform_run_status(av_gio2, &env, true);
+      gio_st = x11_run_status(av_gio2, &env, true);
     }
     log_info("gio launch '%s' exit=%d", expanded, gio_st);
     if (gio_st == 0) {
@@ -318,8 +118,8 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     }
 
     char cmd[4096];
-    if (!platform_resolve_desktop_exec(exec_line, desktop_dir, workdir, cmd,
-                                       sizeof(cmd))) {
+    if (!x11_resolve_desktop_exec(exec_line, desktop_dir, workdir, cmd,
+                                  sizeof(cmd))) {
       log_warn(
           "desktop '%s': cannot resolve Exec '%s' via PATH or desktop dir '%s'",
           expanded, exec_line, desktop_dir);
@@ -508,7 +308,6 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     text_w = te.xOff;
   }
 
-
   EditboxInit ebi;
   EditboxInitFromSpec init_args = {.state = state,
                                    .buf = buf,
@@ -562,7 +361,6 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     Platform_DestroyFont(fh);
   return true;
 }
-
 
 static void *x11_timer_thread(void *arg) {
 

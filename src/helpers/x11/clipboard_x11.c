@@ -468,8 +468,8 @@ static Bool x11_clip_read_prop_pred(Display *dpy, XEvent *ev, XPointer arg) {
 }
 
 static int x11_clip_read_wait_event(Display *dpy, XEvent *ev,
-                             Bool (*pred)(Display *, XEvent *, XPointer),
-                             ClipReadWait *w, int tries) {
+                                    Bool (*pred)(Display *, XEvent *, XPointer),
+                                    ClipReadWait *w, int tries) {
 
   for (int i = 0; i < tries; i++) {
     if (XCheckIfEvent(dpy, ev, pred, (XPointer)w))
@@ -480,7 +480,7 @@ static int x11_clip_read_wait_event(Display *dpy, XEvent *ev,
 }
 
 static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
-                              size_t *out_len) {
+                                    size_t *out_len) {
 
   Atom actual = None;
   int format = 0;
@@ -511,7 +511,7 @@ static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
 }
 
 static char *x11_clip_read_incr(Display *dpy, Window win, Atom prop,
-                          ClipReadWait *w) {
+                                ClipReadWait *w) {
 
   size_t cap = 65536;
   size_t len = 0;
@@ -604,7 +604,8 @@ static char *x11_clip_read_target(Atom target) {
   XFlush(dpy);
   ClipReadWait w = {win, g_clip_clipboard, prop};
   XEvent ev;
-  if (!x11_clip_read_wait_event(dpy, &ev, x11_clip_read_notify_pred, &w, CLIP_READ_TRIES)) {
+  if (!x11_clip_read_wait_event(dpy, &ev, x11_clip_read_notify_pred, &w,
+                                CLIP_READ_TRIES)) {
     return NULL;
   }
   if (ev.xselection.property == None) {

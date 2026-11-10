@@ -28,9 +28,10 @@ typedef struct {
 typedef PlCreateDisplayMessageWindowSpec DisplayMessageParams;
 
 LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
-                              LPARAM lParam);
+                                      LPARAM lParam);
 LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
-                                    LPARAM lParam);
-LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+                                            LPARAM lParam);
+LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
+                                LPARAM lParam);
 
 #endif

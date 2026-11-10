@@ -51,7 +51,6 @@ void UpdateTextCaret(void);
 #define MSG_TIMEOUT_INDEFINITE 6969.0
 #define MsgTimeoutIsIndefinite(t) ((t) == MSG_TIMEOUT_INDEFINITE || (t) <= 0.0)
 
-
 typedef struct {
   int bx;
   int bw;
@@ -87,7 +86,6 @@ void EndMeasure(int *out_w, int *out_h);
 void GetLastMeasureOrigin(int *out_x, int *out_y);
 void SetDrawOffset(int dx, int dy);
 void GetDrawOffset(int *out_x, int *out_y);
-
 
 bool IsPopupActive(WindowHandle hPopupWnd);
 void UI_SetSelection(ListBoxInfo *lb, int index);

@@ -26,15 +26,15 @@ static void widget_mutex_init(void) {
   if (!g_widget_mutex)
     g_widget_mutex = Platform_MutexCreate();
 }
-#define W_LOCK()                                       \
-  do {                                                 \
-    widget_mutex_init();                               \
-    Platform_MutexLock(g_widget_mutex);                \
+#define W_LOCK()                                                               \
+  do {                                                                         \
+    widget_mutex_init();                                                       \
+    Platform_MutexLock(g_widget_mutex);                                        \
   } while (0)
 #define W_UNLOCK() Platform_MutexUnlock(g_widget_mutex)
 
 static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
-                                     int *h) {
+                                    int *h) {
   int count = Monitor_Count();
   int idx = (monitor > 0 && monitor <= count) ? monitor : 0;
   if (Monitor_GeometryAt(idx, x, y, w, h))
@@ -324,8 +324,7 @@ static void widget_attach_window(void *ud) {
     Platform_Widget_SetNoBg(widget->win, widget->no_bg);
     widget_set_fps(widget->win, widget->fps);
     if (created)
-      widget_set_frame_callback(widget->win, widget_render_frame,
-                                       widget);
+      widget_set_frame_callback(widget->win, widget_render_frame, widget);
   }
 }
 
@@ -376,16 +375,15 @@ static void widget_relayout(void) {
     Widget *w = sorted[i];
     if (w->slot < 0 || w->slot >= WIDGET_SLOT_COUNT)
       continue;
-    bool from_right =
-        (w->slot == WIDGET_SLOT_TOP_RIGHT || w->slot == WIDGET_SLOT_BOTTOM_RIGHT);
+    bool from_right = (w->slot == WIDGET_SLOT_TOP_RIGHT ||
+                       w->slot == WIDGET_SLOT_BOTTOM_RIGHT);
     bool from_top =
         (w->slot == WIDGET_SLOT_TOP_LEFT || w->slot == WIDGET_SLOT_TOP_RIGHT);
-    int m = (w->monitor > 0 && w->monitor < WIDGET_MAX_MONITORS) ? w->monitor
-                                                                  : 0;
+    int m =
+        (w->monitor > 0 && w->monitor < WIDGET_MAX_MONITORS) ? w->monitor : 0;
     MonSlot *st = &ms[w->slot][m];
     if (!st->known) {
-      if (!Monitor_GeometryAt(m, &st->x, &st->y, &st->w,
-                                            &st->h))
+      if (!Monitor_GeometryAt(m, &st->x, &st->y, &st->w, &st->h))
         Platform_WM_GetMonitorGeometry(&st->x, &st->y, &st->w, &st->h);
       st->cursor = from_right ? st->x + st->w : st->x;
       st->known = true;
@@ -585,7 +583,6 @@ int widget_height(const PlatformWidget *widget) {
   const PlatformWidgetBase *base = (const PlatformWidgetBase *)widget;
   return widget ? base->h : 0;
 }
-
 
 void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
                       int fps, bool no_bg, void (*on_click)(void),

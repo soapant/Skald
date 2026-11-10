@@ -123,7 +123,7 @@ int x11_msg_text_width(Display *dpy, XftFont *xf, const char *s, int n) {
 }
 
 int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
-                       MsgLine *lines, int max_lines) {
+                      MsgLine *lines, int max_lines) {
 
   int count = 0;
   int spaceW = x11_msg_text_width(dpy, xf, " ", 1);
@@ -221,10 +221,9 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
   return count;
 }
 
-void x11_display_message_draw(Display *dpy, Window win,
-                                     const char *message, unsigned long color,
-                                     int w, int h, bool no_bg,
-                                     void (*render)(void)) {
+void x11_display_message_draw(Display *dpy, Window win, const char *message,
+                              unsigned long color, int w, int h, bool no_bg,
+                              void (*render)(void)) {
 
   XWindowAttributes attrs;
   if (!XGetWindowAttributes(dpy, win, &attrs)) {
@@ -260,7 +259,8 @@ void x11_display_message_draw(Display *dpy, Window win,
     x11_xft_alloc_color(dpy, attrs.visual, attrs.colormap, rgb_to_hex(color),
                         0xFFFF, &col);
     MsgLine lines[MSG_MAX_LINES];
-    int nlines = x11_msg_wrap_text(dpy, xf, message, w - 30, lines, MSG_MAX_LINES);
+    int nlines =
+        x11_msg_wrap_text(dpy, xf, message, w - 30, lines, MSG_MAX_LINES);
     int lineH = xf->ascent + xf->descent;
     int y = (h - nlines * lineH) / 2 + xf->ascent;
     if (y < xf->ascent)
@@ -287,9 +287,9 @@ void x11_display_message_draw(Display *dpy, Window win,
   XFlush(dpy);
 }
 
-void x11_msg_present(Display *dpy, const char *message, int x, int y,
-                       int winW, int winH, double timeout, ColorRef color,
-                       bool no_bg, void (*render)(void), const char *name) {
+void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
+                     int winH, double timeout, ColorRef color, bool no_bg,
+                     void (*render)(void), const char *name) {
 
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
@@ -337,8 +337,8 @@ void x11_msg_present(Display *dpy, const char *message, int x, int y,
 }
 
 void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
-                            int centerX, int centerY, int winW, int winH,
-                            ColorRef color, bool no_bg) {
+                           int centerX, int centerY, int winW, int winH,
+                           ColorRef color, bool no_bg) {
 
   if (!dpy || !key || !key[0] || !message || !message[0]) {
     return;
@@ -392,7 +392,7 @@ void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
 }
 
 void x11_msg_measure(Display *dpy, const char *message, int maxWidth,
-                       int maxHeight, int *outW, int *outH) {
+                     int maxHeight, int *outW, int *outH) {
 
   *outW = 0;
   *outH = 0;

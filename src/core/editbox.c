@@ -23,8 +23,7 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
 }
 
 void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
-                          int fontsize, PromptState *state,
-                          EditboxPlace *out) {
+                          int fontsize, PromptState *state, EditboxPlace *out) {
   if (!out)
     return;
   memset(out, 0, sizeof(*out));
@@ -52,8 +51,7 @@ void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
   out->y_raw = y == 0 ? PROMPT_EDIT_INSET : y;
 }
 
-void Editbox_InitFromSpec(EditboxInit *out,
-                          const EditboxInitFromSpec *args) {
+void Editbox_InitFromSpec(EditboxInit *out, const EditboxInitFromSpec *args) {
   if (!out || !args)
     return;
   memset(out, 0, sizeof(*out));
@@ -69,8 +67,8 @@ void Editbox_InitFromSpec(EditboxInit *out,
   out->text_w = args->text_w;
   out->ascent = args->ascent;
   out->descent = args->descent;
-  out->text_color = args->text_color ? rgb_to_hex(args->text_color)
-                                     : rgb_to_hex(COLOR_TEXT);
+  out->text_color =
+      args->text_color ? rgb_to_hex(args->text_color) : rgb_to_hex(COLOR_TEXT);
   out->bg_color =
       args->bg_color ? rgb_to_hex(args->bg_color) : rgb_to_hex(COLOR_BG);
   out->placeholder = args->placeholder;

@@ -32,7 +32,7 @@ static char g_sm_match[SM_SLOTS][128];
 static bool g_sm_slot_done[SM_SLOTS];
 
 const char *sm_lookup(int slot, const char *const possibilities[],
-                             size_t count) {
+                      size_t count) {
 
   if (slot < 0 || slot >= SM_SLOTS)
     return NULL;
@@ -48,8 +48,7 @@ const char *sm_lookup(int slot, const char *const possibilities[],
   }
   for (size_t j = 0; j < count; j++) {
     for (size_t i = 0; i < g_sm_files.count; i++) {
-      if (String_ContainsCI(g_sm_files.files[i].name,
-                                                 possibilities[j])) {
+      if (String_ContainsCI(g_sm_files.files[i].name, possibilities[j])) {
         char *name = g_sm_files.files[i].name;
         name[0] = (char)tolower((unsigned char)name[0]);
         snprintf(g_sm_match[slot], sizeof(g_sm_match[slot]), "%s", name);
@@ -73,4 +72,3 @@ void win32_default_apps_free_cache(void) {
     g_sm_slot_done[i] = false;
   }
 }
-

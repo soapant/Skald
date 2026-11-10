@@ -53,5 +53,4 @@ int x11_keysym_to_vk(KeySym ks);
 int x11_vk_to_linux_key(int vk);
 bool x11_handle_global_key(int key_code, int value);
 
-
 #endif

@@ -2,14 +2,16 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include <X11/Xlib.h>
+#include <X11/X.h>
+#include <X11/Xft/Xft.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
-#include <X11/Xft/Xft.h>
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcfreetype.h>
 #include <X11/extensions/shape.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include "helpers/x11/env_helpers_x11.h"
 #include <pthread.h>
 #include <stdint.h>
 #include <X11/X.h>
@@ -21,7 +23,6 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
-
 #include "helpers/x11/display_x11.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
@@ -37,55 +38,12 @@
 #include "core/types.h"
 #include "core/types/window.h"
 #include "freetype/freetype.h"
-
 #define NANOSVG_IMPLEMENTATION
 #include "deps/nanosvg.h"
-
 #define NANOSVGRAST_IMPLEMENTATION
 #include "deps/nanosvgrast.h"
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"
-
-#include "helpers/helpers_text.h"
-#include <stdlib.h>
-#include <math.h>
-#include <time.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/Xft/Xft.h>
-#include <fontconfig/fontconfig.h>
-#include <fontconfig/fcfreetype.h>
-#include <X11/extensions/shape.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <X11/X.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/render.h>
-#include <X11/extensions/shapeconst.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/stat.h>
-
-#include "helpers/x11/display_x11.h"
-#include "deps/log.h"
-#include "core/window_manager.h"
-#include "helpers/x11/bg_image_x11.h"
-#include "core/prompt_geometry.h"
-#include "core/listbox_hover.h"
-#include "platform/platform.h"
-#include "platform/draw.h"
-#include "platform/x11/drawing_x11.h"
-#include "helpers/helpers_ui.h"
-#include "wm/niri_wm.h"
-#include "config_values.h"
-#include "core/types.h"
-#include "core/types/window.h"
-#include "freetype/freetype.h"
 
 #define BG_SLOT_COUNT 4
 
@@ -353,7 +311,6 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
   return total;
 }
 
-
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
                            int y, XftFont *xf, const char *s, int n, int px) {
   if (!xf || !xd || !s || n <= 0)
@@ -408,8 +365,8 @@ int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
 }
 
 void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
-                       FontHandle font, const char *text, int startY,
-                       char *centered_to, int xOffset, int boxWidth) {
+                           FontHandle font, const char *text, int startY,
+                           char *centered_to, int xOffset, int boxWidth) {
   if (!text) {
     return;
   }
@@ -521,7 +478,7 @@ int x11_font_list_top_of(FontHandle font) {
 }
 
 const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
-                                   size_t trunc_size) {
+                                          size_t trunc_size) {
   const char *baseText = lb ? ListBoxInfo_Row(lb, idx) : NULL;
   snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
   return trunc;
@@ -623,7 +580,7 @@ static void x11_img_cache_put(const char *key, int w, int h, long long mtime,
 }
 
 bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
-                              const char *path, int x, int y, int tw, int th) {
+                           const char *path, int x, int y, int tw, int th) {
   if (!dpy || !xd || !path || !path[0])
     return false;
   if (tw <= 0)
@@ -926,8 +883,7 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   }
 
   size_t _plen = strlen(path);
-  bool _is_svg = _plen > 4 && String_ContainsCI(
-                                  path + _plen - 4, ".svg");
+  bool _is_svg = _plen > 4 && String_ContainsCI(path + _plen - 4, ".svg");
 
   unsigned char *argb = NULL;
   if (_is_svg) {
@@ -967,8 +923,7 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
     nsvgDeleteRasterizer(rast);
     nsvgDelete(image);
   } else {
-    bool _is_xpm = _plen > 4 && String_ContainsCI(
-                                    path + _plen - 4, ".xpm");
+    bool _is_xpm = _plen > 4 && String_ContainsCI(path + _plen - 4, ".xpm");
     int w = 0, h = 0;
     int comp = 0;
     unsigned char *src = NULL;
@@ -1066,11 +1021,11 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   return copy;
 }
 
-void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
-                         FontHandle font, XftColor *num_color,
-                         XftColor *body_color, XftColor *plain_color,
-                         ListBoxInfo *lb, char *icon_path, int idx, int y,
-                         int text_x) {
+void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
+                                Colormap cmap, FontHandle font,
+                                XftColor *num_color, XftColor *body_color,
+                                XftColor *plain_color, ListBoxInfo *lb,
+                                char *icon_path, int idx, int y, int text_x) {
   XftFont *xf = FH_TO_XFT(font);
   if (!xf)
     return;
@@ -1085,15 +1040,14 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis, Colormap
     int iconY = y + (x11_font_row_height_of(font) - IconSize) / 2;
     XOffset += IconSize + XOffset;
     x11_draw_image_scaled(dpy, xd, vis, icon_path, iconX, iconY, IconSize,
-                             IconSize);
+                          IconSize);
   }
   char trunc[512];
   x11_listbox_item_display_text(lb, idx, trunc, sizeof(trunc));
 
   const char *draw_text = trunc;
   int draw_x = XOffset;
-  int h_scroll =
-      (lb && idx == lb->selected_index) ? lb->text_hscroll : 0;
+  int h_scroll = (lb && idx == lb->selected_index) ? lb->text_hscroll : 0;
   if (h_scroll > 0)
     draw_x -= h_scroll;
 
@@ -1126,7 +1080,7 @@ Window x11_create_window_ex(Display *dpy, int x, int y, int w, int h,
 static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
                                     int radius);
 static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
-                                unsigned int baseAlpha8);
+                                     unsigned int baseAlpha8);
 
 Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
                                unsigned long bg_color, const char *res_name,
@@ -1165,8 +1119,7 @@ Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
     unsigned int r = (bg_color >> 16) & 0xFF;
     unsigned int g = (bg_color >> 8) & 0xFF;
     unsigned int b = bg_color & 0xFF;
-    unsigned int a =
-        GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity;
+    unsigned int a = GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity;
     unsigned long valuemask = CWColormap | CWBorderPixel;
     if (bg_pm != None) {
       attrs.background_pixmap = bg_pm;
@@ -1407,7 +1360,7 @@ static unsigned long x11_background_color_at(int x, int y, int w, int h) {
 }
 
 static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
-                                unsigned int baseAlpha8) {
+                                     unsigned int baseAlpha8) {
   float cx, cy;
   if (x < R && y < R) {
     cx = (float)R;
@@ -1782,7 +1735,6 @@ Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
   return win;
 }
 
-
 void x11_apply_click_through(Display *dpy, Window win) {
   if (!dpy || win == None)
     return;
@@ -1821,3 +1773,199 @@ XftDraw *x11_create_xft_draw(Display *dpy, Window win) {
                        DefaultColormap(dpy, screen));
 }
 
+bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
+                       char workdir[1024], bool *is_terminal) {
+
+  if (exec_line)
+    exec_line[0] = '\0';
+  if (workdir)
+    workdir[0] = '\0';
+  if (is_terminal)
+    *is_terminal = false;
+  if (!desktop_path)
+    return false;
+  static char content[16384];
+  if (File_ReadAll(desktop_path, content, (long)sizeof(content)) <= 0)
+    return false;
+  char *cur = content;
+  while (*cur) {
+    char *nl = strchr(cur, '\n');
+    if (nl)
+      *nl = '\0';
+    char *line = cur;
+    cur = nl ? nl + 1 : cur + strlen(cur);
+    char *p = line;
+    while (*p == ' ' || *p == '\t')
+      p++;
+    if (String_StartsWithCI(p, "Terminal=")) {
+      char *v = p + 9;
+      while (*v == ' ' || *v == '\t')
+        v++;
+      v[strcspn(v, "\r\n")] = '\0';
+      if (is_terminal && (String_ContainsCI(v, "true") || strcmp(v, "1") == 0))
+        *is_terminal = true;
+    } else if (String_StartsWithCI(p, "Exec=")) {
+      char *v = p + 5;
+      while (*v == ' ' || *v == '\t')
+        v++;
+      v[strcspn(v, "\r\n")] = '\0';
+      if (exec_line)
+        strncpy(exec_line, v, 1024 - 1);
+    } else if (String_StartsWithCI(p, "Path=")) {
+      char *v = p + 5;
+      while (*v == ' ' || *v == '\t')
+        v++;
+      v[strcspn(v, "\r\n")] = '\0';
+      if (workdir)
+        strncpy(workdir, v, 1024 - 1);
+    }
+  }
+  return true;
+}
+
+void x11_desktop_clean_exec(char exec_line[1024]) {
+  if (!exec_line || !exec_line[0]) {
+    return;
+  }
+  char cleaned[1024] = {0};
+  size_t o = 0;
+  for (size_t i = 0; exec_line[i] && o < sizeof(cleaned) - 1; i++) {
+    if (exec_line[i] == '%' && exec_line[i + 1]) {
+      char c = exec_line[i + 1];
+      if (c == 'f' || c == 'F' || c == 'u' || c == 'U' || c == 'i' ||
+          c == 'c' || c == 'k' || c == 'v' || c == 'm') {
+        i++;
+        while (exec_line[i + 1] == ' ')
+          i++;
+        continue;
+      }
+    }
+    cleaned[o++] = exec_line[i];
+  }
+  cleaned[o] = '\0';
+  char *s = cleaned;
+  while (*s == ' ' || *s == '\t')
+    s++;
+  char *e = s + strlen(s) - 1;
+  while (e > s && (*e == ' ' || *e == '\t'))
+    *e-- = '\0';
+  strncpy(exec_line, s, 1024 - 1);
+}
+
+bool x11_exe_in_path(const char *name) {
+  if (!name || !name[0])
+    return false;
+  const char *path = getenv("PATH");
+  if (!path || !path[0])
+    return false;
+  const char *p = path;
+  while (*p) {
+    const char *sep = strchr(p, ':');
+    size_t len = sep ? (size_t)(sep - p) : strlen(p);
+    char cand[1024];
+    if (len == 0)
+      snprintf(cand, sizeof(cand), "./%s", name);
+    else
+      snprintf(cand, sizeof(cand), "%.*s/%s", (int)len, p, name);
+    if (access(cand, X_OK) == 0)
+      return true;
+    if (!sep)
+      break;
+    p = sep + 1;
+  }
+  return false;
+}
+
+bool x11_resolve_desktop_exec(const char *exec_line, const char *desktop_dir,
+                              const char *workdir, char *out, size_t out_size) {
+  if (!exec_line || !out || out_size == 0)
+    return false;
+  const char *p = exec_line;
+  while (*p == ' ' || *p == '\t')
+    p++;
+
+  char token[1024];
+  size_t t = 0;
+  if (*p == '"') {
+    p++;
+    while (*p) {
+      if (*p == '\\' && (p[1] == '"' || p[1] == '\\'))
+        p++;
+      else if (*p == '"') {
+        p++;
+        break;
+      }
+      if (t + 1 < sizeof(token))
+        token[t++] = *p;
+      p++;
+    }
+  } else {
+    while (*p && *p != ' ' && *p != '\t') {
+      if (t + 1 < sizeof(token))
+        token[t++] = *p;
+      p++;
+    }
+  }
+  token[t] = '\0';
+  while (*p == ' ' || *p == '\t')
+    p++;
+  if (!token[0])
+    return false;
+
+  const char *base = (workdir && workdir[0]) ? workdir : desktop_dir;
+  char prog[1024];
+  if (strchr(token, '/')) {
+    if (token[0] == '/')
+      snprintf(prog, sizeof(prog), "%s", token);
+    else
+      snprintf(prog, sizeof(prog), "%s/%s", base, token);
+  } else if (x11_exe_in_path(token)) {
+    snprintf(prog, sizeof(prog), "%s", token);
+  } else {
+    snprintf(prog, sizeof(prog), "%s/%s", desktop_dir, token);
+  }
+
+  if (strchr(prog, '/')) {
+    if (access(prog, X_OK) != 0) {
+      log_info("desktop exec resolve: '%s' not executable", prog);
+      return false;
+    }
+  } else if (!x11_exe_in_path(prog)) {
+    return false;
+  }
+
+  char q[2200];
+  size_t n = 0;
+  q[n++] = '\'';
+  for (const char *s = prog; *s && n + 5 < sizeof(q); s++) {
+    if (*s == '\'') {
+      memcpy(q + n, "'\\''", 4);
+      n += 4;
+    } else
+      q[n++] = *s;
+  }
+  q[n++] = '\'';
+  q[n] = '\0';
+
+  snprintf(out, out_size, "%s%s%s", q, p[0] ? " " : "", p);
+  return true;
+}
+
+int x11_run_status(char *const argv[], const X11SessionEnv *env,
+                   bool apply_env) {
+  pid_t pid = fork();
+  if (pid < 0)
+    return -1;
+  if (pid == 0) {
+    if (apply_env && env)
+      x11_env_apply_to_current_process(env);
+    execvp(argv[0], argv);
+    _exit(127);
+  }
+  int st = 0;
+  if (waitpid(pid, &st, 0) < 0)
+    return -1;
+  if (!WIFEXITED(st))
+    return -1;
+  return WEXITSTATUS(st);
+}

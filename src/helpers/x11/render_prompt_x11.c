@@ -79,17 +79,20 @@ static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
   return true;
 }
 
-void x11_draw_prompt_user_edit_control_on_draw(Display *dpy, XftDraw *xd, Visual *vis,
-                                     Colormap cmap, PromptState *state) {
+void x11_draw_prompt_user_edit_control_on_draw(Display *dpy, XftDraw *xd,
+                                               Visual *vis, Colormap cmap,
+                                               PromptState *state) {
   x11_draw_editbox(state, dpy, xd, vis, cmap);
 }
 
-void x11_draw_prompt_user_listbox_on_draw(Display *dpy, XftDraw *xd, Visual *vis,
-                                 Colormap cmap, PromptState *state) {
+void x11_draw_prompt_user_listbox_on_draw(Display *dpy, XftDraw *xd,
+                                          Visual *vis, Colormap cmap,
+                                          PromptState *state) {
   x11_draw_listbox(state, dpy, xd, vis, cmap);
 }
 
-void x11_draw_prompt_user_edit_control(Display *dpy, Window *win, PromptState *state) {
+void x11_draw_prompt_user_edit_control(Display *dpy, Window *win,
+                                       PromptState *state) {
   XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;
@@ -109,7 +112,8 @@ void x11_draw_prompt_user_edit_control(Display *dpy, Window *win, PromptState *s
   XftDrawDestroy(xd);
 }
 
-void x11_draw_prompt_user_listbox(Display *dpy, Window *win, PromptState *state) {
+void x11_draw_prompt_user_listbox(Display *dpy, Window *win,
+                                  PromptState *state) {
   XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;

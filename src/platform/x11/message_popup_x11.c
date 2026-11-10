@@ -24,8 +24,6 @@
 #include "core/types/window.h"
 #include "core/window_manager.h"
 
-
-
 void Platform_HoverMessageRelease(const char *key) {
   Display *dpy = x11_get_display();
   if (!dpy || !key || !key[0]) {
@@ -103,7 +101,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
   int x = abs(centerX - winW / 2);
   int y = abs(centerY - winH / 2);
   x11_msg_present(dpy, message, x, y, winW, winH, timeout, color, no_bg, render,
-             name);
+                  name);
 }
 
 void Platform_HoverMessage(PlHoverMessageSpec spec) {
@@ -135,7 +133,7 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
     x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
   }
   x11_msg_hover_present(dpy, key, message, centerX, centerY, winW, winH, color,
-                  no_bg);
+                        no_bg);
 }
 
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
@@ -208,8 +206,8 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     y = rect_y + (rect_h - winH) / 2;
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
-  x11_msg_present(dpy, message, x - ax, y - ay, winW, winH, timeout, color, no_bg,
-             render, name);
+  x11_msg_present(dpy, message, x - ax, y - ay, winW, winH, timeout, color,
+                  no_bg, render, name);
 }
 
 bool Platform_DismissMessage(const char *name) {

@@ -8,38 +8,10 @@
 #include "config.h"
 #include "helpers/win32/default_apps_win32.h"
 
-#include <windows.h>
-
-#include <stdio.h>
-
-#include <string.h>
-
-#include <ctype.h>
-
-#include "core/types/file.h"
-
-#include "platform/platform.h"
-
-#include "helpers/helpers_text.h"
-
-#include "config.h"
-
 static char default_apps_win32[DEFAULT_APP_COUNT][256];
-
-
-
-
-
 #define SM_SLOTS 8
 
-
-
-
-
-
-
 const char *get_default_terminal(void) {
-
   const char *possible_terminals[] = {"Alacritty",
                                       "WezTerm",
                                       "Tabby",
@@ -67,8 +39,6 @@ const char *get_default_terminal(void) {
   return found ? found : "pwsh";
 }
 
-
-
 const char *get_default_browser(void) {
 
   const char *possible_browsers[] = {"Google Chrome",
@@ -90,8 +60,6 @@ const char *get_default_browser(void) {
       sm_lookup(1, possible_browsers, ARRAY_LEN(possible_browsers));
   return found ? found : "chrome";
 }
-
-
 
 const char *Platform_GetDefaultTerminal(void) {
 
@@ -130,8 +98,6 @@ const char *Platform_GetDefaultTerminal(void) {
   return default_apps_win32[slot];
 }
 
-
-
 const char *Platform_GetDefaultApp(DefaultAppKind kind) {
 
   if (kind < 0 || kind >= DEFAULT_APP_COUNT)
@@ -163,8 +129,6 @@ const char *Platform_GetDefaultApp(DefaultAppKind kind) {
   return default_apps_win32[kind];
 }
 
-
-
 bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
                                  size_t out_size) {
 
@@ -173,4 +137,3 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
   (void)out_size;
   return false;
 }
-

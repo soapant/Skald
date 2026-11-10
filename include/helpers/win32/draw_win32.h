@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include "core/types.h"
 
-
 #define WIN32_SIZE_FONT_SLOTS 16
 #define WIN32_SYM_SLOTS 16
 #define WIN32_IMG_CACHE_SLOTS 24

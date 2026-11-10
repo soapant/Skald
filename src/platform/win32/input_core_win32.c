@@ -16,7 +16,6 @@
 #include "helpers/win32/input_core_win32.h"
 #include "core/hotkey_pending.h"
 
-
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   POINT pt;
   if (!GetCursorPos(&pt))

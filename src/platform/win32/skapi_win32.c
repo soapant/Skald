@@ -157,8 +157,7 @@ char *sk_search_file_in_dir_platform(const char *directory,
     if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
       continue;
     }
-    if (String_ContainsCI(find_data.cFileName,
-                                               search_string)) {
+    if (String_ContainsCI(find_data.cFileName, search_string)) {
       snprintf(found_path, sizeof(found_path), "%s\\%s", directory,
                find_data.cFileName);
       FindClose(hFind);
@@ -264,7 +263,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
 }
 
 static VOID CALLBACK win32_timer_trampoline(PVOID lpParam,
-                                      BOOLEAN TimerOrWaitFired) {
+                                            BOOLEAN TimerOrWaitFired) {
 
   SkRunAfterPayload *payload = (SkRunAfterPayload *)lpParam;
   if (payload) {
@@ -280,8 +279,8 @@ bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload) {
 
   DWORD delay_ms = (DWORD)(payload->seconds * 1000.0);
   HANDLE hTimer = NULL;
-  if (!CreateTimerQueueTimer(&hTimer, NULL, win32_timer_trampoline, payload, delay_ms,
-                             0, WT_EXECUTEONLYONCE)) {
+  if (!CreateTimerQueueTimer(&hTimer, NULL, win32_timer_trampoline, payload,
+                             delay_ms, 0, WT_EXECUTEONLYONCE)) {
     return false;
   }
   return true;

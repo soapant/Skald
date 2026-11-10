@@ -37,8 +37,6 @@
 
 #endif
 
-
-
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
 
@@ -70,8 +68,6 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
   ;
   return true;
 }
-
-
 
 char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   if (!command) {
@@ -240,8 +236,6 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   return out;
 }
 
-
-
 bool Platform_LaunchDetached(char *command) {
   if (!command || !command[0])
     return false;
@@ -261,8 +255,6 @@ bool Platform_LaunchDetached(char *command) {
   CloseHandle(pi.hThread);
   return true;
 }
-
-
 
 char *Platform_RunCommandAndGetOutput(char *command, int priority) {
   if (command == NULL || strlen(command) == 0)
@@ -333,14 +325,6 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
   CloseHandle(pi.hThread);
   return out;
 }
-
-
-
-
-
-
-
-
 
 char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
                               int *out_status) {
@@ -469,23 +453,15 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
   return out;
 }
 
-
-
-
-
 void Platform_StartUniversalTimer() {
   g_timer_start_ms = GetTickCount64();
   log_info("Platform_StartUniversalTimer completed");
 }
 
-
-
 void Platform_ResetUniversalTimer() {
   g_timer_start_ms = GetTickCount64();
   log_info("Platform_ResetUniversalTimer completed");
 }
-
-
 
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
   LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
@@ -494,8 +470,6 @@ void Platform_ModifyUniversalTimer(double seconds_to_add) {
   log_info("Platform_ModifyUniversalTimer seconds_to_add=%f", seconds_to_add);
   ;
 }
-
-
 
 double Platform_GetUniversalTimeSeconds() {
   ULONGLONG current_ms = GetTickCount64();
@@ -507,8 +481,6 @@ double Platform_GetUniversalTimeSeconds() {
   ULONGLONG elapsed_ms = current_ms - g_timer_start_ms;
   return (double)elapsed_ms / 1000.0;
 }
-
-
 
 FontHandle Platform_CreateFont(int size, const char *face_name) {
   int h = -size;
@@ -576,15 +548,11 @@ FontHandle Platform_CreateFont(int size, const char *face_name) {
   return FH_FROM_HFONT(hf);
 }
 
-
-
 void Platform_DestroyFont(FontHandle font) {
   if (FH_TO_HFONT(font)) {
     DeleteObject(FH_TO_HFONT(font));
   }
 }
-
-
 
 void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
                              int *outWidth, int *outHeight) {
@@ -618,14 +586,6 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
   *outWidth = width;
   *outHeight = height;
 }
-
-
-
-
-
-
-
-
 
 bool Platform_FocusWindow(const char *title) {
   if (!title || !title[0]) {
@@ -711,10 +671,6 @@ bool Platform_FocusWindow(const char *title) {
   return true;
 }
 
-
-
-
-
 bool Platform_CloseActiveWindow(void) {
   HWND hwnd = GetForegroundWindow();
   if (!hwnd || !IsWindow(hwnd))
@@ -729,10 +685,6 @@ bool Platform_CloseActiveWindow(void) {
   PostMessageA(hwnd, WM_CLOSE, 0, 0);
   return true;
 }
-
-
-
-
 
 bool Platform_ToggleFullscreenActive(void) {
   HWND hwnd = win32_foreground_target();
@@ -772,14 +724,6 @@ bool Platform_ToggleFullscreenActive(void) {
   return true;
 }
 
-
-
-
-
-
-
-
-
 #define WIN32_FOCUS_LEFT 0
 
 #define WIN32_FOCUS_RIGHT 1
@@ -787,10 +731,6 @@ bool Platform_ToggleFullscreenActive(void) {
 #define WIN32_FOCUS_UP 2
 
 #define WIN32_FOCUS_DOWN 3
-
-
-
-
 
 #define WIN32_MON_LEFT 0
 
@@ -800,40 +740,34 @@ bool Platform_ToggleFullscreenActive(void) {
 
 #define WIN32_MON_DOWN 3
 
-
-
-
-
 bool Platform_MoveActiveWindowToMonitor(bool right) {
   return win32_move_active_window_direction(right ? WIN32_MON_RIGHT
                                                   : WIN32_MON_LEFT);
 }
 
-
-
 bool Platform_MoveActiveWindowLeft(void) {
   return win32_move_active_window_direction(WIN32_MON_LEFT);
 }
-
-
 
 bool Platform_MoveActiveWindowRight(void) {
   return win32_move_active_window_direction(WIN32_MON_RIGHT);
 }
 
+bool Platform_FocusWindowLeft(void) {
+  return win32_focus_direction(WIN32_FOCUS_LEFT);
+}
 
+bool Platform_FocusWindowRight(void) {
+  return win32_focus_direction(WIN32_FOCUS_RIGHT);
+}
 
+bool Platform_FocusWindowUp(void) {
+  return win32_focus_direction(WIN32_FOCUS_UP);
+}
 
-
-bool Platform_FocusWindowLeft(void) { return win32_focus_direction(WIN32_FOCUS_LEFT); }
-
-bool Platform_FocusWindowRight(void) { return win32_focus_direction(WIN32_FOCUS_RIGHT); }
-
-bool Platform_FocusWindowUp(void) { return win32_focus_direction(WIN32_FOCUS_UP); }
-
-bool Platform_FocusWindowDown(void) { return win32_focus_direction(WIN32_FOCUS_DOWN); }
-
-
+bool Platform_FocusWindowDown(void) {
+  return win32_focus_direction(WIN32_FOCUS_DOWN);
+}
 
 bool Platform_MoveActiveWindowUp(void) {
   return win32_move_active_window_direction(WIN32_MON_UP);
@@ -842,8 +776,6 @@ bool Platform_MoveActiveWindowUp(void) {
 bool Platform_MoveActiveWindowDown(void) {
   return win32_move_active_window_direction(WIN32_MON_DOWN);
 }
-
-
 
 bool Platform_MinimizeActiveWindow(void) {
   HWND hwnd = win32_foreground_target();
@@ -870,8 +802,6 @@ bool Platform_MinimizeActiveWindow(void) {
   return false;
 }
 
-
-
 char *Platform_GetActiveWindowTitle(void) {
   static char fgTitle[256];
   HWND hForeground = GetForegroundWindow();
@@ -883,8 +813,6 @@ char *Platform_GetActiveWindowTitle(void) {
   }
   return fgTitle;
 }
-
-
 
 char *Platform_GetActiveWindowAppId(void) {
   static char appId[256];
@@ -913,24 +841,6 @@ char *Platform_GetActiveWindowAppId(void) {
   CloseHandle(h);
   return appId;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 char *Platform_GetIconPath(char *app_path) {
   if (!app_path || !app_path[0]) {
@@ -999,14 +909,6 @@ int Platform_GetIconSize(char *icon_path) {
   return s;
 }
 
-
-
-
-
-
-
-
-
 PlWindowList Platform_GetWindowTitles() {
   PlWindowList titles = {0}, names = {0};
   win32_collect_pair(&titles, &names);
@@ -1027,10 +929,6 @@ PlWindowList Platform_GetWindowNames() {
   return names;
 }
 
-
-
-
-
 bool Platform_TryAcquireSingleInstance(void) {
   g_singleton_mtx = CreateMutexA(NULL, TRUE, "skald_single_instance_mutex");
   if (g_singleton_mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
@@ -1042,31 +940,13 @@ bool Platform_TryAcquireSingleInstance(void) {
   return true;
 }
 
-
-
-
-
-
-
-
-
 bool Platform_InitDisplaySafe(void) { return true; }
 
-
-
 void Platform_CleanupDisplaySafe(void) {}
-
-
 
 void Platform_InitMainThreadContext(void) {
   s_main_thread_id = GetCurrentThreadId();
 }
-
-
-
-
-
-
 
 void Platform_FixWorkingDirectory(void) {
   char buf[MAX_PATH];
@@ -1107,8 +987,6 @@ void Platform_FixWorkingDirectory(void) {
   log_info("Platform_FixWorkingDirectory cwd='%s'", cwd);
 }
 
-
-
 void Platform_CleanupPlatformResources(void) {
 
   {
@@ -1116,8 +994,6 @@ void Platform_CleanupPlatformResources(void) {
     win32_default_apps_free_cache();
   }
 }
-
-
 
 PlColor Platform_GetPixelColor(int x, int y) {
   PlColor out = {0, 0, 0};
@@ -1133,8 +1009,6 @@ PlColor Platform_GetPixelColor(int x, int y) {
   out.b = GetBValue(c);
   return out;
 }
-
-
 
 bool Platform_MoveToPos(int x, int y) {
   int vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
@@ -1169,8 +1043,6 @@ bool Platform_MoveToPos(int x, int y) {
   return ok;
 }
 
-
-
 bool Platform_ClickButton(int button) {
   DWORD down_flag, up_flag;
   if (button == 1) {
@@ -1190,8 +1062,6 @@ bool Platform_ClickButton(int button) {
   return ok;
 }
 
-
-
 bool Platform_Click(void) {
   INPUT inputs[2] = {0};
 
@@ -1206,10 +1076,6 @@ bool Platform_Click(void) {
   log_info("Platform_Click");
   return ok;
 }
-
-
-
-
 
 bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
   if (out_x)
@@ -1237,8 +1103,6 @@ bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
   return true;
 }
 
-
-
 bool Platform_MouseButtonDown(int button, bool down) {
   DWORD flag = win32_button_flag(button, down);
   if (flag == 0)
@@ -1251,8 +1115,6 @@ bool Platform_MouseButtonDown(int button, bool down) {
   return ok;
 }
 
-
-
 bool Platform_MouseScroll(int notches) {
   if (notches == 0)
     return true;
@@ -1264,13 +1126,9 @@ bool Platform_MouseScroll(int notches) {
   return ok;
 }
 
-
-
 char *Platform_GetWorkingDir() {
   return Platform_RunTerminalCommand("cd", false);
 }
-
-
 
 void Platform_InitDataFolder() {
   char dir_path[200];
@@ -1278,12 +1136,6 @@ void Platform_InitDataFolder() {
            Platform_GetRealHome());
   Platform_MkdirIfNotExists(dir_path);
 }
-
-
-
-
-
-
 
 bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
                                size_t out_len) {
@@ -1309,16 +1161,10 @@ bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
   return true;
 }
 
-
-
-
-
 void Platform_PrewarmBackgroundPixmap(void) {
   win32_bg_image_purge();
   win32_bg_image_prewarm(PROMPT_W, PROMPT_H);
 }
-
-
 
 int Platform_InitializeTrayIcon() {
   HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -1344,8 +1190,6 @@ int Platform_InitializeTrayIcon() {
   log_info("Platform_InitializeTrayIcon completed");
   return 0;
 }
-
-
 
 void Platform_InitUI() {
   struct GdiplusStartupInput gdiplusStartupInput;
@@ -1410,8 +1254,6 @@ void Platform_InitUI() {
   log_info("Platform_InitUI completed");
 }
 
-
-
 void Platform_ShutdownUI() {
   {
     extern void win32_img_cache_free_all(void);
@@ -1431,8 +1273,6 @@ void Platform_ShutdownUI() {
   log_info("Platform_ShutdownUI completed");
 }
 
-
-
 static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
   memset(buf, 0, sizeof(*buf));
   buf->limit = limit;
@@ -1444,8 +1284,6 @@ static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
     }
   }
 }
-
-
 
 int Platform_http_perform(const char *url, const char *method,
                           const char *headers, const char *body,
@@ -1615,8 +1453,6 @@ redirect_loop: {
   return status_code;
 }
 
-
-
 char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
                               size_t *out_len) {
   if (!url || !url[0]) {
@@ -1639,13 +1475,9 @@ char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
   return buf.buf;
 }
 
-
-
 char *Platform_HttpGet(const char *url) {
   return Platform_HttpGetLimited(url, HTTP_DEFAULT_LIMIT, NULL);
 }
-
-
 
 char *Platform_HttpPost(const char *url, const char *content_type,
                         const char *body) {
@@ -1663,8 +1495,6 @@ char *Platform_HttpPost(const char *url, const char *content_type,
     buf.buf = (char *)calloc(1, 1);
   return buf.buf;
 }
-
-
 
 bool Platform_HttpDownload(const char *url, const char *save_path) {
   if (!url || !url[0] || !save_path || !save_path[0])
@@ -1693,15 +1523,7 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   return true;
 }
 
-
-
-
-
-
-
 bool Platform_FontInitalized(FontHandle font) { return font.hfont != NULL; }
-
-
 
 PlTimer Platform_StartTimer(void) {
   PlTimer t = {0};
@@ -1710,8 +1532,6 @@ PlTimer Platform_StartTimer(void) {
   t.ticks = (uint64_t)c.QuadPart;
   return t;
 }
-
-
 
 double Platform_EndTimer(PlTimer t) {
   LARGE_INTEGER now;
@@ -1726,12 +1546,6 @@ double Platform_EndTimer(PlTimer t) {
     return 0.0;
   return (double)(end - start) * 1000.0 / (double)freq.QuadPart;
 }
-
-
-
-
-
-
 
 void *Platform_ThreadCreate(void *(*fn)(void *), void *arg) {
   if (!fn)
@@ -1749,8 +1563,6 @@ void *Platform_ThreadCreate(void *(*fn)(void *), void *arg) {
   return (void *)h;
 }
 
-
-
 void Platform_ThreadJoin(void *thread) {
   if (!thread) {
     return;
@@ -1765,8 +1577,6 @@ void Platform_ThreadJoin(void *thread) {
   CloseHandle((HANDLE)thread);
 }
 
-
-
 void *Platform_MutexCreate(void) {
   CRITICAL_SECTION *cs = malloc(sizeof(*cs));
   if (!cs)
@@ -1774,8 +1584,6 @@ void *Platform_MutexCreate(void) {
   InitializeCriticalSection(cs);
   return cs;
 }
-
-
 
 void Platform_MutexDestroy(void *mutex) {
   if (!mutex) {
@@ -1786,16 +1594,12 @@ void Platform_MutexDestroy(void *mutex) {
   free(cs);
 }
 
-
-
 void Platform_MutexLock(void *mutex) {
   if (!mutex) {
     return;
   }
   EnterCriticalSection((CRITICAL_SECTION *)mutex);
 }
-
-
 
 void Platform_MutexUnlock(void *mutex) {
   if (!mutex) {
@@ -1804,25 +1608,17 @@ void Platform_MutexUnlock(void *mutex) {
   LeaveCriticalSection((CRITICAL_SECTION *)mutex);
 }
 
-
-
 bool Platform_MutexTryLock(void *mutex) {
   if (!mutex)
     return false;
   return TryEnterCriticalSection((CRITICAL_SECTION *)mutex) != 0;
 }
 
-
-
-
-
 void Platform_InvalidatePrompt(void) {
   HWND hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hwnd)
     InvalidateRect(hwnd, NULL, FALSE);
 }
-
-
 
 void Platform_EmitKey(int vk_code, int down) {
   log_warn("Platform_EmitKey win32 vk=%d down=%d", vk_code, down);
@@ -1840,4 +1636,3 @@ void Platform_EmitKey(int vk_code, int down) {
               down, (unsigned)sent, GetLastError());
   }
 }
-

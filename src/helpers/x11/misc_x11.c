@@ -178,7 +178,7 @@ bool x11_cmd_exists(const char *cmd) {
 }
 
 bool x11_launch_browser(const char *browser_path, const char *url,
-                               bool new_window) {
+                        bool new_window) {
   if (!browser_path || !browser_path[0] || !url || !url[0])
     return false;
   char command[2048];
@@ -220,4 +220,3 @@ bool x11_launch_browser(const char *browser_path, const char *url,
   }
   return Platform_RunTerminalCommand(command, false);
 }
-

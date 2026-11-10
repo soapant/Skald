@@ -80,9 +80,7 @@ bool Platform_DrawTextLine(int x, int y, const char *text, int len,
                            unsigned long color, int fontsize) {
   return true;
 }
-void Item_GetColors(PlGetItemColorsSpec spec) {
-  (void)spec;
-}
+void Item_GetColors(PlGetItemColorsSpec spec) { (void)spec; }
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   if (line_h)
     *line_h = 16;

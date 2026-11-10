@@ -38,9 +38,9 @@ int x11_msg_find_key_locked(const char *key);
 void x11_msg_remove_indefinite_locked(Display *dpy);
 int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
                       MsgLine *out, int maxLines);
-void x11_msg_present(Display *dpy, const char *message, int x, int y,
-                     int winW, int winH, double timeout, ColorRef color,
-                     bool no_bg, void (*render)(void), const char *name);
+void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
+                     int winH, double timeout, ColorRef color, bool no_bg,
+                     void (*render)(void), const char *name);
 void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
                            int centerX, int centerY, int winW, int winH,
                            ColorRef color, bool no_bg);
