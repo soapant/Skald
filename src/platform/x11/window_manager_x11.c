@@ -405,7 +405,6 @@ int WindowManager_RunLinux(WindowManager *wm) {
       x11_clear_suppress();
       remap_reset();
       Platform_InputState_Clear();
-      x11_sync_held_from_phys();
       for (int i = 0; i < x11_keyboard_count_get(); i++) {
         if (!x11_device_grabbed_get(i)) {
           struct input_event drain_ev;

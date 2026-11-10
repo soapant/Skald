@@ -180,9 +180,6 @@ static void x11_release_rejected_devices(void) {
   g_x11_rejected_count = 0;
 }
 
-static bool g_x11_ctrl_held = false;
-static bool g_x11_alt_held = false;
-static bool g_x11_shift_held = false;
 
 int x11_keyboard_count_get(void) { return g_x11_keyboard_count; }
 int x11_mouse_count_get(void) { return g_x11_mouse_count; }
@@ -194,11 +191,6 @@ void x11_device_grabbed_set(int i, bool v) { if (i >= 0 && i < X11_MAX_KEYBOARDS
 bool x11_mouse_grabbed_get(int i) { return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mouse_grabbed[i] : false; }
 int x11_uinput_fd_get(void) { return g_x11_uinput_fd; }
 void x11_uinput_fd_set(int fd) { g_x11_uinput_fd = fd; }
-
-bool x11_ctrl_held(void) { return g_x11_ctrl_held; }
-bool x11_alt_held(void) { return g_x11_alt_held; }
-bool x11_shift_held(void) { return g_x11_shift_held; }
-
 
 static bool x11_is_traced(void) {
   FILE *f = fopen("/proc/self/status", "r");
@@ -781,13 +773,6 @@ int x11_vk_to_linux_key(int vk) {
   return 0;
 }
 
-void x11_sync_held_from_phys(void) {
-  int m = remap_current_mods();
-  g_x11_ctrl_held = (m & HOTKEY_MOD_CTRL) != 0;
-  g_x11_alt_held = (m & HOTKEY_MOD_ALT) != 0;
-  g_x11_shift_held = (m & HOTKEY_MOD_SHIFT) != 0;
-}
-
 void x11_clear_suppress(void) {
   for (int i = 0; i <= KEY_MAX; i++) {
     g_x11_suppress_release[i] = false;
@@ -824,7 +809,6 @@ void x11_set_suppress(int linux_code, bool v) {
 
 bool x11_handle_global_key(int key_code, int value) {
   remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
-  x11_sync_held_from_phys();
   if (value == 0) {
     hotkey_key_up(ConvertLinuxKeyToWindowsVK(key_code));
     return false;
@@ -871,8 +855,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     return false;
   }
   if (remap_should_swallow_linux_key(code, val)) {
-    x11_sync_held_from_phys();
-    if (val == 1)
+      if (val == 1)
       x11_set_suppress(code, true);
     else if (val == 0)
       x11_set_suppress(code, false);
@@ -884,8 +867,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     hotkey_key_up(ConvertLinuxKeyToWindowsVK(code));
   if (val != 2) {
     remap_update_phys(ConvertLinuxKeyToWindowsVK(code), val);
-    x11_sync_held_from_phys();
-  }
+    }
   {
     PlatformKeyEvent gev;
     gev.vk = ConvertLinuxKeyToWindowsVK(code);

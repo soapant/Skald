@@ -20,9 +20,6 @@ void x11_device_grabbed_set(int i, bool v);
 bool x11_mouse_grabbed_get(int i);
 int x11_uinput_fd_get(void);
 void x11_uinput_fd_set(int fd);
-bool x11_ctrl_held(void);
-bool x11_alt_held(void);
-bool x11_shift_held(void);
 
 struct input_event;
 
@@ -34,7 +31,6 @@ typedef struct {
   char path[256];
 } X11Keyboard;
 
-void x11_sync_held_from_phys(void);
 void x11_clear_suppress(void);
 bool x11_is_suppressed(int linux_code);
 void x11_set_suppress(int linux_code, bool v);
