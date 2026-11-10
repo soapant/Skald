@@ -176,8 +176,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   win32_get_draw_context(&hdc);
   if (!hdc)
     return false;
-  extern PromptState *win32_get_prompt_state(void);
-  PromptState *state = win32_get_prompt_state();
+  PromptState *state = PromptPopup_GetTopPromptState();
   EditboxPlace place;
   Editbox_ResolvePlace(spec->buffer, spec->x, spec->y, spec->w, spec->h,
                        spec->fontsize, state, &place);

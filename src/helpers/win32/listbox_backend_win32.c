@@ -66,8 +66,5 @@ PromptState *ListboxBackend_PromptState(const ListBoxInfo *lb) {
   PromptState *ps = PromptPopup_FindState(lb);
   if (ps)
     return ps;
-  {
-    extern PromptState *win32_get_prompt_state(void);
-    return win32_get_prompt_state();
-  }
+  return PromptPopup_GetTopPromptState();
 }

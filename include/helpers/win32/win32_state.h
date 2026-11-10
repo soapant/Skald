@@ -10,8 +10,7 @@ bool win32_is_main_thread(void);
 WindowHandle win32_tray_window(void);
 bool win32_message_popup_any_open(void);
 
-PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
-PromptState *win32_get_prompt_state(void);
+PromptState *win32_prompt_state_from_hwnd(HWND hwnd);
 void win32_release_draw_cache(void);
 
 void win32_set_draw_context(HDC hdc);
