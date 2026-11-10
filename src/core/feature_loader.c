@@ -173,6 +173,54 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
   g_retired[g_retired_count++] = r;
 }
 
+typedef struct {
+  LibHandle handle;
+  char uniq[512];
+  char owner[512];
+} DeferredUnload;
+
+static DeferredUnload g_defer_unloads[DEFERRED_INIT_MAX];
+static int g_defer_unload_count = 0;
+
+static void feature_mutex_init(void);
+static void *g_feature_mutex;
+
+void FeatureLoader_DrainRetiredUnloads(void) {
+  if (g_defer_unload_count == 0)
+    return;
+  feature_mutex_init();
+  Platform_MutexLock(g_feature_mutex);
+  for (int i = 0; i < g_defer_unload_count; i++) {
+    log_info("draining deferred unload of retired lib %s",
+             g_defer_unloads[i].owner);
+    Platform_UnloadLibrary(g_defer_unloads[i].handle);
+  }
+  g_defer_unload_count = 0;
+  Platform_MutexUnlock(g_feature_mutex);
+}
+
+static void defer_unload(LibHandle handle, const char *uniq,
+                         const char *owner) {
+  if (!handle)
+    return;
+  if (g_defer_unload_count >= DEFERRED_INIT_MAX) {
+    log_error("deferred unload list full, unloading %s inline",
+              owner ? owner : "?");
+    Platform_UnloadLibrary(handle);
+    return;
+  }
+  if (uniq && uniq[0])
+    remove(uniq);
+  DeferredUnload *u = &g_defer_unloads[g_defer_unload_count++];
+  u->handle = handle;
+  u->uniq[0] = '\0';
+  u->owner[0] = '\0';
+  if (uniq && uniq[0])
+    snprintf(u->uniq, sizeof(u->uniq), "%s", uniq);
+  if (owner && owner[0])
+    snprintf(u->owner, sizeof(u->owner), "%s", owner);
+}
+
 static void sweep_retired_libs(void) {
   WindowManager *wm = WindowManager_Get();
   Checkbox_ResetAll();
@@ -208,16 +256,13 @@ static void sweep_retired_libs(void) {
       EventBus_PurgeOwner(g_retired[i].owner, NULL);
       Platform_HoverWidget_PurgeOwner(g_retired[i].owner, NULL);
       Platform_MessagePopup_PurgeOwner(g_retired[i].owner, NULL);
-      log_info("unloading retired lib %s", g_retired[i].owner);
-      Platform_UnloadLibrary(g_retired[i].handle);
-      if (g_retired[i].uniq[0])
-        remove(g_retired[i].uniq);
+      log_info("deferring unload of retired lib %s", g_retired[i].owner);
+      defer_unload(g_retired[i].handle, g_retired[i].uniq, g_retired[i].owner);
     }
   }
   g_retired_count = n;
 }
 
-static void *g_feature_mutex = NULL;
 static void feature_mutex_init(void) {
   if (!g_feature_mutex)
     g_feature_mutex = Platform_MutexCreate();

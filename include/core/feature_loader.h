@@ -20,6 +20,7 @@ void FeatureLoader_Lock(void);
 bool FeatureLoader_TryLock(void);
 void FeatureLoader_Unlock(void);
 void FeatureLoader_SweepRetired(void);
+void FeatureLoader_DrainRetiredUnloads(void);
 void DeferredInit_Register(void (*cb)(void));
 void DeferredInit_RunAll(void);
 
