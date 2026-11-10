@@ -1019,7 +1019,8 @@ int main(int argc, char **argv) {
     if (do_release)
       nob_cmd_append(&cmd, "-O3");
 #if defined(_WIN32)
-    nob_cmd_append(&cmd, "-mwindows");
+    if (do_release)
+      nob_cmd_append(&cmd, "-mwindows");
     nob_cmd_append(&cmd, "-Wl,--export-all-symbols",
                    "-Wl,--out-implib,build/main.lib.a");
 #endif
