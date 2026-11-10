@@ -3,6 +3,7 @@
 #include "core/types/prompt.h"
 #include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
+#include "platform/ui.h"
 #include "platform/draw.h"
 #include "config.h"
 #include "platform/platform.h"
@@ -71,6 +72,60 @@ TEST(filter_handles_double_spaces) {
 }
 
 
+
+TEST(ui_set_selection_unchanged_index_keeps_hscroll) {
+  static ListBoxInfo lb;
+  ListBoxInfo_Init(&lb);
+  const char *items[] = {"apple", "banana"};
+  PopulateListBox(&lb, "", items, 2, NULL);
+  lb.text_hscroll = 120;
+  lb.selected_index = 1;
+  UI_SetSelection(&lb, 1);
+  ASSERT_EQ_INT(lb.text_hscroll, 120);
+  ASSERT_EQ_INT(lb.selected_index, 1);
+}
+
+TEST(ui_set_selection_new_index_resets_hscroll) {
+  static ListBoxInfo lb;
+  ListBoxInfo_Init(&lb);
+  const char *items[] = {"apple", "banana"};
+  PopulateListBox(&lb, "", items, 2, NULL);
+  lb.text_hscroll = 120;
+  lb.selected_index = 1;
+  UI_SetSelection(&lb, 0);
+  ASSERT_EQ_INT(lb.text_hscroll, 0);
+  ASSERT_EQ_INT(lb.selected_index, 0);
+}
+
+TEST(ui_navigate_to_same_index_keeps_hscroll) {
+  static ListBoxInfo lb;
+  ListBoxInfo_Init(&lb);
+  const char *items[] = {"apple", "banana"};
+  PopulateListBox(&lb, "", items, 2, NULL);
+  lb.selected_index = 1;
+  lb.text_hscroll = 90;
+  UI_NavigateTo(&lb, 1);
+  ASSERT_EQ_INT(lb.text_hscroll, 90);
+  ASSERT_EQ_INT(lb.selected_index, 1);
+}
+
+TEST(ui_navigate_to_new_index_resets_hscroll) {
+  static ListBoxInfo lb;
+  ListBoxInfo_Init(&lb);
+  const char *items[] = {"apple", "banana"};
+  PopulateListBox(&lb, "", items, 2, NULL);
+  lb.selected_index = 1;
+  lb.text_hscroll = 90;
+  UI_NavigateTo(&lb, 0);
+  ASSERT_EQ_INT(lb.text_hscroll, 0);
+  ASSERT_EQ_INT(lb.selected_index, 0);
+}
+
+TEST(listbox_info_init_sets_hscroll_zero) {
+  static ListBoxInfo lb;
+  ListBoxInfo_Init(&lb);
+  ASSERT_EQ_INT(lb.text_hscroll, 0);
+}
 int main(void) {
   RUN(populate_normal_mode_selects_first);
   RUN(populate_insert_mode_empty_filter_no_selection);
@@ -78,5 +133,10 @@ int main(void) {
   RUN(populate_no_match);
   RUN(populate_empty_items);
   RUN(filter_handles_double_spaces);
+  RUN(ui_set_selection_unchanged_index_keeps_hscroll);
+  RUN(ui_set_selection_new_index_resets_hscroll);
+  RUN(ui_navigate_to_same_index_keeps_hscroll);
+  RUN(ui_navigate_to_new_index_resets_hscroll);
+  RUN(listbox_info_init_sets_hscroll_zero);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

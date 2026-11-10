@@ -145,8 +145,6 @@ bool Platform_ResolveDataPath(void *caller, const char *name, char *out,
                               size_t out_len);
 bool Platform_ResolveAssetPath(void *caller, const char *name, char *out,
                                size_t out_len);
-bool Platform_WriteTempFile(const char *name, const void *data, size_t len,
-                            char *out_path, size_t out_len);
 void Platform_ShutdownUI(void);
 char *Platform_RunTerminalCommand(char *command, bool open_terminal);
 #define PLATFORM_RUN_PRIO_NORMAL 0
@@ -222,8 +220,6 @@ char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
 bool Platform_HttpDownload(const char *url, const char *save_path);
 char *Platform_HttpPost(const char *url, const char *content_type,
                         const char *body);
-void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
-                           void *userdata);
 
 void *Platform_ThreadCreate(void *(*fn)(void *), void *arg);
 void Platform_ThreadJoin(void *thread);
@@ -252,6 +248,5 @@ typedef struct {
   int listbox_item_height;
 } PlMetrics;
 
-PlMetrics *Platform_GetMetrics(void);
 void Platform_InvalidatePrompt(void);
 #endif

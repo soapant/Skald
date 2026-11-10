@@ -1741,36 +1741,6 @@ bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
   return true;
 }
 
-bool Platform_WriteTempFile(const char *name, const void *data, size_t len,
-                            char *out_path, size_t out_len) {
-
-  if (!name || !name[0] || !out_path || out_len == 0)
-    return false;
-  if (!data && len > 0)
-    return false;
-  for (const char *p = name; *p; p++) {
-    if (*p == '/' || *p == '\\')
-      return false;
-  }
-  if (strstr(name, ".."))
-    return false;
-  const char *dir = getenv("TMPDIR");
-  if (!dir || !dir[0])
-    dir = "/tmp";
-  snprintf(out_path, out_len, "%s/%s", dir, name);
-  out_path[out_len - 1] = '\0';
-  FILE *f = fopen(out_path, "wb");
-  if (!f)
-    return false;
-  bool ok = true;
-  if (len > 0 && fwrite(data, 1, len, f) != len)
-    ok = false;
-  if (fclose(f) != 0)
-    ok = false;
-  if (!ok)
-    remove(out_path);
-  return ok;
-}
 
 static size_t http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
   HttpBuf *b = (HttpBuf *)userdata;
@@ -1958,55 +1928,12 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   return true;
 }
 
-typedef struct {
-  char *url;
-  PlatformHttpCallback cb;
-  void *userdata;
-  char owner[OWNER_PATH_MAX];
-} HttpAsyncJob;
-
-static void *Platform_http_async_worker(void *arg) {
-  HttpAsyncJob *job = (HttpAsyncJob *)arg;
-  if (!job)
-    return NULL;
-
-  char *body = Platform_HttpGet(job->url);
-  if (job->cb) {
-    job->cb(body ? body : "", body != NULL, job->userdata);
-  }
-  free(body);
-  free(job->url);
-  ThreadRegistry_Finish(job);
-  free(job);
-  return NULL;
-}
-
-void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
-                           void *userdata) {
-  if (!url || !url[0] || !cb)
-    return;
-  HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
-  if (!job)
-    return;
-  job->url = strdup(url);
-  job->cb = cb;
-  job->userdata = userdata;
-  if (!job->url) {
-    free(job);
-    return;
-  }
-  job->owner[0] = '\0';
-  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
-  ThreadRegistry_Add(job, job->owner);
+bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
   pthread_t t;
-  if (pthread_create(&t, NULL, Platform_http_async_worker, job) != 0) {
-    log_warn("http async thread create failed");
-    ThreadRegistry_Finish(job);
-    free(job->url);
-    free(job);
-    return;
-  }
+  if (pthread_create(&t, NULL, (void *(*)(void *))fn, ud) != 0)
+    return false;
   pthread_detach(t);
+  return true;
 }
 
 bool Platform_FontInitalized(FontHandle font) { return font.xfont != NULL; }
@@ -2090,19 +2017,6 @@ bool Platform_MutexTryLock(void *mutex) {
   return pthread_mutex_trylock((pthread_mutex_t *)mutex) == 0;
 }
 
-PlMetrics *Platform_GetMetrics(void) {
-  static PlMetrics m = {0};
-  static int init = 0;
-  if (!init) {
-    m.edit_cursor_width = 0;
-    m.edit_cursor_height = PromptCaretHeight();
-    m.editbox_padding = PROMPT_EDIT_INSET;
-    m.listbox_padding = PromptListBottomMargin();
-    m.listbox_item_height = PromptRowHeight();
-    init = 1;
-  }
-  return &m;
-}
 
 void Platform_InvalidatePrompt(void) {
   Display *dpy = get_display();

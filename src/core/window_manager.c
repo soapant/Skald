@@ -14,6 +14,7 @@
 #include "platform/input_state.h"
 #include "deps/stb_ds.h"
 #include "helpers/helpers_owner.h"
+#include "helpers/helpers_ui.h"
 #include "core/feature_loader.h"
 
 static WindowManager *g_window_manager = NULL;
@@ -175,7 +176,7 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   if (ctx)
     ctx->window.editbox_placed = false;
   EventBus_Trigger(EVENT_PROMPT_OPEN);
-  char *res = Platform_PromptUser(wm, spec);
+  char *res = PromptUserRun(wm, spec);
   return res;
 }
 

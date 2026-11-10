@@ -90,14 +90,12 @@ typedef struct {
 } PlMeasureTextWidthSpec;
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec);
-void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec);
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec);
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec);
 bool Platform_DrawTextRaw(PlDrawTextRawSpec spec);
 void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec);
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec);
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
-void Platform_GetItemColors(PlGetItemColorsSpec spec);
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetTextLineHeight(int fontsize);

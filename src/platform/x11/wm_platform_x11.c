@@ -33,6 +33,14 @@ bool Platform_WM_InitDisplay(WindowManager *wm) {
 
 int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunLinux(wm); }
 
+void Prompt_FlushDisplay(WindowManager *wm) {
+  Display *dpy = (wm && wm->display) ? wm->display : get_display();
+  if (dpy) {
+    XFlush(dpy);
+    XSync(dpy, False);
+  }
+}
+
 void Platform_WM_Quit(WindowManager *wm) { WindowManager_QuitLinux(wm); }
 
 void Platform_WM_ProcessEvents(WindowManager *wm) {
@@ -152,96 +160,6 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     *oh = h;
 }
 
-char *Platform_PromptUser(WindowManager *wm, const PromptSpec *spec) {
-  SkaldContext *_ctx = SkaldContext_Get();
-  if (_ctx)
-    _ctx->window.subwindow.created = false;
-  log_info("Platform_PromptUser started wm=%p spec=%p", wm, spec);
-  if (!wm || !spec)
-    return NULL;
-  if (spec->subwindow) {
-    SkaldContext *_c = SkaldContext_Get();
-    if (_c && _c->window.subwindow.in_enter) {
-      _c->window.subwindow.pending = true;
-      _c->window.subwindow.pending_subwindow = *spec;
-      _c->window.subwindow.pending_subwindow.subwindow = false;
-      _c->window.subwindow.created = false;
-      return NULL;
-    }
-    PromptSpec heap_spec = *spec;
-    heap_spec.subwindow = false;
-    (void)PromptPopup_Create(wm, &heap_spec);
-    return NULL;
-  }
-  Popup *popup = PromptPopup_Create(wm, spec);
-  if (!popup)
-    return NULL;
-  Display *dpy = wm->display;
-  long long last_tick = 0;
-  int last_mx = 0, last_my = 0;
-  int last_btn = -1;
-  while (wm->running) {
-    bool _still_open = false;
-    for (int _i = 0; _i < wm->popup_count; _i++) {
-      if (wm->popups[_i] == popup) {
-        _still_open = true;
-        break;
-      }
-    }
-    if (!_still_open)
-      break;
-    Platform_WM_ProcessEvents(wm);
-    bool mouse_changed = false;
-    int mx = 0, my = 0;
-    if (Platform_GetMousePos(&mx, &my)) {
-      ListBox_PublishMousePos(mx, my);
-      int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
-      if (mx != last_mx || my != last_my || btn != last_btn) {
-        last_mx = mx;
-        last_my = my;
-        last_btn = btn;
-        mouse_changed = true;
-      }
-    }
-    Popup *mouse_top = WindowManager_GetTopPopup(wm);
-    if (mouse_changed && mouse_top && mouse_top->vtable &&
-        mouse_top->vtable->on_render) {
-      mouse_top->vtable->on_render(mouse_top);
-      if (dpy)
-        XFlush(dpy);
-    }
-    long long now = Platform_GetWallClockMs();
-    if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
-      last_tick = now;
-      Popup *top = WindowManager_GetTopPopup(wm);
-      if (top && top->vtable && top->vtable->on_render) {
-        top->vtable->on_render(top);
-      }
-      if (dpy)
-        XFlush(dpy);
-    }
-  }
-  {
-    bool _still_open = false;
-    for (int _i = 0; _i < wm->popup_count; _i++) {
-      if (wm->popups[_i] == popup) {
-        _still_open = true;
-        break;
-      }
-    }
-    if (_still_open) {
-      SkaldContext *_ctx2 = SkaldContext_Get();
-      if (!_ctx2 || !_ctx2->window.subwindow.created)
-        WindowManager_PopPopup(wm);
-    }
-  }
-  if (dpy) {
-    XFlush(dpy);
-    XSync(dpy, False);
-  }
-  SkaldContext *_c = SkaldContext_Get();
-  return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
-}
 
 void Platform_ProcessPendingSubwindow(void) {
   SkaldContext *_c = SkaldContext_Get();

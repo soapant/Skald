@@ -538,29 +538,13 @@ void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd,
   }
 }
 
-void Platform_GetItemColors(PlGetItemColorsSpec spec) {
-  unsigned long col_text = rgb_to_hex(COLOR_TEXT);
-  float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
-                             : (float)spec.idx / 10.0f;
-  unsigned long col_rainbow = rgb_to_hex(GetRainbowColor(t, 0.55f, 1.0f));
-  unsigned long n = col_text, b = col_text, p = col_rainbow;
-  if (RainbowText) {
-    n = b = p = col_rainbow;
-  }
-  if (spec.num_color)
-    *spec.num_color = n;
-  if (spec.body_color)
-    *spec.body_color = b;
-  if (spec.plain_color)
-    *spec.plain_color = p;
-}
 
 void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font,
                            ListBoxInfo *lb, int idx, int y, int text_x,
                            const char *icon_path) {
   unsigned long ncol, bcol, pcol;
-  Platform_GetItemColors((PlGetItemColorsSpec){.idx = idx,
+  Item_GetColors((PlGetItemColorsSpec){.idx = idx,
                                                .count = lb->item_count,
                                                .num_color = &ncol,
                                                .body_color = &bcol,
@@ -892,20 +876,6 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   return true;
 }
 
-void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
-  if (!EnableBorders || spec.width <= 0)
-    return;
-  Platform_DrawRectRaw((PlDrawRectRawSpec){.x = 0,
-                                           .y = spec.y,
-                                           .w = spec.width,
-                                           .h = PROMPT_SEP_W,
-                                           .color = rgb_to_hex(COLOR_BORDER),
-                                           .radius = 0,
-                                           .rounded = false,
-                                           .opaque = true,
-                                           .thickness = 1,
-                                           .filled = true});
-}
 
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap) {
@@ -949,7 +919,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
 
   int itemH = x11_font_row_height_of(font);
   int y0 = x11_font_list_top_of(font);
-  Platform_DrawPromptSeparator(
+  DrawPromptSeparator(
       (PlDrawPromptSeparatorSpec){.y = y0, .width = state->width});
   int yOffset = PROMPT_LIST_BOTTOM_TITLE;
   int visible = (state->height - y0 - yOffset) / itemH;
@@ -986,7 +956,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
   }
 
   if (PromptListBottomMargin() > 0) {
-    Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
+    DrawPromptSeparator((PlDrawPromptSeparatorSpec){
         .y = state->height - PROMPT_LIST_BOTTOM_TITLE, .width = state->width});
   }
 
