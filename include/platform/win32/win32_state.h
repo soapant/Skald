@@ -6,9 +6,9 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-extern uint32_t g_win32_main_thread_id;
-extern WindowHandle g_win32_tray_wnd;
-extern WindowHandle g_win32_message_wnd;
+bool Platform_IsMainThread(void);
+WindowHandle Platform_TrayWindow(void);
+bool MessagePopup_AnyOpen(void);
 
 PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
 PromptState *Platform_GetWin32PromptState(void);
