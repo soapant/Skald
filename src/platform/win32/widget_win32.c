@@ -5,6 +5,7 @@
 #include "core/types/color.h"
 #include "config_values.h"
 #include "platform/widget.h"
+#include "core/widget_registry.h"
 #include "platform/draw.h"
 #include "core/draw_state.h"
 #include "platform/win32/win32_state.h"
@@ -378,16 +379,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
     return NULL;
-  widget->base.x = x;
-  widget->base.y = y;
-  widget->base.w = w;
-  widget->base.h = h;
-  widget->base.fps = fps;
-  widget->base.no_bg = no_bg;
-  widget->base.on_click = on_click;
-  snprintf(widget->base.name, sizeof(widget->base.name), "%s", name ? name : "?");
-  widget->base.dirty = true;
-  widget->base.last_draw_ms = 0;
+  widget_init_base(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
   widget->owner_tid = GetCurrentThreadId();
 
   HINSTANCE hInstance = GetModuleHandle(NULL);

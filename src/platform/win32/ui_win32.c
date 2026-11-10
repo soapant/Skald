@@ -279,11 +279,8 @@ void UI_ApplyFilterToEdit(void) {
 
 ListBoxInfo *UI_GetPopupListBox(void) {
   HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
-  if (hPopup && IsWindow(hPopup)) {
-    ListBoxInfo *lb = (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
-    if (lb)
-      return lb;
-  }
+  if (hPopup && IsWindow(hPopup))
+    return (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
   return NULL;
 }
 

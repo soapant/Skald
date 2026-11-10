@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include "config_values.h"
 #include "core/types/window.h"
 #include "core/types/color.h"
@@ -300,8 +301,8 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     y_draw += 2;
   SetBkMode(g_draw_hdc, TRANSPARENT);
   SetTextColor(g_draw_hdc, color);
-  bool centered = Platform_StringContainsCaseInsensitive(a, "CENTER");
-  bool right = !centered && Platform_StringContainsCaseInsensitive(a, "RIGHT");
+  bool centered = String_ContainsCI(a, "CENTER");
+  bool right = !centered && String_ContainsCI(a, "RIGHT");
   bool measuring = PlDrawState_Get()->measuring;
   SIZE msz;
   msz.cx = 0;

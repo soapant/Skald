@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
@@ -352,19 +353,19 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     int th = mf ? (mf->ascent + mf->descent)
                 : (spec.fontsize > 0 ? spec.fontsize : FontSize);
     int bx = x;
-    if (Platform_StringContainsCaseInsensitive(a, "CENTER"))
+    if (String_ContainsCI(a, "CENTER"))
       bx = x - tw / 2;
-    else if (Platform_StringContainsCaseInsensitive(a, "RIGHT"))
+    else if (String_ContainsCI(a, "RIGHT"))
       bx = x - tw;
     DrawMeasureTrack(bx, y, tw, th);
   }
   XftColor col;
   x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
-  if (Platform_StringContainsCaseInsensitive(a, "CENTER") ||
-      Platform_StringContainsCaseInsensitive(a, "LEFT") ||
-      Platform_StringContainsCaseInsensitive(a, "RIGHT")) {
+  if (String_ContainsCI(a, "CENTER") ||
+      String_ContainsCI(a, "LEFT") ||
+      String_ContainsCI(a, "RIGHT")) {
     int box = 0;
-    if (spec.pad == 0 && !Platform_StringContainsCaseInsensitive(a, "LEFT"))
+    if (spec.pad == 0 && !String_ContainsCI(a, "LEFT"))
       box = x;
     draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, spec.text, y, (char *)a,
                       spec.pad ? spec.pad : x, box);

@@ -209,31 +209,7 @@ const char *Platform_GetRuntimeDir(void) {
 }
 
 
-bool Platform_StringContainsCaseInsensitive(const char *haystack,
-                                            const char *needle) {
 
-  if (!haystack || !needle)
-    return false;
-  return strcasestr(haystack, needle) != NULL;
-}
-
-bool Platform_StringStartsWithCaseInsensitive(const char *str,
-                                              const char *prefix) {
-
-  if (!str || !prefix)
-    return false;
-  size_t plen = strlen(prefix);
-  if (plen == 0)
-    return true;
-  return strncasecmp(str, prefix, plen) == 0;
-}
-
-bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b) {
-
-  if (!a || !b)
-    return false;
-  return strcasecmp(a, b) == 0;
-}
 
 bool Platform_MkdirIfNotExists(const char *path) {
 
@@ -386,7 +362,7 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   bool have_browser = tok_len > 0 && x11_cmd_exists(browser_tok);
   if (!have_browser)
     return false;
-  if (Platform_StringStartsWithCaseInsensitive(url, "https://")) {
+  if (String_StartsWithCI(url, "https://")) {
     snprintf(full_url, sizeof(full_url), "%s", url);
   } else {
     snprintf(full_url, sizeof(full_url), "https://%s", url);
@@ -398,53 +374,10 @@ bool Platform_QueryBrowser(const char *query) {
   if (!query || !query[0])
     return false;
 
-  char browser_tok[512];
-  size_t tok_len = UsedBrowser ? strcspn(UsedBrowser, " \t") : 0;
-  if (tok_len >= sizeof(browser_tok))
-    tok_len = sizeof(browser_tok) - 1;
-  if (UsedBrowser)
-    memcpy(browser_tok, UsedBrowser, tok_len);
-  browser_tok[tok_len] = '\0';
-
   char url[2048];
-
-  char encoded_query[2048] = {0};
-  char *src = query;
-  char *dst = encoded_query;
-  while (*src && (dst - encoded_query) < sizeof(encoded_query) - 1) {
-    if (*src == ' ') {
-      *dst++ = '%';
-      *dst++ = '2';
-      *dst++ = '0';
-    } else if (*src == '&') {
-      *dst++ = '%';
-      *dst++ = '2';
-      *dst++ = '6';
-    } else if (*src == '?') {
-      *dst++ = '%';
-      *dst++ = '3';
-      *dst++ = 'F';
-    } else {
-      *dst++ = *src;
-    }
-    src++;
-  }
-  *dst = '\0';
-
-  if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "google")) {
-    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s",
-             encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
-                                                    "duckduckgo")) {
-    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "bing")) {
-    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s",
-             encoded_query);
-  } else {
-    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
-  }
+  Url_BuildSearchUrl(UsedSearchEngine, query, url, sizeof(url));
   bool ok = x11_launch_browser(UsedBrowser, url, false);
-  log_info("Platform_QueryBrowser query='%s'", query ? query : "");
+  log_info("Platform_QueryBrowser query='%s'", query);
   return ok;
 }
 

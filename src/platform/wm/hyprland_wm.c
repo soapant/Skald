@@ -165,12 +165,12 @@ bool succeded_hypr(char *output) {
   }
   StringList lines = String_Split(output, "\n");
   for (size_t i = 0; i < lines.count; i++) {
-    if (Platform_StringContainsCaseInsensitive(lines.items[i], "running")) {
+    if (String_ContainsCI(lines.items[i], "running")) {
       log_error("hyprctl output='%s'", output);
       return false;
     }
   }
-  if (!Platform_StringContainsCaseInsensitive(output, "ok")) {
+  if (!String_ContainsCI(output, "ok")) {
     log_error("hyprctl no ok output='%s'", output);
     return false;
   }

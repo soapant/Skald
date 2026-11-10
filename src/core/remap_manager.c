@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include "core/remap_manager.h"
 #include "core/remap_parse.h"
 #include "core/types/keys.h"
@@ -48,7 +49,7 @@ static bool remap_window_allowed(RemapBinding *b, const char *title) {
   if (!b->whitelist) {
     for (int j = 0; j < b->window_count; j++) {
       if (b->windows[j] && b->windows[j][0] &&
-          Platform_StringContainsCaseInsensitive(title, b->windows[j]))
+          String_ContainsCI(title, b->windows[j]))
         return false;
     }
     return true;
@@ -57,7 +58,7 @@ static bool remap_window_allowed(RemapBinding *b, const char *title) {
     return false;
   for (int j = 0; j < b->window_count; j++) {
     if (b->windows[j] && b->windows[j][0] &&
-        Platform_StringContainsCaseInsensitive(title, b->windows[j]))
+        String_ContainsCI(title, b->windows[j]))
       return true;
   }
   return false;

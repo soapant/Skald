@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include "wm/niri_wm.h"
 #include "wm/wm.h"
 
@@ -66,7 +67,7 @@ static bool niri_succeded(char *output) {
     log_error("output is NULL");
     return false;
   }
-  if (Platform_StringContainsCaseInsensitive(output, "error")) {
+  if (String_ContainsCI(output, "error")) {
     log_error("niri output='%s'", output);
     return false;
   }

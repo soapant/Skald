@@ -78,11 +78,6 @@ typedef enum {
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap);
 #endif
-bool Platform_StringContainsCaseInsensitive(const char *haystack,
-                                            const char *needle);
-bool Platform_StringStartsWithCaseInsensitive(const char *str,
-                                              const char *prefix);
-bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b);
 bool Platform_MkdirIfNotExists(const char *path);
 bool Platform_TerminateProcessByName(const char *exe_name);
 bool Platform_ProcessRunning(const char *name);

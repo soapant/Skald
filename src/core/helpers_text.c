@@ -584,12 +584,12 @@ static const char *file_walk_builtin_ignored_names[] = {".git",
 static bool file_walk_ignored_dir(const char *dir_name,
                                   char **names_to_ignore) {
   for (int i = 0; file_walk_builtin_ignored_names[i] != NULL; i++)
-    if (Platform_StringEqualsCaseInsensitive(
+    if (String_EqualsCI(
             dir_name, file_walk_builtin_ignored_names[i]))
       return true;
   if (names_to_ignore) {
     for (int i = 0; names_to_ignore[i] != NULL; i++)
-      if (Platform_StringEqualsCaseInsensitive(dir_name, names_to_ignore[i]))
+      if (String_EqualsCI(dir_name, names_to_ignore[i]))
         return true;
   }
   return false;
@@ -607,7 +607,7 @@ static bool file_walk_extension_allowed(const char *filename,
     const char *want = allowed_extensions[i];
     if (want && want[0] == '.')
       want++;
-    if (Platform_StringEqualsCaseInsensitive(ext, want))
+    if (String_EqualsCI(ext, want))
       return true;
   }
   return false;
@@ -761,4 +761,83 @@ bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key) {
   }
   bool swallow = !trigger_press && (key->ctrl || key->alt);
   return swallow;
+}
+
+bool String_ContainsCI(const char *haystack, const char *needle) {
+  if (!haystack || !needle)
+    return false;
+  size_t nlen = strlen(needle);
+  if (nlen == 0)
+    return true;
+  size_t hlen = strlen(haystack);
+  for (size_t i = 0; i + nlen <= hlen; i++) {
+    size_t k = 0;
+    while (k < nlen &&
+           tolower((unsigned char)haystack[i + k]) ==
+               tolower((unsigned char)needle[k]))
+      k++;
+    if (k == nlen)
+      return true;
+  }
+  return false;
+}
+
+bool String_StartsWithCI(const char *str, const char *prefix) {
+  if (!str || !prefix)
+    return false;
+  size_t plen = strlen(prefix);
+  for (size_t i = 0; i < plen; i++) {
+    if (tolower((unsigned char)str[i]) != tolower((unsigned char)prefix[i]))
+      return false;
+  }
+  return true;
+}
+
+bool String_EqualsCI(const char *a, const char *b) {
+  if (!a || !b)
+    return false;
+  while (*a && *b) {
+    if (tolower((unsigned char)*a) != tolower((unsigned char)*b))
+      return false;
+    a++;
+    b++;
+  }
+  return *a == *b;
+}
+
+void Url_BuildSearchUrl(const char *engine, const char *query, char *out,
+                        size_t cap) {
+  char encoded[2048] = {0};
+  const char *src = query ? query : "";
+  char *dst = encoded;
+  while (*src && (size_t)(dst - encoded) < sizeof(encoded) - 1) {
+    if (*src == ' ') {
+      *dst++ = '%';
+      *dst++ = '2';
+      *dst++ = '0';
+    } else if (*src == '&') {
+      *dst++ = '%';
+      *dst++ = '2';
+      *dst++ = '6';
+    } else if (*src == '?') {
+      *dst++ = '%';
+      *dst++ = '3';
+      *dst++ = 'F';
+    } else {
+      *dst++ = *src;
+    }
+    src++;
+  }
+  *dst = '\0';
+
+  const char *templ = "https://duckduckgo.com/?q=%s";
+  if (engine) {
+    if (String_ContainsCI(engine, "google"))
+      templ = "https://www.google.com/search?q=%s";
+    else if (String_ContainsCI(engine, "duckduckgo"))
+      templ = "https://duckduckgo.com/?q=%s";
+    else if (String_ContainsCI(engine, "bing"))
+      templ = "https://www.bing.com/search?q=%s";
+  }
+  snprintf(out, cap, templ, encoded);
 }

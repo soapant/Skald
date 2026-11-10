@@ -62,6 +62,7 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
 Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec);
 CloseCallback PromptPopup_TakeOnClose(Popup *p);
+PromptState *PromptPopup_FindState(const ListBoxInfo *lb);
 void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
 void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,

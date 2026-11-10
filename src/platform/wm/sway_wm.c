@@ -127,7 +127,7 @@ bool succeded_sway(char *output) {
   }
   StringList lines = String_Split(output, "\n");
   for (size_t i = 0; i < lines.count; i++) {
-    if (Platform_StringContainsCaseInsensitive(lines.items[i], "\"error\"")) {
+    if (String_ContainsCI(lines.items[i], "\"error\"")) {
       log_error("output='%s'", output ? output : "null");
       return false;
     }

@@ -44,7 +44,7 @@ static const char *sm_lookup(int slot, const char *const possibilities[],
   }
   for (size_t j = 0; j < count; j++) {
     for (size_t i = 0; i < g_sm_files.count; i++) {
-      if (Platform_StringContainsCaseInsensitive(g_sm_files.files[i].name,
+      if (String_ContainsCI(g_sm_files.files[i].name,
                                                  possibilities[j])) {
         char *name = g_sm_files.files[i].name;
         name[0] = (char)tolower((unsigned char)name[0]);

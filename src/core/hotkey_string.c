@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include "core/hotkey_string.h"
 
 #include <ctype.h>
@@ -34,8 +35,8 @@ static int hotkey_mouse_token_to_button(const char *token) {
       return named[i].btn;
   }
 
-  if (Platform_StringContainsCaseInsensitive(token, "Mouse") ||
-      Platform_StringContainsCaseInsensitive(token, "MouseButton")) {
+  if (String_ContainsCI(token, "Mouse") ||
+      String_ContainsCI(token, "MouseButton")) {
     int n = 0;
     for (const char *p = token; *p; p++) {
       if (*p >= '0' && *p <= '9') {
@@ -133,38 +134,38 @@ static int hotkey_named_key_to_vk(const char *token) {
     }
   }
 
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_4") ||
-      Platform_StringContainsCaseInsensitive(token, "Oem4"))
+  if (String_ContainsCI(token, "OEM_4") ||
+      String_ContainsCI(token, "Oem4"))
     return VK_OEM_4;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_5") ||
-      Platform_StringContainsCaseInsensitive(token, "Oem5"))
+  if (String_ContainsCI(token, "OEM_5") ||
+      String_ContainsCI(token, "Oem5"))
     return VK_OEM_5;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_6") ||
-      Platform_StringContainsCaseInsensitive(token, "Oem6"))
+  if (String_ContainsCI(token, "OEM_6") ||
+      String_ContainsCI(token, "Oem6"))
     return VK_OEM_6;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_1") ||
-      Platform_StringContainsCaseInsensitive(token, "Oem1"))
+  if (String_ContainsCI(token, "OEM_1") ||
+      String_ContainsCI(token, "Oem1"))
     return VK_OEM_1;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_2") ||
-      Platform_StringContainsCaseInsensitive(token, "Oem2"))
+  if (String_ContainsCI(token, "OEM_2") ||
+      String_ContainsCI(token, "Oem2"))
     return VK_OEM_2;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_3") ||
-      Platform_StringContainsCaseInsensitive(token, "Oem3"))
+  if (String_ContainsCI(token, "OEM_3") ||
+      String_ContainsCI(token, "Oem3"))
     return VK_OEM_3;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_7") ||
-      Platform_StringContainsCaseInsensitive(token, "Oem7"))
+  if (String_ContainsCI(token, "OEM_7") ||
+      String_ContainsCI(token, "Oem7"))
     return VK_OEM_7;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_COMMA") ||
-      Platform_StringContainsCaseInsensitive(token, "OemComma"))
+  if (String_ContainsCI(token, "OEM_COMMA") ||
+      String_ContainsCI(token, "OemComma"))
     return VK_OEM_COMMA;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_PERIOD") ||
-      Platform_StringContainsCaseInsensitive(token, "OemPeriod"))
+  if (String_ContainsCI(token, "OEM_PERIOD") ||
+      String_ContainsCI(token, "OemPeriod"))
     return VK_OEM_PERIOD;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_MINUS") ||
-      Platform_StringContainsCaseInsensitive(token, "OemMinus"))
+  if (String_ContainsCI(token, "OEM_MINUS") ||
+      String_ContainsCI(token, "OemMinus"))
     return VK_OEM_MINUS;
-  if (Platform_StringContainsCaseInsensitive(token, "OEM_PLUS") ||
-      Platform_StringContainsCaseInsensitive(token, "OemPlus"))
+  if (String_ContainsCI(token, "OEM_PLUS") ||
+      String_ContainsCI(token, "OemPlus"))
     return VK_OEM_PLUS;
 
   if (strcasecmp(token, "F1") == 0)
@@ -209,25 +210,25 @@ static int hotkey_token_to_vk(const char *token, int *out_mods) {
       strcasecmp(token, "LMeta") == 0)
     return VK_LWIN;
 
-  if (Platform_StringContainsCaseInsensitive(token, "Ctrl") ||
-      Platform_StringContainsCaseInsensitive(token, "Control")) {
+  if (String_ContainsCI(token, "Ctrl") ||
+      String_ContainsCI(token, "Control")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_CTRL;
     return 0;
   }
-  if (Platform_StringContainsCaseInsensitive(token, "Shift")) {
+  if (String_ContainsCI(token, "Shift")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_SHIFT;
     return 0;
   }
-  if (Platform_StringContainsCaseInsensitive(token, "Alt")) {
+  if (String_ContainsCI(token, "Alt")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_ALT;
     return 0;
   }
-  if (Platform_StringContainsCaseInsensitive(token, "Win") ||
-      Platform_StringContainsCaseInsensitive(token, "Super") ||
-      Platform_StringContainsCaseInsensitive(token, "Meta")) {
+  if (String_ContainsCI(token, "Win") ||
+      String_ContainsCI(token, "Super") ||
+      String_ContainsCI(token, "Meta")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_SUPER;
     return 0;

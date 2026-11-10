@@ -98,6 +98,50 @@ typedef struct {
   int caret_pos;
 } EditboxInit;
 
+typedef struct {
+  PromptState *state;
+  const char *buf;
+  int text_len;
+  int cursor;
+  int x;
+  int y;
+  int w;
+  int h;
+  int y_raw;
+  int fontsize;
+} EditboxPlace;
+
+void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
+                          int fontsize, PromptState *state,
+                          EditboxPlace *out);
+
+typedef struct {
+  PromptState *state;
+  const char *buf;
+  int text_len;
+  int cursor;
+  int x;
+  int y;
+  int w;
+  int h;
+  int cursor_x;
+  int text_w;
+  int ascent;
+  int descent;
+  int fontsize;
+  FontHandle font;
+  ColorRef text_color;
+  ColorRef bg_color;
+  const char *placeholder;
+  int caret_height;
+  int caret_width;
+  int caret_x;
+  int caret_y;
+  int caret_pos;
+} EditboxInitFromSpec;
+
+void Editbox_InitFromSpec(EditboxInit *out, const EditboxInitFromSpec *args);
+
 void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in);
 int Editbox_CaretY(int box_top, int ascent, int descent, int fontsize);
 void Editbox_ResolveSelection(PromptState *state, int text_len,

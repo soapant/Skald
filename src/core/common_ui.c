@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
@@ -244,11 +245,11 @@ Populate_ItemMatches(const char *search_text, const char *clean_filter,
     return filter_match(search_text, clean_filter);
   char norm_search[1024];
   NormalizeForMatch(search_text, norm_search, sizeof(norm_search));
-  if (Platform_StringStartsWithCaseInsensitive(
+  if (String_StartsWithCI(
           SkaldContext_Get()->window.current_feature, "center")) {
     return FuzzyMatchWithTypo(norm_search, clean_filter);
   }
-  return Platform_StringContainsCaseInsensitive(norm_search, clean_filter);
+  return String_ContainsCI(norm_search, clean_filter);
 }
 
 static int Populate_Filter(ListBoxInfo *lb, const char **items, int item_count,

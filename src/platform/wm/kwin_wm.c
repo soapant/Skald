@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include "wm/kwin_wm.h"
 #include "wm/wm.h"
 #include "deps/log.h"
@@ -28,7 +29,7 @@ static bool kwin_has_error(char *output) {
 
   if (!output)
     return true;
-  return Platform_StringContainsCaseInsensitive(output, "error");
+  return String_ContainsCI(output, "error");
 }
 
 static void kwin_ensure_bus(void) {
