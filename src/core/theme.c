@@ -23,8 +23,7 @@ static const struct {
     {"COLOR_BORDER", offsetof(ThemeEntry, border)},
 };
 static ColorRef *g_theme_targets[] = {
-    &COLOR_BG,     &COLOR_TEXT,&COLOR_SELECTED_TEXT,
-    &COLOR_CURSOR, &COLOR_BORDER,
+    &COLOR_BG, &COLOR_TEXT, &COLOR_SELECTED_TEXT, &COLOR_CURSOR, &COLOR_BORDER,
 };
 
 #define THEME_SLOT_COUNT (sizeof(g_theme_slots) / sizeof(g_theme_slots[0]))

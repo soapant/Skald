@@ -58,8 +58,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     if (useMaxH <= 0 || h > useMaxH)
       useMaxH = h;
   }
-  if (WH_TO_HWND(win32_tray_window()) != NULL &&
-      !win32_is_main_thread()) {
+  if (WH_TO_HWND(win32_tray_window()) != NULL && !win32_is_main_thread()) {
     DisplayMessageParams params;
     params.message = message;
     params.x = centerX;
@@ -387,4 +386,3 @@ void Platform_CreateDisplayMessageWindow(
            textHeight, winWidth, winHeight, topLeftX, topLeftY);
   return;
 }
-

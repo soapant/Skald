@@ -245,8 +245,8 @@ Populate_ItemMatches(const char *search_text, const char *clean_filter,
     return filter_match(search_text, clean_filter);
   char norm_search[1024];
   NormalizeForMatch(search_text, norm_search, sizeof(norm_search));
-  if (String_StartsWithCI(
-          SkaldContext_Get()->window.current_feature, "center")) {
+  if (String_StartsWithCI(SkaldContext_Get()->window.current_feature,
+                          "center")) {
     return FuzzyMatchWithTypo(norm_search, clean_filter);
   }
   return String_ContainsCI(norm_search, clean_filter);
@@ -455,7 +455,6 @@ ColorRef GetRainbowColor(float t, float s, float v) {
 bool UI_IsListBoxSelected(ListBoxInfo *lb) {
   return lb && lb->selected_index != -1;
 }
-
 
 void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
                        int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,
@@ -680,7 +679,6 @@ void DrawMeasureTrack(int x, int y, int w, int h) {
   PlDrawState_TrackMeasure(x, y, w, h);
 }
 
-
 void UpdateTextCaret(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
@@ -690,21 +688,13 @@ void UpdateTextCaret(void) {
   }
 }
 
-void SetTransparentWindow(bool on) {
-  PlDrawState_Get()->transparent = on;
-}
+void SetTransparentWindow(bool on) { PlDrawState_Get()->transparent = on; }
 
-bool GetTransparentWindow(void) {
-  return PlDrawState_Get()->transparent;
-}
+bool GetTransparentWindow(void) { return PlDrawState_Get()->transparent; }
 
-void SetDrawBgColor(unsigned long hex) {
-  PlDrawState_Get()->bg_override = hex;
-}
+void SetDrawBgColor(unsigned long hex) { PlDrawState_Get()->bg_override = hex; }
 
-unsigned long GetDrawBgColor(void) {
-  return PlDrawState_Get()->bg_override;
-}
+unsigned long GetDrawBgColor(void) { return PlDrawState_Get()->bg_override; }
 
 void BeginMeasure(void) { PlDrawState_BeginMeasure(); }
 

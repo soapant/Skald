@@ -1,8 +1,6 @@
 #include "helpers/x11/display_x11.h"
-
 #include <stdio.h>
 #include <dirent.h>
-
 #include "deps/log.h"
 
 static Display *g_display = NULL;

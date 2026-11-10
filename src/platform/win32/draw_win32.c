@@ -18,36 +18,6 @@
 #include <shellapi.h>
 #include <gdiplus/gdiplus.h>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   HWND w = WH_TO_HWND(h);
   if (!w || !IsWindow(w))
@@ -152,8 +122,6 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   return true;
 }
 
-
-
 void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
   if (!spec.text || !g_draw_hdc) {
     return;
@@ -184,8 +152,6 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
     SelectObject(g_draw_hdc, old);
 }
 
-
-
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
   if (!spec.text || spec.len <= 0)
     return 0;
@@ -207,8 +173,6 @@ int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
   free(wide);
   return sz.cx;
 }
-
-
 
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   if (!spec.text || spec.len <= 0 || !g_draw_hdc)
@@ -232,16 +196,6 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   free(wide);
   return true;
 }
-
-
-
-
-
-
-
-
-
-
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   int x = spec.x;
@@ -318,8 +272,6 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   return true;
 }
 
-
-
 int Platform_GetTextLineHeight(int fontsize) {
   if (fontsize <= 0)
     fontsize = FontSize;
@@ -334,8 +286,6 @@ int Platform_GetTextLineHeight(int fontsize) {
   Platform_DestroyFont(font);
   return tm.tmHeight > 0 ? (int)tm.tmHeight : fontsize;
 }
-
-
 
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int t = DrawThicknessPx(spec.thickness);
@@ -359,8 +309,6 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   return true;
 }
 
-
-
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   if (spec.radius <= 0)
     return false;
@@ -368,7 +316,7 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   int cx = spec.cx + PlDrawState_Get()->off_x;
   int cy = spec.cy + PlDrawState_Get()->off_y;
   DrawMeasureTrack(cx - spec.radius, cy - spec.radius, spec.radius * 2,
-                spec.radius * 2);
+                   spec.radius * 2);
   int left = cx - spec.radius, top = cy - spec.radius;
   int right = cx + spec.radius, bottom = cy + spec.radius;
   if (t > 0) {
@@ -390,52 +338,6 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   }
   return true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   if (!path || !path[0])
@@ -520,12 +422,6 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   return (status == Ok);
 }
 
-
-
-
-
-
-
 void Platform_DrawPromptEditText(PromptState *state) {
   if (!state || !g_draw_hdc) {
     return;
@@ -542,8 +438,6 @@ void Platform_DrawPromptEditText(PromptState *state) {
   Platform_DestroyFont(font);
   PlDrawState_Get()->win32_listbox_surface = prev_lb;
 }
-
-
 
 void Platform_DrawPromptEditbox(PromptState *state) {
   if (!state || !g_draw_hdc) {
@@ -562,8 +456,6 @@ void Platform_DrawPromptEditbox(PromptState *state) {
   PlDrawState_Get()->win32_listbox_surface = prev_lb;
 }
 
-
-
 void Platform_DrawPromptEditCursor(PromptState *state) {
   if (!state || !g_draw_hdc) {
     return;
@@ -579,4 +471,3 @@ void Platform_DrawPromptEditCursor(PromptState *state) {
   Platform_DestroyFont(font);
   PlDrawState_Get()->win32_listbox_surface = prev_lb;
 }
-

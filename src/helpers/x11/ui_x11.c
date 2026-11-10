@@ -154,7 +154,6 @@ void UI_SyncEditCursor(int pos) {
   UI_SetCursorPosition(pos);
 }
 
-
 void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
   if (start)
     *start = 0;

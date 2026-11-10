@@ -112,8 +112,7 @@ typedef struct {
 } EditboxPlace;
 
 void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
-                          int fontsize, PromptState *state,
-                          EditboxPlace *out);
+                          int fontsize, PromptState *state, EditboxPlace *out);
 
 typedef struct {
   PromptState *state;

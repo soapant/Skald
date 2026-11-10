@@ -71,8 +71,6 @@ TEST(filter_handles_double_spaces) {
   ASSERT_TRUE(lb.total_matches >= 2);
 }
 
-
-
 TEST(ui_set_selection_unchanged_index_keeps_hscroll) {
   static ListBoxInfo lb;
   ListBoxInfo_Init(&lb);

@@ -3,7 +3,6 @@
 
 #include "core/types.h"
 
-
 typedef struct {
   const char *message;
   int x, y, w, h;

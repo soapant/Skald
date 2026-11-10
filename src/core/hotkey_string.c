@@ -134,26 +134,19 @@ static int hotkey_named_key_to_vk(const char *token) {
     }
   }
 
-  if (String_ContainsCI(token, "OEM_4") ||
-      String_ContainsCI(token, "Oem4"))
+  if (String_ContainsCI(token, "OEM_4") || String_ContainsCI(token, "Oem4"))
     return VK_OEM_4;
-  if (String_ContainsCI(token, "OEM_5") ||
-      String_ContainsCI(token, "Oem5"))
+  if (String_ContainsCI(token, "OEM_5") || String_ContainsCI(token, "Oem5"))
     return VK_OEM_5;
-  if (String_ContainsCI(token, "OEM_6") ||
-      String_ContainsCI(token, "Oem6"))
+  if (String_ContainsCI(token, "OEM_6") || String_ContainsCI(token, "Oem6"))
     return VK_OEM_6;
-  if (String_ContainsCI(token, "OEM_1") ||
-      String_ContainsCI(token, "Oem1"))
+  if (String_ContainsCI(token, "OEM_1") || String_ContainsCI(token, "Oem1"))
     return VK_OEM_1;
-  if (String_ContainsCI(token, "OEM_2") ||
-      String_ContainsCI(token, "Oem2"))
+  if (String_ContainsCI(token, "OEM_2") || String_ContainsCI(token, "Oem2"))
     return VK_OEM_2;
-  if (String_ContainsCI(token, "OEM_3") ||
-      String_ContainsCI(token, "Oem3"))
+  if (String_ContainsCI(token, "OEM_3") || String_ContainsCI(token, "Oem3"))
     return VK_OEM_3;
-  if (String_ContainsCI(token, "OEM_7") ||
-      String_ContainsCI(token, "Oem7"))
+  if (String_ContainsCI(token, "OEM_7") || String_ContainsCI(token, "Oem7"))
     return VK_OEM_7;
   if (String_ContainsCI(token, "OEM_COMMA") ||
       String_ContainsCI(token, "OemComma"))
@@ -210,8 +203,7 @@ static int hotkey_token_to_vk(const char *token, int *out_mods) {
       strcasecmp(token, "LMeta") == 0)
     return VK_LWIN;
 
-  if (String_ContainsCI(token, "Ctrl") ||
-      String_ContainsCI(token, "Control")) {
+  if (String_ContainsCI(token, "Ctrl") || String_ContainsCI(token, "Control")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_CTRL;
     return 0;
@@ -226,8 +218,7 @@ static int hotkey_token_to_vk(const char *token, int *out_mods) {
       *out_mods |= HOTKEY_MOD_ALT;
     return 0;
   }
-  if (String_ContainsCI(token, "Win") ||
-      String_ContainsCI(token, "Super") ||
+  if (String_ContainsCI(token, "Win") || String_ContainsCI(token, "Super") ||
       String_ContainsCI(token, "Meta")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_SUPER;

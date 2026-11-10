@@ -60,7 +60,6 @@
 
 #include "platform/platform.h"
 
-
 #include "helpers/x11/env_helpers_x11.h"
 
 #include "deps/log.h"
@@ -78,10 +77,6 @@
 #include "core/types.h"
 
 #include "core/types/keys.h"
-
-
-
-
 
 const char *Platform_GetRealUser(void) {
 
@@ -112,8 +107,6 @@ const char *Platform_GetRealUser(void) {
   return NULL;
 }
 
-
-
 const char *Platform_GetRealHome(void) {
 
   static char buf[512] = {0};
@@ -138,26 +131,10 @@ const char *Platform_GetRealHome(void) {
   return buf;
 }
 
-
-
 bool Platform_IsRunningAsRoot(void) {
   log_info("Platform_IsRunningAsRoot completed");
   return getuid() == 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 bool Platform_MkdirIfNotExists(const char *path) {
 
@@ -168,16 +145,12 @@ bool Platform_MkdirIfNotExists(const char *path) {
   return errno == EEXIST;
 }
 
-
-
 long long Platform_GetWallClockMs(void) {
 
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL;
 }
-
-
 
 bool Platform_ProcessRunning(const char *name) {
   if (!name || !*name)
@@ -209,8 +182,6 @@ bool Platform_ProcessRunning(const char *name) {
   return found;
 }
 
-
-
 bool Platform_TerminateProcessByName(const char *exe_name) {
   if (!exe_name || !*exe_name)
     return false;
@@ -235,12 +206,6 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   return Platform_RunTerminalCommand(cmd, false);
 }
 
-
-
-
-
-
-
 bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   char full_url[2048];
   char browser_tok[512];
@@ -261,8 +226,6 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   return x11_launch_browser(UsedBrowser, full_url, new_window);
 }
 
-
-
 bool Platform_QueryBrowser(const char *query) {
   if (!query || !query[0])
     return false;
@@ -273,8 +236,6 @@ bool Platform_QueryBrowser(const char *query) {
   log_info("Platform_QueryBrowser query='%s'", query);
   return ok;
 }
-
-
 
 char *Platform_GetClipboardEntry() {
   static long long next_in_ms = 0;
@@ -316,15 +277,11 @@ char *Platform_GetClipboardEntry() {
   return out;
 }
 
-
-
 bool Platform_PasteContent(char *content) {
   log_info("Platform_PasteContent content='%s'", content ? content : "");
   ;
   return Wm_Paste(content);
 }
-
-
 
 bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
                                      char *cmd, size_t cmd_size) {
@@ -336,13 +293,9 @@ bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
   return true;
 }
 
-
-
 bool Platform_AtomicRename(const char *old_path, const char *new_path) {
   return rename(old_path, new_path) == 0;
 }
-
-
 
 int64_t Platform_TimerNowTicks(void) {
   struct timespec ts;
@@ -350,18 +303,12 @@ int64_t Platform_TimerNowTicks(void) {
   return (int64_t)ts.tv_sec * 1000000000LL + (int64_t)ts.tv_nsec;
 }
 
-
-
 int64_t Platform_TimerTickFrequency(void) { return 1000000000LL; }
-
-
 
 struct PlDirIter {
   char dir[MAX_PATH];
   DIR *dh;
 };
-
-
 
 PlDirIter *Platform_DirOpen(const char *dir_path) {
   if (!dir_path)
@@ -378,8 +325,6 @@ PlDirIter *Platform_DirOpen(const char *dir_path) {
   it->dh = dh;
   return it;
 }
-
-
 
 bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
                       bool *is_dir_out) {
@@ -399,8 +344,6 @@ bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
   return false;
 }
 
-
-
 void Platform_DirClose(PlDirIter *it) {
   if (!it)
     return;
@@ -408,4 +351,3 @@ void Platform_DirClose(PlDirIter *it) {
     closedir(it->dh);
   free(it);
 }
-

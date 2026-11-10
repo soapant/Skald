@@ -23,9 +23,7 @@ bool Platform_WM_InitDisplay(WindowManager *wm) {
 
 int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunWin32(wm); }
 
-void Platform_PromptFlushDisplay(WindowManager *wm) {
-  (void)wm;
-}
+void Platform_PromptFlushDisplay(WindowManager *wm) { (void)wm; }
 
 void Platform_WM_Quit(WindowManager *wm) { WindowManager_QuitWin32(wm); }
 
@@ -87,7 +85,6 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
     *list_top = PromptListTop();
 }
 
-
 void Platform_ProcessPendingSubwindow(void) {
   SkaldContext *_c = SkaldContext_Get();
   if (!_c || !_c->window.subwindow.pending)
@@ -112,8 +109,8 @@ typedef struct {
   int count;
 } Win32MonitorList;
 
-static BOOL CALLBACK win32_monitor_enum(HMONITOR hMonitor, HDC hdc,
-                                        LPRECT rect, LPARAM lParam) {
+static BOOL CALLBACK win32_monitor_enum(HMONITOR hMonitor, HDC hdc, LPRECT rect,
+                                        LPARAM lParam) {
   (void)hdc;
   Win32MonitorList *list = (Win32MonitorList *)lParam;
   if (list->count >= 16)
@@ -123,8 +120,7 @@ static BOOL CALLBACK win32_monitor_enum(HMONITOR hMonitor, HDC hdc,
   if (!GetMonitorInfoW(hMonitor, (MONITORINFO *)&mi))
     return TRUE;
   list->list[list->count].rc = mi.rcMonitor;
-  list->list[list->count].is_primary =
-      (mi.dwFlags & MONITORINFOF_PRIMARY) != 0;
+  list->list[list->count].is_primary = (mi.dwFlags & MONITORINFOF_PRIMARY) != 0;
   WideCharToMultiByte(CP_UTF8, 0, mi.szDevice, -1, list->list[list->count].name,
                       sizeof(list->list[list->count].name), NULL, NULL);
   list->count++;
@@ -158,4 +154,3 @@ int Monitor_Fill(MonitorEntry *out, int max_entries) {
   }
   return list.count;
 }
-
