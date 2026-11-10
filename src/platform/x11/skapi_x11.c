@@ -466,7 +466,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   XftDraw *xd;
   Visual *vis;
   Colormap cmap;
-  Platform_GetDrawContext(&dpy, &xd, &vis, &cmap);
+  x11_get_draw_context(&dpy, &xd, &vis, &cmap);
   if (!dpy || !xd)
     return false;
   WindowManager *wm = WindowManager_Get();
@@ -490,11 +490,11 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   FontHandle fh = spec->font;
   bool needDestroy = false;
   if (!FH_TO_XFT(fh)) {
-    fh = Platform_CreateFontOnDisplay(dpy, fs, UsedFont);
+    fh = x11_create_font_on_display(dpy, fs, UsedFont);
     needDestroy = true;
   }
   XftFont *xf = FH_TO_XFT(fh);
-  Platform_SetDrawContext(dpy, xd, vis, cmap);
+  x11_set_draw_context(dpy, xd, vis, cmap);
 
   EditboxX11Metrics metrics = {dpy, xf};
   int cursor_x = 0;
@@ -546,7 +546,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   if (state) {
     if (WindowTitleText && state->window_title) {
       unsigned long title_col = rgb_to_hex(COLOR_TEXT);
-      Platform_SetDrawContext(dpy, xd, vis, cmap);
+      x11_set_draw_context(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
           (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
                               .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,

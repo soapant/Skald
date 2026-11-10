@@ -233,7 +233,7 @@ void UI_Redraw(ListBoxInfo *lb) {
   }
 }
 
-PromptState *Platform_GetPromptStateForHWND(HWND hwnd) {
+PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd) {
   if (hwnd && IsWindow(hwnd)) {
     PromptState *st = (PromptState *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     if (st)
@@ -264,15 +264,15 @@ PromptState *Platform_GetPromptStateForHWND(HWND hwnd) {
   return NULL;
 }
 
-PromptState *Platform_GetWin32PromptState(void) {
-  return Platform_GetPromptStateForHWND(GetFocus() ? GetFocus()
+PromptState *win32_get_prompt_state(void) {
+  return win32_get_prompt_state_for_hwnd(GetFocus() ? GetFocus()
                                                    : GetForegroundWindow());
 }
 
 void UI_SyncFilterFromEdit(void) {}
 
 void UI_ApplyFilterToEdit(void) {
-  PromptState *prompt = Platform_GetWin32PromptState();
+  PromptState *prompt = win32_get_prompt_state();
   if (prompt && prompt->eb)
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
 }

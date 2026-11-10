@@ -20,7 +20,7 @@ static __thread HDC g_b_hdc = NULL;
 
 bool ListboxBackend_Begin(int item_height_override, ListboxBackendInit *out) {
   (void)item_height_override;
-  Platform_GetDrawContextWin32(&g_b_hdc);
+  win32_get_draw_context(&g_b_hdc);
   if (!g_b_hdc)
     return false;
   out->item_h = PromptRowHeight();
@@ -67,7 +67,7 @@ PromptState *ListboxBackend_PromptState(const ListBoxInfo *lb) {
   if (ps)
     return ps;
   {
-    extern PromptState *Platform_GetWin32PromptState(void);
-    return Platform_GetWin32PromptState();
+    extern PromptState *win32_get_prompt_state(void);
+    return win32_get_prompt_state();
   }
 }

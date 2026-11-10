@@ -174,11 +174,11 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   if (!spec)
     return false;
   HDC hdc = NULL;
-  Platform_GetDrawContextWin32(&hdc);
+  win32_get_draw_context(&hdc);
   if (!hdc)
     return false;
-  extern PromptState *Platform_GetWin32PromptState(void);
-  PromptState *state = Platform_GetWin32PromptState();
+  extern PromptState *win32_get_prompt_state(void);
+  PromptState *state = win32_get_prompt_state();
   EditboxPlace place;
   Editbox_ResolvePlace(spec->buffer, spec->x, spec->y, spec->w, spec->h,
                        spec->fontsize, state, &place);
@@ -467,7 +467,7 @@ SkNetStatus sk_net_status_platform(void) {
 }
 
 bool sk_dismiss_message_platform(const char *name) {
-  if (!MessagePopup_AnyOpen()) {
+  if (!win32_message_popup_any_open()) {
     return false;
   }
   return Platform_DismissMessage(name);

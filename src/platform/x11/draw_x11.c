@@ -286,7 +286,7 @@ static bool RawLine_Push(int x, int y, char ch, unsigned long color,
   return true;
 }
 
-void Platform_SetDrawContext(Display *dpy, XftDraw *xd, Visual *vis,
+void x11_set_draw_context(Display *dpy, XftDraw *xd, Visual *vis,
                              Colormap cmap) {
   RawLine_Flush();
   g_draw_dpy = dpy;
@@ -308,10 +308,10 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   if (h <= 0)
     h = IconSize;
   DrawMeasureTrack(x, y, w, h);
-  return Platform_DrawImageScaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y,
+  return x11_draw_image_scaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y,
                                   w, h);
 }
-void Platform_GetDrawContext(Display **dpy, XftDraw **xd, Visual **vis,
+void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
                              Colormap *cmap) {
 
   if (dpy)
@@ -334,9 +334,9 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   bool needDestroy = false;
   if (!FH_TO_XFT(fh)) {
     if (spec.fontsize) {
-      fh = Platform_CreateFontOnDisplay(g_draw_dpy, spec.fontsize, UsedFont);
+      fh = x11_create_font_on_display(g_draw_dpy, spec.fontsize, UsedFont);
     } else {
-      fh = Platform_CreateFontOnDisplay(g_draw_dpy, FontSize, UsedFont);
+      fh = x11_create_font_on_display(g_draw_dpy, FontSize, UsedFont);
     }
     needDestroy = true;
   }
@@ -485,7 +485,7 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   return true;
 }
 
-void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, int y, int h,
                                  bool selected) {
   if (selected) {
@@ -523,7 +523,7 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
 
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, FontHandle font) {
-  Platform_SetDrawContext(dpy, xd, vis, cmap);
+  x11_set_draw_context(dpy, xd, vis, cmap);
   if (WindowTitleText)
     Platform_DrawTextRaw(
         (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
@@ -599,7 +599,7 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
   if (!state)
     return;
-  Platform_SetDrawContext(dpy, xd, vis, cmap);
+  x11_set_draw_context(dpy, xd, vis, cmap);
   EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
   EditboxSpec eb;
   EditboxLayout lay;
@@ -611,7 +611,7 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
 
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
-  Platform_SetDrawContext(dpy, xd, vis, cmap);
+  x11_set_draw_context(dpy, xd, vis, cmap);
   EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
   EditboxSpec eb;
   EditboxLayout lay;
@@ -621,7 +621,7 @@ void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
 }
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd,
                              Visual *vis, Colormap cmap, FontHandle font) {
-  Platform_SetDrawContext(dpy, xd, vis, cmap);
+  x11_set_draw_context(dpy, xd, vis, cmap);
   EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
   EditboxSpec eb;
   EditboxLayout lay;
@@ -828,12 +828,12 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
 }
 
 
-void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap) {
   if (!state)
     return;
   SkaldContext_Get()->window.editbox_placed = true;
-  FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   Platform_DrawEditBackground(state, dpy, xd, vis, cmap, font);
   Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);
   Platform_DrawEditText(state, dpy, xd, vis, cmap, font);
@@ -843,7 +843,7 @@ void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   Display *dpy = get_display();
-  FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   int lh = FontSize;
   int rh = x11_font_row_height_of(font);
   int lt = x11_font_list_top_of(font);
@@ -856,12 +856,12 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
     *list_top = lt;
 }
 
-void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap) {
 
   if (!state || !state->lb)
     return;
-  FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   ListBoxInfo *lb = state->lb;
   if (!lb->item_count) {
     Platform_DestroyFont(font);
@@ -900,7 +900,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd,
             state->width, state->height);
       }
     } else {
-      Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
+      x11_draw_list_background(state, dpy, xd, vis, cmap, y, itemH, sel);
     }
     Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y,
                           PROMPT_ITEM_TEXT_X, NULL);
