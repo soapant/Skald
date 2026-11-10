@@ -8,6 +8,7 @@
 #define MOUSE_RECHECK_INTERVAL_MS 80
 
 bool ListBox_ClientMousePos(int *out_x, int *out_y);
+int ListBox_TextPrefixBytes(const char *text, int hscroll, int *out_draw_x);
 void ListBox_PublishMousePos(int x, int y);
 void ListBox_InvalidateMousePos(void);
 int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,
@@ -15,6 +16,8 @@ int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,
 bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
                         int top_index, int visible_count);
 void ListBox_FocusByKeyboard(void);
+void ListBox_SetRowHScroll(int px);
+int ListBox_GetRowHScroll(void);
 void ListBox_FocusByMouse(void);
 void ListBox_QueueScroll(int rows);
 int ListBox_TakeScroll(void);

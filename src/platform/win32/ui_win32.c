@@ -43,6 +43,7 @@ void UI_SetSelection(ListBoxInfo *lb, int index) {
   if (old_sel == index) {
     return;
   }
+  lb->text_hscroll = 0;
   lb->selected_index = index;
 
   UI_RequestPopupRepaint();
@@ -105,6 +106,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   int count = lb->item_count;
   if (count <= 0) {
     lb->selected_index = -1;
+    lb->text_hscroll = 0;
     UI_RequestPopupRepaint();
     return;
   }
@@ -112,6 +114,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
     index = count - 1;
   if (index == -1) {
     lb->selected_index = -1;
+    lb->text_hscroll = 0;
     UI_RequestPopupRepaint();
     return;
   }
@@ -119,6 +122,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   if (old_sel == index) {
     return;
   }
+  lb->text_hscroll = 0;
   lb->selected_index = index;
   lb->selected_text = ListBoxInfo_Row(lb, index);
   ListBox_ScrollToSelection(lb);

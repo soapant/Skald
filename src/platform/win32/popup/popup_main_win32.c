@@ -672,9 +672,20 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
                                                          .body_color = &bcol,
                                                          .plain_color = &pcol});
 
-            Platform_DrawTextRaw((PlDrawTextRawSpec){.x = 14,
+            int row_h_scroll = (list_idx == estate->lb->selected_index)
+                                   ? estate->lb->text_hscroll
+                                   : 0;
+            const char *draw_text = text;
+            int draw_x = 14;
+            if (row_h_scroll > 0) {
+              int dx = 0;
+              int cut = ListBox_TextPrefixBytes(text, row_h_scroll, &dx);
+              draw_text = text + cut;
+              draw_x = 14 + dx;
+            }
+            Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
                                                      .y = y,
-                                                     .text = text,
+                                                     .text = draw_text,
                                                      .color = ncol,
                                                      .font = FH_NULL,
                                                      .align = "LEFT",
