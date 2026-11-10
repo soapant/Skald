@@ -175,3 +175,94 @@ void Platform_ProcessPendingSubwindow(void) {
   _c->window.selection_complete = false;
   (void)PromptPopup_Create(wm, &_c->window.subwindow.pending_subwindow);
 }
+
+typedef struct {
+  RECT rc;
+  char name[128];
+  bool is_primary;
+} Win32MonitorEntry;
+
+typedef struct {
+  Win32MonitorEntry list[16];
+  int count;
+} Win32MonitorList;
+
+static BOOL CALLBACK win32_monitor_enum(HMONITOR hMonitor, HDC hdc,
+                                        LPRECT rect, LPARAM lParam) {
+  (void)hdc;
+  Win32MonitorList *list = (Win32MonitorList *)lParam;
+  if (list->count >= 16)
+    return TRUE;
+  MONITORINFOEXW mi;
+  mi.cbSize = sizeof(mi);
+  if (!GetMonitorInfoW(hMonitor, (MONITORINFO *)&mi))
+    return TRUE;
+  list->list[list->count].rc = mi.rcMonitor;
+  list->list[list->count].is_primary =
+      (mi.dwFlags & MONITORINFOF_PRIMARY) != 0;
+  WideCharToMultiByte(CP_UTF8, 0, mi.szDevice, -1, list->list[list->count].name,
+                      sizeof(list->list[list->count].name), NULL, NULL);
+  list->count++;
+  return TRUE;
+}
+
+static int win32_monitor_fill(Win32MonitorEntry out[16]) {
+  Win32MonitorList list = {{{0}}, 0};
+  EnumDisplayMonitors(NULL, NULL, win32_monitor_enum, (LPARAM)&list);
+  if (list.count == 0)
+    return 0;
+  int primary_at = 0;
+  for (int i = 0; i < list.count; i++)
+    if (list.list[i].is_primary) {
+      primary_at = i;
+      break;
+    }
+  if (primary_at > 0) {
+    Win32MonitorEntry t = list.list[0];
+    list.list[0] = list.list[primary_at];
+    list.list[primary_at] = t;
+  }
+  for (int i = 0; i < list.count; i++)
+    out[i] = list.list[i];
+  return list.count;
+}
+
+int Platform_WM_GetMonitorCount(void) {
+  Win32MonitorEntry mon[16];
+  return win32_monitor_fill(mon);
+}
+
+bool Platform_WM_GetMonitorGeometryAt(int index, int *x, int *y, int *w,
+                                      int *h) {
+  Win32MonitorEntry mon[16];
+  int n = win32_monitor_fill(mon);
+  if (n <= 0 || index < 0 || index >= n)
+    return false;
+  RECT rc = mon[index].rc;
+  if (x)
+    *x = rc.left;
+  if (y)
+    *y = rc.top;
+  if (w)
+    *w = rc.right - rc.left;
+  if (h)
+    *h = rc.bottom - rc.top;
+  return true;
+}
+
+
+bool Platform_WM_GetMonitorInfo(int index, WMMonitorInfo *out) {
+  Win32MonitorEntry mon[16];
+  int n = win32_monitor_fill(mon);
+  if (n <= 0 || index < 0 || index >= n || !out)
+    return false;
+  memset(out, 0, sizeof(*out));
+  out->index = index;
+  out->x = mon[index].rc.left;
+  out->y = mon[index].rc.top;
+  out->w = mon[index].rc.right - mon[index].rc.left;
+  out->h = mon[index].rc.bottom - mon[index].rc.top;
+  out->is_primary = mon[index].is_primary;
+  snprintf(out->name, sizeof(out->name), "%s", mon[index].name);
+  return true;
+}

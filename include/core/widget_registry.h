@@ -17,7 +17,9 @@ typedef enum {
   WIDGET_SLOT_TOP_RIGHT,
   WIDGET_SLOT_BOTTOM_LEFT,
   WIDGET_SLOT_BOTTOM_RIGHT,
-  WIDGET_FREE
+  WIDGET_SLOT_COUNT,
+  WIDGET_FREE = 99,
+  WIDGET_MAX_MONITORS = 16
 } WidgetSlot;
 
 typedef struct WidgetState WidgetState;
@@ -41,6 +43,8 @@ typedef struct {
   WidgetRenderFn render;
   int x;
   int y;
+  int monitor;
+  const char *monitor_name;
 } WidgetSpec;
 
 typedef struct WidgetState {
@@ -85,6 +89,7 @@ struct Widget {
   PlTimer created_at;
   char *owner;
   unsigned gen;
+  int monitor;
   void (*on_click)(void);
   void (*on_hover)(void);
   bool clickable;

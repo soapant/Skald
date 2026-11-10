@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <string.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
 #include <malloc.h>
@@ -257,4 +259,105 @@ void Platform_ProcessPendingSubwindow(void) {
     XFlush(wm->display);
     XSync(wm->display, False);
   }
+}
+
+typedef struct {
+  int x, y, w, h;
+  char name[128];
+  bool is_primary;
+} X11MonitorEntry;
+
+static int x11_monitor_fill(X11MonitorEntry out[16]) {
+  Display *dpy = NULL;
+  WindowManager *wm = WindowManager_Get();
+  if (wm)
+    dpy = wm->display;
+  if (!dpy)
+    dpy = get_display();
+  if (!dpy)
+    return 0;
+  Window root = DefaultRootWindow(dpy);
+  XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
+  if (!res)
+    return 0;
+  int n = 0;
+  int primary_at = -1;
+  RROutput primary = XRRGetOutputPrimary(dpy, root);
+  for (int c = 0; c < res->ncrtc && n < 16; c++) {
+    XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
+    if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
+      if (ci)
+        XRRFreeCrtcInfo(ci);
+      continue;
+    }
+    for (int o = 0; o < ci->noutput; o++)
+      if (ci->outputs[o] == primary) {
+        primary_at = n;
+        break;
+      }
+    out[n].x = ci->x;
+    out[n].y = ci->y;
+    out[n].w = ci->width;
+    out[n].h = ci->height;
+    out[n].is_primary = false;
+    out[n].name[0] = '\0';
+    for (int o = 0; o < ci->noutput && o < 1; o++) {
+      XRROutputInfo *oi = XRRGetOutputInfo(dpy, res, ci->outputs[o]);
+      if (oi) {
+        if (oi->name && oi->nameLen > 0)
+          snprintf(out[n].name, sizeof(out[n].name), "%s", oi->name);
+        XRRFreeOutputInfo(oi);
+      }
+    }
+    n++;
+    XRRFreeCrtcInfo(ci);
+  }
+  XRRFreeScreenResources(res);
+  if (primary_at >= 0) {
+    out[primary_at].is_primary = true;
+    if (primary_at > 0) {
+      X11MonitorEntry t = out[0];
+      out[0] = out[primary_at];
+      out[primary_at] = t;
+    }
+  }
+  return n;
+}
+
+int Platform_WM_GetMonitorCount(void) {
+  X11MonitorEntry mon[16];
+  return x11_monitor_fill(mon);
+}
+
+bool Platform_WM_GetMonitorGeometryAt(int index, int *x, int *y, int *w,
+                                      int *h) {
+  X11MonitorEntry mon[16];
+  int n = x11_monitor_fill(mon);
+  if (n <= 0 || index < 0 || index >= n || !mon[index].w)
+    return false;
+  if (x)
+    *x = mon[index].x;
+  if (y)
+    *y = mon[index].y;
+  if (w)
+    *w = mon[index].w;
+  if (h)
+    *h = mon[index].h;
+  return true;
+}
+
+bool Platform_WM_GetMonitorInfo(int index, WMMonitorInfo *out) {
+  X11MonitorEntry mon[16];
+  int n = x11_monitor_fill(mon);
+  if (n <= 0 || index < 0 || index >= n || !mon[index].w || !out)
+    return false;
+  memset(out, 0, sizeof(*out));
+  out->index = index;
+  out->x = mon[index].x;
+  out->y = mon[index].y;
+  out->w = mon[index].w;
+  out->h = mon[index].h;
+  out->is_primary = mon[index].is_primary;
+  snprintf(out->name, sizeof(out->name), "%s", mon[index].name);
+  return true;
 }
