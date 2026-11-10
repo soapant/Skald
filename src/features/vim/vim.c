@@ -22,16 +22,16 @@ typedef struct {
   VimMotionCallback cb;
 } VimMotion;
 
-static VimMode g_vim_mode = VIM_MODE_INSERT;
-static VimMotion g_motions[VIM_MAX_MOTIONS];
-static int g_motion_count = 0;
-static char g_key_buffer[VIM_BUFFER_TOKENS][32];
-static int g_key_buffer_count = 0;
-static volatile int g_pending_active = 0;
-static char g_pending_char = 0;
-static SkMutex g_pending_mutex = NULL;
+static VimMode vim_mode = VIM_MODE_INSERT;
+static VimMotion motions[VIM_MAX_MOTIONS];
+static int motion_count = 0;
+static char key_buffer[VIM_BUFFER_TOKENS][32];
+static int key_buffer_count = 0;
+static volatile int pending_active = 0;
+static char pending_char = 0;
+static SkMutex pending_mutex = NULL;
 
-static void vim_reset_buffer(void) { g_key_buffer_count = 0; }
+static void vim_reset_buffer(void) { key_buffer_count = 0; }
 
 static void vim_refresh_prompt(void) {
   PromptState *aps = sk_get_active_prompt();
@@ -56,29 +56,29 @@ static void vim_insert_char_silent(char ch) {
 
 static void *vim_pending_thread(void *arg) {
   sk_sleep(0.3);
-  sk_mutex_lock(g_pending_mutex);
-  if (g_pending_active) {
-    g_pending_active = 0;
-    g_pending_char = 0;
-    sk_mutex_unlock(g_pending_mutex);
+  sk_mutex_lock(pending_mutex);
+  if (pending_active) {
+    pending_active = 0;
+    pending_char = 0;
+    sk_mutex_unlock(pending_mutex);
     vim_refresh_prompt();
   } else {
-    sk_mutex_unlock(g_pending_mutex);
+    sk_mutex_unlock(pending_mutex);
   }
   return NULL;
 }
 
 static void vim_cancel_pending(void) {
-  sk_mutex_lock(g_pending_mutex);
-  g_pending_active = 0;
-  sk_mutex_unlock(g_pending_mutex);
+  sk_mutex_lock(pending_mutex);
+  pending_active = 0;
+  sk_mutex_unlock(pending_mutex);
 }
 
 static void vim_start_pending(char ch) {
-  sk_mutex_lock(g_pending_mutex);
-  g_pending_active = 1;
-  g_pending_char = ch;
-  sk_mutex_unlock(g_pending_mutex);
+  sk_mutex_lock(pending_mutex);
+  pending_active = 1;
+  pending_char = ch;
+  sk_mutex_unlock(pending_mutex);
   sk_thread_create(vim_pending_thread, NULL);
 }
 
@@ -101,9 +101,9 @@ static void vim_delete_last(int n) {
 
 static void vim_motion(const char *seq, const char *mods, VimMode mode,
                        VimMotionCallback cb) {
-  if (!seq || !cb || g_motion_count >= VIM_MAX_MOTIONS)
+  if (!seq || !cb || motion_count >= VIM_MAX_MOTIONS)
     return;
-  VimMotion *m = &g_motions[g_motion_count++];
+  VimMotion *m = &motions[motion_count++];
   m->mode = mode;
   m->cb = cb;
   m->token_count = 0;
@@ -178,31 +178,31 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
   if (!key)
     return false;
   if (key->vk == VK_ESCAPE) {
-    if (g_vim_mode == VIM_MODE_INSERT) {
+    if (vim_mode == VIM_MODE_INSERT) {
       vim_set_normal_mode();
       vim_reset_buffer();
       return true;
     }
     return false;
   }
-  if (g_vim_mode == VIM_MODE_INSERT) {
+  if (vim_mode == VIM_MODE_INSERT) {
     char token[32];
     int has_token = vim_key_to_token(key, token, sizeof(token));
 
-    sk_mutex_lock(g_pending_mutex);
-    int was_pending = g_pending_active;
-    char pending_char = g_pending_char;
-    sk_mutex_unlock(g_pending_mutex);
+    sk_mutex_lock(pending_mutex);
+    int was_pending = pending_active;
+    char pending = pending_char;
+    sk_mutex_unlock(pending_mutex);
 
     if (was_pending) {
       int continues = 0;
-      for (int i = 0; i < g_motion_count; i++) {
-        VimMotion *m = &g_motions[i];
-        if (!(m->mode == g_vim_mode || m->mode == VIM_MODE_ANY))
+      for (int i = 0; i < motion_count; i++) {
+        VimMotion *m = &motions[i];
+        if (!(m->mode == vim_mode || m->mode == VIM_MODE_ANY))
           continue;
         if (m->token_count < 2)
           continue;
-        if (m->tokens[0][0] == pending_char && m->tokens[0][1] == '\0' &&
+        if (m->tokens[0][0] == pending && m->tokens[0][1] == '\0' &&
             strcmp(m->tokens[1], token) == 0) {
           continues = 1;
           break;
@@ -211,13 +211,13 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
       if (continues) {
         vim_cancel_pending();
         vim_delete_last(1);
-        for (int i = 0; i < g_motion_count; i++) {
-          VimMotion *m = &g_motions[i];
-          if (!(m->mode == g_vim_mode || m->mode == VIM_MODE_ANY))
+        for (int i = 0; i < motion_count; i++) {
+          VimMotion *m = &motions[i];
+          if (!(m->mode == vim_mode || m->mode == VIM_MODE_ANY))
             continue;
           if (m->token_count < 2)
             continue;
-          if (m->tokens[0][0] != pending_char || m->tokens[0][1] != '\0')
+          if (m->tokens[0][0] != pending || m->tokens[0][1] != '\0')
             continue;
           if (strcmp(m->tokens[1], token) != 0)
             continue;
@@ -231,9 +231,9 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
     }
 
     if (has_token) {
-      for (int i = 0; i < g_motion_count; i++) {
-        VimMotion *m = &g_motions[i];
-        if (!(m->mode == g_vim_mode || m->mode == VIM_MODE_ANY))
+      for (int i = 0; i < motion_count; i++) {
+        VimMotion *m = &motions[i];
+        if (!(m->mode == vim_mode || m->mode == VIM_MODE_ANY))
           continue;
         if (m->token_count < 2)
           continue;
@@ -248,28 +248,28 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
 
   char token[32];
   if (vim_key_to_token(key, token, sizeof(token))) {
-    if (g_key_buffer_count >= VIM_BUFFER_TOKENS)
-      g_key_buffer_count = 0;
-    snprintf(g_key_buffer[g_key_buffer_count],
-             sizeof(g_key_buffer[g_key_buffer_count]), "%s", token);
-    g_key_buffer_count++;
+    if (key_buffer_count >= VIM_BUFFER_TOKENS)
+      key_buffer_count = 0;
+    snprintf(key_buffer[key_buffer_count],
+             sizeof(key_buffer[key_buffer_count]), "%s", token);
+    key_buffer_count++;
 
-    for (int i = 0; i < g_motion_count; i++) {
-      VimMotion *m = &g_motions[i];
-      if (!(m->mode == g_vim_mode || m->mode == VIM_MODE_ANY))
+    for (int i = 0; i < motion_count; i++) {
+      VimMotion *m = &motions[i];
+      if (!(m->mode == vim_mode || m->mode == VIM_MODE_ANY))
         continue;
-      if (m->token_count == 0 || m->token_count > g_key_buffer_count)
+      if (m->token_count == 0 || m->token_count > key_buffer_count)
         continue;
       bool match = true;
       for (int t = 0; t < m->token_count; t++) {
-        if (strcmp(g_key_buffer[g_key_buffer_count - m->token_count + t],
+        if (strcmp(key_buffer[key_buffer_count - m->token_count + t],
                    m->tokens[t]) != 0) {
           match = false;
           break;
         }
       }
       if (match) {
-        if (g_vim_mode == VIM_MODE_INSERT)
+        if (vim_mode == VIM_MODE_INSERT)
           vim_delete_last(m->token_count);
         vim_reset_buffer();
         if (m->cb)
@@ -284,7 +284,7 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
     vim_reset_buffer();
   }
 
-  if (g_vim_mode == VIM_MODE_NORMAL) {
+  if (vim_mode == VIM_MODE_NORMAL) {
     if (key->vk == 'I' || key->vk == 'i') {
       PromptState *ps = sk_get_active_prompt();
       if (ps && ps->eb && key->shift)
@@ -348,12 +348,12 @@ static void vim_move_up(void) { vim_move(1, true); }
 static void vim_move_up5(void) { vim_move(5, true); }
 
 static void vim_set_insert_mode(void) {
-  g_vim_mode = VIM_MODE_INSERT;
+  vim_mode = VIM_MODE_INSERT;
   sk_get_metrics()->edit_cursor_width = 0;
 }
 
 static void vim_set_normal_mode(void) {
-  g_vim_mode = VIM_MODE_NORMAL;
+  vim_mode = VIM_MODE_NORMAL;
   sk_get_metrics()->edit_cursor_width = 14;
 }
 
@@ -523,7 +523,7 @@ static void vim_change_to_end(void) {
 }
 
 SKALD_FEATURE_INIT {
-  g_pending_mutex = sk_mutex_create();
+  pending_mutex = sk_mutex_create();
   vim_set_insert_mode();
   vim_motion("jk", "", VIM_MODE_INSERT, vim_enter_normal_mode);
   vim_motion("jq", "", VIM_MODE_INSERT, vim_close_window);

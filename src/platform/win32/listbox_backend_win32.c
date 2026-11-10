@@ -15,12 +15,12 @@
 #include "helpers/helpers_ui.h"
 #include "config_values.h"
 
-static __thread HDC g_b_hdc = NULL;
+static __thread HDC b_hdc = NULL;
 
 bool Platform_ListboxBackendBegin(int item_height_override, ListboxBackendInit *out) {
   (void)item_height_override;
-  win32_get_draw_context(&g_b_hdc);
-  if (!g_b_hdc)
+  win32_get_draw_context(&b_hdc);
+  if (!b_hdc)
     return false;
   out->item_h = PromptRowHeight();
   out->list_top = PromptListTop();
@@ -47,18 +47,18 @@ void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h, int
       innerR = R;
     }
     if (sel)
-      win32_fill_rounded_rect(g_b_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
+      win32_fill_rounded_rect(b_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
   } else if (sel) {
     RECT rc = {bx, y, bx + bw, y + item_h};
     HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
-    FillRect(g_b_hdc, &rc, br);
+    FillRect(b_hdc, &rc, br);
     DeleteObject(br);
   }
 }
 
 void Platform_ListboxBackendEnd(void) {
   PlDrawState_Get()->win32_listbox_surface = false;
-  g_b_hdc = NULL;
+  b_hdc = NULL;
 }
 
 PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb) {

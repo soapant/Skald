@@ -12,9 +12,9 @@
 #include <windows.h>
 
 static HWND g_prev_fg = NULL;
-static BOOL g_old_track = FALSE;
-static BOOL g_track_saved = FALSE;
-static HWND g_pending_restore = NULL;
+static BOOL old_track = FALSE;
+static BOOL track_saved = FALSE;
+static HWND pending_restore = NULL;
 
 static void CALLBACK win32_reenable_track_proc(HWND hwnd, UINT msg, UINT_PTR id,
                                                DWORD time) {
@@ -23,10 +23,10 @@ static void CALLBACK win32_reenable_track_proc(HWND hwnd, UINT msg, UINT_PTR id,
   (void)msg;
   (void)time;
   KillTimer(NULL, id);
-  if (g_track_saved) {
+  if (track_saved) {
     SystemParametersInfoA(SPI_SETACTIVEWINDOWTRACKING, 0,
-                          (PVOID)(uintptr_t)g_old_track, 0);
-    g_track_saved = FALSE;
+                          (PVOID)(uintptr_t)old_track, 0);
+    track_saved = FALSE;
   }
 }
 
@@ -63,8 +63,8 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   {
     BOOL cur = FALSE;
     if (SystemParametersInfoA(SPI_GETACTIVEWINDOWTRACKING, 0, &cur, 0)) {
-      g_old_track = cur;
-      g_track_saved = TRUE;
+      old_track = cur;
+      track_saved = TRUE;
       if (cur) {
         SystemParametersInfoA(SPI_SETACTIVEWINDOWTRACKING, 0, (PVOID)FALSE, 0);
       }
@@ -108,17 +108,17 @@ void Platform_PromptPopupHideWindow(Popup *self) {
 
   if (g_prev_fg && IsWindow(g_prev_fg)) {
     HWND target = g_prev_fg;
-    g_pending_restore = target;
-    if (g_track_saved && g_old_track)
+    pending_restore = target;
+    if (track_saved && old_track)
       SetTimer(NULL, 0xC0DF, 800, win32_reenable_track_proc);
     else
-      g_track_saved = FALSE;
+      track_saved = FALSE;
     g_prev_fg = NULL;
   } else {
-    if (g_track_saved && g_old_track)
+    if (track_saved && old_track)
       SetTimer(NULL, 0xC0DF, 800, win32_reenable_track_proc);
     else
-      g_track_saved = FALSE;
+      track_saved = FALSE;
   }
 }
 

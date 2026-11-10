@@ -24,27 +24,27 @@
 #include "helpers/helpers_input_state.h"
 
 #define DEFERRED_INIT_MAX 32
-static void (*g_deferred_inits[DEFERRED_INIT_MAX])(void);
-static int g_deferred_count = 0;
+static void (*deferred_inits[DEFERRED_INIT_MAX])(void);
+static int deferred_count = 0;
 
 void DeferredInit_Register(void (*cb)(void)) {
   if (!cb)
     return;
-  if (g_deferred_count >= DEFERRED_INIT_MAX) {
+  if (deferred_count >= DEFERRED_INIT_MAX) {
     log_error("deferred init queue full (%d), dropping registration",
               DEFERRED_INIT_MAX);
     return;
   }
-  g_deferred_inits[g_deferred_count++] = cb;
+  deferred_inits[deferred_count++] = cb;
 }
 
 void DeferredInit_RunAll(void) {
-  for (int i = 0; i < g_deferred_count; i++) {
-    void (*cb)(void) = g_deferred_inits[i];
-    g_deferred_inits[i] = NULL;
+  for (int i = 0; i < deferred_count; i++) {
+    void (*cb)(void) = deferred_inits[i];
+    deferred_inits[i] = NULL;
     cb();
   }
-  g_deferred_count = 0;
+  deferred_count = 0;
 }
 
 static void fl_copy(char *dst, size_t dst_size, const char *src) {
@@ -63,7 +63,7 @@ typedef struct {
   LibHandle handle;
 } LoadedFeature;
 
-static int g_reload_seq = 0;
+static int reload_seq = 0;
 
 static bool copy_file(const char *src, const char *dst) {
   FILE *in = fopen(src, "rb");
@@ -96,24 +96,24 @@ static bool copy_file(const char *src, const char *dst) {
   return ok;
 }
 
-static LoadedFeature *g_features = NULL;
-static int g_feature_count = 0;
-static int g_feature_cap = 0;
+static LoadedFeature *features = NULL;
+static int feature_count = 0;
+static int feature_cap = 0;
 
 static bool ensure_feature_capacity(int needed) {
-  if (needed <= g_feature_cap)
+  if (needed <= feature_cap)
     return true;
-  int cap = g_feature_cap > 0 ? g_feature_cap : 16;
+  int cap = feature_cap > 0 ? feature_cap : 16;
   while (cap < needed)
     cap *= 2;
   LoadedFeature *grown =
-      (LoadedFeature *)realloc(g_features, (size_t)cap * sizeof(*g_features));
+      (LoadedFeature *)realloc(features, (size_t)cap * sizeof(*features));
   if (!grown) {
     log_error("out of memory growing feature table to %d", cap);
     return false;
   }
-  g_features = grown;
-  g_feature_cap = cap;
+  features = grown;
+  feature_cap = cap;
   return true;
 }
 
@@ -125,24 +125,24 @@ typedef struct {
   Popup *pins[MAX_PINS];
   int npins;
 } RetiredLib;
-static RetiredLib *g_retired = NULL;
-static int g_retired_count = 0;
-static int g_retired_cap = 0;
+static RetiredLib *retired = NULL;
+static int retired_count = 0;
+static int retired_cap = 0;
 
 static bool ensure_retired_capacity(int needed) {
-  if (needed <= g_retired_cap)
+  if (needed <= retired_cap)
     return true;
-  int cap = g_retired_cap > 0 ? g_retired_cap : 16;
+  int cap = retired_cap > 0 ? retired_cap : 16;
   while (cap < needed)
     cap *= 2;
   RetiredLib *grown =
-      (RetiredLib *)realloc(g_retired, (size_t)cap * sizeof(*g_retired));
+      (RetiredLib *)realloc(retired, (size_t)cap * sizeof(*retired));
   if (!grown) {
     log_error("out of memory growing retired-lib table to %d", cap);
     return false;
   }
-  g_retired = grown;
-  g_retired_cap = cap;
+  retired = grown;
+  retired_cap = cap;
   return true;
 }
 
@@ -167,12 +167,12 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
     for (int i = 0; i < wm->popup_count; i++)
       r.pins[r.npins++] = wm->popups[i];
   }
-  if (!ensure_retired_capacity(g_retired_count + 1)) {
+  if (!ensure_retired_capacity(retired_count + 1)) {
     log_error("retire: cannot track lib %s, leaving it loaded",
               owner ? owner : "?");
     return;
   }
-  g_retired[g_retired_count++] = r;
+  retired[retired_count++] = r;
 }
 
 typedef struct {
@@ -181,33 +181,33 @@ typedef struct {
   char owner[512];
 } DeferredUnload;
 
-static DeferredUnload g_defer_unloads[DEFERRED_INIT_MAX];
-static int g_defer_unload_count = 0;
+static DeferredUnload defer_unloads[DEFERRED_INIT_MAX];
+static int defer_unload_count = 0;
 
 static void feature_mutex_init(void);
-static void *g_feature_mutex;
+static void *feature_mutex;
 
-int FeatureLoader_PendingUnloadCount(void) { return g_defer_unload_count; }
+int FeatureLoader_PendingUnloadCount(void) { return defer_unload_count; }
 
 void FeatureLoader_DrainRetiredUnloads(void) {
-  if (g_defer_unload_count == 0)
+  if (defer_unload_count == 0)
     return;
   feature_mutex_init();
-  Platform_MutexLock(g_feature_mutex);
-  for (int i = 0; i < g_defer_unload_count; i++) {
+  Platform_MutexLock(feature_mutex);
+  for (int i = 0; i < defer_unload_count; i++) {
     log_info("draining deferred unload of retired lib %s",
-             g_defer_unloads[i].owner);
-    Platform_UnloadLibrary(g_defer_unloads[i].handle);
+             defer_unloads[i].owner);
+    Platform_UnloadLibrary(defer_unloads[i].handle);
   }
-  g_defer_unload_count = 0;
-  Platform_MutexUnlock(g_feature_mutex);
+  defer_unload_count = 0;
+  Platform_MutexUnlock(feature_mutex);
 }
 
 static void defer_unload(LibHandle handle, const char *uniq,
                          const char *owner) {
   if (!handle)
     return;
-  if (g_defer_unload_count >= DEFERRED_INIT_MAX) {
+  if (defer_unload_count >= DEFERRED_INIT_MAX) {
     log_error("deferred unload list full, unloading %s inline",
               owner ? owner : "?");
     Platform_UnloadLibrary(handle);
@@ -215,7 +215,7 @@ static void defer_unload(LibHandle handle, const char *uniq,
   }
   if (uniq && uniq[0])
     remove(uniq);
-  DeferredUnload *u = &g_defer_unloads[g_defer_unload_count++];
+  DeferredUnload *u = &defer_unloads[defer_unload_count++];
   u->handle = handle;
   u->uniq[0] = '\0';
   u->owner[0] = '\0';
@@ -229,17 +229,17 @@ static void sweep_retired_libs(void) {
   WindowManager *wm = WindowManager_Get();
   Checkbox_ResetAll();
   int n = 0;
-  for (int i = 0; i < g_retired_count; i++) {
+  for (int i = 0; i < retired_count; i++) {
     bool alive = false;
-    if (g_retired[i].owner[0] && widget_owner_active(g_retired[i].owner))
+    if (retired[i].owner[0] && widget_owner_active(retired[i].owner))
       alive = true;
-    else if (g_retired[i].owner[0] &&
-             ThreadRegistry_OwnerActive(g_retired[i].owner))
+    else if (retired[i].owner[0] &&
+             ThreadRegistry_OwnerActive(retired[i].owner))
       alive = true;
-    else if (wm && g_retired[i].npins >= 0) {
-      for (int a = 0; a < g_retired[i].npins && !alive; a++) {
+    else if (wm && retired[i].npins >= 0) {
+      for (int a = 0; a < retired[i].npins && !alive; a++) {
         for (int b = 0; b < wm->popup_count; b++)
-          if (wm->popups[b] == g_retired[i].pins[a]) {
+          if (wm->popups[b] == retired[i].pins[a]) {
             alive = true;
             break;
           }
@@ -247,36 +247,36 @@ static void sweep_retired_libs(void) {
     } else if (wm && wm->popup_count > 0)
       alive = true;
     if (alive) {
-      g_retired[n++] = g_retired[i];
+      retired[n++] = retired[i];
     } else {
-      cap_purge_owner(g_retired[i].owner, NULL);
-      hotkey_purge_owner(g_retired[i].owner, NULL);
-      snippet_purge_owner(g_retired[i].owner, NULL);
-      widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen);
-      cc_registry_purge_owner(g_retired[i].owner, NULL);
-      feature_list_purge_owner(g_retired[i].owner, NULL);
-      KeyCallback_PurgeOwner(g_retired[i].owner, NULL);
-      Key_PurgeInterceptorOwner(g_retired[i].owner, NULL);
-      EventBus_PurgeOwner(g_retired[i].owner, NULL);
-      HoverWidget_PurgeOwner(g_retired[i].owner, NULL);
-      Platform_MessagePopup_PurgeOwner(g_retired[i].owner, NULL);
-      log_info("deferring unload of retired lib %s", g_retired[i].owner);
-      defer_unload(g_retired[i].handle, g_retired[i].uniq, g_retired[i].owner);
+      cap_purge_owner(retired[i].owner, NULL);
+      hotkey_purge_owner(retired[i].owner, NULL);
+      snippet_purge_owner(retired[i].owner, NULL);
+      widget_purge_owner(retired[i].owner, NULL, retired[i].owner_gen);
+      cc_registry_purge_owner(retired[i].owner, NULL);
+      feature_list_purge_owner(retired[i].owner, NULL);
+      KeyCallback_PurgeOwner(retired[i].owner, NULL);
+      Key_PurgeInterceptorOwner(retired[i].owner, NULL);
+      EventBus_PurgeOwner(retired[i].owner, NULL);
+      HoverWidget_PurgeOwner(retired[i].owner, NULL);
+      Platform_MessagePopup_PurgeOwner(retired[i].owner, NULL);
+      log_info("deferring unload of retired lib %s", retired[i].owner);
+      defer_unload(retired[i].handle, retired[i].uniq, retired[i].owner);
     }
   }
-  g_retired_count = n;
+  retired_count = n;
 }
 
 static void feature_mutex_init(void) {
-  if (!g_feature_mutex)
-    g_feature_mutex = Platform_MutexCreate();
+  if (!feature_mutex)
+    feature_mutex = Platform_MutexCreate();
 }
 #define LOCK()                                                                 \
   do {                                                                         \
     feature_mutex_init();                                                      \
-    Platform_MutexLock(g_feature_mutex);                                       \
+    Platform_MutexLock(feature_mutex);                                       \
   } while (0)
-#define UNLOCK() Platform_MutexUnlock(g_feature_mutex)
+#define UNLOCK() Platform_MutexUnlock(feature_mutex)
 
 static bool ends_with(const char *str, const char *suffix) {
   if (!str || !suffix)
@@ -287,18 +287,18 @@ static bool ends_with(const char *str, const char *suffix) {
   return strcmp(str + sl - su, suffix) == 0;
 }
 
-static int g_feature_init_count = 0;
+static int feature_init_count = 0;
 
 #define MANIFEST_LIST_MAX 32
 
-static bool g_warned_no_featurepath = false;
+static bool warned_no_featurepath = false;
 
 static bool feature_dir(const char *name, char *out, size_t n) {
   if (!FeaturePath || !FeaturePath[0]) {
-    if (!g_warned_no_featurepath) {
+    if (!warned_no_featurepath) {
       log_warn("FeaturePath is empty, feature asset lookup disabled "
                "(check config)");
-      g_warned_no_featurepath = true;
+      warned_no_featurepath = true;
     }
     return false;
   }
@@ -593,7 +593,7 @@ static void manifest_parse(const char *name, FeatureManifest *m) {
 }
 
 static bool load_single(const char *dir, const char *filename) {
-  if (!ensure_feature_capacity(g_feature_count + 1))
+  if (!ensure_feature_capacity(feature_count + 1))
     return false;
   char full[1024];
   snprintf(full, sizeof(full), "%s/%s", dir, filename);
@@ -603,8 +603,8 @@ static bool load_single(const char *dir, const char *filename) {
   if (dot)
     *dot = '\0';
 
-  for (int i = 0; i < g_feature_count; i++)
-    if (strcmp(g_features[i].name, name) == 0)
+  for (int i = 0; i < feature_count; i++)
+    if (strcmp(features[i].name, name) == 0)
       return true;
 
   LibHandle h = Platform_LoadLibrary(full);
@@ -617,12 +617,12 @@ static bool load_single(const char *dir, const char *filename) {
   if (!init)
     init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
   if (init) {
-    g_feature_init_count++;
+    feature_init_count++;
   } else {
     log_warn("feature %s has no SkaldFeatureInit/Reload symbol", name);
   }
 
-  LoadedFeature *f = &g_features[g_feature_count++];
+  LoadedFeature *f = &features[feature_count++];
   memset(f, 0, sizeof(*f));
   snprintf(f->name, sizeof(f->name), "%s", name);
   snprintf(f->path, sizeof(f->path), "%s", full);
@@ -754,9 +754,9 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
 
 bool FeatureLoader_Init(void) {
   LOCK();
-  g_feature_count = 0;
+  feature_count = 0;
   UNLOCK();
-  g_feature_init_count = 0;
+  feature_init_count = 0;
   {
     DIR *d = opendir("build/features");
     if (!d)
@@ -789,7 +789,7 @@ bool FeatureLoader_Init(void) {
   FeatureLoader_LoadAllFromDir("build/features");
   DeferredInit_RunAll();
   LOCK();
-  int cnt = g_feature_count;
+  int cnt = feature_count;
   UNLOCK();
   log_info("init done, %d features loaded (hot reload dir: build/features)",
            cnt);
@@ -798,31 +798,31 @@ bool FeatureLoader_Init(void) {
 
 void FeatureLoader_Shutdown(void) {
   LOCK();
-  for (int i = 0; i < g_feature_count; i++) {
-    if (g_features[i].handle) {
+  for (int i = 0; i < feature_count; i++) {
+    if (features[i].handle) {
       typedef void (*ShutdownFn)(void);
-      ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle,
+      ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(features[i].handle,
                                                        "SkaldFeatureShutdown");
       if (shut)
         shut();
-      cap_purge_owner(NULL, g_features[i].path);
-      hotkey_purge_owner(NULL, g_features[i].path);
-      snippet_purge_owner(NULL, g_features[i].path);
-      widget_purge_owner(NULL, g_features[i].path, widget_bump_generation());
-      cc_registry_purge_owner(NULL, g_features[i].path);
-      feature_list_purge_owner(NULL, g_features[i].path);
-      g_features[i].uniq[0] = '\0';
-      g_features[i].handle = 0;
+      cap_purge_owner(NULL, features[i].path);
+      hotkey_purge_owner(NULL, features[i].path);
+      snippet_purge_owner(NULL, features[i].path);
+      widget_purge_owner(NULL, features[i].path, widget_bump_generation());
+      cc_registry_purge_owner(NULL, features[i].path);
+      feature_list_purge_owner(NULL, features[i].path);
+      features[i].uniq[0] = '\0';
+      features[i].handle = 0;
     }
   }
-  free(g_retired);
-  g_retired = NULL;
-  g_retired_count = 0;
-  g_retired_cap = 0;
-  g_feature_count = 0;
-  free(g_features);
-  g_features = NULL;
-  g_feature_cap = 0;
+  free(retired);
+  retired = NULL;
+  retired_count = 0;
+  retired_cap = 0;
+  feature_count = 0;
+  free(features);
+  features = NULL;
+  feature_cap = 0;
   UNLOCK();
   log_info("FeatureLoader_Shutdown completed");
 }
@@ -834,15 +834,15 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
   }
   LOCK();
   sweep_retired_libs();
-  for (int i = 0; i < g_feature_count; i++) {
-    if (strcmp(g_features[i].name, name) == 0) {
+  for (int i = 0; i < feature_count; i++) {
+    if (strcmp(features[i].name, name) == 0) {
       char path_copy[512];
-      fl_copy(path_copy, sizeof(path_copy), g_features[i].path);
+      fl_copy(path_copy, sizeof(path_copy), features[i].path);
       const char *src = (src_path && src_path[0]) ? src_path : path_copy;
-      LibHandle old = g_features[i].handle;
+      LibHandle old = features[i].handle;
       char uniquepath[1024];
       snprintf(uniquepath, sizeof(uniquepath), "%s.hot%d", path_copy,
-               ++g_reload_seq);
+               ++reload_seq);
       if (!copy_file(src, uniquepath)) {
         log_error("reload %s: copy failed (keeping old)", name);
         UNLOCK();
@@ -876,13 +876,13 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       unsigned retire_gen = widget_current_generation();
       char retire_owner[512];
       fl_copy(retire_owner, sizeof(retire_owner),
-              g_features[i].uniq[0] ? g_features[i].uniq : g_features[i].path);
-      retire_old_lib(old, g_features[i].uniq, retire_owner);
+              features[i].uniq[0] ? features[i].uniq : features[i].path);
+      retire_old_lib(old, features[i].uniq, retire_owner);
       widget_bump_generation();
       log_info("feature_reload: %s (constructor ran at dlopen)", name);
-      g_features[i].handle = h;
-      fl_copy(g_features[i].path, sizeof(g_features[i].path), uniquepath);
-      fl_copy(g_features[i].uniq, sizeof(g_features[i].uniq), uniquepath);
+      features[i].handle = h;
+      fl_copy(features[i].path, sizeof(features[i].path), uniquepath);
+      fl_copy(features[i].uniq, sizeof(features[i].uniq), uniquepath);
       cap_purge_owner(retire_owner, path_copy);
       hotkey_purge_owner(retire_owner, path_copy);
       snippet_purge_owner(retire_owner, path_copy);
@@ -913,25 +913,25 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
 
 void FeatureLoader_ReloadAll(void) {
   LOCK();
-  for (int i = 0; i < g_feature_count; i++) {
-    if (g_features[i].handle) {
+  for (int i = 0; i < feature_count; i++) {
+    if (features[i].handle) {
       typedef void (*ShutdownFn)(void);
-      ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle,
+      ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(features[i].handle,
                                                        "SkaldFeatureShutdown");
       if (shut)
         shut();
       {
         char loaded[512];
         fl_copy(loaded, sizeof(loaded),
-                g_features[i].uniq[0] ? g_features[i].uniq
-                                      : g_features[i].path);
-        retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
+                features[i].uniq[0] ? features[i].uniq
+                                      : features[i].path);
+        retire_old_lib(features[i].handle, features[i].uniq, loaded);
       }
-      g_features[i].handle = 0;
-      g_features[i].uniq[0] = '\0';
+      features[i].handle = 0;
+      features[i].uniq[0] = '\0';
     }
   }
-  g_feature_count = 0;
+  feature_count = 0;
   sweep_retired_libs();
   UNLOCK();
   widget_bump_generation();
@@ -947,15 +947,15 @@ void FeatureLoader_Lock(void) { LOCK(); }
 
 void FeatureLoader_SweepRetired(void) {
   feature_mutex_init();
-  if (!Platform_MutexTryLock(g_feature_mutex))
+  if (!Platform_MutexTryLock(feature_mutex))
     return;
   sweep_retired_libs();
-  Platform_MutexUnlock(g_feature_mutex);
+  Platform_MutexUnlock(feature_mutex);
 }
 
 bool FeatureLoader_TryLock(void) {
   feature_mutex_init();
-  return Platform_MutexTryLock(g_feature_mutex);
+  return Platform_MutexTryLock(feature_mutex);
 }
 
 void FeatureLoader_Unlock(void) { UNLOCK(); }

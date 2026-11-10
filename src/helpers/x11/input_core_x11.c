@@ -36,20 +36,20 @@
 
 struct WindowManager;
 
-static X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
-static int g_x11_keyboard_count = 0;
-static X11Keyboard g_x11_mice[X11_MAX_MICE];
-static int g_x11_mouse_count = 0;
-static bool g_x11_mouse_grabbed[X11_MAX_MICE] = {false};
-static int g_x11_uinput_mouse_fd = -1;
-static int g_x11_uinput_fd = -1;
-static bool g_x11_suppress_release[KEY_MAX + 1] = {0};
-static long g_x11_suppress_ms[KEY_MAX + 1] = {0};
-static bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
+static X11Keyboard x11_keyboards[X11_MAX_KEYBOARDS];
+static int x11_keyboard_count = 0;
+static X11Keyboard x11_mice[X11_MAX_MICE];
+static int x11_mouse_count = 0;
+static bool x11_mouse_grabbed[X11_MAX_MICE] = {false};
+static int x11_uinput_mouse_fd = -1;
+static int x11_uinput_fd = -1;
+static bool x11_suppress_release[KEY_MAX + 1] = {0};
+static long x11_suppress_ms[KEY_MAX + 1] = {0};
+static bool x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 
 #define X11_REJECTED_MAX 128
-static int g_x11_rejected_fds[X11_REJECTED_MAX];
-static int g_x11_rejected_count = 0;
+static int x11_rejected_fds[X11_REJECTED_MAX];
+static int x11_rejected_count = 0;
 static int x11_linux_button_to_mouse(int code);
 
 static int x11_linux_button_to_mouse(int code) {
@@ -265,39 +265,39 @@ bool x11_handle_evdev_mouse(struct input_event *ev) {
 }
 
 static void x11_release_rejected_devices(void) {
-  for (int i = 0; i < g_x11_rejected_count; i++) {
-    if (g_x11_rejected_fds[i] >= 0) {
-      close(g_x11_rejected_fds[i]);
-      g_x11_rejected_fds[i] = -1;
+  for (int i = 0; i < x11_rejected_count; i++) {
+    if (x11_rejected_fds[i] >= 0) {
+      close(x11_rejected_fds[i]);
+      x11_rejected_fds[i] = -1;
     }
   }
-  g_x11_rejected_count = 0;
+  x11_rejected_count = 0;
 }
 
-int x11_keyboard_count_get(void) { return g_x11_keyboard_count; }
-int x11_mouse_count_get(void) { return g_x11_mouse_count; }
+int x11_keyboard_count_get(void) { return x11_keyboard_count; }
+int x11_mouse_count_get(void) { return x11_mouse_count; }
 int x11_keyboard_fd(int i) {
-  return (i >= 0 && i < X11_MAX_KEYBOARDS) ? g_x11_keyboards[i].fd : -1;
+  return (i >= 0 && i < X11_MAX_KEYBOARDS) ? x11_keyboards[i].fd : -1;
 }
 int x11_mouse_fd(int i) {
-  return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mice[i].fd : -1;
+  return (i >= 0 && i < X11_MAX_MICE) ? x11_mice[i].fd : -1;
 }
 void x11_keyboard_fd_set(int i, int fd) {
   if (i >= 0 && i < X11_MAX_KEYBOARDS)
-    g_x11_keyboards[i].fd = fd;
+    x11_keyboards[i].fd = fd;
 }
 bool x11_device_grabbed_get(int i) {
-  return (i >= 0 && i < X11_MAX_KEYBOARDS) ? g_x11_device_grabbed[i] : false;
+  return (i >= 0 && i < X11_MAX_KEYBOARDS) ? x11_device_grabbed[i] : false;
 }
 void x11_device_grabbed_set(int i, bool v) {
   if (i >= 0 && i < X11_MAX_KEYBOARDS)
-    g_x11_device_grabbed[i] = v;
+    x11_device_grabbed[i] = v;
 }
 bool x11_mouse_grabbed_get(int i) {
-  return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mouse_grabbed[i] : false;
+  return (i >= 0 && i < X11_MAX_MICE) ? x11_mouse_grabbed[i] : false;
 }
-int x11_uinput_fd_get(void) { return g_x11_uinput_fd; }
-void x11_uinput_fd_set(int fd) { g_x11_uinput_fd = fd; }
+int x11_uinput_fd_get(void) { return x11_uinput_fd; }
+void x11_uinput_fd_set(int fd) { x11_uinput_fd = fd; }
 
 static bool x11_is_traced(void) {
   FILE *f = fopen("/proc/self/status", "r");
@@ -336,14 +336,14 @@ bool x11_should_use_grab(void) {
   return true;
 }
 
-static struct WindowManager *g_x11_wm = NULL;
+static struct WindowManager *x11_wm = NULL;
 
-void x11_set_window_manager(struct WindowManager *wm) { g_x11_wm = wm; }
+void x11_set_window_manager(struct WindowManager *wm) { x11_wm = wm; }
 
 static void x11_force_cleanup(void);
 static void x11_install_cleanup_handlers(void);
 void x11_mouse_grab_end(void);
-static volatile sig_atomic_t g_x11_cleanup_done = 0;
+static volatile sig_atomic_t x11_cleanup_done = 0;
 
 static void x11_sig_handler(int sig) {
   x11_force_cleanup();
@@ -353,21 +353,21 @@ static void x11_sig_handler(int sig) {
 
 static void x11_term_handler(int sig) {
   x11_force_cleanup();
-  if (g_x11_wm) {
+  if (x11_wm) {
     extern void WindowManager_QuitLinux(struct WindowManager * wm);
-    WindowManager_QuitLinux(g_x11_wm);
+    WindowManager_QuitLinux(x11_wm);
   }
   _exit(0);
 }
 
 static void x11_force_cleanup(void) {
 
-  if (g_x11_cleanup_done)
+  if (x11_cleanup_done)
     return;
-  g_x11_cleanup_done = 1;
-  for (int i = 0; i < g_x11_keyboard_count; i++) {
-    if (g_x11_keyboards[i].fd >= 0) {
-      ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
+  x11_cleanup_done = 1;
+  for (int i = 0; i < x11_keyboard_count; i++) {
+    if (x11_keyboards[i].fd >= 0) {
+      ioctl(x11_keyboards[i].fd, EVIOCGRAB, 0);
     }
   }
   x11_mouse_grab_end();
@@ -378,24 +378,24 @@ static void x11_force_cleanup(void) {
   }
   remap_reset();
   x11_clear_suppress();
-  if (g_x11_uinput_fd >= 0) {
-    ioctl(g_x11_uinput_fd, UI_DEV_DESTROY);
-    close(g_x11_uinput_fd);
-    g_x11_uinput_fd = -1;
+  if (x11_uinput_fd >= 0) {
+    ioctl(x11_uinput_fd, UI_DEV_DESTROY);
+    close(x11_uinput_fd);
+    x11_uinput_fd = -1;
   }
-  for (int i = 0; i < g_x11_keyboard_count; i++) {
-    if (g_x11_keyboards[i].fd >= 0) {
-      close(g_x11_keyboards[i].fd);
-      g_x11_keyboards[i].fd = -1;
+  for (int i = 0; i < x11_keyboard_count; i++) {
+    if (x11_keyboards[i].fd >= 0) {
+      close(x11_keyboards[i].fd);
+      x11_keyboards[i].fd = -1;
     }
   }
-  for (int i = 0; i < g_x11_mouse_count; i++) {
-    if (g_x11_mice[i].fd >= 0) {
-      close(g_x11_mice[i].fd);
-      g_x11_mice[i].fd = -1;
+  for (int i = 0; i < x11_mouse_count; i++) {
+    if (x11_mice[i].fd >= 0) {
+      close(x11_mice[i].fd);
+      x11_mice[i].fd = -1;
     }
   }
-  g_x11_mouse_count = 0;
+  x11_mouse_count = 0;
   x11_release_rejected_devices();
 }
 
@@ -474,24 +474,24 @@ int x11_init_uinput(void) {
 }
 
 void x11_mouse_grab_end(void) {
-  for (int i = 0; i < g_x11_mouse_count; i++) {
-    if (g_x11_mice[i].fd >= 0 && g_x11_mouse_grabbed[i]) {
-      ioctl(g_x11_mice[i].fd, EVIOCGRAB, 0);
+  for (int i = 0; i < x11_mouse_count; i++) {
+    if (x11_mice[i].fd >= 0 && x11_mouse_grabbed[i]) {
+      ioctl(x11_mice[i].fd, EVIOCGRAB, 0);
     }
-    g_x11_mouse_grabbed[i] = false;
+    x11_mouse_grabbed[i] = false;
   }
-  if (g_x11_uinput_mouse_fd >= 0) {
-    ioctl(g_x11_uinput_mouse_fd, UI_DEV_DESTROY);
-    close(g_x11_uinput_mouse_fd);
-    g_x11_uinput_mouse_fd = -1;
+  if (x11_uinput_mouse_fd >= 0) {
+    ioctl(x11_uinput_mouse_fd, UI_DEV_DESTROY);
+    close(x11_uinput_mouse_fd);
+    x11_uinput_mouse_fd = -1;
   }
 }
 
 void x11_destroy_uinput(void) {
-  if (g_x11_uinput_fd >= 0) {
-    ioctl(g_x11_uinput_fd, UI_DEV_DESTROY);
-    close(g_x11_uinput_fd);
-    g_x11_uinput_fd = -1;
+  if (x11_uinput_fd >= 0) {
+    ioctl(x11_uinput_fd, UI_DEV_DESTROY);
+    close(x11_uinput_fd);
+    x11_uinput_fd = -1;
   }
 }
 
@@ -555,34 +555,34 @@ void x11_mouse_grab_begin(void) {
   if (x11_grab_blocked())
     return;
 
-  if (g_x11_uinput_mouse_fd < 0) {
-    g_x11_uinput_mouse_fd = x11_init_uinput_mouse();
-    if (g_x11_uinput_mouse_fd < 0) {
+  if (x11_uinput_mouse_fd < 0) {
+    x11_uinput_mouse_fd = x11_init_uinput_mouse();
+    if (x11_uinput_mouse_fd < 0) {
       log_warn("mouse grab disabled, uinput mouse failed");
       return;
     }
   }
-  for (int i = 0; i < g_x11_mouse_count; i++) {
-    if (g_x11_mice[i].fd < 0 || g_x11_mouse_grabbed[i])
+  for (int i = 0; i < x11_mouse_count; i++) {
+    if (x11_mice[i].fd < 0 || x11_mouse_grabbed[i])
       continue;
     struct input_event drain;
-    while (read(g_x11_mice[i].fd, &drain, sizeof(drain)) > 0) {
+    while (read(x11_mice[i].fd, &drain, sizeof(drain)) > 0) {
     }
-    if (ioctl(g_x11_mice[i].fd, EVIOCGRAB, 1) == 0) {
-      g_x11_mouse_grabbed[i] = true;
+    if (ioctl(x11_mice[i].fd, EVIOCGRAB, 1) == 0) {
+      x11_mouse_grabbed[i] = true;
     }
   }
 }
 
 void x11_mouse_forward(const struct input_event *ev, int grabbed) {
-  if (!grabbed || g_x11_uinput_mouse_fd < 0)
+  if (!grabbed || x11_uinput_mouse_fd < 0)
     return;
   if (ev->type == EV_KEY) {
     int btn = x11_linux_button_to_mouse(ev->code);
     if (btn > 0 && hotkey_mouse_button_bound(btn))
       return;
   }
-  if (write(g_x11_uinput_mouse_fd, ev, sizeof(*ev)) < 0) {
+  if (write(x11_uinput_mouse_fd, ev, sizeof(*ev)) < 0) {
     if (errno != EAGAIN)
       perror("[UINPUT-M] write");
     return;
@@ -594,16 +594,16 @@ void x11_mouse_forward(const struct input_event *ev, int grabbed) {
     syn.type = EV_SYN;
     syn.code = SYN_REPORT;
     syn.value = 0;
-    if (write(g_x11_uinput_mouse_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN)
+    if (write(x11_uinput_mouse_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN)
       perror("[UINPUT-M] write syn");
   }
 }
 
 void x11_uinput_emit(const struct input_event *ev) {
-  if (g_x11_uinput_fd < 0) {
+  if (x11_uinput_fd < 0) {
     return;
   }
-  if (write(g_x11_uinput_fd, ev, sizeof(*ev)) < 0) {
+  if (write(x11_uinput_fd, ev, sizeof(*ev)) < 0) {
     if (errno != EAGAIN)
       perror("[UINPUT] write");
     return;
@@ -614,7 +614,7 @@ void x11_uinput_emit(const struct input_event *ev) {
   syn.type = EV_SYN;
   syn.code = SYN_REPORT;
   syn.value = 0;
-  if (write(g_x11_uinput_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN)
+  if (write(x11_uinput_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN)
     perror("[UINPUT] write syn");
 }
 
@@ -670,16 +670,16 @@ void x11_scan_keyboards(void) {
           is_mouse = true;
         }
       }
-      if (is_kb && g_x11_keyboard_count < X11_MAX_KEYBOARDS) {
-        g_x11_keyboards[g_x11_keyboard_count].fd = fd;
-        strncpy(g_x11_keyboards[g_x11_keyboard_count].path, full_path, 255);
-        g_x11_keyboard_count++;
-      } else if (is_mouse && g_x11_mouse_count < X11_MAX_MICE) {
-        g_x11_mice[g_x11_mouse_count].fd = fd;
-        strncpy(g_x11_mice[g_x11_mouse_count].path, full_path, 255);
-        g_x11_mouse_count++;
-      } else if (g_x11_rejected_count < X11_REJECTED_MAX) {
-        g_x11_rejected_fds[g_x11_rejected_count++] = fd;
+      if (is_kb && x11_keyboard_count < X11_MAX_KEYBOARDS) {
+        x11_keyboards[x11_keyboard_count].fd = fd;
+        strncpy(x11_keyboards[x11_keyboard_count].path, full_path, 255);
+        x11_keyboard_count++;
+      } else if (is_mouse && x11_mouse_count < X11_MAX_MICE) {
+        x11_mice[x11_mouse_count].fd = fd;
+        strncpy(x11_mice[x11_mouse_count].path, full_path, 255);
+        x11_mouse_count++;
+      } else if (x11_rejected_count < X11_REJECTED_MAX) {
+        x11_rejected_fds[x11_rejected_count++] = fd;
       } else {
         close(fd);
       }
@@ -687,7 +687,7 @@ void x11_scan_keyboards(void) {
   }
   closedir(dir);
   log_warn("x11_scan_keyboards found %d keyboards %d mice held=%d",
-           g_x11_keyboard_count, g_x11_mouse_count, g_x11_rejected_count);
+           x11_keyboard_count, x11_mouse_count, x11_rejected_count);
 }
 
 int x11_keysym_to_vk(KeySym ks) {
@@ -905,8 +905,8 @@ int x11_vk_to_linux_key(int vk) {
 
 void x11_clear_suppress(void) {
   for (int i = 0; i <= KEY_MAX; i++) {
-    g_x11_suppress_release[i] = false;
-    g_x11_suppress_ms[i] = 0;
+    x11_suppress_release[i] = false;
+    x11_suppress_ms[i] = 0;
   }
 }
 
@@ -919,12 +919,12 @@ static long x11_now_ms(void) {
 bool x11_is_suppressed(int linux_code) {
   if (linux_code < 0 || linux_code > KEY_MAX)
     return false;
-  if (!g_x11_suppress_release[linux_code])
+  if (!x11_suppress_release[linux_code])
     return false;
   long now = x11_now_ms();
-  if (now - g_x11_suppress_ms[linux_code] > 5000) {
-    g_x11_suppress_release[linux_code] = false;
-    g_x11_suppress_ms[linux_code] = 0;
+  if (now - x11_suppress_ms[linux_code] > 5000) {
+    x11_suppress_release[linux_code] = false;
+    x11_suppress_ms[linux_code] = 0;
     return false;
   }
   return true;
@@ -933,8 +933,8 @@ bool x11_is_suppressed(int linux_code) {
 void x11_set_suppress(int linux_code, bool v) {
   if (linux_code < 0 || linux_code > KEY_MAX)
     return;
-  g_x11_suppress_release[linux_code] = v;
-  g_x11_suppress_ms[linux_code] = v ? x11_now_ms() : 0;
+  x11_suppress_release[linux_code] = v;
+  x11_suppress_ms[linux_code] = v ? x11_now_ms() : 0;
 }
 
 bool x11_handle_global_key(int key_code, int value) {
@@ -971,7 +971,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   if (!ev)
     return false;
   if (ev->type != EV_KEY) {
-    if (grabbed && g_x11_uinput_fd >= 0)
+    if (grabbed && x11_uinput_fd >= 0)
       x11_uinput_emit(ev);
     return false;
   }
@@ -980,7 +980,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   if (ev->type == EV_KEY && val != 0)
     Platform_DismissIndefiniteMessage();
   if (code < 0 || code > KEY_MAX) {
-    if (grabbed && g_x11_uinput_fd >= 0)
+    if (grabbed && x11_uinput_fd >= 0)
       x11_uinput_emit(ev);
     return false;
   }
@@ -1019,7 +1019,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       x11_set_suppress(code, true);
       return true;
     }
-    if (grabbed && g_x11_uinput_fd >= 0)
+    if (grabbed && x11_uinput_fd >= 0)
       x11_uinput_emit(ev);
     return false;
   }
@@ -1040,7 +1040,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
           return true;
         }
       }
-      if (grabbed && g_x11_uinput_fd >= 0) {
+      if (grabbed && x11_uinput_fd >= 0) {
         if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
           return false;
         x11_uinput_emit(ev);
@@ -1048,7 +1048,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       return false;
     }
     if (val == 1) {
-      if (grabbed && g_x11_uinput_fd >= 0)
+      if (grabbed && x11_uinput_fd >= 0)
         x11_uinput_emit(ev);
       return false;
     }
@@ -1059,7 +1059,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     return true;
   }
   if (grabbed) {
-    if (g_x11_uinput_fd >= 0) {
+    if (x11_uinput_fd >= 0) {
       if (hotkey_process(x11_convert_key_to_windows_vk(code),
                          remap_current_mods()))
         return true;

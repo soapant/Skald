@@ -132,18 +132,18 @@ static void pk_ocr_area_to_clipboard(void) {
 #include <objidl.h>
 #include <gdiplus.h>
 
-static ULONG_PTR g_shot_gdiplus = 0;
+static ULONG_PTR shot_gdiplus = 0;
 
 static bool shot_gdiplus_start(void) {
-  if (g_shot_gdiplus)
+  if (shot_gdiplus)
     return true;
   GdiplusStartupInput in;
   memset(&in, 0, sizeof(in));
   in.GdiplusVersion = 1;
-  GpStatus st = GdiplusStartup(&g_shot_gdiplus, &in, NULL);
+  GpStatus st = GdiplusStartup(&shot_gdiplus, &in, NULL);
   if (st != Ok) {
     printf("screenshot: GdiplusStartup failed status=%d\n", (int)st);
-    g_shot_gdiplus = 0;
+    shot_gdiplus = 0;
     return false;
   }
   return true;
@@ -158,33 +158,33 @@ static void shot_ov_release(void);
 #define SEL_CLEAR 0x00000000u
 #define SEL_FRAME_C 0xFFFFFFFFu
 
-static bool g_sel_dragging = false;
-static bool g_sel_done = false;
-static bool g_sel_cancel = false;
-static bool g_sel_has = false;
-static POINT g_sel_anchor = {0, 0};
-static RECT g_sel_prev = {0, 0, 0, 0};
-static RECT g_sel_result = {0, 0, 0, 0};
+static bool sel_dragging = false;
+static bool sel_done = false;
+static bool sel_cancel = false;
+static bool sel_has = false;
+static POINT sel_anchor = {0, 0};
+static RECT sel_prev = {0, 0, 0, 0};
+static RECT sel_result = {0, 0, 0, 0};
 
-static int g_ov_w = 0, g_ov_h = 0;
-static HDC g_ov_dc = NULL;
-static HBITMAP g_ov_bmp = NULL;
-static void *g_ov_bits = NULL;
-static HWND g_ov_hwnd = NULL;
+static int ov_w = 0, ov_h = 0;
+static HDC ov_dc = NULL;
+static HBITMAP ov_bmp = NULL;
+static void *ov_bits = NULL;
+static HWND ov_hwnd = NULL;
 
 static void sel_fill(int l, int t, int r, int b, unsigned int argb) {
-  if (!g_ov_bits)
+  if (!ov_bits)
     return;
   if (l < 0)
     l = 0;
   if (t < 0)
     t = 0;
-  if (r > g_ov_w)
-    r = g_ov_w;
-  if (b > g_ov_h)
-    b = g_ov_h;
+  if (r > ov_w)
+    r = ov_w;
+  if (b > ov_h)
+    b = ov_h;
   for (int y = t; y < b; y++) {
-    unsigned int *row = (unsigned int *)g_ov_bits + (size_t)y * (size_t)g_ov_w;
+    unsigned int *row = (unsigned int *)ov_bits + (size_t)y * (size_t)ov_w;
     for (int x = l; x < r; x++)
       row[x] = argb;
   }
@@ -200,7 +200,7 @@ static void sel_paint_sel(int l, int t, int r, int b) {
 }
 
 static void sel_push(void) {
-  if (!g_ov_hwnd || !g_ov_dc)
+  if (!ov_hwnd || !ov_dc)
     return;
   HDC screen = GetDC(NULL);
   if (!screen)
@@ -212,15 +212,15 @@ static void sel_push(void) {
   src.x = 0;
   src.y = 0;
   SIZE size;
-  size.cx = g_ov_w;
-  size.cy = g_ov_h;
+  size.cx = ov_w;
+  size.cy = ov_h;
   BLENDFUNCTION blend;
   blend.BlendOp = AC_SRC_OVER;
   blend.BlendFlags = 0;
   blend.SourceConstantAlpha = 255;
   blend.AlphaFormat = AC_SRC_ALPHA;
-  SetLayout(g_ov_dc, 0);
-  UpdateLayeredWindow(g_ov_hwnd, screen, &dst, &size, g_ov_dc, &src, 0, &blend,
+  SetLayout(ov_dc, 0);
+  UpdateLayeredWindow(ov_hwnd, screen, &dst, &size, ov_dc, &src, 0, &blend,
                       ULW_ALPHA);
   ReleaseDC(NULL, screen);
 }
@@ -228,70 +228,70 @@ static void sel_push(void) {
 static LRESULT CALLBACK ShotSelProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   switch (msg) {
   case WM_LBUTTONDOWN:
-    g_sel_anchor.x = GET_X_LPARAM(lp);
-    g_sel_anchor.y = GET_Y_LPARAM(lp);
-    g_sel_dragging = true;
-    g_sel_has = false;
+    sel_anchor.x = GET_X_LPARAM(lp);
+    sel_anchor.y = GET_Y_LPARAM(lp);
+    sel_dragging = true;
+    sel_has = false;
     SetCapture(hwnd);
     return 0;
   case WM_MOUSEMOVE: {
-    if (!g_sel_dragging)
+    if (!sel_dragging)
       return 0;
     int cx = GET_X_LPARAM(lp);
     int cy = GET_Y_LPARAM(lp);
     if (cx < 0)
       cx = 0;
-    if (cx > g_ov_w)
-      cx = g_ov_w;
+    if (cx > ov_w)
+      cx = ov_w;
     if (cy < 0)
       cy = 0;
-    if (cy > g_ov_h)
-      cy = g_ov_h;
-    int l = cx < g_sel_anchor.x ? cx : g_sel_anchor.x;
-    int r = cx < g_sel_anchor.x ? g_sel_anchor.x : cx;
-    int t = cy < g_sel_anchor.y ? cy : g_sel_anchor.y;
-    int b = cy < g_sel_anchor.y ? g_sel_anchor.y : cy;
+    if (cy > ov_h)
+      cy = ov_h;
+    int l = cx < sel_anchor.x ? cx : sel_anchor.x;
+    int r = cx < sel_anchor.x ? sel_anchor.x : cx;
+    int t = cy < sel_anchor.y ? cy : sel_anchor.y;
+    int b = cy < sel_anchor.y ? sel_anchor.y : cy;
     if (r - l < SHOT_SEL_FRAME * 2)
       r = l + SHOT_SEL_FRAME * 2;
     if (b - t < SHOT_SEL_FRAME * 2)
       b = t + SHOT_SEL_FRAME * 2;
-    if (r > g_ov_w)
-      r = g_ov_w;
-    if (b > g_ov_h)
-      b = g_ov_h;
-    if (g_sel_has)
-      sel_fill(g_sel_prev.left, g_sel_prev.top, g_sel_prev.right,
-               g_sel_prev.bottom, SEL_DIM);
-    g_sel_prev.left = l;
-    g_sel_prev.top = t;
-    g_sel_prev.right = r;
-    g_sel_prev.bottom = b;
+    if (r > ov_w)
+      r = ov_w;
+    if (b > ov_h)
+      b = ov_h;
+    if (sel_has)
+      sel_fill(sel_prev.left, sel_prev.top, sel_prev.right,
+               sel_prev.bottom, SEL_DIM);
+    sel_prev.left = l;
+    sel_prev.top = t;
+    sel_prev.right = r;
+    sel_prev.bottom = b;
     sel_paint_sel(l, t, r, b);
-    g_sel_has = true;
+    sel_has = true;
     sel_push();
     return 0;
   }
   case WM_LBUTTONUP: {
-    if (!g_sel_dragging)
+    if (!sel_dragging)
       return 0;
-    g_sel_dragging = false;
+    sel_dragging = false;
     ReleaseCapture();
-    g_sel_result = g_sel_prev;
-    if (g_sel_result.right - g_sel_result.left < 4)
-      g_sel_cancel = true;
-    if (g_sel_result.bottom - g_sel_result.top < 4)
-      g_sel_cancel = true;
-    g_sel_done = true;
+    sel_result = sel_prev;
+    if (sel_result.right - sel_result.left < 4)
+      sel_cancel = true;
+    if (sel_result.bottom - sel_result.top < 4)
+      sel_cancel = true;
+    sel_done = true;
     DestroyWindow(hwnd);
     return 0;
   }
   case WM_RBUTTONDOWN:
   case WM_KEYDOWN:
     if (wp == VK_ESCAPE || msg == WM_RBUTTONDOWN) {
-      g_sel_cancel = true;
-      g_sel_done = true;
-      if (g_sel_dragging) {
-        g_sel_dragging = false;
+      sel_cancel = true;
+      sel_done = true;
+      if (sel_dragging) {
+        sel_dragging = false;
         ReleaseCapture();
       }
       DestroyWindow(hwnd);
@@ -304,32 +304,32 @@ static LRESULT CALLBACK ShotSelProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   return DefWindowProcA(hwnd, msg, wp, lp);
 }
 
-static HDC g_cap_dc = NULL;
-static HBITMAP g_cap_bmp = NULL;
-static HGDIOBJ g_cap_old = NULL;
-static int g_cap_vx = 0, g_cap_vy = 0, g_cap_w = 0, g_cap_h = 0;
+static HDC cap_dc = NULL;
+static HBITMAP cap_bmp = NULL;
+static HGDIOBJ cap_old = NULL;
+static int cap_vx = 0, cap_vy = 0, cap_w = 0, cap_h = 0;
 
 static void shot_capture_release(void) {
-  if (g_cap_dc) {
-    if (g_cap_old)
-      SelectObject(g_cap_dc, g_cap_old);
-    DeleteDC(g_cap_dc);
-    g_cap_dc = NULL;
+  if (cap_dc) {
+    if (cap_old)
+      SelectObject(cap_dc, cap_old);
+    DeleteDC(cap_dc);
+    cap_dc = NULL;
   }
-  if (g_cap_bmp) {
-    DeleteObject(g_cap_bmp);
-    g_cap_bmp = NULL;
+  if (cap_bmp) {
+    DeleteObject(cap_bmp);
+    cap_bmp = NULL;
   }
-  g_cap_old = NULL;
+  cap_old = NULL;
 }
 
 static bool shot_capture_virtual(void) {
   shot_capture_release();
-  g_cap_vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-  g_cap_vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
-  g_cap_w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-  g_cap_h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-  if (g_cap_w <= 0 || g_cap_h <= 0)
+  cap_vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+  cap_vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+  cap_w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  cap_h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+  if (cap_w <= 0 || cap_h <= 0)
     return false;
 
   HDC screen = GetDC(NULL);
@@ -339,36 +339,36 @@ static bool shot_capture_virtual(void) {
   BITMAPINFO bi;
   memset(&bi, 0, sizeof(bi));
   bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bi.bmiHeader.biWidth = g_cap_w;
-  bi.bmiHeader.biHeight = -g_cap_h;
+  bi.bmiHeader.biWidth = cap_w;
+  bi.bmiHeader.biHeight = -cap_h;
   bi.bmiHeader.biPlanes = 1;
   bi.bmiHeader.biBitCount = 32;
   bi.bmiHeader.biCompression = BI_RGB;
 
   void *bits = NULL;
-  g_cap_dc = CreateCompatibleDC(screen);
-  if (!g_cap_dc) {
+  cap_dc = CreateCompatibleDC(screen);
+  if (!cap_dc) {
     ReleaseDC(NULL, screen);
     return false;
   }
-  g_cap_bmp = CreateDIBSection(screen, &bi, DIB_RGB_COLORS, &bits, NULL, 0);
-  if (!g_cap_bmp || !bits) {
-    if (g_cap_bmp)
-      DeleteObject(g_cap_bmp);
-    g_cap_bmp = NULL;
-    DeleteDC(g_cap_dc);
-    g_cap_dc = NULL;
+  cap_bmp = CreateDIBSection(screen, &bi, DIB_RGB_COLORS, &bits, NULL, 0);
+  if (!cap_bmp || !bits) {
+    if (cap_bmp)
+      DeleteObject(cap_bmp);
+    cap_bmp = NULL;
+    DeleteDC(cap_dc);
+    cap_dc = NULL;
     ReleaseDC(NULL, screen);
-    printf("screenshot: virtual snapshot failed %dx%d err=%lu\n", g_cap_w,
-           g_cap_h, GetLastError());
+    printf("screenshot: virtual snapshot failed %dx%d err=%lu\n", cap_w,
+           cap_h, GetLastError());
     return false;
   }
-  g_cap_old = SelectObject(g_cap_dc, g_cap_bmp);
-  BitBlt(g_cap_dc, 0, 0, g_cap_w, g_cap_h, screen, g_cap_vx, g_cap_vy, SRCCOPY);
+  cap_old = SelectObject(cap_dc, cap_bmp);
+  BitBlt(cap_dc, 0, 0, cap_w, cap_h, screen, cap_vx, cap_vy, SRCCOPY);
   GdiFlush();
   ReleaseDC(NULL, screen);
-  printf("screenshot: snapshotted virtual desktop %dx%d at (%d,%d)\n", g_cap_w,
-         g_cap_h, g_cap_vx, g_cap_vy);
+  printf("screenshot: snapshotted virtual desktop %dx%d at (%d,%d)\n", cap_w,
+         cap_h, cap_vx, cap_vy);
   return true;
 }
 
@@ -393,13 +393,13 @@ static bool shot_select_area(RECT *out) {
     RegisterClassA(&wc);
   }
 
-  g_sel_done = false;
-  g_sel_cancel = false;
-  g_sel_dragging = false;
-  g_sel_has = false;
+  sel_done = false;
+  sel_cancel = false;
+  sel_dragging = false;
+  sel_has = false;
 
-  g_ov_w = vw;
-  g_ov_h = vh;
+  ov_w = vw;
+  ov_h = vh;
   HDC screen = GetDC(NULL);
   if (!screen)
     return false;
@@ -411,20 +411,20 @@ static bool shot_select_area(RECT *out) {
   bi.bmiHeader.biPlanes = 1;
   bi.bmiHeader.biBitCount = 32;
   bi.bmiHeader.biCompression = BI_RGB;
-  g_ov_dc = CreateCompatibleDC(screen);
-  if (!g_ov_dc) {
+  ov_dc = CreateCompatibleDC(screen);
+  if (!ov_dc) {
     ReleaseDC(NULL, screen);
     return false;
   }
-  g_ov_bmp = CreateDIBSection(screen, &bi, DIB_RGB_COLORS, &g_ov_bits, NULL, 0);
+  ov_bmp = CreateDIBSection(screen, &bi, DIB_RGB_COLORS, &ov_bits, NULL, 0);
   ReleaseDC(NULL, screen);
-  if (!g_ov_bmp || !g_ov_bits) {
+  if (!ov_bmp || !ov_bits) {
     printf("screenshot: overlay DIB failed %dx%d err=%lu\n", vw, vh,
            GetLastError());
     shot_ov_release();
     return false;
   }
-  SelectObject(g_ov_dc, g_ov_bmp);
+  SelectObject(ov_dc, ov_bmp);
   sel_fill(0, 0, vw, vh, SEL_DIM);
 
   HWND hwnd = CreateWindowExA(WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
@@ -435,7 +435,7 @@ static bool shot_select_area(RECT *out) {
     shot_ov_release();
     return false;
   }
-  g_ov_hwnd = hwnd;
+  ov_hwnd = hwnd;
 
   ShowWindow(hwnd, SW_SHOW);
   SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
@@ -443,7 +443,7 @@ static bool shot_select_area(RECT *out) {
   sel_push();
 
   MSG msg;
-  while (!g_sel_done) {
+  while (!sel_done) {
     if (!GetMessage(&msg, NULL, 0, 0))
       break;
     TranslateMessage(&msg);
@@ -453,34 +453,34 @@ static bool shot_select_area(RECT *out) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
-  g_ov_hwnd = NULL;
+  ov_hwnd = NULL;
   shot_ov_release();
 
-  if (g_sel_cancel)
+  if (sel_cancel)
     return false;
-  if (g_sel_result.right - g_sel_result.left < 2)
+  if (sel_result.right - sel_result.left < 2)
     return false;
-  if (g_sel_result.bottom - g_sel_result.top < 2)
+  if (sel_result.bottom - sel_result.top < 2)
     return false;
-  g_sel_result.left += vx;
-  g_sel_result.right += vx;
-  g_sel_result.top += vy;
-  g_sel_result.bottom += vy;
+  sel_result.left += vx;
+  sel_result.right += vx;
+  sel_result.top += vy;
+  sel_result.bottom += vy;
   if (out)
-    *out = g_sel_result;
+    *out = sel_result;
   return true;
 }
 
 static void shot_ov_release(void) {
-  if (g_ov_dc) {
-    DeleteDC(g_ov_dc);
-    g_ov_dc = NULL;
+  if (ov_dc) {
+    DeleteDC(ov_dc);
+    ov_dc = NULL;
   }
-  if (g_ov_bmp) {
-    DeleteObject(g_ov_bmp);
-    g_ov_bmp = NULL;
+  if (ov_bmp) {
+    DeleteObject(ov_bmp);
+    ov_bmp = NULL;
   }
-  g_ov_bits = NULL;
+  ov_bits = NULL;
 }
 
 static bool pk_capture_rect(const RECT *r, const char *path) {
@@ -527,9 +527,9 @@ static bool pk_capture_rect(const RECT *r, const char *path) {
   }
 
   HGDIOBJ hOldBitmap = SelectObject(hMemoryDC, hBitmap);
-  if (g_cap_dc && g_cap_bmp) {
-    BitBlt(hMemoryDC, 0, 0, w, h, g_cap_dc, r->left - g_cap_vx,
-           r->top - g_cap_vy, SRCCOPY);
+  if (cap_dc && cap_bmp) {
+    BitBlt(hMemoryDC, 0, 0, w, h, cap_dc, r->left - cap_vx,
+           r->top - cap_vy, SRCCOPY);
   } else {
     BitBlt(hMemoryDC, 0, 0, w, h, hScreenDC, r->left, r->top, SRCCOPY);
   }

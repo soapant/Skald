@@ -56,25 +56,25 @@ typedef struct {
 
 #define X11_FONT_CACHE_SLOTS 8
 
-X11FontSlot g_font_slots[X11_FONT_CACHE_SLOTS];
-unsigned long g_font_tick = 0;
+X11FontSlot font_slots[X11_FONT_CACHE_SLOTS];
+unsigned long font_tick = 0;
 pthread_mutex_t g_font_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 #define X11_FONT_RETIRED 16
-Display *g_font_retired_dpy[X11_FONT_RETIRED];
-XftFont *g_font_retired_xft[X11_FONT_RETIRED];
-int g_font_retired_next = 0;
+Display *font_retired_dpy[X11_FONT_RETIRED];
+XftFont *font_retired_xft[X11_FONT_RETIRED];
+int font_retired_next = 0;
 
 static void x11_font_retire(Display *dpy, XftFont *xft) {
 
-  g_font_retired_dpy[g_font_retired_next] = dpy;
-  g_font_retired_xft[g_font_retired_next] = xft;
-  g_font_retired_next = (g_font_retired_next + 1) % X11_FONT_RETIRED;
+  font_retired_dpy[font_retired_next] = dpy;
+  font_retired_xft[font_retired_next] = xft;
+  font_retired_next = (font_retired_next + 1) % X11_FONT_RETIRED;
 }
 
 bool x11_font_was_retired(Display *dpy, XftFont *xft) {
 
   for (int i = 0; i < X11_FONT_RETIRED; i++) {
-    if (g_font_retired_xft[i] == xft && g_font_retired_dpy[i] == dpy)
+    if (font_retired_xft[i] == xft && font_retired_dpy[i] == dpy)
       return true;
   }
   return false;
@@ -108,7 +108,7 @@ static void x11_font_slot_clear(X11FontSlot *s) {
 bool x11_font_is_cached(Display *dpy, XftFont *xft) {
 
   for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-    if (g_font_slots[i].xft == xft && g_font_slots[i].dpy == dpy)
+    if (font_slots[i].xft == xft && font_slots[i].dpy == dpy)
       return true;
   }
   return false;
@@ -123,9 +123,9 @@ FontHandle x11_create_font_on_display(Display *dpy, int size,
   pthread_mutex_lock(&g_font_cache_mtx);
 
   for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-    if (x11_font_slot_matches(&g_font_slots[i], dpy, size, face_name)) {
-      g_font_slots[i].last_used = ++g_font_tick;
-      FontHandle hit = {.xfont = g_font_slots[i].xft, .dpy = dpy};
+    if (x11_font_slot_matches(&font_slots[i], dpy, size, face_name)) {
+      font_slots[i].last_used = ++font_tick;
+      FontHandle hit = {.xfont = font_slots[i].xft, .dpy = dpy};
       pthread_mutex_unlock(&g_font_cache_mtx);
       return hit;
     }
@@ -154,12 +154,12 @@ FontHandle x11_create_font_on_display(Display *dpy, int size,
   int slot = -1;
   unsigned long oldest = ~0UL;
   for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-    if (!g_font_slots[i].xft) {
+    if (!font_slots[i].xft) {
       slot = i;
       break;
     }
-    if (g_font_slots[i].last_used < oldest) {
-      oldest = g_font_slots[i].last_used;
+    if (font_slots[i].last_used < oldest) {
+      oldest = font_slots[i].last_used;
       slot = i;
     }
   }
@@ -168,13 +168,13 @@ FontHandle x11_create_font_on_display(Display *dpy, int size,
     pthread_mutex_unlock(&g_font_cache_mtx);
     return FH_NULL;
   }
-  x11_font_slot_clear(&g_font_slots[slot]);
+  x11_font_slot_clear(&font_slots[slot]);
 
-  g_font_slots[slot].dpy = dpy;
-  g_font_slots[slot].size = size;
-  g_font_slots[slot].name = face_name ? strdup(face_name) : NULL;
-  g_font_slots[slot].xft = xf;
-  g_font_slots[slot].last_used = ++g_font_tick;
+  font_slots[slot].dpy = dpy;
+  font_slots[slot].size = size;
+  font_slots[slot].name = face_name ? strdup(face_name) : NULL;
+  font_slots[slot].xft = xf;
+  font_slots[slot].last_used = ++font_tick;
 
   FontHandle made = {.xfont = xf, .dpy = dpy};
   pthread_mutex_unlock(&g_font_cache_mtx);

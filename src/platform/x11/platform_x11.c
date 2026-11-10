@@ -580,20 +580,20 @@ void Platform_ModifyUniversalTimer(double seconds_to_add) {
 
 double Platform_GetUniversalTimeSeconds(void) { return 0.0; }
 
-pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t font_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 FontHandle Platform_CreateFont(int size, const char *face_name) {
-  pthread_mutex_lock(&g_font_mtx);
+  pthread_mutex_lock(&font_mtx);
 
   Display *dpy = x11_get_display();
   if (!dpy) {
-    pthread_mutex_unlock(&g_font_mtx);
+    pthread_mutex_unlock(&font_mtx);
     return FH_NULL;
   }
 
   FontHandle fh = x11_create_font_on_display(dpy, size, face_name);
 
-  pthread_mutex_unlock(&g_font_mtx);
+  pthread_mutex_unlock(&font_mtx);
   log_info("Platform_CreateFont size=%d face_name='%s'", size,
            face_name ? face_name : "");
   ;
@@ -716,11 +716,11 @@ int Platform_GetIconSize(char *icon_path) {
 static struct {
   char key[512];
   char value[1024];
-} g_icon_cache[MAX_ICON_CACHE];
+} icon_cache[MAX_ICON_CACHE];
 
-static int g_icon_cache_count = 0;
+static int icon_cache_count = 0;
 
-static bool g_icon_cache_loaded = false;
+static bool icon_cache_loaded = false;
 
 static bool icon_cache_path(char *out, size_t n) {
   return FeaturePath_Get("core", "icon_cache.txt", out, n);
@@ -728,10 +728,10 @@ static bool icon_cache_path(char *out, size_t n) {
 
 static void icon_cache_load(void) {
 
-  if (g_icon_cache_loaded) {
+  if (icon_cache_loaded) {
     return;
   }
-  g_icon_cache_loaded = true;
+  icon_cache_loaded = true;
   char cf[1024];
   static char content[MAX_ICON_CACHE * 1600];
   if (!icon_cache_path(cf, sizeof(cf))) {
@@ -741,7 +741,7 @@ static void icon_cache_load(void) {
     return;
   }
   char *cur = content;
-  while (*cur && g_icon_cache_count < MAX_ICON_CACHE) {
+  while (*cur && icon_cache_count < MAX_ICON_CACHE) {
     char *nl = strchr(cur, '\n');
     if (nl)
       *nl = '\0';
@@ -752,25 +752,25 @@ static void icon_cache_load(void) {
     if (!eq)
       continue;
     *eq = '\0';
-    strncpy(g_icon_cache[g_icon_cache_count].key, line,
-            sizeof(g_icon_cache[0].key) - 1);
-    g_icon_cache[g_icon_cache_count].key[sizeof(g_icon_cache[0].key) - 1] =
+    strncpy(icon_cache[icon_cache_count].key, line,
+            sizeof(icon_cache[0].key) - 1);
+    icon_cache[icon_cache_count].key[sizeof(icon_cache[0].key) - 1] =
         '\0';
-    strncpy(g_icon_cache[g_icon_cache_count].value, eq + 1,
-            sizeof(g_icon_cache[0].value) - 1);
-    g_icon_cache[g_icon_cache_count].value[sizeof(g_icon_cache[0].value) - 1] =
+    strncpy(icon_cache[icon_cache_count].value, eq + 1,
+            sizeof(icon_cache[0].value) - 1);
+    icon_cache[icon_cache_count].value[sizeof(icon_cache[0].value) - 1] =
         '\0';
-    if (access(g_icon_cache[g_icon_cache_count].value, F_OK) == 0)
-      g_icon_cache_count++;
+    if (access(icon_cache[icon_cache_count].value, F_OK) == 0)
+      icon_cache_count++;
   }
 }
 
 static const char *icon_cache_get(const char *key) {
 
   icon_cache_load();
-  for (int i = 0; i < g_icon_cache_count; i++)
-    if (strcmp(g_icon_cache[i].key, key) == 0) {
-      return g_icon_cache[i].value;
+  for (int i = 0; i < icon_cache_count; i++)
+    if (strcmp(icon_cache[i].key, key) == 0) {
+      return icon_cache[i].value;
     }
   return NULL;
 }
@@ -778,18 +778,18 @@ static const char *icon_cache_get(const char *key) {
 static void icon_cache_set(const char *key, const char *value) {
 
   icon_cache_load();
-  for (int i = 0; i < g_icon_cache_count; i++)
-    if (strcmp(g_icon_cache[i].key, key) == 0) {
+  for (int i = 0; i < icon_cache_count; i++)
+    if (strcmp(icon_cache[i].key, key) == 0) {
       return;
     }
-  if (g_icon_cache_count >= MAX_ICON_CACHE) {
+  if (icon_cache_count >= MAX_ICON_CACHE) {
     return;
   }
-  strncpy(g_icon_cache[g_icon_cache_count].key, key,
-          sizeof(g_icon_cache[0].key) - 1);
-  strncpy(g_icon_cache[g_icon_cache_count].value, value,
-          sizeof(g_icon_cache[0].value) - 1);
-  g_icon_cache_count++;
+  strncpy(icon_cache[icon_cache_count].key, key,
+          sizeof(icon_cache[0].key) - 1);
+  strncpy(icon_cache[icon_cache_count].value, value,
+          sizeof(icon_cache[0].value) - 1);
+  icon_cache_count++;
   char cf[1024];
   FILE *f = NULL;
   if (icon_cache_path(cf, sizeof(cf)))
@@ -1226,23 +1226,23 @@ PlWindowList Platform_GetWindowTitles() { return Wm_GetWindowTitles(); }
 
 PlWindowList Platform_GetWindowNames() { return Wm_GetWindowNames(); }
 
-static int g_singleton_lock_fd = -1;
+static int singleton_lock_fd = -1;
 
 bool Platform_TryAcquireSingleInstance(void) {
-  g_singleton_lock_fd = open("/tmp/skald.lock", O_RDWR | O_CREAT, 0666);
-  if (g_singleton_lock_fd < 0) {
+  singleton_lock_fd = open("/tmp/skald.lock", O_RDWR | O_CREAT, 0666);
+  if (singleton_lock_fd < 0) {
     log_error("Cannot open singleton lock /tmp/skald.lock (%s). If it is owned "
               "by another user, remove it: sudo rm /tmp/skald.lock",
               strerror(errno));
     return false;
   }
-  if (flock(g_singleton_lock_fd, LOCK_EX | LOCK_NB) != 0) {
+  if (flock(singleton_lock_fd, LOCK_EX | LOCK_NB) != 0) {
     log_info("Another instance is already running. Exiting.");
-    close(g_singleton_lock_fd);
-    g_singleton_lock_fd = -1;
+    close(singleton_lock_fd);
+    singleton_lock_fd = -1;
     return false;
   }
-  fcntl(g_singleton_lock_fd, F_SETFD, FD_CLOEXEC);
+  fcntl(singleton_lock_fd, F_SETFD, FD_CLOEXEC);
   return true;
 }
 

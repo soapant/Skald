@@ -50,45 +50,45 @@ typedef struct {
   unsigned long color;
 } RawCell;
 
-__thread RawCell g_raw_cells[RAW_LINE_CAP];
+__thread RawCell raw_cells[RAW_LINE_CAP];
 
-__thread char g_raw_text[RAW_LINE_CAP + 1];
+__thread char raw_text[RAW_LINE_CAP + 1];
 
-__thread int g_raw_map_x[RAW_LINE_CAP];
+__thread int raw_map_x[RAW_LINE_CAP];
 
-__thread int g_raw_map_top[RAW_LINE_CAP];
+__thread int raw_map_top[RAW_LINE_CAP];
 
-__thread int g_raw_count = 0;
+__thread int raw_count = 0;
 
-__thread int g_raw_y = 0;
+__thread int raw_y = 0;
 
-__thread int g_raw_x0 = 0;
+__thread int raw_x0 = 0;
 
-__thread int g_raw_pitch = 0;
+__thread int raw_pitch = 0;
 
-__thread int g_raw_fontsize = 0;
+__thread int raw_fontsize = 0;
 
-__thread FontHandle g_raw_font;
+__thread FontHandle raw_font;
 
-__thread bool g_raw_font_owned = false;
+__thread bool raw_font_owned = false;
 
-__thread Display *g_raw_dpy = NULL;
+__thread Display *raw_dpy = NULL;
 
-__thread XftDraw *g_raw_xd = NULL;
+__thread XftDraw *raw_xd = NULL;
 
-__thread Visual *g_raw_vis = NULL;
+__thread Visual *raw_vis = NULL;
 
-__thread Colormap g_raw_cmap = 0;
+__thread Colormap raw_cmap = 0;
 
-__thread int g_raw_map_count = 0;
+__thread int raw_map_count = 0;
 
-__thread int g_raw_map_y = 0;
+__thread int raw_map_y = 0;
 
-__thread int g_raw_map_x0 = 0;
+__thread int raw_map_x0 = 0;
 
-__thread int g_raw_map_pitch = 0;
+__thread int raw_map_pitch = 0;
 
-__thread XftDraw *g_raw_map_xd = NULL;
+__thread XftDraw *raw_map_xd = NULL;
 
 int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
   return x11_measure_utf8_fallback(dpy, xf, s, n, 0);
@@ -101,19 +101,19 @@ void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
   int i = ls;
   while (i < le) {
     int j = i + 1;
-    while (j < le && g_raw_cells[j].color == g_raw_cells[i].color)
+    while (j < le && raw_cells[j].color == raw_cells[i].color)
       j++;
-    int w = x11_raw_measure(dpy, xf, g_raw_text + i, j - i);
+    int w = x11_raw_measure(dpy, xf, raw_text + i, j - i);
     int k = 0;
-    while (k < nu && ucols[k] != g_raw_cells[i].color)
+    while (k < nu && ucols[k] != raw_cells[i].color)
       k++;
     if (k >= nu)
       k = 0;
-    x11_draw_utf8_fallback(dpy, xd, &xcols[k], cx, baseline, xf, g_raw_text + i,
+    x11_draw_utf8_fallback(dpy, xd, &xcols[k], cx, baseline, xf, raw_text + i,
                            j - i, 0);
     for (int m = i; m < j; m++) {
-      g_raw_map_x[m] = cx;
-      g_raw_map_top[m] = rowTop;
+      raw_map_x[m] = cx;
+      raw_map_top[m] = rowTop;
     }
     cx += w;
     i = j;
@@ -121,28 +121,28 @@ void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
 }
 
 void x11_raw_line_flush(void) {
-  int count = g_raw_count;
-  g_raw_count = 0;
+  int count = raw_count;
+  raw_count = 0;
   if (count <= 0)
     return;
-  Display *dpy = g_raw_dpy;
-  XftDraw *xd = g_raw_xd;
-  Visual *vis = g_raw_vis;
-  Colormap cmap = g_raw_cmap;
-  XftFont *xf = FH_TO_XFT(g_raw_font);
-  int x0 = g_raw_x0;
-  int y = g_raw_y;
-  int pitch = g_raw_pitch;
-  bool owned = g_raw_font_owned;
-  g_raw_font_owned = false;
+  Display *dpy = raw_dpy;
+  XftDraw *xd = raw_xd;
+  Visual *vis = raw_vis;
+  Colormap cmap = raw_cmap;
+  XftFont *xf = FH_TO_XFT(raw_font);
+  int x0 = raw_x0;
+  int y = raw_y;
+  int pitch = raw_pitch;
+  bool owned = raw_font_owned;
+  raw_font_owned = false;
   if (!dpy || !xd || !xf) {
     if (owned)
-      Platform_DestroyFont(g_raw_font);
+      Platform_DestroyFont(raw_font);
     return;
   }
   for (int i = 0; i < count; i++)
-    g_raw_text[i] = g_raw_cells[i].ch;
-  g_raw_text[count] = '\0';
+    raw_text[i] = raw_cells[i].ch;
+  raw_text[count] = '\0';
   int avail = 900 - x0 - 10;
   if (avail < 40)
     avail = 40;
@@ -153,10 +153,10 @@ void x11_raw_line_flush(void) {
   int nu = 0;
   for (int i = 0; i < count && nu < 64; i++) {
     int k = 0;
-    while (k < nu && ucols[k] != g_raw_cells[i].color)
+    while (k < nu && ucols[k] != raw_cells[i].color)
       k++;
     if (k >= nu)
-      ucols[nu++] = g_raw_cells[i].color;
+      ucols[nu++] = raw_cells[i].color;
   }
   XftColor xcols[64];
   for (int k = 0; k < nu; k++)
@@ -168,23 +168,23 @@ void x11_raw_line_flush(void) {
   int lw = 0;
   while (p < count) {
     int ws = p;
-    while (ws < count && g_raw_text[ws] == ' ')
+    while (ws < count && raw_text[ws] == ' ')
       ws++;
     if (ws >= count) {
       for (int m = p; m < count; m++) {
-        g_raw_map_x[m] = x0 + lw;
-        g_raw_map_top[m] = y + row * lineH;
+        raw_map_x[m] = x0 + lw;
+        raw_map_top[m] = y + row * lineH;
       }
       break;
     }
     for (int m = p; m < ws; m++) {
-      g_raw_map_x[m] = x0;
-      g_raw_map_top[m] = y + row * lineH;
+      raw_map_x[m] = x0;
+      raw_map_top[m] = y + row * lineH;
     }
     int we = ws;
-    while (we < count && g_raw_text[we] != ' ')
+    while (we < count && raw_text[we] != ' ')
       we++;
-    int ww = x11_raw_measure(dpy, xf, g_raw_text + ws, we - ws);
+    int ww = x11_raw_measure(dpy, xf, raw_text + ws, we - ws);
     if (ww > avail) {
       if (le > ls) {
         x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
@@ -196,16 +196,16 @@ void x11_raw_line_flush(void) {
         int lo = 0, hi = we - c;
         while (lo < hi) {
           int mid = (lo + hi + 1) / 2;
-          if (x11_raw_measure(dpy, xf, g_raw_text + c, mid) <= avail)
+          if (x11_raw_measure(dpy, xf, raw_text + c, mid) <= avail)
             lo = mid;
           else
             hi = mid - 1;
         }
         int n = lo;
-        while (n > 0 && (((unsigned char)g_raw_text[c + n] & 0xC0) == 0x80))
+        while (n > 0 && (((unsigned char)raw_text[c + n] & 0xC0) == 0x80))
           n--;
         if (n <= 0) {
-          unsigned char lc = (unsigned char)g_raw_text[c];
+          unsigned char lc = (unsigned char)raw_text[c];
           if ((lc & 0x80) == 0)
             n = 1;
           else if ((lc & 0xE0) == 0xC0)
@@ -222,7 +222,7 @@ void x11_raw_line_flush(void) {
         if (c + n >= we) {
           ls = c;
           le = we;
-          lw = x11_raw_measure(dpy, xf, g_raw_text + c, we - c);
+          lw = x11_raw_measure(dpy, xf, raw_text + c, we - c);
           c = we;
           break;
         }
@@ -254,57 +254,57 @@ void x11_raw_line_flush(void) {
     x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
                       y + ascent + row * lineH, y + row * lineH);
   }
-  g_raw_map_count = count;
-  g_raw_map_y = y;
-  g_raw_map_x0 = x0;
-  g_raw_map_pitch = pitch;
-  g_raw_map_xd = xd;
+  raw_map_count = count;
+  raw_map_y = y;
+  raw_map_x0 = x0;
+  raw_map_pitch = pitch;
+  raw_map_xd = xd;
   for (int k = 0; k < nu; k++)
     XftColorFree(dpy, vis, cmap, &xcols[k]);
   if (owned)
-    Platform_DestroyFont(g_raw_font);
+    Platform_DestroyFont(raw_font);
 }
 
 bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
                        FontHandle fh, bool owned, int fontsize) {
-  if (g_raw_count > 0) {
-    bool same = (y == g_raw_y) && (fontsize == g_raw_fontsize) &&
-                (g_raw_xd == g_draw_xd);
-    if (same && g_raw_count >= 2)
-      same = (x == g_raw_x0 + g_raw_count * g_raw_pitch);
-    if (same && g_raw_count == 1) {
-      int p = x - g_raw_x0;
+  if (raw_count > 0) {
+    bool same = (y == raw_y) && (fontsize == raw_fontsize) &&
+                (raw_xd == g_draw_xd);
+    if (same && raw_count >= 2)
+      same = (x == raw_x0 + raw_count * raw_pitch);
+    if (same && raw_count == 1) {
+      int p = x - raw_x0;
       if (p <= 0)
         same = false;
       else
-        g_raw_pitch = p;
+        raw_pitch = p;
     }
-    if (same && owned && !g_raw_font_owned)
+    if (same && owned && !raw_font_owned)
       same = false;
     if (same && !owned)
-      same = (FH_TO_XFT(fh) == FH_TO_XFT(g_raw_font));
+      same = (FH_TO_XFT(fh) == FH_TO_XFT(raw_font));
     if (!same)
       x11_raw_line_flush();
   }
-  if (g_raw_count >= RAW_LINE_CAP)
+  if (raw_count >= RAW_LINE_CAP)
     return false;
-  if (g_raw_count == 0) {
-    g_raw_x0 = x;
-    g_raw_y = y;
-    g_raw_pitch = 0;
-    g_raw_fontsize = fontsize;
-    g_raw_font = fh;
-    g_raw_font_owned = owned;
-    g_raw_dpy = g_draw_dpy;
-    g_raw_xd = g_draw_xd;
-    g_raw_vis = g_draw_vis;
-    g_raw_cmap = g_draw_cmap;
+  if (raw_count == 0) {
+    raw_x0 = x;
+    raw_y = y;
+    raw_pitch = 0;
+    raw_fontsize = fontsize;
+    raw_font = fh;
+    raw_font_owned = owned;
+    raw_dpy = g_draw_dpy;
+    raw_xd = g_draw_xd;
+    raw_vis = g_draw_vis;
+    raw_cmap = g_draw_cmap;
   } else if (owned) {
     Platform_DestroyFont(fh);
   }
-  g_raw_cells[g_raw_count].ch = ch;
-  g_raw_cells[g_raw_count].color = color;
-  g_raw_count++;
+  raw_cells[raw_count].ch = ch;
+  raw_cells[raw_count].color = color;
+  raw_count++;
   return true;
 }
 
@@ -330,21 +330,21 @@ void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
     *cmap = g_draw_cmap;
 }
 
-static Display *g_line_dpy = NULL;
+static Display *line_dpy = NULL;
 
-static int g_line_size = 0;
+static int line_size = 0;
 
-static XftFont *g_line_font = NULL;
+static XftFont *line_font = NULL;
 
 XftFont *x11_line_font(Display *dpy, int size) {
   if (size <= 0)
     size = FontSize;
-  if (!g_line_font || g_line_dpy != dpy || g_line_size != size) {
-    if (g_line_font && g_line_dpy)
-      XftFontClose(g_line_dpy, g_line_font);
-    g_line_font = NULL;
-    g_line_dpy = NULL;
-    g_line_size = 0;
+  if (!line_font || line_dpy != dpy || line_size != size) {
+    if (line_font && line_dpy)
+      XftFontClose(line_dpy, line_font);
+    line_font = NULL;
+    line_dpy = NULL;
+    line_size = 0;
     if (!dpy)
       return NULL;
     int screen = DefaultScreen(dpy);
@@ -357,11 +357,11 @@ XftFont *x11_line_font(Display *dpy, int size) {
       xf = XftFontOpenName(dpy, screen, "fixed");
     if (!xf)
       return NULL;
-    g_line_font = xf;
-    g_line_dpy = dpy;
-    g_line_size = size;
+    line_font = xf;
+    line_dpy = dpy;
+    line_size = size;
   }
-  return g_line_font;
+  return line_font;
 }
 
 int x11_editbox_measure(const char *text, int len, void *user) {

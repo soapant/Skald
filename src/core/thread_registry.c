@@ -13,21 +13,21 @@ typedef struct {
   char owner[512];
 } ThreadEntry;
 
-static ThreadEntry *g_threads = NULL;
-static int g_thread_count = 0;
-static int g_thread_cap = 0;
-static void *g_thread_mtx = NULL;
+static ThreadEntry *threads = NULL;
+static int thread_count = 0;
+static int thread_cap = 0;
+static void *thread_mtx = NULL;
 
 static void thread_reg_lock(void) {
-  if (!g_thread_mtx)
-    g_thread_mtx = Platform_MutexCreate();
-  if (g_thread_mtx)
-    Platform_MutexLock(g_thread_mtx);
+  if (!thread_mtx)
+    thread_mtx = Platform_MutexCreate();
+  if (thread_mtx)
+    Platform_MutexLock(thread_mtx);
 }
 
 static void thread_reg_unlock(void) {
-  if (g_thread_mtx)
-    Platform_MutexUnlock(g_thread_mtx);
+  if (thread_mtx)
+    Platform_MutexUnlock(thread_mtx);
 }
 
 static void basename_of(const char *path, char *out, size_t n) {
@@ -56,22 +56,22 @@ void ThreadRegistry_Add(void *ctx, const char *owner_path) {
   if (!ctx)
     return;
   thread_reg_lock();
-  if (g_thread_count >= g_thread_cap) {
-    int cap = g_thread_cap > 0 ? g_thread_cap * 2 : 16;
-    ThreadEntry *grown = realloc(g_threads, (size_t)cap * sizeof(*g_threads));
+  if (thread_count >= thread_cap) {
+    int cap = thread_cap > 0 ? thread_cap * 2 : 16;
+    ThreadEntry *grown = realloc(threads, (size_t)cap * sizeof(*threads));
     if (!grown) {
       thread_reg_unlock();
       return;
     }
-    g_threads = grown;
-    g_thread_cap = cap;
+    threads = grown;
+    thread_cap = cap;
   }
-  g_threads[g_thread_count].ctx = ctx;
-  g_threads[g_thread_count].owner[0] = '\0';
+  threads[thread_count].ctx = ctx;
+  threads[thread_count].owner[0] = '\0';
   if (owner_path && owner_path[0])
-    snprintf(g_threads[g_thread_count].owner,
-             sizeof(g_threads[g_thread_count].owner), "%s", owner_path);
-  g_thread_count++;
+    snprintf(threads[thread_count].owner,
+             sizeof(threads[thread_count].owner), "%s", owner_path);
+  thread_count++;
   thread_reg_unlock();
 }
 
@@ -79,10 +79,10 @@ void ThreadRegistry_Finish(void *ctx) {
   if (!ctx)
     return;
   thread_reg_lock();
-  for (int i = 0; i < g_thread_count; i++) {
-    if (g_threads[i].ctx == ctx) {
-      g_threads[i] = g_threads[g_thread_count - 1];
-      g_thread_count--;
+  for (int i = 0; i < thread_count; i++) {
+    if (threads[i].ctx == ctx) {
+      threads[i] = threads[thread_count - 1];
+      thread_count--;
       thread_reg_unlock();
       return;
     }
@@ -94,8 +94,8 @@ bool ThreadRegistry_OwnerActive(const char *owner_path) {
   if (!owner_path || !owner_path[0])
     return false;
   thread_reg_lock();
-  for (int i = 0; i < g_thread_count; i++) {
-    if (owner_matches(g_threads[i].owner, owner_path)) {
+  for (int i = 0; i < thread_count; i++) {
+    if (owner_matches(threads[i].owner, owner_path)) {
       thread_reg_unlock();
       return true;
     }

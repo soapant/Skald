@@ -20,13 +20,13 @@
 
 #include "helpers/win32/message_popup_win32.h"
 
-static int g_win32_msg_w = 0;
+static int win32_msg_w = 0;
 
-static int g_win32_msg_h = 0;
+static int win32_msg_h = 0;
 
-static HWND g_hover_msg_hwnd = NULL;
+static HWND hover_msg_hwnd = NULL;
 
-static HWND g_last_created_msg_hwnd = NULL;
+static HWND last_created_msg_hwnd = NULL;
 
 HWND g_msg_slots[MSG_SLOT_MAX];
 
@@ -47,8 +47,8 @@ void win32_msg_slot_unregister(HWND hwnd) {
   for (int i = idx; i < g_msg_slot_count - 1; i++)
     g_msg_slots[i] = g_msg_slots[i + 1];
   g_msg_slot_count--;
-  if (hwnd == g_hover_msg_hwnd)
-    g_hover_msg_hwnd = NULL;
+  if (hwnd == hover_msg_hwnd)
+    hover_msg_hwnd = NULL;
 }
 
 void win32_msg_slot_register(HWND hwnd) {
@@ -60,7 +60,7 @@ void win32_msg_slot_register(HWND hwnd) {
   if (g_msg_slot_count >= MSG_SLOT_MAX)
     return;
   g_msg_slots[g_msg_slot_count++] = hwnd;
-  g_last_created_msg_hwnd = hwnd;
+  last_created_msg_hwnd = hwnd;
 }
 
 bool win32_message_popup_any_open(void) { return g_msg_slot_count > 0; }
@@ -278,24 +278,24 @@ bool message_popup_create(int x, int y, int w, int h) {
   return true;
 }
 
-static char g_hover_key[64] = {0};
+static char hover_key[64] = {0};
 
-void win32_msg_created_clear(void) { g_last_created_msg_hwnd = NULL; }
+void win32_msg_created_clear(void) { last_created_msg_hwnd = NULL; }
 
 void win32_msg_hover_release(const char *key) {
   if (!key || !key[0]) {
     return;
   }
-  if (strcmp(g_hover_key, key) != 0) {
+  if (strcmp(hover_key, key) != 0) {
     return;
   }
-  HWND hw = g_hover_msg_hwnd;
+  HWND hw = hover_msg_hwnd;
   if (hw && IsWindow(hw)) {
     KillTimer(hw, 999);
     DestroyWindow(hw);
   }
-  g_hover_msg_hwnd = NULL;
-  g_hover_key[0] = '\0';
+  hover_msg_hwnd = NULL;
+  hover_key[0] = '\0';
 }
 
 void win32_msg_hover_present(PlHoverMessageSpec spec) {
@@ -310,11 +310,11 @@ void win32_msg_hover_present(PlHoverMessageSpec spec) {
   ColorRef color = spec.color;
   bool no_bg = spec.no_bg;
 
-  HWND existing = g_hover_msg_hwnd;
-  if (g_hover_key[0] && strcmp(g_hover_key, key) == 0 && existing &&
+  HWND existing = hover_msg_hwnd;
+  if (hover_key[0] && strcmp(hover_key, key) == 0 && existing &&
       IsWindow(existing)) {
-    SetWindowPos(existing, HWND_TOPMOST, centerX - g_win32_msg_w / 2,
-                 centerY - g_win32_msg_h / 2, g_win32_msg_w, g_win32_msg_h,
+    SetWindowPos(existing, HWND_TOPMOST, centerX - win32_msg_w / 2,
+                 centerY - win32_msg_h / 2, win32_msg_w, win32_msg_h,
                  SWP_NOACTIVATE | SWP_SHOWWINDOW);
     FadeWindowData *hd =
         (FadeWindowData *)GetWindowLongPtrA(existing, GWLP_USERDATA);
@@ -344,7 +344,7 @@ void win32_msg_hover_present(PlHoverMessageSpec spec) {
       winHeight = maxHeight;
   }
 
-  win32_msg_hover_release(g_hover_key);
+  win32_msg_hover_release(hover_key);
   Platform_CreateDisplayMessageWindow(
       (PlCreateDisplayMessageWindowSpec){.message = message,
                                          .x = centerX,
@@ -356,12 +356,12 @@ void win32_msg_hover_present(PlHoverMessageSpec spec) {
                                          .no_bg = no_bg,
                                          .render = NULL,
                                          .name = NULL});
-  g_win32_msg_w = winWidth;
-  g_win32_msg_h = winHeight;
-  snprintf(g_hover_key, sizeof(g_hover_key), "%s", key);
-  g_hover_msg_hwnd = g_last_created_msg_hwnd;
+  win32_msg_w = winWidth;
+  win32_msg_h = winHeight;
+  snprintf(hover_key, sizeof(hover_key), "%s", key);
+  hover_msg_hwnd = last_created_msg_hwnd;
 
-  HWND hw = g_hover_msg_hwnd;
+  HWND hw = hover_msg_hwnd;
   if (hw && IsWindow(hw)) {
     KillTimer(hw, 999);
     SetWindowPos(hw, HWND_TOPMOST, centerX - winWidth / 2,

@@ -23,15 +23,15 @@ typedef struct {
   int window_count;
 } RemapBinding;
 
-static RemapBinding g_remaps[MAX_REMAPS];
-static int g_remap_count = 0;
+static RemapBinding remaps[MAX_REMAPS];
+static int remap_count = 0;
 
-static int g_phys_vk[256] = {0};
-static int g_virt_vk[256] = {0};
-static unsigned long long g_key_seq[256] = {0};
-static unsigned long long g_seq_counter = 0;
+static int phys_vk[256] = {0};
+static int virt_vk[256] = {0};
+static unsigned long long key_seq[256] = {0};
+static unsigned long long seq_counter = 0;
 
-bool remap_has_bindings(void) { return g_remap_count > 0; }
+bool remap_has_bindings(void) { return remap_count > 0; }
 
 static bool remap_window_eq(const char *a, const char *b) {
   if (a == b)
@@ -68,7 +68,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
                              const char *const *windows) {
   if (!src || !dst)
     return false;
-  if (g_remap_count >= MAX_REMAPS)
+  if (remap_count >= MAX_REMAPS)
     return false;
   RemapBinding b = {0};
   b.whitelist = whitelist;
@@ -114,8 +114,8 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
     b.dst_vk = dst_vks[0];
   else
     b.dst_vk = 0;
-  for (int i = 0; i < g_remap_count; i++) {
-    RemapBinding *e = &g_remaps[i];
+  for (int i = 0; i < remap_count; i++) {
+    RemapBinding *e = &remaps[i];
     if (e->src_mods == b.src_mods && e->dst_mods == b.dst_mods &&
         e->dst_vk == b.dst_vk && e->src_vk_count == b.src_vk_count &&
         e->whitelist == b.whitelist && e->window_count == b.window_count) {
@@ -130,14 +130,14 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
           same = false;
       if (same) {
         log_warn("remap duplicate ignored src='%s' dst='%s' total=%d", src, dst,
-                 g_remap_count);
+                 remap_count);
         for (int k = 0; k < b.window_count; k++)
           free(b.windows[k]);
         return true;
       }
     }
   }
-  g_remaps[g_remap_count++] = b;
+  remaps[remap_count++] = b;
   return true;
 }
 
@@ -146,68 +146,68 @@ void remap_update_phys(int vk_code, int value) {
     return;
   if (value == 2)
     return;
-  bool was_down = g_phys_vk[vk_code];
-  g_phys_vk[vk_code] = (value != 0);
+  bool was_down = phys_vk[vk_code];
+  phys_vk[vk_code] = (value != 0);
   if (value != 0 && !was_down) {
-    g_seq_counter++;
-    g_key_seq[vk_code] = g_seq_counter;
+    seq_counter++;
+    key_seq[vk_code] = seq_counter;
   } else if (value == 0) {
-    g_key_seq[vk_code] = 0;
+    key_seq[vk_code] = 0;
   }
 }
 
 void remap_reset(void) {
   for (int i = 0; i < 256; i++) {
-    if (g_virt_vk[i]) {
+    if (virt_vk[i]) {
       Platform_EmitKey(i, 0);
-      g_virt_vk[i] = 0;
+      virt_vk[i] = 0;
     }
-    g_phys_vk[i] = 0;
-    g_key_seq[i] = 0;
+    phys_vk[i] = 0;
+    key_seq[i] = 0;
   }
-  g_seq_counter = 0;
+  seq_counter = 0;
 }
 
 bool remap_check_strict_order(int trigger_vk, int mods) {
   if (trigger_vk < 0 || trigger_vk >= 256)
     return true;
-  unsigned long long trig_seq = g_key_seq[trigger_vk];
+  unsigned long long trig_seq = key_seq[trigger_vk];
   if (trig_seq == 0)
     return false;
 
   if (mods & HOTKEY_MOD_CTRL) {
     unsigned long long mseq = 0;
-    if (g_key_seq[VK_LCONTROL])
-      mseq = g_key_seq[VK_LCONTROL];
-    if (g_key_seq[VK_RCONTROL] && g_key_seq[VK_RCONTROL] > mseq)
-      mseq = g_key_seq[VK_RCONTROL];
+    if (key_seq[VK_LCONTROL])
+      mseq = key_seq[VK_LCONTROL];
+    if (key_seq[VK_RCONTROL] && key_seq[VK_RCONTROL] > mseq)
+      mseq = key_seq[VK_RCONTROL];
     if (mseq > trig_seq)
       return false;
   }
   if (mods & HOTKEY_MOD_ALT) {
     unsigned long long mseq = 0;
-    if (g_key_seq[VK_LMENU])
-      mseq = g_key_seq[VK_LMENU];
-    if (g_key_seq[VK_RMENU] && g_key_seq[VK_RMENU] > mseq)
-      mseq = g_key_seq[VK_RMENU];
+    if (key_seq[VK_LMENU])
+      mseq = key_seq[VK_LMENU];
+    if (key_seq[VK_RMENU] && key_seq[VK_RMENU] > mseq)
+      mseq = key_seq[VK_RMENU];
     if (mseq > trig_seq)
       return false;
   }
   if (mods & HOTKEY_MOD_SHIFT) {
     unsigned long long mseq = 0;
-    if (g_key_seq[VK_LSHIFT])
-      mseq = g_key_seq[VK_LSHIFT];
-    if (g_key_seq[VK_RSHIFT] && g_key_seq[VK_RSHIFT] > mseq)
-      mseq = g_key_seq[VK_RSHIFT];
+    if (key_seq[VK_LSHIFT])
+      mseq = key_seq[VK_LSHIFT];
+    if (key_seq[VK_RSHIFT] && key_seq[VK_RSHIFT] > mseq)
+      mseq = key_seq[VK_RSHIFT];
     if (mseq > trig_seq)
       return false;
   }
   if (mods & HOTKEY_MOD_SUPER) {
     unsigned long long mseq = 0;
-    if (g_key_seq[VK_LWIN])
-      mseq = g_key_seq[VK_LWIN];
-    if (g_key_seq[VK_RWIN] && g_key_seq[VK_RWIN] > mseq)
-      mseq = g_key_seq[VK_RWIN];
+    if (key_seq[VK_LWIN])
+      mseq = key_seq[VK_LWIN];
+    if (key_seq[VK_RWIN] && key_seq[VK_RWIN] > mseq)
+      mseq = key_seq[VK_RWIN];
     if (mseq > trig_seq)
       return false;
   }
@@ -216,13 +216,13 @@ bool remap_check_strict_order(int trigger_vk, int mods) {
 
 int remap_current_mods(void) {
   int m = 0;
-  if (g_phys_vk[VK_LCONTROL] || g_phys_vk[VK_RCONTROL] || g_phys_vk[VK_CONTROL])
+  if (phys_vk[VK_LCONTROL] || phys_vk[VK_RCONTROL] || phys_vk[VK_CONTROL])
     m |= HOTKEY_MOD_CTRL;
-  if (g_phys_vk[VK_LMENU] || g_phys_vk[VK_RMENU] || g_phys_vk[VK_MENU])
+  if (phys_vk[VK_LMENU] || phys_vk[VK_RMENU] || phys_vk[VK_MENU])
     m |= HOTKEY_MOD_ALT;
-  if (g_phys_vk[VK_LSHIFT] || g_phys_vk[VK_RSHIFT] || g_phys_vk[VK_SHIFT])
+  if (phys_vk[VK_LSHIFT] || phys_vk[VK_RSHIFT] || phys_vk[VK_SHIFT])
     m |= HOTKEY_MOD_SHIFT;
-  if (g_phys_vk[VK_LWIN] || g_phys_vk[VK_RWIN])
+  if (phys_vk[VK_LWIN] || phys_vk[VK_RWIN])
     m |= HOTKEY_MOD_SUPER;
   return m;
 }
@@ -230,34 +230,34 @@ int remap_current_mods(void) {
 bool remap_is_virt_held(int vk) {
   if (vk < 0 || vk >= 256)
     return false;
-  return g_virt_vk[vk];
+  return virt_vk[vk];
 }
 
 static bool binding_active(RemapBinding *b) {
   if (b->src_mods == 0 && b->src_vk_count == 0)
     return false;
   if (b->src_mods & HOTKEY_MOD_CTRL) {
-    if (!(g_phys_vk[VK_LCONTROL] || g_phys_vk[VK_RCONTROL] ||
-          g_phys_vk[VK_CONTROL]))
+    if (!(phys_vk[VK_LCONTROL] || phys_vk[VK_RCONTROL] ||
+          phys_vk[VK_CONTROL]))
       return false;
   }
   if (b->src_mods & HOTKEY_MOD_ALT) {
-    if (!(g_phys_vk[VK_LMENU] || g_phys_vk[VK_RMENU] || g_phys_vk[VK_MENU]))
+    if (!(phys_vk[VK_LMENU] || phys_vk[VK_RMENU] || phys_vk[VK_MENU]))
       return false;
   }
   if (b->src_mods & HOTKEY_MOD_SHIFT) {
-    if (!(g_phys_vk[VK_LSHIFT] || g_phys_vk[VK_RSHIFT] || g_phys_vk[VK_SHIFT]))
+    if (!(phys_vk[VK_LSHIFT] || phys_vk[VK_RSHIFT] || phys_vk[VK_SHIFT]))
       return false;
   }
   if (b->src_mods & HOTKEY_MOD_SUPER) {
-    if (!(g_phys_vk[VK_LWIN] || g_phys_vk[VK_RWIN]))
+    if (!(phys_vk[VK_LWIN] || phys_vk[VK_RWIN]))
       return false;
   }
   for (int i = 0; i < b->src_vk_count; i++) {
     int vk = b->src_vks[i];
     if (vk < 0 || vk >= 256)
       return false;
-    if (!g_phys_vk[vk])
+    if (!phys_vk[vk])
       return false;
   }
   return true;
@@ -268,132 +268,132 @@ static void remap_fire_binding(RemapBinding *b, int trigger_vk) {
     int sv = b->src_vks[k];
     if (sv != trigger_vk) {
       Platform_EmitKey(sv, 0);
-      g_virt_vk[sv] = 0;
+      virt_vk[sv] = 0;
     }
   }
   if (b->src_mods & HOTKEY_MOD_CTRL) {
-    if (g_phys_vk[VK_LCONTROL]) {
+    if (phys_vk[VK_LCONTROL]) {
       Platform_EmitKey(VK_LCONTROL, 0);
-      g_virt_vk[VK_LCONTROL] = 0;
+      virt_vk[VK_LCONTROL] = 0;
     }
-    if (g_phys_vk[VK_RCONTROL]) {
+    if (phys_vk[VK_RCONTROL]) {
       Platform_EmitKey(VK_RCONTROL, 0);
-      g_virt_vk[VK_RCONTROL] = 0;
+      virt_vk[VK_RCONTROL] = 0;
     }
   }
   if (b->src_mods & HOTKEY_MOD_ALT) {
-    if (g_phys_vk[VK_LMENU]) {
+    if (phys_vk[VK_LMENU]) {
       Platform_EmitKey(VK_LMENU, 0);
-      g_virt_vk[VK_LMENU] = 0;
+      virt_vk[VK_LMENU] = 0;
     }
-    if (g_phys_vk[VK_RMENU]) {
+    if (phys_vk[VK_RMENU]) {
       Platform_EmitKey(VK_RMENU, 0);
-      g_virt_vk[VK_RMENU] = 0;
+      virt_vk[VK_RMENU] = 0;
     }
   }
   if (b->src_mods & HOTKEY_MOD_SHIFT) {
-    if (g_phys_vk[VK_LSHIFT]) {
+    if (phys_vk[VK_LSHIFT]) {
       Platform_EmitKey(VK_LSHIFT, 0);
-      g_virt_vk[VK_LSHIFT] = 0;
+      virt_vk[VK_LSHIFT] = 0;
     }
-    if (g_phys_vk[VK_RSHIFT]) {
+    if (phys_vk[VK_RSHIFT]) {
       Platform_EmitKey(VK_RSHIFT, 0);
-      g_virt_vk[VK_RSHIFT] = 0;
+      virt_vk[VK_RSHIFT] = 0;
     }
   }
   if (b->src_mods & HOTKEY_MOD_SUPER) {
-    if (g_phys_vk[VK_LWIN]) {
+    if (phys_vk[VK_LWIN]) {
       Platform_EmitKey(VK_LWIN, 0);
-      g_virt_vk[VK_LWIN] = 0;
+      virt_vk[VK_LWIN] = 0;
     }
-    if (g_phys_vk[VK_RWIN]) {
+    if (phys_vk[VK_RWIN]) {
       Platform_EmitKey(VK_RWIN, 0);
-      g_virt_vk[VK_RWIN] = 0;
+      virt_vk[VK_RWIN] = 0;
     }
   }
   if (b->dst_mods & HOTKEY_MOD_CTRL) {
     Platform_EmitKey(VK_LCONTROL, 1);
-    g_virt_vk[VK_LCONTROL] = 1;
+    virt_vk[VK_LCONTROL] = 1;
   }
   if (b->dst_mods & HOTKEY_MOD_SHIFT) {
     Platform_EmitKey(VK_LSHIFT, 1);
-    g_virt_vk[VK_LSHIFT] = 1;
+    virt_vk[VK_LSHIFT] = 1;
   }
   if (b->dst_mods & HOTKEY_MOD_ALT) {
     Platform_EmitKey(VK_LMENU, 1);
-    g_virt_vk[VK_LMENU] = 1;
+    virt_vk[VK_LMENU] = 1;
   }
   if (b->dst_mods & HOTKEY_MOD_SUPER) {
     Platform_EmitKey(VK_LWIN, 1);
-    g_virt_vk[VK_LWIN] = 1;
+    virt_vk[VK_LWIN] = 1;
   }
   if (b->dst_vk) {
     Platform_EmitKey(b->dst_vk, 1);
-    g_virt_vk[b->dst_vk] = 1;
+    virt_vk[b->dst_vk] = 1;
   }
 }
 
 static void remap_release_binding(RemapBinding *b, bool restore_src) {
-  if (b->dst_vk && g_virt_vk[b->dst_vk]) {
+  if (b->dst_vk && virt_vk[b->dst_vk]) {
     Platform_EmitKey(b->dst_vk, 0);
-    g_virt_vk[b->dst_vk] = 0;
+    virt_vk[b->dst_vk] = 0;
   }
-  if ((b->dst_mods & HOTKEY_MOD_CTRL) && g_virt_vk[VK_LCONTROL]) {
+  if ((b->dst_mods & HOTKEY_MOD_CTRL) && virt_vk[VK_LCONTROL]) {
     Platform_EmitKey(VK_LCONTROL, 0);
-    g_virt_vk[VK_LCONTROL] = 0;
+    virt_vk[VK_LCONTROL] = 0;
   }
-  if ((b->dst_mods & HOTKEY_MOD_SHIFT) && g_virt_vk[VK_LSHIFT]) {
+  if ((b->dst_mods & HOTKEY_MOD_SHIFT) && virt_vk[VK_LSHIFT]) {
     Platform_EmitKey(VK_LSHIFT, 0);
-    g_virt_vk[VK_LSHIFT] = 0;
+    virt_vk[VK_LSHIFT] = 0;
   }
-  if ((b->dst_mods & HOTKEY_MOD_ALT) && g_virt_vk[VK_LMENU]) {
+  if ((b->dst_mods & HOTKEY_MOD_ALT) && virt_vk[VK_LMENU]) {
     Platform_EmitKey(VK_LMENU, 0);
-    g_virt_vk[VK_LMENU] = 0;
+    virt_vk[VK_LMENU] = 0;
   }
-  if ((b->dst_mods & HOTKEY_MOD_SUPER) && g_virt_vk[VK_LWIN]) {
+  if ((b->dst_mods & HOTKEY_MOD_SUPER) && virt_vk[VK_LWIN]) {
     Platform_EmitKey(VK_LWIN, 0);
-    g_virt_vk[VK_LWIN] = 0;
+    virt_vk[VK_LWIN] = 0;
   }
   if (!restore_src)
     return;
   if (b->src_mods & HOTKEY_MOD_CTRL) {
-    if (g_phys_vk[VK_LCONTROL]) {
+    if (phys_vk[VK_LCONTROL]) {
       Platform_EmitKey(VK_LCONTROL, 1);
-      g_virt_vk[VK_LCONTROL] = 1;
+      virt_vk[VK_LCONTROL] = 1;
     }
-    if (g_phys_vk[VK_RCONTROL]) {
+    if (phys_vk[VK_RCONTROL]) {
       Platform_EmitKey(VK_RCONTROL, 1);
-      g_virt_vk[VK_RCONTROL] = 1;
+      virt_vk[VK_RCONTROL] = 1;
     }
   }
   if (b->src_mods & HOTKEY_MOD_ALT) {
-    if (g_phys_vk[VK_LMENU]) {
+    if (phys_vk[VK_LMENU]) {
       Platform_EmitKey(VK_LMENU, 1);
-      g_virt_vk[VK_LMENU] = 1;
+      virt_vk[VK_LMENU] = 1;
     }
-    if (g_phys_vk[VK_RMENU]) {
+    if (phys_vk[VK_RMENU]) {
       Platform_EmitKey(VK_RMENU, 1);
-      g_virt_vk[VK_RMENU] = 1;
+      virt_vk[VK_RMENU] = 1;
     }
   }
   if (b->src_mods & HOTKEY_MOD_SHIFT) {
-    if (g_phys_vk[VK_LSHIFT]) {
+    if (phys_vk[VK_LSHIFT]) {
       Platform_EmitKey(VK_LSHIFT, 1);
-      g_virt_vk[VK_LSHIFT] = 1;
+      virt_vk[VK_LSHIFT] = 1;
     }
-    if (g_phys_vk[VK_RSHIFT]) {
+    if (phys_vk[VK_RSHIFT]) {
       Platform_EmitKey(VK_RSHIFT, 1);
-      g_virt_vk[VK_RSHIFT] = 1;
+      virt_vk[VK_RSHIFT] = 1;
     }
   }
   if (b->src_mods & HOTKEY_MOD_SUPER) {
-    if (g_phys_vk[VK_LWIN]) {
+    if (phys_vk[VK_LWIN]) {
       Platform_EmitKey(VK_LWIN, 1);
-      g_virt_vk[VK_LWIN] = 1;
+      virt_vk[VK_LWIN] = 1;
     }
-    if (g_phys_vk[VK_RWIN]) {
+    if (phys_vk[VK_RWIN]) {
       Platform_EmitKey(VK_RWIN, 1);
-      g_virt_vk[VK_RWIN] = 1;
+      virt_vk[VK_RWIN] = 1;
     }
   }
 }
@@ -427,21 +427,21 @@ bool remap_handle_vk(int vk_code, int value) {
   if (value == 2)
     return false;
   bool active_before[64] = {0};
-  for (int i = 0; i < g_remap_count; i++)
-    active_before[i] = binding_active(&g_remaps[i]);
+  for (int i = 0; i < remap_count; i++)
+    active_before[i] = binding_active(&remaps[i]);
 
   remap_update_phys(vk_code, value);
 
   bool active_after[64] = {0};
-  for (int i = 0; i < g_remap_count; i++)
-    active_after[i] = binding_active(&g_remaps[i]);
+  for (int i = 0; i < remap_count; i++)
+    active_after[i] = binding_active(&remaps[i]);
 
   bool allowed[64];
-  for (int i = 0; i < g_remap_count; i++)
+  for (int i = 0; i < remap_count; i++)
     allowed[i] = true;
   bool need_title = false;
-  for (int i = 0; i < g_remap_count; i++) {
-    if (g_remaps[i].window_count > 0) {
+  for (int i = 0; i < remap_count; i++) {
+    if (remaps[i].window_count > 0) {
       need_title = true;
       break;
     }
@@ -449,13 +449,13 @@ bool remap_handle_vk(int vk_code, int value) {
   const char *title = NULL;
   if (need_title)
     title = Platform_GetActiveWindowTitle();
-  for (int i = 0; i < g_remap_count; i++) {
-    if (g_remaps[i].window_count > 0)
-      allowed[i] = remap_window_allowed(&g_remaps[i], title);
+  for (int i = 0; i < remap_count; i++) {
+    if (remaps[i].window_count > 0)
+      allowed[i] = remap_window_allowed(&remaps[i], title);
   }
 
-  for (int i = 0; i < g_remap_count; i++) {
-    RemapBinding *b = &g_remaps[i];
+  for (int i = 0; i < remap_count; i++) {
+    RemapBinding *b = &remaps[i];
     bool before = active_before[i];
     bool after = active_after[i];
     if (!before && after && allowed[i]) {
@@ -468,8 +468,8 @@ bool remap_handle_vk(int vk_code, int value) {
   }
 
   bool swallow = false;
-  for (int i = 0; i < g_remap_count; i++) {
-    RemapBinding *b = &g_remaps[i];
+  for (int i = 0; i < remap_count; i++) {
+    RemapBinding *b = &remaps[i];
     bool before = active_before[i] && allowed[i];
     bool after = active_after[i] && allowed[i];
     for (int k = 0; k < b->src_vk_count; k++)

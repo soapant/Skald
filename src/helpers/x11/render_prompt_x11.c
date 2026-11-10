@@ -15,47 +15,47 @@
 #include "core/types.h"
 #include "platform/platform.h"
 
-static Display *g_pbuf_dpy = NULL;
-static Window g_pbuf_win = None;
-static int g_pbuf_w = 0;
-static int g_pbuf_h = 0;
-static int g_pbuf_depth = 0;
-static Visual *g_pbuf_vis = NULL;
-static Colormap g_pbuf_cmap = None;
-static Pixmap g_pbuf_pm = None;
-static XftDraw *g_pbuf_xd = NULL;
+static Display *pbuf_dpy = NULL;
+static Window pbuf_win = None;
+static int pbuf_w = 0;
+static int pbuf_h = 0;
+static int pbuf_depth = 0;
+static Visual *pbuf_vis = NULL;
+static Colormap pbuf_cmap = None;
+static Pixmap pbuf_pm = None;
+static XftDraw *pbuf_xd = NULL;
 
 static void x11_pbuf_drop(void) {
 
-  if (g_pbuf_xd) {
-    XftDrawDestroy(g_pbuf_xd);
-    g_pbuf_xd = NULL;
+  if (pbuf_xd) {
+    XftDrawDestroy(pbuf_xd);
+    pbuf_xd = NULL;
   }
-  if (g_pbuf_pm) {
-    if (g_pbuf_dpy)
-      XFreePixmap(g_pbuf_dpy, g_pbuf_pm);
-    g_pbuf_pm = None;
+  if (pbuf_pm) {
+    if (pbuf_dpy)
+      XFreePixmap(pbuf_dpy, pbuf_pm);
+    pbuf_pm = None;
   }
-  g_pbuf_dpy = NULL;
-  g_pbuf_win = None;
-  g_pbuf_w = 0;
-  g_pbuf_h = 0;
-  g_pbuf_depth = 0;
-  g_pbuf_vis = NULL;
-  g_pbuf_cmap = None;
+  pbuf_dpy = NULL;
+  pbuf_win = None;
+  pbuf_w = 0;
+  pbuf_h = 0;
+  pbuf_depth = 0;
+  pbuf_vis = NULL;
+  pbuf_cmap = None;
 }
 
 void x11_release_prompt_buffer(Display *dpy, Window win) {
-  if (g_pbuf_dpy == dpy && g_pbuf_win == win)
+  if (pbuf_dpy == dpy && pbuf_win == win)
     x11_pbuf_drop();
 }
 
 static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
                              Visual *vis, Colormap cmap) {
 
-  if (g_pbuf_xd && g_pbuf_pm && g_pbuf_dpy == dpy && g_pbuf_win == win &&
-      g_pbuf_w == w && g_pbuf_h == h && g_pbuf_depth == depth &&
-      g_pbuf_vis == vis && g_pbuf_cmap == cmap) {
+  if (pbuf_xd && pbuf_pm && pbuf_dpy == dpy && pbuf_win == win &&
+      pbuf_w == w && pbuf_h == h && pbuf_depth == depth &&
+      pbuf_vis == vis && pbuf_cmap == cmap) {
     return true;
   }
   x11_pbuf_drop();
@@ -67,15 +67,15 @@ static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
     XFreePixmap(dpy, pm);
     return false;
   }
-  g_pbuf_dpy = dpy;
-  g_pbuf_win = win;
-  g_pbuf_w = w;
-  g_pbuf_h = h;
-  g_pbuf_depth = depth;
-  g_pbuf_vis = vis;
-  g_pbuf_cmap = cmap;
-  g_pbuf_pm = pm;
-  g_pbuf_xd = xd;
+  pbuf_dpy = dpy;
+  pbuf_win = win;
+  pbuf_w = w;
+  pbuf_h = h;
+  pbuf_depth = depth;
+  pbuf_vis = vis;
+  pbuf_cmap = cmap;
+  pbuf_pm = pm;
+  pbuf_xd = xd;
   return true;
 }
 
@@ -173,8 +173,8 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     XFlush(dpy);
     return true;
   }
-  Pixmap dbl = g_pbuf_pm;
-  XftDraw *xdDbl = g_pbuf_xd;
+  Pixmap dbl = pbuf_pm;
+  XftDraw *xdDbl = pbuf_xd;
   x11_set_dbl_visual(dpy, vis, cmap, depth);
   PromptState *pss = state;
   if (state && state->bg_color != 0) {

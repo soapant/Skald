@@ -13,24 +13,24 @@
 #define SNIPPET_MAX_BINDINGS 64
 #define SNIPPET_BUF_CAP 128
 
-static SnippetBinding g_snippets[SNIPPET_MAX_BINDINGS];
-static int g_snippet_count = 0;
-static SnippetFireFn g_fire_fn = NULL;
+static SnippetBinding snippets[SNIPPET_MAX_BINDINGS];
+static int snippet_count = 0;
+static SnippetFireFn fire_fn = NULL;
 
-static char g_buf[SNIPPET_BUF_CAP];
-static int g_buf_len = 0;
+static char buf[SNIPPET_BUF_CAP];
+static int buf_len = 0;
 
-void snippet_set_fire_fn(SnippetFireFn fn) { g_fire_fn = fn; }
+void snippet_set_fire_fn(SnippetFireFn fn) { fire_fn = fn; }
 
-void snippet_reset_buffer(void) { g_buf_len = 0; }
+void snippet_reset_buffer(void) { buf_len = 0; }
 
 const SnippetBinding *snippet_get_binding(int index) {
-  if (index < 0 || index >= g_snippet_count)
+  if (index < 0 || index >= snippet_count)
     return NULL;
-  return &g_snippets[index];
+  return &snippets[index];
 }
 
-int snippet_binding_count(void) { return g_snippet_count; }
+int snippet_binding_count(void) { return snippet_count; }
 
 static void snippet_free_binding(SnippetBinding *b) {
   if (!b)
@@ -61,44 +61,44 @@ bool snippet_register_internal(const char *trigger, const char *text,
   if (!owner[0] && caller)
     Owner_ResolveForFunc(caller, owner, sizeof(owner));
 
-  for (int i = 0; i < g_snippet_count; i++) {
-    if (g_snippets[i].trigger && strcmp(g_snippets[i].trigger, trigger) == 0) {
+  for (int i = 0; i < snippet_count; i++) {
+    if (snippets[i].trigger && strcmp(snippets[i].trigger, trigger) == 0) {
       char *nt = strdup(trigger);
       if (!nt)
         return false;
-      snippet_free_binding(&g_snippets[i]);
-      g_snippets[i].trigger = nt;
-      g_snippets[i].text = text ? strdup(text) : NULL;
-      if (text && !g_snippets[i].text)
+      snippet_free_binding(&snippets[i]);
+      snippets[i].trigger = nt;
+      snippets[i].text = text ? strdup(text) : NULL;
+      if (text && !snippets[i].text)
         log_warn("snippet '%s': text strdup failed", trigger);
-      g_snippets[i].func = func;
-      g_snippets[i].whitelist = whitelist;
-      g_snippets[i].windows = NULL;
-      g_snippets[i].window_count = 0;
-      snprintf(g_snippets[i].owner, sizeof(g_snippets[i].owner), "%s", owner);
+      snippets[i].func = func;
+      snippets[i].whitelist = whitelist;
+      snippets[i].windows = NULL;
+      snippets[i].window_count = 0;
+      snprintf(snippets[i].owner, sizeof(snippets[i].owner), "%s", owner);
       if (windows) {
         int n = 0;
         while (windows[n])
           n++;
         if (n > 0) {
-          g_snippets[i].windows = malloc((size_t)n * sizeof(char *));
-          if (!g_snippets[i].windows)
+          snippets[i].windows = malloc((size_t)n * sizeof(char *));
+          if (!snippets[i].windows)
             return false;
           for (int j = 0; j < n; j++) {
-            g_snippets[i].windows[j] = strdup(windows[j] ? windows[j] : "");
-            if (!g_snippets[i].windows[j])
+            snippets[i].windows[j] = strdup(windows[j] ? windows[j] : "");
+            if (!snippets[i].windows[j])
               return false;
           }
-          g_snippets[i].window_count = n;
+          snippets[i].window_count = n;
         }
       }
       snippet_reset_buffer();
       return true;
     }
   }
-  if (g_snippet_count >= SNIPPET_MAX_BINDINGS)
+  if (snippet_count >= SNIPPET_MAX_BINDINGS)
     return false;
-  SnippetBinding *b = &g_snippets[g_snippet_count];
+  SnippetBinding *b = &snippets[snippet_count];
   memset(b, 0, sizeof(*b));
   b->trigger = strdup(trigger);
   if (!b->trigger)
@@ -138,7 +138,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
       b->window_count = n;
     }
   }
-  g_snippet_count++;
+  snippet_count++;
   snippet_reset_buffer();
   return true;
 }
@@ -148,17 +148,17 @@ bool snippet_unregister_internal(const char *trigger) {
     return false;
   int n = 0;
   bool found = false;
-  for (int i = 0; i < g_snippet_count; i++) {
-    if (g_snippets[i].trigger && strcmp(g_snippets[i].trigger, trigger) == 0) {
-      snippet_free_binding(&g_snippets[i]);
+  for (int i = 0; i < snippet_count; i++) {
+    if (snippets[i].trigger && strcmp(snippets[i].trigger, trigger) == 0) {
+      snippet_free_binding(&snippets[i]);
       found = true;
       continue;
     }
     if (n != i)
-      g_snippets[n] = g_snippets[i];
+      snippets[n] = snippets[i];
     n++;
   }
-  g_snippet_count = n;
+  snippet_count = n;
   return found;
 }
 
@@ -167,22 +167,22 @@ void snippet_purge_owner(const char *path_a, const char *path_b) {
     return;
 
   int n = 0;
-  for (int i = 0; i < g_snippet_count; i++) {
-    if (Owner_ModuleMatches(g_snippets[i].owner, path_a, path_b)) {
+  for (int i = 0; i < snippet_count; i++) {
+    if (Owner_ModuleMatches(snippets[i].owner, path_a, path_b)) {
       log_info("snippet '%s' purged (owner unloaded)",
-               g_snippets[i].trigger ? g_snippets[i].trigger : "?");
-      snippet_free_binding(&g_snippets[i]);
+               snippets[i].trigger ? snippets[i].trigger : "?");
+      snippet_free_binding(&snippets[i]);
       continue;
     }
     if (n != i)
-      g_snippets[n] = g_snippets[i];
+      snippets[n] = snippets[i];
     n++;
   }
-  int dropped = g_snippet_count - n;
+  int dropped = snippet_count - n;
   if (dropped > 0) {
-    memset(&g_snippets[n], 0,
-           (size_t)(g_snippet_count - n) * sizeof(SnippetBinding));
-    g_snippet_count = n;
+    memset(&snippets[n], 0,
+           (size_t)(snippet_count - n) * sizeof(SnippetBinding));
+    snippet_count = n;
     log_info("snippet purged %d binding%s", dropped, dropped == 1 ? "" : "s");
   }
 }
@@ -268,21 +268,21 @@ static char snippet_char_for_vk(int vk, bool shift) {
 }
 
 static void snippet_push_char(char c) {
-  if (g_buf_len >= SNIPPET_BUF_CAP) {
-    memmove(g_buf, g_buf + 1, SNIPPET_BUF_CAP - 1);
-    g_buf_len = SNIPPET_BUF_CAP - 1;
+  if (buf_len >= SNIPPET_BUF_CAP) {
+    memmove(buf, buf + 1, SNIPPET_BUF_CAP - 1);
+    buf_len = SNIPPET_BUF_CAP - 1;
   }
-  g_buf[g_buf_len++] = c;
+  buf[buf_len++] = c;
 }
 
 static int snippet_match(void) {
-  for (int i = 0; i < g_snippet_count; i++) {
-    if (!g_snippets[i].trigger || !g_snippets[i].trigger[0])
+  for (int i = 0; i < snippet_count; i++) {
+    if (!snippets[i].trigger || !snippets[i].trigger[0])
       continue;
-    size_t tlen = strlen(g_snippets[i].trigger);
-    if ((int)tlen > g_buf_len)
+    size_t tlen = strlen(snippets[i].trigger);
+    if ((int)tlen > buf_len)
       continue;
-    if (memcmp(g_buf + g_buf_len - (int)tlen, g_snippets[i].trigger, tlen) == 0)
+    if (memcmp(buf + buf_len - (int)tlen, snippets[i].trigger, tlen) == 0)
       return i;
   }
   return -1;
@@ -292,8 +292,8 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
   if (value == 0)
     return false;
   if (vk_code == VK_BACK) {
-    if (g_buf_len > 0)
-      g_buf_len--;
+    if (buf_len > 0)
+      buf_len--;
     return false;
   }
   if (vk_code == VK_RETURN || vk_code == VK_ESCAPE) {
@@ -311,19 +311,19 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
   if (idx < 0)
     return false;
   const char *title = NULL;
-  if (g_snippets[idx].window_count > 0)
+  if (snippets[idx].window_count > 0)
     title = Platform_GetActiveWindowTitle();
-  bool allowed = snippet_window_allowed(&g_snippets[idx], title);
+  bool allowed = snippet_window_allowed(&snippets[idx], title);
   if (title)
     free((void *)title);
   if (!allowed)
     return false;
-  size_t tlen = strlen(g_snippets[idx].trigger);
+  size_t tlen = strlen(snippets[idx].trigger);
   int del = (int)tlen - (can_swallow ? 1 : 0);
   if (del < 0)
     del = 0;
   snippet_reset_buffer();
-  if (g_fire_fn)
-    g_fire_fn(idx, del);
+  if (fire_fn)
+    fire_fn(idx, del);
   return true;
 }

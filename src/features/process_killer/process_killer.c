@@ -19,13 +19,13 @@ typedef struct {
   double cpu;
 } PkProc;
 
-static PkProc g_pk[PK_MAX];
-static int g_pk_count = 0;
-static int g_pk_sort = 0;
-static SkTimer g_pk_last_collect;
-static bool g_pk_collect_started = false;
-static char g_pk_rows[PK_MAX][PK_ROW_LEN];
-static const char *g_pk_items[PK_MAX];
+static PkProc pk[PK_MAX];
+static int pk_count = 0;
+static int pk_sort_mode = 0;
+static SkTimer pk_last_collect;
+static bool pk_collect_started = false;
+static char pk_rows[PK_MAX][PK_ROW_LEN];
+static const char *pk_items[PK_MAX];
 
 static const char *pk_sort_label(int mode) {
   if (mode == 1)
@@ -107,22 +107,22 @@ static void pk_parse_line(char *line) {
     name++;
   if (*name == '\0')
     return;
-  if (g_pk_count >= PK_MAX)
+  if (pk_count >= PK_MAX)
     return;
 
-  PkProc *p = &g_pk[g_pk_count++];
+  PkProc *p = &pk[pk_count++];
   snprintf(p->name, sizeof(p->name), "%s", name);
   p->rss_kb = strtoull(rss_s, NULL, 10);
   p->cpu = strtod(cpu_s, NULL);
 }
 
 static void pk_collect_running_processes(void) {
-  g_pk_count = 0;
+  pk_count = 0;
   char *out = sk_run_terminal_command("ps -eo comm=,rss=,%cpu= --no-headers");
   if (!out)
     return;
   char *p = out;
-  while (*p && g_pk_count < PK_MAX) {
+  while (*p && pk_count < PK_MAX) {
     char *nl = strchr(p, '\n');
     if (nl)
       *nl = '\0';
@@ -137,23 +137,23 @@ static void pk_collect_running_processes(void) {
 #include <psapi.h>
 
 static int find_or_add_pk_proc(const char *name) {
-  for (int i = 0; i < g_pk_count; i++) {
-    if (strcasecmp(g_pk[i].name, name) == 0) {
+  for (int i = 0; i < pk_count; i++) {
+    if (strcasecmp(pk[i].name, name) == 0) {
       return i;
     }
   }
-  if (g_pk_count >= PK_MAX)
+  if (pk_count >= PK_MAX)
     return -1;
 
-  int index = g_pk_count++;
-  snprintf(g_pk[index].name, sizeof(g_pk[index].name), "%s", name);
-  g_pk[index].rss_kb = 0;
-  g_pk[index].cpu = 0.0;
+  int index = pk_count++;
+  snprintf(pk[index].name, sizeof(pk[index].name), "%s", name);
+  pk[index].rss_kb = 0;
+  pk[index].cpu = 0.0;
   return index;
 }
 
 static void pk_collect_running_processes(void) {
-  g_pk_count = 0;
+  pk_count = 0;
 
   typedef struct {
     DWORD pid;
@@ -213,7 +213,7 @@ static void pk_collect_running_processes(void) {
         int index = find_or_add_pk_proc(pe32.szExeFile);
         if (index != -1) {
 
-          g_pk[index].rss_kb += (unsigned long long)(pmc.PrivateUsage / 1024);
+          pk[index].rss_kb += (unsigned long long)(pmc.PrivateUsage / 1024);
 
           FILETIME ftCreation, ftExit, ftKernel, ftUser;
           if (GetProcessTimes(hProcess, &ftCreation, &ftExit, &ftKernel,
@@ -230,7 +230,7 @@ static void pk_collect_running_processes(void) {
                                             : 0;
 
                 double process_pct = ((double)delta_ticks / 1000000.0) * 100.0;
-                g_pk[index].cpu += (process_pct / num_cores);
+                pk[index].cpu += (process_pct / num_cores);
                 break;
               }
             }
@@ -243,19 +243,19 @@ static void pk_collect_running_processes(void) {
 
   CloseHandle(hSnapshot);
 
-  for (int i = 0; i < g_pk_count; i++) {
-    if (g_pk[i].cpu > 100.0)
-      g_pk[i].cpu = 100.0;
+  for (int i = 0; i < pk_count; i++) {
+    if (pk[i].cpu > 100.0)
+      pk[i].cpu = 100.0;
   }
 }
 #endif
 
 static void pk_sort(void) {
-  if (g_pk_count <= 1)
+  if (pk_count <= 1)
     return;
-  qsort(g_pk, (size_t)g_pk_count, sizeof(PkProc),
-        g_pk_sort == 0   ? pk_cmp_mem
-        : g_pk_sort == 1 ? pk_cmp_cpu
+  qsort(pk, (size_t)pk_count, sizeof(PkProc),
+        pk_sort_mode == 0   ? pk_cmp_mem
+        : pk_sort_mode == 1 ? pk_cmp_cpu
                          : pk_cmp_alpha);
 }
 
@@ -302,13 +302,13 @@ static void pk_split_row(const char *row, char *name, size_t name_len,
 }
 
 static void pk_build_rows(void) {
-  for (int i = 0; i < g_pk_count; i++) {
+  for (int i = 0; i < pk_count; i++) {
     char mem[24];
-    sk_format_bytes((unsigned long long)g_pk[i].rss_kb * 1024ULL, mem,
+    sk_format_bytes((unsigned long long)pk[i].rss_kb * 1024ULL, mem,
                     sizeof(mem));
-    snprintf(g_pk_rows[i], PK_ROW_LEN, "%.48s | %.20s | %.1f", g_pk[i].name,
-             mem, g_pk[i].cpu);
-    g_pk_items[i] = g_pk_rows[i];
+    snprintf(pk_rows[i], PK_ROW_LEN, "%.48s | %.20s | %.1f", pk[i].name,
+             mem, pk[i].cpu);
+    pk_items[i] = pk_rows[i];
   }
 }
 
@@ -319,7 +319,7 @@ static void pk_collect_and_sort(void) {
 }
 
 static void pk_cycle_sort(void) {
-  g_pk_sort = (g_pk_sort + 1) % PK_SORT_MODES;
+  pk_sort_mode = (pk_sort_mode + 1) % PK_SORT_MODES;
   pk_collect_and_sort();
 }
 
@@ -338,10 +338,10 @@ static bool pk_enter_callback(PromptState *state) {
 }
 
 static void pk_refresh_callback(PromptState *state) {
-  g_pk_last_collect = sk_start_timer();
-  g_pk_collect_started = true;
+  pk_last_collect = sk_start_timer();
+  pk_collect_started = true;
   pk_collect_and_sort();
-  sk_populate_listbox(state->lb, state->eb->filter, g_pk_items, g_pk_count);
+  sk_populate_listbox(state->lb, state->eb->filter, pk_items, pk_count);
 }
 
 #define PK_COL_MEM 430
@@ -350,13 +350,13 @@ static void pk_refresh_callback(PromptState *state) {
 static void pk_render_callback(PromptState *state) {
   if (!state)
     return;
-  double since = g_pk_collect_started ? sk_end_timer(g_pk_last_collect) : 1e9;
+  double since = pk_collect_started ? sk_end_timer(pk_last_collect) : 1e9;
   if (since >= 1000.0) {
-    g_pk_last_collect = sk_start_timer();
-    g_pk_collect_started = true;
+    pk_last_collect = sk_start_timer();
+    pk_collect_started = true;
     int keep = state->lb->selected_index;
     pk_collect_and_sort();
-    sk_populate_listbox(state->lb, state->eb->filter, g_pk_items, g_pk_count);
+    sk_populate_listbox(state->lb, state->eb->filter, pk_items, pk_count);
     if (keep >= 0 && keep < state->lb->item_count) {
       state->lb->selected_index = keep;
     }
@@ -364,7 +364,7 @@ static void pk_render_callback(PromptState *state) {
 
   if (sk_hotkey_down(sk_hotkey_from_string("Ctrl+L"))) {
     pk_cycle_sort();
-    sk_populate_listbox(state->lb, NULL, g_pk_items, g_pk_count);
+    sk_populate_listbox(state->lb, NULL, pk_items, pk_count);
   }
 
   sk_draw_text(.text = "memory", .x = PK_COL_MEM, .y = 8, .fontsize = 13,
@@ -373,7 +373,7 @@ static void pk_render_callback(PromptState *state) {
                .align = "LEFT", .color = RGB(130, 130, 160));
   char sort_label[64];
   snprintf(sort_label, sizeof(sort_label), "current sort: %s",
-           pk_sort_label(g_pk_sort));
+           pk_sort_label(pk_sort_mode));
   sk_draw_text(.text = sort_label, .x = 880, .y = 8, .fontsize = 13,
                .align = "RIGHT", .color = RGB(160, 160, 190));
 

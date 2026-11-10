@@ -37,9 +37,9 @@ typedef enum {
   ANKI_STATE_ANSWER
 } AnkiState;
 
-static TYPE_NAME g_current_card = {0};
-static AnkiState g_anki_state = ANKI_STATE_IDLE;
-static SkTimer g_q_timer = {0};
+static TYPE_NAME current_card = {0};
+static AnkiState anki_state = ANKI_STATE_IDLE;
+static SkTimer q_timer = {0};
 
 static SkLibrary g_sqlite_lib = NULL;
 static int (*p_sqlite3_open_v2)(const char *, sqlite3 **, int,
@@ -141,15 +141,15 @@ static int sqlite_init(void) {
          p_sqlite3_step;
 }
 
-static long long g_anki_crt = 0;
+static long long anki_crt = 0;
 
 static long long anki_due_ts(long long now, int queue, long long due) {
   if (queue == 1 || queue == 3) {
     return due;
   }
   if (queue == 2) {
-    long long days_elapsed = (now - g_anki_crt) / 86400;
-    long long next_day_at = g_anki_crt + (days_elapsed + 1) * 86400;
+    long long days_elapsed = (now - anki_crt) / 86400;
+    long long next_day_at = anki_crt + (days_elapsed + 1) * 86400;
     return next_day_at + (due - days_elapsed) * 86400;
   }
   return 0;
@@ -207,7 +207,7 @@ static CardList get_cards_in_deck(const char *db_path,
     if (p_sqlite3_prepare_v2(db, "SELECT crt FROM col;", -1, &cs, NULL) ==
         SQLITE_OK) {
       if (p_sqlite3_step(cs) == SQLITE_ROW)
-        g_anki_crt = p_sqlite3_column_int64(cs, 0);
+        anki_crt = p_sqlite3_column_int64(cs, 0);
       p_sqlite3_finalize(cs);
     }
   }
@@ -310,7 +310,7 @@ void display_card_question(TYPE_NAME card) {
     }
     question[o] = '\0';
   }
-  g_q_timer = sk_start_timer();
+  q_timer = sk_start_timer();
   sk_message(.name = "question", .message = question, .slot = TOP_CENTER,
              .timeout = 10000.0);
 }
@@ -348,7 +348,7 @@ void anki_apply_elapsed(double elapsed_ms) {
   if (p_sqlite3_prepare_v2(db,
                            "SELECT ivl, reps, queue FROM cards WHERE id = ?;",
                            -1, &select_stmt, NULL) == SQLITE_OK) {
-    p_sqlite3_bind_int64(select_stmt, 1, g_current_card.id);
+    p_sqlite3_bind_int64(select_stmt, 1, current_card.id);
     if (p_sqlite3_step(select_stmt) == SQLITE_ROW) {
       current_ivl = p_sqlite3_column_int64(select_stmt, 0);
       current_reps = p_sqlite3_column_int64(select_stmt, 1);
@@ -397,7 +397,7 @@ void anki_apply_elapsed(double elapsed_ms) {
     p_sqlite3_bind_int64(update_stmt, 2, new_reps);
     p_sqlite3_bind_int64(update_stmt, 3, new_queue);
     p_sqlite3_bind_int64(update_stmt, 4, new_due);
-    p_sqlite3_bind_int64(update_stmt, 5, g_current_card.id);
+    p_sqlite3_bind_int64(update_stmt, 5, current_card.id);
 
     if (p_sqlite3_step(update_stmt) != SQLITE_DONE) {
       fprintf(stderr, "Failed to execute update: %s\n", p_sqlite3_errmsg(db));
@@ -415,7 +415,7 @@ void display_card_answer(void) {
   answer[0] = '\0';
 
   sk_mutex_lock(anki_lock);
-  TYPE_NAME card = g_current_card;
+  TYPE_NAME card = current_card;
   sk_mutex_unlock(anki_lock);
 
   if (card.type == CARD_TYPE_BASIC) {
@@ -461,12 +461,12 @@ void display_card_answer(void) {
     answer[o] = '\0';
   }
 
-  double elapsed_ms = sk_end_timer(g_q_timer);
+  double elapsed_ms = sk_end_timer(q_timer);
   fflush(stdout);
   anki_apply_elapsed(elapsed_ms);
 
   sk_mutex_lock(anki_lock);
-  g_anki_state = ANKI_STATE_ANSWER;
+  anki_state = ANKI_STATE_ANSWER;
   sk_mutex_unlock(anki_lock);
 
   sk_dismiss_message("question");
@@ -507,9 +507,9 @@ void print_due_card(void) {
   TYPE_NAME card = list.items[pick];
 
   sk_mutex_lock(anki_lock);
-  free_card_contents(&g_current_card);
-  g_current_card = card_clone(list.items[pick]);
-  g_anki_state = ANKI_STATE_QUESTION;
+  free_card_contents(&current_card);
+  current_card = card_clone(list.items[pick]);
+  anki_state = ANKI_STATE_QUESTION;
   sk_mutex_unlock(anki_lock);
 
   display_card_question(card);
@@ -530,7 +530,7 @@ static void *anki_timer_thread(void *arg) {
 
 void handle_anki(void) {
   sk_mutex_lock(anki_lock);
-  AnkiState current_state = g_anki_state;
+  AnkiState current_state = anki_state;
   sk_mutex_unlock(anki_lock);
 
   if (current_state == ANKI_STATE_QUESTION) {
@@ -540,7 +540,7 @@ void handle_anki(void) {
     display_card_answer();
   } else if (current_state == ANKI_STATE_ANSWER) {
     sk_mutex_lock(anki_lock);
-    g_anki_state = ANKI_STATE_IDLE;
+    anki_state = ANKI_STATE_IDLE;
     sk_mutex_unlock(anki_lock);
     sk_dismiss_message("answer");
   }
@@ -548,7 +548,7 @@ void handle_anki(void) {
 
 bool should_swallow_anki(void) {
   sk_mutex_lock(anki_lock);
-  bool active = (g_anki_state != ANKI_STATE_IDLE);
+  bool active = (anki_state != ANKI_STATE_IDLE);
   sk_mutex_unlock(anki_lock);
   return active;
 }

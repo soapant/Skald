@@ -1,39 +1,39 @@
 #include "core/edit_state.h"
 #include <stdbool.h>
 
-static EditSelection g_sel;
+static EditSelection sel;
 
 void EditState_BeginSelection(int cursor) {
-  g_sel.active = true;
-  g_sel.anchor = cursor;
-  g_sel.head = cursor;
+  sel.active = true;
+  sel.anchor = cursor;
+  sel.head = cursor;
 }
 
 void EditState_UpdateSelection(int cursor) {
-  if (!g_sel.active)
+  if (!sel.active)
     return;
-  g_sel.head = cursor;
+  sel.head = cursor;
 }
 
 void EditState_EndSelection(void) {
-  g_sel.active = false;
-  g_sel.anchor = 0;
-  g_sel.head = 0;
+  sel.active = false;
+  sel.anchor = 0;
+  sel.head = 0;
 }
 
 void EditState_Reset(void) {
-  g_sel.active = false;
-  g_sel.anchor = 0;
-  g_sel.head = 0;
+  sel.active = false;
+  sel.anchor = 0;
+  sel.head = 0;
 }
 
 bool EditState_GetSelection(int *out_start, int *out_end) {
-  if (!g_sel.active)
+  if (!sel.active)
     return false;
-  if (g_sel.anchor == g_sel.head)
+  if (sel.anchor == sel.head)
     return false;
-  int a = g_sel.anchor < g_sel.head ? g_sel.anchor : g_sel.head;
-  int b = g_sel.anchor < g_sel.head ? g_sel.head : g_sel.anchor;
+  int a = sel.anchor < sel.head ? sel.anchor : sel.head;
+  int b = sel.anchor < sel.head ? sel.head : sel.anchor;
   if (out_start)
     *out_start = a;
   if (out_end)
