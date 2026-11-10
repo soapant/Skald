@@ -75,7 +75,7 @@ Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
   }
   if (!wm || !popup)
     return NULL;
-  Platform_InputState_InhibitMods();
+  InputState_InhibitMods();
   log_info("PushPopup wm=%p popup=%p count_before=%d", (void *)wm,
            (void *)popup, wm->popup_count);
   if (wm->popup_count >= wm->popup_capacity) {

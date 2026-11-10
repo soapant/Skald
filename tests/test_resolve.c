@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include "core/context.h"
+#include "core/feature_path.h"
 #include "platform/platform.h"
 
 #if defined(_WIN32)
@@ -36,7 +37,7 @@ TEST(existing_behavior_preserved) {
   TEST_MKDIR(dir);
   SkaldContext_Get()->window.current_feature = (char *)"Todo";
   char out[512] = {0};
-  bool ok = Platform_ResolveDataPath(__builtin_return_address(0), "todo.txt",
+  bool ok = FeaturePath_ResolveDataPath(__builtin_return_address(0), "todo.txt",
                                      out, sizeof(out));
   ASSERT_TRUE(ok);
   ASSERT_TRUE(strstr(out, "todo" TEST_SEP "todo.txt") != NULL);
@@ -46,7 +47,7 @@ TEST(existing_behavior_preserved) {
 TEST(unknown_still_fails) {
   SkaldContext_Get()->window.current_feature = NULL;
   char out[512] = {0};
-  bool ok = Platform_ResolveDataPath(__builtin_return_address(0),
+  bool ok = FeaturePath_ResolveDataPath(__builtin_return_address(0),
                                      "nosuchfeaturexyz.txt", out, sizeof(out));
   ASSERT_FALSE(ok);
 }
@@ -57,7 +58,7 @@ TEST(foreground_first_save) {
   TEST_MKDIR(dir);
   SkaldContext_Get()->window.current_feature = (char *)"Clipboard History";
   char out[512] = {0};
-  bool ok = Platform_ResolveDataPath(__builtin_return_address(0),
+  bool ok = FeaturePath_ResolveDataPath(__builtin_return_address(0),
                                      "zzfirstsave.txt", out, sizeof(out));
   ASSERT_TRUE(ok);
   ASSERT_TRUE(strstr(out, "clipboard_history" TEST_SEP "zzfirstsave.txt") !=

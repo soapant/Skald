@@ -9,6 +9,7 @@
 #include "platform/widget.h"
 #include "helpers/helpers_render_thread.h"
 #include "platform/draw.h"
+#include "helpers/helpers_ui.h"
 #include "platform/lib.h"
 #include "platform/input_state.h"
 #include "config_values.h"
@@ -112,7 +113,7 @@ static void widget_render_frame(void *ud) {
     widget->hovered = inside;
     if (!inside) {
       Platform_HoverMessageRelease(widget->name);
-      Platform_HoverWidgetHide(widget->name);
+      HoverWidgetHide(widget->name);
     }
   }
   WidgetState st;
@@ -122,18 +123,18 @@ static void widget_render_frame(void *ud) {
   st.elapsed = Platform_EndTimer(widget->created_at);
   st.hovered = widget->hovered;
 
-  Platform_SetDrawOffset(-widget->origin_x, 0);
-  Platform_BeginMeasure();
+  SetDrawOffset(-widget->origin_x, 0);
+  BeginMeasure();
   widget->render(&st);
   int mw = 0, mh = 0, mx = 0, my = 0;
-  Platform_EndMeasure(&mw, &mh);
-  Platform_GetLastMeasureOrigin(&mx, &my);
+  EndMeasure(&mw, &mh);
+  GetLastMeasureOrigin(&mx, &my);
   mx += widget->origin_x;
 
   if (widget->origin_x != mx || widget->origin_y != my) {
     widget->origin_x = mx;
     widget->origin_y = my;
-    Platform_Widget_Invalidate(widget->win);
+    widget_invalidate(widget->win);
   }
 
   if (widget->auto_w || widget->auto_h) {
@@ -143,7 +144,7 @@ static void widget_render_frame(void *ud) {
     if (nw != widget->w || nh != widget->h) {
       widget->w = nw;
       widget->h = nh;
-      if (Platform_Widget_IsValid(widget->win)) {
+      if (widget_is_valid(widget->win)) {
         Platform_Widget_Resize(widget->win, nw, nh);
       }
       widget_relayout();
@@ -198,13 +199,13 @@ static void widget_destroy_window(void *ud) {
     return;
   widget->hovered = false;
   Platform_HoverMessageRelease(widget->name);
-  Platform_HoverWidgetHide(widget->name);
+  HoverWidgetHide(widget->name);
   if (widget->hover_thread) {
     Platform_ThreadJoin(widget->hover_thread);
     widget->hover_thread = NULL;
     widget->hover_running = false;
   }
-  if (Platform_Widget_IsValid(widget->win)) {
+  if (widget_is_valid(widget->win)) {
     Platform_Widget_Destroy(widget->win);
   }
   widget->win = NULL;
@@ -215,7 +216,7 @@ void widget_destroy(Widget *widget) {
     return;
   widget->dead = true;
   Platform_HoverMessageRelease(widget->name);
-  Platform_HoverWidgetHide(widget->name);
+  HoverWidgetHide(widget->name);
   RenderThread_RemoveFrameCallback(widget_render_frame, widget);
   RenderThread_Post(widget_destroy_window, widget);
   RenderThread_Sync();
@@ -254,7 +255,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
       continue;
     w->dead = true;
     matched = true;
-    Platform_HoverWidgetHide(w->name);
+    HoverWidgetHide(w->name);
     RenderThread_RemoveFrameCallback(widget_render_frame, w);
     RenderThread_Post(widget_destroy_window, w);
     log_info("widget '%s' purged (owner unloaded)", w->name);
@@ -306,12 +307,12 @@ static void widget_attach_window(void *ud) {
   if (!widget || widget->dead)
     return;
   bool created = false;
-  if (!Platform_Widget_IsValid(widget->win)) {
-    Platform_SetDrawBgColor(widget->has_bg ? widget->bg_color : 0);
+  if (!widget_is_valid(widget->win)) {
+    SetDrawBgColor(widget->has_bg ? widget->bg_color : 0);
     widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w,
                                          widget->h, widget->fps, widget->no_bg,
                                          widget->on_click, widget->name);
-    Platform_SetDrawBgColor(0);
+    SetDrawBgColor(0);
     created = (widget->win != NULL);
   } else {
     Platform_Widget_Move(widget->win, widget->x, widget->y);
@@ -320,9 +321,9 @@ static void widget_attach_window(void *ud) {
     Platform_Widget_SetBgColor(widget->win,
                                widget->has_bg ? widget->bg_color : 0);
     Platform_Widget_SetNoBg(widget->win, widget->no_bg);
-    WidgetRegistry_SetFps(widget->win, widget->fps);
+    widget_set_fps(widget->win, widget->fps);
     if (created)
-      Platform_Widget_SetFrameCallback(widget->win, widget_render_frame,
+      widget_set_frame_callback(widget->win, widget_render_frame,
                                        widget);
   }
 }
@@ -470,10 +471,10 @@ Widget *widget_create(const WidgetSpec *spec) {
       y = my + (mh - widget->h) / 2;
     }
     widget_apply_geometry(widget, x, y);
-    Platform_Widget_SetFrameCallback(widget->win, widget_render_frame, widget);
+    widget_set_frame_callback(widget->win, widget_render_frame, widget);
   } else {
     widget_relayout();
-    Platform_Widget_SetFrameCallback(widget->win, widget_render_frame, widget);
+    widget_set_frame_callback(widget->win, widget_render_frame, widget);
   }
   return widget;
 }
@@ -524,8 +525,8 @@ void widget_set_render(Widget *widget, WidgetRenderFn render) {
   if (!widget_valid(widget))
     return;
   widget->render = render;
-  if (Platform_Widget_IsValid(widget->win)) {
-    Platform_Widget_Invalidate(widget->win);
+  if (widget_is_valid(widget->win)) {
+    widget_invalidate(widget->win);
   }
 }
 
@@ -541,7 +542,7 @@ static bool Widget_ApplyFps(PlatformWidget *widget, int fps) {
   return true;
 }
 
-void WidgetRegistry_SetFps(PlatformWidget *window, int fps) {
+void widget_set_fps(PlatformWidget *window, int fps) {
   if (fps <= 0)
     fps = 1;
   if (!Widget_ApplyFps(window, fps))
@@ -549,3 +550,38 @@ void WidgetRegistry_SetFps(PlatformWidget *window, int fps) {
   RenderThread_EnsureStarted(fps);
   RenderThread_Wake();
 }
+
+bool widget_is_valid(const PlatformWidget *widget) {
+  const PlatformWidgetBase *base = (const PlatformWidgetBase *)widget;
+  return widget && !base->dead;
+}
+
+void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
+                               void *ud) {
+  PlatformWidgetBase *base = (PlatformWidgetBase *)widget;
+  if (!widget || base->dead) {
+    return;
+  }
+  base->fn = fn;
+  base->ud = ud;
+}
+
+void widget_invalidate(PlatformWidget *widget) {
+  PlatformWidgetBase *base = (PlatformWidgetBase *)widget;
+  if (!widget || base->dead) {
+    return;
+  }
+  base->dirty = true;
+  RenderThread_Wake();
+}
+
+int widget_width(const PlatformWidget *widget) {
+  const PlatformWidgetBase *base = (const PlatformWidgetBase *)widget;
+  return widget ? base->w : 0;
+}
+
+int widget_height(const PlatformWidget *widget) {
+  const PlatformWidgetBase *base = (const PlatformWidgetBase *)widget;
+  return widget ? base->h : 0;
+}
+

@@ -1127,7 +1127,7 @@ Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
     use_argb = true;
   }
   Window win;
-  Pixmap bg_pm = (Platform_GetTransparentWindow() || !x11_bg_image_enabled())
+  Pixmap bg_pm = (GetTransparentWindow() || !x11_bg_image_enabled())
                      ? None
                      : x11_bg_image_tile(dpy, w, h);
   if (use_argb) {
@@ -1136,7 +1136,7 @@ Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
     unsigned int g = (bg_color >> 8) & 0xFF;
     unsigned int b = bg_color & 0xFF;
     unsigned int a =
-        Platform_GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity;
+        GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity;
     unsigned long valuemask = CWColormap | CWBorderPixel;
     if (bg_pm != None) {
       attrs.background_pixmap = bg_pm;
@@ -1365,7 +1365,7 @@ static unsigned int x11_bg_channel_at(float c, int x, int y) {
 }
 
 static unsigned long x11_background_color_at(int x, int y, int w, int h) {
-  unsigned long base = Platform_GetDrawBgColor();
+  unsigned long base = GetDrawBgColor();
   if (!base)
     base = rgb_to_hex(COLOR_BG);
   unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
@@ -1544,7 +1544,7 @@ static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
 Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h) {
   if (!dpy || w <= 0 || h <= 0)
     return None;
-  unsigned long base = Platform_GetDrawBgColor();
+  unsigned long base = GetDrawBgColor();
   if (!base)
     base = rgb_to_hex(COLOR_BG);
   int radius = CornerRadius;
@@ -1579,7 +1579,7 @@ Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h) {
 void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h) {
   if (!dpy || w <= 0 || h <= 0)
     return;
-  unsigned long base = Platform_GetDrawBgColor();
+  unsigned long base = GetDrawBgColor();
   if (!base)
     base = rgb_to_hex(COLOR_BG);
   int radius = CornerRadius;
@@ -1775,8 +1775,8 @@ void x11_apply_click_through(Display *dpy, Window win) {
 Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
                                          int h, bool clickable) {
   unsigned long bg = 0;
-  if (!Platform_GetTransparentWindow()) {
-    bg = Platform_GetDrawBgColor();
+  if (!GetTransparentWindow()) {
+    bg = GetDrawBgColor();
     if (!bg)
       bg = rgb_to_hex(COLOR_BG);
   }

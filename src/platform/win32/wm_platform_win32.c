@@ -36,7 +36,7 @@ void Platform_WM_ProcessEvents(WindowManager *wm) {
 void Platform_WM_OnPopEmpty(WindowManager *wm) {
   (void)wm;
   remap_reset();
-  Platform_InputState_Clear();
+  InputState_Clear();
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {

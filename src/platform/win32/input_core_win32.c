@@ -101,9 +101,9 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
   mev.repeat = false;
 
   if (is_btn) {
-    bool was_down = Platform_MouseStateDown(btn);
+    bool was_down = Input_MouseStateDown(btn);
     if (down && was_down) {
-      Platform_UpdateMouseButton(btn, false);
+      Input_UpdateMouseButton(btn, false);
       PlatformMouseEvent rev;
       memset(&rev, 0, sizeof(rev));
       rev.button = btn;
@@ -111,9 +111,9 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
       rev.y = mev.y;
       rev.down = false;
       rev.repeat = false;
-      Platform_GlobalMouse_Push(&rev);
+      GlobalMouse_Push(&rev);
     }
-    Platform_UpdateMouseButton(btn, down);
+    Input_UpdateMouseButton(btn, down);
     if (!down && btn > 0 && btn <= MOUSE_BTN_MAX) {
       hotkey_key_up(MOUSE_VK(btn));
     }
@@ -125,7 +125,7 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
       mev.mods |= HOTKEY_MOD_ALT;
     if (GetKeyState(VK_SHIFT) & 0x8000)
       mev.mods |= HOTKEY_MOD_SHIFT;
-    Platform_GlobalMouse_Push(&mev);
+    GlobalMouse_Push(&mev);
     if (down && btn <= MOUSE_BTN_MAX) {
       static unsigned long long s_last_fire[MOUSE_BTN_MAX + 1] = {0};
       unsigned long long now = GetTickCount64();
@@ -142,10 +142,10 @@ void Platform_HandleRawMouseInput(LPARAM lParam) {
     if (mev.x != s_last_mx || mev.y != s_last_my) {
       s_last_mx = mev.x;
       s_last_my = mev.y;
-      if (!Platform_GlobalMouse_Full()) {
+      if (!GlobalMouse_Full()) {
         mev.button = 0;
         mev.down = false;
-        Platform_GlobalMouse_Push(&mev);
+        GlobalMouse_Push(&mev);
       }
     }
   }
@@ -228,14 +228,14 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
                     (unsigned long long)HotkeyRepeatDelayMs) {
               s_key_is_down[_vk & 0xFF] = true;
               s_last_keydown_ms[_vk & 0xFF] = now_ms;
-              Platform_InputState_Update(_vk, true, _gev.mods, _hint);
+              InputState_Update(_vk, true, _gev.mods, _hint);
             }
           } else {
             s_key_is_down[_vk & 0xFF] = false;
-            Platform_InputState_Update(_vk, false, _gev.mods, 0);
+            InputState_Update(_vk, false, _gev.mods, 0);
           }
         }
-        Platform_GlobalKey_Push(&_gev);
+        GlobalKey_Push(&_gev);
         if (_isUp)
           hotkey_key_up(_vk);
         if (remap_should_swallow_vk(_vk, _val)) {
