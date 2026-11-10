@@ -20,20 +20,20 @@
 #define CHECKBOX_GRAY RGB(68, 68, 68)
 #define CHECKBOX_DARK_GRAY RGB(14, 14, 14)
 
-static CheckboxSpec g_checkboxes[CHECKBOX_MAX];
-static int g_checkbox_count = 0;
+static CheckboxSpec checkboxes[CHECKBOX_MAX];
+static int checkbox_count = 0;
 
 static struct {
   bool valid;
   int mx, my;
   bool down;
-} g_cb_mouse;
+} cb_mouse;
 
-void Checkbox_FrameBegin(void) { g_cb_mouse.valid = false; }
+void Checkbox_FrameBegin(void) { cb_mouse.valid = false; }
 
 static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
 
-  if (!g_cb_mouse.valid) {
+  if (!cb_mouse.valid) {
     int mx = 0, my = 0;
     if (Platform_GetMousePos(&mx, &my)) {
       int wx = 0, wy = 0;
@@ -50,28 +50,28 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
         mx -= wx;
         my -= wy;
       }
-      g_cb_mouse.mx = mx;
-      g_cb_mouse.my = my;
+      cb_mouse.mx = mx;
+      cb_mouse.my = my;
     } else {
-      g_cb_mouse.mx = -9999;
-      g_cb_mouse.my = -9999;
+      cb_mouse.mx = -9999;
+      cb_mouse.my = -9999;
     }
-    g_cb_mouse.down = Input_MouseStateDown(MOUSE_BTN_LEFT);
-    g_cb_mouse.valid = true;
+    cb_mouse.down = Input_MouseStateDown(MOUSE_BTN_LEFT);
+    cb_mouse.valid = true;
   }
   if (out_x)
-    *out_x = g_cb_mouse.mx;
+    *out_x = cb_mouse.mx;
   if (out_y)
-    *out_y = g_cb_mouse.my;
+    *out_y = cb_mouse.my;
   if (out_down)
-    *out_down = g_cb_mouse.down;
+    *out_down = cb_mouse.down;
 }
 
 static CheckboxSpec *checkbox_find(const char *name) {
 
-  for (int i = 0; i < g_checkbox_count; i++) {
-    if (strcmp(g_checkboxes[i].name, name) == 0)
-      return &g_checkboxes[i];
+  for (int i = 0; i < checkbox_count; i++) {
+    if (strcmp(checkboxes[i].name, name) == 0)
+      return &checkboxes[i];
   }
   return NULL;
 }
@@ -81,16 +81,16 @@ static CheckboxSpec *checkbox_intern(const char *name, bool seed) {
   CheckboxSpec *cb = checkbox_find(name);
   if (cb)
     return cb;
-  if (g_checkbox_count >= CHECKBOX_MAX)
+  if (checkbox_count >= CHECKBOX_MAX)
     return NULL;
-  cb = &g_checkboxes[g_checkbox_count++];
+  cb = &checkboxes[checkbox_count++];
   memset(cb, 0, sizeof(*cb));
   cb->checked = seed;
   cb->thickness = 1;
   cb->border = true;
   cb->name = strdup(name);
   if (!cb->name) {
-    g_checkbox_count--;
+    checkbox_count--;
     return NULL;
   }
   return cb;
@@ -109,14 +109,14 @@ bool Checkbox_IsHovered(const char *name) {
 }
 
 void Checkbox_ResetAll(void) {
-  for (int i = 0; i < g_checkbox_count; i++) {
-    g_checkboxes[i].checked = false;
-    g_checkboxes[i].clicked = false;
-    g_checkboxes[i].hovered = false;
-    g_checkboxes[i].was_down = false;
-    g_checkboxes[i].on_click = NULL;
-    g_checkboxes[i].on_hover = NULL;
-    g_checkboxes[i].render = NULL;
+  for (int i = 0; i < checkbox_count; i++) {
+    checkboxes[i].checked = false;
+    checkboxes[i].clicked = false;
+    checkboxes[i].hovered = false;
+    checkboxes[i].was_down = false;
+    checkboxes[i].on_click = NULL;
+    checkboxes[i].on_hover = NULL;
+    checkboxes[i].render = NULL;
   }
 }
 

@@ -118,7 +118,7 @@
 
 #ifndef NOB_H_
 #define NOB_H_
-#ifdef _WIN32
+#if defined(_WIN32)
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS (1)
 #endif
@@ -173,7 +173,7 @@
 #include <limits.h>
 #include <time.h>
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #define _WINUSER_
 #define _WINGDI_
@@ -202,7 +202,7 @@
 #include <image.h>
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #define NOB_LINE_END "\r\n"
 #else
 #define NOB_LINE_END "\n"
@@ -340,7 +340,7 @@ typedef struct {
   bool error;
 
   struct {
-#ifdef _WIN32
+#if defined(_WIN32)
     WIN32_FIND_DATA win32_data;
     HANDLE win32_hFind;
     bool win32_init;
@@ -463,7 +463,7 @@ NOBDEF void nob_sb_pad_align(Nob_String_Builder *sb, size_t size);
 
 #define nob_sb_free(sb) NOB_FREE((sb).items)
 
-#ifdef _WIN32
+#if defined(_WIN32)
 typedef HANDLE Nob_Proc;
 #define NOB_INVALID_PROC INVALID_HANDLE_VALUE
 typedef HANDLE Nob_Fd;
@@ -831,7 +831,7 @@ static const uint8_t nob_bytes_for_utf8[] = {
 
 NOBDEF size_t nob_sv_utf8_len(Nob_String_View sv, size_t *bytes_overrun);
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 NOBDEF char *nob_win32_error_message(DWORD err);
 
@@ -870,7 +870,7 @@ NOBDEF size_t nob_sv_utf8_len(Nob_String_View sv, size_t *bytes_overrun) {
   return 0;
 }
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #ifndef NOB_WIN32_ERR_MSG_SIZE
 #define NOB_WIN32_ERR_MSG_SIZE (4 * 1024)
@@ -921,7 +921,7 @@ NOBDEF void nob__panicf(const char *file, int line, const char *label,
 NOBDEF void nob__go_rebuild_urself(int argc, char **argv,
                                    const char *source_path, ...) {
   const char *binary_path = nob_shift(argv, argc);
-#ifdef _WIN32
+#if defined(_WIN32)
 
   if (!nob_sv_ends_with_cstr(nob_sv_from_cstr(binary_path), ".exe")) {
     binary_path = nob_temp_sprintf("%s.exe", binary_path);
@@ -977,7 +977,7 @@ static size_t nob_temp_size = 0;
 static char nob_temp[NOB_TEMP_CAPACITY] = {0};
 
 NOBDEF bool nob_mkdir_if_not_exists(const char *path) {
-#ifdef _WIN32
+#if defined(_WIN32)
   int result = _mkdir(path);
 #else
   int result = mkdir(path, 0755);
@@ -1004,7 +1004,7 @@ NOBDEF bool nob_copy_file(const char *src_path, const char *dst_path) {
 #ifndef NOB_NO_ECHO
   nob_log(NOB_INFO, "copying %s -> %s", src_path, dst_path);
 #endif
-#ifdef _WIN32
+#if defined(_WIN32)
   if (!CopyFile(src_path, dst_path, FALSE)) {
     nob_log(NOB_ERROR, "Could not copy file: %s",
             nob_win32_error_message(GetLastError()));
@@ -1086,7 +1086,7 @@ NOBDEF void nob_cmd_render(Nob_Cmd cmd, Nob_String_Builder *render) {
   }
 }
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 static void nob__win32_cmd_quote(Nob_Cmd cmd, Nob_String_Builder *quoted) {
   for (size_t i = 0; i < cmd.count; ++i) {
@@ -1129,7 +1129,7 @@ static void nob__win32_cmd_quote(Nob_Cmd cmd, Nob_String_Builder *quoted) {
 #endif
 
 NOBDEF int nob_nprocs(void) {
-#ifdef _WIN32
+#if defined(_WIN32)
   SYSTEM_INFO siSysInfo;
   GetSystemInfo(&siSysInfo);
   return siSysInfo.dwNumberOfProcessors;
@@ -1184,7 +1184,7 @@ NOBDEF bool nob_cmd_run_opt(Nob_Cmd *cmd, Nob_Cmd_Opt opt) {
         }
       }
       if (!waited) {
-#ifdef _WIN32
+#if defined(_WIN32)
         Sleep(1);
 #else
         struct timespec ts = {0, 1000000};
@@ -1293,7 +1293,7 @@ defer:
 }
 
 static Nob_Fd nob__fd_stdout(void) {
-#ifdef _WIN32
+#if defined(_WIN32)
   return GetStdHandle(STD_OUTPUT_HANDLE);
 #else
   return STDOUT_FILENO;
@@ -1332,7 +1332,7 @@ NOBDEF bool nob_chain_end_opt(Nob_Chain *chain, Nob_Chain_End_Opt opt) {
           }
         }
         if (!_waited) {
-#ifdef _WIN32
+#if defined(_WIN32)
           Sleep(1);
 #else
           struct timespec ts = {0, 1000000};
@@ -1390,7 +1390,7 @@ defer:
 }
 
 NOBDEF uint64_t nob_nanos_since_unspecified_epoch(void) {
-#ifdef _WIN32
+#if defined(_WIN32)
   LARGE_INTEGER Time;
   QueryPerformanceCounter(&Time);
 
@@ -1432,7 +1432,7 @@ static Nob_Proc nob__cmd_start_process(Nob_Cmd cmd, Nob_Fd *fdin, Nob_Fd *fdout,
   memset(&sb, 0, sizeof(sb));
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
   STARTUPINFO siStartInfo;
   ZeroMemory(&siStartInfo, sizeof(siStartInfo));
@@ -1593,7 +1593,7 @@ NOBDEF Nob_Fd nob_fd_open_for_write(const char *path) {
 }
 
 NOBDEF void nob_fd_close(Nob_Fd fd) {
-#ifdef _WIN32
+#if defined(_WIN32)
   CloseHandle(fd);
 #else
   close(fd);
@@ -1601,7 +1601,7 @@ NOBDEF void nob_fd_close(Nob_Fd fd) {
 }
 
 NOBDEF bool nob_pipe_create(Nob_Pipe *pp) {
-#ifdef _WIN32
+#if defined(_WIN32)
 
   SECURITY_ATTRIBUTES saAttr = {0};
   saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -1648,7 +1648,7 @@ NOBDEF bool nob_proc_wait(Nob_Proc proc) {
   if (proc == NOB_INVALID_PROC)
     return false;
 
-#ifdef _WIN32
+#if defined(_WIN32)
   DWORD result = WaitForSingleObject(proc, INFINITE);
 
   if (result == WAIT_FAILED) {
@@ -1704,7 +1704,7 @@ static int nob__proc_wait_async(Nob_Proc proc, int ms) {
   if (proc == NOB_INVALID_PROC)
     return false;
 
-#ifdef _WIN32
+#if defined(_WIN32)
   DWORD result = WaitForSingleObject(proc, ms);
 
   if (result == WAIT_TIMEOUT) {
@@ -1899,7 +1899,7 @@ NOBDEF void nob_log(Nob_Log_Level level, const char *fmt, ...) {
 
 NOBDEF bool nob_dir_entry_open(const char *dir_path, Nob_Dir_Entry *dir) {
   memset(dir, 0, sizeof(*dir));
-#ifdef _WIN32
+#if defined(_WIN32)
   size_t temp_mark = nob_temp_save();
   char *buffer = nob_temp_sprintf("%s\\*", dir_path);
   dir->nob__private.win32_hFind =
@@ -1925,7 +1925,7 @@ NOBDEF bool nob_dir_entry_open(const char *dir_path, Nob_Dir_Entry *dir) {
 }
 
 NOBDEF bool nob_dir_entry_next(Nob_Dir_Entry *dir) {
-#ifdef _WIN32
+#if defined(_WIN32)
   if (!dir->nob__private.win32_init) {
     dir->nob__private.win32_init = true;
     dir->name = dir->nob__private.win32_data.cFileName;
@@ -1959,7 +1959,7 @@ NOBDEF bool nob_dir_entry_next(Nob_Dir_Entry *dir) {
 }
 
 NOBDEF void nob_dir_entry_close(Nob_Dir_Entry dir) {
-#ifdef _WIN32
+#if defined(_WIN32)
   FindClose(dir.nob__private.win32_hFind);
 #else
   if (dir.nob__private.posix_dir)
@@ -2019,7 +2019,7 @@ bool nob__walk_dir_opt_impl(Nob_String_Builder *file_path, Nob_Walk_Func func,
         continue;
 
       file_path->count = saved_file_path_count - 1;
-#ifdef _WIN32
+#if defined(_WIN32)
       nob_sb_appendf(file_path, "\\%s", dir.name);
 #else
       nob_sb_appendf(file_path, "/%s", dir.name);
@@ -2127,7 +2127,7 @@ defer:
 }
 
 NOBDEF Nob_File_Type nob_get_file_type(const char *path) {
-#ifdef _WIN32
+#if defined(_WIN32)
   DWORD attr = GetFileAttributesA(path);
   if (attr == INVALID_FILE_ATTRIBUTES) {
     nob_log(NOB_ERROR, "Could not get file attributes of %s: %s", path,
@@ -2159,7 +2159,7 @@ NOBDEF bool nob_delete_file(const char *path) {
 #ifndef NOB_NO_ECHO
   nob_log(NOB_INFO, "deleting %s", path);
 #endif
-#ifdef _WIN32
+#if defined(_WIN32)
   Nob_File_Type type = nob_get_file_type(path);
   switch (type) {
   case NOB_FILE_DIRECTORY:
@@ -2324,7 +2324,7 @@ NOBDEF const char *nob_temp_sv_to_cstr(Nob_String_View sv) {
 
 NOBDEF int nob_needs_rebuild(const char *output_path, const char **input_paths,
                              size_t input_paths_count) {
-#ifdef _WIN32
+#if defined(_WIN32)
   BOOL bSuccess;
 
   HANDLE output_path_fd =
@@ -2406,7 +2406,7 @@ NOBDEF int nob_needs_rebuild1(const char *output_path, const char *input_path) {
 }
 
 NOBDEF const char *nob_path_name(const char *path) {
-#ifdef _WIN32
+#if defined(_WIN32)
   const char *p1 = strrchr(path, '/');
   const char *p2 = strrchr(path, '\\');
   const char *p = (p1 > p2) ? p1 : p2;
@@ -2421,7 +2421,7 @@ NOBDEF bool nob_rename(const char *old_path, const char *new_path) {
 #ifndef NOB_NO_ECHO
   nob_log(NOB_INFO, "renaming %s -> %s", old_path, new_path);
 #endif
-#ifdef _WIN32
+#if defined(_WIN32)
   if (!MoveFileEx(old_path, new_path, MOVEFILE_REPLACE_EXISTING)) {
     nob_log(NOB_ERROR, "could not rename %s to %s: %s", old_path, new_path,
             nob_win32_error_message(GetLastError()));
@@ -2654,7 +2654,7 @@ NOBDEF int nob_file_exists(const char *file_path) {
 }
 
 NOBDEF const char *nob_get_current_dir_temp(void) {
-#ifdef _WIN32
+#if defined(_WIN32)
   DWORD nBufferLength = GetCurrentDirectory(0, NULL);
   if (nBufferLength == 0) {
     nob_log(NOB_ERROR, "could not get current directory: %s",
@@ -2680,7 +2680,7 @@ NOBDEF const char *nob_get_current_dir_temp(void) {
 }
 
 NOBDEF bool nob_set_current_dir(const char *path) {
-#ifdef _WIN32
+#if defined(_WIN32)
   if (!SetCurrentDirectory(path)) {
     nob_log(NOB_ERROR, "could not set current directory to %s: %s", path,
             nob_win32_error_message(GetLastError()));
