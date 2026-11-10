@@ -15,6 +15,8 @@
 #include "core/types.h"
 #include "core/types/color.h"
 #include "deps/stb_ds.h"
+#include "core/window_manager.h"
+#include "core/prompt_geometry.h"
 
 static bool FuzzyMatch(const char *text, const char *pattern) {
   if (!pattern || !pattern[0])
@@ -401,4 +403,126 @@ ColorRef GetRainbowColor(float t, float s, float v) {
 
 bool UI_IsListBoxSelected(ListBoxInfo *lb) {
   return lb && lb->selected_index != -1;
+}
+
+int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
+
+void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
+                       int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,
+                       int *out_gap, int *out_outward) {
+  int h_slot = 1;
+  int v_slot = 1;
+  int gap = MessageScreenGap;
+  int outward = 0;
+  int x = 0, y = 0, w = 0, h = 0;
+  int mox = 0, moy = 0, mow = 0, moh = 0;
+  WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
+  if (mow <= 0)
+    mow = 1920;
+  if (moh <= 0)
+    moh = 1080;
+  if (slot >= TOP_LEFT_RELATIVE && slot <= BOTTOM_RIGHT_RELATIVE) {
+    if (prompt_gap > 0)
+      gap = prompt_gap;
+    outward = 1;
+    WindowManager_GetPromptBounds(&x, &y, &w, &h);
+    if (w <= 0 || h <= 0) {
+      x = mox;
+      y = moy;
+      w = mow;
+      h = moh;
+    }
+    slot = (MessageSlot)(slot - TOP_LEFT_RELATIVE + TOP_LEFT);
+  } else {
+    x = mox;
+    y = moy;
+    w = mow;
+    h = moh;
+  }
+  if (slot >= TOP_LEFT && slot <= BOTTOM_RIGHT) {
+    int idx = slot - TOP_LEFT;
+    h_slot = idx % 3;
+    v_slot = idx / 3;
+  }
+  if (out_x)
+    *out_x = x;
+  if (out_y)
+    *out_y = y;
+  if (out_w)
+    *out_w = w;
+  if (out_h)
+    *out_h = h;
+  if (out_h_slot)
+    *out_h_slot = h_slot;
+  if (out_v_slot)
+    *out_v_slot = v_slot;
+  if (out_gap)
+    *out_gap = gap;
+  if (out_outward)
+    *out_outward = outward;
+}
+
+void DisplayMessageSlot(const char *message, MessageSlot slot, int max_w,
+                        int max_h, int prompt_gap, double timeout,
+                        ColorRef color, void (*render)(void),
+                        const char *name) {
+  if (!message || !message[0])
+    return;
+  int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
+  MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap,
+                    &outward);
+  Platform_DisplayMessageAnchored((PlAnchoredMessageSpec){.message = message,
+                                                          .x = x,
+                                                          .y = y,
+                                                          .w = w,
+                                                          .h = h,
+                                                          .h_slot = h_slot,
+                                                          .v_slot = v_slot,
+                                                          .gap = gap,
+                                                          .outward = outward,
+                                                          .max_width = max_w,
+                                                          .max_height = max_h,
+                                                          .timeout = timeout,
+                                                          .color = color,
+                                                          .no_bg = false,
+                                                          .render = render,
+                                                          .name = name});
+}
+
+void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
+                           int popup_w, int popup_h, int count,
+                           ListboxLayout *out) {
+
+  if (!out) {
+    return;
+  }
+  memset(out, 0, sizeof(*out));
+  if (!spec) {
+    return;
+  }
+
+  out->y0 = spec->y ? spec->y : default_y0;
+  out->item_h = item_h > 0 ? item_h : 1;
+  out->list_h =
+      spec->h ? spec->h
+              : (popup_h > 0 ? (popup_h - out->y0 - PromptListBottomMargin())
+                             : PROMPT_CUSTOM_FALLBACK_LIST_H);
+  if (!spec->x && !spec->w) {
+    out->bx = PROMPT_SEL_X;
+    out->bw = (popup_w > 0 ? popup_w : PROMPT_CUSTOM_FALLBACK_W) -
+              PROMPT_SEL_W_SHRINK;
+    out->fw = popup_w > 0 ? popup_w : PROMPT_W;
+    out->fh = popup_h > 0 ? popup_h : PROMPT_H;
+  } else {
+    out->bx = spec->x + PROMPT_SEL_INSET;
+    out->bw = (spec->w ? spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
+    out->fw = spec->w ? spec->w : PROMPT_W;
+    out->fh = spec->h ? spec->h : PROMPT_H;
+  }
+  int visible = out->list_h / out->item_h;
+  if (visible < 1)
+    visible = 1;
+  if (count > 0 && visible > count)
+    visible = count;
+  out->visible = visible;
 }

@@ -18,7 +18,6 @@ typedef struct {
   const char *type;
 } CcEntrySpec;
 
-bool add_dep(const char *dep_name, const char *owner_file);
 void cc_registry_purge_owner(const char *path_a, const char *path_b);
 void feature_list_purge_owner(const char *path_a, const char *path_b);
 
