@@ -6,6 +6,7 @@
 #include <X11/extensions/XKB.h>
 #include <linux/input-event-codes.h>
 #include "core/hotkey_manager.h"
+#include "core/feature_loader.h"
 
 #include "core/window_manager.h"
 #include "deps/log.h"
@@ -365,6 +366,7 @@ void Linux_ProcessXEvent(Display *dpy, XEvent *ev, WindowManager *wm) {
 int WindowManager_RunLinux(WindowManager *wm) {
   XEvent xev;
 
+  FeatureLoader_DrainRetiredUnloads();
   if (!wm)
     return -1;
   wm->running = true;

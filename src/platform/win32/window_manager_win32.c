@@ -9,6 +9,7 @@
 #include <windows.h>
 
 #include "core/hotkey_pending.h"
+#include "core/feature_loader.h"
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
@@ -20,6 +21,7 @@ int WindowManager_RunWin32(WindowManager *wm) {
 
   MSG msg;
   while (wm->running) {
+    FeatureLoader_DrainRetiredUnloads();
     bool got = false;
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
       got = true;
@@ -58,6 +60,7 @@ void WindowManager_ProcessEventsWin32(WindowManager *wm) {
     return;
   }
 
+  FeatureLoader_DrainRetiredUnloads();
   MSG msg;
   bool got = false;
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
