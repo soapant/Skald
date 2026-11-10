@@ -96,9 +96,9 @@ static void x11_queue_mouse_event(struct input_event *ev) {
   }
   bool down = (ev->value != 0);
   bool repeat = (ev->value == 2);
-  bool was_down = Platform_MouseStateDown(btn);
+  bool was_down = Input_MouseStateDown(btn);
   if (down && was_down && !repeat) {
-    Platform_UpdateMouseButton(btn, false);
+    Input_UpdateMouseButton(btn, false);
     int rmx = 0, rmy = 0;
     Platform_GetMousePos(&rmx, &rmy);
     PlatformMouseEvent rev;
@@ -109,9 +109,9 @@ static void x11_queue_mouse_event(struct input_event *ev) {
     rev.down = false;
     rev.repeat = false;
     rev.t_us = 0;
-    Platform_GlobalMouse_Push(&rev);
+    GlobalMouse_Push(&rev);
   }
-  Platform_UpdateMouseButton(btn, down);
+  Input_UpdateMouseButton(btn, down);
   if (!down && btn > 0 && btn <= MOUSE_BTN_MAX) {
     hotkey_key_up(MOUSE_VK(btn));
   }
@@ -125,7 +125,7 @@ static void x11_queue_mouse_event(struct input_event *ev) {
   mev.down = down;
   mev.repeat = repeat;
   mev.t_us = 0;
-  Platform_GlobalMouse_Push(&mev);
+  GlobalMouse_Push(&mev);
   if (down && !repeat && btn > 0 && btn <= MOUSE_BTN_MAX) {
     long long now_ms =
         (long long)ev->time.tv_sec * 1000LL + ev->time.tv_usec / 1000LL;
@@ -875,7 +875,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     gev.mods = remap_current_mods();
     gev.down = val != 0;
     gev.repeat = (val == 2);
-    Platform_GlobalKey_Push(&gev);
+    GlobalKey_Push(&gev);
   }
   if (val == 0 && x11_is_suppressed(code)) {
     x11_set_suppress(code, false);
