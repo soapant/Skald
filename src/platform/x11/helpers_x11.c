@@ -1064,12 +1064,8 @@ void DrawListBoxItemText(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
   int draw_x = XOffset;
   int h_scroll =
       (lb && idx == lb->selected_index) ? lb->text_hscroll : 0;
-  if (h_scroll > 0) {
-    int dx = 0;
-    int cut = ListBox_TextPrefixBytes(trunc, h_scroll, &dx);
-    draw_text = trunc + cut;
-    draw_x = XOffset + dx;
-  }
+  if (h_scroll > 0)
+    draw_x -= h_scroll;
 
   unsigned long pcol = plain_color ? plain_color->pixel : 0;
   if (!pcol)

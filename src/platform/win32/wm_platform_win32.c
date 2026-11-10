@@ -1,6 +1,7 @@
 #include "config_values.h"
 #include "core/types/prompt.h"
 #include "platform/wm_platform.h"
+#include "helpers/helpers_monitor.h"
 #include "platform/platform.h"
 #include "platform/input_state.h"
 #include "core/window_manager.h"
@@ -206,63 +207,31 @@ static BOOL CALLBACK win32_monitor_enum(HMONITOR hMonitor, HDC hdc,
   return TRUE;
 }
 
-static int win32_monitor_fill(Win32MonitorEntry out[16]) {
+int MonitorFill(MonitorEntry *out, int max_entries) {
   Win32MonitorList list = {{{0}}, 0};
   EnumDisplayMonitors(NULL, NULL, win32_monitor_enum, (LPARAM)&list);
   if (list.count == 0)
     return 0;
+  int mon_cap = list.count < max_entries ? list.count : max_entries;
+  for (int i = 0; i < mon_cap; i++) {
+    out[i].x = list.list[i].rc.left;
+    out[i].y = list.list[i].rc.top;
+    out[i].w = list.list[i].rc.right - list.list[i].rc.left;
+    out[i].h = list.list[i].rc.bottom - list.list[i].rc.top;
+    out[i].is_primary = list.list[i].is_primary;
+    snprintf(out[i].name, sizeof(out[i].name), "%s", list.list[i].name);
+  }
   int primary_at = 0;
-  for (int i = 0; i < list.count; i++)
-    if (list.list[i].is_primary) {
+  for (int i = 0; i < mon_cap; i++)
+    if (out[i].is_primary) {
       primary_at = i;
       break;
     }
   if (primary_at > 0) {
-    Win32MonitorEntry t = list.list[0];
-    list.list[0] = list.list[primary_at];
-    list.list[primary_at] = t;
+    MonitorEntry t = out[0];
+    out[0] = out[primary_at];
+    out[primary_at] = t;
   }
-  for (int i = 0; i < list.count; i++)
-    out[i] = list.list[i];
   return list.count;
 }
 
-int Platform_WM_GetMonitorCount(void) {
-  Win32MonitorEntry mon[16];
-  return win32_monitor_fill(mon);
-}
-
-bool Platform_WM_GetMonitorGeometryAt(int index, int *x, int *y, int *w,
-                                      int *h) {
-  Win32MonitorEntry mon[16];
-  int n = win32_monitor_fill(mon);
-  if (n <= 0 || index < 0 || index >= n)
-    return false;
-  RECT rc = mon[index].rc;
-  if (x)
-    *x = rc.left;
-  if (y)
-    *y = rc.top;
-  if (w)
-    *w = rc.right - rc.left;
-  if (h)
-    *h = rc.bottom - rc.top;
-  return true;
-}
-
-
-bool Platform_WM_GetMonitorInfo(int index, WMMonitorInfo *out) {
-  Win32MonitorEntry mon[16];
-  int n = win32_monitor_fill(mon);
-  if (n <= 0 || index < 0 || index >= n || !out)
-    return false;
-  memset(out, 0, sizeof(*out));
-  out->index = index;
-  out->x = mon[index].rc.left;
-  out->y = mon[index].rc.top;
-  out->w = mon[index].rc.right - mon[index].rc.left;
-  out->h = mon[index].rc.bottom - mon[index].rc.top;
-  out->is_primary = mon[index].is_primary;
-  snprintf(out->name, sizeof(out->name), "%s", mon[index].name);
-  return true;
-}

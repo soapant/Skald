@@ -8,7 +8,7 @@
 #include "platform/draw.h"
 #include "core/draw_state.h"
 #include "platform/win32/win32_state.h"
-#include "platform/render_thread.h"
+#include "helpers/helpers_render_thread.h"
 #include "platform/win32/common_ui_win32.h"
 #include "deps/log.h"
 #include "platform/win32/bg_image_win32.h"
@@ -18,7 +18,7 @@ struct PlatformWidget {
   int x, y, w, h;
   bool mapped;
   bool dead;
-  Platform_RenderFrameFn fn;
+  RenderFrameFn fn;
   void *ud;
   int fps;
   ColorRef bg_color;
@@ -379,7 +379,7 @@ void Platform_Widget_Invalidate(PlatformWidget *widget) {
     return;
   }
   widget->dirty = true;
-  Platform_RenderThread_Wake();
+  RenderThread_Wake();
 }
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
@@ -388,7 +388,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
 
   if (w <= 0 || h <= 0)
     return NULL;
-  if (!Platform_RenderThread_EnsureStarted(fps))
+  if (!RenderThread_EnsureStarted(fps))
     return NULL;
   widget_register_class();
 
@@ -426,7 +426,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-  if (!Platform_RenderThread_AddFrameCallback(widget_frame, widget)) {
+  if (!RenderThread_AddFrameCallback(widget_frame, widget)) {
     DestroyWindow(widget->hwnd);
     free(widget);
     return NULL;
@@ -457,7 +457,7 @@ static void widget_destroy_on_owner_thread(void *ud) {
     return;
   }
   widget->dead = true;
-  Platform_RenderThread_RemoveFrameCallback(widget_frame, widget);
+  RenderThread_RemoveFrameCallback(widget_frame, widget);
   if (widget->hwnd && IsWindow(widget->hwnd)) {
     DestroyWindow(widget->hwnd);
   }
@@ -484,7 +484,7 @@ bool Platform_Widget_IsValid(const PlatformWidget *widget) {
 }
 
 void Platform_Widget_SetFrameCallback(PlatformWidget *widget,
-                                      Platform_RenderFrameFn fn, void *ud) {
+                                      RenderFrameFn fn, void *ud) {
 
   if (!widget || widget->dead) {
     return;
@@ -551,7 +551,7 @@ void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
     return;
   }
   widget->fps = fps;
-  Platform_RenderThread_EnsureStarted(fps);
+  RenderThread_EnsureStarted(fps);
   Platform_Widget_Invalidate(widget);
 }
 

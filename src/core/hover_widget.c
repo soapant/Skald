@@ -6,7 +6,7 @@
 #include "core/types/window.h"
 #include "platform/platform.h"
 #include "platform/widget.h"
-#include "platform/render_thread.h"
+#include "helpers/helpers_render_thread.h"
 #include "helpers/helpers_owner.h"
 
 #define HOVER_WIDGET_MAX 8
@@ -213,7 +213,7 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
                               void *ud, void *owner_src, int x, int y, int w,
                               int h, int fps, bool no_bg, unsigned long bg_hex,
                               void (*release)(void *ud), void *release_ud) {
-  if (Platform_RenderThread_IsCurrentThread()) {
+  if (RenderThread_IsCurrentThread()) {
     if (op == HOVER_OP_HIDE)
       hover_widget_hide_apply(key);
     else
@@ -221,7 +221,7 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
                          bg_hex, release, release_ud);
     return true;
   }
-  if (!Platform_RenderThread_IsRunning())
+  if (!RenderThread_IsRunning())
     return false;
   HoverWidgetRequest *r = (HoverWidgetRequest *)calloc(1, sizeof(*r));
   if (!r)
@@ -240,7 +240,7 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
   r->bg_hex = bg_hex;
   r->release = release;
   r->release_ud = release_ud;
-  if (Platform_RenderThread_Post(hover_widget_dispatch, r))
+  if (RenderThread_Post(hover_widget_dispatch, r))
     return true;
   free(r);
   return false;

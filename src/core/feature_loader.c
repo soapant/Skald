@@ -1,4 +1,5 @@
 #include "core/feature_loader.h"
+#include "helpers/helpers_key.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -254,7 +255,7 @@ static void sweep_retired_libs(void) {
       cc_registry_purge_owner(g_retired[i].owner, NULL);
       feature_list_purge_owner(g_retired[i].owner, NULL);
       Platform_KeyCallback_PurgeOwner(g_retired[i].owner, NULL);
-      Platform_KeyInterceptor_PurgeOwner(g_retired[i].owner, NULL);
+      Key_PurgeInterceptorOwner(g_retired[i].owner, NULL);
       EventBus_PurgeOwner(g_retired[i].owner, NULL);
       Platform_HoverWidget_PurgeOwner(g_retired[i].owner, NULL);
       Platform_MessagePopup_PurgeOwner(g_retired[i].owner, NULL);
@@ -889,7 +890,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       cc_registry_purge_owner(retire_owner, path_copy);
       feature_list_purge_owner(retire_owner, path_copy);
       Platform_KeyCallback_PurgeOwner(retire_owner, path_copy);
-      Platform_KeyInterceptor_PurgeOwner(retire_owner, path_copy);
+      Key_PurgeInterceptorOwner(retire_owner, path_copy);
       EventBus_PurgeOwner(retire_owner, path_copy);
       Platform_HoverWidget_PurgeOwner(retire_owner, path_copy);
       Platform_MessagePopup_PurgeOwner(retire_owner, path_copy);

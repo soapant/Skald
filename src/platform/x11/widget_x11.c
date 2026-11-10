@@ -16,7 +16,7 @@
 #include "config_values.h"
 #include "core/types/color.h"
 #include "core/types/window.h"
-#include "platform/render_thread.h"
+#include "helpers/helpers_render_thread.h"
 
 struct PlatformWidget {
   Display *dpy;
@@ -27,7 +27,7 @@ struct PlatformWidget {
   int x, y, w, h;
   bool mapped;
   bool dead;
-  Platform_RenderFrameFn fn;
+  RenderFrameFn fn;
   void *ud;
   int fps;
   ColorRef bg_color;
@@ -153,9 +153,9 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   (void)name;
   if (w <= 0 || h <= 0)
     return NULL;
-  if (!Platform_RenderThread_EnsureStarted(fps))
+  if (!RenderThread_EnsureStarted(fps))
     return NULL;
-  Display *dpy = (Display *)Platform_RenderThread_Display();
+  Display *dpy = (Display *)RenderThread_Display();
   if (!dpy) {
     log_warn("widget: no render thread display");
     return NULL;
@@ -193,7 +193,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
     widget->cmap = DefaultColormap(dpy, screen);
   }
 
-  if (!Platform_RenderThread_AddFrameCallback(widget_frame, widget)) {
+  if (!RenderThread_AddFrameCallback(widget_frame, widget)) {
     XDestroyWindow(dpy, widget->win);
     XFlush(dpy);
     free(widget);
@@ -221,7 +221,7 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
   }
   widget->dead = true;
   widget_registry_remove(widget);
-  Platform_RenderThread_RemoveFrameCallback(widget_frame, widget);
+  RenderThread_RemoveFrameCallback(widget_frame, widget);
   Display *dpy = widget->dpy;
   if (dpy && widget->win != None) {
     if (widget->xd) {
@@ -240,7 +240,7 @@ bool Platform_Widget_IsValid(const PlatformWidget *widget) {
 }
 
 void Platform_Widget_SetFrameCallback(PlatformWidget *widget,
-                                      Platform_RenderFrameFn fn, void *ud) {
+                                      RenderFrameFn fn, void *ud) {
 
   if (!widget || widget->dead) {
     return;
@@ -295,7 +295,7 @@ void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
   }
   widget->no_bg = no_bg;
   widget->dirty = true;
-  Platform_RenderThread_Wake();
+  RenderThread_Wake();
 }
 
 void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
@@ -309,9 +309,9 @@ void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
   }
   widget->fps = fps;
   widget->last_draw_ms = 0;
-  Platform_RenderThread_EnsureStarted(fps);
+  RenderThread_EnsureStarted(fps);
   widget->dirty = true;
-  Platform_RenderThread_Wake();
+  RenderThread_Wake();
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
@@ -337,7 +337,7 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
   XChangeWindowAttributes(widget->dpy, widget->win, CWBackPixel, &attrs);
   XFlush(widget->dpy);
   widget->dirty = true;
-  Platform_RenderThread_Wake();
+  RenderThread_Wake();
 }
 
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
@@ -345,7 +345,7 @@ void Platform_Widget_Invalidate(PlatformWidget *widget) {
     return;
   }
   widget->dirty = true;
-  Platform_RenderThread_Wake();
+  RenderThread_Wake();
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
@@ -366,7 +366,7 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
   XMoveResizeWindow(widget->dpy, widget->win, widget->x, widget->y, w, h);
   XFlush(widget->dpy);
   widget->dirty = true;
-  Platform_RenderThread_Wake();
+  RenderThread_Wake();
 }
 
 int Platform_Widget_Width(const PlatformWidget *widget) {

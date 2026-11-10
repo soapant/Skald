@@ -32,7 +32,7 @@
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/input_x11.h"
 #include "core/hotkey_pending.h"
-#include "platform/render_thread.h"
+#include "helpers/helpers_render_thread.h"
 #include "platform/widget.h"
 #include "core/remap_manager.h"
 #include "core/hotkey_manager.h"
@@ -466,7 +466,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
   }
 
   while (wm->running) {
-    Display *rdpy = (Display *)Platform_RenderThread_Display();
+    Display *rdpy = (Display *)RenderThread_Display();
     struct pollfd xfds[3];
     int nfds = 0;
     int main_idx = -1, render_idx = -1, wake_idx = -1;
@@ -532,7 +532,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
     }
   }
   destroy_uinput();
-  Platform_RenderThread_Stop();
+  RenderThread_Stop();
   x11_set_window_manager(NULL);
   return 0;
 }
@@ -554,7 +554,7 @@ void WindowManager_ProcessEventsLinux(WindowManager *wm) {
     Linux_ProcessXEvent(dpy, &ev, wm);
   }
 
-  Display *rdpy = (Display *)Platform_RenderThread_Display();
+  Display *rdpy = (Display *)RenderThread_Display();
   if (rdpy && rdpy != dpy) {
     struct pollfd rfd = {.fd = ConnectionNumber(rdpy), .events = POLLIN};
     poll(&rfd, 1, 0);

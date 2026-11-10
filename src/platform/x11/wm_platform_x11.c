@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include "platform/wm_platform.h"
+#include "helpers/helpers_monitor.h"
 #include "core/window_manager.h"
 #include "core/context.h"
 #include "platform/platform.h"
@@ -260,13 +261,7 @@ void Platform_ProcessPendingSubwindow(void) {
   }
 }
 
-typedef struct {
-  int x, y, w, h;
-  char name[128];
-  bool is_primary;
-} X11MonitorEntry;
-
-static int x11_monitor_fill(X11MonitorEntry out[16]) {
+int MonitorFill(MonitorEntry *out, int max_entries) {
   Display *dpy = NULL;
   WindowManager *wm = WindowManager_Get();
   if (wm)
@@ -282,7 +277,7 @@ static int x11_monitor_fill(X11MonitorEntry out[16]) {
   int n = 0;
   int primary_at = -1;
   RROutput primary = XRRGetOutputPrimary(dpy, root);
-  for (int c = 0; c < res->ncrtc && n < 16; c++) {
+  for (int c = 0; c < res->ncrtc && n < max_entries; c++) {
     XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
     if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
       if (ci)
@@ -315,7 +310,7 @@ static int x11_monitor_fill(X11MonitorEntry out[16]) {
   if (primary_at >= 0) {
     out[primary_at].is_primary = true;
     if (primary_at > 0) {
-      X11MonitorEntry t = out[0];
+      MonitorEntry t = out[0];
       out[0] = out[primary_at];
       out[primary_at] = t;
     }
@@ -323,40 +318,3 @@ static int x11_monitor_fill(X11MonitorEntry out[16]) {
   return n;
 }
 
-int Platform_WM_GetMonitorCount(void) {
-  X11MonitorEntry mon[16];
-  return x11_monitor_fill(mon);
-}
-
-bool Platform_WM_GetMonitorGeometryAt(int index, int *x, int *y, int *w,
-                                      int *h) {
-  X11MonitorEntry mon[16];
-  int n = x11_monitor_fill(mon);
-  if (n <= 0 || index < 0 || index >= n || !mon[index].w)
-    return false;
-  if (x)
-    *x = mon[index].x;
-  if (y)
-    *y = mon[index].y;
-  if (w)
-    *w = mon[index].w;
-  if (h)
-    *h = mon[index].h;
-  return true;
-}
-
-bool Platform_WM_GetMonitorInfo(int index, WMMonitorInfo *out) {
-  X11MonitorEntry mon[16];
-  int n = x11_monitor_fill(mon);
-  if (n <= 0 || index < 0 || index >= n || !mon[index].w || !out)
-    return false;
-  memset(out, 0, sizeof(*out));
-  out->index = index;
-  out->x = mon[index].x;
-  out->y = mon[index].y;
-  out->w = mon[index].w;
-  out->h = mon[index].h;
-  out->is_primary = mon[index].is_primary;
-  snprintf(out->name, sizeof(out->name), "%s", mon[index].name);
-  return true;
-}
