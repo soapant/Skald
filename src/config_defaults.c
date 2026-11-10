@@ -12,6 +12,7 @@ int HotkeyRepeatDelayMs = 300;
 bool DebugMode = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
+int MessageScreenGap = 20;
 float WindowOpacity = 235.0;
 
 const char *UsedFont = "0xProto Nerd Font";

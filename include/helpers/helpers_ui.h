@@ -45,9 +45,7 @@ void CalculateWindowMetrics(WindowLayout *layout, int height, int width,
                             int item_height);
 
 #define MSG_PROMPT_GAP_DEFAULT 300
-#define MSG_SCREEN_GAP_DEFAULT 20
 
-extern int MessageScreenGap;
 
 typedef struct {
   int bx;

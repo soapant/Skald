@@ -33,7 +33,6 @@ static bool g_wl_read_disabled = false;
 static char g_wl_read_block_reason[128] = {0};
 #define WL_MAX_RECEIVE_CALLS 3
 #define WL_HYPR_FD_ALARM 20000
-extern long g_cl_selreq;
 
 static void wl_trace(const char *what, const char *fmt, ...) {
 
