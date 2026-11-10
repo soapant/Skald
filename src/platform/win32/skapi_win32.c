@@ -137,159 +137,70 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
 
 #include "core/window_manager.h"
 
-static PlListSpec g_sk_list_spec;
-static ListBoxInfo *g_sk_list_lb;
-static int g_sk_list_y0, g_sk_list_itemH, g_sk_list_visible, g_sk_list_cur;
-static int g_sk_list_bx, g_sk_list_bw, g_sk_list_fw, g_sk_list_h;
-static HDC g_sk_list_hdc;
-static HFONT g_sk_list_font;
-static bool g_sk_list_font_owned;
+#include "helpers/helpers_listbox_backend.h"
 
-bool sk_listbox_begin_platform(const PlListSpec *spec) {
-  if (!spec)
+static __thread HDC g_b_hdc = NULL;
+
+bool ListboxBackend_Begin(int item_height_override, ListboxBackendInit *out) {
+  (void)item_height_override;
+  Platform_GetDrawContextWin32(&g_b_hdc);
+  if (!g_b_hdc)
     return false;
-  ListBoxInfo *lb = spec->lb;
-  if (!lb) {
-    if (!spec->items || spec->count <= 0)
-      return false;
-    return false;
-  }
-  Platform_GetDrawContextWin32(&g_sk_list_hdc);
-  if (!g_sk_list_hdc)
-    return false;
-  g_sk_list_spec = *spec;
-  g_sk_list_lb = lb;
-  PromptState *st = NULL;
-  WindowManager *_wm_lb = WindowManager_Get();
-  if (_wm_lb) {
-    for (int _i = _wm_lb->popup_count - 1; _i >= 0; _i--) {
-      Popup *_p = _wm_lb->popups[_i];
-      if (_p && _p->user_data) {
-        PromptState *_ps = (PromptState *)_p->user_data;
-        if (_ps->lb == lb) {
-          st = _ps;
-          break;
-        }
-      }
-    }
-  }
-  if (!st) {
-    extern PromptState *Platform_GetWin32PromptState(void);
-    st = Platform_GetWin32PromptState();
-  }
-  g_sk_list_itemH = spec->item_height ? spec->item_height : PromptRowHeight();
-  ListboxLayout lay;
-  Listbox_ComputeLayout(spec, PromptListTop(), g_sk_list_itemH,
-                        st ? st->width : 0, st ? st->height : 0, lb->item_count,
-                        &lay);
-  g_sk_list_y0 = lay.y0;
-  g_sk_list_bx = lay.bx;
-  g_sk_list_bw = lay.bw;
-  g_sk_list_fw = lay.fw;
-  g_sk_list_h = lay.list_h;
-  g_sk_list_visible = lay.visible;
-  UI_LB_SetVisibleCount(lay.visible);
-  g_sk_list_cur = 0;
-  g_sk_list_font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-  g_sk_list_font_owned = false;
+  out->item_h = PromptRowHeight();
+  out->list_top = PromptListTop();
   PlDrawState_Get()->win32_listbox_surface = true;
-  ListBox_ApplyPendingScroll(g_sk_list_lb, lay.visible);
-  ListBox_SetGeometry(g_sk_list_y0, g_sk_list_itemH, lay.visible);
-  ListBox_HoverFocus(g_sk_list_lb, g_sk_list_y0, g_sk_list_itemH,
-                     g_sk_list_lb->view_offset, lay.visible);
   return true;
 }
 
-bool sk_listbox_next_platform(SkListItemCtx *out) {
-  if (!out || !g_sk_list_lb)
-    return false;
-  if (g_sk_list_cur >= g_sk_list_visible)
-    return false;
-  int idx = g_sk_list_lb->view_offset + g_sk_list_cur;
-  if (idx < 0 || idx >= g_sk_list_lb->item_count)
-    return false;
-  int y = g_sk_list_y0 + g_sk_list_cur * g_sk_list_itemH;
-  if (g_sk_list_cur == 0)
-    Platform_DrawPromptSeparator(
-        (PlDrawPromptSeparatorSpec){.y = g_sk_list_y0, .width = g_sk_list_fw});
-  bool sel = (idx == g_sk_list_lb->selected_index);
+void ListboxBackend_DrawSelection(int bx, int bw, int y, int item_h, int fw,
+                                  int frame_h, bool sel) {
+  (void)frame_h;
+  (void)fw;
   if (RoundedCorners && CornerRadius > 0) {
     int R = PROMPT_SEL_RADIUS;
     if (R > CornerRadius)
       R = CornerRadius;
     int t = PROMPT_SEL_INSET;
-    int bx = g_sk_list_bx;
-    int bw = g_sk_list_bw;
     RECT inner = {bx + t, y + PROMPT_SEL_TOP_INSET + t, bx + bw - t,
-                  y + g_sk_list_itemH - 1 - t};
+                  y + item_h - 1 - t};
     int innerR = R - 1;
     if (innerR < 0)
       innerR = 0;
     if (inner.right <= inner.left || inner.bottom <= inner.top) {
-      inner = (RECT){bx, y, bx + bw, y + g_sk_list_itemH};
+      inner = (RECT){bx, y, bx + bw, y + item_h};
       innerR = R;
     }
-    if (sel) {
-      win32_fill_rounded_rect(g_sk_list_hdc, &inner, COLOR_SELECTED_TEXT,
-                              innerR);
-    }
-  } else {
-    RECT rc = {g_sk_list_bx, y, g_sk_list_bx + g_sk_list_bw,
-               y + g_sk_list_itemH};
-    if (sel) {
-      HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
-      FillRect(g_sk_list_hdc, &rc, br);
-      DeleteObject(br);
-    }
+    if (sel)
+      win32_fill_rounded_rect(g_b_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
+  } else if (sel) {
+    RECT rc = {bx, y, bx + bw, y + item_h};
+    HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
+    FillRect(g_b_hdc, &rc, br);
+    DeleteObject(br);
   }
-  ListBox_SetRowHScroll(sel ? g_sk_list_lb->text_hscroll : 0);
-  out->idx = idx;
-  out->selected = sel;
-  out->x = g_sk_list_spec.x;
-  out->y = y;
-  out->w = g_sk_list_spec.w;
-  out->h = g_sk_list_itemH;
-  out->text = g_sk_list_lb->items[idx];
-  g_sk_list_cur++;
-  return true;
 }
 
-void sk_listbox_end_platform(void) {
-  ListBox_SetRowHScroll(0);
-  if (PromptListBottomMargin() > 0 && g_sk_list_hdc) {
-    Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-        .y = g_sk_list_y0 + g_sk_list_h, .width = g_sk_list_fw});
-  }
+void ListboxBackend_End(void) {
   PlDrawState_Get()->win32_listbox_surface = false;
-  g_sk_list_lb = NULL;
-  g_sk_list_visible = 0;
-  g_sk_list_cur = 0;
+  g_b_hdc = NULL;
 }
 
-int sk_listbox_get_count(void) {
-  return g_sk_list_lb ? g_sk_list_lb->item_count : 0;
-}
-
-unsigned long sk_listbox_get_current_standard_color(void) {
-
-  if (!g_sk_list_lb || g_sk_list_cur == 0)
-    return 0;
-  int idx = g_sk_list_lb->view_offset + g_sk_list_cur - 1;
-  if (idx < 0 || idx >= g_sk_list_lb->item_count)
-    return 0;
-  int orig_idx = idx;
-  int orig_cnt = g_sk_list_lb->item_count;
-  if (idx >= 0 && idx < g_sk_list_lb->item_count) {
-    orig_idx = g_sk_list_lb->matching_indices[idx];
-    orig_cnt = g_sk_list_lb->item_count;
+PromptState *ListboxBackend_PromptState(const ListBoxInfo *lb) {
+  WindowManager *wm = WindowManager_Get();
+  if (wm) {
+    for (int i = wm->popup_count - 1; i >= 0; i--) {
+      Popup *p = wm->popups[i];
+      if (p && p->user_data) {
+        PromptState *ps = (PromptState *)p->user_data;
+        if (ps->lb == lb)
+          return ps;
+      }
+    }
   }
-  unsigned long ncol, bcol, pcol;
-  Platform_GetItemColors((PlGetItemColorsSpec){.idx = orig_idx,
-                                               .count = orig_cnt,
-                                               .num_color = &ncol,
-                                               .body_color = &bcol,
-                                               .plain_color = &pcol});
-  return rgb_to_hex(pcol);
+  {
+    extern PromptState *Platform_GetWin32PromptState(void);
+    return Platform_GetWin32PromptState();
+  }
 }
 
 char *sk_search_file_in_dir_platform(const char *directory,

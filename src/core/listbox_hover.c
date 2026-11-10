@@ -53,40 +53,6 @@ void ListBox_FocusByKeyboard(void) {
 
 void ListBox_FocusByMouse(void) { g_focus_by_keyboard = false; }
 
-static int utf8_cp_len(const unsigned char *p) {
-  unsigned char c = p[0];
-  if (c < 0x80)
-    return 1;
-  if ((c & 0xE0) == 0xC0)
-    return 2;
-  if ((c & 0xF0) == 0xE0)
-    return 3;
-  if ((c & 0xF8) == 0xF0)
-    return 4;
-  return 1;
-}
-
-int ListBox_TextPrefixBytes(const char *text, int hscroll, int *out_draw_x) {
-  if (out_draw_x)
-    *out_draw_x = 0;
-  if (hscroll <= 0 || !text || !text[0])
-    return 0;
-  int acc = 0;
-  int i = 0;
-  while (text[i]) {
-    int cp_bytes = utf8_cp_len((const unsigned char *)(text + i));
-    int cpw = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
-        .text = text + i, .len = cp_bytes, .fontsize = FontSize});
-    if (acc + cpw > hscroll)
-      break;
-    acc += cpw;
-    i += cp_bytes;
-  }
-  if (out_draw_x)
-    *out_draw_x = acc - hscroll;
-  return i;
-}
-
 void ListBox_PublishMousePos(int x, int y) {
   if (g_pub_set && (g_pub_x != x || g_pub_y != y))
     g_mouse_moved = true;

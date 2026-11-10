@@ -564,25 +564,6 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   return NULL;
 }
 
-bool Platform_IsCtrlPressed(void) {
-  return Platform_IsKeyDown(VK_LCONTROL) || Platform_IsKeyDown(VK_RCONTROL) ||
-         Platform_IsKeyDown(VK_CONTROL);
-}
-
-bool Platform_IsShiftPressed(void) {
-  return Platform_IsKeyDown(VK_LSHIFT) || Platform_IsKeyDown(VK_RSHIFT) ||
-         Platform_IsKeyDown(VK_SHIFT);
-}
-
-bool Platform_IsAltPressed(void) {
-  return Platform_IsKeyDown(VK_LMENU) || Platform_IsKeyDown(VK_RMENU) ||
-         Platform_IsKeyDown(VK_MENU);
-}
-
-bool Platform_IsSuperPressed(void) {
-  return Platform_IsKeyDown(VK_LWIN) || Platform_IsKeyDown(VK_RWIN);
-}
-
 void Platform_StartUniversalTimer(void) { log_warn("not implemented yet"); }
 
 void Platform_ResetUniversalTimer(void) { log_warn("not implemented yet"); }
@@ -2107,32 +2088,6 @@ bool Platform_MutexTryLock(void *mutex) {
   if (!mutex)
     return false;
   return pthread_mutex_trylock((pthread_mutex_t *)mutex) == 0;
-}
-
-static PlatformKeyInterceptorFn g_platform_key_interceptor = NULL;
-static char g_platform_key_interceptor_owner[OWNER_PATH_MAX] = {0};
-
-void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn) {
-  g_platform_key_interceptor = fn;
-  g_platform_key_interceptor_owner[0] = '\0';
-  if (fn)
-    Owner_ResolveForFunc((void *)fn, g_platform_key_interceptor_owner,
-                         sizeof(g_platform_key_interceptor_owner));
-}
-
-void Platform_KeyInterceptor_PurgeOwner(const char *path_a,
-                                        const char *path_b) {
-  if (g_platform_key_interceptor &&
-      Owner_ModuleMatches(g_platform_key_interceptor_owner, path_a, path_b)) {
-    g_platform_key_interceptor = NULL;
-    g_platform_key_interceptor_owner[0] = '\0';
-  }
-}
-
-bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key) {
-  if (!g_platform_key_interceptor)
-    return false;
-  return g_platform_key_interceptor(key);
 }
 
 PlMetrics *Platform_GetMetrics(void) {

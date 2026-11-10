@@ -8,7 +8,6 @@
 #define MOUSE_RECHECK_INTERVAL_MS 80
 
 bool ListBox_ClientMousePos(int *out_x, int *out_y);
-int ListBox_TextPrefixBytes(const char *text, int hscroll, int *out_draw_x);
 void ListBox_PublishMousePos(int x, int y);
 void ListBox_InvalidateMousePos(void);
 int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,

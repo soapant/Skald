@@ -1,5 +1,6 @@
 #include "core/edit_state.h"
 #include "core/prompt_keys.h"
+#include "helpers/helpers_key.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -193,7 +194,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   bool invoke_interceptor = false;
   invoke_interceptor = ctx->window.editbox_placed;
 
-  if (invoke_interceptor && Platform_InvokeKeyInterceptor(key)) {
+  if (invoke_interceptor && Key_InvokeInterceptor(key)) {
     Platform_InvalidatePrompt();
     return true;
   }

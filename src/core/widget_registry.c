@@ -5,8 +5,9 @@
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
+#include "helpers/helpers_monitor.h"
 #include "platform/widget.h"
-#include "platform/render_thread.h"
+#include "helpers/helpers_render_thread.h"
 #include "platform/draw.h"
 #include "platform/lib.h"
 #include "platform/input_state.h"
@@ -32,9 +33,9 @@ static void widget_mutex_init(void) {
 
 static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
                                      int *h) {
-  int count = Platform_WM_GetMonitorCount();
+  int count = Monitor_Count();
   int idx = (monitor > 0 && monitor <= count) ? monitor : 0;
-  if (Platform_WM_GetMonitorGeometryAt(idx, x, y, w, h))
+  if (Monitor_GeometryAt(idx, x, y, w, h))
     return;
   Platform_WM_GetMonitorGeometry(x, y, w, h);
 }
@@ -215,8 +216,8 @@ void widget_destroy(Widget *widget) {
   widget->dead = true;
   Platform_HoverMessageRelease(widget->name);
   Platform_HoverWidgetHide(widget->name);
-  Platform_RenderThread_RemoveFrameCallback(widget_render_frame, widget);
-  Platform_RenderThread_Post(widget_destroy_window, widget);
+  RenderThread_RemoveFrameCallback(widget_render_frame, widget);
+  RenderThread_Post(widget_destroy_window, widget);
   RenderThread_Sync();
 
   int n = 0;
@@ -254,8 +255,8 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     w->dead = true;
     matched = true;
     Platform_HoverWidgetHide(w->name);
-    Platform_RenderThread_RemoveFrameCallback(widget_render_frame, w);
-    Platform_RenderThread_Post(widget_destroy_window, w);
+    RenderThread_RemoveFrameCallback(widget_render_frame, w);
+    RenderThread_Post(widget_destroy_window, w);
     log_info("widget '%s' purged (owner unloaded)", w->name);
   }
 
@@ -329,13 +330,13 @@ static void widget_attach_window(void *ud) {
 static void widget_apply_geometry(Widget *widget, int x, int y) {
   widget->x = x;
   widget->y = y;
-  if (Platform_RenderThread_IsCurrentThread()) {
+  if (RenderThread_IsCurrentThread()) {
     widget_attach_window(widget);
     return;
   }
-  if (!Platform_RenderThread_EnsureStarted(widget->fps))
+  if (!RenderThread_EnsureStarted(widget->fps))
     return;
-  if (!Platform_RenderThread_Post(widget_attach_window, widget))
+  if (!RenderThread_Post(widget_attach_window, widget))
     return;
 }
 
@@ -381,7 +382,7 @@ static void widget_relayout(void) {
                                                                   : 0;
     MonSlot *st = &ms[w->slot][m];
     if (!st->known) {
-      if (!Platform_WM_GetMonitorGeometryAt(m, &st->x, &st->y, &st->w,
+      if (!Monitor_GeometryAt(m, &st->x, &st->y, &st->w,
                                             &st->h))
         Platform_WM_GetMonitorGeometry(&st->x, &st->y, &st->w, &st->h);
       st->cursor = from_right ? st->x + st->w : st->x;
@@ -507,7 +508,7 @@ void widget_show(Widget *widget) {
   if (widget->mapped)
     return;
   widget->mapped = true;
-  Platform_RenderThread_Post(widget_apply_show, widget);
+  RenderThread_Post(widget_apply_show, widget);
 }
 
 void widget_hide(Widget *widget) {
@@ -516,7 +517,7 @@ void widget_hide(Widget *widget) {
   if (!widget->mapped)
     return;
   widget->mapped = false;
-  Platform_RenderThread_Post(widget_apply_hide, widget);
+  RenderThread_Post(widget_apply_hide, widget);
 }
 
 void widget_set_render(Widget *widget, WidgetRenderFn render) {
