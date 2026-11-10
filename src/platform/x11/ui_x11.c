@@ -18,6 +18,8 @@ bool IsPopupActive(WindowHandle hPopupWnd) {
 }
 
 void UI_SetSelection(ListBoxInfo *lb, int index) {
+  if (lb && lb->selected_index != index)
+    lb->text_hscroll = 0;
   lb->selected_index = index;
   return;
 }
@@ -69,6 +71,7 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   int count = lb->item_count;
   if (count <= 0) {
     lb->selected_index = -1;
+    lb->text_hscroll = 0;
     UI_LB_SetCaretIndex(-1, false);
     return;
   }
@@ -76,14 +79,15 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
     index = count - 1;
   if (index == -1) {
     lb->selected_index = -1;
+    lb->text_hscroll = 0;
     UI_LB_SetCaretIndex(-1, false);
     return;
   }
   int old_sel = lb->selected_index;
-  ListBox_FocusByKeyboard();
   if (old_sel == index) {
     return;
   }
+  lb->text_hscroll = 0;
   lb->selected_index = index;
   lb->selected_text = ListBoxInfo_Row(lb, index);
   UI_LB_SetCaretIndex(index, false);

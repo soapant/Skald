@@ -26,6 +26,7 @@
 #include "core/window_manager.h"
 #include "platform/x11/bg_image_x11.h"
 #include "core/prompt_geometry.h"
+#include "core/listbox_hover.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
@@ -1059,13 +1060,24 @@ void DrawListBoxItemText(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
   char trunc[512];
   ListBoxItemDisplayText(lb, idx, trunc, sizeof(trunc));
 
+  const char *draw_text = trunc;
+  int draw_x = XOffset;
+  int h_scroll =
+      (lb && idx == lb->selected_index) ? lb->text_hscroll : 0;
+  if (h_scroll > 0) {
+    int dx = 0;
+    int cut = ListBox_TextPrefixBytes(trunc, h_scroll, &dx);
+    draw_text = trunc + cut;
+    draw_x = XOffset + dx;
+  }
+
   unsigned long pcol = plain_color ? plain_color->pixel : 0;
   if (!pcol)
     pcol = rgb_to_hex(COLOR_TEXT);
   Platform_SetDrawContext(dpy, xd, vis, cmap);
-  Platform_DrawTextRaw((PlDrawTextRawSpec){.x = XOffset,
+  Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
                                            .y = text_y,
-                                           .text = trunc,
+                                           .text = draw_text,
                                            .color = pcol,
                                            .font = font,
                                            .align = "LEFT",

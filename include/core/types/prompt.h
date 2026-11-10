@@ -34,6 +34,7 @@ struct ListBoxInfo {
   int selected_index;
   const char *selected_text;
   int view_offset;
+  int text_hscroll;
   char last_filter[256];
 };
 
@@ -136,6 +137,7 @@ static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
   lb->selected_text = "";
   lb->total_matches = 0;
   lb->view_offset = 0;
+  lb->text_hscroll = 0;
 }
 
 typedef struct {
