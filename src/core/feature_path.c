@@ -8,6 +8,7 @@
 #include "platform/lib.h"
 #include "config_values.h"
 #include <stdio.h>
+#include "deps/log.h"
 
 static int fp_lower(int c) {
   if (c >= 'A' && c <= 'Z')
@@ -119,6 +120,9 @@ bool FeaturePath_StemFromCaller(void *caller, char *out, size_t out_len) {
   out[0] = '\0';
   char mod_path[512];
   if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) {
+    log_warn("feature_path: Platform_GetModuleOwnerPath failed for %p, "
+             "feature assets may not resolve",
+             caller);
     return false;
   }
   const char *base = strrchr(mod_path, '\\');
@@ -213,6 +217,7 @@ bool FeaturePath_ResolveAssetPath(void *caller, const char *name, char *out,
     return false;
   }
   if (!FeaturePath || !FeaturePath[0]) {
+    log_warn("resolve_asset_file: FeaturePath empty, check config");
     return false;
   }
   const char *rel = name;

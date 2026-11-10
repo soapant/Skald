@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 #include <stdbool.h>
 
 #include "core/types/window.h"
@@ -31,10 +32,13 @@ static const char *config_out_path(void) {
 
 static bool config_copy_file(const char *src, const char *dst) {
   FILE *in = fopen(src, "rb");
-  if (!in)
+  if (!in) {
+    log_error("config copy: open src %s failed (%s)", src, strerror(errno));
     return false;
+  }
   FILE *out = fopen(dst, "wb");
   if (!out) {
+    log_error("config copy: open dst %s failed (%s)", dst, strerror(errno));
     fclose(in);
     return false;
   }
@@ -223,8 +227,10 @@ static bool config_build_feature(const char *src, const char *out) {
   char tmp[1024];
   snprintf(tmp, sizeof(tmp), "%s.tmp", out);
   char cmd[2048];
-  if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd)))
+  if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd))) {
+    log_error("config build: no feature build command for %s", src);
     return false;
+  }
   char *outStr = Platform_RunTerminalCommand(cmd, false);
   bool ok = false;
   if (outStr) {
@@ -516,6 +522,7 @@ void Config_Save(void) {
   }
   char *orig = malloc((size_t)fsize + 1);
   if (!orig) {
+    log_error("config save: malloc %lld failed", (long long)fsize + 1);
     fclose(f);
     return;
   }
@@ -537,6 +544,7 @@ void Config_Save(void) {
   }
   char *start_eol = strchr(start, '\n');
   if (!start_eol) {
+    log_error("config marker end without newline, not rewriting");
     free(orig);
     return;
   }
@@ -554,6 +562,7 @@ void Config_Save(void) {
   FILE *out = fopen(tmp, "wb");
   if (!out) {
     free(orig);
+    log_error("config save: fopen %s failed (%s)", tmp, strerror(errno));
     return;
   }
   bool ok = fwrite(orig, 1, head, out) == head;
