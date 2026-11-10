@@ -29,6 +29,11 @@
 #include "core/clipboard_history.h"
 #include "core/skapi.h"
 #include "core/listbox_hover.h"
+#include "helpers/helpers_monitor.h"
+#include "helpers/helpers_key.h"
+#include "helpers/helpers_listbox_backend.h"
+#include "helpers/helpers_ui.h"
+#include "core/prompt_geometry.h"
 #include "core/feature_loader.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
@@ -40,7 +45,7 @@
 #include "core/hotkey_string.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
-#include "platform/render_thread.h"
+#include "helpers/helpers_render_thread.h"
 #include "deps/stb_ds.h"
 #include "config_values.h"
 #include "core/cc_registry.h"
@@ -1202,7 +1207,27 @@ char *ski_popup(const PopupSpec *spec) {
   return r ? strdup(r) : NULL;
 }
 
-unsigned long sk_listbox_get_current_standard_color(void);
+static __thread ListBoxInfo *g_sk_list_lb;
+static __thread PlListSpec g_sk_list_spec;
+static __thread int g_sk_list_y0, g_sk_list_itemH, g_sk_list_visible,
+    g_sk_list_cur, g_sk_list_h;
+static __thread int g_sk_list_bx, g_sk_list_bw, g_sk_list_fw, g_sk_list_fh;
+
+unsigned long sk_listbox_get_current_standard_color(void) {
+  if (!g_sk_list_lb || g_sk_list_cur == 0)
+    return 0;
+  int idx = g_sk_list_lb->view_offset + g_sk_list_cur - 1;
+  if (idx < 0 || idx >= g_sk_list_lb->item_count)
+    return 0;
+  unsigned long ncol, bcol, pcol;
+  Platform_GetItemColors(
+      (PlGetItemColorsSpec){.idx = idx,
+                            .count = g_sk_list_lb->item_count,
+                            .num_color = &ncol,
+                            .body_color = &bcol,
+                            .plain_color = &pcol});
+  return pcol;
+}
 
 bool ski_draw_text(const SkTextSpec *spec) {
   if (!spec) {
@@ -1582,23 +1607,100 @@ bool ski_draw_circle(const PlCircle *spec) {
   return r;
 }
 
-bool sk_listbox_begin(const SkListSpec *spec) {
-  if (!spec) {
+
+static bool sk_listbox_begin_common(const PlListSpec *spec) {
+  if (!spec)
+    return false;
+  ListBoxInfo *lb = spec->lb;
+  if (!lb) {
+    if (!spec->items || spec->count <= 0)
+      return false;
     return false;
   }
-  bool r = sk_listbox_begin_platform(spec);
-  return r;
+  int item_h = spec->item_height ? spec->item_height : 0;
+  ListboxBackendInit bi;
+  if (!ListboxBackend_Begin(item_h, &bi))
+    return false;
+  int itemH = item_h > 0 ? item_h : bi.item_h;
+  PromptState *st = ListboxBackend_PromptState(lb);
+  ListboxLayout lay;
+  Listbox_ComputeLayout(spec, bi.list_top, itemH, st ? st->width : 900,
+                        st ? st->height : 640, lb->item_count, &lay);
+  g_sk_list_spec = *spec;
+  g_sk_list_lb = lb;
+  g_sk_list_itemH = itemH;
+  g_sk_list_y0 = lay.y0;
+  g_sk_list_bx = lay.bx;
+  g_sk_list_bw = lay.bw;
+  g_sk_list_fw = lay.fw;
+  g_sk_list_fh = lay.fh;
+  g_sk_list_h = lay.list_h;
+  g_sk_list_visible = lay.visible;
+  g_sk_list_cur = 0;
+  UI_LB_SetVisibleCount(lay.visible);
+  ListBox_ApplyPendingScroll(lb, lay.visible);
+  ListBox_SetGeometry(g_sk_list_y0, g_sk_list_itemH, lay.visible);
+  ListBox_HoverFocus(lb, g_sk_list_y0, g_sk_list_itemH, lb->view_offset,
+                     lay.visible);
+  return true;
+}
+
+static bool sk_listbox_next_common(SkListItemCtx *out) {
+  if (!out || !g_sk_list_lb)
+    return false;
+  if (g_sk_list_cur >= g_sk_list_visible)
+    return false;
+  int idx = g_sk_list_lb->view_offset + g_sk_list_cur;
+  if (idx < 0 || idx >= g_sk_list_lb->item_count)
+    return false;
+  int y = g_sk_list_y0 + g_sk_list_cur * g_sk_list_itemH;
+  if (g_sk_list_cur == 0)
+    Platform_DrawPromptSeparator(
+        (PlDrawPromptSeparatorSpec){.y = g_sk_list_y0, .width = g_sk_list_fw});
+  bool sel = (idx == g_sk_list_lb->selected_index);
+  ListboxBackend_DrawSelection(g_sk_list_bx, g_sk_list_bw, y, g_sk_list_itemH,
+                               g_sk_list_fw, g_sk_list_fh, sel);
+  ListBox_SetRowHScroll(sel ? g_sk_list_lb->text_hscroll : 0);
+  out->idx = idx;
+  out->selected = sel;
+  out->x = g_sk_list_spec.x;
+  out->y = y;
+  out->w = g_sk_list_spec.w;
+  out->h = g_sk_list_itemH;
+  out->text = g_sk_list_lb->items[idx];
+  g_sk_list_cur++;
+  return true;
+}
+
+void sk_listbox_end(void) {
+  ListBox_SetRowHScroll(0);
+  if (PromptListBottomMargin() > 0 && g_sk_list_y0 >= 0) {
+    Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
+        .y = g_sk_list_y0 + g_sk_list_h, .width = g_sk_list_fw});
+  }
+  ListboxBackend_End();
+  g_sk_list_lb = NULL;
+  g_sk_list_visible = 0;
+  g_sk_list_cur = 0;
+  g_sk_list_y0 = -1;
+}
+
+bool sk_listbox_begin(const SkListSpec *spec) {
+  if (!spec)
+    return false;
+  return sk_listbox_begin_common(spec);
 }
 
 bool sk_listbox_next(SkListItemCtx *out) {
-  if (!out) {
+  if (!out)
     return false;
-  }
-  bool r = sk_listbox_next_platform(out);
-  return r;
+  return sk_listbox_next_common(out);
 }
 
-void sk_listbox_end(void) { sk_listbox_end_platform(); }
+int sk_listbox_get_count(void) {
+  return g_sk_list_lb ? g_sk_list_lb->item_count : 0;
+}
+
 bool ski_place_listbox(const SkListSpec *spec) {
   if (!spec) {
     return false;
@@ -1854,10 +1956,10 @@ SkKey sk_hotkey_from_string(const char *str) {
 bool sk_is_key_down(int vk) { return Platform_IsKeyDown(vk); }
 bool sk_is_key_pressed(int vk) { return Platform_WasKeyPressed(vk); }
 bool sk_is_key_released(int vk) { return Platform_WasKeyReleased(vk); }
-bool sk_ctrl_pressed(void) { return Platform_IsCtrlPressed(); }
-bool sk_shift_pressed(void) { return Platform_IsShiftPressed(); }
-bool sk_alt_pressed(void) { return Platform_IsAltPressed(); }
-bool sk_super_pressed(void) { return Platform_IsSuperPressed(); }
+bool sk_ctrl_pressed(void) { return Key_IsCtrlPressed(); }
+bool sk_shift_pressed(void) { return Key_IsShiftPressed(); }
+bool sk_alt_pressed(void) { return Key_IsAltPressed(); }
+bool sk_super_pressed(void) { return Key_IsSuperPressed(); }
 void sk_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud) {
   Platform_SetKeyCallback(cb, ud);
 }
@@ -2384,15 +2486,15 @@ static void sk_widget_attach_window(void *ud) {
 static void sk_widget_apply_geometry(SkWidget *widget, int x, int y) {
   widget->x = x;
   widget->y = y;
-  if (Platform_RenderThread_IsCurrentThread()) {
+  if (RenderThread_IsCurrentThread()) {
 
     sk_widget_attach_window(widget);
     return;
   }
-  if (!Platform_RenderThread_EnsureStarted(widget->fps)) {
+  if (!RenderThread_EnsureStarted(widget->fps)) {
     return;
   }
-  if (!Platform_RenderThread_Post(sk_widget_attach_window, widget)) {
+  if (!RenderThread_Post(sk_widget_attach_window, widget)) {
     return;
   }
 }
@@ -2513,13 +2615,13 @@ SkNetStatus sk_net_status(void) { return sk_net_status_platform(); }
 
 unsigned long long sk_net_rx_bytes() { return sk_net_rx_bytes_platform(); }
 
-int sk_monitor_count(void) { return Platform_WM_GetMonitorCount(); }
+int sk_monitor_count(void) { return Monitor_Count(); }
 
 bool sk_monitor_at(int index, SkMonitorInfo *out) {
   if (!out)
     return false;
-  WMMonitorInfo info;
-  if (!Platform_WM_GetMonitorInfo(index, &info))
+  MonitorInfo info;
+  if (!Monitor_Info(index, &info))
     return false;
   memset(out, 0, sizeof(*out));
   out->index = info.index;
@@ -2850,7 +2952,7 @@ bool sk_hotkey_down(SkKey key) {
 }
 
 void sk_register_key_interceptor(SkKeyInterceptorFn fn) {
-  Platform_RegisterKeyInterceptor((PlatformKeyInterceptorFn)fn);
+  Key_RegisterInterceptor((KeyInterceptorFn)fn);
 }
 
 typedef struct {

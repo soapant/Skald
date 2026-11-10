@@ -91,15 +91,6 @@ typedef enum {
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap);
 #endif
-bool Platform_IsCtrlPressed(void);
-bool Platform_IsShiftPressed(void);
-bool Platform_IsAltPressed(void);
-bool Platform_IsSuperPressed(void);
-
-typedef bool (*PlatformKeyInterceptorFn)(const PopupKeyEvent *key);
-void Platform_RegisterKeyInterceptor(PlatformKeyInterceptorFn fn);
-bool Platform_InvokeKeyInterceptor(const PopupKeyEvent *key);
-void Platform_KeyInterceptor_PurgeOwner(const char *path_a, const char *path_b);
 bool Platform_StringContainsCaseInsensitive(const char *haystack,
                                             const char *needle);
 bool Platform_StringStartsWithCaseInsensitive(const char *str,

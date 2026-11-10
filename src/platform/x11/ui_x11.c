@@ -17,93 +17,9 @@ bool IsPopupActive(WindowHandle hPopupWnd) {
   return wm && wm->popup_count > 0;
 }
 
-void UI_SetSelection(ListBoxInfo *lb, int index) {
-  if (lb && lb->selected_index != index)
-    lb->text_hscroll = 0;
-  lb->selected_index = index;
-  return;
-}
-
-void UI_SetHorizontalExtent(int width) {}
-
-void UI_LB_SetCount(ListBoxInfo *lb, int count) {
-  if (lb)
-    lb->item_count = count;
-}
-
-void UI_LB_BeginUpdate() {}
-
-void UI_LB_EndUpdate() {}
-
 void UI_RequestPopupRepaint(void) {}
 
 void UI_LegacySyncRepaint(void) {}
-
-void UI_LB_SetItemHeight(int height) {}
-
-void UI_LB_SetCaretIndex(int index, bool scroll) {}
-
-int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
-
-static int g_x11_lb_visible;
-
-int UI_LB_GetVisibleCount(void) { return g_x11_lb_visible; }
-
-void UI_LB_SetVisibleCount(int count) { g_x11_lb_visible = count; }
-
-void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
-  if (!lb) {
-    return;
-  }
-  if (top_index < 0)
-    top_index = 0;
-  if (g_x11_lb_visible > 0 && top_index + g_x11_lb_visible > lb->item_count)
-    top_index = lb->item_count - g_x11_lb_visible;
-  if (top_index < 0)
-    top_index = 0;
-  lb->view_offset = top_index;
-}
-
-void UI_NavigateTo(ListBoxInfo *lb, int index) {
-  if (!lb) {
-    return;
-  }
-  int count = lb->item_count;
-  if (count <= 0) {
-    lb->selected_index = -1;
-    lb->text_hscroll = 0;
-    UI_LB_SetCaretIndex(-1, false);
-    return;
-  }
-  if (index >= count)
-    index = count - 1;
-  if (index == -1) {
-    lb->selected_index = -1;
-    lb->text_hscroll = 0;
-    UI_LB_SetCaretIndex(-1, false);
-    return;
-  }
-  int old_sel = lb->selected_index;
-  if (old_sel == index) {
-    return;
-  }
-  lb->text_hscroll = 0;
-  lb->selected_index = index;
-  lb->selected_text = ListBoxInfo_Row(lb, index);
-  UI_LB_SetCaretIndex(index, false);
-  ListBox_ScrollToSelection(lb);
-}
-
-void UI_NavigateUp(ListBoxInfo *lb) { ListBox_NavigateUp(lb); }
-
-void UI_NavigateDown(ListBoxInfo *lb) { ListBox_NavigateDown(lb); }
-
-void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
-  if (start)
-    *start = 0;
-  if (end)
-    *end = 0;
-}
 
 void UI_GetCurrentTextEdit(char *buffer, size_t cap) {
   if (!buffer || cap == 0) {
@@ -238,4 +154,10 @@ void UI_SyncEditCursor(int pos) {
   UI_SetCursorPosition(pos);
 }
 
-bool UI_ApplyBackspaceToPopup(void) { return false; }
+
+void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
+  if (start)
+    *start = 0;
+  if (end)
+    *end = 0;
+}

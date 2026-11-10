@@ -1,0 +1,107 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include "platform/ui.h"
+#include "core/listbox_hover.h"
+#include "core/types.h"
+#include "core/types/prompt.h"
+
+void UI_SetSelection(ListBoxInfo *lb, int index) {
+  if (!lb)
+    return;
+  if (lb->selected_index == index)
+    return;
+  lb->text_hscroll = 0;
+  lb->selected_index = index;
+  UI_RequestPopupRepaint();
+}
+
+void UI_SetHorizontalExtent(int width) { (void)width; }
+
+static int g_lb_update_depth = 0;
+static int g_lb_visible_count = 0;
+
+void UI_LB_BeginUpdate(void) { g_lb_update_depth++; }
+
+void UI_LB_EndUpdate(void) {
+  if (g_lb_update_depth > 0)
+    g_lb_update_depth--;
+}
+
+void UI_LB_SetCount(ListBoxInfo *lb, int count) {
+  if (lb)
+    lb->item_count = count;
+  UI_RequestPopupRepaint();
+}
+
+void UI_LB_SetItemHeight(int height) { (void)height; }
+
+void UI_LB_SetCaretIndex(int index, bool scroll) {
+  (void)index;
+  (void)scroll;
+  UI_RequestPopupRepaint();
+}
+
+int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
+
+int UI_LB_GetVisibleCount(void) { return g_lb_visible_count; }
+
+void UI_LB_SetVisibleCount(int count) { g_lb_visible_count = count; }
+
+void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
+  if (!lb)
+    return;
+  int visible = UI_LB_GetVisibleCount();
+  if (top_index < 0)
+    top_index = 0;
+  if (visible > 0 && top_index + visible > lb->item_count)
+    top_index = lb->item_count - visible;
+  if (top_index < 0)
+    top_index = 0;
+  lb->view_offset = top_index;
+  UI_RequestPopupRepaint();
+}
+
+void UI_NavigateTo(ListBoxInfo *lb, int index) {
+  if (!lb)
+    return;
+  int count = lb->item_count;
+  if (count <= 0) {
+    lb->selected_index = -1;
+    lb->text_hscroll = 0;
+    UI_LB_SetCaretIndex(-1, false);
+    UI_RequestPopupRepaint();
+    return;
+  }
+  if (index >= count)
+    index = count - 1;
+  if (index == -1) {
+    lb->selected_index = -1;
+    lb->text_hscroll = 0;
+    UI_LB_SetCaretIndex(-1, false);
+    UI_RequestPopupRepaint();
+    return;
+  }
+  int old_sel = lb->selected_index;
+  if (old_sel == index)
+    return;
+  lb->text_hscroll = 0;
+  lb->selected_index = index;
+  lb->selected_text = ListBoxInfo_Row(lb, index);
+  UI_LB_SetCaretIndex(index, false);
+  ListBox_ScrollToSelection(lb);
+  UI_RequestPopupRepaint();
+}
+
+void UI_NavigateUp(ListBoxInfo *lb) {
+  ListBox_NavigateUp(lb);
+  UI_RequestPopupRepaint();
+}
+
+void UI_NavigateDown(ListBoxInfo *lb) {
+  ListBox_NavigateDown(lb);
+  UI_RequestPopupRepaint();
+}
+
+
+bool UI_ApplyBackspaceToPopup(void) { return false; }
