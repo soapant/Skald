@@ -156,7 +156,7 @@ void sk_send_hotkey(const char *hotkey_string);
 
 #define sk_send_key sk_send_hotkey
 
-char *sk_hotkey_to_string(SkKey key);
+bool sk_hotkey_to_string(SkKey key, char *out, size_t cap);
 
 SkKey sk_hotkey_from_string(const char *str);
 
@@ -762,10 +762,10 @@ void sk_disable_global_hotkeys(void);
 void sk_enable_global_hotkeys(void);
 
 int sk_hotkey_count(void);
-const char *sk_hotkey_string_at(int index);
+bool sk_hotkey_string_at(int index, char *out, size_t cap);
 bool sk_hotkey_taken(const char *hotkey);
-const char *sk_hotkey_for_callback(void (*cb)(void));
-const char *sk_hotkey_for_ud(void *ud);
+bool sk_hotkey_for_callback(void (*cb)(void), char *out, size_t cap);
+bool sk_hotkey_for_ud(void *ud, char *out, size_t cap);
 void sk_register_deferred_init(void (*cb)(void));
 
 typedef struct {

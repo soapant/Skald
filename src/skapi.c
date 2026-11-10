@@ -623,43 +623,31 @@ void sk_enable_global_hotkeys(void) { hotkey_set_suspended(false); }
 
 int sk_hotkey_count(void) { return hotkey_count(); }
 
-static char g_sk_hotkey_list_string[HOTKEY_STRING_MAX_LEN];
-
-const char *sk_hotkey_string_at(int index) {
-  const HotkeyBinding *b = hotkey_get(index);
-  if (!b)
-    return NULL;
+static bool hotkey_binding_format(const HotkeyBinding *b, char *out,
+                                  size_t cap) {
+  if (!b || !out || cap == 0)
+    return false;
   HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
-  if (!HotkeyString_Format(key, g_sk_hotkey_list_string,
-                           (int)sizeof(g_sk_hotkey_list_string)))
-    g_sk_hotkey_list_string[0] = '\0';
-  return g_sk_hotkey_list_string;
+  if (!HotkeyString_Format(key, out, (int)cap)) {
+    out[0] = '\0';
+    return false;
+  }
+  return true;
 }
 
-static char g_sk_hotkey_cb_string[HOTKEY_STRING_MAX_LEN];
+bool sk_hotkey_string_at(int index, char *out, size_t cap) {
+  return hotkey_binding_format(hotkey_get(index), out, cap);
+}
 
-const char *sk_hotkey_for_ud(void *ud) {
-  const HotkeyBinding *b = hotkey_find_by_ud(ud);
-  if (!b)
-    return NULL;
-  HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
-  if (!HotkeyString_Format(key, g_sk_hotkey_cb_string,
-                           (int)sizeof(g_sk_hotkey_cb_string)))
-    g_sk_hotkey_cb_string[0] = '\0';
-  return g_sk_hotkey_cb_string;
+bool sk_hotkey_for_ud(void *ud, char *out, size_t cap) {
+  return hotkey_binding_format(hotkey_find_by_ud(ud), out, cap);
 }
 
 void sk_register_deferred_init(void (*cb)(void)) { DeferredInit_Register(cb); }
 
-const char *sk_hotkey_for_callback(void (*cb)(void)) {
-  const HotkeyBinding *b = hotkey_find_by_callback((HotkeyCallback)cb);
-  if (!b)
-    return NULL;
-  HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
-  if (!HotkeyString_Format(key, g_sk_hotkey_cb_string,
-                           (int)sizeof(g_sk_hotkey_cb_string)))
-    g_sk_hotkey_cb_string[0] = '\0';
-  return g_sk_hotkey_cb_string;
+bool sk_hotkey_for_callback(void (*cb)(void), char *out, size_t cap) {
+  return hotkey_binding_format(hotkey_find_by_callback((HotkeyCallback)cb),
+                               out, cap);
 }
 
 bool sk_hotkey_taken(const char *hotkey) {
@@ -1845,14 +1833,14 @@ void sk_send_hotkey(const char *hotkey_string) {
   remap_send_combo(hotkey_string);
 }
 
-static char g_sk_hotkey_string[HOTKEY_STRING_MAX_LEN];
-
-char *sk_hotkey_to_string(SkKey key) {
-  if (!HotkeyString_Format(key, g_sk_hotkey_string,
-                           (int)sizeof(g_sk_hotkey_string))) {
-    g_sk_hotkey_string[0] = '\0';
+bool sk_hotkey_to_string(SkKey key, char *out, size_t cap) {
+  if (!out || cap == 0)
+    return false;
+  if (!HotkeyString_Format(key, out, (int)cap)) {
+    out[0] = '\0';
+    return false;
   }
-  return g_sk_hotkey_string;
+  return true;
 }
 
 SkKey sk_hotkey_from_string(const char *str) {
