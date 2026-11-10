@@ -30,7 +30,6 @@
 #include <linux/input.h>
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/input_x11.h"
-#include "platform/x11/input_x11_priv.h"
 #include "core/hotkey_pending.h"
 #include "platform/render_thread.h"
 #include "platform/widget.h"
@@ -167,37 +166,38 @@ static int XKeysymToVK(KeySym ks) { return x11_keysym_to_vk(ks); }
 
 static void *input_thread_func(void *arg) {
   WindowManager *wm = (WindowManager *)arg;
-  if (g_x11_keyboard_count == 0 && g_x11_mouse_count == 0)
+  int kb_count = x11_keyboard_count_get(), mouse_count = x11_mouse_count_get();
+  if (kb_count == 0 && mouse_count == 0)
     return NULL;
-  int nfds = g_x11_keyboard_count + g_x11_mouse_count;
+  int nfds = kb_count + mouse_count;
   struct pollfd *fds = calloc((size_t)nfds, sizeof(struct pollfd));
   if (!fds) {
     return NULL;
   }
-  for (int i = 0; i < g_x11_keyboard_count; i++) {
-    fds[i].fd = g_x11_keyboards[i].fd;
+  for (int i = 0; i < kb_count; i++) {
+    fds[i].fd = x11_keyboard_fd(i);
     fds[i].events = POLLIN;
   }
-  for (int i = 0; i < g_x11_mouse_count; i++) {
-    fds[g_x11_keyboard_count + i].fd = g_x11_mice[i].fd;
-    fds[g_x11_keyboard_count + i].events = POLLIN;
+  for (int i = 0; i < mouse_count; i++) {
+    fds[kb_count + i].fd = x11_mouse_fd(i);
+    fds[kb_count + i].events = POLLIN;
   }
   struct input_event ev;
   while (wm->running) {
     int r = poll(fds, nfds, 100);
     if (r > 0) {
-      for (int i = 0; i < g_x11_keyboard_count; i++)
+      for (int i = 0; i < kb_count; i++)
         if (fds[i].revents & POLLIN) {
-          bool grabbed = g_x11_device_grabbed[i];
+          bool grabbed = x11_device_grabbed_get(i);
           while (read(fds[i].fd, &ev, sizeof(ev)) > 0) {
             bool has_popup = WindowManager_GetTopPopup(wm) != NULL;
             x11_handle_evdev(&ev, has_popup, grabbed);
           }
         }
-      for (int i = 0; i < g_x11_mouse_count; i++)
-        if (fds[g_x11_keyboard_count + i].revents & POLLIN) {
-          bool mgrab = g_x11_mouse_grabbed[i];
-          while (read(g_x11_mice[i].fd, &ev, sizeof(ev)) > 0) {
+      for (int i = 0; i < mouse_count; i++)
+        if (fds[kb_count + i].revents & POLLIN) {
+          bool mgrab = x11_mouse_grabbed_get(i);
+          while (read(x11_mouse_fd(i), &ev, sizeof(ev)) > 0) {
             x11_handle_evdev_mouse(&ev);
             x11_mouse_forward(&ev, mgrab ? 1 : 0);
           }
@@ -376,10 +376,10 @@ int WindowManager_RunLinux(WindowManager *wm) {
 
   bool use_grab = should_use_grab();
   if (!use_grab) {
-    g_x11_uinput_fd = -1;
+    x11_uinput_fd_set(-1);
   } else {
-    g_x11_uinput_fd = init_uinput();
-    if (g_x11_uinput_fd < 0) {
+    x11_uinput_fd_set(init_uinput());
+    if (x11_uinput_fd_get() < 0) {
       log_warn("continuing without uinput (no swallow)");
     }
   }
@@ -391,28 +391,28 @@ int WindowManager_RunLinux(WindowManager *wm) {
   }
 
   if (remap_has_bindings()) {
-    if (g_x11_uinput_fd < 0) {
+    if (x11_uinput_fd_get() < 0) {
       log_warn("remap forcing uinput init despite use_grab=%d", use_grab);
-      g_x11_uinput_fd = init_uinput();
-      if (g_x11_uinput_fd >= 0)
-        log_warn("remap uinput forced fd=%d", g_x11_uinput_fd);
+      x11_uinput_fd_set(init_uinput());
+      if (x11_uinput_fd_get() >= 0)
+        log_warn("remap uinput forced fd=%d", x11_uinput_fd_get());
       else
         log_warn("remap uinput force failed, fallback XTest will be used");
     }
-    if (g_x11_uinput_fd >= 0) {
+    if (x11_uinput_fd_get() >= 0) {
       x11_clear_suppress();
       remap_reset();
       Platform_InputState_Clear();
       x11_sync_held_from_phys();
-      for (int i = 0; i < g_x11_keyboard_count; i++) {
-        if (!g_x11_device_grabbed[i]) {
+      for (int i = 0; i < x11_keyboard_count_get(); i++) {
+        if (!x11_device_grabbed_get(i)) {
           struct input_event drain_ev;
-          while (read(g_x11_keyboards[i].fd, &drain_ev, sizeof(drain_ev)) > 0) {
+          while (read(x11_keyboard_fd(i), &drain_ev, sizeof(drain_ev)) > 0) {
           }
-          if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1) == 0) {
-            g_x11_device_grabbed[i] = true;
+          if (ioctl(x11_keyboard_fd(i), EVIOCGRAB, 1) == 0) {
+            x11_device_grabbed_set(i, true);
             unsigned long held[(KEY_MAX + 8) / 8] = {0};
-            bool have_held = ioctl(g_x11_keyboards[i].fd,
+            bool have_held = ioctl(x11_keyboard_fd(i),
                                    EVIOCGKEY(sizeof(held)), held) >= 0;
             if (have_held) {
               for (int k = 0; k <= KEY_MAX; k++) {
@@ -454,7 +454,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
   }
   pthread_t input_thr = 0;
   bool input_started = false;
-  if (g_x11_keyboard_count > 0) {
+  if (x11_keyboard_count_get() > 0) {
     if (pthread_create(&input_thr, NULL, input_thread_func, wm) == 0)
       input_started = true;
     else
@@ -523,11 +523,11 @@ int WindowManager_RunLinux(WindowManager *wm) {
   if (input_started)
     pthread_join(input_thr, NULL);
 
-  for (int i = 0; i < g_x11_keyboard_count; i++) {
-    if (g_x11_keyboards[i].fd >= 0) {
-      ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
-      close(g_x11_keyboards[i].fd);
-      g_x11_keyboards[i].fd = -1;
+  for (int i = 0; i < x11_keyboard_count_get(); i++) {
+    if (x11_keyboard_fd(i) >= 0) {
+      ioctl(x11_keyboard_fd(i), EVIOCGRAB, 0);
+      close(x11_keyboard_fd(i));
+      x11_keyboard_fd_set(i, -1);
     }
   }
   destroy_uinput();
