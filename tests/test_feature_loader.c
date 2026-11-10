@@ -50,8 +50,7 @@ TEST(load_reload_unload) {
 
   const char *ext = Platform_LibExtension();
   char fixture[512];
-  snprintf(fixture, sizeof(fixture), "%s/%s%s", FIXTURE_DIR, FIXTURE_NAME,
-           ext);
+  snprintf(fixture, sizeof(fixture), "%s/%s%s", FIXTURE_DIR, FIXTURE_NAME, ext);
   char hot1[512];
   snprintf(hot1, sizeof(hot1), "%s.hot1", fixture);
   char hot2[512];
