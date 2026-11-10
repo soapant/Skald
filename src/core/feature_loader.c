@@ -185,6 +185,8 @@ static int g_defer_unload_count = 0;
 static void feature_mutex_init(void);
 static void *g_feature_mutex;
 
+int FeatureLoader_PendingUnloadCount(void) { return g_defer_unload_count; }
+
 void FeatureLoader_DrainRetiredUnloads(void) {
   if (g_defer_unload_count == 0)
     return;
