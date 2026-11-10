@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "core/types.h"
+#include "core/types/window.h"
 
 unsigned long rgb_to_hex(unsigned long win_color);
 unsigned short OpacityAlpha16(void);
@@ -47,6 +48,21 @@ void CalculateWindowMetrics(WindowLayout *layout, int height, int width,
 #define MSG_SCREEN_GAP_DEFAULT 20
 
 extern int MessageScreenGap;
+
+typedef struct {
+  int bx;
+  int bw;
+  int fw;
+  int fh;
+  int y0;
+  int item_h;
+  int list_h;
+  int visible;
+} ListboxLayout;
+
+void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
+                           int popup_w, int popup_h, int count,
+                           ListboxLayout *out);
 
 void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
                        int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,

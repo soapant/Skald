@@ -4,7 +4,6 @@
 #include "config.h"
 #include "platform/platform.h"
 #include "config_values.h"
-#include "core/types/misc.h"
 
 typedef struct {
   const char **var;

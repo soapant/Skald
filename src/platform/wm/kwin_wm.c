@@ -1,5 +1,5 @@
 #include "wm/kwin_wm.h"
-#include "wm/wm_util.h"
+#include "wm/wm.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "platform/x11/env_helpers_x11.h"

@@ -49,7 +49,7 @@
 #include "core/types/skapi_types.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
-#include "core/deferred_init.h"
+#include "core/feature_loader.h"
 
 size_t sk_clipboard_history_count(void) {
   return clipboard_history_count_platform();
@@ -136,8 +136,22 @@ bool sk_launch_with_args_as_admin(const char *path, const char *args) {
   return sk_launch_with_args_as_admin_platform(expanded, args);
 }
 
+static bool cc_add_dep(const char *dep_name, const char *owner_file) {
+  if (!dep_name || !dep_name[0] || !owner_file || !owner_file[0])
+    return false;
+  char dep[64];
+  snprintf(dep, sizeof(dep), "%s", dep_name);
+  char *dot = strrchr(dep, '.');
+  if (dot)
+    *dot = '\0';
+  if (!dep[0])
+    return false;
+  FeatureLoader_ManifestAddDepends(owner_file, dep);
+  return true;
+}
+
 bool ski_add_dep(const char *dep_name, const char *owner_file) {
-  return add_dep(dep_name, owner_file);
+  return cc_add_dep(dep_name, owner_file);
 }
 
 unsigned sk_cap_generation(void) { return cap_generation(); }
@@ -2607,7 +2621,7 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
   if (e->owner[0] && !sk_cc_dep_seen(e->owner)) {
     sk_cc_dep_mark(e->owner);
-    add_dep("control_center.c", e->owner);
+    cc_add_dep("control_center.c", e->owner);
   }
   if (spec->type && strcmp(spec->type, "Feature") == 0)
     feature_list_add(spec->display_name, spec->on_action, spec->icon,

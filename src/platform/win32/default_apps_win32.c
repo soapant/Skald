@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "core/types/misc.h"
 #include "core/types/file.h"
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"

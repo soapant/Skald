@@ -80,6 +80,13 @@ typedef struct {
   int overflow;
 } HttpBuf;
 
+typedef enum {
+  DEFAULT_BROWSER,
+  DEFAULT_TERMINAL,
+  DEFAULT_SHELL,
+  DEFAULT_APP_COUNT
+} DefaultAppKind;
+
 #if defined(__linux__)
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap);

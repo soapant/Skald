@@ -1,5 +1,5 @@
 #include "wm/niri_wm.h"
-#include "wm/wm_util.h"
+#include "wm/wm.h"
 
 #include <string.h>
 #include <strings.h>

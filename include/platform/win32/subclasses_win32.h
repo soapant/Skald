@@ -2,7 +2,6 @@
 #define SUBCLASSES_H
 
 #include "core/types.h"
-#include "platform/win32/popup_helpers_win32.h"
 #include "helpers/helpers_owner.h"
 
 #define WM_DISPLAY_MESSAGE (WM_APP + 2)

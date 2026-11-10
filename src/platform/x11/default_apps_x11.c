@@ -9,7 +9,6 @@
 #include "platform/x11/env_helpers_x11.h"
 #include "helpers/helpers_text.h"
 #include "core/types.h"
-#include "core/types/misc.h"
 
 char default_apps_x11[DEFAULT_APP_COUNT][256];
 
