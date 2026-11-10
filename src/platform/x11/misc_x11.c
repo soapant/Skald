@@ -15,6 +15,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #include "platform/platform.h"
+#include "platform/x11/misc_x11.h"
 #include "platform/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "wm/wm.h"

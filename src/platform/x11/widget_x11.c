@@ -127,7 +127,7 @@ static void widget_frame(void *ud) {
     }
   }
 
-  Platform_SetDrawContext(dpy, widget->xd, widget->vis, widget->cmap);
+  x11_set_draw_context(dpy, widget->xd, widget->vis, widget->cmap);
   if (widget->base.fn)
     widget->base.fn(widget->base.ud);
   Platform_FlushDraw();

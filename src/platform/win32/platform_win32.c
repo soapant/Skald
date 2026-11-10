@@ -1566,8 +1566,8 @@ static HHOOK s_win32_mouse_hook = NULL;
 static uint32_t s_main_thread_id = 0;
 static WindowHandle s_tray_wnd = {0};
 
-bool Platform_IsMainThread(void) { return GetCurrentThreadId() == s_main_thread_id; }
-WindowHandle Platform_TrayWindow(void) { return s_tray_wnd; }
+bool win32_is_main_thread(void) { return GetCurrentThreadId() == s_main_thread_id; }
+WindowHandle win32_tray_window(void) { return s_tray_wnd; }
 
 bool Platform_InitDisplaySafe(void) { return true; }
 

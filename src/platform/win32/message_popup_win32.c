@@ -65,7 +65,7 @@ static void MsgSlotRegister(HWND hwnd) {
   g_last_created_msg_hwnd = hwnd;
 }
 
-bool MessagePopup_AnyOpen(void) { return g_msg_slot_count > 0; }
+bool win32_message_popup_any_open(void) { return g_msg_slot_count > 0; }
 
 enum { MSG_DESTROY_ALL, MSG_DESTROY_INDEFINITE, MSG_DESTROY_NAMED };
 
@@ -167,9 +167,9 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
     }
 
     if (data && data->render) {
-      Platform_SetDrawContextWin32(hdc);
+      win32_set_draw_context(hdc);
       data->render();
-      Platform_SetDrawContextWin32(NULL);
+      win32_set_draw_context(NULL);
     }
 
     if (data) {
@@ -321,8 +321,8 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     if (useMaxH <= 0 || h > useMaxH)
       useMaxH = h;
   }
-  if (WH_TO_HWND(Platform_TrayWindow()) != NULL &&
-      !Platform_IsMainThread()) {
+  if (WH_TO_HWND(win32_tray_window()) != NULL &&
+      !win32_is_main_thread()) {
     DisplayMessageParams params;
     params.message = message;
     params.x = centerX;
@@ -334,7 +334,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     params.no_bg = no_bg;
     params.render = render;
     params.name = name;
-    SendMessageA(WH_TO_HWND(Platform_TrayWindow()), WM_DISPLAY_MESSAGE, 0,
+    SendMessageA(WH_TO_HWND(win32_tray_window()), WM_DISPLAY_MESSAGE, 0,
                  (LPARAM)&params);
     return;
   }
@@ -352,8 +352,8 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
 }
 
 void Platform_DismissDisplayMessage(void) {
-  HWND tray = WH_TO_HWND(Platform_TrayWindow());
-  if (tray != NULL && !Platform_IsMainThread()) {
+  HWND tray = WH_TO_HWND(win32_tray_window());
+  if (tray != NULL && !win32_is_main_thread()) {
     SendMessageA(tray, WM_DISMISS_MESSAGE, 0, 0);
     return;
   }
@@ -361,8 +361,8 @@ void Platform_DismissDisplayMessage(void) {
 }
 
 bool Platform_DismissMessage(const char *name) {
-  HWND tray = WH_TO_HWND(Platform_TrayWindow());
-  if (tray != NULL && !Platform_IsMainThread()) {
+  HWND tray = WH_TO_HWND(win32_tray_window());
+  if (tray != NULL && !win32_is_main_thread()) {
     DismissMessageParams params;
     params.name = name;
     return SendMessageA(tray, WM_DISMISS_MESSAGE, 0, (LPARAM)&params) != 0;

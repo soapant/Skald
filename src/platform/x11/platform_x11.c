@@ -38,6 +38,7 @@
 
 #include "platform/x11/display_x11.h"
 #include "platform/platform.h"
+#include "platform/x11/misc_x11.h"
 #include "core/context.h"
 #include "helpers/helpers_owner.h"
 #include "core/thread_registry.h"
@@ -644,7 +645,7 @@ static bool x11_font_is_cached(Display *dpy, XftFont *xft) {
   return false;
 }
 
-FontHandle Platform_CreateFontOnDisplay(Display *dpy, int size,
+FontHandle x11_create_font_on_display(Display *dpy, int size,
                                         const char *face_name) {
 
   if (!dpy)
@@ -722,7 +723,7 @@ FontHandle Platform_CreateFont(int size, const char *face_name) {
     return FH_NULL;
   }
 
-  FontHandle fh = Platform_CreateFontOnDisplay(dpy, size, face_name);
+  FontHandle fh = x11_create_font_on_display(dpy, size, face_name);
 
   pthread_mutex_unlock(&g_font_mtx);
   log_info("Platform_CreateFont size=%d face_name='%s'", size,

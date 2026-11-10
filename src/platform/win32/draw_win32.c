@@ -263,8 +263,8 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
     *out_y = (int)pt.y;
   return true;
 }
-void Platform_SetDrawContextWin32(HDC hdc) { g_draw_hdc = hdc; }
-void Platform_GetDrawContextWin32(HDC *out) {
+void win32_set_draw_context(HDC hdc) { g_draw_hdc = hdc; }
+void win32_get_draw_context(HDC *out) {
   if (out)
     *out = g_draw_hdc;
 }
@@ -945,7 +945,7 @@ static void *win32_load_scaled_bitmap(const char *path, int w, int h) {
 static HDC s_cached_hdc = NULL;
 static GpGraphics *s_cached_g = NULL;
 
-void Platform_ReleaseDrawCache(void) {
+void win32_release_draw_cache(void) {
   if (s_cached_g) {
     GdipDeleteGraphics(s_cached_g);
     s_cached_g = NULL;
