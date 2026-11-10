@@ -18,6 +18,7 @@
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 #include "platform/win32/subclasses_win32.h"
+#include "platform/win32/common_ui_win32.h"
 #include "platform/win32/bg_image_win32.h"
 #include "core/prompt_geometry.h"
 #include "platform/win32/input_core_win32.h"
@@ -819,11 +820,11 @@ static HWND win32_foreground_target(void) {
   char cls[64];
   cls[0] = '\0';
   GetClassNameA(hwnd, cls, sizeof(cls));
-  if (strcmp(cls, "QuickSwitcherModalClass") == 0)
+  if (strcmp(cls, QUICKSWITCHER_CLASS) == 0)
     return NULL;
-  if (strcmp(cls, "DisplayMessageModalClass") == 0)
+  if (strcmp(cls, MESSAGE_CLASS) == 0)
     return NULL;
-  if (strcmp(cls, "SearchPopupClass") == 0)
+  if (strcmp(cls, SEARCH_POPUP_CLASS) == 0)
     return NULL;
   return hwnd;
 }
@@ -835,7 +836,7 @@ bool Platform_CloseActiveWindow(void) {
   char cls[64];
   cls[0] = '\0';
   GetClassNameA(hwnd, cls, sizeof(cls));
-  if (strcmp(cls, "QuickSwitcherModalClass") == 0) {
+  if (strcmp(cls, QUICKSWITCHER_CLASS) == 0) {
     SkaldContext_Get()->window.selection_complete = true;
     return true;
   }
@@ -911,10 +912,15 @@ typedef struct {
   HWND best;
   int best_gap;
   int best_vdist;
+  int dir;
 } win32_focus_search;
 
-static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
+#define WIN32_FOCUS_LEFT 0
+#define WIN32_FOCUS_RIGHT 1
+#define WIN32_FOCUS_UP 2
+#define WIN32_FOCUS_DOWN 3
 
+static BOOL CALLBACK win32_focus_enum(HWND hwnd, LPARAM lp) {
   win32_focus_search *s = (win32_focus_search *)lp;
   if (!s)
     return TRUE;
@@ -926,10 +932,10 @@ static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
     return TRUE;
   char cls[64];
   if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
-    if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
-        strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "WidgetClass") == 0) {
+    if (strcmp(cls, QUICKSWITCHER_CLASS) == 0 ||
+        strcmp(cls, MESSAGE_CLASS) == 0 ||
+        strcmp(cls, SEARCH_POPUP_CLASS) == 0 ||
+        strcmp(cls, WIDGET_CLASS) == 0) {
       return TRUE;
     }
   {
@@ -962,200 +968,49 @@ static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
     return TRUE;
   int cx = wr.left + w / 2;
   int cy = wr.top + h / 2;
-  if (cx >= s->fcx)
-    return TRUE;
-  int gap = s->fcx - cx;
-  int vdist = cy >= s->fcy ? cy - s->fcy : s->fcy - cy;
-  if (gap < s->best_gap || (gap == s->best_gap && vdist < s->best_vdist)) {
+  int gap = 0;
+  int cross = 0;
+  switch (s->dir) {
+  case WIN32_FOCUS_LEFT:
+    if (cx >= s->fcx)
+      return TRUE;
+    gap = s->fcx - cx;
+    cross = cy >= s->fcy ? cy - s->fcy : s->fcy - cy;
+    break;
+  case WIN32_FOCUS_RIGHT:
+    if (cx <= s->fcx)
+      return TRUE;
+    gap = cx - s->fcx;
+    cross = cy >= s->fcy ? cy - s->fcy : s->fcy - cy;
+    break;
+  case WIN32_FOCUS_UP:
+    if (cy >= s->fcy)
+      return TRUE;
+    gap = s->fcy - cy;
+    cross = cx >= s->fcx ? cx - s->fcx : s->fcx - cx;
+    break;
+  default: /* WIN32_FOCUS_DOWN */
+    if (cy <= s->fcy)
+      return TRUE;
+    gap = cy - s->fcy;
+    cross = cx >= s->fcx ? cx - s->fcx : s->fcx - cx;
+    break;
+  }
+  if (gap < s->best_gap || (gap == s->best_gap && cross < s->best_vdist)) {
     s->best_gap = gap;
-    s->best_vdist = vdist;
+    s->best_vdist = cross;
     s->best = hwnd;
   }
   return TRUE;
 }
 
-static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
+#define WIN32_MON_LEFT 0
+#define WIN32_MON_RIGHT 1
+#define WIN32_MON_UP 2
+#define WIN32_MON_DOWN 3
 
-  win32_focus_search *s = (win32_focus_search *)lp;
-  if (!s)
-    return TRUE;
-  if (hwnd == GetForegroundWindow())
-    return TRUE;
-  if (!IsWindowVisible(hwnd))
-    return TRUE;
-  if (IsIconic(hwnd))
-    return TRUE;
-  char cls[64];
-  if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
-    if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
-        strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "WidgetClass") == 0) {
-      return TRUE;
-    }
-  {
-    int cloaked = 0;
-    HMODULE dwm = GetModuleHandleA("dwmapi.dll");
-    if (dwm) {
-      HRESULT(WINAPI * p)(HWND, DWORD, PVOID, DWORD) =
-          (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
-      if (p && SUCCEEDED(p(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked)
-        return TRUE;
-    }
-  }
-  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
-  if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
-    HWND o = GetWindow(hwnd, GW_OWNER);
-    if (o)
-      return TRUE;
-  }
-  char title[256];
-  if (GetWindowTextA(hwnd, title, sizeof(title)) == 0)
-    return TRUE;
-  if (title[0] == '\0')
-    return TRUE;
-  RECT wr;
-  if (!GetWindowRect(hwnd, &wr))
-    return TRUE;
-  int w = wr.right - wr.left;
-  int h = wr.bottom - wr.top;
-  if (w <= 0 || h <= 0)
-    return TRUE;
-  int cx = wr.left + w / 2;
-  int cy = wr.top + h / 2;
-  if (cx <= s->fcx)
-    return TRUE;
-  int gap = cx - s->fcx;
-  int vdist = cy >= s->fcy ? cy - s->fcy : s->fcy - cy;
-  if (gap < s->best_gap || (gap == s->best_gap && vdist < s->best_vdist)) {
-    s->best_gap = gap;
-    s->best_vdist = vdist;
-    s->best = hwnd;
-  }
-  return TRUE;
-}
-
-static BOOL CALLBACK win32_focus_enum_up(HWND hwnd, LPARAM lp) {
-  win32_focus_search *s = (win32_focus_search *)lp;
-  if (!s)
-    return TRUE;
-  if (hwnd == GetForegroundWindow())
-    return TRUE;
-  if (!IsWindowVisible(hwnd))
-    return TRUE;
-  if (IsIconic(hwnd))
-    return TRUE;
-  char cls[64];
-  if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
-    if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
-        strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "WidgetClass") == 0) {
-      return TRUE;
-    }
-  {
-    int cloaked = 0;
-    HMODULE dwm = GetModuleHandleA("dwmapi.dll");
-    if (dwm) {
-      HRESULT(WINAPI * p)(HWND, DWORD, PVOID, DWORD) =
-          (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
-      if (p && SUCCEEDED(p(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked)
-        return TRUE;
-    }
-  }
-  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
-  if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
-    HWND o = GetWindow(hwnd, GW_OWNER);
-    if (o)
-      return TRUE;
-  }
-  char title[256];
-  if (GetWindowTextA(hwnd, title, sizeof(title)) == 0)
-    return TRUE;
-  if (title[0] == '\0')
-    return TRUE;
-  RECT wr;
-  if (!GetWindowRect(hwnd, &wr))
-    return TRUE;
-  int w = wr.right - wr.left;
-  int h = wr.bottom - wr.top;
-  if (w <= 0 || h <= 0)
-    return TRUE;
-  int cx = wr.left + w / 2;
-  int cy = wr.top + h / 2;
-  if (cy >= s->fcy)
-    return TRUE;
-  int gap = s->fcy - cy;
-  int hdist = cx >= s->fcx ? cx - s->fcx : s->fcx - cx;
-  if (gap < s->best_gap || (gap == s->best_gap && hdist < s->best_vdist)) {
-    s->best_gap = gap;
-    s->best_vdist = hdist;
-    s->best = hwnd;
-  }
-  return TRUE;
-}
-
-static BOOL CALLBACK win32_focus_enum_down(HWND hwnd, LPARAM lp) {
-  win32_focus_search *s = (win32_focus_search *)lp;
-  if (!s)
-    return TRUE;
-  if (hwnd == GetForegroundWindow())
-    return TRUE;
-  if (!IsWindowVisible(hwnd))
-    return TRUE;
-  if (IsIconic(hwnd))
-    return TRUE;
-  char cls[64];
-  if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
-    if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
-        strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "SearchPopupClass") == 0 ||
-        strcmp(cls, "WidgetClass") == 0) {
-      return TRUE;
-    }
-  {
-    int cloaked = 0;
-    HMODULE dwm = GetModuleHandleA("dwmapi.dll");
-    if (dwm) {
-      HRESULT(WINAPI * p)(HWND, DWORD, PVOID, DWORD) =
-          (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
-      if (p && SUCCEEDED(p(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked)
-        return TRUE;
-    }
-  }
-  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
-  if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
-    HWND o = GetWindow(hwnd, GW_OWNER);
-    if (o)
-      return TRUE;
-  }
-  char title[256];
-  if (GetWindowTextA(hwnd, title, sizeof(title)) == 0)
-    return TRUE;
-  if (title[0] == '\0')
-    return TRUE;
-  RECT wr;
-  if (!GetWindowRect(hwnd, &wr))
-    return TRUE;
-  int w = wr.right - wr.left;
-  int h = wr.bottom - wr.top;
-  if (w <= 0 || h <= 0)
-    return TRUE;
-  int cx = wr.left + w / 2;
-  int cy = wr.top + h / 2;
-  if (cy <= s->fcy)
-    return TRUE;
-  int gap = cy - s->fcy;
-  int hdist = cx >= s->fcx ? cx - s->fcx : s->fcx - cx;
-  if (gap < s->best_gap || (gap == s->best_gap && hdist < s->best_vdist)) {
-    s->best_gap = gap;
-    s->best_vdist = hdist;
-    s->best = hwnd;
-  }
-  return TRUE;
-}
-
-bool Platform_MoveActiveWindowToMonitor(bool right) {
+static bool win32_move_active_window_direction(int dir) {
+  bool horizontal = (dir == WIN32_MON_LEFT || dir == WIN32_MON_RIGHT);
   HWND hwnd = win32_foreground_target();
   if (!hwnd)
     return false;
@@ -1175,7 +1030,12 @@ bool Platform_MoveActiveWindowToMonitor(bool right) {
     return false;
   for (int i = 0; i < list.count - 1; i++) {
     for (int j = i + 1; j < list.count; j++) {
-      if (list.rects[j].left < list.rects[i].left) {
+      int li = horizontal ? list.rects[i].left : list.rects[i].top;
+      int lj = horizontal ? list.rects[j].left : list.rects[j].top;
+      bool before = li > lj || (li == lj && (horizontal
+                                                  ? list.rects[j].top < list.rects[i].top
+                                                  : list.rects[j].left < list.rects[i].left));
+      if (before) {
         RECT t = list.rects[i];
         list.rects[i] = list.rects[j];
         list.rects[j] = t;
@@ -1189,10 +1049,11 @@ bool Platform_MoveActiveWindowToMonitor(bool right) {
       cur = i;
       break;
     }
-    if (list.rects[i].left <= cx)
+    if (horizontal ? list.rects[i].left <= cx : list.rects[i].top <= cy)
       cur = i;
   }
-  int dst = right ? cur + 1 : cur - 1;
+  int dst = (dir == WIN32_MON_RIGHT || dir == WIN32_MON_DOWN) ? cur + 1
+                                                                : cur - 1;
   if (dst < 0 || dst >= list.count)
     return false;
   int w = wr.right - wr.left;
@@ -1217,12 +1078,17 @@ bool Platform_MoveActiveWindowToMonitor(bool right) {
   return true;
 }
 
+bool Platform_MoveActiveWindowToMonitor(bool right) {
+  return win32_move_active_window_direction(right ? WIN32_MON_RIGHT
+                                                  : WIN32_MON_LEFT);
+}
+
 bool Platform_MoveActiveWindowLeft(void) {
-  return Platform_MoveActiveWindowToMonitor(false);
+  return win32_move_active_window_direction(WIN32_MON_LEFT);
 }
 
 bool Platform_MoveActiveWindowRight(void) {
-  return Platform_MoveActiveWindowToMonitor(true);
+  return win32_move_active_window_direction(WIN32_MON_RIGHT);
 }
 
 static bool win32_activate_hwnd(HWND h) {
@@ -1252,18 +1118,10 @@ static bool win32_activate_hwnd(HWND h) {
     AttachThreadInput(tTid, curTid, FALSE);
   return GetForegroundWindow() == h;
 }
-bool Platform_FocusWindowLeft(void) {
+static bool win32_focus_direction(int dir) {
   HWND fg = win32_foreground_target();
   if (!fg)
     fg = GetForegroundWindow();
-  char cls[64] = {0};
-  if (fg)
-    GetClassNameA(fg, cls, sizeof(cls));
-  if (fg && (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
-             strcmp(cls, "DisplayMessageModalClass") == 0 ||
-             strcmp(cls, "SearchPopupClass") == 0 ||
-             strcmp(cls, "WidgetClass") == 0)) {
-  }
   if (!fg)
     return false;
   RECT fr;
@@ -1275,91 +1133,24 @@ bool Platform_FocusWindowLeft(void) {
   s.best = NULL;
   s.best_gap = 1 << 30;
   s.best_vdist = 1 << 30;
-  EnumWindows(win32_focus_enum_left, (LPARAM)&s);
+  s.dir = dir;
+  EnumWindows(win32_focus_enum, (LPARAM)&s);
   if (!s.best)
     return false;
   return win32_activate_hwnd(s.best);
 }
 
-bool Platform_FocusWindowRight(void) {
-  HWND fg = win32_foreground_target();
-  if (!fg)
-    fg = GetForegroundWindow();
-  char cls[64] = {0};
-  if (fg)
-    GetClassNameA(fg, cls, sizeof(cls));
-  if (fg && (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
-             strcmp(cls, "DisplayMessageModalClass") == 0 ||
-             strcmp(cls, "SearchPopupClass") == 0 ||
-             strcmp(cls, "WidgetClass") == 0)) {
-  }
-  if (!fg)
-    return false;
-  RECT fr;
-  if (!GetWindowRect(fg, &fr))
-    return false;
-  win32_focus_search s;
-  s.fcx = fr.left + (fr.right - fr.left) / 2;
-  s.fcy = fr.top + (fr.bottom - fr.top) / 2;
-  s.best = NULL;
-  s.best_gap = 1 << 30;
-  s.best_vdist = 1 << 30;
-  EnumWindows(win32_focus_enum_right, (LPARAM)&s);
-  if (!s.best)
-    return false;
-  return win32_activate_hwnd(s.best);
-}
+bool Platform_FocusWindowLeft(void) { return win32_focus_direction(WIN32_FOCUS_LEFT); }
+bool Platform_FocusWindowRight(void) { return win32_focus_direction(WIN32_FOCUS_RIGHT); }
+bool Platform_FocusWindowUp(void) { return win32_focus_direction(WIN32_FOCUS_UP); }
+bool Platform_FocusWindowDown(void) { return win32_focus_direction(WIN32_FOCUS_DOWN); }
 
-bool Platform_FocusWindowUp(void) {
-  HWND fg = win32_foreground_target();
-  if (!fg)
-    fg = GetForegroundWindow();
-  char cls[64] = {0};
-  if (fg)
-    GetClassNameA(fg, cls, sizeof(cls));
-  if (!fg)
-    return false;
-  RECT fr;
-  if (!GetWindowRect(fg, &fr))
-    return false;
-  win32_focus_search s;
-  s.fcx = fr.left + (fr.right - fr.left) / 2;
-  s.fcy = fr.top + (fr.bottom - fr.top) / 2;
-  s.best = NULL;
-  s.best_gap = 1 << 30;
-  s.best_vdist = 1 << 30;
-  EnumWindows(win32_focus_enum_up, (LPARAM)&s);
-  if (!s.best)
-    return false;
-  return win32_activate_hwnd(s.best);
+bool Platform_MoveActiveWindowUp(void) {
+  return win32_move_active_window_direction(WIN32_MON_UP);
 }
-
-bool Platform_FocusWindowDown(void) {
-  HWND fg = win32_foreground_target();
-  if (!fg)
-    fg = GetForegroundWindow();
-  char cls[64] = {0};
-  if (fg)
-    GetClassNameA(fg, cls, sizeof(cls));
-  if (!fg)
-    return false;
-  RECT fr;
-  if (!GetWindowRect(fg, &fr))
-    return false;
-  win32_focus_search s;
-  s.fcx = fr.left + (fr.right - fr.left) / 2;
-  s.fcy = fr.top + (fr.bottom - fr.top) / 2;
-  s.best = NULL;
-  s.best_gap = 1 << 30;
-  s.best_vdist = 1 << 30;
-  EnumWindows(win32_focus_enum_down, (LPARAM)&s);
-  if (!s.best)
-    return false;
-  return win32_activate_hwnd(s.best);
+bool Platform_MoveActiveWindowDown(void) {
+  return win32_move_active_window_direction(WIN32_MON_DOWN);
 }
-
-bool Platform_MoveActiveWindowUp(void) { return false; }
-bool Platform_MoveActiveWindowDown(void) { return false; }
 
 bool Platform_MinimizeActiveWindow(void) {
   HWND hwnd = win32_foreground_target();
@@ -1670,9 +1461,9 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
   if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0) {
     if (strcmp(cls, "Progman") == 0 || strcmp(cls, "WorkerW") == 0)
       return TRUE;
-    if (strcmp(cls, "QuickSwitcherModalClass") == 0 ||
-        strcmp(cls, "DisplayMessageModalClass") == 0 ||
-        strcmp(cls, "SearchPopupClass") == 0 || strcmp(cls, "WidgetClass") == 0)
+    if (strcmp(cls, QUICKSWITCHER_CLASS) == 0 ||
+        strcmp(cls, MESSAGE_CLASS) == 0 ||
+        strcmp(cls, SEARCH_POPUP_CLASS) == 0 || strcmp(cls, WIDGET_CLASS) == 0)
       return TRUE;
     if (strcmp(cls, "ApplicationFrameWindow") == 0) {
       int cloaked = 0;
@@ -2180,7 +1971,7 @@ void Platform_InitUI() {
   wc.hInstance = GetModuleHandle(NULL);
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = GetStockObject(NULL_BRUSH);
-  wc.lpszClassName = "QuickSwitcherModalClass";
+  wc.lpszClassName = QUICKSWITCHER_CLASS;
 
   if (RegisterClassA(&wc)) {
     log_info("QuickSwitcherModalClass registered successfully with OS.");
@@ -2194,7 +1985,7 @@ void Platform_InitUI() {
   wcFade.hInstance = GetModuleHandle(NULL);
   wcFade.hCursor = LoadCursor(NULL, IDC_ARROW);
   wcFade.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
-  wcFade.lpszClassName = "DisplayMessageModalClass";
+  wcFade.lpszClassName = MESSAGE_CLASS;
   RegisterClassA(&wcFade);
 
   s_win32_keyboard_hook =

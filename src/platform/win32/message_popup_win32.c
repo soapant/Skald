@@ -16,6 +16,7 @@
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 #include "helpers/helpers_owner.h"
+#include "helpers/helpers_ui.h"
 
 #define MSG_AUTO_WRAP_MAX_W 900
 #define MSG_AUTO_WRAP_MAX_H 600
@@ -73,7 +74,7 @@ static int MsgSlotDestroyWhere(int mode, const char *name) {
   for (int i = g_msg_slot_count - 1; i >= 0; i--) {
     HWND h = g_msg_slots[i];
     FadeWindowData *fd = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
-    bool indefinite = fd && (fd->timeout == 6969.0 || fd->timeout <= 0.0);
+    bool indefinite = fd && (MsgTimeoutIsIndefinite(fd->timeout));
     const char *fdname = fd ? fd->name : "";
     bool match = (mode == MSG_DESTROY_ALL) ||
                  (mode == MSG_DESTROY_INDEFINITE && indefinite) ||
@@ -214,7 +215,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_TIMER: {
     if (wParam == 999 && data) {
-      if (data->timeout == 6969.0) {
+      if (data->timeout == MSG_TIMEOUT_INDEFINITE) {
         return 0;
       }
 
@@ -259,17 +260,16 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam,
 static FadeWindowData *s_msg_show_data = NULL;
 static bool s_msg_show_no_bg = false;
 
-bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
-  (void)self;
+static bool message_popup_create(int x, int y, int w, int h) {
   if (!s_msg_show_data) {
-    log_error("MSG Platform_MessagePopupShowWindow null payload");
+    log_error("MSG create null payload");
     return false;
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exStyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED |
                   WS_EX_NOACTIVATE | WS_EX_TRANSPARENT;
   HWND hPopupWnd =
-      CreateWindowExA(exStyle, "DisplayMessageModalClass", NULL, WS_POPUP, x, y,
+      CreateWindowExA(exStyle, MESSAGE_CLASS, NULL, WS_POPUP, x, y,
                       w, h, NULL, NULL, hInstance, s_msg_show_data);
   if (hPopupWnd == NULL) {
     log_error("MSG CreateWindowExA failed: %lu", GetLastError());
@@ -298,22 +298,6 @@ bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h) {
   return true;
 }
 
-void Platform_MessagePopupHideWindow(Popup *self) {
-  (void)self;
-  MsgSlotDestroyWhere(MSG_DESTROY_ALL, NULL);
-}
-
-void Platform_MessagePopupRender(Popup *self) { (void)self; }
-
-void Platform_MessagePopupDestroyWindow(Popup *self) {
-  Platform_MessagePopupHideWindow(self);
-}
-
-bool Platform_MessagePopupOnKey(Popup *self, const PopupKeyEvent *key) {
-  (void)self;
-  (void)key;
-  return false;
-}
 
 void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
   const char *message = spec.message;
@@ -478,7 +462,7 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
                                          .y = centerY,
                                          .max_width = winWidth,
                                          .max_height = winHeight,
-                                         .timeout = 6969.0,
+                                         .timeout = MSG_TIMEOUT_INDEFINITE,
                                          .color = color,
                                          .no_bg = no_bg,
                                          .render = NULL,
@@ -635,7 +619,7 @@ void Platform_CreateDisplayMessageWindow(
   else
     pWndData->name[0] = '\0';
   pWndData->timeout = timeout;
-  if (timeout == 6969.0 || timeout <= 0.0) {
+  if (MsgTimeoutIsIndefinite(timeout)) {
     pWndData->deadline_ms = 0;
   } else {
     pWndData->deadline_ms = GetTickCount64() + (ULONGLONG)(timeout * 1000.0);
@@ -655,10 +639,8 @@ void Platform_CreateDisplayMessageWindow(
 
   s_msg_show_data = pWndData;
   s_msg_show_no_bg = no_bg;
-  if (!Platform_MessagePopupShowWindow(NULL, topLeftX, topLeftY, winWidth,
-                                       winHeight)) {
-    log_error("MSG Platform_MessagePopupShowWindow returned FALSE for '%s'",
-              message ? message : "");
+  if (!message_popup_create(topLeftX, topLeftY, winWidth, winHeight)) {
+    log_error("MSG create failed for '%s'", message ? message : "");
     s_msg_show_data = NULL;
     s_msg_show_no_bg = false;
     Platform_DestroyFont(pWndData->hFont);

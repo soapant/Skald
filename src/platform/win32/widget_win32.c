@@ -13,8 +13,6 @@
 #include "deps/log.h"
 #include "platform/win32/bg_image_win32.h"
 
-#define WIDGET_CLASS "WidgetClass"
-
 struct PlatformWidget {
   HWND hwnd;
   int x, y, w, h;

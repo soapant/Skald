@@ -18,10 +18,4 @@ void Platform_PromptPopupHideWindow(Popup *self);
 void Platform_PromptPopupRender(Popup *self);
 void Platform_PromptPopupDestroyWindow(Popup *self);
 bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key);
-
-bool Platform_MessagePopupShowWindow(Popup *self, int x, int y, int w, int h);
-void Platform_MessagePopupHideWindow(Popup *self);
-void Platform_MessagePopupRender(Popup *self);
-void Platform_MessagePopupDestroyWindow(Popup *self);
-bool Platform_MessagePopupOnKey(Popup *self, const PopupKeyEvent *key);
 #endif
