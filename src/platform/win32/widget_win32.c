@@ -71,7 +71,7 @@ static void layer_release(PlatformWidget *widget) {
     if (widget->layer_bmp)
       DeleteObject(widget->layer_bmp);
     DeleteDC(widget->layer_dc);
-    Platform_ReleaseDrawCache();
+    win32_release_draw_cache();
   }
   widget->layer_dc = NULL;
   widget->layer_bmp = NULL;
@@ -138,7 +138,7 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
   }
   SetDrawBgColor(0);
   SetBkMode(widget->layer_dc, TRANSPARENT);
-  Platform_SetDrawContextWin32(widget->layer_dc);
+  win32_set_draw_context(widget->layer_dc);
   {
     PlDrawState *ds = PlDrawState_Get();
     ds->win32_widget_surface = true;

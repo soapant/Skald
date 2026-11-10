@@ -81,12 +81,12 @@ static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw *xd, Visual *vis,
                                      Colormap cmap, PromptState *state) {
-  Platform_DrawEditBox(state, dpy, xd, vis, cmap);
+  x11_draw_editbox(state, dpy, xd, vis, cmap);
 }
 
 void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw *xd, Visual *vis,
                                  Colormap cmap, PromptState *state) {
-  Platform_DrawListBox(state, dpy, xd, vis, cmap);
+  x11_draw_listbox(state, dpy, xd, vis, cmap);
 }
 
 void DrawPromptUserEditControl(Display *dpy, Window *win, PromptState *state) {
@@ -139,10 +139,10 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   XWindowAttributes attrs;
   if (!XGetWindowAttributes(dpy, *win, &attrs)) {
     x11_draw_background(dpy, *win, w, h);
-    Platform_SetDrawContext(dpy, NULL, NULL, 0);
+    x11_set_draw_context(dpy, NULL, NULL, 0);
     if (state->callbacks->render != NULL) {
       Checkbox_FrameBegin();
-      Platform_SetDrawContext(dpy, NULL, NULL, 0);
+      x11_set_draw_context(dpy, NULL, NULL, 0);
       state->callbacks->render(state);
     } else {
       if (state->lb)
@@ -157,7 +157,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   Colormap cmap = attrs.colormap;
   if (!x11_pbuf_acquire(dpy, *win, w, h, depth, vis, cmap)) {
     x11_draw_background(dpy, *win, w, h);
-    Platform_SetDrawContext(dpy, NULL, NULL, 0);
+    x11_set_draw_context(dpy, NULL, NULL, 0);
     if (state->callbacks->render != NULL) {
       Checkbox_FrameBegin();
       state->callbacks->render(state);
@@ -195,7 +195,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     XFillRectangle(dpy, dbl, clear_gc, 0, 0, w, h);
     XFreeGC(dpy, clear_gc);
   }
-  Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
+  x11_set_draw_context(dpy, xdDbl, vis, cmap);
   if (state->callbacks->render != NULL) {
     Checkbox_FrameBegin();
     state->callbacks->render(state);
@@ -205,7 +205,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     }
     DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
   }
-  Platform_SetDrawContext(NULL, NULL, NULL, 0);
+  x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();
   GC gc = XCreateGC(dpy, *win, 0, NULL);
   XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);

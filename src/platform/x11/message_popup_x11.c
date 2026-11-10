@@ -273,10 +273,10 @@ static void x11_display_message_draw(Display *dpy, Window win,
   }
 
   if (render != NULL) {
-    Platform_SetDrawContext(dpy, xd, attrs.visual, attrs.colormap);
+    x11_set_draw_context(dpy, xd, attrs.visual, attrs.colormap);
     render();
   }
-  FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   XftFont *xf = FH_TO_XFT(font);
   if (xf && message && message[0] != '\0') {
     XftColor col;
@@ -304,7 +304,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
   }
   Platform_DestroyFont(font);
 
-  Platform_SetDrawContext(NULL, NULL, NULL, 0);
+  x11_set_draw_context(NULL, NULL, NULL, 0);
   XftDrawDestroy(xd);
   x11_draw_window_border(dpy, win, w, h, no_bg);
   XFlush(dpy);
@@ -460,7 +460,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     if (maxHeight <= 0)
       maxHeight = MSG_AUTO_WRAP_MAX_H;
 
-    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+    FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
     XftFont *xf = FH_TO_XFT(font);
     int textW = 0;
     int textH = 0;
@@ -499,7 +499,7 @@ static void MsgMeasure(Display *dpy, const char *message, int maxWidth,
 
   *outW = 0;
   *outH = 0;
-  FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   XftFont *xf = FH_TO_XFT(font);
   int textW = 0, textH = 0;
   MsgLine lines[MSG_MAX_LINES];
@@ -587,7 +587,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     maxWidth = MSG_AUTO_WRAP_MAX_W;
   if (maxHeight <= 0)
     maxHeight = MSG_AUTO_WRAP_MAX_H;
-  FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   XftFont *xf = FH_TO_XFT(font);
   int textW = 0;
   int textH = 0;

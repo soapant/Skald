@@ -3,10 +3,6 @@
 
 #include "core/types.h"
 
-#ifndef _WIN32
-#include <X11/Xlib.h>
-#include <X11/Xft/Xft.h>
-#endif
 
 typedef struct {
   const char *message;
@@ -74,10 +70,6 @@ typedef enum {
   DEFAULT_APP_COUNT
 } DefaultAppKind;
 
-#if defined(__linux__)
-void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd,
-                          Visual *vis, Colormap cmap);
-#endif
 bool Platform_MkdirIfNotExists(const char *path);
 bool Platform_TerminateProcessByName(const char *exe_name);
 bool Platform_ProcessRunning(const char *name);
@@ -205,13 +197,6 @@ bool Platform_MutexTryLock(void *mutex);
 bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
                                      char *cmd, size_t cmd_size);
 bool Platform_AtomicRename(const char *old_path, const char *new_path);
-#if defined(__linux__)
-FontHandle Platform_CreateFontOnDisplay(Display *dpy, int size,
-                                        const char *face_name);
-const char *Platform_GetSessionDisplay(void);
-const char *Platform_GetSessionXAuthority(void);
-const char *Platform_GetRuntimeDir(void);
-#endif
 
 typedef struct {
   int edit_cursor_width;

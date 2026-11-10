@@ -30,6 +30,7 @@
 #include "core/listbox_hover.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
+#include "platform/x11/drawing_x11.h"
 #include "helpers/helpers_ui.h"
 #include "wm/niri_wm.h"
 #include "config_values.h"
@@ -318,7 +319,7 @@ int Platform_GetTextLineHeight(int fontsize) {
   Display *dpy = get_display();
   if (!dpy)
     return fontsize;
-  FontHandle font = Platform_CreateFontOnDisplay(dpy, fontsize, UsedFont);
+  FontHandle font = x11_create_font_on_display(dpy, fontsize, UsedFont);
   XftFont *xf = FH_TO_XFT(font);
   int r = xf ? xf->ascent + xf->descent : fontsize;
   Platform_DestroyFont(font);
@@ -593,7 +594,7 @@ static void x11_img_cache_put(const char *key, int w, int h, long long mtime,
   s->stamp = ++g_img_cache_tick;
 }
 
-bool Platform_DrawImageScaled(Display *dpy, XftDraw *xd, Visual *vis,
+bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
                               const char *path, int x, int y, int tw, int th) {
   if (!dpy || !xd || !path || !path[0])
     return false;
@@ -1055,7 +1056,7 @@ void DrawListBoxItemText(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
     int iconX = XOffset;
     int iconY = y + (x11_font_row_height_of(font) - IconSize) / 2;
     XOffset += IconSize + XOffset;
-    Platform_DrawImageScaled(dpy, xd, vis, icon_path, iconX, iconY, IconSize,
+    x11_draw_image_scaled(dpy, xd, vis, icon_path, iconX, iconY, IconSize,
                              IconSize);
   }
   char trunc[512];
@@ -1071,7 +1072,7 @@ void DrawListBoxItemText(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
   unsigned long pcol = plain_color ? plain_color->pixel : 0;
   if (!pcol)
     pcol = rgb_to_hex(COLOR_TEXT);
-  Platform_SetDrawContext(dpy, xd, vis, cmap);
+  x11_set_draw_context(dpy, xd, vis, cmap);
   Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
                                            .y = text_y,
                                            .text = draw_text,
@@ -1781,14 +1782,14 @@ Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
     if (!bg)
       bg = rgb_to_hex(COLOR_BG);
   }
-  Platform_SetDrawContext(dpy, NULL, NULL, 0);
+  x11_set_draw_context(dpy, NULL, NULL, 0);
   long mask = ExposureMask | (clickable ? ButtonPressMask : 0L);
   Window win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext",
                                        "flashtext", mask, true);
   if (win != None && !clickable)
     x11_apply_click_through(dpy, win);
 
-  Platform_SetDrawContext(NULL, NULL, NULL, 0);
+  x11_set_draw_context(NULL, NULL, NULL, 0);
   return win;
 }
 

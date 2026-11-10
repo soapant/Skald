@@ -31,11 +31,11 @@ static bool rainbow_init = false;
 static int g_last_selected_index = -1;
 static int g_pending_navigate = -1;
 
-extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
+extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
 
 static ListBoxInfo *GetLBFromPopup(HWND hPopup) {
   if (hPopup && IsWindow(hPopup)) {
-    PromptState *state = Platform_GetPromptStateForHWND(hPopup);
+    PromptState *state = win32_get_prompt_state_for_hwnd(hPopup);
     if (state) {
       return state->lb;
     }
@@ -80,10 +80,10 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU)
     return false;
 
-  PromptState *state = Platform_GetPromptStateForHWND(hwnd);
+  PromptState *state = win32_get_prompt_state_for_hwnd(hwnd);
 
   if (wParam == VK_ESCAPE) {
-    if (MessagePopup_AnyOpen())
+    if (win32_message_popup_any_open())
       Platform_DismissDisplayMessage();
   }
 
@@ -157,8 +157,8 @@ static HDC popup_back_buffer(HDC hdc, int w, int h, HBITMAP *out_prev) {
 
 static bool prompt_win_no_bg(void) {
 
-  extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
-  PromptState *st = Platform_GetPromptStateForHWND(GetFocus());
+  extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
+  PromptState *st = win32_get_prompt_state_for_hwnd(GetFocus());
   if (st && st->no_bg)
     return true;
   return false;
@@ -197,7 +197,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     break;
   }
   case WM_MOUSEMOVE: {
-    extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
+    extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
     POINT pt;
     RECT rect;
     GetClientRect(hwnd, &rect);
@@ -206,7 +206,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     }
 
     if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
-      PromptState *hst = Platform_GetPromptStateForHWND(hwnd);
+      PromptState *hst = win32_get_prompt_state_for_hwnd(hwnd);
       if (hst && hst->lb != NULL) {
         ListBoxInfo *hlb = hst->lb;
         int list_top = PromptListTop();
@@ -243,8 +243,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     s_swallow_next_char = true;
     bool consumed = PromptWindow_OnKey(hKey, &pkey);
     if (wParam == VK_BACK) {
-      extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
-      PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
+      extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
+      PromptState *ps = win32_get_prompt_state_for_hwnd(hwnd);
       if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
         SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
       }
@@ -253,8 +253,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       s_swallow_next_char = false;
     if (wParam == VK_DELETE) {
       UI_DeleteForward();
-      extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
-      PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
+      extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
+      PromptState *ps = win32_get_prompt_state_for_hwnd(hwnd);
       if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
         SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
       }
@@ -287,14 +287,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == 0x08 || wParam == 0x7F)
       return 0;
     if (wParam >= 0x20 && true) {
-      extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
-      PromptState *ps = Platform_GetPromptStateForHWND(hwnd);
+      extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
+      PromptState *ps = win32_get_prompt_state_for_hwnd(hwnd);
       if (ps && Prompt_DeleteSelection(ps)) {
         UI_SetText(ps->eb->filter);
         UI_SetCursorPosition(ps->eb->cursor);
       }
       if (UI_InsertChar((wchar_t)wParam) > 0) {
-        ps = Platform_GetPromptStateForHWND(hwnd);
+        ps = win32_get_prompt_state_for_hwnd(hwnd);
         if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
           SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
         }
@@ -513,7 +513,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         {
           if (isSelected && strlen(measureBuffer) >= 70) {
             if (g_last_selected_index != (int)pdis->itemID ||
-                !MessagePopup_AnyOpen()) {
+                !win32_message_popup_any_open()) {
               g_last_selected_index = (int)pdis->itemID;
             }
           } else {
@@ -538,7 +538,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
       RECT textRect = pdis->rcItem;
       textRect.left += PROMPT_ITEM_TEXT_X;
 
-      Platform_SetDrawContextWin32(pdis->hDC);
+      win32_set_draw_context(pdis->hDC);
       if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
         return TRUE;
       } else {
@@ -620,20 +620,20 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     if (SkaldContext_Get()->window.prompt_callbacks.render) {
       SkaldContext_Get()->window.editbox_placed = false;
-      extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
-      PromptState *state = Platform_GetPromptStateForHWND(hwnd);
+      extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
+      PromptState *state = win32_get_prompt_state_for_hwnd(hwnd);
       if (state && state->callbacks && state->callbacks->render) {
         Checkbox_FrameBegin();
-        Platform_SetDrawContextWin32(paintDC);
+        win32_set_draw_context(paintDC);
         PlDrawState_Get()->win32_listbox_surface = true;
         state->callbacks->render(state);
         PlDrawState_Get()->win32_listbox_surface = false;
       }
     } else {
-      extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
-      PromptState *estate = Platform_GetPromptStateForHWND(hwnd);
+      extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
+      PromptState *estate = win32_get_prompt_state_for_hwnd(hwnd);
       if (estate) {
-        Platform_SetDrawContextWin32(paintDC);
+        win32_set_draw_context(paintDC);
         extern void Platform_DrawPromptEditbox(PromptState * state);
         Platform_DrawPromptEditbox(estate);
 
@@ -694,7 +694,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
               .y = rect.bottom - PromptListBottomMargin(),
               .width = rect.right - rect.left});
         }
-        Platform_SetDrawContextWin32(NULL);
+        win32_set_draw_context(NULL);
       }
     }
     if (SkaldContext_Get()->window.title != NULL &&

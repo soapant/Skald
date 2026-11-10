@@ -25,10 +25,10 @@ static __thread Visual *g_b_vis = NULL;
 static __thread Colormap g_b_cmap = 0;
 
 bool ListboxBackend_Begin(int item_height_override, ListboxBackendInit *out) {
-  Platform_GetDrawContext(&g_b_dpy, &g_b_xd, &g_b_vis, &g_b_cmap);
+  x11_get_draw_context(&g_b_dpy, &g_b_xd, &g_b_vis, &g_b_cmap);
   if (!g_b_dpy || !g_b_xd)
     return false;
-  g_b_font = Platform_CreateFontOnDisplay(g_b_dpy, FontSize, UsedFont);
+  g_b_font = x11_create_font_on_display(g_b_dpy, FontSize, UsedFont);
   out->item_h = item_height_override > 0 ? item_height_override
                                          : x11_font_row_height_of(g_b_font);
   out->list_top = x11_font_list_top_of(g_b_font);
@@ -51,7 +51,7 @@ void ListboxBackend_DrawSelection(int bx, int bw, int y, int item_h, int fw,
     PromptState tmp = {0};
     tmp.width = fw;
     tmp.height = frame_h;
-    Platform_DrawListBackground(&tmp, g_b_dpy, g_b_xd, g_b_vis, g_b_cmap,
+    x11_draw_list_background(&tmp, g_b_dpy, g_b_xd, g_b_vis, g_b_cmap,
                                 y, item_h, sel);
   }
 }

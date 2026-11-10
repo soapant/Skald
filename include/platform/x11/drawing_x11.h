@@ -5,6 +5,11 @@
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 
+typedef struct {
+  Display *dpy;
+  XftFont *xf;
+} EditboxX11Metrics;
+
 void draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
                        FontHandle font, const char *text, int startY,
                        char *centered_to, int xOffset, int boxWidth);
@@ -41,16 +46,28 @@ Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h);
 void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h);
 void x11_release_prompt_buffer(Display *dpy, Window win);
 
-int x11_font_row_height(int ascent, int descent, int font_size);
+int x11_font_row_height(int font_size);
 int x11_font_list_top(int ascent, int descent, int font_size);
 int x11_font_row_height_of(FontHandle font);
 int x11_font_list_top_of(FontHandle font);
 
-typedef struct {
-  Display *dpy;
-  XftFont *xf;
-} EditboxX11Metrics;
+
+void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
+                             Colormap *cmap);
+void x11_set_draw_context(Display *dpy, XftDraw *xd, Visual *vis,
+                             Colormap cmap);
+void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
+                          Visual *vis, Colormap cmap);
+void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
+                                 Visual *vis, Colormap cmap, int y, int h,
+                                 bool selected);
+bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
+                              const char *path, int x, int y, int tw, int th);
+
+void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
+                          Visual *vis, Colormap cmap);
+FontHandle x11_create_font_on_display(Display *dpy, int size,
+                                        const char *face_name);
 
 int x11_editbox_measure(const char *text, int len, void *user);
-
 #endif

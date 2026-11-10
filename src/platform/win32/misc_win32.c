@@ -12,7 +12,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "platform/platform.h"
-#include "helpers/helpers_url.h"
 #include <time.h>
 
 

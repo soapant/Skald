@@ -6,15 +6,15 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-bool Platform_IsMainThread(void);
-WindowHandle Platform_TrayWindow(void);
-bool MessagePopup_AnyOpen(void);
+bool win32_is_main_thread(void);
+WindowHandle win32_tray_window(void);
+bool win32_message_popup_any_open(void);
 
-PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
-PromptState *Platform_GetWin32PromptState(void);
+PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
+PromptState *win32_get_prompt_state(void);
+void win32_release_draw_cache(void);
 
-void Platform_SetDrawContextWin32(HDC hdc);
-void Platform_GetDrawContextWin32(HDC *out);
-void Platform_ReleaseDrawCache(void);
+void win32_set_draw_context(HDC hdc);
+void win32_get_draw_context(HDC *out);
 
 #endif
