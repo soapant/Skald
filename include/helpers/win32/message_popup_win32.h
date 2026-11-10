@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <stdbool.h>
+#include "platform/platform.h"
 #include "helpers/win32/subclasses_win32.h"
 
 #define MSG_SLOT_MAX 24
@@ -16,11 +17,10 @@ typedef struct FadeWindowData FadeWindowDataFwd;
 
 extern HWND g_msg_slots[MSG_SLOT_MAX];
 extern int g_msg_slot_count;
-extern HWND g_hover_msg_hwnd;
-extern HWND g_last_created_msg_hwnd;
-extern int g_win32_msg_w;
-extern int g_win32_msg_h;
-extern char g_hover_key[64];
+
+void win32_msg_created_clear(void);
+void win32_msg_hover_release(const char *key);
+void win32_msg_hover_present(PlHoverMessageSpec spec);
 
 enum { MSG_DESTROY_ALL, MSG_DESTROY_INDEFINITE, MSG_DESTROY_NAMED };
 

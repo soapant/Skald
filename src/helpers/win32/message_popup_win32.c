@@ -20,13 +20,13 @@
 
 #include "helpers/win32/message_popup_win32.h"
 
-int g_win32_msg_w = 0;
+static int g_win32_msg_w = 0;
 
-int g_win32_msg_h = 0;
+static int g_win32_msg_h = 0;
 
-HWND g_hover_msg_hwnd = NULL;
+static HWND g_hover_msg_hwnd = NULL;
 
-HWND g_last_created_msg_hwnd = NULL;
+static HWND g_last_created_msg_hwnd = NULL;
 
 HWND g_msg_slots[MSG_SLOT_MAX];
 
@@ -278,4 +278,95 @@ bool message_popup_create(int x, int y, int w, int h) {
   return true;
 }
 
-char g_hover_key[64] = {0};
+static char g_hover_key[64] = {0};
+
+void win32_msg_created_clear(void) { g_last_created_msg_hwnd = NULL; }
+
+void win32_msg_hover_release(const char *key) {
+  if (!key || !key[0]) {
+    return;
+  }
+  if (strcmp(g_hover_key, key) != 0) {
+    return;
+  }
+  HWND hw = g_hover_msg_hwnd;
+  if (hw && IsWindow(hw)) {
+    KillTimer(hw, 999);
+    DestroyWindow(hw);
+  }
+  g_hover_msg_hwnd = NULL;
+  g_hover_key[0] = '\0';
+}
+
+void win32_msg_hover_present(PlHoverMessageSpec spec) {
+  const char *key = spec.key;
+  const char *message = spec.message;
+  int centerX = spec.x;
+  int centerY = spec.y;
+  int w = spec.w;
+  int h = spec.h;
+  int maxWidth = spec.max_width;
+  int maxHeight = spec.max_height;
+  ColorRef color = spec.color;
+  bool no_bg = spec.no_bg;
+
+  HWND existing = g_hover_msg_hwnd;
+  if (g_hover_key[0] && strcmp(g_hover_key, key) == 0 && existing &&
+      IsWindow(existing)) {
+    SetWindowPos(existing, HWND_TOPMOST, centerX - g_win32_msg_w / 2,
+                 centerY - g_win32_msg_h / 2, g_win32_msg_w, g_win32_msg_h,
+                 SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    FadeWindowData *hd =
+        (FadeWindowData *)GetWindowLongPtrA(existing, GWLP_USERDATA);
+    if (hd) {
+      if (hd->message)
+        free((void *)hd->message);
+      hd->message = _strdup(message ? message : "");
+      hd->color = color;
+    }
+    InvalidateRect(existing, NULL, TRUE);
+    return;
+  }
+
+  int winWidth = w;
+  int winHeight = h;
+  if (!(winWidth > 0 && winHeight > 0)) {
+    FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
+    int textWidth = 0, textHeight = 0;
+    Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth,
+                            &textHeight);
+    Platform_DestroyFont(msgFont);
+    winWidth = textWidth + 30;
+    winHeight = textHeight + 30;
+    if (maxWidth > 0 && winWidth > maxWidth)
+      winWidth = maxWidth;
+    if (maxHeight > 0 && winHeight > maxHeight)
+      winHeight = maxHeight;
+  }
+
+  win32_msg_hover_release(g_hover_key);
+  Platform_CreateDisplayMessageWindow(
+      (PlCreateDisplayMessageWindowSpec){.message = message,
+                                         .x = centerX,
+                                         .y = centerY,
+                                         .max_width = winWidth,
+                                         .max_height = winHeight,
+                                         .timeout = MSG_TIMEOUT_INDEFINITE,
+                                         .color = color,
+                                         .no_bg = no_bg,
+                                         .render = NULL,
+                                         .name = NULL});
+  g_win32_msg_w = winWidth;
+  g_win32_msg_h = winHeight;
+  snprintf(g_hover_key, sizeof(g_hover_key), "%s", key);
+  g_hover_msg_hwnd = g_last_created_msg_hwnd;
+
+  HWND hw = g_hover_msg_hwnd;
+  if (hw && IsWindow(hw)) {
+    KillTimer(hw, 999);
+    SetWindowPos(hw, HWND_TOPMOST, centerX - winWidth / 2,
+                 centerY - winHeight / 2, winWidth, winHeight,
+                 SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    InvalidateRect(hw, NULL, TRUE);
+  }
+}
