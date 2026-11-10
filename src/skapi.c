@@ -596,7 +596,7 @@ void feature_list_purge_owner(const char *path_a, const char *path_b) {
 }
 
 bool ski_register_hotkey(const SkHotkeySpec *spec) {
-  if (!spec || !spec->hotkey || !spec->cb)
+  if (!spec || !spec->hotkey || (!spec->cb && !spec->cb_ud))
     return false;
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
@@ -604,6 +604,7 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   const char *const *bw = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
   HotkeyBinding binding = convert_into_hotkey_binding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
+  binding.hotkey_callback_ud = spec->cb_ud;
   binding.hold = true;
   binding.should_swallow = spec->should_swallow;
   return hotkey_register_internal(binding);

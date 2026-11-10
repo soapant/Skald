@@ -743,6 +743,7 @@ bool ski_add_dep(const char *dep_name, const char *owner_file);
 typedef struct {
   const char *hotkey;
   void (*cb)(void);
+  void (*cb_ud)(void *);
   bool (*should_swallow)(void);
   const char *whitelist[16];
   const char *blacklist[16];
