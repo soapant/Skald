@@ -320,7 +320,7 @@ static void widget_attach_window(void *ud) {
     Platform_Widget_SetBgColor(widget->win,
                                widget->has_bg ? widget->bg_color : 0);
     Platform_Widget_SetNoBg(widget->win, widget->no_bg);
-    Platform_Widget_SetFps(widget->win, widget->fps);
+    WidgetRegistry_SetFps(widget->win, widget->fps);
     if (created)
       Platform_Widget_SetFrameCallback(widget->win, widget_render_frame,
                                        widget);
@@ -527,4 +527,25 @@ void widget_set_render(Widget *widget, WidgetRenderFn render) {
   if (Platform_Widget_IsValid(widget->win)) {
     Platform_Widget_Invalidate(widget->win);
   }
+}
+
+static bool Widget_ApplyFps(PlatformWidget *widget, int fps) {
+  PlatformWidgetBase *base = (PlatformWidgetBase *)widget;
+  if (!widget || base->dead)
+    return false;
+  if (base->fps == fps)
+    return false;
+  base->fps = fps;
+  base->last_draw_ms = 0;
+  base->dirty = true;
+  return true;
+}
+
+void WidgetRegistry_SetFps(PlatformWidget *window, int fps) {
+  if (fps <= 0)
+    fps = 1;
+  if (!Widget_ApplyFps(window, fps))
+    return;
+  RenderThread_EnsureStarted(fps);
+  RenderThread_Wake();
 }

@@ -19,6 +19,7 @@
 #include "helpers/helpers_render_thread.h"
 
 struct PlatformWidget {
+  PlatformWidgetBase base;
   Display *dpy;
   Window win;
   XftDraw *xd;
@@ -26,15 +27,11 @@ struct PlatformWidget {
   Colormap cmap;
   int x, y, w, h;
   bool mapped;
-  bool dead;
   RenderFrameFn fn;
   void *ud;
-  int fps;
   ColorRef bg_color;
   bool has_bg;
   bool no_bg;
-  bool dirty;
-  long long last_draw_ms;
   int last_draw_w;
   int last_draw_h;
   void (*on_click)(void);
@@ -66,7 +63,7 @@ static void widget_registry_remove(PlatformWidget *w) {
 bool Platform_Widget_DispatchClick(long window_id) {
   for (int i = 0; i < WIDGET_REG_MAX; i++) {
     PlatformWidget *w = s_widgets[i];
-    if (!w || w->dead)
+    if (!w || w->base.dead)
       continue;
     if ((long)w->win != window_id)
       continue;
@@ -88,7 +85,7 @@ static long long widget_now_ms(void) {
 static void widget_frame(void *ud) {
 
   PlatformWidget *widget = (PlatformWidget *)ud;
-  if (!widget || widget->dead) {
+  if (!widget || widget->base.dead) {
     return;
   }
   Display *dpy = widget->dpy;
@@ -100,15 +97,15 @@ static void widget_frame(void *ud) {
   }
 
   long long now = widget_now_ms();
-  long long interval = widget->fps > 0 ? 1000LL / widget->fps : 1000LL;
+  long long interval = widget->base.fps > 0 ? 1000LL / widget->base.fps : 1000LL;
   if (interval < 16)
     interval = 16;
-  if (!widget->dirty) {
-    if (now - widget->last_draw_ms < interval)
+  if (!widget->base.dirty) {
+    if (now - widget->base.last_draw_ms < interval)
       return;
   }
-  widget->dirty = false;
-  widget->last_draw_ms = now;
+  widget->base.dirty = false;
+  widget->base.last_draw_ms = now;
 
   if (widget->no_bg) {
     GC tgc = XCreateGC(dpy, widget->win, 0, NULL);
@@ -169,12 +166,12 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   widget->y = y;
   widget->w = w;
   widget->h = h;
-  widget->fps = fps;
+  widget->base.fps = fps;
   widget->no_bg = no_bg;
   widget->on_click = on_click;
   snprintf(widget->name, sizeof(widget->name), "%s", name ? name : "?");
-  widget->dirty = true;
-  widget->last_draw_ms = 0;
+  widget->base.dirty = true;
+  widget->base.last_draw_ms = 0;
   widget->last_draw_w = 0;
   widget->last_draw_h = 0;
 
@@ -216,10 +213,10 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
 }
 
 void Platform_Widget_Destroy(PlatformWidget *widget) {
-  if (!widget || widget->dead) {
+  if (!widget || widget->base.dead) {
     return;
   }
-  widget->dead = true;
+  widget->base.dead = true;
   widget_registry_remove(widget);
   RenderThread_RemoveFrameCallback(widget_frame, widget);
   Display *dpy = widget->dpy;
@@ -236,13 +233,13 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
-  return widget && !widget->dead;
+  return widget && !widget->base.dead;
 }
 
 void Platform_Widget_SetFrameCallback(PlatformWidget *widget,
                                       RenderFrameFn fn, void *ud) {
 
-  if (!widget || widget->dead) {
+  if (!widget || widget->base.dead) {
     return;
   }
   widget->fn = fn;
@@ -250,7 +247,7 @@ void Platform_Widget_SetFrameCallback(PlatformWidget *widget,
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!widget || widget->dead || widget->mapped) {
+  if (!widget || widget->base.dead || widget->mapped) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -262,7 +259,7 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || widget->dead || !widget->mapped) {
+  if (!widget || widget->base.dead || !widget->mapped) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -274,7 +271,7 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-  if (!widget || widget->dead) {
+  if (!widget || widget->base.dead) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -290,32 +287,17 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-  if (!widget || widget->dead) {
+  if (!widget || widget->base.dead) {
     return;
   }
   widget->no_bg = no_bg;
-  widget->dirty = true;
+  widget->base.dirty = true;
   RenderThread_Wake();
 }
 
-void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
-  if (!widget || widget->dead) {
-    return;
-  }
-  if (fps <= 0)
-    fps = 1;
-  if (widget->fps == fps) {
-    return;
-  }
-  widget->fps = fps;
-  widget->last_draw_ms = 0;
-  RenderThread_EnsureStarted(fps);
-  widget->dirty = true;
-  RenderThread_Wake();
-}
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
-  if (!widget || widget->dead) {
+  if (!widget || widget->base.dead) {
     return;
   }
   widget->has_bg = bg_color != 0;
@@ -336,20 +318,20 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
   attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
   XChangeWindowAttributes(widget->dpy, widget->win, CWBackPixel, &attrs);
   XFlush(widget->dpy);
-  widget->dirty = true;
+  widget->base.dirty = true;
   RenderThread_Wake();
 }
 
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
-  if (!widget || widget->dead) {
+  if (!widget || widget->base.dead) {
     return;
   }
-  widget->dirty = true;
+  widget->base.dirty = true;
   RenderThread_Wake();
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-  if (!widget || widget->dead) {
+  if (!widget || widget->base.dead) {
     return;
   }
   if (w <= 0 || h <= 0) {
@@ -365,7 +347,7 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
   widget->h = h;
   XMoveResizeWindow(widget->dpy, widget->win, widget->x, widget->y, w, h);
   XFlush(widget->dpy);
-  widget->dirty = true;
+  widget->base.dirty = true;
   RenderThread_Wake();
 }
 

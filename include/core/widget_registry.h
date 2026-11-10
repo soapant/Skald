@@ -109,5 +109,6 @@ PlPos widget_get_pos(const char *name);
 void widget_show(Widget *widget);
 void widget_hide(Widget *widget);
 void widget_set_render(Widget *widget, WidgetRenderFn render);
+void WidgetRegistry_SetFps(PlatformWidget *window, int fps);
 
 #endif

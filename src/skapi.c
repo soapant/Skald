@@ -2185,7 +2185,22 @@ void sk_free_flags(SkFlagList *list) {
 }
 
 void sk_run_after_time(double seconds, void (*callback)(void)) {
-  return sk_run_after_time_platform(seconds, callback);
+  if (!callback || seconds < 0)
+    return;
+  SkRunAfterPayload *payload =
+      (SkRunAfterPayload *)malloc(sizeof(SkRunAfterPayload));
+  if (!payload)
+    return;
+  payload->seconds = seconds;
+  payload->callback = callback;
+  payload->owner[0] = '\0';
+  Owner_ResolveForFunc((void *)callback, payload->owner,
+                       sizeof(payload->owner));
+  ThreadRegistry_Add(payload, payload->owner);
+  if (!sk_run_after_time_arm_platform(payload)) {
+    ThreadRegistry_Finish(payload);
+    free(payload);
+  }
 }
 
 SkTimer sk_start_timer(void) { return Platform_StartTimer(); }
@@ -2499,7 +2514,7 @@ static void sk_widget_attach_window(void *ud) {
     Platform_Widget_SetBgColor(widget->win,
                                widget->has_bg ? widget->bg_color : 0);
     Platform_Widget_SetNoBg(widget->win, widget->no_bg);
-    Platform_Widget_SetFps(widget->win, widget->fps);
+    WidgetRegistry_SetFps(widget->win, widget->fps);
     if (created)
       Platform_Widget_SetFrameCallback(widget->win, sk_widget_render_frame,
                                        widget);
