@@ -131,7 +131,7 @@ ListBoxInfo *UI_GetPopupListBox(void) {
     return NULL;
   if (top->type == POPUP_PROMPT && top->user_data) {
     PromptState *prompt = (PromptState *)top->user_data;
-    return prompt->lb != NULL ? prompt->lb : NULL;
+    return prompt->lb;
   }
   return NULL;
 }

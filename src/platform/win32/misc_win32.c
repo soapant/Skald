@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include <windows.h>
 #include "helpers/helpers_fs.h"
 #include <winreg.h>
@@ -11,36 +12,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include "platform/platform.h"
+#include "helpers/helpers_url.h"
 #include <time.h>
 
-bool Platform_StringContainsCaseInsensitive(const char *haystack,
-                                            const char *needle) {
 
-  if (!haystack || !needle) {
-    log_error("operation failed, returning error haystack='%s' needle='%s'",
-              haystack ? haystack : "null", needle ? needle : "null");
-    return false;
-  }
-  return StrStrIA(haystack, needle) != NULL;
-}
-
-bool Platform_StringStartsWithCaseInsensitive(const char *str,
-                                              const char *prefix) {
-
-  if (!str || !prefix) {
-    log_error("operation failed, returning error str='%s' prefix='%s'",
-              str ? str : "null", prefix ? prefix : "null");
-    return false;
-  }
-  return StrStrIA(str, prefix) == str;
-}
-
-bool Platform_StringEqualsCaseInsensitive(const char *a, const char *b) {
-
-  if (!a || !b)
-    return false;
-  return StrCmpIA(a, b) == 0;
-}
 
 bool Platform_MkdirIfNotExists(const char *path) {
 
@@ -74,7 +49,7 @@ bool Platform_ProcessRunning(const char *name) {
   bool found = false;
   if (Process32First(snap, &pe)) {
     do {
-      if (Platform_StringContainsCaseInsensitive(pe.szExeFile, name)) {
+      if (String_ContainsCI(pe.szExeFile, name)) {
         found = true;
         break;
       }
@@ -85,11 +60,8 @@ bool Platform_ProcessRunning(const char *name) {
 }
 
 bool Platform_TerminateProcessByName(const char *exe_name) {
-  if (!exe_name || !*exe_name) {
-    log_error("operation failed, returning error exe_name='%s'",
-              exe_name ? exe_name : "null");
+  if (!exe_name || !*exe_name)
     return false;
-  }
 
   char cmd[512];
   const char *ext = strrchr(exe_name, '.');
@@ -258,64 +230,23 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
 }
 
 bool Platform_QueryBrowser(const char *query) {
-  if (!query || !query[0]) {
-    log_error("operation failed, returning error query='%s'",
-              query ? query : "null");
+  if (!query || !query[0])
     return false;
-  }
-
-  char encoded_query[2048] = {0};
-  char *src = query;
-  char *dst = encoded_query;
-  while (*src && (size_t)(dst - encoded_query) < sizeof(encoded_query) - 1) {
-    if (*src == ' ') {
-      *dst++ = '%';
-      *dst++ = '2';
-      *dst++ = '0';
-    } else if (*src == '&') {
-      *dst++ = '%';
-      *dst++ = '2';
-      *dst++ = '6';
-    } else if (*src == '?') {
-      *dst++ = '%';
-      *dst++ = '3';
-      *dst++ = 'F';
-    } else {
-      *dst++ = *src;
-    }
-    src++;
-  }
-  *dst = '\0';
 
   char url[4096];
-
-  if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "google")) {
-    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s",
-             encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine,
-                                                    "duckduckgo")) {
-    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
-  } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "bing")) {
-    snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s",
-             encoded_query);
-  } else {
-    snprintf(url, sizeof(url), "https://google.com/?q=%s", encoded_query);
-  }
+  Url_BuildSearchUrl(UsedSearchEngine, query, url, sizeof(url));
 
   char command[4096];
   snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
-  log_info("Platform_QueryBrowser query='%s'", query ? query : "");
-  ;
+  log_info("Platform_QueryBrowser query='%s'", query);
   return Platform_RunTerminalCommand(command, false);
 }
 
 char *Platform_GetClipboardEntry(void) {
   char *result = NULL;
 
-  if (!OpenClipboard(NULL)) {
-    log_error("operation failed, returning error");
+  if (!OpenClipboard(NULL))
     return NULL;
-  }
 
   HANDLE hClipData = GetClipboardData(CF_UNICODETEXT);
   if (hClipData == NULL) {
@@ -351,11 +282,8 @@ char *Platform_GetClipboardEntry(void) {
 }
 
 bool Platform_PasteContent(char *content) {
-  if (!content || !content[0]) {
-    log_error("operation failed, returning error content='%s'",
-              content ? content : "null");
+  if (!content || !content[0])
     return false;
-  }
 
   size_t len = strlen(content);
   INPUT *inputs = (INPUT *)calloc(len, sizeof(INPUT));
@@ -394,7 +322,6 @@ bool Platform_PasteContent(char *content) {
 
   free(inputs);
   log_info("Platform_PasteContent content='%s'", content ? content : "");
-  ;
   return success;
 }
 const char *Platform_GetRealHome(void) {

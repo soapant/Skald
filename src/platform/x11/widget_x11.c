@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include "platform/widget.h"
+#include "core/widget_registry.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
 #include "platform/x11/drawing_x11.h"
@@ -153,16 +154,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   if (!widget)
     return NULL;
   widget->dpy = dpy;
-  widget->base.x = x;
-  widget->base.y = y;
-  widget->base.w = w;
-  widget->base.h = h;
-  widget->base.fps = fps;
-  widget->base.no_bg = no_bg;
-  widget->base.on_click = on_click;
-  snprintf(widget->base.name, sizeof(widget->base.name), "%s", name ? name : "?");
-  widget->base.dirty = true;
-  widget->base.last_draw_ms = 0;
+  widget_init_base(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
   widget->last_draw_w = 0;
   widget->last_draw_h = 0;
 

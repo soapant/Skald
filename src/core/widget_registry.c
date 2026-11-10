@@ -586,3 +586,20 @@ int widget_height(const PlatformWidget *widget) {
   return widget ? base->h : 0;
 }
 
+
+void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
+                      int fps, bool no_bg, void (*on_click)(void),
+                      const char *name) {
+  if (!base)
+    return;
+  base->x = x;
+  base->y = y;
+  base->w = w;
+  base->h = h;
+  base->fps = fps;
+  base->no_bg = no_bg;
+  base->on_click = on_click;
+  snprintf(base->name, sizeof(base->name), "%s", name ? name : "?");
+  base->dirty = true;
+  base->last_draw_ms = 0;
+}

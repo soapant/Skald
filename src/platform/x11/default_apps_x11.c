@@ -51,7 +51,7 @@ static const char *match_in_applications_dir(const char *dir,
   const char *found = NULL;
   for (size_t i = 0; i < files->count && !found; i++) {
     for (size_t j = 0; j < count; j++) {
-      if (Platform_StringContainsCaseInsensitive(files->files[i].name,
+      if (String_ContainsCI(files->files[i].name,
                                                  names[j])) {
         found = names[j];
         break;
@@ -231,7 +231,7 @@ const char *get_default_browser(int slot) {
     const char *name = browser_files.files[i].name;
     for (size_t j = 0;
          j < sizeof(possible_browsers) / sizeof(possible_browsers[0]); j++) {
-      if (Platform_StringContainsCaseInsensitive(name, possible_browsers[j])) {
+      if (String_ContainsCI(name, possible_browsers[j])) {
         snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s",
                  String_ToLower(possible_browsers[j]));
         return default_apps_x11[slot];
@@ -242,7 +242,7 @@ const char *get_default_browser(int slot) {
   StringList l = File_ReadLines("~/.config/mimeapps.list");
   for (size_t i = 0; i < l.count; i++) {
     const char *line = l.items[i];
-    if (!Platform_StringContainsCaseInsensitive(line, "text/html"))
+    if (!String_ContainsCI(line, "text/html"))
       continue;
     char *value = String_CutAfter(line, '=');
     if (!value)

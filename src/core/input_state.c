@@ -21,6 +21,7 @@ static int g_char_head = 0, g_char_tail = 0;
 static const int kInhibitMods[SK_INHIBIT_MOD_COUNT] = {
     VK_SHIFT,  VK_CONTROL,  VK_MENU,     VK_LWIN,  VK_RWIN, VK_LSHIFT,
     VK_RSHIFT, VK_LCONTROL, VK_RCONTROL, VK_LMENU, VK_RMENU};
+
 void InputState_InhibitMods(void) {
   for (int i = 0; i < SK_INHIBIT_MOD_COUNT; i++) {
     int nv = kInhibitMods[i];

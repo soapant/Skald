@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include <windows.h>
 #include "helpers/helpers_fs.h"
 #include <winhttp.h>
@@ -678,7 +679,7 @@ static BOOL CALLBACK EnumWindowsProcTitle(HWND hwnd, LPARAM lParam) {
   if (window_title[0] == '\0')
     return TRUE;
 
-  if (Platform_StringContainsCaseInsensitive(window_title,
+  if (String_ContainsCI(window_title,
                                              data->target_title)) {
     data->found_hwnd = hwnd;
     return FALSE;

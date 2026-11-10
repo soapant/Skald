@@ -1,3 +1,4 @@
+#include "helpers/helpers_text.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -264,7 +265,7 @@ bool hotkey_mouse_button_bound(int btn) {
         if (b->blacklist[j][0] == '\0')
           continue;
         if (title &&
-            Platform_StringContainsCaseInsensitive(title, b->blacklist[j])) {
+            String_ContainsCI(title, b->blacklist[j])) {
           ok = true;
           break;
         }
@@ -279,7 +280,7 @@ bool hotkey_mouse_button_bound(int btn) {
           if (b->blacklist[j][0] == '\0')
             continue;
           if (title &&
-              Platform_StringContainsCaseInsensitive(title, b->blacklist[j])) {
+              String_ContainsCI(title, b->blacklist[j])) {
             blocked = true;
             break;
           }
@@ -479,7 +480,7 @@ bool hotkey_process(int vk_code, int modifiers) {
             title_fetched = true;
           }
           bool match =
-              Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
+              String_ContainsCI(title, b->blacklist[j]);
 
           if (match) {
             blacklisted = true;
@@ -505,7 +506,7 @@ bool hotkey_process(int vk_code, int modifiers) {
           title_fetched = true;
         }
         bool match =
-            Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
+            String_ContainsCI(title, b->blacklist[j]);
 
         if (match) {
           whitelisted = true;
