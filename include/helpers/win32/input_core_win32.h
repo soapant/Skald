@@ -5,7 +5,7 @@
 LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
                                          LPARAM lParam);
 
-void Platform_RegisterRawMouse(HWND hwnd);
-void Platform_HandleRawMouseInput(LPARAM lParam);
+void win32_register_raw_mouse(HWND hwnd);
+void win32_handle_raw_mouse_input(LPARAM lParam);
 
 #endif

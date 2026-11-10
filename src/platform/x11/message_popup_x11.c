@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "platform/x11/drawing_x11.h"
-#include "platform/x11/window_factory_x11.h"
+#include "helpers/x11/window_factory_x11.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/wm_platform.h"
@@ -40,7 +40,7 @@ static pthread_mutex_t g_msg_lock = PTHREAD_MUTEX_INITIALIZER;
 static MsgSlot g_msg_slots[MSG_MAX_ACTIVE];
 static int g_msg_slot_count = 0;
 
-static void MsgRemoveSlotLocked(Display *dpy, int idx) {
+static void x11_msg_remove_slot_locked(Display *dpy, int idx) {
 
   XDestroyWindow(dpy, g_msg_slots[idx].win);
   for (int i = idx; i < g_msg_slot_count - 1; i++)
@@ -48,17 +48,17 @@ static void MsgRemoveSlotLocked(Display *dpy, int idx) {
   g_msg_slot_count--;
 }
 
-static void MsgRemoveWindowLocked(Display *dpy, Window win) {
+static void x11_msg_remove_window_locked(Display *dpy, Window win) {
 
   for (int i = 0; i < g_msg_slot_count; i++) {
     if (g_msg_slots[i].win == win) {
-      MsgRemoveSlotLocked(dpy, i);
+      x11_msg_remove_slot_locked(dpy, i);
       return;
     }
   }
 }
 
-static int MsgFindKeyLocked(const char *key) {
+static int x11_msg_find_key_locked(const char *key) {
 
   if (!key || !key[0])
     return -1;
@@ -69,11 +69,11 @@ static int MsgFindKeyLocked(const char *key) {
   return -1;
 }
 
-static void MsgRemoveIndefiniteLocked(Display *dpy) {
+static void x11_msg_remove_indefinite_locked(Display *dpy) {
 
   for (int i = 0; i < g_msg_slot_count;) {
     if (g_msg_slots[i].indefinite)
-      MsgRemoveSlotLocked(dpy, i);
+      x11_msg_remove_slot_locked(dpy, i);
     else
       i++;
   }
@@ -85,7 +85,7 @@ typedef struct {
   double timeout;
 } MsgDismissPayload;
 
-static void *MsgDismissThread(void *arg) {
+static void *x11_msg_dismiss_thread(void *arg) {
 
   MsgDismissPayload *p = (MsgDismissPayload *)arg;
   if (!p)
@@ -105,7 +105,7 @@ static void *MsgDismissThread(void *arg) {
   free(p);
   if (dpy && win != None) {
     pthread_mutex_lock(&g_msg_lock);
-    MsgRemoveWindowLocked(dpy, win);
+    x11_msg_remove_window_locked(dpy, win);
     pthread_mutex_unlock(&g_msg_lock);
     XFlush(dpy);
   }
@@ -123,7 +123,7 @@ typedef struct {
   int w;
 } MsgLine;
 
-static int MsgUtf8CharLen(unsigned char c) {
+static int x11_msg_utf8_char_len(unsigned char c) {
 
   if ((c & 0x80) == 0)
     return 1;
@@ -136,7 +136,7 @@ static int MsgUtf8CharLen(unsigned char c) {
   return 1;
 }
 
-static int MsgTextWidth(Display *dpy, XftFont *xf, const char *s, int n) {
+static int x11_msg_text_width(Display *dpy, XftFont *xf, const char *s, int n) {
 
   if (!s || n <= 0)
     return 0;
@@ -145,11 +145,11 @@ static int MsgTextWidth(Display *dpy, XftFont *xf, const char *s, int n) {
   return ext.xOff;
 }
 
-static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW,
+static int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
                        MsgLine *lines, int max_lines) {
 
   int count = 0;
-  int spaceW = MsgTextWidth(dpy, xf, " ", 1);
+  int spaceW = x11_msg_text_width(dpy, xf, " ", 1);
   const char *p = text;
   while (*p && count < max_lines) {
     const char *nl = strchr(p, '\n');
@@ -167,7 +167,7 @@ static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW,
       while (w < pend && *w != ' ')
         w++;
       int wn = (int)(w - ws);
-      int ww = MsgTextWidth(dpy, xf, ws, wn);
+      int ww = x11_msg_text_width(dpy, xf, ws, wn);
       if (ww > maxW) {
         if (ls) {
           lines[count].s = ls;
@@ -187,10 +187,10 @@ static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW,
           int best = 0;
           int bestW = 0;
           while (t < we) {
-            int cl = MsgUtf8CharLen((unsigned char)*t);
+            int cl = x11_msg_utf8_char_len((unsigned char)*t);
             if (t + cl > we)
               cl = (int)(we - t);
-            int nw = MsgTextWidth(dpy, xf, c, (int)(t + cl - c));
+            int nw = x11_msg_text_width(dpy, xf, c, (int)(t + cl - c));
             if (nw > maxW)
               break;
             best = (int)(t + cl - c);
@@ -198,10 +198,10 @@ static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW,
             t += cl;
           }
           if (best == 0) {
-            best = MsgUtf8CharLen((unsigned char)*c);
+            best = x11_msg_utf8_char_len((unsigned char)*c);
             if (c + best > we)
               best = (int)(we - c);
-            bestW = MsgTextWidth(dpy, xf, c, best);
+            bestW = x11_msg_text_width(dpy, xf, c, best);
           }
           lines[count].s = c;
           lines[count].n = best;
@@ -283,7 +283,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
     x11_xft_alloc_color(dpy, attrs.visual, attrs.colormap, rgb_to_hex(color),
                         0xFFFF, &col);
     MsgLine lines[MSG_MAX_LINES];
-    int nlines = MsgWrapText(dpy, xf, message, w - 30, lines, MSG_MAX_LINES);
+    int nlines = x11_msg_wrap_text(dpy, xf, message, w - 30, lines, MSG_MAX_LINES);
     int lineH = xf->ascent + xf->descent;
     int y = (h - nlines * lineH) / 2 + xf->ascent;
     if (y < xf->ascent)
@@ -310,7 +310,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
   XFlush(dpy);
 }
 
-static void MsgPresent(Display *dpy, const char *message, int x, int y,
+static void x11_msg_present(Display *dpy, const char *message, int x, int y,
                        int winW, int winH, double timeout, ColorRef color,
                        bool no_bg, void (*render)(void), const char *name) {
 
@@ -330,7 +330,7 @@ static void MsgPresent(Display *dpy, const char *message, int x, int y,
   bool indefinite = MsgTimeoutIsIndefinite(timeout);
   pthread_mutex_lock(&g_msg_lock);
   if (g_msg_slot_count >= MSG_MAX_ACTIVE)
-    MsgRemoveSlotLocked(dpy, 0);
+    x11_msg_remove_slot_locked(dpy, 0);
   g_msg_slots[g_msg_slot_count].win = win;
   g_msg_slots[g_msg_slot_count].indefinite = indefinite;
   g_msg_slots[g_msg_slot_count].key[0] = '\0';
@@ -350,7 +350,7 @@ static void MsgPresent(Display *dpy, const char *message, int x, int y,
       p->win = win;
       p->timeout = timeout;
       pthread_t thr;
-      if (pthread_create(&thr, NULL, MsgDismissThread, p) == 0) {
+      if (pthread_create(&thr, NULL, x11_msg_dismiss_thread, p) == 0) {
         pthread_detach(thr);
       } else {
         free(p);
@@ -359,7 +359,7 @@ static void MsgPresent(Display *dpy, const char *message, int x, int y,
   }
 }
 
-static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
+static void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
                             int centerX, int centerY, int winW, int winH,
                             ColorRef color, bool no_bg) {
 
@@ -370,7 +370,7 @@ static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
     return;
   }
   pthread_mutex_lock(&g_msg_lock);
-  int idx = MsgFindKeyLocked(key);
+  int idx = x11_msg_find_key_locked(key);
   if (idx >= 0) {
     Window w = g_msg_slots[idx].win;
     if (g_msg_slots[idx].w != winW || g_msg_slots[idx].h != winH) {
@@ -398,8 +398,8 @@ static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
 
   pthread_mutex_lock(&g_msg_lock);
   if (g_msg_slot_count >= MSG_MAX_ACTIVE)
-    MsgRemoveSlotLocked(dpy, 0);
-  int at = MsgFindKeyLocked(key);
+    x11_msg_remove_slot_locked(dpy, 0);
+  int at = x11_msg_find_key_locked(key);
   if (at < 0)
     at = g_msg_slot_count < MSG_MAX_ACTIVE ? g_msg_slot_count
                                            : MSG_MAX_ACTIVE - 1;
@@ -415,14 +415,14 @@ static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
 }
 
 void Platform_HoverMessageRelease(const char *key) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy || !key || !key[0]) {
     return;
   }
   pthread_mutex_lock(&g_msg_lock);
-  int idx = MsgFindKeyLocked(key);
+  int idx = x11_msg_find_key_locked(key);
   if (idx >= 0)
-    MsgRemoveSlotLocked(dpy, idx);
+    x11_msg_remove_slot_locked(dpy, idx);
   pthread_mutex_unlock(&g_msg_lock);
   XFlush(dpy);
 }
@@ -443,7 +443,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
   void (*render)(void) = spec.render;
   const char *name = spec.name;
 
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy) {
     return;
   }
@@ -471,7 +471,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
       int wrapW = maxWidth - 30;
       if (wrapW > MSG_AUTO_WRAP_MAX_W)
         wrapW = MSG_AUTO_WRAP_MAX_W;
-      nlines = MsgWrapText(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
+      nlines = x11_msg_wrap_text(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
       for (int i = 0; i < nlines; i++) {
         if (lines[i].w > textW)
           textW = lines[i].w;
@@ -490,11 +490,11 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
 
   int x = abs(centerX - winW / 2);
   int y = abs(centerY - winH / 2);
-  MsgPresent(dpy, message, x, y, winW, winH, timeout, color, no_bg, render,
+  x11_msg_present(dpy, message, x, y, winW, winH, timeout, color, no_bg, render,
              name);
 }
 
-static void MsgMeasure(Display *dpy, const char *message, int maxWidth,
+static void x11_msg_measure(Display *dpy, const char *message, int maxWidth,
                        int maxHeight, int *outW, int *outH) {
 
   *outW = 0;
@@ -508,7 +508,7 @@ static void MsgMeasure(Display *dpy, const char *message, int maxWidth,
     int wrapW = maxWidth - 30;
     if (wrapW > MSG_AUTO_WRAP_MAX_W)
       wrapW = MSG_AUTO_WRAP_MAX_W;
-    nlines = MsgWrapText(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
+    nlines = x11_msg_wrap_text(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
     for (int i = 0; i < nlines; i++)
       if (lines[i].w > textW)
         textW = lines[i].w;
@@ -537,7 +537,7 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
   ColorRef color = spec.color;
   bool no_bg = spec.no_bg;
 
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy) {
     return;
   }
@@ -551,9 +551,9 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
     winW = w;
     winH = h;
   } else {
-    MsgMeasure(dpy, message, maxWidth, maxHeight, &winW, &winH);
+    x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
   }
-  MsgHoverPresent(dpy, key, message, centerX, centerY, winW, winH, color,
+  x11_msg_hover_present(dpy, key, message, centerX, centerY, winW, winH, color,
                   no_bg);
 }
 
@@ -578,7 +578,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   if (!message && !render) {
     return;
   }
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy) {
     return;
   }
@@ -597,7 +597,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     int wrapW = maxWidth - 30;
     if (wrapW > MSG_AUTO_WRAP_MAX_W)
       wrapW = MSG_AUTO_WRAP_MAX_W;
-    nlines = MsgWrapText(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
+    nlines = x11_msg_wrap_text(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
     for (int i = 0; i < nlines; i++) {
       if (lines[i].w > textW)
         textW = lines[i].w;
@@ -627,12 +627,12 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     y = rect_y + (rect_h - winH) / 2;
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
-  MsgPresent(dpy, message, x - ax, y - ay, winW, winH, timeout, color, no_bg,
+  x11_msg_present(dpy, message, x - ax, y - ay, winW, winH, timeout, color, no_bg,
              render, name);
 }
 
 bool Platform_DismissMessage(const char *name) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   bool removed = false;
@@ -640,14 +640,14 @@ bool Platform_DismissMessage(const char *name) {
   if (name && name[0]) {
     for (int i = 0; i < g_msg_slot_count;) {
       if (strcmp(g_msg_slots[i].name, name) == 0) {
-        MsgRemoveSlotLocked(dpy, i);
+        x11_msg_remove_slot_locked(dpy, i);
         removed = true;
       } else
         i++;
     }
   } else {
     while (g_msg_slot_count > 0) {
-      MsgRemoveSlotLocked(dpy, 0);
+      x11_msg_remove_slot_locked(dpy, 0);
       removed = true;
     }
   }
@@ -659,7 +659,7 @@ bool Platform_DismissMessage(const char *name) {
 bool Platform_MessageActive(const char *name) {
   if (!name || !name[0])
     return false;
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   bool found = false;
@@ -675,12 +675,12 @@ bool Platform_MessageActive(const char *name) {
 }
 
 void Platform_DismissIndefiniteMessage(void) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy) {
     return;
   }
   pthread_mutex_lock(&g_msg_lock);
-  MsgRemoveIndefiniteLocked(dpy);
+  x11_msg_remove_indefinite_locked(dpy);
   pthread_mutex_unlock(&g_msg_lock);
   XFlush(dpy);
 }

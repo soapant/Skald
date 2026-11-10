@@ -2,7 +2,7 @@
 #include <time.h>
 #if defined(SKALD_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "core/clipboard_history.h"
 #include <wayland-client-core.h>
@@ -826,7 +826,7 @@ static void wl_drop_source(struct wl_proxy **slot) {
   }
 }
 
-bool Platform_ClipboardAvailable(void) { return Env_IsWayland(); }
+bool x11_clipboard_available(void) { return x11_env_is_wayland(); }
 
 static void wl_publish_locked(void) {
 
@@ -859,7 +859,7 @@ static void wl_publish_locked(void) {
            wl.display_get_error(g_wl_dpy));
 }
 
-int Platform_ClipboardSetText(const char *text) {
+int x11_clipboard_set_text(const char *text) {
   if (!text)
     return 0;
   wl_trace("API SetText", "len=%d text='%s'", (int)strlen(text), text);
@@ -903,7 +903,7 @@ int Platform_ClipboardSetText(const char *text) {
   return 1;
 }
 
-int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
+int x11_clipboard_set_image(const unsigned char *png, size_t len) {
   if (!png || len == 0)
     return 0;
   if (!wl_setup())
@@ -931,7 +931,7 @@ int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
   return 1;
 }
 
-int Platform_ClipboardSetFile(const char *path) {
+int x11_clipboard_set_file(const char *path) {
   if (!path || path[0] == 0)
     return 0;
   char *uri = clipboard_path_to_uri_list(path);
@@ -969,7 +969,7 @@ static const char *wl_pick_mime_locked(void) {
   return NULL;
 }
 
-char *Platform_ClipboardGetText(void) {
+char *x11_clipboard_get_text(void) {
   wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
            (void *)g_wl_offer, g_wl_has_selection ? 1 : 0,
            g_wl_offer_mime_count);
@@ -1077,7 +1077,7 @@ char *Platform_ClipboardGetText(void) {
   return out;
 }
 
-void Platform_ClipboardShutdown(void) {
+void x11_clipboard_shutdown(void) {
   if (!g_wl_ready && !g_wl_handle) {
     return;
   }

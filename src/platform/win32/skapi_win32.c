@@ -12,7 +12,7 @@
 #include "core/types/prompt.h"
 #include "core/types/skapi_types.h"
 #include "config_values.h"
-#include "platform/win32/win32_state.h"
+#include "helpers/win32/win32_state.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
@@ -23,7 +23,7 @@
 #include "core/editbox.h"
 #include "core/prompt_geometry.h"
 #include "core/draw_state.h"
-#include "platform/win32/common_ui_win32.h"
+#include "helpers/win32/common_ui_win32.h"
 #include "helpers/helpers_ui.h"
 #include "core/thread_registry.h"
 #include "helpers/helpers_owner.h"
@@ -263,7 +263,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   return true;
 }
 
-static VOID CALLBACK TimerTrampoline(PVOID lpParam,
+static VOID CALLBACK win32_timer_trampoline(PVOID lpParam,
                                       BOOLEAN TimerOrWaitFired) {
 
   SkRunAfterPayload *payload = (SkRunAfterPayload *)lpParam;
@@ -280,7 +280,7 @@ bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload) {
 
   DWORD delay_ms = (DWORD)(payload->seconds * 1000.0);
   HANDLE hTimer = NULL;
-  if (!CreateTimerQueueTimer(&hTimer, NULL, TimerTrampoline, payload, delay_ms,
+  if (!CreateTimerQueueTimer(&hTimer, NULL, win32_timer_trampoline, payload, delay_ms,
                              0, WT_EXECUTEONLYONCE)) {
     return false;
   }

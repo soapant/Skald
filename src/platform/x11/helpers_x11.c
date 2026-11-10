@@ -22,10 +22,10 @@
 #include <strings.h>
 #include <sys/stat.h>
 
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
-#include "platform/x11/bg_image_x11.h"
+#include "helpers/x11/bg_image_x11.h"
 #include "core/prompt_geometry.h"
 #include "core/listbox_hover.h"
 #include "platform/platform.h"
@@ -316,7 +316,7 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
 int Platform_GetTextLineHeight(int fontsize) {
   if (fontsize <= 0)
     fontsize = FontSize;
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return fontsize;
   FontHandle font = x11_create_font_on_display(dpy, fontsize, UsedFont);
@@ -379,7 +379,7 @@ int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
   return cx - x;
 }
 
-void draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
+void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
                        FontHandle font, const char *text, int startY,
                        char *centered_to, int xOffset, int boxWidth) {
   if (!text) {
@@ -492,7 +492,7 @@ int x11_font_list_top_of(FontHandle font) {
   return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
 }
 
-const char *ListBoxItemDisplayText(ListBoxInfo *lb, int idx, char *trunc,
+const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
                                    size_t trunc_size) {
   const char *baseText = lb ? ListBoxInfo_Row(lb, idx) : NULL;
   snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
@@ -1038,7 +1038,7 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   return copy;
 }
 
-void DrawListBoxItemText(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
+void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                          FontHandle font, XftColor *num_color,
                          XftColor *body_color, XftColor *plain_color,
                          ListBoxInfo *lb, char *icon_path, int idx, int y,
@@ -1060,7 +1060,7 @@ void DrawListBoxItemText(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                              IconSize);
   }
   char trunc[512];
-  ListBoxItemDisplayText(lb, idx, trunc, sizeof(trunc));
+  x11_listbox_item_display_text(lb, idx, trunc, sizeof(trunc));
 
   const char *draw_text = trunc;
   int draw_x = XOffset;
@@ -1097,7 +1097,7 @@ Window x11_create_window_ex(Display *dpy, int x, int y, int w, int h,
 
 static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
                                     int radius);
-static unsigned int CornerAlpha(int x, int y, int w, int h, int R,
+static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
                                 unsigned int baseAlpha8);
 
 Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
@@ -1271,7 +1271,7 @@ static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
         continue;
       if (y >= radius && y < h - radius)
         continue;
-      if (CornerAlpha(x, y, w, h, radius, 255) == 0)
+      if (x11_corner_alpha(x, y, w, h, radius, 255) == 0)
         continue;
       XFillRectangle(dpy, mask, gc, x, y, 1, 1);
     }
@@ -1378,7 +1378,7 @@ static unsigned long x11_background_color_at(int x, int y, int w, int h) {
   return ((col >> 16) & 0xFF) << 16 | ((col >> 8) & 0xFF) << 8 | (col & 0xFF);
 }
 
-static unsigned int CornerAlpha(int x, int y, int w, int h, int R,
+static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
                                 unsigned int baseAlpha8) {
   float cx, cy;
   if (x < R && y < R) {
@@ -1427,7 +1427,7 @@ static void x11_generate_background_pixels(uint32_t *img_data,
   for (int y = 0; y < h; y++) {
     row = (uint32_t *)((char *)img_data + y * bytes_per_line);
     for (int x = 0; x < w; x++) {
-      unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+      unsigned int a = x11_corner_alpha(x, y, w, h, R, baseAlpha8);
       row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
     }
   }
@@ -1518,7 +1518,7 @@ static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
     if (img2) {
       for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
-          unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+          unsigned int a = x11_corner_alpha(x, y, w, h, R, baseAlpha8);
           if (a < baseAlpha8) {
             uint32_t pixel = XGetPixel(img2, x, y);
             unsigned int alpha = (pixel >> 24) & 0xFF;
@@ -1710,7 +1710,7 @@ void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
         float d = sqrtf(dx * dx + dy * dy);
         if (d <= ri)
           continue;
-        if (CornerAlpha(x, y, w, h, r, 255) == 0)
+        if (x11_corner_alpha(x, y, w, h, r, 255) == 0)
           continue;
         XFillRectangle(dpy, drw, gc, x, y, 1, 1);
       }
@@ -1755,7 +1755,7 @@ Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
 }
 
 void Platform_PrewarmBackgroundPixmap(void) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy) {
     return;
   }

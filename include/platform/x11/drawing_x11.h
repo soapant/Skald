@@ -10,7 +10,7 @@ typedef struct {
   XftFont *xf;
 } EditboxX11Metrics;
 
-void draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
+void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
                        FontHandle font, const char *text, int startY,
                        char *centered_to, int xOffset, int boxWidth);
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
@@ -21,9 +21,9 @@ void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
                          unsigned long hex, unsigned short alpha,
                          XftColor *out);
 
-const char *ListBoxItemDisplayText(ListBoxInfo *lb, int idx, char *trunc,
+const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
                                    size_t trunc_size);
-void DrawListBoxItemText(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
+void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                          FontHandle font, XftColor *num_color,
                          XftColor *body_color, XftColor *plain_color,
                          ListBoxInfo *lb, char *icon_path, int idx, int y,
@@ -33,7 +33,7 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            unsigned short alpha16, int x, int y, int w, int h,
                            int radius, int win_w, int win_h);
 void x11_draw_background(Display *dpy, Window win, int w, int h);
-void x11_draw_background_to_drawable(Display *dpy, Drawable d, int w, int h);
+void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h);
 Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h);
 void x11_set_dbl_visual(Display *dpy, Visual *vis, Colormap cmap, int depth);
 void x11_clear_dbl_visual(void);
@@ -42,8 +42,6 @@ bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **visOut,
 void x11_draw_selection_background(Display *dpy, XftDraw *xd, Visual *vis,
                                    Colormap cmap, int x, int y, int w, int h,
                                    unsigned long baseHex);
-Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h);
-void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h);
 void x11_release_prompt_buffer(Display *dpy, Window win);
 
 int x11_font_row_height(int font_size);

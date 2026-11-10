@@ -5,12 +5,12 @@
 
 int Monitor_Count(void) {
   MonitorEntry mon[16];
-  return MonitorFill(mon, 16);
+  return Monitor_Fill(mon, 16);
 }
 
 bool Monitor_GeometryAt(int index, int *x, int *y, int *w, int *h) {
   MonitorEntry mon[16];
-  int n = MonitorFill(mon, 16);
+  int n = Monitor_Fill(mon, 16);
   if (n <= 0 || index < 0 || index >= n || !mon[index].w)
     return false;
   if (x)
@@ -26,7 +26,7 @@ bool Monitor_GeometryAt(int index, int *x, int *y, int *w, int *h) {
 
 bool Monitor_Info(int index, MonitorInfo *out) {
   MonitorEntry mon[16];
-  int n = MonitorFill(mon, 16);
+  int n = Monitor_Fill(mon, 16);
   if (n <= 0 || index < 0 || index >= n || !mon[index].w || !out)
     return false;
   memset(out, 0, sizeof(*out));

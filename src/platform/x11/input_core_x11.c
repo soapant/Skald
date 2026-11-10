@@ -12,14 +12,14 @@
 #include <linux/input.h>
 #include <stdbool.h>
 
-#include "platform/x11/input_x11.h"
+#include "helpers/x11/input_x11.h"
 #include "deps/log.h"
 #include "core/hotkey_manager.h"
 #include "helpers/helpers_hotkey.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "platform/platform.h"
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 #include "platform/x11/misc_x11.h"
 #include "wm/wm.h"
 #include "helpers/helpers_input_state.h"
@@ -31,7 +31,7 @@
 #include <X11/Xutil.h>
 #include <signal.h>
 
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "core/hotkey_pending.h"
 
 
@@ -267,14 +267,14 @@ bool x11_handle_evdev_mouse(struct input_event *ev) {
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   int mx = 0, my = 0;
-  if (Env_IsWayland() && Wm_GetMousePos(&mx, &my)) {
+  if (x11_env_is_wayland() && Wm_GetMousePos(&mx, &my)) {
     if (out_x)
       *out_x = mx;
     if (out_y)
       *out_y = my;
     return true;
   }
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   Window root = DefaultRootWindow(dpy);
@@ -337,9 +337,9 @@ bool x11_grab_blocked(void) {
 }
 
 bool x11_should_use_grab(void) {
-  if (Env_IsWayland())
+  if (x11_env_is_wayland())
     return false;
-  if (Env_IsCompositor())
+  if (x11_env_is_compositor())
     return false;
   if (x11_grab_blocked())
     return false;
@@ -1069,7 +1069,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   return false;
 }
 int Platform_CharForKey(int vk, int scancode, int mods) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return 0;
   KeySym ks = 0;

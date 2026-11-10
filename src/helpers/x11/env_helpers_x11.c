@@ -1,4 +1,4 @@
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -21,38 +21,38 @@ static const char *env_or_null(const char *value) {
   return value && value[0] ? value : NULL;
 }
 
-const char *Env_HomeDir(void) { return env_or_null(getenv("HOME")); }
+const char *x11_env_home_dir(void) { return env_or_null(getenv("HOME")); }
 
-const char *Env_XdgRuntimeDir(void) {
+const char *x11_env_xdg_runtime_dir(void) {
   return env_or_null(getenv("XDG_RUNTIME_DIR"));
 }
 
-bool Env_IsWayland(void) {
+bool x11_env_is_wayland(void) {
   return env_or_null(getenv("WAYLAND_DISPLAY")) != NULL;
 }
 
-bool Env_IsCompositor(void) {
+bool x11_env_is_compositor(void) {
   return getenv("WAYLAND_DISPLAY") != NULL || getenv("SWAYSOCK") != NULL ||
          getenv("I3SOCK") != NULL ||
          getenv("HYPRLAND_INSTANCE_SIGNATURE") != NULL ||
          getenv("NIRI_SOCKET") != NULL || getenv("KDE_FULL_SESSION") != NULL;
 }
 
-void Env_GetSessionEnv(X11SessionEnv *out) {
+void x11_env_get_session_env(X11SessionEnv *out) {
   if (!out)
     return;
   out->real_user = Platform_GetRealUser();
   out->real_home = Platform_GetRealHome();
-  out->display = Platform_GetSessionDisplay();
-  out->xauthority = Platform_GetSessionXAuthority();
-  out->runtime_dir = Platform_GetRuntimeDir();
+  out->display = x11_get_session_display();
+  out->xauthority = x11_get_session_xauthority();
+  out->runtime_dir = x11_get_runtime_dir();
   out->wayland_display = getenv("WAYLAND_DISPLAY");
   if (out->wayland_display && out->wayland_display[0]) {
     char sock[512];
     sock[0] = '\0';
     const char *rtd = (out->runtime_dir && out->runtime_dir[0])
                           ? out->runtime_dir
-                          : Env_XdgRuntimeDir();
+                          : x11_env_xdg_runtime_dir();
     if (out->wayland_display[0] == '/')
       snprintf(sock, sizeof(sock), "%s", out->wayland_display);
     else if (rtd && rtd[0])
@@ -64,7 +64,7 @@ void Env_GetSessionEnv(X11SessionEnv *out) {
   }
 }
 
-void Env_BuildEnvStrings(const X11SessionEnv *env, char disp_env[256],
+void x11_env_build_env_strings(const X11SessionEnv *env, char disp_env[256],
                          char xauth_env[512], char runtime_env[512],
                          char wayland_env[512]) {
   if (disp_env)
@@ -81,7 +81,7 @@ void Env_BuildEnvStrings(const X11SessionEnv *env, char disp_env[256],
              env && env->wayland_display ? env->wayland_display : "");
 }
 
-void Env_ApplyToCurrentProcess(const X11SessionEnv *env) {
+void x11_env_apply_to_current_process(const X11SessionEnv *env) {
   if (env->display)
     setenv("DISPLAY", env->display, 1);
   if (env->xauthority)
@@ -108,9 +108,9 @@ void Env_ApplyToCurrentProcess(const X11SessionEnv *env) {
   }
 }
 
-bool Env_IsRunningAsRoot(void) { return Platform_IsRunningAsRoot(); }
+bool x11_env_is_running_as_root(void) { return Platform_IsRunningAsRoot(); }
 
-bool Env_DaemonExec(char *const argv[]) {
+bool x11_env_daemon_exec(char *const argv[]) {
   pid_t pid = fork();
   if (pid < 0)
     return false;
@@ -137,7 +137,7 @@ bool Env_DaemonExec(char *const argv[]) {
   return true;
 }
 
-bool Env_DaemonExecWithEnv(char *const argv[], const X11SessionEnv *env) {
+bool x11_env_daemon_exec_with_env(char *const argv[], const X11SessionEnv *env) {
   pid_t pid = fork();
   if (pid < 0)
     return false;
@@ -157,7 +157,7 @@ bool Env_DaemonExecWithEnv(char *const argv[], const X11SessionEnv *env) {
         close(fd);
     }
     if (env)
-      Env_ApplyToCurrentProcess(env);
+      x11_env_apply_to_current_process(env);
     execvp(argv[0], argv);
     _exit(127);
   }

@@ -131,7 +131,7 @@ static BOOL CALLBACK win32_monitor_enum(HMONITOR hMonitor, HDC hdc,
   return TRUE;
 }
 
-int MonitorFill(MonitorEntry *out, int max_entries) {
+int Monitor_Fill(MonitorEntry *out, int max_entries) {
   Win32MonitorList list = {{{0}}, 0};
   EnumDisplayMonitors(NULL, NULL, win32_monitor_enum, (LPARAM)&list);
   if (list.count == 0)

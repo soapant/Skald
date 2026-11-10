@@ -13,6 +13,7 @@
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "helpers/helpers_input_state.h"
+#include "platform/platform.h"
 #include "platform/draw.h"
 #include "core/context.h"
 #include "core/types.h"
@@ -29,8 +30,8 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <linux/input.h>
-#include "platform/x11/clipboard_x11.h"
-#include "platform/x11/input_x11.h"
+#include "helpers/x11/clipboard_x11.h"
+#include "helpers/x11/input_x11.h"
 #include "core/hotkey_pending.h"
 #include "helpers/helpers_render_thread.h"
 #include "platform/widget.h"
@@ -161,9 +162,7 @@ static void destroy_uinput(void) {
   x11_mouse_grab_end();
   x11_destroy_uinput();
 }
-static void ScanAndHookKeyboards(void) { x11_scan_keyboards(); }
-
-static int XKeysymToVK(KeySym ks) { return x11_keysym_to_vk(ks); }
+static void x11_scan_and_hook_keyboards(void) { x11_scan_keyboards(); }
 
 static void *input_thread_func(void *arg) {
   WindowManager *wm = (WindowManager *)arg;
@@ -235,7 +234,7 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
     vk_code = (unsigned char)buf[0];
     char_hint = (unsigned char)buf[0];
   } else {
-    vk_code = XKeysymToVK(ks);
+    vk_code = x11_keysym_to_vk(ks);
   }
   int modifiers = mods;
   if (vk_code)
@@ -283,13 +282,13 @@ static void x11_handle_key_release(Display *dpy, XKeyEvent *ev) {
   if (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126)
     vk = (unsigned char)buf[0];
   else
-    vk = XKeysymToVK(ks);
+    vk = x11_keysym_to_vk(ks);
   int mods = remap_current_mods();
   if (vk)
     InputState_Update(vk, false, mods, 0);
 }
 
-void Linux_ProcessXEvent(Display *dpy, XEvent *ev, WindowManager *wm) {
+void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
   if (x11_clipboard_handle_event(dpy, ev)) {
     return;
   }
@@ -386,7 +385,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
     }
   }
 
-  ScanAndHookKeyboards();
+  x11_scan_and_hook_keyboards();
 
   if (hotkey_has_mouse_binding()) {
     x11_mouse_grab_begin();
@@ -507,7 +506,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
     if (main_idx >= 0 && (xfds[main_idx].revents & POLLIN)) {
       while (XPending(dpy) > 0) {
         XNextEvent(dpy, &xev);
-        Linux_ProcessXEvent(dpy, &xev, wm);
+        x11_process_xevent(dpy, &xev, wm);
       }
     }
     if (render_idx >= 0 && (xfds[render_idx].revents & POLLIN)) {
@@ -551,7 +550,7 @@ void WindowManager_ProcessEventsLinux(WindowManager *wm) {
 
   while (XPending(dpy) > 0) {
     XNextEvent(dpy, &ev);
-    Linux_ProcessXEvent(dpy, &ev, wm);
+    x11_process_xevent(dpy, &ev, wm);
   }
 
   Display *rdpy = (Display *)RenderThread_Display();

@@ -22,7 +22,7 @@
 #include "helpers/helpers_text.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "helpers/helpers_ui.h"
 #include "core/prompt_geometry.h"
@@ -39,7 +39,7 @@
 #include "core/thread_registry.h"
 #include "helpers/helpers_owner.h"
 
-static bool Desktop_Parse(const char *desktop_path, char exec_line[1024],
+static bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
                           char workdir[1024], bool *is_terminal) {
 
   if (exec_line)
@@ -90,7 +90,7 @@ static bool Desktop_Parse(const char *desktop_path, char exec_line[1024],
   return true;
 }
 
-static void Desktop_CleanExec(char exec_line[1024]) {
+static void x11_desktop_clean_exec(char exec_line[1024]) {
   if (!exec_line || !exec_line[0]) {
     return;
   }
@@ -227,7 +227,7 @@ static int platform_run_status(char *const argv[], const X11SessionEnv *env,
     return -1;
   if (pid == 0) {
     if (apply_env && env)
-      Env_ApplyToCurrentProcess(env);
+      x11_env_apply_to_current_process(env);
     execvp(argv[0], argv);
     _exit(127);
   }
@@ -254,11 +254,11 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     bool is_terminal = false;
     char exec_line[1024] = {0};
     char workdir[1024] = {0};
-    Desktop_Parse(path, exec_line, workdir, &is_terminal);
-    log_info("Desktop_Parse exec='%s' workdir='%s' is_terminal=%d", exec_line,
+    x11_desktop_parse(path, exec_line, workdir, &is_terminal);
+    log_info("x11_desktop_parse exec='%s' workdir='%s' is_terminal=%d", exec_line,
              workdir, is_terminal);
-    Desktop_CleanExec(exec_line);
-    log_info("Desktop_CleanExec exec='%s'", exec_line);
+    x11_desktop_clean_exec(exec_line);
+    log_info("x11_desktop_clean_exec exec='%s'", exec_line);
     if (is_terminal && exec_line[0]) {
       const char *wd = workdir[0] ? workdir : NULL;
       char extra[2048];
@@ -294,10 +294,10 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     const char *run_dir = workdir[0] ? workdir : desktop_dir;
 
     X11SessionEnv env;
-    Env_GetSessionEnv(&env);
+    x11_env_get_session_env(&env);
     char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-    Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, wayland_env);
-    bool as_root = Env_IsRunningAsRoot();
+    x11_env_build_env_strings(&env, disp_env, xauth_env, runtime_env, wayland_env);
+    bool as_root = x11_env_is_running_as_root();
     log_info("desktop '%s' exec='%s' workdir='%s' run_dir='%s' as_root=%d",
              expanded, exec_line, workdir, run_dir, as_root);
 
@@ -334,28 +334,28 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
                               "env",       disp_env,    xauth_env,
                               runtime_env, wayland_env, "sh",
                               "-c",        launch_cmd,  NULL};
-      if (!Env_DaemonExec(av_run)) {
+      if (!x11_env_daemon_exec(av_run)) {
         return false;
       }
     } else {
       X11SessionEnv env2 = env;
       char *const av_run2[] = {"sh", "-c", launch_cmd, NULL};
-      if (!Env_DaemonExecWithEnv(av_run2, &env2)) {
+      if (!x11_env_daemon_exec_with_env(av_run2, &env2)) {
         return false;
       }
     }
     return true;
   } else {
     X11SessionEnv env;
-    Env_GetSessionEnv(&env);
+    x11_env_get_session_env(&env);
     char disp_env[256], xauth_env[512], runtime_env[512];
-    Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, NULL);
+    x11_env_build_env_strings(&env, disp_env, xauth_env, runtime_env, NULL);
     struct stat pst;
     bool is_regular_file = (stat(path, &pst) == 0 && S_ISREG(pst.st_mode));
     bool is_executable = (access(path, X_OK) == 0);
     if (is_regular_file && !is_executable) {
       char *const av_open2[] = {"gio", "open", path, NULL};
-      if (!Env_DaemonExecWithEnv(av_open2, &env))
+      if (!x11_env_daemon_exec_with_env(av_open2, &env))
         return false;
       return true;
     }
@@ -364,12 +364,12 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
       snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, args);
     else
       snprintf(cmd, sizeof(cmd), "\"%s\"", path);
-    if (Env_IsRunningAsRoot()) {
+    if (x11_env_is_running_as_root()) {
       char *const argv[] = {"sudo",      "-u",     (char *)env.real_user,
                             "env",       disp_env, xauth_env,
                             runtime_env, "sh",     "-c",
                             cmd,         NULL};
-      if (!Env_DaemonExec(argv))
+      if (!x11_env_daemon_exec(argv))
         return false;
       return true;
     } else {
@@ -392,7 +392,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
           if (fd > 2)
             close(fd);
         }
-        Env_ApplyToCurrentProcess(&env2);
+        x11_env_apply_to_current_process(&env2);
         execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
         _exit(127);
       }
@@ -564,7 +564,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
 }
 
 
-static void *TimerThread(void *arg) {
+static void *x11_timer_thread(void *arg) {
 
   SkRunAfterPayload *payload = (SkRunAfterPayload *)arg;
   if (!payload)
@@ -584,7 +584,7 @@ static void *TimerThread(void *arg) {
 bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload) {
 
   pthread_t thread;
-  if (pthread_create(&thread, NULL, TimerThread, payload) != 0)
+  if (pthread_create(&thread, NULL, x11_timer_thread, payload) != 0)
     return false;
   pthread_detach(thread);
   return true;

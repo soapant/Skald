@@ -7,9 +7,9 @@
 #include "core/types.h"
 #include "core/types/window.h"
 
-Display *get_display(void);
-bool init_display(void);
-void cleanup_display(void);
+Display *x11_get_display(void);
+bool x11_init_display(void);
+void x11_cleanup_display(void);
 int x11_error_handler(Display *d, XErrorEvent *e);
 
 #endif

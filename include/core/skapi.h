@@ -881,9 +881,6 @@ SkMetrics *sk_get_metrics(void);
 
 void *sk_get_active_prompt(void);
 
-typedef PlMetrics SkMetrics;
-SkMetrics *sk_get_metrics(void);
-
 #define SK_EVENT_PROMPT_OPEN EVENT_PROMPT_OPEN
 #define SK_EVENT_PROMPT_CLOSE EVENT_PROMPT_CLOSE
 

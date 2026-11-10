@@ -14,14 +14,14 @@
 
 #include "deps/log.h"
 #include "platform/platform.h"
-#include "platform/x11/env_helpers_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 #include "helpers/helpers_text.h"
 
 static bool hypr_sock_live(const char *sig) {
 
   if (!sig || !sig[0])
     return false;
-  const char *rtd = Env_XdgRuntimeDir();
+  const char *rtd = x11_env_xdg_runtime_dir();
   if (!rtd || !rtd[0])
     return false;
   char path[512];
@@ -38,7 +38,7 @@ static void hypr_ensure_sig(void) {
   }
   if (cur && cur[0])
     unsetenv("HYPRLAND_INSTANCE_SIGNATURE");
-  const char *rtd = Env_XdgRuntimeDir();
+  const char *rtd = x11_env_xdg_runtime_dir();
   if (!rtd || !rtd[0]) {
     log_error("hypr discovery no XDG_RUNTIME_DIR");
     return;
@@ -395,7 +395,7 @@ bool inject_key_hyprland(int vk, int down) {
     return true;
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  const char *runtime = Env_XdgRuntimeDir();
+  const char *runtime = x11_env_xdg_runtime_dir();
   if (!sig || !sig[0] || !runtime || !runtime[0])
     return false;
 
@@ -532,7 +532,7 @@ bool move_active_window_right_hyprland(void) {
 }
 
 bool get_mouse_pos_hyprland(int *x, int *y) {
-  const char *rtd = Env_XdgRuntimeDir();
+  const char *rtd = x11_env_xdg_runtime_dir();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   if (!rtd || !sig)
     return false;

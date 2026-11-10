@@ -17,13 +17,13 @@
 #include "core/listbox_hover.h"
 #include "core/editbox.h"
 #include "platform/x11/drawing_x11.h"
-#include "platform/x11/display_x11.h"
+#include "helpers/x11/display_x11.h"
 #include "config_values.h"
 #include "core/context.h"
 #include "core/types/window.h"
 
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   Window w = (Window)WH_TO_HWND(h);
@@ -70,10 +70,10 @@ static __thread int g_raw_map_y = 0;
 static __thread int g_raw_map_x0 = 0;
 static __thread int g_raw_map_pitch = 0;
 static __thread XftDraw *g_raw_map_xd = NULL;
-static int RawMeasure(Display *dpy, XftFont *xf, const char *s, int n) {
+static int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
   return x11_measure_utf8_fallback(dpy, xf, s, n, 0);
 }
-static void RawEmitLine(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
+static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
                         unsigned long *ucols, int nu, int ls, int le, int drawX,
                         int baseline, int rowTop) {
   int cx = drawX;
@@ -82,7 +82,7 @@ static void RawEmitLine(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
     int j = i + 1;
     while (j < le && g_raw_cells[j].color == g_raw_cells[i].color)
       j++;
-    int w = RawMeasure(dpy, xf, g_raw_text + i, j - i);
+    int w = x11_raw_measure(dpy, xf, g_raw_text + i, j - i);
     int k = 0;
     while (k < nu && ucols[k] != g_raw_cells[i].color)
       k++;
@@ -99,7 +99,7 @@ static void RawEmitLine(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
   }
 }
 
-static void RawLine_Flush(void) {
+static void x11_raw_line_flush(void) {
   int count = g_raw_count;
   g_raw_count = 0;
   if (count <= 0)
@@ -127,7 +127,7 @@ static void RawLine_Flush(void) {
     avail = 40;
   int ascent = xf->ascent;
   int lineH = ascent + xf->descent;
-  int spaceW = RawMeasure(dpy, xf, " ", 1);
+  int spaceW = x11_raw_measure(dpy, xf, " ", 1);
   unsigned long ucols[64];
   int nu = 0;
   for (int i = 0; i < count && nu < 64; i++) {
@@ -163,10 +163,10 @@ static void RawLine_Flush(void) {
     int we = ws;
     while (we < count && g_raw_text[we] != ' ')
       we++;
-    int ww = RawMeasure(dpy, xf, g_raw_text + ws, we - ws);
+    int ww = x11_raw_measure(dpy, xf, g_raw_text + ws, we - ws);
     if (ww > avail) {
       if (le > ls) {
-        RawEmitLine(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
+        x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
                     y + ascent + row * lineH, y + row * lineH);
         row++;
       }
@@ -175,7 +175,7 @@ static void RawLine_Flush(void) {
         int lo = 0, hi = we - c;
         while (lo < hi) {
           int mid = (lo + hi + 1) / 2;
-          if (RawMeasure(dpy, xf, g_raw_text + c, mid) <= avail)
+          if (x11_raw_measure(dpy, xf, g_raw_text + c, mid) <= avail)
             lo = mid;
           else
             hi = mid - 1;
@@ -201,11 +201,11 @@ static void RawLine_Flush(void) {
         if (c + n >= we) {
           ls = c;
           le = we;
-          lw = RawMeasure(dpy, xf, g_raw_text + c, we - c);
+          lw = x11_raw_measure(dpy, xf, g_raw_text + c, we - c);
           c = we;
           break;
         }
-        RawEmitLine(dpy, xd, xf, xcols, ucols, nu, c, c + n, x0,
+        x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, c, c + n, x0,
                     y + ascent + row * lineH, y + row * lineH);
         row++;
         c += n;
@@ -215,7 +215,7 @@ static void RawLine_Flush(void) {
     }
     int add = ww + (le > ls ? spaceW : 0);
     if (le > ls && lw + add > avail) {
-      RawEmitLine(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
+      x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
                   y + ascent + row * lineH, y + row * lineH);
       row++;
       ls = ws;
@@ -230,7 +230,7 @@ static void RawLine_Flush(void) {
     p = we;
   }
   if (le > ls) {
-    RawEmitLine(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
+    x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
                 y + ascent + row * lineH, y + row * lineH);
   }
   g_raw_map_count = count;
@@ -243,7 +243,7 @@ static void RawLine_Flush(void) {
   if (owned)
     Platform_DestroyFont(g_raw_font);
 }
-static bool RawLine_Push(int x, int y, char ch, unsigned long color,
+static bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
                          FontHandle fh, bool owned, int fontsize) {
   if (g_raw_count > 0) {
     bool same = (y == g_raw_y) && (fontsize == g_raw_fontsize) &&
@@ -262,7 +262,7 @@ static bool RawLine_Push(int x, int y, char ch, unsigned long color,
     if (same && !owned)
       same = (FH_TO_XFT(fh) == FH_TO_XFT(g_raw_font));
     if (!same)
-      RawLine_Flush();
+      x11_raw_line_flush();
   }
   if (g_raw_count >= RAW_LINE_CAP)
     return false;
@@ -288,14 +288,14 @@ static bool RawLine_Push(int x, int y, char ch, unsigned long color,
 
 void x11_set_draw_context(Display *dpy, XftDraw *xd, Visual *vis,
                              Colormap cmap) {
-  RawLine_Flush();
+  x11_raw_line_flush();
   g_draw_dpy = dpy;
   g_draw_xd = xd;
   g_draw_vis = vis;
   g_draw_cmap = cmap;
 }
 
-void Platform_FlushDraw(void) { RawLine_Flush(); }
+void Platform_FlushDraw(void) { x11_raw_line_flush(); }
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   if (!path || !path[0] || !g_draw_dpy || !g_draw_xd)
     return false;
@@ -367,17 +367,17 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     int box = 0;
     if (spec.pad == 0 && !String_ContainsCI(a, "LEFT"))
       box = x;
-    draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, spec.text, y, (char *)a,
+    x11_draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, spec.text, y, (char *)a,
                       spec.pad ? spec.pad : x, box);
   } else {
     XftFont *xf = FH_TO_XFT(fh);
     int len = (int)strlen(spec.text);
     if (len == 1 && xf &&
-        RawLine_Push(x, y, spec.text[0], color, fh, needDestroy,
+        x11_raw_line_push(x, y, spec.text[0], color, fh, needDestroy,
                      spec.fontsize)) {
       needDestroy = false;
     } else {
-      RawLine_Flush();
+      x11_raw_line_flush();
       if (xf)
         x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + (xf->ascent),
                                xf, spec.text, len,
@@ -417,7 +417,7 @@ static Display *g_line_dpy = NULL;
 static int g_line_size = 0;
 static XftFont *g_line_font = NULL;
 
-static XftFont *LineFont(Display *dpy, int size) {
+static XftFont *x11_line_font(Display *dpy, int size) {
   if (size <= 0)
     size = FontSize;
   if (!g_line_font || g_line_dpy != dpy || g_line_size != size) {
@@ -459,7 +459,7 @@ int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
     return 0;
   if (!g_draw_dpy)
     return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2;
-  XftFont *xf = LineFont(g_draw_dpy, spec.fontsize);
+  XftFont *xf = x11_line_font(g_draw_dpy, spec.fontsize);
   if (!xf)
     return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2;
   return x11_measure_utf8_fallback(g_draw_dpy, xf, spec.text, spec.len,
@@ -472,7 +472,7 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
     return false;
   int x = spec.x + PlDrawState_Get()->off_x;
   int y = spec.y + PlDrawState_Get()->off_y;
-  XftFont *xf = LineFont(g_draw_dpy, spec.fontsize);
+  XftFont *xf = x11_line_font(g_draw_dpy, spec.fontsize);
   if (!xf)
     return false;
   unsigned long color = spec.color == 0 ? rgb_to_hex(COLOR_TEXT) : spec.color;
@@ -514,7 +514,7 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
   x11_xft_alloc_color(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
   x11_xft_alloc_color(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
   x11_xft_alloc_color(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
-  DrawListBoxItemText(dpy, xd, vis, cmap, font, &ncolor, &bcolor, &pcolor, lb,
+  x11_draw_listbox_item_text(dpy, xd, vis, cmap, font, &ncolor, &bcolor, &pcolor, lb,
                       (char *)icon_path, idx, y, text_x);
   XftColorFree(dpy, vis, cmap, &ncolor);
   XftColorFree(dpy, vis, cmap, &bcolor);
@@ -842,7 +842,7 @@ void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
 }
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
-  Display *dpy = get_display();
+  Display *dpy = x11_get_display();
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   int lh = FontSize;
   int rh = x11_font_row_height_of(font);

@@ -4,7 +4,7 @@
 #include "core/types/window.h"
 #include "core/types/prompt.h"
 #include "config_values.h"
-#include "platform/win32/win32_state.h"
+#include "helpers/win32/win32_state.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/window_manager.h"
@@ -14,9 +14,9 @@
 #include "core/prompt_geometry.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
-#include "platform/win32/subclasses_win32.h"
-#include "platform/win32/common_ui_win32.h"
-#include "platform/win32/bg_image_win32.h"
+#include "helpers/win32/subclasses_win32.h"
+#include "helpers/win32/common_ui_win32.h"
+#include "helpers/win32/bg_image_win32.h"
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
@@ -33,7 +33,7 @@ static int g_pending_navigate = -1;
 
 extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
 
-static ListBoxInfo *GetLBFromPopup(HWND hPopup) {
+static ListBoxInfo *win32_get_lb_from_popup(HWND hPopup) {
   if (hPopup && IsWindow(hPopup)) {
     PromptState *state = win32_get_prompt_state_for_hwnd(hPopup);
     if (state) {
@@ -67,7 +67,7 @@ static void popup_request_repaint(HWND hwnd) {
 
 static bool prompt_win_no_bg(void);
 
-static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
+static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
 
   WindowManager *wm = WindowManager_Get();
   Popup *top = WindowManager_GetTopPopup(wm);
@@ -104,7 +104,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
       ShowWindow(popup_wnd, SW_SHOW);
     if (popup_wnd && IsWindow(popup_wnd) &&
         WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) != NULL)
-      ForceWindowFocus(SkaldContext_Get()->window.hPopupWnd, WH_NULL);
+      win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd, WH_NULL);
   }
   if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
     HWND hPar = GetParent(hwnd);
@@ -164,17 +164,17 @@ static bool prompt_win_no_bg(void) {
   return false;
 }
 
-LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
+LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                               LPARAM lParam) {
 
-  ListBoxInfo *lb = GetLBFromPopup(hwnd);
+  ListBoxInfo *lb = win32_get_lb_from_popup(hwnd);
   WindowManager *_wm_guard = WindowManager_Get();
   Popup *_top_guard = _wm_guard ? WindowManager_GetTopPopup(_wm_guard) : NULL;
   if (_top_guard && _top_guard->type == POPUP_PROMPT &&
       WH_TO_HWND(_top_guard->handle) != NULL &&
       WH_TO_HWND(_top_guard->handle) != hwnd) {
     if (msg == WM_PAINT) {
-      log_info("PopupWndProc SKIP PAINT hwnd=%p top=%p", (void *)hwnd,
+      log_info("win32_popup_wnd_proc SKIP PAINT hwnd=%p top=%p", (void *)hwnd,
                (void *)WH_TO_HWND(_top_guard->handle));
       PAINTSTRUCT _ps;
       BeginPaint(hwnd, &_ps);
@@ -241,7 +241,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
     pkey.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
     pkey.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
     s_swallow_next_char = true;
-    bool consumed = PromptWindow_OnKey(hKey, &pkey);
+    bool consumed = win32_prompt_window_on_key(hKey, &pkey);
     if (wParam == VK_BACK) {
       extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
       PromptState *ps = win32_get_prompt_state_for_hwnd(hwnd);

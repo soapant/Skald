@@ -6,11 +6,11 @@
 #include "config_values.h"
 #include "core/types.h"
 #include "core/types/window.h"
-#include "platform/win32/subclasses_win32.h"
+#include "helpers/win32/subclasses_win32.h"
 #include "platform/platform.h"
-#include "platform/win32/input_core_win32.h"
+#include "helpers/win32/input_core_win32.h"
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   switch (msg) {
   case WM_CREATE: {
     NOTIFYICONDATA nid = {0};
@@ -33,7 +33,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   }
 
   case WM_INPUT: {
-    Platform_HandleRawMouseInput(lParam);
+    win32_handle_raw_mouse_input(lParam);
     break;
   }
 
