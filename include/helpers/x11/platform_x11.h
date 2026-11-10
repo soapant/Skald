@@ -14,7 +14,7 @@ bool x11_font_was_retired(Display *dpy, XftFont *xft);
 FontHandle x11_create_font_on_display(Display *dpy, int size,
                                       const char *face_name);
 void x11_cleanup_per_feature_edit_map(void);
-int x11_x11_button(int button);
+int x11_button(int button);
 unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask);
 
 #endif

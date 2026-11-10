@@ -2,6 +2,7 @@
 #include <stdbool.h>
 
 #include "helpers/helpers_render_thread.h"
+#include "platform/platform.h"
 #include "deps/log.h"
 
 static HANDLE g_rt_thread = NULL;
@@ -9,7 +10,7 @@ static CRITICAL_SECTION g_rt_lock;
 static CONDITION_VARIABLE g_rt_cond;
 static volatile LONG g_rt_lock_ready = 0;
 
-void RenderThread_InitBackend(void) {}
+void Platform_RenderThreadInit(void) {}
 
 static void rt_ensure_lock(void) {
   if (g_rt_lock_ready == 2)
@@ -24,22 +25,22 @@ static void rt_ensure_lock(void) {
     Sleep(0);
 }
 
-void RenderThread_LockBackend(void) {
+void Platform_RenderThreadLock(void) {
   rt_ensure_lock();
   EnterCriticalSection(&g_rt_lock);
 }
 
-void RenderThread_UnlockBackend(void) { LeaveCriticalSection(&g_rt_lock); }
+void Platform_RenderThreadUnlock(void) { LeaveCriticalSection(&g_rt_lock); }
 
-void RenderThread_WakeOneBackend(void) { WakeConditionVariable(&g_rt_cond); }
+void Platform_RenderThreadWakeOne(void) { WakeConditionVariable(&g_rt_cond); }
 
-void RenderThread_WakeAllBackend(void) { WakeAllConditionVariable(&g_rt_cond); }
+void Platform_RenderThreadWakeAll(void) { WakeAllConditionVariable(&g_rt_cond); }
 
-void RenderThread_WaitTimedBackend(long us) {
+void Platform_RenderThreadWaitTimed(long us) {
   SleepConditionVariableCS(&g_rt_cond, &g_rt_lock, (DWORD)(us / 1000));
 }
 
-void RenderThread_MiniSleepBackend(int milliseconds) {
+void Platform_RenderThreadMiniSleep(int milliseconds) {
   Sleep((DWORD)milliseconds);
 }
 
@@ -49,7 +50,7 @@ static DWORD WINAPI rt_entry(LPVOID arg) {
   return 0;
 }
 
-bool RenderThread_StartBackend(void) {
+bool Platform_RenderThreadStart(void) {
   rt_ensure_lock();
   g_rt_thread = CreateThread(NULL, 0, rt_entry, NULL, 0, NULL);
   if (!g_rt_thread) {
@@ -59,7 +60,7 @@ bool RenderThread_StartBackend(void) {
   return true;
 }
 
-void RenderThread_JoinBackend(void) {
+void Platform_RenderThreadJoin(void) {
   if (!g_rt_thread)
     return;
   WaitForSingleObject(g_rt_thread, INFINITE);
@@ -67,4 +68,4 @@ void RenderThread_JoinBackend(void) {
   g_rt_thread = NULL;
 }
 
-void *RenderThread_DisplayBackend(void) { return NULL; }
+void *Platform_RenderThreadDisplay(void) { return NULL; }

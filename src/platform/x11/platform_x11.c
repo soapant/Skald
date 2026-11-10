@@ -1378,7 +1378,7 @@ bool Platform_ClickButton(int button) {
   Display *dpy = x11_get_display();
   if (!dpy)
     return false;
-  int xb = x11_x11_button(button);
+  int xb = x11_button(button);
   if (xb == 0)
     return false;
 #if __has_include(<X11/extensions/XTest.h>)
@@ -1477,7 +1477,7 @@ bool Platform_MouseButtonDown(int button, bool down) {
   Display *dpy = x11_get_display();
   if (!dpy)
     return false;
-  int xb = x11_x11_button(button);
+  int xb = x11_button(button);
   if (xb == 0)
     return false;
 #if __has_include(<X11/extensions/XTest.h>)

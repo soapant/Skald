@@ -203,10 +203,7 @@ unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
   return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
 }
 
-int x11_x11_button(int button);
-
-int x11_x11_button(int button) {
-
+int x11_button(int button) {
   switch (button) {
   case 1:
     return 1;
