@@ -1813,16 +1813,18 @@ bool Platform_TryAcquireSingleInstance(void) {
 static HHOOK s_win32_keyboard_hook = NULL;
 static HHOOK s_win32_mouse_hook = NULL;
 
-uint32_t g_win32_main_thread_id = 0;
-WindowHandle g_win32_tray_wnd = {0};
-WindowHandle g_win32_message_wnd = {0};
+static uint32_t s_main_thread_id = 0;
+static WindowHandle s_tray_wnd = {0};
+
+bool Platform_IsMainThread(void) { return GetCurrentThreadId() == s_main_thread_id; }
+WindowHandle Platform_TrayWindow(void) { return s_tray_wnd; }
 
 bool Platform_InitDisplaySafe(void) { return true; }
 
 void Platform_CleanupDisplaySafe(void) {}
 
 void Platform_InitMainThreadContext(void) {
-  g_win32_main_thread_id = GetCurrentThreadId();
+  s_main_thread_id = GetCurrentThreadId();
 }
 
 static int win32_dir_exists(const char *path) {
@@ -2139,11 +2141,11 @@ int Platform_InitializeTrayIcon() {
       return -1;
     }
 
-    g_win32_tray_wnd = WH_FROM_HWND(
+    s_tray_wnd = WH_FROM_HWND(
         CreateWindowExA(WS_EX_TOOLWINDOW, wc.lpszClassName, "TrayApp", WS_POPUP,
                         0, 0, 0, 0, NULL, NULL, hInstance, NULL));
 
-    if (WH_TO_HWND(g_win32_tray_wnd) == NULL) {
+    if (WH_TO_HWND(s_tray_wnd) == NULL) {
       return -1;
     }
   }
@@ -2204,7 +2206,7 @@ void Platform_InitUI() {
              (void *)s_win32_keyboard_hook);
   }
 
-  Platform_RegisterRawMouse(WH_TO_HWND(g_win32_tray_wnd));
+  Platform_RegisterRawMouse(WH_TO_HWND(s_tray_wnd));
   s_win32_mouse_hook = NULL;
 
   FontHandle warm = Platform_CreateFont(FontSize, UsedFont);

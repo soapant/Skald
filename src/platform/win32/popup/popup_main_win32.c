@@ -83,10 +83,8 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent *key) {
   PromptState *state = Platform_GetPromptStateForHWND(hwnd);
 
   if (wParam == VK_ESCAPE) {
-    if (WH_TO_HWND(g_win32_message_wnd) != NULL) {
-      KillTimer(WH_TO_HWND(g_win32_message_wnd), 999);
-      DestroyWindow(WH_TO_HWND(g_win32_message_wnd));
-    }
+    if (MessagePopup_AnyOpen())
+      Platform_DismissDisplayMessage();
   }
 
   bool hide_popup = (wParam == VK_RETURN);
@@ -515,7 +513,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         {
           if (isSelected && strlen(measureBuffer) >= 70) {
             if (g_last_selected_index != (int)pdis->itemID ||
-                WH_TO_HWND(g_win32_message_wnd) == NULL) {
+                !MessagePopup_AnyOpen()) {
               g_last_selected_index = (int)pdis->itemID;
             }
           } else {
