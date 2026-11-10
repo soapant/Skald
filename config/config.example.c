@@ -32,7 +32,7 @@ void ConfigApply(void) {
   RainbowText = false;
   WindowTitleText = false;
   CloseOnLossOfFocus = false;
-  Theme = "default";
+  Theme = "rose-pine";
   BackgroundImage = "";
 }
 // </skald-config-generated>
