@@ -427,61 +427,6 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   return true;
 }
 
-#include "helpers/helpers_listbox_backend.h"
-
-static __thread FontHandle g_b_font = FH_NULL;
-static __thread Display *g_b_dpy = NULL;
-static __thread XftDraw *g_b_xd = NULL;
-static __thread Visual *g_b_vis = NULL;
-static __thread Colormap g_b_cmap = 0;
-
-bool ListboxBackend_Begin(int item_height_override, ListboxBackendInit *out) {
-  Platform_GetDrawContext(&g_b_dpy, &g_b_xd, &g_b_vis, &g_b_cmap);
-  if (!g_b_dpy || !g_b_xd)
-    return false;
-  g_b_font = Platform_CreateFontOnDisplay(g_b_dpy, FontSize, UsedFont);
-  out->item_h = item_height_override > 0 ? item_height_override
-                                         : x11_font_row_height_of(g_b_font);
-  out->list_top = x11_font_list_top_of(g_b_font);
-  return true;
-}
-
-void ListboxBackend_DrawSelection(int bx, int bw, int y, int item_h, int fw,
-                                  int frame_h, bool sel) {
-  if (RoundedCorners && CornerRadius > 0) {
-    if (sel) {
-      int R = PROMPT_SEL_RADIUS;
-      int t = PROMPT_SEL_INSET;
-      x11_fill_rounded_rect(g_b_dpy, g_b_xd, g_b_vis, g_b_cmap,
-                            rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF,
-                            bx + t, y + PROMPT_SEL_TOP_INSET + t,
-                            bw - 2 * t, item_h - 2 - 2 * t, R - 1,
-                            fw, frame_h);
-    }
-  } else {
-    PromptState tmp = {0};
-    tmp.width = fw;
-    tmp.height = frame_h;
-    Platform_DrawListBackground(&tmp, g_b_dpy, g_b_xd, g_b_vis, g_b_cmap,
-                                y, item_h, sel);
-  }
-}
-
-void ListboxBackend_End(void) {
-  if (g_b_font.xfont) {
-    Platform_DestroyFont(g_b_font);
-    g_b_font = FH_NULL;
-  }
-  g_b_dpy = NULL;
-  g_b_xd = NULL;
-  g_b_vis = NULL;
-  g_b_cmap = 0;
-}
-
-PromptState *ListboxBackend_PromptState(const ListBoxInfo *lb) {
-  return PromptPopup_FindState(lb);
-}
-
 char *sk_search_file_in_dir_platform(const char *directory,
                                      const char *search_string,
                                      char *output_path) {
