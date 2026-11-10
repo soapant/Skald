@@ -12,15 +12,15 @@
 #define TEST_VK_C 0xF2
 #define TEST_VK_D 0xF3
 
-static int g_ud_calls = 0;
-static void *g_ud_seen = NULL;
+static int ud_calls = 0;
+static void *ud_seen = NULL;
 static void ud_cb(void *ud) {
-  g_ud_calls++;
-  g_ud_seen = ud;
+  ud_calls++;
+  ud_seen = ud;
 }
 
-static int g_fn_calls = 0;
-static void fn_cb(void) { g_fn_calls++; }
+static int fn_calls = 0;
+static void fn_cb(void) { fn_calls++; }
 
 static HotkeyBinding make_binding(int vk, int mods, HotkeyCallbackUd cb_ud,
                                   void *ud, HotkeyCallback cb) {
@@ -34,9 +34,9 @@ static HotkeyBinding make_binding(int vk, int mods, HotkeyCallbackUd cb_ud,
 }
 
 static void reset_counters(void) {
-  g_ud_calls = 0;
-  g_ud_seen = NULL;
-  g_fn_calls = 0;
+  ud_calls = 0;
+  ud_seen = NULL;
+  fn_calls = 0;
 }
 
 TEST(register_and_drain_ud_callback) {
@@ -46,10 +46,10 @@ TEST(register_and_drain_ud_callback) {
   ASSERT_TRUE(hotkey_register_internal(b));
   ASSERT_TRUE(hotkey_process(TEST_VK_A, 0));
   hotkey_drain_pending();
-  ASSERT_EQ_INT(g_ud_calls, 1);
-  ASSERT_EQ_INT(g_ud_seen == &marker, 1);
+  ASSERT_EQ_INT(ud_calls, 1);
+  ASSERT_EQ_INT(ud_seen == &marker, 1);
   hotkey_drain_pending();
-  ASSERT_EQ_INT(g_ud_calls, 1);
+  ASSERT_EQ_INT(ud_calls, 1);
 }
 
 TEST(register_and_drain_legacy_callback) {
@@ -58,7 +58,7 @@ TEST(register_and_drain_legacy_callback) {
   ASSERT_TRUE(hotkey_register_internal(b));
   ASSERT_TRUE(hotkey_process(TEST_VK_B, 0));
   hotkey_drain_pending();
-  ASSERT_EQ_INT(g_fn_calls, 1);
+  ASSERT_EQ_INT(fn_calls, 1);
 }
 
 TEST(unregister_removes_binding) {
@@ -69,7 +69,7 @@ TEST(unregister_removes_binding) {
   ASSERT_TRUE(hotkey_unregister_internal(TEST_VK_C, 0));
   ASSERT_FALSE(hotkey_is_taken(TEST_VK_C, 0));
   hotkey_drain_pending();
-  ASSERT_EQ_INT(g_ud_calls, 0);
+  ASSERT_EQ_INT(ud_calls, 0);
 }
 
 TEST(purge_owner_removes_binding_and_pending) {
@@ -89,7 +89,7 @@ TEST(purge_owner_removes_binding_and_pending) {
   ASSERT_FALSE(hotkey_is_taken(TEST_VK_D, 0));
   reset_counters();
   hotkey_drain_pending();
-  ASSERT_EQ_INT(g_ud_calls, 0);
+  ASSERT_EQ_INT(ud_calls, 0);
 }
 
 TEST(suspended_hotkeys_do_not_dispatch) {
@@ -99,7 +99,7 @@ TEST(suspended_hotkeys_do_not_dispatch) {
   ASSERT_TRUE(hotkey_register_internal(b));
   hotkey_process(0xF4, 0);
   hotkey_drain_pending();
-  ASSERT_EQ_INT(g_ud_calls, 0);
+  ASSERT_EQ_INT(ud_calls, 0);
   hotkey_set_suspended(false);
   hotkey_unregister_internal(0xF4, 0);
 }

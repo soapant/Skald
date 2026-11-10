@@ -11,7 +11,7 @@
 static pthread_t g_rt_thread;
 static pthread_mutex_t g_rt_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_rt_cond = PTHREAD_COND_INITIALIZER;
-static Display *g_rt_dpy = NULL;
+static Display *rt_dpy = NULL;
 
 void Platform_RenderThreadInit(void) {}
 void Platform_RenderThreadLock(void) { pthread_mutex_lock(&g_rt_lock); }
@@ -50,10 +50,10 @@ bool Platform_RenderThreadStart(void) {
     log_warn("render thread: XOpenDisplay failed, widget frames disabled");
     return false;
   }
-  g_rt_dpy = dpy;
+  rt_dpy = dpy;
   if (pthread_create(&g_rt_thread, NULL, rt_entry, NULL) != 0) {
     XCloseDisplay(dpy);
-    g_rt_dpy = NULL;
+    rt_dpy = NULL;
     log_warn("render thread: pthread_create failed");
     return false;
   }
@@ -62,10 +62,10 @@ bool Platform_RenderThreadStart(void) {
 
 void Platform_RenderThreadJoin(void) {
   pthread_join(g_rt_thread, NULL);
-  if (g_rt_dpy) {
-    XCloseDisplay(g_rt_dpy);
-    g_rt_dpy = NULL;
+  if (rt_dpy) {
+    XCloseDisplay(rt_dpy);
+    rt_dpy = NULL;
   }
 }
 
-void *Platform_RenderThreadDisplay(void) { return (void *)g_rt_dpy; }
+void *Platform_RenderThreadDisplay(void) { return (void *)rt_dpy; }

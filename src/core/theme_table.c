@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-static const ThemeEntry g_themes[] = {
+static const ThemeEntry themes[] = {
     {"rose-pine", RGB(25, 23, 36), RGB(255, 255, 255), RGB(57, 255, 20),
      RGB(19, 21, 23), RGB(82, 79, 103), RGB(88, 86, 114)},
     {"tokyo-night", RGB(26, 27, 38), RGB(192, 202, 245), RGB(158, 206, 106),
@@ -112,20 +112,20 @@ static bool theme_name_eq(const char *a, const char *b) {
   return *a == *b;
 }
 
-size_t Theme_Count(void) { return sizeof(g_themes) / sizeof(g_themes[0]); }
+size_t Theme_Count(void) { return sizeof(themes) / sizeof(themes[0]); }
 
 const ThemeEntry *Theme_EntryAt(size_t index) {
   if (index >= Theme_Count())
     return NULL;
-  return &g_themes[index];
+  return &themes[index];
 }
 
 const ThemeEntry *Theme_Find(const char *name) {
   if (!name || !name[0])
     return NULL;
   for (size_t i = 0; i < Theme_Count(); i++) {
-    if (theme_name_eq(name, g_themes[i].name))
-      return &g_themes[i];
+    if (theme_name_eq(name, themes[i].name))
+      return &themes[i];
   }
   return NULL;
 }

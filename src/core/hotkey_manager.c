@@ -22,74 +22,74 @@
 #include "config_values.h"
 #include "core/types/keys.h"
 
-static HotkeyBinding *g_hotkeys = NULL;
-static int g_hotkey_count = 0;
-static int g_hotkey_capacity = 0;
-static bool g_hotkeys_suspended = false;
+static HotkeyBinding *hotkeys = NULL;
+static int hotkey_total = 0;
+static int hotkey_capacity = 0;
+static bool hotkeys_suspended = false;
 
-void hotkey_set_suspended(bool suspended) { g_hotkeys_suspended = suspended; }
+void hotkey_set_suspended(bool suspended) { hotkeys_suspended = suspended; }
 
 #define HOTKEY_PENDING_MAX 64
-static HotkeyCallback g_pending_q[HOTKEY_PENDING_MAX];
-static HotkeyCallbackUd g_pending_cb_ud[HOTKEY_PENDING_MAX];
-static void *g_pending_ud[HOTKEY_PENDING_MAX];
-static int g_pending_vk[HOTKEY_PENDING_MAX];
-static int g_pending_mods[HOTKEY_PENDING_MAX];
-static char g_pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
-static int g_pending_head = 0;
-static int g_pending_tail = 0;
-static void *g_q_mutex = NULL;
+static HotkeyCallback pending_q[HOTKEY_PENDING_MAX];
+static HotkeyCallbackUd pending_cb_ud[HOTKEY_PENDING_MAX];
+static void *pending_ud[HOTKEY_PENDING_MAX];
+static int pending_vk[HOTKEY_PENDING_MAX];
+static int pending_mods[HOTKEY_PENDING_MAX];
+static char pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
+static int pending_head = 0;
+static int pending_tail = 0;
+static void *q_mutex = NULL;
 
-static int g_wake_fd = -1;
+static int wake_fd = -1;
 int hotkey_wake_fd(void) {
-  if (g_wake_fd < 0) {
+  if (wake_fd < 0) {
 #if defined(_WIN32)
-    g_wake_fd = 0;
+    wake_fd = 0;
 #else
-    g_wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
 #endif
   }
-  return g_wake_fd;
+  return wake_fd;
 }
 
 static void hotkey_wake(void) {
-  if (g_wake_fd < 0)
+  if (wake_fd < 0)
     return;
 #if defined(_WIN32)
   return;
 #else
   unsigned long long one = 1;
-  ssize_t wr = write(g_wake_fd, &one, sizeof(one));
+  ssize_t wr = write(wake_fd, &one, sizeof(one));
   (void)wr;
 #endif
 }
 
 static void hotkey_queue_init(void) {
-  if (!g_q_mutex)
-    g_q_mutex = Platform_MutexCreate();
+  if (!q_mutex)
+    q_mutex = Platform_MutexCreate();
   hotkey_wake_fd();
 }
 #define HOTKEY_Q_LOCK()                                                        \
   do {                                                                         \
     hotkey_queue_init();                                                       \
-    Platform_MutexLock(g_q_mutex);                                             \
+    Platform_MutexLock(q_mutex);                                             \
   } while (0)
-#define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(g_q_mutex)
+#define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(q_mutex)
 static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
                            const char *owner, int vk, int mods) {
   if (!fn && !fn_ud)
     return;
   HOTKEY_Q_LOCK();
-  int nxt = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
-  if (nxt != g_pending_head) {
-    g_pending_q[g_pending_tail] = fn;
-    g_pending_cb_ud[g_pending_tail] = fn_ud;
-    g_pending_ud[g_pending_tail] = ud;
-    g_pending_vk[g_pending_tail] = vk;
-    g_pending_mods[g_pending_tail] = mods;
-    snprintf(g_pending_owner[g_pending_tail], OWNER_PATH_MAX, "%s",
+  int nxt = (pending_tail + 1) % HOTKEY_PENDING_MAX;
+  if (nxt != pending_head) {
+    pending_q[pending_tail] = fn;
+    pending_cb_ud[pending_tail] = fn_ud;
+    pending_ud[pending_tail] = ud;
+    pending_vk[pending_tail] = vk;
+    pending_mods[pending_tail] = mods;
+    snprintf(pending_owner[pending_tail], OWNER_PATH_MAX, "%s",
              owner ? owner : "");
-    g_pending_tail = nxt;
+    pending_tail = nxt;
     hotkey_wake();
   }
   HOTKEY_Q_UNLOCK();
@@ -101,7 +101,7 @@ typedef struct {
   unsigned long long next_fire_ms;
   bool active;
 } HotkeyHoldSlot;
-static HotkeyHoldSlot g_hold_slots[HOTKEY_HOLD_MAX];
+static HotkeyHoldSlot hold_slots[HOTKEY_HOLD_MAX];
 
 static unsigned long long hotkey_now_ms(void) {
   return (unsigned long long)Platform_GetWallClockMs();
@@ -126,13 +126,13 @@ static void hotkey_hold_end(int vk) {
     return;
   HOTKEY_Q_LOCK();
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-    if (!g_hold_slots[i].active)
+    if (!hold_slots[i].active)
       continue;
     bool match = false;
-    if (g_hold_slots[i].vk == vk) {
+    if (hold_slots[i].vk == vk) {
       match = true;
     } else {
-      int mods = g_hold_slots[i].modifiers;
+      int mods = hold_slots[i].modifiers;
       if ((mods & HOTKEY_MOD_CTRL) &&
           (vk == VK_LCONTROL || vk == VK_RCONTROL || vk == VK_CONTROL))
         match = true;
@@ -146,7 +146,7 @@ static void hotkey_hold_end(int vk) {
         match = true;
     }
     if (match) {
-      g_hold_slots[i].active = false;
+      hold_slots[i].active = false;
     }
   }
   HOTKEY_Q_UNLOCK();
@@ -163,19 +163,19 @@ static void hotkey_hold_begin(int vk, int modifiers) {
   unsigned long long now = hotkey_now_ms();
   HOTKEY_Q_LOCK();
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-    if (g_hold_slots[i].active && g_hold_slots[i].vk == vk) {
-      g_hold_slots[i].modifiers = modifiers;
-      g_hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
+    if (hold_slots[i].active && hold_slots[i].vk == vk) {
+      hold_slots[i].modifiers = modifiers;
+      hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
       HOTKEY_Q_UNLOCK();
       return;
     }
   }
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-    if (!g_hold_slots[i].active) {
-      g_hold_slots[i].active = true;
-      g_hold_slots[i].vk = vk;
-      g_hold_slots[i].modifiers = modifiers;
-      g_hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
+    if (!hold_slots[i].active) {
+      hold_slots[i].active = true;
+      hold_slots[i].vk = vk;
+      hold_slots[i].modifiers = modifiers;
+      hold_slots[i].next_fire_ms = now + (unsigned long long)interval_ms;
       HOTKEY_Q_UNLOCK();
       return;
     }
@@ -186,26 +186,26 @@ static void hotkey_hold_begin(int vk, int modifiers) {
 static void hotkey_tick_holds(void) {
   unsigned long long now = hotkey_now_ms();
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-    if (!g_hold_slots[i].active)
+    if (!hold_slots[i].active)
       continue;
-    if ((long long)(now - g_hold_slots[i].next_fire_ms) < 0)
+    if ((long long)(now - hold_slots[i].next_fire_ms) < 0)
       continue;
 
-    int vk = g_hold_slots[i].vk;
-    int mods = g_hold_slots[i].modifiers;
+    int vk = hold_slots[i].vk;
+    int mods = hold_slots[i].modifiers;
     HotkeyBinding *b = NULL;
-    for (int k = 0; k < g_hotkey_count; k++) {
-      if (g_hotkeys[k].vk_code == vk && g_hotkeys[k].modifiers == mods &&
-          g_hotkeys[k].hold) {
-        b = &g_hotkeys[k];
+    for (int k = 0; k < hotkey_total; k++) {
+      if (hotkeys[k].vk_code == vk && hotkeys[k].modifiers == mods &&
+          hotkeys[k].hold) {
+        b = &hotkeys[k];
         break;
       }
     }
     if (!b) {
-      g_hold_slots[i].active = false;
+      hold_slots[i].active = false;
       continue;
     }
-    g_hold_slots[i].next_fire_ms =
+    hold_slots[i].next_fire_ms =
         now + (unsigned long long)hotkey_repeat_interval_ms();
     hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud, b->user_ud,
                    b->owner, vk, mods);
@@ -213,7 +213,7 @@ static void hotkey_tick_holds(void) {
 }
 
 void hotkey_drain_pending(void) {
-  if (g_hotkeys_suspended)
+  if (hotkeys_suspended)
     return;
   hotkey_tick_holds();
   for (;;) {
@@ -221,11 +221,11 @@ void hotkey_drain_pending(void) {
     HotkeyCallbackUd fn_ud = NULL;
     void *ud = NULL;
     HOTKEY_Q_LOCK();
-    if (g_pending_head != g_pending_tail) {
-      fn = g_pending_q[g_pending_head];
-      fn_ud = g_pending_cb_ud[g_pending_head];
-      ud = g_pending_ud[g_pending_head];
-      g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
+    if (pending_head != pending_tail) {
+      fn = pending_q[pending_head];
+      fn_ud = pending_cb_ud[pending_head];
+      ud = pending_ud[pending_head];
+      pending_head = (pending_head + 1) % HOTKEY_PENDING_MAX;
     }
     HOTKEY_Q_UNLOCK();
     if (!fn && !fn_ud)
@@ -240,8 +240,8 @@ void hotkey_drain_pending(void) {
 }
 
 bool hotkey_has_mouse_binding(void) {
-  for (int i = 0; i < g_hotkey_count; i++) {
-    int vk = g_hotkeys[i].vk_code;
+  for (int i = 0; i < hotkey_total; i++) {
+    int vk = hotkeys[i].vk_code;
     if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1)
       return true;
   }
@@ -252,10 +252,10 @@ bool hotkey_mouse_button_bound(int btn) {
   if (btn <= 0 || btn > MOUSE_BTN_MAX)
     return false;
   int vk = MOUSE_VK(btn);
-  for (int i = 0; i < g_hotkey_count; i++) {
-    if (g_hotkeys[i].vk_code != vk || g_hotkeys[i].modifiers != 0)
+  for (int i = 0; i < hotkey_total; i++) {
+    if (hotkeys[i].vk_code != vk || hotkeys[i].modifiers != 0)
       continue;
-    HotkeyBinding *b = &g_hotkeys[i];
+    HotkeyBinding *b = &hotkeys[i];
     if (b->whitelist) {
       if (!b->blacklist || b->blacklist_count == 0)
         continue;
@@ -292,35 +292,35 @@ bool hotkey_mouse_button_bound(int btn) {
   return false;
 }
 
-int hotkey_count(void) { return g_hotkey_count; }
+int hotkey_count(void) { return hotkey_total; }
 
 const HotkeyBinding *hotkey_get(int index) {
-  if (index < 0 || index >= g_hotkey_count)
+  if (index < 0 || index >= hotkey_total)
     return NULL;
-  return &g_hotkeys[index];
+  return &hotkeys[index];
 }
 
 const HotkeyBinding *hotkey_find_by_ud(void *ud) {
   if (!ud)
     return NULL;
-  for (int i = 0; i < g_hotkey_count; i++)
-    if (g_hotkeys[i].user_ud == ud)
-      return &g_hotkeys[i];
+  for (int i = 0; i < hotkey_total; i++)
+    if (hotkeys[i].user_ud == ud)
+      return &hotkeys[i];
   return NULL;
 }
 
 const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb) {
   if (!cb)
     return NULL;
-  for (int i = 0; i < g_hotkey_count; i++)
-    if (g_hotkeys[i].hotkey_callback == cb)
-      return &g_hotkeys[i];
+  for (int i = 0; i < hotkey_total; i++)
+    if (hotkeys[i].hotkey_callback == cb)
+      return &hotkeys[i];
   return NULL;
 }
 
 bool hotkey_is_taken(int vk_code, int modifiers) {
-  for (int i = 0; i < g_hotkey_count; i++)
-    if (g_hotkeys[i].vk_code == vk_code && g_hotkeys[i].modifiers == modifiers)
+  for (int i = 0; i < hotkey_total; i++)
+    if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers)
       return true;
   return false;
 }
@@ -337,38 +337,38 @@ bool hotkey_register_internal(HotkeyBinding binding) {
                          sizeof(owner));
   snprintf(binding.owner, sizeof(binding.owner), "%s", owner);
 
-  for (int i = 0; i < g_hotkey_count; i++) {
-    if (g_hotkeys[i].vk_code == binding.vk_code &&
-        g_hotkeys[i].modifiers == binding.modifiers) {
-      g_hotkeys[i] = binding;
+  for (int i = 0; i < hotkey_total; i++) {
+    if (hotkeys[i].vk_code == binding.vk_code &&
+        hotkeys[i].modifiers == binding.modifiers) {
+      hotkeys[i] = binding;
       return true;
     }
   }
-  if (g_hotkey_count >= g_hotkey_capacity) {
-    int new_cap = g_hotkey_capacity == 0 ? 16 : g_hotkey_capacity * 2;
+  if (hotkey_total >= hotkey_capacity) {
+    int new_cap = hotkey_capacity == 0 ? 16 : hotkey_capacity * 2;
     HotkeyBinding *new_arr =
-        realloc(g_hotkeys, new_cap * sizeof(HotkeyBinding));
+        realloc(hotkeys, new_cap * sizeof(HotkeyBinding));
     if (!new_arr)
       return false;
-    g_hotkeys = new_arr;
-    g_hotkey_capacity = new_cap;
+    hotkeys = new_arr;
+    hotkey_capacity = new_cap;
   }
-  g_hotkeys[g_hotkey_count++] = binding;
+  hotkeys[hotkey_total++] = binding;
   return true;
 }
 
 bool hotkey_unregister_internal(int vk_code, int modifiers) {
   int n = 0;
   bool found = false;
-  for (int i = 0; i < g_hotkey_count; i++) {
-    if (g_hotkeys[i].vk_code == vk_code &&
-        g_hotkeys[i].modifiers == modifiers) {
+  for (int i = 0; i < hotkey_total; i++) {
+    if (hotkeys[i].vk_code == vk_code &&
+        hotkeys[i].modifiers == modifiers) {
       found = true;
       continue;
     }
-    g_hotkeys[n++] = g_hotkeys[i];
+    hotkeys[n++] = hotkeys[i];
   }
-  g_hotkey_count = n;
+  hotkey_total = n;
   return found;
 }
 
@@ -377,39 +377,39 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
     return;
 
   int n = 0;
-  for (int i = 0; i < g_hotkey_count; i++) {
-    if (Owner_ModuleMatches(g_hotkeys[i].owner, path_a, path_b)) {
+  for (int i = 0; i < hotkey_total; i++) {
+    if (Owner_ModuleMatches(hotkeys[i].owner, path_a, path_b)) {
       log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)",
-               g_hotkeys[i].vk_code, g_hotkeys[i].modifiers);
+               hotkeys[i].vk_code, hotkeys[i].modifiers);
       continue;
     }
-    g_hotkeys[n++] = g_hotkeys[i];
+    hotkeys[n++] = hotkeys[i];
   }
-  int dropped = g_hotkey_count - n;
-  g_hotkey_count = n;
+  int dropped = hotkey_total - n;
+  hotkey_total = n;
   if (dropped > 0)
     log_info("hotkey purged %d binding%s", dropped, dropped == 1 ? "" : "s");
 
   HOTKEY_Q_LOCK();
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
-    if (!g_hold_slots[i].active)
+    if (!hold_slots[i].active)
       continue;
-    for (int k = 0; k < g_hotkey_count; k++) {
-      if (g_hotkeys[k].vk_code == g_hold_slots[i].vk &&
-          g_hotkeys[k].modifiers == g_hold_slots[i].modifiers &&
-          Owner_ModuleMatches(g_hotkeys[k].owner, path_a, path_b)) {
-        g_hold_slots[i].active = false;
+    for (int k = 0; k < hotkey_total; k++) {
+      if (hotkeys[k].vk_code == hold_slots[i].vk &&
+          hotkeys[k].modifiers == hold_slots[i].modifiers &&
+          Owner_ModuleMatches(hotkeys[k].owner, path_a, path_b)) {
+        hold_slots[i].active = false;
         break;
       }
     }
   }
-  int qn = g_pending_head;
-  while (qn != g_pending_tail) {
-    if (Owner_ModuleMatches(g_pending_owner[qn], path_a, path_b)) {
+  int qn = pending_head;
+  while (qn != pending_tail) {
+    if (Owner_ModuleMatches(pending_owner[qn], path_a, path_b)) {
       log_info("hotkey pending entry dropped (owner unloaded)");
-      g_pending_q[qn] = NULL;
-      g_pending_cb_ud[qn] = NULL;
-      g_pending_ud[qn] = NULL;
+      pending_q[qn] = NULL;
+      pending_cb_ud[qn] = NULL;
+      pending_ud[qn] = NULL;
     }
     qn = (qn + 1) % HOTKEY_PENDING_MAX;
   }
@@ -417,7 +417,7 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
 }
 
 bool hotkey_process(int vk_code, int modifiers) {
-  if (g_hotkeys_suspended)
+  if (hotkeys_suspended)
     return false;
   int eff_modifiers = modifiers;
   if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT)
@@ -429,8 +429,8 @@ bool hotkey_process(int vk_code, int modifiers) {
     eff_modifiers &= ~HOTKEY_MOD_ALT;
   else if (vk_code == VK_LWIN || vk_code == VK_RWIN)
     eff_modifiers &= ~HOTKEY_MOD_SUPER;
-  for (int i = 0; i < g_hotkey_count; i++) {
-    HotkeyBinding *b = &g_hotkeys[i];
+  for (int i = 0; i < hotkey_total; i++) {
+    HotkeyBinding *b = &hotkeys[i];
 
     if (b->vk_code != vk_code) {
       continue;

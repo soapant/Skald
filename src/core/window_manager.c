@@ -17,7 +17,7 @@
 #include "helpers/helpers_ui.h"
 #include "core/feature_loader.h"
 
-static WindowManager *g_window_manager = NULL;
+static WindowManager *window_manager = NULL;
 
 WindowManager *WindowManager_Create(void) {
   WindowManager *wm = calloc(1, sizeof(WindowManager));
@@ -36,7 +36,7 @@ WindowManager *WindowManager_Create(void) {
   }
   Platform_ApplyUIScale();
   wm->ctx = SkaldContext_Get();
-  g_window_manager = wm;
+  window_manager = wm;
   return wm;
 }
 
@@ -51,13 +51,13 @@ void WindowManager_Destroy(WindowManager *wm) {
     }
   }
   free(wm->popups);
-  if (g_window_manager == wm)
-    g_window_manager = NULL;
+  if (window_manager == wm)
+    window_manager = NULL;
   free(wm);
   log_info("WindowManager_Destroy completed");
 }
 
-WindowManager *WindowManager_Get(void) { return g_window_manager; }
+WindowManager *WindowManager_Get(void) { return window_manager; }
 
 int WindowManager_Run(WindowManager *wm) {
   if (!wm)
@@ -66,10 +66,10 @@ int WindowManager_Run(WindowManager *wm) {
   return rc;
 }
 
-static bool g_popup_push_in_progress = false;
+static bool popup_push_in_progress = false;
 
 Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
-  if (g_popup_push_in_progress) {
+  if (popup_push_in_progress) {
     log_info("PushPopup REENTRANT blocked");
     return NULL;
   }
@@ -89,11 +89,11 @@ Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
   popup->manager = wm;
   popup->visible = true;
   wm->popups[wm->popup_count++] = popup;
-  g_popup_push_in_progress = true;
+  popup_push_in_progress = true;
   if (popup->vtable && popup->vtable->on_show) {
     popup->vtable->on_show(popup);
   }
-  g_popup_push_in_progress = false;
+  popup_push_in_progress = false;
   return popup;
 }
 
@@ -185,21 +185,21 @@ struct EventSlot {
   PlEventCallback cb;
   char owner[OWNER_PATH_MAX];
 };
-static struct EventSlot g_event_registry[2][MAX_EVENT_CALLBACKS] = {0};
+static struct EventSlot event_registry[2][MAX_EVENT_CALLBACKS] = {0};
 
 void EventBus_Register(PlEvent event, PlEventCallback cb) {
   if (event < 0 || event >= 2 || !cb)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i].cb == NULL) {
-      g_event_registry[event][i].owner[0] = '\0';
-      Owner_ResolveForFunc((void *)cb, g_event_registry[event][i].owner,
-                           sizeof(g_event_registry[event][i].owner));
-      if (g_event_registry[event][i].owner[0] == '\0') {
+    if (event_registry[event][i].cb == NULL) {
+      event_registry[event][i].owner[0] = '\0';
+      Owner_ResolveForFunc((void *)cb, event_registry[event][i].owner,
+                           sizeof(event_registry[event][i].owner));
+      if (event_registry[event][i].owner[0] == '\0') {
         log_warn("EventBus_Register: cannot resolve owner, dropping callback");
         return;
       }
-      g_event_registry[event][i].cb = cb;
+      event_registry[event][i].cb = cb;
       return;
     }
   }
@@ -209,9 +209,9 @@ void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
   if (event < 0 || event >= 2)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i].cb == cb) {
-      g_event_registry[event][i].cb = NULL;
-      g_event_registry[event][i].owner[0] = '\0';
+    if (event_registry[event][i].cb == cb) {
+      event_registry[event][i].cb = NULL;
+      event_registry[event][i].owner[0] = '\0';
       return;
     }
   }
@@ -222,10 +222,10 @@ void EventBus_PurgeOwner(const char *path_a, const char *path_b) {
     return;
   for (int e = 0; e < 2; ++e) {
     for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-      if (g_event_registry[e][i].cb &&
-          Owner_ModuleMatches(g_event_registry[e][i].owner, path_a, path_b)) {
-        g_event_registry[e][i].cb = NULL;
-        g_event_registry[e][i].owner[0] = '\0';
+      if (event_registry[e][i].cb &&
+          Owner_ModuleMatches(event_registry[e][i].owner, path_a, path_b)) {
+        event_registry[e][i].cb = NULL;
+        event_registry[e][i].owner[0] = '\0';
       }
     }
   }
@@ -235,14 +235,14 @@ void EventBus_Trigger(PlEvent event) {
   if (event < 0 || event >= 2)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
-    if (g_event_registry[event][i].cb) {
-      g_event_registry[event][i].cb();
+    if (event_registry[event][i].cb) {
+      event_registry[event][i].cb();
     }
   }
 }
 
 void WindowManager_Reset(void) {
-  g_popup_push_in_progress = false;
-  g_window_manager = NULL;
-  memset(g_event_registry, 0, sizeof(g_event_registry));
+  popup_push_in_progress = false;
+  window_manager = NULL;
+  memset(event_registry, 0, sizeof(event_registry));
 }

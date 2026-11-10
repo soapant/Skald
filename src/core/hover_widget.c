@@ -28,12 +28,12 @@ typedef struct {
   bool dead;
 } HoverWidgetSlot;
 
-static HoverWidgetSlot g_hover_widgets[HOVER_WIDGET_MAX];
+static HoverWidgetSlot hover_widgets[HOVER_WIDGET_MAX];
 
 static int HoverWidgetFind(const char *key) {
   for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
-    if (g_hover_widgets[i].w && !g_hover_widgets[i].dead &&
-        strcmp(g_hover_widgets[i].key, key) == 0)
+    if (hover_widgets[i].w && !hover_widgets[i].dead &&
+        strcmp(hover_widgets[i].key, key) == 0)
       return i;
   }
   return -1;
@@ -84,7 +84,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
                                void (*release)(void *ud), void *release_ud) {
   int idx = HoverWidgetFind(key);
   if (idx >= 0) {
-    HoverWidgetSlot *s = &g_hover_widgets[idx];
+    HoverWidgetSlot *s = &hover_widgets[idx];
     void (*old_release)(void *) = s->release;
     void *old_release_ud = s->release_ud;
     s->render = render;
@@ -120,7 +120,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   }
   idx = -1;
   for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
-    if (!g_hover_widgets[i].w) {
+    if (!hover_widgets[i].w) {
       idx = i;
       break;
     }
@@ -130,7 +130,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
       release(release_ud);
     return;
   }
-  HoverWidgetSlot *s = &g_hover_widgets[idx];
+  HoverWidgetSlot *s = &hover_widgets[idx];
   memset(s, 0, sizeof(*s));
   snprintf(s->key, sizeof(s->key), "%s", key);
   s->render = render;
@@ -167,7 +167,7 @@ static void hover_widget_hide_apply(const char *key) {
   if (idx < 0) {
     return;
   }
-  hover_widget_destroy_slot(&g_hover_widgets[idx]);
+  hover_widget_destroy_slot(&hover_widgets[idx]);
 }
 
 void HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
@@ -176,7 +176,7 @@ void HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
   }
   bool any = false;
   for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
-    HoverWidgetSlot *s = &g_hover_widgets[i];
+    HoverWidgetSlot *s = &hover_widgets[i];
     if (!s->w || s->dead) {
       continue;
     }
@@ -190,8 +190,8 @@ void HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
   }
   RenderThread_Sync();
   for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
-    if (g_hover_widgets[i].dead) {
-      hover_widget_destroy_slot(&g_hover_widgets[i]);
+    if (hover_widgets[i].dead) {
+      hover_widget_destroy_slot(&hover_widgets[i]);
     }
   }
 }

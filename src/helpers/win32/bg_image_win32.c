@@ -51,31 +51,31 @@ typedef struct {
   DWORD checked_ms;
 } BgTileSlot;
 
-static BgSrcSlot g_bg_srcs[BG_SRC_SLOTS];
+static BgSrcSlot bg_srcs[BG_SRC_SLOTS];
 static BgTileSlot g_bg_tiles[BG_TILE_SLOTS];
 static ULONGLONG g_bg_tick = 0;
-static CRITICAL_SECTION g_bg_cs;
-static BOOL g_bg_cs_ready = FALSE;
-static ULONG_PTR g_bg_gdip_token = 0;
+static CRITICAL_SECTION bg_cs;
+static BOOL bg_cs_ready = FALSE;
+static ULONG_PTR bg_gdip_token = 0;
 
 static void bg_lock(void) {
 
-  if (!g_bg_cs_ready) {
-    InitializeCriticalSection(&g_bg_cs);
-    g_bg_cs_ready = TRUE;
+  if (!bg_cs_ready) {
+    InitializeCriticalSection(&bg_cs);
+    bg_cs_ready = TRUE;
   }
-  EnterCriticalSection(&g_bg_cs);
+  EnterCriticalSection(&bg_cs);
 }
 
 static void bg_unlock(void) {
 
-  if (g_bg_cs_ready)
-    LeaveCriticalSection(&g_bg_cs);
+  if (bg_cs_ready)
+    LeaveCriticalSection(&bg_cs);
 }
 
 static void bg_gdip_ensure(void) {
 
-  if (g_bg_gdip_token != 0) {
+  if (bg_gdip_token != 0) {
     return;
   }
   GdiplusStartupInput gsi;
@@ -83,7 +83,7 @@ static void bg_gdip_ensure(void) {
   gsi.DebugEventCallback = NULL;
   gsi.SuppressBackgroundThread = FALSE;
   gsi.SuppressExternalCodecs = FALSE;
-  GdiplusStartup(&g_bg_gdip_token, &gsi, NULL);
+  GdiplusStartup(&bg_gdip_token, &gsi, NULL);
 }
 
 static void bg_native_path(char *out, size_t cap, const char *path) {
@@ -231,7 +231,7 @@ static void *bg_shell_icon_bitmap(const char *native) {
 static void *bg_load_native(const char *native, int *out_w, int *out_h) {
 
   bg_gdip_ensure();
-  if (g_bg_gdip_token == 0)
+  if (bg_gdip_token == 0)
     return NULL;
   wchar_t wpath[1024];
   bg_widen(native, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
@@ -288,7 +288,7 @@ static void bg_tile_drop(BgTileSlot *t) {
 void win32_bg_image_purge(void) {
   bg_lock();
   for (int i = 0; i < BG_SRC_SLOTS; i++)
-    bg_src_drop(&g_bg_srcs[i]);
+    bg_src_drop(&bg_srcs[i]);
   for (int i = 0; i < BG_TILE_SLOTS; i++)
     bg_tile_drop(&g_bg_tiles[i]);
   bg_unlock();
@@ -299,7 +299,7 @@ static BgSrcSlot *bg_src_get(const char *native) {
   DWORD now = GetTickCount();
   BgSrcSlot *slot = NULL;
   for (int i = 0; i < BG_SRC_SLOTS; i++) {
-    BgSrcSlot *s = &g_bg_srcs[i];
+    BgSrcSlot *s = &bg_srcs[i];
     if (s->path[0] && strcmp(s->path, native) != 0)
       continue;
     if (strcmp(s->path, native) != 0) {
@@ -325,8 +325,8 @@ static BgSrcSlot *bg_src_get(const char *native) {
   }
   if (!slot) {
     for (int i = 0; i < BG_SRC_SLOTS; i++) {
-      if (g_bg_srcs[i].path[0] == 0) {
-        slot = &g_bg_srcs[i];
+      if (bg_srcs[i].path[0] == 0) {
+        slot = &bg_srcs[i];
         break;
       }
     }
@@ -334,9 +334,9 @@ static BgSrcSlot *bg_src_get(const char *native) {
   if (!slot) {
     int oldest = 0;
     for (int i = 1; i < BG_SRC_SLOTS; i++)
-      if (g_bg_srcs[i].stamp < g_bg_srcs[oldest].stamp)
+      if (bg_srcs[i].stamp < bg_srcs[oldest].stamp)
         oldest = i;
-    slot = &g_bg_srcs[oldest];
+    slot = &bg_srcs[oldest];
     bg_src_drop(slot);
   }
   bg_src_drop(slot);

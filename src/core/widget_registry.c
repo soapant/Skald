@@ -16,22 +16,22 @@
 #include "config_values.h"
 #include "core/types/window.h"
 
-static Widget *g_widgets[WIDGET_MAX];
-static int g_widget_count = 0;
-static int g_widget_seq = 0;
-static unsigned g_widget_gen = 1;
+static Widget *widgets[WIDGET_MAX];
+static int widget_count = 0;
+static int widget_seq = 0;
+static unsigned widget_gen = 1;
 
-static void *g_widget_mutex = NULL;
+static void *widget_mutex = NULL;
 static void widget_mutex_init(void) {
-  if (!g_widget_mutex)
-    g_widget_mutex = Platform_MutexCreate();
+  if (!widget_mutex)
+    widget_mutex = Platform_MutexCreate();
 }
 #define W_LOCK()                                                               \
   do {                                                                         \
     widget_mutex_init();                                                       \
-    Platform_MutexLock(g_widget_mutex);                                        \
+    Platform_MutexLock(widget_mutex);                                        \
   } while (0)
-#define W_UNLOCK() Platform_MutexUnlock(g_widget_mutex)
+#define W_UNLOCK() Platform_MutexUnlock(widget_mutex)
 
 static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
                                     int *h) {
@@ -42,16 +42,16 @@ static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
   Platform_WM_GetMonitorGeometry(x, y, w, h);
 }
 
-unsigned widget_bump_generation(void) { return ++g_widget_gen; }
+unsigned widget_bump_generation(void) { return ++widget_gen; }
 
-unsigned widget_current_generation(void) { return g_widget_gen; }
+unsigned widget_current_generation(void) { return widget_gen; }
 
 static Widget *widget_find_by_name_locked(const char *name) {
   if (!name || !name[0])
     return NULL;
-  for (int i = 0; i < g_widget_count; i++) {
-    if (g_widgets[i] && strcmp(g_widgets[i]->name, name) == 0)
-      return g_widgets[i];
+  for (int i = 0; i < widget_count; i++) {
+    if (widgets[i] && strcmp(widgets[i]->name, name) == 0)
+      return widgets[i];
   }
   return NULL;
 }
@@ -224,18 +224,18 @@ void widget_destroy(Widget *widget) {
 
   int n = 0;
   W_LOCK();
-  for (int i = 0; i < g_widget_count; i++) {
-    if (g_widgets[i] == widget) {
+  for (int i = 0; i < widget_count; i++) {
+    if (widgets[i] == widget) {
       if (widget->owner)
         free(widget->owner);
       widget->owner = NULL;
       continue;
     }
-    g_widgets[n++] = g_widgets[i];
+    widgets[n++] = widgets[i];
   }
-  g_widget_count = n;
+  widget_count = n;
   W_UNLOCK();
-  if (g_widget_count > 0)
+  if (widget_count > 0)
     widget_relayout();
   Platform_Widget_FlushDestruction();
 }
@@ -246,8 +246,8 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     return;
 
   bool matched = false;
-  for (int i = 0; i < g_widget_count; i++) {
-    Widget *w = g_widgets[i];
+  for (int i = 0; i < widget_count; i++) {
+    Widget *w = widgets[i];
     if (!w)
       continue;
     if (!widget_owner_matches(w, path_a, path_b))
@@ -269,8 +269,8 @@ void widget_purge_owner(const char *path_a, const char *path_b,
 
   int n = 0;
   W_LOCK();
-  for (int i = 0; i < g_widget_count; i++) {
-    Widget *w = g_widgets[i];
+  for (int i = 0; i < widget_count; i++) {
+    Widget *w = widgets[i];
     if (!w)
       continue;
     if (widget_owner_matches(w, path_a, path_b) && w->gen <= generation) {
@@ -279,11 +279,11 @@ void widget_purge_owner(const char *path_a, const char *path_b,
       w->owner = NULL;
       continue;
     }
-    g_widgets[n++] = w;
+    widgets[n++] = w;
   }
-  g_widget_count = n;
+  widget_count = n;
   W_UNLOCK();
-  if (g_widget_count > 0)
+  if (widget_count > 0)
     widget_relayout();
   Platform_Widget_FlushDestruction();
 }
@@ -292,8 +292,8 @@ bool widget_owner_active(const char *path) {
   if (!path || !path[0])
     return false;
   W_LOCK();
-  for (int i = 0; i < g_widget_count; i++) {
-    Widget *w = g_widgets[i];
+  for (int i = 0; i < widget_count; i++) {
+    Widget *w = widgets[i];
     if (w && widget_owner_matches(w, path, NULL)) {
       W_UNLOCK();
       return true;
@@ -349,9 +349,9 @@ static void widget_relayout(void) {
   Widget *sorted[WIDGET_MAX];
   int n = 0;
   W_LOCK();
-  for (int i = 0; i < g_widget_count; i++) {
-    if (g_widgets[i] && !g_widgets[i]->free_pos)
-      sorted[n++] = g_widgets[i];
+  for (int i = 0; i < widget_count; i++) {
+    if (widgets[i] && !widgets[i]->free_pos)
+      sorted[n++] = widgets[i];
   }
   W_UNLOCK();
   for (int i = 1; i < n; i++) {
@@ -405,7 +405,7 @@ Widget *widget_create(const WidgetSpec *spec) {
   Widget *widget = widget_find_by_name_locked(spec->name);
   bool fresh = (widget == NULL);
   if (fresh) {
-    if (g_widget_count >= WIDGET_MAX) {
+    if (widget_count >= WIDGET_MAX) {
       W_UNLOCK();
       log_warn("widget_create: widget table full");
       return NULL;
@@ -413,8 +413,8 @@ Widget *widget_create(const WidgetSpec *spec) {
     widget = (Widget *)calloc(1, sizeof(*widget));
     if (widget) {
       snprintf(widget->name, WIDGET_NAME_MAX, "%s", spec->name);
-      widget->seq = g_widget_seq++;
-      g_widgets[g_widget_count++] = widget;
+      widget->seq = widget_seq++;
+      widgets[widget_count++] = widget;
     }
   }
   W_UNLOCK();
@@ -432,7 +432,7 @@ Widget *widget_create(const WidgetSpec *spec) {
     }
   }
 
-  widget->gen = g_widget_gen;
+  widget->gen = widget_gen;
   widget->has_bg = spec->color != 0;
   widget->bg_color = widget->has_bg ? spec->color : 0;
   widget->no_bg = spec->no_bg;

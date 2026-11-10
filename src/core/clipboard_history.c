@@ -10,7 +10,7 @@
 const unsigned char PNG_MAGIC[8] = {0x89, 0x50, 0x4E, 0x47,
                                     0x0D, 0x0A, 0x1A, 0x0A};
 
-static ClipboardHistory g_clipboard_history = {0};
+static ClipboardHistory clipboard_history = {0};
 
 static void clipboard_entry_free(ClipboardEntry *e) {
   if (!e)
@@ -22,7 +22,7 @@ static void clipboard_entry_free(ClipboardEntry *e) {
 }
 
 static bool clipboard_history_push(ClipboardEntry e) {
-  ClipboardHistory *h = &g_clipboard_history;
+  ClipboardHistory *h = &clipboard_history;
   if (h->count >= CLIPBOARD_HISTORY_MAX) {
     clipboard_entry_free(&h->entries[0]);
     memmove(h->entries, h->entries + 1, (h->count - 1) * sizeof(h->entries[0]));
@@ -246,22 +246,22 @@ bool clipboard_history_push_image_platform(const char *path, unsigned int w,
 }
 
 size_t clipboard_history_count_platform(void) {
-  return g_clipboard_history.count;
+  return clipboard_history.count;
 }
 
 const ClipboardEntry *clipboard_history_get_platform(size_t index) {
-  if (index >= g_clipboard_history.count)
+  if (index >= clipboard_history.count)
     return NULL;
-  return &g_clipboard_history.entries[index];
+  return &clipboard_history.entries[index];
 }
 
 void clipboard_clear_history_platform(void) {
-  for (size_t i = 0; i < g_clipboard_history.count; i++)
-    clipboard_entry_free(&g_clipboard_history.entries[i]);
-  free(g_clipboard_history.entries);
-  g_clipboard_history.entries = NULL;
-  g_clipboard_history.count = 0;
-  g_clipboard_history.capacity = 0;
+  for (size_t i = 0; i < clipboard_history.count; i++)
+    clipboard_entry_free(&clipboard_history.entries[i]);
+  free(clipboard_history.entries);
+  clipboard_history.entries = NULL;
+  clipboard_history.count = 0;
+  clipboard_history.capacity = 0;
 }
 
 bool clipboard_set_path_platform(const char *path) {

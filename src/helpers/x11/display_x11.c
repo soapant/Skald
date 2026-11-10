@@ -3,8 +3,8 @@
 #include <dirent.h>
 #include "deps/log.h"
 
-static Display *g_display = NULL;
-static bool g_display_initialized = false;
+static Display *display = NULL;
+static bool display_initialized = false;
 
 int x11_error_handler(Display *d, XErrorEvent *e) {
   char error_text[256];
@@ -40,7 +40,7 @@ static Display *x11_open_best_display(void) {
 }
 
 bool x11_init_display(void) {
-  if (g_display_initialized) {
+  if (display_initialized) {
     return true;
   }
 
@@ -48,30 +48,30 @@ bool x11_init_display(void) {
 
   XSetErrorHandler(x11_error_handler);
 
-  g_display = x11_open_best_display();
-  if (g_display == NULL) {
+  display = x11_open_best_display();
+  if (display == NULL) {
     log_error("Failed to open X11 display.");
     return false;
   }
 
-  g_display_initialized = true;
+  display_initialized = true;
   return true;
 }
 
 Display *x11_get_display(void) {
-  if (!g_display_initialized) {
+  if (!display_initialized) {
     if (!x11_init_display()) {
       return NULL;
     }
   }
-  return g_display;
+  return display;
 }
 
 void x11_cleanup_display(void) {
-  if (g_display_initialized && g_display != NULL) {
-    XCloseDisplay(g_display);
-    g_display = NULL;
-    g_display_initialized = false;
+  if (display_initialized && display != NULL) {
+    XCloseDisplay(display);
+    display = NULL;
+    display_initialized = false;
 
     XSetErrorHandler(NULL);
   }

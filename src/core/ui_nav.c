@@ -18,14 +18,14 @@ void UI_SetSelection(ListBoxInfo *lb, int index) {
 
 void UI_SetHorizontalExtent(int width) { (void)width; }
 
-static int g_lb_update_depth = 0;
-static int g_lb_visible_count = 0;
+static int lb_update_depth = 0;
+static int lb_visible_count = 0;
 
-void UI_LB_BeginUpdate(void) { g_lb_update_depth++; }
+void UI_LB_BeginUpdate(void) { lb_update_depth++; }
 
 void UI_LB_EndUpdate(void) {
-  if (g_lb_update_depth > 0)
-    g_lb_update_depth--;
+  if (lb_update_depth > 0)
+    lb_update_depth--;
 }
 
 void UI_LB_SetCount(ListBoxInfo *lb, int count) {
@@ -44,9 +44,9 @@ void UI_LB_SetCaretIndex(int index, bool scroll) {
 
 int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
 
-int UI_LB_GetVisibleCount(void) { return g_lb_visible_count; }
+int UI_LB_GetVisibleCount(void) { return lb_visible_count; }
 
-void UI_LB_SetVisibleCount(int count) { g_lb_visible_count = count; }
+void UI_LB_SetVisibleCount(int count) { lb_visible_count = count; }
 
 void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
   if (!lb)

@@ -57,24 +57,24 @@ typedef struct {
   bool rounded;
 } BgSlot;
 
-static __thread BgSlot g_bg_slots[BG_SLOT_COUNT];
-static __thread int g_bg_slot_next = 0;
-static __thread Visual *g_dblVisual = NULL;
-static __thread Colormap g_dblColormap = None;
-static __thread int g_dblDepth = 0;
-static __thread Display *g_dblDpy = NULL;
+static __thread BgSlot bg_slots[BG_SLOT_COUNT];
+static __thread int bg_slot_next = 0;
+static __thread Visual *dblVisual = NULL;
+static __thread Colormap dblColormap = None;
+static __thread int dblDepth = 0;
+static __thread Display *dblDpy = NULL;
 
 void x11_set_dbl_visual(Display *dpy, Visual *vis, Colormap cmap, int depth) {
-  g_dblVisual = vis;
-  g_dblColormap = cmap;
-  g_dblDepth = depth;
-  g_dblDpy = dpy;
+  dblVisual = vis;
+  dblColormap = cmap;
+  dblDepth = depth;
+  dblDpy = dpy;
 }
 void x11_clear_dbl_visual(void) {
-  g_dblVisual = NULL;
-  g_dblColormap = None;
-  g_dblDepth = 0;
-  g_dblDpy = NULL;
+  dblVisual = NULL;
+  dblColormap = None;
+  dblDepth = 0;
+  dblDpy = NULL;
 }
 
 bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **visOut,
@@ -89,13 +89,13 @@ bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **visOut,
       *depthOut = attrs.depth;
     return true;
   }
-  if (g_dblVisual && g_dblDpy == dpy) {
+  if (dblVisual && dblDpy == dpy) {
     if (visOut)
-      *visOut = g_dblVisual;
+      *visOut = dblVisual;
     if (cmapOut)
-      *cmapOut = g_dblColormap;
+      *cmapOut = dblColormap;
     if (depthOut)
-      *depthOut = g_dblDepth;
+      *depthOut = dblDepth;
     return true;
   }
   return false;
@@ -114,10 +114,10 @@ typedef struct {
   int px;
   XftFont *f;
 } X11FbSlot;
-static X11FbSlot g_fb_cache[X11_FB_CACHE];
-static int g_fb_next = 0;
-static FcConfig *g_fb_config = NULL;
-static pthread_mutex_t g_fb_mtx = PTHREAD_MUTEX_INITIALIZER;
+static X11FbSlot fb_cache[X11_FB_CACHE];
+static int fb_next = 0;
+static FcConfig *fb_config = NULL;
+static pthread_mutex_t fb_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 static int x11_utf8_cp(const unsigned char *s, const unsigned char *end,
                        int *clen) {
@@ -196,10 +196,10 @@ static XftFont *x11_open_fallback_at_locked(Display *dpy, FcChar32 cp, int px) {
     FcPatternAddCharSet(pat, FC_CHARSET, cs);
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
     FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)px);
-    FcConfigSubstitute(g_fb_config, pat, FcMatchPattern);
+    FcConfigSubstitute(fb_config, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
     FcResult res = FcResultNoMatch;
-    FcPattern *match = FcFontMatch(g_fb_config, pat, &res);
+    FcPattern *match = FcFontMatch(fb_config, pat, &res);
     if (match) {
       XLockDisplay(dpy);
       fb = XftFontOpenPattern(dpy, match);
@@ -216,36 +216,36 @@ static XftFont *x11_open_fallback_at_locked(Display *dpy, FcChar32 cp, int px) {
 }
 
 static XftFont *x11_fallback_for_locked(Display *dpy, FcChar32 cp, int px) {
-  if (!g_fb_config)
-    g_fb_config = FcInitLoadConfigAndFonts();
-  if (!g_fb_config)
+  if (!fb_config)
+    fb_config = FcInitLoadConfigAndFonts();
+  if (!fb_config)
     return NULL;
   for (int i = 0; i < X11_FB_CACHE; i++) {
-    if (g_fb_cache[i].f && g_fb_cache[i].dpy == dpy && g_fb_cache[i].cp == cp &&
-        g_fb_cache[i].px == px)
-      return g_fb_cache[i].f;
+    if (fb_cache[i].f && fb_cache[i].dpy == dpy && fb_cache[i].cp == cp &&
+        fb_cache[i].px == px)
+      return fb_cache[i].f;
   }
   XftFont *fb = x11_open_fallback_at_locked(dpy, cp, px > 0 ? px : FontSize);
   if (!fb)
     return NULL;
-  if (g_fb_cache[g_fb_next].f) {
-    Display *odpy = g_fb_cache[g_fb_next].dpy;
+  if (fb_cache[fb_next].f) {
+    Display *odpy = fb_cache[fb_next].dpy;
     XLockDisplay(odpy);
-    XftFontClose(odpy, g_fb_cache[g_fb_next].f);
+    XftFontClose(odpy, fb_cache[fb_next].f);
     XUnlockDisplay(odpy);
   }
-  g_fb_cache[g_fb_next].dpy = dpy;
-  g_fb_cache[g_fb_next].cp = cp;
-  g_fb_cache[g_fb_next].px = px;
-  g_fb_cache[g_fb_next].f = fb;
-  g_fb_next = (g_fb_next + 1) % X11_FB_CACHE;
+  fb_cache[fb_next].dpy = dpy;
+  fb_cache[fb_next].cp = cp;
+  fb_cache[fb_next].px = px;
+  fb_cache[fb_next].f = fb;
+  fb_next = (fb_next + 1) % X11_FB_CACHE;
   return fb;
 }
 
 static XftFont *x11_fallback_for(Display *dpy, FcChar32 cp, int px) {
-  pthread_mutex_lock(&g_fb_mtx);
+  pthread_mutex_lock(&fb_mtx);
   XftFont *f = x11_fallback_for_locked(dpy, cp, px);
-  pthread_mutex_unlock(&g_fb_mtx);
+  pthread_mutex_unlock(&fb_mtx);
   return f;
 }
 
@@ -509,16 +509,16 @@ static long long x11_now_ms(void) {
 
 static ImgCacheSlot g_img_cache[IMG_CACHE_SLOTS];
 static unsigned long g_img_cache_tick = 0;
-static pthread_mutex_t g_img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 void x11_img_cache_free_all(void) {
-  pthread_mutex_lock(&g_img_cache_mtx);
+  pthread_mutex_lock(&img_cache_mtx);
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
     if (g_img_cache[i].argb)
       free(g_img_cache[i].argb);
     memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
   }
-  pthread_mutex_unlock(&g_img_cache_mtx);
+  pthread_mutex_unlock(&img_cache_mtx);
 }
 
 static unsigned char *x11_img_cache_get(const char *key, int w, int h) {
@@ -590,25 +590,25 @@ bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
   int cw = tw;
   int ch = th;
   unsigned char *argb = NULL;
-  pthread_mutex_lock(&g_img_cache_mtx);
+  pthread_mutex_lock(&img_cache_mtx);
   argb = x11_img_cache_get(path, cw, ch);
   if (argb) {
-    pthread_mutex_unlock(&g_img_cache_mtx);
+    pthread_mutex_unlock(&img_cache_mtx);
     Drawable drw = XftDrawDrawable(xd);
     bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
     return ok;
   }
-  pthread_mutex_unlock(&g_img_cache_mtx);
+  pthread_mutex_unlock(&img_cache_mtx);
   struct stat st;
   if (stat(path, &st) != 0)
     return false;
   argb = x11_decode_image_argb(path, &cw, &ch);
   if (!argb)
     return false;
-  pthread_mutex_lock(&g_img_cache_mtx);
+  pthread_mutex_lock(&img_cache_mtx);
   x11_img_cache_put(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size,
                     argb);
-  pthread_mutex_unlock(&g_img_cache_mtx);
+  pthread_mutex_unlock(&img_cache_mtx);
   Drawable drw = XftDrawDrawable(xd);
   bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
   return ok;
@@ -846,8 +846,8 @@ typedef struct {
   bool has_stat;
 } DecodedCacheSlot;
 
-static DecodedCacheSlot g_decoded_cache[32];
-static int g_decoded_count = 0;
+static DecodedCacheSlot decoded_cache[32];
+static int decoded_count = 0;
 
 unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   if (!path || !path[0])
@@ -862,8 +862,8 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   struct stat st;
   bool has_stat = (stat(path, &st) == 0);
 
-  for (int i = 0; i < g_decoded_count; i++) {
-    DecodedCacheSlot *slot = &g_decoded_cache[i];
+  for (int i = 0; i < decoded_count; i++) {
+    DecodedCacheSlot *slot = &decoded_cache[i];
     if (slot->dst_w == dst_w && slot->dst_h == dst_h &&
         strcmp(slot->path, path) == 0) {
       bool fresh =
@@ -993,24 +993,24 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
     free(src);
   }
 
-  int idx = g_decoded_count;
+  int idx = decoded_count;
   if (idx >= 32) {
-    free(g_decoded_cache[0].argb);
+    free(decoded_cache[0].argb);
     for (int i = 0; i < 31; i++)
-      g_decoded_cache[i] = g_decoded_cache[i + 1];
+      decoded_cache[i] = decoded_cache[i + 1];
     idx = 31;
   } else {
-    g_decoded_count++;
+    decoded_count++;
   }
-  snprintf(g_decoded_cache[idx].path, sizeof(g_decoded_cache[idx].path), "%s",
+  snprintf(decoded_cache[idx].path, sizeof(decoded_cache[idx].path), "%s",
            path);
-  g_decoded_cache[idx].argb = argb;
-  g_decoded_cache[idx].w = dst_w;
-  g_decoded_cache[idx].h = dst_h;
-  g_decoded_cache[idx].dst_w = dst_w;
-  g_decoded_cache[idx].dst_h = dst_h;
-  g_decoded_cache[idx].st = st;
-  g_decoded_cache[idx].has_stat = has_stat;
+  decoded_cache[idx].argb = argb;
+  decoded_cache[idx].w = dst_w;
+  decoded_cache[idx].h = dst_h;
+  decoded_cache[idx].dst_w = dst_w;
+  decoded_cache[idx].dst_h = dst_h;
+  decoded_cache[idx].st = st;
+  decoded_cache[idx].has_stat = has_stat;
 
   unsigned char *copy = (unsigned char *)malloc((size_t)dst_w * dst_h * 4);
   if (!copy)
@@ -1429,15 +1429,15 @@ static bool bg_slot_matches(const BgSlot *slot, const BgKey *k) {
 
 static Pixmap bg_cache_find(Display *dpy, const BgKey *k) {
   for (int i = 0; i < BG_SLOT_COUNT; i++) {
-    if (g_bg_slots[i].dpy == dpy && bg_slot_matches(&g_bg_slots[i], k))
-      return g_bg_slots[i].pm;
+    if (bg_slots[i].dpy == dpy && bg_slot_matches(&bg_slots[i], k))
+      return bg_slots[i].pm;
   }
   return None;
 }
 
 static void bg_cache_store(Display *dpy, Pixmap pm, const BgKey *k) {
-  BgSlot *slot = &g_bg_slots[g_bg_slot_next];
-  g_bg_slot_next = (g_bg_slot_next + 1) % BG_SLOT_COUNT;
+  BgSlot *slot = &bg_slots[bg_slot_next];
+  bg_slot_next = (bg_slot_next + 1) % BG_SLOT_COUNT;
   if (slot->used && slot->pm != None)
     XFreePixmap(slot->dpy, slot->pm);
   slot->used = true;
@@ -1505,10 +1505,10 @@ static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
             unsigned int alpha = (pixel >> 24) & 0xFF;
             unsigned int new_alpha = (alpha * a + 127) / 255;
             unsigned int r_c = (pixel >> 16) & 0xFF;
-            unsigned int g_c = (pixel >> 8) & 0xFF;
+            unsigned int c = (pixel >> 8) & 0xFF;
             unsigned int b_c = pixel & 0xFF;
             unsigned int pm_r = (r_c * new_alpha + 127) / 255;
-            unsigned int pm_g = (g_c * new_alpha + 127) / 255;
+            unsigned int pm_g = (c * new_alpha + 127) / 255;
             unsigned int pm_b = (b_c * new_alpha + 127) / 255;
             XPutPixel(img2, x, y,
                       (new_alpha << 24) | (pm_r << 16) | (pm_g << 8) | pm_b);

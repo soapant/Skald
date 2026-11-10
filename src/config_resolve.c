@@ -14,25 +14,25 @@ typedef struct {
 
 #define AUTO_APP_SLOTS 3
 
-static AutoApp g_auto_apps[AUTO_APP_SLOTS];
-static bool g_auto_apps_ready = false;
+static AutoApp auto_apps[AUTO_APP_SLOTS];
+static bool auto_apps_ready = false;
 
 static void auto_apps_init(void) {
-  if (g_auto_apps_ready)
+  if (auto_apps_ready)
     return;
-  g_auto_apps_ready = true;
-  g_auto_apps[0].var = &UsedBrowser;
-  g_auto_apps[0].kind = DEFAULT_BROWSER;
-  g_auto_apps[0].name = "UsedBrowser";
-  g_auto_apps[0].auto_resolved = false;
-  g_auto_apps[1].var = &UsedTerminal;
-  g_auto_apps[1].kind = DEFAULT_TERMINAL;
-  g_auto_apps[1].name = "UsedTerminal";
-  g_auto_apps[1].auto_resolved = false;
-  g_auto_apps[2].var = &UsedShell;
-  g_auto_apps[2].kind = DEFAULT_SHELL;
-  g_auto_apps[2].name = "UsedShell";
-  g_auto_apps[2].auto_resolved = false;
+  auto_apps_ready = true;
+  auto_apps[0].var = &UsedBrowser;
+  auto_apps[0].kind = DEFAULT_BROWSER;
+  auto_apps[0].name = "UsedBrowser";
+  auto_apps[0].auto_resolved = false;
+  auto_apps[1].var = &UsedTerminal;
+  auto_apps[1].kind = DEFAULT_TERMINAL;
+  auto_apps[1].name = "UsedTerminal";
+  auto_apps[1].auto_resolved = false;
+  auto_apps[2].var = &UsedShell;
+  auto_apps[2].kind = DEFAULT_SHELL;
+  auto_apps[2].name = "UsedShell";
+  auto_apps[2].auto_resolved = false;
 }
 
 static void config_resolve_one(AutoApp *app) {
@@ -62,8 +62,8 @@ static void config_resolve_one(AutoApp *app) {
 
 void Config_ResolveDefaultApps(void) {
   auto_apps_init();
-  for (size_t i = 0; i < ARRAY_LEN(g_auto_apps); i++) {
-    config_resolve_one(&g_auto_apps[i]);
+  for (size_t i = 0; i < ARRAY_LEN(auto_apps); i++) {
+    config_resolve_one(&auto_apps[i]);
   }
 }
 
@@ -71,11 +71,11 @@ bool Config_IsAutoResolvedApp(const char *name) {
   auto_apps_init();
   if (!name)
     return false;
-  for (size_t i = 0; i < ARRAY_LEN(g_auto_apps); i++) {
-    if (!g_auto_apps[i].name)
+  for (size_t i = 0; i < ARRAY_LEN(auto_apps); i++) {
+    if (!auto_apps[i].name)
       continue;
-    if (strcmp(g_auto_apps[i].name, name) == 0)
-      return g_auto_apps[i].auto_resolved;
+    if (strcmp(auto_apps[i].name, name) == 0)
+      return auto_apps[i].auto_resolved;
   }
   return false;
 }

@@ -2,9 +2,9 @@
 
 #include <string.h>
 
-static __thread PlDrawState g_draw_state;
+static __thread PlDrawState draw_state;
 
-PlDrawState *PlDrawState_Get(void) { return &g_draw_state; }
+PlDrawState *PlDrawState_Get(void) { return &draw_state; }
 
 void PlDrawState_Reset(void) {
   memset(PlDrawState_Get(), 0, sizeof(PlDrawState));

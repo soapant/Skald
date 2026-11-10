@@ -12,11 +12,11 @@ typedef struct {
   void *fn;
 } Cap;
 
-static Cap g_caps[CAP_MAX];
-static int g_cap_count = 0;
-static unsigned g_cap_generation = 1;
+static Cap caps[CAP_MAX];
+static int cap_count = 0;
+static unsigned cap_gen = 1;
 
-unsigned cap_generation(void) { return g_cap_generation; }
+unsigned cap_generation(void) { return cap_gen; }
 
 static void cap_add_provides(const char *owner, const char *key) {
   FeatureLoader_ManifestAddProvides(owner, key);
@@ -34,34 +34,34 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
   char owner[OWNER_PATH_MAX];
   Owner_ResolveForFunc(fn, owner, sizeof(owner));
 
-  for (int i = 0; i < g_cap_count; i++) {
-    if (strcmp(g_caps[i].key, key) != 0)
+  for (int i = 0; i < cap_count; i++) {
+    if (strcmp(caps[i].key, key) != 0)
       continue;
-    if (g_caps[i].fn == fn)
+    if (caps[i].fn == fn)
       return;
-    log_info("cap '%s' replaced (was abi=%u now abi=%u)", key, g_caps[i].abi,
+    log_info("cap '%s' replaced (was abi=%u now abi=%u)", key, caps[i].abi,
              abi);
-    snprintf(g_caps[i].key, CAP_KEY_LEN, "%s", key);
-    snprintf(g_caps[i].owner, sizeof(g_caps[i].owner), "%s", owner);
-    g_caps[i].abi = abi;
-    g_caps[i].fn = fn;
-    g_cap_generation++;
+    snprintf(caps[i].key, CAP_KEY_LEN, "%s", key);
+    snprintf(caps[i].owner, sizeof(caps[i].owner), "%s", owner);
+    caps[i].abi = abi;
+    caps[i].fn = fn;
+    cap_gen++;
     if (owner[0])
       cap_add_provides(owner, key);
     return;
   }
 
-  if (g_cap_count >= CAP_MAX) {
+  if (cap_count >= CAP_MAX) {
 
     log_error("cap table full, dropping '%s'", key);
     return;
   }
-  Cap *c = &g_caps[g_cap_count++];
+  Cap *c = &caps[cap_count++];
   snprintf(c->key, CAP_KEY_LEN, "%s", key);
   snprintf(c->owner, sizeof(c->owner), "%s", owner);
   c->abi = abi;
   c->fn = fn;
-  g_cap_generation++;
+  cap_gen++;
   log_info("cap '%s' registered abi=%u owner='%s'", key, abi,
            owner[0] ? owner : "?");
   if (owner[0])
@@ -71,16 +71,16 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
 void *cap_resolve_abi(const char *key, unsigned abi) {
   if (!key || !key[0])
     return NULL;
-  for (int i = 0; i < g_cap_count; i++) {
-    if (strcmp(g_caps[i].key, key) != 0)
+  for (int i = 0; i < cap_count; i++) {
+    if (strcmp(caps[i].key, key) != 0)
       continue;
-    if (g_caps[i].abi != abi) {
+    if (caps[i].abi != abi) {
 
       log_warn("cap '%s' abi mismatch want=%u have=%u", key, abi,
-               g_caps[i].abi);
+               caps[i].abi);
       return NULL;
     }
-    return g_caps[i].fn;
+    return caps[i].fn;
   }
   return NULL;
 }
@@ -96,17 +96,17 @@ void cap_bind_declare(const char *key, void *consumer) {
     return;
   }
 
-  for (int i = 0; i < g_cap_count; i++) {
-    if (strcmp(g_caps[i].key, key) != 0)
+  for (int i = 0; i < cap_count; i++) {
+    if (strcmp(caps[i].key, key) != 0)
       continue;
-    if (g_caps[i].abi != CAP_ABI_V1) {
+    if (caps[i].abi != CAP_ABI_V1) {
       return;
     }
-    if (!g_caps[i].owner[0]) {
+    if (!caps[i].owner[0]) {
       return;
     }
     char provider[64];
-    FeatureLoader_OwnerFeatureName(g_caps[i].owner, provider, sizeof(provider));
+    FeatureLoader_OwnerFeatureName(caps[i].owner, provider, sizeof(provider));
     if (!provider[0]) {
       return;
     }
@@ -121,15 +121,15 @@ void cap_purge_owner(const char *path_a, const char *path_b) {
   }
 
   int n = 0;
-  for (int i = 0; i < g_cap_count; i++) {
-    if (Owner_ModuleMatches(g_caps[i].owner, path_a, path_b)) {
+  for (int i = 0; i < cap_count; i++) {
+    if (Owner_ModuleMatches(caps[i].owner, path_a, path_b)) {
       continue;
     }
-    g_caps[n++] = g_caps[i];
+    caps[n++] = caps[i];
   }
-  int dropped = g_cap_count - n;
-  g_cap_count = n;
+  int dropped = cap_count - n;
+  cap_count = n;
   if (dropped > 0) {
-    g_cap_generation++;
+    cap_gen++;
   }
 }

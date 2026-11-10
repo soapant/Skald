@@ -166,7 +166,7 @@ static void PromptPopup_Destroy(Popup *self) {
   free(data);
 }
 
-static const PopupVTable g_prompt_popup_vtable = {
+static const PopupVTable prompt_popup_vtable = {
     .on_show = PromptPopup_OnShow,
     .on_hide = PromptPopup_OnHide,
     .on_render = PromptPopup_OnRender,
@@ -273,7 +273,7 @@ Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec) {
   if (!data)
     return NULL;
 
-  data->base.vtable = &g_prompt_popup_vtable;
+  data->base.vtable = &prompt_popup_vtable;
   data->base.manager = wm;
   data->base.type = POPUP_PROMPT;
   data->spec = *spec;

@@ -15,18 +15,18 @@
 static const struct {
   const char *name;
   size_t off;
-} g_theme_slots[] = {
+} theme_slots[] = {
     {"COLOR_BG", offsetof(ThemeEntry, bg)},
     {"COLOR_TEXT", offsetof(ThemeEntry, text)},
     {"COLOR_SELECTED_TEXT", offsetof(ThemeEntry, selected_text)},
     {"COLOR_CURSOR", offsetof(ThemeEntry, cursor)},
     {"COLOR_BORDER", offsetof(ThemeEntry, border)},
 };
-static ColorRef *g_theme_targets[] = {
+static ColorRef *theme_targets[] = {
     &COLOR_BG, &COLOR_TEXT, &COLOR_SELECTED_TEXT, &COLOR_CURSOR, &COLOR_BORDER,
 };
 
-#define THEME_SLOT_COUNT (sizeof(g_theme_slots) / sizeof(g_theme_slots[0]))
+#define THEME_SLOT_COUNT (sizeof(theme_slots) / sizeof(theme_slots[0]))
 
 void Theme_Apply(void) {
   if (!Theme || !Theme[0])
@@ -38,26 +38,26 @@ void Theme_Apply(void) {
   }
   ColorRef saved[THEME_SLOT_COUNT];
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++)
-    saved[i] = *g_theme_targets[i];
+    saved[i] = *theme_targets[i];
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++)
-    *g_theme_targets[i] =
-        *(ColorRef *)((const char *)found + g_theme_slots[i].off);
+    *theme_targets[i] =
+        *(ColorRef *)((const char *)found + theme_slots[i].off);
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++) {
-    if (saved[i] != *g_theme_targets[i] &&
-        Theme_ColorPinned(g_theme_slots[i].name))
-      *g_theme_targets[i] = saved[i];
+    if (saved[i] != *theme_targets[i] &&
+        Theme_ColorPinned(theme_slots[i].name))
+      *theme_targets[i] = saved[i];
   }
 }
 
 #define THEME_MAX_PINNED 32
-static char g_theme_pinned[THEME_MAX_PINNED][64];
-static int g_theme_pinned_count = 0;
-static bool g_theme_pinned_scanned = false;
+static char theme_pinned[THEME_MAX_PINNED][64];
+static int theme_pinned_count = 0;
+static bool theme_pinned_scanned = false;
 
 bool Theme_PinScanFile(const char *path) {
-  memset(g_theme_pinned, 0, sizeof(g_theme_pinned));
-  g_theme_pinned_count = 0;
-  g_theme_pinned_scanned = true;
+  memset(theme_pinned, 0, sizeof(theme_pinned));
+  theme_pinned_count = 0;
+  theme_pinned_scanned = true;
   if (!path || !path[0])
     return false;
   FILE *f = fopen(path, "rb");
@@ -70,16 +70,16 @@ bool Theme_PinScanFile(const char *path) {
       if (sscanf(line, " %63[A-Z_] =", name) == 1 &&
           strncmp(name, "COLOR_", 6) == 0) {
         bool known = false;
-        for (int i = 0; i < g_theme_pinned_count; i++) {
-          if (strcmp(g_theme_pinned[i], name) == 0) {
+        for (int i = 0; i < theme_pinned_count; i++) {
+          if (strcmp(theme_pinned[i], name) == 0) {
             known = true;
             break;
           }
         }
-        if (!known && g_theme_pinned_count < THEME_MAX_PINNED) {
-          snprintf(g_theme_pinned[g_theme_pinned_count],
-                   sizeof(g_theme_pinned[0]), "%s", name);
-          g_theme_pinned_count++;
+        if (!known && theme_pinned_count < THEME_MAX_PINNED) {
+          snprintf(theme_pinned[theme_pinned_count],
+                   sizeof(theme_pinned[0]), "%s", name);
+          theme_pinned_count++;
         }
       }
     }
@@ -89,18 +89,18 @@ bool Theme_PinScanFile(const char *path) {
 }
 
 void Theme_ResetPinned(void) {
-  memset(g_theme_pinned, 0, sizeof(g_theme_pinned));
-  g_theme_pinned_count = 0;
-  g_theme_pinned_scanned = false;
+  memset(theme_pinned, 0, sizeof(theme_pinned));
+  theme_pinned_count = 0;
+  theme_pinned_scanned = false;
 }
 
 bool Theme_ColorPinned(const char *name) {
   if (!name || !name[0])
     return false;
-  if (!g_theme_pinned_scanned)
+  if (!theme_pinned_scanned)
     Theme_PinScanFile(CONFIG_SRC);
-  for (int i = 0; i < g_theme_pinned_count; i++) {
-    if (strcmp(g_theme_pinned[i], name) == 0)
+  for (int i = 0; i < theme_pinned_count; i++) {
+    if (strcmp(theme_pinned[i], name) == 0)
       return true;
   }
   return false;
