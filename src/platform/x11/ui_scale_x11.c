@@ -84,7 +84,6 @@ float Platform_GetUIScale(void) {
 }
 
 static void ui_scale_apply_locked(void) {
-
   float s = Platform_GetUIScale();
   if (s > 1.0f)
     FontSize = (int)(base_font_size * s + 0.5f);

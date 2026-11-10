@@ -205,7 +205,11 @@ static const char *feature_dep_path(const char *src) {
 }
 
 static const char *obj_file_path(const char *src, const char *ext) {
-  return nob_temp_sprintf("%s/%s%s", obj_dir, nob_path_name(src), ext);
+  char *flat = nob_temp_strdup(src);
+  for (char *p = flat; *p; p++)
+    if (*p == '/' || *p == '\\')
+      *p = '_';
+  return nob_temp_sprintf("%s/%s%s", obj_dir, flat, ext);
 }
 
 static const char *obj_path(const char *src) {

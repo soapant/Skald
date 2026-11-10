@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-#define _XOPEN_SOURCE 500
 #include <pthread.h>
 #include "helpers/helpers_fs.h"
 #include <X11/Xlib.h>
@@ -12,15 +10,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
-
 #include "deps/log.h"
 #include "helpers/helpers_input_state.h"
 #include "config_values.h"
 #include "core/types.h"
 #include "core/types/window.h"
-#if __has_include(<X11/extensions/Xrandr.h>)
 #include <X11/extensions/Xrandr.h>
-#endif
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <poll.h>
@@ -35,10 +30,9 @@
 #include <sys/file.h>
 #include <fontconfig/fontconfig.h>
 #include <curl/curl.h>
-
 #include "helpers/x11/display_x11.h"
 #include "platform/platform.h"
-#include "platform/x11/misc_x11.h"
+#include "helpers/x11/misc_x11.h"
 #include "core/context.h"
 #include "helpers/helpers_owner.h"
 #include "core/thread_registry.h"
@@ -47,9 +41,115 @@
 #include "core/feature_path.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "wm/wm.h"
-#if __has_include(<X11/extensions/XTest.h>)
+#include "helpers/x11/platform_x11.h"
 #include <X11/extensions/XTest.h>
+#include "helpers/x11/clipboard_x11.h"
+#include "platform/x11/clipboard_backend_x11.h"
+
+#define _GNU_SOURCE
+
+#define _XOPEN_SOURCE 500
+
+#include <pthread.h>
+
+#include "helpers/helpers_fs.h"
+
+#include <X11/Xlib.h>
+
+#include <X11/Xatom.h>
+
+#include <X11/Xft/Xft.h>
+
+#include <X11/X.h>
+
+#include <X11/Xutil.h>
+
+#include <X11/extensions/Xrender.h>
+
+#include <stdbool.h>
+
+#include <stdio.h>
+
+#include <stdint.h>
+
+#include <sys/types.h>
+
+
+
+#include "deps/log.h"
+
+#include "helpers/helpers_input_state.h"
+
+#include "config_values.h"
+
+#include "core/types.h"
+
+#include "core/types/window.h"
+
+#if __has_include(<X11/extensions/Xrandr.h>)
+
+#include <X11/extensions/Xrandr.h>
+
 #endif
+
+#include <sys/stat.h>
+
+#include <sys/wait.h>
+
+#include <poll.h>
+
+#include <signal.h>
+
+#include <fcntl.h>
+
+#include <unistd.h>
+
+#include <string.h>
+
+#include <glob.h>
+
+#include <stdlib.h>
+
+#include <time.h>
+
+#include <errno.h>
+
+#include <sys/file.h>
+
+#include <fontconfig/fontconfig.h>
+
+#include <curl/curl.h>
+
+
+
+#include "helpers/x11/display_x11.h"
+
+#include "platform/platform.h"
+
+#include "helpers/x11/misc_x11.h"
+
+#include "core/context.h"
+
+#include "helpers/helpers_owner.h"
+
+#include "core/thread_registry.h"
+
+#include "core/prompt_geometry.h"
+
+#include "helpers/helpers_text.h"
+
+#include "core/feature_path.h"
+
+#include "helpers/x11/env_helpers_x11.h"
+
+#include "wm/wm.h"
+
+#if __has_include(<X11/extensions/XTest.h>)
+
+#include <X11/extensions/XTest.h>
+
+#endif
+
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
   if (!working_dir) {
@@ -153,6 +253,8 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
   return true;
 }
 
+
+
 char *Platform_RunCommandAndGetOutput(char *command, int priority) {
   (void)priority;
   FILE *fp;
@@ -199,6 +301,8 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
   ;
   return output;
 }
+
+
 
 static char *Platform_RunCommandDetachedCapture(char *command) {
 
@@ -436,6 +540,8 @@ static char *Platform_RunCommandDetachedCapture(char *command) {
   return out;
 }
 
+
+
 bool Platform_LaunchDetached(char *command) {
   if (!command || !command[0]) {
     log_error("LaunchDetached: null or empty command");
@@ -518,6 +624,8 @@ bool Platform_LaunchDetached(char *command) {
   return true;
 }
 
+
+
 char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   char timer_text[300];
   snprintf(timer_text, sizeof(timer_text),
@@ -565,154 +673,57 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   return NULL;
 }
 
+
+
 void Platform_StartUniversalTimer(void) { log_warn("not implemented yet"); }
 
+
+
 void Platform_ResetUniversalTimer(void) { log_warn("not implemented yet"); }
+
+
 
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
   (void)seconds_to_add;
   log_warn("not implemented yet");
 }
 
+
+
 double Platform_GetUniversalTimeSeconds(void) { return 0.0; }
 
-#define X11_FONT_CACHE_SLOTS 8
 
-typedef struct {
-  Display *dpy;
-  int size;
-  char *name;
-  XftFont *xft;
-  unsigned long last_used;
-} X11FontSlot;
 
-static X11FontSlot g_font_slots[X11_FONT_CACHE_SLOTS];
-static unsigned long g_font_tick = 0;
-static pthread_mutex_t g_font_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 
-#define X11_FONT_RETIRED 16
-static Display *g_font_retired_dpy[X11_FONT_RETIRED];
-static XftFont *g_font_retired_xft[X11_FONT_RETIRED];
-static int g_font_retired_next = 0;
 
-static void x11_font_retire(Display *dpy, XftFont *xft) {
 
-  g_font_retired_dpy[g_font_retired_next] = dpy;
-  g_font_retired_xft[g_font_retired_next] = xft;
-  g_font_retired_next = (g_font_retired_next + 1) % X11_FONT_RETIRED;
-}
 
-static bool x11_font_was_retired(Display *dpy, XftFont *xft) {
 
-  for (int i = 0; i < X11_FONT_RETIRED; i++) {
-    if (g_font_retired_xft[i] == xft && g_font_retired_dpy[i] == dpy)
-      return true;
-  }
-  return false;
-}
 
-static bool x11_font_slot_matches(const X11FontSlot *s, Display *dpy, int size,
-                                  const char *face_name) {
 
-  if (!s->xft || s->dpy != dpy || s->size != size)
-    return false;
-  if (!s->name || !face_name)
-    return s->name == face_name;
-  return strcmp(s->name, face_name) == 0;
-}
 
-static void x11_font_slot_clear(X11FontSlot *s) {
 
-  if (s->xft) {
-    XftFontClose(s->dpy, s->xft);
-    x11_font_retire(s->dpy, s->xft);
-  }
-  if (s->name)
-    free(s->name);
-  s->dpy = NULL;
-  s->size = 0;
-  s->name = NULL;
-  s->xft = NULL;
-  s->last_used = 0;
-}
 
-static bool x11_font_is_cached(Display *dpy, XftFont *xft) {
 
-  for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-    if (g_font_slots[i].xft == xft && g_font_slots[i].dpy == dpy)
-      return true;
-  }
-  return false;
-}
 
-FontHandle x11_create_font_on_display(Display *dpy, int size,
-                                        const char *face_name) {
 
-  if (!dpy)
-    return FH_NULL;
 
-  pthread_mutex_lock(&g_font_cache_mtx);
 
-  for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-    if (x11_font_slot_matches(&g_font_slots[i], dpy, size, face_name)) {
-      g_font_slots[i].last_used = ++g_font_tick;
-      FontHandle hit = {.xfont = g_font_slots[i].xft, .dpy = dpy};
-      pthread_mutex_unlock(&g_font_cache_mtx);
-      return hit;
-    }
-  }
 
-  int screen = DefaultScreen(dpy);
-  XLockDisplay(dpy);
 
-  XftFont *xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, face_name,
-                            FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
-  if (!xf) {
-    xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, "sans",
-                     FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
-  }
-  if (!xf) {
-    xf = XftFontOpenName(dpy, screen, "fixed");
-  }
 
-  XUnlockDisplay(dpy);
 
-  if (!xf) {
-    pthread_mutex_unlock(&g_font_cache_mtx);
-    return FH_NULL;
-  }
 
-  int slot = -1;
-  unsigned long oldest = ~0UL;
-  for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
-    if (!g_font_slots[i].xft) {
-      slot = i;
-      break;
-    }
-    if (g_font_slots[i].last_used < oldest) {
-      oldest = g_font_slots[i].last_used;
-      slot = i;
-    }
-  }
-  if (slot < 0) {
-    XftFontClose(dpy, xf);
-    pthread_mutex_unlock(&g_font_cache_mtx);
-    return FH_NULL;
-  }
-  x11_font_slot_clear(&g_font_slots[slot]);
 
-  g_font_slots[slot].dpy = dpy;
-  g_font_slots[slot].size = size;
-  g_font_slots[slot].name = face_name ? strdup(face_name) : NULL;
-  g_font_slots[slot].xft = xf;
-  g_font_slots[slot].last_used = ++g_font_tick;
 
-  FontHandle made = {.xfont = xf, .dpy = dpy};
-  pthread_mutex_unlock(&g_font_cache_mtx);
-  return made;
-}
+
+
+
+
 
 pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+
 
 FontHandle Platform_CreateFont(int size, const char *face_name) {
   pthread_mutex_lock(&g_font_mtx);
@@ -732,6 +743,8 @@ FontHandle Platform_CreateFont(int size, const char *face_name) {
   return fh;
 }
 
+
+
 void Platform_DestroyFont(FontHandle font) {
   XftFont *xf = FH_TO_XFT(font);
   if (!xf) {
@@ -747,6 +760,8 @@ void Platform_DestroyFont(FontHandle font) {
   XftFontClose(FH_TO_DPY(font), xf);
 }
 
+
+
 static int xft_text_width(Display *dpy, XftFont *xf, const char *text,
                           int len) {
 
@@ -754,6 +769,8 @@ static int xft_text_width(Display *dpy, XftFont *xf, const char *text,
   XftTextExtentsUtf8(dpy, xf, (FcChar8 *)text, len, &ext);
   return ext.xOff;
 }
+
+
 
 void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
                              int *outWidth, int *outHeight) {
@@ -793,37 +810,68 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
 }
 
 
+
+
+
 bool Platform_FocusWindow(const char *title) { return Wm_FocusByTitle(title); }
 
+
+
 bool Platform_CloseActiveWindow(void) { return Wm_CloseActiveWindow(); }
+
+
 
 bool Platform_ToggleFullscreenActive(void) {
   return Wm_ToggleFullscreenActive();
 }
 
+
+
 bool Platform_MoveActiveWindowToMonitor(bool right) {
   return Wm_MoveActiveWindowToMonitor(right);
 }
 
+
+
 bool Platform_MoveActiveWindowLeft(void) { return Wm_MoveActiveWindowLeft(); }
+
+
 
 bool Platform_MoveActiveWindowRight(void) { return Wm_MoveActiveWindowRight(); }
 
+
+
 bool Platform_MoveActiveWindowUp(void) { return Wm_MoveActiveWindowUp(); }
+
+
 
 bool Platform_MoveActiveWindowDown(void) { return Wm_MoveActiveWindowDown(); }
 
+
+
 bool Platform_FocusWindowLeft(void) { return Wm_FocusWindowLeft(); }
+
+
 
 bool Platform_FocusWindowRight(void) { return Wm_FocusWindowRight(); }
 
+
+
 bool Platform_FocusWindowUp(void) { return Wm_FocusWindowUp(); }
+
+
 
 bool Platform_FocusWindowDown(void) { return Wm_FocusWindowDown(); }
 
+
+
 bool Platform_MinimizeActiveWindow(void) { return Wm_MinimizeActiveWindow(); }
 
+
+
 char *Platform_GetActiveWindowTitle() { return Wm_GetActiveWindowTitle(); }
+
+
 
 int Platform_GetIconSize(char *icon_path) {
   if (strstr(icon_path, "32x32")) {
@@ -844,16 +892,23 @@ int Platform_GetIconSize(char *icon_path) {
   return 32;
 }
 
+
+
 #define MAX_ICON_CACHE 1024
+
 static struct {
   char key[512];
   char value[1024];
 } g_icon_cache[MAX_ICON_CACHE];
+
 static int g_icon_cache_count = 0;
+
 static bool g_icon_cache_loaded = false;
+
 static bool icon_cache_path(char *out, size_t n) {
   return FeaturePath_Get("core", "icon_cache.txt", out, n);
 }
+
 static void icon_cache_load(void) {
 
   if (g_icon_cache_loaded) {
@@ -892,6 +947,7 @@ static void icon_cache_load(void) {
       g_icon_cache_count++;
   }
 }
+
 static const char *icon_cache_get(const char *key) {
 
   icon_cache_load();
@@ -901,6 +957,7 @@ static const char *icon_cache_get(const char *key) {
     }
   return NULL;
 }
+
 static void icon_cache_set(const char *key, const char *value) {
 
   icon_cache_load();
@@ -927,7 +984,11 @@ static void icon_cache_set(const char *key, const char *value) {
   fclose(f);
 }
 
+
+
 char *Platform_GetActiveWindowAppId(void) { return Wm_GetActiveWindowAppId(); }
+
+
 
 char *Platform_GetIconPath(char *app_path) {
   if (!app_path) {
@@ -1168,8 +1229,13 @@ char *Platform_GetIconPath(char *app_path) {
   return strdup(bare[0] ? bare : "placeholder");
 }
 
+
+
 #include "helpers/x11/clipboard_x11.h"
+
 #include "platform/x11/clipboard_backend_x11.h"
+
+
 
 int Platform_CopyToClipboard(const char *text) {
   if (!text)
@@ -1200,6 +1266,8 @@ int Platform_CopyToClipboard(const char *text) {
   return (wr || xr);
 }
 
+
+
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
   if (!png || len == 0)
     return 0;
@@ -1216,6 +1284,8 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
   return (wr || xr);
 }
 
+
+
 int Platform_SetFileToClipboard(const char *path) {
   if (!path || path[0] == 0)
     return 0;
@@ -1229,6 +1299,8 @@ int Platform_SetFileToClipboard(const char *path) {
   log_info("Platform_SetFileToClipboard x11=%d", xr);
   return (wr || xr);
 }
+
+
 
 char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
                               int *out_status) {
@@ -1347,11 +1419,19 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
   return out;
 }
 
+
+
 PlWindowList Platform_GetWindowTitles() { return Wm_GetWindowTitles(); }
+
+
 
 PlWindowList Platform_GetWindowNames() { return Wm_GetWindowNames(); }
 
+
+
 static int g_singleton_lock_fd = -1;
+
+
 
 bool Platform_TryAcquireSingleInstance(void) {
   g_singleton_lock_fd = open("/tmp/skald.lock", O_RDWR | O_CREAT, 0666);
@@ -1370,6 +1450,8 @@ bool Platform_TryAcquireSingleInstance(void) {
   fcntl(g_singleton_lock_fd, F_SETFD, FD_CLOEXEC);
   return true;
 }
+
+
 
 bool Platform_InitDisplaySafe(void) {
   const char *dd = getenv("DISPLAY");
@@ -1429,16 +1511,23 @@ bool Platform_InitDisplaySafe(void) {
   return true;
 }
 
+
+
 void Platform_CleanupDisplaySafe(void) {
   x11_clipboard_shutdown();
   x11_clipboard_shutdown();
   x11_cleanup_display();
 }
 
+
+
 void Platform_InitMainThreadContext(void) {}
 
+
+
 void Platform_FixWorkingDirectory(void) {}
-void x11_cleanup_per_feature_edit_map(void) {}
+
+
 
 void Platform_CleanupPlatformResources(void) {
   x11_cleanup_per_feature_edit_map();
@@ -1458,28 +1547,15 @@ void Platform_CleanupPlatformResources(void) {
   FcFini();
 }
 
-int Platform_InitializeTrayIcon(void) { return 0; }
-void Platform_InitUI(void) {}
-void Platform_ShutdownUI(void) {}
-static unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
 
-  if (!mask)
-    return 0;
-  int shift = 0;
-  while (!(mask & 1ul)) {
-    mask >>= 1;
-    shift++;
-  }
-  unsigned long bits = 0;
-  for (unsigned long m = mask; m; m >>= 1)
-    bits++;
-  unsigned long v = (pixel >> shift) & ((1ul << bits) - 1ul);
-  if (bits == 0)
-    return 0;
-  if (bits >= 8)
-    return (unsigned char)(v >> (bits - 8));
-  return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
-}
+
+int Platform_InitializeTrayIcon(void) { return 0; }
+
+void Platform_InitUI(void) {}
+
+void Platform_ShutdownUI(void) {}
+
+
 
 PlColor Platform_GetPixelColor(int x, int y) {
   PlColor out = {0, 0, 0};
@@ -1502,6 +1578,8 @@ PlColor Platform_GetPixelColor(int x, int y) {
   return out;
 }
 
+
+
 bool Platform_MoveToPos(int x, int y) {
   Display *dpy = x11_get_display();
   if (!dpy)
@@ -1517,7 +1595,9 @@ bool Platform_MoveToPos(int x, int y) {
 #endif
 }
 
-static int x11_x11_button(int button);
+
+
+
 
 bool Platform_ClickButton(int button) {
   Display *dpy = x11_get_display();
@@ -1539,6 +1619,8 @@ bool Platform_ClickButton(int button) {
 #endif
 }
 
+
+
 bool Platform_Click(void) {
   Display *dpy = x11_get_display();
   if (!dpy)
@@ -1556,27 +1638,9 @@ bool Platform_Click(void) {
 #endif
 }
 
-static int x11_x11_button(int button) {
 
-  switch (button) {
-  case 1:
-    return 1;
-  case 2:
-    return 3;
-  case 3:
-    return 2;
-  case 4:
-    return 8;
-  case 5:
-    return 9;
-  case 6:
-    return 8;
-  case 7:
-    return 9;
-  default:
-    return 0;
-  }
-}
+
+
 
 bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
   if (out_x)
@@ -1640,6 +1704,8 @@ bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
   return true;
 }
 
+
+
 bool Platform_MouseButtonDown(int button, bool down) {
   Display *dpy = x11_get_display();
   if (!dpy)
@@ -1655,6 +1721,8 @@ bool Platform_MouseButtonDown(int button, bool down) {
   return false;
 #endif
 }
+
+
 
 bool Platform_MouseScroll(int notches) {
   if (notches == 0)
@@ -1676,6 +1744,8 @@ bool Platform_MouseScroll(int notches) {
 #endif
 }
 
+
+
 char *Platform_GetWorkingDir(void) {
   char *raw = Platform_RunTerminalCommand("pwd", false);
   if (!raw)
@@ -1688,12 +1758,18 @@ char *Platform_GetWorkingDir(void) {
   return raw;
 }
 
+
+
 void Platform_InitDataFolder() {
   char dir_path[300];
   snprintf(dir_path, sizeof(dir_path), "%s/.local/share/skald",
            Platform_GetRealHome());
   Platform_MkdirIfNotExists(dir_path);
 }
+
+
+
+
 
 
 
@@ -1711,6 +1787,9 @@ bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
   snprintf(out, out_len, "%s", full);
   return true;
 }
+
+
+
 
 
 static size_t http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
@@ -1745,6 +1824,8 @@ static size_t http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
   return n;
 }
 
+
+
 static void http_global_init(void) {
   static int done = 0;
   static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -1755,6 +1836,8 @@ static void http_global_init(void) {
   }
   pthread_mutex_unlock(&mtx);
 }
+
+
 
 static CURL *http_new(const char *url, size_t limit, HttpBuf *buf) {
   http_global_init();
@@ -1788,6 +1871,8 @@ static CURL *http_new(const char *url, size_t limit, HttpBuf *buf) {
   return c;
 }
 
+
+
 static char *http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
   if (out_len)
     *out_len = buf->len;
@@ -1802,6 +1887,8 @@ static char *http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
     buf->buf = (char *)calloc(1, 1);
   return buf->buf;
 }
+
+
 
 char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
                               size_t *out_len) {
@@ -1824,9 +1911,13 @@ char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
   return out;
 }
 
+
+
 char *Platform_HttpGet(const char *url) {
   return Platform_HttpGetLimited(url, HTTP_DEFAULT_LIMIT, NULL);
 }
+
+
 
 char *Platform_HttpPost(const char *url, const char *content_type,
                         const char *body) {
@@ -1850,10 +1941,14 @@ char *Platform_HttpPost(const char *url, const char *content_type,
   return out;
 }
 
+
+
 static size_t Platform_http_write_file_cb(char *ptr, size_t sz, size_t nm,
                                           void *userdata) {
   return fwrite(ptr, sz, nm, (FILE *)userdata);
 }
+
+
 
 bool Platform_HttpDownload(const char *url, const char *save_path) {
   if (!url || !url[0] || !save_path || !save_path[0])
@@ -1899,6 +1994,8 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   return true;
 }
 
+
+
 bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
   pthread_t t;
   if (pthread_create(&t, NULL, (void *(*)(void *))fn, ud) != 0)
@@ -1907,7 +2004,11 @@ bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
   return true;
 }
 
+
+
 bool Platform_FontInitalized(FontHandle font) { return font.xfont != NULL; }
+
+
 
 PlTimer Platform_StartTimer(void) {
   PlTimer t = {0};
@@ -1917,6 +2018,8 @@ PlTimer Platform_StartTimer(void) {
   return t;
 }
 
+
+
 double Platform_EndTimer(PlTimer t) {
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -1925,6 +2028,8 @@ double Platform_EndTimer(PlTimer t) {
     return 0.0;
   return (double)(now - t.ticks) / 1000000.0;
 }
+
+
 
 void *Platform_ThreadCreate(void *(*fn)(void *), void *arg) {
   if (!fn)
@@ -1939,6 +2044,8 @@ void *Platform_ThreadCreate(void *(*fn)(void *), void *arg) {
   return t;
 }
 
+
+
 void Platform_ThreadJoin(void *thread) {
   if (!thread) {
     return;
@@ -1947,6 +2054,8 @@ void Platform_ThreadJoin(void *thread) {
   pthread_join(*t, NULL);
   free(t);
 }
+
+
 
 void *Platform_MutexCreate(void) {
   pthread_mutex_t *m = malloc(sizeof(*m));
@@ -1959,6 +2068,8 @@ void *Platform_MutexCreate(void) {
   return m;
 }
 
+
+
 void Platform_MutexDestroy(void *mutex) {
   if (!mutex) {
     return;
@@ -1968,12 +2079,16 @@ void Platform_MutexDestroy(void *mutex) {
   free(m);
 }
 
+
+
 void Platform_MutexLock(void *mutex) {
   if (!mutex) {
     return;
   }
   pthread_mutex_lock((pthread_mutex_t *)mutex);
 }
+
+
 
 void Platform_MutexUnlock(void *mutex) {
   if (!mutex) {
@@ -1982,11 +2097,16 @@ void Platform_MutexUnlock(void *mutex) {
   pthread_mutex_unlock((pthread_mutex_t *)mutex);
 }
 
+
+
 bool Platform_MutexTryLock(void *mutex) {
   if (!mutex)
     return false;
   return pthread_mutex_trylock((pthread_mutex_t *)mutex) == 0;
 }
+
+
+
 
 
 void Platform_InvalidatePrompt(void) {
@@ -1998,4 +2118,7 @@ void Platform_InvalidatePrompt(void) {
   }
 }
 
+
+
 bool Platform_InjectKey(int vk, int down) { return Wm_InjectKey(vk, down); }
+

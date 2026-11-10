@@ -10,8 +10,8 @@
 #include "helpers/win32/win32_state.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/win32/common_ui_win32.h"
-
 #include "core/listbox_hover.h"
+
 bool IsPopupActive(WindowHandle hPopupWnd) {
   (void)hPopupWnd;
   return WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) != NULL &&

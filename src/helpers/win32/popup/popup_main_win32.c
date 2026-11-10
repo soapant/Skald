@@ -20,16 +20,10 @@
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
-
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "core/checkbox.h"
 #include "core/draw_state.h"
-
-static bool only_once = true;
-static bool rainbow_init = false;
-static int g_last_selected_index = -1;
-static int g_pending_navigate = -1;
 
 extern PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd);
 
@@ -367,18 +361,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     return (LRESULT)s_bg_brush;
   }
   case WM_CREATE: {
-    if (only_once) {
-      only_once = false;
       break;
-    }
   }
-    /* fall through */
   case WM_SHOWWINDOW: {
-    if (wParam && g_pending_navigate >= 0) {
-      int idx = g_pending_navigate;
-      g_pending_navigate = -1;
-      UI_NavigateTo(lb, idx);
-    }
     break;
   }
   case WM_COMMAND: {
@@ -509,18 +494,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         char *pos = strchr(measureBuffer, '|');
         if (pos) {
           *pos = '\0';
-        }
-        {
-          if (isSelected && strlen(measureBuffer) >= 70) {
-            if (g_last_selected_index != (int)pdis->itemID ||
-                !win32_message_popup_any_open()) {
-              g_last_selected_index = (int)pdis->itemID;
-            }
-          } else {
-            if (g_last_selected_index == (int)pdis->itemID) {
-              g_last_selected_index = -1;
-            }
-          }
         }
       }
 
@@ -774,7 +747,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     popup_free_back_buffer();
     s_repaint_queued = false;
-    rainbow_init = false;
     break;
   }
   default:
