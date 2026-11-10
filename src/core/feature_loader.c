@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <errno.h>
 
 #include "deps/log.h"
 #include "platform/lib.h"
@@ -25,8 +26,13 @@ static void (*g_deferred_inits[DEFERRED_INIT_MAX])(void);
 static int g_deferred_count = 0;
 
 void DeferredInit_Register(void (*cb)(void)) {
-  if (!cb || g_deferred_count >= DEFERRED_INIT_MAX)
+  if (!cb)
     return;
+  if (g_deferred_count >= DEFERRED_INIT_MAX) {
+    log_error("deferred init queue full (%d), dropping registration",
+              DEFERRED_INIT_MAX);
+    return;
+  }
   g_deferred_inits[g_deferred_count++] = cb;
 }
 
@@ -59,10 +65,13 @@ static int g_reload_seq = 0;
 
 static bool copy_file(const char *src, const char *dst) {
   FILE *in = fopen(src, "rb");
-  if (!in)
+  if (!in) {
+    log_error("copy_file: open src %s failed (%s)", src, strerror(errno));
     return false;
+  }
   FILE *out = fopen(dst, "wb");
   if (!out) {
+    log_error("copy_file: open dst %s failed (%s)", dst, strerror(errno));
     fclose(in);
     return false;
   }
@@ -97,8 +106,10 @@ static bool ensure_feature_capacity(int needed) {
     cap *= 2;
   LoadedFeature *grown =
       (LoadedFeature *)realloc(g_features, (size_t)cap * sizeof(*g_features));
-  if (!grown)
+  if (!grown) {
+    log_error("out of memory growing feature table to %d", cap);
     return false;
+  }
   g_features = grown;
   g_feature_cap = cap;
   return true;
@@ -124,8 +135,10 @@ static bool ensure_retired_capacity(int needed) {
     cap *= 2;
   RetiredLib *grown =
       (RetiredLib *)realloc(g_retired, (size_t)cap * sizeof(*g_retired));
-  if (!grown)
+  if (!grown) {
+    log_error("out of memory growing retired-lib table to %d", cap);
     return false;
+  }
   g_retired = grown;
   g_retired_cap = cap;
   return true;
@@ -229,8 +242,18 @@ static int g_feature_init_count = 0;
 
 #define MANIFEST_LIST_MAX 32
 
+static bool g_warned_no_featurepath = false;
+
 static bool feature_dir(const char *name, char *out, size_t n) {
-  if (!FeaturePath || !FeaturePath[0] || !name || !name[0])
+  if (!FeaturePath || !FeaturePath[0]) {
+    if (!g_warned_no_featurepath) {
+      log_warn("FeaturePath is empty, feature asset lookup disabled "
+               "(check config)");
+      g_warned_no_featurepath = true;
+    }
+    return false;
+  }
+  if (!name || !name[0])
     return false;
   snprintf(out, n, "%s/%s", FeaturePath, name);
   return true;
@@ -294,8 +317,11 @@ static void manifest_write_baseline(const char *name) {
     return;
   Platform_MkdirIfNotExists(dir);
   f = fopen(path, "wb");
-  if (!f)
+  if (!f) {
+    log_error("manifest baseline: open %s for write failed (%s)", path,
+              strerror(errno));
     return;
+  }
   fprintf(f, "name = \"%s\"\n", name);
   fprintf(f, "description = \"\"\n\n");
   fprintf(f, "[provides]\n\n");
@@ -421,9 +447,14 @@ static void manifest_add_entry(const char *name, const char *section,
   }
 
   f = fopen(path, "wb");
-  if (!f)
+  if (!f) {
+    log_error("manifest add: open %s for write failed (%s)", path,
+              strerror(errno));
     return;
-  fwrite(buf, 1, len, f);
+  }
+  if (fwrite(buf, 1, len, f) != len)
+    log_error("manifest add: write %s incomplete (%s)", path,
+              strerror(errno));
   fclose(f);
   log_info("manifest '%s' %s += %s", name, section, entry);
 }
@@ -562,6 +593,8 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
   const char *ext = Platform_LibExtension();
   DIR *d = opendir(dir);
   if (!d) {
+    log_error("FeatureLoader_LoadAllFromDir: opendir %s failed (%s)", dir,
+              strerror(errno));
     UNLOCK();
     return false;
   }
@@ -598,6 +631,8 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
       (FeatureManifest *)calloc((size_t)n_names, sizeof(FeatureManifest));
   bool *loaded = (bool *)calloc((size_t)n_names, sizeof(bool));
   if (!mans || !loaded) {
+    log_error("out of memory allocating manifest arrays (%d features)",
+              n_names);
     free(mans);
     free(loaded);
     UNLOCK();
@@ -676,6 +711,9 @@ bool FeatureLoader_Init(void) {
   g_feature_init_count = 0;
   {
     DIR *d = opendir("build/features");
+    if (!d)
+      log_warn("init: cannot open build/features (%s), no features will load",
+               strerror(errno));
     if (d) {
       struct dirent *e;
       while ((e = readdir(d)) != NULL) {
