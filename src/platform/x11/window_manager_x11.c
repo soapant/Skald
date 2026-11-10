@@ -391,7 +391,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
   }
 
   if (remap_has_bindings()) {
-    if (x11_uinput_fd_get() < 0) {
+    if (x11_uinput_fd_get() < 0 && !x11_grab_blocked()) {
       log_warn("remap forcing uinput init despite use_grab=%d", use_grab);
       x11_uinput_fd_set(init_uinput());
       if (x11_uinput_fd_get() >= 0)

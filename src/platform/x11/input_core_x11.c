@@ -200,10 +200,36 @@ bool x11_alt_held(void) { return g_x11_alt_held; }
 bool x11_shift_held(void) { return g_x11_shift_held; }
 
 
+static bool x11_is_traced(void) {
+  FILE *f = fopen("/proc/self/status", "r");
+  if (!f)
+    return false;
+  char line[256];
+  bool traced = false;
+  while (fgets(line, sizeof(line), f)) {
+    int pid = 0;
+    if (sscanf(line, "TracerPid: %d", &pid) == 1 && pid > 0) {
+      traced = true;
+      break;
+    }
+  }
+  fclose(f);
+  return traced;
+}
+
+bool x11_grab_blocked(void) {
+  const char *hw = getenv("SKALD_NO_GRAB");
+  if (hw && hw[0])
+    return true;
+  return x11_is_traced();
+}
+
 bool x11_should_use_grab(void) {
   if (Env_IsWayland())
     return false;
   if (Env_IsCompositor())
+    return false;
+  if (x11_grab_blocked())
     return false;
   const char *t = getenv("XDG_SESSION_TYPE");
   if (t && strcmp(t, "wayland") == 0)
@@ -427,6 +453,9 @@ static int x11_init_uinput_mouse(void) {
 }
 
 void x11_mouse_grab_begin(void) {
+  if (x11_grab_blocked())
+    return;
+
   if (g_x11_uinput_mouse_fd < 0) {
     g_x11_uinput_mouse_fd = x11_init_uinput_mouse();
     if (g_x11_uinput_mouse_fd < 0) {

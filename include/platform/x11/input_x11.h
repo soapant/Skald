@@ -45,6 +45,7 @@ struct WindowManager;
 void x11_set_window_manager(struct WindowManager *wm);
 
 bool x11_should_use_grab(void);
+bool x11_grab_blocked(void);
 int x11_init_uinput(void);
 void x11_destroy_uinput(void);
 void x11_uinput_emit(const struct input_event *ev);

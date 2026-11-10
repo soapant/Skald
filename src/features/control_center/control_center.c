@@ -5,9 +5,9 @@
 #include <strings.h>
 #include <stdlib.h>
 #include <math.h>
-static size_t ccx_strcpy_trunc(char *dst, size_t dst_size, const char *src);
 #include <dirent.h>
 #include <sys/stat.h>
+static size_t ccx_strcpy_trunc(char *dst, size_t dst_size, const char *src);
 
 typedef void (*CcFill)(void);
 
