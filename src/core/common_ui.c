@@ -621,7 +621,7 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
     int mx = 0, my = 0;
     if (Platform_GetMousePos(&mx, &my)) {
       ListBox_PublishMousePos(mx, my);
-      int btn = Platform_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
+      int btn = Input_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
       if (mx != last_mx || my != last_my || btn != last_btn) {
         last_mx = mx;
         last_my = my;
@@ -687,4 +687,45 @@ void UpdateTextCaret(void) {
     top->vtable->on_render(top);
     Prompt_FlushDisplay(wm);
   }
+}
+
+void SetTransparentWindow(bool on) {
+  PlDrawState_Get()->transparent = on;
+}
+
+bool GetTransparentWindow(void) {
+  return PlDrawState_Get()->transparent;
+}
+
+void SetDrawBgColor(unsigned long hex) {
+  PlDrawState_Get()->bg_override = hex;
+}
+
+unsigned long GetDrawBgColor(void) {
+  return PlDrawState_Get()->bg_override;
+}
+
+void BeginMeasure(void) { PlDrawState_BeginMeasure(); }
+
+void EndMeasure(int *out_w, int *out_h) {
+  PlDrawState_EndMeasure(out_w, out_h);
+}
+
+void GetLastMeasureOrigin(int *out_x, int *out_y) {
+  if (out_x)
+    *out_x = PlDrawState_Get()->meas_origin_x;
+  if (out_y)
+    *out_y = PlDrawState_Get()->meas_origin_y;
+}
+
+void SetDrawOffset(int dx, int dy) {
+  PlDrawState_Get()->off_x = dx;
+  PlDrawState_Get()->off_y = dy;
+}
+
+void GetDrawOffset(int *out_x, int *out_y) {
+  if (out_x)
+    *out_x = PlDrawState_Get()->off_x;
+  if (out_y)
+    *out_y = PlDrawState_Get()->off_y;
 }

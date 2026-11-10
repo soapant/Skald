@@ -9,81 +9,82 @@
 #include "core/types/prompt.h"
 #include "core/window_manager.h"
 #include "platform/draw.h"
+#include "helpers/helpers_ui.h"
 #include "platform/input_state.h"
 #include "platform/ui.h"
 
-static bool g_mouse_valid = false;
-static int g_mouse_x = 0;
-static int g_mouse_y = 0;
-static int g_pending_scroll = 0;
-static bool g_focus_by_keyboard = false;
-static bool g_mouse_moved = false;
-static bool g_hover_pos_set = false;
-static int g_hover_x = 0;
-static int g_hover_y = 0;
-static int g_list_top = 0;
-static int g_item_height = 0;
-static int g_visible_count = 0;
-static int g_row_hscroll = 0;
-static bool g_pub_set = false;
-static int g_pub_x = 0;
-static int g_pub_y = 0;
-static int g_hover_throttle_ms = 0;
-static int64_t g_last_hover_ticks = 0;
+static bool mouse_valid = false;
+static int mouse_x = 0;
+static int mouse_y = 0;
+static int pendinscroll = 0;
+static bool focus_by_keyboard = false;
+static bool mouse_moved = false;
+static bool hover_pos_set = false;
+static int hover_x = 0;
+static int hover_y = 0;
+static int list_top = 0;
+static int item_height = 0;
+static int visible_count = 0;
+static int row_hscroll = 0;
+static bool pub_set = false;
+static int pub_x = 0;
+static int pub_y = 0;
+static int hover_throttle_ms = 0;
+static int64_t last_hover_ticks = 0;
 
 static bool listbox_hover_throttled(void) {
-  if (g_hover_throttle_ms <= 0)
+  if (hover_throttle_ms <= 0)
     return false;
   int64_t now = TimerNowTicks();
-  int64_t interval = (int64_t)g_hover_throttle_ms * TimerTickFrequency() / 1000;
-  if (g_last_hover_ticks != 0 && (now - g_last_hover_ticks) < interval) {
+  int64_t interval = (int64_t)hover_throttle_ms * TimerTickFrequency() / 1000;
+  if (last_hover_ticks != 0 && (now - last_hover_ticks) < interval) {
     return true;
   }
-  g_last_hover_ticks = now;
+  last_hover_ticks = now;
   return false;
 }
 
-void ListBox_SetRowHScroll(int px) { g_row_hscroll = px; }
-int ListBox_GetRowHScroll(void) { return g_row_hscroll; }
+void ListBox_SetRowHScroll(int px) { row_hscroll = px; }
+int ListBox_GetRowHScroll(void) { return row_hscroll; }
 
 void ListBox_FocusByKeyboard(void) {
-  g_focus_by_keyboard = true;
-  g_mouse_moved = false;
+  focus_by_keyboard = true;
+  mouse_moved = false;
 }
 
-void ListBox_FocusByMouse(void) { g_focus_by_keyboard = false; }
+void ListBox_FocusByMouse(void) { focus_by_keyboard = false; }
 
 void ListBox_PublishMousePos(int x, int y) {
-  if (g_pub_set && (g_pub_x != x || g_pub_y != y))
-    g_mouse_moved = true;
-  g_pub_x = x;
-  g_pub_y = y;
-  g_pub_set = true;
-  g_mouse_x = x;
-  g_mouse_y = y;
-  g_mouse_valid = true;
+  if (pub_set && (pub_x != x || pub_y != y))
+    mouse_moved = true;
+  pub_x = x;
+  pub_y = y;
+  pub_set = true;
+  mouse_x = x;
+  mouse_y = y;
+  mouse_valid = true;
 }
 
 void ListBox_InvalidateMousePos(void) {
-  g_mouse_valid = false;
-  g_mouse_moved = false;
-  g_hover_pos_set = false;
+  mouse_valid = false;
+  mouse_moved = false;
+  hover_pos_set = false;
 }
 
 bool ListBox_ClientMousePos(int *out_x, int *out_y) {
-  if (!g_mouse_valid) {
-    if (!Platform_GetMousePos(&g_mouse_x, &g_mouse_y)) {
-      g_mouse_valid = false;
+  if (!mouse_valid) {
+    if (!Platform_GetMousePos(&mouse_x, &mouse_y)) {
+      mouse_valid = false;
       if (out_x)
         *out_x = 0;
       if (out_y)
         *out_y = 0;
       return false;
     }
-    g_mouse_valid = true;
+    mouse_valid = true;
   }
-  int mx = g_mouse_x;
-  int my = g_mouse_y;
+  int mx = mouse_x;
+  int my = mouse_y;
   int wx = 0, wy = 0, dx = 0, dy = 0;
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
@@ -95,7 +96,7 @@ bool ListBox_ClientMousePos(int *out_x, int *out_y) {
     mx -= wx;
     my -= wy;
   }
-  Platform_GetDrawOffset(&dx, &dy);
+  GetDrawOffset(&dx, &dy);
   mx -= dx;
   my -= dy;
   int pw = 0, ph = 0;
@@ -141,20 +142,20 @@ bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
 
   if (!lb || lb->item_count <= 0)
     return false;
-  if (!g_mouse_moved)
+  if (!mouse_moved)
     return false;
   if (listbox_hover_throttled())
     return false;
-  g_mouse_moved = false;
+  mouse_moved = false;
   int mx = 0, my = 0;
   if (!ListBox_ClientMousePos(&mx, &my)) {
-    g_hover_pos_set = false;
+    hover_pos_set = false;
     return false;
   }
-  bool mouse_moved = !g_hover_pos_set || g_hover_x != mx || g_hover_y != my;
-  g_hover_pos_set = true;
-  g_hover_x = mx;
-  g_hover_y = my;
+  bool mouse_moved = !hover_pos_set || hover_x != mx || hover_y != my;
+  hover_pos_set = true;
+  hover_x = mx;
+  hover_y = my;
   if (!mouse_moved)
     return false;
   ListBox_FocusByMouse();
@@ -166,11 +167,11 @@ bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
   return true;
 }
 
-void ListBox_QueueScroll(int rows) { g_pending_scroll += rows; }
+void ListBox_QueueScroll(int rows) { pendinscroll += rows; }
 
 int ListBox_TakeScroll(void) {
-  int rows = g_pending_scroll;
-  g_pending_scroll = 0;
+  int rows = pendinscroll;
+  pendinscroll = 0;
   return rows;
 }
 
@@ -192,7 +193,7 @@ void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count) {
   }
   int old_sel = lb->selected_index;
   lb->view_offset = off;
-  if (!g_focus_by_keyboard && old_sel >= 0) {
+  if (!focus_by_keyboard && old_sel >= 0) {
     int sel = old_sel + delta;
     if (sel < 0)
       sel = 0;
@@ -238,19 +239,19 @@ void ListBox_ScrollToSelection(ListBoxInfo *lb) {
 }
 
 void ListBox_SetGeometry(int list_top, int item_height, int visible_count) {
-  g_list_top = list_top;
-  g_item_height = item_height;
-  g_visible_count = visible_count;
+  list_top = list_top;
+  item_height = item_height;
+  visible_count = visible_count;
 }
 
 void ListBox_GetGeometry(int *out_list_top, int *out_item_height,
                          int *out_visible_count) {
   if (out_list_top)
-    *out_list_top = g_list_top;
+    *out_list_top = list_top;
   if (out_item_height)
-    *out_item_height = g_item_height;
+    *out_item_height = item_height;
   if (out_visible_count)
-    *out_visible_count = g_visible_count;
+    *out_visible_count = visible_count;
 }
 
 void ListBox_NavigateUp(ListBoxInfo *lb) {

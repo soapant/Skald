@@ -10,19 +10,13 @@
 #include "platform/win32/win32_state.h"
 #include "helpers/helpers_render_thread.h"
 #include "platform/win32/common_ui_win32.h"
+#include "core/widget_registry.h"
 #include "deps/log.h"
 #include "platform/win32/bg_image_win32.h"
 
 struct PlatformWidget {
   PlatformWidgetBase base;
   HWND hwnd;
-  int x, y, w, h;
-  bool mapped;
-  RenderFrameFn fn;
-  void *ud;
-  ColorRef bg_color;
-  bool has_bg;
-  bool no_bg;
   DWORD owner_tid;
   BITMAPINFO layer_bi;
   HDC layer_dc;
@@ -30,8 +24,6 @@ struct PlatformWidget {
   HGDIOBJ layer_old;
   void *layer_bits;
   int layer_w, layer_h;
-  void (*on_click)(void);
-  char name[64];
 };
 
 static unsigned int widget_dib_color(unsigned long colorref) {
@@ -89,14 +81,14 @@ static void layer_release(PlatformWidget *widget) {
 
 static bool layer_acquire(PlatformWidget *widget) {
 
-  if (widget->layer_bits && widget->layer_w == widget->w &&
-      widget->layer_h == widget->h)
+  if (widget->layer_bits && widget->layer_w == widget->base.w &&
+      widget->layer_h == widget->base.h)
     return true;
   layer_release(widget);
   memset(&widget->layer_bi, 0, sizeof(widget->layer_bi));
   widget->layer_bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  widget->layer_bi.bmiHeader.biWidth = widget->w;
-  widget->layer_bi.bmiHeader.biHeight = -widget->h;
+  widget->layer_bi.bmiHeader.biWidth = widget->base.w;
+  widget->layer_bi.bmiHeader.biHeight = -widget->base.h;
   widget->layer_bi.bmiHeader.biPlanes = 1;
   widget->layer_bi.bmiHeader.biBitCount = 32;
   widget->layer_bi.bmiHeader.biCompression = BI_RGB;
@@ -118,8 +110,8 @@ static bool layer_acquire(PlatformWidget *widget) {
   widget->layer_bmp = bmp;
   widget->layer_old = SelectObject(dc, bmp);
   widget->layer_bits = bits;
-  widget->layer_w = widget->w;
-  widget->layer_h = widget->h;
+  widget->layer_w = widget->base.w;
+  widget->layer_h = widget->base.h;
   return true;
 }
 
@@ -130,19 +122,19 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
     return;
   }
 
-  if (widget->no_bg) {
+  if (widget->base.no_bg) {
     layer_fill(widget, 0xFF000000u);
   } else if (win32_bg_image_enabled()) {
     RECT full = {0, 0, widget->layer_w, widget->layer_h};
     if (!win32_draw_bg_image_slice(widget->layer_dc, &full, widget->layer_w,
                                    widget->layer_h, 0, 0)) {
       layer_fill(widget,
-                 widget_dib_color(widget->has_bg ? widget->bg_color : 0u));
+                 widget_dib_color(widget->base.has_bg ? widget->base.bg_color : 0u));
     }
   } else {
     layer_fill(widget, widget_dib_color(bg));
   }
-  Platform_SetDrawBgColor(0);
+  SetDrawBgColor(0);
   SetBkMode(widget->layer_dc, TRANSPARENT);
   Platform_SetDrawContextWin32(widget->layer_dc);
   {
@@ -150,13 +142,13 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
     ds->win32_widget_surface = true;
     ds->win32_listbox_surface = false;
   }
-  if (widget->fn)
-    widget->fn(widget->ud);
+  if (widget->base.fn)
+    widget->base.fn(widget->base.ud);
   {
     PlDrawState *ds = PlDrawState_Get();
     ds->win32_widget_surface = false;
   }
-  if (!widget->no_bg)
+  if (!widget->base.no_bg)
     win32_draw_window_border(widget->layer_dc, 0, 0, widget->layer_w,
                              widget->layer_h, NULL);
   GdiFlush();
@@ -164,7 +156,7 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
   {
     unsigned int *px = (unsigned int *)widget->layer_bits;
     size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
-    if (widget->no_bg) {
+    if (widget->base.no_bg) {
       for (size_t i = 0; i < n; i++) {
         unsigned int b = px[i] & 0xFFu;
         unsigned int g = (px[i] >> 8) & 0xFFu;
@@ -179,7 +171,7 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
         px[i] |= 0xFF000000u;
     }
 
-    if (widget->no_bg) {
+    if (widget->base.no_bg) {
       for (size_t i = 0; i < n; i++) {
         if ((px[i] & 0x00FFFFFFu) != 0)
           px[i] = (px[i] & 0x00FFFFFFu) | 0xFF000000u;
@@ -194,8 +186,8 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
     return;
   }
   POINT dst;
-  dst.x = widget->x;
-  dst.y = widget->y;
+  dst.x = widget->base.x;
+  dst.y = widget->base.y;
   SIZE size;
   size.cx = widget->layer_w;
   size.cy = widget->layer_h;
@@ -221,7 +213,7 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
 
   (void)hdc;
   (void)rect;
-  widget_push_layered(widget, widget->has_bg ? widget->bg_color : 0u,
+  widget_push_layered(widget, widget->base.has_bg ? widget->base.bg_color : 0u,
                       (unsigned char)WindowOpacity);
 }
 
@@ -238,13 +230,13 @@ static LRESULT CALLBACK WidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
     return DefWindowProcA(hwnd, msg, wParam, lParam);
   }
   case WM_NCHITTEST: {
-    if (widget && widget->on_click)
+    if (widget && widget->base.on_click)
       return HTCLIENT;
     return 0;
   }
   case WM_LBUTTONDOWN: {
-    if (widget && widget->on_click)
-      widget_queue_click(widget->on_click);
+    if (widget && widget->base.on_click)
+      widget_queue_click(widget->base.on_click);
     return 0;
   }
   case WM_PAINT: {
@@ -252,7 +244,7 @@ static LRESULT CALLBACK WidgetProc(HWND hwnd, UINT msg, WPARAM wParam,
       break;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
-    if (widget->no_bg) {
+    if (widget->base.no_bg) {
       widget_paint_layered(widget);
     } else if (hdc) {
       RECT rect;
@@ -371,13 +363,6 @@ void Platform_Widget_FlushDestruction(void) {
   wdestroy_unlock();
 }
 
-void Platform_Widget_Invalidate(PlatformWidget *widget) {
-  if (!widget || widget->base.dead) {
-    return;
-  }
-  widget->base.dirty = true;
-  RenderThread_Wake();
-}
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
                                        bool no_bg, void (*on_click)(void),
@@ -392,14 +377,14 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
     return NULL;
-  widget->x = x;
-  widget->y = y;
-  widget->w = w;
-  widget->h = h;
+  widget->base.x = x;
+  widget->base.y = y;
+  widget->base.w = w;
+  widget->base.h = h;
   widget->base.fps = fps;
-  widget->no_bg = no_bg;
-  widget->on_click = on_click;
-  snprintf(widget->name, sizeof(widget->name), "%s", name ? name : "?");
+  widget->base.no_bg = no_bg;
+  widget->base.on_click = on_click;
+  snprintf(widget->base.name, sizeof(widget->base.name), "%s", name ? name : "?");
   widget->base.dirty = true;
   widget->base.last_draw_ms = 0;
   widget->owner_tid = GetCurrentThreadId();
@@ -417,7 +402,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
     return NULL;
   }
 
-  if (!widget->no_bg) {
+  if (!widget->base.no_bg) {
     win32_apply_rounded_corners(widget->hwnd, w, h);
   }
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
@@ -429,10 +414,10 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
     return NULL;
   }
 
-  ColorRef amb = Platform_GetDrawBgColor();
+  ColorRef amb = GetDrawBgColor();
   if (amb) {
-    widget->has_bg = true;
-    widget->bg_color = amb;
+    widget->base.has_bg = true;
+    widget->base.bg_color = amb;
   }
 
   widget_frame(widget);
@@ -440,7 +425,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-  widget->mapped = true;
+  widget->base.mapped = true;
   return widget;
 }
 
@@ -476,22 +461,10 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
   wdestroy_unlock();
 }
 
-bool Platform_Widget_IsValid(const PlatformWidget *widget) {
-  return widget && !widget->base.dead;
-}
 
-void Platform_Widget_SetFrameCallback(PlatformWidget *widget,
-                                      RenderFrameFn fn, void *ud) {
-
-  if (!widget || widget->base.dead) {
-    return;
-  }
-  widget->fn = fn;
-  widget->ud = ud;
-}
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!widget || widget->base.dead || widget->mapped) {
+  if (!widget || widget->base.dead || widget->base.mapped) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -500,18 +473,18 @@ void Platform_Widget_Show(PlatformWidget *widget) {
   ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-  widget->mapped = true;
+  widget->base.mapped = true;
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || widget->base.dead || !widget->mapped) {
+  if (!widget || widget->base.dead || !widget->base.mapped) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
     return;
   }
   ShowWindow(widget->hwnd, SW_HIDE);
-  widget->mapped = false;
+  widget->base.mapped = false;
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
@@ -521,11 +494,11 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
     return;
   }
-  if (widget->x == x && widget->y == y) {
+  if (widget->base.x == x && widget->base.y == y) {
     return;
   }
-  widget->x = x;
-  widget->y = y;
+  widget->base.x = x;
+  widget->base.y = y;
   SetWindowPos(widget->hwnd, HWND_TOPMOST, x, y, 0, 0,
                SWP_NOSIZE | SWP_NOACTIVATE);
 }
@@ -534,8 +507,8 @@ void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
   if (!widget || widget->base.dead) {
     return;
   }
-  widget->no_bg = no_bg;
-  Platform_Widget_Invalidate(widget);
+  widget->base.no_bg = no_bg;
+  widget_invalidate(widget);
 }
 
 
@@ -543,9 +516,9 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
   if (!widget || widget->base.dead) {
     return;
   }
-  widget->has_bg = color != 0;
-  widget->bg_color = color;
-  Platform_Widget_Invalidate(widget);
+  widget->base.has_bg = color != 0;
+  widget->base.bg_color = color;
+  widget_invalidate(widget);
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
@@ -558,22 +531,16 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
     return;
   }
-  if (widget->w == w && widget->h == h) {
+  if (widget->base.w == w && widget->base.h == h) {
     return;
   }
-  widget->w = w;
-  widget->h = h;
-  if (!widget->no_bg)
+  widget->base.w = w;
+  widget->base.h = h;
+  if (!widget->base.no_bg)
     win32_apply_rounded_corners(widget->hwnd, w, h);
-  SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->x, widget->y, w, h,
+  SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->base.x, widget->base.y, w, h,
                SWP_NOACTIVATE);
-  Platform_Widget_Invalidate(widget);
+  widget_invalidate(widget);
 }
 
-int Platform_Widget_Width(const PlatformWidget *widget) {
-  return widget ? widget->w : 0;
-}
 
-int Platform_Widget_Height(const PlatformWidget *widget) {
-  return widget ? widget->h : 0;
-}

@@ -11,24 +11,24 @@ typedef struct {
   unsigned long long t_us;
 } PlatformKeyEvent;
 
-void Platform_InputState_Update(int vk, bool down, int mods, int char_hint);
-bool Platform_IsKeyDown(int vk);
-bool Platform_WasKeyPressed(int vk);
-bool Platform_WasKeyReleased(int vk);
-void Platform_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud),
+void InputState_Update(int vk, bool down, int mods, int char_hint);
+bool Input_IsKeyDown(int vk);
+bool Input_WasKeyPressed(int vk);
+bool Input_WasKeyReleased(int vk);
+void Input_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud),
                              void *ud);
-void Platform_KeyCallback_PurgeOwner(const char *path_a, const char *path_b);
-void Platform_InputState_Clear(void);
-void Platform_InputState_ClearQueue(void);
-void Platform_InputState_InhibitMods(void);
-int Platform_GetPressedKey(void);
-char Platform_GetPressedChar(void);
+void KeyCallback_PurgeOwner(const char *path_a, const char *path_b);
+void InputState_Clear(void);
+void InputState_ClearQueue(void);
+void InputState_InhibitMods(void);
+int Input_GetPressedKey(void);
+char Input_GetPressedChar(void);
 
-void Platform_GlobalKey_Push(const PlatformKeyEvent *ev);
-bool Platform_GlobalKey_Pop(PlatformKeyEvent *out);
-void Platform_GlobalKey_Clear(void);
-int Platform_GlobalKey_Pending(void);
-unsigned long Platform_GlobalKey_Dropped(void);
+void GlobalKey_Push(const PlatformKeyEvent *ev);
+bool GlobalKey_Pop(PlatformKeyEvent *out);
+void GlobalKey_Clear(void);
+int GlobalKey_Pending(void);
+unsigned long GlobalKey_Dropped(void);
 int Platform_CharForKey(int vk, int scancode, int mods);
 
 #define MOUSE_BTN_LEFT 0x01
@@ -51,13 +51,13 @@ typedef struct {
   unsigned long long t_us;
 } PlatformMouseEvent;
 
-void Platform_GlobalMouse_Push(const PlatformMouseEvent *ev);
-int Platform_GlobalMouse_Full(void);
-bool Platform_GlobalMouse_Pop(PlatformMouseEvent *out);
-void Platform_GlobalMouse_Clear(void);
-int Platform_GlobalMouse_Pending(void);
-unsigned long Platform_GlobalMouse_Dropped(void);
-bool Platform_MouseStateDown(int button);
-void Platform_UpdateMouseButton(int button, bool down);
+void GlobalMouse_Push(const PlatformMouseEvent *ev);
+int GlobalMouse_Full(void);
+bool GlobalMouse_Pop(PlatformMouseEvent *out);
+void GlobalMouse_Clear(void);
+int GlobalMouse_Pending(void);
+unsigned long GlobalMouse_Dropped(void);
+bool Input_MouseStateDown(int button);
+void Input_UpdateMouseButton(int button, bool down);
 bool Platform_GetMousePos(int *out_x, int *out_y);
 #endif

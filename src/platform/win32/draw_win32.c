@@ -247,40 +247,6 @@ static HFONT win32_sized_font(int size) {
   return g_sizeFonts[slot];
 }
 
-void Platform_SetTransparentWindow(bool on) {
-  PlDrawState_Get()->transparent = on;
-}
-bool Platform_GetTransparentWindow(void) {
-  return PlDrawState_Get()->transparent;
-}
-
-void Platform_SetDrawBgColor(unsigned long hex) {
-  PlDrawState_Get()->bg_override = hex;
-}
-unsigned long Platform_GetDrawBgColor(void) {
-  return PlDrawState_Get()->bg_override;
-}
-
-void Platform_BeginMeasure(void) { PlDrawState_BeginMeasure(); }
-void Platform_EndMeasure(int *out_w, int *out_h) {
-  PlDrawState_EndMeasure(out_w, out_h);
-}
-void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
-  if (out_x)
-    *out_x = PlDrawState_Get()->meas_origin_x;
-  if (out_y)
-    *out_y = PlDrawState_Get()->meas_origin_y;
-}
-void Platform_SetDrawOffset(int dx, int dy) {
-  PlDrawState_Get()->off_x = dx;
-  PlDrawState_Get()->off_y = dy;
-}
-void Platform_GetDrawOffset(int *out_x, int *out_y) {
-  if (out_x)
-    *out_x = PlDrawState_Get()->off_x;
-  if (out_y)
-    *out_y = PlDrawState_Get()->off_y;
-}
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   HWND w = WH_TO_HWND(h);
   if (!w || !IsWindow(w))

@@ -51,7 +51,7 @@ void Platform_WM_OnPopEmpty(WindowManager *wm) {
   (void)wm;
   x11_clear_suppress();
   remap_reset();
-  Platform_InputState_Clear();
+  InputState_Clear();
   malloc_trim(0);
 }
 

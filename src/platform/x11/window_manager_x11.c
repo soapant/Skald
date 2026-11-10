@@ -239,7 +239,7 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   }
   int modifiers = mods;
   if (vk_code)
-    Platform_InputState_Update(vk_code, true, modifiers, char_hint);
+    InputState_Update(vk_code, true, modifiers, char_hint);
   log_info("xkey ks=0x%lx len=%d buf0=%d vk=%d mods=%d state=0x%x",
            (unsigned long)ks, len, len > 0 ? (int)(unsigned char)buf[0] : -1,
            vk_code, modifiers, ev->state);
@@ -286,7 +286,7 @@ static void x11_handle_key_release(Display *dpy, XKeyEvent *ev) {
     vk = XKeysymToVK(ks);
   int mods = remap_current_mods();
   if (vk)
-    Platform_InputState_Update(vk, false, mods, 0);
+    InputState_Update(vk, false, mods, 0);
 }
 
 void Linux_ProcessXEvent(Display *dpy, XEvent *ev, WindowManager *wm) {
@@ -404,7 +404,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
     if (x11_uinput_fd_get() >= 0) {
       x11_clear_suppress();
       remap_reset();
-      Platform_InputState_Clear();
+      InputState_Clear();
       for (int i = 0; i < x11_keyboard_count_get(); i++) {
         if (!x11_device_grabbed_get(i)) {
           struct input_event drain_ev;
