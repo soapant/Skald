@@ -1,6 +1,5 @@
 #include "platform/platform.h"
 #include "platform/x11/input_x11.h"
-#include "platform/x11/input_x11_priv.h"
 #include "platform/x11/display_x11.h"
 #include "deps/log.h"
 #include "core/types/keys.h"
@@ -60,7 +59,7 @@ static int vk_to_linux(int vk_code) {
 
 static bool inject_uinput(int vk_code, int down) {
   int linux_code = vk_to_linux(vk_code);
-  if (!linux_code || g_x11_uinput_fd < 0)
+  if (!linux_code || x11_uinput_fd_get() < 0)
     return false;
   struct input_event ev;
   memset(&ev, 0, sizeof(ev));

@@ -10,6 +10,20 @@
 
 #include "core/types.h"
 
+int x11_keyboard_count_get(void);
+int x11_mouse_count_get(void);
+int x11_keyboard_fd(int i);
+int x11_mouse_fd(int i);
+void x11_keyboard_fd_set(int i, int fd);
+bool x11_device_grabbed_get(int i);
+void x11_device_grabbed_set(int i, bool v);
+bool x11_mouse_grabbed_get(int i);
+int x11_uinput_fd_get(void);
+void x11_uinput_fd_set(int fd);
+bool x11_ctrl_held(void);
+bool x11_alt_held(void);
+bool x11_shift_held(void);
+
 struct input_event;
 
 #define X11_MAX_KEYBOARDS 16

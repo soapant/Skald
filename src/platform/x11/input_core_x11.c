@@ -36,16 +36,16 @@
 
 struct WindowManager;
 
-X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
-int g_x11_keyboard_count = 0;
-X11Keyboard g_x11_mice[X11_MAX_MICE];
-int g_x11_mouse_count = 0;
-bool g_x11_mouse_grabbed[X11_MAX_MICE] = {false};
-int g_x11_uinput_mouse_fd = -1;
-int g_x11_uinput_fd = -1;
-bool g_x11_suppress_release[KEY_MAX + 1] = {0};
+static X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
+static int g_x11_keyboard_count = 0;
+static X11Keyboard g_x11_mice[X11_MAX_MICE];
+static int g_x11_mouse_count = 0;
+static bool g_x11_mouse_grabbed[X11_MAX_MICE] = {false};
+static int g_x11_uinput_mouse_fd = -1;
+static int g_x11_uinput_fd = -1;
+static bool g_x11_suppress_release[KEY_MAX + 1] = {0};
 static long g_x11_suppress_ms[KEY_MAX + 1] = {0};
-bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
+static bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 
 #define X11_REJECTED_MAX 128
 static int g_x11_rejected_fds[X11_REJECTED_MAX];
@@ -180,9 +180,24 @@ static void x11_release_rejected_devices(void) {
   g_x11_rejected_count = 0;
 }
 
-bool g_x11_ctrl_held = false;
-bool g_x11_alt_held = false;
-bool g_x11_shift_held = false;
+static bool g_x11_ctrl_held = false;
+static bool g_x11_alt_held = false;
+static bool g_x11_shift_held = false;
+
+int x11_keyboard_count_get(void) { return g_x11_keyboard_count; }
+int x11_mouse_count_get(void) { return g_x11_mouse_count; }
+int x11_keyboard_fd(int i) { return (i >= 0 && i < X11_MAX_KEYBOARDS) ? g_x11_keyboards[i].fd : -1; }
+int x11_mouse_fd(int i) { return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mice[i].fd : -1; }
+void x11_keyboard_fd_set(int i, int fd) { if (i >= 0 && i < X11_MAX_KEYBOARDS) g_x11_keyboards[i].fd = fd; }
+bool x11_device_grabbed_get(int i) { return (i >= 0 && i < X11_MAX_KEYBOARDS) ? g_x11_device_grabbed[i] : false; }
+void x11_device_grabbed_set(int i, bool v) { if (i >= 0 && i < X11_MAX_KEYBOARDS) g_x11_device_grabbed[i] = v; }
+bool x11_mouse_grabbed_get(int i) { return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mouse_grabbed[i] : false; }
+int x11_uinput_fd_get(void) { return g_x11_uinput_fd; }
+void x11_uinput_fd_set(int fd) { g_x11_uinput_fd = fd; }
+
+bool x11_ctrl_held(void) { return g_x11_ctrl_held; }
+bool x11_alt_held(void) { return g_x11_alt_held; }
+bool x11_shift_held(void) { return g_x11_shift_held; }
 
 
 bool x11_should_use_grab(void) {
