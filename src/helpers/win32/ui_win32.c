@@ -233,55 +233,31 @@ void UI_Redraw(ListBoxInfo *lb) {
   }
 }
 
-PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd) {
-  if (hwnd && IsWindow(hwnd)) {
-    PromptState *st = (PromptState *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-    if (st)
-      return st;
-    HWND parent = GetParent(hwnd);
-    if (parent && IsWindow(parent)) {
-      st = (PromptState *)GetWindowLongPtrA(parent, GWLP_USERDATA);
-      if (st)
-        return st;
-    }
+PromptState *win32_prompt_state_from_hwnd(HWND hwnd) {
+  HWND cur = hwnd;
+  for (int depth = 0; cur && depth < 8; depth++) {
+    Popup *p = PromptPopup_FindPopupByHandle(WH_FROM_HWND(cur));
+    if (p && p->user_data)
+      return (PromptState *)p->user_data;
+    HWND next = GetParent(cur);
+    if (next == cur)
+      break;
+    cur = next;
   }
-  WindowManager *wm = WindowManager_Get();
-  if (wm) {
-    for (int i = wm->popup_count - 1; i >= 0; i--) {
-      Popup *p = wm->popups[i];
-      if (p && p->user_data && p->type == POPUP_PROMPT) {
-        HWND ph = WH_TO_HWND(p->handle);
-        if (hwnd && ph && (hwnd == ph || IsChild(ph, hwnd))) {
-          return (PromptState *)p->user_data;
-        }
-      }
-    }
-    Popup *top = WindowManager_GetTopPopup(wm);
-    if (top && top->type == POPUP_PROMPT && top->user_data) {
-      return (PromptState *)top->user_data;
-    }
-  }
-  return NULL;
-}
-
-PromptState *win32_get_prompt_state(void) {
-  return win32_get_prompt_state_for_hwnd(GetFocus() ? GetFocus()
-                                                    : GetForegroundWindow());
+  return PromptPopup_GetTopPromptState();
 }
 
 void UI_SyncFilterFromEdit(void) {}
 
 void UI_ApplyFilterToEdit(void) {
-  PromptState *prompt = win32_get_prompt_state();
+  PromptState *prompt = PromptPopup_GetTopPromptState();
   if (prompt && prompt->eb)
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
 }
 
 ListBoxInfo *UI_GetPopupListBox(void) {
-  HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
-  if (hPopup && IsWindow(hPopup))
-    return (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
-  return NULL;
+  PromptState *prompt = PromptPopup_GetTopPromptState();
+  return prompt ? prompt->lb : NULL;
 }
 
 void UI_SyncEditCursor(int pos) {
