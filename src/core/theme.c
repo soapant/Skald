@@ -18,15 +18,15 @@ static const struct {
 } g_theme_slots[] = {
     {"COLOR_BG", offsetof(ThemeEntry, bg)},
     {"COLOR_TEXT", offsetof(ThemeEntry, text)},
-    {"COLOR_ALTERNATE", offsetof(ThemeEntry, alternate)},
     {"COLOR_SELECTED_TEXT", offsetof(ThemeEntry, selected_text)},
     {"COLOR_CURSOR", offsetof(ThemeEntry, cursor)},
     {"COLOR_BORDER", offsetof(ThemeEntry, border)},
 };
 static ColorRef *g_theme_targets[] = {
-    &COLOR_BG,     &COLOR_TEXT,   &COLOR_ALTERNATE, &COLOR_SELECTED_TEXT,
+    &COLOR_BG,     &COLOR_TEXT,&COLOR_SELECTED_TEXT,
     &COLOR_CURSOR, &COLOR_BORDER,
 };
+
 #define THEME_SLOT_COUNT (sizeof(g_theme_slots) / sizeof(g_theme_slots[0]))
 
 void Theme_Apply(void) {
