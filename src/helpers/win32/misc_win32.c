@@ -61,7 +61,6 @@ bool win32_default_browser_exe(char *out, size_t cap) {
 }
 
 bool win32_launch_default_browser_blank(void) {
-
   char exe[512];
   if (!win32_default_browser_exe(exe, sizeof(exe))) {
     log_info("Platform_LaunchBrowserAtUrl could not resolve default browser");

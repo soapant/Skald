@@ -154,7 +154,6 @@ bool Platform_MouseScroll(int notches);
 void Platform_ApplyUIScale(void);
 float Platform_GetUIScale(void);
 int Platform_GetUnscaledFontSize(void);
-void Platform_AdjustFontSize(int delta);
 void Platform_ResetUIScale(void);
 bool Platform_CloseActiveWindow(void);
 bool Platform_ToggleFullscreenActive(void);

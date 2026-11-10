@@ -105,11 +105,6 @@ int Platform_GetUnscaledFontSize(void) {
 }
 
 void Platform_AdjustFontSize(int delta) {
-  if (base_font_size <= 0)
-    base_font_size = FontSize;
-  base_font_size += delta;
-  if (base_font_size < 8)
-    base_font_size = 8;
   ui_scale_apply_locked();
 }
 
