@@ -1388,17 +1388,17 @@ static void cc_subwindow_render(PromptState *state) {
   SkListItemCtx ctx;
 
   while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.x = 14, .y = ctx.y + 4, .text = ctx.text, .align = "LEFT",
+    sk_draw_text(.y = ctx.y + 6, .text = ctx.text, .align = "LEFT",.pad=10,
                  .fontsize = 12);
     const char *hk = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
     SkRect r =
         sk_text_bounds(.text = hk, .fontsize = 10, .x = g_actions_width - 6,
-                       .y = ctx.y + 6, .align = "RIGHT");
+                       .y = ctx.y + 8, .align = "RIGHT");
     r.filled = true;
     r.radius = 4;
     r.color = SK_DARK_GRAY;
     ski_draw_rect(&r);
-    sk_draw_text(.x = g_actions_width - 6, .y = ctx.y + 6, .text = hk,
+    sk_draw_text(.x = g_actions_width - 6, .y = ctx.y + 8, .text = hk,
                  .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
   }
   sk_listbox_end();
@@ -1864,3 +1864,4 @@ SKALD_FEATURE_SHUTDOWN {
     g_prewarm_thread = NULL;
   }
 }
+
