@@ -182,13 +182,15 @@ static void cc_entry_hotkey_cb(void *ud) {
     cc_run_entry_by_label(g_cc_hotkey_targets[slot]);
 }
 
-static const char *cc_hotkey_for_label(const char *label) {
-  if (!label)
-    return NULL;
+static bool cc_hotkey_for_label(const char *label, char *out, size_t cap) {
+  if (!label || !out || cap == 0)
+    return false;
+  out[0] = '\0';
   for (int i = 0; i < CC_HK_SLOTS; i++)
-    if (g_cc_hotkey_targets[i][0] && strcmp(g_cc_hotkey_targets[i], label) == 0)
-      return sk_hotkey_for_ud(cc_hotkey_ud(i));
-  return NULL;
+    if (g_cc_hotkey_targets[i][0] &&
+        strcmp(g_cc_hotkey_targets[i], label) == 0)
+      return sk_hotkey_for_ud(cc_hotkey_ud(i), out, cap);
+  return false;
 }
 
 static void cc_run_entry_by_label(const char *label) {
@@ -1716,8 +1718,9 @@ static void cc_render(PromptState *state) {
                             strcmp(e->type, "Feature") == 0);
     if (e) {
       const char *right_text = plain_type ? e->type : CC_TYPE_LABEL;
-      const char *hk = cc_hotkey_for_label(ctx.text);
-      if (hk && hk[0]) {
+      char hk[64];
+      const char *hkp = cc_hotkey_for_label(ctx.text, hk, sizeof(hk)) ? hk : NULL;
+      if (hkp && hkp[0]) {
         int type_w = sk_get_text_width(right_text, FontSize);
         int hk_fs = FontSize - 6;
         int hk_x = type_x - type_w - CC_TYPE_GAP;

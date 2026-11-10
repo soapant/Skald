@@ -24,7 +24,7 @@ static long g_cl_reads = 0;
 static long g_cl_read_fail = 0;
 static long g_cl_selclear = 0;
 
-long g_cl_selreq = 0;
+static long g_cl_selreq = 0;
 
 static long cl_ms_since(void) {
 
