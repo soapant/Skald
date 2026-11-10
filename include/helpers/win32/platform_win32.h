@@ -61,7 +61,8 @@ extern LONG g_win32_fs_exstyle;
 extern ULONG_PTR g_gdiplusToken;
 
 DWORD WINAPI win32_stdin_writer(LPVOID arg);
-bool win32_cmdline_append_arg(char *cmd, size_t cap, size_t *off, const char *arg);
+bool win32_cmdline_append_arg(char *cmd, size_t cap, size_t *off,
+                              const char *arg);
 BOOL CALLBACK win32_enum_windows_proc_title(HWND hwnd, LPARAM lParam);
 HWND win32_foreground_target(void);
 BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lParam);

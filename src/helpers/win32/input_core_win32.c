@@ -16,7 +16,6 @@
 #include "helpers/win32/input_core_win32.h"
 #include "core/hotkey_pending.h"
 
-
 void win32_register_raw_mouse(HWND hwnd) {
   if (!hwnd || !IsWindow(hwnd)) {
     return;
@@ -279,4 +278,3 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
-

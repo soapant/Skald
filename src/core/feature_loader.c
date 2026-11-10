@@ -502,8 +502,7 @@ static void manifest_add_entry(const char *name, const char *section,
     return;
   }
   if (fwrite(buf, 1, len, f) != len)
-    log_error("manifest add: write %s incomplete (%s)", path,
-              strerror(errno));
+    log_error("manifest add: write %s incomplete (%s)", path, strerror(errno));
   fclose(f);
   log_info("manifest '%s' %s += %s", name, section, entry);
 }

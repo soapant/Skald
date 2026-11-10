@@ -52,8 +52,7 @@ static const char *match_in_applications_dir(const char *dir,
   const char *found = NULL;
   for (size_t i = 0; i < files->count && !found; i++) {
     for (size_t j = 0; j < count; j++) {
-      if (String_ContainsCI(files->files[i].name,
-                                                 names[j])) {
+      if (String_ContainsCI(files->files[i].name, names[j])) {
         found = names[j];
         break;
       }
@@ -195,4 +194,3 @@ int x11_default_apps_exec_token(const char *line, char *out, size_t cap) {
   out[n] = '\0';
   return n > 0;
 }
-

@@ -11,8 +11,8 @@ typedef struct {
 } EditboxX11Metrics;
 
 void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
-                       FontHandle font, const char *text, int startY,
-                       char *centered_to, int xOffset, int boxWidth);
+                           FontHandle font, const char *text, int startY,
+                           char *centered_to, int xOffset, int boxWidth);
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
                            int y, XftFont *xf, const char *s, int n, int px);
 int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
@@ -22,12 +22,12 @@ void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
                          XftColor *out);
 
 const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
-                                   size_t trunc_size);
-void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
-                         FontHandle font, XftColor *num_color,
-                         XftColor *body_color, XftColor *plain_color,
-                         ListBoxInfo *lb, char *icon_path, int idx, int y,
-                         int text_x);
+                                          size_t trunc_size);
+void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
+                                Colormap cmap, FontHandle font,
+                                XftColor *num_color, XftColor *body_color,
+                                XftColor *plain_color, ListBoxInfo *lb,
+                                char *icon_path, int idx, int y, int text_x);
 void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            Colormap cmap, unsigned long hex,
                            unsigned short alpha16, int x, int y, int w, int h,
@@ -49,23 +49,22 @@ int x11_font_list_top(int ascent, int descent, int font_size);
 int x11_font_row_height_of(FontHandle font);
 int x11_font_list_top_of(FontHandle font);
 
-
 void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
-                             Colormap *cmap);
+                          Colormap *cmap);
 void x11_set_draw_context(Display *dpy, XftDraw *xd, Visual *vis,
-                             Colormap cmap);
+                          Colormap cmap);
 void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
-                          Visual *vis, Colormap cmap);
+                      Visual *vis, Colormap cmap);
 void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
-                                 Visual *vis, Colormap cmap, int y, int h,
-                                 bool selected);
+                              Visual *vis, Colormap cmap, int y, int h,
+                              bool selected);
 bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
-                              const char *path, int x, int y, int tw, int th);
+                           const char *path, int x, int y, int tw, int th);
 
 void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
-                          Visual *vis, Colormap cmap);
+                      Visual *vis, Colormap cmap);
 FontHandle x11_create_font_on_display(Display *dpy, int size,
-                                        const char *face_name);
+                                      const char *face_name);
 
 int x11_editbox_measure(const char *text, int len, void *user);
 #endif

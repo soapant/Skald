@@ -144,7 +144,8 @@ static bool bg_cache_file(char *out, size_t cap, const char *native, int w,
   if (!FeaturePath_Get("core", BG_CACHE_DIR, dir, sizeof(dir)))
     return false;
   CreateDirectoryA(dir, NULL);
-  snprintf(out, cap, "%s\\%08x_%dx%d.bmp", dir, bg_hash_str(native), w, h); return true;
+  snprintf(out, cap, "%s\\%08x_%dx%d.bmp", dir, bg_hash_str(native), w, h);
+  return true;
 }
 
 static uint64_t bg_mtime_key(const FILETIME *ft) {

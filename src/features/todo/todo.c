@@ -27,7 +27,7 @@ typedef struct {
 #define TODO_ENTRY_DELIMITER "||"
 
 #define TODO_CONFIG_MASTER                                                     \
-  X("-s", "Skald", "Skald", RGB(137, 180, 250), true)                         \
+  X("-s", "Skald", "Skald", RGB(137, 180, 250), true)                          \
   X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true)   \
   X("-pb", "CocBot", "CocBot", RGB(249, 226, 175), true)                       \
   X("-pi", "IndieGame", "IndieGame", RGB(19, 26, 105), true)                   \

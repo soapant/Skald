@@ -107,7 +107,7 @@ wchar_t *msg_widen(const char *in, int *out_len) {
 }
 
 LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
-                                    LPARAM lParam) {
+                                            LPARAM lParam) {
 
   FadeWindowData *data =
       (FadeWindowData *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
@@ -249,8 +249,8 @@ bool message_popup_create(int x, int y, int w, int h) {
   DWORD exStyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED |
                   WS_EX_NOACTIVATE | WS_EX_TRANSPARENT;
   HWND hPopupWnd =
-      CreateWindowExA(exStyle, MESSAGE_CLASS, NULL, WS_POPUP, x, y,
-                      w, h, NULL, NULL, hInstance, s_msg_show_data);
+      CreateWindowExA(exStyle, MESSAGE_CLASS, NULL, WS_POPUP, x, y, w, h, NULL,
+                      NULL, hInstance, s_msg_show_data);
   if (hPopupWnd == NULL) {
     log_error("MSG CreateWindowExA failed: %lu", GetLastError());
     return false;
@@ -279,4 +279,3 @@ bool message_popup_create(int x, int y, int w, int h) {
 }
 
 char g_hover_key[64] = {0};
-

@@ -266,7 +266,7 @@ PromptState *win32_get_prompt_state_for_hwnd(HWND hwnd) {
 
 PromptState *win32_get_prompt_state(void) {
   return win32_get_prompt_state_for_hwnd(GetFocus() ? GetFocus()
-                                                   : GetForegroundWindow());
+                                                    : GetForegroundWindow());
 }
 
 void UI_SyncFilterFromEdit(void) {}
@@ -293,7 +293,6 @@ void UI_SyncEditCursor(int pos) {
       UI_RequestPopupRepaint();
   }
 }
-
 
 void UI_Edit_GetSel(uint32_t *start, uint32_t *end) {
   Win32TextTarget t;

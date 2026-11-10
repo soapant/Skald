@@ -100,7 +100,7 @@ void Platform_PromptPopupRender(Popup *self) {
   if (dpy) {
     PromptState *psr = (PromptState *)self->user_data;
     if (psr && psr->no_bg) {
-     SetTransparentWindow(true);
+      SetTransparentWindow(true);
       x11_render_prompt_user(dpy, &self->handle.xid,
                              (PromptState *)self->user_data);
       SetTransparentWindow(false);

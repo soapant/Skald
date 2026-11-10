@@ -39,7 +39,6 @@
 #include "core/hotkey_manager.h"
 #include "core/types/keys.h"
 
-
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
@@ -302,8 +301,8 @@ int WindowManager_RunLinux(WindowManager *wm) {
           if (ioctl(x11_keyboard_fd(i), EVIOCGRAB, 1) == 0) {
             x11_device_grabbed_set(i, true);
             unsigned long held[(KEY_MAX + 8) / 8] = {0};
-            bool have_held = ioctl(x11_keyboard_fd(i),
-                                   EVIOCGKEY(sizeof(held)), held) >= 0;
+            bool have_held =
+                ioctl(x11_keyboard_fd(i), EVIOCGKEY(sizeof(held)), held) >= 0;
             if (have_held) {
               for (int k = 0; k <= KEY_MAX; k++) {
                 if (held[k / (8 * (int)sizeof(unsigned long))] &

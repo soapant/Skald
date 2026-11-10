@@ -34,7 +34,6 @@
 #include "helpers/x11/display_x11.h"
 #include "core/hotkey_pending.h"
 
-
 struct WindowManager;
 
 static X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
@@ -265,7 +264,6 @@ bool x11_handle_evdev_mouse(struct input_event *ev) {
   return true;
 }
 
-
 static void x11_release_rejected_devices(void) {
   for (int i = 0; i < g_x11_rejected_count; i++) {
     if (g_x11_rejected_fds[i] >= 0) {
@@ -276,15 +274,28 @@ static void x11_release_rejected_devices(void) {
   g_x11_rejected_count = 0;
 }
 
-
 int x11_keyboard_count_get(void) { return g_x11_keyboard_count; }
 int x11_mouse_count_get(void) { return g_x11_mouse_count; }
-int x11_keyboard_fd(int i) { return (i >= 0 && i < X11_MAX_KEYBOARDS) ? g_x11_keyboards[i].fd : -1; }
-int x11_mouse_fd(int i) { return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mice[i].fd : -1; }
-void x11_keyboard_fd_set(int i, int fd) { if (i >= 0 && i < X11_MAX_KEYBOARDS) g_x11_keyboards[i].fd = fd; }
-bool x11_device_grabbed_get(int i) { return (i >= 0 && i < X11_MAX_KEYBOARDS) ? g_x11_device_grabbed[i] : false; }
-void x11_device_grabbed_set(int i, bool v) { if (i >= 0 && i < X11_MAX_KEYBOARDS) g_x11_device_grabbed[i] = v; }
-bool x11_mouse_grabbed_get(int i) { return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mouse_grabbed[i] : false; }
+int x11_keyboard_fd(int i) {
+  return (i >= 0 && i < X11_MAX_KEYBOARDS) ? g_x11_keyboards[i].fd : -1;
+}
+int x11_mouse_fd(int i) {
+  return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mice[i].fd : -1;
+}
+void x11_keyboard_fd_set(int i, int fd) {
+  if (i >= 0 && i < X11_MAX_KEYBOARDS)
+    g_x11_keyboards[i].fd = fd;
+}
+bool x11_device_grabbed_get(int i) {
+  return (i >= 0 && i < X11_MAX_KEYBOARDS) ? g_x11_device_grabbed[i] : false;
+}
+void x11_device_grabbed_set(int i, bool v) {
+  if (i >= 0 && i < X11_MAX_KEYBOARDS)
+    g_x11_device_grabbed[i] = v;
+}
+bool x11_mouse_grabbed_get(int i) {
+  return (i >= 0 && i < X11_MAX_MICE) ? g_x11_mouse_grabbed[i] : false;
+}
 int x11_uinput_fd_get(void) { return g_x11_uinput_fd; }
 void x11_uinput_fd_set(int fd) { g_x11_uinput_fd = fd; }
 
@@ -974,7 +985,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     return false;
   }
   if (remap_should_swallow_linux_key(code, val)) {
-      if (val == 1)
+    if (val == 1)
       x11_set_suppress(code, true);
     else if (val == 0)
       x11_set_suppress(code, false);
@@ -986,7 +997,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     hotkey_key_up(x11_convert_key_to_windows_vk(code));
   if (val != 2) {
     remap_update_phys(x11_convert_key_to_windows_vk(code), val);
-    }
+  }
   {
     PlatformKeyEvent gev;
     gev.vk = x11_convert_key_to_windows_vk(code);

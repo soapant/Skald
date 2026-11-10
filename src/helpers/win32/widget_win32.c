@@ -31,7 +31,7 @@ static void layer_fill(PlatformWidget *widget, unsigned int argb) {
 }
 
 static LRESULT CALLBACK win32_widget_proc(HWND hwnd, UINT msg, WPARAM wParam,
-                                   LPARAM lParam);
+                                          LPARAM lParam);
 
 static void widget_queue_click(void (*fn)(void));
 
@@ -121,8 +121,8 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
     RECT full = {0, 0, widget->layer_w, widget->layer_h};
     if (!win32_draw_bg_image_slice(widget->layer_dc, &full, widget->layer_w,
                                    widget->layer_h, 0, 0)) {
-      layer_fill(widget,
-                 widget_dib_color(widget->base.has_bg ? widget->base.bg_color : 0u));
+      layer_fill(widget, widget_dib_color(
+                             widget->base.has_bg ? widget->base.bg_color : 0u));
     }
   } else {
     layer_fill(widget, widget_dib_color(bg));
@@ -211,7 +211,7 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
 }
 
 static LRESULT CALLBACK win32_widget_proc(HWND hwnd, UINT msg, WPARAM wParam,
-                                   LPARAM lParam) {
+                                          LPARAM lParam) {
 
   PlatformWidget *widget =
       (PlatformWidget *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
@@ -270,7 +270,8 @@ void widget_frame(void *ud) {
   }
   DWORD now = GetTickCount();
   if (!widget->base.dirty) {
-    DWORD interval = widget->base.fps > 0 ? (DWORD)(1000 / widget->base.fps) : 1000;
+    DWORD interval =
+        widget->base.fps > 0 ? (DWORD)(1000 / widget->base.fps) : 1000;
     if (interval < 16)
       interval = 16;
     if (now - widget->base.last_draw_ms < interval)
@@ -353,4 +354,3 @@ void widget_destroy_on_owner_thread(void *ud) {
   widget->hwnd = NULL;
   free(widget);
 }
-

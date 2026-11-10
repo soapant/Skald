@@ -10,6 +10,7 @@ const char *x11_get_runtime_dir(void);
 
 uid_t x11_probe_session_uid(void);
 bool x11_cmd_exists(const char *cmd);
-bool x11_launch_browser(const char *browser_path, const char *url, bool new_window);
+bool x11_launch_browser(const char *browser_path, const char *url,
+                        bool new_window);
 
 #endif

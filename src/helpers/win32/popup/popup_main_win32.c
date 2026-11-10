@@ -159,7 +159,7 @@ static bool prompt_win_no_bg(void) {
 }
 
 LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
-                              LPARAM lParam) {
+                                      LPARAM lParam) {
 
   ListBoxInfo *lb = win32_get_lb_from_popup(hwnd);
   WindowManager *_wm_guard = WindowManager_Get();
@@ -361,7 +361,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     return (LRESULT)s_bg_brush;
   }
   case WM_CREATE: {
-      break;
+    break;
   }
   case WM_SHOWWINDOW: {
     break;
@@ -527,10 +527,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           orig_cnt = lb->item_count;
         }
         Item_GetColors((PlGetItemColorsSpec){.idx = orig_idx,
-                                                     .count = orig_cnt,
-                                                     .num_color = &ncol,
-                                                     .body_color = &bcol,
-                                                     .plain_color = &pcol});
+                                             .count = orig_cnt,
+                                             .num_color = &ncol,
+                                             .body_color = &bcol,
+                                             .plain_color = &pcol});
         SetTextColor(pdis->hDC, ncol);
         DrawTextA(pdis->hDC, textBuffer, -1, &textRect,
                   DT_SINGLELINE | DT_VCENTER);
@@ -640,10 +640,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             int orig_idx = estate->lb->matching_indices[list_idx];
             int orig_cnt = estate->lb->item_count;
             Item_GetColors((PlGetItemColorsSpec){.idx = orig_idx,
-                                                         .count = orig_cnt,
-                                                         .num_color = &ncol,
-                                                         .body_color = &bcol,
-                                                         .plain_color = &pcol});
+                                                 .count = orig_cnt,
+                                                 .num_color = &ncol,
+                                                 .body_color = &bcol,
+                                                 .plain_color = &pcol});
 
             int row_h_scroll = (list_idx == estate->lb->selected_index)
                                    ? estate->lb->text_hscroll

@@ -65,8 +65,8 @@ void x11_env_get_session_env(X11SessionEnv *out) {
 }
 
 void x11_env_build_env_strings(const X11SessionEnv *env, char disp_env[256],
-                         char xauth_env[512], char runtime_env[512],
-                         char wayland_env[512]) {
+                               char xauth_env[512], char runtime_env[512],
+                               char wayland_env[512]) {
   if (disp_env)
     snprintf(disp_env, 256, "DISPLAY=%s",
              env && env->display ? env->display : "");
@@ -137,7 +137,8 @@ bool x11_env_daemon_exec(char *const argv[]) {
   return true;
 }
 
-bool x11_env_daemon_exec_with_env(char *const argv[], const X11SessionEnv *env) {
+bool x11_env_daemon_exec_with_env(char *const argv[],
+                                  const X11SessionEnv *env) {
   pid_t pid = fork();
   if (pid < 0)
     return false;

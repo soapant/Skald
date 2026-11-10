@@ -86,5 +86,4 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetTextLineHeight(int fontsize);
 
-
 #endif

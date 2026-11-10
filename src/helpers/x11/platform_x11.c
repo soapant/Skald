@@ -64,7 +64,6 @@ Display *g_font_retired_dpy[X11_FONT_RETIRED];
 XftFont *g_font_retired_xft[X11_FONT_RETIRED];
 int g_font_retired_next = 0;
 
-
 static void x11_font_retire(Display *dpy, XftFont *xft) {
 
   g_font_retired_dpy[g_font_retired_next] = dpy;
@@ -116,7 +115,7 @@ bool x11_font_is_cached(Display *dpy, XftFont *xft) {
 }
 
 FontHandle x11_create_font_on_display(Display *dpy, int size,
-                                        const char *face_name) {
+                                      const char *face_name) {
 
   if (!dpy)
     return FH_NULL;
@@ -227,4 +226,3 @@ int x11_x11_button(int button) {
     return 0;
   }
 }
-

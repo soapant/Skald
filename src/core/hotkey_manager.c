@@ -75,8 +75,8 @@ static void hotkey_queue_init(void) {
     Platform_MutexLock(g_q_mutex);                                             \
   } while (0)
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(g_q_mutex)
-static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud,
-                           void *ud, const char *owner, int vk, int mods) {
+static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
+                           const char *owner, int vk, int mods) {
   if (!fn && !fn_ud)
     return;
   HOTKEY_Q_LOCK();
@@ -207,8 +207,8 @@ static void hotkey_tick_holds(void) {
     }
     g_hold_slots[i].next_fire_ms =
         now + (unsigned long long)hotkey_repeat_interval_ms();
-    hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud,
-                   b->user_ud, b->owner, vk, mods);
+    hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud, b->user_ud,
+                   b->owner, vk, mods);
   }
 }
 
@@ -264,8 +264,7 @@ bool hotkey_mouse_button_bound(int btn) {
       for (int j = 0; j < b->blacklist_count; j++) {
         if (b->blacklist[j][0] == '\0')
           continue;
-        if (title &&
-            String_ContainsCI(title, b->blacklist[j])) {
+        if (title && String_ContainsCI(title, b->blacklist[j])) {
           ok = true;
           break;
         }
@@ -279,8 +278,7 @@ bool hotkey_mouse_button_bound(int btn) {
         for (int j = 0; j < b->blacklist_count; j++) {
           if (b->blacklist[j][0] == '\0')
             continue;
-          if (title &&
-              String_ContainsCI(title, b->blacklist[j])) {
+          if (title && String_ContainsCI(title, b->blacklist[j])) {
             blocked = true;
             break;
           }
@@ -479,8 +477,7 @@ bool hotkey_process(int vk_code, int modifiers) {
             title = Platform_GetActiveWindowAppId();
             title_fetched = true;
           }
-          bool match =
-              String_ContainsCI(title, b->blacklist[j]);
+          bool match = String_ContainsCI(title, b->blacklist[j]);
 
           if (match) {
             blacklisted = true;
@@ -505,8 +502,7 @@ bool hotkey_process(int vk_code, int modifiers) {
           title = Platform_GetActiveWindowAppId();
           title_fetched = true;
         }
-        bool match =
-            String_ContainsCI(title, b->blacklist[j]);
+        bool match = String_ContainsCI(title, b->blacklist[j]);
 
         if (match) {
           whitelisted = true;
@@ -528,8 +524,8 @@ bool hotkey_process(int vk_code, int modifiers) {
         swallow = false;
       }
     }
-    hotkey_enqueue(cb, b->hotkey_callback_ud, b->user_ud, b->owner,
-                   vk_code, eff_modifiers);
+    hotkey_enqueue(cb, b->hotkey_callback_ud, b->user_ud, b->owner, vk_code,
+                   eff_modifiers);
     char buf[2556];
     char hotkey_buf[2422];
     HotkeyString_Format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},

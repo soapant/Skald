@@ -23,55 +23,6 @@
 #include "core/types/window.h"
 #define RAW_LINE_CAP 4096
 
-#include "helpers/helpers_text.h"
-
-#include <X11/Xft/Xft.h>
-
-#include <X11/extensions/Xrender.h>
-
-#include <X11/Xlib.h>
-
-#include <string.h>
-
-#include <X11/X.h>
-
-#include <fontconfig/fontconfig.h>
-
-#include <stdbool.h>
-
-#include <stdint.h>
-
-
-
-#include "platform/draw.h"
-
-#include "platform/platform.h"
-
-#include "helpers/helpers_ui.h"
-
-#include "core/prompt_geometry.h"
-
-#include "helpers/helpers_ui.h"
-
-#include "core/draw_state.h"
-
-#include "core/listbox_hover.h"
-
-#include "core/editbox.h"
-
-#include "platform/x11/drawing_x11.h"
-
-#include "helpers/x11/display_x11.h"
-#include "helpers/x11/draw_x11.h"
-
-#include "config_values.h"
-
-#include "core/context.h"
-
-#include "core/types/window.h"
-
-
-
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   Display *dpy = x11_get_display();
   if (!dpy)
@@ -91,15 +42,7 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   return true;
 }
 
-
-
 #define RAW_LINE_CAP 4096
-
-
-
-
-
-
 
 void Platform_FlushDraw(void) { x11_raw_line_flush(); }
 
@@ -115,8 +58,8 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   if (h <= 0)
     h = IconSize;
   DrawMeasureTrack(x, y, w, h);
-  return x11_draw_image_scaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y,
-                                  w, h);
+  return x11_draw_image_scaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y, w,
+                               h);
 }
 
 bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
@@ -157,20 +100,19 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   }
   XftColor col;
   x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
-  if (String_ContainsCI(a, "CENTER") ||
-      String_ContainsCI(a, "LEFT") ||
+  if (String_ContainsCI(a, "CENTER") || String_ContainsCI(a, "LEFT") ||
       String_ContainsCI(a, "RIGHT")) {
     int box = 0;
     if (spec.pad == 0 && !String_ContainsCI(a, "LEFT"))
       box = x;
-    x11_draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, spec.text, y, (char *)a,
-                      spec.pad ? spec.pad : x, box);
+    x11_draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, spec.text, y,
+                          (char *)a, spec.pad ? spec.pad : x, box);
   } else {
     XftFont *xf = FH_TO_XFT(fh);
     int len = (int)strlen(spec.text);
     if (len == 1 && xf &&
         x11_raw_line_push(x, y, spec.text[0], color, fh, needDestroy,
-                     spec.fontsize)) {
+                          spec.fontsize)) {
       needDestroy = false;
     } else {
       x11_raw_line_flush();
@@ -185,8 +127,6 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     Platform_DestroyFont(fh);
   return true;
 }
-
-
 
 void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
@@ -211,14 +151,6 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
                                            .fontsize = spec.fontsize});
 }
 
-
-
-
-
-
-
-
-
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
   if (!spec.text || spec.len <= 0)
     return 0;
@@ -231,8 +163,6 @@ int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
                                    spec.fontsize > 0 ? spec.fontsize
                                                      : FontSize);
 }
-
-
 
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   if (!spec.text || spec.len <= 0 || !g_draw_dpy || !g_draw_xd)
@@ -252,34 +182,26 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   return true;
 }
 
-
-
-
-
-
-
 void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font,
                            ListBoxInfo *lb, int idx, int y, int text_x,
                            const char *icon_path) {
   unsigned long ncol, bcol, pcol;
   Item_GetColors((PlGetItemColorsSpec){.idx = idx,
-                                               .count = lb->item_count,
-                                               .num_color = &ncol,
-                                               .body_color = &bcol,
-                                               .plain_color = &pcol});
+                                       .count = lb->item_count,
+                                       .num_color = &ncol,
+                                       .body_color = &bcol,
+                                       .plain_color = &pcol});
   XftColor ncolor, bcolor, pcolor;
   x11_xft_alloc_color(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
   x11_xft_alloc_color(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
   x11_xft_alloc_color(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
-  x11_draw_listbox_item_text(dpy, xd, vis, cmap, font, &ncolor, &bcolor, &pcolor, lb,
-                      (char *)icon_path, idx, y, text_x);
+  x11_draw_listbox_item_text(dpy, xd, vis, cmap, font, &ncolor, &bcolor,
+                             &pcolor, lb, (char *)icon_path, idx, y, text_x);
   XftColorFree(dpy, vis, cmap, &ncolor);
   XftColorFree(dpy, vis, cmap, &bcolor);
   XftColorFree(dpy, vis, cmap, &pcolor);
 }
-
-
 
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, FontHandle font) {
@@ -296,8 +218,6 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                             .fontsize = FontSize});
 }
 
-
-
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
   if (!state)
@@ -311,8 +231,6 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
   state->eb->scroll_offset = eb.scroll;
   Editbox_Draw(&eb, &lay, EDITBOX_PART_TEXT);
 }
-
-
 
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
@@ -335,18 +253,6 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd,
   Editbox_Layout(&eb, &lay);
   Editbox_Draw(&eb, &lay, EDITBOX_PART_CARET);
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   int x = spec.x;
@@ -462,8 +368,6 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   return true;
 }
 
-
-
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   if (!raw_can_draw())
     return false;
@@ -487,8 +391,6 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   return true;
 }
 
-
-
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   if (!raw_can_draw() || spec.radius <= 0)
     return false;
@@ -496,7 +398,7 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   int cx = spec.cx + PlDrawState_Get()->off_x;
   int cy = spec.cy + PlDrawState_Get()->off_y;
   DrawMeasureTrack(cx - spec.radius, cy - spec.radius, spec.radius * 2,
-                spec.radius * 2);
+                   spec.radius * 2);
   GC gc = raw_prepare(spec.color, t);
   if (!gc)
     return false;
@@ -510,12 +412,6 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
              360 * 64);
   return true;
 }
-
-
-
-
-
-
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   Display *dpy = x11_get_display();
@@ -531,6 +427,3 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   if (list_top)
     *list_top = lt;
 }
-
-
-

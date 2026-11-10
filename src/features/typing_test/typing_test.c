@@ -1364,13 +1364,10 @@ void typing_test_render(PromptState *state) {
     positions = (SkCharPos *)malloc(sizeof(SkCharPos) * (size_t)(text_len + 1));
   }
 
-
-
   if (positions) {
     memset(positions, 0, sizeof(SkCharPos) * (size_t)(text_len + 1));
     typing_test_measure_lines(positions, text_len, text, text_y, W - margin * 2,
                               line_height, body);
-
 
     for (int i = 0; i < text_len; i++) {
       unsigned long col;
@@ -1390,7 +1387,8 @@ void typing_test_render(PromptState *state) {
   if (draw_cursor && typing_test_position < text_len) {
     sk_draw_rect(.x = positions[typing_test_position].x + margin + 2,
                  .y = positions[typing_test_position].y + base / 4 + 2,
-                 .w = body / 2, .h = body + 4,.filled=true,.transparent=true);
+                 .w = body / 2, .h = body + 4, .filled = true,
+                 .transparent = true);
   }
 
   if (typing_test_position == text_len && text_len > 0) {

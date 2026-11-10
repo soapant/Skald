@@ -15,9 +15,6 @@
 #include "helpers/win32/misc_win32.h"
 #include <time.h>
 
-
-
-
 bool win32_default_browser_exe(char *out, size_t cap) {
 
   HKEY key = NULL;
@@ -78,4 +75,3 @@ bool win32_launch_default_browser_blank(void) {
   }
   return true;
 }
-

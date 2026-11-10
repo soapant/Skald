@@ -176,7 +176,7 @@ bool win32_text_needs_boost(const wchar_t *wide, int len) {
 }
 
 HFONT win32_font_for_text(const wchar_t *wide, int len, int fontsize,
-                                 HFONT *out_prev, int *out_dy) {
+                          HFONT *out_prev, int *out_dy) {
 
   HFONT prev = NULL;
   if (out_dy)
@@ -388,7 +388,7 @@ void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {
 }
 
 void win32_img_cache_put(const char *path, HDC screen, int w, int h,
-                                void *bmp) {
+                         void *bmp) {
 
   FILETIME ft;
   DWORD size;
@@ -613,7 +613,7 @@ void win32_release_draw_cache(void) {
 }
 
 void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
-                                      EditboxSpec *eb) {
+                               EditboxSpec *eb) {
   int text_len = (int)strlen(state->eb->filter);
   int cursor_x = 0;
   int text_w = 0;
@@ -679,4 +679,3 @@ void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->text_color = rgb_to_hex(COLOR_TEXT);
   eb->font = font;
 }
-

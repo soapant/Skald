@@ -185,7 +185,7 @@ SkStringList sk_load_file_list(const char *filepath) {
     return list;
   char full[MAX_PATH];
   if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
-                                sizeof(full))) {
+                                   sizeof(full))) {
 
     log_warn("sk_load_file_list resolve failed name='%s' feature='%s'",
              filepath,
@@ -204,7 +204,7 @@ long sk_load_file(const char *filepath, char *buffer, long buffer_size) {
   buffer[0] = '\0';
   char full[MAX_PATH];
   if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
-                                sizeof(full))) {
+                                   sizeof(full))) {
 
     log_warn("sk_load_file resolve failed name='%s' feature='%s'", filepath,
              SkaldContext_Get()->window.current_feature
@@ -253,7 +253,7 @@ bool sk_append_to_file(const char *filepath, const char *line) {
     return false;
   char full[MAX_PATH];
   if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
-                                sizeof(full)))
+                                   sizeof(full)))
     return false;
   filepath = full;
   FILE *f = fopen(filepath, "a");
@@ -299,7 +299,7 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
     return false;
   char full[MAX_PATH];
   if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
-                                sizeof(full)))
+                                   sizeof(full)))
     return false;
   filepath = full;
   FILE *f = fopen(filepath, "w");
@@ -364,7 +364,7 @@ bool sk_write_string_to_file(const char *path, const char *content) {
     return false;
   char full[MAX_PATH];
   if (FeaturePath_ResolveDataPath(__builtin_return_address(0), path, full,
-                               sizeof(full))) {
+                                  sizeof(full))) {
     path = full;
   } else {
     char expanded[MAX_PATH];
@@ -654,8 +654,8 @@ bool sk_hotkey_for_ud(void *ud, char *out, size_t cap) {
 void sk_register_deferred_init(void (*cb)(void)) { DeferredInit_Register(cb); }
 
 bool sk_hotkey_for_callback(void (*cb)(void), char *out, size_t cap) {
-  return hotkey_binding_format(hotkey_find_by_callback((HotkeyCallback)cb),
-                               out, cap);
+  return hotkey_binding_format(hotkey_find_by_callback((HotkeyCallback)cb), out,
+                               cap);
 }
 
 bool sk_hotkey_taken(const char *hotkey) {
@@ -1222,12 +1222,11 @@ unsigned long sk_listbox_get_current_standard_color(void) {
   if (idx < 0 || idx >= g_sk_list_lb->item_count)
     return 0;
   unsigned long ncol, bcol, pcol;
-  Item_GetColors(
-      (PlGetItemColorsSpec){.idx = idx,
-                            .count = g_sk_list_lb->item_count,
-                            .num_color = &ncol,
-                            .body_color = &bcol,
-                            .plain_color = &pcol});
+  Item_GetColors((PlGetItemColorsSpec){.idx = idx,
+                                       .count = g_sk_list_lb->item_count,
+                                       .num_color = &ncol,
+                                       .body_color = &bcol,
+                                       .plain_color = &pcol});
   return pcol;
 }
 
@@ -1470,7 +1469,7 @@ bool ski_draw_image(const SkImageSpec *spec) {
   const char *path = spec->path;
   if ((path[0] == '/' || path[0] == '\\') &&
       FeaturePath_ResolveAssetPath(__builtin_return_address(0), path, asset,
-                                sizeof(asset))) {
+                                   sizeof(asset))) {
     path = asset;
   }
   bool r = Platform_DrawImageAt(path, spec->x, spec->y, w, h);
@@ -1608,7 +1607,6 @@ bool ski_draw_circle(const PlCircle *spec) {
                             .thickness = spec->thickness});
   return r;
 }
-
 
 static bool sk_listbox_begin_common(const PlListSpec *spec) {
   if (!spec)
@@ -2023,9 +2021,7 @@ bool sk_poll_mouse(SkMouseEvent *out) {
 
 int sk_mouse_queue_len(void) { return GlobalMouse_Pending(); }
 
-unsigned long sk_mouse_queue_dropped(void) {
-  return GlobalMouse_Dropped();
-}
+unsigned long sk_mouse_queue_dropped(void) { return GlobalMouse_Dropped(); }
 
 void sk_clear_mouse_queue(void) { GlobalMouse_Clear(); }
 
@@ -2039,9 +2035,7 @@ bool sk_mouse_pressed(int button) { return Input_MouseStateDown(button); }
 
 int sk_key_queue_len(void) { return GlobalKey_Pending(); }
 
-unsigned long sk_key_queue_dropped(void) {
-  return GlobalKey_Dropped();
-}
+unsigned long sk_key_queue_dropped(void) { return GlobalKey_Dropped(); }
 
 void sk_clear_key_queue(void) { GlobalKey_Clear(); }
 
@@ -2246,7 +2240,7 @@ char *sk_resolve_data_path(const char *name) {
     return NULL;
   char full[MAX_PATH];
   if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), name, full,
-                                sizeof(full)))
+                                   sizeof(full)))
     return NULL;
   return strdup(full);
 }
@@ -2517,8 +2511,7 @@ static void sk_widget_attach_window(void *ud) {
     Platform_Widget_SetNoBg(widget->win, widget->no_bg);
     widget_set_fps(widget->win, widget->fps);
     if (created)
-      widget_set_frame_callback(widget->win, sk_widget_render_frame,
-                                       widget);
+      widget_set_frame_callback(widget->win, sk_widget_render_frame, widget);
   }
 }
 
@@ -2774,7 +2767,7 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   char icon_asset[MAX_PATH];
   if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
       FeaturePath_ResolveAssetPath(__builtin_return_address(0), spec->icon,
-                                icon_asset, sizeof(icon_asset))) {
+                                   icon_asset, sizeof(icon_asset))) {
     e->pub.icon = sk_cc_dup(e->icon, sizeof(e->icon), icon_asset);
   } else {
     e->pub.icon = sk_cc_dup(e->icon, sizeof(e->icon), spec->icon);

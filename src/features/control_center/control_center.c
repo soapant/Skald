@@ -187,8 +187,7 @@ static bool cc_hotkey_for_label(const char *label, char *out, size_t cap) {
     return false;
   out[0] = '\0';
   for (int i = 0; i < CC_HK_SLOTS; i++)
-    if (g_cc_hotkey_targets[i][0] &&
-        strcmp(g_cc_hotkey_targets[i], label) == 0)
+    if (g_cc_hotkey_targets[i][0] && strcmp(g_cc_hotkey_targets[i], label) == 0)
       return sk_hotkey_for_ud(cc_hotkey_ud(i), out, cap);
   return false;
 }
@@ -1388,7 +1387,7 @@ static void cc_subwindow_render(PromptState *state) {
   SkListItemCtx ctx;
 
   while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.y = ctx.y + 6, .text = ctx.text, .align = "LEFT",.pad=10,
+    sk_draw_text(.y = ctx.y + 6, .text = ctx.text, .align = "LEFT", .pad = 10,
                  .fontsize = 12);
     const char *hk = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
     SkRect r =
@@ -1417,8 +1416,7 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   const CcEntry *e = cc_find(name);
   int slot = cc_hotkey_slot_for(e);
   if (slot >= 0) {
-    sk_register_hotkey(.hotkey = hotkey,
-                       .cb_ud = cc_entry_hotkey_cb,
+    sk_register_hotkey(.hotkey = hotkey, .cb_ud = cc_entry_hotkey_cb,
                        .ud = cc_hotkey_ud(slot));
     char line[320];
     snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
@@ -1623,8 +1621,7 @@ static void cc_register_persisted_hotkeys(void) {
     const CcEntry *e = cc_find(action);
     int slot = cc_hotkey_slot_for(e);
     if (slot >= 0)
-      sk_register_hotkey(.hotkey = hotkey,
-                         .cb_ud = cc_entry_hotkey_cb,
+      sk_register_hotkey(.hotkey = hotkey, .cb_ud = cc_entry_hotkey_cb,
                          .ud = cc_hotkey_ud(slot));
   }
 }
@@ -1719,7 +1716,8 @@ static void cc_render(PromptState *state) {
     if (e) {
       const char *right_text = plain_type ? e->type : CC_TYPE_LABEL;
       char hk[64];
-      const char *hkp = cc_hotkey_for_label(ctx.text, hk, sizeof(hk)) ? hk : NULL;
+      const char *hkp =
+          cc_hotkey_for_label(ctx.text, hk, sizeof(hk)) ? hk : NULL;
       if (hkp && hkp[0]) {
         int type_w = sk_get_text_width(right_text, FontSize);
         int hk_fs = FontSize - 6;
@@ -1864,4 +1862,3 @@ SKALD_FEATURE_SHUTDOWN {
     g_prewarm_thread = NULL;
   }
 }
-

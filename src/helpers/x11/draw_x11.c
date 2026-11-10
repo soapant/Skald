@@ -22,7 +22,6 @@
 #include "core/context.h"
 #include "core/types/window.h"
 
-
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, FontHandle font);
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
@@ -96,8 +95,8 @@ int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
 }
 
 void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
-                        unsigned long *ucols, int nu, int ls, int le, int drawX,
-                        int baseline, int rowTop) {
+                       unsigned long *ucols, int nu, int ls, int le, int drawX,
+                       int baseline, int rowTop) {
   int cx = drawX;
   int i = ls;
   while (i < le) {
@@ -189,7 +188,7 @@ void x11_raw_line_flush(void) {
     if (ww > avail) {
       if (le > ls) {
         x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                    y + ascent + row * lineH, y + row * lineH);
+                          y + ascent + row * lineH, y + row * lineH);
         row++;
       }
       int c = ws;
@@ -228,7 +227,7 @@ void x11_raw_line_flush(void) {
           break;
         }
         x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, c, c + n, x0,
-                    y + ascent + row * lineH, y + row * lineH);
+                          y + ascent + row * lineH, y + row * lineH);
         row++;
         c += n;
       }
@@ -238,7 +237,7 @@ void x11_raw_line_flush(void) {
     int add = ww + (le > ls ? spaceW : 0);
     if (le > ls && lw + add > avail) {
       x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                  y + ascent + row * lineH, y + row * lineH);
+                        y + ascent + row * lineH, y + row * lineH);
       row++;
       ls = ws;
       le = we;
@@ -253,7 +252,7 @@ void x11_raw_line_flush(void) {
   }
   if (le > ls) {
     x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                y + ascent + row * lineH, y + row * lineH);
+                      y + ascent + row * lineH, y + row * lineH);
   }
   g_raw_map_count = count;
   g_raw_map_y = y;
@@ -267,7 +266,7 @@ void x11_raw_line_flush(void) {
 }
 
 bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
-                         FontHandle fh, bool owned, int fontsize) {
+                       FontHandle fh, bool owned, int fontsize) {
   if (g_raw_count > 0) {
     bool same = (y == g_raw_y) && (fontsize == g_raw_fontsize) &&
                 (g_raw_xd == g_draw_xd);
@@ -310,7 +309,7 @@ bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
 }
 
 void x11_set_draw_context(Display *dpy, XftDraw *xd, Visual *vis,
-                             Colormap cmap) {
+                          Colormap cmap) {
   x11_raw_line_flush();
   g_draw_dpy = dpy;
   g_draw_xd = xd;
@@ -319,7 +318,7 @@ void x11_set_draw_context(Display *dpy, XftDraw *xd, Visual *vis,
 }
 
 void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
-                             Colormap *cmap) {
+                          Colormap *cmap) {
 
   if (dpy)
     *dpy = g_draw_dpy;
@@ -375,8 +374,8 @@ int x11_editbox_measure(const char *text, int len, void *user) {
 }
 
 void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
-                                 Visual *vis, Colormap cmap, int y, int h,
-                                 bool selected) {
+                              Visual *vis, Colormap cmap, int y, int h,
+                              bool selected) {
   if (selected) {
     if (state->no_bg) {
       x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
@@ -389,8 +388,7 @@ void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
 }
 
 void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
-                                    EditboxSpec *eb,
-                                    EditboxX11Metrics *metrics) {
+                             EditboxSpec *eb, EditboxX11Metrics *metrics) {
   XftFont *xf = FH_TO_XFT(font);
   int text_len = (int)strlen(state->eb->filter);
   int cursor_x = 0;
@@ -450,9 +448,7 @@ void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
 
 GC raw_gc_for(Display *dpy, Drawable d);
 
-bool raw_can_draw(void) {
-  return g_draw_dpy != NULL && g_draw_xd != NULL;
-}
+bool raw_can_draw(void) { return g_draw_dpy != NULL && g_draw_xd != NULL; }
 
 GC raw_gc_for(Display *dpy, Drawable d) {
   static GC gc = NULL;
@@ -486,7 +482,7 @@ GC raw_prepare(unsigned long color, int thickness) {
 }
 
 void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
-                          Visual *vis, Colormap cmap) {
+                      Visual *vis, Colormap cmap) {
   if (!state)
     return;
   SkaldContext_Get()->window.editbox_placed = true;
@@ -499,7 +495,7 @@ void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
 }
 
 void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
-                          Visual *vis, Colormap cmap) {
+                      Visual *vis, Colormap cmap) {
 
   if (!state || !state->lb)
     return;
@@ -555,4 +551,3 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
 
   Platform_DestroyFont(font);
 }
-

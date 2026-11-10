@@ -287,8 +287,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_LEFT) {
-    if (state->lb && state->lb->item_count > 0 &&
-        state->lb->text_hscroll > 0) {
+    if (state->lb && state->lb->item_count > 0 && state->lb->text_hscroll > 0) {
       state->lb->text_hscroll -= 24;
       if (state->lb->text_hscroll < 0)
         state->lb->text_hscroll = 0;

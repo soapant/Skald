@@ -48,7 +48,7 @@ DWORD WINAPI win32_stdin_writer(LPVOID arg) {
 }
 
 bool win32_cmdline_append_arg(char *cmd, size_t cap, size_t *off,
-                                     const char *arg) {
+                              const char *arg) {
   size_t pos = *off;
   size_t alen = strlen(arg);
   bool needs_quotes = alen == 0 || strpbrk(arg, " \t\"\n\v") != NULL;
@@ -115,8 +115,7 @@ BOOL CALLBACK win32_enum_windows_proc_title(HWND hwnd, LPARAM lParam) {
   if (window_title[0] == '\0')
     return TRUE;
 
-  if (String_ContainsCI(window_title,
-                                             data->target_title)) {
+  if (String_ContainsCI(window_title, data->target_title)) {
     data->found_hwnd = hwnd;
     return FALSE;
   }
@@ -157,8 +156,7 @@ typedef struct {
   int count;
 } win32_mon_list;
 
-BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc,
-                                    LPARAM lp) {
+BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp) {
 
   (void)hMon;
   (void)hdc;
@@ -285,9 +283,10 @@ bool win32_move_active_window_direction(int dir) {
     for (int j = i + 1; j < list.count; j++) {
       int li = horizontal ? list.rects[i].left : list.rects[i].top;
       int lj = horizontal ? list.rects[j].left : list.rects[j].top;
-      bool before = li > lj || (li == lj && (horizontal
-                                                  ? list.rects[j].top < list.rects[i].top
-                                                  : list.rects[j].left < list.rects[i].left));
+      bool before =
+          li > lj ||
+          (li == lj && (horizontal ? list.rects[j].top < list.rects[i].top
+                                   : list.rects[j].left < list.rects[i].left));
       if (before) {
         RECT t = list.rects[i];
         list.rects[i] = list.rects[j];
@@ -305,8 +304,8 @@ bool win32_move_active_window_direction(int dir) {
     if (horizontal ? list.rects[i].left <= cx : list.rects[i].top <= cy)
       cur = i;
   }
-  int dst = (dir == WIN32_MON_RIGHT || dir == WIN32_MON_DOWN) ? cur + 1
-                                                                : cur - 1;
+  int dst =
+      (dir == WIN32_MON_RIGHT || dir == WIN32_MON_DOWN) ? cur + 1 : cur - 1;
   if (dst < 0 || dst >= list.count)
     return false;
   int w = wr.right - wr.left;
@@ -661,8 +660,7 @@ BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam) {
   return TRUE;
 }
 
-void win32_collect_pair(PlWindowList *out_titles,
-                               PlWindowList *out_names) {
+void win32_collect_pair(PlWindowList *out_titles, PlWindowList *out_names) {
 
   WinPair p = {out_titles, out_names};
   EnumWindows(win32_enum_windows_proc_pair, (LPARAM)&p);
@@ -678,7 +676,9 @@ uint32_t s_main_thread_id = 0;
 
 WindowHandle s_tray_wnd = {0};
 
-bool win32_is_main_thread(void) { return GetCurrentThreadId() == s_main_thread_id; }
+bool win32_is_main_thread(void) {
+  return GetCurrentThreadId() == s_main_thread_id;
+}
 
 WindowHandle win32_tray_window(void) { return s_tray_wnd; }
 
@@ -720,8 +720,7 @@ typedef void (*PlatformHttpCallback)(const char *body, bool success,
                                      void *userdata);
 
 bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
-  HANDLE t =
-      CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, ud, 0, NULL);
+  HANDLE t = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, ud, 0, NULL);
   if (!t)
     return false;
   CloseHandle(t);
@@ -737,4 +736,3 @@ DWORD WINAPI win_thread_entry(LPVOID p) {
   fn(arg);
   return 0;
 }
-
