@@ -487,7 +487,7 @@ void print_due_card(void) {
   snprintf(buf, sizeof(buf), "%s/.local/share/Anki2/User 1/collection.anki2",
            sk_resolve_user_path());
 #endif
-  CardList list = get_cards_in_deck(buf, "Chemistry");
+  CardList list = get_cards_in_deck(buf, "Physics");
   long long now = (long long)time(NULL);
   size_t *due = malloc(list.count * sizeof(size_t));
   size_t due_count = 0;
@@ -572,9 +572,9 @@ SKALD_FEATURE_SHUTDOWN {
 }
 
 SKALD_FEATURE_INIT {
-  // anki_lock = sk_mutex_create();
-  // anki_running = true;
-  // anki_thread = sk_thread_create(anki_timer_thread, NULL);
+  anki_lock = sk_mutex_create();
+  anki_running = true;
+  anki_thread = sk_thread_create(anki_timer_thread, NULL);
   sk_register_hotkey(.hotkey = "Shift+Space", .cb = handle_anki,
                      .should_swallow = should_swallow_anki);
 }
