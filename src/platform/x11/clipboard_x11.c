@@ -672,10 +672,7 @@ int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
   return x11_clipboard_set_image(png, len);
 }
 
-int Platform_ClipboardSetFile(const char *path) {
-  (void)path;
-  return 0;
-}
+int Platform_ClipboardSetFile(const char *path) { return x11_clipboard_set_file(path); }
 
 char *Platform_ClipboardGetText(void) { return x11_clipboard_get_text(); }
 

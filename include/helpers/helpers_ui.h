@@ -45,6 +45,8 @@ void CalculateWindowMetrics(WindowLayout *layout, int height, int width,
                             int item_height);
 
 #define MSG_PROMPT_GAP_DEFAULT 300
+#define MSG_TIMEOUT_INDEFINITE 6969.0
+#define MsgTimeoutIsIndefinite(t) ((t) == MSG_TIMEOUT_INDEFINITE || (t) <= 0.0)
 
 
 typedef struct {

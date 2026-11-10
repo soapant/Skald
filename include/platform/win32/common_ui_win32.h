@@ -4,6 +4,11 @@
 #include <windows.h>
 #include "core/types.h"
 
+#define QUICKSWITCHER_CLASS "QuickSwitcherModalClass"
+#define MESSAGE_CLASS "DisplayMessageModalClass"
+#define SEARCH_POPUP_CLASS "SearchPopupClass"
+#define WIDGET_CLASS "WidgetClass"
+
 void UpdateTextCaret(void);
 void CalculateWindowMetrics(WindowLayout *layout, int height, int width,
                             int item_height);
