@@ -713,10 +713,9 @@ bool FileWalk_AllFilesFromDir(const char *dir_path,
 
 #include "core/types/keys.h"
 #include "core/types/window.h"
+#include "core/hotkey_pending.h"
 
-extern int pending_hotkey_vk;
-extern int pending_hotkey_mod;
-extern long pending_hotkey_timeMs;
+
 
 bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
   if (!key || key->text_len <= 0)

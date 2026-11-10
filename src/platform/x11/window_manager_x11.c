@@ -30,15 +30,13 @@
 #include <linux/input.h>
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/input_x11.h"
+#include "core/hotkey_pending.h"
 #include "platform/render_thread.h"
 #include "platform/widget.h"
 #include "core/remap_manager.h"
 #include "core/hotkey_manager.h"
 #include "core/types/keys.h"
 
-extern int pending_hotkey_vk;
-extern int pending_hotkey_mod;
-extern long pending_hotkey_timeMs;
 extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
 
 static int x11_keysym_to_windows_vk(KeySym keysym) {

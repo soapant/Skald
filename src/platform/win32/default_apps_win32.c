@@ -6,7 +6,7 @@
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
 #include "config.h"
-char default_apps_win32[DEFAULT_APP_COUNT][256];
+static char default_apps_win32[DEFAULT_APP_COUNT][256];
 
 const char *win32_terminal_name_from_guid(const char *console_guid,
                                           const char *terminal_guid) {
