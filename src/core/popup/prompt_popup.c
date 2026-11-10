@@ -30,7 +30,7 @@ static void PromptPopup_OnShow(Popup *self) {
   ctx->window.selection_complete = false;
   ctx->window.output_buffer[0] = '\0';
   data->prev_hPopupWnd = ctx->window.hPopupWnd;
-  Platform_InputState_ClearQueue();
+  InputState_ClearQueue();
   log_info("PromptPopup_OnShow title=%s x=%d y=%d popup_count=%d",
            data->spec.title ? data->spec.title : "(null)", data->x, data->y,
            wm->popup_count);

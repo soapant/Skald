@@ -11,6 +11,7 @@
 #include "platform/x11/subclasses_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/display_x11.h"
+#include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "helpers/helpers_text.h"
@@ -99,10 +100,10 @@ void Platform_PromptPopupRender(Popup *self) {
   if (dpy) {
     PromptState *psr = (PromptState *)self->user_data;
     if (psr && psr->no_bg) {
-      Platform_SetTransparentWindow(true);
+     SetTransparentWindow(true);
       x11_render_prompt_user(dpy, &self->handle.xid,
                              (PromptState *)self->user_data);
-      Platform_SetTransparentWindow(false);
+      SetTransparentWindow(false);
       return;
     }
     x11_render_prompt_user(dpy, &self->handle.xid,

@@ -36,6 +36,7 @@
 #include "helpers/helpers_ui.h"
 #include "core/prompt_geometry.h"
 #include "core/feature_loader.h"
+#include "core/feature_path.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
 #include "platform/skapi_platform.h"
@@ -183,7 +184,7 @@ SkStringList sk_load_file_list(const char *filepath) {
   if (!filepath)
     return list;
   char full[MAX_PATH];
-  if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full,
+  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
                                 sizeof(full))) {
 
     log_warn("sk_load_file_list resolve failed name='%s' feature='%s'",
@@ -202,7 +203,7 @@ long sk_load_file(const char *filepath, char *buffer, long buffer_size) {
     return -1;
   buffer[0] = '\0';
   char full[MAX_PATH];
-  if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full,
+  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
                                 sizeof(full))) {
 
     log_warn("sk_load_file resolve failed name='%s' feature='%s'", filepath,
@@ -251,7 +252,7 @@ bool sk_append_to_file(const char *filepath, const char *line) {
   if (!filepath || !line)
     return false;
   char full[MAX_PATH];
-  if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full,
+  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
                                 sizeof(full)))
     return false;
   filepath = full;
@@ -297,7 +298,7 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   if (count > 0 && !lines)
     return false;
   char full[MAX_PATH];
-  if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full,
+  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
                                 sizeof(full)))
     return false;
   filepath = full;
@@ -362,7 +363,7 @@ bool sk_write_string_to_file(const char *path, const char *content) {
   if (!path || !content)
     return false;
   char full[MAX_PATH];
-  if (Platform_ResolveDataPath(__builtin_return_address(0), path, full,
+  if (FeaturePath_ResolveDataPath(__builtin_return_address(0), path, full,
                                sizeof(full))) {
     path = full;
   } else {
@@ -892,11 +893,11 @@ static void sk_hover_popup_frame(void *ud) {
     return;
   }
   p->frame++;
-  Platform_SetDrawOffset(0, 0);
-  Platform_BeginMeasure();
+  SetDrawOffset(0, 0);
+  BeginMeasure();
   p->render();
   int mw = 0, mh = 0;
-  Platform_EndMeasure(&mw, &mh);
+  EndMeasure(&mw, &mh);
   if (mw > 0 && mh > 0) {
     p->w = mw + p->pad;
     p->h = mh + p->pad;
@@ -940,7 +941,7 @@ void ski_message(const SkMessageSpec *spec) {
     if (spec->render) {
       SkHoverPopupCtx *ctx = sk_hover_popup_ctx_new(spec);
       if (ctx) {
-        Platform_HoverWidgetShow((PlHoverWidgetShowSpec){
+        HoverWidgetShow((PlHoverWidgetShowSpec){
             .key = spec->hover_key,
             .render = sk_hover_popup_frame,
             .ud = ctx,
@@ -1468,7 +1469,7 @@ bool ski_draw_image(const SkImageSpec *spec) {
   char asset[MAX_PATH];
   const char *path = spec->path;
   if ((path[0] == '/' || path[0] == '\\') &&
-      Platform_ResolveAssetPath(__builtin_return_address(0), path, asset,
+      FeaturePath_ResolveAssetPath(__builtin_return_address(0), path, asset,
                                 sizeof(asset))) {
     path = asset;
   }
@@ -1976,24 +1977,24 @@ SkKey sk_hotkey_from_string(const char *str) {
   return key;
 }
 
-bool sk_is_key_down(int vk) { return Platform_IsKeyDown(vk); }
-bool sk_is_key_pressed(int vk) { return Platform_WasKeyPressed(vk); }
-bool sk_is_key_released(int vk) { return Platform_WasKeyReleased(vk); }
+bool sk_is_key_down(int vk) { return Input_IsKeyDown(vk); }
+bool sk_is_key_pressed(int vk) { return Input_WasKeyPressed(vk); }
+bool sk_is_key_released(int vk) { return Input_WasKeyReleased(vk); }
 bool sk_ctrl_pressed(void) { return Key_IsCtrlPressed(); }
 bool sk_shift_pressed(void) { return Key_IsShiftPressed(); }
 bool sk_alt_pressed(void) { return Key_IsAltPressed(); }
 bool sk_super_pressed(void) { return Key_IsSuperPressed(); }
 void sk_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud) {
-  Platform_SetKeyCallback(cb, ud);
+  Input_SetKeyCallback(cb, ud);
 }
-int sk_get_key_pressed(void) { return Platform_GetPressedKey(); }
-char sk_get_char_pressed(void) { return Platform_GetPressedChar(); }
+int sk_get_key_pressed(void) { return Input_GetPressedKey(); }
+char sk_get_char_pressed(void) { return Input_GetPressedChar(); }
 
 bool sk_poll_key(SkKeyEvent *out) {
   if (!out)
     return false;
   PlatformKeyEvent ev;
-  if (!Platform_GlobalKey_Pop(&ev))
+  if (!GlobalKey_Pop(&ev))
     return false;
   out->vk = ev.vk;
   out->scancode = ev.scancode;
@@ -2008,7 +2009,7 @@ bool sk_poll_mouse(SkMouseEvent *out) {
   if (!out)
     return false;
   PlatformMouseEvent ev;
-  if (!Platform_GlobalMouse_Pop(&ev))
+  if (!GlobalMouse_Pop(&ev))
     return false;
   out->button = ev.button;
   out->x = ev.x;
@@ -2020,13 +2021,13 @@ bool sk_poll_mouse(SkMouseEvent *out) {
   return true;
 }
 
-int sk_mouse_queue_len(void) { return Platform_GlobalMouse_Pending(); }
+int sk_mouse_queue_len(void) { return GlobalMouse_Pending(); }
 
 unsigned long sk_mouse_queue_dropped(void) {
-  return Platform_GlobalMouse_Dropped();
+  return GlobalMouse_Dropped();
 }
 
-void sk_clear_mouse_queue(void) { Platform_GlobalMouse_Clear(); }
+void sk_clear_mouse_queue(void) { GlobalMouse_Clear(); }
 
 SkPos sk_get_cursor_pos() {
   int x, y;
@@ -2034,15 +2035,15 @@ SkPos sk_get_cursor_pos() {
   return (SkPos){x, y};
 }
 
-bool sk_mouse_pressed(int button) { return Platform_MouseStateDown(button); }
+bool sk_mouse_pressed(int button) { return Input_MouseStateDown(button); }
 
-int sk_key_queue_len(void) { return Platform_GlobalKey_Pending(); }
+int sk_key_queue_len(void) { return GlobalKey_Pending(); }
 
 unsigned long sk_key_queue_dropped(void) {
-  return Platform_GlobalKey_Dropped();
+  return GlobalKey_Dropped();
 }
 
-void sk_clear_key_queue(void) { Platform_GlobalKey_Clear(); }
+void sk_clear_key_queue(void) { GlobalKey_Clear(); }
 
 int sk_char_for_key(int vk, int scancode, int mods) {
   return Platform_CharForKey(vk, scancode, mods);
@@ -2244,7 +2245,7 @@ char *sk_resolve_data_path(const char *name) {
   if (!name || !name[0])
     return NULL;
   char full[MAX_PATH];
-  if (!Platform_ResolveDataPath(__builtin_return_address(0), name, full,
+  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), name, full,
                                 sizeof(full)))
     return NULL;
   return strdup(full);
@@ -2454,7 +2455,7 @@ static void sk_widget_render_frame(void *ud) {
     widget->hovered = inside;
     if (!inside) {
       Platform_HoverMessageRelease(widget->name);
-      Platform_HoverWidgetHide(widget->name);
+      HoverWidgetHide(widget->name);
     }
   }
   SkWidgetState st;
@@ -2464,18 +2465,18 @@ static void sk_widget_render_frame(void *ud) {
   st.elapsed = sk_end_timer(widget->created_at);
   st.hovered = widget->hovered;
 
-  Platform_SetDrawOffset(-widget->origin_x, 0);
-  Platform_BeginMeasure();
+  SetDrawOffset(-widget->origin_x, 0);
+  BeginMeasure();
   widget->render(&st);
   int mw = 0, mh = 0, mx = 0, my = 0;
-  Platform_EndMeasure(&mw, &mh);
-  Platform_GetLastMeasureOrigin(&mx, &my);
+  EndMeasure(&mw, &mh);
+  GetLastMeasureOrigin(&mx, &my);
   mx += widget->origin_x;
 
   if (widget->origin_x != mx || widget->origin_y != my) {
     widget->origin_x = mx;
     widget->origin_y = my;
-    Platform_Widget_Invalidate(widget->win);
+    widget_invalidate(widget->win);
   }
 
   if (widget->auto_w || widget->auto_h) {
@@ -2485,7 +2486,7 @@ static void sk_widget_render_frame(void *ud) {
     if (nw != widget->w || nh != widget->h) {
       widget->w = nw;
       widget->h = nh;
-      if (Platform_Widget_IsValid(widget->win)) {
+      if (widget_is_valid(widget->win)) {
         Platform_Widget_Resize(widget->win, nw, nh);
       }
       sk_widget_relayout();
@@ -2500,12 +2501,12 @@ static void sk_widget_attach_window(void *ud) {
   if (!widget || widget->dead)
     return;
   bool created = false;
-  if (!Platform_Widget_IsValid(widget->win)) {
-    Platform_SetDrawBgColor(widget->has_bg ? widget->bg_color : 0);
+  if (!widget_is_valid(widget->win)) {
+    SetDrawBgColor(widget->has_bg ? widget->bg_color : 0);
     widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w,
                                          widget->h, widget->fps, widget->no_bg,
                                          widget->on_click, widget->name);
-    Platform_SetDrawBgColor(0);
+    SetDrawBgColor(0);
     created = (widget->win != NULL);
   } else {
     Platform_Widget_Move(widget->win, widget->x, widget->y);
@@ -2514,9 +2515,9 @@ static void sk_widget_attach_window(void *ud) {
     Platform_Widget_SetBgColor(widget->win,
                                widget->has_bg ? widget->bg_color : 0);
     Platform_Widget_SetNoBg(widget->win, widget->no_bg);
-    WidgetRegistry_SetFps(widget->win, widget->fps);
+    widget_set_fps(widget->win, widget->fps);
     if (created)
-      Platform_Widget_SetFrameCallback(widget->win, sk_widget_render_frame,
+      widget_set_frame_callback(widget->win, sk_widget_render_frame,
                                        widget);
   }
 }
@@ -2772,7 +2773,7 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
       sk_cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
   char icon_asset[MAX_PATH];
   if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
-      Platform_ResolveAssetPath(__builtin_return_address(0), spec->icon,
+      FeaturePath_ResolveAssetPath(__builtin_return_address(0), spec->icon,
                                 icon_asset, sizeof(icon_asset))) {
     e->pub.icon = sk_cc_dup(e->icon, sizeof(e->icon), icon_asset);
   } else {

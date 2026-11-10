@@ -316,10 +316,10 @@ static void MsgPresent(Display *dpy, const char *message, int x, int y,
 
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
-  Platform_SetTransparentWindow(no_bg);
+  SetTransparentWindow(no_bg);
   Window win =
       x11_create_display_message_window(dpy, x + ax, y + ay, winW, winH, false);
-  Platform_SetTransparentWindow(false);
+  SetTransparentWindow(false);
   if (!win) {
     return;
   }

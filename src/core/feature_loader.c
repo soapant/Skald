@@ -254,10 +254,10 @@ static void sweep_retired_libs(void) {
       widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen);
       cc_registry_purge_owner(g_retired[i].owner, NULL);
       feature_list_purge_owner(g_retired[i].owner, NULL);
-      Platform_KeyCallback_PurgeOwner(g_retired[i].owner, NULL);
+      KeyCallback_PurgeOwner(g_retired[i].owner, NULL);
       Key_PurgeInterceptorOwner(g_retired[i].owner, NULL);
       EventBus_PurgeOwner(g_retired[i].owner, NULL);
-      Platform_HoverWidget_PurgeOwner(g_retired[i].owner, NULL);
+      HoverWidget_PurgeOwner(g_retired[i].owner, NULL);
       Platform_MessagePopup_PurgeOwner(g_retired[i].owner, NULL);
       log_info("deferring unload of retired lib %s", g_retired[i].owner);
       defer_unload(g_retired[i].handle, g_retired[i].uniq, g_retired[i].owner);
@@ -889,10 +889,10 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       widget_purge_owner(retire_owner, path_copy, retire_gen);
       cc_registry_purge_owner(retire_owner, path_copy);
       feature_list_purge_owner(retire_owner, path_copy);
-      Platform_KeyCallback_PurgeOwner(retire_owner, path_copy);
+      KeyCallback_PurgeOwner(retire_owner, path_copy);
       Key_PurgeInterceptorOwner(retire_owner, path_copy);
       EventBus_PurgeOwner(retire_owner, path_copy);
-      Platform_HoverWidget_PurgeOwner(retire_owner, path_copy);
+      HoverWidget_PurgeOwner(retire_owner, path_copy);
       Platform_MessagePopup_PurgeOwner(retire_owner, path_copy);
       sweep_retired_libs();
       UNLOCK();

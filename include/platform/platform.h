@@ -125,10 +125,10 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec);
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec);
 void Platform_CreateDisplayMessageWindow(PlCreateDisplayMessageWindowSpec spec);
 void Platform_HoverMessage(PlHoverMessageSpec spec);
-void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec);
+void HoverWidgetShow(PlHoverWidgetShowSpec spec);
 void Platform_HoverMessageRelease(const char *key);
-void Platform_HoverWidgetHide(const char *key);
-void Platform_HoverWidget_PurgeOwner(const char *path_a, const char *path_b);
+void HoverWidgetHide(const char *key);
+void HoverWidget_PurgeOwner(const char *path_a, const char *path_b);
 void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 
 FontHandle Platform_CreateFont(int size, const char *face_name);
@@ -140,10 +140,6 @@ void Platform_PrewarmBackgroundPixmap(void);
 void Platform_InitUI(void);
 void Platform_InitDataFolder(void);
 bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
-                               size_t out_len);
-bool Platform_ResolveDataPath(void *caller, const char *name, char *out,
-                              size_t out_len);
-bool Platform_ResolveAssetPath(void *caller, const char *name, char *out,
                                size_t out_len);
 void Platform_ShutdownUI(void);
 char *Platform_RunTerminalCommand(char *command, bool open_terminal);

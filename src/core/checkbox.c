@@ -56,7 +56,7 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
       g_cb_mouse.mx = -9999;
       g_cb_mouse.my = -9999;
     }
-    g_cb_mouse.down = Platform_MouseStateDown(MOUSE_BTN_LEFT);
+    g_cb_mouse.down = Input_MouseStateDown(MOUSE_BTN_LEFT);
     g_cb_mouse.valid = true;
   }
   if (out_x)

@@ -9,19 +9,10 @@
 #include <X11/Xft/Xft.h>
 #endif
 
-void Platform_SetDrawBgColor(unsigned long hex);
-unsigned long Platform_GetDrawBgColor(void);
-void Platform_SetTransparentWindow(bool on);
-bool Platform_GetTransparentWindow(void);
 void Platform_FlushDraw(void);
-void Platform_GetLastMeasureOrigin(int *out_x, int *out_y);
-void Platform_SetDrawOffset(int dx, int dy);
-void Platform_BeginMeasure(void);
-void Platform_EndMeasure(int *out_w, int *out_h);
 
 void Platform_DrawPromptEditText(PromptState *state);
 void Platform_DrawPromptEditCursor(PromptState *state);
-void Platform_GetDrawOffset(int *out_x, int *out_y);
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h);
 

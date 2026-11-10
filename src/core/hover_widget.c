@@ -6,6 +6,7 @@
 #include "core/types/window.h"
 #include "platform/platform.h"
 #include "platform/widget.h"
+#include "core/widget_registry.h"
 #include "helpers/helpers_render_thread.h"
 #include "helpers/helpers_owner.h"
 
@@ -68,7 +69,7 @@ static void hover_widget_destroy_slot(HoverWidgetSlot *s) {
   void *release_ud = s->release_ud;
   memset(s, 0, sizeof(*s));
   if (w) {
-    Platform_Widget_SetFrameCallback(w, NULL, NULL);
+    widget_set_frame_callback(w, NULL, NULL);
     Platform_Widget_Destroy(w);
     Platform_Widget_FlushDestruction();
   }
@@ -111,7 +112,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
       Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
       Platform_Widget_SetNoBg(pw, no_bg);
     }
-    Platform_Widget_Invalidate(pw);
+    widget_invalidate(pw);
     if (old_release && (old_release != release || old_release_ud != release_ud))
       old_release(old_release_ud);
     return;
@@ -154,7 +155,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   s->w = pw;
   Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
   Platform_Widget_SetNoBg(pw, no_bg);
-  Platform_Widget_SetFrameCallback(pw, HoverWidgetFrame, s);
+  widget_set_frame_callback(pw, HoverWidgetFrame, s);
   s->owner[0] = '\0';
   Owner_ResolveForFunc(owner_src ? owner_src : (void *)render, s->owner,
                        sizeof(s->owner));
@@ -168,7 +169,7 @@ static void hover_widget_hide_apply(const char *key) {
   hover_widget_destroy_slot(&g_hover_widgets[idx]);
 }
 
-void Platform_HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
+void HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
   if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) {
     return;
   }
@@ -246,7 +247,7 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
   return false;
 }
 
-void Platform_HoverWidgetHide(const char *key) {
+void HoverWidgetHide(const char *key) {
   if (!key || !key[0]) {
     return;
   }
@@ -259,7 +260,7 @@ void Platform_HoverWidgetHide(const char *key) {
   }
 }
 
-void Platform_HoverWidgetShow(PlHoverWidgetShowSpec spec) {
+void HoverWidgetShow(PlHoverWidgetShowSpec spec) {
   const char *key = spec.key;
   void (*render)(void *ud) = spec.render;
   void *ud = spec.ud;

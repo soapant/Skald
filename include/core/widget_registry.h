@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include "core/types.h"
 #include "platform/widget.h"
-#include "platform/platform.h"
 
 #define WIDGET_MAX 32
 #define WIDGET_NAME_MAX 64
@@ -109,6 +108,12 @@ PlPos widget_get_pos(const char *name);
 void widget_show(Widget *widget);
 void widget_hide(Widget *widget);
 void widget_set_render(Widget *widget, WidgetRenderFn render);
-void WidgetRegistry_SetFps(PlatformWidget *window, int fps);
+void widget_set_fps(PlatformWidget *window, int fps);
 
+bool widget_is_valid(const PlatformWidget *widget);
+void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
+                               void *ud);
+void widget_invalidate(PlatformWidget *widget);
+int widget_width(const PlatformWidget *widget);
+int widget_height(const PlatformWidget *widget);
 #endif

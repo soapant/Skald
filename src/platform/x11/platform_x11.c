@@ -1694,19 +1694,7 @@ void Platform_InitDataFolder() {
   Platform_MkdirIfNotExists(dir_path);
 }
 
-bool Platform_ResolveDataPath(void *caller, const char *name, char *out,
-                              size_t out_len) {
 
-  bool ok = FeaturePath_ResolveDataPath(caller, name, out, out_len);
-  return ok;
-}
-
-bool Platform_ResolveAssetPath(void *caller, const char *name, char *out,
-                               size_t out_len) {
-
-  bool ok = FeaturePath_ResolveAssetPath(caller, name, out, out_len);
-  return ok;
-}
 
 bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
                                size_t out_len) {

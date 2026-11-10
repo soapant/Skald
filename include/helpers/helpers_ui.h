@@ -14,6 +14,7 @@ unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
 
 int DrawThicknessPx(float thickness);
 void DrawMeasureTrack(int x, int y, int w, int h);
+void DrawMeasureTrack(int x, int y, int w, int h);
 void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,
                      bool (*filter_match)(const char *item,
@@ -76,5 +77,15 @@ void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
 void DisplayMessageSlot(const char *message, MessageSlot slot, int max_w,
                         int max_h, int prompt_gap, double timeout,
                         ColorRef color, void (*render)(void), const char *name);
+
+void SetTransparentWindow(bool on);
+bool GetTransparentWindow(void);
+void SetDrawBgColor(unsigned long hex);
+unsigned long GetDrawBgColor(void);
+void BeginMeasure(void);
+void EndMeasure(int *out_w, int *out_h);
+void GetLastMeasureOrigin(int *out_x, int *out_y);
+void SetDrawOffset(int dx, int dy);
+void GetDrawOffset(int *out_x, int *out_y);
 
 #endif
