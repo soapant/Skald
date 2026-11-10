@@ -21,6 +21,7 @@ bool FeatureLoader_TryLock(void);
 void FeatureLoader_Unlock(void);
 void FeatureLoader_SweepRetired(void);
 void FeatureLoader_DrainRetiredUnloads(void);
+int FeatureLoader_PendingUnloadCount(void);
 void DeferredInit_Register(void (*cb)(void));
 void DeferredInit_RunAll(void);
 

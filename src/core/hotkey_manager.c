@@ -331,6 +331,9 @@ bool hotkey_register_internal(HotkeyBinding binding) {
   Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_callback, owner,
                        sizeof(owner));
   if (!owner[0])
+    Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_callback_ud, owner,
+                         sizeof(owner));
+  if (!owner[0])
     Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_condition, owner,
                          sizeof(owner));
   snprintf(binding.owner, sizeof(binding.owner), "%s", owner);
@@ -406,6 +409,8 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
     if (Owner_ModuleMatches(g_pending_owner[qn], path_a, path_b)) {
       log_info("hotkey pending entry dropped (owner unloaded)");
       g_pending_q[qn] = NULL;
+      g_pending_cb_ud[qn] = NULL;
+      g_pending_ud[qn] = NULL;
     }
     qn = (qn + 1) % HOTKEY_PENDING_MAX;
   }
