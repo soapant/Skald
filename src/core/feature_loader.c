@@ -15,11 +15,30 @@
 #include "core/thread_registry.h"
 
 #include "core/cc_registry.h"
-#include "core/deferred_init.h"
 #include "core/widget_registry.h"
 #include "core/cap_registry.h"
 #include "core/snippet_manager.h"
 #include "platform/input_state.h"
+
+#define DEFERRED_INIT_MAX 32
+static void (*g_deferred_inits[DEFERRED_INIT_MAX])(void);
+static int g_deferred_count = 0;
+
+void DeferredInit_Register(void (*cb)(void)) {
+  if (!cb || g_deferred_count >= DEFERRED_INIT_MAX)
+    return;
+  g_deferred_inits[g_deferred_count++] = cb;
+}
+
+void DeferredInit_RunAll(void) {
+  for (int i = 0; i < g_deferred_count; i++) {
+    void (*cb)(void) = g_deferred_inits[i];
+    g_deferred_inits[i] = NULL;
+    cb();
+  }
+  g_deferred_count = 0;
+}
+
 
 static void fl_copy(char *dst, size_t dst_size, const char *src) {
   if (dst_size == 0)

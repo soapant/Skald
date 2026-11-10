@@ -2,6 +2,7 @@
 #define HELPERS_TEXT_UI_H
 
 #include "core/types/file.h"
+#include "core/types/keys.h"
 
 typedef struct {
   char **items;
@@ -33,4 +34,7 @@ bool String_EndsWith(const char *str, const char *suffix);
 char *String_Replace(const char *str, const char *from, const char *to);
 char *String_Slice(const char *str, int start, int end);
 
+
+bool HotkeyText_IsPrintable(const PopupKeyEvent *key);
+bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key);
 #endif

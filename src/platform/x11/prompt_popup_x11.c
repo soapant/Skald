@@ -13,7 +13,7 @@
 #include "platform/x11/display_x11.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
-#include "core/hotkey_text.h"
+#include "helpers/helpers_text.h"
 #include "platform/x11/window_factory_x11.h"
 #include "deps/log.h"
 #include "config_values.h"

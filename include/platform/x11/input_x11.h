@@ -59,6 +59,5 @@ extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
-int x11_keysym_to_windows_vk(KeySym keysym);
 
 #endif

@@ -20,12 +20,30 @@
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
-#include "platform/win32/popup_helpers_win32.h"
 
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "core/checkbox.h"
 #include "core/draw_state.h"
+
+static bool only_once = true;
+static bool rainbow_init = false;
+static int g_last_selected_index = -1;
+static int g_pending_navigate = -1;
+
+extern PromptState *Platform_GetPromptStateForHWND(HWND hwnd);
+
+static ListBoxInfo *GetLBFromPopup(HWND hPopup) {
+  if (hPopup && IsWindow(hPopup)) {
+    PromptState *state = Platform_GetPromptStateForHWND(hPopup);
+    if (state) {
+      return state->lb;
+    }
+    return (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
+  }
+  return NULL;
+}
+
 static bool s_swallow_next_char = false;
 
 static bool s_repaint_queued = false;

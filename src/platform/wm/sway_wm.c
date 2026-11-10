@@ -1,5 +1,5 @@
 #include "wm/sway_wm.h"
-#include "wm/wm_util.h"
+#include "wm/wm.h"
 
 #include <string.h>
 #include <stdio.h>
