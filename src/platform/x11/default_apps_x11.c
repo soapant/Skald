@@ -10,7 +10,7 @@
 #include "helpers/helpers_text.h"
 #include "core/types.h"
 
-char default_apps_x11[DEFAULT_APP_COUNT][256];
+static char default_apps_x11[DEFAULT_APP_COUNT][256];
 
 #define APPDIR_CACHE_SLOTS 8
 static ListOfFiles g_ad_cache[APPDIR_CACHE_SLOTS];
