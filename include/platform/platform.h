@@ -112,6 +112,16 @@ void Platform_InitDataFolder(void);
 bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
                                size_t out_len);
 void Platform_ShutdownUI(void);
+void Platform_RenderThreadMiniSleep(int milliseconds);
+void Platform_RenderThreadInit(void);
+void Platform_RenderThreadLock(void);
+void Platform_RenderThreadUnlock(void);
+void Platform_RenderThreadWakeOne(void);
+void Platform_RenderThreadWakeAll(void);
+void Platform_RenderThreadWaitTimed(long us);
+bool Platform_RenderThreadStart(void);
+void Platform_RenderThreadJoin(void);
+void *Platform_RenderThreadDisplay(void);
 char *Platform_RunTerminalCommand(char *command, bool open_terminal);
 #define PLATFORM_RUN_PRIO_NORMAL 0
 #define PLATFORM_RUN_PRIO_LOW 1
