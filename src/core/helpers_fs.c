@@ -45,6 +45,47 @@ static void path_fold_exe(char *out) {
 #endif
 }
 
+bool TempFile_Write(const char *name, const void *data, size_t len,
+                    char *out_path, size_t out_len) {
+  if (!name || !name[0] || !out_path || out_len == 0)
+    return false;
+  if (!data && len > 0)
+    return false;
+  for (const char *p = name; *p; p++) {
+    if (*p == '/' || *p == '\\')
+      return false;
+  }
+  if (strstr(name, ".."))
+    return false;
+#if defined(_WIN32)
+  char dir[MAX_PATH];
+  DWORD dir_n = GetTempPathA(sizeof(dir), dir);
+  if (dir_n == 0 || dir_n >= sizeof(dir))
+    return false;
+  size_t dl = strlen(dir);
+  while (dl > 0 && (dir[dl - 1] == '\\' || dir[dl - 1] == '/'))
+    dir[--dl] = '\0';
+  snprintf(out_path, out_len, "%s\\%s", dir, name);
+#else
+  const char *dir = getenv("TMPDIR");
+  if (!dir || !dir[0])
+    dir = "/tmp";
+  snprintf(out_path, out_len, "%s/%s", dir, name);
+#endif
+  out_path[out_len - 1] = '\0';
+  FILE *f = fopen(out_path, "wb");
+  if (!f)
+    return false;
+  bool ok = true;
+  if (len > 0 && fwrite(data, 1, len, f) != len)
+    ok = false;
+  if (fclose(f) != 0)
+    ok = false;
+  if (!ok)
+    remove(out_path);
+  return ok;
+}
+
 bool ExpandPath(const char *template_path, char *out, size_t out_size) {
 
   if (!template_path || !out || out_size == 0)

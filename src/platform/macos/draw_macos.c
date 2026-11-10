@@ -62,7 +62,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   return true;
 }
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) { return true; }
-void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {}
+void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {}
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) { return true; }
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) { return true; }
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color,
@@ -80,9 +80,9 @@ bool Platform_DrawTextLine(int x, int y, const char *text, int len,
                            unsigned long color, int fontsize) {
   return true;
 }
-void Platform_GetItemColors(int idx, int count, unsigned long *num_color,
-                            unsigned long *body_color,
-                            unsigned long *plain_color) {}
+void Item_GetColors(PlGetItemColorsSpec spec) {
+  (void)spec;
+}
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   if (line_h)
     *line_h = 16;

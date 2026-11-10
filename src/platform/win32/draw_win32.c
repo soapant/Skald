@@ -468,23 +468,6 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   return true;
 }
 
-void Platform_GetItemColors(PlGetItemColorsSpec spec) {
-  unsigned long col_text = COLOR_TEXT;
-  float t = (spec.count > 1)
-                ? (float)(spec.idx % spec.count) / (float)(spec.count - 1)
-                : 0;
-  unsigned long col_rainbow = GetRainbowColor(t, 0.85f, 1.0f);
-  unsigned long n = col_text, b = col_text, p = col_rainbow;
-  if (RainbowText) {
-    n = b = p = col_rainbow;
-  }
-  if (spec.num_color)
-    *spec.num_color = n;
-  if (spec.body_color)
-    *spec.body_color = b;
-  if (spec.plain_color)
-    *spec.plain_color = p;
-}
 
 static COLORREF win32_colorref(unsigned long hex) {
 
@@ -1101,21 +1084,6 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   return (status == Ok);
 }
 
-void Platform_DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
-  if (!EnableBorders || spec.width <= 0) {
-    return;
-  }
-  Platform_DrawRectRaw((PlDrawRectRawSpec){.x = 0,
-                                           .y = spec.y,
-                                           .w = spec.width,
-                                           .h = PROMPT_SEP_W,
-                                           .color = rgb_to_hex(COLOR_BORDER),
-                                           .radius = 0,
-                                           .rounded = false,
-                                           .opaque = true,
-                                           .thickness = 1,
-                                           .filled = true});
-}
 
 static void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
                                       EditboxSpec *eb) {

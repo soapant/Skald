@@ -553,7 +553,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
           orig_idx = lb->matching_indices[pdis->itemID];
           orig_cnt = lb->item_count;
         }
-        Platform_GetItemColors((PlGetItemColorsSpec){.idx = orig_idx,
+        Item_GetColors((PlGetItemColorsSpec){.idx = orig_idx,
                                                      .count = orig_cnt,
                                                      .num_color = &ncol,
                                                      .body_color = &bcol,
@@ -638,7 +638,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
         Platform_DrawPromptEditbox(estate);
 
         if (estate->lb) {
-          Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
+          DrawPromptSeparator((PlDrawPromptSeparatorSpec){
               .y = PromptListTop() - 2, .width = rect.right - rect.left});
 
           int list_top = PromptListTop();
@@ -666,7 +666,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
             unsigned long ncol, bcol, pcol;
             int orig_idx = estate->lb->matching_indices[list_idx];
             int orig_cnt = estate->lb->item_count;
-            Platform_GetItemColors((PlGetItemColorsSpec){.idx = orig_idx,
+            Item_GetColors((PlGetItemColorsSpec){.idx = orig_idx,
                                                          .count = orig_cnt,
                                                          .num_color = &ncol,
                                                          .body_color = &bcol,
@@ -690,7 +690,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam,
           }
           PlDrawState_Get()->win32_listbox_surface = false;
 
-          Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
+          DrawPromptSeparator((PlDrawPromptSeparatorSpec){
               .y = rect.bottom - PromptListBottomMargin(),
               .width = rect.right - rect.left});
         }

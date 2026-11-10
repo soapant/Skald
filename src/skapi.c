@@ -31,6 +31,7 @@
 #include "core/listbox_hover.h"
 #include "helpers/helpers_monitor.h"
 #include "helpers/helpers_key.h"
+#include "helpers/helpers_http.h"
 #include "helpers/helpers_listbox_backend.h"
 #include "helpers/helpers_ui.h"
 #include "core/prompt_geometry.h"
@@ -315,7 +316,7 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
 
 bool sk_write_temp_file(const char *name, const void *data, size_t len,
                         char *out_path, size_t out_len) {
-  return Platform_WriteTempFile(name, data, len, out_path, out_len);
+  return TempFile_Write(name, data, len, out_path, out_len);
 }
 
 char *sk_read_file_to_string(const char *path, size_t *out_len) {
@@ -1071,7 +1072,7 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
       ctx->window.editbox_placed = false;
   }
   EventBus_Trigger(EVENT_PROMPT_OPEN);
-  char *r = Platform_PromptUser(wm, &pspec);
+  char *r = PromptUserRun(wm, &pspec);
   if (r && out_index)
     *out_index = true_idx;
   if (lb && idx >= 0) {
@@ -1220,7 +1221,7 @@ unsigned long sk_listbox_get_current_standard_color(void) {
   if (idx < 0 || idx >= g_sk_list_lb->item_count)
     return 0;
   unsigned long ncol, bcol, pcol;
-  Platform_GetItemColors(
+  Item_GetColors(
       (PlGetItemColorsSpec){.idx = idx,
                             .count = g_sk_list_lb->item_count,
                             .num_color = &ncol,
@@ -1568,7 +1569,7 @@ char *sk_http_post(const char *url, const char *content_type,
 }
 
 void sk_http_get_async(const char *url, SkHttpCallback cb, void *userdata) {
-  Platform_HttpGetAsync(url, cb, userdata);
+  Http_GetAsync(url, cb, userdata);
   return;
 }
 
@@ -1655,7 +1656,7 @@ static bool sk_listbox_next_common(SkListItemCtx *out) {
     return false;
   int y = g_sk_list_y0 + g_sk_list_cur * g_sk_list_itemH;
   if (g_sk_list_cur == 0)
-    Platform_DrawPromptSeparator(
+    DrawPromptSeparator(
         (PlDrawPromptSeparatorSpec){.y = g_sk_list_y0, .width = g_sk_list_fw});
   bool sel = (idx == g_sk_list_lb->selected_index);
   ListboxBackend_DrawSelection(g_sk_list_bx, g_sk_list_bw, y, g_sk_list_itemH,
@@ -1675,7 +1676,7 @@ static bool sk_listbox_next_common(SkListItemCtx *out) {
 void sk_listbox_end(void) {
   ListBox_SetRowHScroll(0);
   if (PromptListBottomMargin() > 0 && g_sk_list_y0 >= 0) {
-    Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
+    DrawPromptSeparator((PlDrawPromptSeparatorSpec){
         .y = g_sk_list_y0 + g_sk_list_h, .width = g_sk_list_fw});
   }
   ListboxBackend_End();
@@ -1842,7 +1843,29 @@ bool sk_replay_hotkey(int vk, int mods) {
   bool matched = hotkey_process(vk, mods);
   return matched;
 }
-bool sk_type_text(const char *s) { return sk_type_text_platform(s); }
+static bool sk_type_text_common(const char *s) {
+  if (!s)
+    return false;
+  char *old = Platform_GetClipboardEntry();
+  Platform_CopyToClipboard(s);
+  Platform_EmitKey(VK_LCONTROL, 1);
+  Platform_EmitKey('V', 1);
+  Platform_EmitKey('V', 0);
+  Platform_EmitKey(VK_LCONTROL, 0);
+  WindowManager *wm = WindowManager_Get();
+  for (int i = 0; i < 40; i++) {
+    if (wm)
+      Platform_WM_ProcessEvents(wm);
+    sk_sleep_platform(0.005);
+  }
+  if (old) {
+    Platform_CopyToClipboard(old);
+    free(old);
+  }
+  return true;
+}
+
+bool sk_type_text(const char *s) { return sk_type_text_common(s); }
 
 void sk_sleep(double seconds) { sk_sleep_platform(seconds); }
 
@@ -2977,7 +3000,7 @@ void sk_run_every(double seconds, void (*callback)(void)) {
   sk_thread_create_ex(sk_run_every_thread, args, (void *)(uintptr_t)callback);
 }
 
-SkMetrics *sk_get_metrics(void) { return Platform_GetMetrics(); }
+SkMetrics *sk_get_metrics(void) { return Metrics_Get(); }
 void *sk_get_active_prompt(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = WindowManager_GetTopPopup(wm);

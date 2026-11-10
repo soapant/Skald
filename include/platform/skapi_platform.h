@@ -9,7 +9,6 @@ char *sk_search_file_in_dir_platform(const char *directory,
 bool sk_launch_with_args_platform(const char *path, const char *args);
 bool sk_launch_with_args_as_admin_platform(const char *path, const char *args);
 bool sk_place_editbox_platform(const SkEditSpec *spec);
-bool sk_type_text_platform(const char *s);
 void sk_run_after_time_platform(double seconds, void (*callback)(void));
 void sk_sleep_platform(double seconds);
 SkNetStatus sk_net_status_platform();
