@@ -292,36 +292,36 @@ void (*g_wclick[WCLICK_MAX])(void);
 
 int g_wclick_head = 0, g_wclick_tail = 0;
 
-static CRITICAL_SECTION g_wclick_cs;
+static CRITICAL_SECTION wclick_cs;
 
-static LONG g_wclick_cs_ready = 0;
+static LONG wclick_cs_ready = 0;
 
 PlatformWidget *g_wdestroy[WDESTROY_MAX];
 
 int g_wdestroy_count = 0;
 
-static CRITICAL_SECTION g_wdestroy_cs;
+static CRITICAL_SECTION wdestroy_cs;
 
-static LONG g_wdestroy_cs_ready = 0;
+static LONG wdestroy_cs_ready = 0;
 
 void wclick_lock(void) {
 
-  if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
-    InitializeCriticalSection(&g_wclick_cs);
+  if (InterlockedCompareExchange(&wclick_cs_ready, 1, 0) == 0) {
+    InitializeCriticalSection(&wclick_cs);
   }
-  EnterCriticalSection(&g_wclick_cs);
+  EnterCriticalSection(&wclick_cs);
 }
 
-void wclick_unlock(void) { LeaveCriticalSection(&g_wclick_cs); }
+void wclick_unlock(void) { LeaveCriticalSection(&wclick_cs); }
 
 void wdestroy_lock(void) {
-  if (InterlockedCompareExchange(&g_wdestroy_cs_ready, 1, 0) == 0) {
-    InitializeCriticalSection(&g_wdestroy_cs);
+  if (InterlockedCompareExchange(&wdestroy_cs_ready, 1, 0) == 0) {
+    InitializeCriticalSection(&wdestroy_cs);
   }
-  EnterCriticalSection(&g_wdestroy_cs);
+  EnterCriticalSection(&wdestroy_cs);
 }
 
-void wdestroy_unlock(void) { LeaveCriticalSection(&g_wdestroy_cs); }
+void wdestroy_unlock(void) { LeaveCriticalSection(&wdestroy_cs); }
 
 static void widget_queue_click(void (*fn)(void)) {
 

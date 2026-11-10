@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static bool g_recording = false;
-static SkThread g_thread = NULL;
+static bool recording = false;
+static SkThread thread = NULL;
 
 #define WIDTH sk_get_screen_width()
 #define HEIGHT sk_get_screen_height()
@@ -32,9 +32,9 @@ typedef struct {
   unsigned long long t_us;
 } MacroEvent;
 
-static MacroEvent g_events[MACRO_MAX_EVENTS];
-static int g_event_count = 0;
-static bool g_overflow = false;
+static MacroEvent events[MACRO_MAX_EVENTS];
+static int event_count = 0;
+static bool overflow = false;
 
 static void recording_render() {
   int max_x = WIDTH - 1;
@@ -58,29 +58,29 @@ static void playback_render() {
   sk_draw_line(.x1 = 0, .y1 = max_y, .x2 = 0, .y2 = 0, .color = SK_BLUE);
 }
 
-static SkTimer g_macro_clock;
-static bool g_macro_clock_valid = false;
+static SkTimer macro_clock;
+static bool macro_clock_valid = false;
 
 static void macro_clock_reset(void) {
-  g_macro_clock = sk_start_timer();
-  g_macro_clock_valid = true;
+  macro_clock = sk_start_timer();
+  macro_clock_valid = true;
 }
 
 static unsigned long long macro_now_us(void) {
-  if (!g_macro_clock_valid)
+  if (!macro_clock_valid)
     macro_clock_reset();
-  double ms = sk_end_timer(g_macro_clock);
+  double ms = sk_end_timer(macro_clock);
   if (ms < 0.0)
     ms = 0.0;
   return (unsigned long long)(ms * 1000.0);
 }
 
 static void record_push(const MacroEvent *m) {
-  if (g_event_count >= MACRO_MAX_EVENTS) {
-    g_overflow = true;
+  if (event_count >= MACRO_MAX_EVENTS) {
+    overflow = true;
     return;
   }
-  g_events[g_event_count++] = *m;
+  events[event_count++] = *m;
 }
 
 static void record_push_key(const SkKeyEvent *e) {
@@ -121,21 +121,21 @@ static bool macro_event_less(const MacroEvent *a, const MacroEvent *b) {
 }
 
 static void sort_events(void) {
-  for (int i = 1; i < g_event_count; i++) {
-    MacroEvent key = g_events[i];
+  for (int i = 1; i < event_count; i++) {
+    MacroEvent key = events[i];
     int j = i - 1;
-    while (j >= 0 && macro_event_less(&key, &g_events[j])) {
-      g_events[j + 1] = g_events[j];
+    while (j >= 0 && macro_event_less(&key, &events[j])) {
+      events[j + 1] = events[j];
       j--;
     }
-    g_events[j + 1] = key;
+    events[j + 1] = key;
   }
 }
 
-static int g_macro_last_mx = -1, g_macro_last_my = -1;
+static int macro_last_mx = -1, macro_last_my = -1;
 
 static void *recorder_loop(void *arg) {
-  while (g_recording) {
+  while (recording) {
     SkKeyEvent ke;
     while (sk_poll_key(&ke))
       record_push_key(&ke);
@@ -146,7 +146,7 @@ static void *recorder_loop(void *arg) {
 
     {
       SkPos _mp = sk_get_cursor_pos();
-      if (_mp.x != g_macro_last_mx || _mp.y != g_macro_last_my) {
+      if (_mp.x != macro_last_mx || _mp.y != macro_last_my) {
         SkMouseEvent _me;
         memset(&_me, 0, sizeof(_me));
         _me.button = 0;
@@ -154,57 +154,57 @@ static void *recorder_loop(void *arg) {
         _me.y = _mp.y;
         _me.t_us = macro_now_us();
         record_push_mouse(&_me);
-        g_macro_last_mx = _mp.x;
-        g_macro_last_my = _mp.y;
+        macro_last_mx = _mp.x;
+        macro_last_my = _mp.y;
       }
     }
     sk_sleep(0.005);
   }
 
-  g_thread = NULL;
+  thread = NULL;
   return NULL;
 }
 
 static void reset_recording(void) {
-  g_event_count = 0;
-  g_overflow = false;
-  g_macro_last_mx = -1;
-  g_macro_last_my = -1;
+  event_count = 0;
+  overflow = false;
+  macro_last_mx = -1;
+  macro_last_my = -1;
   macro_clock_reset();
 }
 
-static bool g_playing = false;
-static SkThread g_play_thread = NULL;
-static bool g_macro_infinite = false;
-static bool g_macro_remove_dead = false;
+static bool playing = false;
+static SkThread play_thread = NULL;
+static bool macro_infinite = false;
+static bool macro_remove_dead = false;
 
 #define MACRO_MAX_HELD 64
-static int g_held_keys[MACRO_MAX_HELD];
-static int g_held_count = 0;
+static int held_keys[MACRO_MAX_HELD];
+static int held_count = 0;
 
 static void held_add(int vk) {
   if (vk == 0)
     return;
-  for (int i = 0; i < g_held_count; i++)
-    if (g_held_keys[i] == vk)
+  for (int i = 0; i < held_count; i++)
+    if (held_keys[i] == vk)
       return;
-  if (g_held_count < MACRO_MAX_HELD)
-    g_held_keys[g_held_count++] = vk;
+  if (held_count < MACRO_MAX_HELD)
+    held_keys[held_count++] = vk;
 }
 
 static void held_remove(int vk) {
-  for (int i = 0; i < g_held_count; i++) {
-    if (g_held_keys[i] == vk) {
-      g_held_keys[i] = g_held_keys[--g_held_count];
+  for (int i = 0; i < held_count; i++) {
+    if (held_keys[i] == vk) {
+      held_keys[i] = held_keys[--held_count];
       return;
     }
   }
 }
 
 static void release_everything(void) {
-  for (int i = 0; i < g_held_count; i++)
-    sk_emit_key(g_held_keys[i], false);
-  g_held_count = 0;
+  for (int i = 0; i < held_count; i++)
+    sk_emit_key(held_keys[i], false);
+  held_count = 0;
   sk_emit_key(VK_SHIFT, false);
   sk_emit_key(VK_CONTROL, false);
   sk_emit_key(VK_MENU, false);
@@ -222,24 +222,24 @@ static bool is_macro_control_chord(int vk, int mods) {
 
 static void *playback_loop(void *arg) {
   (void)arg;
-  if (g_event_count == 0) {
-    g_playing = false;
-    g_play_thread = NULL;
+  if (event_count == 0) {
+    playing = false;
+    play_thread = NULL;
     return NULL;
   }
-  while (g_playing) {
+  while (playing) {
     sort_events();
-    if (g_event_count == 0)
+    if (event_count == 0)
       break;
-    unsigned long long t0 = g_events[0].t_us;
+    unsigned long long t0 = events[0].t_us;
     SkTimer start = sk_start_timer();
-    g_held_count = 0;
-    for (int i = 0; i < g_event_count && g_playing; i++) {
-      const MacroEvent *m = &g_events[i];
+    held_count = 0;
+    for (int i = 0; i < event_count && playing; i++) {
+      const MacroEvent *m = &events[i];
       double target_ms = (double)(m->t_us - t0) / 1000.0;
       double cur_ms = sk_end_timer(start);
       double wait_ms = target_ms - cur_ms;
-      if (g_macro_remove_dead && wait_ms > 500.0)
+      if (macro_remove_dead && wait_ms > 500.0)
         wait_ms = 0.0;
       if (wait_ms > 0.0)
         sk_sleep(wait_ms / 1000.0);
@@ -264,14 +264,14 @@ static void *playback_loop(void *arg) {
       }
     }
     release_everything();
-    if (g_playing && g_macro_infinite)
+    if (playing && macro_infinite)
       continue;
     break;
   }
   release_everything();
   sk_dismiss_overlay(MACRO_OVERLAY_NAME);
-  g_playing = false;
-  g_play_thread = NULL;
+  playing = false;
+  play_thread = NULL;
   return NULL;
 }
 
@@ -279,7 +279,7 @@ static ListOfFiles macro_load_files;
 static const char *macro_file_name_ptrs[MAX_VISIBLE_ITEMS + 1];
 
 static bool macro_save(const char *name) {
-  if (g_event_count == 0)
+  if (event_count == 0)
     return false;
   if (!name || !name[0])
     name = "last.macro";
@@ -295,18 +295,18 @@ static bool macro_save(const char *name) {
       strcat(filename, ".txt");
   }
 
-  size_t cap = (size_t)g_event_count * 128 + 256;
+  size_t cap = (size_t)event_count * 128 + 256;
   char *buf = (char *)malloc(cap);
   if (!buf)
     return false;
   size_t off = 0;
-  off += (size_t)snprintf(buf + off, cap - off, "%d\n", g_event_count);
-  for (int i = 0; i < g_event_count; i++) {
+  off += (size_t)snprintf(buf + off, cap - off, "%d\n", event_count);
+  for (int i = 0; i < event_count; i++) {
     off += (size_t)snprintf(
         buf + off, cap - off, "%d %d %d %d %d %d %d %d %llu\n",
-        g_events[i].type, g_events[i].a, g_events[i].b, g_events[i].x,
-        g_events[i].y, g_events[i].mods, g_events[i].down ? 1 : 0,
-        g_events[i].repeat ? 1 : 0, g_events[i].t_us);
+        events[i].type, events[i].a, events[i].b, events[i].x,
+        events[i].y, events[i].mods, events[i].down ? 1 : 0,
+        events[i].repeat ? 1 : 0, events[i].t_us);
   }
   bool ok = sk_write_string_to_file(filename, buf);
   free(buf);
@@ -345,7 +345,7 @@ static int macro_load(const char *name) {
     cursor++;
   if (*cursor == '\n')
     cursor++;
-  g_event_count = 0;
+  event_count = 0;
   for (int i = 0; i < count; i++) {
     MacroEvent m;
     memset(&m, 0, sizeof(m));
@@ -364,7 +364,7 @@ static int macro_load(const char *name) {
       cursor++;
   }
   free(data);
-  return g_event_count;
+  return event_count;
 }
 
 static void macro_refresh_cache(void) {
@@ -414,7 +414,7 @@ static bool macro_load_ctrlenter(PromptState *state) {
 }
 
 void SaveMacro(void) {
-  if (g_event_count == 0) {
+  if (event_count == 0) {
     sk_message(.message = "No recording in memory", .timeout = 3.0);
     return;
   }
@@ -443,26 +443,26 @@ static void macro_show_overlay(void (*render)(void)) {
 }
 
 void PlayMacro(void) {
-  if (!g_playing) {
-    if (g_event_count == 0) {
+  if (!playing) {
+    if (event_count == 0) {
       sk_message(.message = "No macro loaded", .timeout = 3.0);
     }
     macro_show_overlay(playback_render);
     sk_clear_key_queue();
     sk_clear_mouse_queue();
-    g_playing = true;
-    if (!g_play_thread)
-      g_play_thread = sk_thread_create(playback_loop, NULL);
+    playing = true;
+    if (!play_thread)
+      play_thread = sk_thread_create(playback_loop, NULL);
     return;
   }
   sk_dismiss_overlay(MACRO_OVERLAY_NAME);
-  g_playing = false;
+  playing = false;
   release_everything();
 }
 
 void InfinitePlaybackToggle(void) {
-  g_macro_infinite = !g_macro_infinite;
-  if (g_macro_infinite)
+  macro_infinite = !macro_infinite;
+  if (macro_infinite)
     sk_message(.message = "Infinite playback enabled", .timeout = 1.0,
                .slot = BOTTOM_CENTER);
   else
@@ -471,8 +471,8 @@ void InfinitePlaybackToggle(void) {
 }
 
 void RemoveDeadTimeToggle(void) {
-  g_macro_remove_dead = !g_macro_remove_dead;
-  if (g_macro_remove_dead)
+  macro_remove_dead = !macro_remove_dead;
+  if (macro_remove_dead)
     sk_message(.message = "Remove dead time enabled", .timeout = 1.0,
                .slot = BOTTOM_CENTER);
   else
@@ -481,18 +481,18 @@ void RemoveDeadTimeToggle(void) {
 }
 
 void RecordToggle(void) {
-  if (!g_recording) {
+  if (!recording) {
     macro_show_overlay(recording_render);
     sk_clear_key_queue();
     sk_clear_mouse_queue();
     reset_recording();
-    g_recording = true;
-    if (!g_thread)
-      g_thread = sk_thread_create(recorder_loop, NULL);
+    recording = true;
+    if (!thread)
+      thread = sk_thread_create(recorder_loop, NULL);
     return;
   }
   sk_dismiss_overlay(MACRO_OVERLAY_NAME);
-  g_recording = false;
+  recording = false;
 }
 void crosshair_render(void) {
   int size = 5;

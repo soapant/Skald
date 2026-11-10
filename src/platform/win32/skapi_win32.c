@@ -310,28 +310,28 @@ typedef struct {
   bool valid;
 } SkNetAdapter;
 
-static CRITICAL_SECTION g_net_cs;
-static BOOL g_net_cs_ready = FALSE;
-static SkNetStatus g_net_cached = SK_NET_OFFLINE;
-static DWORD g_net_cached_at = 0;
-static DWORD g_net_ever = 0;
-static SkNetAdapter g_net_adapter = {0};
+static CRITICAL_SECTION net_cs;
+static BOOL net_cs_ready = FALSE;
+static SkNetStatus net_cached = SK_NET_OFFLINE;
+static DWORD net_cached_at = 0;
+static DWORD net_ever = 0;
+static SkNetAdapter net_adapter = {0};
 
 #define SK_NET_TTL_MS 5000
 
 static void net_lock(void) {
 
-  if (!g_net_cs_ready) {
-    InitializeCriticalSection(&g_net_cs);
-    g_net_cs_ready = TRUE;
+  if (!net_cs_ready) {
+    InitializeCriticalSection(&net_cs);
+    net_cs_ready = TRUE;
   }
-  EnterCriticalSection(&g_net_cs);
+  EnterCriticalSection(&net_cs);
 }
 
 static void net_unlock(void) {
 
-  if (g_net_cs_ready)
-    LeaveCriticalSection(&g_net_cs);
+  if (net_cs_ready)
+    LeaveCriticalSection(&net_cs);
 }
 
 static bool net_resolve_adapter(SkNetAdapter *out) {
@@ -378,9 +378,9 @@ static SkNetAdapter net_active_adapter(void) {
 
   net_lock();
   DWORD now = GetTickCount();
-  if (g_net_adapter.valid &&
-      (now - g_net_adapter.at_ms) < SK_NET_ADAPTER_TTL_MS) {
-    SkNetAdapter cached = g_net_adapter;
+  if (net_adapter.valid &&
+      (now - net_adapter.at_ms) < SK_NET_ADAPTER_TTL_MS) {
+    SkNetAdapter cached = net_adapter;
     net_unlock();
     return cached;
   }
@@ -390,28 +390,28 @@ static SkNetAdapter net_active_adapter(void) {
   a.valid = net_resolve_adapter(&a);
   a.at_ms = now;
   net_lock();
-  g_net_adapter = a;
-  SkNetAdapter result = g_net_adapter;
+  net_adapter = a;
+  SkNetAdapter result = net_adapter;
   net_unlock();
   return result;
 }
 
 static void net_invalidate_adapter(void) {
   net_lock();
-  g_net_adapter.valid = false;
-  g_net_adapter.index = 0;
+  net_adapter.valid = false;
+  net_adapter.index = 0;
   net_unlock();
 }
 
 static void net_refresh(void) {
 
-  g_net_cached = SK_NET_OFFLINE;
+  net_cached = SK_NET_OFFLINE;
   SkNetAdapter a = net_active_adapter();
   if (a.valid) {
     if (a.if_type == IF_TYPE_IEEE80211)
-      g_net_cached = SK_NET_WIFI;
+      net_cached = SK_NET_WIFI;
     else if (a.if_type == IF_TYPE_ETHERNET_CSMACD)
-      g_net_cached = SK_NET_ETHERNET;
+      net_cached = SK_NET_ETHERNET;
   }
 }
 
@@ -451,15 +451,15 @@ unsigned long long sk_net_rx_bytes_platform() {
 SkNetStatus sk_net_status_platform(void) {
   DWORD now = GetTickCount();
   net_lock();
-  bool fresh = g_net_ever && (now - g_net_cached_at) < SK_NET_TTL_MS;
+  bool fresh = net_ever && (now - net_cached_at) < SK_NET_TTL_MS;
   if (!fresh) {
     net_unlock();
     net_refresh();
     net_lock();
-    g_net_cached_at = GetTickCount();
-    g_net_ever = 1;
+    net_cached_at = GetTickCount();
+    net_ever = 1;
   }
-  SkNetStatus st = g_net_cached;
+  SkNetStatus st = net_cached;
   net_unlock();
   return st;
 }

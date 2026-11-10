@@ -18,23 +18,23 @@ typedef struct {
   void *ud;
 } RtCallback;
 
-static RtCallback g_callbacks[RT_MAX_CALLBACKS];
-static RtCallback g_pending[RT_MAX_PENDING];
+static RtCallback callbacks[RT_MAX_CALLBACKS];
+static RtCallback pending[RT_MAX_PENDING];
 static int g_count = 0;
-static int g_pending_count = 0;
-static volatile bool g_running = false;
-static volatile bool g_quit = false;
-static __thread bool g_is_thread = false;
-static int g_fps = RT_DEFAULT_FPS;
+static int pending_count = 0;
+static volatile bool running = false;
+static volatile bool quit = false;
+static __thread bool is_thread = false;
+static int frame_rate = RT_DEFAULT_FPS;
 
 static void rt_run_pending(void) {
   RtCallback pend[RT_MAX_PENDING];
   int pn = 0;
   Platform_RenderThreadLock();
-  pn = g_pending_count;
+  pn = pending_count;
   if (pn > 0) {
-    memcpy(pend, g_pending, sizeof(RtCallback) * (size_t)pn);
-    g_pending_count = 0;
+    memcpy(pend, pending, sizeof(RtCallback) * (size_t)pn);
+    pending_count = 0;
   }
   Platform_RenderThreadUnlock();
   for (int i = 0; i < pn; i++) {
@@ -44,14 +44,14 @@ static void rt_run_pending(void) {
 }
 
 void RenderThread_Main(void) {
-  g_is_thread = true;
-  while (!g_quit) {
+  is_thread = true;
+  while (!quit) {
     RtCallback snap[RT_MAX_CALLBACKS];
     int n = 0;
     Platform_RenderThreadLock();
     n = g_count;
     if (n > 0)
-      memcpy(snap, g_callbacks, sizeof(RtCallback) * (size_t)n);
+      memcpy(snap, callbacks, sizeof(RtCallback) * (size_t)n);
     Platform_RenderThreadUnlock();
     rt_run_pending();
     for (int i = 0; i < n; i++) {
@@ -60,68 +60,68 @@ void RenderThread_Main(void) {
     }
 
     long us = (n == 0) ? RT_IDLE_SLEEP_US
-                       : (1000000L / (g_fps > 0 ? g_fps : RT_DEFAULT_FPS));
+                       : (1000000L / (frame_rate > 0 ? frame_rate : RT_DEFAULT_FPS));
     if (us > RT_MAX_SLEEP_US)
       us = RT_MAX_SLEEP_US;
     Platform_RenderThreadLock();
-    if (!g_quit && g_pending_count == 0)
+    if (!quit && pending_count == 0)
       Platform_RenderThreadWaitTimed(us);
     Platform_RenderThreadUnlock();
   }
 }
 
 bool RenderThread_EnsureStarted(int fps) {
-  if (fps > g_fps)
-    g_fps = fps;
-  if (g_running)
+  if (fps > frame_rate)
+    frame_rate = fps;
+  if (running)
     return true;
-  g_quit = false;
+  quit = false;
   if (!Platform_RenderThreadStart()) {
     log_warn("render thread: backend start failed, widget frames disabled");
     return false;
   }
-  g_running = true;
+  running = true;
   return true;
 }
 
 void RenderThread_Stop(void) {
-  if (!g_running)
+  if (!running)
     return;
-  g_quit = true;
+  quit = true;
   Platform_RenderThreadWakeAll();
   Platform_RenderThreadJoin();
-  g_running = false;
+  running = false;
   Platform_RenderThreadLock();
   g_count = 0;
-  g_pending_count = 0;
+  pending_count = 0;
   Platform_RenderThreadUnlock();
 }
 
 bool RenderThread_Post(RenderFrameFn fn, void *ud) {
-  if (!fn || !g_running)
+  if (!fn || !running)
     return false;
   Platform_RenderThreadLock();
-  if (g_pending_count >= RT_MAX_PENDING) {
+  if (pending_count >= RT_MAX_PENDING) {
     Platform_RenderThreadUnlock();
     return false;
   }
-  g_pending[g_pending_count].fn = fn;
-  g_pending[g_pending_count].ud = ud;
-  g_pending_count++;
+  pending[pending_count].fn = fn;
+  pending[pending_count].ud = ud;
+  pending_count++;
   Platform_RenderThreadWakeOne();
   Platform_RenderThreadUnlock();
   return true;
 }
 
 void RenderThread_Wake(void) {
-  if (!g_running)
+  if (!running)
     return;
   Platform_RenderThreadLock();
   Platform_RenderThreadWakeOne();
   Platform_RenderThreadUnlock();
 }
 
-bool RenderThread_IsRunning(void) { return g_running; }
+bool RenderThread_IsRunning(void) { return running; }
 
 void *RenderThread_Display(void) { return Platform_RenderThreadDisplay(); }
 
@@ -132,7 +132,7 @@ int RenderThread_CallbackCount(void) {
   return n;
 }
 
-bool RenderThread_IsCurrentThread(void) { return g_is_thread; }
+bool RenderThread_IsCurrentThread(void) { return is_thread; }
 
 bool RenderThread_AddFrameCallback(RenderFrameFn fn, void *ud) {
   if (!fn)
@@ -145,8 +145,8 @@ bool RenderThread_AddFrameCallback(RenderFrameFn fn, void *ud) {
     log_warn("render thread: callback table full");
     return false;
   }
-  g_callbacks[g_count].fn = fn;
-  g_callbacks[g_count].ud = ud;
+  callbacks[g_count].fn = fn;
+  callbacks[g_count].ud = ud;
   g_count++;
   Platform_RenderThreadUnlock();
   return true;
@@ -156,9 +156,9 @@ bool RenderThread_RemoveFrameCallback(RenderFrameFn fn, void *ud) {
   bool removed = false;
   Platform_RenderThreadLock();
   for (int i = 0; i < g_count; i++) {
-    if (g_callbacks[i].fn == fn && g_callbacks[i].ud == ud) {
+    if (callbacks[i].fn == fn && callbacks[i].ud == ud) {
       for (int j = i; j < g_count - 1; j++)
-        g_callbacks[j] = g_callbacks[j + 1];
+        callbacks[j] = callbacks[j + 1];
       g_count--;
       removed = true;
       break;

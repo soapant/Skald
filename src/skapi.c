@@ -544,16 +544,16 @@ typedef struct {
   char icon[512];
   char owner[OWNER_PATH_MAX];
 } FeatureReg;
-static FeatureReg **g_feature_order = NULL;
-static int g_feature_order_count = 0;
-static int g_feature_order_cap = 0;
+static FeatureReg **feature_order = NULL;
+static int feature_order_count = 0;
+static int feature_order_cap = 0;
 
 static int feature_list_find(const char *name, void (*cb)(void)) {
-  for (int i = 0; i < g_feature_order_count; i++) {
-    if (cb && g_feature_order[i]->cb == cb)
+  for (int i = 0; i < feature_order_count; i++) {
+    if (cb && feature_order[i]->cb == cb)
       return i;
-    if (name && g_feature_order[i]->name[0] &&
-        strcmp(g_feature_order[i]->name, name) == 0)
+    if (name && feature_order[i]->name[0] &&
+        strcmp(feature_order[i]->name, name) == 0)
       return i;
   }
   return -1;
@@ -565,22 +565,22 @@ static bool feature_list_add(const char *name, void (*cb)(void),
     return false;
   int idx = feature_list_find(name, cb);
   if (idx < 0) {
-    if (g_feature_order_count >= g_feature_order_cap) {
-      int ncap = g_feature_order_cap ? g_feature_order_cap * 2 : 32;
+    if (feature_order_count >= feature_order_cap) {
+      int ncap = feature_order_cap ? feature_order_cap * 2 : 32;
       FeatureReg **grown = (FeatureReg **)realloc(
-          g_feature_order, (size_t)ncap * sizeof(*grown));
+          feature_order, (size_t)ncap * sizeof(*grown));
       if (!grown)
         return false;
-      g_feature_order = grown;
-      g_feature_order_cap = ncap;
+      feature_order = grown;
+      feature_order_cap = ncap;
     }
-    idx = g_feature_order_count;
-    g_feature_order[idx] = (FeatureReg *)calloc(1, sizeof(**g_feature_order));
-    if (!g_feature_order[idx])
+    idx = feature_order_count;
+    feature_order[idx] = (FeatureReg *)calloc(1, sizeof(**feature_order));
+    if (!feature_order[idx])
       return false;
-    g_feature_order_count++;
+    feature_order_count++;
   }
-  FeatureReg *reg = g_feature_order[idx];
+  FeatureReg *reg = feature_order[idx];
   snprintf(reg->name, sizeof(reg->name), "%s", name);
   reg->cb = cb;
   snprintf(reg->icon, sizeof(reg->icon), "%s", icon ? icon : "");
@@ -592,14 +592,14 @@ void feature_list_purge_owner(const char *path_a, const char *path_b) {
   if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
     return;
   int n = 0;
-  for (int i = 0; i < g_feature_order_count; i++) {
-    if (Owner_ModuleMatches(g_feature_order[i]->owner, path_a, path_b)) {
-      free(g_feature_order[i]);
+  for (int i = 0; i < feature_order_count; i++) {
+    if (Owner_ModuleMatches(feature_order[i]->owner, path_a, path_b)) {
+      free(feature_order[i]);
       continue;
     }
-    g_feature_order[n++] = g_feature_order[i];
+    feature_order[n++] = feature_order[i];
   }
-  g_feature_order_count = n;
+  feature_order_count = n;
 }
 
 bool ski_register_hotkey(const SkHotkeySpec *spec) {
@@ -669,12 +669,12 @@ bool sk_hotkey_taken(const char *hotkey) {
 int sk_get_feature_list(const char **out_names, void (**out_cbs)(void),
                         int max) {
 
-  int n = g_feature_order_count < max ? g_feature_order_count : max;
+  int n = feature_order_count < max ? feature_order_count : max;
   for (int i = 0; i < n; i++) {
     if (out_names)
-      out_names[i] = g_feature_order[i]->name;
+      out_names[i] = feature_order[i]->name;
     if (out_cbs)
-      out_cbs[i] = g_feature_order[i]->cb;
+      out_cbs[i] = feature_order[i]->cb;
   }
   return n;
 }
@@ -683,12 +683,12 @@ int sk_get_feature_list_with_icons(const char **out_names,
                                    void (**out_cbs)(void),
                                    const char ***out_icons, int max) {
 
-  int n = g_feature_order_count < max ? g_feature_order_count : max;
+  int n = feature_order_count < max ? feature_order_count : max;
   for (int i = 0; i < n; i++) {
     if (out_names)
-      out_names[i] = g_feature_order[i]->name;
+      out_names[i] = feature_order[i]->name;
     if (out_cbs)
-      out_cbs[i] = g_feature_order[i]->cb;
+      out_cbs[i] = feature_order[i]->cb;
   }
   static const char **icon_ptrs = NULL;
   static int icon_ptrs_cap = 0;
@@ -703,7 +703,7 @@ int sk_get_feature_list_with_icons(const char **out_names,
   if (icon_ptrs) {
     for (int i = 0; i < n; i++)
       icon_ptrs[i] =
-          g_feature_order[i]->icon[0] ? g_feature_order[i]->icon : NULL;
+          feature_order[i]->icon[0] ? feature_order[i]->icon : NULL;
     if (out_icons)
       *out_icons = icon_ptrs;
   } else {
@@ -1208,21 +1208,21 @@ char *ski_popup(const PopupSpec *spec) {
   return r ? strdup(r) : NULL;
 }
 
-static __thread ListBoxInfo *g_sk_list_lb;
-static __thread PlListSpec g_sk_list_spec;
-static __thread int g_sk_list_y0, g_sk_list_itemH, g_sk_list_visible,
-    g_sk_list_cur, g_sk_list_h;
-static __thread int g_sk_list_bx, g_sk_list_bw, g_sk_list_fw, g_sk_list_fh;
+static __thread ListBoxInfo *sk_list_lb;
+static __thread PlListSpec sk_list_spec;
+static __thread int sk_list_y0, sk_list_itemH, sk_list_visible,
+    sk_list_cur, sk_list_h;
+static __thread int sk_list_bx, sk_list_bw, sk_list_fw, sk_list_fh;
 
 unsigned long sk_listbox_get_current_standard_color(void) {
-  if (!g_sk_list_lb || g_sk_list_cur == 0)
+  if (!sk_list_lb || sk_list_cur == 0)
     return 0;
-  int idx = g_sk_list_lb->view_offset + g_sk_list_cur - 1;
-  if (idx < 0 || idx >= g_sk_list_lb->item_count)
+  int idx = sk_list_lb->view_offset + sk_list_cur - 1;
+  if (idx < 0 || idx >= sk_list_lb->item_count)
     return 0;
   unsigned long ncol, bcol, pcol;
   Item_GetColors((PlGetItemColorsSpec){.idx = idx,
-                                       .count = g_sk_list_lb->item_count,
+                                       .count = sk_list_lb->item_count,
                                        .num_color = &ncol,
                                        .body_color = &bcol,
                                        .plain_color = &pcol});
@@ -1625,63 +1625,63 @@ static bool sk_listbox_begin_common(const PlListSpec *spec) {
   ListboxLayout lay;
   Listbox_ComputeLayout(spec, bi.list_top, itemH, st ? st->width : 900,
                         st ? st->height : 640, lb->item_count, &lay);
-  g_sk_list_spec = *spec;
-  g_sk_list_lb = lb;
-  g_sk_list_itemH = itemH;
-  g_sk_list_y0 = lay.y0;
-  g_sk_list_bx = lay.bx;
-  g_sk_list_bw = lay.bw;
-  g_sk_list_fw = lay.fw;
-  g_sk_list_fh = lay.fh;
-  g_sk_list_h = lay.list_h;
-  g_sk_list_visible = lay.visible;
-  g_sk_list_cur = 0;
+  sk_list_spec = *spec;
+  sk_list_lb = lb;
+  sk_list_itemH = itemH;
+  sk_list_y0 = lay.y0;
+  sk_list_bx = lay.bx;
+  sk_list_bw = lay.bw;
+  sk_list_fw = lay.fw;
+  sk_list_fh = lay.fh;
+  sk_list_h = lay.list_h;
+  sk_list_visible = lay.visible;
+  sk_list_cur = 0;
   UI_LB_SetVisibleCount(lay.visible);
   ListBox_ApplyPendingScroll(lb, lay.visible);
-  ListBox_SetGeometry(g_sk_list_y0, g_sk_list_itemH, lay.visible);
-  ListBox_HoverFocus(lb, g_sk_list_y0, g_sk_list_itemH, lb->view_offset,
+  ListBox_SetGeometry(sk_list_y0, sk_list_itemH, lay.visible);
+  ListBox_HoverFocus(lb, sk_list_y0, sk_list_itemH, lb->view_offset,
                      lay.visible);
   return true;
 }
 
 static bool sk_listbox_next_common(SkListItemCtx *out) {
-  if (!out || !g_sk_list_lb)
+  if (!out || !sk_list_lb)
     return false;
-  if (g_sk_list_cur >= g_sk_list_visible)
+  if (sk_list_cur >= sk_list_visible)
     return false;
-  int idx = g_sk_list_lb->view_offset + g_sk_list_cur;
-  if (idx < 0 || idx >= g_sk_list_lb->item_count)
+  int idx = sk_list_lb->view_offset + sk_list_cur;
+  if (idx < 0 || idx >= sk_list_lb->item_count)
     return false;
-  int y = g_sk_list_y0 + g_sk_list_cur * g_sk_list_itemH;
-  if (g_sk_list_cur == 0)
+  int y = sk_list_y0 + sk_list_cur * sk_list_itemH;
+  if (sk_list_cur == 0)
     DrawPromptSeparator(
-        (PlDrawPromptSeparatorSpec){.y = g_sk_list_y0, .width = g_sk_list_fw});
-  bool sel = (idx == g_sk_list_lb->selected_index);
-  Platform_ListboxBackendDrawSelection(g_sk_list_bx, g_sk_list_bw, y, g_sk_list_itemH,
-                               g_sk_list_fw, g_sk_list_fh, sel);
-  ListBox_SetRowHScroll(sel ? g_sk_list_lb->text_hscroll : 0);
+        (PlDrawPromptSeparatorSpec){.y = sk_list_y0, .width = sk_list_fw});
+  bool sel = (idx == sk_list_lb->selected_index);
+  Platform_ListboxBackendDrawSelection(sk_list_bx, sk_list_bw, y, sk_list_itemH,
+                               sk_list_fw, sk_list_fh, sel);
+  ListBox_SetRowHScroll(sel ? sk_list_lb->text_hscroll : 0);
   out->idx = idx;
   out->selected = sel;
-  out->x = g_sk_list_spec.x;
+  out->x = sk_list_spec.x;
   out->y = y;
-  out->w = g_sk_list_spec.w;
-  out->h = g_sk_list_itemH;
-  out->text = g_sk_list_lb->items[idx];
-  g_sk_list_cur++;
+  out->w = sk_list_spec.w;
+  out->h = sk_list_itemH;
+  out->text = sk_list_lb->items[idx];
+  sk_list_cur++;
   return true;
 }
 
 void sk_listbox_end(void) {
   ListBox_SetRowHScroll(0);
-  if (PromptListBottomMargin() > 0 && g_sk_list_y0 >= 0) {
+  if (PromptListBottomMargin() > 0 && sk_list_y0 >= 0) {
     DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-        .y = g_sk_list_y0 + g_sk_list_h, .width = g_sk_list_fw});
+        .y = sk_list_y0 + sk_list_h, .width = sk_list_fw});
   }
   Platform_ListboxBackendEnd();
-  g_sk_list_lb = NULL;
-  g_sk_list_visible = 0;
-  g_sk_list_cur = 0;
-  g_sk_list_y0 = -1;
+  sk_list_lb = NULL;
+  sk_list_visible = 0;
+  sk_list_cur = 0;
+  sk_list_y0 = -1;
 }
 
 bool sk_listbox_begin(const SkListSpec *spec) {
@@ -1697,7 +1697,7 @@ bool sk_listbox_next(SkListItemCtx *out) {
 }
 
 int sk_listbox_get_count(void) {
-  return g_sk_list_lb ? g_sk_list_lb->item_count : 0;
+  return sk_list_lb ? sk_list_lb->item_count : 0;
 }
 
 bool ski_place_listbox(const SkListSpec *spec) {
@@ -2339,75 +2339,75 @@ void sk_profile_end(SkTimer timer) {
   }
 }
 
-static SkWidget *g_sk_widgets[WIDGET_MAX];
-static int g_sk_widget_count = 0;
+static SkWidget *sk_widgets[WIDGET_MAX];
+static int sk_widget_count = 0;
 
 typedef struct {
   char name[64];
   SkLibrary handle;
 } LibraryEntry;
-static LibraryEntry g_library_registry[32];
-static int g_registry_count = 0;
+static LibraryEntry library_registry[32];
+static int registry_count = 0;
 
 void sk_library_register(const char *name, SkLibrary handle) {
   if (!name || !handle)
     return;
-  for (int i = 0; i < g_registry_count; ++i) {
-    if (strcmp(g_library_registry[i].name, name) == 0) {
-      g_library_registry[i].handle = handle;
+  for (int i = 0; i < registry_count; ++i) {
+    if (strcmp(library_registry[i].name, name) == 0) {
+      library_registry[i].handle = handle;
       return;
     }
   }
-  if (g_registry_count < 32) {
-    snprintf(g_library_registry[g_registry_count].name,
-             sizeof(g_library_registry[g_registry_count].name), "%s", name);
-    g_library_registry[g_registry_count].handle = handle;
-    g_registry_count++;
+  if (registry_count < 32) {
+    snprintf(library_registry[registry_count].name,
+             sizeof(library_registry[registry_count].name), "%s", name);
+    library_registry[registry_count].handle = handle;
+    registry_count++;
   }
 }
 
 SkLibrary sk_library_get(const char *name) {
   if (!name)
     return NULL;
-  for (int i = 0; i < g_registry_count; ++i) {
-    if (strcmp(g_library_registry[i].name, name) == 0)
-      return g_library_registry[i].handle;
+  for (int i = 0; i < registry_count; ++i) {
+    if (strcmp(library_registry[i].name, name) == 0)
+      return library_registry[i].handle;
   }
   return NULL;
 }
 
-static SkTimer g_mon_at;
-static bool g_mon_valid = false;
-static int g_mon_x, g_mon_y, g_mon_w, g_mon_h;
+static SkTimer mon_at;
+static bool mon_valid = false;
+static int mon_x, mon_y, mon_w, mon_h;
 
 static void sk_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
 
-  if (!g_mon_valid || sk_end_timer(g_mon_at) > 2000) {
-    Platform_WM_GetMonitorGeometry(&g_mon_x, &g_mon_y, &g_mon_w, &g_mon_h);
-    g_mon_at = sk_start_timer();
-    g_mon_valid = true;
+  if (!mon_valid || sk_end_timer(mon_at) > 2000) {
+    Platform_WM_GetMonitorGeometry(&mon_x, &mon_y, &mon_w, &mon_h);
+    mon_at = sk_start_timer();
+    mon_valid = true;
   }
-  *x = g_mon_x;
-  *y = g_mon_y;
-  *w = g_mon_w;
-  *h = g_mon_h;
+  *x = mon_x;
+  *y = mon_y;
+  *w = mon_w;
+  *h = mon_h;
 }
 
 static void sk_widget_relayout(void);
 
-static SkPos g_sk_hover_pos = {0, 0};
-static SkTimer g_sk_hover_at = {0};
-static bool g_sk_hover_valid = false;
+static SkPos sk_hover_pos = {0, 0};
+static SkTimer sk_hover_at = {0};
+static bool sk_hover_valid = false;
 
 static void sk_widget_hover_poll(void) {
 
   SkTimer now = sk_start_timer();
-  if (g_sk_hover_valid && sk_end_timer(g_sk_hover_at) < 400.0) {
+  if (sk_hover_valid && sk_end_timer(sk_hover_at) < 400.0) {
     return;
   }
-  g_sk_hover_pos = sk_get_cursor_pos();
-  g_sk_hover_at = now;
-  g_sk_hover_valid = true;
+  sk_hover_pos = sk_get_cursor_pos();
+  sk_hover_at = now;
+  sk_hover_valid = true;
 }
 
 static void *sk_widget_hover_worker(void *ud) {
@@ -2434,10 +2434,10 @@ static void sk_widget_render_frame(void *ud) {
     sk_widget_hover_poll();
     bool inside = (widget->x >= 0x7fffffff)
                       ? false
-                      : (g_sk_hover_pos.x >= widget->x &&
-                         g_sk_hover_pos.x < widget->x + widget->w &&
-                         g_sk_hover_pos.y >= widget->y &&
-                         g_sk_hover_pos.y < widget->y + widget->h);
+                      : (sk_hover_pos.x >= widget->x &&
+                         sk_hover_pos.x < widget->x + widget->w &&
+                         sk_hover_pos.y >= widget->y &&
+                         sk_hover_pos.y < widget->y + widget->h);
     if (inside && !widget->hovered && widget->on_hover &&
         !widget->hover_running) {
       widget->hover_running = true;
@@ -2541,9 +2541,9 @@ static void sk_widget_relayout(void) {
 
   SkWidget *sorted[WIDGET_MAX];
   int n = 0;
-  for (int i = 0; i < g_sk_widget_count; i++) {
-    if (g_sk_widgets[i] && !g_sk_widgets[i]->free_pos)
-      sorted[n++] = g_sk_widgets[i];
+  for (int i = 0; i < sk_widget_count; i++) {
+    if (sk_widgets[i] && !sk_widgets[i]->free_pos)
+      sorted[n++] = sk_widgets[i];
   }
   for (int i = 1; i < n; i++) {
     SkWidget *key = sorted[i];
@@ -2709,24 +2709,24 @@ typedef struct {
   char owner[OWNER_PATH_MAX];
 } SkCcEntry;
 
-static int g_cc_entry_count = 0;
-static SkCcEntry g_cc_entries[4096];
+static int cc_entry_count = 0;
+static SkCcEntry cc_entries[4096];
 
 #define SK_CC_DEP_OWNERS 256
-static char g_cc_dep_owners[SK_CC_DEP_OWNERS][OWNER_PATH_MAX];
-static int g_cc_dep_owner_count = 0;
+static char cc_dep_owners[SK_CC_DEP_OWNERS][OWNER_PATH_MAX];
+static int cc_dep_owner_count = 0;
 
 static bool sk_cc_dep_seen(const char *owner) {
-  for (int i = 0; i < g_cc_dep_owner_count; i++)
-    if (strcmp(g_cc_dep_owners[i], owner) == 0)
+  for (int i = 0; i < cc_dep_owner_count; i++)
+    if (strcmp(cc_dep_owners[i], owner) == 0)
       return true;
   return false;
 }
 
 static void sk_cc_dep_mark(const char *owner) {
-  if (g_cc_dep_owner_count >= SK_CC_DEP_OWNERS)
+  if (cc_dep_owner_count >= SK_CC_DEP_OWNERS)
     return;
-  snprintf(g_cc_dep_owners[g_cc_dep_owner_count++], OWNER_PATH_MAX, "%s",
+  snprintf(cc_dep_owners[cc_dep_owner_count++], OWNER_PATH_MAX, "%s",
            owner);
 }
 
@@ -2739,19 +2739,19 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   if (!spec)
     return false;
   int slot = -1;
-  for (int i = 0; i < g_cc_entry_count; i++) {
-    if (spec->display_name && g_cc_entries[i].display_name[0] &&
-        strcmp(g_cc_entries[i].display_name, spec->display_name) == 0) {
+  for (int i = 0; i < cc_entry_count; i++) {
+    if (spec->display_name && cc_entries[i].display_name[0] &&
+        strcmp(cc_entries[i].display_name, spec->display_name) == 0) {
       slot = i;
       break;
     }
   }
   if (slot < 0) {
-    if (g_cc_entry_count >= 4096)
+    if (cc_entry_count >= 4096)
       return false;
-    slot = g_cc_entry_count++;
+    slot = cc_entry_count++;
   }
-  SkCcEntry *e = &g_cc_entries[slot];
+  SkCcEntry *e = &cc_entries[slot];
   memset(e, 0, sizeof(*e));
   e->pub.on_enter = spec->on_enter;
   e->pub.on_ctrl_enter = spec->on_ctrl_enter;
@@ -2804,56 +2804,56 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   return true;
 }
 
-int sk_cc_entry_count(void) { return g_cc_entry_count; }
+int sk_cc_entry_count(void) { return cc_entry_count; }
 
 const SkCcEntrySpec *sk_cc_entry_at(int index) {
-  if (index < 0 || index >= g_cc_entry_count)
+  if (index < 0 || index >= cc_entry_count)
     return NULL;
-  return &g_cc_entries[index].pub;
+  return &cc_entries[index].pub;
 }
 
 void cc_registry_purge_owner(const char *path_a, const char *path_b) {
   if (!path_a && !path_b)
     return;
   int out = 0;
-  for (int i = 0; i < g_cc_entry_count; i++) {
-    if (Owner_ModuleMatches(g_cc_entries[i].owner, path_a, path_b))
+  for (int i = 0; i < cc_entry_count; i++) {
+    if (Owner_ModuleMatches(cc_entries[i].owner, path_a, path_b))
       continue;
     if (out != i) {
-      g_cc_entries[out] = g_cc_entries[i];
-      g_cc_entries[out].pub.display_name = g_cc_entries[out].display_name;
-      g_cc_entries[out].pub.internal_name = g_cc_entries[out].internal_name;
-      g_cc_entries[out].pub.icon = g_cc_entries[out].icon;
-      g_cc_entries[out].pub.type = g_cc_entries[out].type;
+      cc_entries[out] = cc_entries[i];
+      cc_entries[out].pub.display_name = cc_entries[out].display_name;
+      cc_entries[out].pub.internal_name = cc_entries[out].internal_name;
+      cc_entries[out].pub.icon = cc_entries[out].icon;
+      cc_entries[out].pub.type = cc_entries[out].type;
     }
     out++;
   }
-  for (int i = out; i < g_cc_entry_count; i++)
-    memset(&g_cc_entries[i], 0, sizeof(g_cc_entries[i]));
-  g_cc_entry_count = out;
+  for (int i = out; i < cc_entry_count; i++)
+    memset(&cc_entries[i], 0, sizeof(cc_entries[i]));
+  cc_entry_count = out;
 }
 
 #define SK_MAX_ALIASES 1024
-static char g_alias_alias[SK_MAX_ALIASES][128];
+static char alias_alias[SK_MAX_ALIASES][128];
 static char g_alias_target[SK_MAX_ALIASES][256];
-static int g_alias_count = 0;
+static int alias_count = 0;
 
 bool ski_add_alias(const SkAliasSpec *spec) {
   if (!spec || !spec->alias || !spec->target)
     return false;
-  if (g_alias_count >= SK_MAX_ALIASES)
+  if (alias_count >= SK_MAX_ALIASES)
     return false;
-  for (int i = 0; i < g_alias_count; i++) {
+  for (int i = 0; i < alias_count; i++) {
     if (strcmp(g_alias_target[i], spec->target) == 0) {
-      snprintf(g_alias_alias[i], sizeof(g_alias_alias[i]), "%s", spec->alias);
+      snprintf(alias_alias[i], sizeof(alias_alias[i]), "%s", spec->alias);
       return true;
     }
   }
-  snprintf(g_alias_alias[g_alias_count], sizeof(g_alias_alias[g_alias_count]),
+  snprintf(alias_alias[alias_count], sizeof(alias_alias[alias_count]),
            "%s", spec->alias);
-  snprintf(g_alias_target[g_alias_count], sizeof(g_alias_target[g_alias_count]),
+  snprintf(g_alias_target[alias_count], sizeof(g_alias_target[alias_count]),
            "%s", spec->target);
-  g_alias_count++;
+  alias_count++;
   return true;
 }
 
@@ -2862,29 +2862,29 @@ bool ski_remove_alias(const char *alias) {
     return false;
   int n = 0;
   bool found = false;
-  for (int i = 0; i < g_alias_count; i++) {
-    if (strcmp(g_alias_alias[i], alias) == 0) {
+  for (int i = 0; i < alias_count; i++) {
+    if (strcmp(alias_alias[i], alias) == 0) {
       found = true;
       continue;
     }
     if (n != i) {
-      snprintf(g_alias_alias[n], sizeof(g_alias_alias[n]), "%s",
-               g_alias_alias[i]);
+      snprintf(alias_alias[n], sizeof(alias_alias[n]), "%s",
+               alias_alias[i]);
       snprintf(g_alias_target[n], sizeof(g_alias_target[n]), "%s",
                g_alias_target[i]);
     }
     n++;
   }
-  g_alias_count = n;
+  alias_count = n;
   return found;
 }
 
 const char *sk_alias_for(const char *target) {
   if (!target)
     return NULL;
-  for (int i = 0; i < g_alias_count; i++) {
+  for (int i = 0; i < alias_count; i++) {
     if (strcmp(g_alias_target[i], target) == 0)
-      return g_alias_alias[i];
+      return alias_alias[i];
   }
   return NULL;
 }

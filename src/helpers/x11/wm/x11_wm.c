@@ -24,22 +24,22 @@
 
 static int _x11_err = 0;
 static Window _x11_last_min = None;
-static int g_ewmh_move_works = -1;
+static int ewmh_move_works = -1;
 
-static int g_i3_probe = 0;
-static char g_i3_sock[512];
+static int i3_probe = 0;
+static char i3_sock[512];
 
 static bool i3_ensure_sock(void) {
 
-  if (g_i3_probe != 0)
-    return g_i3_probe == 1;
-  g_i3_probe = -1;
+  if (i3_probe != 0)
+    return i3_probe == 1;
+  i3_probe = -1;
   const char *cur = getenv("I3SOCK");
   if (cur && cur[0]) {
     struct stat st;
     if (stat(cur, &st) == 0) {
-      snprintf(g_i3_sock, sizeof(g_i3_sock), "%s", cur);
-      g_i3_probe = 1;
+      snprintf(i3_sock, sizeof(i3_sock), "%s", cur);
+      i3_probe = 1;
       return true;
     }
   }
@@ -51,15 +51,15 @@ static bool i3_ensure_sock(void) {
   glob_t g;
   memset(&g, 0, sizeof(g));
   if (glob(pat, 0, NULL, &g) == 0 && g.gl_pathc > 0) {
-    snprintf(g_i3_sock, sizeof(g_i3_sock), "%s", g.gl_pathv[g.gl_pathc - 1]);
+    snprintf(i3_sock, sizeof(i3_sock), "%s", g.gl_pathv[g.gl_pathc - 1]);
     struct stat st;
-    if (stat(g_i3_sock, &st) == 0) {
-      setenv("I3SOCK", g_i3_sock, 1);
-      g_i3_probe = 1;
+    if (stat(i3_sock, &st) == 0) {
+      setenv("I3SOCK", i3_sock, 1);
+      i3_probe = 1;
     }
   }
   globfree(&g);
-  return g_i3_probe == 1;
+  return i3_probe == 1;
 }
 
 static bool i3_exec(const char *command) {
@@ -802,19 +802,19 @@ bool move_active_window_to_monitor_x11(bool right) {
   if (ny < oy[dst])
     ny = oy[dst];
   bool sent = x11_moveresize_window(display, focus, nx, ny, ww, wh);
-  if (g_ewmh_move_works == 1)
+  if (ewmh_move_works == 1)
     return sent;
-  if (g_ewmh_move_works == 0)
+  if (ewmh_move_works == 0)
     return false;
   XSync(display, False);
   usleep(12000);
   int vx = 0, vy = 0, vw = 0, vh = 0;
   if (x11_window_geom(display, focus, &vx, &vy, &vw, &vh) &&
       (vx != wx || vy != wy)) {
-    g_ewmh_move_works = 1;
+    ewmh_move_works = 1;
     return true;
   }
-  g_ewmh_move_works = 0;
+  ewmh_move_works = 0;
   return false;
 }
 
@@ -825,7 +825,7 @@ static bool x11_move_dir(bool right) {
     return false;
   Window before = x11_focused_window(display);
   bool moved = false;
-  if (g_ewmh_move_works != 0 && move_active_window_to_monitor_x11(right))
+  if (ewmh_move_works != 0 && move_active_window_to_monitor_x11(right))
     moved = true;
   else if (i3_move_to_output(right))
     moved = true;

@@ -8,14 +8,14 @@
 #include "core/timer.h"
 #include "helpers/helpers_owner.h"
 
-static bool g_down[256] = {0};
-static bool g_pressed[256] = {0};
-static bool g_released[256] = {0};
-static void (*g_cb)(int vk, bool down, int mods, void *ud) = NULL;
-static void *g_ud = NULL;
-static char g_cb_owner[OWNER_PATH_MAX] = {0};
-static char g_char_queue[32] = {0};
-static int g_char_head = 0, g_char_tail = 0;
+static bool down_map[256] = {0};
+static bool pressed[256] = {0};
+static bool released[256] = {0};
+static void (*key_cb)(int vk, bool down, int mods, void *ud) = NULL;
+static void *key_ud = NULL;
+static char cb_owner[OWNER_PATH_MAX] = {0};
+static char char_queue[32] = {0};
+static int char_head = 0, char_tail = 0;
 
 #define SK_INHIBIT_MOD_COUNT 11
 static const int kInhibitMods[SK_INHIBIT_MOD_COUNT] = {
@@ -26,7 +26,7 @@ void InputState_InhibitMods(void) {
   for (int i = 0; i < SK_INHIBIT_MOD_COUNT; i++) {
     int nv = kInhibitMods[i];
     if (nv >= 0 && nv < 256)
-      g_down[nv] = false;
+      down_map[nv] = false;
   }
 }
 
@@ -39,44 +39,44 @@ void InputState_Update(int vk, bool down, int mods, int char_hint) {
   int nv = norm_vk(vk);
   if (nv < 0 || nv >= 256)
     return;
-  bool was = g_down[nv];
+  bool was = down_map[nv];
   if (down) {
-    g_down[nv] = true;
-    g_pressed[nv] = true;
-    g_released[nv] = false;
+    down_map[nv] = true;
+    pressed[nv] = true;
+    released[nv] = false;
     char ch = (char)char_hint;
     if (ch) {
-      int nxt = (g_char_tail + 1) % 32;
-      if (nxt != g_char_head) {
-        g_char_queue[g_char_tail] = ch;
-        g_char_tail = nxt;
+      int nxt = (char_tail + 1) % 32;
+      if (nxt != char_head) {
+        char_queue[char_tail] = ch;
+        char_tail = nxt;
       }
     }
   } else {
     if (was) {
-      g_down[nv] = false;
-      g_released[nv] = true;
+      down_map[nv] = false;
+      released[nv] = true;
     }
     if (!was)
-      g_released[nv] = false;
+      released[nv] = false;
   }
-  if (g_cb)
-    g_cb(nv, down, mods, g_ud);
+  if (key_cb)
+    key_cb(nv, down, mods, key_ud);
 }
 
 bool Input_IsKeyDown(int vk) {
   vk = norm_vk(vk);
   if (vk < 0 || vk >= 256)
     return false;
-  return g_down[vk];
+  return down_map[vk];
 }
 
 bool Input_WasKeyPressed(int vk) {
   vk = norm_vk(vk);
   if (vk < 0 || vk >= 256)
     return false;
-  bool v = g_pressed[vk];
-  g_pressed[vk] = false;
+  bool v = pressed[vk];
+  pressed[vk] = false;
   return v;
 }
 
@@ -84,55 +84,55 @@ bool Input_WasKeyReleased(int vk) {
   vk = norm_vk(vk);
   if (vk < 0 || vk >= 256)
     return false;
-  bool v = g_released[vk];
-  g_released[vk] = false;
+  bool v = released[vk];
+  released[vk] = false;
   return v;
 }
 
 void Input_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud),
                           void *ud) {
-  g_cb = cb;
-  g_ud = ud;
-  g_cb_owner[0] = '\0';
-  if (cb)
-    Owner_ResolveForFunc((void *)cb, g_cb_owner, sizeof(g_cb_owner));
+  key_cb = cb;
+  key_ud = ud;
+  cb_owner[0] = '\0';
+  if (key_cb)
+    Owner_ResolveForFunc((void *)key_cb, cb_owner, sizeof(cb_owner));
 }
 
 void KeyCallback_PurgeOwner(const char *path_a, const char *path_b) {
-  if (g_cb && Owner_ModuleMatches(g_cb_owner, path_a, path_b)) {
-    g_cb = NULL;
-    g_ud = NULL;
-    g_cb_owner[0] = '\0';
+  if (key_cb && Owner_ModuleMatches(cb_owner, path_a, path_b)) {
+    key_cb = NULL;
+    key_ud = NULL;
+    cb_owner[0] = '\0';
   }
 }
 
 void InputState_Clear(void) {
   for (int i = 0; i < 256; i++) {
-    g_down[i] = false;
-    g_pressed[i] = false;
-    g_released[i] = false;
+    down_map[i] = false;
+    pressed[i] = false;
+    released[i] = false;
   }
-  g_char_head = g_char_tail = 0;
+  char_head = char_tail = 0;
 }
 
-void InputState_ClearQueue(void) { g_char_head = g_char_tail = 0; }
+void InputState_ClearQueue(void) { char_head = char_tail = 0; }
 int Input_GetPressedKey(void) {
   for (int i = 0; i < 256; i++) {
-    if (g_pressed[i]) {
+    if (pressed[i]) {
       if (i >= 32 && i <= 126) {
-        g_pressed[i] = false;
+        pressed[i] = false;
         continue;
       }
-      g_pressed[i] = false;
+      pressed[i] = false;
       return i;
     }
   }
   return 0;
 }
 char Input_GetPressedChar(void) {
-  if (g_char_head != g_char_tail) {
-    char c = g_char_queue[g_char_head];
-    g_char_head = (g_char_head + 1) % 32;
+  if (char_head != char_tail) {
+    char c = char_queue[char_head];
+    char_head = (char_head + 1) % 32;
     return c;
   }
   return 0;
@@ -140,25 +140,25 @@ char Input_GetPressedChar(void) {
 
 #define GLOBAL_KEY_RING 512
 
-static PlatformKeyEvent g_gkeys[GLOBAL_KEY_RING];
-static int g_gkey_head = 0, g_gkey_tail = 0;
-static unsigned long g_gkey_dropped = 0;
-static void *g_gkey_mutex = NULL;
+static PlatformKeyEvent gkeys[GLOBAL_KEY_RING];
+static int gkey_head = 0, gkey_tail = 0;
+static unsigned long gkey_dropped = 0;
+static void *gkey_mutex = NULL;
 static void gkey_lock_init(void) {
-  if (!g_gkey_mutex)
-    g_gkey_mutex = Platform_MutexCreate();
+  if (!gkey_mutex)
+    gkey_mutex = Platform_MutexCreate();
 }
 #define GKEY_LOCK()                                                            \
   do {                                                                         \
     gkey_lock_init();                                                          \
-    Platform_MutexLock(g_gkey_mutex);                                          \
+    Platform_MutexLock(gkey_mutex);                                          \
   } while (0)
-#define GKEY_UNLOCK() Platform_MutexUnlock(g_gkey_mutex)
+#define GKEY_UNLOCK() Platform_MutexUnlock(gkey_mutex)
 
 void GlobalKey_Clear(void) {
   GKEY_LOCK();
-  g_gkey_head = g_gkey_tail = 0;
-  g_gkey_dropped = 0;
+  gkey_head = gkey_tail = 0;
+  gkey_dropped = 0;
   GKEY_UNLOCK();
 }
 
@@ -176,14 +176,14 @@ void GlobalKey_Push(const PlatformKeyEvent *ev) {
   PlatformKeyEvent stamped = *ev;
   stamped.t_us = input_now_us();
   GKEY_LOCK();
-  int nxt = (g_gkey_tail + 1) % GLOBAL_KEY_RING;
-  if (nxt == g_gkey_head) {
-    g_gkey_dropped++;
+  int nxt = (gkey_tail + 1) % GLOBAL_KEY_RING;
+  if (nxt == gkey_head) {
+    gkey_dropped++;
     GKEY_UNLOCK();
     return;
   }
-  g_gkeys[g_gkey_tail] = stamped;
-  g_gkey_tail = nxt;
+  gkeys[gkey_tail] = stamped;
+  gkey_tail = nxt;
   GKEY_UNLOCK();
 }
 
@@ -192,9 +192,9 @@ bool GlobalKey_Pop(PlatformKeyEvent *out) {
     return false;
   bool got = false;
   GKEY_LOCK();
-  if (g_gkey_head != g_gkey_tail) {
-    *out = g_gkeys[g_gkey_head];
-    g_gkey_head = (g_gkey_head + 1) % GLOBAL_KEY_RING;
+  if (gkey_head != gkey_tail) {
+    *out = gkeys[gkey_head];
+    gkey_head = (gkey_head + 1) % GLOBAL_KEY_RING;
     got = true;
   }
   GKEY_UNLOCK();
@@ -203,7 +203,7 @@ bool GlobalKey_Pop(PlatformKeyEvent *out) {
 
 int GlobalKey_Pending(void) {
   GKEY_LOCK();
-  int n = g_gkey_tail - g_gkey_head;
+  int n = gkey_tail - gkey_head;
   if (n < 0)
     n += GLOBAL_KEY_RING;
   GKEY_UNLOCK();
@@ -212,32 +212,32 @@ int GlobalKey_Pending(void) {
 
 unsigned long GlobalKey_Dropped(void) {
   GKEY_LOCK();
-  unsigned long d = g_gkey_dropped;
+  unsigned long d = gkey_dropped;
   GKEY_UNLOCK();
   return d;
 }
 
 #define GLOBAL_MOUSE_RING 256
 
-static PlatformMouseEvent g_gmice[GLOBAL_MOUSE_RING];
-static int g_gmouse_head = 0, g_gmouse_tail = 0;
-static unsigned long g_gmouse_dropped = 0;
-static bool g_mbtn_down[MOUSE_BTN_MAX] = {0};
-static void *g_gmouse_mutex = NULL;
+static PlatformMouseEvent gmice[GLOBAL_MOUSE_RING];
+static int gmouse_head = 0, gmouse_tail = 0;
+static unsigned long gmouse_dropped = 0;
+static bool mbtn_down[MOUSE_BTN_MAX] = {0};
+static void *gmouse_mutex = NULL;
 static void gmouse_lock_init(void) {
-  if (!g_gmouse_mutex)
-    g_gmouse_mutex = Platform_MutexCreate();
+  if (!gmouse_mutex)
+    gmouse_mutex = Platform_MutexCreate();
 }
 #define GMOUSE_LOCK()                                                          \
   do {                                                                         \
     gmouse_lock_init();                                                        \
-    Platform_MutexLock(g_gmouse_mutex);                                        \
+    Platform_MutexLock(gmouse_mutex);                                        \
   } while (0)
-#define GMOUSE_UNLOCK() Platform_MutexUnlock(g_gmouse_mutex)
+#define GMOUSE_UNLOCK() Platform_MutexUnlock(gmouse_mutex)
 
 int GlobalMouse_Full(void) {
-  int next = (g_gmouse_tail + 1) % GLOBAL_MOUSE_RING;
-  return next == g_gmouse_head;
+  int next = (gmouse_tail + 1) % GLOBAL_MOUSE_RING;
+  return next == gmouse_head;
 }
 
 void GlobalMouse_Push(const PlatformMouseEvent *ev) {
@@ -248,14 +248,14 @@ void GlobalMouse_Push(const PlatformMouseEvent *ev) {
   PlatformMouseEvent stamped = *ev;
   stamped.t_us = input_now_us();
   GMOUSE_LOCK();
-  int nxt = (g_gmouse_tail + 1) % GLOBAL_MOUSE_RING;
-  if (nxt == g_gmouse_head) {
-    g_gmouse_dropped++;
+  int nxt = (gmouse_tail + 1) % GLOBAL_MOUSE_RING;
+  if (nxt == gmouse_head) {
+    gmouse_dropped++;
     GMOUSE_UNLOCK();
     return;
   }
-  g_gmice[g_gmouse_tail] = stamped;
-  g_gmouse_tail = nxt;
+  gmice[gmouse_tail] = stamped;
+  gmouse_tail = nxt;
   GMOUSE_UNLOCK();
 }
 
@@ -264,9 +264,9 @@ bool GlobalMouse_Pop(PlatformMouseEvent *out) {
     return false;
   bool got = false;
   GMOUSE_LOCK();
-  if (g_gmouse_head != g_gmouse_tail) {
-    *out = g_gmice[g_gmouse_head];
-    g_gmouse_head = (g_gmouse_head + 1) % GLOBAL_MOUSE_RING;
+  if (gmouse_head != gmouse_tail) {
+    *out = gmice[gmouse_head];
+    gmouse_head = (gmouse_head + 1) % GLOBAL_MOUSE_RING;
     got = true;
   }
   GMOUSE_UNLOCK();
@@ -275,14 +275,14 @@ bool GlobalMouse_Pop(PlatformMouseEvent *out) {
 
 void GlobalMouse_Clear(void) {
   GMOUSE_LOCK();
-  g_gmouse_head = g_gmouse_tail = 0;
-  g_gmouse_dropped = 0;
+  gmouse_head = gmouse_tail = 0;
+  gmouse_dropped = 0;
   GMOUSE_UNLOCK();
 }
 
 int GlobalMouse_Pending(void) {
   GMOUSE_LOCK();
-  int n = g_gmouse_tail - g_gmouse_head;
+  int n = gmouse_tail - gmouse_head;
   if (n < 0)
     n += GLOBAL_MOUSE_RING;
   GMOUSE_UNLOCK();
@@ -291,26 +291,26 @@ int GlobalMouse_Pending(void) {
 
 unsigned long GlobalMouse_Dropped(void) {
   GMOUSE_LOCK();
-  unsigned long d = g_gmouse_dropped;
+  unsigned long d = gmouse_dropped;
   GMOUSE_UNLOCK();
   return d;
 }
 
 void Input_UpdateMouseButton(int button, bool down) {
   if (button < 0 ||
-      button >= (int)(sizeof(g_mbtn_down) / sizeof(g_mbtn_down[0])))
+      button >= (int)(sizeof(mbtn_down) / sizeof(mbtn_down[0])))
     return;
   GMOUSE_LOCK();
-  g_mbtn_down[button] = down;
+  mbtn_down[button] = down;
   GMOUSE_UNLOCK();
 }
 
 bool Input_MouseStateDown(int button) {
   if (button < 0 ||
-      button >= (int)(sizeof(g_mbtn_down) / sizeof(g_mbtn_down[0])))
+      button >= (int)(sizeof(mbtn_down) / sizeof(mbtn_down[0])))
     return false;
   GMOUSE_LOCK();
-  bool d = g_mbtn_down[button];
+  bool d = mbtn_down[button];
   GMOUSE_UNLOCK();
   return d;
 }

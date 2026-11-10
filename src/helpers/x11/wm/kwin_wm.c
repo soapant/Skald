@@ -13,7 +13,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <unistd.h>
-static pthread_mutex_t g_kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 bool kwin_is_active(void) {
   const char *v = getenv("KDE_SESSION_VERSION");
@@ -54,19 +54,19 @@ static void kwin_ensure_bus(void) {
   log_error("kwin bus addr='%s'", addr);
 }
 
-static char g_kwin_qdbus[64] = {0};
+static char kwin_qdbus[64] = {0};
 
 static char *kwin_qdbus_call(const char *args) {
 
   kwin_ensure_bus();
-  if (!g_kwin_qdbus[0]) {
+  if (!kwin_qdbus[0]) {
     const char *c = "/usr/bin/qdbus6";
     if (access(c, X_OK) != 0)
       c = "/usr/bin/qdbus";
-    snprintf(g_kwin_qdbus, sizeof(g_kwin_qdbus), "%s", c);
+    snprintf(kwin_qdbus, sizeof(kwin_qdbus), "%s", c);
   }
   char cmd[2048];
-  snprintf(cmd, sizeof(cmd), "%s %s 2>/dev/null || echo error", g_kwin_qdbus,
+  snprintf(cmd, sizeof(cmd), "%s %s 2>/dev/null || echo error", kwin_qdbus,
            args);
   return Platform_RunTerminalCommand(cmd, false);
 }
@@ -111,29 +111,29 @@ static bool kwin_run_script_inner(const char *body) {
 
 static bool kwin_run_script(const char *body) {
 
-  pthread_mutex_lock(&g_kwin_mtx);
+  pthread_mutex_lock(&kwin_mtx);
   bool ok = kwin_run_script_inner(body);
-  pthread_mutex_unlock(&g_kwin_mtx);
+  pthread_mutex_unlock(&kwin_mtx);
   return ok;
 }
 
-static char *g_kwin_records = NULL;
-static char *g_kwin_active_title = NULL;
-static char *g_kwin_active_class = NULL;
-static long long g_kwin_snap_at = 0;
-static bool g_kwin_q_loaded = false;
-static int g_kwin_q_id = -1;
-static char g_kwin_q_name[64] = {0};
-static unsigned g_kwin_q_seq = 0;
-static bool g_kwin_q_legacy_cleared = false;
-static long long g_kwin_q_load_tried_at = 0;
+static char *kwin_records = NULL;
+static char *kwin_active_title = NULL;
+static char *kwin_active_class = NULL;
+static long long kwin_snap_at = 0;
+static bool kwin_q_loaded = false;
+static int kwin_q_id = -1;
+static char kwin_q_name[64] = {0};
+static unsigned kwin_q_seq = 0;
+static bool kwin_q_legacy_cleared = false;
+static long long kwin_q_load_tried_at = 0;
 
 /* How long a window snapshot stays usable. The query costs a Script.run plus
    a journalctl scrape, so a short TTL meant every hotkey paid for a fresh
    one. Window filters only need the title to be roughly current. */
 #define KWIN_SNAP_TTL_MS 1200
 
-static const char g_kwin_q_body[] =
+static const char kwin_q_body[] =
     "(function(){"
     "function cf(w){try{var v=w.caption;if(!v)return \"\";return "
     "String(v).replace(/[\\r\\n]+/g,\" \");}catch(e){return \"\";}}"
@@ -153,39 +153,39 @@ static const char g_kwin_q_body[] =
 static bool kwin_q_load(void) {
 
   long long now = Platform_GetWallClockMs();
-  if (now - g_kwin_q_load_tried_at < 2000 && g_kwin_q_load_tried_at != 0)
+  if (now - kwin_q_load_tried_at < 2000 && kwin_q_load_tried_at != 0)
     return false;
-  g_kwin_q_load_tried_at = now;
-  if (!g_kwin_q_legacy_cleared) {
-    g_kwin_q_legacy_cleared = true;
+  kwin_q_load_tried_at = now;
+  if (!kwin_q_legacy_cleared) {
+    kwin_q_legacy_cleared = true;
     char *leg = kwin_qdbus_call(
         "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript skaldq");
     if (leg)
       free(leg);
   }
-  if (g_kwin_q_name[0]) {
+  if (kwin_q_name[0]) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd),
              "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript %s",
-             g_kwin_q_name);
+             kwin_q_name);
     char *pre = kwin_qdbus_call(cmd);
     if (pre)
       free(pre);
-    g_kwin_q_name[0] = '\0';
+    kwin_q_name[0] = '\0';
   }
   FILE *f = fopen("/tmp/skald_kwin_q.js", "w");
   if (!f)
     return false;
-  fputs(g_kwin_q_body, f);
+  fputs(kwin_q_body, f);
   fclose(f);
   for (int round = 0; round < 3; round++) {
-    snprintf(g_kwin_q_name, sizeof(g_kwin_q_name), "skaldq_%d_%u",
-             (int)getpid(), ++g_kwin_q_seq);
+    snprintf(kwin_q_name, sizeof(kwin_q_name), "skaldq_%d_%u",
+             (int)getpid(), ++kwin_q_seq);
     char load[256];
     snprintf(load, sizeof(load),
              "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "
              "/tmp/skald_kwin_q.js %s",
-             g_kwin_q_name);
+             kwin_q_name);
     char *out = kwin_qdbus_call(load);
     if (!out || kwin_has_error(out)) {
       log_error("kwin q load failed out='%s'", out ? out : "null");
@@ -193,9 +193,9 @@ static bool kwin_q_load(void) {
         free(out);
       continue;
     }
-    g_kwin_q_id = atoi(out);
+    kwin_q_id = atoi(out);
     free(out);
-    if (g_kwin_q_id < 0) {
+    if (kwin_q_id < 0) {
       log_error("kwin q load bad id");
       continue;
     }
@@ -203,12 +203,12 @@ static bool kwin_q_load(void) {
        Script.run plus a 150ms sleep plus a journalctl scrape, and then
        kwin_snapshot_locked immediately did the same run and scrape again.
        If the script is actually broken the snapshot's own journal retry
-       fails and clears g_kwin_q_loaded, so this self-corrects. */
-    g_kwin_q_loaded = true;
+       fails and clears kwin_q_loaded, so this self-corrects. */
+    kwin_q_loaded = true;
     return true;
   }
-  g_kwin_q_loaded = false;
-  g_kwin_q_name[0] = '\0';
+  kwin_q_loaded = false;
+  kwin_q_name[0] = '\0';
   return false;
 }
 
@@ -259,41 +259,41 @@ static void kwin_snap_store(const char *blob) {
     p = eol ? eol + 1 : p + len;
   }
   if (rec) {
-    free(g_kwin_records);
-    g_kwin_records = rec;
+    free(kwin_records);
+    kwin_records = rec;
   }
   if (at) {
-    free(g_kwin_active_title);
-    g_kwin_active_title = at;
+    free(kwin_active_title);
+    kwin_active_title = at;
   }
   if (ac) {
-    free(g_kwin_active_class);
-    g_kwin_active_class = ac;
+    free(kwin_active_class);
+    kwin_active_class = ac;
   }
 }
 
 static bool kwin_snapshot_locked(void) {
 
   long long now = Platform_GetWallClockMs();
-  if (g_kwin_records && now - g_kwin_snap_at < KWIN_SNAP_TTL_MS)
+  if (kwin_records && now - kwin_snap_at < KWIN_SNAP_TTL_MS)
     return true;
   for (int tries = 0; tries < 2; tries++) {
-    if (!g_kwin_q_loaded && !kwin_q_load())
+    if (!kwin_q_loaded && !kwin_q_load())
       return false;
     char args[128];
     snprintf(args, sizeof(args),
              "org.kde.KWin /Scripting/Script%d org.kde.kwin.Script.run",
-             g_kwin_q_id);
+             kwin_q_id);
     char *rout = kwin_qdbus_call(args);
     bool ok = rout && !kwin_has_error(rout) &&
               (rout[0] == '\0' || !strstr(rout, "false"));
     if (!ok)
-      log_error("kwin q run failed id=%d out='%s'", g_kwin_q_id,
+      log_error("kwin q run failed id=%d out='%s'", kwin_q_id,
                 rout ? rout : "null");
     if (rout)
       free(rout);
     if (!ok) {
-      g_kwin_q_loaded = false;
+      kwin_q_loaded = false;
       continue;
     }
     for (int attempt = 0; attempt < 3; attempt++) {
@@ -311,8 +311,8 @@ static bool kwin_snapshot_locked(void) {
           (strstr(log, "SKALDQR ") || strstr(log, "SKALDQA "))) {
         kwin_snap_store(log);
         free(log);
-        g_kwin_snap_at = Platform_GetWallClockMs();
-        return g_kwin_records != NULL;
+        kwin_snap_at = Platform_GetWallClockMs();
+        return kwin_records != NULL;
       }
       if (!log || !log[0])
         log_error("kwin journal empty attempt=%d", attempt);
@@ -322,10 +322,10 @@ static bool kwin_snapshot_locked(void) {
       if (log)
         free(log);
     }
-    g_kwin_q_loaded = false;
-    return g_kwin_records != NULL;
+    kwin_q_loaded = false;
+    return kwin_records != NULL;
   }
-  return g_kwin_records != NULL;
+  return kwin_records != NULL;
 }
 
 static bool kwin_skip_caption(const char *cap) {
@@ -357,13 +357,13 @@ bool get_title_kwin(char *buffer, int buffer_size) {
   buffer[0] = '\0';
   if (!kwin_is_active())
     return false;
-  pthread_mutex_lock(&g_kwin_mtx);
+  pthread_mutex_lock(&kwin_mtx);
   bool ok =
-      kwin_snapshot_locked() && g_kwin_active_title && g_kwin_active_title[0];
+      kwin_snapshot_locked() && kwin_active_title && kwin_active_title[0];
   if (ok)
-    kwin_clean_copy(g_kwin_active_title, strlen(g_kwin_active_title), buffer,
+    kwin_clean_copy(kwin_active_title, strlen(kwin_active_title), buffer,
                     (size_t)buffer_size);
-  pthread_mutex_unlock(&g_kwin_mtx);
+  pthread_mutex_unlock(&kwin_mtx);
   return ok && buffer[0] != '\0';
 }
 
@@ -373,13 +373,13 @@ bool get_app_id_kwin(char *buffer, int buffer_size) {
   buffer[0] = '\0';
   if (!kwin_is_active())
     return false;
-  pthread_mutex_lock(&g_kwin_mtx);
+  pthread_mutex_lock(&kwin_mtx);
   bool ok =
-      kwin_snapshot_locked() && g_kwin_active_class && g_kwin_active_class[0];
+      kwin_snapshot_locked() && kwin_active_class && kwin_active_class[0];
   if (ok)
-    kwin_clean_copy(g_kwin_active_class, strlen(g_kwin_active_class), buffer,
+    kwin_clean_copy(kwin_active_class, strlen(kwin_active_class), buffer,
                     (size_t)buffer_size);
-  pthread_mutex_unlock(&g_kwin_mtx);
+  pthread_mutex_unlock(&kwin_mtx);
   return ok && buffer[0] != '\0';
 }
 
@@ -451,12 +451,12 @@ PlWindowList get_window_titles_kwin() {
   PlWindowList list = {0};
   if (!kwin_is_active())
     return list;
-  pthread_mutex_lock(&g_kwin_mtx);
-  if (!kwin_snapshot_locked() || !g_kwin_records) {
-    pthread_mutex_unlock(&g_kwin_mtx);
+  pthread_mutex_lock(&kwin_mtx);
+  if (!kwin_snapshot_locked() || !kwin_records) {
+    pthread_mutex_unlock(&kwin_mtx);
     return list;
   }
-  const char *p = g_kwin_records;
+  const char *p = kwin_records;
   while (*p) {
     const char *rend = strchr(p, '\x1f');
     size_t rlen = rend ? (size_t)(rend - p) : strlen(p);
@@ -474,7 +474,7 @@ PlWindowList get_window_titles_kwin() {
     }
     p = rend ? rend + 1 : p + rlen;
   }
-  pthread_mutex_unlock(&g_kwin_mtx);
+  pthread_mutex_unlock(&kwin_mtx);
   return list;
 }
 
@@ -482,12 +482,12 @@ PlWindowList get_window_names_kwin() {
   PlWindowList list = {0};
   if (!kwin_is_active())
     return list;
-  pthread_mutex_lock(&g_kwin_mtx);
-  if (!kwin_snapshot_locked() || !g_kwin_records) {
-    pthread_mutex_unlock(&g_kwin_mtx);
+  pthread_mutex_lock(&kwin_mtx);
+  if (!kwin_snapshot_locked() || !kwin_records) {
+    pthread_mutex_unlock(&kwin_mtx);
     return list;
   }
-  const char *p = g_kwin_records;
+  const char *p = kwin_records;
   while (*p) {
     const char *rend = strchr(p, '\x1f');
     size_t rlen = rend ? (size_t)(rend - p) : strlen(p);
@@ -512,7 +512,7 @@ PlWindowList get_window_names_kwin() {
     }
     p = rend ? rend + 1 : p + rlen;
   }
-  pthread_mutex_unlock(&g_kwin_mtx);
+  pthread_mutex_unlock(&kwin_mtx);
   return list;
 }
 

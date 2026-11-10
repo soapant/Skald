@@ -35,7 +35,7 @@ typedef struct {
 
 static BgTileSlot g_bg_tiles[BG_TILE_SLOTS];
 static unsigned long g_bg_tick = 0;
-static pthread_mutex_t g_bg_mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t bg_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 static unsigned long bg_now_ms(void) {
   struct timespec ts;
@@ -260,21 +260,21 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
     return 0;
   unsigned long now = bg_now_ms();
 
-  pthread_mutex_lock(&g_bg_mtx);
+  pthread_mutex_lock(&bg_mtx);
 
   BgTileSlot *fresh = NULL;
   for (int i = 0; i < BG_TILE_SLOTS; i++) {
     BgTileSlot *t = &g_bg_tiles[i];
     if (t->failed && strcmp(t->path, path) == 0 && t->w == w && t->h == h &&
         now - t->checked_ms < BG_RETRY_MS) {
-      pthread_mutex_unlock(&g_bg_mtx);
+      pthread_mutex_unlock(&bg_mtx);
       return 0;
     }
     if (bg_slot_valid(dpy, t, path, w, h)) {
       if (now - t->checked_ms < BG_REVALIDATE_MS) {
         t->stamp = ++g_bg_tick;
         Pixmap pm = t->pm;
-        pthread_mutex_unlock(&g_bg_mtx);
+        pthread_mutex_unlock(&bg_mtx);
         return pm;
       }
       struct stat st;
@@ -283,7 +283,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
         t->checked_ms = now;
         t->stamp = ++g_bg_tick;
         Pixmap pm = t->pm;
-        pthread_mutex_unlock(&g_bg_mtx);
+        pthread_mutex_unlock(&bg_mtx);
         return pm;
       }
     } else if (t->pm) {
@@ -328,7 +328,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
     slot->failed = true;
   }
   Pixmap result = ok ? pm : 0;
-  pthread_mutex_unlock(&g_bg_mtx);
+  pthread_mutex_unlock(&bg_mtx);
   return result;
 }
 
@@ -340,7 +340,7 @@ bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis, int depth,
   if (!pm)
     return false;
 
-  pthread_mutex_lock(&g_bg_mtx);
+  pthread_mutex_lock(&bg_mtx);
   Picture src = 0;
   for (int i = 0; i < BG_TILE_SLOTS; i++) {
     if (g_bg_tiles[i].pm == pm) {
@@ -361,7 +361,7 @@ bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis, int depth,
       ok = true;
     }
   }
-  pthread_mutex_unlock(&g_bg_mtx);
+  pthread_mutex_unlock(&bg_mtx);
   return ok;
 }
 

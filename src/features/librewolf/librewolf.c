@@ -6,8 +6,8 @@
 #include <stdbool.h>
 #include <dirent.h>
 
-static char g_db_path[4096] = {0};
-static char g_exec_name[64] = "librewolf";
+static char db_path[4096] = {0};
+static char exec_name[64] = "librewolf";
 
 static SkLibrary g_sqlite_lib = NULL;
 static int (*p_sqlite3_open_v2)(const char *, sqlite3 **, int,
@@ -95,7 +95,7 @@ static void browser_scan(void) {
       char full[4096];
       snprintf(full, sizeof(full), "%s/%s/places.sqlite", subdir, e2->d_name);
       if (sk_file_exists(full)) {
-        snprintf(g_db_path, sizeof(g_db_path), "%s", full);
+        snprintf(db_path, sizeof(db_path), "%s", full);
         closedir(d2);
         closedir(d);
         return;
@@ -103,7 +103,7 @@ static void browser_scan(void) {
       // also direct
       snprintf(full, sizeof(full), "%s/places.sqlite", subdir);
       if (sk_file_exists(full)) {
-        snprintf(g_db_path, sizeof(g_db_path), "%s", full);
+        snprintf(db_path, sizeof(db_path), "%s", full);
         closedir(d2);
         closedir(d);
         return;
@@ -116,18 +116,18 @@ static void browser_scan(void) {
 
 static void open_browser(void) {
   char cmd[256];
-  snprintf(cmd, sizeof(cmd), "%s", g_exec_name);
+  snprintf(cmd, sizeof(cmd), "%s", exec_name);
   sk_launch_detached(cmd);
 }
 
 static void open_private(void) {
   char cmd[256];
-  snprintf(cmd, sizeof(cmd), "%s --private-window", g_exec_name);
+  snprintf(cmd, sizeof(cmd), "%s --private-window", exec_name);
   sk_launch_detached(cmd);
 }
 
 static void show_bookmarks(void) {
-  if (!g_db_path[0]) {
+  if (!db_path[0]) {
     sk_message(.message = "LibreWolf places.sqlite not found.");
     return;
   }
@@ -138,7 +138,7 @@ static void show_bookmarks(void) {
   char buf[4096] = {0};
   size_t pos = 0;
   sqlite3 *db = NULL;
-  if (p_sqlite3_open_v2(g_db_path, &db, SQLITE_OPEN_READONLY, NULL) !=
+  if (p_sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READONLY, NULL) !=
       SQLITE_OK) {
     if (db)
       p_sqlite3_close(db);

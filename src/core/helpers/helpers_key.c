@@ -25,27 +25,27 @@ bool Key_IsSuperPressed(void) {
   return Input_IsKeyDown(VK_LWIN) || Input_IsKeyDown(VK_RWIN);
 }
 
-static KeyInterceptorFn g_key_interceptor = NULL;
-static char g_key_interceptor_owner[OWNER_PATH_MAX] = {0};
+static KeyInterceptorFn key_interceptor = NULL;
+static char key_interceptor_owner[OWNER_PATH_MAX] = {0};
 
 void Key_RegisterInterceptor(KeyInterceptorFn fn) {
-  g_key_interceptor = fn;
-  g_key_interceptor_owner[0] = '\0';
+  key_interceptor = fn;
+  key_interceptor_owner[0] = '\0';
   if (fn)
-    Owner_ResolveForFunc((void *)fn, g_key_interceptor_owner,
-                         sizeof(g_key_interceptor_owner));
+    Owner_ResolveForFunc((void *)fn, key_interceptor_owner,
+                         sizeof(key_interceptor_owner));
 }
 
 void Key_PurgeInterceptorOwner(const char *path_a, const char *path_b) {
-  if (g_key_interceptor &&
-      Owner_ModuleMatches(g_key_interceptor_owner, path_a, path_b)) {
-    g_key_interceptor = NULL;
-    g_key_interceptor_owner[0] = '\0';
+  if (key_interceptor &&
+      Owner_ModuleMatches(key_interceptor_owner, path_a, path_b)) {
+    key_interceptor = NULL;
+    key_interceptor_owner[0] = '\0';
   }
 }
 
 bool Key_InvokeInterceptor(const PopupKeyEvent *key) {
-  if (!g_key_interceptor)
+  if (!key_interceptor)
     return false;
-  return g_key_interceptor(key);
+  return key_interceptor(key);
 }

@@ -5,7 +5,7 @@
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 
-static int g_saved_font_size;
+static int saved_font_size;
 
 #define EDIT_TEXT_TOP 20
 
@@ -22,7 +22,7 @@ TEST(metrics_are_available_for_the_current_font) {
 }
 
 TEST(list_never_starts_above_the_bottom_of_the_edit_text) {
-  g_saved_font_size = FontSize;
+  saved_font_size = FontSize;
   for (int size = 8; size <= 48; size++) {
     FontSize = size;
     int lh = 0, rh = 0, lt = 0;
@@ -35,11 +35,11 @@ TEST(list_never_starts_above_the_bottom_of_the_edit_text) {
       skald_test_fails++;
     }
   }
-  FontSize = g_saved_font_size;
+  FontSize = saved_font_size;
 }
 
 TEST(row_height_is_taller_than_the_line_box) {
-  g_saved_font_size = FontSize;
+  saved_font_size = FontSize;
   for (int size = 8; size <= 48; size++) {
     FontSize = size;
     int lh = 0, rh = 0, lt = 0;
@@ -50,11 +50,11 @@ TEST(row_height_is_taller_than_the_line_box) {
       skald_test_fails++;
     }
   }
-  FontSize = g_saved_font_size;
+  FontSize = saved_font_size;
 }
 
 TEST(line_height_grows_with_font_size) {
-  g_saved_font_size = FontSize;
+  saved_font_size = FontSize;
   int prev = 0;
   for (int size = 8; size <= 48; size++) {
     FontSize = size;
@@ -67,11 +67,11 @@ TEST(line_height_grows_with_font_size) {
     }
     prev = lh;
   }
-  FontSize = g_saved_font_size;
+  FontSize = saved_font_size;
 }
 
 TEST(list_top_grows_with_font_size) {
-  g_saved_font_size = FontSize;
+  saved_font_size = FontSize;
   int prev = -1;
   for (int size = 8; size <= 48; size++) {
     FontSize = size;
@@ -84,11 +84,11 @@ TEST(list_top_grows_with_font_size) {
     }
     prev = lt;
   }
-  FontSize = g_saved_font_size;
+  FontSize = saved_font_size;
 }
 
 TEST(metrics_are_stable_across_repeated_calls) {
-  g_saved_font_size = FontSize;
+  saved_font_size = FontSize;
   FontSize = 20;
   int lh0 = 0, rh0 = 0, lt0 = 0;
   metrics(&lh0, &rh0, &lt0);
@@ -99,11 +99,11 @@ TEST(metrics_are_stable_across_repeated_calls) {
     ASSERT_EQ_INT(rh, rh0);
     ASSERT_EQ_INT(lt, lt0);
   }
-  FontSize = g_saved_font_size;
+  FontSize = saved_font_size;
 }
 
 TEST(metrics_survive_font_size_churn) {
-  g_saved_font_size = FontSize;
+  saved_font_size = FontSize;
   FontSize = 20;
   int lh0 = 0, rh0 = 0, lt0 = 0;
   metrics(&lh0, &rh0, &lt0);
@@ -118,11 +118,11 @@ TEST(metrics_survive_font_size_churn) {
   ASSERT_EQ_INT(lh1, lh0);
   ASSERT_EQ_INT(rh1, rh0);
   ASSERT_EQ_INT(lt1, lt0);
-  FontSize = g_saved_font_size;
+  FontSize = saved_font_size;
 }
 
 int main(void) {
-  g_saved_font_size = FontSize;
+  saved_font_size = FontSize;
   RUN(metrics_are_available_for_the_current_font);
   RUN(list_never_starts_above_the_bottom_of_the_edit_text);
   RUN(row_height_is_taller_than_the_line_box);
@@ -130,6 +130,6 @@ int main(void) {
   RUN(list_top_grows_with_font_size);
   RUN(metrics_are_stable_across_repeated_calls);
   RUN(metrics_survive_font_size_churn);
-  FontSize = g_saved_font_size;
+  FontSize = saved_font_size;
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

@@ -254,10 +254,10 @@ static void widgets_internet_render(SkWidgetState *state) {
                 .h = NET_ICON_SIZE);
 }
 
-static SkWidget *g_disk = NULL;
-static SkWidget *g_mem = NULL;
-static SkWidget *g_cpu = NULL;
-static SkWidget *g_internet = NULL;
+static SkWidget *disk = NULL;
+static SkWidget *mem = NULL;
+static SkWidget *cpu = NULL;
+static SkWidget *internet = NULL;
 
 #define NET_POPUP_W 300
 #define NET_POPUP_H 100
@@ -276,10 +276,10 @@ typedef struct {
   int have_baseline;
 } NetUsage;
 
-static NetUsage g_net;
-static SkTimer g_net_last_save;
-static SkTimer g_net_last_sample;
-static bool g_net_persist_loaded;
+static NetUsage net;
+static SkTimer net_last_save;
+static SkTimer net_last_sample;
+static bool net_persist_loaded;
 
 static void net_localtime(time_t t, struct tm *out) {
 #if defined(_WIN32)
@@ -301,15 +301,15 @@ static void net_usage_reset_day(NetUsage *u, int day, int month_index) {
 }
 
 static void net_usage_load(void) {
-  if (g_net_persist_loaded)
+  if (net_persist_loaded)
     return;
-  g_net_persist_loaded = true;
+  net_persist_loaded = true;
 
   time_t now = time(NULL);
   struct tm tm_now;
   net_localtime(now, &tm_now);
-  g_net.today_day = tm_now.tm_mday;
-  g_net.month_index = tm_now.tm_mon;
+  net.today_day = tm_now.tm_mday;
+  net.month_index = tm_now.tm_mon;
 
   char body[512];
   if (sk_load_file(NET_STATE_FILE, body, sizeof(body)) <= 0)
@@ -324,10 +324,10 @@ static void net_usage_load(void) {
     int day = 0, month_index = 0;
     if (sscanf(cursor, "%d %d %llu %llu", &day, &month_index, &today, &month) ==
         4) {
-      if (month_index == g_net.month_index) {
-        g_net.month_bytes = month;
-        if (day == g_net.today_day)
-          g_net.today_bytes = today;
+      if (month_index == net.month_index) {
+        net.month_bytes = month;
+        if (day == net.today_day)
+          net.today_bytes = today;
       }
     }
     cursor = nl ? nl + 1 : NULL;
@@ -336,52 +336,52 @@ static void net_usage_load(void) {
 
 static void net_usage_save(void) {
   char line[128];
-  snprintf(line, sizeof(line), "%d %d %llu %llu", g_net.today_day,
-           g_net.month_index, g_net.today_bytes, g_net.month_bytes);
+  snprintf(line, sizeof(line), "%d %d %llu %llu", net.today_day,
+           net.month_index, net.today_bytes, net.month_bytes);
   sk_write_string_to_file(NET_STATE_FILE, line);
 }
 
 static void net_usage_sample(void) {
   unsigned long long total_rx = sk_net_rx_bytes();
-  double elapsed = sk_end_timer(g_net_last_sample);
-  if (g_net.have_baseline && total_rx >= g_net.last_total_rx &&
+  double elapsed = sk_end_timer(net_last_sample);
+  if (net.have_baseline && total_rx >= net.last_total_rx &&
       elapsed > 0.05) {
-    double delta = (double)(total_rx - g_net.last_total_rx);
+    double delta = (double)(total_rx - net.last_total_rx);
     double inst = delta / elapsed;
-    if (g_net.rate_bps <= 0.0)
-      g_net.rate_bps = inst;
+    if (net.rate_bps <= 0.0)
+      net.rate_bps = inst;
     else
-      g_net.rate_bps = g_net.rate_bps * 0.7 + inst * 0.3;
+      net.rate_bps = net.rate_bps * 0.7 + inst * 0.3;
   }
-  if (g_net.have_baseline && total_rx > g_net.last_total_rx) {
-    unsigned long long delta = total_rx - g_net.last_total_rx;
-    g_net.today_bytes += delta;
-    g_net.month_bytes += delta;
+  if (net.have_baseline && total_rx > net.last_total_rx) {
+    unsigned long long delta = total_rx - net.last_total_rx;
+    net.today_bytes += delta;
+    net.month_bytes += delta;
   }
-  g_net.last_total_rx = total_rx;
-  g_net.have_baseline = 1;
-  g_net_last_sample = sk_start_timer();
+  net.last_total_rx = total_rx;
+  net.have_baseline = 1;
+  net_last_sample = sk_start_timer();
 }
 
 #define NET_SAMPLE_INTERVAL_MS 500.0
 
-static SkTimer g_net_last_tick;
+static SkTimer net_last_tick;
 
 static void net_usage_tick(void) {
-  if (sk_end_timer(g_net_last_tick) < NET_SAMPLE_INTERVAL_MS)
+  if (sk_end_timer(net_last_tick) < NET_SAMPLE_INTERVAL_MS)
     return;
-  g_net_last_tick = sk_start_timer();
+  net_last_tick = sk_start_timer();
   net_usage_load();
 
   time_t now = time(NULL);
   struct tm tm_now;
   net_localtime(now, &tm_now);
-  net_usage_reset_day(&g_net, tm_now.tm_mday, tm_now.tm_mon);
+  net_usage_reset_day(&net, tm_now.tm_mday, tm_now.tm_mon);
   net_usage_sample();
 
-  if (sk_end_timer(g_net_last_save) >= (double)NET_SAVE_EVERY_SEC * 1000.0) {
+  if (sk_end_timer(net_last_save) >= (double)NET_SAVE_EVERY_SEC * 1000.0) {
     net_usage_save();
-    g_net_last_save = sk_start_timer();
+    net_last_save = sk_start_timer();
   }
 }
 
@@ -396,9 +396,9 @@ static void net_row(int y, const char *label, const char *value,
 
 static void internet_hover_render() {
   char today[32], month[32], rate[32];
-  sk_format_bytes(g_net.today_bytes, today, sizeof(today));
-  sk_format_bytes(g_net.month_bytes, month, sizeof(month));
-  sk_format_bytes(g_net.rate_bps * 1024, rate, sizeof(rate));
+  sk_format_bytes(net.today_bytes, today, sizeof(today));
+  sk_format_bytes(net.month_bytes, month, sizeof(month));
+  sk_format_bytes(net.rate_bps * 1024, rate, sizeof(rate));
 
   int y = NET_PAD;
   net_row(y, "rate now:", rate, RGB(160, 220, 255));
@@ -418,15 +418,15 @@ void on_internet_hover(void) {
 }
 
 SKALD_FEATURE_INIT {
-  g_disk = sk_widget(.name = "disk_usage", .fps = FPS, .no_bg = NO_BG,
+  disk = sk_widget(.name = "disk_usage", .fps = FPS, .no_bg = NO_BG,
                      .slot = WIDGET_SLOT_BOTTOM_LEFT,
                      .render = widgets_disk_usage_render);
 
-  g_mem = sk_widget(.name = "memory_usage", .fps = FPS, .no_bg = NO_BG,
+  mem = sk_widget(.name = "memory_usage", .fps = FPS, .no_bg = NO_BG,
                     .slot = WIDGET_SLOT_BOTTOM_LEFT,
                     .render = widgets_memory_usage_render);
 
-  g_cpu = sk_widget(.name = "cpu_usage", .fps = FPS, .no_bg = NO_BG,
+  cpu = sk_widget(.name = "cpu_usage", .fps = FPS, .no_bg = NO_BG,
                     .slot = WIDGET_SLOT_BOTTOM_LEFT,
                     .render = widgets_cpu_usage_render);
 
@@ -434,7 +434,7 @@ SKALD_FEATURE_INIT {
             .slot = WIDGET_SLOT_BOTTOM_RIGHT,
             .render = widgets_date_and_time_render);
 
-  g_internet =
+  internet =
       sk_widget(.name = "internet", .fps = FPS, .no_bg = NO_BG,
                 .on_hover = on_internet_hover, .slot = WIDGET_SLOT_BOTTOM_RIGHT,
                 .render = widgets_internet_render);

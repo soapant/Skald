@@ -33,16 +33,16 @@ TEST(generation_protocol_is_monotonic) {
 
 enum { CONCURRENT_THREADS = 4, CONCURRENT_ITERS = 200 };
 
-static int g_concurrent_owner_checks = 0;
-static pthread_mutex_t g_concurrent_count_mutex = PTHREAD_MUTEX_INITIALIZER;
+static int concurrent_owner_checks = 0;
+static pthread_mutex_t concurrent_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void *concurrent_worker(void *arg) {
   (void)arg;
   for (int i = 0; i < CONCURRENT_ITERS; i++) {
     if (widget_owner_active("concurrent-bogus-owner.so")) {
-      pthread_mutex_lock(&g_concurrent_count_mutex);
-      g_concurrent_owner_checks++;
-      pthread_mutex_unlock(&g_concurrent_count_mutex);
+      pthread_mutex_lock(&concurrent_count_mutex);
+      concurrent_owner_checks++;
+      pthread_mutex_unlock(&concurrent_count_mutex);
     }
     widget_purge_owner("concurrent-bogus-owner.so", NULL,
                        widget_current_generation());
@@ -56,7 +56,7 @@ TEST(concurrent_purge_and_lookup_smoke) {
     ASSERT_TRUE(pthread_create(&t[i], NULL, concurrent_worker, NULL) == 0);
   for (int i = 0; i < CONCURRENT_THREADS; i++)
     pthread_join(t[i], NULL);
-  ASSERT_EQ_INT(g_concurrent_owner_checks, 0);
+  ASSERT_EQ_INT(concurrent_owner_checks, 0);
 }
 
 int main(void) {

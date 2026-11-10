@@ -8,20 +8,20 @@
 static HANDLE g_rt_thread = NULL;
 static CRITICAL_SECTION g_rt_lock;
 static CONDITION_VARIABLE g_rt_cond;
-static volatile LONG g_rt_lock_ready = 0;
+static volatile LONG rt_lock_ready = 0;
 
 void Platform_RenderThreadInit(void) {}
 
 static void rt_ensure_lock(void) {
-  if (g_rt_lock_ready == 2)
+  if (rt_lock_ready == 2)
     return;
-  if (InterlockedCompareExchange(&g_rt_lock_ready, 1, 0) == 0) {
+  if (InterlockedCompareExchange(&rt_lock_ready, 1, 0) == 0) {
     InitializeCriticalSection(&g_rt_lock);
     InitializeConditionVariable(&g_rt_cond);
-    InterlockedExchange(&g_rt_lock_ready, 2);
+    InterlockedExchange(&rt_lock_ready, 2);
     return;
   }
-  while (InterlockedCompareExchange(&g_rt_lock_ready, 2, 2) != 2)
+  while (InterlockedCompareExchange(&rt_lock_ready, 2, 2) != 2)
     Sleep(0);
 }
 
