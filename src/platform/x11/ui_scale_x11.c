@@ -1,7 +1,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <stdlib.h>
-
 #include "platform/platform.h"
 #include "platform/x11/display_x11.h"
 #include "config_values.h"
@@ -11,18 +10,6 @@ static int ui_scale_applied = 0;
 static int base_font_size = 0;
 
 static float ui_scale_detect(void) {
-
-  const char *ov = getenv("SKALD_SCALE");
-  if (!ov || !ov[0])
-    ov = getenv("SKALD_UISCALE");
-  if (ov && ov[0]) {
-    float v = (float)atof(ov);
-    if (v >= 1.0f && v <= 3.0f)
-      return v;
-    if (v > 3.0f)
-      return 3.0f;
-    return 1.0f;
-  }
   float best = 1.0f;
   Display *dpy = get_display();
   if (dpy) {

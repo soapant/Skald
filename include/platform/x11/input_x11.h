@@ -59,5 +59,4 @@ extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
-
 #endif

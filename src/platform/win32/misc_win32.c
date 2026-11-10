@@ -330,7 +330,8 @@ char *Platform_GetClipboardEntry(void) {
   }
   size_t clipBytes = GlobalSize(hClipData);
   DWORD wideCharBuf = (DWORD)(clipBytes / sizeof(wchar_t));
-  wchar_t *clipEnd = (wchar_t *)memchr(pClipText, 0, wideCharBuf * sizeof(wchar_t));
+  wchar_t *clipEnd =
+      (wchar_t *)memchr(pClipText, 0, wideCharBuf * sizeof(wchar_t));
   int wideCharLen = clipEnd ? (int)(clipEnd - pClipText) : (int)wideCharBuf;
   int utf8Len = WideCharToMultiByte(CP_UTF8, 0, pClipText, wideCharLen, NULL, 0,
                                     NULL, NULL);

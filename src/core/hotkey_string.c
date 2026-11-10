@@ -406,8 +406,7 @@ static int hotkey_vk_to_name(int vk, char *out, int out_size) {
     name = tmp;
   }
 
-  if (!name && vk >= VK_MOUSE_BASE &&
-      vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1) {
+  if (!name && vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1) {
     snprintf(tmp, sizeof(tmp), "Mouse%d", vk - VK_MOUSE_BASE + 1);
     name = tmp;
   }

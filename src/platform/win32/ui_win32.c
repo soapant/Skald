@@ -378,8 +378,7 @@ PromptState *Platform_GetWin32PromptState(void) {
                                                    : GetForegroundWindow());
 }
 
-void UI_SyncFilterFromEdit(void) {
-}
+void UI_SyncFilterFromEdit(void) {}
 
 void UI_ApplyFilterToEdit(void) {
   PromptState *prompt = Platform_GetWin32PromptState();
@@ -407,6 +406,4 @@ void UI_SyncEditCursor(int pos) {
   }
 }
 
-bool UI_ApplyBackspaceToPopup(void) {
-  return false;
-}
+bool UI_ApplyBackspaceToPopup(void) { return false; }

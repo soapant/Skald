@@ -404,8 +404,8 @@ bool sk_remove_line(const char *path, const char *line) {
   if (!path || !line)
     return false;
   SkStringList files = sk_load_file_list(path);
-  const char **kept = (const char **)malloc(sizeof(char *) *
-                                            (files.count ? files.count : 1));
+  const char **kept =
+      (const char **)malloc(sizeof(char *) * (files.count ? files.count : 1));
   if (!kept) {
     sk_free_file_list(&files);
     return false;
@@ -429,8 +429,8 @@ bool sk_remove_line_contains(const char *path, const char *substr) {
   if (!path || !substr)
     return false;
   SkStringList files = sk_load_file_list(path);
-  const char **kept = (const char **)malloc(sizeof(char *) *
-                                            (files.count ? files.count : 1));
+  const char **kept =
+      (const char **)malloc(sizeof(char *) * (files.count ? files.count : 1));
   if (!kept) {
     sk_free_file_list(&files);
     return false;
@@ -560,8 +560,8 @@ static bool feature_list_add(const char *name, void (*cb)(void),
   if (idx < 0) {
     if (g_feature_order_count >= g_feature_order_cap) {
       int ncap = g_feature_order_cap ? g_feature_order_cap * 2 : 32;
-      FeatureReg **grown =
-          (FeatureReg **)realloc(g_feature_order, (size_t)ncap * sizeof(*grown));
+      FeatureReg **grown = (FeatureReg **)realloc(
+          g_feature_order, (size_t)ncap * sizeof(*grown));
       if (!grown)
         return false;
       g_feature_order = grown;
@@ -2624,8 +2624,7 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
     cc_add_dep("control_center.c", e->owner);
   }
   if (spec->type && strcmp(spec->type, "Feature") == 0)
-    feature_list_add(spec->display_name, spec->on_action, spec->icon,
-                     e->owner);
+    feature_list_add(spec->display_name, spec->on_action, spec->icon, e->owner);
   return true;
 }
 

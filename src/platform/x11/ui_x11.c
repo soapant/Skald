@@ -234,6 +234,4 @@ void UI_SyncEditCursor(int pos) {
   UI_SetCursorPosition(pos);
 }
 
-bool UI_ApplyBackspaceToPopup(void) {
-  return false;
-}
+bool UI_ApplyBackspaceToPopup(void) { return false; }

@@ -39,6 +39,7 @@
 #include "core/types/window.h"
 #include "core/thread_registry.h"
 #include "helpers/helpers_owner.h"
+
 static bool Desktop_Parse(const char *desktop_path, char exec_line[1024],
                           char workdir[1024], bool *is_terminal) {
 
@@ -89,7 +90,6 @@ static bool Desktop_Parse(const char *desktop_path, char exec_line[1024],
   }
   return true;
 }
-
 
 static void Desktop_CleanExec(char exec_line[1024]) {
   if (!exec_line || !exec_line[0]) {
