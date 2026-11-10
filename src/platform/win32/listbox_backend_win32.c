@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "helpers/helpers_listbox_backend.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "helpers/win32/common_ui_win32.h"
@@ -18,7 +17,7 @@
 
 static __thread HDC g_b_hdc = NULL;
 
-bool ListboxBackend_Begin(int item_height_override, ListboxBackendInit *out) {
+bool Platform_ListboxBackendBegin(int item_height_override, ListboxBackendInit *out) {
   (void)item_height_override;
   win32_get_draw_context(&g_b_hdc);
   if (!g_b_hdc)
@@ -29,7 +28,7 @@ bool ListboxBackend_Begin(int item_height_override, ListboxBackendInit *out) {
   return true;
 }
 
-void ListboxBackend_DrawSelection(int bx, int bw, int y, int item_h, int fw,
+void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h, int fw,
                                   int frame_h, bool sel) {
   (void)frame_h;
   (void)fw;
@@ -57,12 +56,12 @@ void ListboxBackend_DrawSelection(int bx, int bw, int y, int item_h, int fw,
   }
 }
 
-void ListboxBackend_End(void) {
+void Platform_ListboxBackendEnd(void) {
   PlDrawState_Get()->win32_listbox_surface = false;
   g_b_hdc = NULL;
 }
 
-PromptState *ListboxBackend_PromptState(const ListBoxInfo *lb) {
+PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb) {
   PromptState *ps = PromptPopup_FindState(lb);
   if (ps)
     return ps;

@@ -111,6 +111,18 @@ void Platform_InitUI(void);
 void Platform_InitDataFolder(void);
 bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
                                size_t out_len);
+typedef struct {
+  int item_h;
+  int list_top;
+} ListboxBackendInit;
+
+bool Platform_ListboxBackendBegin(int item_height_override,
+                                  ListboxBackendInit *out);
+void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
+                                          int fw, int frame_h, bool sel);
+void Platform_ListboxBackendEnd(void);
+PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb);
+
 void Platform_ShutdownUI(void);
 void Platform_RenderThreadMiniSleep(int milliseconds);
 void Platform_RenderThreadInit(void);
