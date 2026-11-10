@@ -6,23 +6,23 @@ void ConfigApply(void) {
   EnableAutoPairing = true;
   RememberLastIndex = true;
   MessageAfterEachHotkey = false;
-  TimeOutForMessages = 1;
+  TimeOutForMessages = 3;
   DebugMode = false;
   RoundedCorners = true;
   EnableBorders = true;
   CornerRadius = 14;
   HotkeyRepeatDelayMs = 300;
   WindowOpacity = 235.0f;
-  UsedFont = "0xProto Nerd Font";
-  FontSize = 20;
+  UsedFont = "monospace";
+  FontSize = 16;
   IconSize = 32;
   WidgetGap = 10;
   UsedTerminal = "";
-  UsedShell = "nu";
+  UsedShell = "";
   UsedBrowser = "";
-  UsedSearchEngine = "google";
+  UsedSearchEngine = "duckduckgo";
   FeaturePath = "src/features";
-  IconPath = "{MISC}/skald.ico";
+  IconPath = "";
   ControlHotkey = "Alt+Space";
   ReloadFeaturesHotkey = "Alt+R";
   ActionsHotkey = "Ctrl+K";
@@ -32,7 +32,7 @@ void ConfigApply(void) {
   RainbowText = false;
   WindowTitleText = false;
   CloseOnLossOfFocus = false;
-  Theme = "rose-pine";
+  Theme = "default";
   BackgroundImage = "";
 }
 // </skald-config-generated>
