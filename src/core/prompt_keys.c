@@ -16,9 +16,9 @@
 #include "config_values.h"
 #include "platform/draw.h"
 #include "core/prompt_geometry.h"
-#include "platform/input.h"
+#include "helpers/helpers_edit_buffer.h"
 #include "platform/platform.h"
-#include "platform/ui.h"
+#include "helpers/helpers_ui.h"
 #include "helpers/helpers_ui.h"
 #include "core/types/keys.h"
 

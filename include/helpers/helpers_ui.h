@@ -2,6 +2,7 @@
 #define HELPERS_UI_H
 
 #include <stdbool.h>
+#include <wchar.h>
 #include "core/types.h"
 #include "core/types/window.h"
 #include "platform/draw.h"
@@ -13,7 +14,6 @@ unsigned short OpacityAlpha16(void);
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
 
 int DrawThicknessPx(float thickness);
-void DrawMeasureTrack(int x, int y, int w, int h);
 void DrawMeasureTrack(int x, int y, int w, int h);
 void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,
@@ -87,5 +87,45 @@ void EndMeasure(int *out_w, int *out_h);
 void GetLastMeasureOrigin(int *out_x, int *out_y);
 void SetDrawOffset(int dx, int dy);
 void GetDrawOffset(int *out_x, int *out_y);
+
+
+bool IsPopupActive(WindowHandle hPopupWnd);
+void UI_SetSelection(ListBoxInfo *lb, int index);
+void UI_SetHorizontalExtent(int width);
+void UI_LB_SetCount(ListBoxInfo *lb, int count);
+void UI_LB_BeginUpdate(void);
+void UI_LB_EndUpdate(void);
+void UI_RequestPopupRepaint(void);
+void UI_LegacySyncRepaint(void);
+void UI_LB_SetItemHeight(int height);
+void UI_LB_SetCaretIndex(int index, bool scroll);
+int UI_LB_GetViewTop(ListBoxInfo *lb);
+int UI_LB_GetVisibleCount(void);
+void UI_LB_SetVisibleCount(int count);
+void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index);
+void UI_NavigateTo(ListBoxInfo *lb, int index);
+void UI_NavigateUp(ListBoxInfo *lb);
+void UI_NavigateDown(ListBoxInfo *lb);
+
+void UI_Edit_GetSel(uint32_t *start, uint32_t *end);
+void UI_GetCurrentTextEdit(char *buffer, size_t cap);
+void UI_SetText(const char *text);
+void UI_SetCursorPosition(int position);
+int UI_GetCursorPosition(void);
+int UI_InsertText(const char *utf8, int len);
+void UI_DeleteForward(void);
+void UI_Redraw(ListBoxInfo *lb);
+void UI_RedrawNow();
+void UI_SyncFilterFromEdit(void);
+void UI_ApplyFilterToEdit(void);
+ListBoxInfo *UI_GetPopupListBox(void);
+void UI_SyncEditCursor(int pos);
+bool UI_ApplyBackspaceToPopup(void);
+int UI_InsertChar(wchar_t wc);
+
+#define UI_DEBOUNCE_MS 40
+#define UI_DEBOUNCE_TIMER_ID 998
+#define UI_TICK_TIMER_ID 997
+#define UI_TICK_TIMER_MS 1000
 
 #endif

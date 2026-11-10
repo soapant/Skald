@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include "core/types/keys.h"
 #include "platform/platform.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 
 static int hotkey_mouse_token_to_button(const char *token) {
   if (!token || !token[0])

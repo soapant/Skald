@@ -3,7 +3,7 @@
 
 #include "helpers/helpers_key.h"
 #include "core/types/keys.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "helpers/helpers_owner.h"
 
 bool Key_IsCtrlPressed(void) {

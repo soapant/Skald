@@ -17,7 +17,7 @@
 #include "platform/platform.h"
 #include <mmdeviceapi.h>
 #include "platform/draw.h"
-#include "platform/ui.h"
+#include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
 #include "helpers/helpers_ui.h"
 #include "core/editbox.h"

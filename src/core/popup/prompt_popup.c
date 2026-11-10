@@ -9,7 +9,7 @@
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "platform/wm_platform.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "deps/log.h"
 #include "core/types/window.h"
 

@@ -8,7 +8,7 @@
 #include "core/context.h"
 #include "core/window_manager.h"
 #include "platform/win32/win32_state.h"
-#include "platform/ui.h"
+#include "helpers/helpers_ui.h"
 #include "platform/win32/common_ui_win32.h"
 
 #include "core/listbox_hover.h"

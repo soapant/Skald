@@ -12,7 +12,7 @@
 #include "core/window_manager.h"
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "platform/win32/input_core_win32.h"
 #include "core/hotkey_pending.h"
 

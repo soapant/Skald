@@ -3,7 +3,7 @@
 
 #include "test.h"
 
-#include "platform/input.h"
+#include "helpers/helpers_edit_buffer.h"
 #include "config_values.h"
 
 TEST(backspace_removes_before_cursor) {

@@ -25,7 +25,7 @@
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <ctype.h>
-#include "platform/input_state.h"
+#include "helpers/helpers_input_state.h"
 #include "helpers/helpers_owner.h"
 #include "core/thread_registry.h"
 #ifdef _MSC_VER
