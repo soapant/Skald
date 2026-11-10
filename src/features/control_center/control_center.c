@@ -1416,7 +1416,7 @@ static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
   int slot = cc_hotkey_slot_for(e);
   if (slot >= 0) {
     sk_register_hotkey(.hotkey = hotkey,
-                       .cb = (void (*)(void))cc_entry_hotkey_cb,
+                       .cb_ud = cc_entry_hotkey_cb,
                        .ud = cc_hotkey_ud(slot));
     char line[320];
     snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
@@ -1622,7 +1622,7 @@ static void cc_register_persisted_hotkeys(void) {
     int slot = cc_hotkey_slot_for(e);
     if (slot >= 0)
       sk_register_hotkey(.hotkey = hotkey,
-                         .cb = (void (*)(void))cc_entry_hotkey_cb,
+                         .cb_ud = cc_entry_hotkey_cb,
                          .ud = cc_hotkey_ud(slot));
   }
 }
