@@ -528,6 +528,9 @@ bool sk_listbox_next_platform(SkListItemCtx *out) {
                                 g_sk_list_vis, g_sk_list_cmap, y,
                                 g_sk_list_itemH, sel);
   }
+  ListBox_SetRowHScroll(sel && g_sk_list_lb
+                              ? g_sk_list_lb->text_hscroll
+                              : 0);
   out->idx = idx;
   out->selected = sel;
   out->x = g_sk_list_spec.x;
@@ -540,6 +543,7 @@ bool sk_listbox_next_platform(SkListItemCtx *out) {
 }
 
 void sk_listbox_end_platform(void) {
+  ListBox_SetRowHScroll(0);
   if (PromptListBottomMargin() > 0 && g_sk_list_y0 >= 0) {
     Platform_DrawPromptSeparator((PlDrawPromptSeparatorSpec){
         .y = g_sk_list_y0 + g_sk_list_h, .width = g_sk_list_fw});

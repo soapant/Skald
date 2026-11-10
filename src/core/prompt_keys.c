@@ -12,6 +12,9 @@
 #include "platform/wm_platform.h"
 #include "deps/log.h"
 #include "core/listbox_hover.h"
+#include "config_values.h"
+#include "platform/draw.h"
+#include "core/prompt_geometry.h"
 #include "platform/input.h"
 #include "platform/platform.h"
 #include "platform/ui.h"
@@ -49,9 +52,11 @@ bool Prompt_DeleteSelection(PromptState *state) {
     memmove(state->eb->filter + ss, state->eb->filter + se, len - se + 1);
     state->eb->cursor = ss;
     EditState_EndSelection();
+    ListBox_FocusByMouse();
     return true;
   }
   EditState_EndSelection();
+  ListBox_FocusByMouse();
   return false;
 }
 
@@ -64,6 +69,7 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
   EditBufferInsertText(state->eb->filter, sizeof(state->eb->filter), &fcur,
                        text, (size_t)len);
   state->eb->cursor = (int)fcur;
+  ListBox_FocusByMouse();
   Prompt_Refresh(state);
 }
 
@@ -230,6 +236,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       Prompt_Refresh(state);
       return true;
     }
+    ListBox_FocusByMouse();
     if (ctrl) {
       state->eb->filter[0] = '\0';
       state->eb->cursor = 0;
@@ -240,6 +247,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       }
       state->eb->cursor = (int)fcur;
     }
+    ListBox_FocusByMouse();
     Prompt_Refresh(state);
     return true;
   }
@@ -253,11 +261,39 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_RIGHT) {
+    if (state->lb && state->lb->item_count > 0 &&
+        state->lb->selected_index >= 0) {
+      int idx = state->lb->selected_index;
+      const char *text = ListBoxInfo_Row(state->lb, idx);
+      if (text && text[0]) {
+        int tw = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
+            .text = text, .len = (int)strlen(text), .fontsize = FontSize});
+        int avail = state->width > 2 * PROMPT_ITEM_TEXT_X
+                        ? state->width - 2 * PROMPT_ITEM_TEXT_X
+                        : state->width;
+        int max_scroll = tw > avail ? tw - avail : 0;
+        if (max_scroll > 0) {
+          state->lb->text_hscroll += 24;
+          if (state->lb->text_hscroll > max_scroll)
+            state->lb->text_hscroll = max_scroll;
+          Prompt_Refresh(state);
+          return true;
+        }
+      }
+    }
     EditState_EndSelection();
     CursorForward(&state->eb->cursor, strlen(state->eb->filter));
     return true;
   }
   if (vk == VK_LEFT) {
+    if (state->lb && state->lb->item_count > 0 &&
+        state->lb->text_hscroll > 0) {
+      state->lb->text_hscroll -= 24;
+      if (state->lb->text_hscroll < 0)
+        state->lb->text_hscroll = 0;
+      Prompt_Refresh(state);
+      return true;
+    }
     EditState_EndSelection();
     CursorBack(&state->eb->cursor, strlen(state->eb->filter));
     return true;
@@ -296,6 +332,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       Prompt_Refresh(state);
       return true;
     }
+    ListBox_FocusByMouse();
     if (EditBufferDeleteChar(state->eb->filter, &state->eb->cursor)) {
       Prompt_Refresh(state);
     }

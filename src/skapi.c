@@ -28,6 +28,7 @@
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
 #include "core/skapi.h"
+#include "core/listbox_hover.h"
 #include "core/feature_loader.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
@@ -1227,10 +1228,11 @@ bool ski_draw_text(const SkTextSpec *spec) {
   } else {
     col = rgb_to_hex(col);
   }
+  int draw_x = spec->x - (spec->no_hscroll ? 0 : ListBox_GetRowHScroll());
   const char *align = spec->align ? spec->align : "CENTER";
   FontHandle fh = spec->font;
   bool r =
-      Platform_DrawTextRaw((PlDrawTextRawSpec){.x = spec->x,
+      Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
                                                .y = spec->y,
                                                .text = real_text,
                                                .color = col,

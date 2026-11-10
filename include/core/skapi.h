@@ -338,6 +338,7 @@ typedef struct {
   int fontsize;
   const char *align;
   int pad;
+  bool no_hscroll;
 } SkTextSpec;
 
 typedef struct {
