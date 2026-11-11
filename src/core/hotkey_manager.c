@@ -183,6 +183,8 @@ static void hotkey_hold_begin(int vk, int modifiers) {
   HOTKEY_Q_UNLOCK();
 }
 
+static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code, int modifiers);
+
 static void hotkey_tick_holds(void) {
   unsigned long long now = hotkey_now_ms();
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
@@ -202,6 +204,10 @@ static void hotkey_tick_holds(void) {
       }
     }
     if (!b) {
+      hold_slots[i].active = false;
+      continue;
+    }
+    if (!hotkey_binding_allowed(b, vk, mods)) {
       hold_slots[i].active = false;
       continue;
     }
@@ -416,102 +422,83 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
   HOTKEY_Q_UNLOCK();
 }
 
+static int hotkey_strip_self_mod(int vk_code, int mods) {
+  int eff = mods;
+  if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT)
+    eff &= ~HOTKEY_MOD_SHIFT;
+  else if (vk_code == VK_LCONTROL || vk_code == VK_RCONTROL ||
+           vk_code == VK_CONTROL)
+    eff &= ~HOTKEY_MOD_CTRL;
+  else if (vk_code == VK_LMENU || vk_code == VK_RMENU || vk_code == VK_MENU)
+    eff &= ~HOTKEY_MOD_ALT;
+  else if (vk_code == VK_LWIN || vk_code == VK_RWIN)
+    eff &= ~HOTKEY_MOD_SUPER;
+  return eff;
+}
+
+static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
+                                   int modifiers) {
+  int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
+  int b_eff = hotkey_strip_self_mod(b->vk_code, b->modifiers);
+  if (b_eff != eff_modifiers)
+    return false;
+  if (b_eff != 0 && !remap_check_strict_order(vk_code, b_eff))
+    return false;
+
+  if (b->hotkey_condition) {
+    FeatureLoader_Lock();
+    bool cond_pass = b->hotkey_condition();
+    FeatureLoader_Unlock();
+    if (!cond_pass)
+      return false;
+  }
+
+  const char *title = NULL;
+  bool title_fetched = false;
+
+  if (!b->whitelist) {
+    if (b->blacklist && b->blacklist_count > 0) {
+      for (int j = 0; j < b->blacklist_count; j++) {
+        if (b->blacklist[j][0] == '\0')
+          continue;
+        if (!title_fetched) {
+          title = Platform_GetActiveWindowAppId();
+          title_fetched = true;
+        }
+        if (String_ContainsCI(title, b->blacklist[j]))
+          return false;
+      }
+    }
+    return true;
+  }
+
+  if (!b->blacklist || b->blacklist_count == 0)
+    return false;
+  for (int j = 0; j < b->blacklist_count; j++) {
+    if (b->blacklist[j][0] == '\0')
+      continue;
+    if (!title_fetched) {
+      title = Platform_GetActiveWindowAppId();
+      title_fetched = true;
+    }
+    if (String_ContainsCI(title, b->blacklist[j]))
+      return true;
+  }
+  return false;
+}
+
 bool hotkey_process(int vk_code, int modifiers) {
   if (hotkeys_suspended)
     return false;
-  int eff_modifiers = modifiers;
-  if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT)
-    eff_modifiers &= ~HOTKEY_MOD_SHIFT;
-  else if (vk_code == VK_LCONTROL || vk_code == VK_RCONTROL ||
-           vk_code == VK_CONTROL)
-    eff_modifiers &= ~HOTKEY_MOD_CTRL;
-  else if (vk_code == VK_LMENU || vk_code == VK_RMENU || vk_code == VK_MENU)
-    eff_modifiers &= ~HOTKEY_MOD_ALT;
-  else if (vk_code == VK_LWIN || vk_code == VK_RWIN)
-    eff_modifiers &= ~HOTKEY_MOD_SUPER;
+  int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
   for (int i = 0; i < hotkey_total; i++) {
     HotkeyBinding *b = &hotkeys[i];
 
     if (b->vk_code != vk_code) {
       continue;
     }
-    int b_eff = b->modifiers;
-    if (b->vk_code == VK_LSHIFT || b->vk_code == VK_RSHIFT ||
-        b->vk_code == VK_SHIFT)
-      b_eff &= ~HOTKEY_MOD_SHIFT;
-    else if (b->vk_code == VK_LCONTROL || b->vk_code == VK_RCONTROL ||
-             b->vk_code == VK_CONTROL)
-      b_eff &= ~HOTKEY_MOD_CTRL;
-    else if (b->vk_code == VK_LMENU || b->vk_code == VK_RMENU ||
-             b->vk_code == VK_MENU)
-      b_eff &= ~HOTKEY_MOD_ALT;
-    else if (b->vk_code == VK_LWIN || b->vk_code == VK_RWIN)
-      b_eff &= ~HOTKEY_MOD_SUPER;
-    if (b_eff != eff_modifiers) {
+    if (!hotkey_binding_allowed(b, vk_code, eff_modifiers)) {
       continue;
-    }
-    if (b_eff != 0 && !remap_check_strict_order(vk_code, b_eff)) {
-      continue;
-    }
-
-    if (b->hotkey_condition) {
-      FeatureLoader_Lock();
-      bool cond_pass = b->hotkey_condition();
-      FeatureLoader_Unlock();
-      if (!cond_pass) {
-        continue;
-      }
-    }
-
-    const char *title = NULL;
-    bool title_fetched = false;
-
-    if (!b->whitelist) {
-      if (b->blacklist && b->blacklist_count > 0) {
-        bool blacklisted = false;
-        for (int j = 0; j < b->blacklist_count; j++) {
-          if (b->blacklist[j][0] == '\0') {
-            continue;
-          }
-          if (!title_fetched) {
-            title = Platform_GetActiveWindowAppId();
-            title_fetched = true;
-          }
-          bool match = String_ContainsCI(title, b->blacklist[j]);
-
-          if (match) {
-            blacklisted = true;
-            break;
-          }
-        }
-        if (blacklisted) {
-          continue;
-        }
-      }
-    } else {
-      if (!b->blacklist || b->blacklist_count == 0) {
-        continue;
-      }
-
-      bool whitelisted = false;
-      for (int j = 0; j < b->blacklist_count; j++) {
-        if (b->blacklist[j][0] == '\0') {
-          continue;
-        }
-        if (!title_fetched) {
-          title = Platform_GetActiveWindowAppId();
-          title_fetched = true;
-        }
-        bool match = String_ContainsCI(title, b->blacklist[j]);
-
-        if (match) {
-          whitelisted = true;
-          break;
-        }
-      }
-      if (!whitelisted) {
-        continue;
-      }
     }
 
     HotkeyCallback cb = b->hotkey_callback;
