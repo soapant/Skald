@@ -26,7 +26,6 @@ int main() {
   Config_Load();
   Config_ResolveDefaultApps();
 
-  Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();
   Platform_InitUI();
   Platform_PrewarmBackgroundPixmap();

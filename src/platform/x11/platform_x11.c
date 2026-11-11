@@ -570,17 +570,6 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   return NULL;
 }
 
-void Platform_StartUniversalTimer(void) { log_warn("not implemented yet"); }
-
-void Platform_ResetUniversalTimer(void) { log_warn("not implemented yet"); }
-
-void Platform_ModifyUniversalTimer(double seconds_to_add) {
-  (void)seconds_to_add;
-  log_warn("not implemented yet");
-}
-
-double Platform_GetUniversalTimeSeconds(void) { return 0.0; }
-
 pthread_mutex_t font_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 FontHandle Platform_CreateFont(int size, const char *face_name) {
