@@ -206,6 +206,10 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     y = rect_y + (rect_h - winH) / 2;
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
+  int stack_dir = (v_slot == 2) ? -1 : 1;
+  if (outward)
+    stack_dir = -stack_dir;
+  y = x11_msg_stack_adjust_y(x, y, winW, winH, stack_dir);
   x11_msg_present(dpy, message, x - ax, y - ay, winW, winH, timeout, color,
                   no_bg, render, name);
 }

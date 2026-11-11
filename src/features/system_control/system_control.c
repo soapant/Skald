@@ -1,18 +1,34 @@
 #include "core/skapi.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+
+#if defined(__linux__)
+static bool sudo_run(const char *const argv[]) {
+  char *pw = sk_popup(.password_mode = true);
+  if (!pw)
+    return false;
+  int status = -1;
+  char *out = sk_run_argv(argv, pw, &status);
+  free(pw);
+  free(out);
+  return status == 0;
+}
+#endif
 
 static bool do_restart(void) {
 #if defined(_WIN32)
-  sk_run_terminal_command("Restart-Computer");
 #elif defined(__linux__)
-  sk_run_terminal_command("reboot");
+  const char *argv[] = {"sudo", "-S", "xbps-query", "-l", NULL};
+  return sudo_run(argv);
 #endif
   return true;
 }
 static bool do_shutdown(void) {
 #if defined(_WIN32)
-  sk_run_terminal_command("Stop-Computer");
 #elif defined(__linux__)
-  sk_run_terminal_command("shutdown now");
+  const char *argv[] = {"sudo", "-S", "shutdown", "now", NULL};
+  return sudo_run(argv);
 #endif
   return true;
 }
