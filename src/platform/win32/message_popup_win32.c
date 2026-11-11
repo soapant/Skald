@@ -135,6 +135,29 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
   win32_msg_hover_present(spec);
 }
 
+static int win32_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
+  for (;;) {
+    bool hit = false;
+    for (int i = 0; i < g_msg_slot_count; i++) {
+      HWND other = g_msg_slots[i];
+      RECT r;
+      if (!GetWindowRect(other, &r))
+        continue;
+      int ox = r.left, oy = r.top, ow = r.right - r.left, oh = r.bottom - r.top;
+      if (x < ox + ow && x + w > ox && y < oy + oh && y + h > oy) {
+        if (dir > 0)
+          y = oy + oh + MSG_COLLISION_GAP;
+        else
+          y = oy - h - MSG_COLLISION_GAP;
+        hit = true;
+        break;
+      }
+    }
+    if (!hit)
+      return y;
+  }
+}
+
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   const char *message = spec.message;
   int rect_x = spec.x;
@@ -192,6 +215,16 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
                       : rect_y + rect_h - gap - winHeight / 2;
   else
     centerY = rect_y + rect_h / 2;
+
+  {
+    int stack_dir = (v_slot == 2) ? -1 : 1;
+    if (outward)
+      stack_dir = -stack_dir;
+    int stack_y = centerY - winHeight / 2;
+    stack_y = win32_msg_stack_adjust_y(centerX - winWidth / 2, stack_y, winWidth,
+                                       winHeight, stack_dir);
+    centerY = stack_y + winHeight / 2;
+  }
 
   log_info("MSG anchored msg='%s' rect=(%d,%d,%d,%d) slot=(%d,%d) gap=%d "
            "outward=%d -> center=(%d,%d) win=(%d,%d)",
