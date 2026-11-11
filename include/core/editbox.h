@@ -24,6 +24,7 @@ typedef struct {
   const char *text;
   int text_len;
   int cursor;
+  bool password_mode;
 
   int sel_start;
   int sel_end;

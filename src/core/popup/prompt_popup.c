@@ -59,7 +59,10 @@ static void PromptPopup_OnShow(Popup *self) {
     data->state->eb->filter[sizeof(data->state->eb->filter) - 1] = '\0';
     data->state->eb->cursor = (int)strlen(data->state->eb->filter);
   }
-  if (data->spec.placeholder && data->spec.placeholder[0]) {
+  if (data->spec.password_mode &&
+      (!data->spec.placeholder || !data->spec.placeholder[0])) {
+    data->state->eb->placeholder = strdup("Enter Password:");
+  } else if (data->spec.placeholder && data->spec.placeholder[0]) {
     data->state->eb->placeholder = strdup(data->spec.placeholder);
   }
   if (data->spec.items || data->spec.refresh || data->spec.render) {
@@ -70,6 +73,7 @@ static void PromptPopup_OnShow(Popup *self) {
   ListBoxInfo_Init(data->state->lb);
   data->state->no_bg = data->spec.no_bg;
   data->state->bg_color = data->spec.bg_color;
+  data->state->password_mode = data->spec.password_mode;
   if (data->state->lb)
     data->state->lb->selected_index = -1;
   self->user_data = data->state;

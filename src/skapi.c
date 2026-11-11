@@ -1199,6 +1199,7 @@ char *ski_popup(const PopupSpec *spec) {
   PromptSpec pspec = {0};
   pspec.placeholder = spec->placeholder;
   pspec.enter = sk_popup_enter;
+  pspec.password_mode = spec->password_mode;
   pspec.x = spec->x;
   pspec.y = spec->y;
   pspec.w = spec->w ? spec->w : 600;

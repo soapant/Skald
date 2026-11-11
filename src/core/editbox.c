@@ -339,7 +339,7 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
   }
 
   if (parts & EDITBOX_PART_TEXT) {
-    if (spec->text_len > 0) {
+    if (spec->text_len > 0 && !spec->password_mode) {
       if (RainbowText) {
         editbox_draw_rainbow(spec, layout);
       } else {
@@ -368,6 +368,9 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
   }
 
   if (parts & EDITBOX_PART_CARET) {
+    if (spec->password_mode) {
+      return;
+    }
     Platform_DrawRectRaw((PlDrawRectRawSpec){.x = layout->caret_x,
                                              .y = spec->caret_y,
                                              .w = layout->caret_w,
@@ -379,7 +382,7 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
                                              .thickness = 1,
                                              .filled = true});
     if (layout->caret_w > 1) {
-      const char *src = spec->text;
+      const char *src = spec->password_mode ? NULL : spec->text;
       int srclen = spec->text_len;
       bool is_placeholder = false;
       if ((!src || srclen <= 0) && spec->placeholder && spec->placeholder[0]) {
