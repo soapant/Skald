@@ -287,23 +287,27 @@ static bool confibuild_feature(const char *src, const char *out) {
   return true;
 }
 
-static bool confibuild_load_store(void) {
+/* returns 1 if the .so was (re)built, 0 if the existing .so was re-applied,
+ * -1 on failure */
+static int config_build_load_store(void) {
 
   const char *out = confiout_path();
+  int rebuilt = 0;
   if (confioutput_is_fresh(out)) {
     log_info("config .so is newer than source, skipping compile");
   } else {
     bool ok = confibuild_feature(CONFISRC, out);
     if (!ok) {
       log_error("config compile failed, keeping current");
-      return false;
+      return -1;
     }
+    rebuilt = 1;
   }
   char uniq[256];
   const char *lib_ext = Platform_LibExtension();
   if (!lib_ext) {
     log_error("Platform_LibExtension() returned NULL!");
-    return false;
+    return -1;
   }
   snprintf(uniq, sizeof(uniq), "build/config.hot%d%s", ++cfseq, lib_ext);
   {
@@ -312,7 +316,7 @@ static bool confibuild_load_store(void) {
 
     if (!ok) {
       log_error("config copy failed, keeping current");
-      return false;
+      return -1;
     }
   }
   LibHandle h = 0;
@@ -322,7 +326,7 @@ static bool confibuild_load_store(void) {
 
     if (!ok) {
       remove(uniq);
-      return false;
+      return -1;
     }
   }
   if (cfcount >= 2) {
@@ -334,14 +338,14 @@ static bool confibuild_load_store(void) {
   cflibs[cfcount].handle = h;
   snprintf(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq), "%s", uniq);
   cfcount++;
-  return true;
+  return rebuilt;
 }
 
 bool Config_Load(void) {
   cfcull_stale_libs();
-  bool ok = confibuild_load_store();
+  int r = config_build_load_store();
 
-  if (!ok) {
+  if (r < 0) {
     log_error("config load failed, running on built-in defaults");
     return false;
   }
@@ -378,8 +382,14 @@ bool Config_Reload(void) {
     cfreload_unlock();
     return false;
   }
-  if (!confibuild_load_store()) {
+  int r = config_build_load_store();
+  if (r < 0) {
     log_warn("cfg reload blocked: build/load failed, keeping old values");
+    cfreload_unlock();
+    return false;
+  }
+  if (r == 0) {
+    log_info("config unchanged, reload no-op");
     cfreload_unlock();
     return false;
   }
