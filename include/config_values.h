@@ -42,7 +42,6 @@ extern const char *BackgroundImage;
 extern ColorRef COLOR_BG;
 extern ColorRef COLOR_CURSOR;
 extern ColorRef COLOR_TEXT;
-extern ColorRef COLOR_ALTERNATE;
 extern ColorRef COLOR_SELECTED_TEXT;
 extern ColorRef COLOR_BORDER;
 
