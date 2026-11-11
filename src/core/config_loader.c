@@ -119,8 +119,7 @@ static char *heap_used_font = NULL, *heap_used_terminal = NULL,
 static char *heap_used_browser = NULL;
 static char *heap_used_search = NULL, *heap_feature_path = NULL,
             *heap_icon_path = NULL;
-static char *heap_control_hotkey = NULL,
-            *heap_reload_features_hotkey = NULL,
+static char *heap_control_hotkey = NULL, *heap_reload_features_hotkey = NULL,
             *heap_actions_hotkey = NULL, *heap_rehotk = NULL,
             *heap_realias_hotk = NULL, *heap_theme = NULL,
             *heap_background_image = NULL;
@@ -140,8 +139,7 @@ static void heapify_config(void) {
        *old_search = heap_used_search, *old_feat = heap_feature_path,
        *old_icon = heap_icon_path, *old_hotk = heap_control_hotkey,
        *old_reload_hotk = heap_reload_features_hotkey,
-       *old_actions_hotk = heap_actions_hotkey,
-       *old_rehotk = heap_rehotk,
+       *old_actions_hotk = heap_actions_hotkey, *old_rehotk = heap_rehotk,
        *old_realias_hotk = heap_realias_hotk, *old_theme = heap_theme,
        *old_bgimg = heap_background_image;
   if (n_font) {
@@ -334,8 +332,7 @@ static bool confibuild_load_store(void) {
     cfcount = 1;
   }
   cflibs[cfcount].handle = h;
-  snprintf(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq),
-           "%s", uniq);
+  snprintf(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq), "%s", uniq);
   cfcount++;
   return true;
 }
@@ -429,7 +426,7 @@ static void cfput_escaped(char *buf, size_t cap, size_t *off, const char *s) {
 }
 
 static void cfput_float(char *buf, size_t cap, size_t *off, const char *name,
-                          float v) {
+                        float v) {
   char tmp[64];
   snprintf(tmp, sizeof(tmp), "%.6g", (double)v);
   if (!strchr(tmp, '.') && !strchr(tmp, 'e') && !strchr(tmp, 'E') &&
@@ -440,8 +437,8 @@ static void cfput_float(char *buf, size_t cap, size_t *off, const char *name,
   }
 }
 
-static void cfput_str_var(char *buf, size_t cap, size_t *off,
-                            const char *name, const char *value) {
+static void cfput_str_var(char *buf, size_t cap, size_t *off, const char *name,
+                          const char *value) {
   if (Config_IsAutoResolvedApp(name))
     value = "";
   cfput(buf, cap, off, "    %s = ", name);
@@ -454,27 +451,24 @@ static size_t confiemit_region(char *buf, size_t cap) {
   cfput(buf, cap, &off, "void ConfigApply(void) {\n");
   cfput(buf, cap, &off, "    Tray = %s;\n", Tray ? "true" : "false");
   cfput(buf, cap, &off, "    EnableAutoPairing = %s;\n",
-          EnableAutoPairing ? "true" : "false");
+        EnableAutoPairing ? "true" : "false");
   cfput(buf, cap, &off, "    RememberLastIndex = %s;\n",
-          RememberLastIndex ? "true" : "false");
+        RememberLastIndex ? "true" : "false");
   cfput(buf, cap, &off, "    MessageAfterEachHotkey = %s;\n",
-          MessageAfterEachHotkey ? "true" : "false");
+        MessageAfterEachHotkey ? "true" : "false");
   cfput(buf, cap, &off, "    TimeOutForMessages = %d;\n", TimeOutForMessages);
-  cfput(buf, cap, &off, "    DebugMode = %s;\n",
-          DebugMode ? "true" : "false");
+  cfput(buf, cap, &off, "    DebugMode = %s;\n", DebugMode ? "true" : "false");
   cfput(buf, cap, &off, "    RoundedCorners = %s;\n",
-          RoundedCorners ? "true" : "false");
+        RoundedCorners ? "true" : "false");
   cfput(buf, cap, &off, "    EnableBorders = %s;\n",
-          EnableBorders ? "true" : "false");
+        EnableBorders ? "true" : "false");
   cfput(buf, cap, &off, "    CornerRadius = %d;\n", CornerRadius);
-  cfput(buf, cap, &off, "    HotkeyRepeatDelayMs = %d;\n",
-          HotkeyRepeatDelayMs);
+  cfput(buf, cap, &off, "    HotkeyRepeatDelayMs = %d;\n", HotkeyRepeatDelayMs);
   cfput_float(buf, cap, &off, "WindowOpacity", WindowOpacity);
   cfput(buf, cap, &off, "    UsedFont = ");
   cfput_escaped(buf, cap, &off, UsedFont);
   cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    FontSize = %d;\n",
-          Platform_GetUnscaledFontSize());
+  cfput(buf, cap, &off, "    FontSize = %d;\n", Platform_GetUnscaledFontSize());
   cfput(buf, cap, &off, "    IconSize = %d;\n", IconSize);
   cfput(buf, cap, &off, "    WidgetGap = %d;\n", WidgetGap);
   cfput_str_var(buf, cap, &off, "UsedTerminal", UsedTerminal);
@@ -505,13 +499,13 @@ static size_t confiemit_region(char *buf, size_t cap) {
   cfput_escaped(buf, cap, &off, RegAliasHotkey);
   cfput(buf, cap, &off, ";\n");
   cfput(buf, cap, &off, "    MessagesEnabled = %s;\n",
-          MessagesEnabled ? "true" : "false");
+        MessagesEnabled ? "true" : "false");
   cfput(buf, cap, &off, "    RainbowText = %s;\n",
-          RainbowText ? "true" : "false");
+        RainbowText ? "true" : "false");
   cfput(buf, cap, &off, "    WindowTitleText = %s;\n",
-          WindowTitleText ? "true" : "false");
+        WindowTitleText ? "true" : "false");
   cfput(buf, cap, &off, "    CloseOnLossOfFocus = %s;\n",
-          CloseOnLossOfFocus ? "true" : "false");
+        CloseOnLossOfFocus ? "true" : "false");
   cfput(buf, cap, &off, "    Theme = ");
   cfput_escaped(buf, cap, &off, Theme);
   cfput(buf, cap, &off, ";\n");
@@ -526,7 +520,7 @@ static size_t confiemit_region(char *buf, size_t cap) {
                          "COLOR_CURSOR",    "COLOR_BORDER"};
   for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
     cfput(buf, cap, &off, "    %s = RGB(%u, %u, %u);\n", names[i],
-            cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);
+          cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);
   }
   cfput(buf, cap, &off, "}\n");
   return off;

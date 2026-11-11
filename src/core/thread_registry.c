@@ -69,8 +69,8 @@ void ThreadRegistry_Add(void *ctx, const char *owner_path) {
   threads[thread_count].ctx = ctx;
   threads[thread_count].owner[0] = '\0';
   if (owner_path && owner_path[0])
-    snprintf(threads[thread_count].owner,
-             sizeof(threads[thread_count].owner), "%s", owner_path);
+    snprintf(threads[thread_count].owner, sizeof(threads[thread_count].owner),
+             "%s", owner_path);
   thread_count++;
   thread_reg_unlock();
 }

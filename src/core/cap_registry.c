@@ -76,8 +76,7 @@ void *cap_resolve_abi(const char *key, unsigned abi) {
       continue;
     if (caps[i].abi != abi) {
 
-      log_warn("cap '%s' abi mismatch want=%u have=%u", key, abi,
-               caps[i].abi);
+      log_warn("cap '%s' abi mismatch want=%u have=%u", key, abi, caps[i].abi);
       return NULL;
     }
     return caps[i].fn;

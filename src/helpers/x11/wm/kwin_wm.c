@@ -179,8 +179,8 @@ static bool kwin_q_load(void) {
   fputs(kwin_q_body, f);
   fclose(f);
   for (int round = 0; round < 3; round++) {
-    snprintf(kwin_q_name, sizeof(kwin_q_name), "skaldq_%d_%u",
-             (int)getpid(), ++kwin_q_seq);
+    snprintf(kwin_q_name, sizeof(kwin_q_name), "skaldq_%d_%u", (int)getpid(),
+             ++kwin_q_seq);
     char load[256];
     snprintf(load, sizeof(load),
              "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "
@@ -358,8 +358,7 @@ bool get_title_kwin(char *buffer, int buffer_size) {
   if (!kwin_is_active())
     return false;
   pthread_mutex_lock(&kwin_mtx);
-  bool ok =
-      kwin_snapshot_locked() && kwin_active_title && kwin_active_title[0];
+  bool ok = kwin_snapshot_locked() && kwin_active_title && kwin_active_title[0];
   if (ok)
     kwin_clean_copy(kwin_active_title, strlen(kwin_active_title), buffer,
                     (size_t)buffer_size);
@@ -374,8 +373,7 @@ bool get_app_id_kwin(char *buffer, int buffer_size) {
   if (!kwin_is_active())
     return false;
   pthread_mutex_lock(&kwin_mtx);
-  bool ok =
-      kwin_snapshot_locked() && kwin_active_class && kwin_active_class[0];
+  bool ok = kwin_snapshot_locked() && kwin_active_class && kwin_active_class[0];
   if (ok)
     kwin_clean_copy(kwin_active_class, strlen(kwin_active_class), buffer,
                     (size_t)buffer_size);
