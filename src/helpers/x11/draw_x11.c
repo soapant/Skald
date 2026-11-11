@@ -502,10 +502,6 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
     return;
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   ListBoxInfo *lb = state->lb;
-  if (!lb->item_count) {
-    Platform_DestroyFont(font);
-    return;
-  }
 
   int itemH = x11_font_row_height_of(font);
   int y0 = x11_font_list_top_of(font);
