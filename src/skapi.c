@@ -612,7 +612,7 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   HotkeyBinding binding = convert_into_hotkey_binding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
   binding.hotkey_callback_ud = spec->cb_ud;
-  binding.hold = true;
+  binding.hold = false;
   binding.should_swallow = spec->should_swallow;
   return hotkey_register_internal(binding);
 }
@@ -2924,6 +2924,11 @@ void sk_reload_all_features(void) {
   if (!dir)
     return;
   const char *ext = Platform_LibExtension();
+  static struct {
+    char dir[256];
+    time_t src_mtime;
+  } s_failed[64];
+  static int s_failed_count = 0;
   struct dirent *ent;
   int reloaded = 0;
   while ((ent = readdir(dir)) != NULL) {
@@ -2946,6 +2951,17 @@ void sk_reload_all_features(void) {
     }
     if (!should_build)
       continue;
+    bool known_bad = false;
+    for (int fi = 0; fi < s_failed_count; fi++) {
+      if (s_failed[fi].src_mtime == st_src.st_mtime &&
+          strncmp(s_failed[fi].dir, ent->d_name,
+                  sizeof(s_failed[fi].dir)) == 0) {
+        known_bad = true;
+        break;
+      }
+    }
+    if (known_bad)
+      continue;
     char tmp[1024];
     snprintf(tmp, sizeof(tmp), "%s.tmp.%d", dll, sk_get_pid());
     char cmd[4096];
@@ -2961,18 +2977,38 @@ void sk_reload_all_features(void) {
                     strstr(outStr, "undefined reference") ||
                     strstr(outStr, "failed");
       ok = !failed;
+      if (!ok)
+        log_error("hot-reload %s failed:\n%s", ent->d_name, outStr);
       free(outStr);
     } else {
       ok = true;
     }
     if (!ok) {
       remove(tmp);
+      if (s_failed_count < 64) {
+        snprintf(s_failed[s_failed_count].dir,
+                 sizeof(s_failed[s_failed_count].dir), "%s", ent->d_name);
+        s_failed[s_failed_count].src_mtime = st_src.st_mtime;
+        s_failed_count++;
+      }
       continue;
     }
     bool reloaded_ok = FeatureLoader_ReloadFrom(ent->d_name, tmp);
     remove(tmp);
-    if (!reloaded_ok)
+    if (!reloaded_ok) {
+      if (s_failed_count < 64) {
+        snprintf(s_failed[s_failed_count].dir,
+                 sizeof(s_failed[s_failed_count].dir), "%s", ent->d_name);
+        s_failed[s_failed_count].src_mtime = st_src.st_mtime;
+        s_failed_count++;
+      }
       continue;
+    }
+    for (int fi = 0; fi < s_failed_count; fi++) {
+      if (strncmp(s_failed[fi].dir, ent->d_name,
+                  sizeof(s_failed[fi].dir)) == 0)
+        s_failed[fi].src_mtime = 0;
+    }
     struct utimbuf times;
     times.actime = st_src.st_mtime;
     times.modtime = st_src.st_mtime;
