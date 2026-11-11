@@ -6,34 +6,14 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+static HWND music_player_hwnd(void) {
+  SkWindowHandle wh = sk_get_window_id("Music Player");
+  return WH_EQUALS(wh, WH_NULL) ? NULL : (HWND)WH_TO_HWND(wh);
+}
 #endif
 #if defined(__linux__)
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
-static Window music_find_window(Display *dpy, Window w, const char *title) {
-  char *name = NULL;
-  if (XFetchName(dpy, w, &name) && name != NULL) {
-    bool match = (strcmp(name, title) == 0);
-    XFree(name);
-    if (match)
-      return w;
-  }
-  Window root, parent, *children = NULL;
-  unsigned int n = 0;
-  if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
-    for (unsigned int i = 0; i < n; i++) {
-      Window found = music_find_window(dpy, children[i], title);
-      if (found != None) {
-        if (children)
-          XFree(children);
-        return found;
-      }
-    }
-    if (children)
-      XFree(children);
-  }
-  return None;
-}
 static bool music_set_string(const char *window_title, const char *atom_name,
                              const char *value) {
   Display *dpy = XOpenDisplay(NULL);
@@ -43,7 +23,7 @@ static bool music_set_string(const char *window_title, const char *atom_name,
     return false;
   }
   bool ok = false;
-  Window win = music_find_window(dpy, DefaultRootWindow(dpy), window_title);
+  Window win = sk_get_window_id(window_title).xid;
   if (win != None) {
     XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8,
                     PropModeReplace, (const unsigned char *)value,
@@ -63,7 +43,7 @@ static bool music_send_command(const char *window_title, const char *atom_name,
     return false;
   }
   bool ok = false;
-  Window win = music_find_window(dpy, DefaultRootWindow(dpy), window_title);
+  Window win = sk_get_window_id(window_title).xid;
   if (win != None) {
     XEvent ev = {0};
     ev.xclient.type = ClientMessage;
@@ -109,7 +89,7 @@ void music_refresh_callback(PromptState *state) {
 }
 bool play_music(char *name) {
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Music Player");
+  HWND playerHwnd = music_player_hwnd();
   if (playerHwnd) {
     COPYDATASTRUCT cds;
     cds.dwData = 0;
@@ -152,7 +132,7 @@ bool music_enter_callback(PromptState *state) {
 
 void music_cmd_1(void) {
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Music Player");
+  HWND playerHwnd = music_player_hwnd();
   if (playerHwnd)
     PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #elif defined(__linux__)
@@ -161,7 +141,7 @@ void music_cmd_1(void) {
 }
 void music_cmd_5(void) {
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Music Player");
+  HWND playerHwnd = music_player_hwnd();
   if (playerHwnd)
     PostMessage(playerHwnd, WM_USER + 1, 5, 0);
 #elif defined(__linux__)
@@ -170,7 +150,7 @@ void music_cmd_5(void) {
 }
 void music_cmd_6(void) {
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Music Player");
+  HWND playerHwnd = music_player_hwnd();
   if (playerHwnd)
     PostMessage(playerHwnd, WM_USER + 1, 6, 0);
 #elif defined(__linux__)
@@ -179,7 +159,7 @@ void music_cmd_6(void) {
 }
 void music_cmd_2(void) {
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Music Player");
+  HWND playerHwnd = music_player_hwnd();
   if (playerHwnd)
     PostMessage(playerHwnd, WM_USER + 1, 2, 0);
 #elif defined(__linux__)

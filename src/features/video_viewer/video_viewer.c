@@ -5,35 +5,15 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+static HWND video_viewer_hwnd(void) {
+  SkWindowHandle wh = sk_get_window_id("Video Viewer");
+  return WH_EQUALS(wh, WH_NULL) ? NULL : (HWND)WH_TO_HWND(wh);
+}
 #endif
 
 #if defined(__linux__)
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
-static Window video_find_window(Display *dpy, Window w, const char *title) {
-  char *name = NULL;
-  if (XFetchName(dpy, w, &name) && name != NULL) {
-    bool match = (strcmp(name, title) == 0);
-    XFree(name);
-    if (match)
-      return w;
-  }
-  Window root, parent, *children = NULL;
-  unsigned int n = 0;
-  if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
-    for (unsigned int i = 0; i < n; i++) {
-      Window found = video_find_window(dpy, children[i], title);
-      if (found != None) {
-        if (children)
-          XFree(children);
-        return found;
-      }
-    }
-    if (children)
-      XFree(children);
-  }
-  return None;
-}
 static bool video_set_string(const char *window_title, const char *atom_name,
                              const char *value) {
   Display *dpy = XOpenDisplay(NULL);
@@ -43,7 +23,7 @@ static bool video_set_string(const char *window_title, const char *atom_name,
     return false;
   }
   bool ok = false;
-  Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+  Window win = sk_get_window_id(window_title).xid;
   if (win != None) {
     XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8,
                     PropModeReplace, (const unsigned char *)value,
@@ -63,7 +43,7 @@ static bool video_send_command(const char *window_title, const char *atom_name,
     return false;
   }
   bool ok = false;
-  Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+  Window win = sk_get_window_id(window_title).xid;
   if (win != None) {
     XEvent ev = {0};
     ev.xclient.type = ClientMessage;
@@ -88,7 +68,7 @@ static bool video_set_long(const char *window_title, const char *atom_name,
     return false;
   }
   bool ok = false;
-  Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+  Window win = sk_get_window_id(window_title).xid;
   if (win != None) {
     XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_INTEGER,
                     32, PropModeReplace, (unsigned char *)&value, 1);
@@ -163,7 +143,7 @@ bool video_enter_callback(PromptState *state) {
   if (!result)
     return true;
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+  HWND playerHwnd = video_viewer_hwnd();
   if (playerHwnd) {
     COPYDATASTRUCT cds;
     cds.dwData = 0;
@@ -191,7 +171,7 @@ bool video_enter_callback(PromptState *state) {
 }
 void video_cmd_1(void) {
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+  HWND playerHwnd = video_viewer_hwnd();
   if (playerHwnd)
     PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #elif defined(__linux__)
@@ -200,7 +180,7 @@ void video_cmd_1(void) {
 }
 void video_cmd_5(void) {
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+  HWND playerHwnd = video_viewer_hwnd();
   if (playerHwnd)
     PostMessage(playerHwnd, WM_USER + 1, 5, 0);
 #elif defined(__linux__)
@@ -209,7 +189,7 @@ void video_cmd_5(void) {
 }
 void video_cmd_6(void) {
 #if defined(_WIN32)
-  HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+  HWND playerHwnd = video_viewer_hwnd();
   if (playerHwnd)
     PostMessage(playerHwnd, WM_USER + 1, 6, 0);
 #elif defined(__linux__)

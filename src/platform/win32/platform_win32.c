@@ -587,13 +587,9 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
   *outHeight = height;
 }
 
-bool Platform_FocusWindow(const char *title) {
-  if (!title || !title[0]) {
-    log_error("operation failed, returning error title='%s'",
-              title ? title : "null");
-    return false;
-  }
-
+static HWND win32_find_window_by_title(const char *title) {
+  if (!title || !title[0])
+    return NULL;
   char trimmed[512];
   const char *s = title;
   while (*s && isspace((unsigned char)*s))
@@ -603,26 +599,41 @@ bool Platform_FocusWindow(const char *title) {
     e--;
   size_t len = (size_t)(e - s);
   if (len == 0)
-    return false;
+    return NULL;
   if (len >= sizeof(trimmed))
     len = sizeof(trimmed) - 1;
   memcpy(trimmed, s, len);
   trimmed[len] = '\0';
 
   HWND hwnd = FindWindowA(NULL, trimmed);
-
   if (hwnd == NULL) {
     FindWindowData data;
     data.target_title = trimmed;
     data.found_hwnd = NULL;
-
     EnumWindows(win32_enum_windows_proc_title, (LPARAM)&data);
     hwnd = data.found_hwnd;
   }
+  return hwnd;
+}
+
+WindowHandle Platform_GetWindowByTitle(const char *title) {
+  HWND hwnd = win32_find_window_by_title(title);
+  if (hwnd == NULL)
+    return WH_NULL;
+  return WH_FROM_HWND(hwnd);
+}
+
+bool Platform_FocusWindow(const char *title) {
+  if (!title || !title[0]) {
+    log_error("operation failed, returning error title='%s'",
+              title ? title : "null");
+    return false;
+  }
+
+  HWND hwnd = win32_find_window_by_title(title);
 
   if (hwnd == NULL) {
-    log_error("Platform_FocusWindow no window for '%s' (trimmed '%s')", title,
-              trimmed);
+    log_error("Platform_FocusWindow no window for '%s'", title);
     return false;
   }
 
@@ -631,7 +642,7 @@ bool Platform_FocusWindow(const char *title) {
   if (hPopup && IsWindow(hPopup)) {
     Platform_SetSkaldPrevFg(hwnd);
     log_info("Platform_FocusWindow deferred via g_prev_fg hwnd=%p title='%s'",
-             hwnd, trimmed);
+             hwnd, title);
     return true;
   }
 
@@ -666,8 +677,8 @@ bool Platform_FocusWindow(const char *title) {
   fwi.dwTimeout = 0;
   FlashWindowEx(&fwi);
 
-  log_info("Platform_FocusWindow title='%s' trimmed='%s' hwnd=%p",
-           title ? title : "", trimmed, hwnd);
+  log_info("Platform_FocusWindow title='%s' hwnd=%p",
+           title ? title : "", hwnd);
   return true;
 }
 

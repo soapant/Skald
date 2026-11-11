@@ -120,7 +120,7 @@ const char *x11_get_default_terminal_wayland(void) {
   return out ? out : NULL;
 }
 
-const char *x11_get_default_terminal_x11(void) {
+const char *x11_get_default_terminal(void) {
 
   const char *const candidates[] = {
       "gnome-terminal",
