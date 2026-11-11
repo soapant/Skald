@@ -35,9 +35,9 @@ static LRESULT CALLBACK win32_widget_proc(HWND hwnd, UINT msg, WPARAM wParam,
 
 static void widget_queue_click(void (*fn)(void));
 
-void widget_destroy_on_owner_thread(void *ud);
+void win32_widget_destroy_on_owner_thread(void *ud);
 
-void widget_register_class(void) {
+void win32_widget_register_class(void) {
 
   static LONG registered = 0;
   if (InterlockedCompareExchange(&registered, 1, 0) != 0) {
@@ -258,7 +258,7 @@ static LRESULT CALLBACK win32_widget_proc(HWND hwnd, UINT msg, WPARAM wParam,
   return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
-void widget_frame(void *ud) {
+void win32_widget_frame(void *ud) {
 
   PlatformWidget *widget = (PlatformWidget *)ud;
   if (!widget || widget->base.dead) {
@@ -304,7 +304,7 @@ static CRITICAL_SECTION wdestroy_cs;
 
 static LONG wdestroy_cs_ready = 0;
 
-void wclick_lock(void) {
+void win32_wclick_lock(void) {
 
   if (InterlockedCompareExchange(&wclick_cs_ready, 1, 0) == 0) {
     InitializeCriticalSection(&wclick_cs);
@@ -312,32 +312,32 @@ void wclick_lock(void) {
   EnterCriticalSection(&wclick_cs);
 }
 
-void wclick_unlock(void) { LeaveCriticalSection(&wclick_cs); }
+void win32_wclick_unlock(void) { LeaveCriticalSection(&wclick_cs); }
 
-void wdestroy_lock(void) {
+void win32_wdestroy_lock(void) {
   if (InterlockedCompareExchange(&wdestroy_cs_ready, 1, 0) == 0) {
     InitializeCriticalSection(&wdestroy_cs);
   }
   EnterCriticalSection(&wdestroy_cs);
 }
 
-void wdestroy_unlock(void) { LeaveCriticalSection(&wdestroy_cs); }
+void win32_wdestroy_unlock(void) { LeaveCriticalSection(&wdestroy_cs); }
 
 static void widget_queue_click(void (*fn)(void)) {
 
   if (!fn) {
     return;
   }
-  wclick_lock();
+  win32_wclick_lock();
   int next = (g_wclick_tail + 1) % WCLICK_MAX;
   if (next != g_wclick_head) {
     g_wclick[g_wclick_tail] = fn;
     g_wclick_tail = next;
   }
-  wclick_unlock();
+  win32_wclick_unlock();
 }
 
-void widget_destroy_on_owner_thread(void *ud) {
+void win32_widget_destroy_on_owner_thread(void *ud) {
 
   PlatformWidget *widget = (PlatformWidget *)ud;
   if (!widget) {
@@ -347,7 +347,7 @@ void widget_destroy_on_owner_thread(void *ud) {
     return;
   }
   widget->base.dead = true;
-  RenderThread_RemoveFrameCallback(widget_frame, widget);
+  RenderThread_RemoveFrameCallback(win32_widget_frame, widget);
   if (widget->hwnd && IsWindow(widget->hwnd)) {
     DestroyWindow(widget->hwnd);
   }

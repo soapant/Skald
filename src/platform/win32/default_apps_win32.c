@@ -35,7 +35,7 @@ const char *get_default_terminal(void) {
                                       "Windows PowerShell "};
 
   const char *found =
-      sm_lookup(0, possible_terminals, ARRAY_LEN(possible_terminals));
+      win32_sm_lookup(0, possible_terminals, ARRAY_LEN(possible_terminals));
   return found ? found : "pwsh";
 }
 
@@ -57,7 +57,7 @@ const char *get_default_browser(void) {
                                      "Zen"};
 
   const char *found =
-      sm_lookup(1, possible_browsers, ARRAY_LEN(possible_browsers));
+      win32_sm_lookup(1, possible_browsers, ARRAY_LEN(possible_browsers));
   return found ? found : "chrome";
 }
 

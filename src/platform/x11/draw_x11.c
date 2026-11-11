@@ -266,7 +266,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   float thickness = spec.thickness;
   bool filled = spec.filled;
 
-  if (!raw_can_draw()) {
+  if (!x11_raw_can_draw()) {
     return false;
   }
 
@@ -315,7 +315,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   }
 
   Drawable d = XftDrawDrawable(g_draw_xd);
-  GC gc = raw_gc_for(g_draw_dpy, d);
+  GC gc = x11_raw_gc_for(g_draw_dpy, d);
   if (!gc) {
     return false;
   }
@@ -369,7 +369,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
 }
 
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
-  if (!raw_can_draw())
+  if (!x11_raw_can_draw())
     return false;
   int t = DrawThicknessPx(spec.thickness);
   if (t < 1)
@@ -383,7 +383,7 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
   int bh = (y1 > y2 ? y1 - y2 : y2 - y1) + t;
   DrawMeasureTrack(bx - t / 2, by - t / 2, bw, bh);
-  GC gc = raw_prepare(spec.color, t);
+  GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;
   Drawable d = XftDrawDrawable(g_draw_xd);
@@ -392,14 +392,14 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
 }
 
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
-  if (!raw_can_draw() || spec.radius <= 0)
+  if (!x11_raw_can_draw() || spec.radius <= 0)
     return false;
   int t = DrawThicknessPx(spec.thickness);
   int cx = spec.cx + PlDrawState_Get()->off_x;
   int cy = spec.cy + PlDrawState_Get()->off_y;
   DrawMeasureTrack(cx - spec.radius, cy - spec.radius, spec.radius * 2,
                    spec.radius * 2);
-  GC gc = raw_prepare(spec.color, t);
+  GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;
   Drawable d = XftDrawDrawable(g_draw_xd);

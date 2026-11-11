@@ -240,7 +240,7 @@ FadeWindowData *s_msg_show_data = NULL;
 
 bool s_msg_show_no_bg = false;
 
-bool message_popup_create(int x, int y, int w, int h) {
+bool win32_message_popup_create(int x, int y, int w, int h) {
   if (!s_msg_show_data) {
     log_error("MSG create null payload");
     return false;
