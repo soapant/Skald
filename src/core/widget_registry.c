@@ -212,6 +212,26 @@ static void widget_destroy_window(void *ud) {
   widget->win = NULL;
 }
 
+static void widget_reap(void *ud) {
+  Widget *w = (Widget *)ud;
+  if (!w)
+    return;
+  int n = 0;
+  W_LOCK();
+  for (int i = 0; i < widget_count; i++) {
+    if (widgets[i] == w) {
+      if (w->owner)
+        free(w->owner);
+      w->owner = NULL;
+      continue;
+    }
+    widgets[n++] = widgets[i];
+  }
+  widget_count = n;
+  W_UNLOCK();
+  free(w);
+}
+
 void widget_destroy(Widget *widget) {
   if (!widget)
     return;
@@ -219,22 +239,25 @@ void widget_destroy(Widget *widget) {
   Platform_HoverMessageRelease(widget->name);
   HoverWidgetHide(widget->name);
   RenderThread_RemoveFrameCallback(widget_render_frame, widget);
-  RenderThread_Post(widget_destroy_window, widget);
+  bool posted = RenderThread_Post(widget_destroy_window, widget) &&
+                RenderThread_Post(widget_reap, widget);
   RenderThread_Sync();
 
-  int n = 0;
-  W_LOCK();
-  for (int i = 0; i < widget_count; i++) {
-    if (widgets[i] == widget) {
-      if (widget->owner)
-        free(widget->owner);
-      widget->owner = NULL;
-      continue;
+  if (!posted) {
+    int n = 0;
+    W_LOCK();
+    for (int i = 0; i < widget_count; i++) {
+      if (widgets[i] == widget) {
+        if (widget->owner)
+          free(widget->owner);
+        widget->owner = NULL;
+        continue;
+      }
+      widgets[n++] = widgets[i];
     }
-    widgets[n++] = widgets[i];
+    widget_count = n;
+    W_UNLOCK();
   }
-  widget_count = n;
-  W_UNLOCK();
   if (widget_count > 0)
     widget_relayout();
   Platform_Widget_FlushDestruction();
@@ -258,8 +281,14 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     matched = true;
     HoverWidgetHide(w->name);
     RenderThread_RemoveFrameCallback(widget_render_frame, w);
-    RenderThread_Post(widget_destroy_window, w);
-    log_info("widget '%s' purged (owner unloaded)", w->name);
+    if (!RenderThread_Post(widget_destroy_window, w)) {
+      log_error("widget_purge_owner: failed to enqueue destroy for '%s'",
+                w->name ? w->name : "?");
+    }
+    if (!RenderThread_Post(widget_reap, w)) {
+      log_error("widget_purge_owner: failed to enqueue reap for '%s'",
+                w->name ? w->name : "?");
+    }
   }
 
   if (!matched)
@@ -274,9 +303,6 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     if (!w)
       continue;
     if (widget_owner_matches(w, path_a, path_b) && w->gen <= generation) {
-      if (w->owner)
-        free(w->owner);
-      w->owner = NULL;
       continue;
     }
     widgets[n++] = w;
