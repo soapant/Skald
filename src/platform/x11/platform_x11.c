@@ -41,6 +41,7 @@
 #include "core/feature_path.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "wm/wm.h"
+#include "wm/x11_wm.h"
 #include "helpers/x11/platform_x11.h"
 #include "helpers/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
@@ -661,6 +662,14 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
 }
 
 bool Platform_FocusWindow(const char *title) { return Wm_FocusByTitle(title); }
+
+WindowHandle Platform_GetWindowByTitle(const char *title) {
+  WindowHandle h = WH_NULL;
+  unsigned long w = x11_find_window_by_title(title);
+  if (w != 0)
+    h.xid = w;
+  return h;
+}
 
 bool Platform_CloseActiveWindow(void) { return Wm_CloseActiveWindow(); }
 

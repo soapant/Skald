@@ -20,6 +20,8 @@
 
 typedef StringList SkStringList;
 typedef HotkeyKey SkKey;
+typedef WindowHandle SkWindowHandle;
+
 typedef struct PlatformWidget PlatformWidget;
 typedef PlColor SkColor;
 typedef PlMetrics SkMetrics;
@@ -167,6 +169,8 @@ bool sk_launch_browser(char *url);
 bool sk_query_browser(const char *query);
 
 bool sk_focus_window_by_title(char *title);
+
+SkWindowHandle sk_get_window_id(const char *title);
 
 bool sk_close_active_window(void);
 

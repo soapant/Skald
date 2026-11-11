@@ -6,24 +6,25 @@
 #include "core/types.h"
 #include "core/types/window.h"
 
-bool get_title_x11(char *buffer, int buffer_size);
-bool get_app_id_x11(char *buffer, int buffer_size);
-char *paste_x11(char *content);
-bool focus_window_title_x11(char *title);
-PlWindowList get_window_titles_x11();
-PlWindowList get_window_names_x11();
+bool x11_get_title(char *buffer, int buffer_size);
+bool x11_get_app_id(char *buffer, int buffer_size);
+char *x11_paste(char *content);
+bool x11_focus_window_title(char *title);
+unsigned long x11_find_window_by_title(const char *title);
+PlWindowList x11_get_window_titles();
+PlWindowList x11_get_window_names();
 void x11_wm_cleanup_cursor_display(void);
-bool close_active_window_x11(void);
-bool toggle_fullscreen_active_x11(void);
-bool move_active_window_to_monitor_x11(bool right);
-bool move_active_window_left_x11(void);
-bool move_active_window_right_x11(void);
-bool move_active_window_up_x11(void);
-bool move_active_window_down_x11(void);
-bool focus_window_left_x11(void);
-bool focus_window_right_x11(void);
-bool focus_window_up_x11(void);
-bool focus_window_down_x11(void);
-bool minimize_active_window_x11(void);
-bool get_mouse_pos_x11(int *x, int *y);
+bool x11_close_active_window(void);
+bool x11_toggle_fullscreen_active(void);
+bool x11_move_active_window_to_monitor(bool right);
+bool x11_move_active_window_left(void);
+bool x11_move_active_window_right(void);
+bool x11_move_active_window_up(void);
+bool x11_move_active_window_down(void);
+bool x11_focus_window_left(void);
+bool x11_focus_window_right(void);
+bool x11_focus_window_up(void);
+bool x11_focus_window_down(void);
+bool x11_minimize_active_window(void);
+bool x11_get_mouse_pos(int *x, int *y);
 #endif
