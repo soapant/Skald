@@ -13,6 +13,7 @@
 #define MSG_MAX_LINES 64
 #define MSG_AUTO_WRAP_MAX_W 900
 #define MSG_AUTO_WRAP_MAX_H 600
+#define MSG_COLLISION_GAP 20
 
 typedef struct {
   Window win;
@@ -21,6 +22,8 @@ typedef struct {
   char name[64];
   int w;
   int h;
+  int x;
+  int y;
 } MsgSlot;
 
 typedef struct {
@@ -38,6 +41,7 @@ int x11_msg_find_key_locked(const char *key);
 void x11_msg_remove_indefinite_locked(Display *dpy);
 int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
                       MsgLine *out, int maxLines);
+int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir);
 void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
                      int winH, double timeout, ColorRef color, bool no_bg,
                      void (*render)(void), const char *name);
