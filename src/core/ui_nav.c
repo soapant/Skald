@@ -16,8 +16,6 @@ void UI_SetSelection(ListBoxInfo *lb, int index) {
   UI_RequestPopupRepaint();
 }
 
-void UI_SetHorizontalExtent(int width) { (void)width; }
-
 static int lb_update_depth = 0;
 static int lb_visible_count = 0;
 
@@ -31,14 +29,6 @@ void UI_LB_EndUpdate(void) {
 void UI_LB_SetCount(ListBoxInfo *lb, int count) {
   if (lb)
     lb->item_count = count;
-  UI_RequestPopupRepaint();
-}
-
-void UI_LB_SetItemHeight(int height) { (void)height; }
-
-void UI_LB_SetCaretIndex(int index, bool scroll) {
-  (void)index;
-  (void)scroll;
   UI_RequestPopupRepaint();
 }
 
@@ -69,7 +59,6 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   if (count <= 0) {
     lb->selected_index = -1;
     lb->text_hscroll = 0;
-    UI_LB_SetCaretIndex(-1, false);
     UI_RequestPopupRepaint();
     return;
   }
@@ -78,7 +67,6 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   if (index == -1) {
     lb->selected_index = -1;
     lb->text_hscroll = 0;
-    UI_LB_SetCaretIndex(-1, false);
     UI_RequestPopupRepaint();
     return;
   }
@@ -88,7 +76,6 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   lb->text_hscroll = 0;
   lb->selected_index = index;
   lb->selected_text = ListBoxInfo_Row(lb, index);
-  UI_LB_SetCaretIndex(index, false);
   ListBox_ScrollToSelection(lb);
   UI_RequestPopupRepaint();
 }
@@ -102,5 +89,3 @@ void UI_NavigateDown(ListBoxInfo *lb) {
   ListBox_NavigateDown(lb);
   UI_RequestPopupRepaint();
 }
-
-bool UI_ApplyBackspaceToPopup(void) { return false; }

@@ -2954,8 +2954,8 @@ void sk_reload_all_features(void) {
     bool known_bad = false;
     for (int fi = 0; fi < s_failed_count; fi++) {
       if (s_failed[fi].src_mtime == st_src.st_mtime &&
-          strncmp(s_failed[fi].dir, ent->d_name,
-                  sizeof(s_failed[fi].dir)) == 0) {
+          strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) ==
+              0) {
         known_bad = true;
         break;
       }
@@ -3008,8 +3008,7 @@ void sk_reload_all_features(void) {
       continue;
     }
     for (int fi = 0; fi < s_failed_count; fi++) {
-      if (strncmp(s_failed[fi].dir, ent->d_name,
-                  sizeof(s_failed[fi].dir)) == 0)
+      if (strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) == 0)
         s_failed[fi].src_mtime = 0;
     }
     struct utimbuf times;

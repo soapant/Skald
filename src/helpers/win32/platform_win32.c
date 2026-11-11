@@ -99,8 +99,6 @@ bool win32_cmdline_append_arg(char *cmd, size_t cap, size_t *off,
   return true;
 }
 
-ULONGLONG g_timer_start_ms = 0;
-
 BOOL CALLBACK win32_enum_windows_proc_title(HWND hwnd, LPARAM lParam) {
 
   FindWindowData *data = (FindWindowData *)lParam;

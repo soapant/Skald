@@ -56,7 +56,6 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   if (!widget)
     return NULL;
   widget_init_base(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
-  widget->owner_tid = GetCurrentThreadId();
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exstyle =

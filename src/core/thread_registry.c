@@ -25,7 +25,8 @@ static void thread_reg_lock(void) {
     thread_mtx = Platform_MutexCreate();
     if (!thread_mtx) {
       thread_mtx_failed = true;
-      log_error("thread_registry: mutex creation failed; registry will run unsynchronized");
+      log_error("thread_registry: mutex creation failed; registry will run "
+                "unsynchronized");
     }
   }
   if (thread_mtx)

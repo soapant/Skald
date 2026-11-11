@@ -138,4 +138,3 @@ SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = "L", .cb = hard, .whitelist = {"anki"});
   sk_register_hotkey(.hotkey = ";", .cb = fuckme, .whitelist = {"anki"});
 }
-

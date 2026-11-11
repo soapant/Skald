@@ -10,7 +10,6 @@ typedef struct {
   const char *name;
   ColorRef bg;
   ColorRef text;
-  ColorRef alternate;
   ColorRef selected_text;
   ColorRef cursor;
   ColorRef border;

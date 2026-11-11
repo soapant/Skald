@@ -64,8 +64,8 @@ static bool pin_add(const char *name, ColorRef value) {
   }
   if (theme_pinned_count >= THEME_MAX_PINNED)
     return false;
-  snprintf(theme_pinned[theme_pinned_count].name,
-           sizeof(theme_pinned[0].name), "%s", name);
+  snprintf(theme_pinned[theme_pinned_count].name, sizeof(theme_pinned[0].name),
+           "%s", name);
   theme_pinned[theme_pinned_count].value = value;
   theme_pinned_count++;
   return true;
@@ -98,8 +98,8 @@ bool Theme_PinScanFile(const char *path) {
     unsigned int r = 0, g = 0, b = 0;
     if (sscanf(line, " %63[A-Z_] = RGB(%u,%u,%u", name, &r, &g, &b) == 4 &&
         strncmp(name, "COLOR_", 6) == 0) {
-      ColorRef v = (ColorRef)((r & 0xFFu) | ((g & 0xFFu) << 8) |
-                              ((b & 0xFFu) << 16));
+      ColorRef v =
+          (ColorRef)((r & 0xFFu) | ((g & 0xFFu) << 8) | ((b & 0xFFu) << 16));
       pin_add(name, v);
     }
   }
@@ -132,7 +132,8 @@ void Theme_Apply(void) {
   }
   Theme_PinScanFile(CONFIG_SRC);
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++) {
-    ColorRef theme_color = *(ColorRef *)((const char *)found + theme_slots[i].off);
+    ColorRef theme_color =
+        *(ColorRef *)((const char *)found + theme_slots[i].off);
     ColorRef pinned;
     bool user_override = false;
     if (pin_lookup(theme_slots[i].name, &pinned) &&

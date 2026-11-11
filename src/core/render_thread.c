@@ -126,13 +126,6 @@ bool RenderThread_IsRunning(void) { return running; }
 
 void *RenderThread_Display(void) { return Platform_RenderThreadDisplay(); }
 
-int RenderThread_CallbackCount(void) {
-  Platform_RenderThreadLock();
-  int n = g_count;
-  Platform_RenderThreadUnlock();
-  return n;
-}
-
 bool RenderThread_IsCurrentThread(void) { return is_thread; }
 
 bool RenderThread_AddFrameCallback(RenderFrameFn fn, void *ud) {

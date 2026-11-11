@@ -201,7 +201,6 @@ void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count) {
     if (sel >= lb->item_count)
       sel = lb->item_count - 1;
     lb->selected_index = sel;
-    UI_LB_SetCaretIndex(sel, false);
   }
   UI_RequestPopupRepaint();
 }

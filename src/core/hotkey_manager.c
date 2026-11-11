@@ -117,9 +117,7 @@ static unsigned long long hotkey_now_ms(void) {
   return (unsigned long long)Platform_GetWallClockMs();
 }
 
-static int hotkey_repeat_interval_ms(void) {
-  return 50;
-}
+static int hotkey_repeat_interval_ms(void) { return 50; }
 
 static int hotkey_hold_delay_ms(void) {
   int ms = HotkeyRepeatDelayMs;

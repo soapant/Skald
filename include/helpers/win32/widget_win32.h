@@ -12,7 +12,6 @@
 struct PlatformWidget {
   PlatformWidgetBase base;
   HWND hwnd;
-  DWORD owner_tid;
   BITMAPINFO layer_bi;
   HDC layer_dc;
   HBITMAP layer_bmp;
