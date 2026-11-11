@@ -287,6 +287,29 @@ void x11_display_message_draw(Display *dpy, Window win, const char *message,
   XFlush(dpy);
 }
 
+int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
+
+  pthread_mutex_lock(&g_msg_lock);
+  for (;;) {
+    bool hit = false;
+    for (int i = 0; i < g_msg_slot_count; i++) {
+      const MsgSlot *s = &g_msg_slots[i];
+      if (x < s->x + s->w && x + w > s->x && y < s->y + s->h && y + h > s->y) {
+        if (dir > 0)
+          y = s->y + s->h + MSG_COLLISION_GAP;
+        else
+          y = s->y - h - MSG_COLLISION_GAP;
+        hit = true;
+        break;
+      }
+    }
+    if (!hit)
+      break;
+  }
+  pthread_mutex_unlock(&g_msg_lock);
+  return y;
+}
+
 void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
                      int winH, double timeout, ColorRef color, bool no_bg,
                      void (*render)(void), const char *name) {
@@ -318,6 +341,8 @@ void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
     g_msg_slots[g_msg_slot_count].name[0] = '\0';
   g_msg_slots[g_msg_slot_count].w = winW;
   g_msg_slots[g_msg_slot_count].h = winH;
+  g_msg_slots[g_msg_slot_count].x = x + ax;
+  g_msg_slots[g_msg_slot_count].y = y + ay;
   g_msg_slot_count++;
   pthread_mutex_unlock(&g_msg_lock);
   if (!indefinite) {
@@ -356,6 +381,8 @@ void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
       g_msg_slots[idx].w = winW;
       g_msg_slots[idx].h = winH;
     }
+    g_msg_slots[idx].x = centerX - winW / 2;
+    g_msg_slots[idx].y = centerY - winH / 2;
     pthread_mutex_unlock(&g_msg_lock);
     x11_display_message_draw(dpy, w, message, (unsigned long)color, winW, winH,
                              no_bg, NULL);
@@ -385,6 +412,8 @@ void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
   snprintf(g_msg_slots[at].key, sizeof(g_msg_slots[at].key), "%s", key);
   g_msg_slots[at].w = winW;
   g_msg_slots[at].h = winH;
+  g_msg_slots[at].x = centerX - winW / 2;
+  g_msg_slots[at].y = centerY - winH / 2;
   if (at >= g_msg_slot_count)
     g_msg_slot_count = at + 1;
   pthread_mutex_unlock(&g_msg_lock);

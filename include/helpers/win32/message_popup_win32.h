@@ -7,6 +7,7 @@
 #include "helpers/win32/subclasses_win32.h"
 
 #define MSG_SLOT_MAX 24
+#define MSG_COLLISION_GAP 20
 #define MSG_AUTO_WRAP_MAX_W 900
 #define MSG_AUTO_WRAP_MAX_H 600
 #define MSG_TEXT_INSET_X 15
