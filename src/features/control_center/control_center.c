@@ -1818,8 +1818,23 @@ static void cc_tab(PromptState *state) {
 }
 
 static void reload_features_and_config(void) {
-  sk_reload_all_features();
-  sk_reload_config();
+  int features_reloaded = sk_reload_all_features();
+  int config_reloaded = sk_reload_config();
+  char buf[128];
+
+  if (features_reloaded > 0 && config_reloaded) {
+    snprintf(buf, sizeof(buf), "Reloaded %d Feature%s And Config",
+             features_reloaded, features_reloaded == 1 ? "" : "s");
+    sk_message(.message = buf);
+  } else if (features_reloaded > 0) {
+    snprintf(buf, sizeof(buf), "Reloaded %d Feature%s", features_reloaded,
+             features_reloaded == 1 ? "" : "s");
+    sk_message(.message = buf);
+  } else if (config_reloaded) {
+    sk_message(.message = "Reloaded Config");
+  } else {
+    sk_message(.message = "Nothing Reloaded");
+  }
 }
 
 static void TriggerControl(void) {

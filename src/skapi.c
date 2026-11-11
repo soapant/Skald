@@ -2921,12 +2921,12 @@ void sk_reload_feature(char *name) { FeatureLoader_Reload(name); }
 
 int sk_get_pid() { return sk_get_pid_platform(); }
 
-void sk_reload_all_features(void) {
+int sk_reload_all_features(void) {
   if (!FeaturePath || !FeaturePath[0])
-    return;
+    return 0;
   DIR *dir = opendir(FeaturePath);
   if (!dir)
-    return;
+    return 0;
   const char *ext = Platform_LibExtension();
   static struct {
     char dir[256];
@@ -3022,9 +3022,7 @@ void sk_reload_all_features(void) {
     reloaded++;
   }
   closedir(dir);
-  char msg[128];
-  snprintf(msg, sizeof(msg), "Reloaded %d feature(s)!", reloaded);
-  sk_message(.message = msg, .slot = BOTTOM_CENTER, .timeout = 1.0);
+  return reloaded;
 }
 
 bool sk_hotkey_down(SkKey key) {
