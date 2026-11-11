@@ -109,7 +109,6 @@ typedef struct {
   int h;
   int item_height;
 } PlListSpec;
-
 #define GAP 20
 #define ID_TRAY_ICON 1001
 #if defined(_WIN32)
