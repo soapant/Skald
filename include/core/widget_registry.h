@@ -114,8 +114,6 @@ bool widget_is_valid(const PlatformWidget *widget);
 void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
                                void *ud);
 void widget_invalidate(PlatformWidget *widget);
-int widget_width(const PlatformWidget *widget);
-int widget_height(const PlatformWidget *widget);
 void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
                       int fps, bool no_bg, void (*on_click)(void),
                       const char *name);
