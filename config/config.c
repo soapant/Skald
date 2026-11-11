@@ -21,7 +21,7 @@ void ConfigApply(void) {
   UsedShell = "";
   UsedBrowser = "";
   UsedSearchEngine = "google";
-  FeaturePath = "src/features";
+  FeaturePath = "features";
   IconPath = "";
   ControlHotkey = "Alt+Space";
   ReloadFeaturesHotkey = "Alt+R";

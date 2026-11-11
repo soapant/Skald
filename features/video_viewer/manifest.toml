@@ -1,0 +1,8 @@
+name = "video_viewer"
+description = ""
+
+[provides]
+
+[depends]
+control_center
+

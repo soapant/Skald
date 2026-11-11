@@ -1,8 +1,0 @@
-name = "process_killer"
-description = ""
-
-[provides]
-
-[depends]
-control_center
-

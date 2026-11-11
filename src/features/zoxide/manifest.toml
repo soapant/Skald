@@ -1,8 +1,0 @@
-name = "zoxide"
-description = ""
-
-[provides]
-
-[depends]
-control_center
-
