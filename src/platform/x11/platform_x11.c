@@ -1360,7 +1360,42 @@ void Platform_CleanupDisplaySafe(void) {
 
 void Platform_InitMainThreadContext(void) {}
 
-void Platform_FixWorkingDirectory(void) {}
+void Platform_FixWorkingDirectory(void) {
+#if defined(__linux__)
+  char buf[512];
+  ssize_t n = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+  if (n <= 0 || (size_t)n >= sizeof(buf) - 1)
+    return;
+  buf[n] = '\0';
+  char *slash = strrchr(buf, '/');
+  if (!slash)
+    return;
+  *slash = '\0';
+  char exe_dir[512];
+  snprintf(exe_dir, sizeof(exe_dir), "%s", buf);
+  for (int depth = 0; depth < 6; ++depth) {
+    struct stat st;
+    char probe[600];
+    snprintf(probe, sizeof(probe), "%s/config", buf);
+    bool has_core = stat(probe, &st) == 0 && S_ISDIR(st.st_mode);
+    snprintf(probe, sizeof(probe), "%s/build", buf);
+    has_core = has_core && stat(probe, &st) == 0 && S_ISDIR(st.st_mode);
+    snprintf(probe, sizeof(probe), "%s/data", buf);
+    bool has_data = stat(probe, &st) == 0 && S_ISDIR(st.st_mode);
+    if (has_core || has_data) {
+      if (chdir(buf) != 0)
+        log_warn("could not chdir to bundle root '%s'", buf);
+      return;
+    }
+    slash = strrchr(buf, '/');
+    if (!slash || slash == buf)
+      break;
+    *slash = '\0';
+  }
+  if (exe_dir[0])
+    chdir(exe_dir);
+#endif
+}
 
 void Platform_CleanupPlatformResources(void) {
   x11_cleanup_per_feature_edit_map();
