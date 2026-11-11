@@ -42,7 +42,6 @@ bool CloseOnLossOfFocus = false;
 
 ColorRef COLOR_BG = RGB(40, 40, 40);
 ColorRef COLOR_TEXT = RGB(255, 255, 255);
-ColorRef COLOR_ALTERNATE = RGB(57, 255, 20);
 ColorRef COLOR_SELECTED_TEXT = RGB(0, 0, 0);
 ColorRef COLOR_CURSOR = RGB(255, 255, 255);
 ColorRef COLOR_BORDER = RGB(128, 128, 128);
