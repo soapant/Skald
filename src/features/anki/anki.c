@@ -572,9 +572,9 @@ SKALD_FEATURE_SHUTDOWN {
 }
 
 SKALD_FEATURE_INIT {
-  anki_lock = sk_mutex_create();
-  anki_running = true;
-  anki_thread = sk_thread_create(anki_timer_thread, NULL);
+  // anki_lock = sk_mutex_create();
+  // anki_running = true;
+  // anki_thread = sk_thread_create(anki_timer_thread, NULL);
   sk_register_hotkey(.hotkey = "Shift+Space", .cb = handle_anki,
                      .should_swallow = should_swallow_anki);
 }
