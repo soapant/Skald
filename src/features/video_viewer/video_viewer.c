@@ -4,83 +4,6 @@
 #include <stdlib.h>
 
 #if defined(_WIN32)
-#include <windows.h>
-static HWND video_viewer_hwnd(void) {
-  SkWindowHandle wh = sk_get_window_id("Video Viewer");
-  return WH_EQUALS(wh, WH_NULL) ? NULL : (HWND)WH_TO_HWND(wh);
-}
-#endif
-
-#if defined(__linux__)
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-static bool video_set_string(const char *window_title, const char *atom_name,
-                             const char *value) {
-  Display *dpy = XOpenDisplay(NULL);
-  if (!dpy || !window_title || !value) {
-    if (dpy)
-      XCloseDisplay(dpy);
-    return false;
-  }
-  bool ok = false;
-  Window win = sk_get_window_id(window_title).xid;
-  if (win != None) {
-    XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8,
-                    PropModeReplace, (const unsigned char *)value,
-                    (int)strlen(value));
-    XFlush(dpy);
-    ok = true;
-  }
-  XCloseDisplay(dpy);
-  return ok;
-}
-static bool video_send_command(const char *window_title, const char *atom_name,
-                               long command) {
-  Display *dpy = XOpenDisplay(NULL);
-  if (!dpy || !window_title) {
-    if (dpy)
-      XCloseDisplay(dpy);
-    return false;
-  }
-  bool ok = false;
-  Window win = sk_get_window_id(window_title).xid;
-  if (win != None) {
-    XEvent ev = {0};
-    ev.xclient.type = ClientMessage;
-    ev.xclient.window = win;
-    ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
-    ev.xclient.format = 32;
-    ev.xclient.data.l[0] = command;
-    if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
-      XFlush(dpy);
-      ok = true;
-    }
-  }
-  XCloseDisplay(dpy);
-  return ok;
-}
-static bool video_set_long(const char *window_title, const char *atom_name,
-                           long value) {
-  Display *dpy = XOpenDisplay(NULL);
-  if (!dpy || !window_title) {
-    if (dpy)
-      XCloseDisplay(dpy);
-    return false;
-  }
-  bool ok = false;
-  Window win = sk_get_window_id(window_title).xid;
-  if (win != None) {
-    XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_INTEGER,
-                    32, PropModeReplace, (unsigned char *)&value, 1);
-    XFlush(dpy);
-    ok = true;
-  }
-  XCloseDisplay(dpy);
-  return ok;
-}
-#endif
-
-#if defined(_WIN32)
 const char *VideoViewerPath = "C:/Projects/Video Viewer/video_viewer.exe";
 #elif defined(__linux__)
 const char *VideoViewerPath =
@@ -142,60 +65,29 @@ bool video_enter_callback(PromptState *state) {
   }
   if (!result)
     return true;
-#if defined(_WIN32)
-  HWND playerHwnd = video_viewer_hwnd();
-  if (playerHwnd) {
-    COPYDATASTRUCT cds;
-    cds.dwData = 0;
-    cds.cbData = (DWORD)(strlen(result) + 1);
-    cds.lpData = (PVOID)result;
-    SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-    return true;
-  } else {
-    char quoted_result[MAX_PATH + 3] = {0};
-    snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-    sk_launch_with_args(VideoViewerPath, quoted_result);
-  }
-#elif defined(__linux__)
-  if (video_set_string("Video Viewer", "_MP_TRACK", result) &&
-      video_send_command("Video Viewer", "_MP_TRACK_CHANGED", 1)) {
-    return true;
+  SkWindowHandle wh = sk_get_window_id("Video Viewer");
+  if (!WH_EQUALS(wh, WH_NULL)) {
+    bool ok = sk_window_set_string_property(wh, "_MP_TRACK", result);
+#if defined(__linux__)
+    ok = ok && sk_window_send_message(wh, "_MP_TRACK_CHANGED", 1);
+#endif
+    return ok;
   }
   if (strlen(VideoViewerPath) > 0) {
     char quoted_result[MAX_PATH + 3] = {0};
     snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
     sk_launch_with_args(VideoViewerPath, quoted_result);
   }
-#endif
   return true;
 }
-void video_cmd_1(void) {
-#if defined(_WIN32)
-  HWND playerHwnd = video_viewer_hwnd();
-  if (playerHwnd)
-    PostMessage(playerHwnd, WM_USER + 1, 1, 0);
-#elif defined(__linux__)
-  video_set_long("Video Viewer", "_MP_CMD", 1);
-#endif
+static void video_cmd(long cmd) {
+  SkWindowHandle wh = sk_get_window_id("Video Viewer");
+  if (!WH_EQUALS(wh, WH_NULL))
+    sk_window_set_long_property(wh, "_MP_CMD", cmd);
 }
-void video_cmd_5(void) {
-#if defined(_WIN32)
-  HWND playerHwnd = video_viewer_hwnd();
-  if (playerHwnd)
-    PostMessage(playerHwnd, WM_USER + 1, 5, 0);
-#elif defined(__linux__)
-  video_set_long("Video Viewer", "_MP_CMD", 5);
-#endif
-}
-void video_cmd_6(void) {
-#if defined(_WIN32)
-  HWND playerHwnd = video_viewer_hwnd();
-  if (playerHwnd)
-    PostMessage(playerHwnd, WM_USER + 1, 6, 0);
-#elif defined(__linux__)
-  video_set_long("Video Viewer", "_MP_CMD", 6);
-#endif
-}
+void video_cmd_1(void) { video_cmd(1); }
+void video_cmd_5(void) { video_cmd(5); }
+void video_cmd_6(void) { video_cmd(6); }
 void video_prompt(void) {
   sk_window(.title = "Viewer", .refresh = video_refresh_callback,
             .enter = video_enter_callback);

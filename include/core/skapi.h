@@ -172,6 +172,13 @@ bool sk_focus_window_by_title(char *title);
 
 SkWindowHandle sk_get_window_id(const char *title);
 
+bool sk_window_set_string_property(SkWindowHandle window, const char *atom,
+                                   const char *value);
+bool sk_window_set_long_property(SkWindowHandle window, const char *atom,
+                                 long value);
+bool sk_window_send_message(SkWindowHandle window, const char *atom,
+                            long data);
+
 bool sk_close_active_window(void);
 
 bool sk_dismiss_message(const char *name);

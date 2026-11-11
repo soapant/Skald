@@ -1,65 +1,7 @@
 #include "core/skapi.h"
-#include "core/context.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#if defined(_WIN32)
-#include <windows.h>
-static HWND music_player_hwnd(void) {
-  SkWindowHandle wh = sk_get_window_id("Music Player");
-  return WH_EQUALS(wh, WH_NULL) ? NULL : (HWND)WH_TO_HWND(wh);
-}
-#endif
-#if defined(__linux__)
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-static bool music_set_string(const char *window_title, const char *atom_name,
-                             const char *value) {
-  Display *dpy = XOpenDisplay(NULL);
-  if (!dpy || !window_title || !value) {
-    if (dpy)
-      XCloseDisplay(dpy);
-    return false;
-  }
-  bool ok = false;
-  Window win = sk_get_window_id(window_title).xid;
-  if (win != None) {
-    XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8,
-                    PropModeReplace, (const unsigned char *)value,
-                    (int)strlen(value));
-    XFlush(dpy);
-    ok = true;
-  }
-  XCloseDisplay(dpy);
-  return ok;
-}
-static bool music_send_command(const char *window_title, const char *atom_name,
-                               long command) {
-  Display *dpy = XOpenDisplay(NULL);
-  if (!dpy || !window_title) {
-    if (dpy)
-      XCloseDisplay(dpy);
-    return false;
-  }
-  bool ok = false;
-  Window win = sk_get_window_id(window_title).xid;
-  if (win != None) {
-    XEvent ev = {0};
-    ev.xclient.type = ClientMessage;
-    ev.xclient.window = win;
-    ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
-    ev.xclient.format = 32;
-    ev.xclient.data.l[0] = command;
-    if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
-      XFlush(dpy);
-      ok = true;
-    }
-  }
-  XCloseDisplay(dpy);
-  return ok;
-}
-#endif
 
 #if defined(_WIN32)
 const char *MusicPlayerPath = "C:/Projects/Music Player/music_player.exe";
@@ -88,31 +30,19 @@ void music_refresh_callback(PromptState *state) {
   sk_populate_listbox(state->lb, state->eb->filter, s_music_items, (int)n);
 }
 bool play_music(char *name) {
-#if defined(_WIN32)
-  HWND playerHwnd = music_player_hwnd();
-  if (playerHwnd) {
-    COPYDATASTRUCT cds;
-    cds.dwData = 0;
-    cds.cbData = (DWORD)(strlen(name) + 1);
-    cds.lpData = (PVOID)name;
-    SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-    return true;
-  } else {
-    char quoted_name[MAX_PATH + 3] = {0};
-    snprintf(quoted_name, sizeof(quoted_name), "\"%s\"", name);
-    sk_launch_with_args(MusicPlayerPath, quoted_name);
-  }
-#elif defined(__linux__)
-  if (music_set_string("Music Player", "_MP_TRACK", name) &&
-      music_send_command("Music Player", "_MP_TRACK_CHANGED", 1)) {
-    return true;
+  SkWindowHandle wh = sk_get_window_id("Music Player");
+  if (!WH_EQUALS(wh, WH_NULL)) {
+    bool ok = sk_window_set_string_property(wh, "_MP_TRACK", name);
+#if defined(__linux__)
+    ok = ok && sk_window_send_message(wh, "_MP_TRACK_CHANGED", 1);
+#endif
+    return ok;
   }
   if (strlen(MusicPlayerPath) > 0) {
     char quoted_name[MAX_PATH + 3] = {0};
     snprintf(quoted_name, sizeof(quoted_name), "\"%s\"", name);
     sk_launch_with_args(MusicPlayerPath, quoted_name);
   }
-#endif
   return true;
 }
 
@@ -130,42 +60,15 @@ bool music_enter_callback(PromptState *state) {
   return play_music(result);
 }
 
-void music_cmd_1(void) {
-#if defined(_WIN32)
-  HWND playerHwnd = music_player_hwnd();
-  if (playerHwnd)
-    PostMessage(playerHwnd, WM_USER + 1, 1, 0);
-#elif defined(__linux__)
-  music_send_command("Music Player", "_MP_PLAYER_CMD", 1);
-#endif
+static void music_cmd(int cmd) {
+  SkWindowHandle wh = sk_get_window_id("Music Player");
+  if (!WH_EQUALS(wh, WH_NULL))
+    sk_window_send_message(wh, "_MP_PLAYER_CMD", cmd);
 }
-void music_cmd_5(void) {
-#if defined(_WIN32)
-  HWND playerHwnd = music_player_hwnd();
-  if (playerHwnd)
-    PostMessage(playerHwnd, WM_USER + 1, 5, 0);
-#elif defined(__linux__)
-  music_send_command("Music Player", "_MP_PLAYER_CMD", 5);
-#endif
-}
-void music_cmd_6(void) {
-#if defined(_WIN32)
-  HWND playerHwnd = music_player_hwnd();
-  if (playerHwnd)
-    PostMessage(playerHwnd, WM_USER + 1, 6, 0);
-#elif defined(__linux__)
-  music_send_command("Music Player", "_MP_PLAYER_CMD", 6);
-#endif
-}
-void music_cmd_2(void) {
-#if defined(_WIN32)
-  HWND playerHwnd = music_player_hwnd();
-  if (playerHwnd)
-    PostMessage(playerHwnd, WM_USER + 1, 2, 0);
-#elif defined(__linux__)
-  music_send_command("Music Player", "_MP_PLAYER_CMD", 2);
-#endif
-}
+void music_cmd_1(void) { music_cmd(1); }
+void music_cmd_5(void) { music_cmd(5); }
+void music_cmd_6(void) { music_cmd(6); }
+void music_cmd_2(void) { music_cmd(2); }
 
 void random_music(void) {
   int idx = sk_rand_num_between(0, s_music_files.count - 1);

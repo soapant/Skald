@@ -1117,6 +1117,21 @@ SkWindowHandle sk_get_window_id(const char *title) {
   return Platform_GetWindowByTitle(title);
 }
 
+bool sk_window_set_string_property(SkWindowHandle window, const char *atom,
+                                   const char *value) {
+  return Platform_SetWindowStringProperty(window, atom, value);
+}
+
+bool sk_window_set_long_property(SkWindowHandle window, const char *atom,
+                                 long value) {
+  return Platform_SetWindowLongProperty(window, atom, value);
+}
+
+bool sk_window_send_message(SkWindowHandle window, const char *atom,
+                            long data) {
+  return Platform_SendWindowMessage(window, atom, data);
+}
+
 bool sk_close_active_window(void) {
   bool r = Platform_CloseActiveWindow();
   return r;
