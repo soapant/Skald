@@ -1,8 +1,0 @@
-name = "clipboard_history"
-description = ""
-
-[provides]
-
-[depends]
-control_center
-

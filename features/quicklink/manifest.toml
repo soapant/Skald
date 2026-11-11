@@ -1,0 +1,8 @@
+name = "quicklink"
+description = ""
+
+[provides]
+
+[depends]
+control_center
+
