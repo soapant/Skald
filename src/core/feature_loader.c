@@ -198,6 +198,8 @@ void FeatureLoader_DrainRetiredUnloads(void) {
     log_info("draining deferred unload of retired lib %s",
              defer_unloads[i].owner);
     Platform_UnloadLibrary(defer_unloads[i].handle);
+    if (defer_unloads[i].uniq[0])
+      remove(defer_unloads[i].uniq);
   }
   defer_unload_count = 0;
   Platform_MutexUnlock(feature_mutex);
@@ -211,10 +213,10 @@ static void defer_unload(LibHandle handle, const char *uniq,
     log_error("deferred unload list full, unloading %s inline",
               owner ? owner : "?");
     Platform_UnloadLibrary(handle);
+    if (uniq && uniq[0])
+      remove(uniq);
     return;
   }
-  if (uniq && uniq[0])
-    remove(uniq);
   DeferredUnload *u = &defer_unloads[defer_unload_count++];
   u->handle = handle;
   u->uniq[0] = '\0';
