@@ -981,7 +981,11 @@ PlWindowList Platform_GetWindowNames() {
 
 bool Platform_TryAcquireSingleInstance(void) {
   g_singleton_mtx = CreateMutexA(NULL, TRUE, "skald_single_instance_mutex");
-  if (g_singleton_mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
+  if (g_singleton_mtx == NULL) {
+    log_error("singleton mutex creation failed (error=%lu)", GetLastError());
+    return false;
+  }
+  if (GetLastError() == ERROR_ALREADY_EXISTS) {
     log_info("Another instance is already running. Exiting.");
     CloseHandle(g_singleton_mtx);
     g_singleton_mtx = NULL;
@@ -1367,7 +1371,13 @@ redirect_loop: {
   urlComp.dwUrlPathLength = ARRAYSIZE(szUrlPath);
 
   wchar_t wUrl[L_MAX_URL_LENGTH];
-  MultiByteToWideChar(CP_UTF8, 0, current_url, -1, wUrl, ARRAYSIZE(wUrl));
+  if (MultiByteToWideChar(CP_UTF8, 0, current_url, -1, wUrl,
+                          ARRAYSIZE(wUrl)) <= 0) {
+    log_error("MultiByteToWideChar failed for url (len=%d)",
+              (int)strlen(current_url));
+    WinHttpCloseHandle(hSession);
+    return 0;
+  }
 
   if (!WinHttpCrackUrl(wUrl, (DWORD)wcslen(wUrl), 0, &urlComp)) {
     WinHttpCloseHandle(hSession);

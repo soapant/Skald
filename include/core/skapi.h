@@ -353,10 +353,6 @@ typedef struct {
   int y;
 } SkCharPos;
 
-int sk_draw_text_wrapped_ex(int x, int y, int max_width, int line_height,
-                            const char *text, int fontsize, unsigned long color,
-                            SkCharPos *out_positions, int max_positions);
-
 typedef struct {
   int x;
   int y;

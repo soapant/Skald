@@ -257,7 +257,7 @@ void Platform_CreateDisplayMessageWindow(
     return;
   }
 
-  pWndData->message = _strdup(message);
+  pWndData->message = _strdup(message ? message : "");
   pWndData->hFont = msgFont;
   pWndData->alpha = WindowOpacity;
   pWndData->color = color;

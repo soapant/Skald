@@ -152,5 +152,5 @@ int Monitor_Fill(MonitorEntry *out, int max_entries) {
     out[0] = out[primary_at];
     out[primary_at] = t;
   }
-  return list.count;
+  return mon_cap;
 }

@@ -1017,7 +1017,7 @@ char *x11_clipboard_get_text(void) {
     close(fds[0]);
     return NULL;
   }
-  int timeouts = 0, reads = 0, eofs = 0;
+  int timeouts = 0, reads = 0, eofs = 0, complete = 0;
   for (;;) {
     struct pollfd pfd = {fds[0], POLLIN, 0};
     int r = poll(&pfd, 1, 500);
@@ -1028,6 +1028,8 @@ char *x11_clipboard_get_text(void) {
       break;
     }
     if (r < 0) {
+      if (errno == EINTR)
+        continue;
       wl_trace("API GetText", "poll ERR %d errno=%d", r, errno);
       break;
     }
@@ -1044,10 +1046,17 @@ char *x11_clipboard_get_text(void) {
     }
     ssize_t got = read(fds[0], out + len, 4096);
     reads++;
-    if (got <= 0) {
+    if (got == 0) {
       eofs = 1;
-      wl_trace("API GetText", "read EOF got=%d errno=%d after %d bytes",
-               (int)got, errno, (int)len);
+      complete = 1;
+      wl_trace("API GetText", "read EOF after %d bytes", (int)len);
+      break;
+    }
+    if (got < 0) {
+      if (errno == EINTR)
+        continue;
+      wl_trace("API GetText", "read ERR errno=%d after %d bytes", errno,
+               (int)len);
       break;
     }
     len += (size_t)got;
@@ -1055,6 +1064,12 @@ char *x11_clipboard_get_text(void) {
   close(fds[0]);
   wl_trace("API GetText", "result len=%d timeouts=%d reads=%d eof=%d", (int)len,
            timeouts, reads, eofs);
+  if (!complete) {
+    wl_trace("API GetText", "incomplete transfer, discarding %d bytes",
+             (int)len);
+    free(out);
+    return NULL;
+  }
   if (len == 0) {
     free(out);
     wl_dead_offer = offer;

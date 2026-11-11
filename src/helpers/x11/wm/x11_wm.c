@@ -400,7 +400,7 @@ char *x11_paste(char *content) {
     XFlush(dpy);
   }
   XSync(dpy, False);
-  return NULL;
+  return strdup("");
 }
 
 unsigned long x11_find_window_by_title(const char *title) {

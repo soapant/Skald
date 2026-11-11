@@ -146,11 +146,15 @@ char *paste_hyprland(char *content) {
     log_error("content is NULL");
     return NULL;
   }
-  char buffer[100];
-  snprintf(buffer, sizeof(buffer), "wtype %s", content);
-  char *out = Platform_RunTerminalCommand(buffer, false);
+  const char *argv[] = {"wtype", content, NULL};
+  int status = 0;
+  char *out = Platform_RunArgvCapture(argv, NULL, &status);
+  if (status == 127) {
+    free(out);
+    out = NULL;
+  }
   if (!out)
-    log_error("content='%s'", content ? content : "null");
+    log_error("paste via wtype failed");
   return out;
 }
 

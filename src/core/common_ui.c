@@ -10,7 +10,6 @@
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
-#include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
 #include "config_values.h"
 #include "core/types.h"
@@ -87,33 +86,34 @@ static int Levenshtein(const char *a, const char *b) {
     return 100;
   if (la > 255 || lb > 255)
     return 100;
-  int dp[256][256];
-  for (int i = 0; i <= la && i < 256; i++)
-    dp[i][0] = i;
+  int dp[3][256];
   for (int j = 0; j <= lb && j < 256; j++)
     dp[0][j] = j;
-  for (int i = 1; i <= la && i < 256; i++)
+  for (int i = 1; i <= la && i < 256; i++) {
+    int cur = i % 3, prev = (i + 2) % 3, prev2 = (i + 1) % 3;
+    dp[cur][0] = i;
     for (int j = 1; j <= lb && j < 256; j++) {
       int cost =
           tolower((unsigned char)a[i - 1]) == tolower((unsigned char)b[j - 1])
               ? 0
               : 1;
-      int v = dp[i - 1][j] + 1;
-      if (dp[i][j - 1] + 1 < v)
-        v = dp[i][j - 1] + 1;
-      if (dp[i - 1][j - 1] + cost < v)
-        v = dp[i - 1][j - 1] + cost;
+      int v = dp[prev][j] + 1;
+      if (dp[cur][j - 1] + 1 < v)
+        v = dp[cur][j - 1] + 1;
+      if (dp[prev][j - 1] + cost < v)
+        v = dp[prev][j - 1] + cost;
       if (i > 1 && j > 1 &&
           tolower((unsigned char)a[i - 1]) ==
               tolower((unsigned char)b[j - 2]) &&
           tolower((unsigned char)a[i - 2]) ==
               tolower((unsigned char)b[j - 1])) {
-        if (dp[i - 2][j - 2] + 1 < v)
-          v = dp[i - 2][j - 2] + 1;
+        if (dp[prev2][j - 2] + 1 < v)
+          v = dp[prev2][j - 2] + 1;
       }
-      dp[i][j] = v;
+      dp[cur][j] = v;
     }
-  return dp[la][lb];
+  }
+  return dp[la % 3][lb];
 }
 static bool FuzzyMatchWithTypo(const char *text, const char *pattern) {
   if (FuzzyMatch(text, pattern))

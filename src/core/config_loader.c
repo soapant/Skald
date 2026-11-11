@@ -349,41 +349,43 @@ bool Config_Load(void) {
 }
 
 static long long cflast_reload_ms = 0;
-#if defined(_WIN32)
-static volatile LONG cfreload_lock = 0;
-#endif
+static void *cfreload_mutex = NULL;
+
+static void cfreload_lock(void) {
+  if (!cfreload_mutex)
+    cfreload_mutex = Platform_MutexCreate();
+  if (cfreload_mutex)
+    Platform_MutexLock(cfreload_mutex);
+}
+
+static void cfreload_unlock(void) {
+  if (cfreload_mutex)
+    Platform_MutexUnlock(cfreload_mutex);
+}
+
 bool Config_Reload(void) {
   WindowManager *_wm2 = WindowManager_Get();
   if (_wm2 && _wm2->popup_count > 0) {
     log_warn("cfg reload blocked: %d popup(s) open", _wm2->popup_count);
     return false;
   }
-#if defined(_WIN32)
-  if (InterlockedCompareExchange(&cfreload_lock, 1, 0) != 0)
-    return false;
-#endif
+  cfreload_lock();
   long long now = Platform_GetWallClockMs();
   long long debounce = (long long)1000;
   if (cflast_reload_ms && now - cflast_reload_ms < debounce) {
     log_warn("cfg reload blocked: debounce, %lldms since last",
              (long long)(now - cflast_reload_ms));
-#if defined(_WIN32)
-    InterlockedExchange(&cfreload_lock, 0);
-#endif
+    cfreload_unlock();
     return false;
   }
   if (!confibuild_load_store()) {
     log_warn("cfg reload blocked: build/load failed, keeping old values");
-#if defined(_WIN32)
-    InterlockedExchange(&cfreload_lock, 0);
-#endif
+    cfreload_unlock();
     return false;
   }
   cflast_reload_ms = Platform_GetWallClockMs();
   Platform_ResetUIScale();
-#if defined(_WIN32)
-  InterlockedExchange(&cfreload_lock, 0);
-#endif
+  cfreload_unlock();
   return true;
 }
 

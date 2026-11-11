@@ -158,6 +158,8 @@ bool snippet_unregister_internal(const char *trigger) {
       snippets[n] = snippets[i];
     n++;
   }
+  if (n != snippet_count)
+    memset(&snippets[n], 0, (size_t)(snippet_count - n) * sizeof(SnippetBinding));
   snippet_count = n;
   return found;
 }
@@ -314,8 +316,6 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
   if (snippets[idx].window_count > 0)
     title = Platform_GetActiveWindowTitle();
   bool allowed = snippet_window_allowed(&snippets[idx], title);
-  if (title)
-    free((void *)title);
   if (!allowed)
     return false;
   size_t tlen = strlen(snippets[idx].trigger);

@@ -114,16 +114,6 @@ bool ExpandPath(const char *template_path, char *out, size_t out_size) {
   size_t o = 0;
   const char *p = template_path;
   while (*p != '\0' && o < out_size - 1) {
-    if (*p == '{') {
-      const char *close = strchr(p + 1, '}');
-      if (close != NULL) {
-        size_t token_len = (size_t)(close - p - 1);
-        if (token_len > 0 && token_len < 64) {
-          out[0] = '\0';
-          return false;
-        }
-      }
-    }
     out[o++] = *p++;
   }
   out[o] = '\0';

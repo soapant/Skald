@@ -533,4 +533,5 @@ SKALD_FEATURE_INIT {
                .on_action = RemoveDeadTimeToggle, .type = "Macro",
                .icon = "/clock-off.png");
   sk_run_every(1.0, crosshair_fn);
+
 }
