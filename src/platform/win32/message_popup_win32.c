@@ -292,7 +292,7 @@ void Platform_CreateDisplayMessageWindow(
 
   s_msg_show_data = pWndData;
   s_msg_show_no_bg = no_bg;
-  if (!message_popup_create(topLeftX, topLeftY, winWidth, winHeight)) {
+  if (!win32_message_popup_create(topLeftX, topLeftY, winWidth, winHeight)) {
     log_error("MSG create failed for '%s'", message ? message : "");
     s_msg_show_data = NULL;
     s_msg_show_no_bg = false;

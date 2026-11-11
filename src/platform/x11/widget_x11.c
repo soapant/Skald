@@ -74,7 +74,7 @@ static long long widget_now_ms(void) {
   return (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
 }
 
-static void widget_frame(void *ud) {
+static void win32_widget_frame(void *ud) {
 
   PlatformWidget *widget = (PlatformWidget *)ud;
   if (!widget || widget->base.dead) {
@@ -177,7 +177,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
     widget->cmap = DefaultColormap(dpy, screen);
   }
 
-  if (!RenderThread_AddFrameCallback(widget_frame, widget)) {
+  if (!RenderThread_AddFrameCallback(win32_widget_frame, widget)) {
     XDestroyWindow(dpy, widget->win);
     XFlush(dpy);
     free(widget);
@@ -190,7 +190,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
     widget->base.bg_color = amb;
   }
 
-  widget_frame(widget);
+  win32_widget_frame(widget);
 
   XMapRaised(dpy, widget->win);
   XFlush(dpy);
@@ -205,7 +205,7 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
   }
   widget->base.dead = true;
   widget_registry_remove(widget);
-  RenderThread_RemoveFrameCallback(widget_frame, widget);
+  RenderThread_RemoveFrameCallback(win32_widget_frame, widget);
   Display *dpy = widget->dpy;
   if (dpy && widget->win != None) {
     if (widget->xd) {

@@ -846,15 +846,494 @@ static void nob_write_json_string(FILE *f, const char *s) {
   fputc('"', f);
 }
 
+
+typedef struct {
+  const char *path;
+  int line;
+} CheckLoc;
+
+typedef struct {
+  int files_scanned;
+  int skapi_violations;
+  int fn_violations;
+} CheckState;
+
+static CheckState check_state;
+static char decl_buf[8192];
+static size_t decl_len;
+static bool decl_overflow;
+static int decl_start_line;
+static int brace_depth;
+
+static void check_norm_path(const char *src, char *dst, size_t cap) {
+  size_t i = 0;
+  for (; src[i] && i + 1 < cap; i++)
+    dst[i] = (src[i] == '\\') ? '/' : src[i];
+  dst[i] = '\0';
+}
+
+static bool check_starts_with(const char *s, const char *prefix) {
+  size_t i = 0;
+  while (prefix[i] && s[i] == prefix[i])
+    i++;
+  return prefix[i] == '\0';
+}
+
+static bool check_ends_with(const char *s, const char *suffix) {
+  size_t ns = strlen(s), nf = strlen(suffix);
+  if (nf > ns)
+    return false;
+  return strcmp(s + ns - nf, suffix) == 0;
+}
+
+static const char *check_fn_prefix(const char *path_norm) {
+  if (check_ends_with(path_norm, "skapi_x11.c") ||
+      check_ends_with(path_norm, "skapi_win32.c"))
+    return NULL; /* sk_*_platform impls host _platform decl wrappers */
+  if (strstr(path_norm, "src/platform/"))
+    return "Platform_";
+  if (strstr(path_norm, "include/platform/x11/"))
+    return "x11_";
+  if (strstr(path_norm, "include/platform/win32/"))
+    return "win32_";
+  if (strstr(path_norm, "include/platform/"))
+    return "Platform_";
+  if (strstr(path_norm, "src/helpers/x11/") ||
+      strstr(path_norm, "include/helpers/x11/"))
+    return "x11_";
+  if (strstr(path_norm, "src/helpers/win32/") ||
+      strstr(path_norm, "include/helpers/win32/"))
+    return "win32_";
+  return NULL;
+}
+
+static void check_violation(const char *path, int line, const char *message) {
+  fprintf(stderr, "%s:%d: %s\n", path, line, message);
+}
+
+typedef enum {
+  CHK_IDENT,
+  CHK_STAR,
+  CHK_LPAREN,
+  CHK_RPAREN,
+  CHK_LBRACE,
+  CHK_RBRACE,
+  CHK_SEMI,
+  CHK_EQUAL,
+  CHK_COMMA,
+  CHK_OTHER
+} ChkTokKind;
+
+typedef struct {
+  size_t beg, end;
+  ChkTokKind kind;
+} ChkTok;
+
+static ChkTok chk_toks[1024];
+static size_t chk_tok_count;
+
+static void chk_tok_add(size_t beg, size_t end, ChkTokKind kind) {
+  if (chk_tok_count < sizeof(chk_toks) / sizeof(chk_toks[0])) {
+    chk_toks[chk_tok_count].beg = beg;
+    chk_toks[chk_tok_count].end = end;
+    chk_toks[chk_tok_count].kind = kind;
+    chk_tok_count++;
+  }
+}
+
+static void chk_tokenize(const char *buf, size_t len) {
+  chk_tok_count = 0;
+  size_t j = 0;
+  while (j < len) {
+    char c = buf[j];
+    if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+      j++;
+      continue;
+    }
+    if (isalpha((unsigned char)c) || c == '_') {
+      size_t beg = j;
+      while (j < len && (isalpha((unsigned char)buf[j]) ||
+                         isdigit((unsigned char)buf[j]) || buf[j] == '_'))
+        j++;
+      chk_tok_add(beg, j, CHK_IDENT);
+      continue;
+    }
+    switch (c) {
+      case '*': chk_tok_add(j, j + 1, CHK_STAR); break;
+      case '(': chk_tok_add(j, j + 1, CHK_LPAREN); break;
+      case ')': chk_tok_add(j, j + 1, CHK_RPAREN); break;
+      case '{': chk_tok_add(j, j + 1, CHK_LBRACE); break;
+      case '}': chk_tok_add(j, j + 1, CHK_RBRACE); break;
+      case ';': chk_tok_add(j, j + 1, CHK_SEMI); break;
+      case '=': chk_tok_add(j, j + 1, CHK_EQUAL); break;
+      case ',': chk_tok_add(j, j + 1, CHK_COMMA); break;
+      default: chk_tok_add(j, j + 1, CHK_OTHER); break;
+    }
+    j++;
+  }
+}
+
+static bool chk_tok_is(size_t i, const char *buf, const char *name) {
+  if (chk_toks[i].kind != CHK_IDENT)
+    return false;
+  size_t n = strlen(name);
+  return chk_toks[i].end - chk_toks[i].beg == n &&
+         memcmp(buf + chk_toks[i].beg, name, n) == 0;
+}
+
+static void chk_finish_decl(const char *path, int lineno) {
+  const char *buf = decl_buf;
+  size_t len = decl_len;
+  if (chk_tok_count == 0)
+    ; /* nothing captured */
+  chk_tokenize(buf, len);
+  if (chk_tok_count == 0)
+    return;
+  for (size_t i = 0; i < chk_tok_count; i++)
+    if (chk_tok_is(i, buf, "typedef") || chk_tok_is(i, buf, "attribute") ||
+        chk_tok_is(i, buf, "declspec") || chk_tok_is(i, buf, "asm"))
+      return;
+  /* candidate function name: ident at parens-depth 0 followed by '(' */
+  int candidate = -1;
+  size_t pdepth = 0;
+  for (size_t i = 0; i + 1 < chk_tok_count; i++) {
+    ChkTokKind k = chk_toks[i].kind;
+    if (k == CHK_LPAREN) {
+      pdepth++;
+      continue;
+    }
+    if (k == CHK_RPAREN) {
+      if (pdepth)
+        pdepth--;
+      continue;
+    }
+    if (pdepth != 0)
+      continue;
+    if (k != CHK_IDENT)
+      continue;
+    if (chk_toks[i + 1].kind != CHK_LPAREN)
+      continue;
+    /* reject function-pointer declarations: ident '(' '*' ident */
+    if (i + 3 < chk_tok_count && chk_toks[i + 2].kind == CHK_STAR &&
+        chk_toks[i + 3].kind == CHK_IDENT)
+      continue;
+    if (chk_tok_is(i, buf, "if") || chk_tok_is(i, buf, "while") ||
+        chk_tok_is(i, buf, "for") || chk_tok_is(i, buf, "switch") ||
+        chk_tok_is(i, buf, "sizeof") || chk_tok_is(i, buf, "return"))
+      continue;
+    candidate = (int)i;
+  }
+  if (candidate < 0)
+    return;
+  /* reject initializers: any '=' before the candidate's LPAREN */
+  for (size_t i = 0; i < (size_t)candidate; i++)
+    if (chk_toks[i].kind == CHK_EQUAL)
+      return;
+  size_t beg = chk_toks[candidate].beg, end = chk_toks[candidate].end;
+  size_t name_len = end - beg;
+  char name[256];
+  if (name_len >= sizeof(name))
+    name_len = sizeof(name) - 1;
+  memcpy(name, buf + beg, name_len);
+  name[name_len] = '\0';
+
+  char norm[1024];
+  check_norm_path(path, norm, sizeof(norm));
+  const char *prefix = check_fn_prefix(norm);
+  if (!prefix)
+    return;
+  if (strncmp(name, prefix, strlen(prefix)) == 0)
+    return;
+  check_state.fn_violations++;
+  char msg[512];
+  snprintf(msg, sizeof(msg),
+           "function '%s' does not start with '%s' in this directory", name,
+           prefix);
+  check_violation(path, lineno, msg);
+}
+
+static void chk_include_check(const char *path, char *line, int lineno,
+                              bool exempt) {
+  if (exempt)
+    return;
+  size_t j = 0;
+  while (line[j] == ' ' || line[j] == '\t')
+    j++;
+  if (line[j] != '#')
+    return;
+  j++;
+  while (line[j] == ' ' || line[j] == '\t')
+    j++;
+  if (strncmp(line + j, "include", 7) != 0)
+    return;
+  j += 7;
+  if (line[j] && line[j] != ' ' && line[j] != '\t')
+    return;
+  while (line[j] == ' ' || line[j] == '\t')
+    j++;
+  char open = line[j];
+  char close = (open == '<') ? '>' : (open == '"' ? '"' : 0);
+  if (!close)
+    return;
+  j++;
+  size_t beg = j;
+  while (line[j] && line[j] != close)
+    j++;
+  if (line[j] != close)
+    return;
+  const char *file = line + beg;
+  size_t flen = (size_t)(line + j - file);
+  const char *slash = NULL;
+  for (const char *p = file; p < file + flen; p++)
+    if (*p == '/')
+      slash = p;
+  const char *base = slash ? slash + 1 : file;
+  size_t blen = (size_t)(file + flen - base);
+  char name[256];
+  if (blen >= sizeof(name))
+    blen = sizeof(name) - 1;
+  memcpy(name, base, blen);
+  name[blen] = '\0';
+
+  if (strcmp(name, "skapi.h") == 0 || strcmp(name, "skapi_types.h") == 0 ||
+      strcmp(name, "skapi_platform.h") == 0) {
+    check_state.skapi_violations++;
+    char msg[512];
+    snprintf(msg, sizeof(msg),
+             "'#include \"%s\"' is only allowed in src/features/ and tests/",
+             name);
+    check_violation(path, lineno, msg);
+  }
+}
+
+static bool check_walk(Nob_Walk_Entry entry) {
+  if (entry.type != NOB_FILE_REGULAR)
+    return true;
+  const char *path = entry.path;
+  brace_depth = 0;
+  decl_len = 0;
+  decl_overflow = false;
+  decl_start_line = 0;
+  char norm[1024];
+  check_norm_path(path, norm, sizeof(norm));
+  if (!check_ends_with(norm, ".c") && !check_ends_with(norm, ".h"))
+    return true;
+  bool exempt = check_starts_with(norm, "src/features/") ||
+                check_starts_with(norm, "tests/");
+  bool is_h = check_ends_with(norm, ".h");
+  check_state.files_scanned++;
+
+  Nob_String_Builder sb = {0};
+  if (!nob_read_entire_file(path, &sb)) {
+    fprintf(stderr, "%s: failed to read file\n", path);
+    return false;
+  }
+
+  int lex = 0; /* 0 code, 1 block comment, 2 string, 3 char */
+  int lineno = 1;
+  size_t i = 0;
+  while (i < sb.count) {
+    size_t start = i;
+    while (i < sb.count && sb.items[i] != '\n')
+      i++;
+    size_t len = i - start;
+    if (i < sb.count)
+      i++;
+
+    char work[4096];
+    char out[4096];
+    size_t n = len < sizeof(work) ? len : sizeof(work);
+    memcpy(work, sb.items + start, n);
+    work[n] = '\0';
+
+    size_t trimmed = 0;
+    while (work[trimmed] == ' ' || work[trimmed] == '\t')
+      trimmed++;
+    bool preproc = lex != 1 && work[trimmed] == '#';
+
+    size_t oi = 0, j = 0;
+    while (work[j]) {
+      unsigned char c = (unsigned char)work[j];
+      if (lex == 1) {
+        if (c == '*' && work[j + 1] == '/') {
+          if (oi + 1 < sizeof(out)) {
+            out[oi++] = ' ';
+            out[oi++] = ' ';
+          }
+          lex = 0;
+          j += 2;
+          continue;
+        }
+        if (oi < sizeof(out) - 1)
+          out[oi++] = ' ';
+        j++;
+        continue;
+      }
+      if (preproc) {
+        if (c == '/' && work[j + 1] == '*') {
+          lex = 1;
+          if (oi + 1 < sizeof(out)) {
+            out[oi++] = ' ';
+            out[oi++] = ' ';
+          }
+          j += 2;
+          continue;
+        }
+        if (oi < sizeof(out) - 1)
+          out[oi++] = (char)c;
+        j++;
+        continue;
+      }
+      if (c == '"') {
+        lex = 2;
+        j++;
+        while (work[j]) {
+          unsigned char sc = (unsigned char)work[j];
+          if (sc == '\\') {
+            j += 2;
+            continue;
+          }
+          j++;
+          if (sc == '"') {
+            lex = 0;
+            break;
+          }
+        }
+        if (oi < sizeof(out) - 1)
+          out[oi++] = ' ';
+        continue;
+      }
+      if (c == '\'') {
+        lex = 3;
+        j++;
+        while (work[j]) {
+          unsigned char sc = (unsigned char)work[j];
+          if (sc == '\\') {
+            j += 2;
+            continue;
+          }
+          j++;
+          if (sc == '\'') {
+            lex = 0;
+            break;
+          }
+        }
+        if (oi < sizeof(out) - 1)
+          out[oi++] = ' ';
+        continue;
+      }
+      if (c == '/' && work[j + 1]) {
+        char c2 = work[j + 1];
+        if (c2 == '*') {
+          lex = 1;
+          if (oi + 1 < sizeof(out)) {
+            out[oi++] = ' ';
+            out[oi++] = ' ';
+          }
+          j += 2;
+          continue;
+        }
+        if (c2 == '/') {
+          while (work[j]) {
+            if (oi < sizeof(out) - 1)
+              out[oi++] = ' ';
+            j++;
+          }
+          continue;
+        }
+      }
+      if (oi < sizeof(out) - 1)
+        out[oi++] = (char)c;
+      j++;
+    }
+    out[oi] = '\0';
+
+    const char *base = strrchr(norm, '/');
+    base = base ? base + 1 : norm;
+    bool skapi_impl = check_starts_with(base, "skapi");
+    chk_include_check(path, out, lineno, exempt || skapi_impl);
+
+    if (preproc) {
+      lineno++;
+      continue;
+    }
+
+    if (is_h && !exempt) {
+      size_t k = 0;
+      while (out[k]) {
+        char c = out[k];
+        if (brace_depth == 0) {
+          if (decl_len == 0 && c != ' ' && c != '\t' && c != '\0')
+            decl_start_line = lineno;
+          if (!decl_overflow) {
+            if (decl_len + 2 < sizeof(decl_buf)) {
+              decl_buf[decl_len] = c;
+              decl_len++;
+            } else {
+              decl_overflow = true;
+            }
+          }
+          if (c == '{') {
+            decl_buf[decl_len] = '\0';
+            chk_finish_decl(path, decl_start_line ? decl_start_line : lineno);
+            decl_len = 0;
+            decl_overflow = false;
+            decl_start_line = 0;
+            brace_depth++;
+          } else if (c == ';') {
+            decl_buf[decl_len] = '\0';
+            chk_finish_decl(path, decl_start_line ? decl_start_line : lineno);
+            decl_len = 0;
+            decl_overflow = false;
+            decl_start_line = 0;
+          } else if (c == '}') {
+            brace_depth--;
+            decl_len = 0;
+            decl_overflow = false;
+            decl_start_line = 0;
+          }
+        } else {
+          if (c == '{')
+            brace_depth++;
+          else if (c == '}')
+            brace_depth--;
+        }
+        k++;
+      }
+    }
+    lineno++;
+  }
+  nob_da_free(sb);
+  return true;
+}
+
+static bool check_layering(void) {
+  memset(&check_state, 0, sizeof(check_state));
+  decl_len = 0;
+  decl_overflow = false;
+  decl_start_line = 0;
+  if (!nob_walk_dir(SRC_FOLDER, check_walk))
+    return false;
+  if (!nob_walk_dir("include", check_walk))
+    return false;
+  if (!nob_walk_dir("tests", check_walk))
+    return false;
+  printf("check: scanned %d files, %d skapi violation(s), %d function-name violation(s)\n",
+         check_state.files_scanned, check_state.skapi_violations,
+         check_state.fn_violations);
+  return check_state.skapi_violations + check_state.fn_violations == 0;
+}
+
 int main(int argc, char **argv) {
   NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
   int do_run = 0;
   int do_release = 0;
   int do_test = 0;
+  int do_check = 0;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
-      printf("Usage: %s [-win32] [-run] [-release] [-test] [-asan] [-help]\n",
+      printf("Usage: %s [-win32] [-run] [-release] [-test] [-asan] [-check] [-help]\n",
              argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");
@@ -862,6 +1341,8 @@ int main(int argc, char **argv) {
              "add -O3\n");
       printf("  -test   Run test suite\n");
       printf("  -asan   Build with clang -fsanitize=address,undefined\n");
+      printf("  -check  Check for skapi includes outside features/tests and\n"
+             "         function naming in platform/ and helpers/\n");
       printf("  -help   Show this help\n");
       return 0;
     }
@@ -875,6 +1356,14 @@ int main(int argc, char **argv) {
       do_test = 1;
     if (strcmp(argv[i], "-asan") == 0)
       sanitize = true;
+    if (strcmp(argv[i], "-check") == 0)
+      do_check = 1;
+  }
+
+  if (do_check) {
+    if (!check_layering())
+      return 1;
+    return 0;
   }
 
   if (sanitize) {
