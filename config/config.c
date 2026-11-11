@@ -6,7 +6,7 @@ void ConfigApply(void) {
   EnableAutoPairing = true;
   RememberLastIndex = true;
   MessageAfterEachHotkey = false;
-  TimeOutForMessages = 3;
+  TimeOutForMessages = 1;
   DebugMode = false;
   RoundedCorners = true;
   EnableBorders = true;
@@ -16,7 +16,7 @@ void ConfigApply(void) {
   UsedFont = "0xProto Nerd Font";
   FontSize = 22;
   IconSize = 32;
-  WidgetGap = 10;
+  WidgetGap = 0;
   UsedTerminal = "";
   UsedShell = "";
   UsedBrowser = "";
@@ -31,7 +31,7 @@ void ConfigApply(void) {
   MessagesEnabled = true;
   RainbowText = false;
   WindowTitleText = false;
-  CloseOnLossOfFocus = false;
+  CloseOnLossOfFocus = true;
   Theme = "onedark-pro";
   BackgroundImage = "";
 }

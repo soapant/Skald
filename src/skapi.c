@@ -970,9 +970,11 @@ void ski_message(const SkMessageSpec *spec) {
                                                .no_bg = spec->no_bg});
     return;
   }
-  MessageSlot slot = spec->slot ? spec->slot : FREE;
+  MessageSlot slot;
+  if (spec->render)
+      slot = spec->slot ? spec->slot : FREE;
   if (slot == AUTO) {
-    slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : TOP_CENTER;
+    slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER;
   } else if (slot == FREE) {
     Platform_DisplayMessage(
         (PlDisplayMessageSpec){.message = spec->message,
