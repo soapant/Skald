@@ -18,7 +18,6 @@
 #include <stdint.h>
 #include <errno.h>
 
-static volatile long wl_seq = 0;
 static long wl_ev_count = 0;
 static long wl_req_count = 0;
 static long wl_send_count = 0;
@@ -36,12 +35,8 @@ static char wl_read_block_reason[128] = {0};
 
 static void wl_trace(const char *what, const char *fmt, ...) {
 
-  va_list ap;
-  long n = ++wl_seq;
-  char buf[512];
-  va_start(ap, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, ap);
-  va_end(ap);
+  (void)what;
+  (void)fmt;
 }
 
 static int wl_dir_fd_count(const char *pid, const char *want) {
@@ -1124,6 +1119,8 @@ void x11_clipboard_shutdown(void) {
   free(wl_png);
   wl_png = NULL;
   wl_png_len = 0;
+  free(wl_uri_list);
+  wl_uri_list = NULL;
   pthread_mutex_unlock(&wl_text_lock);
   wl_ready = false;
 }

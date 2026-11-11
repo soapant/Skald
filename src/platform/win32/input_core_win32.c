@@ -43,9 +43,8 @@ int Platform_CharForKey(int vk, int scancode, int mods) {
     return 0;
   if (n == 1)
     return (int)buf[0];
-  char mb[16];
-  int m = WideCharToMultiByte(CP_UTF8, 0, buf, 1, mb, sizeof(mb), NULL, NULL);
-  if (m <= 0)
-    return 0;
-  return (int)(unsigned char)mb[0];
+  if (n == 2 && buf[0] >= 0xD800 && buf[0] <= 0xDBFF && buf[1] >= 0xDC00 &&
+      buf[1] <= 0xDFFF)
+    return (int)(0x10000 + (((buf[0] - 0xD800) << 10) | (buf[1] - 0xDC00)));
+  return (int)buf[0];
 }

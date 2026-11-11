@@ -14,7 +14,6 @@
 static HWND g_prev_fg = NULL;
 static BOOL old_track = FALSE;
 static BOOL track_saved = FALSE;
-static HWND pending_restore = NULL;
 
 static void CALLBACK win32_reenable_track_proc(HWND hwnd, UINT msg, UINT_PTR id,
                                                DWORD time) {
@@ -107,8 +106,6 @@ void Platform_PromptPopupHideWindow(Popup *self) {
     self->handle = WH_NULL;
 
   if (g_prev_fg && IsWindow(g_prev_fg)) {
-    HWND target = g_prev_fg;
-    pending_restore = target;
     if (track_saved && old_track)
       SetTimer(NULL, 0xC0DF, 800, win32_reenable_track_proc);
     else
