@@ -7,7 +7,7 @@
 #include "core/types/window.h"
 #include "core/types.h"
 #include "platform/platform.h"
-#include "core/hotkey_string.h"
+#include "core/hotkey_manager.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_text.h"
 #include "core/types/keys.h"
@@ -726,7 +726,7 @@ bool FileWalk_AllFilesFromDir(const char *dir_path,
 
 #include "core/types/keys.h"
 #include "core/types/window.h"
-#include "core/hotkey_pending.h"
+#include "core/hotkey_manager.h"
 
 bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
   if (!key || key->text_len <= 0)

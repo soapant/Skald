@@ -1,7 +1,18 @@
 #ifndef HOTKEY_MANAGER_H
 #define HOTKEY_MANAGER_H
 
+#include <stdbool.h>
 #include "helpers/helpers_hotkey.h"
+#include "core/types/keys.h"
+
+#define HOTKEY_STRING_MAX_LEN 64
+
+bool HotkeyString_Parse(const char *str, HotkeyKey *out);
+bool HotkeyString_Format(HotkeyKey key, char *out, int out_size);
+
+extern int pending_hotkey_vk;
+extern int pending_hotkey_mod;
+extern long pending_hotkey_timeMs;
 
 bool hotkey_register_internal(HotkeyBinding binding);
 bool hotkey_unregister_internal(int vk_code, int modifiers);

@@ -13,7 +13,7 @@
 #include "platform/platform.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
-#include "core/hotkey_string.h"
+#include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
 #include "deps/log.h"
 #include "helpers/helpers_hotkey.h"
