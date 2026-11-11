@@ -538,7 +538,8 @@ static void manifest_parse(const char *name, FeatureManifest *m) {
   snprintf(m->name, sizeof(m->name), "%s", name);
 
   char path[512];
-  manifest_path(name, path, sizeof(path));
+  if (!manifest_path(name, path, sizeof(path)))
+    return;
   FILE *f = fopen(path, "rb");
   if (!f)
     return;

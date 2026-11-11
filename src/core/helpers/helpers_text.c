@@ -39,11 +39,25 @@ convert_into_hotkey_binding(char *hotkey_string,
     output.blacklist_count = cnt;
 
     if (cnt > 0) {
-
-      output.blacklist = malloc(sizeof(char *) * cnt);
+      output.blacklist = (char **)calloc((size_t)cnt, sizeof(char *));
+      if (!output.blacklist) {
+        log_error("convert_into_hotkey_binding: blacklist alloc failed (%d)",
+                  cnt);
+        output.blacklist_count = 0;
+        return output;
+      }
       for (int i = 0; i < cnt; i++) {
-
         output.blacklist[i] = strdup(optional_blacklistedwindows[i]);
+        if (!output.blacklist[i]) {
+          log_error("convert_into_hotkey_binding: strdup failed for entry %d",
+                    i);
+          for (int j = 0; j < i; j++)
+            free(output.blacklist[j]);
+          free(output.blacklist);
+          output.blacklist = NULL;
+          output.blacklist_count = 0;
+          return output;
+        }
       }
     } else {
       output.blacklist = NULL;
@@ -803,24 +817,26 @@ bool String_EqualsCI(const char *a, const char *b) {
 
 void Url_BuildSearchUrl(const char *engine, const char *query, char *out,
                         size_t cap) {
-  char encoded[2048] = {0};
+  if (!out || cap == 0)
+    return;
+  char encoded[2048];
   const char *src = query ? query : "";
   char *dst = encoded;
-  while (*src && (size_t)(dst - encoded) < sizeof(encoded) - 1) {
-    if (*src == ' ') {
+  char *end = encoded + sizeof(encoded) - 1;
+  static const char hex[] = "0123456789ABCDEF";
+  while (*src && dst < end) {
+    unsigned char c = (unsigned char)*src;
+    bool keep = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' ||
+                c == '~';
+    if (keep) {
+      *dst++ = (char)c;
+    } else if (dst + 3 <= end) {
       *dst++ = '%';
-      *dst++ = '2';
-      *dst++ = '0';
-    } else if (*src == '&') {
-      *dst++ = '%';
-      *dst++ = '2';
-      *dst++ = '6';
-    } else if (*src == '?') {
-      *dst++ = '%';
-      *dst++ = '3';
-      *dst++ = 'F';
+      *dst++ = hex[(c >> 4) & 0xF];
+      *dst++ = hex[c & 0xF];
     } else {
-      *dst++ = *src;
+      break;
     }
     src++;
   }

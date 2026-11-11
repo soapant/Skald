@@ -278,9 +278,12 @@ char *Platform_GetClipboardEntry() {
 }
 
 bool Platform_PasteContent(char *content) {
-  log_info("Platform_PasteContent content='%s'", content ? content : "");
-  ;
-  return Wm_Paste(content);
+  log_info("Platform_PasteContent content length=%zu",
+           content ? strlen(content) : 0);
+  char *result = Wm_Paste(content);
+  bool ok = result != NULL;
+  free(result);
+  return ok;
 }
 
 bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,

@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 static pthread_mutex_t kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 bool kwin_is_active(void) {
@@ -56,6 +57,18 @@ static void kwin_ensure_bus(void) {
 
 static char kwin_qdbus[64] = {0};
 
+static int kwin_make_temp_js(char *path, size_t path_cap) {
+  char tmpl[96];
+  snprintf(tmpl, sizeof(tmpl), "/tmp/skald_kwin_XXXXXX.js");
+  int fd = mkstemp(tmpl);
+  if (fd < 0) {
+    log_error("kwin temp JS failed: %s", strerror(errno));
+    return -1;
+  }
+  snprintf(path, path_cap, "%s", tmpl);
+  return fd;
+}
+
 static char *kwin_qdbus_call(const char *args) {
 
   kwin_ensure_bus();
@@ -73,18 +86,28 @@ static char *kwin_qdbus_call(const char *args) {
 
 static bool kwin_run_script_inner(const char *body) {
 
-  FILE *f = fopen("/tmp/skald_kwin_do.js", "w");
-  if (!f)
+  char js_path[96] = {0};
+  int fd = kwin_make_temp_js(js_path, sizeof(js_path));
+  if (fd < 0)
     return false;
+  FILE *f = fdopen(fd, "w");
+  if (!f) {
+    close(fd);
+    unlink(js_path);
+    return false;
+  }
   fputs(body, f);
   fclose(f);
   char *pre = kwin_qdbus_call(
       "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript skald");
   if (pre)
     free(pre);
-  char *out = kwin_qdbus_call(
-      "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "
-      "/tmp/skald_kwin_do.js skald");
+  char load[256];
+  snprintf(load, sizeof(load),
+           "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript %s skald",
+           js_path);
+  char *out = kwin_qdbus_call(load);
+  unlink(js_path);
   if (!out || kwin_has_error(out)) {
     if (out)
       free(out);
@@ -173,19 +196,26 @@ static bool kwin_q_load(void) {
       free(pre);
     kwin_q_name[0] = '\0';
   }
-  FILE *f = fopen("/tmp/skald_kwin_q.js", "w");
-  if (!f)
+  char js_path[96] = {0};
+  int fd = kwin_make_temp_js(js_path, sizeof(js_path));
+  if (fd < 0)
     return false;
+  FILE *f = fdopen(fd, "w");
+  if (!f) {
+    close(fd);
+    unlink(js_path);
+    return false;
+  }
   fputs(kwin_q_body, f);
   fclose(f);
   for (int round = 0; round < 3; round++) {
     snprintf(kwin_q_name, sizeof(kwin_q_name), "skaldq_%d_%u", (int)getpid(),
              ++kwin_q_seq);
-    char load[256];
+    char load[512];
     snprintf(load, sizeof(load),
              "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "
-             "/tmp/skald_kwin_q.js %s",
-             kwin_q_name);
+             "%s %s",
+             js_path, kwin_q_name);
     char *out = kwin_qdbus_call(load);
     if (!out || kwin_has_error(out)) {
       log_error("kwin q load failed out='%s'", out ? out : "null");
@@ -205,10 +235,12 @@ static bool kwin_q_load(void) {
        If the script is actually broken the snapshot's own journal retry
        fails and clears kwin_q_loaded, so this self-corrects. */
     kwin_q_loaded = true;
+    unlink(js_path);
     return true;
   }
   kwin_q_loaded = false;
   kwin_q_name[0] = '\0';
+  unlink(js_path);
   return false;
 }
 
@@ -388,11 +420,15 @@ char *paste_kwin(char *content) {
   }
   if (!kwin_is_active())
     return NULL;
-  char buffer[100];
-  snprintf(buffer, sizeof(buffer), "wtype %s", content);
-  char *out = Platform_RunTerminalCommand(buffer, false);
+  const char *argv[] = {"wtype", content, NULL};
+  int status = 0;
+  char *out = Platform_RunArgvCapture(argv, NULL, &status);
+  if (status == 127) {
+    free(out);
+    out = NULL;
+  }
   if (!out)
-    log_error("content='%s'", content ? content : "null");
+    log_error("paste via wtype failed");
   return out;
 }
 

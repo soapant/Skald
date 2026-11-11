@@ -7,6 +7,7 @@
 
 #include "core/types/window.h"
 #include "platform/platform.h"
+#include "deps/log.h"
 
 typedef struct {
   void *ctx;
@@ -17,10 +18,16 @@ static ThreadEntry *threads = NULL;
 static int thread_count = 0;
 static int thread_cap = 0;
 static void *thread_mtx = NULL;
+static bool thread_mtx_failed = false;
 
 static void thread_reg_lock(void) {
-  if (!thread_mtx)
+  if (!thread_mtx && !thread_mtx_failed) {
     thread_mtx = Platform_MutexCreate();
+    if (!thread_mtx) {
+      thread_mtx_failed = true;
+      log_error("thread_registry: mutex creation failed; registry will run unsynchronized");
+    }
+  }
   if (thread_mtx)
     Platform_MutexLock(thread_mtx);
 }

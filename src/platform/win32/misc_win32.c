@@ -61,6 +61,17 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   if (!exe_name || !*exe_name)
     return false;
 
+  for (const char *p = exe_name; *p; p++) {
+    char c = *p;
+    bool ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+              (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-';
+    if (!ok) {
+      log_error("Platform_TerminateProcessByName: refusing unsafe name '%s'",
+                exe_name);
+      return false;
+    }
+  }
+
   char cmd[512];
   const char *ext = strrchr(exe_name, '.');
 
@@ -258,7 +269,8 @@ bool Platform_PasteContent(char *content) {
   }
 
   free(inputs);
-  log_info("Platform_PasteContent content='%s'", content ? content : "");
+  log_info("Platform_PasteContent content length=%zu",
+           content ? strlen(content) : 0);
   return success;
 }
 const char *Platform_GetRealHome(void) {
@@ -322,8 +334,8 @@ bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
 }
 
 bool Platform_AtomicRename(const char *old_path, const char *new_path) {
-  remove(new_path);
-  return MoveFileExA(old_path, new_path, MOVEFILE_REPLACE_EXISTING) != 0;
+  return MoveFileExA(old_path, new_path,
+                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
 }
 
 int64_t Platform_TimerNowTicks(void) {

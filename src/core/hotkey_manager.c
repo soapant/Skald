@@ -27,6 +27,16 @@ static int hotkey_total = 0;
 static int hotkey_capacity = 0;
 static bool hotkeys_suspended = false;
 
+static void hotkey_binding_free_blacklist(HotkeyBinding *b) {
+  if (!b)
+    return;
+  for (int i = 0; i < b->blacklist_count; i++)
+    free(b->blacklist[i]);
+  free(b->blacklist);
+  b->blacklist = NULL;
+  b->blacklist_count = 0;
+}
+
 void hotkey_set_suspended(bool suspended) { hotkeys_suspended = suspended; }
 
 #define HOTKEY_PENDING_MAX 64
@@ -108,10 +118,7 @@ static unsigned long long hotkey_now_ms(void) {
 }
 
 static int hotkey_repeat_interval_ms(void) {
-  int ms = 50;
-  if (ms < HOTKEY_HOLD_MIN_INTERVAL_MS)
-    ms = HOTKEY_HOLD_MIN_INTERVAL_MS;
-  return ms;
+  return 50;
 }
 
 static int hotkey_hold_delay_ms(void) {
@@ -239,8 +246,6 @@ void hotkey_drain_pending(void) {
       break;
     if (fn_ud)
       fn_ud(ud);
-    else if (ud)
-      ((HotkeyCallbackUd)fn)(ud); /* legacy raw sk_register casts */
     else
       fn();
   }
@@ -347,6 +352,7 @@ bool hotkey_register_internal(HotkeyBinding binding) {
   for (int i = 0; i < hotkey_total; i++) {
     if (hotkeys[i].vk_code == binding.vk_code &&
         hotkeys[i].modifiers == binding.modifiers) {
+      hotkey_binding_free_blacklist(&hotkeys[i]);
       hotkeys[i] = binding;
       return true;
     }
@@ -368,6 +374,7 @@ bool hotkey_unregister_internal(int vk_code, int modifiers) {
   bool found = false;
   for (int i = 0; i < hotkey_total; i++) {
     if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers) {
+      hotkey_binding_free_blacklist(&hotkeys[i]);
       found = true;
       continue;
     }
@@ -386,6 +393,7 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
     if (Owner_ModuleMatches(hotkeys[i].owner, path_a, path_b)) {
       log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)",
                hotkeys[i].vk_code, hotkeys[i].modifiers);
+      hotkey_binding_free_blacklist(&hotkeys[i]);
       continue;
     }
     hotkeys[n++] = hotkeys[i];

@@ -113,11 +113,15 @@ char *paste_sway(char *content) {
     log_error("content is NULL");
     return NULL;
   }
-  char buffer[100];
-  snprintf(buffer, sizeof(buffer), "wtype %s", content);
-  char *out = Platform_RunTerminalCommand(buffer, false);
+  const char *argv[] = {"wtype", content, NULL};
+  int status = 0;
+  char *out = Platform_RunArgvCapture(argv, NULL, &status);
+  if (status == 127) {
+    free(out);
+    out = NULL;
+  }
   if (!out)
-    log_error("content='%s'", content ? content : "null");
+    log_error("paste via wtype failed");
   return out;
 }
 bool succeded_sway(char *output) {
@@ -209,28 +213,31 @@ bool focus_window_title_sway(char *title) {
       *d++ = *s++;
   }
   *d = '\0';
-  char cmd[1200];
-  snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", escaped);
-  if (succeded_sway(Platform_RunTerminalCommand(cmd, false)))
-    return true;
   char low[1024];
   strncpy(low, escaped, sizeof(low) - 1);
   low[sizeof(low) - 1] = '\0';
   if (low[0])
     low[0] = tolower((unsigned char)low[0]);
-  snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", low);
-  if (succeded_sway(Platform_RunTerminalCommand(cmd, false)))
-    return true;
-  if (escaped[0]) {
-    char up[1024];
-    strncpy(up, escaped, sizeof(up) - 1);
-    up[sizeof(up) - 1] = '\0';
+  char up[1024];
+  strncpy(up, escaped, sizeof(up) - 1);
+  up[sizeof(up) - 1] = '\0';
+  if (up[0])
     up[0] = toupper((unsigned char)up[0]);
-    snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", up);
-    if (succeded_sway(Platform_RunTerminalCommand(cmd, false)))
+  const char *targets[3] = {escaped, NULL, NULL};
+  if (low[0])
+    targets[1] = low;
+  if (up[0])
+    targets[2] = up;
+  for (int i = 0; i < 3; i++) {
+    if (!targets[i] || !targets[i][0])
+      continue;
+    char criteria[1200];
+    snprintf(criteria, sizeof(criteria), "[title=\"%s\"] focus", targets[i]);
+    const char *argv[] = {"swaymsg", criteria, NULL};
+    if (succeded_sway(Platform_RunArgvCapture(argv, NULL, NULL)))
       return true;
   }
-  log_error("title='%s'", title ? title : "null");
+  log_warn("sway focus: no title match");
   return false;
 }
 
