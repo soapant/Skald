@@ -81,7 +81,8 @@ struct Widget {
   bool mapped;
   volatile bool dead;
   bool hover_running;
-  void (*hover_thread)(void);
+  void *hover_thread;
+  int hover_epoch;
   PlatformWidget *win;
   WidgetRenderFn render;
   unsigned long frame;

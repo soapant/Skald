@@ -56,13 +56,6 @@ static Widget *widget_find_by_name_locked(const char *name) {
   return NULL;
 }
 
-static Widget *widget_find_by_name(const char *name) {
-  W_LOCK();
-  Widget *found = widget_find_by_name_locked(name);
-  W_UNLOCK();
-  return found;
-}
-
 static void widget_relayout(void);
 
 static PlPos hover_pos = {0, 0};
@@ -81,35 +74,69 @@ static void widget_hover_poll(void) {
   hover_valid = true;
 }
 
+typedef struct {
+  Widget *w;
+  int epoch;
+} HoverJob;
+
 static void *widget_hover_worker(void *ud) {
-  Widget *w = (Widget *)ud;
+  HoverJob *job = (HoverJob *)ud;
+  if (!job)
+    return NULL;
+  Widget *w = job->w;
   if (w && w->on_hover)
     w->on_hover();
-  if (w)
-    w->hover_running = false;
+  if (w) {
+    W_LOCK();
+    if (w->hover_epoch == job->epoch)
+      w->hover_running = false;
+    W_UNLOCK();
+  }
+  free(job);
   return NULL;
 }
 
 static void widget_render_frame(void *ud) {
   Widget *widget = (Widget *)ud;
-  if (!widget || !widget->render || widget->dead)
+  if (!widget)
+    return;
+  W_LOCK();
+  bool dead = widget->dead;
+  WidgetRenderFn render = dead ? NULL : widget->render;
+  int x = widget->x, y = widget->y, w = widget->w, h = widget->h;
+  int pad = widget->pad;
+  bool auto_w = widget->auto_w, auto_h = widget->auto_h;
+  void (*on_hover)(void) = widget->on_hover;
+  bool hover_running = widget->hover_running;
+  W_UNLOCK();
+  if (dead || !render)
     return;
   widget->frame++;
-  bool hoverable = (widget->on_hover != NULL);
+  bool hoverable = (on_hover != NULL);
   if (hoverable) {
     widget_hover_poll();
     bool inside =
-        (widget->x >= 0x7fffffff)
+        (x >= 0x7fffffff)
             ? false
-            : (hover_pos.x >= widget->x &&
-               hover_pos.x < widget->x + widget->w &&
-               hover_pos.y >= widget->y && hover_pos.y < widget->y + widget->h);
-    if (inside && !widget->hovered && widget->on_hover &&
-        !widget->hover_running) {
-      widget->hover_running = true;
-      widget->hover_thread = Platform_ThreadCreate(widget_hover_worker, widget);
-      if (!widget->hover_thread)
-        widget->hover_running = false;
+            : (hover_pos.x >= x && hover_pos.x < x + w && hover_pos.y >= y &&
+               hover_pos.y < y + h);
+    if (inside && !widget->hovered && on_hover && !hover_running) {
+      HoverJob *job = (HoverJob *)calloc(1, sizeof(*job));
+      if (job) {
+        W_LOCK();
+        widget->hover_epoch++;
+        job->w = widget;
+        job->epoch = widget->hover_epoch;
+        widget->hover_running = true;
+        W_UNLOCK();
+        widget->hover_thread = Platform_ThreadCreate(widget_hover_worker, job);
+        if (!widget->hover_thread) {
+          W_LOCK();
+          widget->hover_running = false;
+          W_UNLOCK();
+          free(job);
+        }
+      }
     }
     widget->hovered = inside;
     if (!inside) {
@@ -118,15 +145,15 @@ static void widget_render_frame(void *ud) {
     }
   }
   WidgetState st;
-  st.width = widget->w;
-  st.height = widget->h;
+  st.width = w;
+  st.height = h;
   st.frame = widget->frame;
   st.elapsed = Platform_EndTimer(widget->created_at);
   st.hovered = widget->hovered;
 
   SetDrawOffset(-widget->origin_x, 0);
   BeginMeasure();
-  widget->render(&st);
+  render(&st);
   int mw = 0, mh = 0, mx = 0, my = 0;
   EndMeasure(&mw, &mh);
   GetLastMeasureOrigin(&mx, &my);
@@ -138,13 +165,15 @@ static void widget_render_frame(void *ud) {
     widget_invalidate(widget->win);
   }
 
-  if (widget->auto_w || widget->auto_h) {
-    int nw = (widget->auto_w && mw > 0) ? mw + widget->pad : widget->w;
-    int nh = (widget->auto_h && mh > 0) ? mh + widget->pad : widget->h;
+  if (auto_w || auto_h) {
+    int nw = (auto_w && mw > 0) ? mw + pad : w;
+    int nh = (auto_h && mh > 0) ? mh + pad : h;
 
-    if (nw != widget->w || nh != widget->h) {
+    if (nw != w || nh != h) {
+      W_LOCK();
       widget->w = nw;
       widget->h = nh;
+      W_UNLOCK();
       if (widget_is_valid(widget->win)) {
         Platform_Widget_Resize(widget->win, nw, nh);
       }
@@ -269,6 +298,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     return;
 
   bool matched = false;
+  W_LOCK();
   for (int i = 0; i < widget_count; i++) {
     Widget *w = widgets[i];
     if (!w)
@@ -290,6 +320,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
                 w->name ? w->name : "?");
     }
   }
+  W_UNLOCK();
 
   if (!matched)
     return;
@@ -355,8 +386,10 @@ static void widget_attach_window(void *ud) {
 }
 
 static void widget_apply_geometry(Widget *widget, int x, int y) {
+  W_LOCK();
   widget->x = x;
   widget->y = y;
+  W_UNLOCK();
   if (RenderThread_IsCurrentThread()) {
     widget_attach_window(widget);
     return;
@@ -367,27 +400,40 @@ static void widget_apply_geometry(Widget *widget, int x, int y) {
     return;
 }
 
-static int widget_sort_key(const Widget *widget) {
-  return widget->order_set ? widget->order : widget->seq;
-}
-
 static void widget_relayout(void) {
-  Widget *sorted[WIDGET_MAX];
+  typedef struct {
+    Widget *widget;
+    int w, h;
+    int slot;
+    int monitor;
+    int gap;
+    int key;
+  } LayoutItem;
+  LayoutItem items[WIDGET_MAX];
   int n = 0;
   W_LOCK();
   for (int i = 0; i < widget_count; i++) {
-    if (widgets[i] && !widgets[i]->free_pos)
-      sorted[n++] = widgets[i];
+    Widget *w = widgets[i];
+    if (w && !w->free_pos) {
+      LayoutItem *it = &items[n++];
+      it->widget = w;
+      it->w = w->w;
+      it->h = w->h;
+      it->slot = w->slot;
+      it->monitor = w->monitor;
+      it->gap = w->gap_override;
+      it->key = w->order_set ? w->order : w->seq;
+    }
   }
   W_UNLOCK();
   for (int i = 1; i < n; i++) {
-    Widget *key = sorted[i];
+    LayoutItem key = items[i];
     int k = i - 1;
-    while (k >= 0 && widget_sort_key(sorted[k]) > widget_sort_key(key)) {
-      sorted[k + 1] = sorted[k];
+    while (k >= 0 && items[k].key > key.key) {
+      items[k + 1] = items[k];
       k--;
     }
-    sorted[k + 1] = key;
+    items[k + 1] = key;
   }
 
   typedef struct {
@@ -398,27 +444,27 @@ static void widget_relayout(void) {
   MonSlot ms[WIDGET_SLOT_COUNT][WIDGET_MAX_MONITORS] = {{{0}}};
 
   for (int i = 0; i < n; i++) {
-    Widget *w = sorted[i];
-    if (w->slot < 0 || w->slot >= WIDGET_SLOT_COUNT)
+    LayoutItem *it = &items[i];
+    if (it->slot < 0 || it->slot >= WIDGET_SLOT_COUNT)
       continue;
-    bool from_right = (w->slot == WIDGET_SLOT_TOP_RIGHT ||
-                       w->slot == WIDGET_SLOT_BOTTOM_RIGHT);
+    bool from_right = (it->slot == WIDGET_SLOT_TOP_RIGHT ||
+                       it->slot == WIDGET_SLOT_BOTTOM_RIGHT);
     bool from_top =
-        (w->slot == WIDGET_SLOT_TOP_LEFT || w->slot == WIDGET_SLOT_TOP_RIGHT);
+        (it->slot == WIDGET_SLOT_TOP_LEFT || it->slot == WIDGET_SLOT_TOP_RIGHT);
     int m =
-        (w->monitor > 0 && w->monitor < WIDGET_MAX_MONITORS) ? w->monitor : 0;
-    MonSlot *st = &ms[w->slot][m];
+        (it->monitor > 0 && it->monitor < WIDGET_MAX_MONITORS) ? it->monitor : 0;
+    MonSlot *st = &ms[it->slot][m];
     if (!st->known) {
       if (!Monitor_GeometryAt(m, &st->x, &st->y, &st->w, &st->h))
         Platform_WM_GetMonitorGeometry(&st->x, &st->y, &st->w, &st->h);
       st->cursor = from_right ? st->x + st->w : st->x;
       st->known = true;
     }
-    int g = w->gap_override > 0 ? w->gap_override : WidgetGap;
-    int px = from_right ? st->cursor - w->w : st->cursor;
-    int py = from_top ? st->y : st->y + st->h - w->h;
-    widget_apply_geometry(w, px, py);
-    st->cursor = from_right ? px - g : px + w->w + g;
+    int g = it->gap > 0 ? it->gap : WidgetGap;
+    int px = from_right ? st->cursor - it->w : st->cursor;
+    int py = from_top ? st->y : st->y + st->h - it->h;
+    widget_apply_geometry(it->widget, px, py);
+    st->cursor = from_right ? px - g : px + it->w + g;
   }
 }
 
@@ -443,9 +489,10 @@ Widget *widget_create(const WidgetSpec *spec) {
       widgets[widget_count++] = widget;
     }
   }
-  W_UNLOCK();
-  if (!widget)
+  if (!widget) {
+    W_UNLOCK();
     return NULL;
+  }
 
   {
     char owner_path[512];
@@ -485,6 +532,7 @@ Widget *widget_create(const WidgetSpec *spec) {
   widget->free_pos = (spec->slot == WIDGET_FREE);
   widget->frame = 0;
   widget->created_at = Platform_StartTimer();
+  W_UNLOCK();
 
   if (widget->free_pos) {
     int x = spec->x;
@@ -508,11 +556,13 @@ bool widget_valid(Widget *widget) { return widget != NULL; }
 
 PlPos widget_get_pos(const char *name) {
   PlPos r = {0, 0};
-  Widget *w = widget_find_by_name(name);
+  W_LOCK();
+  Widget *w = widget_find_by_name_locked(name);
   if (w && w->x < 0x7fffffff) {
     r.x = w->x + w->w / 2;
     r.y = w->y + w->h / 2;
   }
+  W_UNLOCK();
   return r;
 }
 
@@ -587,8 +637,10 @@ void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
   if (!widget || base->dead) {
     return;
   }
+  Platform_RenderThreadLock();
   base->fn = fn;
   base->ud = ud;
+  Platform_RenderThreadUnlock();
 }
 
 void widget_invalidate(PlatformWidget *widget) {
