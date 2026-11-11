@@ -1,5 +1,4 @@
 #include "core/skapi.h"
-#include "config.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -139,3 +138,4 @@ SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = "L", .cb = hard, .whitelist = {"anki"});
   sk_register_hotkey(.hotkey = ";", .cb = fuckme, .whitelist = {"anki"});
 }
+

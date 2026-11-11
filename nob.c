@@ -47,6 +47,14 @@
 
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
+#define SDK_CC_FLAGS                                                             \
+  "-std=gnu17", "-DCOBJMACROS", "-I", "build/sdk", "-MMD", "-MP", "-Wall",       \
+      "-Wextra", "-Wno-unused-parameter", "-ggdb"
+#define WIN_SDK_FLAGS                                                            \
+  "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",      \
+      "-I/usr/x86_64-w64-mingw32/include", "-I", "build/sdk", "-MMD", "-MP",      \
+      "-O3", "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
+
 static bool sanitize = false;
 static const char *sanitize_cc = NULL;
 static const char *sanitize_bin = NULL;
@@ -468,20 +476,68 @@ static bool stale(const char *src, const char *obj) {
   return stale_with_dep(src, obj, dep_path(src));
 }
 
+static const char *sdk_files[] = {
+  "config.h",
+  "config_values.h",
+  "core/cc_registry.h",
+  "core/checkbox.h",
+  "core/clipboard_history.h",
+  "core/context.h",
+  "core/skapi.h",
+  "core/skapi_input.h",
+  "core/types.h",
+  "core/types/color.h",
+  "core/types/file.h",
+  "core/types/keys.h",
+  "core/types/prompt.h",
+  "core/types/skapi_types.h",
+  "core/types/window.h",
+  "core/widget_registry.h",
+  "core/window_manager.h",
+  "helpers/helpers_owner.h",
+  "helpers/helpers_render_thread.h",
+  "helpers/helpers_text.h",
+  "helpers/helpers_ui.h",
+  "platform/draw.h",
+  "platform/platform.h",
+  "platform/widget.h",
+};
+
+static bool emit_sdk(void) {
+  const char *dirs[] = {"build/sdk",         "build/sdk/core",
+                        "build/sdk/core/types", "build/sdk/helpers",
+                        "build/sdk/platform"};
+  for (size_t i = 0; i < sizeof(dirs) / sizeof(dirs[0]); ++i) {
+    if (!nob_mkdir_if_not_exists(dirs[i]))
+      return false;
+  }
+  bool ok = true;
+  for (size_t i = 0; i < sizeof(sdk_files) / sizeof(sdk_files[0]); ++i) {
+    char src[512], dst[512];
+    snprintf(src, sizeof(src), "include/%s", sdk_files[i]);
+    snprintf(dst, sizeof(dst), "build/sdk/%s", sdk_files[i]);
+    if (!nob_file_exists(dst) || nob_needs_rebuild1(dst, src) != 0) {
+      if (!nob_copy_file(src, dst))
+        ok = false;
+    }
+  }
+  return ok;
+}
+
 static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
   const char *so = feature_so_path(src);
   if (target_win32) {
-    nob_cmd_append(cmd, CROSS_CC, WIN_CC_FLAGS, "-shared", "-o", so, src,
+    nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS, "-shared", "-o", so, src,
                    "build/win_obj/main.lib.a", WIN_LINK_FLAGS);
   } else {
     append_cc(cmd);
     nob_cc_flags(cmd);
     append_san_flags(cmd);
 #if defined(_WIN32)
-    nob_cmd_append(cmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a",
+    nob_cmd_append(cmd, SDK_CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a",
                    "-MF", feature_dep_path(src), LINK_FLAGS);
 #else
-    nob_cmd_append(cmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF",
+    nob_cmd_append(cmd, SDK_CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF",
                    feature_dep_path(src));
     append_dep_cflags(cmd);
     nob_cmd_append(cmd, "-lX11");
@@ -1442,6 +1498,11 @@ int main(int argc, char **argv) {
 
   if (!nob_mkdir_if_not_exists("build/features"))
     return 1;
+
+  if (!emit_sdk()) {
+    nob_log(NOB_ERROR, "Failed to emit build/sdk");
+    return 1;
+  }
 
   bool any_compiled = false;
   if (!compile_all(&any_compiled))
