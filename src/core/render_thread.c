@@ -59,8 +59,9 @@ void RenderThread_Main(void) {
         snap[i].fn(snap[i].ud);
     }
 
-    long us = (n == 0) ? RT_IDLE_SLEEP_US
-                       : (1000000L / (frame_rate > 0 ? frame_rate : RT_DEFAULT_FPS));
+    long us = (n == 0)
+                  ? RT_IDLE_SLEEP_US
+                  : (1000000L / (frame_rate > 0 ? frame_rate : RT_DEFAULT_FPS));
     if (us > RT_MAX_SLEEP_US)
       us = RT_MAX_SLEEP_US;
     Platform_RenderThreadLock();

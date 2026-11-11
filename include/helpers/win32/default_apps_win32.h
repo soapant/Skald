@@ -7,7 +7,7 @@ const char *win32_terminal_name_from_guid(const char *console_guid,
                                           const char *terminal_guid);
 void win32_default_apps_free_cache(void);
 const char *win32_sm_lookup(int slot, const char *const possibilities[],
-                      size_t count);
+                            size_t count);
 #define SM_SLOTS 8
 
 #endif

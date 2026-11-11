@@ -60,8 +60,7 @@ static int entry_cap;
 static CcEntry *cc_entry_new(void) {
   if (entry_count >= entry_cap) {
     int cap = entry_cap ? entry_cap * 2 : 128;
-    CcEntry *grown =
-        (CcEntry *)realloc(entries, (size_t)cap * sizeof(CcEntry));
+    CcEntry *grown = (CcEntry *)realloc(entries, (size_t)cap * sizeof(CcEntry));
     if (!grown)
       return NULL;
     entries = grown;
@@ -206,8 +205,7 @@ static int cc_hotkey_slot_for(const CcEntry *e) {
   const char *name = e->label;
   int slot = -1;
   for (int i = 0; i < CC_HK_SLOTS; i++)
-    if (cc_hotkey_targets[i][0] &&
-        strcmp(cc_hotkey_targets[i], name) == 0) {
+    if (cc_hotkey_targets[i][0] && strcmp(cc_hotkey_targets[i], name) == 0) {
       slot = i;
       break;
     }
@@ -614,8 +612,7 @@ static void cc_scan_app_dirs(void) {
     if (!p || p[0] == '\0')
       continue;
     sk_get_all_files_from_dir((char *)p, allowed, &tmp,
-                              (char **)ListOfShitToIgnore, true,
-                              xdg_depths[i]);
+                              (char **)ListOfShitToIgnore, true, xdg_depths[i]);
   }
   if (cc_stopping) {
     if (tmp.files)
@@ -742,16 +739,14 @@ static const char *cc_app_map_get(const char *name) {
 }
 
 static bool cc_launch_app(void) {
-  const char *path =
-      cc_staged_label ? cc_app_map_get(cc_staged_label) : NULL;
+  const char *path = cc_staged_label ? cc_app_map_get(cc_staged_label) : NULL;
   if (path && path[0])
     sk_launch_with_args((char *)path, NULL);
   return true;
 }
 
 static bool cc_launch_app_as_admin(void) {
-  const char *path =
-      cc_staged_label ? cc_app_map_get(cc_staged_label) : NULL;
+  const char *path = cc_staged_label ? cc_app_map_get(cc_staged_label) : NULL;
   if (path && path[0])
     sk_launch_with_args_as_admin((char *)path, NULL);
   return true;
@@ -1571,8 +1566,7 @@ static bool cc_reg_select(int type) {
   case 1: {
     ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action),
                      cc_main_selected);
-    ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target),
-                     cc_main_selected);
+    ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target), cc_main_selected);
     sk_disable_global_hotkeys();
     sk_subwindow(.title = "Alias Reg", .x = (cc_width / 2) + 240,
                  .y = (cc_height / 2) + 150, .w = 200, .h = 100,
@@ -1686,8 +1680,7 @@ static void cc_render(PromptState *state) {
     const char *row_icon = (e && e->icon[0]) ? e->icon : NULL;
     int icon_size = FontSize;
     int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
-    if (!row_icon && cc_calc_label[0] &&
-        strcmp(ctx.text, cc_calc_label) == 0) {
+    if (!row_icon && cc_calc_label[0] && strcmp(ctx.text, cc_calc_label) == 0) {
       row_icon = CC_CALC_ROW_ICON;
     }
     if (row_icon) {

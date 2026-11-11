@@ -268,8 +268,8 @@ void x11_raw_line_flush(void) {
 bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
                        FontHandle fh, bool owned, int fontsize) {
   if (raw_count > 0) {
-    bool same = (y == raw_y) && (fontsize == raw_fontsize) &&
-                (raw_xd == g_draw_xd);
+    bool same =
+        (y == raw_y) && (fontsize == raw_fontsize) && (raw_xd == g_draw_xd);
     if (same && raw_count >= 2)
       same = (x == raw_x0 + raw_count * raw_pitch);
     if (same && raw_count == 1) {

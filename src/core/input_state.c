@@ -151,7 +151,7 @@ static void gkey_lock_init(void) {
 #define GKEY_LOCK()                                                            \
   do {                                                                         \
     gkey_lock_init();                                                          \
-    Platform_MutexLock(gkey_mutex);                                          \
+    Platform_MutexLock(gkey_mutex);                                            \
   } while (0)
 #define GKEY_UNLOCK() Platform_MutexUnlock(gkey_mutex)
 
@@ -231,7 +231,7 @@ static void gmouse_lock_init(void) {
 #define GMOUSE_LOCK()                                                          \
   do {                                                                         \
     gmouse_lock_init();                                                        \
-    Platform_MutexLock(gmouse_mutex);                                        \
+    Platform_MutexLock(gmouse_mutex);                                          \
   } while (0)
 #define GMOUSE_UNLOCK() Platform_MutexUnlock(gmouse_mutex)
 
@@ -297,8 +297,7 @@ unsigned long GlobalMouse_Dropped(void) {
 }
 
 void Input_UpdateMouseButton(int button, bool down) {
-  if (button < 0 ||
-      button >= (int)(sizeof(mbtn_down) / sizeof(mbtn_down[0])))
+  if (button < 0 || button >= (int)(sizeof(mbtn_down) / sizeof(mbtn_down[0])))
     return;
   GMOUSE_LOCK();
   mbtn_down[button] = down;
@@ -306,8 +305,7 @@ void Input_UpdateMouseButton(int button, bool down) {
 }
 
 bool Input_MouseStateDown(int button) {
-  if (button < 0 ||
-      button >= (int)(sizeof(mbtn_down) / sizeof(mbtn_down[0])))
+  if (button < 0 || button >= (int)(sizeof(mbtn_down) / sizeof(mbtn_down[0])))
     return false;
   GMOUSE_LOCK();
   bool d = mbtn_down[button];

@@ -567,8 +567,8 @@ static bool feature_list_add(const char *name, void (*cb)(void),
   if (idx < 0) {
     if (feature_order_count >= feature_order_cap) {
       int ncap = feature_order_cap ? feature_order_cap * 2 : 32;
-      FeatureReg **grown = (FeatureReg **)realloc(
-          feature_order, (size_t)ncap * sizeof(*grown));
+      FeatureReg **grown =
+          (FeatureReg **)realloc(feature_order, (size_t)ncap * sizeof(*grown));
       if (!grown)
         return false;
       feature_order = grown;
@@ -702,8 +702,7 @@ int sk_get_feature_list_with_icons(const char **out_names,
   }
   if (icon_ptrs) {
     for (int i = 0; i < n; i++)
-      icon_ptrs[i] =
-          feature_order[i]->icon[0] ? feature_order[i]->icon : NULL;
+      icon_ptrs[i] = feature_order[i]->icon[0] ? feature_order[i]->icon : NULL;
     if (out_icons)
       *out_icons = icon_ptrs;
   } else {
@@ -713,10 +712,10 @@ int sk_get_feature_list_with_icons(const char **out_names,
   return n;
 }
 
-char *sk_get_icon_path(const char *app_path_path) {
-  if (!app_path_path)
+char *sk_get_icon_path(const char *path) {
+  if (!path)
     return NULL;
-  return Platform_GetIconPath((char *)app_path_path);
+  return Platform_GetIconPath((char *)path);
 }
 
 int sk_get_icon_size(const char *icon_path) {
@@ -1210,8 +1209,8 @@ char *ski_popup(const PopupSpec *spec) {
 
 static __thread ListBoxInfo *sk_list_lb;
 static __thread PlListSpec sk_list_spec;
-static __thread int sk_list_y0, sk_list_itemH, sk_list_visible,
-    sk_list_cur, sk_list_h;
+static __thread int sk_list_y0, sk_list_itemH, sk_list_visible, sk_list_cur,
+    sk_list_h;
 static __thread int sk_list_bx, sk_list_bw, sk_list_fw, sk_list_fh;
 
 unsigned long sk_listbox_get_current_standard_color(void) {
@@ -1658,7 +1657,7 @@ static bool sk_listbox_next_common(SkListItemCtx *out) {
         (PlDrawPromptSeparatorSpec){.y = sk_list_y0, .width = sk_list_fw});
   bool sel = (idx == sk_list_lb->selected_index);
   Platform_ListboxBackendDrawSelection(sk_list_bx, sk_list_bw, y, sk_list_itemH,
-                               sk_list_fw, sk_list_fh, sel);
+                                       sk_list_fw, sk_list_fh, sel);
   ListBox_SetRowHScroll(sel ? sk_list_lb->text_hscroll : 0);
   out->idx = idx;
   out->selected = sel;
@@ -1674,8 +1673,8 @@ static bool sk_listbox_next_common(SkListItemCtx *out) {
 void sk_listbox_end(void) {
   ListBox_SetRowHScroll(0);
   if (PromptListBottomMargin() > 0 && sk_list_y0 >= 0) {
-    DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-        .y = sk_list_y0 + sk_list_h, .width = sk_list_fw});
+    DrawPromptSeparator((PlDrawPromptSeparatorSpec){.y = sk_list_y0 + sk_list_h,
+                                                    .width = sk_list_fw});
   }
   Platform_ListboxBackendEnd();
   sk_list_lb = NULL;
@@ -2726,8 +2725,7 @@ static bool sk_cc_dep_seen(const char *owner) {
 static void sk_cc_dep_mark(const char *owner) {
   if (cc_dep_owner_count >= SK_CC_DEP_OWNERS)
     return;
-  snprintf(cc_dep_owners[cc_dep_owner_count++], OWNER_PATH_MAX, "%s",
-           owner);
+  snprintf(cc_dep_owners[cc_dep_owner_count++], OWNER_PATH_MAX, "%s", owner);
 }
 
 static const char *sk_cc_dup(char *dst, size_t cap, const char *src) {
@@ -2849,8 +2847,8 @@ bool ski_add_alias(const SkAliasSpec *spec) {
       return true;
     }
   }
-  snprintf(alias_alias[alias_count], sizeof(alias_alias[alias_count]),
-           "%s", spec->alias);
+  snprintf(alias_alias[alias_count], sizeof(alias_alias[alias_count]), "%s",
+           spec->alias);
   snprintf(g_alias_target[alias_count], sizeof(g_alias_target[alias_count]),
            "%s", spec->target);
   alias_count++;
@@ -2868,8 +2866,7 @@ bool ski_remove_alias(const char *alias) {
       continue;
     }
     if (n != i) {
-      snprintf(alias_alias[n], sizeof(alias_alias[n]), "%s",
-               alias_alias[i]);
+      snprintf(alias_alias[n], sizeof(alias_alias[n]), "%s", alias_alias[i]);
       snprintf(g_alias_target[n], sizeof(g_alias_target[n]), "%s",
                g_alias_target[i]);
     }

@@ -53,9 +53,9 @@ void x11_release_prompt_buffer(Display *dpy, Window win) {
 static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
                              Visual *vis, Colormap cmap) {
 
-  if (pbuf_xd && pbuf_pm && pbuf_dpy == dpy && pbuf_win == win &&
-      pbuf_w == w && pbuf_h == h && pbuf_depth == depth &&
-      pbuf_vis == vis && pbuf_cmap == cmap) {
+  if (pbuf_xd && pbuf_pm && pbuf_dpy == dpy && pbuf_win == win && pbuf_w == w &&
+      pbuf_h == h && pbuf_depth == depth && pbuf_vis == vis &&
+      pbuf_cmap == cmap) {
     return true;
   }
   x11_pbuf_drop();

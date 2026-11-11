@@ -72,7 +72,7 @@ static void hotkey_queue_init(void) {
 #define HOTKEY_Q_LOCK()                                                        \
   do {                                                                         \
     hotkey_queue_init();                                                       \
-    Platform_MutexLock(q_mutex);                                             \
+    Platform_MutexLock(q_mutex);                                               \
   } while (0)
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(q_mutex)
 static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
@@ -183,7 +183,8 @@ static void hotkey_hold_begin(int vk, int modifiers) {
   HOTKEY_Q_UNLOCK();
 }
 
-static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code, int modifiers);
+static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
+                                   int modifiers);
 
 static void hotkey_tick_holds(void) {
   unsigned long long now = hotkey_now_ms();
@@ -352,8 +353,7 @@ bool hotkey_register_internal(HotkeyBinding binding) {
   }
   if (hotkey_total >= hotkey_capacity) {
     int new_cap = hotkey_capacity == 0 ? 16 : hotkey_capacity * 2;
-    HotkeyBinding *new_arr =
-        realloc(hotkeys, new_cap * sizeof(HotkeyBinding));
+    HotkeyBinding *new_arr = realloc(hotkeys, new_cap * sizeof(HotkeyBinding));
     if (!new_arr)
       return false;
     hotkeys = new_arr;
@@ -367,8 +367,7 @@ bool hotkey_unregister_internal(int vk_code, int modifiers) {
   int n = 0;
   bool found = false;
   for (int i = 0; i < hotkey_total; i++) {
-    if (hotkeys[i].vk_code == vk_code &&
-        hotkeys[i].modifiers == modifiers) {
+    if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers) {
       found = true;
       continue;
     }

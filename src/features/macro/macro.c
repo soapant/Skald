@@ -303,10 +303,9 @@ static bool macro_save(const char *name) {
   off += (size_t)snprintf(buf + off, cap - off, "%d\n", event_count);
   for (int i = 0; i < event_count; i++) {
     off += (size_t)snprintf(
-        buf + off, cap - off, "%d %d %d %d %d %d %d %d %llu\n",
-        events[i].type, events[i].a, events[i].b, events[i].x,
-        events[i].y, events[i].mods, events[i].down ? 1 : 0,
-        events[i].repeat ? 1 : 0, events[i].t_us);
+        buf + off, cap - off, "%d %d %d %d %d %d %d %d %llu\n", events[i].type,
+        events[i].a, events[i].b, events[i].x, events[i].y, events[i].mods,
+        events[i].down ? 1 : 0, events[i].repeat ? 1 : 0, events[i].t_us);
   }
   bool ok = sk_write_string_to_file(filename, buf);
   free(buf);

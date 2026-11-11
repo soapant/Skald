@@ -25,7 +25,6 @@
 #include "core/checkbox.h"
 #include "core/draw_state.h"
 
-
 static ListBoxInfo *win32_get_lb_from_popup(HWND hPopup) {
   if (hPopup && IsWindow(hPopup)) {
     PromptState *state = win32_prompt_state_from_hwnd(hPopup);

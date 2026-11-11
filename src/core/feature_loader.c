@@ -274,7 +274,7 @@ static void feature_mutex_init(void) {
 #define LOCK()                                                                 \
   do {                                                                         \
     feature_mutex_init();                                                      \
-    Platform_MutexLock(feature_mutex);                                       \
+    Platform_MutexLock(feature_mutex);                                         \
   } while (0)
 #define UNLOCK() Platform_MutexUnlock(feature_mutex)
 
@@ -923,8 +923,7 @@ void FeatureLoader_ReloadAll(void) {
       {
         char loaded[512];
         fl_copy(loaded, sizeof(loaded),
-                features[i].uniq[0] ? features[i].uniq
-                                      : features[i].path);
+                features[i].uniq[0] ? features[i].uniq : features[i].path);
         retire_old_lib(features[i].handle, features[i].uniq, loaded);
       }
       features[i].handle = 0;
