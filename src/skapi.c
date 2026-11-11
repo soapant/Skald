@@ -1117,6 +1117,10 @@ SkWindowHandle sk_get_window_id(const char *title) {
   return Platform_GetWindowByTitle(title);
 }
 
+SkWindowHandle sk_get_window_by_root_atom(const char *atom) {
+  return Platform_GetWindowByRootAtom(atom);
+}
+
 bool sk_window_set_string_property(SkWindowHandle window, const char *atom,
                                    const char *value) {
   return Platform_SetWindowStringProperty(window, atom, value);

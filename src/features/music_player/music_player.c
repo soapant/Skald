@@ -3,6 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+static SkWindowHandle music_window(void) {
+#if defined(__linux__)
+  return sk_get_window_by_root_atom("_MP_PLAYER_WINDOW");
+#else
+  return sk_get_window_id("Music Player");
+#endif
+}
+
 #if defined(_WIN32)
 const char *MusicPlayerPath = "C:/Projects/Music Player/music_player.exe";
 #elif defined(__linux__)
@@ -30,7 +38,7 @@ void music_refresh_callback(PromptState *state) {
   sk_populate_listbox(state->lb, state->eb->filter, s_music_items, (int)n);
 }
 bool play_music(char *name) {
-  SkWindowHandle wh = sk_get_window_id("Music Player");
+  SkWindowHandle wh = music_window();
   if (!WH_EQUALS(wh, WH_NULL)) {
     bool ok = sk_window_set_string_property(wh, "_MP_TRACK", name);
 #if defined(__linux__)
@@ -61,7 +69,7 @@ bool music_enter_callback(PromptState *state) {
 }
 
 static void music_cmd(int cmd) {
-  SkWindowHandle wh = sk_get_window_id("Music Player");
+  SkWindowHandle wh = music_window();
   if (!WH_EQUALS(wh, WH_NULL))
     sk_window_send_message(wh, "_MP_PLAYER_CMD", cmd);
 }
