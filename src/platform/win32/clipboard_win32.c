@@ -34,20 +34,31 @@ int Platform_CopyToClipboard(const char *text) {
     return 0;
   }
 
-  HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+  int wlen = MultiByteToWideChar(CP_UTF8, 0, clean_text, -1, NULL, 0);
+  if (wlen <= 0) {
+    free(clean_text);
+    return 0;
+  }
+  size_t bytes = (size_t)wlen * sizeof(wchar_t);
+  HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, bytes);
   if (hMem == NULL) {
     free(clean_text);
     return 0;
   }
 
-  char *pMem = (char *)GlobalLock(hMem);
+  wchar_t *pMem = (wchar_t *)GlobalLock(hMem);
   if (pMem == NULL) {
     GlobalFree(hMem);
     free(clean_text);
     return 0;
   }
 
-  memcpy(pMem, clean_text, len + 1);
+  if (MultiByteToWideChar(CP_UTF8, 0, clean_text, -1, pMem, wlen) !=
+      wlen) {
+    GlobalFree(hMem);
+    free(clean_text);
+    return 0;
+  }
   GlobalUnlock(hMem);
   free(clean_text);
 
@@ -62,7 +73,7 @@ int Platform_CopyToClipboard(const char *text) {
     return 0;
   }
 
-  if (SetClipboardData(CF_TEXT, hMem) == NULL) {
+  if (SetClipboardData(CF_UNICODETEXT, hMem) == NULL) {
     GlobalFree(hMem);
     CloseClipboard();
     return 0;

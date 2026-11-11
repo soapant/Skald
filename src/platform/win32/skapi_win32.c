@@ -404,13 +404,17 @@ static void net_invalidate_adapter(void) {
 
 static void net_refresh(void) {
 
+  net_lock();
   net_cached = SK_NET_OFFLINE;
+  net_unlock();
   SkNetAdapter a = net_active_adapter();
   if (a.valid) {
+    net_lock();
     if (a.if_type == IF_TYPE_IEEE80211)
       net_cached = SK_NET_WIFI;
     else if (a.if_type == IF_TYPE_ETHERNET_CSMACD)
       net_cached = SK_NET_ETHERNET;
+    net_unlock();
   }
 }
 

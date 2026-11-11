@@ -9,6 +9,10 @@
 #include "helpers/win32/subclasses_win32.h"
 #include "platform/platform.h"
 #include "helpers/win32/input_core_win32.h"
+#include "deps/log.h"
+
+static HICON s_tray_icon = NULL;
+static bool s_tray_icon_fallback = false;
 
 LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                 LPARAM lParam) {
@@ -27,9 +31,20 @@ LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
 
     nid.hIcon = (HICON)LoadImageA(NULL, expanded_icon, IMAGE_ICON, 0, 0,
                                   LR_LOADFROMFILE | LR_DEFAULTSIZE);
+    if (!nid.hIcon) {
+      log_error("tray: LoadImageA failed for '%s', using generic icon",
+                expanded_icon[0] ? expanded_icon : IconPath);
+      nid.hIcon = LoadIconA(NULL, IDI_APPLICATION);
+      s_tray_icon_fallback = true;
+    } else {
+      s_tray_icon_fallback = false;
+    }
+    s_tray_icon = nid.hIcon;
     lstrcpy(nid.szTip, "Switch Window");
 
-    Shell_NotifyIcon(NIM_ADD, &nid);
+    if (!Shell_NotifyIcon(NIM_ADD, &nid)) {
+      log_error("tray: Shell_NotifyIcon(NIM_ADD) failed (%lu)", GetLastError());
+    }
     break;
   }
 
@@ -87,6 +102,10 @@ LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     nid.hWnd = hwnd;
     nid.uID = ID_TRAY_ICON;
     Shell_NotifyIcon(NIM_DELETE, &nid);
+    if (s_tray_icon && !s_tray_icon_fallback) {
+      DestroyIcon(s_tray_icon);
+    }
+    s_tray_icon = NULL;
 
     PostQuitMessage(0);
     break;

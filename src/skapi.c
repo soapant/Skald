@@ -2969,16 +2969,19 @@ void sk_reload_all_features(void) {
       remove(tmp);
       continue;
     }
-    char *outStr = sk_run_terminal_command(cmd);
+#if defined(_WIN32)
+    const char *argv[] = {"cmd", "/c", cmd, NULL};
+#else
+    const char *argv[] = {"sh", "-c", cmd, NULL};
+#endif
+    int status = -1;
+    char *outStr = sk_run_argv(argv, NULL, &status);
     bool ok = false;
     if (outStr) {
-      bool failed = strstr(outStr, "error:") || strstr(outStr, "error C") ||
-                    strstr(outStr, "error LNK") ||
-                    strstr(outStr, "undefined reference") ||
-                    strstr(outStr, "failed");
-      ok = !failed;
+      ok = (status == 0);
       if (!ok)
-        log_error("hot-reload %s failed:\n%s", ent->d_name, outStr);
+        log_error("hot-reload %s failed (exit %d):\n%s", ent->d_name, status,
+                  outStr);
       free(outStr);
     } else {
       ok = true;
