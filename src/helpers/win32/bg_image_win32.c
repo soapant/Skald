@@ -55,22 +55,24 @@ static BgSrcSlot bg_srcs[BG_SRC_SLOTS];
 static BgTileSlot g_bg_tiles[BG_TILE_SLOTS];
 static ULONGLONG g_bg_tick = 0;
 static CRITICAL_SECTION bg_cs;
-static BOOL bg_cs_ready = FALSE;
+static INIT_ONCE bg_cs_once = INIT_ONCE_STATIC_INIT;
+
+static BOOL CALLBACK bg_cs_init(PINIT_ONCE once, PVOID param, PVOID *ctx) {
+  InitializeCriticalSection(&bg_cs);
+  return TRUE;
+}
 static ULONG_PTR bg_gdip_token = 0;
 
 static void bg_lock(void) {
 
-  if (!bg_cs_ready) {
-    InitializeCriticalSection(&bg_cs);
-    bg_cs_ready = TRUE;
-  }
+  InitOnceExecuteOnce(&bg_cs_once, bg_cs_init, NULL, NULL);
   EnterCriticalSection(&bg_cs);
 }
 
 static void bg_unlock(void) {
 
-  if (bg_cs_ready)
-    LeaveCriticalSection(&bg_cs);
+  InitOnceExecuteOnce(&bg_cs_once, bg_cs_init, NULL, NULL);
+  LeaveCriticalSection(&bg_cs);
 }
 
 static void bg_gdip_ensure(void) {

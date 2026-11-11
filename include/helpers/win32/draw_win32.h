@@ -49,7 +49,7 @@ extern Win32ImgSlot g_img_cache[WIN32_IMG_CACHE_SLOTS];
 extern Win32SrcSlot g_src_cache[WIN32_SRC_CACHE_SLOTS];
 extern ULONGLONG g_img_cache_tick;
 extern CRITICAL_SECTION g_img_cache_cs;
-extern BOOL g_img_cache_cs_ready;
+extern INIT_ONCE g_img_cache_cs_once;
 extern ULONG_PTR g_gdip_token;
 extern HDC s_cached_hdc;
 #include <gdiplus.h>

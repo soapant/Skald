@@ -294,7 +294,12 @@ int g_wclick_head = 0, g_wclick_tail = 0;
 
 static CRITICAL_SECTION wclick_cs;
 
-static LONG wclick_cs_ready = 0;
+static INIT_ONCE wclick_cs_once = INIT_ONCE_STATIC_INIT;
+
+static BOOL CALLBACK wclick_cs_init(PINIT_ONCE once, PVOID param, PVOID *ctx) {
+  InitializeCriticalSection(&wclick_cs);
+  return TRUE;
+}
 
 PlatformWidget *g_wdestroy[WDESTROY_MAX];
 
@@ -302,22 +307,24 @@ int g_wdestroy_count = 0;
 
 static CRITICAL_SECTION wdestroy_cs;
 
-static LONG wdestroy_cs_ready = 0;
+static INIT_ONCE wdestroy_cs_once = INIT_ONCE_STATIC_INIT;
+
+static BOOL CALLBACK wdestroy_cs_init(PINIT_ONCE once, PVOID param,
+                                      PVOID *ctx) {
+  InitializeCriticalSection(&wdestroy_cs);
+  return TRUE;
+}
 
 void win32_wclick_lock(void) {
 
-  if (InterlockedCompareExchange(&wclick_cs_ready, 1, 0) == 0) {
-    InitializeCriticalSection(&wclick_cs);
-  }
+  InitOnceExecuteOnce(&wclick_cs_once, wclick_cs_init, NULL, NULL);
   EnterCriticalSection(&wclick_cs);
 }
 
 void win32_wclick_unlock(void) { LeaveCriticalSection(&wclick_cs); }
 
 void win32_wdestroy_lock(void) {
-  if (InterlockedCompareExchange(&wdestroy_cs_ready, 1, 0) == 0) {
-    InitializeCriticalSection(&wdestroy_cs);
-  }
+  InitOnceExecuteOnce(&wdestroy_cs_once, wdestroy_cs_init, NULL, NULL);
   EnterCriticalSection(&wdestroy_cs);
 }
 
