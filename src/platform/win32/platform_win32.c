@@ -453,35 +453,6 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
   return out;
 }
 
-void Platform_StartUniversalTimer() {
-  g_timer_start_ms = GetTickCount64();
-  log_info("Platform_StartUniversalTimer completed");
-}
-
-void Platform_ResetUniversalTimer() {
-  g_timer_start_ms = GetTickCount64();
-  log_info("Platform_ResetUniversalTimer completed");
-}
-
-void Platform_ModifyUniversalTimer(double seconds_to_add) {
-  LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
-  g_timer_start_ms -= ms_offset;
-  log_info("Modified baseline by %.2f seconds.", seconds_to_add);
-  log_info("Platform_ModifyUniversalTimer seconds_to_add=%f", seconds_to_add);
-  ;
-}
-
-double Platform_GetUniversalTimeSeconds() {
-  ULONGLONG current_ms = GetTickCount64();
-
-  if (current_ms < g_timer_start_ms) {
-    return 0.0;
-  }
-
-  ULONGLONG elapsed_ms = current_ms - g_timer_start_ms;
-  return (double)elapsed_ms / 1000.0;
-}
-
 FontHandle Platform_CreateFont(int size, const char *face_name) {
   int h = -size;
   static bool s_font_loaded = false;

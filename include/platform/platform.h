@@ -90,10 +90,6 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len);
 int Platform_SetFileToClipboard(const char *path);
 char *Platform_GetWorkingDir();
 
-void Platform_StartUniversalTimer(void);
-void Platform_ResetUniversalTimer(void);
-void Platform_ModifyUniversalTimer(double seconds_to_add);
-double Platform_GetUniversalTimeSeconds(void);
 long long Platform_GetWallClockMs(void);
 
 void Platform_DismissDisplayMessage(void);
