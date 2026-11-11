@@ -1,0 +1,8 @@
+name = "screenshot"
+description = ""
+
+[provides]
+
+[depends]
+control_center
+
