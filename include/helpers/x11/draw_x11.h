@@ -18,8 +18,8 @@ bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
 XftFont *x11_line_font(Display *dpy, int size);
 void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
                              EditboxSpec *eb, EditboxX11Metrics *metrics);
-bool raw_can_draw(void);
-GC raw_gc_for(Display *dpy, Drawable d);
-GC raw_prepare(unsigned long color, int thickness);
+bool x11_raw_can_draw(void);
+GC x11_raw_gc_for(Display *dpy, Drawable d);
+GC x11_raw_prepare(unsigned long color, int thickness);
 
 #endif

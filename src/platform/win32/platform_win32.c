@@ -1555,7 +1555,7 @@ void *Platform_ThreadCreate(void *(*fn)(void *), void *arg) {
     return NULL;
   s->fn = fn;
   s->arg = arg;
-  HANDLE h = CreateThread(NULL, 0, win_thread_entry, s, 0, NULL);
+  HANDLE h = CreateThread(NULL, 0, win32_thread_entry, s, 0, NULL);
   if (!h) {
     free(s);
     return NULL;

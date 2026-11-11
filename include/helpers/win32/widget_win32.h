@@ -27,12 +27,12 @@ extern int g_wclick_head, g_wclick_tail;
 extern PlatformWidget *g_wdestroy[WDESTROY_MAX];
 extern int g_wdestroy_count;
 
-void widget_register_class(void);
-void widget_frame(void *ud);
-void widget_destroy_on_owner_thread(void *ud);
-void wclick_lock(void);
-void wclick_unlock(void);
-void wdestroy_lock(void);
-void wdestroy_unlock(void);
+void win32_widget_register_class(void);
+void win32_widget_frame(void *ud);
+void win32_widget_destroy_on_owner_thread(void *ud);
+void win32_wclick_lock(void);
+void win32_wclick_unlock(void);
+void win32_wdestroy_lock(void);
+void win32_wdestroy_unlock(void);
 
 #endif

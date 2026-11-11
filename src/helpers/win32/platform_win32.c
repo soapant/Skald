@@ -727,7 +727,7 @@ bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
   return true;
 }
 
-DWORD WINAPI win_thread_entry(LPVOID p) {
+DWORD WINAPI win32_thread_entry(LPVOID p) {
 
   WinThreadStart *s = (WinThreadStart *)p;
   void *(*fn)(void *) = s->fn;

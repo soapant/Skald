@@ -446,11 +446,11 @@ void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->measure_user = metrics;
 }
 
-GC raw_gc_for(Display *dpy, Drawable d);
+GC x11_raw_gc_for(Display *dpy, Drawable d);
 
-bool raw_can_draw(void) { return g_draw_dpy != NULL && g_draw_xd != NULL; }
+bool x11_raw_can_draw(void) { return g_draw_dpy != NULL && g_draw_xd != NULL; }
 
-GC raw_gc_for(Display *dpy, Drawable d) {
+GC x11_raw_gc_for(Display *dpy, Drawable d) {
   static GC gc = NULL;
   static Drawable gc_owner = 0;
   if (gc != NULL && gc_owner == (Drawable)(uintptr_t)d)
@@ -464,11 +464,11 @@ GC raw_gc_for(Display *dpy, Drawable d) {
   return gc;
 }
 
-GC raw_prepare(unsigned long color, int thickness) {
-  if (!raw_can_draw())
+GC x11_raw_prepare(unsigned long color, int thickness) {
+  if (!x11_raw_can_draw())
     return NULL;
   Drawable d = XftDrawDrawable(g_draw_xd);
-  GC gc = raw_gc_for(g_draw_dpy, d);
+  GC gc = x11_raw_gc_for(g_draw_dpy, d);
   if (!gc)
     return NULL;
   XftColor col;

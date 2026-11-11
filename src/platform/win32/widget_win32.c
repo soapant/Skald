@@ -20,13 +20,13 @@
 void Platform_Widget_DrainClicks(void) {
   for (;;) {
     void (*fn)(void) = NULL;
-    wclick_lock();
+    win32_wclick_lock();
     if (g_wclick_head != g_wclick_tail) {
       fn = g_wclick[g_wclick_head];
       g_wclick[g_wclick_head] = NULL;
       g_wclick_head = (g_wclick_head + 1) % WCLICK_MAX;
     }
-    wclick_unlock();
+    win32_wclick_unlock();
     if (!fn)
       break;
     fn();
@@ -34,12 +34,12 @@ void Platform_Widget_DrainClicks(void) {
 }
 
 void Platform_Widget_FlushDestruction(void) {
-  wdestroy_lock();
+  win32_wdestroy_lock();
   for (int i = 0; i < g_wdestroy_count; i++) {
-    widget_destroy_on_owner_thread(g_wdestroy[i]);
+    win32_widget_destroy_on_owner_thread(g_wdestroy[i]);
   }
   g_wdestroy_count = 0;
-  wdestroy_unlock();
+  win32_wdestroy_unlock();
 }
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
@@ -50,7 +50,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
     return NULL;
   if (!RenderThread_EnsureStarted(fps))
     return NULL;
-  widget_register_class();
+  win32_widget_register_class();
 
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
@@ -77,7 +77,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-  if (!RenderThread_AddFrameCallback(widget_frame, widget)) {
+  if (!RenderThread_AddFrameCallback(win32_widget_frame, widget)) {
     DestroyWindow(widget->hwnd);
     free(widget);
     return NULL;
@@ -89,7 +89,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
     widget->base.bg_color = amb;
   }
 
-  widget_frame(widget);
+  win32_widget_frame(widget);
 
   ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
@@ -103,13 +103,13 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
     return;
   }
   widget->base.dead = true;
-  wdestroy_lock();
+  win32_wdestroy_lock();
   if (g_wdestroy_count < WDESTROY_MAX) {
     g_wdestroy[g_wdestroy_count++] = widget;
   } else {
-    widget_destroy_on_owner_thread(widget);
+    win32_widget_destroy_on_owner_thread(widget);
   }
-  wdestroy_unlock();
+  win32_wdestroy_unlock();
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
