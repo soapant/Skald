@@ -142,11 +142,15 @@ char *paste_niri(char *content) {
   }
   if (!niri_is_active())
     return NULL;
-  char buffer[100];
-  snprintf(buffer, sizeof(buffer), "wtype %s", content);
-  char *out = Platform_RunTerminalCommand(buffer, false);
+  const char *argv[] = {"wtype", content, NULL};
+  int status = 0;
+  char *out = Platform_RunArgvCapture(argv, NULL, &status);
+  if (status == 127) {
+    free(out);
+    out = NULL;
+  }
   if (!out)
-    log_error("content='%s'", content ? content : "null");
+    log_error("paste via wtype failed");
   return out;
 }
 

@@ -888,19 +888,6 @@ char *Platform_GetIconPath(char *app_path) {
       }
       fclose(f);
     }
-    if (!icon_name[0]) {
-      const char *home_ph0 = Platform_GetRealHome();
-      if (!home_ph0 || !home_ph0[0])
-        home_ph0 = x11_env_home_dir();
-      char ph_path[1024];
-      if (home_ph0 && home_ph0[0]) {
-        snprintf(ph_path, sizeof(ph_path),
-                 "%s/Programming/Projects/Skald/resources/Placeholder.png",
-                 home_ph0);
-        if (access(ph_path, F_OK) == 0)
-          return strdup(ph_path);
-      }
-    }
   } else {
     strncpy(icon_name, app_path, sizeof(icon_name) - 1);
   }
@@ -1071,16 +1058,6 @@ char *Platform_GetIconPath(char *app_path) {
     strncpy(found, pix, sizeof(found) - 1);
     icon_cache_set(bare, found);
     return strdup(found);
-  }
-  const char *home_ph = Platform_GetRealHome();
-  if (!home_ph || !home_ph[0])
-    home_ph = x11_env_home_dir();
-  if (home_ph && home_ph[0]) {
-    snprintf(pix, sizeof(pix),
-             "%s/Programming/Projects/Skald/resources/Placeholder.png",
-             home_ph);
-    if (access(pix, F_OK) == 0)
-      return strdup(pix);
   }
   snprintf(pix, sizeof(pix), "resources/Placeholder.png");
   if (access(pix, F_OK) == 0)
@@ -1277,11 +1254,11 @@ PlWindowList Platform_GetWindowNames() { return Wm_GetWindowNames(); }
 static int singleton_lock_fd = -1;
 
 bool Platform_TryAcquireSingleInstance(void) {
-  singleton_lock_fd = open("/tmp/skald.lock", O_RDWR | O_CREAT, 0666);
+  char lock_path[128];
+  snprintf(lock_path, sizeof(lock_path), "/tmp/skald-%d.lock", (int)getuid());
+  singleton_lock_fd = open(lock_path, O_RDWR | O_CREAT, 0600);
   if (singleton_lock_fd < 0) {
-    log_error("Cannot open singleton lock /tmp/skald.lock (%s). If it is owned "
-              "by another user, remove it: sudo rm /tmp/skald.lock",
-              strerror(errno));
+    log_error("Cannot open singleton lock %s (%s)", lock_path, strerror(errno));
     return false;
   }
   if (flock(singleton_lock_fd, LOCK_EX | LOCK_NB) != 0) {
