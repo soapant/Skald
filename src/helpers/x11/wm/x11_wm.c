@@ -280,7 +280,7 @@ static int x11_keycode_for(Display *dpy, KeySym ks, int *need_shift) {
   return 0;
 }
 
-bool get_title_x11(char *buffer, int buffer_size) {
+bool x11_get_title(char *buffer, int buffer_size) {
   if (!buffer || buffer_size <= 0) {
     log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null",
               buffer_size);
@@ -319,7 +319,7 @@ bool get_title_x11(char *buffer, int buffer_size) {
   return buffer[0] != '\0';
 }
 
-bool get_app_id_x11(char *buffer, int buffer_size) {
+bool x11_get_app_id(char *buffer, int buffer_size) {
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -356,7 +356,7 @@ bool get_app_id_x11(char *buffer, int buffer_size) {
   return buffer[0] != '\0';
 }
 
-char *paste_x11(char *content) {
+char *x11_paste(char *content) {
   if (!content) {
     log_error("content is NULL");
     return NULL;
@@ -403,7 +403,36 @@ char *paste_x11(char *content) {
   return NULL;
 }
 
-bool focus_window_title_x11(char *title) {
+unsigned long x11_find_window_by_title(const char *title) {
+  if (!title || !title[0])
+    return 0;
+  Display *display = x11_get_display();
+  if (!display)
+    return 0;
+  int nclients = 0;
+  Window *clients = x11_client_list(display, &nclients);
+  if (!clients || nclients <= 0) {
+    if (clients)
+      free(clients);
+    return 0;
+  }
+  unsigned long found = 0;
+  for (int i = 0; i < nclients; i++) {
+    char *wt = x11_get_text_prop(display, clients[i]);
+    if (!wt)
+      continue;
+    if (strcasestr(wt, title)) {
+      found = (unsigned long)clients[i];
+      free(wt);
+      break;
+    }
+    free(wt);
+  }
+  free(clients);
+  return found;
+}
+
+bool x11_focus_window_title(char *title) {
   if (!title || !title[0]) {
     log_error("title='%s'", title ? title : "null");
     return false;
@@ -411,32 +440,15 @@ bool focus_window_title_x11(char *title) {
   Display *display = x11_get_display();
   if (!display)
     return false;
-  int nclients = 0;
-  Window *clients = x11_client_list(display, &nclients);
-  if (!clients || nclients <= 0) {
-    if (clients)
-      free(clients);
-    log_error("focus_window_title_x11: empty client list");
+  unsigned long target = x11_find_window_by_title(title);
+  if (target == 0) {
+    log_error("x11_focus_window_title: no match for title='%s'", title);
     return false;
   }
-  bool found = false;
-  for (int i = 0; i < nclients && !found; i++) {
-    char *wt = x11_get_text_prop(display, clients[i]);
-    if (!wt)
-      continue;
-    if (strcasestr(wt, title)) {
-      if (x11_activate_window(display, clients[i]))
-        found = true;
-    }
-    free(wt);
-  }
-  free(clients);
-  if (!found)
-    log_error("focus_window_title_x11: no match for title='%s'", title);
-  return found;
+  return x11_activate_window(display, (Window)target);
 }
 
-PlWindowList get_window_names_x11() {
+PlWindowList x11_get_window_names() {
   PlWindowList list = {.windows = NULL, .count = 0};
   Display *display = x11_get_display();
   if (!display) {
@@ -448,7 +460,7 @@ PlWindowList get_window_names_x11() {
   if (!clients || nclients <= 0) {
     if (clients)
       free(clients);
-    log_error("get_window_names_x11: empty client list");
+    log_error("x11_get_window_names: empty client list");
     return list;
   }
   for (int i = 0; i < nclients; i++) {
@@ -480,7 +492,7 @@ PlWindowList get_window_names_x11() {
   return list;
 }
 
-PlWindowList get_window_titles_x11() {
+PlWindowList x11_get_window_titles() {
   PlWindowList list = {.windows = NULL, .count = 0};
   Display *display = x11_get_display();
   if (!display) {
@@ -492,7 +504,7 @@ PlWindowList get_window_titles_x11() {
   if (!clients || nclients <= 0) {
     if (clients)
       free(clients);
-    log_error("get_window_titles_x11: empty client list");
+    log_error("x11_get_window_titles: empty client list");
     return list;
   }
   for (int i = 0; i < nclients; i++) {
@@ -550,7 +562,7 @@ static Window x11_focused_window(Display *display) {
   return focus;
 }
 
-bool close_active_window_x11(void) {
+bool x11_close_active_window(void) {
   Display *display = x11_get_display();
   if (!display)
     return false;
@@ -579,7 +591,7 @@ bool close_active_window_x11(void) {
   return true;
 }
 
-bool toggle_fullscreen_active_x11(void) {
+bool x11_toggle_fullscreen_active(void) {
   Display *display = x11_get_display();
   if (!display)
     return false;
@@ -712,7 +724,7 @@ static bool x11_activate_neighbor_vertical(bool down) {
   return x11_activate_window(display, best);
 }
 
-bool move_active_window_to_monitor_x11(bool right) {
+bool x11_move_active_window_to_monitor(bool right) {
   Display *display = x11_get_display();
   if (!display)
     return false;
@@ -825,7 +837,7 @@ static bool x11_move_dir(bool right) {
     return false;
   Window before = x11_focused_window(display);
   bool moved = false;
-  if (ewmh_move_works != 0 && move_active_window_to_monitor_x11(right))
+  if (ewmh_move_works != 0 && x11_move_active_window_to_monitor(right))
     moved = true;
   else if (i3_move_to_output(right))
     moved = true;
@@ -836,25 +848,25 @@ static bool x11_move_dir(bool right) {
   return true;
 }
 
-bool move_active_window_left_x11(void) { return x11_move_dir(false); }
+bool x11_move_active_window_left(void) { return x11_move_dir(false); }
 
-bool move_active_window_right_x11(void) { return x11_move_dir(true); }
+bool x11_move_active_window_right(void) { return x11_move_dir(true); }
 
-bool move_active_window_up_x11(void) {
+bool x11_move_active_window_up(void) {
   return x11_activate_neighbor_vertical(false);
 }
 
-bool move_active_window_down_x11(void) {
+bool x11_move_active_window_down(void) {
   return x11_activate_neighbor_vertical(true);
 }
 
-bool focus_window_left_x11(void) { return x11_activate_neighbor(false); }
+bool x11_focus_window_left(void) { return x11_activate_neighbor(false); }
 
-bool focus_window_right_x11(void) { return x11_activate_neighbor(true); }
+bool x11_focus_window_right(void) { return x11_activate_neighbor(true); }
 
-bool focus_window_up_x11(void) { return x11_activate_neighbor_vertical(false); }
+bool x11_focus_window_up(void) { return x11_activate_neighbor_vertical(false); }
 
-bool focus_window_down_x11(void) {
+bool x11_focus_window_down(void) {
   return x11_activate_neighbor_vertical(true);
 }
 
@@ -871,7 +883,7 @@ static bool x11_is_hidden(Display *dpy, Window w) {
   return at.map_state == IsUnmapped;
 }
 
-bool minimize_active_window_x11(void) {
+bool x11_minimize_active_window(void) {
   Display *display = x11_get_display();
   if (!display)
     return false;
@@ -912,7 +924,7 @@ bool minimize_active_window_x11(void) {
   return false;
 }
 
-bool get_mouse_pos_x11(int *x, int *y) {
+bool x11_get_mouse_pos(int *x, int *y) {
   Display *dpy = x11_get_display();
   if (!dpy)
     return false;

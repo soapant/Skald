@@ -1113,6 +1113,10 @@ bool sk_focus_window_by_title(char *title) {
   return r;
 }
 
+SkWindowHandle sk_get_window_id(const char *title) {
+  return Platform_GetWindowByTitle(title);
+}
+
 bool sk_close_active_window(void) {
   bool r = Platform_CloseActiveWindow();
   return r;

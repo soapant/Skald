@@ -28,7 +28,7 @@ const char *get_default_terminal(int slot) {
     bool is_wayland =
         (st && strcmp(st, "wayland") == 0) || x11_env_is_compositor();
     term = is_wayland ? x11_get_default_terminal_wayland()
-                      : x11_get_default_terminal_x11();
+                      : x11_get_default_terminal();
   }
 
   if (!term) {

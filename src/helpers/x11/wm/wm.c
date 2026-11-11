@@ -34,7 +34,7 @@ char *Wm_GetActiveWindowTitle(void) {
         return buffer;
     }
   }
-  if (get_title_x11(buffer, sizeof(buffer))) {
+  if (x11_get_title(buffer, sizeof(buffer))) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
       return buffer;
   }
@@ -65,7 +65,7 @@ char *Wm_GetActiveWindowAppId(void) {
         return buffer;
     }
   }
-  if (get_app_id_x11(buffer, sizeof(buffer))) {
+  if (x11_get_app_id(buffer, sizeof(buffer))) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
       return buffer;
   }
@@ -87,7 +87,7 @@ bool Wm_FocusByTitle(const char *title) {
       return true;
     }
   }
-  if (focus_window_title_x11(title)) {
+  if (x11_focus_window_title(title)) {
     return true;
   }
   log_error("Coulnt Focus By TItle %s", title);
@@ -106,7 +106,7 @@ char *Wm_Paste(char *content) {
     if ((result = paste_sway(content)))
       return result;
   }
-  if ((result = paste_x11(content)))
+  if ((result = x11_paste(content)))
     return result;
   log_error("content='%s'", content ? content : "null");
   return NULL;
@@ -129,7 +129,7 @@ PlWindowList Wm_GetWindowTitles() {
     if (result.windows != NULL)
       return result;
   }
-  result = get_window_titles_x11();
+  result = x11_get_window_titles();
   if (result.windows != NULL)
     return result;
   log_error("GetWindowTitles Didnt Work");
@@ -152,7 +152,7 @@ PlWindowList Wm_GetWindowNames() {
     if (result.windows != NULL)
       return result;
   }
-  result = get_window_names_x11();
+  result = x11_get_window_names();
   if (result.windows != NULL)
     return result;
   log_error("GetWindowNames Didnt Work");
@@ -170,7 +170,7 @@ bool Wm_CloseActiveWindow(void) {
     if (close_active_window_sway())
       return true;
   }
-  if (close_active_window_x11())
+  if (x11_close_active_window())
     return true;
   log_error("CloseActiveWindow Didnt Work");
   return false;
@@ -187,7 +187,7 @@ bool Wm_ToggleFullscreenActive(void) {
     if (toggle_fullscreen_active_sway())
       return true;
   }
-  if (toggle_fullscreen_active_x11())
+  if (x11_toggle_fullscreen_active())
     return true;
   log_error("ToggleFullscreenActive Didnt Work");
   return false;
@@ -204,7 +204,7 @@ bool Wm_MoveActiveWindowToMonitor(bool right) {
     if (move_active_window_to_monitor_sway(right))
       return true;
   }
-  if (move_active_window_to_monitor_x11(right))
+  if (x11_move_active_window_to_monitor(right))
     return true;
   log_error("MoveActiveWindowToMonitor Didnt Work");
   return false;
@@ -221,7 +221,7 @@ bool Wm_MoveActiveWindowLeft(void) {
     if (move_active_window_left_sway())
       return true;
   }
-  if (move_active_window_left_x11())
+  if (x11_move_active_window_left())
     return true;
   log_error("MoveActiveWindowLeft Didnt Work");
   return false;
@@ -238,7 +238,7 @@ bool Wm_MoveActiveWindowRight(void) {
     if (move_active_window_right_sway())
       return true;
   }
-  if (move_active_window_right_x11())
+  if (x11_move_active_window_right())
     return true;
   log_error("MoveActiveWindowRight Didnt Work");
   return false;
@@ -255,7 +255,7 @@ bool Wm_MoveActiveWindowUp(void) {
     if (move_active_window_up_sway())
       return true;
   }
-  if (move_active_window_up_x11())
+  if (x11_move_active_window_up())
     return true;
   log_error("MoveActiveWindowUp Didnt Work");
   return false;
@@ -272,7 +272,7 @@ bool Wm_MoveActiveWindowDown(void) {
     if (move_active_window_down_sway())
       return true;
   }
-  if (move_active_window_down_x11())
+  if (x11_move_active_window_down())
     return true;
   log_error("MoveActiveWindowDown Didnt Work");
   return false;
@@ -289,7 +289,7 @@ bool Wm_FocusWindowLeft(void) {
     if (focus_window_left_sway())
       return true;
   }
-  if (focus_window_left_x11())
+  if (x11_focus_window_left())
     return true;
   log_error("FocusWindowLeft Didnt Work");
   return false;
@@ -306,7 +306,7 @@ bool Wm_FocusWindowRight(void) {
     if (focus_window_right_sway())
       return true;
   }
-  if (focus_window_right_x11())
+  if (x11_focus_window_right())
     return true;
   log_error("FocusWindowRight Didnt Work");
   return false;
@@ -323,7 +323,7 @@ bool Wm_FocusWindowUp(void) {
     if (focus_window_up_sway())
       return true;
   }
-  if (focus_window_up_x11())
+  if (x11_focus_window_up())
     return true;
   log_error("FocusWindowUp Didnt Work");
   return false;
@@ -340,7 +340,7 @@ bool Wm_FocusWindowDown(void) {
     if (focus_window_down_sway())
       return true;
   }
-  if (focus_window_down_x11())
+  if (x11_focus_window_down())
     return true;
   log_error("FocusWindowDown Didnt Work");
   return false;
@@ -371,7 +371,7 @@ bool Wm_MinimizeActiveWindow(void) {
     if (minimize_active_window_sway())
       return true;
   }
-  if (minimize_active_window_x11())
+  if (x11_minimize_active_window())
     return true;
   log_error("MinimizeActiveWindow Didnt Work");
   return false;
@@ -388,7 +388,7 @@ bool Wm_GetMousePos(int *x, int *y) {
     if (get_mouse_pos_sway(x, y))
       return true;
   }
-  if (get_mouse_pos_x11(x, y))
+  if (x11_get_mouse_pos(x, y))
     return true;
   return false;
 }
