@@ -860,6 +860,12 @@ static void icon_cache_set(const char *key, const char *value) {
   fclose(f);
 }
 
+static char *icon_probe(const char *path, const char *bare) {
+  if (access(path, F_OK) != 0)
+    return NULL;
+  icon_cache_set(bare, path);
+  return strdup(path);
+}
 char *Platform_GetActiveWindowAppId(void) { return Wm_GetActiveWindowAppId(); }
 
 char *Platform_GetIconPath(char *app_path) {
@@ -923,7 +929,6 @@ char *Platform_GetIconPath(char *app_path) {
   const char *bases[] = {"/usr/share/icons/hicolor", "/usr/share/pixmaps",
                          "/usr/share/icons/Adwaita", "/usr/share/icons/breeze",
                          NULL};
-  static char found[1024];
   const char *home = Platform_GetRealHome();
   if (!home || !home[0])
     home = x11_env_home_dir();
@@ -935,17 +940,17 @@ char *Platform_GetIconPath(char *app_path) {
         sz++;
       snprintf(path, sizeof(path),
                "%s/.local/share/icons/hicolor/%s/apps/%s.png", home, sz, bare);
-      if (access(path, F_OK) == 0) {
-        strncpy(found, path, sizeof(found) - 1);
-        icon_cache_set(bare, found);
-        return strdup(found);
+      {
+        char *hit = icon_probe(path, bare);
+        if (hit)
+          return hit;
       }
       snprintf(path, sizeof(path),
                "%s/.local/share/icons/hicolor/%s/apps/%s.svg", home, sz, bare);
-      if (access(path, F_OK) == 0) {
-        strncpy(found, path, sizeof(found) - 1);
-        icon_cache_set(bare, found);
-        return strdup(found);
+      {
+        char *hit = icon_probe(path, bare);
+        if (hit)
+          return hit;
       }
     }
   }
@@ -967,41 +972,41 @@ char *Platform_GetIconPath(char *app_path) {
           sz++;
         snprintf(path, sizeof(path), "%s/icons/hicolor/%s/apps/%s.png", dir, sz,
                  bare);
-        if (access(path, F_OK) == 0) {
-          strncpy(found, path, sizeof(found) - 1);
-          icon_cache_set(bare, found);
-          return strdup(found);
+        {
+          char *hit = icon_probe(path, bare);
+          if (hit)
+            return hit;
         }
         snprintf(path, sizeof(path), "%s/icons/hicolor/%s/apps/%s.svg", dir, sz,
                  bare);
-        if (access(path, F_OK) == 0) {
-          strncpy(found, path, sizeof(found) - 1);
-          icon_cache_set(bare, found);
-          return strdup(found);
+        {
+          char *hit = icon_probe(path, bare);
+          if (hit)
+            return hit;
         }
         snprintf(path, sizeof(path), "%s/icons/hicolor/%s.svg", dir, bare);
-        if (access(path, F_OK) == 0) {
-          strncpy(found, path, sizeof(found) - 1);
-          icon_cache_set(bare, found);
-          return strdup(found);
+        {
+          char *hit = icon_probe(path, bare);
+          if (hit)
+            return hit;
         }
         snprintf(path, sizeof(path), "%s/icons/hicolor/%s.png", dir, bare);
-        if (access(path, F_OK) == 0) {
-          strncpy(found, path, sizeof(found) - 1);
-          icon_cache_set(bare, found);
-          return strdup(found);
+        {
+          char *hit = icon_probe(path, bare);
+          if (hit)
+            return hit;
         }
         snprintf(path, sizeof(path), "%s/pixmaps/%s.png", dir, bare);
-        if (access(path, F_OK) == 0) {
-          strncpy(found, path, sizeof(found) - 1);
-          icon_cache_set(bare, found);
-          return strdup(found);
+        {
+          char *hit = icon_probe(path, bare);
+          if (hit)
+            return hit;
         }
         snprintf(path, sizeof(path), "%s/pixmaps/%s.svg", dir, bare);
-        if (access(path, F_OK) == 0) {
-          strncpy(found, path, sizeof(found) - 1);
-          icon_cache_set(bare, found);
-          return strdup(found);
+        {
+          char *hit = icon_probe(path, bare);
+          if (hit)
+            return hit;
         }
       }
     }
@@ -1013,62 +1018,62 @@ char *Platform_GetIconPath(char *app_path) {
       while (*sz == ' ')
         sz++;
       snprintf(path, sizeof(path), "%s/%s/apps/%s.png", bases[b], sz, bare);
-      if (access(path, F_OK) == 0) {
-        strncpy(found, path, sizeof(found) - 1);
-        icon_cache_set(bare, found);
-        return strdup(found);
+      {
+        char *hit = icon_probe(path, bare);
+        if (hit)
+          return hit;
       }
       snprintf(path, sizeof(path), "%s/%s/apps/%s.svg", bases[b], sz, bare);
-      if (access(path, F_OK) == 0) {
-        strncpy(found, path, sizeof(found) - 1);
-        icon_cache_set(bare, found);
-        return strdup(found);
+      {
+        char *hit = icon_probe(path, bare);
+        if (hit)
+          return hit;
       }
       snprintf(path, sizeof(path), "%s/%s.svg", bases[b], bare);
-      if (access(path, F_OK) == 0) {
-        strncpy(found, path, sizeof(found) - 1);
-        icon_cache_set(bare, found);
-        return strdup(found);
+      {
+        char *hit = icon_probe(path, bare);
+        if (hit)
+          return hit;
       }
       snprintf(path, sizeof(path), "%s/%s.png", bases[b], bare);
-      if (access(path, F_OK) == 0) {
-        strncpy(found, path, sizeof(found) - 1);
-        icon_cache_set(bare, found);
-        return strdup(found);
+      {
+        char *hit = icon_probe(path, bare);
+        if (hit)
+          return hit;
       }
     }
     char direct[1024];
     snprintf(direct, sizeof(direct), "%s/%s.png", bases[b], bare);
-    if (access(direct, F_OK) == 0) {
-      strncpy(found, direct, sizeof(found) - 1);
-      icon_cache_set(bare, found);
-      return strdup(found);
+    {
+      char *hit = icon_probe(direct, bare);
+      if (hit)
+        return hit;
     }
     snprintf(direct, sizeof(direct), "%s/%s.svg", bases[b], bare);
-    if (access(direct, F_OK) == 0) {
-      strncpy(found, direct, sizeof(found) - 1);
-      icon_cache_set(bare, found);
-      return strdup(found);
+    {
+      char *hit = icon_probe(direct, bare);
+      if (hit)
+        return hit;
     }
   }
   char pix[1024];
   snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.png", bare);
-  if (access(pix, F_OK) == 0) {
-    strncpy(found, pix, sizeof(found) - 1);
-    icon_cache_set(bare, found);
-    return strdup(found);
+  {
+    char *hit = icon_probe(pix, bare);
+    if (hit)
+      return hit;
   }
   snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.svg", bare);
-  if (access(pix, F_OK) == 0) {
-    strncpy(found, pix, sizeof(found) - 1);
-    icon_cache_set(bare, found);
-    return strdup(found);
+  {
+    char *hit = icon_probe(pix, bare);
+    if (hit)
+      return hit;
   }
   snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.xpm", bare);
-  if (access(pix, F_OK) == 0) {
-    strncpy(found, pix, sizeof(found) - 1);
-    icon_cache_set(bare, found);
-    return strdup(found);
+  {
+    char *hit = icon_probe(pix, bare);
+    if (hit)
+      return hit;
   }
   snprintf(pix, sizeof(pix), "resources/Placeholder.png");
   if (access(pix, F_OK) == 0)

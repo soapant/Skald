@@ -819,10 +819,17 @@ bool x11_move_active_window_to_monitor(bool right) {
   if (ewmh_move_works == 0)
     return false;
   XSync(display, False);
-  usleep(12000);
   int vx = 0, vy = 0, vw = 0, vh = 0;
-  if (x11_window_geom(display, focus, &vx, &vy, &vw, &vh) &&
-      (vx != wx || vy != wy)) {
+  bool moved = false;
+  for (int tries = 0; tries < 20; tries++) {
+    usleep(5000);
+    if (x11_window_geom(display, focus, &vx, &vy, &vw, &vh) &&
+        (vx != wx || vy != wy)) {
+      moved = true;
+      break;
+    }
+  }
+  if (moved) {
     ewmh_move_works = 1;
     return true;
   }

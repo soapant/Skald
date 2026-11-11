@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <poll.h>
+#include <errno.h>
 #include <X11/X.h>
 #include <stdarg.h>
 
@@ -467,16 +469,32 @@ static Bool x11_clip_read_prop_pred(Display *dpy, XEvent *ev, XPointer arg) {
   return False;
 }
 
+static long x11_clip_now_ms(void) {
+
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (long)ts.tv_sec * 1000 + (long)ts.tv_nsec / 1000000;
+}
+
 static int x11_clip_read_wait_event(Display *dpy, XEvent *ev,
                                     Bool (*pred)(Display *, XEvent *, XPointer),
                                     ClipReadWait *w, int tries) {
 
-  for (int i = 0; i < tries; i++) {
+  if (tries <= 0)
+    tries = 1;
+  int fd = ConnectionNumber(dpy);
+  long deadline = x11_clip_now_ms() + (long)tries * 5;
+  struct pollfd pfd = {fd, POLLIN, 0};
+  for (;;) {
     if (XCheckIfEvent(dpy, ev, pred, (XPointer)w))
       return 1;
-    usleep(5000);
+    long remain = deadline - x11_clip_now_ms();
+    if (remain <= 0)
+      return 0;
+    int r = poll(&pfd, 1, (int)remain);
+    if (r < 0 && errno != EINTR)
+      return 0;
   }
-  return 0;
 }
 
 static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
