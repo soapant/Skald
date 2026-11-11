@@ -171,6 +171,7 @@ bool sk_query_browser(const char *query);
 bool sk_focus_window_by_title(char *title);
 
 SkWindowHandle sk_get_window_id(const char *title);
+SkWindowHandle sk_get_window_by_root_atom(const char *atom);
 
 bool sk_window_set_string_property(SkWindowHandle window, const char *atom,
                                    const char *value);

@@ -587,6 +587,11 @@ static HWND win32_find_window_by_title(const char *title) {
   return hwnd;
 }
 
+WindowHandle Platform_GetWindowByRootAtom(const char *atom) {
+  (void)atom;
+  return WH_NULL;
+}
+
 WindowHandle Platform_GetWindowByTitle(const char *title) {
   HWND hwnd = win32_find_window_by_title(title);
   if (hwnd == NULL)

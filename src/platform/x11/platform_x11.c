@@ -660,6 +660,28 @@ WindowHandle Platform_GetWindowByTitle(const char *title) {
   return h;
 }
 
+WindowHandle Platform_GetWindowByRootAtom(const char *atom) {
+  WindowHandle h = WH_NULL;
+  if (!atom || !atom[0])
+    return h;
+  Display *dpy = x11_get_display();
+  if (!dpy)
+    return h;
+  Atom a = XInternAtom(dpy, atom, False);
+  Atom type = None;
+  int fmt = 0;
+  unsigned long nitems = 0, after = 0;
+  unsigned char *data = NULL;
+  if (XGetWindowProperty(dpy, DefaultRootWindow(dpy), a, 0, 1, False, XA_WINDOW,
+                         &type, &fmt, &nitems, &after, &data) != Success ||
+      !data)
+    return h;
+  if (type == XA_WINDOW && fmt == 32 && nitems >= 1)
+    h.xid = (Window)((long *)data)[0];
+  XFree(data);
+  return h;
+}
+
 bool Platform_SetWindowStringProperty(WindowHandle window, const char *atom,
                                       const char *value) {
   Display *dpy = x11_get_display();
