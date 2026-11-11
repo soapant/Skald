@@ -412,3 +412,11 @@ void Platform_DirClose(PlDirIter *it) {
     FindClose(it->hFind);
   free(it);
 }
+
+float Platform_GetUIScale(void) { return 1.0f; }
+
+void Platform_ApplyUIScale(void) {}
+
+int Platform_GetUnscaledFontSize(void) { return FontSize; }
+
+void Platform_ResetUIScale(void) {}
