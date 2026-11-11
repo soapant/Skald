@@ -671,6 +671,48 @@ WindowHandle Platform_GetWindowByTitle(const char *title) {
   return h;
 }
 
+bool Platform_SetWindowStringProperty(WindowHandle window, const char *atom,
+                                      const char *value) {
+  Display *dpy = x11_get_display();
+  if (!dpy || window.xid == 0 || !atom || !value)
+    return false;
+  XChangeProperty(dpy, (Window)window.xid, XInternAtom(dpy, atom, False),
+                  XA_STRING, 8, PropModeReplace,
+                  (const unsigned char *)value, (int)strlen(value));
+  XFlush(dpy);
+  return true;
+}
+
+bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
+                                    long value) {
+  Display *dpy = x11_get_display();
+  if (!dpy || window.xid == 0 || !atom)
+    return false;
+  XChangeProperty(dpy, (Window)window.xid, XInternAtom(dpy, atom, False),
+                  XA_INTEGER, 32, PropModeReplace,
+                  (const unsigned char *)&value, 1);
+  XFlush(dpy);
+  return true;
+}
+
+bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
+                                long data) {
+  Display *dpy = x11_get_display();
+  if (!dpy || window.xid == 0 || !atom)
+    return false;
+  XEvent ev;
+  memset(&ev, 0, sizeof(ev));
+  ev.xclient.type = ClientMessage;
+  ev.xclient.window = (Window)window.xid;
+  ev.xclient.message_type = XInternAtom(dpy, atom, False);
+  ev.xclient.format = 32;
+  ev.xclient.data.l[0] = data;
+  if (XSendEvent(dpy, (Window)window.xid, False, NoEventMask, &ev) == 0)
+    return false;
+  XFlush(dpy);
+  return true;
+}
+
 bool Platform_CloseActiveWindow(void) { return Wm_CloseActiveWindow(); }
 
 bool Platform_ToggleFullscreenActive(void) {
