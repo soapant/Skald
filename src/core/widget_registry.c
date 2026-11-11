@@ -600,15 +600,6 @@ void widget_invalidate(PlatformWidget *widget) {
   RenderThread_Wake();
 }
 
-int widget_width(const PlatformWidget *widget) {
-  const PlatformWidgetBase *base = (const PlatformWidgetBase *)widget;
-  return widget ? base->w : 0;
-}
-
-int widget_height(const PlatformWidget *widget) {
-  const PlatformWidgetBase *base = (const PlatformWidgetBase *)widget;
-  return widget ? base->h : 0;
-}
 
 void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
                       int fps, bool no_bg, void (*on_click)(void),
