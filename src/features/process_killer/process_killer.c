@@ -256,7 +256,7 @@ static void pk_sort(void) {
   qsort(pk, (size_t)pk_count, sizeof(PkProc),
         pk_sort_mode == 0   ? pk_cmp_mem
         : pk_sort_mode == 1 ? pk_cmp_cpu
-                         : pk_cmp_alpha);
+                            : pk_cmp_alpha);
 }
 
 static void pk_split_row(const char *row, char *name, size_t name_len,
@@ -306,8 +306,8 @@ static void pk_build_rows(void) {
     char mem[24];
     sk_format_bytes((unsigned long long)pk[i].rss_kb * 1024ULL, mem,
                     sizeof(mem));
-    snprintf(pk_rows[i], PK_ROW_LEN, "%.48s | %.20s | %.1f", pk[i].name,
-             mem, pk[i].cpu);
+    snprintf(pk_rows[i], PK_ROW_LEN, "%.48s | %.20s | %.1f", pk[i].name, mem,
+             pk[i].cpu);
     pk_items[i] = pk_rows[i];
   }
 }

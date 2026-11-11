@@ -29,7 +29,7 @@ static void widget_mutex_init(void) {
 #define W_LOCK()                                                               \
   do {                                                                         \
     widget_mutex_init();                                                       \
-    Platform_MutexLock(widget_mutex);                                        \
+    Platform_MutexLock(widget_mutex);                                          \
   } while (0)
 #define W_UNLOCK() Platform_MutexUnlock(widget_mutex)
 

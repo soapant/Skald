@@ -17,7 +17,8 @@
 
 static __thread HDC b_hdc = NULL;
 
-bool Platform_ListboxBackendBegin(int item_height_override, ListboxBackendInit *out) {
+bool Platform_ListboxBackendBegin(int item_height_override,
+                                  ListboxBackendInit *out) {
   (void)item_height_override;
   win32_get_draw_context(&b_hdc);
   if (!b_hdc)
@@ -28,8 +29,8 @@ bool Platform_ListboxBackendBegin(int item_height_override, ListboxBackendInit *
   return true;
 }
 
-void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h, int fw,
-                                  int frame_h, bool sel) {
+void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
+                                          int fw, int frame_h, bool sel) {
   (void)frame_h;
   (void)fw;
   if (RoundedCorners && CornerRadius > 0) {

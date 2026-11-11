@@ -34,7 +34,9 @@ void Platform_RenderThreadUnlock(void) { LeaveCriticalSection(&g_rt_lock); }
 
 void Platform_RenderThreadWakeOne(void) { WakeConditionVariable(&g_rt_cond); }
 
-void Platform_RenderThreadWakeAll(void) { WakeAllConditionVariable(&g_rt_cond); }
+void Platform_RenderThreadWakeAll(void) {
+  WakeAllConditionVariable(&g_rt_cond);
+}
 
 void Platform_RenderThreadWaitTimed(long us) {
   SleepConditionVariableCS(&g_rt_cond, &g_rt_lock, (DWORD)(us / 1000));

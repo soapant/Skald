@@ -378,8 +378,7 @@ static SkNetAdapter net_active_adapter(void) {
 
   net_lock();
   DWORD now = GetTickCount();
-  if (net_adapter.valid &&
-      (now - net_adapter.at_ms) < SK_NET_ADAPTER_TTL_MS) {
+  if (net_adapter.valid && (now - net_adapter.at_ms) < SK_NET_ADAPTER_TTL_MS) {
     SkNetAdapter cached = net_adapter;
     net_unlock();
     return cached;

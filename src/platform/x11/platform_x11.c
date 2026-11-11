@@ -754,12 +754,10 @@ static void icon_cache_load(void) {
     *eq = '\0';
     strncpy(icon_cache[icon_cache_count].key, line,
             sizeof(icon_cache[0].key) - 1);
-    icon_cache[icon_cache_count].key[sizeof(icon_cache[0].key) - 1] =
-        '\0';
+    icon_cache[icon_cache_count].key[sizeof(icon_cache[0].key) - 1] = '\0';
     strncpy(icon_cache[icon_cache_count].value, eq + 1,
             sizeof(icon_cache[0].value) - 1);
-    icon_cache[icon_cache_count].value[sizeof(icon_cache[0].value) - 1] =
-        '\0';
+    icon_cache[icon_cache_count].value[sizeof(icon_cache[0].value) - 1] = '\0';
     if (access(icon_cache[icon_cache_count].value, F_OK) == 0)
       icon_cache_count++;
   }
@@ -785,8 +783,7 @@ static void icon_cache_set(const char *key, const char *value) {
   if (icon_cache_count >= MAX_ICON_CACHE) {
     return;
   }
-  strncpy(icon_cache[icon_cache_count].key, key,
-          sizeof(icon_cache[0].key) - 1);
+  strncpy(icon_cache[icon_cache_count].key, key, sizeof(icon_cache[0].key) - 1);
   strncpy(icon_cache[icon_cache_count].value, value,
           sizeof(icon_cache[0].value) - 1);
   icon_cache_count++;

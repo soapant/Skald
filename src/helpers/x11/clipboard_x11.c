@@ -46,8 +46,8 @@ static void cl_trace(const char *what, const char *fmt, ...) {
   va_start(ap, fmt);
   vsnprintf(buf, sizeof(buf), fmt, ap);
   va_end(ap);
-  fprintf(stderr, "[clip %+ldms #%ld] %s %s\n", cl_ms_since() - cl_t0, n,
-          what, buf);
+  fprintf(stderr, "[clip %+ldms #%ld] %s %s\n", cl_ms_since() - cl_t0, n, what,
+          buf);
 }
 
 static Window clip_win = None;
@@ -194,8 +194,8 @@ static void x11_clipboard_serve_request(Display *dpy,
         XSelectInput(dpy, req->requestor, PropertyChangeMask);
       }
       long total = (long)clip_png_len;
-      XChangeProperty(dpy, req->requestor, prop, clip_incr, 32,
-                      PropModeReplace, (unsigned char *)&total, 1);
+      XChangeProperty(dpy, req->requestor, prop, clip_incr, 32, PropModeReplace,
+                      (unsigned char *)&total, 1);
       XFlush(dpy);
       incr_active = true;
       incr_req = req->requestor;
@@ -210,8 +210,8 @@ static void x11_clipboard_serve_request(Display *dpy,
     }
   } else if (req->target == clip_urilist && clip_file_uri) {
     size_t n = strlen(clip_file_uri);
-    XChangeProperty(dpy, req->requestor, prop, clip_urilist, 8,
-                    PropModeReplace, (unsigned char *)clip_file_uri, (int)n);
+    XChangeProperty(dpy, req->requestor, prop, clip_urilist, 8, PropModeReplace,
+                    (unsigned char *)clip_file_uri, (int)n);
     resp.xselection.property = prop;
   } else if (req->target == clip_gnome_files && clip_gnome_payload) {
     XChangeProperty(dpy, req->requestor, prop, clip_gnome_files, 8,
@@ -249,14 +249,14 @@ static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
   size_t remaining = clip_png_len - incr_off;
   if (remaining > 0) {
     size_t n = remaining > CLIP_INCR_CHUNK ? CLIP_INCR_CHUNK : remaining;
-    XChangeProperty(dpy, incr_req, incr_prop, clip_img_atom, 8,
-                    PropModeReplace, clip_png + incr_off, (int)n);
+    XChangeProperty(dpy, incr_req, incr_prop, clip_img_atom, 8, PropModeReplace,
+                    clip_png + incr_off, (int)n);
     incr_off += n;
     cl_trace("INCR", "sent chunk n=%zu off=%zu remaining=%zu", n, incr_off,
              remaining);
   } else {
-    XChangeProperty(dpy, incr_req, incr_prop, clip_img_atom, 8,
-                    PropModeReplace, NULL, 0);
+    XChangeProperty(dpy, incr_req, incr_prop, clip_img_atom, 8, PropModeReplace,
+                    NULL, 0);
     cl_trace("INCR", "END off=%zu len=%zu terminator sent", incr_off,
              clip_png_len);
     x11_clipboard_abort_incr();
@@ -576,7 +576,7 @@ static Display *x11_clipboard_read_display(void) {
   XSetWindowAttributes attrs = {0};
   attrs.override_redirect = True;
   clip_rd_win = XCreateWindow(d, root, 0, 0, 1, 1, 0, 0, InputOutput,
-                                CopyFromParent, CWOverrideRedirect, &attrs);
+                              CopyFromParent, CWOverrideRedirect, &attrs);
   clip_rd_prop = XInternAtom(d, "CLIP_READ", False);
   clip_rd_incr = XInternAtom(d, "INCR", False);
   XFlush(d);

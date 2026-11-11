@@ -846,7 +846,6 @@ static void nob_write_json_string(FILE *f, const char *s) {
   fputc('"', f);
 }
 
-
 typedef struct {
   const char *path;
   int line;
@@ -959,15 +958,33 @@ static void chk_tokenize(const char *buf, size_t len) {
       continue;
     }
     switch (c) {
-      case '*': chk_tok_add(j, j + 1, CHK_STAR); break;
-      case '(': chk_tok_add(j, j + 1, CHK_LPAREN); break;
-      case ')': chk_tok_add(j, j + 1, CHK_RPAREN); break;
-      case '{': chk_tok_add(j, j + 1, CHK_LBRACE); break;
-      case '}': chk_tok_add(j, j + 1, CHK_RBRACE); break;
-      case ';': chk_tok_add(j, j + 1, CHK_SEMI); break;
-      case '=': chk_tok_add(j, j + 1, CHK_EQUAL); break;
-      case ',': chk_tok_add(j, j + 1, CHK_COMMA); break;
-      default: chk_tok_add(j, j + 1, CHK_OTHER); break;
+    case '*':
+      chk_tok_add(j, j + 1, CHK_STAR);
+      break;
+    case '(':
+      chk_tok_add(j, j + 1, CHK_LPAREN);
+      break;
+    case ')':
+      chk_tok_add(j, j + 1, CHK_RPAREN);
+      break;
+    case '{':
+      chk_tok_add(j, j + 1, CHK_LBRACE);
+      break;
+    case '}':
+      chk_tok_add(j, j + 1, CHK_RBRACE);
+      break;
+    case ';':
+      chk_tok_add(j, j + 1, CHK_SEMI);
+      break;
+    case '=':
+      chk_tok_add(j, j + 1, CHK_EQUAL);
+      break;
+    case ',':
+      chk_tok_add(j, j + 1, CHK_COMMA);
+      break;
+    default:
+      chk_tok_add(j, j + 1, CHK_OTHER);
+      break;
     }
     j++;
   }
@@ -1318,7 +1335,8 @@ static bool check_layering(void) {
     return false;
   if (!nob_walk_dir("tests", check_walk))
     return false;
-  printf("check: scanned %d files, %d skapi violation(s), %d function-name violation(s)\n",
+  printf("check: scanned %d files, %d skapi violation(s), %d function-name "
+         "violation(s)\n",
          check_state.files_scanned, check_state.skapi_violations,
          check_state.fn_violations);
   return check_state.skapi_violations + check_state.fn_violations == 0;
@@ -1333,7 +1351,8 @@ int main(int argc, char **argv) {
   int do_check = 0;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
-      printf("Usage: %s [-win32] [-run] [-release] [-test] [-asan] [-check] [-help]\n",
+      printf("Usage: %s [-win32] [-run] [-release] [-test] [-asan] [-check] "
+             "[-help]\n",
              argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");

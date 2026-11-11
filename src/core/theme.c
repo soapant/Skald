@@ -40,11 +40,9 @@ void Theme_Apply(void) {
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++)
     saved[i] = *theme_targets[i];
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++)
-    *theme_targets[i] =
-        *(ColorRef *)((const char *)found + theme_slots[i].off);
+    *theme_targets[i] = *(ColorRef *)((const char *)found + theme_slots[i].off);
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++) {
-    if (saved[i] != *theme_targets[i] &&
-        Theme_ColorPinned(theme_slots[i].name))
+    if (saved[i] != *theme_targets[i] && Theme_ColorPinned(theme_slots[i].name))
       *theme_targets[i] = saved[i];
   }
 }
@@ -77,8 +75,8 @@ bool Theme_PinScanFile(const char *path) {
           }
         }
         if (!known && theme_pinned_count < THEME_MAX_PINNED) {
-          snprintf(theme_pinned[theme_pinned_count],
-                   sizeof(theme_pinned[0]), "%s", name);
+          snprintf(theme_pinned[theme_pinned_count], sizeof(theme_pinned[0]),
+                   "%s", name);
           theme_pinned_count++;
         }
       }

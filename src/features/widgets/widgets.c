@@ -344,8 +344,7 @@ static void net_usage_save(void) {
 static void net_usage_sample(void) {
   unsigned long long total_rx = sk_net_rx_bytes();
   double elapsed = sk_end_timer(net_last_sample);
-  if (net.have_baseline && total_rx >= net.last_total_rx &&
-      elapsed > 0.05) {
+  if (net.have_baseline && total_rx >= net.last_total_rx && elapsed > 0.05) {
     double delta = (double)(total_rx - net.last_total_rx);
     double inst = delta / elapsed;
     if (net.rate_bps <= 0.0)
@@ -419,16 +418,16 @@ void on_internet_hover(void) {
 
 SKALD_FEATURE_INIT {
   disk = sk_widget(.name = "disk_usage", .fps = FPS, .no_bg = NO_BG,
-                     .slot = WIDGET_SLOT_BOTTOM_LEFT,
-                     .render = widgets_disk_usage_render);
+                   .slot = WIDGET_SLOT_BOTTOM_LEFT,
+                   .render = widgets_disk_usage_render);
 
   mem = sk_widget(.name = "memory_usage", .fps = FPS, .no_bg = NO_BG,
-                    .slot = WIDGET_SLOT_BOTTOM_LEFT,
-                    .render = widgets_memory_usage_render);
+                  .slot = WIDGET_SLOT_BOTTOM_LEFT,
+                  .render = widgets_memory_usage_render);
 
   cpu = sk_widget(.name = "cpu_usage", .fps = FPS, .no_bg = NO_BG,
-                    .slot = WIDGET_SLOT_BOTTOM_LEFT,
-                    .render = widgets_cpu_usage_render);
+                  .slot = WIDGET_SLOT_BOTTOM_LEFT,
+                  .render = widgets_cpu_usage_render);
 
   sk_widget(.name = "date_and_time", .fps = FPS, .no_bg = NO_BG,
             .slot = WIDGET_SLOT_BOTTOM_RIGHT,

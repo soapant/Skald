@@ -250,8 +250,8 @@ static bool vim_key_interceptor(const PopupKeyEvent *key) {
   if (vim_key_to_token(key, token, sizeof(token))) {
     if (key_buffer_count >= VIM_BUFFER_TOKENS)
       key_buffer_count = 0;
-    snprintf(key_buffer[key_buffer_count],
-             sizeof(key_buffer[key_buffer_count]), "%s", token);
+    snprintf(key_buffer[key_buffer_count], sizeof(key_buffer[key_buffer_count]),
+             "%s", token);
     key_buffer_count++;
 
     for (int i = 0; i < motion_count; i++) {

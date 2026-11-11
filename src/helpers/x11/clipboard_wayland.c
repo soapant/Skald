@@ -121,7 +121,7 @@ static const char *wl_read_guard(const void *offer) {
 
   if (wl_read_disabled)
     return wl_read_block_reason[0] ? wl_read_block_reason
-                                     : "read path disabled";
+                                   : "read path disabled";
   if (!offer)
     return "no offer";
   if (wl_hypr_pid <= 0)
@@ -176,8 +176,7 @@ static const struct wl_interface iface_seat;
 
 static const struct wl_interface *src_offer_types[] = {NULL};
 static const struct wl_interface *mgr_create_types[] = {&iface_source};
-static const struct wl_interface *mgr_device_types[] = {&iface_device,
-                                                          NULL};
+static const struct wl_interface *mgr_device_types[] = {&iface_device, NULL};
 static const struct wl_interface *dev_sel_types[] = {&iface_source};
 static const struct wl_interface *dev_offer_types[] = {&iface_offer};
 static const struct wl_interface *dev_psel_types[] = {&iface_offer};
@@ -231,13 +230,11 @@ static const struct wl_interface iface_ext_device;
 static const struct wl_interface iface_ext_manager;
 
 static const struct wl_interface *ext_src_offer_types[] = {NULL};
-static const struct wl_interface *ext_mgr_create_types[] = {
-    &iface_ext_source};
-static const struct wl_interface *ext_mgr_device_types[] = {
-    &iface_ext_device, NULL};
+static const struct wl_interface *ext_mgr_create_types[] = {&iface_ext_source};
+static const struct wl_interface *ext_mgr_device_types[] = {&iface_ext_device,
+                                                            NULL};
 static const struct wl_interface *ext_dev_sel_types[] = {&iface_ext_source};
-static const struct wl_interface *ext_dev_offer_types[] = {
-    &iface_ext_offer};
+static const struct wl_interface *ext_dev_offer_types[] = {&iface_ext_offer};
 static const struct wl_interface *ext_dev_psel_types[] = {&iface_ext_offer};
 
 static const struct wl_message ext_source_requests[] = {
@@ -250,7 +247,7 @@ static const struct wl_message ext_source_events[] = {
 };
 static const struct wl_interface iface_ext_source = {
     "ext_data_control_source_v1", 1, 2,
-    ext_source_requests,        2, ext_source_events};
+    ext_source_requests,          2, ext_source_events};
 
 static const struct wl_message ext_offer_requests[] = {
     {"receive", "sh", NULL},
@@ -260,8 +257,7 @@ static const struct wl_message ext_offer_events[] = {
     {"offer", "s", NULL},
 };
 static const struct wl_interface iface_ext_offer = {
-    "ext_data_control_offer_v1", 1, 2,
-    ext_offer_requests,        1, ext_offer_events};
+    "ext_data_control_offer_v1", 1, 2, ext_offer_requests, 1, ext_offer_events};
 
 static const struct wl_message ext_device_requests[] = {
     {"set_selection", "?o", ext_dev_sel_types},
@@ -276,7 +272,7 @@ static const struct wl_message ext_device_events[] = {
 };
 static const struct wl_interface iface_ext_device = {
     "ext_data_control_device_v1", 1, 4,
-    ext_device_requests,        4, ext_device_events};
+    ext_device_requests,          4, ext_device_events};
 
 static const struct wl_message ext_manager_requests[] = {
     {"create_data_source", "n", ext_mgr_create_types},
@@ -296,7 +292,7 @@ static const struct wl_message seat_events[] = {
     {"name", "s", NULL},
 };
 static const struct wl_interface iface_seat = {"wl_seat", 1, 0,
-                                                 NULL,      2, seat_events};
+                                               NULL,      2, seat_events};
 
 static struct wl_display *wl_dpy = NULL;
 static struct wl_proxy *wl_manager = NULL;
@@ -335,8 +331,7 @@ static void reg_global(void *data, struct wl_proxy *reg, uint32_t name,
   wl_ev_count++;
   wl_trace("EV registry.global",
            "name=%u iface='%s' version=%u (mgr=%u proto=%s ext=%d)", name,
-           iface ? iface : "?", version, mgr_name, mgr_proto,
-           mgr_ext ? 1 : 0);
+           iface ? iface : "?", version, mgr_name, mgr_proto, mgr_ext ? 1 : 0);
   if (strcmp(iface, "zwlr_data_control_manager_v1") == 0 ||
       strcmp(iface, "ext_data_control_manager_v1") == 0) {
     bool is_ext = strcmp(iface, "ext_data_control_manager_v1") == 0;
@@ -386,8 +381,7 @@ static void offer_mime(void *data, struct wl_proxy *offer, const char *mime) {
   if (wl_offer_mime_count < 8) {
     strncpy(wl_offer_mimes[wl_offer_mime_count], mime,
             sizeof(wl_offer_mimes[0]) - 1);
-    wl_offer_mimes[wl_offer_mime_count][sizeof(wl_offer_mimes[0]) - 1] =
-        '\0';
+    wl_offer_mimes[wl_offer_mime_count][sizeof(wl_offer_mimes[0]) - 1] = '\0';
     wl_offer_mime_count++;
   }
   pthread_mutex_unlock(&wl_text_lock);
@@ -443,7 +437,7 @@ static void dev_finished(void *data, struct wl_proxy *dev) {
   wl_ev_count++;
   wl_trace("EV device.finished", "dev=%p display_err=%d", (void *)dev,
            (wl_dpy && wl.display_get_error) ? wl.display_get_error(wl_dpy)
-                                              : -1);
+                                            : -1);
 }
 
 static void dev_primary(void *data, struct wl_proxy *dev,
@@ -545,8 +539,7 @@ static void src_cancelled(void *data, struct wl_proxy *src) {
   (void)data;
   wl_ev_count++;
   wl_trace("EV source.cancelled", "src=%p is_source=%d is_psource=%d",
-           (void *)src, src == wl_source ? 1 : 0,
-           src == wl_psource ? 1 : 0);
+           (void *)src, src == wl_source ? 1 : 0, src == wl_psource ? 1 : 0);
   if (src == wl_source)
     wl_source = NULL;
   if (src == wl_psource)
@@ -707,10 +700,10 @@ static bool wl_setup(void) {
   }
   pthread_mutex_lock(&wl_lock);
   wl_manager = wl.proxy_marshal_flags(
-      reg, 0, use_manager, (uint32_t)mgr_bind_ver, 0, mgr_name,
-      use_mgr_name, (uint32_t)mgr_bind_ver, NULL);
-  struct wl_proxy *seat = wl.proxy_marshal_flags(
-      reg, 0, &iface_seat, 1, 0, seat_name, "wl_seat", 1, NULL);
+      reg, 0, use_manager, (uint32_t)mgr_bind_ver, 0, mgr_name, use_mgr_name,
+      (uint32_t)mgr_bind_ver, NULL);
+  struct wl_proxy *seat = wl.proxy_marshal_flags(reg, 0, &iface_seat, 1, 0,
+                                                 seat_name, "wl_seat", 1, NULL);
   if (!wl_manager || !seat) {
     pthread_mutex_unlock(&wl_lock);
     if (seat)
@@ -864,8 +857,7 @@ int x11_clipboard_set_text(const char *text) {
     return 0;
   wl_trace("API SetText", "len=%d text='%s'", (int)strlen(text), text);
   pthread_mutex_lock(&wl_text_lock);
-  bool same =
-      wl_text != NULL && strcmp(wl_text, text) == 0 && wl_png == NULL;
+  bool same = wl_text != NULL && strcmp(wl_text, text) == 0 && wl_png == NULL;
   pthread_mutex_unlock(&wl_text_lock);
   if (same && wl_source != NULL) {
     wl_trace("API SetText",
@@ -918,8 +910,7 @@ int x11_clipboard_set_image(const unsigned char *png, size_t len) {
   free(wl_png);
   wl_png = np;
   wl_png_len = len;
-  snprintf(wl_png_mime, sizeof(wl_png_mime), "%s",
-           mime ? mime : "image/png");
+  snprintf(wl_png_mime, sizeof(wl_png_mime), "%s", mime ? mime : "image/png");
   free(wl_text);
   wl_text = NULL;
   free(wl_uri_list);
@@ -971,15 +962,13 @@ static const char *wl_pick_mime_locked(void) {
 
 char *x11_clipboard_get_text(void) {
   wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
-           (void *)wl_offer, wl_has_selection ? 1 : 0,
-           wl_offer_mime_count);
+           (void *)wl_offer, wl_has_selection ? 1 : 0, wl_offer_mime_count);
   if (!wl_setup()) {
     wl_trace("API GetText", "setup failed");
     return NULL;
   }
   pthread_mutex_lock(&wl_lock);
-  struct wl_proxy *offer =
-      (wl_offer && wl_has_selection) ? wl_offer : NULL;
+  struct wl_proxy *offer = (wl_offer && wl_has_selection) ? wl_offer : NULL;
   pthread_mutex_lock(&wl_text_lock);
   const char *pick = offer ? wl_pick_mime_locked() : NULL;
   char mime[64] = {0};
@@ -991,8 +980,8 @@ char *x11_clipboard_get_text(void) {
     wl_trace(
         "API GetText",
         "NO OFFER offer=%p has_selection=%d mime_count=%d picked='%s' dperr=%d",
-        (void *)wl_offer, wl_has_selection ? 1 : 0, wl_offer_mime_count,
-        mime, wl.display_get_error(wl_dpy));
+        (void *)wl_offer, wl_has_selection ? 1 : 0, wl_offer_mime_count, mime,
+        wl.display_get_error(wl_dpy));
     return NULL;
   }
   int fds[2] = {-1, -1};

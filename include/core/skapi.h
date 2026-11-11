@@ -19,27 +19,16 @@
 #include "core/cc_registry.h"
 
 typedef StringList SkStringList;
-
 typedef HotkeyKey SkKey;
-
 typedef struct PlatformWidget PlatformWidget;
-
 typedef PlColor SkColor;
-
 typedef PlMetrics SkMetrics;
 typedef PlEvent SkEvent;
 typedef PlEventCallback SkEventCallback;
 typedef Widget SkWidget;
 typedef WidgetSpec SkWidgetSpec;
-typedef struct {
-  int index;
-  char name[128];
-  int x, y, w, h;
-  bool is_primary;
-} SkMonitorInfo;
 typedef WidgetState SkWidgetState;
 typedef WidgetRenderFn SkWidgetRenderFn;
-
 typedef PlRect SkRect;
 typedef PlLine SkLine;
 typedef PlCircle SkCircle;
@@ -49,6 +38,13 @@ typedef PlWindowList SkWindowList;
 typedef CheckboxSpec SkCheckboxSpec;
 typedef ClipboardEntry SkClipboardEntry;
 typedef ClipboardHistory SkClipboardHistory;
+
+typedef struct {
+  int index;
+  char name[128];
+  int x, y, w, h;
+  bool is_primary;
+} SkMonitorInfo;
 
 bool sk_copy_to_clipboard(const char *text);
 
@@ -106,7 +102,7 @@ bool sk_remove_line_contains(const char *path, const char *substr);
 bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
                            bool *out_nodisplay);
 
-char *sk_get_icon_path(const char *app_path_path);
+char *sk_get_icon_path(const char *path);
 
 bool sk_append_to_file(const char *filepath, const char *line);
 

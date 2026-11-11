@@ -260,8 +260,8 @@ static LRESULT CALLBACK ShotSelProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (b > ov_h)
       b = ov_h;
     if (sel_has)
-      sel_fill(sel_prev.left, sel_prev.top, sel_prev.right,
-               sel_prev.bottom, SEL_DIM);
+      sel_fill(sel_prev.left, sel_prev.top, sel_prev.right, sel_prev.bottom,
+               SEL_DIM);
     sel_prev.left = l;
     sel_prev.top = t;
     sel_prev.right = r;
@@ -359,8 +359,8 @@ static bool shot_capture_virtual(void) {
     DeleteDC(cap_dc);
     cap_dc = NULL;
     ReleaseDC(NULL, screen);
-    printf("screenshot: virtual snapshot failed %dx%d err=%lu\n", cap_w,
-           cap_h, GetLastError());
+    printf("screenshot: virtual snapshot failed %dx%d err=%lu\n", cap_w, cap_h,
+           GetLastError());
     return false;
   }
   cap_old = SelectObject(cap_dc, cap_bmp);
@@ -528,8 +528,8 @@ static bool pk_capture_rect(const RECT *r, const char *path) {
 
   HGDIOBJ hOldBitmap = SelectObject(hMemoryDC, hBitmap);
   if (cap_dc && cap_bmp) {
-    BitBlt(hMemoryDC, 0, 0, w, h, cap_dc, r->left - cap_vx,
-           r->top - cap_vy, SRCCOPY);
+    BitBlt(hMemoryDC, 0, 0, w, h, cap_dc, r->left - cap_vx, r->top - cap_vy,
+           SRCCOPY);
   } else {
     BitBlt(hMemoryDC, 0, 0, w, h, hScreenDC, r->left, r->top, SRCCOPY);
   }

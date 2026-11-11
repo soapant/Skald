@@ -166,12 +166,12 @@ static void PromptPopup_Destroy(Popup *self) {
   free(data);
 }
 
-static const PopupVTable prompt_popup_vtable = {
-    .on_show = PromptPopup_OnShow,
-    .on_hide = PromptPopup_OnHide,
-    .on_render = PromptPopup_OnRender,
-    .on_key = PromptPopup_OnKey,
-    .destroy = PromptPopup_Destroy};
+static const PopupVTable prompt_popup_vtable = {.on_show = PromptPopup_OnShow,
+                                                .on_hide = PromptPopup_OnHide,
+                                                .on_render =
+                                                    PromptPopup_OnRender,
+                                                .on_key = PromptPopup_OnKey,
+                                                .destroy = PromptPopup_Destroy};
 
 int PromptPopup_GetBounds(Popup *p, int *x, int *y, int *w, int *h) {
   if (!p || p->type != POPUP_PROMPT)

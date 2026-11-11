@@ -23,7 +23,8 @@ static __thread XftDraw *b_xd = NULL;
 static __thread Visual *b_vis = NULL;
 static __thread Colormap b_cmap = 0;
 
-bool Platform_ListboxBackendBegin(int item_height_override, ListboxBackendInit *out) {
+bool Platform_ListboxBackendBegin(int item_height_override,
+                                  ListboxBackendInit *out) {
   x11_get_draw_context(&b_dpy, &b_xd, &b_vis, &b_cmap);
   if (!b_dpy || !b_xd)
     return false;
@@ -34,8 +35,8 @@ bool Platform_ListboxBackendBegin(int item_height_override, ListboxBackendInit *
   return true;
 }
 
-void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h, int fw,
-                                  int frame_h, bool sel) {
+void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
+                                          int fw, int frame_h, bool sel) {
   if (RoundedCorners && CornerRadius > 0) {
     if (sel) {
       int R = PROMPT_SEL_RADIUS;
@@ -49,8 +50,7 @@ void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h, int
     PromptState tmp = {0};
     tmp.width = fw;
     tmp.height = frame_h;
-    x11_draw_list_background(&tmp, b_dpy, b_xd, b_vis, b_cmap, y,
-                             item_h, sel);
+    x11_draw_list_background(&tmp, b_dpy, b_xd, b_vis, b_cmap, y, item_h, sel);
   }
 }
 

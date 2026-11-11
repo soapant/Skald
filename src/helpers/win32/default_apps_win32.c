@@ -32,7 +32,7 @@ static char sm_match[SM_SLOTS][128];
 static bool sm_slot_done[SM_SLOTS];
 
 const char *win32_sm_lookup(int slot, const char *const possibilities[],
-                      size_t count) {
+                            size_t count) {
 
   if (slot < 0 || slot >= SM_SLOTS)
     return NULL;
