@@ -72,6 +72,7 @@ TEST(load_reload_unload) {
 
   FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
   ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  FeatureLoader_DrainRetiredUnloads();
   ASSERT_FALSE(has_file(hot1));
   ASSERT_TRUE(has_file(hot2));
 
