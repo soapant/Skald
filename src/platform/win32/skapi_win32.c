@@ -311,7 +311,12 @@ typedef struct {
 } SkNetAdapter;
 
 static CRITICAL_SECTION net_cs;
-static BOOL net_cs_ready = FALSE;
+static INIT_ONCE net_cs_once = INIT_ONCE_STATIC_INIT;
+
+static BOOL CALLBACK net_cs_init(PINIT_ONCE once, PVOID param, PVOID *ctx) {
+  InitializeCriticalSection(&net_cs);
+  return TRUE;
+}
 static SkNetStatus net_cached = SK_NET_OFFLINE;
 static DWORD net_cached_at = 0;
 static DWORD net_ever = 0;
@@ -321,17 +326,14 @@ static SkNetAdapter net_adapter = {0};
 
 static void net_lock(void) {
 
-  if (!net_cs_ready) {
-    InitializeCriticalSection(&net_cs);
-    net_cs_ready = TRUE;
-  }
+  InitOnceExecuteOnce(&net_cs_once, net_cs_init, NULL, NULL);
   EnterCriticalSection(&net_cs);
 }
 
 static void net_unlock(void) {
 
-  if (net_cs_ready)
-    LeaveCriticalSection(&net_cs);
+  InitOnceExecuteOnce(&net_cs_once, net_cs_init, NULL, NULL);
+  LeaveCriticalSection(&net_cs);
 }
 
 static bool net_resolve_adapter(SkNetAdapter *out) {

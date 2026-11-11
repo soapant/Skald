@@ -294,7 +294,13 @@ ULONGLONG g_img_cache_tick = 0;
 
 CRITICAL_SECTION g_img_cache_cs;
 
-BOOL g_img_cache_cs_ready = FALSE;
+INIT_ONCE g_img_cache_cs_once = INIT_ONCE_STATIC_INIT;
+
+static BOOL CALLBACK win32_img_cache_cs_init(PINIT_ONCE once, PVOID param,
+                                             PVOID *ctx) {
+  InitializeCriticalSection(&g_img_cache_cs);
+  return TRUE;
+}
 
 ULONG_PTR g_gdip_token = 0;
 
@@ -327,17 +333,16 @@ HDC win32_screen_dc(void) {
 
 void win32_img_cache_lock(void) {
 
-  if (!g_img_cache_cs_ready) {
-    InitializeCriticalSection(&g_img_cache_cs);
-    g_img_cache_cs_ready = TRUE;
-  }
+  InitOnceExecuteOnce(&g_img_cache_cs_once, win32_img_cache_cs_init, NULL,
+                      NULL);
   EnterCriticalSection(&g_img_cache_cs);
 }
 
 void win32_img_cache_unlock(void) {
 
-  if (g_img_cache_cs_ready)
-    LeaveCriticalSection(&g_img_cache_cs);
+  InitOnceExecuteOnce(&g_img_cache_cs_once, win32_img_cache_cs_init, NULL,
+                      NULL);
+  LeaveCriticalSection(&g_img_cache_cs);
 }
 
 void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
