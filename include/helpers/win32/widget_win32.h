@@ -8,7 +8,6 @@
 
 #define WCLICK_MAX 32
 #define WDESTROY_MAX 32
-#define WIDGET_CLASS "SkaldWidget"
 
 struct PlatformWidget {
   PlatformWidgetBase base;

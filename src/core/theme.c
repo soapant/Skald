@@ -95,7 +95,7 @@ bool Theme_PinScanFile(const char *path) {
     if (line[0] != ' ' && line[0] != '\t')
       continue;
     char name[64];
-    unsigned r, g, b;
+    unsigned int r = 0, g = 0, b = 0;
     if (sscanf(line, " %63[A-Z_] = RGB(%u,%u,%u", name, &r, &g, &b) == 4 &&
         strncmp(name, "COLOR_", 6) == 0) {
       ColorRef v = (ColorRef)((r & 0xFFu) | ((g & 0xFFu) << 8) |

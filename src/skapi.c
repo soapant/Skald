@@ -3058,7 +3058,13 @@ static void *sk_run_every_thread(void *arg) {
 }
 
 void sk_run_every(double seconds, void (*callback)(void)) {
+  if (!callback)
+    return;
   SkRunEveryArgs *args = malloc(sizeof(SkRunEveryArgs));
+  if (!args) {
+    log_error("sk_run_every: malloc failed");
+    return;
+  }
   args->seconds = seconds;
   args->callback = callback;
   sk_thread_create_ex(sk_run_every_thread, args, (void *)(uintptr_t)callback);
