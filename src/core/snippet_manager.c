@@ -171,7 +171,8 @@ bool snippet_unregister_internal(const char *trigger) {
     n++;
   }
   if (n != snippet_count)
-    memset(&snippets[n], 0, (size_t)(snippet_count - n) * sizeof(SnippetBinding));
+    memset(&snippets[n], 0,
+           (size_t)(snippet_count - n) * sizeof(SnippetBinding));
   snippet_count = n;
   return found;
 }

@@ -1,11 +1,9 @@
 #define STB_DS_IMPLEMENTATION
 #include "deps/stb_ds.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <stddef.h>
-
 #include "deps/log.h"
 #include "config.h"
 #include "platform/platform.h"
@@ -51,6 +49,5 @@ int main() {
   Platform_CleanupDisplaySafe();
 
   Platform_CleanupPlatformResources();
-
   return 0;
 }

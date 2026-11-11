@@ -51,7 +51,6 @@ extern WindowHandle s_tray_wnd;
 #define WIN32_MON_UP 2
 #define WIN32_MON_DOWN 3
 
-extern ULONGLONG g_timer_start_ms;
 extern BOOL g_win32_fs_active;
 extern char g_win32_project_root[MAX_PATH];
 extern HWND g_win32_last_min;

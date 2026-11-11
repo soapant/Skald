@@ -89,14 +89,11 @@ void GetDrawOffset(int *out_x, int *out_y);
 
 bool IsPopupActive(WindowHandle hPopupWnd);
 void UI_SetSelection(ListBoxInfo *lb, int index);
-void UI_SetHorizontalExtent(int width);
 void UI_LB_SetCount(ListBoxInfo *lb, int count);
 void UI_LB_BeginUpdate(void);
 void UI_LB_EndUpdate(void);
 void UI_RequestPopupRepaint(void);
 void UI_LegacySyncRepaint(void);
-void UI_LB_SetItemHeight(int height);
-void UI_LB_SetCaretIndex(int index, bool scroll);
 int UI_LB_GetViewTop(ListBoxInfo *lb);
 int UI_LB_GetVisibleCount(void);
 void UI_LB_SetVisibleCount(int count);
@@ -118,7 +115,6 @@ void UI_SyncFilterFromEdit(void);
 void UI_ApplyFilterToEdit(void);
 ListBoxInfo *UI_GetPopupListBox(void);
 void UI_SyncEditCursor(int pos);
-bool UI_ApplyBackspaceToPopup(void);
 int UI_InsertChar(wchar_t wc);
 
 #define UI_DEBOUNCE_MS 40

@@ -13,8 +13,6 @@
 #define MSG_TEXT_INSET_Y 15
 #define MSG_BOTTOM_CLIP 5
 
-typedef struct FadeWindowData FadeWindowDataFwd;
-
 extern HWND g_msg_slots[MSG_SLOT_MAX];
 extern int g_msg_slot_count;
 

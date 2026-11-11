@@ -53,8 +53,7 @@ int Platform_CopyToClipboard(const char *text) {
     return 0;
   }
 
-  if (MultiByteToWideChar(CP_UTF8, 0, clean_text, -1, pMem, wlen) !=
-      wlen) {
+  if (MultiByteToWideChar(CP_UTF8, 0, clean_text, -1, pMem, wlen) != wlen) {
     GlobalFree(hMem);
     free(clean_text);
     return 0;
