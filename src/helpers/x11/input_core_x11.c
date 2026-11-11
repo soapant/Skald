@@ -993,8 +993,12 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
              val, has_popup);
     return true;
   }
-  if (val == 0)
-    hotkey_key_up(x11_convert_key_to_windows_vk(code));
+  if (val == 0) {
+    int vk0 = x11_convert_key_to_windows_vk(code);
+    hotkey_key_up(vk0);
+    if (vk0)
+      InputState_Update(vk0, false, remap_current_mods(), 0);
+  }
   if (val != 2) {
     remap_update_phys(x11_convert_key_to_windows_vk(code), val);
   }
@@ -1014,6 +1018,8 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   if (val == 2 && x11_is_suppressed(code))
     return true;
   if (has_popup) {
+    if (val != 0 && x11_is_suppressed(code))
+      return true; /* repeat/passthrough of a key whose press was swallowed */
     bool hk_swallowed = (val == 1) && x11_handle_global_key(code, val);
     if (hk_swallowed) {
       x11_set_suppress(code, true);
@@ -1060,7 +1066,8 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   }
   if (grabbed) {
     if (x11_uinput_fd >= 0) {
-      if (hotkey_process(x11_convert_key_to_windows_vk(code),
+      if ((val == 1 || val == 2) &&
+          hotkey_process(x11_convert_key_to_windows_vk(code),
                          remap_current_mods()))
         return true;
       if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
