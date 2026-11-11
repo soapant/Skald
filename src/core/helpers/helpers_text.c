@@ -756,7 +756,7 @@ bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key) {
     pending_hotkey_vk = 0;
     pending_hotkey_mod = 0;
   }
-  bool swallow = !trigger_press && (key->ctrl || key->alt);
+  bool swallow = !trigger_press && (key->ctrl);
   return swallow;
 }
 
