@@ -1,8 +1,0 @@
-name = "system_control"
-description = ""
-
-[provides]
-
-[depends]
-control_center
-
