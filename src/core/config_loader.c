@@ -514,12 +514,10 @@ static size_t confiemit_region(char *buf, size_t cap) {
   cfput(buf, cap, &off, "    BackgroundImage = ");
   cfput_escaped(buf, cap, &off, BackgroundImage ? BackgroundImage : "");
   cfput(buf, cap, &off, ";\n");
-  ColorRef cols[] = {COLOR_BG,        COLOR_TEXT,
-                     COLOR_ALTERNATE, COLOR_SELECTED_TEXT,
-                     COLOR_CURSOR,    COLOR_BORDER};
-  const char *names[] = {"COLOR_BG",        "COLOR_TEXT",
-                         "COLOR_ALTERNATE", "COLOR_SELECTED_TEXT",
-                         "COLOR_CURSOR",    "COLOR_BORDER"};
+  ColorRef cols[] = {COLOR_BG, COLOR_TEXT, COLOR_SELECTED_TEXT, COLOR_CURSOR,
+                     COLOR_BORDER};
+  const char *names[] = {"COLOR_BG", "COLOR_TEXT", "COLOR_SELECTED_TEXT",
+                         "COLOR_CURSOR", "COLOR_BORDER"};
   for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
     cfput(buf, cap, &off, "    %s = RGB(%u, %u, %u);\n", names[i],
           cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);
