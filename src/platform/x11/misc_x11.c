@@ -286,7 +286,7 @@ bool Platform_PasteContent(char *content) {
 bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
                                      char *cmd, size_t cmd_size) {
   snprintf(cmd, cmd_size,
-           "gcc -std=gnu17 -I include -I/usr/include/freetype2 "
+           "gcc -std=gnu17 -I build/sdk -I/usr/include/freetype2 "
            "-I/usr/include/libpng16 -I/usr/include/gio-unix-2.0 "
            "-I/usr/include/X11 -pipe -fPIC -shared -o %s %s 2>&1",
            out_tmp, src);
