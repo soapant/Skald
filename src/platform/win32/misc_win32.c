@@ -276,17 +276,26 @@ bool Platform_PasteContent(char *content) {
 const char *Platform_GetRealHome(void) {
 
   static char buf[512] = {0};
+  buf[0] = '\0';
 
   char user_profile[MAX_PATH];
-  if (GetEnvironmentVariableA("USERPROFILE", user_profile, MAX_PATH) > 0) {
-    strncpy(buf, user_profile, sizeof(buf) - 1);
-    buf[sizeof(buf) - 1] = '\0';
+  memset(user_profile, 0, sizeof(user_profile));
+  DWORD n = GetEnvironmentVariableA("USERPROFILE", user_profile, MAX_PATH);
+  if (n > 0 && n < MAX_PATH) {
+    snprintf(buf, sizeof(buf), "%s", user_profile);
     return buf;
   }
+  if (n >= MAX_PATH)
+    log_warn("Platform_GetRealHome: USERPROFILE truncated (%lu)", n);
+
   char drive[MAX_PATH];
-  if (GetEnvironmentVariableA("HOMEDRIVE", drive, MAX_PATH) > 0) {
+  memset(drive, 0, sizeof(drive));
+  n = GetEnvironmentVariableA("HOMEDRIVE", drive, MAX_PATH);
+  if (n > 0 && n < MAX_PATH) {
     char path[MAX_PATH];
-    if (GetEnvironmentVariableA("HOMEPATH", path, MAX_PATH) > 0) {
+    memset(path, 0, sizeof(path));
+    DWORD m = GetEnvironmentVariableA("HOMEPATH", path, MAX_PATH);
+    if (m > 0 && m < MAX_PATH) {
       snprintf(buf, sizeof(buf), "%s%s", drive, path);
       return buf;
     }
@@ -309,6 +318,7 @@ bool Platform_IsRunningAsRoot(void) {
 const char *Platform_GetRealUser(void) {
   static char buf[256];
   DWORD n = sizeof(buf);
+  memset(buf, 0, sizeof(buf));
   if (GetUserNameA(buf, &n) && buf[0])
     return buf;
   const char *u = getenv("USERNAME");

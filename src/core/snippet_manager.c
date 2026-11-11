@@ -63,35 +63,47 @@ bool snippet_register_internal(const char *trigger, const char *text,
 
   for (int i = 0; i < snippet_count; i++) {
     if (snippets[i].trigger && strcmp(snippets[i].trigger, trigger) == 0) {
+      int nwin = 0;
+      if (windows) {
+        while (windows[nwin])
+          nwin++;
+      }
       char *nt = strdup(trigger);
       if (!nt)
         return false;
-      snippet_free_binding(&snippets[i]);
-      snippets[i].trigger = nt;
-      snippets[i].text = text ? strdup(text) : NULL;
-      if (text && !snippets[i].text)
-        log_warn("snippet '%s': text strdup failed", trigger);
-      snippets[i].func = func;
-      snippets[i].whitelist = whitelist;
-      snippets[i].windows = NULL;
-      snippets[i].window_count = 0;
-      snprintf(snippets[i].owner, sizeof(snippets[i].owner), "%s", owner);
-      if (windows) {
-        int n = 0;
-        while (windows[n])
-          n++;
-        if (n > 0) {
-          snippets[i].windows = malloc((size_t)n * sizeof(char *));
-          if (!snippets[i].windows)
+      char *ntext = text ? strdup(text) : NULL;
+      if (text && !ntext) {
+        free(nt);
+        return false;
+      }
+      char **nwindows = NULL;
+      if (nwin > 0) {
+        nwindows = (char **)calloc((size_t)nwin, sizeof(char *));
+        if (!nwindows) {
+          free(nt);
+          free(ntext);
+          return false;
+        }
+        for (int j = 0; j < nwin; j++) {
+          nwindows[j] = strdup(windows[j] ? windows[j] : "");
+          if (!nwindows[j]) {
+            for (int k = 0; k < j; k++)
+              free(nwindows[k]);
+            free(nwindows);
+            free(nt);
+            free(ntext);
             return false;
-          for (int j = 0; j < n; j++) {
-            snippets[i].windows[j] = strdup(windows[j] ? windows[j] : "");
-            if (!snippets[i].windows[j])
-              return false;
           }
-          snippets[i].window_count = n;
         }
       }
+      snippet_free_binding(&snippets[i]);
+      snippets[i].trigger = nt;
+      snippets[i].text = ntext;
+      snippets[i].func = func;
+      snippets[i].whitelist = whitelist;
+      snippets[i].windows = nwindows;
+      snippets[i].window_count = nwindows ? nwin : 0;
+      snprintf(snippets[i].owner, sizeof(snippets[i].owner), "%s", owner);
       snippet_reset_buffer();
       return true;
     }
