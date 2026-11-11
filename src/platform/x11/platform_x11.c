@@ -666,8 +666,8 @@ bool Platform_SetWindowStringProperty(WindowHandle window, const char *atom,
   if (!dpy || window.xid == 0 || !atom || !value)
     return false;
   XChangeProperty(dpy, (Window)window.xid, XInternAtom(dpy, atom, False),
-                  XA_STRING, 8, PropModeReplace,
-                  (const unsigned char *)value, (int)strlen(value));
+                  XA_STRING, 8, PropModeReplace, (const unsigned char *)value,
+                  (int)strlen(value));
   XFlush(dpy);
   return true;
 }

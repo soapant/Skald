@@ -687,8 +687,7 @@ bool Platform_FocusWindow(const char *title) {
   fwi.dwTimeout = 0;
   FlashWindowEx(&fwi);
 
-  log_info("Platform_FocusWindow title='%s' hwnd=%p",
-           title ? title : "", hwnd);
+  log_info("Platform_FocusWindow title='%s' hwnd=%p", title ? title : "", hwnd);
   return true;
 }
 
@@ -1342,8 +1341,8 @@ redirect_loop: {
   urlComp.dwUrlPathLength = ARRAYSIZE(szUrlPath);
 
   wchar_t wUrl[L_MAX_URL_LENGTH];
-  if (MultiByteToWideChar(CP_UTF8, 0, current_url, -1, wUrl,
-                          ARRAYSIZE(wUrl)) <= 0) {
+  if (MultiByteToWideChar(CP_UTF8, 0, current_url, -1, wUrl, ARRAYSIZE(wUrl)) <=
+      0) {
     log_error("MultiByteToWideChar failed for url (len=%d)",
               (int)strlen(current_url));
     WinHttpCloseHandle(hSession);
