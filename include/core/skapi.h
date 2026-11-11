@@ -810,7 +810,7 @@ bool ski_unregister_snippet(const char *trigger);
 #define sk_unregister_snippet(trigger) ski_unregister_snippet((trigger))
 
 void sk_reload_feature(char *name);
-void sk_reload_all_features(void);
+int sk_reload_all_features(void);
 int sk_get_pid();
 
 #if defined(_WIN32)
