@@ -283,11 +283,27 @@ const char *Platform_GetRealHome(void) {
 }
 
 bool Platform_IsRunningAsRoot(void) {
-  // temporary
-  return false;
+  HANDLE token = NULL;
+  if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    return false;
+  TOKEN_ELEVATION elevation;
+  DWORD size = sizeof(elevation);
+  BOOL ok = GetTokenInformation(token, TokenElevation, &elevation,
+                                sizeof(elevation), &size);
+  CloseHandle(token);
+  return ok && elevation.TokenIsElevated;
 }
+
 const char *Platform_GetRealUser(void) {
-  // temporary
+  static char buf[256];
+  DWORD n = sizeof(buf);
+  if (GetUserNameA(buf, &n) && buf[0])
+    return buf;
+  const char *u = getenv("USERNAME");
+  if (u && u[0]) {
+    snprintf(buf, sizeof(buf), "%s", u);
+    return buf;
+  }
   return NULL;
 }
 
