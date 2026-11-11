@@ -3,7 +3,7 @@
 
 #include "test.h"
 
-#include "core/remap_parse.h"
+#include "core/remap_manager.h"
 #include "core/types/keys.h"
 
 static int g_count;

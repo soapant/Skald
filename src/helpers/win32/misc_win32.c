@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "platform/platform.h"
-#include "helpers/win32/misc_win32.h"
+#include "helpers/win32/default_apps_win32.h"
 #include <time.h>
 
 bool win32_default_browser_exe(char *out, size_t cap) {
