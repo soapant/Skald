@@ -649,6 +649,7 @@ void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   eb->text = state->eb->filter;
   eb->text_len = text_len;
   eb->cursor = state->eb->cursor;
+  eb->password_mode = state->password_mode;
   eb->sel_start = sel_start;
   eb->sel_end = sel_end;
   eb->has_selection = has_sel;

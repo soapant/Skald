@@ -45,6 +45,7 @@ struct PromptState {
   ListBoxInfo *lb;
   PromptCallbacks *callbacks;
   bool no_bg;
+  bool password_mode;
   ColorRef bg_color;
 };
 
@@ -161,6 +162,7 @@ typedef struct {
   bool tick;
   bool auto_scale;
   bool no_bg;
+  bool password_mode;
   ColorRef bg_color;
   int w;
   int h;
@@ -173,6 +175,7 @@ typedef struct {
   const char *initial_text;
   const char *placeholder;
   const char *title;
+  bool password_mode;
   int x;
   int y;
   int w;
