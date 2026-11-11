@@ -411,6 +411,16 @@ static void manifest_add_entry(const char *name, const char *section,
   bool had_file = false;
   if (f) {
     had_file = true;
+    if (fseek(f, 0, SEEK_END) == 0) {
+      long sz = ftell(f);
+      if (sz > (long)(sizeof(buf) - 1)) {
+        log_error("manifest '%s' is %ld bytes, too large to rewrite (%d)",
+                  path, sz, (int)(sizeof(buf) - 1));
+        fclose(f);
+        return;
+      }
+      rewind(f);
+    }
     len = fread(buf, 1, sizeof(buf) - 1, f);
     fclose(f);
   }

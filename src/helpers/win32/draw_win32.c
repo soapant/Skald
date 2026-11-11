@@ -96,14 +96,18 @@ int g_sym_len[WIN32_SYM_SLOTS] = {0};
 
 ULONGLONG g_sym_tick = 0;
 
+ULONGLONG g_sym_ticks[WIN32_SYM_SLOTS] = {0};
+
 HFONT win32_symbol_font(int size, const wchar_t *wide, int len) {
 
   if (len > 8)
     len = 8;
   for (int i = 0; i < WIN32_SYM_SLOTS; i++) {
     if (g_sym_fonts[i] && g_sym_sizes[i] == size && g_sym_len[i] == len &&
-        memcmp(g_sym_cp[i], wide, (size_t)len * sizeof(wchar_t)) == 0)
+        memcmp(g_sym_cp[i], wide, (size_t)len * sizeof(wchar_t)) == 0) {
+      g_sym_ticks[i] = ++g_sym_tick;
       return g_sym_fonts[i];
+    }
   }
 
   static const char *faces[] = {"Segoe UI Symbol",  "Segoe UI Emoji",
@@ -141,7 +145,7 @@ HFONT win32_symbol_font(int size, const wchar_t *wide, int len) {
   }
   if (slot < 0) {
     for (int i = 0; i < WIN32_SYM_SLOTS; i++) {
-      ULONGLONG t = (ULONGLONG)g_sym_sizes[i];
+      ULONGLONG t = g_sym_ticks[i];
       if (t <= oldest) {
         oldest = t;
         slot = i;
@@ -153,9 +157,9 @@ HFONT win32_symbol_font(int size, const wchar_t *wide, int len) {
   g_sym_fonts[slot] = found;
   g_sym_sizes[slot] = size;
   g_sym_len[slot] = len;
+  g_sym_ticks[slot] = ++g_sym_tick;
   for (int k = 0; k < len; k++)
     g_sym_cp[slot][k] = wide[k];
-  g_sym_tick++;
   return found;
 }
 

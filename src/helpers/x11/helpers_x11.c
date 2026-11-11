@@ -694,6 +694,7 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
   }
   size_t rd = fread(buf, 1, (size_t)sz, f);
   buf[rd] = '\0';
+  char *buf_end = buf + rd;
   fclose(f);
 
   int w = 0, h = 0, ncolors = 0, cpp = 1;
@@ -717,7 +718,7 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
       return NULL;
     }
   }
-  if (w <= 0 || h <= 0) {
+  if (w <= 0 || h <= 0 || w > 8192 || h > 8192 || ncolors > 65536) {
     free(buf);
     return NULL;
   }
@@ -742,6 +743,8 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
     if (!*p)
       break;
     p++;
+    if (buf_end - p < (ptrdiff_t)cpp)
+      break;
     char keybuf[16] = {0};
     strncpy(keybuf, p, (size_t)cpp);
     keybuf[cpp] = '\0';
@@ -804,6 +807,9 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
     if (!*p)
       break;
     p++;
+    const char *row_end = strchr(p, '"');
+    if (!row_end || (size_t)(row_end - p) < (size_t)w * (size_t)cpp)
+      break;
     for (int x = 0; x < w; x++) {
       char keybuf[16] = {0};
       strncpy(keybuf, p + x * cpp, (size_t)cpp);
@@ -822,9 +828,7 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
         out[(row * w + x) * 4 + 3] = colors[idx * 4 + 3];
       }
     }
-    char *endq = strchr(p, '"');
-    if (endq)
-      p = endq + 1;
+    p = (char *)row_end + 1;
     row++;
   }
   free(buf);
@@ -860,6 +864,7 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
     dst_h = 16;
 
   struct stat st;
+  memset(&st, 0, sizeof(st));
   bool has_stat = (stat(path, &st) == 0);
 
   for (int i = 0; i < decoded_count; i++) {
