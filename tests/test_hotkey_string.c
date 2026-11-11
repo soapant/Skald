@@ -3,7 +3,7 @@
 
 #include "test.h"
 
-#include "core/hotkey_string.h"
+#include "core/hotkey_manager.h"
 #include "core/types/keys.h"
 
 TEST(parse_simple_key) {

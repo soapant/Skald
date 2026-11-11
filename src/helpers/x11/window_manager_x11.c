@@ -32,7 +32,7 @@
 #include <linux/input.h>
 #include "helpers/x11/clipboard_x11.h"
 #include "helpers/x11/input_x11.h"
-#include "core/hotkey_pending.h"
+#include "core/hotkey_manager.h"
 #include "helpers/helpers_render_thread.h"
 #include "platform/widget.h"
 #include "core/remap_manager.h"

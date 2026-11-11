@@ -14,7 +14,7 @@
 #include "core/remap_manager.h"
 #include "helpers/helpers_input_state.h"
 #include "helpers/win32/input_core_win32.h"
-#include "core/hotkey_pending.h"
+#include "core/hotkey_manager.h"
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   POINT pt;

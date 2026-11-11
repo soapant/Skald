@@ -43,7 +43,7 @@
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
-#include "core/hotkey_string.h"
+#include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "helpers/helpers_render_thread.h"

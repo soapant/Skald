@@ -14,7 +14,7 @@
 #include "core/remap_manager.h"
 #include "helpers/helpers_input_state.h"
 #include "helpers/win32/input_core_win32.h"
-#include "core/hotkey_pending.h"
+#include "core/hotkey_manager.h"
 
 void win32_register_raw_mouse(HWND hwnd) {
   if (!hwnd || !IsWindow(hwnd)) {

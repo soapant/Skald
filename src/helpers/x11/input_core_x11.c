@@ -32,7 +32,7 @@
 #include <signal.h>
 
 #include "helpers/x11/display_x11.h"
-#include "core/hotkey_pending.h"
+#include "core/hotkey_manager.h"
 
 struct WindowManager;
 

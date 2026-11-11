@@ -9,7 +9,7 @@
 #include "platform/platform.h"
 #include <windows.h>
 
-#include "core/hotkey_pending.h"
+#include "core/hotkey_manager.h"
 #include "core/feature_loader.h"
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;

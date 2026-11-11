@@ -32,7 +32,7 @@
 #include <signal.h>
 
 #include "helpers/x11/display_x11.h"
-#include "core/hotkey_pending.h"
+#include "core/hotkey_manager.h"
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   int mx = 0, my = 0;

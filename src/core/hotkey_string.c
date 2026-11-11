@@ -1,5 +1,5 @@
 #include "helpers/helpers_text.h"
-#include "core/hotkey_string.h"
+#include "core/hotkey_manager.h"
 
 #include <ctype.h>
 #include <stdio.h>
