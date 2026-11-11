@@ -32,13 +32,7 @@ void ConfigApply(void) {
   RainbowText = false;
   WindowTitleText = false;
   CloseOnLossOfFocus = false;
-  Theme = "tokyo-night";
+  Theme = "onedark-pro";
   BackgroundImage = "";
-  COLOR_BG = RGB(26, 27, 38);
-  COLOR_TEXT = RGB(192, 202, 245);
-  COLOR_ALTERNATE = RGB(158, 206, 106);
-  COLOR_SELECTED_TEXT = RGB(16, 17, 28);
-  COLOR_CURSOR = RGB(192, 202, 245);
-  COLOR_BORDER = RGB(65, 72, 104);
 }
 // </skald-config-generated>
