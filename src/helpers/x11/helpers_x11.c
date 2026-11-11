@@ -249,6 +249,79 @@ static XftFont *x11_fallback_for(Display *dpy, FcChar32 cp, int px) {
   return f;
 }
 
+static int x11_utf8_fallback_runs(Display *dpy, XftFont *xf,
+                                  const unsigned char *b, int n, int px,
+                                  int (*run_cb)(Display *dpy, XftFont *font,
+                                                const unsigned char *run,
+                                                int len, void *ud),
+                                  void *ud) {
+  if (!xf || !b || n <= 0)
+    return 0;
+  int total = 0;
+  const unsigned char *end = b + n;
+  const unsigned char *p = b;
+  while (p < end) {
+    const unsigned char *runStart = p;
+    XftFont *runFont = xf;
+    while (p < end) {
+      int cl = 1;
+      FcChar32 cp = x11_utf8_cp(p, end, &cl);
+      if (!x11_font_has(runFont, cp))
+        break;
+      p += cl;
+    }
+    if (p > runStart)
+      total += run_cb(dpy, runFont, runStart, (int)(p - runStart), ud);
+    if (p >= end)
+      break;
+    int cl = 1;
+    FcChar32 cp = x11_utf8_cp(p, end, &cl);
+    XftFont *fb = x11_fallback_for(dpy, cp, px);
+    if (fb) {
+      const unsigned char *fs = p;
+      int covered = 0;
+      while (p < end) {
+        int l2 = 1;
+        FcChar32 c2 = x11_utf8_cp(p, end, &l2);
+        if (!x11_font_has(fb, c2))
+          break;
+        p += l2;
+        covered += l2;
+      }
+      if (covered > 0)
+        total += run_cb(dpy, fb, fs, covered, ud);
+      else
+        p += cl;
+    } else {
+      p += cl;
+    }
+  }
+  return total;
+}
+
+static int x11_measure_run(Display *dpy, XftFont *font,
+                           const unsigned char *run, int len, void *ud) {
+  (void)ud;
+  return xft_width(dpy, font, (const char *)run, len);
+}
+
+typedef struct {
+  XftDraw *xd;
+  XftColor *color;
+  int y;
+  int cx;
+} X11DrawRunCtx;
+
+static int x11_draw_run(Display *dpy, XftFont *font,
+                        const unsigned char *run, int len, void *ud) {
+  X11DrawRunCtx *ctx = (X11DrawRunCtx *)ud;
+  XftDrawStringUtf8(ctx->xd, ctx->color, font, ctx->cx, ctx->y,
+                    (FcChar8 *)run, len);
+  int w = xft_width(dpy, font, (const char *)run, len);
+  ctx->cx += w;
+  return w;
+}
+
 int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
                               int px) {
   if (!xf || !s || n <= 0)
@@ -269,46 +342,7 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
   }
   if (all)
     return xft_width(dpy, xf, s, n);
-  int total = 0;
-  p = b;
-  while (p < end) {
-    const unsigned char *runStart = p;
-    XftFont *runFont = xf;
-    while (p < end) {
-      int cl = 1;
-      FcChar32 cp = x11_utf8_cp(p, end, &cl);
-      if (!x11_font_has(runFont, cp))
-        break;
-      p += cl;
-    }
-    if (p > runStart)
-      total +=
-          xft_width(dpy, runFont, (const char *)runStart, (int)(p - runStart));
-    if (p >= end)
-      break;
-    int cl = 1;
-    FcChar32 cp = x11_utf8_cp(p, end, &cl);
-    XftFont *fb = x11_fallback_for(dpy, cp, px);
-    if (fb) {
-      const unsigned char *fs = p;
-      int covered = 0;
-      while (p < end) {
-        int l2 = 1;
-        FcChar32 c2 = x11_utf8_cp(p, end, &l2);
-        if (!x11_font_has(fb, c2))
-          break;
-        p += l2;
-        covered += l2;
-      }
-      if (covered > 0)
-        total += xft_width(dpy, fb, (const char *)fs, covered);
-      else
-        p += cl;
-    } else {
-      p += cl;
-    }
-  }
-  return total;
+  return x11_utf8_fallback_runs(dpy, xf, b, n, px, x11_measure_run, NULL);
 }
 
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
@@ -316,52 +350,10 @@ int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
   if (!xf || !xd || !s || n <= 0)
     return 0;
   px = x11_font_px(xf, px);
-  const unsigned char *b = (const unsigned char *)s;
-  const unsigned char *end = b + n;
-  const unsigned char *p = b;
-  int cx = x;
-  while (p < end) {
-    const unsigned char *runStart = p;
-    XftFont *runFont = xf;
-    while (p < end) {
-      int cl = 1;
-      FcChar32 cp = x11_utf8_cp(p, end, &cl);
-      if (!x11_font_has(runFont, cp))
-        break;
-      p += cl;
-    }
-    if (p > runStart) {
-      int rl = (int)(p - runStart);
-      XftDrawStringUtf8(xd, color, runFont, cx, y, (FcChar8 *)runStart, rl);
-      cx += xft_width(dpy, runFont, (const char *)runStart, rl);
-    }
-    if (p >= end)
-      break;
-    int cl = 1;
-    FcChar32 cp = x11_utf8_cp(p, end, &cl);
-    XftFont *fb = x11_fallback_for(dpy, cp, px);
-    if (fb) {
-      const unsigned char *fs = p;
-      int covered = 0;
-      while (p < end) {
-        int l2 = 1;
-        FcChar32 c2 = x11_utf8_cp(p, end, &l2);
-        if (!x11_font_has(fb, c2))
-          break;
-        p += l2;
-        covered += l2;
-      }
-      if (covered > 0) {
-        XftDrawStringUtf8(xd, color, fb, cx, y, (FcChar8 *)fs, covered);
-        cx += xft_width(dpy, fb, (const char *)fs, covered);
-      } else {
-        p += cl;
-      }
-    } else {
-      p += cl;
-    }
-  }
-  return cx - x;
+  X11DrawRunCtx ctx = {xd, color, y, x};
+  x11_utf8_fallback_runs(dpy, xf, (const unsigned char *)s, n, px,
+                         x11_draw_run, &ctx);
+  return ctx.cx - x;
 }
 
 void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
@@ -1785,17 +1777,11 @@ bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
     *is_terminal = false;
   if (!desktop_path)
     return false;
-  static char content[16384];
-  if (File_ReadAll(desktop_path, content, (long)sizeof(content)) <= 0)
+  StringList lines = File_ReadLines(desktop_path);
+  if (!lines.items)
     return false;
-  char *cur = content;
-  while (*cur) {
-    char *nl = strchr(cur, '\n');
-    if (nl)
-      *nl = '\0';
-    char *line = cur;
-    cur = nl ? nl + 1 : cur + strlen(cur);
-    char *p = line;
+  for (size_t i = 0; i < lines.count; i++) {
+    char *p = lines.items[i];
     while (*p == ' ' || *p == '\t')
       p++;
     if (String_StartsWithCI(p, "Terminal=")) {
@@ -1811,16 +1797,17 @@ bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
         v++;
       v[strcspn(v, "\r\n")] = '\0';
       if (exec_line)
-        strncpy(exec_line, v, 1024 - 1);
+        snprintf(exec_line, 1024, "%s", v);
     } else if (String_StartsWithCI(p, "Path=")) {
       char *v = p + 5;
       while (*v == ' ' || *v == '\t')
         v++;
       v[strcspn(v, "\r\n")] = '\0';
       if (workdir)
-        strncpy(workdir, v, 1024 - 1);
+        snprintf(workdir, 1024, "%s", v);
     }
   }
+  StringList_Free(&lines);
   return true;
 }
 
