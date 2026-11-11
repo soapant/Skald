@@ -148,6 +148,8 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
   }
 
   if (nCode == HC_ACTION) {
+    static bool s_key_is_down[256] = {0};
+    bool _freshDown = false;
     bool _popupActive = false;
     WindowManager *_wm = WindowManager_Get();
     if (_wm && WindowManager_GetTopPopup(_wm))
@@ -179,8 +181,9 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
           _gev.mods |= HOTKEY_MOD_SUPER;
         _gev.down = _isDown;
         _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
+        if (_isDown)
+          _freshDown = !s_key_is_down[_vk & 0xFF];
         static unsigned long long s_last_keydown_ms[256] = {0};
-        static bool s_key_is_down[256] = {0};
         unsigned long long now_ms = GetTickCount64();
         {
           int _hint = 0;
@@ -255,7 +258,8 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
       if (ctrl_down)
         modifiers |= HOTKEY_MOD_CTRL;
 
-      if (!_popupActive && hotkey_process(pressed_vk, modifiers)) {
+      if (!_popupActive && _freshDown &&
+          hotkey_process(pressed_vk, modifiers)) {
         pending_hotkey_vk = pressed_vk;
         pending_hotkey_mod = modifiers;
         pending_hotkey_timeMs = (long)GetTickCount();

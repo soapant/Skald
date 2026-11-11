@@ -311,7 +311,11 @@ bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
                                      char *cmd, size_t cmd_size) {
   snprintf(cmd, cmd_size,
            "gcc -std=gnu17 -I build/sdk -pipe -shared -o \"%s\" \"%s\" "
-           "\"build/main.lib.a\" 2>&1",
+           "\"build/main.lib.a\" "
+           "-lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm "
+           "-lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 "
+           "-lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp "
+           "-Lbuild/winlibs -liphlpapi 2>&1",
 
            out_tmp, src);
   return true;
