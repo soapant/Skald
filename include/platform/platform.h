@@ -74,6 +74,12 @@ bool Platform_TerminateProcessByName(const char *exe_name);
 bool Platform_ProcessRunning(const char *name);
 bool Platform_FocusWindow(const char *window_name);
 WindowHandle Platform_GetWindowByTitle(const char *window_name);
+bool Platform_SetWindowStringProperty(WindowHandle window, const char *atom,
+                                      const char *value);
+bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
+                                    long value);
+bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
+                                long data);
 PlWindowList Platform_GetWindowTitles();
 PlWindowList Platform_GetWindowNames();
 bool Platform_QueryBrowser(const char *query);

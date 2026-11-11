@@ -623,6 +623,45 @@ WindowHandle Platform_GetWindowByTitle(const char *title) {
   return WH_FROM_HWND(hwnd);
 }
 
+bool Platform_SetWindowStringProperty(WindowHandle window, const char *atom,
+                                      const char *value) {
+  (void)atom;
+  if (WH_EQUALS(window, WH_NULL) || !value)
+    return false;
+  HWND hwnd = WH_TO_HWND(window);
+  if (!IsWindow(hwnd))
+    return false;
+  COPYDATASTRUCT cds;
+  memset(&cds, 0, sizeof(cds));
+  cds.dwData = 0;
+  cds.cbData = (DWORD)(strlen(value) + 1);
+  cds.lpData = (void *)value;
+  SendMessageA(hwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
+  return true;
+}
+
+bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
+                                    long value) {
+  (void)atom;
+  if (WH_EQUALS(window, WH_NULL))
+    return false;
+  HWND hwnd = WH_TO_HWND(window);
+  if (!IsWindow(hwnd))
+    return false;
+  return PostMessageA(hwnd, WM_USER + 1, (WPARAM)value, 0) != 0;
+}
+
+bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
+                                long data) {
+  (void)atom;
+  if (WH_EQUALS(window, WH_NULL))
+    return false;
+  HWND hwnd = WH_TO_HWND(window);
+  if (!IsWindow(hwnd))
+    return false;
+  return PostMessageA(hwnd, WM_USER + 1, (WPARAM)data, 0) != 0;
+}
+
 bool Platform_FocusWindow(const char *title) {
   if (!title || !title[0]) {
     log_error("operation failed, returning error title='%s'",
