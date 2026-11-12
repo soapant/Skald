@@ -108,8 +108,6 @@ const char *get_default_browser(int slot) {
 }
 
 const char *get_default_shell(int slot) {
-
-  // temporary maybe in future just use the terminal config or somethign idk
   default_apps_x11[slot][0] = '\0';
   const char *shell = getenv("SHELL");
   const char *name = strrchr(shell, '/') ? strrchr(shell, '/') + 1 : shell;
