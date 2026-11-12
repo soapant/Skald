@@ -1778,8 +1778,9 @@ int main(int argc, char **argv) {
       printf("  -run    Run skald after build\n");
       printf("  -release Build a self-contained release/ bundle: skald[.exe],\n"
              "           sdk/, config/config.c (defaults), features/ with\n"
-             "           control_center, settings and clipboard_history\n"
-             "           (Windows also emits main.lib.a); no compiler objects\n");
+             "           control_center, settings and clipboard_history,\n"
+             "           resources/ (png + ico); Windows also emits main.lib.a;\n"
+             "           no compiler objects\n");
       printf("  -test   Run test suite\n");
       printf("  -asan   Build with clang -fsanitize=address,undefined\n");
       printf("  -check  Check for skapi includes outside features/tests,\n"
@@ -1829,13 +1830,14 @@ int main(int argc, char **argv) {
         !nob_copy_directory_recursively("features/settings",
                                         "release/features/settings") ||
         !nob_copy_directory_recursively(
-            "features/clipboard_history", "release/features/clipboard_history"))
+            "features/clipboard_history", "release/features/clipboard_history") ||
+        !nob_copy_directory_recursively("resources", "release/resources"))
       return 1;
     if (!emit_release_config("release/config/config.c")) {
       nob_log(NOB_ERROR, "release: failed to generate release/config/config.c");
       return 1;
     }
-    nob_log(NOB_INFO, "release/: config, features staged (control_center, "
+    nob_log(NOB_INFO, "release/: config, features, resources staged (control_center, "
                       "settings, clipboard_history)");
   }
 
