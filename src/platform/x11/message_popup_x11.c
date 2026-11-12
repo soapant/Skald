@@ -69,33 +69,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
       maxWidth = MSG_AUTO_WRAP_MAX_W;
     if (maxHeight <= 0)
       maxHeight = MSG_AUTO_WRAP_MAX_H;
-
-    FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
-    XftFont *xf = FH_TO_XFT(font);
-    int textW = 0;
-    int textH = 0;
-    MsgLine lines[MSG_MAX_LINES];
-    int nlines = 0;
-
-    if (xf) {
-      int wrapW = maxWidth - 30;
-      if (wrapW > MSG_AUTO_WRAP_MAX_W)
-        wrapW = MSG_AUTO_WRAP_MAX_W;
-      nlines = x11_msg_wrap_text(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
-      for (int i = 0; i < nlines; i++) {
-        if (lines[i].w > textW)
-          textW = lines[i].w;
-      }
-      textH = nlines * (xf->ascent + xf->descent);
-    }
-    Platform_DestroyFont(font);
-
-    winW = textW + 30;
-    winH = textH + 30;
-    if (winW > maxWidth)
-      winW = maxWidth;
-    if (winH > maxHeight)
-      winH = maxHeight;
+    x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
   }
 
   int x = abs(centerX - winW / 2);
@@ -166,30 +140,9 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     maxWidth = MSG_AUTO_WRAP_MAX_W;
   if (maxHeight <= 0)
     maxHeight = MSG_AUTO_WRAP_MAX_H;
-  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
-  XftFont *xf = FH_TO_XFT(font);
-  int textW = 0;
-  int textH = 0;
-  MsgLine lines[MSG_MAX_LINES];
-  int nlines = 0;
-  if (xf) {
-    int wrapW = maxWidth - 30;
-    if (wrapW > MSG_AUTO_WRAP_MAX_W)
-      wrapW = MSG_AUTO_WRAP_MAX_W;
-    nlines = x11_msg_wrap_text(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
-    for (int i = 0; i < nlines; i++) {
-      if (lines[i].w > textW)
-        textW = lines[i].w;
-    }
-    textH = nlines * (xf->ascent + xf->descent);
-  }
-  Platform_DestroyFont(font);
-  int winW = textW + 30;
-  int winH = textH + 30;
-  if (winW > maxWidth)
-    winW = maxWidth;
-  if (winH > maxHeight)
-    winH = maxHeight;
+  int winW = 0;
+  int winH = 0;
+  x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
   int x;
   if (h_slot == 0)
     x = outward ? rect_x - gap - winW : rect_x + gap;

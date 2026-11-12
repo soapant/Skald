@@ -415,26 +415,23 @@ char *String_Trim(const char *str) {
   return out;
 }
 
-char *String_ToLower(const char *str) {
+static char *dup_case_conv(const char *str, int (*conv)(int)) {
   if (!str)
     return NULL;
   char *out = strdup(str);
   if (!out)
     return NULL;
   for (char *p = out; *p; p++)
-    *p = (char)tolower((unsigned char)*p);
+    *p = (char)conv((unsigned char)*p);
   return out;
 }
 
+char *String_ToLower(const char *str) {
+  return dup_case_conv(str, (int (*)(int))tolower);
+}
+
 char *String_ToUpper(const char *str) {
-  if (!str)
-    return NULL;
-  char *out = strdup(str);
-  if (!out)
-    return NULL;
-  for (char *p = out; *p; p++)
-    *p = (char)toupper((unsigned char)*p);
-  return out;
+  return dup_case_conv(str, (int (*)(int))toupper);
 }
 
 bool String_StartsWith(const char *str, const char *prefix) {
@@ -852,4 +849,24 @@ void Url_BuildSearchUrl(const char *engine, const char *query, char *out,
       templ = "https://www.bing.com/search?q=%s";
   }
   snprintf(out, cap, templ, encoded);
+}
+
+bool Window_ListAllows(int window_count, bool whitelist,
+                       char *const *windows, const char *title) {
+  if (window_count == 0)
+    return !whitelist;
+  if (!whitelist) {
+    for (int j = 0; j < window_count; j++) {
+      if (windows[j] && windows[j][0] && String_ContainsCI(title, windows[j]))
+        return false;
+    }
+    return true;
+  }
+  if (!title)
+    return false;
+  for (int j = 0; j < window_count; j++) {
+    if (windows[j] && windows[j][0] && String_ContainsCI(title, windows[j]))
+      return true;
+  }
+  return false;
 }

@@ -171,7 +171,7 @@ static void hover_widget_hide_apply(const char *key) {
 }
 
 void HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
-  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) {
+  if (Owner_PurgeInactive(path_a, path_b)) {
     return;
   }
   bool any = false;

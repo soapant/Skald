@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <sys/types.h>
 
 typedef struct {
   const char *real_user;
@@ -23,6 +24,8 @@ void x11_env_build_env_strings(const X11SessionEnv *env, char disp_env[256],
                                char wayland_env[512]);
 void x11_env_apply_to_current_process(const X11SessionEnv *env);
 bool x11_env_is_running_as_root(void);
+
+pid_t x11_env_detach_fork(void);
 
 bool x11_env_daemon_exec(char *const argv[]);
 bool x11_env_daemon_exec_with_env(char *const argv[], const X11SessionEnv *env);

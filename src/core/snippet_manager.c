@@ -178,7 +178,7 @@ bool snippet_unregister_internal(const char *trigger) {
 }
 
 void snippet_purge_owner(const char *path_a, const char *path_b) {
-  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+  if (Owner_PurgeInactive(path_a, path_b))
     return;
 
   int n = 0;
@@ -200,29 +200,6 @@ void snippet_purge_owner(const char *path_a, const char *path_b) {
     snippet_count = n;
     log_info("snippet purged %d binding%s", dropped, dropped == 1 ? "" : "s");
   }
-}
-
-static bool snippet_window_allowed(const SnippetBinding *b, const char *title) {
-  if (!b)
-    return true;
-  if (b->window_count == 0)
-    return !b->whitelist;
-  if (!b->whitelist) {
-    for (int j = 0; j < b->window_count; j++) {
-      if (b->windows[j] && b->windows[j][0] &&
-          String_ContainsCI(title, b->windows[j]))
-        return false;
-    }
-    return true;
-  }
-  if (!title)
-    return false;
-  for (int j = 0; j < b->window_count; j++) {
-    if (b->windows[j] && b->windows[j][0] &&
-        String_ContainsCI(title, b->windows[j]))
-      return true;
-  }
-  return false;
 }
 
 static char snippet_char_for_vk(int vk, bool shift) {
@@ -328,7 +305,7 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
   const char *title = NULL;
   if (snippets[idx].window_count > 0)
     title = Platform_GetActiveWindowTitle();
-  bool allowed = snippet_window_allowed(&snippets[idx], title);
+  bool allowed = Window_ListAllows(snippets[idx].window_count, snippets[idx].whitelist, snippets[idx].windows, title);
   if (!allowed)
     return false;
   size_t tlen = strlen(snippets[idx].trigger);

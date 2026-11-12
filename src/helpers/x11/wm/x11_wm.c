@@ -280,6 +280,8 @@ static int x11_keycode_for(Display *dpy, KeySym ks, int *need_shift) {
   return 0;
 }
 
+static Window x11_focused_window(Display *display);
+
 bool x11_get_title(char *buffer, int buffer_size) {
   if (!buffer || buffer_size <= 0) {
     log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null",
@@ -293,18 +295,9 @@ bool x11_get_title(char *buffer, int buffer_size) {
               buffer ? buffer : "null", buffer_size);
     return false;
   }
-  Window focus = None;
-  int revert_to = 0;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
-  XGetInputFocus(display, &focus, &revert_to);
-  XSync(display, False);
-  if (_x11_err || focus == None || focus == PointerRoot) {
-    log_error("focus is NULL or PointerRoot buffer='%s' buffer_size=%d",
-              buffer ? buffer : "null", buffer_size);
-    XSetErrorHandler(old);
+  Window focus = x11_focused_window(display);
+  if (focus == None)
     return false;
-  }
   char *name = x11_get_text_prop(display, focus);
   if (!name || !name[0]) {
     log_error("no window title property (win=0x%lx) buffer_size=%d",
@@ -326,18 +319,12 @@ bool x11_get_app_id(char *buffer, int buffer_size) {
   Display *display = x11_get_display();
   if (!display)
     return false;
-  Window focus = None;
-  int revert_to = 0;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
-  XGetInputFocus(display, &focus, &revert_to);
-  XSync(display, False);
-  if (_x11_err || focus == None || focus == PointerRoot) {
-    XSetErrorHandler(old);
+  Window focus = x11_focused_window(display);
+  if (focus == None)
     return false;
-  }
   XClassHint *ch = XAllocClassHint();
   _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
   int ok = ch ? XGetClassHint(display, focus, ch) : 0;
   XSync(display, False);
   XSetErrorHandler(old);
@@ -448,7 +435,7 @@ bool x11_focus_window_title(char *title) {
   return x11_activate_window(display, (Window)target);
 }
 
-PlWindowList x11_get_window_names() {
+static PlWindowList x11_list_client_fields(bool want_names) {
   PlWindowList list = {.windows = NULL, .count = 0};
   Display *display = x11_get_display();
   if (!display) {
@@ -460,83 +447,60 @@ PlWindowList x11_get_window_names() {
   if (!clients || nclients <= 0) {
     if (clients)
       free(clients);
-    log_error("x11_get_window_names: empty client list");
+    log_error("empty client list");
     return list;
   }
   for (int i = 0; i < nclients; i++) {
-    char *cls = x11_get_res_class(display, clients[i]);
-    if (!cls || !cls[0]) {
-      if (cls)
-        free(cls);
+    char *s = want_names ? x11_get_res_class(display, clients[i])
+                         : x11_get_text_prop(display, clients[i]);
+    if (!s)
       continue;
+    if (want_names) {
+      char *dot = strchr(s, '.');
+      if (dot)
+        *dot = '\0';
+      if (s[0] == '\0' || !strcasecmp(s, "N/A") ||
+          !strcasecmp(s, "window") || !strcasecmp(s, "colored")) {
+        free(s);
+        continue;
+      }
+      s[0] = (char)toupper((unsigned char)s[0]);
+    } else {
+      char *trimmed = s;
+      while (*trimmed == ' ' || *trimmed == '\t')
+        trimmed++;
+      if (trimmed[0] == '\0' || !strcasecmp(trimmed, "window") ||
+          !strcasecmp(trimmed, "colored")) {
+        free(s);
+        continue;
+      }
+      if (trimmed != s) {
+        char *dup = strdup(trimmed);
+        free(s);
+        if (!dup)
+          continue;
+        s = dup;
+      }
     }
-    char *dot = strchr(cls, '.');
-    if (dot)
-      *dot = '\0';
-    if (cls[0] == '\0' || !strcasecmp(cls, "N/A") ||
-        !strcasecmp(cls, "window") || !strcasecmp(cls, "colored")) {
-      free(cls);
-      continue;
-    }
-    cls[0] = (char)toupper((unsigned char)cls[0]);
     char **grown = (char **)realloc(list.windows,
                                     (size_t)(list.count + 1) * sizeof(char *));
     if (!grown) {
-      free(cls);
+      free(s);
       break;
     }
     list.windows = grown;
-    list.windows[list.count++] = cls;
+    list.windows[list.count++] = s;
   }
   free(clients);
   return list;
 }
 
-PlWindowList x11_get_window_titles() {
-  PlWindowList list = {.windows = NULL, .count = 0};
-  Display *display = x11_get_display();
-  if (!display) {
-    log_error("no display");
-    return list;
-  }
-  int nclients = 0;
-  Window *clients = x11_client_list(display, &nclients);
-  if (!clients || nclients <= 0) {
-    if (clients)
-      free(clients);
-    log_error("x11_get_window_titles: empty client list");
-    return list;
-  }
-  for (int i = 0; i < nclients; i++) {
-    char *wt = x11_get_text_prop(display, clients[i]);
-    if (!wt)
-      continue;
-    char *trimmed = wt;
-    while (*trimmed == ' ' || *trimmed == '\t')
-      trimmed++;
-    if (trimmed[0] == '\0' || !strcasecmp(trimmed, "window") ||
-        !strcasecmp(trimmed, "colored")) {
-      free(wt);
-      continue;
-    }
-    if (trimmed != wt) {
-      char *dup = strdup(trimmed);
-      free(wt);
-      if (!dup)
-        continue;
-      wt = dup;
-    }
-    char **grown = (char **)realloc(list.windows,
-                                    (size_t)(list.count + 1) * sizeof(char *));
-    if (!grown) {
-      free(wt);
-      break;
-    }
-    list.windows = grown;
-    list.windows[list.count++] = wt;
-  }
-  free(clients);
-  return list;
+PlWindowList x11_get_window_names(void) {
+  return x11_list_client_fields(true);
+}
+
+PlWindowList x11_get_window_titles(void) {
+  return x11_list_client_fields(false);
 }
 
 static Display *_x11_cursor_dpy = NULL;

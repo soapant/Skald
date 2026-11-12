@@ -218,7 +218,7 @@ void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
 }
 
 void EventBus_PurgeOwner(const char *path_a, const char *path_b) {
-  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+  if (Owner_PurgeInactive(path_a, path_b))
     return;
   for (int e = 0; e < 2; ++e) {
     for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {

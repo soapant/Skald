@@ -258,6 +258,18 @@ bool hotkey_has_mouse_binding(void) {
   return false;
 }
 
+static bool hotkey_blacklist_match(HotkeyBinding *b, const char *title) {
+  if (!b->blacklist || b->blacklist_count == 0)
+    return false;
+  for (int j = 0; j < b->blacklist_count; j++) {
+    if (b->blacklist[j][0] == '\0')
+      continue;
+    if (title && String_ContainsCI(title, b->blacklist[j]))
+      return true;
+  }
+  return false;
+}
+
 bool hotkey_mouse_button_bound(int btn) {
   if (btn <= 0 || btn > MOUSE_BTN_MAX)
     return false;
@@ -270,30 +282,12 @@ bool hotkey_mouse_button_bound(int btn) {
       if (!b->blacklist || b->blacklist_count == 0)
         continue;
       const char *title = Platform_GetActiveWindowAppId();
-      bool ok = false;
-      for (int j = 0; j < b->blacklist_count; j++) {
-        if (b->blacklist[j][0] == '\0')
-          continue;
-        if (title && String_ContainsCI(title, b->blacklist[j])) {
-          ok = true;
-          break;
-        }
-      }
-      if (!ok)
+      if (!hotkey_blacklist_match(b, title))
         continue;
     } else {
       if (b->blacklist && b->blacklist_count > 0) {
         const char *title = Platform_GetActiveWindowAppId();
-        bool blocked = false;
-        for (int j = 0; j < b->blacklist_count; j++) {
-          if (b->blacklist[j][0] == '\0')
-            continue;
-          if (title && String_ContainsCI(title, b->blacklist[j])) {
-            blocked = true;
-            break;
-          }
-        }
-        if (blocked)
+        if (hotkey_blacklist_match(b, title))
           continue;
       }
     }
@@ -383,7 +377,7 @@ bool hotkey_unregister_internal(int vk_code, int modifiers) {
 }
 
 void hotkey_purge_owner(const char *path_a, const char *path_b) {
-  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+  if (Owner_PurgeInactive(path_a, path_b))
     return;
 
   int n = 0;
@@ -463,33 +457,23 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
 
   if (!b->whitelist) {
     if (b->blacklist && b->blacklist_count > 0) {
-      for (int j = 0; j < b->blacklist_count; j++) {
-        if (b->blacklist[j][0] == '\0')
-          continue;
-        if (!title_fetched) {
-          title = Platform_GetActiveWindowAppId();
-          title_fetched = true;
-        }
-        if (String_ContainsCI(title, b->blacklist[j]))
-          return false;
+      if (!title_fetched) {
+        title = Platform_GetActiveWindowAppId();
+        title_fetched = true;
       }
+      if (hotkey_blacklist_match(b, title))
+        return false;
     }
     return true;
   }
 
   if (!b->blacklist || b->blacklist_count == 0)
     return false;
-  for (int j = 0; j < b->blacklist_count; j++) {
-    if (b->blacklist[j][0] == '\0')
-      continue;
-    if (!title_fetched) {
-      title = Platform_GetActiveWindowAppId();
-      title_fetched = true;
-    }
-    if (String_ContainsCI(title, b->blacklist[j]))
-      return true;
+  if (!title_fetched) {
+    title = Platform_GetActiveWindowAppId();
+    title_fetched = true;
   }
-  return false;
+  return hotkey_blacklist_match(b, title);
 }
 
 bool hotkey_process(int vk_code, int modifiers) {

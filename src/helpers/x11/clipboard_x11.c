@@ -497,6 +497,31 @@ static int x11_clip_read_wait_event(Display *dpy, XEvent *ev,
   }
 }
 
+static unsigned char *x11_clip_get_prop(Display *dpy, Window win, Atom prop,
+                                        long length, bool delete_flag,
+                                        Atom *out_actual, int *out_format,
+                                        unsigned long *out_nitems,
+                                        unsigned long *out_after) {
+  Atom actual = None;
+  int format = 0;
+  unsigned long nitems = 0;
+  unsigned long after = 0;
+  unsigned char *data = NULL;
+  if (XGetWindowProperty(dpy, win, prop, 0, length, delete_flag ? True : False,
+                         AnyPropertyType, &actual, &format, &nitems, &after,
+                         &data) != Success)
+    return NULL;
+  if (out_actual)
+    *out_actual = actual;
+  if (out_format)
+    *out_format = format;
+  if (out_nitems)
+    *out_nitems = nitems;
+  if (out_after)
+    *out_after = after;
+  return data;
+}
+
 static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
                                     size_t *out_len) {
 
@@ -504,9 +529,9 @@ static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
   int format = 0;
   unsigned long nitems = 0;
   unsigned long after = 0;
-  unsigned char *data = NULL;
-  if (XGetWindowProperty(dpy, win, prop, 0, (~0L), True, AnyPropertyType,
-                         &actual, &format, &nitems, &after, &data) != Success)
+  unsigned char *data = x11_clip_get_prop(dpy, win, prop, (~0L), true,
+                                          &actual, &format, &nitems, &after);
+  if (!data)
     return NULL;
   if (actual == clip_rd_incr) {
     if (data)
@@ -544,10 +569,9 @@ static char *x11_clip_read_incr(Display *dpy, Window win, Atom prop,
     int format = 0;
     unsigned long nitems = 0;
     unsigned long after = 0;
-    unsigned char *data = NULL;
-    if (XGetWindowProperty(dpy, win, prop, 0, (~0L), True, AnyPropertyType,
-                           &actual, &format, &nitems, &after, &data) != Success)
-      break;
+    unsigned char *data = x11_clip_get_prop(dpy, win, prop, (~0L), true,
+                                            &actual, &format, &nitems,
+                                            &after);
     if (!data || nitems == 0) {
       if (data)
         XFree(data);

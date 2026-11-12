@@ -449,78 +449,27 @@ bool Platform_LaunchDetached(char *command) {
 
   log_info("LaunchDetached: starting cmd='%s'", command);
 
-  pid_t pid = fork();
-  if (pid < 0) {
-    log_error("LaunchDetached: fork failed: %s", strerror(errno));
-    return false;
-  }
+  if (x11_env_detach_fork() != 0)
+    return true;
+  const char *real_home = Platform_GetRealHome();
+  if (real_home)
+    setenv("HOME", real_home, 1);
 
-  if (pid == 0) {
-    log_info("LaunchDetached: child pid=%d starting setsid", (int)getpid());
+  const char *display = getenv("DISPLAY");
+  if (display)
+    setenv("DISPLAY", display, 1);
 
-    if (setsid() < 0) {
-      _exit(1);
-    }
+  const char *xauth = getenv("XAUTHORITY");
+  if (xauth)
+    setenv("XAUTHORITY", xauth, 1);
 
-    pid_t pid2 = fork();
-    if (pid2 < 0) {
-      _exit(1);
-    }
-    if (pid2 > 0) {
-      _exit(0);
-    }
+  const char *dbus = getenv("DBUS_SESSION_BUS_ADDRESS");
+  if (dbus)
+    setenv("DBUS_SESSION_BUS_ADDRESS", dbus, 1);
 
-    int fd = open("/dev/null", O_RDWR);
-    if (fd >= 0) {
-      dup2(fd, STDIN_FILENO);
-      dup2(fd, STDOUT_FILENO);
-      dup2(fd, STDERR_FILENO);
-      if (fd > 2)
-        close(fd);
-    }
-
-    const char *real_home = Platform_GetRealHome();
-    if (real_home)
-      setenv("HOME", real_home, 1);
-
-    const char *display = getenv("DISPLAY");
-    if (display)
-      setenv("DISPLAY", display, 1);
-
-    const char *xauth = getenv("XAUTHORITY");
-    if (xauth)
-      setenv("XAUTHORITY", xauth, 1);
-
-    const char *dbus = getenv("DBUS_SESSION_BUS_ADDRESS");
-    if (dbus)
-      setenv("DBUS_SESSION_BUS_ADDRESS", dbus, 1);
-
-    execl("/bin/sh", "sh", "-c", command, (char *)NULL);
-
-    _exit(127);
-  }
-
-  log_info("LaunchDetached: parent waiting for intermediate pid=%d", (int)pid);
-
-  int st = 0;
-  pid_t waited = waitpid(pid, &st, 0);
-
-  if (waited < 0) {
-    log_error("LaunchDetached: waitpid failed: %s", strerror(errno));
-  } else {
-    if (WIFEXITED(st)) {
-      log_info("LaunchDetached: intermediate exited with code %d",
-               WEXITSTATUS(st));
-    } else if (WIFSIGNALED(st)) {
-      log_error("LaunchDetached: intermediate killed by signal %d",
-                WTERMSIG(st));
-    } else {
-      log_info("LaunchDetached: intermediate status=0x%x", st);
-    }
-  }
-
-  log_info("LaunchDetached: returning true (should be instant)");
-  return true;
+  execl("/bin/sh", "sh", "-c", command, (char *)NULL);
+  _exit(127);
+  return false;
 }
 
 char *Platform_RunTerminalCommand(char *command, bool open_terminal) {

@@ -11,4 +11,6 @@ bool FeaturePath_Get(const char *feature, const char *name, char *out,
                      size_t out_len);
 bool FeaturePath_DataDirExists(const char *stem);
 
+bool File_CopyPath(const char *src, const char *dst);
+
 #endif

@@ -218,40 +218,39 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
                             .fontsize = FontSize});
 }
 
+static void platform_draw_editbox_part(PromptState *state, Display *dpy,
+                                       XftDraw *xd, Visual *vis,
+                                       Colormap cmap, FontHandle font,
+                                       int part) {
+  x11_set_draw_context(dpy, xd, vis, cmap);
+  EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
+  EditboxSpec eb;
+  EditboxLayout lay;
+  x11_prompt_editbox_spec(state, font, &eb, &metrics);
+  Editbox_Layout(&eb, &lay);
+  if (part == EDITBOX_PART_TEXT)
+    state->eb->scroll_offset = eb.scroll;
+  Editbox_Draw(&eb, &lay, part);
+}
+
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
   if (!state)
     return;
-  x11_set_draw_context(dpy, xd, vis, cmap);
-  EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
-  EditboxSpec eb;
-  EditboxLayout lay;
-  x11_prompt_editbox_spec(state, font, &eb, &metrics);
-  Editbox_Layout(&eb, &lay);
-  state->eb->scroll_offset = eb.scroll;
-  Editbox_Draw(&eb, &lay, EDITBOX_PART_TEXT);
+  platform_draw_editbox_part(state, dpy, xd, vis, cmap, font,
+                             EDITBOX_PART_TEXT);
 }
 
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
-  x11_set_draw_context(dpy, xd, vis, cmap);
-  EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
-  EditboxSpec eb;
-  EditboxLayout lay;
-  x11_prompt_editbox_spec(state, font, &eb, &metrics);
-  Editbox_Layout(&eb, &lay);
-  Editbox_Draw(&eb, &lay, EDITBOX_PART_TINT);
+  platform_draw_editbox_part(state, dpy, xd, vis, cmap, font,
+                             EDITBOX_PART_TINT);
 }
 
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd,
                              Visual *vis, Colormap cmap, FontHandle font) {
-  x11_set_draw_context(dpy, xd, vis, cmap);
-  EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
-  EditboxSpec eb;
-  EditboxLayout lay;
-  x11_prompt_editbox_spec(state, font, &eb, &metrics);
-  Editbox_Layout(&eb, &lay);
-  Editbox_Draw(&eb, &lay, EDITBOX_PART_CARET);
+  platform_draw_editbox_part(state, dpy, xd, vis, cmap, font,
+                             EDITBOX_PART_CARET);
 }
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {

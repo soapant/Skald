@@ -223,3 +223,7 @@ void Http_GetAsync(const char *url, PlatformHttpCallback cb, void *userdata) {
     log_warn("http async thread create failed");
   }
 }
+
+bool Owner_PurgeInactive(const char *path_a, const char *path_b) {
+  return (!path_a || !path_a[0]) && (!path_b || !path_b[0]);
+}
