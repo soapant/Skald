@@ -257,8 +257,6 @@ static bool confibuild_feature(const char *src, const char *out) {
   return true;
 }
 
-/* returns 1 if the .so was (re)built, 0 if the existing .so was re-applied,
- * -1 on failure */
 static int config_build_load_store(void) {
 
   const char *out = confiout_path();

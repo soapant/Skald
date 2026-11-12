@@ -1074,7 +1074,7 @@ static bool check_ends_with(const char *s, const char *suffix) {
 static const char *check_fn_prefix(const char *path_norm) {
   if (check_ends_with(path_norm, "skapi_x11.c") ||
       check_ends_with(path_norm, "skapi_win32.c"))
-    return NULL; /* sk_*_platform impls host _platform decl wrappers */
+    return NULL;
   if (strstr(path_norm, "src/platform/"))
     return "Platform_";
   if (strstr(path_norm, "include/platform/x11/"))
@@ -1341,7 +1341,6 @@ static void chk_sk_struct_scan(const char *path, int lineno, const char *buf,
       continue;
     }
     if (i == 0 && k == CHK_RBRACE) {
-      /* line starts with '}': aliases like '} SkFoo;' or '} SkFoo, SkBar;' */
       for (size_t j = 1; j < chk_tok_count; j++) {
         if (chk_toks[j].kind != CHK_IDENT) {
           if (chk_toks[j].kind == CHK_COMMA)
@@ -1408,7 +1407,7 @@ static void chk_finish_decl(const char *path, int lineno) {
   const char *buf = decl_buf;
   size_t len = decl_len;
   if (chk_tok_count == 0)
-    ; /* nothing captured */
+    ;
   chk_tokenize(buf, len);
   if (chk_tok_count == 0)
     return;
@@ -1416,7 +1415,6 @@ static void chk_finish_decl(const char *path, int lineno) {
     if (chk_tok_is(i, buf, "typedef") || chk_tok_is(i, buf, "attribute") ||
         chk_tok_is(i, buf, "declspec") || chk_tok_is(i, buf, "asm"))
       return;
-  /* candidate function name: ident at parens-depth 0 followed by '(' */
   int candidate = -1;
   size_t pdepth = 0;
   for (size_t i = 0; i + 1 < chk_tok_count; i++) {
@@ -1436,7 +1434,6 @@ static void chk_finish_decl(const char *path, int lineno) {
       continue;
     if (chk_toks[i + 1].kind != CHK_LPAREN)
       continue;
-    /* reject function-pointer declarations: ident '(' '*' ident */
     if (i + 3 < chk_tok_count && chk_toks[i + 2].kind == CHK_STAR &&
         chk_toks[i + 3].kind == CHK_IDENT)
       continue;
@@ -1448,7 +1445,6 @@ static void chk_finish_decl(const char *path, int lineno) {
   }
   if (candidate < 0)
     return;
-  /* reject initializers: any '=' before the candidate's LPAREN */
   for (size_t i = 0; i < (size_t)candidate; i++)
     if (chk_toks[i].kind == CHK_EQUAL)
       return;
@@ -1552,7 +1548,7 @@ static bool check_walk(Nob_Walk_Entry entry) {
     return false;
   }
 
-  int lex = 0; /* 0 code, 1 block comment, 2 string, 3 char */
+  int lex = 0;
   int lineno = 1;
   size_t i = 0;
   while (i < sb.count) {

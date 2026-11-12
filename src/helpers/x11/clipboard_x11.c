@@ -676,8 +676,7 @@ static char *x11_clip_read_target(Atom target) {
     XFlush(dpy);
     return x11_clip_read_incr(dpy, win, prop, &w);
   }
-  char *res = x11_clip_read_property(dpy, win, prop, NULL);
-  return res;
+  return x11_clip_read_property(dpy, win, prop, NULL);
 }
 
 unsigned long x11_clipboard_owner(void) {
