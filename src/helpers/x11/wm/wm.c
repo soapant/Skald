@@ -90,7 +90,7 @@ bool Wm_FocusByTitle(const char *title) {
   if (x11_focus_window_title(title)) {
     return true;
   }
-  log_error("Coulnt Focus By TItle %s", title);
+  log_error("Couldn't Focus By Title %s", title);
   return NULL;
 }
 
