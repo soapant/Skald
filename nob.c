@@ -7,7 +7,7 @@
 
 #define CC_COMMON_FLAGS                                                        \
   "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
-      "-Wextra", "-Wno-unused-parameter", "-ggdb"
+      "-Wextra", "-Wno-unused-parameter"
 
 #if defined(_WIN32)
 #define CC_FLAGS CC_COMMON_FLAGS
@@ -48,11 +48,11 @@
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
 #define SDK_CC_FLAGS                                                           \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "build/sdk", "-MMD", "-MP", "-Wall",     \
-      "-Wextra", "-Wno-unused-parameter", "-ggdb"
+  "-std=gnu17", "-DCOBJMACROS", "-MMD", "-MP", "-Wall",                  \
+      "-Wextra", "-Wno-unused-parameter"
 #define WIN_SDK_FLAGS                                                          \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
-      "-I/usr/x86_64-w64-mingw32/include", "-I", "build/sdk", "-MMD", "-MP",   \
+      "-I/usr/x86_64-w64-mingw32/include", "-MMD", "-MP",               \
       "-O3", "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
 
 static bool sanitize = false;
@@ -111,6 +111,10 @@ static void append_san_flags(Nob_Cmd *cmd) {
 
 static bool target_win32 = false;
 static const char *obj_dir = BUILD_FOLDER "/obj";
+static bool release = false;
+static const char *sdk_dir = BUILD_FOLDER "/sdk";
+static const char *features_dir = BUILD_FOLDER "/features";
+static const char *main_implib = BUILD_FOLDER "/main.lib.a";
 
 static Nob_File_Paths sources = {0};
 static Nob_File_Paths feature_sources = {0};
@@ -198,7 +202,7 @@ static const char *feature_base(const char *src) {
   char *dot = strrchr(no_ext, '.');
   if (dot)
     *dot = '\0';
-  const char *result = nob_temp_sprintf("build/features/%s", no_ext);
+  const char *result = nob_temp_sprintf("%s/%s", features_dir, no_ext);
   free(no_ext);
   return result;
 }
@@ -208,7 +212,26 @@ static const char *feature_so_path(const char *src) {
 }
 
 static const char *feature_dep_path(const char *src) {
-  return nob_temp_sprintf("%s.d", feature_base(src));
+  char *flat = nob_temp_strdup(src);
+  for (char *p = flat; *p; p++)
+    if (*p == '/' || *p == '\\')
+      *p = '_';
+  const char *result = nob_temp_sprintf("%s/%s.d", obj_dir, flat);
+  return result;
+}
+
+static const char *release_features[] = {"control_center", "settings",
+                                         "clipboard_history"};
+
+static bool release_feature_wanted(const char *src) {
+  const char *base = nob_path_name(src);
+  for (size_t i = 0; i < sizeof(release_features) / sizeof(release_features[0]);
+       i++) {
+    size_t n = strlen(release_features[i]);
+    if (strncmp(base, release_features[i], n) == 0 && base[n] == '.')
+      return true;
+  }
+  return false;
 }
 
 static const char *obj_file_path(const char *src, const char *ext) {
@@ -502,9 +525,13 @@ static const char *sdk_files[] = {
     "platform/widget.h",
 };
 
-static bool emit_sdk(void) {
-  const char *dirs[] = {"build/sdk", "build/sdk/core", "build/sdk/core/types",
-                        "build/sdk/helpers", "build/sdk/platform"};
+static bool emit_sdk(const char *dst_sdk) {
+  char dirs[5][512];
+  snprintf(dirs[0], sizeof(dirs[0]), "%s", dst_sdk);
+  snprintf(dirs[1], sizeof(dirs[1]), "%s/core", dst_sdk);
+  snprintf(dirs[2], sizeof(dirs[2]), "%s/core/types", dst_sdk);
+  snprintf(dirs[3], sizeof(dirs[3]), "%s/helpers", dst_sdk);
+  snprintf(dirs[4], sizeof(dirs[4]), "%s/platform", dst_sdk);
   for (size_t i = 0; i < sizeof(dirs) / sizeof(dirs[0]); ++i) {
     if (!nob_mkdir_if_not_exists(dirs[i]))
       return false;
@@ -513,7 +540,7 @@ static bool emit_sdk(void) {
   for (size_t i = 0; i < sizeof(sdk_files) / sizeof(sdk_files[0]); ++i) {
     char src[512], dst[512];
     snprintf(src, sizeof(src), "include/%s", sdk_files[i]);
-    snprintf(dst, sizeof(dst), "build/sdk/%s", sdk_files[i]);
+    snprintf(dst, sizeof(dst), "%s/%s", dst_sdk, sdk_files[i]);
     if (!nob_file_exists(dst) || nob_needs_rebuild1(dst, src) != 0) {
       if (!nob_copy_file(src, dst))
         ok = false;
@@ -525,25 +552,30 @@ static bool emit_sdk(void) {
 static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
   const char *so = feature_so_path(src);
   if (target_win32) {
-    nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS, "-shared", "-o", so, src,
-                   "build/win_obj/main.lib.a", WIN_LINK_FLAGS);
+    nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS, "-I", sdk_dir, "-shared", "-o",
+                   so, src, main_implib, WIN_LINK_FLAGS);
+    if (!release)
+      nob_cmd_append(cmd, "-ggdb");
   } else {
     append_cc(cmd);
     nob_cc_flags(cmd);
     append_san_flags(cmd);
 #if defined(_WIN32)
-    nob_cmd_append(cmd, SDK_CC_FLAGS, "-shared", "-o", so, src,
-                   "build/main.lib.a", "-MF", feature_dep_path(src),
-                   LINK_FLAGS);
+    nob_cmd_append(cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-shared", "-o", so, src,
+                   main_implib, "-MF", feature_dep_path(src), LINK_FLAGS);
 #else
-    nob_cmd_append(cmd, SDK_CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF",
-                   feature_dep_path(src));
+    nob_cmd_append(cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-fPIC", "-shared", "-o",
+                   so, src, "-MF", feature_dep_path(src));
     append_dep_cflags(cmd);
     nob_cmd_append(cmd, "-lX11");
 #if defined(__APPLE__)
     nob_cmd_append(cmd, LINK_FLAGS);
 #endif
 #endif
+    if (release)
+      nob_cmd_append(cmd, "-O3");
+    else
+      nob_cmd_append(cmd, "-ggdb");
   }
 }
 
@@ -557,14 +589,16 @@ static bool build_features(void) {
   Nob_Procs procs = {0};
   for (size_t i = 0; i < feature_sources.count; ++i) {
     const char *src = feature_sources.items[i];
+    if (release && !release_feature_wanted(src))
+      continue;
     const char *so = feature_so_path(src);
     bool need_rebuild = !nob_file_exists(so);
     if (!need_rebuild) {
       if (target_win32) {
         need_rebuild =
             nob_needs_rebuild1(so, src) != 0 ||
-            (nob_file_exists("build/win_obj/main.lib.a") &&
-             nob_needs_rebuild1(so, "build/win_obj/main.lib.a") != 0);
+            (nob_file_exists(main_implib) &&
+             nob_needs_rebuild1(so, main_implib) != 0);
       } else {
         need_rebuild = stale_with_dep(src, so, feature_dep_path(src));
       }
@@ -579,6 +613,98 @@ static bool build_features(void) {
   if (!nob_procs_wait_and_reset(&procs))
     ok = false;
   return ok;
+}
+
+static bool emit_release_config(const char *dst_path) {
+  const char *src_path = "src/config_defaults.c";
+  FILE *in = fopen(src_path, "rb");
+  if (!in) {
+    nob_log(NOB_ERROR, "release config: cannot open %s", src_path);
+    return false;
+  }
+  Nob_String_Builder out = {0};
+  nob_sb_append_cstr(&out,
+                     "#include <stdbool.h>\n"
+                     "#include \"config_values.h\"\n\n"
+                     "// <skald-config-generated>\n"
+                     "void ConfigApply(void) {\n");
+  bool ok = true;
+  bool wrote_any = false;
+  char line[512];
+  while (fgets(line, sizeof(line), in)) {
+    char *p = line;
+    while (*p == ' ' || *p == '\t')
+      p++;
+    if (*p == '\n' || *p == '\r' || *p == '\0')
+      continue;
+    if (strncmp(p, "#include <stdbool.h>", strlen("#include <stdbool.h>")) == 0 ||
+        strncmp(p, "#include \"config_values.h\"", strlen("#include \"config_values.h\"")) ==
+            0 ||
+        strncmp(p, "#include \"core/types/color.h\"",
+                strlen("#include \"core/types/color.h\"")) == 0 ||
+        strncmp(p, "ColorRef ", strlen("ColorRef ")) == 0)
+      continue;
+    const char *prefixes[] = {"bool ", "int ", "float ", "const char *"};
+    bool matched = false;
+    for (size_t i = 0; i < sizeof(prefixes) / sizeof(prefixes[0]); i++) {
+      size_t n = strlen(prefixes[i]);
+      if (strncmp(p, prefixes[i], n) == 0) {
+        p += n;
+        while (*p == ' ')
+          p++;
+        nob_sb_append_cstr(&out, "  ");
+        nob_sb_append_cstr(&out, p);
+        wrote_any = true;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      nob_log(NOB_ERROR, "release config: unrecognized line in %s: %s", src_path,
+              line);
+      ok = false;
+      break;
+    }
+  }
+  fclose(in);
+  if (!ok || !wrote_any) {
+    nob_log(NOB_ERROR, "release config: failed to parse %s", src_path);
+    nob_sb_free(out);
+    return false;
+  }
+  nob_sb_append_cstr(&out, "}\n// </skald-config-generated>\n");
+  FILE *outf = fopen(dst_path, "wb");
+  if (!outf) {
+    nob_log(NOB_ERROR, "release config: cannot open %s for writing", dst_path);
+    nob_sb_free(out);
+    return false;
+  }
+  bool wrote =
+      fwrite(out.items, 1, out.count, outf) == out.count && fclose(outf) == 0;
+  nob_sb_free(out);
+  if (!wrote) {
+    nob_log(NOB_ERROR, "release config: write failed for %s", dst_path);
+    return false;
+  }
+  nob_log(NOB_INFO, "release: generated %s from %s", dst_path, src_path);
+  return true;
+}
+
+static void release_finalize(void) {
+  if (!release)
+    return;
+  bool win_out = target_win32;
+#if defined(_WIN32)
+  win_out = true;
+#endif
+  if (win_out) {
+    if (nob_file_exists(main_implib) &&
+        !nob_copy_file(main_implib, "release/main.lib.a"))
+      nob_log(NOB_WARNING,
+              "release: could not copy %s to release/main.lib.a", main_implib);
+  }
+  nob_log(NOB_INFO,
+          "Release bundle ready in release/ (run from that directory)");
 }
 
 static Nob_File_Paths to_build = {0};
@@ -608,6 +734,10 @@ static bool compile_all(bool *any_compiled) {
       append_wayland_session_flags(&cmd);
       nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o",
                      obj_path(to_build.items[i]));
+      if (release)
+        nob_cmd_append(&cmd, "-O3");
+      else
+        nob_cmd_append(&cmd, "-ggdb");
       append_dep_cflags(&cmd);
       append_san_flags(&cmd);
     }
@@ -1637,7 +1767,6 @@ int main(int argc, char **argv) {
   NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
   int do_run = 0;
-  int do_release = 0;
   int do_test = 0;
   int do_check = 0;
   for (int i = 1; i < argc; i++) {
@@ -1647,8 +1776,10 @@ int main(int argc, char **argv) {
              argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");
-      printf("  -release Build skald.exe instead of debug build (Windows) and "
-             "add -O3\n");
+      printf("  -release Build a self-contained release/ bundle: skald[.exe],\n"
+             "           sdk/, config/config.c (defaults), features/ with\n"
+             "           control_center, settings and clipboard_history\n"
+             "           (Windows also emits main.lib.a); no compiler objects\n");
       printf("  -test   Run test suite\n");
       printf("  -asan   Build with clang -fsanitize=address,undefined\n");
       printf("  -check  Check for skapi includes outside features/tests,\n"
@@ -1663,7 +1794,7 @@ int main(int argc, char **argv) {
     if (strcmp(argv[i], "-run") == 0)
       do_run = 1;
     if (strcmp(argv[i], "-release") == 0)
-      do_release = 1;
+      release = true;
     if (strcmp(argv[i], "-test") == 0)
       do_test = 1;
     if (strcmp(argv[i], "-asan") == 0)
@@ -1678,6 +1809,36 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  if (release) {
+    obj_dir = BUILD_FOLDER "/release_obj";
+    sdk_dir = "release/sdk";
+    features_dir = "release/build/features";
+    main_implib = "release/build/main.lib.a";
+    if (!nob_mkdir_if_not_exists("release"))
+      return 1;
+    if (!nob_mkdir_if_not_exists("release/build"))
+      return 1;
+    if (!nob_mkdir_if_not_exists("release/build/features"))
+      return 1;
+    if (!nob_mkdir_if_not_exists("release/config"))
+      return 1;
+    if (!nob_mkdir_if_not_exists("release/features"))
+      return 1;
+    if (!nob_copy_directory_recursively("features/control_center",
+                                        "release/features/control_center") ||
+        !nob_copy_directory_recursively("features/settings",
+                                        "release/features/settings") ||
+        !nob_copy_directory_recursively(
+            "features/clipboard_history", "release/features/clipboard_history"))
+      return 1;
+    if (!emit_release_config("release/config/config.c")) {
+      nob_log(NOB_ERROR, "release: failed to generate release/config/config.c");
+      return 1;
+    }
+    nob_log(NOB_INFO, "release/: config, features staged (control_center, "
+                      "settings, clipboard_history)");
+  }
+
   if (sanitize) {
     pick_sanitize_cc();
     obj_dir = BUILD_FOLDER "/san_obj";
@@ -1685,6 +1846,8 @@ int main(int argc, char **argv) {
 
   if (target_win32) {
     obj_dir = BUILD_FOLDER "/win_obj";
+    if (!release)
+      main_implib = BUILD_FOLDER "/win_obj/main.lib.a";
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER))
       return 1;
     if (!nob_mkdir_if_not_exists(obj_dir))
@@ -1737,11 +1900,15 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (!nob_mkdir_if_not_exists("build/features"))
+  if (!nob_mkdir_if_not_exists(features_dir))
     return 1;
 
-  if (!emit_sdk()) {
-    nob_log(NOB_ERROR, "Failed to emit build/sdk");
+  if (!emit_sdk(sdk_dir)) {
+    nob_log(NOB_ERROR, "Failed to emit %s", sdk_dir);
+    return 1;
+  }
+  if (release && !emit_sdk("release/build/sdk")) {
+    nob_log(NOB_ERROR, "Failed to emit release/build/sdk");
     return 1;
   }
 
@@ -1754,14 +1921,14 @@ int main(int argc, char **argv) {
 
   const char *output = NULL;
   if (target_win32) {
-    output = BUILD_FOLDER "/skald_win.exe";
+    output = release ? "release/skald.exe" : BUILD_FOLDER "/skald_win.exe";
   } else {
 #if defined(_WIN32)
     output = sanitize     ? "build/debug/skald_san.exe"
-             : do_release ? "build/skald.exe"
+             : release    ? "release/skald.exe"
                           : "build/debug/skald.exe";
 #else
-    output = BUILD_FOLDER "/skald";
+    output = release ? "release/skald" : BUILD_FOLDER "/skald";
 #endif
   }
 
@@ -1792,11 +1959,12 @@ int main(int argc, char **argv) {
         any_compiled || !nob_file_exists(output) ||
         nob_needs_rebuild(output, (const char **)objs.items, objs.count) != 0;
 #if defined(_WIN32)
-    const char *other =
-        do_release ? "build/debug/skald.exe" : "build/skald.exe";
-    if (nob_file_exists(other) &&
-        nob_needs_rebuild(other, (const char **)objs.items, objs.count) != 0) {
-      needs_link = true;
+    if (!release) {
+      const char *other = "build/skald.exe";
+      if (nob_file_exists(other) &&
+          nob_needs_rebuild(other, (const char **)objs.items, objs.count) != 0) {
+        needs_link = true;
+      }
     }
 #endif
   }
@@ -1806,6 +1974,7 @@ int main(int argc, char **argv) {
     nob_da_free(objs);
     if (!build_features())
       return 1;
+    release_finalize();
     if (do_run && !run_output(output))
       return 1;
     return 0;
@@ -1818,7 +1987,7 @@ int main(int argc, char **argv) {
       nob_cmd_append(&cmd, objs.items[i]);
     }
     nob_cmd_append(&cmd, "-Wl,--export-all-symbols",
-                   "-Wl,--out-implib,build/win_obj/main.lib.a");
+                   nob_temp_sprintf("-Wl,--out-implib,%s", main_implib));
     nob_cmd_append(&cmd, WIN_LINK_FLAGS);
   } else {
     append_cc(&cmd);
@@ -1826,13 +1995,13 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < objs.count; ++i) {
       nob_cmd_append(&cmd, objs.items[i]);
     }
-    if (do_release)
+    if (release)
       nob_cmd_append(&cmd, "-O3");
 #if defined(_WIN32)
-    if (do_release)
+    if (release)
       nob_cmd_append(&cmd, "-mwindows");
     nob_cmd_append(&cmd, "-Wl,--export-all-symbols",
-                   "-Wl,--out-implib,build/main.lib.a");
+                   nob_temp_sprintf("-Wl,--out-implib,%s", main_implib));
 #endif
     append_dep_ldflags(&cmd);
     append_san_flags(&cmd);
@@ -1856,11 +2025,14 @@ int main(int argc, char **argv) {
     nob_cmd_append(&chmod, "chmod", "+x", output);
     nob_cmd_run(&chmod);
 #endif
-    stop_running_instance();
+    release_finalize();
+    if (!release)
+      stop_running_instance();
     if (do_run && !run_output(output))
       return 1;
     nob_log(NOB_INFO, "Built Successfully");
   } else {
+    release_finalize();
     nob_log(NOB_INFO, "Done: %s (copy to a Windows machine and run)", output);
   }
 
