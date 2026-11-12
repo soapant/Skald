@@ -38,7 +38,7 @@ char *Wm_GetActiveWindowTitle(void) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
       return buffer;
   }
-  log_error("Couldnt Get Active Window Title");
+  log_error("Couldn't Get Active Window Title");
   return NULL;
 }
 
@@ -132,7 +132,7 @@ PlWindowList Wm_GetWindowTitles() {
   result = x11_get_window_titles();
   if (result.windows != NULL)
     return result;
-  log_error("GetWindowTitles Didnt Work");
+  log_error("GetWindowTitles Didn't Work");
   return empty;
 }
 PlWindowList Wm_GetWindowNames() {
@@ -155,7 +155,7 @@ PlWindowList Wm_GetWindowNames() {
   result = x11_get_window_names();
   if (result.windows != NULL)
     return result;
-  log_error("GetWindowNames Didnt Work");
+  log_error("GetWindowNames Didn't Work");
   return empty;
 }
 
@@ -172,7 +172,7 @@ bool Wm_CloseActiveWindow(void) {
   }
   if (x11_close_active_window())
     return true;
-  log_error("CloseActiveWindow Didnt Work");
+  log_error("CloseActiveWindow Didn't Work");
   return false;
 }
 
@@ -189,7 +189,7 @@ bool Wm_ToggleFullscreenActive(void) {
   }
   if (x11_toggle_fullscreen_active())
     return true;
-  log_error("ToggleFullscreenActive Didnt Work");
+  log_error("ToggleFullscreenActive Didn't Work");
   return false;
 }
 
@@ -206,7 +206,7 @@ bool Wm_MoveActiveWindowToMonitor(bool right) {
   }
   if (x11_move_active_window_to_monitor(right))
     return true;
-  log_error("MoveActiveWindowToMonitor Didnt Work");
+  log_error("MoveActiveWindowToMonitor Didn't Work");
   return false;
 }
 
@@ -223,7 +223,7 @@ bool Wm_MoveActiveWindowLeft(void) {
   }
   if (x11_move_active_window_left())
     return true;
-  log_error("MoveActiveWindowLeft Didnt Work");
+  log_error("MoveActiveWindowLeft Didn't Work");
   return false;
 }
 
@@ -240,7 +240,7 @@ bool Wm_MoveActiveWindowRight(void) {
   }
   if (x11_move_active_window_right())
     return true;
-  log_error("MoveActiveWindowRight Didnt Work");
+  log_error("MoveActiveWindowRight Didn't Work");
   return false;
 }
 
@@ -257,7 +257,7 @@ bool Wm_MoveActiveWindowUp(void) {
   }
   if (x11_move_active_window_up())
     return true;
-  log_error("MoveActiveWindowUp Didnt Work");
+  log_error("MoveActiveWindowUp Didn't Work");
   return false;
 }
 
@@ -274,7 +274,7 @@ bool Wm_MoveActiveWindowDown(void) {
   }
   if (x11_move_active_window_down())
     return true;
-  log_error("MoveActiveWindowDown Didnt Work");
+  log_error("MoveActiveWindowDown Didn't Work");
   return false;
 }
 
@@ -291,7 +291,7 @@ bool Wm_FocusWindowLeft(void) {
   }
   if (x11_focus_window_left())
     return true;
-  log_error("FocusWindowLeft Didnt Work");
+  log_error("FocusWindowLeft Didn't Work");
   return false;
 }
 
@@ -308,7 +308,7 @@ bool Wm_FocusWindowRight(void) {
   }
   if (x11_focus_window_right())
     return true;
-  log_error("FocusWindowRight Didnt Work");
+  log_error("FocusWindowRight Didn't Work");
   return false;
 }
 
@@ -325,7 +325,7 @@ bool Wm_FocusWindowUp(void) {
   }
   if (x11_focus_window_up())
     return true;
-  log_error("FocusWindowUp Didnt Work");
+  log_error("FocusWindowUp Didn't Work");
   return false;
 }
 
@@ -342,7 +342,7 @@ bool Wm_FocusWindowDown(void) {
   }
   if (x11_focus_window_down())
     return true;
-  log_error("FocusWindowDown Didnt Work");
+  log_error("FocusWindowDown Didn't Work");
   return false;
 }
 
@@ -373,7 +373,7 @@ bool Wm_MinimizeActiveWindow(void) {
   }
   if (x11_minimize_active_window())
     return true;
-  log_error("MinimizeActiveWindow Didnt Work");
+  log_error("MinimizeActiveWindow Didn't Work");
   return false;
 }
 

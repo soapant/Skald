@@ -23,7 +23,6 @@ typedef uint32_t ColorRef;
                    (((unsigned long)(unsigned char)(b)) << 16)))
 #endif
 
-// just dont look here
 #ifndef HEX
 #define HEX(h)                                                                 \
   ((ColorRef)((((unsigned long)(h) & 0xFF0000UL) >> 16) |                      \
