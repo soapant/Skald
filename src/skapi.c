@@ -589,7 +589,7 @@ static bool feature_list_add(const char *name, void (*cb)(void),
 }
 
 void feature_list_purge_owner(const char *path_a, const char *path_b) {
-  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+  if (Owner_PurgeInactive(path_a, path_b))
     return;
   int n = 0;
   for (int i = 0; i < feature_order_count; i++) {
@@ -2736,107 +2736,7 @@ void sk_reload_feature(char *name) { FeatureLoader_Reload(name); }
 int sk_get_pid() { return sk_get_pid_platform(); }
 
 int sk_reload_all_features(void) {
-  if (!FeaturePath || !FeaturePath[0])
-    return 0;
-  DIR *dir = opendir(FeaturePath);
-  if (!dir)
-    return 0;
-  const char *ext = Platform_LibExtension();
-  static struct {
-    char dir[256];
-    time_t src_mtime;
-  } s_failed[64];
-  static int s_failed_count = 0;
-  struct dirent *ent;
-  int reloaded = 0;
-  while ((ent = readdir(dir)) != NULL) {
-    if (ent->d_name[0] == '.')
-      continue;
-    char subpath[512];
-    snprintf(subpath, sizeof(subpath), "%s/%s", FeaturePath, ent->d_name);
-    struct stat st;
-    if (stat(subpath, &st) != 0 || !S_ISDIR(st.st_mode))
-      continue;
-    char src[512], dll[512];
-    snprintf(src, sizeof(src), "%s/%s.c", subpath, ent->d_name);
-    snprintf(dll, sizeof(dll), "build/features/%s%s", ent->d_name, ext);
-    struct stat st_src, st_dll;
-    bool should_build = false;
-    if (stat(src, &st_src) == 0) {
-      if (stat(dll, &st_dll) != 0 || st_src.st_mtime > st_dll.st_mtime) {
-        should_build = true;
-      }
-    }
-    if (!should_build)
-      continue;
-    bool known_bad = false;
-    for (int fi = 0; fi < s_failed_count; fi++) {
-      if (s_failed[fi].src_mtime == st_src.st_mtime &&
-          strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) ==
-              0) {
-        known_bad = true;
-        break;
-      }
-    }
-    if (known_bad)
-      continue;
-    char tmp[1024];
-    snprintf(tmp, sizeof(tmp), "%s.tmp.%d", dll, sk_get_pid());
-    char cmd[4096];
-    if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd))) {
-      remove(tmp);
-      continue;
-    }
-#if defined(_WIN32)
-    const char *argv[] = {"cmd", "/c", cmd, NULL};
-#else
-    const char *argv[] = {"sh", "-c", cmd, NULL};
-#endif
-    int status = -1;
-    char *outStr = sk_run_argv(argv, NULL, &status);
-    bool ok = false;
-    if (outStr) {
-      ok = (status == 0);
-      if (!ok)
-        log_error("hot-reload %s failed (exit %d):\n%s", ent->d_name, status,
-                  outStr);
-      free(outStr);
-    } else {
-      ok = true;
-    }
-    if (!ok) {
-      remove(tmp);
-      if (s_failed_count < 64) {
-        snprintf(s_failed[s_failed_count].dir,
-                 sizeof(s_failed[s_failed_count].dir), "%s", ent->d_name);
-        s_failed[s_failed_count].src_mtime = st_src.st_mtime;
-        s_failed_count++;
-      }
-      continue;
-    }
-    bool reloaded_ok = FeatureLoader_ReloadFrom(ent->d_name, tmp);
-    remove(tmp);
-    if (!reloaded_ok) {
-      if (s_failed_count < 64) {
-        snprintf(s_failed[s_failed_count].dir,
-                 sizeof(s_failed[s_failed_count].dir), "%s", ent->d_name);
-        s_failed[s_failed_count].src_mtime = st_src.st_mtime;
-        s_failed_count++;
-      }
-      continue;
-    }
-    for (int fi = 0; fi < s_failed_count; fi++) {
-      if (strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) == 0)
-        s_failed[fi].src_mtime = 0;
-    }
-    struct utimbuf times;
-    times.actime = st_src.st_mtime;
-    times.modtime = st_src.st_mtime;
-    utime(dll, &times);
-    reloaded++;
-  }
-  closedir(dir);
-  return reloaded;
+  return FeatureLoader_BuildStaleSources(true);
 }
 
 bool sk_hotkey_down(SkKey key) {

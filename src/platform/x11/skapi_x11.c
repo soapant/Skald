@@ -173,31 +173,15 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
         return false;
       return true;
     } else {
-      X11SessionEnv env2 = env;
-      pid_t pid = fork();
-      if (pid < 0)
+      pid_t p = x11_env_detach_fork();
+      if (p < 0)
         return false;
-      if (pid == 0) {
-        setsid();
-        pid_t pid2 = fork();
-        if (pid2 < 0)
-          _exit(1);
-        if (pid2 > 0)
-          _exit(0);
-        int fd = open("/dev/null", O_RDWR);
-        if (fd >= 0) {
-          dup2(fd, 0);
-          dup2(fd, 1);
-          dup2(fd, 2);
-          if (fd > 2)
-            close(fd);
-        }
+      if (p == 0) {
+        X11SessionEnv env2 = env;
         x11_env_apply_to_current_process(&env2);
         execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
         _exit(127);
       }
-      int st = 0;
-      waitpid(pid, &st, 0);
       return true;
     }
   }
