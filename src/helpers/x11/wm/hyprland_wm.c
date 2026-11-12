@@ -142,20 +142,14 @@ bool get_app_id_hyprland(char *buffer, int buffer_size) {
 }
 
 char *paste_hyprland(char *content) {
-  if (!content) {
-    log_error("content is NULL");
-    return NULL;
-  }
-  const char *argv[] = {"wtype", content, NULL};
-  int status = 0;
-  char *out = Platform_RunArgvCapture(argv, NULL, &status);
-  if (status == 127) {
-    free(out);
-    out = NULL;
-  }
-  if (!out)
-    log_error("paste via wtype failed");
-  return out;
+  return x11_paste_wtype(content);
+}
+
+
+static bool hypr_bus(void) {
+  hypr_ensure_sig();
+  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  return sig && sig[0];
 }
 
 bool succeded_hypr(char *output) {
@@ -179,6 +173,16 @@ bool succeded_hypr(char *output) {
     return false;
   }
   return true;
+}
+
+
+static bool hypr_exec(const char *cmd) {
+  if (!hypr_bus())
+    return false;
+  char *out = Platform_RunTerminalCommand(cmd, false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
 }
 
 static bool hypr_focus_lua_cmd(const char *title, char *out, size_t cap) {
@@ -241,25 +245,30 @@ bool focus_window_title_hyprland(char *title) {
   return false;
 }
 
-PlWindowList get_window_names_hyprland() {
+static PlWindowList hypr_client_list(const char *field, bool toupper_first) {
   hypr_ensure_sig();
   char *output = Platform_RunTerminalCommand("hyprctl clients -j", false);
   PlWindowList list = {.windows = NULL, .count = 0};
   char buffer[512];
+  char match_pat[32];
+  char fmt[64];
   if (output == NULL || strlen(output) == 0) {
     log_error("output is NULL or empty");
     return list;
   }
+  snprintf(match_pat, sizeof(match_pat), "\"%s\"", field);
+  snprintf(fmt, sizeof(fmt), "\"%s\": \"%%511[^\"]\"", field);
   StringList lines = String_Split(output, "\n");
   for (size_t i = 0; i < lines.count; i++) {
-    char *match = strstr(lines.items[i], "\"class\"");
+    char *match = strstr(lines.items[i], match_pat);
     if (match) {
-      if (sscanf(match, "\"class\": \"%511[^\"]\"", buffer) == 1) {
+      if (sscanf(match, fmt, buffer) == 1) {
         if (strlen(buffer) == 0)
           continue;
         if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored"))
           continue;
-        buffer[0] = toupper((unsigned char)buffer[0]);
+        if (toupper_first)
+          buffer[0] = toupper((unsigned char)buffer[0]);
         char **temp = realloc(list.windows, (list.count + 1) * sizeof(char *));
         if (temp == NULL)
           break;
@@ -273,68 +282,25 @@ PlWindowList get_window_names_hyprland() {
   free(output);
   return list;
 }
-PlWindowList get_window_titles_hyprland() {
-  hypr_ensure_sig();
-  char *output = Platform_RunTerminalCommand("hyprctl clients -j", false);
-  PlWindowList list = {.windows = NULL, .count = 0};
-  char buffer[512];
-  if (output == NULL || strlen(output) == 0) {
-    log_error("output is NULL or empty");
-    return list;
-  }
-  StringList lines = String_Split(output, "\n");
-  for (size_t i = 0; i < lines.count; i++) {
-    char *match = strstr(lines.items[i], "\"title\"");
-    if (match) {
-      if (sscanf(match, "\"title\": \"%511[^\"]\"", buffer) == 1) {
-        if (strlen(buffer) == 0)
-          continue;
-        if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored"))
-          continue;
-        char **temp = realloc(list.windows, (list.count + 1) * sizeof(char *));
-        if (temp == NULL)
-          break;
-        list.windows = temp;
-        list.windows[list.count] = strdup(buffer);
-        list.count++;
-      }
-    }
-  }
-  StringList_Free(&lines);
-  free(output);
-  return list;
+PlWindowList get_window_names_hyprland(void) {
+  return hypr_client_list("class", true);
+}
+PlWindowList get_window_titles_hyprland(void) {
+  return hypr_client_list("title", false);
 }
 
 bool close_active_window_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
-    return false;
-  char *out = Platform_RunTerminalCommand(
-      "hyprctl dispatch 'hl.dsp.window.close()'", false);
-  bool ok = succeded_hypr(out);
-  free(out);
-  return ok;
+  return hypr_exec("hyprctl dispatch 'hl.dsp.window.close()'");
 }
 
 bool toggle_fullscreen_active_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
-    return false;
-  char *out = Platform_RunTerminalCommand(
+  return hypr_exec(
       "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"fullscreen\", "
-      "action = \"toggle\" })'",
-      false);
-  bool ok = succeded_hypr(out);
-  free(out);
-  return ok;
+      "action = \"toggle\" })'");
 }
 
 bool move_active_window_to_monitor_hyprland(bool right) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
+  if (!hypr_bus())
     return false;
   char cmd[96];
   snprintf(cmd, sizeof(cmd),
@@ -347,51 +313,19 @@ bool move_active_window_to_monitor_hyprland(bool right) {
 }
 
 bool focus_window_up_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
-    return false;
-  char *out =
-      Platform_RunTerminalCommand("hyprctl dispatch movefocus u", false);
-  bool ok = succeded_hypr(out);
-  free(out);
-  return ok;
+  return hypr_exec("hyprctl dispatch movefocus u");
 }
 
 bool focus_window_down_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
-    return false;
-  char *out =
-      Platform_RunTerminalCommand("hyprctl dispatch movefocus d", false);
-  bool ok = succeded_hypr(out);
-  free(out);
-  return ok;
+  return hypr_exec("hyprctl dispatch movefocus d");
 }
 
 bool move_active_window_up_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
-    return false;
-  char *out =
-      Platform_RunTerminalCommand("hyprctl dispatch movewindow u", false);
-  bool ok = succeded_hypr(out);
-  free(out);
-  return ok;
+  return hypr_exec("hyprctl dispatch movewindow u");
 }
 
 bool move_active_window_down_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
-    return false;
-  char *out =
-      Platform_RunTerminalCommand("hyprctl dispatch movewindow d", false);
-  bool ok = succeded_hypr(out);
-  free(out);
-  return ok;
+  return hypr_exec("hyprctl dispatch movewindow d");
 }
 
 bool inject_key_hyprland(int vk, int down) {
@@ -484,9 +418,7 @@ bool inject_key_hyprland(int vk, int down) {
 }
 
 bool minimize_active_window_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
+  if (!hypr_bus())
     return false;
   char *out =
       Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.move({ "
@@ -504,27 +436,13 @@ bool minimize_active_window_hyprland(void) {
 }
 
 bool focus_window_left_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
-    return false;
-  char *out = Platform_RunTerminalCommand(
-      "hyprctl dispatch 'hl.dsp.focus({ direction = \"l\" })'", false);
-  bool ok = succeded_hypr(out);
-  free(out);
-  return ok;
+  return hypr_exec(
+      "hyprctl dispatch 'hl.dsp.focus({ direction = \"l\" })'");
 }
 
 bool focus_window_right_hyprland(void) {
-  hypr_ensure_sig();
-  const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0])
-    return false;
-  char *out = Platform_RunTerminalCommand(
-      "hyprctl dispatch 'hl.dsp.focus({ direction = \"r\" })'", false);
-  bool ok = succeded_hypr(out);
-  free(out);
-  return ok;
+  return hypr_exec(
+      "hyprctl dispatch 'hl.dsp.focus({ direction = \"r\" })'");
 }
 
 bool move_active_window_left_hyprland(void) {
