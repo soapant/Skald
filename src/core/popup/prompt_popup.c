@@ -315,8 +315,7 @@ CloseCallback PromptPopup_TakeOnClose(Popup *p) {
   return cb;
 }
 
-static Popup *prompt_find_popup(bool (*match)(Popup *p, void *arg),
-                                void *arg) {
+static Popup *prompt_find_popup(bool (*match)(Popup *p, void *arg), void *arg) {
   WindowManager *wm = WindowManager_Get();
   if (!wm)
     return NULL;

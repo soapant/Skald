@@ -100,8 +100,8 @@ static size_t niri_copy_json_string(const char *s, char *out, size_t cap) {
   return o;
 }
 
-static bool niri_focused_field(const char *key, size_t key_len,
-                               char *buffer, int buffer_size) {
+static bool niri_focused_field(const char *key, size_t key_len, char *buffer,
+                               int buffer_size) {
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';

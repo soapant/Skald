@@ -7,6 +7,7 @@
 #include <math.h>
 #include <dirent.h>
 #include <sys/stat.h>
+
 static size_t ccx_strcpy_trunc(char *dst, size_t dst_size, const char *src);
 
 typedef void (*CcFill)(void);
@@ -1357,11 +1358,7 @@ static void cc_refresh(PromptState *state) {
   }
 }
 
-static unsigned long cc_type_color(void) {
-  unsigned int h =
-      Color_Lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(COLOR_BG), 0.45f);
-  return RGB((h >> 16) & 0xFF, (h >> 8) & 0xFF, h & 0xFF);
-}
+#define TYPE_COLOR SK_GRAY
 
 static void cc_subwindow_refresh(PromptState *state) {
   const char *items[] = {"Register Hotkey", "Register Alias"};
@@ -1635,21 +1632,21 @@ static void cc_on_actions_render(SkPlaceState state) {
       *plus = ' ';
   }
 
-  sk_draw_rect(.x = state.rect.x + 95, .y = state.rect.y - 2, .w = state.rect.w - 95,
-               .h = state.rect.h, .filled = true, .color = SK_DARK_GRAY,
-               .radius = 6);
+  sk_draw_rect(.x = state.rect.x + 95, .y = state.rect.y - 2,
+               .w = state.rect.w - 95, .h = state.rect.h, .filled = true,
+               .color = SK_DARK_GRAY, .radius = 6);
 
   if (state.hovered) {
-    sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2, .w = state.rect.w - 15,
-                 .h = state.rect.h, .filled = true, .color = SK_GRAY,
-                 .radius = 6);
+    sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2,
+                 .w = state.rect.w - 15, .h = state.rect.h, .filled = true,
+                 .color = SK_GRAY, .radius = 6);
   }
 
   sk_draw_text(.x = state.rect.x + 20, .y = state.rect.y - 4, .text = "Actions",
                .align = "LEFT", .color = SK_DARK_GRAY, .fontsize = 16);
   if (hotkey_str)
-    sk_draw_text(.x = state.rect.x + 100, .y = state.rect.y - 7, .text = hotkey_str,
-                 .align = "LEFT", .fontsize = 20);
+    sk_draw_text(.x = state.rect.x + 100, .y = state.rect.y - 7,
+                 .text = hotkey_str, .align = "LEFT", .fontsize = 20);
 
   free(hotkey_str);
 }
@@ -1739,22 +1736,21 @@ static void cc_render(PromptState *state) {
     }
     if (plain_type) {
       sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = e->type,
-                   .align = "RIGHT", .color = cc_type_color());
+                   .align = "RIGHT", .color = TYPE_COLOR);
     } else if (e) {
       int type_sz = FontSize - CC_TYPE_SIZE_DELTA;
       if (type_sz < 8)
         type_sz = FontSize;
-      unsigned long meta_col = cc_type_color();
       if (e->type[0]) {
         int name_w = sk_get_text_width(ctx.text, FontSize);
         sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
                      .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
                      .text = e->type, .align = "LEFT", .pad = 0,
-                     .fontsize = type_sz, .color = meta_col);
+                     .fontsize = type_sz, .color = TYPE_COLOR);
       }
       sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
                    .text = CC_TYPE_LABEL, .align = "RIGHT", .pad = 0,
-                   .color = meta_col);
+                   .color = TYPE_COLOR);
     }
   }
   sk_listbox_end();

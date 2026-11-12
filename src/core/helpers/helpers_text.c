@@ -869,7 +869,8 @@ bool List_Append(PlWindowList *list, const char *item) {
   char *copy = strdup(item);
   if (!copy)
     return false;
-  char **tmp = realloc(list->windows, (size_t)(list->count + 1) * sizeof(char *));
+  char **tmp =
+      realloc(list->windows, (size_t)(list->count + 1) * sizeof(char *));
   if (!tmp) {
     free(copy);
     return false;
@@ -879,8 +880,8 @@ bool List_Append(PlWindowList *list, const char *item) {
   return true;
 }
 
-bool Window_ListAllows(int window_count, bool whitelist,
-                       char *const *windows, const char *title) {
+bool Window_ListAllows(int window_count, bool whitelist, char *const *windows,
+                       const char *title) {
   if (window_count == 0)
     return !whitelist;
   if (!whitelist) {

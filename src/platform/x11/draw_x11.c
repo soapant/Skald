@@ -79,7 +79,8 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     }
     needDestroy = true;
   }
-  unsigned long color = spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
+  unsigned long color =
+      spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
   const char *a = spec.align ? spec.align : "CENTER";
   if (PlDrawState_Get()->measuring) {
     XftFont *mf = FH_TO_XFT(fh);
@@ -172,7 +173,8 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   XftFont *xf = x11_line_font(g_draw_dpy, spec.fontsize);
   if (!xf)
     return false;
-  unsigned long color = spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
+  unsigned long color =
+      spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
   XftColor col;
   x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
   x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf,
@@ -219,9 +221,8 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
 }
 
 static void platform_draw_editbox_part(PromptState *state, Display *dpy,
-                                       XftDraw *xd, Visual *vis,
-                                       Colormap cmap, FontHandle font,
-                                       int part) {
+                                       XftDraw *xd, Visual *vis, Colormap cmap,
+                                       FontHandle font, int part) {
   x11_set_draw_context(dpy, xd, vis, cmap);
   EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
   EditboxSpec eb;

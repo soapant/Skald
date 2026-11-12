@@ -312,11 +312,11 @@ typedef struct {
   int cx;
 } X11DrawRunCtx;
 
-static int x11_draw_run(Display *dpy, XftFont *font,
-                        const unsigned char *run, int len, void *ud) {
+static int x11_draw_run(Display *dpy, XftFont *font, const unsigned char *run,
+                        int len, void *ud) {
   X11DrawRunCtx *ctx = (X11DrawRunCtx *)ud;
-  XftDrawStringUtf8(ctx->xd, ctx->color, font, ctx->cx, ctx->y,
-                    (FcChar8 *)run, len);
+  XftDrawStringUtf8(ctx->xd, ctx->color, font, ctx->cx, ctx->y, (FcChar8 *)run,
+                    len);
   int w = xft_width(dpy, font, (const char *)run, len);
   ctx->cx += w;
   return w;
@@ -351,8 +351,8 @@ int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
     return 0;
   px = x11_font_px(xf, px);
   X11DrawRunCtx ctx = {xd, color, y, x};
-  x11_utf8_fallback_runs(dpy, xf, (const unsigned char *)s, n, px,
-                         x11_draw_run, &ctx);
+  x11_utf8_fallback_runs(dpy, xf, (const unsigned char *)s, n, px, x11_draw_run,
+                         &ctx);
   return ctx.cx - x;
 }
 
@@ -368,8 +368,7 @@ static void x11_wrap_flush_line(Display *dpy, XftDraw *xd, XftColor *color,
     drawX = boxWidth > 0 ? maxWidth - lw : maxWidth - lw - xOffset;
   else
     drawX = xOffset;
-  x11_draw_utf8_fallback(dpy, xd, color, drawX, y, xf, lineStart, line_len,
-                         0);
+  x11_draw_utf8_fallback(dpy, xd, color, drawX, y, xf, lineStart, line_len, 0);
 }
 
 void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
@@ -431,14 +430,14 @@ void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
       p++;
   }
 
-if (p > lineStart) {
+  if (p > lineStart) {
     x11_wrap_flush_line(dpy, xd, color, xf, lineStart, (int)(p - lineStart),
                         alignment, boxWidth, maxWidth, xOffset, y);
   }
 }
 
-void x11_init_argb_image(Display *dpy, XImage *img, unsigned char *data,
-                         int w, int h, unsigned long red_mask,
+void x11_init_argb_image(Display *dpy, XImage *img, unsigned char *data, int w,
+                         int h, unsigned long red_mask,
                          unsigned long green_mask, unsigned long blue_mask) {
   memset(img, 0, sizeof(*img));
   img->width = w;

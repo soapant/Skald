@@ -10,7 +10,7 @@
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 
-int main() {
+int main(void) {
   srand((unsigned)time(NULL));
   if (!Platform_TryAcquireSingleInstance()) {
     fprintf(stderr, "Skald is already running, exiting.\n");

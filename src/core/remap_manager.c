@@ -427,7 +427,9 @@ bool remap_handle_vk(int vk_code, int value) {
     title = Platform_GetActiveWindowTitle();
   for (int i = 0; i < remap_count; i++) {
     if (remaps[i].window_count > 0)
-      allowed[i] = Window_ListAllows(remaps[i].window_count, remaps[i].whitelist, remaps[i].windows, title);
+      allowed[i] =
+          Window_ListAllows(remaps[i].window_count, remaps[i].whitelist,
+                            remaps[i].windows, title);
   }
 
   for (int i = 0; i < remap_count; i++) {
