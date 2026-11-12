@@ -167,7 +167,7 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   ctx->window.selection_complete = should_close;
   if (ctx)
     ctx->window.subwindow.in_enter = false;
-  Platform_ProcessPendingSubwindow();
+  Platform_ProcessPendingSubWindows();
 }
 
 bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,

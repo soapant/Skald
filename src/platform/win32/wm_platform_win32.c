@@ -85,7 +85,7 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
     *list_top = PromptListTop();
 }
 
-void Platform_ProcessPendingSubwindow(void) {
+void Platform_ProcessPendingSubWindows(void) {
   SkaldContext *_c = SkaldContext_Get();
   if (!_c || !_c->window.subwindow.pending)
     return;
