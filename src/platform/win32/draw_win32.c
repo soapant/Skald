@@ -41,7 +41,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   int _oy = PlDrawState_Get()->off_y;
   int x = spec.x + _ox;
   int y = spec.y + _oy;
-  unsigned long color = spec.color != 0 ? rgb_to_hex(spec.color) : COLOR_TEXT;
+  unsigned long color = spec.color != PL_COLOR_AUTO ? rgb_to_hex(spec.color) : COLOR_TEXT;
   const char *a = spec.align ? spec.align : "CENTER";
   HFONT old = NULL;
   int tlen = (int)strlen(spec.text);
@@ -181,7 +181,7 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   int _oy = PlDrawState_Get()->off_y;
   int x = spec.x + _ox;
   int y = spec.y + _oy;
-  unsigned long color = spec.color != 0 ? rgb_to_hex(spec.color) : COLOR_TEXT;
+  unsigned long color = spec.color != PL_COLOR_AUTO ? rgb_to_hex(spec.color) : COLOR_TEXT;
   int wlen = 0;
   wchar_t *wide = win32_widen(spec.text, spec.len, &wlen);
   if (!wide)
