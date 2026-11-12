@@ -7,7 +7,7 @@ void ConfigApply(void) {
   RememberLastIndex = true;
   MessageAfterEachHotkey = false;
   TimeOutForMessages = 1;
-  DebugMode = false;
+  DebugMode = true;
   RoundedCorners = true;
   EnableBorders = true;
   CornerRadius = 14;
@@ -22,7 +22,6 @@ void ConfigApply(void) {
   UsedBrowser = "";
   UsedSearchEngine = "google";
   FeaturePath = "features";
-  IconPath = "";
   ControlHotkey = "Alt+Space";
   ReloadFeaturesHotkey = "Alt+R";
   ActionsHotkey = "Ctrl+K";

@@ -878,12 +878,9 @@ void sk_cap_bind_declare(const char *key, void *consumer);
 #define SK_CORAL RGB(255, 127, 80)
 #define SK_CRIMSON RGB(220, 20, 60)
 #define SK_CHOCOLATE RGB(210, 105, 30)
-#define SK_GRAY RGB(128, 128, 128)
-#define SK_GREY RGB(128, 128, 128)
+#define SK_GRAY RGB(50, 50, 50)
 #define SK_LIGHT_GRAY RGB(211, 211, 211)
 #define SK_DARK_GRAY RGB(14, 14, 14)
-#define SK_LIGHT_GREY RGB(211, 211, 211)
-#define SK_DARK_GREY RGB(14, 14, 14)
 
 SkMetrics *sk_get_metrics(void);
 
