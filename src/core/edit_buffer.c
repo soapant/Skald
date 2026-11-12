@@ -1,6 +1,5 @@
 #include <stdbool.h>
 #include <string.h>
-
 #include "helpers/helpers_edit_buffer.h"
 #include "config_values.h"
 
