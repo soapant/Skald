@@ -527,7 +527,7 @@ static void manifest_parse(const char *name, FeatureManifest *m) {
     return;
 
   char line[512];
-  int section = 0; /* 0=none 1=provides 2=depends */
+  int section = 0;
   while (fgets(line, sizeof(line), f)) {
     char work[512];
     snprintf(work, sizeof(work), "%s", line);
@@ -557,7 +557,7 @@ static void manifest_parse(const char *name, FeatureManifest *m) {
       manifest_unquote(val);
       if (strcmp(key, "name") == 0)
         snprintf(m->name, sizeof(m->name), "%s", val);
-      else if (strcmp(key, "description") == 0) { /* informational */
+      else if (strcmp(key, "description") == 0) {
       }
       section = 0;
       continue;

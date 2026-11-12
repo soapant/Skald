@@ -158,9 +158,6 @@ static unsigned kwin_q_seq = 0;
 static bool kwin_q_legacy_cleared = false;
 static long long kwin_q_load_tried_at = 0;
 
-/* How long a window snapshot stays usable. The query costs a Script.run plus
-   a journalctl scrape, so a short TTL meant every hotkey paid for a fresh
-   one. Window filters only need the title to be roughly current. */
 #define KWIN_SNAP_TTL_MS 1200
 
 static const char kwin_q_body[] =
@@ -227,11 +224,6 @@ static bool kwin_q_load(void) {
       log_error("kwin q load bad id");
       continue;
     }
-    /* loadScript returning a valid id is enough. Verifying here meant a
-       Script.run plus a 150ms sleep plus a journalctl scrape, and then
-       kwin_snapshot_locked immediately did the same run and scrape again.
-       If the script is actually broken the snapshot's own journal retry
-       fails and clears kwin_q_loaded, so this self-corrects. */
     kwin_q_loaded = true;
     unlink(js_path);
     return true;

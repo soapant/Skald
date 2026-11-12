@@ -1019,7 +1019,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     return true;
   if (has_popup) {
     if (val != 0 && x11_is_suppressed(code))
-      return true; /* repeat/passthrough of a key whose press was swallowed */
+      return true;
     bool hk_swallowed = (val == 1) && x11_handle_global_key(code, val);
     if (hk_swallowed) {
       x11_set_suppress(code, true);

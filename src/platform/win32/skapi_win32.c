@@ -295,17 +295,12 @@ void sk_sleep_platform(double seconds) {
   Sleep((DWORD)ms);
 }
 
-/* GetAdaptersAddresses costs ~6ms on a machine with many adapters (Hyper-V,
-   WSL, VPN, Bluetooth, ...), and the net widgets used to call it on every
-   sample. The active adapter changes rarely, so resolve it once and reuse
-   the interface index for a few seconds. GetIfEntry on that index is then a
-   ~0.08ms single-interface query instead of two full GetIfTable sweeps. */
 #define SK_NET_ADAPTER_TTL_MS 5000
 
 typedef struct {
-  ULONG index;   /* MIB interface index */
-  ULONG if_type; /* IF_TYPE_* */
-  char guid[64]; /* adapter GUID, as GetIfTable reports it */
+  ULONG index;
+  ULONG if_type;
+  char guid[64];
   DWORD at_ms;
   bool valid;
 } SkNetAdapter;
@@ -445,12 +440,10 @@ unsigned long long sk_net_rx_bytes_platform(void) {
   memset(&row, 0, sizeof(row));
   row.dwIndex = a.index;
   if (GetIfEntry(&row) != NO_ERROR) {
-    /* The interface went away or the index was recycled: resolve again. */
     net_invalidate_adapter();
     return 0;
   }
-  unsigned long long rx = (unsigned long long)row.dwInOctets;
-  return rx;
+  return (unsigned long long)row.dwInOctets;
 }
 
 SkNetStatus sk_net_status_platform(void) {

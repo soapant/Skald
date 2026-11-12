@@ -243,7 +243,7 @@ BOOL CALLBACK win32_focus_enum(HWND hwnd, LPARAM lp) {
     gap = s->fcy - cy;
     cross = cx >= s->fcx ? cx - s->fcx : s->fcx - cx;
     break;
-  default: /* WIN32_FOCUS_DOWN */
+  default:
     if (cy <= s->fcy)
       return TRUE;
     gap = cy - s->fcy;
@@ -467,8 +467,6 @@ void win32_gdiplus_ready(void) {
   GdiplusStartup(&g_gdiplusToken, &in, NULL);
 }
 
-/* Shell icon extraction costs several ms and cannot be cached by the draw path,
-   so flatten it to a PNG once and hand that back as the icon path. */
 bool win32_export_shell_icon_png(const char *native_path) {
   char png[MAX_PATH];
   if (!win32_icon_png_path(native_path, png, sizeof(png)))

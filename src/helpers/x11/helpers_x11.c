@@ -668,7 +668,6 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
   FILE *f = fopen(path, "r");
   if (!f)
     return NULL;
-  /* read whole file */
   fseek(f, 0, SEEK_END);
   long sz = ftell(f);
   if (sz <= 0) {

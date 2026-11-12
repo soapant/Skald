@@ -482,8 +482,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   const char *real_home = Platform_GetRealHome();
 
   if (!open_terminal) {
-    char *result = Platform_RunCommandDetachedCapture(command);
-    return result;
+    return Platform_RunCommandDetachedCapture(command);
   }
 
   char temp_file[MAX_PATH];

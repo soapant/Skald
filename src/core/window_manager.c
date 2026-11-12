@@ -62,8 +62,7 @@ WindowManager *WindowManager_Get(void) { return window_manager; }
 int WindowManager_Run(WindowManager *wm) {
   if (!wm)
     return -1;
-  int rc = Platform_WM_Run(wm);
-  return rc;
+  return Platform_WM_Run(wm);
 }
 
 static bool popup_push_in_progress = false;
@@ -176,8 +175,7 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   if (ctx)
     ctx->window.editbox_placed = false;
   EventBus_Trigger(EVENT_PROMPT_OPEN);
-  char *res = PromptUserRun(wm, spec);
-  return res;
+  return PromptUserRun(wm, spec);
 }
 
 #define MAX_EVENT_CALLBACKS 16
