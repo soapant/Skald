@@ -1632,12 +1632,20 @@ static void cc_on_actions_render(SkRect rect) {
   char *plus = strchr(hotkey_str, '+');
   *plus = ' ';
   sk_draw_rect(.x = rect.x + 95, .y = rect.y - 2, .w = rect.w - 95, .h = rect.h,
-               .filled = true,
-               .color = sk_button_hovered("Actions") ? SK_GRAY : SK_DARK_GRAY,
-               .radius = 6);
+                 .filled = true,
+                 .color = SK_DARK_GRAY,
+                 .radius = 6);
+
+  if (sk_button_hovered("Actions")) {
+    sk_draw_rect(.x = rect.x + 15, .y = rect.y - 2, .w = rect.w - 15, .h = rect.h,
+                 .filled = true,
+                 .color = SK_GRAY,
+                 .radius = 6);
+  }
+
 
   sk_draw_text(.x = rect.x + 20, .y = rect.y - 4, .text = "Actions",
-               .align = "LEFT", .color = SK_GRAY, .fontsize = 16);
+               .align = "LEFT", .color = SK_DARK_GRAY, .fontsize = 16);
   sk_draw_text(.x = rect.x + 100, .y = rect.y - 7, .text = hotkey_str,
                .align = "LEFT", .fontsize = 20);
 
