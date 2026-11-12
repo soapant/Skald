@@ -36,6 +36,7 @@
 #include "helpers/helpers_render_thread.h"
 #include "platform/widget.h"
 #include "core/remap_manager.h"
+#include "config_values.h"
 #include "core/hotkey_manager.h"
 #include "core/types/keys.h"
 
@@ -97,6 +98,18 @@ static void *input_thread_func(void *arg) {
   return NULL;
 }
 
+static void x11_drain_selection_complete(Display *dpy, WindowManager *wm) {
+
+  if (!wm || !SkaldContext_Get()->window.selection_complete)
+    return;
+  SkaldContext_Get()->window.selection_complete = false;
+  WindowManager_PopPopup(wm);
+  Popup *top_after = WindowManager_GetTopPopup(wm);
+  if (top_after && top_after->vtable && top_after->vtable->on_render)
+    top_after->vtable->on_render(top_after);
+  XFlush(dpy);
+}
+
 static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
                                  WindowManager *wm) {
 
@@ -150,16 +163,7 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   if (top->vtable && top->vtable->on_key)
     top->vtable->on_key(top, &key);
 
-  if (SkaldContext_Get()->window.selection_complete) {
-    SkaldContext_Get()->window.selection_complete = false;
-    WindowManager_PopPopup(wm);
-  }
-
-  Popup *top_after = WindowManager_GetTopPopup(wm);
-  if (top_after && top_after->vtable && top_after->vtable->on_render) {
-    top_after->vtable->on_render(top_after);
-  }
-  XFlush(dpy);
+  x11_drain_selection_complete(dpy, wm);
 }
 
 static void x11_handle_key_release(Display *dpy, XKeyEvent *ev) {
@@ -246,9 +250,19 @@ void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
   case FocusOut:
     if (top->vtable && top->vtable->on_focus_lost) {
       top->vtable->on_focus_lost(top);
+      break;
+    }
+    if (CloseOnLossOfFocus) {
+      if (wm && wm->popup_count > 1) {
+        SkaldContext_Get()->window.selection_complete = true;
+        break;
+      }
+      SkaldContext_Get()->window.output_buffer[0] = '\0';
+      SkaldContext_Get()->window.selection_complete = true;
     }
     break;
   }
+  x11_drain_selection_complete(dpy, wm);
 }
 
 int WindowManager_RunLinux(WindowManager *wm) {
