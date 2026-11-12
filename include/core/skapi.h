@@ -38,6 +38,7 @@ typedef PlPos SkPos;
 typedef PlListSpec SkListSpec;
 typedef PlWindowList SkWindowList;
 typedef CheckboxSpec SkCheckboxSpec;
+typedef PlaceState SkPlaceState;
 typedef ClipboardEntry SkClipboardEntry;
 typedef ClipboardHistory SkClipboardHistory;
 
@@ -397,6 +398,10 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec);
 
 bool sk_checkbox_is_checked(const char *name);
 bool sk_checkbox_is_hovered(const char *name);
+bool sk_checkbox_is_clicked(const char *name);
+bool sk_button_is_checked(const char *name);
+bool sk_button_is_hovered(const char *name);
+bool sk_button_is_clicked(const char *name);
 
 #define sk_checkbox_hovered sk_checkbox_is_hovered
 #define sk_checkbox_clicked sk_checkbox_is_clicked
@@ -408,10 +413,10 @@ bool sk_checkbox_is_hovered(const char *name);
   ski_place_checkbox(                                                          \
       &(SkCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
 
-#define sk_button_is_clicked sk_checkbox_is_checked
-#define sk_button_is_hovered sk_checkbox_is_hovered
-#define sk_button_clicked sk_checkbox_checked
-#define sk_button_hovered sk_checkbox_hovered
+#define sk_checkbox_checked sk_checkbox_is_checked
+#define sk_button_hovered sk_button_is_hovered
+#define sk_button_clicked sk_button_is_clicked
+#define sk_button_checked sk_button_is_checked
 
 #define sk_draw_text(...) ski_draw_text(&(SkTextSpec){__VA_ARGS__})
 #define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
