@@ -90,7 +90,7 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     ctx->window.subwindow.in_enter = true;
   const char *sel = NULL;
   char filter_copy[sizeof(state->eb->filter)];
-  if (state->lb && UI_IsListBoxSelected(state->lb)) {
+  if (state->lb && state->lb->selected_index != -1) {
     sel = ListBoxInfo_Row(state->lb, state->lb->selected_index);
   } else {
     strncpy(filter_copy, state->eb->filter, sizeof(filter_copy) - 1);

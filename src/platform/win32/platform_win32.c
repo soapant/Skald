@@ -1087,8 +1087,7 @@ bool Platform_ClickButton(int button) {
   inputs[0].mi.dwFlags = down_flag;
   inputs[1].type = INPUT_MOUSE;
   inputs[1].mi.dwFlags = up_flag;
-  bool ok = (SendInput(2, inputs, sizeof(INPUT)) == 2);
-  return ok;
+  return (SendInput(2, inputs, sizeof(INPUT)) == 2);
 }
 
 bool Platform_Click(void) {
@@ -1140,8 +1139,7 @@ bool Platform_MouseButtonDown(int button, bool down) {
   in.type = INPUT_MOUSE;
   in.mi.dwFlags = flag;
   in.mi.mouseData = (button == 5) ? XBUTTON2 : XBUTTON1;
-  bool ok = SendInput(1, &in, sizeof(INPUT)) == 1;
-  return ok;
+  return SendInput(1, &in, sizeof(INPUT)) == 1;
 }
 
 bool Platform_MouseScroll(int notches) {
@@ -1151,8 +1149,7 @@ bool Platform_MouseScroll(int notches) {
   in.type = INPUT_MOUSE;
   in.mi.dwFlags = MOUSEEVENTF_WHEEL;
   in.mi.mouseData = (DWORD)((long)notches * WHEEL_DELTA);
-  bool ok = SendInput(1, &in, sizeof(INPUT)) == 1;
-  return ok;
+  return SendInput(1, &in, sizeof(INPUT)) == 1;
 }
 
 char *Platform_GetWorkingDir(void) {
