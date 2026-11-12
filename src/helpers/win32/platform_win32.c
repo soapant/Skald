@@ -381,7 +381,7 @@ bool win32_focus_direction(int dir) {
 bool win32_placeholder_icon(char *out, size_t out_len) {
 
   char cand[MAX_PATH];
-  snprintf(cand, sizeof(cand), "resources\\Placeholder.png");
+  snprintf(cand, sizeof(cand), "resources\\Skald.png");
   if (GetFileAttributesA(cand) != INVALID_FILE_ATTRIBUTES) {
     snprintf(out, out_len, "%s", cand);
     return true;
@@ -395,7 +395,7 @@ bool win32_placeholder_icon(char *out, size_t out_len) {
     return false;
   *slash = '\0';
   for (int depth = 0; depth < 4; depth++) {
-    snprintf(cand, sizeof(cand), "%s\\resources\\Placeholder.png", exe);
+    snprintf(cand, sizeof(cand), "%s\\resources\\Skald.png", exe);
     if (GetFileAttributesA(cand) != INVALID_FILE_ATTRIBUTES) {
       snprintf(out, out_len, "%s", cand);
       return true;
