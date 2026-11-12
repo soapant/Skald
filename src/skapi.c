@@ -1386,10 +1386,9 @@ int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
   ctx.color = 0;
   ctx.fontsize = fontsize;
   int cap = (int)strlen(spec->text) + 1;
-  int r = wrap_layout(spec->text, spec->x, spec->y, spec->max_width,
+  return wrap_layout(spec->text, spec->x, spec->y, spec->max_width,
                        line_height, wrap_measure_thunk, &ctx,
                        spec->out_positions, cap);
-  return r;
 }
 
 bool ski_place_editbox(const SkEditSpec *spec) {
@@ -1459,8 +1458,7 @@ int sk_get_text_height(const char *text) {
   (void)text;
   int lh = 0, rh = 0, lt = 0;
   Platform_GetTextLayoutMetrics(&lh, &rh, &lt);
-  int r = lh > 0 ? lh : FontSize;
-  return r;
+  return lh > 0 ? lh : FontSize;
 }
 
 SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
@@ -1680,18 +1678,15 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec) {
 }
 
 SkWindowList sk_get_all_window_titles(void) {
-  SkWindowList l = Platform_GetWindowTitles();
-  return l;
+  return Platform_GetWindowTitles();
 }
 
 SkWindowList sk_get_all_window_names(void) {
-  SkWindowList l = Platform_GetWindowNames();
-  return l;
+  return Platform_GetWindowNames();
 }
 
 PlColor sk_get_pixel_color(SkPos pos) {
-  PlColor c = Platform_GetPixelColor(pos.x, pos.y);
-  return c;
+  return Platform_GetPixelColor(pos.x, pos.y);
 }
 bool sk_move_to_pos(SkPos pos) {
   return Platform_MoveToPos(pos.x, pos.y);
@@ -2143,8 +2138,7 @@ char *sk_get_active_window_title(void) {
   if (!title || !title[0]) {
     return NULL;
   }
-  char *r = strdup(title);
-  return r;
+  return strdup(title);
 }
 
 char *sk_get_active_window_app_id(void) {
@@ -2152,8 +2146,7 @@ char *sk_get_active_window_app_id(void) {
   if (!id || !id[0]) {
     return NULL;
   }
-  char *r = strdup(id);
-  return r;
+  return strdup(id);
 }
 
 bool sk_is_window_open(const char *title) {

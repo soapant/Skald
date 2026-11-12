@@ -120,8 +120,7 @@ int UI_GetCursorPosition(void) {
   Win32TextTarget t;
   if (!win32_resolve_text_target(&t) || !t.text)
     return 0;
-  int pos = win32_target_cursor(&t);
-  return pos;
+  return win32_target_cursor(&t);
 }
 
 void UI_SetCursorPosition(int position) {
