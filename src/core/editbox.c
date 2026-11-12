@@ -178,31 +178,19 @@ int Editbox_ScrollOffset(const EditboxSpec *spec) {
   return scroll;
 }
 
-static int editbox_utf8_cp_len(unsigned char c) {
-  if (c < 0x80)
-    return 1;
-  if ((c & 0xE0) == 0xC0)
-    return 2;
-  if ((c & 0xF0) == 0xE0)
-    return 3;
-  if ((c & 0xF8) == 0xF0)
-    return 4;
-  return 1;
-}
-
 static void editbox_draw_rainbow(const EditboxSpec *spec,
                                  const EditboxLayout *layout) {
   int text_len = spec->text_len;
   int nchars = 0;
   for (int p = 0; p < text_len;) {
-    int cl = editbox_utf8_cp_len((unsigned char)spec->text[p]);
+    int cl = Utf8_LeadLen((unsigned char)spec->text[p]);
     p += cl;
     nchars++;
   }
   int ci = 0;
   size_t pos = 0;
   while (pos < (size_t)text_len) {
-    int cl = editbox_utf8_cp_len((unsigned char)spec->text[pos]);
+    int cl = Utf8_LeadLen((unsigned char)spec->text[pos]);
     if (pos + (size_t)cl > (size_t)text_len)
       cl = (int)((size_t)text_len - pos);
     char buf[8];

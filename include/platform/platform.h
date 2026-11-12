@@ -81,15 +81,15 @@ bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
                                     long value);
 bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
                                 long data);
-PlWindowList Platform_GetWindowTitles();
-PlWindowList Platform_GetWindowNames();
+PlWindowList Platform_GetWindowTitles(void);
+PlWindowList Platform_GetWindowNames(void);
 bool Platform_QueryBrowser(const char *query);
-char *Platform_GetClipboardEntry();
+char *Platform_GetClipboardEntry(void);
 bool Platform_PasteContent(char *content);
 int Platform_CopyToClipboard(const char *text);
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len);
 int Platform_SetFileToClipboard(const char *path);
-char *Platform_GetWorkingDir();
+char *Platform_GetWorkingDir(void);
 
 long long Platform_GetWallClockMs(void);
 
@@ -144,8 +144,8 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal);
 char *Platform_RunCommandAndGetOutput(char *command, int priority);
 char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
                               int *out_status);
-char *Platform_GetActiveWindowTitle();
-char *Platform_GetActiveWindowAppId();
+char *Platform_GetActiveWindowTitle(void);
+char *Platform_GetActiveWindowAppId(void);
 char *Platform_GetIconPath(char *app_path);
 int Platform_GetIconSize(char *icon_path);
 PlColor Platform_GetPixelColor(int x, int y);

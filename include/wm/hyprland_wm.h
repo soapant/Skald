@@ -9,9 +9,9 @@
 bool get_title_hyprland(char *buffer, int buffer_size);
 bool get_app_id_hyprland(char *buffer, int buffer_size);
 char *paste_hyprland(char *content);
-bool focus_window_title_hyprland(char *title);
-PlWindowList get_window_titles_hyprland();
-PlWindowList get_window_names_hyprland();
+bool focus_window_title_hyprland(const char *title);
+PlWindowList get_window_titles_hyprland(void);
+PlWindowList get_window_names_hyprland(void);
 bool close_active_window_hyprland(void);
 bool toggle_fullscreen_active_hyprland(void);
 bool move_active_window_to_monitor_hyprland(bool right);

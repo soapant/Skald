@@ -934,7 +934,7 @@ int Platform_GetIconSize(char *icon_path) {
   return s;
 }
 
-PlWindowList Platform_GetWindowTitles() {
+PlWindowList Platform_GetWindowTitles(void) {
   PlWindowList titles = {0}, names = {0};
   win32_collect_pair(&titles, &names);
   for (int i = 0; i < names.count; i++)
@@ -944,7 +944,7 @@ PlWindowList Platform_GetWindowTitles() {
   return titles;
 }
 
-PlWindowList Platform_GetWindowNames() {
+PlWindowList Platform_GetWindowNames(void) {
   PlWindowList titles = {0}, names = {0};
   win32_collect_pair(&titles, &names);
   for (int i = 0; i < titles.count; i++)
@@ -1155,11 +1155,11 @@ bool Platform_MouseScroll(int notches) {
   return ok;
 }
 
-char *Platform_GetWorkingDir() {
+char *Platform_GetWorkingDir(void) {
   return Platform_RunTerminalCommand("cd", false);
 }
 
-void Platform_InitDataFolder() {
+void Platform_InitDataFolder(void) {
   char dir_path[200];
   snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Skald",
            Platform_GetRealHome());
@@ -1195,7 +1195,7 @@ void Platform_PrewarmBackgroundPixmap(void) {
   win32_bg_image_prewarm(PROMPT_W, PROMPT_H);
 }
 
-int Platform_InitializeTrayIcon() {
+int Platform_InitializeTrayIcon(void) {
   HINSTANCE hInstance = GetModuleHandle(NULL);
   if (Tray) {
     WNDCLASS wc = {0};
@@ -1220,7 +1220,7 @@ int Platform_InitializeTrayIcon() {
   return 0;
 }
 
-void Platform_InitUI() {
+void Platform_InitUI(void) {
   struct GdiplusStartupInput gdiplusStartupInput;
   gdiplusStartupInput.GdiplusVersion = 1;
   gdiplusStartupInput.DebugEventCallback = NULL;
@@ -1283,7 +1283,7 @@ void Platform_InitUI() {
   log_info("Platform_InitUI completed");
 }
 
-void Platform_ShutdownUI() {
+void Platform_ShutdownUI(void) {
   {
     extern void win32_img_cache_free_all(void);
     win32_img_cache_free_all();

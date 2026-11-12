@@ -16,6 +16,7 @@
 #include "config_values.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "core/types/window.h"
+#include "helpers/helpers_ui.h"
 
 #define BG_TILE_SLOTS 32
 #define BG_REVALIDATE_MS 1000
@@ -148,19 +149,9 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
   if (sw <= 0 || sh <= 0)
     return false;
 
-  double scale = (double)w / (double)sw;
-  double scaleY = (double)h / (double)sh;
-  if (scaleY > scale)
-    scale = scaleY;
-  if (scale <= 0.0)
+  int dw = 0, dh = 0;
+  if (!Cover_Scale(sw, sh, w, h, &dw, &dh))
     return false;
-
-  int dw = (int)((double)sw * scale + 0.5);
-  int dh = (int)((double)sh * scale + 0.5);
-  if (dw < 1)
-    dw = 1;
-  if (dh < 1)
-    dh = 1;
 
   int cw = dw, ch = dh;
   unsigned char *full = x11_decode_image_argb(path, &cw, &ch);

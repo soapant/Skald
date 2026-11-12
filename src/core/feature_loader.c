@@ -737,6 +737,21 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
   return true;
 }
 
+static struct {
+  char dir[256];
+  time_t src_mtime;
+} s_failed[64];
+static int s_failed_count = 0;
+
+static void feature_mark_failed(const char *dir, time_t mtime) {
+  if (s_failed_count < 64) {
+    snprintf(s_failed[s_failed_count].dir, sizeof(s_failed[s_failed_count].dir),
+             "%s", dir);
+    s_failed[s_failed_count].src_mtime = mtime;
+    s_failed_count++;
+  }
+}
+
 int FeatureLoader_BuildStaleSources(bool hot_reload) {
   const char *ext = Platform_LibExtension();
   if (!ext)
@@ -750,11 +765,6 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
   DIR *dir = opendir(FeaturePath);
   if (!dir)
     return 0;
-  static struct {
-    char dir[256];
-    time_t src_mtime;
-  } s_failed[64];
-  static int s_failed_count = 0;
   struct dirent *ent;
   int done = 0;
   while ((ent = readdir(dir)) != NULL) {
@@ -812,24 +822,14 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
     }
     if (!ok) {
       remove(tmp);
-      if (s_failed_count < 64) {
-        snprintf(s_failed[s_failed_count].dir,
-                 sizeof(s_failed[s_failed_count].dir), "%s", ent->d_name);
-        s_failed[s_failed_count].src_mtime = st_src.st_mtime;
-        s_failed_count++;
-      }
+      feature_mark_failed(ent->d_name, st_src.st_mtime);
       continue;
     }
     if (hot_reload) {
       bool reloaded_ok = FeatureLoader_ReloadFrom(ent->d_name, tmp);
       remove(tmp);
       if (!reloaded_ok) {
-        if (s_failed_count < 64) {
-          snprintf(s_failed[s_failed_count].dir,
-                   sizeof(s_failed[s_failed_count].dir), "%s", ent->d_name);
-          s_failed[s_failed_count].src_mtime = st_src.st_mtime;
-          s_failed_count++;
-        }
+        feature_mark_failed(ent->d_name, st_src.st_mtime);
         continue;
       }
     } else {

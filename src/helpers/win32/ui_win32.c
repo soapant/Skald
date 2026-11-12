@@ -211,7 +211,7 @@ int UI_InsertChar(wchar_t wc) {
   return UI_InsertText(utf8, n);
 }
 
-void UI_RedrawNow() {
+void UI_RedrawNow(void) {
   HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
     UI_RequestPopupRepaint();

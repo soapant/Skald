@@ -436,7 +436,7 @@ int sk_get_active_interface_platform(char out[], size_t max_len) {
   return 1;
 }
 
-unsigned long long sk_net_rx_bytes_platform() {
+unsigned long long sk_net_rx_bytes_platform(void) {
 
   SkNetAdapter a = net_active_adapter();
   if (!a.valid || !a.index)
@@ -476,4 +476,4 @@ bool sk_dismiss_message_platform(const char *name) {
   return Platform_DismissMessage(name);
 }
 
-int sk_get_pid_platform() { return (int)GetCurrentProcessId(); }
+int sk_get_pid_platform(void) { return (int)GetCurrentProcessId(); }

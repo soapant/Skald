@@ -22,6 +22,26 @@
 #include "helpers/helpers_input_state.h"
 #include "platform/wm_platform.h"
 
+bool Cover_Scale(int sw, int sh, int tw, int th, int *dw, int *dh) {
+  double scale = (double)tw / (double)sw;
+  double scale_y = (double)th / (double)sh;
+  if (scale_y > scale)
+    scale = scale_y;
+  if (scale <= 0.0)
+    return 0;
+  int w = (int)((double)sw * scale + 0.5);
+  int hgt = (int)((double)sh * scale + 0.5);
+  if (w < 1)
+    w = 1;
+  if (hgt < 1)
+    hgt = 1;
+  if (dw)
+    *dw = w;
+  if (dh)
+    *dh = hgt;
+  return 1;
+}
+
 PlMetrics *Metrics_Get(void) {
   static PlMetrics m = {0};
   static int init = 0;

@@ -522,6 +522,14 @@ static unsigned char *x11_clip_get_prop(Display *dpy, Window win, Atom prop,
   return data;
 }
 
+static unsigned char *x11_clip_fetch(Display *dpy, Window win, Atom prop,
+                                      Atom *actual, int *format,
+                                      unsigned long *nitems,
+                                      unsigned long *after) {
+  return x11_clip_get_prop(dpy, win, prop, (~0L), true,
+                           actual, format, nitems, after);
+}
+
 static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
                                     size_t *out_len) {
 
@@ -529,8 +537,8 @@ static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
   int format = 0;
   unsigned long nitems = 0;
   unsigned long after = 0;
-  unsigned char *data = x11_clip_get_prop(dpy, win, prop, (~0L), true,
-                                          &actual, &format, &nitems, &after);
+  unsigned char *data = x11_clip_fetch(dpy, win, prop, &actual, &format,
+                                       &nitems, &after);
   if (!data)
     return NULL;
   if (actual == clip_rd_incr) {
@@ -569,9 +577,8 @@ static char *x11_clip_read_incr(Display *dpy, Window win, Atom prop,
     int format = 0;
     unsigned long nitems = 0;
     unsigned long after = 0;
-    unsigned char *data = x11_clip_get_prop(dpy, win, prop, (~0L), true,
-                                            &actual, &format, &nitems,
-                                            &after);
+    unsigned char *data = x11_clip_fetch(dpy, win, prop, &actual, &format,
+                                         &nitems, &after);
     if (!data || nitems == 0) {
       if (data)
         XFree(data);

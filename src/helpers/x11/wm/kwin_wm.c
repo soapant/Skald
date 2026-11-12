@@ -447,7 +447,7 @@ static bool kwin_focus_js_cmd(const char *title, char *out, size_t cap) {
   return true;
 }
 
-bool focus_window_title_kwin(char *title) {
+bool focus_window_title_kwin(const char *title) {
   if (!title) {
     log_error("title is NULL");
     return false;
@@ -494,12 +494,8 @@ static PlWindowList kwin_list_windows(bool want_names) {
           buf[0] = toupper((unsigned char)buf[0]);
         item = buf;
       }
-      char **tmp =
-          realloc(list.windows, (size_t)(list.count + 1) * sizeof(char *));
-      if (!tmp)
+      if (!List_Append(&list, item))
         break;
-      list.windows = tmp;
-      list.windows[list.count++] = strdup(item);
     }
     p = rend ? rend + 1 : p + rlen;
   }

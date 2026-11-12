@@ -9,9 +9,9 @@
 bool get_title_sway(char *buffer, int buffer_size);
 bool get_app_id_sway(char *buffer, int buffer_size);
 char *paste_sway(char *content);
-bool focus_window_title_sway(char *title);
-PlWindowList get_window_titles_sway();
-PlWindowList get_window_names_sway();
+bool focus_window_title_sway(const char *title);
+PlWindowList get_window_titles_sway(void);
+PlWindowList get_window_names_sway(void);
 bool close_active_window_sway(void);
 bool toggle_fullscreen_active_sway(void);
 bool move_active_window_to_monitor_sway(bool right);

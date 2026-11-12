@@ -36,26 +36,12 @@
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   int mx = 0, my = 0;
-  if (x11_env_is_wayland() && Wm_GetMousePos(&mx, &my)) {
-    if (out_x)
-      *out_x = mx;
-    if (out_y)
-      *out_y = my;
-    return true;
-  }
-  Display *dpy = x11_get_display();
-  if (!dpy)
-    return false;
-  Window root = DefaultRootWindow(dpy);
-  Window rw = 0, cw = 0;
-  int rx = 0, ry = 0, wx = 0, wy = 0;
-  int mask = 0;
-  if (!XQueryPointer(dpy, root, &rw, &cw, &rx, &ry, &wx, &wy, &mask))
+  if (!Wm_GetMousePos(&mx, &my))
     return false;
   if (out_x)
-    *out_x = rx;
+    *out_x = mx;
   if (out_y)
-    *out_y = ry;
+    *out_y = my;
   return true;
 }
 int Platform_CharForKey(int vk, int scancode, int mods) {

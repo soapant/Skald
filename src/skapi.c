@@ -407,9 +407,8 @@ bool sk_append_unique_line(const char *path, const char *line) {
   return ok;
 }
 
-bool sk_remove_line(const char *path, const char *line) {
-  if (!path || !line)
-    return false;
+static bool sk_filter_lines(const char *path, const char *needle,
+                            bool match_substr) {
   SkStringList files = sk_load_file_list(path);
   const char **kept =
       (const char **)malloc(sizeof(char *) * (files.count ? files.count : 1));
@@ -419,7 +418,9 @@ bool sk_remove_line(const char *path, const char *line) {
   }
   int k = 0;
   for (size_t i = 0; i < files.count; i++) {
-    if (strcmp(files.items[i], line) != 0)
+    bool drop = match_substr ? strstr(files.items[i], needle) != NULL
+                             : strcmp(files.items[i], needle) == 0;
+    if (!drop)
       kept[k++] = files.items[i];
     else {
       free(files.items[i]);
@@ -432,29 +433,16 @@ bool sk_remove_line(const char *path, const char *line) {
   return ok;
 }
 
+bool sk_remove_line(const char *path, const char *line) {
+  if (!path || !line)
+    return false;
+  return sk_filter_lines(path, line, false);
+}
+
 bool sk_remove_line_contains(const char *path, const char *substr) {
   if (!path || !substr)
     return false;
-  SkStringList files = sk_load_file_list(path);
-  const char **kept =
-      (const char **)malloc(sizeof(char *) * (files.count ? files.count : 1));
-  if (!kept) {
-    sk_free_file_list(&files);
-    return false;
-  }
-  int k = 0;
-  for (size_t i = 0; i < files.count; i++) {
-    if (!strstr(files.items[i], substr))
-      kept[k++] = files.items[i];
-    else {
-      free(files.items[i]);
-      files.items[i] = NULL;
-    }
-  }
-  bool ok = sk_write_to_file(path, kept, k);
-  free(kept);
-  sk_free_file_list(&files);
-  return ok;
+  return sk_filter_lines(path, substr, true);
 }
 
 bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
@@ -495,13 +483,26 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
   return found;
 }
 
+static void sk_resolve_window_list(const char *const *wl,
+                                   const char *const *bl,
+                                   const char *const **out_windows,
+                                   bool *out_whitelist) {
+  bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
+  const char *const *windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
+  if (out_windows)
+    *out_windows = windows;
+  if (out_whitelist)
+    *out_whitelist = whitelist;
+}
+
 bool ski_register_remapping(const SkRemappingSpec *spec) {
   if (!spec || !spec->src || !spec->dst)
     return false;
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
-  bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
-  const char *const *windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
+  const char *const *windows = NULL;
+  bool whitelist = false;
+  sk_resolve_window_list(wl, bl, &windows, &whitelist);
   return remap_register_internal(spec->src, spec->dst, whitelist, windows);
 }
 
@@ -527,8 +528,9 @@ bool ski_register_snippet(const SkSnippetSpec *spec) {
   snippet_set_fire_fn(sk_snippet_fire);
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
-  bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
-  const char *const *windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
+  const char *const *windows = NULL;
+  bool whitelist = false;
+  sk_resolve_window_list(wl, bl, &windows, &whitelist);
   return snippet_register_internal(spec->trigger, spec->text, spec->fn,
                                    whitelist, windows,
                                    (void *)__builtin_return_address(0));
@@ -607,8 +609,9 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
     return false;
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
-  bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
-  const char *const *bw = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
+  const char *const *bw = NULL;
+  bool whitelist = false;
+  sk_resolve_window_list(wl, bl, &bw, &whitelist);
   HotkeyBinding binding = convert_into_hotkey_binding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
   binding.hotkey_callback_ud = spec->cb_ud;
@@ -1007,7 +1010,7 @@ bool sk_query_browser(const char *query) {
   return Platform_QueryBrowser(query);
 }
 
-char *sk_get_last_clipboard_entry() {
+char *sk_get_last_clipboard_entry(void) {
   char *current = Platform_GetClipboardEntry();
   if (current) {
     if (current[0]) {
@@ -1026,7 +1029,7 @@ char *sk_get_last_clipboard_entry() {
   return NULL;
 }
 
-bool sk_paste_from_clipboard() {
+bool sk_paste_from_clipboard(void) {
   char *content = Platform_GetClipboardEntry();
   return Platform_PasteContent(content);
 }
@@ -1298,19 +1301,6 @@ typedef struct {
   int fontsize;
 } SkWrapCtx;
 
-static int SkUtf8LeadLen(unsigned char c) {
-
-  if ((c & 0x80) == 0)
-    return 1;
-  if ((c & 0xE0) == 0xC0)
-    return 2;
-  if ((c & 0xF0) == 0xE0)
-    return 3;
-  if ((c & 0xF8) == 0xF0)
-    return 4;
-  return 1;
-}
-
 static void SkWrapRecord(SkCharPos *out, int maxout, int *count, int x, int y) {
   int i = *count;
   (*count)++;
@@ -1326,7 +1316,7 @@ static int SkWrapPlaceWord(SkWrapMeasureFn measure, SkWrapDrawFn draw,
 
   int i = ws;
   while (i < we) {
-    int j = i + SkUtf8LeadLen((unsigned char)text[i]);
+    int j = i + Utf8_LeadLen((unsigned char)text[i]);
     if (j > we)
       j = we;
     int px = wx + measure(ctx, text + ws, i - ws);
@@ -1400,7 +1390,7 @@ static int SkWrapLayout(const char *text, int x0, int y0, int max_width,
         while (n > 0 && (((unsigned char)text[c + n] & 0xC0) == 0x80))
           n--;
         if (n <= 0) {
-          n = SkUtf8LeadLen((unsigned char)text[c]);
+          n = Utf8_LeadLen((unsigned char)text[c]);
           if (n > we - c)
             n = we - c;
         }
@@ -1768,12 +1758,12 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec) {
   return r;
 }
 
-SkWindowList sk_get_all_window_titles() {
+SkWindowList sk_get_all_window_titles(void) {
   SkWindowList l = Platform_GetWindowTitles();
   return l;
 }
 
-SkWindowList sk_get_all_window_names() {
+SkWindowList sk_get_all_window_names(void) {
   SkWindowList l = Platform_GetWindowNames();
   return l;
 }
@@ -2061,7 +2051,7 @@ unsigned long sk_mouse_queue_dropped(void) { return GlobalMouse_Dropped(); }
 
 void sk_clear_mouse_queue(void) { GlobalMouse_Clear(); }
 
-SkPos sk_get_cursor_pos() {
+SkPos sk_get_cursor_pos(void) {
   int x, y;
   Platform_GetMousePos(&x, &y);
   return (SkPos){x, y};
@@ -2269,7 +2259,7 @@ bool sk_is_window_open(const char *title) {
   return found;
 }
 
-char *sk_get_working_dir() { return Platform_GetWorkingDir(); }
+char *sk_get_working_dir(void) { return Platform_GetWorkingDir(); }
 
 char *sk_resolve_data_path(const char *name) {
   if (!name || !name[0])
@@ -2360,7 +2350,7 @@ const SkHashMap *sk_hashmap_at(SkHashMap *map, size_t index) {
   return &map[index];
 }
 
-SkTimer sk_profile_start() { return sk_start_timer(); }
+SkTimer sk_profile_start(void) { return sk_start_timer(); }
 
 void sk_profile_end(SkTimer timer) {
   double ms = sk_end_timer(timer);
@@ -2481,7 +2471,7 @@ void sk_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
 }
 SkNetStatus sk_net_status(void) { return sk_net_status_platform(); }
 
-unsigned long long sk_net_rx_bytes() { return sk_net_rx_bytes_platform(); }
+unsigned long long sk_net_rx_bytes(void) { return sk_net_rx_bytes_platform(); }
 
 int sk_monitor_count(void) { return Monitor_Count(); }
 
@@ -2519,19 +2509,19 @@ unsigned long long sk_net_rx_bytes_over(double seconds) {
   return after - before;
 }
 
-SkRect sk_get_monitor_geometry() {
+SkRect sk_get_monitor_geometry(void) {
   int x, y, w, h;
   WindowManager_GetMainMonitorGeometry(&x, &y, &w, &h);
   return (PlRect){.x = x, .y = y, .w = w, .h = h, .color = 0};
 }
 
-int sk_get_screen_width() {
+int sk_get_screen_width(void) {
   int x, y, w, h;
   WindowManager_GetMainMonitorGeometry(&x, &y, &w, &h);
   return w;
 }
 
-int sk_get_screen_height() {
+int sk_get_screen_height(void) {
   int x, y, w, h;
   WindowManager_GetMainMonitorGeometry(&x, &y, &w, &h);
   return h;
@@ -2730,10 +2720,10 @@ void ski_window(const SkPromptSpec *spec) {
 
 const char *sk_get_user_name(void) { return Platform_GetRealUser(); }
 
-bool sk_is_root() { return Platform_IsRunningAsRoot(); }
+bool sk_is_root(void) { return Platform_IsRunningAsRoot(); }
 void sk_reload_feature(char *name) { FeatureLoader_Reload(name); }
 
-int sk_get_pid() { return sk_get_pid_platform(); }
+int sk_get_pid(void) { return sk_get_pid_platform(); }
 
 int sk_reload_all_features(void) {
   return FeatureLoader_BuildStaleSources(true);
@@ -2802,4 +2792,6 @@ void sk_register_event(SkEvent event, SkEventCallback cb) {
 void sk_unregister_event(SkEvent event, SkEventCallback cb) {
   EventBus_Unregister(event, cb);
 }
-void sk_close_window() { SkaldContext_Get()->window.selection_complete = true; }
+void sk_close_window(void) {
+  SkaldContext_Get()->window.selection_complete = true; 
+}
