@@ -35,7 +35,7 @@ gcc -o nob nob.c
 
 **1. Download and extract**
 
-Download the latest `.tar.gz` from the [Releases page](https://github.com/YOUR_USERNAME/skald/releases) and extract it:
+Download the latest `.tar.gz` from the [Releases page](https://github.com/soapant/skald/releases) and extract it:
 
 ```bash
 tar -xzf skald-v0.1.0-linux.tar.gz
