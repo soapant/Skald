@@ -31,7 +31,7 @@ void ConfigApply(void) {
   RainbowText = false;
   WindowTitleText = false;
   CloseOnLossOfFocus = true;
-  Theme = "moonfly";
+  Theme = "modus-vivendi";
   BackgroundImage = "";
 }
 // </skald-config-generated>
