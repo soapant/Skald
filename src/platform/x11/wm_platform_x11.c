@@ -166,6 +166,7 @@ void Platform_ProcessPendingSubWindows(void) {
     return;
   _c->window.subwindow.pending = false;
   _c->window.subwindow.created = true;
+  _c->window.selection_complete = false;
   WindowManager *wm = WindowManager_Get();
   if (wm && wm->popup_count > 1)
     WindowManager_PopPopup(wm);

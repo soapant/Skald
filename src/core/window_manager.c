@@ -101,6 +101,11 @@ void WindowManager_PopPopup(WindowManager *wm) {
     return;
   Checkbox_ResetAll();
   Popup *popup = wm->popups[--wm->popup_count];
+  SkaldContext *ctx = SkaldContext_Get();
+  if (ctx)
+    ctx->window.last_popup_pop_ms = Platform_GetWallClockMs();
+  log_info("PopPopup wm=%p popup=%p remaining=%d title='%s'", (void *)wm,
+           (void *)popup, wm->popup_count, ctx && ctx->window.title ? ctx->window.title : "(null)");
   CloseCallback on_close = PromptPopup_TakeOnClose(popup);
   if (popup->vtable && popup->vtable->on_hide) {
     popup->vtable->on_hide(popup);
