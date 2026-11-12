@@ -6,6 +6,23 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "core/types.h"
+#include "helpers/helpers_text.h"
+#include <X11/extensions/Xrender.h>
+#include <string.h>
+#include <X11/X.h>
+#include <fontconfig/fontconfig.h>
+#include "platform/draw.h"
+#include "platform/platform.h"
+#include "helpers/helpers_ui.h"
+#include "core/prompt_geometry.h"
+#include "core/draw_state.h"
+#include "core/listbox_hover.h"
+#include "core/editbox.h"
+#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/display_x11.h"
+#include "config_values.h"
+#include "core/context.h"
+#include "core/types/window.h"
 
 extern __thread Display *g_draw_dpy;
 extern __thread XftDraw *g_draw_xd;

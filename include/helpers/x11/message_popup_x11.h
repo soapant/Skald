@@ -6,6 +6,25 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include "core/types.h"
+#include <stdlib.h>
+#include <time.h>
+#include <X11/X.h>
+#include <X11/extensions/Xrender.h>
+#include <fontconfig/fontconfig.h>
+#include <stdio.h>
+#include <string.h>
+#include "helpers/x11/display_x11.h"
+#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/window_factory_x11.h"
+#include "platform/platform.h"
+#include "helpers/helpers_ui.h"
+#include "platform/wm_platform.h"
+#include "platform/draw.h"
+#include "config_values.h"
+#include "core/context.h"
+#include "core/types/color.h"
+#include "core/types/window.h"
+#include "core/window_manager.h"
 
 #define MSG_MAX_ACTIVE 24
 #define MSG_HOVER_DEFAULT_W 900

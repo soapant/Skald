@@ -5,6 +5,19 @@
 #include <stdbool.h>
 #include "core/types/color.h"
 #include "platform/widget.h"
+#include <wingdi.h>
+#include <stdlib.h>
+#include <string.h>
+#include "config_values.h"
+#include "core/widget_registry.h"
+#include "platform/draw.h"
+#include "core/draw_state.h"
+#include "helpers/win32/win32_state.h"
+#include "helpers/helpers_render_thread.h"
+#include "helpers/helpers_ui.h"
+#include "helpers/win32/common_ui_win32.h"
+#include "deps/log.h"
+#include "helpers/win32/bg_image_win32.h"
 
 #define WCLICK_MAX 32
 #define WDESTROY_MAX 32

@@ -7,6 +7,34 @@
 
 #include "core/types/window.h"
 #include "core/types.h"
+#include "helpers/helpers_text.h"
+#include "helpers/helpers_fs.h"
+#include <winhttp.h>
+#include <psapi.h>
+#include <dwmapi.h>
+#include "config_values.h"
+#include "core/types/keys.h"
+#include "deps/log.h"
+#include <fileapi.h>
+#include <handleapi.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "core/context.h"
+#include "core/feature_path.h"
+#include "platform/platform.h"
+#include "helpers/win32/win32_state.h"
+#include "helpers/win32/subclasses_win32.h"
+#include "helpers/win32/common_ui_win32.h"
+#include "helpers/win32/bg_image_win32.h"
+#include "core/prompt_geometry.h"
+#include "helpers/win32/input_core_win32.h"
+#include <shellapi.h>
+#include <gdiplus.h>
+#include <ctype.h>
+#include "helpers/helpers_input_state.h"
+#include "helpers/helpers_owner.h"
+#include "core/thread_registry.h"
 
 typedef struct {
   HANDLE pipe_write;
