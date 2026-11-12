@@ -32,7 +32,7 @@ void ConfigApply(void) {
   RainbowText = false;
   WindowTitleText = false;
   CloseOnLossOfFocus = true;
-  Theme = "onedark-pro";
+  Theme = "moonfly";
   BackgroundImage = "";
 }
 // </skald-config-generated>
