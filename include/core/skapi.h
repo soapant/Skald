@@ -37,6 +37,15 @@ typedef PlCircle SkCircle;
 typedef PlPos SkPos;
 typedef PlListSpec SkListSpec;
 typedef PlWindowList SkWindowList;
+typedef struct {
+  const char *name;
+  void (*callback)(void);
+  const char *icon;
+} SkFeature;
+typedef struct {
+  SkFeature *items;
+  size_t count;
+} SkFeatureList;
 typedef CheckboxSpec SkCheckboxSpec;
 typedef PlaceState SkPlaceState;
 typedef ClipboardEntry SkClipboardEntry;
@@ -146,12 +155,8 @@ bool sk_launch_detached(char *command);
 bool sk_terminate_process_by_name(const char *exe_name);
 bool sk_process_running(const char *name);
 
-int sk_get_feature_list(const char **out_names, void (**out_cbs)(void),
-                        int max);
-
-int sk_get_feature_list_with_icons(const char **out_names,
-                                   void (**out_cbs)(void),
-                                   const char ***out_icons, int max);
+SkFeatureList sk_get_feature_list(void);
+void sk_free_feature_list(SkFeatureList *list);
 
 void sk_init_all_hotkeys(void);
 
@@ -238,13 +243,17 @@ char *sk_string_slice(const char *str, int start, int end);
 
 SkStringList sk_string_split(const char *str, const char *delimiter);
 
-void sk_populate_listbox(ListBoxInfo *lb, const char *filter,
-                         const char **items, int count);
+typedef struct {
+  ListBoxInfo *lb;
+  const char *filter;
+  const char **items;
+  int count;
+  bool (*filter_match)(const char *item, const char *filter);
+} SkPopulateListboxSpec;
 
-void sk_populate_listbox_ex(ListBoxInfo *lb, const char *filter,
-                            const char **items, int count,
-                            bool (*filter_match)(const char *item,
-                                                 const char *filter));
+void ski_populate_listbox(const SkPopulateListboxSpec *spec);
+#define sk_populate_listbox(...)                                            \
+  ski_populate_listbox(&(SkPopulateListboxSpec){__VA_ARGS__})
 
 bool sk_is_selected(ListBoxInfo *lb);
 
@@ -423,9 +432,11 @@ bool sk_button_is_clicked(const char *name);
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
 
+unsigned long sk_listbox_get_current_standard_color(void);
 bool sk_listbox_begin(const SkListSpec *spec);
 bool sk_listbox_next(SkListItemCtx *out);
 void sk_listbox_end(void);
+int sk_listbox_get_count(void);
 
 bool sk_draw_text_anchored(SkAnchor anchor, int offset_x, int offset_y,
                            const char *text);
@@ -515,6 +526,11 @@ typedef struct {
 } SkFlagList;
 
 SkFlagList sk_parse_flags(const char *input);
+bool sk_is_flag_prefix(char c);
+size_t sk_extract_flag_name(char *p, char *out, size_t cap);
+bool sk_extract_quoted(char **pp, char *out, size_t cap);
+bool sk_extract_value(char **pp, char *out, size_t cap);
+bool sk_next_flag(char *p);
 
 void sk_free_flags(SkFlagList *list);
 

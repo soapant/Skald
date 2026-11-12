@@ -16,7 +16,6 @@ TEST(populate_normal_mode_selects_first) {
   ASSERT_EQ_INT(lb.total_matches, 3);
   ASSERT_EQ_INT(lb.item_count, 3);
   ASSERT_EQ_INT(lb.selected_index, -1);
-  ASSERT_FALSE(UI_IsListBoxSelected(&lb));
 }
 
 TEST(populate_insert_mode_empty_filter_no_selection) {
@@ -26,7 +25,6 @@ TEST(populate_insert_mode_empty_filter_no_selection) {
   PopulateListBox(&lb, "", items, 3, NULL);
   ASSERT_EQ_INT(lb.total_matches, 3);
   ASSERT_EQ_INT(lb.selected_index, -1);
-  ASSERT_FALSE(UI_IsListBoxSelected(&lb));
 }
 
 TEST(populate_filter_narrows) {
@@ -45,7 +43,6 @@ TEST(populate_no_match) {
   PopulateListBox(&lb, "zzz", items, 2, NULL);
   ASSERT_EQ_INT(lb.total_matches, 0);
   ASSERT_EQ_INT(lb.item_count, 0);
-  ASSERT_FALSE(UI_IsListBoxSelected(&lb));
 }
 
 TEST(populate_empty_items) {

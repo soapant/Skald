@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "core/types.h"
+#include "core/editbox.h"
+
+typedef struct PromptState PromptState;
 
 #define WIN32_SIZE_FONT_SLOTS 16
 #define WIN32_SYM_SLOTS 16
