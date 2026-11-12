@@ -911,6 +911,7 @@ typedef struct {
   int files_scanned;
   int skapi_violations;
   int fn_violations;
+  int struct_violations;
 } CheckState;
 
 static CheckState check_state;
@@ -1054,6 +1055,222 @@ static bool chk_tok_is(size_t i, const char *buf, const char *name) {
          memcmp(buf + chk_toks[i].beg, name, n) == 0;
 }
 
+static bool chk_layer_exempt(const char *path_norm) {
+  const char *base = strrchr(path_norm, '/');
+  base = base ? base + 1 : path_norm;
+  size_t n = strlen(base);
+  char low[6];
+  if (n >= 5) {
+    size_t k = 0;
+    for (; k < 5; k++)
+      low[k] = (char)tolower((unsigned char)base[k]);
+    low[5] = '\0';
+    if (strcmp(low, "skapi") == 0)
+      return true;
+  }
+  if (strstr(path_norm, "src/platform/") ||
+      strstr(path_norm, "include/platform/") ||
+      strstr(path_norm, "include/core/types/") ||
+      strstr(path_norm, "src/core/types/"))
+    return true;
+  return false;
+}
+
+static bool chk_ci_sk_func(const char *buf, size_t beg, size_t end) {
+  size_t n = end - beg;
+  if (n <= 3)
+    return false;
+  return tolower((unsigned char)buf[beg]) == 's' &&
+         tolower((unsigned char)buf[beg + 1]) == 'k' && buf[beg + 2] == '_';
+}
+
+static bool chk_ci_sk_struct(const char *buf, size_t beg, size_t end) {
+  size_t n = end - beg;
+  if (n <= 3)
+    return false;
+  return tolower((unsigned char)buf[beg]) == 's' &&
+         tolower((unsigned char)buf[beg + 1]) == 'k' &&
+         isupper((unsigned char)buf[beg + 2]);
+}
+
+static bool chk_ci_is(const ChkTok *t, const char *buf, const char *name) {
+  size_t n = strlen(name);
+  if (t->end - t->beg != n)
+    return false;
+  for (size_t k = 0; k < n; k++)
+    if (tolower((unsigned char)buf[t->beg + k]) !=
+        tolower((unsigned char)name[k]))
+      return false;
+  return true;
+}
+
+static void chk_sk_func_scan(const char *path, int lineno, const char *buf,
+                             size_t len) {
+  chk_tokenize(buf, len);
+  if (chk_tok_count == 0)
+    return;
+  int bdepth = 0;
+  int pdepth = 0;
+  for (size_t i = 0; i < chk_tok_count; i++) {
+    ChkTokKind k = chk_toks[i].kind;
+    if (k == CHK_LBRACE) {
+      bdepth++;
+      continue;
+    }
+    if (k == CHK_RBRACE) {
+      if (bdepth)
+        bdepth--;
+      continue;
+    }
+    if (bdepth != 0)
+      continue;
+    if (k == CHK_LPAREN) {
+      pdepth++;
+      continue;
+    }
+    if (k == CHK_RPAREN) {
+      if (pdepth)
+        pdepth--;
+      continue;
+    }
+    if (pdepth != 0)
+      continue;
+    if (k != CHK_IDENT)
+      continue;
+    if (i + 1 >= chk_tok_count || chk_toks[i + 1].kind != CHK_LPAREN)
+      continue;
+    if (i + 3 < chk_tok_count && chk_toks[i + 2].kind == CHK_STAR &&
+        chk_toks[i + 3].kind == CHK_IDENT)
+      continue;
+    if (chk_ci_is(&chk_toks[i], buf, "if") ||
+        chk_ci_is(&chk_toks[i], buf, "while") ||
+        chk_ci_is(&chk_toks[i], buf, "for") ||
+        chk_ci_is(&chk_toks[i], buf, "switch") ||
+        chk_ci_is(&chk_toks[i], buf, "sizeof") ||
+        chk_ci_is(&chk_toks[i], buf, "return"))
+      continue;
+    if (!chk_ci_sk_func(buf, chk_toks[i].beg, chk_toks[i].end))
+      continue;
+    bool eq_before = false;
+    for (size_t j = 0; j < i; j++)
+      if (chk_toks[j].kind == CHK_EQUAL) {
+        eq_before = true;
+        break;
+      }
+    if (eq_before)
+      continue;
+    check_state.fn_violations++;
+    char name[256];
+    size_t nl = chk_toks[i].end - chk_toks[i].beg;
+    memcpy(name, buf + chk_toks[i].beg, nl);
+    name[nl] = '\0';
+    char msg[512];
+    snprintf(msg, sizeof(msg),
+             "function '%s' squats the sk_ API namespace outside the skapi layer",
+             name);
+    check_violation(path, lineno, msg);
+  }
+}
+
+static void chk_sk_struct_scan(const char *path, int lineno, const char *buf,
+                               bool layer_exempt) {
+  if (layer_exempt)
+    return;
+  size_t len = strlen(buf);
+  if (!len)
+    return;
+  chk_tokenize(buf, len);
+  if (chk_tok_count == 0)
+    return;
+  for (size_t i = 0; i < chk_tok_count; i++) {
+    ChkTokKind k = chk_toks[i].kind;
+    if (k != CHK_IDENT)
+      continue;
+    bool is_struct_kw = chk_ci_is(&chk_toks[i], buf, "struct") ||
+                        chk_ci_is(&chk_toks[i], buf, "union") ||
+                        chk_ci_is(&chk_toks[i], buf, "enum");
+    if (is_struct_kw) {
+      if (i > 0 && chk_toks[i - 1].kind == CHK_LPAREN)
+        continue;
+      if (i + 1 >= chk_tok_count || chk_toks[i + 1].kind != CHK_IDENT)
+        continue;
+      size_t beg = chk_toks[i + 1].beg, end = chk_toks[i + 1].end;
+      if (chk_ci_sk_struct(buf, beg, end)) {
+        char name[256];
+        size_t nl = end - beg;
+        memcpy(name, buf + beg, nl);
+        name[nl] = '\0';
+        char msg[512];
+        snprintf(msg, sizeof(msg),
+                 "struct '%s' squats the Sk API namespace outside the skapi layer",
+                 name);
+        check_state.struct_violations++;
+        check_violation(path, lineno, msg);
+      }
+      continue;
+    }
+    if (i == 0 && k == CHK_RBRACE) {
+      /* line starts with '}': aliases like '} SkFoo;' or '} SkFoo, SkBar;' */
+      for (size_t j = 1; j < chk_tok_count; j++) {
+        if (chk_toks[j].kind != CHK_IDENT) {
+          if (chk_toks[j].kind == CHK_COMMA)
+            continue;
+          break;
+        }
+        size_t beg = chk_toks[j].beg, end = chk_toks[j].end;
+        if (chk_ci_sk_struct(buf, beg, end) && j + 1 < chk_tok_count &&
+            (chk_toks[j + 1].kind == CHK_COMMA ||
+             chk_toks[j + 1].kind == CHK_SEMI)) {
+          char name[256];
+          size_t nl = end - beg;
+          memcpy(name, buf + beg, nl);
+          name[nl] = '\0';
+          char msg[512];
+          snprintf(msg, sizeof(msg),
+                   "struct '%s' squats the Sk API namespace outside the skapi layer",
+                   name);
+          check_state.struct_violations++;
+          check_violation(path, lineno, msg);
+        }
+      }
+      continue;
+    }
+    if (!chk_ci_is(&chk_toks[i], buf, "typedef"))
+      continue;
+    bool has_struct = false;
+    for (size_t j = i + 1; j < chk_tok_count; j++) {
+      if (chk_ci_is(&chk_toks[j], buf, "struct") ||
+          chk_ci_is(&chk_toks[j], buf, "union") ||
+          chk_ci_is(&chk_toks[j], buf, "enum")) {
+        has_struct = true;
+        break;
+      }
+    }
+    if (!has_struct)
+      continue;
+    for (size_t j = i + 1; j < chk_tok_count; j++) {
+      if (chk_toks[j].kind != CHK_SEMI || j == 0)
+        continue;
+      size_t p = j - 1;
+      if (chk_toks[p].kind != CHK_IDENT)
+        continue;
+      size_t beg = chk_toks[p].beg, end = chk_toks[p].end;
+      if (!chk_ci_sk_struct(buf, beg, end))
+        continue;
+      char name[256];
+      size_t nl = end - beg;
+      memcpy(name, buf + beg, nl);
+      name[nl] = '\0';
+      char msg[512];
+      snprintf(msg, sizeof(msg),
+               "struct '%s' squats the Sk API namespace outside the skapi layer",
+               name);
+      check_state.struct_violations++;
+      check_violation(path, lineno, msg);
+    }
+  }
+}
+
 static void chk_finish_decl(const char *path, int lineno) {
   const char *buf = decl_buf;
   size_t len = decl_len;
@@ -1194,6 +1411,7 @@ static bool check_walk(Nob_Walk_Entry entry) {
   bool exempt = check_starts_with(norm, "src/features/") ||
                 check_starts_with(norm, "tests/");
   bool is_h = check_ends_with(norm, ".h");
+  bool sk_layer_exempt = chk_layer_exempt(norm);
   check_state.files_scanned++;
 
   Nob_String_Builder sb = {0};
@@ -1331,7 +1549,9 @@ static bool check_walk(Nob_Walk_Entry entry) {
       continue;
     }
 
-    if (is_h && !exempt) {
+    chk_sk_struct_scan(path, lineno, out, sk_layer_exempt);
+
+    if (!exempt) {
       size_t k = 0;
       while (out[k]) {
         char c = out[k];
@@ -1348,14 +1568,26 @@ static bool check_walk(Nob_Walk_Entry entry) {
           }
           if (c == '{') {
             decl_buf[decl_len] = '\0';
-            chk_finish_decl(path, decl_start_line ? decl_start_line : lineno);
+            if (is_h)
+              chk_finish_decl(path,
+                              decl_start_line ? decl_start_line : lineno);
+            if (!sk_layer_exempt)
+              chk_sk_func_scan(path,
+                               decl_start_line ? decl_start_line : lineno,
+                               decl_buf, decl_len);
             decl_len = 0;
             decl_overflow = false;
             decl_start_line = 0;
             brace_depth++;
           } else if (c == ';') {
             decl_buf[decl_len] = '\0';
-            chk_finish_decl(path, decl_start_line ? decl_start_line : lineno);
+            if (is_h)
+              chk_finish_decl(path,
+                              decl_start_line ? decl_start_line : lineno);
+            if (!sk_layer_exempt)
+              chk_sk_func_scan(path,
+                               decl_start_line ? decl_start_line : lineno,
+                               decl_buf, decl_len);
             decl_len = 0;
             decl_overflow = false;
             decl_start_line = 0;
@@ -1392,10 +1624,12 @@ static bool check_layering(void) {
   if (!nob_walk_dir("tests", check_walk))
     return false;
   printf("check: scanned %d files, %d skapi violation(s), %d function-name "
-         "violation(s)\n",
+         "violation(s), %d struct-name violation(s)\n",
          check_state.files_scanned, check_state.skapi_violations,
-         check_state.fn_violations);
-  return check_state.skapi_violations + check_state.fn_violations == 0;
+         check_state.fn_violations, check_state.struct_violations);
+  return check_state.skapi_violations + check_state.fn_violations +
+             check_state.struct_violations ==
+         0;
 }
 
 int main(int argc, char **argv) {
@@ -1416,8 +1650,10 @@ int main(int argc, char **argv) {
              "add -O3\n");
       printf("  -test   Run test suite\n");
       printf("  -asan   Build with clang -fsanitize=address,undefined\n");
-      printf("  -check  Check for skapi includes outside features/tests and\n"
-             "         function naming in platform/ and helpers/\n");
+      printf("  -check  Check for skapi includes outside features/tests,\n"
+             "         function naming in platform/ and helpers/,\n"
+             "         and sk_ / Sk namesquatting outside the skapi layer\n"
+             "         (case insensitive)\n");
       printf("  -help   Show this help\n");
       return 0;
     }
