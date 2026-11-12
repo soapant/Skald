@@ -1075,7 +1075,7 @@ char *Platform_GetIconPath(char *app_path) {
     if (hit)
       return hit;
   }
-  snprintf(pix, sizeof(pix), "resources/Placeholder.png");
+  snprintf(pix, sizeof(pix), "resources/Skald.png");
   if (access(pix, F_OK) == 0)
     return strdup(pix);
   log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");
