@@ -250,21 +250,41 @@ void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
     }
     break;
   case FocusIn:
+    log_info("FocusIn win=%lu mode=%d detail=%d top=%lu count=%d sel=%d",
+             (unsigned long)ev->xfocus.window, ev->xfocus.mode,
+             ev->xfocus.detail,
+             top ? (unsigned long)top->handle.xid : 0UL,
+             wm ? wm->popup_count : 0,
+             SkaldContext_Get()->window.selection_complete ? 1 : 0);
     break;
-  case FocusOut:
+  case FocusOut: {
+    Window lost_win = ev->xfocus.window;
+    bool lost_is_top =
+        top && WH_EQUALS(top->handle, (WindowHandle){.xid = lost_win});
+    long long since_pop = Platform_GetWallClockMs() -
+                          SkaldContext_Get()->window.last_popup_pop_ms;
+    log_info(
+        "FocusOut win=%lu mode=%d detail=%d lost_is_top=%d top=%lu count=%d "
+        "since_pop=%lld sel=%d",
+        (unsigned long)lost_win, ev->xfocus.mode, ev->xfocus.detail,
+        lost_is_top ? 1 : 0, top ? (unsigned long)top->handle.xid : 0UL,
+        wm ? wm->popup_count : 0, since_pop,
+        SkaldContext_Get()->window.selection_complete ? 1 : 0);
+    if (since_pop >= 0 && since_pop < 250) {
+      break;
+    }
+    if (!lost_is_top) {
+      break;
+    }
     if (top->vtable && top->vtable->on_focus_lost) {
       top->vtable->on_focus_lost(top);
       break;
     }
     if (CloseOnLossOfFocus) {
-      if (wm && wm->popup_count > 1) {
         SkaldContext_Get()->window.selection_complete = true;
-        break;
-      }
-      SkaldContext_Get()->window.output_buffer[0] = '\0';
-      SkaldContext_Get()->window.selection_complete = true;
     }
     break;
+  }
   }
   x11_drain_selection_complete(dpy, wm);
 }

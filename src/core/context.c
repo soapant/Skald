@@ -13,6 +13,7 @@ static SkaldContext ctx = {
             .current_feature = NULL,
             .title = NULL,
             .prompt_callbacks = {0},
+            .last_popup_pop_ms = 0,
         },
 };
 

@@ -23,6 +23,7 @@ typedef struct {
   const char *title;
   PromptCallbacks prompt_callbacks;
   SubwindowInfo subwindow;
+  long long last_popup_pop_ms;
 } WindowContext;
 
 typedef struct {
