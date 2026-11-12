@@ -1,14 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include "platform/platform.h"
-#include "helpers/x11/env_helpers_x11.h"
 #include "helpers/x11/default_apps_x11.h"
-#include "helpers/helpers_text.h"
-#include "core/types.h"
 
 static char default_apps_x11[DEFAULT_APP_COUNT][256];
 

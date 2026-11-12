@@ -1,20 +1,4 @@
 #define _GNU_SOURCE
-#include <sys/stat.h>
-#include "helpers/helpers_fs.h"
-#include <errno.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pwd.h>
-#include <dirent.h>
-#include <time.h>
-#include <linux/input-event-codes.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <strings.h>
-#include <sys/types.h>
-#include "platform/platform.h"
 #include "helpers/x11/misc_x11.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
@@ -26,57 +10,6 @@
 #include "core/types.h"
 #include "core/types/keys.h"
 
-#define _GNU_SOURCE
-
-#include <sys/stat.h>
-
-#include "helpers/helpers_fs.h"
-
-#include <errno.h>
-
-#include <unistd.h>
-
-#include <string.h>
-
-#include <stdio.h>
-
-#include <stdlib.h>
-
-#include <pwd.h>
-
-#include <dirent.h>
-
-#include <time.h>
-
-#include <linux/input-event-codes.h>
-
-#include <stdbool.h>
-
-#include <stdint.h>
-
-#include <strings.h>
-
-#include <sys/types.h>
-
-#include "platform/platform.h"
-
-#include "helpers/x11/env_helpers_x11.h"
-
-#include "deps/log.h"
-
-#include "wm/wm.h"
-
-#include "helpers/x11/clipboard_x11.h"
-
-#include "platform/x11/clipboard_backend_x11.h"
-
-#include "helpers/helpers_text.h"
-
-#include "config_values.h"
-
-#include "core/types.h"
-
-#include "core/types/keys.h"
 
 const char *Platform_GetRealUser(void) {
 
