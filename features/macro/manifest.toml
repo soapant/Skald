@@ -1,8 +1,0 @@
-name = "macro"
-description = ""
-
-[provides]
-
-[depends]
-control_center
-
