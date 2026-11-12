@@ -1768,11 +1768,13 @@ int main(int argc, char **argv) {
   int do_run = 0;
   int do_test = 0;
   int do_check = 0;
+  int do_all = 0;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
-      printf("Usage: %s [-win32] [-run] [-release] [-test] [-asan] [-check] "
-             "[-help]\n",
+      printf("Usage: %s [-all] [-win32] [-run] [-release] [-test] [-asan] "
+             "[-check] [-help]\n",
              argv[0]);
+      printf("  -all    Run nob, nob -test, nob -win32 and nob -check\n");
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");
       printf(
@@ -1802,6 +1804,24 @@ int main(int argc, char **argv) {
       sanitize = true;
     if (strcmp(argv[i], "-check") == 0)
       do_check = 1;
+    if (strcmp(argv[i], "-all") == 0)
+      do_all = 1;
+  }
+
+  if (do_all) {
+    const char *steps[] = {NULL, "-test", "-win32", "-check"};
+    for (size_t st = 0; st < sizeof(steps) / sizeof(steps[0]); st++) {
+      Nob_Cmd cmd = {0};
+      if (steps[st])
+        nob_cmd_append(&cmd, argv[0], steps[st]);
+      else
+        nob_cmd_append(&cmd, argv[0]);
+      if (!nob_cmd_run(&cmd)) {
+        nob_log(NOB_ERROR, "-all: step %s failed", steps[st] ? steps[st] : "(build)");
+        return 1;
+      }
+    }
+    return 0;
   }
 
   if (do_check) {
