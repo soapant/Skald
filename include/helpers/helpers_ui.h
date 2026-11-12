@@ -13,6 +13,8 @@ unsigned short OpacityAlpha16(void);
 
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
 
+bool Cover_Scale(int sw, int sh, int tw, int th, int *dw, int *dh);
+
 int DrawThicknessPx(float thickness);
 void DrawMeasureTrack(int x, int y, int w, int h);
 void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
@@ -110,7 +112,7 @@ int UI_GetCursorPosition(void);
 int UI_InsertText(const char *utf8, int len);
 void UI_DeleteForward(void);
 void UI_Redraw(ListBoxInfo *lb);
-void UI_RedrawNow();
+void UI_RedrawNow(void);
 void UI_SyncFilterFromEdit(void);
 void UI_ApplyFilterToEdit(void);
 ListBoxInfo *UI_GetPopupListBox(void);

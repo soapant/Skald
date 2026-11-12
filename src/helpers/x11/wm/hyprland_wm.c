@@ -210,7 +210,7 @@ static bool hypr_focus_lua_cmd(const char *title, char *out, size_t cap) {
   return esc[0] != '\0';
 }
 
-bool focus_window_title_hyprland(char *title) {
+bool focus_window_title_hyprland(const char *title) {
   if (!title) {
     log_error("title is NULL");
     return false;

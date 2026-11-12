@@ -3,6 +3,7 @@
 
 #include "helpers/helpers_text.h"
 #include "core/types/file.h"
+#include "core/types/window.h"
 #include "core/types/keys.h"
 
 typedef struct {
@@ -42,6 +43,8 @@ bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key);
 bool String_ContainsCI(const char *haystack, const char *needle);
 bool String_StartsWithCI(const char *str, const char *prefix);
 bool String_EqualsCI(const char *a, const char *b);
+int Utf8_LeadLen(unsigned char c);
+bool List_Append(PlWindowList *list, const char *item);
 bool Window_ListAllows(int window_count, bool whitelist,
                        char *const *windows, const char *title);
 #endif

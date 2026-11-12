@@ -90,11 +90,11 @@ __thread int raw_map_pitch = 0;
 
 __thread XftDraw *raw_map_xd = NULL;
 
-int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
+static int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
   return x11_measure_utf8_fallback(dpy, xf, s, n, 0);
 }
 
-void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
+static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf, XftColor *xcols,
                        unsigned long *ucols, int nu, int ls, int le, int drawX,
                        int baseline, int rowTop) {
   int cx = drawX;

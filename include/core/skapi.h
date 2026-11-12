@@ -816,7 +816,7 @@ bool ski_unregister_snippet(const char *trigger);
 
 void sk_reload_feature(char *name);
 int sk_reload_all_features(void);
-int sk_get_pid();
+int sk_get_pid(void);
 
 #if defined(_WIN32)
 #define SKALD_FEATURE_EXPORT __declspec(dllexport)
@@ -896,6 +896,6 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 
 void sk_register_key_interceptor(SkKeyInterceptorFn fn);
 
-void sk_close_window();
+void sk_close_window(void);
 
 #endif

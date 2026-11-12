@@ -23,6 +23,7 @@
 #include "core/types/color.h"
 #include "core/types/window.h"
 #include "core/window_manager.h"
+#include "helpers/helpers_text.h"
 
 pthread_mutex_t g_msg_lock = PTHREAD_MUTEX_INITIALIZER;
 MsgSlot g_msg_slots[MSG_MAX_ACTIVE];
@@ -36,7 +37,7 @@ void x11_msg_remove_slot_locked(Display *dpy, int idx) {
   g_msg_slot_count--;
 }
 
-void x11_msg_remove_window_locked(Display *dpy, Window win) {
+static void x11_msg_remove_window_locked(Display *dpy, Window win) {
 
   for (int i = 0; i < g_msg_slot_count; i++) {
     if (g_msg_slots[i].win == win) {
@@ -73,7 +74,7 @@ typedef struct {
   double timeout;
 } MsgDismissPayload;
 
-void *x11_msg_dismiss_thread(void *arg) {
+static void *x11_msg_dismiss_thread(void *arg) {
 
   MsgDismissPayload *p = (MsgDismissPayload *)arg;
   if (!p)
@@ -100,26 +101,24 @@ void *x11_msg_dismiss_thread(void *arg) {
   return NULL;
 }
 
-int x11_msg_utf8_char_len(unsigned char c) {
-
-  if ((c & 0x80) == 0)
-    return 1;
-  if ((c & 0xE0) == 0xC0)
-    return 2;
-  if ((c & 0xF0) == 0xE0)
-    return 3;
-  if ((c & 0xF8) == 0xF0)
-    return 4;
-  return 1;
-}
-
-int x11_msg_text_width(Display *dpy, XftFont *xf, const char *s, int n) {
+static int x11_msg_text_width(Display *dpy, XftFont *xf, const char *s, int n) {
 
   if (!s || n <= 0)
     return 0;
   XGlyphInfo ext;
   XftTextExtentsUtf8(dpy, xf, (FcChar8 *)s, n, &ext);
   return ext.xOff;
+}
+
+static bool x11_msg_push_line(MsgLine *lines, int *count, int max_lines,
+                              const char *ls, const char *le, int lineW) {
+  if (!ls || *count >= max_lines)
+    return false;
+  lines[*count].s = ls;
+  lines[*count].n = (int)(le - ls);
+  lines[*count].w = lineW;
+  (*count)++;
+  return true;
 }
 
 int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
@@ -146,16 +145,12 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
       int wn = (int)(w - ws);
       int ww = x11_msg_text_width(dpy, xf, ws, wn);
       if (ww > maxW) {
-        if (ls) {
-          lines[count].s = ls;
-          lines[count].n = (int)(le - ls);
-          lines[count].w = lineW;
-          count++;
-          if (count >= max_lines)
-            return count;
+        if (x11_msg_push_line(lines, &count, max_lines, ls, le, lineW)) {
           ls = NULL;
           le = NULL;
           lineW = 0;
+        } else if (count >= max_lines) {
+          return count;
         }
         const char *c = ws;
         const char *we = ws + wn;
@@ -164,7 +159,7 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
           int best = 0;
           int bestW = 0;
           while (t < we) {
-            int cl = x11_msg_utf8_char_len((unsigned char)*t);
+            int cl = Utf8_LeadLen((unsigned char)*t);
             if (t + cl > we)
               cl = (int)(we - t);
             int nw = x11_msg_text_width(dpy, xf, c, (int)(t + cl - c));
@@ -175,7 +170,7 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
             t += cl;
           }
           if (best == 0) {
-            best = x11_msg_utf8_char_len((unsigned char)*c);
+            best = Utf8_LeadLen((unsigned char)*c);
             if (c + best > we)
               best = (int)(we - c);
             bestW = x11_msg_text_width(dpy, xf, c, best);
@@ -190,27 +185,22 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
       }
       int add = ww + (lineW > 0 ? spaceW : 0);
       if (lineW > 0 && lineW + add > maxW) {
-        lines[count].s = ls;
-        lines[count].n = (int)(le - ls);
-        lines[count].w = lineW;
-        count++;
+        if (x11_msg_push_line(lines, &count, max_lines, ls, le, lineW)) {
+          ls = NULL;
+          le = NULL;
+          lineW = 0;
+        }
         if (count >= max_lines)
           return count;
-        ls = NULL;
-        le = NULL;
-        lineW = 0;
       }
       if (!ls)
         ls = ws;
       le = w;
       lineW += add;
     }
-    if (ls) {
-      lines[count].s = ls;
-      lines[count].n = (int)(le - ls);
-      lines[count].w = lineW;
-      count++;
-    } else if (pend == p && nl && count < max_lines) {
+    if (ls)
+      x11_msg_push_line(lines, &count, max_lines, ls, le, lineW);
+    else if (pend == p && nl && count < max_lines) {
       lines[count].s = p;
       lines[count].n = 0;
       lines[count].w = 0;
@@ -231,14 +221,7 @@ void x11_display_message_draw(Display *dpy, Window win, const char *message,
   }
 
   if (!no_bg) {
-    Pixmap bg = x11_get_cached_background(dpy, win, w, h);
-    if (bg) {
-      GC gc = XCreateGC(dpy, win, 0, NULL);
-      XCopyArea(dpy, bg, win, gc, 0, 0, w, h, 0, 0);
-      XFreeGC(dpy, gc);
-    } else {
-      x11_draw_background_to_drawable(dpy, win, w, h);
-    }
+    x11_draw_background(dpy, win, w, h);
   } else {
     XClearArea(dpy, win, 0, 0, w, h, False);
   }

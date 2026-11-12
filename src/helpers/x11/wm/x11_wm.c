@@ -21,6 +21,7 @@
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "platform/platform.h"
+#include "helpers/helpers_text.h"
 
 static int _x11_err = 0;
 static Window _x11_last_min = None;
@@ -419,7 +420,7 @@ unsigned long x11_find_window_by_title(const char *title) {
   return found;
 }
 
-bool x11_focus_window_title(char *title) {
+bool x11_focus_window_title(const char *title) {
   if (!title || !title[0]) {
     log_error("title='%s'", title ? title : "null");
     return false;
@@ -482,14 +483,10 @@ static PlWindowList x11_list_client_fields(bool want_names) {
         s = dup;
       }
     }
-    char **grown = (char **)realloc(list.windows,
-                                    (size_t)(list.count + 1) * sizeof(char *));
-    if (!grown) {
-      free(s);
+    bool appended = List_Append(&list, s);
+    free(s);
+    if (!appended)
       break;
-    }
-    list.windows = grown;
-    list.windows[list.count++] = s;
   }
   free(clients);
   return list;
@@ -583,8 +580,7 @@ bool x11_toggle_fullscreen_active(void) {
   return _x11_err == 0;
 }
 
-static bool x11_activate_neighbor(bool right) {
-
+static bool x11_activate_neighbor_dir(bool vertical, bool positive) {
   Display *display = x11_get_display();
   if (!display)
     return false;
@@ -603,7 +599,7 @@ static bool x11_activate_neighbor(bool right) {
   }
   Window best = None;
   int best_gap = 1 << 30;
-  int best_vdist = 1 << 30;
+  int best_cross = 1 << 30;
   for (int i = 0; i < nclients; i++) {
     Window w = clients[i];
     if (w == focus || w == None)
@@ -615,18 +611,23 @@ static bool x11_activate_neighbor(bool right) {
       continue;
     int cx = x + ww / 2;
     int cy = y + wh / 2;
-    if (right) {
-      if (cx <= fcx)
+    int axis = vertical ? cy : cx;
+    int axis_ref = vertical ? fcy : fcx;
+    int cross = vertical ? cx : cy;
+    int cross_ref = vertical ? fcx : fcy;
+    if (positive) {
+      if (axis <= axis_ref)
         continue;
     } else {
-      if (cx >= fcx)
+      if (axis >= axis_ref)
         continue;
     }
-    int gap = right ? (cx - fcx) : (fcx - cx);
-    int vdist = cy >= fcy ? cy - fcy : fcy - cy;
-    if (gap < best_gap || (gap == best_gap && vdist < best_vdist)) {
+    int gap = positive ? (axis - axis_ref) : (axis_ref - axis);
+    int cross_dist =
+        cross >= cross_ref ? cross - cross_ref : cross_ref - cross;
+    if (gap < best_gap || (gap == best_gap && cross_dist < best_cross)) {
       best_gap = gap;
-      best_vdist = vdist;
+      best_cross = cross_dist;
       best = w;
     }
   }
@@ -636,56 +637,12 @@ static bool x11_activate_neighbor(bool right) {
   return x11_activate_window(display, best);
 }
 
+static bool x11_activate_neighbor(bool right) {
+  return x11_activate_neighbor_dir(false, right);
+}
+
 static bool x11_activate_neighbor_vertical(bool down) {
-  Display *display = x11_get_display();
-  if (!display)
-    return false;
-  Window focus = x11_focused_window(display);
-  int fcx = 0, fcy = 0, fw = 0, fh = 0;
-  if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh))
-    return false;
-  fcx += fw / 2;
-  fcy += fh / 2;
-  int nclients = 0;
-  Window *clients = x11_client_list(display, &nclients);
-  if (!clients || nclients <= 0) {
-    if (clients)
-      free(clients);
-    return false;
-  }
-  Window best = None;
-  int best_gap = 1 << 30;
-  int best_hdist = 1 << 30;
-  for (int i = 0; i < nclients; i++) {
-    Window w = clients[i];
-    if (w == focus || w == None)
-      continue;
-    int x = 0, y = 0, ww = 0, wh = 0;
-    if (!x11_window_geom(display, w, &x, &y, &ww, &wh))
-      continue;
-    if (ww <= 1 || wh <= 1)
-      continue;
-    int cx = x + ww / 2;
-    int cy = y + wh / 2;
-    if (down) {
-      if (cy <= fcy)
-        continue;
-    } else {
-      if (cy >= fcy)
-        continue;
-    }
-    int gap = down ? (cy - fcy) : (fcy - cy);
-    int hdist = cx >= fcx ? cx - fcx : fcx - cx;
-    if (gap < best_gap || (gap == best_gap && hdist < best_hdist)) {
-      best_gap = gap;
-      best_hdist = hdist;
-      best = w;
-    }
-  }
-  free(clients);
-  if (best == None)
-    return false;
-  return x11_activate_window(display, best);
+  return x11_activate_neighbor_dir(true, down);
 }
 
 bool x11_move_active_window_to_monitor(bool right) {
@@ -807,12 +764,9 @@ static bool x11_move_dir(bool right) {
   if (!display)
     return false;
   Window before = x11_focused_window(display);
-  bool moved = false;
-  if (ewmh_move_works != 0 && x11_move_active_window_to_monitor(right))
-    moved = true;
-  else if (i3_move_to_output(right))
-    moved = true;
-  else
+  bool moved = (ewmh_move_works != 0 && x11_move_active_window_to_monitor(right)) ||
+               i3_move_to_output(right);
+  if (!moved)
     return x11_activate_neighbor(right);
   if (before != None)
     x11_activate_window(display, before);
@@ -902,7 +856,7 @@ bool x11_get_mouse_pos(int *x, int *y) {
   Window root = DefaultRootWindow(dpy);
   Window rw = 0, cw = 0;
   int rx = 0, ry = 0, wx = 0, wy = 0;
-  int mask = 0;
+  unsigned int mask = 0;
   if (!XQueryPointer(dpy, root, &rw, &cw, &rx, &ry, &wx, &wy, &mask))
     return false;
   if (x)

@@ -77,7 +77,7 @@ bool Wm_FocusByTitle(const char *title) {
     if (focus_window_title_kwin((char *)title)) {
       return true;
     }
-    if (focus_window_title_niri((char *)title)) {
+    if (focus_window_title_niri(title)) {
       return true;
     }
     if (focus_window_title_hyprland(title)) {
@@ -112,7 +112,7 @@ char *Wm_Paste(char *content) {
   return NULL;
 }
 
-PlWindowList Wm_GetWindowTitles() {
+PlWindowList Wm_GetWindowTitles(void) {
   PlWindowList result;
   PlWindowList empty = {.windows = NULL, .count = 0};
   if (x11_env_is_wayland()) {
@@ -135,7 +135,7 @@ PlWindowList Wm_GetWindowTitles() {
   log_error("GetWindowTitles Didn't Work");
   return empty;
 }
-PlWindowList Wm_GetWindowNames() {
+PlWindowList Wm_GetWindowNames(void) {
   PlWindowList result;
   PlWindowList empty = {.windows = NULL, .count = 0};
   if (x11_env_is_wayland()) {

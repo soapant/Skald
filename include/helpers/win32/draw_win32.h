@@ -78,6 +78,7 @@ void win32_src_cache_put(const char *path, void *src);
 void win32_img_cache_free_all(void);
 void *win32_load_scaled_bitmap(const char *path, int w, int h);
 void *win32_load_shell_icon_bitmap(const char *path);
+void *win32_load_shell_icon_ex(const char *path, bool use_file_attributes);
 void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max);
 
 void win32_prompt_editbox_spec(PromptState *state, FontHandle font,

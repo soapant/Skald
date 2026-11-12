@@ -7,6 +7,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrender.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -701,7 +702,7 @@ bool Platform_FocusWindowDown(void) { return Wm_FocusWindowDown(); }
 
 bool Platform_MinimizeActiveWindow(void) { return Wm_MinimizeActiveWindow(); }
 
-char *Platform_GetActiveWindowTitle() { return Wm_GetActiveWindowTitle(); }
+char *Platform_GetActiveWindowTitle(void) { return Wm_GetActiveWindowTitle(); }
 
 int Platform_GetIconSize(char *icon_path) {
   if (strstr(icon_path, "32x32")) {
@@ -815,6 +816,15 @@ static char *icon_probe(const char *path, const char *bare) {
   icon_cache_set(bare, path);
   return strdup(path);
 }
+
+static char *icon_try(const char *bare, const char *fmt, ...) {
+  char path[1024];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(path, sizeof(path), fmt, ap);
+  va_end(ap);
+  return icon_probe(path, bare);
+}
 char *Platform_GetActiveWindowAppId(void) { return Wm_GetActiveWindowAppId(); }
 
 char *Platform_GetIconPath(char *app_path) {
@@ -878,29 +888,21 @@ char *Platform_GetIconPath(char *app_path) {
   const char *bases[] = {"/usr/share/icons/hicolor", "/usr/share/pixmaps",
                          "/usr/share/icons/Adwaita", "/usr/share/icons/breeze",
                          NULL};
+  char *hit = NULL;
   const char *home = Platform_GetRealHome();
   if (!home || !home[0])
     home = x11_env_home_dir();
   if (home && home[0]) {
     for (int s = 0; sizes[s]; s++) {
-      char path[1024];
       const char *sz = sizes[s];
       while (*sz == ' ')
         sz++;
-      snprintf(path, sizeof(path),
-               "%s/.local/share/icons/hicolor/%s/apps/%s.png", home, sz, bare);
-      {
-        char *hit = icon_probe(path, bare);
-        if (hit)
-          return hit;
-      }
-      snprintf(path, sizeof(path),
-               "%s/.local/share/icons/hicolor/%s/apps/%s.svg", home, sz, bare);
-      {
-        char *hit = icon_probe(path, bare);
-        if (hit)
-          return hit;
-      }
+      hit = icon_try(bare, "%s/.local/share/icons/hicolor/%s/apps/%s.png", home, sz, bare);
+      if (hit)
+        return hit;
+      hit = icon_try(bare, "%s/.local/share/icons/hicolor/%s/apps/%s.svg", home, sz, bare);
+      if (hit)
+        return hit;
     }
   }
   {
@@ -915,115 +917,68 @@ char *Platform_GetIconPath(char *app_path) {
     for (char *dir = strtok_r(xdg_dirs, ":", &save); dir;
          dir = strtok_r(NULL, ":", &save)) {
       for (int s = 0; sizes[s]; s++) {
-        char path[1024];
-        const char *sz = sizes[s];
+          const char *sz = sizes[s];
         while (*sz == ' ')
           sz++;
-        snprintf(path, sizeof(path), "%s/icons/hicolor/%s/apps/%s.png", dir, sz,
+        hit = icon_try(bare, "%s/icons/hicolor/%s/apps/%s.png", dir, sz,
                  bare);
-        {
-          char *hit = icon_probe(path, bare);
-          if (hit)
-            return hit;
-        }
-        snprintf(path, sizeof(path), "%s/icons/hicolor/%s/apps/%s.svg", dir, sz,
+        if (hit)
+          return hit;
+        hit = icon_try(bare, "%s/icons/hicolor/%s/apps/%s.svg", dir, sz,
                  bare);
-        {
-          char *hit = icon_probe(path, bare);
-          if (hit)
-            return hit;
-        }
-        snprintf(path, sizeof(path), "%s/icons/hicolor/%s.svg", dir, bare);
-        {
-          char *hit = icon_probe(path, bare);
-          if (hit)
-            return hit;
-        }
-        snprintf(path, sizeof(path), "%s/icons/hicolor/%s.png", dir, bare);
-        {
-          char *hit = icon_probe(path, bare);
-          if (hit)
-            return hit;
-        }
-        snprintf(path, sizeof(path), "%s/pixmaps/%s.png", dir, bare);
-        {
-          char *hit = icon_probe(path, bare);
-          if (hit)
-            return hit;
-        }
-        snprintf(path, sizeof(path), "%s/pixmaps/%s.svg", dir, bare);
-        {
-          char *hit = icon_probe(path, bare);
-          if (hit)
-            return hit;
-        }
+        if (hit)
+          return hit;
+        hit = icon_try(bare, "%s/icons/hicolor/%s.svg", dir, bare);
+        if (hit)
+          return hit;
+        hit = icon_try(bare, "%s/icons/hicolor/%s.png", dir, bare);
+        if (hit)
+          return hit;
+        hit = icon_try(bare, "%s/pixmaps/%s.png", dir, bare);
+        if (hit)
+          return hit;
+        hit = icon_try(bare, "%s/pixmaps/%s.svg", dir, bare);
+        if (hit)
+          return hit;
       }
     }
   }
   for (int b = 0; bases[b]; b++) {
     for (int s = 0; sizes[s]; s++) {
-      char path[1024];
       const char *sz = sizes[s];
       while (*sz == ' ')
         sz++;
-      snprintf(path, sizeof(path), "%s/%s/apps/%s.png", bases[b], sz, bare);
-      {
-        char *hit = icon_probe(path, bare);
-        if (hit)
-          return hit;
-      }
-      snprintf(path, sizeof(path), "%s/%s/apps/%s.svg", bases[b], sz, bare);
-      {
-        char *hit = icon_probe(path, bare);
-        if (hit)
-          return hit;
-      }
-      snprintf(path, sizeof(path), "%s/%s.svg", bases[b], bare);
-      {
-        char *hit = icon_probe(path, bare);
-        if (hit)
-          return hit;
-      }
-      snprintf(path, sizeof(path), "%s/%s.png", bases[b], bare);
-      {
-        char *hit = icon_probe(path, bare);
-        if (hit)
-          return hit;
-      }
+      hit = icon_try(bare, "%s/%s/apps/%s.png", bases[b], sz, bare);
+      if (hit)
+        return hit;
+      hit = icon_try(bare, "%s/%s/apps/%s.svg", bases[b], sz, bare);
+      if (hit)
+        return hit;
+      hit = icon_try(bare, "%s/%s.svg", bases[b], bare);
+      if (hit)
+        return hit;
+      hit = icon_try(bare, "%s/%s.png", bases[b], bare);
+      if (hit)
+        return hit;
     }
     char direct[1024];
-    snprintf(direct, sizeof(direct), "%s/%s.png", bases[b], bare);
-    {
-      char *hit = icon_probe(direct, bare);
-      if (hit)
-        return hit;
-    }
-    snprintf(direct, sizeof(direct), "%s/%s.svg", bases[b], bare);
-    {
-      char *hit = icon_probe(direct, bare);
-      if (hit)
-        return hit;
-    }
+    hit = icon_try(bare, "%s/%s.png", bases[b], bare);
+    if (hit)
+      return hit;
+    hit = icon_try(bare, "%s/%s.svg", bases[b], bare);
+    if (hit)
+      return hit;
   }
   char pix[1024];
-  snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.png", bare);
-  {
-    char *hit = icon_probe(pix, bare);
-    if (hit)
-      return hit;
-  }
-  snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.svg", bare);
-  {
-    char *hit = icon_probe(pix, bare);
-    if (hit)
-      return hit;
-  }
-  snprintf(pix, sizeof(pix), "/usr/share/pixmaps/%s.xpm", bare);
-  {
-    char *hit = icon_probe(pix, bare);
-    if (hit)
-      return hit;
-  }
+  hit = icon_try(bare, "/usr/share/pixmaps/%s.png", bare);
+  if (hit)
+    return hit;
+  hit = icon_try(bare, "/usr/share/pixmaps/%s.svg", bare);
+  if (hit)
+    return hit;
+  hit = icon_try(bare, "/usr/share/pixmaps/%s.xpm", bare);
+  if (hit)
+    return hit;
   snprintf(pix, sizeof(pix), "resources/Skald.png");
   if (access(pix, F_OK) == 0)
     return strdup(pix);
@@ -1212,9 +1167,9 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
   return out;
 }
 
-PlWindowList Platform_GetWindowTitles() { return Wm_GetWindowTitles(); }
+PlWindowList Platform_GetWindowTitles(void) { return Wm_GetWindowTitles(); }
 
-PlWindowList Platform_GetWindowNames() { return Wm_GetWindowNames(); }
+PlWindowList Platform_GetWindowNames(void) { return Wm_GetWindowNames(); }
 
 static int singleton_lock_fd = -1;
 
@@ -1546,7 +1501,7 @@ char *Platform_GetWorkingDir(void) {
   return raw;
 }
 
-void Platform_InitDataFolder() {
+void Platform_InitDataFolder(void) {
   char dir_path[300];
   snprintf(dir_path, sizeof(dir_path), "%s/.local/share/skald",
            Platform_GetRealHome());

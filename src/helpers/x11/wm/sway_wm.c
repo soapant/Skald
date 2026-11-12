@@ -159,7 +159,7 @@ static bool sway_json_string(const char *at, char *out, size_t cap,
 static bool sway_name_for_pid(const char *json, const char *pid_pos,
                               const char *next_pid, char *out, size_t cap);
 
-bool focus_window_title_sway(char *title) {
+bool focus_window_title_sway(const char *title) {
   if (!title || !*title) {
     log_error("title is NULL");
     return false;
@@ -303,6 +303,15 @@ static bool sway_name_for_pid(const char *json, const char *pid_pos,
   return sway_json_string(colon, out, cap, next_pid);
 }
 
+static bool sway_class_for_pid(const char *pid_pos, const char *next_pid,
+                               char *out, size_t cap) {
+  const char *cls = strstr(pid_pos, "\"class\":");
+  if (!cls || (next_pid && cls >= next_pid))
+    return false;
+  const char *c2 = strchr(cls, ':');
+  return c2 ? sway_json_string(c2, out, cap, next_pid) : false;
+}
+
 static bool sway_app_for_pid(const char *json, const char *pid_pos,
                              const char *next_pid, char *out, size_t cap) {
   (void)json;
@@ -312,21 +321,10 @@ static bool sway_app_for_pid(const char *json, const char *pid_pos,
       const char *colon = strchr(app, ':');
       return colon ? sway_json_string(colon, out, cap, next_pid) : false;
     }
-    if (strncmp(app, "\"app_id\": null", 14) == 0) {
-      const char *cls = strstr(pid_pos, "\"class\":");
-      if (cls && (!next_pid || cls < next_pid)) {
-        const char *c2 = strchr(cls, ':');
-        return c2 ? sway_json_string(c2, out, cap, next_pid) : false;
-      }
-      return false;
-    }
+    if (strncmp(app, "\"app_id\": null", 14) == 0)
+      return sway_class_for_pid(pid_pos, next_pid, out, cap);
   }
-  const char *cls = strstr(pid_pos, "\"class\":");
-  if (cls && (!next_pid || cls < next_pid)) {
-    const char *c2 = strchr(cls, ':');
-    return c2 ? sway_json_string(c2, out, cap, next_pid) : false;
-  }
-  return false;
+  return sway_class_for_pid(pid_pos, next_pid, out, cap);
 }
 
 static PlWindowList sway_list_pid_fields(
@@ -352,11 +350,8 @@ static PlWindowList sway_list_pid_fields(
       continue;
     if (toupper_first)
       buf[0] = toupper((unsigned char)buf[0]);
-    char **tmp = realloc(list.windows, (list.count + 1) * sizeof(char *));
-    if (!tmp)
+    if (!List_Append(&list, buf))
       break;
-    list.windows = tmp;
-    list.windows[list.count++] = strdup(buf);
   }
   free(json);
   return list;
@@ -432,26 +427,29 @@ static int sway_key_bool3(const char *base, const char *from, const char *end,
   return -1;
 }
 
+static char *sway_find_colon(const char *base, const char *from,
+                             const char *end, const char *key, int depth) {
+  char *k = sway_find_key(base, from, end, key, depth);
+  if (!k)
+    return NULL;
+  char *c = strchr(k + strlen(key), ':');
+  if (!c || c >= end)
+    return NULL;
+  return c;
+}
+
 static int sway_key_int(const char *base, const char *from, const char *end,
                         const char *key, int depth) {
 
-  char *k = sway_find_key(base, from, end, key, depth);
-  if (!k)
-    return 0;
-  char *c = strchr(k + strlen(key), ':');
-  if (!c || c >= end)
-    return 0;
-  return atoi(c + 1);
+  char *c = sway_find_colon(base, from, end, key, depth);
+  return c ? atoi(c + 1) : 0;
 }
 
 static int sway_key_str(const char *base, const char *from, const char *end,
                         const char *key, int depth, char *out, size_t cap) {
 
-  char *k = sway_find_key(base, from, end, key, depth);
-  if (!k)
-    return 0;
-  char *c = strchr(k + strlen(key), ':');
-  if (!c || c >= end)
+  char *c = sway_find_colon(base, from, end, key, depth);
+  if (!c)
     return 0;
   char *q = c + 1;
   while (q < end && (*q == ' ' || *q == '\t'))
@@ -554,29 +552,18 @@ bool move_active_window_to_monitor_sway(bool right) {
         for (int i = 0; i < n; i++) {
           if (i == cur || !usable[i])
             continue;
-          int overlap = 0;
-          int gap = 0;
-          if (right) {
-            if (ox[i] < ox[cur] + ow[cur])
-              continue;
-            int top = oy[cur] > oy[i] ? oy[cur] : oy[i];
-            int bottom = oy[cur] + oh[cur] < oy[i] + oh[i] ? oy[cur] + oh[cur]
-                                                           : oy[i] + oh[i];
-            overlap = bottom - top;
-            if (overlap < 0)
-              overlap = 0;
-            gap = ox[i] - (ox[cur] + ow[cur]);
-          } else {
-            if (ox[i] + ow[i] > ox[cur])
-              continue;
-            int top = oy[cur] > oy[i] ? oy[cur] : oy[i];
-            int bottom = oy[cur] + oh[cur] < oy[i] + oh[i] ? oy[cur] + oh[cur]
-                                                           : oy[i] + oh[i];
-            overlap = bottom - top;
-            if (overlap < 0)
-              overlap = 0;
-            gap = ox[cur] - (ox[i] + ow[i]);
-          }
+          if (right && ox[i] < ox[cur] + ow[cur])
+            continue;
+          if (!right && ox[i] + ow[i] > ox[cur])
+            continue;
+          int top = oy[cur] > oy[i] ? oy[cur] : oy[i];
+          int bottom = oy[cur] + oh[cur] < oy[i] + oh[i] ? oy[cur] + oh[cur]
+                                                         : oy[i] + oh[i];
+          int overlap = bottom - top;
+          if (overlap < 0)
+            overlap = 0;
+          int gap = right ? ox[i] - (ox[cur] + ow[cur])
+                          : ox[cur] - (ox[i] + ow[i]);
           if (overlap > best_overlap ||
               (overlap == best_overlap && gap < best_gap)) {
             best_overlap = overlap;

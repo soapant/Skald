@@ -137,7 +137,7 @@ char *paste_niri(char *content) {
   return x11_paste_wtype(content);
 }
 
-bool focus_window_title_niri(char *title) {
+bool focus_window_title_niri(const char *title) {
   if (!title || !*title)
     return false;
   if (!niri_is_active())
@@ -203,12 +203,8 @@ static PlWindowList niri_list_fields(const char *key, size_t key_len,
       continue;
     if (toupper_first)
       buf[0] = toupper((unsigned char)buf[0]);
-    char **tmp =
-        realloc(list.windows, (size_t)(list.count + 1) * sizeof(char *));
-    if (!tmp)
+    if (!List_Append(&list, buf))
       break;
-    list.windows = tmp;
-    list.windows[list.count++] = strdup(buf);
   }
   free(json);
   return list;

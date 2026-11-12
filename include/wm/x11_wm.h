@@ -9,10 +9,10 @@
 bool x11_get_title(char *buffer, int buffer_size);
 bool x11_get_app_id(char *buffer, int buffer_size);
 char *x11_paste(char *content);
-bool x11_focus_window_title(char *title);
+bool x11_focus_window_title(const char *title);
 unsigned long x11_find_window_by_title(const char *title);
-PlWindowList x11_get_window_titles();
-PlWindowList x11_get_window_names();
+PlWindowList x11_get_window_titles(void);
+PlWindowList x11_get_window_names(void);
 void x11_wm_cleanup_cursor_display(void);
 bool x11_close_active_window(void);
 bool x11_toggle_fullscreen_active(void);

@@ -1,4 +1,6 @@
 #include "helpers/win32/bg_image_win32.h"
+#include "helpers/win32/draw_win32.h"
+#include "helpers/helpers_ui.h"
 #include "helpers/helpers_fs.h"
 #include "core/types.h"
 #include "config_values.h"
@@ -213,23 +215,6 @@ static bool bg_cache_load(const char *file, int w, int h, void *bits,
   return ok;
 }
 
-static void *bg_shell_icon_bitmap(const char *native) {
-
-  SHFILEINFOA sfi;
-  ZeroMemory(&sfi, sizeof(sfi));
-  if (!SHGetFileInfoA(native, 0, &sfi, sizeof(sfi),
-                      SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES))
-    return NULL;
-  if (!sfi.hIcon)
-    return NULL;
-  GpBitmap *bmp = NULL;
-  GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
-  DestroyIcon(sfi.hIcon);
-  if (st != Ok || !bmp)
-    return NULL;
-  return bmp;
-}
-
 static void *bg_load_native(const char *native, int *out_w, int *out_h) {
 
   bg_gdip_ensure();
@@ -243,7 +228,7 @@ static void *bg_load_native(const char *native, int *out_w, int *out_h) {
   if (st != Ok || !bmp) {
     if (bmp)
       GdipDisposeImage((GpImage *)bmp);
-    bmp = (GpBitmap *)bg_shell_icon_bitmap(native);
+    bmp = (GpBitmap *)win32_load_shell_icon_ex(native, true);
     if (!bmp) {
       return NULL;
     }
@@ -400,21 +385,12 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
     }
     int sw = s->src_w;
     int sh = s->src_h;
-    double scale = (double)w / (double)sw;
-    double scale_y = (double)h / (double)sh;
-    if (scale_y > scale)
-      scale = scale_y;
-    if (scale <= 0.0) {
+    int dw = 0, dh = 0;
+    if (!Cover_Scale(sw, sh, w, h, &dw, &dh)) {
       DeleteDC(dc);
       DeleteObject(bmp);
       return NULL;
     }
-    int dw = (int)((double)sw * scale + 0.5);
-    int dh = (int)((double)sh * scale + 0.5);
-    if (dw < 1)
-      dw = 1;
-    if (dh < 1)
-      dh = 1;
     int ox = (w - dw) / 2;
     int oy = (h - dh) / 2;
 

@@ -538,11 +538,15 @@ void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max) {
   }
 }
 
-GpBitmap *win32_load_shell_icon_bitmap(const char *path) {
+GpBitmap *win32_load_shell_icon_ex(const char *path,
+                                    bool use_file_attributes) {
 
+  UINT flags = SHGFI_ICON | SHGFI_LARGEICON;
+  if (use_file_attributes)
+    flags |= SHGFI_USEFILEATTRIBUTES;
   SHFILEINFOA sfi;
   ZeroMemory(&sfi, sizeof(sfi));
-  if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON))
+  if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), flags))
     return NULL;
   if (!sfi.hIcon)
     return NULL;
@@ -552,6 +556,10 @@ GpBitmap *win32_load_shell_icon_bitmap(const char *path) {
   if (st != Ok || !bmp)
     return NULL;
   return bmp;
+}
+
+GpBitmap *win32_load_shell_icon_bitmap(const char *path) {
+  return win32_load_shell_icon_ex(path, false);
 }
 
 void *win32_load_scaled_bitmap(const char *path, int w, int h) {
