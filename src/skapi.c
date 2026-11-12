@@ -1740,13 +1740,27 @@ bool ski_place_listbox(const SkListSpec *spec) {
 }
 
 bool sk_checkbox_is_checked(const char *name) {
-  bool r = Checkbox_IsChecked(name);
-  return r;
+  return Checkbox_IsChecked(name, PLACE_CHECKBOX);
 }
 
 bool sk_checkbox_is_hovered(const char *name) {
-  bool r = Checkbox_IsHovered(name);
-  return r;
+  return Checkbox_IsHovered(name, PLACE_CHECKBOX);
+}
+
+bool sk_checkbox_is_clicked(const char *name) {
+  return Checkbox_IsClicked(name, PLACE_CHECKBOX);
+}
+
+bool sk_button_is_checked(const char *name) {
+  return Checkbox_IsChecked(name, PLACE_BUTTON);
+}
+
+bool sk_button_is_hovered(const char *name) {
+  return Checkbox_IsHovered(name, PLACE_BUTTON);
+}
+
+bool sk_button_is_clicked(const char *name) {
+  return Checkbox_IsClicked(name, PLACE_BUTTON);
 }
 
 bool ski_place_checkbox(const SkCheckboxSpec *spec) {
