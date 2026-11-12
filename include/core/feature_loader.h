@@ -22,6 +22,7 @@ void FeatureLoader_Unlock(void);
 void FeatureLoader_SweepRetired(void);
 void FeatureLoader_DrainRetiredUnloads(void);
 int FeatureLoader_PendingUnloadCount(void);
+int FeatureLoader_BuildStaleSources(bool hot_reload);
 void DeferredInit_Register(void (*cb)(void));
 void DeferredInit_RunAll(void);
 

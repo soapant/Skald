@@ -84,10 +84,10 @@ static char *kwin_qdbus_call(const char *args) {
   return Platform_RunTerminalCommand(cmd, false);
 }
 
-static bool kwin_run_script_inner(const char *body) {
-
-  char js_path[96] = {0};
-  int fd = kwin_make_temp_js(js_path, sizeof(js_path));
+static bool kwin_write_js(const char *body, char *js_path,
+                          size_t path_cap) {
+  js_path[0] = '\0';
+  int fd = kwin_make_temp_js(js_path, path_cap);
   if (fd < 0)
     return false;
   FILE *f = fdopen(fd, "w");
@@ -98,6 +98,14 @@ static bool kwin_run_script_inner(const char *body) {
   }
   fputs(body, f);
   fclose(f);
+  return true;
+}
+
+static bool kwin_run_script_inner(const char *body) {
+
+  char js_path[96] = {0};
+  if (!kwin_write_js(body, js_path, sizeof(js_path)))
+    return false;
   char *pre = kwin_qdbus_call(
       "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript skald");
   if (pre)
@@ -197,17 +205,8 @@ static bool kwin_q_load(void) {
     kwin_q_name[0] = '\0';
   }
   char js_path[96] = {0};
-  int fd = kwin_make_temp_js(js_path, sizeof(js_path));
-  if (fd < 0)
+  if (!kwin_write_js(kwin_q_body, js_path, sizeof(js_path)))
     return false;
-  FILE *f = fdopen(fd, "w");
-  if (!f) {
-    close(fd);
-    unlink(js_path);
-    return false;
-  }
-  fputs(kwin_q_body, f);
-  fclose(f);
   for (int round = 0; round < 3; round++) {
     snprintf(kwin_q_name, sizeof(kwin_q_name), "skaldq_%d_%u", (int)getpid(),
              ++kwin_q_seq);
@@ -383,19 +382,23 @@ static void kwin_clean_copy(const char *src, size_t n, char *dst, size_t cap) {
   dst[o] = '\0';
 }
 
+static bool kwin_active_locked_copy(const char *src, char *buffer,
+                                    int buffer_size) {
+  pthread_mutex_lock(&kwin_mtx);
+  bool ok = kwin_snapshot_locked() && src && src[0];
+  if (ok)
+    kwin_clean_copy(src, strlen(src), buffer, (size_t)buffer_size);
+  pthread_mutex_unlock(&kwin_mtx);
+  return ok && buffer[0] != '\0';
+}
+
 bool get_title_kwin(char *buffer, int buffer_size) {
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
   if (!kwin_is_active())
     return false;
-  pthread_mutex_lock(&kwin_mtx);
-  bool ok = kwin_snapshot_locked() && kwin_active_title && kwin_active_title[0];
-  if (ok)
-    kwin_clean_copy(kwin_active_title, strlen(kwin_active_title), buffer,
-                    (size_t)buffer_size);
-  pthread_mutex_unlock(&kwin_mtx);
-  return ok && buffer[0] != '\0';
+  return kwin_active_locked_copy(kwin_active_title, buffer, buffer_size);
 }
 
 bool get_app_id_kwin(char *buffer, int buffer_size) {
@@ -404,32 +407,13 @@ bool get_app_id_kwin(char *buffer, int buffer_size) {
   buffer[0] = '\0';
   if (!kwin_is_active())
     return false;
-  pthread_mutex_lock(&kwin_mtx);
-  bool ok = kwin_snapshot_locked() && kwin_active_class && kwin_active_class[0];
-  if (ok)
-    kwin_clean_copy(kwin_active_class, strlen(kwin_active_class), buffer,
-                    (size_t)buffer_size);
-  pthread_mutex_unlock(&kwin_mtx);
-  return ok && buffer[0] != '\0';
+  return kwin_active_locked_copy(kwin_active_class, buffer, buffer_size);
 }
 
 char *paste_kwin(char *content) {
-  if (!content) {
-    log_error("content is NULL");
-    return NULL;
-  }
   if (!kwin_is_active())
     return NULL;
-  const char *argv[] = {"wtype", content, NULL};
-  int status = 0;
-  char *out = Platform_RunArgvCapture(argv, NULL, &status);
-  if (status == 127) {
-    free(out);
-    out = NULL;
-  }
-  if (!out)
-    log_error("paste via wtype failed");
-  return out;
+  return x11_paste_wtype(content);
 }
 
 static bool kwin_focus_js_cmd(const char *title, char *out, size_t cap) {
@@ -481,7 +465,7 @@ bool focus_window_title_kwin(char *title) {
   return kwin_run_script(body);
 }
 
-PlWindowList get_window_titles_kwin() {
+static PlWindowList kwin_list_windows(bool want_names) {
   PlWindowList list = {0};
   if (!kwin_is_active())
     return list;
@@ -499,12 +483,23 @@ PlWindowList get_window_titles_kwin() {
     char cap[1024];
     kwin_clean_copy(p, clen, cap, sizeof(cap));
     if (!kwin_skip_caption(cap)) {
+      const char *item = cap;
+      char buf[1024];
+      if (want_names) {
+        if (sep)
+          kwin_clean_copy(sep + 1, rlen - clen - 1, buf, sizeof(buf));
+        else
+          buf[0] = '\0';
+        if (buf[0])
+          buf[0] = toupper((unsigned char)buf[0]);
+        item = buf;
+      }
       char **tmp =
           realloc(list.windows, (size_t)(list.count + 1) * sizeof(char *));
       if (!tmp)
         break;
       list.windows = tmp;
-      list.windows[list.count++] = strdup(cap);
+      list.windows[list.count++] = strdup(item);
     }
     p = rend ? rend + 1 : p + rlen;
   }
@@ -512,42 +507,12 @@ PlWindowList get_window_titles_kwin() {
   return list;
 }
 
-PlWindowList get_window_names_kwin() {
-  PlWindowList list = {0};
-  if (!kwin_is_active())
-    return list;
-  pthread_mutex_lock(&kwin_mtx);
-  if (!kwin_snapshot_locked() || !kwin_records) {
-    pthread_mutex_unlock(&kwin_mtx);
-    return list;
-  }
-  const char *p = kwin_records;
-  while (*p) {
-    const char *rend = strchr(p, '\x1f');
-    size_t rlen = rend ? (size_t)(rend - p) : strlen(p);
-    const char *sep = memchr(p, '\x1e', rlen);
-    size_t clen = sep ? (size_t)(sep - p) : rlen;
-    char cap[1024];
-    kwin_clean_copy(p, clen, cap, sizeof(cap));
-    if (!kwin_skip_caption(cap)) {
-      char buf[1024];
-      if (sep)
-        kwin_clean_copy(sep + 1, rlen - clen - 1, buf, sizeof(buf));
-      else
-        buf[0] = '\0';
-      if (buf[0])
-        buf[0] = toupper((unsigned char)buf[0]);
-      char **tmp =
-          realloc(list.windows, (size_t)(list.count + 1) * sizeof(char *));
-      if (!tmp)
-        break;
-      list.windows = tmp;
-      list.windows[list.count++] = strdup(buf);
-    }
-    p = rend ? rend + 1 : p + rlen;
-  }
-  pthread_mutex_unlock(&kwin_mtx);
-  return list;
+PlWindowList get_window_titles_kwin(void) {
+  return kwin_list_windows(false);
+}
+
+PlWindowList get_window_names_kwin(void) {
+  return kwin_list_windows(true);
 }
 
 bool close_active_window_kwin(void) {

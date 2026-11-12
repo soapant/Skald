@@ -20,7 +20,7 @@
 #include "helpers/win32/message_popup_win32.h"
 
 void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
-  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+  if (Owner_PurgeInactive(path_a, path_b))
     return;
   for (int i = g_msg_slot_count - 1; i >= 0; i--) {
     HWND h = g_msg_slots[i];

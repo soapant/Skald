@@ -356,6 +356,22 @@ int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
   return ctx.cx - x;
 }
 
+static void x11_wrap_flush_line(Display *dpy, XftDraw *xd, XftColor *color,
+                                XftFont *xf, const char *lineStart,
+                                int line_len, int alignment, int boxWidth,
+                                int maxWidth, int xOffset, int y) {
+  int lw = x11_measure_utf8_fallback(dpy, xf, lineStart, line_len, 0);
+  int drawX = 0;
+  if (alignment == 1)
+    drawX = boxWidth > 0 ? (maxWidth - lw) / 2 : xOffset + (maxWidth - lw) / 2;
+  else if (alignment == 2)
+    drawX = boxWidth > 0 ? maxWidth - lw : maxWidth - lw - xOffset;
+  else
+    drawX = xOffset;
+  x11_draw_utf8_fallback(dpy, xd, color, drawX, y, xf, lineStart, line_len,
+                         0);
+}
+
 void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
                            FontHandle font, const char *text, int startY,
                            char *centered_to, int xOffset, int boxWidth) {
@@ -402,20 +418,9 @@ void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
     int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
 
     if (lineWidth > 0 && lineWidth + add > maxWidth) {
-      int lw = x11_measure_utf8_fallback(dpy, xf, lineStart,
-                                         (int)(word_start - lineStart), 0);
-
-      int drawX = 0;
-      if (alignment == 1)
-        drawX =
-            boxWidth > 0 ? (maxWidth - lw) / 2 : (maxWidth - lw) / 2 + xOffset;
-      else if (alignment == 2)
-        drawX = boxWidth > 0 ? maxWidth - lw : maxWidth - lw - xOffset;
-      else
-        drawX = xOffset;
-
-      x11_draw_utf8_fallback(dpy, xd, color, drawX, y, xf, lineStart,
-                             (int)(word_start - lineStart), 0);
+      x11_wrap_flush_line(dpy, xd, color, xf, lineStart,
+                          (int)(word_start - lineStart), alignment, boxWidth,
+                          maxWidth, xOffset, y);
       y += lineHeight;
       lineStart = word_start;
       lineWidth = wordWidth;
@@ -426,22 +431,32 @@ void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
       p++;
   }
 
-  if (p > lineStart) {
-    int lw =
-        x11_measure_utf8_fallback(dpy, xf, lineStart, (int)(p - lineStart), 0);
-
-    int drawX = 0;
-    if (alignment == 1)
-      drawX =
-          boxWidth > 0 ? (maxWidth - lw) / 2 : xOffset + (maxWidth - lw) / 2;
-    else if (alignment == 2)
-      drawX = boxWidth > 0 ? maxWidth - lw : maxWidth - lw - xOffset;
-    else
-      drawX = xOffset;
-
-    x11_draw_utf8_fallback(dpy, xd, color, drawX, y, xf, lineStart,
-                           (int)(p - lineStart), 0);
+if (p > lineStart) {
+    x11_wrap_flush_line(dpy, xd, color, xf, lineStart, (int)(p - lineStart),
+                        alignment, boxWidth, maxWidth, xOffset, y);
   }
+}
+
+void x11_init_argb_image(Display *dpy, XImage *img, unsigned char *data,
+                         int w, int h, unsigned long red_mask,
+                         unsigned long green_mask, unsigned long blue_mask) {
+  memset(img, 0, sizeof(*img));
+  img->width = w;
+  img->height = h;
+  img->xoffset = 0;
+  img->format = ZPixmap;
+  img->data = (char *)data;
+  img->byte_order = ImageByteOrder(dpy);
+  img->bitmap_unit = BitmapUnit(dpy);
+  img->bitmap_bit_order = BitmapBitOrder(dpy);
+  img->bitmap_pad = 32;
+  img->depth = 32;
+  img->bytes_per_line = w * 4;
+  img->bits_per_pixel = 32;
+  img->red_mask = red_mask;
+  img->green_mask = green_mask;
+  img->blue_mask = blue_mask;
+  img->obdata = NULL;
 }
 
 void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
@@ -622,23 +637,8 @@ static bool x11_blit_argb(Display *dpy, Drawable drw, Visual *vis,
   if (!vis)
     vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
   XImage img;
-  memset(&img, 0, sizeof(img));
-  img.width = w;
-  img.height = h;
-  img.xoffset = 0;
-  img.format = ZPixmap;
-  img.data = (char *)argb;
-  img.byte_order = ImageByteOrder(dpy);
-  img.bitmap_unit = BitmapUnit(dpy);
-  img.bitmap_bit_order = BitmapBitOrder(dpy);
-  img.bitmap_pad = 32;
-  img.depth = 32;
-  img.bytes_per_line = w * 4;
-  img.bits_per_pixel = 32;
-  img.red_mask = vis->red_mask;
-  img.green_mask = vis->green_mask;
-  img.blue_mask = vis->blue_mask;
-  img.obdata = NULL;
+  x11_init_argb_image(dpy, &img, argb, w, h, vis->red_mask, vis->green_mask,
+                      vis->blue_mask);
   if (!XInitImage(&img))
     return false;
   Pixmap pix = XCreatePixmap(dpy, drw, w, h, 32);
@@ -1067,6 +1067,27 @@ Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
                                const char *res_class, long event_mask,
                                bool override_redirect);
 
+static void x11_set_net_wm_state_skip(Display *dpy, Window win) {
+  Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+  Atom state_skip_taskbar =
+      XInternAtom(dpy, "_NET_WM_STATE_SKIP_TASKBAR", False);
+  Atom state_skip_pager = XInternAtom(dpy, "_NET_WM_STATE_SKIP_PAGER", False);
+  Atom states[2] = {state_skip_taskbar, state_skip_pager};
+  XChangeProperty(dpy, win, wm_state, XA_ATOM, 32, PropModeReplace,
+                  (unsigned char *)states, 2);
+}
+
+static void x11_set_fixed_size_hints(Display *dpy, Window win, int w, int h) {
+  XSizeHints *sh = XAllocSizeHints();
+  sh->flags = PMinSize | PMaxSize;
+  sh->min_width = w;
+  sh->min_height = h;
+  sh->max_width = w;
+  sh->max_height = h;
+  XSetWMNormalHints(dpy, win, sh);
+  XFree(sh);
+}
+
 Window x11_create_window_ex(Display *dpy, int x, int y, int w, int h,
                             unsigned long bg_color, const char *res_name,
                             const char *res_class, long event_mask) {
@@ -1174,26 +1195,14 @@ Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
       XChangeProperty(dpy, win, motif_atom, motif_atom, 32, PropModeReplace,
                       (unsigned char *)&motif, 5);
     }
-    Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
-    Atom state_skip_taskbar =
-        XInternAtom(dpy, "_NET_WM_STATE_SKIP_TASKBAR", False);
-    Atom state_skip_pager = XInternAtom(dpy, "_NET_WM_STATE_SKIP_PAGER", False);
-    Atom states[2] = {state_skip_taskbar, state_skip_pager};
-    XChangeProperty(dpy, win, wm_state, XA_ATOM, 32, PropModeReplace,
-                    (unsigned char *)states, 2);
+    x11_set_net_wm_state_skip(dpy, win);
   } else if (res_name && strcmp(res_name, "flashtext") == 0) {
     Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
     Atom wm_type_note =
         XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", False);
     XChangeProperty(dpy, win, wm_type, XA_ATOM, 32, PropModeReplace,
                     (unsigned char *)&wm_type_note, 1);
-    Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
-    Atom state_skip_taskbar =
-        XInternAtom(dpy, "_NET_WM_STATE_SKIP_TASKBAR", False);
-    Atom state_skip_pager = XInternAtom(dpy, "_NET_WM_STATE_SKIP_PAGER", False);
-    Atom states[2] = {state_skip_taskbar, state_skip_pager};
-    XChangeProperty(dpy, win, wm_state, XA_ATOM, 32, PropModeReplace,
-                    (unsigned char *)states, 2);
+    x11_set_net_wm_state_skip(dpy, win);
   }
   if (res_name || res_class) {
     XClassHint *ch = XAllocClassHint();
@@ -1210,14 +1219,7 @@ Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
   XSetWMHints(dpy, win, hints);
   XFree(hints);
   if (override_redirect && niri_is_active()) {
-    XSizeHints *sh = XAllocSizeHints();
-    sh->flags = PMinSize | PMaxSize;
-    sh->min_width = w;
-    sh->min_height = h;
-    sh->max_width = w;
-    sh->max_height = h;
-    XSetWMNormalHints(dpy, win, sh);
-    XFree(sh);
+    x11_set_fixed_size_hints(dpy, win, w, h);
   }
   XSelectInput(dpy, win, event_mask);
   if (RoundedCorners && !override_redirect && CornerRadius > 0) {
@@ -1714,14 +1716,7 @@ Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
     XGetInputFocus(dpy, &focus_win, &revert_to);
     if (focus_win != None && focus_win != PointerRoot && focus_win != win)
       XSetTransientForHint(dpy, win, focus_win);
-    XSizeHints *sh = XAllocSizeHints();
-    sh->flags = PMinSize | PMaxSize;
-    sh->min_width = w;
-    sh->min_height = h;
-    sh->max_width = w;
-    sh->max_height = h;
-    XSetWMNormalHints(dpy, win, sh);
-    XFree(sh);
+    x11_set_fixed_size_hints(dpy, win, w, h);
   }
   if (RoundedCorners && CornerRadius > 0)
     x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);

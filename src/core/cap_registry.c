@@ -115,7 +115,7 @@ void cap_bind_declare(const char *key, void *consumer) {
 }
 
 void cap_purge_owner(const char *path_a, const char *path_b) {
-  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) {
+  if (Owner_PurgeInactive(path_a, path_b)) {
     return;
   }
 

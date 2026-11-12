@@ -20,6 +20,9 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
 void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
                          unsigned long hex, unsigned short alpha,
                          XftColor *out);
+void x11_init_argb_image(Display *dpy, XImage *img, unsigned char *data,
+                         int w, int h, unsigned long red_mask,
+                         unsigned long green_mask, unsigned long blue_mask);
 
 const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
                                           size_t trunc_size);

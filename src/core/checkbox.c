@@ -131,6 +131,34 @@ void Checkbox_ResetAll(void) {
   }
 }
 
+static void checkbox_fill_border(int x, int y, int w, int h, int thick,
+                                 int body_radius, bool body_round,
+                                 int border_radius, unsigned long body,
+                                 unsigned long border_col, bool with_border) {
+  Platform_DrawRectRaw((PlDrawRectRawSpec){.x = x,
+                                           .y = y,
+                                           .w = w,
+                                           .h = h,
+                                           .color = body,
+                                           .radius = body_radius,
+                                           .rounded = body_round,
+                                           .opaque = true,
+                                           .thickness = thick,
+                                           .filled = true});
+  if (!with_border)
+    return;
+  Platform_DrawRectRaw((PlDrawRectRawSpec){.x = x,
+                                           .y = y,
+                                           .w = w,
+                                           .h = h,
+                                           .color = border_col,
+                                           .radius = border_radius,
+                                           .rounded = true,
+                                           .opaque = true,
+                                           .thickness = thick,
+                                           .filled = false});
+}
+
 static int checkbox_line_height(int fontsize) {
 
   int lh = 0, rh = 0, lt = 0;
@@ -187,28 +215,9 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
     int w = spec->w > 0 ? spec->w : 16;
     int h = spec->h > 0 ? spec->h : 16;
     if (!spec->no_bg) {
-      Platform_DrawRectRaw((PlDrawRectRawSpec){.x = spec->x,
-                                               .y = spec->y,
-                                               .w = w,
-                                               .h = h,
-                                               .color = checkbox_body,
-                                               .radius = 0,
-                                               .rounded = false,
-                                               .opaque = true,
-                                               .thickness = thick,
-                                               .filled = true});
-      if (spec->border) {
-        Platform_DrawRectRaw((PlDrawRectRawSpec){.x = spec->x,
-                                                 .y = spec->y,
-                                                 .w = w,
-                                                 .h = h,
-                                                 .color = checkbox_border,
-                                                 .radius = CornerRadius / 3,
-                                                 .rounded = true,
-                                                 .opaque = true,
-                                                 .thickness = thick,
-                                                 .filled = false});
-      }
+      checkbox_fill_border(spec->x, spec->y, w, h, thick, 0, false,
+                           CornerRadius / 3, checkbox_body, checkbox_border,
+                           spec->border);
     }
 
     if (spec->checked) {
@@ -237,30 +246,9 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
     int w = spec->w > 0 ? spec->w : 100;
     int h = spec->h > 0 ? spec->h : 24;
     if (!spec->no_bg) {
-      Platform_DrawRectRaw((PlDrawRectRawSpec){.x = spec->x,
-                                               .y = spec->y,
-                                               .w = w,
-                                               .h = h,
-                                               .color = button_body,
-                                               .radius = CornerRadius / 2,
-                                               .rounded = true,
-                                               .opaque = true,
-                                               .thickness = thick,
-                                               .filled = true}
-
-      );
-      if (spec->border) {
-        Platform_DrawRectRaw((PlDrawRectRawSpec){.x = spec->x,
-                                                 .y = spec->y,
-                                                 .w = w,
-                                                 .h = h,
-                                                 .color = button_border,
-                                                 .radius = CornerRadius / 2,
-                                                 .rounded = true,
-                                                 .opaque = true,
-                                                 .thickness = thick,
-                                                 .filled = false});
-      }
+      checkbox_fill_border(spec->x, spec->y, w, h, thick, CornerRadius / 2,
+                           true, CornerRadius / 2, button_body, button_border,
+                           spec->border);
     }
     if (spec->text) {
       int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;

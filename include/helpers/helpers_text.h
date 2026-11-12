@@ -42,4 +42,6 @@ bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key);
 bool String_ContainsCI(const char *haystack, const char *needle);
 bool String_StartsWithCI(const char *str, const char *prefix);
 bool String_EqualsCI(const char *a, const char *b);
+bool Window_ListAllows(int window_count, bool whitelist,
+                       char *const *windows, const char *title);
 #endif

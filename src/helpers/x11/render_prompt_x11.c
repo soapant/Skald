@@ -91,8 +91,9 @@ void x11_draw_prompt_user_listbox_on_draw(Display *dpy, XftDraw *xd,
   x11_draw_listbox(state, dpy, xd, vis, cmap);
 }
 
-void x11_draw_prompt_user_edit_control(Display *dpy, Window *win,
-                                       PromptState *state) {
+static XftDraw *x11_prompt_create_draw(Display *dpy, Window *win,
+                                       Visual **vis_out,
+                                       Colormap *cmap_out) {
   XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;
@@ -104,33 +105,48 @@ void x11_draw_prompt_user_edit_control(Display *dpy, Window *win,
     vis = DefaultVisual(dpy, screen);
     cmap = DefaultColormap(dpy, screen);
   }
-  XftDraw *xd = XftDrawCreate(dpy, *win, vis, cmap);
-  if (!xd) {
+  *vis_out = vis;
+  *cmap_out = cmap;
+  return XftDrawCreate(dpy, *win, vis, cmap);
+}
+
+void x11_draw_prompt_user_edit_control(Display *dpy, Window *win,
+                                       PromptState *state) {
+  Visual *vis = NULL;
+  Colormap cmap = 0;
+  XftDraw *xd = x11_prompt_create_draw(dpy, win, &vis, &cmap);
+  if (!xd)
     return;
-  }
   x11_draw_prompt_user_edit_control_on_draw(dpy, xd, vis, cmap, state);
   XftDrawDestroy(xd);
 }
 
 void x11_draw_prompt_user_listbox(Display *dpy, Window *win,
                                   PromptState *state) {
-  XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;
-  if (XGetWindowAttributes(dpy, *win, &attrs)) {
-    vis = attrs.visual;
-    cmap = attrs.colormap;
-  } else {
-    int screen = DefaultScreen(dpy);
-    vis = DefaultVisual(dpy, screen);
-    cmap = DefaultColormap(dpy, screen);
-  }
-  XftDraw *xd = XftDrawCreate(dpy, *win, vis, cmap);
-  if (!xd) {
+  XftDraw *xd = x11_prompt_create_draw(dpy, win, &vis, &cmap);
+  if (!xd)
     return;
-  }
   x11_draw_prompt_user_listbox_on_draw(dpy, xd, vis, cmap, state);
   XftDrawDestroy(xd);
+}
+
+static bool prompt_render_fallback(Display *dpy, Window *win,
+                                   PromptState *state, int w, int h) {
+  x11_draw_background(dpy, *win, w, h);
+  x11_set_draw_context(dpy, NULL, NULL, 0);
+  if (state->callbacks && state->callbacks->render) {
+    Checkbox_FrameBegin();
+    x11_set_draw_context(dpy, NULL, NULL, 0);
+    state->callbacks->render(state);
+  } else {
+    if (state->lb)
+      x11_draw_prompt_user_listbox(dpy, win, state);
+    x11_draw_prompt_user_edit_control(dpy, win, state);
+  }
+  XFlush(dpy);
+  return true;
 }
 
 bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
@@ -141,38 +157,13 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   int w = state->width;
   int h = state->height;
   XWindowAttributes attrs;
-  if (!XGetWindowAttributes(dpy, *win, &attrs)) {
-    x11_draw_background(dpy, *win, w, h);
-    x11_set_draw_context(dpy, NULL, NULL, 0);
-    if (state->callbacks->render != NULL) {
-      Checkbox_FrameBegin();
-      x11_set_draw_context(dpy, NULL, NULL, 0);
-      state->callbacks->render(state);
-    } else {
-      if (state->lb)
-        x11_draw_prompt_user_listbox(dpy, win, state);
-      x11_draw_prompt_user_edit_control(dpy, win, state);
-    }
-    XFlush(dpy);
-    return true;
-  }
+  if (!XGetWindowAttributes(dpy, *win, &attrs))
+    return prompt_render_fallback(dpy, win, state, w, h);
   Visual *vis = attrs.visual;
   int depth = attrs.depth;
   Colormap cmap = attrs.colormap;
-  if (!x11_pbuf_acquire(dpy, *win, w, h, depth, vis, cmap)) {
-    x11_draw_background(dpy, *win, w, h);
-    x11_set_draw_context(dpy, NULL, NULL, 0);
-    if (state->callbacks->render != NULL) {
-      Checkbox_FrameBegin();
-      state->callbacks->render(state);
-    } else {
-      if (state->lb)
-        x11_draw_prompt_user_listbox(dpy, win, state);
-      x11_draw_prompt_user_edit_control(dpy, win, state);
-    }
-    XFlush(dpy);
-    return true;
-  }
+  if (!x11_pbuf_acquire(dpy, *win, w, h, depth, vis, cmap))
+    return prompt_render_fallback(dpy, win, state, w, h);
   Pixmap dbl = pbuf_pm;
   XftDraw *xdDbl = pbuf_xd;
   x11_set_dbl_visual(dpy, vis, cmap, depth);
