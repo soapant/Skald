@@ -160,7 +160,7 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     *oh = h;
 }
 
-void Platform_ProcessPendingSubwindow(void) {
+void Platform_ProcessPendingSubWindows(void) {
   SkaldContext *_c = SkaldContext_Get();
   if (!_c || !_c->window.subwindow.pending)
     return;
