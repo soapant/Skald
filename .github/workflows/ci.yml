@@ -24,6 +24,9 @@ jobs:
       - name: Bootstrap nob
         run: cc -O2 nob.c -o nob
 
+      - name: Main Build
+        run: ./nob 
+
       - name: Check skapi layering
         run: ./nob -check
 
@@ -32,3 +35,4 @@ jobs:
 
       - name: Cross-compile for Windows
         run: ./nob -win32
+
