@@ -221,8 +221,8 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     if (outward)
       stack_dir = -stack_dir;
     int stack_y = centerY - winHeight / 2;
-    stack_y = win32_msg_stack_adjust_y(centerX - winWidth / 2, stack_y, winWidth,
-                                       winHeight, stack_dir);
+    stack_y = win32_msg_stack_adjust_y(centerX - winWidth / 2, stack_y,
+                                       winWidth, winHeight, stack_dir);
     centerY = stack_y + winHeight / 2;
   }
 

@@ -305,7 +305,9 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
   const char *title = NULL;
   if (snippets[idx].window_count > 0)
     title = Platform_GetActiveWindowTitle();
-  bool allowed = Window_ListAllows(snippets[idx].window_count, snippets[idx].whitelist, snippets[idx].windows, title);
+  bool allowed =
+      Window_ListAllows(snippets[idx].window_count, snippets[idx].whitelist,
+                        snippets[idx].windows, title);
   if (!allowed)
     return false;
   size_t tlen = strlen(snippets[idx].trigger);

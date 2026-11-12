@@ -834,15 +834,14 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
       }
     } else {
       if (!Platform_AtomicRename(tmp, dll)) {
-        log_error("feature build %s: rename %s -> %s failed", ent->d_name,
-                  tmp, dll);
+        log_error("feature build %s: rename %s -> %s failed", ent->d_name, tmp,
+                  dll);
         remove(tmp);
         continue;
       }
     }
     for (int fi = 0; fi < s_failed_count; fi++) {
-      if (strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) ==
-          0)
+      if (strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) == 0)
         s_failed[fi].src_mtime = 0;
     }
     struct utimbuf times;
@@ -860,7 +859,6 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
 static int feature_build_stale_sources(void) {
   return FeatureLoader_BuildStaleSources(false);
 }
-
 
 bool FeatureLoader_Init(void) {
   LOCK();

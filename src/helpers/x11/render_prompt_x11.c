@@ -92,8 +92,7 @@ void x11_draw_prompt_user_listbox_on_draw(Display *dpy, XftDraw *xd,
 }
 
 static XftDraw *x11_prompt_create_draw(Display *dpy, Window *win,
-                                       Visual **vis_out,
-                                       Colormap *cmap_out) {
+                                       Visual **vis_out, Colormap *cmap_out) {
   XWindowAttributes attrs;
   Visual *vis = NULL;
   Colormap cmap = 0;

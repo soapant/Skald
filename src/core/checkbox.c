@@ -284,10 +284,8 @@ bool Checkbox_Place(const CheckboxSpec *spec) {
     h = spec->h > 0 ? spec->h : CHECKBOX_BASE;
   }
 
-  CheckboxSpec *cb = checkbox_intern(spec->name,
-                                     spec->button ? PLACE_BUTTON
-                                                  : PLACE_CHECKBOX,
-                                     spec->checked);
+  CheckboxSpec *cb = checkbox_intern(
+      spec->name, spec->button ? PLACE_BUTTON : PLACE_CHECKBOX, spec->checked);
   if (!cb)
     return false;
   cb->on_click = spec->on_click;

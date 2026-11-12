@@ -538,8 +538,7 @@ void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max) {
   }
 }
 
-GpBitmap *win32_load_shell_icon_ex(const char *path,
-                                    bool use_file_attributes) {
+GpBitmap *win32_load_shell_icon_ex(const char *path, bool use_file_attributes) {
 
   UINT flags = SHGFI_ICON | SHGFI_LARGEICON;
   if (use_file_attributes)

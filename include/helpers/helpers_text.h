@@ -45,6 +45,6 @@ bool String_StartsWithCI(const char *str, const char *prefix);
 bool String_EqualsCI(const char *a, const char *b);
 int Utf8_LeadLen(unsigned char c);
 bool List_Append(PlWindowList *list, const char *item);
-bool Window_ListAllows(int window_count, bool whitelist,
-                       char *const *windows, const char *title);
+bool Window_ListAllows(int window_count, bool whitelist, char *const *windows,
+                       const char *title);
 #endif

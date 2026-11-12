@@ -7,8 +7,8 @@
 
 #define CC_COMMON_FLAGS                                                        \
   "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
-      "-Wextra", "-Wshadow", "-Wmissing-prototypes",  \
-      "-Wstrict-prototypes", "-Wformat=2", "-Wundef", "-Wvla"
+      "-Wextra", "-Wshadow", "-Wmissing-prototypes", "-Wstrict-prototypes",    \
+      "-Wformat=2", "-Wundef", "-Wvla"
 
 #if defined(_WIN32)
 #define CC_FLAGS CC_COMMON_FLAGS
@@ -49,12 +49,12 @@
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
 #define SDK_CC_FLAGS                                                           \
-  "-std=gnu17", "-DCOBJMACROS", "-MMD", "-MP", "-Wall",                  \
-      "-Wextra", "-Wno-unused-parameter"
+  "-std=gnu17", "-DCOBJMACROS", "-MMD", "-MP", "-Wall", "-Wextra",             \
+      "-Wno-unused-parameter"
 #define WIN_SDK_FLAGS                                                          \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
-      "-I/usr/x86_64-w64-mingw32/include", "-MMD", "-MP",               \
-      "-O3", "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
+      "-I/usr/x86_64-w64-mingw32/include", "-MMD", "-MP", "-O3", "-Wall",      \
+      "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
 
 static bool sanitize = false;
 static const char *sanitize_cc = NULL;
@@ -596,10 +596,9 @@ static bool build_features(void) {
     bool need_rebuild = !nob_file_exists(so);
     if (!need_rebuild) {
       if (target_win32) {
-        need_rebuild =
-            nob_needs_rebuild1(so, src) != 0 ||
-            (nob_file_exists(main_implib) &&
-             nob_needs_rebuild1(so, main_implib) != 0);
+        need_rebuild = nob_needs_rebuild1(so, src) != 0 ||
+                       (nob_file_exists(main_implib) &&
+                        nob_needs_rebuild1(so, main_implib) != 0);
       } else {
         need_rebuild = stale_with_dep(src, so, feature_dep_path(src));
       }
@@ -624,11 +623,10 @@ static bool emit_release_config(const char *dst_path) {
     return false;
   }
   Nob_String_Builder out = {0};
-  nob_sb_append_cstr(&out,
-                     "#include <stdbool.h>\n"
-                     "#include \"config_values.h\"\n\n"
-                     "// <skald-config-generated>\n"
-                     "void ConfigApply(void) {\n");
+  nob_sb_append_cstr(&out, "#include <stdbool.h>\n"
+                           "#include \"config_values.h\"\n\n"
+                           "// <skald-config-generated>\n"
+                           "void ConfigApply(void) {\n");
   bool ok = true;
   bool wrote_any = false;
   char line[512];
@@ -638,9 +636,10 @@ static bool emit_release_config(const char *dst_path) {
       p++;
     if (*p == '\n' || *p == '\r' || *p == '\0')
       continue;
-    if (strncmp(p, "#include <stdbool.h>", strlen("#include <stdbool.h>")) == 0 ||
-        strncmp(p, "#include \"config_values.h\"", strlen("#include \"config_values.h\"")) ==
+    if (strncmp(p, "#include <stdbool.h>", strlen("#include <stdbool.h>")) ==
             0 ||
+        strncmp(p, "#include \"config_values.h\"",
+                strlen("#include \"config_values.h\"")) == 0 ||
         strncmp(p, "#include \"core/types/color.h\"",
                 strlen("#include \"core/types/color.h\"")) == 0 ||
         strncmp(p, "ColorRef ", strlen("ColorRef ")) == 0)
@@ -661,8 +660,8 @@ static bool emit_release_config(const char *dst_path) {
       }
     }
     if (!matched) {
-      nob_log(NOB_ERROR, "release config: unrecognized line in %s: %s", src_path,
-              line);
+      nob_log(NOB_ERROR, "release config: unrecognized line in %s: %s",
+              src_path, line);
       ok = false;
       break;
     }
@@ -701,8 +700,8 @@ static void release_finalize(void) {
   if (win_out) {
     if (nob_file_exists(main_implib) &&
         !nob_copy_file(main_implib, "release/main.lib.a"))
-      nob_log(NOB_WARNING,
-              "release: could not copy %s to release/main.lib.a", main_implib);
+      nob_log(NOB_WARNING, "release: could not copy %s to release/main.lib.a",
+              main_implib);
   }
   nob_log(NOB_INFO,
           "Release bundle ready in release/ (run from that directory)");
@@ -1295,9 +1294,10 @@ static void chk_sk_func_scan(const char *path, int lineno, const char *buf,
     memcpy(name, buf + chk_toks[i].beg, nl);
     name[nl] = '\0';
     char msg[512];
-    snprintf(msg, sizeof(msg),
-             "function '%s' squats the sk_ API namespace outside the skapi layer",
-             name);
+    snprintf(
+        msg, sizeof(msg),
+        "function '%s' squats the sk_ API namespace outside the skapi layer",
+        name);
     check_violation(path, lineno, msg);
   }
 }
@@ -1331,9 +1331,10 @@ static void chk_sk_struct_scan(const char *path, int lineno, const char *buf,
         memcpy(name, buf + beg, nl);
         name[nl] = '\0';
         char msg[512];
-        snprintf(msg, sizeof(msg),
-                 "struct '%s' squats the Sk API namespace outside the skapi layer",
-                 name);
+        snprintf(
+            msg, sizeof(msg),
+            "struct '%s' squats the Sk API namespace outside the skapi layer",
+            name);
         check_state.struct_violations++;
         check_violation(path, lineno, msg);
       }
@@ -1356,9 +1357,10 @@ static void chk_sk_struct_scan(const char *path, int lineno, const char *buf,
           memcpy(name, buf + beg, nl);
           name[nl] = '\0';
           char msg[512];
-          snprintf(msg, sizeof(msg),
-                   "struct '%s' squats the Sk API namespace outside the skapi layer",
-                   name);
+          snprintf(
+              msg, sizeof(msg),
+              "struct '%s' squats the Sk API namespace outside the skapi layer",
+              name);
           check_state.struct_violations++;
           check_violation(path, lineno, msg);
         }
@@ -1392,9 +1394,10 @@ static void chk_sk_struct_scan(const char *path, int lineno, const char *buf,
       memcpy(name, buf + beg, nl);
       name[nl] = '\0';
       char msg[512];
-      snprintf(msg, sizeof(msg),
-               "struct '%s' squats the Sk API namespace outside the skapi layer",
-               name);
+      snprintf(
+          msg, sizeof(msg),
+          "struct '%s' squats the Sk API namespace outside the skapi layer",
+          name);
       check_state.struct_violations++;
       check_violation(path, lineno, msg);
     }
@@ -1520,8 +1523,7 @@ static void chk_include_check(const char *path, char *line, int lineno,
     check_state.skapi_violations++;
     char msg[512];
     snprintf(msg, sizeof(msg),
-             "'#include \"%s\"' is only allowed in features/ and tests/",
-             name);
+             "'#include \"%s\"' is only allowed in features/ and tests/", name);
     check_violation(path, lineno, msg);
   }
 }
@@ -1538,8 +1540,8 @@ static bool check_walk(Nob_Walk_Entry entry) {
   check_norm_path(path, norm, sizeof(norm));
   if (!check_ends_with(norm, ".c") && !check_ends_with(norm, ".h"))
     return true;
-  bool exempt = check_starts_with(norm, "features/") ||
-                check_starts_with(norm, "tests/");
+  bool exempt =
+      check_starts_with(norm, "features/") || check_starts_with(norm, "tests/");
   bool is_h = check_ends_with(norm, ".h");
   bool sk_layer_exempt = chk_layer_exempt(norm);
   check_state.files_scanned++;
@@ -1699,11 +1701,9 @@ static bool check_walk(Nob_Walk_Entry entry) {
           if (c == '{') {
             decl_buf[decl_len] = '\0';
             if (is_h)
-              chk_finish_decl(path,
-                              decl_start_line ? decl_start_line : lineno);
+              chk_finish_decl(path, decl_start_line ? decl_start_line : lineno);
             if (!sk_layer_exempt)
-              chk_sk_func_scan(path,
-                               decl_start_line ? decl_start_line : lineno,
+              chk_sk_func_scan(path, decl_start_line ? decl_start_line : lineno,
                                decl_buf, decl_len);
             decl_len = 0;
             decl_overflow = false;
@@ -1712,11 +1712,9 @@ static bool check_walk(Nob_Walk_Entry entry) {
           } else if (c == ';') {
             decl_buf[decl_len] = '\0';
             if (is_h)
-              chk_finish_decl(path,
-                              decl_start_line ? decl_start_line : lineno);
+              chk_finish_decl(path, decl_start_line ? decl_start_line : lineno);
             if (!sk_layer_exempt)
-              chk_sk_func_scan(path,
-                               decl_start_line ? decl_start_line : lineno,
+              chk_sk_func_scan(path, decl_start_line ? decl_start_line : lineno,
                                decl_buf, decl_len);
             decl_len = 0;
             decl_overflow = false;
@@ -1777,11 +1775,12 @@ int main(int argc, char **argv) {
              argv[0]);
       printf("  -win32  Cross compile for Windows using MinGW\n");
       printf("  -run    Run skald after build\n");
-      printf("  -release Build a self-contained release/ bundle: skald[.exe],\n"
-             "           sdk/, config/config.c (defaults), features/ with\n"
-             "           control_center, settings and clipboard_history,\n"
-             "           resources/ (png + ico); Windows also emits main.lib.a;\n"
-             "           no compiler objects\n");
+      printf(
+          "  -release Build a self-contained release/ bundle: skald[.exe],\n"
+          "           sdk/, config/config.c (defaults), features/ with\n"
+          "           control_center, settings and clipboard_history,\n"
+          "           resources/ (png + ico); Windows also emits main.lib.a;\n"
+          "           no compiler objects\n");
       printf("  -test   Run test suite\n");
       printf("  -asan   Build with clang -fsanitize=address,undefined\n");
       printf("  -check  Check for skapi includes outside features/tests,\n"
@@ -1830,16 +1829,17 @@ int main(int argc, char **argv) {
                                         "release/features/control_center") ||
         !nob_copy_directory_recursively("features/settings",
                                         "release/features/settings") ||
-        !nob_copy_directory_recursively(
-            "features/clipboard_history", "release/features/clipboard_history") ||
+        !nob_copy_directory_recursively("features/clipboard_history",
+                                        "release/features/clipboard_history") ||
         !nob_copy_directory_recursively("resources", "release/resources"))
       return 1;
     if (!emit_release_config("release/config/config.c")) {
       nob_log(NOB_ERROR, "release: failed to generate release/config/config.c");
       return 1;
     }
-    nob_log(NOB_INFO, "release/: config, features, resources staged (control_center, "
-                      "settings, clipboard_history)");
+    nob_log(NOB_INFO,
+            "release/: config, features, resources staged (control_center, "
+            "settings, clipboard_history)");
   }
 
   if (sanitize) {
@@ -1927,9 +1927,9 @@ int main(int argc, char **argv) {
     output = release ? "release/skald.exe" : BUILD_FOLDER "/skald_win.exe";
   } else {
 #if defined(_WIN32)
-    output = sanitize     ? "build/debug/skald_san.exe"
-             : release    ? "release/skald.exe"
-                          : "build/debug/skald.exe";
+    output = sanitize  ? "build/debug/skald_san.exe"
+             : release ? "release/skald.exe"
+                       : "build/debug/skald.exe";
 #else
     output = release ? "release/skald" : BUILD_FOLDER "/skald";
 #endif
@@ -1965,7 +1965,8 @@ int main(int argc, char **argv) {
     if (!release) {
       const char *other = "build/skald.exe";
       if (nob_file_exists(other) &&
-          nob_needs_rebuild(other, (const char **)objs.items, objs.count) != 0) {
+          nob_needs_rebuild(other, (const char **)objs.items, objs.count) !=
+              0) {
         needs_link = true;
       }
     }

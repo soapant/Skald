@@ -897,10 +897,12 @@ char *Platform_GetIconPath(char *app_path) {
       const char *sz = sizes[s];
       while (*sz == ' ')
         sz++;
-      hit = icon_try(bare, "%s/.local/share/icons/hicolor/%s/apps/%s.png", home, sz, bare);
+      hit = icon_try(bare, "%s/.local/share/icons/hicolor/%s/apps/%s.png", home,
+                     sz, bare);
       if (hit)
         return hit;
-      hit = icon_try(bare, "%s/.local/share/icons/hicolor/%s/apps/%s.svg", home, sz, bare);
+      hit = icon_try(bare, "%s/.local/share/icons/hicolor/%s/apps/%s.svg", home,
+                     sz, bare);
       if (hit)
         return hit;
     }
@@ -917,15 +919,13 @@ char *Platform_GetIconPath(char *app_path) {
     for (char *dir = strtok_r(xdg_dirs, ":", &save); dir;
          dir = strtok_r(NULL, ":", &save)) {
       for (int s = 0; sizes[s]; s++) {
-          const char *sz = sizes[s];
+        const char *sz = sizes[s];
         while (*sz == ' ')
           sz++;
-        hit = icon_try(bare, "%s/icons/hicolor/%s/apps/%s.png", dir, sz,
-                 bare);
+        hit = icon_try(bare, "%s/icons/hicolor/%s/apps/%s.png", dir, sz, bare);
         if (hit)
           return hit;
-        hit = icon_try(bare, "%s/icons/hicolor/%s/apps/%s.svg", dir, sz,
-                 bare);
+        hit = icon_try(bare, "%s/icons/hicolor/%s/apps/%s.svg", dir, sz, bare);
         if (hit)
           return hit;
         hit = icon_try(bare, "%s/icons/hicolor/%s.svg", dir, bare);
