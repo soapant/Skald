@@ -113,6 +113,17 @@ static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
   return true;
 }
 
+static bool win32_hwnd_is_popup(WindowManager *wm, HWND h) {
+  if (!wm || !h)
+    return false;
+  for (int i = 0; i < wm->popup_count; i++) {
+    Popup *p = wm->popups[i];
+    if (p && WH_TO_HWND(p->handle) == h)
+      return true;
+  }
+  return false;
+}
+
 static HDC s_bb_dc = NULL;
 static HBITMAP s_bb_bmp = NULL;
 static HBITMAP s_bb_prev = NULL;
@@ -302,6 +313,13 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (_wm && _wm->popup_count > 1) {
         Popup *_top = WindowManager_GetTopPopup(_wm);
         if (_top && WH_TO_HWND(_top->handle) == hwnd) {
+          HWND other = (HWND)lParam;
+          if (!win32_hwnd_is_popup(_wm, other)) {
+            SkaldContext_Get()->window.output_buffer[0] = '\0';
+            while (_wm->popup_count > 0)
+              WindowManager_PopPopup(_wm);
+            return 0;
+          }
           SkaldContext_Get()->window.selection_complete = true;
           return 0;
         }
@@ -316,9 +334,16 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_KILLFOCUS: {
     WindowManager *_wm = WindowManager_Get();
+    HWND other = (HWND)lParam;
     if (_wm && _wm->popup_count > 1) {
       Popup *_top = WindowManager_GetTopPopup(_wm);
       if (_top && WH_TO_HWND(_top->handle) == hwnd) {
+        if (!win32_hwnd_is_popup(_wm, other)) {
+          SkaldContext_Get()->window.output_buffer[0] = '\0';
+          while (_wm->popup_count > 0)
+            WindowManager_PopPopup(_wm);
+          return 0;
+        }
         SkaldContext_Get()->window.selection_complete = true;
         return 0;
       }
