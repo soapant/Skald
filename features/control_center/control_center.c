@@ -1627,27 +1627,29 @@ static void cc_open_actions_subwindow(void) {
                .enter = cc_subwindow_enter);
 }
 
-static void cc_on_actions_render(SkRect rect) {
+static void cc_on_actions_render(SkPlaceState st) {
   char *hotkey_str = strdup(ActionsHotkey);
-  char *plus = strchr(hotkey_str, '+');
-  *plus = ' ';
-  sk_draw_rect(.x = rect.x + 95, .y = rect.y - 2, .w = rect.w - 95, .h = rect.h,
-                 .filled = true,
-                 .color = SK_DARK_GRAY,
-                 .radius = 6);
+  if (hotkey_str) {
+    char *plus = strchr(hotkey_str, '+');
+    if (plus)
+      *plus = ' ';
+  }
 
-  if (sk_button_hovered("Actions")) {
-    sk_draw_rect(.x = rect.x + 15, .y = rect.y - 2, .w = rect.w - 15, .h = rect.h,
-                 .filled = true,
-                 .color = SK_GRAY,
+  sk_draw_rect(.x = st.rect.x + 95, .y = st.rect.y - 2, .w = st.rect.w - 95,
+               .h = st.rect.h, .filled = true, .color = SK_DARK_GRAY,
+               .radius = 6);
+
+  if (st.hovered) {
+    sk_draw_rect(.x = st.rect.x + 15, .y = st.rect.y - 2, .w = st.rect.w - 15,
+                 .h = st.rect.h, .filled = true, .color = SK_GRAY,
                  .radius = 6);
   }
 
-
-  sk_draw_text(.x = rect.x + 20, .y = rect.y - 4, .text = "Actions",
+  sk_draw_text(.x = st.rect.x + 20, .y = st.rect.y - 4, .text = "Actions",
                .align = "LEFT", .color = SK_DARK_GRAY, .fontsize = 16);
-  sk_draw_text(.x = rect.x + 100, .y = rect.y - 7, .text = hotkey_str,
-               .align = "LEFT", .fontsize = 20);
+  if (hotkey_str)
+    sk_draw_text(.x = st.rect.x + 100, .y = st.rect.y - 7, .text = hotkey_str,
+                 .align = "LEFT", .fontsize = 20);
 
   free(hotkey_str);
 }

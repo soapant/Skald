@@ -67,24 +67,29 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
     *out_down = cb_mouse.down;
 }
 
-static CheckboxSpec *checkbox_find(const char *name) {
+static CheckboxSpec *checkbox_find(const char *name, int kind) {
 
+  if (!name)
+    return NULL;
   for (int i = 0; i < checkbox_count; i++) {
-    if (strcmp(checkboxes[i].name, name) == 0)
+    if (strcmp(checkboxes[i].name, name) == 0 &&
+        checkboxes[i].button == (kind == PLACE_BUTTON))
       return &checkboxes[i];
   }
   return NULL;
 }
 
-static CheckboxSpec *checkbox_intern(const char *name, bool seed) {
+static CheckboxSpec *checkbox_intern(const char *name, int kind, bool seed) {
 
-  CheckboxSpec *cb = checkbox_find(name);
+  CheckboxSpec *cb = checkbox_find(name, kind);
   if (cb)
     return cb;
   if (checkbox_count >= CHECKBOX_MAX)
     return NULL;
   cb = &checkboxes[checkbox_count++];
   memset(cb, 0, sizeof(*cb));
+  cb->button = (kind == PLACE_BUTTON);
+  cb->checkbox = (kind == PLACE_CHECKBOX);
   cb->checked = seed;
   cb->thickness = 1;
   cb->border = true;
@@ -96,15 +101,21 @@ static CheckboxSpec *checkbox_intern(const char *name, bool seed) {
   return cb;
 }
 
-bool Checkbox_IsChecked(const char *name) {
-  CheckboxSpec *cb = name ? checkbox_find(name) : NULL;
+bool Checkbox_IsChecked(const char *name, int kind) {
+  CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
   bool r = cb ? cb->checked : false;
   return r;
 }
 
-bool Checkbox_IsHovered(const char *name) {
-  CheckboxSpec *cb = name ? checkbox_find(name) : NULL;
+bool Checkbox_IsHovered(const char *name, int kind) {
+  CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
   bool r = cb ? cb->hovered : false;
+  return r;
+}
+
+bool Checkbox_IsClicked(const char *name, int kind) {
+  CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  bool r = cb ? cb->clicked : false;
   return r;
 }
 
@@ -135,12 +146,18 @@ FontHandle s_font;
 
 void Checkbox_Draw(const CheckboxSpec *spec) {
   if (spec->render) {
-    PlRect _r = {.x = spec->x,
-                 .y = spec->y,
-                 .w = spec->w > 0 ? spec->w : (spec->button ? 100 : 16),
-                 .h = spec->h > 0 ? spec->h : (spec->button ? 24 : 16),
-                 .color = COLOR_TEXT};
-    spec->render(_r);
+    PlaceState st;
+    memset(&st, 0, sizeof(st));
+    st.rect.x = spec->x;
+    st.rect.y = spec->y;
+    st.rect.w = spec->w > 0 ? spec->w : (spec->button ? 100 : 16);
+    st.rect.h = spec->h > 0 ? spec->h : (spec->button ? 24 : 16);
+    st.name = spec->name;
+    st.kind = spec->button ? PLACE_BUTTON : PLACE_CHECKBOX;
+    st.hovered = spec->hovered;
+    st.checked = spec->checked;
+    st.clicked = spec->clicked;
+    spec->render(st);
     return;
   }
   unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
@@ -279,7 +296,10 @@ bool Checkbox_Place(const CheckboxSpec *spec) {
     h = spec->h > 0 ? spec->h : CHECKBOX_BASE;
   }
 
-  CheckboxSpec *cb = checkbox_intern(spec->name, spec->checked);
+  CheckboxSpec *cb = checkbox_intern(spec->name,
+                                     spec->button ? PLACE_BUTTON
+                                                  : PLACE_CHECKBOX,
+                                     spec->checked);
   if (!cb)
     return false;
   cb->on_click = spec->on_click;
