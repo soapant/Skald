@@ -21,8 +21,8 @@ static inline char *wm_trim_focus_title(char *title) {
 #include "core/types.h"
 #include "core/types/window.h"
 
-char *Wm_GetActiveWindowTitle();
-char *Wm_GetActiveWindowAppId();
+char *Wm_GetActiveWindowTitle(void);
+char *Wm_GetActiveWindowAppId(void);
 bool Wm_FocusByTitle(const char *title);
 char *Wm_Paste(char *content);
 PlWindowList Wm_GetWindowTitles(void);

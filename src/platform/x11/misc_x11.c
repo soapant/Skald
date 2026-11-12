@@ -237,7 +237,7 @@ bool Platform_QueryBrowser(const char *query) {
   return ok;
 }
 
-char *Platform_GetClipboardEntry() {
+char *Platform_GetClipboardEntry(void) {
   static long long next_in_ms = 0;
   static int fail_streak = 0;
   static unsigned long last_owner = 0;

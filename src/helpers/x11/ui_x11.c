@@ -71,7 +71,7 @@ void UI_SetCursorPosition(int position) {
   }
 }
 
-void UI_RedrawNow() {}
+void UI_RedrawNow(void) {}
 
 void UI_Redraw(ListBoxInfo *lb) { UI_RedrawNow(); }
 

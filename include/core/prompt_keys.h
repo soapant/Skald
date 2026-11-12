@@ -12,6 +12,6 @@ bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,
 void Prompt_Refresh(PromptState *state);
 bool Prompt_DeleteSelection(PromptState *state);
 void Prompt_InsertText(PromptState *state, const char *text, int len);
-void Prompt_RedrawNow();
+void Prompt_RedrawNow(void);
 
 #endif
