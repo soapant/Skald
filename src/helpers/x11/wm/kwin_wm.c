@@ -84,8 +84,7 @@ static char *kwin_qdbus_call(const char *args) {
   return Platform_RunTerminalCommand(cmd, false);
 }
 
-static bool kwin_write_js(const char *body, char *js_path,
-                          size_t path_cap) {
+static bool kwin_write_js(const char *body, char *js_path, size_t path_cap) {
   js_path[0] = '\0';
   int fd = kwin_make_temp_js(js_path, path_cap);
   if (fd < 0)
@@ -503,13 +502,9 @@ static PlWindowList kwin_list_windows(bool want_names) {
   return list;
 }
 
-PlWindowList get_window_titles_kwin(void) {
-  return kwin_list_windows(false);
-}
+PlWindowList get_window_titles_kwin(void) { return kwin_list_windows(false); }
 
-PlWindowList get_window_names_kwin(void) {
-  return kwin_list_windows(true);
-}
+PlWindowList get_window_names_kwin(void) { return kwin_list_windows(true); }
 
 bool close_active_window_kwin(void) {
   if (!kwin_is_active())

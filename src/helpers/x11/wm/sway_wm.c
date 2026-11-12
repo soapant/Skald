@@ -45,7 +45,6 @@ static void sway_ensure_sock(void) {
   globfree(&g);
 }
 
-
 static bool sway_bus(void) {
   sway_ensure_sock();
   const char *sock = getenv("SWAYSOCK");
@@ -117,9 +116,7 @@ bool get_app_id_sway(char *buffer, int buffer_size) {
   return sway_tree_field(buffer, buffer_size, "\"app_id\"");
 }
 
-char *paste_sway(char *content) {
-  return x11_paste_wtype(content);
-}
+char *paste_sway(char *content) { return x11_paste_wtype(content); }
 bool succeded_sway(char *output) {
   if (!output) {
     log_error("output is NULL");
@@ -134,7 +131,6 @@ bool succeded_sway(char *output) {
   }
   return true;
 }
-
 
 static bool sway_exec(const char *cmd) {
   if (!sway_bus())
@@ -327,10 +323,11 @@ static bool sway_app_for_pid(const char *json, const char *pid_pos,
   return sway_class_for_pid(pid_pos, next_pid, out, cap);
 }
 
-static PlWindowList sway_list_pid_fields(
-    bool (*extract)(const char *json, const char *pid_pos,
-                    const char *next_pid, char *out, size_t cap),
-    bool toupper_first) {
+static PlWindowList sway_list_pid_fields(bool (*extract)(const char *json,
+                                                         const char *pid_pos,
+                                                         const char *next_pid,
+                                                         char *out, size_t cap),
+                                         bool toupper_first) {
   sway_ensure_sock();
   char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
   PlWindowList list = {0};
@@ -364,8 +361,6 @@ PlWindowList get_window_names_sway(void) {
 PlWindowList get_window_titles_sway(void) {
   return sway_list_pid_fields(sway_name_for_pid, false);
 }
-
-
 
 static int sway_json_depth(const char *base, const char *pos) {
 
@@ -467,9 +462,7 @@ static int sway_key_str(const char *base, const char *from, const char *end,
   return 1;
 }
 
-bool close_active_window_sway(void) {
-  return sway_exec("swaymsg kill");
-}
+bool close_active_window_sway(void) { return sway_exec("swaymsg kill"); }
 
 bool toggle_fullscreen_active_sway(void) {
   return sway_exec("swaymsg fullscreen toggle");
@@ -562,8 +555,8 @@ bool move_active_window_to_monitor_sway(bool right) {
           int overlap = bottom - top;
           if (overlap < 0)
             overlap = 0;
-          int gap = right ? ox[i] - (ox[cur] + ow[cur])
-                          : ox[cur] - (ox[i] + ow[i]);
+          int gap =
+              right ? ox[i] - (ox[cur] + ow[cur]) : ox[cur] - (ox[i] + ow[i]);
           if (overlap > best_overlap ||
               (overlap == best_overlap && gap < best_gap)) {
             best_overlap = overlap;
@@ -599,17 +592,11 @@ bool move_active_window_to_monitor_sway(bool right) {
   return ok;
 }
 
-bool focus_window_up_sway(void) {
-  return sway_exec("swaymsg focus up");
-}
+bool focus_window_up_sway(void) { return sway_exec("swaymsg focus up"); }
 
-bool focus_window_down_sway(void) {
-  return sway_exec("swaymsg focus down");
-}
+bool focus_window_down_sway(void) { return sway_exec("swaymsg focus down"); }
 
-bool move_active_window_up_sway(void) {
-  return sway_exec("swaymsg move up");
-}
+bool move_active_window_up_sway(void) { return sway_exec("swaymsg move up"); }
 
 bool move_active_window_down_sway(void) {
   return sway_exec("swaymsg move down");
@@ -639,13 +626,9 @@ bool minimize_active_window_sway(void) {
   return ok;
 }
 
-bool focus_window_left_sway(void) {
-  return sway_exec("swaymsg focus left");
-}
+bool focus_window_left_sway(void) { return sway_exec("swaymsg focus left"); }
 
-bool focus_window_right_sway(void) {
-  return sway_exec("swaymsg focus right");
-}
+bool focus_window_right_sway(void) { return sway_exec("swaymsg focus right"); }
 
 bool move_active_window_left_sway(void) {
   return move_active_window_to_monitor_sway(false);

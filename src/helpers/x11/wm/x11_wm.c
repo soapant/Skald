@@ -460,8 +460,8 @@ static PlWindowList x11_list_client_fields(bool want_names) {
       char *dot = strchr(s, '.');
       if (dot)
         *dot = '\0';
-      if (s[0] == '\0' || !strcasecmp(s, "N/A") ||
-          !strcasecmp(s, "window") || !strcasecmp(s, "colored")) {
+      if (s[0] == '\0' || !strcasecmp(s, "N/A") || !strcasecmp(s, "window") ||
+          !strcasecmp(s, "colored")) {
         free(s);
         continue;
       }
@@ -492,9 +492,7 @@ static PlWindowList x11_list_client_fields(bool want_names) {
   return list;
 }
 
-PlWindowList x11_get_window_names(void) {
-  return x11_list_client_fields(true);
-}
+PlWindowList x11_get_window_names(void) { return x11_list_client_fields(true); }
 
 PlWindowList x11_get_window_titles(void) {
   return x11_list_client_fields(false);
@@ -623,8 +621,7 @@ static bool x11_activate_neighbor_dir(bool vertical, bool positive) {
         continue;
     }
     int gap = positive ? (axis - axis_ref) : (axis_ref - axis);
-    int cross_dist =
-        cross >= cross_ref ? cross - cross_ref : cross_ref - cross;
+    int cross_dist = cross >= cross_ref ? cross - cross_ref : cross_ref - cross;
     if (gap < best_gap || (gap == best_gap && cross_dist < best_cross)) {
       best_gap = gap;
       best_cross = cross_dist;
@@ -764,8 +761,9 @@ static bool x11_move_dir(bool right) {
   if (!display)
     return false;
   Window before = x11_focused_window(display);
-  bool moved = (ewmh_move_works != 0 && x11_move_active_window_to_monitor(right)) ||
-               i3_move_to_output(right);
+  bool moved =
+      (ewmh_move_works != 0 && x11_move_active_window_to_monitor(right)) ||
+      i3_move_to_output(right);
   if (!moved)
     return x11_activate_neighbor(right);
   if (before != None)

@@ -483,8 +483,7 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
   return found;
 }
 
-static void sk_resolve_window_list(const char *const *wl,
-                                   const char *const *bl,
+static void sk_resolve_window_list(const char *const *wl, const char *const *bl,
                                    const char *const **out_windows,
                                    bool *out_whitelist) {
   bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
@@ -2776,6 +2775,7 @@ void sk_run_every(double seconds, void (*callback)(void)) {
 }
 
 SkMetrics *sk_get_metrics(void) { return Metrics_Get(); }
+
 void *sk_get_active_prompt(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = WindowManager_GetTopPopup(wm);
@@ -2793,5 +2793,5 @@ void sk_unregister_event(SkEvent event, SkEventCallback cb) {
   EventBus_Unregister(event, cb);
 }
 void sk_close_window(void) {
-  SkaldContext_Get()->window.selection_complete = true; 
+  SkaldContext_Get()->window.selection_complete = true;
 }

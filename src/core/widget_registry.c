@@ -116,11 +116,10 @@ static void widget_render_frame(void *ud) {
   bool hoverable = (on_hover != NULL);
   if (hoverable) {
     widget_hover_poll();
-    bool inside =
-        (x >= 0x7fffffff)
-            ? false
-            : (hover_pos.x >= x && hover_pos.x < x + w && hover_pos.y >= y &&
-               hover_pos.y < y + h);
+    bool inside = (x >= 0x7fffffff)
+                      ? false
+                      : (hover_pos.x >= x && hover_pos.x < x + w &&
+                         hover_pos.y >= y && hover_pos.y < y + h);
     if (inside && !widget->hovered && on_hover && !hover_running) {
       HoverJob *job = (HoverJob *)calloc(1, sizeof(*job));
       if (job) {
@@ -438,8 +437,8 @@ static void widget_relayout(void) {
                        it->slot == WIDGET_SLOT_BOTTOM_RIGHT);
     bool from_top =
         (it->slot == WIDGET_SLOT_TOP_LEFT || it->slot == WIDGET_SLOT_TOP_RIGHT);
-    int m =
-        (it->monitor > 0 && it->monitor < WIDGET_MAX_MONITORS) ? it->monitor : 0;
+    int m = (it->monitor > 0 && it->monitor < WIDGET_MAX_MONITORS) ? it->monitor
+                                                                   : 0;
     MonSlot *st = &ms[it->slot][m];
     if (!st->known) {
       if (!Monitor_GeometryAt(m, &st->x, &st->y, &st->w, &st->h))
@@ -638,7 +637,6 @@ void widget_invalidate(PlatformWidget *widget) {
   base->dirty = true;
   RenderThread_Wake();
 }
-
 
 void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
                       int fps, bool no_bg, void (*on_click)(void),

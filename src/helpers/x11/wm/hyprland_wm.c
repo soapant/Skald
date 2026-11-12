@@ -141,10 +141,7 @@ bool get_app_id_hyprland(char *buffer, int buffer_size) {
   return hypr_parse_activewindow_field("class", buffer, buffer_size);
 }
 
-char *paste_hyprland(char *content) {
-  return x11_paste_wtype(content);
-}
-
+char *paste_hyprland(char *content) { return x11_paste_wtype(content); }
 
 static bool hypr_bus(void) {
   hypr_ensure_sig();
@@ -174,7 +171,6 @@ bool succeded_hypr(char *output) {
   }
   return true;
 }
-
 
 static bool hypr_exec(const char *cmd) {
   if (!hypr_bus())
@@ -436,13 +432,11 @@ bool minimize_active_window_hyprland(void) {
 }
 
 bool focus_window_left_hyprland(void) {
-  return hypr_exec(
-      "hyprctl dispatch 'hl.dsp.focus({ direction = \"l\" })'");
+  return hypr_exec("hyprctl dispatch 'hl.dsp.focus({ direction = \"l\" })'");
 }
 
 bool focus_window_right_hyprland(void) {
-  return hypr_exec(
-      "hyprctl dispatch 'hl.dsp.focus({ direction = \"r\" })'");
+  return hypr_exec("hyprctl dispatch 'hl.dsp.focus({ direction = \"r\" })'");
 }
 
 bool move_active_window_left_hyprland(void) {
