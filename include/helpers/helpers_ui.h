@@ -46,7 +46,6 @@ typedef enum {
 } MessageSlot;
 
 ColorRef GetRainbowColor(float t, float s, float v);
-bool UI_IsListBoxSelected(ListBoxInfo *lb);
 void UpdateTextCaret(void);
 
 #define MSG_PROMPT_GAP_DEFAULT 300

@@ -767,8 +767,7 @@ bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key) {
     pending_hotkey_vk = 0;
     pending_hotkey_mod = 0;
   }
-  bool swallow = !trigger_press && (key->ctrl);
-  return swallow;
+  return !trigger_press && (key->ctrl);
 }
 
 bool String_ContainsCI(const char *haystack, const char *needle) {

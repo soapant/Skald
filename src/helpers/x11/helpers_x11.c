@@ -601,8 +601,7 @@ bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
   if (argb) {
     pthread_mutex_unlock(&img_cache_mtx);
     Drawable drw = XftDrawDrawable(xd);
-    bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
-    return ok;
+    return x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
   }
   pthread_mutex_unlock(&img_cache_mtx);
   struct stat st;
@@ -616,8 +615,7 @@ bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
                     argb);
   pthread_mutex_unlock(&img_cache_mtx);
   Drawable drw = XftDrawDrawable(xd);
-  bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
-  return ok;
+  return x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
 }
 
 static bool x11_blit_argb(Display *dpy, Drawable drw, Visual *vis,

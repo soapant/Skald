@@ -472,10 +472,6 @@ ColorRef GetRainbowColor(float t, float s, float v) {
   }
 }
 
-bool UI_IsListBoxSelected(ListBoxInfo *lb) {
-  return lb && lb->selected_index != -1;
-}
-
 void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
                        int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,
                        int *out_gap, int *out_outward) {

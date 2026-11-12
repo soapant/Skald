@@ -483,7 +483,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           }
         }
       }
-      if (UI_IsListBoxSelected(lb)) {
+      if (lb && lb->selected_index != -1) {
         char measureBuffer[512];
         strncpy(measureBuffer, lb->items[pdis->itemID],
                 sizeof(measureBuffer) - 1);

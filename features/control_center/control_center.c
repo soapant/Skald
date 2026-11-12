@@ -1344,15 +1344,17 @@ static void cc_refresh(PromptState *state) {
     names[n] = cc_calc_label;
     n++;
   }
-  sk_populate_listbox_ex(state->lb, state->eb->filter, names, n,
-                         cc_filter_match);
+  sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
+                             .items = names, .count = n,
+                             .filter_match = cc_filter_match);
   if (state->lb->total_matches > 0)
     cc_fallback_active = false;
   if (state->lb->total_matches == 0) {
     CcEntry *fallback = cc_add_fallback();
     if (fallback && n < MAX_VISIBLE_ITEMS) {
       names[n] = fallback->label;
-      sk_populate_listbox(state->lb, "", &names[n], 1);
+      sk_populate_listbox(.lb = state->lb, .filter = "", .items = &names[n],
+                         .count = 1);
       cc_fallback_active = true;
     }
   }
@@ -1362,8 +1364,9 @@ static void cc_refresh(PromptState *state) {
 
 static void cc_subwindow_refresh(PromptState *state) {
   const char *items[] = {"Register Hotkey", "Register Alias"};
-  sk_populate_listbox(state->lb, state->eb->filter, (const char **)items,
-                      ARRAY_LEN(items));
+  sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
+                             .items = (const char **)items,
+                             .count = ARRAY_LEN(items));
 }
 
 static int cc_width = 0, cc_height = 0;
@@ -1652,7 +1655,7 @@ static void cc_on_actions_render(SkPlaceState state) {
 }
 
 static void cc_render(PromptState *state) {
-  if (state->lb && UI_IsListBoxSelected(state->lb)) {
+  if (state->lb && state->lb->selected_index != -1) {
     const char *cur = ListBoxInfo_Row(state->lb, state->lb->selected_index);
     if (cur)
       ccx_strcpy_trunc(cc_main_selected, sizeof(cc_main_selected), cur);

@@ -130,8 +130,7 @@ bool sk_launch_with_args(const char *path, const char *args) {
   if (!ExpandPath(path, expanded, sizeof(expanded))) {
     return false;
   }
-  bool r = sk_launch_with_args_platform(expanded, args);
-  return r;
+  return sk_launch_with_args_platform(expanded, args);
 }
 
 bool sk_launch_with_args_as_admin(const char *path, const char *args) {
@@ -407,7 +406,7 @@ bool sk_append_unique_line(const char *path, const char *line) {
   return ok;
 }
 
-static bool sk_filter_lines(const char *path, const char *needle,
+static bool filter_lines(const char *path, const char *needle,
                             bool match_substr) {
   SkStringList files = sk_load_file_list(path);
   const char **kept =
@@ -436,13 +435,13 @@ static bool sk_filter_lines(const char *path, const char *needle,
 bool sk_remove_line(const char *path, const char *line) {
   if (!path || !line)
     return false;
-  return sk_filter_lines(path, line, false);
+  return filter_lines(path, line, false);
 }
 
 bool sk_remove_line_contains(const char *path, const char *substr) {
   if (!path || !substr)
     return false;
-  return sk_filter_lines(path, substr, true);
+  return filter_lines(path, substr, true);
 }
 
 bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
@@ -483,7 +482,7 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
   return found;
 }
 
-static void sk_resolve_window_list(const char *const *wl, const char *const *bl,
+static void resolve_window_list(const char *const *wl, const char *const *bl,
                                    const char *const **out_windows,
                                    bool *out_whitelist) {
   bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
@@ -501,16 +500,17 @@ bool ski_register_remapping(const SkRemappingSpec *spec) {
   const char *const *bl = spec->blacklist;
   const char *const *windows = NULL;
   bool whitelist = false;
-  sk_resolve_window_list(wl, bl, &windows, &whitelist);
+  resolve_window_list(wl, bl, &windows, &whitelist);
   return remap_register_internal(spec->src, spec->dst, whitelist, windows);
 }
 
-static void sk_snippet_fire(int idx, int del) {
+static void snippet_fire(int idx, int del) {
 
   const SnippetBinding *b = snippet_get_binding(idx);
   if (!b || !b->trigger) {
     return;
   }
+  // Hackish but snippets are only a few characters
   for (int i = 0; i < del; i++) {
     Platform_EmitKey(VK_BACK, 1);
     Platform_EmitKey(VK_BACK, 0);
@@ -524,12 +524,12 @@ static void sk_snippet_fire(int idx, int del) {
 bool ski_register_snippet(const SkSnippetSpec *spec) {
   if (!spec || !spec->trigger || (!spec->text && !spec->fn))
     return false;
-  snippet_set_fire_fn(sk_snippet_fire);
+  snippet_set_fire_fn(snippet_fire);
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
   const char *const *windows = NULL;
   bool whitelist = false;
-  sk_resolve_window_list(wl, bl, &windows, &whitelist);
+  resolve_window_list(wl, bl, &windows, &whitelist);
   return snippet_register_internal(spec->trigger, spec->text, spec->fn,
                                    whitelist, windows,
                                    (void *)__builtin_return_address(0));
@@ -545,6 +545,7 @@ typedef struct {
   char icon[512];
   char owner[OWNER_PATH_MAX];
 } FeatureReg;
+
 static FeatureReg **feature_order = NULL;
 static int feature_order_count = 0;
 static int feature_order_cap = 0;
@@ -610,7 +611,7 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   const char *const *bl = spec->blacklist;
   const char *const *bw = NULL;
   bool whitelist = false;
-  sk_resolve_window_list(wl, bl, &bw, &whitelist);
+  resolve_window_list(wl, bl, &bw, &whitelist);
   HotkeyBinding binding = convert_into_hotkey_binding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
   binding.hotkey_callback_ud = spec->cb_ud;
@@ -628,6 +629,7 @@ bool ski_unregister_hotkey(const char *hotkey) {
 }
 
 void sk_disable_global_hotkeys(void) { hotkey_set_suspended(true); }
+
 void sk_enable_global_hotkeys(void) { hotkey_set_suspended(false); }
 
 int sk_hotkey_count(void) { return hotkey_count(); }
@@ -668,50 +670,30 @@ bool sk_hotkey_taken(const char *hotkey) {
   return hotkey_is_taken(key.vk_code, key.mods);
 }
 
-int sk_get_feature_list(const char **out_names, void (**out_cbs)(void),
-                        int max) {
-
-  int n = feature_order_count < max ? feature_order_count : max;
-  for (int i = 0; i < n; i++) {
-    if (out_names)
-      out_names[i] = feature_order[i]->name;
-    if (out_cbs)
-      out_cbs[i] = feature_order[i]->cb;
+SkFeatureList sk_get_feature_list(void) {
+  SkFeatureList list = {NULL, 0};
+  if (feature_order_count <= 0)
+    return list;
+  SkFeature *items =
+      (SkFeature *)malloc((size_t)feature_order_count * sizeof(*items));
+  if (!items)
+    return list;
+  for (int i = 0; i < feature_order_count; i++) {
+    items[i].name = feature_order[i]->name;
+    items[i].callback = feature_order[i]->cb;
+    items[i].icon = feature_order[i]->icon[0] ? feature_order[i]->icon : NULL;
   }
-  return n;
+  list.items = items;
+  list.count = (size_t)feature_order_count;
+  return list;
 }
 
-int sk_get_feature_list_with_icons(const char **out_names,
-                                   void (**out_cbs)(void),
-                                   const char ***out_icons, int max) {
-
-  int n = feature_order_count < max ? feature_order_count : max;
-  for (int i = 0; i < n; i++) {
-    if (out_names)
-      out_names[i] = feature_order[i]->name;
-    if (out_cbs)
-      out_cbs[i] = feature_order[i]->cb;
-  }
-  static const char **icon_ptrs = NULL;
-  static int icon_ptrs_cap = 0;
-  if (n > icon_ptrs_cap) {
-    const char **new_ptrs =
-        (const char **)realloc(icon_ptrs, (size_t)n * sizeof(const char *));
-    if (new_ptrs) {
-      icon_ptrs = new_ptrs;
-      icon_ptrs_cap = n;
-    }
-  }
-  if (icon_ptrs) {
-    for (int i = 0; i < n; i++)
-      icon_ptrs[i] = feature_order[i]->icon[0] ? feature_order[i]->icon : NULL;
-    if (out_icons)
-      *out_icons = icon_ptrs;
-  } else {
-    if (out_icons)
-      *out_icons = NULL;
-  }
-  return n;
+void sk_free_feature_list(SkFeatureList *list) {
+  if (!list)
+    return;
+  free(list->items);
+  list->items = NULL;
+  list->count = 0;
 }
 
 char *sk_get_icon_path(const char *path) {
@@ -722,7 +704,7 @@ char *sk_get_icon_path(const char *path) {
 
 int sk_get_icon_size(const char *icon_path) {
   if (!icon_path)
-    return 20;
+    return 0;
   return Platform_GetIconSize((char *)icon_path);
 }
 
@@ -730,8 +712,7 @@ char *sk_run_terminal_command(char *command) {
   if (!command) {
     return NULL;
   }
-  char *r = Platform_RunTerminalCommand(command, false);
-  return r;
+  return Platform_RunTerminalCommand(command, false);
 }
 
 char *sk_run_argv(const char *const argv[], const char *stdin_data,
@@ -752,20 +733,17 @@ char *sk_run_terminal_command_and_open(char *command) {
   if (!command) {
     return NULL;
   }
-  char *r = Platform_RunTerminalCommand(command, true);
-  return r;
+  return Platform_RunTerminalCommand(command, true);
 }
 
 bool sk_launch_detached(char *command) {
   if (!command) {
     return false;
   }
-  bool r = Platform_LaunchDetached(command);
-  return r;
+  return Platform_LaunchDetached(command);
 }
 
 bool sk_launch_terminal_at_path(char *path, char *args) {
-  bool r = false;
   if (!path) {
     return false;
   }
@@ -773,8 +751,7 @@ bool sk_launch_terminal_at_path(char *path, char *args) {
   if (!ExpandPath(path, expanded, sizeof(expanded))) {
     return false;
   }
-  r = Platform_LaunchTerminalAtPath(expanded, args);
-  return r;
+  return Platform_LaunchTerminalAtPath(expanded, args);
 }
 
 bool sk_process_running(const char *name) {
@@ -808,8 +785,11 @@ char *sk_string_inside(const char *str, char delim) {
   return String_Inside(str, delim);
 }
 char *sk_string_trim(const char *str) { return String_Trim(str); }
+
 char *sk_string_to_lower(const char *str) { return String_ToLower(str); }
+
 char *sk_string_to_upper(const char *str) { return String_ToUpper(str); }
+
 bool sk_string_starts_with(const char *str, const char *prefix) {
   return String_StartsWith(str, prefix);
 }
@@ -832,46 +812,29 @@ StringList sk_string_split(const char *str, const char *delimiter) {
 
 void sk_string_list_free(StringList *list) { StringList_Free(list); }
 
-void sk_populate_listbox(ListBoxInfo *lb, const char *filter,
-                         const char **items, int count) {
-  PopulateListBox(lb, filter, items, count, NULL);
-}
-
-void sk_populate_listbox_ex(ListBoxInfo *lb, const char *filter,
-                            const char **items, int count,
-                            bool (*filter_match)(const char *item,
-                                                 const char *filter)) {
-  PopulateListBox(lb, filter, items, count, filter_match);
+void ski_populate_listbox(const SkPopulateListboxSpec *spec) {
+  if (!spec)
+    return;
+  PopulateListBox(spec->lb, spec->filter, spec->items, spec->count,
+                  spec->filter_match);
 }
 
 bool sk_is_selected(ListBoxInfo *lb) {
   if (!lb)
     return false;
-  return UI_IsListBoxSelected(lb);
+  return lb->selected_index != -1;
 }
 
 void sk_set_edit_text(const char *text) {
-  SkaldContext *ctx = SkaldContext_Get();
-  if (!ctx) {
-    return;
-  }
   UI_SetText(text ? text : "");
 }
 
 void sk_set_edit_cursor(int position) {
-  SkaldContext *ctx = SkaldContext_Get();
-  if (!ctx) {
-    return;
-  }
   UI_SetCursorPosition(position);
 }
 
 int sk_get_edit_cursor(void) {
-  SkaldContext *ctx = SkaldContext_Get();
-  if (!ctx)
-    return 0;
-  int pos = UI_GetCursorPosition();
-  return pos;
+  return UI_GetCursorPosition();
 }
 
 void sk_get_edit_text(char *buffer, size_t cap) {
@@ -879,15 +842,10 @@ void sk_get_edit_text(char *buffer, size_t cap) {
     return;
   }
   buffer[0] = '\0';
-  SkaldContext *ctx = SkaldContext_Get();
-  if (!ctx) {
-    return;
-  }
   UI_GetCurrentTextEdit(buffer, cap);
 }
 
-static void sk_hover_popup_frame(void *ud) {
-
+static void hover_popup_frame(void *ud) {
   SkHoverPopupCtx *p = (SkHoverPopupCtx *)ud;
   if (!p || !p->render) {
     return;
@@ -904,7 +862,7 @@ static void sk_hover_popup_frame(void *ud) {
   }
 }
 
-static SkHoverPopupCtx *sk_hover_popup_ctx_new(const SkMessageSpec *spec) {
+static SkHoverPopupCtx *hover_popup_ctx_new(const SkMessageSpec *spec) {
 
   SkHoverPopupCtx *p = (SkHoverPopupCtx *)calloc(1, sizeof(*p));
   if (!p)
@@ -917,7 +875,7 @@ static SkHoverPopupCtx *sk_hover_popup_ctx_new(const SkMessageSpec *spec) {
   return p;
 }
 
-static void sk_hover_popup_ctx_free(void *ud) {
+static void hover_popup_ctx_free(void *ud) {
   SkHoverPopupCtx *p = (SkHoverPopupCtx *)ud;
   if (p)
     free(p);
@@ -939,11 +897,11 @@ void ski_message(const SkMessageSpec *spec) {
   ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
   if (spec->hover_key && spec->hover_key[0]) {
     if (spec->render) {
-      SkHoverPopupCtx *ctx = sk_hover_popup_ctx_new(spec);
+      SkHoverPopupCtx *ctx = hover_popup_ctx_new(spec);
       if (ctx) {
         HoverWidgetShow((PlHoverWidgetShowSpec){
             .key = spec->hover_key,
-            .render = sk_hover_popup_frame,
+            .render = hover_popup_frame,
             .ud = ctx,
             .owner_src = (void *)spec->render,
             .x = spec->x,
@@ -955,7 +913,7 @@ void ski_message(const SkMessageSpec *spec) {
             .bg_hex = spec->color_bg
                           ? rgb_to_hex(spec->color_bg)
                           : (spec->no_bg ? 0UL : rgb_to_hex(COLOR_BG)),
-            .release = sk_hover_popup_ctx_free,
+            .release = hover_popup_ctx_free,
             .release_ud = ctx});
       }
       return;
@@ -999,8 +957,7 @@ bool sk_launch_browser(char *url) {
   if (!url) {
     return false;
   }
-  bool r = Platform_LaunchBrowserAtUrl(url, false);
-  return r;
+  return  Platform_LaunchBrowserAtUrl(url, false);
 }
 
 bool sk_query_browser(const char *query) {
@@ -1039,7 +996,11 @@ bool sk_paste(char *content) {
   return Platform_PasteContent(content);
 }
 
-static bool sk_popup_enter(PromptState *state);
+//needed for returning of the buffer to function properly
+static bool popup_enter(PromptState *state) {
+  (void)state;
+  return true;
+}
 
 char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   if (!spec)
@@ -1062,7 +1023,7 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
     return NULL;
   PromptSpec pspec = {0};
   pspec.initial_text = initial_text;
-  pspec.enter = sk_popup_enter;
+  pspec.enter = popup_enter;
   pspec.x = x;
   pspec.y = y;
   pspec.w = w;
@@ -1111,8 +1072,7 @@ bool sk_focus_window_by_title(char *title) {
   if (!title) {
     return false;
   }
-  bool r = Platform_FocusWindow(title);
-  return r;
+  return Platform_FocusWindow(title);
 }
 
 SkWindowHandle sk_get_window_id(const char *title) {
@@ -1139,81 +1099,63 @@ bool sk_window_send_message(SkWindowHandle window, const char *atom,
 }
 
 bool sk_close_active_window(void) {
-  bool r = Platform_CloseActiveWindow();
-  return r;
+  return Platform_CloseActiveWindow();
 }
 
 bool sk_dismiss_message(const char *name) {
-  bool r = sk_dismiss_message_platform(name);
-  return r;
+  return sk_dismiss_message_platform(name);
 }
 
 bool sk_message_active(const char *name) {
-  bool r = Platform_MessageActive(name);
-  return r;
+  return Platform_MessageActive(name);
 }
 
 bool sk_toggle_fullscreen_active(void) {
-  bool r = Platform_ToggleFullscreenActive();
-  return r;
+  return Platform_ToggleFullscreenActive();
 }
 
 bool sk_move_active_window_to_monitor(bool right) {
-  bool r = Platform_MoveActiveWindowToMonitor(right);
-  return r;
+  return Platform_MoveActiveWindowToMonitor(right);
 }
 
 bool sk_move_active_window_left(void) {
-  bool r = Platform_MoveActiveWindowLeft();
-  return r;
+  return Platform_MoveActiveWindowLeft();
 }
 
 bool sk_move_active_window_right(void) {
-  bool r = Platform_MoveActiveWindowRight();
-  return r;
+  return Platform_MoveActiveWindowRight();
 }
 
 bool sk_focus_window_left(void) {
-  bool r = Platform_FocusWindowLeft();
-  return r;
+  return Platform_FocusWindowLeft();
 }
 
 bool sk_focus_window_right(void) {
-  bool r = Platform_FocusWindowRight();
-  return r;
+  return Platform_FocusWindowRight();
 }
 
 bool sk_move_active_window_up(void) {
-  bool r = Platform_MoveActiveWindowUp();
-  return r;
+  return Platform_MoveActiveWindowUp();
 }
 
 bool sk_move_active_window_down(void) {
-  bool r = Platform_MoveActiveWindowDown();
-  return r;
+  return Platform_MoveActiveWindowDown();
 }
 
 bool sk_focus_window_up(void) {
-  bool r = Platform_FocusWindowUp();
-  return r;
+  return Platform_FocusWindowUp();
 }
 
 bool sk_focus_window_down(void) {
-  bool r = Platform_FocusWindowDown();
-  return r;
+  return Platform_FocusWindowDown();
 }
 
 bool sk_toggle_minimized_active(void) {
-  bool r = Platform_MinimizeActiveWindow();
-  return r;
+  return Platform_MinimizeActiveWindow();
 }
 
 bool sk_reload_config(void) { return Config_Reload(); }
 
-static bool sk_popup_enter(PromptState *state) {
-  (void)state;
-  return true;
-}
 
 char *ski_popup(const PopupSpec *spec) {
   if (!spec)
@@ -1223,7 +1165,7 @@ char *ski_popup(const PopupSpec *spec) {
     return NULL;
   PromptSpec pspec = {0};
   pspec.placeholder = spec->placeholder;
-  pspec.enter = sk_popup_enter;
+  pspec.enter = popup_enter;
   pspec.password_mode = spec->password_mode;
   pspec.x = spec->x;
   pspec.y = spec->y;
@@ -1281,8 +1223,7 @@ bool ski_draw_text(const SkTextSpec *spec) {
   int draw_x = spec->x - (spec->no_hscroll ? 0 : ListBox_GetRowHScroll());
   const char *align = spec->align ? spec->align : "CENTER";
   FontHandle fh = spec->font;
-  bool r =
-      Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
+  return Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
                                                .y = spec->y,
                                                .text = real_text,
                                                .color = col,
@@ -1290,17 +1231,16 @@ bool ski_draw_text(const SkTextSpec *spec) {
                                                .align = (char *)align,
                                                .pad = spec->pad,
                                                .fontsize = spec->fontsize});
-  return r;
 }
 
 typedef int (*SkWrapMeasureFn)(void *ctx, const char *s, int n);
-typedef void (*SkWrapDrawFn)(void *ctx, int x, int y, const char *s, int n);
+
 typedef struct {
   unsigned long color;
   int fontsize;
 } SkWrapCtx;
 
-static void SkWrapRecord(SkCharPos *out, int maxout, int *count, int x, int y) {
+static void wrap_record(SkCharPos *out, int maxout, int *count, int x, int y) {
   int i = *count;
   (*count)++;
   if (out && i < maxout) {
@@ -1309,9 +1249,9 @@ static void SkWrapRecord(SkCharPos *out, int maxout, int *count, int x, int y) {
   }
 }
 
-static int SkWrapPlaceWord(SkWrapMeasureFn measure, SkWrapDrawFn draw,
-                           void *ctx, const char *text, int ws, int we, int wx,
-                           int rowtop, SkCharPos *out, int maxout, int *count) {
+static int wrap_place_word(SkWrapMeasureFn measure, void *ctx,
+                           const char *text, int ws, int we, int wx, int rowtop,
+                           SkCharPos *out, int maxout, int *count) {
 
   int i = ws;
   while (i < we) {
@@ -1320,16 +1260,15 @@ static int SkWrapPlaceWord(SkWrapMeasureFn measure, SkWrapDrawFn draw,
       j = we;
     int px = wx + measure(ctx, text + ws, i - ws);
     for (int m = i; m < j; m++)
-      SkWrapRecord(out, maxout, count, px, rowtop);
+      wrap_record(out, maxout, count, px, rowtop);
     i = j;
   }
-  draw(ctx, wx, rowtop, text + ws, we - ws);
   return measure(ctx, text + ws, we - ws);
 }
 
-static int SkWrapLayout(const char *text, int x0, int y0, int max_width,
-                        int line_height, SkWrapMeasureFn measure,
-                        SkWrapDrawFn draw, void *ctx, SkCharPos *out,
+static int wrap_layout(const char *text, int x0, int y0, int max_width,
+                        int line_height, SkWrapMeasureFn measure, void *ctx,
+                        SkCharPos *out,
                         int maxout) {
 
   int count = 0;
@@ -1344,7 +1283,7 @@ static int SkWrapLayout(const char *text, int x0, int y0, int max_width,
   bool has = false;
   while (p < len) {
     if (text[p] == '\n') {
-      SkWrapRecord(out, maxout, &count, x0, y0 + (row + 1) * line_height);
+      wrap_record(out, maxout, &count, x0, y0 + (row + 1) * line_height);
       row++;
       lw = 0;
       has = false;
@@ -1355,7 +1294,7 @@ static int SkWrapLayout(const char *text, int x0, int y0, int max_width,
     while (ws < len && (text[ws] == ' ' || text[ws] == '\t'))
       ws++;
     for (int m = p; m < ws; m++)
-      SkWrapRecord(out, maxout, &count, x0 + (has ? lw : 0),
+      wrap_record(out, maxout, &count, x0 + (has ? lw : 0),
                    y0 + row * line_height);
     if (ws >= len)
       break;
@@ -1394,13 +1333,13 @@ static int SkWrapLayout(const char *text, int x0, int y0, int max_width,
             n = we - c;
         }
         if (c + n >= we) {
-          lw = SkWrapPlaceWord(measure, draw, ctx, text, c, we, x0, rowtop, out,
+          lw = wrap_place_word(measure, ctx, text, c, we, x0, rowtop, out,
                                maxout, &count);
           has = true;
           c = we;
           break;
         }
-        SkWrapPlaceWord(measure, draw, ctx, text, c, c + n, x0, rowtop, out,
+        wrap_place_word(measure, ctx, text, c, c + n, x0, rowtop, out,
                         maxout, &count);
         row++;
         rowtop = y0 + row * line_height;
@@ -1417,7 +1356,7 @@ static int SkWrapLayout(const char *text, int x0, int y0, int max_width,
       has = false;
     }
     int wx = x0 + (has ? lw + spaceW : 0);
-    int pxw = SkWrapPlaceWord(measure, draw, ctx, text, ws, we, wx, rowtop, out,
+    int pxw = wrap_place_word(measure, ctx, text, ws, we, wx, rowtop, out,
                               maxout, &count);
     lw = has ? lw + spaceW + pxw : pxw;
     has = true;
@@ -1426,19 +1365,11 @@ static int SkWrapLayout(const char *text, int x0, int y0, int max_width,
   return count;
 }
 
-static int SkWrapMeasureThunk(void *ctx, const char *s, int n) {
+static int wrap_measure_thunk(void *ctx, const char *s, int n) {
 
   SkWrapCtx *c = (SkWrapCtx *)ctx;
   return Platform_MeasureTextWidth(
       (PlMeasureTextWidthSpec){.text = s, .len = n, .fontsize = c->fontsize});
-}
-
-static void SkWrapNoDraw(void *ctx, int x, int y, const char *s, int n) {
-  (void)ctx;
-  (void)x;
-  (void)y;
-  (void)s;
-  (void)n;
 }
 
 int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
@@ -1455,8 +1386,8 @@ int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
   ctx.color = 0;
   ctx.fontsize = fontsize;
   int cap = (int)strlen(spec->text) + 1;
-  int r = SkWrapLayout(spec->text, spec->x, spec->y, spec->max_width,
-                       line_height, SkWrapMeasureThunk, SkWrapNoDraw, &ctx,
+  int r = wrap_layout(spec->text, spec->x, spec->y, spec->max_width,
+                       line_height, wrap_measure_thunk, &ctx,
                        spec->out_positions, cap);
   return r;
 }
@@ -1466,8 +1397,7 @@ bool ski_place_editbox(const SkEditSpec *spec) {
     return false;
   }
   SkaldContext_Get()->window.editbox_placed = true;
-  bool r = sk_place_editbox_platform(spec);
-  return r;
+  return sk_place_editbox_platform(spec);
 }
 
 bool ski_draw_image(const SkImageSpec *spec) {
@@ -1483,8 +1413,7 @@ bool ski_draw_image(const SkImageSpec *spec) {
                                    sizeof(asset))) {
     path = asset;
   }
-  bool r = Platform_DrawImageAt(path, spec->x, spec->y, w, h);
-  return r;
+  return Platform_DrawImageAt(path, spec->x, spec->y, w, h);
 }
 
 bool ski_draw_rect(const PlRect *spec) {
@@ -1496,7 +1425,7 @@ bool ski_draw_rect(const PlRect *spec) {
   if (col == 0)
     col = COLOR_TEXT;
   col = rgb_to_hex(col);
-  bool r = Platform_DrawRectRaw((PlDrawRectRawSpec){
+  return Platform_DrawRectRaw((PlDrawRectRawSpec){
       .x = spec->x,
       .y = spec->y,
       .w = spec->w,
@@ -1507,7 +1436,6 @@ bool ski_draw_rect(const PlRect *spec) {
       .opaque = !transparent,
       .thickness = spec->thickness,
       .filled = spec->filled});
-  return r;
 }
 
 int sk_rand_num_between(int min, int max) {
@@ -1592,14 +1520,12 @@ bool ski_draw_line(const PlLine *spec) {
   col = rgb_to_hex(col);
   if (col == 0)
     col = COLOR_TEXT;
-  bool r =
-      Platform_DrawLineRaw((PlDrawLineRawSpec){.x1 = spec->x1,
+  return Platform_DrawLineRaw((PlDrawLineRawSpec){.x1 = spec->x1,
                                                .y1 = spec->y1,
                                                .x2 = spec->x2,
                                                .y2 = spec->y2,
                                                .color = col,
                                                .thickness = spec->thickness});
-  return r;
 }
 
 bool ski_draw_circle(const PlCircle *spec) {
@@ -1610,22 +1536,19 @@ bool ski_draw_circle(const PlCircle *spec) {
   col = rgb_to_hex(col);
   if (col == 0)
     col = COLOR_TEXT;
-  bool r = Platform_DrawCircleRaw(
+  return Platform_DrawCircleRaw(
       (PlDrawCircleRawSpec){.cx = spec->x,
                             .cy = spec->y,
                             .radius = spec->radius,
                             .color = col,
                             .thickness = spec->thickness});
-  return r;
 }
 
-static bool sk_listbox_begin_common(const PlListSpec *spec) {
+static bool listbox_begin_common(const PlListSpec *spec) {
   if (!spec)
     return false;
   ListBoxInfo *lb = spec->lb;
   if (!lb) {
-    if (!spec->items || spec->count <= 0)
-      return false;
     return false;
   }
   int item_h = spec->item_height ? spec->item_height : 0;
@@ -1656,7 +1579,7 @@ static bool sk_listbox_begin_common(const PlListSpec *spec) {
   return true;
 }
 
-static bool sk_listbox_next_common(SkListItemCtx *out) {
+static bool listbox_next_common(SkListItemCtx *out) {
   if (!out || !sk_list_lb)
     return false;
   if (sk_list_cur >= sk_list_visible)
@@ -1699,13 +1622,13 @@ void sk_listbox_end(void) {
 bool sk_listbox_begin(const SkListSpec *spec) {
   if (!spec)
     return false;
-  return sk_listbox_begin_common(spec);
+  return listbox_begin_common(spec);
 }
 
 bool sk_listbox_next(SkListItemCtx *out) {
   if (!out)
     return false;
-  return sk_listbox_next_common(out);
+  return listbox_next_common(out);
 }
 
 int sk_listbox_get_count(void) {
@@ -1753,8 +1676,7 @@ bool sk_button_is_clicked(const char *name) {
 }
 
 bool ski_place_checkbox(const SkCheckboxSpec *spec) {
-  bool r = Checkbox_Place(spec);
-  return r;
+  return Checkbox_Place(spec);
 }
 
 SkWindowList sk_get_all_window_titles(void) {
@@ -1772,29 +1694,23 @@ PlColor sk_get_pixel_color(SkPos pos) {
   return c;
 }
 bool sk_move_to_pos(SkPos pos) {
-  bool ok = Platform_MoveToPos(pos.x, pos.y);
-  return ok;
+  return Platform_MoveToPos(pos.x, pos.y);
 }
 bool sk_click_at_pos(SkPos pos) {
-  bool ok = sk_move_to_pos(pos) && sk_click();
-  return ok;
+  return sk_move_to_pos(pos) && sk_click();
 }
 bool sk_left_click(void) {
-  bool ok = Platform_ClickButton(1);
-  return ok;
+  return Platform_ClickButton(1);
 }
 bool sk_right_click(void) {
-  bool ok = Platform_ClickButton(2);
-  return ok;
+  return Platform_ClickButton(2);
 }
 bool sk_emit_mouse_button(int button, bool down) {
-  bool ok = Platform_MouseButtonDown(button, down);
-  return ok;
+  return Platform_MouseButtonDown(button, down);
 }
 bool sk_emit_mouse_button_at(SkPos pos, int button, bool down) {
   bool moved = sk_move_to_pos(pos);
-  bool ok = moved && Platform_MouseButtonDown(button, down);
-  return ok;
+  return moved && Platform_MouseButtonDown(button, down);
 }
 bool sk_click_button_at(SkPos pos, int button) {
   bool moved = sk_move_to_pos(pos);
@@ -1803,15 +1719,13 @@ bool sk_click_button_at(SkPos pos, int button) {
     return false;
   }
   sk_sleep(0.02);
-  bool up = Platform_MouseButtonDown(button, false);
-  return up;
+  return Platform_MouseButtonDown(button, false);
 }
 bool sk_mouse_scroll(int notches) {
-  bool ok = Platform_MouseScroll(notches);
-  return ok;
+  return Platform_MouseScroll(notches);
 }
 
-static bool sk_rel_to_abs(int rx, int ry, SkPos *out) {
+static bool rel_to_abs(int rx, int ry, SkPos *out) {
 
   if (!out) {
     return false;
@@ -1827,56 +1741,53 @@ static bool sk_rel_to_abs(int rx, int ry, SkPos *out) {
 
 bool sk_move_to_pos_rel(int rx, int ry) {
   SkPos abs;
-  if (!sk_rel_to_abs(rx, ry, &abs)) {
+  if (!rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  bool ok = sk_move_to_pos(abs);
-  return ok;
+  return sk_move_to_pos(abs);
 }
 
 bool sk_click_at_pos_rel(int rx, int ry) {
   SkPos abs;
-  if (!sk_rel_to_abs(rx, ry, &abs)) {
+  if (!rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  bool ok = sk_click_at_pos(abs);
-  return ok;
+  return sk_click_at_pos(abs);
 }
 
 bool sk_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
   SkPos abs;
-  if (!sk_rel_to_abs(rx, ry, &abs)) {
+  if (!rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  bool ok = sk_emit_mouse_button_at(abs, button, down);
-  return ok;
+  return sk_emit_mouse_button_at(abs, button, down);
 }
 
 bool sk_click_button_at_rel(int rx, int ry, int button) {
   SkPos abs;
-  if (!sk_rel_to_abs(rx, ry, &abs)) {
+  if (!rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  bool ok = sk_click_button_at(abs, button);
-  return ok;
+  return sk_click_button_at(abs, button);
 }
 
 void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
 
 bool sk_replay_hotkey(int vk, int mods) {
-  bool matched = hotkey_process(vk, mods);
-  return matched;
+  return hotkey_process(vk, mods);
 }
-static bool sk_type_text_common(const char *s) {
+static bool type_text_common(const char *s) {
   if (!s)
     return false;
   char *old = Platform_GetClipboardEntry();
+  //yes this is literally just ctrl c ctrl v
   Platform_CopyToClipboard(s);
   Platform_EmitKey(VK_LCONTROL, 1);
   Platform_EmitKey('V', 1);
   Platform_EmitKey('V', 0);
   Platform_EmitKey(VK_LCONTROL, 0);
   WindowManager *wm = WindowManager_Get();
+  // we have to wait ~200ms for the WM to process the paste event before restoring the clipboard
   for (int i = 0; i < 40; i++) {
     if (wm)
       Platform_WM_ProcessEvents(wm);
@@ -1889,7 +1800,7 @@ static bool sk_type_text_common(const char *s) {
   return true;
 }
 
-bool sk_type_text(const char *s) { return sk_type_text_common(s); }
+bool sk_type_text(const char *s) { return type_text_common(s); }
 
 void sk_sleep(double seconds) { sk_sleep_platform(seconds); }
 
@@ -1911,7 +1822,7 @@ typedef struct {
   char owner[512];
 } SkThreadCtx;
 
-static void *sk_thread_trampoline(void *p) {
+static void *thread_trampoline(void *p) {
   SkThreadCtx *ctx = (SkThreadCtx *)p;
   SkThreadFunc fn = ctx->fn;
   void *arg = ctx->arg;
@@ -1921,7 +1832,7 @@ static void *sk_thread_trampoline(void *p) {
   return ret;
 }
 
-static SkThread sk_thread_create_ex(SkThreadFunc fn, void *arg,
+static SkThread thread_create_ex(SkThreadFunc fn, void *arg,
                                     void *owner_src) {
   if (!fn)
     return NULL;
@@ -1934,7 +1845,7 @@ static SkThread sk_thread_create_ex(SkThreadFunc fn, void *arg,
   Platform_GetModuleOwnerPath(owner_src ? owner_src : (void *)(uintptr_t)fn,
                               ctx->owner, sizeof(ctx->owner));
   ThreadRegistry_Add(ctx, ctx->owner);
-  void *thread = Platform_ThreadCreate(sk_thread_trampoline, ctx);
+  void *thread = Platform_ThreadCreate(thread_trampoline, ctx);
   if (!thread) {
     ThreadRegistry_Finish(ctx);
     free(ctx);
@@ -1944,7 +1855,7 @@ static SkThread sk_thread_create_ex(SkThreadFunc fn, void *arg,
 }
 
 SkThread sk_thread_create(SkThreadFunc fn, void *arg) {
-  return sk_thread_create_ex(fn, arg, NULL);
+  return thread_create_ex(fn, arg, NULL);
 }
 
 void sk_thread_join(SkThread thread) {
@@ -2369,6 +2280,7 @@ typedef struct {
   char name[64];
   SkLibrary handle;
 } LibraryEntry;
+
 static LibraryEntry library_registry[32];
 static int registry_count = 0;
 
@@ -2399,18 +2311,6 @@ SkLibrary sk_library_get(const char *name) {
   return NULL;
 }
 
-static bool monitor_name_matches(const char *a, const char *b) {
-  if (!a || !b)
-    return false;
-  size_t la = strlen(a), lb = strlen(b);
-  if (la == 0 || lb == 0)
-    return false;
-  for (size_t i = 0; i + lb <= la; i++)
-    if (strncasecmp(a + i, b, lb) == 0)
-      return true;
-  return false;
-}
-
 SkWidget *sk_widget_create(const SkWidgetSpec *spec) {
   if (!spec)
     return NULL;
@@ -2422,7 +2322,7 @@ SkWidget *sk_widget_create(const SkWidgetSpec *spec) {
       SkMonitorInfo info;
       if (!sk_monitor_at(i, &info))
         continue;
-      if (monitor_name_matches(info.name, copy.monitor_name)) {
+      if (strcmp(info.name, copy.monitor_name) == 0) {
         found = i;
         break;
       }
@@ -2542,20 +2442,20 @@ static SkCcEntry cc_entries[4096];
 static char cc_dep_owners[SK_CC_DEP_OWNERS][OWNER_PATH_MAX];
 static int cc_dep_owner_count = 0;
 
-static bool sk_cc_dep_seen(const char *owner) {
+static bool cc_dep_seen(const char *owner) {
   for (int i = 0; i < cc_dep_owner_count; i++)
     if (strcmp(cc_dep_owners[i], owner) == 0)
       return true;
   return false;
 }
 
-static void sk_cc_dep_mark(const char *owner) {
+static void cc_dep_mark(const char *owner) {
   if (cc_dep_owner_count >= SK_CC_DEP_OWNERS)
     return;
   snprintf(cc_dep_owners[cc_dep_owner_count++], OWNER_PATH_MAX, "%s", owner);
 }
 
-static const char *sk_cc_dup(char *dst, size_t cap, const char *src) {
+static const char *cc_dup(char *dst, size_t cap, const char *src) {
   snprintf(dst, cap, "%s", src ? src : "");
   return dst;
 }
@@ -2587,21 +2487,21 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   e->pub.on_tab = spec->on_tab;
   e->pub.on_action = spec->on_action;
   e->pub.display_name =
-      sk_cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
+      cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
   char icon_asset[MAX_PATH];
   if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
       FeaturePath_ResolveAssetPath(__builtin_return_address(0), spec->icon,
                                    icon_asset, sizeof(icon_asset))) {
-    e->pub.icon = sk_cc_dup(e->icon, sizeof(e->icon), icon_asset);
+    e->pub.icon = cc_dup(e->icon, sizeof(e->icon), icon_asset);
   } else {
-    e->pub.icon = sk_cc_dup(e->icon, sizeof(e->icon), spec->icon);
+    e->pub.icon = cc_dup(e->icon, sizeof(e->icon), spec->icon);
   }
-  e->pub.type = sk_cc_dup(e->type, sizeof(e->type), spec->type);
+  e->pub.type = cc_dup(e->type, sizeof(e->type), spec->type);
   if (spec->internal_name) {
-    e->pub.internal_name = sk_cc_dup(e->internal_name, sizeof(e->internal_name),
+    e->pub.internal_name = cc_dup(e->internal_name, sizeof(e->internal_name),
                                      spec->internal_name);
   } else {
-    e->pub.internal_name = sk_cc_dup(e->internal_name, sizeof(e->internal_name),
+    e->pub.internal_name = cc_dup(e->internal_name, sizeof(e->internal_name),
                                      spec->display_name);
   }
   void *anchor = (void *)(uintptr_t)spec->on_enter;
@@ -2620,8 +2520,8 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   if (!anchor)
     anchor = (void *)(uintptr_t)spec->on_action;
   Owner_ResolveForFunc(anchor, e->owner, sizeof(e->owner));
-  if (e->owner[0] && !sk_cc_dep_seen(e->owner)) {
-    sk_cc_dep_mark(e->owner);
+  if (e->owner[0] && !cc_dep_seen(e->owner)) {
+    cc_dep_mark(e->owner);
     cc_add_dep("control_center.c", e->owner);
   }
   if (spec->type && strcmp(spec->type, "Feature") == 0)
@@ -2720,6 +2620,7 @@ void ski_window(const SkPromptSpec *spec) {
 const char *sk_get_user_name(void) { return Platform_GetRealUser(); }
 
 bool sk_is_root(void) { return Platform_IsRunningAsRoot(); }
+
 void sk_reload_feature(char *name) { FeatureLoader_Reload(name); }
 
 int sk_get_pid(void) { return sk_get_pid_platform(); }
@@ -2751,7 +2652,7 @@ typedef struct {
   void (*callback)(void);
 } SkRunEveryArgs;
 
-static void *sk_run_every_thread(void *arg) {
+static void *run_every_thread(void *arg) {
   SkRunEveryArgs *args = (SkRunEveryArgs *)arg;
   while (true) {
     sk_sleep(args->seconds);
@@ -2771,7 +2672,7 @@ void sk_run_every(double seconds, void (*callback)(void)) {
   }
   args->seconds = seconds;
   args->callback = callback;
-  sk_thread_create_ex(sk_run_every_thread, args, (void *)(uintptr_t)callback);
+  thread_create_ex(run_every_thread, args, (void *)(uintptr_t)callback);
 }
 
 SkMetrics *sk_get_metrics(void) { return Metrics_Get(); }
