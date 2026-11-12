@@ -38,7 +38,7 @@ char *Wm_GetActiveWindowTitle(void) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
       return buffer;
   }
-  log_error("Coulnt Get Active Window Title");
+  log_error("Couldnt Get Active Window Title");
   return NULL;
 }
 
