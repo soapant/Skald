@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -155,4 +156,35 @@ bool FeaturePath_DataDirExists(const char *stem) {
   struct stat st;
   return stat(stemdir, &st) == 0 && S_ISDIR(st.st_mode);
 #endif
+}
+
+bool File_CopyPath(const char *src, const char *dst) {
+  FILE *in = fopen(src, "rb");
+  if (!in) {
+    log_error("copy_file: open src %s failed (%s)", src, strerror(errno));
+    return false;
+  }
+  FILE *out = fopen(dst, "wb");
+  if (!out) {
+    log_error("copy_file: open dst %s failed (%s)", dst, strerror(errno));
+    fclose(in);
+    return false;
+  }
+  char buf[8192];
+  size_t n;
+  bool ok = true;
+  while ((n = fread(buf, 1, sizeof(buf), in)) > 0) {
+    if (fwrite(buf, 1, n, out) != n) {
+      ok = false;
+      break;
+    }
+  }
+  if (ferror(in))
+    ok = false;
+  fclose(in);
+  if (fclose(out) != 0)
+    ok = false;
+  if (!ok)
+    remove(dst);
+  return ok;
 }

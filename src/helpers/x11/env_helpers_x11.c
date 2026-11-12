@@ -110,10 +110,10 @@ void x11_env_apply_to_current_process(const X11SessionEnv *env) {
 
 bool x11_env_is_running_as_root(void) { return Platform_IsRunningAsRoot(); }
 
-bool x11_env_daemon_exec(char *const argv[]) {
+pid_t x11_env_detach_fork(void) {
   pid_t pid = fork();
   if (pid < 0)
-    return false;
+    return -1;
   if (pid == 0) {
     setsid();
     pid_t pid2 = fork();
@@ -129,40 +129,51 @@ bool x11_env_daemon_exec(char *const argv[]) {
       if (fd > 2)
         close(fd);
     }
-    execvp(argv[0], argv);
-    _exit(127);
+    return 0;
   }
   int st = 0;
   waitpid(pid, &st, 0);
+  return pid;
+}
+
+bool x11_env_daemon_exec(char *const argv[]) {
+  pid_t p = x11_env_detach_fork();
+  if (p < 0)
+    return false;
+  if (p == 0) {
+    execvp(argv[0], argv);
+    _exit(127);
+  }
   return true;
 }
 
 bool x11_env_daemon_exec_with_env(char *const argv[],
                                   const X11SessionEnv *env) {
-  pid_t pid = fork();
-  if (pid < 0)
+  pid_t p = x11_env_detach_fork();
+  if (p < 0)
     return false;
-  if (pid == 0) {
-    setsid();
-    pid_t pid2 = fork();
-    if (pid2 < 0)
-      _exit(1);
-    if (pid2 > 0)
-      _exit(0);
-    int fd = open("/dev/null", O_RDWR);
-    if (fd >= 0) {
-      dup2(fd, STDIN_FILENO);
-      dup2(fd, STDOUT_FILENO);
-      dup2(fd, STDERR_FILENO);
-      if (fd > 2)
-        close(fd);
-    }
+  if (p == 0) {
     if (env)
       x11_env_apply_to_current_process(env);
     execvp(argv[0], argv);
     _exit(127);
   }
-  int st = 0;
-  waitpid(pid, &st, 0);
   return true;
+}
+
+char *x11_paste_wtype(char *content) {
+  if (!content) {
+    log_error("content is NULL");
+    return NULL;
+  }
+  const char *argv[] = {"wtype", content, NULL};
+  int status = 0;
+  char *out = Platform_RunArgvCapture(argv, NULL, &status);
+  if (status == 127) {
+    free(out);
+    out = NULL;
+  }
+  if (!out)
+    log_error("paste via wtype failed");
+  return out;
 }

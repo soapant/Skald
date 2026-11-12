@@ -1,5 +1,6 @@
 #include "core/feature_loader.h"
 #include "helpers/helpers_key.h"
+#include "helpers/helpers_fs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,37 +67,6 @@ typedef struct {
 } LoadedFeature;
 
 static int reload_seq = 0;
-
-static bool copy_file(const char *src, const char *dst) {
-  FILE *in = fopen(src, "rb");
-  if (!in) {
-    log_error("copy_file: open src %s failed (%s)", src, strerror(errno));
-    return false;
-  }
-  FILE *out = fopen(dst, "wb");
-  if (!out) {
-    log_error("copy_file: open dst %s failed (%s)", dst, strerror(errno));
-    fclose(in);
-    return false;
-  }
-  char buf[8192];
-  size_t n;
-  bool ok = true;
-  while ((n = fread(buf, 1, sizeof(buf), in)) > 0) {
-    if (fwrite(buf, 1, n, out) != n) {
-      ok = false;
-      break;
-    }
-  }
-  if (ferror(in))
-    ok = false;
-  fclose(in);
-  if (fclose(out) != 0)
-    ok = false;
-  if (!ok)
-    remove(dst);
-  return ok;
-}
 
 static LoadedFeature *features = NULL;
 static int feature_count = 0;
@@ -767,24 +737,26 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
   return true;
 }
 
-static int feature_build_stale_sources(void) {
+int FeatureLoader_BuildStaleSources(bool hot_reload) {
   const char *ext = Platform_LibExtension();
   if (!ext)
     return 0;
   if (!FeaturePath || !FeaturePath[0])
     return 0;
-  Platform_MkdirIfNotExists("build");
-  Platform_MkdirIfNotExists("build/features");
+  if (!hot_reload) {
+    Platform_MkdirIfNotExists("build");
+    Platform_MkdirIfNotExists("build/features");
+  }
   DIR *dir = opendir(FeaturePath);
   if (!dir)
     return 0;
   static struct {
-    char dir[64];
+    char dir[256];
     time_t src_mtime;
   } s_failed[64];
   static int s_failed_count = 0;
   struct dirent *ent;
-  int built = 0;
+  int done = 0;
   while ((ent = readdir(dir)) != NULL) {
     if (ent->d_name[0] == '.')
       continue;
@@ -831,7 +803,8 @@ static int feature_build_stale_sources(void) {
     if (outStr) {
       ok = (status == 0);
       if (!ok)
-        log_error("feature build %s failed (exit %d):\n%s", ent->d_name,
+        log_error("%s %s failed (exit %d):\n%s",
+                  hot_reload ? "hot-reload" : "feature build", ent->d_name,
                   status, outStr);
       free(outStr);
     } else {
@@ -847,27 +820,47 @@ static int feature_build_stale_sources(void) {
       }
       continue;
     }
-    if (!Platform_AtomicRename(tmp, dll)) {
-      log_error("feature build %s: rename %s -> %s failed", ent->d_name, tmp,
-                dll);
+    if (hot_reload) {
+      bool reloaded_ok = FeatureLoader_ReloadFrom(ent->d_name, tmp);
       remove(tmp);
-      continue;
+      if (!reloaded_ok) {
+        if (s_failed_count < 64) {
+          snprintf(s_failed[s_failed_count].dir,
+                   sizeof(s_failed[s_failed_count].dir), "%s", ent->d_name);
+          s_failed[s_failed_count].src_mtime = st_src.st_mtime;
+          s_failed_count++;
+        }
+        continue;
+      }
+    } else {
+      if (!Platform_AtomicRename(tmp, dll)) {
+        log_error("feature build %s: rename %s -> %s failed", ent->d_name,
+                  tmp, dll);
+        remove(tmp);
+        continue;
+      }
     }
-    struct utimbuf times;
-    times.actime = st_src.st_mtime;
-    times.modtime = st_src.st_mtime;
-    utime(dll, &times);
     for (int fi = 0; fi < s_failed_count; fi++) {
       if (strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) ==
           0)
         s_failed[fi].src_mtime = 0;
     }
-    built++;
-    log_info("feature build: %s from source", ent->d_name);
+    struct utimbuf times;
+    times.actime = st_src.st_mtime;
+    times.modtime = st_src.st_mtime;
+    utime(dll, &times);
+    done++;
+    if (!hot_reload)
+      log_info("feature build: %s from source", ent->d_name);
   }
   closedir(dir);
-  return built;
+  return done;
 }
+
+static int feature_build_stale_sources(void) {
+  return FeatureLoader_BuildStaleSources(false);
+}
+
 
 bool FeatureLoader_Init(void) {
   LOCK();
@@ -916,15 +909,19 @@ bool FeatureLoader_Init(void) {
   return true;
 }
 
+static void call_feature_shutdown(LibHandle handle) {
+  typedef void (*ShutdownFn)(void);
+  ShutdownFn shut =
+      (ShutdownFn)Platform_GetSymbol(handle, "SkaldFeatureShutdown");
+  if (shut)
+    shut();
+}
+
 void FeatureLoader_Shutdown(void) {
   LOCK();
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
-      typedef void (*ShutdownFn)(void);
-      ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(features[i].handle,
-                                                       "SkaldFeatureShutdown");
-      if (shut)
-        shut();
+      call_feature_shutdown(features[i].handle);
       cap_purge_owner(NULL, features[i].path);
       hotkey_purge_owner(NULL, features[i].path);
       snippet_purge_owner(NULL, features[i].path);
@@ -963,7 +960,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       char uniquepath[1024];
       snprintf(uniquepath, sizeof(uniquepath), "%s.hot%d", path_copy,
                ++reload_seq);
-      if (!copy_file(src, uniquepath)) {
+      if (!File_CopyPath(src, uniquepath)) {
         log_error("reload %s: copy failed (keeping old)", name);
         UNLOCK();
         return false;
@@ -1035,11 +1032,7 @@ void FeatureLoader_ReloadAll(void) {
   LOCK();
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
-      typedef void (*ShutdownFn)(void);
-      ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(features[i].handle,
-                                                       "SkaldFeatureShutdown");
-      if (shut)
-        shut();
+      call_feature_shutdown(features[i].handle);
       {
         char loaded[512];
         fl_copy(loaded, sizeof(loaded),

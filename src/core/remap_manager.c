@@ -41,29 +41,6 @@ static bool remap_window_eq(const char *a, const char *b) {
   return strcmp(a, b) == 0;
 }
 
-static bool remap_window_allowed(RemapBinding *b, const char *title) {
-  if (!b)
-    return true;
-  if (b->window_count == 0)
-    return !b->whitelist;
-  if (!b->whitelist) {
-    for (int j = 0; j < b->window_count; j++) {
-      if (b->windows[j] && b->windows[j][0] &&
-          String_ContainsCI(title, b->windows[j]))
-        return false;
-    }
-    return true;
-  }
-  if (!title)
-    return false;
-  for (int j = 0; j < b->window_count; j++) {
-    if (b->windows[j] && b->windows[j][0] &&
-        String_ContainsCI(title, b->windows[j]))
-      return true;
-  }
-  return false;
-}
-
 bool remap_register_internal(const char *src, const char *dst, bool whitelist,
                              const char *const *windows) {
   if (!src || !dst)
@@ -450,7 +427,7 @@ bool remap_handle_vk(int vk_code, int value) {
     title = Platform_GetActiveWindowTitle();
   for (int i = 0; i < remap_count; i++) {
     if (remaps[i].window_count > 0)
-      allowed[i] = remap_window_allowed(&remaps[i], title);
+      allowed[i] = Window_ListAllows(remaps[i].window_count, remaps[i].whitelist, remaps[i].windows, title);
   }
 
   for (int i = 0; i < remap_count; i++) {

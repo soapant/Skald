@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "core/feature_path.h"
 #include "helpers/helpers_fs.h"
 
@@ -16,7 +17,7 @@ static int fp_lower(int c) {
   return c;
 }
 
-static int fp_strnicmp(const char *a, const char *b, size_t n) {
+static int fp_lower_cmp(const char *a, const char *b, size_t n) {
   for (size_t i = 0; i < n; i++) {
     int ca = fp_lower((unsigned char)a[i]);
     int cb = fp_lower((unsigned char)b[i]);
@@ -28,16 +29,12 @@ static int fp_strnicmp(const char *a, const char *b, size_t n) {
   return 0;
 }
 
+static int fp_strnicmp(const char *a, const char *b, size_t n) {
+  return fp_lower_cmp(a, b, n);
+}
+
 static int fp_strcasecmp(const char *a, const char *b) {
-  size_t i = 0;
-  for (;; i++) {
-    int ca = fp_lower((unsigned char)a[i]);
-    int cb = fp_lower((unsigned char)b[i]);
-    if (ca != cb)
-      return ca - cb;
-    if (ca == 0)
-      return 0;
-  }
+  return fp_lower_cmp(a, b, SIZE_MAX);
 }
 
 void FeaturePath_SanitizeStem(const char *src, char *out, size_t out_len) {

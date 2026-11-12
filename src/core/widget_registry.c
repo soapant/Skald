@@ -7,6 +7,7 @@
 #include "platform/wm_platform.h"
 #include "helpers/helpers_monitor.h"
 #include "platform/widget.h"
+#include "helpers/helpers_owner.h"
 #include "core/hover_widget.h"
 #include "helpers/helpers_render_thread.h"
 #include "platform/draw.h"
@@ -186,20 +187,6 @@ static void widget_owner_path(void *addr, char *out, size_t n) {
   Platform_GetModuleOwnerPath(addr, out, n);
 }
 
-static const char *widget_owner_basename(const char *p, char *out, size_t n) {
-  if (!p || !p[0]) {
-    if (n)
-      out[0] = '\0';
-    return out;
-  }
-  const char *s = p;
-  for (const char *q = p; *q; q++)
-    if (*q == '/' || *q == '\\')
-      s = q + 1;
-  snprintf(out, n, "%s", s);
-  return out;
-}
-
 static bool widget_owner_matches(const Widget *widget, const char *a,
                                  const char *b) {
   if (!widget->owner)
@@ -209,14 +196,14 @@ static bool widget_owner_matches(const Widget *widget, const char *a,
   if (b && b[0] && strcmp(widget->owner, b) == 0)
     return true;
   char ab[512], bb[512], wb[512];
-  widget_owner_basename(widget->owner, wb, sizeof(wb));
+  Owner_ModuleBasename(widget->owner, wb, sizeof(wb));
   if (a && a[0]) {
-    widget_owner_basename(a, ab, sizeof(ab));
+    Owner_ModuleBasename(a, ab, sizeof(ab));
     if (strcmp(wb, ab) == 0)
       return true;
   }
   if (b && b[0]) {
-    widget_owner_basename(b, bb, sizeof(bb));
+    Owner_ModuleBasename(b, bb, sizeof(bb));
     if (strcmp(wb, bb) == 0)
       return true;
   }
@@ -294,7 +281,7 @@ void widget_destroy(Widget *widget) {
 
 void widget_purge_owner(const char *path_a, const char *path_b,
                         unsigned generation) {
-  if ((!path_a || !path_a[0]) && (!path_b || !path_b[0]))
+  if (Owner_PurgeInactive(path_a, path_b))
     return;
 
   bool matched = false;

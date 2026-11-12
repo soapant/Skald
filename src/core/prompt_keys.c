@@ -32,13 +32,11 @@ void Prompt_Refresh(PromptState *state) {
   }
 }
 
-bool Prompt_DeleteSelection(PromptState *state) {
-  if (!state)
-    return false;
+static bool prompt_keys_selection(PromptState *state, int *out_ss,
+                                  int *out_se) {
   int ss = 0, se = 0;
-  if (!EditState_GetSelection(&ss, &se)) {
+  if (!EditState_GetSelection(&ss, &se))
     return false;
-  }
   if (se < ss) {
     int t = ss;
     ss = se;
@@ -49,6 +47,18 @@ bool Prompt_DeleteSelection(PromptState *state) {
     ss = 0;
   if (se > len)
     se = len;
+  *out_ss = ss;
+  *out_se = se;
+  return true;
+}
+
+bool Prompt_DeleteSelection(PromptState *state) {
+  if (!state)
+    return false;
+  int ss = 0, se = 0;
+  int len = (int)strlen(state->eb->filter);
+  if (!prompt_keys_selection(state, &ss, &se))
+    return false;
   if (se > ss) {
     memmove(state->eb->filter + ss, state->eb->filter + se, len - se + 1);
     state->eb->cursor = ss;
@@ -209,17 +219,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   }
   if (ctrl && (vk == 'C' || vk == 'c')) {
     int ss = 0, se = 0;
-    if (EditState_GetSelection(&ss, &se)) {
-      if (se < ss) {
-        int t = ss;
-        ss = se;
-        se = t;
-      }
-      int len = (int)strlen(state->eb->filter);
-      if (ss < 0)
-        ss = 0;
-      if (se > len)
-        se = len;
+    if (prompt_keys_selection(state, &ss, &se)) {
       if (se > ss) {
         char buf[512];
         int n = se - ss;

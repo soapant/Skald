@@ -20,6 +20,7 @@
 #include <windows.h>
 #endif
 #include "core/window_manager.h"
+#include "helpers/helpers_fs.h"
 
 #define CONFISRC "config/config.c"
 #define CONFISTART_MARK "// <skald-config-generated>"
@@ -29,37 +30,6 @@ static const char *confiout_path(void) {
   static char path[256];
   snprintf(path, sizeof(path), "build/config%s", Platform_LibExtension());
   return path;
-}
-
-static bool conficopy_file(const char *src, const char *dst) {
-  FILE *in = fopen(src, "rb");
-  if (!in) {
-    log_error("config copy: open src %s failed (%s)", src, strerror(errno));
-    return false;
-  }
-  FILE *out = fopen(dst, "wb");
-  if (!out) {
-    log_error("config copy: open dst %s failed (%s)", dst, strerror(errno));
-    fclose(in);
-    return false;
-  }
-  char buf[8192];
-  size_t n;
-  bool ok = true;
-  while ((n = fread(buf, 1, sizeof(buf), in)) > 0) {
-    if (fwrite(buf, 1, n, out) != n) {
-      ok = false;
-      break;
-    }
-  }
-  if (ferror(in))
-    ok = false;
-  fclose(in);
-  if (fclose(out) != 0)
-    ok = false;
-  if (!ok)
-    remove(dst);
-  return ok;
 }
 
 typedef struct {
@@ -312,7 +282,7 @@ static int config_build_load_store(void) {
   snprintf(uniq, sizeof(uniq), "build/config.hot%d%s", ++cfseq, lib_ext);
   {
 
-    bool ok = conficopy_file(out, uniq);
+    bool ok = File_CopyPath(out, uniq);
 
     if (!ok) {
       log_error("config copy failed, keeping current");

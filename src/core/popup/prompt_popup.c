@@ -315,35 +315,38 @@ CloseCallback PromptPopup_TakeOnClose(Popup *p) {
   return cb;
 }
 
-PromptState *PromptPopup_FindState(const ListBoxInfo *lb) {
+static Popup *prompt_find_popup(bool (*match)(Popup *p, void *arg),
+                                void *arg) {
   WindowManager *wm = WindowManager_Get();
-  if (wm) {
-    for (int i = wm->popup_count - 1; i >= 0; i--) {
-      Popup *p = wm->popups[i];
-      if (!p || p->type != POPUP_PROMPT || !p->user_data)
-        continue;
-      PromptState *ps = (PromptState *)p->user_data;
-      if (ps->lb == lb)
-        return ps;
-    }
+  if (!wm)
+    return NULL;
+  for (int i = wm->popup_count - 1; i >= 0; i--) {
+    Popup *p = wm->popups[i];
+    if (!p || p->type != POPUP_PROMPT || !p->user_data)
+      continue;
+    if (match(p, arg))
+      return p;
   }
   return NULL;
+}
+
+static bool prompt_lb_matches(Popup *p, void *arg) {
+  return ((PromptState *)p->user_data)->lb == (const ListBoxInfo *)arg;
+}
+
+static bool prompt_handle_matches(Popup *p, void *arg) {
+  return WH_EQUALS(p->handle, *(WindowHandle *)arg);
+}
+
+PromptState *PromptPopup_FindState(const ListBoxInfo *lb) {
+  Popup *p = prompt_find_popup(prompt_lb_matches, (void *)lb);
+  return p ? (PromptState *)p->user_data : NULL;
 }
 
 Popup *PromptPopup_FindPopupByHandle(WindowHandle handle) {
   if (WH_EQUALS(handle, WH_NULL))
     return NULL;
-  WindowManager *wm = WindowManager_Get();
-  if (wm) {
-    for (int i = wm->popup_count - 1; i >= 0; i--) {
-      Popup *p = wm->popups[i];
-      if (!p || p->type != POPUP_PROMPT || !p->user_data)
-        continue;
-      if (WH_EQUALS(p->handle, handle))
-        return p;
-    }
-  }
-  return NULL;
+  return prompt_find_popup(prompt_handle_matches, &handle);
 }
 
 PromptState *PromptPopup_GetTopPromptState(void) {

@@ -45,6 +45,15 @@ static void sway_ensure_sock(void) {
   globfree(&g);
 }
 
+
+static bool sway_bus(void) {
+  sway_ensure_sock();
+  const char *sock = getenv("SWAYSOCK");
+  if (!sock || !sock[0])
+    sock = getenv("I3SOCK");
+  return sway_sock_live(sock);
+}
+
 static bool sway_tree_field(char *buffer, int buffer_size, const char *key) {
   if (!buffer || buffer_size <= 0) {
     log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null",
@@ -109,20 +118,7 @@ bool get_app_id_sway(char *buffer, int buffer_size) {
 }
 
 char *paste_sway(char *content) {
-  if (!content) {
-    log_error("content is NULL");
-    return NULL;
-  }
-  const char *argv[] = {"wtype", content, NULL};
-  int status = 0;
-  char *out = Platform_RunArgvCapture(argv, NULL, &status);
-  if (status == 127) {
-    free(out);
-    out = NULL;
-  }
-  if (!out)
-    log_error("paste via wtype failed");
-  return out;
+  return x11_paste_wtype(content);
 }
 bool succeded_sway(char *output) {
   if (!output) {
@@ -137,6 +133,16 @@ bool succeded_sway(char *output) {
     }
   }
   return true;
+}
+
+
+static bool sway_exec(const char *cmd) {
+  if (!sway_bus())
+    return false;
+  char *out = Platform_RunTerminalCommand(cmd, false);
+  bool ok = succeded_sway(out);
+  free(out);
+  return ok;
 }
 
 static bool sway_focus_by_con_id(int con_id) {
@@ -297,9 +303,9 @@ static bool sway_name_for_pid(const char *json, const char *pid_pos,
   return sway_json_string(colon, out, cap, next_pid);
 }
 
-static bool sway_app_for_pid(const char *pid_pos, const char *next_pid,
-                             char *out, size_t cap) {
-
+static bool sway_app_for_pid(const char *json, const char *pid_pos,
+                             const char *next_pid, char *out, size_t cap) {
+  (void)json;
   const char *app = strstr(pid_pos, "\"app_id\":");
   if (app && (!next_pid || app < next_pid)) {
     if (strncmp(app, "\"app_id\": \"", 11) == 0) {
@@ -323,36 +329,10 @@ static bool sway_app_for_pid(const char *pid_pos, const char *next_pid,
   return false;
 }
 
-PlWindowList get_window_names_sway() {
-  sway_ensure_sock();
-  char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
-  PlWindowList list = {0};
-  if (!json || !*json) {
-    log_error("output is NULL or empty");
-    free(json);
-    return list;
-  }
-  for (char *p = json; (p = strstr(p, "\"pid\":")); p += 6) {
-    char *next = strstr(p + 6, "\"pid\":");
-    char buf[256];
-    if (!sway_app_for_pid(p, next, buf, sizeof(buf)))
-      continue;
-    if (!buf[0] || !strcmp(buf, "null"))
-      continue;
-    if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored"))
-      continue;
-    buf[0] = toupper((unsigned char)buf[0]);
-    char **tmp = realloc(list.windows, (list.count + 1) * sizeof(char *));
-    if (!tmp)
-      break;
-    list.windows = tmp;
-    list.windows[list.count++] = strdup(buf);
-  }
-  free(json);
-  return list;
-}
-
-PlWindowList get_window_titles_sway() {
+static PlWindowList sway_list_pid_fields(
+    bool (*extract)(const char *json, const char *pid_pos,
+                    const char *next_pid, char *out, size_t cap),
+    bool toupper_first) {
   sway_ensure_sock();
   char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
   PlWindowList list = {0};
@@ -364,12 +344,14 @@ PlWindowList get_window_titles_sway() {
   for (char *p = json; (p = strstr(p, "\"pid\":")); p += 6) {
     char *next = strstr(p + 6, "\"pid\":");
     char buf[512];
-    if (!sway_name_for_pid(json, p, next, buf, sizeof(buf)))
+    if (!extract(json, p, next, buf, sizeof(buf)))
       continue;
     if (!buf[0] || !strcmp(buf, "null"))
       continue;
     if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored"))
       continue;
+    if (toupper_first)
+      buf[0] = toupper((unsigned char)buf[0]);
     char **tmp = realloc(list.windows, (list.count + 1) * sizeof(char *));
     if (!tmp)
       break;
@@ -379,6 +361,16 @@ PlWindowList get_window_titles_sway() {
   free(json);
   return list;
 }
+
+PlWindowList get_window_names_sway(void) {
+  return sway_list_pid_fields(sway_app_for_pid, true);
+}
+
+PlWindowList get_window_titles_sway(void) {
+  return sway_list_pid_fields(sway_name_for_pid, false);
+}
+
+
 
 static int sway_json_depth(const char *base, const char *pos) {
 
@@ -478,37 +470,15 @@ static int sway_key_str(const char *base, const char *from, const char *end,
 }
 
 bool close_active_window_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
-    return false;
-  char *out = Platform_RunTerminalCommand("swaymsg kill", false);
-  bool ok = succeded_sway(out);
-  free(out);
-  return ok;
+  return sway_exec("swaymsg kill");
 }
 
 bool toggle_fullscreen_active_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
-    return false;
-  char *out = Platform_RunTerminalCommand("swaymsg fullscreen toggle", false);
-  bool ok = succeded_sway(out);
-  free(out);
-  return ok;
+  return sway_exec("swaymsg fullscreen toggle");
 }
 
 bool move_active_window_to_monitor_sway(bool right) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
+  if (!sway_bus())
     return false;
   char *outs = Platform_RunTerminalCommand("swaymsg -t get_outputs", false);
   if (outs && outs[0]) {
@@ -643,55 +613,19 @@ bool move_active_window_to_monitor_sway(bool right) {
 }
 
 bool focus_window_up_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
-    return false;
-  char *out = Platform_RunTerminalCommand("swaymsg focus up", false);
-  bool ok = succeded_sway(out);
-  free(out);
-  return ok;
+  return sway_exec("swaymsg focus up");
 }
 
 bool focus_window_down_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
-    return false;
-  char *out = Platform_RunTerminalCommand("swaymsg focus down", false);
-  bool ok = succeded_sway(out);
-  free(out);
-  return ok;
+  return sway_exec("swaymsg focus down");
 }
 
 bool move_active_window_up_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
-    return false;
-  char *out = Platform_RunTerminalCommand("swaymsg move up", false);
-  bool ok = succeded_sway(out);
-  free(out);
-  return ok;
+  return sway_exec("swaymsg move up");
 }
 
 bool move_active_window_down_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
-    return false;
-  char *out = Platform_RunTerminalCommand("swaymsg move down", false);
-  bool ok = succeded_sway(out);
-  free(out);
-  return ok;
+  return sway_exec("swaymsg move down");
 }
 
 bool inject_key_sway(int vk, int down) {
@@ -701,11 +635,7 @@ bool inject_key_sway(int vk, int down) {
 }
 
 bool minimize_active_window_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
+  if (!sway_bus())
     return false;
   char *out = Platform_RunTerminalCommand("swaymsg move scratchpad", false);
   bool ok = succeded_sway(out);
@@ -723,29 +653,11 @@ bool minimize_active_window_sway(void) {
 }
 
 bool focus_window_left_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
-    return false;
-  char *out = Platform_RunTerminalCommand("swaymsg focus left", false);
-  bool ok = succeded_sway(out);
-  free(out);
-  return ok;
+  return sway_exec("swaymsg focus left");
 }
 
 bool focus_window_right_sway(void) {
-  sway_ensure_sock();
-  const char *sock = getenv("SWAYSOCK");
-  if (!sock || !sock[0])
-    sock = getenv("I3SOCK");
-  if (!sway_sock_live(sock))
-    return false;
-  char *out = Platform_RunTerminalCommand("swaymsg focus right", false);
-  bool ok = succeded_sway(out);
-  free(out);
-  return ok;
+  return sway_exec("swaymsg focus right");
 }
 
 bool move_active_window_left_sway(void) {
