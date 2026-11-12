@@ -1,4 +1,5 @@
 #include "helpers/x11/bg_image_x11.h"
+#include "platform/x11/drawing_x11.h"
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
 #include <pthread.h>
@@ -199,23 +200,7 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
   }
 
   XImage img;
-  memset(&img, 0, sizeof(img));
-  img.width = w;
-  img.height = h;
-  img.xoffset = 0;
-  img.format = ZPixmap;
-  img.data = (char *)crop;
-  img.byte_order = ImageByteOrder(dpy);
-  img.bitmap_unit = BitmapUnit(dpy);
-  img.bitmap_bit_order = BitmapBitOrder(dpy);
-  img.bitmap_pad = 32;
-  img.depth = 32;
-  img.bytes_per_line = w * 4;
-  img.bits_per_pixel = 32;
-  img.red_mask = 0xff0000;
-  img.green_mask = 0x00ff00;
-  img.blue_mask = 0x0000ff;
-  img.obdata = NULL;
+  x11_init_argb_image(dpy, &img, crop, w, h, 0xff0000, 0x00ff00, 0x0000ff);
   bool ok = false;
   if (XInitImage(&img)) {
     GC gc = XCreateGC(dpy, pm, 0, NULL);
