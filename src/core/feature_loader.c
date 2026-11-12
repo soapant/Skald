@@ -6,6 +6,8 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <utime.h>
 
 #include "deps/log.h"
 #include "platform/lib.h"
@@ -765,6 +767,108 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
   return true;
 }
 
+static int feature_build_stale_sources(void) {
+  const char *ext = Platform_LibExtension();
+  if (!ext)
+    return 0;
+  if (!FeaturePath || !FeaturePath[0])
+    return 0;
+  Platform_MkdirIfNotExists("build");
+  Platform_MkdirIfNotExists("build/features");
+  DIR *dir = opendir(FeaturePath);
+  if (!dir)
+    return 0;
+  static struct {
+    char dir[64];
+    time_t src_mtime;
+  } s_failed[64];
+  static int s_failed_count = 0;
+  struct dirent *ent;
+  int built = 0;
+  while ((ent = readdir(dir)) != NULL) {
+    if (ent->d_name[0] == '.')
+      continue;
+    char subpath[512];
+    snprintf(subpath, sizeof(subpath), "%s/%s", FeaturePath, ent->d_name);
+    struct stat st;
+    if (stat(subpath, &st) != 0 || !S_ISDIR(st.st_mode))
+      continue;
+    char src[512], dll[512];
+    snprintf(src, sizeof(src), "%s/%s.c", subpath, ent->d_name);
+    snprintf(dll, sizeof(dll), "build/features/%s%s", ent->d_name, ext);
+    struct stat st_src, st_dll;
+    if (stat(src, &st_src) != 0)
+      continue;
+    if (stat(dll, &st_dll) == 0 && st_src.st_mtime <= st_dll.st_mtime)
+      continue;
+    bool known_bad = false;
+    for (int fi = 0; fi < s_failed_count; fi++) {
+      if (s_failed[fi].src_mtime == st_src.st_mtime &&
+          strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) ==
+              0) {
+        known_bad = true;
+        break;
+      }
+    }
+    if (known_bad)
+      continue;
+    static unsigned build_seq = 0;
+    char tmp[1024];
+    snprintf(tmp, sizeof(tmp), "%s.tmp.%u", dll, ++build_seq);
+    char cmd[4096];
+    if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd))) {
+      remove(tmp);
+      continue;
+    }
+#if defined(_WIN32)
+    const char *argv[] = {"cmd", "/c", cmd, NULL};
+#else
+    const char *argv[] = {"sh", "-c", cmd, NULL};
+#endif
+    int status = -1;
+    char *outStr = Platform_RunArgvCapture(argv, NULL, &status);
+    bool ok = false;
+    if (outStr) {
+      ok = (status == 0);
+      if (!ok)
+        log_error("feature build %s failed (exit %d):\n%s", ent->d_name,
+                  status, outStr);
+      free(outStr);
+    } else {
+      ok = true;
+    }
+    if (!ok) {
+      remove(tmp);
+      if (s_failed_count < 64) {
+        snprintf(s_failed[s_failed_count].dir,
+                 sizeof(s_failed[s_failed_count].dir), "%s", ent->d_name);
+        s_failed[s_failed_count].src_mtime = st_src.st_mtime;
+        s_failed_count++;
+      }
+      continue;
+    }
+    if (!Platform_AtomicRename(tmp, dll)) {
+      log_error("feature build %s: rename %s -> %s failed", ent->d_name, tmp,
+                dll);
+      remove(tmp);
+      continue;
+    }
+    struct utimbuf times;
+    times.actime = st_src.st_mtime;
+    times.modtime = st_src.st_mtime;
+    utime(dll, &times);
+    for (int fi = 0; fi < s_failed_count; fi++) {
+      if (strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) ==
+          0)
+        s_failed[fi].src_mtime = 0;
+    }
+    built++;
+    log_info("feature build: %s from source", ent->d_name);
+  }
+  closedir(dir);
+  return built;
+}
+
 bool FeatureLoader_Init(void) {
   LOCK();
   feature_count = 0;
@@ -799,6 +903,9 @@ bool FeatureLoader_Init(void) {
       closedir(d);
     }
   }
+  int built = feature_build_stale_sources();
+  if (built > 0)
+    log_info("FeatureLoader_Init: built %d feature(s) from source", built);
   FeatureLoader_LoadAllFromDir("build/features");
   DeferredInit_RunAll();
   LOCK();
