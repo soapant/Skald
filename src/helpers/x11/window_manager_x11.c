@@ -164,6 +164,10 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
     top->vtable->on_key(top, &key);
 
   x11_drain_selection_complete(dpy, wm);
+  Popup *cur_top = WindowManager_GetTopPopup(wm);
+  if (cur_top && cur_top->vtable && cur_top->vtable->on_render)
+    cur_top->vtable->on_render(cur_top);
+  XFlush(dpy);
 }
 
 static void x11_handle_key_release(Display *dpy, XKeyEvent *ev) {
