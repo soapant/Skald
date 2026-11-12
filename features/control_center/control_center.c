@@ -1504,7 +1504,7 @@ static void cc_subwindow_reg_render(PromptState *state) {
     reg_flashing = false;
 
   unsigned long rect_color = reg_flashing ? SK_GRAY : SK_DARK_GRAY;
-  unsigned long text_color = reg_flashing ? SK_DARK_GREEN : SK_GREY;
+  unsigned long text_color = reg_flashing ? SK_DARK_GREEN : SK_GRAY;
 
   sk_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
                .color = SK_GRAY, .align = "LEFT");

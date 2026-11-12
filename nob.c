@@ -164,9 +164,8 @@ static bool collect_source(Nob_Walk_Entry entry) {
             return true;
       }
       bool is_feature = false;
-      // hardcoded until skald releases
-      if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
-          nob_sv_starts_with(path, nob_sv_from_cstr("src\\features\\"))) {
+      if (nob_sv_starts_with(path, nob_sv_from_cstr("features/")) ||
+          nob_sv_starts_with(path, nob_sv_from_cstr("features\\"))) {
         is_feature = true;
       }
       if (is_feature) {
@@ -1390,7 +1389,7 @@ static void chk_include_check(const char *path, char *line, int lineno,
     check_state.skapi_violations++;
     char msg[512];
     snprintf(msg, sizeof(msg),
-             "'#include \"%s\"' is only allowed in src/features/ and tests/",
+             "'#include \"%s\"' is only allowed in features/ and tests/",
              name);
     check_violation(path, lineno, msg);
   }
@@ -1408,7 +1407,7 @@ static bool check_walk(Nob_Walk_Entry entry) {
   check_norm_path(path, norm, sizeof(norm));
   if (!check_ends_with(norm, ".c") && !check_ends_with(norm, ".h"))
     return true;
-  bool exempt = check_starts_with(norm, "src/features/") ||
+  bool exempt = check_starts_with(norm, "features/") ||
                 check_starts_with(norm, "tests/");
   bool is_h = check_ends_with(norm, ".h");
   bool sk_layer_exempt = chk_layer_exempt(norm);
@@ -1621,6 +1620,8 @@ static bool check_layering(void) {
     return false;
   if (!nob_walk_dir("include", check_walk))
     return false;
+  if (!nob_walk_dir("features", check_walk))
+    return false;
   if (!nob_walk_dir("tests", check_walk))
     return false;
   printf("check: scanned %d files, %d skapi violation(s), %d function-name "
@@ -1711,6 +1712,10 @@ int main(int argc, char **argv) {
 
   if (!nob_walk_dir(SRC_FOLDER, collect_source)) {
     nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
+    return 1;
+  }
+  if (!nob_walk_dir("features", collect_source)) {
+    nob_log(NOB_ERROR, "Failed to walk features");
     return 1;
   }
   if (!nob_walk_dir("tests", collect_source)) {
