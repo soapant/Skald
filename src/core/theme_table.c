@@ -89,7 +89,15 @@ static const ThemeEntry themes[] = {
     {"pastel", RGB(38, 36, 48), RGB(238, 236, 245), RGB(30, 29, 40),
      RGB(238, 236, 245), RGB(96, 93, 112)},
     {"mono-warm", RGB(45, 40, 38), RGB(226, 216, 206), RGB(32, 29, 27),
-     RGB(196, 106, 96), RGB(210, 180, 140)}};
+     RGB(196, 106, 96), RGB(210, 180, 140)},
+    {"modus-operandi", RGB(255, 255, 255), RGB(0, 0, 0), RGB(218, 229, 236),
+     RGB(0, 0, 0), RGB(159, 159, 159)},
+    {"modus-vivendi", RGB(0, 0, 0), RGB(255, 255, 255), RGB(47, 56, 73),
+     RGB(255, 255, 255), RGB(100, 100, 100)},
+    {"modus-operandi-tinted", RGB(251, 247, 240), RGB(0, 0, 0),
+     RGB(241, 213, 208), RGB(0, 0, 0), RGB(159, 150, 144)},
+    {"modus-vivendi-tinted", RGB(13, 14, 28), RGB(255, 255, 255),
+     RGB(48, 58, 111), RGB(255, 255, 255), RGB(97, 100, 122)}};
 
 static bool theme_name_eq(const char *a, const char *b) {
   if (!a || !b)
