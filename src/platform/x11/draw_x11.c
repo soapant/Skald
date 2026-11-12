@@ -1,26 +1,4 @@
-#include "helpers/helpers_text.h"
-#include <X11/Xft/Xft.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/Xlib.h>
-#include <string.h>
-#include <X11/X.h>
-#include <fontconfig/fontconfig.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include "platform/draw.h"
-#include "platform/platform.h"
-#include "helpers/helpers_ui.h"
-#include "core/prompt_geometry.h"
-#include "helpers/helpers_ui.h"
-#include "core/draw_state.h"
-#include "core/listbox_hover.h"
-#include "core/editbox.h"
-#include "platform/x11/drawing_x11.h"
-#include "helpers/x11/display_x11.h"
 #include "helpers/x11/draw_x11.h"
-#include "config_values.h"
-#include "core/context.h"
-#include "core/types/window.h"
 #define RAW_LINE_CAP 4096
 
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {

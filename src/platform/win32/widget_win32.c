@@ -1,20 +1,3 @@
-#include <windows.h>
-#include <wingdi.h>
-#include <stdlib.h>
-#include <string.h>
-#include "core/types/color.h"
-#include "config_values.h"
-#include "platform/widget.h"
-#include "core/widget_registry.h"
-#include "platform/draw.h"
-#include "core/draw_state.h"
-#include "helpers/win32/win32_state.h"
-#include "helpers/helpers_render_thread.h"
-#include "helpers/helpers_ui.h"
-#include "helpers/win32/common_ui_win32.h"
-#include "core/widget_registry.h"
-#include "deps/log.h"
-#include "helpers/win32/bg_image_win32.h"
 #include "helpers/win32/widget_win32.h"
 
 void Platform_Widget_DrainClicks(void) {

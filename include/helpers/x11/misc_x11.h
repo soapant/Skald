@@ -3,6 +3,20 @@
 
 #include <sys/types.h>
 #include <stdbool.h>
+#include <sys/stat.h>
+#include "helpers/helpers_fs.h"
+#include <errno.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <time.h>
+#include <linux/input-event-codes.h>
+#include <stdint.h>
+#include <strings.h>
+#include "platform/platform.h"
 
 const char *x11_get_session_display(void);
 const char *x11_get_session_xauthority(void);

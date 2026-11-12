@@ -1,28 +1,4 @@
-#include <stdlib.h>
-#include <time.h>
-#include <pthread.h>
-#include <X11/Xlib.h>
-#include <X11/Xft/Xft.h>
-#include <X11/X.h>
-#include <X11/extensions/Xrender.h>
-#include <fontconfig/fontconfig.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "helpers/x11/display_x11.h"
-#include "platform/x11/drawing_x11.h"
 #include "helpers/x11/message_popup_x11.h"
-#include "helpers/x11/window_factory_x11.h"
-#include "platform/platform.h"
-#include "helpers/helpers_ui.h"
-#include "platform/wm_platform.h"
-#include "platform/draw.h"
-#include "config_values.h"
-#include "core/context.h"
-#include "core/types/color.h"
-#include "core/types/window.h"
-#include "core/window_manager.h"
 
 void Platform_HoverMessageRelease(const char *key) {
   Display *dpy = x11_get_display();

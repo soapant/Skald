@@ -1,22 +1,4 @@
-#include "helpers/helpers_text.h"
-#include "config_values.h"
-#include "core/types/window.h"
-#include "core/types/color.h"
-#include "core/types/prompt.h"
-#include "platform/draw.h"
-#include "core/prompt_geometry.h"
-#include "core/editbox.h"
-#include "platform/platform.h"
-#include "helpers/win32/win32_state.h"
 #include "helpers/win32/draw_win32.h"
-#include "helpers/helpers_ui.h"
-#include "core/draw_state.h"
-#include "deps/log.h"
-#include <stdio.h>
-#include <string.h>
-#include <objidl.h>
-#include <shellapi.h>
-#include <gdiplus/gdiplus.h>
 
 __thread HFONT g_sizeFonts[WIN32_SIZE_FONT_SLOTS] = {NULL};
 

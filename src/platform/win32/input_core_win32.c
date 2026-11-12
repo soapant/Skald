@@ -1,20 +1,4 @@
-#include <windows.h>
-#include <stdbool.h>
-#include <string.h>
-#include "core/types/keys.h"
-#include "core/types/window.h"
-#include "config_values.h"
-#include "deps/log.h"
-#include "core/context.h"
-#include "core/hotkey_manager.h"
-#include "helpers/helpers_hotkey.h"
-#include "platform/platform.h"
-#include "core/window_manager.h"
-#include "core/snippet_manager.h"
-#include "core/remap_manager.h"
-#include "helpers/helpers_input_state.h"
 #include "helpers/win32/input_core_win32.h"
-#include "core/hotkey_manager.h"
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   POINT pt;

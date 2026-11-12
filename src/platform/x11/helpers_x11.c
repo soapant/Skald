@@ -10,21 +10,9 @@
 #include <fontconfig/fcfreetype.h>
 #include <X11/extensions/shape.h>
 #include <unistd.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <X11/X.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/render.h>
-#include <X11/extensions/shapeconst.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/stat.h>
-
-#include "helpers/x11/display_x11.h"
+#include "helpers/x11/helpers_x11.h"
 #include "helpers/x11/window_factory_x11.h"
-#include "deps/log.h"
+
 #include "core/window_manager.h"
 #include "helpers/x11/bg_image_x11.h"
 #include "core/prompt_geometry.h"
