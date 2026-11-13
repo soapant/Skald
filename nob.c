@@ -1783,6 +1783,10 @@ static bool check_walk(Nob_Walk_Entry entry) {
             if (!sk_layer_exempt)
               chk_sk_func_scan(path, decl_start_line ? decl_start_line : lineno,
                                decl_buf, decl_len);
+            if (!chk_ci_platform_layer(norm))
+              chk_platform_func_scan(path,
+                                     decl_start_line ? decl_start_line : lineno,
+                                     decl_buf, decl_len);
             decl_len = 0;
             decl_overflow = false;
             decl_start_line = 0;
@@ -1794,6 +1798,10 @@ static bool check_walk(Nob_Walk_Entry entry) {
             if (!sk_layer_exempt)
               chk_sk_func_scan(path, decl_start_line ? decl_start_line : lineno,
                                decl_buf, decl_len);
+            if (!chk_ci_platform_layer(norm))
+              chk_platform_func_scan(path,
+                                     decl_start_line ? decl_start_line : lineno,
+                                     decl_buf, decl_len);
             decl_len = 0;
             decl_overflow = false;
             decl_start_line = 0;

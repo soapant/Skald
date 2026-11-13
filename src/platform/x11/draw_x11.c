@@ -185,7 +185,7 @@ void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
                             .fontsize = FontSize});
 }
 
-static void platform_draw_editbox_part(PromptState *state, Display *dpy,
+static void draw_editbox_part(PromptState *state, Display *dpy,
                                        XftDraw *xd, Visual *vis, Colormap cmap,
                                        FontHandle font, int part) {
   x11_set_draw_context(dpy, xd, vis, cmap);
@@ -203,19 +203,19 @@ void x11_draw_edit_text(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
   if (!state)
     return;
-  platform_draw_editbox_part(state, dpy, xd, vis, cmap, font,
+  draw_editbox_part(state, dpy, xd, vis, cmap, font,
                              EDITBOX_PART_TEXT);
 }
 
 void x11_draw_edit_tint(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
-  platform_draw_editbox_part(state, dpy, xd, vis, cmap, font,
+  draw_editbox_part(state, dpy, xd, vis, cmap, font,
                              EDITBOX_PART_TINT);
 }
 
 void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
                              Visual *vis, Colormap cmap, FontHandle font) {
-  platform_draw_editbox_part(state, dpy, xd, vis, cmap, font,
+  draw_editbox_part(state, dpy, xd, vis, cmap, font,
                              EDITBOX_PART_CARET);
 }
 

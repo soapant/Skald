@@ -156,21 +156,21 @@ bool ski_add_dep(const char *dep_name, const char *owner_file) {
   return cc_add_dep(dep_name, owner_file);
 }
 
-unsigned sk_cap_generation(void) { return cap_generation(); }
+unsigned sk_cap_generation(void) { return Cap_Generation(); }
 void ski_cap_register(const char *key, void *fn) {
-  cap_register_abi(key, CAP_ABI_V1, fn);
+  Cap_RegisterAbi(key, CAP_ABI_V1, fn);
 }
 void *ski_cap_resolve(const char *key) {
-  return cap_resolve_abi(key, CAP_ABI_V1);
+  return Cap_ResolveAbi(key, CAP_ABI_V1);
 }
 void sk_cap_register_abi(const char *key, unsigned abi, void *fn) {
-  cap_register_abi(key, abi, (void *)fn);
+  Cap_RegisterAbi(key, abi, (void *)fn);
 }
 void *sk_cap_resolve_abi(const char *key, unsigned abi) {
-  return cap_resolve_abi(key, abi);
+  return Cap_ResolveAbi(key, abi);
 }
 void sk_cap_bind_declare(const char *key, void *consumer) {
-  cap_bind_declare(key, consumer);
+  Cap_BindDeclare(key, consumer);
 }
 
 static bool sk_resolve_caller_path(void *caller_ret, const char *name,
@@ -506,7 +506,7 @@ bool ski_register_remapping(const SkRemappingSpec *spec) {
 
 static void snippet_fire(int idx, int del) {
 
-  const SnippetBinding *b = snippet_get_binding(idx);
+  const SnippetBinding *b = Snippet_GetBinding(idx);
   if (!b || !b->trigger) {
     return;
   }
@@ -524,19 +524,19 @@ static void snippet_fire(int idx, int del) {
 bool ski_register_snippet(const SkSnippetSpec *spec) {
   if (!spec || !spec->trigger || (!spec->text && !spec->fn))
     return false;
-  snippet_set_fire_fn(snippet_fire);
+  Snippet_SetFireFn(snippet_fire);
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
   const char *const *windows;
   bool whitelist;
   resolve_window_list(wl, bl, &windows, &whitelist);
-  return snippet_register_internal(spec->trigger, spec->text, spec->fn,
+  return Snippet_RegisterInternal(spec->trigger, spec->text, spec->fn,
                                    whitelist, windows,
                                    (void *)__builtin_return_address(0));
 }
 
 bool ski_unregister_snippet(const char *trigger) {
-  return snippet_unregister_internal(trigger);
+  return Snippet_UnregisterInternal(trigger);
 }
 
 typedef struct {
@@ -590,7 +590,7 @@ static bool feature_list_add(const char *name, void (*cb)(void),
   return true;
 }
 
-void feature_list_purge_owner(const char *path_a, const char *path_b) {
+void FeatureList_PurgeOwner(const char *path_a, const char *path_b) {
   if (Owner_PurgeInactive(path_a, path_b))
     return;
   int n = 0;
@@ -612,27 +612,27 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   const char *const *bw;
   bool whitelist;
   resolve_window_list(wl, bl, &bw, &whitelist);
-  HotkeyBinding binding = convert_into_hotkey_binding(
+  HotkeyBinding binding = Hotkey_ConvertIntoBinding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
   binding.hotkey_callback_ud = spec->cb_ud;
   binding.hold = false;
   binding.should_swallow = spec->should_swallow;
-  return hotkey_register_internal(binding);
+  return Hotkey_RegisterInternal(binding);
 }
 
 bool ski_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
-  HotkeyBinding binding = convert_into_hotkey_binding((char *)hotkey, NULL,
+  HotkeyBinding binding = Hotkey_ConvertIntoBinding((char *)hotkey, NULL,
                                                       NULL, NULL, false, NULL);
-  return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
+  return Hotkey_UnregisterInternal(binding.vk_code, binding.modifiers);
 }
 
-void sk_disable_global_hotkeys(void) { hotkey_set_suspended(true); }
+void sk_disable_global_hotkeys(void) { Hotkey_SetSuspended(true); }
 
-void sk_enable_global_hotkeys(void) { hotkey_set_suspended(false); }
+void sk_enable_global_hotkeys(void) { Hotkey_SetSuspended(false); }
 
-int sk_hotkey_count(void) { return hotkey_count(); }
+int sk_hotkey_count(void) { return Hotkey_Count(); }
 
 static bool hotkey_binding_format(const HotkeyBinding *b, char *out,
                                   size_t cap) {
@@ -647,17 +647,17 @@ static bool hotkey_binding_format(const HotkeyBinding *b, char *out,
 }
 
 bool sk_hotkey_string_at(int index, char *out, size_t cap) {
-  return hotkey_binding_format(hotkey_get(index), out, cap);
+  return hotkey_binding_format(Hotkey_Get(index), out, cap);
 }
 
 bool sk_hotkey_for_ud(void *ud, char *out, size_t cap) {
-  return hotkey_binding_format(hotkey_find_by_ud(ud), out, cap);
+  return hotkey_binding_format(Hotkey_FindByUd(ud), out, cap);
 }
 
 void sk_register_deferred_init(void (*cb)(void)) { DeferredInit_Register(cb); }
 
 bool sk_hotkey_for_callback(void (*cb)(void), char *out, size_t cap) {
-  return hotkey_binding_format(hotkey_find_by_callback((HotkeyCallback)cb), out,
+  return hotkey_binding_format(Hotkey_FindByCallback((HotkeyCallback)cb), out,
                                cap);
 }
 
@@ -667,7 +667,7 @@ bool sk_hotkey_taken(const char *hotkey) {
   HotkeyKey key = {0};
   if (!HotkeyString_Parse(hotkey, &key))
     return false;
-  return hotkey_is_taken(key.vk_code, key.mods);
+  return Hotkey_IsTaken(key.vk_code, key.mods);
 }
 
 SkFeatureList sk_get_feature_list(void) {
@@ -1769,7 +1769,7 @@ bool sk_click_button_at_rel(int rx, int ry, int button) {
 void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
 
 bool sk_replay_hotkey(int vk, int mods) {
-  return hotkey_process(vk, mods);
+  return Hotkey_Process(vk, mods);
 }
 static bool type_text_common(const char *s) {
   if (!s)
@@ -2326,21 +2326,21 @@ SkWidget *sk_widget_create(const SkWidgetSpec *spec) {
       log_warn("sk_widget: monitor '%s' not found, using primary",
                copy.monitor_name);
   }
-  return widget_create(&copy);
+  return Widget_Create(&copy);
 }
 
-bool sk_widget_valid(SkWidget *widget) { return widget_valid(widget); }
+bool sk_widget_valid(SkWidget *widget) { return Widget_Valid(widget); }
 
-SkPos sk_get_widget_pos(const char *name) { return widget_get_pos(name); }
+SkPos sk_get_widget_pos(const char *name) { return Widget_GetPos(name); }
 
-void sk_widget_show(SkWidget *widget) { widget_show(widget); }
+void sk_widget_show(SkWidget *widget) { Widget_Show(widget); }
 
-void sk_widget_hide(SkWidget *widget) { widget_hide(widget); }
+void sk_widget_hide(SkWidget *widget) { Widget_Hide(widget); }
 
-void sk_widget_destroy(SkWidget *widget) { widget_destroy(widget); }
+void sk_widget_destroy(SkWidget *widget) { Widget_Destroy(widget); }
 
 void sk_widget_set_render(SkWidget *widget, SkWidgetRenderFn render) {
-  widget_set_render(widget, render);
+  Widget_SetRender(widget, render);
 }
 
 void sk_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
@@ -2530,7 +2530,7 @@ const SkCcEntrySpec *sk_cc_entry_at(int index) {
   return &cc_entries[index].pub;
 }
 
-void cc_registry_purge_owner(const char *path_a, const char *path_b) {
+void CcRegistry_PurgeOwner(const char *path_a, const char *path_b) {
   if (!path_a && !path_b)
     return;
   int out = 0;

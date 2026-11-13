@@ -158,7 +158,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   if (!widget)
     return NULL;
   widget->dpy = dpy;
-  widget_init_base(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
+  Widget_InitBase(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
   widget->last_draw_w = 0;
   widget->last_draw_h = 0;
 
@@ -220,7 +220,7 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!WidgetBaseCheck(widget ? &widget->base : NULL) ||
+  if (!Widget_BaseCheck(widget ? &widget->base : NULL) ||
       widget->base.mapped) {
     return;
   }
@@ -233,7 +233,7 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || !WidgetBaseCheck(&widget->base) ||
+  if (!widget || !Widget_BaseCheck(&widget->base) ||
       !widget->base.mapped) {
     return;
   }
@@ -246,7 +246,7 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-  if (!widget || !WidgetBaseMove(&widget->base, x, y)) {
+  if (!widget || !Widget_BaseMove(&widget->base, x, y)) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -257,7 +257,7 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-  if (!widget || !WidgetBaseSetNoBg(&widget->base, no_bg)) {
+  if (!widget || !Widget_BaseSetNoBg(&widget->base, no_bg)) {
     return;
   }
   widget->base.dirty = true;
@@ -265,7 +265,7 @@ void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
-  if (!widget || !WidgetBaseSetBgColor(&widget->base, bg_color)) {
+  if (!widget || !Widget_BaseSetBgColor(&widget->base, bg_color)) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -290,7 +290,7 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-  if (!widget || !WidgetBaseResize(&widget->base, w, h)) {
+  if (!widget || !Widget_BaseResize(&widget->base, w, h)) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
