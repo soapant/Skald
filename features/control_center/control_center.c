@@ -1719,7 +1719,6 @@ static void cc_render(PromptState *state) {
                    .align = "LEFT", .pad = 0, .color = SK_GRAY,
                    .fontsize = FontSize - 3);
     }
-
     bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
                             strcmp(e->type, "Feature") == 0);
     const char *right_text = plain_type ? e->type : CC_TYPE_LABEL;
@@ -1894,3 +1893,4 @@ SKALD_FEATURE_SHUTDOWN {
     prewarm_thread = NULL;
   }
 }
+

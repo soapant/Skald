@@ -140,6 +140,7 @@ static void PromptPopup_OnHide(Popup *self) {
     SkaldContext *_c3 = SkaldContext_Get();
     if (_c3) {
       _c3->window.current_feature = NULL;
+      _c3->window.title = NULL;
       _c3->window.prompt_callbacks = data->saved_callbacks;
       _c3->window.hPopupWnd = data->prev_hPopupWnd;
     }
