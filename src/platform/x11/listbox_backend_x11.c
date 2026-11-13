@@ -9,7 +9,7 @@
 
 #include "platform/platform.h"
 #include "platform/draw.h"
-#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include "core/prompt_geometry.h"
 #include "core/types.h"
 #include "core/types/window.h"

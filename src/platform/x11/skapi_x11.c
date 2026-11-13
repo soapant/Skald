@@ -22,7 +22,7 @@
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/x11/env_helpers_x11.h"
-#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include "core/prompt_geometry.h"
 #include "core/listbox_hover.h"
 #include "core/editbox.h"
