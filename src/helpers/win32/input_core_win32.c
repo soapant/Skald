@@ -87,7 +87,7 @@ void win32_handle_raw_mouse_input(LPARAM lParam) {
     }
     Input_UpdateMouseButton(btn, down);
     if (!down && btn > 0 && btn <= MOUSE_BTN_MAX) {
-      hotkey_key_up(MOUSE_VK(btn));
+      Hotkey_KeyUp(MOUSE_VK(btn));
     }
     mev.button = btn;
     mev.down = down;
@@ -105,7 +105,7 @@ void win32_handle_raw_mouse_input(LPARAM lParam) {
       bool stale = (now - s_last_fire[btn]) > 200;
       if (rising || stale) {
         s_last_fire[btn] = now;
-        hotkey_process(MOUSE_VK(btn), mev.mods);
+        Hotkey_Process(MOUSE_VK(btn), mev.mods);
       }
     }
   } else {
@@ -212,7 +212,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         }
         GlobalKey_Push(&_gev);
         if (_isUp)
-          hotkey_key_up(_vk);
+          Hotkey_KeyUp(_vk);
         if (remap_should_swallow_vk(_vk, _val)) {
           char *_t = Platform_GetActiveWindowTitle();
           log_info("hook swallow=remap vk=0x%X val=%d title='%s'", _vk, _val,
@@ -243,7 +243,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         modifiers |= HOTKEY_MOD_CTRL;
 
       if (!_popupActive && _freshDown &&
-          hotkey_process(pressed_vk, modifiers)) {
+          Hotkey_Process(pressed_vk, modifiers)) {
         pending_hotkey_vk = pressed_vk;
         pending_hotkey_mod = modifiers;
         pending_hotkey_timeMs = (long)GetTickCount();
@@ -258,7 +258,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
     WindowManager *wmx = WindowManager_Get();
     if (!wmx || !WindowManager_GetTopPopup(wmx)) {
       KBDLLHOOKSTRUCT *rk = (KBDLLHOOKSTRUCT *)lParam;
-      if (snippet_feed_vk((int)rk->vkCode, 1, true)) {
+      if (Snippet_FeedVk((int)rk->vkCode, 1, true)) {
         log_info("hook swallow=snippet vk=0x%X", (int)rk->vkCode);
         return 1;
       }

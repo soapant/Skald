@@ -38,7 +38,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
     return NULL;
-  widget_init_base(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
+  Widget_InitBase(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exstyle =
@@ -95,7 +95,7 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!WidgetBaseCheck(widget ? &widget->base : NULL) ||
+  if (!Widget_BaseCheck(widget ? &widget->base : NULL) ||
       widget->base.mapped) {
     return;
   }
@@ -109,7 +109,7 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || !WidgetBaseCheck(&widget->base) ||
+  if (!widget || !Widget_BaseCheck(&widget->base) ||
       !widget->base.mapped) {
     return;
   }
@@ -121,7 +121,7 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-  if (!widget || !WidgetBaseMove(&widget->base, x, y)) {
+  if (!widget || !Widget_BaseMove(&widget->base, x, y)) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -132,21 +132,21 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-  if (!widget || !WidgetBaseSetNoBg(&widget->base, no_bg)) {
+  if (!widget || !Widget_BaseSetNoBg(&widget->base, no_bg)) {
     return;
   }
-  widget_invalidate(widget);
+  Widget_Invalidate(widget);
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
-  if (!widget || !WidgetBaseSetBgColor(&widget->base, color)) {
+  if (!widget || !Widget_BaseSetBgColor(&widget->base, color)) {
     return;
   }
-  widget_invalidate(widget);
+  Widget_Invalidate(widget);
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-  if (!widget || !WidgetBaseResize(&widget->base, w, h)) {
+  if (!widget || !Widget_BaseResize(&widget->base, w, h)) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -156,5 +156,5 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
     win32_apply_rounded_corners(widget->hwnd, w, h);
   SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->base.x, widget->base.y, w, h,
                SWP_NOACTIVATE);
-  widget_invalidate(widget);
+  Widget_Invalidate(widget);
 }

@@ -128,7 +128,7 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
   r.uniq[0] = '\0';
   if (uniq && uniq[0])
     fl_copy(r.uniq, sizeof(r.uniq), uniq);
-  r.owner_gen = widget_current_generation();
+  r.owner_gen = Widget_CurrentGeneration();
   r.owner[0] = '\0';
   if (owner && owner[0])
     fl_copy(r.owner, sizeof(r.owner), owner);
@@ -205,7 +205,7 @@ static void sweep_retired_libs(void) {
   int n = 0;
   for (int i = 0; i < retired_count; i++) {
     bool alive = false;
-    if (retired[i].owner[0] && widget_owner_active(retired[i].owner))
+    if (retired[i].owner[0] && Widget_OwnerActive(retired[i].owner))
       alive = true;
     else if (retired[i].owner[0] &&
              ThreadRegistry_OwnerActive(retired[i].owner))
@@ -223,12 +223,12 @@ static void sweep_retired_libs(void) {
     if (alive) {
       retired[n++] = retired[i];
     } else {
-      cap_purge_owner(retired[i].owner, NULL);
-      hotkey_purge_owner(retired[i].owner, NULL);
-      snippet_purge_owner(retired[i].owner, NULL);
-      widget_purge_owner(retired[i].owner, NULL, retired[i].owner_gen);
-      cc_registry_purge_owner(retired[i].owner, NULL);
-      feature_list_purge_owner(retired[i].owner, NULL);
+      Cap_PurgeOwner(retired[i].owner, NULL);
+      Hotkey_PurgeOwner(retired[i].owner, NULL);
+      Snippet_PurgeOwner(retired[i].owner, NULL);
+      Widget_PurgeOwner(retired[i].owner, NULL, retired[i].owner_gen);
+      CcRegistry_PurgeOwner(retired[i].owner, NULL);
+      FeatureList_PurgeOwner(retired[i].owner, NULL);
       KeyCallback_PurgeOwner(retired[i].owner, NULL);
       Key_PurgeInterceptorOwner(retired[i].owner, NULL);
       EventBus_PurgeOwner(retired[i].owner, NULL);
@@ -920,12 +920,12 @@ void FeatureLoader_Shutdown(void) {
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
       call_feature_shutdown(features[i].handle);
-      cap_purge_owner(NULL, features[i].path);
-      hotkey_purge_owner(NULL, features[i].path);
-      snippet_purge_owner(NULL, features[i].path);
-      widget_purge_owner(NULL, features[i].path, widget_bump_generation());
-      cc_registry_purge_owner(NULL, features[i].path);
-      feature_list_purge_owner(NULL, features[i].path);
+      Cap_PurgeOwner(NULL, features[i].path);
+      Hotkey_PurgeOwner(NULL, features[i].path);
+      Snippet_PurgeOwner(NULL, features[i].path);
+      Widget_PurgeOwner(NULL, features[i].path, Widget_BumpGeneration());
+      CcRegistry_PurgeOwner(NULL, features[i].path);
+      FeatureList_PurgeOwner(NULL, features[i].path);
       features[i].uniq[0] = '\0';
       features[i].handle = 0;
     }
@@ -988,22 +988,22 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       if (shut)
         shut();
       Checkbox_ResetAll();
-      unsigned retire_gen = widget_current_generation();
+      unsigned retire_gen = Widget_CurrentGeneration();
       char retire_owner[512];
       fl_copy(retire_owner, sizeof(retire_owner),
               features[i].uniq[0] ? features[i].uniq : features[i].path);
       retire_old_lib(old, features[i].uniq, retire_owner);
-      widget_bump_generation();
+      Widget_BumpGeneration();
       log_info("feature_reload: %s (constructor ran at dlopen)", name);
       features[i].handle = h;
       fl_copy(features[i].path, sizeof(features[i].path), uniquepath);
       fl_copy(features[i].uniq, sizeof(features[i].uniq), uniquepath);
-      cap_purge_owner(retire_owner, path_copy);
-      hotkey_purge_owner(retire_owner, path_copy);
-      snippet_purge_owner(retire_owner, path_copy);
-      widget_purge_owner(retire_owner, path_copy, retire_gen);
-      cc_registry_purge_owner(retire_owner, path_copy);
-      feature_list_purge_owner(retire_owner, path_copy);
+      Cap_PurgeOwner(retire_owner, path_copy);
+      Hotkey_PurgeOwner(retire_owner, path_copy);
+      Snippet_PurgeOwner(retire_owner, path_copy);
+      Widget_PurgeOwner(retire_owner, path_copy, retire_gen);
+      CcRegistry_PurgeOwner(retire_owner, path_copy);
+      FeatureList_PurgeOwner(retire_owner, path_copy);
       KeyCallback_PurgeOwner(retire_owner, path_copy);
       Key_PurgeInterceptorOwner(retire_owner, path_copy);
       EventBus_PurgeOwner(retire_owner, path_copy);
@@ -1044,7 +1044,7 @@ void FeatureLoader_ReloadAll(void) {
   feature_count = 0;
   sweep_retired_libs();
   UNLOCK();
-  widget_bump_generation();
+  Widget_BumpGeneration();
   FeatureLoader_Init();
   LOCK();
   sweep_retired_libs();

@@ -33,7 +33,7 @@ int WindowManager_RunWin32(WindowManager *wm) {
       DispatchMessage(&msg);
     }
     Platform_Widget_DrainClicks();
-    hotkey_drain_pending();
+    Hotkey_DrainPending();
     if (!got)
       Sleep(10);
   }
@@ -57,7 +57,7 @@ void WindowManager_ProcessEventsWin32(WindowManager *wm) {
   }
   if (!got)
     MsgWaitForMultipleObjects(0, NULL, FALSE, 16, QS_ALLINPUT);
-  hotkey_drain_pending();
+  Hotkey_DrainPending();
   {
     int mx = 0, my = 0;
     if (Platform_GetMousePos(&mx, &my))

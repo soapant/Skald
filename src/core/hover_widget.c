@@ -70,7 +70,7 @@ static void hover_widget_destroy_slot(HoverWidgetSlot *s) {
   void *release_ud = s->release_ud;
   memset(s, 0, sizeof(*s));
   if (w) {
-    widget_set_frame_callback(w, NULL, NULL);
+    Widget_SetFrameCallback(w, NULL, NULL);
     Platform_Widget_Destroy(w);
     Platform_Widget_FlushDestruction();
   }
@@ -113,7 +113,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
       Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
       Platform_Widget_SetNoBg(pw, no_bg);
     }
-    widget_invalidate(pw);
+    Widget_Invalidate(pw);
     if (old_release && (old_release != release || old_release_ud != release_ud))
       old_release(old_release_ud);
     return;
@@ -156,7 +156,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   s->w = pw;
   Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
   Platform_Widget_SetNoBg(pw, no_bg);
-  widget_set_frame_callback(pw, HoverWidgetFrame, s);
+  Widget_SetFrameCallback(pw, HoverWidgetFrame, s);
   s->owner[0] = '\0';
   Owner_ResolveForFunc(owner_src ? owner_src : (void *)render, s->owner,
                        sizeof(s->owner));
