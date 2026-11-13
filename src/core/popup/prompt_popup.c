@@ -136,15 +136,19 @@ static void PromptPopup_OnHide(Popup *self) {
   PromptPopupData *data = (PromptPopupData *)self;
   log_info("DEBUG_ON_HIDE title='%s'",
            data->spec.title ? data->spec.title : "(null)");
-  Platform_PromptPopupHideWindow(self);
+  {
+    SkaldContext *_c3 = SkaldContext_Get();
+    if (_c3) {
+      _c3->window.current_feature = NULL;
+      _c3->window.prompt_callbacks = data->saved_callbacks;
+      _c3->window.hPopupWnd = data->prev_hPopupWnd;
+    }
+  }
   if (data->state) {
     if (data->state->lb)
       data->state->lb->selected_index = 0;
-    SkaldContext *_c3 = SkaldContext_Get();
-    _c3->window.current_feature = NULL;
-    _c3->window.prompt_callbacks = data->saved_callbacks;
-    _c3->window.hPopupWnd = data->prev_hPopupWnd;
   }
+  Platform_PromptPopupHideWindow(self);
 }
 
 static void PromptPopup_OnRender(Popup *self) {

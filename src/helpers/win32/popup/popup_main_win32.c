@@ -117,8 +117,7 @@ static void win32_prompt_deactivate(HWND hwnd, HWND other) {
     if (_top && WH_TO_HWND(_top->handle) == hwnd) {
       if (!win32_hwnd_is_popup(_wm, other)) {
         SkaldContext_Get()->window.output_buffer[0] = '\0';
-        while (_wm->popup_count > 0)
-          WindowManager_PopPopup(_wm);
+        WindowManager_PopPopup(_wm);
         return;
       }
       SkaldContext_Get()->window.selection_complete = true;
