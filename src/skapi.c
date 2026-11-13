@@ -323,7 +323,7 @@ char *sk_read_file_to_string(const char *path, size_t *out_len) {
     return NULL;
   char expanded[MAX_PATH];
   if (!ExpandPath(path, expanded, sizeof(expanded)))
-    strncpy(expanded, path, sizeof(expanded) - 1);
+    SafeCopy(expanded, sizeof(expanded), path);
   FILE *f = fopen(expanded, "rb");
   if (!f)
     return NULL;
@@ -367,7 +367,7 @@ bool sk_write_string_to_file(const char *path, const char *content) {
   } else {
     char expanded[MAX_PATH];
     if (!ExpandPath(path, expanded, sizeof(expanded)))
-      strncpy(expanded, path, sizeof(expanded) - 1);
+      SafeCopy(expanded, sizeof(expanded), path);
     path = expanded;
   }
   FILE *f = fopen(path, "w");
@@ -383,7 +383,7 @@ bool sk_file_exists(const char *path) {
     return false;
   char expanded[MAX_PATH];
   if (!ExpandPath(path, expanded, sizeof(expanded)))
-    strncpy(expanded, path, sizeof(expanded) - 1);
+    SafeCopy(expanded, sizeof(expanded), path);
   FILE *f = fopen(expanded, "rb");
   if (f) {
     fclose(f);
@@ -451,7 +451,7 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
     return false;
   char expanded[MAX_PATH];
   if (!ExpandPath(path, expanded, sizeof(expanded)))
-    strncpy(expanded, path, sizeof(expanded) - 1);
+    SafeCopy(expanded, sizeof(expanded), path);
   FILE *f = fopen(expanded, "r");
   if (!f)
     return false;
@@ -473,7 +473,7 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
       while (*p == ' ' || *p == '\t')
         p++;
       p[strcspn(p, "\r\n")] = '\0';
-      strncpy(out_name, p, n - 1);
+      SafeCopy(out_name, n, p);
       out_name[n - 1] = '\0';
       found = true;
     }

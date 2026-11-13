@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #include "platform/platform.h"
-#include "helpers/x11/misc_x11.h"
+#include "helpers/x11/raw_misc_x11.h"
 #include "deps/log.h"
 
 static bool env_sock_live(const char *path) {

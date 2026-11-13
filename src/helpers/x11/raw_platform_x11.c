@@ -1,5 +1,5 @@
 #include <X11/extensions/XTest.h>
-#include "helpers/x11/platform_x11.h"
+#include "helpers/x11/raw_platform_x11.h"
 
 typedef struct {
   Display *dpy;

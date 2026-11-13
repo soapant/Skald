@@ -35,7 +35,7 @@
 #include <curl/curl.h>
 #include "helpers/x11/display_x11.h"
 #include "platform/platform.h"
-#include "helpers/x11/misc_x11.h"
+#include "helpers/x11/raw_misc_x11.h"
 #include "core/context.h"
 #include "helpers/helpers_owner.h"
 #include "core/thread_registry.h"

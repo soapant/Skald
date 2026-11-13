@@ -1,4 +1,5 @@
-#include "helpers/win32/platform_win32.h"
+#include "helpers/win32/raw_platform_win32.h"
+#include "helpers/helpers_http.h"
 
 DWORD WINAPI win32_stdin_writer(LPVOID arg) {
   StdinWriteCtx *ctx = (StdinWriteCtx *)arg;
@@ -685,7 +686,8 @@ typedef void (*PlatformHttpCallback)(const char *body, bool success,
                                      void *userdata);
 
 bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
-  HANDLE t = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, ud, 0, NULL);
+  HANDLE t = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(void *)fn, ud, 0,
+                          NULL);
   if (!t)
     return false;
   CloseHandle(t);

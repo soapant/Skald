@@ -1,4 +1,4 @@
-#include "helpers/win32/widget_win32.h"
+#include "helpers/win32/raw_widget_win32.h"
 
 static unsigned int widget_dib_color(unsigned long colorref) {
   return 0xFF000000u | ((colorref & 0x000000FFu) << 16) |

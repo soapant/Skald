@@ -28,7 +28,7 @@
 #include "helpers/win32/common_ui_win32.h"
 #include "helpers/win32/bg_image_win32.h"
 #include "core/prompt_geometry.h"
-#include "helpers/win32/input_core_win32.h"
+#include "helpers/win32/raw_input_core_win32.h"
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <ctype.h>

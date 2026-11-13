@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "helpers/helpers_ui.h"
+#include "helpers/helpers_text.h"
 #include "core/window_manager.h"
 #include "core/context.h"
 #include "core/listbox_hover.h"
@@ -48,8 +49,7 @@ void UI_SetText(const char *text) {
     text = "";
   PromptState *prompt = ui_top_prompt();
   if (prompt) {
-    strncpy(prompt->eb->filter, text, sizeof(prompt->eb->filter) - 1);
-    prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
+    SafeCopy(prompt->eb->filter, sizeof(prompt->eb->filter), text);
     prompt->eb->cursor = (int)strlen(prompt->eb->filter);
   }
 }
