@@ -9,6 +9,7 @@
 #include "helpers/win32/common_ui_win32.h"
 #include <windows.h>
 #include <commctrl.h>
+#include <string.h>
 
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
   if (!hwnd || !IsWindow(hwnd))
@@ -170,10 +171,24 @@ void win32_fill_rounded_rect(HDC hdc, RECT *rc, COLORREF col, int radius) {
   DeleteObject(rgn);
 }
 
+static bool win32_is_skald_window(HWND hwnd) {
+  if (!hwnd || !IsWindow(hwnd))
+    return false;
+  char cls[64] = {0};
+  GetClassNameA(hwnd, cls, sizeof(cls));
+  return strcmp(cls, QUICKSWITCHER_CLASS) == 0 ||
+         strcmp(cls, MESSAGE_CLASS) == 0 ||
+         strcmp(cls, SEARCH_POPUP_CLASS) == 0 ||
+         strcmp(cls, WIDGET_CLASS) == 0;
+}
+
 void win32_force_window_focus(WindowHandle hwndTarget) {
   ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);
 
-  SetWindowPos(WH_TO_HWND(hwndTarget), HWND_TOPMOST, 0, 0, 0, 0,
+  SetWindowPos(WH_TO_HWND(hwndTarget),
+               win32_is_skald_window(WH_TO_HWND(hwndTarget)) ? HWND_TOPMOST
+                                                             : HWND_TOP,
+               0, 0, 0, 0,
                SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_ASYNCWINDOWPOS);
 
   HWND hForeground = GetForegroundWindow();
