@@ -2,6 +2,8 @@
 #define PLATFORM_H
 
 #include "core/types.h"
+#include "helpers/helpers_owner.h"
+#include "helpers/helpers_misc.h"
 
 typedef struct {
   const char *message;
@@ -86,6 +88,8 @@ typedef struct {
 #define HTTP_MAX_REDIRECTS 10
 #define HTTP_DEFAULT_LIMIT ((size_t)64 * 1024 * 1024)
 
+typedef void (*PlatformHttpCallback)(const char *body, bool ok, void *userdata);
+
 typedef struct {
   char *buf;
   size_t len;
@@ -93,6 +97,13 @@ typedef struct {
   size_t limit;
   int overflow;
 } HttpBuf;
+
+typedef struct {
+  char *url;
+  PlatformHttpCallback cb;
+  void *userdata;
+  char owner[OWNER_PATH_MAX];
+} HttpAsyncJob;
 
 typedef enum {
   DEFAULT_BROWSER,
@@ -237,13 +248,15 @@ void Platform_FixWorkingDirectory(void);
 void Platform_CleanupPlatformResources(void);
 bool Platform_FontInitalized(FontHandle font);
 
-typedef void (*PlatformHttpCallback)(const char *body, bool ok, void *userdata);
 char *Platform_HttpGet(const char *url);
 char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
                               size_t *out_len);
 bool Platform_HttpDownload(const char *url, const char *save_path);
 char *Platform_HttpPost(const char *url, const char *content_type,
                         const char *body);
+
+void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
+                           void *userdata);
 
 void *Platform_ThreadCreate(void *(*fn)(void *), void *arg);
 void Platform_ThreadJoin(void *thread);
@@ -255,7 +268,7 @@ bool Platform_MutexTryLock(void *mutex);
 
 #define PLATFORM_BUILD_ARGV_MAX 48
 bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
-                                 const char *argv[], size_t argv_cap);
+                                  const char *argv[], size_t argv_cap);
 bool Platform_AtomicRename(const char *old_path, const char *new_path);
 
 typedef struct {
