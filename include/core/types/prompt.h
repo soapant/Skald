@@ -90,56 +90,10 @@ typedef void (*KeyCallback)(int vkCode);
 
 typedef void (*CloseCallback)(void);
 
-static inline void ListBoxInfo_Free(ListBoxInfo *lb) {
-  if (!lb)
-    return;
-  free(lb->items);
-  lb->items = NULL;
-  lb->items_cap = 0;
-  lb->item_count = 0;
-}
-
-static inline bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows) {
-  if (!lb || rows <= 0 || rows > MAX_VISIBLE_ITEMS)
-    return false;
-  if (lb->items && rows <= lb->items_cap)
-    return true;
-  int cap = lb->items_cap > 0 ? lb->items_cap : 64;
-  while (cap < rows)
-    cap *= 2;
-  if (cap > MAX_VISIBLE_ITEMS)
-    cap = MAX_VISIBLE_ITEMS;
-  if (cap < rows)
-    return false;
-  char (*grown)[LISTBOX_ROW_BYTES] = (char (*)[LISTBOX_ROW_BYTES])realloc(
-      lb->items, (size_t)cap * LISTBOX_ROW_BYTES);
-  if (!grown)
-    return false;
-  lb->items = grown;
-  lb->items_cap = cap;
-  return true;
-}
-
-static inline const char *ListBoxInfo_Row(ListBoxInfo *lb, int idx) {
-  if (!lb || !lb->items)
-    return NULL;
-  if (idx < 0 || idx >= lb->item_count)
-    return NULL;
-  if (idx >= lb->items_cap)
-    return NULL;
-  return lb->items[idx];
-}
-
-static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
-  if (!lb)
-    return;
-  ListBoxInfo_Free(lb);
-  lb->selected_index = -1;
-  lb->selected_text = "";
-  lb->total_matches = 0;
-  lb->view_offset = 0;
-  lb->text_hscroll = 0;
-}
+void ListBoxInfo_Free(ListBoxInfo *lb);
+bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows);
+const char *ListBoxInfo_Row(ListBoxInfo *lb, int idx);
+void ListBoxInfo_Init(ListBoxInfo *lb);
 
 typedef struct {
   const char *title;

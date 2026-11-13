@@ -556,6 +556,7 @@ StringList File_ReadLines(const char *path) {
 
 static const char *file_walk_builtin_ignored_names[] = {".git",
                                                         ".hg",
+                                                        ".wine",
                                                         ".svn",
                                                         ".bzr",
                                                         ".fossil",
@@ -575,11 +576,10 @@ static const char *file_walk_builtin_ignored_names[] = {".git",
                                                         "env",
                                                         ".env",
                                                         ".tox",
+                                                        "service",
                                                         "target",
-                                                        "build",
                                                         "dist",
-                                                        "out",
-                                                        "bin",
+                                                        "dbus",
                                                         "obj",
                                                         "cmake-build-debug",
                                                         "cmake-build-release",
@@ -721,9 +721,6 @@ bool FileWalk_AllFilesFromDir(const char *dir_path,
 
 #include <sys/time.h>
 
-#include "core/types/keys.h"
-#include "core/types/window.h"
-#include "core/hotkey_manager.h"
 
 bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
   if (!key || key->text_len <= 0)

@@ -109,6 +109,13 @@ static bool bg_src_dims(const char *path, int *out_w, int *out_h) {
   return true;
 }
 
+static int bg_slot_empty(const void *s) {
+  return ((const BgTileSlot *)s)->pm == NULL;
+}
+static unsigned long bg_slot_stamp(const void *s) {
+  return ((const BgTileSlot *)s)->stamp;
+}
+
 static void bg_slot_release(Display *dpy, BgTileSlot *t) {
   if (!t)
     return;
@@ -270,19 +277,9 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
 
   BgTileSlot *slot = fresh;
   if (!slot) {
-    for (int i = 0; i < BG_TILE_SLOTS; i++) {
-      if (!g_bg_tiles[i].pm) {
-        slot = &g_bg_tiles[i];
-        break;
-      }
-    }
-  }
-  if (!slot) {
-    int oldest = 0;
-    for (int i = 1; i < BG_TILE_SLOTS; i++)
-      if (g_bg_tiles[i].stamp < g_bg_tiles[oldest].stamp)
-        oldest = i;
-    slot = &g_bg_tiles[oldest];
+    slot = &g_bg_tiles[BgTileLruPick(g_bg_tiles, BG_TILE_SLOTS,
+                                     sizeof(g_bg_tiles[0]), bg_slot_empty,
+                                     bg_slot_stamp)];
   }
 
   bg_slot_release(dpy, slot);

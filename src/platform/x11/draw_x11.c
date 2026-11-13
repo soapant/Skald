@@ -114,20 +114,7 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
   int ascent = xf ? xf->ascent : (spec.fontsize * 3 / 4);
   int descent = xf ? xf->descent : (spec.fontsize / 4);
   int lineHeight = ascent + descent;
-  int tw = Platform_MeasureTextWidth(
-      (PlMeasureTextWidthSpec){.text = spec.text,
-                               .len = (int)strlen(spec.text),
-                               .fontsize = spec.fontsize});
-  int tx = spec.x + (spec.w - tw) / 2;
-  int ty = spec.y + (spec.h - lineHeight) / 2;
-  Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
-                                           .y = ty,
-                                           .text = spec.text,
-                                           .color = spec.color,
-                                           .font = spec.font,
-                                           .align = "LEFT",
-                                           .pad = 0,
-                                           .fontsize = spec.fontsize});
+  DrawTextCenteredImpl(&spec, lineHeight);
 }
 
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
@@ -162,7 +149,7 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   return true;
 }
 
-void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_list_item(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font,
                            ListBoxInfo *lb, int idx, int y, int text_x,
                            const char *icon_path) {
@@ -183,7 +170,7 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
   XftColorFree(dpy, vis, cmap, &pcolor);
 }
 
-void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, FontHandle font) {
   x11_set_draw_context(dpy, xd, vis, cmap);
   if (WindowTitleText)
@@ -212,7 +199,7 @@ static void platform_draw_editbox_part(PromptState *state, Display *dpy,
   Editbox_Draw(&eb, &lay, part);
 }
 
-void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_text(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
   if (!state)
     return;
@@ -220,29 +207,20 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
                              EDITBOX_PART_TEXT);
 }
 
-void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_tint(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font) {
   platform_draw_editbox_part(state, dpy, xd, vis, cmap, font,
                              EDITBOX_PART_TINT);
 }
 
-void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
                              Visual *vis, Colormap cmap, FontHandle font) {
   platform_draw_editbox_part(state, dpy, xd, vis, cmap, font,
                              EDITBOX_PART_CARET);
 }
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
-  int x = spec.x;
-  int y = spec.y;
-  int w = spec.w;
-  int h = spec.h;
-  unsigned long color = spec.color;
-  int radius = spec.radius;
-  bool rounded = spec.rounded;
-  bool opaque = spec.opaque;
-  float thickness = spec.thickness;
-  bool filled = spec.filled;
+  RECT_RAW_UNPACK(spec);
 
   if (!x11_raw_can_draw()) {
     return false;
@@ -349,18 +327,10 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   if (!x11_raw_can_draw())
     return false;
-  int t = DrawThicknessPx(spec.thickness);
-  if (t < 1)
-    t = 1;
-  int x1 = spec.x1 + PlDrawState_Get()->off_x;
-  int y1 = spec.y1 + PlDrawState_Get()->off_y;
-  int x2 = spec.x2 + PlDrawState_Get()->off_x;
-  int y2 = spec.y2 + PlDrawState_Get()->off_y;
-  int bx = x1 < x2 ? x1 : x2;
-  int by = y1 < y2 ? y1 : y2;
-  int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
-  int bh = (y1 > y2 ? y1 - y2 : y2 - y1) + t;
-  DrawMeasureTrack(bx - t / 2, by - t / 2, bw, bh);
+  int x1, y1, x2, y2;
+  int t = DrawLinePrep(&spec, PlDrawState_Get()->off_x,
+                                PlDrawState_Get()->off_y, &x1, &y1, &x2,
+                                &y2);
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;
@@ -372,11 +342,9 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
   if (!x11_raw_can_draw() || spec.radius <= 0)
     return false;
-  int t = DrawThicknessPx(spec.thickness);
-  int cx = spec.cx + PlDrawState_Get()->off_x;
-  int cy = spec.cy + PlDrawState_Get()->off_y;
-  DrawMeasureTrack(cx - spec.radius, cy - spec.radius, spec.radius * 2,
-                   spec.radius * 2);
+  int cx, cy;
+  int t = DrawCirclePrep(&spec, PlDrawState_Get()->off_x,
+                                 PlDrawState_Get()->off_y, &cx, &cy);
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;

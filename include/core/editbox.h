@@ -144,6 +144,9 @@ void Editbox_InitFromSpec(EditboxInit *out, const EditboxInitFromSpec *args);
 
 void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in);
 int Editbox_CaretY(int box_top, int ascent, int descent, int fontsize);
+void EditboxSpec_FillFromPrompt(EditboxSpec *spec, PromptState *state,
+                                int text_len, int cursor_x, int text_w,
+                                int ascent, int descent, FontHandle font);
 void Editbox_ResolveSelection(PromptState *state, int text_len,
                               bool prefer_state, int *out_start, int *out_end,
                               bool *out_has);

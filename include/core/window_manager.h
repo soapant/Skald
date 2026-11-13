@@ -55,6 +55,7 @@ void WindowManager_Reset(void);
 
 Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup);
 void WindowManager_PopPopup(WindowManager *wm);
+void WindowManager_DrainSelectionComplete(WindowManager *wm);
 Popup *WindowManager_GetTopPopup(WindowManager *wm);
 bool WindowManager_TopPopupWantsTick(WindowManager *wm);
 

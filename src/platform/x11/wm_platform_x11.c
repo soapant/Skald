@@ -55,6 +55,17 @@ void Platform_WM_OnPopEmpty(WindowManager *wm) {
   malloc_trim(0);
 }
 
+static XRRCrtcInfo *x11_monitor_valid(Display *dpy, XRRScreenResources *res,
+                                      int idx) {
+  XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[idx]);
+  if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
+    if (ci)
+      XRRFreeCrtcInfo(ci);
+    return NULL;
+  }
+  return ci;
+}
+
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
   int x = 0, y = 0, w = 1920, h = 1080;
   Display *dpy = NULL;
@@ -80,12 +91,9 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
       int bx = x, by = y, bw = w, bh = h;
       bool found = false;
       for (int c = 0; c < res->ncrtc && !found; c++) {
-        XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
-        if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
-          if (ci)
-            XRRFreeCrtcInfo(ci);
+        XRRCrtcInfo *ci = x11_monitor_valid(dpy, res, c);
+        if (!ci)
           continue;
-        }
         if (px >= ci->x && px < ci->x + ci->width && py >= ci->y &&
             py < ci->y + ci->height) {
           bx = ci->x;
@@ -99,12 +107,9 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
       if (!found) {
         RROutput primary = XRRGetOutputPrimary(dpy, root);
         for (int c = 0; c < res->ncrtc && !found; c++) {
-          XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
-          if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
-            if (ci)
-              XRRFreeCrtcInfo(ci);
+          XRRCrtcInfo *ci = x11_monitor_valid(dpy, res, c);
+          if (!ci)
             continue;
-          }
           for (int o = 0; o < ci->noutput; o++) {
             if (ci->outputs[o] == primary) {
               bx = ci->x;
@@ -121,12 +126,9 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
       if (!found) {
         long best = -1;
         for (int c = 0; c < res->ncrtc; c++) {
-          XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
-          if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
-            if (ci)
-              XRRFreeCrtcInfo(ci);
+          XRRCrtcInfo *ci = x11_monitor_valid(dpy, res, c);
+          if (!ci)
             continue;
-          }
           long area = (long)ci->width * ci->height;
           if (area > best) {
             best = area;
@@ -160,25 +162,6 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     *oh = h;
 }
 
-void Platform_ProcessPendingSubWindows(void) {
-  SkaldContext *_c = SkaldContext_Get();
-  if (!_c || !_c->window.subwindow.pending)
-    return;
-  _c->window.subwindow.pending = false;
-  _c->window.subwindow.created = true;
-  _c->window.selection_complete = false;
-  WindowManager *wm = WindowManager_Get();
-  if (wm && wm->popup_count > 1)
-    WindowManager_PopPopup(wm);
-  Popup *p = PromptPopup_Create(wm, &_c->window.subwindow.pending_subwindow);
-  if (p && p->vtable && p->vtable->on_render)
-    p->vtable->on_render(p);
-  if (wm && wm->display) {
-    XFlush(wm->display);
-    XSync(wm->display, False);
-  }
-}
-
 int Monitor_Fill(MonitorEntry *out, int max_entries) {
   Display *dpy = NULL;
   WindowManager *wm = WindowManager_Get();
@@ -196,12 +179,9 @@ int Monitor_Fill(MonitorEntry *out, int max_entries) {
   int primary_at = -1;
   RROutput primary = XRRGetOutputPrimary(dpy, root);
   for (int c = 0; c < res->ncrtc && n < max_entries; c++) {
-    XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
-    if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
-      if (ci)
-        XRRFreeCrtcInfo(ci);
+    XRRCrtcInfo *ci = x11_monitor_valid(dpy, res, c);
+    if (!ci)
       continue;
-    }
     for (int o = 0; o < ci->noutput; o++)
       if (ci->outputs[o] == primary) {
         primary_at = n;

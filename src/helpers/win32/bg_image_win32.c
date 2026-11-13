@@ -344,6 +344,13 @@ static BgSrcSlot *bg_src_get(const char *native) {
   return slot;
 }
 
+static int bg_slot_empty(const void *s) {
+  return ((const BgTileSlot *)s)->bmp == NULL;
+}
+static unsigned long bg_slot_stamp(const void *s) {
+  return (unsigned long)((const BgTileSlot *)s)->stamp;
+}
+
 static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
                                    FILETIME ft, DWORD sz) {
 
@@ -413,20 +420,10 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
       bg_cache_store(cacheFile, w, h, bits, &ft, sz);
   }
 
-  BgTileSlot *slot = NULL;
-  for (int i = 0; i < BG_TILE_SLOTS; i++) {
-    if (g_bg_tiles[i].bmp == NULL) {
-      slot = &g_bg_tiles[i];
-      break;
-    }
-  }
-  if (!slot) {
-    int oldest = 0;
-    for (int i = 1; i < BG_TILE_SLOTS; i++)
-      if (g_bg_tiles[i].stamp < g_bg_tiles[oldest].stamp)
-        oldest = i;
-    slot = &g_bg_tiles[oldest];
-  }
+  int slot_idx = BgTileLruPick(g_bg_tiles, BG_TILE_SLOTS,
+                               sizeof(g_bg_tiles[0]), bg_slot_empty,
+                               bg_slot_stamp);
+  BgTileSlot *slot = &g_bg_tiles[slot_idx];
   bg_tile_drop(slot);
   slot->bmp = bmp;
   slot->dc = dc;

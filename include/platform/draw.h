@@ -4,6 +4,19 @@
 #include "core/types.h"
 #include "core/types/window.h"
 
+#define RECT_RAW_UNPACK(spec)              \
+  int x = (spec).x;                           \
+  int y = (spec).y;                           \
+  int w = (spec).w;                           \
+  int h = (spec).h;                           \
+  unsigned long color = (spec).color;         \
+  int radius = (spec).radius;                 \
+  bool rounded = (spec).rounded;              \
+  bool opaque = (spec).opaque;                \
+  float thickness = (spec).thickness;         \
+  bool filled = (spec).filled
+
+
 void Platform_FlushDraw(void);
 
 void Platform_DrawPromptEditText(PromptState *state);
@@ -82,8 +95,8 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec);
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec);
 bool Platform_DrawTextRaw(PlDrawTextRawSpec spec);
 void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec);
-int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec);
-bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
+
+int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec);bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetTextLineHeight(int fontsize);

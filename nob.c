@@ -1213,6 +1213,18 @@ static bool chk_ci_sk_func(const char *buf, size_t beg, size_t end) {
          tolower((unsigned char)buf[beg + 1]) == 'k' && buf[beg + 2] == '_';
 }
 
+static bool chk_ci_platform_func(const char *buf, size_t beg, size_t end) {
+  size_t n = end - beg;
+  if (n <= 9)
+    return false;
+  return memcmp(buf + beg, "Platform_", 9) == 0;
+}
+
+static bool chk_ci_platform_layer(const char *path_norm) {
+  return strstr(path_norm, "src/platform/") != NULL ||
+         strstr(path_norm, "include/platform/") != NULL;
+}
+
 static bool chk_ci_sk_struct(const char *buf, size_t beg, size_t end) {
   size_t n = end - beg;
   if (n <= 3)
@@ -1232,6 +1244,76 @@ static bool chk_ci_is(const ChkTok *t, const char *buf, const char *name) {
       return false;
   return true;
 }
+
+static void chk_platform_func_scan(const char *path, int lineno,
+                                   const char *buf, size_t len) {
+  chk_tokenize(buf, len);
+  if (chk_tok_count == 0)
+    return;
+  int bdepth = 0;
+  int pdepth = 0;
+  for (size_t i = 0; i < chk_tok_count; i++) {
+    ChkTokKind k = chk_toks[i].kind;
+    if (k == CHK_LBRACE) {
+      bdepth++;
+      continue;
+    }
+    if (k == CHK_RBRACE) {
+      if (bdepth)
+        bdepth--;
+      continue;
+    }
+    if (bdepth != 0)
+      continue;
+    if (k == CHK_LPAREN) {
+      pdepth++;
+      continue;
+    }
+    if (k == CHK_RPAREN) {
+      if (pdepth)
+        pdepth--;
+      continue;
+    }
+    if (pdepth != 0)
+      continue;
+    if (k != CHK_IDENT)
+      continue;
+    if (i + 1 >= chk_tok_count || chk_toks[i + 1].kind != CHK_LPAREN)
+      continue;
+    if (i + 3 < chk_tok_count && chk_toks[i + 2].kind == CHK_STAR &&
+        chk_toks[i + 3].kind == CHK_IDENT)
+      continue;
+    if (chk_ci_is(&chk_toks[i], buf, "if") ||
+        chk_ci_is(&chk_toks[i], buf, "while") ||
+        chk_ci_is(&chk_toks[i], buf, "for") ||
+        chk_ci_is(&chk_toks[i], buf, "switch") ||
+        chk_ci_is(&chk_toks[i], buf, "sizeof") ||
+        chk_ci_is(&chk_toks[i], buf, "return"))
+      continue;
+    if (!chk_ci_platform_func(buf, chk_toks[i].beg, chk_toks[i].end))
+      continue;
+    bool eq_before = false;
+    for (size_t j = 0; j < i; j++)
+      if (chk_toks[j].kind == CHK_EQUAL) {
+        eq_before = true;
+        break;
+      }
+    if (eq_before)
+      continue;
+    check_state.fn_violations++;
+    char name[256];
+    size_t nl = chk_toks[i].end - chk_toks[i].beg;
+    memcpy(name, buf + chk_toks[i].beg, nl);
+    name[nl] = '\0';
+    char msg[512];
+    snprintf(msg, sizeof(msg),
+             "function '%s' belongs to the platform layer (src/platform/, "
+             "include/platform/)",
+             name);
+    check_violation(path, lineno, msg);
+  }
+}
+
 
 static void chk_sk_func_scan(const char *path, int lineno, const char *buf,
                              size_t len) {

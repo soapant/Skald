@@ -654,3 +654,45 @@ void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
   base->dirty = true;
   base->last_draw_ms = 0;
 }
+
+bool WidgetBaseCheck(PlatformWidgetBase *base) {
+  return base && !base->dead;
+}
+
+bool WidgetBaseMove(PlatformWidgetBase *base, int x, int y) {
+  if (!base || base->dead)
+    return false;
+  if (base->x == x && base->y == y)
+    return false;
+  base->x = x;
+  base->y = y;
+  return true;
+}
+
+bool WidgetBaseResize(PlatformWidgetBase *base, int w, int h) {
+  if (!base || base->dead)
+    return false;
+  if (w <= 0 || h <= 0)
+    return false;
+  if (base->w == w && base->h == h)
+    return false;
+  base->w = w;
+  base->h = h;
+  return true;
+}
+
+bool WidgetBaseSetNoBg(PlatformWidgetBase *base, bool no_bg) {
+  if (!base || base->dead)
+    return false;
+  base->no_bg = no_bg;
+  return true;
+}
+
+bool WidgetBaseSetBgColor(PlatformWidgetBase *base,
+                                     ColorRef bg_color) {
+  if (!base || base->dead)
+    return false;
+  base->has_bg = bg_color != 0;
+  base->bg_color = bg_color;
+  return true;
+}

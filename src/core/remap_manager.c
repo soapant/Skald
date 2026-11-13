@@ -1,6 +1,5 @@
 #include "helpers/helpers_text.h"
 #include "core/remap_manager.h"
-#include "core/remap_manager.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
 #include "platform/platform.h"

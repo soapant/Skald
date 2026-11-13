@@ -32,13 +32,10 @@
 #include <linux/input.h>
 #include "helpers/x11/clipboard_x11.h"
 #include "helpers/x11/input_x11.h"
-#include "core/hotkey_manager.h"
 #include "helpers/helpers_render_thread.h"
 #include "platform/widget.h"
 #include "core/remap_manager.h"
 #include "config_values.h"
-#include "core/hotkey_manager.h"
-#include "core/types/keys.h"
 
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
@@ -99,14 +96,7 @@ static void *input_thread_func(void *arg) {
 }
 
 static void x11_drain_selection_complete(Display *dpy, WindowManager *wm) {
-
-  if (!wm || !SkaldContext_Get()->window.selection_complete)
-    return;
-  SkaldContext_Get()->window.selection_complete = false;
-  WindowManager_PopPopup(wm);
-  Popup *top_after = WindowManager_GetTopPopup(wm);
-  if (top_after && top_after->vtable && top_after->vtable->on_render)
-    top_after->vtable->on_render(top_after);
+  WindowManager_DrainSelectionComplete(wm);
   XFlush(dpy);
 }
 
