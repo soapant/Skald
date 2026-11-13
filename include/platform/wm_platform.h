@@ -6,9 +6,6 @@
 #include "core/types.h"
 
 bool Platform_InitDisplay(WindowManager *wm);
-int Platform_Run(WindowManager *wm);
-void Platform_Quit(WindowManager *wm);
-void Platform_ProcessEvents(WindowManager *wm);
 void Platform_OnPopEmpty(void);
 void Platform_GetMonitorGeometry(int *x, int *y, int *w, int *h);
 

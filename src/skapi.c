@@ -1752,7 +1752,7 @@ static bool type_text_common(const char *s) {
   // restoring the clipboard
   for (int i = 0; i < 40; i++) {
     if (wm)
-      Platform_ProcessEvents(wm);
+      WindowManager_ProcessEvents(wm);
     sk_sleep_platform(0.005);
   }
   if (old) {
