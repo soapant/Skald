@@ -73,8 +73,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     if (exec_line[0] && args && args[0]) {
       char combined[2048];
       snprintf(combined, sizeof(combined), "%s %s", exec_line, args);
-      strncpy(exec_line, combined, sizeof(exec_line) - 1);
-      exec_line[sizeof(exec_line) - 1] = '\0';
+      SafeCopy(exec_line, sizeof(exec_line), combined);
     }
     if (!exec_line[0]) {
       log_warn("desktop '%s' has no usable Exec line", expanded);
@@ -402,8 +401,7 @@ int sk_get_active_interface_platform(char out[], size_t max_len) {
     if (sscanf(line, "%63s %lx %*s %*s %*s %*s %*s %lx", iface, &dest, &mask) ==
         3) {
       if (dest == 0 && mask == 0) {
-        strncpy(out, iface, max_len - 1);
-        out[max_len - 1] = '\0';
+        SafeCopy(out, max_len, iface);
         found = 1;
         break;
       }

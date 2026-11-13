@@ -119,17 +119,17 @@ bool ListBox_ClientMousePos(int *out_x, int *out_y) {
   return true;
 }
 
-int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,
-                   int top_index, int visible_count, int mouse_y) {
+int ListBox_RowAtY(const ListBoxInfo *lb, int top_y, int row_h, int top_index,
+                   int rows_visible, int pos_y) {
 
-  if (!lb || item_height <= 0 || visible_count <= 0) {
+  if (!lb || row_h <= 0 || rows_visible <= 0) {
     return -1;
   }
-  int rel = mouse_y - list_top;
+  int rel = pos_y - top_y;
   if (rel < 0)
     return -1;
-  int row = rel / item_height;
-  if (row >= visible_count)
+  int row = rel / row_h;
+  if (row >= rows_visible)
     return -1;
   int idx = top_index + row;
   if (idx < 0 || idx >= lb->item_count)
@@ -137,8 +137,8 @@ int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,
   return idx;
 }
 
-bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
-                        int top_index, int visible_count) {
+bool ListBox_HoverFocus(ListBoxInfo *lb, int top_y, int row_h, int top_index,
+                        int rows_visible) {
 
   if (!lb || lb->item_count <= 0)
     return false;
@@ -152,15 +152,15 @@ bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
     hover_pos_set = false;
     return false;
   }
-  bool mouse_moved = !hover_pos_set || hover_x != mx || hover_y != my;
+  bool moved = !hover_pos_set || hover_x != mx || hover_y != my;
   hover_pos_set = true;
   hover_x = mx;
   hover_y = my;
-  if (!mouse_moved)
+  if (!moved)
     return false;
   ListBox_FocusByMouse();
   int idx =
-      ListBox_RowAtY(lb, list_top, item_height, top_index, visible_count, my);
+      ListBox_RowAtY(lb, top_y, row_h, top_index, rows_visible, my);
   if (idx < 0 || idx == lb->selected_index)
     return false;
   UI_SetSelection(lb, idx);
@@ -175,11 +175,11 @@ int ListBox_TakeScroll(void) {
   return rows;
 }
 
-void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count) {
+void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int rows_visible) {
   if (!lb || rows == 0) {
     return;
   }
-  int max_off = lb->item_count - visible_count;
+  int max_off = lb->item_count - rows_visible;
   if (max_off < 0)
     max_off = 0;
   int off = lb->view_offset + rows;
@@ -204,21 +204,21 @@ void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count) {
   UI_RequestPopupRepaint();
 }
 
-void ListBox_ApplyPendingScroll(ListBoxInfo *lb, int visible_count) {
+void ListBox_ApplyPendingScroll(ListBoxInfo *lb, int rows_visible) {
   int rows = ListBox_TakeScroll();
   if (rows == 0)
     return;
-  ListBox_ScrollBy(lb, rows, visible_count);
+  ListBox_ScrollBy(lb, rows, rows_visible);
 }
 
-int ListBox_ScrollTopFor(int index, int visible_count, int count) {
-  if (visible_count <= 0)
-    visible_count = 16;
-  int new_top = index - visible_count / 2;
+int ListBox_ScrollTopFor(int index, int rows_visible, int count) {
+  if (rows_visible <= 0)
+    rows_visible = 16;
+  int new_top = index - rows_visible / 2;
   if (new_top < 0)
     new_top = 0;
-  if (new_top + visible_count > count)
-    new_top = count - visible_count;
+  if (new_top + rows_visible > count)
+    new_top = count - rows_visible;
   if (new_top < 0)
     new_top = 0;
   return new_top;
@@ -237,10 +237,10 @@ void ListBox_ScrollToSelection(ListBoxInfo *lb) {
     UI_LB_ScrollToTop(lb, new_top);
 }
 
-void ListBox_SetGeometry(int list_top, int item_height, int visible_count) {
-  list_top = list_top;
-  item_height = item_height;
-  visible_count = visible_count;
+void ListBox_SetGeometry(int top_y, int row_h, int rows_visible) {
+  list_top = top_y;
+  item_height = row_h;
+  visible_count = rows_visible;
 }
 
 void ListBox_GetGeometry(int *out_list_top, int *out_item_height,

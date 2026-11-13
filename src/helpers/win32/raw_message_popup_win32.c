@@ -1,4 +1,4 @@
-#include "helpers/win32/message_popup_win32.h"
+#include "helpers/win32/raw_message_popup_win32.h"
 
 static int win32_msg_w = 0;
 
@@ -65,7 +65,7 @@ int win32_msg_slot_destroy_where(int mode, const char *name) {
   return destroyed;
 }
 
-wchar_t *msg_widen(const char *in, int *out_len) {
+static wchar_t *msg_widen(const char *in, int *out_len) {
 
   if (out_len)
     *out_len = 0;

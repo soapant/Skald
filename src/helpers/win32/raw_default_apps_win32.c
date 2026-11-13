@@ -9,7 +9,7 @@
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
 #include "config.h"
-#include "helpers/win32/default_apps_win32.h"
+#include "helpers/win32/raw_default_apps_win32.h"
 
 const char *win32_terminal_name_from_guid(const char *console_guid,
                                           const char *terminal_guid) {

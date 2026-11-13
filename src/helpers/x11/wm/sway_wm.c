@@ -216,13 +216,11 @@ bool focus_window_title_sway(const char *title) {
   }
   *d = '\0';
   char low[1024];
-  strncpy(low, escaped, sizeof(low) - 1);
-  low[sizeof(low) - 1] = '\0';
+  SafeCopy(low, sizeof(low), escaped);
   if (low[0])
     low[0] = tolower((unsigned char)low[0]);
   char up[1024];
-  strncpy(up, escaped, sizeof(up) - 1);
-  up[sizeof(up) - 1] = '\0';
+  SafeCopy(up, sizeof(up), escaped);
   if (up[0])
     up[0] = toupper((unsigned char)up[0]);
   const char *targets[3] = {escaped, NULL, NULL};

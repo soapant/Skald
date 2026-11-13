@@ -244,8 +244,7 @@ bool HotkeyString_Parse(const char *str, HotkeyKey *out) {
     return false;
 
   char buffer[256];
-  strncpy(buffer, str, sizeof(buffer) - 1);
-  buffer[sizeof(buffer) - 1] = '\0';
+  SafeCopy(buffer, sizeof(buffer), str);
 
   size_t len = strlen(buffer);
   bool ends_with_plus = false;

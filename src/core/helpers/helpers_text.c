@@ -14,6 +14,40 @@
 #include "core/types/file.h"
 #include "deps/log.h"
 
+bool SafeCopy(char *dst, size_t cap, const char *src) {
+  if (!dst || cap == 0)
+    return false;
+  if (!src)
+    src = "";
+  size_t len = strlen(src);
+  bool truncated = len >= cap;
+  size_t n = truncated ? cap - 1 : len;
+  memcpy(dst, src, n);
+  dst[n] = '\0';
+  if (truncated)
+    log_warn("SafeCopy: truncated %zu-byte string into %zu-byte buffer", len,
+             cap);
+  return !truncated;
+}
+
+bool SafeCat(char *dst, size_t cap, const char *src) {
+  if (!dst || cap == 0)
+    return false;
+  if (!src)
+    src = "";
+  size_t have = strlen(dst);
+  size_t add = strlen(src);
+  if (have + add >= cap) {
+    size_t room = cap > have + 1 ? cap - have - 1 : 0;
+    memcpy(dst + have, src, room);
+    dst[have + room] = '\0';
+    log_warn("SafeCat: truncated append into %zu-byte buffer", cap);
+    return false;
+  }
+  memcpy(dst + have, src, add + 1);
+  return true;
+}
+
 HotkeyBinding
 Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
                           bool (*optional_condition_for_hotkey)(void),
@@ -841,7 +875,13 @@ void Url_BuildSearchUrl(const char *engine, const char *query, char *out,
     else if (String_ContainsCI(engine, "bing"))
       templ = "https://www.bing.com/search?q=%s";
   }
-  snprintf(out, cap, templ, encoded);
+  const char *pct = strstr(templ, "%s");
+  if (pct) {
+    int pre = (int)(pct - templ);
+    snprintf(out, cap, "%.*s%s%s", pre, templ, encoded, pct + 2);
+    return;
+  }
+  snprintf(out, cap, "%s", templ);
 }
 
 int Utf8_LeadLen(unsigned char c) {

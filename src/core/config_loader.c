@@ -21,6 +21,7 @@
 #endif
 #include "core/window_manager.h"
 #include "helpers/helpers_fs.h"
+#include "helpers/helpers_text.h"
 
 #define CONFISRC "config/config.c"
 #define CONFISTART_MARK "// <skald-config-generated>"
@@ -229,23 +230,21 @@ static bool confioutput_is_fresh(const char *out) {
 static bool confibuild_feature(const char *src, const char *out) {
   char tmp[1024];
   snprintf(tmp, sizeof(tmp), "%s.tmp", out);
-  char cmd[2048];
-  if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd))) {
-    log_error("config build: no feature build command for %s", src);
+  const char *argv[PLATFORM_BUILD_ARGV_MAX];
+  if (!Platform_GetFeatureBuildArgv(src, tmp, argv,
+                                    PLATFORM_BUILD_ARGV_MAX)) {
+    log_error("config build: no feature build argv for %s", src);
     return false;
   }
-  char *outStr = Platform_RunTerminalCommand(cmd, false);
-  bool ok = false;
+  int status = -1;
+  char *outStr = Platform_RunArgvCapture(argv, NULL, &status);
+  bool ok = outStr != NULL && status == 0;
   if (outStr) {
-    if (strlen(outStr) == 0 ||
-        (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") &&
-         !strstr(outStr, "failed")))
-      ok = true;
-    log_info("%s", outStr);
+    if (outStr[0])
+      log_info("%s", outStr);
     free(outStr);
-  } else {
-    ok = true;
-  }
+  } else
+    log_error("config build: could not run compiler for %s", src);
   if (!ok) {
     unlink(tmp);
     return false;
@@ -304,7 +303,7 @@ static int config_build_load_store(void) {
     cfcount = 1;
   }
   cflibs[cfcount].handle = h;
-  snprintf(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq), "%s", uniq);
+  SafeCopy(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq), uniq);
   cfcount++;
   return rebuilt;
 }

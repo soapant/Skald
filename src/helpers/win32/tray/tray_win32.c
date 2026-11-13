@@ -8,7 +8,7 @@
 #include "core/types/window.h"
 #include "helpers/win32/subclasses_win32.h"
 #include "platform/platform.h"
-#include "helpers/win32/input_core_win32.h"
+#include "helpers/win32/raw_input_core_win32.h"
 #include "deps/log.h"
 
 static HICON s_tray_icon = NULL;
@@ -40,7 +40,7 @@ LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       s_tray_icon_fallback = false;
     }
     s_tray_icon = nid.hIcon;
-    lstrcpy(nid.szTip, "Switch Window");
+    lstrcpy(nid.szTip, "Skald");
 
     if (!Shell_NotifyIcon(NIM_ADD, &nid)) {
       log_error("tray: Shell_NotifyIcon(NIM_ADD) failed (%lu)", GetLastError());

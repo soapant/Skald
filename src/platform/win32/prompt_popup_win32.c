@@ -9,6 +9,7 @@
 #include "platform/wm_platform.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/win32/common_ui_win32.h"
+#include "helpers/win32/win32_state.h"
 #include <windows.h>
 
 static HWND g_prev_fg = NULL;
@@ -42,7 +43,7 @@ static bool is_popup_class(HWND hwnd) {
   }
 }
 
-void Platform_SetSkaldPrevFg(HWND h) {
+void win32_set_prev_fg(HWND h) {
   if (h && IsWindow(h))
     g_prev_fg = h;
 }

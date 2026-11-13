@@ -758,7 +758,7 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
         b = (val & 0xf) * 17;
       }
     }
-    strncpy(keys[ci], keybuf, 15);
+    SafeCopy(keys[ci], 16, keybuf);
     colors[ci * 4 + 0] = b;
     colors[ci * 4 + 1] = g;
     colors[ci * 4 + 2] = r;
@@ -1816,7 +1816,7 @@ void x11_desktop_clean_exec(char exec_line[1024]) {
   char *e = s + strlen(s) - 1;
   while (e > s && (*e == ' ' || *e == '\t'))
     *e-- = '\0';
-  strncpy(exec_line, s, 1024 - 1);
+  SafeCopy(exec_line, 1024, s);
 }
 
 bool x11_exe_in_path(const char *name) {
