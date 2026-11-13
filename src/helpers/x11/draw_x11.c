@@ -1,14 +1,14 @@
 #include "helpers/x11/draw_x11.h"
 
-void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
                                  Visual *vis, Colormap cmap, FontHandle font);
-void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_tint(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font);
-void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_text(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font);
-void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
                              Visual *vis, Colormap cmap, FontHandle font);
-void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_list_item(PromptState *state, Display *dpy, XftDraw *xd,
                            Visual *vis, Colormap cmap, FontHandle font,
                            ListBoxInfo *lb, int idx, int y, int text_x,
                            const char *icon_path);
@@ -382,46 +382,10 @@ void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
                        &textExt);
     text_w = textExt.xOff;
   }
-  int sel_start = 0, sel_end = 0;
-  bool has_sel = false;
-  Editbox_ResolveSelection(state, text_len, false, &sel_start, &sel_end,
-                           &has_sel);
-  memset(eb, 0, sizeof(*eb));
-  eb->text = state->eb->filter;
-  eb->text_len = text_len;
-  eb->cursor = state->eb->cursor;
-  eb->password_mode = state->password_mode;
-  eb->sel_start = sel_start;
-  eb->sel_end = sel_end;
-  eb->has_selection = has_sel;
   int asc = xf ? xf->ascent : 0;
   int desc = xf ? xf->descent : 0;
-  int edit_y = PROMPT_EDIT_INSET;
-  if (!state->lb && state->height > 0) {
-    int line_h = asc + desc;
-    if (line_h <= 0)
-      line_h = FontSize > 0 ? FontSize : 16;
-    edit_y = (state->height - line_h) / 2;
-    if (edit_y < 2)
-      edit_y = 2;
-  }
-  eb->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
-  eb->x = 0;
-  eb->y = edit_y;
-  eb->w = state->width;
-  eb->inset = PROMPT_EDIT_INSET;
-  eb->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
-  eb->scroll = state->eb->scroll_offset;
-  eb->cursor_x = cursor_x;
-  eb->text_w = text_w;
-  eb->text_y = edit_y;
-  eb->caret_y = Editbox_CaretY(edit_y, asc, desc, FontSize);
-  eb->caret_h = PromptCaretHeight();
-  eb->placeholder_dy = 2;
-  eb->rainbow_limit_x = -1;
-  eb->placeholder = state->eb->placeholder;
-  eb->text_color = rgb_to_hex(COLOR_TEXT);
-  eb->font = font;
+  EditboxSpec_FillFromPrompt(eb, state, text_len, cursor_x, text_w, asc, desc,
+                             font);
   eb->measure = x11_editbox_measure;
   eb->measure_user = metrics;
 }
@@ -467,10 +431,10 @@ void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
     return;
   SkaldContext_Get()->window.editbox_placed = true;
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
-  Platform_DrawEditBackground(state, dpy, xd, vis, cmap, font);
-  Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);
-  Platform_DrawEditText(state, dpy, xd, vis, cmap, font);
-  Platform_DrawEditCursor(state, dpy, xd, vis, cmap, font);
+  x11_draw_edit_background(state, dpy, xd, vis, cmap, font);
+  x11_draw_edit_tint(state, dpy, xd, vis, cmap, font);
+  x11_draw_edit_text(state, dpy, xd, vis, cmap, font);
+  x11_draw_edit_cursor(state, dpy, xd, vis, cmap, font);
   Platform_DestroyFont(font);
 }
 
@@ -516,7 +480,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
     } else {
       x11_draw_list_background(state, dpy, xd, vis, cmap, y, itemH, sel);
     }
-    Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y,
+    x11_draw_list_item(state, dpy, xd, vis, cmap, font, lb, idx, y,
                           PROMPT_ITEM_TEXT_X, NULL);
   }
 

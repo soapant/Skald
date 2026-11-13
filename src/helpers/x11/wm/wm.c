@@ -1,6 +1,7 @@
 #include "wm/wm.h"
 
 #include <strings.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "helpers/x11/env_helpers_x11.h"
@@ -10,6 +11,31 @@
 #include "wm/hyprland_wm.h"
 #include "wm/x11_wm.h"
 #include "deps/log.h"
+
+
+bool Wm_AppendWindowName(PlWindowList *list, const char *name,
+                         bool toupper_first) {
+  if (!strcasecmp(name, "window") || !strcasecmp(name, "colored"))
+    return true;
+  char buf[1024];
+  snprintf(buf, sizeof(buf), "%s", name);
+  if (toupper_first)
+    buf[0] = toupper((unsigned char)buf[0]);
+  return List_Append(list, buf);
+}
+
+char *wm_trim_focus_title(char *title) {
+  if (!title)
+    return NULL;
+  while (*title &&
+         (iscntrl((unsigned char)*title) || isspace((unsigned char)*title)))
+    title++;
+  char *end = title + strlen(title);
+  while (end > title &&
+         (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1])))
+    *--end = '\0';
+  return title;
+}
 
 char *Wm_GetActiveWindowTitle(void) {
   static char buffer[1024];

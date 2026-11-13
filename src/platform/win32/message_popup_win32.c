@@ -18,18 +18,7 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
 }
 
 void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
-  const char *message = spec.message;
-  int centerX = spec.x;
-  int centerY = spec.y;
-  bool no_bg = spec.no_bg;
-  int w = spec.w;
-  int h = spec.h;
-  int maxWidth = spec.max_width;
-  int maxHeight = spec.max_height;
-  double timeout = spec.timeout;
-  ColorRef color = spec.color;
-  void (*render)(void) = spec.render;
-  const char *name = spec.name;
+  MSG_UNPACK(spec);
 
   int useMaxW = maxWidth;
   int useMaxH = maxHeight;
@@ -140,22 +129,7 @@ static int win32_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
 }
 
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
-  const char *message = spec.message;
-  int rect_x = spec.x;
-  int rect_y = spec.y;
-  int rect_w = spec.w;
-  int rect_h = spec.h;
-  int h_slot = spec.h_slot;
-  int v_slot = spec.v_slot;
-  int gap = spec.gap;
-  int outward = spec.outward;
-  int maxWidth = spec.max_width;
-  int maxHeight = spec.max_height;
-  double timeout = spec.timeout;
-  ColorRef color = spec.color;
-  bool no_bg = spec.no_bg;
-  void (*render)(void) = spec.render;
-  const char *name = spec.name;
+  ANCHORED_MSG_UNPACK(spec);
 
   if (!message && !render) {
     return;
@@ -178,29 +152,13 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   if (winHeight > maxHeight)
     winHeight = maxHeight;
 
-  int centerX;
-  if (h_slot == 0)
-    centerX =
-        outward ? rect_x - gap - winWidth / 2 : rect_x + gap + winWidth / 2;
-  else if (h_slot == 2)
-    centerX = outward ? rect_x + rect_w + gap + winWidth / 2
-                      : rect_x + rect_w - gap - winWidth / 2;
-  else
-    centerX = rect_x + rect_w / 2;
-  int centerY;
-  if (v_slot == 0)
-    centerY =
-        outward ? rect_y - gap - winHeight / 2 : rect_y + gap + winHeight / 2;
-  else if (v_slot == 2)
-    centerY = outward ? rect_y + rect_h + gap + winHeight / 2
-                      : rect_y + rect_h - gap - winHeight / 2;
-  else
-    centerY = rect_y + rect_h / 2;
+  int centerX =
+      MsgAnchorCenter(rect_x, rect_w, h_slot, gap, outward, winWidth);
+  int centerY =
+      MsgAnchorCenter(rect_y, rect_h, v_slot, gap, outward, winHeight);
 
   {
-    int stack_dir = (v_slot == 2) ? -1 : 1;
-    if (outward)
-      stack_dir = -stack_dir;
+    int stack_dir = MsgStackDir(v_slot, outward);
     int stack_y = centerY - winHeight / 2;
     stack_y = win32_msg_stack_adjust_y(centerX - winWidth / 2, stack_y,
                                        winWidth, winHeight, stack_dir);

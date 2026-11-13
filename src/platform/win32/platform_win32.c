@@ -1,4 +1,5 @@
 #include "helpers/win32/platform_win32.h"
+#include "helpers/helpers_ui.h"
 
 #ifdef _MSC_VER
 
@@ -9,17 +10,8 @@
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
 
-  if (!working_dir) {
-    log_error("working_dir is NULL extra_args='%s'",
-              extra_args ? extra_args : "null");
+  if (!TerminalGuard(working_dir, extra_args))
     return false;
-  }
-  if (!UsedTerminal || !UsedTerminal[0]) {
-    log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'",
-              working_dir ? working_dir : "null",
-              extra_args ? extra_args : "null");
-    return false;
-  }
   char terminal[512];
   snprintf(terminal, sizeof(terminal), "%s.exe", UsedTerminal);
   HINSTANCE res = ShellExecuteA(NULL, "open", terminal, extra_args, working_dir,
@@ -36,6 +28,72 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
            working_dir ? working_dir : "", extra_args ? extra_args : "");
   ;
   return true;
+}
+
+static bool win32_grow_buf(char **out, size_t *cap, size_t need) {
+  if (need <= *cap)
+    return true;
+  size_t ncap = *cap;
+  while (need > ncap)
+    ncap *= 2;
+  char *n = (char *)realloc(*out, ncap);
+  if (!n)
+    return false;
+  *out = n;
+  *cap = ncap;
+  return true;
+}
+
+static bool win32_drain_read_pipe(HANDLE hRead, char **out, size_t *len,
+                                  size_t *cap) {
+  for (;;) {
+    if (!win32_grow_buf(out, cap, *len + 1024 + 1))
+      return false;
+    DWORD bytesRead = 0;
+    if (!ReadFile(hRead, *out + *len, (DWORD)(*cap - *len - 1), &bytesRead,
+                  NULL) ||
+        bytesRead == 0)
+      break;
+    *len += bytesRead;
+  }
+  return true;
+}
+
+static bool win32_create_child_pipe(HANDLE *hRead, HANDLE *hWrite) {
+  SECURITY_ATTRIBUTES sa;
+  sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+  sa.bInheritHandle = TRUE;
+  sa.lpSecurityDescriptor = NULL;
+  if (!CreatePipe(hRead, hWrite, &sa, 0))
+    return false;
+  SetHandleInformation(*hRead, HANDLE_FLAG_INHERIT, 0);
+  return true;
+}
+
+static BOOL win32_spawn_capture(const char *command, DWORD flags,
+                                PROCESS_INFORMATION *pi, HANDLE hWrite) {
+  STARTUPINFOA si = {0};
+  si.cb = sizeof(si);
+  si.hStdOutput = hWrite;
+  si.hStdError = hWrite;
+  si.dwFlags = STARTF_USESTDHANDLES;
+  char cmdLine[4096];
+  snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
+  return CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, flags, NULL, NULL,
+                        &si, pi);
+}
+
+static void win32_add_font_dir(const char *glob, const char *prefix) {
+  WIN32_FIND_DATAA fd;
+  HANDLE hFind = FindFirstFileA(glob, &fd);
+  if (hFind == INVALID_HANDLE_VALUE)
+    return;
+  do {
+    char path[MAX_PATH];
+    snprintf(path, sizeof(path), "%s%s", prefix, fd.cFileName);
+    AddFontResourceExA(path, FR_PRIVATE, 0);
+  } while (FindNextFileA(hFind, &fd));
+  FindClose(hFind);
 }
 
 char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
@@ -88,29 +146,17 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
     }
     return NULL;
   }
-  SECURITY_ATTRIBUTES sa;
-  sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-  sa.bInheritHandle = TRUE;
-  sa.lpSecurityDescriptor = NULL;
   HANDLE hRead, hWrite;
-  if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
+  if (!win32_create_child_pipe(&hRead, &hWrite)) {
     log_error("CreatePipe failed err=%lu", GetLastError());
     return NULL;
   }
-  SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
-  STARTUPINFOA si = {0};
-  si.cb = sizeof(STARTUPINFOA);
-  si.hStdOutput = hWrite;
-  si.hStdError = hWrite;
-  si.dwFlags = STARTF_USESTDHANDLES;
   PROCESS_INFORMATION pi = {0};
-  char cmdLine[4096];
-  snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
-  BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW,
-                           NULL, NULL, &si, &pi);
+  BOOL ok = win32_spawn_capture(command, CREATE_NO_WINDOW, &pi, hWrite);
   CloseHandle(hWrite);
   if (!ok) {
-    log_error("CreateProcess failed for '%s' err=%lu", cmdLine, GetLastError());
+    log_error("CreateProcess failed for '%s' err=%lu", command,
+              GetLastError());
     CloseHandle(hRead);
     return NULL;
   }
@@ -144,16 +190,8 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
         break;
       if (avail == 0)
         break;
-      if (len + avail + 1 > cap) {
-        size_t ncap = cap;
-        while (len + avail + 1 > ncap)
-          ncap *= 2;
-        char *n = (char *)realloc(out, ncap);
-        if (!n)
-          break;
-        out = n;
-        cap = ncap;
-      }
+      if (!win32_grow_buf(&out, &cap, len + avail + 1))
+        break;
       DWORD chunk = avail;
       if (chunk > (DWORD)(cap - len - 1))
         chunk = (DWORD)(cap - len - 1);
@@ -168,31 +206,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
       deadline = GetTickCount64() + 5000;
     }
     if (exited) {
-      for (;;) {
-        DWORD avail = 0;
-        if (!PeekNamedPipe(hRead, NULL, 0, NULL, &avail, NULL))
-          break;
-        if (avail == 0)
-          break;
-        if (len + avail + 1 > cap) {
-          size_t ncap = cap;
-          while (len + avail + 1 > ncap)
-            ncap *= 2;
-          char *n = (char *)realloc(out, ncap);
-          if (!n)
-            break;
-          out = n;
-          cap = ncap;
-        }
-        DWORD chunk = avail;
-        if (chunk > (DWORD)(cap - len - 1))
-          chunk = (DWORD)(cap - len - 1);
-        DWORD bytesRead = 0;
-        if (!ReadFile(hRead, out + len, chunk, &bytesRead, NULL) ||
-            bytesRead == 0)
-          break;
-        len += bytesRead;
-      }
+      win32_drain_read_pipe(hRead, &out, &len, &cap);
       break;
     }
   }
@@ -228,27 +242,14 @@ bool Platform_LaunchDetached(char *command) {
 char *Platform_RunCommandAndGetOutput(char *command, int priority) {
   if (command == NULL || strlen(command) == 0)
     return NULL;
-  SECURITY_ATTRIBUTES sa;
-  sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-  sa.bInheritHandle = TRUE;
-  sa.lpSecurityDescriptor = NULL;
   HANDLE hRead, hWrite;
-  if (!CreatePipe(&hRead, &hWrite, &sa, 0))
+  if (!win32_create_child_pipe(&hRead, &hWrite))
     return NULL;
-  SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
-  STARTUPINFOA si = {0};
-  si.cb = sizeof(STARTUPINFOA);
-  si.hStdOutput = hWrite;
-  si.hStdError = hWrite;
-  si.dwFlags = STARTF_USESTDHANDLES;
   PROCESS_INFORMATION pi = {0};
-  char cmdLine[4096];
-  snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
   DWORD creation_flags = CREATE_NO_WINDOW;
   if (priority == PLATFORM_RUN_PRIO_LOW)
     creation_flags |= BELOW_NORMAL_PRIORITY_CLASS;
-  BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, creation_flags,
-                           NULL, NULL, &si, &pi);
+  BOOL ok = win32_spawn_capture(command, creation_flags, &pi, hWrite);
   CloseHandle(hWrite);
   if (!ok) {
     CloseHandle(hRead);
@@ -263,25 +264,13 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
     CloseHandle(pi.hThread);
     return NULL;
   }
-  for (;;) {
-    if (len + 1024 + 1 > cap) {
-      size_t ncap = cap * 2;
-      char *n = (char *)realloc(out, ncap);
-      if (!n) {
-        free(out);
-        out = NULL;
-        break;
-      }
-      out = n;
-      cap = ncap;
-    }
-    DWORD bytesRead = 0;
-    if (!ReadFile(hRead, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) ||
-        bytesRead == 0)
-      break;
-    len += bytesRead;
-  }
+  bool read_ok = win32_drain_read_pipe(hRead, &out, &len, &cap);
   WaitForSingleObject(pi.hProcess, INFINITE);
+  if (!read_ok) {
+    if (out)
+      free(out);
+    out = NULL;
+  }
   if (!out) {
     CloseHandle(hRead);
     CloseHandle(pi.hProcess);
@@ -385,24 +374,9 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
     CloseHandle(pi.hProcess);
     return NULL;
   }
-  for (;;) {
-    if (len + 1024 + 1 > cap) {
-      size_t ncap = cap * 2;
-      char *n = (char *)realloc(out, ncap);
-      if (!n) {
-        free(out);
-        out = NULL;
-        break;
-      }
-      out = n;
-      cap = ncap;
-    }
-    DWORD bytesRead = 0;
-    if (!ReadFile(rd_out, out + len, (DWORD)(cap - len - 1), &bytesRead,
-                  NULL) ||
-        bytesRead == 0)
-      break;
-    len += bytesRead;
+  if (!win32_drain_read_pipe(rd_out, &out, &len, &cap)) {
+    free(out);
+    out = NULL;
   }
   CloseHandle(rd_out);
   if (stdin_thread) {
@@ -427,25 +401,8 @@ FontHandle Platform_CreateFont(int size, const char *face_name) {
   static bool s_font_loaded = false;
   if (!s_font_loaded) {
     s_font_loaded = true;
-    WIN32_FIND_DATAA fd;
-    HANDLE hFind = FindFirstFileA("resources\\*.ttf", &fd);
-    if (hFind != INVALID_HANDLE_VALUE) {
-      do {
-        char path[MAX_PATH];
-        snprintf(path, sizeof(path), "resources\\%s", fd.cFileName);
-        AddFontResourceExA(path, FR_PRIVATE, 0);
-      } while (FindNextFileA(hFind, &fd));
-      FindClose(hFind);
-    }
-    hFind = FindFirstFileA("data\\*.ttf", &fd);
-    if (hFind != INVALID_HANDLE_VALUE) {
-      do {
-        char path[MAX_PATH];
-        snprintf(path, sizeof(path), "data\\%s", fd.cFileName);
-        AddFontResourceExA(path, FR_PRIVATE, 0);
-      } while (FindNextFileA(hFind, &fd));
-      FindClose(hFind);
-    }
+    win32_add_font_dir("resources\\*.ttf", "resources\\");
+    win32_add_font_dir("data\\*.ttf", "data\\");
   }
   HFONT hf =
       CreateFontA(h, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
@@ -598,13 +555,7 @@ bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
 
 bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
                                 long data) {
-  (void)atom;
-  if (WH_EQUALS(window, WH_NULL))
-    return false;
-  HWND hwnd = WH_TO_HWND(window);
-  if (!IsWindow(hwnd))
-    return false;
-  return PostMessageA(hwnd, WM_USER + 1, (WPARAM)data, 0) != 0;
+  return Platform_SetWindowLongProperty(window, atom, data);
 }
 
 bool Platform_FocusWindow(const char *title) {
@@ -1280,6 +1231,30 @@ static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
   }
 }
 
+static void Platform_http_buf_init(HttpBuf *buf, size_t limit);
+int Platform_http_perform(const char *url, const char *method,
+                          const char *headers, const char *body,
+                          HttpBuf *resp_buf, FILE *file_out,
+                          long max_redirects);
+
+static char *win32_http_collect(const char *url, const char *method,
+                                const char *content_type, const char *body,
+                                size_t max_bytes, size_t *out_len) {
+  HttpBuf buf;
+  Platform_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
+  int ok = Platform_http_perform(url, method, content_type, body, &buf, NULL,
+                                 HTTP_MAX_REDIRECTS);
+  if (out_len)
+    *out_len = buf.len;
+  if (ok < 200 || ok >= 300) {
+    free(buf.buf);
+    return NULL;
+  }
+  if (!buf.buf)
+    buf.buf = (char *)calloc(1, 1);
+  return buf.buf;
+}
+
 int Platform_http_perform(const char *url, const char *method,
                           const char *headers, const char *body,
                           HttpBuf *resp_buf, FILE *file_out,
@@ -1461,19 +1436,7 @@ char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
       *out_len = 0;
     return NULL;
   }
-  HttpBuf buf;
-  Platform_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
-  int ok = Platform_http_perform(url, "GET", NULL, NULL, &buf, NULL,
-                                 HTTP_MAX_REDIRECTS);
-  if (out_len)
-    *out_len = buf.len;
-  if (ok < 200 || ok >= 300) {
-    free(buf.buf);
-    return NULL;
-  }
-  if (!buf.buf)
-    buf.buf = (char *)calloc(1, 1);
-  return buf.buf;
+  return win32_http_collect(url, "GET", NULL, NULL, max_bytes, out_len);
 }
 
 char *Platform_HttpGet(const char *url) {
@@ -1484,17 +1447,8 @@ char *Platform_HttpPost(const char *url, const char *content_type,
                         const char *body) {
   if (!url || !url[0])
     return NULL;
-  HttpBuf buf;
-  Platform_http_buf_init(&buf, HTTP_DEFAULT_LIMIT);
-  int ok = Platform_http_perform(url, "POST", content_type, body ? body : "",
-                                 &buf, NULL, HTTP_MAX_REDIRECTS);
-  if (ok < 200 || ok >= 300) {
-    free(buf.buf);
-    return NULL;
-  }
-  if (!buf.buf)
-    buf.buf = (char *)calloc(1, 1);
-  return buf.buf;
+  return win32_http_collect(url, "POST", content_type, body ? body : "",
+                            HTTP_DEFAULT_LIMIT, NULL);
 }
 
 bool Platform_HttpDownload(const char *url, const char *save_path) {

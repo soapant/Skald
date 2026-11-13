@@ -199,11 +199,7 @@ static PlWindowList niri_list_fields(const char *key, size_t key_len,
     p = tpos + key_len;
     if (!buf[0])
       continue;
-    if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored"))
-      continue;
-    if (toupper_first)
-      buf[0] = toupper((unsigned char)buf[0]);
-    if (!List_Append(&list, buf))
+    if (!Wm_AppendWindowName(&list, buf, toupper_first))
       break;
   }
   free(json);

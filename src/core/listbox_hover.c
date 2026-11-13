@@ -12,7 +12,6 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_input_state.h"
 #include "platform/platform.h"
-#include "helpers/helpers_ui.h"
 
 static bool mouse_valid = false;
 static int mouse_x = 0;
@@ -283,4 +282,55 @@ void ListBox_NavigateDown(ListBoxInfo *lb) {
   if (sel == lb->selected_index)
     return;
   UI_NavigateTo(lb, sel);
+}
+
+void ListBoxInfo_Free(ListBoxInfo *lb) {
+  if (!lb)
+    return;
+  free(lb->items);
+  lb->items = NULL;
+  lb->items_cap = 0;
+  lb->item_count = 0;
+}
+
+bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows) {
+  if (!lb || rows <= 0 || rows > MAX_VISIBLE_ITEMS)
+    return false;
+  if (lb->items && rows <= lb->items_cap)
+    return true;
+  int cap = lb->items_cap > 0 ? lb->items_cap : 64;
+  while (cap < rows)
+    cap *= 2;
+  if (cap > MAX_VISIBLE_ITEMS)
+    cap = MAX_VISIBLE_ITEMS;
+  if (cap < rows)
+    return false;
+  char (*grown)[LISTBOX_ROW_BYTES] = (char (*)[LISTBOX_ROW_BYTES])realloc(
+      lb->items, (size_t)cap * LISTBOX_ROW_BYTES);
+  if (!grown)
+    return false;
+  lb->items = grown;
+  lb->items_cap = cap;
+  return true;
+}
+
+const char *ListBoxInfo_Row(ListBoxInfo *lb, int idx) {
+  if (!lb || !lb->items)
+    return NULL;
+  if (idx < 0 || idx >= lb->item_count)
+    return NULL;
+  if (idx >= lb->items_cap)
+    return NULL;
+  return lb->items[idx];
+}
+
+void ListBoxInfo_Init(ListBoxInfo *lb) {
+  if (!lb)
+    return;
+  ListBoxInfo_Free(lb);
+  lb->selected_index = -1;
+  lb->selected_text = "";
+  lb->total_matches = 0;
+  lb->view_offset = 0;
+  lb->text_hscroll = 0;
 }

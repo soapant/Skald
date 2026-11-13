@@ -86,6 +86,17 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   return true;
 }
 
+static bool win32_resolve_browser(char *out, size_t cap) {
+  if (!UsedBrowser || !UsedBrowser[0])
+    return false;
+  if (SearchPathA(NULL, UsedBrowser, ".exe", (DWORD)cap, out, NULL) ||
+      SearchPathA(NULL, UsedBrowser, NULL, (DWORD)cap, out, NULL))
+    return true;
+  char with_exe[MAX_PATH];
+  snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser);
+  return SearchPathA(NULL, with_exe, NULL, (DWORD)cap, out, NULL) != 0;
+}
+
 bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   char full_url[2048] = {0};
   if (!url || !url[0])
@@ -97,22 +108,13 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   if (full_url[0] == '\0') {
     if (UsedBrowser && UsedBrowser[0]) {
       char browser_path[MAX_PATH] = {0};
-      char *exe = NULL;
-      if (SearchPathA(NULL, UsedBrowser, ".exe", MAX_PATH, browser_path,
-                      NULL) ||
-          SearchPathA(NULL, UsedBrowser, NULL, MAX_PATH, browser_path, NULL))
-        exe = browser_path;
-      else {
-        char with_exe[MAX_PATH];
-        snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser);
-        if (SearchPathA(NULL, with_exe, NULL, MAX_PATH, browser_path, NULL))
-          exe = browser_path;
-      }
-      if (exe && exe[0]) {
+      if (win32_resolve_browser(browser_path, sizeof(browser_path))) {
         HINSTANCE r =
-            ShellExecuteA(NULL, "open", exe, NULL, NULL, SW_SHOWNORMAL);
+            ShellExecuteA(NULL, "open", browser_path, NULL, NULL,
+                          SW_SHOWNORMAL);
         if ((intptr_t)r > 32) {
-          log_info("Platform_LaunchBrowserAtUrl via %s (no url)", exe);
+          log_info("Platform_LaunchBrowserAtUrl via %s (no url)",
+                   browser_path);
           return true;
         }
       }
@@ -131,17 +133,8 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
   }
   if (new_window && UsedBrowser && UsedBrowser[0]) {
     char browser_path[MAX_PATH] = {0};
-    char *exe = NULL;
-    if (SearchPathA(NULL, UsedBrowser, ".exe", MAX_PATH, browser_path, NULL) ||
-        SearchPathA(NULL, UsedBrowser, NULL, MAX_PATH, browser_path, NULL))
-      exe = browser_path;
-    else {
-      char with_exe[MAX_PATH];
-      snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser);
-      if (SearchPathA(NULL, with_exe, NULL, MAX_PATH, browser_path, NULL))
-        exe = browser_path;
-    }
-    if (exe && exe[0]) {
+    if (win32_resolve_browser(browser_path, sizeof(browser_path))) {
+      char *exe = browser_path;
       char params[4096];
       snprintf(params, sizeof(params), "--new-window \"%s\"", full_url);
       HINSTANCE r =

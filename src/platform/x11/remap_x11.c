@@ -122,18 +122,22 @@ static const char *vk_to_name(int vk_code, char *buf, size_t sz) {
   }
 }
 
+static bool inject_run(const char *cmd) {
+  char *out = Platform_RunTerminalCommand((char *)cmd, false);
+  if (out) {
+    free(out);
+    return true;
+  }
+  return false;
+}
+
 static bool inject_ydotool(int vk_code, int down) {
   int linux_code = vk_to_linux(vk_code);
   if (!linux_code)
     return false;
   char cmd[128];
   snprintf(cmd, sizeof(cmd), "ydotool key %d:%d", linux_code, down ? 1 : 0);
-  char *out = Platform_RunTerminalCommand(cmd, false);
-  if (out) {
-    free(out);
-    return true;
-  }
-  return false;
+  return inject_run(cmd);
 }
 
 static bool inject_wtype(int vk_code, int down) {
@@ -143,12 +147,7 @@ static bool inject_wtype(int vk_code, int down) {
     return false;
   char cmd[256];
   snprintf(cmd, sizeof(cmd), "wtype %s %s", down ? "-P" : "-R", name);
-  char *out = Platform_RunTerminalCommand(cmd, false);
-  if (out) {
-    free(out);
-    return true;
-  }
-  return false;
+  return inject_run(cmd);
 }
 
 static bool inject_xdotool(int vk_code, int down) {
@@ -158,12 +157,7 @@ static bool inject_xdotool(int vk_code, int down) {
     return false;
   char cmd[256];
   snprintf(cmd, sizeof(cmd), "xdotool %s %s", down ? "keydown" : "keyup", name);
-  char *out = Platform_RunTerminalCommand(cmd, false);
-  if (out) {
-    free(out);
-    return true;
-  }
-  return false;
+  return inject_run(cmd);
 }
 
 static bool inject_xtest(int vk_code, int down) {

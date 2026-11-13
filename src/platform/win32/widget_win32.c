@@ -95,7 +95,8 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!widget || widget->base.dead || widget->base.mapped) {
+  if (!WidgetBaseCheck(widget ? &widget->base : NULL) ||
+      widget->base.mapped) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -108,7 +109,8 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || widget->base.dead || !widget->base.mapped) {
+  if (!widget || !WidgetBaseCheck(&widget->base) ||
+      !widget->base.mapped) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -119,53 +121,37 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-  if (!widget || widget->base.dead) {
+  if (!widget || !WidgetBaseMove(&widget->base, x, y)) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
     return;
   }
-  if (widget->base.x == x && widget->base.y == y) {
-    return;
-  }
-  widget->base.x = x;
-  widget->base.y = y;
   SetWindowPos(widget->hwnd, HWND_TOPMOST, x, y, 0, 0,
                SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-  if (!widget || widget->base.dead) {
+  if (!widget || !WidgetBaseSetNoBg(&widget->base, no_bg)) {
     return;
   }
-  widget->base.no_bg = no_bg;
   widget_invalidate(widget);
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
-  if (!widget || widget->base.dead) {
+  if (!widget || !WidgetBaseSetBgColor(&widget->base, color)) {
     return;
   }
-  widget->base.has_bg = color != 0;
-  widget->base.bg_color = color;
   widget_invalidate(widget);
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-  if (!widget || widget->base.dead) {
-    return;
-  }
-  if (w <= 0 || h <= 0) {
+  if (!widget || !WidgetBaseResize(&widget->base, w, h)) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
     return;
   }
-  if (widget->base.w == w && widget->base.h == h) {
-    return;
-  }
-  widget->base.w = w;
-  widget->base.h = h;
   if (!widget->base.no_bg)
     win32_apply_rounded_corners(widget->hwnd, w, h);
   SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->base.x, widget->base.y, w, h,

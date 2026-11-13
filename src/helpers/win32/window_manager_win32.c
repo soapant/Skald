@@ -9,7 +9,6 @@
 #include "platform/platform.h"
 #include <windows.h>
 
-#include "core/hotkey_manager.h"
 #include "core/feature_loader.h"
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
@@ -41,20 +40,7 @@ int WindowManager_RunWin32(WindowManager *wm) {
   return 0;
 }
 
-static void WindowManager_DrainSelectionComplete(WindowManager *wm) {
 
-  if (!wm || wm->popup_count == 0) {
-    return;
-  }
-  if (!SkaldContext_Get()->window.selection_complete) {
-    return;
-  }
-  SkaldContext_Get()->window.selection_complete = false;
-  WindowManager_PopPopup(wm);
-  Popup *top_after = WindowManager_GetTopPopup(wm);
-  if (top_after && top_after->vtable && top_after->vtable->on_render)
-    top_after->vtable->on_render(top_after);
-}
 
 void WindowManager_ProcessEventsWin32(WindowManager *wm) {
   if (!wm) {

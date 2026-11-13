@@ -241,6 +241,7 @@ int64_t Platform_TimerNowTicks(void) {
 
 int64_t Platform_TimerTickFrequency(void) { return 1000000000LL; }
 
+
 struct PlDirIter {
   char dir[MAX_PATH];
   DIR *dh;

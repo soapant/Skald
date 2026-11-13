@@ -343,11 +343,7 @@ static PlWindowList sway_list_pid_fields(bool (*extract)(const char *json,
       continue;
     if (!buf[0] || !strcmp(buf, "null"))
       continue;
-    if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored"))
-      continue;
-    if (toupper_first)
-      buf[0] = toupper((unsigned char)buf[0]);
-    if (!List_Append(&list, buf))
+    if (!Wm_AppendWindowName(&list, buf, toupper_first))
       break;
   }
   free(json);

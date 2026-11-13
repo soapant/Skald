@@ -22,7 +22,6 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_input_state.h"
-#include "helpers/helpers_ui.h"
 #include "core/window_manager.h"
 #include "core/thread_registry.h"
 #include "platform/lib.h"
@@ -32,7 +31,6 @@
 #include "helpers/helpers_monitor.h"
 #include "helpers/helpers_key.h"
 #include "helpers/helpers_http.h"
-#include "helpers/helpers_ui.h"
 #include "core/prompt_geometry.h"
 #include "core/feature_loader.h"
 #include "core/feature_path.h"
@@ -42,7 +40,6 @@
 #include "core/hover_widget.h"
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
-#include "core/hotkey_manager.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
@@ -56,7 +53,6 @@
 #include "core/types/skapi_types.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
-#include "core/feature_loader.h"
 
 size_t sk_clipboard_history_count(void) {
   return clipboard_history_count_platform();
@@ -177,21 +173,33 @@ void sk_cap_bind_declare(const char *key, void *consumer) {
   cap_bind_declare(key, consumer);
 }
 
+static bool sk_resolve_caller_path(const char *name, char *full, size_t cap,
+                                   const char *func) {
+  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), name, full,
+                                   cap)) {
+    log_warn("%s resolve failed name='%s' feature='%s'", func, name,
+             SkaldContext_Get()->window.current_feature
+                 ? SkaldContext_Get()->window.current_feature
+                 : "(null)");
+    return false;
+  }
+  return true;
+}
+
+static bool sk_resolve_caller_path_silent(const char *name, char *full,
+                                          size_t cap) {
+  return FeaturePath_ResolveDataPath(__builtin_return_address(0), name, full,
+                                     cap);
+}
+
 SkStringList sk_load_file_list(const char *filepath) {
   SkStringList list = {0};
   if (!filepath)
     return list;
   char full[MAX_PATH];
-  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
-                                   sizeof(full))) {
-
-    log_warn("sk_load_file_list resolve failed name='%s' feature='%s'",
-             filepath,
-             SkaldContext_Get()->window.current_feature
-                 ? SkaldContext_Get()->window.current_feature
-                 : "(null)");
+  if (!sk_resolve_caller_path(filepath, full, sizeof(full),
+                              "sk_load_file_list"))
     return list;
-  }
   list = File_ReadLines(full);
   return list;
 }
@@ -201,15 +209,9 @@ long sk_load_file(const char *filepath, char *buffer, long buffer_size) {
     return -1;
   buffer[0] = '\0';
   char full[MAX_PATH];
-  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
-                                   sizeof(full))) {
-
-    log_warn("sk_load_file resolve failed name='%s' feature='%s'", filepath,
-             SkaldContext_Get()->window.current_feature
-                 ? SkaldContext_Get()->window.current_feature
-                 : "(null)");
+  if (!sk_resolve_caller_path(filepath, full, sizeof(full),
+                              "sk_load_file"))
     return -1;
-  }
   return File_ReadAll(full, buffer, buffer_size);
 }
 
@@ -250,8 +252,7 @@ bool sk_append_to_file(const char *filepath, const char *line) {
   if (!filepath || !line)
     return false;
   char full[MAX_PATH];
-  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
-                                   sizeof(full)))
+  if (!sk_resolve_caller_path_silent(filepath, full, sizeof(full)))
     return false;
   filepath = full;
   FILE *f = fopen(filepath, "a");
@@ -296,8 +297,7 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   if (count > 0 && !lines)
     return false;
   char full[MAX_PATH];
-  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), filepath, full,
-                                   sizeof(full)))
+  if (!sk_resolve_caller_path_silent(filepath, full, sizeof(full)))
     return false;
   filepath = full;
   FILE *f = fopen(filepath, "w");
@@ -498,8 +498,8 @@ bool ski_register_remapping(const SkRemappingSpec *spec) {
     return false;
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
-  const char *const *windows = NULL;
-  bool whitelist = false;
+  const char *const *windows;
+  bool whitelist;
   resolve_window_list(wl, bl, &windows, &whitelist);
   return remap_register_internal(spec->src, spec->dst, whitelist, windows);
 }
@@ -527,8 +527,8 @@ bool ski_register_snippet(const SkSnippetSpec *spec) {
   snippet_set_fire_fn(snippet_fire);
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
-  const char *const *windows = NULL;
-  bool whitelist = false;
+  const char *const *windows;
+  bool whitelist;
   resolve_window_list(wl, bl, &windows, &whitelist);
   return snippet_register_internal(spec->trigger, spec->text, spec->fn,
                                    whitelist, windows,
@@ -609,8 +609,8 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
     return false;
   const char *const *wl = spec->whitelist;
   const char *const *bl = spec->blacklist;
-  const char *const *bw = NULL;
-  bool whitelist = false;
+  const char *const *bw;
+  bool whitelist;
   resolve_window_list(wl, bl, &bw, &whitelist);
   HotkeyBinding binding = convert_into_hotkey_binding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
@@ -2168,8 +2168,7 @@ char *sk_resolve_data_path(const char *name) {
   if (!name || !name[0])
     return NULL;
   char full[MAX_PATH];
-  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), name, full,
-                                   sizeof(full)))
+  if (!sk_resolve_caller_path_silent(name, full, sizeof(full)))
     return NULL;
   return strdup(full);
 }

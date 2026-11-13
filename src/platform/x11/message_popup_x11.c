@@ -14,20 +14,9 @@ void Platform_HoverMessageRelease(const char *key) {
 }
 
 void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
-  const char *message = spec.message;
+  MSG_UNPACK(spec);
   if (!message)
     message = "";
-  int centerX = spec.x;
-  int centerY = spec.y;
-  bool no_bg = spec.no_bg;
-  int w = spec.w;
-  int h = spec.h;
-  int maxWidth = spec.max_width;
-  int maxHeight = spec.max_height;
-  double timeout = spec.timeout;
-  ColorRef color = spec.color;
-  void (*render)(void) = spec.render;
-  const char *name = spec.name;
 
   Display *dpy = x11_get_display();
   if (!dpy) {
@@ -87,22 +76,7 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
 }
 
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
-  const char *message = spec.message;
-  int rect_x = spec.x;
-  int rect_y = spec.y;
-  int rect_w = spec.w;
-  int rect_h = spec.h;
-  int h_slot = spec.h_slot;
-  int v_slot = spec.v_slot;
-  int gap = spec.gap;
-  int outward = spec.outward;
-  int maxWidth = spec.max_width;
-  int maxHeight = spec.max_height;
-  double timeout = spec.timeout;
-  ColorRef color = spec.color;
-  bool no_bg = spec.no_bg;
-  void (*render)(void) = spec.render;
-  const char *name = spec.name;
+  ANCHORED_MSG_UNPACK(spec);
 
   if (!message && !render) {
     return;
@@ -119,25 +93,15 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   int winW = 0;
   int winH = 0;
   x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
-  int x;
-  if (h_slot == 0)
-    x = outward ? rect_x - gap - winW : rect_x + gap;
-  else if (h_slot == 2)
-    x = outward ? rect_x + rect_w + gap : rect_x + rect_w - gap - winW;
-  else
-    x = rect_x + (rect_w - winW) / 2;
-  int y;
-  if (v_slot == 0)
-    y = outward ? rect_y - gap - winH : rect_y + gap;
-  else if (v_slot == 2)
-    y = outward ? rect_y + rect_h + gap : rect_y + rect_h - gap - winH;
-  else
-    y = rect_y + (rect_h - winH) / 2;
+  int centerX =
+      MsgAnchorCenter(rect_x, rect_w, h_slot, gap, outward, winW);
+  int centerY =
+      MsgAnchorCenter(rect_y, rect_h, v_slot, gap, outward, winH);
+  int x = centerX - winW / 2;
+  int y = centerY - winH / 2;
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
-  int stack_dir = (v_slot == 2) ? -1 : 1;
-  if (outward)
-    stack_dir = -stack_dir;
+  int stack_dir = MsgStackDir(v_slot, outward);
   y = x11_msg_stack_adjust_y(x, y, winW, winH, stack_dir);
   x11_msg_present(dpy, message, x - ax, y - ay, winW, winH, timeout, color,
                   no_bg, render, name);

@@ -220,7 +220,8 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!widget || widget->base.dead || widget->base.mapped) {
+  if (!WidgetBaseCheck(widget ? &widget->base : NULL) ||
+      widget->base.mapped) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -232,7 +233,8 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || widget->base.dead || !widget->base.mapped) {
+  if (!widget || !WidgetBaseCheck(&widget->base) ||
+      !widget->base.mapped) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -244,36 +246,28 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-  if (!widget || widget->base.dead) {
+  if (!widget || !WidgetBaseMove(&widget->base, x, y)) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
     return;
   }
-  if (widget->base.x == x && widget->base.y == y) {
-    return;
-  }
-  widget->base.x = x;
-  widget->base.y = y;
   XMoveWindow(widget->dpy, widget->win, x, y);
   XFlush(widget->dpy);
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-  if (!widget || widget->base.dead) {
+  if (!widget || !WidgetBaseSetNoBg(&widget->base, no_bg)) {
     return;
   }
-  widget->base.no_bg = no_bg;
   widget->base.dirty = true;
   RenderThread_Wake();
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
-  if (!widget || widget->base.dead) {
+  if (!widget || !WidgetBaseSetBgColor(&widget->base, bg_color)) {
     return;
   }
-  widget->base.has_bg = bg_color != 0;
-  widget->base.bg_color = bg_color;
   if (!widget->dpy || widget->win == None) {
     return;
   }
@@ -296,20 +290,12 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-  if (!widget || widget->base.dead) {
-    return;
-  }
-  if (w <= 0 || h <= 0) {
+  if (!widget || !WidgetBaseResize(&widget->base, w, h)) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
     return;
   }
-  if (widget->base.w == w && widget->base.h == h) {
-    return;
-  }
-  widget->base.w = w;
-  widget->base.h = h;
   XMoveResizeWindow(widget->dpy, widget->win, widget->base.x, widget->base.y, w,
                     h);
   XFlush(widget->dpy);

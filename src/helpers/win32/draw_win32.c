@@ -30,16 +30,54 @@ __thread HDC g_draw_hdc = NULL;
 
 HFONT win32_sized_font(int size);
 
-bool win32_text_is_symbolic(const wchar_t *wide, int len) {
+void win32_img_stat(const char *path, FILETIME *ft, DWORD *size);
 
+static void win32_path_to_native(char *dst, size_t cap, const char *src) {
+  snprintf(dst, cap, "%s", src);
+  for (char *p = dst; *p; p++)
+    if (*p == '/')
+      *p = '\\';
+}
+
+static bool win32_text_any(const wchar_t *wide, int len,
+                           bool (*pred)(unsigned int)) {
   for (int i = 0; i < len; i++) {
     unsigned int c = (unsigned int)wide[i];
     if (c == 0xFE0F || c == 0xFE0E)
       continue;
-    if (c > 0x7F)
+    if (pred(c))
       return true;
   }
   return false;
+}
+
+static bool win32_pred_symbolic(unsigned int c) { return c > 0x7F; }
+
+static bool win32_pred_boost(unsigned int c) {
+  if (c >= 0x1F000)
+    return true;
+  if (c >= 0xD800 && c <= 0xDFFF)
+    return true;
+  if (c >= 0xE000 && c <= 0xF8FF)
+    return true;
+  return false;
+}
+
+static bool win32_entry_changed(DWORD now, DWORD *checked_ms, const char *path,
+                                const FILETIME *slot_mtime, DWORD slot_size) {
+  if (now - *checked_ms < WIN32_IMG_REVALIDATE_MS)
+    return false;
+  *checked_ms = now;
+  FILETIME ft;
+  DWORD size = 0;
+  win32_img_stat(path, &ft, &size);
+  if (memcmp(slot_mtime, &ft, sizeof(ft)) != 0)
+    return true;
+  return slot_size != size;
+}
+
+bool win32_text_is_symbolic(const wchar_t *wide, int len) {
+  return win32_text_any(wide, len, win32_pred_symbolic);
 }
 
 bool win32_font_covers(HFONT f, const wchar_t *wide, int len) {
@@ -146,19 +184,7 @@ HFONT win32_symbol_font(int size, const wchar_t *wide, int len) {
 }
 
 bool win32_text_needs_boost(const wchar_t *wide, int len) {
-
-  for (int i = 0; i < len; i++) {
-    unsigned int c = (unsigned int)wide[i];
-    if (c == 0xFE0F || c == 0xFE0E)
-      continue;
-    if (c >= 0x1F000)
-      return true;
-    if (c >= 0xD800 && c <= 0xDFFF)
-      return true;
-    if (c >= 0xE000 && c <= 0xF8FF)
-      return true;
-  }
-  return false;
+  return win32_text_any(wide, len, win32_pred_boost);
 }
 
 HFONT win32_font_for_text(const wchar_t *wide, int len, int fontsize,
@@ -333,10 +359,7 @@ void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
   ft->dwHighDateTime = 0;
   *size = 0;
   char native[MAX_PATH * 2];
-  snprintf(native, sizeof(native), "%s", path);
-  for (char *p = native; *p; p++)
-    if (*p == '/')
-      *p = '\\';
+  win32_path_to_native(native, sizeof(native), path);
   WIN32_FILE_ATTRIBUTE_DATA fad;
   if (!GetFileAttributesExA(native, GetFileExInfoStandard, &fad)) {
     return;
@@ -358,17 +381,12 @@ void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {
       continue;
     if (strcmp(s->key, path) != 0)
       continue;
-    if (now - s->checked_ms >= WIN32_IMG_REVALIDATE_MS) {
-      FILETIME ft;
-      DWORD size;
-      win32_img_stat(path, &ft, &size);
-      s->checked_ms = now;
-      if (memcmp(&s->mtime, &ft, sizeof(ft)) != 0 || s->size != size) {
-        win32_gdip_dispose(s->bmp);
-        s->bmp = NULL;
-        s->failed = 0;
-        continue;
-      }
+    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime,
+                            s->size)) {
+      win32_gdip_dispose(s->bmp);
+      s->bmp = NULL;
+      s->failed = 0;
+      continue;
     }
     s->stamp = ++g_img_cache_tick;
     found = s->bmp ? s->bmp : WIN32_IMG_FAILED;
@@ -439,16 +457,11 @@ void *win32_src_cache_get(const char *path) {
       continue;
     if (strcmp(s->key, path) != 0)
       continue;
-    if (now - s->checked_ms >= WIN32_IMG_REVALIDATE_MS) {
-      FILETIME ft;
-      DWORD size;
-      win32_img_stat(path, &ft, &size);
-      s->checked_ms = now;
-      if (memcmp(&s->mtime, &ft, sizeof(ft)) != 0 || s->size != size) {
-        win32_gdip_dispose(s->src);
-        s->src = NULL;
-        continue;
-      }
+    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime,
+                            s->size)) {
+      win32_gdip_dispose(s->src);
+      s->src = NULL;
+      continue;
     }
     s->stamp = ++g_img_cache_tick;
     found = s->src;
@@ -556,10 +569,7 @@ void *win32_load_scaled_bitmap(const char *path, int w, int h) {
   GpBitmap *src = (GpBitmap *)win32_src_cache_get(path);
   if (!src) {
     char native[MAX_PATH * 2];
-    snprintf(native, sizeof(native), "%s", path);
-    for (char *p = native; *p; p++)
-      if (*p == '/')
-        *p = '\\';
+    win32_path_to_native(native, sizeof(native), path);
 
     wchar_t wpath[MAX_PATH * 2];
     win32_utf8_to_wide(native, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
@@ -639,42 +649,6 @@ void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   }
   if (told)
     SelectObject(g_draw_hdc, told);
-  int sel_start = 0, sel_end = 0;
-  bool has_sel = false;
-  Editbox_ResolveSelection(state, text_len, false, &sel_start, &sel_end,
-                           &has_sel);
-  memset(eb, 0, sizeof(*eb));
-  eb->text = state->eb->filter;
-  eb->text_len = text_len;
-  eb->cursor = state->eb->cursor;
-  eb->password_mode = state->password_mode;
-  eb->sel_start = sel_start;
-  eb->sel_end = sel_end;
-  eb->has_selection = has_sel;
-  int edit_y = PROMPT_EDIT_INSET;
-  if (!state->lb && state->height > 0) {
-    int line_h = ascent + descent;
-    if (line_h <= 0)
-      line_h = FontSize > 0 ? FontSize : 16;
-    edit_y = (state->height - line_h) / 2;
-    if (edit_y < 2)
-      edit_y = 2;
-  }
-  eb->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
-  eb->x = 0;
-  eb->y = edit_y;
-  eb->w = state->width;
-  eb->inset = PROMPT_EDIT_INSET;
-  eb->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
-  eb->scroll = state->eb->scroll_offset;
-  eb->cursor_x = cursor_x;
-  eb->text_w = text_w;
-  eb->text_y = edit_y;
-  eb->caret_y = Editbox_CaretY(edit_y, ascent, descent, FontSize);
-  eb->caret_h = PromptCaretHeight();
-  eb->placeholder_dy = 2;
-  eb->rainbow_limit_x = -1;
-  eb->placeholder = state->eb->placeholder;
-  eb->text_color = rgb_to_hex(COLOR_TEXT);
-  eb->font = font;
+  EditboxSpec_FillFromPrompt(eb, state, text_len, cursor_x, text_w, ascent,
+                             descent, font);
 }

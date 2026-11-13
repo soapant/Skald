@@ -530,24 +530,33 @@ static unsigned char *x11_clip_fetch(Display *dpy, Window win, Atom prop,
                            after);
 }
 
+typedef struct {
+  unsigned char *data;
+  Atom actual;
+  unsigned long nitems;
+} X11ClipFetchResult;
+
+static X11ClipFetchResult x11_clip_fetch_full(Display *dpy, Window win, Atom prop) {
+  X11ClipFetchResult r = {0};
+  int format = 0;
+  unsigned long after = 0;
+  r.data = x11_clip_fetch(dpy, win, prop, &r.actual, &format, &r.nitems,
+                          &after);
+  return r;
+}
+
 static char *x11_clip_read_property(Display *dpy, Window win, Atom prop,
                                     size_t *out_len) {
 
-  Atom actual = None;
-  int format = 0;
-  unsigned long nitems = 0;
-  unsigned long after = 0;
-  unsigned char *data =
-      x11_clip_fetch(dpy, win, prop, &actual, &format, &nitems, &after);
-  if (!data)
+  X11ClipFetchResult r = x11_clip_fetch_full(dpy, win, prop);
+  if (!r.data)
     return NULL;
-  if (actual == clip_rd_incr) {
-    if (data)
-      XFree(data);
+  if (r.actual == clip_rd_incr) {
+    XFree(r.data);
     return NULL;
   }
-  if (!data)
-    return NULL;
+  unsigned char *data = r.data;
+  unsigned long nitems = r.nitems;
   char *out = malloc(nitems + 1);
   if (!out) {
     XFree(data);
@@ -573,12 +582,9 @@ static char *x11_clip_read_incr(Display *dpy, Window win, Atom prop,
   for (;;) {
     if (!x11_clip_read_wait_event(dpy, &ev, x11_clip_read_prop_pred, w, 400))
       break;
-    Atom actual = None;
-    int format = 0;
-    unsigned long nitems = 0;
-    unsigned long after = 0;
-    unsigned char *data =
-        x11_clip_fetch(dpy, win, prop, &actual, &format, &nitems, &after);
+    X11ClipFetchResult r = x11_clip_fetch_full(dpy, win, prop);
+    unsigned char *data = r.data;
+    unsigned long nitems = r.nitems;
     if (!data || nitems == 0) {
       if (data)
         XFree(data);
