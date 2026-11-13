@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include <string.h>
 
-char *wm_trim_focus_title(char *title);
+char *wm_trim_focus_title(const char *title);
 
 #include "core/types.h"
 #include "core/types/window.h"

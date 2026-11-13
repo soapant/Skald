@@ -24,6 +24,20 @@
 #include "core/context.h"
 #include "core/types/window.h"
 
+
+void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
+                              Visual *vis, Colormap cmap, FontHandle font);
+void x11_draw_edit_tint(PromptState *state, Display *dpy, XftDraw *xd,
+                        Visual *vis, Colormap cmap, FontHandle font);
+void x11_draw_edit_text(PromptState *state, Display *dpy, XftDraw *xd,
+                        Visual *vis, Colormap cmap, FontHandle font);
+void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
+                          Visual *vis, Colormap cmap, FontHandle font);
+void x11_draw_list_item(Display *dpy, XftDraw *xd,
+                        Visual *vis, Colormap cmap, FontHandle font,
+                        ListBoxInfo *lb, int idx, int y, int text_x,
+                        const char *icon_path);
+
 extern __thread Display *g_draw_dpy;
 extern __thread XftDraw *g_draw_xd;
 extern __thread Visual *g_draw_vis;

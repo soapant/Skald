@@ -210,28 +210,6 @@ int UI_InsertChar(wchar_t wc) {
   return UI_InsertText(utf8, n);
 }
 
-void UI_RedrawNow(void) {
-  HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
-  if (hPopup && IsWindow(hPopup)) {
-    UI_RequestPopupRepaint();
-  }
-}
-
-void UI_Redraw(ListBoxInfo *lb) {
-  if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
-    HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
-    if (hPopup)
-      KillTimer(hPopup, UI_DEBOUNCE_TIMER_ID);
-    UI_RedrawNow();
-    return;
-  }
-  if (IsPopupActive(SkaldContext_Get()->window.hPopupWnd)) {
-    SetTimer(WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd),
-             UI_DEBOUNCE_TIMER_ID, UI_DEBOUNCE_MS, NULL);
-    return;
-  }
-}
-
 PromptState *win32_prompt_state_from_hwnd(HWND hwnd) {
   HWND cur = hwnd;
   for (int depth = 0; cur && depth < 8; depth++) {

@@ -293,7 +293,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       return true;
     }
     EditState_EndSelection();
-    CursorBack(&state->eb->cursor, strlen(state->eb->filter));
+    CursorBack(&state->eb->cursor);
     return true;
   }
   if (vk == VK_HOME) {

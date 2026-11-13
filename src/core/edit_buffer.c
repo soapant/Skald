@@ -108,7 +108,7 @@ bool EditBufferBackspacePair(char *buf, size_t *cursor) {
   return true;
 }
 
-bool CursorBack(size_t *cursor, size_t text_len) {
+bool CursorBack(size_t *cursor) {
   if (*cursor == 0)
     return false;
   (*cursor)--;

@@ -739,8 +739,6 @@ unsigned long sk_key_queue_dropped(void);
 
 void sk_clear_key_queue(void);
 
-int sk_char_for_key(int vk, int scancode, int mods);
-
 typedef CcEntrySpec SkCcEntrySpec;
 
 #define sk_add_to_cc(...) ski_add_to_cc(&(SkCcEntrySpec){__VA_ARGS__})

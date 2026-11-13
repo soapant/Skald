@@ -122,8 +122,9 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
           expanded, exec_line, desktop_dir);
       return false;
     }
-    char launch_cmd[4608];
-    snprintf(launch_cmd, sizeof(launch_cmd), "cd '%s' && %s", run_dir, cmd);
+    char launch_cmd[6144];
+    snprintf(launch_cmd, sizeof(launch_cmd), "cd '%.1023s' && %.4095s", run_dir,
+             cmd);
     log_info("desktop resolved launch_cmd='%s'", launch_cmd);
 
     if (as_root) {
@@ -151,7 +152,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     bool is_regular_file = (stat(path, &pst) == 0 && S_ISREG(pst.st_mode));
     bool is_executable = (access(path, X_OK) == 0);
     if (is_regular_file && !is_executable) {
-      char *const av_open2[] = {"gio", "open", path, NULL};
+      char *const av_open2[] = {"gio", "open", (char *)path, NULL};
       if (!x11_env_daemon_exec_with_env(av_open2, &env))
         return false;
       return true;
