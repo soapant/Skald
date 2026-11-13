@@ -1389,8 +1389,7 @@ static void cc_subwindow_render(PromptState *state) {
     r.filled = true;
     r.radius = 4;
     r.color = SK_DARK_GRAY;
-    int hk_w = sk_get_text_width(hk, 10);
-    if (state->width > hk_w + 28) {
+    if (state->width > sk_get_text_width(ctx.text, 10) + 28) {
       ski_draw_rect(&r);
       sk_draw_text(.x = actions_width - 6, .y = ctx.y + 8, .text = hk,
                    .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
@@ -1723,13 +1722,13 @@ static void cc_render(PromptState *state) {
 
     bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
                             strcmp(e->type, "Feature") == 0);
+    const char *right_text = plain_type ? e->type : CC_TYPE_LABEL;
     if (e) {
-      const char *right_text = plain_type ? e->type : CC_TYPE_LABEL;
       char hk[64];
+      int type_w = sk_get_text_width(right_text, FontSize);
       const char *hkp =
           cc_hotkey_for_label(ctx.text, hk, sizeof(hk)) ? hk : NULL;
       if (hkp && hkp[0]) {
-        int type_w = sk_get_text_width(right_text, FontSize);
         int hk_fs = FontSize - 6;
         int hk_x = type_x - type_w - CC_TYPE_GAP;
         SkRect r = sk_text_bounds(.text = hk, .fontsize = hk_fs, .x = hk_x - 4,
@@ -1738,31 +1737,39 @@ static void cc_render(PromptState *state) {
         r.radius = 4;
         r.color = SK_DARK_GRAY;
         ski_draw_rect(&r);
-        printf("%i %i\n",sk_get_text_width(ctx.text,FontSize) + type_w,state->width);
-        if (sk_get_text_width(ctx.text,FontSize) + type_w < state->width)
-          sk_draw_text(.x = hk_x - 4, .y = ctx.y + 10, .text = hk,
-                       .align = "RIGHT", .pad = 0, .color = SK_GRAY,
-                       .fontsize = hk_fs);
+        sk_draw_text(.x = hk_x - 4, .y = ctx.y + 10, .text = hk,
+                     .align = "RIGHT", .pad = 0, .color = SK_GRAY,
+                     .fontsize = hk_fs);
       }
     }
-    if (plain_type) {
-      sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = e->type,
-                   .align = "RIGHT", .color = TYPE_COLOR);
-    } else if (e) {
-      int type_sz = FontSize - CC_TYPE_SIZE_DELTA;
-      if (type_sz < 8)
-        type_sz = FontSize;
-      if (e->type[0]) {
-        int name_w = sk_get_text_width(ctx.text, FontSize);
-        sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
-                     .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
-                     .text = e->type, .align = "LEFT", .pad = 0,
-                     .fontsize = type_sz, .color = TYPE_COLOR);
+      if (plain_type) {
+        sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = e->type,
+                     .align = "RIGHT", .color = TYPE_COLOR);
+      } else if (e) {
+        int type_sz = FontSize - CC_TYPE_SIZE_DELTA;
+        if (type_sz < 8)
+          type_sz = FontSize;
+        if (e->type[0]) {
+          int name_w = sk_get_text_width(ctx.text, FontSize);
+          int type_w = sk_get_text_width(e->type, type_sz);
+          int cmd_w = sk_get_text_width(CC_TYPE_LABEL, FontSize);
+          char hk2[64] = {0};
+          bool has_hk = cc_hotkey_for_label(ctx.text, hk2, sizeof(hk2)) &&
+                        hk2[0] != '\0';
+          int hk_chip_w = has_hk ? sk_get_text_width(hk2, FontSize - 6) : 0;
+          int right_limit = type_x - cmd_w -
+                            (has_hk ? CC_TYPE_GAP + 4 + hk_chip_w : 0);
+          if (name_x + name_w + CC_TYPE_GAP + type_w + CC_TYPE_GAP <=
+              right_limit)
+            sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
+                         .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
+                         .text = e->type, .align = "LEFT", .pad = 0,
+                         .fontsize = type_sz, .color = TYPE_COLOR);
+        }
+        sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
+                     .text = CC_TYPE_LABEL, .align = "RIGHT", .pad = 0,
+                     .color = TYPE_COLOR);
       }
-      sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
-                   .text = CC_TYPE_LABEL, .align = "RIGHT", .pad = 0,
-                   .color = TYPE_COLOR);
-    }
   }
   sk_listbox_end();
 }
