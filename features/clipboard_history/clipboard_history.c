@@ -175,7 +175,7 @@ static void *ch_sampler(void *arg) {
   return NULL;
 }
 
-void clipboard_history_refresh(PromptState *state) {
+static void clipboard_history_refresh(PromptState *state) {
   sk_mutex_lock(ch_lock);
   int count = ch_count;
   const char **items = NULL;
@@ -195,7 +195,7 @@ void clipboard_history_refresh(PromptState *state) {
   sk_free_list(items, count);
 }
 
-bool clipboard_history_enter(PromptState *state) {
+static bool clipboard_history_enter(PromptState *state) {
   (void)state->lb->selected_text;
   if (!sk_is_selected(state->lb))
     return true;
@@ -219,7 +219,7 @@ bool clipboard_history_enter(PromptState *state) {
   return true;
 }
 
-void TriggerClipboardHistory(void) {
+static void TriggerClipboardHistory(void) {
   sk_window(.title = "Clipboard History", .refresh = clipboard_history_refresh,
             .enter = clipboard_history_enter);
 }

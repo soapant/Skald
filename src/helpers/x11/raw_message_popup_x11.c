@@ -187,7 +187,7 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
   return count;
 }
 
-void x11_display_message_draw(Display *dpy, Window win, const char *message,
+static void x11_display_message_draw(Display *dpy, Window win, const char *message,
                               unsigned long color, int w, int h, bool no_bg,
                               void (*render)(void)) {
 
