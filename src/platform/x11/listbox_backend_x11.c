@@ -29,9 +29,9 @@ bool Platform_ListboxBackendBegin(int item_height_override,
   if (!b_dpy || !b_xd)
     return false;
   b_font = x11_create_font_on_display(b_dpy, FontSize, UsedFont);
-  out->item_h = item_height_override > 0 ? item_height_override
-                                         : x11_font_row_height_of(b_font);
-  out->list_top = x11_font_list_top_of(b_font);
+  out->item_h =
+      item_height_override > 0 ? item_height_override : PromptRowHeight();
+  out->list_top = PromptListTop();
   return true;
 }
 
@@ -44,7 +44,7 @@ void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
       x11_fill_rounded_rect(b_dpy, b_xd, b_vis, b_cmap,
                             RgbToHex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
                             y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t,
-                            item_h - 2 - 2 * t, R - 1, fw, frame_h);
+                            item_h - 2 - 2 * t, R - 1);
     }
   } else {
     PromptState tmp = {0};

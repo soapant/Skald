@@ -294,7 +294,8 @@ static int x11_utf8_fallback_runs(Display *dpy, XftFont *xf,
 }
 
 static int x11_measure_run(Display *dpy, XftFont *font,
-                           const unsigned char *run, int len) {
+                           const unsigned char *run, int len, void *ud) {
+  (void)ud;
   return xft_width(dpy, font, (const char *)run, len);
 }
 
@@ -335,7 +336,7 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
   }
   if (all)
     return xft_width(dpy, xf, s, n);
-  return x11_utf8_fallback_runs(dpy, xf, b, n, px, x11_measure_run);
+  return x11_utf8_fallback_runs(dpy, xf, b, n, px, x11_measure_run, NULL);
 }
 
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
@@ -457,25 +458,6 @@ void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
   XRenderColor rc = {((hex >> 16) & 0xFF) * 0x101, ((hex >> 8) & 0xFF) * 0x101,
                      (hex & 0xFF) * 0x101, alpha};
   XftColorAllocValue(dpy, vis, cmap, &rc, out);
-}
-int x11_font_row_height(int font_size) {
-  return font_size + PROMPT_ROW_H_BONUS;
-}
-
-int x11_font_list_top(int ascent, int descent, int font_size) {
-  (void)ascent;
-  (void)descent;
-  return font_size + PROMPT_LIST_TOP_BONUS;
-}
-
-int x11_font_row_height_of(FontHandle font) {
-  (void)font;
-  return x11_font_row_height(FontSize);
-}
-
-int x11_font_list_top_of(FontHandle font) {
-  XftFont *xf = FH_TO_XFT(font);
-  return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
 }
 
 const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
@@ -1011,24 +993,20 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
 
 void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                 Colormap cmap, FontHandle font,
-                                XftColor *num_color, XftColor *body_color,
                                 XftColor *plain_color, ListBoxInfo *lb,
-                                char *icon_path, int idx, int y, int text_x) {
-  (void)num_color;
-  (void)body_color;
-  (void)text_x;
+                                char *icon_path, int idx, int y) {
   XftFont *xf = FH_TO_XFT(font);
   if (!xf)
     return;
   int XOffset = PROMPT_ITEM_TEXT_X;
-  int row_h = x11_font_row_height_of(font);
+  int row_h = PromptRowHeight();
   int pad_top = (row_h - (xf->ascent + xf->descent)) / 2;
   if (pad_top < 0)
     pad_top = 0;
   int text_y = y + pad_top;
   if (icon_path) {
     int iconX = XOffset;
-    int iconY = y + (x11_font_row_height_of(font) - IconSize) / 2;
+    int iconY = y + (PromptRowHeight() - IconSize) / 2;
     XOffset += IconSize + XOffset;
     x11_draw_image_scaled(dpy, xd, vis, icon_path, iconX, iconY, IconSize,
                           IconSize);
@@ -1057,9 +1035,10 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
 }
 
 static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
-                               unsigned long bg_color, const char *res_name,
-                               const char *res_class, long event_mask,
-                               bool override_redirect);
+                                      unsigned long bg_color,
+                                      const char *res_name,
+                                      const char *res_class, long event_mask,
+                                      bool override_redirect);
 
 static void x11_set_net_wm_state_skip(Display *dpy, Window win) {
   Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
@@ -1095,9 +1074,10 @@ static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
                                      unsigned int baseAlpha8);
 
 static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
-                               unsigned long bg_color, const char *res_name,
-                               const char *res_class, long event_mask,
-                               bool override_redirect) {
+                                      unsigned long bg_color,
+                                      const char *res_name,
+                                      const char *res_class, long event_mask,
+                                      bool override_redirect) {
   int screen = DefaultScreen(dpy);
   XVisualInfo vinfo;
   Visual *visual = NULL;
@@ -1256,14 +1236,18 @@ static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
   XFreeGC(dpy, gc);
 }
 
-static unsigned long x11_background_color_at(void);
+static unsigned long x11_background_color_at(void) {
+  unsigned long base = GetDrawBgColor();
+  if (!base)
+    base = RgbToHex(COLOR_BG);
+  return ((base >> 16) & 0xFF) << 16 | ((base >> 8) & 0xFF) << 8 |
+         (base & 0xFF);
+}
 
 void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            Colormap cmap, unsigned long hex,
                            unsigned short alpha16, int x, int y, int w, int h,
-                           int radius, int win_w, int win_h) {
-  (void)win_w;
-  (void)win_h;
+                           int radius) {
   if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
     XftColor c;
     x11_xft_alloc_color(dpy, vis, cmap, hex, alpha16, &c);
@@ -1318,8 +1302,7 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
         float cov = (float)a / (float)(alpha16 ? alpha16 : 1);
         if (cov > 1.0f)
           cov = 1.0f;
-        unsigned long backdrop =
-            x11_background_color_at();
+        unsigned long backdrop = x11_background_color_at();
         unsigned long mixed = Color_Lerp(backdrop, hex, cov);
         XftColor px_c = solid;
         px_c.color.red = (unsigned short)(((mixed >> 16) & 0xFF) * 257);
@@ -1331,13 +1314,6 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
     }
   }
   XftColorFree(dpy, vis, cmap, &solid);
-}
-
-static unsigned long x11_background_color_at(void) {
-  unsigned long base = GetDrawBgColor();
-  if (!base)
-    base = RgbToHex(COLOR_BG);
-  return ((base >> 16) & 0xFF) << 16 | ((base >> 8) & 0xFF) << 8 | (base & 0xFF);
 }
 
 static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,

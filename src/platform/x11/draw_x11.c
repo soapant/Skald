@@ -149,10 +149,9 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   return true;
 }
 
-void x11_draw_list_item(Display *dpy, XftDraw *xd,
-                        Visual *vis, Colormap cmap, FontHandle font,
-                        ListBoxInfo *lb, int idx, int y, int text_x,
-                        const char *icon_path) {
+void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
+                        FontHandle font, ListBoxInfo *lb, int idx, int y,
+                        int text_x, const char *icon_path) {
   unsigned long ncol, bcol, pcol;
   Item_GetColors((PlGetItemColorsSpec){.idx = idx,
                                        .count = lb->item_count,
@@ -163,8 +162,8 @@ void x11_draw_list_item(Display *dpy, XftDraw *xd,
   x11_xft_alloc_color(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
   x11_xft_alloc_color(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
   x11_xft_alloc_color(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
-  x11_draw_listbox_item_text(dpy, xd, vis, cmap, font, &ncolor, &bcolor,
-                             &pcolor, lb, (char *)icon_path, idx, y, text_x);
+  x11_draw_listbox_item_text(dpy, xd, vis, cmap, font, &pcolor, lb,
+                             (char *)icon_path, idx, y);
   XftColorFree(dpy, vis, cmap, &ncolor);
   XftColorFree(dpy, vis, cmap, &bcolor);
   XftColorFree(dpy, vis, cmap, &pcolor);
@@ -256,7 +255,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   if (filled) {
     if (want_round && r > 0) {
       x11_fill_rounded_rect(g_draw_dpy, g_draw_xd, g_draw_vis, g_draw_cmap,
-                            color, target_alpha, x, y, w, h, r, w, h);
+                            color, target_alpha, x, y, w, h, r);
     } else {
       XftColor col;
       x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
@@ -287,9 +286,8 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
            (unsigned short)(r * 2), 0 * 64, 90 * 64},
           {(short)(x + w - r * 2), (short)(y + h - r * 2),
            (unsigned short)(r * 2), (unsigned short)(r * 2), 270 * 64, 90 * 64},
-          {(short)x, (short)(y + h - r * 2),
-           (unsigned short)(r * 2), (unsigned short)(r * 2),
-           180 * 64, 90 * 64}};
+          {(short)x, (short)(y + h - r * 2), (unsigned short)(r * 2),
+           (unsigned short)(r * 2), 180 * 64, 90 * 64}};
       XDrawArcs(g_draw_dpy, d, gc, arcs, 4);
 
       XSegment segments[4] = {{x + r, y, x + w - r, y},
@@ -353,8 +351,8 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   Display *dpy = x11_get_display();
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   int lh = FontSize;
-  int rh = x11_font_row_height_of(font);
-  int lt = x11_font_list_top_of(font);
+  int rh = PromptRowHeight();
+  int lt = PromptListTop();
   Platform_DestroyFont(font);
   if (line_h)
     *line_h = lh;

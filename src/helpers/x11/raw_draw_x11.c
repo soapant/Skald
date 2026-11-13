@@ -434,8 +434,8 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   ListBoxInfo *lb = state->lb;
 
-  int itemH = x11_font_row_height_of(font);
-  int y0 = x11_font_list_top_of(font);
+  int itemH = PromptRowHeight();
+  int y0 = PromptListTop();
   DrawPromptSeparator(
       (PlDrawPromptSeparatorSpec){.y = y0, .width = state->width});
   int yOffset = PROMPT_LIST_BOTTOM_TITLE;
@@ -460,16 +460,15 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
       int t = PROMPT_SEL_INSET;
       int bx = PROMPT_SEL_X, bw = state->width - PROMPT_SEL_W_SHRINK;
       if (sel) {
-        x11_fill_rounded_rect(
-            dpy, xd, vis, cmap, RgbToHex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
-            y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t, itemH - 2 - 2 * t, R - 1,
-            state->width, state->height);
+        x11_fill_rounded_rect(dpy, xd, vis, cmap, RgbToHex(COLOR_SELECTED_TEXT),
+                              0xFFFF, bx + t, y + PROMPT_SEL_TOP_INSET + t,
+                              bw - 2 * t, itemH - 2 - 2 * t, R - 1);
       }
     } else {
       x11_draw_list_background(state, dpy, xd, vis, cmap, y, itemH, sel);
     }
-    x11_draw_list_item(dpy, xd, vis, cmap, font, lb, idx, y,
-                       PROMPT_ITEM_TEXT_X, NULL);
+    x11_draw_list_item(dpy, xd, vis, cmap, font, lb, idx, y, PROMPT_ITEM_TEXT_X,
+                       NULL);
   }
 
   if (PromptListBottomMargin() > 0) {

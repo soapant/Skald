@@ -680,4 +680,3 @@ DWORD win32_button_flag(int button, bool down) {
     return 0;
   }
 }
-

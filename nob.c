@@ -53,8 +53,8 @@
       "-Wno-unused-parameter"
 #define WIN_SDK_FLAGS                                                          \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
-      "-I/usr/x86_64-w64-mingw32/include", "-MMD", "-MP", "-Wall",      \
-      "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
+      "-I/usr/x86_64-w64-mingw32/include", "-MMD", "-MP", "-Wall", "-Wextra",  \
+      "-Wno-sign-compare", "-Wno-unused-parameter"
 
 static bool sanitize = false;
 static const char *sanitize_cc = NULL;
