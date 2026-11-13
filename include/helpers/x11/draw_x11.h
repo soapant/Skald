@@ -18,7 +18,7 @@
 #include "core/draw_state.h"
 #include "core/listbox_hover.h"
 #include "core/editbox.h"
-#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include "helpers/x11/display_x11.h"
 #include "config_values.h"
 #include "core/context.h"

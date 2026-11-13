@@ -9,7 +9,7 @@
 #include "config.h"
 #include "platform/wm_platform.h"
 #include "helpers/x11/subclasses_x11.h"
-#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include "helpers/x11/display_x11.h"
 #include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"

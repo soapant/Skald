@@ -1,5 +1,5 @@
 #include "helpers/x11/bg_image_x11.h"
-#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
 #include <pthread.h>
