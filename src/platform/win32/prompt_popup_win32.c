@@ -10,11 +10,9 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/win32/common_ui_win32.h"
 #include "helpers/win32/win32_state.h"
-#include "deps/log.h"
 #include <windows.h>
 
 static HWND g_prev_fg = NULL;
-static bool g_prev_fg_explicit = false;
 static BOOL old_track = FALSE;
 static BOOL track_saved = FALSE;
 
@@ -46,10 +44,8 @@ static bool is_popup_class(HWND hwnd) {
 }
 
 void win32_set_prev_fg(HWND h) {
-  if (h && IsWindow(h)) {
+  if (h && IsWindow(h))
     g_prev_fg = h;
-    g_prev_fg_explicit = true;
-  }
 }
 
 bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
@@ -57,7 +53,6 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
 
   ListBox_InvalidateMousePos();
   HWND fg = GetForegroundWindow();
-  g_prev_fg_explicit = false;
   if (fg && IsWindow(fg) && !is_popup_class(fg))
     g_prev_fg = fg;
   else if (!fg || !IsWindow(fg))
@@ -103,7 +98,6 @@ void Platform_PromptPopupHideWindow(Popup *self) {
       self->handle = WH_NULL;
     return;
   }
-  HWND fg_before = GetForegroundWindow();
   bool subwindow_hide = ctx_hwnd != NULL && ctx_hwnd != hwnd;
 
   if (hwnd != NULL && IsWindow(hwnd)) {
@@ -124,24 +118,18 @@ void Platform_PromptPopupHideWindow(Popup *self) {
     return;
   }
 
-  HWND restore = NULL;
   if (g_prev_fg && IsWindow(g_prev_fg)) {
-    if (g_prev_fg_explicit || fg_before == hwnd || is_popup_class(fg_before))
-      restore = g_prev_fg;
+    if (track_saved && old_track)
+      SetTimer(NULL, 0xC0DF, 800, win32_reenable_track_proc);
+    else
+      track_saved = FALSE;
+    g_prev_fg = NULL;
+  } else {
+    if (track_saved && old_track)
+      SetTimer(NULL, 0xC0DF, 800, win32_reenable_track_proc);
+    else
+      track_saved = FALSE;
   }
-
-  if (track_saved && old_track)
-    SetTimer(NULL, 0xC0DF, 800, win32_reenable_track_proc);
-  else
-    track_saved = FALSE;
-
-  if (restore) {
-    log_info("Platform_PromptPopupHideWindow restoring fg hwnd=%p explicit=%d",
-             restore, (int)g_prev_fg_explicit);
-    win32_force_window_focus(WH_FROM_HWND(restore));
-  }
-  g_prev_fg = NULL;
-  g_prev_fg_explicit = false;
 }
 
 void Platform_PromptPopupRender(Popup *self) {
