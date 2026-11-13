@@ -88,6 +88,7 @@ Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
     popup->vtable->on_show(popup);
   }
   popup_push_in_progress = false;
+  Platform_InvalidatePrompt();
   return popup;
 }
 
