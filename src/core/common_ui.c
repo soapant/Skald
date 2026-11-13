@@ -767,7 +767,6 @@ void GetDrawOffset(int *out_x, int *out_y) {
     *out_y = PlDrawState_Get()->off_y;
 }
 
-
 int DrawLinePrep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
                  int *y1, int *x2, int *y2) {
   int t = DrawThicknessPx(spec->thickness);
@@ -790,8 +789,8 @@ int DrawCirclePrep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
   int t = DrawThicknessPx(spec->thickness);
   *cx = spec->cx + off_x;
   *cy = spec->cy + off_y;
-  DrawMeasureTrack(*cx - spec->radius, *cy - spec->radius,
-                   spec->radius * 2, spec->radius * 2);
+  DrawMeasureTrack(*cx - spec->radius, *cy - spec->radius, spec->radius * 2,
+                   spec->radius * 2);
   return t;
 }
 
@@ -845,17 +844,11 @@ int MsgStackDir(int v_slot, bool outward) {
   return outward ? -dir : dir;
 }
 
-int PromptRowHeight(void) {
-  return FontSize + PROMPT_ROW_H_BONUS;
-}
+int PromptRowHeight(void) { return FontSize + PROMPT_ROW_H_BONUS; }
 
-int PromptListTop(void) {
-  return FontSize + PROMPT_LIST_TOP_BONUS;
-}
+int PromptListTop(void) { return FontSize + PROMPT_LIST_TOP_BONUS; }
 
-int PromptCaretHeight(void) {
-  return FontSize + PROMPT_CARET_H_BONUS;
-}
+int PromptCaretHeight(void) { return FontSize + PROMPT_CARET_H_BONUS; }
 
 int PromptCustomEditHeight(void) {
   return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS;

@@ -150,9 +150,9 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
 }
 
 void x11_draw_list_item(PromptState *state, Display *dpy, XftDraw *xd,
-                           Visual *vis, Colormap cmap, FontHandle font,
-                           ListBoxInfo *lb, int idx, int y, int text_x,
-                           const char *icon_path) {
+                        Visual *vis, Colormap cmap, FontHandle font,
+                        ListBoxInfo *lb, int idx, int y, int text_x,
+                        const char *icon_path) {
   unsigned long ncol, bcol, pcol;
   Item_GetColors((PlGetItemColorsSpec){.idx = idx,
                                        .count = lb->item_count,
@@ -171,7 +171,7 @@ void x11_draw_list_item(PromptState *state, Display *dpy, XftDraw *xd,
 }
 
 void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
-                                 Visual *vis, Colormap cmap, FontHandle font) {
+                              Visual *vis, Colormap cmap, FontHandle font) {
   x11_set_draw_context(dpy, xd, vis, cmap);
   if (WindowTitleText)
     Platform_DrawTextRaw(
@@ -185,9 +185,9 @@ void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
                             .fontsize = FontSize});
 }
 
-static void draw_editbox_part(PromptState *state, Display *dpy,
-                                       XftDraw *xd, Visual *vis, Colormap cmap,
-                                       FontHandle font, int part) {
+static void draw_editbox_part(PromptState *state, Display *dpy, XftDraw *xd,
+                              Visual *vis, Colormap cmap, FontHandle font,
+                              int part) {
   x11_set_draw_context(dpy, xd, vis, cmap);
   EditboxX11Metrics metrics = {dpy, FH_TO_XFT(font)};
   EditboxSpec eb;
@@ -200,23 +200,20 @@ static void draw_editbox_part(PromptState *state, Display *dpy,
 }
 
 void x11_draw_edit_text(PromptState *state, Display *dpy, XftDraw *xd,
-                           Visual *vis, Colormap cmap, FontHandle font) {
+                        Visual *vis, Colormap cmap, FontHandle font) {
   if (!state)
     return;
-  draw_editbox_part(state, dpy, xd, vis, cmap, font,
-                             EDITBOX_PART_TEXT);
+  draw_editbox_part(state, dpy, xd, vis, cmap, font, EDITBOX_PART_TEXT);
 }
 
 void x11_draw_edit_tint(PromptState *state, Display *dpy, XftDraw *xd,
-                           Visual *vis, Colormap cmap, FontHandle font) {
-  draw_editbox_part(state, dpy, xd, vis, cmap, font,
-                             EDITBOX_PART_TINT);
+                        Visual *vis, Colormap cmap, FontHandle font) {
+  draw_editbox_part(state, dpy, xd, vis, cmap, font, EDITBOX_PART_TINT);
 }
 
 void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
-                             Visual *vis, Colormap cmap, FontHandle font) {
-  draw_editbox_part(state, dpy, xd, vis, cmap, font,
-                             EDITBOX_PART_CARET);
+                          Visual *vis, Colormap cmap, FontHandle font) {
+  draw_editbox_part(state, dpy, xd, vis, cmap, font, EDITBOX_PART_CARET);
 }
 
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
@@ -329,8 +326,7 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
     return false;
   int x1, y1, x2, y2;
   int t = DrawLinePrep(&spec, PlDrawState_Get()->off_x,
-                                PlDrawState_Get()->off_y, &x1, &y1, &x2,
-                                &y2);
+                       PlDrawState_Get()->off_y, &x1, &y1, &x2, &y2);
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;
@@ -344,7 +340,7 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
     return false;
   int cx, cy;
   int t = DrawCirclePrep(&spec, PlDrawState_Get()->off_x,
-                                 PlDrawState_Get()->off_y, &cx, &cy);
+                         PlDrawState_Get()->off_y, &cx, &cy);
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;

@@ -49,36 +49,36 @@ typedef struct {
   const char *name;
 } PlDisplayMessageSpec;
 
-#define MSG_UNPACK(spec)                                              \
-  const char *message = (spec).message;                                  \
-  int centerX = (spec).x;                                                \
-  int centerY = (spec).y;                                                \
-  bool no_bg = (spec).no_bg;                                             \
-  int w = (spec).w;                                                      \
-  int h = (spec).h;                                                      \
-  int maxWidth = (spec).max_width;                                       \
-  int maxHeight = (spec).max_height;                                     \
-  double timeout = (spec).timeout;                                       \
-  ColorRef color = (spec).color;                                         \
-  void (*render)(void) = (spec).render;                                  \
+#define MSG_UNPACK(spec)                                                       \
+  const char *message = (spec).message;                                        \
+  int centerX = (spec).x;                                                      \
+  int centerY = (spec).y;                                                      \
+  bool no_bg = (spec).no_bg;                                                   \
+  int w = (spec).w;                                                            \
+  int h = (spec).h;                                                            \
+  int maxWidth = (spec).max_width;                                             \
+  int maxHeight = (spec).max_height;                                           \
+  double timeout = (spec).timeout;                                             \
+  ColorRef color = (spec).color;                                               \
+  void (*render)(void) = (spec).render;                                        \
   const char *name = (spec).name
 
-#define ANCHORED_MSG_UNPACK(spec)                                         \
-  const char *message = (spec).message;                                  \
-  int rect_x = (spec).x;                                                 \
-  int rect_y = (spec).y;                                                 \
-  int rect_w = (spec).w;                                                 \
-  int rect_h = (spec).h;                                                 \
-  int h_slot = (spec).h_slot;                                            \
-  int v_slot = (spec).v_slot;                                            \
-  int gap = (spec).gap;                                                  \
-  int outward = (spec).outward;                                          \
-  int maxWidth = (spec).max_width;                                       \
-  int maxHeight = (spec).max_height;                                     \
-  double timeout = (spec).timeout;                                       \
-  ColorRef color = (spec).color;                                         \
-  bool no_bg = (spec).no_bg;                                             \
-  void (*render)(void) = (spec).render;                                  \
+#define ANCHORED_MSG_UNPACK(spec)                                              \
+  const char *message = (spec).message;                                        \
+  int rect_x = (spec).x;                                                       \
+  int rect_y = (spec).y;                                                       \
+  int rect_w = (spec).w;                                                       \
+  int rect_h = (spec).h;                                                       \
+  int h_slot = (spec).h_slot;                                                  \
+  int v_slot = (spec).v_slot;                                                  \
+  int gap = (spec).gap;                                                        \
+  int outward = (spec).outward;                                                \
+  int maxWidth = (spec).max_width;                                             \
+  int maxHeight = (spec).max_height;                                           \
+  double timeout = (spec).timeout;                                             \
+  ColorRef color = (spec).color;                                               \
+  bool no_bg = (spec).no_bg;                                                   \
+  void (*render)(void) = (spec).render;                                        \
   const char *name = (spec).name
 
 #define HTTP_CONNECT_TIMEOUT_S 10
@@ -267,4 +267,3 @@ typedef struct {
 
 void Platform_InvalidatePrompt(void);
 #endif
-

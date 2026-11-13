@@ -133,8 +133,7 @@ int BgTileLruPick(const void *slots, int count, size_t stride,
                   int (*is_empty)(const void *slot),
                   unsigned long (*stamp)(const void *slot));
 
-void DrawTextCenteredImpl(const PlDrawTextCenteredSpec *spec,
-                          int lineHeight);
+void DrawTextCenteredImpl(const PlDrawTextCenteredSpec *spec, int lineHeight);
 int MsgAnchorCenter(int rect, int rect_size, int slot, int gap, int outward,
                     int win_size);
 int MsgStackDir(int v_slot, bool outward);

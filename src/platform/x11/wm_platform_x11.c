@@ -43,12 +43,9 @@ void Platform_PromptFlushDisplay(WindowManager *wm) {
 
 void Platform_Quit(WindowManager *wm) { x11_quit(wm); }
 
-void Platform_ProcessEvents(WindowManager *wm) {
-  x11_process_events(wm);
-}
+void Platform_ProcessEvents(WindowManager *wm) { x11_process_events(wm); }
 
-void Platform_OnPopEmpty(WindowManager *wm) {
-  (void)wm;
+void Platform_OnPopEmpty() {
   x11_clear_suppress();
   remap_reset();
   InputState_Clear();

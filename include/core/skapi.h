@@ -252,7 +252,7 @@ typedef struct {
 } SkPopulateListboxSpec;
 
 void ski_populate_listbox(const SkPopulateListboxSpec *spec);
-#define sk_populate_listbox(...)                                            \
+#define sk_populate_listbox(...)                                               \
   ski_populate_listbox(&(SkPopulateListboxSpec){__VA_ARGS__})
 
 bool sk_is_selected(ListBoxInfo *lb);

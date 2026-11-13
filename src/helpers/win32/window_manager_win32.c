@@ -40,8 +40,6 @@ int WindowManager_RunWin32(WindowManager *wm) {
   return 0;
 }
 
-
-
 void WindowManager_ProcessEventsWin32(WindowManager *wm) {
   if (!wm) {
     return;

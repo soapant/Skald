@@ -191,7 +191,7 @@ void clipboard_history_refresh(PromptState *state) {
   }
   sk_mutex_unlock(ch_lock);
   sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
-                         .items = items, .count = count);
+                      .items = items, .count = count);
   sk_free_list(items, count);
 }
 
