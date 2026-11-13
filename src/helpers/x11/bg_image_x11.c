@@ -308,7 +308,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
   return result;
 }
 
-bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis, int depth,
+bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis,
                        int w, int h) {
   if (!x11_bg_image_enabled() || !dpy || !dst || w <= 0 || h <= 0)
     return false;
@@ -328,7 +328,6 @@ bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis, int depth,
   if (src) {
     if (!vis)
       vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
-    (void)depth;
     XRenderPictFormat *dfmt = XRenderFindVisualFormat(dpy, vis);
     Picture dp = dfmt ? XRenderCreatePicture(dpy, dst, dfmt, 0, NULL) : 0;
     if (dp) {

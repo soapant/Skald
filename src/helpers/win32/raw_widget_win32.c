@@ -185,10 +185,8 @@ static void widget_paint_layered(PlatformWidget *widget) {
   widget_push_layered(widget, 0xFF000000u, 255);
 }
 
-static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
+static void widget_paint(PlatformWidget *widget) {
 
-  (void)hdc;
-  (void)rect;
   widget_push_layered(widget, widget->base.has_bg ? widget->base.bg_color : 0u,
                       (unsigned char)WindowOpacity);
 }
@@ -223,9 +221,7 @@ static LRESULT CALLBACK win32_widget_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (widget->base.no_bg) {
       widget_paint_layered(widget);
     } else if (hdc) {
-      RECT rect;
-      GetClientRect(hwnd, &rect);
-      widget_paint(widget, hdc, &rect);
+      widget_paint(widget);
     }
     if (hdc)
       EndPaint(hwnd, &ps);

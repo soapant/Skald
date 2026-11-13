@@ -9,7 +9,7 @@
 #define SEARCH_POPUP_CLASS "SearchPopupClass"
 #define WIDGET_CLASS "WidgetClass"
 
-void win32_force_window_focus(WindowHandle hwndTarget, WindowHandle hwndInput);
+void win32_force_window_focus(WindowHandle hwndTarget);
 BOOL CALLBACK win32_enum_windows_proc(HWND hwnd, LPARAM lParam);
 WindowHandle win32_find_window_by_partial_title(const char *partialTitle);
 void win32_draw_window_border(HDC hdc, int ox, int oy, int ww, int wh,

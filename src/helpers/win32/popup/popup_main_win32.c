@@ -95,7 +95,7 @@ static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
       ShowWindow(popup_wnd, SW_SHOW);
     if (popup_wnd && IsWindow(popup_wnd) &&
         WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) != NULL)
-      win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd, WH_NULL);
+      win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd);
   }
   if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
     HWND hPar = GetParent(hwnd);
