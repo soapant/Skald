@@ -68,7 +68,8 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   {
     BOOL cur = FALSE;
     if (SystemParametersInfoA(SPI_GETACTIVEWINDOWTRACKING, 0, &cur, 0)) {
-      old_track = cur;
+      if (!track_saved)
+        old_track = cur;
       track_saved = TRUE;
       if (cur) {
         SystemParametersInfoA(SPI_SETACTIVEWINDOWTRACKING, 0, (PVOID)FALSE, 0);
@@ -95,10 +96,15 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
 }
 
 void Platform_PromptPopupHideWindow(Popup *self) {
-  HWND hwnd = (self && WH_TO_HWND(self->handle) != NULL)
-                  ? WH_TO_HWND(self->handle)
-                  : WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
+  HWND ctx_hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
+  HWND hwnd = self ? WH_TO_HWND(self->handle) : ctx_hwnd;
+  if (!hwnd) {
+    if (self)
+      self->handle = WH_NULL;
+    return;
+  }
   HWND fg_before = GetForegroundWindow();
+  bool subwindow_hide = ctx_hwnd != NULL && ctx_hwnd != hwnd;
 
   if (hwnd != NULL && IsWindow(hwnd)) {
     KillTimer(hwnd, 999);
@@ -111,6 +117,12 @@ void Platform_PromptPopupHideWindow(Popup *self) {
 
   if (self)
     self->handle = WH_NULL;
+
+  if (subwindow_hide) {
+    if (IsWindow(ctx_hwnd))
+      win32_force_window_focus(WH_FROM_HWND(ctx_hwnd), WH_NULL);
+    return;
+  }
 
   HWND restore = NULL;
   if (g_prev_fg && IsWindow(g_prev_fg)) {
