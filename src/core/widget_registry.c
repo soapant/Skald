@@ -40,7 +40,7 @@ static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
   int idx = (monitor > 0 && monitor <= count) ? monitor : 0;
   if (Monitor_GeometryAt(idx, x, y, w, h))
     return;
-  Platform_WM_GetMonitorGeometry(x, y, w, h);
+  Platform_GetMonitorGeometry(x, y, w, h);
 }
 
 unsigned Widget_BumpGeneration(void) { return ++widget_gen; }
@@ -442,7 +442,7 @@ static void widget_relayout(void) {
     MonSlot *st = &ms[it->slot][m];
     if (!st->known) {
       if (!Monitor_GeometryAt(m, &st->x, &st->y, &st->w, &st->h))
-        Platform_WM_GetMonitorGeometry(&st->x, &st->y, &st->w, &st->h);
+        Platform_GetMonitorGeometry(&st->x, &st->y, &st->w, &st->h);
       st->cursor = from_right ? st->x + st->w : st->x;
       st->known = true;
     }

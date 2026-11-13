@@ -24,14 +24,14 @@ extern int WindowManager_RunLinux(WindowManager *wm);
 extern void WindowManager_QuitLinux(WindowManager *wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager *wm);
 
-bool Platform_WM_InitDisplay(WindowManager *wm) {
+bool Platform_InitDisplay(WindowManager *wm) {
   if (!wm)
     return false;
   wm->display = x11_get_display();
   return wm->display != NULL;
 }
 
-int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunLinux(wm); }
+int Platform_Run(WindowManager *wm) { return WindowManager_RunLinux(wm); }
 
 void Platform_PromptFlushDisplay(WindowManager *wm) {
   Display *dpy = (wm && wm->display) ? wm->display : x11_get_display();
@@ -41,13 +41,13 @@ void Platform_PromptFlushDisplay(WindowManager *wm) {
   }
 }
 
-void Platform_WM_Quit(WindowManager *wm) { WindowManager_QuitLinux(wm); }
+void Platform_Quit(WindowManager *wm) { WindowManager_QuitLinux(wm); }
 
-void Platform_WM_ProcessEvents(WindowManager *wm) {
+void Platform_ProcessEvents(WindowManager *wm) {
   WindowManager_ProcessEventsLinux(wm);
 }
 
-void Platform_WM_OnPopEmpty(WindowManager *wm) {
+void Platform_OnPopEmpty(WindowManager *wm) {
   (void)wm;
   x11_clear_suppress();
   remap_reset();
@@ -66,7 +66,7 @@ static XRRCrtcInfo *x11_monitor_valid(Display *dpy, XRRScreenResources *res,
   return ci;
 }
 
-void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
+void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
   int x = 0, y = 0, w = 1920, h = 1080;
   Display *dpy = NULL;
   WindowManager *wm = WindowManager_Get();
