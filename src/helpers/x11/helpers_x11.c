@@ -19,7 +19,7 @@
 #include "core/listbox_hover.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
-#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include "helpers/helpers_ui.h"
 #include "wm/niri_wm.h"
 #include "config_values.h"

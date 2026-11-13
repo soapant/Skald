@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <stdbool.h>
-
 #include "platform/lib.h"
 
 bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n) {

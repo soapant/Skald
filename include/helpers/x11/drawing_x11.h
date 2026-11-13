@@ -1,5 +1,5 @@
-#ifndef PLATFORM_X11_DRAWING_H
-#define PLATFORM_X11_DRAWING_H
+#ifndef HELPERS_X11_DRAWING_H
+#define HELPERS_X11_DRAWING_H
 
 #include "core/types.h"
 #include <X11/Xlib.h>

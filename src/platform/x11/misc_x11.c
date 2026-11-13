@@ -8,7 +8,13 @@
 #include "helpers/helpers_text.h"
 #include "config_values.h"
 #include "core/types.h"
+#include "core/prompt_geometry.h"
 #include "core/types/keys.h"
+#include "platform/draw.h"
+#include "helpers/x11/window_factory_x11.h"
+#include "helpers/x11/bg_image_x11.h"
+#include "helpers/x11/drawing_x11.h"
+#include "helpers/x11/display_x11.h"
 
 const char *Platform_GetRealUser(void) {
 
@@ -285,4 +291,29 @@ void Platform_DirClose(PlDirIter *it) {
   if (it->dh)
     closedir(it->dh);
   free(it);
+}
+
+int Platform_GetTextLineHeight(int fontsize) {
+  if (fontsize <= 0)
+    fontsize = FontSize;
+  Display *dpy = x11_get_display();
+  if (!dpy)
+    return fontsize;
+  FontHandle font = x11_create_font_on_display(dpy, fontsize, UsedFont);
+  XftFont *xf = FH_TO_XFT(font);
+  int r = xf ? xf->ascent + xf->descent : fontsize;
+  Platform_DestroyFont(font);
+  return r;
+}
+void Platform_PrewarmBackgroundPixmap(void) {
+  Display *dpy = x11_get_display();
+  if (!dpy) {
+    return;
+  }
+  x11_bg_image_prewarm(dpy, PROMPT_W, PROMPT_H);
+  Window _pw = x11_create_prompt_window(dpy, 0, 0, PROMPT_W, PROMPT_H);
+  if (_pw != None) {
+    x11_get_cached_background(dpy, _pw, PROMPT_W, PROMPT_H);
+    XDestroyWindow(dpy, _pw);
+  }
 }

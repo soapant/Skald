@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "helpers/x11/display_x11.h"
-#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include "helpers/x11/window_factory_x11.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"

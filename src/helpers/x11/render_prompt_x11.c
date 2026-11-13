@@ -9,7 +9,7 @@
 #include "core/checkbox.h"
 #include "platform/draw.h"
 #include "deps/log.h"
-#include "platform/x11/drawing_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include "helpers/x11/bg_image_x11.h"
 #include "helpers/x11/window_factory_x11.h"
 #include "core/types.h"
