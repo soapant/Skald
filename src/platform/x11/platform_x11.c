@@ -447,8 +447,7 @@ char *Platform_RunTerminalCommand(const char *command, bool open_terminal) {
       char chown_cmd[2048];
       snprintf(chown_cmd, sizeof(chown_cmd),
                "chown %.255s:%.255s \"%.511s\" && chmod 755 \"%.511s\"",
-               real_user, real_user,
-               temp_file, temp_file);
+               real_user, real_user, temp_file, temp_file);
       Platform_RunTerminalCommand(chown_cmd, false);
     } else {
       chmod(temp_file, 0755);

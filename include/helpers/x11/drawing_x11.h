@@ -28,13 +28,12 @@ const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
                                           size_t trunc_size);
 void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                 Colormap cmap, FontHandle font,
-                                XftColor *num_color, XftColor *body_color,
                                 XftColor *plain_color, ListBoxInfo *lb,
-                                char *icon_path, int idx, int y, int text_x);
+                                char *icon_path, int idx, int y);
 void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            Colormap cmap, unsigned long hex,
                            unsigned short alpha16, int x, int y, int w, int h,
-                           int radius, int win_w, int win_h);
+                           int radius);
 void x11_draw_background(Display *dpy, Window win, int w, int h);
 void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h);
 Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h);
@@ -46,11 +45,6 @@ void x11_draw_selection_background(Display *dpy, XftDraw *xd, Visual *vis,
                                    Colormap cmap, int x, int y, int w, int h,
                                    unsigned long baseHex);
 void x11_release_prompt_buffer(Display *dpy, Window win);
-
-int x11_font_row_height(int font_size);
-int x11_font_list_top(int ascent, int descent, int font_size);
-int x11_font_row_height_of(FontHandle font);
-int x11_font_list_top_of(FontHandle font);
 
 void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
                           Colormap *cmap);
