@@ -79,8 +79,8 @@ static BOOL win32_spawn_capture(const char *command, DWORD flags,
   si.dwFlags = STARTF_USESTDHANDLES;
   char cmdLine[4096];
   snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
-  return CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, flags, NULL, NULL,
-                        &si, pi);
+  return CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, flags, NULL, NULL, &si,
+                        pi);
 }
 
 static void win32_add_font_dir(const char *glob, const char *prefix) {
@@ -155,8 +155,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   BOOL ok = win32_spawn_capture(command, CREATE_NO_WINDOW, &pi, hWrite);
   CloseHandle(hWrite);
   if (!ok) {
-    log_error("CreateProcess failed for '%s' err=%lu", command,
-              GetLastError());
+    log_error("CreateProcess failed for '%s' err=%lu", command, GetLastError());
     CloseHandle(hRead);
     return NULL;
   }

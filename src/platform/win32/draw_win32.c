@@ -250,8 +250,7 @@ int Platform_GetTextLineHeight(int fontsize) {
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int x1, y1, x2, y2;
   int t = DrawLinePrep(&spec, PlDrawState_Get()->off_x,
-                                PlDrawState_Get()->off_y, &x1, &y1, &x2,
-                                &y2);
+                       PlDrawState_Get()->off_y, &x1, &y1, &x2, &y2);
   HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(spec.color));
   HGDIOBJ old = SelectObject(g_draw_hdc, pen);
   MoveToEx(g_draw_hdc, x1, y1, NULL);
@@ -266,7 +265,7 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
     return false;
   int cx, cy;
   int t = DrawCirclePrep(&spec, PlDrawState_Get()->off_x,
-                                 PlDrawState_Get()->off_y, &cx, &cy);
+                         PlDrawState_Get()->off_y, &cx, &cy);
   int left = cx - spec.radius, top = cy - spec.radius;
   int right = cx + spec.radius, bottom = cy + spec.radius;
   if (t > 0) {
@@ -392,8 +391,7 @@ static void win32_draw_prompt_editbox(PromptState *state, int part_mask,
 }
 
 void Platform_DrawPromptEditText(PromptState *state) {
-  win32_draw_prompt_editbox(state, EDITBOX_PART_TINT | EDITBOX_PART_TEXT,
-                            true);
+  win32_draw_prompt_editbox(state, EDITBOX_PART_TINT | EDITBOX_PART_TEXT, true);
 }
 
 void Platform_DrawPromptEditbox(PromptState *state) {

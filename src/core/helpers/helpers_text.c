@@ -15,11 +15,10 @@
 #include "deps/log.h"
 
 HotkeyBinding
-Hotkey_ConvertIntoBinding(char *hotkey_string,
-                            void (*on_hotkey_trigger)(void),
-                            bool (*optional_condition_for_hotkey)(void),
-                            const char *const *optional_blacklistedwindows,
-                            bool whitelist, void *user_ud) {
+Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
+                          bool (*optional_condition_for_hotkey)(void),
+                          const char *const *optional_blacklistedwindows,
+                          bool whitelist, void *user_ud) {
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 
@@ -49,8 +48,7 @@ Hotkey_ConvertIntoBinding(char *hotkey_string,
       for (int i = 0; i < cnt; i++) {
         output.blacklist[i] = strdup(optional_blacklistedwindows[i]);
         if (!output.blacklist[i]) {
-          log_error("Hotkey_ConvertIntoBinding: strdup failed for entry %d",
-                    i);
+          log_error("Hotkey_ConvertIntoBinding: strdup failed for entry %d", i);
           for (int j = 0; j < i; j++)
             free(output.blacklist[j]);
           free(output.blacklist);
@@ -720,7 +718,6 @@ bool FileWalk_AllFilesFromDir(const char *dir_path,
 }
 
 #include <sys/time.h>
-
 
 bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
   if (!key || key->text_len <= 0)

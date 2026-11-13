@@ -17,8 +17,8 @@ typedef struct {
 } SnippetBinding;
 
 bool Snippet_RegisterInternal(const char *trigger, const char *text,
-                               void (*func)(void), bool whitelist,
-                               const char *const *windows, void *caller);
+                              void (*func)(void), bool whitelist,
+                              const char *const *windows, void *caller);
 bool Snippet_UnregisterInternal(const char *trigger);
 void Snippet_SetFireFn(SnippetFireFn fn);
 bool Snippet_FeedVk(int vk_code, int value, bool can_swallow);

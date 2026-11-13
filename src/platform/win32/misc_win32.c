@@ -109,12 +109,10 @@ bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
     if (UsedBrowser && UsedBrowser[0]) {
       char browser_path[MAX_PATH] = {0};
       if (win32_resolve_browser(browser_path, sizeof(browser_path))) {
-        HINSTANCE r =
-            ShellExecuteA(NULL, "open", browser_path, NULL, NULL,
-                          SW_SHOWNORMAL);
+        HINSTANCE r = ShellExecuteA(NULL, "open", browser_path, NULL, NULL,
+                                    SW_SHOWNORMAL);
         if ((intptr_t)r > 32) {
-          log_info("Platform_LaunchBrowserAtUrl via %s (no url)",
-                   browser_path);
+          log_info("Platform_LaunchBrowserAtUrl via %s (no url)", browser_path);
           return true;
         }
       }

@@ -10,7 +10,6 @@
 #include "core/types.h"
 #include "core/types/keys.h"
 
-
 const char *Platform_GetRealUser(void) {
 
   static char buf[256] = {0};
@@ -240,7 +239,6 @@ int64_t Platform_TimerNowTicks(void) {
 }
 
 int64_t Platform_TimerTickFrequency(void) { return 1000000000LL; }
-
 
 struct PlDirIter {
   char dir[MAX_PATH];

@@ -93,10 +93,8 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   int winW = 0;
   int winH = 0;
   x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
-  int centerX =
-      MsgAnchorCenter(rect_x, rect_w, h_slot, gap, outward, winW);
-  int centerY =
-      MsgAnchorCenter(rect_y, rect_h, v_slot, gap, outward, winH);
+  int centerX = MsgAnchorCenter(rect_x, rect_w, h_slot, gap, outward, winW);
+  int centerY = MsgAnchorCenter(rect_y, rect_h, v_slot, gap, outward, winH);
   int x = centerX - winW / 2;
   int y = centerY - winH / 2;
   int ax, ay, aw, ah;

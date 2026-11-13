@@ -152,8 +152,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   if (winHeight > maxHeight)
     winHeight = maxHeight;
 
-  int centerX =
-      MsgAnchorCenter(rect_x, rect_w, h_slot, gap, outward, winWidth);
+  int centerX = MsgAnchorCenter(rect_x, rect_w, h_slot, gap, outward, winWidth);
   int centerY =
       MsgAnchorCenter(rect_y, rect_h, v_slot, gap, outward, winHeight);
 

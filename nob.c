@@ -1314,7 +1314,6 @@ static void chk_platform_func_scan(const char *path, int lineno,
   }
 }
 
-
 static void chk_sk_func_scan(const char *path, int lineno, const char *buf,
                              size_t len) {
   chk_tokenize(buf, len);
@@ -1903,7 +1902,8 @@ int main(int argc, char **argv) {
       else
         nob_cmd_append(&cmd, argv[0]);
       if (!nob_cmd_run(&cmd)) {
-        nob_log(NOB_ERROR, "-all: step %s failed", steps[st] ? steps[st] : "(build)");
+        nob_log(NOB_ERROR, "-all: step %s failed",
+                steps[st] ? steps[st] : "(build)");
         return 1;
       }
     }

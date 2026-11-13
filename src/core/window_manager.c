@@ -105,7 +105,8 @@ void WindowManager_PopPopup(WindowManager *wm) {
   if (ctx)
     ctx->window.last_popup_pop_ms = Platform_GetWallClockMs();
   log_info("PopPopup wm=%p popup=%p remaining=%d title='%s'", (void *)wm,
-           (void *)popup, wm->popup_count, ctx && ctx->window.title ? ctx->window.title : "(null)");
+           (void *)popup, wm->popup_count,
+           ctx && ctx->window.title ? ctx->window.title : "(null)");
   CloseCallback on_close = PromptPopup_TakeOnClose(popup);
   if (popup->vtable && popup->vtable->on_hide) {
     popup->vtable->on_hide(popup);
@@ -116,7 +117,7 @@ void WindowManager_PopPopup(WindowManager *wm) {
     popup->vtable->destroy(popup);
   }
   if (wm->popup_count == 0) {
-    Platform_OnPopEmpty(wm);
+    Platform_OnPopEmpty();
   }
   if (on_close) {
     on_close();

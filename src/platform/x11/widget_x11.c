@@ -220,8 +220,7 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!Widget_BaseCheck(widget ? &widget->base : NULL) ||
-      widget->base.mapped) {
+  if (!Widget_BaseCheck(widget ? &widget->base : NULL) || widget->base.mapped) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -233,8 +232,7 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || !Widget_BaseCheck(&widget->base) ||
-      !widget->base.mapped) {
+  if (!widget || !Widget_BaseCheck(&widget->base) || !widget->base.mapped) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
