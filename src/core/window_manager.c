@@ -29,7 +29,7 @@ WindowManager *WindowManager_Create(void) {
     free(wm);
     return NULL;
   }
-  if (!Platform_WM_InitDisplay(wm)) {
+  if (!Platform_InitDisplay(wm)) {
     free(wm->popups);
     free(wm);
     return NULL;
@@ -62,7 +62,7 @@ WindowManager *WindowManager_Get(void) { return window_manager; }
 int WindowManager_Run(WindowManager *wm) {
   if (!wm)
     return -1;
-  return Platform_WM_Run(wm);
+  return Platform_Run(wm);
 }
 
 static bool popup_push_in_progress = false;
@@ -116,7 +116,7 @@ void WindowManager_PopPopup(WindowManager *wm) {
     popup->vtable->destroy(popup);
   }
   if (wm->popup_count == 0) {
-    Platform_WM_OnPopEmpty(wm);
+    Platform_OnPopEmpty(wm);
   }
   if (on_close) {
     on_close();
@@ -144,7 +144,7 @@ void WindowManager_DrainSelectionComplete(WindowManager *wm) {
 }
 
 void WindowManager_GetMainMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
-  Platform_WM_GetMonitorGeometry(ox, oy, ow, oh);
+  Platform_GetMonitorGeometry(ox, oy, ow, oh);
 }
 
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x,
