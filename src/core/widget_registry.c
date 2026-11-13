@@ -43,9 +43,9 @@ static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
   Platform_WM_GetMonitorGeometry(x, y, w, h);
 }
 
-unsigned widget_bump_generation(void) { return ++widget_gen; }
+unsigned Widget_BumpGeneration(void) { return ++widget_gen; }
 
-unsigned widget_current_generation(void) { return widget_gen; }
+unsigned Widget_CurrentGeneration(void) { return widget_gen; }
 
 static Widget *widget_find_by_name_locked(const char *name) {
   if (!name || !name[0])
@@ -162,7 +162,7 @@ static void widget_render_frame(void *ud) {
   if (widget->origin_x != mx || widget->origin_y != my) {
     widget->origin_x = mx;
     widget->origin_y = my;
-    widget_invalidate(widget->win);
+    Widget_Invalidate(widget->win);
   }
 
   if (auto_w || auto_h) {
@@ -174,7 +174,7 @@ static void widget_render_frame(void *ud) {
       widget->w = nw;
       widget->h = nh;
       W_UNLOCK();
-      if (widget_is_valid(widget->win)) {
+      if (Widget_IsValid(widget->win)) {
         Platform_Widget_Resize(widget->win, nw, nh);
       }
       widget_relayout();
@@ -221,7 +221,7 @@ static void widget_destroy_window(void *ud) {
     widget->hover_thread = NULL;
     widget->hover_running = false;
   }
-  if (widget_is_valid(widget->win)) {
+  if (Widget_IsValid(widget->win)) {
     Platform_Widget_Destroy(widget->win);
   }
   widget->win = NULL;
@@ -247,7 +247,7 @@ static void widget_reap(void *ud) {
   free(w);
 }
 
-void widget_destroy(Widget *widget) {
+void Widget_Destroy(Widget *widget) {
   if (!widget)
     return;
   widget->dead = true;
@@ -278,7 +278,7 @@ void widget_destroy(Widget *widget) {
   Platform_Widget_FlushDestruction();
 }
 
-void widget_purge_owner(const char *path_a, const char *path_b,
+void Widget_PurgeOwner(const char *path_a, const char *path_b,
                         unsigned generation) {
   if (Owner_PurgeInactive(path_a, path_b))
     return;
@@ -298,11 +298,11 @@ void widget_purge_owner(const char *path_a, const char *path_b,
     HoverWidgetHide(w->name);
     RenderThread_RemoveFrameCallback(widget_render_frame, w);
     if (!RenderThread_Post(widget_destroy_window, w)) {
-      log_error("widget_purge_owner: failed to enqueue destroy for '%s'",
+      log_error("Widget_PurgeOwner: failed to enqueue destroy for '%s'",
                 w->name ? w->name : "?");
     }
     if (!RenderThread_Post(widget_reap, w)) {
-      log_error("widget_purge_owner: failed to enqueue reap for '%s'",
+      log_error("Widget_PurgeOwner: failed to enqueue reap for '%s'",
                 w->name ? w->name : "?");
     }
   }
@@ -331,7 +331,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
   Platform_Widget_FlushDestruction();
 }
 
-bool widget_owner_active(const char *path) {
+bool Widget_OwnerActive(const char *path) {
   if (!path || !path[0])
     return false;
   W_LOCK();
@@ -351,7 +351,7 @@ static void widget_attach_window(void *ud) {
   if (!widget || widget->dead)
     return;
   bool created = false;
-  if (!widget_is_valid(widget->win)) {
+  if (!Widget_IsValid(widget->win)) {
     SetDrawBgColor(widget->has_bg ? widget->bg_color : 0);
     widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w,
                                          widget->h, widget->fps, widget->no_bg,
@@ -365,9 +365,9 @@ static void widget_attach_window(void *ud) {
     Platform_Widget_SetBgColor(widget->win,
                                widget->has_bg ? widget->bg_color : 0);
     Platform_Widget_SetNoBg(widget->win, widget->no_bg);
-    widget_set_fps(widget->win, widget->fps);
+    Widget_SetFps(widget->win, widget->fps);
     if (created)
-      widget_set_frame_callback(widget->win, widget_render_frame, widget);
+      Widget_SetFrameCallback(widget->win, widget_render_frame, widget);
   }
 }
 
@@ -454,9 +454,9 @@ static void widget_relayout(void) {
   }
 }
 
-Widget *widget_create(const WidgetSpec *spec) {
+Widget *Widget_Create(const WidgetSpec *spec) {
   if (!spec || !spec->name || !spec->name[0]) {
-    log_warn("widget_create: name is required");
+    log_warn("Widget_Create: name is required");
     return NULL;
   }
   W_LOCK();
@@ -465,7 +465,7 @@ Widget *widget_create(const WidgetSpec *spec) {
   if (fresh) {
     if (widget_count >= WIDGET_MAX) {
       W_UNLOCK();
-      log_warn("widget_create: widget table full");
+      log_warn("Widget_Create: widget table full");
       return NULL;
     }
     widget = (Widget *)calloc(1, sizeof(*widget));
@@ -530,17 +530,17 @@ Widget *widget_create(const WidgetSpec *spec) {
       y = my + (mh - widget->h) / 2;
     }
     widget_apply_geometry(widget, x, y);
-    widget_set_frame_callback(widget->win, widget_render_frame, widget);
+    Widget_SetFrameCallback(widget->win, widget_render_frame, widget);
   } else {
     widget_relayout();
-    widget_set_frame_callback(widget->win, widget_render_frame, widget);
+    Widget_SetFrameCallback(widget->win, widget_render_frame, widget);
   }
   return widget;
 }
 
-bool widget_valid(Widget *widget) { return widget != NULL; }
+bool Widget_Valid(Widget *widget) { return widget != NULL; }
 
-PlPos widget_get_pos(const char *name) {
+PlPos Widget_GetPos(const char *name) {
   PlPos r = {0, 0};
   W_LOCK();
   Widget *w = widget_find_by_name_locked(name);
@@ -564,8 +564,8 @@ static void widget_apply_hide(void *ud) {
     Platform_Widget_Hide(widget->win);
 }
 
-void widget_show(Widget *widget) {
-  if (!widget_valid(widget))
+void Widget_Show(Widget *widget) {
+  if (!Widget_Valid(widget))
     return;
   if (widget->mapped)
     return;
@@ -573,8 +573,8 @@ void widget_show(Widget *widget) {
   RenderThread_Post(widget_apply_show, widget);
 }
 
-void widget_hide(Widget *widget) {
-  if (!widget_valid(widget))
+void Widget_Hide(Widget *widget) {
+  if (!Widget_Valid(widget))
     return;
   if (!widget->mapped)
     return;
@@ -582,12 +582,12 @@ void widget_hide(Widget *widget) {
   RenderThread_Post(widget_apply_hide, widget);
 }
 
-void widget_set_render(Widget *widget, WidgetRenderFn render) {
-  if (!widget_valid(widget))
+void Widget_SetRender(Widget *widget, WidgetRenderFn render) {
+  if (!Widget_Valid(widget))
     return;
   widget->render = render;
-  if (widget_is_valid(widget->win)) {
-    widget_invalidate(widget->win);
+  if (Widget_IsValid(widget->win)) {
+    Widget_Invalidate(widget->win);
   }
 }
 
@@ -603,7 +603,7 @@ static bool Widget_ApplyFps(PlatformWidget *widget, int fps) {
   return true;
 }
 
-void widget_set_fps(PlatformWidget *window, int fps) {
+void Widget_SetFps(PlatformWidget *window, int fps) {
   if (fps <= 0)
     fps = 1;
   if (!Widget_ApplyFps(window, fps))
@@ -612,12 +612,12 @@ void widget_set_fps(PlatformWidget *window, int fps) {
   RenderThread_Wake();
 }
 
-bool widget_is_valid(const PlatformWidget *widget) {
+bool Widget_IsValid(const PlatformWidget *widget) {
   const PlatformWidgetBase *base = (const PlatformWidgetBase *)widget;
   return widget && !base->dead;
 }
 
-void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
+void Widget_SetFrameCallback(PlatformWidget *widget, RenderFrameFn fn,
                                void *ud) {
   PlatformWidgetBase *base = (PlatformWidgetBase *)widget;
   if (!widget || base->dead) {
@@ -629,7 +629,7 @@ void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
   Platform_RenderThreadUnlock();
 }
 
-void widget_invalidate(PlatformWidget *widget) {
+void Widget_Invalidate(PlatformWidget *widget) {
   PlatformWidgetBase *base = (PlatformWidgetBase *)widget;
   if (!widget || base->dead) {
     return;
@@ -638,7 +638,7 @@ void widget_invalidate(PlatformWidget *widget) {
   RenderThread_Wake();
 }
 
-void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
+void Widget_InitBase(PlatformWidgetBase *base, int x, int y, int w, int h,
                       int fps, bool no_bg, void (*on_click)(void),
                       const char *name) {
   if (!base)
@@ -655,11 +655,11 @@ void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
   base->last_draw_ms = 0;
 }
 
-bool WidgetBaseCheck(PlatformWidgetBase *base) {
+bool Widget_BaseCheck(PlatformWidgetBase *base) {
   return base && !base->dead;
 }
 
-bool WidgetBaseMove(PlatformWidgetBase *base, int x, int y) {
+bool Widget_BaseMove(PlatformWidgetBase *base, int x, int y) {
   if (!base || base->dead)
     return false;
   if (base->x == x && base->y == y)
@@ -669,7 +669,7 @@ bool WidgetBaseMove(PlatformWidgetBase *base, int x, int y) {
   return true;
 }
 
-bool WidgetBaseResize(PlatformWidgetBase *base, int w, int h) {
+bool Widget_BaseResize(PlatformWidgetBase *base, int w, int h) {
   if (!base || base->dead)
     return false;
   if (w <= 0 || h <= 0)
@@ -681,14 +681,14 @@ bool WidgetBaseResize(PlatformWidgetBase *base, int w, int h) {
   return true;
 }
 
-bool WidgetBaseSetNoBg(PlatformWidgetBase *base, bool no_bg) {
+bool Widget_BaseSetNoBg(PlatformWidgetBase *base, bool no_bg) {
   if (!base || base->dead)
     return false;
   base->no_bg = no_bg;
   return true;
 }
 
-bool WidgetBaseSetBgColor(PlatformWidgetBase *base,
+bool Widget_BaseSetBgColor(PlatformWidgetBase *base,
                                      ColorRef bg_color) {
   if (!base || base->dead)
     return false;

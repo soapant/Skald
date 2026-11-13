@@ -16,13 +16,13 @@ static Cap caps[CAP_MAX];
 static int cap_count = 0;
 static unsigned cap_gen = 1;
 
-unsigned cap_generation(void) { return cap_gen; }
+unsigned Cap_Generation(void) { return cap_gen; }
 
 static void cap_add_provides(const char *owner, const char *key) {
   FeatureLoader_ManifestAddProvides(owner, key);
 }
 
-void cap_register_abi(const char *key, unsigned abi, void *fn) {
+void Cap_RegisterAbi(const char *key, unsigned abi, void *fn) {
   if (!key || !key[0] || !fn)
     return;
   if (strlen(key) >= CAP_KEY_LEN) {
@@ -68,7 +68,7 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     cap_add_provides(owner, key);
 }
 
-void *cap_resolve_abi(const char *key, unsigned abi) {
+void *Cap_ResolveAbi(const char *key, unsigned abi) {
   if (!key || !key[0])
     return NULL;
   for (int i = 0; i < cap_count; i++) {
@@ -84,7 +84,7 @@ void *cap_resolve_abi(const char *key, unsigned abi) {
   return NULL;
 }
 
-void cap_bind_declare(const char *key, void *consumer) {
+void Cap_BindDeclare(const char *key, void *consumer) {
   if (!key || !key[0] || !consumer) {
     return;
   }
@@ -114,7 +114,7 @@ void cap_bind_declare(const char *key, void *consumer) {
   }
 }
 
-void cap_purge_owner(const char *path_a, const char *path_b) {
+void Cap_PurgeOwner(const char *path_a, const char *path_b) {
   if (Owner_PurgeInactive(path_a, path_b)) {
     return;
   }

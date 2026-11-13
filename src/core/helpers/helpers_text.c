@@ -15,7 +15,7 @@
 #include "deps/log.h"
 
 HotkeyBinding
-convert_into_hotkey_binding(char *hotkey_string,
+Hotkey_ConvertIntoBinding(char *hotkey_string,
                             void (*on_hotkey_trigger)(void),
                             bool (*optional_condition_for_hotkey)(void),
                             const char *const *optional_blacklistedwindows,
@@ -41,7 +41,7 @@ convert_into_hotkey_binding(char *hotkey_string,
     if (cnt > 0) {
       output.blacklist = (char **)calloc((size_t)cnt, sizeof(char *));
       if (!output.blacklist) {
-        log_error("convert_into_hotkey_binding: blacklist alloc failed (%d)",
+        log_error("Hotkey_ConvertIntoBinding: blacklist alloc failed (%d)",
                   cnt);
         output.blacklist_count = 0;
         return output;
@@ -49,7 +49,7 @@ convert_into_hotkey_binding(char *hotkey_string,
       for (int i = 0; i < cnt; i++) {
         output.blacklist[i] = strdup(optional_blacklistedwindows[i]);
         if (!output.blacklist[i]) {
-          log_error("convert_into_hotkey_binding: strdup failed for entry %d",
+          log_error("Hotkey_ConvertIntoBinding: strdup failed for entry %d",
                     i);
           for (int j = 0; j < i; j++)
             free(output.blacklist[j]);

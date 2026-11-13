@@ -199,7 +199,7 @@ static void x11_queue_mouse_event(struct input_event *ev) {
   }
   Input_UpdateMouseButton(btn, down);
   if (!down && btn > 0 && btn <= MOUSE_BTN_MAX) {
-    hotkey_key_up(MOUSE_VK(btn));
+    Hotkey_KeyUp(MOUSE_VK(btn));
   }
   int mx = 0, my = 0;
   Platform_GetMousePos(&mx, &my);
@@ -219,7 +219,7 @@ static void x11_queue_mouse_event(struct input_event *ev) {
     bool stale = (now_ms - x11_mouse_last_fire_ms[btn]) > 200;
     if (rising || stale) {
       x11_mouse_last_fire_ms[btn] = now_ms;
-      hotkey_process(MOUSE_VK(btn), mev.mods);
+      Hotkey_Process(MOUSE_VK(btn), mev.mods);
     }
   }
 }
@@ -546,7 +546,7 @@ void x11_mouse_forward(const struct input_event *ev, int grabbed) {
     return;
   if (ev->type == EV_KEY) {
     int btn = x11_linux_button_to_mouse(ev->code);
-    if (btn > 0 && hotkey_mouse_button_bound(btn))
+    if (btn > 0 && Hotkey_MouseButtonBound(btn))
       return;
   }
   if (write(x11_uinput_mouse_fd, ev, sizeof(*ev)) < 0) {
@@ -907,14 +907,14 @@ void x11_set_suppress(int linux_code, bool v) {
 bool x11_handle_global_key(int key_code, int value) {
   remap_update_phys(x11_convert_key_to_windows_vk(key_code), value);
   if (value == 0) {
-    hotkey_key_up(x11_convert_key_to_windows_vk(key_code));
+    Hotkey_KeyUp(x11_convert_key_to_windows_vk(key_code));
     return false;
   }
   if (value != 1 && value != 2)
     return false;
   int pressed_vk = x11_convert_key_to_windows_vk(key_code);
   int modifiers = remap_current_mods();
-  bool processed = hotkey_process(pressed_vk, modifiers);
+  bool processed = Hotkey_Process(pressed_vk, modifiers);
   if (pressed_vk && processed) {
     pending_hotkey_vk = pressed_vk;
     pending_hotkey_mod = modifiers;
@@ -962,7 +962,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   }
   if (val == 0) {
     int vk0 = x11_convert_key_to_windows_vk(code);
-    hotkey_key_up(vk0);
+    Hotkey_KeyUp(vk0);
     if (vk0)
       InputState_Update(vk0, false, remap_current_mods(), 0);
   }
@@ -1014,7 +1014,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
         }
       }
       if (grabbed && x11_uinput_fd >= 0) {
-        if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
+        if (Snippet_FeedVk(x11_convert_key_to_windows_vk(code), val, true))
           return false;
         x11_uinput_emit(ev);
       }
@@ -1034,10 +1034,10 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   if (grabbed) {
     if (x11_uinput_fd >= 0) {
       if ((val == 1 || val == 2) &&
-          hotkey_process(x11_convert_key_to_windows_vk(code),
+          Hotkey_Process(x11_convert_key_to_windows_vk(code),
                          remap_current_mods()))
         return true;
-      if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
+      if (Snippet_FeedVk(x11_convert_key_to_windows_vk(code), val, true))
         return false;
       x11_uinput_emit(ev);
     } else {
@@ -1048,7 +1048,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       }
     }
   } else {
-    snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, false);
+    Snippet_FeedVk(x11_convert_key_to_windows_vk(code), val, false);
   }
   return false;
 }

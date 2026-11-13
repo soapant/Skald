@@ -20,17 +20,17 @@ static SnippetFireFn fire_fn = NULL;
 static char buf[SNIPPET_BUF_CAP];
 static int buf_len = 0;
 
-void snippet_set_fire_fn(SnippetFireFn fn) { fire_fn = fn; }
+void Snippet_SetFireFn(SnippetFireFn fn) { fire_fn = fn; }
 
-void snippet_reset_buffer(void) { buf_len = 0; }
+void Snippet_ResetBuffer(void) { buf_len = 0; }
 
-const SnippetBinding *snippet_get_binding(int index) {
+const SnippetBinding *Snippet_GetBinding(int index) {
   if (index < 0 || index >= snippet_count)
     return NULL;
   return &snippets[index];
 }
 
-int snippet_binding_count(void) { return snippet_count; }
+int Snippet_BindingCount(void) { return snippet_count; }
 
 static void snippet_free_binding(SnippetBinding *b) {
   if (!b)
@@ -46,7 +46,7 @@ static void snippet_free_binding(SnippetBinding *b) {
   b->window_count = 0;
 }
 
-bool snippet_register_internal(const char *trigger, const char *text,
+bool Snippet_RegisterInternal(const char *trigger, const char *text,
                                void (*func)(void), bool whitelist,
                                const char *const *windows, void *caller) {
   if (!trigger || !trigger[0])
@@ -104,7 +104,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
       snippets[i].windows = nwindows;
       snippets[i].window_count = nwindows ? nwin : 0;
       snprintf(snippets[i].owner, sizeof(snippets[i].owner), "%s", owner);
-      snippet_reset_buffer();
+      Snippet_ResetBuffer();
       return true;
     }
   }
@@ -151,11 +151,11 @@ bool snippet_register_internal(const char *trigger, const char *text,
     }
   }
   snippet_count++;
-  snippet_reset_buffer();
+  Snippet_ResetBuffer();
   return true;
 }
 
-bool snippet_unregister_internal(const char *trigger) {
+bool Snippet_UnregisterInternal(const char *trigger) {
   if (!trigger || !trigger[0])
     return false;
   int n = 0;
@@ -177,7 +177,7 @@ bool snippet_unregister_internal(const char *trigger) {
   return found;
 }
 
-void snippet_purge_owner(const char *path_a, const char *path_b) {
+void Snippet_PurgeOwner(const char *path_a, const char *path_b) {
   if (Owner_PurgeInactive(path_a, path_b))
     return;
 
@@ -280,7 +280,7 @@ static int snippet_match(void) {
   return -1;
 }
 
-bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
+bool Snippet_FeedVk(int vk_code, int value, bool can_swallow) {
   if (value == 0)
     return false;
   if (vk_code == VK_BACK) {
@@ -289,7 +289,7 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
     return false;
   }
   if (vk_code == VK_RETURN || vk_code == VK_ESCAPE) {
-    snippet_reset_buffer();
+    Snippet_ResetBuffer();
     return false;
   }
   int mods = remap_current_mods();
@@ -314,7 +314,7 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
   int del = (int)tlen - (can_swallow ? 1 : 0);
   if (del < 0)
     del = 0;
-  snippet_reset_buffer();
+  Snippet_ResetBuffer();
   if (fire_fn)
     fire_fn(idx, del);
   return true;

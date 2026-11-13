@@ -304,7 +304,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
 
   x11_scan_and_hook_keyboards();
 
-  if (hotkey_has_mouse_binding()) {
+  if (Hotkey_HasMouseBinding()) {
     x11_mouse_grab_begin();
   }
 
@@ -386,7 +386,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
     struct pollfd xfds[3];
     int nfds = 0;
     int main_idx = -1, render_idx = -1, wake_idx = -1;
-    int hk_fd = hotkey_wake_fd();
+    int hk_fd = Hotkey_WakeFd();
     if (hk_fd >= 0) {
       wake_idx = nfds;
       xfds[nfds].fd = hk_fd;
@@ -434,7 +434,7 @@ int WindowManager_RunLinux(WindowManager *wm) {
         }
       }
     }
-    hotkey_drain_pending();
+    Hotkey_DrainPending();
   }
 
   if (input_started)
@@ -481,7 +481,7 @@ void WindowManager_ProcessEventsLinux(WindowManager *wm) {
       }
     }
   }
-  hotkey_drain_pending();
+  Hotkey_DrainPending();
 }
 
 void WindowManager_QuitLinux(WindowManager *wm) {

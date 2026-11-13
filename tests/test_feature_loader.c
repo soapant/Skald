@@ -62,16 +62,16 @@ TEST(load_reload_unload) {
 
   bool loaded = FeatureLoader_LoadAllFromDir(FIXTURE_DIR);
   ASSERT_TRUE(loaded);
-  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
   ASSERT_FALSE(has_file(hot1));
 
   FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
-  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
   ASSERT_TRUE(has_file(hot1));
   ASSERT_FALSE(has_file(hot2));
 
   FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
-  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
   FeatureLoader_DrainRetiredUnloads();
   ASSERT_FALSE(has_file(hot1));
   ASSERT_TRUE(has_file(hot2));
@@ -101,15 +101,15 @@ TEST(reload_defers_unload_until_drain) {
 
   FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
   ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 1);
-  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
 
   FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
   ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 2);
-  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
 
   FeatureLoader_DrainRetiredUnloads();
   ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
-  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
 
   FeatureLoader_DrainRetiredUnloads();
   ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);

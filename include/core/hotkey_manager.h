@@ -14,18 +14,18 @@ extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
-bool hotkey_register_internal(HotkeyBinding binding);
-bool hotkey_unregister_internal(int vk_code, int modifiers);
-int hotkey_count(void);
-const HotkeyBinding *hotkey_get(int index);
-bool hotkey_is_taken(int vk_code, int modifiers);
-const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb);
-const HotkeyBinding *hotkey_find_by_ud(void *ud);
-bool hotkey_process(int vk_code, int modifiers);
-void hotkey_drain_pending(void);
-int hotkey_wake_fd(void);
-void hotkey_set_suspended(bool suspended);
-bool hotkey_has_mouse_binding(void);
-bool hotkey_mouse_button_bound(int btn);
+bool Hotkey_RegisterInternal(HotkeyBinding binding);
+bool Hotkey_UnregisterInternal(int vk_code, int modifiers);
+int Hotkey_Count(void);
+const HotkeyBinding *Hotkey_Get(int index);
+bool Hotkey_IsTaken(int vk_code, int modifiers);
+const HotkeyBinding *Hotkey_FindByCallback(HotkeyCallback cb);
+const HotkeyBinding *Hotkey_FindByUd(void *ud);
+bool Hotkey_Process(int vk_code, int modifiers);
+void Hotkey_DrainPending(void);
+int Hotkey_WakeFd(void);
+void Hotkey_SetSuspended(bool suspended);
+bool Hotkey_HasMouseBinding(void);
+bool Hotkey_MouseButtonBound(int btn);
 
 #endif
