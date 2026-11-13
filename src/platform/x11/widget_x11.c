@@ -274,7 +274,7 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
   unsigned long bg =
       widget->base.no_bg
           ? 0UL
-          : (widget->base.has_bg ? rgb_to_hex(bg_color) : rgb_to_hex(COLOR_BG));
+          : (widget->base.has_bg ? RgbToHex(bg_color) : RgbToHex(COLOR_BG));
   unsigned int r = (unsigned int)((bg >> 16) & 0xFF);
   unsigned int g = (unsigned int)((bg >> 8) & 0xFF);
   unsigned int b = (unsigned int)(bg & 0xFF);

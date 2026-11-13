@@ -324,7 +324,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
 
   if (state) {
     if (WindowTitleText && state->window_title) {
-      unsigned long title_col = rgb_to_hex(COLOR_TEXT);
+      unsigned long title_col = RgbToHex(COLOR_TEXT);
       x11_set_draw_context(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
           (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,

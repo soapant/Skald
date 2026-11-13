@@ -58,7 +58,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     needDestroy = true;
   }
   unsigned long color =
-      spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
+      spec.color == PL_COLOR_AUTO ? RgbToHex(COLOR_TEXT) : spec.color;
   const char *a = spec.align ? spec.align : "CENTER";
   if (PlDrawState_Get()->measuring) {
     XftFont *mf = FH_TO_XFT(fh);
@@ -139,7 +139,7 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   if (!xf)
     return false;
   unsigned long color =
-      spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
+      spec.color == PL_COLOR_AUTO ? RgbToHex(COLOR_TEXT) : spec.color;
   XftColor col;
   x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
   x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf,
@@ -178,7 +178,7 @@ void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
         (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
                             .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
                             .text = state->window_title,
-                            .color = rgb_to_hex(COLOR_TEXT),
+                            .color = RgbToHex(COLOR_TEXT),
                             .font = font,
                             .align = "LEFT",
                             .pad = PROMPT_FOOTER_PAD,
