@@ -1,6 +1,8 @@
 #define _GNU_SOURCE
+
 #include "helpers/x11/raw_input_core_x11.h"
 #include "helpers/helpers_text.h"
+#include "core/window_manager.h"
 
 struct WindowManager;
 
@@ -322,8 +324,7 @@ static void x11_sig_handler(int sig) {
 static void x11_term_handler(int sig) {
   x11_force_cleanup();
   if (x11_wm) {
-    extern void x11_quit(struct WindowManager * wm);
-    x11_quit(x11_wm);
+    WindowManager_Quit(x11_wm);
   }
   _exit(0);
 }

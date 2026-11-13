@@ -660,7 +660,7 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
     }
     if (!_still_open)
       break;
-    Platform_ProcessEvents(wm);
+    WindowManager_ProcessEvents(wm);
     bool mouse_changed = false;
     int mx = 0, my = 0;
     if (Platform_GetMousePos(&mx, &my)) {
