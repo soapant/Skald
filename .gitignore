@@ -13,3 +13,4 @@ features/
 !features/control_center
 !features/settings
 !features/clipboard_history
+/ISSUES.md
