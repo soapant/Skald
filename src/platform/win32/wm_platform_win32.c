@@ -22,11 +22,6 @@ bool Platform_InitDisplay(WindowManager *wm) {
 
 void Platform_PromptFlushDisplay(WindowManager *wm) { (void)wm; }
 
-void Platform_Quit(WindowManager *wm) { WindowManager_Quit(wm); }
-
-void Platform_ProcessEvents(WindowManager *wm) {
-  WindowManager_ProcessEvents(wm); }
-
 void Platform_OnPopEmpty(void) {
   remap_reset();
   InputState_Clear();

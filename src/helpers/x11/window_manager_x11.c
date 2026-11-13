@@ -278,7 +278,7 @@ void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
   x11_drain_selection_complete(dpy, wm);
 }
 
-int x11_run(WindowManager *wm) {
+int WindowManager_Run(WindowManager *wm) {
   XEvent xev;
 
   FeatureLoader_DrainRetiredUnloads();
@@ -452,7 +452,7 @@ int x11_run(WindowManager *wm) {
   return 0;
 }
 
-void x11_process_events(WindowManager *wm) {
+void WindowManager_ProcessEvents(WindowManager *wm) {
   if (!wm || !wm->display) {
     return;
   }
@@ -483,7 +483,7 @@ void x11_process_events(WindowManager *wm) {
   Hotkey_DrainPending();
 }
 
-void x11_quit(WindowManager *wm) {
+void WindowManager_Quit(WindowManager *wm) {
   if (wm)
     wm->running = false;
 }
