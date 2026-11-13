@@ -71,7 +71,7 @@ void UI_SetCursorPosition(int position) {
   }
 }
 
-void UI_SyncFilterFromEdit(void) { (void)ui_top_prompt(); }
+void UI_SyncFilterFromEdit(void) { ui_top_prompt(); }
 
 void UI_ApplyFilterToEdit(void) {
   PromptState *prompt = ui_top_prompt();

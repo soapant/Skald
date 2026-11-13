@@ -91,7 +91,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   win32_apply_rounded_corners(hwnd, w, h);
   ShowWindow(hwnd, SW_SHOW);
   UpdateWindow(hwnd);
-  win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd, WH_NULL);
+  win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd);
   return true;
 }
 
@@ -120,7 +120,7 @@ void Platform_PromptPopupHideWindow(Popup *self) {
 
   if (subwindow_hide) {
     if (IsWindow(ctx_hwnd))
-      win32_force_window_focus(WH_FROM_HWND(ctx_hwnd), WH_NULL);
+      win32_force_window_focus(WH_FROM_HWND(ctx_hwnd));
     return;
   }
 
@@ -138,7 +138,7 @@ void Platform_PromptPopupHideWindow(Popup *self) {
   if (restore) {
     log_info("Platform_PromptPopupHideWindow restoring fg hwnd=%p explicit=%d",
              restore, (int)g_prev_fg_explicit);
-    win32_force_window_focus(WH_FROM_HWND(restore), WH_NULL);
+    win32_force_window_focus(WH_FROM_HWND(restore));
   }
   g_prev_fg = NULL;
   g_prev_fg_explicit = false;

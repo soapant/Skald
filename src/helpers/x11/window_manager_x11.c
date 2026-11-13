@@ -414,8 +414,7 @@ int WindowManager_Run(WindowManager *wm) {
     int poll_res = poll(xfds, (nfds_t)nfds, 50);
     if (wake_idx >= 0 && (xfds[wake_idx].revents & POLLIN)) {
       unsigned long long v;
-      ssize_t rd = read(hk_fd, &v, sizeof(v));
-      (void)rd;
+      read(hk_fd, &v, sizeof(v));
     }
     if (poll_res < 0)
       break;

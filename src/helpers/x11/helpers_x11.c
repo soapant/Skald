@@ -1446,7 +1446,7 @@ static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
   XFreeGC(dpy, gc);
   XDestroyImage(img);
   if (x11_bg_image_enabled()) {
-    x11_bg_image_blit(dpy, pm, vis, depth, w, h);
+    x11_bg_image_blit(dpy, pm, vis, w, h);
   }
   if (rounded && R > 0) {
     XImage *img2 = XGetImage(dpy, pm, 0, 0, w, h, AllPlanes, ZPixmap);
