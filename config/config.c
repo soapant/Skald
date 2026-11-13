@@ -35,11 +35,5 @@ void ConfigApply(void) {
   WindowTitleText = false;
   CloseOnLossOfFocus = false;
   Theme = "modus-vivendi";
-  BackgroundImage = "";
-  COLOR_BG = RGB(0, 0, 0);
-  COLOR_TEXT = RGB(255, 255, 255);
-  COLOR_SELECTED_TEXT = RGB(47, 56, 73);
-  COLOR_CURSOR = RGB(255, 255, 255);
-  COLOR_BORDER = RGB(100, 100, 100);
 }
 // </skald-config-generated>
