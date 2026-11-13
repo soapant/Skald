@@ -2,7 +2,7 @@
 
 static char default_apps_x11[DEFAULT_APP_COUNT][256];
 
-const char *get_default_terminal(int slot) {
+static const char *get_default_terminal(int slot) {
 
   default_apps_x11[slot][0] = '\0';
 
@@ -29,7 +29,7 @@ const char *get_default_terminal(int slot) {
   return default_apps_x11[slot];
 }
 
-const char *get_default_browser(int slot) {
+static const char *get_default_browser(int slot) {
 
   default_apps_x11[slot][0] = '\0';
 
@@ -97,7 +97,7 @@ const char *get_default_browser(int slot) {
   return default_apps_x11[slot];
 }
 
-const char *get_default_shell(int slot) {
+static const char *get_default_shell(int slot) {
   default_apps_x11[slot][0] = '\0';
   const char *shell = getenv("SHELL");
   const char *name = strrchr(shell, '/') ? strrchr(shell, '/') + 1 : shell;
