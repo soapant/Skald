@@ -149,7 +149,7 @@ static bool hypr_bus(void) {
   return sig && sig[0];
 }
 
-bool succeded_hypr(char *output) {
+static bool succeded_hypr(char *output) {
   if (!output) {
     log_error("output is NULL");
     return false;

@@ -1046,7 +1046,7 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                            .fontsize = FontSize});
 }
 
-Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
+static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
                                unsigned long bg_color, const char *res_name,
                                const char *res_class, long event_mask,
                                bool override_redirect);
@@ -1084,7 +1084,7 @@ static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
 static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
                                      unsigned int baseAlpha8);
 
-Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
+static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
                                unsigned long bg_color, const char *res_name,
                                const char *res_class, long event_mask,
                                bool override_redirect) {

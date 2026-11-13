@@ -30,7 +30,7 @@ __thread HDC g_draw_hdc = NULL;
 
 HFONT win32_sized_font(int size);
 
-void win32_img_stat(const char *path, FILETIME *ft, DWORD *size);
+static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size);
 
 static void win32_path_to_native(char *dst, size_t cap, const char *src) {
   snprintf(dst, cap, "%s", src);
@@ -353,7 +353,7 @@ void win32_img_cache_unlock(void) {
   LeaveCriticalSection(&g_img_cache_cs);
 }
 
-void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
+static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
 
   ft->dwLowDateTime = 0;
   ft->dwHighDateTime = 0;

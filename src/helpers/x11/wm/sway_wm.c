@@ -117,7 +117,7 @@ bool get_app_id_sway(char *buffer, int buffer_size) {
 }
 
 char *paste_sway(char *content) { return x11_paste_wtype(content); }
-bool succeded_sway(char *output) {
+static bool succeded_sway(char *output) {
   if (!output) {
     log_error("output is NULL");
     return false;
