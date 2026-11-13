@@ -115,6 +115,12 @@ bool widget_is_valid(const PlatformWidget *widget);
 void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
                                void *ud);
 void widget_invalidate(PlatformWidget *widget);
+bool WidgetBaseCheck(PlatformWidgetBase *base);
+bool WidgetBaseMove(PlatformWidgetBase *base, int x, int y);
+bool WidgetBaseResize(PlatformWidgetBase *base, int w, int h);
+bool WidgetBaseSetNoBg(PlatformWidgetBase *base, bool no_bg);
+bool WidgetBaseSetBgColor(PlatformWidgetBase *base, ColorRef bg_color);
+
 void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
                       int fps, bool no_bg, void (*on_click)(void),
                       const char *name);

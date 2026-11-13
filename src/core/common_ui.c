@@ -592,6 +592,36 @@ void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
   out->visible = visible;
 }
 
+bool TerminalGuard(const char *working_dir, const char *extra_args) {
+  if (!working_dir) {
+    log_error("working_dir is NULL extra_args='%s'",
+              extra_args ? extra_args : "null");
+    return false;
+  }
+  if (!UsedTerminal || !UsedTerminal[0]) {
+    log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'",
+              working_dir, extra_args ? extra_args : "null");
+    return false;
+  }
+  return true;
+}
+
+void Prompt_ProcessPendingSubwindow(void) {
+  SkaldContext *_c = SkaldContext_Get();
+  if (!_c || !_c->window.subwindow.pending)
+    return;
+  _c->window.subwindow.pending = false;
+  _c->window.subwindow.created = true;
+  _c->window.selection_complete = false;
+  WindowManager *wm = WindowManager_Get();
+  if (wm && wm->popup_count > 1)
+    WindowManager_PopPopup(wm);
+  Popup *p = PromptPopup_Create(wm, &_c->window.subwindow.pending_subwindow);
+  if (p && p->vtable && p->vtable->on_render)
+    p->vtable->on_render(p);
+  Platform_PromptFlushDisplay(wm);
+}
+
 char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
   SkaldContext *_ctx = SkaldContext_Get();
   if (_ctx)
@@ -736,3 +766,103 @@ void GetDrawOffset(int *out_x, int *out_y) {
   if (out_y)
     *out_y = PlDrawState_Get()->off_y;
 }
+
+
+int DrawLinePrep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
+                 int *y1, int *x2, int *y2) {
+  int t = DrawThicknessPx(spec->thickness);
+  if (t < 1)
+    t = 1;
+  *x1 = spec->x1 + off_x;
+  *y1 = spec->y1 + off_y;
+  *x2 = spec->x2 + off_x;
+  *y2 = spec->y2 + off_y;
+  int bx = *x1 < *x2 ? *x1 : *x2;
+  int by = *y1 < *y2 ? *y1 : *y2;
+  int bw = (*x1 > *x2 ? *x1 - *x2 : *x2 - *x1) + t;
+  int bh = (*y1 > *y2 ? *y1 - *y2 : *y2 - *y1) + t;
+  DrawMeasureTrack(bx - t / 2, by - t / 2, bw, bh);
+  return t;
+}
+
+int DrawCirclePrep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
+                   int *cx, int *cy) {
+  int t = DrawThicknessPx(spec->thickness);
+  *cx = spec->cx + off_x;
+  *cy = spec->cy + off_y;
+  DrawMeasureTrack(*cx - spec->radius, *cy - spec->radius,
+                   spec->radius * 2, spec->radius * 2);
+  return t;
+}
+
+int BgTileLruPick(const void *slots, int count, size_t stride,
+                  int (*is_empty)(const void *slot),
+                  unsigned long (*stamp)(const void *slot)) {
+  int i;
+  for (i = 0; i < count; i++)
+    if (is_empty((const char *)slots + (size_t)i * stride))
+      return i;
+
+  int oldest = 0;
+  for (i = 1; i < count; i++) {
+    const void *cand = (const char *)slots + (size_t)i * stride;
+    const void *best = (const char *)slots + (size_t)oldest * stride;
+    if (stamp(cand) < stamp(best))
+      oldest = i;
+  }
+  return oldest;
+}
+
+void DrawTextCenteredImpl(const PlDrawTextCenteredSpec *spec, int lineHeight) {
+  int tw = Platform_MeasureTextWidth(
+      (PlMeasureTextWidthSpec){.text = spec->text,
+                               .len = (int)strlen(spec->text),
+                               .fontsize = spec->fontsize});
+  int tx = spec->x + (spec->w - tw) / 2;
+  int ty = spec->y + (spec->h - lineHeight) / 2;
+  Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
+                                           .y = ty,
+                                           .text = spec->text,
+                                           .color = spec->color,
+                                           .font = spec->font,
+                                           .align = "LEFT",
+                                           .pad = 0,
+                                           .fontsize = spec->fontsize});
+}
+
+int MsgAnchorCenter(int rect, int rect_size, int slot, int gap, int outward,
+                    int win_size) {
+  if (slot == 0)
+    return outward ? rect - gap - win_size / 2 : rect + gap + win_size / 2;
+  if (slot == 2)
+    return outward ? rect + rect_size + gap + win_size / 2
+                   : rect + rect_size - gap - win_size / 2;
+  return rect + rect_size / 2;
+}
+
+int MsgStackDir(int v_slot, bool outward) {
+  int dir = (v_slot == 2) ? -1 : 1;
+  return outward ? -dir : dir;
+}
+
+int PromptRowHeight(void) {
+  return FontSize + PROMPT_ROW_H_BONUS;
+}
+
+int PromptListTop(void) {
+  return FontSize + PROMPT_LIST_TOP_BONUS;
+}
+
+int PromptCaretHeight(void) {
+  return FontSize + PROMPT_CARET_H_BONUS;
+}
+
+int PromptCustomEditHeight(void) {
+  return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS;
+}
+
+int PromptListBottomMargin(void) { return 40; }
+
+int64_t TimerNowTicks(void) { return Platform_TimerNowTicks(); }
+
+int64_t TimerTickFrequency(void) { return Platform_TimerTickFrequency(); }

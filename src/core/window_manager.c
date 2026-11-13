@@ -130,6 +130,19 @@ Popup *WindowManager_GetTopPopup(WindowManager *wm) {
   return wm->popups[wm->popup_count - 1];
 }
 
+void WindowManager_DrainSelectionComplete(WindowManager *wm) {
+  if (!wm || wm->popup_count == 0)
+    return;
+  SkaldContext *ctx = SkaldContext_Get();
+  if (!ctx || !ctx->window.selection_complete)
+    return;
+  ctx->window.selection_complete = false;
+  WindowManager_PopPopup(wm);
+  Popup *top_after = WindowManager_GetTopPopup(wm);
+  if (top_after && top_after->vtable && top_after->vtable->on_render)
+    top_after->vtable->on_render(top_after);
+}
+
 void WindowManager_GetMainMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
   Platform_WM_GetMonitorGeometry(ox, oy, ow, oh);
 }

@@ -20,6 +20,8 @@ typedef struct {
 } PlDrawState;
 
 PlDrawState *PlDrawState_Get(void);
+void PlDrawState_Offset(int *x, int *y);
+
 void PlDrawState_BeginMeasure(void);
 void PlDrawState_Reset(void);
 void PlDrawState_TrackMeasure(int x, int y, int w, int h);

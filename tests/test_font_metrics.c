@@ -1,9 +1,8 @@
 #include "test.h"
 #include "config.h"
 #include "platform/platform.h"
+#include "platform/draw.h"
 #include <stdbool.h>
-
-void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 
 static int saved_font_size;
 

@@ -47,18 +47,10 @@
 #define PROMPT_CUSTOM_FALLBACK_LIST_W 650
 #define PROMPT_CUSTOM_EDIT_H_BONUS 28
 
-static inline int PromptRowHeight(void) {
-  return FontSize + PROMPT_ROW_H_BONUS;
-}
-static inline int PromptListTop(void) {
-  return FontSize + PROMPT_LIST_TOP_BONUS;
-}
-static inline int PromptCaretHeight(void) {
-  return FontSize + PROMPT_CARET_H_BONUS;
-}
-static inline int PromptCustomEditHeight(void) {
-  return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS;
-}
-static inline int PromptListBottomMargin(void) { return 40; }
+int PromptRowHeight(void);
+int PromptListTop(void);
+int PromptCaretHeight(void);
+int PromptCustomEditHeight(void);
+int PromptListBottomMargin(void);
 
 #endif

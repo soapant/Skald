@@ -17,6 +17,10 @@ bool Cover_Scale(int sw, int sh, int tw, int th, int *dw, int *dh);
 
 int DrawThicknessPx(float thickness);
 void DrawMeasureTrack(int x, int y, int w, int h);
+int DrawLinePrep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
+                 int *y1, int *x2, int *y2);
+int DrawCirclePrep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
+                   int *cx, int *cy);
 void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,
                      bool (*filter_match)(const char *item,
@@ -64,6 +68,8 @@ typedef struct {
 } ListboxLayout;
 
 char *PromptUserRun(WindowManager *wm, const PromptSpec *spec);
+void Prompt_ProcessPendingSubwindow(void);
+bool TerminalGuard(const char *working_dir, const char *extra_args);
 PlMetrics *Metrics_Get(void);
 void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec);
 void Item_GetColors(PlGetItemColorsSpec spec);
@@ -122,5 +128,15 @@ int UI_InsertChar(wchar_t wc);
 #define UI_DEBOUNCE_TIMER_ID 998
 #define UI_TICK_TIMER_ID 997
 #define UI_TICK_TIMER_MS 1000
+
+int BgTileLruPick(const void *slots, int count, size_t stride,
+                  int (*is_empty)(const void *slot),
+                  unsigned long (*stamp)(const void *slot));
+
+void DrawTextCenteredImpl(const PlDrawTextCenteredSpec *spec,
+                          int lineHeight);
+int MsgAnchorCenter(int rect, int rect_size, int slot, int gap, int outward,
+                    int win_size);
+int MsgStackDir(int v_slot, bool outward);
 
 #endif

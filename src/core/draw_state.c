@@ -53,3 +53,9 @@ void PlDrawState_EndMeasure(int *out_w, int *out_h) {
   ds->meas_x1 = 0;
   ds->meas_y1 = 0;
 }
+
+void PlDrawState_Offset(int *x, int *y) {
+  PlDrawState *d = PlDrawState_Get();
+  *x += d->off_x;
+  *y += d->off_y;
+}

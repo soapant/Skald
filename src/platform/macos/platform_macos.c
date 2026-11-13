@@ -44,6 +44,7 @@ int64_t Platform_TimerNowTicks(void) {
 
 int64_t Platform_TimerTickFrequency(void) { return 1000000000LL; }
 
+
 bool Platform_ProcessRunning(const char *name) {
   if (!name || !*name)
     return false;

@@ -85,19 +85,6 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
     *list_top = PromptListTop();
 }
 
-void Platform_ProcessPendingSubWindows(void) {
-  SkaldContext *_c = SkaldContext_Get();
-  if (!_c || !_c->window.subwindow.pending)
-    return;
-  _c->window.subwindow.pending = false;
-  _c->window.subwindow.created = true;
-  WindowManager *wm = WindowManager_Get();
-  if (wm && wm->popup_count > 1)
-    WindowManager_PopPopup(wm);
-  _c->window.selection_complete = false;
-  (void)PromptPopup_Create(wm, &_c->window.subwindow.pending_subwindow);
-}
-
 typedef struct {
   RECT rc;
   char name[128];

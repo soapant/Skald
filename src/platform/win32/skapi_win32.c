@@ -19,12 +19,10 @@
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
-#include "helpers/helpers_ui.h"
 #include "core/editbox.h"
 #include "core/prompt_geometry.h"
 #include "core/draw_state.h"
 #include "helpers/win32/common_ui_win32.h"
-#include "helpers/helpers_ui.h"
 #include "core/thread_registry.h"
 #include "helpers/helpers_owner.h"
 #include <stdio.h>

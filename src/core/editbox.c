@@ -128,6 +128,51 @@ int Editbox_CaretY(int box_top, int ascent, int descent, int fontsize) {
   return box_top + (line_h - fs) / 2 + (PROMPT_DEADCURSOR_Y / 4);
 }
 
+void EditboxSpec_FillFromPrompt(EditboxSpec *spec, PromptState *state,
+                                int text_len, int cursor_x, int text_w,
+                                int ascent, int descent, FontHandle font) {
+  if (!spec || !state)
+    return;
+  int sel_start = 0, sel_end = 0;
+  bool has_sel = false;
+  Editbox_ResolveSelection(state, text_len, false, &sel_start, &sel_end,
+                           &has_sel);
+  memset(spec, 0, sizeof(*spec));
+  spec->text = state->eb->filter;
+  spec->text_len = text_len;
+  spec->cursor = state->eb->cursor;
+  spec->password_mode = state->password_mode;
+  spec->sel_start = sel_start;
+  spec->sel_end = sel_end;
+  spec->has_selection = has_sel;
+  int edit_y = PROMPT_EDIT_INSET;
+  if (!state->lb && state->height > 0) {
+    int line_h = ascent + descent;
+    if (line_h <= 0)
+      line_h = FontSize > 0 ? FontSize : 16;
+    edit_y = (state->height - line_h) / 2;
+    if (edit_y < 2)
+      edit_y = 2;
+  }
+  spec->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
+  spec->x = 0;
+  spec->y = edit_y;
+  spec->w = state->width;
+  spec->inset = PROMPT_EDIT_INSET;
+  spec->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
+  spec->scroll = state->eb->scroll_offset;
+  spec->cursor_x = cursor_x;
+  spec->text_w = text_w;
+  spec->text_y = edit_y;
+  spec->caret_y = Editbox_CaretY(edit_y, ascent, descent, FontSize);
+  spec->caret_h = PromptCaretHeight();
+  spec->placeholder_dy = 2;
+  spec->rainbow_limit_x = -1;
+  spec->placeholder = state->eb->placeholder;
+  spec->text_color = rgb_to_hex(COLOR_TEXT);
+  spec->font = font;
+}
+
 void Editbox_ResolveSelection(PromptState *state, int text_len,
                               bool prefer_state, int *out_start, int *out_end,
                               bool *out_has) {

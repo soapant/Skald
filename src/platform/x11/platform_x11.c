@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include "wm/x11_wm.h"
+#include "helpers/helpers_ui.h"
 #include "helpers/x11/platform_x11.h"
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
@@ -12,17 +13,8 @@
 
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
-  if (!working_dir) {
-    log_error("working_dir is NULL extra_args='%s'",
-              extra_args ? extra_args : "null");
+  if (!TerminalGuard(working_dir, extra_args))
     return false;
-  }
-  if (!UsedTerminal || !UsedTerminal[0]) {
-    log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'",
-              working_dir ? working_dir : "null",
-              extra_args ? extra_args : "null");
-    return false;
-  }
 
   X11SessionEnv env;
   x11_env_get_session_env(&env);
@@ -779,6 +771,22 @@ static char *icon_try(const char *bare, const char *fmt, ...) {
   va_end(ap);
   return icon_probe(path, bare);
 }
+static char *x11_icon_try_sizes(const char *bare, const char *dir,
+                                const char *const *sizes,
+                                const char *const *fmts, int n_fmts) {
+  for (int s = 0; sizes[s]; s++) {
+    const char *sz = sizes[s];
+    while (*sz == ' ')
+      sz++;
+    for (int f = 0; f < n_fmts; f++) {
+      char *hit = icon_try(bare, fmts[f], dir, sz, bare);
+      if (hit)
+        return hit;
+    }
+  }
+  return NULL;
+}
+
 char *Platform_GetActiveWindowAppId(void) { return Wm_GetActiveWindowAppId(); }
 
 char *Platform_GetIconPath(char *app_path) {
@@ -847,19 +855,13 @@ char *Platform_GetIconPath(char *app_path) {
   if (!home || !home[0])
     home = x11_env_home_dir();
   if (home && home[0]) {
-    for (int s = 0; sizes[s]; s++) {
-      const char *sz = sizes[s];
-      while (*sz == ' ')
-        sz++;
-      hit = icon_try(bare, "%s/.local/share/icons/hicolor/%s/apps/%s.png", home,
-                     sz, bare);
-      if (hit)
-        return hit;
-      hit = icon_try(bare, "%s/.local/share/icons/hicolor/%s/apps/%s.svg", home,
-                     sz, bare);
-      if (hit)
-        return hit;
-    }
+    const char *fmts[] = {
+        "%s/.local/share/icons/hicolor/%s/apps/%s.png",
+        "%s/.local/share/icons/hicolor/%s/apps/%s.svg",
+    };
+    hit = x11_icon_try_sizes(bare, home, (const char *const *)sizes, fmts, 2);
+    if (hit)
+      return hit;
   }
   {
     const char *xdg = getenv("XDG_DATA_DIRS");
@@ -872,54 +874,43 @@ char *Platform_GetIconPath(char *app_path) {
     char *save = NULL;
     for (char *dir = strtok_r(xdg_dirs, ":", &save); dir;
          dir = strtok_r(NULL, ":", &save)) {
-      for (int s = 0; sizes[s]; s++) {
-        const char *sz = sizes[s];
-        while (*sz == ' ')
-          sz++;
-        hit = icon_try(bare, "%s/icons/hicolor/%s/apps/%s.png", dir, sz, bare);
-        if (hit)
-          return hit;
-        hit = icon_try(bare, "%s/icons/hicolor/%s/apps/%s.svg", dir, sz, bare);
-        if (hit)
-          return hit;
-        hit = icon_try(bare, "%s/icons/hicolor/%s.svg", dir, bare);
-        if (hit)
-          return hit;
-        hit = icon_try(bare, "%s/icons/hicolor/%s.png", dir, bare);
-        if (hit)
-          return hit;
-        hit = icon_try(bare, "%s/pixmaps/%s.png", dir, bare);
-        if (hit)
-          return hit;
-        hit = icon_try(bare, "%s/pixmaps/%s.svg", dir, bare);
+      {
+        const char *fmts[] = {
+            "%s/icons/hicolor/%s/apps/%s.png",
+            "%s/icons/hicolor/%s/apps/%s.svg",
+        };
+        hit = x11_icon_try_sizes(bare, dir, (const char *const *)sizes, fmts,
+                                 2);
         if (hit)
           return hit;
       }
+      hit = icon_try(bare, "%s/icons/hicolor/%s.svg", dir, bare);
+      if (hit)
+        return hit;
+      hit = icon_try(bare, "%s/icons/hicolor/%s.png", dir, bare);
+      if (hit)
+        return hit;
+      hit = icon_try(bare, "%s/pixmaps/%s.png", dir, bare);
+      if (hit)
+        return hit;
+      hit = icon_try(bare, "%s/pixmaps/%s.svg", dir, bare);
+      if (hit)
+        return hit;
     }
   }
   for (int b = 0; bases[b]; b++) {
-    for (int s = 0; sizes[s]; s++) {
-      const char *sz = sizes[s];
-      while (*sz == ' ')
-        sz++;
-      hit = icon_try(bare, "%s/%s/apps/%s.png", bases[b], sz, bare);
-      if (hit)
-        return hit;
-      hit = icon_try(bare, "%s/%s/apps/%s.svg", bases[b], sz, bare);
-      if (hit)
-        return hit;
-      hit = icon_try(bare, "%s/%s.svg", bases[b], bare);
-      if (hit)
-        return hit;
-      hit = icon_try(bare, "%s/%s.png", bases[b], bare);
-      if (hit)
-        return hit;
-    }
-    char direct[1024];
-    hit = icon_try(bare, "%s/%s.png", bases[b], bare);
+    const char *fmts[] = {
+        "%s/%s/apps/%s.png",
+        "%s/%s/apps/%s.svg",
+    };
+    hit = x11_icon_try_sizes(bare, bases[b], (const char *const *)sizes, fmts,
+                             2);
     if (hit)
       return hit;
     hit = icon_try(bare, "%s/%s.svg", bases[b], bare);
+    if (hit)
+      return hit;
+    hit = icon_try(bare, "%s/%s.png", bases[b], bare);
     if (hit)
       return hit;
   }
@@ -1345,6 +1336,19 @@ bool Platform_Click(void) {
 #endif
 }
 
+static bool x11_bounds_write(int min_x, int min_y, int max_x, int max_y,
+                             int *out_x, int *out_y, int *out_w, int *out_h) {
+  if (out_x)
+    *out_x = min_x;
+  if (out_y)
+    *out_y = min_y;
+  if (out_w)
+    *out_w = max_x - min_x;
+  if (out_h)
+    *out_h = max_y - min_y;
+  return true;
+}
+
 bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
   if (out_x)
     *out_x = 0;
@@ -1396,15 +1400,8 @@ bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
     max_x = DisplayWidth(dpy, DefaultScreen(dpy));
     max_y = DisplayHeight(dpy, DefaultScreen(dpy));
   }
-  if (out_x)
-    *out_x = min_x;
-  if (out_y)
-    *out_y = min_y;
-  if (out_w)
-    *out_w = max_x - min_x;
-  if (out_h)
-    *out_h = max_y - min_y;
-  return true;
+  return x11_bounds_write(min_x, min_y, max_x, max_y, out_x, out_y, out_w,
+                          out_h);
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {
@@ -1509,6 +1506,17 @@ static size_t http_write_cb(char *ptr, size_t sz, size_t nm, void *userdata) {
   return n;
 }
 
+static void http_setopt_common(CURL *c) {
+  curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
+  curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
+  curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
+  curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
+  curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
+  curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
+  curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
+}
+
 static void http_global_init(void) {
   static int done = 0;
   static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -1539,15 +1547,8 @@ static CURL *http_new(const char *url, size_t limit, HttpBuf *buf) {
   curl_easy_setopt(c, CURLOPT_URL, url);
   curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, http_write_cb);
   curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)buf);
-  curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
-  curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
-  curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
-  curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
-  curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
+  http_setopt_common(c);
   curl_easy_setopt(c, CURLOPT_USERAGENT, "Skald/1.0");
-  curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
-  curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
-  curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
   curl_easy_setopt(c, CURLOPT_FAILONERROR, 0L);
   return c;
 }
@@ -1638,14 +1639,7 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   curl_easy_setopt(c, CURLOPT_WRITEFUNCTION,
                    (curl_write_callback)Platform_http_write_file_cb);
   curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)f);
-  curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, 1L);
-  curl_easy_setopt(c, CURLOPT_MAXREDIRS, (long)HTTP_MAX_REDIRECTS);
-  curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT, (long)HTTP_CONNECT_TIMEOUT_S);
-  curl_easy_setopt(c, CURLOPT_TIMEOUT, (long)HTTP_TIMEOUT_S);
-  curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
-  curl_easy_setopt(c, CURLOPT_SSL_VERIFYPEER, 1L);
-  curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
-  curl_easy_setopt(c, CURLOPT_ACCEPT_ENCODING, "");
+  http_setopt_common(c);
   CURLcode res = curl_easy_perform(c);
   curl_easy_cleanup(c);
   fclose(f);

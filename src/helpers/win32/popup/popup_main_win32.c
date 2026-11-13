@@ -19,7 +19,6 @@
 #include "helpers/win32/bg_image_win32.h"
 #include "wingdi.h"
 #include "platform/platform.h"
-#include "helpers/helpers_ui.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "core/checkbox.h"
@@ -111,6 +110,29 @@ static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
     InvalidateRect(hwnd, NULL, FALSE);
   }
   return true;
+}
+
+static bool win32_hwnd_is_popup(WindowManager *wm, HWND h);
+
+static void win32_prompt_deactivate(HWND hwnd, HWND other) {
+  WindowManager *_wm = WindowManager_Get();
+  if (_wm && _wm->popup_count > 1) {
+    Popup *_top = WindowManager_GetTopPopup(_wm);
+    if (_top && WH_TO_HWND(_top->handle) == hwnd) {
+      if (!win32_hwnd_is_popup(_wm, other)) {
+        SkaldContext_Get()->window.output_buffer[0] = '\0';
+        while (_wm->popup_count > 0)
+          WindowManager_PopPopup(_wm);
+        return;
+      }
+      SkaldContext_Get()->window.selection_complete = true;
+    }
+    return;
+  }
+  if (CloseOnLossOfFocus) {
+    SkaldContext_Get()->window.output_buffer[0] = '\0';
+    SkaldContext_Get()->window.selection_complete = true;
+  }
 }
 
 static bool win32_hwnd_is_popup(WindowManager *wm, HWND h) {
@@ -308,51 +330,12 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     break;
   }
   case WM_ACTIVATE: {
-    if (LOWORD(wParam) == WA_INACTIVE) {
-      WindowManager *_wm = WindowManager_Get();
-      if (_wm && _wm->popup_count > 1) {
-        Popup *_top = WindowManager_GetTopPopup(_wm);
-        if (_top && WH_TO_HWND(_top->handle) == hwnd) {
-          HWND other = (HWND)lParam;
-          if (!win32_hwnd_is_popup(_wm, other)) {
-            SkaldContext_Get()->window.output_buffer[0] = '\0';
-            while (_wm->popup_count > 0)
-              WindowManager_PopPopup(_wm);
-            return 0;
-          }
-          SkaldContext_Get()->window.selection_complete = true;
-          return 0;
-        }
-        return 0;
-      }
-      if (CloseOnLossOfFocus) {
-        SkaldContext_Get()->window.output_buffer[0] = '\0';
-        SkaldContext_Get()->window.selection_complete = true;
-      }
-    }
+    if (LOWORD(wParam) == WA_INACTIVE)
+      win32_prompt_deactivate(hwnd, (HWND)lParam);
     break;
   }
   case WM_KILLFOCUS: {
-    WindowManager *_wm = WindowManager_Get();
-    HWND other = (HWND)lParam;
-    if (_wm && _wm->popup_count > 1) {
-      Popup *_top = WindowManager_GetTopPopup(_wm);
-      if (_top && WH_TO_HWND(_top->handle) == hwnd) {
-        if (!win32_hwnd_is_popup(_wm, other)) {
-          SkaldContext_Get()->window.output_buffer[0] = '\0';
-          while (_wm->popup_count > 0)
-            WindowManager_PopPopup(_wm);
-          return 0;
-        }
-        SkaldContext_Get()->window.selection_complete = true;
-        return 0;
-      }
-      return 0;
-    }
-    if (CloseOnLossOfFocus) {
-      SkaldContext_Get()->window.output_buffer[0] = '\0';
-      SkaldContext_Get()->window.selection_complete = true;
-    }
+    win32_prompt_deactivate(hwnd, (HWND)lParam);
     break;
   }
   case WM_CTLCOLOREDIT: {

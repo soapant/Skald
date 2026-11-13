@@ -19,7 +19,6 @@
 #include "helpers/helpers_edit_buffer.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
-#include "helpers/helpers_ui.h"
 #include "core/types/keys.h"
 
 void Prompt_Refresh(PromptState *state) {
@@ -167,7 +166,7 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   ctx->window.selection_complete = should_close;
   if (ctx)
     ctx->window.subwindow.in_enter = false;
-  Platform_ProcessPendingSubWindows();
+  Prompt_ProcessPendingSubwindow();
 }
 
 bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,
