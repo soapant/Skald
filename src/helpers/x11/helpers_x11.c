@@ -1034,7 +1034,7 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
 
   unsigned long pcol = plain_color ? plain_color->pixel : 0;
   if (!pcol)
-    pcol = rgb_to_hex(COLOR_TEXT);
+    pcol = RgbToHex(COLOR_TEXT);
   x11_set_draw_context(dpy, xd, vis, cmap);
   Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
                                            .y = text_y,
@@ -1333,7 +1333,7 @@ static unsigned int x11_bg_channel_at(float c, int x, int y) {
 static unsigned long x11_background_color_at(int x, int y, int w, int h) {
   unsigned long base = GetDrawBgColor();
   if (!base)
-    base = rgb_to_hex(COLOR_BG);
+    base = RgbToHex(COLOR_BG);
   unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
   unsigned long col = base;
   unsigned int cr = x11_bg_channel_at((float)((col >> 16) & 0xFF), x, y);
@@ -1512,7 +1512,7 @@ Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h) {
     return None;
   unsigned long base = GetDrawBgColor();
   if (!base)
-    base = rgb_to_hex(COLOR_BG);
+    base = RgbToHex(COLOR_BG);
   int radius = CornerRadius;
   bool rounded = RoundedCorners;
   if (!rounded && radius > 0 && !x11_bg_image_enabled()) {
@@ -1547,7 +1547,7 @@ void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h) {
     return;
   unsigned long base = GetDrawBgColor();
   if (!base)
-    base = rgb_to_hex(COLOR_BG);
+    base = RgbToHex(COLOR_BG);
   int radius = CornerRadius;
   bool rounded = RoundedCorners;
   BgKey k;
@@ -1647,7 +1647,7 @@ void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
     r = w / 2;
   if (r > h / 2)
     r = h / 2;
-  unsigned long hex = rgb_to_hex(COLOR_BORDER);
+  unsigned long hex = RgbToHex(COLOR_BORDER);
   unsigned long a = ((unsigned long)((int)WindowOpacity)) & 0xFFUL;
   unsigned long px =
       (a << 24) | (hex & 0xFF0000UL) | (hex & 0xFF00UL) | (hex & 0xFFUL);
@@ -1684,7 +1684,7 @@ void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
 }
 
 Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
-  unsigned long bg = rgb_to_hex(COLOR_BG);
+  unsigned long bg = RgbToHex(COLOR_BG);
   Window win;
   if (niri_is_active()) {
     log_error("niri override_redirect prompt w=%d h=%d", w, h);
@@ -1720,7 +1720,7 @@ Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
   if (!GetTransparentWindow()) {
     bg = GetDrawBgColor();
     if (!bg)
-      bg = rgb_to_hex(COLOR_BG);
+      bg = RgbToHex(COLOR_BG);
   }
   x11_set_draw_context(dpy, NULL, NULL, 0);
   long mask = ExposureMask | (clickable ? ButtonPressMask : 0L);

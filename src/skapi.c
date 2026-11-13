@@ -903,8 +903,8 @@ void ski_message(const SkMessageSpec *spec) {
             .fps = spec->fps > 0 ? spec->fps : 1,
             .no_bg = spec->no_bg,
             .bg_hex = spec->color_bg
-                          ? rgb_to_hex(spec->color_bg)
-                          : (spec->no_bg ? 0UL : rgb_to_hex(COLOR_BG)),
+                          ? RgbToHex(spec->color_bg)
+                          : (spec->no_bg ? 0UL : RgbToHex(COLOR_BG)),
             .release = hover_popup_ctx_free,
             .release_ud = ctx});
       }
@@ -1195,9 +1195,9 @@ bool ski_draw_text(const SkTextSpec *spec) {
   unsigned long col = spec->color;
   if (col == 0) {
     unsigned long cur = sk_listbox_get_current_standard_color();
-    col = cur ? cur : rgb_to_hex(COLOR_TEXT);
+    col = cur ? cur : RgbToHex(COLOR_TEXT);
   } else {
-    col = rgb_to_hex(col);
+    col = RgbToHex(col);
   }
   int draw_x = spec->x - (spec->no_hscroll ? 0 : ListBox_GetRowHScroll());
   const char *align = spec->align ? spec->align : "CENTER";
@@ -1400,7 +1400,7 @@ bool ski_draw_rect(const PlRect *spec) {
   bool transparent = spec->transparent;
   if (col == 0)
     col = COLOR_TEXT;
-  col = rgb_to_hex(col);
+  col = RgbToHex(col);
   return Platform_DrawRectRaw((PlDrawRectRawSpec){
       .x = spec->x,
       .y = spec->y,
@@ -1492,7 +1492,7 @@ bool ski_draw_line(const PlLine *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  col = rgb_to_hex(col);
+  col = RgbToHex(col);
   if (col == 0)
     col = COLOR_TEXT;
   return Platform_DrawLineRaw(
@@ -1509,7 +1509,7 @@ bool ski_draw_circle(const PlCircle *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  col = rgb_to_hex(col);
+  col = RgbToHex(col);
   if (col == 0)
     col = COLOR_TEXT;
   return Platform_DrawCircleRaw(

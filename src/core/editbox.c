@@ -68,9 +68,9 @@ void Editbox_InitFromSpec(EditboxInit *out, const EditboxInitFromSpec *args) {
   out->ascent = args->ascent;
   out->descent = args->descent;
   out->text_color =
-      args->text_color ? rgb_to_hex(args->text_color) : rgb_to_hex(COLOR_TEXT);
+      args->text_color ? RgbToHex(args->text_color) : RgbToHex(COLOR_TEXT);
   out->bg_color =
-      args->bg_color ? rgb_to_hex(args->bg_color) : rgb_to_hex(COLOR_BG);
+      args->bg_color ? RgbToHex(args->bg_color) : RgbToHex(COLOR_BG);
   out->placeholder = args->placeholder;
   out->caret_height = args->caret_height;
   out->caret_width = args->caret_width;
@@ -169,7 +169,7 @@ void EditboxSpec_FillFromPrompt(EditboxSpec *spec, PromptState *state,
   spec->placeholder_dy = 2;
   spec->rainbow_limit_x = -1;
   spec->placeholder = state->eb->placeholder;
-  spec->text_color = rgb_to_hex(COLOR_TEXT);
+  spec->text_color = RgbToHex(COLOR_TEXT);
   spec->font = font;
 }
 
@@ -348,10 +348,10 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
   if (!spec || !layout) {
     return;
   }
-  unsigned long bg = spec->bg_color ? spec->bg_color : rgb_to_hex(COLOR_BG);
+  unsigned long bg = spec->bg_color ? spec->bg_color : RgbToHex(COLOR_BG);
 
   if (parts & EDITBOX_PART_TINT) {
-    unsigned long tint = Color_Lerp(bg, rgb_to_hex(COLOR_CURSOR), 0.72f);
+    unsigned long tint = Color_Lerp(bg, RgbToHex(COLOR_CURSOR), 0.72f);
     if (layout->draw_selection) {
       Platform_DrawRectRaw(
           (PlDrawRectRawSpec){.x = layout->sel_x0,
@@ -385,7 +385,7 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
       }
     } else if (spec->placeholder && spec->placeholder[0]) {
       unsigned long ph =
-          Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
+          Color_Lerp(RgbToHex(COLOR_BG), RgbToHex(COLOR_TEXT), 0.45f);
       Platform_DrawTextRaw(
           (PlDrawTextRawSpec){.x = layout->draw_x,
                               .y = spec->text_y + spec->placeholder_dy,
@@ -406,7 +406,7 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
                                              .y = spec->caret_y,
                                              .w = layout->caret_w,
                                              .h = spec->caret_h,
-                                             .color = rgb_to_hex(COLOR_CURSOR),
+                                             .color = RgbToHex(COLOR_CURSOR),
                                              .radius = 0,
                                              .rounded = false,
                                              .opaque = true,
