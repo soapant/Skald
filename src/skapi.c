@@ -1785,7 +1785,7 @@ static bool type_text_common(const char *s) {
   // we have to wait ~200ms for the WM to process the paste event before restoring the clipboard
   for (int i = 0; i < 40; i++) {
     if (wm)
-      Platform_WM_ProcessEvents(wm);
+      Platform_ProcessEvents(wm);
     sk_sleep_platform(0.005);
   }
   if (old) {

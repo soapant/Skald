@@ -5,12 +5,12 @@
 #include "core/window_manager.h"
 #include "core/types.h"
 
-bool Platform_WM_InitDisplay(WindowManager *wm);
-int Platform_WM_Run(WindowManager *wm);
-void Platform_WM_Quit(WindowManager *wm);
-void Platform_WM_ProcessEvents(WindowManager *wm);
-void Platform_WM_OnPopEmpty(WindowManager *wm);
-void Platform_WM_GetMonitorGeometry(int *x, int *y, int *w, int *h);
+bool Platform_InitDisplay(WindowManager *wm);
+int Platform_Run(WindowManager *wm);
+void Platform_Quit(WindowManager *wm);
+void Platform_ProcessEvents(WindowManager *wm);
+void Platform_OnPopEmpty(WindowManager *wm);
+void Platform_GetMonitorGeometry(int *x, int *y, int *w, int *h);
 
 
 void Platform_PromptFlushDisplay(WindowManager *wm);

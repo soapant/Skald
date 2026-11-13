@@ -16,28 +16,28 @@ extern int WindowManager_RunWin32(WindowManager *wm);
 extern void WindowManager_QuitWin32(WindowManager *wm);
 extern void WindowManager_ProcessEventsWin32(WindowManager *wm);
 
-bool Platform_WM_InitDisplay(WindowManager *wm) {
+bool Platform_InitDisplay(WindowManager *wm) {
   (void)wm;
   return true;
 }
 
-int Platform_WM_Run(WindowManager *wm) { return WindowManager_RunWin32(wm); }
+int Platform_Run(WindowManager *wm) { return WindowManager_RunWin32(wm); }
 
 void Platform_PromptFlushDisplay(WindowManager *wm) { (void)wm; }
 
-void Platform_WM_Quit(WindowManager *wm) { WindowManager_QuitWin32(wm); }
+void Platform_Quit(WindowManager *wm) { WindowManager_QuitWin32(wm); }
 
-void Platform_WM_ProcessEvents(WindowManager *wm) {
+void Platform_ProcessEvents(WindowManager *wm) {
   WindowManager_ProcessEventsWin32(wm);
 }
 
-void Platform_WM_OnPopEmpty(WindowManager *wm) {
+void Platform_OnPopEmpty(WindowManager *wm) {
   (void)wm;
   remap_reset();
   InputState_Clear();
 }
 
-void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
+void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
   int x = 0, y = 0, w = GetSystemMetrics(SM_CXSCREEN),
       h = GetSystemMetrics(SM_CYSCREEN);
   if (!w)
@@ -62,7 +62,7 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     w = 1920;
   if (!h)
     h = 1080;
-  log_info("Platform_WM_GetMonitorGeometry cursor=(%ld,%ld) mon=(%d,%d %dx%d)",
+  log_info("Platform_GetMonitorGeometry cursor=(%ld,%ld) mon=(%d,%d %dx%d)",
            pt.x, pt.y, x, y, w, h);
   if (ox)
     *ox = x;
