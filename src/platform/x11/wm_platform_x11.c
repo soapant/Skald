@@ -65,7 +65,7 @@ void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     Window root = DefaultRootWindow(dpy);
     w = DisplayWidth(dpy, DefaultScreen(dpy));
     h = DisplayHeight(dpy, DefaultScreen(dpy));
-    int px = 0, py = 0;
+    unsigned int px = 0, py = 0;
     Window rw = None, cw = None;
     int rx = 0, ry = 0, wx = 0, wy = 0;
     unsigned int m = 0;

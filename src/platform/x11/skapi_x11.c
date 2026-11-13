@@ -209,8 +209,7 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
 }
 
 char *sk_search_file_in_dir_platform(const char *directory,
-                                     const char *search_string,
-                                     char *output_path) {
+                                     const char *search_string) {
   if (!directory || !search_string || strlen(search_string) == 0)
     return NULL;
   DIR *dir = opendir(directory);
