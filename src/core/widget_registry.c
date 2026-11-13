@@ -509,7 +509,6 @@ Widget *Widget_Create(const WidgetSpec *spec) {
                      ? spec->slot
                      : WIDGET_SLOT_BOTTOM_LEFT;
   widget->monitor = spec->monitor > 0 ? spec->monitor : 0;
-  (void)spec->monitor_name;
   widget->order = spec->order;
   widget->order_set = spec->order > 0;
   widget->render = spec->render;

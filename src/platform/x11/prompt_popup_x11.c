@@ -21,8 +21,6 @@
 #include "core/types.h"
 
 bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
-  (void)x;
-  (void)y;
   WindowManager *wm = (WindowManager *)self->manager;
   Display *dpy = wm ? wm->display : NULL;
   if (!dpy)

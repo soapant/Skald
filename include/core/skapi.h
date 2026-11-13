@@ -499,8 +499,6 @@ int sk_rand_num_between(int min, int max);
 
 int sk_get_text_width(const char *text, int fontsize);
 
-int sk_get_text_height(const char *text);
-
 char *sk_http_get(const char *url);
 
 char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len);

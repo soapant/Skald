@@ -211,6 +211,7 @@ static bool inject_xtest(int vk_code, int down) {
   XFlush(dpy);
   return true;
 #else
+  log_warn("inject_xtest: XTest Isnt Available");
   (void)vk_code;
   (void)down;
   return false;
