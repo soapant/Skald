@@ -4,8 +4,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifndef MAX_VISIBLE_ITEMS
 #define MAX_VISIBLE_ITEMS 10000
+#endif
+#ifndef MAX_PATH
 #define MAX_PATH 260
+#endif
 
 #include "core/types/keys.h"
 #include "core/types/color.h"

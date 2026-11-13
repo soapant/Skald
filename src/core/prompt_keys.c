@@ -1,6 +1,7 @@
 #include "core/edit_state.h"
 #include "core/prompt_keys.h"
 #include "helpers/helpers_key.h"
+#include "helpers/helpers_text.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -92,8 +93,7 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   if (state->lb && state->lb->selected_index != -1) {
     sel = ListBoxInfo_Row(state->lb, state->lb->selected_index);
   } else {
-    strncpy(filter_copy, state->eb->filter, sizeof(filter_copy) - 1);
-    filter_copy[sizeof(filter_copy) - 1] = '\0';
+    SafeCopy(filter_copy, sizeof(filter_copy), state->eb->filter);
     sel = filter_copy;
   }
   bool should_close = true;
@@ -156,9 +156,8 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   }
   if (should_close) {
     if (sel) {
-      strncpy(ctx->window.output_buffer, sel,
-              sizeof(ctx->window.output_buffer) - 1);
-      ctx->window.output_buffer[sizeof(ctx->window.output_buffer) - 1] = '\0';
+      SafeCopy(ctx->window.output_buffer, sizeof(ctx->window.output_buffer),
+               sel);
     } else {
       ctx->window.output_buffer[0] = '\0';
     }

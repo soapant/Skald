@@ -253,8 +253,9 @@ void Platform_MutexLock(void *mutex);
 void Platform_MutexUnlock(void *mutex);
 bool Platform_MutexTryLock(void *mutex);
 
-bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
-                                     char *cmd, size_t cmd_size);
+#define PLATFORM_BUILD_ARGV_MAX 48
+bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
+                                 const char *argv[], size_t argv_cap);
 bool Platform_AtomicRename(const char *old_path, const char *new_path);
 
 typedef struct {

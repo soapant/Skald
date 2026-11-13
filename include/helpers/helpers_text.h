@@ -13,6 +13,8 @@ typedef struct {
 
 StringList String_Split(const char *string, const char *delimiter);
 void StringList_Free(StringList *list);
+bool SafeCopy(char *dst, size_t cap, const char *src);
+bool SafeCat(char *dst, size_t cap, const char *src);
 
 long File_ReadAll(const char *path, char *buffer, long buffer_size);
 StringList File_ReadLines(const char *path);

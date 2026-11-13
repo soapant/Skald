@@ -60,12 +60,6 @@ void WindowManager_Destroy(WindowManager *wm) {
 
 WindowManager *WindowManager_Get(void) { return window_manager; }
 
-int WindowManager_Run(WindowManager *wm) {
-  if (!wm)
-    return -1;
-  return Platform_Run(wm);
-}
-
 static bool popup_push_in_progress = false;
 
 Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
@@ -158,8 +152,6 @@ void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x,
   if (out_y)
     *out_y = moy + (moh - win_h) / 2;
 }
-
-int PromptPopup_GetBounds(Popup *p, int *x, int *y, int *w, int *h);
 
 void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
                                    int *out_h) {

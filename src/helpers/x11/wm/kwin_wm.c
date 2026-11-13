@@ -425,8 +425,7 @@ static bool kwin_focus_js_cmd(const char *title, char *out, size_t cap) {
   if (!esc[0])
     return false;
   char low[1024];
-  strncpy(low, esc, sizeof(low) - 1);
-  low[sizeof(low) - 1] = '\0';
+  SafeCopy(low, sizeof(low), esc);
   if (low[0])
     low[0] = tolower((unsigned char)low[0]);
   snprintf(out, cap,

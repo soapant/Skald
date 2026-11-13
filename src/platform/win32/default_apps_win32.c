@@ -6,12 +6,12 @@
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
 #include "config.h"
-#include "helpers/win32/default_apps_win32.h"
+#include "helpers/win32/raw_default_apps_win32.h"
 
 static char default_apps_win32[DEFAULT_APP_COUNT][256];
 #define SM_SLOTS 8
 
-const char *get_default_terminal(void) {
+static const char *get_default_terminal(void) {
   const char *possible_terminals[] = {"Alacritty",
                                       "WezTerm",
                                       "Tabby",
@@ -39,7 +39,7 @@ const char *get_default_terminal(void) {
   return found ? found : "pwsh";
 }
 
-const char *get_default_browser(void) {
+static const char *get_default_browser(void) {
 
   const char *possible_browsers[] = {"Google Chrome",
                                      "Mozilla Firefox",
@@ -61,7 +61,7 @@ const char *get_default_browser(void) {
   return found ? found : "chrome";
 }
 
-const char *Platform_GetDefaultTerminal(void) {
+static const char *Platform_GetDefaultTerminal(void) {
 
   int slot = DEFAULT_TERMINAL;
   default_apps_win32[slot][0] = '\0';

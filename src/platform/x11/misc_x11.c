@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#include "helpers/x11/misc_x11.h"
+#include "helpers/x11/raw_misc_x11.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "wm/wm.h"
@@ -23,7 +23,7 @@ const char *Platform_GetRealUser(void) {
   for (int i = 0; env_names[i]; i++) {
     const char *u = getenv(env_names[i]);
     if (u && u[0] && strcmp(u, "root") != 0) {
-      strncpy(buf, u, sizeof(buf) - 1);
+      SafeCopy(buf, sizeof(buf), u);
       return buf;
     }
   }
@@ -32,13 +32,13 @@ const char *Platform_GetRealUser(void) {
   if (suid != (uid_t)-1) {
     struct passwd *spw = getpwuid(suid);
     if (spw && spw->pw_name) {
-      strncpy(buf, spw->pw_name, sizeof(buf) - 1);
+      SafeCopy(buf, sizeof(buf), spw->pw_name);
       return buf;
     }
   }
   struct passwd *pw = getpwuid(getuid());
   if (pw && pw->pw_name && strcmp(pw->pw_name, "root") != 0) {
-    strncpy(buf, pw->pw_name, sizeof(buf) - 1);
+    SafeCopy(buf, sizeof(buf), pw->pw_name);
     log_info("Platform_GetRealUser completed");
     return buf;
   }
@@ -51,17 +51,17 @@ const char *Platform_GetRealHome(void) {
   const char *u = Platform_GetRealUser();
   struct passwd *pw = u ? getpwnam(u) : NULL;
   if (pw && pw->pw_dir) {
-    strncpy(buf, pw->pw_dir, sizeof(buf) - 1);
+    SafeCopy(buf, sizeof(buf), pw->pw_dir);
     return buf;
   }
   pw = getpwuid(getuid());
   if (pw && pw->pw_dir) {
-    strncpy(buf, pw->pw_dir, sizeof(buf) - 1);
+    SafeCopy(buf, sizeof(buf), pw->pw_dir);
     return buf;
   }
   const char *h = x11_env_home_dir();
   if (h && h[0]) {
-    strncpy(buf, h, sizeof(buf) - 1);
+    SafeCopy(buf, sizeof(buf), h);
     return buf;
   }
   snprintf(buf, sizeof(buf), "/home/%s", u);
@@ -122,8 +122,7 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   if (!exe_name || !*exe_name)
     return false;
   char tmp[256];
-  strncpy(tmp, exe_name, sizeof(tmp) - 1);
-  tmp[sizeof(tmp) - 1] = '\0';
+  SafeCopy(tmp, sizeof(tmp), exe_name);
   char *ext = strrchr(tmp, '.');
   if (ext && strcmp(ext, ".exe") == 0)
     *ext = '\0';
@@ -222,13 +221,31 @@ bool Platform_PasteContent(char *content) {
   return ok;
 }
 
-bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
-                                     char *cmd, size_t cmd_size) {
-  snprintf(cmd, cmd_size,
-           "gcc -std=gnu17 -I build/sdk -I/usr/include/freetype2 "
-           "-I/usr/include/libpng16 -I/usr/include/gio-unix-2.0 "
-           "-I/usr/include/X11 -pipe -fPIC -shared -o %s %s 2>&1",
-           out_tmp, src);
+bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
+                                 const char *argv[], size_t argv_cap) {
+  size_t n = 0;
+#define ADD_ARG(arg)                                                     \
+  do {                                                                         \
+    if (n + 1 >= argv_cap)                                                     \
+      return false;                                                            \
+    argv[n++] = (arg);                                                         \
+  } while (0)
+  ADD_ARG("gcc");
+  ADD_ARG("-std=gnu17");
+  ADD_ARG("-I");
+  ADD_ARG("build/sdk");
+  ADD_ARG("-I/usr/include/freetype2");
+  ADD_ARG("-I/usr/include/libpng16");
+  ADD_ARG("-I/usr/include/gio-unix-2.0");
+  ADD_ARG("-I/usr/include/X11");
+  ADD_ARG("-pipe");
+  ADD_ARG("-fPIC");
+  ADD_ARG("-shared");
+  ADD_ARG("-o");
+  ADD_ARG(out_tmp);
+  ADD_ARG(src);
+  argv[n] = NULL;
+#undef ADD_ARG
   return true;
 }
 
