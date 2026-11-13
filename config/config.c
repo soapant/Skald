@@ -7,7 +7,7 @@ void ConfigApply(void) {
     RememberLastIndex = true;
     MessageAfterEachHotkey = false;
     TimeOutForMessages = 1;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     EnableBorders = true;
     CornerRadius = 14;
@@ -17,8 +17,8 @@ void ConfigApply(void) {
     FontSize = 17;
     IconSize = 32;
     WidgetGap = 0;
-    PromptWidth = 450;
-    PromptHeight = 320;
+    PromptWidth = 900;
+    PromptHeight = 640;
     UsedTerminal = "";
     UsedShell = "";
     UsedBrowser = "";
