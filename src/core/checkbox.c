@@ -233,7 +233,7 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
           .y = ty - 2,
           .text = CHECKBOX_GLYPH,
           .color =
-              spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
+              spec->text_color ? RgbToHex(spec->text_color) : CHECKBOX_WHITE,
           .font = FH_NULL,
           .align = "LEFT",
           .pad = 0,
@@ -258,7 +258,7 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
           .h = h,
           .text = spec->text,
           .color =
-              spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
+              spec->text_color ? RgbToHex(spec->text_color) : CHECKBOX_WHITE,
           .font = s_font,
           .fontsize = fontsize});
     }

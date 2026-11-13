@@ -42,7 +42,7 @@ void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
       x11_fill_rounded_rect(b_dpy, b_xd, b_vis, b_cmap,
-                            rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
+                            RgbToHex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
                             y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t,
                             item_h - 2 - 2 * t, R - 1, fw, frame_h);
     }

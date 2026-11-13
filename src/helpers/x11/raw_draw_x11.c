@@ -359,10 +359,10 @@ void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
   if (selected) {
     if (state->no_bg) {
       x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                    rgb_to_hex(COLOR_SELECTED_TEXT));
+                                    RgbToHex(COLOR_SELECTED_TEXT));
     } else {
       x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                    rgb_to_hex(COLOR_SELECTED_TEXT));
+                                    RgbToHex(COLOR_SELECTED_TEXT));
     }
   }
 }
@@ -474,7 +474,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
       int bx = PROMPT_SEL_X, bw = state->width - PROMPT_SEL_W_SHRINK;
       if (sel) {
         x11_fill_rounded_rect(
-            dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
+            dpy, xd, vis, cmap, RgbToHex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
             y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t, itemH - 2 - 2 * t, R - 1,
             state->width, state->height);
       }

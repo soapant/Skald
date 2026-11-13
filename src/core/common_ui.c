@@ -64,7 +64,7 @@ void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
                                            .y = spec.y,
                                            .w = spec.width,
                                            .h = PROMPT_SEP_W,
-                                           .color = rgb_to_hex(COLOR_BORDER),
+                                           .color = RgbToHex(COLOR_BORDER),
                                            .radius = 0,
                                            .rounded = false,
                                            .opaque = true,
@@ -73,10 +73,10 @@ void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
 }
 
 void Item_GetColors(PlGetItemColorsSpec spec) {
-  unsigned long col_text = rgb_to_hex(COLOR_TEXT);
+  unsigned long col_text = RgbToHex(COLOR_TEXT);
   float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
                              : (float)spec.idx / 10.0f;
-  unsigned long col_rainbow = rgb_to_hex(GetRainbowColor(t, 0.55f, 1.0f));
+  unsigned long col_rainbow = RgbToHex(GetRainbowColor(t, 0.55f, 1.0f));
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;

@@ -8,7 +8,7 @@
 #include "platform/draw.h"
 #include "platform/platform.h"
 
-unsigned long rgb_to_hex(unsigned long win_color);
+unsigned long RgbToHex(unsigned long win_color);
 unsigned short OpacityAlpha16(void);
 
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);

@@ -169,7 +169,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   PromptState *pss = state;
   if (state && state->bg_color != 0) {
     GC gc = XCreateGC(dpy, dbl, 0, NULL);
-    XSetForeground(dpy, gc, rgb_to_hex(state->bg_color));
+    XSetForeground(dpy, gc, RgbToHex(state->bg_color));
     XFillRectangle(dpy, dbl, gc, 0, 0, w, h);
     XFreeGC(dpy, gc);
   } else if (!(pss && pss->no_bg)) {
