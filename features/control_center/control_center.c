@@ -1383,6 +1383,7 @@ static void cc_subwindow_render(PromptState *state) {
   while (sk_listbox_next(&ctx)) {
     sk_draw_text(.y = ctx.y + 6, .text = ctx.text, .align = "LEFT", .pad = 10,
                  .fontsize = 12);
+
     const char *hk = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
     SkRect r =
         sk_text_bounds(.text = hk, .fontsize = 10, .x = actions_width - 6,
@@ -1390,9 +1391,11 @@ static void cc_subwindow_render(PromptState *state) {
     r.filled = true;
     r.radius = 4;
     r.color = SK_DARK_GRAY;
-    ski_draw_rect(&r);
-    sk_draw_text(.x = actions_width - 6, .y = ctx.y + 8, .text = hk,
-                 .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
+    if (state->width > (10 * strlen(hk)) + 20) {
+      ski_draw_rect(&r);
+      sk_draw_text(.x = actions_width - 6, .y = ctx.y + 8, .text = hk,
+                   .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
+    }
   }
   sk_listbox_end();
 }
@@ -1550,14 +1553,20 @@ static bool cc_alias_reg_enter(PromptState *state) {
 }
 
 static void cc_alias_reg_onclose() { sk_enable_global_hotkeys(); }
+
+#define SUBWINDOW_W cc_width / 4
+#define SUBWINDOW_H cc_height / 9
+#define SUBWINDOW_X (cc_width / 2) + SUBWINDOW_W - 10
+#define SUBWINDOW_Y (cc_height / 2) - 50
+
 static bool cc_reg_select(int type) {
   switch (type) {
   case 0: {
     ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action),
                      cc_main_selected);
     sk_disable_global_hotkeys();
-    sk_subwindow(.title = "Hotkey Reg", .x = (cc_width / 2) + 240,
-                 .y = (cc_height / 2) + 150, .w = 200, .h = 100,
+    sk_subwindow(.title = "Hotkey Reg", .x = SUBWINDOW_X,
+                 .y = SUBWINDOW_Y + (SUBWINDOW_H * 2), .w = SUBWINDOW_W, .h = SUBWINDOW_H,
                  .render = cc_subwindow_reg_render,
                  .on_close = cc_subwindow_reg_onclose);
     break;
@@ -1567,8 +1576,8 @@ static bool cc_reg_select(int type) {
                      cc_main_selected);
     ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target), cc_main_selected);
     sk_disable_global_hotkeys();
-    sk_subwindow(.title = "Alias Reg", .x = (cc_width / 2) + 240,
-                 .y = (cc_height / 2) + 150, .w = 200, .h = 100,
+    sk_subwindow(.title = "Alias Reg", .x = SUBWINDOW_X,
+                 .y = SUBWINDOW_Y + (SUBWINDOW_H * 2), .w = SUBWINDOW_W, .h = SUBWINDOW_H,
                  .render = cc_alias_reg_render, .enter = cc_alias_reg_enter,
                  .on_close = cc_alias_reg_onclose);
     break;
@@ -1620,8 +1629,8 @@ static void cc_register_persisted_hotkeys(void) {
 }
 
 static void cc_open_actions_subwindow(void) {
-  sk_subwindow(.title = "Actions", .x = (cc_width / 2) + 240,
-               .y = (cc_height / 2) - 50, .w = 200, .h = 300,
+  sk_subwindow(.title = "Actions", .x = SUBWINDOW_X,
+               .y = SUBWINDOW_Y, .w = SUBWINDOW_W, .h = 300,
                .render = cc_subwindow_render, .refresh = cc_subwindow_refresh,
                .enter = cc_subwindow_enter);
 }
