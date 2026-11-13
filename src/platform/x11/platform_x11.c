@@ -154,7 +154,7 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
   return output;
 }
 
-static char *Platform_RunCommandDetachedCapture(char *command) {
+static char *Platform_RunCommandDetachedCapture(const char *command) {
 
   if (!command || !*command) {
     log_error("capture: null/empty command");
@@ -421,7 +421,7 @@ bool Platform_LaunchDetached(char *command) {
   return false;
 }
 
-char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
+char *Platform_RunTerminalCommand(const char *command, bool open_terminal) {
   char timer_text[300];
   snprintf(timer_text, sizeof(timer_text),
            "platform_x11:Platform_RunTerminalCommand Command:%s", command);
@@ -444,9 +444,10 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
     fprintf(f, "%s\n", command);
     fclose(f);
     if (Platform_IsRunningAsRoot()) {
-      char chown_cmd[MAX_PATH + 64];
+      char chown_cmd[2048];
       snprintf(chown_cmd, sizeof(chown_cmd),
-               "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user,
+               "chown %.255s:%.255s \"%.511s\" && chmod 755 \"%.511s\"",
+               real_user, real_user,
                temp_file, temp_file);
       Platform_RunTerminalCommand(chown_cmd, false);
     } else {
@@ -1381,10 +1382,10 @@ bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
             min_x = ci->x;
           if (ci->y < min_y)
             min_y = ci->y;
-          if (ci->x + ci->width > max_x)
-            max_x = ci->x + ci->width;
-          if (ci->y + ci->height > max_y)
-            max_y = ci->y + ci->height;
+          if (ci->x + (int)ci->width > max_x)
+            max_x = ci->x + (int)ci->width;
+          if (ci->y + (int)ci->height > max_y)
+            max_y = ci->y + (int)ci->height;
         }
       }
       XRRFreeCrtcInfo(ci);
@@ -1781,4 +1782,15 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
     free(job);
     log_warn("http async thread create failed");
   }
+}
+
+bool Platform_GetMousePos(int *out_x, int *out_y) {
+  int mx = 0, my = 0;
+  if (!Wm_GetMousePos(&mx, &my))
+    return false;
+  if (out_x)
+    *out_x = mx;
+  if (out_y)
+    *out_y = my;
+  return true;
 }

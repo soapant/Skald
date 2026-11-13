@@ -160,7 +160,7 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   XFlush(dpy);
 }
 
-static void x11_handle_key_release(Display *dpy, XKeyEvent *ev) {
+static void x11_handle_key_release(XKeyEvent *ev) {
 
   KeySym ks;
   char buf[32];
@@ -192,7 +192,7 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
     x11_handle_key_press(dpy, &ev->xkey, wm);
     break;
   case KeyRelease:
-    x11_handle_key_release(dpy, &ev->xkey);
+    x11_handle_key_release(&ev->xkey);
     break;
   case ButtonPress:
     if (ev->xbutton.button == Button4 || ev->xbutton.button == Button5) {

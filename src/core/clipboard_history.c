@@ -232,8 +232,7 @@ bool clipboard_history_push_text_platform(const char *text) {
   return true;
 }
 
-bool clipboard_history_push_image_platform(const char *path, unsigned int w,
-                                           unsigned int h) {
+bool clipboard_history_push_image_platform(const char *path) {
   ClipboardEntry e = {0};
   e.type = CLIPBOARD_IMAGE;
   e.timestamp = (uint64_t)time(NULL);
@@ -294,11 +293,9 @@ bool clipboard_set_path_platform(const char *path) {
     free(buf);
     return Platform_SetFileToClipboard(path);
   }
-  uint32_t w = 0, h = 0;
-  clipboard_image_dims(buf, (size_t)n, &w, &h);
   bool ok = Platform_CopyImageToClipboard(buf, (size_t)n);
   free(buf);
   if (ok)
-    clipboard_history_push_image_platform(path, w, h);
+    clipboard_history_push_image_platform(path);
   return ok;
 }

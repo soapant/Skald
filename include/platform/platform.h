@@ -181,7 +181,7 @@ void Platform_RenderThreadWaitTimed(long us);
 bool Platform_RenderThreadStart(void);
 void Platform_RenderThreadJoin(void);
 void *Platform_RenderThreadDisplay(void);
-char *Platform_RunTerminalCommand(char *command, bool open_terminal);
+char *Platform_RunTerminalCommand(const char *command, bool open_terminal);
 #define PLATFORM_RUN_PRIO_NORMAL 0
 #define PLATFORM_RUN_PRIO_LOW 1
 char *Platform_RunCommandAndGetOutput(char *command, int priority);
@@ -191,6 +191,7 @@ char *Platform_GetActiveWindowTitle(void);
 char *Platform_GetActiveWindowAppId(void);
 char *Platform_GetIconPath(char *app_path);
 int Platform_GetIconSize(char *icon_path);
+bool Platform_GetMousePos(int *x,int *y);
 PlColor Platform_GetPixelColor(int x, int y);
 bool Platform_MoveToPos(int x, int y);
 bool Platform_Click(void);
@@ -236,9 +237,6 @@ int64_t Platform_TimerNowTicks(void);
 int64_t Platform_TimerTickFrequency(void);
 
 void Platform_EmitKey(int vk_code, int down);
-
-int Platform_CharForKey(int vk, int scancode, int mods);
-bool Platform_GetMousePos(int *out_x, int *out_y);
 
 bool Platform_TryAcquireSingleInstance(void);
 bool Platform_InitDisplaySafe(void);

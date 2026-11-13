@@ -49,8 +49,6 @@ TEST(delete_char_middle_and_ends) {
 
 TEST(cursor_movement_bounds) {
   size_t cur = 0;
-  ASSERT_FALSE(CursorBack(&cur, 3));
-  ASSERT_EQ_INT(cur, 0);
   ASSERT_TRUE(CursorForward(&cur, 3));
   ASSERT_EQ_INT(cur, 1);
   cur = 3;

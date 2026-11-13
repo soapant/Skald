@@ -23,17 +23,24 @@ bool Wm_AppendWindowName(PlWindowList *list, const char *name,
   return List_Append(list, buf);
 }
 
-char *wm_trim_focus_title(char *title) {
+char *wm_trim_focus_title(const char *title) {
+  static __thread char trimmed[1024];
   if (!title)
     return NULL;
-  while (*title &&
-         (iscntrl((unsigned char)*title) || isspace((unsigned char)*title)))
-    title++;
-  char *end = title + strlen(title);
-  while (end > title &&
+  const char *start = title;
+  while (*start &&
+         (iscntrl((unsigned char)*start) || isspace((unsigned char)*start)))
+    start++;
+  const char *end = start + strlen(start);
+  while (end > start &&
          (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1])))
-    *--end = '\0';
-  return title;
+    end--;
+  size_t len = (size_t)(end - start);
+  if (len >= sizeof(trimmed))
+    len = sizeof(trimmed) - 1;
+  memcpy(trimmed, start, len);
+  trimmed[len] = '\0';
+  return trimmed;
 }
 
 char *Wm_GetActiveWindowTitle(void) {
@@ -99,7 +106,7 @@ char *Wm_GetActiveWindowAppId(void) {
 
 bool Wm_FocusByTitle(const char *title) {
   if (x11_env_is_wayland()) {
-    if (focus_window_title_kwin((char *)title)) {
+    if (focus_window_title_kwin(title)) {
       return true;
     }
     if (focus_window_title_niri(title)) {

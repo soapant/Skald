@@ -11,8 +11,13 @@
 #include <unistd.h>
 #include <time.h>
 #include <X11/extensions/render.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "deps/nanosvg.h"
 #include "deps/stb_image.h"
+#pragma GCC diagnostic pop
 #include "config_values.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "core/types/window.h"
@@ -110,7 +115,7 @@ static bool bg_src_dims(const char *path, int *out_w, int *out_h) {
 }
 
 static int bg_slot_empty(const void *s) {
-  return ((const BgTileSlot *)s)->pm == NULL;
+  return ((const BgTileSlot *)s)->pm == 0;
 }
 static unsigned long bg_slot_stamp(const void *s) {
   return ((const BgTileSlot *)s)->stamp;
@@ -166,7 +171,6 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
     return false;
   }
 
-  int ox = (w - dw) / 2;
   int oy = (h - dh) / 2;
   unsigned char *crop = (unsigned char *)malloc((size_t)w * (size_t)h * 4);
   if (!crop) {
@@ -218,7 +222,7 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
   return ok;
 }
 
-static bool bg_slot_valid(Display *dpy, BgTileSlot *t, const char *path, int w,
+static bool bg_slot_valid(BgTileSlot *t, const char *path, int w,
                           int h) {
   if (!t->pm || !t->pic)
     return false;
@@ -253,7 +257,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
       pthread_mutex_unlock(&bg_mtx);
       return 0;
     }
-    if (bg_slot_valid(dpy, t, path, w, h)) {
+    if (bg_slot_valid(t, path, w, h)) {
       if (now - t->checked_ms < BG_REVALIDATE_MS) {
         t->stamp = ++g_bg_tick;
         Pixmap pm = t->pm;

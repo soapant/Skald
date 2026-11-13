@@ -15,4 +15,6 @@
 #include "helpers/x11/display_x11.h"
 #include "deps/log.h"
 
+void x11_img_cache_free_all(void);
+
 #endif

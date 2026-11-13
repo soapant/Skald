@@ -322,6 +322,7 @@ static void x11_sig_handler(int sig) {
 }
 
 static void x11_term_handler(int sig) {
+  (void)sig;
   x11_force_cleanup();
   if (x11_wm) {
     WindowManager_Quit(x11_wm);
@@ -597,7 +598,7 @@ void x11_scan_keyboards(void) {
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
     if (strncmp(entry->d_name, "event", 5) == 0) {
-      char full_path[256];
+      char full_path[sizeof("/dev/input/") + 255];
       snprintf(full_path, sizeof(full_path), "/dev/input/%s", entry->d_name);
       int fd = open(full_path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
       if (fd < 0)
