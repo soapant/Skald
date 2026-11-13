@@ -22,7 +22,7 @@ typedef struct {
   void (*on_focus_lost)(Popup *self);
   void (*destroy)(Popup *self);
 } PopupVTable;
-typedef enum { POPUP_PROMPT, POPUP_MESSAGE, POPUP_SEARCH } PopupType;
+typedef enum { POPUP_PROMPT, POPUP_MESSAGE} PopupType;
 
 struct Popup {
   const PopupVTable *vtable;
