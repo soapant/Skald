@@ -71,10 +71,6 @@ void UI_SetCursorPosition(int position) {
   }
 }
 
-void UI_RedrawNow(void) {}
-
-void UI_Redraw(ListBoxInfo *lb) { UI_RedrawNow(); }
-
 void UI_SyncFilterFromEdit(void) { (void)ui_top_prompt(); }
 
 void UI_ApplyFilterToEdit(void) {

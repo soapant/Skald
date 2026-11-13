@@ -459,7 +459,11 @@ bool get_mouse_pos_hyprland(int *x, int *y) {
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
-  snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path);
+  if (strlen(path) >= sizeof(addr.sun_path)) {
+    close(fd);
+    return false;
+  }
+  memcpy(addr.sun_path, path, strlen(path) + 1);
   if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
     close(fd);
     return false;

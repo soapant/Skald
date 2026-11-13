@@ -1,19 +1,6 @@
 #include "helpers/x11/raw_draw_x11.h"
 #include "config_values.h"
 
-void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
-                              Visual *vis, Colormap cmap, FontHandle font);
-void x11_draw_edit_tint(PromptState *state, Display *dpy, XftDraw *xd,
-                        Visual *vis, Colormap cmap, FontHandle font);
-void x11_draw_edit_text(PromptState *state, Display *dpy, XftDraw *xd,
-                        Visual *vis, Colormap cmap, FontHandle font);
-void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
-                          Visual *vis, Colormap cmap, FontHandle font);
-void x11_draw_list_item(PromptState *state, Display *dpy, XftDraw *xd,
-                        Visual *vis, Colormap cmap, FontHandle font,
-                        ListBoxInfo *lb, int idx, int y, int text_x,
-                        const char *icon_path);
-
 #define RAW_LINE_CAP 4096
 
 __thread Display *g_draw_dpy = NULL;
@@ -481,7 +468,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
     } else {
       x11_draw_list_background(state, dpy, xd, vis, cmap, y, itemH, sel);
     }
-    x11_draw_list_item(state, dpy, xd, vis, cmap, font, lb, idx, y,
+    x11_draw_list_item(dpy, xd, vis, cmap, font, lb, idx, y,
                        PROMPT_ITEM_TEXT_X, NULL);
   }
 
