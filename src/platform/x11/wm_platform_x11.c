@@ -20,9 +20,9 @@
 #include "core/listbox_hover.h"
 #include "core/types.h"
 
-extern int WindowManager_RunLinux(WindowManager *wm);
-extern void WindowManager_QuitLinux(WindowManager *wm);
-extern void WindowManager_ProcessEventsLinux(WindowManager *wm);
+extern int x11_run(WindowManager *wm);
+extern void x11_quit(WindowManager *wm);
+extern void x11_process_events(WindowManager *wm);
 
 bool Platform_InitDisplay(WindowManager *wm) {
   if (!wm)
@@ -31,7 +31,7 @@ bool Platform_InitDisplay(WindowManager *wm) {
   return wm->display != NULL;
 }
 
-int Platform_Run(WindowManager *wm) { return WindowManager_RunLinux(wm); }
+int Platform_Run(WindowManager *wm) { return x11_run(wm); }
 
 void Platform_PromptFlushDisplay(WindowManager *wm) {
   Display *dpy = (wm && wm->display) ? wm->display : x11_get_display();
@@ -41,10 +41,10 @@ void Platform_PromptFlushDisplay(WindowManager *wm) {
   }
 }
 
-void Platform_Quit(WindowManager *wm) { WindowManager_QuitLinux(wm); }
+void Platform_Quit(WindowManager *wm) { x11_quit(wm); }
 
 void Platform_ProcessEvents(WindowManager *wm) {
-  WindowManager_ProcessEventsLinux(wm);
+  x11_process_events(wm);
 }
 
 void Platform_OnPopEmpty(WindowManager *wm) {
