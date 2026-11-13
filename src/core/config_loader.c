@@ -451,6 +451,8 @@ static size_t confiemit_region(char *buf, size_t cap) {
   cfput(buf, cap, &off, "    FontSize = %d;\n", Platform_GetUnscaledFontSize());
   cfput(buf, cap, &off, "    IconSize = %d;\n", IconSize);
   cfput(buf, cap, &off, "    WidgetGap = %d;\n", WidgetGap);
+  cfput(buf, cap, &off, "    PromptWidth = %d;\n", PromptWidth);
+  cfput(buf, cap, &off, "    PromptHeight = %d;\n", PromptHeight);
   cfput_str_var(buf, cap, &off, "UsedTerminal", UsedTerminal);
   cfput_str_var(buf, cap, &off, "UsedShell", UsedShell);
   cfput_str_var(buf, cap, &off, "UsedBrowser", UsedBrowser);

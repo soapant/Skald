@@ -1536,8 +1536,8 @@ static bool listbox_begin_common(const PlListSpec *spec) {
   int itemH = item_h > 0 ? item_h : bi.item_h;
   PromptState *st = Platform_ListboxBackendPromptState(lb);
   ListboxLayout lay;
-  Listbox_ComputeLayout(spec, bi.list_top, itemH, st ? st->width : 900,
-                        st ? st->height : 640, lb->item_count, &lay);
+  Listbox_ComputeLayout(spec, bi.list_top, itemH, st ? st->width : PromptWidth,
+                        st ? st->height : PromptHeight, lb->item_count, &lay);
   sk_list_spec = *spec;
   sk_list_lb = lb;
   sk_list_itemH = itemH;

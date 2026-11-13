@@ -75,7 +75,6 @@ bool Platform_IsRunningAsRoot(void) {
 }
 
 bool Platform_MkdirIfNotExists(const char *path) {
-
   if (!path)
     return false;
   if (mkdir(path, 0755) == 0)
@@ -84,7 +83,6 @@ bool Platform_MkdirIfNotExists(const char *path) {
 }
 
 long long Platform_GetWallClockMs(void) {
-
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL;
@@ -133,7 +131,7 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   char cmd[1024];
   snprintf(cmd, sizeof(cmd),
            "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" "
-           "2>/dev/null; pkill -9 -f \"build/[f]lint\" 2>/dev/null; pkill "
+           "2>/dev/null; pkill"
            "\"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r "
            "\"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &",
            tmp, tmp, tmp, tmp, tmp, tmp);
@@ -310,10 +308,10 @@ void Platform_PrewarmBackgroundPixmap(void) {
   if (!dpy) {
     return;
   }
-  x11_bg_image_prewarm(dpy, PROMPT_W, PROMPT_H);
-  Window _pw = x11_create_prompt_window(dpy, 0, 0, PROMPT_W, PROMPT_H);
+  x11_bg_image_prewarm(dpy, PromptWidth, PromptHeight);
+  Window _pw = x11_create_prompt_window(dpy, 0, 0, PromptWidth, PromptHeight);
   if (_pw != None) {
-    x11_get_cached_background(dpy, _pw, PROMPT_W, PROMPT_H);
+    x11_get_cached_background(dpy, _pw, PromptWidth, PromptHeight);
     XDestroyWindow(dpy, _pw);
   }
 }
