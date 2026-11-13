@@ -20,6 +20,6 @@ static SkaldContext ctx = {
 SkaldContext *SkaldContext_Get(void) { return &ctx; }
 
 void SkaldContext_Clear(void) {
-  SkaldContext *ctx = SkaldContext_Get();
-  memset(&ctx->window, 0, sizeof(ctx->window));
+  SkaldContext *sc = SkaldContext_Get();
+  memset(&sc->window, 0, sizeof(sc->window));
 }

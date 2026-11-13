@@ -23,12 +23,29 @@ const char *Platform_GetRealUser(void) {
 
 bool Platform_QueryBrowser(const char *query) { return false; }
 
-bool Platform_GetFeatureBuildCommand(const char *src, const char *out_tmp,
-                                     char *cmd, size_t cmd_size) {
-  snprintf(cmd, cmd_size,
-           "gcc -std=gnu17 -I include -I/usr/include/freetype2 "
-           "-I/usr/include/libpng16 -pipe -fPIC -shared -o %s %s 2>&1",
-           out_tmp, src);
+bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
+                                 const char *argv[], size_t argv_cap) {
+  size_t n = 0;
+#define ADD_ARG(arg)                                                     \
+  do {                                                                         \
+    if (n + 1 >= argv_cap)                                                     \
+      return false;                                                            \
+    argv[n++] = (arg);                                                         \
+  } while (0)
+  ADD_ARG("gcc");
+  ADD_ARG("-std=gnu17");
+  ADD_ARG("-I");
+  ADD_ARG("include");
+  ADD_ARG("-I/usr/include/freetype2");
+  ADD_ARG("-I/usr/include/libpng16");
+  ADD_ARG("-pipe");
+  ADD_ARG("-fPIC");
+  ADD_ARG("-shared");
+  ADD_ARG("-o");
+  ADD_ARG(out_tmp);
+  ADD_ARG(src);
+  argv[n] = NULL;
+#undef ADD_ARG
   return true;
 }
 

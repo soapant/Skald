@@ -225,8 +225,7 @@ bool focus_window_title_hyprland(const char *title) {
   free(out);
   if (title[0] != '\0') {
     char alt[1024];
-    strncpy(alt, title, sizeof(alt) - 1);
-    alt[sizeof(alt) - 1] = '\0';
+    SafeCopy(alt, sizeof(alt), title);
     alt[0] = toupper((unsigned char)alt[0]);
     if (hypr_focus_lua_cmd(alt, cmd, sizeof(cmd))) {
       out = Platform_RunTerminalCommand(cmd, false);
@@ -386,7 +385,7 @@ bool inject_key_hyprland(int vk, int down) {
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
-  strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+  SafeCopy(addr.sun_path, sizeof(addr.sun_path), path);
 
   if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     close(fd);

@@ -62,15 +62,21 @@ bool WindowManager_TopPopupWantsTick(WindowManager *wm);
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
 Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec);
+int PromptPopup_GetBounds(Popup *p, int *x, int *y, int *w, int *h);
 CloseCallback PromptPopup_TakeOnClose(Popup *p);
 PromptState *PromptPopup_FindState(const ListBoxInfo *lb);
 Popup *PromptPopup_FindPopupByHandle(WindowHandle handle);
 PromptState *PromptPopup_GetTopPromptState(void);
+
 void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
 void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
                                    int *out_h);
+
+void WindowManager_Quit(WindowManager *wm);
+void WindowManager_ProcessEvents(WindowManager *wm);
 bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x, int root_y);
+
 void EventBus_Register(PlEvent event, PlEventCallback cb);
 void EventBus_Unregister(PlEvent event, PlEventCallback cb);
 void EventBus_PurgeOwner(const char *path_a, const char *path_b);

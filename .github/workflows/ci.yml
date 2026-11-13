@@ -25,7 +25,7 @@ jobs:
         run: cc -O2 nob.c -o nob
 
       - name: Main Build
-        run: ./nob 
+        run: ./nob -werror
 
       - name: Check skapi layering
         run: ./nob -check
@@ -36,3 +36,23 @@ jobs:
       - name: Cross-compile for Windows
         run: ./nob -win32
 
+  linux-asan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang pkg-config \
+            libcurl4-openssl-dev \
+            libx11-dev libxft-dev libfontconfig-dev libfreetype-dev \
+            libxext-dev libxrandr-dev libxrender-dev libxtst-dev libxi-dev \
+            libglib2.0-dev
+
+      - name: Bootstrap nob
+        run: cc -O2 nob.c -o nob
+
+      - name: Build and test with ASan + UBSan
+        run: ./nob -asan -test

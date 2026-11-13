@@ -18,6 +18,7 @@
 
 void Platform_FlushDraw(void);
 
+void Platform_DrawPromptEditbox(PromptState *state);
 void Platform_DrawPromptEditText(PromptState *state);
 void Platform_DrawPromptEditCursor(PromptState *state);
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);

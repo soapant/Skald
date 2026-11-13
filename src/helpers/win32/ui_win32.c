@@ -10,6 +10,7 @@
 #include "helpers/win32/win32_state.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/win32/common_ui_win32.h"
+#include "helpers/helpers_text.h"
 #include "core/listbox_hover.h"
 
 bool IsPopupActive(WindowHandle hPopupWnd) {
@@ -104,8 +105,7 @@ void UI_SetText(const char *text) {
   if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) {
     return;
   }
-  strncpy(t.text, text, t.capacity - 1);
-  t.text[t.capacity - 1] = '\0';
+  SafeCopy(t.text, t.capacity, text);
   UI_SetCursorPosition((int)strlen(t.text));
   if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
     UI_RequestPopupRepaint();

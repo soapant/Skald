@@ -1,4 +1,5 @@
 #include "helpers/helpers_fs.h"
+#include "helpers/helpers_text.h"
 
 #include "platform/platform.h"
 #include "deps/log.h"
@@ -27,9 +28,11 @@ static bool feature_base_dir(char *out, size_t out_len) {
   if (!out || out_len == 0 || !home || !home[0])
     return false;
 #if defined(_WIN32)
-  snprintf(out, out_len, "%s\\AppData\\Roaming\\Skald", home);
+  SafeCopy(out, out_len, home);
+  SafeCat(out, out_len, "\\AppData\\Roaming\\Skald");
 #else
-  snprintf(out, out_len, "%s/.local/share/skald", home);
+  SafeCopy(out, out_len, home);
+  SafeCat(out, out_len, "/.local/share/skald");
 #endif
   return true;
 }
@@ -67,14 +70,17 @@ bool TempFile_Write(const char *name, const void *data, size_t len,
   size_t dl = strlen(dir);
   while (dl > 0 && (dir[dl - 1] == '\\' || dir[dl - 1] == '/'))
     dir[--dl] = '\0';
-  snprintf(out_path, out_len, "%s\\%s", dir, name);
+  SafeCopy(out_path, out_len, dir);
+  SafeCat(out_path, out_len, "\\");
+  SafeCat(out_path, out_len, name);
 #else
   const char *dir = getenv("TMPDIR");
   if (!dir || !dir[0])
     dir = "/tmp";
-  snprintf(out_path, out_len, "%s/%s", dir, name);
+  SafeCopy(out_path, out_len, dir);
+  SafeCat(out_path, out_len, "/");
+  SafeCat(out_path, out_len, name);
 #endif
-  out_path[out_len - 1] = '\0';
   FILE *f = fopen(out_path, "wb");
   if (!f)
     return false;
@@ -131,11 +137,15 @@ bool FeaturePath_Get(const char *feature, const char *name, char *out,
   if (!feature_base_dir(dir_path, sizeof(dir_path)))
     return false;
   Platform_MkdirIfNotExists(dir_path);
+  const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
   char feat_path[720];
-  snprintf(feat_path, sizeof(feat_path), "%s%c%s", dir_path, SK_FEAT_SEP,
-           feature);
+  SafeCopy(feat_path, sizeof(feat_path), dir_path);
+  SafeCat(feat_path, sizeof(feat_path), sep);
+  SafeCat(feat_path, sizeof(feat_path), feature);
   Platform_MkdirIfNotExists(feat_path);
-  snprintf(out, out_len, "%s%c%s", feat_path, SK_FEAT_SEP, name);
+  SafeCopy(out, out_len, feat_path);
+  SafeCat(out, out_len, sep);
+  SafeCat(out, out_len, name);
   return true;
 }
 
@@ -147,7 +157,10 @@ bool FeaturePath_DataDirExists(const char *stem) {
   if (!feature_base_dir(dir_path, sizeof(dir_path)))
     return false;
   char stemdir[720];
-  snprintf(stemdir, sizeof(stemdir), "%s%c%s", dir_path, SK_FEAT_SEP, stem);
+  const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
+  SafeCopy(stemdir, sizeof(stemdir), dir_path);
+  SafeCat(stemdir, sizeof(stemdir), sep);
+  SafeCat(stemdir, sizeof(stemdir), stem);
 #if defined(_WIN32)
   DWORD attrs = GetFileAttributesA(stemdir);
   return attrs != INVALID_FILE_ATTRIBUTES &&

@@ -846,6 +846,9 @@ int sk_get_pid(void);
 #define SKALD_FEATURE_SHUTDOWN                                                 \
   SKALD_FEATURE_EXPORT void SkaldFeatureShutdown(void)
 
+void sk_cap_register_abi(const char *key, unsigned abi, void *fn);
+void *sk_cap_resolve_abi(const char *key, unsigned abi);
+
 void ski_cap_register(const char *key, void *fn);
 void *ski_cap_resolve(const char *key);
 unsigned sk_cap_generation(void);

@@ -1,4 +1,5 @@
 #include "helpers/x11/clipboard_x11.h"
+#include "helpers/helpers_text.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -651,7 +652,7 @@ static char *x11_clip_read_target(Atom target) {
   char *tname = XGetAtomName(dpy, target);
   char tbuf[64] = {0};
   if (tname) {
-    strncpy(tbuf, tname, sizeof(tbuf) - 1);
+    SafeCopy(tbuf, sizeof(tbuf), tname);
     XFree(tname);
     tname = NULL;
   }

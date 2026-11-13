@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#include "helpers/x11/input_core_x11.h"
+#include "helpers/x11/raw_input_core_x11.h"
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   int mx = 0, my = 0;

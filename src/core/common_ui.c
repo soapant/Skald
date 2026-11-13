@@ -1,4 +1,5 @@
 #include "helpers/helpers_text.h"
+#include "core/timer.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
@@ -199,8 +200,7 @@ static void Populate_CaptureSelection(ListBoxInfo *lb, char *out_text,
     const char *cur = ListBoxInfo_Row(lb, current_sel);
     lb->selected_text = cur;
     if (cur) {
-      strncpy(out_text, cur, out_size - 1);
-      out_text[out_size - 1] = '\0';
+      SafeCopy(out_text, out_size, cur);
     }
   }
 }
@@ -346,9 +346,8 @@ static void Populate_BuildCache(ListBoxInfo *lb, const char **items,
     int raw_data_index = lb->matching_indices[i];
     if (!items[raw_data_index])
       continue;
-    strncpy(lb->items[lb->item_count], items[raw_data_index],
-            LISTBOX_ROW_BYTES - 1);
-    lb->items[lb->item_count][LISTBOX_ROW_BYTES - 1] = '\0';
+    SafeCopy(lb->items[lb->item_count], LISTBOX_ROW_BYTES,
+             items[raw_data_index]);
     lb->items[lb->item_count][strcspn(lb->items[lb->item_count], "\r\n")] =
         '\0';
     lb->item_count++;
@@ -374,10 +373,9 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
     UI_SetSelection(lb, -1);
   }
   if (filter)
-    strncpy(lb->last_filter, filter, sizeof(lb->last_filter) - 1);
+    SafeCopy(lb->last_filter, sizeof(lb->last_filter), filter);
   else
     lb->last_filter[0] = '\0';
-  lb->last_filter[sizeof(lb->last_filter) - 1] = '\0';
   ListBox_ScrollToSelection(lb);
   if (total_matches == 0) {
     Platform_DismissDisplayMessage();

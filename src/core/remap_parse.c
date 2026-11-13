@@ -1,6 +1,7 @@
 #include "core/remap_manager.h"
 
 #include "core/types/keys.h"
+#include "helpers/helpers_text.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -115,8 +116,7 @@ bool Remap_ParseTriggers(const char *str, int *out_mods, int *out_vks,
   if (!str)
     return false;
   char buf[256];
-  strncpy(buf, str, sizeof(buf) - 1);
-  buf[sizeof(buf) - 1] = '\0';
+  SafeCopy(buf, sizeof(buf), str);
   char *save = NULL;
   char *token = strtok_r(buf, "+", &save);
   while (token) {

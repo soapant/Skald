@@ -1,4 +1,4 @@
-#include "helpers/x11/draw_x11.h"
+#include "helpers/x11/raw_draw_x11.h"
 #include "config_values.h"
 
 void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,

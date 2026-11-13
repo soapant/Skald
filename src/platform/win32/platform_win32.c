@@ -1,5 +1,7 @@
-#include "helpers/win32/platform_win32.h"
+#include "helpers/win32/raw_platform_win32.h"
 #include "helpers/helpers_ui.h"
+#include "helpers/helpers_text.h"
+#include "helpers/win32/win32_state.h"
 
 #ifdef _MSC_VER
 
@@ -26,7 +28,6 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
   }
   log_info("Platform_LaunchTerminalAtPath working_dir='%s' extra_args='%s'",
            working_dir ? working_dir : "", extra_args ? extra_args : "");
-  ;
   return true;
 }
 
@@ -103,8 +104,7 @@ char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
   }
   if (open_terminal) {
     char clean_cmd[512];
-    strncpy(clean_cmd, command ? command : "", sizeof(clean_cmd) - 1);
-    clean_cmd[sizeof(clean_cmd) - 1] = '\0';
+    SafeCopy(clean_cmd, sizeof(clean_cmd), command ? command : "");
     char *p = clean_cmd;
     while (*p && isspace((unsigned char)*p))
       p++;
@@ -571,10 +571,9 @@ bool Platform_FocusWindow(const char *title) {
     return false;
   }
 
-  extern void Platform_SetSkaldPrevFg(HWND h);
   HWND hPopup = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hPopup && IsWindow(hPopup)) {
-    Platform_SetSkaldPrevFg(hwnd);
+    win32_set_prev_fg(hwnd);
     log_info("Platform_FocusWindow deferred via g_prev_fg hwnd=%p title='%s'",
              hwnd, title);
     return true;
@@ -776,8 +775,7 @@ char *Platform_GetActiveWindowAppId(void) {
   if (QueryFullProcessImageNameA(h, 0, exe, &sz) && sz > 0) {
     const char *base = strrchr(exe, '\\');
     base = base ? base + 1 : exe;
-    strncpy(appId, base, sizeof(appId) - 1);
-    appId[sizeof(appId) - 1] = '\0';
+    SafeCopy(appId, sizeof(appId), base);
     size_t n = strlen(appId);
     if (n > 4 && _stricmp(appId + n - 4, ".exe") == 0)
       appId[n - 4] = '\0';

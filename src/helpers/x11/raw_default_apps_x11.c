@@ -1,4 +1,4 @@
-#include "helpers/x11/default_apps_x11.h"
+#include "helpers/x11/raw_default_apps_x11.h"
 
 #define APPDIR_CACHE_SLOTS 8
 

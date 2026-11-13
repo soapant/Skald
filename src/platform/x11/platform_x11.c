@@ -1,7 +1,8 @@
 #include <stdarg.h>
 #include "wm/x11_wm.h"
 #include "helpers/helpers_ui.h"
-#include "helpers/x11/platform_x11.h"
+#include "helpers/helpers_text.h"
+#include "helpers/x11/raw_platform_x11.h"
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 
@@ -710,12 +711,10 @@ static void icon_cache_load(void) {
     if (!eq)
       continue;
     *eq = '\0';
-    strncpy(icon_cache[icon_cache_count].key, line,
-            sizeof(icon_cache[0].key) - 1);
-    icon_cache[icon_cache_count].key[sizeof(icon_cache[0].key) - 1] = '\0';
-    strncpy(icon_cache[icon_cache_count].value, eq + 1,
-            sizeof(icon_cache[0].value) - 1);
-    icon_cache[icon_cache_count].value[sizeof(icon_cache[0].value) - 1] = '\0';
+    SafeCopy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key),
+             line);
+    SafeCopy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
+             eq + 1);
     if (access(icon_cache[icon_cache_count].value, F_OK) == 0)
       icon_cache_count++;
   }
@@ -741,9 +740,10 @@ static void icon_cache_set(const char *key, const char *value) {
   if (icon_cache_count >= MAX_ICON_CACHE) {
     return;
   }
-  strncpy(icon_cache[icon_cache_count].key, key, sizeof(icon_cache[0].key) - 1);
-  strncpy(icon_cache[icon_cache_count].value, value,
-          sizeof(icon_cache[0].value) - 1);
+  SafeCopy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key),
+           key);
+  SafeCopy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
+           value);
   icon_cache_count++;
   char cf[1024];
   FILE *f = NULL;
@@ -820,14 +820,14 @@ char *Platform_GetIconPath(char *app_path) {
           char *end = strpbrk(p, " \r\n#");
           if (end)
             *end = '\0';
-          strncpy(icon_name, p, sizeof(icon_name) - 1);
+          SafeCopy(icon_name, sizeof(icon_name), p);
           break;
         }
       }
       fclose(f);
     }
   } else {
-    strncpy(icon_name, app_path, sizeof(icon_name) - 1);
+    SafeCopy(icon_name, sizeof(icon_name), app_path);
   }
   if (icon_name[0] == '/' && access(icon_name, F_OK) == 0) {
     if (strstr(icon_name, ".png") || strstr(icon_name, ".svg") ||
@@ -835,7 +835,7 @@ char *Platform_GetIconPath(char *app_path) {
       return strdup(icon_name);
   }
   char bare[512];
-  strncpy(bare, icon_name, sizeof(bare) - 1);
+  SafeCopy(bare, sizeof(bare), icon_name);
   char *dot = strrchr(bare, '.');
   if (dot && (strcmp(dot, ".png") == 0 || strcmp(dot, ".svg") == 0 ||
               strcmp(dot, ".xpm") == 0))
@@ -867,7 +867,7 @@ char *Platform_GetIconPath(char *app_path) {
     const char *xdg = getenv("XDG_DATA_DIRS");
     char xdg_dirs[1024] = {0};
     if (xdg && xdg[0]) {
-      strncpy(xdg_dirs, xdg, sizeof(xdg_dirs) - 1);
+      SafeCopy(xdg_dirs, sizeof(xdg_dirs), xdg);
     } else {
       snprintf(xdg_dirs, sizeof(xdg_dirs), "/usr/local/share:/usr/share");
     }

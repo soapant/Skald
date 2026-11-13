@@ -1,4 +1,4 @@
-#include "helpers/x11/message_popup_x11.h"
+#include "helpers/x11/raw_message_popup_x11.h"
 #include "helpers/helpers_text.h"
 
 pthread_mutex_t g_msg_lock = PTHREAD_MUTEX_INITIALIZER;

@@ -307,8 +307,7 @@ bool x11_get_title(char *buffer, int buffer_size) {
       free(name);
     return false;
   }
-  strncpy(buffer, name, buffer_size - 1);
-  buffer[buffer_size - 1] = '\0';
+  SafeCopy(buffer, (size_t)buffer_size, name);
   free(name);
   return buffer[0] != '\0';
 }
@@ -334,8 +333,7 @@ bool x11_get_app_id(char *buffer, int buffer_size) {
       XFree(ch);
     return false;
   }
-  strncpy(buffer, ch->res_class, buffer_size - 1);
-  buffer[buffer_size - 1] = '\0';
+  SafeCopy(buffer, (size_t)buffer_size, ch->res_class);
   if (ch->res_name)
     XFree(ch->res_name);
   if (ch->res_class)

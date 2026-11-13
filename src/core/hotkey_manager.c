@@ -258,7 +258,7 @@ bool Hotkey_HasMouseBinding(void) {
   return false;
 }
 
-static bool hotkey_blacklist_match(HotkeyBinding *b, const char *title) {
+static bool hotkey_blacklist_match(const HotkeyBinding *b, const char *title) {
   if (!b->blacklist || b->blacklist_count == 0)
     return false;
   for (int j = 0; j < b->blacklist_count; j++) {

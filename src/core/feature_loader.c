@@ -1,6 +1,8 @@
 #include "core/feature_loader.h"
+#include "core/manifest.h"
 #include "helpers/helpers_key.h"
 #include "helpers/helpers_fs.h"
+#include "helpers/helpers_text.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,8 +55,7 @@ void DeferredInit_RunAll(void) {
 static void fl_copy(char *dst, size_t dst_size, const char *src) {
   if (dst_size == 0)
     return;
-  strncpy(dst, src ? src : "", dst_size - 1);
-  dst[dst_size - 1] = '\0';
+  SafeCopy(dst, dst_size, src);
 }
 
 #define MAX_PINS 16
@@ -194,9 +195,9 @@ static void defer_unload(LibHandle handle, const char *uniq,
   u->uniq[0] = '\0';
   u->owner[0] = '\0';
   if (uniq && uniq[0])
-    snprintf(u->uniq, sizeof(u->uniq), "%s", uniq);
+    SafeCopy(u->uniq, sizeof(u->uniq), uniq);
   if (owner && owner[0])
-    snprintf(u->owner, sizeof(u->owner), "%s", owner);
+    SafeCopy(u->owner, sizeof(u->owner), owner);
 }
 
 static void sweep_retired_libs(void) {
@@ -263,8 +264,6 @@ static bool ends_with(const char *str, const char *suffix) {
 
 static int feature_init_count = 0;
 
-#define MANIFEST_LIST_MAX 32
-
 static bool warned_no_featurepath = false;
 
 static bool feature_dir(const char *name, char *out, size_t n) {
@@ -282,40 +281,7 @@ static bool feature_dir(const char *name, char *out, size_t n) {
   return true;
 }
 
-typedef struct {
-  char name[64];
-  char deps[MANIFEST_LIST_MAX][64];
-  int dep_count;
-  char provides[MANIFEST_LIST_MAX][96];
-  int provide_count;
-  bool valid;
-} FeatureManifest;
 
-static void manifest_trim(char *s) {
-  size_t n = strlen(s);
-  while (n > 0 && (s[n - 1] == '\n' || s[n - 1] == '\r' || s[n - 1] == ' ' ||
-                   s[n - 1] == '\t'))
-    s[--n] = '\0';
-  char *p = s;
-  while (*p == ' ' || *p == '\t')
-    p++;
-  if (p != s)
-    memmove(s, p, strlen(p) + 1);
-}
-
-static void manifest_unquote(char *s) {
-  char *hash = strchr(s, '#');
-  if (hash) {
-    *hash = '\0';
-  }
-  manifest_trim(s);
-  size_t n = strlen(s);
-  if (n >= 2 && ((s[0] == '"' && s[n - 1] == '"') ||
-                 (s[0] == '\'' && s[n - 1] == '\''))) {
-    s[n - 1] = '\0';
-    memmove(s, s + 1, n - 1);
-  }
-}
 
 static bool manifest_path(const char *name, char *out, size_t n) {
   char dir[512];
@@ -365,7 +331,7 @@ void FeatureLoader_OwnerFeatureName(const char *owner_path, char *out,
   if (bslash && (!base || bslash > base))
     base = bslash;
   base = base ? base + 1 : owner_path;
-  snprintf(out, n, "%s", base);
+  SafeCopy(out, n, base);
   char *dot = strchr(out, '.');
   if (dot)
     *dot = '\0';
@@ -423,8 +389,8 @@ static void manifest_add_entry(const char *name, const char *section,
     line[cl] = '\0';
 
     char work[512];
-    snprintf(work, sizeof(work), "%s", line);
-    manifest_trim(work);
+    SafeCopy(work, sizeof(work), line);
+    Manifest_Trim(work);
 
     if (work[0] == '[') {
       if (strstr(work, section)) {
@@ -443,8 +409,8 @@ static void manifest_add_entry(const char *name, const char *section,
 
     if (have_section && work[0] != '\0' && work[0] != '#') {
       char e[512];
-      snprintf(e, sizeof(e), "%s", work);
-      manifest_unquote(e);
+      SafeCopy(e, sizeof(e), work);
+      Manifest_Unquote(e);
       if (strcmp(e, entry) == 0)
         have_entry = true;
     }
@@ -515,68 +481,6 @@ void FeatureLoader_ManifestAddDepends(const char *owner_path,
   manifest_add_entry(name, "depends", dep_name);
 }
 
-static void manifest_parse(const char *name, FeatureManifest *m) {
-  memset(m, 0, sizeof(*m));
-  snprintf(m->name, sizeof(m->name), "%s", name);
-
-  char path[512];
-  if (!manifest_path(name, path, sizeof(path)))
-    return;
-  FILE *f = fopen(path, "rb");
-  if (!f)
-    return;
-
-  char line[512];
-  int section = 0;
-  while (fgets(line, sizeof(line), f)) {
-    char work[512];
-    snprintf(work, sizeof(work), "%s", line);
-    manifest_trim(work);
-    if (work[0] == '\0' || work[0] == '#')
-      continue;
-
-    if (work[0] == '[') {
-      if (strstr(work, "provides"))
-        section = 1;
-      else if (strstr(work, "depends"))
-        section = 2;
-      else
-        section = 0;
-      continue;
-    }
-
-    char *eq = strchr(work, '=');
-    if (eq) {
-      *eq = '\0';
-      char key[128];
-      snprintf(key, sizeof(key), "%s", work);
-      manifest_trim(key);
-      char val[384];
-      snprintf(val, sizeof(val), "%s", eq + 1);
-      manifest_trim(val);
-      manifest_unquote(val);
-      if (strcmp(key, "name") == 0)
-        snprintf(m->name, sizeof(m->name), "%s", val);
-      else if (strcmp(key, "description") == 0) {
-      }
-      section = 0;
-      continue;
-    }
-
-    manifest_unquote(work);
-    if (work[0] == '\0')
-      continue;
-    if (section == 1 && m->provide_count < MANIFEST_LIST_MAX) {
-      snprintf(m->provides[m->provide_count++], sizeof(m->provides[0]), "%s",
-               work);
-    } else if (section == 2 && m->dep_count < MANIFEST_LIST_MAX) {
-      snprintf(m->deps[m->dep_count++], sizeof(m->deps[0]), "%s", work);
-    }
-  }
-  fclose(f);
-  m->valid = true;
-}
-
 static bool load_single(const char *dir, const char *filename) {
   if (!ensure_feature_capacity(feature_count + 1))
     return false;
@@ -609,8 +513,8 @@ static bool load_single(const char *dir, const char *filename) {
 
   LoadedFeature *f = &features[feature_count++];
   memset(f, 0, sizeof(*f));
-  snprintf(f->name, sizeof(f->name), "%s", name);
-  snprintf(f->path, sizeof(f->path), "%s", full);
+  SafeCopy(f->name, sizeof(f->name), name);
+  SafeCopy(f->path, sizeof(f->path), full);
   f->handle = h;
   return true;
 }
@@ -651,12 +555,12 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
     }
 
     char nm[64];
-    snprintf(nm, sizeof(nm), "%s", e->d_name);
+    SafeCopy(nm, sizeof(nm), e->d_name);
     char *dot = strrchr(nm, '.');
     if (dot)
       *dot = '\0';
     manifest_write_baseline(nm);
-    snprintf(names[n_names++], sizeof(names[0]), "%s", nm);
+    SafeCopy(names[n_names++], sizeof(names[0]), nm);
   }
   closedir(d);
 
@@ -671,8 +575,11 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
     UNLOCK();
     return false;
   }
-  for (int i = 0; i < n_names; i++)
-    manifest_parse(names[i], &mans[i]);
+  for (int i = 0; i < n_names; i++) {
+    char mpath[512];
+    if (manifest_path(names[i], mpath, sizeof(mpath)))
+      Manifest_ParseFile(mpath, names[i], &mans[i]);
+  }
 
   for (int i = 0; i < n_names; i++) {
     const char *missing = NULL;
@@ -745,8 +652,8 @@ static int s_failed_count = 0;
 
 static void feature_mark_failed(const char *dir, time_t mtime) {
   if (s_failed_count < 64) {
-    snprintf(s_failed[s_failed_count].dir, sizeof(s_failed[s_failed_count].dir),
-             "%s", dir);
+    SafeCopy(s_failed[s_failed_count].dir,
+             sizeof(s_failed[s_failed_count].dir), dir);
     s_failed[s_failed_count].src_mtime = mtime;
     s_failed_count++;
   }
@@ -797,29 +704,26 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
     static unsigned build_seq = 0;
     char tmp[1024];
     snprintf(tmp, sizeof(tmp), "%s.tmp.%u", dll, ++build_seq);
-    char cmd[4096];
-    if (!Platform_GetFeatureBuildCommand(src, tmp, cmd, sizeof(cmd))) {
+    const char *argv[PLATFORM_BUILD_ARGV_MAX];
+    if (!Platform_GetFeatureBuildArgv(src, tmp, argv,
+                                      PLATFORM_BUILD_ARGV_MAX)) {
       remove(tmp);
       continue;
     }
-#if defined(_WIN32)
-    const char *argv[] = {"cmd", "/c", cmd, NULL};
-#else
-    const char *argv[] = {"sh", "-c", cmd, NULL};
-#endif
     int status = -1;
     char *outStr = Platform_RunArgvCapture(argv, NULL, &status);
-    bool ok = false;
-    if (outStr) {
-      ok = (status == 0);
-      if (!ok)
+    bool ok = outStr != NULL && status == 0;
+    if (!ok) {
+      if (outStr) {
         log_error("%s %s failed (exit %d):\n%s",
                   hot_reload ? "hot-reload" : "feature build", ent->d_name,
                   status, outStr);
+        free(outStr);
+      } else
+        log_error("%s %s failed: could not run compiler",
+                  hot_reload ? "hot-reload" : "feature build", ent->d_name);
+    } else
       free(outStr);
-    } else {
-      ok = true;
-    }
     if (!ok) {
       remove(tmp);
       feature_mark_failed(ent->d_name, st_src.st_mtime);

@@ -8,13 +8,13 @@
 #include "helpers/helpers_input_state.h"
 #include "platform/platform.h"
 #include <windows.h>
-
 #include "core/feature_loader.h"
+
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
 
-int WindowManager_RunWin32(WindowManager *wm) {
+int WindowManager_Run(WindowManager *wm) {
   if (!wm)
     return -1;
   wm->running = true;
@@ -40,7 +40,7 @@ int WindowManager_RunWin32(WindowManager *wm) {
   return 0;
 }
 
-void WindowManager_ProcessEventsWin32(WindowManager *wm) {
+void WindowManager_ProcessEvents(WindowManager *wm) {
   if (!wm) {
     return;
   }
@@ -64,7 +64,7 @@ void WindowManager_ProcessEventsWin32(WindowManager *wm) {
   WindowManager_DrainSelectionComplete(wm);
 }
 
-void WindowManager_QuitWin32(WindowManager *wm) {
+void WindowManager_Quit(WindowManager *wm) {
   if (wm)
     wm->running = false;
   PostQuitMessage(0);

@@ -113,6 +113,7 @@ static void append_san_flags(Nob_Cmd *cmd) {
 static bool target_win32 = false;
 static const char *obj_dir = BUILD_FOLDER "/obj";
 static bool release = false;
+static bool werror = false;
 static const char *sdk_dir = BUILD_FOLDER "/sdk";
 static const char *features_dir = BUILD_FOLDER "/features";
 static const char *main_implib = BUILD_FOLDER "/main.lib.a";
@@ -734,6 +735,9 @@ static bool compile_all(bool *any_compiled) {
       append_wayland_session_flags(&cmd);
       nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o",
                      obj_path(to_build.items[i]));
+      if (werror)
+        nob_cmd_append(&cmd, "-Werror", "-Wno-error=unused-parameter",
+                       "-Wno-error=undef");
       if (release)
         nob_cmd_append(&cmd, "-O3");
       else
@@ -1857,10 +1861,11 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
       printf("Usage: %s [-all] [-win32] [-run] [-release] [-test] [-asan] "
-             "[-check] [-help]\n",
+             "[-check] [-werror] [-help]\n",
              argv[0]);
       printf("  -all    Run nob, nob -test, nob -win32 and nob -check\n");
       printf("  -win32  Cross compile for Windows using MinGW\n");
+      printf("  -werror Build the main app with warnings as errors\n");
       printf("  -run    Run skald after build\n");
       printf(
           "  -release Build a self-contained release/ bundle: skald[.exe],\n"
@@ -1885,6 +1890,8 @@ int main(int argc, char **argv) {
       release = true;
     if (strcmp(argv[i], "-test") == 0)
       do_test = 1;
+    if (strcmp(argv[i], "-werror") == 0)
+      werror = true;
     if (strcmp(argv[i], "-asan") == 0)
       sanitize = true;
     if (strcmp(argv[i], "-check") == 0)

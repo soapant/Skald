@@ -6,6 +6,7 @@
 #include "core/types/prompt.h"
 #include "core/types/keys.h"
 #include "core/window_manager.h"
+#include "helpers/helpers_text.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "platform/wm_platform.h"
@@ -55,9 +56,8 @@ static void PromptPopup_OnShow(Popup *self) {
   data->state->window_title = (char *)title;
   data->state->eb->filter[0] = '\0';
   if (data->spec.initial_text && data->spec.initial_text[0]) {
-    strncpy(data->state->eb->filter, data->spec.initial_text,
-            sizeof(data->state->eb->filter) - 1);
-    data->state->eb->filter[sizeof(data->state->eb->filter) - 1] = '\0';
+    SafeCopy(data->state->eb->filter, sizeof(data->state->eb->filter),
+             data->spec.initial_text);
     data->state->eb->cursor = (int)strlen(data->state->eb->filter);
   }
   if (data->spec.password_mode &&

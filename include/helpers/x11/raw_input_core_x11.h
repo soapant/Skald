@@ -22,7 +22,7 @@
 #include "core/snippet_manager.h"
 #include "platform/platform.h"
 #include "helpers/x11/env_helpers_x11.h"
-#include "helpers/x11/misc_x11.h"
+#include "helpers/x11/raw_misc_x11.h"
 #include "wm/wm.h"
 #include "helpers/helpers_input_state.h"
 #include "core/types/keys.h"

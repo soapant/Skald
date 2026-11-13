@@ -1,5 +1,8 @@
 #include "config_values.h"
 #include "core/types/prompt.h"
+#include "platform/draw.h"
+
+
 #include "platform/wm_platform.h"
 #include "helpers/helpers_monitor.h"
 #include "platform/platform.h"
@@ -12,26 +15,19 @@
 #include "core/context.h"
 #include "core/listbox_hover.h"
 
-extern int WindowManager_RunWin32(WindowManager *wm);
-extern void WindowManager_QuitWin32(WindowManager *wm);
-extern void WindowManager_ProcessEventsWin32(WindowManager *wm);
-
 bool Platform_InitDisplay(WindowManager *wm) {
   (void)wm;
   return true;
 }
 
-int Platform_Run(WindowManager *wm) { return WindowManager_RunWin32(wm); }
-
 void Platform_PromptFlushDisplay(WindowManager *wm) { (void)wm; }
 
-void Platform_Quit(WindowManager *wm) { WindowManager_QuitWin32(wm); }
+void Platform_Quit(WindowManager *wm) { WindowManager_Quit(wm); }
 
 void Platform_ProcessEvents(WindowManager *wm) {
-  WindowManager_ProcessEventsWin32(wm);
-}
+  WindowManager_ProcessEvents(wm); }
 
-void Platform_OnPopEmpty() {
+void Platform_OnPopEmpty(void) {
   remap_reset();
   InputState_Clear();
 }
@@ -114,7 +110,7 @@ static BOOL CALLBACK win32_monitor_enum(HMONITOR hMonitor, HDC hdc, LPRECT rect,
 }
 
 int Monitor_Fill(MonitorEntry *out, int max_entries) {
-  Win32MonitorList list = {{{0}}, 0};
+  Win32MonitorList list = {0};
   EnumDisplayMonitors(NULL, NULL, win32_monitor_enum, (LPARAM)&list);
   if (list.count == 0)
     return 0;

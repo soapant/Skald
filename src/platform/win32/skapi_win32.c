@@ -360,8 +360,7 @@ static bool net_resolve_adapter(SkNetAdapter *out) {
     out->index = a->IfIndex;
     out->if_type = a->IfType;
     const char *id = a->AdapterName ? a->AdapterName : "";
-    strncpy(out->guid, id, sizeof(out->guid) - 1);
-    out->guid[sizeof(out->guid) - 1] = '\0';
+    SafeCopy(out->guid, sizeof(out->guid), id);
     found = true;
     break;
   }

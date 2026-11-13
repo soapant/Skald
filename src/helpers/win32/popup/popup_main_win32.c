@@ -9,6 +9,7 @@
 #include "core/context.h"
 #include "core/window_manager.h"
 #include <commctrl.h>
+#include "helpers/helpers_text.h"
 #include <shellapi.h>
 #include "config.h"
 #include "core/prompt_geometry.h"
@@ -493,9 +494,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (lb && lb->selected_index != -1) {
         char measureBuffer[512];
-        strncpy(measureBuffer, lb->items[pdis->itemID],
-                sizeof(measureBuffer) - 1);
-        measureBuffer[sizeof(measureBuffer) - 1] = '\0';
+        SafeCopy(measureBuffer, sizeof(measureBuffer),
+                 lb->items[pdis->itemID]);
         char *pos = strchr(measureBuffer, '|');
         if (pos) {
           *pos = '\0';
