@@ -768,7 +768,6 @@ static void cc_fill_applications(void) {
 }
 
 static const char *names[MAX_VISIBLE_ITEMS + 1];
-static const char **no_results = NULL;
 
 typedef struct {
   const char *canonical;
@@ -1334,7 +1333,6 @@ static bool cc_filter_match(const char *item, const char *filter) {
 
 static void cc_refresh(PromptState *state) {
   cc_build();
-  (void)no_results;
   int n = entry_count;
   if (n > MAX_VISIBLE_ITEMS)
     n = MAX_VISIBLE_ITEMS;
@@ -1391,7 +1389,8 @@ static void cc_subwindow_render(PromptState *state) {
     r.filled = true;
     r.radius = 4;
     r.color = SK_DARK_GRAY;
-    if (state->width > (10 * strlen(hk)) + 20) {
+    int hk_w = sk_get_text_width(hk, 10);
+    if (state->width > hk_w + 28) {
       ski_draw_rect(&r);
       sk_draw_text(.x = actions_width - 6, .y = ctx.y + 8, .text = hk,
                    .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
@@ -1739,10 +1738,11 @@ static void cc_render(PromptState *state) {
         r.radius = 4;
         r.color = SK_DARK_GRAY;
         ski_draw_rect(&r);
-
-        sk_draw_text(.x = hk_x - 4, .y = ctx.y + 10, .text = hk,
-                     .align = "RIGHT", .pad = 0, .color = SK_GRAY,
-                     .fontsize = hk_fs);
+        printf("%i %i\n",sk_get_text_width(ctx.text,FontSize) + type_w,state->width);
+        if (sk_get_text_width(ctx.text,FontSize) + type_w < state->width)
+          sk_draw_text(.x = hk_x - 4, .y = ctx.y + 10, .text = hk,
+                       .align = "RIGHT", .pad = 0, .color = SK_GRAY,
+                       .fontsize = hk_fs);
       }
     }
     if (plain_type) {

@@ -1462,6 +1462,8 @@ int sk_get_text_width(const char *text, int fontsize) {
       .text = text, .len = (int)strlen(text), .fontsize = fontsize});
 }
 
+int sk_get_text_height(int fontsize) { return Platform_GetTextLineHeight(fontsize); }
+
 char *sk_http_get(const char *url) { return Platform_HttpGet(url); }
 
 char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
