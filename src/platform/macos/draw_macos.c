@@ -10,44 +10,44 @@ static int measure_h = 0;
 static int last_measure_x = 0;
 static int last_measure_y = 0;
 
-void Platform_SetDrawOffset(int dx, int dy) {
+static void Platform_SetDrawOffset(int dx, int dy) {
   draw_offset_x = dx;
   draw_offset_y = dy;
 }
 
-void Platform_GetDrawOffset(int *out_x, int *out_y) {
+static void Platform_GetDrawOffset(int *out_x, int *out_y) {
   if (out_x)
     *out_x = draw_offset_x;
   if (out_y)
     *out_y = draw_offset_y;
 }
 
-void Platform_BeginMeasure(void) {
+static void Platform_BeginMeasure(void) {
   measure_w = 0;
   measure_h = 0;
 }
 
-void Platform_EndMeasure(int *out_w, int *out_h) {
+static void Platform_EndMeasure(int *out_w, int *out_h) {
   if (out_w)
     *out_w = measure_w;
   if (out_h)
     *out_h = measure_h;
 }
 
-void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
+static void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
   if (out_x)
     *out_x = last_measure_x;
   if (out_y)
     *out_y = last_measure_y;
 }
 
-void Platform_SetDrawBgColor(unsigned long hex) { draw_bg_color = hex; }
+static void Platform_SetDrawBgColor(unsigned long hex) { draw_bg_color = hex; }
 
-unsigned long Platform_GetDrawBgColor(void) { return draw_bg_color; }
+static unsigned long Platform_GetDrawBgColor(void) { return draw_bg_color; }
 
-void Platform_SetTransparentWindow(bool on) { transparent_window = on; }
+static void Platform_SetTransparentWindow(bool on) { transparent_window = on; }
 
-bool Platform_GetTransparentWindow(void) { return transparent_window; }
+static bool Platform_GetTransparentWindow(void) { return transparent_window; }
 
 void Platform_FlushDraw(void) {}
 

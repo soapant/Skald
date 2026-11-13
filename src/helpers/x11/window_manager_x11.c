@@ -175,7 +175,7 @@ static void x11_handle_key_release(Display *dpy, XKeyEvent *ev) {
     InputState_Update(vk, false, mods, 0);
 }
 
-void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
+static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
   if (x11_clipboard_handle_event(dpy, ev)) {
     return;
   }

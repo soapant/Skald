@@ -54,7 +54,7 @@ static int x11_linux_button_to_mouse(int code) {
   return 0;
 }
 
-int x11_convert_key_to_windows_vk(int key_code) {
+static int x11_convert_key_to_windows_vk(int key_code) {
   if (key_code >= KEY_1 && key_code <= KEY_0) {
     return '1' + (key_code - KEY_1);
   }
