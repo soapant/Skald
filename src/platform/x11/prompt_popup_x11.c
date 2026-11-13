@@ -127,7 +127,6 @@ bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
   if (Prompt_HandleKey(state, key))
     return true;
 
-  int wParam = key->vk;
   if (key->text_len > 0) {
     bool swallow = HotkeyText_ShouldSwallow(key);
     if (!swallow && HotkeyText_IsPrintable(key)) {

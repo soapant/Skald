@@ -105,8 +105,7 @@ bool sk_get_all_files_from_dir(const char *dir_path,
                                   strip_extension, max_depth);
 }
 
-char *sk_search_file_in_dir(const char *directory, const char *search_string,
-                            char *output_path) {
+char *sk_search_file_in_dir(const char *directory, const char *search_string) {
 
   if (!directory)
     return NULL;
@@ -115,7 +114,7 @@ char *sk_search_file_in_dir(const char *directory, const char *search_string,
   if (!ExpandPath(directory, expanded_dir, sizeof(expanded_dir)))
     return NULL;
   directory = expanded_dir;
-  return sk_search_file_in_dir_platform(directory, search_string, output_path);
+  return sk_search_file_in_dir_platform(directory, search_string);
 }
 
 bool sk_launch_with_args(const char *path, const char *args) {
@@ -2552,9 +2551,8 @@ bool ski_remove_alias(const char *alias) {
       continue;
     }
     if (n != i) {
-      snprintf(alias_alias[n], sizeof(alias_alias[n]), "%s", alias_alias[i]);
-      snprintf(g_alias_target[n], sizeof(g_alias_target[n]), "%s",
-               g_alias_target[i]);
+      memmove(alias_alias[n], alias_alias[i], sizeof(alias_alias[n]));
+      memmove(g_alias_target[n], g_alias_target[i], sizeof(g_alias_target[n]));
     }
     n++;
   }

@@ -51,8 +51,7 @@ typedef struct SkRunAfterPayload {
 bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload);
 
 char *sk_search_file_in_dir_platform(const char *directory,
-                                     const char *search_string,
-                                     char *output_path);
+                                     const char *search_string);
 bool sk_launch_with_args_platform(const char *path, const char *args);
 bool sk_launch_with_args_as_admin_platform(const char *path, const char *args);
 bool sk_place_editbox_platform(const SkEditSpec *spec);

@@ -84,8 +84,7 @@ unsigned long long sk_net_rx_bytes_over(double seconds);
 
 #define SK_DIR_WALK_UNLIMITED 0
 
-char *sk_search_file_in_dir(const char *directory, const char *search_string,
-                            char *output_path);
+char *sk_search_file_in_dir(const char *directory, const char *search_string);
 
 bool sk_get_all_files_from_dir(const char *dir_path,
                                char **list_of_allowed_extensions,
