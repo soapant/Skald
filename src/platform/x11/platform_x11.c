@@ -107,8 +107,7 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
   return true;
 }
 
-char *Platform_RunCommandAndGetOutput(char *command, int priority) {
-  (void)priority;
+char *Platform_RunCommandAndGetOutput(char *command) {
   FILE *fp;
   char buffer[8192];
   size_t cap = 8192;
