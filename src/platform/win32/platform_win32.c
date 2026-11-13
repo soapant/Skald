@@ -97,7 +97,7 @@ static void win32_add_font_dir(const char *glob, const char *prefix) {
   FindClose(hFind);
 }
 
-char *Platform_RunTerminalCommand(char *command, bool open_terminal) {
+char *Platform_RunTerminalCommand(const char *command, bool open_terminal) {
   if (!command) {
     log_error("Platform_RunTerminalCommand: NULL command");
     return NULL;
@@ -1499,6 +1499,15 @@ double Platform_EndTimer(PlTimer t) {
   return (double)(end - start) * 1000.0 / (double)freq.QuadPart;
 }
 
+static DWORD WINAPI win32_thread_entry(LPVOID p) {
+  WinThreadStart *s = (WinThreadStart *)p;
+  void *(*fn)(void *) = s->fn;
+  void *arg = s->arg;
+  free(s);
+  fn(arg);
+  return 0;
+}
+
 void *Platform_ThreadCreate(void *(*fn)(void *), void *arg) {
   if (!fn)
     return NULL;
@@ -1621,4 +1630,15 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
     free(job);
     log_warn("http async thread create failed");
   }
+}
+
+bool Platform_GetMousePos(int *out_x, int *out_y) {
+  POINT pt;
+  if (!GetCursorPos(&pt))
+    return false;
+  if (out_x)
+    *out_x = (int)pt.x;
+  if (out_y)
+    *out_y = (int)pt.y;
+  return true;
 }

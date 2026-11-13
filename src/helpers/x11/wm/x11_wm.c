@@ -67,7 +67,7 @@ static bool i3_exec(const char *command) {
 
   if (!i3_ensure_sock())
     return false;
-  char *out = Platform_RunTerminalCommand((char *)command, false);
+  char *out = Platform_RunTerminalCommand(command, false);
   if (!out || out[0] == '\0') {
     if (out)
       free(out);

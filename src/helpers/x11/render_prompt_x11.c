@@ -12,6 +12,7 @@
 #include "helpers/x11/drawing_x11.h"
 #include "helpers/x11/bg_image_x11.h"
 #include "helpers/x11/window_factory_x11.h"
+#include "helpers/x11/subclasses_x11.h"
 #include "core/types.h"
 #include "platform/platform.h"
 

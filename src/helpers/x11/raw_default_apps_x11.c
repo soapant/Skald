@@ -136,10 +136,10 @@ const char *x11_get_default_terminal(void) {
       "x-terminal-emulator",
   };
   size_t n = sizeof(candidates) / sizeof(candidates[0]);
-  const char *out = Platform_RunTerminalCommand(
+  char *out = Platform_RunTerminalCommand(
       "gsettings get org.gnome.desktop.default-applications.terminal exec",
       false);
-  char trimmed[256];
+  static __thread char trimmed[256];
   trimmed[0] = '\0';
   if (out) {
     const char *p = out;

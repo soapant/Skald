@@ -278,7 +278,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
         SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
       }
-      UI_Redraw(lb);
+      UI_RequestPopupRepaint();
       InvalidateRect(hwnd, NULL, FALSE);
       return 0;
     }
@@ -317,7 +317,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
           SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
         }
-        UI_Redraw(lb);
+        UI_RequestPopupRepaint();
         popup_request_repaint(hwnd);
         return 0;
       }
@@ -378,7 +378,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_TIMER: {
     if (wParam == UI_DEBOUNCE_TIMER_ID) {
       KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
-      UI_RedrawNow();
+      UI_RequestPopupRepaint();
       if (SkaldContext_Get()->window.prompt_callbacks.render != NULL)
         InvalidateRect(hwnd, NULL, FALSE);
       else
@@ -386,7 +386,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       return 0;
     }
     if (wParam == UI_TICK_TIMER_ID) {
-      UI_Redraw(lb);
+      UI_RequestPopupRepaint();
     }
     if (SkaldContext_Get()->window.prompt_callbacks.render != NULL)
       InvalidateRect(hwnd, NULL, FALSE);

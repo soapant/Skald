@@ -15,7 +15,10 @@
 #include "config_values.h"
 #include "core/types.h"
 #include "core/types/color.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wundef"
 #include "deps/stb_ds.h"
+#pragma GCC diagnostic pop
 #include "core/window_manager.h"
 #include "core/prompt_geometry.h"
 #include "core/draw_state.h"
@@ -383,10 +386,6 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
   UI_LB_EndUpdate();
 }
 
-static void Populate_CommitState(ListBoxInfo *lb, int item_count,
-                                 int total_matches) {
-  lb->total_matches = total_matches;
-}
 
 void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,
@@ -417,7 +416,7 @@ void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
 
   Populate_UpdateUI(lb, total_matches, filter);
 
-  Populate_CommitState(lb, item_count, total_matches);
+  lb->total_matches = total_matches;
 
   log_info("PopulateListBox completed for filter='%s'", filter ? filter : "");
 }

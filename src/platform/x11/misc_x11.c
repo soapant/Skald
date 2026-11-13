@@ -127,7 +127,7 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   if (ext && strcmp(ext, ".exe") == 0)
     *ext = '\0';
 
-  char cmd[1024];
+  char cmd[2048];
   snprintf(cmd, sizeof(cmd),
            "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" "
            "2>/dev/null; pkill"
@@ -292,7 +292,12 @@ bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
       continue;
     snprintf(name_out, name_cap, "%s", ent->d_name);
     char full[MAX_PATH];
-    snprintf(full, sizeof(full), "%s/%s", it->dir, ent->d_name);
+    size_t dl = strlen(it->dir), el = strlen(ent->d_name);
+    if (dl + 1 + el + 1 > sizeof(full))
+      continue;
+    memcpy(full, it->dir, dl);
+    full[dl] = '/';
+    memcpy(full + dl + 1, ent->d_name, el + 1);
     struct stat st;
     *is_dir_out = (stat(full, &st) == 0 && S_ISDIR(st.st_mode));
     return true;

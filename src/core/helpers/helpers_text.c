@@ -714,7 +714,12 @@ static bool file_walk_dir(const char *dir_path,
   bool is_dir = false;
   while (Platform_DirNext(it, entry_name, sizeof(entry_name), &is_dir)) {
     char full_path[MAX_PATH];
-    snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry_name);
+    size_t dl = strlen(dir_path), el = strlen(entry_name);
+    if (dl + 1 + el + 1 > sizeof(full_path))
+      continue;
+    memcpy(full_path, dir_path, dl);
+    full_path[dl] = '/';
+    memcpy(full_path + dl + 1, entry_name, el + 1);
 
     if (is_dir) {
       if (!file_walk_ignored_dir(entry_name, list_of_names_to_ignore) &&

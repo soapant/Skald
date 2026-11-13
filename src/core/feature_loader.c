@@ -675,14 +675,17 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
   while ((ent = readdir(dir)) != NULL) {
     if (ent->d_name[0] == '.')
       continue;
-    char subpath[512];
-    snprintf(subpath, sizeof(subpath), "%s/%s", FeaturePath, ent->d_name);
+    char subpath[1024];
+    snprintf(subpath, sizeof(subpath), "%.255s/%.255s",
+             FeaturePath, ent->d_name);
     struct stat st;
     if (stat(subpath, &st) != 0 || !S_ISDIR(st.st_mode))
       continue;
-    char src[512], dll[512];
-    snprintf(src, sizeof(src), "%s/%s.c", subpath, ent->d_name);
-    snprintf(dll, sizeof(dll), "build/features/%s%s", ent->d_name, ext);
+    char src[1024], dll[1024];
+    snprintf(src, sizeof(src), "%.255s/%.255s.c", subpath,
+             ent->d_name);
+    snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", ent->d_name,
+             ext);
     struct stat st_src, st_dll;
     if (stat(src, &st_src) != 0)
       continue;
@@ -701,7 +704,7 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
       continue;
     static unsigned build_seq = 0;
     char tmp[1024];
-    snprintf(tmp, sizeof(tmp), "%s.tmp.%u", dll, ++build_seq);
+    snprintf(tmp, sizeof(tmp), "%.1009s.tmp.%u", dll, ++build_seq);
     const char *argv[PLATFORM_BUILD_ARGV_MAX];
     if (!Platform_GetFeatureBuildArgv(src, tmp, argv,
                                       PLATFORM_BUILD_ARGV_MAX)) {

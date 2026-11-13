@@ -13,7 +13,10 @@
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
 #include "helpers/helpers_input_state.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wundef"
 #include "deps/stb_ds.h"
+#pragma GCC diagnostic pop
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_ui.h"
 #include "core/feature_loader.h"

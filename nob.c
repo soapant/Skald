@@ -38,7 +38,7 @@
 #define WIN_CC_FLAGS                                                           \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
       "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-MMD", "-MP",     \
-      "-O3", "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
+      "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
 
 #define WIN_LINK_FLAGS                                                         \
   "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm",   \
@@ -53,7 +53,7 @@
       "-Wno-unused-parameter"
 #define WIN_SDK_FLAGS                                                          \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
-      "-I/usr/x86_64-w64-mingw32/include", "-MMD", "-MP", "-O3", "-Wall",      \
+      "-I/usr/x86_64-w64-mingw32/include", "-MMD", "-MP", "-Wall",      \
       "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
 
 static bool sanitize = false;
@@ -416,6 +416,10 @@ static bool write_compile_commands(void) {
     if (target_win32) {
       nob_cmd_append(&cmd, CROSS_CC);
       nob_cmd_append(&cmd, WIN_CC_FLAGS, "-c", sources.items[i]);
+      if (release)
+        nob_cmd_append(&cmd, "-O3");
+      else
+        nob_cmd_append(&cmd, "-ggdb");
     } else {
       append_cc(&cmd);
       nob_cc_flags(&cmd);
@@ -557,7 +561,9 @@ static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
   if (target_win32) {
     nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS, "-I", sdk_dir, "-shared", "-o",
                    so, src, main_implib, WIN_LINK_FLAGS);
-    if (!release)
+    if (release)
+      nob_cmd_append(cmd, "-O3");
+    else
       nob_cmd_append(cmd, "-ggdb");
   } else {
     append_cc(cmd);
@@ -730,6 +736,10 @@ static bool compile_all(bool *any_compiled) {
       nob_cmd_append(&cmd, CROSS_CC);
       nob_cmd_append(&cmd, WIN_CC_FLAGS, "-c", to_build.items[i], "-o",
                      obj_path(to_build.items[i]));
+      if (release)
+        nob_cmd_append(&cmd, "-O3");
+      else
+        nob_cmd_append(&cmd, "-ggdb");
     } else {
       append_cc(&cmd);
       nob_cc_flags(&cmd);

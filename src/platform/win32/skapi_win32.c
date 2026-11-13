@@ -25,6 +25,7 @@
 #include "helpers/win32/common_ui_win32.h"
 #include "core/thread_registry.h"
 #include "helpers/helpers_owner.h"
+#include "core/window_manager.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -133,10 +134,9 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   return ok;
 }
 
-#include "core/window_manager.h"
 
 char *sk_search_file_in_dir_platform(const char *directory,
-                                     const char *search_string, ) {
+                                     const char *search_string) {
 
   char search_path[MAX_PATH];
   snprintf(search_path, sizeof(search_path), "%s\\*", directory);

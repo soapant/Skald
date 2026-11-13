@@ -1,5 +1,4 @@
 #include "helpers/win32/raw_platform_win32.h"
-#include "helpers/helpers_http.h"
 
 DWORD WINAPI win32_stdin_writer(LPVOID arg) {
   StdinWriteCtx *ctx = (StdinWriteCtx *)arg;
@@ -682,15 +681,3 @@ DWORD win32_button_flag(int button, bool down) {
   }
 }
 
-typedef void (*PlatformHttpCallback)(const char *body, bool success,
-                                     void *userdata);
-
-DWORD WINAPI win32_thread_entry(LPVOID p) {
-
-  WinThreadStart *s = (WinThreadStart *)p;
-  void *(*fn)(void *) = s->fn;
-  void *arg = s->arg;
-  free(s);
-  fn(arg);
-  return 0;
-}

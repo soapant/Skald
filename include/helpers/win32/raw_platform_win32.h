@@ -110,6 +110,5 @@ void win32_collect_pair(PlWindowList *out_titles, PlWindowList *out_names);
 int win32_dir_exists(const char *path);
 int win32_is_project_root(const char *dir);
 DWORD win32_button_flag(int button, bool down);
-DWORD WINAPI win32_thread_entry(LPVOID p);
 
 #endif

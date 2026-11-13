@@ -65,7 +65,7 @@ void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     Window root = DefaultRootWindow(dpy);
     w = DisplayWidth(dpy, DefaultScreen(dpy));
     h = DisplayHeight(dpy, DefaultScreen(dpy));
-    unsigned int px = 0, py = 0;
+    int px = 0, py = 0;
     Window rw = None, cw = None;
     int rx = 0, ry = 0, wx = 0, wy = 0;
     unsigned int m = 0;
@@ -81,8 +81,8 @@ void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
         XRRCrtcInfo *ci = x11_monitor_valid(dpy, res, c);
         if (!ci)
           continue;
-        if (px >= ci->x && px < ci->x + ci->width && py >= ci->y &&
-            py < ci->y + ci->height) {
+        if (px >= ci->x && px < ci->x + (int)ci->width &&
+            py >= ci->y && py < ci->y + (int)ci->height) {
           bx = ci->x;
           by = ci->y;
           bw = ci->width;

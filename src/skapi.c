@@ -43,7 +43,10 @@
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "helpers/helpers_render_thread.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wundef"
 #include "deps/stb_ds.h"
+#pragma GCC diagnostic pop
 #include "config_values.h"
 #include "core/cc_registry.h"
 #include "core/skapi_input.h"
@@ -1933,10 +1936,6 @@ int sk_key_queue_len(void) { return GlobalKey_Pending(); }
 unsigned long sk_key_queue_dropped(void) { return GlobalKey_Dropped(); }
 
 void sk_clear_key_queue(void) { GlobalKey_Clear(); }
-
-int sk_char_for_key(int vk, int scancode, int mods) {
-  return Platform_CharForKey(vk, scancode, mods);
-}
 
 bool sk_is_flag_prefix(char c) { return c == '-' || c == '/'; }
 

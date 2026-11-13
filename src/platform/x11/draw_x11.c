@@ -149,7 +149,7 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   return true;
 }
 
-void x11_draw_list_item(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_list_item(Display *dpy, XftDraw *xd,
                         Visual *vis, Colormap cmap, FontHandle font,
                         ListBoxInfo *lb, int idx, int y, int text_x,
                         const char *icon_path) {
@@ -287,21 +287,15 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
            (unsigned short)(r * 2), 0 * 64, 90 * 64},
           {(short)(x + w - r * 2), (short)(y + h - r * 2),
            (unsigned short)(r * 2), (unsigned short)(r * 2), 270 * 64, 90 * 64},
-          (short)x,
-          (short)(y + h - r * 2),
-          (unsigned short)(r * 2),
-          (unsigned short)(r * 2),
-          180 * 64,
-          90 * 64};
+          {(short)x, (short)(y + h - r * 2),
+           (unsigned short)(r * 2), (unsigned short)(r * 2),
+           180 * 64, 90 * 64}};
       XDrawArcs(g_draw_dpy, d, gc, arcs, 4);
 
       XSegment segments[4] = {{x + r, y, x + w - r, y},
                               {x + w, y + r, x + w, y + h - r},
                               {x + r, y + h, x + w - r, y + h},
-                              x,
-                              y + r,
-                              x,
-                              y + h - r};
+                              {x, y + r, x, y + h - r}};
       XDrawSegments(g_draw_dpy, d, gc, segments, 4);
     } else {
       XDrawRectangle(g_draw_dpy, d, gc, x, y, w, h);

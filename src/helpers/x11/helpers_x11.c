@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include "helpers/x11/env_helpers_x11.h"
 #include "helpers/x11/helpers_x11.h"
+#include "helpers/x11/window_factory_x11.h"
 #include "core/window_manager.h"
 #include "helpers/x11/bg_image_x11.h"
 #include "core/prompt_geometry.h"
@@ -26,12 +27,17 @@
 #include "core/types.h"
 #include "core/types/window.h"
 #include "freetype/freetype.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #define NANOSVG_IMPLEMENTATION
 #include "deps/nanosvg.h"
 #define NANOSVGRAST_IMPLEMENTATION
 #include "deps/nanosvgrast.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "deps/stb_image.h"
+#pragma GCC diagnostic pop
 
 #define BG_SLOT_COUNT 4
 
@@ -288,8 +294,7 @@ static int x11_utf8_fallback_runs(Display *dpy, XftFont *xf,
 }
 
 static int x11_measure_run(Display *dpy, XftFont *font,
-                           const unsigned char *run, int len, void *ud) {
-  (void)ud;
+                           const unsigned char *run, int len) {
   return xft_width(dpy, font, (const char *)run, len);
 }
 
@@ -330,7 +335,7 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
   }
   if (all)
     return xft_width(dpy, xf, s, n);
-  return x11_utf8_fallback_runs(dpy, xf, b, n, px, x11_measure_run, NULL);
+  return x11_utf8_fallback_runs(dpy, xf, b, n, px, x11_measure_run);
 }
 
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
@@ -458,11 +463,13 @@ int x11_font_row_height(int font_size) {
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
+  (void)ascent;
+  (void)descent;
   return font_size + PROMPT_LIST_TOP_BONUS;
 }
 
 int x11_font_row_height_of(FontHandle font) {
-  XftFont *xf = FH_TO_XFT(font);
+  (void)font;
   return x11_font_row_height(FontSize);
 }
 
@@ -1007,6 +1014,9 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                 XftColor *num_color, XftColor *body_color,
                                 XftColor *plain_color, ListBoxInfo *lb,
                                 char *icon_path, int idx, int y, int text_x) {
+  (void)num_color;
+  (void)body_color;
+  (void)text_x;
   XftFont *xf = FH_TO_XFT(font);
   if (!xf)
     return;
@@ -1246,12 +1256,14 @@ static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
   XFreeGC(dpy, gc);
 }
 
-static unsigned long x11_background_color_at(int x, int y, int w, int h);
+static unsigned long x11_background_color_at(void);
 
 void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            Colormap cmap, unsigned long hex,
                            unsigned short alpha16, int x, int y, int w, int h,
                            int radius, int win_w, int win_h) {
+  (void)win_w;
+  (void)win_h;
   if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
     XftColor c;
     x11_xft_alloc_color(dpy, vis, cmap, hex, alpha16, &c);
@@ -1307,7 +1319,7 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
         if (cov > 1.0f)
           cov = 1.0f;
         unsigned long backdrop =
-            x11_background_color_at(ox0 + dx, oy0 + dy, win_w, win_h);
+            x11_background_color_at();
         unsigned long mixed = Color_Lerp(backdrop, hex, cov);
         XftColor px_c = solid;
         px_c.color.red = (unsigned short)(((mixed >> 16) & 0xFF) * 257);
@@ -1321,25 +1333,11 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
   XftColorFree(dpy, vis, cmap, &solid);
 }
 
-static unsigned int x11_bg_channel_at(float c, int x, int y) {
-  int v = (int)(c);
-  if (v < 0)
-    v = 0;
-  if (v > 255)
-    v = 255;
-  return (unsigned int)v;
-}
-
-static unsigned long x11_background_color_at(int x, int y, int w, int h) {
+static unsigned long x11_background_color_at(void) {
   unsigned long base = GetDrawBgColor();
   if (!base)
     base = RgbToHex(COLOR_BG);
-  unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-  unsigned long col = base;
-  unsigned int cr = x11_bg_channel_at((float)((col >> 16) & 0xFF), x, y);
-  unsigned int cg = x11_bg_channel_at((float)((col >> 8) & 0xFF), x, y);
-  unsigned int cb = x11_bg_channel_at((float)(col & 0xFF), x, y);
-  return ((col >> 16) & 0xFF) << 16 | ((col >> 8) & 0xFF) << 8 | (col & 0xFF);
+  return ((base >> 16) & 0xFF) << 16 | ((base >> 8) & 0xFF) << 8 | (base & 0xFF);
 }
 
 static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
@@ -1384,8 +1382,7 @@ static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
 static void x11_generate_background_pixels(uint32_t *img_data,
                                            int bytes_per_line, int w, int h,
                                            int R, unsigned int baseAlpha8,
-                                           unsigned long base,
-                                           unsigned long fill) {
+                                           unsigned long base) {
   uint32_t *row;
   unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
   for (int y = 0; y < h; y++) {
@@ -1465,10 +1462,8 @@ static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
     return None;
   }
 
-  unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-  unsigned long fill = (baseAlpha8 << 24) | (r << 16) | (g << 8) | b;
   x11_generate_background_pixels((uint32_t *)img->data, img->bytes_per_line, w,
-                                 h, R, baseAlpha8, base, fill);
+                                 h, R, baseAlpha8, base);
 
   GC gc = XCreateGC(dpy, pm, 0, NULL);
   XPutImage(dpy, pm, gc, img, 0, 0, 0, 0, w, h);
@@ -1602,11 +1597,9 @@ void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h) {
     free(pixbuf);
     return;
   }
-  unsigned int r = cr0, g = cg0, b = cb0;
-  unsigned long fill = (baseAlpha8 << 24) | (r << 16) | (g << 8) | b;
   GC gc = XCreateGC(dpy, drw, 0, NULL);
   x11_generate_background_pixels((uint32_t *)img->data, img->bytes_per_line, w,
-                                 h, R, baseAlpha8, base, fill);
+                                 h, R, baseAlpha8, base);
   XPutImage(dpy, drw, gc, img, 0, 0, 0, 0, w, h);
   XFreeGC(dpy, gc);
   XDestroyImage(img);
@@ -1883,13 +1876,13 @@ bool x11_resolve_desktop_exec(const char *exec_line, const char *desktop_dir,
   char prog[1024];
   if (strchr(token, '/')) {
     if (token[0] == '/')
-      snprintf(prog, sizeof(prog), "%s", token);
+      snprintf(prog, sizeof(prog), "%.1023s", token);
     else
-      snprintf(prog, sizeof(prog), "%s/%s", base, token);
+      snprintf(prog, sizeof(prog), "%.511s/%.511s", base, token);
   } else if (x11_exe_in_path(token)) {
-    snprintf(prog, sizeof(prog), "%s", token);
+    snprintf(prog, sizeof(prog), "%.1023s", token);
   } else {
-    snprintf(prog, sizeof(prog), "%s/%s", desktop_dir, token);
+    snprintf(prog, sizeof(prog), "%.511s/%.511s", desktop_dir, token);
   }
 
   if (strchr(prog, '/')) {
