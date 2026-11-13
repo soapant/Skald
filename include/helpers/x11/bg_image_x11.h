@@ -12,7 +12,7 @@ bool x11_bg_image_enabled(void);
 Pixmap x11_bg_image_tile(Display *dpy, int w, int h);
 int x11_bg_image_prewarm(Display *dpy, int w, int h);
 
-bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis, int depth,
-                       int w, int h);
+bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis, int w,
+                       int h);
 
 #endif

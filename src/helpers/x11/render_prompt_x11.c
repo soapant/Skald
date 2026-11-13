@@ -174,7 +174,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     XFillRectangle(dpy, dbl, gc, 0, 0, w, h);
     XFreeGC(dpy, gc);
   } else if (!(pss && pss->no_bg)) {
-    if (!x11_bg_image_blit(dpy, dbl, vis, depth, w, h)) {
+    if (!x11_bg_image_blit(dpy, dbl, vis, w, h)) {
       Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
       if (bg) {
         GC gc = XCreateGC(dpy, dbl, 0, NULL);
