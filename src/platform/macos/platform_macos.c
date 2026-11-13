@@ -24,9 +24,9 @@ const char *Platform_GetRealUser(void) {
 bool Platform_QueryBrowser(const char *query) { return false; }
 
 bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
-                                 const char *argv[], size_t argv_cap) {
+                                  const char *argv[], size_t argv_cap) {
   size_t n = 0;
-#define ADD_ARG(arg)                                                     \
+#define ADD_ARG(arg)                                                           \
   do {                                                                         \
     if (n + 1 >= argv_cap)                                                     \
       return false;                                                            \
