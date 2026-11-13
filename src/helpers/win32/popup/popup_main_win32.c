@@ -488,8 +488,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (lb && lb->selected_index != -1) {
         char measureBuffer[512];
-        SafeCopy(measureBuffer, sizeof(measureBuffer),
-                 lb->items[pdis->itemID]);
+        SafeCopy(measureBuffer, sizeof(measureBuffer), lb->items[pdis->itemID]);
         char *pos = strchr(measureBuffer, '|');
         if (pos) {
           *pos = '\0';

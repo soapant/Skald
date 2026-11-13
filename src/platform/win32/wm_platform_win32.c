@@ -2,7 +2,6 @@
 #include "core/types/prompt.h"
 #include "platform/draw.h"
 
-
 #include "platform/wm_platform.h"
 #include "helpers/helpers_monitor.h"
 #include "platform/platform.h"

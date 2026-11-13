@@ -375,8 +375,8 @@ static void offer_mime(void *data, struct wl_proxy *offer, const char *mime) {
            mime, wl_offer_mime_count);
   pthread_mutex_lock(&wl_text_lock);
   if (wl_offer_mime_count < 8) {
-    SafeCopy(wl_offer_mimes[wl_offer_mime_count],
-             sizeof(wl_offer_mimes[0]), mime);
+    SafeCopy(wl_offer_mimes[wl_offer_mime_count], sizeof(wl_offer_mimes[0]),
+             mime);
     wl_offer_mime_count++;
   }
   pthread_mutex_unlock(&wl_text_lock);

@@ -1588,3 +1588,37 @@ void Platform_EmitKey(int vk_code, int down) {
               down, (unsigned)sent, GetLastError());
   }
 }
+
+static bool win32_http_thread_start(void *(*fn)(void *), void *ud) {
+  HANDLE t =
+      CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(void *)fn, ud, 0, NULL);
+  if (!t)
+    return false;
+  CloseHandle(t);
+  return true;
+}
+
+void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
+                           void *userdata) {
+  if (!url || !url[0] || !cb)
+    return;
+  HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
+  if (!job)
+    return;
+  job->url = strdup(url);
+  job->cb = cb;
+  job->userdata = userdata;
+  if (!job->url) {
+    free(job);
+    return;
+  }
+  job->owner[0] = '\0';
+  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
+  ThreadRegistry_Add(job, job->owner);
+  if (!win32_http_thread_start(HttpAsyncWorker, job)) {
+    ThreadRegistry_Finish(job);
+    free(job->url);
+    free(job);
+    log_warn("http async thread create failed");
+  }
+}

@@ -231,8 +231,7 @@ static bool confibuild_feature(const char *src, const char *out) {
   char tmp[1024];
   snprintf(tmp, sizeof(tmp), "%s.tmp", out);
   const char *argv[PLATFORM_BUILD_ARGV_MAX];
-  if (!Platform_GetFeatureBuildArgv(src, tmp, argv,
-                                    PLATFORM_BUILD_ARGV_MAX)) {
+  if (!Platform_GetFeatureBuildArgv(src, tmp, argv, PLATFORM_BUILD_ARGV_MAX)) {
     log_error("config build: no feature build argv for %s", src);
     return false;
   }
