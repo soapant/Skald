@@ -321,8 +321,8 @@ static void x11_sig_handler(int sig) {
 static void x11_term_handler(int sig) {
   x11_force_cleanup();
   if (x11_wm) {
-    extern void WindowManager_QuitLinux(struct WindowManager * wm);
-    WindowManager_QuitLinux(x11_wm);
+    extern void x11_quit(struct WindowManager * wm);
+    x11_quit(x11_wm);
   }
   _exit(0);
 }
