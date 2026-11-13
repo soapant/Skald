@@ -78,11 +78,6 @@ static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
 
   PromptState *state = win32_prompt_state_from_hwnd(hwnd);
 
-  if (wParam == VK_ESCAPE) {
-    if (win32_message_popup_any_open())
-      Platform_DismissDisplayMessage();
-  }
-
   bool hide_popup = (wParam == VK_RETURN);
   HWND popup_wnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hide_popup && popup_wnd != NULL && IsWindow(popup_wnd))
