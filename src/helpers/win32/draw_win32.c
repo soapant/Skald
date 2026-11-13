@@ -381,8 +381,7 @@ void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {
       continue;
     if (strcmp(s->key, path) != 0)
       continue;
-    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime,
-                            s->size)) {
+    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime, s->size)) {
       win32_gdip_dispose(s->bmp);
       s->bmp = NULL;
       s->failed = 0;
@@ -457,8 +456,7 @@ void *win32_src_cache_get(const char *path) {
       continue;
     if (strcmp(s->key, path) != 0)
       continue;
-    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime,
-                            s->size)) {
+    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime, s->size)) {
       win32_gdip_dispose(s->src);
       s->src = NULL;
       continue;

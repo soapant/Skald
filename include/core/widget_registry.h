@@ -97,7 +97,7 @@ struct Widget {
 };
 
 void Widget_PurgeOwner(const char *path_a, const char *path_b,
-                        unsigned generation);
+                       unsigned generation);
 bool Widget_OwnerActive(const char *path);
 unsigned Widget_BumpGeneration(void);
 unsigned Widget_CurrentGeneration(void);
@@ -113,7 +113,7 @@ void Widget_SetFps(PlatformWidget *window, int fps);
 
 bool Widget_IsValid(const PlatformWidget *widget);
 void Widget_SetFrameCallback(PlatformWidget *widget, RenderFrameFn fn,
-                               void *ud);
+                             void *ud);
 void Widget_Invalidate(PlatformWidget *widget);
 bool Widget_BaseCheck(PlatformWidgetBase *base);
 bool Widget_BaseMove(PlatformWidgetBase *base, int x, int y);
@@ -122,6 +122,6 @@ bool Widget_BaseSetNoBg(PlatformWidgetBase *base, bool no_bg);
 bool Widget_BaseSetBgColor(PlatformWidgetBase *base, ColorRef bg_color);
 
 void Widget_InitBase(PlatformWidgetBase *base, int x, int y, int w, int h,
-                      int fps, bool no_bg, void (*on_click)(void),
-                      const char *name);
+                     int fps, bool no_bg, void (*on_click)(void),
+                     const char *name);
 #endif

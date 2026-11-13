@@ -242,8 +242,7 @@ void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
   case FocusIn:
     log_info("FocusIn win=%lu mode=%d detail=%d top=%lu count=%d sel=%d",
              (unsigned long)ev->xfocus.window, ev->xfocus.mode,
-             ev->xfocus.detail,
-             top ? (unsigned long)top->handle.xid : 0UL,
+             ev->xfocus.detail, top ? (unsigned long)top->handle.xid : 0UL,
              wm ? wm->popup_count : 0,
              SkaldContext_Get()->window.selection_complete ? 1 : 0);
     break;
@@ -271,7 +270,7 @@ void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
       break;
     }
     if (CloseOnLossOfFocus) {
-        SkaldContext_Get()->window.selection_complete = true;
+      SkaldContext_Get()->window.selection_complete = true;
     }
     break;
   }

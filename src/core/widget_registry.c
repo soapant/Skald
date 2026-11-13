@@ -279,7 +279,7 @@ void Widget_Destroy(Widget *widget) {
 }
 
 void Widget_PurgeOwner(const char *path_a, const char *path_b,
-                        unsigned generation) {
+                       unsigned generation) {
   if (Owner_PurgeInactive(path_a, path_b))
     return;
 
@@ -618,7 +618,7 @@ bool Widget_IsValid(const PlatformWidget *widget) {
 }
 
 void Widget_SetFrameCallback(PlatformWidget *widget, RenderFrameFn fn,
-                               void *ud) {
+                             void *ud) {
   PlatformWidgetBase *base = (PlatformWidgetBase *)widget;
   if (!widget || base->dead) {
     return;
@@ -639,8 +639,8 @@ void Widget_Invalidate(PlatformWidget *widget) {
 }
 
 void Widget_InitBase(PlatformWidgetBase *base, int x, int y, int w, int h,
-                      int fps, bool no_bg, void (*on_click)(void),
-                      const char *name) {
+                     int fps, bool no_bg, void (*on_click)(void),
+                     const char *name) {
   if (!base)
     return;
   base->x = x;
@@ -655,9 +655,7 @@ void Widget_InitBase(PlatformWidgetBase *base, int x, int y, int w, int h,
   base->last_draw_ms = 0;
 }
 
-bool Widget_BaseCheck(PlatformWidgetBase *base) {
-  return base && !base->dead;
-}
+bool Widget_BaseCheck(PlatformWidgetBase *base) { return base && !base->dead; }
 
 bool Widget_BaseMove(PlatformWidgetBase *base, int x, int y) {
   if (!base || base->dead)
@@ -688,8 +686,7 @@ bool Widget_BaseSetNoBg(PlatformWidgetBase *base, bool no_bg) {
   return true;
 }
 
-bool Widget_BaseSetBgColor(PlatformWidgetBase *base,
-                                     ColorRef bg_color) {
+bool Widget_BaseSetBgColor(PlatformWidgetBase *base, ColorRef bg_color) {
   if (!base || base->dead)
     return false;
   base->has_bg = bg_color != 0;

@@ -879,8 +879,8 @@ char *Platform_GetIconPath(char *app_path) {
             "%s/icons/hicolor/%s/apps/%s.png",
             "%s/icons/hicolor/%s/apps/%s.svg",
         };
-        hit = x11_icon_try_sizes(bare, dir, (const char *const *)sizes, fmts,
-                                 2);
+        hit =
+            x11_icon_try_sizes(bare, dir, (const char *const *)sizes, fmts, 2);
         if (hit)
           return hit;
       }
@@ -903,8 +903,8 @@ char *Platform_GetIconPath(char *app_path) {
         "%s/%s/apps/%s.png",
         "%s/%s/apps/%s.svg",
     };
-    hit = x11_icon_try_sizes(bare, bases[b], (const char *const *)sizes, fmts,
-                             2);
+    hit =
+        x11_icon_try_sizes(bare, bases[b], (const char *const *)sizes, fmts, 2);
     if (hit)
       return hit;
     hit = icon_try(bare, "%s/%s.svg", bases[b], bare);

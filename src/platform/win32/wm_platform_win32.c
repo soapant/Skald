@@ -31,8 +31,7 @@ void Platform_ProcessEvents(WindowManager *wm) {
   WindowManager_ProcessEventsWin32(wm);
 }
 
-void Platform_OnPopEmpty(WindowManager *wm) {
-  (void)wm;
+void Platform_OnPopEmpty() {
   remap_reset();
   InputState_Clear();
 }

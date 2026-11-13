@@ -1345,8 +1345,8 @@ static void cc_refresh(PromptState *state) {
     n++;
   }
   sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
-                             .items = names, .count = n,
-                             .filter_match = cc_filter_match);
+                      .items = names, .count = n,
+                      .filter_match = cc_filter_match);
   if (state->lb->total_matches > 0)
     cc_fallback_active = false;
   if (state->lb->total_matches == 0) {
@@ -1354,7 +1354,7 @@ static void cc_refresh(PromptState *state) {
     if (fallback && n < MAX_VISIBLE_ITEMS) {
       names[n] = fallback->label;
       sk_populate_listbox(.lb = state->lb, .filter = "", .items = &names[n],
-                         .count = 1);
+                          .count = 1);
       cc_fallback_active = true;
     }
   }
@@ -1365,8 +1365,7 @@ static void cc_refresh(PromptState *state) {
 static void cc_subwindow_refresh(PromptState *state) {
   const char *items[] = {"Register Hotkey", "Register Alias"};
   sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
-                             .items = (const char **)items,
-                             .count = ARRAY_LEN(items));
+                      .items = (const char **)items, .count = ARRAY_LEN(items));
 }
 
 static int cc_width = 0, cc_height = 0;

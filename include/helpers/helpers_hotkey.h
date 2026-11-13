@@ -28,11 +28,10 @@ typedef struct {
 bool Hotkey_AlwaysEnabled(void);
 bool Hotkey_AlwaysDisabled(void);
 HotkeyBinding
-Hotkey_ConvertIntoBinding(char *hotkey_string,
-                            void (*on_hotkey_trigger)(void),
-                            bool (*optional_condition_for_hotkey)(void),
-                            const char *const *optional_blacklistedwindows,
-                            bool whitelist, void *user_ud);
+Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
+                          bool (*optional_condition_for_hotkey)(void),
+                          const char *const *optional_blacklistedwindows,
+                          bool whitelist, void *user_ud);
 void Hotkey_PurgeOwner(const char *path_a, const char *path_b);
 void Hotkey_KeyUp(int vk_code);
 

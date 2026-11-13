@@ -12,7 +12,6 @@
 #include "wm/x11_wm.h"
 #include "deps/log.h"
 
-
 bool Wm_AppendWindowName(PlWindowList *list, const char *name,
                          bool toupper_first) {
   if (!strcasecmp(name, "window") || !strcasecmp(name, "colored"))

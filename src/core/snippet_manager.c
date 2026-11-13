@@ -47,8 +47,8 @@ static void snippet_free_binding(SnippetBinding *b) {
 }
 
 bool Snippet_RegisterInternal(const char *trigger, const char *text,
-                               void (*func)(void), bool whitelist,
-                               const char *const *windows, void *caller) {
+                              void (*func)(void), bool whitelist,
+                              const char *const *windows, void *caller) {
   if (!trigger || !trigger[0])
     return false;
   if (!text && !func)

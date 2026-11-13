@@ -536,12 +536,13 @@ typedef struct {
   unsigned long nitems;
 } X11ClipFetchResult;
 
-static X11ClipFetchResult x11_clip_fetch_full(Display *dpy, Window win, Atom prop) {
+static X11ClipFetchResult x11_clip_fetch_full(Display *dpy, Window win,
+                                              Atom prop) {
   X11ClipFetchResult r = {0};
   int format = 0;
   unsigned long after = 0;
-  r.data = x11_clip_fetch(dpy, win, prop, &r.actual, &format, &r.nitems,
-                          &after);
+  r.data =
+      x11_clip_fetch(dpy, win, prop, &r.actual, &format, &r.nitems, &after);
   return r;
 }
 
