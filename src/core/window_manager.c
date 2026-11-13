@@ -7,6 +7,7 @@
 #include "core/types/prompt.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
+#include "config_values.h"
 
 #include "core/checkbox.h"
 #include "platform/platform.h"
@@ -169,8 +170,8 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
   if (top && top->type == POPUP_PROMPT)
     PromptPopup_GetBounds(top, &px, &py, &pw, &ph);
   if (pw <= 0 || ph <= 0) {
-    pw = (int)(900 * Platform_GetUIScale());
-    ph = (int)(640 * Platform_GetUIScale());
+    pw = (int)(PromptWidth * Platform_GetUIScale());
+    ph = (int)(PromptHeight * Platform_GetUIScale());
     px = -1;
   }
   if (px < 0 || py < 0)

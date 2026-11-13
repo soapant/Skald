@@ -19,6 +19,8 @@ extern int FontSize;
 extern const char *UsedFont;
 extern int IconSize;
 extern int WidgetGap;
+extern int PromptWidth;
+extern int PromptHeight;
 extern bool CloseOnLossOfFocus;
 extern const char *UsedTerminal;
 extern const char *UsedShell;

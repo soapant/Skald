@@ -14,9 +14,11 @@ void ConfigApply(void) {
   HotkeyRepeatDelayMs = 300;
   WindowOpacity = 235.0f;
   UsedFont = "0xProto Nerd Font";
-  FontSize = 21;
+  FontSize = 16;
   IconSize = 32;
   WidgetGap = 0;
+  PromptWidth = 450;
+  PromptHeight = 320;
   UsedTerminal = "";
   UsedShell = "";
   UsedBrowser = "";

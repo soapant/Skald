@@ -11,6 +11,7 @@
 #include "platform/wm_platform.h"
 #include "helpers/helpers_input_state.h"
 #include "deps/log.h"
+#include "config_values.h"
 #include "core/types/window.h"
 
 typedef struct {
@@ -199,8 +200,8 @@ Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec) {
   int scale = (int)Platform_GetUIScale();
   if (scale <= 0)
     scale = 1;
-  int layout_w = spec->w > 0 ? spec->w : 900 * scale;
-  int layout_h = spec->h > 0 ? spec->h : 640 * scale;
+  int layout_w = spec->w > 0 ? spec->w : PromptWidth * scale;
+  int layout_h = spec->h > 0 ? spec->h : PromptHeight * scale;
 
   {
     int mx = 0, my = 0, mw = 0, mh = 0;
@@ -218,9 +219,9 @@ Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec) {
         layout_h = mh > 140 ? mh - 40 : mh;
     }
     if (layout_w <= 0)
-      layout_w = spec->w > 0 ? spec->w : 900;
+      layout_w = spec->w > 0 ? spec->w : PromptWidth;
     if (layout_h <= 0)
-      layout_h = spec->h > 0 ? spec->h : 640;
+      layout_h = spec->h > 0 ? spec->h : PromptHeight;
   }
 
   if (spec->auto_scale) {
