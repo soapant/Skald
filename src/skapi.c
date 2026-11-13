@@ -173,10 +173,9 @@ void sk_cap_bind_declare(const char *key, void *consumer) {
   cap_bind_declare(key, consumer);
 }
 
-static bool sk_resolve_caller_path(const char *name, char *full, size_t cap,
-                                   const char *func) {
-  if (!FeaturePath_ResolveDataPath(__builtin_return_address(0), name, full,
-                                   cap)) {
+static bool sk_resolve_caller_path(void *caller_ret, const char *name,
+                                   char *full, size_t cap, const char *func) {
+  if (!FeaturePath_ResolveDataPath(caller_ret, name, full, cap)) {
     log_warn("%s resolve failed name='%s' feature='%s'", func, name,
              SkaldContext_Get()->window.current_feature
                  ? SkaldContext_Get()->window.current_feature
@@ -186,10 +185,9 @@ static bool sk_resolve_caller_path(const char *name, char *full, size_t cap,
   return true;
 }
 
-static bool sk_resolve_caller_path_silent(const char *name, char *full,
-                                          size_t cap) {
-  return FeaturePath_ResolveDataPath(__builtin_return_address(0), name, full,
-                                     cap);
+static bool sk_resolve_caller_path_silent(void *caller_ret, const char *name,
+                                          char *full, size_t cap) {
+  return FeaturePath_ResolveDataPath(caller_ret, name, full, cap);
 }
 
 SkStringList sk_load_file_list(const char *filepath) {
@@ -197,8 +195,8 @@ SkStringList sk_load_file_list(const char *filepath) {
   if (!filepath)
     return list;
   char full[MAX_PATH];
-  if (!sk_resolve_caller_path(filepath, full, sizeof(full),
-                              "sk_load_file_list"))
+  if (!sk_resolve_caller_path(__builtin_return_address(0), filepath,
+                              full, sizeof(full), "sk_load_file_list"))
     return list;
   list = File_ReadLines(full);
   return list;
@@ -209,8 +207,8 @@ long sk_load_file(const char *filepath, char *buffer, long buffer_size) {
     return -1;
   buffer[0] = '\0';
   char full[MAX_PATH];
-  if (!sk_resolve_caller_path(filepath, full, sizeof(full),
-                              "sk_load_file"))
+  if (!sk_resolve_caller_path(__builtin_return_address(0), filepath,
+                              full, sizeof(full), "sk_load_file"))
     return -1;
   return File_ReadAll(full, buffer, buffer_size);
 }
@@ -252,7 +250,8 @@ bool sk_append_to_file(const char *filepath, const char *line) {
   if (!filepath || !line)
     return false;
   char full[MAX_PATH];
-  if (!sk_resolve_caller_path_silent(filepath, full, sizeof(full)))
+  if (!sk_resolve_caller_path_silent(__builtin_return_address(0), filepath,
+                                           full, sizeof(full)))
     return false;
   filepath = full;
   FILE *f = fopen(filepath, "a");
@@ -297,7 +296,8 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   if (count > 0 && !lines)
     return false;
   char full[MAX_PATH];
-  if (!sk_resolve_caller_path_silent(filepath, full, sizeof(full)))
+  if (!sk_resolve_caller_path_silent(__builtin_return_address(0), filepath,
+                                     full, sizeof(full)))
     return false;
   filepath = full;
   FILE *f = fopen(filepath, "w");
@@ -2168,7 +2168,8 @@ char *sk_resolve_data_path(const char *name) {
   if (!name || !name[0])
     return NULL;
   char full[MAX_PATH];
-  if (!sk_resolve_caller_path_silent(name, full, sizeof(full)))
+  if (!sk_resolve_caller_path_silent(__builtin_return_address(0), name,
+                                           full, sizeof(full)))
     return NULL;
   return strdup(full);
 }
