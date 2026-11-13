@@ -281,8 +281,6 @@ static bool feature_dir(const char *name, char *out, size_t n) {
   return true;
 }
 
-
-
 static bool manifest_path(const char *name, char *out, size_t n) {
   char dir[512];
   if (!feature_dir(name, dir, sizeof(dir)))
@@ -652,8 +650,8 @@ static int s_failed_count = 0;
 
 static void feature_mark_failed(const char *dir, time_t mtime) {
   if (s_failed_count < 64) {
-    SafeCopy(s_failed[s_failed_count].dir,
-             sizeof(s_failed[s_failed_count].dir), dir);
+    SafeCopy(s_failed[s_failed_count].dir, sizeof(s_failed[s_failed_count].dir),
+             dir);
     s_failed[s_failed_count].src_mtime = mtime;
     s_failed_count++;
   }

@@ -711,8 +711,7 @@ static void icon_cache_load(void) {
     if (!eq)
       continue;
     *eq = '\0';
-    SafeCopy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key),
-             line);
+    SafeCopy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key), line);
     SafeCopy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
              eq + 1);
     if (access(icon_cache[icon_cache_count].value, F_OK) == 0)
@@ -740,8 +739,7 @@ static void icon_cache_set(const char *key, const char *value) {
   if (icon_cache_count >= MAX_ICON_CACHE) {
     return;
   }
-  SafeCopy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key),
-           key);
+  SafeCopy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key), key);
   SafeCopy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
            value);
   icon_cache_count++;
@@ -1657,14 +1655,6 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   return true;
 }
 
-bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
-  pthread_t t;
-  if (pthread_create(&t, NULL, (void *(*)(void *))fn, ud) != 0)
-    return false;
-  pthread_detach(t);
-  return true;
-}
-
 bool Platform_FontInitalized(FontHandle font) { return font.xfont != NULL; }
 
 PlTimer Platform_StartTimer(void) {
@@ -1756,3 +1746,39 @@ void Platform_InvalidatePrompt(void) {
 }
 
 bool Platform_InjectKey(int vk, int down) { return Wm_InjectKey(vk, down); }
+
+static bool x11_http_thread_start(void *(*fn)(void *), void *ud) {
+  pthread_t thread;
+  int err = pthread_create(&thread, NULL, fn, ud);
+  if (err != 0)
+    return false;
+
+  pthread_detach(thread);
+  return true;
+}
+
+void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
+                           void *userdata) {
+  if (!url || !url[0] || !cb)
+    return;
+  HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
+  if (!job)
+    return;
+  job->url = strdup(url);
+  job->cb = cb;
+  job->userdata = userdata;
+  if (!job->url) {
+    free(job);
+    return;
+  }
+  job->owner[0] = '\0';
+  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
+  ThreadRegistry_Add(job, job->owner);
+
+  if (!x11_http_thread_start(HttpAsyncWorker, job)) {
+    ThreadRegistry_Finish(job);
+    free(job->url);
+    free(job);
+    log_warn("http async thread create failed");
+  }
+}

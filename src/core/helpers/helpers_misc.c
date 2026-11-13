@@ -1,15 +1,12 @@
 #include "config_values.h"
 #include "helpers/helpers_ui.h"
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "helpers/helpers_monitor.h"
 #include "helpers/helpers_key.h"
 #include "helpers/helpers_owner.h"
-#include "helpers/helpers_http.h"
 #include "helpers/helpers_input_state.h"
 #include "core/types/keys.h"
 #include "core/thread_registry.h"
@@ -179,14 +176,7 @@ void Owner_ResolveForFunc(void *fn, char *out, size_t n) {
   out[n - 1] = '\0';
 }
 
-typedef struct {
-  char *url;
-  PlatformHttpCallback cb;
-  void *userdata;
-  char owner[OWNER_PATH_MAX];
-} HttpAsyncJob;
-
-static void *http_async_worker(void *arg) {
+void *HttpAsyncWorker(void *arg) {
   HttpAsyncJob *job = (HttpAsyncJob *)arg;
   if (!job)
     return NULL;
@@ -198,30 +188,6 @@ static void *http_async_worker(void *arg) {
   ThreadRegistry_Finish(job);
   free(job);
   return NULL;
-}
-
-void Http_GetAsync(const char *url, PlatformHttpCallback cb, void *userdata) {
-  if (!url || !url[0] || !cb)
-    return;
-  HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
-  if (!job)
-    return;
-  job->url = strdup(url);
-  job->cb = cb;
-  job->userdata = userdata;
-  if (!job->url) {
-    free(job);
-    return;
-  }
-  job->owner[0] = '\0';
-  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
-  ThreadRegistry_Add(job, job->owner);
-  if (!HttpBackend_ThreadRun(http_async_worker, job)) {
-    ThreadRegistry_Finish(job);
-    free(job->url);
-    free(job);
-    log_warn("http async thread create failed");
-  }
 }
 
 bool Owner_PurgeInactive(const char *path_a, const char *path_b) {

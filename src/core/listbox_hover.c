@@ -159,8 +159,7 @@ bool ListBox_HoverFocus(ListBoxInfo *lb, int top_y, int row_h, int top_index,
   if (!moved)
     return false;
   ListBox_FocusByMouse();
-  int idx =
-      ListBox_RowAtY(lb, top_y, row_h, top_index, rows_visible, my);
+  int idx = ListBox_RowAtY(lb, top_y, row_h, top_index, rows_visible, my);
   if (idx < 0 || idx == lb->selected_index)
     return false;
   UI_SetSelection(lb, idx);

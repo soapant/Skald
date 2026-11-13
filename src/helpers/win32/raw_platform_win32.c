@@ -685,15 +685,6 @@ DWORD win32_button_flag(int button, bool down) {
 typedef void (*PlatformHttpCallback)(const char *body, bool success,
                                      void *userdata);
 
-bool HttpBackend_ThreadRun(void *(*fn)(void *), void *ud) {
-  HANDLE t = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(void *)fn, ud, 0,
-                          NULL);
-  if (!t)
-    return false;
-  CloseHandle(t);
-  return true;
-}
-
 DWORD WINAPI win32_thread_entry(LPVOID p) {
 
   WinThreadStart *s = (WinThreadStart *)p;

@@ -30,7 +30,6 @@
 #include "core/listbox_hover.h"
 #include "helpers/helpers_monitor.h"
 #include "helpers/helpers_key.h"
-#include "helpers/helpers_http.h"
 #include "core/prompt_geometry.h"
 #include "core/feature_loader.h"
 #include "core/feature_path.h"
@@ -1484,7 +1483,7 @@ char *sk_http_post(const char *url, const char *content_type,
 }
 
 void sk_http_get_async(const char *url, SkHttpCallback cb, void *userdata) {
-  Http_GetAsync(url, cb, userdata);
+  Platform_HttpGetAsync(url, cb, userdata);
   return;
 }
 

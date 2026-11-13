@@ -519,6 +519,7 @@ static const char *sdk_files[] = {
     "core/widget_registry.h",
     "core/window_manager.h",
     "helpers/helpers_owner.h",
+    "helpers/helpers_misc.h",
     "helpers/helpers_render_thread.h",
     "helpers/helpers_text.h",
     "helpers/helpers_ui.h",
