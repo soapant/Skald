@@ -182,9 +182,7 @@ bool Platform_RenderThreadStart(void);
 void Platform_RenderThreadJoin(void);
 void *Platform_RenderThreadDisplay(void);
 char *Platform_RunTerminalCommand(const char *command, bool open_terminal);
-#define PLATFORM_RUN_PRIO_NORMAL 0
-#define PLATFORM_RUN_PRIO_LOW 1
-char *Platform_RunCommandAndGetOutput(char *command, int priority);
+char *Platform_RunCommandAndGetOutput(char *command);
 char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
                               int *out_status);
 char *Platform_GetActiveWindowTitle(void);

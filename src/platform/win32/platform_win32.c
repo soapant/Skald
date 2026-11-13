@@ -238,7 +238,7 @@ bool Platform_LaunchDetached(char *command) {
   return true;
 }
 
-char *Platform_RunCommandAndGetOutput(char *command, int priority) {
+char *Platform_RunCommandAndGetOutput(char *command) {
   if (command == NULL || strlen(command) == 0)
     return NULL;
   HANDLE hRead, hWrite;
@@ -246,8 +246,6 @@ char *Platform_RunCommandAndGetOutput(char *command, int priority) {
     return NULL;
   PROCESS_INFORMATION pi = {0};
   DWORD creation_flags = CREATE_NO_WINDOW;
-  if (priority == PLATFORM_RUN_PRIO_LOW)
-    creation_flags |= BELOW_NORMAL_PRIORITY_CLASS;
   BOOL ok = win32_spawn_capture(command, creation_flags, &pi, hWrite);
   CloseHandle(hWrite);
   if (!ok) {

@@ -727,7 +727,7 @@ char *sk_run_argv(const char *const argv[], const char *stdin_data,
 char *sk_run_terminal_command_blocking(char *command) {
   if (!command)
     return NULL;
-  return Platform_RunCommandAndGetOutput(command, PLATFORM_RUN_PRIO_NORMAL);
+  return Platform_RunCommandAndGetOutput(command);
 }
 
 char *sk_run_terminal_command_and_open(char *command) {
@@ -1431,13 +1431,6 @@ int sk_rand_num_between(int min, int max) {
     r = (r << 31) | (unsigned long)rand();
   }
   return min + (int)(r % span);
-}
-
-int sk_get_text_height(const char *text) {
-  (void)text;
-  int lh = 0, rh = 0, lt = 0;
-  Platform_GetTextLayoutMetrics(&lh, &rh, &lt);
-  return lh > 0 ? lh : FontSize;
 }
 
 SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
