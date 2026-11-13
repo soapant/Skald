@@ -81,8 +81,8 @@ void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
         XRRCrtcInfo *ci = x11_monitor_valid(dpy, res, c);
         if (!ci)
           continue;
-        if (px >= ci->x && px < ci->x + (int)ci->width &&
-            py >= ci->y && py < ci->y + (int)ci->height) {
+        if (px >= ci->x && px < ci->x + (int)ci->width && py >= ci->y &&
+            py < ci->y + (int)ci->height) {
           bx = ci->x;
           by = ci->y;
           bw = ci->width;

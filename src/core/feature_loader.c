@@ -676,16 +676,14 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
     if (ent->d_name[0] == '.')
       continue;
     char subpath[1024];
-    snprintf(subpath, sizeof(subpath), "%.255s/%.255s",
-             FeaturePath, ent->d_name);
+    snprintf(subpath, sizeof(subpath), "%.255s/%.255s", FeaturePath,
+             ent->d_name);
     struct stat st;
     if (stat(subpath, &st) != 0 || !S_ISDIR(st.st_mode))
       continue;
     char src[1024], dll[1024];
-    snprintf(src, sizeof(src), "%.255s/%.255s.c", subpath,
-             ent->d_name);
-    snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", ent->d_name,
-             ext);
+    snprintf(src, sizeof(src), "%.255s/%.255s.c", subpath, ent->d_name);
+    snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", ent->d_name, ext);
     struct stat st_src, st_dll;
     if (stat(src, &st_src) != 0)
       continue;

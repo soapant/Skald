@@ -386,7 +386,6 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
   UI_LB_EndUpdate();
 }
 
-
 void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,
                      bool (*filter_match)(const char *item,

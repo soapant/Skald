@@ -191,7 +191,7 @@ char *Platform_GetActiveWindowTitle(void);
 char *Platform_GetActiveWindowAppId(void);
 char *Platform_GetIconPath(char *app_path);
 int Platform_GetIconSize(char *icon_path);
-bool Platform_GetMousePos(int *x,int *y);
+bool Platform_GetMousePos(int *x, int *y);
 PlColor Platform_GetPixelColor(int x, int y);
 bool Platform_MoveToPos(int x, int y);
 bool Platform_Click(void);

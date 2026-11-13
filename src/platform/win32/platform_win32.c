@@ -1230,9 +1230,9 @@ static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
 
 static void Platform_http_buf_init(HttpBuf *buf, size_t limit);
 static int Platform_http_perform(const char *url, const char *method,
-                          const char *headers, const char *body,
-                          HttpBuf *resp_buf, FILE *file_out,
-                          long max_redirects);
+                                 const char *headers, const char *body,
+                                 HttpBuf *resp_buf, FILE *file_out,
+                                 long max_redirects);
 
 static char *win32_http_collect(const char *url, const char *method,
                                 const char *content_type, const char *body,
@@ -1253,9 +1253,9 @@ static char *win32_http_collect(const char *url, const char *method,
 }
 
 static int Platform_http_perform(const char *url, const char *method,
-                          const char *headers, const char *body,
-                          HttpBuf *resp_buf, FILE *file_out,
-                          long max_redirects) {
+                                 const char *headers, const char *body,
+                                 HttpBuf *resp_buf, FILE *file_out,
+                                 long max_redirects) {
   if (!url || !url[0])
     return 0;
 

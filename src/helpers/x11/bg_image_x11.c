@@ -222,8 +222,7 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
   return ok;
 }
 
-static bool bg_slot_valid(BgTileSlot *t, const char *path, int w,
-                          int h) {
+static bool bg_slot_valid(BgTileSlot *t, const char *path, int w, int h) {
   if (!t->pm || !t->pic)
     return false;
   if (t->w != w || t->h != h)

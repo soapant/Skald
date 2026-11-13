@@ -905,9 +905,8 @@ void ski_message(const SkMessageSpec *spec) {
             .h = ctx->h,
             .fps = spec->fps > 0 ? spec->fps : 1,
             .no_bg = spec->no_bg,
-            .bg_hex = spec->color_bg
-                          ? RgbToHex(spec->color_bg)
-                          : (spec->no_bg ? 0UL : RgbToHex(COLOR_BG)),
+            .bg_hex = spec->color_bg ? RgbToHex(spec->color_bg)
+                                     : (spec->no_bg ? 0UL : RgbToHex(COLOR_BG)),
             .release = hover_popup_ctx_free,
             .release_ud = ctx});
       }
