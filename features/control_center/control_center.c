@@ -1090,51 +1090,70 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   sk_draw_text(.x = name_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = ctx->text,
                .align = "LEFT", .pad = 0);
 
+  int cursor = name_x + name_w + CC_TYPE_GAP;
   const char *alias = sk_alias_for(ctx->text);
-  if (alias) {
-    char chip[160];
-    snprintf(chip, sizeof(chip), "[%s]", alias);
-    sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
-                 .y = ctx->y + CC_ITEM_TEXT_Y + 2, .text = chip,
-                 .align = "LEFT", .pad = 0, .color = SK_GRAY,
-                 .fontsize = FontSize - 3);
-  }
-  if (!e)
+
+  if (!e) {
+    if (alias) {
+      char chip[160];
+      snprintf(chip, sizeof(chip), "[%s]", alias);
+      int alias_w = sk_get_text_width(chip, FontSize - 3);
+      if (cursor + alias_w <= type_x)
+        sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y + 2,
+                     .text = chip, .align = "LEFT", .pad = 0, .color = SK_GRAY,
+                     .fontsize = FontSize - 3);
+    }
     return;
+  }
 
   bool plain = strcmp(e->type, "Application") == 0 ||
                strcmp(e->type, "Feature") == 0;
+  const char *right_label = plain ? e->type : CC_TYPE_LABEL;
+  int right_w = sk_get_text_width(right_label, FontSize);
+
   char hotkey[64];
   bool has_hotkey =
       cc_hotkey_for_label(ctx->text, hotkey, sizeof(hotkey)) && hotkey[0];
-  int right_w = sk_get_text_width(plain ? e->type : CC_TYPE_LABEL, FontSize);
-  if (has_hotkey)
-    cc_draw_hotkey_chip(hotkey, type_x - right_w - CC_TYPE_GAP - 4,
-                        ctx->y + 10);
+  int hk_font = FontSize - CC_HOTKEY_FONT_DELTA;
+  int hk_w = has_hotkey ? sk_get_text_width(hotkey, hk_font) : 0;
 
-  if (plain) {
-    sk_draw_text(.x = type_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = e->type,
-                 .align = "RIGHT", .color = CC_TYPE_COLOR);
-    return;
+  int left_limit = type_x - right_w;
+  if (has_hotkey)
+    left_limit -= hk_w + 4 + CC_TYPE_GAP;
+
+  if (alias) {
+    char chip[160];
+    snprintf(chip, sizeof(chip), "[%s]", alias);
+    int alias_w = sk_get_text_width(chip, FontSize - 3);
+    if (cursor + alias_w + CC_TYPE_GAP <= left_limit) {
+      sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y + 2, .text = chip,
+                   .align = "LEFT", .pad = 0, .color = SK_GRAY,
+                   .fontsize = FontSize - 3);
+      cursor += alias_w + CC_TYPE_GAP;
+    }
   }
 
-  if (e->type[0]) {
+  if (!plain && e->type[0]) {
     int tag_size = FontSize - CC_TYPE_SIZE_DELTA;
     if (tag_size < 8)
       tag_size = FontSize;
     int tag_w = sk_get_text_width(e->type, tag_size);
-    int limit = type_x - sk_get_text_width(CC_TYPE_LABEL, FontSize);
-    if (has_hotkey)
-      limit -= CC_TYPE_GAP + 4 +
-               sk_get_text_width(hotkey, FontSize - CC_HOTKEY_FONT_DELTA);
-    if (name_x + name_w + CC_TYPE_GAP + tag_w + CC_TYPE_GAP <= limit)
-      sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
-                   .y = ctx->y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
+    if (cursor + tag_w + CC_TYPE_GAP <= left_limit) {
+      sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
                    .text = e->type, .align = "LEFT", .pad = 0,
                    .fontsize = tag_size, .color = CC_TYPE_COLOR);
+      cursor += tag_w + CC_TYPE_GAP;
+    }
   }
-  sk_draw_text(.x = type_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = CC_TYPE_LABEL,
-               .align = "RIGHT", .pad = 0, .color = CC_TYPE_COLOR);
+
+  bool far_fits = cursor + CC_TYPE_GAP <= type_x - right_w;
+  int hk_right =
+      (far_fits ? type_x - right_w - CC_TYPE_GAP : type_x) - 4;
+  if (has_hotkey && cursor + CC_TYPE_GAP + hk_w <= hk_right)
+    cc_draw_hotkey_chip(hotkey, hk_right, ctx->y + 10);
+  if (far_fits)
+    sk_draw_text(.x = type_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = right_label,
+                 .align = "RIGHT", .pad = 0, .color = CC_TYPE_COLOR);
 }
 
 static void cc_open_actions_window(void);
