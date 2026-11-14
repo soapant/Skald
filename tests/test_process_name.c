@@ -6,30 +6,30 @@
 #include "helpers/helpers_misc.h"
 
 TEST(accepts_plain_process_names) {
-  ASSERT_TRUE(IsSafeProcessName("firefox"));
-  ASSERT_TRUE(IsSafeProcessName("chrome.exe"));
-  ASSERT_TRUE(IsSafeProcessName("my-app_2"));
-  ASSERT_TRUE(IsSafeProcessName("C"));
+  ASSERT_TRUE(is_safe_process_name("firefox"));
+  ASSERT_TRUE(is_safe_process_name("chrome.exe"));
+  ASSERT_TRUE(is_safe_process_name("my-app_2"));
+  ASSERT_TRUE(is_safe_process_name("C"));
 }
 
 TEST(rejects_shell_metacharacters) {
-  ASSERT_FALSE(IsSafeProcessName("$(rm -rf /)"));
-  ASSERT_FALSE(IsSafeProcessName("a;b"));
-  ASSERT_FALSE(IsSafeProcessName("a|b"));
-  ASSERT_FALSE(IsSafeProcessName("a&&b"));
-  ASSERT_FALSE(IsSafeProcessName("a b"));
-  ASSERT_FALSE(IsSafeProcessName("a\"b"));
-  ASSERT_FALSE(IsSafeProcessName("a'b"));
-  ASSERT_FALSE(IsSafeProcessName("a`b"));
-  ASSERT_FALSE(IsSafeProcessName("a\\b"));
-  ASSERT_FALSE(IsSafeProcessName("a/b"));
-  ASSERT_FALSE(IsSafeProcessName("a$b"));
-  ASSERT_FALSE(IsSafeProcessName("a*b"));
+  ASSERT_FALSE(is_safe_process_name("$(rm -rf /)"));
+  ASSERT_FALSE(is_safe_process_name("a;b"));
+  ASSERT_FALSE(is_safe_process_name("a|b"));
+  ASSERT_FALSE(is_safe_process_name("a&&b"));
+  ASSERT_FALSE(is_safe_process_name("a b"));
+  ASSERT_FALSE(is_safe_process_name("a\"b"));
+  ASSERT_FALSE(is_safe_process_name("a'b"));
+  ASSERT_FALSE(is_safe_process_name("a`b"));
+  ASSERT_FALSE(is_safe_process_name("a\\b"));
+  ASSERT_FALSE(is_safe_process_name("a/b"));
+  ASSERT_FALSE(is_safe_process_name("a$b"));
+  ASSERT_FALSE(is_safe_process_name("a*b"));
 }
 
 TEST(rejects_empty_and_null) {
-  ASSERT_FALSE(IsSafeProcessName(""));
-  ASSERT_FALSE(IsSafeProcessName(NULL));
+  ASSERT_FALSE(is_safe_process_name(""));
+  ASSERT_FALSE(is_safe_process_name(NULL));
 }
 
 int main(void) {

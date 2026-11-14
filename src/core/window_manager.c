@@ -72,7 +72,7 @@ Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
   }
   if (!wm || !popup)
     return NULL;
-  InputState_InhibitMods();
+  input_state_inhibit_mods();
   log_info("PushPopup wm=%p popup=%p count_before=%d", (void *)wm,
            (void *)popup, wm->popup_count);
   if (wm->popup_count >= wm->popup_capacity) {
@@ -98,7 +98,7 @@ Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup) {
 void WindowManager_PopPopup(WindowManager *wm) {
   if (!wm || wm->popup_count == 0)
     return;
-  Checkbox_ResetAll();
+  checkbox_reset_all();
   Popup *popup = wm->popups[--wm->popup_count];
   SkaldContext *ctx = SkaldContext_Get();
   if (ctx)
@@ -121,7 +121,7 @@ void WindowManager_PopPopup(WindowManager *wm) {
   if (on_close) {
     on_close();
   }
-  FeatureLoader_SweepRetired();
+  feature_loader_sweep_retired();
 }
 
 Popup *WindowManager_GetTopPopup(const WindowManager *wm) {
@@ -164,7 +164,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
   Popup *top = WindowManager_GetTopPopup(WindowManager_Get());
   int pw = 0, ph = 0, px = -1, py = -1;
   if (top && top->type == POPUP_PROMPT)
-    PromptPopup_GetBounds(top, &px, &py, &pw, &ph);
+    prompt_popup_get_bounds(top, &px, &py, &pw, &ph);
   if (pw <= 0 || ph <= 0) {
     pw = (int)(PromptWidth * Platform_GetUIScale());
     ph = (int)(PromptHeight * Platform_GetUIScale());
@@ -190,8 +190,8 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   SkaldContext *ctx = SkaldContext_Get();
   if (ctx)
     ctx->window.editbox_placed = false;
-  EventBus_Trigger(EVENT_PROMPT_OPEN);
-  return PromptUserRun(wm, spec);
+  event_bus_trigger(EVENT_PROMPT_OPEN);
+  return prompt_user_run(wm, spec);
 }
 
 #define MAX_EVENT_CALLBACKS 16
@@ -201,16 +201,16 @@ struct EventSlot {
 };
 static struct EventSlot event_registry[2][MAX_EVENT_CALLBACKS] = {0};
 
-void EventBus_Register(PlEvent event, PlEventCallback cb) {
+void event_bus_register(PlEvent event, PlEventCallback cb) {
   if (event < 0 || event >= 2 || !cb)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
     if (event_registry[event][i].cb == NULL) {
       event_registry[event][i].owner[0] = '\0';
-      Owner_ResolveForFunc((void *)cb, event_registry[event][i].owner,
+      owner_resolve_for_func((void *)cb, event_registry[event][i].owner,
                            sizeof(event_registry[event][i].owner));
       if (event_registry[event][i].owner[0] == '\0') {
-        log_warn("EventBus_Register: cannot resolve owner, dropping callback");
+        log_warn("event_bus_register: cannot resolve owner, dropping callback");
         return;
       }
       event_registry[event][i].cb = cb;
@@ -218,11 +218,11 @@ void EventBus_Register(PlEvent event, PlEventCallback cb) {
     }
   }
   log_error(
-      "EventBus_Register: event %d table is full (%d slots), callback dropped",
+      "event_bus_register: event %d table is full (%d slots), callback dropped",
       event, MAX_EVENT_CALLBACKS);
 }
 
-void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
+void event_bus_unregister(PlEvent event, PlEventCallback cb) {
   if (event < 0 || event >= 2)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
@@ -234,13 +234,13 @@ void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
   }
 }
 
-void EventBus_PurgeOwner(const char *path_a, const char *path_b) {
-  if (Owner_PurgeInactive(path_a, path_b))
+void event_bus_purge_owner(const char *path_a, const char *path_b) {
+  if (owner_purge_inactive(path_a, path_b))
     return;
   for (int e = 0; e < 2; ++e) {
     for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
       if (event_registry[e][i].cb &&
-          Owner_ModuleMatches(event_registry[e][i].owner, path_a, path_b)) {
+          owner_module_matches(event_registry[e][i].owner, path_a, path_b)) {
         event_registry[e][i].cb = NULL;
         event_registry[e][i].owner[0] = '\0';
       }
@@ -248,7 +248,7 @@ void EventBus_PurgeOwner(const char *path_a, const char *path_b) {
   }
 }
 
-void EventBus_Trigger(PlEvent event) {
+void event_bus_trigger(PlEvent event) {
   if (event < 0 || event >= 2)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {

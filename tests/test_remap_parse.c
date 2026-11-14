@@ -14,7 +14,7 @@ static bool parse(const char *str) {
   memset(vks, 0, sizeof(vks));
   mods = -1;
   g_count = -1;
-  return Remap_ParseTriggers(str, &mods, vks, &g_count);
+  return remap_parse_triggers(str, &mods, vks, &g_count);
 }
 
 TEST(parse_ctrl_a) {
@@ -88,7 +88,7 @@ TEST(parse_empty_string_yields_no_vk) {
 
 TEST(parse_null_returns_false) {
   mods = -1;
-  ASSERT_FALSE(Remap_ParseTriggers(NULL, &mods, vks, &g_count));
+  ASSERT_FALSE(remap_parse_triggers(NULL, &mods, vks, &g_count));
 }
 
 TEST(parse_super_aliases) {

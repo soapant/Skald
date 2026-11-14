@@ -67,7 +67,7 @@ static bool niri_succeded(char *output) {
     log_error("output is NULL");
     return false;
   }
-  if (String_ContainsCI(output, "error")) {
+  if (string_contains_ci(output, "error")) {
     log_error("niri output='%s'", output);
     return false;
   }
@@ -199,7 +199,7 @@ static PlWindowList niri_list_fields(const char *key, size_t key_len,
     p = tpos + key_len;
     if (!buf[0])
       continue;
-    if (!Wm_AppendWindowName(&list, buf, toupper_first))
+    if (!wm_append_window_name(&list, buf, toupper_first))
       break;
   }
   free(json);

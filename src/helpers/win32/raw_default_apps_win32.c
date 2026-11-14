@@ -45,13 +45,13 @@ const char *win32_sm_lookup(int slot, const char *const possibilities[],
 
   if (!sm_scanned) {
     sm_scanned = true;
-    FileWalk_AllFilesFromDir(
+    file_walk_all_files_from_dir(
         "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", NULL,
         &sm_files, NULL, true, 0);
   }
   for (size_t j = 0; j < count; j++) {
     for (size_t i = 0; i < sm_files.count; i++) {
-      if (String_ContainsCI(sm_files.files[i].name, possibilities[j])) {
+      if (string_contains_ci(sm_files.files[i].name, possibilities[j])) {
         char *name = sm_files.files[i].name;
         name[0] = (char)tolower((unsigned char)name[0]);
         snprintf(sm_match[slot], sizeof(sm_match[slot]), "%s", name);

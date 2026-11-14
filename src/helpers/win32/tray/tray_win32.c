@@ -26,7 +26,7 @@ LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     nid.uCallbackMessage = WM_TRAYICON;
 
     char expanded_icon[MAX_PATH];
-    if (!ExpandPath(IconPath, expanded_icon, sizeof(expanded_icon)))
+    if (!expand_path(IconPath, expanded_icon, sizeof(expanded_icon)))
       expanded_icon[0] = '\0';
 
     nid.hIcon = (HICON)LoadImageA(NULL, expanded_icon, IMAGE_ICON, 0, 0,
@@ -78,7 +78,7 @@ LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
 
   case WM_APP + 0x42: {
-    Config_Reload();
+    config_reload();
     return 0;
   }
   case WM_DISPLAY_MESSAGE: {

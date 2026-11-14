@@ -110,18 +110,18 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
   } else {
     layer_fill(widget, widget_dib_color(bg));
   }
-  SetDrawBgColor(0);
+  set_draw_bg_color(0);
   SetBkMode(widget->layer_dc, TRANSPARENT);
   win32_set_draw_context(widget->layer_dc);
   {
-    PlDrawState *ds = PlDrawState_Get();
+    PlDrawState *ds = pl_draw_state_get();
     ds->win32_widget_surface = true;
     ds->win32_listbox_surface = false;
   }
   if (widget->base.fn)
     widget->base.fn(widget->base.ud);
   {
-    PlDrawState *ds = PlDrawState_Get();
+    PlDrawState *ds = pl_draw_state_get();
     ds->win32_widget_surface = false;
   }
   if (!widget->base.no_bg)
@@ -333,7 +333,7 @@ void win32_widget_destroy_on_owner_thread(void *ud) {
     return;
   }
   widget->base.dead = true;
-  RenderThread_RemoveFrameCallback(win32_widget_frame, widget);
+  render_thread_remove_frame_callback(win32_widget_frame, widget);
   if (widget->hwnd && IsWindow(widget->hwnd)) {
     DestroyWindow(widget->hwnd);
   }

@@ -198,7 +198,7 @@ static bool clipboard_history_enter(PromptState *state) {
   return true;
 }
 
-static void TriggerClipboardHistory(void) {
+static void trigger_clipboard_history(void) {
   sk_window(.title = "Clipboard History", .refresh = clipboard_history_refresh,
             .enter = clipboard_history_enter);
 }
@@ -211,8 +211,8 @@ SKALD_FEATURE_SHUTDOWN {
 SKALD_FEATURE_INIT {
   ch_load();
   sk_run_every(5.0, ch_tick);
-  sk_register_hotkey(.hotkey = "Alt+Shift+R", .cb = TriggerClipboardHistory);
+  sk_register_hotkey(.hotkey = "Alt+Shift+R", .cb = trigger_clipboard_history);
   sk_add_feature(.display_name = "Clipboard History",
-                 .on_action = TriggerClipboardHistory,
+                 .on_action = trigger_clipboard_history,
                  .icon = "/clipboard.png");
 }

@@ -162,7 +162,7 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
     return false;
 
   int dw = 0, dh = 0;
-  if (!Cover_Scale(sw, sh, w, h, &dw, &dh))
+  if (!cover_scale(sw, sh, w, h, &dw, &dh))
     return false;
 
   int cw = dw, ch = dh;
@@ -280,7 +280,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
 
   BgTileSlot *slot = fresh;
   if (!slot) {
-    slot = &g_bg_tiles[BgTileLruPick(g_bg_tiles, BG_TILE_SLOTS,
+    slot = &g_bg_tiles[bg_tile_lru_pick(g_bg_tiles, BG_TILE_SLOTS,
                                      sizeof(g_bg_tiles[0]), bg_slot_empty,
                                      bg_slot_stamp)];
   }

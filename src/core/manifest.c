@@ -7,7 +7,7 @@
 #include "deps/log.h"
 #include "helpers/helpers_text.h"
 
-void Manifest_Trim(char *s) {
+void manifest_trim(char *s) {
   size_t n = strlen(s);
   while (n > 0 && (s[n - 1] == '\n' || s[n - 1] == '\r' || s[n - 1] == ' ' ||
                    s[n - 1] == '\t'))
@@ -37,7 +37,7 @@ static bool has_control_char(const char *s) {
   return false;
 }
 
-void Manifest_Unquote(char *s) {
+void manifest_unquote(char *s) {
   size_t i = 0;
   bool in_single = false, in_double = false;
   while (s[i]) {
@@ -51,7 +51,7 @@ void Manifest_Unquote(char *s) {
     }
     i++;
   }
-  Manifest_Trim(s);
+  manifest_trim(s);
   size_t n = strlen(s);
   if (n >= 2 && ((s[0] == '"' && s[n - 1] == '"') ||
                  (s[0] == '\'' && s[n - 1] == '\''))) {
@@ -60,13 +60,13 @@ void Manifest_Unquote(char *s) {
   }
 }
 
-bool Manifest_ParseString(const char *name, const char *data,
+bool manifest_parse_string(const char *name, const char *data,
                           FeatureManifest *out) {
   if (!out || !data)
     return false;
   memset(out, 0, sizeof(*out));
   if (name)
-    SafeCopy(out->name, sizeof(out->name), name);
+    safe_copy(out->name, sizeof(out->name), name);
 
   bool malformed = false;
   int section = 0;
@@ -84,13 +84,13 @@ bool Manifest_ParseString(const char *name, const char *data,
       malformed = true;
 
     char work[512];
-    SafeCopy(work, sizeof(work), line);
-    Manifest_Trim(work);
+    safe_copy(work, sizeof(work), line);
+    manifest_trim(work);
     if (work[0] == '\0' || work[0] == '#')
       continue;
 
     if (work[0] == '[') {
-      Manifest_Unquote(work);
+      manifest_unquote(work);
       if (strchr(work, ']') == NULL) {
         malformed = true;
         section = 0;
@@ -109,16 +109,16 @@ bool Manifest_ParseString(const char *name, const char *data,
     if (eq) {
       *eq = '\0';
       char key[128];
-      SafeCopy(key, sizeof(key), work);
-      Manifest_Trim(key);
+      safe_copy(key, sizeof(key), work);
+      manifest_trim(key);
       char val[384];
-      SafeCopy(val, sizeof(val), eq + 1);
-      Manifest_Trim(val);
+      safe_copy(val, sizeof(val), eq + 1);
+      manifest_trim(val);
       if (key[0] == '\0' || !quote_balanced(val))
         malformed = true;
-      Manifest_Unquote(val);
+      manifest_unquote(val);
       if (strcmp(key, "name") == 0)
-        SafeCopy(out->name, sizeof(out->name), val);
+        safe_copy(out->name, sizeof(out->name), val);
       else if (strcmp(key, "description") == 0) {
       }
       section = 0;
@@ -127,14 +127,14 @@ bool Manifest_ParseString(const char *name, const char *data,
 
     if (!quote_balanced(work))
       malformed = true;
-    Manifest_Unquote(work);
+    manifest_unquote(work);
     if (work[0] == '\0')
       continue;
     if (section == 1 && out->provide_count < MANIFEST_LIST_MAX) {
-      SafeCopy(out->provides[out->provide_count++], sizeof(out->provides[0]),
+      safe_copy(out->provides[out->provide_count++], sizeof(out->provides[0]),
                work);
     } else if (section == 2 && out->dep_count < MANIFEST_LIST_MAX) {
-      SafeCopy(out->deps[out->dep_count++], sizeof(out->deps[0]), work);
+      safe_copy(out->deps[out->dep_count++], sizeof(out->deps[0]), work);
     } else if (section != 0) {
       log_warn("manifest: ignoring extra entry '%s' in section %d", work,
                section);
@@ -144,13 +144,13 @@ bool Manifest_ParseString(const char *name, const char *data,
   return true;
 }
 
-bool Manifest_ParseFile(const char *path, const char *name,
+bool manifest_parse_file(const char *path, const char *name,
                         FeatureManifest *out) {
   if (!out)
     return false;
   memset(out, 0, sizeof(*out));
   if (name)
-    SafeCopy(out->name, sizeof(out->name), name);
+    safe_copy(out->name, sizeof(out->name), name);
   if (!path)
     return false;
   FILE *f = fopen(path, "rb");
@@ -174,7 +174,7 @@ bool Manifest_ParseFile(const char *path, const char *name,
   size_t rd = fread(data, 1, (size_t)sz, f);
   fclose(f);
   data[rd] = '\0';
-  bool ok = Manifest_ParseString(name, data, out);
+  bool ok = manifest_parse_string(name, data, out);
   free(data);
   return ok;
 }

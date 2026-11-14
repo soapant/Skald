@@ -137,7 +137,7 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
   x11_draw_background(dpy, *win, w, h);
   x11_set_draw_context(dpy, NULL, NULL, 0);
   if (state->callbacks && state->callbacks->render) {
-    Checkbox_FrameBegin();
+    checkbox_frame_begin();
     x11_set_draw_context(dpy, NULL, NULL, 0);
     state->callbacks->render(state);
   } else {
@@ -170,7 +170,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   PromptState *pss = state;
   if (state && state->bg_color != 0) {
     GC gc = XCreateGC(dpy, dbl, 0, NULL);
-    XSetForeground(dpy, gc, RgbToHex(state->bg_color));
+    XSetForeground(dpy, gc, rgb_to_hex(state->bg_color));
     XFillRectangle(dpy, dbl, gc, 0, 0, w, h);
     XFreeGC(dpy, gc);
   } else if (!(pss && pss->no_bg)) {
@@ -192,7 +192,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   }
   x11_set_draw_context(dpy, xdDbl, vis, cmap);
   if (state->callbacks->render != NULL) {
-    Checkbox_FrameBegin();
+    checkbox_frame_begin();
     state->callbacks->render(state);
   } else {
     if (state->lb) {

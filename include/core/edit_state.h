@@ -9,10 +9,10 @@ typedef struct {
   int head;
 } EditSelection;
 
-void EditState_BeginSelection(int cursor);
-void EditState_UpdateSelection(int cursor);
-void EditState_EndSelection(void);
-bool EditState_GetSelection(int *out_start, int *out_end);
-void EditState_Reset(void);
+void edit_state_begin_selection(int cursor);
+void edit_state_update_selection(int cursor);
+void edit_state_end_selection(void);
+bool edit_state_get_selection(int *out_start, int *out_end);
+void edit_state_reset(void);
 
 #endif
