@@ -1,333 +1,407 @@
 #include "core/skapi.h"
 #include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <stdlib.h>
 #include <math.h>
-#include <dirent.h>
-#include <sys/stat.h>
+#include <stdatomic.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-static size_t ccx_strcpy_trunc(char *dst, size_t dst_size, const char *src);
+#define CC_MAX_BINDINGS 64
+#define CC_HOTKEY_FILE "hotkeys.txt"
+#define CC_APPCACHE_FILE "app_launcher_cache.txt"
+#define CC_APPCACHE_VERSION "#cc5"
 
-typedef void (*CcFill)(void);
+#define CC_ITEM_TEXT_X 10
+#define CC_ITEM_TEXT_Y 4
+#define CC_ICON_GAP 8
+#define CC_TYPE_GAP 6
+#define CC_TYPE_SIZE_DELTA 2
+#define CC_HOTKEY_FONT_DELTA 6
+#define CC_TYPE_LABEL "Command"
+#define CC_CALC_ROW_ICON "/calculator.png"
+#define CC_TYPE_COLOR SK_GRAY
+
+static size_t cc_copy(char *dst, size_t size, const char *src) {
+  if (size == 0)
+    return 0;
+  const char *s = src ? src : "";
+  size_t n = strlen(s);
+  if (n >= size)
+    n = size - 1;
+  memcpy(dst, s, n);
+  dst[n] = '\0';
+  return n;
+}
+
+static void cc_trim_copy(const char *src, char *dst, size_t cap) {
+  if (!dst || cap == 0)
+    return;
+  if (!src)
+    src = "";
+  while (*src && isspace((unsigned char)*src))
+    src++;
+  size_t len = strlen(src);
+  while (len > 0 && isspace((unsigned char)src[len - 1]))
+    len--;
+  if (len >= cap)
+    len = cap - 1;
+  memmove(dst, src, len);
+  dst[len] = '\0';
+}
+
+static int cc_lower(char c) { return tolower((unsigned char)c); }
+
+static char *cc_strdup(const char *s) {
+  if (!s)
+    s = "";
+  size_t n = strlen(s) + 1;
+  char *copy = (char *)malloc(n);
+  if (copy)
+    memcpy(copy, s, n);
+  return copy;
+}
+
+typedef bool (*CcHandler)(void);
 
 typedef struct {
   char label[256];
   char type[64];
-  char payload[MAX_PATH];
+  const char *payload;
   char icon[MAX_PATH];
-  bool (*on_enter)(void);
-  bool (*on_ctrl_enter)(void);
-  bool (*on_shift_enter)(void);
-  bool (*on_ctrl_shift_enter)(void);
-  bool (*on_ctrl_alt_enter)(void);
-  bool (*on_shift_alt_enter)(void);
+  CcHandler on_enter;
+  CcHandler on_ctrl_enter;
+  CcHandler on_shift_enter;
+  CcHandler on_ctrl_shift_enter;
+  CcHandler on_ctrl_alt_enter;
+  CcHandler on_shift_alt_enter;
   bool (*on_tab)(void);
   void (*on_action)(void);
 } CcEntry;
 
-#define CC_MAX_TYPES 16
-#define CC_MAX_ACTIONS 64
-#define CC_MAYBE_UNUSED __attribute__((unused))
+typedef enum {
+  CC_RUN_ENTER,
+  CC_RUN_CTRL,
+  CC_RUN_SHIFT,
+  CC_RUN_CTRL_SHIFT,
+  CC_RUN_CTRL_ALT,
+  CC_RUN_SHIFT_ALT,
+} CcRunMode;
 
-static volatile int cc_stopping = 0;
+static CcEntry *cc_entries;
+static int cc_entry_count;
+static int cc_entry_cap;
+static int cc_entry_base;
 
-#define CC_ITEM_TEXT_X 10
-#define CC_ITEM_TEXT_Y 4
+static atomic_bool cc_entries_dirty = true;
+static atomic_bool cc_stopping;
 
-#define CC_ICON_GAP 8
-#define CC_TYPE_GAP 6
-#define CC_TYPE_SIZE_DELTA 2
-#define CC_TYPE_LABEL "Command"
-
-static const char *type_names[CC_MAX_TYPES];
-static CcFill type_fills[CC_MAX_TYPES];
-static int type_count;
-
-typedef struct {
-  char label[256];
-  char type[64];
-  void (*fn)(void);
-} CcActionDef;
-
-static CcActionDef actions[CC_MAX_ACTIONS];
-static int action_count;
-
-static CcEntry *entries;
-static int entry_count;
-static int entry_cap;
+static void cc_fill_applications(int limit);
+static void cc_register_pending_bindings(void);
 
 static CcEntry *cc_entry_new(void) {
-  if (entry_count >= entry_cap) {
-    int cap = entry_cap ? entry_cap * 2 : 128;
-    CcEntry *grown = (CcEntry *)realloc(entries, (size_t)cap * sizeof(CcEntry));
+  if (cc_entry_count >= cc_entry_cap) {
+    int cap = cc_entry_cap ? cc_entry_cap * 2 : 128;
+    CcEntry *grown =
+        (CcEntry *)realloc(cc_entries, (size_t)cap * sizeof(CcEntry));
     if (!grown)
       return NULL;
-    entries = grown;
-    entry_cap = cap;
+    cc_entries = grown;
+    cc_entry_cap = cap;
   }
-  CcEntry *e = &entries[entry_count++];
+  CcEntry *e = &cc_entries[cc_entry_count++];
   memset(e, 0, sizeof(*e));
   return e;
 }
 
-static CcEntry *cc_entry_add_icon(const char *label, const char *type,
-                                  const char *payload, const char *icon) {
-  if (!label || !label[0])
-    return NULL;
-  if (entry_count >= MAX_VISIBLE_ITEMS)
+static CcEntry *cc_entry_add(const char *label, const char *type,
+                             const char *payload, const char *icon) {
+  if (!label || !label[0] || cc_entry_count >= MAX_VISIBLE_ITEMS)
     return NULL;
   CcEntry *e = cc_entry_new();
   if (!e)
     return NULL;
-  ccx_strcpy_trunc(e->label, sizeof(e->label), label);
-  ccx_strcpy_trunc(e->type, sizeof(e->type), type ? type : "");
-  ccx_strcpy_trunc(e->payload, sizeof(e->payload), payload ? payload : "");
-  ccx_strcpy_trunc(e->icon, sizeof(e->icon), icon ? icon : "");
+  cc_copy(e->label, sizeof(e->label), label);
+  cc_copy(e->type, sizeof(e->type), type);
+  e->payload = payload;
+  cc_copy(e->icon, sizeof(e->icon), icon);
   return e;
 }
 
-static CcEntry *cc_entry_add(const char *label, const char *type,
-                             const char *payload) {
-  return cc_entry_add_icon(label, type, payload, NULL);
-}
-
-static bool cc_register_type(const char *name, CcFill fill) {
-  if (!name || !fill || type_count >= CC_MAX_TYPES)
-    return false;
-  type_names[type_count] = name;
-  type_fills[type_count] = fill;
-  type_count++;
-  return true;
-}
-
-static bool cc_fallback_active = false;
-
 static CcEntry *cc_add_fallback(void) {
-  CcEntry *fallback = cc_entry_new();
-  if (!fallback)
+  CcEntry *e = cc_entry_new();
+  if (!e)
     return NULL;
-  char buffer[256];
-  snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
-  buffer[0] = toupper((unsigned char)buffer[0]);
-  ccx_strcpy_trunc(fallback->label, sizeof(fallback->label), buffer);
-  snprintf(fallback->icon, sizeof(fallback->icon), "/%s.png", UsedSearchEngine);
-  return fallback;
+  snprintf(e->label, sizeof(e->label), "%s Search", UsedSearchEngine);
+  e->label[0] = (char)toupper((unsigned char)e->label[0]);
+  snprintf(e->icon, sizeof(e->icon), "/%s.png", UsedSearchEngine);
+  return e;
 }
 
-static void cc_register_persisted_hotkeys(void);
-
-static void cc_build(void) {
-  entry_count = 0;
-  for (int i = 0; i < type_count; i++)
-    type_fills[i]();
-  for (int i = 0; i < action_count; i++) {
-    CcEntry *e = cc_entry_add(actions[i].label, actions[i].type, "");
-    if (e)
-      e->on_action = actions[i].fn;
-  }
+static void cc_fill_feature_entries(void) {
   for (int i = 0; i < sk_cc_entry_count(); i++) {
     const SkCcEntrySpec *s = sk_cc_entry_at(i);
     if (!s || !s->display_name || !s->display_name[0])
       continue;
-    CcEntry *e = cc_entry_add_icon(s->display_name, s->type ? s->type : "", "",
-                                   s->icon ? s->icon : "");
+    CcEntry *e = cc_entry_add(s->display_name, s->type, NULL, s->icon);
     if (!e)
       continue;
-    if (s->on_enter)
-      e->on_enter = s->on_enter;
-    if (s->on_ctrl_enter)
-      e->on_ctrl_enter = s->on_ctrl_enter;
-    if (s->on_shift_enter)
-      e->on_shift_enter = s->on_shift_enter;
-    if (s->on_ctrl_shift_enter)
-      e->on_ctrl_shift_enter = s->on_ctrl_shift_enter;
-    if (s->on_ctrl_alt_enter)
-      e->on_ctrl_alt_enter = s->on_ctrl_alt_enter;
-    if (s->on_shift_alt_enter)
-      e->on_shift_alt_enter = s->on_shift_alt_enter;
-    if (s->on_tab)
-      e->on_tab = s->on_tab;
-    if (s->on_action)
-      e->on_action = s->on_action;
+    e->on_enter = s->on_enter;
+    e->on_ctrl_enter = s->on_ctrl_enter;
+    e->on_shift_enter = s->on_shift_enter;
+    e->on_ctrl_shift_enter = s->on_ctrl_shift_enter;
+    e->on_ctrl_alt_enter = s->on_ctrl_alt_enter;
+    e->on_shift_alt_enter = s->on_shift_alt_enter;
+    e->on_tab = s->on_tab;
+    e->on_action = s->on_action;
   }
-  if (cc_fallback_active)
-    cc_add_fallback();
-  cc_register_persisted_hotkeys();
 }
 
-static void cc_run_entry_by_label(const char *label);
+static void cc_build(void) {
+  atomic_store(&cc_entries_dirty, false);
+  cc_entry_count = 0;
 
-#define CC_HK_SLOTS 64
-static char cc_hotkey_targets[CC_HK_SLOTS][256];
-static void cc_build(void);
-
-static void cc_deferred_entry_build(void) { cc_build(); }
-
-static const CcEntry *cc_find(const char *label);
-static void cc_stage(const CcEntry *e, int mode);
-static void cc_run_pending(void);
-
-static void *cc_hotkey_ud(int slot) { return (void *)(uintptr_t)(slot + 1); }
-
-static int cc_hotkey_slot_from_ud(void *ud) {
-  int slot = (int)(uintptr_t)ud;
-  return slot > 0 ? slot - 1 : -1;
+  cc_fill_applications(MAX_VISIBLE_ITEMS - sk_cc_entry_count());
+  cc_fill_feature_entries();
+  cc_entry_base = cc_entry_count;
+  cc_register_pending_bindings();
 }
 
-static void cc_entry_hotkey_cb(void *ud) {
-  int slot = cc_hotkey_slot_from_ud(ud);
-  if (slot >= 0 && slot < CC_HK_SLOTS)
-    cc_run_entry_by_label(cc_hotkey_targets[slot]);
+static const CcEntry *cc_find(const char *label) {
+  if (!label || !label[0])
+    return NULL;
+  for (int i = 0; i < cc_entry_count; i++)
+    if (strcmp(cc_entries[i].label, label) == 0)
+      return &cc_entries[i];
+  return NULL;
+}
+
+static void (*cc_pending_action)(void);
+static CcHandler cc_pending_fn;
+static char cc_pending_label[256];
+static char cc_pending_payload[MAX_PATH];
+static const char *cc_staged_label;
+static const char *cc_staged_payload;
+
+static CcHandler cc_pick_handler(const CcEntry *e, CcRunMode mode) {
+  switch (mode) {
+  case CC_RUN_CTRL:
+    return e->on_ctrl_enter;
+  case CC_RUN_SHIFT:
+    return e->on_shift_enter ? e->on_shift_enter : e->on_enter;
+  case CC_RUN_CTRL_SHIFT:
+    return e->on_ctrl_shift_enter ? e->on_ctrl_shift_enter : e->on_ctrl_enter;
+  case CC_RUN_CTRL_ALT:
+    return e->on_ctrl_alt_enter ? e->on_ctrl_alt_enter : e->on_ctrl_enter;
+  case CC_RUN_SHIFT_ALT:
+    return e->on_shift_alt_enter ? e->on_shift_alt_enter : e->on_enter;
+  case CC_RUN_ENTER:
+  default:
+    return e->on_enter;
+  }
+}
+
+static void cc_stage(const CcEntry *e, CcRunMode mode) {
+  cc_pending_action = NULL;
+  cc_pending_fn = NULL;
+  cc_pending_label[0] = '\0';
+  cc_pending_payload[0] = '\0';
+  if (!e)
+    return;
+  if (mode == CC_RUN_ENTER && e->on_action)
+    cc_pending_action = e->on_action;
+  else
+    cc_pending_fn = cc_pick_handler(e, mode);
+  if (cc_pending_action || cc_pending_fn) {
+    cc_copy(cc_pending_label, sizeof(cc_pending_label), e->label);
+    cc_copy(cc_pending_payload, sizeof(cc_pending_payload), e->payload);
+  }
+}
+
+static void cc_run_pending(void) {
+  void (*action)(void) = cc_pending_action;
+  CcHandler fn = cc_pending_fn;
+  cc_pending_action = NULL;
+  cc_pending_fn = NULL;
+  cc_staged_label = cc_pending_label;
+  cc_staged_payload = cc_pending_payload;
+  if (action)
+    action();
+  else if (fn)
+    fn();
+  cc_staged_label = NULL;
+  cc_staged_payload = NULL;
+}
+
+static void cc_run_entry_by_label(const char *label) {
+  cc_stage(cc_find(label), CC_RUN_ENTER);
+  cc_run_pending();
+}
+
+typedef struct {
+  char hotkey[64];
+  char action[256];
+  bool registered;
+} CcBinding;
+
+static CcBinding cc_bindings[CC_MAX_BINDINGS];
+static int cc_binding_count;
+
+static bool cc_binding_used(int i) { return cc_bindings[i].action[0] != '\0'; }
+
+static void cc_binding_cb(void *ud) {
+  int i = (int)(uintptr_t)ud - 1;
+  if (i >= 0 && i < cc_binding_count && cc_binding_used(i))
+    cc_run_entry_by_label(cc_bindings[i].action);
+}
+
+static void cc_binding_register(int i) {
+  sk_register_hotkey(.hotkey = cc_bindings[i].hotkey, .cb_ud = cc_binding_cb,
+                     .ud = (void *)(uintptr_t)(i + 1));
+  cc_bindings[i].registered = true;
+}
+
+static void cc_binding_unregister(int i) {
+  if (cc_bindings[i].registered)
+    sk_unregister_hotkey(cc_bindings[i].hotkey);
+  cc_bindings[i].registered = false;
+}
+
+static void cc_binding_release(int i) {
+  cc_binding_unregister(i);
+  memset(&cc_bindings[i], 0, sizeof(cc_bindings[i]));
+}
+
+static int cc_binding_find(const char *action) {
+  for (int i = 0; i < cc_binding_count; i++)
+    if (cc_binding_used(i) && strcmp(cc_bindings[i].action, action) == 0)
+      return i;
+  return -1;
+}
+
+static int cc_binding_find_hotkey(const char *hotkey) {
+  for (int i = 0; i < cc_binding_count; i++)
+    if (cc_binding_used(i) && sk_string_equals_ci(cc_bindings[i].hotkey, hotkey))
+      return i;
+  return -1;
+}
+
+static int cc_binding_set(const char *hotkey, const char *action) {
+  int i = cc_binding_find(action);
+  if (i < 0) {
+    for (int j = 0; j < cc_binding_count && i < 0; j++)
+      if (!cc_binding_used(j))
+        i = j;
+    if (i < 0) {
+      if (cc_binding_count >= CC_MAX_BINDINGS)
+        return -1;
+      i = cc_binding_count++;
+    }
+    cc_copy(cc_bindings[i].action, sizeof(cc_bindings[i].action), action);
+  }
+  cc_copy(cc_bindings[i].hotkey, sizeof(cc_bindings[i].hotkey), hotkey);
+  cc_bindings[i].registered = false;
+  return i;
+}
+
+static void cc_bindings_load(void) {
+  cc_binding_count = 0;
+  memset(cc_bindings, 0, sizeof(cc_bindings));
+  SkStringList lines = sk_load_file_list(CC_HOTKEY_FILE);
+  for (size_t i = 0; i < lines.count; i++) {
+    char copy[512];
+    cc_copy(copy, sizeof(copy), lines.items[i]);
+    char *tab = strchr(copy, '\t');
+    if (!tab)
+      continue;
+    *tab = '\0';
+    const char *hotkey = copy;
+    const char *action = tab + 1;
+    if (!hotkey[0] || !action[0])
+      continue;
+
+    int owner = cc_binding_find_hotkey(hotkey);
+    if (owner >= 0 && strcmp(cc_bindings[owner].action, action) != 0)
+      cc_binding_release(owner);
+    cc_binding_set(hotkey, action);
+  }
+  sk_free_file_list(&lines);
+}
+
+static void cc_bindings_save(void) {
+  char buf[CC_MAX_BINDINGS][64 + 1 + 256 + 1];
+  const char *lines[CC_MAX_BINDINGS];
+  int n = 0;
+  for (int i = 0; i < cc_binding_count; i++) {
+    if (!cc_binding_used(i))
+      continue;
+    snprintf(buf[n], sizeof(buf[n]), "%s\t%s", cc_bindings[i].hotkey,
+             cc_bindings[i].action);
+    lines[n] = buf[n];
+    n++;
+  }
+  sk_write_to_file(CC_HOTKEY_FILE, lines, n);
+}
+
+static void cc_register_pending_bindings(void) {
+  for (int i = 0; i < cc_binding_count; i++)
+    if (cc_binding_used(i) && !cc_bindings[i].registered &&
+        cc_find(cc_bindings[i].action))
+      cc_binding_register(i);
+}
+
+static void cc_bind_hotkey(const char *action, const char *hotkey) {
+  if (!action || !action[0] || !hotkey || !hotkey[0] || !cc_find(action))
+    return;
+
+  int existing = cc_binding_find(action);
+  if (existing >= 0 && cc_bindings[existing].registered &&
+      sk_string_equals_ci(cc_bindings[existing].hotkey, hotkey))
+    return;
+
+  int owner = cc_binding_find_hotkey(hotkey);
+  if (owner >= 0 && owner != existing)
+    cc_binding_release(owner);
+  if (existing >= 0)
+    cc_binding_unregister(existing);
+
+  int i = cc_binding_set(hotkey, action);
+  if (i < 0)
+    return;
+  cc_binding_register(i);
+  cc_bindings_save();
 }
 
 static bool cc_hotkey_for_label(const char *label, char *out, size_t cap) {
   if (!label || !out || cap == 0)
     return false;
   out[0] = '\0';
-  for (int i = 0; i < CC_HK_SLOTS; i++)
-    if (cc_hotkey_targets[i][0] && strcmp(cc_hotkey_targets[i], label) == 0)
-      return sk_hotkey_for_ud(cc_hotkey_ud(i), out, cap);
-  return false;
+  int i = cc_binding_find(label);
+  if (i < 0 || !cc_bindings[i].registered)
+    return false;
+  cc_copy(out, cap, cc_bindings[i].hotkey);
+  return true;
 }
 
-static void cc_run_entry_by_label(const char *label) {
-  const CcEntry *e = cc_find(label);
-  if (!e)
-    return;
-  cc_stage(e, 0);
-  cc_run_pending();
-}
+typedef struct {
+  char *name;
+  char *path;
+  char *icon;
+} CcApp;
 
-static int cc_hotkey_slot_for(const CcEntry *e) {
-  if (!e)
-    return -1;
-  const char *name = e->label;
-  int slot = -1;
-  for (int i = 0; i < CC_HK_SLOTS; i++)
-    if (cc_hotkey_targets[i][0] && strcmp(cc_hotkey_targets[i], name) == 0) {
-      slot = i;
-      break;
-    }
-  if (slot < 0) {
-    for (int i = 0; i < CC_HK_SLOTS; i++)
-      if (!cc_hotkey_targets[i][0]) {
-        slot = i;
-        break;
-      }
-  }
-  if (slot < 0)
-    return -1;
-  ccx_strcpy_trunc(cc_hotkey_targets[slot], sizeof(cc_hotkey_targets[slot]),
-                   name);
-  return slot;
-}
-
-static const CcEntry *cc_find(const char *label) {
-  if (!label || !label[0])
-    return NULL;
-  for (int i = 0; i < entry_count; i++) {
-    if (strcmp(entries[i].label, label) == 0) {
-      return &entries[i];
-    }
-  }
-  return NULL;
-}
-
-static const char *cc_staged_label = NULL;
-static void (*pending_action)(void);
-static bool (*pending_fn)(void);
-static char pending_label[256];
-
-static void cc_stage(const CcEntry *e, int mode) {
-  pending_action = NULL;
-  pending_fn = NULL;
-  pending_label[0] = '\0';
-  if (!e)
-    return;
-  if (mode == 1) {
-    if (e->on_ctrl_enter) {
-      pending_fn = e->on_ctrl_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    }
-    return;
-  }
-  if (mode == 2) {
-    if (e->on_shift_enter) {
-      pending_fn = e->on_shift_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    } else if (e->on_enter) {
-      pending_fn = e->on_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    }
-    return;
-  }
-  if (mode == 3) {
-    if (e->on_ctrl_shift_enter) {
-      pending_fn = e->on_ctrl_shift_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    } else if (e->on_ctrl_enter) {
-      pending_fn = e->on_ctrl_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    }
-    return;
-  }
-  if (mode == 4) {
-    if (e->on_ctrl_alt_enter) {
-      pending_fn = e->on_ctrl_alt_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    } else if (e->on_ctrl_enter) {
-      pending_fn = e->on_ctrl_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    }
-    return;
-  }
-  if (mode == 5) {
-    if (e->on_shift_alt_enter) {
-      pending_fn = e->on_shift_alt_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    } else if (e->on_enter) {
-      pending_fn = e->on_enter;
-      ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-    }
-    return;
-  }
-  if (e->on_action) {
-    pending_action = e->on_action;
-    ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-  } else if (e->on_enter) {
-    pending_fn = e->on_enter;
-    ccx_strcpy_trunc(pending_label, sizeof(pending_label), e->label);
-  }
-}
-
-static void cc_run_pending(void) {
-  void (*act)(void) = pending_action;
-  bool (*pfn)(void) = pending_fn;
-  pending_action = NULL;
-  pending_fn = NULL;
-  cc_staged_label = pending_label;
-  if (act)
-    act();
-  else if (pfn)
-    pfn();
-  cc_staged_label = NULL;
-}
-
-static const char *ListOfShitToIgnore[] = {
-    "node_modules",
-    "git",
-    "dll",
-    NULL,
-};
+static CcApp *cc_apps;
+static size_t cc_app_count;
+static size_t cc_app_cap;
+static atomic_bool cc_apps_ready;
+static SkThread cc_prewarm_thread;
 
 typedef struct {
   const char *path;
   int max_depth;
 } CcScanPath;
 
-static const CcScanPath ListOfProgramPaths[] = {
+static const CcScanPath cc_scan_paths[] = {
 #if defined(_WIN32)
     {"~\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
      SK_DIR_WALK_UNLIMITED},
@@ -339,1498 +413,824 @@ static const CcScanPath ListOfProgramPaths[] = {
     {"C:\\Program Files (x86)\\Epic Games", 5},
     {"D:\\Epic Games", 5},
     {"C:\\Games", 5},
-    {"C:\\C:\\Program Files\\WindowsApps", 5},
+    {"C:\\Program Files\\WindowsApps", 5},
     {"C:\\Program Files (x86)\\Steam\\steamapps\\common", 5},
     {"C:\\Program Files\\Steam\\steamapps\\common", 5},
 #elif defined(__linux__)
     {"/usr/share/applications", SK_DIR_WALK_UNLIMITED},
     {"~", 6},
+#else
+    {"/Applications", 2},
 #endif
 };
 
-#define CC_APPCACHE_FILE "app_launcher_cache.txt"
-#define CC_HOTKEY_FILE "hotkeys.txt"
-#define CC_APPCACHE_VERSION "#cc4"
+static void cc_apps_free(void) {
+  for (size_t i = 0; i < cc_app_count; i++) {
+    free(cc_apps[i].name);
+    free(cc_apps[i].path);
+    free(cc_apps[i].icon);
+  }
+  free(cc_apps);
+  cc_apps = NULL;
+  cc_app_count = 0;
+  cc_app_cap = 0;
+}
+
+static bool cc_apps_push(char *name, char *path, char *icon) {
+  if (!name || !path || !icon)
+    goto fail;
+  if (cc_app_count >= cc_app_cap) {
+    size_t cap = cc_app_cap ? cc_app_cap * 2 : 128;
+    CcApp *grown = (CcApp *)realloc(cc_apps, cap * sizeof(CcApp));
+    if (!grown)
+      goto fail;
+    cc_apps = grown;
+    cc_app_cap = cap;
+  }
+  cc_apps[cc_app_count++] = (CcApp){name, path, icon};
+  return true;
+fail:
+  free(name);
+  free(path);
+  free(icon);
+  return false;
+}
 
 static bool cc_icon_is_shell_only(const char *icon) {
-  if (!icon || !icon[0])
-    return false;
   const char *dot = strrchr(icon, '.');
-  if (!dot)
-    return false;
-  return (strcmp(dot, ".lnk") == 0 || strcmp(dot, ".exe") == 0 ||
-          strcmp(dot, ".url") == 0);
+  return dot && (strcmp(dot, ".lnk") == 0 || strcmp(dot, ".exe") == 0 ||
+                 strcmp(dot, ".url") == 0);
 }
 
-static ListOfFiles apps = {0};
-
-static char (*app_icons)[MAX_PATH] = NULL;
-static size_t app_icons_cap = 0;
-
-static bool cc_app_icons_reserve(size_t n) {
-  if (n <= app_icons_cap)
-    return true;
-  size_t cap = app_icons_cap ? app_icons_cap : 64;
-  while (cap < n)
-    cap *= 2;
-  char (*grown)[MAX_PATH] =
-      (char (*)[MAX_PATH])realloc(app_icons, cap * MAX_PATH);
-  if (!grown)
-    return false;
-  memset(grown + app_icons_cap, 0, (cap - app_icons_cap) * MAX_PATH);
-  app_icons = grown;
-  app_icons_cap = cap;
-  return true;
-}
-
-static void cc_app_icons_clear(void) {
-  free(app_icons);
-  app_icons = NULL;
-  app_icons_cap = 0;
-}
-
-static void cc_resolve_app_icon(size_t idx) {
-  if (idx >= app_icons_cap)
-    return;
-  app_icons[idx][0] = '\0';
-  char *icon = sk_get_icon_path(apps.files[idx].path);
-  if (!icon)
-    return;
-  snprintf(app_icons[idx], MAX_PATH, "%s", icon);
-  free(icon);
-}
-
-static const char *cc_app_icon(size_t idx) {
-  if (idx >= app_icons_cap)
-    return "";
-  return app_icons[idx];
-}
-
-static bool cc_app_cache_grow(ListOfFiles *l) {
-  size_t new_cap = l->capacity ? l->capacity * 2 : 64;
-  FileItem *grown = (FileItem *)realloc(l->files, new_cap * sizeof(FileItem));
-  if (!grown)
-    return false;
-  l->files = grown;
-  l->capacity = new_cap;
-  return true;
-}
-
-static void cc_save_app_cache(void) {
-  size_t n = apps.count;
-  if (n == 0)
-    return;
-  if (!cc_app_icons_reserve(n))
-    return;
-  size_t total = 0;
-  for (size_t i = 0; i < n; i++) {
-    total += strlen(apps.files[i].name) + 1;
-    total += strlen(apps.files[i].path) + 1;
-    total += strlen(cc_app_icon(i)) + 2;
-  }
-  total += sizeof(CC_APPCACHE_VERSION);
-  const char **lines = (const char **)malloc((n + 1) * sizeof(char *));
-  char *store = (char *)malloc(total);
-  if (!lines || !store) {
-    free(lines);
-    free(store);
-    return;
-  }
-  size_t off = 0;
-  size_t written = 0;
-  {
-    int k = snprintf(store + off, total - off, "%s", CC_APPCACHE_VERSION);
-    if (k > 0 && (size_t)k < total - off) {
-      lines[written++] = store + off;
-      off += (size_t)k + 1;
-    }
-  }
-  for (size_t i = 0; i < n; i++) {
-    const char *nm = apps.files[i].name;
-    const char *pth = apps.files[i].path;
-    if (!nm[0] || !pth[0])
-      continue;
-    int k =
-        snprintf(store + off, total - off, "%s;%s;%s", nm, pth, cc_app_icon(i));
-    if (k <= 0 || (size_t)k >= total - off)
-      continue;
-    lines[written++] = store + off;
-    off += (size_t)k + 1;
-  }
-  sk_write_to_file(CC_APPCACHE_FILE, lines, (int)written);
-  free(store);
-  free(lines);
-}
-
-static bool cc_reexported = false;
-
-static bool cc_load_app_cache(void) {
+static bool cc_apps_load_cache(bool *needs_save) {
   SkStringList lines = sk_load_file_list(CC_APPCACHE_FILE);
-  if (!lines.items || lines.count <= 0) {
-    if (lines.items)
-      sk_free_file_list(&lines);
+  if (!lines.items)
     return false;
-  }
-  if (strcmp(lines.items[0], CC_APPCACHE_VERSION) != 0) {
+  if (lines.count == 0 || !lines.items[0] ||
+      strcmp(lines.items[0], CC_APPCACHE_VERSION) != 0) {
     sk_free_file_list(&lines);
     return false;
   }
-  ListOfFiles tmp = {0};
-  char (*icons)[MAX_PATH] = NULL;
-  size_t icons_cap = 0;
-  if (lines.count > 0) {
-    icons_cap = 64;
-    icons = (char (*)[MAX_PATH])calloc(icons_cap, MAX_PATH);
-    if (!icons) {
-      sk_free_file_list(&lines);
-      return false;
-    }
-  }
   for (size_t i = 1; i < lines.count; i++) {
-    char *entry = lines.items[i];
-    if (!entry)
+    char *line = lines.items[i];
+    if (!line)
       continue;
-    char *first = strchr(entry, ';');
-    if (!first || !first[1])
+    char *tab1 = strchr(line, '\t');
+    if (!tab1)
       continue;
-    char *second = strchr(first + 1, ';');
-    const char *name = entry;
-    const char *path = first + 1;
+    char *tab2 = strchr(tab1 + 1, '\t');
+    const char *name = line;
+    const char *path = tab1 + 1;
     const char *icon = "";
-    *first = '\0';
-    if (second) {
-      *second = '\0';
-      icon = second + 1;
+    *tab1 = '\0';
+    if (tab2) {
+      *tab2 = '\0';
+      icon = tab2 + 1;
     }
     if (!path[0])
       continue;
-    if (tmp.count >= tmp.capacity && !cc_app_cache_grow(&tmp))
-      break;
-    while (tmp.count >= icons_cap) {
-      size_t grown_cap = icons_cap * 2;
-      char (*grown)[MAX_PATH] =
-          (char (*)[MAX_PATH])realloc(icons, grown_cap * MAX_PATH);
-      if (!grown)
-        break;
-      memset(grown + icons_cap, 0, (grown_cap - icons_cap) * MAX_PATH);
-      icons = grown;
-      icons_cap = grown_cap;
-    }
-    if (tmp.count >= icons_cap)
-      break;
-    strncpy(tmp.files[tmp.count].name, name,
-            sizeof(tmp.files[tmp.count].name) - 1);
-    tmp.files[tmp.count].name[sizeof(tmp.files[tmp.count].name) - 1] = '\0';
-    strncpy(tmp.files[tmp.count].path, path,
-            sizeof(tmp.files[tmp.count].path) - 1);
-    tmp.files[tmp.count].path[sizeof(tmp.files[tmp.count].path) - 1] = '\0';
-    snprintf(icons[tmp.count], MAX_PATH, "%s", icon);
-    tmp.count++;
-  }
-  sk_free_file_list(&lines);
-  if (tmp.count == 0) {
-    free(tmp.files);
-    free(icons);
-    return false;
-  }
-  bool reexported = false;
-  cc_reexported = false;
-  for (size_t i = 0; i < tmp.count; i++) {
-    if (icons[i][0] == '\0' || cc_icon_is_shell_only(icons[i]) ||
-        !sk_file_exists(icons[i])) {
-      char *resolved = sk_get_icon_path(tmp.files[i].path);
+
+    char *icon_copy = cc_strdup(icon);
+    if (icon_copy && (!icon[0] || cc_icon_is_shell_only(icon) ||
+                      !sk_file_exists(icon))) {
+      char *resolved = sk_get_icon_path(path);
       if (resolved) {
-        if (strcmp(resolved, icons[i]) != 0)
-          reexported = true;
-        snprintf(icons[i], MAX_PATH, "%s", resolved);
-        free(resolved);
+        if (strcmp(resolved, icon) != 0)
+          *needs_save = true;
+        free(icon_copy);
+        icon_copy = resolved;
       }
     }
+    if (!cc_apps_push(cc_strdup(name), cc_strdup(path), icon_copy))
+      break;
   }
-  cc_reexported = reexported;
-  if (apps.files)
-    free(apps.files);
-  apps = tmp;
-  cc_app_icons_clear();
-  if (icons) {
-    app_icons = icons;
-    app_icons_cap = icons_cap;
-  }
-  return true;
+  sk_free_file_list(&lines);
+  return cc_app_count > 0;
 }
 
-static const char **xdg_paths = NULL;
-static size_t xdg_path_count = 0;
-static int *xdg_depths = NULL;
-
-static void cc_build_xdg_paths(void) {
-  if (xdg_paths)
+static void cc_apps_save_cache(void) {
+  if (cc_app_count == 0)
     return;
-  xdg_paths = calloc(ARRAY_LEN(ListOfProgramPaths) + 16, sizeof(char *));
-  xdg_depths = calloc(ARRAY_LEN(ListOfProgramPaths) + 16, sizeof(int));
-  if (!xdg_paths || !xdg_depths)
+  char **lines = (char **)calloc(cc_app_count + 1, sizeof(char *));
+  if (!lines)
     return;
-  for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
-    xdg_paths[i] = ListOfProgramPaths[i].path;
-    xdg_depths[i] = ListOfProgramPaths[i].max_depth;
+  int n = 0;
+  lines[n++] = cc_strdup(CC_APPCACHE_VERSION);
+  for (size_t i = 0; i < cc_app_count; i++) {
+    const CcApp *a = &cc_apps[i];
+    if (!a->name[0] || !a->path[0])
+      continue;
+    size_t len = strlen(a->name) + strlen(a->path) + strlen(a->icon) + 3;
+    char *line = (char *)malloc(len);
+    if (!line)
+      continue;
+    snprintf(line, len, "%s\t%s\t%s", a->name, a->path, a->icon);
+    lines[n++] = line;
   }
-  xdg_path_count = ARRAY_LEN(ListOfProgramPaths);
+  sk_write_to_file(CC_APPCACHE_FILE, (const char **)lines, n);
+  for (int i = 0; i < n; i++)
+    free(lines[i]);
+  free(lines);
+}
+
+static void cc_scan_dir(const char *path, int depth, char **allowed,
+                        ListOfFiles *out) {
+  sk_get_all_files_from_dir((char *)path, allowed, out,
+                            NULL, true, depth);
+}
+
 #if defined(__linux__)
+static bool cc_is_builtin_scan_path(const char *dir) {
+  for (size_t i = 0; i < ARRAY_LEN(cc_scan_paths); i++)
+    if (strcmp(cc_scan_paths[i].path, dir) == 0)
+      return true;
+  return false;
+}
+
+static void cc_scan_xdg_dirs(char **allowed, ListOfFiles *out) {
   const char *data_dirs = getenv("XDG_DATA_DIRS");
   if (!data_dirs || !data_dirs[0])
     data_dirs = "/usr/local/share:/usr/share";
   char buf[4096];
-  ccx_strcpy_trunc(buf, sizeof(buf), data_dirs);
-  char *save = buf;
+  cc_copy(buf, sizeof(buf), data_dirs);
+  char *save = NULL;
   for (char *tok = strtok_r(buf, ":", &save); tok;
        tok = strtok_r(NULL, ":", &save)) {
-    char *dir = malloc(strlen(tok) + 16);
-    if (!dir)
+    char dir[MAX_PATH];
+    snprintf(dir, sizeof(dir), "%s/applications", tok);
+    if (cc_is_builtin_scan_path(dir))
       continue;
-    snprintf(dir, strlen(tok) + 16, "%s/applications", tok);
-    xdg_paths[xdg_path_count] = dir;
-    xdg_depths[xdg_path_count] = SK_DIR_WALK_UNLIMITED;
-    xdg_path_count++;
+    if (atomic_load(&cc_stopping))
+      return;
+    cc_scan_dir(dir, SK_DIR_WALK_UNLIMITED, allowed, out);
   }
-#endif
 }
+#endif
 
-static void cc_scan_app_dirs(void) {
+static void cc_apps_scan(void) {
 #if defined(_WIN32)
   char *allowed[] = {"lnk", "exe", "url", NULL};
 #elif defined(__linux__)
   char *allowed[] = {"desktop", NULL};
+#else
+  char *allowed[] = {"app", NULL};
 #endif
-  ListOfFiles tmp = {0};
-  cc_build_xdg_paths();
-  for (size_t i = 0; i < xdg_path_count; i++) {
-    if (cc_stopping) {
-      if (tmp.files)
-        free(tmp.files);
-      return;
+  ListOfFiles found = {0};
+
+  for (size_t i = 0; i < ARRAY_LEN(cc_scan_paths); i++) {
+    if (atomic_load(&cc_stopping))
+      goto done;
+    const CcScanPath *p = &cc_scan_paths[i];
+    if (p->path && p->path[0])
+      cc_scan_dir(p->path, p->max_depth, allowed, &found);
+  }
+#if defined(__linux__)
+  cc_scan_xdg_dirs(allowed, &found);
+#endif
+  if (atomic_load(&cc_stopping) || found.count == 0)
+    goto done;
+
+  size_t kept = 0;
+  for (size_t i = 0; i < found.count; i++) {
+    bool no_display = false;
+    if (strstr(found.files[i].path, ".desktop")) {
+      char display_name[256] = {0};
+      sk_parse_desktop_file(found.files[i].path, display_name,
+                            sizeof(display_name), &no_display);
     }
-    const char *p = xdg_paths[i];
-    if (!p || p[0] == '\0')
+    if (!no_display)
+      found.files[kept++] = found.files[i];
+  }
+  found.count = kept;
+
+  bool *drop = (bool *)calloc(found.count ? found.count : 1, sizeof(bool));
+  if (!drop)
+    goto done;
+  for (size_t i = 0; i < found.count; i++) {
+    if (drop[i] || !found.files[i].name[0])
       continue;
-    sk_get_all_files_from_dir((char *)p, allowed, &tmp,
-                              (char **)ListOfShitToIgnore, true, xdg_depths[i]);
+    for (size_t j = i + 1; j < found.count; j++)
+      if (!drop[j] && sk_string_equals_ci(found.files[j].name, found.files[i].name))
+        drop[j] = true;
   }
-  if (cc_stopping) {
-    if (tmp.files)
-      free(tmp.files);
-    return;
-  }
-  for (size_t i = 0; i < tmp.count;) {
-    bool skip = false;
-    char display_name[256] = {0};
-    if (strstr(tmp.files[i].path, ".desktop")) {
-      bool nodisplay = false;
-      sk_parse_desktop_file(tmp.files[i].path, display_name,
-                            sizeof(display_name), &nodisplay);
-      if (nodisplay)
-        skip = true;
-    }
-    if (skip) {
-      for (size_t k = i; k + 1 < tmp.count; k++)
-        tmp.files[k] = tmp.files[k + 1];
-      tmp.count--;
+
+  for (size_t i = 0; i < found.count; i++) {
+    if (drop[i])
       continue;
-    }
-    i++;
+    char *icon = sk_get_icon_path(found.files[i].path);
+    if (!cc_apps_push(cc_strdup(found.files[i].name),
+                      cc_strdup(found.files[i].path),
+                      icon ? icon : cc_strdup("")))
+      break;
   }
-  for (size_t i = 0; i < tmp.count; i++) {
-    for (size_t j = i + 1; j < tmp.count;) {
-      if (sk_string_contains(tmp.files[j].name, tmp.files[i].name)) {
-        for (size_t k = j; k + 1 < tmp.count; k++)
-          tmp.files[k] = tmp.files[k + 1];
-        tmp.count--;
-      } else {
-        j++;
-      }
-    }
-  }
-  if (apps.files)
-    free(apps.files);
-  apps = tmp;
-  cc_app_icons_clear();
-  if (cc_app_icons_reserve(apps.count)) {
-    for (size_t i = 0; i < apps.count; i++)
-      cc_resolve_app_icon(i);
-  }
+  free(drop);
+done:
+  free(found.files);
 }
 
-static SkMutex app_cache_mtx = NULL;
-static bool app_cache_ready = false;
-static SkThread prewarm_thread = NULL;
-
-static void cc_ensure_app_cache(void) {
-  if (!app_cache_mtx)
-    return;
-  sk_mutex_lock(app_cache_mtx);
-  if (!app_cache_ready) {
-    if (cc_stopping) {
-      sk_mutex_unlock(app_cache_mtx);
-      return;
-    }
-    int loaded = cc_load_app_cache();
-    if (!loaded) {
-      cc_scan_app_dirs();
-      cc_save_app_cache();
-    } else if (cc_reexported) {
-      cc_save_app_cache();
-    }
-    app_cache_ready = true;
+static void cc_load_apps(void) {
+  bool needs_save = false;
+  if (!cc_apps_load_cache(&needs_save)) {
+    cc_apps_free();
+    cc_apps_scan();
+    if (!atomic_load(&cc_stopping))
+      cc_apps_save_cache();
+  } else if (needs_save) {
+    cc_apps_save_cache();
   }
-  sk_mutex_unlock(app_cache_mtx);
+  if (atomic_load(&cc_stopping))
+    return;
+  atomic_store(&cc_apps_ready, true);
+  atomic_store(&cc_entries_dirty, true);
 }
 
-static void *cc_prewarm_app_cache(void *arg) {
+static void *cc_prewarm_apps(void *arg) {
   (void)arg;
-  cc_ensure_app_cache();
-  return NULL;
-}
-
-#define CC_APP_MAP_SLOTS 2048
-static char cc_app_map_key[CC_APP_MAP_SLOTS][128];
-static char cc_app_map_path[CC_APP_MAP_SLOTS][MAX_PATH];
-
-static unsigned cc_map_hash(const char *s) {
-  unsigned h = 2166136261u;
-  while (s && *s) {
-    h ^= (unsigned char)*s++;
-    h *= 16777619u;
-  }
-  return h;
-}
-
-static void cc_app_map_clear(void) {
-  memset(cc_app_map_key, 0, sizeof(cc_app_map_key));
-  memset(cc_app_map_path, 0, sizeof(cc_app_map_path));
-}
-
-static void cc_app_map_put(const char *name, const char *path) {
-  if (!name || !name[0] || !path || !path[0])
-    return;
-  unsigned i = cc_map_hash(name) % CC_APP_MAP_SLOTS;
-  for (unsigned n = 0; n < CC_APP_MAP_SLOTS; n++) {
-    unsigned slot = (i + n) % CC_APP_MAP_SLOTS;
-    if (cc_app_map_key[slot][0] == '\0' ||
-        strcmp(cc_app_map_key[slot], name) == 0) {
-      ccx_strcpy_trunc(cc_app_map_key[slot], sizeof(cc_app_map_key[slot]),
-                       name);
-      ccx_strcpy_trunc(cc_app_map_path[slot], sizeof(cc_app_map_path[slot]),
-                       path);
-      return;
-    }
-  }
-}
-
-static const char *cc_app_map_get(const char *name) {
-  if (!name || !name[0])
-    return NULL;
-  unsigned i = cc_map_hash(name) % CC_APP_MAP_SLOTS;
-  for (unsigned n = 0; n < CC_APP_MAP_SLOTS; n++) {
-    unsigned slot = (i + n) % CC_APP_MAP_SLOTS;
-    if (cc_app_map_key[slot][0] == '\0')
-      return NULL;
-    if (strcmp(cc_app_map_key[slot], name) == 0)
-      return cc_app_map_path[slot];
-  }
+  cc_load_apps();
   return NULL;
 }
 
 static bool cc_launch_app(void) {
-  const char *path = cc_staged_label ? cc_app_map_get(cc_staged_label) : NULL;
-  if (path && path[0])
-    sk_launch_with_args((char *)path, NULL);
+  if (cc_staged_payload && cc_staged_payload[0])
+    sk_launch_with_args((char *)cc_staged_payload, NULL);
   return true;
 }
 
 static bool cc_launch_app_as_admin(void) {
-  const char *path = cc_staged_label ? cc_app_map_get(cc_staged_label) : NULL;
-  if (path && path[0])
-    sk_launch_with_args_as_admin((char *)path, NULL);
+  if (cc_staged_payload && cc_staged_payload[0])
+    sk_launch_with_args_as_admin((char *)cc_staged_payload, NULL);
   return true;
 }
 
-static void cc_fill_applications(void) {
-  cc_ensure_app_cache();
-  cc_app_map_clear();
-  for (size_t i = 0; i < apps.count; i++) {
-    CcEntry *e = cc_entry_add_icon(apps.files[i].name, "Application",
-                                   apps.files[i].path, cc_app_icon(i));
+static void cc_fill_applications(int limit) {
+  if (!atomic_load(&cc_apps_ready)) {
+    if (cc_prewarm_thread)
+      return;
+    cc_load_apps();
+  }
+  for (size_t i = 0; i < cc_app_count && (int)i < limit; i++) {
+    CcEntry *e = cc_entry_add(cc_apps[i].name, "Application", cc_apps[i].path,
+                              cc_apps[i].icon);
     if (!e)
       break;
-    cc_app_map_put(apps.files[i].name, apps.files[i].path);
     e->on_enter = cc_launch_app;
     e->on_ctrl_enter = cc_launch_app_as_admin;
   }
 }
 
-static const char *names[MAX_VISIBLE_ITEMS + 1];
-
 typedef struct {
-  const char *canonical;
-  double to_seconds;
-  const char *aliases[16];
-  int alias_count;
-} CcCalcUnit;
+  const char *name;
+  double seconds;
+  const char *aliases[8];
+} CcUnit;
 
-static CcCalcUnit CC_CALC_UNITS[] = {
+static const CcUnit cc_units[] = {
     {"ms",
      0.001,
-     {"ms", "millis", "millisecond", "milliseconds", "milli", "msec", "msecs"},
-     7},
-    {"s",
-     1.0,
-     {"s", "sec", "secs", "second", "seconds", "sec.", "secs.", "sec"},
-     6},
-    {"min", 60.0, {"m", "min", "mins", "minute", "minutes"}, 5},
-    {"hour", 3600.0, {"h", "hr", "hrs", "hour", "hours"}, 5},
-    {"day", 86400.0, {"d", "day", "days"}, 3},
-    {"week", 604800.0, {"w", "wk", "wks", "week", "weeks"}, 5},
-    {"month", 2629746.0, {"mo", "mos", "month", "months"}, 4},
-    {"year", 31557600.0, {"y", "yr", "yrs", "year", "years"}, 5},
+     {"ms", "millis", "millisecond", "milliseconds", "milli", "msec", "msecs",
+      NULL}},
+    {"s", 1.0, {"s", "sec", "secs", "second", "seconds", NULL}},
+    {"min", 60.0, {"m", "min", "mins", "minute", "minutes", NULL}},
+    {"hour", 3600.0, {"h", "hr", "hrs", "hour", "hours", NULL}},
+    {"day", 86400.0, {"d", "day", "days", NULL}},
+    {"week", 604800.0, {"w", "wk", "wks", "week", "weeks", NULL}},
+    {"month", 2629746.0, {"mo", "mos", "month", "months", NULL}},
+    {"year", 31557600.0, {"y", "yr", "yrs", "year", "years", NULL}},
 };
-#define CC_CALC_UNIT_COUNT (sizeof(CC_CALC_UNITS) / sizeof(CC_CALC_UNITS[0]))
-static int ccx_str_casecmp_n(const char *a, const char *b) {
-  while (*a && *b) {
-    int ca = tolower((unsigned char)*a), cb = tolower((unsigned char)*b);
-    if (ca != cb)
-      return ca - cb;
-    a++;
-    b++;
-  }
-  return tolower((unsigned char)*a) - tolower((unsigned char)*b);
-}
-static bool ccx_str_equals_ci(const char *a, const char *b) {
-  if (!a || !b)
-    return false;
-  if (strlen(a) != strlen(b))
-    return false;
-  return ccx_str_casecmp_n(a, b) == 0;
-}
-static int ccx_levenshtein_ci(const char *s, const char *t) {
-  int ls = strlen(s), lt = strlen(t);
+
+static int cc_edit_distance(const char *s, const char *t) {
+  size_t ls = strlen(s), lt = strlen(t);
   if (ls > 32 || lt > 32)
     return 999;
   int d[33][33];
-  for (int i = 0; i <= ls; i++)
-    d[i][0] = i;
-  for (int j = 0; j <= lt; j++)
-    d[0][j] = j;
-  for (int i = 1; i <= ls; i++)
-    for (int j = 1; j <= lt; j++) {
-      int cost =
-          tolower((unsigned char)s[i - 1]) == tolower((unsigned char)t[j - 1])
-              ? 0
-              : 1;
-      int del = d[i - 1][j] + 1, ins = d[i][j - 1] + 1,
-          sub = d[i - 1][j - 1] + cost;
-      int m = del < ins ? del : ins;
-      m = m < sub ? m : sub;
-      d[i][j] = m;
+  for (size_t i = 0; i <= ls; i++)
+    d[i][0] = (int)i;
+  for (size_t j = 0; j <= lt; j++)
+    d[0][j] = (int)j;
+  for (size_t i = 1; i <= ls; i++)
+    for (size_t j = 1; j <= lt; j++) {
+      int cost = cc_lower(s[i - 1]) == cc_lower(t[j - 1]) ? 0 : 1;
+      int best = d[i - 1][j] + 1;
+      if (d[i][j - 1] + 1 < best)
+        best = d[i][j - 1] + 1;
+      if (d[i - 1][j - 1] + cost < best)
+        best = d[i - 1][j - 1] + cost;
+      d[i][j] = best;
     }
   return d[ls][lt];
 }
-static CcCalcUnit *ccx_find_unit_fuzzy(const char *input) {
-  if (!input || !*input)
+
+static const CcUnit *cc_find_unit(const char *input) {
+  char s[64];
+  cc_trim_copy(input, s, sizeof(s));
+  size_t len = strlen(s);
+  if (len == 0)
     return NULL;
 
-  char tmp[64];
-  strncpy(tmp, input, sizeof(tmp) - 1);
-  tmp[sizeof(tmp) - 1] = '\0';
-
-  char *s = tmp;
-  while (*s && isspace((unsigned char)*s))
-    s++;
-  char *e = s + strlen(s);
-  while (e > s && isspace((unsigned char)*(e - 1)))
-    *--e = '\0';
-  if (!*s)
+  for (size_t i = 0; i < sizeof(cc_units) / sizeof(cc_units[0]); i++) {
+    if (sk_string_equals_ci(s, cc_units[i].name))
+      return &cc_units[i];
+    for (int j = 0; cc_units[i].aliases[j]; j++)
+      if (sk_string_equals_ci(s, cc_units[i].aliases[j]))
+        return &cc_units[i];
+  }
+  if (len < 3)
     return NULL;
 
-  for (size_t i = 0; i < CC_CALC_UNIT_COUNT; i++)
-    for (int j = 0; j < CC_CALC_UNITS[i].alias_count; j++)
-      if (ccx_str_equals_ci(s, CC_CALC_UNITS[i].aliases[j]))
-        return &CC_CALC_UNITS[i];
-  for (size_t i = 0; i < CC_CALC_UNIT_COUNT; i++)
-    if (ccx_str_equals_ci(s, CC_CALC_UNITS[i].canonical))
-      return &CC_CALC_UNITS[i];
+  for (size_t i = 0; i < sizeof(cc_units) / sizeof(cc_units[0]); i++)
+    for (int j = 0; cc_units[i].aliases[j]; j++)
+      if (sk_string_starts_with_ci(cc_units[i].aliases[j], s))
+        return &cc_units[i];
 
-  for (size_t i = 0; i < CC_CALC_UNIT_COUNT; i++)
-    for (int j = 0; j < CC_CALC_UNITS[i].alias_count; j++) {
-      if (sk_string_contains(s, CC_CALC_UNITS[i].aliases[j]) ||
-          sk_string_contains(s, CC_CALC_UNITS[i].aliases[j]))
-        return &CC_CALC_UNITS[i];
-    }
-
-  CcCalcUnit *best = NULL;
-  int bestd = 999;
-  for (size_t i = 0; i < CC_CALC_UNIT_COUNT; i++)
-    for (int j = 0; j < CC_CALC_UNITS[i].alias_count; j++) {
-      int d = ccx_levenshtein_ci(s, CC_CALC_UNITS[i].aliases[j]);
-      if (d < bestd && d <= 2 && strlen(s) >= 3) {
-        bestd = d;
-        best = &CC_CALC_UNITS[i];
+  const CcUnit *best = NULL;
+  int best_d = 999;
+  int max_d = len >= 6 ? 2 : 1;
+  for (size_t i = 0; i < sizeof(cc_units) / sizeof(cc_units[0]); i++)
+    for (int j = 0; cc_units[i].aliases[j]; j++) {
+      int d = cc_edit_distance(s, cc_units[i].aliases[j]);
+      if (d < best_d && d <= max_d) {
+        best_d = d;
+        best = &cc_units[i];
       }
     }
-  if (best)
-    return best;
-
-  for (size_t i = 0; i < CC_CALC_UNIT_COUNT; i++) {
-    int d = ccx_levenshtein_ci(s, CC_CALC_UNITS[i].canonical);
-    if (d < bestd && d <= 2 && strlen(s) >= 3) {
-      bestd = d;
-      best = &CC_CALC_UNITS[i];
-    }
-  }
   return best;
 }
 
-static void ccx_format_number_plain(double num, char *out, size_t max_len) {
+static void cc_format_number(double num, char *out, size_t cap) {
   if (isnan(num) || isinf(num)) {
-    snprintf(out, max_len, "%g", num);
+    snprintf(out, cap, "%g", num);
     return;
   }
   double a = fabs(num);
-  if (a >= 1e12 || (a != 0 && a < 1e-6)) {
-    snprintf(out, max_len, "%.6e", num);
-  } else {
-
-    snprintf(out, max_len, "%.12g", num);
-  }
+  if (a >= 1e12 || (a != 0 && a < 1e-6))
+    snprintf(out, cap, "%.6e", num);
+  else
+    snprintf(out, cap, "%.12g", num);
 }
 
-static double ccx_parse_number_with_suffix(const char *str) {
-  char cleaned[64];
-  strncpy(cleaned, str, sizeof(cleaned) - 1);
-  cleaned[sizeof(cleaned) - 1] = '\0';
-  int len = strlen(cleaned);
-  while (len > 0 && isspace((unsigned char)cleaned[len - 1]))
-    cleaned[--len] = '\0';
-  char *p = cleaned;
-  while (*p && isspace((unsigned char)*p))
-    p++;
-  if (*p == '\0')
-    return 0.0;
+#define CC_MAX_DEPTH 48
 
-  len = strlen(p);
-  if (len == 0)
-    return 0.0;
-  char suffix = tolower((unsigned char)p[len - 1]);
-  if (suffix == 'k' || suffix == 'm') {
+typedef struct {
+  const char *p;
+  bool ok;
+  int depth;
+} CcParser;
 
-    char num_part[64];
-    size_t num_len = strnlen(p, sizeof(num_part) - 1);
-    if (num_len > 0)
-      num_len -= 1;
-    memcpy(num_part, p, num_len);
-    num_part[num_len] = '\0';
-    char *end = NULL;
-    double v = strtod(num_part, &end);
-    if (end && *end == '\0') {
-      if (suffix == 'k')
-        return v * 1000.0;
-      if (suffix == 'm')
-        return v * 1000000.0;
-    }
-  }
-  return atof(p);
+static double cc_parse_expr(CcParser *ps);
+
+static void cc_skip_ws(CcParser *ps) {
+  while (isspace((unsigned char)*ps->p))
+    ps->p++;
 }
 
-static size_t ccx_strcpy_trunc(char *dst, size_t dst_size, const char *src) {
-  if (dst_size == 0)
-    return 0;
-  const char *s = src ? src : "";
-  size_t n = strlen(s);
-  if (n >= dst_size)
-    n = dst_size - 1;
-  memcpy(dst, s, n);
-  dst[n] = '\0';
-  return n;
-}
-
-static void ccx_trim_trailinspaces(char *str) {
-  int len = strlen(str);
-  while (len > 0 && isspace((unsigned char)str[len - 1]))
-    str[--len] = '\0';
-}
-
-static int ccx_precedence(char op) {
-  if (op == '*' || op == '/' || op == '^')
-    return 2;
-  if (op == '+' || op == '-')
-    return 1;
-  return 0;
-}
-static bool ccx_apply_op(double *vals, int *vtop, char *ops, int *otop,
-                         bool *ok) {
-  if (*vtop < 1 || *otop < 0) {
-    *ok = false;
+static bool cc_enter_level(CcParser *ps) {
+  if (++ps->depth > CC_MAX_DEPTH) {
+    ps->ok = false;
     return false;
   }
-  double b = vals[(*vtop)--];
-  double a = vals[(*vtop)--];
-  char op = ops[(*otop)--];
-  double r = 0;
-  switch (op) {
-  case '+':
-    r = a + b;
-    break;
-  case '-':
-    r = a - b;
-    break;
-  case '*':
-    r = a * b;
-    break;
-  case '^':
-    r = pow(a, b);
-    break;
-  case '/':
-    if (b == 0) {
-      *ok = false;
-      return false;
-    }
-    r = a / b;
-    break;
-  default:
-    *ok = false;
-    return false;
-  }
-  vals[++(*vtop)] = r;
   return true;
 }
-static double ccx_evaluate_expression(const char *expr, bool *out_ok) {
-  if (!expr) {
-    if (out_ok)
-      *out_ok = false;
+
+static double cc_parse_number(CcParser *ps) {
+  const char *s = ps->p;
+  const char *q = s;
+  int digits = 0;
+  while (isdigit((unsigned char)*q)) {
+    q++;
+    digits++;
+  }
+  if (*q == '.') {
+    q++;
+    while (isdigit((unsigned char)*q)) {
+      q++;
+      digits++;
+    }
+  }
+  if (digits == 0) {
+    ps->ok = false;
     return 0;
   }
-  char clean[512];
-  strncpy(clean, expr, sizeof(clean) - 1);
-  clean[sizeof(clean) - 1] = '\0';
-
-  for (int i = 0; clean[i]; i++)
-    if (clean[i] == 'x' || clean[i] == 'X')
-      clean[i] = '*';
-  double vals[128];
-  int vtop = -1;
-  char ops[128];
-  int otop = -1;
-  bool ok = true;
-  bool expect_number = true;
-  int n = strlen(clean);
-  for (int i = 0; i < n;) {
-    if (isspace((unsigned char)clean[i])) {
-      i++;
-      continue;
+  if (*q == 'e' || *q == 'E') {
+    const char *r = q + 1;
+    if (*r == '+' || *r == '-')
+      r++;
+    if (isdigit((unsigned char)*r)) {
+      while (isdigit((unsigned char)*r))
+        r++;
+      q = r;
     }
-    if (clean[i] == '(') {
-      ops[++otop] = '(';
-      expect_number = true;
-      i++;
-      continue;
-    }
-    if (clean[i] == ')') {
-      while (otop >= 0 && ops[otop] != '(') {
-        if (!ccx_apply_op(vals, &vtop, ops, &otop, &ok))
-          break;
-      }
-      if (otop >= 0 && ops[otop] == '(')
-        otop--;
-      else
-        ok = false;
-      expect_number = false;
-      i++;
-      continue;
-    }
-    if (expect_number && (clean[i] == '-' || clean[i] == '+')) {
-
-      int j = i + 1;
-      while (j < n && isspace((unsigned char)clean[j]))
-        j++;
-      if (j < n && (isdigit((unsigned char)clean[j]) || clean[j] == '.')) {
-
-      } else if (clean[j] == '(') {
-
-        vals[++vtop] = 0;
-        ops[++otop] = clean[i];
-        expect_number = true;
-        i++;
-        continue;
-      } else {
-        ok = false;
-        break;
-      }
-    }
-    if (isdigit((unsigned char)clean[i]) || clean[i] == '.' ||
-        (expect_number && (clean[i] == '-' || clean[i] == '+'))) {
-      int j = i;
-      if (clean[j] == '-' || clean[j] == '+')
-        j++;
-      while (j < n && (isdigit((unsigned char)clean[j]) || clean[j] == '.'))
-        j++;
-
-      if (j < n && (clean[j] == 'k' || clean[j] == 'K' || clean[j] == 'm' ||
-                    clean[j] == 'M')) {
-
-        char nxt = (j + 1 < n) ? clean[j + 1] : '\0';
-        if (nxt == '\0' || isspace((unsigned char)nxt) ||
-            strchr("+-*^/()", nxt)) {
-          j++;
-        }
-      }
-      char numtok[64] = {0};
-      int len = j - i;
-      if (len >= (int)sizeof(numtok))
-        len = sizeof(numtok) - 1;
-      strncpy(numtok, clean + i, len);
-      numtok[len] = '\0';
-      double v = ccx_parse_number_with_suffix(numtok);
-
-      if (v == 0 && numtok[0] != '0') {
-      }
-      vals[++vtop] = v;
-      expect_number = false;
-      i = j;
-      continue;
-    }
-    if (strchr("+-^*/", clean[i])) {
-      char cur = clean[i];
-      while (otop >= 0 && ops[otop] != '(' &&
-             ccx_precedence(ops[otop]) >= ccx_precedence(cur)) {
-        if (!ccx_apply_op(vals, &vtop, ops, &otop, &ok))
-          break;
-      }
-      ops[++otop] = cur;
-      expect_number = true;
-      i++;
-      continue;
-    }
-
-    ok = false;
-    break;
   }
-  while (ok && otop >= 0) {
-    if (ops[otop] == '(' || ops[otop] == ')') {
-      ok = false;
-      break;
-    }
-    if (!ccx_apply_op(vals, &vtop, ops, &otop, &ok))
-      break;
-  }
-  if (!ok || vtop != 0) {
-    if (out_ok)
-      *out_ok = false;
+  char tok[64];
+  size_t len = (size_t)(q - s);
+  if (len >= sizeof(tok)) {
+    ps->ok = false;
     return 0;
   }
-  if (out_ok)
-    *out_ok = true;
-  return vals[0];
+  memcpy(tok, s, len);
+  tok[len] = '\0';
+  double v = strtod(tok, NULL);
+
+  char c = *q;
+  if (c == 'k' || c == 'K' || c == 'm' || c == 'M') {
+    char next = q[1];
+    if (next == '\0' || isspace((unsigned char)next) || strchr("+-*/^()xX", next)) {
+      v *= (c == 'k' || c == 'K') ? 1e3 : 1e6;
+      q++;
+    }
+  }
+  ps->p = q;
+  return v;
 }
 
-static int ccx_find_in_keyword(const char *s) {
-  if (!s)
-    return -1;
-  int n = strlen(s);
-  for (int i = 0; i < n - 2; i++) {
-    if (tolower((unsigned char)s[i]) == ' ' &&
-        tolower((unsigned char)s[i + 1]) == 'i' &&
-        tolower((unsigned char)s[i + 2]) == 'n') {
-
-      if (i + 3 >= n || isspace((unsigned char)s[i + 3]) || s[i + 3] == '\0') {
-        return i + 1;
-      }
+static double cc_parse_primary(CcParser *ps) {
+  cc_skip_ws(ps);
+  if (*ps->p == '(') {
+    if (!cc_enter_level(ps))
+      return 0;
+    ps->p++;
+    double v = cc_parse_expr(ps);
+    cc_skip_ws(ps);
+    if (*ps->p != ')') {
+      ps->ok = false;
+      return 0;
     }
+    ps->p++;
+    ps->depth--;
+    return v;
   }
+  return cc_parse_number(ps);
+}
+
+static double cc_parse_unary(CcParser *ps);
+
+static double cc_parse_power(CcParser *ps) {
+  double base = cc_parse_primary(ps);
+  cc_skip_ws(ps);
+  if (*ps->p == '^') {
+    ps->p++;
+    if (!cc_enter_level(ps))
+      return 0;
+    double exponent = cc_parse_unary(ps);
+    ps->depth--;
+    return pow(base, exponent);
+  }
+  return base;
+}
+
+static double cc_parse_unary(CcParser *ps) {
+  cc_skip_ws(ps);
+  if (*ps->p == '-' || *ps->p == '+') {
+    char op = *ps->p++;
+    if (!cc_enter_level(ps))
+      return 0;
+    double v = cc_parse_unary(ps);
+    ps->depth--;
+    return op == '-' ? -v : v;
+  }
+  return cc_parse_power(ps);
+}
+
+static double cc_parse_term(CcParser *ps) {
+  double v = cc_parse_unary(ps);
+  for (;;) {
+    cc_skip_ws(ps);
+    char c = *ps->p;
+    if (c == '*' || c == 'x' || c == 'X') {
+      ps->p++;
+      v *= cc_parse_unary(ps);
+    } else if (c == '/') {
+      ps->p++;
+      double d = cc_parse_unary(ps);
+      if (d == 0) {
+        ps->ok = false;
+        return 0;
+      }
+      v /= d;
+    } else {
+      return v;
+    }
+    if (!ps->ok)
+      return 0;
+  }
+}
+
+static double cc_parse_expr(CcParser *ps) {
+  double v = cc_parse_term(ps);
+  for (;;) {
+    cc_skip_ws(ps);
+    char c = *ps->p;
+    if (c == '+') {
+      ps->p++;
+      v += cc_parse_term(ps);
+    } else if (c == '-') {
+      ps->p++;
+      v -= cc_parse_term(ps);
+    } else {
+      return v;
+    }
+    if (!ps->ok)
+      return 0;
+  }
+}
+
+static double cc_eval(const char *expr, bool *ok) {
+  CcParser ps = {expr ? expr : "", true, 0};
+  double v = cc_parse_expr(&ps);
+  cc_skip_ws(&ps);
+  *ok = ps.ok && *ps.p == '\0' && !isnan(v);
+  return *ok ? v : 0;
+}
+
+static int cc_find_in_keyword(const char *s) {
+  for (int i = 0; s[i] && s[i + 1] && s[i + 2]; i++)
+    if (s[i] == ' ' && cc_lower(s[i + 1]) == 'i' && cc_lower(s[i + 2]) == 'n' &&
+        (s[i + 3] == '\0' || isspace((unsigned char)s[i + 3])))
+      return i;
   return -1;
 }
-static void ccx_trim_copy(const char *src, char *dst, size_t cap) {
-  if (!src || !dst || cap == 0)
-    return;
-  while (*src && isspace((unsigned char)*src))
-    src++;
-  size_t len = strlen(src);
-  while (len > 0 && isspace((unsigned char)src[len - 1]))
-    len--;
-  if (len >= cap)
-    len = cap - 1;
-  strncpy(dst, src, len);
-  dst[len] = '\0';
-}
 
-#define CC_CALC_ROW_ICON "/calculator.png"
-
-static char cc_calc_label[512] = {0};
-
-static bool cc_calc_strict_number(const char *str, double *out) {
-  if (!str || !*str)
+static bool cc_calc_result(const char *input, char *out, size_t cap) {
+  char text[512];
+  cc_trim_copy(input, text, sizeof(text));
+  if (!text[0])
     return false;
-  while (*str && isspace((unsigned char)*str))
-    str++;
-  char *end = NULL;
-  double v = strtod(str, &end);
-  if (end == str)
-    return false;
-  while (*end && isspace((unsigned char)*end))
-    end++;
-  if (*end == 'k' || *end == 'K') {
-    v *= 1000.0;
-    end++;
-  } else if (*end == 'm' || *end == 'M') {
-    v *= 1000000.0;
-    end++;
+
+  bool ok = false;
+  char formatted[64];
+  int in_pos = cc_find_in_keyword(text);
+  if (in_pos < 0) {
+    double v = cc_eval(text, &ok);
+    if (!ok)
+      return false;
+    cc_format_number(v, formatted, sizeof(formatted));
+    cc_copy(out, cap, formatted);
+    return true;
   }
-  while (*end && isspace((unsigned char)*end))
-    end++;
-  if (*end != '\0')
+
+  char left[512];
+  memcpy(left, text, (size_t)in_pos);
+  left[in_pos] = '\0';
+  cc_trim_copy(left, left, sizeof(left));
+
+  size_t len = strlen(left);
+  size_t split = len;
+  while (split > 0 && isalpha((unsigned char)left[split - 1]))
+    split--;
+  if (split == len)
     return false;
-  if (out)
-    *out = v;
+  const CcUnit *from = cc_find_unit(left + split);
+  const CcUnit *to = cc_find_unit(text + in_pos + 3);
+  if (!from || !to)
+    return false;
+
+  char expr[512];
+  left[split] = '\0';
+  cc_trim_copy(left, expr, sizeof(expr));
+  if (!expr[0])
+    cc_copy(expr, sizeof(expr), "1");
+  double v = cc_eval(expr, &ok);
+  if (!ok)
+    return false;
+
+  cc_format_number(v * (from->seconds / to->seconds), formatted,
+                   sizeof(formatted));
+  snprintf(out, cap, "%s %s", formatted, to->name);
   return true;
 }
 
-static bool cc_calc_result_for(char *out_value, const char *filter,
-                               size_t cap) {
-  if (!filter || !filter[0])
-    return false;
-  char clean[512];
-  ccx_strcpy_trunc(clean, sizeof(clean), filter);
-  int in_pos = ccx_find_in_keyword(clean);
-  if (in_pos >= 0) {
-    char target_unit[64] = {0};
-    ccx_strcpy_trunc(target_unit, sizeof(target_unit), clean + in_pos + 2);
-    ccx_trim_trailinspaces(target_unit);
-    char *tp = target_unit;
-    while (*tp && isspace((unsigned char)*tp))
-      tp++;
-    memmove(target_unit, tp, strlen(tp) + 1);
-    clean[in_pos - 1] = '\0';
-    ccx_trim_trailinspaces(clean);
-    char left_trim[256];
-    ccx_trim_copy(clean, left_trim, sizeof(left_trim));
-    char *last_sp = strrchr(left_trim, ' ');
-    CcCalcUnit *fromU = NULL;
-    char expr_part[256] = {0};
-    double val = 0;
-    bool ok = false;
-    if (last_sp) {
-      char cand[64];
-      ccx_trim_copy(last_sp + 1, cand, sizeof(cand));
-      CcCalcUnit *u = ccx_find_unit_fuzzy(cand);
-      if (u) {
-        fromU = u;
-        *last_sp = '\0';
-        ccx_trim_copy(left_trim, expr_part, sizeof(expr_part));
-        if (expr_part[0] == '\0')
-          strcpy(expr_part, "1");
-        val = ccx_evaluate_expression(expr_part, &ok);
-        if (!ok)
-          val = ccx_parse_number_with_suffix(expr_part);
-      } else {
-        return false;
-      }
-    } else {
-      int L = (int)strlen(left_trim);
-      int p = L - 1;
-      while (p >= 0 && isalpha((unsigned char)left_trim[p]))
-        p--;
-      if (p >= L - 1)
-        return false;
-      char unit_cand[64] = {0};
-      ccx_strcpy_trunc(unit_cand, sizeof(unit_cand), left_trim + p + 1);
-      CcCalcUnit *u = ccx_find_unit_fuzzy(unit_cand);
-      if (!u)
-        return false;
-      fromU = u;
-      char numpart[256] = {0};
-      ccx_strcpy_trunc(numpart, sizeof(numpart), left_trim);
-      numpart[p + 1] = '\0';
-      ccx_trim_copy(numpart, expr_part, sizeof(expr_part));
-      if (expr_part[0] == '\0')
-        strcpy(expr_part, "1");
-      val = ccx_evaluate_expression(expr_part, &ok);
-      if (!ok)
-        val = ccx_parse_number_with_suffix(expr_part);
-    }
-    CcCalcUnit *toU = ccx_find_unit_fuzzy(target_unit);
-    if (!fromU || !toU)
-      return false;
-    double result = val * (fromU->to_seconds / toU->to_seconds);
-    char formatted[64];
-    ccx_format_number_plain(result, formatted, sizeof(formatted));
-    snprintf(out_value, cap, "%s %s", formatted, toU->canonical);
-    return true;
-  }
-
-  bool ok = false;
-  double result = ccx_evaluate_expression(clean, &ok);
-  if (ok) {
-    char formatted[64];
-    ccx_format_number_plain(result, formatted, sizeof(formatted));
-    snprintf(out_value, cap, "%s", formatted);
-    return true;
-  }
-  double val = 0;
-  if (cc_calc_strict_number(clean, &val)) {
-    char formatted[64];
-    ccx_format_number_plain(val, formatted, sizeof(formatted));
-    snprintf(out_value, cap, "%s", formatted);
-    return true;
-  }
-  return false;
-}
+static char cc_calc_label[512];
 
 static bool cc_calc_build_label(const char *filter) {
   cc_calc_label[0] = '\0';
   if (!filter || !filter[0])
     return false;
   char trimmed[256];
-  ccx_trim_copy(filter, trimmed, sizeof(trimmed));
-  if (!trimmed[0])
-    return false;
-  int has_digit = 0;
-  for (const char *p = trimmed; *p; p++) {
-    if (isdigit((unsigned char)*p) || *p == '.') {
-      has_digit = 1;
+  cc_trim_copy(filter, trimmed, sizeof(trimmed));
+  bool has_digit = false;
+  for (const char *p = trimmed; *p; p++)
+    if (isdigit((unsigned char)*p)) {
+      has_digit = true;
       break;
     }
-  }
   if (!has_digit)
     return false;
-  char value[128] = {0};
-  if (!cc_calc_result_for(value, trimmed, sizeof(value)))
+  char value[128];
+  if (!cc_calc_result(trimmed, value, sizeof(value)))
+    return false;
+  if (strcmp(trimmed, value) == 0)
     return false;
   snprintf(cc_calc_label, sizeof(cc_calc_label), "%s = %s", trimmed, value);
   return true;
 }
-static bool cc_contains_ci(const char *hay, const char *needle) {
-  if (!hay || !needle || !needle[0])
-    return true;
-  size_t nlen = strlen(needle);
-  for (const char *p = hay; *p; p++) {
-    size_t i = 0;
-    while (i < nlen && p[i] &&
-           tolower((unsigned char)p[i]) == tolower((unsigned char)needle[i]))
-      i++;
-    if (i == nlen)
-      return true;
-  }
-  return false;
-}
+
+static const char *cc_names[MAX_VISIBLE_ITEMS + 1];
+static int cc_width, cc_height;
+static char cc_selected_text[256];
 
 static bool cc_filter_match(const char *item, const char *filter) {
   if (!item || !filter || !filter[0])
     return true;
-  if (cc_contains_ci(item, filter))
+  if (sk_string_contains_ci(item, filter))
     return true;
-  const char *al = sk_alias_for(item);
-  if (al && cc_contains_ci(al, filter))
-    return true;
-  return false;
+  const char *alias = sk_alias_for(item);
+  return alias && sk_string_contains_ci(alias, filter);
 }
 
 static void cc_refresh(PromptState *state) {
-  cc_build();
-  int n = entry_count;
-  if (n > MAX_VISIBLE_ITEMS)
-    n = MAX_VISIBLE_ITEMS;
-  for (int i = 0; i < n; i++)
-    names[i] = entries[i].label;
-  if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(state->eb->filter)) {
-    names[n] = cc_calc_label;
-    n++;
-  }
-  sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
-                      .items = names, .count = n,
-                      .filter_match = cc_filter_match);
-  if (state->lb->total_matches > 0)
-    cc_fallback_active = false;
-  if (state->lb->total_matches == 0) {
-    CcEntry *fallback = cc_add_fallback();
-    if (fallback && n < MAX_VISIBLE_ITEMS) {
-      names[n] = fallback->label;
-      sk_populate_listbox(.lb = state->lb, .filter = "", .items = &names[n],
-                          .count = 1);
-      cc_fallback_active = true;
-    }
-  }
-}
-
-#define TYPE_COLOR SK_GRAY
-
-static void cc_subwindow_refresh(PromptState *state) {
-  const char *items[] = {"Register Hotkey", "Register Alias"};
-  sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
-                      .items = (const char **)items, .count = ARRAY_LEN(items));
-}
-
-static int cc_width = 0, cc_height = 0;
-static int actions_width = 0, actions_height = 0;
-
-static void cc_subwindow_render(PromptState *state) {
-  actions_width = state->width;
-  actions_height = state->height;
-  SkListSpec spec = {.lb = state->lb};
-  sk_place_editbox();
-  if (!sk_listbox_begin(&spec))
-    return;
-  SkListItemCtx ctx;
-
-  while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.y = ctx.y + 6, .text = ctx.text, .align = "LEFT", .pad = 10,
-                 .fontsize = 12);
-
-    const char *hk = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
-    SkRect r =
-        sk_text_bounds(.text = hk, .fontsize = 10, .x = actions_width - 6,
-                       .y = ctx.y + 8, .align = "RIGHT");
-    r.filled = true;
-    r.radius = 4;
-    r.color = SK_DARK_GRAY;
-    if (state->width > sk_get_text_width(ctx.text, 10) + 28) {
-      ski_draw_rect(&r);
-      sk_draw_text(.x = actions_width - 6, .y = ctx.y + 8, .text = hk,
-                   .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
-    }
-  }
-  sk_listbox_end();
-}
-
-static char current_hotkey_reg[128];
-static char current_reg_action[128];
-static char cc_main_selected[256];
-static SkTimer reg_flash_timer;
-static bool reg_flashing = false;
-static int reg_last_key = 0;
-
-static void cc_register_selected_hotkey(const char *name, const char *hotkey) {
-  if (!name || !name[0] || !hotkey || !hotkey[0])
-    return;
-  const CcEntry *e = cc_find(name);
-  int slot = cc_hotkey_slot_for(e);
-  if (slot >= 0) {
-    sk_register_hotkey(.hotkey = hotkey, .cb_ud = cc_entry_hotkey_cb,
-                       .ud = cc_hotkey_ud(slot));
-    char line[320];
-    snprintf(line, sizeof(line), "%s\t%s", hotkey, name);
-    sk_append_to_file(CC_HOTKEY_FILE, line);
-    return;
-  }
-}
-
-static const struct {
-  int vk;
-  const char *name;
-} kCapturableKeys[] = {
-    {VK_OEM_1, ";"},     {VK_OEM_2, "/"},     {VK_OEM_3, "`"},
-    {VK_OEM_4, "["},     {VK_OEM_5, "\\"},    {VK_OEM_6, "]"},
-    {VK_OEM_7, "'"},     {VK_OEM_COMMA, ","}, {VK_OEM_PERIOD, "."},
-    {VK_OEM_MINUS, "-"}, {VK_OEM_PLUS, "="},
-};
-
-static void cc_subwindow_reg_render(PromptState *state) {
-  char buf[128] = {0};
-  int pos = 0;
-  int rem = (int)sizeof(buf);
-  sk_disable_global_hotkeys();
-
-  if (sk_ctrl_pressed()) {
-    int written = snprintf(buf + pos, rem, "Ctrl+");
-    if (written > 0 && written < rem) {
-      pos += written;
-      rem -= written;
-    }
-  }
-  if (sk_alt_pressed()) {
-    int written = snprintf(buf + pos, rem, "Alt+");
-    if (written > 0 && written < rem) {
-      pos += written;
-      rem -= written;
-    }
-  }
-  if (sk_shift_pressed()) {
-    int written = snprintf(buf + pos, rem, "Shift+");
-    if (written > 0 && written < rem) {
-      pos += written;
-      rem -= written;
-    }
-  }
-
-  int k = 0;
-  char kname[8] = {0};
-  for (int c = 'A'; c <= 'Z' && !k; c++) {
-    if (sk_is_key_pressed(c)) {
-      k = c;
-      snprintf(kname, sizeof(kname), "%c", c);
-    }
-  }
-  for (int c = '0'; c <= '9' && !k; c++) {
-    if (sk_is_key_pressed(c)) {
-      k = c;
-      snprintf(kname, sizeof(kname), "%c", c);
-    }
-  }
-  for (size_t i = 0; i < ARRAY_LEN(kCapturableKeys) && !k; i++) {
-    if (sk_is_key_pressed(kCapturableKeys[i].vk)) {
-      k = kCapturableKeys[i].vk;
-      snprintf(kname, sizeof(kname), "%s", kCapturableKeys[i].name);
-    }
-  }
-  if (k && rem > 1) {
-    snprintf(buf + pos, rem, "%s", kname);
-  }
-  bool has_mod = sk_ctrl_pressed() || sk_alt_pressed() || sk_shift_pressed() ||
-                 sk_super_pressed();
-
-  size_t len = strlen(buf);
-  if (len > 0 && buf[len - 1] == '+') {
-    buf[len - 1] = '\0';
-  }
-
-  if (buf[0] && k != 0 && k != reg_last_key && has_mod) {
-    cc_register_selected_hotkey(current_reg_action, buf);
-    ccx_strcpy_trunc(current_hotkey_reg, sizeof(current_hotkey_reg), buf);
-    reg_flashing = true;
-    reg_flash_timer = sk_start_timer();
-    sk_enable_global_hotkeys();
-  }
-  if (k == 0)
-    reg_last_key = 0;
+  if (atomic_load(&cc_entries_dirty))
+    cc_build();
   else
-    reg_last_key = k;
-  if (reg_flashing && sk_end_timer(reg_flash_timer) >= 1.0)
-    reg_flashing = false;
+    cc_entry_count = cc_entry_base;
 
-  unsigned long rect_color = reg_flashing ? SK_GRAY : SK_DARK_GRAY;
-  unsigned long text_color = reg_flashing ? SK_DARK_GREEN : SK_GRAY;
+  int n = cc_entry_count < MAX_VISIBLE_ITEMS ? cc_entry_count
+                                             : MAX_VISIBLE_ITEMS;
+  for (int i = 0; i < n; i++)
+    cc_names[i] = cc_entries[i].label;
+  if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(state->eb->filter))
+    cc_names[n++] = cc_calc_label;
 
-  sk_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
-               .color = SK_GRAY, .align = "LEFT");
-  sk_draw_rect(.x = 10, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
-               .color = rect_color, .filled = true);
-  if (buf[0] || reg_flashing) {
-    sk_draw_text(.x = 17, .y = state->height / 2,
-                 .text = buf[0] ? buf : current_hotkey_reg, .fontsize = 22,
-                 .color = text_color, .align = "LEFT");
+  sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
+                      .items = cc_names, .count = n,
+                      .filter_match = cc_filter_match);
+
+  if (state->lb->total_matches == 0 && n < MAX_VISIBLE_ITEMS) {
+    CcEntry *fallback = cc_add_fallback();
+    if (fallback) {
+      cc_names[n] = fallback->label;
+      sk_populate_listbox(.lb = state->lb, .filter = "", .items = &cc_names[n],
+                          .count = 1);
+    }
   }
 }
 
-static void cc_subwindow_reg_onclose() { sk_enable_global_hotkeys(); }
+static void cc_draw_hotkey_chip(const char *hotkey, int right_x, int y) {
+  int font = FontSize - CC_HOTKEY_FONT_DELTA;
+  SkRect r = sk_text_bounds(.text = hotkey, .fontsize = font, .x = right_x,
+                            .y = y, .align = "RIGHT");
+  r.filled = true;
+  r.radius = 4;
+  r.color = SK_DARK_GRAY;
+  ski_draw_rect(&r);
+  sk_draw_text(.x = right_x, .y = y, .text = hotkey, .align = "RIGHT", .pad = 0,
+               .color = SK_GRAY, .fontsize = font);
+}
 
-static char g_alias_target[256];
+static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
+  const CcEntry *e = cc_find(ctx->text);
+  const char *icon = (e && e->icon[0]) ? e->icon : NULL;
+  if (!icon && cc_calc_label[0] && strcmp(ctx->text, cc_calc_label) == 0)
+    icon = CC_CALC_ROW_ICON;
 
-static void cc_alias_reg_render(PromptState *state) {
-  char label[284];
-  snprintf(label, sizeof(label), "Alias For: %s", g_alias_target);
-  sk_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 11, .color = SK_GRAY,
+  int name_x = ctx->x + CC_ITEM_TEXT_X + FontSize + CC_ICON_GAP;
+  int name_w = sk_get_text_width(ctx->text, FontSize);
+  if (icon)
+    sk_draw_image(.path = icon, .x = ctx->x + CC_ITEM_TEXT_X,
+                  .y = ctx->y + (ctx->h - FontSize) / 2, .w = FontSize,
+                  .h = FontSize);
+  sk_draw_text(.x = name_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = ctx->text,
                .align = "LEFT", .pad = 0);
 
-  sk_place_editbox(.x = (state->width - 160) / 2,
-                   .y = (state->height - 30) / 2 + 6, .w = 160, .h = 26,
-                   .placeholder = "alias name", .caret_height = 14,
-                   .caret_width = 1, .caret_y = 47, .fontsize = 14);
-}
-
-static bool cc_alias_reg_enter(PromptState *state) {
-  const char *input = state->eb->filter;
-  char alias[256];
-  ccx_strcpy_trunc(alias, sizeof(alias), input ? input : "");
-  char *p = alias;
-  while (*p == ' ')
-    p++;
-  char *end = alias + strlen(alias) - 1;
-  while (end > alias && *end == ' ') {
-    *end = '\0';
-    end--;
+  const char *alias = sk_alias_for(ctx->text);
+  if (alias) {
+    char chip[160];
+    snprintf(chip, sizeof(chip), "[%s]", alias);
+    sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
+                 .y = ctx->y + CC_ITEM_TEXT_Y + 2, .text = chip,
+                 .align = "LEFT", .pad = 0, .color = SK_GRAY,
+                 .fontsize = FontSize - 3);
   }
-  if (alias[0])
-    sk_add_alias(.alias = alias, .target = g_alias_target);
-  return true;
-}
+  if (!e)
+    return;
 
-static void cc_alias_reg_onclose() { sk_enable_global_hotkeys(); }
+  bool plain = strcmp(e->type, "Application") == 0 ||
+               strcmp(e->type, "Feature") == 0;
+  char hotkey[64];
+  bool has_hotkey =
+      cc_hotkey_for_label(ctx->text, hotkey, sizeof(hotkey)) && hotkey[0];
+  int right_w = sk_get_text_width(plain ? e->type : CC_TYPE_LABEL, FontSize);
+  if (has_hotkey)
+    cc_draw_hotkey_chip(hotkey, type_x - right_w - CC_TYPE_GAP - 4,
+                        ctx->y + 10);
 
-#define SUBWINDOW_W cc_width / 4
-#define SUBWINDOW_H cc_height / 9
-#define SUBWINDOW_X (cc_width / 2) + SUBWINDOW_W - 10
-#define SUBWINDOW_Y (cc_height / 2) - 50
-
-static bool cc_reg_select(int type) {
-  switch (type) {
-  case 0: {
-    ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action),
-                     cc_main_selected);
-    sk_disable_global_hotkeys();
-    sk_subwindow(.title = "Hotkey Reg", .x = SUBWINDOW_X,
-                 .y = SUBWINDOW_Y + (SUBWINDOW_H * 2), .w = SUBWINDOW_W, .h = SUBWINDOW_H,
-                 .render = cc_subwindow_reg_render,
-                 .on_close = cc_subwindow_reg_onclose);
-    break;
+  if (plain) {
+    sk_draw_text(.x = type_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = e->type,
+                 .align = "RIGHT", .color = CC_TYPE_COLOR);
+    return;
   }
-  case 1: {
-    ccx_strcpy_trunc(current_reg_action, sizeof(current_reg_action),
-                     cc_main_selected);
-    ccx_strcpy_trunc(g_alias_target, sizeof(g_alias_target), cc_main_selected);
-    sk_disable_global_hotkeys();
-    sk_subwindow(.title = "Alias Reg", .x = SUBWINDOW_X,
-                 .y = SUBWINDOW_Y + (SUBWINDOW_H * 2), .w = SUBWINDOW_W, .h = SUBWINDOW_H,
-                 .render = cc_alias_reg_render, .enter = cc_alias_reg_enter,
-                 .on_close = cc_alias_reg_onclose);
-    break;
+
+  if (e->type[0]) {
+    int tag_size = FontSize - CC_TYPE_SIZE_DELTA;
+    if (tag_size < 8)
+      tag_size = FontSize;
+    int tag_w = sk_get_text_width(e->type, tag_size);
+    int limit = type_x - sk_get_text_width(CC_TYPE_LABEL, FontSize);
+    if (has_hotkey)
+      limit -= CC_TYPE_GAP + 4 +
+               sk_get_text_width(hotkey, FontSize - CC_HOTKEY_FONT_DELTA);
+    if (name_x + name_w + CC_TYPE_GAP + tag_w + CC_TYPE_GAP <= limit)
+      sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
+                   .y = ctx->y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
+                   .text = e->type, .align = "LEFT", .pad = 0,
+                   .fontsize = tag_size, .color = CC_TYPE_COLOR);
   }
-  }
-  return true;
+  sk_draw_text(.x = type_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = CC_TYPE_LABEL,
+               .align = "RIGHT", .pad = 0, .color = CC_TYPE_COLOR);
 }
 
-static bool cc_subwindow_enter(PromptState *state) {
-  return cc_reg_select(state->lb->selected_index);
-}
-
-#define CC_PERSIST_MAX 64
-
-static char persisted_hotkeys[CC_PERSIST_MAX][64];
-static char persisted_actions[CC_PERSIST_MAX][256];
-static size_t persisted_count;
-
-static void cc_load_persisted_hotkeys(void) {
-  SkStringList lines = sk_load_file_list(CC_HOTKEY_FILE);
-  for (size_t li = 0; li < lines.count && persisted_count < CC_PERSIST_MAX;
-       li++) {
-    char copy[512];
-    ccx_strcpy_trunc(copy, sizeof(copy),
-                     lines.items[li] ? lines.items[li] : "");
-    char *tab = strchr(copy, '\t');
-    if (!tab)
-      continue;
-    *tab = '\0';
-    ccx_strcpy_trunc(persisted_hotkeys[persisted_count],
-                     sizeof(persisted_hotkeys[0]), copy);
-    ccx_strcpy_trunc(persisted_actions[persisted_count],
-                     sizeof(persisted_actions[0]), tab + 1);
-    persisted_count++;
-  }
-  sk_free_file_list(&lines);
-}
-
-static void cc_register_persisted_hotkeys(void) {
-  for (size_t li = 0; li < persisted_count; li++) {
-    const char *hotkey = persisted_hotkeys[li];
-    const char *action = persisted_actions[li];
-    const CcEntry *e = cc_find(action);
-    int slot = cc_hotkey_slot_for(e);
-    if (slot >= 0)
-      sk_register_hotkey(.hotkey = hotkey, .cb_ud = cc_entry_hotkey_cb,
-                         .ud = cc_hotkey_ud(slot));
-  }
-}
-
-static void cc_open_actions_subwindow(void) {
-  sk_subwindow(.title = "Actions", .x = SUBWINDOW_X,
-               .y = SUBWINDOW_Y, .w = SUBWINDOW_W, .h = 300,
-               .render = cc_subwindow_render, .refresh = cc_subwindow_refresh,
-               .enter = cc_subwindow_enter);
-}
+static void cc_open_actions_window(void);
+static void cc_open_register_window(int kind);
 
 static void cc_on_actions_render(SkPlaceState state) {
-  char *hotkey_str = strdup(ActionsHotkey);
-  if (hotkey_str) {
-    char *plus = strchr(hotkey_str, '+');
-    if (plus)
-      *plus = ' ';
-  }
+
+  char hotkey[64];
+  cc_copy(hotkey, sizeof(hotkey), ActionsHotkey);
+  char *plus = strchr(hotkey, '+');
+  if (plus)
+    *plus = ' ';
 
   sk_draw_rect(.x = state.rect.x + 95, .y = state.rect.y - 2,
                .w = state.rect.w - 95, .h = state.rect.h, .filled = true,
                .color = SK_DARK_GRAY, .radius = 6);
-
-  if (state.hovered) {
+  if (state.hovered)
     sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2,
                  .w = state.rect.w - 15, .h = state.rect.h, .filled = true,
                  .color = SK_GRAY, .radius = 6);
-  }
-
   sk_draw_text(.x = state.rect.x + 20, .y = state.rect.y - 4, .text = "Actions",
                .align = "LEFT", .color = SK_DARK_GRAY, .fontsize = 16);
-  if (hotkey_str)
-    sk_draw_text(.x = state.rect.x + 100, .y = state.rect.y - 7,
-                 .text = hotkey_str, .align = "LEFT", .fontsize = 20);
-
-  free(hotkey_str);
+  sk_draw_text(.x = state.rect.x + 100, .y = state.rect.y - 7, .text = hotkey,
+               .align = "LEFT", .fontsize = 20);
 }
 
 static void cc_render(PromptState *state) {
   if (state->lb && state->lb->selected_index != -1) {
-    const char *cur = ListBoxInfo_Row(state->lb, state->lb->selected_index);
-    if (cur)
-      ccx_strcpy_trunc(cc_main_selected, sizeof(cc_main_selected), cur);
+    const char *current = ListBoxInfo_Row(state->lb, state->lb->selected_index);
+    if (current)
+      cc_copy(cc_selected_text, sizeof(cc_selected_text), current);
   } else if (state->eb) {
-    ccx_strcpy_trunc(cc_main_selected, sizeof(cc_main_selected),
-                     state->eb->filter);
+    cc_copy(cc_selected_text, sizeof(cc_selected_text), state->eb->filter);
   }
   cc_width = state->width;
   cc_height = state->height;
+
   SkListSpec spec = {.lb = state->lb, .item_height = FontSize * 2};
   sk_place_editbox();
   sk_place_button(.name = "Actions", .x = state->width - 200,
                   .y = state->height - 30, .w = 180,
                   .render = cc_on_actions_render,
-                  .on_click = cc_open_actions_subwindow);
+                  .on_click = cc_open_actions_window);
 
-  if (sk_hotkey_down(sk_hotkey_from_string(ActionsHotkey))) {
-    cc_open_actions_subwindow();
-  }
-  if (sk_hotkey_down(sk_hotkey_from_string(RegHotkey))) {
-    cc_reg_select(0);
-  }
-  if (sk_hotkey_down(sk_hotkey_from_string(RegAliasHotkey))) {
-    cc_reg_select(1);
-  }
+  if (sk_hotkey_down(sk_hotkey_from_string(ActionsHotkey)))
+    cc_open_actions_window();
+  if (sk_hotkey_down(sk_hotkey_from_string(RegHotkey)))
+    cc_open_register_window(0);
+  if (sk_hotkey_down(sk_hotkey_from_string(RegAliasHotkey)))
+    cc_open_register_window(1);
+
   if (!sk_listbox_begin(&spec))
     return;
   int type_x = state->width - CC_ITEM_TEXT_X;
   SkListItemCtx ctx;
-  while (sk_listbox_next(&ctx)) {
-    const CcEntry *e = cc_find(ctx.text);
-    const char *row_icon = (e && e->icon[0]) ? e->icon : NULL;
-    int icon_size = FontSize;
-    int name_x = ctx.x + CC_ITEM_TEXT_X + icon_size + CC_ICON_GAP;
-    if (!row_icon && cc_calc_label[0] && strcmp(ctx.text, cc_calc_label) == 0) {
-      row_icon = CC_CALC_ROW_ICON;
-    }
-    if (row_icon) {
-      int icon_x = ctx.x + CC_ITEM_TEXT_X;
-      int icon_y = ctx.y + (ctx.h - icon_size) / 2;
-      sk_draw_image(.path = row_icon, .x = icon_x, .y = icon_y, .w = icon_size,
-                    .h = icon_size);
-    }
-
-    sk_draw_text(.x = name_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = ctx.text,
-                 .align = "LEFT", .pad = 0);
-
-    const char *al = sk_alias_for(ctx.text);
-    if (al) {
-      char abuf[160];
-      snprintf(abuf, sizeof(abuf), "[%s]", al);
-      int name_w = sk_get_text_width(ctx.text, FontSize);
-      sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
-                   .y = ctx.y + CC_ITEM_TEXT_Y + 2, .text = abuf,
-                   .align = "LEFT", .pad = 0, .color = SK_GRAY,
-                   .fontsize = FontSize - 3);
-    }
-    bool plain_type = e && (strcmp(e->type, "Application") == 0 ||
-                            strcmp(e->type, "Feature") == 0);
-    const char *right_text = plain_type ? e->type : CC_TYPE_LABEL;
-    if (e) {
-      char hk[64];
-      int type_w = sk_get_text_width(right_text, FontSize);
-      const char *hkp =
-          cc_hotkey_for_label(ctx.text, hk, sizeof(hk)) ? hk : NULL;
-      if (hkp && hkp[0]) {
-        int hk_fs = FontSize - 6;
-        int hk_x = type_x - type_w - CC_TYPE_GAP;
-        SkRect r = sk_text_bounds(.text = hk, .fontsize = hk_fs, .x = hk_x - 4,
-                                  .y = ctx.y + 10, .align = "RIGHT");
-        r.filled = true;
-        r.radius = 4;
-        r.color = SK_DARK_GRAY;
-        ski_draw_rect(&r);
-        sk_draw_text(.x = hk_x - 4, .y = ctx.y + 10, .text = hk,
-                     .align = "RIGHT", .pad = 0, .color = SK_GRAY,
-                     .fontsize = hk_fs);
-      }
-    }
-      if (plain_type) {
-        sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y, .text = e->type,
-                     .align = "RIGHT", .color = TYPE_COLOR);
-      } else if (e) {
-        int type_sz = FontSize - CC_TYPE_SIZE_DELTA;
-        if (type_sz < 8)
-          type_sz = FontSize;
-        if (e->type[0]) {
-          int name_w = sk_get_text_width(ctx.text, FontSize);
-          int type_w = sk_get_text_width(e->type, type_sz);
-          int cmd_w = sk_get_text_width(CC_TYPE_LABEL, FontSize);
-          char hk2[64] = {0};
-          bool has_hk = cc_hotkey_for_label(ctx.text, hk2, sizeof(hk2)) &&
-                        hk2[0] != '\0';
-          int hk_chip_w = has_hk ? sk_get_text_width(hk2, FontSize - 6) : 0;
-          int right_limit = type_x - cmd_w -
-                            (has_hk ? CC_TYPE_GAP + 4 + hk_chip_w : 0);
-          if (name_x + name_w + CC_TYPE_GAP + type_w + CC_TYPE_GAP <=
-              right_limit)
-            sk_draw_text(.x = name_x + name_w + CC_TYPE_GAP,
-                         .y = ctx.y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
-                         .text = e->type, .align = "LEFT", .pad = 0,
-                         .fontsize = type_sz, .color = TYPE_COLOR);
-        }
-        sk_draw_text(.x = type_x, .y = ctx.y + CC_ITEM_TEXT_Y,
-                     .text = CC_TYPE_LABEL, .align = "RIGHT", .pad = 0,
-                     .color = TYPE_COLOR);
-      }
-  }
+  while (sk_listbox_next(&ctx))
+    cc_draw_row(&ctx, type_x);
   sk_listbox_end();
 }
 
+static bool cc_copy_calc_result(const PromptState *state) {
+  if (!cc_calc_label[0] || strcmp(state->eb->filter, cc_calc_label) != 0)
+    return false;
+  const char *eq = strchr(cc_calc_label, '=');
+  if (eq) {
+    char value[128];
+    cc_trim_copy(eq + 1, value, sizeof(value));
+    sk_copy_to_clipboard(value);
+  }
+  return true;
+}
+
 static bool cc_enter(PromptState *state) {
-  if (cc_calc_label[0] && strcmp(state->eb->filter, cc_calc_label) == 0) {
-    const char *eq = strchr(cc_calc_label, '=');
-    if (eq) {
-      char value[128];
-      ccx_strcpy_trunc(value, sizeof(value), eq + 1);
-      char *v = value;
-      while (*v && isspace((unsigned char)*v))
-        v++;
-      ccx_trim_trailinspaces(v);
-      sk_copy_to_clipboard(v);
-    }
+  if (cc_copy_calc_result(state))
     return true;
-  }
-  if (sk_is_selected(state->lb)) {
-    cc_stage(cc_find(state->lb->selected_text), 0);
-  } else {
+  if (sk_is_selected(state->lb))
+    cc_stage(cc_find(state->lb->selected_text), CC_RUN_ENTER);
+  else
     sk_query_browser(state->eb->filter);
-  }
   return true;
 }
 
-static bool cc_ctrl_enter(PromptState *state) {
-  if (!sk_is_selected(state->lb)) {
+static bool cc_enter_with(PromptState *state, CcRunMode mode) {
+  if (!sk_is_selected(state->lb))
     sk_query_browser(state->lb->selected_text);
-  }
-  cc_stage(cc_find(state->lb->selected_text), 1);
+  cc_stage(cc_find(state->lb->selected_text), mode);
   return true;
 }
 
-static bool cc_shift_enter(PromptState *state) {
-  if (!sk_is_selected(state->lb)) {
-    sk_query_browser(state->lb->selected_text);
-  }
-  cc_stage(cc_find(state->lb->selected_text), 2);
-  return true;
-}
-static bool cc_ctrl_shift_enter(PromptState *state) {
-  if (!sk_is_selected(state->lb)) {
-    sk_query_browser(state->lb->selected_text);
-  }
-  cc_stage(cc_find(state->lb->selected_text), 3);
-  return true;
-}
-static bool cc_ctrl_alt_enter(PromptState *state) {
-  if (!sk_is_selected(state->lb)) {
-    sk_query_browser(state->lb->selected_text);
-  }
-  cc_stage(cc_find(state->lb->selected_text), 4);
-  return true;
-}
-static bool cc_shift_alt_enter(PromptState *state) {
-  if (!sk_is_selected(state->lb)) {
-    sk_query_browser(state->lb->selected_text);
-  }
-  cc_stage(cc_find(state->lb->selected_text), 5);
-  return true;
-}
+#define CC_DEFINE_ENTER(fn, mode)                                              \
+  static bool fn(PromptState *state) { return cc_enter_with(state, mode); }
+CC_DEFINE_ENTER(cc_ctrl_enter, CC_RUN_CTRL)
+CC_DEFINE_ENTER(cc_shift_enter, CC_RUN_SHIFT)
+CC_DEFINE_ENTER(cc_ctrl_shift_enter, CC_RUN_CTRL_SHIFT)
+CC_DEFINE_ENTER(cc_ctrl_alt_enter, CC_RUN_CTRL_ALT)
+CC_DEFINE_ENTER(cc_shift_alt_enter, CC_RUN_SHIFT_ALT)
 
 static void cc_on_close(void) { cc_run_pending(); }
 
@@ -1840,29 +1240,25 @@ static void cc_tab(PromptState *state) {
     e->on_tab();
 }
 
-static void reload_features_and_config(void) {
-  int features_reloaded = sk_reload_all_features();
-  int config_reloaded = sk_reload_config();
-  char buf[128];
-
-  if (features_reloaded > 0 && config_reloaded) {
-    snprintf(buf, sizeof(buf), "Reloaded %d Feature%s And Config",
-             features_reloaded, features_reloaded == 1 ? "" : "s");
-    sk_message(.message = buf);
-  } else if (features_reloaded > 0) {
-    snprintf(buf, sizeof(buf), "Reloaded %d Feature%s", features_reloaded,
-             features_reloaded == 1 ? "" : "s");
-    sk_message(.message = buf);
-  } else if (config_reloaded) {
-    sk_message(.message = "Reloaded Config");
-  } else {
-    sk_message(.message = "Nothing Reloaded");
-  }
+static void cc_reload(void) {
+  int features = sk_reload_all_features();
+  int config = sk_reload_config();
+  char msg[128];
+  if (features > 0 && config)
+    snprintf(msg, sizeof(msg), "Reloaded %d Feature%s And Config", features,
+             features == 1 ? "" : "s");
+  else if (features > 0)
+    snprintf(msg, sizeof(msg), "Reloaded %d Feature%s", features,
+             features == 1 ? "" : "s");
+  else if (config)
+    snprintf(msg, sizeof(msg), "Reloaded Config");
+  else
+    snprintf(msg, sizeof(msg), "Nothing Reloaded");
+  sk_message(.message = msg);
 }
 
-static void TriggerControl(void) {
-  cc_build_xdg_paths();
-
+static void cc_open_control(void) {
+  atomic_store(&cc_entries_dirty, true);
   sk_window(.title = "Control", .placeholder = "Search For Something...",
             .refresh = cc_refresh, .enter = cc_enter,
             .ctrl_enter = cc_ctrl_enter, .shift_enter = cc_shift_enter,
@@ -1872,25 +1268,207 @@ static void TriggerControl(void) {
             .render = cc_render, .on_close = cc_on_close);
 }
 
+static int cc_sub_w(void) { return cc_width / 4; }
+static int cc_sub_h(void) { return cc_height / 9; }
+static int cc_sub_x(void) { return cc_width / 2 + cc_sub_w() - 10; }
+static int cc_sub_y(void) { return cc_height / 2 - 50; }
+
+static const char *cc_action_names[] = {"Register Hotkey", "Register Alias"};
+
+static void cc_actions_refresh(PromptState *state) {
+  sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
+                      .items = cc_action_names,
+                      .count = (int)ARRAY_LEN(cc_action_names));
+}
+
+static void cc_actions_render(PromptState *state) {
+  int width = state->width;
+  SkListSpec spec = {.lb = state->lb};
+  sk_place_editbox();
+  if (!sk_listbox_begin(&spec))
+    return;
+  SkListItemCtx ctx;
+  while (sk_listbox_next(&ctx)) {
+    sk_draw_text(.y = ctx.y + 6, .text = ctx.text, .align = "LEFT", .pad = 10,
+                 .fontsize = 12);
+    const char *hotkey = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
+    if (width <= sk_get_text_width(ctx.text, 10) + 28)
+      continue;
+    SkRect r = sk_text_bounds(.text = hotkey, .fontsize = 10, .x = width - 6,
+                              .y = ctx.y + 8, .align = "RIGHT");
+    r.filled = true;
+    r.radius = 4;
+    r.color = SK_DARK_GRAY;
+    ski_draw_rect(&r);
+    sk_draw_text(.x = width - 6, .y = ctx.y + 8, .text = hotkey,
+                 .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
+  }
+  sk_listbox_end();
+}
+
+static bool cc_actions_enter(PromptState *state) {
+  cc_open_register_window(state->lb->selected_index);
+  return true;
+}
+
+static void cc_open_actions_window(void) {
+  sk_subwindow(.title = "Actions", .x = cc_sub_x(), .y = cc_sub_y(),
+               .w = cc_sub_w(), .h = 300, .render = cc_actions_render,
+               .refresh = cc_actions_refresh, .enter = cc_actions_enter);
+}
+
+static char cc_register_target[256];
+static char cc_captured_hotkey[128];
+static SkTimer cc_flash_timer;
+static bool cc_flashing;
+static int cc_last_key;
+
+static const struct {
+  int vk;
+  const char *name;
+} cc_punctuation_keys[] = {
+    {VK_OEM_1, ";"},     {VK_OEM_2, "/"},     {VK_OEM_3, "`"},
+    {VK_OEM_4, "["},     {VK_OEM_5, "\\"},    {VK_OEM_6, "]"},
+    {VK_OEM_7, "'"},     {VK_OEM_COMMA, ","}, {VK_OEM_PERIOD, "."},
+    {VK_OEM_MINUS, "-"}, {VK_OEM_PLUS, "="},
+};
+
+static void cc_append(char *buf, size_t cap, const char *s) {
+  size_t len = strlen(buf);
+  if (len < cap)
+    snprintf(buf + len, cap - len, "%s", s);
+}
+
+static int cc_pressed_key(char *name, size_t cap) {
+  for (int c = 'A'; c <= 'Z'; c++)
+    if (sk_is_key_pressed(c)) {
+      snprintf(name, cap, "%c", c);
+      return c;
+    }
+  for (int c = '0'; c <= '9'; c++)
+    if (sk_is_key_pressed(c)) {
+      snprintf(name, cap, "%c", c);
+      return c;
+    }
+  for (size_t i = 0; i < ARRAY_LEN(cc_punctuation_keys); i++)
+    if (sk_is_key_pressed(cc_punctuation_keys[i].vk)) {
+      cc_copy(name, cap, cc_punctuation_keys[i].name);
+      return cc_punctuation_keys[i].vk;
+    }
+  return 0;
+}
+
+static void cc_hotkey_capture_render(PromptState *state) {
+  sk_disable_global_hotkeys();
+
+  char combo[128] = "";
+  if (sk_ctrl_pressed())
+    cc_append(combo, sizeof(combo), "Ctrl+");
+  if (sk_alt_pressed())
+    cc_append(combo, sizeof(combo), "Alt+");
+  if (sk_shift_pressed())
+    cc_append(combo, sizeof(combo), "Shift+");
+
+  bool has_modifier =
+      sk_ctrl_pressed() || sk_alt_pressed() || sk_shift_pressed();
+
+  char key_name[8] = "";
+  int key = cc_pressed_key(key_name, sizeof(key_name));
+  if (key)
+    cc_append(combo, sizeof(combo), key_name);
+  size_t len = strlen(combo);
+  if (len > 0 && combo[len - 1] == '+')
+    combo[len - 1] = '\0';
+
+  if (combo[0] && key && key != cc_last_key && has_modifier) {
+    cc_bind_hotkey(cc_register_target, combo);
+    cc_copy(cc_captured_hotkey, sizeof(cc_captured_hotkey), combo);
+    cc_flashing = true;
+    cc_flash_timer = sk_start_timer();
+    sk_enable_global_hotkeys();
+  }
+  cc_last_key = key;
+  if (cc_flashing && sk_end_timer(cc_flash_timer) >= 1.0)
+    cc_flashing = false;
+
+  sk_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
+               .color = SK_GRAY, .align = "LEFT");
+  sk_draw_rect(.x = 10, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
+               .color = cc_flashing ? SK_GRAY : SK_DARK_GRAY, .filled = true);
+  if (combo[0] || cc_flashing)
+    sk_draw_text(.x = 17, .y = state->height / 2,
+                 .text = combo[0] ? combo : cc_captured_hotkey, .fontsize = 22,
+                 .color = cc_flashing ? SK_DARK_GREEN : SK_GRAY,
+                 .align = "LEFT");
+}
+
+static void cc_hotkey_capture_close(void) { sk_enable_global_hotkeys(); }
+
+static void cc_alias_render(PromptState *state) {
+  char label[284];
+  snprintf(label, sizeof(label), "Alias For: %s", cc_register_target);
+  sk_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 11, .color = SK_GRAY,
+               .align = "LEFT", .pad = 0);
+  sk_place_editbox(.x = (state->width - 160) / 2,
+                   .y = (state->height - 30) / 2 + 6, .w = 160, .h = 26,
+                   .placeholder = "alias name", .caret_height = 14,
+                   .caret_width = 1, .caret_y = 47, .fontsize = 14);
+}
+
+static bool cc_alias_enter(PromptState *state) {
+  char alias[256];
+  cc_trim_copy(state->eb->filter, alias, sizeof(alias));
+  if (alias[0])
+    sk_add_alias(.alias = alias, .target = cc_register_target);
+  return true;
+}
+
+static void cc_alias_close(void) { sk_enable_global_hotkeys(); }
+
+static void cc_open_register_window(int kind) {
+  if (kind != 0 && kind != 1)
+    return;
+  cc_copy(cc_register_target, sizeof(cc_register_target), cc_selected_text);
+  sk_disable_global_hotkeys();
+  if (kind == 0)
+    sk_subwindow(.title = "Hotkey Reg", .x = cc_sub_x(),
+                 .y = cc_sub_y() + cc_sub_h() * 2, .w = cc_sub_w(),
+                 .h = cc_sub_h(), .render = cc_hotkey_capture_render,
+                 .on_close = cc_hotkey_capture_close);
+  else
+    sk_subwindow(.title = "Alias Reg", .x = cc_sub_x(),
+                 .y = cc_sub_y() + cc_sub_h() * 2, .w = cc_sub_w(),
+                 .h = cc_sub_h(), .render = cc_alias_render,
+                 .enter = cc_alias_enter, .on_close = cc_alias_close);
+}
+
+static void cc_deferred_build(void) { cc_build(); }
+
 SKALD_FEATURE_INIT {
-  cc_stopping = 0;
-  cc_load_persisted_hotkeys();
-  app_cache_mtx = sk_mutex_create();
-  cc_register_type("Application", cc_fill_applications);
+  atomic_store(&cc_stopping, false);
+  atomic_store(&cc_apps_ready, false);
+  atomic_store(&cc_entries_dirty, true);
+  cc_entry_count = 0;
+  cc_entry_base = 0;
+  cc_bindings_load();
+
+  cc_prewarm_thread = sk_thread_create(cc_prewarm_apps, NULL);
   cc_build();
-  if (app_cache_mtx)
-    prewarm_thread = sk_thread_create(cc_prewarm_app_cache, NULL);
-  sk_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = TriggerControl);
-  sk_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey,
-                     .cb = reload_features_and_config);
-  sk_register_deferred_init(cc_deferred_entry_build);
+  sk_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = cc_open_control);
+  sk_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey, .cb = cc_reload);
+  sk_register_deferred_init(cc_deferred_build);
 }
 
 SKALD_FEATURE_SHUTDOWN {
-  cc_stopping = 1;
-  if (prewarm_thread) {
-    sk_thread_join(prewarm_thread);
-    prewarm_thread = NULL;
+  atomic_store(&cc_stopping, true);
+  if (cc_prewarm_thread) {
+    sk_thread_join(cc_prewarm_thread);
+    cc_prewarm_thread = NULL;
   }
+  cc_apps_free();
+  free(cc_entries);
+  cc_entries = NULL;
+  cc_entry_count = 0;
+  cc_entry_cap = 0;
+  cc_entry_base = 0;
 }
-

@@ -771,6 +771,12 @@ bool sk_string_contains(const char *haystack, const char *needle) {
   return String_ContainsCI(haystack, needle);
 }
 
+bool sk_string_contains_ci(const char *haystack, const char *needle) {
+  if (!needle || !haystack)
+    return false;
+  return String_ContainsCI(haystack, needle);
+}
+
 char *sk_string_cut_at(const char *str, char delim) {
   return String_CutAt(str, delim);
 }
@@ -795,8 +801,14 @@ char *sk_string_to_upper(const char *str) { return String_ToUpper(str); }
 bool sk_string_starts_with(const char *str, const char *prefix) {
   return String_StartsWith(str, prefix);
 }
+bool sk_string_starts_with_ci(const char *str, const char *prefix) {
+  return String_StartsWithCI(str, prefix);
+}
 bool sk_string_ends_with(const char *str, const char *suffix) {
   return String_EndsWith(str, suffix);
+}
+bool sk_string_equals_ci(const char *str, const char *other) {
+  return String_EqualsCI(str, other);
 }
 char *sk_string_replace(const char *str, const char *from, const char *to) {
   return String_Replace(str, from, to);
