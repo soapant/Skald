@@ -185,6 +185,7 @@ char *Platform_RunTerminalCommand(const char *command, bool open_terminal);
 char *Platform_RunCommandAndGetOutput(const char *command);
 char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
                               int *out_status);
+char *Platform_FindExecutable(const char *name);
 char *Platform_GetActiveWindowTitle(void);
 char *Platform_GetActiveWindowAppId(void);
 char *Platform_GetIconPath(char *app_path);

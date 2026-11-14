@@ -149,6 +149,8 @@ char *sk_run_terminal_command_and_open(char *command);
 char *sk_run_argv(const char *const argv[], const char *stdin_data,
                   int *out_status);
 
+char *sk_which(const char *command);
+
 bool sk_launch_detached(char *command);
 
 bool sk_terminate_process_by_name(const char *exe_name);
