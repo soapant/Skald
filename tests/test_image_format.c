@@ -21,6 +21,10 @@ static void put_le32(unsigned char *p, uint32_t v) {
 
 static unsigned char *make_png(unsigned w, unsigned h, size_t *out_len) {
   unsigned char *b = calloc(1, 64);
+  if (!b) {
+    fprintf(stderr, "out of memory\n");
+    exit(1);
+  }
   memcpy(b, "\x89PNG\r\n\x1a\n", 8);
   memcpy(b + 12, "IHDR", 4);
   b[16] = (unsigned char)(w >> 24);
@@ -37,6 +41,10 @@ static unsigned char *make_png(unsigned w, unsigned h, size_t *out_len) {
 
 static unsigned char *make_gif(unsigned w, unsigned h, size_t *out_len) {
   unsigned char *b = calloc(1, 16);
+  if (!b) {
+    fprintf(stderr, "out of memory\n");
+    exit(1);
+  }
   memcpy(b, "GIF89a", 6);
   put_le16(b + 6, w);
   put_le16(b + 8, h);
@@ -46,6 +54,10 @@ static unsigned char *make_gif(unsigned w, unsigned h, size_t *out_len) {
 
 static unsigned char *make_bmp(int32_t w, int32_t h, size_t *out_len) {
   unsigned char *b = calloc(1, 40);
+  if (!b) {
+    fprintf(stderr, "out of memory\n");
+    exit(1);
+  }
   b[0] = 'B';
   b[1] = 'M';
   put_le32(b + 18, (uint32_t)w);
@@ -58,6 +70,10 @@ static unsigned char *make_jpeg(unsigned char sof_marker, unsigned w,
                                 unsigned h, int with_app_segment,
                                 size_t *out_len) {
   unsigned char *b = calloc(1, 128);
+  if (!b) {
+    fprintf(stderr, "out of memory\n");
+    exit(1);
+  }
   b[0] = 0xFF;
   b[1] = 0xD8;
   b[2] = 0xFF;
