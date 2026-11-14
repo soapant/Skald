@@ -194,7 +194,6 @@ void RenderThread_Sync(void) {
     long long now = Platform_GetWallClockMs();
     if (now - start >= 5000) {
       log_warn("render thread sync timed out after 5s");
-      free(s);
       return;
     }
     Platform_RenderThreadMiniSleep(1);

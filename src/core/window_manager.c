@@ -217,6 +217,9 @@ void EventBus_Register(PlEvent event, PlEventCallback cb) {
       return;
     }
   }
+  log_error(
+      "EventBus_Register: event %d table is full (%d slots), callback dropped",
+      event, MAX_EVENT_CALLBACKS);
 }
 
 void EventBus_Unregister(PlEvent event, PlEventCallback cb) {
