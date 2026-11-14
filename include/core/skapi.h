@@ -630,7 +630,7 @@ SkColor sk_get_pixel_color(SkPos pos);
 
 bool sk_move_to_pos(SkPos pos);
 
-bool sk_click_at_pos(SkPos pos);
+bool sk_click_at(SkPos pos);
 
 bool sk_left_click(void);
 
@@ -651,7 +651,7 @@ void sk_emit_key(int vk, bool down);
 
 bool sk_move_to_pos_rel(int rx, int ry);
 
-bool sk_click_at_pos_rel(int rx, int ry);
+bool sk_click_at_rel(int rx, int ry);
 
 bool sk_emit_mouse_button_at_rel(int rx, int ry, int button, bool down);
 

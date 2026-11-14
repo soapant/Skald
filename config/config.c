@@ -13,11 +13,11 @@ void ConfigApply(void) {
   MessageScreenGap = 20;
   WindowOpacity = 235.0f;
   UsedFont = "0xProto Nerd Font";
+  PromptWidth = 900;
+  PromptHeight = 640;
   FontSize = 18;
   IconSize = 32;
   WidgetGap = 0;
-  PromptWidth = 450;
-  PromptHeight = 640;
   UsedTerminal = "";
   UsedShell = "";
   UsedBrowser = "";
@@ -29,7 +29,7 @@ void ConfigApply(void) {
   ActionsHotkey = "Ctrl+K";
   RegHotkey = "Ctrl+Shift+E";
   RegAliasHotkey = "Ctrl+Shift+A";
-  Theme = "modus-vivendi";
+  Theme = "matrix";
   BackgroundImage = "";
   MessagesEnabled = true;
   EnableAutoPairing = true;
@@ -37,10 +37,5 @@ void ConfigApply(void) {
   RainbowText = false;
   WindowTitleText = false;
   CloseOnLossOfFocus = false;
-  COLOR_BG = RGB(40, 40, 40);
-  COLOR_TEXT = RGB(255, 255, 255);
-  COLOR_SELECTED_TEXT = RGB(0, 0, 0);
-  COLOR_CURSOR = RGB(255, 255, 255);
-  COLOR_BORDER = RGB(128, 128, 128);
 }
 // </skald-config-generated>

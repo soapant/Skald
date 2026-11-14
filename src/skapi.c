@@ -1677,7 +1677,7 @@ PlColor sk_get_pixel_color(SkPos pos) {
   return Platform_GetPixelColor(pos.x, pos.y);
 }
 bool sk_move_to_pos(SkPos pos) { return Platform_MoveToPos(pos.x, pos.y); }
-bool sk_click_at_pos(SkPos pos) { return sk_move_to_pos(pos) && sk_click(); }
+bool sk_click_at(SkPos pos) { return sk_move_to_pos(pos) && sk_click(); }
 bool sk_left_click(void) { return Platform_ClickButton(1); }
 bool sk_right_click(void) { return Platform_ClickButton(2); }
 bool sk_emit_mouse_button(int button, bool down) {
@@ -1720,12 +1720,12 @@ bool sk_move_to_pos_rel(int rx, int ry) {
   return sk_move_to_pos(abs);
 }
 
-bool sk_click_at_pos_rel(int rx, int ry) {
+bool sk_click_at_rel(int rx, int ry) {
   SkPos abs;
   if (!rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  return sk_click_at_pos(abs);
+  return sk_click_at(abs);
 }
 
 bool sk_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
