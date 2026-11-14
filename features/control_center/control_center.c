@@ -406,10 +406,8 @@ static const CcScanPath cc_scan_paths[] = {
 #if defined(_WIN32)
     {"~\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
      SK_DIR_WALK_UNLIMITED},
-    {"C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
+    {"C:\\ProgramData\\Microsoft\\Windows\\Start Menu",
      SK_DIR_WALK_UNLIMITED},
-    {"C:\\miscellaneous", SK_DIR_WALK_UNLIMITED},
-    {"shell:AppsFolder", SK_DIR_WALK_UNLIMITED},
     {"C:\\Program Files\\Epic Games", 5},
     {"C:\\Program Files (x86)\\Epic Games", 5},
     {"D:\\Epic Games", 5},
