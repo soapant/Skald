@@ -24,6 +24,7 @@
 #include "helpers/helpers_input_state.h"
 #include "core/window_manager.h"
 #include "core/thread_registry.h"
+#include "core/owner_purge.h"
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
 #include "core/skapi.h"
@@ -2599,21 +2600,55 @@ void sk_register_key_interceptor(SkKeyInterceptorFn fn) {
 typedef struct {
   double seconds;
   void (*callback)(void);
+  int stop;
 } SkRunEveryArgs;
+
+typedef struct SkRunEveryEntry {
+  SkRunEveryArgs *args;
+  void *thread;
+  char owner[OWNER_PATH_MAX];
+  struct SkRunEveryEntry *next;
+} SkRunEveryEntry;
+
+static SkRunEveryEntry *run_every_head = NULL;
+static void *run_every_mtx = NULL;
+
+static void run_every_lock(void) {
+  if (!run_every_mtx)
+    run_every_mtx = Platform_MutexCreate();
+  if (run_every_mtx)
+    Platform_MutexLock(run_every_mtx);
+}
+
+static void run_every_unlock(void) {
+  if (run_every_mtx)
+    Platform_MutexUnlock(run_every_mtx);
+}
 
 static void *run_every_thread(void *arg) {
   SkRunEveryArgs *args = (SkRunEveryArgs *)arg;
-  while (true) {
-    sk_sleep(args->seconds);
+  for (;;) {
+    if (__atomic_load_n(&args->stop, __ATOMIC_RELAXED))
+      return NULL;
+    double remaining = args->seconds;
+    while (remaining > 0.0) {
+      if (__atomic_load_n(&args->stop, __ATOMIC_RELAXED))
+        return NULL;
+      double step = remaining >= 0.05 ? 0.05 : remaining;
+      sk_sleep(step);
+      remaining -= step;
+    }
+    if (__atomic_load_n(&args->stop, __ATOMIC_RELAXED))
+      return NULL;
     args->callback();
   }
-  free(args);
-  return NULL;
 }
 
 void sk_run_every(double seconds, void (*callback)(void)) {
   if (!callback)
     return;
+  if (!(seconds > 0.0))
+    seconds = 0.01;
   SkRunEveryArgs *args = malloc(sizeof(SkRunEveryArgs));
   if (!args) {
     log_error("sk_run_every: malloc failed");
@@ -2621,7 +2656,57 @@ void sk_run_every(double seconds, void (*callback)(void)) {
   }
   args->seconds = seconds;
   args->callback = callback;
-  thread_create_ex(run_every_thread, args, (void *)(uintptr_t)callback);
+  args->stop = 0;
+  SkRunEveryEntry *entry = malloc(sizeof(SkRunEveryEntry));
+  if (!entry) {
+    log_error("sk_run_every: malloc failed");
+    free(args);
+    return;
+  }
+  entry->args = args;
+  entry->owner[0] = '\0';
+  entry->next = NULL;
+  Platform_GetModuleOwnerPath((void *)(uintptr_t)callback, entry->owner,
+                              sizeof(entry->owner));
+  entry->owner[sizeof(entry->owner) - 1] = '\0';
+  entry->thread = thread_create_ex(run_every_thread, args,
+                                   (void *)(uintptr_t)callback);
+  if (!entry->thread) {
+    log_error("sk_run_every: thread creation failed");
+    free(entry);
+    free(args);
+    return;
+  }
+  run_every_lock();
+  entry->next = run_every_head;
+  run_every_head = entry;
+  run_every_unlock();
+}
+
+void RunEvery_PurgeOwner(const char *path_a, const char *path_b) {
+  SkRunEveryEntry *mine = NULL;
+  run_every_lock();
+  SkRunEveryEntry **pp = &run_every_head;
+  while (*pp) {
+    SkRunEveryEntry *e = *pp;
+    if (Owner_ModuleMatches(e->owner, path_a, path_b)) {
+      *pp = e->next;
+      e->next = mine;
+      mine = e;
+    } else {
+      pp = &e->next;
+    }
+  }
+  run_every_unlock();
+  while (mine) {
+    SkRunEveryEntry *e = mine;
+    mine = e->next;
+    __atomic_store_n(&e->args->stop, 1, __ATOMIC_RELAXED);
+    if (e->thread)
+      Platform_ThreadJoin(e->thread);
+    free(e->args);
+    free(e);
+  }
 }
 
 SkMetrics *sk_get_metrics(void) { return Metrics_Get(); }
