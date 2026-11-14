@@ -826,6 +826,9 @@ bool string_starts_with_ci(const char *str, const char *prefix) {
   if (!str || !prefix)
     return false;
   size_t plen = strlen(prefix);
+  size_t slen = strlen(str);
+  if (plen > slen)
+    return false;
   for (size_t i = 0; i < plen; i++) {
     if (tolower((unsigned char)str[i]) != tolower((unsigned char)prefix[i]))
       return false;

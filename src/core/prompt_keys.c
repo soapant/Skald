@@ -84,6 +84,26 @@ void prompt_insert_text(PromptState *state, const char *text, int len) {
   prompt_refresh(state);
 }
 
+typedef bool (*PromptEnterFn)(PromptState *state);
+
+static PromptEnterFn prompt_enter_callback_for(const PromptCallbacks *cb,
+                                               bool ctrl, bool shift,
+                                               bool alt, bool *out_combo) {
+  *out_combo = true;
+  if (ctrl && shift)
+    return cb->ctrl_shift_enter ? cb->ctrl_shift_enter : cb->enter;
+  if (ctrl && alt)
+    return cb->ctrl_alt_enter ? cb->ctrl_alt_enter : cb->enter;
+  if (shift && alt)
+    return cb->shift_alt_enter ? cb->shift_alt_enter : cb->enter;
+  if (shift)
+    return cb->shift_enter ? cb->shift_enter : cb->enter;
+  if (ctrl)
+    return cb->ctrl_enter ? cb->ctrl_enter : cb->enter;
+  *out_combo = false;
+  return cb->enter;
+}
+
 void prompt_trigger_enter(PromptState *state, bool ctrl, bool shift, bool alt) {
   SkaldContext *ctx = SkaldContext_Get();
   if (!ctx)
@@ -97,71 +117,15 @@ void prompt_trigger_enter(PromptState *state, bool ctrl, bool shift, bool alt) {
     safe_copy(filter_copy, sizeof(filter_copy), state->eb->filter);
     sel = filter_copy;
   }
-  bool should_close = true;
-  if (ctrl && shift) {
-    should_close = false;
-    if (ctx->window.prompt_callbacks.ctrl_shift_enter)
-      should_close = ctx->window.prompt_callbacks.ctrl_shift_enter(state);
-    else if (ctx->window.prompt_callbacks.enter)
-      should_close = ctx->window.prompt_callbacks.enter(state);
-  } else if (ctrl && alt) {
-    should_close = false;
-    if (ctx->window.prompt_callbacks.ctrl_alt_enter)
-      should_close = ctx->window.prompt_callbacks.ctrl_alt_enter(state);
-    else if (ctx->window.prompt_callbacks.enter)
-      should_close = ctx->window.prompt_callbacks.enter(state);
-  } else if (shift && alt) {
-    should_close = false;
-    if (ctx->window.prompt_callbacks.shift_alt_enter)
-      should_close = ctx->window.prompt_callbacks.shift_alt_enter(state);
-    else if (ctx->window.prompt_callbacks.enter)
-      should_close = ctx->window.prompt_callbacks.enter(state);
-  } else if (shift) {
-    should_close = false;
-    if (ctx->window.prompt_callbacks.shift_enter)
-      should_close = ctx->window.prompt_callbacks.shift_enter(state);
-    else if (ctx->window.prompt_callbacks.enter)
-      should_close = ctx->window.prompt_callbacks.enter(state);
-  } else if (ctrl) {
-    should_close = false;
-    log_info("CTRL_ENTER_BRANCH: ctrl_enter=%p sel='%s'",
-             (void *)ctx->window.prompt_callbacks.ctrl_enter,
-             sel ? sel : "(null)");
-    if (ctx->window.prompt_callbacks.ctrl_enter) {
-      log_info("CTRL_ENTER_CALLBACK_CALLING");
-      should_close = ctx->window.prompt_callbacks.ctrl_enter(state);
-      log_info("CTRL_ENTER_CALLBACK_RETURNED should_close=%d", should_close);
-    } else if (ctx->window.prompt_callbacks.enter) {
-      log_info("ENTER_FALLBACK_CALLBACK_CALLING");
-      should_close = ctx->window.prompt_callbacks.enter(state);
-      log_info("ENTER_FALLBACK_CALLBACK_RETURNED should_close=%d",
-               should_close);
-    } else {
-      log_info("CTRL_ENTER_CALLBACK_IS_NULL");
-    }
-  } else {
-    should_close = true;
-
-    log_info("ENTER_BRANCH: enter=%p sel='%s'",
-             (void *)ctx->window.prompt_callbacks.enter, sel ? sel : "(null)");
-
-    if (ctx->window.prompt_callbacks.enter) {
-      log_info("ENTER_CALLBACK_CALLING");
-
-      should_close = ctx->window.prompt_callbacks.enter(state);
-
-      log_info("ENTER_CALLBACK_RETURNED should_close=%d", should_close);
-    } else {
-      log_info("ENTER_CALLBACK_IS_NULL");
-    }
-  }
+  bool combo = false;
+  PromptEnterFn fn = prompt_enter_callback_for(&ctx->window.prompt_callbacks,
+                                               ctrl, shift, alt, &combo);
+  bool should_close = !combo;
+  if (fn)
+    should_close = fn(state);
   if (should_close) {
-    if (sel) {
-      safe_copy(ctx->window.output_buffer, sizeof(ctx->window.output_buffer),
-               sel);
-    } else {
-      ctx->window.output_buffer[0] = '\0';
-    }
+    safe_copy(ctx->window.output_buffer, sizeof(ctx->window.output_buffer),
+              sel);
   }
   ctx->window.selection_complete = should_close;
   ctx->window.subwindow.in_enter = false;
@@ -199,10 +163,10 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   bool alt = key->alt;
 
   SkaldContext *ctx = SkaldContext_Get();
-  bool invoke_interceptor = false;
-  invoke_interceptor = ctx->window.editbox_placed;
+  if (!ctx)
+    return false;
 
-  if (invoke_interceptor && key_invoke_interceptor(key)) {
+  if (ctx->window.editbox_placed && key_invoke_interceptor(key)) {
     Platform_InvalidatePrompt();
     return true;
   }
@@ -241,9 +205,8 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       state->eb->cursor = 0;
     } else {
       size_t fcur = (size_t)state->eb->cursor;
-      if (!edit_buffer_backspace_pair(state->eb->filter, &fcur) && true) {
+      if (!edit_buffer_backspace_pair(state->eb->filter, &fcur))
         edit_buffer_backspace(state->eb->filter, &fcur);
-      }
       state->eb->cursor = (int)fcur;
     }
     listbox_focus_by_mouse();
@@ -369,6 +332,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       free(clip);
       return true;
     }
+    prompt_delete_selection(state);
     size_t cur_len = strlen(state->eb->filter);
     size_t clip_len = strlen(clip);
     size_t avail = sizeof(state->eb->filter) - cur_len - 1;
