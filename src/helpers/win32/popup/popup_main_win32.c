@@ -634,7 +634,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             if (!text)
               continue;
 
-            unsigned long ncol, bcol, pcol;
+            unsigned long ncol = RgbToHex(COLOR_TEXT),
+                        bcol = RgbToHex(COLOR_TEXT),
+                        pcol = RgbToHex(COLOR_TEXT);
             int orig_idx = estate->lb->matching_indices[list_idx];
             int orig_cnt = estate->lb->item_count;
             Item_GetColors((PlGetItemColorsSpec){.idx = orig_idx,

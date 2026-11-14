@@ -27,7 +27,7 @@ bool ReloadLib_Compile(const char *src, const char *out, const char *log_tag) {
   char *tmp = malloc(tmp_len);
   if (!tmp)
     return false;
-  snprintf(tmp, tmp_len, "%s.tmp.%d.%u", out, (int)getpid(), ++build_seq);
+  snprintf(tmp, tmp_len, "%s.tmp.%d.%d", out, (int)getpid(), ++build_seq);
 
   const char *argv[PLATFORM_BUILD_ARGV_MAX];
   if (!Platform_GetFeatureBuildArgv(src, tmp, argv, PLATFORM_BUILD_ARGV_MAX)) {
