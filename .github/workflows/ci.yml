@@ -19,7 +19,7 @@ jobs:
             libcurl4-openssl-dev \
             libx11-dev libxft-dev libfontconfig-dev libfreetype-dev \
             libxext-dev libxrandr-dev libxrender-dev libxtst-dev libxi-dev \
-            libglib2.0-dev
+            libglib2.0-dev libgpg-error-dev libp11-kit-dev libmount-dev
 
       - name: Bootstrap nob
         run: cc -O2 nob.c -o nob
@@ -65,7 +65,7 @@ jobs:
             libcurl4-openssl-dev \
             libx11-dev libxft-dev libfontconfig-dev libfreetype-dev \
             libxext-dev libxrandr-dev libxrender-dev libxtst-dev libxi-dev \
-            libglib2.0-dev
+            libglib2.0-dev libgpg-error-dev libp11-kit-dev libmount-dev
 
       - name: Bootstrap nob
         run: cc -O2 nob.c -o nob
