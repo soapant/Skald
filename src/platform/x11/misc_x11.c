@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include "platform/platform.h"
 #include "helpers/x11/raw_misc_x11.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
@@ -241,31 +242,39 @@ bool Platform_PasteContent(const char *content) {
   return ok;
 }
 
+static const char *x11_compiler_found(void) {
+  static char *cc = NULL;
+  if (!cc) {
+    const char *candidates[] = {"clang", "gcc", "cc", NULL};
+    for (size_t i = 0; candidates[i] && !cc; i++)
+      cc = Platform_FindExecutable(candidates[i]);
+    if (cc)
+      log_info("feature builds will use compiler: %s", cc);
+  }
+  return cc;
+}
+
 bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
                                   const char *argv[], size_t argv_cap) {
+  const char *cc = x11_compiler_found();
+  if (!cc || argv_cap < 15)
+    return false;
   size_t n = 0;
-#define ADD_ARG(arg)                                                           \
-  do {                                                                         \
-    if (n + 1 >= argv_cap)                                                     \
-      return false;                                                            \
-    argv[n++] = (arg);                                                         \
-  } while (0)
-  ADD_ARG("gcc");
-  ADD_ARG("-std=gnu17");
-  ADD_ARG("-I");
-  ADD_ARG("build/sdk");
-  ADD_ARG("-I/usr/include/freetype2");
-  ADD_ARG("-I/usr/include/libpng16");
-  ADD_ARG("-I/usr/include/gio-unix-2.0");
-  ADD_ARG("-I/usr/include/X11");
-  ADD_ARG("-pipe");
-  ADD_ARG("-fPIC");
-  ADD_ARG("-shared");
-  ADD_ARG("-o");
-  ADD_ARG(out_tmp);
-  ADD_ARG(src);
+  argv[n++] = cc;
+  argv[n++] = "-std=gnu17";
+  argv[n++] = "-I";
+  argv[n++] = "build/sdk";
+  argv[n++] = "-I/usr/include/freetype2";
+  argv[n++] = "-I/usr/include/libpng16";
+  argv[n++] = "-I/usr/include/gio-unix-2.0";
+  argv[n++] = "-I/usr/include/X11";
+  argv[n++] = "-pipe";
+  argv[n++] = "-fPIC";
+  argv[n++] = "-shared";
+  argv[n++] = "-o";
+  argv[n++] = out_tmp;
+  argv[n++] = src;
   argv[n] = NULL;
-#undef ADD_ARG
   return true;
 }
 
