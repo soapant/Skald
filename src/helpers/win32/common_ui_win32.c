@@ -208,7 +208,7 @@ void win32_force_window_focus(WindowHandle hwndTarget) {
       IsWindowVisible(WH_TO_HWND(hwndTarget))) {
     SetFocus(WH_TO_HWND(hwndTarget));
   }
-  UpdateTextCaret();
+  update_text_caret();
 
   if (foregroundThreadID != currentThreadID)
     AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);

@@ -346,10 +346,10 @@ void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
   if (selected) {
     if (state->no_bg) {
       x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                    RgbToHex(COLOR_SELECTED_TEXT));
+                                    rgb_to_hex(COLOR_SELECTED_TEXT));
     } else {
       x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                    RgbToHex(COLOR_SELECTED_TEXT));
+                                    rgb_to_hex(COLOR_SELECTED_TEXT));
     }
   }
 }
@@ -372,7 +372,7 @@ void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   }
   int asc = xf ? xf->ascent : 0;
   int desc = xf ? xf->descent : 0;
-  EditboxSpec_FillFromPrompt(eb, state, text_len, cursor_x, text_w, asc, desc,
+  editbox_spec_fill_from_prompt(eb, state, text_len, cursor_x, text_w, asc, desc,
                              font);
   eb->measure = x11_editbox_measure;
   eb->measure_user = metrics;
@@ -405,7 +405,7 @@ GC x11_raw_prepare(unsigned long color, int thickness) {
     return NULL;
   XftColor col;
   x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
-                      OpacityAlpha16(), &col);
+                      opacity_alpha16(), &col);
   XSetForeground(g_draw_dpy, gc, col.pixel);
   XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
   XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid,
@@ -434,9 +434,9 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   ListBoxInfo *lb = state->lb;
 
-  int itemH = PromptRowHeight();
-  int y0 = PromptListTop();
-  DrawPromptSeparator(
+  int itemH = prompt_row_height();
+  int y0 = prompt_list_top();
+  draw_prompt_separator(
       (PlDrawPromptSeparatorSpec){.y = y0, .width = state->width});
   int yOffset = PROMPT_LIST_BOTTOM_TITLE;
   int visible = (state->height - y0 - yOffset) / itemH;
@@ -446,10 +446,10 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
     visible = lb->item_count;
   UI_LB_SetVisibleCount(visible);
 
-  ListBox_ApplyPendingScroll(lb, visible);
+  listbox_apply_pending_scroll(lb, visible);
 
-  ListBox_SetGeometry(y0, itemH, visible);
-  ListBox_HoverFocus(lb, y0, itemH, lb->view_offset, visible);
+  listbox_set_geometry(y0, itemH, visible);
+  listbox_hover_focus(lb, y0, itemH, lb->view_offset, visible);
 
   for (int i = 0; i < visible; i++) {
     int idx = lb->view_offset + i;
@@ -460,7 +460,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
       int t = PROMPT_SEL_INSET;
       int bx = PROMPT_SEL_X, bw = state->width - PROMPT_SEL_W_SHRINK;
       if (sel) {
-        x11_fill_rounded_rect(dpy, xd, vis, cmap, RgbToHex(COLOR_SELECTED_TEXT),
+        x11_fill_rounded_rect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT),
                               0xFFFF, bx + t, y + PROMPT_SEL_TOP_INSET + t,
                               bw - 2 * t, itemH - 2 - 2 * t, R - 1);
       }
@@ -471,8 +471,8 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
                        NULL);
   }
 
-  if (PromptListBottomMargin() > 0) {
-    DrawPromptSeparator((PlDrawPromptSeparatorSpec){
+  if (prompt_list_bottom_margin() > 0) {
+    draw_prompt_separator((PlDrawPromptSeparatorSpec){
         .y = state->height - PROMPT_LIST_BOTTOM_TITLE, .width = state->width});
   }
 

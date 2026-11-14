@@ -35,8 +35,8 @@ static int hotkey_mouse_token_to_button(const char *token) {
       return named[i].btn;
   }
 
-  if (String_ContainsCI(token, "Mouse") ||
-      String_ContainsCI(token, "MouseButton")) {
+  if (string_contains_ci(token, "Mouse") ||
+      string_contains_ci(token, "MouseButton")) {
     int n = 0;
     for (const char *p = token; *p; p++) {
       if (*p >= '0' && *p <= '9') {
@@ -134,31 +134,31 @@ static int hotkey_named_key_to_vk(const char *token) {
     }
   }
 
-  if (String_ContainsCI(token, "OEM_4") || String_ContainsCI(token, "Oem4"))
+  if (string_contains_ci(token, "OEM_4") || string_contains_ci(token, "Oem4"))
     return VK_OEM_4;
-  if (String_ContainsCI(token, "OEM_5") || String_ContainsCI(token, "Oem5"))
+  if (string_contains_ci(token, "OEM_5") || string_contains_ci(token, "Oem5"))
     return VK_OEM_5;
-  if (String_ContainsCI(token, "OEM_6") || String_ContainsCI(token, "Oem6"))
+  if (string_contains_ci(token, "OEM_6") || string_contains_ci(token, "Oem6"))
     return VK_OEM_6;
-  if (String_ContainsCI(token, "OEM_1") || String_ContainsCI(token, "Oem1"))
+  if (string_contains_ci(token, "OEM_1") || string_contains_ci(token, "Oem1"))
     return VK_OEM_1;
-  if (String_ContainsCI(token, "OEM_2") || String_ContainsCI(token, "Oem2"))
+  if (string_contains_ci(token, "OEM_2") || string_contains_ci(token, "Oem2"))
     return VK_OEM_2;
-  if (String_ContainsCI(token, "OEM_3") || String_ContainsCI(token, "Oem3"))
+  if (string_contains_ci(token, "OEM_3") || string_contains_ci(token, "Oem3"))
     return VK_OEM_3;
-  if (String_ContainsCI(token, "OEM_7") || String_ContainsCI(token, "Oem7"))
+  if (string_contains_ci(token, "OEM_7") || string_contains_ci(token, "Oem7"))
     return VK_OEM_7;
-  if (String_ContainsCI(token, "OEM_COMMA") ||
-      String_ContainsCI(token, "OemComma"))
+  if (string_contains_ci(token, "OEM_COMMA") ||
+      string_contains_ci(token, "OemComma"))
     return VK_OEM_COMMA;
-  if (String_ContainsCI(token, "OEM_PERIOD") ||
-      String_ContainsCI(token, "OemPeriod"))
+  if (string_contains_ci(token, "OEM_PERIOD") ||
+      string_contains_ci(token, "OemPeriod"))
     return VK_OEM_PERIOD;
-  if (String_ContainsCI(token, "OEM_MINUS") ||
-      String_ContainsCI(token, "OemMinus"))
+  if (string_contains_ci(token, "OEM_MINUS") ||
+      string_contains_ci(token, "OemMinus"))
     return VK_OEM_MINUS;
-  if (String_ContainsCI(token, "OEM_PLUS") ||
-      String_ContainsCI(token, "OemPlus"))
+  if (string_contains_ci(token, "OEM_PLUS") ||
+      string_contains_ci(token, "OemPlus"))
     return VK_OEM_PLUS;
 
   if (strcasecmp(token, "F1") == 0)
@@ -203,23 +203,23 @@ static int hotkey_token_to_vk(const char *token, int *out_mods) {
       strcasecmp(token, "LMeta") == 0)
     return VK_LWIN;
 
-  if (String_ContainsCI(token, "Ctrl") || String_ContainsCI(token, "Control")) {
+  if (string_contains_ci(token, "Ctrl") || string_contains_ci(token, "Control")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_CTRL;
     return 0;
   }
-  if (String_ContainsCI(token, "Shift")) {
+  if (string_contains_ci(token, "Shift")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_SHIFT;
     return 0;
   }
-  if (String_ContainsCI(token, "Alt")) {
+  if (string_contains_ci(token, "Alt")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_ALT;
     return 0;
   }
-  if (String_ContainsCI(token, "Win") || String_ContainsCI(token, "Super") ||
-      String_ContainsCI(token, "Meta")) {
+  if (string_contains_ci(token, "Win") || string_contains_ci(token, "Super") ||
+      string_contains_ci(token, "Meta")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_SUPER;
     return 0;
@@ -235,7 +235,7 @@ static int hotkey_token_to_vk(const char *token, int *out_mods) {
   return toupper((unsigned char)token[0]);
 }
 
-bool HotkeyString_Parse(const char *str, HotkeyKey *out) {
+bool hotkey_string_parse(const char *str, HotkeyKey *out) {
   if (out) {
     out->vk_code = 0;
     out->mods = 0;
@@ -244,7 +244,7 @@ bool HotkeyString_Parse(const char *str, HotkeyKey *out) {
     return false;
 
   char buffer[256];
-  SafeCopy(buffer, sizeof(buffer), str);
+  safe_copy(buffer, sizeof(buffer), str);
 
   size_t len = strlen(buffer);
   bool ends_with_plus = false;
@@ -413,7 +413,7 @@ static int hotkey_vk_to_name(int vk, char *out, int out_size) {
   return written;
 }
 
-bool HotkeyString_Format(HotkeyKey key, char *out, int out_size) {
+bool hotkey_string_format(HotkeyKey key, char *out, int out_size) {
   if (!out || out_size <= 0)
     return false;
   out[0] = '\0';

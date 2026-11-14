@@ -30,8 +30,8 @@ bool Platform_ListboxBackendBegin(int item_height_override,
     return false;
   b_font = x11_create_font_on_display(b_dpy, FontSize, UsedFont);
   out->item_h =
-      item_height_override > 0 ? item_height_override : PromptRowHeight();
-  out->list_top = PromptListTop();
+      item_height_override > 0 ? item_height_override : prompt_row_height();
+  out->list_top = prompt_list_top();
   return true;
 }
 
@@ -42,7 +42,7 @@ void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
       x11_fill_rounded_rect(b_dpy, b_xd, b_vis, b_cmap,
-                            RgbToHex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
+                            rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
                             y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t,
                             item_h - 2 - 2 * t, R - 1);
     }
@@ -66,5 +66,5 @@ void Platform_ListboxBackendEnd(void) {
 }
 
 PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb) {
-  return PromptPopup_FindState(lb);
+  return prompt_popup_find_state(lb);
 }

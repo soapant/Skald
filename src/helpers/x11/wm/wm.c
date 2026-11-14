@@ -12,7 +12,7 @@
 #include "wm/x11_wm.h"
 #include "deps/log.h"
 
-bool Wm_AppendWindowName(PlWindowList *list, const char *name,
+bool wm_append_window_name(PlWindowList *list, const char *name,
                          bool toupper_first) {
   if (!strcasecmp(name, "window") || !strcasecmp(name, "colored"))
     return true;
@@ -20,7 +20,7 @@ bool Wm_AppendWindowName(PlWindowList *list, const char *name,
   snprintf(buf, sizeof(buf), "%s", name);
   if (toupper_first)
     buf[0] = toupper((unsigned char)buf[0]);
-  return List_Append(list, buf);
+  return list_append(list, buf);
 }
 
 char *wm_trim_focus_title(const char *title) {
@@ -43,7 +43,7 @@ char *wm_trim_focus_title(const char *title) {
   return trimmed;
 }
 
-char *Wm_GetActiveWindowTitle(void) {
+char *wm_get_active_window_title(void) {
   static char buffer[1024];
 
   buffer[0] = '\0';
@@ -74,7 +74,7 @@ char *Wm_GetActiveWindowTitle(void) {
   return NULL;
 }
 
-char *Wm_GetActiveWindowAppId(void) {
+char *wm_get_active_window_app_id(void) {
   static char buffer[1024];
 
   buffer[0] = '\0';
@@ -104,7 +104,7 @@ char *Wm_GetActiveWindowAppId(void) {
   return NULL;
 }
 
-bool Wm_FocusByTitle(const char *title) {
+bool wm_focus_by_title(const char *title) {
   if (x11_env_is_wayland()) {
     if (focus_window_title_kwin(title)) {
       return true;
@@ -126,7 +126,7 @@ bool Wm_FocusByTitle(const char *title) {
   return NULL;
 }
 
-char *Wm_Paste(const char *content) {
+char *wm_paste(const char *content) {
   char *result;
   if (x11_env_is_wayland()) {
     if ((result = paste_kwin(content)))
@@ -191,7 +191,7 @@ PlWindowList Wm_GetWindowNames(void) {
   return empty;
 }
 
-bool Wm_CloseActiveWindow(void) {
+bool wm_close_active_window(void) {
   if (x11_env_is_wayland()) {
     if (close_active_window_kwin())
       return true;
@@ -208,7 +208,7 @@ bool Wm_CloseActiveWindow(void) {
   return false;
 }
 
-bool Wm_ToggleFullscreenActive(void) {
+bool wm_toggle_fullscreen_active(void) {
   if (x11_env_is_wayland()) {
     if (toggle_fullscreen_active_kwin())
       return true;
@@ -225,7 +225,7 @@ bool Wm_ToggleFullscreenActive(void) {
   return false;
 }
 
-bool Wm_MoveActiveWindowToMonitor(bool right) {
+bool wm_move_active_window_to_monitor(bool right) {
   if (x11_env_is_wayland()) {
     if (move_active_window_to_monitor_kwin(right))
       return true;
@@ -242,7 +242,7 @@ bool Wm_MoveActiveWindowToMonitor(bool right) {
   return false;
 }
 
-bool Wm_MoveActiveWindowLeft(void) {
+bool wm_move_active_window_left(void) {
   if (x11_env_is_wayland()) {
     if (move_active_window_left_kwin())
       return true;
@@ -259,7 +259,7 @@ bool Wm_MoveActiveWindowLeft(void) {
   return false;
 }
 
-bool Wm_MoveActiveWindowRight(void) {
+bool wm_move_active_window_right(void) {
   if (x11_env_is_wayland()) {
     if (move_active_window_right_kwin())
       return true;
@@ -276,7 +276,7 @@ bool Wm_MoveActiveWindowRight(void) {
   return false;
 }
 
-bool Wm_MoveActiveWindowUp(void) {
+bool wm_move_active_window_up(void) {
   if (x11_env_is_wayland()) {
     if (move_active_window_up_kwin())
       return true;
@@ -293,7 +293,7 @@ bool Wm_MoveActiveWindowUp(void) {
   return false;
 }
 
-bool Wm_MoveActiveWindowDown(void) {
+bool wm_move_active_window_down(void) {
   if (x11_env_is_wayland()) {
     if (move_active_window_down_kwin())
       return true;
@@ -310,7 +310,7 @@ bool Wm_MoveActiveWindowDown(void) {
   return false;
 }
 
-bool Wm_FocusWindowLeft(void) {
+bool wm_focus_window_left(void) {
   if (x11_env_is_wayland()) {
     if (focus_window_left_kwin())
       return true;
@@ -327,7 +327,7 @@ bool Wm_FocusWindowLeft(void) {
   return false;
 }
 
-bool Wm_FocusWindowRight(void) {
+bool wm_focus_window_right(void) {
   if (x11_env_is_wayland()) {
     if (focus_window_right_kwin())
       return true;
@@ -344,7 +344,7 @@ bool Wm_FocusWindowRight(void) {
   return false;
 }
 
-bool Wm_FocusWindowUp(void) {
+bool wm_focus_window_up(void) {
   if (x11_env_is_wayland()) {
     if (focus_window_up_kwin())
       return true;
@@ -361,7 +361,7 @@ bool Wm_FocusWindowUp(void) {
   return false;
 }
 
-bool Wm_FocusWindowDown(void) {
+bool wm_focus_window_down(void) {
   if (x11_env_is_wayland()) {
     if (focus_window_down_kwin())
       return true;
@@ -378,7 +378,7 @@ bool Wm_FocusWindowDown(void) {
   return false;
 }
 
-bool Wm_InjectKey(int vk, int down) {
+bool wm_inject_key(int vk, int down) {
   if (x11_env_is_wayland()) {
     if (inject_key_kwin(vk, down))
       return true;
@@ -392,7 +392,7 @@ bool Wm_InjectKey(int vk, int down) {
   return false;
 }
 
-bool Wm_MinimizeActiveWindow(void) {
+bool wm_minimize_active_window(void) {
   if (x11_env_is_wayland()) {
     if (minimize_active_window_kwin())
       return true;
@@ -409,7 +409,7 @@ bool Wm_MinimizeActiveWindow(void) {
   return false;
 }
 
-bool Wm_GetMousePos(int *x, int *y) {
+bool wm_get_mouse_pos(int *x, int *y) {
   if (x11_env_is_wayland()) {
     if (get_mouse_pos_hyprland(x, y))
       return true;

@@ -38,7 +38,7 @@ void Platform_PromptFlushDisplay(WindowManager *wm) {
 void Platform_OnPopEmpty() {
   x11_clear_suppress();
   remap_reset();
-  InputState_Clear();
+  input_state_clear();
   malloc_trim(0);
 }
 
@@ -149,7 +149,7 @@ void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     *oh = h;
 }
 
-int Monitor_Fill(MonitorEntry *out, int max_entries) {
+int monitor_fill(MonitorEntry *out, int max_entries) {
   Display *dpy = NULL;
   const WindowManager *wm = WindowManager_Get();
   if (wm)

@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 
-void ThreadRegistry_Add(void *ctx, const char *owner_path);
-void ThreadRegistry_Finish(const void *ctx);
-bool ThreadRegistry_OwnerActive(const char *owner_path);
+void thread_registry_add(void *ctx, const char *owner_path);
+void thread_registry_finish(const void *ctx);
+bool thread_registry_owner_active(const char *owner_path);
 
 #endif

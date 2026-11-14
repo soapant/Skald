@@ -85,7 +85,7 @@ static bool i3_move_to_output(bool right) {
            right ? "right" : "left");
   return i3_exec(cmd);
 }
-static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
+static int x11_err_handler(Display *dpy, XErrorEvent *ev) {
 
   (void)dpy;
   (void)ev;
@@ -136,7 +136,7 @@ static char *x11_get_res_class(Display *dpy, Window w) {
     return NULL;
   char *out = NULL;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   int ok = XGetClassHint(dpy, w, ch);
   XSync(dpy, False);
   XSetErrorHandler(old);
@@ -190,7 +190,7 @@ static bool x11_window_geom(Display *dpy, Window w, int *out_x, int *out_y,
   unsigned int gw = 0, gh = 0, border = 0, depth = 0;
   Window child = None;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   int ok = XGetGeometry(dpy, w, &child, &gx, &gy, &gw, &gh, &border, &depth);
   if (ok)
     ok = XTranslateCoordinates(dpy, w, DefaultRootWindow(dpy), 0, 0, &abs_x,
@@ -216,7 +216,7 @@ static bool x11_moveresize_window(Display *dpy, Window w, int x, int y, int cw,
   if (!dpy || w == None)
     return false;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   Atom mrs = XInternAtom(dpy, "_NET_MOVERESIZE_WINDOW", False);
   XEvent ev;
   memset(&ev, 0, sizeof(ev));
@@ -246,7 +246,7 @@ static bool x11_activate_window(Display *dpy, Window w) {
   if (!dpy || w == None)
     return false;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   Atom active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
   XEvent ev;
   memset(&ev, 0, sizeof(ev));
@@ -307,7 +307,7 @@ bool x11_get_title(char *buffer, int buffer_size) {
       free(name);
     return false;
   }
-  SafeCopy(buffer, (size_t)buffer_size, name);
+  safe_copy(buffer, (size_t)buffer_size, name);
   free(name);
   return buffer[0] != '\0';
 }
@@ -324,7 +324,7 @@ bool x11_get_app_id(char *buffer, int buffer_size) {
     return false;
   XClassHint *ch = XAllocClassHint();
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   int ok = ch ? XGetClassHint(display, focus, ch) : 0;
   XSync(display, False);
   XSetErrorHandler(old);
@@ -333,7 +333,7 @@ bool x11_get_app_id(char *buffer, int buffer_size) {
       XFree(ch);
     return false;
   }
-  SafeCopy(buffer, (size_t)buffer_size, ch->res_class);
+  safe_copy(buffer, (size_t)buffer_size, ch->res_class);
   if (ch->res_name)
     XFree(ch->res_name);
   if (ch->res_class)
@@ -481,7 +481,7 @@ static PlWindowList x11_list_client_fields(bool want_names) {
         s = dup;
       }
     }
-    bool appended = List_Append(&list, s);
+    bool appended = list_append(&list, s);
     free(s);
     if (!appended)
       break;
@@ -510,7 +510,7 @@ static Window x11_focused_window(Display *display) {
   Window focus = None;
   int revert_to = 0;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   XGetInputFocus(display, &focus, &revert_to);
   XSync(display, False);
   XSetErrorHandler(old);
@@ -536,7 +536,7 @@ bool x11_close_active_window(void) {
   ev.xclient.data.l[0] = CurrentTime;
   ev.xclient.data.l[1] = 2;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   XSendEvent(display, DefaultRootWindow(display), False,
              SubstructureRedirectMask | SubstructureNotifyMask, &ev);
   XSync(display, False);
@@ -568,7 +568,7 @@ bool x11_toggle_fullscreen_active(void) {
   ev.xclient.data.l[2] = 0;
   ev.xclient.data.l[3] = 1;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   XSendEvent(display, DefaultRootWindow(display), False,
              SubstructureRedirectMask | SubstructureNotifyMask, &ev);
   XSync(display, False);
@@ -795,7 +795,7 @@ static bool x11_is_hidden(Display *dpy, Window w) {
 
   XWindowAttributes at;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   int ok = XGetWindowAttributes(dpy, w, &at);
   XSync(dpy, False);
   XSetErrorHandler(old);
@@ -812,7 +812,7 @@ bool x11_minimize_active_window(void) {
     Window target = _x11_last_min;
     _x11_last_min = None;
     _x11_err = 0;
-    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    XErrorHandler old = XSetErrorHandler(x11_err_handler);
     XMapWindow(display, target);
     XSync(display, False);
     XSetErrorHandler(old);
@@ -825,7 +825,7 @@ bool x11_minimize_active_window(void) {
   if (focus == None)
     return false;
   _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   XIconifyWindow(display, focus, DefaultScreen(display));
   XSync(display, False);
   XSetErrorHandler(old);
@@ -834,7 +834,7 @@ bool x11_minimize_active_window(void) {
     return true;
   }
   _x11_err = 0;
-  old = XSetErrorHandler(_x11_err_handler);
+  old = XSetErrorHandler(x11_err_handler);
   XUnmapWindow(display, focus);
   XSync(display, False);
   XSetErrorHandler(old);

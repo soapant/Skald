@@ -3,7 +3,7 @@
 #include "helpers/helpers_edit_buffer.h"
 #include "config_values.h"
 
-void EditBufferBackspace(char *buf, size_t *cursor) {
+void edit_buffer_backspace(char *buf, size_t *cursor) {
   size_t n = strlen(buf);
   if (*cursor > n)
     *cursor = n;
@@ -13,7 +13,7 @@ void EditBufferBackspace(char *buf, size_t *cursor) {
   }
 }
 
-bool EditBufferDeleteChar(char *buf, size_t *cursor) {
+bool edit_buffer_delete_char(char *buf, size_t *cursor) {
   size_t n = strlen(buf);
   if (*cursor >= n)
     return false;
@@ -43,7 +43,7 @@ static bool edit_quote_at_word_start(const char *buf, size_t cursor) {
   return true;
 }
 
-char EditBufferPairFor(char c) {
+char edit_buffer_pair_for(char c) {
   switch (c) {
   case '{':
     return '}';
@@ -60,7 +60,7 @@ char EditBufferPairFor(char c) {
   }
 }
 
-size_t EditBufferInsertText(char *buf, size_t cap, size_t *cursor,
+size_t edit_buffer_insert_text(char *buf, size_t cap, size_t *cursor,
                             const char *text, size_t len) {
 
   if (!buf || !cursor || !text || len == 0 || cap == 0)
@@ -76,7 +76,7 @@ size_t EditBufferInsertText(char *buf, size_t cap, size_t *cursor,
       return 0;
     }
     if (!edit_is_quote(text[0]) || edit_quote_at_word_start(buf, *cursor)) {
-      closer = EditBufferPairFor(text[0]);
+      closer = edit_buffer_pair_for(text[0]);
     }
   }
 
@@ -91,7 +91,7 @@ size_t EditBufferInsertText(char *buf, size_t cap, size_t *cursor,
   return total;
 }
 
-bool EditBufferBackspacePair(char *buf, size_t *cursor) {
+bool edit_buffer_backspace_pair(char *buf, size_t *cursor) {
   if (!buf || !cursor || !EnableAutoPairing)
     return false;
   size_t c = *cursor;
@@ -101,21 +101,21 @@ bool EditBufferBackspacePair(char *buf, size_t *cursor) {
   char closer = buf[c];
   if (closer == '\0' || !edit_is_closer(closer))
     return false;
-  if (EditBufferPairFor(buf[c - 1]) != closer)
+  if (edit_buffer_pair_for(buf[c - 1]) != closer)
     return false;
   memmove(buf + c - 1, buf + c + 1, n - c);
   (*cursor)--;
   return true;
 }
 
-bool CursorBack(size_t *cursor) {
+bool cursor_back(size_t *cursor) {
   if (*cursor == 0)
     return false;
   (*cursor)--;
   return true;
 }
 
-bool CursorForward(size_t *cursor, size_t text_len) {
+bool cursor_forward(size_t *cursor, size_t text_len) {
   if (*cursor >= text_len)
     return false;
   (*cursor)++;

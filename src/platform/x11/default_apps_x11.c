@@ -53,15 +53,15 @@ static const char *get_default_browser(int slot) {
                                      "Internet Explorer",
                                      "Zen"};
   ListOfFiles browser_files = {0};
-  FileWalk_AllFilesFromDir("/usr/share/applications", NULL, &browser_files,
+  file_walk_all_files_from_dir("/usr/share/applications", NULL, &browser_files,
                            NULL, true, 0);
   for (size_t i = 0; i < browser_files.count; i++) {
     const char *name = browser_files.files[i].name;
     for (size_t j = 0;
          j < sizeof(possible_browsers) / sizeof(possible_browsers[0]); j++) {
-      if (String_ContainsCI(name, possible_browsers[j])) {
+      if (string_contains_ci(name, possible_browsers[j])) {
         snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s",
-                 String_ToLower(possible_browsers[j]));
+                 string_to_lower(possible_browsers[j]));
         return default_apps_x11[slot];
       }
     }
@@ -70,19 +70,19 @@ static const char *get_default_browser(int slot) {
   StringList l = File_ReadLines("~/.config/mimeapps.list");
   for (size_t i = 0; i < l.count; i++) {
     const char *line = l.items[i];
-    if (!String_ContainsCI(line, "text/html"))
+    if (!string_contains_ci(line, "text/html"))
       continue;
-    char *value = String_CutAfter(line, '=');
+    char *value = string_cut_after(line, '=');
     if (!value)
       break;
-    char *first = String_CutBefore(value, ';');
+    char *first = string_cut_before(value, ';');
     free(value);
     if (!first)
       break;
-    char *trimmed = String_Trim(first);
+    char *trimmed = string_trim(first);
     free(first);
     if (trimmed) {
-      char *stem = String_CutBefore(trimmed, '.');
+      char *stem = string_cut_before(trimmed, '.');
       if (stem) {
         if (stem[0])
           snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s",
@@ -93,7 +93,7 @@ static const char *get_default_browser(int slot) {
     }
     break;
   }
-  StringList_Free(&l);
+  string_list_free(&l);
   return default_apps_x11[slot];
 }
 
@@ -145,7 +145,7 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
     char path[1024];
     snprintf(path, sizeof(path), "%s/applications/%s", d, desktop_id);
     static char content[16384];
-    if (File_ReadAll(path, content, (long)sizeof(content)) <= 0)
+    if (file_read_all(path, content, (long)sizeof(content)) <= 0)
       continue;
     bool found = false;
     char *cur = content;
@@ -161,11 +161,11 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
       }
     }
     if (found) {
-      StringList_Free(&dir_list);
+      string_list_free(&dir_list);
       return true;
     }
     out[0] = '\0';
   }
-  StringList_Free(&dir_list);
+  string_list_free(&dir_list);
   return false;
 }

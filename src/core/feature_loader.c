@@ -33,7 +33,7 @@
 static void (*deferred_inits[DEFERRED_INIT_MAX])(void);
 static int deferred_count = 0;
 
-void DeferredInit_Register(void (*cb)(void)) {
+void deferred_init_register(void (*cb)(void)) {
   if (!cb)
     return;
   if (deferred_count >= DEFERRED_INIT_MAX) {
@@ -44,7 +44,7 @@ void DeferredInit_Register(void (*cb)(void)) {
   deferred_inits[deferred_count++] = cb;
 }
 
-void DeferredInit_RunAll(void) {
+void deferred_init_run_all(void) {
   for (int i = 0; i < deferred_count; i++) {
     void (*cb)(void) = deferred_inits[i];
     deferred_inits[i] = NULL;
@@ -56,7 +56,7 @@ void DeferredInit_RunAll(void) {
 static void fl_copy(char *dst, size_t dst_size, const char *src) {
   if (dst_size == 0)
     return;
-  SafeCopy(dst, dst_size, src);
+  safe_copy(dst, dst_size, src);
 }
 
 #define MAX_PINS 16
@@ -130,7 +130,7 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
   r.uniq[0] = '\0';
   if (uniq && uniq[0])
     fl_copy(r.uniq, sizeof(r.uniq), uniq);
-  r.owner_gen = Widget_CurrentGeneration();
+  r.owner_gen = widget_current_generation();
   r.owner[0] = '\0';
   if (owner && owner[0])
     fl_copy(r.owner, sizeof(r.owner), owner);
@@ -161,9 +161,9 @@ static int defer_unload_count = 0;
 static void feature_mutex_init(void);
 static void *feature_mutex;
 
-int FeatureLoader_PendingUnloadCount(void) { return defer_unload_count; }
+int feature_loader_pending_unload_count(void) { return defer_unload_count; }
 
-void FeatureLoader_DrainRetiredUnloads(void) {
+void feature_loader_drain_retired_unloads(void) {
   if (defer_unload_count == 0)
     return;
   feature_mutex_init();
@@ -196,21 +196,21 @@ static void defer_unload(LibHandle handle, const char *uniq,
   u->uniq[0] = '\0';
   u->owner[0] = '\0';
   if (uniq && uniq[0])
-    SafeCopy(u->uniq, sizeof(u->uniq), uniq);
+    safe_copy(u->uniq, sizeof(u->uniq), uniq);
   if (owner && owner[0])
-    SafeCopy(u->owner, sizeof(u->owner), owner);
+    safe_copy(u->owner, sizeof(u->owner), owner);
 }
 
 static void sweep_retired_libs(void) {
   const WindowManager *wm = WindowManager_Get();
-  Checkbox_ResetAll();
+  checkbox_reset_all();
   int n = 0;
   for (int i = 0; i < retired_count; i++) {
     bool alive = false;
-    if (retired[i].owner[0] && Widget_OwnerActive(retired[i].owner))
+    if (retired[i].owner[0] && widget_owner_active(retired[i].owner))
       alive = true;
     else if (retired[i].owner[0] &&
-             ThreadRegistry_OwnerActive(retired[i].owner))
+             thread_registry_owner_active(retired[i].owner))
       alive = true;
     else if (wm && retired[i].npins >= 0) {
       for (int a = 0; a < retired[i].npins && !alive; a++) {
@@ -225,7 +225,7 @@ static void sweep_retired_libs(void) {
     if (alive) {
       retired[n++] = retired[i];
     } else {
-      PurgeOwnerSet(retired[i].owner, NULL, retired[i].owner_gen);
+      purge_owner_set(retired[i].owner, NULL, retired[i].owner_gen);
       log_info("deferring unload of retired lib %s", retired[i].owner);
       defer_unload(retired[i].handle, retired[i].uniq, retired[i].owner);
     }
@@ -308,7 +308,7 @@ static void manifest_write_baseline(const char *name) {
   log_info("manifest created for feature '%s'", name);
 }
 
-void FeatureLoader_OwnerFeatureName(const char *owner_path, char *out,
+void feature_loader_owner_feature_name(const char *owner_path, char *out,
                                     size_t n) {
   if (!out || n == 0)
     return;
@@ -320,7 +320,7 @@ void FeatureLoader_OwnerFeatureName(const char *owner_path, char *out,
   if (bslash && (!base || bslash > base))
     base = bslash;
   base = base ? base + 1 : owner_path;
-  SafeCopy(out, n, base);
+  safe_copy(out, n, base);
   char *dot = strchr(out, '.');
   if (dot)
     *dot = '\0';
@@ -378,8 +378,8 @@ static void manifest_add_entry(const char *name, const char *section,
     line[cl] = '\0';
 
     char work[512];
-    SafeCopy(work, sizeof(work), line);
-    Manifest_Trim(work);
+    safe_copy(work, sizeof(work), line);
+    manifest_trim(work);
 
     if (work[0] == '[') {
       if (strstr(work, section)) {
@@ -398,8 +398,8 @@ static void manifest_add_entry(const char *name, const char *section,
 
     if (have_section && work[0] != '\0' && work[0] != '#') {
       char e[512];
-      SafeCopy(e, sizeof(e), work);
-      Manifest_Unquote(e);
+      safe_copy(e, sizeof(e), work);
+      manifest_unquote(e);
       if (strcmp(e, entry) == 0)
         have_entry = true;
     }
@@ -446,23 +446,23 @@ static void manifest_add_entry(const char *name, const char *section,
   log_info("manifest '%s' %s += %s", name, section, entry);
 }
 
-void FeatureLoader_ManifestAddProvides(const char *owner_path,
+void feature_loader_manifest_add_provides(const char *owner_path,
                                        const char *key) {
   if (!owner_path || !owner_path[0] || !key || !key[0])
     return;
   char name[64];
-  FeatureLoader_OwnerFeatureName(owner_path, name, sizeof(name));
+  feature_loader_owner_feature_name(owner_path, name, sizeof(name));
   if (!name[0])
     return;
   manifest_add_entry(name, "provides", key);
 }
 
-void FeatureLoader_ManifestAddDepends(const char *owner_path,
+void feature_loader_manifest_add_depends(const char *owner_path,
                                       const char *dep_name) {
   if (!owner_path || !owner_path[0] || !dep_name || !dep_name[0])
     return;
   char name[64];
-  FeatureLoader_OwnerFeatureName(owner_path, name, sizeof(name));
+  feature_loader_owner_feature_name(owner_path, name, sizeof(name));
   if (!name[0])
     return;
   if (strcmp(name, dep_name) == 0)
@@ -491,19 +491,19 @@ static bool load_single(const char *dir, const char *filename) {
     return false;
   }
   typedef void (*InitFn)(void);
-  InitFn init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureInit");
+  InitFn init = (InitFn)Platform_GetSymbol(h, "skald_feature_init");
   if (!init)
     init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
   if (init) {
     feature_init_count++;
   } else {
-    log_warn("feature %s has no SkaldFeatureInit/Reload symbol", name);
+    log_warn("feature %s has no skald_feature_init/reload symbol", name);
   }
 
   LoadedFeature *f = &features[feature_count++];
   memset(f, 0, sizeof(*f));
-  SafeCopy(f->name, sizeof(f->name), name);
-  SafeCopy(f->path, sizeof(f->path), full);
+  safe_copy(f->name, sizeof(f->name), name);
+  safe_copy(f->path, sizeof(f->path), full);
   f->handle = h;
   return true;
 }
@@ -514,12 +514,12 @@ static bool load_named(const char *dir, const char *ext, const char *name) {
   return load_single(dir, filename);
 }
 
-bool FeatureLoader_LoadAllFromDir(const char *dir) {
+bool feature_loader_load_all_from_dir(const char *dir) {
   LOCK();
   const char *ext = Platform_LibExtension();
   DIR *d = opendir(dir);
   if (!d) {
-    log_error("FeatureLoader_LoadAllFromDir: opendir %s failed (%s)", dir,
+    log_error("feature_loader_load_all_from_dir: opendir %s failed (%s)", dir,
               strerror(errno));
     UNLOCK();
     return false;
@@ -552,12 +552,12 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
     }
 
     char nm[64];
-    SafeCopy(nm, sizeof(nm), e->d_name);
+    safe_copy(nm, sizeof(nm), e->d_name);
     char *dot = strrchr(nm, '.');
     if (dot)
       *dot = '\0';
     manifest_write_baseline(nm);
-    SafeCopy(names[n_names++], sizeof(names[0]), nm);
+    safe_copy(names[n_names++], sizeof(names[0]), nm);
   }
   closedir(d);
   if (names_oom) {
@@ -581,7 +581,7 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
     char mpath[512];
     if (!manifest_path(names[i], mpath, sizeof(mpath)))
       continue;
-    if (!Manifest_ParseFile(mpath, names[i], &mans[i]) || !mans[i].valid) {
+    if (!manifest_parse_file(mpath, names[i], &mans[i]) || !mans[i].valid) {
       log_error("feature '%s': manifest %s is malformed, skipping", names[i],
                 mpath);
       continue;
@@ -650,7 +650,7 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
   free(loaded);
   free(names);
   UNLOCK();
-  log_info("FeatureLoader_LoadAllFromDir completed");
+  log_info("feature_loader_load_all_from_dir completed");
   return true;
 }
 
@@ -662,14 +662,14 @@ static int s_failed_count = 0;
 
 static void feature_mark_failed(const char *dir, time_t mtime) {
   if (s_failed_count < 64) {
-    SafeCopy(s_failed[s_failed_count].dir, sizeof(s_failed[s_failed_count].dir),
+    safe_copy(s_failed[s_failed_count].dir, sizeof(s_failed[s_failed_count].dir),
              dir);
     s_failed[s_failed_count].src_mtime = mtime;
     s_failed_count++;
   }
 }
 
-int FeatureLoader_BuildStaleSources(bool hot_reload) {
+int feature_loader_build_stale_sources(bool hot_reload) {
   const char *ext = Platform_LibExtension();
   if (!ext)
     return 0;
@@ -699,7 +699,7 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
     struct stat st_src;
     if (stat(src, &st_src) != 0)
       continue;
-    if (ReloadLib_IsFresh(src, dll))
+    if (reload_lib_is_fresh(src, dll))
       continue;
     bool known_bad = false;
     for (int fi = 0; fi < s_failed_count; fi++) {
@@ -719,13 +719,13 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
     else
       snprintf(out_path, sizeof(out_path), "%s", dll);
     const char *tag = hot_reload ? "hot-reload" : "feature build";
-    bool ok = ReloadLib_Compile(src, out_path, tag);
+    bool ok = reload_lib_compile(src, out_path, tag);
     if (!ok) {
       feature_mark_failed(ent->d_name, st_src.st_mtime);
       continue;
     }
     if (hot_reload) {
-      bool reloaded_ok = FeatureLoader_ReloadFrom(ent->d_name, out_path);
+      bool reloaded_ok = feature_loader_reload_from(ent->d_name, out_path);
       remove(out_path);
       if (!reloaded_ok) {
         feature_mark_failed(ent->d_name, st_src.st_mtime);
@@ -749,28 +749,28 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
 }
 
 static int feature_build_stale_sources(void) {
-  return FeatureLoader_BuildStaleSources(false);
+  return feature_loader_build_stale_sources(false);
 }
 
-bool FeatureLoader_Init(void) {
+bool feature_loader_init(void) {
   LOCK();
   feature_count = 0;
   UNLOCK();
   feature_init_count = 0;
   {
     int removed =
-        ReloadLib_SweepStaleHotLibs("build/features", Platform_LibExtension());
+        reload_lib_sweep_stale_hot_libs("build/features", Platform_LibExtension());
     if (removed < 0)
       log_warn("init: cannot open build/features, no features will load");
     else if (removed > 0)
-      log_info("FeatureLoader_Init: removed %d stale hot-reload lib(s)",
+      log_info("feature_loader_init: removed %d stale hot-reload lib(s)",
                removed);
   }
   int built = feature_build_stale_sources();
   if (built > 0)
-    log_info("FeatureLoader_Init: built %d feature(s) from source", built);
-  FeatureLoader_LoadAllFromDir("build/features");
-  DeferredInit_RunAll();
+    log_info("feature_loader_init: built %d feature(s) from source", built);
+  feature_loader_load_all_from_dir("build/features");
+  deferred_init_run_all();
   LOCK();
   int cnt = feature_count;
   UNLOCK();
@@ -782,17 +782,17 @@ bool FeatureLoader_Init(void) {
 static void call_feature_shutdown(LibHandle handle) {
   typedef void (*ShutdownFn)(void);
   ShutdownFn shut =
-      (ShutdownFn)Platform_GetSymbol(handle, "SkaldFeatureShutdown");
+      (ShutdownFn)Platform_GetSymbol(handle, "skald_feature_shutdown");
   if (shut)
     shut();
 }
 
-void FeatureLoader_Shutdown(void) {
+void feature_loader_shutdown(void) {
   LOCK();
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
       call_feature_shutdown(features[i].handle);
-      PurgeOwnerSet(NULL, features[i].path, Widget_BumpGeneration());
+      purge_owner_set(NULL, features[i].path, widget_bump_generation());
       features[i].uniq[0] = '\0';
       features[i].handle = 0;
     }
@@ -806,12 +806,12 @@ void FeatureLoader_Shutdown(void) {
   features = NULL;
   feature_cap = 0;
   UNLOCK();
-  log_info("FeatureLoader_Shutdown completed");
+  log_info("feature_loader_shutdown completed");
 }
 
-bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
+bool feature_loader_reload_from(const char *name, const char *src_path) {
   if (!name) {
-    FeatureLoader_ReloadAll();
+    feature_loader_reload_all();
     return true;
   }
   LOCK();
@@ -823,7 +823,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       const char *src = (src_path && src_path[0]) ? src_path : path_copy;
       LibHandle old = features[i].handle;
       char *uniquepath =
-          ReloadLib_UniqueCopy(src, path_copy, ++reload_seq, NULL);
+          reload_lib_unique_copy(src, path_copy, ++reload_seq, NULL);
       if (!uniquepath) {
         log_error("reload %s: copy failed (keeping old)", name);
         UNLOCK();
@@ -839,7 +839,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
         return false;
       }
       typedef void (*InitFn)(void);
-      InitFn init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureInit");
+      InitFn init = (InitFn)Platform_GetSymbol(h, "skald_feature_init");
       if (!init)
         init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
       if (!init) {
@@ -852,25 +852,25 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       }
       typedef void (*ShutdownFn)(void);
       ShutdownFn shut =
-          (ShutdownFn)Platform_GetSymbol(old, "SkaldFeatureShutdown");
+          (ShutdownFn)Platform_GetSymbol(old, "skald_feature_shutdown");
       if (shut)
         shut();
-      Checkbox_ResetAll();
-      unsigned retire_gen = Widget_CurrentGeneration();
+      checkbox_reset_all();
+      unsigned retire_gen = widget_current_generation();
       char retire_owner[512];
       fl_copy(retire_owner, sizeof(retire_owner),
               features[i].uniq[0] ? features[i].uniq : features[i].path);
       retire_old_lib(old, features[i].uniq, retire_owner);
-      Widget_BumpGeneration();
+      widget_bump_generation();
       log_info("feature_reload: %s (constructor ran at dlopen)", name);
       features[i].handle = h;
       fl_copy(features[i].path, sizeof(features[i].path), uniquepath);
       fl_copy(features[i].uniq, sizeof(features[i].uniq), uniquepath);
       free(uniquepath);
-      PurgeOwnerSet(retire_owner, path_copy, retire_gen);
+      purge_owner_set(retire_owner, path_copy, retire_gen);
       sweep_retired_libs();
       UNLOCK();
-      DeferredInit_RunAll();
+      deferred_init_run_all();
       LOCK();
       log_info("reloaded %s", name);
       UNLOCK();
@@ -881,11 +881,11 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
   snprintf(file, sizeof(file), "%s%s", name, Platform_LibExtension());
   bool ok = load_single("build/features", file);
   UNLOCK();
-  log_info("FeatureLoader_Reload completed");
+  log_info("feature_loader_reload completed");
   return ok;
 }
 
-void FeatureLoader_ReloadAll(void) {
+void feature_loader_reload_all(void) {
   LOCK();
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
@@ -903,18 +903,18 @@ void FeatureLoader_ReloadAll(void) {
   feature_count = 0;
   sweep_retired_libs();
   UNLOCK();
-  Widget_BumpGeneration();
-  FeatureLoader_Init();
+  widget_bump_generation();
+  feature_loader_init();
   LOCK();
   sweep_retired_libs();
   UNLOCK();
 
-  log_info("FeatureLoader_ReloadAll completed");
+  log_info("feature_loader_reload_all completed");
 }
 
-void FeatureLoader_Lock(void) { LOCK(); }
+void feature_loader_lock(void) { LOCK(); }
 
-void FeatureLoader_SweepRetired(void) {
+void feature_loader_sweep_retired(void) {
   feature_mutex_init();
   if (!Platform_MutexTryLock(feature_mutex))
     return;
@@ -922,13 +922,13 @@ void FeatureLoader_SweepRetired(void) {
   Platform_MutexUnlock(feature_mutex);
 }
 
-bool FeatureLoader_TryLock(void) {
+bool feature_loader_try_lock(void) {
   feature_mutex_init();
   return Platform_MutexTryLock(feature_mutex);
 }
 
-void FeatureLoader_Unlock(void) { UNLOCK(); }
+void feature_loader_unlock(void) { UNLOCK(); }
 
-void FeatureLoader_Reload(const char *name) {
-  (void)FeatureLoader_ReloadFrom(name, NULL);
+void feature_loader_reload(const char *name) {
+  (void)feature_loader_reload_from(name, NULL);
 }

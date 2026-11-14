@@ -135,7 +135,7 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
           int best = 0;
           int bestW = 0;
           while (t < we) {
-            int cl = Utf8_LeadLen((unsigned char)*t);
+            int cl = utf8_lead_len((unsigned char)*t);
             if (t + cl > we)
               cl = (int)(we - t);
             int nw = x11_msg_text_width(dpy, xf, c, (int)(t + cl - c));
@@ -146,7 +146,7 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
             t += cl;
           }
           if (best == 0) {
-            best = Utf8_LeadLen((unsigned char)*c);
+            best = utf8_lead_len((unsigned char)*c);
             if (c + best > we)
               best = (int)(we - c);
             bestW = x11_msg_text_width(dpy, xf, c, best);
@@ -216,7 +216,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
   XftFont *xf = FH_TO_XFT(font);
   if (xf && message && message[0] != '\0') {
     XftColor col;
-    x11_xft_alloc_color(dpy, attrs.visual, attrs.colormap, RgbToHex(color),
+    x11_xft_alloc_color(dpy, attrs.visual, attrs.colormap, rgb_to_hex(color),
                         0xFFFF, &col);
     MsgLine lines[MSG_MAX_LINES];
     int nlines =
@@ -276,10 +276,10 @@ void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
 
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
-  SetTransparentWindow(no_bg);
+  set_transparent_window(no_bg);
   Window win =
       x11_create_display_message_window(dpy, x + ax, y + ay, winW, winH, false);
-  SetTransparentWindow(false);
+  set_transparent_window(false);
   if (!win) {
     return;
   }

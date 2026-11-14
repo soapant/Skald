@@ -26,7 +26,7 @@ static ListOfFiles *x11_applications_dir_files(const char *dir) {
     ad_cache[slot].count = 0;
     ad_cache[slot].capacity = 0;
   }
-  FileWalk_AllFilesFromDir(dir, NULL, &ad_cache[slot], NULL, true, 0);
+  file_walk_all_files_from_dir(dir, NULL, &ad_cache[slot], NULL, true, 0);
   snprintf(ad_path[slot], sizeof(ad_path[slot]), "%s", dir);
   ad_valid[slot] = true;
   return &ad_cache[slot];
@@ -42,7 +42,7 @@ static const char *match_in_applications_dir(const char *dir,
   const char *found = NULL;
   for (size_t i = 0; i < files->count && !found; i++) {
     for (size_t j = 0; j < count; j++) {
-      if (String_ContainsCI(files->files[i].name, names[j])) {
+      if (string_contains_ci(files->files[i].name, names[j])) {
         found = names[j];
         break;
       }
@@ -86,11 +86,11 @@ const char *x11_find_terminal_in_desktop_files(const char *const *names,
     snprintf(dir, sizeof(dir), "%s/applications", tok);
     const char *hit = match_in_applications_dir(dir, names, count);
     if (hit) {
-      StringList_Free(&dirs);
+      string_list_free(&dirs);
       return hit;
     }
   }
-  StringList_Free(&dirs);
+  string_list_free(&dirs);
   return match_in_applications_dir("/usr/share/applications", names, count);
 }
 

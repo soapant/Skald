@@ -20,17 +20,17 @@ static SnippetFireFn fire_fn = NULL;
 static char buf[SNIPPET_BUF_CAP];
 static int buf_len = 0;
 
-void Snippet_SetFireFn(SnippetFireFn fn) { fire_fn = fn; }
+void snippet_set_fire_fn(SnippetFireFn fn) { fire_fn = fn; }
 
-void Snippet_ResetBuffer(void) { buf_len = 0; }
+void snippet_reset_buffer(void) { buf_len = 0; }
 
-const SnippetBinding *Snippet_GetBinding(int index) {
+const SnippetBinding *snippet_get_binding(int index) {
   if (index < 0 || index >= snippet_count)
     return NULL;
   return &snippets[index];
 }
 
-int Snippet_BindingCount(void) { return snippet_count; }
+int snippet_binding_count(void) { return snippet_count; }
 
 static void snippet_free_binding(SnippetBinding *b) {
   if (!b)
@@ -46,7 +46,7 @@ static void snippet_free_binding(SnippetBinding *b) {
   b->window_count = 0;
 }
 
-bool Snippet_RegisterInternal(const char *trigger, const char *text,
+bool snippet_register_internal(const char *trigger, const char *text,
                               void (*func)(void), bool whitelist,
                               const char *const *windows, void *caller) {
   if (!trigger || !trigger[0])
@@ -57,9 +57,9 @@ bool Snippet_RegisterInternal(const char *trigger, const char *text,
   char owner[OWNER_PATH_MAX];
   owner[0] = '\0';
   if (func)
-    Owner_ResolveForFunc((void *)(uintptr_t)func, owner, sizeof(owner));
+    owner_resolve_for_func((void *)(uintptr_t)func, owner, sizeof(owner));
   if (!owner[0] && caller)
-    Owner_ResolveForFunc(caller, owner, sizeof(owner));
+    owner_resolve_for_func(caller, owner, sizeof(owner));
 
   for (int i = 0; i < snippet_count; i++) {
     if (snippets[i].trigger && strcmp(snippets[i].trigger, trigger) == 0) {
@@ -104,7 +104,7 @@ bool Snippet_RegisterInternal(const char *trigger, const char *text,
       snippets[i].windows = nwindows;
       snippets[i].window_count = nwindows ? nwin : 0;
       snprintf(snippets[i].owner, sizeof(snippets[i].owner), "%s", owner);
-      Snippet_ResetBuffer();
+      snippet_reset_buffer();
       return true;
     }
   }
@@ -151,11 +151,11 @@ bool Snippet_RegisterInternal(const char *trigger, const char *text,
     }
   }
   snippet_count++;
-  Snippet_ResetBuffer();
+  snippet_reset_buffer();
   return true;
 }
 
-bool Snippet_UnregisterInternal(const char *trigger) {
+bool snippet_unregister_internal(const char *trigger) {
   if (!trigger || !trigger[0])
     return false;
   int n = 0;
@@ -177,13 +177,13 @@ bool Snippet_UnregisterInternal(const char *trigger) {
   return found;
 }
 
-void Snippet_PurgeOwner(const char *path_a, const char *path_b) {
-  if (Owner_PurgeInactive(path_a, path_b))
+void snippet_purge_owner(const char *path_a, const char *path_b) {
+  if (owner_purge_inactive(path_a, path_b))
     return;
 
   int n = 0;
   for (int i = 0; i < snippet_count; i++) {
-    if (Owner_ModuleMatches(snippets[i].owner, path_a, path_b)) {
+    if (owner_module_matches(snippets[i].owner, path_a, path_b)) {
       log_info("snippet '%s' purged (owner unloaded)",
                snippets[i].trigger ? snippets[i].trigger : "?");
       snippet_free_binding(&snippets[i]);
@@ -280,7 +280,7 @@ static int snippet_match(void) {
   return -1;
 }
 
-bool Snippet_FeedVk(int vk_code, int value, bool can_swallow) {
+bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
   if (value == 0)
     return false;
   if (vk_code == VK_BACK) {
@@ -289,7 +289,7 @@ bool Snippet_FeedVk(int vk_code, int value, bool can_swallow) {
     return false;
   }
   if (vk_code == VK_RETURN || vk_code == VK_ESCAPE) {
-    Snippet_ResetBuffer();
+    snippet_reset_buffer();
     return false;
   }
   int mods = remap_current_mods();
@@ -306,7 +306,7 @@ bool Snippet_FeedVk(int vk_code, int value, bool can_swallow) {
   if (snippets[idx].window_count > 0)
     title = Platform_GetActiveWindowTitle();
   bool allowed =
-      Window_ListAllows(snippets[idx].window_count, snippets[idx].whitelist,
+      window_list_allows(snippets[idx].window_count, snippets[idx].whitelist,
                         snippets[idx].windows, title);
   if (!allowed)
     return false;
@@ -314,7 +314,7 @@ bool Snippet_FeedVk(int vk_code, int value, bool can_swallow) {
   int del = (int)tlen - (can_swallow ? 1 : 0);
   if (del < 0)
     del = 0;
-  Snippet_ResetBuffer();
+  snippet_reset_buffer();
   if (fire_fn)
     fire_fn(idx, del);
   return true;

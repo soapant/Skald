@@ -10,34 +10,34 @@
 #include "config_values.h"
 
 TEST(find_known_theme_case_insensitive) {
-  const ThemeEntry *a = Theme_Find("cyberpunk");
-  const ThemeEntry *b = Theme_Find("CYBERPUNK");
+  const ThemeEntry *a = theme_find("cyberpunk");
+  const ThemeEntry *b = theme_find("CYBERPUNK");
   ASSERT_TRUE(a != NULL);
   ASSERT_TRUE(a == b);
 }
 
 TEST(find_unknown_and_empty) {
-  ASSERT_TRUE(Theme_Find("definitely-not-a-theme") == NULL);
-  ASSERT_TRUE(Theme_Find("") == NULL);
-  ASSERT_TRUE(Theme_Find(NULL) == NULL);
+  ASSERT_TRUE(theme_find("definitely-not-a-theme") == NULL);
+  ASSERT_TRUE(theme_find("") == NULL);
+  ASSERT_TRUE(theme_find(NULL) == NULL);
 }
 
 TEST(theme_names_are_unique) {
-  size_t n = Theme_Count();
+  size_t n = theme_count();
   ASSERT_TRUE(n >= 40);
   for (size_t i = 0; i < n; i++) {
-    const ThemeEntry *e = Theme_EntryAt(i);
+    const ThemeEntry *e = theme_entry_at(i);
     ASSERT_TRUE(e != NULL);
     ASSERT_TRUE(e->name && e->name[0]);
     for (size_t j = i + 1; j < n; j++) {
-      ASSERT_TRUE(strcmp(Theme_EntryAt(i)->name, Theme_EntryAt(j)->name) != 0);
+      ASSERT_TRUE(strcmp(theme_entry_at(i)->name, theme_entry_at(j)->name) != 0);
     }
   }
 }
 
 TEST(entry_at_out_of_bounds) {
-  ASSERT_TRUE(Theme_EntryAt(Theme_Count()) == NULL);
-  ASSERT_TRUE(Theme_EntryAt(SIZE_MAX) == NULL);
+  ASSERT_TRUE(theme_entry_at(theme_count()) == NULL);
+  ASSERT_TRUE(theme_entry_at(SIZE_MAX) == NULL);
 }
 
 static const char *PIN_FILE = "build/tests/pin_test.cnf";
@@ -54,31 +54,31 @@ TEST(pin_scan_detects_color_overrides) {
         f);
   fclose(f);
 
-  ASSERT_TRUE(Theme_PinScanFile(PIN_FILE));
-  ASSERT_TRUE(Theme_ColorPinned("COLOR_BG"));
-  ASSERT_TRUE(Theme_ColorPinned("COLOR_BORDER"));
-  ASSERT_FALSE(Theme_ColorPinned("COLOR_TEXT"));
-  ASSERT_FALSE(Theme_ColorPinned("COLOR_BG_NO_LEADING_SPACE"));
+  ASSERT_TRUE(theme_pin_scan_file(PIN_FILE));
+  ASSERT_TRUE(theme_color_pinned("COLOR_BG"));
+  ASSERT_TRUE(theme_color_pinned("COLOR_BORDER"));
+  ASSERT_FALSE(theme_color_pinned("COLOR_TEXT"));
+  ASSERT_FALSE(theme_color_pinned("COLOR_BG_NO_LEADING_SPACE"));
 
-  Theme_ResetPinned();
-  Theme_ResetPinned();
-  ASSERT_TRUE(Theme_PinScanFile(PIN_FILE));
-  ASSERT_TRUE(Theme_ColorPinned("COLOR_BG"));
-  ASSERT_TRUE(Theme_ColorPinned("COLOR_BORDER"));
-  Theme_ResetPinned();
+  theme_reset_pinned();
+  theme_reset_pinned();
+  ASSERT_TRUE(theme_pin_scan_file(PIN_FILE));
+  ASSERT_TRUE(theme_color_pinned("COLOR_BG"));
+  ASSERT_TRUE(theme_color_pinned("COLOR_BORDER"));
+  theme_reset_pinned();
 }
 
 TEST(pin_scan_missing_file_keeps_pins_empty) {
-  Theme_ResetPinned();
-  ASSERT_FALSE(Theme_PinScanFile("build/tests/definitely_not_here.cnf"));
-  ASSERT_FALSE(Theme_ColorPinned("COLOR_BG"));
+  theme_reset_pinned();
+  ASSERT_FALSE(theme_pin_scan_file("build/tests/definitely_not_here.cnf"));
+  ASSERT_FALSE(theme_color_pinned("COLOR_BG"));
 }
 
 TEST(apply_flow_unknown_theme_keeps_colors) {
   ColorRef before = COLOR_BG;
   const char *saved_theme = Theme;
   Theme = "definitely-not-a-theme";
-  Theme_Apply();
+  theme_apply();
   ASSERT_EQ_INT((long)before, (long)COLOR_BG);
   Theme = saved_theme;
 }

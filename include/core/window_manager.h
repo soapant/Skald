@@ -61,12 +61,12 @@ bool WindowManager_TopPopupWantsTick(WindowManager *wm);
 
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
-Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec);
-int PromptPopup_GetBounds(Popup *p, int *x, int *y, int *w, int *h);
+Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec);
+int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h);
 CloseCallback PromptPopup_TakeOnClose(Popup *p);
-PromptState *PromptPopup_FindState(const ListBoxInfo *lb);
-Popup *PromptPopup_FindPopupByHandle(WindowHandle handle);
-PromptState *PromptPopup_GetTopPromptState(void);
+PromptState *prompt_popup_find_state(const ListBoxInfo *lb);
+Popup *prompt_popup_find_popup_by_handle(WindowHandle handle);
+PromptState *prompt_popup_get_top_prompt_state(void);
 
 void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
@@ -77,9 +77,9 @@ void WindowManager_Quit(WindowManager *wm);
 void WindowManager_ProcessEvents(WindowManager *wm);
 bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x, int root_y);
 
-void EventBus_Register(PlEvent event, PlEventCallback cb);
-void EventBus_Unregister(PlEvent event, PlEventCallback cb);
-void EventBus_PurgeOwner(const char *path_a, const char *path_b);
-void EventBus_Trigger(PlEvent event);
+void event_bus_register(PlEvent event, PlEventCallback cb);
+void event_bus_unregister(PlEvent event, PlEventCallback cb);
+void event_bus_purge_owner(const char *path_a, const char *path_b);
+void event_bus_trigger(PlEvent event);
 
 #endif

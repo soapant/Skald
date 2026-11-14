@@ -652,7 +652,7 @@ static char *x11_clip_read_target(Atom target) {
   char *tname = XGetAtomName(dpy, target);
   char tbuf[64] = {0};
   if (tname) {
-    SafeCopy(tbuf, sizeof(tbuf), tname);
+    safe_copy(tbuf, sizeof(tbuf), tname);
     XFree(tname);
     tname = NULL;
   }

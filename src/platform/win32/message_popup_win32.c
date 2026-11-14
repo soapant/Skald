@@ -1,14 +1,14 @@
 #include "helpers/win32/raw_message_popup_win32.h"
 
 void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
-  if (Owner_PurgeInactive(path_a, path_b))
+  if (owner_purge_inactive(path_a, path_b))
     return;
   for (int i = g_msg_slot_count - 1; i >= 0; i--) {
     HWND h = g_msg_slots[i];
     FadeWindowData *fd = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
     if (!fd || fd->render_owner[0] == '\0')
       continue;
-    if (!Owner_ModuleMatches(fd->render_owner, path_a, path_b))
+    if (!owner_module_matches(fd->render_owner, path_a, path_b))
       continue;
     fd->render = NULL;
     fd->render_owner[0] = '\0';
@@ -152,12 +152,12 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   if (winHeight > maxHeight)
     winHeight = maxHeight;
 
-  int centerX = MsgAnchorCenter(rect_x, rect_w, h_slot, gap, outward, winWidth);
+  int centerX = msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, winWidth);
   int centerY =
-      MsgAnchorCenter(rect_y, rect_h, v_slot, gap, outward, winHeight);
+      msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, winHeight);
 
   {
-    int stack_dir = MsgStackDir(v_slot, outward);
+    int stack_dir = msg_stack_dir(v_slot, outward);
     int stack_y = centerY - winHeight / 2;
     stack_y = win32_msg_stack_adjust_y(centerX - winWidth / 2, stack_y,
                                        winWidth, winHeight, stack_dir);
@@ -236,7 +236,7 @@ void Platform_CreateDisplayMessageWindow(
   pWndData->render = render;
   pWndData->render_owner[0] = '\0';
   if (render)
-    Owner_ResolveForFunc((void *)render, pWndData->render_owner,
+    owner_resolve_for_func((void *)render, pWndData->render_owner,
                          sizeof(pWndData->render_owner));
   if (name && name[0])
     snprintf(pWndData->name, sizeof(pWndData->name), "%s", name);

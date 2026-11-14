@@ -11,7 +11,7 @@
 #include "platform/platform.h"
 #include "helpers/helpers_fs.h"
 
-bool ReloadLib_IsFresh(const char *src, const char *out) {
+bool reload_lib_is_fresh(const char *src, const char *out) {
   struct stat src_st, out_st;
   if (stat(src, &src_st) != 0)
     return false;
@@ -20,7 +20,7 @@ bool ReloadLib_IsFresh(const char *src, const char *out) {
   return out_st.st_mtime >= src_st.st_mtime;
 }
 
-bool ReloadLib_Compile(const char *src, const char *out, const char *log_tag) {
+bool reload_lib_compile(const char *src, const char *out, const char *log_tag) {
   static int build_seq = 0;
   const char *tag = log_tag ? log_tag : "reload lib";
   size_t tmp_len = strlen(out) + 48;
@@ -63,7 +63,7 @@ bool ReloadLib_Compile(const char *src, const char *out, const char *log_tag) {
   return true;
 }
 
-char *ReloadLib_UniqueCopy(const char *src, const char *base, int seq,
+char *reload_lib_unique_copy(const char *src, const char *base, int seq,
                            const char *ext_suffix) {
   char seqbuf[32];
   snprintf(seqbuf, sizeof(seqbuf), ".hot%d", seq);
@@ -78,14 +78,14 @@ char *ReloadLib_UniqueCopy(const char *src, const char *base, int seq,
   if (ext_len)
     memcpy(path + base_len + seq_len, ext_suffix, ext_len);
   path[base_len + seq_len + ext_len] = '\0';
-  if (!File_CopyPath(src, path)) {
+  if (!file_copy_path(src, path)) {
     free(path);
     return NULL;
   }
   return path;
 }
 
-int ReloadLib_SweepStaleHotLibs(const char *dir, const char *lib_ext) {
+int reload_lib_sweep_stale_hot_libs(const char *dir, const char *lib_ext) {
   DIR *d = opendir(dir);
   if (!d)
     return -1;

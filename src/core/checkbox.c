@@ -30,7 +30,7 @@ static struct {
   bool down;
 } cb_mouse;
 
-void Checkbox_FrameBegin(void) { cb_mouse.valid = false; }
+void checkbox_frame_begin(void) { cb_mouse.valid = false; }
 
 static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
 
@@ -57,7 +57,7 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
       cb_mouse.mx = -9999;
       cb_mouse.my = -9999;
     }
-    cb_mouse.down = Input_MouseStateDown(MOUSE_BTN_LEFT);
+    cb_mouse.down = input_mouse_state_down(MOUSE_BTN_LEFT);
     cb_mouse.valid = true;
   }
   if (out_x)
@@ -104,22 +104,22 @@ static CheckboxSpec *checkbox_intern(const char *name, int kind, bool seed) {
   return cb;
 }
 
-bool Checkbox_IsChecked(const char *name, int kind) {
+bool checkbox_is_checked(const char *name, int kind) {
   const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->checked : false;
 }
 
-bool Checkbox_IsHovered(const char *name, int kind) {
+bool checkbox_is_hovered(const char *name, int kind) {
   const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->hovered : false;
 }
 
-bool Checkbox_IsClicked(const char *name, int kind) {
+bool checkbox_is_clicked(const char *name, int kind) {
   const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->clicked : false;
 }
 
-void Checkbox_ResetAll(void) {
+void checkbox_reset_all(void) {
   for (int i = 0; i < checkbox_count; i++) {
     checkboxes[i].checked = false;
     checkboxes[i].clicked = false;
@@ -161,7 +161,7 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
 
 FontHandle s_font;
 
-void Checkbox_Draw(const CheckboxSpec *spec) {
+void checkbox_draw(const CheckboxSpec *spec) {
   if (spec->render) {
     PlaceState st;
     memset(&st, 0, sizeof(st));
@@ -235,14 +235,14 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
           .h = h,
           .text = spec->text,
           .color =
-              spec->text_color ? RgbToHex(spec->text_color) : CHECKBOX_WHITE,
+              spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
           .font = s_font,
           .fontsize = fontsize});
     }
   }
 }
 
-bool Checkbox_Place(const CheckboxSpec *spec) {
+bool checkbox_place(const CheckboxSpec *spec) {
   if (!spec || !spec->name || !spec->name[0]) {
     return false;
   }
@@ -303,7 +303,7 @@ bool Checkbox_Place(const CheckboxSpec *spec) {
   }
   cb->was_down = down;
 
-  Checkbox_Draw(cb);
+  checkbox_draw(cb);
 
   if (clicked && cb->on_click)
     cb->on_click();

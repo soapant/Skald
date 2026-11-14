@@ -5,15 +5,15 @@
 
 #include "core/types/keys.h"
 
-bool Key_IsCtrlPressed(void);
-bool Key_IsShiftPressed(void);
-bool Key_IsAltPressed(void);
-bool Key_IsSuperPressed(void);
+bool key_is_ctrl_pressed(void);
+bool key_is_shift_pressed(void);
+bool key_is_alt_pressed(void);
+bool key_is_super_pressed(void);
 
 typedef bool (*KeyInterceptorFn)(const PopupKeyEvent *key);
 
-void Key_RegisterInterceptor(KeyInterceptorFn fn);
-void Key_PurgeInterceptorOwner(const char *path_a, const char *path_b);
-bool Key_InvokeInterceptor(const PopupKeyEvent *key);
+void key_register_interceptor(KeyInterceptorFn fn);
+void key_purge_interceptor_owner(const char *path_a, const char *path_b);
+bool key_invoke_interceptor(const PopupKeyEvent *key);
 
 #endif
