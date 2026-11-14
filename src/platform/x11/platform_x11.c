@@ -2,6 +2,7 @@
 #include "wm/x11_wm.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_fs.h"
 #include "helpers/x11/raw_platform_x11.h"
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
@@ -1791,4 +1792,309 @@ bool Platform_GetMousePos(int *out_x, int *out_y) {
   if (out_y)
     *out_y = my;
   return true;
+}
+
+static bool x11_lookup_is_exec(const char *path) {
+  struct stat st;
+  return stat(path, &st) == 0 && S_ISREG(st.st_mode) &&
+         access(path, X_OK) == 0;
+}
+
+static bool x11_lookup_ci_eq(const char *a, const char *b) {
+  for (;;) {
+    unsigned char ca = (unsigned char)*a, cb = (unsigned char)*b;
+    if (ca >= 'A' && ca <= 'Z')
+      ca += 32;
+    if (cb >= 'A' && cb <= 'Z')
+      cb += 32;
+    if (ca != cb)
+      return false;
+    if (ca == '\0')
+      return true;
+    a++;
+    b++;
+  }
+}
+
+static bool x11_lookup_ci_ends_with(const char *s, const char *suffix) {
+  size_t ns = strlen(s), nf = strlen(suffix);
+  if (nf > ns)
+    return false;
+  return x11_lookup_ci_eq(s + ns - nf, suffix);
+}
+
+static char *x11_lookup_try_dir(const char *dir, const char *name) {
+  if (!dir || !dir[0])
+    return NULL;
+  char cand[4096];
+  int rc = snprintf(cand, sizeof(cand), "%s/%s", dir, name);
+  if (rc < 0 || (size_t)rc >= sizeof(cand))
+    return NULL;
+  if (x11_lookup_is_exec(cand))
+    return strdup(cand);
+  return NULL;
+}
+
+static char *x11_lookup_find_in_list(const char *list, const char *name) {
+  const char *p = list;
+  while (p && *p) {
+    const char *end = strchr(p, ':');
+    size_t len = end ? (size_t)(end - p) : strlen(p);
+    if (len > 0 && len < 4096) {
+      char dirbuf[4096];
+      memcpy(dirbuf, p, len);
+      dirbuf[len] = '\0';
+      char *hit = x11_lookup_try_dir(dirbuf, name);
+      if (hit)
+        return hit;
+    }
+    if (!end)
+      break;
+    p = end + 1;
+  }
+  return NULL;
+}
+
+static char *x11_lookup_find_in_path(const char *name, const char *home) {
+  const char *path = getenv("PATH");
+  if (path && path[0]) {
+    char *hit = x11_lookup_find_in_list(path, name);
+    if (hit)
+      return hit;
+  }
+  const char *extra[] = {"/usr/local/bin", "/usr/bin",   "/bin",
+                         "/usr/sbin",      "/sbin",
+                         "/snap/bin",
+                         "/var/lib/flatpak/exports/bin", NULL};
+  for (size_t i = 0; extra[i]; i++) {
+    char *hit = x11_lookup_try_dir(extra[i], name);
+    if (hit)
+      return hit;
+  }
+  if (home && home[0]) {
+    char buf[1024];
+    const char *home_extra[] = {"/.local/bin", "/bin",
+                                "/.local/share/flatpak/exports/bin", NULL};
+    for (size_t i = 0; home_extra[i]; i++) {
+      int rc = snprintf(buf, sizeof(buf), "%s%s", home, home_extra[i]);
+      if (rc < 0 || (size_t)rc >= sizeof(buf))
+        continue;
+      char *hit = x11_lookup_try_dir(buf, name);
+      if (hit)
+        return hit;
+    }
+  }
+  return NULL;
+}
+
+static char *x11_lookup_resolve_exec(const char *desktop_file,
+                                     const char *home) {
+  FILE *f = fopen(desktop_file, "r");
+  if (!f)
+    return NULL;
+  char line[8192];
+  char *result = NULL;
+  while (!result && fgets(line, sizeof(line), f)) {
+    char *p = line;
+    while (*p == ' ' || *p == '\t')
+      p++;
+    if (strncmp(p, "Exec=", 5) != 0)
+      continue;
+    p += 5;
+    while (*p == ' ' || *p == '\t')
+      p++;
+    char *eol = p + strlen(p);
+    while (eol > p && (eol[-1] == '\n' || eol[-1] == '\r'))
+      *--eol = '\0';
+    char tokens[16][512];
+    int ntok = 0;
+    for (char *t = p; t && *t && ntok < 16;) {
+      while (*t == ' ' || *t == '\t')
+        t++;
+      if (!*t)
+        break;
+      bool quoted = false;
+      if (*t == '"') {
+        quoted = true;
+        t++;
+      }
+      char *dst = tokens[ntok];
+      size_t cap = sizeof(tokens[ntok]) - 1;
+      size_t o = 0;
+      while (*t && o < cap) {
+        if (quoted) {
+          if (*t == '"') {
+            t++;
+            break;
+          }
+          dst[o++] = *t++;
+        } else {
+          if (*t == ' ' || *t == '\t')
+            break;
+          dst[o++] = *t++;
+        }
+      }
+      dst[o] = '\0';
+      ntok++;
+    }
+    int i = 0;
+    if (ntok > 0 && x11_lookup_ci_eq(tokens[0], "env")) {
+      i = 1;
+      while (i < ntok && strchr(tokens[i], '=') != NULL)
+        i++;
+    }
+    if (i >= ntok)
+      continue;
+    char *prog = tokens[i];
+    if (!prog[0] || prog[0] == '%')
+      continue;
+    if (strchr(prog, '/')) {
+      if (x11_lookup_is_exec(prog))
+        result = strdup(prog);
+      continue;
+    }
+    result = x11_lookup_find_in_path(prog, home);
+  }
+  fclose(f);
+  return result;
+}
+
+static char *x11_lookup_scan_app_dir(const char *apps_dir, const char *name,
+                                     const char *home) {
+  char desktop[4096];
+  snprintf(desktop, sizeof(desktop), "%s/%s.desktop", apps_dir, name);
+  struct stat st;
+  if (stat(desktop, &st) == 0 && S_ISREG(st.st_mode)) {
+    char *hit = x11_lookup_resolve_exec(desktop, home);
+    if (hit)
+      return hit;
+  }
+  char *hit = NULL;
+  PlDirIter *it = Platform_DirOpen(apps_dir);
+  if (!it)
+    return NULL;
+  char entry[256];
+  bool is_dir = false;
+  while (!hit && Platform_DirNext(it, entry, sizeof(entry), &is_dir)) {
+    if (is_dir || !x11_lookup_ci_ends_with(entry, ".desktop"))
+      continue;
+    char stem[256];
+    snprintf(stem, sizeof(stem), "%.*s", (int)(strlen(entry) - 8), entry);
+    char full[4096];
+    snprintf(full, sizeof(full), "%s/%s", apps_dir, entry);
+    if (x11_lookup_ci_eq(stem, name)) {
+      hit = x11_lookup_resolve_exec(full, home);
+      continue;
+    }
+    hit = x11_lookup_resolve_exec(full, home);
+    if (hit) {
+      char base[512];
+      const char *slash = strrchr(hit, '/');
+      snprintf(base, sizeof(base), "%s", slash ? slash + 1 : hit);
+      if (!x11_lookup_ci_eq(base, name)) {
+        free(hit);
+        hit = NULL;
+      }
+    }
+  }
+  Platform_DirClose(it);
+  return hit;
+}
+
+static char *x11_lookup_find_in_apps_db(const char *name, const char *home) {
+  const char *data_home = getenv("XDG_DATA_HOME");
+  char dh[1024];
+  char *hit = NULL;
+  if (!data_home || !data_home[0]) {
+    if (home && home[0]) {
+      snprintf(dh, sizeof(dh), "%s/.local/share", home);
+      data_home = dh;
+    }
+  }
+  if (data_home && data_home[0]) {
+    char dir[1024];
+    snprintf(dir, sizeof(dir), "%s/applications", data_home);
+    hit = x11_lookup_scan_app_dir(dir, name, home);
+    if (hit)
+      return hit;
+  }
+  const char *data_dirs = getenv("XDG_DATA_DIRS");
+  if (!data_dirs || !data_dirs[0])
+    data_dirs = "/usr/local/share:/usr/share";
+  const char *p = data_dirs;
+  while (p && *p && !hit) {
+    const char *end = strchr(p, ':');
+    size_t len = end ? (size_t)(end - p) : strlen(p);
+    if (len > 0 && len < sizeof(dh)) {
+      char dirbuf[1024];
+      memcpy(dirbuf, p, len);
+      dirbuf[len] = '\0';
+      char full[1024];
+      int rc = snprintf(full, sizeof(full), "%s/applications", dirbuf);
+      if (rc > 0 && (size_t)rc < sizeof(full))
+        hit = x11_lookup_scan_app_dir(full, name, home);
+    }
+    if (!end)
+      break;
+    p = end + 1;
+  }
+  if (hit)
+    return hit;
+  const char *flatpak[] = {"/var/lib/flatpak/exports/share/applications",
+                           "/var/lib/snapd/desktop/applications", NULL};
+  for (size_t i = 0; flatpak[i] && !hit; i++)
+    hit = x11_lookup_scan_app_dir(flatpak[i], name, home);
+  if (hit || !home || !home[0])
+    return hit;
+  snprintf(dh, sizeof(dh), "%s/.local/share/flatpak/exports/share/applications",
+           home);
+  return x11_lookup_scan_app_dir(dh, name, home);
+}
+
+static char *x11_lookup_first_line(char *out) {
+  char *start = out;
+  while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n')
+    start++;
+  char *end = start;
+  while (*end && *end != '\n' && *end != '\r')
+    end++;
+  while (end > start && (end[-1] == ' ' || end[-1] == '\t'))
+    end--;
+  *end = '\0';
+  return start;
+}
+
+char *Platform_FindExecutable(const char *name) {
+  if (!name || !name[0])
+    return NULL;
+
+  const char *home = Platform_GetRealHome();
+
+  if (strchr(name, '/')) {
+    char expanded[4096];
+    if (!ExpandPath(name, expanded, sizeof(expanded)))
+      return NULL;
+    if (x11_lookup_is_exec(expanded))
+      return strdup(expanded);
+    return NULL;
+  }
+
+  char *hit = x11_lookup_find_in_path(name, home);
+  if (hit)
+    return hit;
+
+  hit = x11_lookup_find_in_apps_db(name, home);
+  if (hit)
+    return hit;
+
+  int status = 0;
+  char *out = Platform_RunArgvCapture((const char *const[]){"which", name, NULL},
+                                      NULL, &status);
+  if (!out)
+    return NULL;
+  char *line = x11_lookup_first_line(out);
+  if (line[0] && x11_lookup_is_exec(line))
+    hit = strdup(line);
+  free(out);
+  return hit;
 }

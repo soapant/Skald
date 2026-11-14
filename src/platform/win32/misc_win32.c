@@ -315,46 +315,54 @@ const char *Platform_GetRealUser(void) {
   return NULL;
 }
 
+static const char *win32_compiler_found(void) {
+  static char *cc = NULL;
+  if (!cc) {
+    const char *candidates[] = {"clang", "gcc", NULL};
+    for (size_t i = 0; candidates[i] && !cc; i++)
+      cc = Platform_FindExecutable(candidates[i]);
+    if (cc)
+      log_info("feature builds will use compiler: %s", cc);
+  }
+  return cc;
+}
+
 bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
                                   const char *argv[], size_t argv_cap) {
+  const char *cc = win32_compiler_found();
+  if (!cc || argv_cap < 30)
+    return false;
   size_t n = 0;
-#define ADD_ARG(arg)                                                           \
-  do {                                                                         \
-    if (n + 1 >= argv_cap)                                                     \
-      return false;                                                            \
-    argv[n++] = (arg);                                                         \
-  } while (0)
-  ADD_ARG("gcc");
-  ADD_ARG("-std=gnu17");
-  ADD_ARG("-I");
-  ADD_ARG("build/sdk");
-  ADD_ARG("-pipe");
-  ADD_ARG("-shared");
-  ADD_ARG("-o");
-  ADD_ARG(out_tmp);
-  ADD_ARG(src);
-  ADD_ARG("build/main.lib.a");
-  ADD_ARG("-lcomctl32");
-  ADD_ARG("-lgdiplus");
-  ADD_ARG("-lgdi32");
-  ADD_ARG("-lshlwapi");
-  ADD_ARG("-lshell32");
-  ADD_ARG("-lwinmm");
-  ADD_ARG("-lole32");
-  ADD_ARG("-luuid");
-  ADD_ARG("-lmsimg32");
-  ADD_ARG("-ldwmapi");
-  ADD_ARG("-lpsapi");
-  ADD_ARG("-lcrypt32");
-  ADD_ARG("-lcomdlg32");
-  ADD_ARG("-ladvapi32");
-  ADD_ARG("-ldxva2");
-  ADD_ARG("-luser32");
-  ADD_ARG("-lwinhttp");
-  ADD_ARG("-Lbuild/winlibs");
-  ADD_ARG("-liphlpapi");
+  argv[n++] = cc;
+  argv[n++] = "-std=gnu17";
+  argv[n++] = "-I";
+  argv[n++] = "build/sdk";
+  argv[n++] = "-pipe";
+  argv[n++] = "-shared";
+  argv[n++] = "-o";
+  argv[n++] = out_tmp;
+  argv[n++] = src;
+  argv[n++] = "build/main.lib.a";
+  argv[n++] = "-lcomctl32";
+  argv[n++] = "-lgdiplus";
+  argv[n++] = "-lgdi32";
+  argv[n++] = "-lshlwapi";
+  argv[n++] = "-lshell32";
+  argv[n++] = "-lwinmm";
+  argv[n++] = "-lole32";
+  argv[n++] = "-luuid";
+  argv[n++] = "-lmsimg32";
+  argv[n++] = "-ldwmapi";
+  argv[n++] = "-lpsapi";
+  argv[n++] = "-lcrypt32";
+  argv[n++] = "-lcomdlg32";
+  argv[n++] = "-ladvapi32";
+  argv[n++] = "-ldxva2";
+  argv[n++] = "-luser32";
+  argv[n++] = "-lwinhttp";
+  argv[n++] = "-Lbuild/winlibs";
+  argv[n++] = "-liphlpapi";
   argv[n] = NULL;
-#undef ADD_ARG
   return true;
 }
 

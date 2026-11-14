@@ -725,6 +725,13 @@ char *sk_run_argv(const char *const argv[], const char *stdin_data,
   return Platform_RunArgvCapture(argv, stdin_data, out_status);
 }
 
+char *sk_which(const char *command) {
+
+  if (!command || !command[0])
+    return NULL;
+  return Platform_FindExecutable(command);
+}
+
 char *sk_run_terminal_command_blocking(char *command) {
   if (!command)
     return NULL;
