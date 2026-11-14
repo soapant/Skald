@@ -3,7 +3,10 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "core/types.h"
+
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
 
 typedef struct {
   char name[256];
