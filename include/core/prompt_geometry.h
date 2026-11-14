@@ -44,10 +44,10 @@
 #define PROMPT_CUSTOM_FALLBACK_LIST_W 650
 #define PROMPT_CUSTOM_EDIT_H_BONUS 28
 
-int PromptRowHeight(void);
-int PromptListTop(void);
-int PromptCaretHeight(void);
-int PromptCustomEditHeight(void);
-int PromptListBottomMargin(void);
+int prompt_row_height(void);
+int prompt_list_top(void);
+int prompt_caret_height(void);
+int prompt_custom_edit_height(void);
+int prompt_list_bottom_margin(void);
 
 #endif

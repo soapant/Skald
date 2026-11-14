@@ -75,17 +75,17 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
     return;
   lb->text_hscroll = 0;
   lb->selected_index = index;
-  lb->selected_text = ListBoxInfo_Row(lb, index);
-  ListBox_ScrollToSelection(lb);
+  lb->selected_text = listbox_info_row(lb, index);
+  listbox_scroll_to_selection(lb);
   UI_RequestPopupRepaint();
 }
 
 void UI_NavigateUp(ListBoxInfo *lb) {
-  ListBox_NavigateUp(lb);
+  listbox_navigate_up(lb);
   UI_RequestPopupRepaint();
 }
 
 void UI_NavigateDown(ListBoxInfo *lb) {
-  ListBox_NavigateDown(lb);
+  listbox_navigate_down(lb);
   UI_RequestPopupRepaint();
 }

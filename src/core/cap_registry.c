@@ -34,13 +34,13 @@ static void cap_unlock(void) {
     Platform_MutexUnlock(cap_mutex);
 }
 
-unsigned Cap_Generation(void) { return cap_gen; }
+unsigned cap_generation(void) { return cap_gen; }
 
 static void cap_add_provides(const char *owner, const char *key) {
-  FeatureLoader_ManifestAddProvides(owner, key);
+  feature_loader_manifest_add_provides(owner, key);
 }
 
-void Cap_RegisterAbi(const char *key, unsigned abi, void *fn) {
+void cap_register_abi(const char *key, unsigned abi, void *fn) {
   if (!key || !key[0] || !fn)
     return;
   if (strlen(key) >= CAP_KEY_LEN) {
@@ -51,7 +51,7 @@ void Cap_RegisterAbi(const char *key, unsigned abi, void *fn) {
   cap_lock();
 
   char owner[OWNER_PATH_MAX];
-  Owner_ResolveForFunc(fn, owner, sizeof(owner));
+  owner_resolve_for_func(fn, owner, sizeof(owner));
 
   for (int i = 0; i < cap_count; i++) {
     if (strcmp(caps[i].key, key) != 0)
@@ -91,7 +91,7 @@ void Cap_RegisterAbi(const char *key, unsigned abi, void *fn) {
     cap_add_provides(owner, key);
 }
 
-void *Cap_ResolveAbi(const char *key, unsigned abi) {
+void *cap_resolve_abi(const char *key, unsigned abi) {
   if (!key || !key[0])
     return NULL;
   cap_lock();
@@ -111,13 +111,13 @@ void *Cap_ResolveAbi(const char *key, unsigned abi) {
   return NULL;
 }
 
-void Cap_BindDeclare(const char *key, void *consumer) {
+void cap_bind_declare(const char *key, void *consumer) {
   if (!key || !key[0] || !consumer) {
     return;
   }
 
   char consumer_path[OWNER_PATH_MAX];
-  Owner_ResolveForFunc(consumer, consumer_path, sizeof(consumer_path));
+  owner_resolve_for_func(consumer, consumer_path, sizeof(consumer_path));
   if (!consumer_path[0]) {
     return;
   }
@@ -135,26 +135,26 @@ void Cap_BindDeclare(const char *key, void *consumer) {
       return;
     }
     char provider[64];
-    FeatureLoader_OwnerFeatureName(caps[i].owner, provider, sizeof(provider));
+    feature_loader_owner_feature_name(caps[i].owner, provider, sizeof(provider));
     cap_unlock();
     if (!provider[0]) {
       return;
     }
-    FeatureLoader_ManifestAddDepends(consumer_path, provider);
+    feature_loader_manifest_add_depends(consumer_path, provider);
     return;
   }
   cap_unlock();
 }
 
-void Cap_PurgeOwner(const char *path_a, const char *path_b) {
-  if (Owner_PurgeInactive(path_a, path_b)) {
+void cap_purge_owner(const char *path_a, const char *path_b) {
+  if (owner_purge_inactive(path_a, path_b)) {
     return;
   }
 
   int n = 0;
   cap_lock();
   for (int i = 0; i < cap_count; i++) {
-    if (Owner_ModuleMatches(caps[i].owner, path_a, path_b)) {
+    if (owner_module_matches(caps[i].owner, path_a, path_b)) {
       continue;
     }
     caps[n++] = caps[i];

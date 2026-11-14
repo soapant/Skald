@@ -27,7 +27,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
     return false;
   struct timespec _t0, _t1, _t2, _t3;
   clock_gettime(CLOCK_MONOTONIC, &_t0);
-  ListBox_InvalidateMousePos();
+  listbox_invalidate_mouse_pos();
   self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
   XSelectInput(dpy, self->handle.xid,
                KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask |
@@ -76,7 +76,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
              (unsigned long)self->handle.xid, _fw == self->handle.xid);
     char *_nm = NULL;
     if (XFetchName(dpy, self->handle.xid, &_nm) && _nm) {
-      Wm_FocusByTitle(_nm);
+      wm_focus_by_title(_nm);
       XFree(_nm);
     }
   }
@@ -98,10 +98,10 @@ void Platform_PromptPopupRender(Popup *self) {
   if (dpy) {
     const PromptState *psr = (PromptState *)self->user_data;
     if (psr && psr->no_bg) {
-      SetTransparentWindow(true);
+      set_transparent_window(true);
       x11_render_prompt_user(dpy, &self->handle.xid,
                              (PromptState *)self->user_data);
-      SetTransparentWindow(false);
+      set_transparent_window(false);
       return;
     }
     x11_render_prompt_user(dpy, &self->handle.xid,
@@ -122,13 +122,13 @@ bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   PromptState *state = self ? (PromptState *)self->user_data : NULL;
   if (!state)
     return true;
-  if (Prompt_HandleKey(state, key))
+  if (prompt_handle_key(state, key))
     return true;
 
   if (key->text_len > 0) {
-    bool swallow = HotkeyText_ShouldSwallow(key);
-    if (!swallow && HotkeyText_IsPrintable(key)) {
-      Prompt_InsertText(state, key->text, key->text_len);
+    bool swallow = hotkey_text_should_swallow(key);
+    if (!swallow && hotkey_text_is_printable(key)) {
+      prompt_insert_text(state, key->text, key->text_len);
       return true;
     }
   }

@@ -24,7 +24,7 @@ typedef struct {
   int x, y, w, h;
 } PromptPopupData;
 
-static void PromptPopup_OnShow(Popup *self) {
+static void prompt_popup_on_show(Popup *self) {
 
   PromptPopupData *data = (PromptPopupData *)self;
   WindowManager *wm = (WindowManager *)self->manager;
@@ -32,8 +32,8 @@ static void PromptPopup_OnShow(Popup *self) {
   ctx->window.selection_complete = false;
   ctx->window.output_buffer[0] = '\0';
   data->prev_hPopupWnd = ctx->window.hPopupWnd;
-  InputState_ClearQueue();
-  log_info("PromptPopup_OnShow title=%s x=%d y=%d popup_count=%d",
+  input_state_clear_queue();
+  log_info("prompt_popup_on_show title=%s x=%d y=%d popup_count=%d",
            data->spec.title ? data->spec.title : "(null)", data->x, data->y,
            wm->popup_count);
 
@@ -56,7 +56,7 @@ static void PromptPopup_OnShow(Popup *self) {
   data->state->window_title = (char *)title;
   data->state->eb->filter[0] = '\0';
   if (data->spec.initial_text && data->spec.initial_text[0]) {
-    SafeCopy(data->state->eb->filter, sizeof(data->state->eb->filter),
+    safe_copy(data->state->eb->filter, sizeof(data->state->eb->filter),
              data->spec.initial_text);
     data->state->eb->cursor = (int)strlen(data->state->eb->filter);
   }
@@ -71,7 +71,7 @@ static void PromptPopup_OnShow(Popup *self) {
   } else {
     data->state->lb = NULL;
   }
-  ListBoxInfo_Init(data->state->lb);
+  listbox_info_init(data->state->lb);
   data->state->no_bg = data->spec.no_bg;
   data->state->bg_color = data->spec.bg_color;
   data->state->password_mode = data->spec.password_mode;
@@ -131,7 +131,7 @@ static void PromptPopup_OnShow(Popup *self) {
     data->spec.refresh(data->state);
 }
 
-static void PromptPopup_OnHide(Popup *self) {
+static void prompt_popup_on_hide(Popup *self) {
 
   PromptPopupData *data = (PromptPopupData *)self;
   log_info("DEBUG_ON_HIDE title='%s'",
@@ -152,23 +152,23 @@ static void PromptPopup_OnHide(Popup *self) {
   Platform_PromptPopupHideWindow(self);
 }
 
-static void PromptPopup_OnRender(Popup *self) {
+static void prompt_popup_on_render(Popup *self) {
   const PromptPopupData *data = (PromptPopupData *)self;
   if (!data->state)
     return;
   Platform_PromptPopupRender(self);
 }
 
-static bool PromptPopup_OnKey(Popup *self, const PopupKeyEvent *key) {
+static bool prompt_popup_on_key(Popup *self, const PopupKeyEvent *key) {
   return Platform_PromptPopupOnKey(self, key);
 }
 
-static void PromptPopup_Destroy(Popup *self) {
+static void prompt_popup_destroy(Popup *self) {
 
   PromptPopupData *data = (PromptPopupData *)self;
   Platform_PromptPopupDestroyWindow(self);
   if (data->state) {
-    ListBoxInfo_Free(data->state->lb);
+    listbox_info_free(data->state->lb);
     free(data->state->eb->placeholder);
     free(data->state->eb);
     free(data->state);
@@ -176,14 +176,14 @@ static void PromptPopup_Destroy(Popup *self) {
   free(data);
 }
 
-static const PopupVTable prompt_popup_vtable = {.on_show = PromptPopup_OnShow,
-                                                .on_hide = PromptPopup_OnHide,
+static const PopupVTable prompt_popup_vtable = {.on_show = prompt_popup_on_show,
+                                                .on_hide = prompt_popup_on_hide,
                                                 .on_render =
-                                                    PromptPopup_OnRender,
-                                                .on_key = PromptPopup_OnKey,
-                                                .destroy = PromptPopup_Destroy};
+                                                    prompt_popup_on_render,
+                                                .on_key = prompt_popup_on_key,
+                                                .destroy = prompt_popup_destroy};
 
-int PromptPopup_GetBounds(Popup *p, int *x, int *y, int *w, int *h) {
+int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h) {
   if (!p || p->type != POPUP_PROMPT)
     return 0;
   const PromptPopupData *d = (PromptPopupData *)p;
@@ -198,7 +198,7 @@ int PromptPopup_GetBounds(Popup *p, int *x, int *y, int *w, int *h) {
   return 1;
 }
 
-Popup *PromptPopup_Create(WindowManager *wm, const PromptSpec *spec) {
+Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
   if (!wm || !spec)
     return NULL;
 
@@ -343,18 +343,18 @@ static bool prompt_handle_matches(Popup *p, void *arg) {
   return WH_EQUALS(p->handle, *(WindowHandle *)arg);
 }
 
-PromptState *PromptPopup_FindState(const ListBoxInfo *lb) {
+PromptState *prompt_popup_find_state(const ListBoxInfo *lb) {
   Popup *p = prompt_find_popup(prompt_lb_matches, (void *)lb);
   return p ? (PromptState *)p->user_data : NULL;
 }
 
-Popup *PromptPopup_FindPopupByHandle(WindowHandle handle) {
+Popup *prompt_popup_find_popup_by_handle(WindowHandle handle) {
   if (WH_EQUALS(handle, WH_NULL))
     return NULL;
   return prompt_find_popup(prompt_handle_matches, &handle);
 }
 
-PromptState *PromptPopup_GetTopPromptState(void) {
+PromptState *prompt_popup_get_top_prompt_state(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (top && top->type == POPUP_PROMPT && top->user_data)

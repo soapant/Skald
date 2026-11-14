@@ -92,10 +92,10 @@ typedef void (*KeyCallback)(int vkCode);
 
 typedef void (*CloseCallback)(void);
 
-void ListBoxInfo_Free(ListBoxInfo *lb);
-bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows);
-const char *ListBoxInfo_Row(const ListBoxInfo *lb, int idx);
-void ListBoxInfo_Init(ListBoxInfo *lb);
+void listbox_info_free(ListBoxInfo *lb);
+bool listbox_info_ensure_rows(ListBoxInfo *lb, int rows);
+const char *listbox_info_row(const ListBoxInfo *lb, int idx);
+void listbox_info_init(ListBoxInfo *lb);
 
 typedef struct {
   const char *title;

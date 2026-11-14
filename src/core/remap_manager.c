@@ -62,7 +62,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
   int tmp_vks[MAX_SRC_VKS];
   int tmp_count = 0;
   int tmp_mods = 0;
-  Remap_ParseTriggers(src, &tmp_mods, tmp_vks, &tmp_count);
+  remap_parse_triggers(src, &tmp_mods, tmp_vks, &tmp_count);
   if (tmp_count == 0 && tmp_mods == 0) {
     log_warn("remap '%s' -> '%s': no trigger keys parsed, refusing", src, dst);
     for (int k = 0; k < b.window_count; k++)
@@ -77,7 +77,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
   int dst_mods = 0;
   int dst_vks[MAX_SRC_VKS];
   int dst_count = 0;
-  Remap_ParseTriggers(dst, &dst_mods, dst_vks, &dst_count);
+  remap_parse_triggers(dst, &dst_mods, dst_vks, &dst_count);
   if (dst_count == 0 && dst_mods == 0) {
     log_warn("remap '%s' -> '%s': no destination keys parsed, refusing", src,
              dst);
@@ -385,7 +385,7 @@ void remap_send_combo(const char *combo) {
   int mods = 0;
   int vks[MAX_SRC_VKS];
   int count = 0;
-  Remap_ParseTriggers(combo, &mods, vks, &count);
+  remap_parse_triggers(combo, &mods, vks, &count);
   if (count <= 0)
     return;
   RemapBinding b = {0};
@@ -427,7 +427,7 @@ bool remap_handle_vk(int vk_code, int value) {
   for (int i = 0; i < remap_count; i++) {
     if (remaps[i].window_count > 0)
       allowed[i] =
-          Window_ListAllows(remaps[i].window_count, remaps[i].whitelist,
+          window_list_allows(remaps[i].window_count, remaps[i].whitelist,
                             remaps[i].windows, title);
   }
 

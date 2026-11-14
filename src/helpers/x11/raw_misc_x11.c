@@ -153,11 +153,11 @@ bool x11_cmd_exists(const char *cmd) {
     char full[4352];
     snprintf(full, sizeof(full), "%s/%s", dir, cmd);
     if (access(full, X_OK) == 0) {
-      StringList_Free(&dirs);
+      string_list_free(&dirs);
       return true;
     }
   }
-  StringList_Free(&dirs);
+  string_list_free(&dirs);
   return false;
 }
 

@@ -5,17 +5,17 @@
 
 typedef void (*RenderFrameFn)(void *ud);
 
-bool RenderThread_EnsureStarted(int fps);
-void RenderThread_Stop(void);
-bool RenderThread_IsRunning(void);
-bool RenderThread_AddFrameCallback(RenderFrameFn fn, void *ud);
-bool RenderThread_RemoveFrameCallback(RenderFrameFn fn, const void *ud);
-bool RenderThread_Post(RenderFrameFn fn, void *ud);
-void RenderThread_Wake(void);
-void RenderThread_Sync(void);
-bool RenderThread_IsCurrentThread(void);
-void *RenderThread_Display(void);
+bool render_thread_ensure_started(int fps);
+void render_thread_stop(void);
+bool render_thread_is_running(void);
+bool render_thread_add_frame_callback(RenderFrameFn fn, void *ud);
+bool render_thread_remove_frame_callback(RenderFrameFn fn, const void *ud);
+bool render_thread_post(RenderFrameFn fn, void *ud);
+void render_thread_wake(void);
+void render_thread_sync(void);
+bool render_thread_is_current_thread(void);
+void *render_thread_display(void);
 
-void RenderThread_Main(void);
+void render_thread_main(void);
 
 #endif

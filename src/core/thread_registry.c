@@ -60,7 +60,7 @@ static bool owner_matches(const char *a, const char *b) {
   return strcmp(ab, bb) == 0;
 }
 
-void ThreadRegistry_Add(void *ctx, const char *owner_path) {
+void thread_registry_add(void *ctx, const char *owner_path) {
   if (!ctx)
     return;
   thread_reg_lock();
@@ -83,7 +83,7 @@ void ThreadRegistry_Add(void *ctx, const char *owner_path) {
   thread_reg_unlock();
 }
 
-void ThreadRegistry_Finish(const void *ctx) {
+void thread_registry_finish(const void *ctx) {
   if (!ctx)
     return;
   thread_reg_lock();
@@ -98,7 +98,7 @@ void ThreadRegistry_Finish(const void *ctx) {
   thread_reg_unlock();
 }
 
-bool ThreadRegistry_OwnerActive(const char *owner_path) {
+bool thread_registry_owner_active(const char *owner_path) {
   if (!owner_path || !owner_path[0])
     return false;
   thread_reg_lock();

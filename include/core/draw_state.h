@@ -19,12 +19,12 @@ typedef struct {
   bool win32_listbox_surface;
 } PlDrawState;
 
-PlDrawState *PlDrawState_Get(void);
-void PlDrawState_Offset(int *x, int *y);
+PlDrawState *pl_draw_state_get(void);
+void pl_draw_state_offset(int *x, int *y);
 
-void PlDrawState_BeginMeasure(void);
-void PlDrawState_Reset(void);
-void PlDrawState_TrackMeasure(int x, int y, int w, int h);
-void PlDrawState_EndMeasure(int *out_w, int *out_h);
+void pl_draw_state_begin_measure(void);
+void pl_draw_state_reset(void);
+void pl_draw_state_track_measure(int x, int y, int w, int h);
+void pl_draw_state_end_measure(int *out_w, int *out_h);
 
 #endif

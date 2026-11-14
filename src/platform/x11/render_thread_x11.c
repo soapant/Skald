@@ -40,7 +40,7 @@ void Platform_RenderThreadMiniSleep(int milliseconds) {
 
 static void *rt_entry(void *arg) {
   (void)arg;
-  RenderThread_Main();
+  render_thread_main();
   return NULL;
 }
 

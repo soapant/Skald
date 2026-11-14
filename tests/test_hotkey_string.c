@@ -8,86 +8,86 @@
 
 TEST(parse_simple_key) {
   HotkeyKey k;
-  ASSERT_TRUE(HotkeyString_Parse("A", &k));
+  ASSERT_TRUE(hotkey_string_parse("A", &k));
   ASSERT_EQ_INT(k.vk_code, 'A');
   ASSERT_EQ_INT(k.mods, 0);
 
-  ASSERT_TRUE(HotkeyString_Parse("1", &k));
+  ASSERT_TRUE(hotkey_string_parse("1", &k));
   ASSERT_EQ_INT(k.vk_code, '1');
 
-  ASSERT_TRUE(HotkeyString_Parse("Escape", &k));
+  ASSERT_TRUE(hotkey_string_parse("Escape", &k));
   ASSERT_EQ_INT(k.vk_code, VK_ESCAPE);
   ASSERT_EQ_INT(k.mods, 0);
 }
 
 TEST(parse_modifiers) {
   HotkeyKey k;
-  ASSERT_TRUE(HotkeyString_Parse("Ctrl+Shift+A", &k));
+  ASSERT_TRUE(hotkey_string_parse("Ctrl+Shift+A", &k));
   ASSERT_EQ_INT(k.vk_code, 'A');
   ASSERT_EQ_INT(k.mods, HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT);
 }
 
 TEST(parse_modifiers_case_insensitive) {
   HotkeyKey k;
-  ASSERT_TRUE(HotkeyString_Parse("ctrl+A", &k));
+  ASSERT_TRUE(hotkey_string_parse("ctrl+A", &k));
   ASSERT_EQ_INT(k.mods, HOTKEY_MOD_CTRL);
 
-  ASSERT_TRUE(HotkeyString_Parse("shift+f5", &k));
+  ASSERT_TRUE(hotkey_string_parse("shift+f5", &k));
   ASSERT_EQ_INT(k.vk_code, VK_F1 + 4);
   ASSERT_EQ_INT(k.mods, HOTKEY_MOD_SHIFT);
 
-  ASSERT_TRUE(HotkeyString_Parse("control+a", &k));
+  ASSERT_TRUE(hotkey_string_parse("control+a", &k));
   ASSERT_EQ_INT(k.mods, HOTKEY_MOD_CTRL);
 }
 
 TEST(parse_alt_and_super) {
   HotkeyKey k;
-  ASSERT_TRUE(HotkeyString_Parse("Alt+Super+V", &k));
+  ASSERT_TRUE(hotkey_string_parse("Alt+Super+V", &k));
   ASSERT_EQ_INT(k.vk_code, 'V');
   ASSERT_EQ_INT(k.mods, HOTKEY_MOD_ALT | HOTKEY_MOD_SUPER);
 }
 
 TEST(parse_modifiers_only_fail) {
   HotkeyKey k;
-  ASSERT_FALSE(HotkeyString_Parse("Ctrl", &k));
+  ASSERT_FALSE(hotkey_string_parse("Ctrl", &k));
   ASSERT_EQ_INT(k.mods, HOTKEY_MOD_CTRL);
 
-  ASSERT_FALSE(HotkeyString_Parse("CtrlW", &k));
+  ASSERT_FALSE(hotkey_string_parse("CtrlW", &k));
 
-  ASSERT_FALSE(HotkeyString_Parse("Shift+Alt", &k));
+  ASSERT_FALSE(hotkey_string_parse("Shift+Alt", &k));
 }
 
 TEST(parse_empty_string_fails) {
   HotkeyKey k;
-  ASSERT_FALSE(HotkeyString_Parse("", &k));
+  ASSERT_FALSE(hotkey_string_parse("", &k));
 }
 
 TEST(parse_control_plus_plus) {
   HotkeyKey k;
-  ASSERT_TRUE(HotkeyString_Parse("Ctrl++", &k));
+  ASSERT_TRUE(hotkey_string_parse("Ctrl++", &k));
   ASSERT_EQ_INT(k.vk_code, VK_OEM_PLUS);
   ASSERT_EQ_INT(k.mods, HOTKEY_MOD_CTRL);
 }
 
 TEST(parse_lshift_is_key_not_modifier) {
   HotkeyKey k;
-  ASSERT_TRUE(HotkeyString_Parse("LShift", &k));
+  ASSERT_TRUE(hotkey_string_parse("LShift", &k));
   ASSERT_EQ_INT(k.vk_code, VK_LSHIFT);
   ASSERT_EQ_INT(k.mods, 0);
 }
 
 TEST(parse_mouse_button) {
   HotkeyKey k;
-  ASSERT_TRUE(HotkeyString_Parse("Mouse3", &k));
+  ASSERT_TRUE(hotkey_string_parse("Mouse3", &k));
   ASSERT_EQ_INT(k.vk_code, MOUSE_VK(3));
 }
 
 TEST(parse_function_keys) {
   HotkeyKey k;
-  ASSERT_TRUE(HotkeyString_Parse("F5", &k));
+  ASSERT_TRUE(hotkey_string_parse("F5", &k));
   ASSERT_EQ_INT(k.vk_code, VK_F1 + 4);
 
-  ASSERT_TRUE(HotkeyString_Parse("F12", &k));
+  ASSERT_TRUE(hotkey_string_parse("F12", &k));
   ASSERT_EQ_INT(k.vk_code, VK_F12);
 }
 
@@ -97,7 +97,7 @@ TEST(format_ctrl_shift_a) {
   k.vk_code = 'A';
   k.mods = HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT;
   char out[64];
-  ASSERT_TRUE(HotkeyString_Format(k, out, sizeof(out)));
+  ASSERT_TRUE(hotkey_string_format(k, out, sizeof(out)));
   ASSERT_EQ_STR(out, "Ctrl+Shift+A");
 }
 
@@ -106,7 +106,7 @@ TEST(format_escape) {
   memset(&k, 0, sizeof(k));
   k.vk_code = VK_ESCAPE;
   char out[64];
-  ASSERT_TRUE(HotkeyString_Format(k, out, sizeof(out)));
+  ASSERT_TRUE(hotkey_string_format(k, out, sizeof(out)));
   ASSERT_EQ_STR(out, "Escape");
 }
 
@@ -116,7 +116,7 @@ TEST(format_ctrl_equals) {
   k.vk_code = VK_OEM_PLUS;
   k.mods = HOTKEY_MOD_CTRL;
   char out[64];
-  ASSERT_TRUE(HotkeyString_Format(k, out, sizeof(out)));
+  ASSERT_TRUE(hotkey_string_format(k, out, sizeof(out)));
   ASSERT_EQ_STR(out, "Ctrl+=");
 }
 
@@ -124,15 +124,15 @@ TEST(format_zero_key_fails) {
   HotkeyKey k;
   memset(&k, 0, sizeof(k));
   char out[64] = "sentinel";
-  ASSERT_FALSE(HotkeyString_Format(k, out, sizeof(out)));
+  ASSERT_FALSE(hotkey_string_format(k, out, sizeof(out)));
   ASSERT_EQ_INT(out[0], '\0');
 }
 
 TEST(format_roundtrip) {
   HotkeyKey parsed;
-  ASSERT_TRUE(HotkeyString_Parse("Ctrl+Shift+A", &parsed));
+  ASSERT_TRUE(hotkey_string_parse("Ctrl+Shift+A", &parsed));
   char out[64];
-  ASSERT_TRUE(HotkeyString_Format(parsed, out, sizeof(out)));
+  ASSERT_TRUE(hotkey_string_format(parsed, out, sizeof(out)));
   ASSERT_EQ_STR(out, "Ctrl+Shift+A");
 }
 
@@ -142,7 +142,7 @@ TEST(format_mod_order) {
   k.vk_code = 'V';
   k.mods = HOTKEY_MOD_SUPER | HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL;
   char out[64];
-  ASSERT_TRUE(HotkeyString_Format(k, out, sizeof(out)));
+  ASSERT_TRUE(hotkey_string_format(k, out, sizeof(out)));
   ASSERT_EQ_STR(out, "Ctrl+Alt+Super+V");
 }
 
