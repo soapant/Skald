@@ -153,7 +153,7 @@ static void PromptPopup_OnHide(Popup *self) {
 }
 
 static void PromptPopup_OnRender(Popup *self) {
-  PromptPopupData *data = (PromptPopupData *)self;
+  const PromptPopupData *data = (PromptPopupData *)self;
   if (!data->state)
     return;
   Platform_PromptPopupRender(self);
@@ -186,7 +186,7 @@ static const PopupVTable prompt_popup_vtable = {.on_show = PromptPopup_OnShow,
 int PromptPopup_GetBounds(Popup *p, int *x, int *y, int *w, int *h) {
   if (!p || p->type != POPUP_PROMPT)
     return 0;
-  PromptPopupData *d = (PromptPopupData *)p;
+  const PromptPopupData *d = (PromptPopupData *)p;
   if (x)
     *x = d->x;
   if (y)
@@ -307,7 +307,7 @@ bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x,
   Popup *top = WindowManager_GetTopPopup(wm);
   if (!top || top->type != POPUP_PROMPT)
     return true;
-  PromptPopupData *data = (PromptPopupData *)top;
+  const PromptPopupData *data = (PromptPopupData *)top;
   return (root_x >= data->x && root_x <= data->x + data->w &&
           root_y >= data->y && root_y <= data->y + data->h);
 }

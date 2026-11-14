@@ -103,7 +103,7 @@ bool ListBox_ClientMousePos(int *out_x, int *out_y) {
   int pw = 0, ph = 0;
   if (top) {
     if (top->type == POPUP_PROMPT && top->user_data) {
-      PromptState *s = (PromptState *)top->user_data;
+      const PromptState *s = (PromptState *)top->user_data;
       pw = s->width;
       ph = s->height;
     }
@@ -314,7 +314,7 @@ bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows) {
   return true;
 }
 
-const char *ListBoxInfo_Row(ListBoxInfo *lb, int idx) {
+const char *ListBoxInfo_Row(const ListBoxInfo *lb, int idx) {
   if (!lb || !lb->items)
     return NULL;
   if (idx < 0 || idx >= lb->item_count)

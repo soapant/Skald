@@ -342,7 +342,7 @@ bool x11_get_app_id(char *buffer, int buffer_size) {
   return buffer[0] != '\0';
 }
 
-char *x11_paste(char *content) {
+char *x11_paste(const char *content) {
   if (!content) {
     log_error("content is NULL");
     return NULL;

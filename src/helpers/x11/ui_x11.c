@@ -24,7 +24,7 @@ static PromptState *ui_top_prompt(void) {
 
 bool IsPopupActive(WindowHandle hPopupWnd) {
   (void)hPopupWnd;
-  WindowManager *wm = WindowManager_Get();
+  const WindowManager *wm = WindowManager_Get();
   return wm && wm->popup_count > 0;
 }
 
@@ -37,7 +37,7 @@ void UI_GetCurrentTextEdit(char *buffer, size_t cap) {
     return;
   }
   buffer[0] = '\0';
-  PromptState *prompt = ui_top_prompt();
+  const PromptState *prompt = ui_top_prompt();
   if (prompt) {
     snprintf(buffer, cap, "%s", prompt->eb->filter);
     buffer[cap - 1] = '\0';
@@ -80,7 +80,7 @@ void UI_ApplyFilterToEdit(void) {
 }
 
 ListBoxInfo *UI_GetPopupListBox(void) {
-  PromptState *prompt = ui_top_prompt();
+  const PromptState *prompt = ui_top_prompt();
   return prompt ? prompt->lb : NULL;
 }
 

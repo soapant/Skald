@@ -290,7 +290,7 @@ bool Hotkey_MouseButtonBound(int btn) {
   for (int i = 0; i < hotkey_total; i++) {
     if (hotkeys[i].vk_code != vk || hotkeys[i].modifiers != 0)
       continue;
-    HotkeyBinding *b = &hotkeys[i];
+    const HotkeyBinding *b = &hotkeys[i];
     if (b->whitelist) {
       if (!b->blacklist || b->blacklist_count == 0)
         continue;
@@ -317,7 +317,7 @@ const HotkeyBinding *Hotkey_Get(int index) {
   return &hotkeys[index];
 }
 
-const HotkeyBinding *Hotkey_FindByUd(void *ud) {
+const HotkeyBinding *Hotkey_FindByUd(const void *ud) {
   if (!ud)
     return NULL;
   for (int i = 0; i < hotkey_total; i++)

@@ -401,7 +401,7 @@ bool get_app_id_kwin(char *buffer, int buffer_size) {
   return kwin_active_locked_copy(kwin_active_class, buffer, buffer_size);
 }
 
-char *paste_kwin(char *content) {
+char *paste_kwin(const char *content) {
   if (!kwin_is_active())
     return NULL;
   return x11_paste_wtype(content);

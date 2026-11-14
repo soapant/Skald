@@ -139,7 +139,7 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
              x11_env_home_dir() ? x11_env_home_dir() : "/root", data_dirs);
   StringList dir_list = String_Split(dirs, ":");
   for (size_t i = 0; i < dir_list.count; i++) {
-    char *d = dir_list.items[i];
+    const char *d = dir_list.items[i];
     if (!d || !d[0])
       continue;
     char path[1024];

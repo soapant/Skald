@@ -27,7 +27,7 @@
 
 static ListBoxInfo *win32_get_lb_from_popup(HWND hPopup) {
   if (hPopup && IsWindow(hPopup)) {
-    PromptState *state = win32_prompt_state_from_hwnd(hPopup);
+    const PromptState *state = win32_prompt_state_from_hwnd(hPopup);
     if (state) {
       return state->lb;
     }
@@ -181,7 +181,7 @@ static HDC popup_back_buffer(HDC hdc, int w, int h, HBITMAP *out_prev) {
 
 static bool prompt_win_no_bg(void) {
 
-  PromptState *st = win32_prompt_state_from_hwnd(GetFocus());
+  const PromptState *st = win32_prompt_state_from_hwnd(GetFocus());
   if (st && st->no_bg)
     return true;
   return false;

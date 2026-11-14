@@ -336,7 +336,7 @@ bool Widget_OwnerActive(const char *path) {
     return false;
   W_LOCK();
   for (int i = 0; i < widget_count; i++) {
-    Widget *w = widgets[i];
+    const Widget *w = widgets[i];
     if (w && widget_owner_matches(w, path, NULL)) {
       W_UNLOCK();
       return true;
@@ -537,12 +537,12 @@ Widget *Widget_Create(const WidgetSpec *spec) {
   return widget;
 }
 
-bool Widget_Valid(Widget *widget) { return widget != NULL; }
+bool Widget_Valid(const Widget *widget) { return widget != NULL; }
 
 PlPos Widget_GetPos(const char *name) {
   PlPos r = {0, 0};
   W_LOCK();
-  Widget *w = widget_find_by_name_locked(name);
+  const Widget *w = widget_find_by_name_locked(name);
   if (w && w->x < 0x7fffffff) {
     r.x = w->x + w->w / 2;
     r.y = w->y + w->h / 2;
@@ -654,7 +654,7 @@ void Widget_InitBase(PlatformWidgetBase *base, int x, int y, int w, int h,
   base->last_draw_ms = 0;
 }
 
-bool Widget_BaseCheck(PlatformWidgetBase *base) { return base && !base->dead; }
+bool Widget_BaseCheck(const PlatformWidgetBase *base) { return base && !base->dead; }
 
 bool Widget_BaseMove(PlatformWidgetBase *base, int x, int y) {
   if (!base || base->dead)

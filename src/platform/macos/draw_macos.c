@@ -92,5 +92,5 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
 int Platform_GetTextLineHeight(int fontsize) {
   return fontsize > 0 ? fontsize : 16;
 }
-void Platform_DrawPromptEditText(PromptState *state) {}
-void Platform_DrawPromptEditCursor(PromptState *state) {}
+void Platform_DrawPromptEditText(const PromptState *state) {}
+void Platform_DrawPromptEditCursor(const PromptState *state) {}
