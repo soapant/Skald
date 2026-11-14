@@ -326,52 +326,22 @@ void feature_loader_owner_feature_name(const char *owner_path, char *out,
     *dot = '\0';
 }
 
-static void manifest_add_entry(const char *name, const char *section,
-                               const char *entry) {
-  char path[512];
-  if (!manifest_path(name, path, sizeof(path)))
-    return;
+typedef struct {
+  bool found_section;
+  bool found_entry;
+  size_t insert_at;
+} ManifestSectionScan;
 
-  char buf[16384];
-  size_t len = 0;
-  FILE *f = fopen(path, "rb");
-  bool had_file = false;
-  if (f) {
-    had_file = true;
-    if (fseek(f, 0, SEEK_END) == 0) {
-      long sz = ftell(f);
-      if (sz > (long)(sizeof(buf) - 1)) {
-        log_error("manifest '%s' is %ld bytes, too large to rewrite (%d)", path,
-                  sz, (int)(sizeof(buf) - 1));
-        fclose(f);
-        return;
-      }
-      rewind(f);
-    }
-    len = fread(buf, 1, sizeof(buf) - 1, f);
-    fclose(f);
-  }
-  buf[len] = '\0';
-
-  if (!had_file) {
-    manifest_write_baseline(name);
-    f = fopen(path, "rb");
-    if (!f)
-      return;
-    len = fread(buf, 1, sizeof(buf) - 1, f);
-    fclose(f);
-    buf[len] = '\0';
-  }
-
-  bool have_section = false;
-  bool have_entry = false;
-  size_t insert_at = 0;
-  size_t section_end = 0;
-
+static void manifest_scan_section(const char *buf, size_t len,
+                                  const char *section, const char *entry,
+                                  ManifestSectionScan *out) {
+  memset(out, 0, sizeof(*out));
+  bool in_section = false;
   size_t off = 0;
   while (off < len) {
     const char *nl = memchr(buf + off, '\n', len - off);
     size_t line_len = nl ? (size_t)(nl - (buf + off)) : (len - off);
+    size_t line_end = off + line_len + (nl ? 1 : 0);
     char line[512];
     size_t cl = line_len < sizeof(line) - 1 ? line_len : sizeof(line) - 1;
     memcpy(line, buf + off, cl);
@@ -382,59 +352,99 @@ static void manifest_add_entry(const char *name, const char *section,
     manifest_trim(work);
 
     if (work[0] == '[') {
-      if (strstr(work, section)) {
-        have_section = true;
-        section_end = off + line_len + (nl ? 1 : 0);
-        insert_at = section_end;
+      in_section = strstr(work, section) != NULL;
+      if (in_section && !out->found_section) {
+        out->found_section = true;
+        out->insert_at = line_end;
       }
-      off += line_len + (nl ? 1 : 0);
+      off = line_end;
       continue;
     }
 
-    if (have_section && section_end == off + line_len + (nl ? 1 : 0)) {
-      if (work[0] != '\0')
-        insert_at = off + line_len + (nl ? 1 : 0);
-    }
-
-    if (have_section && work[0] != '\0' && work[0] != '#') {
+    if (in_section && work[0] != '\0' && work[0] != '#') {
       char e[512];
       safe_copy(e, sizeof(e), work);
       manifest_unquote(e);
       if (strcmp(e, entry) == 0)
-        have_entry = true;
+        out->found_entry = true;
     }
-
-    off += line_len + (nl ? 1 : 0);
+    off = line_end;
   }
+}
 
-  if (have_entry)
+static bool manifest_read_or_create(const char *name, char *buf, size_t cap,
+                                    size_t *out_len) {
+  char path[512];
+  if (!manifest_path(name, path, sizeof(path)))
+    return false;
+  FILE *f = fopen(path, "rb");
+  if (!f) {
+    manifest_write_baseline(name);
+    f = fopen(path, "rb");
+    if (!f) {
+      log_error("manifest add: cannot open %s even after baseline create",
+                path);
+      return false;
+    }
+  }
+  size_t len = 0;
+  if (fseek(f, 0, SEEK_END) == 0) {
+    long sz = ftell(f);
+    if (sz >= 0 && (size_t)sz >= cap) {
+      log_error("manifest '%s' is %ld bytes, too large to rewrite (%zu)",
+                path, sz, cap - 1);
+      fclose(f);
+      return false;
+    }
+    rewind(f);
+  }
+  len = fread(buf, 1, cap - 1, f);
+  fclose(f);
+  buf[len] = '\0';
+  *out_len = len;
+  return true;
+}
+
+static void manifest_add_entry(const char *name, const char *section,
+                               const char *entry) {
+  char buf[16384];
+  size_t len = 0;
+  if (!manifest_read_or_create(name, buf, sizeof(buf), &len))
+    return;
+
+  ManifestSectionScan scan;
+  manifest_scan_section(buf, len, section, entry, &scan);
+  if (scan.found_entry)
     return;
 
   char new_line[128];
-  snprintf(new_line, sizeof(new_line), "%s\n", entry);
+  int nl_len = snprintf(new_line, sizeof(new_line), "%s\n", entry);
+  if (nl_len <= 0)
+    return;
+  size_t add = (size_t)nl_len;
 
-  if (!have_section) {
+  if (!scan.found_section) {
     char header[64];
     int hn = snprintf(header, sizeof(header), "\n[%s]\n", section);
-    size_t n = len;
-    if (hn <= 0 || n + (size_t)hn + strlen(new_line) + 16 >= sizeof(buf))
+    if (hn <= 0 || len + (size_t)hn + add >= sizeof(buf))
       return;
-    memcpy(buf + n, header, (size_t)hn);
-    n += (size_t)hn;
-    memcpy(buf + n, new_line, strlen(new_line));
-    n += strlen(new_line);
-    len = n;
-    insert_at = len - strlen(new_line);
-  } else if (insert_at + strlen(new_line) > sizeof(buf)) {
-    return;
+    memcpy(buf + len, header, (size_t)hn);
+    len += (size_t)hn;
+    memcpy(buf + len, new_line, add);
+    len += add;
   } else {
-    memmove(buf + insert_at + strlen(new_line), buf + insert_at,
-            len - insert_at);
-    memcpy(buf + insert_at, new_line, strlen(new_line));
-    len += strlen(new_line);
+    if (len + add > sizeof(buf))
+      return;
+    memmove(buf + scan.insert_at + add, buf + scan.insert_at,
+            len - scan.insert_at);
+    memcpy(buf + scan.insert_at, new_line, add);
+    len += add;
   }
 
-  f = fopen(path, "wb");
+  char path[512];
+  if (!manifest_path(name, path, sizeof(path)))
+    return;
+  FILE *f = fopen(path, "wb");
   if (!f) {
     log_error("manifest add: open %s for write failed (%s)", path,
               strerror(errno));
@@ -445,7 +455,6 @@ static void manifest_add_entry(const char *name, const char *section,
   fclose(f);
   log_info("manifest '%s' %s += %s", name, section, entry);
 }
-
 void feature_loader_manifest_add_provides(const char *owner_path,
                                        const char *key) {
   if (!owner_path || !owner_path[0] || !key || !key[0])
