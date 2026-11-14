@@ -8,10 +8,6 @@
 #define CH_MAX_TEXT 4096
 #define CH_PREVIEW_LEN 128
 
-static SkThread ch_thread = NULL;
-static SkMutex ch_lock = NULL;
-static bool ch_running = false;
-static bool ch_inited = false;
 static char **ch_items = NULL;
 static int ch_count = 0;
 
@@ -112,7 +108,6 @@ static void ch_remember_locked(const char *text) {
 static void ch_save(void) {
   char **lines = NULL;
   int count = 0;
-  sk_mutex_lock(ch_lock);
   if (ch_count > 0) {
     lines = malloc((size_t)ch_count * sizeof(char *));
     if (lines) {
@@ -125,7 +120,6 @@ static void ch_save(void) {
       }
     }
   }
-  sk_mutex_unlock(ch_lock);
   if (lines && count > 0)
     sk_write_to_file(CH_FILE, (const char **)lines, count);
   if (lines) {
@@ -137,7 +131,6 @@ static void ch_save(void) {
 
 static void ch_load(void) {
   SkStringList lines = sk_load_file_list(CH_FILE);
-  sk_mutex_lock(ch_lock);
   for (size_t i = 0; i < lines.count; i++) {
     if (!lines.items[i] || !lines.items[i][0])
       continue;
@@ -145,20 +138,17 @@ static void ch_load(void) {
     ch_unescape(lines.items[i], buf, sizeof(buf));
     ch_remember_locked(buf);
   }
-  sk_mutex_unlock(ch_lock);
   sk_free_file_list(&lines);
 }
 
 static bool ch_sample_once(void) {
   char *cur = sk_get_last_clipboard_entry();
   bool changed = false;
-  sk_mutex_lock(ch_lock);
   if (cur && cur[0] &&
       (ch_count == 0 || strcmp(ch_items[ch_count - 1], cur) != 0)) {
     ch_remember_locked(cur);
     changed = true;
   }
-  sk_mutex_unlock(ch_lock);
   if (cur)
     free(cur);
   if (changed)
@@ -166,17 +156,11 @@ static bool ch_sample_once(void) {
   return changed;
 }
 
-static void *ch_sampler(void *arg) {
-  (void)arg;
-  while (ch_running) {
-    ch_sample_once();
-    sk_sleep(5);
-  }
-  return NULL;
+static void ch_tick(void) {
+  ch_sample_once();
 }
 
 static void clipboard_history_refresh(PromptState *state) {
-  sk_mutex_lock(ch_lock);
   int count = ch_count;
   const char **items = NULL;
   if (count > 0) {
@@ -189,7 +173,6 @@ static void clipboard_history_refresh(PromptState *state) {
       items[i] = buffer;
     }
   }
-  sk_mutex_unlock(ch_lock);
   sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
                       .items = items, .count = count);
   sk_free_list(items, count);
@@ -204,13 +187,11 @@ static bool clipboard_history_enter(PromptState *state) {
     return true;
   int idx = state->lb->matching_indices[sel];
   char *copy = NULL;
-  sk_mutex_lock(ch_lock);
   if (idx >= 0 && idx < ch_count && ch_items[ch_count - 1 - idx]) {
     copy = strdup(ch_items[ch_count - 1 - idx]);
     if (copy)
       ch_remember_locked(copy);
   }
-  sk_mutex_unlock(ch_lock);
   if (copy) {
     sk_copy_to_clipboard(copy);
     free(copy);
@@ -225,26 +206,13 @@ static void TriggerClipboardHistory(void) {
 }
 
 SKALD_FEATURE_SHUTDOWN {
-  ch_running = false;
-  if (ch_inited)
-    sk_thread_join(ch_thread);
   ch_save();
-  sk_mutex_lock(ch_lock);
   ch_free_items();
-  sk_mutex_unlock(ch_lock);
-  sk_mutex_destroy(ch_lock);
-  ch_lock = NULL;
-  ch_inited = false;
 }
 
 SKALD_FEATURE_INIT {
-  if (ch_inited)
-    return;
-  ch_inited = true;
-  ch_lock = sk_mutex_create();
   ch_load();
-  ch_running = true;
-  ch_thread = sk_thread_create(ch_sampler, NULL);
+  sk_run_every(5.0, ch_tick);
   sk_register_hotkey(.hotkey = "Alt+Shift+R", .cb = TriggerClipboardHistory);
   sk_add_feature(.display_name = "Clipboard History",
                  .on_action = TriggerClipboardHistory,
