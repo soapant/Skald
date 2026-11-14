@@ -22,8 +22,6 @@ typedef enum {
 } WidgetSlot;
 
 typedef struct WidgetState WidgetState;
-
-typedef struct WidgetState WidgetState;
 typedef void (*WidgetRenderFn)(WidgetState *state);
 
 typedef struct {

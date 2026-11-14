@@ -1,15 +1,17 @@
 #ifndef TYPES_PROMPT_H
 #define TYPES_PROMPT_H
 
-#include <string.h>
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdbool.h>
+
+#ifndef MAX_VISIBLE_ITEMS
+#define MAX_VISIBLE_ITEMS 10000
+#endif
 
 typedef struct ListBoxInfo ListBoxInfo;
 typedef struct PromptState PromptState;
 typedef struct PromptCallbacks PromptCallbacks;
 
-#include "core/types.h"
 #include "core/types/color.h"
 
 typedef void (*RenderCallback)(PromptState *state);
@@ -135,10 +137,6 @@ typedef struct {
   int w;
   int h;
 } PopupSpec;
-
-typedef struct WindowManager WindowManager;
-WindowManager *WindowManager_Get(void);
-char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
 typedef struct {
   const char *name;

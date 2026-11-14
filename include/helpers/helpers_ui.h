@@ -56,6 +56,7 @@ void UpdateTextCaret(void);
 #define MSG_TIMEOUT_INDEFINITE 6969.0
 #define MsgTimeoutIsIndefinite(t) ((t) == MSG_TIMEOUT_INDEFINITE || (t) <= 0.0)
 
+typedef struct WindowManager WindowManager;
 typedef struct {
   int bx;
   int bw;
