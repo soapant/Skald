@@ -135,7 +135,7 @@ void EditboxSpec_FillFromPrompt(EditboxSpec *spec, PromptState *state,
     return;
   int sel_start = 0, sel_end = 0;
   bool has_sel = false;
-  Editbox_ResolveSelection(state, text_len, false, &sel_start, &sel_end,
+  Editbox_ResolveSelection(state, text_len, true, &sel_start, &sel_end,
                            &has_sel);
   memset(spec, 0, sizeof(*spec));
   spec->text = state->eb->filter;
@@ -316,7 +316,7 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
       if (spec->sel_mode == EDITBOX_SEL_INCLUSIVE) {
         sx1 = draw_x + editbox_measure(spec, spec->text, sel_end + 1);
       } else if (spec->sel_mode == EDITBOX_SEL_INCLUSIVE_CARET) {
-        sx1 = draw_x + editbox_measure(spec, spec->text, sel_end) + caret_w;
+        sx1 = draw_x + editbox_measure(spec, spec->text, sel_end);
       } else {
         sx1 = draw_x + editbox_measure(spec, spec->text, sel_end);
       }
