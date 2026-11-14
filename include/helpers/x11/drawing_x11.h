@@ -20,6 +20,9 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
 void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
                          unsigned long hex, unsigned short alpha,
                          XftColor *out);
+bool x11_xft_color_cached(Display *dpy, Visual *vis, Colormap cmap,
+                          unsigned long hex, unsigned short alpha,
+                          XftColor *out);
 void x11_init_argb_image(Display *dpy, XImage *img, unsigned char *data, int w,
                          int h, unsigned long red_mask,
                          unsigned long green_mask, unsigned long blue_mask);

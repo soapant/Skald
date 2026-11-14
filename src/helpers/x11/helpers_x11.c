@@ -460,6 +460,69 @@ void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
   XftColorAllocValue(dpy, vis, cmap, &rc, out);
 }
 
+#define XFT_COLOR_CACHE_SLOTS 64
+
+typedef struct {
+  bool used;
+  Display *dpy;
+  Colormap cmap;
+  Visual *vis;
+  unsigned long hex;
+  unsigned short alpha;
+  XftColor color;
+  unsigned long stamp;
+} XftColorSlot;
+static XftColorSlot xft_color_slots[XFT_COLOR_CACHE_SLOTS];
+static unsigned long xft_color_tick;
+static pthread_mutex_t xft_color_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+bool x11_xft_color_cached(Display *dpy, Visual *vis, Colormap cmap,
+                          unsigned long hex, unsigned short alpha,
+                          XftColor *out) {
+  if (!dpy || !vis || !out)
+    return false;
+  pthread_mutex_lock(&xft_color_cache_mtx);
+  int i, slot = -1;
+  unsigned long oldest = ~0UL;
+  for (i = 0; i < XFT_COLOR_CACHE_SLOTS; i++) {
+    XftColorSlot *s = &xft_color_slots[i];
+    if (s->used && s->dpy == dpy && s->vis == vis && s->cmap == cmap &&
+        s->hex == hex && s->alpha == alpha) {
+      s->stamp = ++xft_color_tick;
+      *out = s->color;
+      pthread_mutex_unlock(&xft_color_cache_mtx);
+      return true;
+    }
+    if (!s->used) {
+      if (slot < 0)
+        slot = i;
+    } else if (s->stamp < oldest) {
+      oldest = s->stamp;
+      slot = i;
+    }
+  }
+  if (slot < 0)
+    slot = 0;
+  XftColorSlot *s = &xft_color_slots[slot];
+  XRenderColor rc = {((hex >> 16) & 0xFF) * 0x101, ((hex >> 8) & 0xFF) * 0x101,
+                     (hex & 0xFF) * 0x101, alpha};
+  memset(&s->color, 0, sizeof(s->color));
+  if (!XftColorAllocValue(dpy, vis, cmap, &rc, &s->color)) {
+    pthread_mutex_unlock(&xft_color_cache_mtx);
+    return false;
+  }
+  s->used = true;
+  s->dpy = dpy;
+  s->vis = vis;
+  s->cmap = cmap;
+  s->hex = hex;
+  s->alpha = alpha;
+  s->stamp = ++xft_color_tick;
+  *out = s->color;
+  pthread_mutex_unlock(&xft_color_cache_mtx);
+  return true;
+}
+
 const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
                                           size_t trunc_size) {
   const char *baseText = lb ? listbox_info_row(lb, idx) : NULL;
@@ -470,15 +533,17 @@ const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
 #define IMG_CACHE_SLOTS 256
 #define X11_IMG_REVALIDATE_MS 1000
 
-static bool x11_blit_argb(Display *dpy, Drawable drw, Visual *vis,
-                          unsigned char *argb, int w, int h, int x, int y);
+static bool x11_blit_cached(Display *dpy, Drawable drw, Visual *vis,
+                            Picture src, int w, int h, int x, int y);
 
 typedef struct {
   char key[512];
   int w, h;
   long long mtime;
   long long size;
-  unsigned char *argb;
+  Display *dpy;
+  Pixmap pm;
+  Picture pic;
   unsigned long stamp;
   long long checked_ms;
 } ImgCacheSlot;
@@ -494,21 +559,31 @@ static ImgCacheSlot g_img_cache[IMG_CACHE_SLOTS];
 static unsigned long g_img_cache_tick = 0;
 static pthread_mutex_t img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 
+static void x11_img_slot_release(ImgCacheSlot *s) {
+  if (s->pic && s->dpy)
+    XRenderFreePicture(s->dpy, s->pic);
+  if (s->pm && s->dpy)
+    XFreePixmap(s->dpy, s->pm);
+  s->pic = 0;
+  s->pm = 0;
+  s->dpy = NULL;
+}
+
 void x11_img_cache_free_all(void) {
   pthread_mutex_lock(&img_cache_mtx);
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
-    if (g_img_cache[i].argb)
-      free(g_img_cache[i].argb);
+    x11_img_slot_release(&g_img_cache[i]);
     memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
   }
   pthread_mutex_unlock(&img_cache_mtx);
 }
 
-static unsigned char *x11_img_cache_get(const char *key, int w, int h) {
+static bool x11_img_cache_get(const char *key, int w, int h, Pixmap *out_pm,
+                              Picture *out_pic) {
   long long now = x11_now_ms();
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
     ImgCacheSlot *s = &g_img_cache[i];
-    if (!s->argb)
+    if (!s->pm || !s->pic)
       continue;
     if (s->w != w || s->h != h)
       continue;
@@ -519,26 +594,29 @@ static unsigned char *x11_img_cache_get(const char *key, int w, int h) {
       s->checked_ms = now;
       if (stat(key, &st) != 0 || (long long)st.st_mtime != s->mtime ||
           (long long)st.st_size != s->size) {
-        free(s->argb);
-        s->argb = NULL;
+        x11_img_slot_release(s);
+        memset(s, 0, sizeof(*s));
         continue;
       }
     }
     s->stamp = ++g_img_cache_tick;
-    return s->argb;
+    *out_pm = s->pm;
+    *out_pic = s->pic;
+    return true;
   }
-  return NULL;
+  return false;
 }
 
-static void x11_img_cache_put(const char *key, int w, int h, long long mtime,
-                              long long size, unsigned char *argb) {
-  if (!argb)
+static void x11_img_cache_put(Display *dpy, const char *key, int w, int h,
+                              long long mtime, long long size, Pixmap pm,
+                              Picture pic) {
+  if (!pm || !pic)
     return;
   int slot = -1;
   unsigned long oldest = ~0UL;
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
     const ImgCacheSlot *s = &g_img_cache[i];
-    if (!s->argb) {
+    if (!s->pm && !s->pic) {
       slot = i;
       break;
     }
@@ -550,16 +628,83 @@ static void x11_img_cache_put(const char *key, int w, int h, long long mtime,
   if (slot < 0)
     slot = 0;
   ImgCacheSlot *s = &g_img_cache[slot];
-  if (s->argb)
-    free(s->argb);
+  x11_img_slot_release(s);
+  memset(s, 0, sizeof(*s));
   snprintf(s->key, sizeof(s->key), "%s", key);
   s->w = w;
   s->h = h;
   s->mtime = mtime;
   s->size = size;
-  s->argb = argb;
+  s->dpy = dpy;
+  s->pm = pm;
+  s->pic = pic;
   s->checked_ms = x11_now_ms();
   s->stamp = ++g_img_cache_tick;
+}
+
+static pthread_mutex_t decode_mtx;
+static unsigned char *decode_locked(const char *path, int *out_w, int *out_h);
+
+static bool image_cache_store(Display *dpy, Drawable ref, Visual *vis,
+                              const char *path, int w, int h, Picture *out_pic) {
+  if (!dpy || !path || !path[0] || w <= 0 || h <= 0)
+    return false;
+  struct stat st;
+  memset(&st, 0, sizeof(st));
+  if (stat(path, &st) != 0)
+    return false;
+  pthread_mutex_lock(&decode_mtx);
+  unsigned char *argb = decode_locked(path, &w, &h);
+  if (!argb) {
+    pthread_mutex_unlock(&decode_mtx);
+    return false;
+  }
+  if (!vis)
+    vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
+  Pixmap pm = XCreatePixmap(dpy, ref, w, h, 32);
+  if (!pm) {
+    pthread_mutex_unlock(&decode_mtx);
+    return false;
+  }
+  XImage img;
+  x11_init_argb_image(dpy, &img, argb, w, h, vis->red_mask, vis->green_mask,
+                      vis->blue_mask);
+  bool uploaded = XInitImage(&img);
+  if (uploaded) {
+    GC gc = XCreateGC(dpy, pm, 0, NULL);
+    XPutImage(dpy, pm, gc, &img, 0, 0, 0, 0, w, h);
+    XFreeGC(dpy, gc);
+  }
+  pthread_mutex_unlock(&decode_mtx);
+  if (!uploaded) {
+    XFreePixmap(dpy, pm);
+    return false;
+  }
+  Picture pic = XRenderCreatePicture(
+      dpy, pm, XRenderFindStandardFormat(dpy, PictStandardARGB32), 0, NULL);
+  pthread_mutex_lock(&img_cache_mtx);
+  if (pic) {
+    x11_img_cache_put(dpy, path, w, h, (long long)st.st_mtime,
+                      (long long)st.st_size, pm, pic);
+    if (out_pic)
+      *out_pic = pic;
+    return true;
+  }
+  pthread_mutex_unlock(&img_cache_mtx);
+  XFreePixmap(dpy, pm);
+  return false;
+}
+
+bool x11_prewarm_image(Display *dpy, const char *path) {
+  if (!dpy)
+    return false;
+  Picture pic = 0;
+  bool ok = image_cache_store(dpy, DefaultRootWindow(dpy), NULL, path,
+                              FontSize, FontSize, &pic);
+  if (!ok)
+    return false;
+  pthread_mutex_unlock(&img_cache_mtx);
+  return true;
 }
 
 bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
@@ -572,73 +717,41 @@ bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
     th = IconSize;
   int cw = tw;
   int ch = th;
-  unsigned char *argb = NULL;
+  Pixmap cpm = 0;
+  Picture cpic = 0;
   pthread_mutex_lock(&img_cache_mtx);
-  argb = x11_img_cache_get(path, cw, ch);
-  if (argb) {
+  bool hit = x11_img_cache_get(path, cw, ch, &cpm, &cpic);
+  Drawable drw = XftDrawDrawable(xd);
+  if (hit) {
+    bool ok = x11_blit_cached(dpy, drw, vis, cpic, cw, ch, x, y);
     pthread_mutex_unlock(&img_cache_mtx);
-    Drawable drw = XftDrawDrawable(xd);
-    return x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
+    return ok;
   }
   pthread_mutex_unlock(&img_cache_mtx);
-  struct stat st;
-  if (stat(path, &st) != 0)
+  bool ok = image_cache_store(dpy, drw, vis, path, cw, ch, &cpic);
+  if (!ok) {
     return false;
-  argb = x11_decode_image_argb(path, &cw, &ch);
-  if (!argb)
-    return false;
-  pthread_mutex_lock(&img_cache_mtx);
-  x11_img_cache_put(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size,
-                    argb);
+  }
+  ok = x11_blit_cached(dpy, drw, vis, cpic, cw, ch, x, y);
   pthread_mutex_unlock(&img_cache_mtx);
-  Drawable drw = XftDrawDrawable(xd);
-  return x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
+  return ok;
 }
 
-static bool x11_blit_argb(Display *dpy, Drawable drw, Visual *vis,
-                          unsigned char *argb, int w, int h, int x, int y) {
-  if (!dpy || !argb || w <= 0 || h <= 0)
+static bool x11_blit_cached(Display *dpy, Drawable drw, Visual *vis,
+                            Picture src, int w, int h, int x, int y) {
+  if (!dpy || !src || w <= 0 || h <= 0)
     return false;
-  int first_opaque_row = -1;
-  for (int ry = 0; ry < h && first_opaque_row < 0; ry++) {
-    for (int rx = 0; rx < w; rx++) {
-      if (argb[(ry * w + rx) * 4 + 3] > 0) {
-        first_opaque_row = ry;
-        break;
-      }
-    }
-  }
   if (!vis)
     vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
-  XImage img;
-  x11_init_argb_image(dpy, &img, argb, w, h, vis->red_mask, vis->green_mask,
-                      vis->blue_mask);
-  if (!XInitImage(&img))
-    return false;
-  Pixmap pix = XCreatePixmap(dpy, drw, w, h, 32);
-  if (!pix)
-    return false;
-  GC gc = XCreateGC(dpy, pix, 0, NULL);
-  XPutImage(dpy, pix, gc, &img, 0, 0, 0, 0, w, h);
-  XFreeGC(dpy, gc);
-  XRenderPictFormat *src_fmt =
-      XRenderFindStandardFormat(dpy, PictStandardARGB32);
   XRenderPictFormat *dst_fmt = XRenderFindVisualFormat(dpy, vis);
-  bool ok = false;
-  if (src_fmt && dst_fmt) {
-    Picture src = XRenderCreatePicture(dpy, pix, src_fmt, 0, NULL);
-    Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
-    if (src && dst) {
-      XRenderComposite(dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, x, y, w, h);
-      ok = true;
-    }
-    if (src)
-      XRenderFreePicture(dpy, src);
-    if (dst)
-      XRenderFreePicture(dpy, dst);
-  }
-  XFreePixmap(dpy, pix);
-  return ok;
+  if (!dst_fmt)
+    return false;
+  Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
+  if (!dst)
+    return false;
+  XRenderComposite(dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, x, y, w, h);
+  XRenderFreePicture(dpy, dst);
+  return true;
 }
 
 static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
@@ -817,8 +930,9 @@ typedef struct {
 
 static DecodedCacheSlot decoded_cache[32];
 static int decoded_count = 0;
+static pthread_mutex_t decode_mtx = PTHREAD_MUTEX_INITIALIZER;
 
-unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
+static unsigned char *decode_locked(const char *path, int *out_w, int *out_h) {
   if (!path || !path[0])
     return NULL;
   int dst_w = *out_w;
@@ -841,14 +955,9 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
                         slot->st.st_size == st.st_size);
       if (!fresh)
         continue;
-      size_t bytes = (size_t)dst_w * dst_h * 4;
-      unsigned char *copy = (unsigned char *)malloc(bytes);
-      if (!copy)
-        return NULL;
-      memcpy(copy, slot->argb, bytes);
       *out_w = dst_w;
       *out_h = dst_h;
-      return copy;
+      return slot->argb;
     }
   }
 
@@ -982,12 +1091,29 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   decoded_cache[idx].st = st;
   decoded_cache[idx].has_stat = has_stat;
 
-  unsigned char *copy = (unsigned char *)malloc((size_t)dst_w * dst_h * 4);
-  if (!copy)
-    return NULL;
-  memcpy(copy, argb, (size_t)dst_w * dst_h * 4);
   *out_w = dst_w;
   *out_h = dst_h;
+  return decoded_cache[idx].argb;
+}
+
+unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
+  pthread_mutex_lock(&decode_mtx);
+  int dst_w = *out_w;
+  int dst_h = *out_h;
+  if (dst_w <= 0)
+    dst_w = 16;
+  if (dst_h <= 0)
+    dst_h = 16;
+  unsigned char *borrowed = decode_locked(path, out_w, out_h);
+  if (!borrowed) {
+    pthread_mutex_unlock(&decode_mtx);
+    return NULL;
+  }
+  size_t bytes = (size_t)(*out_w) * (size_t)(*out_h) * 4;
+  unsigned char *copy = (unsigned char *)malloc(bytes);
+  if (copy)
+    memcpy(copy, borrowed, bytes);
+  pthread_mutex_unlock(&decode_mtx);
   return copy;
 }
 
@@ -1250,9 +1376,8 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            int radius) {
   if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
     XftColor c;
-    x11_xft_alloc_color(dpy, vis, cmap, hex, alpha16, &c);
+    x11_xft_color_cached(dpy, vis, cmap, hex, alpha16, &c);
     XftDrawRect(xd, &c, x, y, w, h);
-    XftColorFree(dpy, vis, cmap, &c);
     return;
   }
   if (radius > w / 2)
@@ -1260,7 +1385,7 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
   if (radius > h / 2)
     radius = h / 2;
   XftColor solid;
-  x11_xft_alloc_color(dpy, vis, cmap, hex, alpha16, &solid);
+  x11_xft_color_cached(dpy, vis, cmap, hex, alpha16, &solid);
 
   XftDrawRect(xd, &solid, x + radius, y, w - 2 * radius, h);
   XftDrawRect(xd, &solid, x, y + radius, radius, h - 2 * radius);
@@ -1313,7 +1438,6 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
       }
     }
   }
-  XftColorFree(dpy, vis, cmap, &solid);
 }
 
 static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
@@ -1599,57 +1723,182 @@ void x11_draw_selection_background(Display *dpy, XftDraw *xd, Visual *vis,
   if (w <= 0 || h <= 0)
     return;
   XftColor c;
-  x11_xft_alloc_color(dpy, vis, cmap, baseHex, opacity_alpha16(), &c);
+  x11_xft_color_cached(dpy, vis, cmap, baseHex, opacity_alpha16(), &c);
   XftDrawRect(xd, &c, x, y, w, h);
-  XftColorFree(dpy, vis, cmap, &c);
+}
+
+#define BORDER_CACHE_SLOTS 4
+
+typedef struct {
+  bool used;
+  Display *dpy;
+  int w, h, t, r;
+  unsigned long hex;
+  unsigned long a8;
+  unsigned long stamp;
+  Pixmap pm;
+  Picture pic;
+} BorderSlot;
+static BorderSlot border_slots[BORDER_CACHE_SLOTS];
+static unsigned long border_tick;
+static pthread_mutex_t border_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+static void border_slot_release(BorderSlot *s) {
+  if (s->pic && s->dpy)
+    XRenderFreePicture(s->dpy, s->pic);
+  if (s->pm && s->dpy)
+    XFreePixmap(s->dpy, s->pm);
+  s->pic = 0;
+  s->pm = 0;
+  s->used = false;
+}
+
+void x11_border_cache_free_all(void) {
+  pthread_mutex_lock(&border_mtx);
+  for (int i = 0; i < BORDER_CACHE_SLOTS; i++) {
+    border_slot_release(&border_slots[i]);
+    memset(&border_slots[i], 0, sizeof(border_slots[i]));
+  }
+  pthread_mutex_unlock(&border_mtx);
+}
+
+static Picture border_slot_get_or_create(Display *dpy, int w, int h) {
+  int t = PROMPT_BORDER_W;
+  if (w <= 2 * t || h <= 2 * t)
+    return 0;
+  int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
+  if (r > w / 2)
+    r = w / 2;
+  if (r > h / 2)
+    r = h / 2;
+  if (r <= t)
+    r = 0;
+  unsigned long hex = rgb_to_hex(COLOR_BORDER);
+  unsigned long a8 = ((unsigned long)((int)WindowOpacity)) & 0xFFUL;
+  int i, slot = -1;
+  unsigned long oldest = ~0UL;
+  for (i = 0; i < BORDER_CACHE_SLOTS; i++) {
+    BorderSlot *s = &border_slots[i];
+    if (s->used && s->dpy == dpy && s->w == w && s->h == h && s->t == t &&
+        s->r == r && s->hex == hex && s->a8 == a8) {
+      s->stamp = ++border_tick;
+      return s->pic;
+    }
+    if (!s->used) {
+      if (slot < 0)
+        slot = i;
+    } else if (s->stamp < oldest) {
+      oldest = s->stamp;
+      slot = i;
+    }
+  }
+  unsigned char *buf = (unsigned char *)calloc((size_t)w * (size_t)h * 4, 1);
+  if (!buf)
+    return 0;
+  unsigned int a = (unsigned int)a8;
+  unsigned int hr = (unsigned int)((hex >> 16) & 0xFF),
+               hg = (unsigned int)((hex >> 8) & 0xFF),
+               hb = (unsigned int)(hex & 0xFF);
+  unsigned int pr = hr * a / 255, pg = hg * a / 255, pb = hb * a / 255;
+  for (int y = 0; y < h; y++) {
+    unsigned char *row = buf + (size_t)y * (size_t)w * 4;
+    bool band = (y < t) || (y >= h - t);
+    for (int x = 0; x < w; x++) {
+      if (!band && x >= t && x < w - t)
+        continue;
+      uint32_t px = (uint32_t)((a << 24) | (pr << 16) | (pg << 8) | pb);
+      memcpy(row + (size_t)x * 4, &px, 4);
+    }
+  }
+  if (r > t) {
+    float ri = (float)r - PROMPT_BORDER_INNER_OFF;
+    for (int y = 0; y < h; y++) {
+      bool yband = (y < r) || (y >= h - r);
+      if (!yband)
+        continue;
+      int cy = (y < r) ? r : h - r - 1;
+      for (int x = 0; x < w; x++) {
+        bool xband = (x < r) || (x >= w - r);
+        if (!xband)
+          continue;
+        int cx = (x < r) ? r : w - r - 1;
+        float dx = (float)x - (float)cx;
+        float dy = (float)y - (float)cy;
+        if (dx * dx + dy * dy <= ri * ri)
+          continue;
+        unsigned int ca = x11_corner_alpha(x, y, w, h, r, 255);
+        if (!ca)
+          continue;
+        unsigned int a2 = a * ca / 255;
+        if (!a2)
+          continue;
+        unsigned int pr2 = hr * a2 / 255, pg2 = hg * a2 / 255,
+                     pb2 = hb * a2 / 255;
+        uint32_t px = (uint32_t)((a2 << 24) | (pr2 << 16) | (pg2 << 8) | pb2);
+        memcpy(buf + ((size_t)y * (size_t)w + (size_t)x) * 4, &px, 4);
+      }
+    }
+  }
+  Pixmap pm = XCreatePixmap(dpy, DefaultRootWindow(dpy), w, h, 32);
+  Picture pic = 0;
+  if (pm) {
+    XImage img;
+    x11_init_argb_image(dpy, &img, buf, w, h, 0xff0000, 0x00ff00, 0x0000ff);
+    if (XInitImage(&img)) {
+      GC gc = XCreateGC(dpy, pm, 0, NULL);
+      XPutImage(dpy, pm, gc, &img, 0, 0, 0, 0, w, h);
+      XFreeGC(dpy, gc);
+    } else {
+      XFreePixmap(dpy, pm);
+      pm = 0;
+    }
+  }
+  free(buf);
+  if (!pm)
+    return 0;
+  pic = XRenderCreatePicture(dpy, pm,
+                             XRenderFindStandardFormat(dpy, PictStandardARGB32),
+                             0, NULL);
+  if (slot < 0)
+    slot = 0;
+  BorderSlot *s = &border_slots[slot];
+  border_slot_release(s);
+  memset(s, 0, sizeof(*s));
+  s->used = true;
+  s->dpy = dpy;
+  s->w = w;
+  s->h = h;
+  s->t = t;
+  s->r = r;
+  s->hex = hex;
+  s->a8 = a8;
+  s->pm = pm;
+  s->pic = pic;
+  s->stamp = ++border_tick;
+  return pic;
 }
 
 void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
                             bool no_bg) {
   if (!dpy || !drw || no_bg || !EnableBorders)
     return;
-  int t = PROMPT_BORDER_W;
-  if (w <= 2 * t || h <= 2 * t)
-    return;
-  int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
-  if (r > w / 2)
-    r = w / 2;
-  if (r > h / 2)
-    r = h / 2;
-  unsigned long hex = rgb_to_hex(COLOR_BORDER);
-  unsigned long a = ((unsigned long)((int)WindowOpacity)) & 0xFFUL;
-  unsigned long px =
-      (a << 24) | (hex & 0xFF0000UL) | (hex & 0xFF00UL) | (hex & 0xFFUL);
-  if (r <= t)
-    r = 0;
-  GC gc = XCreateGC(dpy, drw, 0, NULL);
-  XSetForeground(dpy, gc, px);
-  XFillRectangle(dpy, drw, gc, r, 0, w - 2 * r, t);
-  XFillRectangle(dpy, drw, gc, r, h - t, w - 2 * r, t);
-  XFillRectangle(dpy, drw, gc, 0, r, t, h - 2 * r);
-  XFillRectangle(dpy, drw, gc, w - t, r, t, h - 2 * r);
-  float ri = (float)r - PROMPT_BORDER_INNER_OFF;
-  if (r > t) {
-    for (int y = 0; y < h; y++) {
-      if (y >= r && y < h - r)
-        continue;
-      int cy = (y < r) ? r : h - r - 1;
-      for (int x = 0; x < w; x++) {
-        if (x >= r && x < w - r)
-          continue;
-        int cx = (x < r) ? r : w - r - 1;
-        float dx = (float)x - (float)cx;
-        float dy = (float)y - (float)cy;
-        float d = sqrtf(dx * dx + dy * dy);
-        if (d <= ri)
-          continue;
-        if (x11_corner_alpha(x, y, w, h, r, 255) == 0)
-          continue;
-        XFillRectangle(dpy, drw, gc, x, y, 1, 1);
+  pthread_mutex_lock(&border_mtx);
+  Picture src = border_slot_get_or_create(dpy, w, h);
+  if (src) {
+    XWindowAttributes attrs;
+    if (XGetWindowAttributes(dpy, drw, &attrs)) {
+      XRenderPictFormat *dst_fmt = XRenderFindVisualFormat(dpy, attrs.visual);
+      if (dst_fmt) {
+        Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
+        if (dst) {
+          XRenderComposite(dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, 0, 0, w,
+                           h);
+          XRenderFreePicture(dpy, dst);
+        }
       }
     }
   }
-  XFreeGC(dpy, gc);
+  pthread_mutex_unlock(&border_mtx);
 }
 
 Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {

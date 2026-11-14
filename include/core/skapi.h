@@ -114,6 +114,7 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
                            bool *out_nodisplay);
 
 char *sk_get_icon_path(const char *path);
+bool sk_prewarm_image(const char *path);
 
 bool sk_append_to_file(const char *filepath, const char *line);
 
