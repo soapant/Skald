@@ -302,9 +302,11 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
     if (spec->sel_mode == EDITBOX_SEL_EXCLUSIVE) {
       if (sel_end > spec->text_len)
         sel_end = spec->text_len;
-    } else {
+    } else if (spec->sel_mode == EDITBOX_SEL_INCLUSIVE) {
       if (sel_end >= spec->text_len)
         sel_end = spec->text_len - 1;
+    } else if (sel_end > spec->text_len) {
+      sel_end = spec->text_len;
     }
     if (sel_start <= sel_end && sel_start < spec->text_len) {
       int sx0 = draw_x;
