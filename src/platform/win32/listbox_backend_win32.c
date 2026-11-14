@@ -23,9 +23,9 @@ bool Platform_ListboxBackendBegin(int item_height_override,
   win32_get_draw_context(&b_hdc);
   if (!b_hdc)
     return false;
-  out->item_h = PromptRowHeight();
-  out->list_top = PromptListTop();
-  PlDrawState_Get()->win32_listbox_surface = true;
+  out->item_h = prompt_row_height();
+  out->list_top = prompt_list_top();
+  pl_draw_state_get()->win32_listbox_surface = true;
   return true;
 }
 
@@ -58,13 +58,13 @@ void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
 }
 
 void Platform_ListboxBackendEnd(void) {
-  PlDrawState_Get()->win32_listbox_surface = false;
+  pl_draw_state_get()->win32_listbox_surface = false;
   b_hdc = NULL;
 }
 
 PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb) {
-  PromptState *ps = PromptPopup_FindState(lb);
+  PromptState *ps = prompt_popup_find_state(lb);
   if (ps)
     return ps;
-  return PromptPopup_GetTopPromptState();
+  return prompt_popup_get_top_prompt_state();
 }

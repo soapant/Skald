@@ -634,7 +634,7 @@ static bool emit_release_config(const char *dst_path) {
   }
   fprintf(outf, "#include <stdbool.h>\n#include \"config_values.h\"\n\n"
                 "// <skald-config-generated>\n"
-                "void ConfigApply(void) {\n");
+                "void config_apply(void) {\n");
 #define EMIT_DEFAULT(type, name, def)                                          \
   fprintf(outf, "  " #name " = " #def ";\n");
   SKALD_CONFIG_VALUES(EMIT_DEFAULT)

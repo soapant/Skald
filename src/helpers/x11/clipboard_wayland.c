@@ -375,7 +375,7 @@ static void offer_mime(void *data, struct wl_proxy *offer, const char *mime) {
            mime, wl_offer_mime_count);
   pthread_mutex_lock(&wl_text_lock);
   if (wl_offer_mime_count < 8) {
-    SafeCopy(wl_offer_mimes[wl_offer_mime_count], sizeof(wl_offer_mimes[0]),
+    safe_copy(wl_offer_mimes[wl_offer_mime_count], sizeof(wl_offer_mimes[0]),
              mime);
     wl_offer_mime_count++;
   }
@@ -968,7 +968,7 @@ char *x11_clipboard_get_text(void) {
   const char *pick = offer ? wl_pick_mime_locked() : NULL;
   char mime[64] = {0};
   if (pick)
-    SafeCopy(mime, sizeof(mime), pick);
+    safe_copy(mime, sizeof(mime), pick);
   pthread_mutex_unlock(&wl_text_lock);
   if (!offer || !mime[0]) {
     pthread_mutex_unlock(&wl_lock);

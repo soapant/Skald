@@ -25,14 +25,14 @@ typedef struct {
 
 #define HOTKEY_HOLD_MIN_INTERVAL_MS 10
 
-bool Hotkey_AlwaysEnabled(void);
-bool Hotkey_AlwaysDisabled(void);
+bool hotkey_always_enabled(void);
+bool hotkey_always_disabled(void);
 HotkeyBinding
 Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
                           bool (*optional_condition_for_hotkey)(void),
                           const char *const *optional_blacklistedwindows,
                           bool whitelist, void *user_ud);
-void Hotkey_PurgeOwner(const char *path_a, const char *path_b);
-void Hotkey_KeyUp(int vk_code);
+void hotkey_purge_owner(const char *path_a, const char *path_b);
+void hotkey_key_up(int vk_code);
 
 #endif

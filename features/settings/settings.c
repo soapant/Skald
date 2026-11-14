@@ -14,14 +14,14 @@ static void settings_render(PromptState *state) {
                     .y = state->height / 2, .text = "Button", .w = 32, .h = 32);
 }
 
-static void TriggerSettings(void) {
+static void trigger_settings(void) {
   sk_window(.title = "Settings", .refresh = settings_refresh,
             .enter = settings_enter, .ctrl_enter = settings_ctrl_enter,
             .tab = settings_tab, .render = settings_render);
 }
 
 SKALD_FEATURE_INIT {
-  sk_register_hotkey(.hotkey = "Alt+D", .cb = TriggerSettings);
-  sk_add_feature(.display_name = "Settings", .on_action = TriggerSettings,
+  sk_register_hotkey(.hotkey = "Alt+D", .cb = trigger_settings);
+  sk_add_feature(.display_name = "Settings", .on_action = trigger_settings,
                  .icon = "/settings.png");
 }

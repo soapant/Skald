@@ -18,9 +18,9 @@ typedef struct {
   char name[128];
 } MonitorInfo;
 
-int Monitor_Fill(MonitorEntry *out, int max_entries);
-int Monitor_Count(void);
-bool Monitor_GeometryAt(int index, int *x, int *y, int *w, int *h);
-bool Monitor_Info(int index, MonitorInfo *out);
+int monitor_fill(MonitorEntry *out, int max_entries);
+int monitor_count(void);
+bool monitor_geometry_at(int index, int *x, int *y, int *w, int *h);
+bool monitor_info(int index, MonitorInfo *out);
 
 #endif

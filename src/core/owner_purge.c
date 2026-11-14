@@ -11,18 +11,18 @@
 #include "helpers/helpers_key.h"
 #include "platform/platform.h"
 
-void PurgeOwnerSet(const char *path_a, const char *path_b,
+void purge_owner_set(const char *path_a, const char *path_b,
                    unsigned widget_gen) {
-  Cap_PurgeOwner(path_a, path_b);
-  Hotkey_PurgeOwner(path_a, path_b);
-  RunEvery_PurgeOwner(path_a, path_b);
-  Snippet_PurgeOwner(path_a, path_b);
-  Widget_PurgeOwner(path_a, path_b, widget_gen);
-  CcRegistry_PurgeOwner(path_a, path_b);
-  FeatureList_PurgeOwner(path_a, path_b);
-  KeyCallback_PurgeOwner(path_a, path_b);
-  Key_PurgeInterceptorOwner(path_a, path_b);
-  EventBus_PurgeOwner(path_a, path_b);
-  HoverWidget_PurgeOwner(path_a, path_b);
+  cap_purge_owner(path_a, path_b);
+  hotkey_purge_owner(path_a, path_b);
+  run_every_purge_owner(path_a, path_b);
+  snippet_purge_owner(path_a, path_b);
+  widget_purge_owner(path_a, path_b, widget_gen);
+  cc_registry_purge_owner(path_a, path_b);
+  feature_list_purge_owner(path_a, path_b);
+  key_callback_purge_owner(path_a, path_b);
+  key_purge_interceptor_owner(path_a, path_b);
+  event_bus_purge_owner(path_a, path_b);
+  hover_widget_purge_owner(path_a, path_b);
   Platform_MessagePopup_PurgeOwner(path_a, path_b);
 }

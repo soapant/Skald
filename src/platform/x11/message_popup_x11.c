@@ -93,13 +93,13 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   int winW = 0;
   int winH = 0;
   x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
-  int centerX = MsgAnchorCenter(rect_x, rect_w, h_slot, gap, outward, winW);
-  int centerY = MsgAnchorCenter(rect_y, rect_h, v_slot, gap, outward, winH);
+  int centerX = msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, winW);
+  int centerY = msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, winH);
   int x = centerX - winW / 2;
   int y = centerY - winH / 2;
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
-  int stack_dir = MsgStackDir(v_slot, outward);
+  int stack_dir = msg_stack_dir(v_slot, outward);
   y = x11_msg_stack_adjust_y(x, y, winW, winH, stack_dir);
   x11_msg_present(dpy, message, x - ax, y - ay, winW, winH, timeout, color,
                   no_bg, render, name);

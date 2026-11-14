@@ -48,7 +48,7 @@ void Platform_RenderThreadMiniSleep(int milliseconds) {
 
 static DWORD WINAPI rt_entry(LPVOID arg) {
   (void)arg;
-  RenderThread_Main();
+  render_thread_main();
   return 0;
 }
 

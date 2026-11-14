@@ -18,7 +18,7 @@ typedef struct {
   const char *type;
 } CcEntrySpec;
 
-void CcRegistry_PurgeOwner(const char *path_a, const char *path_b);
-void FeatureList_PurgeOwner(const char *path_a, const char *path_b);
+void cc_registry_purge_owner(const char *path_a, const char *path_b);
+void feature_list_purge_owner(const char *path_a, const char *path_b);
 
 #endif

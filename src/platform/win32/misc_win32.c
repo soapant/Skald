@@ -47,7 +47,7 @@ bool Platform_ProcessRunning(const char *name) {
   bool found = false;
   if (Process32First(snap, &pe)) {
     do {
-      if (String_ContainsCI(pe.szExeFile, name)) {
+      if (string_contains_ci(pe.szExeFile, name)) {
         found = true;
         break;
       }
@@ -61,7 +61,7 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   if (!exe_name || !*exe_name)
     return false;
 
-  if (!IsSafeProcessName(exe_name)) {
+  if (!is_safe_process_name(exe_name)) {
     log_error("Platform_TerminateProcessByName: refusing unsafe name '%s'",
               exe_name);
     return false;
@@ -168,7 +168,7 @@ bool Platform_QueryBrowser(const char *query) {
     return false;
 
   char url[4096];
-  Url_BuildSearchUrl(UsedSearchEngine, query, url, sizeof(url));
+  url_build_search_url(UsedSearchEngine, query, url, sizeof(url));
 
   char command[4096];
   snprintf(command, sizeof(command), "start \"\" \"%s\"", url);

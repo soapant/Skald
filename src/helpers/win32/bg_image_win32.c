@@ -145,7 +145,7 @@ static unsigned int bg_hash_str(const char *s) {
 static bool bg_cache_file(char *out, size_t cap, const char *native, int w,
                           int h) {
   char dir[MAX_PATH];
-  if (!FeaturePath_Get("core", BG_CACHE_DIR, dir, sizeof(dir)))
+  if (!feature_path_get("core", BG_CACHE_DIR, dir, sizeof(dir)))
     return false;
   CreateDirectoryA(dir, NULL);
   snprintf(out, cap, "%s\\%08x_%dx%d.bmp", dir, bg_hash_str(native), w, h);
@@ -393,7 +393,7 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
     int sw = s->src_w;
     int sh = s->src_h;
     int dw = 0, dh = 0;
-    if (!Cover_Scale(sw, sh, w, h, &dw, &dh)) {
+    if (!cover_scale(sw, sh, w, h, &dw, &dh)) {
       DeleteDC(dc);
       DeleteObject(bmp);
       return NULL;
@@ -420,7 +420,7 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
       bg_cache_store(cacheFile, w, h, bits, &ft, sz);
   }
 
-  int slot_idx = BgTileLruPick(g_bg_tiles, BG_TILE_SLOTS, sizeof(g_bg_tiles[0]),
+  int slot_idx = bg_tile_lru_pick(g_bg_tiles, BG_TILE_SLOTS, sizeof(g_bg_tiles[0]),
                                bg_slot_empty, bg_slot_stamp);
   BgTileSlot *slot = &g_bg_tiles[slot_idx];
   bg_tile_drop(slot);

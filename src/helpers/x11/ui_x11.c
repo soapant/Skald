@@ -22,7 +22,7 @@ static PromptState *ui_top_prompt(void) {
   return (PromptState *)top->user_data;
 }
 
-bool IsPopupActive(WindowHandle hPopupWnd) {
+bool is_popup_active(WindowHandle hPopupWnd) {
   (void)hPopupWnd;
   const WindowManager *wm = WindowManager_Get();
   return wm && wm->popup_count > 0;
@@ -49,7 +49,7 @@ void UI_SetText(const char *text) {
     text = "";
   PromptState *prompt = ui_top_prompt();
   if (prompt) {
-    SafeCopy(prompt->eb->filter, sizeof(prompt->eb->filter), text);
+    safe_copy(prompt->eb->filter, sizeof(prompt->eb->filter), text);
     prompt->eb->cursor = (int)strlen(prompt->eb->filter);
   }
 }

@@ -10,44 +10,44 @@ static int measure_h = 0;
 static int last_measure_x = 0;
 static int last_measure_y = 0;
 
-static void Platform_SetDrawOffset(int dx, int dy) {
+static void macos_set_draw_offset(int dx, int dy) {
   draw_offset_x = dx;
   draw_offset_y = dy;
 }
 
-static void Platform_GetDrawOffset(int *out_x, int *out_y) {
+static void macos_get_draw_offset(int *out_x, int *out_y) {
   if (out_x)
     *out_x = draw_offset_x;
   if (out_y)
     *out_y = draw_offset_y;
 }
 
-static void Platform_BeginMeasure(void) {
+static void macos_begin_measure(void) {
   measure_w = 0;
   measure_h = 0;
 }
 
-static void Platform_EndMeasure(int *out_w, int *out_h) {
+static void macos_end_measure(int *out_w, int *out_h) {
   if (out_w)
     *out_w = measure_w;
   if (out_h)
     *out_h = measure_h;
 }
 
-static void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
+static void macos_get_last_measure_origin(int *out_x, int *out_y) {
   if (out_x)
     *out_x = last_measure_x;
   if (out_y)
     *out_y = last_measure_y;
 }
 
-static void Platform_SetDrawBgColor(unsigned long hex) { draw_bg_color = hex; }
+static void macos_set_draw_bg_color(unsigned long hex) { draw_bg_color = hex; }
 
-static unsigned long Platform_GetDrawBgColor(void) { return draw_bg_color; }
+static unsigned long macos_get_draw_bg_color(void) { return draw_bg_color; }
 
-static void Platform_SetTransparentWindow(bool on) { transparent_window = on; }
+static void macos_set_transparent_window(bool on) { transparent_window = on; }
 
-static bool Platform_GetTransparentWindow(void) { return transparent_window; }
+static bool macos_get_transparent_window(void) { return transparent_window; }
 
 void Platform_FlushDraw(void) {}
 
@@ -62,7 +62,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   return true;
 }
 bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) { return true; }
-void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {}
+void draw_prompt_separator(PlDrawPromptSeparatorSpec spec) {}
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) { return true; }
 bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) { return true; }
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color,
@@ -80,7 +80,7 @@ bool Platform_DrawTextLine(int x, int y, const char *text, int len,
                            unsigned long color, int fontsize) {
   return true;
 }
-void Item_GetColors(PlGetItemColorsSpec spec) { (void)spec; }
+void item_get_colors(PlGetItemColorsSpec spec) { (void)spec; }
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   if (line_h)
     *line_h = 16;

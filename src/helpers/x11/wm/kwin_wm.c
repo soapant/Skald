@@ -30,7 +30,7 @@ static bool kwin_has_error(char *output) {
 
   if (!output)
     return true;
-  return String_ContainsCI(output, "error");
+  return string_contains_ci(output, "error");
 }
 
 static void kwin_ensure_bus(void) {
@@ -425,7 +425,7 @@ static bool kwin_focus_js_cmd(const char *title, char *out, size_t cap) {
   if (!esc[0])
     return false;
   char low[1024];
-  SafeCopy(low, sizeof(low), esc);
+  safe_copy(low, sizeof(low), esc);
   if (low[0])
     low[0] = tolower((unsigned char)low[0]);
   snprintf(out, cap,
@@ -484,7 +484,7 @@ static PlWindowList kwin_list_windows(bool want_names) {
           buf[0] = toupper((unsigned char)buf[0]);
         item = buf;
       }
-      if (!List_Append(&list, item))
+      if (!list_append(&list, item))
         break;
     }
     p = rend ? rend + 1 : p + rlen;

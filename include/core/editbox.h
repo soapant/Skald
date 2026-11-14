@@ -112,7 +112,7 @@ typedef struct {
   int fontsize;
 } EditboxPlace;
 
-void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
+void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
                           int fontsize, PromptState *state, EditboxPlace *out);
 
 typedef struct {
@@ -140,20 +140,20 @@ typedef struct {
   int caret_pos;
 } EditboxInitFromSpec;
 
-void Editbox_InitFromSpec(EditboxInit *out, const EditboxInitFromSpec *args);
+void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args);
 
-void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in);
-int Editbox_CaretY(int box_top, int ascent, int descent, int fontsize);
-void EditboxSpec_FillFromPrompt(EditboxSpec *spec, PromptState *state,
+void editbox_build_spec(EditboxSpec *out, const EditboxInit *in);
+int editbox_caret_y(int box_top, int ascent, int descent, int fontsize);
+void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                 int text_len, int cursor_x, int text_w,
                                 int ascent, int descent, FontHandle font);
-void Editbox_ResolveSelection(PromptState *state, int text_len,
+void editbox_resolve_selection(PromptState *state, int text_len,
                               bool prefer_state, int *out_start, int *out_end,
                               bool *out_has);
-int Editbox_ScrollOffset(const EditboxSpec *spec);
-void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out);
-void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
+int editbox_scroll_offset(const EditboxSpec *spec);
+void editbox_layout(EditboxSpec *spec, EditboxLayout *out);
+void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                   int parts);
-void Editbox_Render(EditboxSpec *spec, EditboxLayout *out);
+void editbox_render(EditboxSpec *spec, EditboxLayout *out);
 
 #endif

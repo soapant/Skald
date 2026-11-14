@@ -3,31 +3,31 @@
 
 static EditSelection sel;
 
-void EditState_BeginSelection(int cursor) {
+void edit_state_begin_selection(int cursor) {
   sel.active = true;
   sel.anchor = cursor;
   sel.head = cursor;
 }
 
-void EditState_UpdateSelection(int cursor) {
+void edit_state_update_selection(int cursor) {
   if (!sel.active)
     return;
   sel.head = cursor;
 }
 
-void EditState_EndSelection(void) {
+void edit_state_end_selection(void) {
   sel.active = false;
   sel.anchor = 0;
   sel.head = 0;
 }
 
-void EditState_Reset(void) {
+void edit_state_reset(void) {
   sel.active = false;
   sel.anchor = 0;
   sel.head = 0;
 }
 
-bool EditState_GetSelection(int *out_start, int *out_end) {
+bool edit_state_get_selection(int *out_start, int *out_end) {
   if (!sel.active)
     return false;
   if (sel.anchor == sel.head)

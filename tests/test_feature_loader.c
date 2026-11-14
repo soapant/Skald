@@ -60,25 +60,25 @@ TEST(load_reload_unload) {
   ASSERT_FALSE(has_file(hot1));
   ASSERT_FALSE(has_file(hot2));
 
-  bool loaded = FeatureLoader_LoadAllFromDir(FIXTURE_DIR);
+  bool loaded = feature_loader_load_all_from_dir(FIXTURE_DIR);
   ASSERT_TRUE(loaded);
-  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
   ASSERT_FALSE(has_file(hot1));
 
-  FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
-  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  feature_loader_reload_from(FIXTURE_NAME, fixture);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
   ASSERT_TRUE(has_file(hot1));
   ASSERT_FALSE(has_file(hot2));
 
-  FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
-  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
-  FeatureLoader_DrainRetiredUnloads();
+  feature_loader_reload_from(FIXTURE_NAME, fixture);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  feature_loader_drain_retired_unloads();
   ASSERT_FALSE(has_file(hot1));
   ASSERT_TRUE(has_file(hot2));
 
   FeaturePath = orig_feature_path;
-  FeatureLoader_DrainRetiredUnloads();
-  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
+  feature_loader_drain_retired_unloads();
+  ASSERT_EQ_INT(feature_loader_pending_unload_count(), 0);
 }
 
 TEST(reload_defers_unload_until_drain) {
@@ -87,32 +87,32 @@ TEST(reload_defers_unload_until_drain) {
   Platform_MkdirIfNotExists(MANIFEST_DIR);
   Platform_MkdirIfNotExists(FIXTURE_DIR);
   remove_hot_artifacts();
-  FeatureLoader_DrainRetiredUnloads();
+  feature_loader_drain_retired_unloads();
 
-  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
+  ASSERT_EQ_INT(feature_loader_pending_unload_count(), 0);
 
-  bool loaded = FeatureLoader_LoadAllFromDir(FIXTURE_DIR);
+  bool loaded = feature_loader_load_all_from_dir(FIXTURE_DIR);
   ASSERT_TRUE(loaded);
-  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
+  ASSERT_EQ_INT(feature_loader_pending_unload_count(), 0);
 
   const char *ext = Platform_LibExtension();
   char fixture[512];
   snprintf(fixture, sizeof(fixture), "%s/%s%s", FIXTURE_DIR, FIXTURE_NAME, ext);
 
-  FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
-  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 1);
-  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  feature_loader_reload_from(FIXTURE_NAME, fixture);
+  ASSERT_EQ_INT(feature_loader_pending_unload_count(), 1);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
 
-  FeatureLoader_ReloadFrom(FIXTURE_NAME, fixture);
-  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 2);
-  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  feature_loader_reload_from(FIXTURE_NAME, fixture);
+  ASSERT_EQ_INT(feature_loader_pending_unload_count(), 2);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
 
-  FeatureLoader_DrainRetiredUnloads();
-  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
-  ASSERT_TRUE(Cap_ResolveAbi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  feature_loader_drain_retired_unloads();
+  ASSERT_EQ_INT(feature_loader_pending_unload_count(), 0);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
 
-  FeatureLoader_DrainRetiredUnloads();
-  ASSERT_EQ_INT(FeatureLoader_PendingUnloadCount(), 0);
+  feature_loader_drain_retired_unloads();
+  ASSERT_EQ_INT(feature_loader_pending_unload_count(), 0);
 
   FeaturePath = orig_feature_path;
 }

@@ -45,12 +45,12 @@ typedef struct {
   void (*render)(PlaceState state);
 } CheckboxSpec;
 
-void Checkbox_FrameBegin(void);
-bool Checkbox_IsChecked(const char *name, int kind);
-bool Checkbox_IsHovered(const char *name, int kind);
-bool Checkbox_IsClicked(const char *name, int kind);
-void Checkbox_ResetAll(void);
-bool Checkbox_Place(const CheckboxSpec *spec);
-void Checkbox_Draw(const CheckboxSpec *spec);
+void checkbox_frame_begin(void);
+bool checkbox_is_checked(const char *name, int kind);
+bool checkbox_is_hovered(const char *name, int kind);
+bool checkbox_is_clicked(const char *name, int kind);
+void checkbox_reset_all(void);
+bool checkbox_place(const CheckboxSpec *spec);
+void checkbox_draw(const CheckboxSpec *spec);
 
 #endif

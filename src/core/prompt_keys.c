@@ -22,7 +22,7 @@
 #include "helpers/helpers_ui.h"
 #include "core/types/keys.h"
 
-void Prompt_Refresh(PromptState *state) {
+void prompt_refresh(PromptState *state) {
   if (!state) {
     return;
   }
@@ -35,7 +35,7 @@ void Prompt_Refresh(PromptState *state) {
 static bool prompt_keys_selection(const PromptState *state, int *out_ss,
                                   int *out_se) {
   int ss = 0, se = 0;
-  if (!EditState_GetSelection(&ss, &se))
+  if (!edit_state_get_selection(&ss, &se))
     return false;
   if (se < ss) {
     int t = ss;
@@ -52,7 +52,7 @@ static bool prompt_keys_selection(const PromptState *state, int *out_ss,
   return true;
 }
 
-bool Prompt_DeleteSelection(PromptState *state) {
+bool prompt_delete_selection(PromptState *state) {
   if (!state)
     return false;
   int ss = 0, se = 0;
@@ -62,29 +62,29 @@ bool Prompt_DeleteSelection(PromptState *state) {
   if (se > ss) {
     memmove(state->eb->filter + ss, state->eb->filter + se, len - se + 1);
     state->eb->cursor = ss;
-    EditState_EndSelection();
-    ListBox_FocusByMouse();
+    edit_state_end_selection();
+    listbox_focus_by_mouse();
     return true;
   }
-  EditState_EndSelection();
-  ListBox_FocusByMouse();
+  edit_state_end_selection();
+  listbox_focus_by_mouse();
   return false;
 }
 
-void Prompt_InsertText(PromptState *state, const char *text, int len) {
+void prompt_insert_text(PromptState *state, const char *text, int len) {
   if (!state || !text || len <= 0) {
     return;
   }
-  Prompt_DeleteSelection(state);
+  prompt_delete_selection(state);
   size_t fcur = (size_t)state->eb->cursor;
-  EditBufferInsertText(state->eb->filter, sizeof(state->eb->filter), &fcur,
+  edit_buffer_insert_text(state->eb->filter, sizeof(state->eb->filter), &fcur,
                        text, (size_t)len);
   state->eb->cursor = (int)fcur;
-  ListBox_FocusByMouse();
-  Prompt_Refresh(state);
+  listbox_focus_by_mouse();
+  prompt_refresh(state);
 }
 
-void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
+void prompt_trigger_enter(PromptState *state, bool ctrl, bool shift, bool alt) {
   SkaldContext *ctx = SkaldContext_Get();
   if (!ctx)
     return;
@@ -92,9 +92,9 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   const char *sel = NULL;
   char filter_copy[sizeof(state->eb->filter)];
   if (state->lb && state->lb->selected_index != -1) {
-    sel = ListBoxInfo_Row(state->lb, state->lb->selected_index);
+    sel = listbox_info_row(state->lb, state->lb->selected_index);
   } else {
-    SafeCopy(filter_copy, sizeof(filter_copy), state->eb->filter);
+    safe_copy(filter_copy, sizeof(filter_copy), state->eb->filter);
     sel = filter_copy;
   }
   bool should_close = true;
@@ -157,7 +157,7 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   }
   if (should_close) {
     if (sel) {
-      SafeCopy(ctx->window.output_buffer, sizeof(ctx->window.output_buffer),
+      safe_copy(ctx->window.output_buffer, sizeof(ctx->window.output_buffer),
                sel);
     } else {
       ctx->window.output_buffer[0] = '\0';
@@ -165,32 +165,32 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   }
   ctx->window.selection_complete = should_close;
   ctx->window.subwindow.in_enter = false;
-  Prompt_ProcessPendingSubwindow();
+  prompt_process_pending_subwindow();
 }
 
-bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,
+bool prompt_handle_list_click(PromptState *state, bool ctrl, bool shift,
                             bool alt) {
 
   if (!state || !state->lb)
     return false;
   int list_top = 0, item_height = 0, visible_count = 0;
-  ListBox_GetGeometry(&list_top, &item_height, &visible_count);
+  listbox_get_geometry(&list_top, &item_height, &visible_count);
   if (item_height <= 0 || visible_count <= 0)
     return false;
   ListBoxInfo *lb = state->lb;
   int mx = 0, my = 0;
-  if (!ListBox_ClientMousePos(&mx, &my))
+  if (!listbox_client_mouse_pos(&mx, &my))
     return false;
-  int idx = ListBox_RowAtY(lb, list_top, item_height, lb->view_offset,
+  int idx = listbox_row_at_y(lb, list_top, item_height, lb->view_offset,
                            visible_count, my);
   if (idx < 0)
     return false;
   UI_SetSelection(lb, idx);
-  Prompt_TriggerEnter(state, ctrl, shift, alt);
+  prompt_trigger_enter(state, ctrl, shift, alt);
   return true;
 }
 
-bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
+bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   if (!state || !key)
     return false;
   int vk = key->vk;
@@ -202,17 +202,17 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
   bool invoke_interceptor = false;
   invoke_interceptor = ctx->window.editbox_placed;
 
-  if (invoke_interceptor && Key_InvokeInterceptor(key)) {
+  if (invoke_interceptor && key_invoke_interceptor(key)) {
     Platform_InvalidatePrompt();
     return true;
   }
 
   if (ctrl && (vk == 'A' || vk == 'a')) {
     int len = (int)strlen(state->eb->filter);
-    EditState_BeginSelection(0);
-    EditState_UpdateSelection(len);
+    edit_state_begin_selection(0);
+    edit_state_update_selection(len);
     state->eb->cursor = len;
-    Prompt_Refresh(state);
+    prompt_refresh(state);
     return true;
   }
   if (ctrl && (vk == 'C' || vk == 'c')) {
@@ -231,23 +231,23 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_BACK) {
-    if (Prompt_DeleteSelection(state)) {
-      Prompt_Refresh(state);
+    if (prompt_delete_selection(state)) {
+      prompt_refresh(state);
       return true;
     }
-    ListBox_FocusByMouse();
+    listbox_focus_by_mouse();
     if (ctrl) {
       state->eb->filter[0] = '\0';
       state->eb->cursor = 0;
     } else {
       size_t fcur = (size_t)state->eb->cursor;
-      if (!EditBufferBackspacePair(state->eb->filter, &fcur) && true) {
-        EditBufferBackspace(state->eb->filter, &fcur);
+      if (!edit_buffer_backspace_pair(state->eb->filter, &fcur) && true) {
+        edit_buffer_backspace(state->eb->filter, &fcur);
       }
       state->eb->cursor = (int)fcur;
     }
-    ListBox_FocusByMouse();
-    Prompt_Refresh(state);
+    listbox_focus_by_mouse();
+    prompt_refresh(state);
     return true;
   }
   if (vk == VK_ESCAPE) {
@@ -263,7 +263,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     if (state->lb && state->lb->item_count > 0 &&
         state->lb->selected_index >= 0) {
       int idx = state->lb->selected_index;
-      const char *text = ListBoxInfo_Row(state->lb, idx);
+      const char *text = listbox_info_row(state->lb, idx);
       if (text && text[0]) {
         int tw = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
             .text = text, .len = (int)strlen(text), .fontsize = FontSize});
@@ -275,13 +275,13 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
           state->lb->text_hscroll += 24;
           if (state->lb->text_hscroll > max_scroll)
             state->lb->text_hscroll = max_scroll;
-          Prompt_Refresh(state);
+          prompt_refresh(state);
           return true;
         }
       }
     }
-    EditState_EndSelection();
-    CursorForward(&state->eb->cursor, strlen(state->eb->filter));
+    edit_state_end_selection();
+    cursor_forward(&state->eb->cursor, strlen(state->eb->filter));
     return true;
   }
   if (vk == VK_LEFT) {
@@ -289,20 +289,20 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       state->lb->text_hscroll -= 24;
       if (state->lb->text_hscroll < 0)
         state->lb->text_hscroll = 0;
-      Prompt_Refresh(state);
+      prompt_refresh(state);
       return true;
     }
-    EditState_EndSelection();
-    CursorBack(&state->eb->cursor);
+    edit_state_end_selection();
+    cursor_back(&state->eb->cursor);
     return true;
   }
   if (vk == VK_HOME) {
-    EditState_EndSelection();
+    edit_state_end_selection();
     state->eb->cursor = 0;
     return true;
   }
   if (vk == VK_END) {
-    EditState_EndSelection();
+    edit_state_end_selection();
     state->eb->cursor = (int)strlen(state->eb->filter);
     return true;
   }
@@ -326,13 +326,13 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_DELETE) {
-    if (Prompt_DeleteSelection(state)) {
-      Prompt_Refresh(state);
+    if (prompt_delete_selection(state)) {
+      prompt_refresh(state);
       return true;
     }
-    ListBox_FocusByMouse();
-    if (EditBufferDeleteChar(state->eb->filter, &state->eb->cursor)) {
-      Prompt_Refresh(state);
+    listbox_focus_by_mouse();
+    if (edit_buffer_delete_char(state->eb->filter, &state->eb->cursor)) {
+      prompt_refresh(state);
     }
     return true;
   }
@@ -342,7 +342,7 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_RETURN) {
-    Prompt_TriggerEnter(state, ctrl, shift, alt);
+    prompt_trigger_enter(state, ctrl, shift, alt);
     return true;
   }
   if ((shift || ctrl) && vk == COPY_SELECTION_KEY) {
@@ -382,20 +382,20 @@ bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key) {
       state->eb->cursor += (int)clip_len;
     }
     free(clip);
-    Prompt_Refresh(state);
+    prompt_refresh(state);
     return true;
   }
   if (ctrl) {
     if (vk == VK_OEM_MINUS) {
       FontSize -= 1;
       Platform_ResetUIScale();
-      Config_Save();
+      config_save();
       return true;
     }
     if (vk == VK_OEM_PLUS) {
       FontSize += 1;
       Platform_ResetUIScale();
-      Config_Save();
+      config_save();
       return true;
     }
   }

@@ -48,7 +48,7 @@ static void cfcull_stale_libs(void) {
     return;
   cfculled = true;
   const char *lib_ext = Platform_LibExtension();
-  int nremoved = ReloadLib_SweepStaleHotLibs("build", lib_ext);
+  int nremoved = reload_lib_sweep_stale_hot_libs("build", lib_ext);
   if (nremoved > 0)
     log_info("config: removed %d stale hot-reload libs", nremoved);
 }
@@ -182,14 +182,14 @@ static bool confiload_copy(const char *uniq, LibHandle *out) {
     return false;
   }
   typedef void (*ApplyFn)(void);
-  ApplyFn apply = (ApplyFn)Platform_GetSymbol(h, "ConfigApply");
+  ApplyFn apply = (ApplyFn)Platform_GetSymbol(h, "config_apply");
   if (!apply) {
-    log_error("config %s has no ConfigApply, keeping current", uniq);
+    log_error("config %s has no config_apply, keeping current", uniq);
     Platform_UnloadLibrary(h);
     return false;
   }
   apply();
-  Theme_Apply();
+  theme_apply();
   heapify_config();
   *out = h;
   return true;
@@ -199,10 +199,10 @@ static int config_build_load_store(void) {
 
   const char *out = confiout_path();
   int rebuilt = 0;
-  if (ReloadLib_IsFresh(CONFISRC, out)) {
+  if (reload_lib_is_fresh(CONFISRC, out)) {
     log_info("config .so is newer than source, skipping compile");
   } else {
-    bool ok = ReloadLib_Compile(CONFISRC, out, "config build");
+    bool ok = reload_lib_compile(CONFISRC, out, "config build");
     if (!ok) {
       log_error("config compile failed, keeping current");
       return -1;
@@ -214,7 +214,7 @@ static int config_build_load_store(void) {
     log_error("Platform_LibExtension() returned NULL!");
     return -1;
   }
-  char *uniq = ReloadLib_UniqueCopy(out, "build/config", ++cfseq, lib_ext);
+  char *uniq = reload_lib_unique_copy(out, "build/config", ++cfseq, lib_ext);
   if (!uniq) {
     log_error("config copy failed, keeping current");
     return -1;
@@ -233,13 +233,13 @@ static int config_build_load_store(void) {
     cfcount = 1;
   }
   cflibs[cfcount].handle = h;
-  SafeCopy(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq), uniq);
+  safe_copy(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq), uniq);
   cfcount++;
   free(uniq);
   return rebuilt;
 }
 
-bool Config_Load(void) {
+bool config_load(void) {
   cfcull_stale_libs();
   int r = config_build_load_store();
 
@@ -265,7 +265,7 @@ static void cfreload_unlock(void) {
     Platform_MutexUnlock(cfreload_mutex);
 }
 
-bool Config_Reload(void) {
+bool config_reload(void) {
   WindowManager *_wm2 = WindowManager_Get();
   if (_wm2 && _wm2->popup_count > 0) {
     log_warn("cfg reload blocked: %d popup(s) open", _wm2->popup_count);
@@ -297,7 +297,7 @@ bool Config_Reload(void) {
   return true;
 }
 
-void Config_Unload(void) {
+void config_unload(void) {
   for (int i = 0; i < cfcount; i++) {
     if (cflibs[i].handle)
       Platform_UnloadLibrary(cflibs[i].handle);
@@ -389,7 +389,7 @@ static void cfput_escaped(ConfigBuf *b, const char *s) {
 }
 
 static void cfput_str_line(ConfigBuf *b, const char *name, const char *value) {
-  if (Config_IsAutoResolvedApp(name))
+  if (config_is_auto_resolved_app(name))
     value = "";
   cfbuf_put(b, "  %s = ", name);
   cfput_escaped(b, value);
@@ -403,7 +403,7 @@ static void cfput_color_line(ConfigBuf *b, const char *name, ColorRef v) {
 
 static ConfigBuf confiemit_region(void) {
   ConfigBuf b = {0};
-  cfbuf_put(&b, "void ConfigApply(void) {\n");
+  cfbuf_put(&b, "void config_apply(void) {\n");
 #define EMIT_LIVE(type, name, def)                                             \
   _Generic((type){0},                                                          \
       bool: cfput_bool_line,                                                   \
@@ -421,7 +421,7 @@ static long long cfsaved_mtime = 0;
 static long long cfsaved_size = 0;
 static int cfsaved_valid = 0;
 
-void Config_Save(void) {
+void config_save(void) {
   ConfigBuf region = confiemit_region();
   if (!region.data) {
     log_error("config emit failed");

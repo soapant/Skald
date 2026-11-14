@@ -16,15 +16,15 @@ typedef struct {
   char owner[512];
 } SnippetBinding;
 
-bool Snippet_RegisterInternal(const char *trigger, const char *text,
+bool snippet_register_internal(const char *trigger, const char *text,
                               void (*func)(void), bool whitelist,
                               const char *const *windows, void *caller);
-bool Snippet_UnregisterInternal(const char *trigger);
-void Snippet_SetFireFn(SnippetFireFn fn);
-bool Snippet_FeedVk(int vk_code, int value, bool can_swallow);
-void Snippet_ResetBuffer(void);
-const SnippetBinding *Snippet_GetBinding(int index);
-int Snippet_BindingCount(void);
-void Snippet_PurgeOwner(const char *path_a, const char *path_b);
+bool snippet_unregister_internal(const char *trigger);
+void snippet_set_fire_fn(SnippetFireFn fn);
+bool snippet_feed_vk(int vk_code, int value, bool can_swallow);
+void snippet_reset_buffer(void);
+const SnippetBinding *snippet_get_binding(int index);
+int snippet_binding_count(void);
+void snippet_purge_owner(const char *path_a, const char *path_b);
 
 #endif

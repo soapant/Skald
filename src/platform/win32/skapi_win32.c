@@ -110,7 +110,7 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
-  if (!ExpandPath(path, expanded, sizeof(expanded)))
+  if (!expand_path(path, expanded, sizeof(expanded)))
     return false;
   path = expanded;
   char params[2048] = {0};
@@ -153,7 +153,7 @@ char *sk_search_file_in_dir_platform(const char *directory,
     if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
       continue;
     }
-    if (String_ContainsCI(find_data.cFileName, search_string)) {
+    if (string_contains_ci(find_data.cFileName, search_string)) {
       snprintf(found_path, sizeof(found_path), "%s\\%s", directory,
                find_data.cFileName);
       FindClose(hFind);
@@ -172,9 +172,9 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   win32_get_draw_context(&hdc);
   if (!hdc)
     return false;
-  PromptState *state = PromptPopup_GetTopPromptState();
+  PromptState *state = prompt_popup_get_top_prompt_state();
   EditboxPlace place;
-  Editbox_ResolvePlace(spec->buffer, spec->x, spec->y, spec->w, spec->h,
+  editbox_resolve_place(spec->buffer, spec->x, spec->y, spec->w, spec->h,
                        spec->fontsize, state, &place);
   int fs = place.fontsize;
   const char *buf = place.buf;
@@ -238,15 +238,15 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
                                    .caret_x = spec->caret_x,
                                    .caret_y = spec->caret_y,
                                    .caret_pos = spec->caret_pos};
-  Editbox_InitFromSpec(&ebi, &init_args);
+  editbox_init_from_spec(&ebi, &init_args);
 
   EditboxSpec eb;
-  Editbox_BuildSpec(&eb, &ebi);
+  editbox_build_spec(&eb, &ebi);
 
-  bool prev_lb = PlDrawState_Get()->win32_listbox_surface;
-  PlDrawState_Get()->win32_listbox_surface = false;
-  Editbox_Render(&eb, NULL);
-  PlDrawState_Get()->win32_listbox_surface = prev_lb;
+  bool prev_lb = pl_draw_state_get()->win32_listbox_surface;
+  pl_draw_state_get()->win32_listbox_surface = false;
+  editbox_render(&eb, NULL);
+  pl_draw_state_get()->win32_listbox_surface = prev_lb;
   if (state)
     state->eb->scroll_offset = eb.scroll;
 
@@ -265,7 +265,7 @@ static VOID CALLBACK win32_timer_trampoline(PVOID lpParam,
     if (payload->callback) {
       payload->callback();
     }
-    ThreadRegistry_Finish(payload);
+    thread_registry_finish(payload);
     free(payload);
   }
 }
@@ -358,7 +358,7 @@ static bool net_resolve_adapter(SkNetAdapter *out) {
     out->index = a->IfIndex;
     out->if_type = a->IfType;
     const char *id = a->AdapterName ? a->AdapterName : "";
-    SafeCopy(out->guid, sizeof(out->guid), id);
+    safe_copy(out->guid, sizeof(out->guid), id);
     found = true;
     break;
   }

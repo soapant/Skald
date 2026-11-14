@@ -383,10 +383,10 @@ void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
   int alignment = 0;
 
   if (centered_to != NULL) {
-    if (String_ContainsCI(centered_to, "CENTER")) {
+    if (string_contains_ci(centered_to, "CENTER")) {
       alignment = 1;
       maxWidth = boxWidth > 0 ? boxWidth : PROMPT_WRAP_BOX_CENTER;
-    } else if (String_ContainsCI(centered_to, "RIGHT")) {
+    } else if (string_contains_ci(centered_to, "RIGHT")) {
       alignment = 2;
       maxWidth = boxWidth > 0 ? boxWidth : PROMPT_WRAP_BOX_RIGHT;
     } else {
@@ -462,7 +462,7 @@ void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
 
 const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
                                           size_t trunc_size) {
-  const char *baseText = lb ? ListBoxInfo_Row(lb, idx) : NULL;
+  const char *baseText = lb ? listbox_info_row(lb, idx) : NULL;
   snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
   return trunc;
 }
@@ -747,7 +747,7 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
         b = (val & 0xf) * 17;
       }
     }
-    SafeCopy(keys[ci], 16, keybuf);
+    safe_copy(keys[ci], 16, keybuf);
     colors[ci * 4 + 0] = b;
     colors[ci * 4 + 1] = g;
     colors[ci * 4 + 2] = r;
@@ -853,7 +853,7 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   }
 
   size_t _plen = strlen(path);
-  bool _is_svg = _plen > 4 && String_ContainsCI(path + _plen - 4, ".svg");
+  bool _is_svg = _plen > 4 && string_contains_ci(path + _plen - 4, ".svg");
 
   unsigned char *argb = NULL;
   if (_is_svg) {
@@ -893,7 +893,7 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
     nsvgDeleteRasterizer(rast);
     nsvgDelete(image);
   } else {
-    bool _is_xpm = _plen > 4 && String_ContainsCI(path + _plen - 4, ".xpm");
+    bool _is_xpm = _plen > 4 && string_contains_ci(path + _plen - 4, ".xpm");
     int w = 0, h = 0;
     int comp = 0;
     unsigned char *src = NULL;
@@ -999,14 +999,14 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
   if (!xf)
     return;
   int XOffset = PROMPT_ITEM_TEXT_X;
-  int row_h = PromptRowHeight();
+  int row_h = prompt_row_height();
   int pad_top = (row_h - (xf->ascent + xf->descent)) / 2;
   if (pad_top < 0)
     pad_top = 0;
   int text_y = y + pad_top;
   if (icon_path) {
     int iconX = XOffset;
-    int iconY = y + (PromptRowHeight() - IconSize) / 2;
+    int iconY = y + (prompt_row_height() - IconSize) / 2;
     XOffset += IconSize + XOffset;
     x11_draw_image_scaled(dpy, xd, vis, icon_path, iconX, iconY, IconSize,
                           IconSize);
@@ -1022,7 +1022,7 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
 
   unsigned long pcol = plain_color ? plain_color->pixel : 0;
   if (!pcol)
-    pcol = RgbToHex(COLOR_TEXT);
+    pcol = rgb_to_hex(COLOR_TEXT);
   x11_set_draw_context(dpy, xd, vis, cmap);
   Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
                                            .y = text_y,
@@ -1103,7 +1103,7 @@ static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
     use_argb = true;
   }
   Window win;
-  Pixmap bg_pm = (GetTransparentWindow() || !x11_bg_image_enabled())
+  Pixmap bg_pm = (get_transparent_window() || !x11_bg_image_enabled())
                      ? None
                      : x11_bg_image_tile(dpy, w, h);
   if (use_argb) {
@@ -1111,7 +1111,7 @@ static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
     unsigned int r = (bg_color >> 16) & 0xFF;
     unsigned int g = (bg_color >> 8) & 0xFF;
     unsigned int b = bg_color & 0xFF;
-    unsigned int a = GetTransparentWindow() ? 0 : (unsigned int)WindowOpacity;
+    unsigned int a = get_transparent_window() ? 0 : (unsigned int)WindowOpacity;
     unsigned long valuemask = CWColormap | CWBorderPixel;
     if (bg_pm != None) {
       attrs.background_pixmap = bg_pm;
@@ -1237,9 +1237,9 @@ static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
 }
 
 static unsigned long x11_background_color_at(void) {
-  unsigned long base = GetDrawBgColor();
+  unsigned long base = get_draw_bg_color();
   if (!base)
-    base = RgbToHex(COLOR_BG);
+    base = rgb_to_hex(COLOR_BG);
   return ((base >> 16) & 0xFF) << 16 | ((base >> 8) & 0xFF) << 8 |
          (base & 0xFF);
 }
@@ -1303,7 +1303,7 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
         if (cov > 1.0f)
           cov = 1.0f;
         unsigned long backdrop = x11_background_color_at();
-        unsigned long mixed = Color_Lerp(backdrop, hex, cov);
+        unsigned long mixed = color_lerp(backdrop, hex, cov);
         XftColor px_c = solid;
         px_c.color.red = (unsigned short)(((mixed >> 16) & 0xFF) * 257);
         px_c.color.green = (unsigned short)(((mixed >> 8) & 0xFF) * 257);
@@ -1481,9 +1481,9 @@ static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
 Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h) {
   if (!dpy || w <= 0 || h <= 0)
     return None;
-  unsigned long base = GetDrawBgColor();
+  unsigned long base = get_draw_bg_color();
   if (!base)
-    base = RgbToHex(COLOR_BG);
+    base = rgb_to_hex(COLOR_BG);
   int radius = CornerRadius;
   bool rounded = RoundedCorners;
   if (!rounded && radius > 0 && !x11_bg_image_enabled()) {
@@ -1516,9 +1516,9 @@ Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h) {
 void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h) {
   if (!dpy || w <= 0 || h <= 0)
     return;
-  unsigned long base = GetDrawBgColor();
+  unsigned long base = get_draw_bg_color();
   if (!base)
-    base = RgbToHex(COLOR_BG);
+    base = rgb_to_hex(COLOR_BG);
   int radius = CornerRadius;
   bool rounded = RoundedCorners;
   BgKey k;
@@ -1599,7 +1599,7 @@ void x11_draw_selection_background(Display *dpy, XftDraw *xd, Visual *vis,
   if (w <= 0 || h <= 0)
     return;
   XftColor c;
-  x11_xft_alloc_color(dpy, vis, cmap, baseHex, OpacityAlpha16(), &c);
+  x11_xft_alloc_color(dpy, vis, cmap, baseHex, opacity_alpha16(), &c);
   XftDrawRect(xd, &c, x, y, w, h);
   XftColorFree(dpy, vis, cmap, &c);
 }
@@ -1616,7 +1616,7 @@ void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
     r = w / 2;
   if (r > h / 2)
     r = h / 2;
-  unsigned long hex = RgbToHex(COLOR_BORDER);
+  unsigned long hex = rgb_to_hex(COLOR_BORDER);
   unsigned long a = ((unsigned long)((int)WindowOpacity)) & 0xFFUL;
   unsigned long px =
       (a << 24) | (hex & 0xFF0000UL) | (hex & 0xFF00UL) | (hex & 0xFFUL);
@@ -1653,7 +1653,7 @@ void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
 }
 
 Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
-  unsigned long bg = RgbToHex(COLOR_BG);
+  unsigned long bg = rgb_to_hex(COLOR_BG);
   Window win;
   if (niri_is_active()) {
     log_error("niri override_redirect prompt w=%d h=%d", w, h);
@@ -1686,10 +1686,10 @@ void x11_apply_click_through(Display *dpy, Window win) {
 Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
                                          int h, bool clickable) {
   unsigned long bg = 0;
-  if (!GetTransparentWindow()) {
-    bg = GetDrawBgColor();
+  if (!get_transparent_window()) {
+    bg = get_draw_bg_color();
     if (!bg)
-      bg = RgbToHex(COLOR_BG);
+      bg = rgb_to_hex(COLOR_BG);
   }
   x11_set_draw_context(dpy, NULL, NULL, 0);
   long mask = ExposureMask | (clickable ? ButtonPressMask : 0L);
@@ -1732,21 +1732,21 @@ bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
     char *p = lines.items[i];
     while (*p == ' ' || *p == '\t')
       p++;
-    if (String_StartsWithCI(p, "Terminal=")) {
+    if (string_starts_with_ci(p, "Terminal=")) {
       char *v = p + 9;
       while (*v == ' ' || *v == '\t')
         v++;
       v[strcspn(v, "\r\n")] = '\0';
-      if (is_terminal && (String_ContainsCI(v, "true") || strcmp(v, "1") == 0))
+      if (is_terminal && (string_contains_ci(v, "true") || strcmp(v, "1") == 0))
         *is_terminal = true;
-    } else if (String_StartsWithCI(p, "Exec=")) {
+    } else if (string_starts_with_ci(p, "Exec=")) {
       char *v = p + 5;
       while (*v == ' ' || *v == '\t')
         v++;
       v[strcspn(v, "\r\n")] = '\0';
       if (exec_line)
         snprintf(exec_line, 1024, "%s", v);
-    } else if (String_StartsWithCI(p, "Path=")) {
+    } else if (string_starts_with_ci(p, "Path=")) {
       char *v = p + 5;
       while (*v == ' ' || *v == '\t')
         v++;
@@ -1755,7 +1755,7 @@ bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
         snprintf(workdir, 1024, "%s", v);
     }
   }
-  StringList_Free(&lines);
+  string_list_free(&lines);
   return true;
 }
 
@@ -1785,7 +1785,7 @@ void x11_desktop_clean_exec(char exec_line[1024]) {
   char *e = s + strlen(s) - 1;
   while (e > s && (*e == ' ' || *e == '\t'))
     *e-- = '\0';
-  SafeCopy(exec_line, 1024, s);
+  safe_copy(exec_line, 1024, s);
 }
 
 bool x11_exe_in_path(const char *name) {

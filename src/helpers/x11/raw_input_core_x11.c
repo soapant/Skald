@@ -185,9 +185,9 @@ static void x11_queue_mouse_event(struct input_event *ev) {
   }
   bool down = (ev->value != 0);
   bool repeat = (ev->value == 2);
-  bool was_down = Input_MouseStateDown(btn);
+  bool was_down = input_mouse_state_down(btn);
   if (down && was_down && !repeat) {
-    Input_UpdateMouseButton(btn, false);
+    input_update_mouse_button(btn, false);
     int rmx = 0, rmy = 0;
     Platform_GetMousePos(&rmx, &rmy);
     PlatformMouseEvent rev;
@@ -198,11 +198,11 @@ static void x11_queue_mouse_event(struct input_event *ev) {
     rev.down = false;
     rev.repeat = false;
     rev.t_us = 0;
-    GlobalMouse_Push(&rev);
+    global_mouse_push(&rev);
   }
-  Input_UpdateMouseButton(btn, down);
+  input_update_mouse_button(btn, down);
   if (!down && btn > 0 && btn <= MOUSE_BTN_MAX) {
-    Hotkey_KeyUp(MOUSE_VK(btn));
+    hotkey_key_up(MOUSE_VK(btn));
   }
   int mx = 0, my = 0;
   Platform_GetMousePos(&mx, &my);
@@ -214,7 +214,7 @@ static void x11_queue_mouse_event(struct input_event *ev) {
   mev.down = down;
   mev.repeat = repeat;
   mev.t_us = 0;
-  GlobalMouse_Push(&mev);
+  global_mouse_push(&mev);
   if (down && !repeat && btn > 0 && btn <= MOUSE_BTN_MAX) {
     long long now_ms =
         (long long)ev->time.tv_sec * 1000LL + ev->time.tv_usec / 1000LL;
@@ -222,7 +222,7 @@ static void x11_queue_mouse_event(struct input_event *ev) {
     bool stale = (now_ms - x11_mouse_last_fire_ms[btn]) > 200;
     if (rising || stale) {
       x11_mouse_last_fire_ms[btn] = now_ms;
-      Hotkey_Process(MOUSE_VK(btn), mev.mods);
+      hotkey_process(MOUSE_VK(btn), mev.mods);
     }
   }
 }
@@ -549,7 +549,7 @@ void x11_mouse_forward(const struct input_event *ev, int grabbed) {
     return;
   if (ev->type == EV_KEY) {
     int btn = x11_linux_button_to_mouse(ev->code);
-    if (btn > 0 && Hotkey_MouseButtonBound(btn))
+    if (btn > 0 && hotkey_mouse_button_bound(btn))
       return;
   }
   if (write(x11_uinput_mouse_fd, ev, sizeof(*ev)) < 0) {
@@ -642,12 +642,12 @@ void x11_scan_keyboards(void) {
       }
       if (is_kb && x11_keyboard_count < X11_MAX_KEYBOARDS) {
         x11_keyboards[x11_keyboard_count].fd = fd;
-        SafeCopy(x11_keyboards[x11_keyboard_count].path,
+        safe_copy(x11_keyboards[x11_keyboard_count].path,
                  sizeof(x11_keyboards[x11_keyboard_count].path), full_path);
         x11_keyboard_count++;
       } else if (is_mouse && x11_mouse_count < X11_MAX_MICE) {
         x11_mice[x11_mouse_count].fd = fd;
-        SafeCopy(x11_mice[x11_mouse_count].path,
+        safe_copy(x11_mice[x11_mouse_count].path,
                  sizeof(x11_mice[x11_mouse_count].path), full_path);
         x11_mouse_count++;
       } else if (x11_rejected_count < X11_REJECTED_MAX) {
@@ -912,14 +912,14 @@ void x11_set_suppress(int linux_code, bool v) {
 bool x11_handle_global_key(int key_code, int value) {
   remap_update_phys(x11_convert_key_to_windows_vk(key_code), value);
   if (value == 0) {
-    Hotkey_KeyUp(x11_convert_key_to_windows_vk(key_code));
+    hotkey_key_up(x11_convert_key_to_windows_vk(key_code));
     return false;
   }
   if (value != 1 && value != 2)
     return false;
   int pressed_vk = x11_convert_key_to_windows_vk(key_code);
   int modifiers = remap_current_mods();
-  bool processed = Hotkey_Process(pressed_vk, modifiers);
+  bool processed = hotkey_process(pressed_vk, modifiers);
   if (pressed_vk && processed) {
     pending_hotkey_vk = pressed_vk;
     pending_hotkey_mod = modifiers;
@@ -967,9 +967,9 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   }
   if (val == 0) {
     int vk0 = x11_convert_key_to_windows_vk(code);
-    Hotkey_KeyUp(vk0);
+    hotkey_key_up(vk0);
     if (vk0)
-      InputState_Update(vk0, false, remap_current_mods(), 0);
+      input_state_update(vk0, false, remap_current_mods(), 0);
   }
   if (val != 2) {
     remap_update_phys(x11_convert_key_to_windows_vk(code), val);
@@ -981,7 +981,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     gev.mods = remap_current_mods();
     gev.down = val != 0;
     gev.repeat = (val == 2);
-    GlobalKey_Push(&gev);
+    global_key_push(&gev);
   }
   if (val == 0 && x11_is_suppressed(code)) {
     x11_set_suppress(code, false);
@@ -1019,7 +1019,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
         }
       }
       if (grabbed && x11_uinput_fd >= 0) {
-        if (Snippet_FeedVk(x11_convert_key_to_windows_vk(code), val, true))
+        if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
           return false;
         x11_uinput_emit(ev);
       }
@@ -1039,10 +1039,10 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   if (grabbed) {
     if (x11_uinput_fd >= 0) {
       if ((val == 1 || val == 2) &&
-          Hotkey_Process(x11_convert_key_to_windows_vk(code),
+          hotkey_process(x11_convert_key_to_windows_vk(code),
                          remap_current_mods()))
         return true;
-      if (Snippet_FeedVk(x11_convert_key_to_windows_vk(code), val, true))
+      if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
         return false;
       x11_uinput_emit(ev);
     } else {
@@ -1053,7 +1053,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       }
     }
   } else {
-    Snippet_FeedVk(x11_convert_key_to_windows_vk(code), val, false);
+    snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, false);
   }
   return false;
 }

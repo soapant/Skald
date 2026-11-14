@@ -15,7 +15,7 @@
 
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
-  if (!TerminalGuard(working_dir, extra_args))
+  if (!terminal_guard(working_dir, extra_args))
     return false;
 
   X11SessionEnv env;
@@ -154,7 +154,7 @@ char *Platform_RunCommandAndGetOutput(const char *command) {
   return output;
 }
 
-static char *Platform_RunCommandDetachedCapture(const char *command) {
+static char *x11_run_command_detached_capture(const char *command) {
 
   if (!command || !*command) {
     log_error("capture: null/empty command");
@@ -430,7 +430,7 @@ char *Platform_RunTerminalCommand(const char *command, bool open_terminal) {
   const char *real_home = Platform_GetRealHome();
 
   if (!open_terminal) {
-    return Platform_RunCommandDetachedCapture(command);
+    return x11_run_command_detached_capture(command);
   }
 
   char temp_file[MAX_PATH];
@@ -547,7 +547,7 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
   *outHeight = totalHeight;
 }
 
-bool Platform_FocusWindow(const char *title) { return Wm_FocusByTitle(title); }
+bool Platform_FocusWindow(const char *title) { return wm_focus_by_title(title); }
 
 WindowHandle Platform_GetWindowByTitle(const char *title) {
   WindowHandle h = WH_NULL;
@@ -621,35 +621,35 @@ bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
   return true;
 }
 
-bool Platform_CloseActiveWindow(void) { return Wm_CloseActiveWindow(); }
+bool Platform_CloseActiveWindow(void) { return wm_close_active_window(); }
 
 bool Platform_ToggleFullscreenActive(void) {
-  return Wm_ToggleFullscreenActive();
+  return wm_toggle_fullscreen_active();
 }
 
 bool Platform_MoveActiveWindowToMonitor(bool right) {
-  return Wm_MoveActiveWindowToMonitor(right);
+  return wm_move_active_window_to_monitor(right);
 }
 
-bool Platform_MoveActiveWindowLeft(void) { return Wm_MoveActiveWindowLeft(); }
+bool Platform_MoveActiveWindowLeft(void) { return wm_move_active_window_left(); }
 
-bool Platform_MoveActiveWindowRight(void) { return Wm_MoveActiveWindowRight(); }
+bool Platform_MoveActiveWindowRight(void) { return wm_move_active_window_right(); }
 
-bool Platform_MoveActiveWindowUp(void) { return Wm_MoveActiveWindowUp(); }
+bool Platform_MoveActiveWindowUp(void) { return wm_move_active_window_up(); }
 
-bool Platform_MoveActiveWindowDown(void) { return Wm_MoveActiveWindowDown(); }
+bool Platform_MoveActiveWindowDown(void) { return wm_move_active_window_down(); }
 
-bool Platform_FocusWindowLeft(void) { return Wm_FocusWindowLeft(); }
+bool Platform_FocusWindowLeft(void) { return wm_focus_window_left(); }
 
-bool Platform_FocusWindowRight(void) { return Wm_FocusWindowRight(); }
+bool Platform_FocusWindowRight(void) { return wm_focus_window_right(); }
 
-bool Platform_FocusWindowUp(void) { return Wm_FocusWindowUp(); }
+bool Platform_FocusWindowUp(void) { return wm_focus_window_up(); }
 
-bool Platform_FocusWindowDown(void) { return Wm_FocusWindowDown(); }
+bool Platform_FocusWindowDown(void) { return wm_focus_window_down(); }
 
-bool Platform_MinimizeActiveWindow(void) { return Wm_MinimizeActiveWindow(); }
+bool Platform_MinimizeActiveWindow(void) { return wm_minimize_active_window(); }
 
-char *Platform_GetActiveWindowTitle(void) { return Wm_GetActiveWindowTitle(); }
+char *Platform_GetActiveWindowTitle(void) { return wm_get_active_window_title(); }
 
 int Platform_GetIconSize(char *icon_path) {
   if (strstr(icon_path, "32x32")) {
@@ -682,7 +682,7 @@ static int icon_cache_count = 0;
 static bool icon_cache_loaded = false;
 
 static bool icon_cache_path(char *out, size_t n) {
-  return FeaturePath_Get("core", "icon_cache.txt", out, n);
+  return feature_path_get("core", "icon_cache.txt", out, n);
 }
 
 static void icon_cache_load(void) {
@@ -696,7 +696,7 @@ static void icon_cache_load(void) {
   if (!icon_cache_path(cf, sizeof(cf))) {
     return;
   }
-  if (File_ReadAll(cf, content, (long)sizeof(content)) <= 0) {
+  if (file_read_all(cf, content, (long)sizeof(content)) <= 0) {
     return;
   }
   char *cur = content;
@@ -711,8 +711,8 @@ static void icon_cache_load(void) {
     if (!eq)
       continue;
     *eq = '\0';
-    SafeCopy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key), line);
-    SafeCopy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
+    safe_copy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key), line);
+    safe_copy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
              eq + 1);
     if (access(icon_cache[icon_cache_count].value, F_OK) == 0)
       icon_cache_count++;
@@ -739,8 +739,8 @@ static void icon_cache_set(const char *key, const char *value) {
   if (icon_cache_count >= MAX_ICON_CACHE) {
     return;
   }
-  SafeCopy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key), key);
-  SafeCopy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
+  safe_copy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key), key);
+  safe_copy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
            value);
   icon_cache_count++;
   char cf[1024];
@@ -785,7 +785,7 @@ static char *x11_icon_try_sizes(const char *bare, const char *dir,
   return NULL;
 }
 
-char *Platform_GetActiveWindowAppId(void) { return Wm_GetActiveWindowAppId(); }
+char *Platform_GetActiveWindowAppId(void) { return wm_get_active_window_app_id(); }
 
 char *Platform_GetIconPath(char *app_path) {
   if (!app_path) {
@@ -808,7 +808,7 @@ char *Platform_GetIconPath(char *app_path) {
         char *p = line;
         while (*p == ' ' || *p == '\t')
           p++;
-        if (String_ContainsCI(p, "Icon=")) {
+        if (string_contains_ci(p, "Icon=")) {
           p = strchr(p, '=');
           if (p) {
             p++;
@@ -818,14 +818,14 @@ char *Platform_GetIconPath(char *app_path) {
           char *end = strpbrk(p, " \r\n#");
           if (end)
             *end = '\0';
-          SafeCopy(icon_name, sizeof(icon_name), p);
+          safe_copy(icon_name, sizeof(icon_name), p);
           break;
         }
       }
       fclose(f);
     }
   } else {
-    SafeCopy(icon_name, sizeof(icon_name), app_path);
+    safe_copy(icon_name, sizeof(icon_name), app_path);
   }
   if (icon_name[0] == '/' && access(icon_name, F_OK) == 0) {
     if (strstr(icon_name, ".png") || strstr(icon_name, ".svg") ||
@@ -833,7 +833,7 @@ char *Platform_GetIconPath(char *app_path) {
       return strdup(icon_name);
   }
   char bare[512];
-  SafeCopy(bare, sizeof(bare), icon_name);
+  safe_copy(bare, sizeof(bare), icon_name);
   char *dot = strrchr(bare, '.');
   if (dot && (strcmp(dot, ".png") == 0 || strcmp(dot, ".svg") == 0 ||
               strcmp(dot, ".xpm") == 0))
@@ -865,7 +865,7 @@ char *Platform_GetIconPath(char *app_path) {
     const char *xdg = getenv("XDG_DATA_DIRS");
     char xdg_dirs[1024] = {0};
     if (xdg && xdg[0]) {
-      SafeCopy(xdg_dirs, sizeof(xdg_dirs), xdg);
+      safe_copy(xdg_dirs, sizeof(xdg_dirs), xdg);
     } else {
       snprintf(xdg_dirs, sizeof(xdg_dirs), "/usr/local/share:/usr/share");
     }
@@ -1613,7 +1613,7 @@ char *Platform_HttpPost(const char *url, const char *content_type,
   return out;
 }
 
-static size_t Platform_http_write_file_cb(char *ptr, size_t sz, size_t nm,
+static size_t x11_http_write_file_cb(char *ptr, size_t sz, size_t nm,
                                           void *userdata) {
   return fwrite(ptr, sz, nm, (FILE *)userdata);
 }
@@ -1635,7 +1635,7 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   }
   curl_easy_setopt(c, CURLOPT_URL, url);
   curl_easy_setopt(c, CURLOPT_WRITEFUNCTION,
-                   (curl_write_callback)Platform_http_write_file_cb);
+                   (curl_write_callback)x11_http_write_file_cb);
   curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)f);
   http_setopt_common(c);
   CURLcode res = curl_easy_perform(c);
@@ -1745,7 +1745,7 @@ void Platform_InvalidatePrompt(void) {
   }
 }
 
-bool Platform_InjectKey(int vk, int down) { return Wm_InjectKey(vk, down); }
+bool Platform_InjectKey(int vk, int down) { return wm_inject_key(vk, down); }
 
 static bool x11_http_thread_start(void *(*fn)(void *), void *ud) {
   pthread_t thread;
@@ -1772,11 +1772,11 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
     return;
   }
   job->owner[0] = '\0';
-  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
-  ThreadRegistry_Add(job, job->owner);
+  owner_resolve_for_func((void *)cb, job->owner, sizeof(job->owner));
+  thread_registry_add(job, job->owner);
 
-  if (!x11_http_thread_start(HttpAsyncWorker, job)) {
-    ThreadRegistry_Finish(job);
+  if (!x11_http_thread_start(http_async_worker, job)) {
+    thread_registry_finish(job);
     free(job->url);
     free(job);
     log_warn("http async thread create failed");
@@ -1785,7 +1785,7 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
   int mx = 0, my = 0;
-  if (!Wm_GetMousePos(&mx, &my))
+  if (!wm_get_mouse_pos(&mx, &my))
     return false;
   if (out_x)
     *out_x = mx;
@@ -2072,7 +2072,7 @@ char *Platform_FindExecutable(const char *name) {
 
   if (strchr(name, '/')) {
     char expanded[4096];
-    if (!ExpandPath(name, expanded, sizeof(expanded)))
+    if (!expand_path(name, expanded, sizeof(expanded)))
       return NULL;
     if (x11_lookup_is_exec(expanded))
       return strdup(expanded);

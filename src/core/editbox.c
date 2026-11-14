@@ -22,7 +22,7 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
       .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
 }
 
-void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
+void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
                           int fontsize, PromptState *state, EditboxPlace *out) {
   if (!out)
     return;
@@ -35,7 +35,7 @@ void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
   if (w <= 0)
     w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
   if (h <= 0)
-    h = PromptCustomEditHeight();
+    h = prompt_custom_edit_height();
   out->x = x;
   out->w = w;
   out->h = h;
@@ -51,7 +51,7 @@ void Editbox_ResolvePlace(const char *buffer, int x, int y, int w, int h,
   out->y_raw = y == 0 ? PROMPT_EDIT_INSET : y;
 }
 
-void Editbox_InitFromSpec(EditboxInit *out, const EditboxInitFromSpec *args) {
+void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args) {
   if (!out || !args)
     return;
   memset(out, 0, sizeof(*out));
@@ -68,9 +68,9 @@ void Editbox_InitFromSpec(EditboxInit *out, const EditboxInitFromSpec *args) {
   out->ascent = args->ascent;
   out->descent = args->descent;
   out->text_color =
-      args->text_color ? RgbToHex(args->text_color) : RgbToHex(COLOR_TEXT);
+      args->text_color ? rgb_to_hex(args->text_color) : rgb_to_hex(COLOR_TEXT);
   out->bg_color =
-      args->bg_color ? RgbToHex(args->bg_color) : RgbToHex(COLOR_BG);
+      args->bg_color ? rgb_to_hex(args->bg_color) : rgb_to_hex(COLOR_BG);
   out->placeholder = args->placeholder;
   out->caret_height = args->caret_height;
   out->caret_width = args->caret_width;
@@ -81,7 +81,7 @@ void Editbox_InitFromSpec(EditboxInit *out, const EditboxInitFromSpec *args) {
   out->font = args->font;
 }
 
-void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
+void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   if (!out || !in)
     return;
   memset(out, 0, sizeof(*out));
@@ -98,12 +98,12 @@ void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
   out->cursor_x = in->cursor_x;
   out->text_w = in->text_w;
   out->text_y = in->y;
-  int caret_auto_y = Editbox_CaretY(in->y, in->ascent, in->descent,
+  int caret_auto_y = editbox_caret_y(in->y, in->ascent, in->descent,
                                     in->fontsize > 0 ? in->fontsize : FontSize);
   out->caret_y = in->caret_y > 0 ? in->caret_y : caret_auto_y;
   out->fontsize = in->fontsize > 0 ? in->fontsize : FontSize;
   out->caret_height =
-      in->caret_height > 0 ? in->caret_height : PromptCaretHeight();
+      in->caret_height > 0 ? in->caret_height : prompt_caret_height();
   out->caret_width = in->caret_width;
   out->caret_x = in->caret_x;
   out->caret_pos = in->caret_pos;
@@ -116,11 +116,11 @@ void Editbox_BuildSpec(EditboxSpec *out, const EditboxInit *in) {
   out->text_color = in->text_color;
   out->bg_color = in->bg_color;
   out->font = in->font;
-  Editbox_ResolveSelection(in->state, in->text_len, true, &out->sel_start,
+  editbox_resolve_selection(in->state, in->text_len, true, &out->sel_start,
                            &out->sel_end, &out->has_selection);
 }
 
-int Editbox_CaretY(int box_top, int ascent, int descent, int fontsize) {
+int editbox_caret_y(int box_top, int ascent, int descent, int fontsize) {
   int line_h = ascent + descent;
   int fs = fontsize > 0 ? fontsize : FontSize;
   if (line_h <= 0 || fs <= 0)
@@ -128,14 +128,14 @@ int Editbox_CaretY(int box_top, int ascent, int descent, int fontsize) {
   return box_top + (line_h - fs) / 2 + (PROMPT_DEADCURSOR_Y / 4);
 }
 
-void EditboxSpec_FillFromPrompt(EditboxSpec *spec, PromptState *state,
+void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                 int text_len, int cursor_x, int text_w,
                                 int ascent, int descent, FontHandle font) {
   if (!spec || !state)
     return;
   int sel_start = 0, sel_end = 0;
   bool has_sel = false;
-  Editbox_ResolveSelection(state, text_len, true, &sel_start, &sel_end,
+  editbox_resolve_selection(state, text_len, true, &sel_start, &sel_end,
                            &has_sel);
   memset(spec, 0, sizeof(*spec));
   spec->text = state->eb->filter;
@@ -164,16 +164,16 @@ void EditboxSpec_FillFromPrompt(EditboxSpec *spec, PromptState *state,
   spec->cursor_x = cursor_x;
   spec->text_w = text_w;
   spec->text_y = edit_y;
-  spec->caret_y = Editbox_CaretY(edit_y, ascent, descent, FontSize);
-  spec->caret_h = PromptCaretHeight();
+  spec->caret_y = editbox_caret_y(edit_y, ascent, descent, FontSize);
+  spec->caret_h = prompt_caret_height();
   spec->placeholder_dy = 2;
   spec->rainbow_limit_x = -1;
   spec->placeholder = state->eb->placeholder;
-  spec->text_color = RgbToHex(COLOR_TEXT);
+  spec->text_color = rgb_to_hex(COLOR_TEXT);
   spec->font = font;
 }
 
-void Editbox_ResolveSelection(PromptState *state, int text_len,
+void editbox_resolve_selection(PromptState *state, int text_len,
                               bool prefer_state, int *out_start, int *out_end,
                               bool *out_has) {
   int sel_start = 0;
@@ -185,7 +185,7 @@ void Editbox_ResolveSelection(PromptState *state, int text_len,
     sel_end = state->eb->sel_end;
     has = true;
   } else {
-    has = EditState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+    has = edit_state_get_selection(&sel_start, &sel_end) && text_len > 0;
   }
   if (out_start)
     *out_start = sel_start;
@@ -195,7 +195,7 @@ void Editbox_ResolveSelection(PromptState *state, int text_len,
     *out_has = has;
 }
 
-int Editbox_ScrollOffset(const EditboxSpec *spec) {
+int editbox_scroll_offset(const EditboxSpec *spec) {
   if (!spec)
     return 0;
   int visible_w = spec->visible_w;
@@ -228,14 +228,14 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
   int text_len = spec->text_len;
   int nchars = 0;
   for (int p = 0; p < text_len;) {
-    int cl = Utf8_LeadLen((unsigned char)spec->text[p]);
+    int cl = utf8_lead_len((unsigned char)spec->text[p]);
     p += cl;
     nchars++;
   }
   int ci = 0;
   size_t pos = 0;
   while (pos < (size_t)text_len) {
-    int cl = Utf8_LeadLen((unsigned char)spec->text[pos]);
+    int cl = utf8_lead_len((unsigned char)spec->text[pos]);
     if (pos + (size_t)cl > (size_t)text_len)
       cl = (int)((size_t)text_len - pos);
     char buf[8];
@@ -263,7 +263,7 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
   }
 }
 
-void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
+void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
   if (!spec) {
     return;
   }
@@ -271,17 +271,17 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
   EditboxLayout layout;
   memset(&layout, 0, sizeof(layout));
 
-  int scroll = Editbox_ScrollOffset(spec);
+  int scroll = editbox_scroll_offset(spec);
   spec->scroll = scroll;
   layout.scroll = scroll;
 
   int draw_x = spec->x + spec->inset - scroll;
   int cursor_draw_x = spec->x + spec->inset + spec->cursor_x - scroll;
   if (spec->align && spec->text_w > 0 && spec->text_w <= spec->w - 20) {
-    if (String_ContainsCI(spec->align, "CENTER")) {
+    if (string_contains_ci(spec->align, "CENTER")) {
       draw_x = (spec->w - spec->text_w) / 2;
       cursor_draw_x = draw_x + spec->cursor_x;
-    } else if (String_ContainsCI(spec->align, "RIGHT")) {
+    } else if (string_contains_ci(spec->align, "RIGHT")) {
       draw_x = spec->w - spec->inset - spec->text_w;
       cursor_draw_x = draw_x + spec->cursor_x;
     }
@@ -292,7 +292,7 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
   int lo = spec->x + PROMPT_CARET_LO_CLAMP;
   int hi = spec->x + spec->w - PROMPT_CARET_HI_CLAMP;
   int caret_w = spec->caret_width > 0 ? spec->caret_width : 1;
-  const PlMetrics *metrics = Metrics_Get();
+  const PlMetrics *metrics = metrics_get();
   if (spec->caret_width <= 0 && metrics && metrics->edit_cursor_width > 0)
     caret_w = metrics->edit_cursor_width;
 
@@ -344,16 +344,16 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
     *out = layout;
 }
 
-void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
+void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                   int parts) {
 
   if (!spec || !layout) {
     return;
   }
-  unsigned long bg = spec->bg_color ? spec->bg_color : RgbToHex(COLOR_BG);
+  unsigned long bg = spec->bg_color ? spec->bg_color : rgb_to_hex(COLOR_BG);
 
   if (parts & EDITBOX_PART_TINT) {
-    unsigned long tint = Color_Lerp(bg, RgbToHex(COLOR_CURSOR), 0.72f);
+    unsigned long tint = color_lerp(bg, rgb_to_hex(COLOR_CURSOR), 0.72f);
     if (layout->draw_selection) {
       Platform_DrawRectRaw(
           (PlDrawRectRawSpec){.x = layout->sel_x0,
@@ -387,7 +387,7 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
       }
     } else if (spec->placeholder && spec->placeholder[0]) {
       unsigned long ph =
-          Color_Lerp(RgbToHex(COLOR_BG), RgbToHex(COLOR_TEXT), 0.45f);
+          color_lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
       Platform_DrawTextRaw(
           (PlDrawTextRawSpec){.x = layout->draw_x,
                               .y = spec->text_y + spec->placeholder_dy,
@@ -408,7 +408,7 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
                                              .y = spec->caret_y,
                                              .w = layout->caret_w,
                                              .h = spec->caret_h,
-                                             .color = RgbToHex(COLOR_CURSOR),
+                                             .color = rgb_to_hex(COLOR_CURSOR),
                                              .radius = 0,
                                              .rounded = false,
                                              .opaque = true,
@@ -448,13 +448,13 @@ void Editbox_Draw(const EditboxSpec *spec, const EditboxLayout *layout,
   }
 }
 
-void Editbox_Render(EditboxSpec *spec, EditboxLayout *out) {
+void editbox_render(EditboxSpec *spec, EditboxLayout *out) {
   if (!spec) {
     return;
   }
   EditboxLayout layout;
-  Editbox_Layout(spec, &layout);
-  Editbox_Draw(spec, &layout, EDITBOX_PART_ALL);
+  editbox_layout(spec, &layout);
+  editbox_draw(spec, &layout, EDITBOX_PART_ALL);
   if (out)
     *out = layout;
 }

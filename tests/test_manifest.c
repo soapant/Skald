@@ -9,46 +9,46 @@
 TEST(trim_strips_surrounding_whitespace) {
   char s1[32];
   strcpy(s1, "   hello   ");
-  Manifest_Trim(s1);
+  manifest_trim(s1);
   ASSERT_EQ_STR(s1, "hello");
 
   char s2[64];
   strcpy(s2, "\t  answer\r\n");
-  Manifest_Trim(s2);
+  manifest_trim(s2);
   ASSERT_EQ_STR(s2, "answer");
 
   char s3[32];
   strcpy(s3, "\t\t spaced \t\t");
-  Manifest_Trim(s3);
+  manifest_trim(s3);
   ASSERT_EQ_STR(s3, "spaced");
 }
 
 TEST(unquote_strips_comments) {
   char s1[64];
   strcpy(s1, "value # the rest is gone");
-  Manifest_Unquote(s1);
+  manifest_unquote(s1);
   ASSERT_EQ_STR(s1, "value");
 
   char s2[64];
   strcpy(s2, "\"quoted\" # comment");
-  Manifest_Unquote(s2);
+  manifest_unquote(s2);
   ASSERT_EQ_STR(s2, "quoted");
 }
 
 TEST(unquote_strips_matching_quotes) {
   char s1[64];
   strcpy(s1, "\"hello\"");
-  Manifest_Unquote(s1);
+  manifest_unquote(s1);
   ASSERT_EQ_STR(s1, "hello");
 
   char s2[64];
   strcpy(s2, "'world'");
-  Manifest_Unquote(s2);
+  manifest_unquote(s2);
   ASSERT_EQ_STR(s2, "world");
 
   char s3[64];
   strcpy(s3, "\"unbalanced");
-  Manifest_Unquote(s3);
+  manifest_unquote(s3);
   ASSERT_EQ_STR(s3, "\"unbalanced");
 }
 
@@ -62,7 +62,7 @@ TEST(parse_minimal_manifest) {
                      "[depends]\n"
                      "control_center\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("myfeature", data, &m));
+  ASSERT_TRUE(manifest_parse_string("myfeature", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_STR(m.name, "myfeature");
   ASSERT_EQ_INT(m.provide_count, 1);
@@ -74,7 +74,7 @@ TEST(parse_minimal_manifest) {
 TEST(parse_name_key_overrides_default) {
   const char *data = "name = \"renamed\"\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("original", data, &m));
+  ASSERT_TRUE(manifest_parse_string("original", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_STR(m.name, "renamed");
 }
@@ -82,7 +82,7 @@ TEST(parse_name_key_overrides_default) {
 TEST(parse_crlf_line_endings) {
   const char *data = "name = \"crlf\"\r\n[provides]\r\ncap.one\r\ncap.two\r\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("crlf", data, &m));
+  ASSERT_TRUE(manifest_parse_string("crlf", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.provide_count, 2);
   ASSERT_EQ_STR(m.provides[0], "cap.one");
@@ -92,7 +92,7 @@ TEST(parse_crlf_line_endings) {
 TEST(parse_missing_trailing_newline) {
   const char *data = "[depends]\ncontrol_center";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.dep_count, 1);
   ASSERT_EQ_STR(m.deps[0], "control_center");
@@ -105,7 +105,7 @@ TEST(parse_comments_and_blank_lines_ignored) {
                      "control_center # inline comment\n"
                      "# another comment\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.dep_count, 1);
   ASSERT_EQ_STR(m.deps[0], "control_center");
@@ -114,7 +114,7 @@ TEST(parse_comments_and_blank_lines_ignored) {
 TEST(parse_provides_before_or_after_depends) {
   const char *data = "[depends]\ndep_a\n[provides]\nprov_a\n[depends]\ndep_b\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.dep_count, 2);
   ASSERT_EQ_STR(m.deps[0], "dep_a");
@@ -126,54 +126,54 @@ TEST(parse_provides_before_or_after_depends) {
 TEST(unquote_keeps_hash_inside_quotes) {
   char s1[64];
   strcpy(s1, "\"value # not a comment\"");
-  Manifest_Unquote(s1);
+  manifest_unquote(s1);
   ASSERT_EQ_STR(s1, "value # not a comment");
 
   char s2[64];
   strcpy(s2, "'keep # also kept'");
-  Manifest_Unquote(s2);
+  manifest_unquote(s2);
   ASSERT_EQ_STR(s2, "keep # also kept");
 }
 
 TEST(parse_quoted_hash_is_not_a_comment) {
   const char *data = "description = \"runs # not a comment\"\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
 }
 
 TEST(parse_unterminated_section_is_invalid) {
   const char *data = "[provides\ncap.one\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_FALSE(m.valid);
 }
 
 TEST(parse_unterminated_value_quote_is_invalid) {
   const char *data = "description = \"unterminated\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_FALSE(m.valid);
 }
 
 TEST(parse_empty_key_is_invalid) {
   const char *data = "= \"no key\"\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_FALSE(m.valid);
 }
 
 TEST(parse_binary_garbage_is_invalid) {
   const char *data = "\x01\x02\x03\x04\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_FALSE(m.valid);
 }
 
 TEST(parse_unknown_sections_ignored) {
   const char *data = "[other]\nnot_a_dep\n[depends]\nreal_dep\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.dep_count, 1);
   ASSERT_EQ_STR(m.deps[0], "real_dep");
@@ -182,7 +182,7 @@ TEST(parse_unknown_sections_ignored) {
 TEST(parse_key_value_line_resets_section) {
   const char *data = "[depends]\nsome = value\nreal_dep\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.dep_count, 0);
 }
@@ -201,14 +201,14 @@ TEST(parse_depends_cap_at_max) {
     off += (size_t)written;
   }
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.dep_count, MANIFEST_LIST_MAX);
 }
 
 TEST(parse_empty_data_is_valid_with_zero_counts) {
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", "", &m));
+  ASSERT_TRUE(manifest_parse_string("x", "", &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.dep_count, 0);
   ASSERT_EQ_INT(m.provide_count, 0);
@@ -216,7 +216,7 @@ TEST(parse_empty_data_is_valid_with_zero_counts) {
 
 TEST(parse_null_data_returns_false) {
   FeatureManifest m;
-  ASSERT_FALSE(Manifest_ParseString("x", NULL, &m));
+  ASSERT_FALSE(manifest_parse_string("x", NULL, &m));
 }
 
 TEST(parse_full_baseline_file) {
@@ -228,7 +228,7 @@ TEST(parse_full_baseline_file) {
                      "[depends]\n"
                      "control_center\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("quicklink", data, &m));
+  ASSERT_TRUE(manifest_parse_string("quicklink", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_STR(m.name, "quicklink");
   ASSERT_EQ_INT(m.dep_count, 1);
@@ -238,7 +238,7 @@ TEST(parse_full_baseline_file) {
 TEST(parse_file_missing_returns_false_and_invalid) {
   FeatureManifest m;
   memset(&m, 0xAB, sizeof(m));
-  ASSERT_FALSE(Manifest_ParseFile("definitely-not-here-skald-test-abc123.toml",
+  ASSERT_FALSE(manifest_parse_file("definitely-not-here-skald-test-abc123.toml",
                                   "x", &m));
   ASSERT_FALSE(m.valid);
   ASSERT_EQ_STR(m.name, "x");
@@ -255,7 +255,7 @@ TEST(parse_file_roundtrip) {
   fclose(f);
 
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseFile(path, "roundtrip", &m));
+  ASSERT_TRUE(manifest_parse_file(path, "roundtrip", &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_STR(m.name, "roundtrip");
   ASSERT_EQ_INT(m.provide_count, 1);
@@ -268,7 +268,7 @@ TEST(parse_file_roundtrip) {
 TEST(parse_comment_inside_depends_would_strip_hash) {
   const char *data = "[depends]\ndep#one\n";
   FeatureManifest m;
-  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
   ASSERT_EQ_INT(m.dep_count, 1);
   ASSERT_EQ_STR(m.deps[0], "dep");

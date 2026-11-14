@@ -13,7 +13,7 @@
 #include "helpers/helpers_text.h"
 #include "core/listbox_hover.h"
 
-bool IsPopupActive(WindowHandle hPopupWnd) {
+bool is_popup_active(WindowHandle hPopupWnd) {
   (void)hPopupWnd;
   return WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) != NULL &&
          IsWindow(WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd));
@@ -105,7 +105,7 @@ void UI_SetText(const char *text) {
   if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) {
     return;
   }
-  SafeCopy(t.text, t.capacity, text);
+  safe_copy(t.text, t.capacity, text);
   UI_SetCursorPosition((int)strlen(t.text));
   if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
     UI_RequestPopupRepaint();
@@ -213,7 +213,7 @@ int UI_InsertChar(wchar_t wc) {
 PromptState *win32_prompt_state_from_hwnd(HWND hwnd) {
   HWND cur = hwnd;
   for (int depth = 0; cur && depth < 8; depth++) {
-    Popup *p = PromptPopup_FindPopupByHandle(WH_FROM_HWND(cur));
+    Popup *p = prompt_popup_find_popup_by_handle(WH_FROM_HWND(cur));
     if (p && p->user_data)
       return (PromptState *)p->user_data;
     HWND next = GetParent(cur);
@@ -221,19 +221,19 @@ PromptState *win32_prompt_state_from_hwnd(HWND hwnd) {
       break;
     cur = next;
   }
-  return PromptPopup_GetTopPromptState();
+  return prompt_popup_get_top_prompt_state();
 }
 
 void UI_SyncFilterFromEdit(void) {}
 
 void UI_ApplyFilterToEdit(void) {
-  PromptState *prompt = PromptPopup_GetTopPromptState();
+  PromptState *prompt = prompt_popup_get_top_prompt_state();
   if (prompt && prompt->eb)
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
 }
 
 ListBoxInfo *UI_GetPopupListBox(void) {
-  const PromptState *prompt = PromptPopup_GetTopPromptState();
+  const PromptState *prompt = prompt_popup_get_top_prompt_state();
   return prompt ? prompt->lb : NULL;
 }
 

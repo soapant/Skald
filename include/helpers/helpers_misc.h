@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 
-void *HttpAsyncWorker(void *arg);
+void *http_async_worker(void *arg);
 
-bool IsSafeProcessName(const char *name);
+bool is_safe_process_name(const char *name);
 
 #endif

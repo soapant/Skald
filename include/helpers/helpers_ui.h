@@ -8,20 +8,20 @@
 #include "platform/draw.h"
 #include "platform/platform.h"
 
-unsigned long RgbToHex(unsigned long win_color);
-unsigned short OpacityAlpha16(void);
+unsigned long rgb_to_hex(unsigned long win_color);
+unsigned short opacity_alpha16(void);
 
-unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
+unsigned int color_lerp(unsigned int a, unsigned int b, float t);
 
-bool Cover_Scale(int sw, int sh, int tw, int th, int *dw, int *dh);
+bool cover_scale(int sw, int sh, int tw, int th, int *dw, int *dh);
 
-int DrawThicknessPx(float thickness);
-void DrawMeasureTrack(int x, int y, int w, int h);
-int DrawLinePrep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
+int draw_thickness_px(float thickness);
+void draw_measure_track(int x, int y, int w, int h);
+int draw_line_prep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
                  int *y1, int *x2, int *y2);
-int DrawCirclePrep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
+int draw_circle_prep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
                    int *cx, int *cy);
-void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
+void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,
                      bool (*filter_match)(const char *item,
                                           const char *filter));
@@ -50,7 +50,7 @@ typedef enum {
 } MessageSlot;
 
 ColorRef GetRainbowColor(float t, float s, float v);
-void UpdateTextCaret(void);
+void update_text_caret(void);
 
 #define MSG_PROMPT_GAP_DEFAULT 300
 #define MSG_TIMEOUT_INDEFINITE 6969.0
@@ -68,34 +68,34 @@ typedef struct {
   int visible;
 } ListboxLayout;
 
-char *PromptUserRun(WindowManager *wm, const PromptSpec *spec);
-void Prompt_ProcessPendingSubwindow(void);
-bool TerminalGuard(const char *working_dir, const char *extra_args);
-PlMetrics *Metrics_Get(void);
-void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec);
-void Item_GetColors(PlGetItemColorsSpec spec);
-void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
+char *prompt_user_run(WindowManager *wm, const PromptSpec *spec);
+void prompt_process_pending_subwindow(void);
+bool terminal_guard(const char *working_dir, const char *extra_args);
+PlMetrics *metrics_get(void);
+void draw_prompt_separator(PlDrawPromptSeparatorSpec spec);
+void item_get_colors(PlGetItemColorsSpec spec);
+void listbox_compute_layout(const PlListSpec *spec, int default_y0, int item_h,
                            int popup_w, int popup_h, int count,
                            ListboxLayout *out);
 
-void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
+void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
                        int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,
                        int *out_gap, int *out_outward);
-void DisplayMessageSlot(const char *message, MessageSlot slot, int max_w,
+void display_message_slot(const char *message, MessageSlot slot, int max_w,
                         int max_h, int prompt_gap, double timeout,
                         ColorRef color, void (*render)(void), const char *name);
 
-void SetTransparentWindow(bool on);
-bool GetTransparentWindow(void);
-void SetDrawBgColor(unsigned long hex);
-unsigned long GetDrawBgColor(void);
-void BeginMeasure(void);
-void EndMeasure(int *out_w, int *out_h);
-void GetLastMeasureOrigin(int *out_x, int *out_y);
-void SetDrawOffset(int dx, int dy);
-void GetDrawOffset(int *out_x, int *out_y);
+void set_transparent_window(bool on);
+bool get_transparent_window(void);
+void set_draw_bg_color(unsigned long hex);
+unsigned long get_draw_bg_color(void);
+void begin_measure(void);
+void end_measure(int *out_w, int *out_h);
+void get_last_measure_origin(int *out_x, int *out_y);
+void set_draw_offset(int dx, int dy);
+void get_draw_offset(int *out_x, int *out_y);
 
-bool IsPopupActive(WindowHandle hPopupWnd);
+bool is_popup_active(WindowHandle hPopupWnd);
 void UI_SetSelection(ListBoxInfo *lb, int index);
 void UI_LB_SetCount(ListBoxInfo *lb, int count);
 void UI_LB_BeginUpdate(void);
@@ -128,13 +128,13 @@ int UI_InsertChar(wchar_t wc);
 #define UI_TICK_TIMER_ID 997
 #define UI_TICK_TIMER_MS 1000
 
-int BgTileLruPick(const void *slots, int count, size_t stride,
+int bg_tile_lru_pick(const void *slots, int count, size_t stride,
                   int (*is_empty)(const void *slot),
                   unsigned long (*stamp)(const void *slot));
 
-void DrawTextCenteredImpl(const PlDrawTextCenteredSpec *spec, int lineHeight);
-int MsgAnchorCenter(int rect, int rect_size, int slot, int gap, int outward,
+void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec, int lineHeight);
+int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,
                     int win_size);
-int MsgStackDir(int v_slot, bool outward);
+int msg_stack_dir(int v_slot, bool outward);
 
 #endif

@@ -12,28 +12,28 @@ char *wm_trim_focus_title(const char *title);
 
 #include "helpers/helpers_text.h"
 
-bool Wm_AppendWindowName(PlWindowList *list, const char *name,
+bool wm_append_window_name(PlWindowList *list, const char *name,
                          bool toupper_first);
 
-char *Wm_GetActiveWindowTitle(void);
-char *Wm_GetActiveWindowAppId(void);
-bool Wm_FocusByTitle(const char *title);
-char *Wm_Paste(const char *content);
+char *wm_get_active_window_title(void);
+char *wm_get_active_window_app_id(void);
+bool wm_focus_by_title(const char *title);
+char *wm_paste(const char *content);
 PlWindowList Wm_GetWindowTitles(void);
 PlWindowList Wm_GetWindowNames(void);
-bool Wm_CloseActiveWindow(void);
-bool Wm_ToggleFullscreenActive(void);
-bool Wm_MoveActiveWindowToMonitor(bool right);
-bool Wm_MoveActiveWindowLeft(void);
-bool Wm_MoveActiveWindowUp(void);
-bool Wm_MoveActiveWindowDown(void);
-bool Wm_MoveActiveWindowRight(void);
-bool Wm_FocusWindowLeft(void);
-bool Wm_FocusWindowUp(void);
-bool Wm_FocusWindowDown(void);
-bool Wm_FocusWindowRight(void);
-bool Wm_MinimizeActiveWindow(void);
-bool Wm_InjectKey(int vk, int down);
-bool Wm_GetMousePos(int *x, int *y);
+bool wm_close_active_window(void);
+bool wm_toggle_fullscreen_active(void);
+bool wm_move_active_window_to_monitor(bool right);
+bool wm_move_active_window_left(void);
+bool wm_move_active_window_up(void);
+bool wm_move_active_window_down(void);
+bool wm_move_active_window_right(void);
+bool wm_focus_window_left(void);
+bool wm_focus_window_up(void);
+bool wm_focus_window_down(void);
+bool wm_focus_window_right(void);
+bool wm_minimize_active_window(void);
+bool wm_inject_key(int vk, int down);
+bool wm_get_mouse_pos(int *x, int *y);
 
 #endif

@@ -94,32 +94,32 @@ struct Widget {
   bool hovered;
 };
 
-void Widget_PurgeOwner(const char *path_a, const char *path_b,
+void widget_purge_owner(const char *path_a, const char *path_b,
                        unsigned generation);
-bool Widget_OwnerActive(const char *path);
-unsigned Widget_BumpGeneration(void);
-unsigned Widget_CurrentGeneration(void);
+bool widget_owner_active(const char *path);
+unsigned widget_bump_generation(void);
+unsigned widget_current_generation(void);
 
-Widget *Widget_Create(const WidgetSpec *spec);
-void Widget_Destroy(Widget *widget);
-bool Widget_Valid(const Widget *widget);
+Widget *widget_create(const WidgetSpec *spec);
+void widget_destroy(Widget *widget);
+bool widget_valid(const Widget *widget);
 PlPos Widget_GetPos(const char *name);
-void Widget_Show(Widget *widget);
-void Widget_Hide(Widget *widget);
-void Widget_SetRender(Widget *widget, WidgetRenderFn render);
-void Widget_SetFps(PlatformWidget *window, int fps);
+void widget_show(Widget *widget);
+void widget_hide(Widget *widget);
+void widget_set_render(Widget *widget, WidgetRenderFn render);
+void widget_set_fps(PlatformWidget *window, int fps);
 
-bool Widget_IsValid(const PlatformWidget *widget);
-void Widget_SetFrameCallback(PlatformWidget *widget, RenderFrameFn fn,
+bool widget_is_valid(const PlatformWidget *widget);
+void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
                              void *ud);
-void Widget_Invalidate(PlatformWidget *widget);
-bool Widget_BaseCheck(const PlatformWidgetBase *base);
-bool Widget_BaseMove(PlatformWidgetBase *base, int x, int y);
-bool Widget_BaseResize(PlatformWidgetBase *base, int w, int h);
-bool Widget_BaseSetNoBg(PlatformWidgetBase *base, bool no_bg);
-bool Widget_BaseSetBgColor(PlatformWidgetBase *base, ColorRef bg_color);
+void widget_invalidate(PlatformWidget *widget);
+bool widget_base_check(const PlatformWidgetBase *base);
+bool widget_base_move(PlatformWidgetBase *base, int x, int y);
+bool widget_base_resize(PlatformWidgetBase *base, int w, int h);
+bool widget_base_set_no_bg(PlatformWidgetBase *base, bool no_bg);
+bool widget_base_set_bg_color(PlatformWidgetBase *base, ColorRef bg_color);
 
-void Widget_InitBase(PlatformWidgetBase *base, int x, int y, int w, int h,
+void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
                      int fps, bool no_bg, void (*on_click)(void),
                      const char *name);
 #endif

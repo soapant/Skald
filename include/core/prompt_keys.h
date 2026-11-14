@@ -5,13 +5,13 @@
 #include "core/types.h"
 #include "core/window_manager.h"
 
-bool Prompt_HandleKey(PromptState *state, const PopupKeyEvent *key);
-void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt);
-bool Prompt_HandleListClick(PromptState *state, bool ctrl, bool shift,
+bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key);
+void prompt_trigger_enter(PromptState *state, bool ctrl, bool shift, bool alt);
+bool prompt_handle_list_click(PromptState *state, bool ctrl, bool shift,
                             bool alt);
-void Prompt_Refresh(PromptState *state);
-bool Prompt_DeleteSelection(PromptState *state);
-void Prompt_InsertText(PromptState *state, const char *text, int len);
-void Prompt_RedrawNow(void);
+void prompt_refresh(PromptState *state);
+bool prompt_delete_selection(PromptState *state);
+void prompt_insert_text(PromptState *state, const char *text, int len);
+void prompt_redraw_now(void);
 
 #endif

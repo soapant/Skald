@@ -128,7 +128,7 @@ static bool hypr_parse_activewindow_field(const char *field, char *buffer,
   } else {
     log_info("hypr activewindow %s='%s'", field, buffer);
   }
-  StringList_Free(&lines);
+  string_list_free(&lines);
   free(output);
   return ok;
 }
@@ -160,12 +160,12 @@ static bool succeded_hypr(char *output) {
   }
   StringList lines = String_Split(output, "\n");
   for (size_t i = 0; i < lines.count; i++) {
-    if (String_ContainsCI(lines.items[i], "running")) {
+    if (string_contains_ci(lines.items[i], "running")) {
       log_error("hyprctl output='%s'", output);
       return false;
     }
   }
-  if (!String_ContainsCI(output, "ok")) {
+  if (!string_contains_ci(output, "ok")) {
     log_error("hyprctl no ok output='%s'", output);
     return false;
   }
@@ -225,7 +225,7 @@ bool focus_window_title_hyprland(const char *title) {
   free(out);
   if (title[0] != '\0') {
     char alt[1024];
-    SafeCopy(alt, sizeof(alt), title);
+    safe_copy(alt, sizeof(alt), title);
     alt[0] = toupper((unsigned char)alt[0]);
     if (hypr_focus_lua_cmd(alt, cmd, sizeof(cmd))) {
       out = Platform_RunTerminalCommand(cmd, false);
@@ -273,7 +273,7 @@ static PlWindowList hypr_client_list(const char *field, bool toupper_first) {
       }
     }
   }
-  StringList_Free(&lines);
+  string_list_free(&lines);
   free(output);
   return list;
 }
@@ -385,7 +385,7 @@ bool inject_key_hyprland(int vk, int down) {
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
-  SafeCopy(addr.sun_path, sizeof(addr.sun_path), path);
+  safe_copy(addr.sun_path, sizeof(addr.sun_path), path);
 
   if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     close(fd);

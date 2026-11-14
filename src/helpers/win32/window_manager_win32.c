@@ -21,7 +21,7 @@ int WindowManager_Run(WindowManager *wm) {
 
   MSG msg;
   while (wm->running) {
-    FeatureLoader_DrainRetiredUnloads();
+    feature_loader_drain_retired_unloads();
     bool got = false;
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
       got = true;
@@ -33,7 +33,7 @@ int WindowManager_Run(WindowManager *wm) {
       DispatchMessage(&msg);
     }
     Platform_Widget_DrainClicks();
-    Hotkey_DrainPending();
+    hotkey_drain_pending();
     if (!got)
       Sleep(10);
   }
@@ -45,7 +45,7 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
     return;
   }
 
-  FeatureLoader_DrainRetiredUnloads();
+  feature_loader_drain_retired_unloads();
   MSG msg;
   bool got = false;
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -55,11 +55,11 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
   }
   if (!got)
     MsgWaitForMultipleObjects(0, NULL, FALSE, 16, QS_ALLINPUT);
-  Hotkey_DrainPending();
+  hotkey_drain_pending();
   {
     int mx = 0, my = 0;
     if (Platform_GetMousePos(&mx, &my))
-      ListBox_PublishMousePos(mx, my);
+      listbox_publish_mouse_pos(mx, my);
   }
   WindowManager_DrainSelectionComplete(wm);
 }

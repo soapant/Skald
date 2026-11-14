@@ -85,7 +85,7 @@ static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
 
   bool handled = false;
   if (state)
-    handled = Prompt_HandleKey(state, key);
+    handled = prompt_handle_key(state, key);
 
   if (!handled)
     return false;
@@ -215,7 +215,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_LBUTTONDOWN: {
     POINT pt;
     if (GetCursorPos(&pt))
-      ListBox_PublishMousePos((int)pt.x, (int)pt.y);
+      listbox_publish_mouse_pos((int)pt.x, (int)pt.y);
     InvalidateRect(hwnd, NULL, FALSE);
     break;
   }
@@ -224,21 +224,21 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     RECT rect;
     GetClientRect(hwnd, &rect);
     if (GetCursorPos(&pt)) {
-      ListBox_PublishMousePos(pt.x, pt.y);
+      listbox_publish_mouse_pos(pt.x, pt.y);
     }
 
     if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
       PromptState *hst = win32_prompt_state_from_hwnd(hwnd);
       if (hst && hst->lb != NULL) {
         ListBoxInfo *hlb = hst->lb;
-        int list_top = PromptListTop();
-        int item_h = PromptRowHeight();
+        int list_top = prompt_list_top();
+        int item_h = prompt_row_height();
         int visible =
-            (rect.bottom - PromptListBottomMargin() - list_top) / item_h;
+            (rect.bottom - prompt_list_bottom_margin() - list_top) / item_h;
 
-        ListBox_SetGeometry(list_top, item_h, visible);
+        listbox_set_geometry(list_top, item_h, visible);
 
-        ListBox_HoverFocus(hlb, list_top, item_h, hlb->view_offset, visible);
+        listbox_hover_focus(hlb, list_top, item_h, hlb->view_offset, visible);
       }
     }
     InvalidateRect(hwnd, NULL, FALSE);
@@ -247,9 +247,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_MOUSEWHEEL: {
     short delta = (short)HIWORD(wParam);
     int rows = (delta > 0) ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS;
-    ListBox_PublishMousePos((short)(lParam & 0xFFFF),
+    listbox_publish_mouse_pos((short)(lParam & 0xFFFF),
                             (short)((lParam >> 16) & 0xFFFF));
-    ListBox_QueueScroll(rows);
+    listbox_queue_scroll(rows);
     InvalidateRect(hwnd, NULL, FALSE);
     return 0;
   }
@@ -308,7 +308,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       return 0;
     if (wParam >= 0x20 && true) {
       PromptState *ps = win32_prompt_state_from_hwnd(hwnd);
-      if (ps && Prompt_DeleteSelection(ps)) {
+      if (ps && prompt_delete_selection(ps)) {
         UI_SetText(ps->eb->filter);
         UI_SetCursorPosition(ps->eb->cursor);
       }
@@ -395,7 +395,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_MEASUREITEM: {
     MEASUREITEMSTRUCT *pmis = (MEASUREITEMSTRUCT *)lParam;
     if (pmis->CtlID == IDC_LIST_BOX) {
-      int h = PromptRowHeight();
+      int h = prompt_row_height();
       pmis->itemHeight = h;
       return TRUE;
     }
@@ -488,7 +488,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (lb && lb->selected_index != -1) {
         char measureBuffer[512];
-        SafeCopy(measureBuffer, sizeof(measureBuffer), lb->items[pdis->itemID]);
+        safe_copy(measureBuffer, sizeof(measureBuffer), lb->items[pdis->itemID]);
         char *pos = strchr(measureBuffer, '|');
         if (pos) {
           *pos = '\0';
@@ -524,7 +524,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           orig_idx = lb->matching_indices[pdis->itemID];
           orig_cnt = lb->item_count;
         }
-        Item_GetColors((PlGetItemColorsSpec){.idx = orig_idx,
+        item_get_colors((PlGetItemColorsSpec){.idx = orig_idx,
                                              .count = orig_cnt,
                                              .num_color = &ncol,
                                              .body_color = &bcol,
@@ -593,13 +593,13 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       SkaldContext_Get()->window.editbox_placed = false;
       PromptState *state = win32_prompt_state_from_hwnd(hwnd);
       if (state && state->callbacks && state->callbacks->render) {
-        Checkbox_FrameBegin();
+        checkbox_frame_begin();
         win32_set_draw_context(paintDC);
-        PlDrawState_Get()->win32_listbox_surface = true;
+        pl_draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;
         state->callbacks->render(state);
         s_in_render = false;
-        PlDrawState_Get()->win32_listbox_surface = false;
+        pl_draw_state_get()->win32_listbox_surface = false;
       }
     } else {
       PromptState *estate = win32_prompt_state_from_hwnd(hwnd);
@@ -609,17 +609,17 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         Platform_DrawPromptEditbox(estate);
 
         if (estate->lb) {
-          DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-              .y = PromptListTop() - 2, .width = rect.right - rect.left});
+          draw_prompt_separator((PlDrawPromptSeparatorSpec){
+              .y = prompt_list_top() - 2, .width = rect.right - rect.left});
 
-          int list_top = PromptListTop();
-          int row_height = PromptRowHeight();
+          int list_top = prompt_list_top();
+          int row_height = prompt_row_height();
           int count = estate->lb->item_count;
           int visible_count =
-              (rect.bottom - PromptListBottomMargin() - list_top) / row_height;
+              (rect.bottom - prompt_list_bottom_margin() - list_top) / row_height;
           int view_offset = estate->lb->view_offset;
 
-          PlDrawState_Get()->win32_listbox_surface = true;
+          pl_draw_state_get()->win32_listbox_surface = true;
           for (int i = 0; i < visible_count && (i + view_offset) < count; i++) {
             int list_idx = i + view_offset;
             int y = list_top + i * row_height;
@@ -630,16 +630,16 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                       PROMPT_SEL_RADIUS);
             }
 
-            const char *text = ListBoxInfo_Row(estate->lb, list_idx);
+            const char *text = listbox_info_row(estate->lb, list_idx);
             if (!text)
               continue;
 
-            unsigned long ncol = RgbToHex(COLOR_TEXT),
-                        bcol = RgbToHex(COLOR_TEXT),
-                        pcol = RgbToHex(COLOR_TEXT);
+            unsigned long ncol = rgb_to_hex(COLOR_TEXT),
+                        bcol = rgb_to_hex(COLOR_TEXT),
+                        pcol = rgb_to_hex(COLOR_TEXT);
             int orig_idx = estate->lb->matching_indices[list_idx];
             int orig_cnt = estate->lb->item_count;
-            Item_GetColors((PlGetItemColorsSpec){.idx = orig_idx,
+            item_get_colors((PlGetItemColorsSpec){.idx = orig_idx,
                                                  .count = orig_cnt,
                                                  .num_color = &ncol,
                                                  .body_color = &bcol,
@@ -661,10 +661,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                                      .pad = 0,
                                                      .fontsize = FontSize});
           }
-          PlDrawState_Get()->win32_listbox_surface = false;
+          pl_draw_state_get()->win32_listbox_surface = false;
 
-          DrawPromptSeparator((PlDrawPromptSeparatorSpec){
-              .y = rect.bottom - PromptListBottomMargin(),
+          draw_prompt_separator((PlDrawPromptSeparatorSpec){
+              .y = rect.bottom - prompt_list_bottom_margin(),
               .width = rect.right - rect.left});
         }
         win32_set_draw_context(NULL);

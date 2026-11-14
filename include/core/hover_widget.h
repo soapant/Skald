@@ -14,10 +14,10 @@ typedef struct {
   unsigned long bg_hex;
   void (*release)(void *ud);
   void *release_ud;
-} PlHoverWidgetShowSpec;
+} HoverWidgetShowSpec;
 
-void HoverWidgetShow(PlHoverWidgetShowSpec spec);
-void HoverWidgetHide(const char *key);
-void HoverWidget_PurgeOwner(const char *path_a, const char *path_b);
+void hover_widget_show(HoverWidgetShowSpec spec);
+void hover_widget_hide(const char *key);
+void hover_widget_purge_owner(const char *path_a, const char *path_b);
 
 #endif

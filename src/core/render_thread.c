@@ -43,7 +43,7 @@ static void rt_run_pending(void) {
   }
 }
 
-void RenderThread_Main(void) {
+void render_thread_main(void) {
   is_thread = true;
   while (!quit) {
     RtCallback snap[RT_MAX_CALLBACKS];
@@ -71,7 +71,7 @@ void RenderThread_Main(void) {
   }
 }
 
-bool RenderThread_EnsureStarted(int fps) {
+bool render_thread_ensure_started(int fps) {
   if (fps > frame_rate)
     frame_rate = fps;
   if (running)
@@ -85,7 +85,7 @@ bool RenderThread_EnsureStarted(int fps) {
   return true;
 }
 
-void RenderThread_Stop(void) {
+void render_thread_stop(void) {
   if (!running)
     return;
   quit = true;
@@ -98,7 +98,7 @@ void RenderThread_Stop(void) {
   Platform_RenderThreadUnlock();
 }
 
-bool RenderThread_Post(RenderFrameFn fn, void *ud) {
+bool render_thread_post(RenderFrameFn fn, void *ud) {
   if (!fn || !running)
     return false;
   Platform_RenderThreadLock();
@@ -114,7 +114,7 @@ bool RenderThread_Post(RenderFrameFn fn, void *ud) {
   return true;
 }
 
-void RenderThread_Wake(void) {
+void render_thread_wake(void) {
   if (!running)
     return;
   Platform_RenderThreadLock();
@@ -122,16 +122,16 @@ void RenderThread_Wake(void) {
   Platform_RenderThreadUnlock();
 }
 
-bool RenderThread_IsRunning(void) { return running; }
+bool render_thread_is_running(void) { return running; }
 
-void *RenderThread_Display(void) { return Platform_RenderThreadDisplay(); }
+void *render_thread_display(void) { return Platform_RenderThreadDisplay(); }
 
-bool RenderThread_IsCurrentThread(void) { return is_thread; }
+bool render_thread_is_current_thread(void) { return is_thread; }
 
-bool RenderThread_AddFrameCallback(RenderFrameFn fn, void *ud) {
+bool render_thread_add_frame_callback(RenderFrameFn fn, void *ud) {
   if (!fn)
     return false;
-  if (!RenderThread_EnsureStarted(0))
+  if (!render_thread_ensure_started(0))
     return false;
   Platform_RenderThreadLock();
   if (g_count >= RT_MAX_CALLBACKS) {
@@ -146,7 +146,7 @@ bool RenderThread_AddFrameCallback(RenderFrameFn fn, void *ud) {
   return true;
 }
 
-bool RenderThread_RemoveFrameCallback(RenderFrameFn fn, const void *ud) {
+bool render_thread_remove_frame_callback(RenderFrameFn fn, const void *ud) {
   bool removed = false;
   Platform_RenderThreadLock();
   for (int i = 0; i < g_count; i++) {
@@ -172,16 +172,16 @@ static void rt_sync_mark(void *ud) {
     s->done = 1;
 }
 
-void RenderThread_Sync(void) {
-  if (!RenderThread_IsRunning())
+void render_thread_sync(void) {
+  if (!render_thread_is_running())
     return;
-  if (RenderThread_IsCurrentThread())
+  if (render_thread_is_current_thread())
     return;
   RtSync *s = (RtSync *)malloc(sizeof(*s));
   if (!s)
     return;
   s->done = 0;
-  if (!RenderThread_Post(rt_sync_mark, s)) {
+  if (!render_thread_post(rt_sync_mark, s)) {
     free(s);
     return;
   }

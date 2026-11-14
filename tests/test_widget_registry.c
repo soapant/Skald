@@ -8,26 +8,26 @@
 #include "core/widget_registry.h"
 
 TEST(empty_registry_reports_inactive_owner) {
-  ASSERT_FALSE(Widget_OwnerActive("some/bogus-owner.so"));
-  ASSERT_FALSE(Widget_OwnerActive(""));
-  ASSERT_FALSE(Widget_OwnerActive(NULL));
+  ASSERT_FALSE(widget_owner_active("some/bogus-owner.so"));
+  ASSERT_FALSE(widget_owner_active(""));
+  ASSERT_FALSE(widget_owner_active(NULL));
 }
 
 TEST(purge_owner_on_empty_registry_does_not_deadlock) {
-  Widget_PurgeOwner("no-owner-a.so", NULL, Widget_CurrentGeneration());
-  Widget_PurgeOwner(NULL, "no-owner-b.so", Widget_CurrentGeneration());
-  Widget_PurgeOwner("no-owner-c.so", "no-owner-d.so",
-                    Widget_CurrentGeneration());
+  widget_purge_owner("no-owner-a.so", NULL, widget_current_generation());
+  widget_purge_owner(NULL, "no-owner-b.so", widget_current_generation());
+  widget_purge_owner("no-owner-c.so", "no-owner-d.so",
+                    widget_current_generation());
   ASSERT_TRUE(true);
 }
 
 TEST(generation_protocol_is_monotonic) {
-  unsigned g0 = Widget_CurrentGeneration();
-  unsigned g1 = Widget_BumpGeneration();
-  unsigned g2 = Widget_CurrentGeneration();
+  unsigned g0 = widget_current_generation();
+  unsigned g1 = widget_bump_generation();
+  unsigned g2 = widget_current_generation();
   ASSERT_TRUE(g1 > g0);
   ASSERT_EQ_INT(g1, g2);
-  unsigned g3 = Widget_BumpGeneration();
+  unsigned g3 = widget_bump_generation();
   ASSERT_TRUE(g3 > g1);
 }
 
@@ -39,13 +39,13 @@ static pthread_mutex_t concurrent_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 static void *concurrent_worker(void *arg) {
   (void)arg;
   for (int i = 0; i < CONCURRENT_ITERS; i++) {
-    if (Widget_OwnerActive("concurrent-bogus-owner.so")) {
+    if (widget_owner_active("concurrent-bogus-owner.so")) {
       pthread_mutex_lock(&concurrent_count_mutex);
       concurrent_owner_checks++;
       pthread_mutex_unlock(&concurrent_count_mutex);
     }
-    Widget_PurgeOwner("concurrent-bogus-owner.so", NULL,
-                      Widget_CurrentGeneration());
+    widget_purge_owner("concurrent-bogus-owner.so", NULL,
+                      widget_current_generation());
   }
   return NULL;
 }

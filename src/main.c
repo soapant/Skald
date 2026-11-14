@@ -24,14 +24,14 @@ int main(void) {
   Platform_FixWorkingDirectory();
   Platform_InitDisplaySafe();
 
-  Config_Load();
-  Config_ResolveDefaultApps();
+  config_load();
+  config_resolve_default_apps();
 
   Platform_InitializeTrayIcon();
   Platform_InitUI();
   Platform_PrewarmBackgroundPixmap();
 
-  FeatureLoader_Init();
+  feature_loader_init();
 
   WindowManager *wm = WindowManager_Create();
 
@@ -45,9 +45,9 @@ int main(void) {
   WindowManager_Run(wm);
   WindowManager_Destroy(wm);
 
-  FeatureLoader_Shutdown();
-  Config_Save();
-  Config_Unload();
+  feature_loader_shutdown();
+  config_save();
+  config_unload();
   Platform_ShutdownUI();
   Platform_CleanupDisplaySafe();
 

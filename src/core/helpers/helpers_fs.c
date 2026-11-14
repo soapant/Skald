@@ -28,11 +28,11 @@ static bool feature_base_dir(char *out, size_t out_len) {
   if (!out || out_len == 0 || !home || !home[0])
     return false;
 #if defined(_WIN32)
-  SafeCopy(out, out_len, home);
-  SafeCat(out, out_len, "\\AppData\\Roaming\\Skald");
+  safe_copy(out, out_len, home);
+  safe_cat(out, out_len, "\\AppData\\Roaming\\Skald");
 #else
-  SafeCopy(out, out_len, home);
-  SafeCat(out, out_len, "/.local/share/skald");
+  safe_copy(out, out_len, home);
+  safe_cat(out, out_len, "/.local/share/skald");
 #endif
   return true;
 }
@@ -50,7 +50,7 @@ static void path_fold_exe(char *out) {
 #endif
 }
 
-bool TempFile_Write(const char *name, const void *data, size_t len,
+bool temp_file_write(const char *name, const void *data, size_t len,
                     char *out_path, size_t out_len) {
   if (!name || !name[0] || !out_path || out_len == 0)
     return false;
@@ -70,16 +70,16 @@ bool TempFile_Write(const char *name, const void *data, size_t len,
   size_t dl = strlen(dir);
   while (dl > 0 && (dir[dl - 1] == '\\' || dir[dl - 1] == '/'))
     dir[--dl] = '\0';
-  SafeCopy(out_path, out_len, dir);
-  SafeCat(out_path, out_len, "\\");
-  SafeCat(out_path, out_len, name);
+  safe_copy(out_path, out_len, dir);
+  safe_cat(out_path, out_len, "\\");
+  safe_cat(out_path, out_len, name);
 #else
   const char *dir = getenv("TMPDIR");
   if (!dir || !dir[0])
     dir = "/tmp";
-  SafeCopy(out_path, out_len, dir);
-  SafeCat(out_path, out_len, "/");
-  SafeCat(out_path, out_len, name);
+  safe_copy(out_path, out_len, dir);
+  safe_cat(out_path, out_len, "/");
+  safe_cat(out_path, out_len, name);
 #endif
   FILE *f = fopen(out_path, "wb");
   if (!f)
@@ -94,7 +94,7 @@ bool TempFile_Write(const char *name, const void *data, size_t len,
   return ok;
 }
 
-bool ExpandPath(const char *template_path, char *out, size_t out_size) {
+bool expand_path(const char *template_path, char *out, size_t out_size) {
 
   if (!template_path || !out || out_size == 0)
     return false;
@@ -129,7 +129,7 @@ bool ExpandPath(const char *template_path, char *out, size_t out_size) {
   return true;
 }
 
-bool FeaturePath_Get(const char *feature, const char *name, char *out,
+bool feature_path_get(const char *feature, const char *name, char *out,
                      size_t out_len) {
 
   if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0)
@@ -140,17 +140,17 @@ bool FeaturePath_Get(const char *feature, const char *name, char *out,
   Platform_MkdirIfNotExists(dir_path);
   const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
   char feat_path[720];
-  SafeCopy(feat_path, sizeof(feat_path), dir_path);
-  SafeCat(feat_path, sizeof(feat_path), sep);
-  SafeCat(feat_path, sizeof(feat_path), feature);
+  safe_copy(feat_path, sizeof(feat_path), dir_path);
+  safe_cat(feat_path, sizeof(feat_path), sep);
+  safe_cat(feat_path, sizeof(feat_path), feature);
   Platform_MkdirIfNotExists(feat_path);
-  SafeCopy(out, out_len, feat_path);
-  SafeCat(out, out_len, sep);
-  SafeCat(out, out_len, name);
+  safe_copy(out, out_len, feat_path);
+  safe_cat(out, out_len, sep);
+  safe_cat(out, out_len, name);
   return true;
 }
 
-bool FeaturePath_DataDirExists(const char *stem) {
+bool feature_path_data_dir_exists(const char *stem) {
 
   if (!stem || !stem[0])
     return false;
@@ -159,9 +159,9 @@ bool FeaturePath_DataDirExists(const char *stem) {
     return false;
   char stemdir[720];
   const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
-  SafeCopy(stemdir, sizeof(stemdir), dir_path);
-  SafeCat(stemdir, sizeof(stemdir), sep);
-  SafeCat(stemdir, sizeof(stemdir), stem);
+  safe_copy(stemdir, sizeof(stemdir), dir_path);
+  safe_cat(stemdir, sizeof(stemdir), sep);
+  safe_cat(stemdir, sizeof(stemdir), stem);
 #if defined(_WIN32)
   DWORD attrs = GetFileAttributesA(stemdir);
   return attrs != INVALID_FILE_ATTRIBUTES &&
@@ -172,7 +172,7 @@ bool FeaturePath_DataDirExists(const char *stem) {
 #endif
 }
 
-bool File_CopyPath(const char *src, const char *dst) {
+bool file_copy_path(const char *src, const char *dst) {
   FILE *in = fopen(src, "rb");
   if (!in) {
     log_error("copy_file: open src %s failed (%s)", src, strerror(errno));

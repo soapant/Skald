@@ -25,7 +25,7 @@ const char *Platform_GetRealUser(void) {
   for (int i = 0; env_names[i]; i++) {
     const char *u = getenv(env_names[i]);
     if (u && u[0] && strcmp(u, "root") != 0) {
-      SafeCopy(buf, sizeof(buf), u);
+      safe_copy(buf, sizeof(buf), u);
       return buf;
     }
   }
@@ -34,13 +34,13 @@ const char *Platform_GetRealUser(void) {
   if (suid != (uid_t)-1) {
     struct passwd *spw = getpwuid(suid);
     if (spw && spw->pw_name) {
-      SafeCopy(buf, sizeof(buf), spw->pw_name);
+      safe_copy(buf, sizeof(buf), spw->pw_name);
       return buf;
     }
   }
   struct passwd *pw = getpwuid(getuid());
   if (pw && pw->pw_name && strcmp(pw->pw_name, "root") != 0) {
-    SafeCopy(buf, sizeof(buf), pw->pw_name);
+    safe_copy(buf, sizeof(buf), pw->pw_name);
     log_info("Platform_GetRealUser completed");
     return buf;
   }
@@ -53,17 +53,17 @@ const char *Platform_GetRealHome(void) {
   const char *u = Platform_GetRealUser();
   struct passwd *pw = u ? getpwnam(u) : NULL;
   if (pw && pw->pw_dir) {
-    SafeCopy(buf, sizeof(buf), pw->pw_dir);
+    safe_copy(buf, sizeof(buf), pw->pw_dir);
     return buf;
   }
   pw = getpwuid(getuid());
   if (pw && pw->pw_dir) {
-    SafeCopy(buf, sizeof(buf), pw->pw_dir);
+    safe_copy(buf, sizeof(buf), pw->pw_dir);
     return buf;
   }
   const char *h = x11_env_home_dir();
   if (h && h[0]) {
-    SafeCopy(buf, sizeof(buf), h);
+    safe_copy(buf, sizeof(buf), h);
     return buf;
   }
   snprintf(buf, sizeof(buf), "/home/%s", u);
@@ -134,7 +134,7 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   char *ext = strrchr(name, '.');
   if (ext && strcmp(ext, ".exe") == 0)
     *ext = '\0';
-  if (!IsSafeProcessName(name)) {
+  if (!is_safe_process_name(name)) {
     log_error("Platform_TerminateProcessByName: refusing unsafe name '%s'",
               exe_name);
     free(name);
@@ -174,7 +174,7 @@ bool Platform_LaunchBrowserAtUrl(const char *url, bool new_window) {
   bool have_browser = tok_len > 0 && x11_cmd_exists(browser_tok);
   if (!have_browser)
     return false;
-  if (String_StartsWithCI(url, "https://")) {
+  if (string_starts_with_ci(url, "https://")) {
     snprintf(full_url, sizeof(full_url), "%s", url);
   } else {
     snprintf(full_url, sizeof(full_url), "https://%s", url);
@@ -187,7 +187,7 @@ bool Platform_QueryBrowser(const char *query) {
     return false;
 
   char url[2048];
-  Url_BuildSearchUrl(UsedSearchEngine, query, url, sizeof(url));
+  url_build_search_url(UsedSearchEngine, query, url, sizeof(url));
   bool ok = x11_launch_browser(UsedBrowser, url, false);
   log_info("Platform_QueryBrowser query='%s'", query);
   return ok;
@@ -236,7 +236,7 @@ char *Platform_GetClipboardEntry(void) {
 bool Platform_PasteContent(const char *content) {
   log_info("Platform_PasteContent content length=%zu",
            content ? strlen(content) : 0);
-  char *result = Wm_Paste(content);
+  char *result = wm_paste(content);
   bool ok = result != NULL;
   free(result);
   return ok;

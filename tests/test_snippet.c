@@ -6,9 +6,9 @@
 static void dummy(void) {}
 
 static const SnippetBinding *find_by_trigger(const char *t) {
-  int n = Snippet_BindingCount();
+  int n = snippet_binding_count();
   for (int i = 0; i < n; i++) {
-    const SnippetBinding *b = Snippet_GetBinding(i);
+    const SnippetBinding *b = snippet_get_binding(i);
     if (b && b->trigger && strcmp(b->trigger, t) == 0)
       return b;
   }
@@ -16,9 +16,9 @@ static const SnippetBinding *find_by_trigger(const char *t) {
 }
 
 static int count_of(const char *t) {
-  int n = Snippet_BindingCount(), c = 0;
+  int n = snippet_binding_count(), c = 0;
   for (int i = 0; i < n; i++) {
-    const SnippetBinding *b = Snippet_GetBinding(i);
+    const SnippetBinding *b = snippet_get_binding(i);
     if (b && b->trigger && strcmp(b->trigger, t) == 0)
       c++;
   }
@@ -26,9 +26,9 @@ static int count_of(const char *t) {
 }
 
 TEST(register_then_reregister_same_trigger_survives_match) {
-  Snippet_ResetBuffer();
-  ASSERT_TRUE(Snippet_RegisterInternal("jq", NULL, dummy, false, NULL, NULL));
-  ASSERT_TRUE(Snippet_RegisterInternal("jq", NULL, dummy, false, NULL, NULL));
+  snippet_reset_buffer();
+  ASSERT_TRUE(snippet_register_internal("jq", NULL, dummy, false, NULL, NULL));
+  ASSERT_TRUE(snippet_register_internal("jq", NULL, dummy, false, NULL, NULL));
   ASSERT_EQ_INT(count_of("jq"), 1);
   const SnippetBinding *b = find_by_trigger("jq");
   ASSERT_TRUE(b != NULL);
@@ -38,9 +38,9 @@ TEST(register_then_reregister_same_trigger_survives_match) {
 }
 
 TEST(repeated_reregister_does_not_leak_null_trigger) {
-  Snippet_ResetBuffer();
+  snippet_reset_buffer();
   for (int i = 0; i < 50; i++) {
-    Snippet_RegisterInternal("zz", "text", NULL, false, NULL, NULL);
+    snippet_register_internal("zz", "text", NULL, false, NULL, NULL);
   }
   ASSERT_EQ_INT(count_of("zz"), 1);
   const SnippetBinding *b = find_by_trigger("zz");
@@ -51,10 +51,10 @@ TEST(repeated_reregister_does_not_leak_null_trigger) {
 }
 
 TEST(reregister_can_switch_text_to_func) {
-  Snippet_ResetBuffer();
-  Snippet_RegisterInternal("sw", "hello", NULL, false, NULL, NULL);
+  snippet_reset_buffer();
+  snippet_register_internal("sw", "hello", NULL, false, NULL, NULL);
   ASSERT_EQ_INT(count_of("sw"), 1);
-  Snippet_RegisterInternal("sw", NULL, dummy, false, NULL, NULL);
+  snippet_register_internal("sw", NULL, dummy, false, NULL, NULL);
   ASSERT_EQ_INT(count_of("sw"), 1);
   const SnippetBinding *b = find_by_trigger("sw");
   ASSERT_TRUE(b != NULL);
@@ -67,10 +67,10 @@ TEST(reregister_can_switch_text_to_func) {
 }
 
 TEST(reregister_can_switch_func_to_text) {
-  Snippet_ResetBuffer();
-  Snippet_RegisterInternal("sf", NULL, dummy, false, NULL, NULL);
+  snippet_reset_buffer();
+  snippet_register_internal("sf", NULL, dummy, false, NULL, NULL);
   ASSERT_EQ_INT(count_of("sf"), 1);
-  Snippet_RegisterInternal("sf", "hello", NULL, false, NULL, NULL);
+  snippet_register_internal("sf", "hello", NULL, false, NULL, NULL);
   ASSERT_EQ_INT(count_of("sf"), 1);
   const SnippetBinding *b = find_by_trigger("sf");
   ASSERT_TRUE(b != NULL);
@@ -85,19 +85,19 @@ TEST(reregister_can_switch_func_to_text) {
 }
 
 TEST(distinct_triggers_do_not_collapse) {
-  Snippet_ResetBuffer();
-  Snippet_RegisterInternal("aa", "1", NULL, false, NULL, NULL);
-  Snippet_RegisterInternal("bb", "2", NULL, false, NULL, NULL);
-  Snippet_RegisterInternal("cc", "3", NULL, false, NULL, NULL);
+  snippet_reset_buffer();
+  snippet_register_internal("aa", "1", NULL, false, NULL, NULL);
+  snippet_register_internal("bb", "2", NULL, false, NULL, NULL);
+  snippet_register_internal("cc", "3", NULL, false, NULL, NULL);
   ASSERT_EQ_INT(count_of("aa"), 1);
   ASSERT_EQ_INT(count_of("bb"), 1);
   ASSERT_EQ_INT(count_of("cc"), 1);
 }
 
 TEST(reregister_preserves_window_whitelist) {
-  Snippet_ResetBuffer();
+  snippet_reset_buffer();
   const char *wins[] = {"feh", NULL};
-  Snippet_RegisterInternal("ww", "1", NULL, true, wins, NULL);
+  snippet_register_internal("ww", "1", NULL, true, wins, NULL);
   const SnippetBinding *b = find_by_trigger("ww");
   ASSERT_TRUE(b != NULL);
   if (!b)
@@ -108,11 +108,11 @@ TEST(reregister_preserves_window_whitelist) {
 }
 
 TEST(reregister_replaces_window_list_without_leaking) {
-  Snippet_ResetBuffer();
+  snippet_reset_buffer();
   const char *w1[] = {"feh", NULL};
   const char *w2[] = {"kitty", NULL};
-  Snippet_RegisterInternal("wx", "1", NULL, false, w1, NULL);
-  Snippet_RegisterInternal("wx", "1", NULL, false, w2, NULL);
+  snippet_register_internal("wx", "1", NULL, false, w1, NULL);
+  snippet_register_internal("wx", "1", NULL, false, w2, NULL);
   const SnippetBinding *b = find_by_trigger("wx");
   ASSERT_TRUE(b != NULL);
   if (!b)
@@ -123,20 +123,20 @@ TEST(reregister_replaces_window_list_without_leaking) {
 }
 
 TEST(get_binding_rejects_out_of_range) {
-  Snippet_ResetBuffer();
-  ASSERT_TRUE(Snippet_GetBinding(-1) == NULL);
-  ASSERT_TRUE(Snippet_GetBinding(Snippet_BindingCount()) == NULL);
+  snippet_reset_buffer();
+  ASSERT_TRUE(snippet_get_binding(-1) == NULL);
+  ASSERT_TRUE(snippet_get_binding(snippet_binding_count()) == NULL);
 }
 
 TEST(rejects_invalid_registration) {
-  ASSERT_FALSE(Snippet_RegisterInternal(NULL, "x", NULL, false, NULL, NULL));
-  ASSERT_FALSE(Snippet_RegisterInternal("", "x", NULL, false, NULL, NULL));
-  ASSERT_FALSE(Snippet_RegisterInternal("tt", NULL, NULL, false, NULL, NULL));
+  ASSERT_FALSE(snippet_register_internal(NULL, "x", NULL, false, NULL, NULL));
+  ASSERT_FALSE(snippet_register_internal("", "x", NULL, false, NULL, NULL));
+  ASSERT_FALSE(snippet_register_internal("tt", NULL, NULL, false, NULL, NULL));
 }
 
 TEST(owner_falls_back_to_caller_when_no_func) {
-  Snippet_ResetBuffer();
-  Snippet_RegisterInternal("own", "x", NULL, false, NULL, (void *)dummy);
+  snippet_reset_buffer();
+  snippet_register_internal("own", "x", NULL, false, NULL, (void *)dummy);
   const SnippetBinding *b = find_by_trigger("own");
   ASSERT_TRUE(b != NULL);
   if (!b)

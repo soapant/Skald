@@ -10,8 +10,8 @@
 #define TIMER_BUF_LINES 8192
 #define TIMER_BUF_LINE 256
 
-int64_t TimerNowTicks(void);
-int64_t TimerTickFrequency(void);
+int64_t timer_now_ticks(void);
+int64_t timer_tick_frequency(void);
 
-void TimerFlush(void);
+void timer_flush(void);
 #endif

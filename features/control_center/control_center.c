@@ -1182,9 +1182,7 @@ static void cc_on_actions_render(SkPlaceState state) {
 
 static void cc_render(PromptState *state) {
   if (state->lb && state->lb->selected_index != -1) {
-    const char *current = ListBoxInfo_Row(state->lb, state->lb->selected_index);
-    if (current)
-      cc_copy(cc_selected_text, sizeof(cc_selected_text), current);
+      snprintf(cc_selected_text,sizeof(cc_selected_text),"%s",state->lb->selected_text);
   } else if (state->eb) {
     cc_copy(cc_selected_text, sizeof(cc_selected_text), state->eb->filter);
   }

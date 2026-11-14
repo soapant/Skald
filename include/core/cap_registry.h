@@ -9,12 +9,12 @@
 #define CAP_MAX 640
 #define CAP_KEY_LEN 96
 
-void Cap_RegisterAbi(const char *key, unsigned abi, void *fn);
-void *Cap_ResolveAbi(const char *key, unsigned abi);
+void cap_register_abi(const char *key, unsigned abi, void *fn);
+void *cap_resolve_abi(const char *key, unsigned abi);
 
-void Cap_BindDeclare(const char *key, void *consumer);
-void Cap_PurgeOwner(const char *path_a, const char *path_b);
+void cap_bind_declare(const char *key, void *consumer);
+void cap_purge_owner(const char *path_a, const char *path_b);
 
-unsigned Cap_Generation(void);
+unsigned cap_generation(void);
 
 #endif

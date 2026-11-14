@@ -48,9 +48,9 @@ static bool slot_offset(const char *name, size_t *off) {
 }
 
 static bool matches_any_theme(size_t off, ColorRef value) {
-  size_t n = Theme_Count();
+  size_t n = theme_count();
   for (size_t i = 0; i < n; i++) {
-    const ThemeEntry *e = Theme_EntryAt(i);
+    const ThemeEntry *e = theme_entry_at(i);
     if (e && *(const ColorRef *)((const char *)e + off) == value)
       return true;
   }
@@ -82,7 +82,7 @@ static bool pin_lookup(const char *name, ColorRef *out) {
   return false;
 }
 
-bool Theme_PinScanFile(const char *path) {
+bool theme_pin_scan_file(const char *path) {
   memset(theme_pinned, 0, sizeof(theme_pinned));
   theme_pinned_count = 0;
   if (!path || !path[0])
@@ -107,12 +107,12 @@ bool Theme_PinScanFile(const char *path) {
   return true;
 }
 
-void Theme_ResetPinned(void) {
+void theme_reset_pinned(void) {
   memset(theme_pinned, 0, sizeof(theme_pinned));
   theme_pinned_count = 0;
 }
 
-bool Theme_ColorPinned(const char *name) {
+bool theme_color_pinned(const char *name) {
   if (!name || !name[0])
     return false;
   size_t off;
@@ -122,15 +122,15 @@ bool Theme_ColorPinned(const char *name) {
   return !matches_any_theme(off, value);
 }
 
-void Theme_Apply(void) {
+void theme_apply(void) {
   if (!Theme || !Theme[0])
     return;
-  const ThemeEntry *found = Theme_Find(Theme);
+  const ThemeEntry *found = theme_find(Theme);
   if (!found) {
     log_warn("unknown Theme \"%s\", keeping current colors", Theme);
     return;
   }
-  Theme_PinScanFile(CONFIG_SRC);
+  theme_pin_scan_file(CONFIG_SRC);
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++) {
     ColorRef theme_color =
         *(ColorRef *)((const char *)found + theme_slots[i].off);

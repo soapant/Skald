@@ -82,7 +82,7 @@ BOOL CALLBACK win32_enum_windows_proc_title(HWND hwnd, LPARAM lParam) {
   if (window_title[0] == '\0')
     return TRUE;
 
-  if (String_ContainsCI(window_title, data->target_title)) {
+  if (string_contains_ci(window_title, data->target_title)) {
     data->found_hwnd = hwnd;
     return FALSE;
   }

@@ -7,27 +7,27 @@
 #define LISTBOX_WHEEL_ROWS 3
 #define MOUSE_RECHECK_INTERVAL_MS 80
 
-bool ListBox_ClientMousePos(int *out_x, int *out_y);
-void ListBox_PublishMousePos(int x, int y);
-void ListBox_InvalidateMousePos(void);
-int ListBox_RowAtY(const ListBoxInfo *lb, int list_top, int item_height,
+bool listbox_client_mouse_pos(int *out_x, int *out_y);
+void listbox_publish_mouse_pos(int x, int y);
+void listbox_invalidate_mouse_pos(void);
+int listbox_row_at_y(const ListBoxInfo *lb, int list_top, int item_height,
                    int top_index, int visible_count, int mouse_y);
-bool ListBox_HoverFocus(ListBoxInfo *lb, int list_top, int item_height,
+bool listbox_hover_focus(ListBoxInfo *lb, int list_top, int item_height,
                         int top_index, int visible_count);
-void ListBox_FocusByKeyboard(void);
-void ListBox_SetRowHScroll(int px);
-int ListBox_GetRowHScroll(void);
-void ListBox_FocusByMouse(void);
-void ListBox_QueueScroll(int rows);
-int ListBox_TakeScroll(void);
-void ListBox_ScrollBy(ListBoxInfo *lb, int rows, int visible_count);
-void ListBox_ApplyPendingScroll(ListBoxInfo *lb, int visible_count);
-int ListBox_ScrollTopFor(int index, int visible_count, int count);
-void ListBox_ScrollToSelection(ListBoxInfo *lb);
-void ListBox_SetGeometry(int list_top, int item_height, int visible_count);
-void ListBox_GetGeometry(int *out_list_top, int *out_item_height,
+void listbox_focus_by_keyboard(void);
+void listbox_set_row_h_scroll(int px);
+int listbox_get_row_h_scroll(void);
+void listbox_focus_by_mouse(void);
+void listbox_queue_scroll(int rows);
+int listbox_take_scroll(void);
+void listbox_scroll_by(ListBoxInfo *lb, int rows, int visible_count);
+void listbox_apply_pending_scroll(ListBoxInfo *lb, int visible_count);
+int listbox_scroll_top_for(int index, int visible_count, int count);
+void listbox_scroll_to_selection(ListBoxInfo *lb);
+void listbox_set_geometry(int list_top, int item_height, int visible_count);
+void listbox_get_geometry(int *out_list_top, int *out_item_height,
                          int *out_visible_count);
-void ListBox_NavigateUp(ListBoxInfo *lb);
-void ListBox_NavigateDown(ListBoxInfo *lb);
+void listbox_navigate_up(ListBoxInfo *lb);
+void listbox_navigate_down(ListBoxInfo *lb);
 
 #endif

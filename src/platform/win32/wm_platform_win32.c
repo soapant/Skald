@@ -23,7 +23,7 @@ void Platform_PromptFlushDisplay(WindowManager *wm) { (void)wm; }
 
 void Platform_OnPopEmpty(void) {
   remap_reset();
-  InputState_Clear();
+  input_state_clear();
 }
 
 void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
@@ -65,13 +65,13 @@ void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   int lh = FontSize;
-  int rh = PromptRowHeight();
+  int rh = prompt_row_height();
   if (line_h)
     *line_h = lh;
   if (row_h)
     *row_h = rh;
   if (list_top)
-    *list_top = PromptListTop();
+    *list_top = prompt_list_top();
 }
 
 typedef struct {
@@ -103,7 +103,7 @@ static BOOL CALLBACK win32_monitor_enum(HMONITOR hMonitor, HDC hdc, LPRECT rect,
   return TRUE;
 }
 
-int Monitor_Fill(MonitorEntry *out, int max_entries) {
+int monitor_fill(MonitorEntry *out, int max_entries) {
   Win32MonitorList list = {0};
   EnumDisplayMonitors(NULL, NULL, win32_monitor_enum, (LPARAM)&list);
   if (list.count == 0)

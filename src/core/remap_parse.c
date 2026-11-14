@@ -109,14 +109,14 @@ static int remap_vk_from_token(const char *tok) {
   return 0;
 }
 
-bool Remap_ParseTriggers(const char *str, int *out_mods, int *out_vks,
+bool remap_parse_triggers(const char *str, int *out_mods, int *out_vks,
                          int *out_count) {
   *out_mods = 0;
   *out_count = 0;
   if (!str)
     return false;
   char buf[256];
-  SafeCopy(buf, sizeof(buf), str);
+  safe_copy(buf, sizeof(buf), str);
   char *save = NULL;
   char *token = strtok_r(buf, "+", &save);
   while (token) {

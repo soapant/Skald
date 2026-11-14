@@ -60,14 +60,14 @@ static void config_resolve_one(AutoApp *app) {
   app->auto_resolved = true;
 }
 
-void Config_ResolveDefaultApps(void) {
+void config_resolve_default_apps(void) {
   auto_apps_init();
   for (size_t i = 0; i < ARRAY_LEN(auto_apps); i++) {
     config_resolve_one(&auto_apps[i]);
   }
 }
 
-bool Config_IsAutoResolvedApp(const char *name) {
+bool config_is_auto_resolved_app(const char *name) {
   auto_apps_init();
   if (!name)
     return false;

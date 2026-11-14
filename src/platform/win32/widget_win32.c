@@ -31,14 +31,14 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
 
   if (w <= 0 || h <= 0)
     return NULL;
-  if (!RenderThread_EnsureStarted(fps))
+  if (!render_thread_ensure_started(fps))
     return NULL;
   win32_widget_register_class();
 
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
     return NULL;
-  Widget_InitBase(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
+  widget_init_base(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exstyle =
@@ -59,13 +59,13 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-  if (!RenderThread_AddFrameCallback(win32_widget_frame, widget)) {
+  if (!render_thread_add_frame_callback(win32_widget_frame, widget)) {
     DestroyWindow(widget->hwnd);
     free(widget);
     return NULL;
   }
 
-  ColorRef amb = GetDrawBgColor();
+  ColorRef amb = get_draw_bg_color();
   if (amb) {
     widget->base.has_bg = true;
     widget->base.bg_color = amb;
@@ -95,7 +95,7 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!Widget_BaseCheck(widget ? &widget->base : NULL) || widget->base.mapped) {
+  if (!widget_base_check(widget ? &widget->base : NULL) || widget->base.mapped) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -108,7 +108,7 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || !Widget_BaseCheck(&widget->base) || !widget->base.mapped) {
+  if (!widget || !widget_base_check(&widget->base) || !widget->base.mapped) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -119,7 +119,7 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-  if (!widget || !Widget_BaseMove(&widget->base, x, y)) {
+  if (!widget || !widget_base_move(&widget->base, x, y)) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -130,21 +130,21 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-  if (!widget || !Widget_BaseSetNoBg(&widget->base, no_bg)) {
+  if (!widget || !widget_base_set_no_bg(&widget->base, no_bg)) {
     return;
   }
-  Widget_Invalidate(widget);
+  widget_invalidate(widget);
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
-  if (!widget || !Widget_BaseSetBgColor(&widget->base, color)) {
+  if (!widget || !widget_base_set_bg_color(&widget->base, color)) {
     return;
   }
-  Widget_Invalidate(widget);
+  widget_invalidate(widget);
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-  if (!widget || !Widget_BaseResize(&widget->base, w, h)) {
+  if (!widget || !widget_base_resize(&widget->base, w, h)) {
     return;
   }
   if (!widget->hwnd || !IsWindow(widget->hwnd)) {
@@ -154,5 +154,5 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
     win32_apply_rounded_corners(widget->hwnd, w, h);
   SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->base.x, widget->base.y, w, h,
                SWP_NOACTIVATE);
-  Widget_Invalidate(widget);
+  widget_invalidate(widget);
 }

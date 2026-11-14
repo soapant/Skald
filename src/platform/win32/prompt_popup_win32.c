@@ -51,7 +51,7 @@ void win32_set_prev_fg(HWND h) {
 bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   (void)self;
 
-  ListBox_InvalidateMousePos();
+  listbox_invalidate_mouse_pos();
   HWND fg = GetForegroundWindow();
   if (fg && IsWindow(fg) && !is_popup_class(fg))
     g_prev_fg = fg;

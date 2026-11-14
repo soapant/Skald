@@ -12,7 +12,7 @@
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args) {
 
-  if (!TerminalGuard(working_dir, extra_args))
+  if (!terminal_guard(working_dir, extra_args))
     return false;
   char terminal[512];
   snprintf(terminal, sizeof(terminal), "%s.exe", UsedTerminal);
@@ -104,7 +104,7 @@ char *Platform_RunTerminalCommand(const char *command, bool open_terminal) {
   }
   if (open_terminal) {
     char clean_cmd[512];
-    SafeCopy(clean_cmd, sizeof(clean_cmd), command ? command : "");
+    safe_copy(clean_cmd, sizeof(clean_cmd), command ? command : "");
     const char *p = clean_cmd;
     while (*p && isspace((unsigned char)*p))
       p++;
@@ -773,7 +773,7 @@ char *Platform_GetActiveWindowAppId(void) {
   if (QueryFullProcessImageNameA(h, 0, exe, &sz) && sz > 0) {
     const char *base = strrchr(exe, '\\');
     base = base ? base + 1 : exe;
-    SafeCopy(appId, sizeof(appId), base);
+    safe_copy(appId, sizeof(appId), base);
     size_t n = strlen(appId);
     if (n > 4 && _stricmp(appId + n - 4, ".exe") == 0)
       appId[n - 4] = '\0';
@@ -790,7 +790,7 @@ char *Platform_GetIconPath(char *app_path) {
   }
   char expanded[MAX_PATH];
   const char *src = app_path;
-  if (ExpandPath(app_path, expanded, sizeof(expanded))) {
+  if (expand_path(app_path, expanded, sizeof(expanded))) {
     if (expanded[0])
       src = expanded;
   }
@@ -1214,7 +1214,7 @@ void Platform_ShutdownUI(void) {
   log_info("Platform_ShutdownUI completed");
 }
 
-static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
+static void win32_http_buf_init(HttpBuf *buf, size_t limit) {
   memset(buf, 0, sizeof(*buf));
   buf->limit = limit;
   if (limit) {
@@ -1226,8 +1226,8 @@ static void Platform_http_buf_init(HttpBuf *buf, size_t limit) {
   }
 }
 
-static void Platform_http_buf_init(HttpBuf *buf, size_t limit);
-static int Platform_http_perform(const char *url, const char *method,
+static void win32_http_buf_init(HttpBuf *buf, size_t limit);
+static int win32_http_perform(const char *url, const char *method,
                                  const char *headers, const char *body,
                                  HttpBuf *resp_buf, FILE *file_out,
                                  long max_redirects);
@@ -1236,8 +1236,8 @@ static char *win32_http_collect(const char *url, const char *method,
                                 const char *content_type, const char *body,
                                 size_t max_bytes, size_t *out_len) {
   HttpBuf buf;
-  Platform_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
-  int ok = Platform_http_perform(url, method, content_type, body, &buf, NULL,
+  win32_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
+  int ok = win32_http_perform(url, method, content_type, body, &buf, NULL,
                                  HTTP_MAX_REDIRECTS);
   if (out_len)
     *out_len = buf.len;
@@ -1250,7 +1250,7 @@ static char *win32_http_collect(const char *url, const char *method,
   return buf.buf;
 }
 
-static int Platform_http_perform(const char *url, const char *method,
+static int win32_http_perform(const char *url, const char *method,
                                  const char *headers, const char *body,
                                  HttpBuf *resp_buf, FILE *file_out,
                                  long max_redirects) {
@@ -1458,7 +1458,7 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
 
   HttpBuf unused;
   memset(&unused, 0, sizeof(unused));
-  int ok = Platform_http_perform(url, "GET", NULL, NULL, &unused, f,
+  int ok = win32_http_perform(url, "GET", NULL, NULL, &unused, f,
                                  HTTP_MAX_REDIRECTS);
   fclose(f);
 
@@ -1621,10 +1621,10 @@ void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
     return;
   }
   job->owner[0] = '\0';
-  Owner_ResolveForFunc((void *)cb, job->owner, sizeof(job->owner));
-  ThreadRegistry_Add(job, job->owner);
-  if (!win32_http_thread_start(HttpAsyncWorker, job)) {
-    ThreadRegistry_Finish(job);
+  owner_resolve_for_func((void *)cb, job->owner, sizeof(job->owner));
+  thread_registry_add(job, job->owner);
+  if (!win32_http_thread_start(http_async_worker, job)) {
+    thread_registry_finish(job);
     free(job->url);
     free(job);
     log_warn("http async thread create failed");
@@ -1809,10 +1809,10 @@ static char *win32_lookup_walk_programs(const char *name) {
     if (!win32_lookup_is_dir(roots[i]))
       continue;
     ListOfFiles found = {0};
-    if (FileWalk_AllFilesFromDir((char *)roots[i], allowed, &found, NULL, true,
+    if (file_walk_all_files_from_dir((char *)roots[i], allowed, &found, NULL, true,
                                  3)) {
       for (size_t j = 0; j < found.count; j++) {
-        if (String_EqualsCI(found.files[j].name, name)) {
+        if (string_equals_ci(found.files[j].name, name)) {
           char *hit = _strdup(found.files[j].path);
           free(found.files);
           return hit;
@@ -1845,7 +1845,7 @@ char *Platform_FindExecutable(const char *name) {
 
   if (strchr(name, '\\') || strchr(name, '/')) {
     char expanded[4096];
-    if (!ExpandPath(name, expanded, sizeof(expanded)))
+    if (!expand_path(name, expanded, sizeof(expanded)))
       return NULL;
     return win32_lookup_try_full(expanded, pathext);
   }

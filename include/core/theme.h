@@ -15,12 +15,12 @@ typedef struct {
   ColorRef border;
 } ThemeEntry;
 
-void Theme_Apply(void);
-bool Theme_ColorPinned(const char *name);
-const ThemeEntry *Theme_Find(const char *name);
-size_t Theme_Count(void);
-const ThemeEntry *Theme_EntryAt(size_t index);
-bool Theme_PinScanFile(const char *path);
-void Theme_ResetPinned(void);
+void theme_apply(void);
+bool theme_color_pinned(const char *name);
+const ThemeEntry *theme_find(const char *name);
+size_t theme_count(void);
+const ThemeEntry *theme_entry_at(size_t index);
+bool theme_pin_scan_file(const char *path);
+void theme_reset_pinned(void);
 
 #endif

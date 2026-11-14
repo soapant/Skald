@@ -26,7 +26,7 @@
 #include "helpers/helpers_input_state.h"
 #include "platform/wm_platform.h"
 
-bool Cover_Scale(int sw, int sh, int tw, int th, int *dw, int *dh) {
+bool cover_scale(int sw, int sh, int tw, int th, int *dw, int *dh) {
   double scale = (double)tw / (double)sw;
   double scale_y = (double)th / (double)sh;
   if (scale_y > scale)
@@ -46,28 +46,28 @@ bool Cover_Scale(int sw, int sh, int tw, int th, int *dw, int *dh) {
   return 1;
 }
 
-PlMetrics *Metrics_Get(void) {
+PlMetrics *metrics_get(void) {
   static PlMetrics m = {0};
   static int init = 0;
   if (!init) {
     m.edit_cursor_width = 0;
-    m.edit_cursor_height = PromptCaretHeight();
+    m.edit_cursor_height = prompt_caret_height();
     m.editbox_padding = PROMPT_EDIT_INSET;
-    m.listbox_padding = PromptListBottomMargin();
-    m.listbox_item_height = PromptRowHeight();
+    m.listbox_padding = prompt_list_bottom_margin();
+    m.listbox_item_height = prompt_row_height();
     init = 1;
   }
   return &m;
 }
 
-void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
+void draw_prompt_separator(PlDrawPromptSeparatorSpec spec) {
   if (!EnableBorders || spec.width <= 0)
     return;
   Platform_DrawRectRaw((PlDrawRectRawSpec){.x = 0,
                                            .y = spec.y,
                                            .w = spec.width,
                                            .h = PROMPT_SEP_W,
-                                           .color = RgbToHex(COLOR_BORDER),
+                                           .color = rgb_to_hex(COLOR_BORDER),
                                            .radius = 0,
                                            .rounded = false,
                                            .opaque = true,
@@ -75,11 +75,11 @@ void DrawPromptSeparator(PlDrawPromptSeparatorSpec spec) {
                                            .filled = true});
 }
 
-void Item_GetColors(PlGetItemColorsSpec spec) {
-  unsigned long col_text = RgbToHex(COLOR_TEXT);
+void item_get_colors(PlGetItemColorsSpec spec) {
+  unsigned long col_text = rgb_to_hex(COLOR_TEXT);
   float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
                              : (float)spec.idx / 10.0f;
-  unsigned long col_rainbow = RgbToHex(GetRainbowColor(t, 0.55f, 1.0f));
+  unsigned long col_rainbow = rgb_to_hex(GetRainbowColor(t, 0.55f, 1.0f));
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;
@@ -92,7 +92,7 @@ void Item_GetColors(PlGetItemColorsSpec spec) {
     *spec.plain_color = p;
 }
 
-static bool FuzzyMatch(const char *text, const char *pattern) {
+static bool fuzzy_match(const char *text, const char *pattern) {
   if (!pattern || !pattern[0])
     return true;
   if (!text || !text[0])
@@ -104,7 +104,7 @@ static bool FuzzyMatch(const char *text, const char *pattern) {
   }
   return *pattern == '\0';
 }
-static int Levenshtein(const char *a, const char *b) {
+static int levenshtein(const char *a, const char *b) {
   int la = (int)strlen(a), lb = (int)strlen(b);
   if (abs(la - lb) > 2)
     return 100;
@@ -139,21 +139,21 @@ static int Levenshtein(const char *a, const char *b) {
   }
   return dp[la % 3][lb];
 }
-static bool FuzzyMatchWithTypo(const char *text, const char *pattern) {
-  if (FuzzyMatch(text, pattern))
+static bool fuzzy_match_with_typo(const char *text, const char *pattern) {
+  if (fuzzy_match(text, pattern))
     return true;
   if (!text || !pattern)
     return false;
   if (strlen(pattern) < 3)
     return false;
-  int dist = Levenshtein(text, pattern);
+  int dist = levenshtein(text, pattern);
   if (dist <= 1)
     return true;
   if (strlen(pattern) >= 4 && dist == 2)
     return true;
   return false;
 }
-static int FuzzyScore(const char *text, const char *pattern) {
+static int fuzzy_score(const char *text, const char *pattern) {
   if (!pattern || !pattern[0])
     return 0;
   if (!text || !text[0])
@@ -193,22 +193,22 @@ static int FuzzyScore(const char *text, const char *pattern) {
   return score;
 }
 
-static void Populate_CaptureSelection(ListBoxInfo *lb, char *out_text,
+static void populate_capture_selection(ListBoxInfo *lb, char *out_text,
                                       size_t out_size, int *out_sel) {
   int current_sel = lb->selected_index;
   if (out_sel)
     *out_sel = current_sel;
   if (out_text && out_size > 0) {
     out_text[0] = '\0';
-    const char *cur = ListBoxInfo_Row(lb, current_sel);
+    const char *cur = listbox_info_row(lb, current_sel);
     lb->selected_text = cur;
     if (cur) {
-      SafeCopy(out_text, out_size, cur);
+      safe_copy(out_text, out_size, cur);
     }
   }
 }
 
-static void Populate_CleanFilter(const char *filter, char *clean_filter,
+static void populate_clean_filter(const char *filter, char *clean_filter,
                                  size_t size) {
   clean_filter[0] = '\0';
   if (!filter)
@@ -234,7 +234,7 @@ static void Populate_CleanFilter(const char *filter, char *clean_filter,
   clean_filter[j] = '\0';
 }
 
-static void NormalizeForMatch(const char *src, char *dst, size_t dst_size) {
+static void normalize_for_match(const char *src, char *dst, size_t dst_size) {
   if (!src || !dst || dst_size == 0) {
     if (dst && dst_size)
       dst[0] = '\0';
@@ -267,15 +267,15 @@ Populate_ItemMatches(const char *search_text, const char *clean_filter,
   if (filter_match)
     return filter_match(search_text, clean_filter);
   char norm_search[1024];
-  NormalizeForMatch(search_text, norm_search, sizeof(norm_search));
-  if (String_StartsWithCI(SkaldContext_Get()->window.current_feature,
+  normalize_for_match(search_text, norm_search, sizeof(norm_search));
+  if (string_starts_with_ci(SkaldContext_Get()->window.current_feature,
                           "center")) {
-    return FuzzyMatchWithTypo(norm_search, clean_filter);
+    return fuzzy_match_with_typo(norm_search, clean_filter);
   }
-  return String_ContainsCI(norm_search, clean_filter);
+  return string_contains_ci(norm_search, clean_filter);
 }
 
-static int Populate_Filter(ListBoxInfo *lb, const char **items, int item_count,
+static int populate_filter(ListBoxInfo *lb, const char **items, int item_count,
                            const char *clean_filter,
                            bool (*filter_match)(const char *, const char *)) {
   int total_matches = 0;
@@ -294,7 +294,7 @@ static int Populate_Filter(ListBoxInfo *lb, const char **items, int item_count,
   return total_matches;
 }
 
-static void Populate_RankMatches(ListBoxInfo *lb, const char **items,
+static void populate_rank_matches(ListBoxInfo *lb, const char **items,
                                  const char *clean_filter, int total_matches) {
   if (clean_filter[0] == '\0' || total_matches <= 1)
     return;
@@ -302,10 +302,10 @@ static void Populate_RankMatches(ListBoxInfo *lb, const char **items,
   for (int i = 0; i < total_matches; i++) {
     int idx = lb->matching_indices[i];
     const char *txt = items[idx] ? items[idx] : "";
-    if (FuzzyMatch(txt, clean_filter))
-      scores[i] = FuzzyScore(txt, clean_filter);
+    if (fuzzy_match(txt, clean_filter))
+      scores[i] = fuzzy_score(txt, clean_filter);
     else
-      scores[i] = 500 + Levenshtein(txt, clean_filter) * 20;
+      scores[i] = 500 + levenshtein(txt, clean_filter) * 20;
   }
   for (int i = 0; i < total_matches - 1; i++)
     for (int j = i + 1; j < total_matches; j++)
@@ -319,7 +319,7 @@ static void Populate_RankMatches(ListBoxInfo *lb, const char **items,
       }
 }
 
-static void Populate_EnsureMatches(ListBoxInfo *lb, int item_count,
+static void populate_ensure_matches(ListBoxInfo *lb, int item_count,
                                    const char *clean_filter,
                                    int *total_matches) {
   if (*total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
@@ -334,14 +334,14 @@ static void Populate_EnsureMatches(ListBoxInfo *lb, int item_count,
     *total_matches = pool_max;
 }
 
-static void Populate_BuildCache(ListBoxInfo *lb, const char **items,
+static void populate_build_cache(ListBoxInfo *lb, const char **items,
                                 int total_matches) {
   if (total_matches > MAX_VISIBLE_ITEMS)
     total_matches = MAX_VISIBLE_ITEMS;
   lb->item_count = 0;
   if (total_matches <= 0)
     return;
-  if (!ListBoxInfo_EnsureRows(lb, total_matches)) {
+  if (!listbox_info_ensure_rows(lb, total_matches)) {
     lb->item_count = 0;
     return;
   }
@@ -349,7 +349,7 @@ static void Populate_BuildCache(ListBoxInfo *lb, const char **items,
     int raw_data_index = lb->matching_indices[i];
     if (!items[raw_data_index])
       continue;
-    SafeCopy(lb->items[lb->item_count], LISTBOX_ROW_BYTES,
+    safe_copy(lb->items[lb->item_count], LISTBOX_ROW_BYTES,
              items[raw_data_index]);
     lb->items[lb->item_count][strcspn(lb->items[lb->item_count], "\r\n")] =
         '\0';
@@ -357,7 +357,7 @@ static void Populate_BuildCache(ListBoxInfo *lb, const char **items,
   }
 }
 
-static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
+static void populate_update_ui(ListBoxInfo *lb, int total_matches,
                               const char *filter) {
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
@@ -376,17 +376,17 @@ static void Populate_UpdateUI(ListBoxInfo *lb, int total_matches,
     UI_SetSelection(lb, -1);
   }
   if (filter)
-    SafeCopy(lb->last_filter, sizeof(lb->last_filter), filter);
+    safe_copy(lb->last_filter, sizeof(lb->last_filter), filter);
   else
     lb->last_filter[0] = '\0';
-  ListBox_ScrollToSelection(lb);
+  listbox_scroll_to_selection(lb);
   if (total_matches == 0) {
     Platform_DismissDisplayMessage();
   }
   UI_LB_EndUpdate();
 }
 
-void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
+void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
                      int item_count,
                      bool (*filter_match)(const char *item,
                                           const char *filter)) {
@@ -397,27 +397,27 @@ void PopulateListBox(ListBoxInfo *lb, const char *filter, const char **items,
     filter = "";
   int current_sel;
   char current_text[256];
-  Populate_CaptureSelection(lb, current_text, sizeof(current_text),
+  populate_capture_selection(lb, current_text, sizeof(current_text),
                             &current_sel);
 
   char clean_filter[256];
-  Populate_CleanFilter(filter, clean_filter, sizeof(clean_filter));
+  populate_clean_filter(filter, clean_filter, sizeof(clean_filter));
   int total_matches = 0;
 
   total_matches =
-      Populate_Filter(lb, items, item_count, clean_filter, filter_match);
+      populate_filter(lb, items, item_count, clean_filter, filter_match);
 
-  Populate_RankMatches(lb, items, clean_filter, total_matches);
+  populate_rank_matches(lb, items, clean_filter, total_matches);
 
-  Populate_EnsureMatches(lb, item_count, clean_filter, &total_matches);
+  populate_ensure_matches(lb, item_count, clean_filter, &total_matches);
 
-  Populate_BuildCache(lb, items, total_matches);
+  populate_build_cache(lb, items, total_matches);
 
-  Populate_UpdateUI(lb, total_matches, filter);
+  populate_update_ui(lb, total_matches, filter);
 
   lb->total_matches = total_matches;
 
-  log_info("PopulateListBox completed for filter='%s'", filter ? filter : "");
+  log_info("populate_listbox completed for filter='%s'", filter ? filter : "");
 }
 
 ColorRef GetRainbowColor(float t, float s, float v) {
@@ -468,7 +468,7 @@ ColorRef GetRainbowColor(float t, float s, float v) {
   }
 }
 
-void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
+void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
                        int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,
                        int *out_gap, int *out_outward) {
   int h_slot = 1;
@@ -523,14 +523,14 @@ void MessageSlotToRect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
     *out_outward = outward;
 }
 
-void DisplayMessageSlot(const char *message, MessageSlot slot, int max_w,
+void display_message_slot(const char *message, MessageSlot slot, int max_w,
                         int max_h, int prompt_gap, double timeout,
                         ColorRef color, void (*render)(void),
                         const char *name) {
   if (!message || !message[0])
     return;
   int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
-  MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap,
+  message_slot_to_rect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap,
                     &outward);
   Platform_DisplayMessageAnchored((PlAnchoredMessageSpec){.message = message,
                                                           .x = x,
@@ -550,7 +550,7 @@ void DisplayMessageSlot(const char *message, MessageSlot slot, int max_w,
                                                           .name = name});
 }
 
-void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
+void listbox_compute_layout(const PlListSpec *spec, int default_y0, int item_h,
                            int popup_w, int popup_h, int count,
                            ListboxLayout *out) {
 
@@ -566,7 +566,7 @@ void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
   out->item_h = item_h > 0 ? item_h : 1;
   out->list_h =
       spec->h ? spec->h
-              : (popup_h > 0 ? (popup_h - out->y0 - PromptListBottomMargin())
+              : (popup_h > 0 ? (popup_h - out->y0 - prompt_list_bottom_margin())
                              : PROMPT_CUSTOM_FALLBACK_LIST_H);
   if (!spec->x && !spec->w) {
     out->bx = PROMPT_SEL_X;
@@ -588,7 +588,7 @@ void Listbox_ComputeLayout(const PlListSpec *spec, int default_y0, int item_h,
   out->visible = visible;
 }
 
-bool TerminalGuard(const char *working_dir, const char *extra_args) {
+bool terminal_guard(const char *working_dir, const char *extra_args) {
   if (!working_dir) {
     log_error("working_dir is NULL extra_args='%s'",
               extra_args ? extra_args : "null");
@@ -602,7 +602,7 @@ bool TerminalGuard(const char *working_dir, const char *extra_args) {
   return true;
 }
 
-void Prompt_ProcessPendingSubwindow(void) {
+void prompt_process_pending_subwindow(void) {
   SkaldContext *_c = SkaldContext_Get();
   if (!_c || !_c->window.subwindow.pending)
     return;
@@ -612,17 +612,17 @@ void Prompt_ProcessPendingSubwindow(void) {
   WindowManager *wm = WindowManager_Get();
   if (wm && wm->popup_count > 1)
     WindowManager_PopPopup(wm);
-  Popup *p = PromptPopup_Create(wm, &_c->window.subwindow.pending_subwindow);
+  Popup *p = prompt_popup_create(wm, &_c->window.subwindow.pending_subwindow);
   if (p && p->vtable && p->vtable->on_render)
     p->vtable->on_render(p);
   Platform_PromptFlushDisplay(wm);
 }
 
-char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
+char *prompt_user_run(WindowManager *wm, const PromptSpec *spec) {
   SkaldContext *_ctx = SkaldContext_Get();
   if (_ctx)
     _ctx->window.subwindow.created = false;
-  log_info("PromptUserRun started wm=%p spec=%p", wm, spec);
+  log_info("prompt_user_run started wm=%p spec=%p", wm, spec);
   if (!wm || !spec)
     return NULL;
   if (spec->subwindow) {
@@ -639,10 +639,10 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
     }
     PromptSpec heap_spec = *spec;
     heap_spec.subwindow = false;
-    (void)PromptPopup_Create(wm, &heap_spec);
+    (void)prompt_popup_create(wm, &heap_spec);
     return NULL;
   }
-  const Popup *popup = PromptPopup_Create(wm, spec);
+  const Popup *popup = prompt_popup_create(wm, spec);
   if (!popup)
     return NULL;
   long long last_tick = 0;
@@ -662,8 +662,8 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
     bool mouse_changed = false;
     int mx = 0, my = 0;
     if (Platform_GetMousePos(&mx, &my)) {
-      ListBox_PublishMousePos(mx, my);
-      int btn = Input_MouseStateDown(MOUSE_BTN_LEFT) ? 1 : 0;
+      listbox_publish_mouse_pos(mx, my);
+      int btn = input_mouse_state_down(MOUSE_BTN_LEFT) ? 1 : 0;
       if (mx != last_mx || my != last_my || btn != last_btn) {
         last_mx = mx;
         last_my = my;
@@ -706,7 +706,7 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
   return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 }
 
-int DrawThicknessPx(float thickness) {
+int draw_thickness_px(float thickness) {
   if (thickness <= 0.0f)
     return 0;
   int px = (int)(thickness + 0.5f);
@@ -717,11 +717,11 @@ int DrawThicknessPx(float thickness) {
   return px;
 }
 
-void DrawMeasureTrack(int x, int y, int w, int h) {
-  PlDrawState_TrackMeasure(x, y, w, h);
+void draw_measure_track(int x, int y, int w, int h) {
+  pl_draw_state_track_measure(x, y, w, h);
 }
 
-void UpdateTextCaret(void) {
+void update_text_caret(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
   if (top && top->vtable && top->vtable->on_render) {
@@ -730,42 +730,42 @@ void UpdateTextCaret(void) {
   }
 }
 
-void SetTransparentWindow(bool on) { PlDrawState_Get()->transparent = on; }
+void set_transparent_window(bool on) { pl_draw_state_get()->transparent = on; }
 
-bool GetTransparentWindow(void) { return PlDrawState_Get()->transparent; }
+bool get_transparent_window(void) { return pl_draw_state_get()->transparent; }
 
-void SetDrawBgColor(unsigned long hex) { PlDrawState_Get()->bg_override = hex; }
+void set_draw_bg_color(unsigned long hex) { pl_draw_state_get()->bg_override = hex; }
 
-unsigned long GetDrawBgColor(void) { return PlDrawState_Get()->bg_override; }
+unsigned long get_draw_bg_color(void) { return pl_draw_state_get()->bg_override; }
 
-void BeginMeasure(void) { PlDrawState_BeginMeasure(); }
+void begin_measure(void) { pl_draw_state_begin_measure(); }
 
-void EndMeasure(int *out_w, int *out_h) {
-  PlDrawState_EndMeasure(out_w, out_h);
+void end_measure(int *out_w, int *out_h) {
+  pl_draw_state_end_measure(out_w, out_h);
 }
 
-void GetLastMeasureOrigin(int *out_x, int *out_y) {
+void get_last_measure_origin(int *out_x, int *out_y) {
   if (out_x)
-    *out_x = PlDrawState_Get()->meas_origin_x;
+    *out_x = pl_draw_state_get()->meas_origin_x;
   if (out_y)
-    *out_y = PlDrawState_Get()->meas_origin_y;
+    *out_y = pl_draw_state_get()->meas_origin_y;
 }
 
-void SetDrawOffset(int dx, int dy) {
-  PlDrawState_Get()->off_x = dx;
-  PlDrawState_Get()->off_y = dy;
+void set_draw_offset(int dx, int dy) {
+  pl_draw_state_get()->off_x = dx;
+  pl_draw_state_get()->off_y = dy;
 }
 
-void GetDrawOffset(int *out_x, int *out_y) {
+void get_draw_offset(int *out_x, int *out_y) {
   if (out_x)
-    *out_x = PlDrawState_Get()->off_x;
+    *out_x = pl_draw_state_get()->off_x;
   if (out_y)
-    *out_y = PlDrawState_Get()->off_y;
+    *out_y = pl_draw_state_get()->off_y;
 }
 
-int DrawLinePrep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
+int draw_line_prep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
                  int *y1, int *x2, int *y2) {
-  int t = DrawThicknessPx(spec->thickness);
+  int t = draw_thickness_px(spec->thickness);
   if (t < 1)
     t = 1;
   *x1 = spec->x1 + off_x;
@@ -776,21 +776,21 @@ int DrawLinePrep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
   int by = *y1 < *y2 ? *y1 : *y2;
   int bw = (*x1 > *x2 ? *x1 - *x2 : *x2 - *x1) + t;
   int bh = (*y1 > *y2 ? *y1 - *y2 : *y2 - *y1) + t;
-  DrawMeasureTrack(bx - t / 2, by - t / 2, bw, bh);
+  draw_measure_track(bx - t / 2, by - t / 2, bw, bh);
   return t;
 }
 
-int DrawCirclePrep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
+int draw_circle_prep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
                    int *cx, int *cy) {
-  int t = DrawThicknessPx(spec->thickness);
+  int t = draw_thickness_px(spec->thickness);
   *cx = spec->cx + off_x;
   *cy = spec->cy + off_y;
-  DrawMeasureTrack(*cx - spec->radius, *cy - spec->radius, spec->radius * 2,
+  draw_measure_track(*cx - spec->radius, *cy - spec->radius, spec->radius * 2,
                    spec->radius * 2);
   return t;
 }
 
-int BgTileLruPick(const void *slots, int count, size_t stride,
+int bg_tile_lru_pick(const void *slots, int count, size_t stride,
                   int (*is_empty)(const void *slot),
                   unsigned long (*stamp)(const void *slot)) {
   int i;
@@ -808,7 +808,7 @@ int BgTileLruPick(const void *slots, int count, size_t stride,
   return oldest;
 }
 
-void DrawTextCenteredImpl(const PlDrawTextCenteredSpec *spec, int lineHeight) {
+void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec, int lineHeight) {
   int tw = Platform_MeasureTextWidth(
       (PlMeasureTextWidthSpec){.text = spec->text,
                                .len = (int)strlen(spec->text),
@@ -825,7 +825,7 @@ void DrawTextCenteredImpl(const PlDrawTextCenteredSpec *spec, int lineHeight) {
                                            .fontsize = spec->fontsize});
 }
 
-int MsgAnchorCenter(int rect, int rect_size, int slot, int gap, int outward,
+int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,
                     int win_size) {
   if (slot == 0)
     return outward ? rect - gap - win_size / 2 : rect + gap + win_size / 2;
@@ -835,23 +835,23 @@ int MsgAnchorCenter(int rect, int rect_size, int slot, int gap, int outward,
   return rect + rect_size / 2;
 }
 
-int MsgStackDir(int v_slot, bool outward) {
+int msg_stack_dir(int v_slot, bool outward) {
   int dir = (v_slot == 2) ? -1 : 1;
   return outward ? -dir : dir;
 }
 
-int PromptRowHeight(void) { return FontSize + PROMPT_ROW_H_BONUS; }
+int prompt_row_height(void) { return FontSize + PROMPT_ROW_H_BONUS; }
 
-int PromptListTop(void) { return FontSize + PROMPT_LIST_TOP_BONUS; }
+int prompt_list_top(void) { return FontSize + PROMPT_LIST_TOP_BONUS; }
 
-int PromptCaretHeight(void) { return FontSize + PROMPT_CARET_H_BONUS; }
+int prompt_caret_height(void) { return FontSize + PROMPT_CARET_H_BONUS; }
 
-int PromptCustomEditHeight(void) {
+int prompt_custom_edit_height(void) {
   return FontSize + PROMPT_CUSTOM_EDIT_H_BONUS;
 }
 
-int PromptListBottomMargin(void) { return 40; }
+int prompt_list_bottom_margin(void) { return 40; }
 
-int64_t TimerNowTicks(void) { return Platform_TimerNowTicks(); }
+int64_t timer_now_ticks(void) { return Platform_TimerNowTicks(); }
 
-int64_t TimerTickFrequency(void) { return Platform_TimerTickFrequency(); }
+int64_t timer_tick_frequency(void) { return Platform_TimerTickFrequency(); }

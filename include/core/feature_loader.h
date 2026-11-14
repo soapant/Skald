@@ -4,26 +4,26 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool FeatureLoader_Init(void);
-void FeatureLoader_Shutdown(void);
-void FeatureLoader_ManifestAddProvides(const char *owner_path, const char *key);
-void FeatureLoader_ManifestAddDepends(const char *owner_path,
+bool feature_loader_init(void);
+void feature_loader_shutdown(void);
+void feature_loader_manifest_add_provides(const char *owner_path, const char *key);
+void feature_loader_manifest_add_depends(const char *owner_path,
                                       const char *dep_name);
-void FeatureLoader_OwnerFeatureName(const char *owner_path, char *out,
+void feature_loader_owner_feature_name(const char *owner_path, char *out,
                                     size_t n);
-void FeatureLoader_Reload(const char *name);
-bool FeatureLoader_ReloadFrom(const char *name, const char *src_path);
-void FeatureLoader_ReloadAll(void);
-bool FeatureLoader_LoadAllFromDir(const char *dir);
+void feature_loader_reload(const char *name);
+bool feature_loader_reload_from(const char *name, const char *src_path);
+void feature_loader_reload_all(void);
+bool feature_loader_load_all_from_dir(const char *dir);
 
-void FeatureLoader_Lock(void);
-bool FeatureLoader_TryLock(void);
-void FeatureLoader_Unlock(void);
-void FeatureLoader_SweepRetired(void);
-void FeatureLoader_DrainRetiredUnloads(void);
-int FeatureLoader_PendingUnloadCount(void);
-int FeatureLoader_BuildStaleSources(bool hot_reload);
-void DeferredInit_Register(void (*cb)(void));
-void DeferredInit_RunAll(void);
+void feature_loader_lock(void);
+bool feature_loader_try_lock(void);
+void feature_loader_unlock(void);
+void feature_loader_sweep_retired(void);
+void feature_loader_drain_retired_unloads(void);
+int feature_loader_pending_unload_count(void);
+int feature_loader_build_stale_sources(bool hot_reload);
+void deferred_init_register(void (*cb)(void));
+void deferred_init_run_all(void);
 
 #endif

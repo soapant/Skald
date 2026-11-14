@@ -116,18 +116,18 @@ static bool theme_name_eq(const char *a, const char *b) {
   return *a == *b;
 }
 
-size_t Theme_Count(void) { return sizeof(themes) / sizeof(themes[0]); }
+size_t theme_count(void) { return sizeof(themes) / sizeof(themes[0]); }
 
-const ThemeEntry *Theme_EntryAt(size_t index) {
-  if (index >= Theme_Count())
+const ThemeEntry *theme_entry_at(size_t index) {
+  if (index >= theme_count())
     return NULL;
   return &themes[index];
 }
 
-const ThemeEntry *Theme_Find(const char *name) {
+const ThemeEntry *theme_find(const char *name) {
   if (!name || !name[0])
     return NULL;
-  for (size_t i = 0; i < Theme_Count(); i++) {
+  for (size_t i = 0; i < theme_count(); i++) {
     if (theme_name_eq(name, themes[i].name))
       return &themes[i];
   }

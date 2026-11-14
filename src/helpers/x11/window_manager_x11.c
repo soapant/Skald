@@ -130,7 +130,7 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   }
   int modifiers = mods;
   if (vk_code)
-    InputState_Update(vk_code, true, modifiers, char_hint);
+    input_state_update(vk_code, true, modifiers, char_hint);
   log_info("xkey ks=0x%lx len=%d buf0=%d vk=%d mods=%d state=0x%x",
            (unsigned long)ks, len, len > 0 ? (int)(unsigned char)buf[0] : -1,
            vk_code, modifiers, ev->state);
@@ -172,7 +172,7 @@ static void x11_handle_key_release(XKeyEvent *ev) {
     vk = x11_keysym_to_vk(ks);
   int mods = remap_current_mods();
   if (vk)
-    InputState_Update(vk, false, mods, 0);
+    input_state_update(vk, false, mods, 0);
 }
 
 static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
@@ -198,8 +198,8 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
     if (ev->xbutton.button == Button4 || ev->xbutton.button == Button5) {
       int wx = 0, wy = 0;
       if (Platform_GetMousePos(&wx, &wy))
-        ListBox_PublishMousePos(wx, wy);
-      ListBox_QueueScroll(ev->xbutton.button == Button4 ? -LISTBOX_WHEEL_ROWS
+        listbox_publish_mouse_pos(wx, wy);
+      listbox_queue_scroll(ev->xbutton.button == Button4 ? -LISTBOX_WHEEL_ROWS
                                                         : LISTBOX_WHEEL_ROWS);
       if (top->vtable && top->vtable->on_render) {
         top->vtable->on_render(top);
@@ -217,14 +217,14 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
       }
       int wx = 0, wy = 0;
       if (Platform_WindowToRoot(top->handle, &wx, &wy)) {
-        ListBox_PublishMousePos(wx + ev->xbutton.x, wy + ev->xbutton.y);
+        listbox_publish_mouse_pos(wx + ev->xbutton.x, wy + ev->xbutton.y);
       }
       if (top->type == POPUP_PROMPT && top->user_data) {
         PromptState *st = (PromptState *)top->user_data;
         bool ctrl = (ev->xbutton.state & ControlMask) != 0;
         bool shift = (ev->xbutton.state & ShiftMask) != 0;
         bool alt = (ev->xbutton.state & Mod1Mask) != 0;
-        Prompt_HandleListClick(st, ctrl, shift, alt);
+        prompt_handle_list_click(st, ctrl, shift, alt);
       }
       Popup *current_top = WindowManager_GetTopPopup(wm);
       if (current_top && current_top->vtable &&
@@ -281,7 +281,7 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
 int WindowManager_Run(WindowManager *wm) {
   XEvent xev;
 
-  FeatureLoader_DrainRetiredUnloads();
+  feature_loader_drain_retired_unloads();
   if (!wm)
     return -1;
   wm->running = true;
@@ -303,7 +303,7 @@ int WindowManager_Run(WindowManager *wm) {
 
   x11_scan_and_hook_keyboards();
 
-  if (Hotkey_HasMouseBinding()) {
+  if (hotkey_has_mouse_binding()) {
     x11_mouse_grab_begin();
   }
 
@@ -319,7 +319,7 @@ int WindowManager_Run(WindowManager *wm) {
     if (x11_uinput_fd_get() >= 0) {
       x11_clear_suppress();
       remap_reset();
-      InputState_Clear();
+      input_state_clear();
       for (int i = 0; i < x11_keyboard_count_get(); i++) {
         if (!x11_device_grabbed_get(i)) {
           struct input_event drain_ev;
@@ -381,11 +381,11 @@ int WindowManager_Run(WindowManager *wm) {
   }
 
   while (wm->running) {
-    Display *rdpy = (Display *)RenderThread_Display();
+    Display *rdpy = (Display *)render_thread_display();
     struct pollfd xfds[3];
     int nfds = 0;
     int main_idx = -1, render_idx = -1, wake_idx = -1;
-    int hk_fd = Hotkey_WakeFd();
+    int hk_fd = hotkey_wake_fd();
     if (hk_fd >= 0) {
       wake_idx = nfds;
       xfds[nfds].fd = hk_fd;
@@ -432,7 +432,7 @@ int WindowManager_Run(WindowManager *wm) {
         }
       }
     }
-    Hotkey_DrainPending();
+    hotkey_drain_pending();
   }
 
   if (input_started)
@@ -446,7 +446,7 @@ int WindowManager_Run(WindowManager *wm) {
     }
   }
   destroy_uinput();
-  RenderThread_Stop();
+  render_thread_stop();
   x11_set_window_manager(NULL);
   return 0;
 }
@@ -468,7 +468,7 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
     x11_process_xevent(dpy, &ev, wm);
   }
 
-  Display *rdpy = (Display *)RenderThread_Display();
+  Display *rdpy = (Display *)render_thread_display();
   if (rdpy && rdpy != dpy) {
     struct pollfd rfd = {.fd = ConnectionNumber(rdpy), .events = POLLIN};
     poll(&rfd, 1, 0);
@@ -479,7 +479,7 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
       }
     }
   }
-  Hotkey_DrainPending();
+  hotkey_drain_pending();
 }
 
 void WindowManager_Quit(WindowManager *wm) {

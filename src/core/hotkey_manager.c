@@ -37,7 +37,7 @@ static void hotkey_binding_free_blacklist(HotkeyBinding *b) {
   b->blacklist_count = 0;
 }
 
-void Hotkey_SetSuspended(bool suspended) { hotkeys_suspended = suspended; }
+void hotkey_set_suspended(bool suspended) { hotkeys_suspended = suspended; }
 
 #define HOTKEY_PENDING_MAX 64
 static HotkeyCallback pending_q[HOTKEY_PENDING_MAX];
@@ -52,7 +52,7 @@ static void *q_mutex = NULL;
 static unsigned long pending_dropped = 0;
 
 static int wake_fd = -1;
-int Hotkey_WakeFd(void) {
+int hotkey_wake_fd(void) {
   if (wake_fd < 0) {
 #if defined(_WIN32)
     wake_fd = 0;
@@ -78,7 +78,7 @@ static void hotkey_wake(void) {
 static void hotkey_queue_init(void) {
   if (!q_mutex)
     q_mutex = Platform_MutexCreate();
-  Hotkey_WakeFd();
+  hotkey_wake_fd();
 }
 #define HOTKEY_Q_LOCK()                                                        \
   do {                                                                         \
@@ -111,7 +111,7 @@ static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
   HOTKEY_Q_UNLOCK();
 }
 
-unsigned long Hotkey_PendingDropped(void) { return pending_dropped; }
+unsigned long hotkey_pending_dropped(void) { return pending_dropped; }
 #define HOTKEY_HOLD_MAX 16
 typedef struct {
   int vk;
@@ -166,7 +166,7 @@ static void hotkey_hold_end(int vk) {
   HOTKEY_Q_UNLOCK();
 }
 
-void Hotkey_KeyUp(int vk_code) {
+void hotkey_key_up(int vk_code) {
   if (!vk_code)
     return;
   hotkey_hold_end(vk_code);
@@ -237,7 +237,7 @@ static void hotkey_tick_holds(void) {
   }
 }
 
-void Hotkey_DrainPending(void) {
+void hotkey_drain_pending(void) {
   if (hotkeys_suspended)
     return;
   hotkey_tick_holds();
@@ -262,7 +262,7 @@ void Hotkey_DrainPending(void) {
   }
 }
 
-bool Hotkey_HasMouseBinding(void) {
+bool hotkey_has_mouse_binding(void) {
   for (int i = 0; i < hotkey_total; i++) {
     int vk = hotkeys[i].vk_code;
     if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1)
@@ -277,13 +277,13 @@ static bool hotkey_blacklist_match(const HotkeyBinding *b, const char *title) {
   for (int j = 0; j < b->blacklist_count; j++) {
     if (b->blacklist[j][0] == '\0')
       continue;
-    if (title && String_ContainsCI(title, b->blacklist[j]))
+    if (title && string_contains_ci(title, b->blacklist[j]))
       return true;
   }
   return false;
 }
 
-bool Hotkey_MouseButtonBound(int btn) {
+bool hotkey_mouse_button_bound(int btn) {
   if (btn <= 0 || btn > MOUSE_BTN_MAX)
     return false;
   int vk = MOUSE_VK(btn);
@@ -309,15 +309,15 @@ bool Hotkey_MouseButtonBound(int btn) {
   return false;
 }
 
-int Hotkey_Count(void) { return hotkey_total; }
+int hotkey_count(void) { return hotkey_total; }
 
-const HotkeyBinding *Hotkey_Get(int index) {
+const HotkeyBinding *hotkey_get(int index) {
   if (index < 0 || index >= hotkey_total)
     return NULL;
   return &hotkeys[index];
 }
 
-const HotkeyBinding *Hotkey_FindByUd(const void *ud) {
+const HotkeyBinding *hotkey_find_by_ud(const void *ud) {
   if (!ud)
     return NULL;
   for (int i = 0; i < hotkey_total; i++)
@@ -326,7 +326,7 @@ const HotkeyBinding *Hotkey_FindByUd(const void *ud) {
   return NULL;
 }
 
-const HotkeyBinding *Hotkey_FindByCallback(HotkeyCallback cb) {
+const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb) {
   if (!cb)
     return NULL;
   for (int i = 0; i < hotkey_total; i++)
@@ -335,22 +335,22 @@ const HotkeyBinding *Hotkey_FindByCallback(HotkeyCallback cb) {
   return NULL;
 }
 
-bool Hotkey_IsTaken(int vk_code, int modifiers) {
+bool hotkey_is_taken(int vk_code, int modifiers) {
   for (int i = 0; i < hotkey_total; i++)
     if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers)
       return true;
   return false;
 }
 
-bool Hotkey_RegisterInternal(HotkeyBinding binding) {
+bool hotkey_register_internal(HotkeyBinding binding) {
   char owner[OWNER_PATH_MAX];
-  Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_callback, owner,
+  owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_callback, owner,
                        sizeof(owner));
   if (!owner[0])
-    Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_callback_ud, owner,
+    owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_callback_ud, owner,
                          sizeof(owner));
   if (!owner[0])
-    Owner_ResolveForFunc((void *)(uintptr_t)binding.hotkey_condition, owner,
+    owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_condition, owner,
                          sizeof(owner));
   snprintf(binding.owner, sizeof(binding.owner), "%s", owner);
 
@@ -374,7 +374,7 @@ bool Hotkey_RegisterInternal(HotkeyBinding binding) {
   return true;
 }
 
-bool Hotkey_UnregisterInternal(int vk_code, int modifiers) {
+bool hotkey_unregister_internal(int vk_code, int modifiers) {
   int n = 0;
   bool found = false;
   for (int i = 0; i < hotkey_total; i++) {
@@ -389,13 +389,13 @@ bool Hotkey_UnregisterInternal(int vk_code, int modifiers) {
   return found;
 }
 
-void Hotkey_PurgeOwner(const char *path_a, const char *path_b) {
-  if (Owner_PurgeInactive(path_a, path_b))
+void hotkey_purge_owner(const char *path_a, const char *path_b) {
+  if (owner_purge_inactive(path_a, path_b))
     return;
 
   int n = 0;
   for (int i = 0; i < hotkey_total; i++) {
-    if (Owner_ModuleMatches(hotkeys[i].owner, path_a, path_b)) {
+    if (owner_module_matches(hotkeys[i].owner, path_a, path_b)) {
       log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)",
                hotkeys[i].vk_code, hotkeys[i].modifiers);
       hotkey_binding_free_blacklist(&hotkeys[i]);
@@ -415,7 +415,7 @@ void Hotkey_PurgeOwner(const char *path_a, const char *path_b) {
     for (int k = 0; k < hotkey_total; k++) {
       if (hotkeys[k].vk_code == hold_slots[i].vk &&
           hotkeys[k].modifiers == hold_slots[i].modifiers &&
-          Owner_ModuleMatches(hotkeys[k].owner, path_a, path_b)) {
+          owner_module_matches(hotkeys[k].owner, path_a, path_b)) {
         hold_slots[i].active = false;
         break;
       }
@@ -423,7 +423,7 @@ void Hotkey_PurgeOwner(const char *path_a, const char *path_b) {
   }
   int qn = pending_head;
   while (qn != pending_tail) {
-    if (Owner_ModuleMatches(pending_owner[qn], path_a, path_b)) {
+    if (owner_module_matches(pending_owner[qn], path_a, path_b)) {
       log_info("hotkey pending entry dropped (owner unloaded)");
       pending_q[qn] = NULL;
       pending_cb_ud[qn] = NULL;
@@ -458,9 +458,9 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
     return false;
 
   if (b->hotkey_condition) {
-    FeatureLoader_Lock();
+    feature_loader_lock();
     bool cond_pass = b->hotkey_condition();
-    FeatureLoader_Unlock();
+    feature_loader_unlock();
     if (!cond_pass)
       return false;
   }
@@ -489,7 +489,7 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
   return hotkey_blacklist_match(b, title);
 }
 
-bool Hotkey_Process(int vk_code, int modifiers) {
+bool hotkey_process(int vk_code, int modifiers) {
   if (hotkeys_suspended)
     return false;
   int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
@@ -506,9 +506,9 @@ bool Hotkey_Process(int vk_code, int modifiers) {
     HotkeyCallback cb = b->hotkey_callback;
     bool swallow = true;
     if (b->should_swallow) {
-      if (FeatureLoader_TryLock()) {
+      if (feature_loader_try_lock()) {
         swallow = b->should_swallow();
-        FeatureLoader_Unlock();
+        feature_loader_unlock();
       } else {
         swallow = false;
       }
@@ -517,14 +517,14 @@ bool Hotkey_Process(int vk_code, int modifiers) {
                    eff_modifiers);
     char buf[2556];
     char hotkey_buf[2422];
-    HotkeyString_Format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},
+    hotkey_string_format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},
                         hotkey_buf, sizeof(hotkey_buf));
     if (MessageAfterEachHotkey) {
       snprintf(buf, sizeof(buf), "Ran Hotkey %s", hotkey_buf);
-      DisplayMessageSlot(buf, BOTTOM_CENTER, 400, 400, 20, TimeOutForMessages,
+      display_message_slot(buf, BOTTOM_CENTER, 400, 400, 20, TimeOutForMessages,
                          COLOR_TEXT, NULL, NULL);
     }
-    log_info("Hotkey_Process Hotkey %s Matches", hotkey_buf);
+    log_info("hotkey_process Hotkey %s Matches", hotkey_buf);
     if (b->hold)
       hotkey_hold_begin(vk_code, b->modifiers);
     return swallow;

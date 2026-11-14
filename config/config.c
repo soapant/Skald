@@ -1,7 +1,7 @@
 #include "config_values.h"
 
 // <skald-config-generated>
-void ConfigApply(void) {
+void config_apply(void) {
   Tray = true;
   RememberLastIndex = true;
   MessageAfterEachHotkey = false;
@@ -13,8 +13,6 @@ void ConfigApply(void) {
   MessageScreenGap = 20;
   WindowOpacity = 235.0f;
   UsedFont = "0xProto Nerd Font";
-  PromptWidth = 900;
-  PromptHeight = 640;
   FontSize = 18;
   IconSize = 32;
   WidgetGap = 0;

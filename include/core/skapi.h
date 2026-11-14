@@ -843,10 +843,10 @@ int sk_get_pid(void);
 #endif
 
 #define SKALD_FEATURE_INIT                                                     \
-  SKALD_FEATURE_EXPORT __attribute__((constructor)) void SkaldFeatureInit(void)
+  SKALD_FEATURE_EXPORT __attribute__((constructor)) void skald_feature_init(void)
 
 #define SKALD_FEATURE_SHUTDOWN                                                 \
-  SKALD_FEATURE_EXPORT void SkaldFeatureShutdown(void)
+  SKALD_FEATURE_EXPORT void skald_feature_shutdown(void)
 
 void sk_cap_register_abi(const char *key, unsigned abi, void *fn);
 void *sk_cap_resolve_abi(const char *key, unsigned abi);

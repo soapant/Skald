@@ -8,12 +8,12 @@
 #define HELP_SCREEN_KEY 'H'
 #define COPY_SELECTION_KEY 'Y'
 
-void Config_ResolveDefaultApps(void);
-bool Config_IsAutoResolvedApp(const char *name);
-bool Config_Load(void);
-bool Config_Reload(void);
-void Config_Unload(void);
-void Config_Save(void);
+void config_resolve_default_apps(void);
+bool config_is_auto_resolved_app(const char *name);
+bool config_load(void);
+bool config_reload(void);
+void config_unload(void);
+void config_save(void);
 
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 

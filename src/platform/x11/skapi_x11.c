@@ -42,7 +42,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[1024];
-  if (!ExpandPath(path, expanded, sizeof(expanded)))
+  if (!expand_path(path, expanded, sizeof(expanded)))
     return false;
   log_info("sk_launch expanded='%s'", expanded);
   path = expanded;
@@ -73,7 +73,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     if (exec_line[0] && args && args[0]) {
       char combined[2048];
       snprintf(combined, sizeof(combined), "%s %s", exec_line, args);
-      SafeCopy(exec_line, sizeof(exec_line), combined);
+      safe_copy(exec_line, sizeof(exec_line), combined);
     }
     if (!exec_line[0]) {
       log_warn("desktop '%s' has no usable Exec line", expanded);
@@ -189,7 +189,7 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   if (!path)
     return false;
   char expanded[MAX_PATH];
-  if (!ExpandPath(path, expanded, sizeof(expanded)))
+  if (!expand_path(path, expanded, sizeof(expanded)))
     return false;
   char cmd[2048];
   if (args && args[0])
@@ -230,7 +230,7 @@ char *sk_search_file_in_dir_platform(const char *directory,
       continue;
     if (S_ISDIR(st.st_mode))
       continue;
-    if (String_ContainsCI(entry->d_name, search_string)) {
+    if (string_contains_ci(entry->d_name, search_string)) {
       snprintf(found_path, sizeof(found_path), "%s", full_path);
       closedir(dir);
       return found_path;
@@ -258,7 +258,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
       state = (PromptState *)top->user_data;
   }
   EditboxPlace place;
-  Editbox_ResolvePlace(spec->buffer, spec->x, spec->y, spec->w, spec->h,
+  editbox_resolve_place(spec->buffer, spec->x, spec->y, spec->w, spec->h,
                        spec->fontsize, state, &place);
   int fs = place.fontsize;
   const char *buf = place.buf;
@@ -312,20 +312,20 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
                                    .caret_x = spec->caret_x,
                                    .caret_y = spec->caret_y,
                                    .caret_pos = spec->caret_pos};
-  Editbox_InitFromSpec(&ebi, &init_args);
+  editbox_init_from_spec(&ebi, &init_args);
 
   EditboxSpec eb;
-  Editbox_BuildSpec(&eb, &ebi);
+  editbox_build_spec(&eb, &ebi);
   eb.measure = x11_editbox_measure;
   eb.measure_user = &metrics;
 
-  Editbox_Render(&eb, NULL);
+  editbox_render(&eb, NULL);
   if (state)
     state->eb->scroll_offset = eb.scroll;
 
   if (state) {
     if (WindowTitleText && state->window_title) {
-      unsigned long title_col = RgbToHex(COLOR_TEXT);
+      unsigned long title_col = rgb_to_hex(COLOR_TEXT);
       x11_set_draw_context(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
           (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
@@ -355,7 +355,7 @@ static void *x11_timer_thread(void *arg) {
   if (payload->callback) {
     payload->callback();
   }
-  ThreadRegistry_Finish(payload);
+  thread_registry_finish(payload);
   free(payload);
   return NULL;
 }
@@ -380,7 +380,7 @@ void sk_sleep_platform(double seconds) {
 
 int sk_get_active_interface_platform(char out[], size_t max_len) {
   static char content[16384];
-  if (File_ReadAll("/proc/net/route", content, (long)sizeof(content)) <= 0)
+  if (file_read_all("/proc/net/route", content, (long)sizeof(content)) <= 0)
     return 0;
   int found = 0;
   char *cur = content;
@@ -401,7 +401,7 @@ int sk_get_active_interface_platform(char out[], size_t max_len) {
     if (sscanf(line, "%63s %lx %*s %*s %*s %*s %*s %lx", iface, &dest, &mask) ==
         3) {
       if (dest == 0 && mask == 0) {
-        SafeCopy(out, max_len, iface);
+        safe_copy(out, max_len, iface);
         found = 1;
         break;
       }

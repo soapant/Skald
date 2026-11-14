@@ -43,32 +43,32 @@ TEST(register_and_drain_ud_callback) {
   reset_counters();
   int marker = 0x1234;
   HotkeyBinding b = make_binding(TEST_VK_A, 0, ud_cb, &marker, NULL);
-  ASSERT_TRUE(Hotkey_RegisterInternal(b));
-  ASSERT_TRUE(Hotkey_Process(TEST_VK_A, 0));
-  Hotkey_DrainPending();
+  ASSERT_TRUE(hotkey_register_internal(b));
+  ASSERT_TRUE(hotkey_process(TEST_VK_A, 0));
+  hotkey_drain_pending();
   ASSERT_EQ_INT(ud_calls, 1);
   ASSERT_EQ_INT(ud_seen == &marker, 1);
-  Hotkey_DrainPending();
+  hotkey_drain_pending();
   ASSERT_EQ_INT(ud_calls, 1);
 }
 
 TEST(register_and_drain_legacy_callback) {
   reset_counters();
   HotkeyBinding b = make_binding(TEST_VK_B, 0, NULL, NULL, fn_cb);
-  ASSERT_TRUE(Hotkey_RegisterInternal(b));
-  ASSERT_TRUE(Hotkey_Process(TEST_VK_B, 0));
-  Hotkey_DrainPending();
+  ASSERT_TRUE(hotkey_register_internal(b));
+  ASSERT_TRUE(hotkey_process(TEST_VK_B, 0));
+  hotkey_drain_pending();
   ASSERT_EQ_INT(fn_calls, 1);
 }
 
 TEST(unregister_removes_binding) {
   reset_counters();
   HotkeyBinding b = make_binding(TEST_VK_C, 0, ud_cb, &reset_counters, NULL);
-  ASSERT_TRUE(Hotkey_RegisterInternal(b));
-  ASSERT_TRUE(Hotkey_IsTaken(TEST_VK_C, 0));
-  ASSERT_TRUE(Hotkey_UnregisterInternal(TEST_VK_C, 0));
-  ASSERT_FALSE(Hotkey_IsTaken(TEST_VK_C, 0));
-  Hotkey_DrainPending();
+  ASSERT_TRUE(hotkey_register_internal(b));
+  ASSERT_TRUE(hotkey_is_taken(TEST_VK_C, 0));
+  ASSERT_TRUE(hotkey_unregister_internal(TEST_VK_C, 0));
+  ASSERT_FALSE(hotkey_is_taken(TEST_VK_C, 0));
+  hotkey_drain_pending();
   ASSERT_EQ_INT(ud_calls, 0);
 }
 
@@ -76,32 +76,32 @@ TEST(purge_owner_removes_binding_and_pending) {
   reset_counters();
   int marker = 0xABCD;
   HotkeyBinding b = make_binding(TEST_VK_D, 0, ud_cb, &marker, NULL);
-  ASSERT_TRUE(Hotkey_RegisterInternal(b));
+  ASSERT_TRUE(hotkey_register_internal(b));
   int found = -1;
-  for (int i = 0; i < Hotkey_Count(); i++) {
-    const HotkeyBinding *x = Hotkey_Get(i);
+  for (int i = 0; i < hotkey_count(); i++) {
+    const HotkeyBinding *x = hotkey_get(i);
     if (x && x->vk_code == TEST_VK_D)
       found = i;
   }
   ASSERT_TRUE(found >= 0);
-  ASSERT_TRUE(Hotkey_Process(TEST_VK_D, 0));
-  Hotkey_PurgeOwner(Hotkey_Get(found)->owner, NULL);
-  ASSERT_FALSE(Hotkey_IsTaken(TEST_VK_D, 0));
+  ASSERT_TRUE(hotkey_process(TEST_VK_D, 0));
+  hotkey_purge_owner(hotkey_get(found)->owner, NULL);
+  ASSERT_FALSE(hotkey_is_taken(TEST_VK_D, 0));
   reset_counters();
-  Hotkey_DrainPending();
+  hotkey_drain_pending();
   ASSERT_EQ_INT(ud_calls, 0);
 }
 
 TEST(suspended_hotkeys_do_not_dispatch) {
   reset_counters();
-  Hotkey_SetSuspended(true);
+  hotkey_set_suspended(true);
   HotkeyBinding b = make_binding(0xF4, 0, ud_cb, &reset_counters, NULL);
-  ASSERT_TRUE(Hotkey_RegisterInternal(b));
-  Hotkey_Process(0xF4, 0);
-  Hotkey_DrainPending();
+  ASSERT_TRUE(hotkey_register_internal(b));
+  hotkey_process(0xF4, 0);
+  hotkey_drain_pending();
   ASSERT_EQ_INT(ud_calls, 0);
-  Hotkey_SetSuspended(false);
-  Hotkey_UnregisterInternal(0xF4, 0);
+  hotkey_set_suspended(false);
+  hotkey_unregister_internal(0xF4, 0);
 }
 
 int main(void) {

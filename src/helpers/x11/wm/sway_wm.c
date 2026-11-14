@@ -103,7 +103,7 @@ static bool sway_tree_field(char *buffer, int buffer_size, const char *key) {
     ok = true;
     break;
   }
-  StringList_Free(&lines);
+  string_list_free(&lines);
   free(command_output);
   return ok;
 }
@@ -124,7 +124,7 @@ static bool succeded_sway(char *output) {
   }
   StringList lines = String_Split(output, "\n");
   for (size_t i = 0; i < lines.count; i++) {
-    if (String_ContainsCI(lines.items[i], "\"error\"")) {
+    if (string_contains_ci(lines.items[i], "\"error\"")) {
       log_error("output='%s'", output ? output : "null");
       return false;
     }
@@ -217,11 +217,11 @@ bool focus_window_title_sway(const char *title) {
   }
   *d = '\0';
   char low[1024];
-  SafeCopy(low, sizeof(low), escaped);
+  safe_copy(low, sizeof(low), escaped);
   if (low[0])
     low[0] = tolower((unsigned char)low[0]);
   char up[1024];
-  SafeCopy(up, sizeof(up), escaped);
+  safe_copy(up, sizeof(up), escaped);
   if (up[0])
     up[0] = toupper((unsigned char)up[0]);
   const char *targets[3] = {escaped, NULL, NULL};
@@ -342,7 +342,7 @@ static PlWindowList sway_list_pid_fields(bool (*extract)(const char *json,
       continue;
     if (!buf[0] || !strcmp(buf, "null"))
       continue;
-    if (!Wm_AppendWindowName(&list, buf, toupper_first))
+    if (!wm_append_window_name(&list, buf, toupper_first))
       break;
   }
   free(json);

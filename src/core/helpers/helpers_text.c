@@ -14,7 +14,7 @@
 #include "core/types/file.h"
 #include "deps/log.h"
 
-bool SafeCopy(char *dst, size_t cap, const char *src) {
+bool safe_copy(char *dst, size_t cap, const char *src) {
   if (!dst || cap == 0)
     return false;
   if (!src)
@@ -25,12 +25,12 @@ bool SafeCopy(char *dst, size_t cap, const char *src) {
   memcpy(dst, src, n);
   dst[n] = '\0';
   if (truncated)
-    log_warn("SafeCopy: truncated %zu-byte string into %zu-byte buffer", len,
+    log_warn("safe_copy: truncated %zu-byte string into %zu-byte buffer", len,
              cap);
   return !truncated;
 }
 
-bool SafeCat(char *dst, size_t cap, const char *src) {
+bool safe_cat(char *dst, size_t cap, const char *src) {
   if (!dst || cap == 0)
     return false;
   if (!src)
@@ -41,7 +41,7 @@ bool SafeCat(char *dst, size_t cap, const char *src) {
     size_t room = cap > have + 1 ? cap - have - 1 : 0;
     memcpy(dst + have, src, room);
     dst[have + room] = '\0';
-    log_warn("SafeCat: truncated append into %zu-byte buffer", cap);
+    log_warn("safe_cat: truncated append into %zu-byte buffer", cap);
     return false;
   }
   memcpy(dst + have, src, add + 1);
@@ -56,7 +56,7 @@ Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 
-  HotkeyString_Parse(hotkey_string, &key);
+  hotkey_string_parse(hotkey_string, &key);
 
   output.vk_code = key.vk_code;
   output.modifiers = key.mods;
@@ -161,7 +161,7 @@ StringList String_Split(const char *string, const char *delimiter) {
   return result;
 }
 
-void StringList_Free(StringList *list) {
+void string_list_free(StringList *list) {
   if (!list)
     return;
 
@@ -243,7 +243,7 @@ static char *read_all_dynamic(const char *path) {
   return buf;
 }
 
-long File_ReadAll(const char *path, char *buffer, long buffer_size) {
+long file_read_all(const char *path, char *buffer, long buffer_size) {
   if (!path || !buffer || buffer_size <= 0)
     return -1;
 
@@ -275,7 +275,7 @@ long File_ReadAll(const char *path, char *buffer, long buffer_size) {
   return (long)total;
 }
 
-static char String_MatchingClose(char open) {
+static char string_matching_close(char open) {
   switch (open) {
   case '(':
     return ')';
@@ -296,7 +296,7 @@ static char String_MatchingClose(char open) {
   }
 }
 
-char *String_CutAt(const char *str, char delim) {
+char *string_cut_at(const char *str, char delim) {
   if (!str)
     return NULL;
   const char *p = strchr(str, delim);
@@ -305,7 +305,7 @@ char *String_CutAt(const char *str, char delim) {
   return strdup(p);
 }
 
-char *String_CutBefore(const char *str, char delim) {
+char *string_cut_before(const char *str, char delim) {
   if (!str)
     return NULL;
   const char *p = strchr(str, delim);
@@ -320,7 +320,7 @@ char *String_CutBefore(const char *str, char delim) {
   return out;
 }
 
-char *String_CutAfter(const char *str, char delim) {
+char *string_cut_after(const char *str, char delim) {
   if (!str)
     return NULL;
   const char *p = strchr(str, delim);
@@ -329,7 +329,7 @@ char *String_CutAfter(const char *str, char delim) {
   return strdup(p + 1);
 }
 
-char *String_Between(const char *str, char open, char close) {
+char *string_between(const char *str, char open, char close) {
   if (!str)
     return NULL;
   const char *start = strchr(str, open);
@@ -370,10 +370,10 @@ char *String_Between(const char *str, char open, char close) {
   return NULL;
 }
 
-char *String_Inside(const char *str, char delim) {
+char *string_inside(const char *str, char delim) {
   if (!str)
     return NULL;
-  char close = String_MatchingClose(delim);
+  char close = string_matching_close(delim);
   if (delim == close) {
     const char *p = str;
     char *last = NULL;
@@ -430,7 +430,7 @@ char *String_Inside(const char *str, char delim) {
   }
 }
 
-char *String_Trim(const char *str) {
+char *string_trim(const char *str) {
   if (!str)
     return NULL;
   const char *s = str;
@@ -459,22 +459,22 @@ static char *dup_case_conv(const char *str, int (*conv)(int)) {
   return out;
 }
 
-char *String_ToLower(const char *str) {
+char *string_to_lower(const char *str) {
   return dup_case_conv(str, (int (*)(int))tolower);
 }
 
-char *String_ToUpper(const char *str) {
+char *string_to_upper(const char *str) {
   return dup_case_conv(str, (int (*)(int))toupper);
 }
 
-bool String_StartsWith(const char *str, const char *prefix) {
+bool string_starts_with(const char *str, const char *prefix) {
   if (!str || !prefix)
     return false;
   size_t n = strlen(prefix);
   return strncmp(str, prefix, n) == 0;
 }
 
-bool String_EndsWith(const char *str, const char *suffix) {
+bool string_ends_with(const char *str, const char *suffix) {
   if (!str || !suffix)
     return false;
   size_t ls = strlen(str);
@@ -484,7 +484,7 @@ bool String_EndsWith(const char *str, const char *suffix) {
   return strcmp(str + ls - lx, suffix) == 0;
 }
 
-char *String_Replace(const char *str, const char *from, const char *to) {
+char *string_replace(const char *str, const char *from, const char *to) {
   if (!str || !from || !to)
     return NULL;
   size_t lf = strlen(from);
@@ -517,7 +517,7 @@ char *String_Replace(const char *str, const char *from, const char *to) {
   return out;
 }
 
-char *String_Slice(const char *str, int start, int end) {
+char *string_slice(const char *str, int start, int end) {
   if (!str)
     return NULL;
   int len = (int)strlen(str);
@@ -628,11 +628,11 @@ static const char *file_walk_builtin_ignored_names[] = {".git",
 static bool file_walk_ignored_dir(const char *dir_name,
                                   char **names_to_ignore) {
   for (int i = 0; file_walk_builtin_ignored_names[i] != NULL; i++)
-    if (String_EqualsCI(dir_name, file_walk_builtin_ignored_names[i]))
+    if (string_equals_ci(dir_name, file_walk_builtin_ignored_names[i]))
       return true;
   if (names_to_ignore) {
     for (int i = 0; names_to_ignore[i] != NULL; i++)
-      if (String_EqualsCI(dir_name, names_to_ignore[i]))
+      if (string_equals_ci(dir_name, names_to_ignore[i]))
         return true;
   }
   return false;
@@ -650,7 +650,7 @@ static bool file_walk_extension_allowed(const char *filename,
     const char *want = allowed_extensions[i];
     if (want && want[0] == '.')
       want++;
-    if (String_EqualsCI(ext, want))
+    if (string_equals_ci(ext, want))
       return true;
   }
   return false;
@@ -746,7 +746,7 @@ static bool file_walk_dir(const char *dir_path,
   return true;
 }
 
-bool FileWalk_AllFilesFromDir(const char *dir_path,
+bool file_walk_all_files_from_dir(const char *dir_path,
                               char **list_of_allowed_extensions,
                               ListOfFiles *list_of_files,
                               char **list_of_names_to_ignore,
@@ -759,7 +759,7 @@ bool FileWalk_AllFilesFromDir(const char *dir_path,
 
 #include <sys/time.h>
 
-bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
+bool hotkey_text_is_printable(const PopupKeyEvent *key) {
   if (!key || key->text_len <= 0)
     return false;
   for (int i = 0; i < key->text_len; i++) {
@@ -770,7 +770,7 @@ bool HotkeyText_IsPrintable(const PopupKeyEvent *key) {
   return true;
 }
 
-bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key) {
+bool hotkey_text_should_swallow(const PopupKeyEvent *key) {
   if (!key)
     return false;
   bool trigger_press = false;
@@ -804,7 +804,7 @@ bool HotkeyText_ShouldSwallow(const PopupKeyEvent *key) {
   return !trigger_press && (key->ctrl);
 }
 
-bool String_ContainsCI(const char *haystack, const char *needle) {
+bool string_contains_ci(const char *haystack, const char *needle) {
   if (!haystack || !needle)
     return false;
   size_t nlen = strlen(needle);
@@ -822,7 +822,7 @@ bool String_ContainsCI(const char *haystack, const char *needle) {
   return false;
 }
 
-bool String_StartsWithCI(const char *str, const char *prefix) {
+bool string_starts_with_ci(const char *str, const char *prefix) {
   if (!str || !prefix)
     return false;
   size_t plen = strlen(prefix);
@@ -833,7 +833,7 @@ bool String_StartsWithCI(const char *str, const char *prefix) {
   return true;
 }
 
-bool String_EqualsCI(const char *a, const char *b) {
+bool string_equals_ci(const char *a, const char *b) {
   if (!a || !b)
     return false;
   while (*a && *b) {
@@ -845,7 +845,7 @@ bool String_EqualsCI(const char *a, const char *b) {
   return *a == *b;
 }
 
-void Url_BuildSearchUrl(const char *engine, const char *query, char *out,
+void url_build_search_url(const char *engine, const char *query, char *out,
                         size_t cap) {
   if (!out || cap == 0)
     return;
@@ -874,11 +874,11 @@ void Url_BuildSearchUrl(const char *engine, const char *query, char *out,
 
   const char *templ = "https://duckduckgo.com/?q=%s";
   if (engine) {
-    if (String_ContainsCI(engine, "google"))
+    if (string_contains_ci(engine, "google"))
       templ = "https://www.google.com/search?q=%s";
-    else if (String_ContainsCI(engine, "duckduckgo"))
+    else if (string_contains_ci(engine, "duckduckgo"))
       templ = "https://duckduckgo.com/?q=%s";
-    else if (String_ContainsCI(engine, "bing"))
+    else if (string_contains_ci(engine, "bing"))
       templ = "https://www.bing.com/search?q=%s";
   }
   const char *pct = strstr(templ, "%s");
@@ -890,7 +890,7 @@ void Url_BuildSearchUrl(const char *engine, const char *query, char *out,
   snprintf(out, cap, "%s", templ);
 }
 
-int Utf8_LeadLen(unsigned char c) {
+int utf8_lead_len(unsigned char c) {
   if (c < 0x80)
     return 1;
   if ((c & 0xE0) == 0xC0)
@@ -902,7 +902,7 @@ int Utf8_LeadLen(unsigned char c) {
   return 1;
 }
 
-bool List_Append(PlWindowList *list, const char *item) {
+bool list_append(PlWindowList *list, const char *item) {
   if (!list || !item)
     return false;
   char *copy = strdup(item);
@@ -919,13 +919,13 @@ bool List_Append(PlWindowList *list, const char *item) {
   return true;
 }
 
-bool Window_ListAllows(int window_count, bool whitelist, char *const *windows,
+bool window_list_allows(int window_count, bool whitelist, char *const *windows,
                        const char *title) {
   if (window_count == 0)
     return !whitelist;
   if (!whitelist) {
     for (int j = 0; j < window_count; j++) {
-      if (windows[j] && windows[j][0] && String_ContainsCI(title, windows[j]))
+      if (windows[j] && windows[j][0] && string_contains_ci(title, windows[j]))
         return false;
     }
     return true;
@@ -933,7 +933,7 @@ bool Window_ListAllows(int window_count, bool whitelist, char *const *windows,
   if (!title)
     return false;
   for (int j = 0; j < window_count; j++) {
-    if (windows[j] && windows[j][0] && String_ContainsCI(title, windows[j]))
+    if (windows[j] && windows[j][0] && string_contains_ci(title, windows[j]))
       return true;
   }
   return false;

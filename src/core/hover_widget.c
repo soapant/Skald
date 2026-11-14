@@ -30,7 +30,7 @@ typedef struct {
 
 static HoverWidgetSlot hover_widgets[HOVER_WIDGET_MAX];
 
-static int HoverWidgetFind(const char *key) {
+static int hover_widget_find(const char *key) {
   for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
     if (hover_widgets[i].w && !hover_widgets[i].dead &&
         strcmp(hover_widgets[i].key, key) == 0)
@@ -39,7 +39,7 @@ static int HoverWidgetFind(const char *key) {
   return -1;
 }
 
-static void HoverWidgetFrame(void *ud) {
+static void hover_widget_frame(void *ud) {
   HoverWidgetSlot *s = (HoverWidgetSlot *)ud;
   if (!s || !s->w || s->dead) {
     return;
@@ -70,7 +70,7 @@ static void hover_widget_destroy_slot(HoverWidgetSlot *s) {
   void *release_ud = s->release_ud;
   memset(s, 0, sizeof(*s));
   if (w) {
-    Widget_SetFrameCallback(w, NULL, NULL);
+    widget_set_frame_callback(w, NULL, NULL);
     Platform_Widget_Destroy(w);
     Platform_Widget_FlushDestruction();
   }
@@ -82,7 +82,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
                                void *ud, void *owner_src, int x, int y, int w,
                                int h, int fps, bool no_bg, unsigned long bg_hex,
                                void (*release)(void *ud), void *release_ud) {
-  int idx = HoverWidgetFind(key);
+  int idx = hover_widget_find(key);
   if (idx >= 0) {
     HoverWidgetSlot *s = &hover_widgets[idx];
     void (*old_release)(void *) = s->release;
@@ -92,7 +92,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
     s->release = release;
     s->release_ud = release_ud;
     s->owner[0] = '\0';
-    Owner_ResolveForFunc(owner_src ? owner_src : (void *)render, s->owner,
+    owner_resolve_for_func(owner_src ? owner_src : (void *)render, s->owner,
                          sizeof(s->owner));
     bool geom_changed =
         (s->x != x || s->y != y || s->w_px != w || s->h_px != h);
@@ -113,7 +113,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
       Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
       Platform_Widget_SetNoBg(pw, no_bg);
     }
-    Widget_Invalidate(pw);
+    widget_invalidate(pw);
     if (old_release && (old_release != release || old_release_ud != release_ud))
       old_release(old_release_ud);
     return;
@@ -156,22 +156,22 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   s->w = pw;
   Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
   Platform_Widget_SetNoBg(pw, no_bg);
-  Widget_SetFrameCallback(pw, HoverWidgetFrame, s);
+  widget_set_frame_callback(pw, hover_widget_frame, s);
   s->owner[0] = '\0';
-  Owner_ResolveForFunc(owner_src ? owner_src : (void *)render, s->owner,
+  owner_resolve_for_func(owner_src ? owner_src : (void *)render, s->owner,
                        sizeof(s->owner));
 }
 
 static void hover_widget_hide_apply(const char *key) {
-  int idx = HoverWidgetFind(key);
+  int idx = hover_widget_find(key);
   if (idx < 0) {
     return;
   }
   hover_widget_destroy_slot(&hover_widgets[idx]);
 }
 
-void HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
-  if (Owner_PurgeInactive(path_a, path_b)) {
+void hover_widget_purge_owner(const char *path_a, const char *path_b) {
+  if (owner_purge_inactive(path_a, path_b)) {
     return;
   }
   bool any = false;
@@ -180,7 +180,7 @@ void HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
     if (!s->w || s->dead) {
       continue;
     }
-    if (Owner_ModuleMatches(s->owner, path_a, path_b)) {
+    if (owner_module_matches(s->owner, path_a, path_b)) {
       s->dead = true;
       any = true;
     }
@@ -188,7 +188,7 @@ void HoverWidget_PurgeOwner(const char *path_a, const char *path_b) {
   if (!any) {
     return;
   }
-  RenderThread_Sync();
+  render_thread_sync();
   for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
     if (hover_widgets[i].dead) {
       hover_widget_destroy_slot(&hover_widgets[i]);
@@ -215,7 +215,7 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
                               void *ud, void *owner_src, int x, int y, int w,
                               int h, int fps, bool no_bg, unsigned long bg_hex,
                               void (*release)(void *ud), void *release_ud) {
-  if (RenderThread_IsCurrentThread()) {
+  if (render_thread_is_current_thread()) {
     if (op == HOVER_OP_HIDE)
       hover_widget_hide_apply(key);
     else
@@ -223,7 +223,7 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
                          bg_hex, release, release_ud);
     return true;
   }
-  if (!RenderThread_IsRunning())
+  if (!render_thread_is_running())
     return false;
   HoverWidgetRequest *r = (HoverWidgetRequest *)calloc(1, sizeof(*r));
   if (!r)
@@ -242,17 +242,17 @@ static bool hover_widget_post(int op, const char *key, void (*render)(void *ud),
   r->bg_hex = bg_hex;
   r->release = release;
   r->release_ud = release_ud;
-  if (RenderThread_Post(hover_widget_dispatch, r))
+  if (render_thread_post(hover_widget_dispatch, r))
     return true;
   free(r);
   return false;
 }
 
-void HoverWidgetHide(const char *key) {
+void hover_widget_hide(const char *key) {
   if (!key || !key[0]) {
     return;
   }
-  if (HoverWidgetFind(key) < 0) {
+  if (hover_widget_find(key) < 0) {
     return;
   }
   if (!hover_widget_post(HOVER_OP_HIDE, key, NULL, NULL, NULL, 0, 0, 0, 0, 0,
@@ -261,7 +261,7 @@ void HoverWidgetHide(const char *key) {
   }
 }
 
-void HoverWidgetShow(PlHoverWidgetShowSpec spec) {
+void hover_widget_show(HoverWidgetShowSpec spec) {
   const char *key = spec.key;
   void (*render)(void *ud) = spec.render;
   void *ud = spec.ud;

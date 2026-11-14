@@ -9,13 +9,13 @@
 TEST(backspace_removes_before_cursor) {
   char buf[64] = "hello";
   size_t cur = 5;
-  EditBufferBackspace(buf, &cur);
+  edit_buffer_backspace(buf, &cur);
   ASSERT_EQ_STR(buf, "hell");
   ASSERT_EQ_INT(cur, 4);
 
   char b3[8] = "abc";
   size_t mid = 1;
-  EditBufferBackspace(b3, &mid);
+  edit_buffer_backspace(b3, &mid);
   ASSERT_EQ_STR(b3, "bc");
   ASSERT_EQ_INT(mid, 0);
 }
@@ -23,7 +23,7 @@ TEST(backspace_removes_before_cursor) {
 TEST(backspace_at_zero_is_noop) {
   char buf[8] = "ab";
   size_t cur = 0;
-  EditBufferBackspace(buf, &cur);
+  edit_buffer_backspace(buf, &cur);
   ASSERT_EQ_STR(buf, "ab");
   ASSERT_EQ_INT(cur, 0);
 }
@@ -31,45 +31,45 @@ TEST(backspace_at_zero_is_noop) {
 TEST(delete_char_middle_and_ends) {
   char b[16] = "bca";
   size_t cur = 0;
-  ASSERT_TRUE(EditBufferDeleteChar(b, &cur));
+  ASSERT_TRUE(edit_buffer_delete_char(b, &cur));
   ASSERT_EQ_STR(b, "ca");
   ASSERT_EQ_INT(cur, 0);
 
   char b2[16] = "bca";
   size_t mid = 1;
-  ASSERT_TRUE(EditBufferDeleteChar(b2, &mid));
+  ASSERT_TRUE(edit_buffer_delete_char(b2, &mid));
   ASSERT_EQ_STR(b2, "ba");
   ASSERT_EQ_INT(mid, 1);
 
   char b3[16] = "bca";
   size_t end = strlen(b3);
-  ASSERT_FALSE(EditBufferDeleteChar(b3, &end));
+  ASSERT_FALSE(edit_buffer_delete_char(b3, &end));
   ASSERT_EQ_STR(b3, "bca");
 }
 
 TEST(cursor_movement_bounds) {
   size_t cur = 0;
-  ASSERT_TRUE(CursorForward(&cur, 3));
+  ASSERT_TRUE(cursor_forward(&cur, 3));
   ASSERT_EQ_INT(cur, 1);
   cur = 3;
-  ASSERT_FALSE(CursorForward(&cur, 3));
+  ASSERT_FALSE(cursor_forward(&cur, 3));
   ASSERT_EQ_INT(cur, 3);
 }
 
 TEST(pair_for_round_pairs) {
-  ASSERT_EQ_INT(EditBufferPairFor('{'), '}');
-  ASSERT_EQ_INT(EditBufferPairFor('('), ')');
-  ASSERT_EQ_INT(EditBufferPairFor('['), ']');
-  ASSERT_EQ_INT(EditBufferPairFor('"'), '"');
-  ASSERT_EQ_INT(EditBufferPairFor('\''), '\'');
-  ASSERT_EQ_INT(EditBufferPairFor('x'), 0);
+  ASSERT_EQ_INT(edit_buffer_pair_for('{'), '}');
+  ASSERT_EQ_INT(edit_buffer_pair_for('('), ')');
+  ASSERT_EQ_INT(edit_buffer_pair_for('['), ']');
+  ASSERT_EQ_INT(edit_buffer_pair_for('"'), '"');
+  ASSERT_EQ_INT(edit_buffer_pair_for('\''), '\'');
+  ASSERT_EQ_INT(edit_buffer_pair_for('x'), 0);
 }
 
 TEST(insert_into_middle) {
   EnableAutoPairing = false;
   char buf[16] = "ac";
   size_t cur = 1;
-  size_t total = EditBufferInsertText(buf, sizeof(buf), &cur, "b", 1);
+  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, "b", 1);
   ASSERT_EQ_INT(total, 1);
   ASSERT_EQ_STR(buf, "abc");
   ASSERT_EQ_INT(cur, 2);
@@ -79,13 +79,13 @@ TEST(insert_respects_capacity) {
   EnableAutoPairing = false;
   char buf[4] = "abc";
   size_t cur = 3;
-  size_t total = EditBufferInsertText(buf, sizeof(buf), &cur, "yy", 2);
+  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, "yy", 2);
   ASSERT_EQ_INT(total, 0);
   ASSERT_EQ_STR(buf, "abc");
 
   char small[4] = "abc";
   size_t end = 3;
-  ASSERT_EQ_INT(EditBufferInsertText(small, sizeof(small), &end, "y", 1), 0);
+  ASSERT_EQ_INT(edit_buffer_insert_text(small, sizeof(small), &end, "y", 1), 0);
   ASSERT_EQ_STR(small, "abc");
 }
 
@@ -94,14 +94,14 @@ TEST(insert_autopair_opener) {
 
   char buf[16] = "";
   size_t cur = 0;
-  size_t total = EditBufferInsertText(buf, sizeof(buf), &cur, "{", 1);
+  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, "{", 1);
   ASSERT_EQ_INT(total, 2);
   ASSERT_EQ_STR(buf, "{}");
   ASSERT_EQ_INT(cur, 1);
 
   char b4[16] = "";
   size_t start = 0;
-  ASSERT_EQ_INT(EditBufferInsertText(b4, sizeof(b4), &start, "\"", 1), 2);
+  ASSERT_EQ_INT(edit_buffer_insert_text(b4, sizeof(b4), &start, "\"", 1), 2);
   ASSERT_EQ_STR(b4, "\"\"");
   ASSERT_EQ_INT(start, 1);
 
@@ -113,7 +113,7 @@ TEST(insert_quote_after_letter_is_not_paired) {
 
   char buf[16] = "ab";
   size_t cur = strlen(buf);
-  size_t total = EditBufferInsertText(buf, sizeof(buf), &cur, "\"", 1);
+  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, "\"", 1);
   ASSERT_EQ_INT(total, 1);
   ASSERT_EQ_STR(buf, "ab\"");
   ASSERT_EQ_INT(cur, 3);
@@ -126,7 +126,7 @@ TEST(insert_skips_over_closer) {
 
   char buf[16] = "()";
   size_t cur = 1;
-  size_t total = EditBufferInsertText(buf, sizeof(buf), &cur, ")", 1);
+  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, ")", 1);
   ASSERT_EQ_INT(total, 0);
   ASSERT_EQ_STR(buf, "()");
   ASSERT_EQ_INT(cur, 2);
@@ -139,7 +139,7 @@ TEST(insert_closer_at_end_appends) {
 
   char buf[16] = "ab";
   size_t cur = strlen(buf);
-  EditBufferInsertText(buf, sizeof(buf), &cur, "}", 1);
+  edit_buffer_insert_text(buf, sizeof(buf), &cur, "}", 1);
   ASSERT_EQ_STR(buf, "ab}");
   ASSERT_EQ_INT(cur, 3);
 
@@ -151,7 +151,7 @@ TEST(backspace_pair_deletes_both) {
 
   char buf[8] = "()";
   size_t cur = 1;
-  ASSERT_TRUE(EditBufferBackspacePair(buf, &cur));
+  ASSERT_TRUE(edit_buffer_backspace_pair(buf, &cur));
   ASSERT_EQ_STR(buf, "");
   ASSERT_EQ_INT(cur, 0);
 
@@ -163,12 +163,12 @@ TEST(backspace_pair_disabled_or_empty) {
 
   char b2[8] = "()";
   size_t c2 = 2;
-  ASSERT_FALSE(EditBufferBackspacePair(b2, &c2));
+  ASSERT_FALSE(edit_buffer_backspace_pair(b2, &c2));
 
   EnableAutoPairing = true;
   char b3[8] = "";
   size_t c3 = 0;
-  ASSERT_FALSE(EditBufferBackspacePair(b3, &c3));
+  ASSERT_FALSE(edit_buffer_backspace_pair(b3, &c3));
 
   EnableAutoPairing = false;
 }

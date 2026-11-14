@@ -31,6 +31,6 @@ typedef struct {
 } SkaldContext;
 
 SkaldContext *SkaldContext_Get(void);
-void SkaldContext_Clear(void);
+void skald_context_clear(void);
 
 #endif

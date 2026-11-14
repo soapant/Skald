@@ -15,11 +15,11 @@ typedef struct {
   bool valid;
 } FeatureManifest;
 
-void Manifest_Trim(char *s);
-void Manifest_Unquote(char *s);
-bool Manifest_ParseString(const char *name, const char *data,
+void manifest_trim(char *s);
+void manifest_unquote(char *s);
+bool manifest_parse_string(const char *name, const char *data,
                           FeatureManifest *out);
-bool Manifest_ParseFile(const char *path, const char *name,
+bool manifest_parse_file(const char *path, const char *name,
                         FeatureManifest *out);
 
 #endif

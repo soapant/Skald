@@ -61,7 +61,7 @@ static const char *get_default_browser(void) {
   return found ? found : "chrome";
 }
 
-static const char *Platform_GetDefaultTerminal(void) {
+static const char *win32_get_default_terminal(void) {
 
   int slot = DEFAULT_TERMINAL;
   default_apps_win32[slot][0] = '\0';
@@ -112,7 +112,7 @@ const char *Platform_GetDefaultApp(DefaultAppKind kind) {
     break;
 
   case DEFAULT_TERMINAL:
-    return Platform_GetDefaultTerminal();
+    return win32_get_default_terminal();
 
   default:
     default_apps_win32[kind][0] = '\0';
