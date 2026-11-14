@@ -176,7 +176,8 @@ void StringList_Free(StringList *list) {
 
 static const char *resolve_home_path(const char *path, char *expanded,
                                      size_t cap) {
-  if (!(path[0] == '~' && (path[1] == '/' || path[1] == '\0')))
+  if (!(path[0] == '~' &&
+        (path[1] == '/' || path[1] == '\\' || path[1] == '\0')))
     return path;
 
   const char *home = Platform_GetRealHome();

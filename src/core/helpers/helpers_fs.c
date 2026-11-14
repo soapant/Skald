@@ -100,7 +100,8 @@ bool ExpandPath(const char *template_path, char *out, size_t out_size) {
     return false;
 
   if (template_path[0] == '~' &&
-      (template_path[1] == '/' || template_path[1] == '\0')) {
+      (template_path[1] == '/' || template_path[1] == '\\' ||
+       template_path[1] == '\0')) {
     const char *home = Platform_GetRealHome();
     if (home && home[0]) {
       size_t hn = strlen(home);
