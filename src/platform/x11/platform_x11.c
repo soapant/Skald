@@ -922,7 +922,7 @@ char *Platform_GetIconPath(char *app_path) {
   hit = icon_try(bare, "/usr/share/pixmaps/%s.xpm", bare);
   if (hit)
     return hit;
-  snprintf(pix, sizeof(pix), "resources/Skald.png");
+  snprintf(pix, sizeof(pix), "resources/IconFallback.png");
   if (access(pix, F_OK) == 0)
     return strdup(pix);
   log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");
