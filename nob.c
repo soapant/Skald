@@ -559,8 +559,9 @@ static bool emit_sdk(const char *dst_sdk) {
   return ok;
 }
 
-static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
-  const char *so = feature_so_path(src);
+static void append_plugin_build_cmd(Nob_Cmd *cmd, const char *src,
+                                    const char *out) {
+  const char *so = out;
   if (target_win32) {
     nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS, "-I", sdk_dir, "-shared", "-o",
                    so, src, main_implib, WIN_LINK_FLAGS);
@@ -589,6 +590,41 @@ static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
     else
       nob_cmd_append(cmd, "-ggdb");
   }
+}
+
+static const char *config_src_path(void) {
+  return release ? "release/config/config.c" : "config/config.c";
+}
+
+static const char *config_out_path(void) {
+  return nob_temp_sprintf("%s/config%s", release ? "release/build" : "build",
+                          feature_ext());
+}
+
+static bool build_config(void) {
+  const char *src = config_src_path();
+  const char *out = config_out_path();
+  if (!nob_file_exists(src)) {
+    nob_log(NOB_INFO, "config: no %s, skipping", src);
+    return true;
+  }
+  bool need = stale_with_dep(src, out, feature_dep_path(src));
+  if (!need && nob_file_exists(main_implib))
+    need = nob_needs_rebuild1(out, main_implib) != 0;
+  if (!need)
+    return true;
+  Nob_Cmd cmd = {0};
+  append_plugin_build_cmd(&cmd, src, out);
+  nob_log(NOB_INFO, "config: building %s -> %s", src, out);
+  if (!nob_cmd_run(&cmd)) {
+    nob_log(NOB_ERROR, "config build failed for %s", src);
+    return false;
+  }
+  return true;
+}
+
+static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
+  append_plugin_build_cmd(cmd, src, feature_so_path(src));
 }
 
 static bool build_features(void) {
@@ -2121,7 +2157,7 @@ int main(int argc, char **argv) {
   if (!needs_link) {
     nob_log(NOB_INFO, "No changes, skipping link");
     nob_da_free(objs);
-    if (!build_features())
+    if (!build_features() || !build_config())
       return 1;
     release_finalize();
     if (do_run && !run_output(output))
@@ -2165,7 +2201,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (!build_features())
+  if (!build_features() || !build_config())
     return 1;
 
   if (!target_win32) {
