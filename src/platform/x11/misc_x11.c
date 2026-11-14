@@ -6,6 +6,7 @@
 #include "helpers/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_misc.h"
 #include "config_values.h"
 #include "core/types.h"
 #include "core/prompt_geometry.h"
@@ -118,27 +119,46 @@ bool Platform_ProcessRunning(const char *name) {
   return found;
 }
 
+static const char TERMINATE_CMD_FMT[] =
+    "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null; "
+    "pkill \"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r "
+    "\"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &";
+
 bool Platform_TerminateProcessByName(const char *exe_name) {
   if (!exe_name || !*exe_name)
     return false;
-  char tmp[256];
-  SafeCopy(tmp, sizeof(tmp), exe_name);
-  char *ext = strrchr(tmp, '.');
+  char *name = strdup(exe_name);
+  if (!name)
+    return false;
+  char *ext = strrchr(name, '.');
   if (ext && strcmp(ext, ".exe") == 0)
     *ext = '\0';
+  if (!IsSafeProcessName(name)) {
+    log_error("Platform_TerminateProcessByName: refusing unsafe name '%s'",
+              exe_name);
+    free(name);
+    return false;
+  }
 
-  char cmd[2048];
-  snprintf(cmd, sizeof(cmd),
-           "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" "
-           "2>/dev/null; pkill"
-           "\"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r "
-           "\"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &",
-           tmp, tmp, tmp, tmp, tmp, tmp);
+  int need =
+      snprintf(NULL, 0, TERMINATE_CMD_FMT, name, name, name, name, name, name);
+  if (need < 0) {
+    free(name);
+    return false;
+  }
+  char *cmd = malloc((size_t)need + 1);
+  if (!cmd) {
+    free(name);
+    return false;
+  }
+  snprintf(cmd, (size_t)need + 1, TERMINATE_CMD_FMT, name, name, name, name,
+           name, name);
 
-  log_info("Platform_TerminateProcessByName exe_name='%s'",
-           exe_name ? exe_name : "");
-  ;
-  return Platform_RunTerminalCommand(cmd, false);
+  log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
+  bool ok = Platform_RunTerminalCommand(cmd, false);
+  free(cmd);
+  free(name);
+  return ok;
 }
 
 bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {

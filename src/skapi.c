@@ -1475,7 +1475,9 @@ int sk_get_text_width(const char *text, int fontsize) {
       .text = text, .len = (int)strlen(text), .fontsize = fontsize});
 }
 
-int sk_get_text_height(int fontsize) { return Platform_GetTextLineHeight(fontsize); }
+int sk_get_text_height(int fontsize) {
+  return Platform_GetTextLineHeight(fontsize);
+}
 
 char *sk_http_get(const char *url) { return Platform_HttpGet(url); }
 
@@ -2681,8 +2683,8 @@ void sk_run_every(double seconds, void (*callback)(void)) {
   Platform_GetModuleOwnerPath((void *)(uintptr_t)callback, entry->owner,
                               sizeof(entry->owner));
   entry->owner[sizeof(entry->owner) - 1] = '\0';
-  entry->thread = thread_create_ex(run_every_thread, args,
-                                   (void *)(uintptr_t)callback);
+  entry->thread =
+      thread_create_ex(run_every_thread, args, (void *)(uintptr_t)callback);
   if (!entry->thread) {
     log_error("sk_run_every: thread creation failed");
     free(entry);
