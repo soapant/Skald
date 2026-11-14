@@ -24,7 +24,7 @@
 #include "core/context.h"
 #include "core/types/window.h"
 
-void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_background(const PromptState *state, Display *dpy, XftDraw *xd,
                               Visual *vis, Colormap cmap, FontHandle font);
 void x11_draw_edit_tint(PromptState *state, Display *dpy, XftDraw *xd,
                         Visual *vis, Colormap cmap, FontHandle font);

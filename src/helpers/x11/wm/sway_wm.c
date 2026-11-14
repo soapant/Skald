@@ -116,7 +116,7 @@ bool get_app_id_sway(char *buffer, int buffer_size) {
   return sway_tree_field(buffer, buffer_size, "\"app_id\"");
 }
 
-char *paste_sway(char *content) { return x11_paste_wtype(content); }
+char *paste_sway(const char *content) { return x11_paste_wtype(content); }
 static bool succeded_sway(char *output) {
   if (!output) {
     log_error("output is NULL");
@@ -170,7 +170,7 @@ bool focus_window_title_sway(const char *title) {
   char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
   if (json) {
     for (char *p = json; (p = strstr(p, "\"pid\":")); p += 6) {
-      char *next = strstr(p + 6, "\"pid\":");
+      const char *next = strstr(p + 6, "\"pid\":");
       char name[512] = {0};
       if (!sway_name_for_pid(json, p, next, name, sizeof(name)))
         continue;
@@ -431,7 +431,7 @@ static char *sway_find_colon(const char *base, const char *from,
 static int sway_key_int(const char *base, const char *from, const char *end,
                         const char *key, int depth) {
 
-  char *c = sway_find_colon(base, from, end, key, depth);
+  const char *c = sway_find_colon(base, from, end, key, depth);
   return c ? atoi(c + 1) : 0;
 }
 
@@ -446,7 +446,7 @@ static int sway_key_str(const char *base, const char *from, const char *end,
     q++;
   if (q >= end || *q != '"')
     return 0;
-  char *e = strchr(q + 1, '"');
+  const char *e = strchr(q + 1, '"');
   if (!e || e >= end)
     return 0;
   size_t len = (size_t)(e - (q + 1));
@@ -468,7 +468,7 @@ bool move_active_window_to_monitor_sway(bool right) {
     return false;
   char *outs = Platform_RunTerminalCommand("swaymsg -t get_outputs", false);
   if (outs && outs[0]) {
-    char *doc_end = outs + strlen(outs);
+    const char *doc_end = outs + strlen(outs);
     char names[16][64];
     int ox[16];
     int oy[16];
@@ -477,7 +477,7 @@ bool move_active_window_to_monitor_sway(bool right) {
     int usable[16];
     int focused[16];
     int n = 0;
-    char *p = outs;
+    const char *p = outs;
     while (n < 16) {
       char *np = sway_find_key(outs, p, doc_end, "\"name\"", 2);
       if (!np)
@@ -492,7 +492,7 @@ bool move_active_window_to_monitor_sway(bool right) {
       int ry = 0;
       int rw = 0;
       int rh = 0;
-      char *rk = sway_find_key(outs, p, doc_end, "\"rect\"", 2);
+      const char *rk = sway_find_key(outs, p, doc_end, "\"rect\"", 2);
       if (rk) {
         rx = sway_key_int(outs, rk, doc_end, "\"x\"", 3);
         ry = sway_key_int(outs, rk, doc_end, "\"y\"", 3);

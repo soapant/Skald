@@ -108,7 +108,7 @@ static bool hypr_parse_activewindow_field(const char *field, char *buffer,
   for (size_t i = 0; i < lines.count && !ok; i++) {
     if (!lines.items[i])
       continue;
-    char *match = strstr(lines.items[i], needle);
+    const char *match = strstr(lines.items[i], needle);
     if (!match)
       continue;
     char tmp[1024];
@@ -141,7 +141,7 @@ bool get_app_id_hyprland(char *buffer, int buffer_size) {
   return hypr_parse_activewindow_field("class", buffer, buffer_size);
 }
 
-char *paste_hyprland(char *content) { return x11_paste_wtype(content); }
+char *paste_hyprland(const char *content) { return x11_paste_wtype(content); }
 
 static bool hypr_bus(void) {
   hypr_ensure_sig();
@@ -255,7 +255,7 @@ static PlWindowList hypr_client_list(const char *field, bool toupper_first) {
   snprintf(fmt, sizeof(fmt), "\"%s\": \"%%511[^\"]\"", field);
   StringList lines = String_Split(output, "\n");
   for (size_t i = 0; i < lines.count; i++) {
-    char *match = strstr(lines.items[i], match_pat);
+    const char *match = strstr(lines.items[i], match_pat);
     if (match) {
       if (sscanf(match, fmt, buffer) == 1) {
         if (strlen(buffer) == 0)

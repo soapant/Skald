@@ -91,7 +91,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
   else
     b.dst_vk = 0;
   for (int i = 0; i < remap_count; i++) {
-    RemapBinding *e = &remaps[i];
+    const RemapBinding *e = &remaps[i];
     if (e->src_mods == b.src_mods && e->dst_mods == b.dst_mods &&
         e->dst_vk == b.dst_vk && e->src_vk_count == b.src_vk_count &&
         e->whitelist == b.whitelist && e->window_count == b.window_count) {
@@ -446,7 +446,7 @@ bool remap_handle_vk(int vk_code, int value) {
 
   bool swallow = false;
   for (int i = 0; i < remap_count; i++) {
-    RemapBinding *b = &remaps[i];
+    const RemapBinding *b = &remaps[i];
     bool before = active_before[i] && allowed[i];
     bool after = active_after[i] && allowed[i];
     for (int k = 0; k < b->src_vk_count; k++)

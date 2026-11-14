@@ -16,7 +16,7 @@ uid_t x11_probe_session_uid(void) {
   DIR *d = opendir("/tmp/.X11-unix");
   if (!d)
     return (uid_t)-1;
-  struct dirent *e;
+  const struct dirent *e;
   while ((e = readdir(d)) != NULL) {
     if (e->d_name[0] != 'X')
       continue;
@@ -42,7 +42,7 @@ const char *x11_get_session_display(void) {
   }
   DIR *d = opendir("/tmp/.X11-unix");
   if (d) {
-    struct dirent *e;
+    const struct dirent *e;
     while ((e = readdir(d)) != NULL) {
       if (e->d_name[0] != 'X')
         continue;
@@ -85,7 +85,7 @@ const char *x11_get_session_xauthority(void) {
     snprintf(rtd, sizeof(rtd), "/run/user/%d", (int)getuid());
   DIR *d = opendir(rtd);
   if (d) {
-    struct dirent *e;
+    const struct dirent *e;
     time_t best_mtime = 0;
     char best[512] = {0};
     while ((e = readdir(d)) != NULL) {
@@ -126,7 +126,7 @@ const char *x11_get_runtime_dir(void) {
     return buf;
   }
   const char *u = Platform_GetRealUser();
-  struct passwd *pw = u ? getpwnam(u) : NULL;
+  const struct passwd *pw = u ? getpwnam(u) : NULL;
   if (pw) {
     snprintf(buf, sizeof(buf), "/run/user/%d", (int)pw->pw_uid);
     return buf;
@@ -147,7 +147,7 @@ bool x11_cmd_exists(const char *cmd) {
     path = "/usr/bin:/bin:/usr/local/bin";
   StringList dirs = String_Split(path, ":");
   for (size_t i = 0; i < dirs.count; i++) {
-    char *dir = dirs.items[i];
+    const char *dir = dirs.items[i];
     if (!dir || !dir[0])
       continue;
     char full[4352];

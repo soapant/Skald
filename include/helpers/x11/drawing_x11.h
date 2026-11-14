@@ -29,7 +29,7 @@ const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
 void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                 Colormap cmap, FontHandle font,
                                 XftColor *plain_color, ListBoxInfo *lb,
-                                char *icon_path, int idx, int y);
+                                const char *icon_path, int idx, int y);
 void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            Colormap cmap, unsigned long hex,
                            unsigned short alpha16, int x, int y, int w, int h,

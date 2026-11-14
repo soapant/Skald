@@ -91,7 +91,7 @@ int ReloadLib_SweepStaleHotLibs(const char *dir, const char *lib_ext) {
     return -1;
   size_t ext_len = lib_ext ? strlen(lib_ext) : 0;
   int nremoved = 0;
-  struct dirent *e;
+  const struct dirent *e;
   while ((e = readdir(d)) != NULL) {
     const char *name = e->d_name;
     const char *dot = strstr(name, ".hot");

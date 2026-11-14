@@ -32,7 +32,7 @@ void Prompt_Refresh(PromptState *state) {
   }
 }
 
-static bool prompt_keys_selection(PromptState *state, int *out_ss,
+static bool prompt_keys_selection(const PromptState *state, int *out_ss,
                                   int *out_se) {
   int ss = 0, se = 0;
   if (!EditState_GetSelection(&ss, &se))
