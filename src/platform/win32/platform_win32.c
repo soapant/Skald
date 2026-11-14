@@ -218,7 +218,7 @@ char *Platform_RunTerminalCommand(const char *command, bool open_terminal) {
   return out;
 }
 
-bool Platform_LaunchDetached(char *command) {
+bool Platform_LaunchDetached(const char *command) {
   if (!command || !command[0])
     return false;
   char cmdLine[4096];
@@ -238,7 +238,7 @@ bool Platform_LaunchDetached(char *command) {
   return true;
 }
 
-char *Platform_RunCommandAndGetOutput(char *command) {
+char *Platform_RunCommandAndGetOutput(const char *command) {
   if (command == NULL || strlen(command) == 0)
     return NULL;
   HANDLE hRead, hWrite;
@@ -1474,7 +1474,7 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   return true;
 }
 
-bool Platform_FontInitalized(FontHandle font) { return font.hfont != NULL; }
+bool Platform_FontInitialized(FontHandle font) { return font.hfont != NULL; }
 
 PlTimer Platform_StartTimer(void) {
   PlTimer t = {0};
