@@ -40,12 +40,13 @@ static void hotkey_binding_free_blacklist(HotkeyBinding *b) {
 void hotkey_set_suspended(bool suspended) { hotkeys_suspended = suspended; }
 
 #define HOTKEY_PENDING_MAX 64
-static HotkeyCallback pending_q[HOTKEY_PENDING_MAX];
-static HotkeyCallbackUd pending_cb_ud[HOTKEY_PENDING_MAX];
-static void *pending_ud[HOTKEY_PENDING_MAX];
-static int pending_vk[HOTKEY_PENDING_MAX];
-static int pending_mods[HOTKEY_PENDING_MAX];
-static char pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
+typedef struct {
+  HotkeyCallback fn;
+  HotkeyCallbackUd fn_ud;
+  void *ud;
+  char owner[OWNER_PATH_MAX];
+} PendingHotkey;
+static PendingHotkey pending_hotkeys[HOTKEY_PENDING_MAX];
 static int pending_head = 0;
 static int pending_tail = 0;
 static void *q_mutex = NULL;
@@ -87,19 +88,17 @@ static void hotkey_queue_init(void) {
   } while (0)
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(q_mutex)
 static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
-                           const char *owner, int vk, int mods) {
+                           const char *owner) {
   if (!fn && !fn_ud)
     return;
   HOTKEY_Q_LOCK();
   int nxt = (pending_tail + 1) % HOTKEY_PENDING_MAX;
   if (nxt != pending_head) {
-    pending_q[pending_tail] = fn;
-    pending_cb_ud[pending_tail] = fn_ud;
-    pending_ud[pending_tail] = ud;
-    pending_vk[pending_tail] = vk;
-    pending_mods[pending_tail] = mods;
-    snprintf(pending_owner[pending_tail], OWNER_PATH_MAX, "%s",
-             owner ? owner : "");
+    PendingHotkey *slot = &pending_hotkeys[pending_tail];
+    slot->fn = fn;
+    slot->fn_ud = fn_ud;
+    slot->ud = ud;
+    snprintf(slot->owner, sizeof(slot->owner), "%s", owner ? owner : "");
     pending_tail = nxt;
     hotkey_wake();
   } else {
@@ -233,7 +232,7 @@ static void hotkey_tick_holds(void) {
     hold_slots[i].next_fire_ms =
         now + (unsigned long long)hotkey_repeat_interval_ms();
     hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud, b->user_ud,
-                   b->owner, vk, mods);
+                   b->owner);
   }
 }
 
@@ -242,23 +241,23 @@ void hotkey_drain_pending(void) {
     return;
   hotkey_tick_holds();
   for (;;) {
-    HotkeyCallback fn = NULL;
-    HotkeyCallbackUd fn_ud = NULL;
-    void *ud = NULL;
+    PendingHotkey job = {0};
+    bool have = false;
     HOTKEY_Q_LOCK();
     if (pending_head != pending_tail) {
-      fn = pending_q[pending_head];
-      fn_ud = pending_cb_ud[pending_head];
-      ud = pending_ud[pending_head];
+      job = pending_hotkeys[pending_head];
       pending_head = (pending_head + 1) % HOTKEY_PENDING_MAX;
+      have = true;
     }
     HOTKEY_Q_UNLOCK();
-    if (!fn && !fn_ud)
+    if (!have)
       break;
-    if (fn_ud)
-      fn_ud(ud);
+    if (!job.fn && !job.fn_ud)
+      continue;
+    if (job.fn_ud)
+      job.fn_ud(job.ud);
     else
-      fn();
+      job.fn();
   }
 }
 
@@ -423,11 +422,12 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
   }
   int qn = pending_head;
   while (qn != pending_tail) {
-    if (owner_module_matches(pending_owner[qn], path_a, path_b)) {
+    if (owner_module_matches(pending_hotkeys[qn].owner, path_a, path_b)) {
       log_info("hotkey pending entry dropped (owner unloaded)");
-      pending_q[qn] = NULL;
-      pending_cb_ud[qn] = NULL;
-      pending_ud[qn] = NULL;
+      pending_hotkeys[qn].fn = NULL;
+      pending_hotkeys[qn].fn_ud = NULL;
+      pending_hotkeys[qn].ud = NULL;
+      pending_hotkeys[qn].owner[0] = '\0';
     }
     qn = (qn + 1) % HOTKEY_PENDING_MAX;
   }
@@ -513,8 +513,7 @@ bool hotkey_process(int vk_code, int modifiers) {
         swallow = false;
       }
     }
-    hotkey_enqueue(cb, b->hotkey_callback_ud, b->user_ud, b->owner, vk_code,
-                   eff_modifiers);
+    hotkey_enqueue(cb, b->hotkey_callback_ud, b->user_ud, b->owner);
     char buf[2556];
     char hotkey_buf[2422];
     hotkey_string_format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},

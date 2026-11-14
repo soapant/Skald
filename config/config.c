@@ -16,6 +16,8 @@ void config_apply(void) {
   FontSize = 18;
   IconSize = 32;
   WidgetGap = 0;
+  PromptWidth = 900;
+  PromptHeight = 640;
   UsedTerminal = "";
   UsedShell = "";
   UsedBrowser = "";
@@ -35,5 +37,10 @@ void config_apply(void) {
   RainbowText = false;
   WindowTitleText = false;
   CloseOnLossOfFocus = false;
+  COLOR_BG = RGB(0, 0, 0);
+  COLOR_TEXT = RGB(0, 255, 0);
+  COLOR_SELECTED_TEXT = RGB(0, 0, 0);
+  COLOR_CURSOR = RGB(0, 255, 0);
+  COLOR_BORDER = RGB(0, 120, 0);
 }
 // </skald-config-generated>
