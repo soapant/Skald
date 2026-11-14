@@ -9,7 +9,7 @@
 bool niri_is_active(void);
 bool get_title_niri(char *buffer, int buffer_size);
 bool get_app_id_niri(char *buffer, int buffer_size);
-char *paste_niri(char *content);
+char *paste_niri(const char *content);
 bool focus_window_title_niri(const char *title);
 PlWindowList get_window_titles_niri(void);
 PlWindowList get_window_names_niri(void);

@@ -405,7 +405,7 @@ void win32_img_cache_put(const char *path, HDC screen, int w, int h,
   int slot = -1;
   ULONGLONG oldest = ~(ULONGLONG)0;
   for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-    Win32ImgSlot *s = &g_img_cache[i];
+    const Win32ImgSlot *s = &g_img_cache[i];
     if (!s->bmp && !s->failed) {
       slot = i;
       break;
@@ -420,7 +420,7 @@ void win32_img_cache_put(const char *path, HDC screen, int w, int h,
   }
   if (slot < 0) {
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-      Win32ImgSlot *s = &g_img_cache[i];
+      const Win32ImgSlot *s = &g_img_cache[i];
       if (s->screen != screen)
         continue;
       if (s->stamp < oldest) {
@@ -479,7 +479,7 @@ void win32_src_cache_put(const char *path, void *src) {
   int slot = -1;
   ULONGLONG oldest = ~(ULONGLONG)0;
   for (int i = 0; i < WIN32_SRC_CACHE_SLOTS; i++) {
-    Win32SrcSlot *s = &g_src_cache[i];
+    const Win32SrcSlot *s = &g_src_cache[i];
     if (!s->src) {
       slot = i;
       break;

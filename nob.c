@@ -274,7 +274,7 @@ static void append_ws_split(Nob_File_Paths *da, const char *s) {
       p++;
     if (!*p)
       break;
-    char *start = p;
+    const char *start = p;
     while (*p && *p != ' ' && *p != '\t' && *p != '\n' && *p != '\r')
       p++;
     if (*p)
@@ -495,7 +495,7 @@ static bool stale_with_dep(const char *src, const char *obj,
     if (tok.data[tok.count - 1] == ':')
       continue;
 
-    char *dep_file = nob_temp_sprintf("%.*s", (int)tok.count, tok.data);
+    const char *dep_file = nob_temp_sprintf("%.*s", (int)tok.count, tok.data);
     if (nob_needs_rebuild1(obj, dep_file) != 0)
       return true;
   }
@@ -1861,7 +1861,7 @@ static bool check_layering(void) {
   if (!nob_walk_dir("tests", check_walk))
     return false;
   for (size_t i = 0; i < pending_fn_count; i++) {
-    PendingFn *p = &pending_fns[i];
+    const PendingFn *p = &pending_fns[i];
     if (decl_known(p->name))
       continue;
     check_state.fn_violations++;

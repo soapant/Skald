@@ -202,7 +202,7 @@ static void defer_unload(LibHandle handle, const char *uniq,
 }
 
 static void sweep_retired_libs(void) {
-  WindowManager *wm = WindowManager_Get();
+  const WindowManager *wm = WindowManager_Get();
   Checkbox_ResetAll();
   int n = 0;
   for (int i = 0; i < retired_count; i++) {
@@ -370,7 +370,7 @@ static void manifest_add_entry(const char *name, const char *section,
 
   size_t off = 0;
   while (off < len) {
-    char *nl = memchr(buf + off, '\n', len - off);
+    const char *nl = memchr(buf + off, '\n', len - off);
     size_t line_len = nl ? (size_t)(nl - (buf + off)) : (len - off);
     char line[512];
     size_t cl = line_len < sizeof(line) - 1 ? line_len : sizeof(line) - 1;

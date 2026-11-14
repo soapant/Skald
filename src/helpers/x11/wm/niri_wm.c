@@ -131,7 +131,7 @@ bool get_app_id_niri(char *buffer, int buffer_size) {
   return niri_focused_field("\"app_id\":\"", 10, buffer, buffer_size);
 }
 
-char *paste_niri(char *content) {
+char *paste_niri(const char *content) {
   if (!niri_is_active())
     return NULL;
   return x11_paste_wtype(content);

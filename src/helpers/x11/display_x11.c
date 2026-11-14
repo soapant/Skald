@@ -26,7 +26,7 @@ static Display *x11_open_best_display(void) {
     return NULL;
 
   char name[32];
-  struct dirent *e;
+  const struct dirent *e;
   while ((e = readdir(dir)) != NULL) {
     if (e->d_name[0] == 'X') {
       snprintf(name, sizeof(name), ":%s", e->d_name + 1);

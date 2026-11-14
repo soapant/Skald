@@ -32,7 +32,7 @@ void UI_LB_SetCount(ListBoxInfo *lb, int count) {
   UI_RequestPopupRepaint();
 }
 
-int UI_LB_GetViewTop(ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
+int UI_LB_GetViewTop(const ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
 
 int UI_LB_GetVisibleCount(void) { return lb_visible_count; }
 

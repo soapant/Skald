@@ -257,7 +257,7 @@ bool HotkeyString_Parse(const char *str, HotkeyKey *out) {
   int mods = 0;
 
   char *save = NULL;
-  char *token = strtok_r(buffer, "+", &save);
+  const char *token = strtok_r(buffer, "+", &save);
   while (token != NULL) {
     int vk = hotkey_token_to_vk(token, &mods);
     if (vk != 0)

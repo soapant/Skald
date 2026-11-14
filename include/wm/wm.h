@@ -18,7 +18,7 @@ bool Wm_AppendWindowName(PlWindowList *list, const char *name,
 char *Wm_GetActiveWindowTitle(void);
 char *Wm_GetActiveWindowAppId(void);
 bool Wm_FocusByTitle(const char *title);
-char *Wm_Paste(char *content);
+char *Wm_Paste(const char *content);
 PlWindowList Wm_GetWindowTitles(void);
 PlWindowList Wm_GetWindowNames(void);
 bool Wm_CloseActiveWindow(void);

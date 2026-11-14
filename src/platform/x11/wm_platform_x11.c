@@ -56,7 +56,7 @@ static XRRCrtcInfo *x11_monitor_valid(Display *dpy, XRRScreenResources *res,
 void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
   int x = 0, y = 0, w = 1920, h = 1080;
   Display *dpy = NULL;
-  WindowManager *wm = WindowManager_Get();
+  const WindowManager *wm = WindowManager_Get();
   if (wm)
     dpy = wm->display;
   if (!dpy)
@@ -151,7 +151,7 @@ void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 
 int Monitor_Fill(MonitorEntry *out, int max_entries) {
   Display *dpy = NULL;
-  WindowManager *wm = WindowManager_Get();
+  const WindowManager *wm = WindowManager_Get();
   if (wm)
     dpy = wm->display;
   if (!dpy)

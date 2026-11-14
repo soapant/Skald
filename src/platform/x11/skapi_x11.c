@@ -394,7 +394,7 @@ int sk_get_active_interface_platform(char out[], size_t max_len) {
     char *nl = strchr(cur, '\n');
     if (nl)
       *nl = '\0';
-    char *line = cur;
+    const char *line = cur;
     cur = nl ? nl + 1 : cur + strlen(cur);
     char iface[64];
     unsigned long dest, mask;

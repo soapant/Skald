@@ -57,7 +57,7 @@ static char *config_region(char *cfg, const char **out_end) {
   if (!nl)
     return NULL;
   start = nl + 1;
-  char *end = strstr(start, end_mark);
+  const char *end = strstr(start, end_mark);
   if (!end || end <= start)
     return NULL;
   size_t len = (size_t)(end - start);
@@ -115,7 +115,7 @@ TEST(config_file_has_no_unknown_assignments) {
   if (!cfg)
     return;
   const char *end = NULL;
-  char *region = config_region(cfg, &end);
+  const char *region = config_region(cfg, &end);
   ASSERT_TRUE(region != NULL);
   if (!region) {
     free(cfg);
@@ -130,7 +130,7 @@ TEST(config_file_has_no_unknown_assignments) {
   char *save = NULL;
   for (char *line = strtok_r(work, "\n", &save); line;
        line = strtok_r(NULL, "\n", &save)) {
-    char *eq = strstr(line, " = ");
+    const char *eq = strstr(line, " = ");
     if (!eq)
       continue;
     char name[128];
@@ -141,7 +141,7 @@ TEST(config_file_has_no_unknown_assignments) {
     }
     memcpy(name, line, nlen);
     name[nlen] = '\0';
-    char *p = name;
+    const char *p = name;
     while (*p == ' ' || *p == '\t')
       p++;
     ASSERT_TRUE(table_index_of(p) != TABLE_COUNT);

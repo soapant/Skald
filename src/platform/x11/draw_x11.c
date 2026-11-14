@@ -169,7 +169,7 @@ void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
   XftColorFree(dpy, vis, cmap, &pcolor);
 }
 
-void x11_draw_edit_background(PromptState *state, Display *dpy, XftDraw *xd,
+void x11_draw_edit_background(const PromptState *state, Display *dpy, XftDraw *xd,
                               Visual *vis, Colormap cmap, FontHandle font) {
   x11_set_draw_context(dpy, xd, vis, cmap);
   if (WindowTitleText)

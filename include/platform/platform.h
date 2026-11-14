@@ -128,7 +128,7 @@ PlWindowList Platform_GetWindowTitles(void);
 PlWindowList Platform_GetWindowNames(void);
 bool Platform_QueryBrowser(const char *query);
 char *Platform_GetClipboardEntry(void);
-bool Platform_PasteContent(char *content);
+bool Platform_PasteContent(const char *content);
 int Platform_CopyToClipboard(const char *text);
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len);
 int Platform_SetFileToClipboard(const char *path);

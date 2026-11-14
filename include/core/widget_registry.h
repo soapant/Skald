@@ -102,7 +102,7 @@ unsigned Widget_CurrentGeneration(void);
 
 Widget *Widget_Create(const WidgetSpec *spec);
 void Widget_Destroy(Widget *widget);
-bool Widget_Valid(Widget *widget);
+bool Widget_Valid(const Widget *widget);
 PlPos Widget_GetPos(const char *name);
 void Widget_Show(Widget *widget);
 void Widget_Hide(Widget *widget);
@@ -113,7 +113,7 @@ bool Widget_IsValid(const PlatformWidget *widget);
 void Widget_SetFrameCallback(PlatformWidget *widget, RenderFrameFn fn,
                              void *ud);
 void Widget_Invalidate(PlatformWidget *widget);
-bool Widget_BaseCheck(PlatformWidgetBase *base);
+bool Widget_BaseCheck(const PlatformWidgetBase *base);
 bool Widget_BaseMove(PlatformWidgetBase *base, int x, int y);
 bool Widget_BaseResize(PlatformWidgetBase *base, int w, int h);
 bool Widget_BaseSetNoBg(PlatformWidgetBase *base, bool no_bg);

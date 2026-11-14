@@ -537,7 +537,7 @@ static void x11_img_cache_put(const char *key, int w, int h, long long mtime,
   int slot = -1;
   unsigned long oldest = ~0UL;
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
-    ImgCacheSlot *s = &g_img_cache[i];
+    const ImgCacheSlot *s = &g_img_cache[i];
     if (!s->argb) {
       slot = i;
       break;
@@ -659,7 +659,7 @@ static unsigned char *xpm_load(const char *path, int *out_w, int *out_h) {
   }
   size_t rd = fread(buf, 1, (size_t)sz, f);
   buf[rd] = '\0';
-  char *buf_end = buf + rd;
+  const char *buf_end = buf + rd;
   fclose(f);
 
   int w = 0, h = 0, ncolors = 0, cpp = 1;
@@ -994,8 +994,8 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
 void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                 Colormap cmap, FontHandle font,
                                 XftColor *plain_color, ListBoxInfo *lb,
-                                char *icon_path, int idx, int y) {
-  XftFont *xf = FH_TO_XFT(font);
+                                const char *icon_path, int idx, int y) {
+  const XftFont *xf = FH_TO_XFT(font);
   if (!xf)
     return;
   int XOffset = PROMPT_ITEM_TEXT_X;
@@ -1085,7 +1085,7 @@ static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
   Colormap cmap = 0;
   bool use_argb = false;
   static __thread Colormap cached_cmap = None;
-  static __thread Visual *cached_visual = NULL;
+  static __thread const Visual *cached_visual = NULL;
   static __thread int cached_screen = -1;
   if (XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
     visual = vinfo.visual;
@@ -1407,7 +1407,7 @@ static void bg_cache_store(Display *dpy, Pixmap pm, const BgKey *k) {
 }
 
 static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
-                                           int h, XWindowAttributes *attrs,
+                                           int h, const XWindowAttributes *attrs,
                                            unsigned long base,
                                            unsigned int baseAlpha8) {
   Visual *vis = attrs->visual;

@@ -233,7 +233,7 @@ void UI_ApplyFilterToEdit(void) {
 }
 
 ListBoxInfo *UI_GetPopupListBox(void) {
-  PromptState *prompt = PromptPopup_GetTopPromptState();
+  const PromptState *prompt = PromptPopup_GetTopPromptState();
   return prompt ? prompt->lb : NULL;
 }
 

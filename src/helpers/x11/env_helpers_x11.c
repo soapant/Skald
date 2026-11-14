@@ -161,7 +161,7 @@ bool x11_env_daemon_exec_with_env(char *const argv[],
   return true;
 }
 
-char *x11_paste_wtype(char *content) {
+char *x11_paste_wtype(const char *content) {
   if (!content) {
     log_error("content is NULL");
     return NULL;

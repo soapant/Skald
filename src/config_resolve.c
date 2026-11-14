@@ -45,7 +45,7 @@ static void config_resolve_one(AutoApp *app) {
   if (!id || !id[0])
     return;
   size_t n = strlen(id);
-  char *copy = NULL;
+  const char *copy = NULL;
   if (n > 8 && strcmp(id + n - 8, ".desktop") == 0) {
     char exe[512];
     if (!Platform_ResolveDesktopExec(id, exe, sizeof(exe)) || !exe[0])

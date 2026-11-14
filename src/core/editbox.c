@@ -292,7 +292,7 @@ void Editbox_Layout(EditboxSpec *spec, EditboxLayout *out) {
   int lo = spec->x + PROMPT_CARET_LO_CLAMP;
   int hi = spec->x + spec->w - PROMPT_CARET_HI_CLAMP;
   int caret_w = spec->caret_width > 0 ? spec->caret_width : 1;
-  PlMetrics *metrics = Metrics_Get();
+  const PlMetrics *metrics = Metrics_Get();
   if (spec->caret_width <= 0 && metrics && metrics->edit_cursor_width > 0)
     caret_w = metrics->edit_cursor_width;
 

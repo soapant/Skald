@@ -96,7 +96,7 @@ bool Platform_ProcessRunning(const char *name) {
   if (!d)
     return false;
   bool found = false;
-  struct dirent *e;
+  const struct dirent *e;
   while (!found && (e = readdir(d)) != NULL) {
     if (e->d_name[0] < '0' || e->d_name[0] > '9')
       continue;
@@ -232,7 +232,7 @@ char *Platform_GetClipboardEntry(void) {
   return out;
 }
 
-bool Platform_PasteContent(char *content) {
+bool Platform_PasteContent(const char *content) {
   log_info("Platform_PasteContent content length=%zu",
            content ? strlen(content) : 0);
   char *result = Wm_Paste(content);
@@ -306,7 +306,7 @@ bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
                       bool *is_dir_out) {
   if (!it || !name_out || name_cap == 0 || !is_dir_out)
     return false;
-  struct dirent *ent;
+  const struct dirent *ent;
   while ((ent = readdir(it->dh)) != NULL) {
     if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
       continue;
@@ -340,7 +340,7 @@ int Platform_GetTextLineHeight(int fontsize) {
   if (!dpy)
     return fontsize;
   FontHandle font = x11_create_font_on_display(dpy, fontsize, UsedFont);
-  XftFont *xf = FH_TO_XFT(font);
+  const XftFont *xf = FH_TO_XFT(font);
   int r = xf ? xf->ascent + xf->descent : fontsize;
   Platform_DestroyFont(font);
   return r;

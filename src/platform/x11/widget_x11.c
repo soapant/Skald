@@ -42,7 +42,7 @@ static void widget_registry_add(PlatformWidget *w) {
     }
   }
 }
-static void widget_registry_remove(PlatformWidget *w) {
+static void widget_registry_remove(const PlatformWidget *w) {
 
   for (int i = 0; i < WIDGET_REG_MAX; i++) {
     if (s_widgets[i] == w) {

@@ -102,7 +102,7 @@ void UI_LB_BeginUpdate(void);
 void UI_LB_EndUpdate(void);
 void UI_RequestPopupRepaint(void);
 void UI_LegacySyncRepaint(void);
-int UI_LB_GetViewTop(ListBoxInfo *lb);
+int UI_LB_GetViewTop(const ListBoxInfo *lb);
 int UI_LB_GetVisibleCount(void);
 void UI_LB_SetVisibleCount(int count);
 void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index);

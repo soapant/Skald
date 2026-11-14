@@ -595,7 +595,7 @@ void x11_scan_keyboards(void) {
   if (!dir) {
     return;
   }
-  struct dirent *entry;
+  const struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
     if (strncmp(entry->d_name, "event", 5) == 0) {
       char full_path[sizeof("/dev/input/") + 255];

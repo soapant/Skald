@@ -239,7 +239,7 @@ static void x11_clipboard_serve_request(Display *dpy,
     XFree(tname2);
 }
 
-static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
+static void x11_clipboard_serve_incr(Display *dpy, const XPropertyEvent *pev) {
 
   if (!incr_active || !clip_png) {
     x11_clipboard_abort_incr();
@@ -452,7 +452,7 @@ typedef struct {
 static Bool x11_clip_read_notify_pred(Display *dpy, XEvent *ev, XPointer arg) {
 
   (void)dpy;
-  ClipReadWait *w = (ClipReadWait *)arg;
+  const ClipReadWait *w = (ClipReadWait *)arg;
   if (ev->type == SelectionNotify)
     return ev->xselection.requestor == w->win &&
            ev->xselection.selection == w->selection;
@@ -462,7 +462,7 @@ static Bool x11_clip_read_notify_pred(Display *dpy, XEvent *ev, XPointer arg) {
 static Bool x11_clip_read_prop_pred(Display *dpy, XEvent *ev, XPointer arg) {
 
   (void)dpy;
-  ClipReadWait *w = (ClipReadWait *)arg;
+  const ClipReadWait *w = (ClipReadWait *)arg;
   if (ev->type == PropertyNotify)
     return ev->xproperty.window == w->win &&
            ev->xproperty.atom == w->property &&

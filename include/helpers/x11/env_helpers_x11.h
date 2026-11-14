@@ -38,6 +38,6 @@ bool x11_resolve_desktop_exec(const char *exec_line, const char *desktop_dir,
 int x11_run_status(char *const argv[], const X11SessionEnv *env,
                    bool apply_env);
 
-char *x11_paste_wtype(char *content);
+char *x11_paste_wtype(const char *content);
 
 #endif

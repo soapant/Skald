@@ -580,7 +580,7 @@ BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam) {
   DWORD sz = sizeof(exePath);
   DWORD len = 0;
   if (QueryFullProcessImageNameA(h, 0, exePath, &sz) && sz > 0) {
-    char *base = strrchr(exePath, '\\');
+    const char *base = strrchr(exePath, '\\');
     if (base) {
       snprintf(exe, sizeof(exe), "%s", base + 1);
       len = strlen(exe);

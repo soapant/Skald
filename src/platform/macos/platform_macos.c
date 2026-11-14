@@ -6,7 +6,7 @@
 #include <string.h>
 
 const char *Platform_GetRealHome(void) {
-  struct passwd *pw = getpwuid(getuid());
+  const struct passwd *pw = getpwuid(getuid());
   if (pw && pw->pw_dir)
     return pw->pw_dir;
   char *home = getenv("HOME");
@@ -14,7 +14,7 @@ const char *Platform_GetRealHome(void) {
 }
 
 const char *Platform_GetRealUser(void) {
-  struct passwd *pw = getpwuid(getuid());
+  const struct passwd *pw = getpwuid(getuid());
   if (pw && pw->pw_name)
     return pw->pw_name;
   char *user = getenv("USER");

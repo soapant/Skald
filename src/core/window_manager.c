@@ -124,7 +124,7 @@ void WindowManager_PopPopup(WindowManager *wm) {
   FeatureLoader_SweepRetired();
 }
 
-Popup *WindowManager_GetTopPopup(WindowManager *wm) {
+Popup *WindowManager_GetTopPopup(const WindowManager *wm) {
   if (!wm || wm->popup_count == 0)
     return NULL;
   return wm->popups[wm->popup_count - 1];

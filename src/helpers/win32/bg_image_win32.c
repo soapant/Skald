@@ -480,7 +480,7 @@ bool win32_bg_image_enabled(void) {
   return p && p[0];
 }
 
-bool win32_draw_bg_image_slice(HDC hdc, RECT *rc, int containerW,
+bool win32_draw_bg_image_slice(HDC hdc, const RECT *rc, int containerW,
                                int containerH, int originX, int originY) {
 
   if (!hdc || !rc)
@@ -535,7 +535,7 @@ int win32_bg_image_prewarm(int containerW, int containerH) {
   if (!win32_bg_image_enabled() || containerW <= 0 || containerH <= 0)
     return 0;
   HDC screen = GetDC(NULL);
-  BgTileSlot *t = NULL;
+  const BgTileSlot *t = NULL;
   bg_lock();
   if (screen)
     t = bg_tile_get(screen, BackgroundImage, containerW, containerH);

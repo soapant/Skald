@@ -35,7 +35,7 @@ void win32_handle_raw_mouse_input(LPARAM lParam) {
     free(buf);
     return;
   }
-  RAWMOUSE *rm = &raw->data.mouse;
+  const RAWMOUSE *rm = &raw->data.mouse;
   POINT pt;
   if (!GetCursorPos(&pt)) {
     free(buf);
@@ -141,7 +141,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
     if (!_popupActive && WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) &&
         IsWindow(WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd)))
       _popupActive = true;
-    KBDLLHOOKSTRUCT *_rk = (KBDLLHOOKSTRUCT *)lParam;
+    const KBDLLHOOKSTRUCT *_rk = (KBDLLHOOKSTRUCT *)lParam;
     if (_rk->flags & LLKHF_INJECTED)
       return CallNextHookEx(NULL, nCode, wParam, lParam);
     {
@@ -224,7 +224,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
     if (nCode == HC_ACTION &&
         (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
       Platform_DismissIndefiniteMessage();
-      KBDLLHOOKSTRUCT *pKeyInfo = (KBDLLHOOKSTRUCT *)lParam;
+      const KBDLLHOOKSTRUCT *pKeyInfo = (KBDLLHOOKSTRUCT *)lParam;
 
       bool alt_down = (pKeyInfo->flags & LLKHF_ALTDOWN) ||
                       (GetAsyncKeyState(VK_MENU) & 0x8000);

@@ -14,5 +14,5 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h);
 void Platform_PromptPopupHideWindow(Popup *self);
 void Platform_PromptPopupRender(Popup *self);
 void Platform_PromptPopupDestroyWindow(Popup *self);
-bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key);
+bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key);
 #endif

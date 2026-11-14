@@ -8,7 +8,7 @@
 
 bool x11_get_title(char *buffer, int buffer_size);
 bool x11_get_app_id(char *buffer, int buffer_size);
-char *x11_paste(char *content);
+char *x11_paste(const char *content);
 bool x11_focus_window_title(const char *title);
 unsigned long x11_find_window_by_title(const char *title);
 PlWindowList x11_get_window_titles(void);

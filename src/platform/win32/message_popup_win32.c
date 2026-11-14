@@ -89,7 +89,7 @@ bool Platform_MessageActive(const char *name) {
     HWND h = g_msg_slots[i];
     if (!h || !IsWindow(h))
       continue;
-    FadeWindowData *data =
+    const FadeWindowData *data =
         (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
     if (data && strcmp(data->name, name) == 0)
       return true;

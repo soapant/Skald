@@ -48,7 +48,7 @@ static int wl_dir_fd_count(const char *pid, const char *want) {
   if (!d)
     return -1;
   int total = 0, pipes = 0;
-  struct dirent *e;
+  const struct dirent *e;
   while ((e = readdir(d))) {
     if (e->d_name[0] == '.')
       continue;
@@ -75,7 +75,7 @@ static int wl_find_pid(const char *name) {
   if (!d)
     return -1;
   int found = -1;
-  struct dirent *e;
+  const struct dirent *e;
   while ((e = readdir(d))) {
     if (e->d_name[0] < '0' || e->d_name[0] > '9')
       continue;

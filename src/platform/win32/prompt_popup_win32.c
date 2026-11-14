@@ -145,6 +145,6 @@ void Platform_PromptPopupDestroyWindow(Popup *self) {
   Platform_PromptPopupHideWindow(self);
 }
 
-bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
+bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   return false;
 }

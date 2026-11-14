@@ -61,7 +61,7 @@ static int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
 }
 
 static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf,
-                              XftColor *xcols, unsigned long *ucols, int nu,
+                              XftColor *xcols, const unsigned long *ucols, int nu,
                               int ls, int le, int drawX, int baseline,
                               int rowTop) {
   int cx = drawX;

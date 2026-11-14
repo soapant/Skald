@@ -96,7 +96,7 @@ void Platform_PromptPopupRender(Popup *self) {
   WindowManager *wm = (WindowManager *)self->manager;
   Display *dpy = wm ? wm->display : NULL;
   if (dpy) {
-    PromptState *psr = (PromptState *)self->user_data;
+    const PromptState *psr = (PromptState *)self->user_data;
     if (psr && psr->no_bg) {
       SetTransparentWindow(true);
       x11_render_prompt_user(dpy, &self->handle.xid,
@@ -118,7 +118,7 @@ void Platform_PromptPopupDestroyWindow(Popup *self) {
   }
 }
 
-bool Platform_PromptPopupOnKey(Popup *self, const PopupKeyEvent *key) {
+bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   PromptState *state = self ? (PromptState *)self->user_data : NULL;
   if (!state)
     return true;
