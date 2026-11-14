@@ -20,6 +20,7 @@
 #include "config_values.h"
 #include "helpers/helpers_hotkey.h"
 #include "core/thread_registry.h"
+#include "core/owner_purge.h"
 
 #include "core/cc_registry.h"
 #include "core/widget_registry.h"
@@ -224,17 +225,7 @@ static void sweep_retired_libs(void) {
     if (alive) {
       retired[n++] = retired[i];
     } else {
-      Cap_PurgeOwner(retired[i].owner, NULL);
-      Hotkey_PurgeOwner(retired[i].owner, NULL);
-      Snippet_PurgeOwner(retired[i].owner, NULL);
-      Widget_PurgeOwner(retired[i].owner, NULL, retired[i].owner_gen);
-      CcRegistry_PurgeOwner(retired[i].owner, NULL);
-      FeatureList_PurgeOwner(retired[i].owner, NULL);
-      KeyCallback_PurgeOwner(retired[i].owner, NULL);
-      Key_PurgeInterceptorOwner(retired[i].owner, NULL);
-      EventBus_PurgeOwner(retired[i].owner, NULL);
-      HoverWidget_PurgeOwner(retired[i].owner, NULL);
-      Platform_MessagePopup_PurgeOwner(retired[i].owner, NULL);
+      PurgeOwnerSet(retired[i].owner, NULL, retired[i].owner_gen);
       log_info("deferring unload of retired lib %s", retired[i].owner);
       defer_unload(retired[i].handle, retired[i].uniq, retired[i].owner);
     }
@@ -823,12 +814,7 @@ void FeatureLoader_Shutdown(void) {
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
       call_feature_shutdown(features[i].handle);
-      Cap_PurgeOwner(NULL, features[i].path);
-      Hotkey_PurgeOwner(NULL, features[i].path);
-      Snippet_PurgeOwner(NULL, features[i].path);
-      Widget_PurgeOwner(NULL, features[i].path, Widget_BumpGeneration());
-      CcRegistry_PurgeOwner(NULL, features[i].path);
-      FeatureList_PurgeOwner(NULL, features[i].path);
+      PurgeOwnerSet(NULL, features[i].path, Widget_BumpGeneration());
       features[i].uniq[0] = '\0';
       features[i].handle = 0;
     }
@@ -901,17 +887,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       features[i].handle = h;
       fl_copy(features[i].path, sizeof(features[i].path), uniquepath);
       fl_copy(features[i].uniq, sizeof(features[i].uniq), uniquepath);
-      Cap_PurgeOwner(retire_owner, path_copy);
-      Hotkey_PurgeOwner(retire_owner, path_copy);
-      Snippet_PurgeOwner(retire_owner, path_copy);
-      Widget_PurgeOwner(retire_owner, path_copy, retire_gen);
-      CcRegistry_PurgeOwner(retire_owner, path_copy);
-      FeatureList_PurgeOwner(retire_owner, path_copy);
-      KeyCallback_PurgeOwner(retire_owner, path_copy);
-      Key_PurgeInterceptorOwner(retire_owner, path_copy);
-      EventBus_PurgeOwner(retire_owner, path_copy);
-      HoverWidget_PurgeOwner(retire_owner, path_copy);
-      Platform_MessagePopup_PurgeOwner(retire_owner, path_copy);
+      PurgeOwnerSet(retire_owner, path_copy, retire_gen);
       sweep_retired_libs();
       UNLOCK();
       DeferredInit_RunAll();
