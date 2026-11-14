@@ -105,17 +105,17 @@ static CheckboxSpec *checkbox_intern(const char *name, int kind, bool seed) {
 }
 
 bool Checkbox_IsChecked(const char *name, int kind) {
-  CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->checked : false;
 }
 
 bool Checkbox_IsHovered(const char *name, int kind) {
-  CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->hovered : false;
 }
 
 bool Checkbox_IsClicked(const char *name, int kind) {
-  CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->clicked : false;
 }
 

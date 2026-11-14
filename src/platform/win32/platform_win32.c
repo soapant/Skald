@@ -105,7 +105,7 @@ char *Platform_RunTerminalCommand(const char *command, bool open_terminal) {
   if (open_terminal) {
     char clean_cmd[512];
     SafeCopy(clean_cmd, sizeof(clean_cmd), command ? command : "");
-    char *p = clean_cmd;
+    const char *p = clean_cmd;
     while (*p && isspace((unsigned char)*p))
       p++;
     bool empty = (*p == '\0');

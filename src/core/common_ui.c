@@ -642,7 +642,7 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
     (void)PromptPopup_Create(wm, &heap_spec);
     return NULL;
   }
-  Popup *popup = PromptPopup_Create(wm, spec);
+  const Popup *popup = PromptPopup_Create(wm, spec);
   if (!popup)
     return NULL;
   long long last_tick = 0;
@@ -696,7 +696,7 @@ char *PromptUserRun(WindowManager *wm, const PromptSpec *spec) {
       }
     }
     if (_still_open) {
-      SkaldContext *_ctx2 = SkaldContext_Get();
+      const SkaldContext *_ctx2 = SkaldContext_Get();
       if (!_ctx2 || !_ctx2->window.subwindow.created)
         WindowManager_PopPopup(wm);
     }

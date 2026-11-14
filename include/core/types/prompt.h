@@ -94,7 +94,7 @@ typedef void (*CloseCallback)(void);
 
 void ListBoxInfo_Free(ListBoxInfo *lb);
 bool ListBoxInfo_EnsureRows(ListBoxInfo *lb, int rows);
-const char *ListBoxInfo_Row(ListBoxInfo *lb, int idx);
+const char *ListBoxInfo_Row(const ListBoxInfo *lb, int idx);
 void ListBoxInfo_Init(ListBoxInfo *lb);
 
 typedef struct {

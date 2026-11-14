@@ -20,7 +20,7 @@ int Hotkey_Count(void);
 const HotkeyBinding *Hotkey_Get(int index);
 bool Hotkey_IsTaken(int vk_code, int modifiers);
 const HotkeyBinding *Hotkey_FindByCallback(HotkeyCallback cb);
-const HotkeyBinding *Hotkey_FindByUd(void *ud);
+const HotkeyBinding *Hotkey_FindByUd(const void *ud);
 bool Hotkey_Process(int vk_code, int modifiers);
 void Hotkey_DrainPending(void);
 int Hotkey_WakeFd(void);

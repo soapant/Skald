@@ -8,7 +8,7 @@
 
 bool get_title_hyprland(char *buffer, int buffer_size);
 bool get_app_id_hyprland(char *buffer, int buffer_size);
-char *paste_hyprland(char *content);
+char *paste_hyprland(const char *content);
 bool focus_window_title_hyprland(const char *title);
 PlWindowList get_window_titles_hyprland(void);
 PlWindowList get_window_names_hyprland(void);

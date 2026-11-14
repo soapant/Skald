@@ -75,7 +75,7 @@ static const char *bg_resolve(const char *in, char *out, size_t cap) {
   if (!home || !home[0])
     home = getenv("USERPROFILE");
   if (!home || !home[0]) {
-    struct passwd *pw = getpwuid(getuid());
+    const struct passwd *pw = getpwuid(getuid());
     if (pw && pw->pw_dir && pw->pw_dir[0])
       home = pw->pw_dir;
   }

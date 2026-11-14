@@ -83,7 +83,7 @@ void ThreadRegistry_Add(void *ctx, const char *owner_path) {
   thread_reg_unlock();
 }
 
-void ThreadRegistry_Finish(void *ctx) {
+void ThreadRegistry_Finish(const void *ctx) {
   if (!ctx)
     return;
   thread_reg_lock();

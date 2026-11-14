@@ -126,7 +126,7 @@ bool Wm_FocusByTitle(const char *title) {
   return NULL;
 }
 
-char *Wm_Paste(char *content) {
+char *Wm_Paste(const char *content) {
   char *result;
   if (x11_env_is_wayland()) {
     if ((result = paste_kwin(content)))

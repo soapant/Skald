@@ -8,7 +8,7 @@
 
 bool get_title_sway(char *buffer, int buffer_size);
 bool get_app_id_sway(char *buffer, int buffer_size);
-char *paste_sway(char *content);
+char *paste_sway(const char *content);
 bool focus_window_title_sway(const char *title);
 PlWindowList get_window_titles_sway(void);
 PlWindowList get_window_names_sway(void);
