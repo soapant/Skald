@@ -1641,3 +1641,232 @@ bool Platform_GetMousePos(int *out_x, int *out_y) {
     *out_y = (int)pt.y;
   return true;
 }
+
+static bool win32_lookup_ci_eq(const char *a, const char *b) {
+  for (;;) {
+    unsigned char ca = (unsigned char)*a, cb = (unsigned char)*b;
+    if (ca >= 'A' && ca <= 'Z')
+      ca += 32;
+    if (cb >= 'A' && cb <= 'Z')
+      cb += 32;
+    if (ca != cb)
+      return false;
+    if (ca == '\0')
+      return true;
+    a++;
+    b++;
+  }
+}
+
+static bool win32_lookup_is_file(const char *path) {
+  DWORD attr = GetFileAttributesA(path);
+  return attr != INVALID_FILE_ATTRIBUTES &&
+         !(attr & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+static bool win32_lookup_is_dir(const char *path) {
+  DWORD attr = GetFileAttributesA(path);
+  return attr != INVALID_FILE_ATTRIBUTES &&
+         (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+static const char *win32_lookup_pathext(void) {
+  const char *pathext = getenv("PATHEXT");
+  return (pathext && pathext[0]) ? pathext : ".COM;.EXE;.BAT;.CMD";
+}
+
+static void win32_lookup_each_ext(const char *pathext, char exts[][32],
+                                  size_t *count) {
+  *count = 0;
+  const char *p = pathext;
+  while (p && *p && *count < 16) {
+    const char *end = strchr(p, ';');
+    size_t len = end ? (size_t)(end - p) : strlen(p);
+    if (len > 0 && len < 31) {
+      memcpy(exts[*count], p, len);
+      exts[*count][len] = '\0';
+      (*count)++;
+    }
+    if (!end)
+      break;
+    p = end + 1;
+  }
+}
+
+static bool win32_lookup_has_ext(const char *name, const char *pathext) {
+  const char *base = strrchr(name, '\\');
+  base = base ? base + 1 : name;
+  const char *dot = strrchr(base, '.');
+  if (!dot)
+    return false;
+  char exts[16][32];
+  size_t count = 0;
+  win32_lookup_each_ext(pathext, exts, &count);
+  for (size_t i = 0; i < count; i++)
+    if (win32_lookup_ci_eq(dot, exts[i]))
+      return true;
+  return false;
+}
+
+static char *win32_lookup_try_full(const char *full, const char *pathext) {
+  if (win32_lookup_is_file(full))
+    return _strdup(full);
+  if (win32_lookup_has_ext(full, pathext))
+    return NULL;
+  char exts[16][32];
+  size_t count = 0;
+  win32_lookup_each_ext(pathext, exts, &count);
+  char cand[4096];
+  for (size_t i = 0; i < count; i++) {
+    int rc = snprintf(cand, sizeof(cand), "%s%s", full, exts[i]);
+    if (rc > 0 && (size_t)rc < sizeof(cand) && win32_lookup_is_file(cand))
+      return _strdup(cand);
+  }
+  return NULL;
+}
+
+static char *win32_lookup_try_dir(const char *dir, const char *name,
+                                  const char *pathext) {
+  if (!dir || !dir[0])
+    return NULL;
+  char cand[4096];
+  int rc = snprintf(cand, sizeof(cand), "%s\\%s", dir, name);
+  if (rc > 0 && (size_t)rc < sizeof(cand)) {
+    char *hit = win32_lookup_try_full(cand, pathext);
+    if (hit)
+      return hit;
+  }
+  return NULL;
+}
+
+static char *win32_lookup_find_in_path(const char *name, const char *pathext) {
+  const char *path = getenv("PATH");
+  if (path && path[0]) {
+    const char *p = path;
+    while (p && *p) {
+      const char *end = strchr(p, ';');
+      size_t len = end ? (size_t)(end - p) : strlen(p);
+      if (len > 0 && len < 4096) {
+        char dirbuf[4096];
+        memcpy(dirbuf, p, len);
+        dirbuf[len] = '\0';
+        size_t n = strlen(dirbuf);
+        if (n >= 2 && dirbuf[0] == '"' && dirbuf[n - 1] == '"') {
+          dirbuf[n - 1] = '\0';
+          memmove(dirbuf, dirbuf + 1, n - 1);
+        }
+        char *hit = win32_lookup_try_dir(dirbuf, name, pathext);
+        if (hit)
+          return hit;
+      }
+      if (!end)
+        break;
+      p = end + 1;
+    }
+  }
+  const char *sysroot = getenv("SystemRoot");
+  if (!sysroot || !sysroot[0])
+    sysroot = "C:\\Windows";
+  char buf[MAX_PATH];
+  snprintf(buf, sizeof(buf), "%s\\System32", sysroot);
+  char *hit = win32_lookup_try_dir(buf, name, pathext);
+  if (hit)
+    return hit;
+  hit = win32_lookup_try_dir(sysroot, name, pathext);
+  if (hit)
+    return hit;
+  snprintf(buf, sizeof(buf), "%s\\System32\\Wbem", sysroot);
+  hit = win32_lookup_try_dir(buf, name, pathext);
+  if (hit)
+    return hit;
+  const char *local = getenv("LOCALAPPDATA");
+  const char *home = Platform_GetRealHome();
+  if (local && local[0])
+    snprintf(buf, sizeof(buf), "%s\\Microsoft\\WindowsApps", local);
+  else if (home && home[0])
+    snprintf(buf, sizeof(buf), "%s\\AppData\\Local\\Microsoft\\WindowsApps",
+             home);
+  else
+    buf[0] = '\0';
+  return win32_lookup_try_dir(buf, name, pathext);
+}
+
+static char *win32_lookup_walk_programs(const char *name) {
+  const char *roots[3];
+  size_t n = 0;
+  const char *pf = getenv("ProgramFiles");
+  const char *pf86 = getenv("ProgramFiles(x86)");
+  const char *local = getenv("LOCALAPPDATA");
+  char local_progs[MAX_PATH];
+  roots[n++] = (pf && pf[0]) ? pf : "C:\\Program Files";
+  roots[n++] = (pf86 && pf86[0]) ? pf86 : "C:\\Program Files (x86)";
+  if (local && local[0]) {
+    snprintf(local_progs, sizeof(local_progs), "%s\\Programs", local);
+    roots[n++] = local_progs;
+  }
+  char *allowed[] = {"exe", "bat", "cmd", NULL};
+  for (size_t i = 0; i < n; i++) {
+    if (!win32_lookup_is_dir(roots[i]))
+      continue;
+    ListOfFiles found = {0};
+    if (FileWalk_AllFilesFromDir((char *)roots[i], allowed, &found, NULL, true,
+                                 3)) {
+      for (size_t j = 0; j < found.count; j++) {
+        if (String_EqualsCI(found.files[j].name, name)) {
+          char *hit = _strdup(found.files[j].path);
+          free(found.files);
+          return hit;
+        }
+      }
+    }
+    free(found.files);
+  }
+  return NULL;
+}
+
+static char *win32_lookup_first_line(char *out) {
+  char *start = out;
+  while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n')
+    start++;
+  char *end = start;
+  while (*end && *end != '\r' && *end != '\n')
+    end++;
+  while (end > start && (end[-1] == ' ' || end[-1] == '\t'))
+    end--;
+  *end = '\0';
+  return start;
+}
+
+char *Platform_FindExecutable(const char *name) {
+  if (!name || !name[0])
+    return NULL;
+
+  const char *pathext = win32_lookup_pathext();
+
+  if (strchr(name, '\\') || strchr(name, '/')) {
+    char expanded[4096];
+    if (!ExpandPath(name, expanded, sizeof(expanded)))
+      return NULL;
+    return win32_lookup_try_full(expanded, pathext);
+  }
+
+  char *hit = win32_lookup_find_in_path(name, pathext);
+  if (hit)
+    return hit;
+
+  hit = win32_lookup_walk_programs(name);
+  if (hit)
+    return hit;
+
+  int status = 0;
+  char *out =
+      Platform_RunArgvCapture((const char *const[]){"where", name, NULL}, NULL,
+                              &status);
+  if (!out)
+    return NULL;
+  char *line = win32_lookup_first_line(out);
+  if (line[0] && win32_lookup_is_file(line))
+    hit = _strdup(line);
+  free(out);
+  return hit;
+}
