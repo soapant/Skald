@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "deps/log.h"
 #include "helpers/helpers_text.h"
 
 void Manifest_Trim(char *s) {
@@ -18,10 +19,37 @@ void Manifest_Trim(char *s) {
     memmove(s, p, strlen(p) + 1);
 }
 
+static bool quote_balanced(const char *s) {
+  size_t double_q = 0, single_q = 0;
+  for (const char *p = s; *p; p++) {
+    if (*p == '"')
+      double_q++;
+    else if (*p == '\'')
+      single_q++;
+  }
+  return (double_q % 2 == 0) && (single_q % 2 == 0);
+}
+
+static bool has_control_char(const char *s) {
+  for (const unsigned char *p = (const unsigned char *)s; *p; p++)
+    if (*p < 32 && *p != '\t' && *p != '\r')
+      return true;
+  return false;
+}
+
 void Manifest_Unquote(char *s) {
-  char *hash = strchr(s, '#');
-  if (hash) {
-    *hash = '\0';
+  size_t i = 0;
+  bool in_single = false, in_double = false;
+  while (s[i]) {
+    if (s[i] == '"' && !in_single)
+      in_double = !in_double;
+    else if (s[i] == '\'' && !in_double)
+      in_single = !in_single;
+    else if (s[i] == '#' && !in_single && !in_double) {
+      s[i] = '\0';
+      break;
+    }
+    i++;
   }
   Manifest_Trim(s);
   size_t n = strlen(s);
@@ -40,6 +68,7 @@ bool Manifest_ParseString(const char *name, const char *data,
   if (name)
     SafeCopy(out->name, sizeof(out->name), name);
 
+  bool malformed = false;
   int section = 0;
   const char *off = data;
   while (*off) {
@@ -51,6 +80,9 @@ bool Manifest_ParseString(const char *name, const char *data,
     line[cl] = '\0';
     off = nl ? nl + 1 : off + line_len;
 
+    if (has_control_char(line))
+      malformed = true;
+
     char work[512];
     SafeCopy(work, sizeof(work), line);
     Manifest_Trim(work);
@@ -58,9 +90,15 @@ bool Manifest_ParseString(const char *name, const char *data,
       continue;
 
     if (work[0] == '[') {
-      if (strstr(work, "provides"))
+      Manifest_Unquote(work);
+      if (strchr(work, ']') == NULL) {
+        malformed = true;
+        section = 0;
+        continue;
+      }
+      if (strcmp(work, "[provides]") == 0)
         section = 1;
-      else if (strstr(work, "depends"))
+      else if (strcmp(work, "[depends]") == 0)
         section = 2;
       else
         section = 0;
@@ -76,6 +114,8 @@ bool Manifest_ParseString(const char *name, const char *data,
       char val[384];
       SafeCopy(val, sizeof(val), eq + 1);
       Manifest_Trim(val);
+      if (key[0] == '\0' || !quote_balanced(val))
+        malformed = true;
       Manifest_Unquote(val);
       if (strcmp(key, "name") == 0)
         SafeCopy(out->name, sizeof(out->name), val);
@@ -85,6 +125,8 @@ bool Manifest_ParseString(const char *name, const char *data,
       continue;
     }
 
+    if (!quote_balanced(work))
+      malformed = true;
     Manifest_Unquote(work);
     if (work[0] == '\0')
       continue;
@@ -93,9 +135,12 @@ bool Manifest_ParseString(const char *name, const char *data,
                work);
     } else if (section == 2 && out->dep_count < MANIFEST_LIST_MAX) {
       SafeCopy(out->deps[out->dep_count++], sizeof(out->deps[0]), work);
+    } else if (section != 0) {
+      log_warn("manifest: ignoring extra entry '%s' in section %d", work,
+               section);
     }
   }
-  out->valid = true;
+  out->valid = !malformed;
   return true;
 }
 

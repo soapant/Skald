@@ -161,7 +161,7 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   return ok;
 }
 
-bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
+bool Platform_LaunchBrowserAtUrl(const char *url, bool new_window) {
   char full_url[2048];
   char browser_tok[512];
   size_t tok_len = UsedBrowser ? strcspn(UsedBrowser, " \t") : 0;

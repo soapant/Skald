@@ -577,18 +577,27 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
     return false;
   }
   for (int i = 0; i < n_names; i++) {
+    mans[i].valid = false;
     char mpath[512];
-    if (manifest_path(names[i], mpath, sizeof(mpath)))
-      Manifest_ParseFile(mpath, names[i], &mans[i]);
+    if (!manifest_path(names[i], mpath, sizeof(mpath)))
+      continue;
+    if (!Manifest_ParseFile(mpath, names[i], &mans[i]) || !mans[i].valid) {
+      log_error("feature '%s': manifest %s is malformed, skipping", names[i],
+                mpath);
+      continue;
+    }
+    mans[i].valid = true;
   }
 
   for (int i = 0; i < n_names; i++) {
+    if (!mans[i].valid)
+      continue;
     const char *missing = NULL;
     for (int k = 0; k < mans[i].dep_count && !missing; k++) {
       bool found = false;
       for (int j = 0; j < n_names; j++) {
         if (strcmp(names[j], mans[i].deps[k]) == 0) {
-          found = true;
+          found = mans[j].valid;
           break;
         }
       }

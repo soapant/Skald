@@ -92,7 +92,7 @@ static bool win32_resolve_browser(char *out, size_t cap) {
   return SearchPathA(NULL, with_exe, NULL, (DWORD)cap, out, NULL) != 0;
 }
 
-bool Platform_LaunchBrowserAtUrl(char *url, bool new_window) {
+bool Platform_LaunchBrowserAtUrl(const char *url, bool new_window) {
   char full_url[2048] = {0};
   if (!url || !url[0])
     full_url[0] = '\0';

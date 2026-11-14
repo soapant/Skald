@@ -182,7 +182,7 @@ bool Platform_RenderThreadStart(void);
 void Platform_RenderThreadJoin(void);
 void *Platform_RenderThreadDisplay(void);
 char *Platform_RunTerminalCommand(const char *command, bool open_terminal);
-char *Platform_RunCommandAndGetOutput(char *command);
+char *Platform_RunCommandAndGetOutput(const char *command);
 char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
                               int *out_status);
 char *Platform_GetActiveWindowTitle(void);
@@ -214,7 +214,7 @@ bool Platform_FocusWindowUp(void);
 bool Platform_FocusWindowDown(void);
 bool Platform_FocusWindowRight(void);
 bool Platform_MinimizeActiveWindow(void);
-bool Platform_LaunchDetached(char *command);
+bool Platform_LaunchDetached(const char *command);
 const char *Platform_GetDefaultApp(DefaultAppKind kind);
 bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
                                  size_t out_size);
@@ -228,7 +228,7 @@ const char *Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args);
-bool Platform_LaunchBrowserAtUrl(char *url, bool new_window);
+bool Platform_LaunchBrowserAtUrl(const char *url, bool new_window);
 PlTimer Platform_StartTimer(void);
 double Platform_EndTimer(PlTimer t);
 int64_t Platform_TimerNowTicks(void);
@@ -242,7 +242,7 @@ void Platform_CleanupDisplaySafe(void);
 void Platform_InitMainThreadContext(void);
 void Platform_FixWorkingDirectory(void);
 void Platform_CleanupPlatformResources(void);
-bool Platform_FontInitalized(FontHandle font);
+bool Platform_FontInitialized(FontHandle font);
 
 char *Platform_HttpGet(const char *url);
 char *Platform_HttpGetLimited(const char *url, size_t max_bytes,

@@ -49,6 +49,7 @@ static char pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
 static int pending_head = 0;
 static int pending_tail = 0;
 static void *q_mutex = NULL;
+static unsigned long pending_dropped = 0;
 
 static int wake_fd = -1;
 int Hotkey_WakeFd(void) {
@@ -101,9 +102,16 @@ static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
              owner ? owner : "");
     pending_tail = nxt;
     hotkey_wake();
+  } else {
+    pending_dropped++;
+    if (pending_dropped == 1 || pending_dropped % 100 == 0)
+      log_warn("hotkey pending queue full (%d), dropped %lu event(s) so far",
+               HOTKEY_PENDING_MAX, pending_dropped);
   }
   HOTKEY_Q_UNLOCK();
 }
+
+unsigned long Hotkey_PendingDropped(void) { return pending_dropped; }
 #define HOTKEY_HOLD_MAX 16
 typedef struct {
   int vk;
@@ -112,6 +120,7 @@ typedef struct {
   bool active;
 } HotkeyHoldSlot;
 static HotkeyHoldSlot hold_slots[HOTKEY_HOLD_MAX];
+static unsigned long hold_dropped = 0;
 
 static unsigned long long hotkey_now_ms(void) {
   return (unsigned long long)Platform_GetWallClockMs();
@@ -185,6 +194,10 @@ static void hotkey_hold_begin(int vk, int modifiers) {
       return;
     }
   }
+  hold_dropped++;
+  if (hold_dropped == 1 || hold_dropped % 100 == 0)
+    log_warn("hotkey hold queue full (%d), dropped %lu hold(s) so far",
+             HOTKEY_HOLD_MAX, hold_dropped);
   HOTKEY_Q_UNLOCK();
 }
 

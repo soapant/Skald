@@ -107,7 +107,7 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
   return true;
 }
 
-char *Platform_RunCommandAndGetOutput(char *command) {
+char *Platform_RunCommandAndGetOutput(const char *command) {
   FILE *fp;
   char buffer[8192];
   size_t cap = 8192;
@@ -389,7 +389,7 @@ static char *Platform_RunCommandDetachedCapture(const char *command) {
   return out;
 }
 
-bool Platform_LaunchDetached(char *command) {
+bool Platform_LaunchDetached(const char *command) {
   if (!command || !command[0]) {
     log_error("LaunchDetached: null or empty command");
     return false;
@@ -1654,7 +1654,7 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   return true;
 }
 
-bool Platform_FontInitalized(FontHandle font) { return font.xfont != NULL; }
+bool Platform_FontInitialized(FontHandle font) { return font.xfont != NULL; }
 
 PlTimer Platform_StartTimer(void) {
   PlTimer t = {0};
