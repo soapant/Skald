@@ -71,109 +71,36 @@ static char *heap_control_hotkey = NULL, *heap_reload_features_hotkey = NULL,
             *heap_actions_hotkey = NULL, *heap_rehotk = NULL,
             *heap_realias_hotk = NULL, *heap_theme = NULL,
             *heap_background_image = NULL;
+
 static void heapify_config(void) {
-  char *n_font = heap_dup(UsedFont), *n_term = heap_dup(UsedTerminal),
-       *n_shell = heap_dup(UsedShell);
-  char *n_search = heap_dup(UsedSearchEngine), *n_feat = heap_dup(FeaturePath),
-       *n_browser = heap_dup(UsedBrowser), *n_icon = heap_dup(IconPath);
-  char *n_hotk = heap_dup(ControlHotkey),
-       *n_reload_hotk = heap_dup(ReloadFeaturesHotkey),
-       *n_actions_hotk = heap_dup(ActionsHotkey),
-       *n_rehotk = heap_dup(RegHotkey),
-       *n_realias_hotk = heap_dup(RegAliasHotkey), *n_theme = heap_dup(Theme),
-       *n_bgimg = heap_dup(BackgroundImage);
-  char *old_font = heap_used_font, *old_term = heap_used_terminal,
-       *old_shell = heap_used_shell, *old_browser = heap_used_browser,
-       *old_search = heap_used_search, *old_feat = heap_feature_path,
-       *old_icon = heap_icon_path, *old_hotk = heap_control_hotkey,
-       *old_reload_hotk = heap_reload_features_hotkey,
-       *old_actions_hotk = heap_actions_hotkey, *old_rehotk = heap_rehotk,
-       *old_realias_hotk = heap_realias_hotk, *old_theme = heap_theme,
-       *old_bgimg = heap_background_image;
-  if (n_font) {
-    UsedFont = n_font;
-    heap_used_font = n_font;
-  } else
-    heap_used_font = old_font, old_font = NULL;
-  if (n_term) {
-    UsedTerminal = n_term;
-    heap_used_terminal = n_term;
-  } else
-    heap_used_terminal = old_term, old_term = NULL;
-  if (n_shell) {
-    UsedShell = n_shell;
-    heap_used_shell = n_shell;
-  } else
-    heap_used_shell = old_shell, old_shell = NULL;
-  if (n_browser) {
-    UsedBrowser = n_browser;
-    heap_used_browser = n_browser;
-  } else
-    heap_used_browser = old_browser, old_browser = NULL;
-  if (n_search) {
-    UsedSearchEngine = n_search;
-    heap_used_search = n_search;
-  } else
-    heap_used_search = old_search, old_search = NULL;
-  if (n_feat) {
-    FeaturePath = n_feat;
-    heap_feature_path = n_feat;
-  } else
-    heap_feature_path = old_feat, old_feat = NULL;
-  if (n_icon) {
-    IconPath = n_icon;
-    heap_icon_path = n_icon;
-  } else
-    heap_icon_path = old_icon, old_icon = NULL;
-  if (n_hotk) {
-    ControlHotkey = n_hotk;
-    heap_control_hotkey = n_hotk;
-  } else
-    heap_control_hotkey = old_hotk, old_hotk = NULL;
-  if (n_reload_hotk) {
-    ReloadFeaturesHotkey = n_reload_hotk;
-    heap_reload_features_hotkey = n_reload_hotk;
-  } else
-    heap_reload_features_hotkey = old_reload_hotk, old_reload_hotk = NULL;
-  if (n_actions_hotk) {
-    ActionsHotkey = n_actions_hotk;
-    heap_actions_hotkey = n_actions_hotk;
-  } else
-    heap_actions_hotkey = old_actions_hotk, old_actions_hotk = NULL;
-  if (n_rehotk) {
-    RegHotkey = n_rehotk;
-    heap_rehotk = n_rehotk;
-  } else
-    heap_rehotk = old_rehotk, old_rehotk = NULL;
-  if (n_realias_hotk) {
-    RegAliasHotkey = n_realias_hotk;
-    heap_realias_hotk = n_realias_hotk;
-  } else
-    heap_realias_hotk = old_realias_hotk, old_realias_hotk = NULL;
-  if (n_theme) {
-    Theme = n_theme;
-    heap_theme = n_theme;
-  } else
-    heap_theme = old_theme, old_theme = NULL;
-  if (n_bgimg) {
-    BackgroundImage = n_bgimg;
-    heap_background_image = n_bgimg;
-  } else
-    heap_background_image = old_bgimg, old_bgimg = NULL;
-  free(old_font);
-  free(old_term);
-  free(old_shell);
-  free(old_browser);
-  free(old_search);
-  free(old_feat);
-  free(old_icon);
-  free(old_hotk);
-  free(old_reload_hotk);
-  free(old_actions_hotk);
-  free(old_rehotk);
-  free(old_realias_hotk);
-  free(old_theme);
-  free(old_bgimg);
+  static struct {
+    const char **global;
+    char **heap;
+  } slots[] = {
+      {&UsedFont, &heap_used_font},
+      {&UsedTerminal, &heap_used_terminal},
+      {&UsedShell, &heap_used_shell},
+      {&UsedBrowser, &heap_used_browser},
+      {&UsedSearchEngine, &heap_used_search},
+      {&FeaturePath, &heap_feature_path},
+      {&IconPath, &heap_icon_path},
+      {&ControlHotkey, &heap_control_hotkey},
+      {&ReloadFeaturesHotkey, &heap_reload_features_hotkey},
+      {&ActionsHotkey, &heap_actions_hotkey},
+      {&RegHotkey, &heap_rehotk},
+      {&RegAliasHotkey, &heap_realias_hotk},
+      {&Theme, &heap_theme},
+      {&BackgroundImage, &heap_background_image},
+  };
+  for (size_t i = 0; i < sizeof(slots) / sizeof(slots[0]); i++) {
+    char *fresh = heap_dup(*slots[i].global);
+    if (!fresh)
+      continue;
+    char *old = *slots[i].heap;
+    *slots[i].global = fresh;
+    *slots[i].heap = fresh;
+    free(old);
+  }
 }
 static bool confiload_copy(const char *uniq, LibHandle *out) {
   LibHandle h = Platform_LoadLibrary(uniq);
