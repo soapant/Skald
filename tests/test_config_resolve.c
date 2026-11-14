@@ -37,7 +37,7 @@ TEST(empty_value_resolves_and_is_flagged) {
   const char *resolved = UsedTerminal;
   if (resolved && resolved[0]) {
     ASSERT_TRUE(Config_IsAutoResolvedApp("UsedTerminal"));
-    ASSERT_TRUE(resolved != (const char *)"");
+    ASSERT_TRUE(strcmp(resolved, "") != 0);
   } else {
     ASSERT_FALSE(Config_IsAutoResolvedApp("UsedTerminal"));
   }

@@ -86,8 +86,9 @@ void Prompt_InsertText(PromptState *state, const char *text, int len) {
 
 void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
   SkaldContext *ctx = SkaldContext_Get();
-  if (ctx)
-    ctx->window.subwindow.in_enter = true;
+  if (!ctx)
+    return;
+  ctx->window.subwindow.in_enter = true;
   const char *sel = NULL;
   char filter_copy[sizeof(state->eb->filter)];
   if (state->lb && state->lb->selected_index != -1) {
@@ -163,8 +164,7 @@ void Prompt_TriggerEnter(PromptState *state, bool ctrl, bool shift, bool alt) {
     }
   }
   ctx->window.selection_complete = should_close;
-  if (ctx)
-    ctx->window.subwindow.in_enter = false;
+  ctx->window.subwindow.in_enter = false;
   Prompt_ProcessPendingSubwindow();
 }
 
