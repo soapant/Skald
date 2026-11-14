@@ -55,7 +55,7 @@ sudo usermod -aG input $USER
 
 ## Quick Start (Windows)
 
-Download the latest `.zip` from the [Releases page](https://github.com/YOUR_USERNAME/skald/releases), extract it, and run `skald.exe`.
+Download the latest `.zip` from the [Releases page](https://github.com/soapant/skald/releases), extract it, and run `skald.exe`.
 
 ## How it Works
 

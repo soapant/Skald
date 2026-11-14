@@ -178,8 +178,7 @@ static bool win32_is_skald_window(HWND hwnd) {
   GetClassNameA(hwnd, cls, sizeof(cls));
   return strcmp(cls, QUICKSWITCHER_CLASS) == 0 ||
          strcmp(cls, MESSAGE_CLASS) == 0 ||
-         strcmp(cls, SEARCH_POPUP_CLASS) == 0 ||
-         strcmp(cls, WIDGET_CLASS) == 0;
+         strcmp(cls, SEARCH_POPUP_CLASS) == 0 || strcmp(cls, WIDGET_CLASS) == 0;
 }
 
 void win32_force_window_focus(WindowHandle hwndTarget) {
