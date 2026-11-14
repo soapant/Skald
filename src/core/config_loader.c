@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <dirent.h>
 #include <errno.h>
 #include <stdbool.h>
 
@@ -20,8 +19,9 @@
 #include <windows.h>
 #endif
 #include "core/window_manager.h"
-#include "helpers/helpers_fs.h"
 #include "helpers/helpers_text.h"
+#include "config_defs.h"
+#include "core/reload_lib.h"
 
 #define CONFISRC "config/config.c"
 #define CONFISTART_MARK "// <skald-config-generated>"
@@ -47,31 +47,8 @@ static void cfcull_stale_libs(void) {
   if (cfculled)
     return;
   cfculled = true;
-  DIR *d = opendir("build");
-  if (!d)
-    return;
   const char *lib_ext = Platform_LibExtension();
-  struct dirent *e;
-  int nremoved = 0;
-  while ((e = readdir(d)) != NULL) {
-    const char *name = e->d_name;
-    if (strncmp(name, "config.hot", 10) != 0)
-      continue;
-    const char *p = name + 10;
-    while (*p >= '0' && *p <= '9')
-      p++;
-    if (*p == '\0')
-      continue;
-    if (p == name + 10)
-      continue;
-    if (!lib_ext || strcmp(p, lib_ext) != 0)
-      continue;
-    char junk[512];
-    snprintf(junk, sizeof(junk), "build/%s", name);
-    if (remove(junk) == 0)
-      nremoved++;
-  }
-  closedir(d);
+  int nremoved = ReloadLib_SweepStaleHotLibs("build", lib_ext);
   if (nremoved > 0)
     log_info("config: removed %d stale hot-reload libs", nremoved);
 }
@@ -218,82 +195,36 @@ static bool confiload_copy(const char *uniq, LibHandle *out) {
   return true;
 }
 
-static bool confioutput_is_fresh(const char *out) {
-  struct stat src_st, out_st;
-  if (stat(CONFISRC, &src_st) != 0)
-    return false;
-  if (stat(out, &out_st) != 0)
-    return false;
-  return out_st.st_mtime >= src_st.st_mtime;
-}
-
-static bool confibuild_feature(const char *src, const char *out) {
-  char tmp[1024];
-  snprintf(tmp, sizeof(tmp), "%s.tmp", out);
-  const char *argv[PLATFORM_BUILD_ARGV_MAX];
-  if (!Platform_GetFeatureBuildArgv(src, tmp, argv, PLATFORM_BUILD_ARGV_MAX)) {
-    log_error("config build: no feature build argv for %s", src);
-    return false;
-  }
-  int status = -1;
-  char *outStr = Platform_RunArgvCapture(argv, NULL, &status);
-  bool ok = outStr != NULL && status == 0;
-  if (outStr) {
-    if (outStr[0])
-      log_info("%s", outStr);
-    free(outStr);
-  } else
-    log_error("config build: could not run compiler for %s", src);
-  if (!ok) {
-    unlink(tmp);
-    return false;
-  }
-  if (!Platform_AtomicRename(tmp, out)) {
-    unlink(tmp);
-    return false;
-  }
-  return true;
-}
-
 static int config_build_load_store(void) {
 
   const char *out = confiout_path();
   int rebuilt = 0;
-  if (confioutput_is_fresh(out)) {
+  if (ReloadLib_IsFresh(CONFISRC, out)) {
     log_info("config .so is newer than source, skipping compile");
   } else {
-    bool ok = confibuild_feature(CONFISRC, out);
+    bool ok = ReloadLib_Compile(CONFISRC, out, "config build");
     if (!ok) {
       log_error("config compile failed, keeping current");
       return -1;
     }
     rebuilt = 1;
   }
-  char uniq[256];
   const char *lib_ext = Platform_LibExtension();
   if (!lib_ext) {
     log_error("Platform_LibExtension() returned NULL!");
     return -1;
   }
-  snprintf(uniq, sizeof(uniq), "build/config.hot%d%s", ++cfseq, lib_ext);
-  {
-
-    bool ok = File_CopyPath(out, uniq);
-
-    if (!ok) {
-      log_error("config copy failed, keeping current");
-      return -1;
-    }
+  char *uniq = ReloadLib_UniqueCopy(out, "build/config", ++cfseq, lib_ext);
+  if (!uniq) {
+    log_error("config copy failed, keeping current");
+    return -1;
   }
   LibHandle h = 0;
-  {
-
-    bool ok = confiload_copy(uniq, &h);
-
-    if (!ok) {
-      remove(uniq);
-      return -1;
-    }
+  bool ok = confiload_copy(uniq, &h);
+  if (!ok) {
+    remove(uniq);
+    free(uniq);
+    return -1;
   }
   if (cfcount >= 2) {
     Platform_UnloadLibrary(cflibs[0].handle);
@@ -304,6 +235,7 @@ static int config_build_load_store(void) {
   cflibs[cfcount].handle = h;
   SafeCopy(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq), uniq);
   cfcount++;
+  free(uniq);
   return rebuilt;
 }
 
@@ -377,131 +309,112 @@ void Config_Unload(void) {
   cfcount = 0;
 }
 
-static void cfput(char *buf, size_t cap, size_t *off, const char *fmt, ...) {
-  if (*off >= cap)
-    return;
+typedef struct {
+  char *data;
+  size_t len;
+  size_t cap;
+} ConfigBuf;
+
+static void cfbuf_free(ConfigBuf *b) {
+  free(b->data);
+  b->data = NULL;
+  b->len = 0;
+  b->cap = 0;
+}
+
+static void cfbuf_put(ConfigBuf *b, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
-  int n = vsnprintf(buf + *off, cap - *off, fmt, ap);
+  va_list aq;
+  va_copy(aq, ap);
+  int n = vsnprintf(NULL, 0, fmt, ap);
   va_end(ap);
-  if (n > 0)
-    *off += (size_t)n;
-}
-
-static void cfput_escaped(char *buf, size_t cap, size_t *off, const char *s) {
-  cfput(buf, cap, off, "\"");
-  for (const char *p = s ? s : ""; *p; p++) {
-    if (*p == '\\' || *p == '"')
-      cfput(buf, cap, off, "\\%c", *p);
-    else if (*p == '\n')
-      cfput(buf, cap, off, "\\n");
-    else if (*p == '\r')
-      cfput(buf, cap, off, "\\r");
-    else
-      cfput(buf, cap, off, "%c", *p);
+  if (n < 0) {
+    va_end(aq);
+    return;
   }
-  cfput(buf, cap, off, "\"");
+  size_t need = b->len + (size_t)n + 1;
+  if (need > b->cap) {
+    size_t cap = b->cap ? b->cap : 512;
+    while (cap < need)
+      cap *= 2;
+    char *grown = (char *)realloc(b->data, cap);
+    if (!grown) {
+      va_end(aq);
+      return;
+    }
+    b->data = grown;
+    b->cap = cap;
+  }
+  vsnprintf(b->data + b->len, b->cap - b->len, fmt, aq);
+  va_end(aq);
+  b->len += (size_t)n;
 }
 
-static void cfput_float(char *buf, size_t cap, size_t *off, const char *name,
-                        float v) {
+static void cfput_bool_line(ConfigBuf *b, const char *name, bool v) {
+  cfbuf_put(b, "  %s = %s;\n", name, v ? "true" : "false");
+}
+
+static void cfput_int_line(ConfigBuf *b, const char *name, int v) {
+  if (strcmp(name, "FontSize") == 0) {
+    cfbuf_put(b, "  FontSize = Platform_GetUnscaledFontSize();\n");
+    return;
+  }
+  cfbuf_put(b, "  %s = %d;\n", name, v);
+}
+
+static void cfput_float_line(ConfigBuf *b, const char *name, float v) {
   char tmp[64];
   snprintf(tmp, sizeof(tmp), "%.6g", (double)v);
   if (!strchr(tmp, '.') && !strchr(tmp, 'e') && !strchr(tmp, 'E') &&
-      !strchr(tmp, 'n') && !strchr(tmp, 'N')) {
-    cfput(buf, cap, off, "    %s = %s.0f;\n", name, tmp);
-  } else {
-    cfput(buf, cap, off, "    %s = %sf;\n", name, tmp);
-  }
+      !strchr(tmp, 'n') && !strchr(tmp, 'N'))
+    cfbuf_put(b, "  %s = %s.0f;\n", name, tmp);
+  else
+    cfbuf_put(b, "  %s = %sf;\n", name, tmp);
 }
 
-static void cfput_str_var(char *buf, size_t cap, size_t *off, const char *name,
-                          const char *value) {
+static void cfput_escaped(ConfigBuf *b, const char *s) {
+  cfbuf_put(b, "\"");
+  for (const char *p = s ? s : ""; *p; p++) {
+    if (*p == '\\' || *p == '"')
+      cfbuf_put(b, "\\%c", *p);
+    else if (*p == '\n')
+      cfbuf_put(b, "\\n");
+    else if (*p == '\r')
+      cfbuf_put(b, "\\r");
+    else
+      cfbuf_put(b, "%c", *p);
+  }
+  cfbuf_put(b, "\"");
+}
+
+static void cfput_str_line(ConfigBuf *b, const char *name, const char *value) {
   if (Config_IsAutoResolvedApp(name))
     value = "";
-  cfput(buf, cap, off, "    %s = ", name);
-  cfput_escaped(buf, cap, off, value);
-  cfput(buf, cap, off, ";\n");
+  cfbuf_put(b, "  %s = ", name);
+  cfput_escaped(b, value);
+  cfbuf_put(b, ";\n");
 }
 
-static size_t confiemit_region(char *buf, size_t cap) {
-  size_t off = 0;
-  cfput(buf, cap, &off, "void ConfigApply(void) {\n");
-  cfput(buf, cap, &off, "    Tray = %s;\n", Tray ? "true" : "false");
-  cfput(buf, cap, &off, "    EnableAutoPairing = %s;\n",
-        EnableAutoPairing ? "true" : "false");
-  cfput(buf, cap, &off, "    RememberLastIndex = %s;\n",
-        RememberLastIndex ? "true" : "false");
-  cfput(buf, cap, &off, "    MessageAfterEachHotkey = %s;\n",
-        MessageAfterEachHotkey ? "true" : "false");
-  cfput(buf, cap, &off, "    TimeOutForMessages = %d;\n", TimeOutForMessages);
-  cfput(buf, cap, &off, "    DebugMode = %s;\n", DebugMode ? "true" : "false");
-  cfput(buf, cap, &off, "    RoundedCorners = %s;\n",
-        RoundedCorners ? "true" : "false");
-  cfput(buf, cap, &off, "    EnableBorders = %s;\n",
-        EnableBorders ? "true" : "false");
-  cfput(buf, cap, &off, "    CornerRadius = %d;\n", CornerRadius);
-  cfput(buf, cap, &off, "    HotkeyRepeatDelayMs = %d;\n", HotkeyRepeatDelayMs);
-  cfput_float(buf, cap, &off, "WindowOpacity", WindowOpacity);
-  cfput(buf, cap, &off, "    UsedFont = ");
-  cfput_escaped(buf, cap, &off, UsedFont);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    FontSize = %d;\n", Platform_GetUnscaledFontSize());
-  cfput(buf, cap, &off, "    IconSize = %d;\n", IconSize);
-  cfput(buf, cap, &off, "    WidgetGap = %d;\n", WidgetGap);
-  cfput(buf, cap, &off, "    PromptWidth = %d;\n", PromptWidth);
-  cfput(buf, cap, &off, "    PromptHeight = %d;\n", PromptHeight);
-  cfput_str_var(buf, cap, &off, "UsedTerminal", UsedTerminal);
-  cfput_str_var(buf, cap, &off, "UsedShell", UsedShell);
-  cfput_str_var(buf, cap, &off, "UsedBrowser", UsedBrowser);
-  cfput(buf, cap, &off, "    UsedSearchEngine = ");
-  cfput_escaped(buf, cap, &off, UsedSearchEngine);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    FeaturePath = ");
-  cfput_escaped(buf, cap, &off, FeaturePath);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    IconPath = ");
-  cfput_escaped(buf, cap, &off, IconPath);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    ControlHotkey = ");
-  cfput_escaped(buf, cap, &off, ControlHotkey);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    ReloadFeaturesHotkey = ");
-  cfput_escaped(buf, cap, &off, ReloadFeaturesHotkey);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    ActionsHotkey = ");
-  cfput_escaped(buf, cap, &off, ActionsHotkey);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    RegHotkey = ");
-  cfput_escaped(buf, cap, &off, RegHotkey);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    RegAliasHotkey = ");
-  cfput_escaped(buf, cap, &off, RegAliasHotkey);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    MessagesEnabled = %s;\n",
-        MessagesEnabled ? "true" : "false");
-  cfput(buf, cap, &off, "    RainbowText = %s;\n",
-        RainbowText ? "true" : "false");
-  cfput(buf, cap, &off, "    WindowTitleText = %s;\n",
-        WindowTitleText ? "true" : "false");
-  cfput(buf, cap, &off, "    CloseOnLossOfFocus = %s;\n",
-        CloseOnLossOfFocus ? "true" : "false");
-  cfput(buf, cap, &off, "    Theme = ");
-  cfput_escaped(buf, cap, &off, Theme);
-  cfput(buf, cap, &off, ";\n");
-  cfput(buf, cap, &off, "    BackgroundImage = ");
-  cfput_escaped(buf, cap, &off, BackgroundImage ? BackgroundImage : "");
-  cfput(buf, cap, &off, ";\n");
-  ColorRef cols[] = {COLOR_BG, COLOR_TEXT, COLOR_SELECTED_TEXT, COLOR_CURSOR,
-                     COLOR_BORDER};
-  const char *names[] = {"COLOR_BG", "COLOR_TEXT", "COLOR_SELECTED_TEXT",
-                         "COLOR_CURSOR", "COLOR_BORDER"};
-  for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
-    cfput(buf, cap, &off, "    %s = RGB(%u, %u, %u);\n", names[i],
-          cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);
-  }
-  cfput(buf, cap, &off, "}\n");
-  return off;
+static void cfput_color_line(ConfigBuf *b, const char *name, ColorRef v) {
+  cfbuf_put(b, "  %s = RGB(%u, %u, %u);\n", name, v & 0xFFu, (v >> 8) & 0xFFu,
+            (v >> 16) & 0xFFu);
+}
+
+static ConfigBuf confiemit_region(void) {
+  ConfigBuf b = {0};
+  cfbuf_put(&b, "void ConfigApply(void) {\n");
+#define EMIT_LIVE(type, name, def)                                             \
+  _Generic((type){0},                                                          \
+      bool: cfput_bool_line,                                                   \
+      int: cfput_int_line,                                                     \
+      float: cfput_float_line,                                                 \
+      const char *: cfput_str_line,                                            \
+      ColorRef: cfput_color_line)(&b, #name, name);
+  SKALD_CONFIG_VALUES(EMIT_LIVE)
+#undef EMIT_LIVE
+  cfbuf_put(&b, "}\n");
+  return b;
 }
 
 static long long cfsaved_mtime = 0;
@@ -509,16 +422,17 @@ static long long cfsaved_size = 0;
 static int cfsaved_valid = 0;
 
 void Config_Save(void) {
-  static char region[65536];
-  size_t n = confiemit_region(region, sizeof(region));
-  if (n == 0 || n >= sizeof(region)) {
+  ConfigBuf region = confiemit_region();
+  if (!region.data) {
     log_error("config emit failed");
     return;
   }
+  size_t n = region.len;
+  const char *region_data = region.data;
   FILE *f = fopen(CONFISRC, "rb");
   if (!f) {
     log_error("config open %s failed", CONFISRC);
-    return;
+    goto out;
   }
   fseek(f, 0, SEEK_END);
   long fsize = ftell(f);
@@ -526,13 +440,13 @@ void Config_Save(void) {
   if (fsize < 0 || fsize > 1048576) {
     fclose(f);
     log_error("config size bad");
-    return;
+    goto out;
   }
   char *orig = malloc((size_t)fsize + 1);
   if (!orig) {
     log_error("config save: malloc %lld failed", (long long)fsize + 1);
     fclose(f);
-    return;
+    goto out;
   }
   size_t got = fread(orig, 1, (size_t)fsize, f);
   fclose(f);
@@ -540,7 +454,7 @@ void Config_Save(void) {
     free(orig);
     log_error("config read short (%zu/%lld), not touching file", got,
               (long long)fsize);
-    return;
+    goto out;
   }
   orig[got] = '\0';
   char *start = strstr(orig, CONFISTART_MARK);
@@ -548,22 +462,22 @@ void Config_Save(void) {
   if (!start || !end || end < start) {
     free(orig);
     log_error("config markers missing, not touching file");
-    return;
+    goto out;
   }
   char *start_eol = strchr(start, '\n');
   if (!start_eol) {
     log_error("config marker end without newline, not rewriting");
     free(orig);
-    return;
+    goto out;
   }
   start_eol++;
   size_t head = (size_t)(start_eol - orig);
   size_t tail = got - (size_t)(end - orig);
   size_t body_len = (size_t)(end - start_eol);
-  if (body_len == n && memcmp(orig + head, region, n) == 0) {
+  if (body_len == n && memcmp(orig + head, region_data, n) == 0) {
     free(orig);
     log_info("config unchanged, not rewriting");
-    return;
+    goto out;
   }
   char tmp[512];
   snprintf(tmp, sizeof(tmp), "%s.tmp.%d", CONFISRC, (int)getpid());
@@ -571,11 +485,11 @@ void Config_Save(void) {
   if (!out) {
     free(orig);
     log_error("config save: fopen %s failed (%s)", tmp, strerror(errno));
-    return;
+    goto out;
   }
   bool ok = fwrite(orig, 1, head, out) == head;
   if (ok)
-    ok = fwrite(region, 1, n, out) == n;
+    ok = fwrite(region_data, 1, n, out) == n;
   if (ok)
     ok = fwrite(end, 1, tail, out) == tail;
   if (fclose(out) != 0)
@@ -584,12 +498,12 @@ void Config_Save(void) {
   if (!ok) {
     remove(tmp);
     log_error("config write failed");
-    return;
+    goto out;
   }
   if (!Platform_AtomicRename(tmp, CONFISRC)) {
     remove(tmp);
     log_error("config rename failed");
-    return;
+    goto out;
   }
   struct stat st;
   if (stat(CONFISRC, &st) == 0) {
@@ -598,4 +512,6 @@ void Config_Save(void) {
     cfsaved_valid = 1;
   }
   log_info("config saved");
+out:
+  cfbuf_free(&region);
 }

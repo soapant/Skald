@@ -1,7 +1,7 @@
 #include "core/feature_loader.h"
+#include "core/reload_lib.h"
 #include "core/manifest.h"
 #include "helpers/helpers_key.h"
-#include "helpers/helpers_fs.h"
 #include "helpers/helpers_text.h"
 
 #include <stdio.h>
@@ -528,6 +528,7 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
   char (*names)[64] = NULL;
   int names_cap = 0;
   int n_names = 0;
+  bool names_oom = false;
   struct dirent *e;
   while ((e = readdir(d)) != NULL) {
     if (e->d_name[0] == '.')
@@ -536,9 +537,16 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
       continue;
     if (n_names >= names_cap) {
       int cap = names_cap > 0 ? names_cap * 2 : 32;
-      char (*grown)[64] = (char (*)[64])realloc(names, (size_t)cap * 64);
-      if (!grown)
+      char (*grown)[64] =
+          (char (*)[64])realloc(names, (size_t)cap * sizeof(names[0]));
+      if (!grown) {
+        log_error("LoadAllFromDir: out of memory collecting feature list");
+        free(names);
+        names = NULL;
+        n_names = 0;
+        names_oom = true;
         break;
+      }
       names = grown;
       names_cap = cap;
     }
@@ -552,6 +560,10 @@ bool FeatureLoader_LoadAllFromDir(const char *dir) {
     SafeCopy(names[n_names++], sizeof(names[0]), nm);
   }
   closedir(d);
+  if (names_oom) {
+    UNLOCK();
+    return false;
+  }
 
   FeatureManifest *mans =
       (FeatureManifest *)calloc((size_t)n_names, sizeof(FeatureManifest));
@@ -675,10 +687,10 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
     char src[1024], dll[1024];
     snprintf(src, sizeof(src), "%.255s/%.255s.c", subpath, ent->d_name);
     snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", ent->d_name, ext);
-    struct stat st_src, st_dll;
+    struct stat st_src;
     if (stat(src, &st_src) != 0)
       continue;
-    if (stat(dll, &st_dll) == 0 && st_src.st_mtime <= st_dll.st_mtime)
+    if (ReloadLib_IsFresh(src, dll))
       continue;
     bool known_bad = false;
     for (int fi = 0; fi < s_failed_count; fi++) {
@@ -692,45 +704,22 @@ int FeatureLoader_BuildStaleSources(bool hot_reload) {
     if (known_bad)
       continue;
     static unsigned build_seq = 0;
-    char tmp[1024];
-    snprintf(tmp, sizeof(tmp), "%.1009s.tmp.%u", dll, ++build_seq);
-    const char *argv[PLATFORM_BUILD_ARGV_MAX];
-    if (!Platform_GetFeatureBuildArgv(src, tmp, argv,
-                                      PLATFORM_BUILD_ARGV_MAX)) {
-      remove(tmp);
-      continue;
-    }
-    int status = -1;
-    char *outStr = Platform_RunArgvCapture(argv, NULL, &status);
-    bool ok = outStr != NULL && status == 0;
+    char out_path[1024];
+    if (hot_reload)
+      snprintf(out_path, sizeof(out_path), "%.1009s.tmp.%u", dll, ++build_seq);
+    else
+      snprintf(out_path, sizeof(out_path), "%s", dll);
+    const char *tag = hot_reload ? "hot-reload" : "feature build";
+    bool ok = ReloadLib_Compile(src, out_path, tag);
     if (!ok) {
-      if (outStr) {
-        log_error("%s %s failed (exit %d):\n%s",
-                  hot_reload ? "hot-reload" : "feature build", ent->d_name,
-                  status, outStr);
-        free(outStr);
-      } else
-        log_error("%s %s failed: could not run compiler",
-                  hot_reload ? "hot-reload" : "feature build", ent->d_name);
-    } else
-      free(outStr);
-    if (!ok) {
-      remove(tmp);
       feature_mark_failed(ent->d_name, st_src.st_mtime);
       continue;
     }
     if (hot_reload) {
-      bool reloaded_ok = FeatureLoader_ReloadFrom(ent->d_name, tmp);
-      remove(tmp);
+      bool reloaded_ok = FeatureLoader_ReloadFrom(ent->d_name, out_path);
+      remove(out_path);
       if (!reloaded_ok) {
         feature_mark_failed(ent->d_name, st_src.st_mtime);
-        continue;
-      }
-    } else {
-      if (!Platform_AtomicRename(tmp, dll)) {
-        log_error("feature build %s: rename %s -> %s failed", ent->d_name, tmp,
-                  dll);
-        remove(tmp);
         continue;
       }
     }
@@ -760,33 +749,13 @@ bool FeatureLoader_Init(void) {
   UNLOCK();
   feature_init_count = 0;
   {
-    DIR *d = opendir("build/features");
-    if (!d)
-      log_warn("init: cannot open build/features (%s), no features will load",
-               strerror(errno));
-    if (d) {
-      struct dirent *e;
-      while ((e = readdir(d)) != NULL) {
-        const char *dot = strstr(e->d_name, ".hot");
-        if (!dot)
-          continue;
-        const char *end = dot + 4;
-        bool digits = true;
-        for (const char *p = end; *p; p++)
-          if (*p < '0' || *p > '9') {
-            digits = false;
-            break;
-          }
-        if (!digits || !*end)
-          continue;
-        char junk[512];
-        snprintf(junk, sizeof(junk), "build/features/%s", e->d_name);
-        if (remove(junk) == 0)
-          log_info("FeatureLoader_Init: removed stale hot-reload lib %s",
-                   e->d_name);
-      }
-      closedir(d);
-    }
+    int removed =
+        ReloadLib_SweepStaleHotLibs("build/features", Platform_LibExtension());
+    if (removed < 0)
+      log_warn("init: cannot open build/features, no features will load");
+    else if (removed > 0)
+      log_info("FeatureLoader_Init: removed %d stale hot-reload lib(s)",
+               removed);
   }
   int built = feature_build_stale_sources();
   if (built > 0)
@@ -844,10 +813,9 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       fl_copy(path_copy, sizeof(path_copy), features[i].path);
       const char *src = (src_path && src_path[0]) ? src_path : path_copy;
       LibHandle old = features[i].handle;
-      char uniquepath[1024];
-      snprintf(uniquepath, sizeof(uniquepath), "%s.hot%d", path_copy,
-               ++reload_seq);
-      if (!File_CopyPath(src, uniquepath)) {
+      char *uniquepath =
+          ReloadLib_UniqueCopy(src, path_copy, ++reload_seq, NULL);
+      if (!uniquepath) {
         log_error("reload %s: copy failed (keeping old)", name);
         UNLOCK();
         return false;
@@ -857,6 +825,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
         log_error("reload %s failed: %s (keeping old)", name,
                   Platform_GetLoadError());
         remove(uniquepath);
+        free(uniquepath);
         UNLOCK();
         return false;
       }
@@ -868,6 +837,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
         log_error("reload %s: no init symbol, keeping old", name);
         Platform_UnloadLibrary(h);
         remove(uniquepath);
+        free(uniquepath);
         UNLOCK();
         return false;
       }
@@ -887,6 +857,7 @@ bool FeatureLoader_ReloadFrom(const char *name, const char *src_path) {
       features[i].handle = h;
       fl_copy(features[i].path, sizeof(features[i].path), uniquepath);
       fl_copy(features[i].uniq, sizeof(features[i].uniq), uniquepath);
+      free(uniquepath);
       PurgeOwnerSet(retire_owner, path_copy, retire_gen);
       sweep_retired_libs();
       UNLOCK();

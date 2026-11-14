@@ -156,9 +156,7 @@ static bool ch_sample_once(void) {
   return changed;
 }
 
-static void ch_tick(void) {
-  ch_sample_once();
-}
+static void ch_tick(void) { ch_sample_once(); }
 
 static void clipboard_history_refresh(PromptState *state) {
   int count = ch_count;

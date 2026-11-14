@@ -61,15 +61,10 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
   if (!exe_name || !*exe_name)
     return false;
 
-  for (const char *p = exe_name; *p; p++) {
-    char c = *p;
-    bool ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-              (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-';
-    if (!ok) {
-      log_error("Platform_TerminateProcessByName: refusing unsafe name '%s'",
-                exe_name);
-      return false;
-    }
+  if (!IsSafeProcessName(exe_name)) {
+    log_error("Platform_TerminateProcessByName: refusing unsafe name '%s'",
+              exe_name);
+    return false;
   }
 
   char cmd[512];

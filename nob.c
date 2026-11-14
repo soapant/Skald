@@ -1,6 +1,8 @@
 #define NOB_IMPLEMENTATION
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #include "nob.h"
+#include "include/core/types/color.h"
+#include "include/config_defs.h"
 
 #define SRC_FOLDER "src"
 #define BUILD_FOLDER "build"
@@ -506,6 +508,7 @@ static bool stale(const char *src, const char *obj) {
 
 static const char *sdk_files[] = {
     "config.h",
+    "config_defs.h",
     "config_values.h",
     "core/cc_registry.h",
     "core/checkbox.h",
@@ -624,77 +627,25 @@ static bool build_features(void) {
 }
 
 static bool emit_release_config(const char *dst_path) {
-  const char *src_path = "src/config_defaults.c";
-  FILE *in = fopen(src_path, "rb");
-  if (!in) {
-    nob_log(NOB_ERROR, "release config: cannot open %s", src_path);
-    return false;
-  }
-  Nob_String_Builder out = {0};
-  nob_sb_append_cstr(&out, "#include <stdbool.h>\n"
-                           "#include \"config_values.h\"\n\n"
-                           "// <skald-config-generated>\n"
-                           "void ConfigApply(void) {\n");
-  bool ok = true;
-  bool wrote_any = false;
-  char line[512];
-  while (fgets(line, sizeof(line), in)) {
-    char *p = line;
-    while (*p == ' ' || *p == '\t')
-      p++;
-    if (*p == '\n' || *p == '\r' || *p == '\0')
-      continue;
-    if (strncmp(p, "#include <stdbool.h>", strlen("#include <stdbool.h>")) ==
-            0 ||
-        strncmp(p, "#include \"config_values.h\"",
-                strlen("#include \"config_values.h\"")) == 0 ||
-        strncmp(p, "#include \"core/types/color.h\"",
-                strlen("#include \"core/types/color.h\"")) == 0 ||
-        strncmp(p, "ColorRef ", strlen("ColorRef ")) == 0)
-      continue;
-    const char *prefixes[] = {"bool ", "int ", "float ", "const char *"};
-    bool matched = false;
-    for (size_t i = 0; i < sizeof(prefixes) / sizeof(prefixes[0]); i++) {
-      size_t n = strlen(prefixes[i]);
-      if (strncmp(p, prefixes[i], n) == 0) {
-        p += n;
-        while (*p == ' ')
-          p++;
-        nob_sb_append_cstr(&out, "  ");
-        nob_sb_append_cstr(&out, p);
-        wrote_any = true;
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      nob_log(NOB_ERROR, "release config: unrecognized line in %s: %s",
-              src_path, line);
-      ok = false;
-      break;
-    }
-  }
-  fclose(in);
-  if (!ok || !wrote_any) {
-    nob_log(NOB_ERROR, "release config: failed to parse %s", src_path);
-    nob_sb_free(out);
-    return false;
-  }
-  nob_sb_append_cstr(&out, "}\n// </skald-config-generated>\n");
   FILE *outf = fopen(dst_path, "wb");
   if (!outf) {
     nob_log(NOB_ERROR, "release config: cannot open %s for writing", dst_path);
-    nob_sb_free(out);
     return false;
   }
-  bool wrote =
-      fwrite(out.items, 1, out.count, outf) == out.count && fclose(outf) == 0;
-  nob_sb_free(out);
-  if (!wrote) {
+  fprintf(outf, "#include <stdbool.h>\n#include \"config_values.h\"\n\n"
+                "// <skald-config-generated>\n"
+                "void ConfigApply(void) {\n");
+#define EMIT_DEFAULT(type, name, def)                                          \
+  fprintf(outf, "  " #name " = " #def ";\n");
+  SKALD_CONFIG_VALUES(EMIT_DEFAULT)
+#undef EMIT_DEFAULT
+  fprintf(outf, "}\n// </skald-config-generated>\n");
+  if (fclose(outf) != 0) {
     nob_log(NOB_ERROR, "release config: write failed for %s", dst_path);
     return false;
   }
-  nob_log(NOB_INFO, "release: generated %s from %s", dst_path, src_path);
+  nob_log(NOB_INFO, "release: generated %s from include/config_defs.h",
+          dst_path);
   return true;
 }
 
@@ -1064,6 +1015,46 @@ static size_t decl_len;
 static bool decl_overflow;
 static int decl_start_line;
 static int brace_depth;
+
+static char **g_declared = NULL;
+static size_t g_declared_count = 0;
+static size_t g_declared_cap = 0;
+
+typedef struct {
+  char path[1024];
+  int line;
+  char name[256];
+  const char *prefix;
+} PendingFn;
+static PendingFn pending_fns[512];
+static size_t pending_fn_count = 0;
+
+static void decl_remember(const char *name) {
+  for (size_t i = 0; i < g_declared_count; i++)
+    if (strcmp(g_declared[i], name) == 0)
+      return;
+  if (g_declared_count >= g_declared_cap) {
+    size_t ncap = g_declared_cap ? g_declared_cap * 2 : 256;
+    char **grown = (char **)realloc(g_declared, ncap * sizeof(*grown));
+    if (!grown)
+      return;
+    g_declared = grown;
+    g_declared_cap = ncap;
+  }
+  size_t n = strlen(name) + 1;
+  char *dup = (char *)malloc(n);
+  if (!dup)
+    return;
+  memcpy(dup, name, n);
+  g_declared[g_declared_count++] = dup;
+}
+
+static bool decl_known(const char *name) {
+  for (size_t i = 0; i < g_declared_count; i++)
+    if (strcmp(g_declared[i], name) == 0)
+      return true;
+  return false;
+}
 
 static void check_norm_path(const char *src, char *dst, size_t cap) {
   size_t i = 0;
@@ -1499,7 +1490,7 @@ static void chk_sk_struct_scan(const char *path, int lineno, const char *buf,
   }
 }
 
-static void chk_finish_decl(const char *path, int lineno) {
+static void chk_finish_decl(const char *path, int lineno, bool is_h) {
   const char *buf = decl_buf;
   size_t len = decl_len;
   if (chk_tok_count == 0)
@@ -1544,6 +1535,11 @@ static void chk_finish_decl(const char *path, int lineno) {
   for (size_t i = 0; i < (size_t)candidate; i++)
     if (chk_toks[i].kind == CHK_EQUAL)
       return;
+  if (!is_h) {
+    for (size_t i = 0; i < (size_t)candidate; i++)
+      if (chk_tok_is(i, buf, "static"))
+        return;
+  }
   size_t beg = chk_toks[candidate].beg, end = chk_toks[candidate].end;
   size_t name_len = end - beg;
   char name[256];
@@ -1555,10 +1551,21 @@ static void chk_finish_decl(const char *path, int lineno) {
   char norm[1024];
   check_norm_path(path, norm, sizeof(norm));
   const char *prefix = check_fn_prefix(norm);
+  if (is_h)
+    decl_remember(name);
   if (!prefix)
     return;
   if (strncmp(name, prefix, strlen(prefix)) == 0)
     return;
+  if (!is_h &&
+      pending_fn_count < sizeof(pending_fns) / sizeof(pending_fns[0])) {
+    PendingFn *p = &pending_fns[pending_fn_count++];
+    snprintf(p->path, sizeof(p->path), "%s", path);
+    p->line = lineno;
+    snprintf(p->name, sizeof(p->name), "%s", name);
+    p->prefix = prefix;
+    return;
+  }
   check_state.fn_violations++;
   char msg[512];
   snprintf(msg, sizeof(msg),
@@ -1634,7 +1641,6 @@ static bool check_walk(Nob_Walk_Entry entry) {
     return true;
   bool exempt =
       check_starts_with(norm, "features/") || check_starts_with(norm, "tests/");
-  bool is_h = check_ends_with(norm, ".h");
   bool sk_layer_exempt = chk_layer_exempt(norm);
   check_state.files_scanned++;
 
@@ -1792,8 +1798,8 @@ static bool check_walk(Nob_Walk_Entry entry) {
           }
           if (c == '{') {
             decl_buf[decl_len] = '\0';
-            if (is_h)
-              chk_finish_decl(path, decl_start_line ? decl_start_line : lineno);
+            chk_finish_decl(path, decl_start_line ? decl_start_line : lineno,
+                            check_ends_with(norm, ".h"));
             if (!sk_layer_exempt)
               chk_sk_func_scan(path, decl_start_line ? decl_start_line : lineno,
                                decl_buf, decl_len);
@@ -1807,8 +1813,8 @@ static bool check_walk(Nob_Walk_Entry entry) {
             brace_depth++;
           } else if (c == ';') {
             decl_buf[decl_len] = '\0';
-            if (is_h)
-              chk_finish_decl(path, decl_start_line ? decl_start_line : lineno);
+            chk_finish_decl(path, decl_start_line ? decl_start_line : lineno,
+                            check_ends_with(norm, ".h"));
             if (!sk_layer_exempt)
               chk_sk_func_scan(path, decl_start_line ? decl_start_line : lineno,
                                decl_buf, decl_len);
@@ -1845,6 +1851,7 @@ static bool check_layering(void) {
   decl_len = 0;
   decl_overflow = false;
   decl_start_line = 0;
+  pending_fn_count = 0;
   if (!nob_walk_dir(SRC_FOLDER, check_walk))
     return false;
   if (!nob_walk_dir("include", check_walk))
@@ -1853,6 +1860,18 @@ static bool check_layering(void) {
     return false;
   if (!nob_walk_dir("tests", check_walk))
     return false;
+  for (size_t i = 0; i < pending_fn_count; i++) {
+    PendingFn *p = &pending_fns[i];
+    if (decl_known(p->name))
+      continue;
+    check_state.fn_violations++;
+    char msg[512];
+    snprintf(msg, sizeof(msg),
+             "function '%s' does not start with '%s' in this directory and is "
+             "not declared in any header",
+             p->name, p->prefix);
+    check_violation(p->path, p->line, msg);
+  }
   printf("check: scanned %d files, %d skapi violation(s), %d function-name "
          "violation(s), %d struct-name violation(s)\n",
          check_state.files_scanned, check_state.skapi_violations,
@@ -1863,7 +1882,7 @@ static bool check_layering(void) {
 }
 
 int main(int argc, char **argv) {
-  NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
+  NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h", "include/config_defs.h");
 
   int do_run = 0;
   int do_test = 0;
@@ -1887,7 +1906,9 @@ int main(int argc, char **argv) {
       printf("  -test   Run test suite\n");
       printf("  -asan   Build with clang -fsanitize=address,undefined\n");
       printf("  -check  Check for skapi includes outside features/tests,\n"
-             "         function naming in platform/ and helpers/,\n"
+             "         function naming in platform/ and helpers/ (.c and .h;\n"
+             "         .c externs must match the directory prefix or be\n"
+             "         declared in a header; statics are exempt),\n"
              "         and sk_ / Sk namesquatting outside the skapi layer\n"
              "         (case insensitive)\n");
       printf("  -help   Show this help\n");

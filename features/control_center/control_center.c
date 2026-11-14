@@ -282,7 +282,8 @@ static int cc_binding_find(const char *action) {
 
 static int cc_binding_find_hotkey(const char *hotkey) {
   for (int i = 0; i < cc_binding_count; i++)
-    if (cc_binding_used(i) && sk_string_equals_ci(cc_bindings[i].hotkey, hotkey))
+    if (cc_binding_used(i) &&
+        sk_string_equals_ci(cc_bindings[i].hotkey, hotkey))
       return i;
   return -1;
 }
@@ -491,8 +492,8 @@ static bool cc_apps_load_cache(bool *needs_save) {
       continue;
 
     char *icon_copy = cc_strdup(icon);
-    if (icon_copy && (!icon[0] || cc_icon_is_shell_only(icon) ||
-                      !sk_file_exists(icon))) {
+    if (icon_copy &&
+        (!icon[0] || cc_icon_is_shell_only(icon) || !sk_file_exists(icon))) {
       char *resolved = sk_get_icon_path(path);
       if (resolved) {
         if (strcmp(resolved, icon) != 0)
@@ -535,8 +536,7 @@ static void cc_apps_save_cache(void) {
 
 static void cc_scan_dir(const char *path, int depth, char **allowed,
                         ListOfFiles *out) {
-  sk_get_all_files_from_dir((char *)path, allowed, out,
-                            NULL, true, depth);
+  sk_get_all_files_from_dir((char *)path, allowed, out, NULL, true, depth);
 }
 
 #if defined(__linux__)
@@ -610,7 +610,8 @@ static void cc_apps_scan(void) {
     if (drop[i] || !found.files[i].name[0])
       continue;
     for (size_t j = i + 1; j < found.count; j++)
-      if (!drop[j] && sk_string_equals_ci(found.files[j].name, found.files[i].name))
+      if (!drop[j] &&
+          sk_string_equals_ci(found.files[j].name, found.files[i].name))
         drop[j] = true;
   }
 
@@ -833,7 +834,8 @@ static double cc_parse_number(CcParser *ps) {
   char c = *q;
   if (c == 'k' || c == 'K' || c == 'm' || c == 'M') {
     char next = q[1];
-    if (next == '\0' || isspace((unsigned char)next) || strchr("+-*/^()xX", next)) {
+    if (next == '\0' || isspace((unsigned char)next) ||
+        strchr("+-*/^()xX", next)) {
       v *= (c == 'k' || c == 'K') ? 1e3 : 1e6;
       q++;
     }
@@ -1042,8 +1044,8 @@ static void cc_refresh(PromptState *state) {
   else
     cc_entry_count = cc_entry_base;
 
-  int n = cc_entry_count < MAX_VISIBLE_ITEMS ? cc_entry_count
-                                             : MAX_VISIBLE_ITEMS;
+  int n =
+      cc_entry_count < MAX_VISIBLE_ITEMS ? cc_entry_count : MAX_VISIBLE_ITEMS;
   for (int i = 0; i < n; i++)
     cc_names[i] = cc_entries[i].label;
   if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(state->eb->filter))
@@ -1106,8 +1108,8 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
     return;
   }
 
-  bool plain = strcmp(e->type, "Application") == 0 ||
-               strcmp(e->type, "Feature") == 0;
+  bool plain =
+      strcmp(e->type, "Application") == 0 || strcmp(e->type, "Feature") == 0;
   const char *right_label = plain ? e->type : CC_TYPE_LABEL;
   int right_w = sk_get_text_width(right_label, FontSize);
 
@@ -1139,7 +1141,8 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
       tag_size = FontSize;
     int tag_w = sk_get_text_width(e->type, tag_size);
     if (cursor + tag_w + CC_TYPE_GAP <= left_limit) {
-      sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
+      sk_draw_text(.x = cursor,
+                   .y = ctx->y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
                    .text = e->type, .align = "LEFT", .pad = 0,
                    .fontsize = tag_size, .color = CC_TYPE_COLOR);
       cursor += tag_w + CC_TYPE_GAP;
@@ -1147,8 +1150,7 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   }
 
   bool far_fits = cursor + CC_TYPE_GAP <= type_x - right_w;
-  int hk_right =
-      (far_fits ? type_x - right_w - CC_TYPE_GAP : type_x) - 4;
+  int hk_right = (far_fits ? type_x - right_w - CC_TYPE_GAP : type_x) - 4;
   if (has_hotkey && cursor + CC_TYPE_GAP + hk_w <= hk_right)
     cc_draw_hotkey_chip(hotkey, hk_right, ctx->y + 10);
   if (far_fits)

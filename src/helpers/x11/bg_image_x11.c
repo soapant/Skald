@@ -308,8 +308,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
   return result;
 }
 
-bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis,
-                       int w, int h) {
+bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis, int w, int h) {
   if (!x11_bg_image_enabled() || !dpy || !dst || w <= 0 || h <= 0)
     return false;
   Pixmap pm = x11_bg_image_tile(dpy, w, h);

@@ -176,6 +176,19 @@ void Owner_ResolveForFunc(void *fn, char *out, size_t n) {
   out[n - 1] = '\0';
 }
 
+bool IsSafeProcessName(const char *name) {
+  if (!name || !*name)
+    return false;
+  for (const char *p = name; *p; p++) {
+    unsigned char c = (unsigned char)*p;
+    bool ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+              (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-';
+    if (!ok)
+      return false;
+  }
+  return true;
+}
+
 void *HttpAsyncWorker(void *arg) {
   HttpAsyncJob *job = (HttpAsyncJob *)arg;
   if (!job)
