@@ -401,17 +401,17 @@ bool remap_handle_vk(int vk_code, int value) {
     return false;
   if (value == 2)
     return false;
-  bool active_before[64] = {0};
+  bool active_before[MAX_REMAPS] = {0};
   for (int i = 0; i < remap_count; i++)
     active_before[i] = binding_active(&remaps[i]);
 
   remap_update_phys(vk_code, value);
 
-  bool active_after[64] = {0};
+  bool active_after[MAX_REMAPS] = {0};
   for (int i = 0; i < remap_count; i++)
     active_after[i] = binding_active(&remaps[i]);
 
-  bool allowed[64];
+  bool allowed[MAX_REMAPS];
   for (int i = 0; i < remap_count; i++)
     allowed[i] = true;
   bool need_title = false;

@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "deps/log.h"
 #include "core/types/color.h"
 #include "core/types/window.h"
 #include "core/window_manager.h"
@@ -84,8 +85,10 @@ static CheckboxSpec *checkbox_intern(const char *name, int kind, bool seed) {
   CheckboxSpec *cb = checkbox_find(name, kind);
   if (cb)
     return cb;
-  if (checkbox_count >= CHECKBOX_MAX)
+  if (checkbox_count >= CHECKBOX_MAX) {
+    log_error("checkbox table full (%d), refusing '%s'", CHECKBOX_MAX, name);
     return NULL;
+  }
   cb = &checkboxes[checkbox_count++];
   memset(cb, 0, sizeof(*cb));
   cb->button = (kind == PLACE_BUTTON);
@@ -223,7 +226,7 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
     }
     if (spec->text) {
       int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
-      if (!Platform_FontInitalized(s_font))
+      if (!Platform_FontInitialized(s_font))
         s_font = Platform_CreateFont(fontsize, UsedFont);
       Platform_DrawTextCentered((PlDrawTextCenteredSpec){
           .x = spec->x,

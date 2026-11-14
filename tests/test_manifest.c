@@ -123,6 +123,53 @@ TEST(parse_provides_before_or_after_depends) {
   ASSERT_EQ_STR(m.provides[0], "prov_a");
 }
 
+TEST(unquote_keeps_hash_inside_quotes) {
+  char s1[64];
+  strcpy(s1, "\"value # not a comment\"");
+  Manifest_Unquote(s1);
+  ASSERT_EQ_STR(s1, "value # not a comment");
+
+  char s2[64];
+  strcpy(s2, "'keep # also kept'");
+  Manifest_Unquote(s2);
+  ASSERT_EQ_STR(s2, "keep # also kept");
+}
+
+TEST(parse_quoted_hash_is_not_a_comment) {
+  const char *data = "description = \"runs # not a comment\"\n";
+  FeatureManifest m;
+  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_TRUE(m.valid);
+}
+
+TEST(parse_unterminated_section_is_invalid) {
+  const char *data = "[provides\ncap.one\n";
+  FeatureManifest m;
+  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_FALSE(m.valid);
+}
+
+TEST(parse_unterminated_value_quote_is_invalid) {
+  const char *data = "description = \"unterminated\n";
+  FeatureManifest m;
+  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_FALSE(m.valid);
+}
+
+TEST(parse_empty_key_is_invalid) {
+  const char *data = "= \"no key\"\n";
+  FeatureManifest m;
+  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_FALSE(m.valid);
+}
+
+TEST(parse_binary_garbage_is_invalid) {
+  const char *data = "\x01\x02\x03\x04\n";
+  FeatureManifest m;
+  ASSERT_TRUE(Manifest_ParseString("x", data, &m));
+  ASSERT_FALSE(m.valid);
+}
+
 TEST(parse_unknown_sections_ignored) {
   const char *data = "[other]\nnot_a_dep\n[depends]\nreal_dep\n";
   FeatureManifest m;
@@ -230,8 +277,14 @@ TEST(parse_comment_inside_depends_would_strip_hash) {
 int main(void) {
   RUN(trim_strips_surrounding_whitespace);
   RUN(unquote_strips_comments);
+  RUN(unquote_keeps_hash_inside_quotes);
   RUN(unquote_strips_matching_quotes);
   RUN(parse_minimal_manifest);
+  RUN(parse_quoted_hash_is_not_a_comment);
+  RUN(parse_unterminated_section_is_invalid);
+  RUN(parse_unterminated_value_quote_is_invalid);
+  RUN(parse_empty_key_is_invalid);
+  RUN(parse_binary_garbage_is_invalid);
   RUN(parse_name_key_overrides_default);
   RUN(parse_crlf_line_endings);
   RUN(parse_missing_trailing_newline);
