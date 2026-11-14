@@ -14,7 +14,7 @@
 
 #define CHECKBOX_MAX 1024
 #define CHECKBOX_BASE 16
-#define CHECKBOX_GLYPH "\xe2\x9c\x93"
+#define CHECKBOX_ICON_PATH "resources/check.png"
 
 #define CHECKBOX_WHITE RGB(155, 155, 155)
 #define CHECKBOX_GRAY RGB(68, 68, 68)
@@ -156,17 +156,6 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                            .filled = false});
 }
 
-static int checkbox_line_height(int fontsize) {
-
-  int lh = 0, rh = 0, lt = 0;
-  Platform_GetTextLayoutMetrics(&lh, &rh, &lt);
-  int ref_h = lh > 0 ? lh : FontSize;
-  int ref_fs = FontSize > 0 ? FontSize : fontsize;
-  if (ref_h <= 0 || ref_fs <= 0)
-    return fontsize;
-  return (int)((long)ref_h * fontsize / ref_fs);
-}
-
 FontHandle s_font;
 
 void Checkbox_Draw(const CheckboxSpec *spec) {
@@ -218,26 +207,11 @@ void Checkbox_Draw(const CheckboxSpec *spec) {
     }
 
     if (spec->checked) {
-      int fontsize = w * 3 / 4;
-      if (fontsize < 1)
-        fontsize = 1;
-      int tw = Platform_MeasureTextWidth(
-          (PlMeasureTextWidthSpec){.text = CHECKBOX_GLYPH,
-                                   .len = (int)strlen(CHECKBOX_GLYPH),
-                                   .fontsize = fontsize});
-      int th = checkbox_line_height(fontsize);
-      int tx = spec->x + (w - tw) / 2;
-      int ty = spec->y + (h - th) / 2;
-      Platform_DrawTextRaw((PlDrawTextRawSpec){
-          .x = tx,
-          .y = ty - 2,
-          .text = CHECKBOX_GLYPH,
-          .color =
-              spec->text_color ? RgbToHex(spec->text_color) : CHECKBOX_WHITE,
-          .font = FH_NULL,
-          .align = "LEFT",
-          .pad = 0,
-          .fontsize = fontsize});
+      int m = w < h ? w : h;
+      int pad = m / 8;
+      int s = m - 2 * pad;
+      Platform_DrawImageAt(CHECKBOX_ICON_PATH, spec->x + (w - s) / 2,
+                           spec->y + (h - s) / 2, s, s);
     }
   } else if (spec->button) {
     int w = spec->w > 0 ? spec->w : 100;
@@ -319,10 +293,7 @@ bool Checkbox_Place(const CheckboxSpec *spec) {
 
   if (down && !cb->was_down) {
     if (hovered) {
-      if (cb->button)
-        cb->checked = !cb->checked;
-      else
-        cb->checked = true;
+      cb->checked = !cb->checked;
       cb->clicked = true;
       clicked = true;
     }
