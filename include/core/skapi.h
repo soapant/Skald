@@ -233,8 +233,10 @@ char *sk_string_to_lower(const char *str);
 char *sk_string_to_upper(const char *str);
 
 bool sk_string_starts_with(const char *str, const char *prefix);
+bool sk_string_starts_with_ci(const char *str, const char *prefix);
 
 bool sk_string_ends_with(const char *str, const char *suffix);
+bool sk_string_equals_ci(const char *str, const char *other);
 
 char *sk_string_replace(const char *str, const char *from, const char *to);
 
@@ -544,6 +546,7 @@ void sk_profile_end(SkTimer timer);
 void sk_run_after_time(double seconds, void (*callback)(void));
 
 bool sk_string_contains(const char *haystack, const char *needle);
+bool sk_string_contains_ci(const char *haystack, const char *needle);
 
 char *sk_get_working_dir(void);
 
