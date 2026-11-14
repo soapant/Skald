@@ -242,14 +242,45 @@ bool Platform_PasteContent(const char *content) {
   return ok;
 }
 
+static bool x11_compiler_probe(const char *cc) {
+  char src[4096], dll[4096];
+  const char *tmp = getenv("TMPDIR");
+  if (!tmp || !tmp[0])
+    tmp = "/tmp";
+  snprintf(src, sizeof(src), "%s/skald_cc_probe_%d.c", tmp, (int)getpid());
+  snprintf(dll, sizeof(dll), "%s/skald_cc_probe_%d.so", tmp, (int)getpid());
+  FILE *f = fopen(src, "wb");
+  if (!f)
+    return false;
+  fputs("int skald_cc_probe(void) { return 42; }\n", f);
+  fclose(f);
+  const char *argv[] = {cc, "-shared", "-fPIC", "-o", dll, src, "-lm", NULL};
+  int status = -1;
+  char *out = Platform_RunArgvCapture(argv, NULL, &status);
+  bool ok =
+      out != NULL && status == 0 && access(dll, F_OK) == 0;
+  free(out);
+  remove(src);
+  remove(dll);
+  return ok;
+}
+
 static const char *x11_compiler_found(void) {
   static char *cc = NULL;
   if (!cc) {
     const char *candidates[] = {"clang", "gcc", "cc", NULL};
-    for (size_t i = 0; candidates[i] && !cc; i++)
-      cc = Platform_FindExecutable(candidates[i]);
-    if (cc)
-      log_info("feature builds will use compiler: %s", cc);
+    for (size_t i = 0; candidates[i] && !cc; i++) {
+      char *found = Platform_FindExecutable(candidates[i]);
+      if (!found)
+        continue;
+      if (x11_compiler_probe(found)) {
+        cc = found;
+        log_info("feature builds will use compiler: %s", cc);
+      } else {
+        log_warn("skipping unusable compiler for feature builds: %s", found);
+        free(found);
+      }
+    }
   }
   return cc;
 }

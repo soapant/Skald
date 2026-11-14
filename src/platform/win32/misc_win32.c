@@ -315,14 +315,46 @@ const char *Platform_GetRealUser(void) {
   return NULL;
 }
 
+static bool win32_compiler_probe(const char *cc) {
+  char tmp_dir[MAX_PATH], src[MAX_PATH], dll[MAX_PATH];
+  DWORD n = GetTempPathA(MAX_PATH, tmp_dir);
+  if (n == 0 || n >= MAX_PATH)
+    return false;
+  DWORD pid = GetCurrentProcessId();
+  snprintf(src, sizeof(src), "%sskald_cc_probe_%lu.c", tmp_dir, pid);
+  snprintf(dll, sizeof(dll), "%sskald_cc_probe_%lu.dll", tmp_dir, pid);
+  FILE *f = fopen(src, "wb");
+  if (!f)
+    return false;
+  fputs("__declspec(dllexport) int skald_cc_probe(void) { return 42; }\n", f);
+  fclose(f);
+  const char *argv[] = {cc, "-shared", "-o", dll, src, "-lcomctl32", NULL};
+  int status = -1;
+  char *out = Platform_RunArgvCapture(argv, NULL, &status);
+  bool ok = out != NULL && status == 0 &&
+            GetFileAttributesA(dll) != INVALID_FILE_ATTRIBUTES;
+  free(out);
+  DeleteFileA(src);
+  DeleteFileA(dll);
+  return ok;
+}
+
 static const char *win32_compiler_found(void) {
   static char *cc = NULL;
   if (!cc) {
     const char *candidates[] = {"clang", "gcc", NULL};
-    for (size_t i = 0; candidates[i] && !cc; i++)
-      cc = Platform_FindExecutable(candidates[i]);
-    if (cc)
-      log_info("feature builds will use compiler: %s", cc);
+    for (size_t i = 0; candidates[i] && !cc; i++) {
+      char *found = Platform_FindExecutable(candidates[i]);
+      if (!found)
+        continue;
+      if (win32_compiler_probe(found)) {
+        cc = found;
+        log_info("feature builds will use compiler: %s", cc);
+      } else {
+        log_warn("skipping unusable compiler for feature builds: %s", found);
+        free(found);
+      }
+    }
   }
   return cc;
 }
