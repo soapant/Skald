@@ -78,7 +78,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     draw_measure_track(bx, y, tw, th);
   }
   XftColor col;
-  x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
   if (string_contains_ci(a, "CENTER") || string_contains_ci(a, "LEFT") ||
       string_contains_ci(a, "RIGHT")) {
     int box = 0;
@@ -101,7 +101,6 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
                                spec.fontsize > 0 ? spec.fontsize : FontSize);
     }
   }
-  XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
   if (needDestroy)
     Platform_DestroyFont(fh);
   return true;
@@ -141,11 +140,10 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   unsigned long color =
       spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
   XftColor col;
-  x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
   x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf,
                          spec.text, spec.len,
                          spec.fontsize > 0 ? spec.fontsize : FontSize);
-  XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
   return true;
 }
 
@@ -159,14 +157,11 @@ void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                                        .body_color = &bcol,
                                        .plain_color = &pcol});
   XftColor ncolor, bcolor, pcolor;
-  x11_xft_alloc_color(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
-  x11_xft_alloc_color(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
-  x11_xft_alloc_color(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
+  x11_xft_color_cached(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
+  x11_xft_color_cached(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
+  x11_xft_color_cached(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
   x11_draw_listbox_item_text(dpy, xd, vis, cmap, font, &pcolor, lb,
                              (char *)icon_path, idx, y);
-  XftColorFree(dpy, vis, cmap, &ncolor);
-  XftColorFree(dpy, vis, cmap, &bcolor);
-  XftColorFree(dpy, vis, cmap, &pcolor);
 }
 
 void x11_draw_edit_background(const PromptState *state, Display *dpy, XftDraw *xd,
@@ -258,10 +253,9 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
                             color, target_alpha, x, y, w, h, r);
     } else {
       XftColor col;
-      x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
+      x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
                           target_alpha, &col);
       XftDrawRect(g_draw_xd, &col, x, y, w, h);
-      XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     }
     return true;
   }
@@ -272,10 +266,9 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     return false;
   }
   XftColor col;
-  x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, target_alpha,
+  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, target_alpha,
                       &col);
   XSetForeground(g_draw_dpy, gc, col.pixel);
-  XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
   XSetLineAttributes(g_draw_dpy, gc, t, LineSolid, CapButt, JoinMiter);
   if (want_round) {
     if (r > 0) {
@@ -300,7 +293,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     }
   } else {
     XftColor border_col;
-    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
+    x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
                         target_alpha, &border_col);
 
     XftDrawRect(g_draw_xd, &border_col, x, y, w, t);
@@ -308,7 +301,6 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     XftDrawRect(g_draw_xd, &border_col, x, y, t, h);
     XftDrawRect(g_draw_xd, &border_col, x + w - t, y, t, h);
 
-    XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &border_col);
   }
   return true;
 }

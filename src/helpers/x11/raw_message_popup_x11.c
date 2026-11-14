@@ -216,7 +216,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
   XftFont *xf = FH_TO_XFT(font);
   if (xf && message && message[0] != '\0') {
     XftColor col;
-    x11_xft_alloc_color(dpy, attrs.visual, attrs.colormap, rgb_to_hex(color),
+    x11_xft_color_cached(dpy, attrs.visual, attrs.colormap, rgb_to_hex(color),
                         0xFFFF, &col);
     MsgLine lines[MSG_MAX_LINES];
     int nlines =
@@ -237,7 +237,6 @@ static void x11_display_message_draw(Display *dpy, Window win,
       }
       y += lineH;
     }
-    XftColorFree(dpy, attrs.visual, attrs.colormap, &col);
   }
   Platform_DestroyFont(font);
 

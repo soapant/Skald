@@ -646,6 +646,9 @@ static void cc_load_apps(void) {
 static void *cc_prewarm_apps(void *arg) {
   (void)arg;
   cc_load_apps();
+  size_t n = cc_app_count < 48 ? cc_app_count : 48;
+  for (size_t i = 0; i < n; i++)
+    sk_prewarm_image(cc_apps[i].icon);
   return NULL;
 }
 

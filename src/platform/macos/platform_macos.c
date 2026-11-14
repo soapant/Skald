@@ -81,3 +81,8 @@ bool Platform_ProcessRunning(const char *name) {
   pclose(fp);
   return found;
 }
+
+bool Platform_PrewarmImage(char *path) {
+  (void)path;
+  return true;
+}

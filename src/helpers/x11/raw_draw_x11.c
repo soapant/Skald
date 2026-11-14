@@ -127,7 +127,7 @@ void x11_raw_line_flush(void) {
   }
   XftColor xcols[64];
   for (int k = 0; k < nu; k++)
-    x11_xft_alloc_color(dpy, vis, cmap, ucols[k], 0xFFFF, &xcols[k]);
+    x11_xft_color_cached(dpy, vis, cmap, ucols[k], 0xFFFF, &xcols[k]);
   int row = 0;
   int p = 0;
   int ls = 0;
@@ -227,7 +227,6 @@ void x11_raw_line_flush(void) {
   raw_map_pitch = pitch;
   raw_map_xd = xd;
   for (int k = 0; k < nu; k++)
-    XftColorFree(dpy, vis, cmap, &xcols[k]);
   if (owned)
     Platform_DestroyFont(raw_font);
 }
@@ -404,10 +403,9 @@ GC x11_raw_prepare(unsigned long color, int thickness) {
   if (!gc)
     return NULL;
   XftColor col;
-  x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
+  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
                       opacity_alpha16(), &col);
   XSetForeground(g_draw_dpy, gc, col.pixel);
-  XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
   XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid,
                      CapButt, JoinMiter);
   return gc;

@@ -16,5 +16,7 @@
 #include "deps/log.h"
 
 void x11_img_cache_free_all(void);
+void x11_border_cache_free_all(void);
+bool x11_prewarm_image(Display *dpy, const char *path);
 
 #endif

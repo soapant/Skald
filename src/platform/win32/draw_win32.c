@@ -1,5 +1,21 @@
 #include "helpers/win32/raw_draw_win32.h"
 
+bool Platform_PrewarmImage(char *path) {
+  if (!path || !path[0])
+    return false;
+  HDC screen = win32_screen_dc();
+  if (!screen)
+    return false;
+  void *bmp = win32_img_cache_get(path, screen, FontSize, FontSize);
+  if (bmp == WIN32_IMG_FAILED)
+    return false;
+  if (!bmp) {
+    bmp = win32_load_scaled_bitmap(path, FontSize, FontSize);
+    win32_img_cache_put(path, screen, FontSize, FontSize, bmp);
+  }
+  return bmp != NULL;
+}
+
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   HWND w = WH_TO_HWND(h);
   if (!w || !IsWindow(w))

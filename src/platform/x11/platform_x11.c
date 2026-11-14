@@ -787,6 +787,14 @@ static char *x11_icon_try_sizes(const char *bare, const char *dir,
 
 char *Platform_GetActiveWindowAppId(void) { return wm_get_active_window_app_id(); }
 
+bool Platform_PrewarmImage(char *path) {
+  extern bool x11_prewarm_image(Display *dpy, const char *path);
+  Display *dpy = x11_get_display();
+  if (!dpy || !path || !path[0])
+    return false;
+  return x11_prewarm_image(dpy, path);
+}
+
 char *Platform_GetIconPath(char *app_path) {
   if (!app_path) {
     log_error("operation failed, returning error app_path='%s'",
@@ -1246,6 +1254,10 @@ void Platform_CleanupPlatformResources(void) {
   {
     extern void x11_img_cache_free_all(void);
     x11_img_cache_free_all();
+  }
+  {
+    extern void x11_border_cache_free_all(void);
+    x11_border_cache_free_all();
   }
   {
     extern void x11_wm_cleanup_cursor_display(void);

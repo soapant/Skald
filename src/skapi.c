@@ -704,6 +704,12 @@ char *sk_get_icon_path(const char *path) {
   return Platform_GetIconPath((char *)path);
 }
 
+bool sk_prewarm_image(const char *path) {
+  if (!path || !path[0])
+    return false;
+  return Platform_PrewarmImage((char *)path);
+}
+
 int sk_get_icon_size(const char *icon_path) {
   if (!icon_path)
     return 0;
