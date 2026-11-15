@@ -990,6 +990,10 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   int cursor = name_x + name_w + CC_TYPE_GAP;
   const char *alias = sk_alias_for(ctx->text);
 
+  if (!e) {
+    return;
+  }
+
   bool plain =
       strcmp(e->type, "Application") == 0 || strcmp(e->type, "Feature") == 0;
   const char *right_label = plain ? e->type : CC_TYPE_LABEL;
@@ -1010,7 +1014,7 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
     snprintf(chip, sizeof(chip), "[%s]", alias);
     int alias_w = sk_get_text_width(chip, FontSize - 3);
     if (cursor + alias_w + CC_TYPE_GAP <= left_limit) {
-      sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y , .text = chip,
+      sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y, .text = chip,
                    .align = "LEFT",.color = SK_GRAY,
                    .fontsize = FontSize);
       cursor += alias_w + CC_TYPE_GAP;
