@@ -1,5 +1,5 @@
-#ifndef CORE_LISTBOX_HOVER_H
-#define CORE_LISTBOX_HOVER_H
+#ifndef LISTBOX_HOVER_H
+#define LISTBOX_HOVER_H
 
 #include <stdbool.h>
 #include "core/types.h"

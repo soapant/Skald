@@ -1,5 +1,5 @@
-#ifndef CORE_FEATURE_PATH_H
-#define CORE_FEATURE_PATH_H
+#ifndef FEATURE_PATH_H
+#define FEATURE_PATH_H
 
 #include <stdbool.h>
 #include <stddef.h>

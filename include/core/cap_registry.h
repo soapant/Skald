@@ -1,5 +1,5 @@
-#ifndef CORE_CAP_REGISTRY_H
-#define CORE_CAP_REGISTRY_H
+#ifndef CAP_REGISTRY_H
+#define CAP_REGISTRY_H
 
 #include <stdbool.h>
 #include <stdint.h>

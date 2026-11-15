@@ -1,7 +1,7 @@
-#include <stdbool.h>
-
 #ifndef HELPERS_RENDER_THREAD_H
 #define HELPERS_RENDER_THREAD_H
+
+#include <stdbool.h>
 
 typedef void (*RenderFrameFn)(void *ud);
 
