@@ -25,16 +25,16 @@ jobs:
         run: cc -O2 nob.c -o nob
 
       - name: Main Build
-        run: ./nob -werror
+        run: ./nob --werror
 
       - name: Check skapi layering
-        run: ./nob -check
+        run: ./nob --check
 
       - name: Run tests
-        run: ./nob -test
+        run: ./nob --test
 
       - name: Cross-compile for Windows
-        run: ./nob -win32
+        run: ./nob --win32
 
   format:
     runs-on: ubuntu-latest
@@ -71,4 +71,4 @@ jobs:
         run: cc -O2 nob.c -o nob
 
       - name: Build and test with ASan + UBSan
-        run: ./nob -asan -test
+        run: ./nob --asan --test
