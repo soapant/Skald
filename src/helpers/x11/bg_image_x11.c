@@ -258,8 +258,8 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
   BgTileSlot *slot = fresh;
   if (!slot) {
     slot = &g_bg_tiles[bg_tile_lru_pick(g_bg_tiles, BG_TILE_SLOTS,
-                                     sizeof(g_bg_tiles[0]), bg_slot_empty,
-                                     bg_slot_stamp)];
+                                        sizeof(g_bg_tiles[0]), bg_slot_empty,
+                                        bg_slot_stamp)];
   }
 
   bg_slot_release(dpy, slot);

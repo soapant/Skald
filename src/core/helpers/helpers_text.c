@@ -753,10 +753,10 @@ static bool file_walk_dir(const char *dir_path,
 }
 
 bool file_walk_all_files_from_dir(const char *dir_path,
-                              char **list_of_allowed_extensions,
-                              ListOfFiles *list_of_files,
-                              char **list_of_names_to_ignore,
-                              bool strip_extension, int max_depth) {
+                                  char **list_of_allowed_extensions,
+                                  ListOfFiles *list_of_files,
+                                  char **list_of_names_to_ignore,
+                                  bool strip_extension, int max_depth) {
   if (!dir_path || !list_of_files)
     return false;
   return file_walk_dir(dir_path, list_of_allowed_extensions, list_of_files,
@@ -861,7 +861,7 @@ bool string_equals_ci(const char *a, const char *b) {
 }
 
 void url_build_search_url(const char *engine, const char *query, char *out,
-                        size_t cap) {
+                          size_t cap) {
   if (!out || cap == 0)
     return;
   char encoded[2048];
@@ -935,7 +935,7 @@ bool list_append(PlWindowList *list, const char *item) {
 }
 
 bool window_list_allows(int window_count, bool whitelist, char *const *windows,
-                       const char *title) {
+                        const char *title) {
   if (window_count == 0)
     return !whitelist;
   if (!whitelist) {

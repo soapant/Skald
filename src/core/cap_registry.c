@@ -135,7 +135,8 @@ void cap_bind_declare(const char *key, void *consumer) {
       return;
     }
     char provider[64];
-    feature_loader_owner_feature_name(caps[i].owner, provider, sizeof(provider));
+    feature_loader_owner_feature_name(caps[i].owner, provider,
+                                      sizeof(provider));
     cap_unlock();
     if (!provider[0]) {
       return;

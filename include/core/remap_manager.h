@@ -6,7 +6,7 @@
 #define REMAP_PARSE_MAX_VKS 8
 
 bool remap_parse_triggers(const char *str, int *out_mods, int *out_vks,
-                         int *out_count);
+                          int *out_count);
 
 bool remap_register_internal(const char *src, const char *dst, bool whitelist,
                              const char *const *windows);

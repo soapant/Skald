@@ -12,7 +12,7 @@
 #include "platform/platform.h"
 
 void purge_owner_set(const char *path_a, const char *path_b,
-                   unsigned widget_gen) {
+                     unsigned widget_gen) {
   cap_purge_owner(path_a, path_b);
   hotkey_purge_owner(path_a, path_b);
   run_every_purge_owner(path_a, path_b);

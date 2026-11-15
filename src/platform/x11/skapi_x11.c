@@ -259,7 +259,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   }
   EditboxPlace place;
   editbox_resolve_place(spec->buffer, spec->x, spec->y, spec->w, spec->h,
-                       spec->fontsize, state, &place);
+                        spec->fontsize, state, &place);
   int fs = place.fontsize;
   const char *buf = place.buf;
   int text_len = place.text_len;
