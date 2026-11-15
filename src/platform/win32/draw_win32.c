@@ -268,6 +268,26 @@ int Platform_GetTextLineHeight(int fontsize) {
   return tm.tmHeight > 0 ? (int)tm.tmHeight : fontsize;
 }
 
+int Platform_GetTextYOffset(int fontsize) {
+  if (!g_draw_hdc)
+    return 0;
+  if (pl_draw_state_get()->win32_widget_surface) {
+    if (fontsize <= 0)
+      fontsize = FontSize;
+    FontHandle font = Platform_CreateFont(fontsize, UsedFont);
+    HFONT old = font.hfont ? (HFONT)SelectObject(g_draw_hdc, font.hfont) : NULL;
+    TEXTMETRICW tm = {0};
+    GetTextMetricsW(g_draw_hdc, &tm);
+    if (old)
+      SelectObject(g_draw_hdc, old);
+    Platform_DestroyFont(font);
+    return -((int)tm.tmInternalLeading - 1);
+  }
+  if (pl_draw_state_get()->win32_listbox_surface)
+    return 2;
+  return 0;
+}
+
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int x1, y1, x2, y2;
   int t = draw_line_prep(&spec, pl_draw_state_get()->off_x,
