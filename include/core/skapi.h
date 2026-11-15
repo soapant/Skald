@@ -64,7 +64,7 @@ bool sk_copy_file_path(const char *path);
 
 bool sk_paste_from_clipboard(void);
 
-bool sk_paste(char *content);
+bool sk_paste(const char *content);
 
 char *sk_get_last_clipboard_entry(void);
 
@@ -126,6 +126,7 @@ bool sk_write_temp_file(const char *name, const void *data, size_t len,
 int sk_get_icon_size(const char *icon_path);
 
 void sk_free_file_list(SkStringList *list);
+void sk_free_files_list(ListOfFiles *list);
 
 bool sk_free_list(const char *list[], int count);
 
@@ -139,20 +140,20 @@ bool sk_launch_with_args(const char *path, const char *args);
 
 bool sk_launch_with_args_as_admin(const char *path, const char *args);
 
-bool sk_launch_terminal_at_path(char *path, char *args);
+bool sk_launch_terminal_at_path(const char *path, const char *args);
 
-char *sk_run_terminal_command(char *command);
+char *sk_run_terminal_command(const char *command);
 
-char *sk_run_terminal_command_blocking(char *command);
+char *sk_run_terminal_command_blocking(const char *command);
 
-char *sk_run_terminal_command_and_open(char *command);
+char *sk_run_terminal_command_and_open(const char *command);
 
 char *sk_run_argv(const char *const argv[], const char *stdin_data,
                   int *out_status);
 
 char *sk_which(const char *command);
 
-bool sk_launch_detached(char *command);
+bool sk_launch_detached(const char *command);
 
 bool sk_terminate_process_by_name(const char *exe_name);
 bool sk_process_running(const char *name);
@@ -172,11 +173,11 @@ SkKey sk_hotkey_from_string(const char *str);
 
 bool sk_hotkey_down(SkKey key);
 
-bool sk_launch_browser(char *url);
+bool sk_launch_browser(const char *url);
 
 bool sk_query_browser(const char *query);
 
-bool sk_focus_window_by_title(char *title);
+bool sk_focus_window_by_title(const char *title);
 
 SkWindowHandle sk_get_window_id(const char *title);
 SkWindowHandle sk_get_window_by_root_atom(const char *atom);
@@ -833,7 +834,7 @@ bool ski_register_snippet(const SkSnippetSpec *spec);
 bool ski_unregister_snippet(const char *trigger);
 #define sk_unregister_snippet(trigger) ski_unregister_snippet((trigger))
 
-void sk_reload_feature(char *name);
+void sk_reload_feature(const char *name);
 int sk_reload_all_features(void);
 int sk_get_pid(void);
 
