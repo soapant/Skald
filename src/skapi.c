@@ -1018,7 +1018,11 @@ char *sk_get_last_clipboard_entry(void) {
 
 bool sk_paste_from_clipboard(void) {
   char *content = Platform_GetClipboardEntry();
-  return Platform_PasteContent(content);
+  if (!content)
+    return false;
+  bool ok = Platform_PasteContent(content);
+  free(content);
+  return ok;
 }
 
 bool sk_paste(const char *content) {

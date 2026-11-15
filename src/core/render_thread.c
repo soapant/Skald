@@ -164,12 +164,18 @@ bool render_thread_remove_frame_callback(RenderFrameFn fn, const void *ud) {
 
 typedef struct {
   volatile int done;
+  volatile int abandoned;
 } RtSync;
 
 static void rt_sync_mark(void *ud) {
   RtSync *s = (RtSync *)ud;
-  if (s)
-    s->done = 1;
+  if (!s)
+    return;
+  if (s->abandoned) {
+    free(s);
+    return;
+  }
+  s->done = 1;
 }
 
 void render_thread_sync(void) {
@@ -181,6 +187,7 @@ void render_thread_sync(void) {
   if (!s)
     return;
   s->done = 0;
+  s->abandoned = 0;
   if (!render_thread_post(rt_sync_mark, s)) {
     free(s);
     return;
@@ -194,6 +201,7 @@ void render_thread_sync(void) {
     long long now = Platform_GetWallClockMs();
     if (now - start >= 5000) {
       log_warn("render thread sync timed out after 5s");
+      s->abandoned = 1;
       return;
     }
     Platform_RenderThreadMiniSleep(1);

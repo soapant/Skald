@@ -255,44 +255,40 @@ bool Platform_PasteContent(const char *content) {
   if (!content || !content[0])
     return false;
 
-  size_t len = strlen(content);
-  INPUT *inputs = (INPUT *)calloc(len, sizeof(INPUT));
-  if (!inputs)
+  int wchars = MultiByteToWideChar(CP_UTF8, 0, content, -1, NULL, 0);
+  if (wchars <= 1)
     return false;
+  wchar_t *wbuf = (wchar_t *)malloc((size_t)wchars * sizeof(wchar_t));
+  if (!wbuf)
+    return false;
+  MultiByteToWideChar(CP_UTF8, 0, content, -1, wbuf, wchars);
+  int code_units = wchars - 1; /* don't paste the trailing NUL */
 
-  for (size_t i = 0; i < len; i++) {
-    char c = content[i];
-    inputs[i].type = INPUT_KEYBOARD;
-    inputs[i].ki.wVk = 0;
-    inputs[i].ki.wScan = c;
-    inputs[i].ki.dwFlags = KEYEVENTF_SCANCODE;
-    inputs[i].ki.time = 0;
-    inputs[i].ki.dwExtraInfo = 0;
+  INPUT *inputs = (INPUT *)calloc((size_t)code_units * 2, sizeof(INPUT));
+  if (!inputs) {
+    free(wbuf);
+    return false;
+  }
+  for (int i = 0; i < code_units; i++) {
+    INPUT *down = &inputs[2 * i];
+    INPUT *up = &inputs[2 * i + 1];
+    down->type = INPUT_KEYBOARD;
+    down->ki.wVk = 0;
+    down->ki.wScan = wbuf[i];
+    down->ki.dwFlags = KEYEVENTF_UNICODE;
+    up->type = INPUT_KEYBOARD;
+    up->ki.wVk = 0;
+    up->ki.wScan = wbuf[i];
+    up->ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
   }
 
-  UINT result = SendInput((UINT)len, inputs, sizeof(INPUT));
-
-  bool success = (result == len);
-  if (success) {
-    INPUT *up_inputs = (INPUT *)calloc(len, sizeof(INPUT));
-    if (!up_inputs) {
-      free(inputs);
-      return false;
-    }
-
-    for (size_t i = 0; i < len; i++) {
-      up_inputs[i] = inputs[i];
-      up_inputs[i].ki.dwFlags |= KEYEVENTF_KEYUP;
-    }
-
-    result = SendInput((UINT)len, up_inputs, sizeof(INPUT));
-    success = (result == len);
-    free(up_inputs);
-  }
+  UINT total = (UINT)code_units * 2;
+  UINT result = SendInput(total, inputs, sizeof(INPUT));
+  bool success = (result == total);
 
   free(inputs);
-  log_info("Platform_PasteContent content length=%zu",
-           content ? strlen(content) : 0);
+  free(wbuf);
+  log_info("Platform_PasteContent content length=%zu", strlen(content));
   return success;
 }
 const char *Platform_GetRealHome(void) {
