@@ -819,7 +819,8 @@ void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec,
                                .len = (int)strlen(spec->text),
                                .fontsize = spec->fontsize});
   int tx = spec->x + (spec->w - tw) / 2;
-  int ty = spec->y + (spec->h - lineHeight) / 2;
+  int ty = spec->y + (spec->h - lineHeight) / 2 -
+           Platform_GetTextYOffset(spec->fontsize);
   Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
                                            .y = ty,
                                            .text = spec->text,
