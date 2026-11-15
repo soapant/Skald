@@ -113,7 +113,6 @@ bool widget_is_valid(const PlatformWidget *widget);
 void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
                              void *ud);
 void widget_invalidate(PlatformWidget *widget);
-bool widget_base_check(const PlatformWidgetBase *base);
 bool widget_base_ready(const PlatformWidgetBase *base, bool mapped);
 bool widget_base_move(PlatformWidgetBase *base, int x, int y);
 bool widget_base_resize(PlatformWidgetBase *base, int w, int h);

@@ -654,8 +654,6 @@ void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
   base->last_draw_ms = 0;
 }
 
-bool widget_base_check(const PlatformWidgetBase *base) { return base && !base->dead; }
-
 bool widget_base_ready(const PlatformWidgetBase *base, bool mapped) {
   return base && !base->dead && base->mapped == mapped;
 }
