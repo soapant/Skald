@@ -21,6 +21,7 @@ int WindowManager_Run(WindowManager *wm) {
 
   MSG msg;
   while (wm->running) {
+    feature_loader_service_builds();
     feature_loader_drain_retired_unloads();
     bool got = false;
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -45,6 +46,7 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
     return;
   }
 
+  feature_loader_service_builds();
   feature_loader_drain_retired_unloads();
   MSG msg;
   bool got = false;
