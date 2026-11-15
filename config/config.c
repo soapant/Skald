@@ -29,7 +29,7 @@ void config_apply(void) {
   ActionsHotkey = "Ctrl+K";
   RegHotkey = "Ctrl+Shift+E";
   RegAliasHotkey = "Ctrl+Shift+A";
-  Theme = "matrix";
+  Theme = "modus-vivendi";
   BackgroundImage = "";
   MessagesEnabled = true;
   EnableAutoPairing = true;
@@ -37,10 +37,5 @@ void config_apply(void) {
   RainbowText = false;
   WindowTitleText = false;
   CloseOnLossOfFocus = false;
-  COLOR_BG = RGB(0, 0, 0);
-  COLOR_TEXT = RGB(0, 255, 0);
-  COLOR_SELECTED_TEXT = RGB(0, 0, 0);
-  COLOR_CURSOR = RGB(0, 255, 0);
-  COLOR_BORDER = RGB(0, 120, 0);
 }
 // </skald-config-generated>

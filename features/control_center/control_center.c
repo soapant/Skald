@@ -11,7 +11,6 @@
 #define CC_MAX_BINDINGS 64
 #define CC_HOTKEY_FILE "hotkeys.txt"
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
-#define CC_APPCACHE_VERSION "#cc5"
 
 #define CC_ITEM_TEXT_X 10
 #define CC_ITEM_TEXT_Y 4
@@ -465,8 +464,7 @@ static bool cc_apps_load_cache(bool *needs_save) {
   SkStringList lines = sk_load_file_list(CC_APPCACHE_FILE);
   if (!lines.items)
     return false;
-  if (lines.count == 0 || !lines.items[0] ||
-      strcmp(lines.items[0], CC_APPCACHE_VERSION) != 0) {
+  if (lines.count == 0 || !lines.items[0]) {
     sk_free_file_list(&lines);
     return false;
   }
@@ -514,7 +512,6 @@ static void cc_apps_save_cache(void) {
   if (!lines)
     return;
   int n = 0;
-  lines[n++] = cc_strdup(CC_APPCACHE_VERSION);
   for (size_t i = 0; i < cc_app_count; i++) {
     const CcApp *a = &cc_apps[i];
     if (!a->name[0] || !a->path[0])
