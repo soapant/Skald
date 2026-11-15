@@ -93,7 +93,7 @@ static const ThemeEntry themes[] = {
     {"modus-operandi", RGB(255, 255, 255), RGB(0, 0, 0), RGB(218, 229, 236),
      RGB(0, 0, 0), RGB(159, 159, 159)},
     {"modus-vivendi", RGB(0, 0, 0), RGB(255, 255, 255), RGB(47, 56, 73),
-     RGB(255, 255, 255), RGB(100, 100, 100)},
+     RGB(105, 105, 105), RGB(100, 100, 100)},
     {"modus-operandi-tinted", RGB(251, 247, 240), RGB(0, 0, 0),
      RGB(241, 213, 208), RGB(0, 0, 0), RGB(159, 150, 144)},
     {"modus-vivendi-tinted", RGB(13, 14, 28), RGB(255, 255, 255),
