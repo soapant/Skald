@@ -25,8 +25,6 @@ typedef struct {
 
 #define HOTKEY_HOLD_MIN_INTERVAL_MS 10
 
-bool hotkey_always_enabled(void);
-bool hotkey_always_disabled(void);
 HotkeyBinding
 Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
                           bool (*optional_condition_for_hotkey)(void),
