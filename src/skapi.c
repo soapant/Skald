@@ -1198,7 +1198,9 @@ bool sk_snap_active_window(SnapPreset preset) {
 
 long sk_get_active_window_pid(void) { return Platform_GetActiveWindowPid(); }
 
-bool sk_switch_to_workspace(int index) { return Platform_SwitchToWorkspace(index); }
+bool sk_switch_to_workspace(int index) {
+  return Platform_SwitchToWorkspace(index);
+}
 
 bool sk_move_active_window_to_workspace(int index) {
   return Platform_MoveActiveWindowToWorkspace(index);

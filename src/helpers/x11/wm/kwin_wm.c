@@ -599,14 +599,21 @@ bool snap_active_window_kwin(SnapPreset preset) {
   if (!kwin_is_active())
     return false;
   static const char *exprs[] = {
-    "x: g.x, y: g.y, width: Math.round(g.width / 2), height: g.height",
-    "x: g.x + Math.round(g.width / 2), y: g.y, width: g.width - Math.round(g.width / 2), height: g.height",
-    "x: g.x, y: g.y, width: g.width, height: Math.round(g.height / 2)",
-    "x: g.x, y: g.y + Math.round(g.height / 2), width: g.width, height: g.height - Math.round(g.height / 2)",
-    "x: g.x, y: g.y, width: Math.round(g.width / 2), height: Math.round(g.height / 2)",
-    "x: g.x + Math.round(g.width / 2), y: g.y, width: g.width - Math.round(g.width / 2), height: Math.round(g.height / 2)",
-    "x: g.x, y: g.y + Math.round(g.height / 2), width: Math.round(g.width / 2), height: g.height - Math.round(g.height / 2)",
-    "x: g.x + Math.round(g.width / 2), y: g.y + Math.round(g.height / 2), width: g.width - Math.round(g.width / 2), height: g.height - Math.round(g.height / 2)",
+      "x: g.x, y: g.y, width: Math.round(g.width / 2), height: g.height",
+      "x: g.x + Math.round(g.width / 2), y: g.y, width: g.width - "
+      "Math.round(g.width / 2), height: g.height",
+      "x: g.x, y: g.y, width: g.width, height: Math.round(g.height / 2)",
+      "x: g.x, y: g.y + Math.round(g.height / 2), width: g.width, height: "
+      "g.height - Math.round(g.height / 2)",
+      "x: g.x, y: g.y, width: Math.round(g.width / 2), height: "
+      "Math.round(g.height / 2)",
+      "x: g.x + Math.round(g.width / 2), y: g.y, width: g.width - "
+      "Math.round(g.width / 2), height: Math.round(g.height / 2)",
+      "x: g.x, y: g.y + Math.round(g.height / 2), width: Math.round(g.width / "
+      "2), height: g.height - Math.round(g.height / 2)",
+      "x: g.x + Math.round(g.width / 2), y: g.y + Math.round(g.height / 2), "
+      "width: g.width - Math.round(g.width / 2), height: g.height - "
+      "Math.round(g.height / 2)",
   };
   if (preset < 0 || preset > SNAP_BOTTOM_RIGHT)
     return false;

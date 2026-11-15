@@ -697,7 +697,10 @@ static bool sway_focused_output_geom(int *ox, int *oy, int *ow, int *oh) {
     log_error("sway get_outputs no rect for focused output");
     return false;
   }
-  *ox = (int)x; *oy = (int)y; *ow = (int)w; *oh = (int)h;
+  *ox = (int)x;
+  *oy = (int)y;
+  *ow = (int)w;
+  *oh = (int)h;
   return true;
 }
 
@@ -771,8 +774,8 @@ static void sway_json_extract_field(const char *json, const char *at,
   }
   /* null / number */
   const char *e = p;
-  while (e < end && *e && (*e != ',' && *e != '}' && *e != ']' &&
-                           !iscntrl((unsigned char)*e)))
+  while (e < end && *e &&
+         (*e != ',' && *e != '}' && *e != ']' && !iscntrl((unsigned char)*e)))
     e++;
   {
     size_t m = (size_t)(e - p);

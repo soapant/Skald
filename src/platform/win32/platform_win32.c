@@ -1838,23 +1838,59 @@ static void win32_snap_rect(int wx, int wy, int ww, int wh, SnapPreset p,
   int hw = ww / 2, hh = wh / 2;
   switch (p) {
   case SNAP_LEFT:
-    *x = wx; *y = wy; *w = hw; *h = wh; break;
+    *x = wx;
+    *y = wy;
+    *w = hw;
+    *h = wh;
+    break;
   case SNAP_RIGHT:
-    *x = wx + hw; *y = wy; *w = ww - hw; *h = wh; break;
+    *x = wx + hw;
+    *y = wy;
+    *w = ww - hw;
+    *h = wh;
+    break;
   case SNAP_TOP:
-    *x = wx; *y = wy; *w = ww; *h = hh; break;
+    *x = wx;
+    *y = wy;
+    *w = ww;
+    *h = hh;
+    break;
   case SNAP_BOTTOM:
-    *x = wx; *y = wy + hh; *w = ww; *h = wh - hh; break;
+    *x = wx;
+    *y = wy + hh;
+    *w = ww;
+    *h = wh - hh;
+    break;
   case SNAP_TOP_LEFT:
-    *x = wx; *y = wy; *w = hw; *h = hh; break;
+    *x = wx;
+    *y = wy;
+    *w = hw;
+    *h = hh;
+    break;
   case SNAP_TOP_RIGHT:
-    *x = wx + hw; *y = wy; *w = ww - hw; *h = hh; break;
+    *x = wx + hw;
+    *y = wy;
+    *w = ww - hw;
+    *h = hh;
+    break;
   case SNAP_BOTTOM_LEFT:
-    *x = wx; *y = wy + hh; *w = hw; *h = wh - hh; break;
+    *x = wx;
+    *y = wy + hh;
+    *w = hw;
+    *h = wh - hh;
+    break;
   case SNAP_BOTTOM_RIGHT:
-    *x = wx + hw; *y = wy + hh; *w = ww - hw; *h = wh - hh; break;
+    *x = wx + hw;
+    *y = wy + hh;
+    *w = ww - hw;
+    *h = wh - hh;
+    break;
   default:
-    *x = wx; *y = wy; *w = ww; *h = wh; break;
+    *x = wx;
+    *y = wy;
+    *w = ww;
+    *h = wh;
+    break;
   }
 }
 
@@ -1871,8 +1907,8 @@ bool Platform_SnapActiveWindow(SnapPreset preset) {
     ShowWindow(hwnd, SW_RESTORE);
   RECT w = mi.rcWork;
   int x = 0, y = 0, cw = 0, ch = 0;
-  win32_snap_rect(w.left, w.top, w.right - w.left, w.bottom - w.top, preset,
-                  &x, &y, &cw, &ch);
+  win32_snap_rect(w.left, w.top, w.right - w.left, w.bottom - w.top, preset, &x,
+                  &y, &cw, &ch);
   SetWindowPos(hwnd, HWND_TOP, x, y, cw, ch,
                SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
   return true;
@@ -1909,9 +1945,8 @@ bool Platform_SwitchToWorkspace(int index) {
 
 bool Platform_MoveActiveWindowToWorkspace(int index) {
   (void)index;
-  log_error(
-      "win32 has no public API to move a window to an absolute virtual "
-      "desktop (IVirtualDesktopManager cannot enumerate; use adjacent)");
+  log_error("win32 has no public API to move a window to an absolute virtual "
+            "desktop (IVirtualDesktopManager cannot enumerate; use adjacent)");
   return false;
 }
 
