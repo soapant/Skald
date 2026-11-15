@@ -2025,7 +2025,7 @@ static char *x11_lookup_find_in_apps_db(const char *name, const char *home) {
   }
   if (data_home && data_home[0]) {
     char dir[1024];
-    snprintf(dir, sizeof(dir), "%s/applications", data_home);
+    snprintf(dir, sizeof(dir), "%.1000s/applications", data_home);
     hit = x11_lookup_scan_app_dir(dir, name, home);
     if (hit)
       return hit;
