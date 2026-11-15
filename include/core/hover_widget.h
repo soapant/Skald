@@ -1,5 +1,5 @@
-#ifndef CORE_HOVER_WIDGET_H
-#define CORE_HOVER_WIDGET_H
+#ifndef HOVER_WIDGET_H
+#define HOVER_WIDGET_H
 
 #include "core/types.h"
 
