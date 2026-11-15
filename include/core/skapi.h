@@ -783,6 +783,47 @@ bool ski_remove_alias(const char *alias);
 
 const char *sk_alias_for(const char *target);
 
+typedef void (*SkConfigFn)(void *ud);
+
+typedef struct {
+  const char *name;
+  const char *hotkey;
+  SkConfigFn cb;
+  void *ud;
+} SkConfigHotkeySpec;
+
+#define sk_config_set_hotkey(...) \
+  ski_config_set_hotkey(&(SkConfigHotkeySpec){__VA_ARGS__})
+
+typedef struct {
+  const char *target;
+  const char *alias;
+} SkConfigAliasSpec;
+
+#define sk_config_set_alias(...) \
+  ski_config_set_alias(&(SkConfigAliasSpec){__VA_ARGS__})
+
+void sk_config_init(void);
+
+bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec);
+bool sk_config_get_hotkey(const char *name, char *out, size_t cap);
+bool sk_config_clear_hotkey(const char *name);
+
+bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud);
+
+int sk_config_hotkey_count(void);
+bool sk_config_hotkey_at(int index, char *name_out, size_t name_cap,
+                         char *hotkey_out, size_t hotkey_cap);
+
+bool ski_config_set_alias(const SkConfigAliasSpec *spec);
+bool sk_config_get_alias(const char *target, char *out, size_t cap);
+bool sk_config_clear_alias(const char *target);
+
+int sk_config_alias_count(void);
+bool sk_config_alias_at(int index, char *target_out, size_t target_cap,
+                        char *alias_out, size_t alias_cap);
+
+
 int sk_cc_entry_count(void);
 
 const CcEntrySpec *sk_cc_entry_at(int index);
