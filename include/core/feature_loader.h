@@ -24,6 +24,7 @@ void feature_loader_sweep_retired(void);
 void feature_loader_drain_retired_unloads(void);
 int feature_loader_pending_unload_count(void);
 int feature_loader_build_stale_sources(bool hot_reload);
+void feature_loader_service_builds(void);
 void deferred_init_register(void (*cb)(void));
 void deferred_init_run_all(void);
 
