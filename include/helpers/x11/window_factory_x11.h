@@ -15,5 +15,6 @@ void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
 Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
                                          int h, bool clickable);
 void x11_apply_click_through(Display *dpy, Window win);
+void x11_apply_shape_rounded_window(Display *dpy, Window win, int w, int h);
 XftDraw *x11_create_xft_draw(Display *dpy, Window win);
 #endif

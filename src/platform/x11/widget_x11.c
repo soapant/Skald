@@ -296,6 +296,7 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
   }
   XMoveResizeWindow(widget->dpy, widget->win, widget->base.x, widget->base.y, w,
                     h);
+  x11_apply_shape_rounded_window(widget->dpy, widget->win, w, h);
   XFlush(widget->dpy);
   widget->base.dirty = true;
   render_thread_wake();
