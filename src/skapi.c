@@ -1508,6 +1508,10 @@ int sk_get_text_height(int fontsize) {
   return Platform_GetTextLineHeight(fontsize);
 }
 
+int sk_get_text_yoffset(int fontsize) {
+  return Platform_GetTextYOffset(fontsize);
+}
+
 char *sk_http_get(const char *url) { return http_get(url); }
 
 char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {

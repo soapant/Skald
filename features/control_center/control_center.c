@@ -1169,10 +1169,18 @@ static void cc_on_actions_render(SkPlaceState state) {
     sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2,
                  .w = state.rect.w - 15, .h = state.rect.h, .filled = true,
                  .color = SK_GRAY, .radius = 6);
-  sk_draw_text(.x = state.rect.x + 20, .y = state.rect.y - 4, .text = "Actions",
-               .align = "LEFT", .color = SK_DARK_GRAY, .fontsize = 16);
-  sk_draw_text(.x = state.rect.x + 100, .y = state.rect.y - 7, .text = hotkey,
-               .align = "LEFT", .fontsize = 20);
+  int h = state.rect.h;
+  int lh_title = sk_get_text_height(16);
+  int lh_hotkey = sk_get_text_height(20);
+  sk_draw_text(.x = state.rect.x + 20,
+               .y = state.rect.y - 2 + (h - lh_title) / 2 -
+                    sk_get_text_yoffset(16),
+               .text = "Actions", .align = "LEFT", .color = SK_DARK_GRAY,
+               .fontsize = 16);
+  sk_draw_text(.x = state.rect.x + 100,
+               .y = state.rect.y - 2 + (h - lh_hotkey) / 2 -
+                    sk_get_text_yoffset(20),
+               .text = hotkey, .align = "LEFT", .fontsize = 20);
 }
 
 static void cc_render(PromptState *state) {
