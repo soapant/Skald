@@ -266,21 +266,10 @@ static bool x11_compiler_probe(const char *cc) {
 }
 
 static const char *x11_compiler_found(void) {
-  static char *cc = NULL;
+  static const char *cc = NULL;
   if (!cc) {
     const char *candidates[] = {"clang", "gcc", "cc", NULL};
-    for (size_t i = 0; candidates[i] && !cc; i++) {
-      char *found = Platform_FindExecutable(candidates[i]);
-      if (!found)
-        continue;
-      if (x11_compiler_probe(found)) {
-        cc = found;
-        log_info("feature builds will use compiler: %s", cc);
-      } else {
-        log_warn("skipping unusable compiler for feature builds: %s", found);
-        free(found);
-      }
-    }
+    cc = compiler_find_usable(candidates, x11_compiler_probe);
   }
   return cc;
 }
@@ -290,11 +279,7 @@ bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
   const char *cc = x11_compiler_found();
   if (!cc || argv_cap < 15)
     return false;
-  size_t n = 0;
-  argv[n++] = cc;
-  argv[n++] = "-std=gnu17";
-  argv[n++] = "-I";
-  argv[n++] = "build/sdk";
+  size_t n = compiler_argv_base(cc, argv);
   argv[n++] = "-I/usr/include/freetype2";
   argv[n++] = "-I/usr/include/libpng16";
   argv[n++] = "-I/usr/include/gio-unix-2.0";
