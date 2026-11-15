@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -429,10 +428,10 @@ void config_save(void) {
     log_error("config rename failed");
     goto out;
   }
-  struct stat st;
-  if (stat(CONFISRC, &st) == 0) {
-    cfsaved_mtime = (long long)st.st_mtime;
-    cfsaved_size = (long long)st.st_size;
+  long long mt = 0, sz = 0;
+  if (Platform_FileInfo(CONFISRC, &mt, &sz)) {
+    cfsaved_mtime = mt;
+    cfsaved_size = sz;
     cfsaved_valid = 1;
   }
   log_info("config saved");

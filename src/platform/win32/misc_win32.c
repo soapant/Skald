@@ -9,6 +9,7 @@
 #include <tlhelp32.h>
 #include <shlwapi.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <stdlib.h>
 #include "platform/platform.h"
@@ -31,6 +32,18 @@ bool Platform_DirExists(const char *path) {
   DWORD attrs = GetFileAttributesA(path);
   return attrs != INVALID_FILE_ATTRIBUTES &&
          (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+bool Platform_FileInfo(const char *path, long long *mtime_out,
+                       long long *size_out) {
+  struct _stat64 st;
+  if (!path || _stat64(path, &st) != 0)
+    return false;
+  if (mtime_out)
+    *mtime_out = (long long)st.st_mtime;
+  if (size_out)
+    *size_out = (long long)st.st_size;
+  return true;
 }
 
 bool Platform_TempDirPath(char *out, size_t out_len) {
