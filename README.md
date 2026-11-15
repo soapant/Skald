@@ -4,6 +4,18 @@
 
 Skald is a native system control center.  Skald is written entirely in C. It boots instantly, uses virtually no RAM,and talks directly to your window manager and its not just a Launcher you can do much more.
 
+## Important Notice:
+> **Skald is an engine, not a finished setup.** It provides the pieces (global
+> hotkeys, key remapping, clipboard access, overlays, widget slots, a feature
+> loader), but a fresh install ships with **no widgets and no remaps**. You add
+> what you want as features. Out of the box you get the control center:
+> launcher, calculator, hotkey and alias registration.
+> this is temporary as a result of early development will be improved on in the future.
+
+> **Looking for example features?** See [skald-features](https://github.com/soapant/skald-features),
+> the features I use daily in my own workflow. They're a good reference for
+> writing your own. Since the API is unstable, they may break between versions.
+
 ## Why Skald?
 
 - **Modular by Design:** The core is tiny. Everything else (features) is compiled C modules.
