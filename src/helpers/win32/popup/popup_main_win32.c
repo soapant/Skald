@@ -218,6 +218,23 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     POINT pt;
     if (GetCursorPos(&pt))
       listbox_publish_mouse_pos((int)pt.x, (int)pt.y);
+    RECT rect;
+    GetClientRect(hwnd, &rect);
+    PromptState *click_ps = win32_prompt_state_from_hwnd(hwnd);
+    if (SkaldContext_Get()->window.prompt_callbacks.render == NULL &&
+        click_ps && click_ps->lb != NULL) {
+      int list_top = prompt_list_top();
+      int item_h = prompt_row_height();
+      int visible =
+          (rect.bottom - prompt_list_bottom_margin() - list_top) / item_h;
+      listbox_set_geometry(list_top, item_h, visible);
+    }
+    if (click_ps) {
+      bool click_ctrl = (wParam & MK_CONTROL) != 0;
+      bool click_shift = (wParam & MK_SHIFT) != 0;
+      bool click_alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+      prompt_handle_list_click(click_ps, click_ctrl, click_shift, click_alt);
+    }
     InvalidateRect(hwnd, NULL, FALSE);
     break;
   }
