@@ -1,0 +1,37 @@
+# <skald-config-generated>
+Tray = true
+RememberLastIndex = true
+MessageAfterEachHotkey = false
+TimeOutForMessages = 1
+HotkeyRepeatDelayMs = 300
+DebugMode = false
+RoundedCorners = true
+CornerRadius = 14
+MessageScreenGap = 20
+WindowOpacity = 235.0
+UsedFont = "0xProto Nerd Font"
+FontSize = 18
+IconSize = 32
+WidgetGap = 0
+PromptWidth = 900
+PromptHeight = 640
+UsedTerminal = ""
+UsedShell = ""
+UsedBrowser = ""
+UsedSearchEngine = "google"
+FeaturePath = "features"
+IconPath = "resources/Skald.ico"
+ControlHotkey = "Alt+Space"
+ReloadFeaturesHotkey = "Alt+R"
+ActionsHotkey = "Ctrl+K"
+RegHotkey = "Ctrl+Shift+E"
+RegAliasHotkey = "Ctrl+Shift+A"
+Theme = "modus-vivendi"
+BackgroundImage = ""
+MessagesEnabled = true
+EnableAutoPairing = true
+EnableBorders = true
+RainbowText = false
+WindowTitleText = false
+CloseOnLossOfFocus = false
+# </skald-config-generated>
