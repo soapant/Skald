@@ -18,9 +18,9 @@
 #include "config_defs.h"
 #include "helpers/helpers_ui.h"
 
-#define CONFISRC "config/config.toml"
-#define CONFISTART_MARK "# <skald-config-generated>"
-#define CONFIEND_MARK "# </skald-config-generated>"
+#define CONFIG_SRC "config/config.toml"
+#define CONFIG_START_MARK "# <skald-config-generated>"
+#define CONFIG_END_MARK "# </skald-config-generated>"
 
 typedef enum { CFG_BOOL, CFG_INT, CFG_FLOAT, CFG_STRING, CFG_COLORREF } CfgKind;
 
@@ -243,7 +243,7 @@ static bool cfg_load_path(const char *path) {
   return true;
 }
 
-bool config_load(void) { return cfg_load_path(CONFISRC); }
+bool config_load(void) { return cfg_load_path(CONFIG_SRC); }
 
 static long long config_last_reload_ms = 0;
 static void *config_reload_mutex = NULL;
@@ -270,7 +270,7 @@ bool config_reload(void) {
     config_reload_unlock();
     return false;
   }
-  bool ok = cfg_load_path(CONFISRC);
+  bool ok = cfg_load_path(CONFIG_SRC);
   if (!ok) {
     log_warn("cfg reload blocked: load failed, keeping old values");
     config_reload_unlock();
@@ -411,9 +411,9 @@ void config_save(void) {
   }
   size_t n = region.len;
   const char *region_data = region.data;
-  FILE *f = fopen(CONFISRC, "rb");
+  FILE *f = fopen(CONFIG_SRC, "rb");
   if (!f) {
-    log_error("config open %s failed", CONFISRC);
+    log_error("config open %s failed", CONFIG_SRC);
     goto out;
   }
   fseek(f, 0, SEEK_END);
@@ -439,9 +439,9 @@ void config_save(void) {
     goto out;
   }
   orig[got] = '\0';
-  const char *start = strstr(orig, CONFISTART_MARK);
+  const char *start = strstr(orig, CONFIG_START_MARK);
   const char *end =
-      start ? strstr(start + strlen(CONFISTART_MARK), CONFIEND_MARK) : NULL;
+      start ? strstr(start + strlen(CONFIG_START_MARK), CONFIG_END_MARK) : NULL;
   if (!start || !end || end < start) {
     free(orig);
     log_error("config markers missing, not touching file");
@@ -456,7 +456,7 @@ void config_save(void) {
   size_t tail_off = (size_t)(after_end - orig);
   size_t tail = got - tail_off;
   char tmp[512];
-  snprintf(tmp, sizeof(tmp), "%s.tmp.%d", CONFISRC, (int)getpid());
+  snprintf(tmp, sizeof(tmp), "%s.tmp.%d", CONFIG_SRC, (int)getpid());
   FILE *out = fopen(tmp, "wb");
   if (!out) {
     free(orig);
@@ -476,7 +476,7 @@ void config_save(void) {
     log_error("config write failed");
     goto out;
   }
-  if (!Platform_AtomicRename(tmp, CONFISRC)) {
+  if (!Platform_AtomicRename(tmp, CONFIG_SRC)) {
     remove(tmp);
     log_error("config rename failed");
     goto out;
