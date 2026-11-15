@@ -2,21 +2,21 @@
 
 <p align="center">
   <img src="images/cc_neon_green.png" width="800"
-       alt="Skald's control center with Neon Green Theme">
+       alt="Skald's control center with the Neon Green theme">
 </p>
 
 > A native, lightning-fast control center that so happens to have a launcher for Linux and Windows.
 
+Skald is a native system control center. It is written entirely in C, boots instantly, uses very little RAM, and talks directly to your window manager. It's not just a launcher; you can do much more.
 
-Skald is a native system control center.  Skald is written entirely in C. It boots instantly, uses virtually no RAM,and talks directly to your window manager and its not just a Launcher you can do much more.
+## Important Notice
 
-## Important Notice:
 > **Skald is an engine, not a finished setup.** It provides the pieces (global
 > hotkeys, key remapping, clipboard access, overlays, widget slots, a feature
 > loader), but a fresh install ships with **no widgets and no remaps**. You add
 > what you want as features. Out of the box you get the control center:
 > launcher, calculator, hotkey and alias registration.
-> this is temporary as a result of early development will be improved on in the future.
+> This is temporary: it's a result of early development and will be improved in the future.
 
 > **Looking for example features?** See [skald-features](https://github.com/soapant/skald-features),
 > the features I use daily in my own workflow. They're a good reference for
@@ -27,11 +27,58 @@ Skald is a native system control center.  Skald is written entirely in C. It boo
 - **Modular by Design:** The core is tiny. Everything else (features) is compiled C modules.
 - **Window Manager Native:** Deep integration with X11, Wayland (Sway/Hyprland), and Windows.
 - **Zero Dependencies:** No package manager required to run.
+- **Lightweight:** about 20 MB of RAM with [N] features loaded (see below).
+
+### Lightweight
+
+<img src="images/process_killer.png" width="700" alt="A process list showing Skald using 19.6 MB of RAM">
+
+*Skald using 19.6 MB after startup with [N] features loaded ([Linux X11 / Windows], v[#.#.#]), as shown by a process-killer feature running inside Skald.*
 
 > ⚠️ **Early Development Warning:**
 > Skald is evolving rapidly. The public API (`skapi.h`) is currently **unstable** and changes frequently. If you write your own features right now, be prepared to update your code often as the API matures. After the stable release, Skald will maintain backwards compatibility.
 >
 > If you are a C developer and want to help build the GUI or refine the features or just help in general, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Screenshots
+
+### Themes
+
+<table>
+  <tr>
+    <td align="center"><img src="images/cc_rose_pine.png" width="420" alt="Skald with the Rose Pine theme"><br><sub>Rose Pine</sub></td>
+    <td align="center"><img src="images/cc_modus_vivendi.png" width="420" alt="Skald with the Modus Vivendi theme"><br><sub>Modus Vivendi</sub></td>
+  </tr>
+</table>
+
+### What it does out of the box
+
+<table>
+  <tr>
+    <td align="center"><img src="images/cc_rose_pine_calc.png" width="420" alt="The built-in calculator in the search box"><br><sub>Built-in calculator</sub></td>
+    <td align="center"><img src="images/cc_web_search.png" width="420" alt="Web search when nothing matches"><br><sub>Web search when nothing matches</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="images/cc_controls.png" width="420" alt="Skald's controls"><br><sub>Controls</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+### Backgrounds and window sizes
+
+<table>
+  <tr>
+    <td align="center"><img src="images/cc_matching_bg.png" width="280" alt="A background image matching the theme"><br><sub>Matching background</sub></td>
+    <td align="center"><img src="images/cc_tall.png" width="280" alt="A tall window"><br><sub>Tall window</sub></td>
+    <td align="center"><img src="images/cc_tall_image_bg.png" width="280" alt="A tall window with an image background"><br><sub>Tall window with image background</sub></td>
+  </tr>
+</table>
+
+### Example feature: process killer
+
+<img src="images/full_process_killer.png" width="800" alt="A process killer feature showing system information, running processes, and their CPU and memory usage">
+
+*An example feature (not included by default) showing system information, running processes, and their CPU and memory usage.*
 
 ## Build System
 
@@ -96,4 +143,4 @@ Skald is in active, early development. The following bugs are known and will be 
 - **macOS Support:** Port the platform layer to fully support macOS.
 - **Polyglot Features:** Allow features to be written in languages other than C (e.g., Lua, C++, or Rust).
 - **Settings GUI:** Build a proper graphical settings menu (currently just an empty feature placeholder).
-- **Feature Registry:** A centralized website where users can easily find and download community-made features (like a "Skald Extensions" store), alongside a built-in viewer inside as a feature in Skald.
+- **Feature Registry:** A centralized website where users can easily find and download community-made features (like a "Skald Extensions" store), alongside a built-in viewer as a feature inside Skald.
