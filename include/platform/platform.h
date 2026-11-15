@@ -259,6 +259,8 @@ const char *Platform_GetRealUser(void);
 const char *Platform_GetRealHome(void);
 bool Platform_DirExists(const char *path);
 bool Platform_TempDirPath(char *out, size_t out_len);
+bool Platform_FileInfo(const char *path, long long *mtime_out,
+                       long long *size_out);
 bool Platform_IsRunningAsRoot(void);
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args);
