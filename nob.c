@@ -1925,51 +1925,51 @@ int main(int argc, char **argv) {
   int do_check = 0;
   int do_all = 0;
   for (int i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0) {
-      printf("Usage: %s [-all] [-win32] [-run] [-release] [-test] [-asan] "
-             "[-check] [-werror] [-help]\n",
+    if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+      printf("Usage: %s [-a|--all] [-w|--win32] [-r|--run] [-R|--release] "
+             "[-t|--test] [-A|--asan] [-c|--check] [-W|--werror]\n",
              argv[0]);
-      printf("  -all    Run nob, nob -test, nob -win32 and nob -check\n");
-      printf("  -win32  Cross compile for Windows using MinGW\n");
-      printf("  -werror Build the main app with warnings as errors\n");
-      printf("  -run    Run skald after build\n");
+      printf("  -a, --all      Run nob, nob -t, nob -w and nob -c\n");
+      printf("  -w, --win32    Cross compile for Windows using MinGW\n");
+      printf("  -W, --werror   Build the main app with warnings as errors\n");
+      printf("  -r, --run      Run skald after build\n");
       printf(
-          "  -release Build a self-contained release/ bundle: skald[.exe],\n"
-          "           sdk/, config/config.c (defaults), features/ with\n"
-          "           control_center, settings and clipboard_history,\n"
-          "           resources/ (png + ico); Windows also emits main.lib.a;\n"
-          "           no compiler objects\n");
-      printf("  -test   Run test suite\n");
-      printf("  -asan   Build with clang -fsanitize=address,undefined\n");
-      printf("  -check  Check for skapi includes outside features/tests,\n"
-             "         function naming in platform/ and helpers/ (.c and .h;\n"
-             "         .c externs must match the directory prefix or be\n"
-             "         declared in a header; statics are exempt),\n"
-             "         and sk_ / Sk namesquatting outside the skapi layer\n"
-             "         (case insensitive)\n");
-      printf("  -help   Show this help\n");
+          "  -R, --release  Build a self-contained release/ bundle: skald[.exe],\n"
+          "                 sdk/, config/config.c (defaults), features/ with\n"
+          "                 control_center, settings and clipboard_history,\n"
+          "                 resources/ (png + ico); Windows also emits main.lib.a;\n"
+          "                 no compiler objects\n");
+      printf("  -t, --test     Run test suite\n");
+      printf("  -A, --asan     Build with clang -fsanitize=address,undefined\n");
+      printf("  -c, --check    Check for skapi includes outside features/tests,\n"
+             "                 function naming in platform/ and helpers/ (.c and .h;\n"
+             "                 .c externs must match the directory prefix or be\n"
+             "                 declared in a header; statics are exempt),\n"
+             "                 and sk_ / Sk namesquatting outside the skapi layer\n"
+             "                 (case insensitive)\n");
+      printf("  -h, --help     Show this help\n");
       return 0;
     }
-    if (strcmp(argv[i], "-win32") == 0)
+    if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--win32") == 0)
       target_win32 = true;
-    if (strcmp(argv[i], "-run") == 0)
+    if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--run") == 0)
       do_run = 1;
-    if (strcmp(argv[i], "-release") == 0)
+    if (strcmp(argv[i], "-R") == 0 || strcmp(argv[i], "--release") == 0)
       release = true;
-    if (strcmp(argv[i], "-test") == 0)
+    if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--test") == 0)
       do_test = 1;
-    if (strcmp(argv[i], "-werror") == 0)
+    if (strcmp(argv[i], "-W") == 0 || strcmp(argv[i], "--werror") == 0)
       werror = true;
-    if (strcmp(argv[i], "-asan") == 0)
+    if (strcmp(argv[i], "-A") == 0 || strcmp(argv[i], "--asan") == 0)
       sanitize = true;
-    if (strcmp(argv[i], "-check") == 0)
+    if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--check") == 0)
       do_check = 1;
-    if (strcmp(argv[i], "-all") == 0)
+    if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--all") == 0)
       do_all = 1;
   }
 
   if (do_all) {
-    const char *steps[] = {NULL, "-test", "-win32", "-check"};
+    const char *steps[] = {NULL, "-t", "-w", "-c"};
     for (size_t st = 0; st < sizeof(steps) / sizeof(steps[0]); st++) {
       Nob_Cmd cmd = {0};
       if (steps[st])
@@ -1977,7 +1977,7 @@ int main(int argc, char **argv) {
       else
         nob_cmd_append(&cmd, argv[0]);
       if (!nob_cmd_run(&cmd)) {
-        nob_log(NOB_ERROR, "-all: step %s failed",
+        nob_log(NOB_ERROR, "--all: step %s failed",
                 steps[st] ? steps[st] : "(build)");
         return 1;
       }

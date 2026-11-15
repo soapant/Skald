@@ -7,7 +7,7 @@ Skald is a native C project. To keep the codebase fast, maintainable, and consis
 **No New Dependencies:** Skald is designed to have zero external runtime dependencies. Do not add new third-party libraries without explicit permission.
 
 ## Architecture Rules
-* **Separation of Layers:** `skapi.h` is the public API for features **DO NOT** include skapi.h in any core file if you need a core implementation that also has an skapi function it should be a wrapper to a core function this is inforced via `./nob -check`. 
+* **Separation of Layers:** `skapi.h` is the public API for features **DO NOT** include skapi.h in any core file if you need a core implementation that also has an skapi function it should be a wrapper to a core function this is inforced via `./nob --check`. 
 * **Struct Specs over Booleans:** Do not add functions with 5+ boolean/integer arguments (e.g., `func(x, y, w, h, true, false, 1)`). Use designated initializer structs instead (e.g., `func((MySpec){ .w = 10, .filled = true })`).
 * **Public vs. Internal:** If a function is only used by the core (not by features), keep it out of `skapi.h` unless a wrapper is needed.
 
