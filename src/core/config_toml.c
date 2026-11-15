@@ -158,20 +158,92 @@ ConfigTomlStatus config_toml_parse(const char *path, ConfigTomlVisitFn visit,
     }
 
     {
-      const char *eq = memchr(s, '=', s_len);
+      char keybuf[384];
+      const char *cur = s;
+      size_t rem = s_len;
+      if (s[0] == '"') {
+        size_t i = 1, o = 0;
+        bool closed = false;
+        while (i < rem) {
+          char c = s[i];
+          if (c == '"') {
+            closed = true;
+            break;
+          }
+          if (o + 1 >= sizeof(keybuf)) {
+            status = CONFIG_TOML_ERR_PARSE;
+            goto out;
+          }
+          if (c == '\\' && i + 1 < rem) {
+            char e = s[++i];
+            switch (e) {
+            case 'n':
+              keybuf[o++] = '\n';
+              break;
+            case 't':
+              keybuf[o++] = '\t';
+              break;
+            case 'r':
+              keybuf[o++] = '\r';
+              break;
+            case '"':
+              keybuf[o++] = '"';
+              break;
+            case '\\':
+              keybuf[o++] = '\\';
+              break;
+            default:
+              status = CONFIG_TOML_ERR_PARSE;
+              goto out;
+            }
+          } else {
+            if (o + 1 >= sizeof(keybuf)) {
+              status = CONFIG_TOML_ERR_PARSE;
+              goto out;
+            }
+            keybuf[o++] = c;
+          }
+          i++;
+        }
+        if (!closed || o == 0) {
+          status = CONFIG_TOML_ERR_PARSE;
+          goto out;
+        }
+        keybuf[o] = '\0';
+        size_t key_end = i + 1;
+        cur = s + key_end;
+        rem = s_len - key_end;
+      } else {
+        const char *eq0 = memchr(s, '=', s_len);
+        if (!eq0) {
+          status = CONFIG_TOML_ERR_PARSE;
+          goto out;
+        }
+        size_t klen = config_trim_end_len(s, (size_t)(eq0 - s));
+        if (klen == 0 || klen >= sizeof(keybuf)) {
+          status = CONFIG_TOML_ERR_PARSE;
+          goto out;
+        }
+        memcpy(keybuf, s, klen);
+        keybuf[klen] = '\0';
+        if (!config_is_bare_key(keybuf)) {
+          status = CONFIG_TOML_ERR_PARSE;
+          goto out;
+        }
+        cur = s + klen;
+        rem = s_len - klen;
+      }
+
+      {
+        const char *v = config_trim(cur);
+        size_t lead = (size_t)(v - cur);
+        rem = rem >= lead ? rem - lead : 0;
+        cur = v;
+        rem = config_trim_end_len(cur, rem);
+      }
+
+      const char *eq = memchr(cur, '=', rem);
       if (!eq) {
-        status = CONFIG_TOML_ERR_PARSE;
-        goto out;
-      }
-      size_t klen = config_trim_end_len(s, (size_t)(eq - s));
-      char keybuf[96];
-      if (klen == 0 || klen >= sizeof(keybuf)) {
-        status = CONFIG_TOML_ERR_PARSE;
-        goto out;
-      }
-      memcpy(keybuf, s, klen);
-      keybuf[klen] = '\0';
-      if (!config_is_bare_key(keybuf)) {
         status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }

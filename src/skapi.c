@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -17,6 +18,7 @@
 #include "core/widget_registry.h"
 #include "deps/log.h"
 #include "config.h"
+#include "core/config_toml.h"
 #include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
@@ -2895,3 +2897,564 @@ void sk_unregister_event(SkEvent event, SkEventCallback cb) {
 void sk_close_window(void) {
   SkaldContext_Get()->window.selection_complete = true;
 }
+
+#if defined(_WIN32)
+#define SK_PATH_SEP '\\'
+#else
+#define SK_PATH_SEP '/'
+#endif
+
+#define SK_CONFIG_MAX_ENTRIES 256
+#define SK_CONFIG_NAME_MAX 384
+#define SK_CONFIG_HOTKEY_MAX 64
+#define SK_CONFIG_ALIAS_MAX 128
+#define SK_CONFIG_TARGET_MAX 256
+
+typedef struct {
+  char name[SK_CONFIG_NAME_MAX];
+  char hotkey[SK_CONFIG_HOTKEY_MAX];
+} SkConfigHotkeyEntry;
+
+typedef struct {
+  char target[SK_CONFIG_TARGET_MAX];
+  char alias[SK_CONFIG_ALIAS_MAX];
+} SkConfigAliasEntry;
+
+static SkConfigHotkeyEntry hotkey_entries[SK_CONFIG_MAX_ENTRIES];
+static int hotkey_entry_count = 0;
+
+static SkConfigAliasEntry alias_entries[SK_CONFIG_MAX_ENTRIES];
+static int alias_entry_count = 0;
+
+static void *sk_config_mutex = NULL;
+static char sk_config_path[1024];
+static bool sk_config_loaded = false;
+
+static void sk_config_lock(void) {
+  if (!sk_config_mutex)
+    sk_config_mutex = Platform_MutexCreate();
+  if (sk_config_mutex)
+    Platform_MutexLock(sk_config_mutex);
+}
+
+static void sk_config_unlock(void) {
+  if (sk_config_mutex)
+    Platform_MutexUnlock(sk_config_mutex);
+}
+
+static int hotkey_index_of(const char *name) {
+  if (!name)
+    return -1;
+  for (int i = 0; i < hotkey_entry_count; i++)
+    if (sk_string_equals_ci(hotkey_entries[i].name, name))
+      return i;
+  return -1;
+}
+
+static int hotkey_index_by_key(const char *hotkey) {
+  if (!hotkey)
+    return -1;
+  for (int i = 0; i < hotkey_entry_count; i++)
+    if (sk_string_equals_ci(hotkey_entries[i].hotkey, hotkey))
+      return i;
+  return -1;
+}
+
+static int alias_index_of(const char *target) {
+  if (!target)
+    return -1;
+  for (int i = 0; i < alias_entry_count; i++)
+    if (sk_string_equals_ci(alias_entries[i].target, target))
+      return i;
+  return -1;
+}
+
+static void hotkey_entries_remove(int i) {
+  for (int j = i; j + 1 < hotkey_entry_count; j++)
+    hotkey_entries[j] = hotkey_entries[j + 1];
+  memset(&hotkey_entries[hotkey_entry_count - 1], 0,
+         sizeof(hotkey_entries[hotkey_entry_count - 1]));
+  hotkey_entry_count--;
+}
+
+static void alias_entries_remove(int i) {
+  for (int j = i; j + 1 < alias_entry_count; j++)
+    alias_entries[j] = alias_entries[j + 1];
+  memset(&alias_entries[alias_entry_count - 1], 0,
+         sizeof(alias_entries[alias_entry_count - 1]));
+  alias_entry_count--;
+}
+
+static void hotkey_entries_set(const char *name, const char *hotkey) {
+  int i = hotkey_index_of(name);
+  if (i >= 0) {
+    snprintf(hotkey_entries[i].hotkey, sizeof(hotkey_entries[i].hotkey), "%s",
+             hotkey);
+    return;
+  }
+  if (hotkey_entry_count >= SK_CONFIG_MAX_ENTRIES) {
+    log_error("sk_config: hotkey table full");
+    return;
+  }
+  snprintf(hotkey_entries[hotkey_entry_count].name,
+           sizeof(hotkey_entries[hotkey_entry_count].name), "%s", name);
+  snprintf(hotkey_entries[hotkey_entry_count].hotkey,
+           sizeof(hotkey_entries[hotkey_entry_count].hotkey), "%s", hotkey);
+  hotkey_entry_count++;
+}
+
+static void alias_entries_set(const char *target, const char *alias) {
+  int i = alias_index_of(target);
+  if (i >= 0) {
+    snprintf(alias_entries[i].alias, sizeof(alias_entries[i].alias), "%s",
+             alias);
+    return;
+  }
+  if (alias_entry_count >= SK_CONFIG_MAX_ENTRIES) {
+    log_error("sk_config: alias table full");
+    return;
+  }
+  snprintf(alias_entries[alias_entry_count].target,
+           sizeof(alias_entries[alias_entry_count].target), "%s", target);
+  snprintf(alias_entries[alias_entry_count].alias,
+           sizeof(alias_entries[alias_entry_count].alias), "%s", alias);
+  alias_entry_count++;
+}
+
+static bool sk_config_parse_path(void) {
+  char dir[512];
+  if (!data_dir(dir, sizeof(dir)))
+    return false;
+  Platform_MkdirIfNotExists(dir);
+  snprintf(sk_config_path, sizeof(sk_config_path), "%s%ccore%cskald.toml",dir,SK_PATH_SEP,
+           SK_PATH_SEP);
+  return true;
+}
+
+static bool sk_config_write(void) {
+  if (!sk_config_path[0] && !sk_config_parse_path())
+    return false;
+
+  size_t cap = 4096;
+  char *buf = malloc(cap);
+  if (!buf)
+    return false;
+  buf[0] = '\0';
+  size_t len = 0;
+  int w = snprintf(buf, cap,
+                   "# sk_config generated. Hand edits are overwritten on next "
+                   "save.\n[hotkeys]\n");
+  if (w < 0) {
+    free(buf);
+    return false;
+  }
+  len = (size_t)w;
+
+  char enc[1024];
+  for (int i = 0; i < hotkey_entry_count; i++) {
+    if (!config_toml_encode_string(hotkey_entries[i].name, enc,
+                                   sizeof(enc)))
+      continue;
+    char val[1024];
+    if (!config_toml_encode_string(hotkey_entries[i].hotkey, val,
+                                   sizeof(val)))
+      continue;
+    size_t need = len + strlen(enc) + strlen(val) + 8;
+    if (need > cap) {
+      char *grown = realloc(buf, cap * 2);
+      if (!grown) {
+        free(buf);
+        return false;
+      }
+      cap *= 2;
+      buf = grown;
+    }
+    w = snprintf(buf + len, cap - len, "%s = %s\n", enc, val);
+    len += (size_t)w;
+  }
+
+  {
+    const char *alias_sec = "\n[aliases]\n";
+    if (len + strlen(alias_sec) + 1 > cap) {
+      char *grown = realloc(buf, cap * 2);
+      if (!grown) {
+        free(buf);
+        return false;
+      }
+      cap *= 2;
+      buf = grown;
+    }
+    memcpy(buf + len, alias_sec, strlen(alias_sec) + 1);
+    len += strlen(alias_sec);
+  }
+
+  for (int i = 0; i < alias_entry_count; i++) {
+    if (!config_toml_encode_string(alias_entries[i].target, enc,
+                                   sizeof(enc)))
+      continue;
+    char val[1024];
+    if (!config_toml_encode_string(alias_entries[i].alias, val,
+                                   sizeof(val)))
+      continue;
+    size_t need = len + strlen(enc) + strlen(val) + 8;
+    if (need > cap) {
+      char *grown = realloc(buf, cap * 2);
+      if (!grown) {
+        free(buf);
+        return false;
+      }
+      cap *= 2;
+      buf = grown;
+    }
+    w = snprintf(buf + len, cap - len, "%s = %s\n", enc, val);
+    len += (size_t)w;
+  }
+
+  char tmp[1088];
+  snprintf(tmp, sizeof(tmp), "%s.tmp.%d", sk_config_path, (int)getpid());
+  FILE *f = fopen(tmp, "wb");
+  if (!f) {
+    free(buf);
+    log_error("sk_config: open %s failed", tmp);
+    return false;
+  }
+  bool ok = fwrite(buf, 1, len, f) == len;
+  if (fclose(f) != 0)
+    ok = false;
+  free(buf);
+  if (!ok) {
+    remove(tmp);
+    log_error("sk_config: write %s failed", tmp);
+    return false;
+  }
+  if (!Platform_AtomicRename(tmp, sk_config_path)) {
+    remove(tmp);
+    log_error("sk_config: rename %s failed", tmp);
+    return false;
+  }
+  return true;
+}
+
+static bool sk_config_apply_entry(const ConfigTomlEntry *e, void *user) {
+  (void)user;
+  char body[1024];
+  if (e->type != CONFIG_TOML_STRING) {
+    log_error("sk_config: skipping non-string value for '%s' in [%s]", e->key,
+              e->section);
+    return true;
+  }
+  if (!config_toml_decode_string(e->raw, body, sizeof(body))) {
+    log_error("sk_config: bad string for '%s' in [%s]", e->key, e->section);
+    return true;
+  }
+  if (strcmp(e->section, "hotkeys") == 0) {
+    HotkeyKey key;
+    if (!hotkey_string_parse(body, &key)) {
+      log_error("sk_config: unparsable hotkey '%s' for '%s'", body, e->key);
+      return true;
+    }
+    hotkey_entries_set(e->key, body);
+  } else if (strcmp(e->section, "aliases") == 0) {
+    alias_entries_set(e->key, body);
+  } else {
+    log_warn("sk_config: unknown section [%s], ignoring", e->section);
+  }
+  return true;
+}
+
+static void sk_config_trim_inplace(char *s) {
+  size_t n = strlen(s);
+  while (n > 0 && (s[n - 1] == '\n' || s[n - 1] == '\r' || s[n - 1] == ' ' ||
+                   s[n - 1] == '\t'))
+    s[--n] = '\0';
+}
+
+static void sk_config_migrate_hotkeys_txt(const char *dir) {
+  char mkpath[1088];
+  snprintf(mkpath, sizeof(mkpath), "%s%ccontrol_center%chotkeys.txt", dir,
+           SK_PATH_SEP, SK_PATH_SEP);
+  FILE *f = fopen(mkpath, "r");
+  if (!f)
+    return;
+
+  size_t migrated = 0;
+  char line[640];
+  while (fgets(line, sizeof(line), f)) {
+    char copy[640];
+    snprintf(copy, sizeof(copy), "%s", line);
+    char *tab = strchr(copy, '\t');
+    if (!tab)
+      continue;
+    *tab = '\0';
+    char *hotkey = copy;
+    char *action = tab + 1;
+    sk_config_trim_inplace(hotkey);
+    while (*action == ' ' || *action == '\t')
+      action++;
+    sk_config_trim_inplace(action);
+    if (!hotkey[0] || !action[0])
+      continue;
+    HotkeyKey key;
+    if (!hotkey_string_parse(hotkey, &key))
+      continue;
+    if (hotkey_index_of(action) >= 0 || hotkey_index_by_key(hotkey) >= 0)
+      continue;
+    hotkey_entries_set(action, hotkey);
+    migrated++;
+  }
+  fclose(f);
+  if (migrated > 0) {
+    log_info("sk_config: migrated %zu hotkey(s) from "
+             "control_center/hotkeys.txt",
+             migrated);
+    sk_config_write();
+  }
+}
+
+static void sk_config_init_locked(void) {
+  if (sk_config_loaded)
+    return;
+  sk_config_loaded = true;
+  char dir[512];
+  if (!data_dir(dir, sizeof(dir)))
+    dir[0] = '\0';
+  if (!sk_config_parse_path()) {
+    log_error("sk_config: data dir unavailable, config persistence disabled");
+    return;
+  }
+  ConfigTomlStatus st = config_toml_parse(sk_config_path,
+                                          sk_config_apply_entry, NULL);
+  if (st == CONFIG_TOML_ERR_IO)
+    log_info("sk_config: %s not found, starting with empty tables",
+             sk_config_path);
+  else if (st == CONFIG_TOML_ERR_PARSE)
+    log_error("sk_config: parse failed for %s, keeping defaults",
+              sk_config_path);
+
+  if (dir[0])
+    sk_config_migrate_hotkeys_txt(dir);
+
+  for (int i = 0; i < alias_entry_count; i++)
+    sk_add_alias(.alias = alias_entries[i].alias,
+                 .target = alias_entries[i].target);
+}
+
+void sk_config_init(void) {
+  sk_config_lock();
+  sk_config_init_locked();
+  sk_config_unlock();
+}
+
+static void hotkey_bind_live(const char *hotkey, SkConfigFn cb, void *ud) {
+  if (!hotkey || !cb)
+    return;
+  sk_unregister_hotkey(hotkey);
+  sk_register_hotkey(.hotkey = (char *)hotkey, .cb_ud = (HotkeyCallbackUd)cb,
+                     .ud = ud);
+}
+
+bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
+  if (!spec || !spec->name || !spec->name[0])
+    return false;
+  if (spec->name[0] && strlen(spec->name) >= SK_CONFIG_NAME_MAX)
+    return false;
+  if (!spec->hotkey || !spec->hotkey[0])
+    return false;
+  if (strlen(spec->hotkey) >= SK_CONFIG_HOTKEY_MAX)
+    return false;
+  HotkeyKey key;
+  if (!hotkey_string_parse(spec->hotkey, &key))
+    return false;
+
+  sk_config_lock();
+  sk_config_init_locked();
+  int displaced = hotkey_index_by_key(spec->hotkey);
+  int self = hotkey_index_of(spec->name);
+  if (displaced >= 0 && displaced != self) {
+    log_warn("sk_config: '%s' overwrites hotkey '%s' previously bound to "
+             "'%s'",
+             spec->name, spec->hotkey, hotkey_entries[displaced].name);
+    hotkey_entries_remove(displaced);
+    if (displaced < self)
+      self--;
+  }
+
+  char old_hotkey[SK_CONFIG_HOTKEY_MAX] = "";
+  int i = hotkey_index_of(spec->name);
+  if (i >= 0)
+    snprintf(old_hotkey, sizeof(old_hotkey), "%s", hotkey_entries[i].hotkey);
+
+  hotkey_entries_set(spec->name, spec->hotkey);
+  if (!sk_config_write())
+    log_error("sk_config: failed to save %s", sk_config_path);
+
+  if (old_hotkey[0] && !sk_string_equals_ci(old_hotkey, spec->hotkey))
+    sk_unregister_hotkey(old_hotkey);
+  if (spec->cb)
+    hotkey_bind_live(spec->hotkey, spec->cb, spec->ud);
+  sk_config_unlock();
+  return true;
+}
+
+bool sk_config_get_hotkey(const char *name, char *out, size_t cap) {
+  if (!name || !out || cap == 0)
+    return false;
+  out[0] = '\0';
+  sk_config_lock();
+  sk_config_init_locked();
+  int i = hotkey_index_of(name);
+  if (i >= 0)
+    snprintf(out, cap, "%s", hotkey_entries[i].hotkey);
+  bool ok = i >= 0;
+  sk_config_unlock();
+  return ok;
+}
+
+bool sk_config_clear_hotkey(const char *name) {
+  if (!name)
+    return false;
+  sk_config_lock();
+  sk_config_init_locked();
+  int i = hotkey_index_of(name);
+  if (i < 0) {
+    sk_config_unlock();
+    return false;
+  }
+  char hk[SK_CONFIG_HOTKEY_MAX];
+  snprintf(hk, sizeof(hk), "%s", hotkey_entries[i].hotkey);
+  hotkey_entries_remove(i);
+  sk_config_write();
+  sk_unregister_hotkey(hk);
+  sk_config_unlock();
+  return true;
+}
+
+bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud) {
+  if (!name || !cb)
+    return false;
+  sk_config_lock();
+  sk_config_init_locked();
+  int i = hotkey_index_of(name);
+  if (i < 0) {
+    sk_config_unlock();
+    return false;
+  }
+  char hk[SK_CONFIG_HOTKEY_MAX];
+  snprintf(hk, sizeof(hk), "%s", hotkey_entries[i].hotkey);
+  hotkey_bind_live(hk, cb, ud);
+  sk_config_unlock();
+  return true;
+}
+
+int sk_config_hotkey_count(void) {
+  sk_config_lock();
+  sk_config_init_locked();
+  int n = hotkey_entry_count;
+  sk_config_unlock();
+  return n;
+}
+
+bool sk_config_hotkey_at(int index, char *name_out, size_t name_cap,
+                         char *hotkey_out, size_t hotkey_cap) {
+  if (name_out && name_cap == 0)
+    return false;
+  if (hotkey_out && hotkey_cap == 0)
+    return false;
+  sk_config_lock();
+  sk_config_init_locked();
+  bool ok = index >= 0 && index < hotkey_entry_count;
+  if (ok) {
+    if (name_out)
+      snprintf(name_out, name_cap, "%s", hotkey_entries[index].name);
+    if (hotkey_out)
+      snprintf(hotkey_out, hotkey_cap, "%s", hotkey_entries[index].hotkey);
+  }
+  sk_config_unlock();
+  return ok;
+}
+
+bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
+  if (!spec || !spec->target || !spec->target[0])
+    return false;
+  if (strlen(spec->target) >= SK_CONFIG_TARGET_MAX)
+    return false;
+  const char *alias = spec->alias;
+  bool clearing = !alias || !alias[0];
+  if (!clearing && strlen(alias) >= SK_CONFIG_ALIAS_MAX)
+    return false;
+
+  sk_config_lock();
+  sk_config_init_locked();
+  if (clearing) {
+    int i = alias_index_of(spec->target);
+    if (i >= 0) {
+      const char *cur = sk_alias_for(spec->target);
+      if (cur)
+        sk_remove_alias(cur);
+      alias_entries_remove(i);
+      sk_config_write();
+    } else {
+      const char *cur = sk_alias_for(spec->target);
+      if (cur)
+        sk_remove_alias(cur);
+    }
+    sk_config_unlock();
+    return true;
+  }
+
+  alias_entries_set(spec->target, alias);
+  if (!sk_config_write())
+    log_error("sk_config: failed to save %s", sk_config_path);
+  sk_add_alias(.alias = alias, .target = spec->target);
+  sk_config_unlock();
+  return true;
+}
+
+bool sk_config_get_alias(const char *target, char *out, size_t cap) {
+  if (!target || !out || cap == 0)
+    return false;
+  out[0] = '\0';
+  sk_config_lock();
+  sk_config_init_locked();
+  int i = alias_index_of(target);
+  if (i >= 0)
+    snprintf(out, cap, "%s", alias_entries[i].alias);
+  bool ok = i >= 0;
+  sk_config_unlock();
+  return ok;
+}
+
+bool sk_config_clear_alias(const char *target) {
+  if (!target)
+    return false;
+  SkConfigAliasSpec spec = {.target = target, .alias = NULL};
+  return ski_config_set_alias(&spec);
+}
+
+int sk_config_alias_count(void) {
+  sk_config_lock();
+  sk_config_init_locked();
+  int n = alias_entry_count;
+  sk_config_unlock();
+  return n;
+}
+
+bool sk_config_alias_at(int index, char *target_out, size_t target_cap,
+                        char *alias_out, size_t alias_cap) {
+  if (target_out && target_cap == 0)
+    return false;
+  if (alias_out && alias_cap == 0)
+    return false;
+  sk_config_lock();
+  sk_config_init_locked();
+  bool ok = index >= 0 && index < alias_entry_count;
+  if (ok) {
+    if (target_out)
+      snprintf(target_out, target_cap, "%s", alias_entries[index].target);
+    if (alias_out)
+      snprintf(alias_out, alias_cap, "%s", alias_entries[index].alias);
+  }
+  sk_config_unlock();
+  return ok;
+}
+
