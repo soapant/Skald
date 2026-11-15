@@ -48,10 +48,8 @@ TEST(pin_scan_detects_color_overrides) {
   ASSERT_TRUE(f != NULL);
   if (!f)
     return;
-  fputs("Theme = \"rose-pine\"\n  COLOR_BG = RGB(1, 2, 3)\n"
-        "  COLOR_BORDER = RGB(4, 5, 6)\n"
-        "  NOT_COLOR = RGB(0, 0, 0)\n"
-        "COLOR_BG_NO_LEADING_SPACE = RGB(7, 8, 9)\n",
+  fputs("Theme = \"rose-pine\"\nTEXT = \"#0A0B0C\"\n[color]\nBG = \"#010203\"\n"
+        "BORDER = \"#040506\"\n",
         f);
   fclose(f);
 
@@ -59,7 +57,6 @@ TEST(pin_scan_detects_color_overrides) {
   ASSERT_TRUE(theme_color_pinned("COLOR_BG"));
   ASSERT_TRUE(theme_color_pinned("COLOR_BORDER"));
   ASSERT_FALSE(theme_color_pinned("COLOR_TEXT"));
-  ASSERT_FALSE(theme_color_pinned("COLOR_BG_NO_LEADING_SPACE"));
 
   theme_reset_pinned();
   theme_reset_pinned();
