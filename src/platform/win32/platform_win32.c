@@ -550,7 +550,7 @@ bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
   HWND hwnd = WH_TO_HWND(window);
   if (!IsWindow(hwnd))
     return false;
-  return PostMessageA(hwnd, WM_WINDOW_LONG_PROPERTY, (WPARAM)value, 0) != 0;
+  return PostMessageA(hwnd, WM_PLAYER_CMD, (WPARAM)value, 0) != 0;
 }
 
 bool Platform_SendWindowMessage(WindowHandle window, const char *atom,

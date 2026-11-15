@@ -6,7 +6,7 @@
 
 #define WM_DISPLAY_MESSAGE (WM_APP + 2)
 #define WM_DISMISS_MESSAGE (WM_APP + 3)
-#define WM_WINDOW_LONG_PROPERTY (WM_APP + 4)
+#define WM_PLAYER_CMD (WM_USER + 1)
 
 typedef struct {
   const char *message;
