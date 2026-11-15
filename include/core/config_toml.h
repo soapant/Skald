@@ -15,7 +15,7 @@ typedef enum {
 
 typedef struct {
   char section[32];
-  char key[96];
+  char key[384];
   ConfigTomlValueType type;
   char raw[1024];
 } ConfigTomlEntry;
