@@ -402,6 +402,11 @@ int Platform_GetTextLineHeight(int fontsize) {
   Platform_DestroyFont(font);
   return r;
 }
+
+int Platform_GetTextYOffset(int fontsize) {
+  (void)fontsize;
+  return 0;
+}
 void Platform_PrewarmBackgroundPixmap(void) {
   Display *dpy = x11_get_display();
   if (!dpy) {
