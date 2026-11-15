@@ -117,6 +117,12 @@
 #if !defined(VK_RMENU)
 #define VK_RMENU 0xA5
 #endif
+#if !defined(VK_INSERT)
+#define VK_INSERT 0x2D
+#endif
+#if !defined(VK_CAPITAL)
+#define VK_CAPITAL 0x14
+#endif
 
 #define HOTKEY_MOD_NONE 0x00
 #define HOTKEY_MOD_ALT 0x01

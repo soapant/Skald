@@ -110,8 +110,4 @@ typedef struct {
   int item_height;
 } PlListSpec;
 
-#define GAP 20
-#define IDC_INPUT_BOX 101
-#define IDC_LIST_BOX 102
-
 #endif
