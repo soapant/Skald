@@ -775,7 +775,7 @@ typedef struct {
   const char *target;
 } SkAliasSpec;
 
-#define sk_add_alias(...) ski_add_alias(&(SkAliasSpec){__VA_ARGS__})
+#define sk_register_alias(...) ski_add_alias(&(SkAliasSpec){__VA_ARGS__})
 
 bool ski_add_alias(const SkAliasSpec *spec);
 bool ski_remove_alias(const char *alias);
