@@ -8,12 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CC_MAX_BINDINGS 64
-#define CC_HOTKEY_FILE "hotkeys.txt"
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
 
 #define CC_ITEM_TEXT_X 10
-#define CC_ITEM_TEXT_Y 4
+#define CC_ITEM_TEXT_Y 6
 #define CC_ICON_GAP 8
 #define CC_TYPE_GAP 6
 #define CC_TYPE_SIZE_DELTA 2
@@ -97,7 +95,10 @@ static atomic_bool cc_entries_dirty = true;
 static atomic_bool cc_stopping;
 
 static void cc_fill_applications(int limit);
-static void cc_register_pending_bindings(void);
+static void cc_register_config_hotkeys(void);
+static void cc_stage(const CcEntry *e, CcRunMode mode);
+static void cc_run_pending(void);
+static const CcEntry *cc_find(const char *label);
 
 static CcEntry *cc_entry_new(void) {
   if (cc_entry_count >= cc_entry_cap) {
@@ -164,7 +165,7 @@ static void cc_build(void) {
   cc_fill_applications(MAX_VISIBLE_ITEMS - sk_cc_entry_count());
   cc_fill_feature_entries();
   cc_entry_base = cc_entry_count;
-  cc_register_pending_bindings();
+  cc_register_config_hotkeys();
 }
 
 static const CcEntry *cc_find(const char *label) {
@@ -233,155 +234,56 @@ static void cc_run_pending(void) {
   cc_staged_payload = NULL;
 }
 
-static void cc_run_entry_by_label(const char *label) {
+#define CC_HOTKEY_UD_MAX 512
+static char cc_hotkey_ud_name[CC_HOTKEY_UD_MAX][256];
+static int cc_hotkey_ud_count;
+
+static void *cc_hotkey_ud_for(const char *label) {
+  if (!label || !label[0])
+    return NULL;
+  for (int i = 0; i < cc_hotkey_ud_count; i++)
+    if (strcmp(cc_hotkey_ud_name[i], label) == 0)
+      return cc_hotkey_ud_name[i];
+  if (cc_hotkey_ud_count >= CC_HOTKEY_UD_MAX) {
+    return NULL;
+  }
+  snprintf(cc_hotkey_ud_name[cc_hotkey_ud_count],
+           sizeof(cc_hotkey_ud_name[cc_hotkey_ud_count]), "%s", label);
+  return cc_hotkey_ud_name[cc_hotkey_ud_count++];
+}
+
+static void cc_config_hotkey_cb(void *ud) {
+  const char *label = ud;
+  if (!label)
+    return;
   cc_stage(cc_find(label), CC_RUN_ENTER);
   cc_run_pending();
 }
 
-typedef struct {
-  char hotkey[64];
-  char action[256];
-  bool registered;
-} CcBinding;
-
-static CcBinding cc_bindings[CC_MAX_BINDINGS];
-static int cc_binding_count;
-
-static bool cc_binding_used(int i) { return cc_bindings[i].action[0] != '\0'; }
-
-static void cc_binding_cb(void *ud) {
-  int i = (int)(uintptr_t)ud - 1;
-  if (i >= 0 && i < cc_binding_count && cc_binding_used(i))
-    cc_run_entry_by_label(cc_bindings[i].action);
-}
-
-static void cc_binding_register(int i) {
-  sk_register_hotkey(.hotkey = cc_bindings[i].hotkey, .cb_ud = cc_binding_cb,
-                     .ud = (void *)(uintptr_t)(i + 1));
-  cc_bindings[i].registered = true;
-}
-
-static void cc_binding_unregister(int i) {
-  if (cc_bindings[i].registered)
-    sk_unregister_hotkey(cc_bindings[i].hotkey);
-  cc_bindings[i].registered = false;
-}
-
-static void cc_binding_release(int i) {
-  cc_binding_unregister(i);
-  memset(&cc_bindings[i], 0, sizeof(cc_bindings[i]));
-}
-
-static int cc_binding_find(const char *action) {
-  for (int i = 0; i < cc_binding_count; i++)
-    if (cc_binding_used(i) && strcmp(cc_bindings[i].action, action) == 0)
-      return i;
-  return -1;
-}
-
-static int cc_binding_find_hotkey(const char *hotkey) {
-  for (int i = 0; i < cc_binding_count; i++)
-    if (cc_binding_used(i) &&
-        sk_string_equals_ci(cc_bindings[i].hotkey, hotkey))
-      return i;
-  return -1;
-}
-
-static int cc_binding_set(const char *hotkey, const char *action) {
-  int i = cc_binding_find(action);
-  if (i < 0) {
-    for (int j = 0; j < cc_binding_count && i < 0; j++)
-      if (!cc_binding_used(j))
-        i = j;
-    if (i < 0) {
-      if (cc_binding_count >= CC_MAX_BINDINGS)
-        return -1;
-      i = cc_binding_count++;
-    }
-    cc_copy(cc_bindings[i].action, sizeof(cc_bindings[i].action), action);
-  }
-  cc_copy(cc_bindings[i].hotkey, sizeof(cc_bindings[i].hotkey), hotkey);
-  cc_bindings[i].registered = false;
-  return i;
-}
-
-static void cc_bindings_load(void) {
-  cc_binding_count = 0;
-  memset(cc_bindings, 0, sizeof(cc_bindings));
-  SkStringList lines = sk_load_file_list(CC_HOTKEY_FILE);
-  for (size_t i = 0; i < lines.count; i++) {
-    char copy[512];
-    cc_copy(copy, sizeof(copy), lines.items[i]);
-    char *tab = strchr(copy, '\t');
-    if (!tab)
+static void cc_register_config_hotkeys(void) {
+  for (int i = 0; i < cc_entry_count; i++) {
+    CcEntry *e = &cc_entries[i];
+    if (!e->label[0])
       continue;
-    *tab = '\0';
-    const char *hotkey = copy;
-    const char *action = tab + 1;
-    if (!hotkey[0] || !action[0])
+    void *ud = cc_hotkey_ud_for(e->label);
+    if (!ud)
       continue;
-
-    int owner = cc_binding_find_hotkey(hotkey);
-    if (owner >= 0 && strcmp(cc_bindings[owner].action, action) != 0)
-      cc_binding_release(owner);
-    cc_binding_set(hotkey, action);
+    sk_config_bind_hotkey(e->label, cc_config_hotkey_cb, ud);
   }
-  sk_free_file_list(&lines);
-}
-
-static void cc_bindings_save(void) {
-  char buf[CC_MAX_BINDINGS][64 + 1 + 256 + 1];
-  const char *lines[CC_MAX_BINDINGS];
-  int n = 0;
-  for (int i = 0; i < cc_binding_count; i++) {
-    if (!cc_binding_used(i))
-      continue;
-    snprintf(buf[n], sizeof(buf[n]), "%s\t%s", cc_bindings[i].hotkey,
-             cc_bindings[i].action);
-    lines[n] = buf[n];
-    n++;
-  }
-  sk_write_to_file(CC_HOTKEY_FILE, lines, n);
-}
-
-static void cc_register_pending_bindings(void) {
-  for (int i = 0; i < cc_binding_count; i++)
-    if (cc_binding_used(i) && !cc_bindings[i].registered &&
-        cc_find(cc_bindings[i].action))
-      cc_binding_register(i);
 }
 
 static void cc_bind_hotkey(const char *action, const char *hotkey) {
   if (!action || !action[0] || !hotkey || !hotkey[0] || !cc_find(action))
     return;
-
-  int existing = cc_binding_find(action);
-  if (existing >= 0 && cc_bindings[existing].registered &&
-      sk_string_equals_ci(cc_bindings[existing].hotkey, hotkey))
+  void *ud = cc_hotkey_ud_for(action);
+  if (!ud)
     return;
-
-  int owner = cc_binding_find_hotkey(hotkey);
-  if (owner >= 0 && owner != existing)
-    cc_binding_release(owner);
-  if (existing >= 0)
-    cc_binding_unregister(existing);
-
-  int i = cc_binding_set(hotkey, action);
-  if (i < 0)
-    return;
-  cc_binding_register(i);
-  cc_bindings_save();
+  sk_config_set_hotkey(.name = action, .hotkey = hotkey,
+                       .cb = cc_config_hotkey_cb, .ud = ud);
 }
 
 static bool cc_hotkey_for_label(const char *label, char *out, size_t cap) {
-  if (!label || !out || cap == 0)
-    return false;
-  out[0] = '\0';
-  int i = cc_binding_find(label);
-  if (i < 0 || !cc_bindings[i].registered)
-    return false;
-  cc_copy(out, cap, cc_bindings[i].hotkey);
-  return true;
+  return sk_config_get_hotkey(label, out, cap);
 }
 
 typedef struct {
@@ -1440,7 +1342,7 @@ static bool cc_alias_enter(PromptState *state) {
   char alias[256];
   cc_trim_copy(state->eb->filter, alias, sizeof(alias));
   if (alias[0])
-    sk_add_alias(.alias = alias, .target = cc_register_target);
+    sk_config_set_alias(.target = cc_register_target, .alias = alias);
   return true;
 }
 
@@ -1471,7 +1373,7 @@ SKALD_FEATURE_INIT {
   atomic_store(&cc_entries_dirty, true);
   cc_entry_count = 0;
   cc_entry_base = 0;
-  cc_bindings_load();
+
 
   cc_prewarm_apps();
   cc_build();
