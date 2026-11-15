@@ -41,6 +41,10 @@ int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
 
+static bool x11_autorepeat_saved = false;
+static unsigned int x11_saved_delay = 0;
+static unsigned int x11_saved_interval = 0;
+
 static bool should_use_grab(void) { return x11_should_use_grab(); }
 
 static int init_uinput(void) { return x11_init_uinput(); }
@@ -365,8 +369,12 @@ int WindowManager_Run(WindowManager *wm) {
   }
   if (dpy) {
     usleep(300000);
-    XkbSetAutoRepeatRate(dpy, XkbUseCoreKbd, 300, 33);
-    XSync(dpy, False);
+    if (XkbGetAutoRepeatRate(dpy, XkbUseCoreKbd, &x11_saved_delay,
+                             &x11_saved_interval)) {
+      x11_autorepeat_saved = true;
+      XkbSetAutoRepeatRate(dpy, XkbUseCoreKbd, 300, 33);
+      XSync(dpy, False);
+    }
   }
   pthread_t input_thr = 0;
   bool input_started = false;
@@ -444,6 +452,12 @@ int WindowManager_Run(WindowManager *wm) {
       close(x11_keyboard_fd(i));
       x11_keyboard_fd_set(i, -1);
     }
+  }
+  if (dpy && x11_autorepeat_saved) {
+    XkbSetAutoRepeatRate(dpy, XkbUseCoreKbd, x11_saved_delay,
+                         x11_saved_interval);
+    XSync(dpy, False);
+    x11_autorepeat_saved = false;
   }
   destroy_uinput();
   render_thread_stop();
