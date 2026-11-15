@@ -2,8 +2,6 @@
 
 > A native, lightning-fast control center that so happens to have a launcher for Linux and Windows.
 
-<!-- TODO: Insert a 10-second GIF here showing the launcher opening, typing, and a widget appearing. This is the most important part of the README. -->
-
 Skald is a native system control center.  Skald is written entirely in C. It boots instantly, uses virtually no RAM,and talks directly to your window manager and its not just a Launcher you can do much more.
 
 ## Why Skald?
@@ -15,7 +13,7 @@ Skald is a native system control center.  Skald is written entirely in C. It boo
 > ⚠️ **Early Development Warning:**
 > Skald is evolving rapidly. The public API (`skapi.h`) is currently **unstable** and changes frequently. If you write your own features right now, be prepared to update your code often as the API matures. After the stable release, Skald will maintain backwards compatibility.
 >
-> If you are a C developer and want to help build the GUI or refine the features, see [CONTRIBUTING.md](CONTRIBUTING.md).
+> If you are a C developer and want to help build the GUI or refine the features or just help in general, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Build System
 
@@ -29,6 +27,9 @@ gcc -o nob nob.c
 
 # 2. Run the build
 ./nob
+
+# 3. -h or --help for list of available commands
+./nob -h
 ```
 
 ## Quick Start (Linux)
@@ -38,8 +39,8 @@ gcc -o nob nob.c
 Download the latest `.tar.gz` from the [Releases page](https://github.com/soapant/skald/releases) and extract it:
 
 ```bash
-tar -xzf skald-v0.1.0-linux.tar.gz
-cd skald-v0.1.0
+tar -xzf skald-v#.#.#-linux.tar.gz
+cd skald-v#.#.#
 ./skald
 ```
 
@@ -77,4 +78,4 @@ Skald is in active, early development. The following bugs are known and will be 
 - **macOS Support:** Port the platform layer to fully support macOS.
 - **Polyglot Features:** Allow features to be written in languages other than C (e.g., Lua, C++, or Rust).
 - **Settings GUI:** Build a proper graphical settings menu (currently just an empty feature placeholder).
-- **Feature Registry:** A centralized website where users can easily find and download community-made features (like a "Skald Extensions" store), alongside a built-in viewer inside Skald.
+- **Feature Registry:** A centralized website where users can easily find and download community-made features (like a "Skald Extensions" store), alongside a built-in viewer inside as a feature in Skald.
