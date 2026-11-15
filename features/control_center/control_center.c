@@ -1232,7 +1232,7 @@ static bool cc_enter(PromptState *state) {
 
 static bool cc_enter_with(PromptState *state, CcRunMode mode) {
   if (!sk_is_selected(state->lb))
-    sk_query_browser(state->lb->selected_text);
+    sk_query_browser(state->eb->filter);
   cc_stage(cc_find(state->lb->selected_text), mode);
   return true;
 }
