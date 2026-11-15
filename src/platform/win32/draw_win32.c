@@ -68,7 +68,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   if (pl_draw_state_get()->win32_widget_surface)
     y_draw -= (int)tm.tmInternalLeading - 1;
   else if (pl_draw_state_get()->win32_listbox_surface)
-    y_draw += 2;
+    y_draw += 3;
   SetBkMode(g_draw_hdc, TRANSPARENT);
   SetTextColor(g_draw_hdc, color);
   bool centered = string_contains_ci(a, "CENTER");
