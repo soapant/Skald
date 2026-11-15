@@ -392,7 +392,7 @@ bool get_title_kwin(char *buffer, int buffer_size) {
   return kwin_active_locked_copy(kwin_active_title, buffer, buffer_size);
 }
 
-bool get_app_id_kwin(char *buffer, int buffer_size) {
+bool get_id_kwin(char *buffer, int buffer_size) {
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -495,7 +495,7 @@ static PlWindowList kwin_list_windows(bool want_names) {
 
 PlWindowList get_window_titles_kwin(void) { return kwin_list_windows(false); }
 
-PlWindowList get_window_names_kwin(void) { return kwin_list_windows(true); }
+PlWindowList get_window_ids_kwin(void) { return kwin_list_windows(true); }
 
 bool close_active_window_kwin(void) {
   if (!kwin_is_active())
@@ -624,4 +624,84 @@ bool snap_active_window_kwin(SnapPreset preset) {
 long get_pid_kwin(void) {
   log_error("kwin pid not implemented (frameGeometry/pid binding untested)");
   return 0;
+}
+
+bool switch_to_workspace_kwin(int index) {
+  if (index < 1)
+    return false;
+  if (!kwin_is_active())
+    return false;
+  char body[256];
+  snprintf(body, sizeof(body),
+           "workspace.currentDesktop = workspace.desktopAtIndex(%d);",
+           index - 1);
+  return kwin_run_script(body);
+}
+
+bool move_active_window_to_workspace_kwin(int index) {
+  if (index < 1)
+    return false;
+  if (!kwin_is_active())
+    return false;
+  char body[512];
+  snprintf(body, sizeof(body),
+           "var a = workspace.activeWindow; if (!a) { throw 'skald: no "
+           "window'; }"
+           "a.desktops = [ workspace.desktopAtIndex(%d) ];",
+           index - 1);
+  return kwin_run_script(body);
+}
+
+bool set_active_window_opacity_kwin(int percent) {
+  if (percent < 1)
+    percent = 1;
+  if (percent > 100)
+    percent = 100;
+  if (!kwin_is_active())
+    return false;
+  char body[256];
+  snprintf(body, sizeof(body),
+           "var a = workspace.activeWindow; if (!a) { throw 'skald: no "
+           "window'; }"
+           "a.opacity = %.2f;",
+           (double)percent / 100.0);
+  return kwin_run_script(body);
+}
+
+static bool kwin_close_windows(const char *needle, bool by_id) {
+  if (!needle || !needle[0])
+    return false;
+  if (!kwin_is_active())
+    return false;
+  char escaped[512];
+  size_t j = 0;
+  for (const char *s = needle; *s && j + 2 < sizeof(escaped); s++) {
+    if (*s == '\\' || *s == '\'') {
+      escaped[j++] = '\\';
+      escaped[j++] = *s;
+    } else {
+      escaped[j++] = (char)tolower((unsigned char)*s);
+    }
+  }
+  escaped[j] = '\0';
+  const char *expr = by_id ? "(w.resourceClass || '')" : "(w.caption || '')";
+  char body[1024];
+  snprintf(body, sizeof(body),
+           "var n = '%s';\n"
+           "var wins = workspace.windowList();\n"
+           "for (var i = 0; i < wins.length; i++) {\n"
+           "  var w = wins[i]; if (!w) continue;\n"
+           "  var v = String(%s).toLowerCase();\n"
+           "  if (v.indexOf(n) !== -1) w.closeWindow();\n"
+           "}\n",
+           escaped, expr);
+  return kwin_run_script(body);
+}
+
+bool close_windows_matching_title_kwin(const char *needle) {
+  return kwin_close_windows(needle, false);
+}
+
+bool close_windows_matching_id_kwin(const char *needle) {
+  return kwin_close_windows(needle, true);
 }
