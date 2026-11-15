@@ -1491,7 +1491,7 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
     r.x = base - w;
   else
     r.x = base - w / 2;
-  r.y = spec->y;
+  r.y = spec->y + Platform_GetTextYOffset(fs);
   r.w = w;
   r.h = h;
   return r;
