@@ -4,9 +4,8 @@
 #include <windows.h>
 #include "core/types.h"
 
-#define QUICKSWITCHER_CLASS "QuickSwitcherModalClass"
+#define SKALD_CLASS "SkaldClass"
 #define MESSAGE_CLASS "DisplayMessageModalClass"
-#define SEARCH_POPUP_CLASS "SearchPopupClass"
 #define WIDGET_CLASS "WidgetClass"
 
 void win32_force_window_focus(WindowHandle hwndTarget);
