@@ -110,4 +110,15 @@ typedef struct {
   int item_height;
 } PlListSpec;
 
+typedef enum {
+  SNAP_LEFT,
+  SNAP_RIGHT,
+  SNAP_TOP,
+  SNAP_BOTTOM,
+  SNAP_TOP_LEFT,
+  SNAP_TOP_RIGHT,
+  SNAP_BOTTOM_LEFT,
+  SNAP_BOTTOM_RIGHT,
+} SnapPreset;
+
 #endif
