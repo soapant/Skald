@@ -26,5 +26,12 @@ bool x11_focus_window_right(void);
 bool x11_focus_window_up(void);
 bool x11_focus_window_down(void);
 bool x11_minimize_active_window(void);
+bool x11_toggle_maximize_active(void);
+bool x11_toggle_always_on_top_active(void);
+bool x11_raise_active_window(void);
+bool x11_lower_active_window(void);
+bool x11_center_active_window(void);
+bool x11_snap_active_window(SnapPreset preset);
+long x11_get_active_window_pid(void);
 bool x11_get_mouse_pos(int *x, int *y);
 #endif

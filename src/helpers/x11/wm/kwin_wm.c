@@ -564,3 +564,64 @@ bool get_mouse_pos_kwin(int *x, int *y) {
   (void)y;
   return false;
 }
+
+bool toggle_maximize_active_kwin(void) {
+  if (!kwin_is_active())
+    return false;
+  return kwin_run_script("workspace.slotWindowMaximize();");
+}
+
+bool toggle_always_on_top_active_kwin(void) {
+  if (!kwin_is_active())
+    return false;
+  return kwin_run_script("workspace.slotWindowAbove();");
+}
+
+bool raise_active_window_kwin(void) {
+  if (!kwin_is_active())
+    return false;
+  return kwin_run_script("workspace.slotWindowRaise();");
+}
+
+bool lower_active_window_kwin(void) {
+  if (!kwin_is_active())
+    return false;
+  return kwin_run_script("workspace.slotWindowLower();");
+}
+
+bool center_active_window_kwin(void) {
+  if (!kwin_is_active())
+    return false;
+  return kwin_run_script("workspace.slotWindowCenter();");
+}
+
+bool snap_active_window_kwin(SnapPreset preset) {
+  if (!kwin_is_active())
+    return false;
+  static const char *exprs[] = {
+    "x: g.x, y: g.y, width: Math.round(g.width / 2), height: g.height",
+    "x: g.x + Math.round(g.width / 2), y: g.y, width: g.width - Math.round(g.width / 2), height: g.height",
+    "x: g.x, y: g.y, width: g.width, height: Math.round(g.height / 2)",
+    "x: g.x, y: g.y + Math.round(g.height / 2), width: g.width, height: g.height - Math.round(g.height / 2)",
+    "x: g.x, y: g.y, width: Math.round(g.width / 2), height: Math.round(g.height / 2)",
+    "x: g.x + Math.round(g.width / 2), y: g.y, width: g.width - Math.round(g.width / 2), height: Math.round(g.height / 2)",
+    "x: g.x, y: g.y + Math.round(g.height / 2), width: Math.round(g.width / 2), height: g.height - Math.round(g.height / 2)",
+    "x: g.x + Math.round(g.width / 2), y: g.y + Math.round(g.height / 2), width: g.width - Math.round(g.width / 2), height: g.height - Math.round(g.height / 2)",
+  };
+  if (preset < 0 || preset > SNAP_BOTTOM_RIGHT)
+    return false;
+  char body[2048];
+  snprintf(body, sizeof(body),
+           "var a = workspace.activeWindow;\n"
+           "if (!a) { throw 'skald: no active window'; }\n"
+           "var g = a.output ? a.output.geometry : null;\n"
+           "if (!g) { throw 'skald: no output geometry'; }\n"
+           "a.frameGeometry = { %s };\n",
+           exprs[preset]);
+  return kwin_run_script(body);
+}
+
+long get_pid_kwin(void) {
+  log_error("kwin pid not implemented (frameGeometry/pid binding untested)");
+  return 0;
+}

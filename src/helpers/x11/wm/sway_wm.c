@@ -638,3 +638,109 @@ bool get_mouse_pos_sway(int *x, int *y) {
   (void)y;
   return false;
 }
+
+static bool sway_focused_output_geom(int *ox, int *oy, int *ow, int *oh) {
+  char *out = Platform_RunTerminalCommand("swaymsg -t get_outputs", false);
+  if (!out || !out[0]) {
+    log_error("sway get_outputs failed or empty");
+    free(out);
+    return false;
+  }
+  const char *focus = strstr(out, "\"focused\": true");
+  if (!focus) {
+    log_error("sway get_outputs no focused output");
+    free(out);
+    return false;
+  }
+  size_t flen = strlen(out);
+  size_t fpos = (size_t)(focus - out);
+  size_t start = 0, end = 0;
+  int depth = 0;
+  bool got = false;
+  for (size_t i = 0; i < flen; i++) {
+    char c = out[i];
+    if (c == '{') {
+      if (depth == 0)
+        start = i;
+      depth++;
+    } else if (c == '}') {
+      depth--;
+      if (depth == 0 && start <= fpos && fpos <= i) {
+        end = i;
+        got = true;
+        break;
+      }
+    }
+  }
+  if (!got) {
+    log_error("sway get_outputs focused object not found");
+    free(out);
+    return false;
+  }
+  size_t n = end - start + 1;
+  char *block = malloc(n + 1);
+  if (!block) {
+    free(out);
+    return false;
+  }
+  memcpy(block, out + start, n);
+  block[n] = '\0';
+  free(out);
+  const char *rect = strstr(block, "\"rect\":");
+  long x = 0, y = 0, w = 0, h = 0;
+  bool ok = rect && wm_json_num_at(rect, "\"x\"", &x) &&
+            wm_json_num_at(rect, "\"y\"", &y) &&
+            wm_json_num_at(rect, "\"width\"", &w) &&
+            wm_json_num_at(rect, "\"height\"", &h);
+  free(block);
+  if (!ok) {
+    log_error("sway get_outputs no rect for focused output");
+    return false;
+  }
+  *ox = (int)x; *oy = (int)y; *ow = (int)w; *oh = (int)h;
+  return true;
+}
+
+bool toggle_maximize_active_sway(void) {
+  log_error("sway maximize is tiling; not supported (use fullscreen)");
+  return false;
+}
+
+bool toggle_always_on_top_active_sway(void) {
+  return sway_exec("swaymsg sticky toggle");
+}
+
+bool raise_active_window_sway(void) {
+  log_error("sway has no z-order raise command");
+  return false;
+}
+
+bool lower_active_window_sway(void) {
+  log_error("sway has no z-order lower command");
+  return false;
+}
+
+bool center_active_window_sway(void) {
+  return sway_exec("swaymsg move position center");
+}
+
+bool snap_active_window_sway(SnapPreset preset) {
+  int mx = 0, my = 0, mw = 0, mh = 0;
+  if (!sway_focused_output_geom(&mx, &my, &mw, &mh))
+    return false;
+  int x = 0, y = 0, w = 0, h = 0;
+  wm_snap_rect(mx, my, mw, mh, preset, &x, &y, &w, &h);
+  char cmd[512];
+  snprintf(cmd, sizeof(cmd),
+           "swaymsg resize set width %d px height %d px && "
+           "swaymsg move position %d px %d px",
+           w, h, x, y);
+  return sway_exec(cmd);
+}
+
+long get_pid_sway(void) {
+  char buf[64];
+  if (!sway_tree_field(buf, sizeof(buf), "\"pid\""))
+    return 0;
+  return strtol(buf, NULL, 10);
+}

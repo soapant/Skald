@@ -269,3 +269,51 @@ bool get_mouse_pos_niri(int *x, int *y) {
   (void)y;
   return false;
 }
+
+bool toggle_maximize_active_niri(void) {
+  if (!niri_is_active())
+    return false;
+  return niri_exec("niri msg action maximize-window-to-edges");
+}
+
+bool toggle_always_on_top_active_niri(void) {
+  log_error("niri has no always-on-top concept");
+  return false;
+}
+
+bool raise_active_window_niri(void) {
+  log_error("niri has no z-order raise command");
+  return false;
+}
+
+bool lower_active_window_niri(void) {
+  log_error("niri has no z-order lower command");
+  return false;
+}
+
+bool center_active_window_niri(void) {
+  if (!niri_is_active())
+    return false;
+  return niri_exec("niri msg action center-window");
+}
+
+bool snap_active_window_niri(SnapPreset preset) {
+  (void)preset;
+  log_error("niri has no absolute window positioning (scrollable layout)");
+  return false;
+}
+
+long get_pid_niri(void) {
+  if (!niri_is_active())
+    return 0;
+  char *json = Platform_RunTerminalCommand(
+      "niri msg --json focused-window", false);
+  if (!json)
+    return 0;
+  const char *p = strstr(json, "\"pid\":");
+  long pid = 0;
+  if (p)
+    pid = strtol(p + 6, NULL, 10);
+  free(json);
+  return pid;
+}

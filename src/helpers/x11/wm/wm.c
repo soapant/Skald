@@ -424,3 +424,127 @@ bool wm_get_mouse_pos(int *x, int *y) {
     return true;
   return false;
 }
+
+bool wm_toggle_maximize_active(void) {
+  if (x11_env_is_wayland()) {
+    if (toggle_maximize_active_kwin())
+      return true;
+    if (toggle_maximize_active_niri())
+      return true;
+    if (toggle_maximize_active_hyprland())
+      return true;
+    if (toggle_maximize_active_sway())
+      return true;
+  }
+  if (x11_toggle_maximize_active())
+    return true;
+  log_error("ToggleMaximizeActive Didn't Work");
+  return false;
+}
+
+bool wm_toggle_always_on_top_active(void) {
+  if (x11_env_is_wayland()) {
+    if (toggle_always_on_top_active_kwin())
+      return true;
+    if (toggle_always_on_top_active_niri())
+      return true;
+    if (toggle_always_on_top_active_hyprland())
+      return true;
+    if (toggle_always_on_top_active_sway())
+      return true;
+  }
+  if (x11_toggle_always_on_top_active())
+    return true;
+  log_error("ToggleAlwaysOnTopActive Didn't Work");
+  return false;
+}
+
+bool wm_raise_active_window(void) {
+  if (x11_env_is_wayland()) {
+    if (raise_active_window_kwin())
+      return true;
+    if (raise_active_window_niri())
+      return true;
+    if (raise_active_window_hyprland())
+      return true;
+    if (raise_active_window_sway())
+      return true;
+  }
+  if (x11_raise_active_window())
+    return true;
+  log_error("RaiseActiveWindow Didn't Work");
+  return false;
+}
+
+bool wm_lower_active_window(void) {
+  if (x11_env_is_wayland()) {
+    if (lower_active_window_kwin())
+      return true;
+    if (lower_active_window_niri())
+      return true;
+    if (lower_active_window_hyprland())
+      return true;
+    if (lower_active_window_sway())
+      return true;
+  }
+  if (x11_lower_active_window())
+    return true;
+  log_error("LowerActiveWindow Didn't Work");
+  return false;
+}
+
+bool wm_center_active_window(void) {
+  if (x11_env_is_wayland()) {
+    if (center_active_window_kwin())
+      return true;
+    if (center_active_window_niri())
+      return true;
+    if (center_active_window_hyprland())
+      return true;
+    if (center_active_window_sway())
+      return true;
+  }
+  if (x11_center_active_window())
+    return true;
+  log_error("CenterActiveWindow Didn't Work");
+  return false;
+}
+
+bool wm_snap_active_window(SnapPreset preset) {
+  if (x11_env_is_wayland()) {
+    if (snap_active_window_kwin(preset))
+      return true;
+    if (snap_active_window_niri(preset))
+      return true;
+    if (snap_active_window_hyprland(preset))
+      return true;
+    if (snap_active_window_sway(preset))
+      return true;
+  }
+  if (x11_snap_active_window(preset))
+    return true;
+  log_error("SnapActiveWindow Didn't Work");
+  return false;
+}
+
+long wm_get_active_window_pid(void) {
+  if (x11_env_is_wayland()) {
+    long pid = get_pid_kwin();
+    if (pid)
+      return pid;
+    pid = get_pid_niri();
+    if (pid)
+      return pid;
+    pid = get_pid_hyprland();
+    if (pid)
+      return pid;
+    pid = get_pid_sway();
+    if (pid)
+      return pid;
+  }
+  long pid = x11_get_active_window_pid();
+  if (pid)
+    return pid;
+  log_error("GetActiveWindowPid Didn't Work");
+  return 0;
+}
