@@ -418,10 +418,15 @@ static bool write_compile_commands(void) {
     if (target_win32) {
       nob_cmd_append(&cmd, CROSS_CC);
       nob_cmd_append(&cmd, WIN_CC_FLAGS, "-c", sources.items[i]);
-      if (release)
+      if (release) {
+        if (target_win32) {
+          nob_cmd_append(&cmd, "-mwindows");
+        }
         nob_cmd_append(&cmd, "-O3");
-      else
+      }
+      else {
         nob_cmd_append(&cmd, "-ggdb");
+      }
     } else {
       append_cc(&cmd);
       nob_cc_flags(&cmd);
