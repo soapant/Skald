@@ -97,11 +97,9 @@ HWND win32_foreground_target(void) {
   char cls[64];
   cls[0] = '\0';
   GetClassNameA(hwnd, cls, sizeof(cls));
-  if (strcmp(cls, QUICKSWITCHER_CLASS) == 0)
+  if (strcmp(cls, SKALD_CLASS) == 0)
     return NULL;
   if (strcmp(cls, MESSAGE_CLASS) == 0)
-    return NULL;
-  if (strcmp(cls, SEARCH_POPUP_CLASS) == 0)
     return NULL;
   return hwnd;
 }
@@ -178,9 +176,8 @@ BOOL CALLBACK win32_focus_enum(HWND hwnd, LPARAM lp) {
     return TRUE;
   char cls[64];
   if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
-    if (strcmp(cls, QUICKSWITCHER_CLASS) == 0 ||
+    if (strcmp(cls, SKALD_CLASS) == 0 ||
         strcmp(cls, MESSAGE_CLASS) == 0 ||
-        strcmp(cls, SEARCH_POPUP_CLASS) == 0 ||
         strcmp(cls, WIDGET_CLASS) == 0) {
       return TRUE;
     }
@@ -533,9 +530,8 @@ BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam) {
   if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0) {
     if (strcmp(cls, "Progman") == 0 || strcmp(cls, "WorkerW") == 0)
       return TRUE;
-    if (strcmp(cls, QUICKSWITCHER_CLASS) == 0 ||
-        strcmp(cls, MESSAGE_CLASS) == 0 ||
-        strcmp(cls, SEARCH_POPUP_CLASS) == 0 || strcmp(cls, WIDGET_CLASS) == 0)
+    if (strcmp(cls, SKALD_CLASS) == 0 ||
+        strcmp(cls, MESSAGE_CLASS) == 0 || strcmp(cls, WIDGET_CLASS) == 0)
       return TRUE;
     if (strcmp(cls, "ApplicationFrameWindow") == 0) {
       if (win32_is_cloaked(hwnd))

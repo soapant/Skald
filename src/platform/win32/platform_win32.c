@@ -622,7 +622,7 @@ bool Platform_CloseActiveWindow(void) {
   char cls[64];
   cls[0] = '\0';
   GetClassNameA(hwnd, cls, sizeof(cls));
-  if (strcmp(cls, QUICKSWITCHER_CLASS) == 0) {
+  if (strcmp(cls, SKALD_CLASS) == 0) {
     SkaldContext_Get()->window.selection_complete = true;
     return true;
   }
@@ -1155,10 +1155,10 @@ void Platform_InitUI(void) {
   wc.hInstance = GetModuleHandle(NULL);
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = GetStockObject(NULL_BRUSH);
-  wc.lpszClassName = QUICKSWITCHER_CLASS;
+  wc.lpszClassName = SKALD_CLASS;
 
   if (RegisterClassA(&wc)) {
-    log_info("QuickSwitcherModalClass registered successfully with OS.");
+    log_info("%s registered successfully with OS.", SKALD_CLASS);
   } else {
     log_error("CRITICAL WARNING: Failed to register window class! Error: %lu",
               GetLastError());
