@@ -8,12 +8,17 @@
 
 bool kwin_is_active(void);
 bool get_title_kwin(char *buffer, int buffer_size);
-bool get_app_id_kwin(char *buffer, int buffer_size);
+bool get_id_kwin(char *buffer, int buffer_size);
 char *paste_kwin(const char *content);
 bool focus_window_title_kwin(const char *title);
 PlWindowList get_window_titles_kwin(void);
-PlWindowList get_window_names_kwin(void);
+PlWindowList get_window_ids_kwin(void);
 bool close_active_window_kwin(void);
+bool switch_to_workspace_kwin(int index);
+bool move_active_window_to_workspace_kwin(int index);
+bool set_active_window_opacity_kwin(int percent);
+bool close_windows_matching_title_kwin(const char *needle);
+bool close_windows_matching_id_kwin(const char *needle);
 bool toggle_fullscreen_active_kwin(void);
 bool move_active_window_to_monitor_kwin(bool right);
 bool move_active_window_left_kwin(void);

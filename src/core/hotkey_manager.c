@@ -291,12 +291,12 @@ bool hotkey_mouse_button_bound(int btn) {
     if (b->whitelist) {
       if (!b->blacklist || b->blacklist_count == 0)
         continue;
-      const char *title = Platform_GetActiveWindowAppId();
+      const char *title = Platform_GetActiveWindowId();
       if (!hotkey_blacklist_match(b, title))
         continue;
     } else {
       if (b->blacklist && b->blacklist_count > 0) {
-        const char *title = Platform_GetActiveWindowAppId();
+        const char *title = Platform_GetActiveWindowId();
         if (hotkey_blacklist_match(b, title))
           continue;
       }
@@ -469,7 +469,7 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
   if (!b->whitelist) {
     if (b->blacklist && b->blacklist_count > 0) {
       if (!title_fetched) {
-        title = Platform_GetActiveWindowAppId();
+        title = Platform_GetActiveWindowId();
         title_fetched = true;
       }
       if (hotkey_blacklist_match(b, title))
@@ -481,7 +481,7 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
   if (!b->blacklist || b->blacklist_count == 0)
     return false;
   if (!title_fetched) {
-    title = Platform_GetActiveWindowAppId();
+    title = Platform_GetActiveWindowId();
     title_fetched = true;
   }
   return hotkey_blacklist_match(b, title);

@@ -155,7 +155,7 @@ bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
 bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
                                 long data);
 PlWindowList Platform_GetWindowTitles(void);
-PlWindowList Platform_GetWindowNames(void);
+PlWindowList Platform_GetWindowIds(void);
 bool Platform_QueryBrowser(const char *query);
 char *Platform_GetClipboardEntry(void);
 bool Platform_PasteContent(const char *content);
@@ -217,7 +217,7 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
                               int *out_status);
 char *Platform_FindExecutable(const char *name);
 char *Platform_GetActiveWindowTitle(void);
-char *Platform_GetActiveWindowAppId(void);
+char *Platform_GetActiveWindowId(void);
 char *Platform_GetIconPath(char *app_path);
 int Platform_GetIconSize(char *icon_path);
 bool Platform_PrewarmImage(char *path);
@@ -253,6 +253,11 @@ bool Platform_LowerActiveWindow(void);
 bool Platform_CenterActiveWindow(void);
 bool Platform_SnapActiveWindow(SnapPreset preset);
 long Platform_GetActiveWindowPid(void);
+bool Platform_SwitchToWorkspace(int index);
+bool Platform_MoveActiveWindowToWorkspace(int index);
+bool Platform_SetActiveWindowOpacity(int percent);
+bool Platform_CloseWindowsByTitle(const char *needle);
+bool Platform_CloseWindowsById(const char *needle);
 bool Platform_LaunchDetached(const char *command);
 const char *Platform_GetDefaultApp(DefaultAppKind kind);
 bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
