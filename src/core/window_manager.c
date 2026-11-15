@@ -143,6 +143,23 @@ void WindowManager_DrainSelectionComplete(WindowManager *wm) {
     top_after->vtable->on_render(top_after);
 }
 
+void WindowManager_GetDefaultPromptPosition(int win_w, int win_h, int *out_x,
+                                            int *out_y) {
+  int cx = 0, cy = 0;
+  if (PromptX >= 0 && PromptY >= 0) {
+    if (out_x)
+      *out_x = PromptX;
+    if (out_y)
+      *out_y = PromptY;
+    return;
+  }
+  WindowManager_GetCenteredPos(win_w, win_h, &cx, &cy);
+  if (out_x)
+    *out_x = PromptX >= 0 ? PromptX : cx;
+  if (out_y)
+    *out_y = PromptY >= 0 ? PromptY : cy;
+}
+
 void WindowManager_GetMainMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
   Platform_GetMonitorGeometry(ox, oy, ow, oh);
 }
@@ -171,7 +188,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
     px = -1;
   }
   if (px < 0 || py < 0)
-    WindowManager_GetCenteredPos(pw, ph, &px, &py);
+    WindowManager_GetDefaultPromptPosition(pw, ph, &px, &py);
   if (out_x)
     *out_x = px;
   if (out_y)

@@ -70,6 +70,8 @@ PromptState *prompt_popup_get_top_prompt_state(void);
 
 void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
+void WindowManager_GetDefaultPromptPosition(int win_w, int win_h, int *out_x,
+                                            int *out_y);
 void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
                                    int *out_h);
 
