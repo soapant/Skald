@@ -90,6 +90,18 @@ bool Platform_DirExists(const char *path) {
   return path && stat(path, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
+bool Platform_FileInfo(const char *path, long long *mtime_out,
+                       long long *size_out) {
+  struct stat st;
+  if (!path || stat(path, &st) != 0)
+    return false;
+  if (mtime_out)
+    *mtime_out = (long long)st.st_mtime;
+  if (size_out)
+    *size_out = (long long)st.st_size;
+  return true;
+}
+
 bool Platform_TempDirPath(char *out, size_t out_len) {
   const char *dir = getenv("TMPDIR");
   if (!dir || !dir[0])
