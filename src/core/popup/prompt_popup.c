@@ -262,7 +262,7 @@ Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
   int x = spec->x;
   int y = spec->y;
   if (x == 0 && y == 0) {
-    WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
+    WindowManager_GetDefaultPromptPosition(layout_w, layout_h, &x, &y);
   } else {
     int wx = 0, wy = 0;
     Popup *top = WindowManager_GetTopPopup(wm);
