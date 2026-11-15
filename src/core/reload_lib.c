@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <dirent.h>
 #include <unistd.h>
 
 #include "deps/log.h"
@@ -12,12 +10,12 @@
 #include "helpers/helpers_fs.h"
 
 bool reload_lib_is_fresh(const char *src, const char *out) {
-  struct stat src_st, out_st;
-  if (stat(src, &src_st) != 0)
+  long long src_mt = 0, out_mt = 0;
+  if (!Platform_FileInfo(src, &src_mt, NULL))
     return false;
-  if (stat(out, &out_st) != 0)
+  if (!Platform_FileInfo(out, &out_mt, NULL))
     return false;
-  return out_st.st_mtime >= src_st.st_mtime;
+  return out_mt >= src_mt;
 }
 
 bool reload_lib_compile(const char *src, const char *out, const char *log_tag) {
@@ -86,15 +84,16 @@ char *reload_lib_unique_copy(const char *src, const char *base, int seq,
 }
 
 int reload_lib_sweep_stale_hot_libs(const char *dir, const char *lib_ext) {
-  DIR *d = opendir(dir);
+  PlDirIter *d = Platform_DirOpen(dir);
   if (!d)
     return -1;
   size_t ext_len = lib_ext ? strlen(lib_ext) : 0;
   int nremoved = 0;
-  const struct dirent *e;
-  while ((e = readdir(d)) != NULL) {
-    const char *name = e->d_name;
-    const char *dot = strstr(name, ".hot");
+  char name[256];
+  bool name_is_dir;
+  while (Platform_DirNext(d, name, sizeof(name), &name_is_dir)) {
+    const char *dot;
+    dot = strstr(name, ".hot");
     if (!dot)
       continue;
     const char *p = dot + 4;
@@ -113,6 +112,6 @@ int reload_lib_sweep_stale_hot_libs(const char *dir, const char *lib_ext) {
       nremoved++;
     free(junk);
   }
-  closedir(d);
+  Platform_DirClose(d);
   return nremoved;
 }

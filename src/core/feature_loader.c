@@ -7,9 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 #include <errno.h>
-#include <sys/stat.h>
 #include <utime.h>
 
 #include "deps/log.h"
@@ -526,10 +524,9 @@ static bool load_named(const char *dir, const char *ext, const char *name) {
 bool feature_loader_load_all_from_dir(const char *dir) {
   LOCK();
   const char *ext = Platform_LibExtension();
-  DIR *d = opendir(dir);
+  PlDirIter *d = Platform_DirOpen(dir);
   if (!d) {
-    log_error("feature_loader_load_all_from_dir: opendir %s failed (%s)", dir,
-              strerror(errno));
+    log_error("feature_loader_load_all_from_dir: opendir %s failed", dir);
     UNLOCK();
     return false;
   }
@@ -538,11 +535,12 @@ bool feature_loader_load_all_from_dir(const char *dir) {
   int names_cap = 0;
   int n_names = 0;
   bool names_oom = false;
-  struct dirent *e;
-  while ((e = readdir(d)) != NULL) {
-    if (e->d_name[0] == '.')
+  char dname[256];
+  bool d_is_dir;
+  while (Platform_DirNext(d, dname, sizeof(dname), &d_is_dir)) {
+    if (dname[0] == '.')
       continue;
-    if (!ends_with(e->d_name, ext))
+    if (!ends_with(dname, ext))
       continue;
     if (n_names >= names_cap) {
       int cap = names_cap > 0 ? names_cap * 2 : 32;
@@ -561,14 +559,14 @@ bool feature_loader_load_all_from_dir(const char *dir) {
     }
 
     char nm[64];
-    safe_copy(nm, sizeof(nm), e->d_name);
+    safe_copy(nm, sizeof(nm), dname);
     char *dot = strrchr(nm, '.');
     if (dot)
       *dot = '\0';
     manifest_write_baseline(nm);
     safe_copy(names[n_names++], sizeof(names[0]), nm);
   }
-  closedir(d);
+  Platform_DirClose(d);
   if (names_oom) {
     UNLOCK();
     return false;
@@ -688,32 +686,32 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     Platform_MkdirIfNotExists("build");
     Platform_MkdirIfNotExists("build/features");
   }
-  DIR *dir = opendir(FeaturePath);
+  PlDirIter *dir = Platform_DirOpen(FeaturePath);
   if (!dir)
     return 0;
-  struct dirent *ent;
+  char ent_name[256];
+  bool ent_is_dir;
   int done = 0;
-  while ((ent = readdir(dir)) != NULL) {
-    if (ent->d_name[0] == '.')
+  while (Platform_DirNext(dir, ent_name, sizeof(ent_name), &ent_is_dir)) {
+    if (ent_name[0] == '.')
       continue;
     char subpath[1024];
     snprintf(subpath, sizeof(subpath), "%.255s/%.255s", FeaturePath,
-             ent->d_name);
-    struct stat st;
-    if (stat(subpath, &st) != 0 || !S_ISDIR(st.st_mode))
+             ent_name);
+    if (!Platform_DirExists(subpath))
       continue;
     char src[1024], dll[1024];
-    snprintf(src, sizeof(src), "%.255s/%.255s.c", subpath, ent->d_name);
-    snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", ent->d_name, ext);
-    struct stat st_src;
-    if (stat(src, &st_src) != 0)
+    snprintf(src, sizeof(src), "%.255s/%.255s.c", subpath, ent_name);
+    snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", ent_name, ext);
+    long long src_mtime = 0;
+    if (!Platform_FileInfo(src, &src_mtime, NULL))
       continue;
     if (reload_lib_is_fresh(src, dll))
       continue;
     bool known_bad = false;
     for (int fi = 0; fi < s_failed_count; fi++) {
-      if (s_failed[fi].src_mtime == st_src.st_mtime &&
-          strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) ==
+      if (s_failed[fi].src_mtime == src_mtime &&
+          strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) ==
               0) {
         known_bad = true;
         break;
@@ -730,30 +728,30 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     const char *tag = hot_reload ? "hot-reload" : "feature build";
     bool ok = reload_lib_compile(src, out_path, tag);
     if (!ok) {
-      feature_mark_failed(ent->d_name, st_src.st_mtime);
+      feature_mark_failed(ent_name, src_mtime);
       continue;
     }
     if (hot_reload) {
-      bool reloaded_ok = feature_loader_reload_from(ent->d_name, out_path);
+      bool reloaded_ok = feature_loader_reload_from(ent_name, out_path);
       remove(out_path);
       if (!reloaded_ok) {
-        feature_mark_failed(ent->d_name, st_src.st_mtime);
+        feature_mark_failed(ent_name, src_mtime);
         continue;
       }
     }
     for (int fi = 0; fi < s_failed_count; fi++) {
-      if (strncmp(s_failed[fi].dir, ent->d_name, sizeof(s_failed[fi].dir)) == 0)
+      if (strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) == 0)
         s_failed[fi].src_mtime = 0;
     }
     struct utimbuf times;
-    times.actime = st_src.st_mtime;
-    times.modtime = st_src.st_mtime;
+    times.actime = (time_t)src_mtime;
+    times.modtime = (time_t)src_mtime;
     utime(dll, &times);
     done++;
     if (!hot_reload)
-      log_info("feature build: %s from source", ent->d_name);
+      log_info("feature build: %s from source", ent_name);
   }
-  closedir(dir);
+  Platform_DirClose(dir);
   return done;
 }
 
