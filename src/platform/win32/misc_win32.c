@@ -25,6 +25,28 @@ bool Platform_MkdirIfNotExists(const char *path) {
   return GetLastError() == ERROR_ALREADY_EXISTS;
 }
 
+bool Platform_DirExists(const char *path) {
+  if (!path)
+    return false;
+  DWORD attrs = GetFileAttributesA(path);
+  return attrs != INVALID_FILE_ATTRIBUTES &&
+         (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+bool Platform_TempDirPath(char *out, size_t out_len) {
+  if (!out || out_len == 0)
+    return false;
+  char dir[MAX_PATH];
+  DWORD dir_n = GetTempPathA(sizeof(dir), dir);
+  if (dir_n == 0 || dir_n >= sizeof(dir))
+    return false;
+  size_t dl = strlen(dir);
+  while (dl > 0 && (dir[dl - 1] == '\\' || dir[dl - 1] == '/'))
+    dir[--dl] = '\0';
+  snprintf(out, out_len, "%s", dir);
+  return true;
+}
+
 long long Platform_GetWallClockMs(void) {
 
   FILETIME ft;

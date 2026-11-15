@@ -5,7 +5,7 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   Display *dpy = x11_get_display();
   if (!dpy)
     return false;
-  Window w = (Window)WH_TO_HWND(h);
+  Window w = (Window)WH_TO_XID(h);
   if (w == None)
     return false;
   Window child = None;

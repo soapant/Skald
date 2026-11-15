@@ -12,26 +12,21 @@
 #include <errno.h>
 
 #if defined(_WIN32)
-#include <windows.h>
-#else
-#include <sys/stat.h>
-#endif
-
-#if defined(_WIN32)
 #define SK_FEAT_SEP '\\'
 #else
 #define SK_FEAT_SEP '/'
 #endif
 
-static bool feature_base_dir(char *out, size_t out_len) {
-  const char *home = Platform_GetRealHome();
-  if (!out || out_len == 0 || !home || !home[0])
+bool data_dir(char *out, size_t out_len) {
+  if (!out || out_len == 0)
     return false;
-#if defined(_WIN32)
+  const char *home = Platform_GetRealHome();
+  if (!home || !home[0])
+    return false;
   safe_copy(out, out_len, home);
+#if defined(_WIN32)
   safe_cat(out, out_len, "\\AppData\\Roaming\\Skald");
 #else
-  safe_copy(out, out_len, home);
   safe_cat(out, out_len, "/.local/share/skald");
 #endif
   return true;
@@ -62,25 +57,13 @@ bool temp_file_write(const char *name, const void *data, size_t len,
   }
   if (strstr(name, ".."))
     return false;
-#if defined(_WIN32)
-  char dir[MAX_PATH];
-  DWORD dir_n = GetTempPathA(sizeof(dir), dir);
-  if (dir_n == 0 || dir_n >= sizeof(dir))
+  char dir[1024];
+  if (!Platform_TempDirPath(dir, sizeof(dir)))
     return false;
-  size_t dl = strlen(dir);
-  while (dl > 0 && (dir[dl - 1] == '\\' || dir[dl - 1] == '/'))
-    dir[--dl] = '\0';
+  const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
   safe_copy(out_path, out_len, dir);
-  safe_cat(out_path, out_len, "\\");
+  safe_cat(out_path, out_len, sep);
   safe_cat(out_path, out_len, name);
-#else
-  const char *dir = getenv("TMPDIR");
-  if (!dir || !dir[0])
-    dir = "/tmp";
-  safe_copy(out_path, out_len, dir);
-  safe_cat(out_path, out_len, "/");
-  safe_cat(out_path, out_len, name);
-#endif
   FILE *f = fopen(out_path, "wb");
   if (!f)
     return false;
@@ -135,7 +118,7 @@ bool feature_path_get(const char *feature, const char *name, char *out,
   if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0)
     return false;
   char dir_path[512];
-  if (!feature_base_dir(dir_path, sizeof(dir_path)))
+  if (!data_dir(dir_path, sizeof(dir_path)))
     return false;
   Platform_MkdirIfNotExists(dir_path);
   const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
@@ -155,21 +138,14 @@ bool feature_path_data_dir_exists(const char *stem) {
   if (!stem || !stem[0])
     return false;
   char dir_path[512];
-  if (!feature_base_dir(dir_path, sizeof(dir_path)))
+  if (!data_dir(dir_path, sizeof(dir_path)))
     return false;
   char stemdir[720];
   const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
   safe_copy(stemdir, sizeof(stemdir), dir_path);
   safe_cat(stemdir, sizeof(stemdir), sep);
   safe_cat(stemdir, sizeof(stemdir), stem);
-#if defined(_WIN32)
-  DWORD attrs = GetFileAttributesA(stemdir);
-  return attrs != INVALID_FILE_ATTRIBUTES &&
-         (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
-#else
-  struct stat st;
-  return stat(stemdir, &st) == 0 && S_ISDIR(st.st_mode);
-#endif
+  return Platform_DirExists(stemdir);
 }
 
 bool file_copy_path(const char *src, const char *dst) {

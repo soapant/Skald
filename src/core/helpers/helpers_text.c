@@ -804,6 +804,12 @@ bool hotkey_text_should_swallow(const PopupKeyEvent *key) {
   return !trigger_press && (key->ctrl);
 }
 
+bool string_contains(const char *haystack, const char *needle) {
+  if (!haystack || !needle)
+    return false;
+  return strstr(haystack, needle) != NULL;
+}
+
 bool string_contains_ci(const char *haystack, const char *needle) {
   if (!haystack || !needle)
     return false;

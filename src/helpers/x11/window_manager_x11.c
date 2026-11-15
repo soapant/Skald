@@ -249,7 +249,7 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
   case FocusOut: {
     Window lost_win = ev->xfocus.window;
     bool lost_is_top =
-        top && WH_EQUALS(top->handle, (WindowHandle){.xid = lost_win});
+        top && WH_EQUALS(top->handle, WH_FROM_XID(lost_win));
     long long since_pop = Platform_GetWallClockMs() -
                           SkaldContext_Get()->window.last_popup_pop_ms;
     log_info(

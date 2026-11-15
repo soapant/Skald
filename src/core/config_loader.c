@@ -15,9 +15,6 @@
 #include "deps/log.h"
 #include "config_values.h"
 #include "core/types/color.h"
-#if defined(_WIN32)
-#include <windows.h>
-#endif
 #include "core/window_manager.h"
 #include "helpers/helpers_text.h"
 #include "config_defs.h"

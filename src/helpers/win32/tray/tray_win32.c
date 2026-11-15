@@ -1,4 +1,9 @@
 #include <windows.h>
+
+#define ID_TRAY_ICON 1001
+#define WM_TRAYICON (WM_USER + 1)
+#define ID_EXIT 2001
+
 #include "helpers/helpers_fs.h"
 #include <commctrl.h>
 #include <shellapi.h>

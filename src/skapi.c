@@ -782,7 +782,7 @@ bool sk_terminate_process_by_name(const char *exe_name) {
 bool sk_string_contains(const char *haystack, const char *needle) {
   if (!needle || !haystack)
     return false;
-  return string_contains_ci(haystack, needle);
+  return string_contains(haystack, needle);
 }
 
 bool sk_string_contains_ci(const char *haystack, const char *needle) {
