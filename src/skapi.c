@@ -236,6 +236,16 @@ void sk_free_file_list(SkStringList *list) {
   }
   list->count = 0;
 }
+
+void sk_free_files_list(ListOfFiles *list) {
+  if (!list) {
+    return;
+  }
+  free(list->files);
+  list->files = NULL;
+  list->count = 0;
+  list->capacity = 0;
+}
 bool sk_free_window_list(SkWindowList *list) {
   if (!list)
     return false;
@@ -717,7 +727,7 @@ int sk_get_icon_size(const char *icon_path) {
   return Platform_GetIconSize((char *)icon_path);
 }
 
-char *sk_run_terminal_command(char *command) {
+char *sk_run_terminal_command(const char *command) {
   if (!command) {
     return NULL;
   }
@@ -739,27 +749,27 @@ char *sk_which(const char *command) {
   return Platform_FindExecutable(command);
 }
 
-char *sk_run_terminal_command_blocking(char *command) {
+char *sk_run_terminal_command_blocking(const char *command) {
   if (!command)
     return NULL;
   return Platform_RunCommandAndGetOutput(command);
 }
 
-char *sk_run_terminal_command_and_open(char *command) {
+char *sk_run_terminal_command_and_open(const char *command) {
   if (!command) {
     return NULL;
   }
   return Platform_RunTerminalCommand(command, true);
 }
 
-bool sk_launch_detached(char *command) {
+bool sk_launch_detached(const char *command) {
   if (!command) {
     return false;
   }
   return Platform_LaunchDetached(command);
 }
 
-bool sk_launch_terminal_at_path(char *path, char *args) {
+bool sk_launch_terminal_at_path(const char *path, const char *args) {
   if (!path) {
     return false;
   }
@@ -974,7 +984,7 @@ void ski_message(const SkMessageSpec *spec) {
                      color, spec->render, spec->name);
 }
 
-bool sk_launch_browser(char *url) {
+bool sk_launch_browser(const char *url) {
   if (!url) {
     return false;
   }
@@ -1011,7 +1021,7 @@ bool sk_paste_from_clipboard(void) {
   return Platform_PasteContent(content);
 }
 
-bool sk_paste(char *content) {
+bool sk_paste(const char *content) {
   if (!content)
     return false;
   return Platform_PasteContent(content);
@@ -1089,7 +1099,7 @@ bool sk_replace_line_in_file(const char *filepath, int line_index,
   return ok;
 }
 
-bool sk_focus_window_by_title(char *title) {
+bool sk_focus_window_by_title(const char *title) {
   if (!title) {
     return false;
   }
@@ -1790,15 +1800,93 @@ bool sk_type_text(const char *s) { return type_text_common(s); }
 
 void sk_sleep(double seconds) { sk_sleep_platform(seconds); }
 
+#define SKI_LIB_TRACK_MAX 32
+
+typedef struct {
+  SkLibrary lib;
+  char canon[MAX_PATH];
+} SkiLibTrack;
+
+static SkiLibTrack ski_lib_track[SKI_LIB_TRACK_MAX];
+static size_t ski_lib_track_count = 0;
+
+static bool sk_lib_canonical_path(const char *path, char *out, size_t cap) {
+  if (!path || !out || cap == 0)
+    return false;
+#if defined(_WIN32)
+  return _fullpath(out, path, cap) != NULL;
+#else
+  char *resolved = realpath(path, NULL);
+  if (!resolved)
+    return false;
+  snprintf(out, cap, "%s", resolved);
+  free(resolved);
+  return true;
+#endif
+}
+
+static bool sk_lib_path_equal(const char *a, const char *b) {
+#if defined(_WIN32)
+  return _stricmp(a, b) == 0;
+#else
+  return strcmp(a, b) == 0;
+#endif
+}
+
+static void ski_lib_track_add(SkLibrary lib, const char *canon) {
+  if (ski_lib_track_count >= SKI_LIB_TRACK_MAX) {
+    log_error("sk_library_open: tracking table full, not tracking '%s'", canon);
+    return;
+  }
+  SkiLibTrack *e = &ski_lib_track[ski_lib_track_count++];
+  e->lib = lib;
+  snprintf(e->canon, sizeof(e->canon), "%s", canon);
+}
+
+static void ski_lib_track_remove(size_t idx) {
+  ski_lib_track[idx] = ski_lib_track[ski_lib_track_count - 1];
+  ski_lib_track_count--;
+}
+
 SkLibrary sk_library_open(const char *path) {
-  return (SkLibrary)Platform_LoadLibrary(path);
+  SkLibrary lib = (SkLibrary)Platform_LoadLibrary(path);
+  if (!lib)
+    return NULL;
+  char canon[MAX_PATH];
+  if (sk_lib_canonical_path(path, canon, sizeof(canon)))
+    ski_lib_track_add(lib, canon);
+  return lib;
 }
 
 void *sk_library_symbol(SkLibrary lib, const char *name) {
   return Platform_GetSymbol((LibHandle)lib, name);
 }
 
-void sk_library_close(SkLibrary lib) { Platform_UnloadLibrary((LibHandle)lib); }
+void sk_library_close(SkLibrary lib) {
+  if (!lib)
+    return;
+  char caller[MAX_PATH];
+  owner_resolve_for_func((void *)__builtin_return_address(0), caller,
+                         sizeof(caller));
+  char canon_caller[MAX_PATH];
+  bool have_caller = caller[0] && sk_lib_canonical_path(caller, canon_caller,
+                                                        sizeof(canon_caller));
+  for (size_t i = 0; i < ski_lib_track_count; i++) {
+    if (ski_lib_track[i].lib == lib && have_caller &&
+        sk_lib_path_equal(ski_lib_track[i].canon, canon_caller)) {
+      log_error(
+          "sk_library_close: refusing to unload the caller's own library");
+      return;
+    }
+  }
+  for (size_t i = 0; i < ski_lib_track_count; i++) {
+    if (ski_lib_track[i].lib == lib) {
+      ski_lib_track_remove(i);
+      break;
+    }
+  }
+  Platform_UnloadLibrary((LibHandle)lib);
+}
 
 const char *sk_library_error(void) { return Platform_GetLoadError(); }
 
@@ -2599,7 +2687,7 @@ const char *sk_get_user_name(void) { return Platform_GetRealUser(); }
 
 bool sk_is_root(void) { return Platform_IsRunningAsRoot(); }
 
-void sk_reload_feature(char *name) { feature_loader_reload(name); }
+void sk_reload_feature(const char *name) { feature_loader_reload(name); }
 
 int sk_get_pid(void) { return sk_get_pid_platform(); }
 
