@@ -112,6 +112,17 @@ typedef struct {
   int fontsize;
 } EditboxPlace;
 
+typedef struct {
+  ColorRef color_text;
+  ColorRef color_bg;
+  const char *placeholder;
+  int caret_height;
+  int caret_width;
+  int caret_x;
+  int caret_y;
+  int caret_pos;
+} EditboxUiSpec;
+
 void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
                           int fontsize, PromptState *state, EditboxPlace *out);
 
@@ -143,6 +154,10 @@ typedef struct {
 void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args);
 
 void editbox_build_spec(EditboxSpec *out, const EditboxInit *in);
+void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
+                             PromptState *state, const EditboxUiSpec *ui,
+                             int text_w, int cursor_x, int ascent, int descent,
+                             FontHandle font);
 int editbox_caret_y(int box_top, int ascent, int descent, int fontsize);
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                 int text_len, int cursor_x, int text_w,

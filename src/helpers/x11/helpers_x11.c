@@ -559,11 +559,15 @@ static ImgCacheSlot g_img_cache[IMG_CACHE_SLOTS];
 static unsigned long g_img_cache_tick = 0;
 static pthread_mutex_t img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 
+static void x11_release_pixmap_picture(Display *dpy, Pixmap pm, Picture pic) {
+  if (pic && dpy)
+    XRenderFreePicture(dpy, pic);
+  if (pm && dpy)
+    XFreePixmap(dpy, pm);
+}
+
 static void x11_img_slot_release(ImgCacheSlot *s) {
-  if (s->pic && s->dpy)
-    XRenderFreePicture(s->dpy, s->pic);
-  if (s->pm && s->dpy)
-    XFreePixmap(s->dpy, s->pm);
+  x11_release_pixmap_picture(s->dpy, s->pm, s->pic);
   s->pic = 0;
   s->pm = 0;
   s->dpy = NULL;
@@ -645,61 +649,72 @@ static void x11_img_cache_put(Display *dpy, const char *key, int w, int h,
 static pthread_mutex_t decode_mtx;
 static unsigned char *decode_locked(const char *path, int *out_w, int *out_h);
 
-static bool image_cache_store(Display *dpy, Drawable ref, Visual *vis,
-                              const char *path, int w, int h, Picture *out_pic) {
+bool x11_upload_argb(Display *dpy, Drawable ref, unsigned char *argb, int w,
+                     int h, Pixmap *out_pm, Picture *out_pic) {
+  if (!dpy || !argb || w <= 0 || h <= 0)
+    return false;
+  if (!ref)
+    ref = DefaultRootWindow(dpy);
+  Pixmap pm = XCreatePixmap(dpy, ref, w, h, 32);
+  if (!pm)
+    return false;
+  XImage img;
+  x11_init_argb_image(dpy, &img, argb, w, h, 0xff0000, 0x00ff00, 0x0000ff);
+  if (!XInitImage(&img)) {
+    XFreePixmap(dpy, pm);
+    return false;
+  }
+  GC gc = XCreateGC(dpy, pm, 0, NULL);
+  XPutImage(dpy, pm, gc, &img, 0, 0, 0, 0, w, h);
+  XFreeGC(dpy, gc);
+  Picture pic = XRenderCreatePicture(
+      dpy, pm, XRenderFindStandardFormat(dpy, PictStandardARGB32), 0, NULL);
+  if (!pic) {
+    XFreePixmap(dpy, pm);
+    return false;
+  }
+  if (out_pm)
+    *out_pm = pm;
+  if (out_pic)
+    *out_pic = pic;
+  return true;
+}
+
+static bool image_cache_store(Display *dpy, Drawable ref, const char *path,
+                              int w, int h, Picture *out_pic) {
   if (!dpy || !path || !path[0] || w <= 0 || h <= 0)
     return false;
   struct stat st;
   memset(&st, 0, sizeof(st));
   if (stat(path, &st) != 0)
     return false;
+  if (!ref)
+    ref = DefaultRootWindow(dpy);
   pthread_mutex_lock(&decode_mtx);
   unsigned char *argb = decode_locked(path, &w, &h);
   if (!argb) {
     pthread_mutex_unlock(&decode_mtx);
     return false;
   }
-  if (!vis)
-    vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
-  Pixmap pm = XCreatePixmap(dpy, ref, w, h, 32);
-  if (!pm) {
-    pthread_mutex_unlock(&decode_mtx);
-    return false;
-  }
-  XImage img;
-  x11_init_argb_image(dpy, &img, argb, w, h, vis->red_mask, vis->green_mask,
-                      vis->blue_mask);
-  bool uploaded = XInitImage(&img);
-  if (uploaded) {
-    GC gc = XCreateGC(dpy, pm, 0, NULL);
-    XPutImage(dpy, pm, gc, &img, 0, 0, 0, 0, w, h);
-    XFreeGC(dpy, gc);
-  }
+  Pixmap pm = 0;
+  Picture pic = 0;
+  bool uploaded = x11_upload_argb(dpy, ref, argb, w, h, &pm, &pic);
   pthread_mutex_unlock(&decode_mtx);
-  if (!uploaded) {
-    XFreePixmap(dpy, pm);
+  if (!uploaded)
     return false;
-  }
-  Picture pic = XRenderCreatePicture(
-      dpy, pm, XRenderFindStandardFormat(dpy, PictStandardARGB32), 0, NULL);
   pthread_mutex_lock(&img_cache_mtx);
-  if (pic) {
-    x11_img_cache_put(dpy, path, w, h, (long long)st.st_mtime,
-                      (long long)st.st_size, pm, pic);
-    if (out_pic)
-      *out_pic = pic;
-    return true;
-  }
-  pthread_mutex_unlock(&img_cache_mtx);
-  XFreePixmap(dpy, pm);
-  return false;
+  x11_img_cache_put(dpy, path, w, h, (long long)st.st_mtime,
+                    (long long)st.st_size, pm, pic);
+  if (out_pic)
+    *out_pic = pic;
+  return true;
 }
 
 bool x11_prewarm_image(Display *dpy, const char *path) {
   if (!dpy)
     return false;
   Picture pic = 0;
-  bool ok = image_cache_store(dpy, DefaultRootWindow(dpy), NULL, path,
+  bool ok = image_cache_store(dpy, DefaultRootWindow(dpy), path,
                               FontSize, FontSize, &pic);
   if (!ok)
     return false;
@@ -728,7 +743,7 @@ bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
     return ok;
   }
   pthread_mutex_unlock(&img_cache_mtx);
-  bool ok = image_cache_store(dpy, drw, vis, path, cw, ch, &cpic);
+  bool ok = image_cache_store(dpy, drw, path, cw, ch, &cpic);
   if (!ok) {
     return false;
   }
@@ -1744,10 +1759,7 @@ static unsigned long border_tick;
 static pthread_mutex_t border_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 static void border_slot_release(BorderSlot *s) {
-  if (s->pic && s->dpy)
-    XRenderFreePicture(s->dpy, s->pic);
-  if (s->pm && s->dpy)
-    XFreePixmap(s->dpy, s->pm);
+  x11_release_pixmap_picture(s->dpy, s->pm, s->pic);
   s->pic = 0;
   s->pm = 0;
   s->used = false;
@@ -1839,26 +1851,13 @@ static Picture border_slot_get_or_create(Display *dpy, int w, int h) {
       }
     }
   }
-  Pixmap pm = XCreatePixmap(dpy, DefaultRootWindow(dpy), w, h, 32);
+  Pixmap pm = 0;
   Picture pic = 0;
-  if (pm) {
-    XImage img;
-    x11_init_argb_image(dpy, &img, buf, w, h, 0xff0000, 0x00ff00, 0x0000ff);
-    if (XInitImage(&img)) {
-      GC gc = XCreateGC(dpy, pm, 0, NULL);
-      XPutImage(dpy, pm, gc, &img, 0, 0, 0, 0, w, h);
-      XFreeGC(dpy, gc);
-    } else {
-      XFreePixmap(dpy, pm);
-      pm = 0;
-    }
-  }
+  bool ok =
+      x11_upload_argb(dpy, DefaultRootWindow(dpy), buf, w, h, &pm, &pic);
   free(buf);
-  if (!pm)
+  if (!ok)
     return 0;
-  pic = XRenderCreatePicture(dpy, pm,
-                             XRenderFindStandardFormat(dpy, PictStandardARGB32),
-                             0, NULL);
   if (slot < 0)
     slot = 0;
   BorderSlot *s = &border_slots[slot];

@@ -9,7 +9,6 @@
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_input_state.h"
 #include "core/types/keys.h"
-#include "core/thread_registry.h"
 #include "platform/lib.h"
 #include "deps/log.h"
 
@@ -189,18 +188,56 @@ bool is_safe_process_name(const char *name) {
   return true;
 }
 
-void *http_async_worker(void *arg) {
-  HttpAsyncJob *job = (HttpAsyncJob *)arg;
-  if (!job)
-    return NULL;
-  char *body = Platform_HttpGet(job->url);
-  if (job->cb)
-    job->cb(body ? body : "", body != NULL, job->userdata);
-  free(body);
-  free(job->url);
-  thread_registry_finish(job);
-  free(job);
-  return NULL;
+bool lookup_ci_eq(const char *a, const char *b) {
+  for (;;) {
+    unsigned char ca = (unsigned char)*a, cb = (unsigned char)*b;
+    if (ca >= 'A' && ca <= 'Z')
+      ca += 32;
+    if (cb >= 'A' && cb <= 'Z')
+      cb += 32;
+    if (ca != cb)
+      return false;
+    if (ca == '\0')
+      return true;
+    a++;
+    b++;
+  }
+}
+
+char *lookup_first_line(char *out) {
+  char *start = out;
+  while (*start == ' ' || *start == '\t' || *start == '\r' ||
+         *start == '\n')
+    start++;
+  char *end = start;
+  while (*end && *end != '\r' && *end != '\n')
+    end++;
+  while (end > start && (end[-1] == ' ' || end[-1] == '\t'))
+    end--;
+  *end = '\0';
+  return start;
+}
+
+bool path_next_entry(const char **cursor, char sep, char *out,
+                     size_t out_cap) {
+  const char *p = cursor ? *cursor : NULL;
+  while (p && *p) {
+    const char *end = strchr(p, sep);
+    size_t len = end ? (size_t)(end - p) : strlen(p);
+    if (len > 0 && len < out_cap) {
+      memcpy(out, p, len);
+      out[len] = '\0';
+      *cursor = end ? end + 1 : NULL;
+      return true;
+    }
+    if (!end) {
+      *cursor = NULL;
+      return false;
+    }
+    p = end + 1;
+  }
+  *cursor = NULL;
+  return false;
 }
 
 bool owner_purge_inactive(const char *path_a, const char *path_b) {

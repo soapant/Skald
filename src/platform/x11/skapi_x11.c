@@ -262,10 +262,6 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
                        spec->fontsize, state, &place);
   int fs = place.fontsize;
   const char *buf = place.buf;
-  int x = place.x;
-  int y_raw = place.y_raw;
-  int w = place.w;
-  int h = place.h;
   int text_len = place.text_len;
   int cursor = place.cursor;
   FontHandle fh = spec->font;
@@ -289,33 +285,17 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     text_w = te.xOff;
   }
 
-  EditboxInit ebi;
-  EditboxInitFromSpec init_args = {.state = state,
-                                   .buf = buf,
-                                   .text_len = text_len,
-                                   .cursor = cursor,
-                                   .x = x,
-                                   .y = y_raw,
-                                   .w = w,
-                                   .h = h,
-                                   .cursor_x = cursor_x,
-                                   .text_w = text_w,
-                                   .ascent = xf ? xf->ascent : 0,
-                                   .descent = xf ? xf->descent : 0,
-                                   .fontsize = fs,
-                                   .font = fh,
-                                   .text_color = spec->color_text,
-                                   .bg_color = spec->color_bg,
-                                   .placeholder = spec->placeholder,
-                                   .caret_height = spec->caret_height,
-                                   .caret_width = spec->caret_width,
-                                   .caret_x = spec->caret_x,
-                                   .caret_y = spec->caret_y,
-                                   .caret_pos = spec->caret_pos};
-  editbox_init_from_spec(&ebi, &init_args);
-
+  EditboxUiSpec ui = {.color_text = spec->color_text,
+                      .color_bg = spec->color_bg,
+                      .placeholder = spec->placeholder,
+                      .caret_height = spec->caret_height,
+                      .caret_width = spec->caret_width,
+                      .caret_x = spec->caret_x,
+                      .caret_y = spec->caret_y,
+                      .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_build_spec(&eb, &ebi);
+  editbox_spec_from_place(&eb, &place, state, &ui, text_w, cursor_x,
+                          xf ? xf->ascent : 0, xf ? xf->descent : 0, fh);
   eb.measure = x11_editbox_measure;
   eb.measure_user = &metrics;
 
