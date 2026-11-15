@@ -558,7 +558,10 @@ static bool hypr_focused_monitor_geom(int *out_x, int *out_y, int *out_w,
     long rl = 0, rt = 0, rr = 0, rb = 0;
     const char *br = strchr(res, '[');
     if (br && sscanf(br, "[%ld,%ld,%ld,%ld]", &rl, &rt, &rr, &rb) == 4) {
-      x += rl; y += rt; w -= rl + rr; h -= rt + rb;
+      x += rl;
+      y += rt;
+      w -= rl + rr;
+      h -= rt + rb;
     }
   }
   free(block);
@@ -566,10 +569,12 @@ static bool hypr_focused_monitor_geom(int *out_x, int *out_y, int *out_w,
     log_error("hypr monitors no geometry for focused monitor");
     return false;
   }
-  *out_x = (int)x; *out_y = (int)y; *out_w = (int)w; *out_h = (int)h;
+  *out_x = (int)x;
+  *out_y = (int)y;
+  *out_w = (int)w;
+  *out_h = (int)h;
   return true;
 }
-
 
 static bool hypr_numeric_activewindow_field(const char *field, char *buffer,
                                             int buffer_size) {
@@ -746,9 +751,10 @@ static bool hypr_close_windows(const char *needle, bool by_id) {
     if (!v || v[0] == '\0' || !string_contains_ci(v, needle))
       continue;
     char cmd[256];
-    snprintf(cmd, sizeof(cmd),
-             "hyprctl dispatch 'hl.dsp.window.close({ window = \"address:%s\" })'",
-             address);
+    snprintf(
+        cmd, sizeof(cmd),
+        "hyprctl dispatch 'hl.dsp.window.close({ window = \"address:%s\" })'",
+        address);
     if (hypr_exec(cmd))
       closed++;
   }

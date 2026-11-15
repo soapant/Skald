@@ -837,9 +837,7 @@ static char *x11_icon_try_sizes(const char *bare, const char *dir,
   return NULL;
 }
 
-char *Platform_GetActiveWindowId(void) {
-  return wm_get_active_window_id();
-}
+char *Platform_GetActiveWindowId(void) { return wm_get_active_window_id(); }
 
 bool Platform_PrewarmImage(char *path) {
   extern bool x11_prewarm_image(Display * dpy, const char *path);

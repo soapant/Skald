@@ -301,7 +301,7 @@ static bool x11_compiler_probe(const char *cc) {
 static const char *x11_compiler_found(void) {
   static const char *cc = NULL;
   if (!cc) {
-    const char *candidates[] = {"gcc","clang","cc", NULL};
+    const char *candidates[] = {"gcc", "clang", "cc", NULL};
     cc = compiler_find_usable(candidates, x11_compiler_probe);
   }
   return cc;
