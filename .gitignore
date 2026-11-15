@@ -9,7 +9,7 @@ skald.service
 compile_commands.json
 release/
 icon.svg
-features/
+features/*
 !features/control_center
 !features/settings
 !features/clipboard_history
