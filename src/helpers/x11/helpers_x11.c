@@ -452,14 +452,6 @@ void x11_init_argb_image(Display *dpy, XImage *img, unsigned char *data, int w,
   img->obdata = NULL;
 }
 
-void x11_xft_alloc_color(Display *dpy, Visual *vis, Colormap cmap,
-                         unsigned long hex, unsigned short alpha,
-                         XftColor *out) {
-  XRenderColor rc = {((hex >> 16) & 0xFF) * 0x101, ((hex >> 8) & 0xFF) * 0x101,
-                     (hex & 0xFF) * 0x101, alpha};
-  XftColorAllocValue(dpy, vis, cmap, &rc, out);
-}
-
 #define XFT_COLOR_CACHE_SLOTS 64
 
 typedef struct {
