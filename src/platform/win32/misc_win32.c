@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include "platform/platform.h"
 #include "helpers/win32/raw_default_apps_win32.h"
+#include "helpers/helpers_misc.h"
 #include <time.h>
 
 bool Platform_MkdirIfNotExists(const char *path) {
@@ -340,21 +341,10 @@ static bool win32_compiler_probe(const char *cc) {
 }
 
 static const char *win32_compiler_found(void) {
-  static char *cc = NULL;
+  static const char *cc = NULL;
   if (!cc) {
     const char *candidates[] = {"clang", "gcc", NULL};
-    for (size_t i = 0; candidates[i] && !cc; i++) {
-      char *found = Platform_FindExecutable(candidates[i]);
-      if (!found)
-        continue;
-      if (win32_compiler_probe(found)) {
-        cc = found;
-        log_info("feature builds will use compiler: %s", cc);
-      } else {
-        log_warn("skipping unusable compiler for feature builds: %s", found);
-        free(found);
-      }
-    }
+    cc = compiler_find_usable(candidates, win32_compiler_probe);
   }
   return cc;
 }
@@ -364,11 +354,7 @@ bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
   const char *cc = win32_compiler_found();
   if (!cc || argv_cap < 30)
     return false;
-  size_t n = 0;
-  argv[n++] = cc;
-  argv[n++] = "-std=gnu17";
-  argv[n++] = "-I";
-  argv[n++] = "build/sdk";
+  size_t n = compiler_argv_base(cc, argv);
   argv[n++] = "-pipe";
   argv[n++] = "-shared";
   argv[n++] = "-o";

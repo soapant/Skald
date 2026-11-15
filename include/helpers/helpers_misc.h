@@ -8,5 +8,8 @@ bool is_safe_process_name(const char *name);
 bool lookup_ci_eq(const char *a, const char *b);
 char *lookup_first_line(char *out);
 bool path_next_entry(const char **cursor, char sep, char *out, size_t out_cap);
+const char *compiler_find_usable(const char *const candidates[],
+                                 bool (*probe)(const char *));
+size_t compiler_argv_base(const char *cc, const char *argv[]);
 
 #endif

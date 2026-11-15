@@ -9,6 +9,7 @@
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_input_state.h"
 #include "core/types/keys.h"
+#include "platform/platform.h"
 #include "platform/lib.h"
 #include "deps/log.h"
 
@@ -83,6 +84,31 @@ bool monitor_info(int index, MonitorInfo *out) {
   out->is_primary = mon[index].is_primary;
   snprintf(out->name, sizeof(out->name), "%s", mon[index].name);
   return true;
+}
+
+const char *compiler_find_usable(const char *const candidates[],
+                                 bool (*probe)(const char *)) {
+  for (size_t i = 0; candidates[i]; i++) {
+    char *found = Platform_FindExecutable(candidates[i]);
+    if (!found)
+      continue;
+    if (probe(found)) {
+      log_info("feature builds will use compiler: %s", found);
+      return found;
+    }
+    log_warn("skipping unusable compiler for feature builds: %s", found);
+    free(found);
+  }
+  return NULL;
+}
+
+size_t compiler_argv_base(const char *cc, const char *argv[]) {
+  size_t n = 0;
+  argv[n++] = cc;
+  argv[n++] = "-std=gnu17";
+  argv[n++] = "-I";
+  argv[n++] = "build/sdk";
+  return n;
 }
 
 bool key_is_ctrl_pressed(void) {
