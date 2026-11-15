@@ -1,11 +1,12 @@
 # Skald
 
+<p align="center">
+  <img src="images/cc_neon_green.png" width="800"
+       alt="Skald's control center with Neon Green Theme">
+</p>
+
 > A native, lightning-fast control center that so happens to have a launcher for Linux and Windows.
 
-<p align="center">
-  <img src="images/cc_modus_vivendi.png" width="800"
-       alt="Skald's control center with Modus Vivendi">
-</p>
 
 Skald is a native system control center.  Skald is written entirely in C. It boots instantly, uses virtually no RAM,and talks directly to your window manager and its not just a Launcher you can do much more.
 
