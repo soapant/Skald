@@ -5,21 +5,21 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CFG_TOML_LINE_MAX 2048
+#define CONFIG_TOML_LINE_MAX 2048
 
-static const char *cfg_trim(const char *s) {
+static const char *config_trim(const char *s) {
   while (*s && isspace((unsigned char)*s))
     s++;
   return s;
 }
 
-static size_t cfg_trim_end_len(const char *s, size_t len) {
+static size_t config_trim_end_len(const char *s, size_t len) {
   while (len > 0 && isspace((unsigned char)s[len - 1]))
     len--;
   return len;
 }
 
-static bool cfg_is_bare_key(const char *s) {
+static bool config_is_bare_key(const char *s) {
   if (!s || !s[0])
     return false;
   for (const char *p = s; *p; p++) {
@@ -30,7 +30,8 @@ static bool cfg_is_bare_key(const char *s) {
   return true;
 }
 
-static size_t cfg_strip_comment(const char *line, char *out, size_t out_cap) {
+static size_t config_strip_comment(const char *line, char *out,
+                                   size_t out_cap) {
   bool in_string = false;
   size_t o = 0;
   for (size_t i = 0; line[i] && o + 1 < out_cap; i++) {
@@ -60,18 +61,18 @@ static size_t cfg_strip_comment(const char *line, char *out, size_t out_cap) {
   return o;
 }
 
-static bool cfg_classify(const char *raw, size_t raw_len,
-                         CfgTomlValueType *out_type) {
+static bool config_classify(const char *raw, size_t raw_len,
+                            ConfigTomlValueType *out_type) {
   if (raw_len == 4 && !memcmp(raw, "true", 4)) {
-    *out_type = CFG_TOML_BOOL;
+    *out_type = CONFIG_TOML_BOOL;
     return true;
   }
   if (raw_len == 5 && !memcmp(raw, "false", 5)) {
-    *out_type = CFG_TOML_BOOL;
+    *out_type = CONFIG_TOML_BOOL;
     return true;
   }
   if (raw_len >= 2 && raw[0] == '"' && raw[raw_len - 1] == '"') {
-    *out_type = CFG_TOML_STRING;
+    *out_type = CONFIG_TOML_STRING;
     return true;
   }
   {
@@ -84,7 +85,7 @@ static bool cfg_classify(const char *raw, size_t raw_len,
       if (!isdigit((unsigned char)raw[i]))
         break;
     if (i == raw_len && i > 0) {
-      *out_type = CFG_TOML_INT;
+      *out_type = CONFIG_TOML_INT;
       return true;
     }
   }
@@ -103,53 +104,53 @@ static bool cfg_classify(const char *raw, size_t raw_len,
         return false;
     }
     if (saw_digit && saw_dot) {
-      *out_type = CFG_TOML_FLOAT;
+      *out_type = CONFIG_TOML_FLOAT;
       return true;
     }
   }
   return false;
 }
 
-CfgTomlStatus cfg_toml_parse(const char *path, CfgTomlVisitFn visit,
-                             void *user) {
+ConfigTomlStatus config_toml_parse(const char *path, ConfigTomlVisitFn visit,
+                                   void *user) {
   if (!path || !visit)
-    return CFG_TOML_ERR_IO;
+    return CONFIG_TOML_ERR_IO;
   FILE *f = fopen(path, "rb");
   if (!f)
-    return CFG_TOML_ERR_IO;
+    return CONFIG_TOML_ERR_IO;
 
-  CfgTomlStatus status = CFG_TOML_OK;
+  ConfigTomlStatus status = CONFIG_TOML_OK;
   char section[32] = "";
-  char line_buf[CFG_TOML_LINE_MAX];
+  char line_buf[CONFIG_TOML_LINE_MAX];
 
   while (fgets(line_buf, sizeof(line_buf), f)) {
     char *nl = strchr(line_buf, '\n');
     if (nl)
       *nl = '\0';
 
-    char stripped[CFG_TOML_LINE_MAX];
-    cfg_strip_comment(line_buf, stripped, sizeof(stripped));
-    const char *s = cfg_trim(stripped);
-    size_t s_len = cfg_trim_end_len(s, strlen(s));
+    char stripped[CONFIG_TOML_LINE_MAX];
+    config_strip_comment(line_buf, stripped, sizeof(stripped));
+    const char *s = config_trim(stripped);
+    size_t s_len = config_trim_end_len(s, strlen(s));
 
     if (s_len == 0)
       continue;
 
     if (s[0] == '[') {
       if (s[s_len - 1] != ']' || s_len < 3) {
-        status = CFG_TOML_ERR_PARSE;
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
       size_t tlen = s_len - 2;
       if (tlen >= sizeof(section)) {
-        status = CFG_TOML_ERR_PARSE;
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
       char tbuf[32];
       memcpy(tbuf, s + 1, tlen);
       tbuf[tlen] = '\0';
-      if (!cfg_is_bare_key(tbuf)) {
-        status = CFG_TOML_ERR_PARSE;
+      if (!config_is_bare_key(tbuf)) {
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
       memcpy(section, tbuf, tlen + 1);
@@ -159,43 +160,43 @@ CfgTomlStatus cfg_toml_parse(const char *path, CfgTomlVisitFn visit,
     {
       const char *eq = memchr(s, '=', s_len);
       if (!eq) {
-        status = CFG_TOML_ERR_PARSE;
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
-      size_t klen = cfg_trim_end_len(s, (size_t)(eq - s));
+      size_t klen = config_trim_end_len(s, (size_t)(eq - s));
       char keybuf[96];
       if (klen == 0 || klen >= sizeof(keybuf)) {
-        status = CFG_TOML_ERR_PARSE;
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
       memcpy(keybuf, s, klen);
       keybuf[klen] = '\0';
-      if (!cfg_is_bare_key(keybuf)) {
-        status = CFG_TOML_ERR_PARSE;
+      if (!config_is_bare_key(keybuf)) {
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
 
-      const char *vs = cfg_trim(eq + 1);
-      size_t vlen = cfg_trim_end_len(vs, strlen(vs));
+      const char *vs = config_trim(eq + 1);
+      size_t vlen = config_trim_end_len(vs, strlen(vs));
       char raw[1024];
       if (vlen == 0 || vlen >= sizeof(raw)) {
-        status = CFG_TOML_ERR_PARSE;
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
       memcpy(raw, vs, vlen);
       raw[vlen] = '\0';
 
-      CfgTomlEntry entry;
+      ConfigTomlEntry entry;
       memset(&entry, 0, sizeof(entry));
       memcpy(entry.section, section, strlen(section) + 1);
       memcpy(entry.key, keybuf, strlen(keybuf) + 1);
       memcpy(entry.raw, raw, strlen(raw) + 1);
-      if (!cfg_classify(raw, vlen, &entry.type)) {
-        status = CFG_TOML_ERR_PARSE;
+      if (!config_classify(raw, vlen, &entry.type)) {
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
       if (!visit(&entry, user)) {
-        status = CFG_TOML_ERR_PARSE;
+        status = CONFIG_TOML_ERR_PARSE;
         goto out;
       }
     }
@@ -206,7 +207,7 @@ out:
   return status;
 }
 
-bool cfg_toml_decode_string(const char *raw, char *out, size_t out_cap) {
+bool config_toml_decode_string(const char *raw, char *out, size_t out_cap) {
   if (!raw || !out || out_cap == 0)
     return false;
   size_t len = strlen(raw);
@@ -246,7 +247,7 @@ bool cfg_toml_decode_string(const char *raw, char *out, size_t out_cap) {
   return true;
 }
 
-bool cfg_toml_encode_string(const char *src, char *out, size_t out_cap) {
+bool config_toml_encode_string(const char *src, char *out, size_t out_cap) {
   if (!out || out_cap < 3)
     return false;
   size_t o = 0;
@@ -289,7 +290,7 @@ bool cfg_toml_encode_string(const char *src, char *out, size_t out_cap) {
   return true;
 }
 
-bool cfg_toml_color_ref(const char *body, ColorRef *out) {
+bool config_toml_color_ref(const char *body, ColorRef *out) {
   size_t n = strlen(body);
   if (n > 0 && body[0] == '#') {
     body++;

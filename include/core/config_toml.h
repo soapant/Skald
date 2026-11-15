@@ -7,34 +7,34 @@
 #include "core/types/color.h"
 
 typedef enum {
-  CFG_TOML_BOOL,
-  CFG_TOML_INT,
-  CFG_TOML_FLOAT,
-  CFG_TOML_STRING,
-} CfgTomlValueType;
+  CONFIG_TOML_BOOL,
+  CONFIG_TOML_INT,
+  CONFIG_TOML_FLOAT,
+  CONFIG_TOML_STRING,
+} ConfigTomlValueType;
 
 typedef struct {
   char section[32];
   char key[96];
-  CfgTomlValueType type;
+  ConfigTomlValueType type;
   char raw[1024];
-} CfgTomlEntry;
+} ConfigTomlEntry;
 
 typedef enum {
-  CFG_TOML_OK = 0,
-  CFG_TOML_ERR_IO,
-  CFG_TOML_ERR_PARSE,
-} CfgTomlStatus;
+  CONFIG_TOML_OK = 0,
+  CONFIG_TOML_ERR_IO,
+  CONFIG_TOML_ERR_PARSE,
+} ConfigTomlStatus;
 
-typedef bool (*CfgTomlVisitFn)(const CfgTomlEntry *entry, void *user);
+typedef bool (*ConfigTomlVisitFn)(const ConfigTomlEntry *entry, void *user);
 
-CfgTomlStatus cfg_toml_parse(const char *path, CfgTomlVisitFn visit,
-                             void *user);
+ConfigTomlStatus config_toml_parse(const char *path, ConfigTomlVisitFn visit,
+                                   void *user);
 
-bool cfg_toml_decode_string(const char *raw, char *out, size_t out_cap);
+bool config_toml_decode_string(const char *raw, char *out, size_t out_cap);
 
-bool cfg_toml_encode_string(const char *src, char *out, size_t out_cap);
+bool config_toml_encode_string(const char *src, char *out, size_t out_cap);
 
-bool cfg_toml_color_ref(const char *body, ColorRef *out);
+bool config_toml_color_ref(const char *body, ColorRef *out);
 
 #endif

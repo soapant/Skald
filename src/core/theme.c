@@ -83,7 +83,7 @@ static bool pin_lookup(const char *name, ColorRef *out) {
   return false;
 }
 
-static bool theme_pin_visit(const CfgTomlEntry *e, void *user) {
+static bool theme_pin_visit(const ConfigTomlEntry *e, void *user) {
   (void)user;
   if (strcmp(e->section, "color") != 0)
     return true;
@@ -96,10 +96,10 @@ static bool theme_pin_visit(const CfgTomlEntry *e, void *user) {
   if (!known)
     return true;
   char body[1024];
-  if (!cfg_toml_decode_string(e->raw, body, sizeof(body)))
+  if (!config_toml_decode_string(e->raw, body, sizeof(body)))
     return true;
   ColorRef v;
-  if (!cfg_toml_color_ref(body, &v))
+  if (!config_toml_color_ref(body, &v))
     return true;
   char name[64];
   if (strlen(e->key) + 7 > sizeof(name))
@@ -114,8 +114,8 @@ bool theme_pin_scan_file(const char *path) {
   theme_pinned_count = 0;
   if (!path || !path[0])
     return false;
-  CfgTomlStatus st = cfg_toml_parse(path, theme_pin_visit, NULL);
-  return st == CFG_TOML_OK;
+  ConfigTomlStatus st = config_toml_parse(path, theme_pin_visit, NULL);
+  return st == CONFIG_TOML_OK;
 }
 
 void theme_reset_pinned(void) {
