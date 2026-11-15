@@ -342,13 +342,13 @@ bool hotkey_is_taken(int vk_code, int modifiers) {
 bool hotkey_register_internal(HotkeyBinding binding) {
   char owner[OWNER_PATH_MAX];
   owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_callback, owner,
-                       sizeof(owner));
+                         sizeof(owner));
   if (!owner[0])
     owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_callback_ud, owner,
-                         sizeof(owner));
+                           sizeof(owner));
   if (!owner[0])
     owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_condition, owner,
-                         sizeof(owner));
+                           sizeof(owner));
   snprintf(binding.owner, sizeof(binding.owner), "%s", owner);
 
   for (int i = 0; i < hotkey_total; i++) {
@@ -515,11 +515,11 @@ bool hotkey_process(int vk_code, int modifiers) {
     char buf[2556];
     char hotkey_buf[2422];
     hotkey_string_format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},
-                        hotkey_buf, sizeof(hotkey_buf));
+                         hotkey_buf, sizeof(hotkey_buf));
     if (MessageAfterEachHotkey) {
       snprintf(buf, sizeof(buf), "Ran Hotkey %s", hotkey_buf);
       display_message_slot(buf, BOTTOM_CENTER, 400, 400, 20, TimeOutForMessages,
-                         COLOR_TEXT, NULL, NULL);
+                           COLOR_TEXT, NULL, NULL);
     }
     log_info("hotkey_process Hotkey %s Matches", hotkey_buf);
     if (b->hold)

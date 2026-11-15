@@ -250,7 +250,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     short delta = (short)HIWORD(wParam);
     int rows = (delta > 0) ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS;
     listbox_publish_mouse_pos((short)(lParam & 0xFFFF),
-                            (short)((lParam >> 16) & 0xFFFF));
+                              (short)((lParam >> 16) & 0xFFFF));
     listbox_queue_scroll(rows);
     InvalidateRect(hwnd, NULL, FALSE);
     return 0;
@@ -490,7 +490,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (lb && lb->selected_index != -1) {
         char measureBuffer[512];
-        safe_copy(measureBuffer, sizeof(measureBuffer), lb->items[pdis->itemID]);
+        safe_copy(measureBuffer, sizeof(measureBuffer),
+                  lb->items[pdis->itemID]);
         char *pos = strchr(measureBuffer, '|');
         if (pos) {
           *pos = '\0';
@@ -527,10 +528,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           orig_cnt = lb->item_count;
         }
         item_get_colors((PlGetItemColorsSpec){.idx = orig_idx,
-                                             .count = orig_cnt,
-                                             .num_color = &ncol,
-                                             .body_color = &bcol,
-                                             .plain_color = &pcol});
+                                              .count = orig_cnt,
+                                              .num_color = &ncol,
+                                              .body_color = &bcol,
+                                              .plain_color = &pcol});
         SetTextColor(pdis->hDC, ncol);
         DrawTextA(pdis->hDC, textBuffer, -1, &textRect,
                   DT_SINGLELINE | DT_VCENTER);
@@ -618,7 +619,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           int row_height = prompt_row_height();
           int count = estate->lb->item_count;
           int visible_count =
-              (rect.bottom - prompt_list_bottom_margin() - list_top) / row_height;
+              (rect.bottom - prompt_list_bottom_margin() - list_top) /
+              row_height;
           int view_offset = estate->lb->view_offset;
 
           pl_draw_state_get()->win32_listbox_surface = true;
@@ -637,15 +639,15 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
               continue;
 
             unsigned long ncol = rgb_to_hex(COLOR_TEXT),
-                        bcol = rgb_to_hex(COLOR_TEXT),
-                        pcol = rgb_to_hex(COLOR_TEXT);
+                          bcol = rgb_to_hex(COLOR_TEXT),
+                          pcol = rgb_to_hex(COLOR_TEXT);
             int orig_idx = estate->lb->matching_indices[list_idx];
             int orig_cnt = estate->lb->item_count;
             item_get_colors((PlGetItemColorsSpec){.idx = orig_idx,
-                                                 .count = orig_cnt,
-                                                 .num_color = &ncol,
-                                                 .body_color = &bcol,
-                                                 .plain_color = &pcol});
+                                                  .count = orig_cnt,
+                                                  .num_color = &ncol,
+                                                  .body_color = &bcol,
+                                                  .plain_color = &pcol});
 
             int row_h_scroll = (list_idx == estate->lb->selected_index)
                                    ? estate->lb->text_hscroll

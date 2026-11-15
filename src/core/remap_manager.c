@@ -428,7 +428,7 @@ bool remap_handle_vk(int vk_code, int value) {
     if (remaps[i].window_count > 0)
       allowed[i] =
           window_list_allows(remaps[i].window_count, remaps[i].whitelist,
-                            remaps[i].windows, title);
+                             remaps[i].windows, title);
   }
 
   for (int i = 0; i < remap_count; i++) {

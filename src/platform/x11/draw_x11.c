@@ -78,7 +78,8 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     draw_measure_track(bx, y, tw, th);
   }
   XftColor col;
-  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF,
+                       &col);
   if (string_contains_ci(a, "CENTER") || string_contains_ci(a, "LEFT") ||
       string_contains_ci(a, "RIGHT")) {
     int box = 0;
@@ -140,7 +141,8 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   unsigned long color =
       spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
   XftColor col;
-  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF,
+                       &col);
   x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf,
                          spec.text, spec.len,
                          spec.fontsize > 0 ? spec.fontsize : FontSize);
@@ -152,10 +154,10 @@ void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                         int text_x, const char *icon_path) {
   unsigned long ncol, bcol, pcol;
   item_get_colors((PlGetItemColorsSpec){.idx = idx,
-                                       .count = lb->item_count,
-                                       .num_color = &ncol,
-                                       .body_color = &bcol,
-                                       .plain_color = &pcol});
+                                        .count = lb->item_count,
+                                        .num_color = &ncol,
+                                        .body_color = &bcol,
+                                        .plain_color = &pcol});
   XftColor ncolor, bcolor, pcolor;
   x11_xft_color_cached(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
   x11_xft_color_cached(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
@@ -164,8 +166,9 @@ void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                              (char *)icon_path, idx, y);
 }
 
-void x11_draw_edit_background(const PromptState *state, Display *dpy, XftDraw *xd,
-                              Visual *vis, Colormap cmap, FontHandle font) {
+void x11_draw_edit_background(const PromptState *state, Display *dpy,
+                              XftDraw *xd, Visual *vis, Colormap cmap,
+                              FontHandle font) {
   x11_set_draw_context(dpy, xd, vis, cmap);
   if (WindowTitleText)
     Platform_DrawTextRaw(
@@ -254,7 +257,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     } else {
       XftColor col;
       x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
-                          target_alpha, &col);
+                           target_alpha, &col);
       XftDrawRect(g_draw_xd, &col, x, y, w, h);
     }
     return true;
@@ -267,7 +270,7 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   }
   XftColor col;
   x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, target_alpha,
-                      &col);
+                       &col);
   XSetForeground(g_draw_dpy, gc, col.pixel);
   XSetLineAttributes(g_draw_dpy, gc, t, LineSolid, CapButt, JoinMiter);
   if (want_round) {
@@ -294,13 +297,12 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   } else {
     XftColor border_col;
     x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
-                        target_alpha, &border_col);
+                         target_alpha, &border_col);
 
     XftDrawRect(g_draw_xd, &border_col, x, y, w, t);
     XftDrawRect(g_draw_xd, &border_col, x, y + h - t, w, t);
     XftDrawRect(g_draw_xd, &border_col, x, y, t, h);
     XftDrawRect(g_draw_xd, &border_col, x + w - t, y, t, h);
-
   }
   return true;
 }
@@ -310,7 +312,7 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
     return false;
   int x1, y1, x2, y2;
   int t = draw_line_prep(&spec, pl_draw_state_get()->off_x,
-                       pl_draw_state_get()->off_y, &x1, &y1, &x2, &y2);
+                         pl_draw_state_get()->off_y, &x1, &y1, &x2, &y2);
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;
@@ -324,7 +326,7 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
     return false;
   int cx, cy;
   int t = draw_circle_prep(&spec, pl_draw_state_get()->off_x,
-                         pl_draw_state_get()->off_y, &cx, &cy);
+                           pl_draw_state_get()->off_y, &cx, &cy);
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;

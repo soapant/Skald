@@ -1224,9 +1224,9 @@ static void win32_http_buf_init(HttpBuf *buf, size_t limit) {
 
 static void win32_http_buf_init(HttpBuf *buf, size_t limit);
 static int win32_http_perform(const char *url, const char *method,
-                                 const char *headers, const char *body,
-                                 HttpBuf *resp_buf, FILE *file_out,
-                                 long max_redirects);
+                              const char *headers, const char *body,
+                              HttpBuf *resp_buf, FILE *file_out,
+                              long max_redirects);
 
 char *Platform_HttpCollect(const char *url, const char *method,
                            const char *content_type, const char *body,
@@ -1234,7 +1234,7 @@ char *Platform_HttpCollect(const char *url, const char *method,
   HttpBuf buf;
   win32_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
   int ok = win32_http_perform(url, method, content_type, body, &buf, NULL,
-                                 HTTP_MAX_REDIRECTS);
+                              HTTP_MAX_REDIRECTS);
   if (out_len)
     *out_len = buf.len;
   if (ok < 200 || ok >= 300) {
@@ -1247,9 +1247,9 @@ char *Platform_HttpCollect(const char *url, const char *method,
 }
 
 static int win32_http_perform(const char *url, const char *method,
-                                 const char *headers, const char *body,
-                                 HttpBuf *resp_buf, FILE *file_out,
-                                 long max_redirects) {
+                              const char *headers, const char *body,
+                              HttpBuf *resp_buf, FILE *file_out,
+                              long max_redirects) {
   if (!url || !url[0])
     return 0;
 
@@ -1264,153 +1264,152 @@ static int win32_http_perform(const char *url, const char *method,
   if (!hSession)
     return 0;
 
-redirect_loop:
-  {
-    URL_COMPONENTS urlComp;
-    ZeroMemory(&urlComp, sizeof(urlComp));
-    urlComp.dwStructSize = sizeof(urlComp);
+redirect_loop: {
+  URL_COMPONENTS urlComp;
+  ZeroMemory(&urlComp, sizeof(urlComp));
+  urlComp.dwStructSize = sizeof(urlComp);
 
-    wchar_t szHostName[256];
-    wchar_t szUrlPath[2048];
+  wchar_t szHostName[256];
+  wchar_t szUrlPath[2048];
 
-    urlComp.lpszHostName = szHostName;
-    urlComp.dwHostNameLength = ARRAYSIZE(szHostName);
-    urlComp.lpszUrlPath = szUrlPath;
-    urlComp.dwUrlPathLength = ARRAYSIZE(szUrlPath);
+  urlComp.lpszHostName = szHostName;
+  urlComp.dwHostNameLength = ARRAYSIZE(szHostName);
+  urlComp.lpszUrlPath = szUrlPath;
+  urlComp.dwUrlPathLength = ARRAYSIZE(szUrlPath);
 
-    wchar_t wUrl[L_MAX_URL_LENGTH];
-    if (MultiByteToWideChar(CP_UTF8, 0, current_url, -1, wUrl,
-                            ARRAYSIZE(wUrl)) <= 0) {
-      log_error("MultiByteToWideChar failed for url (len=%d)",
-                (int)strlen(current_url));
-      WinHttpCloseHandle(hSession);
-      return 0;
-    }
+  wchar_t wUrl[L_MAX_URL_LENGTH];
+  if (MultiByteToWideChar(CP_UTF8, 0, current_url, -1, wUrl, ARRAYSIZE(wUrl)) <=
+      0) {
+    log_error("MultiByteToWideChar failed for url (len=%d)",
+              (int)strlen(current_url));
+    WinHttpCloseHandle(hSession);
+    return 0;
+  }
 
-    if (!WinHttpCrackUrl(wUrl, (DWORD)wcslen(wUrl), 0, &urlComp)) {
-      WinHttpCloseHandle(hSession);
-      return 0;
-    }
+  if (!WinHttpCrackUrl(wUrl, (DWORD)wcslen(wUrl), 0, &urlComp)) {
+    WinHttpCloseHandle(hSession);
+    return 0;
+  }
 
-    if (hConnect)
-      WinHttpCloseHandle(hConnect);
-    hConnect = WinHttpConnect(hSession, urlComp.lpszHostName, urlComp.nPort, 0);
-    if (!hConnect) {
-      WinHttpCloseHandle(hSession);
-      return 0;
-    }
+  if (hConnect)
+    WinHttpCloseHandle(hConnect);
+  hConnect = WinHttpConnect(hSession, urlComp.lpszHostName, urlComp.nPort, 0);
+  if (!hConnect) {
+    WinHttpCloseHandle(hSession);
+    return 0;
+  }
 
-    DWORD dwFlags =
-        (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
+  DWORD dwFlags =
+      (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
 
-    wchar_t wMethod[32];
-    MultiByteToWideChar(CP_UTF8, 0, method ? method : "GET", -1, wMethod,
-                        ARRAYSIZE(wMethod));
+  wchar_t wMethod[32];
+  MultiByteToWideChar(CP_UTF8, 0, method ? method : "GET", -1, wMethod,
+                      ARRAYSIZE(wMethod));
 
-    if (hRequest)
-      WinHttpCloseHandle(hRequest);
-    hRequest = WinHttpOpenRequest(hConnect, wMethod, urlComp.lpszUrlPath, NULL,
-                                  WINHTTP_NO_REFERER,
-                                  WINHTTP_DEFAULT_ACCEPT_TYPES, dwFlags);
-    if (!hRequest) {
-      WinHttpCloseHandle(hConnect);
-      WinHttpCloseHandle(hSession);
-      return 0;
-    }
+  if (hRequest)
+    WinHttpCloseHandle(hRequest);
+  hRequest = WinHttpOpenRequest(hConnect, wMethod, urlComp.lpszUrlPath, NULL,
+                                WINHTTP_NO_REFERER,
+                                WINHTTP_DEFAULT_ACCEPT_TYPES, dwFlags);
+  if (!hRequest) {
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return 0;
+  }
 
-    wchar_t *wHeaders = NULL;
-    DWORD wHeadersLen = 0;
-    if (headers && headers[0]) {
-      int len = MultiByteToWideChar(CP_UTF8, 0, headers, -1, NULL, 0);
-      wHeaders = (wchar_t *)malloc(len * sizeof(wchar_t));
-      if (wHeaders) {
-        MultiByteToWideChar(CP_UTF8, 0, headers, -1, wHeaders, len);
-        wHeadersLen = (DWORD)(len - 1);
-      }
-    }
-
-    DWORD bodyLen = body ? (DWORD)strlen(body) : 0;
-    BOOL bResults = WinHttpSendRequest(
-        hRequest, wHeaders, wHeadersLen,
-        (LPVOID)(bodyLen > 0 ? body : WINHTTP_NO_REQUEST_DATA), bodyLen,
-        bodyLen, 0);
-    if (wHeaders)
-      free(wHeaders);
-
-    if (!bResults || !WinHttpReceiveResponse(hRequest, NULL)) {
-      WinHttpCloseHandle(hRequest);
-      WinHttpCloseHandle(hConnect);
-      WinHttpCloseHandle(hSession);
-      return 0;
-    }
-
-    DWORD dwStatusCode = 0;
-    DWORD dwSize = sizeof(dwStatusCode);
-    WinHttpQueryHeaders(hRequest,
-                        WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-                        WINHTTP_HEADER_NAME_BY_INDEX, &dwStatusCode, &dwSize,
-                        WINHTTP_NO_HEADER_INDEX);
-    status_code = (int)dwStatusCode;
-
-    if ((status_code == 301 || status_code == 302 || status_code == 303 ||
-         status_code == 307 || status_code == 308) &&
-        redirects_followed < max_redirects) {
-
-      wchar_t szLocation[L_MAX_URL_LENGTH];
-      DWORD dwLocSize = sizeof(szLocation);
-      if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_LOCATION,
-                              WINHTTP_HEADER_NAME_BY_INDEX, szLocation,
-                              &dwLocSize, WINHTTP_NO_HEADER_INDEX)) {
-        WideCharToMultiByte(CP_UTF8, 0, szLocation, -1, current_url,
-                            sizeof(current_url), NULL, NULL);
-        redirects_followed++;
-        if (status_code == 303 || ((status_code == 301 || status_code == 302) &&
-                                   strcmp(method, "POST") == 0)) {
-          method = "GET";
-          body = NULL;
-        }
-        goto redirect_loop;
-      }
-    }
-
-    while (TRUE) {
-      DWORD dwSizeAvailable = 0;
-      if (!WinHttpQueryDataAvailable(hRequest, &dwSizeAvailable) ||
-          dwSizeAvailable == 0) {
-        break;
-      }
-
-      LPSTR pszOutBuffer = (LPSTR)malloc(dwSizeAvailable + 1);
-      if (!pszOutBuffer)
-        break;
-
-      ZeroMemory(pszOutBuffer, dwSizeAvailable + 1);
-      DWORD dwRead = 0;
-      if (WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSizeAvailable,
-                          &dwRead) &&
-          dwRead > 0) {
-        if (file_out) {
-          fwrite(pszOutBuffer, 1, dwRead, file_out);
-        } else if (resp_buf) {
-          size_t space_left = resp_buf->limit > resp_buf->len
-                                  ? resp_buf->limit - resp_buf->len
-                                  : 0;
-          if (dwRead > space_left) {
-            resp_buf->overflow = true;
-            dwRead = (DWORD)space_left;
-          }
-          if (dwRead > 0) {
-            memcpy(resp_buf->buf + resp_buf->len, pszOutBuffer, dwRead);
-            resp_buf->len += dwRead;
-            resp_buf->buf[resp_buf->len] = '\0';
-          }
-        }
-      }
-      free(pszOutBuffer);
-      if (resp_buf && resp_buf->overflow)
-        break;
+  wchar_t *wHeaders = NULL;
+  DWORD wHeadersLen = 0;
+  if (headers && headers[0]) {
+    int len = MultiByteToWideChar(CP_UTF8, 0, headers, -1, NULL, 0);
+    wHeaders = (wchar_t *)malloc(len * sizeof(wchar_t));
+    if (wHeaders) {
+      MultiByteToWideChar(CP_UTF8, 0, headers, -1, wHeaders, len);
+      wHeadersLen = (DWORD)(len - 1);
     }
   }
+
+  DWORD bodyLen = body ? (DWORD)strlen(body) : 0;
+  BOOL bResults =
+      WinHttpSendRequest(hRequest, wHeaders, wHeadersLen,
+                         (LPVOID)(bodyLen > 0 ? body : WINHTTP_NO_REQUEST_DATA),
+                         bodyLen, bodyLen, 0);
+  if (wHeaders)
+    free(wHeaders);
+
+  if (!bResults || !WinHttpReceiveResponse(hRequest, NULL)) {
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return 0;
+  }
+
+  DWORD dwStatusCode = 0;
+  DWORD dwSize = sizeof(dwStatusCode);
+  WinHttpQueryHeaders(hRequest,
+                      WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                      WINHTTP_HEADER_NAME_BY_INDEX, &dwStatusCode, &dwSize,
+                      WINHTTP_NO_HEADER_INDEX);
+  status_code = (int)dwStatusCode;
+
+  if ((status_code == 301 || status_code == 302 || status_code == 303 ||
+       status_code == 307 || status_code == 308) &&
+      redirects_followed < max_redirects) {
+
+    wchar_t szLocation[L_MAX_URL_LENGTH];
+    DWORD dwLocSize = sizeof(szLocation);
+    if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_LOCATION,
+                            WINHTTP_HEADER_NAME_BY_INDEX, szLocation,
+                            &dwLocSize, WINHTTP_NO_HEADER_INDEX)) {
+      WideCharToMultiByte(CP_UTF8, 0, szLocation, -1, current_url,
+                          sizeof(current_url), NULL, NULL);
+      redirects_followed++;
+      if (status_code == 303 || ((status_code == 301 || status_code == 302) &&
+                                 strcmp(method, "POST") == 0)) {
+        method = "GET";
+        body = NULL;
+      }
+      goto redirect_loop;
+    }
+  }
+
+  while (TRUE) {
+    DWORD dwSizeAvailable = 0;
+    if (!WinHttpQueryDataAvailable(hRequest, &dwSizeAvailable) ||
+        dwSizeAvailable == 0) {
+      break;
+    }
+
+    LPSTR pszOutBuffer = (LPSTR)malloc(dwSizeAvailable + 1);
+    if (!pszOutBuffer)
+      break;
+
+    ZeroMemory(pszOutBuffer, dwSizeAvailable + 1);
+    DWORD dwRead = 0;
+    if (WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSizeAvailable,
+                        &dwRead) &&
+        dwRead > 0) {
+      if (file_out) {
+        fwrite(pszOutBuffer, 1, dwRead, file_out);
+      } else if (resp_buf) {
+        size_t space_left = resp_buf->limit > resp_buf->len
+                                ? resp_buf->limit - resp_buf->len
+                                : 0;
+        if (dwRead > space_left) {
+          resp_buf->overflow = true;
+          dwRead = (DWORD)space_left;
+        }
+        if (dwRead > 0) {
+          memcpy(resp_buf->buf + resp_buf->len, pszOutBuffer, dwRead);
+          resp_buf->len += dwRead;
+          resp_buf->buf[resp_buf->len] = '\0';
+        }
+      }
+    }
+    free(pszOutBuffer);
+    if (resp_buf && resp_buf->overflow)
+      break;
+  }
+}
 
   if (hRequest)
     WinHttpCloseHandle(hRequest);
@@ -1585,8 +1584,7 @@ bool Platform_GetMousePos(int *out_x, int *out_y) {
 
 static bool win32_lookup_is_file(const char *path) {
   DWORD attr = GetFileAttributesA(path);
-  return attr != INVALID_FILE_ATTRIBUTES &&
-         !(attr & FILE_ATTRIBUTE_DIRECTORY);
+  return attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 static bool win32_lookup_is_dir(const char *path) {
@@ -1725,8 +1723,8 @@ static char *win32_lookup_walk_programs(const char *name) {
     if (!win32_lookup_is_dir(roots[i]))
       continue;
     ListOfFiles found = {0};
-    if (file_walk_all_files_from_dir((char *)roots[i], allowed, &found, NULL, true,
-                                 3)) {
+    if (file_walk_all_files_from_dir((char *)roots[i], allowed, &found, NULL,
+                                     true, 3)) {
       for (size_t j = 0; j < found.count; j++) {
         if (string_equals_ci(found.files[j].name, name)) {
           char *hit = _strdup(found.files[j].path);
@@ -1762,9 +1760,8 @@ char *Platform_FindExecutable(const char *name) {
     return hit;
 
   int status = 0;
-  char *out =
-      Platform_RunArgvCapture((const char *const[]){"where", name, NULL}, NULL,
-                              &status);
+  char *out = Platform_RunArgvCapture(
+      (const char *const[]){"where", name, NULL}, NULL, &status);
   if (!out)
     return NULL;
   char *line = lookup_first_line(out);

@@ -62,7 +62,7 @@ bool reload_lib_compile(const char *src, const char *out, const char *log_tag) {
 }
 
 char *reload_lib_unique_copy(const char *src, const char *base, int seq,
-                           const char *ext_suffix) {
+                             const char *ext_suffix) {
   char seqbuf[32];
   snprintf(seqbuf, sizeof(seqbuf), ".hot%d", seq);
   size_t base_len = strlen(base);

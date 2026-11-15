@@ -16,7 +16,6 @@ bool Platform_PrewarmImage(char *path) {
   return bmp != NULL;
 }
 
-
 static void win32_draw_text_prep(int sx, int sy, unsigned long c, int *x_out,
                                  int *y_out, unsigned long *color_out) {
   *x_out = sx;
@@ -215,7 +214,8 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     if (filled)
       draw_measure_track(x, y, w, h);
     else
-      draw_measure_track(x - fill_t, y - fill_t, w + 2 * fill_t, h + 2 * fill_t);
+      draw_measure_track(x - fill_t, y - fill_t, w + 2 * fill_t,
+                         h + 2 * fill_t);
     HBRUSH brush = CreateSolidBrush(win32_resolve_color(color, opaque));
     HGDIOBJ old_brush = SelectObject(g_draw_hdc, brush);
     HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
@@ -271,7 +271,7 @@ int Platform_GetTextLineHeight(int fontsize) {
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int x1, y1, x2, y2;
   int t = draw_line_prep(&spec, pl_draw_state_get()->off_x,
-                       pl_draw_state_get()->off_y, &x1, &y1, &x2, &y2);
+                         pl_draw_state_get()->off_y, &x1, &y1, &x2, &y2);
   HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(spec.color));
   HGDIOBJ old = SelectObject(g_draw_hdc, pen);
   MoveToEx(g_draw_hdc, x1, y1, NULL);
@@ -286,7 +286,7 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
     return false;
   int cx, cy;
   int t = draw_circle_prep(&spec, pl_draw_state_get()->off_x,
-                         pl_draw_state_get()->off_y, &cx, &cy);
+                           pl_draw_state_get()->off_y, &cx, &cy);
   int left = cx - spec.radius, top = cy - spec.radius;
   int right = cx + spec.radius, bottom = cy + spec.radius;
   if (t > 0) {

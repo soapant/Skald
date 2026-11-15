@@ -61,7 +61,8 @@ void feature_path_sanitize_stem(const char *src, char *out, size_t out_len) {
     out[0] = '\0';
 }
 
-bool feature_path_lib_basename_stem(const char *base, char *out, size_t out_len) {
+bool feature_path_lib_basename_stem(const char *base, char *out,
+                                    size_t out_len) {
   if (!base || !out || out_len == 0)
     return false;
   char work[256];
@@ -136,7 +137,7 @@ bool feature_path_stem_from_caller(void *caller, char *out, size_t out_len) {
 }
 
 bool feature_path_resolve_data_path(void *caller, const char *name, char *out,
-                                 size_t out_len) {
+                                    size_t out_len) {
 
   if (!name || !name[0] || !out || out_len == 0) {
     return false;
@@ -208,7 +209,7 @@ bool feature_path_resolve_data_path(void *caller, const char *name, char *out,
 }
 
 bool feature_path_resolve_asset_path(void *caller, const char *name, char *out,
-                                  size_t out_len) {
+                                     size_t out_len) {
 
   if (!name || !name[0] || !out || out_len == 0) {
     return false;
