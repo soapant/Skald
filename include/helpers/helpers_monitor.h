@@ -1,8 +1,7 @@
-#include <stdbool.h>
-
 #ifndef HELPERS_MONITOR_H
 #define HELPERS_MONITOR_H
 
+#include <stdbool.h>
 #include "core/types.h"
 
 typedef struct {

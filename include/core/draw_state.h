@@ -1,5 +1,5 @@
-#ifndef CORE_DRAW_STATE_H
-#define CORE_DRAW_STATE_H
+#ifndef DRAW_STATE_H
+#define DRAW_STATE_H
 
 #include <stdbool.h>
 
