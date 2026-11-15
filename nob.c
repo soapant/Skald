@@ -419,10 +419,8 @@ static bool write_compile_commands(void) {
       nob_cmd_append(&cmd, CROSS_CC);
       nob_cmd_append(&cmd, WIN_CC_FLAGS, "-c", sources.items[i]);
       if (release) {
-        if (target_win32) {
-          nob_cmd_append(&cmd, "-mwindows");
-        }
         nob_cmd_append(&cmd, "-O3");
+        nob_cmd_append(&cmd, "-mwindows");
       }
       else {
         nob_cmd_append(&cmd, "-ggdb");
@@ -2179,6 +2177,8 @@ int main(int argc, char **argv) {
   Nob_Cmd cmd = {0};
   if (target_win32) {
     nob_cmd_append(&cmd, CROSS_CC, "-o", output);
+    if (release)
+      nob_cmd_append(&cmd, "-mwindows");
     for (size_t i = 0; i < objs.count; ++i) {
       nob_cmd_append(&cmd, objs.items[i]);
     }
