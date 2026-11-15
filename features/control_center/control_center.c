@@ -11,7 +11,7 @@
 #define CC_APPCACHE_FILE "app_launcher_cache.txt"
 
 #define CC_ITEM_TEXT_X 10
-#define CC_ITEM_TEXT_Y 6
+#define CC_ITEM_TEXT_Y 2
 #define CC_ICON_GAP 8
 #define CC_TYPE_GAP 6
 #define CC_TYPE_SIZE_DELTA 2
@@ -982,26 +982,13 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   int name_w = sk_get_text_width(ctx->text, FontSize);
   if (icon)
     sk_draw_image(.path = icon, .x = ctx->x + CC_ITEM_TEXT_X,
-                  .y = ctx->y + (ctx->h - FontSize) / 2, .w = FontSize,
+                  .y = ctx->y + (ctx->h - FontSize) / 2 - CC_ITEM_TEXT_Y / 2, .w = FontSize,
                   .h = FontSize);
   sk_draw_text(.x = name_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = ctx->text,
                .align = "LEFT", .pad = 0);
 
   int cursor = name_x + name_w + CC_TYPE_GAP;
   const char *alias = sk_alias_for(ctx->text);
-
-  if (!e) {
-    if (alias) {
-      char chip[160];
-      snprintf(chip, sizeof(chip), "[%s]", alias);
-      int alias_w = sk_get_text_width(chip, FontSize - 3);
-      if (cursor + alias_w <= type_x)
-        sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y + 2,
-                     .text = chip, .align = "LEFT", .pad = 0, .color = SK_GRAY,
-                     .fontsize = FontSize - 3);
-    }
-    return;
-  }
 
   bool plain =
       strcmp(e->type, "Application") == 0 || strcmp(e->type, "Feature") == 0;
@@ -1023,9 +1010,9 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
     snprintf(chip, sizeof(chip), "[%s]", alias);
     int alias_w = sk_get_text_width(chip, FontSize - 3);
     if (cursor + alias_w + CC_TYPE_GAP <= left_limit) {
-      sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y + 2, .text = chip,
-                   .align = "LEFT", .pad = 0, .color = SK_GRAY,
-                   .fontsize = FontSize - 3);
+      sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y , .text = chip,
+                   .align = "LEFT",.color = SK_GRAY,
+                   .fontsize = FontSize);
       cursor += alias_w + CC_TYPE_GAP;
     }
   }
@@ -1379,6 +1366,7 @@ SKALD_FEATURE_INIT {
   cc_build();
   sk_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = cc_open_control);
   sk_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey, .cb = cc_reload);
+  sk_register_alias(.alias="ng",.target="gimp");
   sk_register_deferred_init(cc_deferred_build);
 }
 
