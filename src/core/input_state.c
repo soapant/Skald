@@ -17,13 +17,13 @@ static char cb_owner[OWNER_PATH_MAX] = {0};
 static char char_queue[32] = {0};
 static int char_head = 0, char_tail = 0;
 
-#define SK_INHIBIT_MOD_COUNT 11
-static const int kInhibitMods[SK_INHIBIT_MOD_COUNT] = {
+#define INHIBIT_MOD_COUNT 11
+static const int kInhibitMods[INHIBIT_MOD_COUNT] = {
     VK_SHIFT,  VK_CONTROL,  VK_MENU,     VK_LWIN,  VK_RWIN, VK_LSHIFT,
     VK_RSHIFT, VK_LCONTROL, VK_RCONTROL, VK_LMENU, VK_RMENU};
 
 void input_state_inhibit_mods(void) {
-  for (int i = 0; i < SK_INHIBIT_MOD_COUNT; i++) {
+  for (int i = 0; i < INHIBIT_MOD_COUNT; i++) {
     int nv = kInhibitMods[i];
     if (nv >= 0 && nv < 256)
       down_map[nv] = false;

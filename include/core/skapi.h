@@ -212,6 +212,14 @@ bool sk_focus_window_right(void);
 
 bool sk_toggle_minimized_active(void);
 
+bool sk_toggle_maximize_active(void);
+bool sk_toggle_always_on_top_active(void);
+bool sk_raise_active_window(void);
+bool sk_lower_active_window(void);
+bool sk_center_active_window(void);
+bool sk_snap_active_window(SnapPreset preset);
+long sk_get_active_window_pid(void);
+
 bool sk_reload_config(void);
 
 int sk_get_screen_width(void);

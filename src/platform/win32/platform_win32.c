@@ -1770,3 +1770,119 @@ char *Platform_FindExecutable(const char *name) {
   free(out);
   return hit;
 }
+
+bool Platform_ToggleMaximizeActiveWindow(void) {
+  HWND hwnd = win32_foreground_target();
+  if (!hwnd)
+    return false;
+  if (IsZoomed(hwnd)) {
+    ShowWindow(hwnd, SW_RESTORE);
+    return true;
+  }
+  ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+  return true;
+}
+
+bool Platform_ToggleAlwaysOnTopActiveWindow(void) {
+  HWND hwnd = win32_foreground_target();
+  if (!hwnd)
+    return false;
+  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
+  bool topmost = (ex & WS_EX_TOPMOST) != 0;
+  SetWindowPos(hwnd, topmost ? HWND_NOTOPMOST : HWND_TOPMOST, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  return true;
+}
+
+bool Platform_RaiseActiveWindow(void) {
+  HWND hwnd = win32_foreground_target();
+  if (!hwnd)
+    return false;
+  SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+  return true;
+}
+
+bool Platform_LowerActiveWindow(void) {
+  HWND hwnd = win32_foreground_target();
+  if (!hwnd)
+    return false;
+  SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+  return true;
+}
+
+bool Platform_CenterActiveWindow(void) {
+  HWND hwnd = win32_foreground_target();
+  if (!hwnd)
+    return false;
+  RECT r;
+  if (!GetWindowRect(hwnd, &r))
+    return false;
+  MONITORINFO mi;
+  mi.cbSize = sizeof(mi);
+  HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+  if (!GetMonitorInfoA(mon, &mi))
+    return false;
+  int x = mi.rcWork.left +
+          ((mi.rcWork.right - mi.rcWork.left) - (r.right - r.left)) / 2;
+  int y = mi.rcWork.top +
+          ((mi.rcWork.bottom - mi.rcWork.top) - (r.bottom - r.top)) / 2;
+  SetWindowPos(hwnd, NULL, x, y, 0, 0,
+               SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  return true;
+}
+
+static void win32_snap_rect(int wx, int wy, int ww, int wh, SnapPreset p,
+                            int *x, int *y, int *w, int *h) {
+  int hw = ww / 2, hh = wh / 2;
+  switch (p) {
+  case SNAP_LEFT:
+    *x = wx; *y = wy; *w = hw; *h = wh; break;
+  case SNAP_RIGHT:
+    *x = wx + hw; *y = wy; *w = ww - hw; *h = wh; break;
+  case SNAP_TOP:
+    *x = wx; *y = wy; *w = ww; *h = hh; break;
+  case SNAP_BOTTOM:
+    *x = wx; *y = wy + hh; *w = ww; *h = wh - hh; break;
+  case SNAP_TOP_LEFT:
+    *x = wx; *y = wy; *w = hw; *h = hh; break;
+  case SNAP_TOP_RIGHT:
+    *x = wx + hw; *y = wy; *w = ww - hw; *h = hh; break;
+  case SNAP_BOTTOM_LEFT:
+    *x = wx; *y = wy + hh; *w = hw; *h = wh - hh; break;
+  case SNAP_BOTTOM_RIGHT:
+    *x = wx + hw; *y = wy + hh; *w = ww - hw; *h = wh - hh; break;
+  default:
+    *x = wx; *y = wy; *w = ww; *h = wh; break;
+  }
+}
+
+bool Platform_SnapActiveWindow(SnapPreset preset) {
+  HWND hwnd = win32_foreground_target();
+  if (!hwnd)
+    return false;
+  MONITORINFO mi;
+  mi.cbSize = sizeof(mi);
+  HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+  if (!GetMonitorInfoA(mon, &mi))
+    return false;
+  if (IsIconic(hwnd) || IsZoomed(hwnd))
+    ShowWindow(hwnd, SW_RESTORE);
+  RECT w = mi.rcWork;
+  int x = 0, y = 0, cw = 0, ch = 0;
+  win32_snap_rect(w.left, w.top, w.right - w.left, w.bottom - w.top, preset,
+                  &x, &y, &cw, &ch);
+  SetWindowPos(hwnd, HWND_TOP, x, y, cw, ch,
+               SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+  return true;
+}
+
+long Platform_GetActiveWindowPid(void) {
+  HWND hwnd = win32_foreground_target();
+  if (!hwnd)
+    return 0;
+  DWORD pid = 0;
+  GetWindowThreadProcessId(hwnd, &pid);
+  return (long)pid;
+}

@@ -24,6 +24,13 @@ bool focus_window_up_hyprland(void);
 bool focus_window_down_hyprland(void);
 bool focus_window_right_hyprland(void);
 bool minimize_active_window_hyprland(void);
+bool toggle_maximize_active_hyprland(void);
+bool toggle_always_on_top_active_hyprland(void);
+bool raise_active_window_hyprland(void);
+bool lower_active_window_hyprland(void);
+bool center_active_window_hyprland(void);
+bool snap_active_window_hyprland(SnapPreset preset);
+long get_pid_hyprland(void);
 bool inject_key_hyprland(int vk, int down);
 bool get_mouse_pos_hyprland(int *x, int *y);
 #endif

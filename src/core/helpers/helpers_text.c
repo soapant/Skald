@@ -12,9 +12,9 @@
 #include "helpers/helpers_text.h"
 
 #if defined(_WIN32)
-#define SK_TEXT_PATH_SEP '\\'
+#define TEXT_PATH_SEP '\\'
 #else
-#define SK_TEXT_PATH_SEP '/'
+#define TEXT_PATH_SEP '/'
 #endif
 #include "core/types/keys.h"
 #include "core/types/file.h"
@@ -725,7 +725,7 @@ static bool file_walk_dir(const char *dir_path,
     if (dl + 1 + el + 1 > sizeof(full_path))
       continue;
     memcpy(full_path, dir_path, dl);
-    full_path[dl] = SK_TEXT_PATH_SEP;
+    full_path[dl] = TEXT_PATH_SEP;
     memcpy(full_path + dl + 1, entry_name, el + 1);
 
     if (is_dir) {

@@ -24,6 +24,13 @@ bool focus_window_up_sway(void);
 bool focus_window_down_sway(void);
 bool focus_window_right_sway(void);
 bool minimize_active_window_sway(void);
+bool toggle_maximize_active_sway(void);
+bool toggle_always_on_top_active_sway(void);
+bool raise_active_window_sway(void);
+bool lower_active_window_sway(void);
+bool center_active_window_sway(void);
+bool snap_active_window_sway(SnapPreset preset);
+long get_pid_sway(void);
 bool inject_key_sway(int vk, int down);
 bool get_mouse_pos_sway(int *x, int *y);
 

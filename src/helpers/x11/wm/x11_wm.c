@@ -1,4 +1,5 @@
 #include "wm/x11_wm.h"
+#include "wm/wm.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -860,4 +861,180 @@ bool x11_get_mouse_pos(int *x, int *y) {
   if (y)
     *y = ry;
   return true;
+}
+
+static bool x11_state_toggle(const char *atom1, const char *atom2) {
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  Atom state_atom = XInternAtom(display, "_NET_WM_STATE", False);
+  Atom a1 = atom1 ? XInternAtom(display, atom1, False) : None;
+  Atom a2 = atom2 ? XInternAtom(display, atom2, False) : None;
+  XEvent ev;
+  memset(&ev, 0, sizeof(ev));
+  ev.xclient.type = ClientMessage;
+  ev.xclient.window = focus;
+  ev.xclient.message_type = state_atom;
+  ev.xclient.format = 32;
+  ev.xclient.data.l[0] = 2;
+  ev.xclient.data.l[1] = (long)a1;
+  ev.xclient.data.l[2] = (long)a2;
+  ev.xclient.data.l[3] = 1;
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XSendEvent(display, DefaultRootWindow(display), False,
+             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+  XSync(display, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
+}
+
+bool x11_toggle_maximize_active(void) {
+  return x11_state_toggle("_NET_WM_STATE_MAXIMIZED_VERT",
+                          "_NET_WM_STATE_MAXIMIZED_HORZ");
+}
+
+bool x11_toggle_always_on_top_active(void) {
+  return x11_state_toggle("_NET_WM_STATE_ABOVE", NULL);
+}
+
+bool x11_raise_active_window(void) {
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XRaiseWindow(display, focus);
+  XSync(display, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
+}
+
+bool x11_lower_active_window(void) {
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XLowerWindow(display, focus);
+  XSync(display, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
+}
+
+static bool x11_monitor_for_rect(Display *display, int wx, int wy, int ww,
+                                 int wh, int *ox, int *oy, int *ow,
+                                 int *oh) {
+  (void)ww;
+  (void)wh;
+  Window root = DefaultRootWindow(display);
+  XRRScreenResources *res = XRRGetScreenResourcesCurrent(display, root);
+  if (!res)
+    return false;
+  int cx = wx + ww / 2, cy = wy + wh / 2;
+  bool got = false;
+  int bx = 0, by = 0, bw = 0, bh = 0;
+  int best_d = 1 << 30;
+  for (int c = 0; c < res->ncrtc; c++) {
+    XRRCrtcInfo *ci = XRRGetCrtcInfo(display, res, res->crtcs[c]);
+    if (!ci)
+      continue;
+    if (ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
+      XRRFreeCrtcInfo(ci);
+      continue;
+    }
+    int mx = ci->x, my = ci->y, mw = (int)ci->width, mh = (int)ci->height;
+    XRRFreeCrtcInfo(ci);
+    if (cx >= mx && cx < mx + mw && cy >= my && cy < my + mh) {
+      bx = mx; by = my; bw = mw; bh = mh;
+      got = true;
+      break;
+    }
+    int dx = cx < mx ? mx - cx : (cx >= mx + mw ? cx - (mx + mw) : 0);
+    int dy = cy < my ? my - cy : (cy >= my + mh ? cy - (my + mh) : 0);
+    int d = dx * dx + dy * dy;
+    if (d < best_d) {
+      best_d = d;
+      bx = mx; by = my; bw = mw; bh = mh;
+      got = true;
+    }
+  }
+  XRRFreeScreenResources(res);
+  if (!got)
+    return false;
+  *ox = bx; *oy = by; *ow = bw; *oh = bh;
+  return true;
+}
+
+bool x11_snap_active_window(SnapPreset preset) {
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  int fgx = 0, fgy = 0, fw = 0, fh = 0;
+  if (!x11_window_geom(display, focus, &fgx, &fgy, &fw, &fh))
+    return false;
+  int mx, my, mw, mh;
+  if (!x11_monitor_for_rect(display, fgx, fgy, fw, fh, &mx, &my, &mw, &mh))
+    return false;
+  int x = 0, y = 0, w = 0, h = 0;
+  wm_snap_rect(mx, my, mw, mh, preset, &x, &y, &w, &h);
+  return x11_moveresize_window(display, focus, x, y, w, h);
+}
+
+bool x11_center_active_window(void) {
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  int fgx = 0, fgy = 0, fw = 0, fh = 0;
+  if (!x11_window_geom(display, focus, &fgx, &fgy, &fw, &fh))
+    return false;
+  int mx, my, mw, mh;
+  if (!x11_monitor_for_rect(display, fgx, fgy, fw, fh, &mx, &my, &mw, &mh))
+    return false;
+  int x = mx + (mw - fw) / 2, y = my + (mh - fh) / 2;
+  return x11_moveresize_window(display, focus, x, y, fw, fh);
+}
+
+long x11_get_active_window_pid(void) {
+  Display *display = x11_get_display();
+  if (!display)
+    return 0;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return 0;
+  Atom pid_atom = XInternAtom(display, "_NET_WM_PID", False);
+  Atom type = None;
+  int fmt = 0;
+  unsigned long nitems = 0, after = 0;
+  unsigned char *data = NULL;
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  if (XGetWindowProperty(display, focus, pid_atom, 0, 1, False, XA_CARDINAL,
+                         &type, &fmt, &nitems, &after, &data) != Success) {
+    XSetErrorHandler(old);
+    return 0;
+  }
+  XSync(display, False);
+  XSetErrorHandler(old);
+  long pid = 0;
+  if (data && nitems > 0) {
+    pid = (long)*(unsigned long *)data;
+    XFree(data);
+  }
+  return pid;
 }

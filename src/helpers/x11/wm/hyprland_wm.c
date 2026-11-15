@@ -1,4 +1,5 @@
 #include "wm/hyprland_wm.h"
+#include "wm/wm.h"
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -16,6 +17,9 @@
 #include "platform/platform.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "helpers/helpers_text.h"
+
+static bool hypr_numeric_activewindow_field(const char *field, char *buffer,
+                                            int buffer_size);
 
 static bool hypr_sock_live(const char *sig) {
 
@@ -494,4 +498,166 @@ bool get_mouse_pos_hyprland(int *x, int *y) {
     return true;
   }
   return false;
+}
+
+static bool hypr_focused_monitor_geom(int *out_x, int *out_y, int *out_w,
+                                      int *out_h) {
+  char *out = Platform_RunTerminalCommand("hyprctl monitors -j", false);
+  if (!out || !out[0]) {
+    log_error("hypr monitors failed or empty");
+    free(out);
+    return false;
+  }
+  const char *focus = strstr(out, "\"focused\": true");
+  if (!focus) {
+    log_error("hypr monitors no focused monitor");
+    free(out);
+    return false;
+  }
+  size_t flen = strlen(out);
+  size_t fpos = (size_t)(focus - out);
+  size_t start = 0, end = 0;
+  int depth = 0;
+  bool got = false;
+  for (size_t i = 0; i < flen; i++) {
+    char c = out[i];
+    if (c == '{') {
+      if (depth == 0)
+        start = i;
+      depth++;
+    } else if (c == '}') {
+      depth--;
+      if (depth == 0 && start <= fpos && fpos <= i) {
+        end = i;
+        got = true;
+        break;
+      }
+    }
+  }
+  if (!got) {
+    log_error("hypr monitors focused object not found");
+    free(out);
+    return false;
+  }
+  size_t n = end - start + 1;
+  char *block = malloc(n + 1);
+  if (!block) {
+    free(out);
+    return false;
+  }
+  memcpy(block, out + start, n);
+  block[n] = '\0';
+  free(out);
+  long x = 0, y = 0, w = 0, h = 0;
+  bool ok = wm_json_num_at(block, "\"x\"", &x) &&
+            wm_json_num_at(block, "\"y\"", &y) &&
+            wm_json_num_at(block, "\"width\"", &w) &&
+            wm_json_num_at(block, "\"height\"", &h);
+  const char *res = strstr(block, "\"reserved\":");
+  if (ok && res) {
+    long rl = 0, rt = 0, rr = 0, rb = 0;
+    const char *br = strchr(res, '[');
+    if (br && sscanf(br, "[%ld,%ld,%ld,%ld]", &rl, &rt, &rr, &rb) == 4) {
+      x += rl; y += rt; w -= rl + rr; h -= rt + rb;
+    }
+  }
+  free(block);
+  if (!ok) {
+    log_error("hypr monitors no geometry for focused monitor");
+    return false;
+  }
+  *out_x = (int)x; *out_y = (int)y; *out_w = (int)w; *out_h = (int)h;
+  return true;
+}
+
+
+static bool hypr_numeric_activewindow_field(const char *field, char *buffer,
+                                            int buffer_size) {
+  if (!field || !buffer || buffer_size <= 0)
+    return false;
+  buffer[0] = '\0';
+  hypr_ensure_sig();
+  char *output = Platform_RunTerminalCommand("hyprctl activewindow -j", false);
+  if (!output || output[0] == '\0') {
+    log_error("hypr activewindow empty for field='%s'", field);
+    free(output);
+    return false;
+  }
+  char needle[64];
+  snprintf(needle, sizeof(needle), "\"%s\":", field);
+  const char *p = strstr(output, needle);
+  bool ok = false;
+  if (p) {
+    p += strlen(needle);
+    while (*p == ' ' || *p == ':')
+      p++;
+    char *end = NULL;
+    long v = strtol(p, &end, 10);
+    if (end != p) {
+      snprintf(buffer, (size_t)buffer_size, "%ld", v);
+      ok = buffer[0] != '\0';
+    }
+  }
+  free(output);
+  return ok;
+}
+
+bool toggle_maximize_active_hyprland(void) {
+  if (!hypr_bus())
+    return false;
+  return hypr_exec(
+      "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", "
+      "action = \"toggle\" })'");
+}
+
+bool toggle_always_on_top_active_hyprland(void) {
+  if (!hypr_bus())
+    return false;
+  return hypr_exec("hyprctl dispatch 'hl.dsp.window.pin({ action = "
+                   "\"toggle\" })'");
+}
+
+bool raise_active_window_hyprland(void) {
+  if (!hypr_bus())
+    return false;
+  return hypr_exec(
+      "hyprctl dispatch 'hl.dsp.window.alter_zorder({ mode = \"top\" })'");
+}
+
+bool lower_active_window_hyprland(void) {
+  if (!hypr_bus())
+    return false;
+  return hypr_exec(
+      "hyprctl dispatch 'hl.dsp.window.alter_zorder({ mode = \"bottom\" })'");
+}
+
+bool center_active_window_hyprland(void) {
+  if (!hypr_bus())
+    return false;
+  return hypr_exec("hyprctl dispatch 'hl.dsp.window.center({})'");
+}
+
+bool snap_active_window_hyprland(SnapPreset preset) {
+  if (!hypr_bus())
+    return false;
+  int mx = 0, my = 0, mw = 0, mh = 0;
+  if (!hypr_focused_monitor_geom(&mx, &my, &mw, &mh))
+    return false;
+  int x = 0, y = 0, w = 0, h = 0;
+  wm_snap_rect(mx, my, mw, mh, preset, &x, &y, &w, &h);
+  char cmd[512];
+  snprintf(cmd, sizeof(cmd),
+           "hyprctl dispatch 'hl.dsp.window.resize({ x = %d, y = %d })' && "
+           "hyprctl dispatch 'hl.dsp.window.move({ x = %d, y = %d })'",
+           w, h, x, y);
+  return hypr_exec(cmd);
+}
+
+long get_pid_hyprland(void) {
+  if (!hypr_bus())
+    return 0;
+  char buf[64];
+  if (!hypr_numeric_activewindow_field("pid", buf, sizeof(buf)))
+    return 0;
+  return strtol(buf, NULL, 10);
 }

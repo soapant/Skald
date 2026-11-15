@@ -626,6 +626,26 @@ bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
 
 bool Platform_CloseActiveWindow(void) { return wm_close_active_window(); }
 
+bool Platform_ToggleMaximizeActiveWindow(void) {
+  return wm_toggle_maximize_active();
+}
+
+bool Platform_ToggleAlwaysOnTopActiveWindow(void) {
+  return wm_toggle_always_on_top_active();
+}
+
+bool Platform_RaiseActiveWindow(void) { return wm_raise_active_window(); }
+
+bool Platform_LowerActiveWindow(void) { return wm_lower_active_window(); }
+
+bool Platform_CenterActiveWindow(void) { return wm_center_active_window(); }
+
+bool Platform_SnapActiveWindow(SnapPreset preset) {
+  return wm_snap_active_window(preset);
+}
+
+long Platform_GetActiveWindowPid(void) { return wm_get_active_window_pid(); }
+
 bool Platform_ToggleFullscreenActive(void) {
   return wm_toggle_fullscreen_active();
 }

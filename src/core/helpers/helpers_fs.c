@@ -12,9 +12,9 @@
 #include <errno.h>
 
 #if defined(_WIN32)
-#define SK_FEAT_SEP '\\'
+#define FEAT_SEP '\\'
 #else
-#define SK_FEAT_SEP '/'
+#define FEAT_SEP '/'
 #endif
 
 bool data_dir(char *out, size_t out_len) {
@@ -60,7 +60,7 @@ bool temp_file_write(const char *name, const void *data, size_t len,
   char dir[1024];
   if (!Platform_TempDirPath(dir, sizeof(dir)))
     return false;
-  const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
+  const char sep[2] = {(char)FEAT_SEP, '\0'};
   safe_copy(out_path, out_len, dir);
   safe_cat(out_path, out_len, sep);
   safe_cat(out_path, out_len, name);
@@ -121,7 +121,7 @@ bool feature_path_get(const char *feature, const char *name, char *out,
   if (!data_dir(dir_path, sizeof(dir_path)))
     return false;
   Platform_MkdirIfNotExists(dir_path);
-  const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
+  const char sep[2] = {(char)FEAT_SEP, '\0'};
   char feat_path[720];
   safe_copy(feat_path, sizeof(feat_path), dir_path);
   safe_cat(feat_path, sizeof(feat_path), sep);
@@ -141,7 +141,7 @@ bool feature_path_data_dir_exists(const char *stem) {
   if (!data_dir(dir_path, sizeof(dir_path)))
     return false;
   char stemdir[720];
-  const char sep[2] = {(char)SK_FEAT_SEP, '\0'};
+  const char sep[2] = {(char)FEAT_SEP, '\0'};
   safe_copy(stemdir, sizeof(stemdir), dir_path);
   safe_cat(stemdir, sizeof(stemdir), sep);
   safe_cat(stemdir, sizeof(stemdir), stem);
