@@ -758,31 +758,31 @@ char *Platform_GetActiveWindowTitle(void) {
   return fgTitle;
 }
 
-char *Platform_GetActiveWindowAppId(void) {
-  static char appId[256];
-  appId[0] = '\0';
+char *Platform_GetActiveWindowId(void) {
+  static char id[256];
+  id[0] = '\0';
   HWND hForeground = GetForegroundWindow();
   if (hForeground == NULL)
-    return appId;
+    return id;
   DWORD pid = 0;
   GetWindowThreadProcessId(hForeground, &pid);
   if (pid == 0)
-    return appId;
+    return id;
   HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
   if (!h)
-    return appId;
+    return id;
   char exe[MAX_PATH];
   DWORD sz = sizeof(exe);
   if (QueryFullProcessImageNameA(h, 0, exe, &sz) && sz > 0) {
     const char *base = strrchr(exe, '\\');
     base = base ? base + 1 : exe;
-    safe_copy(appId, sizeof(appId), base);
-    size_t n = strlen(appId);
-    if (n > 4 && _stricmp(appId + n - 4, ".exe") == 0)
-      appId[n - 4] = '\0';
+    safe_copy(id, sizeof(id), base);
+    size_t n = strlen(id);
+    if (n > 4 && _stricmp(id + n - 4, ".exe") == 0)
+      id[n - 4] = '\0';
   }
   CloseHandle(h);
-  return appId;
+  return id;
 }
 
 char *Platform_GetIconPath(char *app_path) {
@@ -862,13 +862,13 @@ PlWindowList Platform_GetWindowTitles(void) {
   return titles;
 }
 
-PlWindowList Platform_GetWindowNames(void) {
+PlWindowList Platform_GetWindowIds(void) {
   PlWindowList titles = {0}, names = {0};
   win32_collect_pair(&titles, &names);
   for (int i = 0; i < titles.count; i++)
     free(titles.windows[i]);
   free(titles.windows);
-  log_info("Platform_GetWindowNames count=%d", names.count);
+  log_info("Platform_GetWindowIds count=%d", names.count);
   return names;
 }
 
@@ -1885,4 +1885,107 @@ long Platform_GetActiveWindowPid(void) {
   DWORD pid = 0;
   GetWindowThreadProcessId(hwnd, &pid);
   return (long)pid;
+}
+
+static void win32_fill_key(INPUT *in, WORD vk, BOOL down) {
+  in->type = INPUT_KEYBOARD;
+  in->ki.wVk = vk;
+  in->ki.dwFlags = down ? 0 : KEYEVENTF_KEYUP;
+}
+
+bool Platform_SwitchToWorkspace(int index) {
+  if (index < 1 || index > 9)
+    return false;
+  WORD digit = (WORD)('0' + index);
+  INPUT inputs[6] = {0};
+  win32_fill_key(&inputs[0], VK_CONTROL, TRUE);
+  win32_fill_key(&inputs[1], VK_LWIN, TRUE);
+  win32_fill_key(&inputs[2], digit, TRUE);
+  win32_fill_key(&inputs[3], digit, FALSE);
+  win32_fill_key(&inputs[4], VK_LWIN, FALSE);
+  win32_fill_key(&inputs[5], VK_CONTROL, FALSE);
+  return SendInput(6, inputs, sizeof(INPUT)) == 6;
+}
+
+bool Platform_MoveActiveWindowToWorkspace(int index) {
+  (void)index;
+  log_error(
+      "win32 has no public API to move a window to an absolute virtual "
+      "desktop (IVirtualDesktopManager cannot enumerate; use adjacent)");
+  return false;
+}
+
+bool Platform_SetActiveWindowOpacity(int percent) {
+  HWND hwnd = win32_foreground_target();
+  if (!hwnd)
+    return false;
+  if (percent < 0)
+    percent = 0;
+  if (percent > 100)
+    percent = 100;
+  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
+  SetWindowLongA(hwnd, GWL_EXSTYLE, ex | WS_EX_LAYERED);
+  BYTE alpha = (BYTE)((255.0 * percent) / 100.0 + 0.5);
+  SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA);
+  if (percent == 100) {
+    SetWindowLongA(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
+    SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+  }
+  return true;
+}
+
+typedef struct {
+  const char *needle;
+  bool by_id;
+  int count;
+} win32_close_ctx;
+
+static BOOL CALLBACK win32_close_enum(HWND hwnd, LPARAM lp) {
+  win32_close_ctx *c = (win32_close_ctx *)lp;
+  char buf[512];
+  if (!IsWindowVisible(hwnd))
+    return TRUE;
+  if (c->by_id) {
+    DWORD pid = 0;
+    GetWindowThreadProcessId(hwnd, &pid);
+    HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!h)
+      return TRUE;
+    DWORD n = GetModuleFileNameA(h, buf, sizeof(buf));
+    CloseHandle(h);
+    if (!n)
+      return TRUE;
+    char *base = strrchr(buf, '\\');
+    base = base ? base + 1 : buf;
+    size_t nb = strlen(base);
+    if (nb > 4 && _stricmp(base + nb - 4, ".exe") == 0)
+      base[nb - 4] = '\0';
+    if (!string_contains_ci(base, c->needle))
+      return TRUE;
+  } else {
+    if (!GetWindowTextA(hwnd, buf, sizeof(buf)))
+      return TRUE;
+    if (!string_contains_ci(buf, c->needle))
+      return TRUE;
+  }
+  PostMessageA(hwnd, WM_CLOSE, 0, 0);
+  c->count++;
+  return TRUE;
+}
+
+bool Platform_CloseWindowsByTitle(const char *needle) {
+  if (!needle || !needle[0])
+    return false;
+  win32_close_ctx ctx = {needle, false, 0};
+  EnumWindows(win32_close_enum, (LPARAM)&ctx);
+  return ctx.count > 0;
+}
+
+bool Platform_CloseWindowsById(const char *needle) {
+  if (!needle || !needle[0])
+    return false;
+  win32_close_ctx ctx = {needle, true, 0};
+  EnumWindows(win32_close_enum, (LPARAM)&ctx);
+  return ctx.count > 0;
 }

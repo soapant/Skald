@@ -220,6 +220,12 @@ bool sk_center_active_window(void);
 bool sk_snap_active_window(SnapPreset preset);
 long sk_get_active_window_pid(void);
 
+bool sk_switch_to_workspace(int index);
+bool sk_move_active_window_to_workspace(int index);
+bool sk_set_active_window_opacity(int percent);
+bool sk_close_windows_by_title(const char *needle);
+bool sk_close_windows_by_id(const char *needle);
+
 bool sk_reload_config(void);
 
 int sk_get_screen_width(void);
@@ -631,11 +637,11 @@ const SkHashMap *sk_hashmap_at(SkHashMap *map, size_t index);
 
 SkWindowList sk_get_all_window_titles(void);
 
-SkWindowList sk_get_all_window_names(void);
+SkWindowList sk_get_all_window_ids(void);
 
 char *sk_get_active_window_title(void);
 
-char *sk_get_active_window_app_id(void);
+char *sk_get_active_window_id(void);
 
 bool sk_is_window_open(const char *title);
 #define sk_window_open sk_is_window_open

@@ -313,7 +313,7 @@ bool x11_get_title(char *buffer, int buffer_size) {
   return buffer[0] != '\0';
 }
 
-bool x11_get_app_id(char *buffer, int buffer_size) {
+bool x11_get_id(char *buffer, int buffer_size) {
   if (!buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
@@ -1037,4 +1037,132 @@ long x11_get_active_window_pid(void) {
     XFree(data);
   }
   return pid;
+}
+
+bool x11_switch_to_workspace(int index) {
+  if (index < 1)
+    return false;
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Atom cd = XInternAtom(display, "_NET_CURRENT_DESKTOP", False);
+  XEvent ev;
+  memset(&ev, 0, sizeof(ev));
+  ev.xclient.type = ClientMessage;
+  ev.xclient.window = DefaultRootWindow(display);
+  ev.xclient.message_type = cd;
+  ev.xclient.format = 32;
+  ev.xclient.data.l[0] = (long)(index - 1);
+  ev.xclient.data.l[1] = CurrentTime;
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XSendEvent(display, DefaultRootWindow(display), False,
+             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+  XSync(display, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
+}
+
+bool x11_move_active_window_to_workspace(int index) {
+  if (index < 1)
+    return false;
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  Atom wd = XInternAtom(display, "_NET_WM_DESKTOP", False);
+  XEvent ev;
+  memset(&ev, 0, sizeof(ev));
+  ev.xclient.type = ClientMessage;
+  ev.xclient.window = focus;
+  ev.xclient.message_type = wd;
+  ev.xclient.format = 32;
+  ev.xclient.data.l[0] = (long)(index - 1);
+  ev.xclient.data.l[1] = CurrentTime;
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XSendEvent(display, DefaultRootWindow(display), False,
+             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+  XSync(display, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
+}
+
+bool x11_set_active_window_opacity(int percent) {
+  if (percent < 0)
+    percent = 0;
+  if (percent > 100)
+    percent = 100;
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  Atom op = XInternAtom(display, "_NET_WM_WINDOW_OPACITY", False);
+  unsigned long v =
+      (unsigned long)(((double)percent / 100.0) * 4294967295.0 + 0.5);
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XChangeProperty(display, focus, op, XA_CARDINAL, 32, PropModeReplace,
+                  (unsigned char *)&v, 1);
+  XSync(display, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
+}
+
+static bool x11_close_window(Display *display, Window w) {
+  Atom close_atom = XInternAtom(display, "_NET_CLOSE_WINDOW", False);
+  XEvent ev;
+  memset(&ev, 0, sizeof(ev));
+  ev.xclient.type = ClientMessage;
+  ev.xclient.window = w;
+  ev.xclient.message_type = close_atom;
+  ev.xclient.format = 32;
+  ev.xclient.data.l[0] = CurrentTime;
+  ev.xclient.data.l[1] = 2;
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XSendEvent(display, DefaultRootWindow(display), False,
+             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+  XSync(display, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
+}
+
+static bool x11_close_windows_where(const char *needle, bool use_id) {
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  if (!needle || !needle[0])
+    return false;
+  int n = 0;
+  Window *clients = x11_client_list(display, &n);
+  if (!clients)
+    return false;
+  int closed = 0;
+  for (int i = 0; i < n; i++) {
+    char *v = use_id ? x11_get_res_class(display, clients[i])
+                     : x11_get_text_prop(display, clients[i]);
+    if (!v)
+      continue;
+    bool match = string_contains_ci(v, needle);
+    free(v);
+    if (!match)
+      continue;
+    if (x11_close_window(display, clients[i]))
+      closed++;
+  }
+  free(clients);
+  return closed > 0;
+}
+
+bool x11_close_windows_by_title(const char *needle) {
+  return x11_close_windows_where(needle, false);
+}
+
+bool x11_close_windows_by_id(const char *needle) {
+  return x11_close_windows_where(needle, true);
 }

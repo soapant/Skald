@@ -141,7 +141,7 @@ bool get_title_hyprland(char *buffer, int buffer_size) {
   return hypr_parse_activewindow_field("title", buffer, buffer_size);
 }
 
-bool get_app_id_hyprland(char *buffer, int buffer_size) {
+bool get_id_hyprland(char *buffer, int buffer_size) {
   return hypr_parse_activewindow_field("class", buffer, buffer_size);
 }
 
@@ -281,7 +281,7 @@ static PlWindowList hypr_client_list(const char *field, bool toupper_first) {
   free(output);
   return list;
 }
-PlWindowList get_window_names_hyprland(void) {
+PlWindowList get_window_ids_hyprland(void) {
   return hypr_client_list("class", true);
 }
 PlWindowList get_window_titles_hyprland(void) {
@@ -660,4 +660,106 @@ long get_pid_hyprland(void) {
   if (!hypr_numeric_activewindow_field("pid", buf, sizeof(buf)))
     return 0;
   return strtol(buf, NULL, 10);
+}
+
+bool switch_to_workspace_hyprland(int index) {
+  if (index < 1)
+    return false;
+  if (!hypr_bus())
+    return false;
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "hyprctl dispatch workspace %d", index);
+  char *out = Platform_RunTerminalCommand(cmd, false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_to_workspace_hyprland(int index) {
+  if (index < 1)
+    return false;
+  if (!hypr_bus())
+    return false;
+  char cmd[256];
+  snprintf(cmd, sizeof(cmd),
+           "hyprctl dispatch 'hl.dsp.window.move({ workspace = \"%d\" })'",
+           index);
+  return hypr_exec(cmd);
+}
+
+bool set_active_window_opacity_hyprland(int percent) {
+  if (percent < 1)
+    percent = 1;
+  if (percent > 100)
+    percent = 100;
+  if (!hypr_bus())
+    return false;
+  char cmd[256];
+  snprintf(cmd, sizeof(cmd),
+           "hyprctl dispatch 'hl.dsp.window.set_prop({ prop = \"opacity\", "
+           "value = \"%.2f\" })'",
+           (double)percent / 100.0);
+  return hypr_exec(cmd);
+}
+
+static void hypr_json_field(const char *json, const char *limit,
+                            const char *key, char *out, size_t cap) {
+  out[0] = '\0';
+  const char *p = strstr(json, key);
+  if (!p || p >= limit)
+    return;
+  p += strlen(key);
+  while (p < limit && (*p == ' ' || *p == ':'))
+    p++;
+  if (*p != '"')
+    return;
+  p++;
+  const char *e = p;
+  while (e < limit && *e && *e != '"')
+    e++;
+  size_t m = (size_t)(e - p);
+  if (m >= cap)
+    m = cap - 1;
+  memcpy(out, p, m);
+  out[m] = '\0';
+}
+
+static bool hypr_close_windows(const char *needle, bool by_id) {
+  if (!needle || !needle[0])
+    return false;
+  if (!hypr_bus())
+    return false;
+  char *out = Platform_RunTerminalCommand("hyprctl clients -j", false);
+  if (!out || out[0] == '\0') {
+    free(out);
+    return false;
+  }
+  int closed = 0;
+  for (char *p = out; (p = strstr(p, "\"address\":")); p += 10) {
+    char *next = strstr(p + 10, "\"address\":");
+    char *limit = next ? next : out + strlen(out);
+    char address[64] = {0}, title[512] = {0}, clazz[512] = {0};
+    hypr_json_field(p, limit, "\"address\":", address, sizeof(address));
+    hypr_json_field(p, limit, "\"title\":", title, sizeof(title));
+    hypr_json_field(p, limit, "\"class\":", clazz, sizeof(clazz));
+    const char *v = by_id ? clazz : title;
+    if (!v || v[0] == '\0' || !string_contains_ci(v, needle))
+      continue;
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd),
+             "hyprctl dispatch 'hl.dsp.window.close({ window = \"address:%s\" })'",
+             address);
+    if (hypr_exec(cmd))
+      closed++;
+  }
+  free(out);
+  return closed > 0;
+}
+
+bool close_windows_matching_title_hyprland(const char *needle) {
+  return hypr_close_windows(needle, false);
+}
+
+bool close_windows_matching_id_hyprland(const char *needle) {
+  return hypr_close_windows(needle, true);
 }

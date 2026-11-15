@@ -60,11 +60,11 @@ bool wm_append_window_name(PlWindowList *list, const char *name,
                            bool toupper_first);
 
 char *wm_get_active_window_title(void);
-char *wm_get_active_window_app_id(void);
+char *wm_get_active_window_id(void);
 bool wm_focus_by_title(const char *title);
 char *wm_paste(const char *content);
 PlWindowList Wm_GetWindowTitles(void);
-PlWindowList Wm_GetWindowNames(void);
+PlWindowList Wm_GetWindowIds(void);
 bool wm_close_active_window(void);
 bool wm_toggle_fullscreen_active(void);
 bool wm_move_active_window_to_monitor(bool right);
@@ -85,6 +85,11 @@ bool wm_center_active_window(void);
 bool wm_snap_active_window(SnapPreset preset);
 long wm_get_active_window_pid(void);
 bool wm_inject_key(int vk, int down);
+bool wm_switch_to_workspace(int index);
+bool wm_move_active_window_to_workspace(int index);
+bool wm_set_active_window_opacity(int percent);
+bool wm_close_windows_matching_title(const char *needle);
+bool wm_close_windows_matching_id(const char *needle);
 bool wm_get_mouse_pos(int *x, int *y);
 
 #endif

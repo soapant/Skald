@@ -74,30 +74,30 @@ char *wm_get_active_window_title(void) {
   return NULL;
 }
 
-char *wm_get_active_window_app_id(void) {
+char *wm_get_active_window_id(void) {
   static char buffer[1024];
 
   buffer[0] = '\0';
 
   if (x11_env_is_wayland()) {
-    if (get_app_id_kwin(buffer, sizeof(buffer))) {
+    if (get_id_kwin(buffer, sizeof(buffer))) {
       if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
         return buffer;
     }
-    if (get_app_id_niri(buffer, sizeof(buffer))) {
+    if (get_id_niri(buffer, sizeof(buffer))) {
       if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
         return buffer;
     }
-    if (get_app_id_hyprland(buffer, sizeof(buffer))) {
+    if (get_id_hyprland(buffer, sizeof(buffer))) {
       if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
         return buffer;
     }
-    if (get_app_id_sway(buffer, sizeof(buffer))) {
+    if (get_id_sway(buffer, sizeof(buffer))) {
       if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
         return buffer;
     }
   }
-  if (x11_get_app_id(buffer, sizeof(buffer))) {
+  if (x11_get_id(buffer, sizeof(buffer))) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
       return buffer;
   }
@@ -167,20 +167,20 @@ PlWindowList Wm_GetWindowTitles(void) {
   log_error("GetWindowTitles Didn't Work");
   return empty;
 }
-PlWindowList Wm_GetWindowNames(void) {
+PlWindowList Wm_GetWindowIds(void) {
   PlWindowList result;
   PlWindowList empty = {.windows = NULL, .count = 0};
   if (x11_env_is_wayland()) {
-    result = get_window_names_kwin();
+    result = get_window_ids_kwin();
     if (result.windows != NULL)
       return result;
-    result = get_window_names_niri();
+    result = get_window_ids_niri();
     if (result.windows != NULL)
       return result;
-    result = get_window_names_hyprland();
+    result = get_window_ids_hyprland();
     if (result.windows != NULL)
       return result;
-    result = get_window_names_sway();
+    result = get_window_ids_sway();
     if (result.windows != NULL)
       return result;
   }
@@ -547,4 +547,95 @@ long wm_get_active_window_pid(void) {
     return pid;
   log_error("GetActiveWindowPid Didn't Work");
   return 0;
+}
+
+bool wm_switch_to_workspace(int index) {
+  if (index < 1)
+    return false;
+  if (x11_env_is_wayland()) {
+    if (switch_to_workspace_kwin(index))
+      return true;
+    if (switch_to_workspace_niri(index))
+      return true;
+    if (switch_to_workspace_hyprland(index))
+      return true;
+    if (switch_to_workspace_sway(index))
+      return true;
+  }
+  if (x11_switch_to_workspace(index))
+    return true;
+  log_error("SwitchToWorkspace Didn't Work");
+  return false;
+}
+
+bool wm_move_active_window_to_workspace(int index) {
+  if (index < 1)
+    return false;
+  if (x11_env_is_wayland()) {
+    if (move_active_window_to_workspace_kwin(index))
+      return true;
+    if (move_active_window_to_workspace_niri(index))
+      return true;
+    if (move_active_window_to_workspace_hyprland(index))
+      return true;
+    if (move_active_window_to_workspace_sway(index))
+      return true;
+  }
+  if (x11_move_active_window_to_workspace(index))
+    return true;
+  log_error("MoveActiveWindowToWorkspace Didn't Work");
+  return false;
+}
+
+bool wm_set_active_window_opacity(int percent) {
+  if (percent < 0 || percent > 100)
+    return false;
+  if (x11_env_is_wayland()) {
+    if (set_active_window_opacity_kwin(percent))
+      return true;
+    if (set_active_window_opacity_niri(percent))
+      return true;
+    if (set_active_window_opacity_hyprland(percent))
+      return true;
+    if (set_active_window_opacity_sway(percent))
+      return true;
+  }
+  if (x11_set_active_window_opacity(percent))
+    return true;
+  log_error("SetActiveWindowOpacity Didn't Work");
+  return false;
+}
+
+bool wm_close_windows_matching_title(const char *needle) {
+  if (x11_env_is_wayland()) {
+    if (close_windows_matching_title_kwin(needle))
+      return true;
+    if (close_windows_matching_title_niri(needle))
+      return true;
+    if (close_windows_matching_title_hyprland(needle))
+      return true;
+    if (close_windows_matching_title_sway(needle))
+      return true;
+  }
+  if (x11_close_windows_by_title(needle))
+    return true;
+  log_error("CloseWindowsByTitle Didn't Work");
+  return false;
+}
+
+bool wm_close_windows_matching_id(const char *needle) {
+  if (x11_env_is_wayland()) {
+    if (close_windows_matching_id_kwin(needle))
+      return true;
+    if (close_windows_matching_id_niri(needle))
+      return true;
+    if (close_windows_matching_id_hyprland(needle))
+      return true;
+    if (close_windows_matching_id_sway(needle))
+      return true;
+  }
+  if (x11_close_windows_by_id(needle))
+    return true;
+  log_error("CloseWindowsById Didn't Work");
+  return false;
 }

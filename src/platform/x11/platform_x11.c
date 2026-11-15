@@ -636,6 +636,26 @@ bool Platform_ToggleAlwaysOnTopActiveWindow(void) {
 
 bool Platform_RaiseActiveWindow(void) { return wm_raise_active_window(); }
 
+bool Platform_SwitchToWorkspace(int index) {
+  return wm_switch_to_workspace(index);
+}
+
+bool Platform_MoveActiveWindowToWorkspace(int index) {
+  return wm_move_active_window_to_workspace(index);
+}
+
+bool Platform_SetActiveWindowOpacity(int percent) {
+  return wm_set_active_window_opacity(percent);
+}
+
+bool Platform_CloseWindowsByTitle(const char *needle) {
+  return wm_close_windows_matching_title(needle);
+}
+
+bool Platform_CloseWindowsById(const char *needle) {
+  return wm_close_windows_matching_id(needle);
+}
+
 bool Platform_LowerActiveWindow(void) { return wm_lower_active_window(); }
 
 bool Platform_CenterActiveWindow(void) { return wm_center_active_window(); }
@@ -817,8 +837,8 @@ static char *x11_icon_try_sizes(const char *bare, const char *dir,
   return NULL;
 }
 
-char *Platform_GetActiveWindowAppId(void) {
-  return wm_get_active_window_app_id();
+char *Platform_GetActiveWindowId(void) {
+  return wm_get_active_window_id();
 }
 
 bool Platform_PrewarmImage(char *path) {
@@ -1154,7 +1174,7 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
 
 PlWindowList Platform_GetWindowTitles(void) { return Wm_GetWindowTitles(); }
 
-PlWindowList Platform_GetWindowNames(void) { return Wm_GetWindowNames(); }
+PlWindowList Platform_GetWindowIds(void) { return Wm_GetWindowIds(); }
 
 static int singleton_lock_fd = -1;
 

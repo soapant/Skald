@@ -127,7 +127,7 @@ bool get_title_niri(char *buffer, int buffer_size) {
   return niri_focused_field("\"title\":\"", 9, buffer, buffer_size);
 }
 
-bool get_app_id_niri(char *buffer, int buffer_size) {
+bool get_id_niri(char *buffer, int buffer_size) {
   return niri_focused_field("\"app_id\":\"", 10, buffer, buffer_size);
 }
 
@@ -210,7 +210,7 @@ PlWindowList get_window_titles_niri(void) {
   return niri_list_fields("\"title\":\"", 9, false);
 }
 
-PlWindowList get_window_names_niri(void) {
+PlWindowList get_window_ids_niri(void) {
   return niri_list_fields("\"app_id\":\"", 10, true);
 }
 
@@ -316,4 +316,109 @@ long get_pid_niri(void) {
     pid = strtol(p + 6, NULL, 10);
   free(json);
   return pid;
+}
+
+bool switch_to_workspace_niri(int index) {
+  if (index < 1)
+    return false;
+  if (!niri_is_active())
+    return false;
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "niri msg action focus-workspace %d", index);
+  return niri_exec(cmd);
+}
+
+bool move_active_window_to_workspace_niri(int index) {
+  if (index < 1)
+    return false;
+  if (!niri_is_active())
+    return false;
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "niri msg action move-window-to-workspace %d",
+           index);
+  return niri_exec(cmd);
+}
+
+bool set_active_window_opacity_niri(int percent) {
+  (void)percent;
+  log_error("niri has no absolute opacity setter (toggle-window-rule-opacity only)");
+  return false;
+}
+
+static bool niri_windows_field(const char *obj, const char *key, char *out,
+                               size_t cap) {
+  const char *p = strstr(obj, key);
+  out[0] = '\0';
+  if (!p)
+    return false;
+  p += strlen(key);
+  while (*p == ' ' || *p == ':' || *p == '"')
+    p++;
+  const char *e = p;
+  while (*e && *e != '"' && *e != ',' && *e != '}' &&
+         !isspace((unsigned char)*e))
+    e++;
+  size_t m = (size_t)(e - p);
+  if (m == 0)
+    return false;
+  if (m >= cap)
+    m = cap - 1;
+  memcpy(out, p, m);
+  out[m] = '\0';
+  return true;
+}
+
+static bool niri_close_windows(const char *needle, bool by_id) {
+  if (!needle || !needle[0])
+    return false;
+  if (!niri_is_active())
+    return false;
+  char *json = Platform_RunTerminalCommand("niri msg --json windows", false);
+  if (!json || !json[0]) {
+    free(json);
+    return false;
+  }
+  int closed = 0;
+  for (char *p = json; (p = strstr(p, "\"id\":")); p += 5) {
+    char *next = strstr(p + 5, "\"id\":");
+    char *limit = next ? next : json + strlen(json);
+    /* bound the scan to this window object */
+    size_t save_len = (size_t)(limit - p);
+    char *obj = malloc(save_len + 1);
+    if (!obj)
+      continue;
+    memcpy(obj, p, save_len);
+    obj[save_len] = '\0';
+    long id = strtol(p + 5, NULL, 10);
+    if (id == 0) {
+      free(obj);
+      continue;
+    }
+    char title[1024] = {0}, app_id[1024] = {0};
+    niri_windows_field(obj, "\"title\":", title, sizeof(title));
+    niri_windows_field(obj, "\"app_id\":", app_id, sizeof(app_id));
+    if (strncmp(app_id, "null", 4) == 0)
+      app_id[0] = '\0';
+    if (strncmp(title, "null", 4) == 0)
+      title[0] = '\0';
+    const char *v = by_id ? app_id : title;
+    bool match = v[0] != '\0' && string_contains_ci(v, needle);
+    free(obj);
+    if (!match)
+      continue;
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "niri msg action close-window --id %ld", id);
+    if (niri_exec(cmd))
+      closed++;
+  }
+  free(json);
+  return closed > 0;
+}
+
+bool close_windows_matching_title_niri(const char *needle) {
+  return niri_close_windows(needle, false);
+}
+
+bool close_windows_matching_id_niri(const char *needle) {
+  return niri_close_windows(needle, true);
 }
