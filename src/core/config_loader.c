@@ -23,7 +23,7 @@
 #define CONFISTART_MARK "// <skald-config-generated>"
 #define CONFIEND_MARK "// </skald-config-generated>"
 
-static const char *confiout_path(void) {
+static const char *config_out_path(void) {
   static char path[256];
   snprintf(path, sizeof(path), "build/config%s", Platform_LibExtension());
   return path;
@@ -34,15 +34,15 @@ typedef struct {
   char uniq[256];
 } ConfigLib;
 
-static ConfigLib cflibs[2];
-static int cfcount = 0;
-static int cfseq = 0;
-static bool cfculled = false;
+static ConfigLib config_libs[2];
+static int config_lib_count = 0;
+static int config_seq = 0;
+static bool stale_swept = false;
 
-static void cfcull_stale_libs(void) {
-  if (cfculled)
+static void config_sweep_stale_libs(void) {
+  if (stale_swept)
     return;
-  cfculled = true;
+  stale_swept = true;
   const char *lib_ext = Platform_LibExtension();
   int nremoved = reload_lib_sweep_stale_hot_libs("build", lib_ext);
   if (nremoved > 0)
@@ -98,7 +98,7 @@ static void heapify_config(void) {
     free(old);
   }
 }
-static bool confiload_copy(const char *uniq, LibHandle *out) {
+static bool config_load_copy(const char *uniq, LibHandle *out) {
   LibHandle h = Platform_LoadLibrary(uniq);
   if (!h) {
     log_error("config dlopen %s failed", uniq);
@@ -120,7 +120,7 @@ static bool confiload_copy(const char *uniq, LibHandle *out) {
 
 static int config_build_load_store(void) {
 
-  const char *out = confiout_path();
+  const char *out = config_out_path();
   int rebuilt = 0;
   if (reload_lib_is_fresh(CONFISRC, out)) {
     log_info("config .so is newer than source, skipping compile");
@@ -137,33 +137,35 @@ static int config_build_load_store(void) {
     log_error("Platform_LibExtension() returned NULL!");
     return -1;
   }
-  char *uniq = reload_lib_unique_copy(out, "build/config", ++cfseq, lib_ext);
+  char *uniq =
+      reload_lib_unique_copy(out, "build/config", ++config_seq, lib_ext);
   if (!uniq) {
     log_error("config copy failed, keeping current");
     return -1;
   }
   LibHandle h = 0;
-  bool ok = confiload_copy(uniq, &h);
+  bool ok = config_load_copy(uniq, &h);
   if (!ok) {
     remove(uniq);
     free(uniq);
     return -1;
   }
-  if (cfcount >= 2) {
-    Platform_UnloadLibrary(cflibs[0].handle);
-    remove(cflibs[0].uniq);
-    cflibs[0] = cflibs[1];
-    cfcount = 1;
+  if (config_lib_count >= 2) {
+    Platform_UnloadLibrary(config_libs[0].handle);
+    remove(config_libs[0].uniq);
+    config_libs[0] = config_libs[1];
+    config_lib_count = 1;
   }
-  cflibs[cfcount].handle = h;
-  safe_copy(cflibs[cfcount].uniq, sizeof(cflibs[cfcount].uniq), uniq);
-  cfcount++;
+  config_libs[config_lib_count].handle = h;
+  safe_copy(config_libs[config_lib_count].uniq,
+            sizeof(config_libs[config_lib_count].uniq), uniq);
+  config_lib_count++;
   free(uniq);
   return rebuilt;
 }
 
 bool config_load(void) {
-  cfcull_stale_libs();
+  config_sweep_stale_libs();
   int r = config_build_load_store();
 
   if (r < 0) {
@@ -173,19 +175,19 @@ bool config_load(void) {
   return true;
 }
 
-static long long cflast_reload_ms = 0;
-static void *cfreload_mutex = NULL;
+static long long config_last_reload_ms = 0;
+static void *config_reload_mutex = NULL;
 
-static void cfreload_lock(void) {
-  if (!cfreload_mutex)
-    cfreload_mutex = Platform_MutexCreate();
-  if (cfreload_mutex)
-    Platform_MutexLock(cfreload_mutex);
+static void config_reload_lock(void) {
+  if (!config_reload_mutex)
+    config_reload_mutex = Platform_MutexCreate();
+  if (config_reload_mutex)
+    Platform_MutexLock(config_reload_mutex);
 }
 
-static void cfreload_unlock(void) {
-  if (cfreload_mutex)
-    Platform_MutexUnlock(cfreload_mutex);
+static void config_reload_unlock(void) {
+  if (config_reload_mutex)
+    Platform_MutexUnlock(config_reload_mutex);
 }
 
 bool config_reload(void) {
@@ -194,42 +196,42 @@ bool config_reload(void) {
     log_warn("cfg reload blocked: %d popup(s) open", _wm2->popup_count);
     return false;
   }
-  cfreload_lock();
+  config_reload_lock();
   long long now = Platform_GetWallClockMs();
   long long debounce = (long long)1000;
-  if (cflast_reload_ms && now - cflast_reload_ms < debounce) {
+  if (config_last_reload_ms && now - config_last_reload_ms < debounce) {
     log_warn("cfg reload blocked: debounce, %lldms since last",
-             (long long)(now - cflast_reload_ms));
-    cfreload_unlock();
+             (long long)(now - config_last_reload_ms));
+    config_reload_unlock();
     return false;
   }
   int r = config_build_load_store();
   if (r < 0) {
     log_warn("cfg reload blocked: build/load failed, keeping old values");
-    cfreload_unlock();
+    config_reload_unlock();
     return false;
   }
   if (r == 0) {
     log_info("config unchanged, reload no-op");
-    cfreload_unlock();
+    config_reload_unlock();
     return false;
   }
-  cflast_reload_ms = Platform_GetWallClockMs();
+  config_last_reload_ms = Platform_GetWallClockMs();
   Platform_ResetUIScale();
-  cfreload_unlock();
+  config_reload_unlock();
   return true;
 }
 
 void config_unload(void) {
-  for (int i = 0; i < cfcount; i++) {
-    if (cflibs[i].handle)
-      Platform_UnloadLibrary(cflibs[i].handle);
-    if (cflibs[i].uniq[0])
-      remove(cflibs[i].uniq);
-    cflibs[i].handle = 0;
-    cflibs[i].uniq[0] = '\0';
+  for (int i = 0; i < config_lib_count; i++) {
+    if (config_libs[i].handle)
+      Platform_UnloadLibrary(config_libs[i].handle);
+    if (config_libs[i].uniq[0])
+      remove(config_libs[i].uniq);
+    config_libs[i].handle = 0;
+    config_libs[i].uniq[0] = '\0';
   }
-  cfcount = 0;
+  config_lib_count = 0;
 }
 
 typedef struct {
@@ -238,14 +240,14 @@ typedef struct {
   size_t cap;
 } ConfigBuf;
 
-static void cfbuf_free(ConfigBuf *b) {
+static void config_buf_free(ConfigBuf *b) {
   free(b->data);
   b->data = NULL;
   b->len = 0;
   b->cap = 0;
 }
 
-static void cfbuf_put(ConfigBuf *b, const char *fmt, ...) {
+static void config_buf_put(ConfigBuf *b, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   va_list aq;
@@ -274,78 +276,79 @@ static void cfbuf_put(ConfigBuf *b, const char *fmt, ...) {
   b->len += (size_t)n;
 }
 
-static void cfput_bool_line(ConfigBuf *b, const char *name, bool v) {
-  cfbuf_put(b, "  %s = %s;\n", name, v ? "true" : "false");
+static void config_emit_bool_line(ConfigBuf *b, const char *name, bool v) {
+  config_buf_put(b, "  %s = %s;\n", name, v ? "true" : "false");
 }
 
-static void cfput_int_line(ConfigBuf *b, const char *name, int v) {
+static void config_emit_int_line(ConfigBuf *b, const char *name, int v) {
   if (strcmp(name, "FontSize") == 0) {
-    cfbuf_put(b, "  FontSize = Platform_GetUnscaledFontSize();\n");
+    config_buf_put(b, "  FontSize = Platform_GetUnscaledFontSize();\n");
     return;
   }
-  cfbuf_put(b, "  %s = %d;\n", name, v);
+  config_buf_put(b, "  %s = %d;\n", name, v);
 }
 
-static void cfput_float_line(ConfigBuf *b, const char *name, float v) {
+static void config_emit_float_line(ConfigBuf *b, const char *name, float v) {
   char tmp[64];
   snprintf(tmp, sizeof(tmp), "%.6g", (double)v);
   if (!strchr(tmp, '.') && !strchr(tmp, 'e') && !strchr(tmp, 'E') &&
       !strchr(tmp, 'n') && !strchr(tmp, 'N'))
-    cfbuf_put(b, "  %s = %s.0f;\n", name, tmp);
+    config_buf_put(b, "  %s = %s.0f;\n", name, tmp);
   else
-    cfbuf_put(b, "  %s = %sf;\n", name, tmp);
+    config_buf_put(b, "  %s = %sf;\n", name, tmp);
 }
 
-static void cfput_escaped(ConfigBuf *b, const char *s) {
-  cfbuf_put(b, "\"");
+static void config_emit_escaped(ConfigBuf *b, const char *s) {
+  config_buf_put(b, "\"");
   for (const char *p = s ? s : ""; *p; p++) {
     if (*p == '\\' || *p == '"')
-      cfbuf_put(b, "\\%c", *p);
+      config_buf_put(b, "\\%c", *p);
     else if (*p == '\n')
-      cfbuf_put(b, "\\n");
+      config_buf_put(b, "\\n");
     else if (*p == '\r')
-      cfbuf_put(b, "\\r");
+      config_buf_put(b, "\\r");
     else
-      cfbuf_put(b, "%c", *p);
+      config_buf_put(b, "%c", *p);
   }
-  cfbuf_put(b, "\"");
+  config_buf_put(b, "\"");
 }
 
-static void cfput_str_line(ConfigBuf *b, const char *name, const char *value) {
+static void config_emit_str_line(ConfigBuf *b, const char *name,
+                                 const char *value) {
   if (config_is_auto_resolved_app(name))
     value = "";
-  cfbuf_put(b, "  %s = ", name);
-  cfput_escaped(b, value);
-  cfbuf_put(b, ";\n");
+  config_buf_put(b, "  %s = ", name);
+  config_emit_escaped(b, value);
+  config_buf_put(b, ";\n");
 }
 
-static void cfput_color_line(ConfigBuf *b, const char *name, ColorRef v) {
-  cfbuf_put(b, "  %s = RGB(%u, %u, %u);\n", name, v & 0xFFu, (v >> 8) & 0xFFu,
-            (v >> 16) & 0xFFu);
+static void config_emit_color_line(ConfigBuf *b, const char *name, ColorRef v) {
+  config_buf_put(b, "  %s = RGB(%u, %u, %u);\n", name, v & 0xFFu,
+                 (v >> 8) & 0xFFu, (v >> 16) & 0xFFu);
 }
 
-static ConfigBuf confiemit_region(void) {
+static ConfigBuf config_emit_region(void) {
   ConfigBuf b = {0};
-  cfbuf_put(&b, "void config_apply(void) {\n");
+  config_buf_put(&b, "void config_apply(void) {\n");
 #define EMIT_LIVE(type, name, def)                                             \
   _Generic((type){0},                                                          \
-      bool: cfput_bool_line,                                                   \
-      int: cfput_int_line,                                                     \
-      float: cfput_float_line,                                                 \
-      const char *: cfput_str_line,                                            \
-      ColorRef: cfput_color_line)(&b, #name, name);
+      bool: config_emit_bool_line,                                             \
+      int: config_emit_int_line,                                               \
+      float: config_emit_float_line,                                           \
+      const char *: config_emit_str_line,                                      \
+      ColorRef: config_emit_color_line)(&b, #name, name);
   SKALD_CONFIG_VALUES(EMIT_LIVE)
 #undef EMIT_LIVE
-  cfbuf_put(&b, "}\n");
+  config_buf_put(&b, "}\n");
   return b;
 }
 
-static long long cfsaved_mtime = 0;
-static long long cfsaved_size = 0;
-static int cfsaved_valid = 0;
+static long long config_saved_mtime = 0;
+static long long config_saved_size = 0;
+static int config_saved_valid = 0;
 
 void config_save(void) {
-  ConfigBuf region = confiemit_region();
+  ConfigBuf region = config_emit_region();
   if (!region.data) {
     log_error("config emit failed");
     return;
@@ -430,11 +433,11 @@ void config_save(void) {
   }
   long long mt = 0, sz = 0;
   if (Platform_FileInfo(CONFISRC, &mt, &sz)) {
-    cfsaved_mtime = mt;
-    cfsaved_size = sz;
-    cfsaved_valid = 1;
+    config_saved_mtime = mt;
+    config_saved_size = sz;
+    config_saved_valid = 1;
   }
   log_info("config saved");
 out:
-  cfbuf_free(&region);
+  config_buf_free(&region);
 }
