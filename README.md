@@ -27,13 +27,13 @@ Skald is a native system control center. It is written entirely in C, boots inst
 - **Modular by Design:** The core is tiny. Everything else (features) is compiled C modules.
 - **Window Manager Native:** Deep integration with X11, Wayland (Sway/Hyprland), and Windows.
 - **Zero Dependencies:** No package manager required to run.
-- **Lightweight:** about 20 MB of RAM with [22] features loaded (see below).
+- **Lightweight:** about 20 MB of RAM with 22 features loaded (see below).
 
 ### Lightweight
 
 <img src="images/process_killer.png" width="700" alt="A process list showing Skald using 19.5 MB of RAM">
 
-*Skald using 19.5 MB after startup with [22] features loaded ([Linux X11]), as shown by a process-killer feature running inside Skald.*
+*Skald using 19.5 MB after startup with 22 features loaded [Linux X11], as shown by a process-killer feature running inside Skald.*
 
 > ⚠️ **Early Development Warning:**
 > Skald is evolving rapidly. The public API (`skapi.h`) is currently **unstable** and changes frequently. If you write your own features right now, be prepared to update your code often as the API matures. After the stable release, Skald will maintain backwards compatibility.
@@ -57,10 +57,6 @@ Skald is a native system control center. It is written entirely in C, boots inst
   <tr>
     <td align="center"><img src="images/cc_rose_pine_calc.png" width="420" alt="The built-in calculator in the search box"><br><sub>Built-in calculator</sub></td>
     <td align="center"><img src="images/cc_web_search.png" width="420" alt="Web search when nothing matches"><br><sub>Web search when nothing matches</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="images/cc_controls.png" width="420" alt="Skald's controls"><br><sub>Controls</sub></td>
-    <td></td>
   </tr>
 </table>
 
@@ -93,8 +89,6 @@ gcc -o nob nob.c
 # 2. Run the build
 ./nob
 
-# 3. -h or --help for list of available commands
-./nob -h
 ```
 
 ## Quick Start (Linux)
