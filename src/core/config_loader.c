@@ -231,6 +231,24 @@ static void config_staging_commit(ConfigStaging *st) {
   st->count = 0;
 }
 
+static long long config_cached_mtime = 0;
+static long long config_cached_size = -1;
+
+static void config_cache_info(const char *path) {
+  long long mtime = 0, size = 0;
+  if (Platform_FileInfo(path, &mtime, &size)) {
+    config_cached_mtime = mtime;
+    config_cached_size = size;
+  }
+}
+
+static bool config_file_unchanged(void) {
+  long long mtime = 0, size = 0;
+  if (!Platform_FileInfo(CONFIG_SRC, &mtime, &size))
+    return false;
+  return mtime == config_cached_mtime && size == config_cached_size;
+}
+
 static bool config_load_path(const char *path) {
   ConfigStaging st;
   memset(&st, 0, sizeof(st));
@@ -245,6 +263,7 @@ static bool config_load_path(const char *path) {
   }
   config_staging_commit(&st);
   theme_apply();
+  config_cache_info(path);
   log_info("config loaded from %s", path);
   return true;
 }
@@ -273,6 +292,11 @@ bool config_reload(void) {
   if (config_last_reload_ms && now - config_last_reload_ms < debounce) {
     log_warn("cfg reload blocked: debounce, %lldms since last",
              (long long)(now - config_last_reload_ms));
+    config_reload_unlock();
+    return false;
+  }
+  if (config_file_unchanged()) {
+    log_info("config reload skipped: %s unchanged", CONFIG_SRC);
     config_reload_unlock();
     return false;
   }
