@@ -656,6 +656,10 @@ void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
 
 bool widget_base_check(const PlatformWidgetBase *base) { return base && !base->dead; }
 
+bool widget_base_ready(const PlatformWidgetBase *base, bool mapped) {
+  return base && !base->dead && base->mapped == mapped;
+}
+
 bool widget_base_move(PlatformWidgetBase *base, int x, int y) {
   if (!base || base->dead)
     return false;

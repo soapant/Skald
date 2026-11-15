@@ -279,16 +279,7 @@ void win32_msg_hover_release(const char *key) {
 }
 
 void win32_msg_hover_present(PlHoverMessageSpec spec) {
-  const char *key = spec.key;
-  const char *message = spec.message;
-  int centerX = spec.x;
-  int centerY = spec.y;
-  int w = spec.w;
-  int h = spec.h;
-  int maxWidth = spec.max_width;
-  int maxHeight = spec.max_height;
-  ColorRef color = spec.color;
-  bool no_bg = spec.no_bg;
+  HOVER_MSG_UNPACK(spec);
 
   HWND existing = hover_msg_hwnd;
   if (hover_key[0] && strcmp(hover_key, key) == 0 && existing &&

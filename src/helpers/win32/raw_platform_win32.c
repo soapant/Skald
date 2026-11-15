@@ -134,6 +134,29 @@ BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp) {
   return TRUE;
 }
 
+static bool win32_is_cloaked(HWND hwnd) {
+  int cloaked = 0;
+  HMODULE dwm = GetModuleHandleA("dwmapi.dll");
+  if (!dwm)
+    return false;
+  HRESULT(WINAPI * p)(HWND, DWORD, PVOID,
+                      DWORD) = (void *)GetProcAddress(dwm,
+                                                      "DwmGetWindowAttribute");
+  return (p && SUCCEEDED(p(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked)
+             ? true
+             : false;
+}
+
+static bool win32_is_hidden_style(HWND hwnd) {
+  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
+  if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
+    HWND owner = GetWindow(hwnd, GW_OWNER);
+    if (owner)
+      return true;
+  }
+  return false;
+}
+
 typedef struct {
   int fcx;
   int fcy;
@@ -161,22 +184,8 @@ BOOL CALLBACK win32_focus_enum(HWND hwnd, LPARAM lp) {
         strcmp(cls, WIDGET_CLASS) == 0) {
       return TRUE;
     }
-  {
-    int cloaked = 0;
-    HMODULE dwm = GetModuleHandleA("dwmapi.dll");
-    if (dwm) {
-      HRESULT(WINAPI * p)(HWND, DWORD, PVOID, DWORD) =
-          (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
-      if (p && SUCCEEDED(p(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked)
-        return TRUE;
-    }
-  }
-  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
-  if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
-    HWND o = GetWindow(hwnd, GW_OWNER);
-    if (o)
-      return TRUE;
-  }
+  if (win32_is_cloaked(hwnd) || win32_is_hidden_style(hwnd))
+    return TRUE;
   char title[256];
   if (GetWindowTextA(hwnd, title, sizeof(title)) == 0)
     return TRUE;
@@ -529,35 +538,12 @@ BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam) {
         strcmp(cls, SEARCH_POPUP_CLASS) == 0 || strcmp(cls, WIDGET_CLASS) == 0)
       return TRUE;
     if (strcmp(cls, "ApplicationFrameWindow") == 0) {
-      int cloaked = 0;
-      HMODULE dwm = GetModuleHandleA("dwmapi.dll");
-      if (dwm) {
-        HRESULT(WINAPI * pDwmGet)(HWND, DWORD, PVOID, DWORD) =
-            (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
-        if (pDwmGet)
-          pDwmGet(hwnd, 14, &cloaked, sizeof(cloaked));
-      }
-      if (cloaked)
+      if (win32_is_cloaked(hwnd))
         return TRUE;
     }
   }
-  {
-    int cloaked = 0;
-    HMODULE dwm = GetModuleHandleA("dwmapi.dll");
-    if (dwm) {
-      HRESULT(WINAPI * pDwmGet)(HWND, DWORD, PVOID, DWORD) =
-          (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
-      if (pDwmGet && SUCCEEDED(pDwmGet(hwnd, 14, &cloaked, sizeof(cloaked))) &&
-          cloaked)
-        return TRUE;
-    }
-  }
-  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
-  if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
-    HWND owner = GetWindow(hwnd, GW_OWNER);
-    if (owner)
-      return TRUE;
-  }
+  if (win32_is_cloaked(hwnd) || win32_is_hidden_style(hwnd))
+    return TRUE;
   RECT wr;
   if (!GetWindowRect(hwnd, &wr))
     return TRUE;

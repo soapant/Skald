@@ -51,6 +51,40 @@ void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
   out->y_raw = y == 0 ? PROMPT_EDIT_INSET : y;
 }
 
+void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
+                             PromptState *state, const EditboxUiSpec *ui,
+                             int text_w, int cursor_x, int ascent, int descent,
+                             FontHandle font) {
+  if (!out || !place || !ui)
+    return;
+  EditboxInitFromSpec init_args = {0};
+  init_args.state = state;
+  init_args.buf = place->buf;
+  init_args.text_len = place->text_len;
+  init_args.cursor = place->cursor;
+  init_args.x = place->x;
+  init_args.y = place->y_raw;
+  init_args.w = place->w;
+  init_args.h = place->h;
+  init_args.cursor_x = cursor_x;
+  init_args.text_w = text_w;
+  init_args.ascent = ascent;
+  init_args.descent = descent;
+  init_args.fontsize = place->fontsize;
+  init_args.font = font;
+  init_args.text_color = ui->color_text;
+  init_args.bg_color = ui->color_bg;
+  init_args.placeholder = ui->placeholder;
+  init_args.caret_height = ui->caret_height;
+  init_args.caret_width = ui->caret_width;
+  init_args.caret_x = ui->caret_x;
+  init_args.caret_y = ui->caret_y;
+  init_args.caret_pos = ui->caret_pos;
+  EditboxInit ebi;
+  editbox_init_from_spec(&ebi, &init_args);
+  editbox_build_spec(out, &ebi);
+}
+
 void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args) {
   if (!out || !args)
     return;
