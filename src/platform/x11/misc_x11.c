@@ -315,7 +315,6 @@ bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
     return false;
   size_t n = compiler_argv_base(cc, argv);
   argv[n++] = "-I/usr/include/freetype2";
-  argv[n++] = "-I/usr/include/libpng16";
   argv[n++] = "-I/usr/include/gio-unix-2.0";
   argv[n++] = "-I/usr/include/X11";
   argv[n++] = "-pipe";

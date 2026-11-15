@@ -1,5 +1,7 @@
 #include "helpers/x11/raw_default_apps_x11.h"
 
+#include "helpers/helpers_fs.h"
+
 static char default_apps_x11[DEFAULT_APP_COUNT][256];
 
 static const char *get_default_terminal(int slot) {
@@ -131,7 +133,7 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
   const char *data_home = getenv("XDG_DATA_HOME");
   const char *data_dirs = getenv("XDG_DATA_DIRS");
   if (!data_dirs || !data_dirs[0])
-    data_dirs = "/usr/local/share:/usr/share";
+    data_dirs = XDG_DATA_DIRS_FALLBACK;
   if (data_home && data_home[0])
     snprintf(dirs, sizeof(dirs), "%s:%s", data_home, data_dirs);
   else

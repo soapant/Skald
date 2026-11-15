@@ -1,5 +1,7 @@
 #include "helpers/x11/raw_default_apps_x11.h"
 
+#include "helpers/helpers_fs.h"
+
 #define APPDIR_CACHE_SLOTS 8
 
 static ListOfFiles ad_cache[APPDIR_CACHE_SLOTS];
@@ -77,7 +79,7 @@ const char *x11_find_terminal_in_desktop_files(const char *const *names,
   }
   const char *data_dirs = getenv("XDG_DATA_DIRS");
   if (!data_dirs || !data_dirs[0])
-    data_dirs = "/usr/local/share:/usr/share";
+    data_dirs = XDG_DATA_DIRS_FALLBACK;
   StringList dirs = String_Split(data_dirs, ":");
   for (size_t i = 0; i < dirs.count; i++) {
     const char *tok = dirs.items[i];

@@ -876,7 +876,7 @@ char *Platform_GetIconPath(char *app_path) {
     if (xdg && xdg[0]) {
       safe_copy(xdg_dirs, sizeof(xdg_dirs), xdg);
     } else {
-      snprintf(xdg_dirs, sizeof(xdg_dirs), "/usr/local/share:/usr/share");
+      safe_copy(xdg_dirs, sizeof(xdg_dirs), XDG_DATA_DIRS_FALLBACK);
     }
     char *save = NULL;
     for (char *dir = strtok_r(xdg_dirs, ":", &save); dir;
@@ -1968,7 +1968,7 @@ static char *x11_lookup_find_in_apps_db(const char *name, const char *home) {
   }
   const char *data_dirs = getenv("XDG_DATA_DIRS");
   if (!data_dirs || !data_dirs[0])
-    data_dirs = "/usr/local/share:/usr/share";
+    data_dirs = XDG_DATA_DIRS_FALLBACK;
   const char *p = data_dirs;
   while (p && *p && !hit) {
     const char *end = strchr(p, ':');
