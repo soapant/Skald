@@ -13,4 +13,5 @@ features/
 !features/control_center
 !features/settings
 !features/clipboard_history
+!features/window_management
 /ISSUES.md
