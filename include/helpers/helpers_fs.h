@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#define XDG_DATA_DIRS_FALLBACK "/usr/local/share:/usr/share"
+
 bool data_dir(char *out, size_t out_len);
 bool expand_path(const char *template_path, char *out, size_t out_size);
 bool temp_file_write(const char *name, const void *data, size_t len,
