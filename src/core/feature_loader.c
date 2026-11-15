@@ -307,7 +307,7 @@ static void manifest_write_baseline(const char *name) {
 }
 
 void feature_loader_owner_feature_name(const char *owner_path, char *out,
-                                    size_t n) {
+                                       size_t n) {
   if (!out || n == 0)
     return;
   out[0] = '\0';
@@ -389,8 +389,8 @@ static bool manifest_read_or_create(const char *name, char *buf, size_t cap,
   if (fseek(f, 0, SEEK_END) == 0) {
     long sz = ftell(f);
     if (sz >= 0 && (size_t)sz >= cap) {
-      log_error("manifest '%s' is %ld bytes, too large to rewrite (%zu)",
-                path, sz, cap - 1);
+      log_error("manifest '%s' is %ld bytes, too large to rewrite (%zu)", path,
+                sz, cap - 1);
       fclose(f);
       return false;
     }
@@ -454,7 +454,7 @@ static void manifest_add_entry(const char *name, const char *section,
   log_info("manifest '%s' %s += %s", name, section, entry);
 }
 void feature_loader_manifest_add_provides(const char *owner_path,
-                                       const char *key) {
+                                          const char *key) {
   if (!owner_path || !owner_path[0] || !key || !key[0])
     return;
   char name[64];
@@ -465,7 +465,7 @@ void feature_loader_manifest_add_provides(const char *owner_path,
 }
 
 void feature_loader_manifest_add_depends(const char *owner_path,
-                                      const char *dep_name) {
+                                         const char *dep_name) {
   if (!owner_path || !owner_path[0] || !dep_name || !dep_name[0])
     return;
   char name[64];
@@ -669,8 +669,8 @@ static int s_failed_count = 0;
 
 static void feature_mark_failed(const char *dir, time_t mtime) {
   if (s_failed_count < 64) {
-    safe_copy(s_failed[s_failed_count].dir, sizeof(s_failed[s_failed_count].dir),
-             dir);
+    safe_copy(s_failed[s_failed_count].dir,
+              sizeof(s_failed[s_failed_count].dir), dir);
     s_failed[s_failed_count].src_mtime = mtime;
     s_failed_count++;
   }
@@ -696,8 +696,7 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     if (ent_name[0] == '.')
       continue;
     char subpath[1024];
-    snprintf(subpath, sizeof(subpath), "%.255s/%.255s", FeaturePath,
-             ent_name);
+    snprintf(subpath, sizeof(subpath), "%.255s/%.255s", FeaturePath, ent_name);
     if (!Platform_DirExists(subpath))
       continue;
     char src[1024], dll[1024];
@@ -711,8 +710,7 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     bool known_bad = false;
     for (int fi = 0; fi < s_failed_count; fi++) {
       if (s_failed[fi].src_mtime == src_mtime &&
-          strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) ==
-              0) {
+          strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) == 0) {
         known_bad = true;
         break;
       }
@@ -765,8 +763,8 @@ bool feature_loader_init(void) {
   UNLOCK();
   feature_init_count = 0;
   {
-    int removed =
-        reload_lib_sweep_stale_hot_libs("build/features", Platform_LibExtension());
+    int removed = reload_lib_sweep_stale_hot_libs("build/features",
+                                                  Platform_LibExtension());
     if (removed < 0)
       log_warn("init: cannot open build/features, no features will load");
     else if (removed > 0)

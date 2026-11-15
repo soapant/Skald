@@ -110,7 +110,7 @@ static int remap_vk_from_token(const char *tok) {
 }
 
 bool remap_parse_triggers(const char *str, int *out_mods, int *out_vks,
-                         int *out_count) {
+                          int *out_count) {
   *out_mods = 0;
   *out_count = 0;
   if (!str)

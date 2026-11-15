@@ -203,7 +203,8 @@ static int hotkey_token_to_vk(const char *token, int *out_mods) {
       strcasecmp(token, "LMeta") == 0)
     return VK_LWIN;
 
-  if (string_contains_ci(token, "Ctrl") || string_contains_ci(token, "Control")) {
+  if (string_contains_ci(token, "Ctrl") ||
+      string_contains_ci(token, "Control")) {
     if (out_mods)
       *out_mods |= HOTKEY_MOD_CTRL;
     return 0;

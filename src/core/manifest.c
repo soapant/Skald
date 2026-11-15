@@ -61,7 +61,7 @@ void manifest_unquote(char *s) {
 }
 
 bool manifest_parse_string(const char *name, const char *data,
-                          FeatureManifest *out) {
+                           FeatureManifest *out) {
   if (!out || !data)
     return false;
   memset(out, 0, sizeof(*out));
@@ -132,7 +132,7 @@ bool manifest_parse_string(const char *name, const char *data,
       continue;
     if (section == 1 && out->provide_count < MANIFEST_LIST_MAX) {
       safe_copy(out->provides[out->provide_count++], sizeof(out->provides[0]),
-               work);
+                work);
     } else if (section == 2 && out->dep_count < MANIFEST_LIST_MAX) {
       safe_copy(out->deps[out->dep_count++], sizeof(out->deps[0]), work);
     } else if (section != 0) {
@@ -145,7 +145,7 @@ bool manifest_parse_string(const char *name, const char *data,
 }
 
 bool manifest_parse_file(const char *path, const char *name,
-                        FeatureManifest *out) {
+                         FeatureManifest *out) {
   if (!out)
     return false;
   memset(out, 0, sizeof(*out));

@@ -225,7 +225,7 @@ void event_bus_register(PlEvent event, PlEventCallback cb) {
     if (event_registry[event][i].cb == NULL) {
       event_registry[event][i].owner[0] = '\0';
       owner_resolve_for_func((void *)cb, event_registry[event][i].owner,
-                           sizeof(event_registry[event][i].owner));
+                             sizeof(event_registry[event][i].owner));
       if (event_registry[event][i].owner[0] == '\0') {
         log_warn("event_bus_register: cannot resolve owner, dropping callback");
         return;

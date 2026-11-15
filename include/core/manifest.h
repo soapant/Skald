@@ -18,8 +18,8 @@ typedef struct {
 void manifest_trim(char *s);
 void manifest_unquote(char *s);
 bool manifest_parse_string(const char *name, const char *data,
-                          FeatureManifest *out);
+                           FeatureManifest *out);
 bool manifest_parse_file(const char *path, const char *name,
-                        FeatureManifest *out);
+                         FeatureManifest *out);
 
 #endif

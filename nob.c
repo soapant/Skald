@@ -1934,19 +1934,25 @@ int main(int argc, char **argv) {
       printf("  -W, --werror   Build the main app with warnings as errors\n");
       printf("  -r, --run      Run skald after build\n");
       printf(
-          "  -R, --release  Build a self-contained release/ bundle: skald[.exe],\n"
+          "  -R, --release  Build a self-contained release/ bundle: "
+          "skald[.exe],\n"
           "                 sdk/, config/config.c (defaults), features/ with\n"
           "                 control_center, settings and clipboard_history,\n"
-          "                 resources/ (png + ico); Windows also emits main.lib.a;\n"
+          "                 resources/ (png + ico); Windows also emits "
+          "main.lib.a;\n"
           "                 no compiler objects\n");
       printf("  -t, --test     Run test suite\n");
-      printf("  -A, --asan     Build with clang -fsanitize=address,undefined\n");
-      printf("  -c, --check    Check for skapi includes outside features/tests,\n"
-             "                 function naming in platform/ and helpers/ (.c and .h;\n"
-             "                 .c externs must match the directory prefix or be\n"
-             "                 declared in a header; statics are exempt),\n"
-             "                 and sk_ / Sk namesquatting outside the skapi layer\n"
-             "                 (case insensitive)\n");
+      printf(
+          "  -A, --asan     Build with clang -fsanitize=address,undefined\n");
+      printf(
+          "  -c, --check    Check for skapi includes outside features/tests,\n"
+          "                 function naming in platform/ and helpers/ (.c and "
+          ".h;\n"
+          "                 .c externs must match the directory prefix or be\n"
+          "                 declared in a header; statics are exempt),\n"
+          "                 and sk_ / Sk namesquatting outside the skapi "
+          "layer\n"
+          "                 (case insensitive)\n");
       printf("  -h, --help     Show this help\n");
       return 0;
     }

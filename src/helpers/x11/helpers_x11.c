@@ -706,8 +706,8 @@ bool x11_prewarm_image(Display *dpy, const char *path) {
   if (!dpy)
     return false;
   Picture pic = 0;
-  bool ok = image_cache_store(dpy, DefaultRootWindow(dpy), path,
-                              FontSize, FontSize, &pic);
+  bool ok = image_cache_store(dpy, DefaultRootWindow(dpy), path, FontSize,
+                              FontSize, &pic);
   if (!ok)
     return false;
   pthread_mutex_unlock(&img_cache_mtx);
@@ -1538,7 +1538,8 @@ static void bg_cache_store(Display *dpy, Pixmap pm, const BgKey *k) {
 }
 
 static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
-                                           int h, const XWindowAttributes *attrs,
+                                           int h,
+                                           const XWindowAttributes *attrs,
                                            unsigned long base,
                                            unsigned int baseAlpha8) {
   Visual *vis = attrs->visual;
@@ -1845,8 +1846,7 @@ static Picture border_slot_get_or_create(Display *dpy, int w, int h) {
   }
   Pixmap pm = 0;
   Picture pic = 0;
-  bool ok =
-      x11_upload_argb(dpy, DefaultRootWindow(dpy), buf, w, h, &pm, &pic);
+  bool ok = x11_upload_argb(dpy, DefaultRootWindow(dpy), buf, w, h, &pm, &pic);
   free(buf);
   if (!ok)
     return 0;

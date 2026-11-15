@@ -61,7 +61,7 @@ char edit_buffer_pair_for(char c) {
 }
 
 size_t edit_buffer_insert_text(char *buf, size_t cap, size_t *cursor,
-                            const char *text, size_t len) {
+                               const char *text, size_t len) {
 
   if (!buf || !cursor || !text || len == 0 || cap == 0)
     return 0;

@@ -138,7 +138,7 @@ void key_register_interceptor(KeyInterceptorFn fn) {
   key_interceptor_owner[0] = '\0';
   if (fn)
     owner_resolve_for_func((void *)fn, key_interceptor_owner,
-                         sizeof(key_interceptor_owner));
+                           sizeof(key_interceptor_owner));
 }
 
 void key_purge_interceptor_owner(const char *path_a, const char *path_b) {
@@ -232,8 +232,7 @@ bool lookup_ci_eq(const char *a, const char *b) {
 
 char *lookup_first_line(char *out) {
   char *start = out;
-  while (*start == ' ' || *start == '\t' || *start == '\r' ||
-         *start == '\n')
+  while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n')
     start++;
   char *end = start;
   while (*end && *end != '\r' && *end != '\n')
@@ -244,8 +243,7 @@ char *lookup_first_line(char *out) {
   return start;
 }
 
-bool path_next_entry(const char **cursor, char sep, char *out,
-                     size_t out_cap) {
+bool path_next_entry(const char **cursor, char sep, char *out, size_t out_cap) {
   const char *p = cursor ? *cursor : NULL;
   while (p && *p) {
     const char *end = strchr(p, sep);

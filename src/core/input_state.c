@@ -90,7 +90,7 @@ bool input_was_key_released(int vk) {
 }
 
 void input_set_key_callback(void (*cb)(int vk, bool down, int mods, void *ud),
-                          void *ud) {
+                            void *ud) {
   key_cb = cb;
   key_ud = ud;
   cb_owner[0] = '\0';
@@ -167,7 +167,8 @@ static unsigned long long input_now_us(void) {
   int64_t freq = timer_tick_frequency();
   if (freq <= 0)
     freq = 1;
-  unsigned long long whole = (unsigned long long)ticks / (unsigned long long)freq;
+  unsigned long long whole =
+      (unsigned long long)ticks / (unsigned long long)freq;
   unsigned long long rem = (unsigned long long)ticks % (unsigned long long)freq;
   return whole * 1000000ULL + rem * 1000000ULL / (unsigned long long)freq;
 }
