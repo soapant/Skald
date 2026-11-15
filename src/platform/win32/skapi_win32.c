@@ -184,7 +184,6 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   int h = place.h;
   int text_len = place.text_len;
   int cursor = place.cursor;
-  int y_raw = place.y_raw;
   HFONT hfont_created = NULL;
   HFONT hfont = spec->font.hfont
                     ? spec->font.hfont
@@ -215,33 +214,17 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     RECT textRc = {x + PROMPT_EDIT_INSET, y, x + w, y + h};
     DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
   }
-  EditboxInit ebi;
-  EditboxInitFromSpec init_args = {.state = state,
-                                   .buf = buf,
-                                   .text_len = text_len,
-                                   .cursor = cursor,
-                                   .x = x,
-                                   .y = y_raw,
-                                   .w = w,
-                                   .h = h,
-                                   .cursor_x = cursor_x,
-                                   .text_w = text_w,
-                                   .ascent = ascent,
-                                   .descent = descent,
-                                   .fontsize = fs,
-                                   .font = spec->font,
-                                   .text_color = spec->color_text,
-                                   .bg_color = spec->color_bg,
-                                   .placeholder = spec->placeholder,
-                                   .caret_height = spec->caret_height,
-                                   .caret_width = spec->caret_width,
-                                   .caret_x = spec->caret_x,
-                                   .caret_y = spec->caret_y,
-                                   .caret_pos = spec->caret_pos};
-  editbox_init_from_spec(&ebi, &init_args);
-
+  EditboxUiSpec ui = {.color_text = spec->color_text,
+                      .color_bg = spec->color_bg,
+                      .placeholder = spec->placeholder,
+                      .caret_height = spec->caret_height,
+                      .caret_width = spec->caret_width,
+                      .caret_x = spec->caret_x,
+                      .caret_y = spec->caret_y,
+                      .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_build_spec(&eb, &ebi);
+  editbox_spec_from_place(&eb, &place, state, &ui, text_w, cursor_x, ascent,
+                          descent, spec->font);
 
   bool prev_lb = pl_draw_state_get()->win32_listbox_surface;
   pl_draw_state_get()->win32_listbox_surface = false;

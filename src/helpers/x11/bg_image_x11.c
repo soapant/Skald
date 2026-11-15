@@ -188,38 +188,15 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
   }
   free(full);
 
-  Pixmap pm = XCreatePixmap(dpy, DefaultRootWindow(dpy), w, h, 32);
-  if (!pm) {
-    free(crop);
-    return false;
-  }
-
-  XRenderPictFormat *fmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
-  if (!fmt) {
-    XFreePixmap(dpy, pm);
-    free(crop);
-    return false;
-  }
-
-  XImage img;
-  x11_init_argb_image(dpy, &img, crop, w, h, 0xff0000, 0x00ff00, 0x0000ff);
-  bool ok = false;
-  if (XInitImage(&img)) {
-    GC gc = XCreateGC(dpy, pm, 0, NULL);
-    XPutImage(dpy, pm, gc, &img, 0, 0, 0, 0, w, h);
-    XFreeGC(dpy, gc);
-    Picture pic = XRenderCreatePicture(dpy, pm, fmt, 0, NULL);
-    if (pic) {
-      *out_pm = pm;
-      *out_pic = pic;
-      ok = true;
-    }
-  }
-  if (!ok) {
-    XFreePixmap(dpy, pm);
-  }
+  Pixmap pm = 0;
+  Picture pic = 0;
+  bool ok = x11_upload_argb(dpy, DefaultRootWindow(dpy), crop, w, h, &pm, &pic);
   free(crop);
-  return ok;
+  if (!ok)
+    return false;
+  *out_pm = pm;
+  *out_pic = pic;
+  return true;
 }
 
 static bool bg_slot_valid(BgTileSlot *t, const char *path, int w, int h) {

@@ -24,6 +24,7 @@
 #include "helpers/helpers_input_state.h"
 #include "core/window_manager.h"
 #include "core/thread_registry.h"
+#include "core/http.h"
 #include "core/owner_purge.h"
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
@@ -1492,23 +1493,23 @@ int sk_get_text_height(int fontsize) {
   return Platform_GetTextLineHeight(fontsize);
 }
 
-char *sk_http_get(const char *url) { return Platform_HttpGet(url); }
+char *sk_http_get(const char *url) { return http_get(url); }
 
 char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
-  return Platform_HttpGetLimited(url, max_bytes, out_len);
+  return http_get_limited(url, max_bytes, out_len);
 }
 
 bool sk_http_download(const char *url, const char *save_path) {
-  return Platform_HttpDownload(url, save_path);
+  return http_download(url, save_path);
 }
 
 char *sk_http_post(const char *url, const char *content_type,
                    const char *body) {
-  return Platform_HttpPost(url, content_type, body);
+  return http_post(url, content_type, body);
 }
 
 void sk_http_get_async(const char *url, SkHttpCallback cb, void *userdata) {
-  Platform_HttpGetAsync(url, cb, userdata);
+  http_get_async(url, cb, userdata);
   return;
 }
 
