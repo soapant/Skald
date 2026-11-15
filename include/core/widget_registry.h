@@ -1,5 +1,5 @@
-#ifndef CORE_WIDGET_REGISTRY_H
-#define CORE_WIDGET_REGISTRY_H
+#ifndef WIDGET_REGISTRY_H
+#define WIDGET_REGISTRY_H
 
 #include <stdbool.h>
 #include "core/types.h"

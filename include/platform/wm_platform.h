@@ -1,6 +1,7 @@
-#include <stdbool.h>
 #ifndef WM_PLATFORM_H
 #define WM_PLATFORM_H
+
+#include <stdbool.h>
 
 #include "core/window_manager.h"
 #include "core/types.h"

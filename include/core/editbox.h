@@ -1,5 +1,5 @@
-#ifndef CORE_EDITBOX_H
-#define CORE_EDITBOX_H
+#ifndef EDITBOX_H
+#define EDITBOX_H
 
 #include <stdbool.h>
 

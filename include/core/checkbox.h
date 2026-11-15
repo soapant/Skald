@@ -1,5 +1,5 @@
-#ifndef CORE_CHECKBOX_H
-#define CORE_CHECKBOX_H
+#ifndef CHECKBOX_H
+#define CHECKBOX_H
 
 #include <stdbool.h>
 

@@ -1,5 +1,5 @@
-#ifndef CORE_RELOAD_LIB_H
-#define CORE_RELOAD_LIB_H
+#ifndef RELOAD_LIB_H
+#define RELOAD_LIB_H
 
 #include <stdbool.h>
 

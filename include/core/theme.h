@@ -1,5 +1,5 @@
-#ifndef CORE_THEME_H
-#define CORE_THEME_H
+#ifndef THEME_H
+#define THEME_H
 
 #include <stdbool.h>
 #include <stddef.h>

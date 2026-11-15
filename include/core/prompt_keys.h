@@ -1,5 +1,5 @@
-#ifndef CORE_PROMPT_KEYS_H
-#define CORE_PROMPT_KEYS_H
+#ifndef PROMPT_KEYS_H
+#define PROMPT_KEYS_H
 
 #include <stdbool.h>
 #include "core/types.h"

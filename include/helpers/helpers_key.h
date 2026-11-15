@@ -1,8 +1,7 @@
-#include <stdbool.h>
-
 #ifndef HELPERS_KEY_H
 #define HELPERS_KEY_H
 
+#include <stdbool.h>
 #include "core/types/keys.h"
 
 bool key_is_ctrl_pressed(void);

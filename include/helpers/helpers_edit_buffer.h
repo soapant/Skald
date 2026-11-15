@@ -1,5 +1,5 @@
-#ifndef PLATFORM_INPUT_H
-#define PLATFORM_INPUT_H
+#ifndef HELPERS_EDIT_BUFFER_H
+#define HELPERS_EDIT_BUFFER_H
 
 #include <stddef.h>
 #include <stdbool.h>
