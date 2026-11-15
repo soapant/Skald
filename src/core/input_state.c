@@ -167,7 +167,9 @@ static unsigned long long input_now_us(void) {
   int64_t freq = timer_tick_frequency();
   if (freq <= 0)
     freq = 1;
-  return (unsigned long long)((ticks * 1000000LL) / freq);
+  unsigned long long whole = (unsigned long long)ticks / (unsigned long long)freq;
+  unsigned long long rem = (unsigned long long)ticks % (unsigned long long)freq;
+  return whole * 1000000ULL + rem * 1000000ULL / (unsigned long long)freq;
 }
 
 void global_key_push(const PlatformKeyEvent *ev) {
