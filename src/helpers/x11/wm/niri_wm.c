@@ -306,8 +306,8 @@ bool snap_active_window_niri(SnapPreset preset) {
 long get_pid_niri(void) {
   if (!niri_is_active())
     return 0;
-  char *json = Platform_RunTerminalCommand(
-      "niri msg --json focused-window", false);
+  char *json =
+      Platform_RunTerminalCommand("niri msg --json focused-window", false);
   if (!json)
     return 0;
   const char *p = strstr(json, "\"pid\":");
@@ -341,7 +341,8 @@ bool move_active_window_to_workspace_niri(int index) {
 
 bool set_active_window_opacity_niri(int percent) {
   (void)percent;
-  log_error("niri has no absolute opacity setter (toggle-window-rule-opacity only)");
+  log_error(
+      "niri has no absolute opacity setter (toggle-window-rule-opacity only)");
   return false;
 }
 
