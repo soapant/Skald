@@ -644,6 +644,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           int visible_count =
               (rect.bottom - prompt_list_bottom_margin() - list_top) /
               row_height;
+          listbox_apply_pending_scroll(estate->lb, visible_count);
           int view_offset = estate->lb->view_offset;
 
           pl_draw_state_get()->win32_listbox_surface = true;
