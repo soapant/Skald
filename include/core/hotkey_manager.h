@@ -25,7 +25,6 @@ bool hotkey_process(int vk_code, int modifiers);
 void hotkey_drain_pending(void);
 int hotkey_wake_fd(void);
 void hotkey_set_suspended(bool suspended);
-unsigned long hotkey_pending_dropped(void);
 bool hotkey_has_mouse_binding(void);
 bool hotkey_mouse_button_bound(int btn);
 

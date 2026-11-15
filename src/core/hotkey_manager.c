@@ -109,7 +109,6 @@ static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
   HOTKEY_Q_UNLOCK();
 }
 
-unsigned long hotkey_pending_dropped(void) { return pending_dropped; }
 #define HOTKEY_HOLD_MAX 16
 typedef struct {
   int vk;
