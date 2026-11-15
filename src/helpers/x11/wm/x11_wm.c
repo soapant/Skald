@@ -932,8 +932,7 @@ bool x11_lower_active_window(void) {
 }
 
 static bool x11_monitor_for_rect(Display *display, int wx, int wy, int ww,
-                                 int wh, int *ox, int *oy, int *ow,
-                                 int *oh) {
+                                 int wh, int *ox, int *oy, int *ow, int *oh) {
   (void)ww;
   (void)wh;
   Window root = DefaultRootWindow(display);
@@ -955,7 +954,10 @@ static bool x11_monitor_for_rect(Display *display, int wx, int wy, int ww,
     int mx = ci->x, my = ci->y, mw = (int)ci->width, mh = (int)ci->height;
     XRRFreeCrtcInfo(ci);
     if (cx >= mx && cx < mx + mw && cy >= my && cy < my + mh) {
-      bx = mx; by = my; bw = mw; bh = mh;
+      bx = mx;
+      by = my;
+      bw = mw;
+      bh = mh;
       got = true;
       break;
     }
@@ -964,14 +966,20 @@ static bool x11_monitor_for_rect(Display *display, int wx, int wy, int ww,
     int d = dx * dx + dy * dy;
     if (d < best_d) {
       best_d = d;
-      bx = mx; by = my; bw = mw; bh = mh;
+      bx = mx;
+      by = my;
+      bw = mw;
+      bh = mh;
       got = true;
     }
   }
   XRRFreeScreenResources(res);
   if (!got)
     return false;
-  *ox = bx; *oy = by; *ow = bw; *oh = bh;
+  *ox = bx;
+  *oy = by;
+  *ow = bw;
+  *oh = bh;
   return true;
 }
 

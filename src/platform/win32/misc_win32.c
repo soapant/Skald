@@ -375,7 +375,7 @@ static bool win32_compiler_probe(const char *cc) {
 static const char *win32_compiler_found(void) {
   static const char *cc = NULL;
   if (!cc) {
-    const char *candidates[] = {"gcc","clang",NULL};
+    const char *candidates[] = {"gcc", "clang", NULL};
     cc = compiler_find_usable(candidates, win32_compiler_probe);
   }
   return cc;

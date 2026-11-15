@@ -11,7 +11,7 @@ static void settings_tab(PromptState *state) {}
 
 static void settings_render(PromptState *state) {
   sk_place_button(.name = "Checkbox", .x = state->width / 2,
-                    .y = state->height / 2, .text = "Button");
+                  .y = state->height / 2, .text = "Button");
 }
 
 static void trigger_settings(void) {
