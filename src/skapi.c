@@ -3235,7 +3235,7 @@ static void sk_config_init_locked(void) {
     sk_config_migrate_hotkeys_txt(dir);
 
   for (int i = 0; i < alias_entry_count; i++)
-    sk_add_alias(.alias = alias_entries[i].alias,
+    sk_register_alias(.alias = alias_entries[i].alias,
                  .target = alias_entries[i].target);
 }
 
@@ -3405,7 +3405,7 @@ bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
   alias_entries_set(spec->target, alias);
   if (!sk_config_write())
     log_error("sk_config: failed to save %s", sk_config_path);
-  sk_add_alias(.alias = alias, .target = spec->target);
+  sk_register_alias(.alias = alias, .target = spec->target);
   sk_config_unlock();
   return true;
 }
