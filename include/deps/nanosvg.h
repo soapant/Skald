@@ -1884,9 +1884,11 @@ static int nsvg__parseNameValue(NSVGparser *p, const char *start,
 
   val = str;
 
-  while (str > start && (*str == ':' || nsvg__isspace(*str)))
+  while (str > start && str < end && (*str == ':' || nsvg__isspace(*str)))
     --str;
   ++str;
+  if (str > end)
+    str = end;
 
   n = (int)(str - start);
   if (n > 511)
@@ -1920,7 +1922,7 @@ static void nsvg__parseStyle(NSVGparser *p, const char *str) {
       ++str;
     end = str;
 
-    while (end > start && (*end == ';' || nsvg__isspace(*end)))
+    while (end > start && (*end == ';' || *end == '\0' || nsvg__isspace(*end)))
       --end;
     ++end;
 
