@@ -189,6 +189,21 @@ static bool prompt_win_no_bg(void) {
   return false;
 }
 
+static HBRUSH s_bg_brush = NULL;
+static HBRUSH s_sel_brush = NULL;
+static COLORREF s_bg_color = (COLORREF)-1;
+static COLORREF s_sel_color = (COLORREF)-1;
+
+static HBRUSH cached_brush(HBRUSH *cache, COLORREF *cached, COLORREF want) {
+  if (!*cache || *cached != want) {
+    if (*cache)
+      DeleteObject(*cache);
+    *cache = CreateSolidBrush(want);
+    *cached = want;
+  }
+  return *cache;
+}
+
 LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                       LPARAM lParam) {
 
@@ -210,9 +225,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       return DefWindowProcA(hwnd, msg, wParam, lParam);
     }
   }
-  static HBRUSH s_bg_brush = NULL;
-  static HBRUSH s_sel_brush = NULL;
-
   switch (msg) {
   case WM_LBUTTONDOWN: {
     POINT pt;
@@ -362,9 +374,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     SetTextColor(hdc, tc);
     SetBkColor(hdc, COLOR_BG);
-    if (!s_bg_brush)
-      s_bg_brush = CreateSolidBrush(COLOR_BG);
-    return (LRESULT)s_bg_brush;
+    return (LRESULT)cached_brush(&s_bg_brush, &s_bg_color, COLOR_BG);
   }
   case WM_CTLCOLORLISTBOX: {
     HDC hdc = (HDC)wParam;
@@ -375,9 +385,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     SetTextColor(hdc, COLOR_TEXT);
     SetBkColor(hdc, COLOR_BG);
-    if (!s_bg_brush)
-      s_bg_brush = CreateSolidBrush(COLOR_BG);
-    return (LRESULT)s_bg_brush;
+    return (LRESULT)cached_brush(&s_bg_brush, &s_bg_color, COLOR_BG);
   }
   case WM_CREATE: {
     break;
@@ -477,9 +485,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         }
       } else {
         if (isSelected) {
-          if (!s_sel_brush)
-            s_sel_brush = CreateSolidBrush(COLOR_SELECTED_TEXT);
-          FillRect(pdis->hDC, &pdis->rcItem, s_sel_brush);
+          FillRect(
+              pdis->hDC, &pdis->rcItem,
+              cached_brush(&s_sel_brush, &s_sel_color, COLOR_SELECTED_TEXT));
         } else {
           RECT winRc;
           GetClientRect(hwnd, &winRc);
@@ -499,9 +507,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           }
           if (!win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, winW, winH,
                                          lbOrigin.x, lbOrigin.y)) {
-            if (!s_bg_brush)
-              s_bg_brush = CreateSolidBrush(COLOR_BG);
-            FillRect(pdis->hDC, &pdis->rcItem, s_bg_brush);
+            FillRect(pdis->hDC, &pdis->rcItem,
+                     cached_brush(&s_bg_brush, &s_bg_color, COLOR_BG));
           }
         }
       }
@@ -603,9 +610,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                       rect.bottom - rect.top, 0, 0);
       }
       if (!imgDrawn) {
-        if (!s_bg_brush)
-          s_bg_brush = CreateSolidBrush(COLOR_BG);
-        FillRect(paintDC, &ps.rcPaint, s_bg_brush);
+        FillRect(paintDC, &ps.rcPaint,
+                 cached_brush(&s_bg_brush, &s_bg_color, COLOR_BG));
       }
       win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
     }
@@ -765,6 +771,12 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (s_sel_brush) {
       DeleteObject(s_sel_brush);
       s_sel_brush = NULL;
+      s_sel_color = (COLORREF)-1;
+    }
+    if (s_bg_brush) {
+      DeleteObject(s_bg_brush);
+      s_bg_brush = NULL;
+      s_bg_color = (COLORREF)-1;
     }
     popup_free_back_buffer();
     s_repaint_queued = false;
