@@ -246,6 +246,13 @@ bool Platform_FocusWindowUp(void);
 bool Platform_FocusWindowDown(void);
 bool Platform_FocusWindowRight(void);
 bool Platform_MinimizeActiveWindow(void);
+bool Platform_ToggleMaximizeActiveWindow(void);
+bool Platform_ToggleAlwaysOnTopActiveWindow(void);
+bool Platform_RaiseActiveWindow(void);
+bool Platform_LowerActiveWindow(void);
+bool Platform_CenterActiveWindow(void);
+bool Platform_SnapActiveWindow(SnapPreset preset);
+long Platform_GetActiveWindowPid(void);
 bool Platform_LaunchDetached(const char *command);
 const char *Platform_GetDefaultApp(DefaultAppKind kind);
 bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,

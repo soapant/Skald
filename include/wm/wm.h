@@ -5,10 +5,54 @@
 #include <ctype.h>
 #include <string.h>
 
-char *wm_trim_focus_title(const char *title);
+#include <stdlib.h>
+#include <string.h>
 
 #include "core/types.h"
 #include "core/types/window.h"
+
+static inline void wm_snap_rect(int mx, int my, int mw, int mh,
+                                SnapPreset p, int *x, int *y, int *w,
+                                int *h) {
+  int hw = mw / 2, hh = mh / 2;
+  switch (p) {
+  case SNAP_LEFT:
+    *x = mx; *y = my; *w = hw; *h = mh; return;
+  case SNAP_RIGHT:
+    *x = mx + hw; *y = my; *w = mw - hw; *h = mh; return;
+  case SNAP_TOP:
+    *x = mx; *y = my; *w = mw; *h = hh; return;
+  case SNAP_BOTTOM:
+    *x = mx; *y = my + hh; *w = mw; *h = mh - hh; return;
+  case SNAP_TOP_LEFT:
+    *x = mx; *y = my; *w = hw; *h = hh; return;
+  case SNAP_TOP_RIGHT:
+    *x = mx + hw; *y = my; *w = mw - hw; *h = hh; return;
+  case SNAP_BOTTOM_LEFT:
+    *x = mx; *y = my + hh; *w = hw; *h = mh - hh; return;
+  case SNAP_BOTTOM_RIGHT:
+    *x = mx + hw; *y = my + hh; *w = mw - hw; *h = mh - hh; return;
+  }
+}
+
+static inline bool wm_json_num_at(const char *json, const char *key,
+                                  long *out_v) {
+  const char *p = json ? strstr(json, key) : NULL;
+  if (!p)
+    return false;
+  p += strlen(key);
+  while (*p == ' ' || *p == '\t' || *p == ':')
+    p++;
+  char *end = NULL;
+  long v = strtol(p, &end, 10);
+  if (!end || end == p)
+    return false;
+  *out_v = v;
+  return true;
+}
+
+char *wm_trim_focus_title(const char *title);
+
 
 #include "helpers/helpers_text.h"
 
@@ -33,6 +77,13 @@ bool wm_focus_window_up(void);
 bool wm_focus_window_down(void);
 bool wm_focus_window_right(void);
 bool wm_minimize_active_window(void);
+bool wm_toggle_maximize_active(void);
+bool wm_toggle_always_on_top_active(void);
+bool wm_raise_active_window(void);
+bool wm_lower_active_window(void);
+bool wm_center_active_window(void);
+bool wm_snap_active_window(SnapPreset preset);
+long wm_get_active_window_pid(void);
 bool wm_inject_key(int vk, int down);
 bool wm_get_mouse_pos(int *x, int *y);
 

@@ -1178,6 +1178,26 @@ bool sk_toggle_minimized_active(void) {
   return Platform_MinimizeActiveWindow();
 }
 
+bool sk_toggle_maximize_active(void) {
+  return Platform_ToggleMaximizeActiveWindow();
+}
+
+bool sk_toggle_always_on_top_active(void) {
+  return Platform_ToggleAlwaysOnTopActiveWindow();
+}
+
+bool sk_raise_active_window(void) { return Platform_RaiseActiveWindow(); }
+
+bool sk_lower_active_window(void) { return Platform_LowerActiveWindow(); }
+
+bool sk_center_active_window(void) { return Platform_CenterActiveWindow(); }
+
+bool sk_snap_active_window(SnapPreset preset) {
+  return Platform_SnapActiveWindow(preset);
+}
+
+long sk_get_active_window_pid(void) { return Platform_GetActiveWindowPid(); }
+
 bool sk_reload_config(void) { return config_reload(); }
 
 char *ski_popup(const PopupSpec *spec) {
