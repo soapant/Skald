@@ -10,8 +10,8 @@ static bool settings_ctrl_enter(PromptState *state) { return false; }
 static void settings_tab(PromptState *state) {}
 
 static void settings_render(PromptState *state) {
-  sk_place_checkbox(.name = "Checkbox", .x = state->width / 2,
-                    .y = state->height / 2, .text = "Button", .w = 32, .h = 32);
+  sk_place_button(.name = "Checkbox", .x = state->width / 2,
+                    .y = state->height / 2, .text = "Button");
 }
 
 static void trigger_settings(void) {
