@@ -44,8 +44,7 @@ bool http_download(const char *url, const char *save_path) {
     remove(tmp);
     return false;
   }
-  remove(save_path);
-  if (rename(tmp, save_path) != 0) {
+  if (!Platform_AtomicRename(tmp, save_path)) {
     log_warn("http download rename failed for %s", save_path);
     remove(tmp);
     return false;
