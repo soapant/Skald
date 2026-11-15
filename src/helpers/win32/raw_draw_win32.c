@@ -76,6 +76,16 @@ static bool win32_entry_changed(DWORD now, DWORD *checked_ms, const char *path,
   return slot_size != size;
 }
 
+static bool win32_cache_stale(DWORD now, DWORD *checked_ms, const char *path,
+                              const FILETIME *mtime, DWORD size, void **obj) {
+  if (!win32_entry_changed(now, checked_ms, path, mtime, size))
+    return false;
+  win32_gdip_dispose(*obj);
+  *obj = NULL;
+  return true;
+}
+
+
 bool win32_text_is_symbolic(const wchar_t *wide, int len) {
   return win32_text_any(wide, len, win32_pred_symbolic);
 }
@@ -381,9 +391,8 @@ void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {
       continue;
     if (strcmp(s->key, path) != 0)
       continue;
-    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime, s->size)) {
-      win32_gdip_dispose(s->bmp);
-      s->bmp = NULL;
+    if (win32_cache_stale(now, &s->checked_ms, path, &s->mtime, s->size,
+                          (void **)&s->bmp)) {
       s->failed = 0;
       continue;
     }
@@ -456,11 +465,9 @@ void *win32_src_cache_get(const char *path) {
       continue;
     if (strcmp(s->key, path) != 0)
       continue;
-    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime, s->size)) {
-      win32_gdip_dispose(s->src);
-      s->src = NULL;
+    if (win32_cache_stale(now, &s->checked_ms, path, &s->mtime, s->size,
+                          (void **)&s->src))
       continue;
-    }
     s->stamp = ++g_img_cache_tick;
     found = s->src;
     break;

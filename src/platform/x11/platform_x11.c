@@ -4,6 +4,7 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_fs.h"
 #include "helpers/x11/raw_platform_x11.h"
+#include "helpers/helpers_misc.h"
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 
@@ -1309,12 +1310,24 @@ bool Platform_MoveToPos(int x, int y) {
 #endif
 }
 
-bool Platform_ClickButton(int button) {
+static bool x11_button_valid(int button, Display **out_dpy, int *out_xb) {
   Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   int xb = x11_button(button);
   if (xb == 0)
+    return false;
+  if (out_dpy)
+    *out_dpy = dpy;
+  if (out_xb)
+    *out_xb = xb;
+  return true;
+}
+
+bool Platform_ClickButton(int button) {
+  Display *dpy = NULL;
+  int xb = 0;
+  if (!x11_button_valid(button, &dpy, &xb))
     return false;
 #if __has_include(<X11/extensions/XTest.h>)
   usleep(1000);
@@ -1360,14 +1373,7 @@ static bool x11_bounds_write(int min_x, int min_y, int max_x, int max_y,
 }
 
 bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
-  if (out_x)
-    *out_x = 0;
-  if (out_y)
-    *out_y = 0;
-  if (out_w)
-    *out_w = 0;
-  if (out_h)
-    *out_h = 0;
+  Platform_BoundsZero(out_x, out_y, out_w, out_h);
   Display *dpy = x11_get_display();
   if (!dpy)
     return false;
@@ -1415,11 +1421,9 @@ bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {
-  Display *dpy = x11_get_display();
-  if (!dpy)
-    return false;
-  int xb = x11_button(button);
-  if (xb == 0)
+  Display *dpy = NULL;
+  int xb = 0;
+  if (!x11_button_valid(button, &dpy, &xb))
     return false;
 #if __has_include(<X11/extensions/XTest.h>)
   XTestFakeButtonEvent(dpy, (unsigned int)xb, down, CurrentTime);
@@ -1578,71 +1582,60 @@ static char *http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
   return buf->buf;
 }
 
-char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
-                              size_t *out_len) {
+static size_t x11_http_write_file_cb(char *ptr, size_t sz, size_t nm,
+                                          void *userdata) {
+  return fwrite(ptr, sz, nm, (FILE *)userdata);
+}
+
+char *Platform_HttpCollect(const char *url, const char *method,
+                           const char *content_type, const char *body,
+                           size_t max_bytes, size_t *out_len) {
   if (!url || !url[0]) {
     if (out_len)
       *out_len = 0;
     return NULL;
   }
   HttpBuf buf;
-  CURL *c = http_new(url, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT, &buf);
+  size_t limit = max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT;
+  CURL *c = http_new(url, limit, &buf);
   if (!c) {
     if (out_len)
       *out_len = 0;
     return NULL;
   }
+  if (method && strcmp(method, "POST") == 0) {
+    curl_easy_setopt(c, CURLOPT_POST, 1L);
+    curl_easy_setopt(c, CURLOPT_POSTFIELDS, body ? body : "");
+    curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE,
+                     (long)(body ? strlen(body) : 0));
+    struct curl_slist *hdrs = curl_slist_append(
+        NULL, content_type && content_type[0] ? content_type
+                                              : "application/octet-stream");
+    curl_easy_setopt(c, CURLOPT_HTTPHEADER, hdrs);
+    CURLcode res = curl_easy_perform(c);
+    char *out = http_finish(c, &buf, res, out_len);
+    if (hdrs)
+      curl_slist_free_all(hdrs);
+    return out;
+  }
   CURLcode res = curl_easy_perform(c);
   char *out = http_finish(c, &buf, res, out_len);
-  if (out && buf.overflow)
+  if (out && buf.overflow && max_bytes > 0)
     log_warn("http response exceeded %zu byte limit", max_bytes);
   return out;
 }
 
-char *Platform_HttpGet(const char *url) {
-  return Platform_HttpGetLimited(url, HTTP_DEFAULT_LIMIT, NULL);
-}
-
-char *Platform_HttpPost(const char *url, const char *content_type,
-                        const char *body) {
-  if (!url || !url[0])
-    return NULL;
-  HttpBuf buf;
-  CURL *c = http_new(url, HTTP_DEFAULT_LIMIT, &buf);
-  if (!c)
-    return NULL;
-  curl_easy_setopt(c, CURLOPT_POST, 1L);
-  curl_easy_setopt(c, CURLOPT_POSTFIELDS, body ? body : "");
-  curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE, (long)(body ? strlen(body) : 0));
-  struct curl_slist *hdrs = curl_slist_append(
-      NULL, content_type && content_type[0] ? content_type
-                                            : "application/octet-stream");
-  curl_easy_setopt(c, CURLOPT_HTTPHEADER, hdrs);
-  CURLcode res = curl_easy_perform(c);
-  char *out = http_finish(c, &buf, res, NULL);
-  if (hdrs)
-    curl_slist_free_all(hdrs);
-  return out;
-}
-
-static size_t x11_http_write_file_cb(char *ptr, size_t sz, size_t nm,
-                                          void *userdata) {
-  return fwrite(ptr, sz, nm, (FILE *)userdata);
-}
-
-bool Platform_HttpDownload(const char *url, const char *save_path) {
-  if (!url || !url[0] || !save_path || !save_path[0])
-    return false;
-  char tmp[MAX_PATH];
-  snprintf(tmp, sizeof(tmp), "%s.part", save_path);
-  FILE *f = fopen(tmp, "wb");
-  if (!f)
+bool Platform_HttpSaveToFile(const char *url, const char *path) {
+  if (!url || !url[0] || !path || !path[0])
     return false;
   http_global_init();
+  FILE *f = fopen(path, "wb");
+  if (!f)
+    return false;
   CURL *c = curl_easy_init();
   if (!c) {
     fclose(f);
-    remove(tmp);
+    remove(path);
     return false;
   }
   curl_easy_setopt(c, CURLOPT_URL, url);
@@ -1654,14 +1647,8 @@ bool Platform_HttpDownload(const char *url, const char *save_path) {
   curl_easy_cleanup(c);
   fclose(f);
   if (res != CURLE_OK) {
-    log_warn("http download failed: %s", curl_easy_strerror(res));
-    remove(tmp);
-    return false;
-  }
-  remove(save_path);
-  if (rename(tmp, save_path) != 0) {
-    log_warn("http download rename failed for %s", save_path);
-    remove(tmp);
+    log_warn("http transfer failed: %s", curl_easy_strerror(res));
+    remove(path);
     return false;
   }
   return true;
@@ -1759,7 +1746,7 @@ void Platform_InvalidatePrompt(void) {
 
 bool Platform_InjectKey(int vk, int down) { return wm_inject_key(vk, down); }
 
-static bool x11_http_thread_start(void *(*fn)(void *), void *ud) {
+bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud) {
   pthread_t thread;
   int err = pthread_create(&thread, NULL, fn, ud);
   if (err != 0)
@@ -1767,32 +1754,6 @@ static bool x11_http_thread_start(void *(*fn)(void *), void *ud) {
 
   pthread_detach(thread);
   return true;
-}
-
-void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
-                           void *userdata) {
-  if (!url || !url[0] || !cb)
-    return;
-  HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
-  if (!job)
-    return;
-  job->url = strdup(url);
-  job->cb = cb;
-  job->userdata = userdata;
-  if (!job->url) {
-    free(job);
-    return;
-  }
-  job->owner[0] = '\0';
-  owner_resolve_for_func((void *)cb, job->owner, sizeof(job->owner));
-  thread_registry_add(job, job->owner);
-
-  if (!x11_http_thread_start(http_async_worker, job)) {
-    thread_registry_finish(job);
-    free(job->url);
-    free(job);
-    log_warn("http async thread create failed");
-  }
 }
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
@@ -1812,27 +1773,11 @@ static bool x11_lookup_is_exec(const char *path) {
          access(path, X_OK) == 0;
 }
 
-static bool x11_lookup_ci_eq(const char *a, const char *b) {
-  for (;;) {
-    unsigned char ca = (unsigned char)*a, cb = (unsigned char)*b;
-    if (ca >= 'A' && ca <= 'Z')
-      ca += 32;
-    if (cb >= 'A' && cb <= 'Z')
-      cb += 32;
-    if (ca != cb)
-      return false;
-    if (ca == '\0')
-      return true;
-    a++;
-    b++;
-  }
-}
-
 static bool x11_lookup_ci_ends_with(const char *s, const char *suffix) {
   size_t ns = strlen(s), nf = strlen(suffix);
   if (nf > ns)
     return false;
-  return x11_lookup_ci_eq(s + ns - nf, suffix);
+  return lookup_ci_eq(s + ns - nf, suffix);
 }
 
 static char *x11_lookup_try_dir(const char *dir, const char *name) {
@@ -1848,21 +1793,12 @@ static char *x11_lookup_try_dir(const char *dir, const char *name) {
 }
 
 static char *x11_lookup_find_in_list(const char *list, const char *name) {
-  const char *p = list;
-  while (p && *p) {
-    const char *end = strchr(p, ':');
-    size_t len = end ? (size_t)(end - p) : strlen(p);
-    if (len > 0 && len < 4096) {
-      char dirbuf[4096];
-      memcpy(dirbuf, p, len);
-      dirbuf[len] = '\0';
-      char *hit = x11_lookup_try_dir(dirbuf, name);
-      if (hit)
-        return hit;
-    }
-    if (!end)
-      break;
-    p = end + 1;
+  const char *cursor = list;
+  char dirbuf[4096];
+  while (path_next_entry(&cursor, ':', dirbuf, sizeof(dirbuf))) {
+    char *hit = x11_lookup_try_dir(dirbuf, name);
+    if (hit)
+      return hit;
   }
   return NULL;
 }
@@ -1950,7 +1886,7 @@ static char *x11_lookup_resolve_exec(const char *desktop_file,
       ntok++;
     }
     int i = 0;
-    if (ntok > 0 && x11_lookup_ci_eq(tokens[0], "env")) {
+    if (ntok > 0 && lookup_ci_eq(tokens[0], "env")) {
       i = 1;
       while (i < ntok && strchr(tokens[i], '=') != NULL)
         i++;
@@ -1994,7 +1930,7 @@ static char *x11_lookup_scan_app_dir(const char *apps_dir, const char *name,
     snprintf(stem, sizeof(stem), "%.*s", (int)(strlen(entry) - 8), entry);
     char full[4096];
     snprintf(full, sizeof(full), "%s/%s", apps_dir, entry);
-    if (x11_lookup_ci_eq(stem, name)) {
+    if (lookup_ci_eq(stem, name)) {
       hit = x11_lookup_resolve_exec(full, home);
       continue;
     }
@@ -2003,7 +1939,7 @@ static char *x11_lookup_scan_app_dir(const char *apps_dir, const char *name,
       char base[512];
       const char *slash = strrchr(hit, '/');
       snprintf(base, sizeof(base), "%s", slash ? slash + 1 : hit);
-      if (!x11_lookup_ci_eq(base, name)) {
+      if (!lookup_ci_eq(base, name)) {
         free(hit);
         hit = NULL;
       }
@@ -2063,19 +1999,6 @@ static char *x11_lookup_find_in_apps_db(const char *name, const char *home) {
   return x11_lookup_scan_app_dir(dh, name, home);
 }
 
-static char *x11_lookup_first_line(char *out) {
-  char *start = out;
-  while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n')
-    start++;
-  char *end = start;
-  while (*end && *end != '\n' && *end != '\r')
-    end++;
-  while (end > start && (end[-1] == ' ' || end[-1] == '\t'))
-    end--;
-  *end = '\0';
-  return start;
-}
-
 char *Platform_FindExecutable(const char *name) {
   if (!name || !name[0])
     return NULL;
@@ -2104,7 +2027,7 @@ char *Platform_FindExecutable(const char *name) {
                                       NULL, &status);
   if (!out)
     return NULL;
-  char *line = x11_lookup_first_line(out);
+  char *line = lookup_first_line(out);
   if (line[0] && x11_lookup_is_exec(line))
     hit = strdup(line);
   free(out);

@@ -51,6 +51,18 @@ typedef struct {
   const char *name;
 } PlDisplayMessageSpec;
 
+#define HOVER_MSG_UNPACK(spec)                                                \
+  const char *key = (spec).key;                                                \
+  const char *message = (spec).message;                                        \
+  int centerX = (spec).x;                                                      \
+  int centerY = (spec).y;                                                      \
+  int w = (spec).w;                                                            \
+  int h = (spec).h;                                                            \
+  int maxWidth = (spec).max_width;                                             \
+  int maxHeight = (spec).max_height;                                           \
+  ColorRef color = (spec).color;                                               \
+  bool no_bg = (spec).no_bg
+
 #define MSG_UNPACK(spec)                                                       \
   const char *message = (spec).message;                                        \
   int centerX = (spec).x;                                                      \
@@ -87,6 +99,23 @@ typedef struct {
 #define HTTP_TIMEOUT_S 30
 #define HTTP_MAX_REDIRECTS 10
 #define HTTP_DEFAULT_LIMIT ((size_t)64 * 1024 * 1024)
+
+char *Platform_HttpCollect(const char *url, const char *method,
+                           const char *content_type, const char *body,
+                           size_t max_bytes, size_t *out_len);
+bool Platform_HttpSaveToFile(const char *url, const char *path);
+bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud);
+static inline void Platform_BoundsZero(int *out_x, int *out_y, int *out_w,
+                                        int *out_h) {
+  if (out_x)
+    *out_x = 0;
+  if (out_y)
+    *out_y = 0;
+  if (out_w)
+    *out_w = 0;
+  if (out_h)
+    *out_h = 0;
+}
 
 typedef void (*PlatformHttpCallback)(const char *body, bool ok, void *userdata);
 
@@ -245,16 +274,6 @@ void Platform_InitMainThreadContext(void);
 void Platform_FixWorkingDirectory(void);
 void Platform_CleanupPlatformResources(void);
 bool Platform_FontInitialized(FontHandle font);
-
-char *Platform_HttpGet(const char *url);
-char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
-                              size_t *out_len);
-bool Platform_HttpDownload(const char *url, const char *save_path);
-char *Platform_HttpPost(const char *url, const char *content_type,
-                        const char *body);
-
-void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
-                           void *userdata);
 
 void *Platform_ThreadCreate(void *(*fn)(void *), void *arg);
 void Platform_ThreadJoin(void *thread);

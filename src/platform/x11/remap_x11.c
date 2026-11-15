@@ -140,24 +140,24 @@ static bool inject_ydotool(int vk_code, int down) {
   return inject_run(cmd);
 }
 
-static bool inject_wtype(int vk_code, int down) {
+static bool inject_keytool(const char *tool, const char *down_flag,
+                           const char *up_flag, int vk_code, int down) {
   char buf[32];
   const char *name = vk_to_name(vk_code, buf, sizeof(buf));
   if (!name)
     return false;
   char cmd[256];
-  snprintf(cmd, sizeof(cmd), "wtype %s %s", down ? "-P" : "-R", name);
+  snprintf(cmd, sizeof(cmd), "%s %s %s", tool, down ? down_flag : up_flag,
+           name);
   return inject_run(cmd);
 }
 
+static bool inject_wtype(int vk_code, int down) {
+  return inject_keytool("wtype", "-P", "-R", vk_code, down);
+}
+
 static bool inject_xdotool(int vk_code, int down) {
-  char buf[32];
-  const char *name = vk_to_name(vk_code, buf, sizeof(buf));
-  if (!name)
-    return false;
-  char cmd[256];
-  snprintf(cmd, sizeof(cmd), "xdotool %s %s", down ? "keydown" : "keyup", name);
-  return inject_run(cmd);
+  return inject_keytool("xdotool", "keydown", "keyup", vk_code, down);
 }
 
 static bool inject_xtest(int vk_code, int down) {

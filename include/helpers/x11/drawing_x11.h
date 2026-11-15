@@ -3,6 +3,7 @@
 
 #include "core/types.h"
 #include <X11/Xlib.h>
+#include <X11/extensions/Xrender.h>
 #include <X11/Xft/Xft.h>
 
 typedef struct {
@@ -26,6 +27,8 @@ bool x11_xft_color_cached(Display *dpy, Visual *vis, Colormap cmap,
 void x11_init_argb_image(Display *dpy, XImage *img, unsigned char *data, int w,
                          int h, unsigned long red_mask,
                          unsigned long green_mask, unsigned long blue_mask);
+bool x11_upload_argb(Display *dpy, Drawable ref, unsigned char *argb, int w,
+                     int h, Pixmap *out_pm, Picture *out_pic);
 
 const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
                                           size_t trunc_size);

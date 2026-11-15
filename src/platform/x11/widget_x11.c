@@ -220,7 +220,7 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-  if (!widget_base_check(widget ? &widget->base : NULL) || widget->base.mapped) {
+  if (!widget || !widget_base_ready(&widget->base, false)) {
     return;
   }
   if (!widget->dpy || widget->win == None) {
@@ -232,7 +232,7 @@ void Platform_Widget_Show(PlatformWidget *widget) {
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-  if (!widget || !widget_base_check(&widget->base) || !widget->base.mapped) {
+  if (!widget || !widget_base_ready(&widget->base, true)) {
     return;
   }
   if (!widget->dpy || widget->win == None) {

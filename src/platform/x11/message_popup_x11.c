@@ -44,16 +44,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
 }
 
 void Platform_HoverMessage(PlHoverMessageSpec spec) {
-  const char *key = spec.key;
-  const char *message = spec.message;
-  int centerX = spec.x;
-  int centerY = spec.y;
-  int w = spec.w;
-  int h = spec.h;
-  int maxWidth = spec.max_width;
-  int maxHeight = spec.max_height;
-  ColorRef color = spec.color;
-  bool no_bg = spec.no_bg;
+  HOVER_MSG_UNPACK(spec);
 
   Display *dpy = x11_get_display();
   if (!dpy) {

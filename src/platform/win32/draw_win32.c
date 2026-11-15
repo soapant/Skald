@@ -16,6 +16,15 @@ bool Platform_PrewarmImage(char *path) {
   return bmp != NULL;
 }
 
+
+static void win32_draw_text_prep(int sx, int sy, unsigned long c, int *x_out,
+                                 int *y_out, unsigned long *color_out) {
+  *x_out = sx;
+  *y_out = sy;
+  pl_draw_state_offset(x_out, y_out);
+  *color_out = c != PL_COLOR_AUTO ? rgb_to_hex(c) : COLOR_TEXT;
+}
+
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   HWND w = WH_TO_HWND(h);
   if (!w || !IsWindow(w))
@@ -35,11 +44,9 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
 bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   if (!spec.text || !g_draw_hdc)
     return false;
-  int x = spec.x;
-  int y = spec.y;
-  pl_draw_state_offset(&x, &y);
-  unsigned long color =
-      spec.color != PL_COLOR_AUTO ? rgb_to_hex(spec.color) : COLOR_TEXT;
+  int x = 0, y = 0;
+  unsigned long color = 0;
+  win32_draw_text_prep(spec.x, spec.y, spec.color, &x, &y, &color);
   const char *a = spec.align ? spec.align : "CENTER";
   HFONT old = NULL;
   int tlen = (int)strlen(spec.text);
@@ -162,11 +169,9 @@ int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
 bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   if (!spec.text || spec.len <= 0 || !g_draw_hdc)
     return false;
-  int x = spec.x;
-  int y = spec.y;
-  pl_draw_state_offset(&x, &y);
-  unsigned long color =
-      spec.color != PL_COLOR_AUTO ? rgb_to_hex(spec.color) : COLOR_TEXT;
+  int x = 0, y = 0;
+  unsigned long color = 0;
+  win32_draw_text_prep(spec.x, spec.y, spec.color, &x, &y, &color);
   int wlen = 0;
   wchar_t *wide = win32_widen(spec.text, spec.len, &wlen);
   if (!wide)

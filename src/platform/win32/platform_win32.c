@@ -1,4 +1,5 @@
 #include "helpers/win32/raw_platform_win32.h"
+#include "helpers/helpers_misc.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_text.h"
 #include "helpers/win32/win32_state.h"
@@ -1021,14 +1022,7 @@ bool Platform_Click(void) {
 }
 
 bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
-  if (out_x)
-    *out_x = 0;
-  if (out_y)
-    *out_y = 0;
-  if (out_w)
-    *out_w = 0;
-  if (out_h)
-    *out_h = 0;
+  Platform_BoundsZero(out_x, out_y, out_w, out_h);
   int vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
   int vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
   int vw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -1232,9 +1226,9 @@ static int win32_http_perform(const char *url, const char *method,
                                  HttpBuf *resp_buf, FILE *file_out,
                                  long max_redirects);
 
-static char *win32_http_collect(const char *url, const char *method,
-                                const char *content_type, const char *body,
-                                size_t max_bytes, size_t *out_len) {
+char *Platform_HttpCollect(const char *url, const char *method,
+                           const char *content_type, const char *body,
+                           size_t max_bytes, size_t *out_len) {
   HttpBuf buf;
   win32_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
   int ok = win32_http_perform(url, method, content_type, body, &buf, NULL,
@@ -1425,50 +1419,20 @@ redirect_loop:
   return status_code;
 }
 
-char *Platform_HttpGetLimited(const char *url, size_t max_bytes,
-                              size_t *out_len) {
-  if (!url || !url[0]) {
-    if (out_len)
-      *out_len = 0;
-    return NULL;
-  }
-  return win32_http_collect(url, "GET", NULL, NULL, max_bytes, out_len);
-}
-
-char *Platform_HttpGet(const char *url) {
-  return Platform_HttpGetLimited(url, HTTP_DEFAULT_LIMIT, NULL);
-}
-
-char *Platform_HttpPost(const char *url, const char *content_type,
-                        const char *body) {
-  if (!url || !url[0])
-    return NULL;
-  return win32_http_collect(url, "POST", content_type, body ? body : "",
-                            HTTP_DEFAULT_LIMIT, NULL);
-}
-
-bool Platform_HttpDownload(const char *url, const char *save_path) {
-  if (!url || !url[0] || !save_path || !save_path[0])
+bool Platform_HttpSaveToFile(const char *url, const char *path) {
+  if (!url || !url[0] || !path || !path[0])
     return false;
-  char tmp[MAX_PATH];
-  snprintf(tmp, sizeof(tmp), "%s.part", save_path);
-  FILE *f = fopen(tmp, "wb");
+  FILE *f = fopen(path, "wb");
   if (!f)
     return false;
-
   HttpBuf unused;
   memset(&unused, 0, sizeof(unused));
   int ok = win32_http_perform(url, "GET", NULL, NULL, &unused, f,
-                                 HTTP_MAX_REDIRECTS);
+                              HTTP_MAX_REDIRECTS);
   fclose(f);
-
   if (ok < 200 || ok >= 300) {
-    remove(tmp);
-    return false;
-  }
-  remove(save_path);
-  if (rename(tmp, save_path) != 0) {
-    remove(tmp);
+    log_warn("http download failed with status %d for %s", ok, url);
+    remove(path);
     return false;
   }
   return true;
@@ -1597,38 +1561,13 @@ void Platform_EmitKey(int vk_code, int down) {
   }
 }
 
-static bool win32_http_thread_start(void *(*fn)(void *), void *ud) {
+bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud) {
   HANDLE t =
       CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(void *)fn, ud, 0, NULL);
   if (!t)
     return false;
   CloseHandle(t);
   return true;
-}
-
-void Platform_HttpGetAsync(const char *url, PlatformHttpCallback cb,
-                           void *userdata) {
-  if (!url || !url[0] || !cb)
-    return;
-  HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));
-  if (!job)
-    return;
-  job->url = strdup(url);
-  job->cb = cb;
-  job->userdata = userdata;
-  if (!job->url) {
-    free(job);
-    return;
-  }
-  job->owner[0] = '\0';
-  owner_resolve_for_func((void *)cb, job->owner, sizeof(job->owner));
-  thread_registry_add(job, job->owner);
-  if (!win32_http_thread_start(http_async_worker, job)) {
-    thread_registry_finish(job);
-    free(job->url);
-    free(job);
-    log_warn("http async thread create failed");
-  }
 }
 
 bool Platform_GetMousePos(int *out_x, int *out_y) {
@@ -1640,22 +1579,6 @@ bool Platform_GetMousePos(int *out_x, int *out_y) {
   if (out_y)
     *out_y = (int)pt.y;
   return true;
-}
-
-static bool win32_lookup_ci_eq(const char *a, const char *b) {
-  for (;;) {
-    unsigned char ca = (unsigned char)*a, cb = (unsigned char)*b;
-    if (ca >= 'A' && ca <= 'Z')
-      ca += 32;
-    if (cb >= 'A' && cb <= 'Z')
-      cb += 32;
-    if (ca != cb)
-      return false;
-    if (ca == '\0')
-      return true;
-    a++;
-    b++;
-  }
 }
 
 static bool win32_lookup_is_file(const char *path) {
@@ -1703,7 +1626,7 @@ static bool win32_lookup_has_ext(const char *name, const char *pathext) {
   size_t count = 0;
   win32_lookup_each_ext(pathext, exts, &count);
   for (size_t i = 0; i < count; i++)
-    if (win32_lookup_ci_eq(dot, exts[i]))
+    if (lookup_ci_eq(dot, exts[i]))
       return true;
   return false;
 }
@@ -1742,26 +1665,17 @@ static char *win32_lookup_try_dir(const char *dir, const char *name,
 static char *win32_lookup_find_in_path(const char *name, const char *pathext) {
   const char *path = getenv("PATH");
   if (path && path[0]) {
-    const char *p = path;
-    while (p && *p) {
-      const char *end = strchr(p, ';');
-      size_t len = end ? (size_t)(end - p) : strlen(p);
-      if (len > 0 && len < 4096) {
-        char dirbuf[4096];
-        memcpy(dirbuf, p, len);
-        dirbuf[len] = '\0';
-        size_t n = strlen(dirbuf);
-        if (n >= 2 && dirbuf[0] == '"' && dirbuf[n - 1] == '"') {
-          dirbuf[n - 1] = '\0';
-          memmove(dirbuf, dirbuf + 1, n - 1);
-        }
-        char *hit = win32_lookup_try_dir(dirbuf, name, pathext);
-        if (hit)
-          return hit;
+    const char *cursor = path;
+    char dirbuf[4096];
+    while (path_next_entry(&cursor, ';', dirbuf, sizeof(dirbuf))) {
+      size_t n = strlen(dirbuf);
+      if (n >= 2 && dirbuf[0] == '"' && dirbuf[n - 1] == '"') {
+        dirbuf[n - 1] = '\0';
+        memmove(dirbuf, dirbuf + 1, n - 1);
       }
-      if (!end)
-        break;
-      p = end + 1;
+      char *hit = win32_lookup_try_dir(dirbuf, name, pathext);
+      if (hit)
+        return hit;
     }
   }
   const char *sysroot = getenv("SystemRoot");
@@ -1824,19 +1738,6 @@ static char *win32_lookup_walk_programs(const char *name) {
   return NULL;
 }
 
-static char *win32_lookup_first_line(char *out) {
-  char *start = out;
-  while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n')
-    start++;
-  char *end = start;
-  while (*end && *end != '\r' && *end != '\n')
-    end++;
-  while (end > start && (end[-1] == ' ' || end[-1] == '\t'))
-    end--;
-  *end = '\0';
-  return start;
-}
-
 char *Platform_FindExecutable(const char *name) {
   if (!name || !name[0])
     return NULL;
@@ -1864,7 +1765,7 @@ char *Platform_FindExecutable(const char *name) {
                               &status);
   if (!out)
     return NULL;
-  char *line = win32_lookup_first_line(out);
+  char *line = lookup_first_line(out);
   if (line[0] && win32_lookup_is_file(line))
     hit = _strdup(line);
   free(out);
