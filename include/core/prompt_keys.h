@@ -12,6 +12,5 @@ bool prompt_handle_list_click(PromptState *state, bool ctrl, bool shift,
 void prompt_refresh(PromptState *state);
 bool prompt_delete_selection(PromptState *state);
 void prompt_insert_text(PromptState *state, const char *text, int len);
-void prompt_redraw_now(void);
 
 #endif

@@ -19,7 +19,6 @@ bool remap_has_bindings(void);
 void remap_reset(void);
 int remap_current_mods(void);
 bool remap_is_virt_held(int vk);
-void remap_release_mods(int mods);
 bool remap_check_strict_order(int trigger_vk, int mods);
 
 #endif

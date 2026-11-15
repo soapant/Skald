@@ -13,5 +13,4 @@
 int64_t timer_now_ticks(void);
 int64_t timer_tick_frequency(void);
 
-void timer_flush(void);
 #endif
