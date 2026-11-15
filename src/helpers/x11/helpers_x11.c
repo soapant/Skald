@@ -1329,7 +1329,7 @@ static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
     x11_set_fixed_size_hints(dpy, win, w, h);
   }
   XSelectInput(dpy, win, event_mask);
-  if (RoundedCorners && !override_redirect && CornerRadius > 0) {
+  if (RoundedCorners && CornerRadius > 0) {
     x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
   }
   return win;
@@ -1358,7 +1358,7 @@ static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
         continue;
       if (y >= radius && y < h - radius)
         continue;
-      if (x11_corner_alpha(x, y, w, h, radius, 255) == 0)
+      if (x11_corner_alpha(x, y, w, h, radius, 255) < 128)
         continue;
       XFillRectangle(dpy, mask, gc, x, y, 1, 1);
     }
@@ -1914,6 +1914,12 @@ Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
   if (RoundedCorners && CornerRadius > 0)
     x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
   return win;
+}
+
+void x11_apply_shape_rounded_window(Display *dpy, Window win, int w, int h) {
+  if (!dpy || win == None || !RoundedCorners || CornerRadius <= 0)
+    return;
+  x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
 }
 
 void x11_apply_click_through(Display *dpy, Window win) {
