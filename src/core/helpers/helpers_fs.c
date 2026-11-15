@@ -46,7 +46,7 @@ static void path_fold_exe(char *out) {
 }
 
 bool temp_file_write(const char *name, const void *data, size_t len,
-                    char *out_path, size_t out_len) {
+                     char *out_path, size_t out_len) {
   if (!name || !name[0] || !out_path || out_len == 0)
     return false;
   if (!data && len > 0)
@@ -113,7 +113,7 @@ bool expand_path(const char *template_path, char *out, size_t out_size) {
 }
 
 bool feature_path_get(const char *feature, const char *name, char *out,
-                     size_t out_len) {
+                      size_t out_len) {
 
   if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0)
     return false;

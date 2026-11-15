@@ -105,8 +105,8 @@ bool sk_get_all_files_from_dir(const char *dir_path,
     return false;
   dir_path = expanded_dir;
   return file_walk_all_files_from_dir(dir_path, list_of_allowed_extensions,
-                                  list_of_files, list_of_names_to_ignore,
-                                  strip_extension, max_depth);
+                                      list_of_files, list_of_names_to_ignore,
+                                      strip_extension, max_depth);
 }
 
 char *sk_search_file_in_dir(const char *directory, const char *search_string) {
@@ -375,7 +375,7 @@ bool sk_write_string_to_file(const char *path, const char *content) {
     return false;
   char full[MAX_PATH];
   if (feature_path_resolve_data_path(__builtin_return_address(0), path, full,
-                                  sizeof(full))) {
+                                     sizeof(full))) {
     path = full;
   } else {
     char expanded[MAX_PATH];
@@ -544,8 +544,8 @@ bool ski_register_snippet(const SkSnippetSpec *spec) {
   bool whitelist;
   resolve_window_list(wl, bl, &windows, &whitelist);
   return snippet_register_internal(spec->trigger, spec->text, spec->fn,
-                                  whitelist, windows,
-                                  (void *)__builtin_return_address(0));
+                                   whitelist, windows,
+                                   (void *)__builtin_return_address(0));
 }
 
 bool ski_unregister_snippet(const char *trigger) {
@@ -854,7 +854,7 @@ void ski_populate_listbox(const SkPopulateListboxSpec *spec) {
   if (!spec)
     return;
   populate_listbox(spec->lb, spec->filter, spec->items, spec->count,
-                  spec->filter_match);
+                   spec->filter_match);
 }
 
 bool sk_is_selected(ListBoxInfo *lb) {
@@ -942,8 +942,9 @@ void ski_message(const SkMessageSpec *spec) {
             .h = ctx->h,
             .fps = spec->fps > 0 ? spec->fps : 1,
             .no_bg = spec->no_bg,
-            .bg_hex = spec->color_bg ? rgb_to_hex(spec->color_bg)
-                                     : (spec->no_bg ? 0UL : rgb_to_hex(COLOR_BG)),
+            .bg_hex = spec->color_bg
+                          ? rgb_to_hex(spec->color_bg)
+                          : (spec->no_bg ? 0UL : rgb_to_hex(COLOR_BG)),
             .release = hover_popup_ctx_free,
             .release_ud = ctx});
       }
@@ -981,7 +982,7 @@ void ski_message(const SkMessageSpec *spec) {
     return;
   }
   display_message_slot(spec->message, slot, mw, mh, spec->prompt_gap, timeout,
-                     color, spec->render, spec->name);
+                       color, spec->render, spec->name);
 }
 
 bool sk_launch_browser(const char *url) {
@@ -1211,10 +1212,10 @@ unsigned long sk_listbox_get_current_standard_color(void) {
     return 0;
   unsigned long ncol, bcol, pcol;
   item_get_colors((PlGetItemColorsSpec){.idx = idx,
-                                       .count = sk_list_lb->item_count,
-                                       .num_color = &ncol,
-                                       .body_color = &bcol,
-                                       .plain_color = &pcol});
+                                        .count = sk_list_lb->item_count,
+                                        .num_color = &ncol,
+                                        .body_color = &bcol,
+                                        .plain_color = &pcol});
   return pcol;
 }
 
@@ -1429,7 +1430,7 @@ bool ski_draw_image(const SkImageSpec *spec) {
   const char *path = spec->path;
   if ((path[0] == '/' || path[0] == '\\') &&
       feature_path_resolve_asset_path(__builtin_return_address(0), path, asset,
-                                   sizeof(asset))) {
+                                      sizeof(asset))) {
     path = asset;
   }
   return Platform_DrawImageAt(path, spec->x, spec->y, w, h);
@@ -1575,7 +1576,7 @@ static bool listbox_begin_common(const PlListSpec *spec) {
   PromptState *st = Platform_ListboxBackendPromptState(lb);
   ListboxLayout lay;
   listbox_compute_layout(spec, bi.list_top, itemH, st ? st->width : PromptWidth,
-                        st ? st->height : PromptHeight, lb->item_count, &lay);
+                         st ? st->height : PromptHeight, lb->item_count, &lay);
   sk_list_spec = *spec;
   sk_list_lb = lb;
   sk_list_itemH = itemH;
@@ -1591,7 +1592,7 @@ static bool listbox_begin_common(const PlListSpec *spec) {
   listbox_apply_pending_scroll(lb, lay.visible);
   listbox_set_geometry(sk_list_y0, sk_list_itemH, lay.visible);
   listbox_hover_focus(lb, sk_list_y0, sk_list_itemH, lb->view_offset,
-                     lay.visible);
+                      lay.visible);
   return true;
 }
 
@@ -1625,8 +1626,8 @@ static bool listbox_next_common(SkListItemCtx *out) {
 void sk_listbox_end(void) {
   listbox_set_row_h_scroll(0);
   if (prompt_list_bottom_margin() > 0 && sk_list_y0 >= 0) {
-    draw_prompt_separator((PlDrawPromptSeparatorSpec){.y = sk_list_y0 + sk_list_h,
-                                                    .width = sk_list_fw});
+    draw_prompt_separator((PlDrawPromptSeparatorSpec){
+        .y = sk_list_y0 + sk_list_h, .width = sk_list_fw});
   }
   Platform_ListboxBackendEnd();
   sk_list_lb = NULL;
@@ -2199,7 +2200,7 @@ void sk_run_after_time(double seconds, void (*callback)(void)) {
   payload->callback = callback;
   payload->owner[0] = '\0';
   owner_resolve_for_func((void *)callback, payload->owner,
-                       sizeof(payload->owner));
+                         sizeof(payload->owner));
   thread_registry_add(payload, payload->owner);
   if (!sk_run_after_time_arm_platform(payload)) {
     thread_registry_finish(payload);
@@ -2562,7 +2563,7 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   char icon_asset[MAX_PATH];
   if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
       feature_path_resolve_asset_path(__builtin_return_address(0), spec->icon,
-                                   icon_asset, sizeof(icon_asset))) {
+                                      icon_asset, sizeof(icon_asset))) {
     e->pub.icon = cc_dup(e->icon, sizeof(e->icon), icon_asset);
   } else {
     e->pub.icon = cc_dup(e->icon, sizeof(e->icon), spec->icon);

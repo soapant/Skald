@@ -52,7 +52,7 @@ typedef struct {
   const char *name;
 } PlDisplayMessageSpec;
 
-#define HOVER_MSG_UNPACK(spec)                                                \
+#define HOVER_MSG_UNPACK(spec)                                                 \
   const char *key = (spec).key;                                                \
   const char *message = (spec).message;                                        \
   int centerX = (spec).x;                                                      \
@@ -107,7 +107,7 @@ char *Platform_HttpCollect(const char *url, const char *method,
 bool Platform_HttpSaveToFile(const char *url, const char *path);
 bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud);
 static inline void Platform_BoundsZero(int *out_x, int *out_y, int *out_w,
-                                        int *out_h) {
+                                       int *out_h) {
   if (out_x)
     *out_x = 0;
   if (out_y)

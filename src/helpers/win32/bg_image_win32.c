@@ -420,8 +420,9 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
       bg_cache_store(cacheFile, w, h, bits, &ft, sz);
   }
 
-  int slot_idx = bg_tile_lru_pick(g_bg_tiles, BG_TILE_SLOTS, sizeof(g_bg_tiles[0]),
-                               bg_slot_empty, bg_slot_stamp);
+  int slot_idx =
+      bg_tile_lru_pick(g_bg_tiles, BG_TILE_SLOTS, sizeof(g_bg_tiles[0]),
+                       bg_slot_empty, bg_slot_stamp);
   BgTileSlot *slot = &g_bg_tiles[slot_idx];
   bg_tile_drop(slot);
   slot->bmp = bmp;

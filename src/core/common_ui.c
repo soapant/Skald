@@ -194,7 +194,7 @@ static int fuzzy_score(const char *text, const char *pattern) {
 }
 
 static void populate_capture_selection(ListBoxInfo *lb, char *out_text,
-                                      size_t out_size, int *out_sel) {
+                                       size_t out_size, int *out_sel) {
   int current_sel = lb->selected_index;
   if (out_sel)
     *out_sel = current_sel;
@@ -209,7 +209,7 @@ static void populate_capture_selection(ListBoxInfo *lb, char *out_text,
 }
 
 static void populate_clean_filter(const char *filter, char *clean_filter,
-                                 size_t size) {
+                                  size_t size) {
   clean_filter[0] = '\0';
   if (!filter)
     return;
@@ -269,7 +269,7 @@ Populate_ItemMatches(const char *search_text, const char *clean_filter,
   char norm_search[1024];
   normalize_for_match(search_text, norm_search, sizeof(norm_search));
   if (string_starts_with_ci(SkaldContext_Get()->window.current_feature,
-                          "center")) {
+                            "center")) {
     return fuzzy_match_with_typo(norm_search, clean_filter);
   }
   return string_contains_ci(norm_search, clean_filter);
@@ -295,7 +295,7 @@ static int populate_filter(ListBoxInfo *lb, const char **items, int item_count,
 }
 
 static void populate_rank_matches(ListBoxInfo *lb, const char **items,
-                                 const char *clean_filter, int total_matches) {
+                                  const char *clean_filter, int total_matches) {
   if (clean_filter[0] == '\0' || total_matches <= 1)
     return;
   int scores[MAX_VISIBLE_ITEMS];
@@ -320,8 +320,8 @@ static void populate_rank_matches(ListBoxInfo *lb, const char **items,
 }
 
 static void populate_ensure_matches(ListBoxInfo *lb, int item_count,
-                                   const char *clean_filter,
-                                   int *total_matches) {
+                                    const char *clean_filter,
+                                    int *total_matches) {
   if (*total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
     int force_count = (item_count < 30) ? item_count : 30;
     for (int i = 0; i < force_count; i++) {
@@ -335,7 +335,7 @@ static void populate_ensure_matches(ListBoxInfo *lb, int item_count,
 }
 
 static void populate_build_cache(ListBoxInfo *lb, const char **items,
-                                int total_matches) {
+                                 int total_matches) {
   if (total_matches > MAX_VISIBLE_ITEMS)
     total_matches = MAX_VISIBLE_ITEMS;
   lb->item_count = 0;
@@ -350,7 +350,7 @@ static void populate_build_cache(ListBoxInfo *lb, const char **items,
     if (!items[raw_data_index])
       continue;
     safe_copy(lb->items[lb->item_count], LISTBOX_ROW_BYTES,
-             items[raw_data_index]);
+              items[raw_data_index]);
     lb->items[lb->item_count][strcspn(lb->items[lb->item_count], "\r\n")] =
         '\0';
     lb->item_count++;
@@ -358,7 +358,7 @@ static void populate_build_cache(ListBoxInfo *lb, const char **items,
 }
 
 static void populate_update_ui(ListBoxInfo *lb, int total_matches,
-                              const char *filter) {
+                               const char *filter) {
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
   bool has_filter = filter && filter[0] != '\0';
@@ -387,9 +387,9 @@ static void populate_update_ui(ListBoxInfo *lb, int total_matches,
 }
 
 void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
-                     int item_count,
-                     bool (*filter_match)(const char *item,
-                                          const char *filter)) {
+                      int item_count,
+                      bool (*filter_match)(const char *item,
+                                           const char *filter)) {
   if (!lb)
     return;
 
@@ -398,7 +398,7 @@ void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
   int current_sel;
   char current_text[256];
   populate_capture_selection(lb, current_text, sizeof(current_text),
-                            &current_sel);
+                             &current_sel);
 
   char clean_filter[256];
   populate_clean_filter(filter, clean_filter, sizeof(clean_filter));
@@ -468,9 +468,9 @@ ColorRef GetRainbowColor(float t, float s, float v) {
   }
 }
 
-void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
-                       int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,
-                       int *out_gap, int *out_outward) {
+void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x,
+                          int *out_y, int *out_w, int *out_h, int *out_h_slot,
+                          int *out_v_slot, int *out_gap, int *out_outward) {
   int h_slot = 1;
   int v_slot = 1;
   int gap = MessageScreenGap;
@@ -524,14 +524,14 @@ void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x, int *out
 }
 
 void display_message_slot(const char *message, MessageSlot slot, int max_w,
-                        int max_h, int prompt_gap, double timeout,
-                        ColorRef color, void (*render)(void),
-                        const char *name) {
+                          int max_h, int prompt_gap, double timeout,
+                          ColorRef color, void (*render)(void),
+                          const char *name) {
   if (!message || !message[0])
     return;
   int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
   message_slot_to_rect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap,
-                    &outward);
+                       &outward);
   Platform_DisplayMessageAnchored((PlAnchoredMessageSpec){.message = message,
                                                           .x = x,
                                                           .y = y,
@@ -551,8 +551,8 @@ void display_message_slot(const char *message, MessageSlot slot, int max_w,
 }
 
 void listbox_compute_layout(const PlListSpec *spec, int default_y0, int item_h,
-                           int popup_w, int popup_h, int count,
-                           ListboxLayout *out) {
+                            int popup_w, int popup_h, int count,
+                            ListboxLayout *out) {
 
   if (!out) {
     return;
@@ -734,9 +734,13 @@ void set_transparent_window(bool on) { pl_draw_state_get()->transparent = on; }
 
 bool get_transparent_window(void) { return pl_draw_state_get()->transparent; }
 
-void set_draw_bg_color(unsigned long hex) { pl_draw_state_get()->bg_override = hex; }
+void set_draw_bg_color(unsigned long hex) {
+  pl_draw_state_get()->bg_override = hex;
+}
 
-unsigned long get_draw_bg_color(void) { return pl_draw_state_get()->bg_override; }
+unsigned long get_draw_bg_color(void) {
+  return pl_draw_state_get()->bg_override;
+}
 
 void begin_measure(void) { pl_draw_state_begin_measure(); }
 
@@ -764,7 +768,7 @@ void get_draw_offset(int *out_x, int *out_y) {
 }
 
 int draw_line_prep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
-                 int *y1, int *x2, int *y2) {
+                   int *y1, int *x2, int *y2) {
   int t = draw_thickness_px(spec->thickness);
   if (t < 1)
     t = 1;
@@ -781,18 +785,18 @@ int draw_line_prep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
 }
 
 int draw_circle_prep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
-                   int *cx, int *cy) {
+                     int *cx, int *cy) {
   int t = draw_thickness_px(spec->thickness);
   *cx = spec->cx + off_x;
   *cy = spec->cy + off_y;
   draw_measure_track(*cx - spec->radius, *cy - spec->radius, spec->radius * 2,
-                   spec->radius * 2);
+                     spec->radius * 2);
   return t;
 }
 
 int bg_tile_lru_pick(const void *slots, int count, size_t stride,
-                  int (*is_empty)(const void *slot),
-                  unsigned long (*stamp)(const void *slot)) {
+                     int (*is_empty)(const void *slot),
+                     unsigned long (*stamp)(const void *slot)) {
   int i;
   for (i = 0; i < count; i++)
     if (is_empty((const char *)slots + (size_t)i * stride))
@@ -808,7 +812,8 @@ int bg_tile_lru_pick(const void *slots, int count, size_t stride,
   return oldest;
 }
 
-void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec, int lineHeight) {
+void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec,
+                             int lineHeight) {
   int tw = Platform_MeasureTextWidth(
       (PlMeasureTextWidthSpec){.text = spec->text,
                                .len = (int)strlen(spec->text),
@@ -826,7 +831,7 @@ void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec, int lineHeight)
 }
 
 int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,
-                    int win_size) {
+                      int win_size) {
   if (slot == 0)
     return outward ? rect - gap - win_size / 2 : rect + gap + win_size / 2;
   if (slot == 2)

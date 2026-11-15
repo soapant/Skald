@@ -78,7 +78,7 @@ void prompt_insert_text(PromptState *state, const char *text, int len) {
   prompt_delete_selection(state);
   size_t fcur = (size_t)state->eb->cursor;
   edit_buffer_insert_text(state->eb->filter, sizeof(state->eb->filter), &fcur,
-                       text, (size_t)len);
+                          text, (size_t)len);
   state->eb->cursor = (int)fcur;
   listbox_focus_by_mouse();
   prompt_refresh(state);
@@ -87,8 +87,8 @@ void prompt_insert_text(PromptState *state, const char *text, int len) {
 typedef bool (*PromptEnterFn)(PromptState *state);
 
 static PromptEnterFn prompt_enter_callback_for(const PromptCallbacks *cb,
-                                               bool ctrl, bool shift,
-                                               bool alt, bool *out_combo) {
+                                               bool ctrl, bool shift, bool alt,
+                                               bool *out_combo) {
   *out_combo = true;
   if (ctrl && shift)
     return cb->ctrl_shift_enter ? cb->ctrl_shift_enter : cb->enter;
@@ -133,7 +133,7 @@ void prompt_trigger_enter(PromptState *state, bool ctrl, bool shift, bool alt) {
 }
 
 bool prompt_handle_list_click(PromptState *state, bool ctrl, bool shift,
-                            bool alt) {
+                              bool alt) {
 
   if (!state || !state->lb)
     return false;
@@ -146,7 +146,7 @@ bool prompt_handle_list_click(PromptState *state, bool ctrl, bool shift,
   if (!listbox_client_mouse_pos(&mx, &my))
     return false;
   int idx = listbox_row_at_y(lb, list_top, item_height, lb->view_offset,
-                           visible_count, my);
+                             visible_count, my);
   if (idx < 0)
     return false;
   UI_SetSelection(lb, idx);

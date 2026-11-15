@@ -239,7 +239,7 @@ TEST(parse_file_missing_returns_false_and_invalid) {
   FeatureManifest m;
   memset(&m, 0xAB, sizeof(m));
   ASSERT_FALSE(manifest_parse_file("definitely-not-here-skald-test-abc123.toml",
-                                  "x", &m));
+                                   "x", &m));
   ASSERT_FALSE(m.valid);
   ASSERT_EQ_STR(m.name, "x");
 }

@@ -204,7 +204,7 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
       if (Platform_GetMousePos(&wx, &wy))
         listbox_publish_mouse_pos(wx, wy);
       listbox_queue_scroll(ev->xbutton.button == Button4 ? -LISTBOX_WHEEL_ROWS
-                                                        : LISTBOX_WHEEL_ROWS);
+                                                         : LISTBOX_WHEEL_ROWS);
       if (top->vtable && top->vtable->on_render) {
         top->vtable->on_render(top);
       }
@@ -252,8 +252,7 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
     break;
   case FocusOut: {
     Window lost_win = ev->xfocus.window;
-    bool lost_is_top =
-        top && WH_EQUALS(top->handle, WH_FROM_XID(lost_win));
+    bool lost_is_top = top && WH_EQUALS(top->handle, WH_FROM_XID(lost_win));
     long long since_pop = Platform_GetWallClockMs() -
                           SkaldContext_Get()->window.last_popup_pop_ms;
     log_info(

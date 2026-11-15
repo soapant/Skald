@@ -137,9 +137,8 @@ static bool win32_is_cloaked(HWND hwnd) {
   HMODULE dwm = GetModuleHandleA("dwmapi.dll");
   if (!dwm)
     return false;
-  HRESULT(WINAPI * p)(HWND, DWORD, PVOID,
-                      DWORD) = (void *)GetProcAddress(dwm,
-                                                      "DwmGetWindowAttribute");
+  HRESULT(WINAPI * p)(HWND, DWORD, PVOID, DWORD) =
+      (void *)GetProcAddress(dwm, "DwmGetWindowAttribute");
   return (p && SUCCEEDED(p(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked)
              ? true
              : false;
@@ -176,8 +175,7 @@ BOOL CALLBACK win32_focus_enum(HWND hwnd, LPARAM lp) {
     return TRUE;
   char cls[64];
   if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0)
-    if (strcmp(cls, SKALD_CLASS) == 0 ||
-        strcmp(cls, MESSAGE_CLASS) == 0 ||
+    if (strcmp(cls, SKALD_CLASS) == 0 || strcmp(cls, MESSAGE_CLASS) == 0 ||
         strcmp(cls, WIDGET_CLASS) == 0) {
       return TRUE;
     }
@@ -530,8 +528,8 @@ BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam) {
   if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0) {
     if (strcmp(cls, "Progman") == 0 || strcmp(cls, "WorkerW") == 0)
       return TRUE;
-    if (strcmp(cls, SKALD_CLASS) == 0 ||
-        strcmp(cls, MESSAGE_CLASS) == 0 || strcmp(cls, WIDGET_CLASS) == 0)
+    if (strcmp(cls, SKALD_CLASS) == 0 || strcmp(cls, MESSAGE_CLASS) == 0 ||
+        strcmp(cls, WIDGET_CLASS) == 0)
       return TRUE;
     if (strcmp(cls, "ApplicationFrameWindow") == 0) {
       if (win32_is_cloaked(hwnd))

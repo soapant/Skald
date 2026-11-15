@@ -394,7 +394,6 @@ static CcApp *cc_apps;
 static size_t cc_app_count;
 static size_t cc_app_cap;
 static atomic_bool cc_apps_ready;
-static SkThread cc_prewarm_thread;
 
 typedef struct {
   const char *path;
@@ -405,8 +404,7 @@ static const CcScanPath cc_scan_paths[] = {
 #if defined(_WIN32)
     {"~\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
      SK_DIR_WALK_UNLIMITED},
-    {"C:\\ProgramData\\Microsoft\\Windows\\Start Menu",
-     SK_DIR_WALK_UNLIMITED},
+    {"C:\\ProgramData\\Microsoft\\Windows\\Start Menu", SK_DIR_WALK_UNLIMITED},
     {"C:\\Program Files\\Epic Games", 5},
     {"C:\\Program Files (x86)\\Epic Games", 5},
     {"D:\\Epic Games", 5},
@@ -640,8 +638,7 @@ static void cc_load_apps(void) {
   atomic_store(&cc_entries_dirty, true);
 }
 
-static void *cc_prewarm_apps(void *arg) {
-  (void)arg;
+static void *cc_prewarm_apps() {
   cc_load_apps();
   size_t n = cc_app_count < 48 ? cc_app_count : 48;
   for (size_t i = 0; i < n; i++)
@@ -663,8 +660,6 @@ static bool cc_launch_app_as_admin(void) {
 
 static void cc_fill_applications(int limit) {
   if (!atomic_load(&cc_apps_ready)) {
-    if (cc_prewarm_thread)
-      return;
     cc_load_apps();
   }
   for (size_t i = 0; i < cc_app_count && (int)i < limit; i++) {
@@ -1182,7 +1177,8 @@ static void cc_on_actions_render(SkPlaceState state) {
 
 static void cc_render(PromptState *state) {
   if (state->lb && state->lb->selected_index != -1) {
-      snprintf(cc_selected_text,sizeof(cc_selected_text),"%s",state->lb->selected_text);
+    snprintf(cc_selected_text, sizeof(cc_selected_text), "%s",
+             state->lb->selected_text);
   } else if (state->eb) {
     cc_copy(cc_selected_text, sizeof(cc_selected_text), state->eb->filter);
   }
@@ -1469,7 +1465,7 @@ SKALD_FEATURE_INIT {
   cc_entry_base = 0;
   cc_bindings_load();
 
-  cc_prewarm_thread = sk_thread_create(cc_prewarm_apps, NULL);
+  cc_prewarm_apps();
   cc_build();
   sk_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = cc_open_control);
   sk_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey, .cb = cc_reload);
@@ -1478,10 +1474,6 @@ SKALD_FEATURE_INIT {
 
 SKALD_FEATURE_SHUTDOWN {
   atomic_store(&cc_stopping, true);
-  if (cc_prewarm_thread) {
-    sk_thread_join(cc_prewarm_thread);
-    cc_prewarm_thread = NULL;
-  }
   cc_apps_free();
   free(cc_entries);
   cc_entries = NULL;

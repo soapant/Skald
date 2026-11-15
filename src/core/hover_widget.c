@@ -93,7 +93,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
     s->release_ud = release_ud;
     s->owner[0] = '\0';
     owner_resolve_for_func(owner_src ? owner_src : (void *)render, s->owner,
-                         sizeof(s->owner));
+                           sizeof(s->owner));
     bool geom_changed =
         (s->x != x || s->y != y || s->w_px != w || s->h_px != h);
     s->x = x;
@@ -159,7 +159,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   widget_set_frame_callback(pw, hover_widget_frame, s);
   s->owner[0] = '\0';
   owner_resolve_for_func(owner_src ? owner_src : (void *)render, s->owner,
-                       sizeof(s->owner));
+                         sizeof(s->owner));
 }
 
 static void hover_widget_hide_apply(const char *key) {

@@ -37,8 +37,8 @@ TEST(existing_behavior_preserved) {
   TEST_MKDIR(dir);
   SkaldContext_Get()->window.current_feature = (char *)"Todo";
   char out[512] = {0};
-  bool ok = feature_path_resolve_data_path(__builtin_return_address(0), "todo.txt",
-                                        out, sizeof(out));
+  bool ok = feature_path_resolve_data_path(__builtin_return_address(0),
+                                           "todo.txt", out, sizeof(out));
   ASSERT_TRUE(ok);
   ASSERT_TRUE(strstr(out, "todo" TEST_SEP "todo.txt") != NULL);
   TEST_RMDIR(dir);
@@ -59,7 +59,7 @@ TEST(foreground_first_save) {
   SkaldContext_Get()->window.current_feature = (char *)"Clipboard History";
   char out[512] = {0};
   bool ok = feature_path_resolve_data_path(__builtin_return_address(0),
-                                        "zzfirstsave.txt", out, sizeof(out));
+                                           "zzfirstsave.txt", out, sizeof(out));
   ASSERT_TRUE(ok);
   ASSERT_TRUE(strstr(out, "clipboard_history" TEST_SEP "zzfirstsave.txt") !=
               NULL);

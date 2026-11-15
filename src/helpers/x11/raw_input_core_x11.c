@@ -643,12 +643,12 @@ void x11_scan_keyboards(void) {
       if (is_kb && x11_keyboard_count < X11_MAX_KEYBOARDS) {
         x11_keyboards[x11_keyboard_count].fd = fd;
         safe_copy(x11_keyboards[x11_keyboard_count].path,
-                 sizeof(x11_keyboards[x11_keyboard_count].path), full_path);
+                  sizeof(x11_keyboards[x11_keyboard_count].path), full_path);
         x11_keyboard_count++;
       } else if (is_mouse && x11_mouse_count < X11_MAX_MICE) {
         x11_mice[x11_mouse_count].fd = fd;
         safe_copy(x11_mice[x11_mouse_count].path,
-                 sizeof(x11_mice[x11_mouse_count].path), full_path);
+                  sizeof(x11_mice[x11_mouse_count].path), full_path);
         x11_mouse_count++;
       } else if (x11_rejected_count < X11_REJECTED_MAX) {
         x11_rejected_fds[x11_rejected_count++] = fd;

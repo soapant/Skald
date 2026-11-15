@@ -548,7 +548,9 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
   *outHeight = totalHeight;
 }
 
-bool Platform_FocusWindow(const char *title) { return wm_focus_by_title(title); }
+bool Platform_FocusWindow(const char *title) {
+  return wm_focus_by_title(title);
+}
 
 WindowHandle Platform_GetWindowByTitle(const char *title) {
   WindowHandle h = WH_NULL;
@@ -632,13 +634,19 @@ bool Platform_MoveActiveWindowToMonitor(bool right) {
   return wm_move_active_window_to_monitor(right);
 }
 
-bool Platform_MoveActiveWindowLeft(void) { return wm_move_active_window_left(); }
+bool Platform_MoveActiveWindowLeft(void) {
+  return wm_move_active_window_left();
+}
 
-bool Platform_MoveActiveWindowRight(void) { return wm_move_active_window_right(); }
+bool Platform_MoveActiveWindowRight(void) {
+  return wm_move_active_window_right();
+}
 
 bool Platform_MoveActiveWindowUp(void) { return wm_move_active_window_up(); }
 
-bool Platform_MoveActiveWindowDown(void) { return wm_move_active_window_down(); }
+bool Platform_MoveActiveWindowDown(void) {
+  return wm_move_active_window_down();
+}
 
 bool Platform_FocusWindowLeft(void) { return wm_focus_window_left(); }
 
@@ -650,7 +658,9 @@ bool Platform_FocusWindowDown(void) { return wm_focus_window_down(); }
 
 bool Platform_MinimizeActiveWindow(void) { return wm_minimize_active_window(); }
 
-char *Platform_GetActiveWindowTitle(void) { return wm_get_active_window_title(); }
+char *Platform_GetActiveWindowTitle(void) {
+  return wm_get_active_window_title();
+}
 
 int Platform_GetIconSize(char *icon_path) {
   if (strstr(icon_path, "32x32")) {
@@ -712,9 +722,10 @@ static void icon_cache_load(void) {
     if (!eq)
       continue;
     *eq = '\0';
-    safe_copy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key), line);
+    safe_copy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key),
+              line);
     safe_copy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
-             eq + 1);
+              eq + 1);
     if (access(icon_cache[icon_cache_count].value, F_OK) == 0)
       icon_cache_count++;
   }
@@ -742,7 +753,7 @@ static void icon_cache_set(const char *key, const char *value) {
   }
   safe_copy(icon_cache[icon_cache_count].key, sizeof(icon_cache[0].key), key);
   safe_copy(icon_cache[icon_cache_count].value, sizeof(icon_cache[0].value),
-           value);
+            value);
   icon_cache_count++;
   char cf[1024];
   FILE *f = NULL;
@@ -786,10 +797,12 @@ static char *x11_icon_try_sizes(const char *bare, const char *dir,
   return NULL;
 }
 
-char *Platform_GetActiveWindowAppId(void) { return wm_get_active_window_app_id(); }
+char *Platform_GetActiveWindowAppId(void) {
+  return wm_get_active_window_app_id();
+}
 
 bool Platform_PrewarmImage(char *path) {
-  extern bool x11_prewarm_image(Display *dpy, const char *path);
+  extern bool x11_prewarm_image(Display * dpy, const char *path);
   Display *dpy = x11_get_display();
   if (!dpy || !path || !path[0])
     return false;
@@ -1583,7 +1596,7 @@ static char *http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
 }
 
 static size_t x11_http_write_file_cb(char *ptr, size_t sz, size_t nm,
-                                          void *userdata) {
+                                     void *userdata) {
   return fwrite(ptr, sz, nm, (FILE *)userdata);
 }
 
@@ -1606,8 +1619,7 @@ char *Platform_HttpCollect(const char *url, const char *method,
   if (method && strcmp(method, "POST") == 0) {
     curl_easy_setopt(c, CURLOPT_POST, 1L);
     curl_easy_setopt(c, CURLOPT_POSTFIELDS, body ? body : "");
-    curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE,
-                     (long)(body ? strlen(body) : 0));
+    curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE, (long)(body ? strlen(body) : 0));
     struct curl_slist *hdrs = curl_slist_append(
         NULL, content_type && content_type[0] ? content_type
                                               : "application/octet-stream");
@@ -1769,8 +1781,7 @@ bool Platform_GetMousePos(int *out_x, int *out_y) {
 
 static bool x11_lookup_is_exec(const char *path) {
   struct stat st;
-  return stat(path, &st) == 0 && S_ISREG(st.st_mode) &&
-         access(path, X_OK) == 0;
+  return stat(path, &st) == 0 && S_ISREG(st.st_mode) && access(path, X_OK) == 0;
 }
 
 static bool x11_lookup_ci_ends_with(const char *s, const char *suffix) {
@@ -1810,10 +1821,14 @@ static char *x11_lookup_find_in_path(const char *name, const char *home) {
     if (hit)
       return hit;
   }
-  const char *extra[] = {"/usr/local/bin", "/usr/bin",   "/bin",
-                         "/usr/sbin",      "/sbin",
+  const char *extra[] = {"/usr/local/bin",
+                         "/usr/bin",
+                         "/bin",
+                         "/usr/sbin",
+                         "/sbin",
                          "/snap/bin",
-                         "/var/lib/flatpak/exports/bin", NULL};
+                         "/var/lib/flatpak/exports/bin",
+                         NULL};
   for (size_t i = 0; extra[i]; i++) {
     char *hit = x11_lookup_try_dir(extra[i], name);
     if (hit)
@@ -2023,8 +2038,8 @@ char *Platform_FindExecutable(const char *name) {
     return hit;
 
   int status = 0;
-  char *out = Platform_RunArgvCapture((const char *const[]){"which", name, NULL},
-                                      NULL, &status);
+  char *out = Platform_RunArgvCapture(
+      (const char *const[]){"which", name, NULL}, NULL, &status);
   if (!out)
     return NULL;
   char *line = lookup_first_line(out);

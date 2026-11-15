@@ -47,8 +47,8 @@ static void snippet_free_binding(SnippetBinding *b) {
 }
 
 bool snippet_register_internal(const char *trigger, const char *text,
-                              void (*func)(void), bool whitelist,
-                              const char *const *windows, void *caller) {
+                               void (*func)(void), bool whitelist,
+                               const char *const *windows, void *caller) {
   if (!trigger || !trigger[0])
     return false;
   if (!text && !func)
@@ -307,7 +307,7 @@ bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
     title = Platform_GetActiveWindowTitle();
   bool allowed =
       window_list_allows(snippets[idx].window_count, snippets[idx].whitelist,
-                        snippets[idx].windows, title);
+                         snippets[idx].windows, title);
   if (!allowed)
     return false;
   size_t tlen = strlen(snippets[idx].trigger);

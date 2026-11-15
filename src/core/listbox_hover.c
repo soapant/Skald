@@ -121,7 +121,7 @@ bool listbox_client_mouse_pos(int *out_x, int *out_y) {
 }
 
 int listbox_row_at_y(const ListBoxInfo *lb, int top_y, int row_h, int top_index,
-                   int rows_visible, int pos_y) {
+                     int rows_visible, int pos_y) {
 
   if (!lb || row_h <= 0 || rows_visible <= 0) {
     return -1;
@@ -139,7 +139,7 @@ int listbox_row_at_y(const ListBoxInfo *lb, int top_y, int row_h, int top_index,
 }
 
 bool listbox_hover_focus(ListBoxInfo *lb, int top_y, int row_h, int top_index,
-                        int rows_visible) {
+                         int rows_visible) {
 
   if (!lb || lb->item_count <= 0)
     return false;
@@ -244,7 +244,7 @@ void listbox_set_geometry(int top_y, int row_h, int rows_visible) {
 }
 
 void listbox_get_geometry(int *out_list_top, int *out_item_height,
-                         int *out_visible_count) {
+                          int *out_visible_count) {
   if (out_list_top)
     *out_list_top = list_top;
   if (out_item_height)

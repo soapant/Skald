@@ -845,7 +845,8 @@ int sk_get_pid(void);
 #endif
 
 #define SKALD_FEATURE_INIT                                                     \
-  SKALD_FEATURE_EXPORT __attribute__((constructor)) void skald_feature_init(void)
+  SKALD_FEATURE_EXPORT __attribute__((constructor)) void skald_feature_init(   \
+      void)
 
 #define SKALD_FEATURE_SHUTDOWN                                                 \
   SKALD_FEATURE_EXPORT void skald_feature_shutdown(void)

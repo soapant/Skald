@@ -11,9 +11,9 @@ bool listbox_client_mouse_pos(int *out_x, int *out_y);
 void listbox_publish_mouse_pos(int x, int y);
 void listbox_invalidate_mouse_pos(void);
 int listbox_row_at_y(const ListBoxInfo *lb, int list_top, int item_height,
-                   int top_index, int visible_count, int mouse_y);
+                     int top_index, int visible_count, int mouse_y);
 bool listbox_hover_focus(ListBoxInfo *lb, int list_top, int item_height,
-                        int top_index, int visible_count);
+                         int top_index, int visible_count);
 void listbox_focus_by_keyboard(void);
 void listbox_set_row_h_scroll(int px);
 int listbox_get_row_h_scroll(void);
@@ -26,7 +26,7 @@ int listbox_scroll_top_for(int index, int visible_count, int count);
 void listbox_scroll_to_selection(ListBoxInfo *lb);
 void listbox_set_geometry(int list_top, int item_height, int visible_count);
 void listbox_get_geometry(int *out_list_top, int *out_item_height,
-                         int *out_visible_count);
+                          int *out_visible_count);
 void listbox_navigate_up(ListBoxInfo *lb);
 void listbox_navigate_down(ListBoxInfo *lb);
 

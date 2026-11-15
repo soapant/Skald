@@ -18,8 +18,8 @@
   X(int, WidgetGap, 10)                                                        \
   X(int, PromptWidth, 900)                                                     \
   X(int, PromptHeight, 640)                                                    \
-  X(int, PromptX, -1)                                                        \
-  X(int, PromptY, -1)                                                        \
+  X(int, PromptX, -1)                                                          \
+  X(int, PromptY, -1)                                                          \
   X(const char *, UsedTerminal, "")                                            \
   X(const char *, UsedShell, "")                                               \
   X(const char *, UsedBrowser, "")                                             \
@@ -31,7 +31,7 @@
   X(const char *, ActionsHotkey, "Ctrl+K")                                     \
   X(const char *, RegHotkey, "Ctrl+Shift+E")                                   \
   X(const char *, RegAliasHotkey, "Ctrl+Shift+A")                              \
-  X(const char *, Theme, "")                                          \
+  X(const char *, Theme, "")                                                   \
   X(const char *, BackgroundImage, "")                                         \
   X(bool, MessagesEnabled, true)                                               \
   X(bool, EnableAutoPairing, false)                                            \

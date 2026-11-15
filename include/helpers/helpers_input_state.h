@@ -16,7 +16,7 @@ bool input_is_key_down(int vk);
 bool input_was_key_pressed(int vk);
 bool input_was_key_released(int vk);
 void input_set_key_callback(void (*cb)(int vk, bool down, int mods, void *ud),
-                          void *ud);
+                            void *ud);
 void key_callback_purge_owner(const char *path_a, const char *path_b);
 void input_state_clear(void);
 void input_state_clear_queue(void);

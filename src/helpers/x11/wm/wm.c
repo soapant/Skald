@@ -13,7 +13,7 @@
 #include "deps/log.h"
 
 bool wm_append_window_name(PlWindowList *list, const char *name,
-                         bool toupper_first) {
+                           bool toupper_first) {
   if (!strcasecmp(name, "window") || !strcasecmp(name, "colored"))
     return true;
   char buf[1024];

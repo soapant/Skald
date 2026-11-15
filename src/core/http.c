@@ -27,7 +27,7 @@ char *http_post(const char *url, const char *content_type, const char *body) {
   if (!url || !url[0])
     return NULL;
   return Platform_HttpCollect(url, "POST", content_type, body ? body : "",
-                             HTTP_DEFAULT_LIMIT, NULL);
+                              HTTP_DEFAULT_LIMIT, NULL);
 }
 
 bool http_download(const char *url, const char *save_path) {
@@ -66,8 +66,7 @@ static void *http_async_worker(void *arg) {
   return NULL;
 }
 
-void http_get_async(const char *url, PlatformHttpCallback cb,
-                    void *userdata) {
+void http_get_async(const char *url, PlatformHttpCallback cb, void *userdata) {
   if (!url || !url[0] || !cb)
     return;
   HttpAsyncJob *job = (HttpAsyncJob *)calloc(1, sizeof(*job));

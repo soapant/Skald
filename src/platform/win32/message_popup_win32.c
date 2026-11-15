@@ -152,7 +152,8 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   if (winHeight > maxHeight)
     winHeight = maxHeight;
 
-  int centerX = msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, winWidth);
+  int centerX =
+      msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, winWidth);
   int centerY =
       msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, winHeight);
 
@@ -237,7 +238,7 @@ void Platform_CreateDisplayMessageWindow(
   pWndData->render_owner[0] = '\0';
   if (render)
     owner_resolve_for_func((void *)render, pWndData->render_owner,
-                         sizeof(pWndData->render_owner));
+                           sizeof(pWndData->render_owner));
   if (name && name[0])
     snprintf(pWndData->name, sizeof(pWndData->name), "%s", name);
   else

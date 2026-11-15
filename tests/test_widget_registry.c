@@ -17,7 +17,7 @@ TEST(purge_owner_on_empty_registry_does_not_deadlock) {
   widget_purge_owner("no-owner-a.so", NULL, widget_current_generation());
   widget_purge_owner(NULL, "no-owner-b.so", widget_current_generation());
   widget_purge_owner("no-owner-c.so", "no-owner-d.so",
-                    widget_current_generation());
+                     widget_current_generation());
   ASSERT_TRUE(true);
 }
 
@@ -45,7 +45,7 @@ static void *concurrent_worker(void *arg) {
       pthread_mutex_unlock(&concurrent_count_mutex);
     }
     widget_purge_owner("concurrent-bogus-owner.so", NULL,
-                      widget_current_generation());
+                       widget_current_generation());
   }
   return NULL;
 }

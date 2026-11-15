@@ -23,7 +23,8 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
 }
 
 void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
-                          int fontsize, PromptState *state, EditboxPlace *out) {
+                           int fontsize, PromptState *state,
+                           EditboxPlace *out) {
   if (!out)
     return;
   memset(out, 0, sizeof(*out));
@@ -132,8 +133,9 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->cursor_x = in->cursor_x;
   out->text_w = in->text_w;
   out->text_y = in->y;
-  int caret_auto_y = editbox_caret_y(in->y, in->ascent, in->descent,
-                                    in->fontsize > 0 ? in->fontsize : FontSize);
+  int caret_auto_y =
+      editbox_caret_y(in->y, in->ascent, in->descent,
+                      in->fontsize > 0 ? in->fontsize : FontSize);
   out->caret_y = in->caret_y > 0 ? in->caret_y : caret_auto_y;
   out->fontsize = in->fontsize > 0 ? in->fontsize : FontSize;
   out->caret_height =
@@ -151,7 +153,7 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->bg_color = in->bg_color;
   out->font = in->font;
   editbox_resolve_selection(in->state, in->text_len, true, &out->sel_start,
-                           &out->sel_end, &out->has_selection);
+                            &out->sel_end, &out->has_selection);
 }
 
 int editbox_caret_y(int box_top, int ascent, int descent, int fontsize) {
@@ -163,14 +165,14 @@ int editbox_caret_y(int box_top, int ascent, int descent, int fontsize) {
 }
 
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
-                                int text_len, int cursor_x, int text_w,
-                                int ascent, int descent, FontHandle font) {
+                                   int text_len, int cursor_x, int text_w,
+                                   int ascent, int descent, FontHandle font) {
   if (!spec || !state)
     return;
   int sel_start = 0, sel_end = 0;
   bool has_sel = false;
   editbox_resolve_selection(state, text_len, true, &sel_start, &sel_end,
-                           &has_sel);
+                            &has_sel);
   memset(spec, 0, sizeof(*spec));
   spec->text = state->eb->filter;
   spec->text_len = text_len;
@@ -208,8 +210,8 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
 }
 
 void editbox_resolve_selection(PromptState *state, int text_len,
-                              bool prefer_state, int *out_start, int *out_end,
-                              bool *out_has) {
+                               bool prefer_state, int *out_start, int *out_end,
+                               bool *out_has) {
   int sel_start = 0;
   int sel_end = 0;
   bool has = false;

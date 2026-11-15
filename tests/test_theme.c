@@ -30,7 +30,8 @@ TEST(theme_names_are_unique) {
     ASSERT_TRUE(e != NULL);
     ASSERT_TRUE(e->name && e->name[0]);
     for (size_t j = i + 1; j < n; j++) {
-      ASSERT_TRUE(strcmp(theme_entry_at(i)->name, theme_entry_at(j)->name) != 0);
+      ASSERT_TRUE(strcmp(theme_entry_at(i)->name, theme_entry_at(j)->name) !=
+                  0);
     }
   }
 }

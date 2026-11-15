@@ -18,13 +18,13 @@ bool cover_scale(int sw, int sh, int tw, int th, int *dw, int *dh);
 int draw_thickness_px(float thickness);
 void draw_measure_track(int x, int y, int w, int h);
 int draw_line_prep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
-                 int *y1, int *x2, int *y2);
+                   int *y1, int *x2, int *y2);
 int draw_circle_prep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
-                   int *cx, int *cy);
+                     int *cx, int *cy);
 void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
-                     int item_count,
-                     bool (*filter_match)(const char *item,
-                                          const char *filter));
+                      int item_count,
+                      bool (*filter_match)(const char *item,
+                                           const char *filter));
 
 typedef enum {
   AUTO = 0,
@@ -75,15 +75,16 @@ PlMetrics *metrics_get(void);
 void draw_prompt_separator(PlDrawPromptSeparatorSpec spec);
 void item_get_colors(PlGetItemColorsSpec spec);
 void listbox_compute_layout(const PlListSpec *spec, int default_y0, int item_h,
-                           int popup_w, int popup_h, int count,
-                           ListboxLayout *out);
+                            int popup_w, int popup_h, int count,
+                            ListboxLayout *out);
 
-void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x, int *out_y,
-                       int *out_w, int *out_h, int *out_h_slot, int *out_v_slot,
-                       int *out_gap, int *out_outward);
+void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x,
+                          int *out_y, int *out_w, int *out_h, int *out_h_slot,
+                          int *out_v_slot, int *out_gap, int *out_outward);
 void display_message_slot(const char *message, MessageSlot slot, int max_w,
-                        int max_h, int prompt_gap, double timeout,
-                        ColorRef color, void (*render)(void), const char *name);
+                          int max_h, int prompt_gap, double timeout,
+                          ColorRef color, void (*render)(void),
+                          const char *name);
 
 void set_transparent_window(bool on);
 bool get_transparent_window(void);
@@ -129,12 +130,13 @@ int UI_InsertChar(wchar_t wc);
 #define UI_TICK_TIMER_MS 1000
 
 int bg_tile_lru_pick(const void *slots, int count, size_t stride,
-                  int (*is_empty)(const void *slot),
-                  unsigned long (*stamp)(const void *slot));
+                     int (*is_empty)(const void *slot),
+                     unsigned long (*stamp)(const void *slot));
 
-void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec, int lineHeight);
+void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec,
+                             int lineHeight);
 int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,
-                    int win_size);
+                      int win_size);
 int msg_stack_dir(int v_slot, bool outward);
 
 #endif

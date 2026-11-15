@@ -124,7 +124,7 @@ typedef struct {
 } EditboxUiSpec;
 
 void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
-                          int fontsize, PromptState *state, EditboxPlace *out);
+                           int fontsize, PromptState *state, EditboxPlace *out);
 
 typedef struct {
   PromptState *state;
@@ -160,11 +160,11 @@ void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
                              FontHandle font);
 int editbox_caret_y(int box_top, int ascent, int descent, int fontsize);
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
-                                int text_len, int cursor_x, int text_w,
-                                int ascent, int descent, FontHandle font);
+                                   int text_len, int cursor_x, int text_w,
+                                   int ascent, int descent, FontHandle font);
 void editbox_resolve_selection(PromptState *state, int text_len,
-                              bool prefer_state, int *out_start, int *out_end,
-                              bool *out_has);
+                               bool prefer_state, int *out_start, int *out_end,
+                               bool *out_has);
 int editbox_scroll_offset(const EditboxSpec *spec);
 void editbox_layout(EditboxSpec *spec, EditboxLayout *out);
 void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,

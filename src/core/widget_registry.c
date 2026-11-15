@@ -279,7 +279,7 @@ void widget_destroy(Widget *widget) {
 }
 
 void widget_purge_owner(const char *path_a, const char *path_b,
-                       unsigned generation) {
+                        unsigned generation) {
   if (owner_purge_inactive(path_a, path_b))
     return;
 
@@ -617,7 +617,7 @@ bool widget_is_valid(const PlatformWidget *widget) {
 }
 
 void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,
-                             void *ud) {
+                               void *ud) {
   PlatformWidgetBase *base = (PlatformWidgetBase *)widget;
   if (!widget || base->dead) {
     return;
@@ -638,8 +638,8 @@ void widget_invalidate(PlatformWidget *widget) {
 }
 
 void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
-                     int fps, bool no_bg, void (*on_click)(void),
-                     const char *name) {
+                      int fps, bool no_bg, void (*on_click)(void),
+                      const char *name) {
   if (!base)
     return;
   base->x = x;

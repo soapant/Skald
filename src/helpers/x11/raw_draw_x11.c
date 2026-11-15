@@ -61,8 +61,8 @@ static int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
 }
 
 static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf,
-                              XftColor *xcols, const unsigned long *ucols, int nu,
-                              int ls, int le, int drawX, int baseline,
+                              XftColor *xcols, const unsigned long *ucols,
+                              int nu, int ls, int le, int drawX, int baseline,
                               int rowTop) {
   int cx = drawX;
   int i = ls;
@@ -227,8 +227,8 @@ void x11_raw_line_flush(void) {
   raw_map_pitch = pitch;
   raw_map_xd = xd;
   for (int k = 0; k < nu; k++)
-  if (owned)
-    Platform_DestroyFont(raw_font);
+    if (owned)
+      Platform_DestroyFont(raw_font);
 }
 
 bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
@@ -371,8 +371,8 @@ void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   }
   int asc = xf ? xf->ascent : 0;
   int desc = xf ? xf->descent : 0;
-  editbox_spec_fill_from_prompt(eb, state, text_len, cursor_x, text_w, asc, desc,
-                             font);
+  editbox_spec_fill_from_prompt(eb, state, text_len, cursor_x, text_w, asc,
+                                desc, font);
   eb->measure = x11_editbox_measure;
   eb->measure_user = metrics;
 }
@@ -404,7 +404,7 @@ GC x11_raw_prepare(unsigned long color, int thickness) {
     return NULL;
   XftColor col;
   x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
-                      opacity_alpha16(), &col);
+                       opacity_alpha16(), &col);
   XSetForeground(g_draw_dpy, gc, col.pixel);
   XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid,
                      CapButt, JoinMiter);
@@ -458,9 +458,9 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
       int t = PROMPT_SEL_INSET;
       int bx = PROMPT_SEL_X, bw = state->width - PROMPT_SEL_W_SHRINK;
       if (sel) {
-        x11_fill_rounded_rect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT),
-                              0xFFFF, bx + t, y + PROMPT_SEL_TOP_INSET + t,
-                              bw - 2 * t, itemH - 2 - 2 * t, R - 1);
+        x11_fill_rounded_rect(
+            dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
+            y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t, itemH - 2 - 2 * t, R - 1);
       }
     } else {
       x11_draw_list_background(state, dpy, xd, vis, cmap, y, itemH, sel);

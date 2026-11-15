@@ -291,8 +291,7 @@ static bool x11_compiler_probe(const char *cc) {
   const char *argv[] = {cc, "-shared", "-fPIC", "-o", dll, src, "-lm", NULL};
   int status = -1;
   char *out = Platform_RunArgvCapture(argv, NULL, &status);
-  bool ok =
-      out != NULL && status == 0 && access(dll, F_OK) == 0;
+  bool ok = out != NULL && status == 0 && access(dll, F_OK) == 0;
   free(out);
   remove(src);
   remove(dll);

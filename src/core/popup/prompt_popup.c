@@ -57,7 +57,7 @@ static void prompt_popup_on_show(Popup *self) {
   data->state->eb->filter[0] = '\0';
   if (data->spec.initial_text && data->spec.initial_text[0]) {
     safe_copy(data->state->eb->filter, sizeof(data->state->eb->filter),
-             data->spec.initial_text);
+              data->spec.initial_text);
     data->state->eb->cursor = (int)strlen(data->state->eb->filter);
   }
   if (data->spec.password_mode &&
@@ -176,12 +176,12 @@ static void prompt_popup_destroy(Popup *self) {
   free(data);
 }
 
-static const PopupVTable prompt_popup_vtable = {.on_show = prompt_popup_on_show,
-                                                .on_hide = prompt_popup_on_hide,
-                                                .on_render =
-                                                    prompt_popup_on_render,
-                                                .on_key = prompt_popup_on_key,
-                                                .destroy = prompt_popup_destroy};
+static const PopupVTable prompt_popup_vtable = {
+    .on_show = prompt_popup_on_show,
+    .on_hide = prompt_popup_on_hide,
+    .on_render = prompt_popup_on_render,
+    .on_key = prompt_popup_on_key,
+    .destroy = prompt_popup_destroy};
 
 int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h) {
   if (!p || p->type != POPUP_PROMPT)

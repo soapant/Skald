@@ -13,7 +13,7 @@ char *wm_trim_focus_title(const char *title);
 #include "helpers/helpers_text.h"
 
 bool wm_append_window_name(PlWindowList *list, const char *name,
-                         bool toupper_first);
+                           bool toupper_first);
 
 char *wm_get_active_window_title(void);
 char *wm_get_active_window_app_id(void);

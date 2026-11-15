@@ -85,7 +85,6 @@ static bool win32_cache_stale(DWORD now, DWORD *checked_ms, const char *path,
   return true;
 }
 
-
 bool win32_text_is_symbolic(const wchar_t *wide, int len) {
   return win32_text_any(wide, len, win32_pred_symbolic);
 }
@@ -655,5 +654,5 @@ void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   if (told)
     SelectObject(g_draw_hdc, told);
   editbox_spec_fill_from_prompt(eb, state, text_len, cursor_x, text_w, ascent,
-                             descent, font);
+                                descent, font);
 }

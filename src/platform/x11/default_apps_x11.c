@@ -56,7 +56,7 @@ static const char *get_default_browser(int slot) {
                                      "Zen"};
   ListOfFiles browser_files = {0};
   file_walk_all_files_from_dir("/usr/share/applications", NULL, &browser_files,
-                           NULL, true, 0);
+                               NULL, true, 0);
   for (size_t i = 0; i < browser_files.count; i++) {
     const char *name = browser_files.files[i].name;
     for (size_t j = 0;
