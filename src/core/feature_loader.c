@@ -19,6 +19,7 @@
 #include "helpers/helpers_hotkey.h"
 #include "core/thread_registry.h"
 #include "core/owner_purge.h"
+#include "helpers/helpers_ui.h"
 
 #include "core/cc_registry.h"
 #include "core/widget_registry.h"
@@ -676,6 +677,162 @@ static void feature_mark_failed(const char *dir, time_t mtime) {
   }
 }
 
+#define FEATURE_BUILD_Q_MAX 32
+
+typedef struct {
+  char ent_name[256];
+  char src[1024];
+  char dll[1024];
+  char out[1024];
+  long long src_mtime;
+} FeatureBuildJob;
+
+typedef struct {
+  FeatureBuildJob job;
+  bool ok;
+} FeatureBuildDone;
+
+static void *build_mutex;
+static FeatureBuildJob build_queue[FEATURE_BUILD_Q_MAX];
+static int build_queue_count;
+static FeatureBuildDone build_done[FEATURE_BUILD_Q_MAX];
+static int build_done_count;
+static int builds_in_flight;
+static bool reload_session_active;
+static int reload_session_ok;
+static int reload_session_fail;
+static unsigned build_seq = 0;
+static void *build_worker;
+static bool build_worker_failed;
+
+static void build_mutex_init(void) {
+  if (!build_mutex)
+    build_mutex = Platform_MutexCreate();
+}
+#define B_LOCK()                                                               \
+  do {                                                                         \
+    build_mutex_init();                                                        \
+    Platform_MutexLock(build_mutex);                                           \
+  } while (0)
+#define B_UNLOCK() Platform_MutexUnlock(build_mutex)
+
+static void note_feature_built(const char *ent_name, const char *dll,
+                               long long src_mtime) {
+  for (int fi = 0; fi < s_failed_count; fi++) {
+    if (strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) == 0)
+      s_failed[fi].src_mtime = 0;
+  }
+  struct utimbuf times;
+  times.actime = (time_t)src_mtime;
+  times.modtime = (time_t)src_mtime;
+  utime(dll, &times);
+}
+
+static int finish_hot_build(const char *ent_name, const char *dll,
+                            const char *out, long long src_mtime, bool ok) {
+  if (ok)
+    ok = feature_loader_reload_from(ent_name, out);
+  remove(out);
+  if (!ok) {
+    feature_mark_failed(ent_name, (time_t)src_mtime);
+    return 0;
+  }
+  note_feature_built(ent_name, dll, src_mtime);
+  return 1;
+}
+
+static void *feature_build_worker_main(void *unused) {
+  (void)unused;
+  for (;;) {
+    FeatureBuildJob job;
+    bool have = false;
+    B_LOCK();
+    if (build_queue_count > 0) {
+      job = build_queue[0];
+      memmove(build_queue, build_queue + 1,
+              sizeof(build_queue[0]) * (size_t)(build_queue_count - 1));
+      build_queue_count--;
+      have = true;
+    }
+    B_UNLOCK();
+    if (!have) {
+      Platform_RenderThreadMiniSleep(25);
+      continue;
+    }
+    bool ok = reload_lib_compile(job.src, job.out, "hot-reload");
+    B_LOCK();
+    builds_in_flight--;
+    if (build_done_count < FEATURE_BUILD_Q_MAX) {
+      build_done[build_done_count].job = job;
+      build_done[build_done_count].ok = ok;
+      build_done_count++;
+    } else {
+      remove(job.out);
+      log_warn("feature build result for %s dropped, queue full", job.ent_name);
+    }
+    B_UNLOCK();
+  }
+  return NULL;
+}
+
+static bool feature_build_enqueue(const FeatureBuildJob *job) {
+  B_LOCK();
+  if (build_queue_count >= FEATURE_BUILD_Q_MAX ||
+      builds_in_flight >= FEATURE_BUILD_Q_MAX) {
+    B_UNLOCK();
+    return false;
+  }
+  build_queue[build_queue_count] = *job;
+  build_queue_count++;
+  builds_in_flight++;
+  if (!build_worker && !build_worker_failed) {
+    build_worker = Platform_ThreadCreate(feature_build_worker_main, NULL);
+    if (!build_worker) {
+      builds_in_flight--;
+      build_queue_count--;
+      build_worker_failed = true;
+      log_warn("hot-reload worker failed to start, hot reload disabled");
+      B_UNLOCK();
+      return false;
+    }
+  }
+  B_UNLOCK();
+  return true;
+}
+
+void feature_loader_service_builds(void) {
+  FeatureBuildDone done[FEATURE_BUILD_Q_MAX];
+  int n = 0;
+  B_LOCK();
+  n = build_done_count;
+  if (n > 0) {
+    memcpy(done, build_done, sizeof(build_done[0]) * (size_t)n);
+    build_done_count = 0;
+  }
+  B_UNLOCK();
+  int ok_n = 0, fail_n = 0;
+  for (int i = 0; i < n; i++) {
+    if (finish_hot_build(done[i].job.ent_name, done[i].job.dll, done[i].job.out,
+                         done[i].job.src_mtime, done[i].ok))
+      ok_n++;
+    else
+      fail_n++;
+  }
+  if (!reload_session_active)
+    return;
+  reload_session_ok += ok_n;
+  reload_session_fail += fail_n;
+  B_LOCK();
+  bool still =
+      builds_in_flight != 0 || build_queue_count != 0 || build_done_count != 0;
+  B_UNLOCK();
+  if (still)
+    return;
+  reload_session_active = false;
+  reload_session_ok = 0;
+  reload_session_fail = 0;
+}
+
 int feature_loader_build_stale_sources(bool hot_reload) {
   const char *ext = Platform_LibExtension();
   if (!ext)
@@ -717,37 +874,38 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     }
     if (known_bad)
       continue;
-    static unsigned build_seq = 0;
+    if (hot_reload) {
+      FeatureBuildJob job;
+      memset(&job, 0, sizeof(job));
+      snprintf(job.ent_name, sizeof(job.ent_name), "%s", ent_name);
+      snprintf(job.src, sizeof(job.src), "%s", src);
+      snprintf(job.dll, sizeof(job.dll), "%s", dll);
+      snprintf(job.out, sizeof(job.out), "%.1000s.tmp.%u", dll, ++build_seq);
+      job.src_mtime = src_mtime;
+      if (!feature_build_enqueue(&job)) {
+        log_warn("feature build queue full, skipping hot reload for %s",
+                 ent_name);
+        feature_mark_failed(ent_name, src_mtime);
+        continue;
+      }
+      if (!reload_session_active) {
+        reload_session_active = true;
+        reload_session_ok = 0;
+        reload_session_fail = 0;
+      }
+      done++;
+      continue;
+    }
     char out_path[1024];
-    if (hot_reload)
-      snprintf(out_path, sizeof(out_path), "%.1009s.tmp.%u", dll, ++build_seq);
-    else
-      snprintf(out_path, sizeof(out_path), "%s", dll);
-    const char *tag = hot_reload ? "hot-reload" : "feature build";
-    bool ok = reload_lib_compile(src, out_path, tag);
+    snprintf(out_path, sizeof(out_path), "%s", dll);
+    bool ok = reload_lib_compile(src, out_path, "feature build");
     if (!ok) {
       feature_mark_failed(ent_name, src_mtime);
       continue;
     }
-    if (hot_reload) {
-      bool reloaded_ok = feature_loader_reload_from(ent_name, out_path);
-      remove(out_path);
-      if (!reloaded_ok) {
-        feature_mark_failed(ent_name, src_mtime);
-        continue;
-      }
-    }
-    for (int fi = 0; fi < s_failed_count; fi++) {
-      if (strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) == 0)
-        s_failed[fi].src_mtime = 0;
-    }
-    struct utimbuf times;
-    times.actime = (time_t)src_mtime;
-    times.modtime = (time_t)src_mtime;
-    utime(dll, &times);
+    note_feature_built(ent_name, dll, src_mtime);
     done++;
-    if (!hot_reload)
-      log_info("feature build: %s from source", ent_name);
+    log_info("feature build: %s from source", ent_name);
   }
   Platform_DirClose(dir);
   return done;

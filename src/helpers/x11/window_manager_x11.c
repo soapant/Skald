@@ -284,6 +284,7 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
 int WindowManager_Run(WindowManager *wm) {
   XEvent xev;
 
+  feature_loader_service_builds();
   feature_loader_drain_retired_unloads();
   if (!wm)
     return -1;
@@ -439,6 +440,7 @@ int WindowManager_Run(WindowManager *wm) {
         }
       }
     }
+    feature_loader_service_builds();
     hotkey_drain_pending();
   }
 
@@ -492,6 +494,7 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
       }
     }
   }
+  feature_loader_service_builds();
   hotkey_drain_pending();
 }
 
