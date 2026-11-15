@@ -3,6 +3,7 @@
 #include "helpers/x11/raw_misc_x11.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
+#include <sys/stat.h>
 #include "wm/wm.h"
 #include "helpers/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
@@ -82,6 +83,27 @@ bool Platform_MkdirIfNotExists(const char *path) {
   if (mkdir(path, 0755) == 0)
     return true;
   return errno == EEXIST;
+}
+
+bool Platform_DirExists(const char *path) {
+  struct stat st;
+  return path && stat(path, &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+bool Platform_TempDirPath(char *out, size_t out_len) {
+  const char *dir = getenv("TMPDIR");
+  if (!dir || !dir[0])
+    dir = "/tmp";
+  if (!out || out_len == 0)
+    return false;
+  size_t len = strlen(dir);
+  while (len > 0 && (dir[len - 1] == '/' || dir[len - 1] == '\\'))
+    len--;
+  if (len + 1 > out_len)
+    return false;
+  memcpy(out, dir, len);
+  out[len] = '\0';
+  return true;
 }
 
 long long Platform_GetWallClockMs(void) {

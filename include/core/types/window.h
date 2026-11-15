@@ -34,8 +34,8 @@ typedef struct FontHandle {
 #define WH_TO_HWND(h) ((h).hwnd)
 #define WH_EQUALS(a, b) ((a).hwnd == (b).hwnd)
 #elif defined(__linux__)
-#define WH_FROM_HWND(h) ((void)(h), WH_NULL)
-#define WH_TO_HWND(h) ((h).xid)
+#define WH_FROM_XID(x) ((WindowHandle){.xid = (unsigned long)(x)})
+#define WH_TO_XID(h) ((h).xid)
 #define WH_EQUALS(a, b) ((a).xid == (b).xid)
 #endif
 
@@ -111,13 +111,6 @@ typedef struct {
 } PlListSpec;
 
 #define GAP 20
-#define ID_TRAY_ICON 1001
-#if defined(_WIN32)
-#define WM_TRAYICON (WM_USER + 1)
-#define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
-#define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
-#endif
-#define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
 

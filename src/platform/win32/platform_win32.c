@@ -3,6 +3,8 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_text.h"
 #include "helpers/win32/win32_state.h"
+#include "helpers/helpers_fs.h"
+#include "helpers/win32/subclasses_win32.h"
 
 #ifdef _MSC_VER
 
@@ -548,7 +550,7 @@ bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
   HWND hwnd = WH_TO_HWND(window);
   if (!IsWindow(hwnd))
     return false;
-  return PostMessageA(hwnd, WM_USER + 1, (WPARAM)value, 0) != 0;
+  return PostMessageA(hwnd, WM_WINDOW_LONG_PROPERTY, (WPARAM)value, 0) != 0;
 }
 
 bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
@@ -1066,9 +1068,9 @@ char *Platform_GetWorkingDir(void) {
 }
 
 void Platform_InitDataFolder(void) {
-  char dir_path[200];
-  snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Skald",
-           Platform_GetRealHome());
+  char dir_path[512];
+  if (!data_dir(dir_path, sizeof(dir_path)))
+    return;
   Platform_MkdirIfNotExists(dir_path);
 }
 

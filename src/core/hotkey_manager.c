@@ -54,14 +54,13 @@ static unsigned long pending_dropped = 0;
 
 static int wake_fd = -1;
 int hotkey_wake_fd(void) {
-  if (wake_fd < 0) {
 #if defined(_WIN32)
-    wake_fd = 0;
+  return -1;
 #else
+  if (wake_fd < 0)
     wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-#endif
-  }
   return wake_fd;
+#endif
 }
 
 static void hotkey_wake(void) {
