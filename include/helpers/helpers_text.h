@@ -42,6 +42,7 @@ char *string_slice(const char *str, int start, int end);
 
 bool hotkey_text_is_printable(const PopupKeyEvent *key);
 bool hotkey_text_should_swallow(const PopupKeyEvent *key);
+bool string_contains(const char *haystack, const char *needle);
 bool string_contains_ci(const char *haystack, const char *needle);
 bool string_starts_with_ci(const char *str, const char *prefix);
 bool string_equals_ci(const char *a, const char *b);

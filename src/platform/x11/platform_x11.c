@@ -1467,9 +1467,9 @@ char *Platform_GetWorkingDir(void) {
 }
 
 void Platform_InitDataFolder(void) {
-  char dir_path[300];
-  snprintf(dir_path, sizeof(dir_path), "%s/.local/share/skald",
-           Platform_GetRealHome());
+  char dir_path[512];
+  if (!data_dir(dir_path, sizeof(dir_path)))
+    return;
   Platform_MkdirIfNotExists(dir_path);
 }
 
