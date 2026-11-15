@@ -18,6 +18,8 @@
   X(int, WidgetGap, 10)                                                        \
   X(int, PromptWidth, 900)                                                     \
   X(int, PromptHeight, 640)                                                    \
+  X(int, PromptX, -1)                                                        \
+  X(int, PromptY, -1)                                                        \
   X(const char *, UsedTerminal, "")                                            \
   X(const char *, UsedShell, "")                                               \
   X(const char *, UsedBrowser, "")                                             \
