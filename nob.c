@@ -43,10 +43,10 @@
       "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
 
 #define WIN_LINK_FLAGS                                                         \
-  "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm",   \
-      "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32",    \
-      "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp",          \
-      "-Lbuild/winlibs", "-liphlpapi"
+  "-static", "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32",   \
+      "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi",      \
+      "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32",          \
+      "-lwinhttp", "-Lbuild/winlibs", "-liphlpapi"
 
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
