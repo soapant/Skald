@@ -1198,6 +1198,24 @@ bool sk_snap_active_window(SnapPreset preset) {
 
 long sk_get_active_window_pid(void) { return Platform_GetActiveWindowPid(); }
 
+bool sk_switch_to_workspace(int index) { return Platform_SwitchToWorkspace(index); }
+
+bool sk_move_active_window_to_workspace(int index) {
+  return Platform_MoveActiveWindowToWorkspace(index);
+}
+
+bool sk_set_active_window_opacity(int percent) {
+  return Platform_SetActiveWindowOpacity(percent);
+}
+
+bool sk_close_windows_by_title(const char *needle) {
+  return Platform_CloseWindowsByTitle(needle);
+}
+
+bool sk_close_windows_by_id(const char *needle) {
+  return Platform_CloseWindowsById(needle);
+}
+
 bool sk_reload_config(void) { return config_reload(); }
 
 char *ski_popup(const PopupSpec *spec) {
@@ -1724,7 +1742,7 @@ SkWindowList sk_get_all_window_titles(void) {
   return Platform_GetWindowTitles();
 }
 
-SkWindowList sk_get_all_window_names(void) { return Platform_GetWindowNames(); }
+SkWindowList sk_get_all_window_ids(void) { return Platform_GetWindowIds(); }
 
 PlColor sk_get_pixel_color(SkPos pos) {
   return Platform_GetPixelColor(pos.x, pos.y);
@@ -2244,8 +2262,8 @@ char *sk_get_active_window_title(void) {
   return strdup(title);
 }
 
-char *sk_get_active_window_app_id(void) {
-  char *id = Platform_GetActiveWindowAppId();
+char *sk_get_active_window_id(void) {
+  char *id = Platform_GetActiveWindowId();
   if (!id || !id[0]) {
     return NULL;
   }

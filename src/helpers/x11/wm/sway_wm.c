@@ -112,7 +112,7 @@ bool get_title_sway(char *buffer, int buffer_size) {
   return sway_tree_field(buffer, buffer_size, "\"name\"");
 }
 
-bool get_app_id_sway(char *buffer, int buffer_size) {
+bool get_id_sway(char *buffer, int buffer_size) {
   return sway_tree_field(buffer, buffer_size, "\"app_id\"");
 }
 
@@ -349,7 +349,7 @@ static PlWindowList sway_list_pid_fields(bool (*extract)(const char *json,
   return list;
 }
 
-PlWindowList get_window_names_sway(void) {
+PlWindowList get_window_ids_sway(void) {
   return sway_list_pid_fields(sway_app_for_pid, true);
 }
 
@@ -743,4 +743,120 @@ long get_pid_sway(void) {
   if (!sway_tree_field(buf, sizeof(buf), "\"pid\""))
     return 0;
   return strtol(buf, NULL, 10);
+}
+
+static void sway_json_extract_field(const char *json, const char *at,
+                                    const char *limit, const char *key,
+                                    char *out, size_t cap) {
+  size_t n = (size_t)(limit - at);
+  const char *end = at + n;
+  const char *p = strstr(at, key);
+  out[0] = '\0';
+  if (!p || p >= end)
+    return;
+  p += strlen(key);
+  while (p < end && (*p == ' ' || *p == ':'))
+    p++;
+  if (*p == '"') {
+    p++;
+    const char *e = p;
+    while (e < end && *e && *e != '"')
+      e++;
+    size_t m = (size_t)(e - p);
+    if (m >= cap)
+      m = cap - 1;
+    memcpy(out, p, m);
+    out[m] = '\0';
+    return;
+  }
+  /* null / number */
+  const char *e = p;
+  while (e < end && *e && (*e != ',' && *e != '}' && *e != ']' &&
+                           !iscntrl((unsigned char)*e)))
+    e++;
+  {
+    size_t m = (size_t)(e - p);
+    if (m >= cap)
+      m = cap - 1;
+    memcpy(out, p, m);
+    out[m] = '\0';
+  }
+  char *t = out + strlen(out);
+  while (t > out && isspace((unsigned char)t[-1]))
+    *--t = '\0';
+}
+
+static bool sway_foreach_window(const char *match, bool by_id, int *closed) {
+  if (match == NULL || match[0] == '\0')
+    return false;
+  char *json = Platform_RunTerminalCommand("swaymsg -t get_tree --raw", false);
+  if (!json || !json[0]) {
+    free(json);
+    return false;
+  }
+  int count = 0;
+  if (closed)
+    *closed = 0;
+  for (char *p = json; (p = strstr(p, "\"id\":")); p += 5) {
+    char *next = strstr(p + 5, "\"id\":");
+    const char *limit = next ? next : json + strlen(json);
+    long con_id = strtol(p + 6, NULL, 10);
+    if (con_id == 0)
+      continue;
+    char name[1024] = {0}, app_id[1024] = {0};
+    sway_json_extract_field(json, p, limit, "\"name\":", name, sizeof(name));
+    sway_json_extract_field(json, p, limit, "\"app_id\":", app_id,
+                            sizeof(app_id));
+    if (strncmp(name, "null", 4) == 0)
+      name[0] = '\0';
+    if (strncmp(app_id, "null", 4) == 0)
+      app_id[0] = '\0';
+    const char *v = by_id ? app_id : name;
+    if (!v || v[0] == '\0' || !string_contains_ci(v, match))
+      continue;
+    char crit[256];
+    snprintf(crit, sizeof(crit), "swaymsg '[con_id=%ld] kill'", con_id);
+    if (sway_exec(crit))
+      count++;
+  }
+  free(json);
+  if (closed)
+    *closed = count;
+  return count > 0;
+}
+
+bool close_windows_matching_title_sway(const char *needle) {
+  int n = 0;
+  return sway_foreach_window(needle, false, &n);
+}
+
+bool close_windows_matching_id_sway(const char *needle) {
+  int n = 0;
+  return sway_foreach_window(needle, true, &n);
+}
+
+bool switch_to_workspace_sway(int index) {
+  if (index < 1)
+    return false;
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "swaymsg workspace %d", index);
+  return sway_exec(cmd);
+}
+
+bool move_active_window_to_workspace_sway(int index) {
+  if (index < 1)
+    return false;
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "swaymsg move container to workspace %d", index);
+  return sway_exec(cmd);
+}
+
+bool set_active_window_opacity_sway(int percent) {
+  if (percent < 1)
+    percent = 1;
+  if (percent > 100)
+    percent = 100;
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "swaymsg opacity %.2f", (double)percent / 100.0);
+  return sway_exec(cmd);
 }
