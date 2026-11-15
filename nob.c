@@ -421,8 +421,7 @@ static bool write_compile_commands(void) {
       if (release) {
         nob_cmd_append(&cmd, "-O3");
         nob_cmd_append(&cmd, "-mwindows");
-      }
-      else {
+      } else {
         nob_cmd_append(&cmd, "-ggdb");
       }
     } else {
@@ -595,37 +594,6 @@ static void append_plugin_build_cmd(Nob_Cmd *cmd, const char *src,
   }
 }
 
-static const char *config_src_path(void) {
-  return release ? "release/config/config.c" : "config/config.c";
-}
-
-static const char *config_out_path(void) {
-  return nob_temp_sprintf("%s/config%s", release ? "release/build" : "build",
-                          feature_ext());
-}
-
-static bool build_config(void) {
-  const char *src = config_src_path();
-  const char *out = config_out_path();
-  if (!nob_file_exists(src)) {
-    nob_log(NOB_INFO, "config: no %s, skipping", src);
-    return true;
-  }
-  bool need = stale_with_dep(src, out, feature_dep_path(src));
-  if (!need && nob_file_exists(main_implib))
-    need = nob_needs_rebuild1(out, main_implib) != 0;
-  if (!need)
-    return true;
-  Nob_Cmd cmd = {0};
-  append_plugin_build_cmd(&cmd, src, out);
-  nob_log(NOB_INFO, "config: building %s -> %s", src, out);
-  if (!nob_cmd_run(&cmd)) {
-    nob_log(NOB_ERROR, "config build failed for %s", src);
-    return false;
-  }
-  return true;
-}
-
 static void append_feature_build_cmd(Nob_Cmd *cmd, const char *src) {
   append_plugin_build_cmd(cmd, src, feature_so_path(src));
 }
@@ -665,20 +633,64 @@ static bool build_features(void) {
   return ok;
 }
 
+static void emit_bool_toml(FILE *f, const char *name, bool v) {
+  fprintf(f, "%s = %s\n", name, v ? "true" : "false");
+}
+
+static void emit_int_toml(FILE *f, const char *name, int v) {
+  fprintf(f, "%s = %d\n", name, v);
+}
+
+static void emit_float_toml(FILE *f, const char *name, float v) {
+  char tmp[64];
+  snprintf(tmp, sizeof(tmp), "%g", (double)v);
+  if (!strchr(tmp, '.') && !strchr(tmp, 'e') && !strchr(tmp, 'E') &&
+      !strchr(tmp, 'n') && !strchr(tmp, 'N'))
+    snprintf(tmp, sizeof(tmp), "%s.0", tmp);
+  fprintf(f, "%s = %s\n", name, tmp);
+}
+
+static void emit_str_toml(FILE *f, const char *name, const char *v) {
+  fprintf(f, "%s = \"%s\"\n", name, v ? v : "");
+}
+
+static void emit_skip_toml(FILE *f, const char *name, ...) {
+  (void)f;
+  (void)name;
+}
+
+static void emit_color_toml(FILE *f, const char *name, unsigned v) {
+  unsigned r = v & 0xFFu, g = (v >> 8) & 0xFFu, b = (v >> 16) & 0xFFu;
+  fprintf(f, "%s = \"#%02X%02X%02X\"\n", name, r, g, b);
+}
+
 static bool emit_release_config(const char *dst_path) {
   FILE *outf = fopen(dst_path, "wb");
   if (!outf) {
     nob_log(NOB_ERROR, "release config: cannot open %s for writing", dst_path);
     return false;
   }
-  fprintf(outf, "#include <stdbool.h>\n#include \"config_values.h\"\n\n"
-                "// <skald-config-generated>\n"
-                "void config_apply(void) {\n");
-#define EMIT_DEFAULT(type, name, def)                                          \
-  fprintf(outf, "  " #name " = " #def ";\n");
-  SKALD_CONFIG_VALUES(EMIT_DEFAULT)
-#undef EMIT_DEFAULT
-  fprintf(outf, "}\n// </skald-config-generated>\n");
+  fprintf(outf, "# <skald-config-generated>\n");
+#define EMIT_ROOT(type, name, def)                                             \
+  _Generic((type){0},                                                          \
+      bool: emit_bool_toml,                                                    \
+      int: emit_int_toml,                                                      \
+      float: emit_float_toml,                                                  \
+      const char *: emit_str_toml,                                             \
+      ColorRef: emit_skip_toml)(outf, #name, def);
+  SKALD_CONFIG_VALUES(EMIT_ROOT)
+#undef EMIT_ROOT
+  fprintf(outf, "\n[color]\n");
+#define EMIT_COLOR(type, name, def)                                            \
+  _Generic((type){0},                                                          \
+      bool: emit_skip_toml,                                                    \
+      int: emit_skip_toml,                                                     \
+      float: emit_skip_toml,                                                   \
+      const char *: emit_skip_toml,                                            \
+      ColorRef: emit_color_toml)(outf, #name + 6, def);
+  SKALD_CONFIG_VALUES(EMIT_COLOR)
+#undef EMIT_COLOR
+  fprintf(outf, "# </skald-config-generated>\n");
   if (fclose(outf) != 0) {
     nob_log(NOB_ERROR, "release config: write failed for %s", dst_path);
     return false;
@@ -1939,7 +1951,8 @@ int main(int argc, char **argv) {
       printf(
           "  -R, --release  Build a self-contained release/ bundle: "
           "skald[.exe],\n"
-          "                 sdk/, config/config.c (defaults), features/ with\n"
+          "                 sdk/, config/config.toml (defaults),\n"
+          "                 features/ with\n"
           "                 control_center, settings and clipboard_history,\n"
           "                 resources/ (png + ico); Windows also emits "
           "main.lib.a;\n"
@@ -2023,8 +2036,9 @@ int main(int argc, char **argv) {
                                         "release/features/clipboard_history") ||
         !nob_copy_directory_recursively("resources", "release/resources"))
       return 1;
-    if (!emit_release_config("release/config/config.c")) {
-      nob_log(NOB_ERROR, "release: failed to generate release/config/config.c");
+    if (!emit_release_config("release/config/config.toml")) {
+      nob_log(NOB_ERROR,
+              "release: failed to generate release/config/config.toml");
       return 1;
     }
     nob_log(NOB_INFO,
@@ -2166,7 +2180,7 @@ int main(int argc, char **argv) {
   if (!needs_link) {
     nob_log(NOB_INFO, "No changes, skipping link");
     nob_da_free(objs);
-    if (!build_features() || !build_config())
+    if (!build_features())
       return 1;
     release_finalize();
     if (do_run && !run_output(output))
@@ -2212,7 +2226,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (!build_features() || !build_config())
+  if (!build_features())
     return 1;
 
   if (!target_win32) {

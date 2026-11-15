@@ -7,9 +7,10 @@
 #include "deps/log.h"
 #include "config_values.h"
 #include "core/types/color.h"
+#include "core/config_toml.h"
 
 #ifndef CONFIG_SRC
-#define CONFIG_SRC "config/config.c"
+#define CONFIG_SRC "config/config.toml"
 #endif
 
 static const struct {
@@ -82,29 +83,39 @@ static bool pin_lookup(const char *name, ColorRef *out) {
   return false;
 }
 
+static bool theme_pin_visit(const CfgTomlEntry *e, void *user) {
+  (void)user;
+  if (strcmp(e->section, "color") != 0)
+    return true;
+  bool known = false;
+  for (size_t i = 0; i < THEME_SLOT_COUNT; i++)
+    if (strcmp(theme_slots[i].name + 6, e->key) == 0) {
+      known = true;
+      break;
+    }
+  if (!known)
+    return true;
+  char body[1024];
+  if (!cfg_toml_decode_string(e->raw, body, sizeof(body)))
+    return true;
+  ColorRef v;
+  if (!cfg_toml_color_ref(body, &v))
+    return true;
+  char name[64];
+  if (strlen(e->key) + 7 > sizeof(name))
+    return true;
+  snprintf(name, sizeof(name), "COLOR_%s", e->key);
+  pin_add(name, v);
+  return true;
+}
+
 bool theme_pin_scan_file(const char *path) {
   memset(theme_pinned, 0, sizeof(theme_pinned));
   theme_pinned_count = 0;
   if (!path || !path[0])
     return false;
-  FILE *f = fopen(path, "rb");
-  if (!f)
-    return false;
-  char line[512];
-  while (fgets(line, sizeof(line), f)) {
-    if (line[0] != ' ' && line[0] != '\t')
-      continue;
-    char name[64];
-    unsigned int r = 0, g = 0, b = 0;
-    if (sscanf(line, " %63[A-Z_] = RGB(%u,%u,%u", name, &r, &g, &b) == 4 &&
-        strncmp(name, "COLOR_", 6) == 0) {
-      ColorRef v =
-          (ColorRef)((r & 0xFFu) | ((g & 0xFFu) << 8) | ((b & 0xFFu) << 16));
-      pin_add(name, v);
-    }
-  }
-  fclose(f);
-  return true;
+  CfgTomlStatus st = cfg_toml_parse(path, theme_pin_visit, NULL);
+  return st == CFG_TOML_OK;
 }
 
 void theme_reset_pinned(void) {

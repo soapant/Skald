@@ -4,176 +4,246 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
+#include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-#include "core/types/window.h"
 #include "platform/platform.h"
-#include "platform/lib.h"
 #include "config.h"
 #include "core/theme.h"
 #include "deps/log.h"
 #include "config_values.h"
 #include "core/types/color.h"
-#include "core/window_manager.h"
-#include "helpers/helpers_text.h"
+#include "core/config_toml.h"
 #include "config_defs.h"
-#include "core/reload_lib.h"
+#include "helpers/helpers_ui.h"
 
-#define CONFISRC "config/config.c"
-#define CONFISTART_MARK "// <skald-config-generated>"
-#define CONFIEND_MARK "// </skald-config-generated>"
+#define CONFISRC "config/config.toml"
+#define CONFISTART_MARK "# <skald-config-generated>"
+#define CONFIEND_MARK "# </skald-config-generated>"
 
-static const char *config_out_path(void) {
-  static char path[256];
-  snprintf(path, sizeof(path), "build/config%s", Platform_LibExtension());
-  return path;
+typedef enum { CFG_BOOL, CFG_INT, CFG_FLOAT, CFG_STRING, CFG_COLORREF } CfgKind;
+
+typedef struct {
+  const char *name;
+  CfgKind kind;
+  void *slot;
+} CfgEntry;
+
+static const CfgEntry cfg_entries[] = {
+    {"Tray", CFG_BOOL, &Tray},
+    {"RememberLastIndex", CFG_BOOL, &RememberLastIndex},
+    {"MessageAfterEachHotkey", CFG_BOOL, &MessageAfterEachHotkey},
+    {"TimeOutForMessages", CFG_INT, &TimeOutForMessages},
+    {"HotkeyRepeatDelayMs", CFG_INT, &HotkeyRepeatDelayMs},
+    {"DebugMode", CFG_BOOL, &DebugMode},
+    {"RoundedCorners", CFG_BOOL, &RoundedCorners},
+    {"CornerRadius", CFG_INT, &CornerRadius},
+    {"MessageScreenGap", CFG_INT, &MessageScreenGap},
+    {"WindowOpacity", CFG_FLOAT, &WindowOpacity},
+    {"UsedFont", CFG_STRING, &UsedFont},
+    {"FontSize", CFG_INT, &FontSize},
+    {"IconSize", CFG_INT, &IconSize},
+    {"WidgetGap", CFG_INT, &WidgetGap},
+    {"PromptWidth", CFG_INT, &PromptWidth},
+    {"PromptHeight", CFG_INT, &PromptHeight},
+    {"PromptX", CFG_INT, &PromptX},
+    {"PromptY", CFG_INT, &PromptY},
+    {"UsedTerminal", CFG_STRING, &UsedTerminal},
+    {"UsedShell", CFG_STRING, &UsedShell},
+    {"UsedBrowser", CFG_STRING, &UsedBrowser},
+    {"UsedSearchEngine", CFG_STRING, &UsedSearchEngine},
+    {"FeaturePath", CFG_STRING, &FeaturePath},
+    {"IconPath", CFG_STRING, &IconPath},
+    {"ControlHotkey", CFG_STRING, &ControlHotkey},
+    {"ReloadFeaturesHotkey", CFG_STRING, &ReloadFeaturesHotkey},
+    {"ActionsHotkey", CFG_STRING, &ActionsHotkey},
+    {"RegHotkey", CFG_STRING, &RegHotkey},
+    {"RegAliasHotkey", CFG_STRING, &RegAliasHotkey},
+    {"Theme", CFG_STRING, &Theme},
+    {"BackgroundImage", CFG_STRING, &BackgroundImage},
+    {"MessagesEnabled", CFG_BOOL, &MessagesEnabled},
+    {"EnableAutoPairing", CFG_BOOL, &EnableAutoPairing},
+    {"EnableBorders", CFG_BOOL, &EnableBorders},
+    {"RainbowText", CFG_BOOL, &RainbowText},
+    {"WindowTitleText", CFG_BOOL, &WindowTitleText},
+    {"CloseOnLossOfFocus", CFG_BOOL, &CloseOnLossOfFocus},
+    {"COLOR_BG", CFG_COLORREF, &COLOR_BG},
+    {"COLOR_TEXT", CFG_COLORREF, &COLOR_TEXT},
+    {"COLOR_SELECTED_TEXT", CFG_COLORREF, &COLOR_SELECTED_TEXT},
+    {"COLOR_CURSOR", CFG_COLORREF, &COLOR_CURSOR},
+    {"COLOR_BORDER", CFG_COLORREF, &COLOR_BORDER},
+};
+#define CFG_ENTRY_COUNT ((int)(sizeof(cfg_entries) / sizeof(cfg_entries[0])))
+
+static char *cfg_owned[CFG_ENTRY_COUNT];
+
+static int cfg_find(const char *section, const char *key) {
+  if (!key || !key[0])
+    return -1;
+  bool color_section = section && strcmp(section, "color") == 0;
+  bool root_or_color = !section || !section[0] || color_section;
+  if (!root_or_color)
+    return -1;
+  for (int i = 0; i < CFG_ENTRY_COUNT; i++) {
+    const CfgEntry *e = &cfg_entries[i];
+    if (color_section) {
+      if (e->kind != CFG_COLORREF)
+        continue;
+      const char *short_name = e->name + 6;
+      if (strcmp(short_name, key) == 0)
+        return i;
+    } else {
+      if (e->kind == CFG_COLORREF)
+        continue;
+      if (strcmp(e->name, key) == 0)
+        return i;
+    }
+  }
+  return -1;
 }
 
 typedef struct {
-  LibHandle handle;
-  char uniq[256];
-} ConfigLib;
+  int idx;
+  bool b;
+  long i;
+  double f;
+  char *s;
+  ColorRef cr;
+} CfgAssign;
 
-static ConfigLib config_libs[2];
-static int config_lib_count = 0;
-static int config_seq = 0;
-static bool stale_swept = false;
+typedef struct {
+  CfgAssign items[CFG_ENTRY_COUNT];
+  size_t count;
+} CfgStaging;
 
-static void config_sweep_stale_libs(void) {
-  if (stale_swept)
-    return;
-  stale_swept = true;
-  const char *lib_ext = Platform_LibExtension();
-  int nremoved = reload_lib_sweep_stale_hot_libs("build", lib_ext);
-  if (nremoved > 0)
-    log_info("config: removed %d stale hot-reload libs", nremoved);
-}
-
-static char *heap_dup(const char *s) {
-  if (!s)
-    return NULL;
-  size_t n = strlen(s) + 1;
-  char *d = (char *)malloc(n);
-  if (d)
-    memcpy(d, s, n);
-  return d;
-}
-static char *heap_used_font = NULL, *heap_used_terminal = NULL,
-            *heap_used_shell = NULL;
-static char *heap_used_browser = NULL;
-static char *heap_used_search = NULL, *heap_feature_path = NULL,
-            *heap_icon_path = NULL;
-static char *heap_control_hotkey = NULL, *heap_reload_features_hotkey = NULL,
-            *heap_actions_hotkey = NULL, *heap_rehotk = NULL,
-            *heap_realias_hotk = NULL, *heap_theme = NULL,
-            *heap_background_image = NULL;
-
-static void heapify_config(void) {
-  static struct {
-    const char **global;
-    char **heap;
-  } slots[] = {
-      {&UsedFont, &heap_used_font},
-      {&UsedTerminal, &heap_used_terminal},
-      {&UsedShell, &heap_used_shell},
-      {&UsedBrowser, &heap_used_browser},
-      {&UsedSearchEngine, &heap_used_search},
-      {&FeaturePath, &heap_feature_path},
-      {&IconPath, &heap_icon_path},
-      {&ControlHotkey, &heap_control_hotkey},
-      {&ReloadFeaturesHotkey, &heap_reload_features_hotkey},
-      {&ActionsHotkey, &heap_actions_hotkey},
-      {&RegHotkey, &heap_rehotk},
-      {&RegAliasHotkey, &heap_realias_hotk},
-      {&Theme, &heap_theme},
-      {&BackgroundImage, &heap_background_image},
-  };
-  for (size_t i = 0; i < sizeof(slots) / sizeof(slots[0]); i++) {
-    char *fresh = heap_dup(*slots[i].global);
-    if (!fresh)
-      continue;
-    char *old = *slots[i].heap;
-    *slots[i].global = fresh;
-    *slots[i].heap = fresh;
-    free(old);
-  }
-}
-static bool config_load_copy(const char *uniq, LibHandle *out) {
-  LibHandle h = Platform_LoadLibrary(uniq);
-  if (!h) {
-    log_error("config dlopen %s failed", uniq);
+static bool cfg_visit(const CfgTomlEntry *e, void *user) {
+  CfgStaging *st = (CfgStaging *)user;
+  if (!st || st->count >= CFG_ENTRY_COUNT)
+    return false;
+  int idx = cfg_find(e->section, e->key);
+  if (idx < 0) {
+    log_error("config: unknown key '%s' in [%s]", e->key,
+              e->section[0] ? e->section : "(root)");
     return false;
   }
-  typedef void (*ApplyFn)(void);
-  ApplyFn apply = (ApplyFn)Platform_GetSymbol(h, "config_apply");
-  if (!apply) {
-    log_error("config %s has no config_apply, keeping current", uniq);
-    Platform_UnloadLibrary(h);
-    return false;
-  }
-  apply();
-  theme_apply();
-  heapify_config();
-  *out = h;
-  return true;
-}
+  const CfgEntry *ent = &cfg_entries[idx];
+  CfgAssign *a = &st->items[st->count];
+  memset(a, 0, sizeof(*a));
+  a->idx = idx;
 
-static int config_build_load_store(void) {
-
-  const char *out = config_out_path();
-  int rebuilt = 0;
-  if (reload_lib_is_fresh(CONFISRC, out)) {
-    log_info("config .so is newer than source, skipping compile");
-  } else {
-    bool ok = reload_lib_compile(CONFISRC, out, "config build");
-    if (!ok) {
-      log_error("config compile failed, keeping current");
-      return -1;
+  switch (ent->kind) {
+  case CFG_BOOL:
+    if (strcmp(e->raw, "true") == 0)
+      a->b = true;
+    else if (strcmp(e->raw, "false") == 0)
+      a->b = false;
+    else {
+      log_error("config: bad bool for '%s'", ent->name);
+      return false;
     }
-    rebuilt = 1;
+    break;
+  case CFG_INT: {
+    errno = 0;
+    char *end = NULL;
+    long v = strtol(e->raw, &end, 10);
+    if (errno || !end || end[0] != '\0' || v < INT32_MIN || v > INT32_MAX) {
+      log_error("config: bad integer for '%s'", ent->name);
+      return false;
+    }
+    a->i = v;
+    break;
   }
-  const char *lib_ext = Platform_LibExtension();
-  if (!lib_ext) {
-    log_error("Platform_LibExtension() returned NULL!");
-    return -1;
+  case CFG_FLOAT: {
+    errno = 0;
+    char *end = NULL;
+    double v = strtod(e->raw, &end);
+    if (errno || !end || end[0] != '\0' || !isfinite(v)) {
+      log_error("config: bad float for '%s'", ent->name);
+      return false;
+    }
+    a->f = v;
+    break;
   }
-  char *uniq =
-      reload_lib_unique_copy(out, "build/config", ++config_seq, lib_ext);
-  if (!uniq) {
-    log_error("config copy failed, keeping current");
-    return -1;
+  case CFG_STRING: {
+    char body[1024];
+    if (!cfg_toml_decode_string(e->raw, body, sizeof(body))) {
+      log_error("config: bad string for '%s'", ent->name);
+      return false;
+    }
+    a->s = strdup(body);
+    if (!a->s)
+      return false;
+    break;
   }
-  LibHandle h = 0;
-  bool ok = config_load_copy(uniq, &h);
-  if (!ok) {
-    remove(uniq);
-    free(uniq);
-    return -1;
+  case CFG_COLORREF: {
+    char body[1024];
+    if (!cfg_toml_decode_string(e->raw, body, sizeof(body)) ||
+        !cfg_toml_color_ref(body, &a->cr)) {
+      log_error("config: bad color for '%s'", ent->name);
+      return false;
+    }
+    break;
   }
-  if (config_lib_count >= 2) {
-    Platform_UnloadLibrary(config_libs[0].handle);
-    remove(config_libs[0].uniq);
-    config_libs[0] = config_libs[1];
-    config_lib_count = 1;
   }
-  config_libs[config_lib_count].handle = h;
-  safe_copy(config_libs[config_lib_count].uniq,
-            sizeof(config_libs[config_lib_count].uniq), uniq);
-  config_lib_count++;
-  free(uniq);
-  return rebuilt;
-}
-
-bool config_load(void) {
-  config_sweep_stale_libs();
-  int r = config_build_load_store();
-
-  if (r < 0) {
-    log_error("config load failed, running on built-in defaults");
-    return false;
-  }
+  st->count++;
   return true;
 }
+
+static void cfg_staging_free(CfgStaging *st) {
+  for (size_t i = 0; i < st->count; i++)
+    free(st->items[i].s);
+  st->count = 0;
+}
+
+static void cfg_staging_commit(CfgStaging *st) {
+  for (size_t i = 0; i < st->count; i++) {
+    CfgAssign *a = &st->items[i];
+    const CfgEntry *ent = &cfg_entries[a->idx];
+    switch (ent->kind) {
+    case CFG_BOOL:
+      *(bool *)ent->slot = a->b;
+      break;
+    case CFG_INT:
+      *(int *)ent->slot = (int)a->i;
+      break;
+    case CFG_FLOAT:
+      *(float *)ent->slot = (float)a->f;
+      break;
+    case CFG_STRING: {
+      char *old = cfg_owned[a->idx];
+      *(const char **)ent->slot = a->s;
+      cfg_owned[a->idx] = a->s;
+      free(old);
+      break;
+    }
+    case CFG_COLORREF:
+      *(ColorRef *)ent->slot = a->cr;
+      break;
+    }
+  }
+  st->count = 0;
+}
+
+static bool cfg_load_path(const char *path) {
+  CfgStaging st;
+  memset(&st, 0, sizeof(st));
+  CfgTomlStatus status = cfg_toml_parse(path, cfg_visit, &st);
+  if (status != CFG_TOML_OK) {
+    cfg_staging_free(&st);
+    if (status == CFG_TOML_ERR_IO)
+      log_error("config open %s failed, running on defaults", path);
+    else
+      log_error("config parse failed for %s, keeping previous config", path);
+    return false;
+  }
+  cfg_staging_commit(&st);
+  theme_apply();
+  log_info("config loaded from %s", path);
+  return true;
+}
+
+bool config_load(void) { return cfg_load_path(CONFISRC); }
 
 static long long config_last_reload_ms = 0;
 static void *config_reload_mutex = NULL;
@@ -191,11 +261,6 @@ static void config_reload_unlock(void) {
 }
 
 bool config_reload(void) {
-  WindowManager *_wm2 = WindowManager_Get();
-  if (_wm2 && _wm2->popup_count > 0) {
-    log_warn("cfg reload blocked: %d popup(s) open", _wm2->popup_count);
-    return false;
-  }
   config_reload_lock();
   long long now = Platform_GetWallClockMs();
   long long debounce = (long long)1000;
@@ -205,33 +270,25 @@ bool config_reload(void) {
     config_reload_unlock();
     return false;
   }
-  int r = config_build_load_store();
-  if (r < 0) {
-    log_warn("cfg reload blocked: build/load failed, keeping old values");
-    config_reload_unlock();
-    return false;
-  }
-  if (r == 0) {
-    log_info("config unchanged, reload no-op");
+  bool ok = cfg_load_path(CONFISRC);
+  if (!ok) {
+    log_warn("cfg reload blocked: load failed, keeping old values");
     config_reload_unlock();
     return false;
   }
   config_last_reload_ms = Platform_GetWallClockMs();
   Platform_ResetUIScale();
+  Platform_PrewarmBackgroundPixmap();
+  UI_RequestPopupRepaint();
   config_reload_unlock();
   return true;
 }
 
 void config_unload(void) {
-  for (int i = 0; i < config_lib_count; i++) {
-    if (config_libs[i].handle)
-      Platform_UnloadLibrary(config_libs[i].handle);
-    if (config_libs[i].uniq[0])
-      remove(config_libs[i].uniq);
-    config_libs[i].handle = 0;
-    config_libs[i].uniq[0] = '\0';
+  for (int i = 0; i < CFG_ENTRY_COUNT; i++) {
+    free(cfg_owned[i]);
+    cfg_owned[i] = NULL;
   }
-  config_lib_count = 0;
 }
 
 typedef struct {
@@ -277,15 +334,11 @@ static void config_buf_put(ConfigBuf *b, const char *fmt, ...) {
 }
 
 static void config_emit_bool_line(ConfigBuf *b, const char *name, bool v) {
-  config_buf_put(b, "  %s = %s;\n", name, v ? "true" : "false");
+  config_buf_put(b, "  %s = %s\n", name, v ? "true" : "false");
 }
 
 static void config_emit_int_line(ConfigBuf *b, const char *name, int v) {
-  if (strcmp(name, "FontSize") == 0) {
-    config_buf_put(b, "  FontSize = Platform_GetUnscaledFontSize();\n");
-    return;
-  }
-  config_buf_put(b, "  %s = %d;\n", name, v);
+  config_buf_put(b, "  %s = %d\n", name, v);
 }
 
 static void config_emit_float_line(ConfigBuf *b, const char *name, float v) {
@@ -293,59 +346,62 @@ static void config_emit_float_line(ConfigBuf *b, const char *name, float v) {
   snprintf(tmp, sizeof(tmp), "%.6g", (double)v);
   if (!strchr(tmp, '.') && !strchr(tmp, 'e') && !strchr(tmp, 'E') &&
       !strchr(tmp, 'n') && !strchr(tmp, 'N'))
-    config_buf_put(b, "  %s = %s.0f;\n", name, tmp);
-  else
-    config_buf_put(b, "  %s = %sf;\n", name, tmp);
-}
-
-static void config_emit_escaped(ConfigBuf *b, const char *s) {
-  config_buf_put(b, "\"");
-  for (const char *p = s ? s : ""; *p; p++) {
-    if (*p == '\\' || *p == '"')
-      config_buf_put(b, "\\%c", *p);
-    else if (*p == '\n')
-      config_buf_put(b, "\\n");
-    else if (*p == '\r')
-      config_buf_put(b, "\\r");
-    else
-      config_buf_put(b, "%c", *p);
-  }
-  config_buf_put(b, "\"");
+    snprintf(tmp, sizeof(tmp), "%s.0", tmp);
+  config_buf_put(b, "  %s = %s\n", name, tmp);
 }
 
 static void config_emit_str_line(ConfigBuf *b, const char *name,
                                  const char *value) {
+  const char *out = value ? value : "";
   if (config_is_auto_resolved_app(name))
-    value = "";
-  config_buf_put(b, "  %s = ", name);
-  config_emit_escaped(b, value);
-  config_buf_put(b, ";\n");
+    out = "";
+  char enc[1024];
+  if (!cfg_toml_encode_string(out, enc, sizeof(enc)))
+    return;
+  config_buf_put(b, "  %s = %s\n", name, enc);
 }
 
 static void config_emit_color_line(ConfigBuf *b, const char *name, ColorRef v) {
-  config_buf_put(b, "  %s = RGB(%u, %u, %u);\n", name, v & 0xFFu,
-                 (v >> 8) & 0xFFu, (v >> 16) & 0xFFu);
+  unsigned r = v & 0xFFu, g = (v >> 8) & 0xFFu, b_ = (v >> 16) & 0xFFu;
+  config_buf_put(b, "  %s = \"#%02X%02X%02X\"\n", name, r, g, b_);
 }
 
 static ConfigBuf config_emit_region(void) {
   ConfigBuf b = {0};
-  config_buf_put(&b, "void config_apply(void) {\n");
-#define EMIT_LIVE(type, name, def)                                             \
-  _Generic((type){0},                                                          \
-      bool: config_emit_bool_line,                                             \
-      int: config_emit_int_line,                                               \
-      float: config_emit_float_line,                                           \
-      const char *: config_emit_str_line,                                      \
-      ColorRef: config_emit_color_line)(&b, #name, name);
-  SKALD_CONFIG_VALUES(EMIT_LIVE)
-#undef EMIT_LIVE
-  config_buf_put(&b, "}\n");
+  config_buf_put(&b, "# <skald-config-generated>\n");
+  for (int i = 0; i < CFG_ENTRY_COUNT; i++) {
+    const CfgEntry *e = &cfg_entries[i];
+    if (e->kind == CFG_COLORREF)
+      continue;
+    const char *name = e->name;
+    switch (e->kind) {
+    case CFG_BOOL:
+      config_emit_bool_line(&b, name, *(const bool *)e->slot);
+      break;
+    case CFG_INT:
+      config_emit_int_line(&b, name, *(const int *)e->slot);
+      break;
+    case CFG_FLOAT:
+      config_emit_float_line(&b, name, *(const float *)e->slot);
+      break;
+    case CFG_STRING:
+      config_emit_str_line(&b, name, *(const char *const *)e->slot);
+      break;
+    case CFG_COLORREF:
+      break;
+    }
+  }
+  config_buf_put(&b, "\n[color]\n");
+  for (int i = 0; i < CFG_ENTRY_COUNT; i++) {
+    const CfgEntry *e = &cfg_entries[i];
+    if (e->kind != CFG_COLORREF)
+      continue;
+    const char *short_name = e->name + 6;
+    config_emit_color_line(&b, short_name, *(const ColorRef *)e->slot);
+  }
+  config_buf_put(&b, "# </skald-config-generated>\n");
   return b;
 }
-
-static long long config_saved_mtime = 0;
-static long long config_saved_size = 0;
-static int config_saved_valid = 0;
 
 void config_save(void) {
   ConfigBuf region = config_emit_region();
@@ -383,28 +439,22 @@ void config_save(void) {
     goto out;
   }
   orig[got] = '\0';
-  char *start = strstr(orig, CONFISTART_MARK);
-  char *end = start ? strstr(start, CONFIEND_MARK) : NULL;
+  const char *start = strstr(orig, CONFISTART_MARK);
+  const char *end =
+      start ? strstr(start + strlen(CONFISTART_MARK), CONFIEND_MARK) : NULL;
   if (!start || !end || end < start) {
     free(orig);
     log_error("config markers missing, not touching file");
     goto out;
   }
-  char *start_eol = strchr(start, '\n');
-  if (!start_eol) {
-    log_error("config marker end without newline, not rewriting");
-    free(orig);
-    goto out;
-  }
-  start_eol++;
-  size_t head = (size_t)(start_eol - orig);
-  size_t tail = got - (size_t)(end - orig);
-  size_t body_len = (size_t)(end - start_eol);
-  if (body_len == n && memcmp(orig + head, region_data, n) == 0) {
-    free(orig);
-    log_info("config unchanged, not rewriting");
-    goto out;
-  }
+  const char *after_end = end;
+  while (*after_end && *after_end != '\n')
+    after_end++;
+  if (*after_end == '\n')
+    after_end++;
+  size_t head = (size_t)(start - orig);
+  size_t tail_off = (size_t)(after_end - orig);
+  size_t tail = got - tail_off;
   char tmp[512];
   snprintf(tmp, sizeof(tmp), "%s.tmp.%d", CONFISRC, (int)getpid());
   FILE *out = fopen(tmp, "wb");
@@ -417,7 +467,7 @@ void config_save(void) {
   if (ok)
     ok = fwrite(region_data, 1, n, out) == n;
   if (ok)
-    ok = fwrite(end, 1, tail, out) == tail;
+    ok = fwrite(after_end, 1, tail, out) == tail;
   if (fclose(out) != 0)
     ok = false;
   free(orig);
@@ -430,12 +480,6 @@ void config_save(void) {
     remove(tmp);
     log_error("config rename failed");
     goto out;
-  }
-  long long mt = 0, sz = 0;
-  if (Platform_FileInfo(CONFISRC, &mt, &sz)) {
-    config_saved_mtime = mt;
-    config_saved_size = sz;
-    config_saved_valid = 1;
   }
   log_info("config saved");
 out:
