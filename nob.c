@@ -225,7 +225,7 @@ static const char *feature_dep_path(const char *src) {
 }
 
 static const char *release_features[] = {"control_center", "settings",
-                                         "clipboard_history"};
+                                         "clipboard_history","window_management"};
 
 static bool release_feature_wanted(const char *src) {
   const char *base = nob_path_name(src);
