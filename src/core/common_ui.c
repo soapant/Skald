@@ -63,8 +63,7 @@ PlMetrics *metrics_get(void) {
 void draw_prompt_separator(PlDrawPromptSeparatorSpec spec) {
   if (!EnableBorders || spec.width <= 0)
     return;
-  const PromptState *sep_state = prompt_popup_get_top_prompt_state();
-  if (sep_state && sep_state->no_separators)
+  if (pl_draw_state_get()->suppress_separators)
     return;
   Platform_DrawRectRaw((PlDrawRectRawSpec){.x = 0,
                                            .y = spec.y,
