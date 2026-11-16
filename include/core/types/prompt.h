@@ -49,6 +49,7 @@ struct PromptState {
   bool no_bg;
   bool password_mode;
   ColorRef bg_color;
+  bool no_separators;
 };
 
 typedef void (*RefreshCallback)(PromptState *state);
@@ -125,6 +126,7 @@ typedef struct {
   int x;
   int y;
   bool subwindow;
+  bool no_separators;
 } PromptSpec;
 
 typedef struct {
