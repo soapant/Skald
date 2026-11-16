@@ -116,6 +116,7 @@ static bool target_win32 = false;
 static const char *obj_dir = BUILD_FOLDER "/obj";
 static bool release = false;
 static bool werror = false;
+static bool static_deps = true;
 static const char *sdk_dir = BUILD_FOLDER "/sdk";
 static const char *features_dir = BUILD_FOLDER "/features";
 static const char *main_implib = BUILD_FOLDER "/main.lib.a";
@@ -341,8 +342,8 @@ static void discover_dep_flags(void) {
     for (size_t i = 0; i < sizeof(fb) / sizeof(fb[0]); i++)
       nob_da_append(&dep_cflags, nob_temp_strdup(fb[i]));
   }
-  snprintf(cmdline, sizeof(cmdline),
-           "pkg-config --static --libs %s 2>/dev/null", PKG_LIBS_PKGS_STR);
+  snprintf(cmdline, sizeof(cmdline), "pkg-config %s --libs %s 2>/dev/null",
+           static_deps ? "--static" : "", PKG_LIBS_PKGS_STR);
   const char *ldflags = run_capture(cmdline);
   if (ldflags && ldflags[0]) {
     append_ws_split(&dep_ldflags, ldflags);
@@ -375,7 +376,8 @@ static void append_dep_ldflags(Nob_Cmd *cmd) {
   (void)cmd;
   return;
 #endif
-  nob_cmd_append(cmd, "-Wl,-Bstatic");
+  if (static_deps)
+    nob_cmd_append(cmd, "-Wl,-Bstatic");
   for (size_t i = 0; i < dep_ldflags.count; ++i) {
     if (strcmp(dep_ldflags.items[i], "-lm") == 0 ||
         strcmp(dep_ldflags.items[i], "-ldl") == 0 ||
@@ -384,7 +386,8 @@ static void append_dep_ldflags(Nob_Cmd *cmd) {
       continue;
     nob_cmd_append(cmd, dep_ldflags.items[i]);
   }
-  nob_cmd_append(cmd, "-Wl,-Bdynamic");
+  if (static_deps)
+    nob_cmd_append(cmd, "-Wl,-Bdynamic");
 }
 #else
 static void append_dep_cflags(Nob_Cmd *cmd) { (void)cmd; }
@@ -1814,10 +1817,13 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
       printf("Usage: %s [-a|--all] [-w|--win32] [-r|--run] [-R|--release] "
-             "[-t|--test] [-A|--asan] [-c|--check] [-W|--werror]\n",
+             "[-t|--test] [-A|--asan] [-c|--check] [-W|--werror] "
+             "[-D|--dynamic]\n",
              argv[0]);
       printf("  -a, --all      Run nob, nob -t, nob -w and nob -c\n");
       printf("  -w, --win32    Cross compile for Windows using MinGW\n");
+      printf("  -D, --dynamic  Link external dependencies dynamically "
+             "(static by default)\n");
       printf("  -W, --werror   Build the main app with warnings as errors\n");
       printf("  -r, --run      Run skald after build\n");
       printf("  -R, --release  Build a self-contained release/ bundle: "
@@ -1851,6 +1857,8 @@ int main(int argc, char **argv) {
       release = true;
     if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--test") == 0)
       do_test = 1;
+    if (strcmp(argv[i], "-D") == 0 || strcmp(argv[i], "--dynamic") == 0)
+      static_deps = false;
     if (strcmp(argv[i], "-W") == 0 || strcmp(argv[i], "--werror") == 0)
       werror = true;
     if (strcmp(argv[i], "-A") == 0 || strcmp(argv[i], "--asan") == 0)
