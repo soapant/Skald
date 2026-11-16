@@ -699,6 +699,17 @@ int x11_keysym_to_vk(KeySym ks) {
     return VK_PRIOR;
   case XK_Page_Down:
     return VK_NEXT;
+  case XK_KP_0:
+  case XK_KP_1:
+  case XK_KP_2:
+  case XK_KP_3:
+  case XK_KP_4:
+  case XK_KP_5:
+  case XK_KP_6:
+  case XK_KP_7:
+  case XK_KP_8:
+  case XK_KP_9:
+    return '0' + (ks - XK_KP_0);
   case XK_space:
     return VK_SPACE;
   case XK_Control_L:

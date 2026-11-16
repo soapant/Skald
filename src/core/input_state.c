@@ -138,6 +138,45 @@ char input_get_pressed_char(void) {
   return 0;
 }
 
+static const struct {
+  int vk;
+  const char *name;
+} printable_vks[] = {
+    {VK_OEM_1, ";"},     {VK_OEM_2, "/"},     {VK_OEM_3, "`"},
+    {VK_OEM_4, "["},     {VK_OEM_5, "\\"}, {VK_OEM_6, "]"},
+    {VK_OEM_7, "'"},     {VK_OEM_COMMA, ","}, {VK_OEM_PERIOD, "."},
+    {VK_OEM_MINUS, "-"}, {VK_OEM_PLUS, "="},
+};
+
+bool input_vk_to_name(int vk, char *out, size_t cap) {
+  if (!out || cap < 2)
+    return false;
+  if (vk >= 'A' && vk <= 'Z') {
+    out[0] = (char)vk;
+    out[1] = '\0';
+    return true;
+  }
+  if (vk >= '0' && vk <= '9') {
+    out[0] = (char)vk;
+    out[1] = '\0';
+    return true;
+  }
+  for (size_t i = 0; i < sizeof(printable_vks) / sizeof(printable_vks[0]); i++) {
+    if (printable_vks[i].vk == vk) {
+      const char *name = printable_vks[i].name;
+      size_t len = strlen(name);
+      if (len >= cap) {
+        memcpy(out, name, cap - 1);
+        out[cap - 1] = '\0';
+      } else {
+        memcpy(out, name, len + 1);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 #define GLOBAL_KEY_RING 512
 
 static PlatformKeyEvent gkeys[GLOBAL_KEY_RING];
