@@ -13,6 +13,7 @@ void UI_SetSelection(ListBoxInfo *lb, int index) {
     return;
   lb->text_hscroll = 0;
   lb->selected_index = index;
+  lb->selected_text = listbox_info_row(lb, index);
   UI_RequestPopupRepaint();
 }
 
