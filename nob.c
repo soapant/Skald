@@ -645,8 +645,10 @@ static void emit_float_toml(FILE *f, const char *name, float v) {
   char tmp[64];
   snprintf(tmp, sizeof(tmp), "%g", (double)v);
   if (!strchr(tmp, '.') && !strchr(tmp, 'e') && !strchr(tmp, 'E') &&
-      !strchr(tmp, 'n') && !strchr(tmp, 'N'))
-    snprintf(tmp, sizeof(tmp), "%s.0", tmp);
+      !strchr(tmp, 'n') && !strchr(tmp, 'N')) {
+    size_t n = strlen(tmp);
+    snprintf(tmp + n, sizeof(tmp) - n, ".0");
+  }
   fprintf(f, "%s = %s\n", name, tmp);
 }
 
