@@ -63,6 +63,11 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     old = (HFONT)SelectObject(g_draw_hdc, hfont);
 
   int y_draw = y + dy;
+  if (pl_draw_state_get()->win32_widget_surface) {
+    TEXTMETRICW tm = {0};
+    if (GetTextMetricsW(g_draw_hdc, &tm))
+      y_draw -= (int)tm.tmInternalLeading - 1;
+  }
   SetBkMode(g_draw_hdc, TRANSPARENT);
   SetTextColor(g_draw_hdc, color);
   bool centered = string_contains_ci(a, "CENTER");
