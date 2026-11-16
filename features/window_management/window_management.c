@@ -248,6 +248,6 @@ SKALD_FEATURE_INIT {
   for (size_t i = 0; i < sizeof(WM_ENTRIES) / sizeof(WM_ENTRIES[0]); i++) {
     const WMEntry *e = &WM_ENTRIES[i];
     sk_add_to_cc(.display_name = e->display_name, .on_action = e->on_action,
-                 .type = "WindowManagement", .icon = e->icon);
+                 .type = "Window Management", .icon = e->icon);
   }
 }
