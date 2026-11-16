@@ -146,7 +146,7 @@ static const struct {
   const char *name;
 } printable_vks[] = {
     {VK_OEM_1, ";"},     {VK_OEM_2, "/"},     {VK_OEM_3, "`"},
-    {VK_OEM_4, "["},     {VK_OEM_5, "\\"}, {VK_OEM_6, "]"},
+    {VK_OEM_4, "["},     {VK_OEM_5, "\\"},    {VK_OEM_6, "]"},
     {VK_OEM_7, "'"},     {VK_OEM_COMMA, ","}, {VK_OEM_PERIOD, "."},
     {VK_OEM_MINUS, "-"}, {VK_OEM_PLUS, "="},
 };
@@ -164,7 +164,8 @@ bool input_vk_to_name(int vk, char *out, size_t cap) {
     out[1] = '\0';
     return true;
   }
-  for (size_t i = 0; i < sizeof(printable_vks) / sizeof(printable_vks[0]); i++) {
+  for (size_t i = 0; i < sizeof(printable_vks) / sizeof(printable_vks[0]);
+       i++) {
     if (printable_vks[i].vk == vk) {
       const char *name = printable_vks[i].name;
       size_t len = strlen(name);

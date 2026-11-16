@@ -175,7 +175,8 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   UNUSED(spec);
 }
 
-void Platform_CreateDisplayMessageWindow(PlCreateDisplayMessageWindowSpec spec) {
+void Platform_CreateDisplayMessageWindow(
+    PlCreateDisplayMessageWindowSpec spec) {
   UNUSED(spec);
 }
 
@@ -196,8 +197,8 @@ FontHandle Platform_CreateFont(int size, const char *face_name) {
 
 void Platform_DestroyFont(FontHandle font) { UNUSED(font); }
 
-void Platform_GetTextExtents(FontHandle font, const char *text,
-                             int max_width, int *outWidth, int *outHeight) {
+void Platform_GetTextExtents(FontHandle font, const char *text, int max_width,
+                             int *outWidth, int *outHeight) {
   UNUSED(font);
   UNUSED(text);
   UNUSED(max_width);
@@ -360,8 +361,7 @@ bool Platform_MouseButtonDown(int button, bool down) {
   return false;
 }
 
-bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w,
-                               int *out_h) {
+bool Platform_GetVirtualBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
   UNUSED(out_x);
   UNUSED(out_y);
   UNUSED(out_w);
@@ -572,7 +572,8 @@ PlTimer Platform_StartTimer(void) {
 
 double Platform_EndTimer(PlTimer t) {
   int64_t now = Platform_TimerNowTicks();
-  return (double)(now - (int64_t)t.ticks) / (double)Platform_TimerTickFrequency();
+  return (double)(now - (int64_t)t.ticks) /
+         (double)Platform_TimerTickFrequency();
 }
 
 int64_t Platform_TimerNowTicks(void) {
