@@ -39,7 +39,7 @@
   X(bool, RainbowText, false)                                                  \
   X(bool, WindowTitleText, false)                                              \
   X(bool, CloseOnLossOfFocus, false)                                           \
-  X(ColorRef, COLOR_BG, RGB(20, 20, 20))                                       \
+  X(ColorRef, COLOR_BG, RGB(15, 15, 15))                                       \
   X(ColorRef, COLOR_TEXT, RGB(255, 255, 255))                                  \
   X(ColorRef, COLOR_SELECTED_TEXT, RGB(0, 0, 0))                               \
   X(ColorRef, COLOR_CURSOR, RGB(255, 255, 255))                                \

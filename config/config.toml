@@ -38,7 +38,7 @@
   CloseOnLossOfFocus = false
 
 [color]
-  BG = "#141414"
+  BG = "#101010"
   TEXT = "#FFFFFF"
   SELECTED_TEXT = "#000000"
   CURSOR = "#FFFFFF"

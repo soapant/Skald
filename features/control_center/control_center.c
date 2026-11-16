@@ -1212,7 +1212,7 @@ static bool cc_actions_enter(PromptState *state) {
 }
 
 static void cc_open_actions_window(void) {
-  sk_subwindow(.title = "Actions", .x = cc_sub_x(), .y = cc_sub_y() - 20,
+  sk_subwindow(.title = "Actions", .x = cc_sub_x(), .y = cc_sub_y(),
                .w = cc_sub_w(), .h = 300, .render = cc_actions_render,
                .refresh = cc_actions_refresh, .enter = cc_actions_enter,.no_separators=true);
 }
