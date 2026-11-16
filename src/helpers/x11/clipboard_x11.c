@@ -1,5 +1,6 @@
 #include "helpers/x11/clipboard_x11.h"
 #include "helpers/helpers_text.h"
+#include "deps/log.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -49,8 +50,7 @@ static void cl_trace(const char *what, const char *fmt, ...) {
   va_start(ap, fmt);
   vsnprintf(buf, sizeof(buf), fmt, ap);
   va_end(ap);
-  fprintf(stderr, "[clip %+ldms #%ld] %s %s\n", cl_ms_since() - cl_t0, n, what,
-          buf);
+  log_debug("[clip %+ldms #%ld] %s %s", cl_ms_since() - cl_t0, n, what, buf);
 }
 
 static Window clip_win = None;
@@ -717,7 +717,7 @@ char *x11_clipboard_get_text(void) {
 }
 
 #if !defined(SKALD_WAYLAND_SESSION)
-#include "platform/x11/clipboard_backend_x11.h"
+#include "helpers/x11/clipboard_x11.h"
 
 bool x11_clipboard_available(void) { return true; }
 #endif

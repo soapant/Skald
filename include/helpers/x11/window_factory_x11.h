@@ -1,5 +1,5 @@
-#ifndef PLATFORM_X11_WINDOW_FACTORY_H
-#define PLATFORM_X11_WINDOW_FACTORY_H
+#ifndef WINDOW_FACTORY_X11_H
+#define WINDOW_FACTORY_X11_H
 
 #include "core/types.h"
 #include <X11/Xlib.h>

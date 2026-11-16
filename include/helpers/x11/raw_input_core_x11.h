@@ -1,5 +1,5 @@
-#ifndef INPUT_CORE_X11_H
-#define INPUT_CORE_X11_H
+#ifndef RAW_INPUT_CORE_X11_H
+#define RAW_INPUT_CORE_X11_H
 
 #include <stdio.h>
 #include <stdlib.h>

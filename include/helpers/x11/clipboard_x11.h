@@ -1,11 +1,12 @@
-#ifndef PLATFORM_X11_CLIPBOARD_H
-#define PLATFORM_X11_CLIPBOARD_H
+#ifndef CLIPBOARD_X11_H
+#define CLIPBOARD_X11_H
 
 #include <stdbool.h>
 #include <stddef.h>
 typedef struct _XDisplay Display;
 typedef union _XEvent XEvent;
 
+bool x11_clipboard_available(void);
 void x11_clipboard_ensure_started(void);
 void x11_clipboard_shutdown(void);
 int x11_clipboard_set_text(const char *text);

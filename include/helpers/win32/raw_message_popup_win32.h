@@ -1,5 +1,5 @@
-#ifndef HELPERS_WIN32_MESSAGE_POPUP_H
-#define HELPERS_WIN32_MESSAGE_POPUP_H
+#ifndef RAW_MESSAGE_POPUP_WIN32_H
+#define RAW_MESSAGE_POPUP_WIN32_H
 
 #include <windows.h>
 #include <stdbool.h>

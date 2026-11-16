@@ -1,5 +1,5 @@
-#ifndef TYPES_FILE_H
-#define TYPES_FILE_H
+#ifndef FILE_H
+#define FILE_H
 
 #include <stddef.h>
 #include <stdbool.h>

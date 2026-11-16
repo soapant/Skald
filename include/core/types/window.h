@@ -1,5 +1,5 @@
-#ifndef TYPES_WINDOW_H
-#define TYPES_WINDOW_H
+#ifndef WINDOW_H
+#define WINDOW_H
 
 #include <stdbool.h>
 #include <stdint.h>

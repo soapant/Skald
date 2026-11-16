@@ -451,7 +451,7 @@ void Platform_DestroyFont(FontHandle font) {
   }
 }
 
-void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
+void Platform_GetTextExtents(FontHandle font, const char *text, int max_width,
                              int *outWidth, int *outHeight) {
 
   if (!FH_TO_HFONT(font) || !text) {
@@ -463,15 +463,15 @@ void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
   HFONT hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(font));
   int width = 0;
   int height = 0;
-  if (maxWidth > 0) {
+  if (max_width > 0) {
     RECT measure = {0, 0, 0, 0};
     DrawTextA(hdc, text, -1, &measure, DT_CALCRECT);
-    RECT wrapped = {0, 0, maxWidth, 0x7FFFFFFF};
+    RECT wrapped = {0, 0, max_width, 0x7FFFFFFF};
     DrawTextA(hdc, text, -1, &wrapped, DT_CALCRECT | DT_WORDBREAK);
     height = wrapped.bottom - wrapped.top;
     width = measure.right - measure.left;
-    if (width > maxWidth)
-      width = maxWidth;
+    if (width > max_width)
+      width = max_width;
   } else {
     RECT measure = {0, 0, 0, 0};
     DrawTextA(hdc, text, -1, &measure, DT_CALCRECT);
