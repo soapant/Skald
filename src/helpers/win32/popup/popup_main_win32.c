@@ -640,6 +640,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
 
           int list_top = prompt_list_top();
           int row_height = prompt_row_height();
+          int line_h = Platform_GetTextLineHeight(FontSize);
+          int pad_top = (row_height - line_h) / 2;
+          if (pad_top < 0)
+            pad_top = 0;
           int count = estate->lb->item_count;
           int visible_count =
               (rect.bottom - prompt_list_bottom_margin() - list_top) /
@@ -681,7 +685,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             if (row_h_scroll > 0)
               draw_x -= row_h_scroll;
             Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
-                                                     .y = y,
+                                                     .y = y + pad_top,
                                                      .text = draw_text,
                                                      .color = ncol,
                                                      .font = FH_NULL,

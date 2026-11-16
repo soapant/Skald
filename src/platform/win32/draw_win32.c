@@ -61,14 +61,8 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     hfont = win32_sized_font(spec.fontsize);
   if (!old && hfont)
     old = (HFONT)SelectObject(g_draw_hdc, hfont);
-  TEXTMETRICW tm = {0};
-  GetTextMetricsW(g_draw_hdc, &tm);
 
   int y_draw = y + dy;
-  if (pl_draw_state_get()->win32_widget_surface)
-    y_draw -= (int)tm.tmInternalLeading - 1;
-  else if (pl_draw_state_get()->win32_listbox_surface)
-    y_draw += 3;
   SetBkMode(g_draw_hdc, TRANSPARENT);
   SetTextColor(g_draw_hdc, color);
   bool centered = string_contains_ci(a, "CENTER");
@@ -268,26 +262,6 @@ int Platform_GetTextLineHeight(int fontsize) {
   return tm.tmHeight > 0 ? (int)tm.tmHeight : fontsize;
 }
 
-int Platform_GetTextYOffset(int fontsize) {
-  if (!g_draw_hdc)
-    return 0;
-  if (pl_draw_state_get()->win32_widget_surface) {
-    if (fontsize <= 0)
-      fontsize = FontSize;
-    FontHandle font = Platform_CreateFont(fontsize, UsedFont);
-    HFONT old = font.hfont ? (HFONT)SelectObject(g_draw_hdc, font.hfont) : NULL;
-    TEXTMETRICW tm = {0};
-    GetTextMetricsW(g_draw_hdc, &tm);
-    if (old)
-      SelectObject(g_draw_hdc, old);
-    Platform_DestroyFont(font);
-    return -((int)tm.tmInternalLeading - 1);
-  }
-  if (pl_draw_state_get()->win32_listbox_surface)
-    return 2;
-  return 0;
-}
-
 bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   int x1, y1, x2, y2;
   int t = draw_line_prep(&spec, pl_draw_state_get()->off_x,
@@ -336,25 +310,13 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   int _offy = pl_draw_state_get()->off_y;
   x += _offx;
   y += _offy;
+  if (pl_draw_state_get()->listbox_rows &&
+      pl_draw_state_get()->win32_listbox_surface)
+    y -= 2;
   if (w <= 0)
     w = (IconSize > 0) ? IconSize : 16;
   if (h <= 0)
     h = (IconSize > 0) ? IconSize : 16;
-  if (w == h && w == FontSize && g_draw_hdc) {
-    HFONT hf = win32_sized_font(FontSize);
-    if (hf) {
-      HFONT told = (HFONT)SelectObject(g_draw_hdc, hf);
-      TEXTMETRICW itm;
-      memset(&itm, 0, sizeof(itm));
-      GetTextMetricsW(g_draw_hdc, &itm);
-      int nudge = (int)itm.tmInternalLeading * 2 / 3;
-      if (nudge < 1)
-        nudge = 1;
-      y -= nudge;
-      if (told)
-        SelectObject(g_draw_hdc, told);
-    }
-  }
   draw_measure_track(x, y, w, h);
 
   if (!g_draw_hdc) {
