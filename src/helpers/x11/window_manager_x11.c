@@ -230,6 +230,7 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
         bool alt = (ev->xbutton.state & Mod1Mask) != 0;
         prompt_handle_list_click(st, ctrl, shift, alt);
       }
+      x11_drain_selection_complete(dpy, wm);
       Popup *current_top = WindowManager_GetTopPopup(wm);
       if (current_top && current_top->vtable &&
           current_top->vtable->on_render) {
