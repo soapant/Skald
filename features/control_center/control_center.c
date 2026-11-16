@@ -365,7 +365,7 @@ static bool cc_apps_load_cache(bool *needs_save) {
   if (!lines.items)
     return false;
   if (lines.count == 0 || !lines.items[0]) {
-    sk_free_file_list(&lines);
+    sk_free_string_list(&lines);
     return false;
   }
   for (size_t i = 1; i < lines.count; i++) {
@@ -401,7 +401,7 @@ static bool cc_apps_load_cache(bool *needs_save) {
     if (!cc_apps_push(cc_strdup(name), cc_strdup(path), icon_copy))
       break;
   }
-  sk_free_file_list(&lines);
+  sk_free_string_list(&lines);
   return cc_app_count > 0;
 }
 
