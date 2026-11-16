@@ -113,8 +113,8 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
   XftFont *xf = FH_TO_XFT(spec.font);
   int ascent = xf ? xf->ascent : (spec.fontsize * 3 / 4);
   int descent = xf ? xf->descent : (spec.fontsize / 4);
-  int lineHeight = ascent + descent;
-  draw_text_centered_impl(&spec, lineHeight);
+  int line_height = ascent + descent;
+  draw_text_centered_impl(&spec, line_height);
 }
 
 int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {

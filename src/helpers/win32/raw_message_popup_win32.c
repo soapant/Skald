@@ -284,8 +284,8 @@ void win32_msg_hover_present(PlHoverMessageSpec spec) {
   HWND existing = hover_msg_hwnd;
   if (hover_key[0] && strcmp(hover_key, key) == 0 && existing &&
       IsWindow(existing)) {
-    SetWindowPos(existing, HWND_TOPMOST, centerX - win32_msg_w / 2,
-                 centerY - win32_msg_h / 2, win32_msg_w, win32_msg_h,
+    SetWindowPos(existing, HWND_TOPMOST, center_x - win32_msg_w / 2,
+                 center_y - win32_msg_h / 2, win32_msg_w, win32_msg_h,
                  SWP_NOACTIVATE | SWP_SHOWWINDOW);
     FadeWindowData *hd =
         (FadeWindowData *)GetWindowLongPtrA(existing, GWLP_USERDATA);
@@ -304,22 +304,22 @@ void win32_msg_hover_present(PlHoverMessageSpec spec) {
   if (!(winWidth > 0 && winHeight > 0)) {
     FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
     int textWidth = 0, textHeight = 0;
-    Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth,
+    Platform_GetTextExtents(msgFont, message, max_width - 30, &textWidth,
                             &textHeight);
     Platform_DestroyFont(msgFont);
     winWidth = textWidth + 30;
     winHeight = textHeight + 30;
-    if (maxWidth > 0 && winWidth > maxWidth)
-      winWidth = maxWidth;
-    if (maxHeight > 0 && winHeight > maxHeight)
-      winHeight = maxHeight;
+    if (max_width > 0 && winWidth > max_width)
+      winWidth = max_width;
+    if (max_height > 0 && winHeight > max_height)
+      winHeight = max_height;
   }
 
   win32_msg_hover_release(hover_key);
   Platform_CreateDisplayMessageWindow(
       (PlCreateDisplayMessageWindowSpec){.message = message,
-                                         .x = centerX,
-                                         .y = centerY,
+                                         .x = center_x,
+                                         .y = center_y,
                                          .max_width = winWidth,
                                          .max_height = winHeight,
                                          .timeout = MSG_TIMEOUT_INDEFINITE,
@@ -335,8 +335,8 @@ void win32_msg_hover_present(PlHoverMessageSpec spec) {
   HWND hw = hover_msg_hwnd;
   if (hw && IsWindow(hw)) {
     KillTimer(hw, 999);
-    SetWindowPos(hw, HWND_TOPMOST, centerX - winWidth / 2,
-                 centerY - winHeight / 2, winWidth, winHeight,
+    SetWindowPos(hw, HWND_TOPMOST, center_x - winWidth / 2,
+                 center_y - winHeight / 2, winWidth, winHeight,
                  SWP_NOACTIVATE | SWP_SHOWWINDOW);
     InvalidateRect(hw, NULL, TRUE);
   }

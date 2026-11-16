@@ -55,24 +55,24 @@ typedef struct {
 #define HOVER_MSG_UNPACK(spec)                                                 \
   const char *key = (spec).key;                                                \
   const char *message = (spec).message;                                        \
-  int centerX = (spec).x;                                                      \
-  int centerY = (spec).y;                                                      \
+  int center_x = (spec).x;                                                     \
+  int center_y = (spec).y;                                                     \
   int w = (spec).w;                                                            \
   int h = (spec).h;                                                            \
-  int maxWidth = (spec).max_width;                                             \
-  int maxHeight = (spec).max_height;                                           \
+  int max_width = (spec).max_width;                                            \
+  int max_height = (spec).max_height;                                          \
   ColorRef color = (spec).color;                                               \
   bool no_bg = (spec).no_bg
 
 #define MSG_UNPACK(spec)                                                       \
   const char *message = (spec).message;                                        \
-  int centerX = (spec).x;                                                      \
-  int centerY = (spec).y;                                                      \
+  int center_x = (spec).x;                                                     \
+  int center_y = (spec).y;                                                     \
   bool no_bg = (spec).no_bg;                                                   \
   int w = (spec).w;                                                            \
   int h = (spec).h;                                                            \
-  int maxWidth = (spec).max_width;                                             \
-  int maxHeight = (spec).max_height;                                           \
+  int max_width = (spec).max_width;                                            \
+  int max_height = (spec).max_height;                                          \
   double timeout = (spec).timeout;                                             \
   ColorRef color = (spec).color;                                               \
   void (*render)(void) = (spec).render;                                        \
@@ -88,8 +88,8 @@ typedef struct {
   int v_slot = (spec).v_slot;                                                  \
   int gap = (spec).gap;                                                        \
   int outward = (spec).outward;                                                \
-  int maxWidth = (spec).max_width;                                             \
-  int maxHeight = (spec).max_height;                                           \
+  int max_width = (spec).max_width;                                            \
+  int max_height = (spec).max_height;                                          \
   double timeout = (spec).timeout;                                             \
   ColorRef color = (spec).color;                                               \
   bool no_bg = (spec).no_bg;                                                   \
@@ -180,7 +180,7 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 
 FontHandle Platform_CreateFont(int size, const char *face_name);
 void Platform_DestroyFont(FontHandle font);
-void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
+void Platform_GetTextExtents(FontHandle font, const char *text, int max_width,
                              int *outWidth, int *outHeight);
 int Platform_InitializeTrayIcon(void);
 void Platform_PrewarmBackgroundPixmap(void);

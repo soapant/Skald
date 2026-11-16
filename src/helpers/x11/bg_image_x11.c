@@ -40,8 +40,8 @@ typedef struct {
   bool failed;
 } BgTileSlot;
 
-static BgTileSlot g_bg_tiles[BG_TILE_SLOTS];
-static unsigned long g_bg_tick = 0;
+static BgTileSlot bg_tiles[BG_TILE_SLOTS];
+static unsigned long bg_tick = 0;
 static pthread_mutex_t bg_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 static unsigned long bg_now_ms(void) {
@@ -227,7 +227,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
 
   BgTileSlot *fresh = NULL;
   for (int i = 0; i < BG_TILE_SLOTS; i++) {
-    BgTileSlot *t = &g_bg_tiles[i];
+    BgTileSlot *t = &bg_tiles[i];
     if (t->failed && strcmp(t->path, path) == 0 && t->w == w && t->h == h &&
         now - t->checked_ms < BG_RETRY_MS) {
       pthread_mutex_unlock(&bg_mtx);
@@ -235,7 +235,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
     }
     if (bg_slot_valid(t, path, w, h)) {
       if (now - t->checked_ms < BG_REVALIDATE_MS) {
-        t->stamp = ++g_bg_tick;
+        t->stamp = ++bg_tick;
         Pixmap pm = t->pm;
         pthread_mutex_unlock(&bg_mtx);
         return pm;
@@ -244,7 +244,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
       if (stat(path, &st) == 0 && t->has_stat &&
           t->st.st_mtime == st.st_mtime && t->st.st_size == st.st_size) {
         t->checked_ms = now;
-        t->stamp = ++g_bg_tick;
+        t->stamp = ++bg_tick;
         Pixmap pm = t->pm;
         pthread_mutex_unlock(&bg_mtx);
         return pm;
@@ -257,9 +257,9 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
 
   BgTileSlot *slot = fresh;
   if (!slot) {
-    slot = &g_bg_tiles[bg_tile_lru_pick(g_bg_tiles, BG_TILE_SLOTS,
-                                        sizeof(g_bg_tiles[0]), bg_slot_empty,
-                                        bg_slot_stamp)];
+    slot =
+        &bg_tiles[bg_tile_lru_pick(bg_tiles, BG_TILE_SLOTS, sizeof(bg_tiles[0]),
+                                   bg_slot_empty, bg_slot_stamp)];
   }
 
   bg_slot_release(dpy, slot);
@@ -271,7 +271,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
   slot->w = w;
   slot->h = h;
   slot->checked_ms = now;
-  slot->stamp = ++g_bg_tick;
+  slot->stamp = ++bg_tick;
   slot->has_stat = (stat(path, &slot->st) == 0);
   if (ok) {
     slot->pm = pm;
@@ -295,8 +295,8 @@ bool x11_bg_image_blit(Display *dpy, Drawable dst, Visual *vis, int w, int h) {
   pthread_mutex_lock(&bg_mtx);
   Picture src = 0;
   for (int i = 0; i < BG_TILE_SLOTS; i++) {
-    if (g_bg_tiles[i].pm == pm) {
-      src = g_bg_tiles[i].pic;
+    if (bg_tiles[i].pm == pm) {
+      src = bg_tiles[i].pic;
       break;
     }
   }

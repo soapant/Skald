@@ -1,5 +1,5 @@
-#ifndef HELPERS_X11_DEFAULT_APPS_H
-#define HELPERS_X11_DEFAULT_APPS_H
+#ifndef RAW_DEFAULT_APPS_X11_H
+#define RAW_DEFAULT_APPS_X11_H
 
 #include <stddef.h>
 #include <stdbool.h>

@@ -55,10 +55,11 @@ bool safe_cat(char *dst, size_t cap, const char *src) {
 }
 
 HotkeyBinding
-Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
-                          bool (*optional_condition_for_hotkey)(void),
-                          const char *const *optional_blacklistedwindows,
-                          bool whitelist, void *user_ud) {
+hotkey_convert_into_binding(char *hotkey_string,
+                            void (*on_hotkey_trigger)(void),
+                            bool (*optional_condition_for_hotkey)(void),
+                            const char *const *optional_blacklistedwindows,
+                            bool whitelist, void *user_ud) {
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 
@@ -80,7 +81,7 @@ Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
     if (cnt > 0) {
       output.blacklist = (char **)calloc((size_t)cnt, sizeof(char *));
       if (!output.blacklist) {
-        log_error("Hotkey_ConvertIntoBinding: blacklist alloc failed (%d)",
+        log_error("hotkey_convert_into_binding: blacklist alloc failed (%d)",
                   cnt);
         output.blacklist_count = 0;
         return output;
@@ -88,7 +89,8 @@ Hotkey_ConvertIntoBinding(char *hotkey_string, void (*on_hotkey_trigger)(void),
       for (int i = 0; i < cnt; i++) {
         output.blacklist[i] = strdup(optional_blacklistedwindows[i]);
         if (!output.blacklist[i]) {
-          log_error("Hotkey_ConvertIntoBinding: strdup failed for entry %d", i);
+          log_error("hotkey_convert_into_binding: strdup failed for entry %d",
+                    i);
           for (int j = 0; j < i; j++)
             free(output.blacklist[j]);
           free(output.blacklist);

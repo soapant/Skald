@@ -366,7 +366,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_CTLCOLOREDIT: {
     HDC hdc = (HDC)wParam;
-    COLORREF tc = RainbowText ? GetRainbowColor(0.5f, 0.85f, 1.0f) : COLOR_TEXT;
+    COLORREF tc =
+        RainbowText ? get_rainbow_color(0.5f, 0.85f, 1.0f) : COLOR_TEXT;
     if (prompt_win_no_bg()) {
       SetTextColor(hdc, tc);
       SetBkMode(hdc, TRANSPARENT);
@@ -455,12 +456,12 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         {
           RECT winRc;
           GetClientRect(hwnd, &winRc);
-          int winW = winRc.right - winRc.left;
-          int winH = winRc.bottom - winRc.top;
+          int win_w = winRc.right - winRc.left;
+          int win_h = winRc.bottom - winRc.top;
           POINT lbOrigin2 = {0, 0};
           ClientToScreen(pdis->hwndItem, &lbOrigin2);
           ScreenToClient(hwnd, &lbOrigin2);
-          win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, winW, winH,
+          win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, win_w, win_h,
                                     lbOrigin2.x, lbOrigin2.y);
         }
         if (isSelected) {
@@ -491,21 +492,21 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         } else {
           RECT winRc;
           GetClientRect(hwnd, &winRc);
-          int winW = winRc.right - winRc.left;
-          int winH = winRc.bottom - winRc.top;
+          int win_w = winRc.right - winRc.left;
+          int win_h = winRc.bottom - winRc.top;
           POINT lbOrigin = {0, 0};
           ClientToScreen(pdis->hwndItem, &lbOrigin);
           ScreenToClient(hwnd, &lbOrigin);
-          if (winW <= 0)
-            winW = pdis->rcItem.right - pdis->rcItem.left;
-          if (winH <= 0) {
+          if (win_w <= 0)
+            win_w = pdis->rcItem.right - pdis->rcItem.left;
+          if (win_h <= 0) {
             RECT tr2;
             GetClientRect(hwnd, &tr2);
-            winH = tr2.bottom - tr2.top;
-            if (winH <= 0)
-              winH = pdis->rcItem.bottom - pdis->rcItem.top + 600;
+            win_h = tr2.bottom - tr2.top;
+            if (win_h <= 0)
+              win_h = pdis->rcItem.bottom - pdis->rcItem.top + 600;
           }
-          if (!win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, winW, winH,
+          if (!win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, win_w, win_h,
                                          lbOrigin.x, lbOrigin.y)) {
             FillRect(pdis->hDC, &pdis->rcItem,
                      cached_brush(&s_bg_brush, &s_bg_color, COLOR_BG));
