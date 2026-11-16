@@ -971,7 +971,6 @@ void ski_message(const SkMessageSpec *spec) {
   } else if (slot == FREE) {
     Platform_DisplayMessage(
         (PlDisplayMessageSpec){.message = spec->message,
-                               .fps = spec->fps,
                                .x = spec->x,
                                .y = spec->y,
                                .no_bg = spec->no_bg,
@@ -986,7 +985,7 @@ void ski_message(const SkMessageSpec *spec) {
     return;
   }
   display_message_slot(spec->message, slot, mw, mh, spec->prompt_gap, timeout,
-                       color, spec->render, spec->name, spec->fps);
+                       color, spec->render, spec->name);
 }
 
 bool sk_launch_browser(const char *url) {
