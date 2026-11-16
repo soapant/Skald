@@ -75,6 +75,7 @@ static void prompt_popup_on_show(Popup *self) {
   data->state->no_bg = data->spec.no_bg;
   data->state->bg_color = data->spec.bg_color;
   data->state->password_mode = data->spec.password_mode;
+  data->state->no_separators = data->spec.no_separators;
   if (data->state->lb)
     data->state->lb->selected_index = -1;
   self->user_data = data->state;
