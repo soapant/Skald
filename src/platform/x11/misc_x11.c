@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include "wm/wm.h"
 #include "helpers/x11/clipboard_x11.h"
-#include "platform/x11/clipboard_backend_x11.h"
+#include "helpers/x11/clipboard_x11.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_misc.h"
 #include "config_values.h"

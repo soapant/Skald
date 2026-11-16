@@ -49,7 +49,7 @@ typedef enum {
   FREE
 } MessageSlot;
 
-ColorRef GetRainbowColor(float t, float s, float v);
+ColorRef get_rainbow_color(float t, float s, float v);
 void update_text_caret(void);
 
 #define MSG_PROMPT_GAP_DEFAULT 300
@@ -134,7 +134,7 @@ int bg_tile_lru_pick(const void *slots, int count, size_t stride,
                      unsigned long (*stamp)(const void *slot));
 
 void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec,
-                             int lineHeight);
+                             int line_height);
 int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,
                       int win_size);
 int msg_stack_dir(int v_slot, bool outward);

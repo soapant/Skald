@@ -8,16 +8,16 @@
 #include "platform/platform.h"
 #include "deps/log.h"
 
-static pthread_t g_rt_thread;
-static pthread_mutex_t g_rt_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_rt_cond = PTHREAD_COND_INITIALIZER;
+static pthread_t rt_thread;
+static pthread_mutex_t rt_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t rt_cond = PTHREAD_COND_INITIALIZER;
 static Display *rt_dpy = NULL;
 
 void Platform_RenderThreadInit(void) {}
-void Platform_RenderThreadLock(void) { pthread_mutex_lock(&g_rt_lock); }
-void Platform_RenderThreadUnlock(void) { pthread_mutex_unlock(&g_rt_lock); }
-void Platform_RenderThreadWakeOne(void) { pthread_cond_signal(&g_rt_cond); }
-void Platform_RenderThreadWakeAll(void) { pthread_cond_broadcast(&g_rt_cond); }
+void Platform_RenderThreadLock(void) { pthread_mutex_lock(&rt_lock); }
+void Platform_RenderThreadUnlock(void) { pthread_mutex_unlock(&rt_lock); }
+void Platform_RenderThreadWakeOne(void) { pthread_cond_signal(&rt_cond); }
+void Platform_RenderThreadWakeAll(void) { pthread_cond_broadcast(&rt_cond); }
 void Platform_RenderThreadWaitTimed(long us) {
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
@@ -27,7 +27,7 @@ void Platform_RenderThreadWaitTimed(long us) {
     ts.tv_sec += 1;
     ts.tv_nsec -= 1000000000L;
   }
-  pthread_cond_timedwait(&g_rt_cond, &g_rt_lock, &ts);
+  pthread_cond_timedwait(&rt_cond, &rt_lock, &ts);
 }
 
 void Platform_RenderThreadMiniSleep(int milliseconds) {
@@ -51,7 +51,7 @@ bool Platform_RenderThreadStart(void) {
     return false;
   }
   rt_dpy = dpy;
-  if (pthread_create(&g_rt_thread, NULL, rt_entry, NULL) != 0) {
+  if (pthread_create(&rt_thread, NULL, rt_entry, NULL) != 0) {
     XCloseDisplay(dpy);
     rt_dpy = NULL;
     log_warn("render thread: pthread_create failed");
@@ -61,7 +61,7 @@ bool Platform_RenderThreadStart(void) {
 }
 
 void Platform_RenderThreadJoin(void) {
-  pthread_join(g_rt_thread, NULL);
+  pthread_join(rt_thread, NULL);
   if (rt_dpy) {
     XCloseDisplay(rt_dpy);
     rt_dpy = NULL;

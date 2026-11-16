@@ -5,9 +5,9 @@
 #include "platform/platform.h"
 #include "deps/log.h"
 
-static HANDLE g_rt_thread = NULL;
-static CRITICAL_SECTION g_rt_lock;
-static CONDITION_VARIABLE g_rt_cond;
+static HANDLE rt_thread = NULL;
+static CRITICAL_SECTION rt_lock;
+static CONDITION_VARIABLE rt_cond;
 static volatile LONG rt_lock_ready = 0;
 
 void Platform_RenderThreadInit(void) {}
@@ -16,8 +16,8 @@ static void rt_ensure_lock(void) {
   if (rt_lock_ready == 2)
     return;
   if (InterlockedCompareExchange(&rt_lock_ready, 1, 0) == 0) {
-    InitializeCriticalSection(&g_rt_lock);
-    InitializeConditionVariable(&g_rt_cond);
+    InitializeCriticalSection(&rt_lock);
+    InitializeConditionVariable(&rt_cond);
     InterlockedExchange(&rt_lock_ready, 2);
     return;
   }
@@ -27,19 +27,17 @@ static void rt_ensure_lock(void) {
 
 void Platform_RenderThreadLock(void) {
   rt_ensure_lock();
-  EnterCriticalSection(&g_rt_lock);
+  EnterCriticalSection(&rt_lock);
 }
 
-void Platform_RenderThreadUnlock(void) { LeaveCriticalSection(&g_rt_lock); }
+void Platform_RenderThreadUnlock(void) { LeaveCriticalSection(&rt_lock); }
 
-void Platform_RenderThreadWakeOne(void) { WakeConditionVariable(&g_rt_cond); }
+void Platform_RenderThreadWakeOne(void) { WakeConditionVariable(&rt_cond); }
 
-void Platform_RenderThreadWakeAll(void) {
-  WakeAllConditionVariable(&g_rt_cond);
-}
+void Platform_RenderThreadWakeAll(void) { WakeAllConditionVariable(&rt_cond); }
 
 void Platform_RenderThreadWaitTimed(long us) {
-  SleepConditionVariableCS(&g_rt_cond, &g_rt_lock, (DWORD)(us / 1000));
+  SleepConditionVariableCS(&rt_cond, &rt_lock, (DWORD)(us / 1000));
 }
 
 void Platform_RenderThreadMiniSleep(int milliseconds) {
@@ -54,8 +52,8 @@ static DWORD WINAPI rt_entry(LPVOID arg) {
 
 bool Platform_RenderThreadStart(void) {
   rt_ensure_lock();
-  g_rt_thread = CreateThread(NULL, 0, rt_entry, NULL, 0, NULL);
-  if (!g_rt_thread) {
+  rt_thread = CreateThread(NULL, 0, rt_entry, NULL, 0, NULL);
+  if (!rt_thread) {
     log_warn("render thread: CreateThread failed, widget frames disabled");
     return false;
   }
@@ -63,11 +61,11 @@ bool Platform_RenderThreadStart(void) {
 }
 
 void Platform_RenderThreadJoin(void) {
-  if (!g_rt_thread)
+  if (!rt_thread)
     return;
-  WaitForSingleObject(g_rt_thread, INFINITE);
-  CloseHandle(g_rt_thread);
-  g_rt_thread = NULL;
+  WaitForSingleObject(rt_thread, INFINITE);
+  CloseHandle(rt_thread);
+  rt_thread = NULL;
 }
 
 void *Platform_RenderThreadDisplay(void) { return NULL; }

@@ -79,7 +79,7 @@ void item_get_colors(PlGetItemColorsSpec spec) {
   unsigned long col_text = rgb_to_hex(COLOR_TEXT);
   float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
                              : (float)spec.idx / 10.0f;
-  unsigned long col_rainbow = rgb_to_hex(GetRainbowColor(t, 0.55f, 1.0f));
+  unsigned long col_rainbow = rgb_to_hex(get_rainbow_color(t, 0.55f, 1.0f));
   unsigned long n = col_text, b = col_text, p = col_rainbow;
   if (RainbowText) {
     n = b = p = col_rainbow;
@@ -262,8 +262,8 @@ static void normalize_for_match(const char *src, char *dst, size_t dst_size) {
 }
 
 static bool
-Populate_ItemMatches(const char *search_text, const char *clean_filter,
-                     bool (*filter_match)(const char *, const char *)) {
+populate_item_matches(const char *search_text, const char *clean_filter,
+                      bool (*filter_match)(const char *, const char *)) {
   if (filter_match)
     return filter_match(search_text, clean_filter);
   char norm_search[1024];
@@ -287,7 +287,7 @@ static int populate_filter(ListBoxInfo *lb, const char **items, int item_count,
       lb->matching_indices[total_matches++] = i;
       continue;
     }
-    if (Populate_ItemMatches(items[i], clean_filter, filter_match)) {
+    if (populate_item_matches(items[i], clean_filter, filter_match)) {
       lb->matching_indices[total_matches++] = i;
     }
   }
@@ -420,7 +420,7 @@ void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
   log_info("populate_listbox completed for filter='%s'", filter ? filter : "");
 }
 
-ColorRef GetRainbowColor(float t, float s, float v) {
+ColorRef get_rainbow_color(float t, float s, float v) {
   if (RainbowText) {
     float hue = t * 240.0f;
     float h = hue / 60.0f;
@@ -813,13 +813,13 @@ int bg_tile_lru_pick(const void *slots, int count, size_t stride,
 }
 
 void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec,
-                             int lineHeight) {
+                             int line_height) {
   int tw = Platform_MeasureTextWidth(
       (PlMeasureTextWidthSpec){.text = spec->text,
                                .len = (int)strlen(spec->text),
                                .fontsize = spec->fontsize});
   int tx = spec->x + (spec->w - tw) / 2;
-  int ty = spec->y + (spec->h - lineHeight) / 2;
+  int ty = spec->y + (spec->h - line_height) / 2;
   Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
                                            .y = ty,
                                            .text = spec->text,

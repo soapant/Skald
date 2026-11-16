@@ -303,11 +303,11 @@ COLORREF win32_resolve_color(unsigned long hex, bool opaque) {
   return (COLORREF)((b << 16) | (g << 8) | r);
 }
 
-Win32ImgSlot g_img_cache[WIN32_IMG_CACHE_SLOTS];
+Win32ImgSlot img_cache[WIN32_IMG_CACHE_SLOTS];
 
 Win32SrcSlot g_src_cache[WIN32_SRC_CACHE_SLOTS];
 
-ULONGLONG g_img_cache_tick = 0;
+ULONGLONG img_cache_tick = 0;
 
 CRITICAL_SECTION g_img_cache_cs;
 
@@ -383,7 +383,7 @@ void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {
   DWORD now = GetTickCount();
   win32_img_cache_lock();
   for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-    Win32ImgSlot *s = &g_img_cache[i];
+    Win32ImgSlot *s = &img_cache[i];
     if (!s->bmp && !s->failed)
       continue;
     if (s->screen != screen || s->w != w || s->h != h)
@@ -395,7 +395,7 @@ void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {
       s->failed = 0;
       continue;
     }
-    s->stamp = ++g_img_cache_tick;
+    s->stamp = ++img_cache_tick;
     found = s->bmp ? s->bmp : WIN32_IMG_FAILED;
     break;
   }
@@ -413,7 +413,7 @@ void win32_img_cache_put(const char *path, HDC screen, int w, int h,
   int slot = -1;
   ULONGLONG oldest = ~(ULONGLONG)0;
   for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-    const Win32ImgSlot *s = &g_img_cache[i];
+    const Win32ImgSlot *s = &img_cache[i];
     if (!s->bmp && !s->failed) {
       slot = i;
       break;
@@ -428,7 +428,7 @@ void win32_img_cache_put(const char *path, HDC screen, int w, int h,
   }
   if (slot < 0) {
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-      const Win32ImgSlot *s = &g_img_cache[i];
+      const Win32ImgSlot *s = &img_cache[i];
       if (s->screen != screen)
         continue;
       if (s->stamp < oldest) {
@@ -439,7 +439,7 @@ void win32_img_cache_put(const char *path, HDC screen, int w, int h,
   }
   if (slot < 0)
     slot = 0;
-  Win32ImgSlot *s = &g_img_cache[slot];
+  Win32ImgSlot *s = &img_cache[slot];
   win32_gdip_dispose(s->bmp);
   snprintf(s->key, sizeof(s->key), "%s", path);
   s->w = w;
@@ -450,7 +450,7 @@ void win32_img_cache_put(const char *path, HDC screen, int w, int h,
   s->bmp = bmp;
   s->failed = (bmp == NULL) ? 1 : 0;
   s->checked_ms = GetTickCount();
-  s->stamp = ++g_img_cache_tick;
+  s->stamp = ++img_cache_tick;
   win32_img_cache_unlock();
 }
 
@@ -467,7 +467,7 @@ void *win32_src_cache_get(const char *path) {
     if (win32_cache_stale(now, &s->checked_ms, path, &s->mtime, s->size,
                           (void **)&s->src))
       continue;
-    s->stamp = ++g_img_cache_tick;
+    s->stamp = ++img_cache_tick;
     found = s->src;
     break;
   }
@@ -504,17 +504,17 @@ void win32_src_cache_put(const char *path, void *src) {
   s->size = size;
   s->src = src;
   s->checked_ms = GetTickCount();
-  s->stamp = ++g_img_cache_tick;
+  s->stamp = ++img_cache_tick;
   win32_img_cache_unlock();
 }
 
 void win32_img_cache_free_all(void) {
   win32_img_cache_lock();
   for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-    if (g_img_cache[i].bmp) {
-      win32_gdip_dispose(g_img_cache[i].bmp);
+    if (img_cache[i].bmp) {
+      win32_gdip_dispose(img_cache[i].bmp);
     }
-    memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
+    memset(&img_cache[i], 0, sizeof(img_cache[i]));
   }
   for (int i = 0; i < WIN32_SRC_CACHE_SLOTS; i++) {
     if (g_src_cache[i].src) {

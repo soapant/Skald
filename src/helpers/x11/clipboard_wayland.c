@@ -2,7 +2,7 @@
 #include "helpers/helpers_text.h"
 #include <time.h>
 #if defined(SKALD_WAYLAND_SESSION)
-#include "platform/x11/clipboard_backend_x11.h"
+#include "helpers/x11/clipboard_x11.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "core/clipboard_history.h"

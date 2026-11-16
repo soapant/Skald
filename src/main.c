@@ -16,7 +16,7 @@
 int main(void) {
   srand((unsigned)time(NULL));
   if (!Platform_TryAcquireSingleInstance()) {
-    fprintf(stderr, "Skald is already running, exiting.\n");
+    log_warn("Skald is already running, exiting");
     return 1;
   }
   Platform_InitDataFolder();

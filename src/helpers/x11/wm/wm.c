@@ -144,7 +144,7 @@ char *wm_paste(const char *content) {
   return NULL;
 }
 
-PlWindowList Wm_GetWindowTitles(void) {
+PlWindowList wm_get_window_titles(void) {
   PlWindowList result;
   PlWindowList empty = {.windows = NULL, .count = 0};
   if (x11_env_is_wayland()) {
@@ -167,7 +167,7 @@ PlWindowList Wm_GetWindowTitles(void) {
   log_error("GetWindowTitles Didn't Work");
   return empty;
 }
-PlWindowList Wm_GetWindowIds(void) {
+PlWindowList wm_get_window_ids(void) {
   PlWindowList result;
   PlWindowList empty = {.windows = NULL, .count = 0};
   if (x11_env_is_wayland()) {

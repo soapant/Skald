@@ -284,7 +284,7 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
                  .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
     if (spec->rainbow_limit_x >= 0 && tx >= spec->rainbow_limit_x)
       break;
-    unsigned long col = GetRainbowColor(
+    unsigned long col = get_rainbow_color(
         nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, 1.0f);
     Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
                                              .y = spec->text_y,
