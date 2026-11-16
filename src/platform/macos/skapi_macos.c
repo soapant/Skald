@@ -22,8 +22,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
   return false;
 }
 
-bool sk_launch_with_args_as_admin_platform(const char *path,
-                                           const char *args) {
+bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   (void)path;
   (void)args;
   return false;
