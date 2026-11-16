@@ -82,23 +82,20 @@ static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
   PromptState *state = win32_prompt_state_from_hwnd(hwnd);
 
   bool hide_popup = (wParam == VK_RETURN);
-  HWND popup_wnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
-  if (hide_popup && popup_wnd != NULL && IsWindow(popup_wnd))
-    ShowWindow(popup_wnd, SW_HIDE);
-
   bool handled = false;
   if (state)
     handled = prompt_handle_key(state, key);
-
   if (!handled)
     return false;
 
-  if (hide_popup && !SkaldContext_Get()->window.selection_complete) {
-    if (popup_wnd != NULL && IsWindow(popup_wnd))
-      ShowWindow(popup_wnd, SW_SHOW);
-    if (popup_wnd && IsWindow(popup_wnd) &&
-        WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) != NULL)
-      win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd);
+  HWND popup_wnd_now = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
+  if (hide_popup && SkaldContext_Get()->window.selection_complete) {
+    SkaldContext_Get()->window.selection_complete = false;
+    if (popup_wnd_now != NULL && IsWindow(popup_wnd_now))
+      ShowWindow(popup_wnd_now, SW_HIDE);
+  } else if (hide_popup && popup_wnd_now != NULL && IsWindow(popup_wnd_now)) {
+    ShowWindow(popup_wnd_now, SW_SHOW);
+    win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd);
   }
   if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
     HWND hPar = GetParent(hwnd);
