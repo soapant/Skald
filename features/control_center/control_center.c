@@ -1276,7 +1276,7 @@ static void cc_hotkey_capture_render(PromptState *state) {
                .color = cc_flashing ? SK_GRAY : SK_DARK_GRAY, .filled = true);
 
   if (combo[0] || cc_flashing)
-    sk_draw_text(.x = 27, .y = state->height / 2,
+    sk_draw_text(.x = 27, .y = state->height / 2 + 5,
                  .text = combo[0] ? combo : cc_captured_hotkey, .fontsize = 22,
                  .color = cc_flashing ? SK_DARK_GREEN : SK_GRAY,
                  .align = "LEFT");
