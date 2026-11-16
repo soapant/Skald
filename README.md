@@ -24,16 +24,9 @@ Skald is a native system control center. It is written entirely in C, boots inst
 
 ## Why Skald?
 
-- **Modular by Design:** The core is tiny. Everything else (features) is compiled C modules.
+- **Modular by Design:** The core is tiny. Everything else (features) are compiled C modules.
 - **Window Manager Native:** Deep integration with X11, Wayland (Sway/Hyprland), and Windows.
 - **Zero Dependencies:** No package manager required to run.
-- **Lightweight:** about 20 MB of RAM with 22 features loaded (see below).
-
-### Lightweight
-
-<img src="images/process_killer.png" width="700" alt="A process list showing Skald using 19.5 MB of RAM">
-
-*Skald using 19.5 MB after startup with 22 features loaded [Linux X11], as shown by a process-killer feature running inside Skald.*
 
 > ⚠️ **Early Development Warning:**
 > Skald is evolving rapidly. The public API (`skapi.h`) is currently **unstable** and changes frequently. If you write your own features right now, be prepared to update your code often as the API matures. After the stable release, Skald will maintain backwards compatibility.
