@@ -17,6 +17,7 @@ typedef struct {
   int meas_origin_y;
   bool win32_widget_surface;
   bool win32_listbox_surface;
+  bool listbox_rows;
 } PlDrawState;
 
 PlDrawState *pl_draw_state_get(void);

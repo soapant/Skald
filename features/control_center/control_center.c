@@ -1066,13 +1066,12 @@ static void cc_on_actions_render(SkPlaceState state) {
   int lh_title = sk_get_text_height(16);
   int lh_hotkey = sk_get_text_height(20);
   sk_draw_text(.x = state.rect.x + 20,
-               .y = state.rect.y - 2 + (h - lh_title) / 2 -
-                    sk_get_text_yoffset(16),
+               .y = state.rect.y - 2 + (h - lh_title) / 2,
                .text = "Actions", .align = "LEFT", .color = SK_DARK_GRAY,
                .fontsize = 16);
+
   sk_draw_text(.x = state.rect.x + 100,
-               .y = state.rect.y - 2 + (h - lh_hotkey) / 2 -
-                    sk_get_text_yoffset(20),
+               .y = state.rect.y - 2 + (h - lh_hotkey) / 2,
                .text = hotkey, .align = "LEFT", .fontsize = 20);
 }
 

@@ -35,6 +35,7 @@
 #include "helpers/helpers_monitor.h"
 #include "helpers/helpers_key.h"
 #include "core/prompt_geometry.h"
+#include "core/draw_state.h"
 #include "core/feature_loader.h"
 #include "core/feature_path.h"
 #include "core/cap_registry.h"
@@ -1286,10 +1287,14 @@ bool ski_draw_text(const SkTextSpec *spec) {
     col = rgb_to_hex(col);
   }
   int draw_x = spec->x - (spec->no_hscroll ? 0 : listbox_get_row_h_scroll());
+  int draw_y = spec->y;
+  if (pl_draw_state_get()->listbox_rows &&
+      pl_draw_state_get()->win32_listbox_surface)
+    draw_y += 3;
   const char *align = spec->align ? spec->align : "CENTER";
   FontHandle fh = spec->font;
   return Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
-                                                  .y = spec->y,
+                                                  .y = draw_y,
                                                   .text = real_text,
                                                   .color = col,
                                                   .font = fh,
@@ -1533,7 +1538,7 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
     r.x = base - w;
   else
     r.x = base - w / 2;
-  r.y = spec->y + Platform_GetTextYOffset(fs);
+  r.y = spec->y;
   r.w = w;
   r.h = h;
   return r;
@@ -1548,10 +1553,6 @@ int sk_get_text_width(const char *text, int fontsize) {
 
 int sk_get_text_height(int fontsize) {
   return Platform_GetTextLineHeight(fontsize);
-}
-
-int sk_get_text_yoffset(int fontsize) {
-  return Platform_GetTextYOffset(fontsize);
 }
 
 char *sk_http_get(const char *url) { return http_get(url); }
@@ -1639,6 +1640,7 @@ static bool listbox_begin_common(const PlListSpec *spec) {
   listbox_set_geometry(sk_list_y0, sk_list_itemH, lay.visible);
   listbox_hover_focus(lb, sk_list_y0, sk_list_itemH, lb->view_offset,
                       lay.visible);
+  pl_draw_state_get()->listbox_rows = true;
   return true;
 }
 
@@ -1680,6 +1682,7 @@ void sk_listbox_end(void) {
   sk_list_visible = 0;
   sk_list_cur = 0;
   sk_list_y0 = -1;
+  pl_draw_state_get()->listbox_rows = false;
 }
 
 bool sk_listbox_begin(const SkListSpec *spec) {
@@ -1705,9 +1708,13 @@ bool ski_place_listbox(const SkListSpec *spec) {
   if (!sk_listbox_begin(spec)) {
     return false;
   }
+  int line_h = Platform_GetTextLineHeight(0);
+  int pad_top = (sk_list_itemH - line_h) / 2;
+  if (pad_top < 0)
+    pad_top = 0;
   SkListItemCtx ctx;
   while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.x = ctx.x + 10, .y = ctx.y + 4, .text = ctx.text,
+    sk_draw_text(.x = ctx.x + 10, .y = ctx.y + pad_top, .text = ctx.text,
                  .align = "LEFT", .pad = ctx.x + 10);
   }
   sk_listbox_end();
