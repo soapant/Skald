@@ -900,13 +900,9 @@ int sk_get_pid(void);
 #define SKALD_FEATURE_EXPORT __attribute__((visibility("default")))
 #endif
 
-#if defined(_WIN32)
-#define SKALD_FEATURE_INIT SKALD_FEATURE_EXPORT void skald_feature_init(void)
-#else
 #define SKALD_FEATURE_INIT                                                     \
   SKALD_FEATURE_EXPORT __attribute__((constructor)) void skald_feature_init(   \
       void)
-#endif
 
 #define SKALD_FEATURE_SHUTDOWN                                                 \
   SKALD_FEATURE_EXPORT void skald_feature_shutdown(void)
