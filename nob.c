@@ -371,6 +371,10 @@ static void append_dep_cflags(Nob_Cmd *cmd) {
 }
 
 static void append_dep_ldflags(Nob_Cmd *cmd) {
+#if defined(__APPLE__)
+  (void)cmd;
+  return;
+#endif
   nob_cmd_append(cmd, "-Wl,-Bstatic");
   for (size_t i = 0; i < dep_ldflags.count; ++i) {
     if (strcmp(dep_ldflags.items[i], "-lm") == 0 ||
@@ -579,12 +583,16 @@ static void append_plugin_build_cmd(Nob_Cmd *cmd, const char *src,
     nob_cmd_append(cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-shared", "-o", so, src,
                    main_implib, "-MF", feature_dep_path(src), LINK_FLAGS);
 #else
+#if defined(__APPLE__)
+    nob_cmd_append(cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-dynamiclib", "-o", so,
+                   src, "-MF", feature_dep_path(src));
+    append_dep_cflags(cmd);
+    nob_cmd_append(cmd, LINK_FLAGS);
+#else
     nob_cmd_append(cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-fPIC", "-shared", "-o",
                    so, src, "-MF", feature_dep_path(src));
     append_dep_cflags(cmd);
     nob_cmd_append(cmd, "-lX11");
-#if defined(__APPLE__)
-    nob_cmd_append(cmd, LINK_FLAGS);
 #endif
 #endif
     if (release)
