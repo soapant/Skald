@@ -1539,6 +1539,9 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
   else
     r.x = base - w / 2;
   r.y = spec->y;
+  if (pl_draw_state_get()->listbox_rows &&
+      pl_draw_state_get()->win32_listbox_surface)
+    r.y += 3;
   r.w = w;
   r.h = h;
   return r;
