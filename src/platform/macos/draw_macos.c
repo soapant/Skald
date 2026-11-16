@@ -1,86 +1,66 @@
+#include <string.h>
 #include "platform/draw.h"
-#include "core/context.h"
-
-static int draw_offset_x = 0;
-static int draw_offset_y = 0;
-static unsigned long draw_bg_color = 0;
-static bool transparent_window = false;
-static int measure_w = 0;
-static int measure_h = 0;
-static int last_measure_x = 0;
-static int last_measure_y = 0;
-
-static void macos_set_draw_offset(int dx, int dy) {
-  draw_offset_x = dx;
-  draw_offset_y = dy;
-}
-
-static void macos_get_draw_offset(int *out_x, int *out_y) {
-  if (out_x)
-    *out_x = draw_offset_x;
-  if (out_y)
-    *out_y = draw_offset_y;
-}
-
-static void macos_begin_measure(void) {
-  measure_w = 0;
-  measure_h = 0;
-}
-
-static void macos_end_measure(int *out_w, int *out_h) {
-  if (out_w)
-    *out_w = measure_w;
-  if (out_h)
-    *out_h = measure_h;
-}
-
-static void macos_get_last_measure_origin(int *out_x, int *out_y) {
-  if (out_x)
-    *out_x = last_measure_x;
-  if (out_y)
-    *out_y = last_measure_y;
-}
-
-static void macos_set_draw_bg_color(unsigned long hex) { draw_bg_color = hex; }
-
-static unsigned long macos_get_draw_bg_color(void) { return draw_bg_color; }
-
-static void macos_set_transparent_window(bool on) { transparent_window = on; }
-
-static bool macos_get_transparent_window(void) { return transparent_window; }
+#include "core/types/prompt.h"
 
 void Platform_FlushDraw(void) {}
 
+void Platform_DrawPromptEditbox(PromptState *state) { (void)state; }
+
+void Platform_DrawPromptEditText(PromptState *state) { (void)state; }
+
+void Platform_DrawPromptEditCursor(PromptState *state) { (void)state; }
+
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
+  (void)h;
   if (out_x)
     *out_x = 0;
   if (out_y)
     *out_y = 0;
   return false;
 }
+
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
+  (void)path;
+  (void)x;
+  (void)y;
+  (void)w;
+  (void)h;
   return true;
 }
-bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) { return true; }
-void draw_prompt_separator(PlDrawPromptSeparatorSpec spec) {}
-bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) { return true; }
-bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) { return true; }
-bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color,
-                          FontHandle font, const char *align, int pad,
-                          int fontsize) {
+
+bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
+  (void)spec;
   return true;
 }
-void Platform_DrawTextCentered(int x, int y, int w, int h, const char *text,
-                               unsigned long color, FontHandle font,
-                               int fontsize) {}
-int Platform_MeasureTextWidth(const char *text, int len, int fontsize) {
-  return len * 8;
-}
-bool Platform_DrawTextLine(int x, int y, const char *text, int len,
-                           unsigned long color, int fontsize) {
+
+bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
+  (void)spec;
   return true;
 }
-void item_get_colors(PlGetItemColorsSpec spec) { (void)spec; }
+
+bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
+  (void)spec;
+  return true;
+}
+
+bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
+  (void)spec;
+  return true;
+}
+
+void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) { (void)spec; }
+
+int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
+  if (spec.text && spec.len > 0)
+    return spec.len * 8;
+  return 0;
+}
+
+bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
+  (void)spec;
+  return true;
+}
+
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   if (line_h)
     *line_h = 16;
@@ -89,8 +69,7 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   if (list_top)
     *list_top = 0;
 }
+
 int Platform_GetTextLineHeight(int fontsize) {
   return fontsize > 0 ? fontsize : 16;
 }
-void Platform_DrawPromptEditText(const PromptState *state) {}
-void Platform_DrawPromptEditCursor(const PromptState *state) {}
