@@ -28,6 +28,9 @@ void input_state_inhibit_mods(void) {
     if (nv >= 0 && nv < 256)
       down_map[nv] = false;
   }
+  memset(pressed, 0, sizeof(pressed));
+  memset(released, 0, sizeof(released));
+  input_state_clear_queue();
 }
 
 static int norm_vk(int vk) {
