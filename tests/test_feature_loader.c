@@ -14,9 +14,12 @@
 
 extern const char *FeaturePath;
 
-#define FIXTURE_DIR "build/tests/fixture"
+#ifndef TEST_BUILD_DIR
+#define TEST_BUILD_DIR "build/tests"
+#endif
+#define FIXTURE_DIR TEST_BUILD_DIR "/fixture"
 #define FIXTURE_NAME "reload_probe"
-#define MANIFEST_DIR "build/tests/featurepath"
+#define MANIFEST_DIR TEST_BUILD_DIR "/featurepath"
 
 static void remove_hot_artifacts(void) {
   DIR *d = opendir(FIXTURE_DIR);
