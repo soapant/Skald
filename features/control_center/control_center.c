@@ -982,8 +982,8 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   int name_w = sk_get_text_width(ctx->text, FontSize);
   if (icon)
     sk_draw_image(.path = icon, .x = ctx->x + CC_ITEM_TEXT_X,
-                  .y = ctx->y + (ctx->h - FontSize) / 2 - CC_ITEM_TEXT_Y / 2, .w = FontSize,
-                  .h = FontSize);
+                  .y = ctx->y + (ctx->h - FontSize) / 2 - CC_ITEM_TEXT_Y / 2,
+                  .w = FontSize, .h = FontSize);
   sk_draw_text(.x = name_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = ctx->text,
                .align = "LEFT", .pad = 0);
 
@@ -1015,8 +1015,7 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
     int alias_w = sk_get_text_width(chip, FontSize - 3);
     if (cursor + alias_w + CC_TYPE_GAP <= left_limit) {
       sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y, .text = chip,
-                   .align = "LEFT",.color = SK_GRAY,
-                   .fontsize = FontSize);
+                   .align = "LEFT", .color = SK_GRAY, .fontsize = FontSize);
       cursor += alias_w + CC_TYPE_GAP;
     }
   }
@@ -1066,13 +1065,12 @@ static void cc_on_actions_render(SkPlaceState state) {
   int lh_title = sk_get_text_height(16);
   int lh_hotkey = sk_get_text_height(20);
   sk_draw_text(.x = state.rect.x + 20,
-               .y = state.rect.y - 2 + (h - lh_title) / 2,
-               .text = "Actions", .align = "LEFT", .color = SK_DARK_GRAY,
-               .fontsize = 16);
+               .y = state.rect.y - 2 + (h - lh_title) / 2, .text = "Actions",
+               .align = "LEFT", .color = SK_DARK_GRAY, .fontsize = 16);
 
   sk_draw_text(.x = state.rect.x + 100,
-               .y = state.rect.y - 2 + (h - lh_hotkey) / 2,
-               .text = hotkey, .align = "LEFT", .fontsize = 20);
+               .y = state.rect.y - 2 + (h - lh_hotkey) / 2, .text = hotkey,
+               .align = "LEFT", .fontsize = 20);
 }
 
 static void cc_render(PromptState *state) {
@@ -1364,12 +1362,11 @@ SKALD_FEATURE_INIT {
   cc_entry_count = 0;
   cc_entry_base = 0;
 
-
   cc_prewarm_apps();
   cc_build();
   sk_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = cc_open_control);
   sk_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey, .cb = cc_reload);
-  sk_register_alias(.alias="ng",.target="gimp");
+  sk_register_alias(.alias = "ng", .target = "gimp");
   sk_register_deferred_init(cc_deferred_build);
 }
 
