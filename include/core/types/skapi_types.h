@@ -1,5 +1,5 @@
-#ifndef TYPES_SKAPI_TYPES_H
-#define TYPES_SKAPI_TYPES_H
+#ifndef SKAPI_TYPES_H
+#define SKAPI_TYPES_H
 
 #include <stdbool.h>
 #include <stdint.h>

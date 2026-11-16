@@ -628,7 +628,7 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   const char *const *bw;
   bool whitelist;
   resolve_window_list(wl, bl, &bw, &whitelist);
-  HotkeyBinding binding = Hotkey_ConvertIntoBinding(
+  HotkeyBinding binding = hotkey_convert_into_binding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
   binding.hotkey_callback_ud = spec->cb_ud;
   binding.hold = false;
@@ -639,8 +639,8 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
 bool ski_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
-  HotkeyBinding binding =
-      Hotkey_ConvertIntoBinding((char *)hotkey, NULL, NULL, NULL, false, NULL);
+  HotkeyBinding binding = hotkey_convert_into_binding((char *)hotkey, NULL,
+                                                      NULL, NULL, false, NULL);
   return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
 }
 
@@ -1345,7 +1345,7 @@ static int wrap_layout(const char *text, int x0, int y0, int max_width,
   int avail = max_width;
   if (avail < 40)
     avail = 40;
-  int spaceW = measure(ctx, " ", 1);
+  int space_w = measure(ctx, " ", 1);
   int row = 0;
   int p = 0;
   int lw = 0;
@@ -1417,17 +1417,17 @@ static int wrap_layout(const char *text, int x0, int y0, int max_width,
       p = we;
       continue;
     }
-    int add = ww + (has ? spaceW : 0);
+    int add = ww + (has ? space_w : 0);
     if (has && lw + add > avail) {
       row++;
       rowtop = y0 + row * line_height;
       lw = 0;
       has = false;
     }
-    int wx = x0 + (has ? lw + spaceW : 0);
+    int wx = x0 + (has ? lw + space_w : 0);
     int pxw = wrap_place_word(measure, ctx, text, ws, we, wx, rowtop, out,
                               maxout, &count);
-    lw = has ? lw + spaceW + pxw : pxw;
+    lw = has ? lw + space_w + pxw : pxw;
     has = true;
     p = we;
   }
@@ -1619,14 +1619,15 @@ static bool listbox_begin_common(const PlListSpec *spec) {
   ListboxBackendInit bi;
   if (!Platform_ListboxBackendBegin(item_h, &bi))
     return false;
-  int itemH = item_h > 0 ? item_h : bi.item_h;
+  item_h = item_h > 0 ? item_h : bi.item_h;
   PromptState *st = Platform_ListboxBackendPromptState(lb);
   ListboxLayout lay;
-  listbox_compute_layout(spec, bi.list_top, itemH, st ? st->width : PromptWidth,
+  listbox_compute_layout(spec, bi.list_top, item_h,
+                         st ? st->width : PromptWidth,
                          st ? st->height : PromptHeight, lb->item_count, &lay);
   sk_list_spec = *spec;
   sk_list_lb = lb;
-  sk_list_itemH = itemH;
+  sk_list_itemH = item_h;
   sk_list_y0 = lay.y0;
   sk_list_bx = lay.bx;
   sk_list_bw = lay.bw;
@@ -2392,13 +2393,12 @@ void sk_profile_end(SkTimer timer) {
   if (ms < 0.0)
     ms = 0.0;
 
-  if (ms >= 1000.0) {
-    printf("[profile] %.3f s\n", ms / 1000.0);
-  } else if (ms >= 1.0) {
-    printf("[profile] %.3f ms\n", ms);
-  } else {
-    printf("[profile] %.3f µs\n", ms * 1000.0);
-  }
+  if (ms >= 1000.0)
+    log_debug("[profile] %.3f s", ms / 1000.0);
+  else if (ms >= 1.0)
+    log_debug("[profile] %.3f ms", ms);
+  else
+    log_debug("[profile] %.3f µs", ms * 1000.0);
 }
 
 typedef struct {
@@ -2685,7 +2685,7 @@ void cc_registry_purge_owner(const char *path_a, const char *path_b) {
 
 #define SK_MAX_ALIASES 1024
 static char alias_alias[SK_MAX_ALIASES][128];
-static char g_alias_target[SK_MAX_ALIASES][256];
+static char alias_target[SK_MAX_ALIASES][256];
 static int alias_count = 0;
 
 bool ski_add_alias(const SkAliasSpec *spec) {
@@ -2694,15 +2694,15 @@ bool ski_add_alias(const SkAliasSpec *spec) {
   if (alias_count >= SK_MAX_ALIASES)
     return false;
   for (int i = 0; i < alias_count; i++) {
-    if (strcmp(g_alias_target[i], spec->target) == 0) {
+    if (strcmp(alias_target[i], spec->target) == 0) {
       snprintf(alias_alias[i], sizeof(alias_alias[i]), "%s", spec->alias);
       return true;
     }
   }
   snprintf(alias_alias[alias_count], sizeof(alias_alias[alias_count]), "%s",
            spec->alias);
-  snprintf(g_alias_target[alias_count], sizeof(g_alias_target[alias_count]),
-           "%s", spec->target);
+  snprintf(alias_target[alias_count], sizeof(alias_target[alias_count]), "%s",
+           spec->target);
   alias_count++;
   return true;
 }
@@ -2719,7 +2719,7 @@ bool ski_remove_alias(const char *alias) {
     }
     if (n != i) {
       memmove(alias_alias[n], alias_alias[i], sizeof(alias_alias[n]));
-      memmove(g_alias_target[n], g_alias_target[i], sizeof(g_alias_target[n]));
+      memmove(alias_target[n], alias_target[i], sizeof(alias_target[n]));
     }
     n++;
   }
@@ -2731,7 +2731,7 @@ const char *sk_alias_for(const char *target) {
   if (!target)
     return NULL;
   for (int i = 0; i < alias_count; i++) {
-    if (strcmp(g_alias_target[i], target) == 0)
+    if (strcmp(alias_target[i], target) == 0)
       return alias_alias[i];
   }
   return NULL;

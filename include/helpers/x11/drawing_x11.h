@@ -1,5 +1,5 @@
-#ifndef HELPERS_X11_DRAWING_H
-#define HELPERS_X11_DRAWING_H
+#ifndef DRAWING_X11_H
+#define DRAWING_X11_H
 
 #include "core/types.h"
 #include <X11/Xlib.h>
@@ -12,8 +12,8 @@ typedef struct {
 } EditboxX11Metrics;
 
 void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
-                           FontHandle font, const char *text, int startY,
-                           char *centered_to, int xOffset, int boxWidth);
+                           FontHandle font, const char *text, int start_y,
+                           char *centered_to, int x_offset, int box_width);
 int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
                            int y, XftFont *xf, const char *s, int n, int px);
 int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
@@ -42,8 +42,8 @@ void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h);
 Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h);
 void x11_set_dbl_visual(Display *dpy, Visual *vis, Colormap cmap, int depth);
 void x11_clear_dbl_visual(void);
-bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **visOut,
-                             Colormap *cmapOut, int *depthOut);
+bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **vis_out,
+                             Colormap *cmap_out, int *depth_out);
 void x11_draw_selection_background(Display *dpy, XftDraw *xd, Visual *vis,
                                    Colormap cmap, int x, int y, int w, int h,
                                    unsigned long baseHex);
@@ -63,6 +63,7 @@ bool x11_draw_image_scaled(Display *dpy, XftDraw *xd, Visual *vis,
 
 void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
                       Visual *vis, Colormap cmap);
+
 FontHandle x11_create_font_on_display(Display *dpy, int size,
                                       const char *face_name);
 

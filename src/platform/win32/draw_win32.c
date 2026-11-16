@@ -131,8 +131,8 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
   GetTextMetricsW(g_draw_hdc, &tm);
   int ascent = tm.tmAscent;
   int descent = tm.tmDescent;
-  int lineHeight = ascent + descent;
-  draw_text_centered_impl(&spec, lineHeight);
+  int line_height = ascent + descent;
+  draw_text_centered_impl(&spec, line_height);
   if (old)
     SelectObject(g_draw_hdc, old);
 }

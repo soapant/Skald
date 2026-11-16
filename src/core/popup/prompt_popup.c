@@ -84,16 +84,7 @@ static void prompt_popup_on_show(Popup *self) {
   SkaldContext *ctx2 = SkaldContext_Get();
   if (!wm->ctx)
     wm->ctx = ctx2;
-  log_info("BEFORE SAVE: ctx=%p enter=%p ctrl_enter=%p", (void *)ctx2,
-           (void *)ctx2->window.prompt_callbacks.enter,
-           (void *)ctx2->window.prompt_callbacks.ctrl_enter);
   data->saved_callbacks = ctx2->window.prompt_callbacks;
-  log_info("DEBUG_SAVE_CALLBACKS title='%s' saved_enter=%p saved_ctrl_enter=%p "
-           "spec_enter=%p spec_ctrl_enter=%p",
-           data->spec.title ? data->spec.title : "(null)",
-           (void *)data->saved_callbacks.enter,
-           (void *)data->saved_callbacks.ctrl_enter, (void *)data->spec.enter,
-           (void *)data->spec.ctrl_enter);
   ctx2->window.prompt_callbacks.refresh =
       data->spec.refresh ? data->spec.refresh : data->saved_callbacks.refresh;
   ctx2->window.prompt_callbacks.enter =
@@ -134,8 +125,6 @@ static void prompt_popup_on_show(Popup *self) {
 static void prompt_popup_on_hide(Popup *self) {
 
   PromptPopupData *data = (PromptPopupData *)self;
-  log_info("DEBUG_ON_HIDE title='%s'",
-           data->spec.title ? data->spec.title : "(null)");
   {
     SkaldContext *_c3 = SkaldContext_Get();
     if (_c3) {

@@ -613,8 +613,6 @@ bool feature_loader_load_all_from_dir(const char *dir) {
         missing = mans[i].deps[k];
     }
     if (missing) {
-      printf("skald: skipping feature '%s' - missing dependency '%s'\n",
-             names[i], missing);
       log_warn("feature '%s' skipped, dep '%s' not found", names[i], missing);
       continue;
     }

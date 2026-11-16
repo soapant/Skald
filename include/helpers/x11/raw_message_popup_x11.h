@@ -1,5 +1,5 @@
-#ifndef HELPERS_X11_MESSAGE_POPUP_H
-#define HELPERS_X11_MESSAGE_POPUP_H
+#ifndef RAW_MESSAGE_POPUP_X11_H
+#define RAW_MESSAGE_POPUP_X11_H
 
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
@@ -58,16 +58,16 @@ extern int g_msg_slot_count;
 void x11_msg_remove_slot_locked(Display *dpy, int idx);
 int x11_msg_find_key_locked(const char *key);
 void x11_msg_remove_indefinite_locked(Display *dpy);
-int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
+int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int max_w,
                       MsgLine *out, int maxLines);
 int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir);
-void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
-                     int winH, double timeout, ColorRef color, bool no_bg,
+void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
+                     int win_h, double timeout, ColorRef color, bool no_bg,
                      void (*render)(void), const char *name);
 void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
-                           int centerX, int centerY, int winW, int winH,
+                           int center_x, int center_y, int win_w, int win_h,
                            ColorRef color, bool no_bg);
-void x11_msg_measure(Display *dpy, const char *message, int maxWidth,
-                     int maxHeight, int *outW, int *outH);
+void x11_msg_measure(Display *dpy, const char *message, int max_width,
+                     int max_height, int *out_w, int *out_h);
 
 #endif

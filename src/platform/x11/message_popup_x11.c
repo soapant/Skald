@@ -23,24 +23,24 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     return;
   }
 
-  int winW = 0;
-  int winH = 0;
+  int win_w = 0;
+  int win_h = 0;
 
   if (w > 0 && h > 0) {
-    winW = w;
-    winH = h;
+    win_w = w;
+    win_h = h;
   } else {
-    if (maxWidth <= 0)
-      maxWidth = MSG_AUTO_WRAP_MAX_W;
-    if (maxHeight <= 0)
-      maxHeight = MSG_AUTO_WRAP_MAX_H;
-    x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
+    if (max_width <= 0)
+      max_width = MSG_AUTO_WRAP_MAX_W;
+    if (max_height <= 0)
+      max_height = MSG_AUTO_WRAP_MAX_H;
+    x11_msg_measure(dpy, message, max_width, max_height, &win_w, &win_h);
   }
 
-  int x = abs(centerX - winW / 2);
-  int y = abs(centerY - winH / 2);
-  x11_msg_present(dpy, message, x, y, winW, winH, timeout, color, no_bg, render,
-                  name);
+  int x = abs(center_x - win_w / 2);
+  int y = abs(center_y - win_h / 2);
+  x11_msg_present(dpy, message, x, y, win_w, win_h, timeout, color, no_bg,
+                  render, name);
 }
 
 void Platform_HoverMessage(PlHoverMessageSpec spec) {
@@ -51,19 +51,19 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
     return;
   }
 
-  if (maxWidth <= 0)
-    maxWidth = MSG_HOVER_DEFAULT_W;
-  if (maxHeight <= 0)
-    maxHeight = MSG_HOVER_DEFAULT_H;
-  int winW = 0, winH = 0;
+  if (max_width <= 0)
+    max_width = MSG_HOVER_DEFAULT_W;
+  if (max_height <= 0)
+    max_height = MSG_HOVER_DEFAULT_H;
+  int win_w = 0, win_h = 0;
   if (w > 0 && h > 0) {
-    winW = w;
-    winH = h;
+    win_w = w;
+    win_h = h;
   } else {
-    x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
+    x11_msg_measure(dpy, message, max_width, max_height, &win_w, &win_h);
   }
-  x11_msg_hover_present(dpy, key, message, centerX, centerY, winW, winH, color,
-                        no_bg);
+  x11_msg_hover_present(dpy, key, message, center_x, center_y, win_w, win_h,
+                        color, no_bg);
 }
 
 void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
@@ -77,22 +77,22 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
     return;
   }
 
-  if (maxWidth <= 0)
-    maxWidth = MSG_AUTO_WRAP_MAX_W;
-  if (maxHeight <= 0)
-    maxHeight = MSG_AUTO_WRAP_MAX_H;
-  int winW = 0;
-  int winH = 0;
-  x11_msg_measure(dpy, message, maxWidth, maxHeight, &winW, &winH);
-  int centerX = msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, winW);
-  int centerY = msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, winH);
-  int x = centerX - winW / 2;
-  int y = centerY - winH / 2;
+  if (max_width <= 0)
+    max_width = MSG_AUTO_WRAP_MAX_W;
+  if (max_height <= 0)
+    max_height = MSG_AUTO_WRAP_MAX_H;
+  int win_w = 0;
+  int win_h = 0;
+  x11_msg_measure(dpy, message, max_width, max_height, &win_w, &win_h);
+  int center_x = msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, win_w);
+  int center_y = msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, win_h);
+  int x = center_x - win_w / 2;
+  int y = center_y - win_h / 2;
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
   int stack_dir = msg_stack_dir(v_slot, outward);
-  y = x11_msg_stack_adjust_y(x, y, winW, winH, stack_dir);
-  x11_msg_present(dpy, message, x - ax, y - ay, winW, winH, timeout, color,
+  y = x11_msg_stack_adjust_y(x, y, win_w, win_h, stack_dir);
+  x11_msg_present(dpy, message, x - ax, y - ay, win_w, win_h, timeout, color,
                   no_bg, render, name);
 }
 

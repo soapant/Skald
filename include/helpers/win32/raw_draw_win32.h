@@ -1,5 +1,5 @@
-#ifndef HELPERS_WIN32_DRAW_H
-#define HELPERS_WIN32_DRAW_H
+#ifndef RAW_DRAW_WIN32_H
+#define RAW_DRAW_WIN32_H
 
 #include <windows.h>
 #include <stdbool.h>
@@ -65,9 +65,9 @@ typedef struct {
   DWORD checked_ms;
 } Win32SrcSlot;
 
-extern Win32ImgSlot g_img_cache[WIN32_IMG_CACHE_SLOTS];
+extern Win32ImgSlot img_cache[WIN32_IMG_CACHE_SLOTS];
 extern Win32SrcSlot g_src_cache[WIN32_SRC_CACHE_SLOTS];
-extern ULONGLONG g_img_cache_tick;
+extern ULONGLONG img_cache_tick;
 extern CRITICAL_SECTION g_img_cache_cs;
 extern INIT_ONCE g_img_cache_cs_once;
 extern ULONG_PTR g_gdip_token;

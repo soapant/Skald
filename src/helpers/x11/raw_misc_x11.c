@@ -1,11 +1,10 @@
 #define _GNU_SOURCE
 #include "helpers/x11/raw_misc_x11.h"
-#include "platform/x11/misc_x11.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "wm/wm.h"
 #include "helpers/x11/clipboard_x11.h"
-#include "platform/x11/clipboard_backend_x11.h"
+#include "helpers/x11/clipboard_x11.h"
 #include "helpers/helpers_text.h"
 #include "config_values.h"
 #include "core/types.h"

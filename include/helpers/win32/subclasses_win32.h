@@ -1,5 +1,5 @@
-#ifndef SUBCLASSES_H
-#define SUBCLASSES_H
+#ifndef SUBCLASSES_WIN32_H
+#define SUBCLASSES_WIN32_H
 
 #include "core/types.h"
 #include "helpers/helpers_owner.h"

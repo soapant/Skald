@@ -1,5 +1,5 @@
-#ifndef PLATFORM_X11_INPUT_H
-#define PLATFORM_X11_INPUT_H
+#ifndef INPUT_X11_H
+#define INPUT_X11_H
 
 #include <stdbool.h>
 #include <linux/input-event-codes.h>

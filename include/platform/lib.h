@@ -1,5 +1,5 @@
-#ifndef PLATFORM_LIB_H
-#define PLATFORM_LIB_H
+#ifndef LIB_H
+#define LIB_H
 
 #include <stddef.h>
 #include <stdbool.h>

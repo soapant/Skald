@@ -20,8 +20,8 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
 void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
   MSG_UNPACK(spec);
 
-  int useMaxW = maxWidth;
-  int useMaxH = maxHeight;
+  int useMaxW = max_width;
+  int useMaxH = max_height;
   if (w > 0 && h > 0) {
     if (useMaxW <= 0 || w > useMaxW)
       useMaxW = w;
@@ -31,8 +31,8 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
   if (WH_TO_HWND(win32_tray_window()) != NULL && !win32_is_main_thread()) {
     DisplayMessageParams params;
     params.message = message;
-    params.x = centerX;
-    params.y = centerY;
+    params.x = center_x;
+    params.y = center_y;
     params.max_width = useMaxW;
     params.max_height = useMaxH;
     params.timeout = timeout;
@@ -46,8 +46,8 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
   }
   Platform_CreateDisplayMessageWindow(
       (PlCreateDisplayMessageWindowSpec){.message = message,
-                                         .x = centerX,
-                                         .y = centerY,
+                                         .x = center_x,
+                                         .y = center_y,
                                          .max_width = useMaxW,
                                          .max_height = useMaxH,
                                          .timeout = timeout,
@@ -134,50 +134,50 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   if (!message && !render) {
     return;
   }
-  if (maxWidth <= 0)
-    maxWidth = MSG_AUTO_WRAP_MAX_W;
-  if (maxHeight <= 0)
-    maxHeight = MSG_AUTO_WRAP_MAX_H;
+  if (max_width <= 0)
+    max_width = MSG_AUTO_WRAP_MAX_W;
+  if (max_height <= 0)
+    max_height = MSG_AUTO_WRAP_MAX_H;
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
   int textWidth = 0, textHeight = 0;
-  Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth,
+  Platform_GetTextExtents(msgFont, message, max_width - 30, &textWidth,
                           &textHeight);
   Platform_DestroyFont(msgFont);
 
   int winWidth = textWidth + 30;
   int winHeight = textHeight + 30;
-  if (winWidth > maxWidth)
-    winWidth = maxWidth;
-  if (winHeight > maxHeight)
-    winHeight = maxHeight;
+  if (winWidth > max_width)
+    winWidth = max_width;
+  if (winHeight > max_height)
+    winHeight = max_height;
 
-  int centerX =
+  int center_x =
       msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, winWidth);
-  int centerY =
+  int center_y =
       msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, winHeight);
 
   {
     int stack_dir = msg_stack_dir(v_slot, outward);
-    int stack_y = centerY - winHeight / 2;
-    stack_y = win32_msg_stack_adjust_y(centerX - winWidth / 2, stack_y,
+    int stack_y = center_y - winHeight / 2;
+    stack_y = win32_msg_stack_adjust_y(center_x - winWidth / 2, stack_y,
                                        winWidth, winHeight, stack_dir);
-    centerY = stack_y + winHeight / 2;
+    center_y = stack_y + winHeight / 2;
   }
 
   log_info("MSG anchored msg='%s' rect=(%d,%d,%d,%d) slot=(%d,%d) gap=%d "
            "outward=%d -> center=(%d,%d) win=(%d,%d)",
            message, rect_x, rect_y, rect_w, rect_h, h_slot, v_slot, gap,
-           outward, centerX, centerY, winWidth, winHeight);
+           outward, center_x, center_y, winWidth, winHeight);
 
   Platform_DisplayMessage((PlDisplayMessageSpec){.message = message,
-                                                 .x = centerX,
-                                                 .y = centerY,
+                                                 .x = center_x,
+                                                 .y = center_y,
                                                  .no_bg = no_bg,
                                                  .w = winWidth,
                                                  .h = winHeight,
-                                                 .max_width = maxWidth,
-                                                 .max_height = maxHeight,
+                                                 .max_width = max_width,
+                                                 .max_height = max_height,
                                                  .timeout = timeout,
                                                  .color = color,
                                                  .render = render,
@@ -187,10 +187,10 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
 void Platform_CreateDisplayMessageWindow(
     PlCreateDisplayMessageWindowSpec spec) {
   const char *message = spec.message;
-  int centerX = spec.x;
-  int centerY = spec.y;
-  int maxWidth = spec.max_width;
-  int maxHeight = spec.max_height;
+  int center_x = spec.x;
+  int center_y = spec.y;
+  int max_width = spec.max_width;
+  int max_height = spec.max_height;
   double timeout = spec.timeout;
   ColorRef color = spec.color;
   bool no_bg = spec.no_bg;
@@ -199,27 +199,27 @@ void Platform_CreateDisplayMessageWindow(
 
   log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g "
            "no_bg=%d render=%p",
-           message ? message : "(null)", centerX, centerY, maxWidth, maxHeight,
-           timeout, no_bg ? 1 : 0, (void *)render);
+           message ? message : "(null)", center_x, center_y, max_width,
+           max_height, timeout, no_bg ? 1 : 0, (void *)render);
   win32_msg_created_clear();
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
   int textWidth = 0, textHeight = 0;
   int winWidth = 0, winHeight = 0;
 
-  if ((!message || !message[0]) && maxWidth > 0 && maxHeight > 0) {
-    winWidth = maxWidth;
-    winHeight = maxHeight;
+  if ((!message || !message[0]) && max_width > 0 && max_height > 0) {
+    winWidth = max_width;
+    winHeight = max_height;
   } else {
-    Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth,
+    Platform_GetTextExtents(msgFont, message, max_width - 30, &textWidth,
                             &textHeight);
     int padding = 30;
     winWidth = textWidth + padding;
     winHeight = textHeight + padding;
-    if (maxWidth > 0 && winWidth > maxWidth)
-      winWidth = maxWidth;
-    if (maxHeight > 0 && winHeight > maxHeight)
-      winHeight = maxHeight;
+    if (max_width > 0 && winWidth > max_width)
+      winWidth = max_width;
+    if (max_height > 0 && winHeight > max_height)
+      winHeight = max_height;
   }
 
   FadeWindowData *pWndData = (FadeWindowData *)malloc(sizeof(FadeWindowData));
@@ -250,8 +250,8 @@ void Platform_CreateDisplayMessageWindow(
     pWndData->deadline_ms = GetTickCount64() + (ULONGLONG)(timeout * 1000.0);
   }
 
-  int topLeftX = centerX - (winWidth / 2);
-  int topLeftY = centerY - (winHeight / 2);
+  int topLeftX = center_x - (winWidth / 2);
+  int topLeftY = center_y - (winHeight / 2);
 
   POINT msgPt;
   msgPt.x = topLeftX + winWidth / 2;

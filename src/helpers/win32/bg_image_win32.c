@@ -54,8 +54,8 @@ typedef struct {
 } BgTileSlot;
 
 static BgSrcSlot bg_srcs[BG_SRC_SLOTS];
-static BgTileSlot g_bg_tiles[BG_TILE_SLOTS];
-static ULONGLONG g_bg_tick = 0;
+static BgTileSlot bg_tiles[BG_TILE_SLOTS];
+static ULONGLONG bg_tick = 0;
 static CRITICAL_SECTION bg_cs;
 static INIT_ONCE bg_cs_once = INIT_ONCE_STATIC_INIT;
 
@@ -277,7 +277,7 @@ void win32_bg_image_purge(void) {
   for (int i = 0; i < BG_SRC_SLOTS; i++)
     bg_src_drop(&bg_srcs[i]);
   for (int i = 0; i < BG_TILE_SLOTS; i++)
-    bg_tile_drop(&g_bg_tiles[i]);
+    bg_tile_drop(&bg_tiles[i]);
   bg_unlock();
 }
 
@@ -302,7 +302,7 @@ static BgSrcSlot *bg_src_get(const char *native) {
       break;
     }
     if (s->src) {
-      s->stamp = ++g_bg_tick;
+      s->stamp = ++bg_tick;
       return s;
     }
     if (s->failed && now - s->checked_ms < BG_RETRY_MS)
@@ -330,7 +330,7 @@ static BgSrcSlot *bg_src_get(const char *native) {
   void *bmp = bg_load_native(native, &slot->src_w, &slot->src_h);
   snprintf(slot->path, sizeof(slot->path), "%s", native);
   slot->checked_ms = now;
-  slot->stamp = ++g_bg_tick;
+  slot->stamp = ++bg_tick;
   if (!bmp) {
     slot->failed = true;
     return NULL;
@@ -420,10 +420,9 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
       bg_cache_store(cacheFile, w, h, bits, &ft, sz);
   }
 
-  int slot_idx =
-      bg_tile_lru_pick(g_bg_tiles, BG_TILE_SLOTS, sizeof(g_bg_tiles[0]),
-                       bg_slot_empty, bg_slot_stamp);
-  BgTileSlot *slot = &g_bg_tiles[slot_idx];
+  int slot_idx = bg_tile_lru_pick(bg_tiles, BG_TILE_SLOTS, sizeof(bg_tiles[0]),
+                                  bg_slot_empty, bg_slot_stamp);
+  BgTileSlot *slot = &bg_tiles[slot_idx];
   bg_tile_drop(slot);
   slot->bmp = bmp;
   slot->dc = dc;
@@ -431,7 +430,7 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
   slot->h = h;
   slot->mtime = ft;
   slot->size = sz;
-  slot->stamp = ++g_bg_tick;
+  slot->stamp = ++bg_tick;
   slot->checked_ms = GetTickCount();
   snprintf(slot->path, sizeof(slot->path), "%s", native);
   return slot;
@@ -447,11 +446,11 @@ static BgTileSlot *bg_tile_get(HDC refDC, const char *path, int w, int h) {
 
   BgTileSlot *stale = NULL;
   for (int i = 0; i < BG_TILE_SLOTS; i++) {
-    BgTileSlot *t = &g_bg_tiles[i];
+    BgTileSlot *t = &bg_tiles[i];
     if (!t->bmp || strcmp(t->path, native) != 0 || t->w != w || t->h != h)
       continue;
     if (now - t->checked_ms < BG_REVALIDATE_MS) {
-      t->stamp = ++g_bg_tick;
+      t->stamp = ++bg_tick;
       return t;
     }
     FILETIME ft;
@@ -462,7 +461,7 @@ static BgTileSlot *bg_tile_get(HDC refDC, const char *path, int w, int h) {
       continue;
     }
     t->checked_ms = now;
-    t->stamp = ++g_bg_tick;
+    t->stamp = ++bg_tick;
     return t;
   }
 

@@ -224,8 +224,8 @@ static const char *feature_dep_path(const char *src) {
   return result;
 }
 
-static const char *release_features[] = {"control_center", "settings",
-                                         "clipboard_history","window_management"};
+static const char *release_features[] = {
+    "control_center", "settings", "clipboard_history", "window_management"};
 
 static bool release_feature_wanted(const char *src) {
   const char *base = nob_path_name(src);
@@ -1812,15 +1812,14 @@ int main(int argc, char **argv) {
       printf("  -w, --win32    Cross compile for Windows using MinGW\n");
       printf("  -W, --werror   Build the main app with warnings as errors\n");
       printf("  -r, --run      Run skald after build\n");
-      printf(
-          "  -R, --release  Build a self-contained release/ bundle: "
-          "skald[.exe],\n"
-          "                 sdk/, config/config.toml (defaults),\n"
-          "                 features/ with\n"
-          "                 control_center, settings etc,\n"
-          "                 resources/ (png + ico); Windows also emits "
-          "main.lib.a;\n"
-          "                 no compiler objects\n");
+      printf("  -R, --release  Build a self-contained release/ bundle: "
+             "skald[.exe],\n"
+             "                 sdk/, config/config.toml (defaults),\n"
+             "                 features/ with\n"
+             "                 control_center, settings etc,\n"
+             "                 resources/ (png + ico); Windows also emits "
+             "main.lib.a;\n"
+             "                 no compiler objects\n");
       printf("  -t, --test     Run test suite\n");
       printf(
           "  -A, --asan     Build with clang -fsanitize=address,undefined\n");

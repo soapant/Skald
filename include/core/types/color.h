@@ -1,5 +1,5 @@
-#ifndef TYPES_COLOR_H
-#define TYPES_COLOR_H
+#ifndef COLOR_H
+#define COLOR_H
 
 #include <stdint.h>
 #include <stdbool.h>

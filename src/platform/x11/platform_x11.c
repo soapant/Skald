@@ -4,6 +4,7 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_fs.h"
 #include "helpers/x11/raw_platform_x11.h"
+#include "helpers/x11/drawing_x11.h"
 #include "helpers/helpers_misc.h"
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
@@ -511,40 +512,40 @@ static int xft_text_width(Display *dpy, XftFont *xf, const char *text,
   return ext.xOff;
 }
 
-void Platform_GetTextExtents(FontHandle font, const char *text, int maxWidth,
+void Platform_GetTextExtents(FontHandle font, const char *text, int max_width,
                              int *outWidth, int *outHeight) {
 
   if (!FH_TO_XFT(font) || !text) {
     *outWidth = 0;
     *outHeight = 0;
-    log_info("Platform_GetTextExtents text='%s' maxWidth=%d", text ? text : "",
-             maxWidth);
+    log_info("Platform_GetTextExtents text='%s' max_width=%d", text ? text : "",
+             max_width);
     return;
   }
   Display *dpy = FH_TO_DPY(font);
   XftFont *xf = FH_TO_XFT(font);
-  int lineHeight = xf->ascent + xf->descent;
-  int spaceWidth = xft_text_width(dpy, xf, " ", 1);
+  int line_height = xf->ascent + xf->descent;
+  int space_width = xft_text_width(dpy, xf, " ", 1);
 
-  int lineWidth = 0;
-  int totalHeight = lineHeight;
+  int line_width = 0;
+  int totalHeight = line_height;
   const char *p = text;
   while (*p) {
     const char *word_start = p;
     while (*p && *p != ' ')
       p++;
-    int wordWidth = xft_text_width(dpy, xf, word_start, p - word_start);
-    int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
-    if (lineWidth > 0 && lineWidth + add > maxWidth) {
-      totalHeight += lineHeight;
-      lineWidth = wordWidth;
+    int word_width = xft_text_width(dpy, xf, word_start, p - word_start);
+    int add = word_width + (line_width > 0 ? space_width : 0);
+    if (line_width > 0 && line_width + add > max_width) {
+      totalHeight += line_height;
+      line_width = word_width;
     } else {
-      lineWidth += add;
+      line_width += add;
     }
     while (*p == ' ')
       p++;
   }
-  *outWidth = lineWidth;
+  *outWidth = line_width;
   *outHeight = totalHeight;
 }
 
@@ -990,10 +991,6 @@ char *Platform_GetIconPath(char *app_path) {
   return strdup(bare[0] ? bare : "placeholder");
 }
 
-#include "helpers/x11/clipboard_x11.h"
-
-#include "platform/x11/clipboard_backend_x11.h"
-
 int Platform_CopyToClipboard(const char *text) {
   if (!text)
     return 0;
@@ -1170,9 +1167,9 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
   return out;
 }
 
-PlWindowList Platform_GetWindowTitles(void) { return Wm_GetWindowTitles(); }
+PlWindowList Platform_GetWindowTitles(void) { return wm_get_window_titles(); }
 
-PlWindowList Platform_GetWindowIds(void) { return Wm_GetWindowIds(); }
+PlWindowList Platform_GetWindowIds(void) { return wm_get_window_ids(); }
 
 static int singleton_lock_fd = -1;
 

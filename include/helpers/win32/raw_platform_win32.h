@@ -1,5 +1,5 @@
-#ifndef HELPERS_WIN32_PLATFORM_H
-#define HELPERS_WIN32_PLATFORM_H
+#ifndef RAW_PLATFORM_WIN32_H
+#define RAW_PLATFORM_WIN32_H
 
 #include <windows.h>
 #include <stdbool.h>

@@ -87,21 +87,21 @@ static int x11_msg_text_width(Display *dpy, XftFont *xf, const char *s, int n) {
 }
 
 static bool x11_msg_push_line(MsgLine *lines, int *count, int max_lines,
-                              const char *ls, const char *le, int lineW) {
+                              const char *ls, const char *le, int line_w) {
   if (!ls || *count >= max_lines)
     return false;
   lines[*count].s = ls;
   lines[*count].n = (int)(le - ls);
-  lines[*count].w = lineW;
+  lines[*count].w = line_w;
   (*count)++;
   return true;
 }
 
-int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
+int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int max_w,
                       MsgLine *lines, int max_lines) {
 
   int count = 0;
-  int spaceW = x11_msg_text_width(dpy, xf, " ", 1);
+  int space_w = x11_msg_text_width(dpy, xf, " ", 1);
   const char *p = text;
   while (*p && count < max_lines) {
     const char *nl = strchr(p, '\n');
@@ -109,7 +109,7 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
     const char *w = p;
     const char *ls = NULL;
     const char *le = NULL;
-    int lineW = 0;
+    int line_w = 0;
     while (w < pend) {
       while (w < pend && *w == ' ')
         w++;
@@ -120,11 +120,11 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
         w++;
       int wn = (int)(w - ws);
       int ww = x11_msg_text_width(dpy, xf, ws, wn);
-      if (ww > maxW) {
-        if (x11_msg_push_line(lines, &count, max_lines, ls, le, lineW)) {
+      if (ww > max_w) {
+        if (x11_msg_push_line(lines, &count, max_lines, ls, le, line_w)) {
           ls = NULL;
           le = NULL;
-          lineW = 0;
+          line_w = 0;
         } else if (count >= max_lines) {
           return count;
         }
@@ -133,38 +133,38 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
         while (c < we && count < max_lines) {
           const char *t = c;
           int best = 0;
-          int bestW = 0;
+          int best_w = 0;
           while (t < we) {
             int cl = utf8_lead_len((unsigned char)*t);
             if (t + cl > we)
               cl = (int)(we - t);
             int nw = x11_msg_text_width(dpy, xf, c, (int)(t + cl - c));
-            if (nw > maxW)
+            if (nw > max_w)
               break;
             best = (int)(t + cl - c);
-            bestW = nw;
+            best_w = nw;
             t += cl;
           }
           if (best == 0) {
             best = utf8_lead_len((unsigned char)*c);
             if (c + best > we)
               best = (int)(we - c);
-            bestW = x11_msg_text_width(dpy, xf, c, best);
+            best_w = x11_msg_text_width(dpy, xf, c, best);
           }
           lines[count].s = c;
           lines[count].n = best;
-          lines[count].w = bestW;
+          lines[count].w = best_w;
           count++;
           c += best;
         }
         continue;
       }
-      int add = ww + (lineW > 0 ? spaceW : 0);
-      if (lineW > 0 && lineW + add > maxW) {
-        if (x11_msg_push_line(lines, &count, max_lines, ls, le, lineW)) {
+      int add = ww + (line_w > 0 ? space_w : 0);
+      if (line_w > 0 && line_w + add > max_w) {
+        if (x11_msg_push_line(lines, &count, max_lines, ls, le, line_w)) {
           ls = NULL;
           le = NULL;
-          lineW = 0;
+          line_w = 0;
         }
         if (count >= max_lines)
           return count;
@@ -172,10 +172,10 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int maxW,
       if (!ls)
         ls = ws;
       le = w;
-      lineW += add;
+      line_w += add;
     }
     if (ls)
-      x11_msg_push_line(lines, &count, max_lines, ls, le, lineW);
+      x11_msg_push_line(lines, &count, max_lines, ls, le, line_w);
     else if (pend == p && nl && count < max_lines) {
       lines[count].s = p;
       lines[count].n = 0;
@@ -221,8 +221,8 @@ static void x11_display_message_draw(Display *dpy, Window win,
     MsgLine lines[MSG_MAX_LINES];
     int nlines =
         x11_msg_wrap_text(dpy, xf, message, w - 30, lines, MSG_MAX_LINES);
-    int lineH = xf->ascent + xf->descent;
-    int y = (h - nlines * lineH) / 2 + xf->ascent;
+    int line_h = xf->ascent + xf->descent;
+    int y = (h - nlines * line_h) / 2 + xf->ascent;
     if (y < xf->ascent)
       y = xf->ascent;
     for (int i = 0; i < nlines; i++) {
@@ -235,7 +235,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
         XftDrawStringUtf8(xd, &col, xf, x, y, (FcChar8 *)lines[i].s,
                           lines[i].n);
       }
-      y += lineH;
+      y += line_h;
     }
   }
   Platform_DestroyFont(font);
@@ -269,23 +269,23 @@ int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
   return y;
 }
 
-void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
-                     int winH, double timeout, ColorRef color, bool no_bg,
+void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
+                     int win_h, double timeout, ColorRef color, bool no_bg,
                      void (*render)(void), const char *name) {
 
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
   set_transparent_window(no_bg);
-  Window win =
-      x11_create_display_message_window(dpy, x + ax, y + ay, winW, winH, false);
+  Window win = x11_create_display_message_window(dpy, x + ax, y + ay, win_w,
+                                                 win_h, false);
   set_transparent_window(false);
   if (!win) {
     return;
   }
   XMapWindow(dpy, win);
   XFlush(dpy);
-  x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,
-                           no_bg, render);
+  x11_display_message_draw(dpy, win, message, (unsigned long)color, win_w,
+                           win_h, no_bg, render);
   bool indefinite = MsgTimeoutIsIndefinite(timeout);
   pthread_mutex_lock(&g_msg_lock);
   if (g_msg_slot_count >= MSG_MAX_ACTIVE)
@@ -298,8 +298,8 @@ void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
              sizeof(g_msg_slots[g_msg_slot_count].name), "%s", name);
   else
     g_msg_slots[g_msg_slot_count].name[0] = '\0';
-  g_msg_slots[g_msg_slot_count].w = winW;
-  g_msg_slots[g_msg_slot_count].h = winH;
+  g_msg_slots[g_msg_slot_count].w = win_w;
+  g_msg_slots[g_msg_slot_count].h = win_h;
   g_msg_slots[g_msg_slot_count].x = x + ax;
   g_msg_slots[g_msg_slot_count].y = y + ay;
   g_msg_slot_count++;
@@ -321,43 +321,43 @@ void x11_msg_present(Display *dpy, const char *message, int x, int y, int winW,
 }
 
 void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
-                           int centerX, int centerY, int winW, int winH,
+                           int center_x, int center_y, int win_w, int win_h,
                            ColorRef color, bool no_bg) {
 
   if (!dpy || !key || !key[0] || !message || !message[0]) {
     return;
   }
-  if (winW <= 0 || winH <= 0) {
+  if (win_w <= 0 || win_h <= 0) {
     return;
   }
   pthread_mutex_lock(&g_msg_lock);
   int idx = x11_msg_find_key_locked(key);
   if (idx >= 0) {
     Window w = g_msg_slots[idx].win;
-    if (g_msg_slots[idx].w != winW || g_msg_slots[idx].h != winH) {
-      XMoveResizeWindow(dpy, w, centerX - winW / 2, centerY - winH / 2, winW,
-                        winH);
-      g_msg_slots[idx].w = winW;
-      g_msg_slots[idx].h = winH;
+    if (g_msg_slots[idx].w != win_w || g_msg_slots[idx].h != win_h) {
+      XMoveResizeWindow(dpy, w, center_x - win_w / 2, center_y - win_h / 2,
+                        win_w, win_h);
+      g_msg_slots[idx].w = win_w;
+      g_msg_slots[idx].h = win_h;
     }
-    g_msg_slots[idx].x = centerX - winW / 2;
-    g_msg_slots[idx].y = centerY - winH / 2;
+    g_msg_slots[idx].x = center_x - win_w / 2;
+    g_msg_slots[idx].y = center_y - win_h / 2;
     pthread_mutex_unlock(&g_msg_lock);
-    x11_display_message_draw(dpy, w, message, (unsigned long)color, winW, winH,
-                             no_bg, NULL);
+    x11_display_message_draw(dpy, w, message, (unsigned long)color, win_w,
+                             win_h, no_bg, NULL);
     return;
   }
   pthread_mutex_unlock(&g_msg_lock);
 
   Window win = x11_create_display_message_window(
-      dpy, centerX - winW / 2, centerY - winH / 2, winW, winH, false);
+      dpy, center_x - win_w / 2, center_y - win_h / 2, win_w, win_h, false);
   if (win == None) {
     return;
   }
   XMapRaised(dpy, win);
   XFlush(dpy);
-  x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,
-                           no_bg, NULL);
+  x11_display_message_draw(dpy, win, message, (unsigned long)color, win_w,
+                           win_h, no_bg, NULL);
 
   pthread_mutex_lock(&g_msg_lock);
   if (g_msg_slot_count >= MSG_MAX_ACTIVE)
@@ -369,43 +369,43 @@ void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
   g_msg_slots[at].win = win;
   g_msg_slots[at].indefinite = true;
   snprintf(g_msg_slots[at].key, sizeof(g_msg_slots[at].key), "%s", key);
-  g_msg_slots[at].w = winW;
-  g_msg_slots[at].h = winH;
-  g_msg_slots[at].x = centerX - winW / 2;
-  g_msg_slots[at].y = centerY - winH / 2;
+  g_msg_slots[at].w = win_w;
+  g_msg_slots[at].h = win_h;
+  g_msg_slots[at].x = center_x - win_w / 2;
+  g_msg_slots[at].y = center_y - win_h / 2;
   if (at >= g_msg_slot_count)
     g_msg_slot_count = at + 1;
   pthread_mutex_unlock(&g_msg_lock);
   XFlush(dpy);
 }
 
-void x11_msg_measure(Display *dpy, const char *message, int maxWidth,
-                     int maxHeight, int *outW, int *outH) {
+void x11_msg_measure(Display *dpy, const char *message, int max_width,
+                     int max_height, int *out_w, int *out_h) {
 
-  *outW = 0;
-  *outH = 0;
+  *out_w = 0;
+  *out_h = 0;
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   XftFont *xf = FH_TO_XFT(font);
-  int textW = 0, textH = 0;
+  int text_w = 0, text_h = 0;
   MsgLine lines[MSG_MAX_LINES];
   int nlines = 0;
   if (xf) {
-    int wrapW = maxWidth - 30;
-    if (wrapW > MSG_AUTO_WRAP_MAX_W)
-      wrapW = MSG_AUTO_WRAP_MAX_W;
-    nlines = x11_msg_wrap_text(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
+    int wrap_w = max_width - 30;
+    if (wrap_w > MSG_AUTO_WRAP_MAX_W)
+      wrap_w = MSG_AUTO_WRAP_MAX_W;
+    nlines = x11_msg_wrap_text(dpy, xf, message, wrap_w, lines, MSG_MAX_LINES);
     for (int i = 0; i < nlines; i++)
-      if (lines[i].w > textW)
-        textW = lines[i].w;
-    textH = nlines * (xf->ascent + xf->descent);
+      if (lines[i].w > text_w)
+        text_w = lines[i].w;
+    text_h = nlines * (xf->ascent + xf->descent);
   }
   Platform_DestroyFont(font);
-  int winW = textW + 30;
-  int winH = textH + 30;
-  if (winW > maxWidth)
-    winW = maxWidth;
-  if (winH > maxHeight)
-    winH = maxHeight;
-  *outW = winW;
-  *outH = winH;
+  int win_w = text_w + 30;
+  int win_h = text_h + 30;
+  if (win_w > max_width)
+    win_w = max_width;
+  if (win_h > max_height)
+    win_h = max_height;
+  *out_w = win_w;
+  *out_h = win_h;
 }

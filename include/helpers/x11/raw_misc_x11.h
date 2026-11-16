@@ -1,5 +1,5 @@
-#ifndef HELPERS_X11_MISC_H
-#define HELPERS_X11_MISC_H
+#ifndef RAW_MISC_X11_H
+#define RAW_MISC_X11_H
 
 #include <sys/types.h>
 #include <stdbool.h>

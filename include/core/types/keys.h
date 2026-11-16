@@ -1,5 +1,5 @@
-#ifndef TYPES_KEYS_H
-#define TYPES_KEYS_H
+#ifndef KEYS_H
+#define KEYS_H
 
 #include <stdbool.h>
 

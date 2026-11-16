@@ -20,7 +20,7 @@ typedef struct {
 
 static RtCallback callbacks[RT_MAX_CALLBACKS];
 static RtCallback pending[RT_MAX_PENDING];
-static int g_count = 0;
+static int count = 0;
 static int pending_count = 0;
 static volatile bool running = false;
 static volatile bool quit = false;
@@ -49,7 +49,7 @@ void render_thread_main(void) {
     RtCallback snap[RT_MAX_CALLBACKS];
     int n = 0;
     Platform_RenderThreadLock();
-    n = g_count;
+    n = count;
     if (n > 0)
       memcpy(snap, callbacks, sizeof(RtCallback) * (size_t)n);
     Platform_RenderThreadUnlock();
@@ -93,7 +93,7 @@ void render_thread_stop(void) {
   Platform_RenderThreadJoin();
   running = false;
   Platform_RenderThreadLock();
-  g_count = 0;
+  count = 0;
   pending_count = 0;
   Platform_RenderThreadUnlock();
 }
@@ -134,14 +134,14 @@ bool render_thread_add_frame_callback(RenderFrameFn fn, void *ud) {
   if (!render_thread_ensure_started(0))
     return false;
   Platform_RenderThreadLock();
-  if (g_count >= RT_MAX_CALLBACKS) {
+  if (count >= RT_MAX_CALLBACKS) {
     Platform_RenderThreadUnlock();
     log_warn("render thread: callback table full");
     return false;
   }
-  callbacks[g_count].fn = fn;
-  callbacks[g_count].ud = ud;
-  g_count++;
+  callbacks[count].fn = fn;
+  callbacks[count].ud = ud;
+  count++;
   Platform_RenderThreadUnlock();
   return true;
 }
@@ -149,11 +149,11 @@ bool render_thread_add_frame_callback(RenderFrameFn fn, void *ud) {
 bool render_thread_remove_frame_callback(RenderFrameFn fn, const void *ud) {
   bool removed = false;
   Platform_RenderThreadLock();
-  for (int i = 0; i < g_count; i++) {
+  for (int i = 0; i < count; i++) {
     if (callbacks[i].fn == fn && callbacks[i].ud == ud) {
-      for (int j = i; j < g_count - 1; j++)
+      for (int j = i; j < count - 1; j++)
         callbacks[j] = callbacks[j + 1];
-      g_count--;
+      count--;
       removed = true;
       break;
     }

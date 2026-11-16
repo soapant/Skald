@@ -62,9 +62,9 @@ static int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
 
 static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf,
                               XftColor *xcols, const unsigned long *ucols,
-                              int nu, int ls, int le, int drawX, int baseline,
-                              int rowTop) {
-  int cx = drawX;
+                              int nu, int ls, int le, int draw_x, int baseline,
+                              int row_top) {
+  int cx = draw_x;
   int i = ls;
   while (i < le) {
     int j = i + 1;
@@ -80,7 +80,7 @@ static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf,
                            j - i, 0);
     for (int m = i; m < j; m++) {
       raw_map_x[m] = cx;
-      raw_map_top[m] = rowTop;
+      raw_map_top[m] = row_top;
     }
     cx += w;
     i = j;
@@ -114,8 +114,8 @@ void x11_raw_line_flush(void) {
   if (avail < 40)
     avail = 40;
   int ascent = xf->ascent;
-  int lineH = ascent + xf->descent;
-  int spaceW = x11_raw_measure(dpy, xf, " ", 1);
+  int line_h = ascent + xf->descent;
+  int space_w = x11_raw_measure(dpy, xf, " ", 1);
   unsigned long ucols[64];
   int nu = 0;
   for (int i = 0; i < count && nu < 64; i++) {
@@ -140,13 +140,13 @@ void x11_raw_line_flush(void) {
     if (ws >= count) {
       for (int m = p; m < count; m++) {
         raw_map_x[m] = x0 + lw;
-        raw_map_top[m] = y + row * lineH;
+        raw_map_top[m] = y + row * line_h;
       }
       break;
     }
     for (int m = p; m < ws; m++) {
       raw_map_x[m] = x0;
-      raw_map_top[m] = y + row * lineH;
+      raw_map_top[m] = y + row * line_h;
     }
     int we = ws;
     while (we < count && raw_text[we] != ' ')
@@ -155,7 +155,7 @@ void x11_raw_line_flush(void) {
     if (ww > avail) {
       if (le > ls) {
         x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                          y + ascent + row * lineH, y + row * lineH);
+                          y + ascent + row * line_h, y + row * line_h);
         row++;
       }
       int c = ws;
@@ -194,17 +194,17 @@ void x11_raw_line_flush(void) {
           break;
         }
         x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, c, c + n, x0,
-                          y + ascent + row * lineH, y + row * lineH);
+                          y + ascent + row * line_h, y + row * line_h);
         row++;
         c += n;
       }
       p = we;
       continue;
     }
-    int add = ww + (le > ls ? spaceW : 0);
+    int add = ww + (le > ls ? space_w : 0);
     if (le > ls && lw + add > avail) {
       x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                        y + ascent + row * lineH, y + row * lineH);
+                        y + ascent + row * line_h, y + row * line_h);
       row++;
       ls = ws;
       le = we;
@@ -219,7 +219,7 @@ void x11_raw_line_flush(void) {
   }
   if (le > ls) {
     x11_raw_emit_line(dpy, xd, xf, xcols, ucols, nu, ls, le, x0,
-                      y + ascent + row * lineH, y + row * lineH);
+                      y + ascent + row * line_h, y + row * line_h);
   }
   raw_map_count = count;
   raw_map_y = y;
@@ -364,10 +364,10 @@ void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
     XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8 *)state->eb->filter,
                        state->eb->cursor, &cext);
     cursor_x = cext.xOff;
-    XGlyphInfo textExt;
+    XGlyphInfo text_ext;
     XftTextExtentsUtf8(metrics->dpy, xf, (FcChar8 *)state->eb->filter, text_len,
-                       &textExt);
-    text_w = textExt.xOff;
+                       &text_ext);
+    text_w = text_ext.xOff;
   }
   int asc = xf ? xf->ascent : 0;
   int desc = xf ? xf->descent : 0;
@@ -432,12 +432,12 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   ListBoxInfo *lb = state->lb;
 
-  int itemH = prompt_row_height();
+  int item_h = prompt_row_height();
   int y0 = prompt_list_top();
   draw_prompt_separator(
       (PlDrawPromptSeparatorSpec){.y = y0, .width = state->width});
-  int yOffset = PROMPT_LIST_BOTTOM_TITLE;
-  int visible = (state->height - y0 - yOffset) / itemH;
+  int y_offset = PROMPT_LIST_BOTTOM_TITLE;
+  int visible = (state->height - y0 - y_offset) / item_h;
   if (visible < 1)
     visible = 1;
   if (visible > lb->item_count)
@@ -446,24 +446,25 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
 
   listbox_apply_pending_scroll(lb, visible);
 
-  listbox_set_geometry(y0, itemH, visible);
-  listbox_hover_focus(lb, y0, itemH, lb->view_offset, visible);
+  listbox_set_geometry(y0, item_h, visible);
+  listbox_hover_focus(lb, y0, item_h, lb->view_offset, visible);
 
   for (int i = 0; i < visible; i++) {
     int idx = lb->view_offset + i;
-    int y = y0 + i * itemH;
+    int y = y0 + i * item_h;
     bool sel = (idx == lb->selected_index);
     if (RoundedCorners && CornerRadius > 0) {
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
       int bx = PROMPT_SEL_X, bw = state->width - PROMPT_SEL_W_SHRINK;
       if (sel) {
-        x11_fill_rounded_rect(
-            dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
-            y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t, itemH - 2 - 2 * t, R - 1);
+        x11_fill_rounded_rect(dpy, xd, vis, cmap,
+                              rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
+                              y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t,
+                              item_h - 2 - 2 * t, R - 1);
       }
     } else {
-      x11_draw_list_background(state, dpy, xd, vis, cmap, y, itemH, sel);
+      x11_draw_list_background(state, dpy, xd, vis, cmap, y, item_h, sel);
     }
     x11_draw_list_item(dpy, xd, vis, cmap, font, lb, idx, y, PROMPT_ITEM_TEXT_X,
                        NULL);

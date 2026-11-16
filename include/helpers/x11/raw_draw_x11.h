@@ -1,5 +1,5 @@
-#ifndef HELPERS_X11_DRAW_H
-#define HELPERS_X11_DRAW_H
+#ifndef RAW_DRAW_X11_H
+#define RAW_DRAW_X11_H
 
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>

@@ -1,5 +1,5 @@
-#ifndef TYPES_PROMPT_H
-#define TYPES_PROMPT_H
+#ifndef PROMPT_H
+#define PROMPT_H
 
 #include <stddef.h>
 #include <stdbool.h>

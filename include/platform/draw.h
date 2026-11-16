@@ -1,5 +1,5 @@
-#ifndef PLATFORM_DRAW_H
-#define PLATFORM_DRAW_H
+#ifndef DRAW_H
+#define DRAW_H
 
 #include "core/types.h"
 #include "core/types/window.h"

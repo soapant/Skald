@@ -53,43 +53,43 @@ typedef struct {
 
 static __thread BgSlot bg_slots[BG_SLOT_COUNT];
 static __thread int bg_slot_next = 0;
-static __thread Visual *dblVisual = NULL;
-static __thread Colormap dblColormap = None;
-static __thread int dblDepth = 0;
-static __thread Display *dblDpy = NULL;
+static __thread Visual *dbl_visual = NULL;
+static __thread Colormap dbl_colormap = None;
+static __thread int dbl_depth = 0;
+static __thread Display *dbl_dpy = NULL;
 
 void x11_set_dbl_visual(Display *dpy, Visual *vis, Colormap cmap, int depth) {
-  dblVisual = vis;
-  dblColormap = cmap;
-  dblDepth = depth;
-  dblDpy = dpy;
+  dbl_visual = vis;
+  dbl_colormap = cmap;
+  dbl_depth = depth;
+  dbl_dpy = dpy;
 }
 void x11_clear_dbl_visual(void) {
-  dblVisual = NULL;
-  dblColormap = None;
-  dblDepth = 0;
-  dblDpy = NULL;
+  dbl_visual = NULL;
+  dbl_colormap = None;
+  dbl_depth = 0;
+  dbl_dpy = NULL;
 }
 
-bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **visOut,
-                             Colormap *cmapOut, int *depthOut) {
+bool x11_get_drawable_visual(Display *dpy, Drawable d, Visual **vis_out,
+                             Colormap *cmap_out, int *depth_out) {
   XWindowAttributes attrs;
   if (XGetWindowAttributes(dpy, d, &attrs)) {
-    if (visOut)
-      *visOut = attrs.visual;
-    if (cmapOut)
-      *cmapOut = attrs.colormap;
-    if (depthOut)
-      *depthOut = attrs.depth;
+    if (vis_out)
+      *vis_out = attrs.visual;
+    if (cmap_out)
+      *cmap_out = attrs.colormap;
+    if (depth_out)
+      *depth_out = attrs.depth;
     return true;
   }
-  if (dblVisual && dblDpy == dpy) {
-    if (visOut)
-      *visOut = dblVisual;
-    if (cmapOut)
-      *cmapOut = dblColormap;
-    if (depthOut)
-      *depthOut = dblDepth;
+  if (dbl_visual && dbl_dpy == dpy) {
+    if (vis_out)
+      *vis_out = dbl_visual;
+    if (cmap_out)
+      *cmap_out = dbl_colormap;
+    if (depth_out)
+      *depth_out = dbl_depth;
     return true;
   }
   return false;
@@ -255,17 +255,17 @@ static int x11_utf8_fallback_runs(Display *dpy, XftFont *xf,
   const unsigned char *end = b + n;
   const unsigned char *p = b;
   while (p < end) {
-    const unsigned char *runStart = p;
-    XftFont *runFont = xf;
+    const unsigned char *run_start = p;
+    XftFont *run_font = xf;
     while (p < end) {
       int cl = 1;
       FcChar32 cp = x11_utf8_cp(p, end, &cl);
-      if (!x11_font_has(runFont, cp))
+      if (!x11_font_has(run_font, cp))
         break;
       p += cl;
     }
-    if (p > runStart)
-      total += run_cb(dpy, runFont, runStart, (int)(p - runStart), ud);
+    if (p > run_start)
+      total += run_cb(dpy, run_font, run_start, (int)(p - run_start), ud);
     if (p >= end)
       break;
     int cl = 1;
@@ -351,23 +351,25 @@ int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
 }
 
 static void x11_wrap_flush_line(Display *dpy, XftDraw *xd, XftColor *color,
-                                XftFont *xf, const char *lineStart,
-                                int line_len, int alignment, int boxWidth,
-                                int maxWidth, int xOffset, int y) {
-  int lw = x11_measure_utf8_fallback(dpy, xf, lineStart, line_len, 0);
-  int drawX = 0;
+                                XftFont *xf, const char *line_start,
+                                int line_len, int alignment, int box_width,
+                                int max_width, int x_offset, int y) {
+  int lw = x11_measure_utf8_fallback(dpy, xf, line_start, line_len, 0);
+  int draw_x = 0;
   if (alignment == 1)
-    drawX = boxWidth > 0 ? (maxWidth - lw) / 2 : xOffset + (maxWidth - lw) / 2;
+    draw_x =
+        box_width > 0 ? (max_width - lw) / 2 : x_offset + (max_width - lw) / 2;
   else if (alignment == 2)
-    drawX = boxWidth > 0 ? maxWidth - lw : maxWidth - lw - xOffset;
+    draw_x = box_width > 0 ? max_width - lw : max_width - lw - x_offset;
   else
-    drawX = xOffset;
-  x11_draw_utf8_fallback(dpy, xd, color, drawX, y, xf, lineStart, line_len, 0);
+    draw_x = x_offset;
+  x11_draw_utf8_fallback(dpy, xd, color, draw_x, y, xf, line_start, line_len,
+                         0);
 }
 
 void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
-                           FontHandle font, const char *text, int startY,
-                           char *centered_to, int xOffset, int boxWidth) {
+                           FontHandle font, const char *text, int start_y,
+                           char *centered_to, int x_offset, int box_width) {
   if (!text) {
     return;
   }
@@ -375,58 +377,58 @@ void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
   if (!xf) {
     return;
   }
-  int lineHeight = xf->ascent + xf->descent;
-  int spaceWidth = xft_width(dpy, xf, " ", 1);
-  int y = startY + xf->ascent;
+  int line_height = xf->ascent + xf->descent;
+  int space_width = xft_width(dpy, xf, " ", 1);
+  int y = start_y + xf->ascent;
   int text_len = strlen(text);
-  int maxWidth = 0;
+  int max_width = 0;
   int alignment = 0;
 
   if (centered_to != NULL) {
     if (string_contains_ci(centered_to, "CENTER")) {
       alignment = 1;
-      maxWidth = boxWidth > 0 ? boxWidth : PROMPT_WRAP_BOX_CENTER;
+      max_width = box_width > 0 ? box_width : PROMPT_WRAP_BOX_CENTER;
     } else if (string_contains_ci(centered_to, "RIGHT")) {
       alignment = 2;
-      maxWidth = boxWidth > 0 ? boxWidth : PROMPT_WRAP_BOX_RIGHT;
+      max_width = box_width > 0 ? box_width : PROMPT_WRAP_BOX_RIGHT;
     } else {
       alignment = 0;
-      maxWidth = FontSize * text_len;
+      max_width = FontSize * text_len;
     }
   } else {
     alignment = 0;
-    maxWidth = FontSize * text_len;
+    max_width = FontSize * text_len;
   }
 
   const char *p = text;
-  const char *lineStart = text;
-  int lineWidth = 0;
+  const char *line_start = text;
+  int line_width = 0;
 
   while (*p) {
     const char *word_start = p;
     while (*p && *p != ' ')
       p++;
-    int wordWidth = x11_measure_utf8_fallback(dpy, xf, word_start,
-                                              (int)(p - word_start), 0);
-    int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
+    int word_width = x11_measure_utf8_fallback(dpy, xf, word_start,
+                                               (int)(p - word_start), 0);
+    int add = word_width + (line_width > 0 ? space_width : 0);
 
-    if (lineWidth > 0 && lineWidth + add > maxWidth) {
-      x11_wrap_flush_line(dpy, xd, color, xf, lineStart,
-                          (int)(word_start - lineStart), alignment, boxWidth,
-                          maxWidth, xOffset, y);
-      y += lineHeight;
-      lineStart = word_start;
-      lineWidth = wordWidth;
+    if (line_width > 0 && line_width + add > max_width) {
+      x11_wrap_flush_line(dpy, xd, color, xf, line_start,
+                          (int)(word_start - line_start), alignment, box_width,
+                          max_width, x_offset, y);
+      y += line_height;
+      line_start = word_start;
+      line_width = word_width;
     } else {
-      lineWidth += add;
+      line_width += add;
     }
     while (*p == ' ')
       p++;
   }
 
-  if (p > lineStart) {
-    x11_wrap_flush_line(dpy, xd, color, xf, lineStart, (int)(p - lineStart),
-                        alignment, boxWidth, maxWidth, xOffset, y);
+  if (p > line_start) {
+    x11_wrap_flush_line(dpy, xd, color, xf, line_start, (int)(p - line_start),
+                        alignment, box_width, max_width, x_offset, y);
   }
 }
 
@@ -517,8 +519,8 @@ bool x11_xft_color_cached(Display *dpy, Visual *vis, Colormap cmap,
 
 const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
                                           size_t trunc_size) {
-  const char *baseText = lb ? listbox_info_row(lb, idx) : NULL;
-  snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
+  const char *base_text = lb ? listbox_info_row(lb, idx) : NULL;
+  snprintf(trunc, trunc_size, "%.80s", base_text ? base_text : "");
   return trunc;
 }
 
@@ -547,8 +549,8 @@ static long long x11_now_ms(void) {
   return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
 
-static ImgCacheSlot g_img_cache[IMG_CACHE_SLOTS];
-static unsigned long g_img_cache_tick = 0;
+static ImgCacheSlot img_cache[IMG_CACHE_SLOTS];
+static unsigned long img_cache_tick = 0;
 static pthread_mutex_t img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 static void x11_release_pixmap_picture(Display *dpy, Pixmap pm, Picture pic) {
@@ -568,8 +570,8 @@ static void x11_img_slot_release(ImgCacheSlot *s) {
 void x11_img_cache_free_all(void) {
   pthread_mutex_lock(&img_cache_mtx);
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
-    x11_img_slot_release(&g_img_cache[i]);
-    memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
+    x11_img_slot_release(&img_cache[i]);
+    memset(&img_cache[i], 0, sizeof(img_cache[i]));
   }
   pthread_mutex_unlock(&img_cache_mtx);
 }
@@ -578,7 +580,7 @@ static bool x11_img_cache_get(const char *key, int w, int h, Pixmap *out_pm,
                               Picture *out_pic) {
   long long now = x11_now_ms();
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
-    ImgCacheSlot *s = &g_img_cache[i];
+    ImgCacheSlot *s = &img_cache[i];
     if (!s->pm || !s->pic)
       continue;
     if (s->w != w || s->h != h)
@@ -595,7 +597,7 @@ static bool x11_img_cache_get(const char *key, int w, int h, Pixmap *out_pm,
         continue;
       }
     }
-    s->stamp = ++g_img_cache_tick;
+    s->stamp = ++img_cache_tick;
     *out_pm = s->pm;
     *out_pic = s->pic;
     return true;
@@ -611,7 +613,7 @@ static void x11_img_cache_put(Display *dpy, const char *key, int w, int h,
   int slot = -1;
   unsigned long oldest = ~0UL;
   for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
-    const ImgCacheSlot *s = &g_img_cache[i];
+    const ImgCacheSlot *s = &img_cache[i];
     if (!s->pm && !s->pic) {
       slot = i;
       break;
@@ -623,7 +625,7 @@ static void x11_img_cache_put(Display *dpy, const char *key, int w, int h,
   }
   if (slot < 0)
     slot = 0;
-  ImgCacheSlot *s = &g_img_cache[slot];
+  ImgCacheSlot *s = &img_cache[slot];
   x11_img_slot_release(s);
   memset(s, 0, sizeof(*s));
   snprintf(s->key, sizeof(s->key), "%s", key);
@@ -635,7 +637,7 @@ static void x11_img_cache_put(Display *dpy, const char *key, int w, int h,
   s->pm = pm;
   s->pic = pic;
   s->checked_ms = x11_now_ms();
-  s->stamp = ++g_img_cache_tick;
+  s->stamp = ++img_cache_tick;
 }
 
 static pthread_mutex_t decode_mtx;
@@ -1139,9 +1141,9 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
   int text_y = y + pad_top;
   if (icon_path) {
     int iconX = XOffset;
-    int iconY = y + (prompt_row_height() - IconSize) / 2;
+    int icon_y = y + (prompt_row_height() - IconSize) / 2;
     XOffset += IconSize + XOffset;
-    x11_draw_image_scaled(dpy, xd, vis, icon_path, iconX, iconY, IconSize,
+    x11_draw_image_scaled(dpy, xd, vis, icon_path, iconX, icon_y, IconSize,
                           IconSize);
   }
   char trunc[512];
@@ -1546,8 +1548,8 @@ static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
   int depth = attrs->depth;
   if (depth != 32)
     return None;
-  bool hasAlpha = true;
-  bool rounded = RoundedCorners && CornerRadius > 0 && hasAlpha;
+  bool has_alpha = true;
+  bool rounded = RoundedCorners && CornerRadius > 0 && has_alpha;
   int R = rounded ? CornerRadius : 0;
   if (R > w / 2)
     R = w / 2;
@@ -1674,8 +1676,8 @@ void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h) {
     vis = DefaultVisual(dpy, screen);
     depth = DefaultDepth(dpy, screen);
   }
-  bool hasAlpha = (depth == 32);
-  bool rded = rounded && radius > 0 && hasAlpha;
+  bool has_alpha = (depth == 32);
+  bool rded = rounded && radius > 0 && has_alpha;
   int R = rded ? radius : 0;
   if (R > w / 2)
     R = w / 2;
@@ -1686,7 +1688,7 @@ void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h) {
     baseAlpha8 = 255;
   unsigned int cr0 = (base >> 16) & 0xFF, cg0 = (base >> 8) & 0xFF,
                cb0 = base & 0xFF;
-  if (!hasAlpha) {
+  if (!has_alpha) {
     unsigned long solid = (cr0 << 16) | (cg0 << 8) | cb0;
     GC sgc = XCreateGC(dpy, drw, 0, NULL);
     XSetForeground(dpy, sgc, solid);

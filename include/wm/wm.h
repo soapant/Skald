@@ -1,5 +1,5 @@
-#ifndef WINDOW_PLATFORM_H
-#define WINDOW_PLATFORM_H
+#ifndef WM_H
+#define WM_H
 
 #include <stdbool.h>
 #include <ctype.h>
@@ -10,6 +10,7 @@
 
 #include "core/types.h"
 #include "core/types/window.h"
+#include "helpers/helpers_text.h"
 
 static inline void wm_snap_rect(int mx, int my, int mw, int mh, SnapPreset p,
                                 int *x, int *y, int *w, int *h) {
@@ -84,8 +85,6 @@ static inline bool wm_json_num_at(const char *json, const char *key,
 
 char *wm_trim_focus_title(const char *title);
 
-#include "helpers/helpers_text.h"
-
 bool wm_append_window_name(PlWindowList *list, const char *name,
                            bool toupper_first);
 
@@ -93,8 +92,8 @@ char *wm_get_active_window_title(void);
 char *wm_get_active_window_id(void);
 bool wm_focus_by_title(const char *title);
 char *wm_paste(const char *content);
-PlWindowList Wm_GetWindowTitles(void);
-PlWindowList Wm_GetWindowIds(void);
+PlWindowList wm_get_window_titles(void);
+PlWindowList wm_get_window_ids(void);
 bool wm_close_active_window(void);
 bool wm_toggle_fullscreen_active(void);
 bool wm_move_active_window_to_monitor(bool right);

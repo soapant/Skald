@@ -1,5 +1,5 @@
-#ifndef INPUT_STATE_H
-#define INPUT_STATE_H
+#ifndef HELPERS_INPUT_STATE_H
+#define HELPERS_INPUT_STATE_H
 #include <stdbool.h>
 
 typedef struct {

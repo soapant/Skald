@@ -1,5 +1,5 @@
-#ifndef HELPERS_WIN32_DEFAULT_APPS_H
-#define HELPERS_WIN32_DEFAULT_APPS_H
+#ifndef RAW_DEFAULT_APPS_WIN32_H
+#define RAW_DEFAULT_APPS_WIN32_H
 
 #include <stddef.h>
 #include <stdbool.h>
