@@ -106,7 +106,7 @@ void WindowManager_PopPopup(WindowManager *wm) {
   log_info("PopPopup wm=%p popup=%p remaining=%d title='%s'", (void *)wm,
            (void *)popup, wm->popup_count,
            ctx && ctx->window.title ? ctx->window.title : "(null)");
-  CloseCallback on_close = PromptPopup_TakeOnClose(popup);
+  CloseCallback on_close = prompt_popup_take_on_close(popup);
   if (popup->vtable && popup->vtable->on_hide) {
     popup->vtable->on_hide(popup);
   }
@@ -213,12 +213,12 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
 
 #define MAX_EVENT_CALLBACKS 16
 struct EventSlot {
-  PlEventCallback cb;
+  EventCallback cb;
   char owner[OWNER_PATH_MAX];
 };
 static struct EventSlot event_registry[2][MAX_EVENT_CALLBACKS] = {0};
 
-void event_bus_register(PlEvent event, PlEventCallback cb) {
+void event_bus_register(Event event, EventCallback cb) {
   if (event < 0 || event >= 2 || !cb)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
@@ -239,7 +239,7 @@ void event_bus_register(PlEvent event, PlEventCallback cb) {
       event, MAX_EVENT_CALLBACKS);
 }
 
-void event_bus_unregister(PlEvent event, PlEventCallback cb) {
+void event_bus_unregister(Event event, EventCallback cb) {
   if (event < 0 || event >= 2)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
@@ -265,7 +265,7 @@ void event_bus_purge_owner(const char *path_a, const char *path_b) {
   }
 }
 
-void event_bus_trigger(PlEvent event) {
+void event_bus_trigger(Event event) {
   if (event < 0 || event >= 2)
     return;
   for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {

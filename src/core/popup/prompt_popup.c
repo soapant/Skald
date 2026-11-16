@@ -312,7 +312,7 @@ bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x,
           root_y >= data->y && root_y <= data->y + data->h);
 }
 
-CloseCallback PromptPopup_TakeOnClose(Popup *p) {
+CloseCallback prompt_popup_take_on_close(Popup *p) {
   if (!p || p->type != POPUP_PROMPT)
     return NULL;
   PromptPopupData *data = (PromptPopupData *)p;

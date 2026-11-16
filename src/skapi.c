@@ -3033,8 +3033,8 @@ static bool sk_config_parse_path(void) {
   if (!data_dir(dir, sizeof(dir)))
     return false;
   Platform_MkdirIfNotExists(dir);
-  snprintf(sk_config_path, sizeof(sk_config_path), "%s%ccore%cskald.toml",dir,SK_PATH_SEP,
-           SK_PATH_SEP);
+  snprintf(sk_config_path, sizeof(sk_config_path), "%s%ccore%cskald.toml", dir,
+           SK_PATH_SEP, SK_PATH_SEP);
   return true;
 }
 
@@ -3059,12 +3059,10 @@ static bool sk_config_write(void) {
 
   char enc[1024];
   for (int i = 0; i < hotkey_entry_count; i++) {
-    if (!config_toml_encode_string(hotkey_entries[i].name, enc,
-                                   sizeof(enc)))
+    if (!config_toml_encode_string(hotkey_entries[i].name, enc, sizeof(enc)))
       continue;
     char val[1024];
-    if (!config_toml_encode_string(hotkey_entries[i].hotkey, val,
-                                   sizeof(val)))
+    if (!config_toml_encode_string(hotkey_entries[i].hotkey, val, sizeof(val)))
       continue;
     size_t need = len + strlen(enc) + strlen(val) + 8;
     if (need > cap) {
@@ -3096,12 +3094,10 @@ static bool sk_config_write(void) {
   }
 
   for (int i = 0; i < alias_entry_count; i++) {
-    if (!config_toml_encode_string(alias_entries[i].target, enc,
-                                   sizeof(enc)))
+    if (!config_toml_encode_string(alias_entries[i].target, enc, sizeof(enc)))
       continue;
     char val[1024];
-    if (!config_toml_encode_string(alias_entries[i].alias, val,
-                                   sizeof(val)))
+    if (!config_toml_encode_string(alias_entries[i].alias, val, sizeof(val)))
       continue;
     size_t need = len + strlen(enc) + strlen(val) + 8;
     if (need > cap) {
@@ -3229,8 +3225,8 @@ static void sk_config_init_locked(void) {
     log_error("sk_config: data dir unavailable, config persistence disabled");
     return;
   }
-  ConfigTomlStatus st = config_toml_parse(sk_config_path,
-                                          sk_config_apply_entry, NULL);
+  ConfigTomlStatus st =
+      config_toml_parse(sk_config_path, sk_config_apply_entry, NULL);
   if (st == CONFIG_TOML_ERR_IO)
     log_info("sk_config: %s not found, starting with empty tables",
              sk_config_path);
@@ -3243,7 +3239,7 @@ static void sk_config_init_locked(void) {
 
   for (int i = 0; i < alias_entry_count; i++)
     sk_register_alias(.alias = alias_entries[i].alias,
-                 .target = alias_entries[i].target);
+                      .target = alias_entries[i].target);
 }
 
 void sk_config_init(void) {
@@ -3464,4 +3460,3 @@ bool sk_config_alias_at(int index, char *target_out, size_t target_cap,
   sk_config_unlock();
   return ok;
 }
-
