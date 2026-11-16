@@ -1817,7 +1817,7 @@ int main(int argc, char **argv) {
           "skald[.exe],\n"
           "                 sdk/, config/config.toml (defaults),\n"
           "                 features/ with\n"
-          "                 control_center, settings and clipboard_history,\n"
+          "                 control_center, settings etc,\n"
           "                 resources/ (png + ico); Windows also emits "
           "main.lib.a;\n"
           "                 no compiler objects\n");
@@ -1898,6 +1898,8 @@ int main(int argc, char **argv) {
                                         "release/features/settings") ||
         !nob_copy_directory_recursively("features/clipboard_history",
                                         "release/features/clipboard_history") ||
+        !nob_copy_directory_recursively("features/window_management",
+                                        "release/features/window_management") ||
         !nob_copy_directory_recursively("resources", "release/resources"))
       return 1;
     if (!emit_release_config("release/config/config.toml")) {
@@ -1907,7 +1909,7 @@ int main(int argc, char **argv) {
     }
     nob_log(NOB_INFO,
             "release/: config, features, resources staged (control_center, "
-            "settings, clipboard_history)");
+            "settings etc)");
   }
 
   if (sanitize) {
