@@ -25,8 +25,8 @@ typedef WindowHandle SkWindowHandle;
 typedef struct PlatformWidget PlatformWidget;
 typedef PlColor SkColor;
 typedef PlMetrics SkMetrics;
-typedef PlEvent SkEvent;
-typedef PlEventCallback SkEventCallback;
+typedef Event SkEvent;
+typedef EventCallback SkEventCallback;
 typedef Widget SkWidget;
 typedef WidgetSpec SkWidgetSpec;
 typedef WidgetState SkWidgetState;
@@ -790,7 +790,7 @@ typedef struct {
   void *ud;
 } SkConfigHotkeySpec;
 
-#define sk_config_set_hotkey(...) \
+#define sk_config_set_hotkey(...)                                              \
   ski_config_set_hotkey(&(SkConfigHotkeySpec){__VA_ARGS__})
 
 typedef struct {
@@ -798,7 +798,7 @@ typedef struct {
   const char *alias;
 } SkConfigAliasSpec;
 
-#define sk_config_set_alias(...) \
+#define sk_config_set_alias(...)                                               \
   ski_config_set_alias(&(SkConfigAliasSpec){__VA_ARGS__})
 
 void sk_config_init(void);
@@ -820,7 +820,6 @@ bool sk_config_clear_alias(const char *target);
 int sk_config_alias_count(void);
 bool sk_config_alias_at(int index, char *target_out, size_t target_cap,
                         char *alias_out, size_t alias_cap);
-
 
 int sk_cc_entry_count(void);
 
