@@ -24,6 +24,7 @@
 #include "core/prompt_keys.h"
 #include "core/checkbox.h"
 #include "core/draw_state.h"
+#include "core/draw_state.h"
 
 #define IDC_LIST_BOX 102
 
@@ -624,13 +625,18 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         win32_set_draw_context(paintDC);
         pl_draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;
+        bool sep_prev = pl_draw_state_get()->suppress_separators;
+        pl_draw_state_get()->suppress_separators = state->no_separators;
         state->callbacks->render(state);
+        pl_draw_state_get()->suppress_separators = sep_prev;
         s_in_render = false;
         pl_draw_state_get()->win32_listbox_surface = false;
       }
     } else {
       PromptState *estate = win32_prompt_state_from_hwnd(hwnd);
       if (estate) {
+        bool sep_prev = pl_draw_state_get()->suppress_separators;
+        pl_draw_state_get()->suppress_separators = estate->no_separators;
         win32_set_draw_context(paintDC);
         extern void Platform_DrawPromptEditbox(PromptState * state);
         Platform_DrawPromptEditbox(estate);
@@ -700,6 +706,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
               .y = rect.bottom - prompt_list_bottom_margin(),
               .width = rect.right - rect.left});
         }
+        pl_draw_state_get()->suppress_separators = sep_prev;
         win32_set_draw_context(NULL);
       }
     }

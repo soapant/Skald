@@ -18,6 +18,7 @@ typedef struct {
   bool win32_widget_surface;
   bool win32_listbox_surface;
   bool listbox_rows;
+  bool suppress_separators;
 } PlDrawState;
 
 PlDrawState *pl_draw_state_get(void);
