@@ -699,6 +699,8 @@ int sk_get_key_pressed(void);
 
 char sk_get_char_pressed(void);
 
+bool sk_vk_to_name(int vk, char *out, size_t cap);
+
 #define sk_key_pressed sk_is_key_pressed
 #define sk_key_released sk_is_key_released
 #define sk_ctrl_down sk_ctrl_pressed

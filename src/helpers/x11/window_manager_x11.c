@@ -124,14 +124,11 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   else if (ks == XK_Shift_L || ks == XK_Shift_R)
     mods |= HOTKEY_MOD_SHIFT;
 
-  int vk_code = 0;
-  int char_hint = 0;
-  if (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126) {
-    vk_code = (unsigned char)buf[0];
-    char_hint = (unsigned char)buf[0];
-  } else {
-    vk_code = x11_keysym_to_vk(ks);
-  }
+  int vk_code = x11_keysym_to_vk(ks);
+  int char_hint =
+      (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126)
+          ? (unsigned char)buf[0]
+          : 0;
   int modifiers = mods;
   if (vk_code)
     input_state_update(vk_code, true, modifiers, char_hint);
@@ -169,11 +166,7 @@ static void x11_handle_key_release(XKeyEvent *ev) {
   KeySym ks;
   char buf[32];
   int len = XLookupString(ev, buf, sizeof(buf), &ks, NULL);
-  int vk = 0;
-  if (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126)
-    vk = (unsigned char)buf[0];
-  else
-    vk = x11_keysym_to_vk(ks);
+  int vk = x11_keysym_to_vk(ks);
   int mods = remap_current_mods();
   if (vk)
     input_state_update(vk, false, mods, 0);

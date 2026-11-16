@@ -1,6 +1,7 @@
 #ifndef HELPERS_INPUT_STATE_H
 #define HELPERS_INPUT_STATE_H
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct {
   int vk;
@@ -23,6 +24,7 @@ void input_state_clear_queue(void);
 void input_state_inhibit_mods(void);
 int input_get_pressed_key(void);
 char input_get_pressed_char(void);
+bool input_vk_to_name(int vk, char *out, size_t cap);
 
 void global_key_push(const PlatformKeyEvent *ev);
 bool global_key_pop(PlatformKeyEvent *out);

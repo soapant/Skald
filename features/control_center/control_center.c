@@ -1234,16 +1234,6 @@ static SkTimer cc_flash_timer;
 static bool cc_flashing;
 static int cc_last_key;
 
-static const struct {
-  int vk;
-  const char *name;
-} cc_punctuation_keys[] = {
-    {VK_OEM_1, ";"},     {VK_OEM_2, "/"},     {VK_OEM_3, "`"},
-    {VK_OEM_4, "["},     {VK_OEM_5, "\\"},    {VK_OEM_6, "]"},
-    {VK_OEM_7, "'"},     {VK_OEM_COMMA, ","}, {VK_OEM_PERIOD, "."},
-    {VK_OEM_MINUS, "-"}, {VK_OEM_PLUS, "="},
-};
-
 static void cc_append(char *buf, size_t cap, const char *s) {
   size_t len = strlen(buf);
   if (len < cap)
@@ -1251,21 +1241,9 @@ static void cc_append(char *buf, size_t cap, const char *s) {
 }
 
 static int cc_pressed_key(char *name, size_t cap) {
-  for (int c = 'A'; c <= 'Z'; c++)
-    if (sk_is_key_pressed(c)) {
-      snprintf(name, cap, "%c", c);
-      return c;
-    }
-  for (int c = '0'; c <= '9'; c++)
-    if (sk_is_key_pressed(c)) {
-      snprintf(name, cap, "%c", c);
-      return c;
-    }
-  for (size_t i = 0; i < ARRAY_LEN(cc_punctuation_keys); i++)
-    if (sk_is_key_pressed(cc_punctuation_keys[i].vk)) {
-      cc_copy(name, cap, cc_punctuation_keys[i].name);
-      return cc_punctuation_keys[i].vk;
-    }
+  for (int vk = 32; vk < 256; vk++)
+    if (sk_is_key_pressed(vk) && sk_vk_to_name(vk, name, cap))
+      return vk;
   return 0;
 }
 
