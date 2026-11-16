@@ -720,26 +720,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       titleRect.top = rect.bottom - PROMPT_FOOTER_Y_FROM_BOTTOM;
       titleRect.right = titleRect.left + sz.cx + PROMPT_FOOTER_PAD;
       titleRect.bottom = titleRect.top + sz.cy;
-      COLORREF titleColor;
-      if ((lb ? lb->item_count : 0) < 25) {
-        titleColor = RGB(0, 255, 0);
-      } else if ((lb ? lb->item_count : 0) < 50) {
-        titleColor = RGB(100, 255, 0);
-      } else if ((lb ? lb->item_count : 0) < 75) {
-        titleColor = RGB(200, 255, 0);
-      } else if ((lb ? lb->item_count : 0) < 100) {
-        titleColor = RGB(255, 255, 0);
-      } else if ((lb ? lb->item_count : 0) < 125) {
-        titleColor = RGB(255, 200, 0);
-      } else if ((lb ? lb->item_count : 0) < 150) {
-        titleColor = RGB(255, 150, 0);
-      } else if ((lb ? lb->item_count : 0) < 175) {
-        titleColor = RGB(255, 100, 0);
-      } else if ((lb ? lb->item_count : 0) < 200) {
-        titleColor = RGB(255, 50, 0);
-      } else {
-        titleColor = RGB(255, 0, 0);
-      }
+      COLORREF titleColor = COLOR_TEXT;
       SetTextColor(paintDC, titleColor);
       DrawTextW(paintDC, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
       SelectObject(paintDC, hOldFont);
