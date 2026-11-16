@@ -64,11 +64,13 @@ static const char *get_default_browser(int slot) {
       if (string_contains_ci(name, possible_browsers[j])) {
         snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s",
                  string_to_lower(possible_browsers[j]));
+        free(browser_files.files);
         return default_apps_x11[slot];
       }
     }
     break;
   }
+  free(browser_files.files);
   StringList l = File_ReadLines("~/.config/mimeapps.list");
   for (size_t i = 0; i < l.count; i++) {
     const char *line = l.items[i];
