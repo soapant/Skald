@@ -210,7 +210,7 @@ SKALD_FEATURE_SHUTDOWN {
 
 SKALD_FEATURE_INIT {
   ch_load();
-  sk_run_every(5.0, ch_tick);
+  sk_run_every(2.0, ch_tick);
   sk_register_hotkey(.hotkey = "Alt+Shift+R", .cb = trigger_clipboard_history);
   sk_add_feature(.display_name = "Clipboard History",
                  .on_action = trigger_clipboard_history,
