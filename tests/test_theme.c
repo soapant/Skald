@@ -41,7 +41,10 @@ TEST(entry_at_out_of_bounds) {
   ASSERT_TRUE(theme_entry_at(SIZE_MAX) == NULL);
 }
 
-static const char *PIN_FILE = "build/tests/pin_test.cnf";
+#ifndef TEST_BUILD_DIR
+#define TEST_BUILD_DIR "build/tests"
+#endif
+static const char *PIN_FILE = TEST_BUILD_DIR "/pin_test.cnf";
 
 TEST(pin_scan_detects_color_overrides) {
   FILE *f = fopen(PIN_FILE, "wb");

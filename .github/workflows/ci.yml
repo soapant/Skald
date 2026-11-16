@@ -31,7 +31,7 @@ jobs:
         run: ./nob --check
 
       - name: Run tests
-        run: ./nob --test
+        run: ./nob --test --dynamic
 
       - name: Cross-compile for Windows
         run: ./nob --win32
