@@ -1198,7 +1198,8 @@ static void cc_actions_render(PromptState *state) {
   if (!sk_listbox_begin(&spec))
     return;
   SkListItemCtx ctx;
-  sk_draw_line(.x1=0,.y1=55,.x2=state->width,.y2=55,.color=COLOR_BORDER);
+  sk_draw_line(.x1 = 0, .y1 = 55, .x2 = state->width, .y2 = 55,
+               .color = COLOR_BORDER);
   while (sk_listbox_next(&ctx)) {
     sk_draw_text(.y = ctx.y - 4, .text = ctx.text, .align = "LEFT", .pad = 10,
                  .fontsize = 20);
@@ -1214,7 +1215,8 @@ static bool cc_actions_enter(PromptState *state) {
 static void cc_open_actions_window(void) {
   sk_subwindow(.title = "Actions", .x = cc_sub_x(), .y = cc_sub_y(),
                .w = cc_sub_w(), .h = 300, .render = cc_actions_render,
-               .refresh = cc_actions_refresh, .enter = cc_actions_enter,.no_separators=true);
+               .refresh = cc_actions_refresh, .enter = cc_actions_enter,
+               .no_separators = true);
 }
 
 static char cc_register_target[256];
