@@ -27,7 +27,9 @@ static void snap_bottom(void) { sk_snap_active_window(SNAP_BOTTOM); }
 static void snap_top_left(void) { sk_snap_active_window(SNAP_TOP_LEFT); }
 static void snap_top_right(void) { sk_snap_active_window(SNAP_TOP_RIGHT); }
 static void snap_bottom_left(void) { sk_snap_active_window(SNAP_BOTTOM_LEFT); }
-static void snap_bottom_right(void) { sk_snap_active_window(SNAP_BOTTOM_RIGHT); }
+static void snap_bottom_right(void) {
+  sk_snap_active_window(SNAP_BOTTOM_RIGHT);
+}
 
 static void move_window_to_next_monitor(void) {
   sk_move_active_window_to_monitor(true);
