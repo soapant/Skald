@@ -1193,26 +1193,15 @@ static void cc_actions_refresh(PromptState *state) {
 }
 
 static void cc_actions_render(PromptState *state) {
-  int width = state->width;
   SkListSpec spec = {.lb = state->lb};
   sk_place_editbox();
   if (!sk_listbox_begin(&spec))
     return;
   SkListItemCtx ctx;
+  sk_draw_line(.x1=0,.y1=55,.x2=state->width,.y2=55,.color=COLOR_BORDER);
   while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.y = ctx.y + 4, .text = ctx.text, .align = "LEFT", .pad = 10,
-                 .fontsize = 12);
-    const char *hotkey = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
-    if (width <= sk_get_text_width(ctx.text, 10) + 28)
-      continue;
-    SkRect r = sk_text_bounds(.text = hotkey, .fontsize = 10, .x = width - 6,
-                              .y = ctx.y + 6, .align = "RIGHT");
-    r.filled = true;
-    r.radius = 4;
-    r.color = SK_DARK_GRAY;
-    ski_draw_rect(&r);
-    sk_draw_text(.x = width - 6, .y = ctx.y + 6, .text = hotkey,
-                 .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
+    sk_draw_text(.y = ctx.y, .text = ctx.text, .align = "LEFT", .pad = 10,
+                 .fontsize = 20);
   }
   sk_listbox_end();
 }
