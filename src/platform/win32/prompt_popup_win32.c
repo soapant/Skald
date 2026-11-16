@@ -10,6 +10,7 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/win32/common_ui_win32.h"
 #include "helpers/win32/win32_state.h"
+#include "core/draw_state.h"
 #include <windows.h>
 
 static HWND g_prev_fg = NULL;
@@ -134,7 +135,10 @@ void Platform_PromptPopupRender(Popup *self) {
   if (!state)
     return;
   if (state->callbacks->render) {
+    bool sep_prev = pl_draw_state_get()->suppress_separators;
+    pl_draw_state_get()->suppress_separators = state->no_separators;
     state->callbacks->render(state);
+    pl_draw_state_get()->suppress_separators = sep_prev;
   }
 }
 
