@@ -138,7 +138,7 @@ static void ch_load(void) {
     ch_unescape(lines.items[i], buf, sizeof(buf));
     ch_remember_locked(buf);
   }
-  sk_free_file_list(&lines);
+  sk_free_string_list(&lines);
 }
 
 static bool ch_sample_once(void) {

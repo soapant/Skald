@@ -125,7 +125,7 @@ bool sk_write_temp_file(const char *name, const void *data, size_t len,
 
 int sk_get_icon_size(const char *icon_path);
 
-void sk_free_file_list(SkStringList *list);
+void sk_free_string_list(SkStringList *list);
 void sk_free_files_list(ListOfFiles *list);
 
 bool sk_free_list(const char *list[], int count);

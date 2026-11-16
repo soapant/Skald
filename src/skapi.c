@@ -227,7 +227,7 @@ bool sk_free_list(const char *list[], int count) {
   return true;
 }
 
-void sk_free_file_list(SkStringList *list) {
+void sk_free_string_list(SkStringList *list) {
   if (!list) {
     return;
   }
@@ -414,11 +414,11 @@ bool sk_append_unique_line(const char *path, const char *line) {
   SkStringList files = sk_load_file_list(path);
   for (size_t i = 0; i < files.count; i++)
     if (files.items[i] && strcmp(files.items[i], line) == 0) {
-      sk_free_file_list(&files);
+      sk_free_string_list(&files);
       return true;
     }
   bool ok = sk_append_to_file(path, line);
-  sk_free_file_list(&files);
+  sk_free_string_list(&files);
   return ok;
 }
 
@@ -428,7 +428,7 @@ static bool filter_lines(const char *path, const char *needle,
   const char **kept =
       (const char **)malloc(sizeof(char *) * (files.count ? files.count : 1));
   if (!kept) {
-    sk_free_file_list(&files);
+    sk_free_string_list(&files);
     return false;
   }
   int k = 0;
@@ -444,7 +444,7 @@ static bool filter_lines(const char *path, const char *needle,
   }
   bool ok = sk_write_to_file(path, kept, k);
   free(kept);
-  sk_free_file_list(&files);
+  sk_free_string_list(&files);
   return ok;
 }
 
@@ -971,6 +971,7 @@ void ski_message(const SkMessageSpec *spec) {
   } else if (slot == FREE) {
     Platform_DisplayMessage(
         (PlDisplayMessageSpec){.message = spec->message,
+                               .fps = spec->fps,
                                .x = spec->x,
                                .y = spec->y,
                                .no_bg = spec->no_bg,
@@ -985,7 +986,7 @@ void ski_message(const SkMessageSpec *spec) {
     return;
   }
   display_message_slot(spec->message, slot, mw, mh, spec->prompt_gap, timeout,
-                       color, spec->render, spec->name);
+                       color, spec->render, spec->name, spec->fps);
 }
 
 bool sk_launch_browser(const char *url) {
@@ -1091,7 +1092,7 @@ bool sk_replace_line_in_file(const char *filepath, int line_index,
   SkStringList files = sk_load_file_list(filepath);
   if ((size_t)line_index >= files.count) {
 
-    sk_free_file_list(&files);
+    sk_free_string_list(&files);
     return false;
   }
   free(files.items[line_index]);
@@ -1099,11 +1100,11 @@ bool sk_replace_line_in_file(const char *filepath, int line_index,
   files.items[line_index] = strdup(new_text);
   if (!files.items[line_index]) {
 
-    sk_free_file_list(&files);
+    sk_free_string_list(&files);
     return false;
   }
   bool ok = sk_write_to_file(filepath, (const char **)files.items, files.count);
-  sk_free_file_list(&files);
+  sk_free_string_list(&files);
   return ok;
 }
 
