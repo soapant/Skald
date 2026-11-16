@@ -1291,7 +1291,7 @@ bool ski_draw_text(const SkTextSpec *spec) {
   if (pl_draw_state_get()->listbox_rows &&
       pl_draw_state_get()->win32_listbox_surface)
     draw_y += 3;
-  const char *align = spec->align ? spec->align : "CENTER";
+  const char *align = spec->align ? spec->align : "LEFT";
   FontHandle fh = spec->font;
   return Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
                                                   .y = draw_y,
