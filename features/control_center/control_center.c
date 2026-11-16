@@ -1180,9 +1180,9 @@ static void cc_open_control(void) {
 }
 
 static int cc_sub_w(void) { return cc_width / 4; }
-static int cc_sub_h(void) { return cc_height / 9; }
+static int cc_sub_h(void) { return cc_height / 7; }
 static int cc_sub_x(void) { return cc_width / 2 + cc_sub_w() - 10; }
-static int cc_sub_y(void) { return cc_height / 2 - 50; }
+static int cc_sub_y(void) { return cc_height / 2 - 30; }
 
 static const char *cc_action_names[] = {"Register Hotkey", "Register Alias"};
 
@@ -1200,18 +1200,18 @@ static void cc_actions_render(PromptState *state) {
     return;
   SkListItemCtx ctx;
   while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.y = ctx.y + 6, .text = ctx.text, .align = "LEFT", .pad = 10,
+    sk_draw_text(.y = ctx.y + 4, .text = ctx.text, .align = "LEFT", .pad = 10,
                  .fontsize = 12);
     const char *hotkey = ctx.idx == 0 ? RegHotkey : RegAliasHotkey;
     if (width <= sk_get_text_width(ctx.text, 10) + 28)
       continue;
     SkRect r = sk_text_bounds(.text = hotkey, .fontsize = 10, .x = width - 6,
-                              .y = ctx.y + 8, .align = "RIGHT");
+                              .y = ctx.y + 6, .align = "RIGHT");
     r.filled = true;
     r.radius = 4;
     r.color = SK_DARK_GRAY;
     ski_draw_rect(&r);
-    sk_draw_text(.x = width - 6, .y = ctx.y + 8, .text = hotkey,
+    sk_draw_text(.x = width - 6, .y = ctx.y + 6, .text = hotkey,
                  .align = "RIGHT", .fontsize = 10, .color = SK_GRAY);
   }
   sk_listbox_end();
@@ -1223,7 +1223,7 @@ static bool cc_actions_enter(PromptState *state) {
 }
 
 static void cc_open_actions_window(void) {
-  sk_subwindow(.title = "Actions", .x = cc_sub_x(), .y = cc_sub_y(),
+  sk_subwindow(.title = "Actions", .x = cc_sub_x(), .y = cc_sub_y() - 20,
                .w = cc_sub_w(), .h = 300, .render = cc_actions_render,
                .refresh = cc_actions_refresh, .enter = cc_actions_enter);
 }
@@ -1302,12 +1302,14 @@ static void cc_hotkey_capture_render(PromptState *state) {
   if (cc_flashing && sk_end_timer(cc_flash_timer) >= 1.0)
     cc_flashing = false;
 
-  sk_draw_text(.x = 15, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
+  sk_draw_text(.x = 25, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
                .color = SK_GRAY, .align = "LEFT");
-  sk_draw_rect(.x = 10, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
+
+  sk_draw_rect(.x = 20, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
                .color = cc_flashing ? SK_GRAY : SK_DARK_GRAY, .filled = true);
+
   if (combo[0] || cc_flashing)
-    sk_draw_text(.x = 17, .y = state->height / 2,
+    sk_draw_text(.x = 27, .y = state->height / 2,
                  .text = combo[0] ? combo : cc_captured_hotkey, .fontsize = 22,
                  .color = cc_flashing ? SK_DARK_GREEN : SK_GRAY,
                  .align = "LEFT");
@@ -1318,12 +1320,14 @@ static void cc_hotkey_capture_close(void) { sk_enable_global_hotkeys(); }
 static void cc_alias_render(PromptState *state) {
   char label[284];
   snprintf(label, sizeof(label), "Alias For: %s", cc_register_target);
-  sk_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 11, .color = SK_GRAY,
+
+  sk_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 15, .color = SK_GRAY,
                .align = "LEFT", .pad = 0);
+
   sk_place_editbox(.x = (state->width - 160) / 2,
                    .y = (state->height - 30) / 2 + 6, .w = 160, .h = 26,
-                   .placeholder = "alias name", .caret_height = 14,
-                   .caret_width = 1, .caret_y = 47, .fontsize = 14);
+                   .placeholder = "alias name", .caret_height = 16,
+                   .caret_width = 1, .caret_y = 40, .fontsize = 14);
 }
 
 static bool cc_alias_enter(PromptState *state) {
@@ -1366,7 +1370,6 @@ SKALD_FEATURE_INIT {
   cc_build();
   sk_register_hotkey(.hotkey = (char *)ControlHotkey, .cb = cc_open_control);
   sk_register_hotkey(.hotkey = (char *)ReloadFeaturesHotkey, .cb = cc_reload);
-  sk_register_alias(.alias = "ng", .target = "gimp");
   sk_register_deferred_init(cc_deferred_build);
 }
 
