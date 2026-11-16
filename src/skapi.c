@@ -2056,6 +2056,10 @@ void sk_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud) {
 int sk_get_key_pressed(void) { return input_get_pressed_key(); }
 char sk_get_char_pressed(void) { return input_get_pressed_char(); }
 
+bool sk_vk_to_name(int vk, char *out, size_t cap) {
+  return input_vk_to_name(vk, out, cap);
+}
+
 bool sk_poll_key(SkKeyEvent *out) {
   if (!out)
     return false;
