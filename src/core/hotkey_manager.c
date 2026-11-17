@@ -519,7 +519,7 @@ bool hotkey_process(int vk_code, int modifiers) {
     if (MessageAfterEachHotkey) {
       snprintf(buf, sizeof(buf), "Ran Hotkey %s", hotkey_buf);
       display_message_slot(buf, BOTTOM_CENTER, 400, 400, 20, TimeOutForMessages,
-                           COLOR_TEXT, NULL, NULL);
+                           COLOR_TEXT, NULL, NULL, NULL);
     }
     log_info("hotkey_process Hotkey %s Matches", hotkey_buf);
     if (b->hold)

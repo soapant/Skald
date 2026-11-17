@@ -889,7 +889,7 @@ static void hover_popup_frame(void *ud) {
   p->frame++;
   set_draw_offset(0, 0);
   begin_measure();
-  p->render();
+  p->render(p->render_data);
   int mw = 0, mh = 0;
   end_measure(&mw, &mh);
   if (mw > 0 && mh > 0) {
@@ -904,6 +904,7 @@ static SkHoverPopupCtx *hover_popup_ctx_new(const SkMessageSpec *spec) {
   if (!p)
     return NULL;
   p->render = spec->render;
+  p->render_data = spec->render_data;
   p->w = spec->w > 0 ? spec->w : WIDGET_PROVISIONAL_W;
   p->h = spec->h > 0 ? spec->h : WIDGET_PROVISIONAL_H;
   p->created_at = sk_start_timer();
@@ -997,11 +998,12 @@ void ski_message(const SkMessageSpec *spec) {
                                .timeout = timeout,
                                .color = color,
                                .render = spec->render ? spec->render : NULL,
-                               .name = spec->name});
+                               .name = spec->name,
+                               .render_data = spec->render_data});
     return;
   }
   display_message_slot(spec->message, slot, mw, mh, spec->prompt_gap, timeout,
-                       color, spec->render, spec->name);
+                       color, spec->render, spec->render_data, spec->name);
 }
 
 bool sk_launch_browser(const char *url) {

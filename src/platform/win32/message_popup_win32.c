@@ -39,6 +39,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     params.color = color;
     params.no_bg = no_bg;
     params.render = render;
+    params.render_data = render_data;
     params.name = name;
     SendMessageA(WH_TO_HWND(win32_tray_window()), WM_DISPLAY_MESSAGE, 0,
                  (LPARAM)&params);
@@ -54,6 +55,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
                                          .color = color,
                                          .no_bg = no_bg,
                                          .render = render,
+                                         .render_data = render_data,
                                          .name = name});
 }
 
@@ -181,6 +183,7 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
                                                  .timeout = timeout,
                                                  .color = color,
                                                  .render = render,
+                                                 .render_data = render_data,
                                                  .name = name});
 }
 
@@ -194,7 +197,8 @@ void Platform_CreateDisplayMessageWindow(
   double timeout = spec.timeout;
   ColorRef color = spec.color;
   bool no_bg = spec.no_bg;
-  void (*render)(void) = spec.render;
+  void (*render)(void *ud) = spec.render;
+  void *render_data = spec.render_data;
   const char *name = spec.name;
 
   log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g "
@@ -235,6 +239,7 @@ void Platform_CreateDisplayMessageWindow(
   pWndData->color = color;
   pWndData->no_bg = no_bg;
   pWndData->render = render;
+  pWndData->render_data = render_data;
   pWndData->render_owner[0] = '\0';
   if (render)
     owner_resolve_for_func((void *)render, pWndData->render_owner,

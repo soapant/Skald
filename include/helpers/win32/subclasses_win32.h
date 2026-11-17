@@ -14,7 +14,8 @@ typedef struct {
   int alpha;
   ColorRef color;
   bool no_bg;
-  void (*render)(void);
+  void (*render)(void *ud);
+  void *render_data;
   char render_owner[OWNER_PATH_MAX];
   double timeout;
   ULONGLONG deadline_ms;

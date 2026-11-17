@@ -321,7 +321,8 @@ typedef struct {
   int prompt_gap;
   ColorRef color_text;
   const char *hover_key;
-  void (*render)(void);
+  void (*render)(void *ud);
+  void *render_data;
   int fps;
   bool no_bg;
   ColorRef color_bg;
@@ -330,7 +331,8 @@ typedef struct {
 } SkMessageSpec;
 
 typedef struct {
-  void (*render)(void);
+  void (*render)(void *ud);
+  void *render_data;
   int w;
   int h;
   unsigned long frame;
