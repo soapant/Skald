@@ -268,6 +268,16 @@ bool hotkey_has_mouse_binding(void) {
   return false;
 }
 
+bool hotkey_has_keyboard_binding(void) {
+  for (int i = 0; i < hotkey_total; i++) {
+    int vk = hotkeys[i].vk_code;
+    if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1)
+      continue;
+    return true;
+  }
+  return false;
+}
+
 static bool hotkey_blacklist_match(const HotkeyBinding *b, const char *title) {
   if (!b->blacklist || b->blacklist_count == 0)
     return false;

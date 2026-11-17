@@ -305,14 +305,15 @@ int WindowManager_Run(WindowManager *wm) {
     x11_mouse_grab_begin();
   }
 
-  if (remap_has_bindings()) {
+  bool grab_keyboards = remap_has_bindings() || hotkey_has_keyboard_binding();
+  if (grab_keyboards) {
     if (x11_uinput_fd_get() < 0 && !x11_grab_blocked()) {
-      log_warn("remap forcing uinput init despite use_grab=%d", use_grab);
+      log_warn("input grab forcing uinput init despite use_grab=%d", use_grab);
       x11_uinput_fd_set(init_uinput());
       if (x11_uinput_fd_get() >= 0)
-        log_warn("remap uinput forced fd=%d", x11_uinput_fd_get());
+        log_warn("input grab uinput forced fd=%d", x11_uinput_fd_get());
       else
-        log_warn("remap uinput force failed, fallback XTest will be used");
+        log_warn("input grab uinput force failed, fallback XTest will be used");
     }
     if (x11_uinput_fd_get() >= 0) {
       x11_clear_suppress();
@@ -358,7 +359,7 @@ int WindowManager_Run(WindowManager *wm) {
         }
       }
     } else {
-      log_warn("remap grab skipped: no uinput, not grabbing to avoid bricking");
+      log_warn("keyboard grab skipped: no uinput, not grabbing to avoid bricking");
     }
   }
   if (dpy) {

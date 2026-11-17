@@ -92,6 +92,18 @@ TEST(purge_owner_removes_binding_and_pending) {
   ASSERT_EQ_INT(ud_calls, 0);
 }
 
+TEST(keyboard_binding_detection_ignores_mouse) {
+  HotkeyBinding mouse_binding = make_binding(0xE3, 0, ud_cb, NULL, NULL);
+  ASSERT_TRUE(hotkey_register_internal(mouse_binding));
+  ASSERT_FALSE(hotkey_has_keyboard_binding());
+  HotkeyBinding kb_binding = make_binding('Z', 0, ud_cb, NULL, fn_cb);
+  ASSERT_TRUE(hotkey_register_internal(kb_binding));
+  ASSERT_TRUE(hotkey_has_keyboard_binding());
+  ASSERT_TRUE(hotkey_unregister_internal('Z', 0));
+  ASSERT_TRUE(hotkey_unregister_internal(0xE3, 0));
+  ASSERT_FALSE(hotkey_has_keyboard_binding());
+}
+
 TEST(suspended_hotkeys_do_not_dispatch) {
   reset_counters();
   hotkey_set_suspended(true);
@@ -109,6 +121,7 @@ int main(void) {
   RUN(register_and_drain_legacy_callback);
   RUN(unregister_removes_binding);
   RUN(purge_owner_removes_binding_and_pending);
+  RUN(keyboard_binding_detection_ignores_mouse);
   RUN(suspended_hotkeys_do_not_dispatch);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
