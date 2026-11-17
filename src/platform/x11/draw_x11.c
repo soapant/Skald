@@ -58,7 +58,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     needDestroy = true;
   }
   unsigned long color =
-      spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
+      spec.color == COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
   const char *a = spec.align ? spec.align : "CENTER";
   if (pl_draw_state_get()->measuring) {
     XftFont *mf = FH_TO_XFT(fh);
@@ -139,7 +139,7 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   if (!xf)
     return false;
   unsigned long color =
-      spec.color == PL_COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
+      spec.color == COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
   XftColor col;
   x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF,
                        &col);

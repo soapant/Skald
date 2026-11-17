@@ -1299,7 +1299,7 @@ bool ski_draw_text(const SkTextSpec *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  if (col == 0) {
+  if (col == COLOR_AUTO) {
     unsigned long cur = sk_listbox_get_current_standard_color();
     col = cur ? cur : rgb_to_hex(COLOR_TEXT);
   } else {
@@ -1508,7 +1508,7 @@ bool ski_draw_rect(const PlRect *spec) {
   }
   unsigned long col = spec->color;
   bool transparent = spec->transparent;
-  if (col == 0)
+  if (col == COLOR_AUTO)
     col = COLOR_TEXT;
   col = rgb_to_hex(col);
   return Platform_DrawRectRaw((PlDrawRectRawSpec){
@@ -1602,9 +1602,10 @@ bool ski_draw_line(const PlLine *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  col = rgb_to_hex(col);
-  if (col == 0)
+  if (col == COLOR_AUTO)
     col = COLOR_TEXT;
+  else
+    col = rgb_to_hex(col);
   return Platform_DrawLineRaw(
       (PlDrawLineRawSpec){.x1 = spec->x1,
                           .y1 = spec->y1,
@@ -1619,9 +1620,10 @@ bool ski_draw_circle(const PlCircle *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  col = rgb_to_hex(col);
-  if (col == 0)
+  if (col == COLOR_AUTO)
     col = COLOR_TEXT;
+  else
+    col = rgb_to_hex(col);
   return Platform_DrawCircleRaw(
       (PlDrawCircleRawSpec){.cx = spec->x,
                             .cy = spec->y,
