@@ -171,6 +171,8 @@ bool sk_hotkey_to_string(SkKey key, char *out, size_t cap);
 
 SkKey sk_hotkey_from_string(const char *str);
 
+bool ski_hotkey_down(int vk_code, int mods);
+
 bool sk_hotkey_down(SkKey key);
 
 bool sk_launch_browser(const char *url);
@@ -555,9 +557,13 @@ void sk_free_flags(SkFlagList *list);
 
 SkTimer sk_start_timer(void);
 
+double ski_end_timer(uint64_t ticks);
+
 double sk_end_timer(SkTimer t);
 
 SkTimer sk_profile_start(void);
+
+void ski_profile_end(uint64_t ticks);
 
 void sk_profile_end(SkTimer timer);
 
@@ -644,9 +650,19 @@ char *sk_get_active_window_id(void);
 bool sk_is_window_open(const char *title);
 #define sk_window_open sk_is_window_open
 
+SkColor ski_get_pixel_color(int x, int y);
+
 SkColor sk_get_pixel_color(SkPos pos);
 
+bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b);
+
+bool sk_color_matches(SkPos pos, SkColor color);
+
+bool ski_move_to_pos(int x, int y);
+
 bool sk_move_to_pos(SkPos pos);
+
+bool ski_click_at(int x, int y);
 
 bool sk_click_at(SkPos pos);
 
