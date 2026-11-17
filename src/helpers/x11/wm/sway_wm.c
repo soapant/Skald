@@ -731,8 +731,8 @@ bool snap_active_window_sway(SnapPreset preset) {
   int mx = 0, my = 0, mw = 0, mh = 0;
   if (!sway_focused_output_geom(&mx, &my, &mw, &mh))
     return false;
-  int x = 0, y = 0, w = 0, h = 0;
-  wm_snap_rect(mx, my, mw, mh, preset, &x, &y, &w, &h);
+  SnapRect r = wm_snap_rect(mx, my, mw, mh, preset);
+  int w = r.w, h = r.h, x = r.x, y = r.y;
   char cmd[512];
   snprintf(cmd, sizeof(cmd),
            "swaymsg resize set width %d px height %d px && "

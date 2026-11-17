@@ -174,8 +174,13 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
     return false;
   PromptState *state = prompt_popup_get_top_prompt_state();
   EditboxPlace place;
-  editbox_resolve_place(spec->buffer, spec->x, spec->y, spec->w, spec->h,
-                        spec->fontsize, state, &place);
+  editbox_resolve_place(&(EditboxPlaceSpec){.buffer = spec->buffer,
+                                            .x = spec->x,
+                                            .y = spec->y,
+                                            .w = spec->w,
+                                            .h = spec->h,
+                                            .fontsize = spec->fontsize},
+                        state, &place);
   int fs = place.fontsize;
   const char *buf = place.buf;
   int x = place.x;
@@ -223,8 +228,12 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
                       .caret_y = spec->caret_y,
                       .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_spec_from_place(&eb, &place, state, &ui, text_w, cursor_x, ascent,
-                          descent, spec->font);
+  editbox_spec_from_place(&eb, &place, state, &ui,
+                          &(EditboxMetrics){.text_w = text_w,
+                                            .cursor_x = cursor_x,
+                                            .ascent = ascent,
+                                            .descent = descent,
+                                            .font = spec->font});
 
   bool prev_lb = draw_state_get()->win32_listbox_surface;
   draw_state_get()->win32_listbox_surface = false;

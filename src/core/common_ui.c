@@ -470,9 +470,8 @@ ColorRef get_rainbow_color(float t, float s, float v) {
   }
 }
 
-void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x,
-                          int *out_y, int *out_w, int *out_h, int *out_h_slot,
-                          int *out_v_slot, int *out_gap, int *out_outward) {
+SlotRect message_slot_to_rect(MessageSlot slot, int prompt_gap) {
+  SlotRect out;
   int h_slot = 1;
   int v_slot = 1;
   int gap = MessageScreenGap;
@@ -507,58 +506,51 @@ void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x,
     h_slot = idx % 3;
     v_slot = idx / 3;
   }
-  if (out_x)
-    *out_x = x;
-  if (out_y)
-    *out_y = y;
-  if (out_w)
-    *out_w = w;
-  if (out_h)
-    *out_h = h;
-  if (out_h_slot)
-    *out_h_slot = h_slot;
-  if (out_v_slot)
-    *out_v_slot = v_slot;
-  if (out_gap)
-    *out_gap = gap;
-  if (out_outward)
-    *out_outward = outward;
+  out.x = x;
+  out.y = y;
+  out.w = w;
+  out.h = h;
+  out.h_slot = h_slot;
+  out.v_slot = v_slot;
+  out.gap = gap;
+  out.outward = outward;
+  return out;
 }
 
-void display_message_slot(const char *message, MessageSlot slot, int max_w,
-                          int max_h, int prompt_gap, double timeout,
-                          ColorRef color, void (*render)(void *ud),
-                          void *render_data, const char *name, int win_w,
-                          int win_h, bool rounded, int radius) {
+void display_message_slot(const MessageSlotSpec *spec) {
+  if (!spec)
+    return;
+  const char *message = spec->message;
+  void (*render)(void *ud) = spec->render;
   if (!message)
     message = "";
   if (!message[0] && !render)
     return;
-  int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
-  message_slot_to_rect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap,
-                       &outward);
+  SlotRect r = message_slot_to_rect(spec->slot, spec->prompt_gap);
   Platform_DisplayMessageAnchored((AnchoredMessageSpec){.message = message,
-                                                          .x = x,
-                                                          .y = y,
-                                                          .w = w,
-                                                          .h = h,
-                                                          .h_slot = h_slot,
-                                                          .v_slot = v_slot,
-                                                          .gap = gap,
-                                                          .outward = outward,
-                                                          .max_width = max_w,
-                                                          .max_height = max_h,
-                                                          .timeout = timeout,
-                                                          .color = color,
+                                                          .x = r.x,
+                                                          .y = r.y,
+                                                          .w = r.w,
+                                                          .h = r.h,
+                                                          .h_slot = r.h_slot,
+                                                          .v_slot = r.v_slot,
+                                                          .gap = r.gap,
+                                                          .outward = r.outward,
+                                                          .max_width =
+                                                              spec->max_w,
+                                                          .max_height =
+                                                              spec->max_h,
+                                                          .timeout = spec->timeout,
+                                                          .color = spec->color,
                                                           .no_bg = false,
                                                           .render = render,
                                                           .render_data =
-                                                              render_data,
-                                                          .width = win_w,
-                                                          .height = win_h,
-                                                          .name = name,
-                                                          .rounded = rounded,
-                                                          .radius = radius});
+                                                              spec->render_data,
+                                                          .width = spec->win_w,
+                                                          .height = spec->win_h,
+                                                          .name = spec->name,
+                                                          .rounded = spec->rounded,
+                                                          .radius = spec->radius});
 }
 
 void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,

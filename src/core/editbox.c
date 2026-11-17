@@ -22,13 +22,16 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
       .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
 }
 
-void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
-                           int fontsize, PromptState *state,
+void editbox_resolve_place(const EditboxPlaceSpec *spec,
+                           PromptState *state,
                            EditboxPlace *out) {
-  if (!out)
+  if (!out || !spec)
     return;
   memset(out, 0, sizeof(*out));
   out->state = state;
+  int x = spec->x, y = spec->y, w = spec->w, h = spec->h;
+  int fontsize = spec->fontsize;
+  const char *buffer = spec->buffer;
   int fs = fontsize > 0 ? fontsize : FontSize;
   const char *buf = buffer;
   if (!buf)
@@ -54,10 +57,12 @@ void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
 
 void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
                              PromptState *state, const EditboxUiSpec *ui,
-                             int text_w, int cursor_x, int ascent, int descent,
-                             FontHandle font) {
-  if (!out || !place || !ui)
+                             const EditboxMetrics *metrics) {
+  if (!out || !place || !ui || !metrics)
     return;
+  int text_w = metrics->text_w, cursor_x = metrics->cursor_x;
+  int ascent = metrics->ascent, descent = metrics->descent;
+  FontHandle font = metrics->font;
   EditboxInitFromSpec init_args = {0};
   init_args.state = state;
   init_args.buf = place->buf;
@@ -165,10 +170,12 @@ int editbox_caret_y(int box_top, int ascent, int descent, int fontsize) {
 }
 
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
-                                   int text_len, int cursor_x, int text_w,
-                                   int ascent, int descent, FontHandle font) {
-  if (!spec || !state)
+                                   int text_len, const EditboxMetrics *metrics) {
+  if (!spec || !state || !metrics)
     return;
+  int cursor_x = metrics->cursor_x, text_w = metrics->text_w;
+  int ascent = metrics->ascent, descent = metrics->descent;
+  FontHandle font = metrics->font;
   int sel_start = 0, sel_end = 0;
   bool has_sel = false;
   editbox_resolve_selection(state, text_len, true, &sel_start, &sel_end,
