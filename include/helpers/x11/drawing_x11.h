@@ -18,6 +18,7 @@ int x11_draw_utf8_fallback(Display *dpy, XftDraw *xd, XftColor *color, int x,
                            int y, XftFont *xf, const char *s, int n, int px);
 int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
                               int px);
+void x11_bump_measure_epoch(void);
 bool x11_xft_color_cached(Display *dpy, Visual *vis, Colormap cmap,
                           unsigned long hex, unsigned short alpha,
                           XftColor *out);
