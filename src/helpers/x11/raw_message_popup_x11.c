@@ -190,7 +190,8 @@ int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int max_w,
 static void x11_display_message_draw(Display *dpy, Window win,
                                      const char *message, unsigned long color,
                                      int w, int h, bool no_bg,
-                                     void (*render)(void)) {
+                                     void (*render)(void *ud),
+                                     void *render_data) {
 
   XWindowAttributes attrs;
   if (!XGetWindowAttributes(dpy, win, &attrs)) {
@@ -210,7 +211,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
 
   if (render != NULL) {
     x11_set_draw_context(dpy, xd, attrs.visual, attrs.colormap);
-    render();
+    render(render_data);
   }
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   XftFont *xf = FH_TO_XFT(font);
@@ -271,7 +272,8 @@ int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
 
 void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
                      int win_h, double timeout, ColorRef color, bool no_bg,
-                     void (*render)(void), const char *name) {
+                     void (*render)(void *ud), void *render_data,
+                     const char *name) {
 
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
@@ -285,7 +287,7 @@ void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
   XMapWindow(dpy, win);
   XFlush(dpy);
   x11_display_message_draw(dpy, win, message, (unsigned long)color, win_w,
-                           win_h, no_bg, render);
+                           win_h, no_bg, render, render_data);
   bool indefinite = MsgTimeoutIsIndefinite(timeout);
   pthread_mutex_lock(&g_msg_lock);
   if (g_msg_slot_count >= MSG_MAX_ACTIVE)
@@ -344,7 +346,7 @@ void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
     g_msg_slots[idx].y = center_y - win_h / 2;
     pthread_mutex_unlock(&g_msg_lock);
     x11_display_message_draw(dpy, w, message, (unsigned long)color, win_w,
-                             win_h, no_bg, NULL);
+                             win_h, no_bg, NULL, NULL);
     return;
   }
   pthread_mutex_unlock(&g_msg_lock);
@@ -357,7 +359,7 @@ void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
   XMapRaised(dpy, win);
   XFlush(dpy);
   x11_display_message_draw(dpy, win, message, (unsigned long)color, win_w,
-                           win_h, no_bg, NULL);
+                           win_h, no_bg, NULL, NULL);
 
   pthread_mutex_lock(&g_msg_lock);
   if (g_msg_slot_count >= MSG_MAX_ACTIVE)

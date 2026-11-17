@@ -127,7 +127,7 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
 
     if (data && data->render) {
       win32_set_draw_context(hdc);
-      data->render();
+      data->render(data->render_data);
       win32_set_draw_context(NULL);
     }
 
