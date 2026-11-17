@@ -16,7 +16,8 @@ typedef struct {
   double timeout;
   ColorRef color;
   bool no_bg;
-  void (*render)(void);
+  void (*render)(void *ud);
+  void *render_data;
   const char *name;
 } PlAnchoredMessageSpec;
 
@@ -27,7 +28,8 @@ typedef struct {
   double timeout;
   ColorRef color;
   bool no_bg;
-  void (*render)(void);
+  void (*render)(void *ud);
+  void *render_data;
   const char *name;
 } PlCreateDisplayMessageWindowSpec;
 
@@ -48,7 +50,8 @@ typedef struct {
   int max_width, max_height;
   double timeout;
   ColorRef color;
-  void (*render)(void);
+  void (*render)(void *ud);
+  void *render_data;
   const char *name;
 } PlDisplayMessageSpec;
 
@@ -75,7 +78,8 @@ typedef struct {
   int max_height = (spec).max_height;                                          \
   double timeout = (spec).timeout;                                             \
   ColorRef color = (spec).color;                                               \
-  void (*render)(void) = (spec).render;                                        \
+  void (*render)(void *ud) = (spec).render;                                     \
+  void *render_data = (spec).render_data;                                          \
   const char *name = (spec).name
 
 #define ANCHORED_MSG_UNPACK(spec)                                              \
@@ -93,7 +97,8 @@ typedef struct {
   double timeout = (spec).timeout;                                             \
   ColorRef color = (spec).color;                                               \
   bool no_bg = (spec).no_bg;                                                   \
-  void (*render)(void) = (spec).render;                                        \
+  void (*render)(void *ud) = (spec).render;                                     \
+  void *render_data = (spec).render_data;                                          \
   const char *name = (spec).name
 
 #define HTTP_CONNECT_TIMEOUT_S 10
