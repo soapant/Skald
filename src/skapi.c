@@ -1759,11 +1759,21 @@ SkWindowList sk_get_all_window_titles(void) {
 
 SkWindowList sk_get_all_window_ids(void) { return Platform_GetWindowIds(); }
 
-PlColor sk_get_pixel_color(SkPos pos) {
-  return Platform_GetPixelColor(pos.x, pos.y);
+SkColor ski_get_pixel_color(int x, int y) {
+  return Platform_GetPixelColor(x, y);
 }
-bool sk_move_to_pos(SkPos pos) { return Platform_MoveToPos(pos.x, pos.y); }
-bool sk_click_at(SkPos pos) { return sk_move_to_pos(pos) && sk_click(); }
+SkColor sk_get_pixel_color(SkPos pos) { return ski_get_pixel_color(pos.x, pos.y); }
+bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b) {
+  SkColor c = ski_get_pixel_color(x, y);
+  return c.r == r && c.g == g && c.b == b;
+}
+bool sk_color_matches(SkPos pos, SkColor color) {
+  return ski_color_matches(pos.x, pos.y, color.r, color.g, color.b);
+}
+bool ski_move_to_pos(int x, int y) { return Platform_MoveToPos(x, y); }
+bool sk_move_to_pos(SkPos pos) { return ski_move_to_pos(pos.x, pos.y); }
+bool ski_click_at(int x, int y) { return ski_move_to_pos(x, y) && sk_click(); }
+bool sk_click_at(SkPos pos) { return ski_click_at(pos.x, pos.y); }
 bool sk_left_click(void) { return Platform_ClickButton(1); }
 bool sk_right_click(void) { return Platform_ClickButton(2); }
 bool sk_emit_mouse_button(int button, bool down) {
@@ -2271,7 +2281,11 @@ void sk_run_after_time(double seconds, void (*callback)(void)) {
 
 SkTimer sk_start_timer(void) { return Platform_StartTimer(); }
 
-double sk_end_timer(SkTimer t) { return Platform_EndTimer(t); }
+double ski_end_timer(uint64_t ticks) {
+  return Platform_EndTimer((SkTimer){.ticks = ticks});
+}
+
+double sk_end_timer(SkTimer t) { return ski_end_timer(t.ticks); }
 
 char *sk_get_active_window_title(void) {
   char *title = Platform_GetActiveWindowTitle();
@@ -2395,8 +2409,8 @@ const SkHashMap *sk_hashmap_at(SkHashMap *map, size_t index) {
 
 SkTimer sk_profile_start(void) { return sk_start_timer(); }
 
-void sk_profile_end(SkTimer timer) {
-  double ms = sk_end_timer(timer);
+void ski_profile_end(uint64_t ticks) {
+  double ms = ski_end_timer(ticks);
   if (ms < 0.0)
     ms = 0.0;
 
@@ -2407,6 +2421,8 @@ void sk_profile_end(SkTimer timer) {
   else
     log_debug("[profile] %.3f µs", ms * 1000.0);
 }
+
+void sk_profile_end(SkTimer timer) { ski_profile_end(timer.ticks); }
 
 typedef struct {
   char name[64];
@@ -2760,19 +2776,21 @@ int sk_reload_all_features(void) {
   return feature_loader_build_stale_sources(true);
 }
 
-bool sk_hotkey_down(SkKey key) {
-  if (!sk_is_key_down(key.vk_code))
+bool ski_hotkey_down(int vk_code, int mods) {
+  if (!sk_is_key_down(vk_code))
     return false;
-  if ((key.mods & SK_CTRL) && !sk_ctrl_pressed())
+  if ((mods & SK_CTRL) && !sk_ctrl_pressed())
     return false;
-  if ((key.mods & SK_SHIFT) && !sk_shift_pressed())
+  if ((mods & SK_SHIFT) && !sk_shift_pressed())
     return false;
-  if ((key.mods & SK_ALT) && !sk_alt_pressed())
+  if ((mods & SK_ALT) && !sk_alt_pressed())
     return false;
-  if ((key.mods & SK_SUPER) && !sk_super_pressed())
+  if ((mods & SK_SUPER) && !sk_super_pressed())
     return false;
   return true;
 }
+
+bool sk_hotkey_down(SkKey key) { return ski_hotkey_down(key.vk_code, key.mods); }
 
 void sk_register_key_interceptor(SkKeyInterceptorFn fn) {
   key_register_interceptor((KeyInterceptorFn)fn);
