@@ -1,5 +1,21 @@
 #include "helpers/x11/raw_draw_x11.h"
+#include "helpers/x11/window_factory_x11.h"
 #define RAW_LINE_CAP 4096
+
+bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius) {
+  Display *dpy = x11_get_display();
+  if (!dpy)
+    return false;
+  Window w = (Window)WH_TO_XID(win);
+  if (w == None)
+    return false;
+  XWindowAttributes attrs;
+  if (!XGetWindowAttributes(dpy, w, &attrs))
+    return false;
+  x11_apply_shape(dpy, w, attrs.width, attrs.height, rounded, radius);
+  XFlush(dpy);
+  return true;
+}
 
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   Display *dpy = x11_get_display();

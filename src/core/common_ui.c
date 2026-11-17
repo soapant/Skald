@@ -529,7 +529,7 @@ void display_message_slot(const char *message, MessageSlot slot, int max_w,
                           int max_h, int prompt_gap, double timeout,
                           ColorRef color, void (*render)(void *ud),
                           void *render_data, const char *name, int win_w,
-                          int win_h) {
+                          int win_h, bool rounded, int radius) {
   if (!message)
     message = "";
   if (!message[0] && !render)
@@ -556,7 +556,9 @@ void display_message_slot(const char *message, MessageSlot slot, int max_w,
                                                               render_data,
                                                           .width = win_w,
                                                           .height = win_h,
-                                                          .name = name});
+                                                          .name = name,
+                                                          .rounded = rounded,
+                                                          .radius = radius});
 }
 
 void listbox_compute_layout(const PlListSpec *spec, int default_y0, int item_h,

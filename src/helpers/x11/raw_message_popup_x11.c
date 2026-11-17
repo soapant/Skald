@@ -273,13 +273,13 @@ int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
 void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
                      int win_h, double timeout, ColorRef color, bool no_bg,
                      void (*render)(void *ud), void *render_data,
-                     const char *name) {
+                     const char *name, bool rounded, int radius) {
 
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
   set_transparent_window(no_bg);
-  Window win = x11_create_display_message_window(dpy, x + ax, y + ay, win_w,
-                                                 win_h, false);
+  Window win = x11_create_display_message_window_ex(
+      dpy, x + ax, y + ay, win_w, win_h, false, rounded, radius);
   set_transparent_window(false);
   if (!win) {
     return;
