@@ -21,7 +21,7 @@ static void win32_draw_text_prep(int sx, int sy, unsigned long c, int *x_out,
   *x_out = sx;
   *y_out = sy;
   pl_draw_state_offset(x_out, y_out);
-  *color_out = c != PL_COLOR_AUTO ? rgb_to_hex(c) : COLOR_TEXT;
+  *color_out = c != COLOR_AUTO ? rgb_to_hex(c) : COLOR_TEXT;
 }
 
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {

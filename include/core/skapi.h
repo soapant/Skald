@@ -452,7 +452,8 @@ bool sk_button_is_clicked(const char *name);
 #define sk_button_clicked sk_button_is_clicked
 #define sk_button_checked sk_button_is_checked
 
-#define sk_draw_text(...) ski_draw_text(&(SkTextSpec){__VA_ARGS__})
+#define sk_draw_text(...)                                                       \
+  ski_draw_text(&(SkTextSpec){.color = COLOR_AUTO, __VA_ARGS__})
 #define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
@@ -515,11 +516,14 @@ bool ski_draw_line(const SkLine *spec);
 
 bool ski_draw_circle(const SkCircle *spec);
 
-#define sk_draw_rect(...) ski_draw_rect(&(PlRect){__VA_ARGS__})
+#define sk_draw_rect(...)                                                       \
+  ski_draw_rect(&(PlRect){.color = COLOR_AUTO, __VA_ARGS__})
 
-#define sk_draw_line(...) ski_draw_line(&(PlLine){__VA_ARGS__})
+#define sk_draw_line(...)                                                        \
+  ski_draw_line(&(PlLine){.color = COLOR_AUTO, __VA_ARGS__})
 
-#define sk_draw_circle(...) ski_draw_circle(&(PlCircle){__VA_ARGS__})
+#define sk_draw_circle(...)                                                      \
+  ski_draw_circle(&(PlCircle){.color = COLOR_AUTO, __VA_ARGS__})
 
 int sk_rand_num_between(int min, int max);
 
@@ -951,7 +955,7 @@ void sk_cap_bind_declare(const char *key, void *consumer);
   var = var##_fn
 
 #define SK_WHITE RGB(255, 255, 255)
-#define SK_BLACK RGB(1, 1, 1)
+#define SK_BLACK RGB(0, 0, 0)
 #define SK_RED RGB(255, 0, 0)
 #define SK_DARK_RED RGB(128, 0, 0)
 #define SK_GREEN RGB(0, 255, 0)

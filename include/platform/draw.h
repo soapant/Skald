@@ -24,7 +24,7 @@ void Platform_DrawPromptEditCursor(PromptState *state);
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h);
 
-#define PL_COLOR_AUTO (~0UL)
+#define COLOR_AUTO (~0UL)
 
 typedef struct {
   int x, y, w, h;
