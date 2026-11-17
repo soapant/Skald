@@ -1004,9 +1004,20 @@ void ski_message(const SkMessageSpec *spec) {
                                .radius = spec->radius});
     return;
   }
-  display_message_slot(spec->message, slot, mw, mh, spec->prompt_gap, timeout,
-                       color, spec->render, spec->render_data, spec->name,
-                       spec->w, spec->h, spec->rounded, spec->radius);
+  display_message_slot(&(MessageSlotSpec){.message = spec->message,
+                                          .slot = slot,
+                                          .max_w = mw,
+                                          .max_h = mh,
+                                          .prompt_gap = spec->prompt_gap,
+                                          .timeout = timeout,
+                                          .color = color,
+                                          .render = spec->render,
+                                          .render_data = spec->render_data,
+                                          .name = spec->name,
+                                          .win_w = spec->w,
+                                          .win_h = spec->h,
+                                          .rounded = spec->rounded,
+                                          .radius = spec->radius});
 }
 
 bool sk_launch_browser(const char *url) {

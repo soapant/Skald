@@ -371,8 +371,12 @@ void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
   }
   int asc = xf ? xf->ascent : 0;
   int desc = xf ? xf->descent : 0;
-  editbox_spec_fill_from_prompt(eb, state, text_len, cursor_x, text_w, asc,
-                                desc, font);
+  editbox_spec_fill_from_prompt(eb, state, text_len,
+                                &(EditboxMetrics){.cursor_x = cursor_x,
+                                                  .text_w = text_w,
+                                                  .ascent = asc,
+                                                  .descent = desc,
+                                                  .font = font});
   eb->measure = x11_editbox_measure;
   eb->measure_user = metrics;
 }

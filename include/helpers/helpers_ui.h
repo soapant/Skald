@@ -78,14 +78,28 @@ void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,
                             int popup_w, int popup_h, int count,
                             ListboxLayout *out);
 
-void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x,
-                          int *out_y, int *out_w, int *out_h, int *out_h_slot,
-                          int *out_v_slot, int *out_gap, int *out_outward);
-void display_message_slot(const char *message, MessageSlot slot, int max_w,
-                          int max_h, int prompt_gap, double timeout,
-                          ColorRef color, void (*render)(void *ud),
-                          void *render_data, const char *name, int win_w,
-                          int win_h, bool rounded, int radius);
+typedef struct {
+  int x, y, w, h;
+  int h_slot, v_slot, gap, outward;
+} SlotRect;
+
+SlotRect message_slot_to_rect(MessageSlot slot, int prompt_gap);
+typedef struct {
+  const char *message;
+  MessageSlot slot;
+  int max_w, max_h;
+  int prompt_gap;
+  double timeout;
+  ColorRef color;
+  void (*render)(void *ud);
+  void *render_data;
+  const char *name;
+  int win_w, win_h;
+  bool rounded;
+  int radius;
+} MessageSlotSpec;
+
+void display_message_slot(const MessageSlotSpec *spec);
 
 void set_transparent_window(bool on);
 bool get_transparent_window(void);

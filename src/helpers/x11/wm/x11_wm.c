@@ -996,9 +996,8 @@ bool x11_snap_active_window(SnapPreset preset) {
   int mx, my, mw, mh;
   if (!x11_monitor_for_rect(display, fgx, fgy, fw, fh, &mx, &my, &mw, &mh))
     return false;
-  int x = 0, y = 0, w = 0, h = 0;
-  wm_snap_rect(mx, my, mw, mh, preset, &x, &y, &w, &h);
-  return x11_moveresize_window(display, focus, x, y, w, h);
+  SnapRect r = wm_snap_rect(mx, my, mw, mh, preset);
+  return x11_moveresize_window(display, focus, r.x, r.y, r.w, r.h);
 }
 
 bool x11_center_active_window(void) {

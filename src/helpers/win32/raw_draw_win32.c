@@ -653,6 +653,10 @@ void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
   }
   if (told)
     SelectObject(g_draw_hdc, told);
-  editbox_spec_fill_from_prompt(eb, state, text_len, cursor_x, text_w, ascent,
-                                descent, font);
+  editbox_spec_fill_from_prompt(eb, state, text_len,
+                                &(EditboxMetrics){.cursor_x = cursor_x,
+                                                  .text_w = text_w,
+                                                  .ascent = ascent,
+                                                  .descent = descent,
+                                                  .font = font});
 }
