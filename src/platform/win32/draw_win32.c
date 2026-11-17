@@ -35,7 +35,7 @@ static void win32_draw_text_prep(int sx, int sy, unsigned long c, int *x_out,
                                  int *y_out, unsigned long *color_out) {
   *x_out = sx;
   *y_out = sy;
-  pl_draw_state_offset(x_out, y_out);
+  draw_state_offset(x_out, y_out);
   *color_out = c != COLOR_AUTO ? rgb_to_hex(c) : COLOR_TEXT;
 }
 
@@ -55,7 +55,7 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   return true;
 }
 
-bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
+bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   if (!spec.text || !g_draw_hdc)
     return false;
   int x = 0, y = 0;
@@ -78,7 +78,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
     old = (HFONT)SelectObject(g_draw_hdc, hfont);
 
   int y_draw = y + dy;
-  if (pl_draw_state_get()->win32_widget_surface) {
+  if (draw_state_get()->win32_widget_surface) {
     TEXTMETRICW tm = {0};
     if (GetTextMetricsW(g_draw_hdc, &tm))
       y_draw -= (int)tm.tmInternalLeading - 1;
@@ -87,7 +87,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   SetTextColor(g_draw_hdc, color);
   bool centered = string_contains_ci(a, "CENTER");
   bool right = !centered && string_contains_ci(a, "RIGHT");
-  bool measuring = pl_draw_state_get()->measuring;
+  bool measuring = draw_state_get()->measuring;
   SIZE msz;
   msz.cx = 0;
   msz.cy = 0;
@@ -140,7 +140,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   return true;
 }
 
-void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
+void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
   if (!spec.text || !g_draw_hdc) {
     return;
   }
@@ -157,7 +157,7 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
     SelectObject(g_draw_hdc, old);
 }
 
-int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
+int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
   if (!spec.text || spec.len <= 0)
     return 0;
   if (!g_draw_hdc)
@@ -179,7 +179,7 @@ int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
   return sz.cx;
 }
 
-bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
+bool Platform_DrawTextLine(DrawTextLineSpec spec) {
   if (!spec.text || spec.len <= 0 || !g_draw_hdc)
     return false;
   int x = 0, y = 0;
@@ -200,15 +200,15 @@ bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
   return true;
 }
 
-bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
+bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   RECT_RAW_UNPACK(spec);
 
   if (!g_draw_hdc || w <= 0 || h <= 0) {
     return false;
   }
 
-  x += pl_draw_state_get()->off_x;
-  y += pl_draw_state_get()->off_y;
+  x += draw_state_get()->off_x;
+  y += draw_state_get()->off_y;
 
   int corner_w = 0;
   int corner_h = 0;
@@ -282,10 +282,10 @@ int Platform_GetTextLineHeight(int fontsize) {
   return tm.tmHeight > 0 ? (int)tm.tmHeight : fontsize;
 }
 
-bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
+bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   int x1, y1, x2, y2;
-  int t = draw_line_prep(&spec, pl_draw_state_get()->off_x,
-                         pl_draw_state_get()->off_y, &x1, &y1, &x2, &y2);
+  int t = draw_line_prep(&spec, draw_state_get()->off_x,
+                         draw_state_get()->off_y, &x1, &y1, &x2, &y2);
   HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(spec.color));
   HGDIOBJ old = SelectObject(g_draw_hdc, pen);
   MoveToEx(g_draw_hdc, x1, y1, NULL);
@@ -295,12 +295,12 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   return true;
 }
 
-bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
+bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
   if (spec.radius <= 0)
     return false;
   int cx, cy;
-  int t = draw_circle_prep(&spec, pl_draw_state_get()->off_x,
-                           pl_draw_state_get()->off_y, &cx, &cy);
+  int t = draw_circle_prep(&spec, draw_state_get()->off_x,
+                           draw_state_get()->off_y, &cx, &cy);
   int left = cx - spec.radius, top = cy - spec.radius;
   int right = cx + spec.radius, bottom = cy + spec.radius;
   if (t > 0) {
@@ -326,12 +326,12 @@ bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   if (!path || !path[0])
     return false;
-  int _offx = pl_draw_state_get()->off_x;
-  int _offy = pl_draw_state_get()->off_y;
+  int _offx = draw_state_get()->off_x;
+  int _offy = draw_state_get()->off_y;
   x += _offx;
   y += _offy;
-  if (pl_draw_state_get()->listbox_rows &&
-      pl_draw_state_get()->win32_listbox_surface)
+  if (draw_state_get()->listbox_rows &&
+      draw_state_get()->win32_listbox_surface)
     y -= 2;
   if (w <= 0)
     w = (IconSize > 0) ? IconSize : 16;
@@ -399,8 +399,8 @@ static void win32_draw_prompt_editbox(PromptState *state, int part_mask,
   if (!state || !g_draw_hdc) {
     return;
   }
-  bool prev_lb = pl_draw_state_get()->win32_listbox_surface;
-  pl_draw_state_get()->win32_listbox_surface = false;
+  bool prev_lb = draw_state_get()->win32_listbox_surface;
+  draw_state_get()->win32_listbox_surface = false;
   FontHandle font = Platform_CreateFont(FontSize, UsedFont);
   EditboxSpec eb;
   EditboxLayout lay;
@@ -410,7 +410,7 @@ static void win32_draw_prompt_editbox(PromptState *state, int part_mask,
     state->eb->scroll_offset = eb.scroll;
   editbox_draw(&eb, &lay, part_mask);
   Platform_DestroyFont(font);
-  pl_draw_state_get()->win32_listbox_surface = prev_lb;
+  draw_state_get()->win32_listbox_surface = prev_lb;
 }
 
 void Platform_DrawPromptEditText(PromptState *state) {

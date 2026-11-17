@@ -25,7 +25,7 @@ bool Platform_ListboxBackendBegin(int item_height_override,
     return false;
   out->item_h = prompt_row_height();
   out->list_top = prompt_list_top();
-  pl_draw_state_get()->win32_listbox_surface = true;
+  draw_state_get()->win32_listbox_surface = true;
   return true;
 }
 
@@ -58,7 +58,7 @@ void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
 }
 
 void Platform_ListboxBackendEnd(void) {
-  pl_draw_state_get()->win32_listbox_surface = false;
+  draw_state_get()->win32_listbox_surface = false;
   b_hdc = NULL;
 }
 

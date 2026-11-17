@@ -12,7 +12,7 @@
 #include "wm/x11_wm.h"
 #include "deps/log.h"
 
-bool wm_append_window_name(PlWindowList *list, const char *name,
+bool wm_append_window_name(WindowList *list, const char *name,
                            bool toupper_first) {
   if (!strcasecmp(name, "window") || !strcasecmp(name, "colored"))
     return true;
@@ -144,9 +144,9 @@ char *wm_paste(const char *content) {
   return NULL;
 }
 
-PlWindowList wm_get_window_titles(void) {
-  PlWindowList result;
-  PlWindowList empty = {.windows = NULL, .count = 0};
+WindowList wm_get_window_titles(void) {
+  WindowList result;
+  WindowList empty = {.windows = NULL, .count = 0};
   if (x11_env_is_wayland()) {
     result = get_window_titles_kwin();
     if (result.windows != NULL)
@@ -167,9 +167,9 @@ PlWindowList wm_get_window_titles(void) {
   log_error("GetWindowTitles Didn't Work");
   return empty;
 }
-PlWindowList wm_get_window_ids(void) {
-  PlWindowList result;
-  PlWindowList empty = {.windows = NULL, .count = 0};
+WindowList wm_get_window_ids(void) {
+  WindowList result;
+  WindowList empty = {.windows = NULL, .count = 0};
   if (x11_env_is_wayland()) {
     result = get_window_ids_kwin();
     if (result.windows != NULL)

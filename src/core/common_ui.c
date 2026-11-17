@@ -46,8 +46,8 @@ bool cover_scale(int sw, int sh, int tw, int th, int *dw, int *dh) {
   return 1;
 }
 
-PlMetrics *metrics_get(void) {
-  static PlMetrics m = {0};
+Metrics *metrics_get(void) {
+  static Metrics m = {0};
   static int init = 0;
   if (!init) {
     m.edit_cursor_width = 0;
@@ -60,12 +60,12 @@ PlMetrics *metrics_get(void) {
   return &m;
 }
 
-void draw_prompt_separator(PlDrawPromptSeparatorSpec spec) {
+void draw_prompt_separator(DrawPromptSeparatorSpec spec) {
   if (!EnableBorders || spec.width <= 0)
     return;
-  if (pl_draw_state_get()->suppress_separators)
+  if (draw_state_get()->suppress_separators)
     return;
-  Platform_DrawRectRaw((PlDrawRectRawSpec){.x = 0,
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = 0,
                                            .y = spec.y,
                                            .w = spec.width,
                                            .h = PROMPT_SEP_W,
@@ -77,7 +77,7 @@ void draw_prompt_separator(PlDrawPromptSeparatorSpec spec) {
                                            .filled = true});
 }
 
-void item_get_colors(PlGetItemColorsSpec spec) {
+void item_get_colors(GetItemColorsSpec spec) {
   unsigned long col_text = rgb_to_hex(COLOR_TEXT);
   float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
                              : (float)spec.idx / 10.0f;
@@ -537,7 +537,7 @@ void display_message_slot(const char *message, MessageSlot slot, int max_w,
   int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
   message_slot_to_rect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap,
                        &outward);
-  Platform_DisplayMessageAnchored((PlAnchoredMessageSpec){.message = message,
+  Platform_DisplayMessageAnchored((AnchoredMessageSpec){.message = message,
                                                           .x = x,
                                                           .y = y,
                                                           .w = w,
@@ -561,7 +561,7 @@ void display_message_slot(const char *message, MessageSlot slot, int max_w,
                                                           .radius = radius});
 }
 
-void listbox_compute_layout(const PlListSpec *spec, int default_y0, int item_h,
+void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,
                             int popup_w, int popup_h, int count,
                             ListboxLayout *out) {
 
@@ -729,7 +729,7 @@ int draw_thickness_px(float thickness) {
 }
 
 void draw_measure_track(int x, int y, int w, int h) {
-  pl_draw_state_track_measure(x, y, w, h);
+  draw_state_track_measure(x, y, w, h);
 }
 
 void update_text_caret(void) {
@@ -741,44 +741,44 @@ void update_text_caret(void) {
   }
 }
 
-void set_transparent_window(bool on) { pl_draw_state_get()->transparent = on; }
+void set_transparent_window(bool on) { draw_state_get()->transparent = on; }
 
-bool get_transparent_window(void) { return pl_draw_state_get()->transparent; }
+bool get_transparent_window(void) { return draw_state_get()->transparent; }
 
 void set_draw_bg_color(unsigned long hex) {
-  pl_draw_state_get()->bg_override = hex;
+  draw_state_get()->bg_override = hex;
 }
 
 unsigned long get_draw_bg_color(void) {
-  return pl_draw_state_get()->bg_override;
+  return draw_state_get()->bg_override;
 }
 
-void begin_measure(void) { pl_draw_state_begin_measure(); }
+void begin_measure(void) { draw_state_begin_measure(); }
 
 void end_measure(int *out_w, int *out_h) {
-  pl_draw_state_end_measure(out_w, out_h);
+  draw_state_end_measure(out_w, out_h);
 }
 
 void get_last_measure_origin(int *out_x, int *out_y) {
   if (out_x)
-    *out_x = pl_draw_state_get()->meas_origin_x;
+    *out_x = draw_state_get()->meas_origin_x;
   if (out_y)
-    *out_y = pl_draw_state_get()->meas_origin_y;
+    *out_y = draw_state_get()->meas_origin_y;
 }
 
 void set_draw_offset(int dx, int dy) {
-  pl_draw_state_get()->off_x = dx;
-  pl_draw_state_get()->off_y = dy;
+  draw_state_get()->off_x = dx;
+  draw_state_get()->off_y = dy;
 }
 
 void get_draw_offset(int *out_x, int *out_y) {
   if (out_x)
-    *out_x = pl_draw_state_get()->off_x;
+    *out_x = draw_state_get()->off_x;
   if (out_y)
-    *out_y = pl_draw_state_get()->off_y;
+    *out_y = draw_state_get()->off_y;
 }
 
-int draw_line_prep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
+int draw_line_prep(const DrawLineRawSpec *spec, int off_x, int off_y, int *x1,
                    int *y1, int *x2, int *y2) {
   int t = draw_thickness_px(spec->thickness);
   if (t < 1)
@@ -795,7 +795,7 @@ int draw_line_prep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
   return t;
 }
 
-int draw_circle_prep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
+int draw_circle_prep(const DrawCircleRawSpec *spec, int off_x, int off_y,
                      int *cx, int *cy) {
   int t = draw_thickness_px(spec->thickness);
   *cx = spec->cx + off_x;
@@ -823,15 +823,15 @@ int bg_tile_lru_pick(const void *slots, int count, size_t stride,
   return oldest;
 }
 
-void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec,
+void draw_text_centered_impl(const DrawTextCenteredSpec *spec,
                              int line_height) {
   int tw = Platform_MeasureTextWidth(
-      (PlMeasureTextWidthSpec){.text = spec->text,
+      (MeasureTextWidthSpec){.text = spec->text,
                                .len = (int)strlen(spec->text),
                                .fontsize = spec->fontsize});
   int tx = spec->x + (spec->w - tw) / 2;
   int ty = spec->y + (spec->h - line_height) / 2;
-  Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
+  Platform_DrawTextRaw((DrawTextRawSpec){.x = tx,
                                            .y = ty,
                                            .text = spec->text,
                                            .color = spec->color,

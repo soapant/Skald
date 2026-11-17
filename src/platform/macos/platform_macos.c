@@ -111,9 +111,9 @@ bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
   return false;
 }
 
-PlWindowList Platform_GetWindowTitles(void) { return (PlWindowList){0}; }
+WindowList Platform_GetWindowTitles(void) { return (WindowList){0}; }
 
-PlWindowList Platform_GetWindowIds(void) { return (PlWindowList){0}; }
+WindowList Platform_GetWindowIds(void) { return (WindowList){0}; }
 
 bool Platform_QueryBrowser(const char *query) {
   UNUSED(query);
@@ -169,18 +169,18 @@ bool Platform_MessageActive(const char *name) {
 
 void Platform_DismissIndefiniteMessage(void) {}
 
-void Platform_DisplayMessage(PlDisplayMessageSpec spec) { UNUSED(spec); }
+void Platform_DisplayMessage(DisplayMessageSpec spec) { UNUSED(spec); }
 
-void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
+void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
   UNUSED(spec);
 }
 
 void Platform_CreateDisplayMessageWindow(
-    PlCreateDisplayMessageWindowSpec spec) {
+    CreateDisplayMessageWindowSpec spec) {
   UNUSED(spec);
 }
 
-void Platform_HoverMessage(PlHoverMessageSpec spec) { UNUSED(spec); }
+void Platform_HoverMessage(HoverMessageSpec spec) { UNUSED(spec); }
 
 void Platform_HoverMessageRelease(const char *key) { UNUSED(key); }
 
@@ -336,10 +336,10 @@ bool Platform_GetMousePos(int *x, int *y) {
   return false;
 }
 
-PlColor Platform_GetPixelColor(int x, int y) {
+RgbColor Platform_GetPixelColor(int x, int y) {
   UNUSED(x);
   UNUSED(y);
-  return (PlColor){0, 0, 0};
+  return (RgbColor){0, 0, 0};
 }
 
 bool Platform_MoveToPos(int x, int y) {
@@ -475,17 +475,17 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
   return false;
 }
 
-struct PlDirIter {
+struct DirIter {
   DIR *dir;
   int dummy;
 };
 
-PlDirIter *Platform_DirOpen(const char *dir_path) {
+DirIter *Platform_DirOpen(const char *dir_path) {
   UNUSED(dir_path);
   return NULL;
 }
 
-bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
+bool Platform_DirNext(DirIter *it, char *name_out, size_t name_cap,
                       bool *is_dir_out) {
   UNUSED(it);
   UNUSED(name_out);
@@ -495,7 +495,7 @@ bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
   return false;
 }
 
-void Platform_DirClose(PlDirIter *it) {
+void Platform_DirClose(DirIter *it) {
   if (it)
     free(it);
 }
@@ -564,13 +564,13 @@ bool Platform_LaunchBrowserAtUrl(const char *url, bool new_window) {
   return false;
 }
 
-PlTimer Platform_StartTimer(void) {
-  PlTimer t = {0};
+Timer Platform_StartTimer(void) {
+  Timer t = {0};
   t.ticks = (uint64_t)Platform_TimerNowTicks();
   return t;
 }
 
-double Platform_EndTimer(PlTimer t) {
+double Platform_EndTimer(Timer t) {
   int64_t now = Platform_TimerNowTicks();
   return (double)(now - (int64_t)t.ticks) /
          (double)Platform_TimerTickFrequency();

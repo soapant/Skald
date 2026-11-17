@@ -85,15 +85,15 @@ static inline bool wm_json_num_at(const char *json, const char *key,
 
 char *wm_trim_focus_title(const char *title);
 
-bool wm_append_window_name(PlWindowList *list, const char *name,
+bool wm_append_window_name(WindowList *list, const char *name,
                            bool toupper_first);
 
 char *wm_get_active_window_title(void);
 char *wm_get_active_window_id(void);
 bool wm_focus_by_title(const char *title);
 char *wm_paste(const char *content);
-PlWindowList wm_get_window_titles(void);
-PlWindowList wm_get_window_ids(void);
+WindowList wm_get_window_titles(void);
+WindowList wm_get_window_ids(void);
 bool wm_close_active_window(void);
 bool wm_toggle_fullscreen_active(void);
 bool wm_move_active_window_to_monitor(bool right);

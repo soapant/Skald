@@ -11,7 +11,7 @@
 #define PLACE_BUTTON 1
 
 typedef struct {
-  PlRect rect;
+  DrawRect rect;
   const char *name;
   int kind;
   bool hovered;

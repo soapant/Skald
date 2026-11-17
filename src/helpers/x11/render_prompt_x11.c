@@ -140,17 +140,17 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
   if (state->callbacks && state->callbacks->render) {
     checkbox_frame_begin();
     x11_set_draw_context(dpy, NULL, NULL, 0);
-    bool sep_prev = pl_draw_state_get()->suppress_separators;
-    pl_draw_state_get()->suppress_separators = state->no_separators;
+    bool sep_prev = draw_state_get()->suppress_separators;
+    draw_state_get()->suppress_separators = state->no_separators;
     state->callbacks->render(state);
-    pl_draw_state_get()->suppress_separators = sep_prev;
+    draw_state_get()->suppress_separators = sep_prev;
   } else {
-    bool sep_prev = pl_draw_state_get()->suppress_separators;
-    pl_draw_state_get()->suppress_separators = state->no_separators;
+    bool sep_prev = draw_state_get()->suppress_separators;
+    draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb)
       x11_draw_prompt_user_listbox(dpy, win, state);
     x11_draw_prompt_user_edit_control(dpy, win, state);
-    pl_draw_state_get()->suppress_separators = sep_prev;
+    draw_state_get()->suppress_separators = sep_prev;
   }
   XFlush(dpy);
   return true;
@@ -200,18 +200,18 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   x11_set_draw_context(dpy, xdDbl, vis, cmap);
   if (state->callbacks->render != NULL) {
     checkbox_frame_begin();
-    bool sep_prev = pl_draw_state_get()->suppress_separators;
-    pl_draw_state_get()->suppress_separators = state->no_separators;
+    bool sep_prev = draw_state_get()->suppress_separators;
+    draw_state_get()->suppress_separators = state->no_separators;
     state->callbacks->render(state);
-    pl_draw_state_get()->suppress_separators = sep_prev;
+    draw_state_get()->suppress_separators = sep_prev;
   } else {
-    bool sep_prev = pl_draw_state_get()->suppress_separators;
-    pl_draw_state_get()->suppress_separators = state->no_separators;
+    bool sep_prev = draw_state_get()->suppress_separators;
+    draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb) {
       x11_draw_prompt_user_listbox_on_draw(dpy, xdDbl, vis, cmap, state);
     }
     x11_draw_prompt_user_edit_control_on_draw(dpy, xdDbl, vis, cmap, state);
-    pl_draw_state_get()->suppress_separators = sep_prev;
+    draw_state_get()->suppress_separators = sep_prev;
   }
   x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();

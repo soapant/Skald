@@ -179,9 +179,9 @@ bool focus_window_title_niri(const char *title) {
   return niri_exec(cmd);
 }
 
-static PlWindowList niri_list_fields(const char *key, size_t key_len,
+static WindowList niri_list_fields(const char *key, size_t key_len,
                                      bool toupper_first) {
-  PlWindowList list = {0};
+  WindowList list = {0};
   if (!niri_is_active())
     return list;
   char *json = Platform_RunTerminalCommand("niri msg --json windows", false);
@@ -206,11 +206,11 @@ static PlWindowList niri_list_fields(const char *key, size_t key_len,
   return list;
 }
 
-PlWindowList get_window_titles_niri(void) {
+WindowList get_window_titles_niri(void) {
   return niri_list_fields("\"title\":\"", 9, false);
 }
 
-PlWindowList get_window_ids_niri(void) {
+WindowList get_window_ids_niri(void) {
   return niri_list_fields("\"app_id\":\"", 10, true);
 }
 

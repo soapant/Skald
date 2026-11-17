@@ -13,7 +13,7 @@ void Platform_HoverMessageRelease(const char *key) {
   XFlush(dpy);
 }
 
-void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
+void Platform_DisplayMessage(DisplayMessageSpec spec) {
   MSG_UNPACK(spec);
   if (!message)
     message = "";
@@ -43,7 +43,7 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
                   render, render_data, name, rounded, radius);
 }
 
-void Platform_HoverMessage(PlHoverMessageSpec spec) {
+void Platform_HoverMessage(HoverMessageSpec spec) {
   HOVER_MSG_UNPACK(spec);
 
   Display *dpy = x11_get_display();
@@ -66,7 +66,7 @@ void Platform_HoverMessage(PlHoverMessageSpec spec) {
                         color, no_bg);
 }
 
-void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
+void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
   ANCHORED_MSG_UNPACK(spec);
 
   if (!message && !render) {

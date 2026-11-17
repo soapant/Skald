@@ -114,14 +114,14 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
   SetBkMode(widget->layer_dc, TRANSPARENT);
   win32_set_draw_context(widget->layer_dc);
   {
-    PlDrawState *ds = pl_draw_state_get();
+    DrawCanvas *ds = draw_state_get();
     ds->win32_widget_surface = true;
     ds->win32_listbox_surface = false;
   }
   if (widget->base.fn)
     widget->base.fn(widget->base.ud);
   {
-    PlDrawState *ds = pl_draw_state_get();
+    DrawCanvas *ds = draw_state_get();
     ds->win32_widget_surface = false;
   }
   if (!widget->base.no_bg)
