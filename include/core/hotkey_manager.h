@@ -26,6 +26,7 @@ void hotkey_drain_pending(void);
 int hotkey_wake_fd(void);
 void hotkey_set_suspended(bool suspended);
 bool hotkey_has_mouse_binding(void);
+bool hotkey_has_keyboard_binding(void);
 bool hotkey_mouse_button_bound(int btn);
 
 #endif
