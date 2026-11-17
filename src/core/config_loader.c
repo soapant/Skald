@@ -375,8 +375,10 @@ static void config_emit_float_line(ConfigBuf *b, const char *name, float v) {
   char tmp[64];
   snprintf(tmp, sizeof(tmp), "%.6g", (double)v);
   if (!strchr(tmp, '.') && !strchr(tmp, 'e') && !strchr(tmp, 'E') &&
-      !strchr(tmp, 'n') && !strchr(tmp, 'N'))
-    snprintf(tmp, sizeof(tmp), "%s.0", tmp);
+      !strchr(tmp, 'n') && !strchr(tmp, 'N')) {
+    size_t n = strlen(tmp);
+    snprintf(tmp + n, sizeof(tmp) - n, ".0");
+  }
   config_buf_put(b, "  %s = %s\n", name, tmp);
 }
 
