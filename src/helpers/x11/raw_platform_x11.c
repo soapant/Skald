@@ -1,5 +1,6 @@
 #include <X11/extensions/XTest.h>
 #include "helpers/x11/raw_platform_x11.h"
+#include "helpers/x11/drawing_x11.h"
 
 typedef struct {
   Display *dpy;
@@ -50,6 +51,7 @@ static void x11_font_slot_clear(X11FontSlot *s) {
   if (s->xft) {
     XftFontClose(s->dpy, s->xft);
     x11_font_retire(s->dpy, s->xft);
+    x11_bump_measure_epoch();
   }
   if (s->name)
     free(s->name);

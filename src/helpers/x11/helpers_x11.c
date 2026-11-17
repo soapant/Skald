@@ -150,6 +150,39 @@ static int x11_utf8_cp(const unsigned char *s, const unsigned char *end,
   return cp;
 }
 
+#define X11_MEASURE_SLOTS 256
+#define X11_MEASURE_TEXT_MAX 160
+#define X11_MEASURE_PROBE 4
+
+typedef struct {
+  XftFont *xf;
+  int len;
+  int width;
+  unsigned long epoch;
+  unsigned long stamp;
+  char text[X11_MEASURE_TEXT_MAX];
+} MeasureSlot;
+
+static MeasureSlot measure_slots[X11_MEASURE_SLOTS];
+static unsigned long measure_stamp = 0;
+static pthread_mutex_t measure_mtx = PTHREAD_MUTEX_INITIALIZER;
+static unsigned long g_measure_epoch = 1;
+
+void x11_bump_measure_epoch(void) {
+  pthread_mutex_lock(&measure_mtx);
+  g_measure_epoch++;
+  pthread_mutex_unlock(&measure_mtx);
+}
+
+static unsigned long x11_str_hash(const char *s, int n) {
+  unsigned long h = 14695981039346656037ULL;
+  for (int i = 0; i < n; i++) {
+    h ^= (unsigned char)s[i];
+    h *= 1099511628211ULL;
+  }
+  return h;
+}
+
 static bool x11_font_has(XftFont *f, FcChar32 cp) {
   if (!f || !f->pattern)
     return false;
@@ -316,11 +349,91 @@ static int x11_draw_run(Display *dpy, XftFont *font, const unsigned char *run,
   return w;
 }
 
+static bool measure_slot_find(XftFont *xf, const char *s, int n,
+                              unsigned long epoch, unsigned long *out_width) {
+  unsigned long h = x11_str_hash(s, n) % X11_MEASURE_SLOTS;
+  for (int k = 0; k < X11_MEASURE_PROBE; k++) {
+    MeasureSlot *ms = &measure_slots[(h + k) % X11_MEASURE_SLOTS];
+    if (ms->xf == xf && ms->len == n && ms->epoch == epoch &&
+        !memcmp(ms->text, s, (size_t)n)) {
+      measure_stamp++;
+      ms->stamp = measure_stamp;
+      *out_width = (unsigned long)ms->width;
+      return true;
+    }
+  }
+  return false;
+}
+
+static void measure_slot_store(XftFont *xf, const char *s, int n, int width,
+                               unsigned long epoch) {
+  unsigned long h = x11_str_hash(s, n) % X11_MEASURE_SLOTS;
+  int best = -1;
+  unsigned long oldest = ~0UL;
+  for (int k = 0; k < X11_MEASURE_PROBE; k++) {
+    int i = (int)((h + k) % X11_MEASURE_SLOTS);
+    MeasureSlot *ms = &measure_slots[i];
+    if (!ms->xf || ms->epoch != epoch) {
+      best = i;
+      break;
+    }
+    if (ms->stamp < oldest) {
+      oldest = ms->stamp;
+      best = i;
+    }
+  }
+  MeasureSlot *ms = &measure_slots[best];
+  memset(ms, 0, sizeof(*ms));
+  ms->xf = xf;
+  ms->len = n;
+  ms->width = width;
+  ms->epoch = epoch;
+  measure_stamp++;
+  ms->stamp = measure_stamp;
+  memcpy(ms->text, s, (size_t)n);
+}
+
 int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
                               int px) {
   if (!xf || !s || n <= 0)
     return 0;
   px = x11_font_px(xf, px);
+  if (n < X11_MEASURE_TEXT_MAX) {
+    pthread_mutex_lock(&measure_mtx);
+    unsigned long epoch = g_measure_epoch;
+    unsigned long hit = 0;
+    if (measure_slot_find(xf, s, n, epoch, &hit)) {
+      pthread_mutex_unlock(&measure_mtx);
+      return (int)hit;
+    }
+    pthread_mutex_unlock(&measure_mtx);
+    int width = -1;
+    {
+      const unsigned char *b0 = (const unsigned char *)s;
+      const unsigned char *e0 = b0 + n;
+      bool all = true;
+      const unsigned char *p0 = b0;
+      while (p0 < e0) {
+        int cl = 1;
+        FcChar32 cp0 = x11_utf8_cp(p0, e0, &cl);
+        if (!x11_font_has(xf, cp0)) {
+          all = false;
+          break;
+        }
+        p0 += cl;
+      }
+      if (all)
+        width = xft_width(dpy, xf, s, n);
+      else
+        width =
+            x11_utf8_fallback_runs(dpy, xf, s, n, px, x11_measure_run, NULL);
+    }
+    pthread_mutex_lock(&measure_mtx);
+    if (epoch == g_measure_epoch)
+      measure_slot_store(xf, s, n, width, epoch);
+    pthread_mutex_unlock(&measure_mtx);
+    return width;
+  }
   const unsigned char *b = (const unsigned char *)s;
   const unsigned char *end = b + n;
   bool all = true;
