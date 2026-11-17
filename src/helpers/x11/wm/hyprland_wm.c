@@ -244,10 +244,10 @@ bool focus_window_title_hyprland(const char *title) {
   return false;
 }
 
-static PlWindowList hypr_client_list(const char *field, bool toupper_first) {
+static WindowList hypr_client_list(const char *field, bool toupper_first) {
   hypr_ensure_sig();
   char *output = Platform_RunTerminalCommand("hyprctl clients -j", false);
-  PlWindowList list = {.windows = NULL, .count = 0};
+  WindowList list = {.windows = NULL, .count = 0};
   char buffer[512];
   char match_pat[32];
   char fmt[64];
@@ -281,10 +281,10 @@ static PlWindowList hypr_client_list(const char *field, bool toupper_first) {
   free(output);
   return list;
 }
-PlWindowList get_window_ids_hyprland(void) {
+WindowList get_window_ids_hyprland(void) {
   return hypr_client_list("class", true);
 }
-PlWindowList get_window_titles_hyprland(void) {
+WindowList get_window_titles_hyprland(void) {
   return hypr_client_list("title", false);
 }
 

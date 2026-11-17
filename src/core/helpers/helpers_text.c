@@ -713,7 +713,7 @@ static bool file_walk_dir(const char *dir_path,
                           ListOfFiles *list_of_files,
                           char **list_of_names_to_ignore, bool strip_extension,
                           int max_depth) {
-  PlDirIter *it = Platform_DirOpen(dir_path);
+  DirIter *it = Platform_DirOpen(dir_path);
   if (!it) {
     log_warn("file walk cannot open directory name='%s'", dir_path);
     return false;
@@ -919,7 +919,7 @@ int utf8_lead_len(unsigned char c) {
   return 1;
 }
 
-bool list_append(PlWindowList *list, const char *item) {
+bool list_append(WindowList *list, const char *item) {
   if (!list || !item)
     return false;
   char *copy = strdup(item);

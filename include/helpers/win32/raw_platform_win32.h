@@ -106,7 +106,7 @@ bool win32_icon_png_path(const char *src, char *out, size_t n);
 void win32_gdiplus_ready(void);
 bool win32_export_shell_icon_png(const char *native_path);
 BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam);
-void win32_collect_pair(PlWindowList *out_titles, PlWindowList *out_names);
+void win32_collect_pair(WindowList *out_titles, WindowList *out_names);
 int win32_dir_exists(const char *path);
 int win32_is_project_root(const char *dir);
 DWORD win32_button_flag(int button, bool down);

@@ -22,7 +22,7 @@ typedef struct {
   const char *name;
   bool rounded;
   int radius;
-} PlAnchoredMessageSpec;
+} AnchoredMessageSpec;
 
 typedef struct {
   const char *message;
@@ -36,7 +36,7 @@ typedef struct {
   const char *name;
   bool rounded;
   int radius;
-} PlCreateDisplayMessageWindowSpec;
+} CreateDisplayMessageWindowSpec;
 
 typedef struct {
   const char *key;
@@ -45,7 +45,7 @@ typedef struct {
   int max_width, max_height;
   ColorRef color;
   bool no_bg;
-} PlHoverMessageSpec;
+} HoverMessageSpec;
 
 typedef struct {
   const char *message;
@@ -60,7 +60,7 @@ typedef struct {
   const char *name;
   bool rounded;
   int radius;
-} PlDisplayMessageSpec;
+} DisplayMessageSpec;
 
 #define HOVER_MSG_UNPACK(spec)                                                 \
   const char *key = (spec).key;                                                \
@@ -172,8 +172,8 @@ bool Platform_SetWindowLongProperty(WindowHandle window, const char *atom,
                                     long value);
 bool Platform_SendWindowMessage(WindowHandle window, const char *atom,
                                 long data);
-PlWindowList Platform_GetWindowTitles(void);
-PlWindowList Platform_GetWindowIds(void);
+WindowList Platform_GetWindowTitles(void);
+WindowList Platform_GetWindowIds(void);
 bool Platform_QueryBrowser(const char *query);
 char *Platform_GetClipboardEntry(void);
 bool Platform_PasteContent(const char *content);
@@ -189,10 +189,10 @@ bool Platform_DismissMessage(const char *name);
 bool Platform_MessageActive(const char *name);
 void Platform_DismissIndefiniteMessage(void);
 
-void Platform_DisplayMessage(PlDisplayMessageSpec spec);
-void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec);
-void Platform_CreateDisplayMessageWindow(PlCreateDisplayMessageWindowSpec spec);
-void Platform_HoverMessage(PlHoverMessageSpec spec);
+void Platform_DisplayMessage(DisplayMessageSpec spec);
+void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec);
+void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec);
+void Platform_HoverMessage(HoverMessageSpec spec);
 void Platform_HoverMessageRelease(const char *key);
 void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 
@@ -240,7 +240,7 @@ char *Platform_GetIconPath(char *app_path);
 int Platform_GetIconSize(char *icon_path);
 bool Platform_PrewarmImage(char *path);
 bool Platform_GetMousePos(int *x, int *y);
-PlColor Platform_GetPixelColor(int x, int y);
+RgbColor Platform_GetPixelColor(int x, int y);
 bool Platform_MoveToPos(int x, int y);
 bool Platform_Click(void);
 bool Platform_ClickButton(int button);
@@ -280,11 +280,11 @@ bool Platform_LaunchDetached(const char *command);
 const char *Platform_GetDefaultApp(DefaultAppKind kind);
 bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
                                  size_t out_size);
-typedef struct PlDirIter PlDirIter;
-PlDirIter *Platform_DirOpen(const char *dir_path);
-bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
+typedef struct DirIter DirIter;
+DirIter *Platform_DirOpen(const char *dir_path);
+bool Platform_DirNext(DirIter *it, char *name_out, size_t name_cap,
                       bool *is_dir_out);
-void Platform_DirClose(PlDirIter *it);
+void Platform_DirClose(DirIter *it);
 const char *Platform_GetRealUser(void);
 const char *Platform_GetRealHome(void);
 bool Platform_DirExists(const char *path);
@@ -295,8 +295,8 @@ bool Platform_IsRunningAsRoot(void);
 bool Platform_LaunchTerminalAtPath(const char *working_dir,
                                    const char *extra_args);
 bool Platform_LaunchBrowserAtUrl(const char *url, bool new_window);
-PlTimer Platform_StartTimer(void);
-double Platform_EndTimer(PlTimer t);
+Timer Platform_StartTimer(void);
+double Platform_EndTimer(Timer t);
 int64_t Platform_TimerNowTicks(void);
 int64_t Platform_TimerTickFrequency(void);
 
@@ -329,7 +329,7 @@ typedef struct {
   int editbox_padding;
   int listbox_padding;
   int listbox_item_height;
-} PlMetrics;
+} Metrics;
 
 void Platform_InvalidatePrompt(void);
 #endif

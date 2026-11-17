@@ -455,8 +455,8 @@ bool focus_window_title_kwin(const char *title) {
   return kwin_run_script(body);
 }
 
-static PlWindowList kwin_list_windows(bool want_names) {
-  PlWindowList list = {0};
+static WindowList kwin_list_windows(bool want_names) {
+  WindowList list = {0};
   if (!kwin_is_active())
     return list;
   pthread_mutex_lock(&kwin_mtx);
@@ -493,9 +493,9 @@ static PlWindowList kwin_list_windows(bool want_names) {
   return list;
 }
 
-PlWindowList get_window_titles_kwin(void) { return kwin_list_windows(false); }
+WindowList get_window_titles_kwin(void) { return kwin_list_windows(false); }
 
-PlWindowList get_window_ids_kwin(void) { return kwin_list_windows(true); }
+WindowList get_window_ids_kwin(void) { return kwin_list_windows(true); }
 
 bool close_active_window_kwin(void) {
   if (!kwin_is_active())

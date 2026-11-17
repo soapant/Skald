@@ -525,7 +525,7 @@ static bool load_named(const char *dir, const char *ext, const char *name) {
 bool feature_loader_load_all_from_dir(const char *dir) {
   LOCK();
   const char *ext = Platform_LibExtension();
-  PlDirIter *d = Platform_DirOpen(dir);
+  DirIter *d = Platform_DirOpen(dir);
   if (!d) {
     log_error("feature_loader_load_all_from_dir: opendir %s failed", dir);
     UNLOCK();
@@ -841,7 +841,7 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     Platform_MkdirIfNotExists("build");
     Platform_MkdirIfNotExists("build/features");
   }
-  PlDirIter *dir = Platform_DirOpen(FeaturePath);
+  DirIter *dir = Platform_DirOpen(FeaturePath);
   if (!dir)
     return 0;
   char ent_name[256];

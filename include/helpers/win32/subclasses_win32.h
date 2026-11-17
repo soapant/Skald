@@ -27,7 +27,7 @@ typedef struct {
 } DismissMessageParams;
 
 #include "platform/platform.h"
-typedef PlCreateDisplayMessageWindowSpec DisplayMessageParams;
+typedef CreateDisplayMessageWindowSpec DisplayMessageParams;
 
 LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                       LPARAM lParam);
