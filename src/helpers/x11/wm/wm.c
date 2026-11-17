@@ -9,6 +9,7 @@
 #include "wm/niri_wm.h"
 #include "wm/sway_wm.h"
 #include "wm/hyprland_wm.h"
+#include "wm/i3_wm.h"
 #include "wm/x11_wm.h"
 #include "deps/log.h"
 
@@ -236,6 +237,8 @@ bool wm_move_active_window_to_monitor(bool right) {
     if (move_active_window_to_monitor_sway(right))
       return true;
   }
+  if (move_active_window_to_monitor_i3(right))
+    return true;
   if (x11_move_active_window_to_monitor(right))
     return true;
   log_error("MoveActiveWindowToMonitor Didn't Work");
@@ -253,6 +256,8 @@ bool wm_move_active_window_left(void) {
     if (move_active_window_left_sway())
       return true;
   }
+  if (move_active_window_left_i3())
+    return true;
   if (x11_move_active_window_left())
     return true;
   log_error("MoveActiveWindowLeft Didn't Work");
@@ -270,6 +275,8 @@ bool wm_move_active_window_right(void) {
     if (move_active_window_right_sway())
       return true;
   }
+  if (move_active_window_right_i3())
+    return true;
   if (x11_move_active_window_right())
     return true;
   log_error("MoveActiveWindowRight Didn't Work");
