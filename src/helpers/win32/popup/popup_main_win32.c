@@ -90,9 +90,6 @@ static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
 
   HWND popup_wnd_now = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (hide_popup && SkaldContext_Get()->window.selection_complete) {
-    SkaldContext_Get()->window.selection_complete = false;
-    if (popup_wnd_now != NULL && IsWindow(popup_wnd_now))
-      ShowWindow(popup_wnd_now, SW_HIDE);
   } else if (hide_popup && popup_wnd_now != NULL && IsWindow(popup_wnd_now)) {
     ShowWindow(popup_wnd_now, SW_SHOW);
     win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd);
