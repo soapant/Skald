@@ -134,13 +134,6 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
   if (nCode == HC_ACTION) {
     static bool s_key_is_down[256] = {0};
     bool _freshDown = false;
-    bool _popupActive = false;
-    WindowManager *_wm = WindowManager_Get();
-    if (_wm && WindowManager_GetTopPopup(_wm))
-      _popupActive = true;
-    if (!_popupActive && WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) &&
-        IsWindow(WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd)))
-      _popupActive = true;
     const KBDLLHOOKSTRUCT *_rk = (KBDLLHOOKSTRUCT *)lParam;
     if (_rk->flags & LLKHF_INJECTED)
       return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -232,6 +225,8 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
       bool shift_down = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ||
                         (GetAsyncKeyState(VK_LSHIFT) & 0x8000) ||
                         (GetAsyncKeyState(VK_RSHIFT) & 0x8000);
+      bool super_down = (GetAsyncKeyState(VK_LWIN) & 0x8000) ||
+                        (GetAsyncKeyState(VK_RWIN) & 0x8000);
 
       int pressed_vk = (int)pKeyInfo->vkCode;
       int modifiers = HOTKEY_MOD_NONE;
@@ -241,9 +236,10 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         modifiers |= HOTKEY_MOD_SHIFT;
       if (ctrl_down)
         modifiers |= HOTKEY_MOD_CTRL;
+      if (super_down)
+        modifiers |= HOTKEY_MOD_SUPER;
 
-      if (!_popupActive && _freshDown &&
-          hotkey_process(pressed_vk, modifiers)) {
+      if (_freshDown && hotkey_process(pressed_vk, modifiers)) {
         pending_hotkey_vk = pressed_vk;
         pending_hotkey_mod = modifiers;
         pending_hotkey_timeMs = (long)GetTickCount();
