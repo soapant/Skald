@@ -308,7 +308,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
       unsigned long title_col = rgb_to_hex(COLOR_TEXT);
       x11_set_draw_context(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
-          (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
+          (DrawTextRawSpec){.x = PROMPT_FOOTER_X,
                               .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
                               .text = state->window_title,
                               .color = title_col,

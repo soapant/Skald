@@ -281,7 +281,7 @@ void win32_msg_hover_release(const char *key) {
   hover_key[0] = '\0';
 }
 
-void win32_msg_hover_present(PlHoverMessageSpec spec) {
+void win32_msg_hover_present(HoverMessageSpec spec) {
   HOVER_MSG_UNPACK(spec);
 
   HWND existing = hover_msg_hwnd;
@@ -320,7 +320,7 @@ void win32_msg_hover_present(PlHoverMessageSpec spec) {
 
   win32_msg_hover_release(hover_key);
   Platform_CreateDisplayMessageWindow(
-      (PlCreateDisplayMessageWindowSpec){.message = message,
+      (CreateDisplayMessageWindowSpec){.message = message,
                                          .x = center_x,
                                          .y = center_y,
                                          .max_width = winWidth,

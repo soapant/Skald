@@ -2,16 +2,16 @@
 
 #include <string.h>
 
-static __thread PlDrawState draw_state;
+static __thread DrawCanvas draw_state;
 
-PlDrawState *pl_draw_state_get(void) { return &draw_state; }
+DrawCanvas *draw_state_get(void) { return &draw_state; }
 
-void pl_draw_state_reset(void) {
-  memset(pl_draw_state_get(), 0, sizeof(PlDrawState));
+void draw_state_reset(void) {
+  memset(draw_state_get(), 0, sizeof(DrawCanvas));
 }
 
-void pl_draw_state_begin_measure(void) {
-  PlDrawState *ds = pl_draw_state_get();
+void draw_state_begin_measure(void) {
+  DrawCanvas *ds = draw_state_get();
   ds->measuring = true;
   ds->meas_x0 = 1 << 30;
   ds->meas_y0 = 1 << 30;
@@ -19,8 +19,8 @@ void pl_draw_state_begin_measure(void) {
   ds->meas_y1 = -(1 << 30);
 }
 
-void pl_draw_state_track_measure(int x, int y, int w, int h) {
-  PlDrawState *ds = pl_draw_state_get();
+void draw_state_track_measure(int x, int y, int w, int h) {
+  DrawCanvas *ds = draw_state_get();
   if (!ds->measuring) {
     return;
   }
@@ -34,8 +34,8 @@ void pl_draw_state_track_measure(int x, int y, int w, int h) {
     ds->meas_y1 = y + h;
 }
 
-void pl_draw_state_end_measure(int *out_w, int *out_h) {
-  PlDrawState *ds = pl_draw_state_get();
+void draw_state_end_measure(int *out_w, int *out_h) {
+  DrawCanvas *ds = draw_state_get();
   int rw = 0, rh = 0;
   if (ds->meas_x1 > ds->meas_x0)
     rw = ds->meas_x1 - ds->meas_x0;
@@ -54,8 +54,8 @@ void pl_draw_state_end_measure(int *out_w, int *out_h) {
   ds->meas_y1 = 0;
 }
 
-void pl_draw_state_offset(int *x, int *y) {
-  const PlDrawState *d = pl_draw_state_get();
+void draw_state_offset(int *x, int *y) {
+  const DrawCanvas *d = draw_state_get();
   *x += d->off_x;
   *y += d->off_y;
 }

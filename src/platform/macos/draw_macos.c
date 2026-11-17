@@ -35,35 +35,35 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   return true;
 }
 
-bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
+bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   (void)spec;
   return true;
 }
 
-bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
+bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   (void)spec;
   return true;
 }
 
-bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
+bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
   (void)spec;
   return true;
 }
 
-bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
+bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   (void)spec;
   return true;
 }
 
-void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) { (void)spec; }
+void Platform_DrawTextCentered(DrawTextCenteredSpec spec) { (void)spec; }
 
-int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
+int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
   if (spec.text && spec.len > 0)
     return spec.len * 8;
   return 0;
 }
 
-bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
+bool Platform_DrawTextLine(DrawTextLineSpec spec) {
   (void)spec;
   return true;
 }

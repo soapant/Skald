@@ -135,10 +135,10 @@ void Platform_PromptPopupRender(Popup *self) {
   if (!state)
     return;
   if (state->callbacks->render) {
-    bool sep_prev = pl_draw_state_get()->suppress_separators;
-    pl_draw_state_get()->suppress_separators = state->no_separators;
+    bool sep_prev = draw_state_get()->suppress_separators;
+    draw_state_get()->suppress_separators = state->no_separators;
     state->callbacks->render(state);
-    pl_draw_state_get()->suppress_separators = sep_prev;
+    draw_state_get()->suppress_separators = sep_prev;
   }
 }
 

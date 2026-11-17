@@ -1167,9 +1167,9 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
   return out;
 }
 
-PlWindowList Platform_GetWindowTitles(void) { return wm_get_window_titles(); }
+WindowList Platform_GetWindowTitles(void) { return wm_get_window_titles(); }
 
-PlWindowList Platform_GetWindowIds(void) { return wm_get_window_ids(); }
+WindowList Platform_GetWindowIds(void) { return wm_get_window_ids(); }
 
 static int singleton_lock_fd = -1;
 
@@ -1322,8 +1322,8 @@ void Platform_InitUI(void) {}
 
 void Platform_ShutdownUI(void) {}
 
-PlColor Platform_GetPixelColor(int x, int y) {
-  PlColor out = {0, 0, 0};
+RgbColor Platform_GetPixelColor(int x, int y) {
+  RgbColor out = {0, 0, 0};
   Display *dpy = x11_get_display();
   if (!dpy)
     return out;
@@ -1703,15 +1703,15 @@ bool Platform_HttpSaveToFile(const char *url, const char *path) {
 
 bool Platform_FontInitialized(FontHandle font) { return font.xfont != NULL; }
 
-PlTimer Platform_StartTimer(void) {
-  PlTimer t = {0};
+Timer Platform_StartTimer(void) {
+  Timer t = {0};
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
   return t;
 }
 
-double Platform_EndTimer(PlTimer t) {
+double Platform_EndTimer(Timer t) {
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
@@ -1968,7 +1968,7 @@ static char *x11_lookup_scan_app_dir(const char *apps_dir, const char *name,
       return hit;
   }
   char *hit = NULL;
-  PlDirIter *it = Platform_DirOpen(apps_dir);
+  DirIter *it = Platform_DirOpen(apps_dir);
   if (!it)
     return NULL;
   char entry[256];

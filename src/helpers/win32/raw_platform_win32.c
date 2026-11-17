@@ -515,8 +515,8 @@ bool win32_export_shell_icon_png(const char *native_path) {
 }
 
 typedef struct {
-  PlWindowList *titles;
-  PlWindowList *names;
+  WindowList *titles;
+  WindowList *names;
 } WinPair;
 
 BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam) {
@@ -605,7 +605,7 @@ BOOL CALLBACK win32_enum_windows_proc_pair(HWND hwnd, LPARAM lParam) {
   return TRUE;
 }
 
-void win32_collect_pair(PlWindowList *out_titles, PlWindowList *out_names) {
+void win32_collect_pair(WindowList *out_titles, WindowList *out_names) {
 
   WinPair p = {out_titles, out_names};
   EnumWindows(win32_enum_windows_proc_pair, (LPARAM)&p);

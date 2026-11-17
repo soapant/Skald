@@ -62,7 +62,7 @@ typedef struct {
 
 typedef struct {
   size_t r, g, b;
-} PlColor;
+} RgbColor;
 
 typedef struct {
   int x, y, w, h;
@@ -72,32 +72,32 @@ typedef struct {
   bool filled;
   int radius;
   bool rounded;
-} PlRect;
+} DrawRect;
 
 typedef struct {
   int x1, y1, x2, y2;
   unsigned long color;
   float thickness;
-} PlLine;
+} Line;
 
 typedef struct {
   int x, y, radius;
   unsigned long color;
   float thickness;
-} PlCircle;
+} Circle;
 
 typedef struct {
   int x, y;
-} PlPos;
+} Pos;
 
 typedef struct {
   char **windows;
   int count;
-} PlWindowList;
+} WindowList;
 
 typedef struct {
   uint64_t ticks;
-} PlTimer;
+} Timer;
 
 typedef struct {
   ListBoxInfo *lb;
@@ -108,7 +108,7 @@ typedef struct {
   int w;
   int h;
   int item_height;
-} PlListSpec;
+} ListSpec;
 
 typedef enum {
   SNAP_LEFT,

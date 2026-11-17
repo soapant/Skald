@@ -1159,7 +1159,7 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
   if (!pcol)
     pcol = rgb_to_hex(COLOR_TEXT);
   x11_set_draw_context(dpy, xd, vis, cmap);
-  Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
+  Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
                                            .y = text_y,
                                            .text = draw_text,
                                            .color = pcol,

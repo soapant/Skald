@@ -47,7 +47,7 @@ bool string_contains_ci(const char *haystack, const char *needle);
 bool string_starts_with_ci(const char *str, const char *prefix);
 bool string_equals_ci(const char *a, const char *b);
 int utf8_lead_len(unsigned char c);
-bool list_append(PlWindowList *list, const char *item);
+bool list_append(WindowList *list, const char *item);
 bool window_list_allows(int window_count, bool whitelist, char *const *windows,
                         const char *title);
 #endif

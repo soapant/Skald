@@ -43,8 +43,8 @@ void Platform_FlushDraw(void) { x11_raw_line_flush(); }
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   if (!path || !path[0] || !g_draw_dpy || !g_draw_xd)
     return false;
-  int _offx = pl_draw_state_get()->off_x;
-  int _offy = pl_draw_state_get()->off_y;
+  int _offx = draw_state_get()->off_x;
+  int _offy = draw_state_get()->off_y;
   x += _offx;
   y += _offy;
   if (w <= 0)
@@ -56,11 +56,11 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
                                h);
 }
 
-bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
+bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return false;
-  int _ox = pl_draw_state_get()->off_x;
-  int _oy = pl_draw_state_get()->off_y;
+  int _ox = draw_state_get()->off_x;
+  int _oy = draw_state_get()->off_y;
   int x = spec.x + _ox;
   int y = spec.y + _oy;
   FontHandle fh = spec.font;
@@ -76,7 +76,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   unsigned long color =
       spec.color == COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
   const char *a = spec.align ? spec.align : "CENTER";
-  if (pl_draw_state_get()->measuring) {
+  if (draw_state_get()->measuring) {
     XftFont *mf = FH_TO_XFT(fh);
     int tw = 0;
     if (mf) {
@@ -123,7 +123,7 @@ bool Platform_DrawTextRaw(PlDrawTextRawSpec spec) {
   return true;
 }
 
-void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
+void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return;
   XftFont *xf = FH_TO_XFT(spec.font);
@@ -133,7 +133,7 @@ void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec) {
   draw_text_centered_impl(&spec, line_height);
 }
 
-int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
+int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
   if (!spec.text || spec.len <= 0)
     return 0;
   if (!g_draw_dpy)
@@ -146,11 +146,11 @@ int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec) {
                                                      : FontSize);
 }
 
-bool Platform_DrawTextLine(PlDrawTextLineSpec spec) {
+bool Platform_DrawTextLine(DrawTextLineSpec spec) {
   if (!spec.text || spec.len <= 0 || !g_draw_dpy || !g_draw_xd)
     return false;
-  int x = spec.x + pl_draw_state_get()->off_x;
-  int y = spec.y + pl_draw_state_get()->off_y;
+  int x = spec.x + draw_state_get()->off_x;
+  int y = spec.y + draw_state_get()->off_y;
   XftFont *xf = x11_line_font(g_draw_dpy, spec.fontsize);
   if (!xf)
     return false;
@@ -169,7 +169,7 @@ void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                         FontHandle font, ListBoxInfo *lb, int idx, int y,
                         int text_x, const char *icon_path) {
   unsigned long ncol, bcol, pcol;
-  item_get_colors((PlGetItemColorsSpec){.idx = idx,
+  item_get_colors((GetItemColorsSpec){.idx = idx,
                                         .count = lb->item_count,
                                         .num_color = &ncol,
                                         .body_color = &bcol,
@@ -188,7 +188,7 @@ void x11_draw_edit_background(const PromptState *state, Display *dpy,
   x11_set_draw_context(dpy, xd, vis, cmap);
   if (WindowTitleText)
     Platform_DrawTextRaw(
-        (PlDrawTextRawSpec){.x = PROMPT_FOOTER_X,
+        (DrawTextRawSpec){.x = PROMPT_FOOTER_X,
                             .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
                             .text = state->window_title,
                             .color = rgb_to_hex(COLOR_TEXT),
@@ -229,7 +229,7 @@ void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
   draw_editbox_part(state, dpy, xd, vis, cmap, font, EDITBOX_PART_CARET);
 }
 
-bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
+bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   RECT_RAW_UNPACK(spec);
 
   if (!x11_raw_can_draw()) {
@@ -240,8 +240,8 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
     return false;
   }
 
-  x += pl_draw_state_get()->off_x;
-  y += pl_draw_state_get()->off_y;
+  x += draw_state_get()->off_x;
+  y += draw_state_get()->off_y;
 
   int t = draw_thickness_px(thickness);
   if (t <= 0)
@@ -323,12 +323,12 @@ bool Platform_DrawRectRaw(PlDrawRectRawSpec spec) {
   return true;
 }
 
-bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
+bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   if (!x11_raw_can_draw())
     return false;
   int x1, y1, x2, y2;
-  int t = draw_line_prep(&spec, pl_draw_state_get()->off_x,
-                         pl_draw_state_get()->off_y, &x1, &y1, &x2, &y2);
+  int t = draw_line_prep(&spec, draw_state_get()->off_x,
+                         draw_state_get()->off_y, &x1, &y1, &x2, &y2);
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;
@@ -337,12 +337,12 @@ bool Platform_DrawLineRaw(PlDrawLineRawSpec spec) {
   return true;
 }
 
-bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec) {
+bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
   if (!x11_raw_can_draw() || spec.radius <= 0)
     return false;
   int cx, cy;
-  int t = draw_circle_prep(&spec, pl_draw_state_get()->off_x,
-                           pl_draw_state_get()->off_y, &cx, &cy);
+  int t = draw_circle_prep(&spec, draw_state_get()->off_x,
+                           draw_state_get()->off_y, &cx, &cy);
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;

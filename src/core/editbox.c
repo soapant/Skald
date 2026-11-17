@@ -16,7 +16,7 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
     return 0;
   if (spec->measure)
     return spec->measure(text, len, spec->measure_user);
-  return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
+  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
       .text = text,
       .len = len,
       .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
@@ -278,7 +278,7 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
     memcpy(buf, spec->text + pos, cl);
     buf[cl] = '\0';
     int tx = layout->draw_x +
-             Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
+             Platform_MeasureTextWidth((MeasureTextWidthSpec){
                  .text = spec->text,
                  .len = (int)pos,
                  .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
@@ -286,7 +286,7 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
       break;
     unsigned long col = get_rainbow_color(
         nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, 1.0f);
-    Platform_DrawTextRaw((PlDrawTextRawSpec){.x = tx,
+    Platform_DrawTextRaw((DrawTextRawSpec){.x = tx,
                                              .y = spec->text_y,
                                              .text = buf,
                                              .color = col,
@@ -328,7 +328,7 @@ void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
   int lo = spec->x + PROMPT_CARET_LO_CLAMP;
   int hi = spec->x + spec->w - PROMPT_CARET_HI_CLAMP;
   int caret_w = spec->caret_width > 0 ? spec->caret_width : 1;
-  const PlMetrics *metrics = metrics_get();
+  const Metrics *metrics = metrics_get();
   if (spec->caret_width <= 0 && metrics && metrics->edit_cursor_width > 0)
     caret_w = metrics->edit_cursor_width;
 
@@ -392,7 +392,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
     unsigned long tint = color_lerp(bg, rgb_to_hex(COLOR_CURSOR), 0.72f);
     if (layout->draw_selection) {
       Platform_DrawRectRaw(
-          (PlDrawRectRawSpec){.x = layout->sel_x0,
+          (DrawRectRawSpec){.x = layout->sel_x0,
                               .y = spec->caret_y,
                               .w = layout->sel_x1 - layout->sel_x0,
                               .h = spec->caret_h,
@@ -412,7 +412,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
       if (RainbowText) {
         editbox_draw_rainbow(spec, layout);
       } else {
-        Platform_DrawTextRaw((PlDrawTextRawSpec){.x = layout->draw_x,
+        Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->draw_x,
                                                  .y = spec->text_y,
                                                  .text = spec->text,
                                                  .color = spec->text_color,
@@ -425,7 +425,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
       unsigned long ph =
           color_lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
       Platform_DrawTextRaw(
-          (PlDrawTextRawSpec){.x = layout->draw_x,
+          (DrawTextRawSpec){.x = layout->draw_x,
                               .y = spec->text_y + spec->placeholder_dy,
                               .text = spec->placeholder,
                               .color = ph,
@@ -440,7 +440,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
     if (spec->password_mode) {
       return;
     }
-    Platform_DrawRectRaw((PlDrawRectRawSpec){.x = layout->caret_x,
+    Platform_DrawRectRaw((DrawRectRawSpec){.x = layout->caret_x,
                                              .y = spec->caret_y,
                                              .w = layout->caret_w,
                                              .h = spec->caret_h,
@@ -471,7 +471,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
         ch[cl] = '\0';
         int ty =
             is_placeholder ? spec->text_y + spec->placeholder_dy : spec->text_y;
-        Platform_DrawTextRaw((PlDrawTextRawSpec){.x = layout->caret_x,
+        Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->caret_x,
                                                  .y = ty,
                                                  .text = ch,
                                                  .color = bg,

@@ -852,8 +852,8 @@ int Platform_GetIconSize(char *icon_path) {
   return s;
 }
 
-PlWindowList Platform_GetWindowTitles(void) {
-  PlWindowList titles = {0}, names = {0};
+WindowList Platform_GetWindowTitles(void) {
+  WindowList titles = {0}, names = {0};
   win32_collect_pair(&titles, &names);
   for (int i = 0; i < names.count; i++)
     free(names.windows[i]);
@@ -862,8 +862,8 @@ PlWindowList Platform_GetWindowTitles(void) {
   return titles;
 }
 
-PlWindowList Platform_GetWindowIds(void) {
-  PlWindowList titles = {0}, names = {0};
+WindowList Platform_GetWindowIds(void) {
+  WindowList titles = {0}, names = {0};
   win32_collect_pair(&titles, &names);
   for (int i = 0; i < titles.count; i++)
     free(titles.windows[i]);
@@ -942,8 +942,8 @@ void Platform_CleanupPlatformResources(void) {
   }
 }
 
-PlColor Platform_GetPixelColor(int x, int y) {
-  PlColor out = {0, 0, 0};
+RgbColor Platform_GetPixelColor(int x, int y) {
+  RgbColor out = {0, 0, 0};
   HDC screen = GetDC(NULL);
   if (!screen)
     return out;
@@ -1441,15 +1441,15 @@ bool Platform_HttpSaveToFile(const char *url, const char *path) {
 
 bool Platform_FontInitialized(FontHandle font) { return font.hfont != NULL; }
 
-PlTimer Platform_StartTimer(void) {
-  PlTimer t = {0};
+Timer Platform_StartTimer(void) {
+  Timer t = {0};
   LARGE_INTEGER c;
   QueryPerformanceCounter(&c);
   t.ticks = (uint64_t)c.QuadPart;
   return t;
 }
 
-double Platform_EndTimer(PlTimer t) {
+double Platform_EndTimer(Timer t) {
   LARGE_INTEGER now;
   LARGE_INTEGER freq;
   QueryPerformanceCounter(&now);

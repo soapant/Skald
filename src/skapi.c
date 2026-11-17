@@ -970,7 +970,7 @@ void ski_message(const SkMessageSpec *spec) {
       }
       return;
     }
-    Platform_HoverMessage((PlHoverMessageSpec){.key = spec->hover_key,
+    Platform_HoverMessage((HoverMessageSpec){.key = spec->hover_key,
                                                .message = spec->message,
                                                .x = spec->x,
                                                .y = spec->y,
@@ -987,7 +987,7 @@ void ski_message(const SkMessageSpec *spec) {
     slot = is_popup_active(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER;
   } else if (slot == FREE) {
     Platform_DisplayMessage(
-        (PlDisplayMessageSpec){.message = spec->message,
+        (DisplayMessageSpec){.message = spec->message,
                                .x = spec->x,
                                .y = spec->y,
                                .no_bg = spec->no_bg,
@@ -1263,7 +1263,7 @@ char *ski_popup(const PopupSpec *spec) {
 }
 
 static __thread ListBoxInfo *sk_list_lb;
-static __thread PlListSpec sk_list_spec;
+static __thread ListSpec sk_list_spec;
 static __thread int sk_list_y0, sk_list_itemH, sk_list_visible, sk_list_cur,
     sk_list_h;
 static __thread int sk_list_bx, sk_list_bw, sk_list_fw, sk_list_fh;
@@ -1275,7 +1275,7 @@ unsigned long sk_listbox_get_current_standard_color(void) {
   if (idx < 0 || idx >= sk_list_lb->item_count)
     return 0;
   unsigned long ncol, bcol, pcol;
-  item_get_colors((PlGetItemColorsSpec){.idx = idx,
+  item_get_colors((GetItemColorsSpec){.idx = idx,
                                         .count = sk_list_lb->item_count,
                                         .num_color = &ncol,
                                         .body_color = &bcol,
@@ -1309,12 +1309,12 @@ bool ski_draw_text(const SkTextSpec *spec) {
   }
   int draw_x = spec->x - (spec->no_hscroll ? 0 : listbox_get_row_h_scroll());
   int draw_y = spec->y;
-  if (pl_draw_state_get()->listbox_rows &&
-      pl_draw_state_get()->win32_listbox_surface)
+  if (draw_state_get()->listbox_rows &&
+      draw_state_get()->win32_listbox_surface)
     draw_y += 3;
   const char *align = spec->align ? spec->align : "LEFT";
   FontHandle fh = spec->font;
-  return Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
+  return Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
                                                   .y = draw_y,
                                                   .text = real_text,
                                                   .color = col,
@@ -1459,7 +1459,7 @@ static int wrap_measure_thunk(void *ctx, const char *s, int n) {
 
   SkWrapCtx *c = (SkWrapCtx *)ctx;
   return Platform_MeasureTextWidth(
-      (PlMeasureTextWidthSpec){.text = s, .len = n, .fontsize = c->fontsize});
+      (MeasureTextWidthSpec){.text = s, .len = n, .fontsize = c->fontsize});
 }
 
 int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
@@ -1504,7 +1504,7 @@ bool ski_draw_image(const SkImageSpec *spec) {
   return Platform_DrawImageAt(path, spec->x, spec->y, w, h);
 }
 
-bool ski_draw_rect(const PlRect *spec) {
+bool ski_draw_rect(const DrawRect *spec) {
   if (!spec) {
     return false;
   }
@@ -1513,7 +1513,7 @@ bool ski_draw_rect(const PlRect *spec) {
   if (col == COLOR_AUTO)
     col = COLOR_TEXT;
   col = rgb_to_hex(col);
-  return Platform_DrawRectRaw((PlDrawRectRawSpec){
+  return Platform_DrawRectRaw((DrawRectRawSpec){
       .x = spec->x,
       .y = spec->y,
       .w = spec->w,
@@ -1549,7 +1549,7 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
     return r;
   int fs = spec->fontsize > 0 ? spec->fontsize : FontSize;
   const char *a = spec->align ? spec->align : "CENTER";
-  int w = Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
+  int w = Platform_MeasureTextWidth((MeasureTextWidthSpec){
       .text = spec->text, .len = (int)strlen(spec->text), .fontsize = fs});
   int h = Platform_GetTextLineHeight(fs);
   int base = spec->pad > 0 ? spec->pad : spec->x;
@@ -1560,8 +1560,8 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
   else
     r.x = base - w / 2;
   r.y = spec->y;
-  if (pl_draw_state_get()->listbox_rows &&
-      pl_draw_state_get()->win32_listbox_surface)
+  if (draw_state_get()->listbox_rows &&
+      draw_state_get()->win32_listbox_surface)
     r.y += 3;
   r.w = w;
   r.h = h;
@@ -1571,7 +1571,7 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
 int sk_get_text_width(const char *text, int fontsize) {
   if (!text)
     return 0;
-  return Platform_MeasureTextWidth((PlMeasureTextWidthSpec){
+  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
       .text = text, .len = (int)strlen(text), .fontsize = fontsize});
 }
 
@@ -1599,7 +1599,7 @@ void sk_http_get_async(const char *url, SkHttpCallback cb, void *userdata) {
   return;
 }
 
-bool ski_draw_line(const PlLine *spec) {
+bool ski_draw_line(const Line *spec) {
   if (!spec) {
     return false;
   }
@@ -1609,7 +1609,7 @@ bool ski_draw_line(const PlLine *spec) {
   else
     col = rgb_to_hex(col);
   return Platform_DrawLineRaw(
-      (PlDrawLineRawSpec){.x1 = spec->x1,
+      (DrawLineRawSpec){.x1 = spec->x1,
                           .y1 = spec->y1,
                           .x2 = spec->x2,
                           .y2 = spec->y2,
@@ -1617,7 +1617,7 @@ bool ski_draw_line(const PlLine *spec) {
                           .thickness = spec->thickness});
 }
 
-bool ski_draw_circle(const PlCircle *spec) {
+bool ski_draw_circle(const Circle *spec) {
   if (!spec) {
     return false;
   }
@@ -1627,14 +1627,14 @@ bool ski_draw_circle(const PlCircle *spec) {
   else
     col = rgb_to_hex(col);
   return Platform_DrawCircleRaw(
-      (PlDrawCircleRawSpec){.cx = spec->x,
+      (DrawCircleRawSpec){.cx = spec->x,
                             .cy = spec->y,
                             .radius = spec->radius,
                             .color = col,
                             .thickness = spec->thickness});
 }
 
-static bool listbox_begin_common(const PlListSpec *spec) {
+static bool listbox_begin_common(const ListSpec *spec) {
   if (!spec)
     return false;
   ListBoxInfo *lb = spec->lb;
@@ -1667,7 +1667,7 @@ static bool listbox_begin_common(const PlListSpec *spec) {
   listbox_set_geometry(sk_list_y0, sk_list_itemH, lay.visible);
   listbox_hover_focus(lb, sk_list_y0, sk_list_itemH, lb->view_offset,
                       lay.visible);
-  pl_draw_state_get()->listbox_rows = true;
+  draw_state_get()->listbox_rows = true;
   return true;
 }
 
@@ -1682,7 +1682,7 @@ static bool listbox_next_common(SkListItemCtx *out) {
   int y = sk_list_y0 + sk_list_cur * sk_list_itemH;
   if (sk_list_cur == 0)
     draw_prompt_separator(
-        (PlDrawPromptSeparatorSpec){.y = sk_list_y0, .width = sk_list_fw});
+        (DrawPromptSeparatorSpec){.y = sk_list_y0, .width = sk_list_fw});
   bool sel = (idx == sk_list_lb->selected_index);
   Platform_ListboxBackendDrawSelection(sk_list_bx, sk_list_bw, y, sk_list_itemH,
                                        sk_list_fw, sk_list_fh, sel);
@@ -1701,7 +1701,7 @@ static bool listbox_next_common(SkListItemCtx *out) {
 void sk_listbox_end(void) {
   listbox_set_row_h_scroll(0);
   if (prompt_list_bottom_margin() > 0 && sk_list_y0 >= 0) {
-    draw_prompt_separator((PlDrawPromptSeparatorSpec){
+    draw_prompt_separator((DrawPromptSeparatorSpec){
         .y = sk_list_y0 + sk_list_h, .width = sk_list_fw});
   }
   Platform_ListboxBackendEnd();
@@ -1709,7 +1709,7 @@ void sk_listbox_end(void) {
   sk_list_visible = 0;
   sk_list_cur = 0;
   sk_list_y0 = -1;
-  pl_draw_state_get()->listbox_rows = false;
+  draw_state_get()->listbox_rows = false;
 }
 
 bool sk_listbox_begin(const SkListSpec *spec) {
@@ -2582,7 +2582,7 @@ unsigned long long sk_net_rx_bytes_over(double seconds) {
 SkRect sk_get_monitor_geometry(void) {
   int x, y, w, h;
   WindowManager_GetMainMonitorGeometry(&x, &y, &w, &h);
-  return (PlRect){.x = x, .y = y, .w = w, .h = h, .color = 0};
+  return (DrawRect){.x = x, .y = y, .w = w, .h = h, .color = 0};
 }
 
 int sk_get_screen_width(void) {

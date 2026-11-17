@@ -23,20 +23,20 @@ typedef HotkeyKey SkKey;
 typedef WindowHandle SkWindowHandle;
 
 typedef struct PlatformWidget PlatformWidget;
-typedef PlColor SkColor;
-typedef PlMetrics SkMetrics;
+typedef RgbColor SkColor;
+typedef Metrics SkMetrics;
 typedef Event SkEvent;
 typedef EventCallback SkEventCallback;
 typedef Widget SkWidget;
 typedef WidgetSpec SkWidgetSpec;
 typedef WidgetState SkWidgetState;
 typedef WidgetRenderFn SkWidgetRenderFn;
-typedef PlRect SkRect;
-typedef PlLine SkLine;
-typedef PlCircle SkCircle;
-typedef PlPos SkPos;
-typedef PlListSpec SkListSpec;
-typedef PlWindowList SkWindowList;
+typedef DrawRect SkRect;
+typedef Line SkLine;
+typedef Circle SkCircle;
+typedef Pos SkPos;
+typedef ListSpec SkListSpec;
+typedef WindowList SkWindowList;
 typedef struct {
   const char *name;
   void (*callback)(void);
@@ -519,13 +519,13 @@ bool ski_draw_line(const SkLine *spec);
 bool ski_draw_circle(const SkCircle *spec);
 
 #define sk_draw_rect(...)                                                       \
-  ski_draw_rect(&(PlRect){.color = COLOR_AUTO, __VA_ARGS__})
+  ski_draw_rect(&(DrawRect){.color = COLOR_AUTO, __VA_ARGS__})
 
 #define sk_draw_line(...)                                                        \
-  ski_draw_line(&(PlLine){.color = COLOR_AUTO, __VA_ARGS__})
+  ski_draw_line(&(Line){.color = COLOR_AUTO, __VA_ARGS__})
 
 #define sk_draw_circle(...)                                                      \
-  ski_draw_circle(&(PlCircle){.color = COLOR_AUTO, __VA_ARGS__})
+  ski_draw_circle(&(Circle){.color = COLOR_AUTO, __VA_ARGS__})
 
 int sk_rand_num_between(int min, int max);
 

@@ -35,20 +35,20 @@ typedef struct {
   bool opaque;
   float thickness;
   bool filled;
-} PlDrawRectRawSpec;
+} DrawRectRawSpec;
 
 typedef struct {
   int x1, y1, x2, y2;
   unsigned long color;
   float thickness;
-} PlDrawLineRawSpec;
+} DrawLineRawSpec;
 
 typedef struct {
   int cx, cy;
   int radius;
   unsigned long color;
   float thickness;
-} PlDrawCircleRawSpec;
+} DrawCircleRawSpec;
 
 typedef struct {
   int x, y;
@@ -58,7 +58,7 @@ typedef struct {
   const char *align;
   int pad;
   int fontsize;
-} PlDrawTextRawSpec;
+} DrawTextRawSpec;
 
 typedef struct {
   int x, y, w, h;
@@ -66,7 +66,7 @@ typedef struct {
   unsigned long color;
   FontHandle font;
   int fontsize;
-} PlDrawTextCenteredSpec;
+} DrawTextCenteredSpec;
 
 typedef struct {
   int x, y;
@@ -74,31 +74,31 @@ typedef struct {
   int len;
   unsigned long color;
   int fontsize;
-} PlDrawTextLineSpec;
+} DrawTextLineSpec;
 
 typedef struct {
   int idx, count;
   unsigned long *num_color, *body_color, *plain_color;
-} PlGetItemColorsSpec;
+} GetItemColorsSpec;
 
 typedef struct {
   int y, width;
-} PlDrawPromptSeparatorSpec;
+} DrawPromptSeparatorSpec;
 
 typedef struct {
   const char *text;
   int len;
   int fontsize;
-} PlMeasureTextWidthSpec;
+} MeasureTextWidthSpec;
 
-bool Platform_DrawRectRaw(PlDrawRectRawSpec spec);
-bool Platform_DrawLineRaw(PlDrawLineRawSpec spec);
-bool Platform_DrawCircleRaw(PlDrawCircleRawSpec spec);
-bool Platform_DrawTextRaw(PlDrawTextRawSpec spec);
-void Platform_DrawTextCentered(PlDrawTextCenteredSpec spec);
+bool Platform_DrawRectRaw(DrawRectRawSpec spec);
+bool Platform_DrawLineRaw(DrawLineRawSpec spec);
+bool Platform_DrawCircleRaw(DrawCircleRawSpec spec);
+bool Platform_DrawTextRaw(DrawTextRawSpec spec);
+void Platform_DrawTextCentered(DrawTextCenteredSpec spec);
 
-int Platform_MeasureTextWidth(PlMeasureTextWidthSpec spec);
-bool Platform_DrawTextLine(PlDrawTextLineSpec spec);
+int Platform_MeasureTextWidth(MeasureTextWidthSpec spec);
+bool Platform_DrawTextLine(DrawTextLineSpec spec);
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetTextLineHeight(int fontsize);

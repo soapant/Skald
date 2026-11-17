@@ -226,10 +226,10 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   editbox_spec_from_place(&eb, &place, state, &ui, text_w, cursor_x, ascent,
                           descent, spec->font);
 
-  bool prev_lb = pl_draw_state_get()->win32_listbox_surface;
-  pl_draw_state_get()->win32_listbox_surface = false;
+  bool prev_lb = draw_state_get()->win32_listbox_surface;
+  draw_state_get()->win32_listbox_surface = false;
   editbox_render(&eb, NULL);
-  pl_draw_state_get()->win32_listbox_surface = prev_lb;
+  draw_state_get()->win32_listbox_surface = prev_lb;
   if (state)
     state->eb->scroll_offset = eb.scroll;
 

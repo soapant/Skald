@@ -17,9 +17,9 @@ bool cover_scale(int sw, int sh, int tw, int th, int *dw, int *dh);
 
 int draw_thickness_px(float thickness);
 void draw_measure_track(int x, int y, int w, int h);
-int draw_line_prep(const PlDrawLineRawSpec *spec, int off_x, int off_y, int *x1,
+int draw_line_prep(const DrawLineRawSpec *spec, int off_x, int off_y, int *x1,
                    int *y1, int *x2, int *y2);
-int draw_circle_prep(const PlDrawCircleRawSpec *spec, int off_x, int off_y,
+int draw_circle_prep(const DrawCircleRawSpec *spec, int off_x, int off_y,
                      int *cx, int *cy);
 void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
                       int item_count,
@@ -71,10 +71,10 @@ typedef struct {
 char *prompt_user_run(WindowManager *wm, const PromptSpec *spec);
 void prompt_process_pending_subwindow(void);
 bool terminal_guard(const char *working_dir, const char *extra_args);
-PlMetrics *metrics_get(void);
-void draw_prompt_separator(PlDrawPromptSeparatorSpec spec);
-void item_get_colors(PlGetItemColorsSpec spec);
-void listbox_compute_layout(const PlListSpec *spec, int default_y0, int item_h,
+Metrics *metrics_get(void);
+void draw_prompt_separator(DrawPromptSeparatorSpec spec);
+void item_get_colors(GetItemColorsSpec spec);
+void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,
                             int popup_w, int popup_h, int count,
                             ListboxLayout *out);
 
@@ -134,7 +134,7 @@ int bg_tile_lru_pick(const void *slots, int count, size_t stride,
                      int (*is_empty)(const void *slot),
                      unsigned long (*stamp)(const void *slot));
 
-void draw_text_centered_impl(const PlDrawTextCenteredSpec *spec,
+void draw_text_centered_impl(const DrawTextCenteredSpec *spec,
                              int line_height);
 int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,
                       int win_size);

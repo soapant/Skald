@@ -435,8 +435,8 @@ bool x11_focus_window_title(const char *title) {
   return x11_activate_window(display, (Window)target);
 }
 
-static PlWindowList x11_list_client_fields(bool want_names) {
-  PlWindowList list = {.windows = NULL, .count = 0};
+static WindowList x11_list_client_fields(bool want_names) {
+  WindowList list = {.windows = NULL, .count = 0};
   Display *display = x11_get_display();
   if (!display) {
     log_error("no display");
@@ -491,9 +491,9 @@ static PlWindowList x11_list_client_fields(bool want_names) {
   return list;
 }
 
-PlWindowList x11_get_window_names(void) { return x11_list_client_fields(true); }
+WindowList x11_get_window_names(void) { return x11_list_client_fields(true); }
 
-PlWindowList x11_get_window_titles(void) {
+WindowList x11_get_window_titles(void) {
   return x11_list_client_fields(false);
 }
 

@@ -84,7 +84,7 @@ struct Widget {
   PlatformWidget *win;
   WidgetRenderFn render;
   unsigned long frame;
-  PlTimer created_at;
+  Timer created_at;
   char *owner;
   unsigned gen;
   int monitor;
@@ -103,7 +103,7 @@ unsigned widget_current_generation(void);
 Widget *widget_create(const WidgetSpec *spec);
 void widget_destroy(Widget *widget);
 bool widget_valid(const Widget *widget);
-PlPos Widget_GetPos(const char *name);
+Pos Widget_GetPos(const char *name);
 void widget_show(Widget *widget);
 void widget_hide(Widget *widget);
 void widget_set_render(Widget *widget, WidgetRenderFn render);

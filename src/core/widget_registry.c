@@ -59,18 +59,18 @@ static Widget *widget_find_by_name_locked(const char *name) {
 
 static void widget_relayout(void);
 
-static PlPos hover_pos = {0, 0};
-static PlTimer hover_at_timer = {0};
+static Pos hover_pos = {0, 0};
+static Timer hover_at_timer = {0};
 static bool hover_valid = false;
 
 static void widget_hover_poll(void) {
-  PlTimer now = Platform_StartTimer();
+  Timer now = Platform_StartTimer();
   if (hover_valid && Platform_EndTimer(hover_at_timer) < 400.0) {
     return;
   }
   int mx, my;
   Platform_GetMousePos(&mx, &my);
-  hover_pos = (PlPos){mx, my};
+  hover_pos = (Pos){mx, my};
   hover_at_timer = now;
   hover_valid = true;
 }
@@ -539,8 +539,8 @@ Widget *widget_create(const WidgetSpec *spec) {
 
 bool widget_valid(const Widget *widget) { return widget != NULL; }
 
-PlPos Widget_GetPos(const char *name) {
-  PlPos r = {0, 0};
+Pos Widget_GetPos(const char *name) {
+  Pos r = {0, 0};
   W_LOCK();
   const Widget *w = widget_find_by_name_locked(name);
   if (w && w->x < 0x7fffffff) {

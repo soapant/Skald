@@ -550,7 +550,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           orig_idx = lb->matching_indices[pdis->itemID];
           orig_cnt = lb->item_count;
         }
-        item_get_colors((PlGetItemColorsSpec){.idx = orig_idx,
+        item_get_colors((GetItemColorsSpec){.idx = orig_idx,
                                               .count = orig_cnt,
                                               .num_color = &ncol,
                                               .body_color = &bcol,
@@ -620,26 +620,26 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (state && state->callbacks && state->callbacks->render) {
         checkbox_frame_begin();
         win32_set_draw_context(paintDC);
-        pl_draw_state_get()->win32_listbox_surface = true;
+        draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;
-        bool sep_prev = pl_draw_state_get()->suppress_separators;
-        pl_draw_state_get()->suppress_separators = state->no_separators;
+        bool sep_prev = draw_state_get()->suppress_separators;
+        draw_state_get()->suppress_separators = state->no_separators;
         state->callbacks->render(state);
-        pl_draw_state_get()->suppress_separators = sep_prev;
+        draw_state_get()->suppress_separators = sep_prev;
         s_in_render = false;
-        pl_draw_state_get()->win32_listbox_surface = false;
+        draw_state_get()->win32_listbox_surface = false;
       }
     } else {
       PromptState *estate = win32_prompt_state_from_hwnd(hwnd);
       if (estate) {
-        bool sep_prev = pl_draw_state_get()->suppress_separators;
-        pl_draw_state_get()->suppress_separators = estate->no_separators;
+        bool sep_prev = draw_state_get()->suppress_separators;
+        draw_state_get()->suppress_separators = estate->no_separators;
         win32_set_draw_context(paintDC);
         extern void Platform_DrawPromptEditbox(PromptState * state);
         Platform_DrawPromptEditbox(estate);
 
         if (estate->lb) {
-          draw_prompt_separator((PlDrawPromptSeparatorSpec){
+          draw_prompt_separator((DrawPromptSeparatorSpec){
               .y = prompt_list_top() - 2, .width = rect.right - rect.left});
 
           int list_top = prompt_list_top();
@@ -655,7 +655,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           listbox_apply_pending_scroll(estate->lb, visible_count);
           int view_offset = estate->lb->view_offset;
 
-          pl_draw_state_get()->win32_listbox_surface = true;
+          draw_state_get()->win32_listbox_surface = true;
           for (int i = 0; i < visible_count && (i + view_offset) < count; i++) {
             int list_idx = i + view_offset;
             int y = list_top + i * row_height;
@@ -675,7 +675,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                           pcol = rgb_to_hex(COLOR_TEXT);
             int orig_idx = estate->lb->matching_indices[list_idx];
             int orig_cnt = estate->lb->item_count;
-            item_get_colors((PlGetItemColorsSpec){.idx = orig_idx,
+            item_get_colors((GetItemColorsSpec){.idx = orig_idx,
                                                   .count = orig_cnt,
                                                   .num_color = &ncol,
                                                   .body_color = &bcol,
@@ -688,7 +688,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             int draw_x = 14;
             if (row_h_scroll > 0)
               draw_x -= row_h_scroll;
-            Platform_DrawTextRaw((PlDrawTextRawSpec){.x = draw_x,
+            Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
                                                      .y = y + pad_top,
                                                      .text = draw_text,
                                                      .color = ncol,
@@ -697,13 +697,13 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                                      .pad = 0,
                                                      .fontsize = FontSize});
           }
-          pl_draw_state_get()->win32_listbox_surface = false;
+          draw_state_get()->win32_listbox_surface = false;
 
-          draw_prompt_separator((PlDrawPromptSeparatorSpec){
+          draw_prompt_separator((DrawPromptSeparatorSpec){
               .y = rect.bottom - prompt_list_bottom_margin(),
               .width = rect.right - rect.left});
         }
-        pl_draw_state_get()->suppress_separators = sep_prev;
+        draw_state_get()->suppress_separators = sep_prev;
         win32_set_draw_context(NULL);
       }
     }

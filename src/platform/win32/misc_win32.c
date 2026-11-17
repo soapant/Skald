@@ -433,13 +433,13 @@ int64_t Platform_TimerTickFrequency(void) {
   return (int64_t)f.QuadPart;
 }
 
-struct PlDirIter {
+struct DirIter {
   HANDLE hFind;
   WIN32_FIND_DATAA fd;
   bool first_pending;
 };
 
-PlDirIter *Platform_DirOpen(const char *dir_path) {
+DirIter *Platform_DirOpen(const char *dir_path) {
   if (!dir_path)
     return NULL;
   char search_path[MAX_PATH];
@@ -448,7 +448,7 @@ PlDirIter *Platform_DirOpen(const char *dir_path) {
   HANDLE h = FindFirstFileA(search_path, &fd);
   if (h == INVALID_HANDLE_VALUE)
     return NULL;
-  PlDirIter *it = calloc(1, sizeof(*it));
+  DirIter *it = calloc(1, sizeof(*it));
   if (!it) {
     FindClose(h);
     return NULL;
@@ -459,7 +459,7 @@ PlDirIter *Platform_DirOpen(const char *dir_path) {
   return it;
 }
 
-bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
+bool Platform_DirNext(DirIter *it, char *name_out, size_t name_cap,
                       bool *is_dir_out) {
   if (!it || !name_out || name_cap == 0 || !is_dir_out)
     return false;
@@ -478,7 +478,7 @@ bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
   }
 }
 
-void Platform_DirClose(PlDirIter *it) {
+void Platform_DirClose(DirIter *it) {
   if (!it)
     return;
   if (it->hFind != INVALID_HANDLE_VALUE)
