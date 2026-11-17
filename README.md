@@ -1,7 +1,7 @@
 # Skald
 
 <p align="center">
-  <img src="images/cc_neon_green.png" width="800"
+  <img src="images/cc_neon_green.webp" width="800"
        alt="Skald's control center with the Neon Green theme">
 </p>
 
@@ -50,8 +50,8 @@ goal. It's early, so expect rough edges.
 
 <table>
   <tr>
-    <td align="center"><img src="images/cc_rose_pine.png" width="420" alt="Skald with the Rose Pine theme"><br><sub>Rose Pine</sub></td>
-    <td align="center"><img src="images/cc_modus_vivendi.png" width="420" alt="Skald with the Modus Vivendi theme"><br><sub>Modus Vivendi</sub></td>
+    <td align="center"><img src="images/cc_rose_pine.webp" width="420" alt="Skald with the Rose Pine theme"><br><sub>Rose Pine</sub></td>
+    <td align="center"><img src="images/cc_modus_vivendi.webp" width="420" alt="Skald with the Modus Vivendi theme"><br><sub>Modus Vivendi</sub></td>
   </tr>
 </table>
 
@@ -59,8 +59,8 @@ goal. It's early, so expect rough edges.
 
 <table>
   <tr>
-    <td align="center"><img src="images/cc_rose_pine_calc.png" width="420" alt="The built-in calculator in the search box"><br><sub>Built-in calculator</sub></td>
-    <td align="center"><img src="images/cc_web_search.png" width="420" alt="Web search when nothing matches"><br><sub>Web search when nothing matches</sub></td>
+    <td align="center"><img src="images/cc_rose_pine_calc.webp" width="420" alt="The built-in calculator in the search box"><br><sub>Built-in calculator</sub></td>
+    <td align="center"><img src="images/cc_web_search.webp" width="420" alt="Web search when nothing matches"><br><sub>Web search when nothing matches</sub></td>
   </tr>
 </table>
 
@@ -68,15 +68,14 @@ goal. It's early, so expect rough edges.
 
 <table>
   <tr>
-    <td align="center"><img src="images/cc_matching_bg.png" width="280" alt="A background image matching the theme"><br><sub>Matching background</sub></td>
-    <td align="center"><img src="images/cc_tall.png" width="280" alt="A tall window"><br><sub>Tall window</sub></td>
-    <td align="center"><img src="images/cc_tall_image_bg.png" width="280" alt="A tall window with an image background"><br><sub>Tall window with image background</sub></td>
+    <td align="center"><img src="images/cc_matching_bg.webp" width="420" alt="A background image matching the theme"><br><sub>Matching background</sub></td>
+    <td align="center"><img src="images/cc_tall.webp" width="420" alt="A tall window"><br><sub>Tall window</sub></td>
   </tr>
 </table>
 
 ### Example feature: process killer
 
-<img src="images/full_process_killer.png" width="800" alt="A process killer feature showing system information, running processes, and their CPU and memory usage">
+<img src="images/full_process_killer.webp" width="800" alt="A process killer feature showing system information, running processes, and their CPU and memory usage">
 
 *An example feature (not included by default) showing system information, running processes, and their CPU and memory usage.*
 
