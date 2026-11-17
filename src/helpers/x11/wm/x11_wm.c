@@ -13,13 +13,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <glob.h>
-#include <sys/stat.h>
 #include <X11/X.h>
 #include <X11/keysym.h>
 
 #include "helpers/x11/display_x11.h"
-#include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_text.h"
@@ -28,64 +25,6 @@ static int _x11_err = 0;
 static Window _x11_last_min = None;
 static int ewmh_move_works = -1;
 
-static int i3_probe = 0;
-static char i3_sock[512];
-
-static bool i3_ensure_sock(void) {
-
-  if (i3_probe != 0)
-    return i3_probe == 1;
-  i3_probe = -1;
-  const char *cur = getenv("I3SOCK");
-  if (cur && cur[0]) {
-    struct stat st;
-    if (stat(cur, &st) == 0) {
-      snprintf(i3_sock, sizeof(i3_sock), "%s", cur);
-      i3_probe = 1;
-      return true;
-    }
-  }
-  const char *rtd = x11_env_xdg_runtime_dir();
-  if (!rtd || !rtd[0])
-    return false;
-  char pat[512];
-  snprintf(pat, sizeof(pat), "%s/i3/ipc-socket.*", rtd);
-  glob_t g;
-  memset(&g, 0, sizeof(g));
-  if (glob(pat, 0, NULL, &g) == 0 && g.gl_pathc > 0) {
-    snprintf(i3_sock, sizeof(i3_sock), "%s", g.gl_pathv[g.gl_pathc - 1]);
-    struct stat st;
-    if (stat(i3_sock, &st) == 0) {
-      setenv("I3SOCK", i3_sock, 1);
-      i3_probe = 1;
-    }
-  }
-  globfree(&g);
-  return i3_probe == 1;
-}
-
-static bool i3_exec(const char *command) {
-
-  if (!i3_ensure_sock())
-    return false;
-  char *out = Platform_RunTerminalCommand(command, false);
-  if (!out || out[0] == '\0') {
-    if (out)
-      free(out);
-    return false;
-  }
-  bool ok = !(strstr(out, "\"success\":false") || strstr(out, "\"error\""));
-  free(out);
-  return ok;
-}
-
-static bool i3_move_to_output(bool right) {
-
-  char cmd[128];
-  snprintf(cmd, sizeof(cmd), "i3-msg move container to output %s",
-           right ? "right" : "left");
-  return i3_exec(cmd);
-}
 static int x11_err_handler(Display *dpy, XErrorEvent *ev) {
 
   (void)dpy;
@@ -760,9 +699,7 @@ static bool x11_move_dir(bool right) {
   if (!display)
     return false;
   Window before = x11_focused_window(display);
-  bool moved =
-      (ewmh_move_works != 0 && x11_move_active_window_to_monitor(right)) ||
-      i3_move_to_output(right);
+  bool moved = ewmh_move_works != 0 && x11_move_active_window_to_monitor(right);
   if (!moved)
     return x11_activate_neighbor(right);
   if (before != None)
