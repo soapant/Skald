@@ -528,8 +528,11 @@ void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x,
 void display_message_slot(const char *message, MessageSlot slot, int max_w,
                           int max_h, int prompt_gap, double timeout,
                           ColorRef color, void (*render)(void *ud),
-                          void *render_data, const char *name) {
-  if (!message || !message[0])
+                          void *render_data, const char *name, int win_w,
+                          int win_h) {
+  if (!message)
+    message = "";
+  if (!message[0] && !render)
     return;
   int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
   message_slot_to_rect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap,
@@ -551,6 +554,8 @@ void display_message_slot(const char *message, MessageSlot slot, int max_w,
                                                           .render = render,
                                                           .render_data =
                                                               render_data,
+                                                          .width = win_w,
+                                                          .height = win_h,
                                                           .name = name});
 }
 

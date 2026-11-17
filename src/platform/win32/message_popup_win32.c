@@ -149,6 +149,15 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
 
   int winWidth = textWidth + 30;
   int winHeight = textHeight + 30;
+  if (render) {
+    if (want_width > 0 && want_height > 0 && !outward) {
+      winWidth = want_width;
+      winHeight = want_height;
+    } else if (textWidth <= 0 && textHeight <= 0) {
+      winWidth = 160;
+      winHeight = 48;
+    }
+  }
   if (winWidth > max_width)
     winWidth = max_width;
   if (winHeight > max_height)
