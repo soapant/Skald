@@ -123,8 +123,19 @@ typedef struct {
   int caret_pos;
 } EditboxUiSpec;
 
-void editbox_resolve_place(const char *buffer, int x, int y, int w, int h,
-                           int fontsize, PromptState *state, EditboxPlace *out);
+typedef struct {
+  const char *buffer;
+  int x, y, w, h;
+  int fontsize;
+} EditboxPlaceSpec;
+
+typedef struct {
+  int text_w, cursor_x, ascent, descent;
+  FontHandle font;
+} EditboxMetrics;
+
+void editbox_resolve_place(const EditboxPlaceSpec *spec, PromptState *state,
+                           EditboxPlace *out);
 
 typedef struct {
   PromptState *state;
@@ -156,12 +167,10 @@ void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args);
 void editbox_build_spec(EditboxSpec *out, const EditboxInit *in);
 void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
                              PromptState *state, const EditboxUiSpec *ui,
-                             int text_w, int cursor_x, int ascent, int descent,
-                             FontHandle font);
+                             const EditboxMetrics *metrics);
 int editbox_caret_y(int box_top, int ascent, int descent, int fontsize);
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
-                                   int text_len, int cursor_x, int text_w,
-                                   int ascent, int descent, FontHandle font);
+                                   int text_len, const EditboxMetrics *metrics);
 void editbox_resolve_selection(PromptState *state, int text_len,
                                bool prefer_state, int *out_start, int *out_end,
                                bool *out_has);
