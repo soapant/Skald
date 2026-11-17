@@ -322,14 +322,14 @@ static bool sway_app_for_pid(const char *json, const char *pid_pos,
   return sway_class_for_pid(pid_pos, next_pid, out, cap);
 }
 
-static PlWindowList sway_list_pid_fields(bool (*extract)(const char *json,
+static WindowList sway_list_pid_fields(bool (*extract)(const char *json,
                                                          const char *pid_pos,
                                                          const char *next_pid,
                                                          char *out, size_t cap),
                                          bool toupper_first) {
   sway_ensure_sock();
   char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
-  PlWindowList list = {0};
+  WindowList list = {0};
   if (!json || !*json) {
     log_error("output is NULL or empty");
     free(json);
@@ -349,11 +349,11 @@ static PlWindowList sway_list_pid_fields(bool (*extract)(const char *json,
   return list;
 }
 
-PlWindowList get_window_ids_sway(void) {
+WindowList get_window_ids_sway(void) {
   return sway_list_pid_fields(sway_app_for_pid, true);
 }
 
-PlWindowList get_window_titles_sway(void) {
+WindowList get_window_titles_sway(void) {
   return sway_list_pid_fields(sway_name_for_pid, false);
 }
 

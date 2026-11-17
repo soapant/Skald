@@ -338,18 +338,18 @@ int64_t Platform_TimerNowTicks(void) {
 
 int64_t Platform_TimerTickFrequency(void) { return 1000000000LL; }
 
-struct PlDirIter {
+struct DirIter {
   char dir[MAX_PATH];
   DIR *dh;
 };
 
-PlDirIter *Platform_DirOpen(const char *dir_path) {
+DirIter *Platform_DirOpen(const char *dir_path) {
   if (!dir_path)
     return NULL;
   DIR *dh = opendir(dir_path);
   if (!dh)
     return NULL;
-  PlDirIter *it = calloc(1, sizeof(*it));
+  DirIter *it = calloc(1, sizeof(*it));
   if (!it) {
     closedir(dh);
     return NULL;
@@ -359,7 +359,7 @@ PlDirIter *Platform_DirOpen(const char *dir_path) {
   return it;
 }
 
-bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
+bool Platform_DirNext(DirIter *it, char *name_out, size_t name_cap,
                       bool *is_dir_out) {
   if (!it || !name_out || name_cap == 0 || !is_dir_out)
     return false;
@@ -382,7 +382,7 @@ bool Platform_DirNext(PlDirIter *it, char *name_out, size_t name_cap,
   return false;
 }
 
-void Platform_DirClose(PlDirIter *it) {
+void Platform_DirClose(DirIter *it) {
   if (!it)
     return;
   if (it->dh)

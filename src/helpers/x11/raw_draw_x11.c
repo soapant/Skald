@@ -435,7 +435,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   int item_h = prompt_row_height();
   int y0 = prompt_list_top();
   draw_prompt_separator(
-      (PlDrawPromptSeparatorSpec){.y = y0, .width = state->width});
+      (DrawPromptSeparatorSpec){.y = y0, .width = state->width});
   int y_offset = PROMPT_LIST_BOTTOM_TITLE;
   int visible = (state->height - y0 - y_offset) / item_h;
   if (visible < 1)
@@ -471,7 +471,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   }
 
   if (prompt_list_bottom_margin() > 0) {
-    draw_prompt_separator((PlDrawPromptSeparatorSpec){
+    draw_prompt_separator((DrawPromptSeparatorSpec){
         .y = state->height - PROMPT_LIST_BOTTOM_TITLE, .width = state->width});
   }
 

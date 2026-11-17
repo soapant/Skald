@@ -6,7 +6,7 @@
 #include "core/types.h"
 #include "helpers/helpers_owner.h"
 
-typedef PlTimer SkTimer;
+typedef Timer SkTimer;
 
 typedef enum {
   SK_NET_OFFLINE,

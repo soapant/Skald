@@ -84,7 +84,7 @@ char *reload_lib_unique_copy(const char *src, const char *base, int seq,
 }
 
 int reload_lib_sweep_stale_hot_libs(const char *dir, const char *lib_ext) {
-  PlDirIter *d = Platform_DirOpen(dir);
+  DirIter *d = Platform_DirOpen(dir);
   if (!d)
     return -1;
   size_t ext_len = lib_ext ? strlen(lib_ext) : 0;

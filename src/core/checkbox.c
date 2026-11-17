@@ -135,7 +135,7 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                  int body_radius, bool body_round,
                                  int border_radius, unsigned long body,
                                  unsigned long border_col, bool with_border) {
-  Platform_DrawRectRaw((PlDrawRectRawSpec){.x = x,
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = x,
                                            .y = y,
                                            .w = w,
                                            .h = h,
@@ -147,7 +147,7 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                            .filled = true});
   if (!with_border)
     return;
-  Platform_DrawRectRaw((PlDrawRectRawSpec){.x = x,
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = x,
                                            .y = y,
                                            .w = w,
                                            .h = h,
@@ -228,7 +228,7 @@ void checkbox_draw(const CheckboxSpec *spec) {
       int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
       if (!Platform_FontInitialized(s_font))
         s_font = Platform_CreateFont(fontsize, UsedFont);
-      Platform_DrawTextCentered((PlDrawTextCenteredSpec){
+      Platform_DrawTextCentered((DrawTextCenteredSpec){
           .x = spec->x,
           .y = spec->y,
           .w = w,
