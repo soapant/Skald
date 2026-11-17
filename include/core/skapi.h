@@ -342,6 +342,8 @@ typedef struct {
 
 void ski_message(const SkMessageSpec *spec);
 
+void sk_message_fmt(const SkMessageSpec *spec, const char *fmt, ...);
+
 #define sk_overlay(...) sk_message(__VA_ARGS__, .timeout = 10000000.0)
 #define sk_dismiss_overlay(...) sk_dismiss_message(__VA_ARGS__)
 #define sk_overlay_active(...) sk_message_active(__VA_ARGS__)
