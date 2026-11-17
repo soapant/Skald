@@ -1201,7 +1201,7 @@ static void cc_actions_render(PromptState *state) {
   sk_draw_line(.x1 = 0, .y1 = 55, .x2 = state->width, .y2 = 55,
                .color = COLOR_BORDER);
   while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.y = ctx.y, .text = ctx.text, .align = "LEFT", .pad = 10,
+    sk_draw_text(.y = ctx.y - 3, .text = ctx.text, .align = "LEFT", .pad = 10,
                  .fontsize = 20);
   }
   sk_listbox_end();
