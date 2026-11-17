@@ -1037,7 +1037,7 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   bool far_fits = cursor + CC_TYPE_GAP <= type_x - right_w;
   int hk_right = (far_fits ? type_x - right_w - CC_TYPE_GAP : type_x) - 4;
   if (has_hotkey && cursor + CC_TYPE_GAP + hk_w <= hk_right)
-    cc_draw_hotkey_chip(hotkey, hk_right, ctx->y + 10);
+    cc_draw_hotkey_chip(hotkey, hk_right, ctx->y + 7);
   if (far_fits)
     sk_draw_text(.x = type_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = right_label,
                  .align = "RIGHT", .pad = 0, .color = CC_TYPE_COLOR);
@@ -1201,7 +1201,7 @@ static void cc_actions_render(PromptState *state) {
   sk_draw_line(.x1 = 0, .y1 = 55, .x2 = state->width, .y2 = 55,
                .color = COLOR_BORDER);
   while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.y = ctx.y - 4, .text = ctx.text, .align = "LEFT", .pad = 10,
+    sk_draw_text(.y = ctx.y, .text = ctx.text, .align = "LEFT", .pad = 10,
                  .fontsize = 20);
   }
   sk_listbox_end();
