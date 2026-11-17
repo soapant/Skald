@@ -84,6 +84,15 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
   int win_w = 0;
   int win_h = 0;
   x11_msg_measure(dpy, message, max_width, max_height, &win_w, &win_h);
+  if (render) {
+    if (want_width > 0 && want_height > 0 && !outward) {
+      win_w = want_width;
+      win_h = want_height;
+    } else if (win_w <= 0 || win_h <= 0) {
+      win_w = 160;
+      win_h = 48;
+    }
+  }
   int center_x = msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, win_w);
   int center_y = msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, win_h);
   int x = center_x - win_w / 2;

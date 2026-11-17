@@ -1003,7 +1003,8 @@ void ski_message(const SkMessageSpec *spec) {
     return;
   }
   display_message_slot(spec->message, slot, mw, mh, spec->prompt_gap, timeout,
-                       color, spec->render, spec->render_data, spec->name);
+                       color, spec->render, spec->render_data, spec->name,
+                       spec->w, spec->h);
 }
 
 bool sk_launch_browser(const char *url) {
