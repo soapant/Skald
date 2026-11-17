@@ -296,38 +296,62 @@ void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
     *cmap = g_draw_cmap;
 }
 
-static Display *line_dpy = NULL;
+#define X11_LINE_FONT_SLOTS 12
+typedef struct {
+  Display *dpy;
+  int size;
+  XftFont *f;
+  unsigned long stamp;
+} LineFontSlot;
 
-static int line_size = 0;
-
-static XftFont *line_font = NULL;
+static LineFontSlot line_slots[X11_LINE_FONT_SLOTS];
+static unsigned long line_stamp = 0;
 
 XftFont *x11_line_font(Display *dpy, int size) {
   if (size <= 0)
     size = FontSize;
-  if (!line_font || line_dpy != dpy || line_size != size) {
-    if (line_font && line_dpy)
-      XftFontClose(line_dpy, line_font);
-    line_font = NULL;
-    line_dpy = NULL;
-    line_size = 0;
-    if (!dpy)
-      return NULL;
-    int screen = DefaultScreen(dpy);
-    XftFont *xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, UsedFont,
-                              FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
-    if (!xf)
-      xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, "sans",
-                       FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
-    if (!xf)
-      xf = XftFontOpenName(dpy, screen, "fixed");
-    if (!xf)
-      return NULL;
-    line_font = xf;
-    line_dpy = dpy;
-    line_size = size;
+  for (int i = 0; i < X11_LINE_FONT_SLOTS; i++) {
+    LineFontSlot *s = &line_slots[i];
+    if (s->f && s->dpy == dpy && s->size == size) {
+      s->stamp = ++line_stamp;
+      return s->f;
+    }
   }
-  return line_font;
+  if (!dpy)
+    return NULL;
+  int screen = DefaultScreen(dpy);
+  XLockDisplay(dpy);
+  XftFont *xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, UsedFont,
+                            FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
+  if (!xf)
+    xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, "sans",
+                     FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
+  if (!xf)
+    xf = XftFontOpenName(dpy, screen, "fixed");
+  XUnlockDisplay(dpy);
+  if (!xf)
+    return NULL;
+  int slot = -1;
+  unsigned long oldest = ~0UL;
+  for (int i = 0; i < X11_LINE_FONT_SLOTS; i++) {
+    if (!line_slots[i].f) {
+      slot = i;
+      break;
+    }
+    if (line_slots[i].stamp < oldest) {
+      oldest = line_slots[i].stamp;
+      slot = i;
+    }
+  }
+  if (line_slots[slot].f) {
+    XftFontClose(line_slots[slot].dpy, line_slots[slot].f);
+    x11_bump_measure_epoch();
+  }
+  line_slots[slot].dpy = dpy;
+  line_slots[slot].size = size;
+  line_slots[slot].f = xf;
+  line_slots[slot].stamp = ++line_stamp;
+  return xf;
 }
 
 int x11_editbox_measure(const char *text, int len, void *user) {
