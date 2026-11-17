@@ -38,6 +38,11 @@ static void prompt_popup_on_show(Popup *self) {
            wm->popup_count);
 
   Platform_PromptPopupShowWindow(self, data->x, data->y, data->w, data->h);
+  {
+    bool want_rounded = data->spec.rounded ? data->spec.rounded : RoundedCorners;
+    int want_radius = data->spec.radius > 0 ? data->spec.radius : CornerRadius;
+    Platform_SetWindowRounded(self->handle, want_rounded, want_radius);
+  }
 
   data->state = calloc(1, sizeof(PromptState));
   if (!data->state)

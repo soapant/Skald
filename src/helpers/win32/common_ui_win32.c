@@ -11,7 +11,7 @@
 #include <commctrl.h>
 #include <string.h>
 
-void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
+void win32_apply_rounded(HWND hwnd, int w, int h, bool rounded, int radius) {
   if (!hwnd || !IsWindow(hwnd))
     return;
   if (w <= 0 || h <= 0) {
@@ -31,7 +31,7 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
       const DWORD DWMWA_BORDER_COLOR = 34;
       COLORREF border = 0xFFFFFFFE;
       pDwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &border, sizeof(border));
-      if (!RoundedCorners) {
+      if (!rounded) {
         FreeLibrary(dwm);
         return;
       }
@@ -42,10 +42,10 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
     }
     FreeLibrary(dwm);
   }
-  if (!RoundedCorners)
+
+  if (!rounded)
     return;
 
-  int radius = CornerRadius;
   if (radius < 0)
     radius = 0;
   if (radius > 32)
@@ -59,6 +59,10 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
   HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius * 2, radius * 2);
   if (rgn)
     SetWindowRgn(hwnd, rgn, TRUE);
+}
+
+void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
+  win32_apply_rounded(hwnd, w, h, RoundedCorners, CornerRadius);
 }
 
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1,

@@ -40,6 +40,8 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
     params.no_bg = no_bg;
     params.render = render;
     params.render_data = render_data;
+    params.rounded = rounded;
+    params.radius = radius;
     params.name = name;
     SendMessageA(WH_TO_HWND(win32_tray_window()), WM_DISPLAY_MESSAGE, 0,
                  (LPARAM)&params);
@@ -56,6 +58,8 @@ void Platform_DisplayMessage(PlDisplayMessageSpec spec) {
                                          .no_bg = no_bg,
                                          .render = render,
                                          .render_data = render_data,
+                                         .rounded = rounded,
+                                         .radius = radius,
                                          .name = name});
 }
 
@@ -193,6 +197,8 @@ void Platform_DisplayMessageAnchored(PlAnchoredMessageSpec spec) {
                                                  .color = color,
                                                  .render = render,
                                                  .render_data = render_data,
+                                                 .rounded = rounded,
+                                                 .radius = radius,
                                                  .name = name});
 }
 
@@ -208,6 +214,8 @@ void Platform_CreateDisplayMessageWindow(
   bool no_bg = spec.no_bg;
   void (*render)(void *ud) = spec.render;
   void *render_data = spec.render_data;
+  bool rounded = spec.rounded;
+  int radius = spec.radius;
   const char *name = spec.name;
 
   log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g "
@@ -278,10 +286,14 @@ void Platform_CreateDisplayMessageWindow(
 
   s_msg_show_data = pWndData;
   s_msg_show_no_bg = no_bg;
+  s_msg_rounded = rounded ? rounded : RoundedCorners;
+  s_msg_radius = radius > 0 ? radius : CornerRadius;
   if (!win32_message_popup_create(topLeftX, topLeftY, winWidth, winHeight)) {
     log_error("MSG create failed for '%s'", message ? message : "");
     s_msg_show_data = NULL;
     s_msg_show_no_bg = false;
+    s_msg_rounded = true;
+    s_msg_radius = CornerRadius;
     Platform_DestroyFont(pWndData->hFont);
     free((void *)pWndData->message);
     free(pWndData);
