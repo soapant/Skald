@@ -28,7 +28,7 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = ""
+  Theme = "modus-vivendi"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = false
@@ -36,11 +36,4 @@
   RainbowText = false
   WindowTitleText = false
   CloseOnLossOfFocus = false
-
-[color]
-  BG = "#101010"
-  TEXT = "#FFFFFF"
-  SELECTED_TEXT = "#000000"
-  CURSOR = "#FFFFFF"
-  BORDER = "#808080"
 # </skald-config-generated>

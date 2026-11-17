@@ -50,7 +50,6 @@ static void cl_trace(const char *what, const char *fmt, ...) {
   va_start(ap, fmt);
   vsnprintf(buf, sizeof(buf), fmt, ap);
   va_end(ap);
-  log_debug("[clip %+ldms #%ld] %s %s", cl_ms_since() - cl_t0, n, what, buf);
 }
 
 static Window clip_win = None;
