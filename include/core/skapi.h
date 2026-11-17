@@ -328,6 +328,8 @@ typedef struct {
   ColorRef color_bg;
   const char *name;
   bool close_on_keypress;
+  bool rounded;
+  int radius;
 } SkMessageSpec;
 
 typedef struct {

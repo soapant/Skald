@@ -10,6 +10,13 @@ void Platform_DrawPromptEditText(PromptState *state) { (void)state; }
 
 void Platform_DrawPromptEditCursor(PromptState *state) { (void)state; }
 
+bool Platform_SetWindowRounded(WindowHandle h, bool rounded, int radius) {
+  (void)h;
+  (void)rounded;
+  (void)radius;
+  return false;
+}
+
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   (void)h;
   if (out_x)

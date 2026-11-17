@@ -45,6 +45,8 @@ void win32_msg_slot_register(HWND hwnd);
 bool win32_message_popup_any_open(void);
 int win32_msg_slot_destroy_where(int mode, const char *name);
 bool win32_message_popup_create(int x, int y, int w, int h);
+extern bool s_msg_rounded;
+extern int s_msg_radius;
 
 extern FadeWindowData *s_msg_show_data;
 extern bool s_msg_show_no_bg;

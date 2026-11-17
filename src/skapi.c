@@ -999,12 +999,14 @@ void ski_message(const SkMessageSpec *spec) {
                                .color = color,
                                .render = spec->render ? spec->render : NULL,
                                .name = spec->name,
-                               .render_data = spec->render_data});
+                               .render_data = spec->render_data,
+                               .rounded = spec->rounded,
+                               .radius = spec->radius});
     return;
   }
   display_message_slot(spec->message, slot, mw, mh, spec->prompt_gap, timeout,
                        color, spec->render, spec->render_data, spec->name,
-                       spec->w, spec->h);
+                       spec->w, spec->h, spec->rounded, spec->radius);
 }
 
 bool sk_launch_browser(const char *url) {

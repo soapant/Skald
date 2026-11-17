@@ -1927,6 +1927,29 @@ void x11_apply_shape_rounded_window(Display *dpy, Window win, int w, int h) {
   x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
 }
 
+void x11_apply_shape(Display *dpy, Window win, int w, int h, bool rounded,
+                     int radius) {
+  if (!dpy || win == None || w <= 0 || h <= 0)
+    return;
+  if (rounded && radius > 0) {
+    x11_apply_shape_rounded(dpy, win, w, h, radius);
+    return;
+  }
+  Pixmap mask = XCreatePixmap(dpy, win, w, h, 1);
+  if (!mask)
+    return;
+  GC gc = XCreateGC(dpy, mask, 0, NULL);
+  if (!gc) {
+    XFreePixmap(dpy, mask);
+    return;
+  }
+  XSetForeground(dpy, gc, 1);
+  XFillRectangle(dpy, mask, gc, 0, 0, w, h);
+  XShapeCombineMask(dpy, win, ShapeBounding, 0, 0, mask, ShapeSet);
+  XFreeGC(dpy, gc);
+  XFreePixmap(dpy, mask);
+}
+
 void x11_apply_click_through(Display *dpy, Window win) {
   if (!dpy || win == None)
     return;
@@ -1934,8 +1957,9 @@ void x11_apply_click_through(Display *dpy, Window win) {
                           Unsorted);
 }
 
-Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
-                                         int h, bool clickable) {
+Window x11_create_display_message_window_ex(Display *dpy, int x, int y, int w,
+                                             int h, bool clickable,
+                                             bool rounded, int radius) {
   unsigned long bg = 0;
   if (!get_transparent_window()) {
     bg = get_draw_bg_color();
@@ -1950,7 +1974,18 @@ Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
     x11_apply_click_through(dpy, win);
 
   x11_set_draw_context(NULL, NULL, NULL, 0);
+  if (win != None) {
+    bool want_rounded = rounded ? rounded : RoundedCorners;
+    x11_apply_shape(dpy, win, w, h, want_rounded,
+                    radius > 0 ? radius : CornerRadius);
+  }
   return win;
+}
+
+Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
+                                         int h, bool clickable) {
+  return x11_create_display_message_window_ex(dpy, x, y, w, h, clickable,
+                                              RoundedCorners, CornerRadius);
 }
 
 XftDraw *x11_create_xft_draw(Display *dpy, Window win) {

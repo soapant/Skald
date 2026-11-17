@@ -219,6 +219,8 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
 FadeWindowData *s_msg_show_data = NULL;
 
 bool s_msg_show_no_bg = false;
+bool s_msg_rounded = true;
+int s_msg_radius = 14;
 
 bool win32_message_popup_create(int x, int y, int w, int h) {
   if (!s_msg_show_data) {
@@ -237,9 +239,10 @@ bool win32_message_popup_create(int x, int y, int w, int h) {
   }
   s_msg_show_data = NULL;
   if (!s_msg_show_no_bg) {
-    win32_apply_rounded_corners(hPopupWnd, w, h);
+    win32_apply_rounded(hPopupWnd, w, h, s_msg_rounded, s_msg_radius);
     SetLayeredWindowAttributes(hPopupWnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
   } else {
+    win32_apply_rounded(hPopupWnd, w, h, s_msg_rounded, s_msg_radius);
     SetLayeredWindowAttributes(hPopupWnd, 0, 0, LWA_COLORKEY);
   }
   ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);

@@ -1,4 +1,19 @@
 #include "helpers/win32/raw_draw_win32.h"
+#include "helpers/win32/common_ui_win32.h"
+
+bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius) {
+  HWND hwnd = WH_TO_HWND(win);
+  if (!hwnd || !IsWindow(hwnd))
+    return false;
+  RECT rc;
+  GetWindowRect(hwnd, &rc);
+  int w = rc.right - rc.left;
+  int h = rc.bottom - rc.top;
+  if (w <= 0 || h <= 0)
+    return false;
+  win32_apply_rounded(hwnd, w, h, rounded, radius);
+  return true;
+}
 
 bool Platform_PrewarmImage(char *path) {
   if (!path || !path[0])

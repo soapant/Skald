@@ -20,6 +20,8 @@ typedef struct {
   void *render_data;
   int width, height;
   const char *name;
+  bool rounded;
+  int radius;
 } PlAnchoredMessageSpec;
 
 typedef struct {
@@ -32,6 +34,8 @@ typedef struct {
   void (*render)(void *ud);
   void *render_data;
   const char *name;
+  bool rounded;
+  int radius;
 } PlCreateDisplayMessageWindowSpec;
 
 typedef struct {
@@ -54,6 +58,8 @@ typedef struct {
   void (*render)(void *ud);
   void *render_data;
   const char *name;
+  bool rounded;
+  int radius;
 } PlDisplayMessageSpec;
 
 #define HOVER_MSG_UNPACK(spec)                                                 \
@@ -73,6 +79,8 @@ typedef struct {
   int center_x = (spec).x;                                                     \
   int center_y = (spec).y;                                                     \
   bool no_bg = (spec).no_bg;                                                   \
+  bool rounded = (spec).rounded;                                               \
+  int radius = (spec).radius;                                                  \
   int w = (spec).w;                                                            \
   int h = (spec).h;                                                            \
   int max_width = (spec).max_width;                                            \
@@ -89,6 +97,8 @@ typedef struct {
   int rect_y = (spec).y;                                                       \
   int rect_w = (spec).w;                                                       \
   int rect_h = (spec).h;                                                       \
+  bool rounded = (spec).rounded;                                             \
+  int radius = (spec).radius;                                                  \
   int h_slot = (spec).h_slot;                                                  \
   int v_slot = (spec).v_slot;                                                  \
   int gap = (spec).gap;                                                        \
