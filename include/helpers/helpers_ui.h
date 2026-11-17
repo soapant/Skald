@@ -84,7 +84,8 @@ void message_slot_to_rect(MessageSlot slot, int prompt_gap, int *out_x,
 void display_message_slot(const char *message, MessageSlot slot, int max_w,
                           int max_h, int prompt_gap, double timeout,
                           ColorRef color, void (*render)(void *ud),
-                          void *render_data, const char *name);
+                          void *render_data, const char *name, int win_w,
+                          int win_h);
 
 void set_transparent_window(bool on);
 bool get_transparent_window(void);

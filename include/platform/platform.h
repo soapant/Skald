@@ -18,6 +18,7 @@ typedef struct {
   bool no_bg;
   void (*render)(void *ud);
   void *render_data;
+  int width, height;
   const char *name;
 } PlAnchoredMessageSpec;
 
@@ -99,6 +100,8 @@ typedef struct {
   bool no_bg = (spec).no_bg;                                                   \
   void (*render)(void *ud) = (spec).render;                                     \
   void *render_data = (spec).render_data;                                          \
+  int want_width = (spec).width;                                                   \
+  int want_height = (spec).height;                                                 \
   const char *name = (spec).name
 
 #define HTTP_CONNECT_TIMEOUT_S 10
