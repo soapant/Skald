@@ -5,6 +5,7 @@
 #include "helpers/win32/win32_state.h"
 #include "helpers/helpers_fs.h"
 #include "helpers/win32/subclasses_win32.h"
+#include "wm/wm.h"
 
 #ifdef _MSC_VER
 
@@ -1833,66 +1834,6 @@ bool Platform_CenterActiveWindow(void) {
   return true;
 }
 
-static void win32_snap_rect(int wx, int wy, int ww, int wh, SnapPreset p,
-                            int *x, int *y, int *w, int *h) {
-  int hw = ww / 2, hh = wh / 2;
-  switch (p) {
-  case SNAP_LEFT:
-    *x = wx;
-    *y = wy;
-    *w = hw;
-    *h = wh;
-    break;
-  case SNAP_RIGHT:
-    *x = wx + hw;
-    *y = wy;
-    *w = ww - hw;
-    *h = wh;
-    break;
-  case SNAP_TOP:
-    *x = wx;
-    *y = wy;
-    *w = ww;
-    *h = hh;
-    break;
-  case SNAP_BOTTOM:
-    *x = wx;
-    *y = wy + hh;
-    *w = ww;
-    *h = wh - hh;
-    break;
-  case SNAP_TOP_LEFT:
-    *x = wx;
-    *y = wy;
-    *w = hw;
-    *h = hh;
-    break;
-  case SNAP_TOP_RIGHT:
-    *x = wx + hw;
-    *y = wy;
-    *w = ww - hw;
-    *h = hh;
-    break;
-  case SNAP_BOTTOM_LEFT:
-    *x = wx;
-    *y = wy + hh;
-    *w = hw;
-    *h = wh - hh;
-    break;
-  case SNAP_BOTTOM_RIGHT:
-    *x = wx + hw;
-    *y = wy + hh;
-    *w = ww - hw;
-    *h = wh - hh;
-    break;
-  default:
-    *x = wx;
-    *y = wy;
-    *w = ww;
-    *h = wh;
-    break;
-  }
-}
 
 bool Platform_SnapActiveWindow(SnapPreset preset) {
   HWND hwnd = win32_foreground_target();
@@ -1906,10 +1847,9 @@ bool Platform_SnapActiveWindow(SnapPreset preset) {
   if (IsIconic(hwnd) || IsZoomed(hwnd))
     ShowWindow(hwnd, SW_RESTORE);
   RECT w = mi.rcWork;
-  int x = 0, y = 0, cw = 0, ch = 0;
-  win32_snap_rect(w.left, w.top, w.right - w.left, w.bottom - w.top, preset, &x,
-                  &y, &cw, &ch);
-  SetWindowPos(hwnd, HWND_TOP, x, y, cw, ch,
+  SnapRect r = wm_snap_rect(w.left, w.top, w.right - w.left, w.bottom - w.top,
+                            preset);
+  SetWindowPos(hwnd, HWND_TOP, r.x, r.y, r.w, r.h,
                SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
   return true;
 }

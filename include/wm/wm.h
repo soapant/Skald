@@ -12,59 +12,51 @@
 #include "core/types/window.h"
 #include "helpers/helpers_text.h"
 
-static inline void wm_snap_rect(int mx, int my, int mw, int mh, SnapPreset p,
-                                int *x, int *y, int *w, int *h) {
+typedef struct {
+  int x, y, w, h;
+} SnapRect;
+
+static inline SnapRect wm_snap_rect(int mx, int my, int mw, int mh,
+                                    SnapPreset p) {
+  SnapRect r = {mx, my, mw, mh};
   int hw = mw / 2, hh = mh / 2;
   switch (p) {
   case SNAP_LEFT:
-    *x = mx;
-    *y = my;
-    *w = hw;
-    *h = mh;
-    return;
+    r.w = hw;
+    break;
   case SNAP_RIGHT:
-    *x = mx + hw;
-    *y = my;
-    *w = mw - hw;
-    *h = mh;
-    return;
+    r.x = mx + hw;
+    r.w = mw - hw;
+    break;
   case SNAP_TOP:
-    *x = mx;
-    *y = my;
-    *w = mw;
-    *h = hh;
-    return;
+    r.h = hh;
+    break;
   case SNAP_BOTTOM:
-    *x = mx;
-    *y = my + hh;
-    *w = mw;
-    *h = mh - hh;
-    return;
+    r.y = my + hh;
+    r.h = mh - hh;
+    break;
   case SNAP_TOP_LEFT:
-    *x = mx;
-    *y = my;
-    *w = hw;
-    *h = hh;
-    return;
+    r.w = hw;
+    r.h = hh;
+    break;
   case SNAP_TOP_RIGHT:
-    *x = mx + hw;
-    *y = my;
-    *w = mw - hw;
-    *h = hh;
-    return;
+    r.x = mx + hw;
+    r.w = mw - hw;
+    r.h = hh;
+    break;
   case SNAP_BOTTOM_LEFT:
-    *x = mx;
-    *y = my + hh;
-    *w = hw;
-    *h = mh - hh;
-    return;
+    r.y = my + hh;
+    r.w = hw;
+    r.h = mh - hh;
+    break;
   case SNAP_BOTTOM_RIGHT:
-    *x = mx + hw;
-    *y = my + hh;
-    *w = mw - hw;
-    *h = mh - hh;
-    return;
+    r.x = mx + hw;
+    r.y = my + hh;
+    r.w = mw - hw;
+    r.h = mh - hh;
+    break;
   }
+  return r;
 }
 
 static inline bool wm_json_num_at(const char *json, const char *key,
