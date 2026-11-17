@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <utime.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -914,6 +915,21 @@ static void hover_popup_ctx_free(void *ud) {
   SkHoverPopupCtx *p = (SkHoverPopupCtx *)ud;
   if (p)
     free(p);
+}
+
+void sk_message_fmt(const SkMessageSpec *spec, const char *fmt, ...) {
+  char buffer[1024];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
+  SkMessageSpec final;
+  if (spec)
+    final = *spec;
+  else
+    memset(&final, 0, sizeof(final));
+  final.message = buffer;
+  ski_message(&final);
 }
 
 void ski_message(const SkMessageSpec *spec) {
