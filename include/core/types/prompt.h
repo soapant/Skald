@@ -127,6 +127,8 @@ typedef struct {
   int y;
   bool subwindow;
   bool no_separators;
+  bool rounded;
+  int radius;
 } PromptSpec;
 
 typedef struct {
