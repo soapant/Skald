@@ -7,7 +7,7 @@
 
 > A native, lightning-fast control center that so happens to have a launcher for Linux and Windows.
 
-Skald is a native system control center. It is written entirely in C, boots instantly, uses very little RAM, and talks directly to your window manager. It's not just a launcher; you can do much more.
+Skald is a native system control center. It is written entirely in C, boots instantly, uses very little RAM, and talks directly to your window manager. It's not just a launcher; it can do much more.
 
 ## Why I made Skald
 
