@@ -1,6 +1,30 @@
 #include <X11/extensions/XTest.h>
+#include <string.h>
+#include <strings.h>
+#include <stdlib.h>
 #include "helpers/x11/raw_platform_x11.h"
 #include "helpers/x11/drawing_x11.h"
+
+static bool s_bundled_font_done = false;
+
+static bool x11_is_bundled_face(const char *face_name) {
+  return face_name &&
+         (strcasecmp(face_name, "0xProto Nerd Font") == 0 ||
+          strcasecmp(face_name, "0xProtoNerdFont") == 0);
+}
+
+static bool x11_register_bundled_font(void) {
+  if (s_bundled_font_done)
+    return true;
+  const char *path = "resources/fonts/0xProtoNerdFont-Regular.ttf";
+  FILE *f = fopen(path, "rb");
+  if (!f)
+    return false;
+  fclose(f);
+  FcBool ok = FcConfigAppFontAddFile(NULL, (const FcChar8 *)path);
+  s_bundled_font_done = (ok == FcTrue);
+  return s_bundled_font_done;
+}
 
 typedef struct {
   Display *dpy;
@@ -76,6 +100,8 @@ FontHandle x11_create_font_on_display(Display *dpy, int size,
 
   if (!dpy)
     return FH_NULL;
+  if (x11_is_bundled_face(face_name))
+    x11_register_bundled_font();
 
   pthread_mutex_lock(&g_font_cache_mtx);
 
