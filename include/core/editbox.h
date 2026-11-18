@@ -53,7 +53,7 @@ typedef struct {
   ColorRef text_color;
   ColorRef bg_color;
   FontHandle font;
-  int fontsize;
+  int font_size;
   int caret_height;
   int caret_width;
   int caret_x;
@@ -91,7 +91,7 @@ typedef struct {
   unsigned long bg_color;
   const char *placeholder;
   FontHandle font;
-  int fontsize;
+  int font_size;
   int caret_height;
   int caret_width;
   int caret_x;
@@ -109,7 +109,7 @@ typedef struct {
   int w;
   int h;
   int y_raw;
-  int fontsize;
+  int font_size;
 } EditboxPlace;
 
 typedef struct {
@@ -126,7 +126,7 @@ typedef struct {
 typedef struct {
   const char *buffer;
   int x, y, w, h;
-  int fontsize;
+  int font_size;
 } EditboxPlaceSpec;
 
 typedef struct {
@@ -150,7 +150,7 @@ typedef struct {
   int text_w;
   int ascent;
   int descent;
-  int fontsize;
+  int font_size;
   FontHandle font;
   ColorRef text_color;
   ColorRef bg_color;
@@ -168,7 +168,7 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in);
 void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
                              PromptState *state, const EditboxUiSpec *ui,
                              const EditboxMetrics *metrics);
-int editbox_caret_y(int box_top, int ascent, int descent, int fontsize);
+int editbox_caret_y(int box_top, int ascent, int descent, int font_size);
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                    int text_len, const EditboxMetrics *metrics);
 void editbox_resolve_selection(PromptState *state, int text_len,

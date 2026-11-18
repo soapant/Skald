@@ -1383,7 +1383,7 @@ bool ski_draw_text(const SkTextSpec *spec) {
                                                 .font = fh,
                                                 .align = (char *)align,
                                                 .pad = spec->pad,
-                                                .fontsize = spec->fontsize,
+                                                .font_size = spec->font_size,
                                                 .angle = spec->angle});
 }
 
@@ -1391,7 +1391,7 @@ typedef int (*SkWrapMeasureFn)(void *ctx, const char *s, int n);
 
 typedef struct {
   unsigned long color;
-  int fontsize;
+  int font_size;
 } SkWrapCtx;
 
 static void wrap_record(SkCharPos *out, int maxout, int *count, int x, int y) {
@@ -1522,22 +1522,22 @@ static int wrap_measure_thunk(void *ctx, const char *s, int n) {
 
   SkWrapCtx *c = (SkWrapCtx *)ctx;
   return Platform_MeasureTextWidth(
-      (MeasureTextWidthSpec){.text = s, .len = n, .fontsize = c->fontsize});
+      (MeasureTextWidthSpec){.text = s, .len = n, .font_size = c->font_size});
 }
 
 int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
   if (!spec || !spec->text) {
     return 0;
   }
-  int fontsize = spec->fontsize;
-  if (fontsize <= 0)
-    fontsize = FontSize;
+  int font_size = spec->font_size;
+  if (font_size <= 0)
+    font_size = FontSize;
   int line_height = spec->line_height;
   if (line_height <= 0)
-    line_height = fontsize + 4;
+    line_height = font_size + 4;
   SkWrapCtx ctx;
   ctx.color = 0;
-  ctx.fontsize = fontsize;
+  ctx.font_size = font_size;
   int cap = (int)strlen(spec->text) + 1;
   return wrap_layout(spec->text, spec->x, spec->y, spec->max_width, line_height,
                      wrap_measure_thunk, &ctx, spec->out_positions, cap);
@@ -1611,10 +1611,10 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
   SkRect r = {.x = 0, .y = 0, .w = 0, .h = 0, .color = 0};
   if (!spec || !spec->text || !spec->text[0])
     return r;
-  int fs = spec->fontsize > 0 ? spec->fontsize : FontSize;
+  int fs = spec->font_size > 0 ? spec->font_size : FontSize;
   const char *a = spec->align ? spec->align : "CENTER";
   int w = Platform_MeasureTextWidth((MeasureTextWidthSpec){
-      .text = spec->text, .len = (int)strlen(spec->text), .fontsize = fs});
+      .text = spec->text, .len = (int)strlen(spec->text), .font_size = fs});
   int h = Platform_GetTextLineHeight(fs);
   int base = spec->pad > 0 ? spec->pad : spec->x;
   if (string_contains_ci(a, "LEFT"))
@@ -1631,15 +1631,15 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
   return r;
 }
 
-int sk_get_text_width(const char *text, int fontsize) {
+int sk_get_text_width(const char *text, int font_size) {
   if (!text)
     return 0;
   return Platform_MeasureTextWidth((MeasureTextWidthSpec){
-      .text = text, .len = (int)strlen(text), .fontsize = fontsize});
+      .text = text, .len = (int)strlen(text), .font_size = font_size});
 }
 
-int sk_get_text_height(int fontsize) {
-  return Platform_GetTextLineHeight(fontsize);
+int sk_get_text_height(int font_size) {
+  return Platform_GetTextLineHeight(font_size);
 }
 
 ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t) {
@@ -3937,9 +3937,9 @@ SkPos sk_get_widget_pos_fmt(const char *fmt, ...) {
   return sk_get_widget_pos(buf);
 }
 
-int sk_get_text_width_fmt(int fontsize, const char *fmt, ...) {
+int sk_get_text_width_fmt(int font_size, const char *fmt, ...) {
   SK_FMT_BUFFER();
-  return sk_get_text_width(buf, fontsize);
+  return sk_get_text_width(buf, font_size);
 }
 
 void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt, ...) {

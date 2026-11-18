@@ -696,7 +696,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                                    .font = FH_NULL,
                                                    .align = "LEFT",
                                                    .pad = 0,
-                                                   .fontsize = FontSize});
+                                                   .font_size = FontSize});
           }
           draw_state_get()->win32_listbox_surface = false;
 
