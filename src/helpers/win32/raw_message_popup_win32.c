@@ -12,6 +12,8 @@ HWND g_msg_slots[MSG_SLOT_MAX];
 
 int g_msg_slot_count = 0;
 
+#define MSG_FPS_TIMER_ID 1001
+
 int win32_msg_slot_find(HWND hwnd) {
   for (int i = 0; i < g_msg_slot_count; i++) {
     if (g_msg_slots[i] == hwnd)
@@ -173,6 +175,10 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
     return 0;
   }
   case WM_TIMER: {
+    if (wParam == MSG_FPS_TIMER_ID) {
+      InvalidateRect(hwnd, NULL, FALSE);
+      return 0;
+    }
     if (wParam == 999 && data) {
       if (data->timeout == MSG_TIMEOUT_INDEFINITE) {
         return 0;
@@ -208,6 +214,8 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_DESTROY: {
     HWND dead = hwnd;
+    KillTimer(hwnd, MSG_FPS_TIMER_ID);
+    KillTimer(hwnd, 999);
     log_info("MSG WM_DESTROY hwnd=%p", (void *)dead);
     win32_msg_slot_unregister(dead);
     return 0;
@@ -223,6 +231,7 @@ bool s_msg_rounded = true;
 int s_msg_radius = 14;
 
 bool win32_message_popup_create(int x, int y, int w, int h) {
+  FadeWindowData *created = s_msg_show_data;
   if (!s_msg_show_data) {
     log_error("MSG create null payload");
     return false;
@@ -248,6 +257,12 @@ bool win32_message_popup_create(int x, int y, int w, int h) {
   ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
   UpdateWindow(hPopupWnd);
   SetTimer(hPopupWnd, 999, 16, NULL);
+  if (created->render && created->fps > 0) {
+    int interval = 1000 / created->fps;
+    if (interval < 16)
+      interval = 16;
+    SetTimer(hPopupWnd, MSG_FPS_TIMER_ID, (UINT)interval, NULL);
+  }
   win32_msg_slot_register(hPopupWnd);
   {
     RECT vr;
