@@ -49,15 +49,35 @@ static bool settings_ctrl_enter(PromptState *state) { return false; }
 
 static void settings_tab(PromptState *state) {}
 
-static void settings_quicklinks_render(void *ud) { (void)ud; }
+static void settings_quicklinks_render(void *ud) {
+  static ListBoxInfo pane;
+   char* desc = "Add Quicklinks for your most commonly opened websites.";
+   sk_draw_image(.path="/quicklinks.png",.x=(PromptWidth - SETTINGS_SIDEBAR_W) / 2 - 64,.y=10,.w=128,.h=128);
+   sk_draw_text(.text=desc,.color=SK_GRAY,
+                .x = 30,
+                .y = 150
+                );
 
-static void settings_config_render(void *ud) { (void)ud; }
+  sk_draw_line(.x1 = -7, .y1 = 210,
+               .x2 = PromptWidth, .y2 = 210,
+               .color = COLOR_BORDER);
+}
 
-static void settings_snippets_render(void *ud) { (void)ud; }
+static void settings_config_render(void *ud) {
+  (void)ud;
+}
 
-static void settings_hotkeys_render(void *ud) { (void)ud; }
+static void settings_snippets_render(void *ud) {
+  (void)ud;
+}
 
-static void settings_remaps_render(void *ud) { (void)ud; }
+static void settings_hotkeys_render(void *ud) {
+  (void)ud;
+}
+
+static void settings_remaps_render(void *ud) {
+  (void)ud;
+}
 
 static void settings_list(PromptState *state) {
   if (!sk_listbox_begin(.lb = state->lb, .item_height = SETTINGS_ROW_H,
@@ -83,13 +103,12 @@ static void settings_list(PromptState *state) {
 }
 
 static void settings_render(PromptState *state) {
-
   sk_draw_rect(.w = SETTINGS_SIDEBAR_W, .h = state->height,
                .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.72f),
                .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .fontsize = 16);
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .fontsize = 16,.caret_height=19,.caret_y = SETTINGS_EB_H / 2);
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
                .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W, .y2 = SETTINGS_SEP_Y,
