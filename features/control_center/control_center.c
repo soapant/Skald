@@ -75,6 +75,7 @@ typedef struct {
   CcHandler on_shift_alt_enter;
   bool (*on_tab)(void);
   void (*on_action)(void);
+  bool keep_open;
 } CcEntry;
 
 typedef enum {
@@ -641,8 +642,10 @@ static bool cc_add_quicklink(void) {
 
 static void cc_fill_add_quicklink(void) {
   CcEntry *e = cc_entry_add("Add Quicklink", "Quicklink", NULL, "/internet.svg");
-  if (e)
+  if (e) {
     e->on_enter = cc_add_quicklink;
+    e->keep_open = true;
+  }
 }
 
 static bool cc_launch_quicklink(void) {
@@ -1262,8 +1265,11 @@ static bool cc_enter(PromptState *state) {
   if (cc_copy_calc_result(state))
     return true;
   if (sk_is_selected(state->lb)) {
-    cc_stage(cc_find(state->lb->selected_text), CC_RUN_ENTER);
-    return cc_run_pending();
+    const CcEntry *e = cc_find(state->lb->selected_text);
+    cc_stage(e, CC_RUN_ENTER);
+    if (e && e->keep_open)
+      return cc_run_pending();
+    return true;
   }
   sk_query_browser(state->eb->filter);
   return true;
@@ -1274,8 +1280,11 @@ static bool cc_enter_with(PromptState *state, CcRunMode mode) {
     sk_query_browser(state->eb->filter);
     return true;
   }
-  cc_stage(cc_find(state->lb->selected_text), mode);
-  return cc_run_pending();
+  const CcEntry *e = cc_find(state->lb->selected_text);
+  cc_stage(e, mode);
+  if (e && e->keep_open)
+    return cc_run_pending();
+  return true;
 }
 
 #define CC_DEFINE_ENTER(fn, mode)                                              \
