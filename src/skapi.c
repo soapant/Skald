@@ -1784,7 +1784,7 @@ void sk_listbox_end(void) {
   draw_state_get()->listbox_rows = false;
 }
 
-bool sk_listbox_begin(const SkListSpec *spec) {
+bool ski_listbox_begin(const SkListSpec *spec) {
   if (!spec)
     return false;
   return listbox_begin_common(spec);
@@ -1804,7 +1804,7 @@ bool ski_place_listbox(const SkListSpec *spec) {
   if (!spec) {
     return false;
   }
-  if (!sk_listbox_begin(spec)) {
+  if (!ski_listbox_begin(spec)) {
     return false;
   }
   int line_h = Platform_GetTextLineHeight(0);
