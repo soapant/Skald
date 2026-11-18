@@ -265,7 +265,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
 
         listbox_set_geometry(list_top, item_h, visible);
 
-        listbox_hover_focus(hlb, list_top, item_h, hlb->view_offset, visible);
+        listbox_hover_focus(hlb, list_top, item_h, hlb->view_offset, visible,
+                               PROMPT_SEL_X,
+                               PROMPT_SEL_X + (rect.right - rect.left) -
+                                   PROMPT_SEL_W_SHRINK);
       }
     }
     InvalidateRect(hwnd, NULL, FALSE);
