@@ -1647,6 +1647,10 @@ int sk_get_text_height(int fontsize) {
   return Platform_GetTextLineHeight(fontsize);
 }
 
+
+void sk_set_draw_offset(int dx, int dy) { set_draw_offset(dx, dy); }
+
+void sk_get_draw_offset(int *out_x, int *out_y) { get_draw_offset(out_x, out_y); }
 char *sk_http_get(const char *url) { return http_get(url); }
 
 char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
