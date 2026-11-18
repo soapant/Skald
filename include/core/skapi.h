@@ -699,9 +699,15 @@ SkColor ski_get_pixel_color(int x, int y);
 
 SkColor sk_get_pixel_color(SkPos pos);
 
-bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b);
+bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b,
+                       int tolerance);
 
-bool sk_color_matches(SkPos pos, SkColor color);
+bool sk_color_matches(SkPos pos, SkColor color, int tolerance);
+
+bool ski_wait_pixel(int x, int y, size_t r, size_t g, size_t b, int tolerance,
+                    double timeout);
+
+bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout);
 
 bool ski_move_to_pos(int x, int y);
 
