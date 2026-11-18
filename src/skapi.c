@@ -1647,6 +1647,21 @@ int sk_get_text_height(int fontsize) {
   return Platform_GetTextLineHeight(fontsize);
 }
 
+ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t) {
+  if (t < 0)
+    t = 0;
+  if (t > 1)
+    t = 1;
+  int ar = (int)(a & 0xFF), ag = (int)((a >> 8) & 0xFF),
+      ab = (int)((a >> 16) & 0xFF);
+  int br = (int)(b & 0xFF), bg = (int)((b >> 8) & 0xFF),
+      bb = (int)((b >> 16) & 0xFF);
+  unsigned int rr = (unsigned int)(ar + (br - ar) * t + 0.5f);
+  unsigned int rg = (unsigned int)(ag + (bg - ag) * t + 0.5f);
+  unsigned int rb = (unsigned int)(ab + (bb - ab) * t + 0.5f);
+  return (ColorRef)(rr | (rg << 8) | (rb << 16));
+}
+
 
 void sk_set_draw_offset(int dx, int dy) { set_draw_offset(dx, dy); }
 

@@ -558,6 +558,8 @@ int sk_rand_num_between(int min, int max);
 int sk_get_text_width(const char *text, int fontsize);
 
 int sk_get_text_height(int fontsize);
+
+ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t);
 void sk_set_draw_offset(int dx, int dy);
 void sk_get_draw_offset(int *out_x, int *out_y);
 
