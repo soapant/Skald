@@ -8,9 +8,8 @@
 static bool s_bundled_font_done = false;
 
 static bool x11_is_bundled_face(const char *face_name) {
-  return face_name &&
-         (strcasecmp(face_name, "0xProto Nerd Font") == 0 ||
-          strcasecmp(face_name, "0xProtoNerdFont") == 0);
+  return face_name && (strcasecmp(face_name, "0xProto Nerd Font") == 0 ||
+                       strcasecmp(face_name, "0xProtoNerdFont") == 0);
 }
 
 static bool x11_register_bundled_font(void) {

@@ -57,7 +57,8 @@ TEST(set_creates_missing_file) {
 }
 
 TEST(set_appends_inside_existing_section_before_next_section) {
-  seed("[other]\nother = \"x\"\n\n[hotkeys]\nA = \"1\"\n\n[color]\nBG = \"#000\"\n");
+  seed("[other]\nother = \"x\"\n\n[hotkeys]\nA = \"1\"\n\n[color]\nBG = "
+       "\"#000\"\n");
   ASSERT_TRUE(config_section_set(PATH, "hotkeys", "B", "2"));
   char *s = slurp();
   ASSERT_TRUE(s != NULL);
@@ -73,7 +74,8 @@ TEST(set_appends_inside_existing_section_before_next_section) {
 
 TEST(set_creates_section_at_eof) {
   seed("[other]\nother = \"x\"\n");
-  ASSERT_TRUE(config_section_set(PATH, "quicklinks", "YouTube", "https://youtube.com"));
+  ASSERT_TRUE(
+      config_section_set(PATH, "quicklinks", "YouTube", "https://youtube.com"));
   char *s = slurp();
   ASSERT_TRUE(s != NULL);
   ASSERT_TRUE(strstr(s, "[quicklinks]") != NULL);
@@ -95,7 +97,8 @@ TEST(set_upsert_replaces_same_name) {
 }
 
 TEST(set_preserves_comments_and_entries) {
-  seed("# leading comment\n\n[hotkeys]\n# section comment\nTerm = \"Ctrl+Alt+T\" # entry comment\n");
+  seed("# leading comment\n\n[hotkeys]\n# section comment\nTerm = "
+       "\"Ctrl+Alt+T\" # entry comment\n");
   ASSERT_TRUE(config_section_set(PATH, "hotkeys", "New", "Super+N"));
   char *s = slurp();
   ASSERT_TRUE(s != NULL);
@@ -120,7 +123,8 @@ TEST(set_replaces_line_with_trailing_comment) {
 
 TEST(set_quoted_key_roundtrip) {
   remove(PATH);
-  ASSERT_TRUE(config_section_set(PATH, "quicklinks", "My Home", "https://example.com"));
+  ASSERT_TRUE(
+      config_section_set(PATH, "quicklinks", "My Home", "https://example.com"));
   char *s = slurp();
   ASSERT_TRUE(s != NULL);
   ASSERT_TRUE(strstr(s, "\"My Home\" = \"https://example.com\"") != NULL);
@@ -194,9 +198,8 @@ TEST(set_then_parse_with_config_toml) {
   seed("[color]\nBG = \"#FFFFFF\"\n\n[hotkeys]\n");
   ASSERT_TRUE(config_section_set(PATH, "hotkeys", "Term", "Ctrl+Alt+T"));
   ASSERT_TRUE(config_section_set(PATH, "hotkeys", "Browser", "Super+B"));
-  ConfigTomlStatus st = config_toml_parse(PATH,
-                                          (ConfigTomlVisitFn)test_noop_visit,
-                                          NULL);
+  ConfigTomlStatus st =
+      config_toml_parse(PATH, (ConfigTomlVisitFn)test_noop_visit, NULL);
   ASSERT_EQ_INT((int)st, (int)CONFIG_TOML_OK);
   remove(PATH);
 }

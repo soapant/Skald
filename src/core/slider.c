@@ -78,7 +78,8 @@ static SliderSpec *slider_find(const char *name) {
   return NULL;
 }
 
-static SliderSpec *slider_intern(const char *name, float seed, bool *out_fresh) {
+static SliderSpec *slider_intern(const char *name, float seed,
+                                 bool *out_fresh) {
 
   if (out_fresh)
     *out_fresh = false;
@@ -213,7 +214,8 @@ static void slider_track_geometry(const SliderSpec *sl, int *tx, int *ty,
     *tw = t;
     *th = sl->h;
     *rx = sl->x + (sl->w - ts) / 2;
-    *ry = sl->y + (int)lroundf((float)(sl->h - ts) * (1.0f - slider_fraction_of(sl)));
+    *ry = sl->y +
+          (int)lroundf((float)(sl->h - ts) * (1.0f - slider_fraction_of(sl)));
     *rsize = ts;
     return;
   }
@@ -234,10 +236,10 @@ static void slider_track_geometry(const SliderSpec *sl, int *tx, int *ty,
 void slider_draw(const SliderSpec *spec) {
   if (!spec)
     return;
-  int tw = spec->w > 0 ? spec->w
-                       : (spec->orientation == SLIDER_VERTICAL ? 16 : 150);
-  int th = spec->h > 0 ? spec->h
-                       : (spec->orientation == SLIDER_VERTICAL ? 150 : 16);
+  int tw =
+      spec->w > 0 ? spec->w : (spec->orientation == SLIDER_VERTICAL ? 16 : 150);
+  int th =
+      spec->h > 0 ? spec->h : (spec->orientation == SLIDER_VERTICAL ? 150 : 16);
   if (spec->render) {
     SliderState st;
     memset(&st, 0, sizeof(st));
@@ -260,84 +262,86 @@ void slider_draw(const SliderSpec *spec) {
   slider_track_geometry(spec, &tx, &ty, &twk, &thk, &rx, &ry, &rsize);
 
   unsigned long track_bg = spec->bg_color ? spec->bg_color : COLOR_BG;
-  unsigned long fill =
-      spec->fill_color ? spec->fill_color : (spec->hovered ? SLIDER_WHITE : SLIDER_GRAY);
+  unsigned long fill = spec->fill_color
+                           ? spec->fill_color
+                           : (spec->hovered ? SLIDER_WHITE : SLIDER_GRAY);
   unsigned long thumb = spec->thumb_color ? spec->thumb_color : SLIDER_THUMB;
   unsigned long track_border = spec->hovered ? SLIDER_WHITE : SLIDER_GRAY;
 
   if (!spec->no_bg) {
-    Platform_DrawRectRaw((DrawRectRawSpec){.x = tx,
-                                             .y = ty,
-                                             .w = twk,
-                                             .h = thk,
-                                             .color = track_bg,
-                                             .radius = thk > twk ? twk / 2 : thk / 2,
-                                             .rounded = true,
-                                             .opaque = true,
-                                             .thickness = 1,
-                                             .filled = true});
+    Platform_DrawRectRaw(
+        (DrawRectRawSpec){.x = tx,
+                          .y = ty,
+                          .w = twk,
+                          .h = thk,
+                          .color = track_bg,
+                          .radius = thk > twk ? twk / 2 : thk / 2,
+                          .rounded = true,
+                          .opaque = true,
+                          .thickness = 1,
+                          .filled = true});
   }
 
   int fill_radius = thk > twk ? twk / 2 : thk / 2;
   if (spec->orientation == SLIDER_VERTICAL) {
     int fill_h = (int)lroundf((float)thk * slider_fraction_of(spec));
     Platform_DrawRectRaw((DrawRectRawSpec){.x = tx,
-                                             .y = ty + thk - fill_h,
-                                             .w = twk,
-                                             .h = fill_h,
-                                             .color = fill,
-                                             .radius = fill_radius,
-                                             .rounded = true,
-                                             .opaque = true,
-                                             .thickness = 1,
-                                             .filled = true});
-  } else {
-    int fill_w = (int)lroundf((float)twk * slider_fraction_of(spec));
-    Platform_DrawRectRaw((DrawRectRawSpec){.x = tx,
-                                             .y = ty,
-                                             .w = fill_w,
-                                             .h = thk,
-                                             .color = fill,
-                                             .radius = fill_radius,
-                                             .rounded = true,
-                                             .opaque = true,
-                                             .thickness = 1,
-                                             .filled = true});
-  }
-
-  if (spec->border) {
-    Platform_DrawRectRaw((DrawRectRawSpec){.x = tx,
-                                             .y = ty,
-                                             .w = twk,
-                                             .h = thk,
-                                             .color = track_border,
-                                             .radius = fill_radius,
-                                             .rounded = true,
-                                             .opaque = true,
-                                             .thickness = 1,
-                                             .filled = false});
-  }
-
-  Platform_DrawRectRaw((DrawRectRawSpec){.x = rx,
-                                           .y = ry,
-                                           .w = rsize,
-                                           .h = rsize,
-                                           .color = thumb,
-                                           .radius = rsize / 2,
+                                           .y = ty + thk - fill_h,
+                                           .w = twk,
+                                           .h = fill_h,
+                                           .color = fill,
+                                           .radius = fill_radius,
                                            .rounded = true,
                                            .opaque = true,
                                            .thickness = 1,
                                            .filled = true});
-  Platform_DrawRectRaw((DrawRectRawSpec){.x = rx,
-                                           .y = ry,
-                                           .w = rsize,
-                                           .h = rsize,
+  } else {
+    int fill_w = (int)lroundf((float)twk * slider_fraction_of(spec));
+    Platform_DrawRectRaw((DrawRectRawSpec){.x = tx,
+                                           .y = ty,
+                                           .w = fill_w,
+                                           .h = thk,
+                                           .color = fill,
+                                           .radius = fill_radius,
+                                           .rounded = true,
+                                           .opaque = true,
+                                           .thickness = 1,
+                                           .filled = true});
+  }
+
+  if (spec->border) {
+    Platform_DrawRectRaw((DrawRectRawSpec){.x = tx,
+                                           .y = ty,
+                                           .w = twk,
+                                           .h = thk,
                                            .color = track_border,
-                                           .radius = rsize / 2,
+                                           .radius = fill_radius,
                                            .rounded = true,
                                            .opaque = true,
                                            .thickness = 1,
                                            .filled = false});
+  }
+
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = rx,
+                                         .y = ry,
+                                         .w = rsize,
+                                         .h = rsize,
+                                         .color = thumb,
+                                         .radius = rsize / 2,
+                                         .rounded = true,
+                                         .opaque = true,
+                                         .thickness = 1,
+                                         .filled = true});
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = rx,
+                                         .y = ry,
+                                         .w = rsize,
+                                         .h = rsize,
+                                         .color = track_border,
+                                         .radius = rsize / 2,
+                                         .rounded = true,
+                                         .opaque = true,
+                                         .thickness = 1,
+                                         .filled = false});
 }
 
 bool slider_place(const SliderSpec *spec) {
@@ -345,16 +349,16 @@ bool slider_place(const SliderSpec *spec) {
     return false;
 
   int x = spec->x, y = spec->y;
-  int w = spec->w > 0 ? spec->w
-                      : (spec->orientation == SLIDER_VERTICAL ? 16 : 150);
-  int h = spec->h > 0 ? spec->h
-                      : (spec->orientation == SLIDER_VERTICAL ? 150 : 16);
+  int w =
+      spec->w > 0 ? spec->w : (spec->orientation == SLIDER_VERTICAL ? 16 : 150);
+  int h =
+      spec->h > 0 ? spec->h : (spec->orientation == SLIDER_VERTICAL ? 150 : 16);
 
   float minv = spec->min_value;
   float maxv = spec->max_value;
   if (maxv - minv < SLIDER_MIN_SPAN) {
-    log_error("slider '%s' has an empty range (%g..%g)", spec->name, (double)minv,
-              (double)maxv);
+    log_error("slider '%s' has an empty range (%g..%g)", spec->name,
+              (double)minv, (double)maxv);
     return false;
   }
 
@@ -368,7 +372,8 @@ bool slider_place(const SliderSpec *spec) {
   sl->y = y;
   sl->w = w;
   sl->h = h;
-  sl->orientation = spec->orientation == SLIDER_VERTICAL ? SLIDER_VERTICAL : SLIDER_HORIZONTAL;
+  sl->orientation = spec->orientation == SLIDER_VERTICAL ? SLIDER_VERTICAL
+                                                         : SLIDER_HORIZONTAL;
   sl->min_value = minv;
   sl->max_value = maxv;
   sl->step = spec->step > 0.0f ? spec->step : 0.0f;

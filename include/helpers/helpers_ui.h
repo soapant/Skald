@@ -149,8 +149,7 @@ int bg_tile_lru_pick(const void *slots, int count, size_t stride,
                      int (*is_empty)(const void *slot),
                      unsigned long (*stamp)(const void *slot));
 
-void draw_text_centered_impl(const DrawTextCenteredSpec *spec,
-                             int line_height);
+void draw_text_centered_impl(const DrawTextCenteredSpec *spec, int line_height);
 int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,
                       int win_size);
 int msg_stack_dir(int v_slot, bool outward);

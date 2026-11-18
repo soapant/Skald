@@ -50,19 +50,19 @@ void Platform_DisplayMessage(DisplayMessageSpec spec) {
   }
   Platform_CreateDisplayMessageWindow(
       (CreateDisplayMessageWindowSpec){.message = message,
-                                         .x = center_x,
-                                         .y = center_y,
-                                         .max_width = useMaxW,
-                                         .max_height = useMaxH,
-                                         .timeout = timeout,
-                                         .color = color,
-                                         .no_bg = no_bg,
-                                         .render = render,
-                                         .render_data = render_data,
-                                         .rounded = rounded,
-                                         .radius = radius,
-                                         .name = name,
-                                         .fps = fps});
+                                       .x = center_x,
+                                       .y = center_y,
+                                       .max_width = useMaxW,
+                                       .max_height = useMaxH,
+                                       .timeout = timeout,
+                                       .color = color,
+                                       .no_bg = no_bg,
+                                       .render = render,
+                                       .render_data = render_data,
+                                       .rounded = rounded,
+                                       .radius = radius,
+                                       .name = name,
+                                       .fps = fps});
 }
 
 void Platform_DismissDisplayMessage(void) {
@@ -188,25 +188,24 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
            outward, center_x, center_y, winWidth, winHeight);
 
   Platform_DisplayMessage((DisplayMessageSpec){.message = message,
-                                                 .x = center_x,
-                                                 .y = center_y,
-                                                 .no_bg = no_bg,
-                                                 .w = winWidth,
-                                                 .h = winHeight,
-                                                 .max_width = max_width,
-                                                 .max_height = max_height,
-                                                 .timeout = timeout,
-                                                 .color = color,
-                                                 .render = render,
-                                                 .render_data = render_data,
-                                                 .rounded = rounded,
-                                                 .radius = radius,
-                                                 .name = name,
-                                                 .fps = fps});
+                                               .x = center_x,
+                                               .y = center_y,
+                                               .no_bg = no_bg,
+                                               .w = winWidth,
+                                               .h = winHeight,
+                                               .max_width = max_width,
+                                               .max_height = max_height,
+                                               .timeout = timeout,
+                                               .color = color,
+                                               .render = render,
+                                               .render_data = render_data,
+                                               .rounded = rounded,
+                                               .radius = radius,
+                                               .name = name,
+                                               .fps = fps});
 }
 
-void Platform_CreateDisplayMessageWindow(
-    CreateDisplayMessageWindowSpec spec) {
+void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec) {
   const char *message = spec.message;
   int center_x = spec.x;
   int center_y = spec.y;

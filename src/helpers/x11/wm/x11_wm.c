@@ -432,9 +432,7 @@ static WindowList x11_list_client_fields(bool want_names) {
 
 WindowList x11_get_window_names(void) { return x11_list_client_fields(true); }
 
-WindowList x11_get_window_titles(void) {
-  return x11_list_client_fields(false);
-}
+WindowList x11_get_window_titles(void) { return x11_list_client_fields(false); }
 
 static Display *_x11_cursor_dpy = NULL;
 

@@ -400,9 +400,8 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
 static bool s_bundled_font_done = false;
 
 static bool win32_is_bundled_face(const char *face_name) {
-  return face_name &&
-         (_stricmp(face_name, "0xProto Nerd Font") == 0 ||
-          _stricmp(face_name, "0xProtoNerdFont") == 0);
+  return face_name && (_stricmp(face_name, "0xProto Nerd Font") == 0 ||
+                       _stricmp(face_name, "0xProtoNerdFont") == 0);
 }
 
 static bool win32_register_bundled_font(const char *face_name) {
@@ -1855,7 +1854,6 @@ bool Platform_CenterActiveWindow(void) {
   return true;
 }
 
-
 bool Platform_SnapActiveWindow(SnapPreset preset) {
   HWND hwnd = win32_foreground_target();
   if (!hwnd)
@@ -1868,8 +1866,8 @@ bool Platform_SnapActiveWindow(SnapPreset preset) {
   if (IsIconic(hwnd) || IsZoomed(hwnd))
     ShowWindow(hwnd, SW_RESTORE);
   RECT w = mi.rcWork;
-  SnapRect r = wm_snap_rect(w.left, w.top, w.right - w.left, w.bottom - w.top,
-                            preset);
+  SnapRect r =
+      wm_snap_rect(w.left, w.top, w.right - w.left, w.bottom - w.top, preset);
   SetWindowPos(hwnd, HWND_TOP, r.x, r.y, r.w, r.h,
                SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
   return true;

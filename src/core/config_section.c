@@ -215,8 +215,9 @@ static bool section_apply(const char *path, const char *section,
       if (sec_header != SIZE_MAX) {
         free(lines);
         free(orig);
-        log_error("config-section: multiple [%s] sections in %s, not touching file",
-                  section, path);
+        log_error(
+            "config-section: multiple [%s] sections in %s, not touching file",
+            section, path);
         return false;
       }
       sec_header = i;
@@ -229,8 +230,8 @@ static bool section_apply(const char *path, const char *section,
       const char *s = orig + lines[i].offset;
       size_t len = lines[i].count;
       char *trimmed = section_trim(s, len);
-      bool is_header = trimmed && trimmed[0] == '[' &&
-                       trimmed[strlen(trimmed) - 1] == ']';
+      bool is_header =
+          trimmed && trimmed[0] == '[' && trimmed[strlen(trimmed) - 1] == ']';
       free(trimmed);
       if (is_header) {
         sec_end = i;
@@ -260,12 +261,13 @@ static bool section_apply(const char *path, const char *section,
   if (sec_header != SIZE_MAX) {
     for (size_t i = sec_header + 1; i < sec_end; i++) {
       char *key = NULL, *entry_value = NULL;
-      int pr = section_parse_entry_line(orig + lines[i].offset,
-                                        lines[i].count, &key, &entry_value);
+      int pr = section_parse_entry_line(orig + lines[i].offset, lines[i].count,
+                                        &key, &entry_value);
       if (pr < 0) {
         free(lines);
         free(orig);
-        log_error("config-section: malformed line %zu in [%s] of %s, not touching file",
+        log_error("config-section: malformed line %zu in [%s] of %s, not "
+                  "touching file",
                   i + 1, section, path);
         return false;
       }
@@ -374,8 +376,8 @@ static bool section_apply(const char *path, const char *section,
   return true;
 }
 
-bool config_section_set(const char *path, const char *section,
-                        const char *name, const char *value) {
+bool config_section_set(const char *path, const char *section, const char *name,
+                        const char *value) {
   if (!path || !path[0] || !section || !section[0] || !name || !name[0] ||
       !value || !value[0])
     return false;

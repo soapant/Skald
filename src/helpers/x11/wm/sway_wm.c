@@ -323,10 +323,10 @@ static bool sway_app_for_pid(const char *json, const char *pid_pos,
 }
 
 static WindowList sway_list_pid_fields(bool (*extract)(const char *json,
-                                                         const char *pid_pos,
-                                                         const char *next_pid,
-                                                         char *out, size_t cap),
-                                         bool toupper_first) {
+                                                       const char *pid_pos,
+                                                       const char *next_pid,
+                                                       char *out, size_t cap),
+                                       bool toupper_first) {
   sway_ensure_sock();
   char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
   WindowList list = {0};

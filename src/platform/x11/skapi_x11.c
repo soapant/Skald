@@ -318,13 +318,13 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
       x11_set_draw_context(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
           (DrawTextRawSpec){.x = PROMPT_FOOTER_X,
-                              .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
-                              .text = state->window_title,
-                              .color = title_col,
-                              .font = fh,
-                              .align = "LEFT",
-                              .pad = PROMPT_FOOTER_PAD,
-                              .fontsize = FontSize});
+                            .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
+                            .text = state->window_title,
+                            .color = title_col,
+                            .font = fh,
+                            .align = "LEFT",
+                            .pad = PROMPT_FOOTER_PAD,
+                            .fontsize = FontSize});
     }
   }
   if (needDestroy)

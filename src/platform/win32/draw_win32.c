@@ -406,8 +406,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   int _offy = draw_state_get()->off_y;
   x += _offx;
   y += _offy;
-  if (draw_state_get()->listbox_rows &&
-      draw_state_get()->win32_listbox_surface)
+  if (draw_state_get()->listbox_rows && draw_state_get()->win32_listbox_surface)
     y -= 2;
   if (w <= 0)
     w = (IconSize > 0) ? IconSize : 16;

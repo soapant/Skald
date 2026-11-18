@@ -595,20 +595,19 @@ static unsigned char *x11_rot_rect_pixels(int w, int h, float radius,
 }
 
 static void x11_rot_composite(Display *dpy, XftDraw *xd, Visual *vis,
-                              Picture src, int dst_x, int dst_y, int bw,
-                              int bh, float angle, double dst_cx, double dst_cy,
+                              Picture src, int dst_x, int dst_y, int bw, int bh,
+                              float angle, double dst_cx, double dst_cy,
                               double src_cx, double src_cy) {
   XRenderSetPictureFilter(dpy, src, FilterBilinear, NULL, 0);
   XTransform t;
   x11_rot_transform(&t, angle, dst_cx, dst_cy, src_cx, src_cy);
   XRenderSetPictureTransform(dpy, src, &t);
   XRenderPictFormat *dfmt = XRenderFindVisualFormat(dpy, vis);
-  Picture dst = dfmt ? XRenderCreatePicture(dpy, XftDrawDrawable(xd), dfmt, 0,
-                                            NULL)
-                     : 0;
+  Picture dst =
+      dfmt ? XRenderCreatePicture(dpy, XftDrawDrawable(xd), dfmt, 0, NULL) : 0;
   if (dst) {
-    XRenderComposite(dpy, PictOpOver, src, None, dst, dst_x, dst_y, 0, 0,
-                     dst_x, dst_y, (unsigned int)bw, (unsigned int)bh);
+    XRenderComposite(dpy, PictOpOver, src, None, dst, dst_x, dst_y, 0, 0, dst_x,
+                     dst_y, (unsigned int)bw, (unsigned int)bh);
     XRenderFreePicture(dpy, dst);
   }
   return;
@@ -647,8 +646,8 @@ bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec) {
   }
   unsigned short target_alpha = spec->opaque ? 0xFFFFu : opacity_alpha16();
   unsigned char *buf =
-      x11_rot_rect_pixels(w, h, radius, spec->filled,
-                          t > 0 ? (float)t : 1.0f, spec->color, target_alpha);
+      x11_rot_rect_pixels(w, h, radius, spec->filled, t > 0 ? (float)t : 1.0f,
+                          spec->color, target_alpha);
   if (!buf)
     return false;
   Pixmap pm = 0;
@@ -657,9 +656,8 @@ bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec) {
   free(buf);
   if (!ok)
     return false;
-  x11_rot_composite(dpy, xd, g_draw_vis, pic, bx, by, bw, bh, angle,
-                         (double)cx, (double)cy, (double)w * 0.5,
-                         (double)h * 0.5);
+  x11_rot_composite(dpy, xd, g_draw_vis, pic, bx, by, bw, bh, angle, (double)cx,
+                    (double)cy, (double)w * 0.5, (double)h * 0.5);
   if (pic)
     XRenderFreePicture(dpy, pic);
   if (pm)
@@ -728,8 +726,8 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
       Platform_DestroyFont(fh);
     return false;
   }
-  Colormap cmap = XCreateColormap(dpy, RootWindow(dpy, screen), vinfo.visual,
-                                  AllocNone);
+  Colormap cmap =
+      XCreateColormap(dpy, RootWindow(dpy, screen), vinfo.visual, AllocNone);
   {
     GC gc = XCreateGC(dpy, pm, 0, NULL);
     XSetForeground(dpy, gc, 0);
@@ -758,13 +756,13 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
     XRenderSetPictureFilter(dpy, src, FilterBilinear, NULL, 0);
     XTransform t;
     x11_rot_transform(&t, angle, (double)bx + (double)bw * 0.5,
-                      (double)by + (double)bh * 0.5,
-                      (double)tw * 0.5, (double)lh * 0.5);
+                      (double)by + (double)bh * 0.5, (double)tw * 0.5,
+                      (double)lh * 0.5);
     XRenderSetPictureTransform(dpy, src, &t);
     XRenderPictFormat *dfmt = XRenderFindVisualFormat(dpy, g_draw_vis);
-    Picture dst = dfmt ? XRenderCreatePicture(dpy, XftDrawDrawable(xd), dfmt,
-                                              0, NULL)
-                       : 0;
+    Picture dst =
+        dfmt ? XRenderCreatePicture(dpy, XftDrawDrawable(xd), dfmt, 0, NULL)
+             : 0;
     if (dst) {
       XRenderComposite(dpy, PictOpOver, src, None, dst, bx, by, 0, 0, bx, by,
                        (unsigned int)bw, (unsigned int)bh);

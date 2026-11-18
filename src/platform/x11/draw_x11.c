@@ -172,10 +172,10 @@ void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                         int text_x, const char *icon_path) {
   unsigned long ncol, bcol, pcol;
   item_get_colors((GetItemColorsSpec){.idx = idx,
-                                        .count = lb->item_count,
-                                        .num_color = &ncol,
-                                        .body_color = &bcol,
-                                        .plain_color = &pcol});
+                                      .count = lb->item_count,
+                                      .num_color = &ncol,
+                                      .body_color = &bcol,
+                                      .plain_color = &pcol});
   XftColor ncolor, bcolor, pcolor;
   x11_xft_color_cached(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
   x11_xft_color_cached(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
@@ -191,13 +191,13 @@ void x11_draw_edit_background(const PromptState *state, Display *dpy,
   if (WindowTitleText)
     Platform_DrawTextRaw(
         (DrawTextRawSpec){.x = PROMPT_FOOTER_X,
-                            .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
-                            .text = state->window_title,
-                            .color = rgb_to_hex(COLOR_TEXT),
-                            .font = font,
-                            .align = "LEFT",
-                            .pad = PROMPT_FOOTER_PAD,
-                            .fontsize = FontSize});
+                          .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
+                          .text = state->window_title,
+                          .color = rgb_to_hex(COLOR_TEXT),
+                          .font = font,
+                          .align = "LEFT",
+                          .pad = PROMPT_FOOTER_PAD,
+                          .fontsize = FontSize});
 }
 
 static void draw_editbox_part(PromptState *state, Display *dpy, XftDraw *xd,

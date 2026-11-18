@@ -1273,13 +1273,13 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
     pcol = rgb_to_hex(COLOR_TEXT);
   x11_set_draw_context(dpy, xd, vis, cmap);
   Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
-                                           .y = text_y,
-                                           .text = draw_text,
-                                           .color = pcol,
-                                           .font = font,
-                                           .align = "LEFT",
-                                           .pad = XOffset,
-                                           .fontsize = FontSize});
+                                         .y = text_y,
+                                         .text = draw_text,
+                                         .color = pcol,
+                                         .font = font,
+                                         .align = "LEFT",
+                                         .pad = XOffset,
+                                         .fontsize = FontSize});
 }
 
 static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
@@ -2071,8 +2071,8 @@ void x11_apply_click_through(Display *dpy, Window win) {
 }
 
 Window x11_create_display_message_window_ex(Display *dpy, int x, int y, int w,
-                                             int h, bool clickable,
-                                             bool rounded, int radius) {
+                                            int h, bool clickable, bool rounded,
+                                            int radius) {
   unsigned long bg = 0;
   if (!get_transparent_window()) {
     bg = get_draw_bg_color();

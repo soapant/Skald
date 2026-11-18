@@ -467,24 +467,23 @@ bool sk_slider_set_value(const char *name, float value);
   ski_place_checkbox(                                                          \
       &(SkCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
 #define sk_place_slider(...)                                                   \
-  ski_place_slider(                                                            \
-      &(SkSliderSpec){.border = true, __VA_ARGS__, .orientation = SLIDER_HORIZONTAL})
+  ski_place_slider(&(SkSliderSpec){                                            \
+      .border = true, __VA_ARGS__, .orientation = SLIDER_HORIZONTAL})
 #define sk_place_vslider(...)                                                  \
-  ski_place_slider(                                                            \
-      &(SkSliderSpec){.border = true, __VA_ARGS__, .orientation = SLIDER_VERTICAL})
+  ski_place_slider(&(SkSliderSpec){                                            \
+      .border = true, __VA_ARGS__, .orientation = SLIDER_VERTICAL})
 
 #define sk_checkbox_checked sk_checkbox_is_checked
 #define sk_button_hovered sk_button_is_hovered
 #define sk_button_clicked sk_button_is_clicked
 #define sk_button_checked sk_button_is_checked
 
-#define sk_draw_text(...)                                                       \
+#define sk_draw_text(...)                                                      \
   ski_draw_text(&(SkTextSpec){.color = COLOR_AUTO, __VA_ARGS__})
 #define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
-#define sk_listbox_begin(...)                                                   \
-  ski_listbox_begin(&(SkListSpec){__VA_ARGS__})
+#define sk_listbox_begin(...) ski_listbox_begin(&(SkListSpec){__VA_ARGS__})
 
 unsigned long sk_listbox_get_current_standard_color(void);
 bool ski_listbox_begin(const SkListSpec *spec);
@@ -544,13 +543,13 @@ bool ski_draw_line(const SkLine *spec);
 
 bool ski_draw_circle(const SkCircle *spec);
 
-#define sk_draw_rect(...)                                                       \
+#define sk_draw_rect(...)                                                      \
   ski_draw_rect(&(DrawRect){.color = COLOR_AUTO, __VA_ARGS__})
 
-#define sk_draw_line(...)                                                        \
+#define sk_draw_line(...)                                                      \
   ski_draw_line(&(Line){.color = COLOR_AUTO, __VA_ARGS__})
 
-#define sk_draw_circle(...)                                                      \
+#define sk_draw_circle(...)                                                    \
   ski_draw_circle(&(Circle){.color = COLOR_AUTO, __VA_ARGS__})
 
 int sk_rand_num_between(int min, int max);
@@ -824,7 +823,8 @@ typedef CcEntrySpec SkCcEntrySpec;
 
 #define sk_add_feature(...) sk_add_to_cc(.type = "Feature", __VA_ARGS__)
 
-#define sk_add_settings_entry(...) sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
+#define sk_add_settings_entry(...)                                             \
+  sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
 
 bool sk_settings_entry_add(const SkSettingsEntrySpec *spec);
 

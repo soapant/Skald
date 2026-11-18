@@ -39,9 +39,8 @@ static void x11_msg_fps_frame(void *ud) {
     return;
   }
   g_msg_slots[idx].last_frame_ms = now;
-  char *message = g_msg_slots[idx].message
-                      ? strdup(g_msg_slots[idx].message)
-                      : NULL;
+  char *message =
+      g_msg_slots[idx].message ? strdup(g_msg_slots[idx].message) : NULL;
   unsigned long color = g_msg_slots[idx].color;
   bool no_bg = g_msg_slots[idx].no_bg;
   int w = g_msg_slots[idx].w, h = g_msg_slots[idx].h;
@@ -387,8 +386,7 @@ void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
   pthread_mutex_unlock(&g_msg_lock);
   if (pump) {
     render_thread_ensure_started(fps);
-    render_thread_add_frame_callback(x11_msg_fps_frame,
-                                     (void *)(uintptr_t)win);
+    render_thread_add_frame_callback(x11_msg_fps_frame, (void *)(uintptr_t)win);
   }
   if (!indefinite) {
     MsgDismissPayload *p = malloc(sizeof(*p));

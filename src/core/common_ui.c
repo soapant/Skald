@@ -66,15 +66,15 @@ void draw_prompt_separator(DrawPromptSeparatorSpec spec) {
   if (draw_state_get()->suppress_separators)
     return;
   Platform_DrawRectRaw((DrawRectRawSpec){.x = 0,
-                                           .y = spec.y,
-                                           .w = spec.width,
-                                           .h = PROMPT_SEP_W,
-                                           .color = rgb_to_hex(COLOR_BORDER),
-                                           .radius = 0,
-                                           .rounded = false,
-                                           .opaque = true,
-                                           .thickness = 0,
-                                           .filled = true});
+                                         .y = spec.y,
+                                         .w = spec.width,
+                                         .h = PROMPT_SEP_W,
+                                         .color = rgb_to_hex(COLOR_BORDER),
+                                         .radius = 0,
+                                         .rounded = false,
+                                         .opaque = true,
+                                         .thickness = 0,
+                                         .filled = true});
 }
 
 void item_get_colors(GetItemColorsSpec spec) {
@@ -527,31 +527,29 @@ void display_message_slot(const MessageSlotSpec *spec) {
   if (!message[0] && !render)
     return;
   SlotRect r = message_slot_to_rect(spec->slot, spec->prompt_gap);
-  Platform_DisplayMessageAnchored((AnchoredMessageSpec){.message = message,
-                                                          .x = r.x,
-                                                          .y = r.y,
-                                                          .w = r.w,
-                                                          .h = r.h,
-                                                          .h_slot = r.h_slot,
-                                                          .v_slot = r.v_slot,
-                                                          .gap = r.gap,
-                                                          .outward = r.outward,
-                                                          .max_width =
-                                                              spec->max_w,
-                                                          .max_height =
-                                                              spec->max_h,
-                                                          .timeout = spec->timeout,
-                                                          .color = spec->color,
-                                                          .no_bg = false,
-                                                          .render = render,
-                                                          .render_data =
-                                                              spec->render_data,
-                                                          .width = spec->win_w,
-                                                          .height = spec->win_h,
-                                                          .name = spec->name,
-                                                          .rounded = spec->rounded,
-                                                          .radius = spec->radius,
-                                                          .fps = spec->fps});
+  Platform_DisplayMessageAnchored(
+      (AnchoredMessageSpec){.message = message,
+                            .x = r.x,
+                            .y = r.y,
+                            .w = r.w,
+                            .h = r.h,
+                            .h_slot = r.h_slot,
+                            .v_slot = r.v_slot,
+                            .gap = r.gap,
+                            .outward = r.outward,
+                            .max_width = spec->max_w,
+                            .max_height = spec->max_h,
+                            .timeout = spec->timeout,
+                            .color = spec->color,
+                            .no_bg = false,
+                            .render = render,
+                            .render_data = spec->render_data,
+                            .width = spec->win_w,
+                            .height = spec->win_h,
+                            .name = spec->name,
+                            .rounded = spec->rounded,
+                            .radius = spec->radius,
+                            .fps = spec->fps});
 }
 
 void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,
@@ -742,9 +740,7 @@ void set_draw_bg_color(unsigned long hex) {
   draw_state_get()->bg_override = hex;
 }
 
-unsigned long get_draw_bg_color(void) {
-  return draw_state_get()->bg_override;
-}
+unsigned long get_draw_bg_color(void) { return draw_state_get()->bg_override; }
 
 void begin_measure(void) { draw_state_begin_measure(); }
 
@@ -820,18 +816,18 @@ void draw_text_centered_impl(const DrawTextCenteredSpec *spec,
                              int line_height) {
   int tw = Platform_MeasureTextWidth(
       (MeasureTextWidthSpec){.text = spec->text,
-                               .len = (int)strlen(spec->text),
-                               .fontsize = spec->fontsize});
+                             .len = (int)strlen(spec->text),
+                             .fontsize = spec->fontsize});
   int tx = spec->x + (spec->w - tw) / 2;
   int ty = spec->y + (spec->h - line_height) / 2;
   Platform_DrawTextRaw((DrawTextRawSpec){.x = tx,
-                                           .y = ty,
-                                           .text = spec->text,
-                                           .color = spec->color,
-                                           .font = spec->font,
-                                           .align = "LEFT",
-                                           .pad = 0,
-                                           .fontsize = spec->fontsize});
+                                         .y = ty,
+                                         .text = spec->text,
+                                         .color = spec->color,
+                                         .font = spec->font,
+                                         .align = "LEFT",
+                                         .pad = 0,
+                                         .fontsize = spec->fontsize});
 }
 
 int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,

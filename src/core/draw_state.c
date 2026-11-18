@@ -6,9 +6,7 @@ static __thread DrawCanvas draw_state;
 
 DrawCanvas *draw_state_get(void) { return &draw_state; }
 
-void draw_state_reset(void) {
-  memset(draw_state_get(), 0, sizeof(DrawCanvas));
-}
+void draw_state_reset(void) { memset(draw_state_get(), 0, sizeof(DrawCanvas)); }
 
 void draw_state_begin_measure(void) {
   DrawCanvas *ds = draw_state_get();

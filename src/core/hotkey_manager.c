@@ -529,12 +529,12 @@ bool hotkey_process(int vk_code, int modifiers) {
     if (MessageAfterEachHotkey) {
       snprintf(buf, sizeof(buf), "Ran Hotkey %s", hotkey_buf);
       display_message_slot(&(MessageSlotSpec){.message = buf,
-                                                .slot = BOTTOM_CENTER,
-                                                .max_w = 400,
-                                                .max_h = 400,
-                                                .prompt_gap = 20,
-                                                .timeout = TimeOutForMessages,
-                                                .color = COLOR_TEXT});
+                                              .slot = BOTTOM_CENTER,
+                                              .max_w = 400,
+                                              .max_h = 400,
+                                              .prompt_gap = 20,
+                                              .timeout = TimeOutForMessages,
+                                              .color = COLOR_TEXT});
     }
     log_info("hotkey_process Hotkey %s Matches", hotkey_buf);
     if (b->hold)

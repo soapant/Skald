@@ -336,15 +336,15 @@ void win32_msg_hover_present(HoverMessageSpec spec) {
   win32_msg_hover_release(hover_key);
   Platform_CreateDisplayMessageWindow(
       (CreateDisplayMessageWindowSpec){.message = message,
-                                         .x = center_x,
-                                         .y = center_y,
-                                         .max_width = winWidth,
-                                         .max_height = winHeight,
-                                         .timeout = MSG_TIMEOUT_INDEFINITE,
-                                         .color = color,
-                                         .no_bg = no_bg,
-                                         .render = NULL,
-                                         .name = NULL});
+                                       .x = center_x,
+                                       .y = center_y,
+                                       .max_width = winWidth,
+                                       .max_height = winHeight,
+                                       .timeout = MSG_TIMEOUT_INDEFINITE,
+                                       .color = color,
+                                       .no_bg = no_bg,
+                                       .render = NULL,
+                                       .name = NULL});
   win32_msg_w = winWidth;
   win32_msg_h = winHeight;
   snprintf(hover_key, sizeof(hover_key), "%s", key);

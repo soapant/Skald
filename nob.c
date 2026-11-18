@@ -926,8 +926,9 @@ static bool run_tests(void) {
       const char *out = nob_temp_sprintf("build/win_tests/%s.exe", name);
       Nob_Cmd cmd = {0};
       nob_cmd_append(&cmd, CROSS_CC);
-      nob_cmd_append(&cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src,
-                     nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder));
+      nob_cmd_append(
+          &cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src,
+          nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder));
       if (support_obj)
         nob_cmd_append(&cmd, support_obj);
       for (size_t i = 0; i < sources.count; ++i) {
@@ -973,8 +974,9 @@ static bool run_tests(void) {
 #endif
     Nob_Cmd cmd = {0};
     append_cc(&cmd);
-    nob_cmd_append(&cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src,
-                   nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder));
+    nob_cmd_append(
+        &cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src,
+        nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder));
     append_san_flags(&cmd);
     append_dep_cflags(&cmd);
     if (support_obj)

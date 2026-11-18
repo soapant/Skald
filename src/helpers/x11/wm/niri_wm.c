@@ -180,7 +180,7 @@ bool focus_window_title_niri(const char *title) {
 }
 
 static WindowList niri_list_fields(const char *key, size_t key_len,
-                                     bool toupper_first) {
+                                   bool toupper_first) {
   WindowList list = {0};
   if (!niri_is_active())
     return list;

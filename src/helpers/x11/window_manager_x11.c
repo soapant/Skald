@@ -369,7 +369,8 @@ int WindowManager_Run(WindowManager *wm) {
         }
       }
     } else {
-      log_warn("keyboard grab skipped: no uinput, not grabbing to avoid bricking");
+      log_warn(
+          "keyboard grab skipped: no uinput, not grabbing to avoid bricking");
     }
   }
   if (dpy) {
