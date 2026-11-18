@@ -43,6 +43,7 @@ void Platform_DisplayMessage(DisplayMessageSpec spec) {
     params.rounded = rounded;
     params.radius = radius;
     params.name = name;
+    params.fps = fps;
     SendMessageA(WH_TO_HWND(win32_tray_window()), WM_DISPLAY_MESSAGE, 0,
                  (LPARAM)&params);
     return;
@@ -60,7 +61,8 @@ void Platform_DisplayMessage(DisplayMessageSpec spec) {
                                          .render_data = render_data,
                                          .rounded = rounded,
                                          .radius = radius,
-                                         .name = name});
+                                         .name = name,
+                                         .fps = fps});
 }
 
 void Platform_DismissDisplayMessage(void) {
@@ -199,7 +201,8 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
                                                  .render_data = render_data,
                                                  .rounded = rounded,
                                                  .radius = radius,
-                                                 .name = name});
+                                                 .name = name,
+                                                 .fps = fps});
 }
 
 void Platform_CreateDisplayMessageWindow(
@@ -217,11 +220,12 @@ void Platform_CreateDisplayMessageWindow(
   bool rounded = spec.rounded;
   int radius = spec.radius;
   const char *name = spec.name;
+  int fps = spec.fps;
 
   log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g "
-           "no_bg=%d render=%p",
+           "no_bg=%d render=%p fps=%d",
            message ? message : "(null)", center_x, center_y, max_width,
-           max_height, timeout, no_bg ? 1 : 0, (void *)render);
+           max_height, timeout, no_bg ? 1 : 0, (void *)render, fps);
   win32_msg_created_clear();
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
@@ -265,6 +269,7 @@ void Platform_CreateDisplayMessageWindow(
     snprintf(pWndData->name, sizeof(pWndData->name), "%s", name);
   else
     pWndData->name[0] = '\0';
+  pWndData->fps = fps;
   pWndData->timeout = timeout;
   if (MsgTimeoutIsIndefinite(timeout)) {
     pWndData->deadline_ms = 0;

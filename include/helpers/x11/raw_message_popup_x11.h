@@ -43,6 +43,13 @@ typedef struct {
   int h;
   int x;
   int y;
+  int fps;
+  int last_frame_ms;
+  unsigned long color;
+  bool no_bg;
+  char *message;
+  void (*render)(void *ud);
+  void *render_data;
 } MsgSlot;
 
 typedef struct {
@@ -64,7 +71,7 @@ int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir);
 void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
                      int win_h, double timeout, ColorRef color, bool no_bg,
                      void (*render)(void *ud), void *render_data,
-                     const char *name, bool rounded, int radius);
+                     const char *name, bool rounded, int radius, int fps);
 void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
                            int center_x, int center_y, int win_w, int win_h,
                            ColorRef color, bool no_bg);

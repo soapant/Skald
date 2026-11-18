@@ -1,16 +1,86 @@
 #include "helpers/x11/raw_message_popup_x11.h"
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_render_thread.h"
+
+static void x11_msg_fps_frame(void *ud);
+static void x11_display_message_draw(Display *dpy, Window win,
+                                     const char *message, unsigned long color,
+                                     int w, int h, bool no_bg,
+                                     void (*render)(void *ud),
+                                     void *render_data);
 
 pthread_mutex_t g_msg_lock = PTHREAD_MUTEX_INITIALIZER;
 MsgSlot g_msg_slots[MSG_MAX_ACTIVE];
 int g_msg_slot_count = 0;
 
+static void x11_msg_fps_frame(void *ud) {
+  Window win = (Window)(uintptr_t)ud;
+  pthread_mutex_lock(&g_msg_lock);
+  int idx = -1;
+  for (int i = 0; i < g_msg_slot_count; i++) {
+    if (g_msg_slots[i].win == win) {
+      idx = i;
+      break;
+    }
+  }
+  if (idx < 0 || !g_msg_slots[idx].render || g_msg_slots[idx].fps <= 0) {
+    pthread_mutex_unlock(&g_msg_lock);
+    return;
+  }
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  long long now = (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
+  long long interval = 1000LL / g_msg_slots[idx].fps;
+  if (interval < 16)
+    interval = 16;
+  if (g_msg_slots[idx].last_frame_ms != 0 &&
+      now - g_msg_slots[idx].last_frame_ms < interval) {
+    pthread_mutex_unlock(&g_msg_lock);
+    return;
+  }
+  g_msg_slots[idx].last_frame_ms = now;
+  char *message = g_msg_slots[idx].message
+                      ? strdup(g_msg_slots[idx].message)
+                      : NULL;
+  unsigned long color = g_msg_slots[idx].color;
+  bool no_bg = g_msg_slots[idx].no_bg;
+  int w = g_msg_slots[idx].w, h = g_msg_slots[idx].h;
+  void (*render)(void *ud) = g_msg_slots[idx].render;
+  void *render_data = g_msg_slots[idx].render_data;
+  pthread_mutex_unlock(&g_msg_lock);
+  Display *rdpy = (Display *)render_thread_display();
+  if (!rdpy)
+    rdpy = x11_get_display();
+  if (rdpy)
+    x11_display_message_draw(rdpy, win, message ? message : "", color, w, h,
+                             no_bg, render, render_data);
+  free(message);
+}
+
+static void x11_msg_slot_reset_extra(MsgSlot *s) {
+  s->fps = 0;
+  s->last_frame_ms = 0;
+  s->color = 0;
+  s->no_bg = false;
+  s->name[0] = '\0';
+  free(s->message);
+  s->message = NULL;
+  s->render = NULL;
+  s->render_data = NULL;
+}
+
 void x11_msg_remove_slot_locked(Display *dpy, int idx) {
 
-  XDestroyWindow(dpy, g_msg_slots[idx].win);
+  Window win = g_msg_slots[idx].win;
+  if (g_msg_slots[idx].fps > 0 && g_msg_slots[idx].render)
+    render_thread_remove_frame_callback(x11_msg_fps_frame,
+                                        (void *)(uintptr_t)win);
+  x11_msg_slot_reset_extra(&g_msg_slots[idx]);
+  XDestroyWindow(dpy, win);
   for (int i = idx; i < g_msg_slot_count - 1; i++)
     g_msg_slots[i] = g_msg_slots[i + 1];
   g_msg_slot_count--;
+  memset(&g_msg_slots[g_msg_slot_count], 0, sizeof(g_msg_slots[0]));
 }
 
 static void x11_msg_remove_window_locked(Display *dpy, Window win) {
@@ -273,7 +343,7 @@ int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
 void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
                      int win_h, double timeout, ColorRef color, bool no_bg,
                      void (*render)(void *ud), void *render_data,
-                     const char *name, bool rounded, int radius) {
+                     const char *name, bool rounded, int radius, int fps) {
 
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
@@ -289,23 +359,37 @@ void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
   x11_display_message_draw(dpy, win, message, (unsigned long)color, win_w,
                            win_h, no_bg, render, render_data);
   bool indefinite = MsgTimeoutIsIndefinite(timeout);
+  bool pump = false;
   pthread_mutex_lock(&g_msg_lock);
   if (g_msg_slot_count >= MSG_MAX_ACTIVE)
     x11_msg_remove_slot_locked(dpy, 0);
-  g_msg_slots[g_msg_slot_count].win = win;
-  g_msg_slots[g_msg_slot_count].indefinite = indefinite;
-  g_msg_slots[g_msg_slot_count].key[0] = '\0';
+  MsgSlot *slot = &g_msg_slots[g_msg_slot_count];
+  memset(slot, 0, sizeof(*slot));
+  slot->win = win;
+  slot->indefinite = indefinite;
+  slot->key[0] = '\0';
   if (name && name[0])
-    snprintf(g_msg_slots[g_msg_slot_count].name,
-             sizeof(g_msg_slots[g_msg_slot_count].name), "%s", name);
+    snprintf(slot->name, sizeof(slot->name), "%s", name);
   else
-    g_msg_slots[g_msg_slot_count].name[0] = '\0';
-  g_msg_slots[g_msg_slot_count].w = win_w;
-  g_msg_slots[g_msg_slot_count].h = win_h;
-  g_msg_slots[g_msg_slot_count].x = x + ax;
-  g_msg_slots[g_msg_slot_count].y = y + ay;
+    slot->name[0] = '\0';
+  slot->w = win_w;
+  slot->h = win_h;
+  slot->x = x + ax;
+  slot->y = y + ay;
+  slot->fps = fps;
+  slot->color = (unsigned long)color;
+  slot->no_bg = no_bg;
+  slot->message = strdup(message ? message : "");
+  slot->render = render;
+  slot->render_data = render_data;
+  pump = fps > 0 && render != NULL;
   g_msg_slot_count++;
   pthread_mutex_unlock(&g_msg_lock);
+  if (pump) {
+    render_thread_ensure_started(fps);
+    render_thread_add_frame_callback(x11_msg_fps_frame,
+                                     (void *)(uintptr_t)win);
+  }
   if (!indefinite) {
     MsgDismissPayload *p = malloc(sizeof(*p));
     if (p) {
@@ -344,6 +428,7 @@ void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
     }
     g_msg_slots[idx].x = center_x - win_w / 2;
     g_msg_slots[idx].y = center_y - win_h / 2;
+    x11_msg_slot_reset_extra(&g_msg_slots[idx]);
     pthread_mutex_unlock(&g_msg_lock);
     x11_display_message_draw(dpy, w, message, (unsigned long)color, win_w,
                              win_h, no_bg, NULL, NULL);
@@ -370,11 +455,13 @@ void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
                                            : MSG_MAX_ACTIVE - 1;
   g_msg_slots[at].win = win;
   g_msg_slots[at].indefinite = true;
+  g_msg_slots[at].key[0] = '\0';
   snprintf(g_msg_slots[at].key, sizeof(g_msg_slots[at].key), "%s", key);
   g_msg_slots[at].w = win_w;
   g_msg_slots[at].h = win_h;
   g_msg_slots[at].x = center_x - win_w / 2;
   g_msg_slots[at].y = center_y - win_h / 2;
+  x11_msg_slot_reset_extra(&g_msg_slots[at]);
   if (at >= g_msg_slot_count)
     g_msg_slot_count = at + 1;
   pthread_mutex_unlock(&g_msg_lock);

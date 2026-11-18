@@ -40,7 +40,7 @@ void Platform_DisplayMessage(DisplayMessageSpec spec) {
   int x = abs(center_x - win_w / 2);
   int y = abs(center_y - win_h / 2);
   x11_msg_present(dpy, message, x, y, win_w, win_h, timeout, color, no_bg,
-                  render, render_data, name, rounded, radius);
+                  render, render_data, name, rounded, radius, fps);
 }
 
 void Platform_HoverMessage(HoverMessageSpec spec) {
@@ -102,7 +102,7 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
   int stack_dir = msg_stack_dir(v_slot, outward);
   y = x11_msg_stack_adjust_y(x, y, win_w, win_h, stack_dir);
   x11_msg_present(dpy, message, x - ax, y - ay, win_w, win_h, timeout, color,
-                  no_bg, render, render_data, name, rounded, radius);
+                  no_bg, render, render_data, name, rounded, radius, fps);
 }
 
 bool Platform_DismissMessage(const char *name) {

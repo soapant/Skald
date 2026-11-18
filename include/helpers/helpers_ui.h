@@ -97,6 +97,7 @@ typedef struct {
   int win_w, win_h;
   bool rounded;
   int radius;
+  int fps;
 } MessageSlotSpec;
 
 void display_message_slot(const MessageSlotSpec *spec);
