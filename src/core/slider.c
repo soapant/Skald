@@ -50,6 +50,12 @@ static void slider_mouse(int *out_x, int *out_y, bool *out_down) {
         mx -= wx;
         my -= wy;
       }
+      {
+        int dx = 0, dy = 0;
+        get_draw_offset(&dx, &dy);
+        mx -= dx;
+        my -= dy;
+      }
     } else {
       mx = -9999;
       my = -9999;
@@ -261,12 +267,16 @@ void slider_draw(const SliderSpec *spec) {
   int tx, ty, twk, thk, rx, ry, rsize;
   slider_track_geometry(spec, &tx, &ty, &twk, &thk, &rx, &ry, &rsize);
 
-  unsigned long track_bg = spec->bg_color ? spec->bg_color : COLOR_BG;
-  unsigned long fill = spec->fill_color
-                           ? spec->fill_color
-                           : (spec->hovered ? SLIDER_WHITE : SLIDER_GRAY);
-  unsigned long thumb = spec->thumb_color ? spec->thumb_color : SLIDER_THUMB;
-  unsigned long track_border = spec->hovered ? SLIDER_WHITE : SLIDER_GRAY;
+  unsigned long track_bg =
+      rgb_to_hex(spec->bg_color ? spec->bg_color : COLOR_BG);
+  unsigned long fill = rgb_to_hex(spec->fill_color
+                                      ? spec->fill_color
+                                      : (spec->hovered ? SLIDER_WHITE
+                                                       : SLIDER_GRAY));
+  unsigned long thumb =
+      rgb_to_hex(spec->thumb_color ? spec->thumb_color : SLIDER_THUMB);
+  unsigned long track_border =
+      rgb_to_hex(spec->hovered ? SLIDER_WHITE : SLIDER_GRAY);
 
   if (!spec->no_bg) {
     Platform_DrawRectRaw(
