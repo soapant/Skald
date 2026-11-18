@@ -7,6 +7,7 @@
 
 #include "core/context.h"
 #include "core/checkbox.h"
+#include "core/slider.h"
 #include "platform/draw.h"
 #include "deps/log.h"
 #include "helpers/x11/drawing_x11.h"
@@ -139,6 +140,7 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
   x11_set_draw_context(dpy, NULL, NULL, 0);
   if (state->callbacks && state->callbacks->render) {
     checkbox_frame_begin();
+    slider_frame_begin();
     x11_set_draw_context(dpy, NULL, NULL, 0);
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
@@ -200,6 +202,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   x11_set_draw_context(dpy, xdDbl, vis, cmap);
   if (state->callbacks->render != NULL) {
     checkbox_frame_begin();
+    slider_frame_begin();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     state->callbacks->render(state);

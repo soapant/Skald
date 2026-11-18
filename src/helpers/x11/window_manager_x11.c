@@ -232,6 +232,16 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
       XFlush(dpy);
     }
     break;
+  case MotionNotify: {
+    int wx = 0, wy = 0;
+    if (Platform_WindowToRoot(top->handle, &wx, &wy))
+      listbox_publish_mouse_pos(wx + ev->xmotion.x, wy + ev->xmotion.y);
+    if (top->vtable && top->vtable->on_render) {
+      top->vtable->on_render(top);
+      XFlush(dpy);
+    }
+    break;
+  }
   case Expose:
     if (top->vtable && top->vtable->on_render) {
       top->vtable->on_render(top);

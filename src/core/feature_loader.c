@@ -15,6 +15,7 @@
 #include "platform/platform.h"
 #include "core/window_manager.h"
 #include "core/checkbox.h"
+#include "core/slider.h"
 #include "config_values.h"
 #include "helpers/helpers_hotkey.h"
 #include "core/thread_registry.h"
@@ -203,6 +204,7 @@ static void defer_unload(LibHandle handle, const char *uniq,
 static void sweep_retired_libs(void) {
   const WindowManager *wm = WindowManager_Get();
   checkbox_reset_all();
+  slider_reset_all();
   int n = 0;
   for (int i = 0; i < retired_count; i++) {
     bool alive = false;
@@ -1017,6 +1019,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       if (shut)
         shut();
       checkbox_reset_all();
+  slider_reset_all();
       unsigned retire_gen = widget_current_generation();
       char retire_owner[512];
       fl_copy(retire_owner, sizeof(retire_owner),

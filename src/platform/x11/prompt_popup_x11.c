@@ -31,7 +31,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
   XSelectInput(dpy, self->handle.xid,
                KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask |
-                   ButtonPressMask);
+                   ButtonPressMask | PointerMotionMask);
   clock_gettime(CLOCK_MONOTONIC, &_t1);
   Popup *popup = self;
   (void)popup;

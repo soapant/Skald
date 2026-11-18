@@ -11,6 +11,7 @@
 #include "core/types/prompt.h"
 #include "core/types/skapi_types.h"
 #include "core/checkbox.h"
+#include "core/slider.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
 #include "core/skapi_input.h"
@@ -47,6 +48,7 @@ typedef struct {
   size_t count;
 } SkFeatureList;
 typedef CheckboxSpec SkCheckboxSpec;
+typedef SliderSpec SkSliderSpec;
 typedef PlaceState SkPlaceState;
 typedef ClipboardEntry SkClipboardEntry;
 typedef ClipboardHistory SkClipboardHistory;
@@ -429,6 +431,7 @@ bool ski_draw_image(const SkImageSpec *spec);
 bool ski_place_editbox(const SkEditSpec *spec);
 bool ski_place_listbox(const SkListSpec *spec);
 bool ski_place_checkbox(const SkCheckboxSpec *spec);
+bool ski_place_slider(const SkSliderSpec *spec);
 
 bool sk_checkbox_is_checked(const char *name);
 bool sk_checkbox_is_hovered(const char *name);
@@ -436,9 +439,19 @@ bool sk_checkbox_is_clicked(const char *name);
 bool sk_button_is_checked(const char *name);
 bool sk_button_is_hovered(const char *name);
 bool sk_button_is_clicked(const char *name);
+bool sk_slider_is_hovered(const char *name);
+bool sk_slider_is_clicked(const char *name);
+bool sk_slider_is_dragging(const char *name);
+float sk_slider_value(const char *name);
+float sk_slider_fraction(const char *name);
+int sk_slider_percent(const char *name);
+bool sk_slider_set_value(const char *name, float value);
 
 #define sk_checkbox_hovered sk_checkbox_is_hovered
 #define sk_checkbox_clicked sk_checkbox_is_clicked
+#define sk_slider_hovered sk_slider_is_hovered
+#define sk_slider_clicked sk_slider_is_clicked
+#define sk_slider_dragging sk_slider_is_dragging
 
 #define sk_place_button(...)                                                   \
   ski_place_checkbox(                                                          \
@@ -446,6 +459,12 @@ bool sk_button_is_clicked(const char *name);
 #define sk_place_checkbox(...)                                                 \
   ski_place_checkbox(                                                          \
       &(SkCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
+#define sk_place_slider(...)                                                   \
+  ski_place_slider(                                                            \
+      &(SkSliderSpec){.border = true, __VA_ARGS__, .orientation = SLIDER_HORIZONTAL})
+#define sk_place_vslider(...)                                                  \
+  ski_place_slider(                                                            \
+      &(SkSliderSpec){.border = true, __VA_ARGS__, .orientation = SLIDER_VERTICAL})
 
 #define sk_checkbox_checked sk_checkbox_is_checked
 #define sk_button_hovered sk_button_is_hovered
