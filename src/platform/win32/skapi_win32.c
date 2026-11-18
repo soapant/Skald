@@ -222,8 +222,8 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   EditboxUiSpec ui = {.color_text = spec->color_text,
                       .color_bg = spec->color_bg,
                       .placeholder = spec->placeholder,
-                      .caret_height = spec->caret_height,
-                      .caret_width = spec->caret_width,
+                      .caret_h = spec->caret_h,
+                      .caret_w = spec->caret_w,
                       .caret_x = spec->caret_x,
                       .caret_y = spec->caret_y,
                       .caret_pos = spec->caret_pos};
