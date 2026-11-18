@@ -94,11 +94,11 @@ bool sk_get_all_files_from_dir(const char *dir_path,
 
 SkStringList sk_load_file_list(const char *filepath);
 
-long sk_load_file(const char *filepath, char *buffer, long buffer_size);
+char *sk_load_file(const char *filepath);
 
 char *sk_read_file_to_string(const char *path, size_t *out_len);
 
-long sk_read_entire_file(const char *full_path, char *buffer, long buffer_size);
+char *sk_read_entire_file(const char *full_path);
 
 bool sk_write_string_to_file(const char *path, const char *content);
 
@@ -110,8 +110,7 @@ bool sk_remove_line(const char *path, const char *line);
 
 bool sk_remove_line_contains(const char *path, const char *substr);
 
-bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
-                           bool *out_nodisplay);
+char *sk_parse_desktop_file(const char *path, bool *out_nodisplay);
 
 char *sk_get_icon_path(const char *path);
 bool sk_prewarm_image(const char *path);
@@ -120,8 +119,7 @@ bool sk_append_to_file(const char *filepath, const char *line);
 
 bool sk_write_to_file(const char *filepath, const char *lines[], int count);
 
-bool sk_write_temp_file(const char *name, const void *data, size_t len,
-                        char *out_path, size_t out_len);
+char *sk_write_temp_file(const char *name, const void *data, size_t len);
 
 int sk_get_icon_size(const char *icon_path);
 
@@ -134,7 +132,7 @@ bool sk_free_window_list(SkWindowList *list);
 
 void sk_string_list_free(StringList *list);
 
-void sk_format_bytes(unsigned long long bytes, char *out_str, size_t out_len);
+char *sk_format_bytes(unsigned long long bytes);
 
 bool sk_launch_with_args(const char *path, const char *args);
 
@@ -167,7 +165,7 @@ void sk_send_hotkey(const char *hotkey_string);
 
 #define sk_send_key sk_send_hotkey
 
-bool sk_hotkey_to_string(SkKey key, char *out, size_t cap);
+char *sk_hotkey_to_string(SkKey key);
 
 SkKey sk_hotkey_from_string(const char *str);
 
@@ -284,7 +282,7 @@ void sk_set_edit_cursor(int position);
 
 int sk_get_edit_cursor(void);
 
-void sk_get_edit_text(char *buffer, size_t cap);
+char *sk_get_edit_text(void);
 
 typedef struct {
   const char *initial_text;
@@ -558,9 +556,9 @@ typedef struct {
 
 SkFlagList sk_parse_flags(const char *input);
 bool sk_is_flag_prefix(char c);
-size_t sk_extract_flag_name(char *p, char *out, size_t cap);
-bool sk_extract_quoted(char **pp, char *out, size_t cap);
-bool sk_extract_value(char **pp, char *out, size_t cap);
+char *sk_extract_flag_name(const char *p);
+char *sk_extract_quoted(char **pp);
+char *sk_extract_value(char **pp);
 bool sk_next_flag(char *p);
 
 void sk_free_flags(SkFlagList *list);
@@ -725,7 +723,7 @@ int sk_get_key_pressed(void);
 
 char sk_get_char_pressed(void);
 
-bool sk_vk_to_name(int vk, char *out, size_t cap);
+char *sk_vk_to_name(int vk);
 
 #define sk_key_pressed sk_is_key_pressed
 #define sk_key_released sk_is_key_released
@@ -832,22 +830,25 @@ typedef struct {
 void sk_config_init(void);
 
 bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec);
-bool sk_config_get_hotkey(const char *name, char *out, size_t cap);
+char *sk_config_get_hotkey(const char *name);
 bool sk_config_clear_hotkey(const char *name);
 
 bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud);
 
 int sk_config_hotkey_count(void);
-bool sk_config_hotkey_at(int index, char *name_out, size_t name_cap,
-                         char *hotkey_out, size_t hotkey_cap);
+char *sk_config_hotkey_name_at(int index);
+char *sk_config_hotkey_value_at(int index);
 
 bool ski_config_set_alias(const SkConfigAliasSpec *spec);
-bool sk_config_get_alias(const char *target, char *out, size_t cap);
+char *sk_config_get_alias(const char *target);
 bool sk_config_clear_alias(const char *target);
 
 int sk_config_alias_count(void);
-bool sk_config_alias_at(int index, char *target_out, size_t target_cap,
-                        char *alias_out, size_t alias_cap);
+char *sk_config_alias_target_at(int index);
+char *sk_config_alias_value_at(int index);
+int sk_config_quicklink_count(void);
+char *sk_config_quicklink_name_at(int index);
+char *sk_config_quicklink_value_at(int index);
 
 int sk_cc_entry_count(void);
 
@@ -879,10 +880,10 @@ void sk_disable_global_hotkeys(void);
 void sk_enable_global_hotkeys(void);
 
 int sk_hotkey_count(void);
-bool sk_hotkey_string_at(int index, char *out, size_t cap);
+char *sk_hotkey_string_at(int index);
 bool sk_hotkey_taken(const char *hotkey);
-bool sk_hotkey_for_callback(void (*cb)(void), char *out, size_t cap);
-bool sk_hotkey_for_ud(void *ud, char *out, size_t cap);
+char *sk_hotkey_for_callback(void (*cb)(void));
+char *sk_hotkey_for_ud(void *ud);
 void sk_register_deferred_init(void (*cb)(void));
 
 typedef struct {
