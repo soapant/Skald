@@ -10,6 +10,7 @@
 #include "config_values.h"
 
 #include "core/checkbox.h"
+#include "core/slider.h"
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
 #include "helpers/helpers_input_state.h"
@@ -99,6 +100,7 @@ void WindowManager_PopPopup(WindowManager *wm) {
   if (!wm || wm->popup_count == 0)
     return;
   checkbox_reset_all();
+  slider_reset_all();
   Popup *popup = wm->popups[--wm->popup_count];
   SkaldContext *ctx = SkaldContext_Get();
   if (ctx)
