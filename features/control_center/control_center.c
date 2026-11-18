@@ -283,7 +283,12 @@ static void cc_bind_hotkey(const char *action, const char *hotkey) {
 }
 
 static bool cc_hotkey_for_label(const char *label, char *out, size_t cap) {
-  return sk_config_get_hotkey(label, out, cap);
+  char *hotkey = sk_config_get_hotkey(label);
+  if (!hotkey)
+    return false;
+  snprintf(out, cap, "%s", hotkey);
+  free(hotkey);
+  return true;
 }
 
 typedef struct {
@@ -489,9 +494,9 @@ static void cc_apps_scan(void) {
   for (size_t i = 0; i < found.count; i++) {
     bool no_display = false;
     if (strstr(found.files[i].path, ".desktop")) {
-      char display_name[256] = {0};
-      sk_parse_desktop_file(found.files[i].path, display_name,
-                            sizeof(display_name), &no_display);
+      char *display_name =
+          sk_parse_desktop_file(found.files[i].path, &no_display);
+      free(display_name);
     }
     if (!no_display)
       found.files[kept++] = found.files[i];
@@ -1232,9 +1237,16 @@ static void cc_append(char *buf, size_t cap, const char *s) {
 }
 
 static int cc_pressed_key(char *name, size_t cap) {
-  for (int vk = 32; vk < 256; vk++)
-    if (sk_is_key_pressed(vk) && sk_vk_to_name(vk, name, cap))
-      return vk;
+  for (int vk = 32; vk < 256; vk++) {
+    if (!sk_is_key_pressed(vk))
+      continue;
+    char *vk_name = sk_vk_to_name(vk);
+    if (!vk_name)
+      continue;
+    snprintf(name, cap, "%s", vk_name);
+    free(vk_name);
+    return vk;
+  }
   return 0;
 }
 
