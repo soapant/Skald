@@ -96,6 +96,8 @@ static atomic_bool cc_stopping;
 
 static void cc_fill_applications(int limit);
 static void cc_register_config_hotkeys(void);
+static void cc_fill_quicklinks(void);
+static void cc_quicklinks_clear(void);
 static void cc_stage(const CcEntry *e, CcRunMode mode);
 static void cc_run_pending(void);
 static const CcEntry *cc_find(const char *label);
@@ -160,10 +162,13 @@ static void cc_fill_feature_entries(void) {
 
 static void cc_build(void) {
   atomic_store(&cc_entries_dirty, false);
+  cc_quicklinks_clear();
   cc_entry_count = 0;
 
-  cc_fill_applications(MAX_VISIBLE_ITEMS - sk_cc_entry_count());
+  cc_fill_applications(MAX_VISIBLE_ITEMS - sk_cc_entry_count() -
+                       sk_config_quicklink_count());
   cc_fill_feature_entries();
+  cc_fill_quicklinks();
   cc_entry_base = cc_entry_count;
   cc_register_config_hotkeys();
 }
@@ -563,6 +568,61 @@ static bool cc_launch_app_as_admin(void) {
   if (cc_staged_payload && cc_staged_payload[0])
     sk_launch_with_args_as_admin((char *)cc_staged_payload, NULL);
   return true;
+}
+
+static bool cc_launch_quicklink(void) {
+  if (cc_staged_payload && cc_staged_payload[0])
+    sk_launch_browser(cc_staged_payload);
+  return true;
+}
+
+static char **cc_quicklink_targets;
+static size_t cc_quicklink_target_count;
+static size_t cc_quicklink_target_cap;
+
+static void cc_quicklinks_clear(void) {
+  for (size_t i = 0; i < cc_quicklink_target_count; i++)
+    free(cc_quicklink_targets[i]);
+  free(cc_quicklink_targets);
+  cc_quicklink_targets = NULL;
+  cc_quicklink_target_count = 0;
+  cc_quicklink_target_cap = 0;
+}
+
+static const char *cc_quicklink_track(char *target) {
+  if (cc_quicklink_target_count == cc_quicklink_target_cap) {
+    size_t cap = cc_quicklink_target_cap ? cc_quicklink_target_cap * 2 : 8;
+    char **grown = (char **)realloc(cc_quicklink_targets, cap * sizeof(*grown));
+    if (!grown)
+      return NULL;
+    cc_quicklink_targets = grown;
+    cc_quicklink_target_cap = cap;
+  }
+  cc_quicklink_targets[cc_quicklink_target_count++] = target;
+  return target;
+}
+
+static void cc_fill_quicklinks(void) {
+  int n = sk_config_quicklink_count();
+  for (int i = 0; i < n; i++) {
+    char *name = sk_config_quicklink_name_at(i);
+    char *target = sk_config_quicklink_value_at(i);
+    if (!name || !target) {
+      free(name);
+      free(target);
+      continue;
+    }
+    const char *tracked = cc_quicklink_track(target);
+    if (!tracked) {
+      free(target);
+      free(name);
+      continue;
+    }
+    CcEntry *e = cc_entry_add(name, "QuickLink", tracked, NULL);
+    free(name);
+    if (e)
+      e->on_enter = cc_launch_quicklink;
+  }
 }
 
 static void cc_fill_applications(int limit) {
