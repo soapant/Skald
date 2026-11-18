@@ -1124,7 +1124,7 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   int name_w = sk_get_text_width(ctx->text, FontSize);
   if (icon)
     sk_draw_image(.path = icon, .x = ctx->x + CC_ITEM_TEXT_X,
-                  .y = ctx->y + (ctx->h - FontSize) / 2 - 2,
+                  .y = ctx->y + (ctx->h - FontSize) / 2 - 1,
                   .w = FontSize, .h = FontSize);
   sk_draw_text(.x = name_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = ctx->text,
                .align = "LEFT", .pad = 0);
