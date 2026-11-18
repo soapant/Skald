@@ -582,7 +582,6 @@ typedef struct {
 
 static Quicklink cc_quicklink_draft = {0};
 
-// https://youtube.com
 static void cc_quicklinksub_render(PromptState *state) {
     sk_place_editbox();
 }
@@ -1125,7 +1124,7 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   int name_w = sk_get_text_width(ctx->text, FontSize);
   if (icon)
     sk_draw_image(.path = icon, .x = ctx->x + CC_ITEM_TEXT_X,
-                  .y = ctx->y + (ctx->h - FontSize) / 2 - CC_ITEM_TEXT_Y / 2,
+                  .y = ctx->y + (ctx->h - FontSize) / 2 - 2,
                   .w = FontSize, .h = FontSize);
   sk_draw_text(.x = name_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = ctx->text,
                .align = "LEFT", .pad = 0);
@@ -1334,6 +1333,7 @@ static void cc_open_control(void) {
 static int cc_sub_w(void) { return cc_width / 4; }
 static int cc_sub_h(void) { return cc_height / 7; }
 static int cc_sub_x(void) { return cc_width / 2 + cc_sub_w() - 10; }
+//for some reason this needs to be - 50 for linux to look good prio windows for now
 static int cc_sub_y(void) { return cc_height / 2 - 30; }
 
 static const char *cc_action_names[] = {"Register Hotkey", "Register Alias"};
@@ -1407,6 +1407,8 @@ static void cc_hotkey_capture_render(PromptState *state) {
     cc_append(combo, sizeof(combo), "Alt+");
   if (sk_shift_pressed())
     cc_append(combo, sizeof(combo), "Shift+");
+  if (sk_super_pressed())
+    cc_append(combo, sizeof(combo), "Super+");
 
   bool has_modifier =
       sk_ctrl_pressed() || sk_alt_pressed() || sk_shift_pressed();
