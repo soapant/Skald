@@ -383,6 +383,7 @@ typedef struct {
   const char *align;
   int pad;
   bool no_hscroll;
+  float angle;
 } SkTextSpec;
 
 typedef struct {

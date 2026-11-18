@@ -1,5 +1,9 @@
 #include "helpers/win32/raw_draw_win32.h"
 #include "helpers/win32/common_ui_win32.h"
+#include <math.h>
+
+static int win32_rotate_begin(HDC hdc, float angle, float cx, float cy);
+static void win32_rotate_end(HDC hdc, int saved);
 
 bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius) {
   HWND hwnd = WH_TO_HWND(win);
@@ -88,10 +92,11 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   bool centered = string_contains_ci(a, "CENTER");
   bool right = !centered && string_contains_ci(a, "RIGHT");
   bool measuring = draw_state_get()->measuring;
+  bool rotated = spec.angle != 0.0f;
   SIZE msz;
   msz.cx = 0;
   msz.cy = 0;
-  if (measuring || centered || right) {
+  if (measuring || centered || right || rotated) {
     if (dy != 0) {
       HFONT nf = win32_sized_font(spec.fontsize);
       if (!nf)
@@ -119,7 +124,14 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
     int x0 = spec.pad ? spec.pad : x;
     if (measuring)
       draw_measure_track(x0, y, msz.cx, msz.cy);
-    TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
+    if (rotated) {
+      int saved = win32_rotate_begin(g_draw_hdc, spec.angle, x0 + msz.cx / 2.0f,
+                                     y_draw + msz.cy / 2.0f);
+      TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
+      win32_rotate_end(g_draw_hdc, saved);
+    } else {
+      TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
+    }
     free(wide);
     if (old)
       SelectObject(g_draw_hdc, old);
@@ -133,7 +145,14 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   } else {
     x0 = box > 0 ? box - msz.cx : PROMPT_WRAP_BOX_RIGHT - msz.cx - spec.pad;
   }
-  TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
+  if (rotated) {
+    int saved = win32_rotate_begin(g_draw_hdc, spec.angle, x0 + msz.cx / 2.0f,
+                                   y_draw + msz.cy / 2.0f);
+    TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
+    win32_rotate_end(g_draw_hdc, saved);
+  } else {
+    TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
+  }
   free(wide);
   if (old)
     SelectObject(g_draw_hdc, old);
@@ -200,7 +219,64 @@ bool Platform_DrawTextLine(DrawTextLineSpec spec) {
   return true;
 }
 
+static bool draw_rect_raw_body(DrawRectRawSpec spec);
+
+static float win32_norm_angle(float angle) {
+  float a = fmodf(angle, 360.0f);
+  if (a < 0.0f)
+    a += 360.0f;
+  if (a >= 360.0f)
+    a -= 360.0f;
+  return a;
+}
+
+static int win32_rotate_begin(HDC hdc, float angle, float cx, float cy) {
+  float a = win32_norm_angle(angle) * (float)(M_PI / 180.0);
+  float c = cosf(a), s = sinf(a);
+  int saved = SaveDC(hdc);
+  if (saved <= 0)
+    return 0;
+  SetGraphicsMode(hdc, GM_ADVANCED);
+  XFORM xf;
+  xf.eM11 = c;
+  xf.eM12 = s;
+  xf.eM21 = -s;
+  xf.eM22 = c;
+  xf.eDx = cx - c * cx + s * cy;
+  xf.eDy = cy - s * cx - c * cy;
+  if (!SetWorldTransform(hdc, &xf)) {
+    RestoreDC(hdc, saved);
+    SetGraphicsMode(hdc, GM_COMPATIBLE);
+    return 0;
+  }
+  return saved;
+}
+
+static void win32_rotate_end(HDC hdc, int saved) {
+  if (saved > 0)
+    RestoreDC(hdc, saved);
+  SetGraphicsMode(hdc, GM_COMPATIBLE);
+}
+
 bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
+  RECT_RAW_UNPACK(spec);
+
+  if (!g_draw_hdc || w <= 0 || h <= 0) {
+    return false;
+  }
+
+  if (angle != 0.0f) {
+    int saved = win32_rotate_begin(g_draw_hdc, angle,
+                                   x + draw_state_get()->off_x + w / 2.0f,
+                                   y + draw_state_get()->off_y + h / 2.0f);
+    bool ok = draw_rect_raw_body(spec);
+    win32_rotate_end(g_draw_hdc, saved);
+    return ok;
+  }
+  return draw_rect_raw_body(spec);
+}
+
+static bool draw_rect_raw_body(DrawRectRawSpec spec) {
   RECT_RAW_UNPACK(spec);
 
   if (!g_draw_hdc || w <= 0 || h <= 0) {
