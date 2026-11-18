@@ -98,8 +98,9 @@ static void cc_fill_applications(int limit);
 static void cc_register_config_hotkeys(void);
 static void cc_fill_quicklinks(void);
 static void cc_quicklinks_clear(void);
+static void cc_fill_add_quicklink(void);
 static void cc_stage(const CcEntry *e, CcRunMode mode);
-static void cc_run_pending(void);
+static bool cc_run_pending(void);
 static const CcEntry *cc_find(const char *label);
 
 static CcEntry *cc_entry_new(void) {
@@ -168,6 +169,7 @@ static void cc_build(void) {
   cc_fill_applications(MAX_VISIBLE_ITEMS - sk_cc_entry_count() -
                        sk_config_quicklink_count());
   cc_fill_feature_entries();
+  cc_fill_add_quicklink();
   cc_fill_quicklinks();
   cc_entry_base = cc_entry_count;
   cc_register_config_hotkeys();
@@ -224,19 +226,21 @@ static void cc_stage(const CcEntry *e, CcRunMode mode) {
   }
 }
 
-static void cc_run_pending(void) {
+static bool cc_run_pending(void) {
   void (*action)(void) = cc_pending_action;
   CcHandler fn = cc_pending_fn;
   cc_pending_action = NULL;
   cc_pending_fn = NULL;
   cc_staged_label = cc_pending_label;
   cc_staged_payload = cc_pending_payload;
+  bool close = true;
   if (action)
     action();
   else if (fn)
-    fn();
+    close = fn();
   cc_staged_label = NULL;
   cc_staged_payload = NULL;
+  return close;
 }
 
 #define CC_HOTKEY_UD_MAX 512
@@ -568,6 +572,52 @@ static bool cc_launch_app_as_admin(void) {
   if (cc_staged_payload && cc_staged_payload[0])
     sk_launch_with_args_as_admin((char *)cc_staged_payload, NULL);
   return true;
+}
+
+// https://youtube.com
+static void cc_quicklinksub_render(PromptState *state) {
+    sk_place_editbox();
+}
+
+static bool cc_quicklink_enter(PromptState *state) {
+  char buf[600];
+  if (!sk_string_starts_with(state->eb->filter, "https://")) return false;
+
+  char* temp_after = sk_string_cut_after(state->eb->filter, ':');
+  if (!temp_after) return false;
+  temp_after += 2;
+
+  char* website_name = sk_string_cut_before(temp_after, '.');
+  if (!website_name) return false;
+
+  char default_name[256];
+  snprintf(default_name, sizeof(default_name), "%s", website_name);
+  
+  if (default_name[0] != '\0') {
+    default_name[0] = toupper((unsigned char)default_name[0]);
+  }
+
+  snprintf(buf, sizeof(buf), "Enter Name For Url (%s) (Default:%s)", state->eb->filter, default_name);
+  sk_subwindow(.title = "QuicklinkSub", .h = 60, .placeholder = buf, .render = cc_quicklinksub_render);
+  
+  free(website_name);
+  return true;
+}
+
+static void cc_quicklink_render(PromptState *state) {
+  sk_place_editbox();
+}
+
+static bool cc_add_quicklink(void) {
+  sk_subwindow(.title = "Quicklink", .h = 60,
+               .enter = cc_quicklink_enter, .render = cc_quicklink_render,.placeholder="Enter Quicklink Url");
+  return false;
+}
+
+static void cc_fill_add_quicklink(void) {
+  CcEntry *e = cc_entry_add("Add Quicklink", "Quicklink", NULL, "/internet.svg");
+  if (e)
+    e->on_enter = cc_add_quicklink;
 }
 
 static bool cc_launch_quicklink(void) {
@@ -1186,18 +1236,21 @@ static bool cc_copy_calc_result(const PromptState *state) {
 static bool cc_enter(PromptState *state) {
   if (cc_copy_calc_result(state))
     return true;
-  if (sk_is_selected(state->lb))
+  if (sk_is_selected(state->lb)) {
     cc_stage(cc_find(state->lb->selected_text), CC_RUN_ENTER);
-  else
-    sk_query_browser(state->eb->filter);
+    return cc_run_pending();
+  }
+  sk_query_browser(state->eb->filter);
   return true;
 }
 
 static bool cc_enter_with(PromptState *state, CcRunMode mode) {
-  if (!sk_is_selected(state->lb))
+  if (!sk_is_selected(state->lb)) {
     sk_query_browser(state->eb->filter);
+    return true;
+  }
   cc_stage(cc_find(state->lb->selected_text), mode);
-  return true;
+  return cc_run_pending();
 }
 
 #define CC_DEFINE_ENTER(fn, mode)                                              \
