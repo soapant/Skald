@@ -46,6 +46,7 @@ struct PromptState {
   EditBoxInfo *eb;
   ListBoxInfo *lb;
   PromptCallbacks *callbacks;
+  void *render_data;
   bool no_bg;
   bool password_mode;
   ColorRef bg_color;
@@ -116,6 +117,7 @@ typedef struct {
   CloseCallback on_close;
   const char *placeholder;
   const char *initial_text;
+  void *render_data;
   bool tick;
   bool auto_scale;
   bool no_bg;

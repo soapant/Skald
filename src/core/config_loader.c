@@ -9,6 +9,8 @@
 #include <stdint.h>
 
 #include "platform/platform.h"
+
+static void config_cache_info(const char *path);
 #include "config.h"
 #include "core/theme.h"
 #include "deps/log.h"
@@ -20,67 +22,6 @@
 #define CONFIG_SRC "config/config.toml"
 #define CONFIG_START_MARK "# <skald-config-generated>"
 #define CONFIG_END_MARK "# </skald-config-generated>"
-
-typedef struct {
-  char *name;
-  char *target;
-} QuickLinkItem;
-
-typedef struct {
-  QuickLinkItem *items;
-  size_t count;
-  size_t cap;
-} QuickLinkList;
-
-static QuickLinkList g_quicklinks;
-static void *quicklink_mutex = NULL;
-
-static void quicklink_lock(void) {
-  if (!quicklink_mutex)
-    quicklink_mutex = Platform_MutexCreate();
-  if (quicklink_mutex)
-    Platform_MutexLock(quicklink_mutex);
-}
-
-static void quicklink_unlock(void) {
-  if (quicklink_mutex)
-    Platform_MutexUnlock(quicklink_mutex);
-}
-
-static void quicklinks_list_free(QuickLinkList *ql) {
-  for (size_t i = 0; i < ql->count; i++) {
-    free(ql->items[i].name);
-    free(ql->items[i].target);
-  }
-  free(ql->items);
-  ql->items = NULL;
-  ql->count = 0;
-  ql->cap = 0;
-}
-
-static bool quicklinks_list_push(QuickLinkList *ql, const char *name,
-                                 const char *target) {
-  if (ql->count == ql->cap) {
-    size_t cap = ql->cap ? ql->cap * 2 : 8;
-    QuickLinkItem *items = (QuickLinkItem *)realloc(ql->items,
-                                                    cap * sizeof(*items));
-    if (!items)
-      return false;
-    ql->items = items;
-    ql->cap = cap;
-  }
-  ql->items[ql->count].name = strdup(name);
-  ql->items[ql->count].target = strdup(target);
-  if (!ql->items[ql->count].name || !ql->items[ql->count].target) {
-    free(ql->items[ql->count].name);
-    free(ql->items[ql->count].target);
-    ql->items[ql->count].name = NULL;
-    ql->items[ql->count].target = NULL;
-    return false;
-  }
-  ql->count++;
-  return true;
-}
 
 typedef enum {
   CONFIG_BOOL,
@@ -182,30 +123,12 @@ typedef struct {
 typedef struct {
   ConfigAssign items[CONFIG_ENTRY_COUNT];
   size_t count;
-  QuickLinkList quicklinks;
 } ConfigStaging;
 
 static bool config_visit(const ConfigTomlEntry *e, void *user) {
   ConfigStaging *st = (ConfigStaging *)user;
   if (!st)
     return false;
-  if (e->section[0] && strcmp(e->section, "quicklinks") == 0) {
-    if (e->type != CONFIG_TOML_STRING) {
-      log_error("config: quicklink '%s' target must be a string", e->key);
-      return false;
-    }
-    char target[1024];
-    if (!config_toml_decode_string(e->raw, target, sizeof(target)) ||
-        !target[0]) {
-      log_error("config: quicklink '%s' has a bad or empty target", e->key);
-      return false;
-    }
-    if (!quicklinks_list_push(&st->quicklinks, e->key, target)) {
-      log_error("config: out of memory adding quicklink '%s'", e->key);
-      return false;
-    }
-    return true;
-  }
   if (st->count >= CONFIG_ENTRY_COUNT)
     return false;
   int idx = config_find(e->section, e->key);
@@ -281,7 +204,6 @@ static void config_staging_free(ConfigStaging *st) {
   for (size_t i = 0; i < st->count; i++)
     free(st->items[i].s);
   st->count = 0;
-  quicklinks_list_free(&st->quicklinks);
 }
 
 static void config_staging_commit(ConfigStaging *st) {
@@ -311,11 +233,6 @@ static void config_staging_commit(ConfigStaging *st) {
     }
   }
   st->count = 0;
-  quicklink_lock();
-  quicklinks_list_free(&g_quicklinks);
-  g_quicklinks = st->quicklinks;
-  memset(&st->quicklinks, 0, sizeof(st->quicklinks));
-  quicklink_unlock();
 }
 
 static long long config_cached_mtime = 0;
@@ -401,37 +318,11 @@ bool config_reload(void) {
   return true;
 }
 
-size_t quicklink_count(void) {
-  quicklink_lock();
-  size_t n = g_quicklinks.count;
-  quicklink_unlock();
-  return n;
-}
-
-bool quicklink_at(size_t index, char *name_out, size_t name_cap,
-                  char *target_out, size_t target_cap) {
-  if (name_out && name_cap == 0)
-    return false;
-  if (target_out && target_cap == 0)
-    return false;
-  quicklink_lock();
-  bool ok = index < g_quicklinks.count;
-  if (ok && name_out)
-    snprintf(name_out, name_cap, "%s", g_quicklinks.items[index].name);
-  if (ok && target_out)
-    snprintf(target_out, target_cap, "%s", g_quicklinks.items[index].target);
-  quicklink_unlock();
-  return ok;
-}
-
 void config_unload(void) {
   for (int i = 0; i < CONFIG_ENTRY_COUNT; i++) {
     free(config_owned[i]);
     config_owned[i] = NULL;
   }
-  quicklink_lock();
-  quicklinks_list_free(&g_quicklinks);
-  quicklink_unlock();
 }
 
 typedef struct {
