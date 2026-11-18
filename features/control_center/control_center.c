@@ -446,7 +446,8 @@ static void cc_apps_save_cache(void) {
 
 static void cc_scan_dir(const char *path, int depth, char **allowed,
                         ListOfFiles *out) {
-  sk_get_all_files_from_dir((char *)path, allowed, out, NULL, true, depth);
+  sk_dir_scan(.dir_path = path, .allowed_extensions = allowed, .out = out,
+              .strip_extension = true, .max_depth = depth);
 }
 
 #if defined(__linux__)

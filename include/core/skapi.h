@@ -90,11 +90,17 @@ unsigned long long sk_net_rx_bytes_over(double seconds);
 
 char *sk_search_file_in_dir(const char *directory, const char *search_string);
 
-bool sk_get_all_files_from_dir(const char *dir_path,
-                               char **list_of_allowed_extensions,
-                               ListOfFiles *list_of_files,
-                               char **list_of_names_to_ignore,
-                               bool strip_extension, int max_depth);
+typedef struct {
+  const char *dir_path;
+  char **allowed_extensions;
+  ListOfFiles *out;
+  char **names_to_ignore;
+  bool strip_extension;
+  int max_depth;
+} SkDirScanSpec;
+
+#define sk_dir_scan(...) ski_dir_scan(&(SkDirScanSpec){__VA_ARGS__})
+bool ski_dir_scan(const SkDirScanSpec *spec);
 
 SkStringList sk_load_file_list(const char *filepath);
 
@@ -1051,7 +1057,6 @@ void sk_close_window(void);
 bool sk_copy_to_clipboard_fmt(const char *fmt, ...);
 bool sk_copy_file_path_fmt(const char *fmt, ...);
 bool sk_paste_fmt(const char *fmt, ...);
-bool sk_get_all_files_from_dir_fmt(char **list_of_allowed_extensions, ListOfFiles *list_of_files, char **list_of_names_to_ignore, bool strip_extension, int max_depth, const char *fmt, ...);
 SkStringList sk_load_file_list_fmt(const char *fmt, ...);
 bool sk_file_exists_fmt(const char *fmt, ...);
 bool sk_prewarm_image_fmt(const char *fmt, ...);

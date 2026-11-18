@@ -98,22 +98,18 @@ bool sk_copy_file_path(const char *path) {
   return clipboard_set_path_platform(path);
 }
 
-bool sk_get_all_files_from_dir(const char *dir_path,
-                               char **list_of_allowed_extensions,
-                               ListOfFiles *list_of_files,
-                               char **list_of_names_to_ignore,
-                               bool strip_extension, int max_depth) {
+bool ski_dir_scan(const SkDirScanSpec *spec) {
 
-  if (!dir_path || !list_of_files)
+  if (!spec || !spec->dir_path || !spec->out)
     return false;
 
   char expanded_dir[MAX_PATH];
-  if (!expand_path(dir_path, expanded_dir, sizeof(expanded_dir)))
+  if (!expand_path(spec->dir_path, expanded_dir, sizeof(expanded_dir)))
     return false;
-  dir_path = expanded_dir;
-  return file_walk_all_files_from_dir(dir_path, list_of_allowed_extensions,
-                                      list_of_files, list_of_names_to_ignore,
-                                      strip_extension, max_depth);
+  const char *dir_path = expanded_dir;
+  return file_walk_all_files_from_dir(dir_path, spec->allowed_extensions,
+                                      spec->out, spec->names_to_ignore,
+                                      spec->strip_extension, spec->max_depth);
 }
 
 char *sk_search_file_in_dir(const char *directory, const char *search_string) {
@@ -3712,11 +3708,6 @@ bool sk_copy_file_path_fmt(const char *fmt, ...) {
 bool sk_paste_fmt(const char *fmt, ...) {
   SK_FMT_BUFFER();
   return sk_paste(buf);
-}
-
-bool sk_get_all_files_from_dir_fmt(char **list_of_allowed_extensions, ListOfFiles *list_of_files, char **list_of_names_to_ignore, bool strip_extension, int max_depth, const char *fmt, ...) {
-  SK_FMT_BUFFER();
-  return sk_get_all_files_from_dir(buf, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension, max_depth);
 }
 
 SkStringList sk_load_file_list_fmt(const char *fmt, ...) {
