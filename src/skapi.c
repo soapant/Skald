@@ -1812,6 +1812,22 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec) {
   return checkbox_place(spec);
 }
 
+bool ski_place_slider(const SkSliderSpec *spec) {
+  return slider_place(spec);
+}
+
+bool sk_slider_is_hovered(const char *name) { return slider_is_hovered(name); }
+bool sk_slider_is_clicked(const char *name) { return slider_is_clicked(name); }
+bool sk_slider_is_dragging(const char *name) {
+  return slider_is_dragging(name);
+}
+float sk_slider_value(const char *name) { return slider_value(name); }
+float sk_slider_fraction(const char *name) { return slider_fraction(name); }
+int sk_slider_percent(const char *name) { return slider_percent(name); }
+bool sk_slider_set_value(const char *name, float value) {
+  return slider_set_value(name, value);
+}
+
 SkWindowList sk_get_all_window_titles(void) {
   return Platform_GetWindowTitles();
 }
