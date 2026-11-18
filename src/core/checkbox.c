@@ -51,6 +51,12 @@ static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
         mx -= wx;
         my -= wy;
       }
+      {
+        int dx = 0, dy = 0;
+        get_draw_offset(&dx, &dy);
+        mx -= dx;
+        my -= dy;
+      }
       cb_mouse.mx = mx;
       cb_mouse.my = my;
     } else {
@@ -135,6 +141,8 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                  int body_radius, bool body_round,
                                  int border_radius, unsigned long body,
                                  unsigned long border_col, bool with_border) {
+  body = rgb_to_hex(body);
+  border_col = rgb_to_hex(border_col);
   Platform_DrawRectRaw((DrawRectRawSpec){.x = x,
                                          .y = y,
                                          .w = w,
