@@ -1225,7 +1225,6 @@ static void cc_render(PromptState *state) {
   cc_width = state->width;
   cc_height = state->height;
 
-  SkListSpec spec = {.lb = state->lb, .item_height = FontSize * 2};
   sk_place_editbox();
   sk_place_button(.name = "Actions", .x = state->width - 200,
                   .y = state->height - 30, .w = 180,
@@ -1239,7 +1238,7 @@ static void cc_render(PromptState *state) {
   if (sk_hotkey_down(sk_hotkey_from_string(RegAliasHotkey)))
     cc_open_register_window(1);
 
-  if (!sk_listbox_begin(&spec))
+  if (!sk_listbox_begin(.lb = state->lb, .item_height = FontSize * 2))
     return;
   int type_x = state->width - CC_ITEM_TEXT_X;
   SkListItemCtx ctx;
@@ -1345,9 +1344,8 @@ static void cc_actions_refresh(PromptState *state) {
 }
 
 static void cc_actions_render(PromptState *state) {
-  SkListSpec spec = {.lb = state->lb};
   sk_place_editbox();
-  if (!sk_listbox_begin(&spec))
+  if (!sk_listbox_begin(.lb = state->lb))
     return;
   SkListItemCtx ctx;
   sk_draw_line(.x1 = 0, .y1 = 55, .x2 = state->width, .y2 = 55,

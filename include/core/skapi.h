@@ -483,9 +483,11 @@ bool sk_slider_set_value(const char *name, float value);
 #define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
+#define sk_listbox_begin(...)                                                   \
+  ski_listbox_begin(&(SkListSpec){__VA_ARGS__})
 
 unsigned long sk_listbox_get_current_standard_color(void);
-bool sk_listbox_begin(const SkListSpec *spec);
+bool ski_listbox_begin(const SkListSpec *spec);
 bool sk_listbox_next(SkListItemCtx *out);
 void sk_listbox_end(void);
 int sk_listbox_get_count(void);

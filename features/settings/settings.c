@@ -54,11 +54,9 @@ static void settings_tab(PromptState *state) {}
 static void settings_empty_render(void *ud) { (void)ud; }
 
 static void settings_list(PromptState *state) {
-  SkListSpec spec = {.lb = state->lb, .item_height = SETTINGS_ROW_H,
-                     .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y, .w = 220,
-                     .h = state->height - SETTINGS_LIST_Y - 4};
-
-  if (!sk_listbox_begin(&spec))
+  if (!sk_listbox_begin(.lb = state->lb, .item_height = SETTINGS_ROW_H,
+                        .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y, .w = 220,
+                        .h = state->height - SETTINGS_LIST_Y - 4))
     return;
   SkListItemCtx ctx;
   while (sk_listbox_next(&ctx)) {
