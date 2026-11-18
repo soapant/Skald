@@ -25,8 +25,8 @@ typedef struct {
   ColorRef color_text;
   FontHandle font;
   int font_size;
-  int caret_height;
-  int caret_width;
+  int caret_h;
+  int caret_w;
   int caret_x;
   int caret_y;
   int caret_pos;

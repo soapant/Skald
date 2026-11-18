@@ -574,13 +574,13 @@ void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,
     out->bx = PROMPT_SEL_X;
     out->bw = (popup_w > 0 ? popup_w : PROMPT_CUSTOM_FALLBACK_W) -
               PROMPT_SEL_W_SHRINK;
-    out->fw = popup_w > 0 ? popup_w : PromptWidth;
-    out->fh = popup_h > 0 ? popup_h : PromptHeight;
+    out->fw = popup_w > 0 ? popup_w : PromptW;
+    out->fh = popup_h > 0 ? popup_h : PromptH;
   } else {
     out->bx = spec->x + PROMPT_SEL_INSET;
     out->bw = (spec->w ? spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
-    out->fw = spec->w ? spec->w : PromptWidth;
-    out->fh = spec->h ? spec->h : PromptHeight;
+    out->fw = spec->w ? spec->w : PromptW;
+    out->fh = spec->h ? spec->h : PromptH;
   }
   int visible = out->list_h / out->item_h;
   if (visible < 1)

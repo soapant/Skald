@@ -1121,7 +1121,7 @@ bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
 
 void Platform_PrewarmBackgroundPixmap(void) {
   win32_bg_image_purge();
-  win32_bg_image_prewarm(PromptWidth, PromptHeight);
+  win32_bg_image_prewarm(PromptW, PromptH);
 }
 
 int Platform_InitializeTrayIcon(void) {

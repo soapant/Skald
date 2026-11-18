@@ -80,8 +80,8 @@ void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
   init_args.text_color = ui->color_text;
   init_args.bg_color = ui->color_bg;
   init_args.placeholder = ui->placeholder;
-  init_args.caret_height = ui->caret_height;
-  init_args.caret_width = ui->caret_width;
+  init_args.caret_h = ui->caret_h;
+  init_args.caret_w = ui->caret_w;
   init_args.caret_x = ui->caret_x;
   init_args.caret_y = ui->caret_y;
   init_args.caret_pos = ui->caret_pos;
@@ -111,8 +111,8 @@ void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args) {
   out->bg_color =
       args->bg_color ? rgb_to_hex(args->bg_color) : rgb_to_hex(COLOR_BG);
   out->placeholder = args->placeholder;
-  out->caret_height = args->caret_height;
-  out->caret_width = args->caret_width;
+  out->caret_h = args->caret_h;
+  out->caret_w = args->caret_w;
   out->caret_x = args->caret_x;
   out->caret_y = args->caret_y;
   out->caret_pos = args->caret_pos;
@@ -142,12 +142,12 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
                       in->font_size > 0 ? in->font_size : FontSize);
   out->caret_y = in->caret_y > 0 ? in->caret_y : caret_auto_y;
   out->font_size = in->font_size > 0 ? in->font_size : FontSize;
-  out->caret_height =
-      in->caret_height > 0 ? in->caret_height : prompt_caret_height();
-  out->caret_width = in->caret_width;
+  out->caret_h =
+      in->caret_h > 0 ? in->caret_h : prompt_caret_height();
+  out->caret_w = in->caret_w;
   out->caret_x = in->caret_x;
   out->caret_pos = in->caret_pos;
-  out->caret_h = out->caret_height;
+  out->caret_h = out->caret_h;
   out->placeholder = in->placeholder
                          ? in->placeholder
                          : (in->state ? in->state->eb->placeholder : NULL);
@@ -334,9 +334,9 @@ void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
 
   int lo = spec->x + PROMPT_CARET_LO_CLAMP;
   int hi = spec->x + spec->w - PROMPT_CARET_HI_CLAMP;
-  int caret_w = spec->caret_width > 0 ? spec->caret_width : 1;
+  int caret_w = spec->caret_w > 0 ? spec->caret_w : 1;
   const Metrics *metrics = metrics_get();
-  if (spec->caret_width <= 0 && metrics && metrics->edit_cursor_width > 0)
+  if (spec->caret_w <= 0 && metrics && metrics->edit_cursor_width > 0)
     caret_w = metrics->edit_cursor_width;
 
   if (spec->has_selection) {

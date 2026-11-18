@@ -43,7 +43,6 @@ typedef struct {
 
   int text_y;
   int caret_y;
-  int caret_h;
 
   const char *align;
   int placeholder_dy;
@@ -54,8 +53,8 @@ typedef struct {
   ColorRef bg_color;
   FontHandle font;
   int font_size;
-  int caret_height;
-  int caret_width;
+  int caret_h;
+  int caret_w;
   int caret_x;
   int caret_pos;
 
@@ -92,8 +91,8 @@ typedef struct {
   const char *placeholder;
   FontHandle font;
   int font_size;
-  int caret_height;
-  int caret_width;
+  int caret_h;
+  int caret_w;
   int caret_x;
   int caret_y;
   int caret_pos;
@@ -116,8 +115,8 @@ typedef struct {
   ColorRef color_text;
   ColorRef color_bg;
   const char *placeholder;
-  int caret_height;
-  int caret_width;
+  int caret_h;
+  int caret_w;
   int caret_x;
   int caret_y;
   int caret_pos;
@@ -155,8 +154,8 @@ typedef struct {
   ColorRef text_color;
   ColorRef bg_color;
   const char *placeholder;
-  int caret_height;
-  int caret_width;
+  int caret_h;
+  int caret_w;
   int caret_x;
   int caret_y;
   int caret_pos;

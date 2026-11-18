@@ -408,10 +408,10 @@ void Platform_PrewarmBackgroundPixmap(void) {
   if (!dpy) {
     return;
   }
-  x11_bg_image_prewarm(dpy, PromptWidth, PromptHeight);
-  Window _pw = x11_create_prompt_window(dpy, 0, 0, PromptWidth, PromptHeight);
+  x11_bg_image_prewarm(dpy, PromptW, PromptH);
+  Window _pw = x11_create_prompt_window(dpy, 0, 0, PromptW, PromptH);
   if (_pw != None) {
-    x11_get_cached_background(dpy, _pw, PromptWidth, PromptHeight);
+    x11_get_cached_background(dpy, _pw, PromptW, PromptH);
     XDestroyWindow(dpy, _pw);
   }
 }

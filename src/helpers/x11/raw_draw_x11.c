@@ -112,7 +112,7 @@ void x11_raw_line_flush(void) {
   for (int i = 0; i < count; i++)
     raw_text[i] = raw_cells[i].ch;
   raw_text[count] = '\0';
-  int avail = PromptWidth - x0 - 10;
+  int avail = PromptW - x0 - 10;
   if (avail < 40)
     avail = 40;
   int ascent = xf->ascent;
