@@ -11,6 +11,8 @@
 #include "core/prompt_keys.h"
 #include "core/types.h"
 #include "core/types/window.h"
+#include <X11/Xlib.h>
+#include "platform/platform.h"
 
 static PromptState *ui_top_prompt(void) {
   WindowManager *wm = WindowManager_Get();
@@ -28,7 +30,18 @@ bool is_popup_active(WindowHandle hPopupWnd) {
   return wm && wm->popup_count > 0;
 }
 
-void UI_RequestPopupRepaint(void) {}
+void UI_RequestPopupRepaint(void) {
+  WindowManager *wm = WindowManager_Get();
+  if (!wm)
+    return;
+  Popup *top = WindowManager_GetTopPopup(wm);
+  if (!top || !top->vtable || !top->vtable->on_render)
+    return;
+  top->vtable->on_render(top);
+  Display *dpy = wm->display;
+  if (dpy)
+    XFlush(dpy);
+}
 
 void UI_LegacySyncRepaint(void) {}
 

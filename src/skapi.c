@@ -26,6 +26,7 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_input_state.h"
 #include "core/window_manager.h"
+#include "core/theme.h"
 #include "core/thread_registry.h"
 #include "core/http.h"
 #include "core/owner_purge.h"
@@ -1281,6 +1282,32 @@ bool sk_close_windows_by_id(const char *needle) {
 }
 
 bool sk_reload_config(void) { return config_reload(); }
+
+const char *sk_get_theme(void) {
+  return (Theme && Theme[0]) ? Theme : NULL;
+}
+
+int sk_theme_count(void) { return (int)theme_count(); }
+
+const char *sk_theme_name_at(int index) {
+  if (index < 0)
+    return NULL;
+  const ThemeEntry *e = theme_entry_at((size_t)index);
+  return e ? e->name : NULL;
+}
+
+bool sk_set_theme(const char *name) {
+  if (!name || !name[0])
+    return false;
+  const ThemeEntry *e = theme_find(name);
+  if (!e)
+    return false;
+  Theme = e->name;
+  theme_apply();
+  config_save();
+  UI_RequestPopupRepaint();
+  return true;
+}
 
 char *ski_popup(const PopupSpec *spec) {
   if (!spec)
