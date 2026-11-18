@@ -849,6 +849,7 @@ char *sk_config_alias_value_at(int index);
 int sk_config_quicklink_count(void);
 char *sk_config_quicklink_name_at(int index);
 char *sk_config_quicklink_value_at(int index);
+bool sk_config_set_quicklink(const char *name, const char *target);
 
 int sk_cc_entry_count(void);
 

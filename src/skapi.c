@@ -32,6 +32,7 @@
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
 #include "core/skapi.h"
+#include "core/config_section.h"
 #include "core/listbox_hover.h"
 #include "helpers/helpers_monitor.h"
 #include "helpers/helpers_key.h"
@@ -3013,6 +3014,7 @@ void sk_close_window(void) {
 #define SK_CONFIG_HOTKEY_MAX 64
 #define SK_CONFIG_ALIAS_MAX 128
 #define SK_CONFIG_TARGET_MAX 256
+#define SK_CONFIG_QUICKLINK_TARGET_MAX 1024
 
 typedef struct {
   char name[SK_CONFIG_NAME_MAX];
@@ -3024,11 +3026,19 @@ typedef struct {
   char alias[SK_CONFIG_ALIAS_MAX];
 } SkConfigAliasEntry;
 
+typedef struct {
+  char name[SK_CONFIG_NAME_MAX];
+  char target[SK_CONFIG_QUICKLINK_TARGET_MAX];
+} SkConfigQuicklinkEntry;
+
 static SkConfigHotkeyEntry hotkey_entries[SK_CONFIG_MAX_ENTRIES];
 static int hotkey_entry_count = 0;
 
 static SkConfigAliasEntry alias_entries[SK_CONFIG_MAX_ENTRIES];
 static int alias_entry_count = 0;
+
+static SkConfigQuicklinkEntry quicklink_entries[SK_CONFIG_MAX_ENTRIES];
+static int quicklink_entry_count = 0;
 
 static void *sk_config_mutex = NULL;
 static char sk_config_path[1024];
@@ -3073,12 +3083,29 @@ static int alias_index_of(const char *target) {
   return -1;
 }
 
+static int quicklink_index_of(const char *name) {
+  if (!name)
+    return -1;
+  for (int i = 0; i < quicklink_entry_count; i++)
+    if (sk_string_equals_ci(quicklink_entries[i].name, name))
+      return i;
+  return -1;
+}
+
 static void hotkey_entries_remove(int i) {
   for (int j = i; j + 1 < hotkey_entry_count; j++)
     hotkey_entries[j] = hotkey_entries[j + 1];
   memset(&hotkey_entries[hotkey_entry_count - 1], 0,
          sizeof(hotkey_entries[hotkey_entry_count - 1]));
   hotkey_entry_count--;
+}
+
+static void quicklink_entries_remove(int i) {
+  for (int j = i; j + 1 < quicklink_entry_count; j++)
+    quicklink_entries[j] = quicklink_entries[j + 1];
+  memset(&quicklink_entries[quicklink_entry_count - 1], 0,
+         sizeof(quicklink_entries[quicklink_entry_count - 1]));
+  quicklink_entry_count--;
 }
 
 static void alias_entries_remove(int i) {
@@ -3105,6 +3132,25 @@ static void hotkey_entries_set(const char *name, const char *hotkey) {
   snprintf(hotkey_entries[hotkey_entry_count].hotkey,
            sizeof(hotkey_entries[hotkey_entry_count].hotkey), "%s", hotkey);
   hotkey_entry_count++;
+}
+
+static void quicklink_entries_set(const char *name, const char *target) {
+  int i = quicklink_index_of(name);
+  if (i >= 0) {
+    snprintf(quicklink_entries[i].target,
+             sizeof(quicklink_entries[i].target), "%s", target);
+    return;
+  }
+  if (quicklink_entry_count >= SK_CONFIG_MAX_ENTRIES) {
+    log_error("sk_config: quicklink table full");
+    return;
+  }
+  snprintf(quicklink_entries[quicklink_entry_count].name,
+           sizeof(quicklink_entries[quicklink_entry_count].name), "%s", name);
+  snprintf(quicklink_entries[quicklink_entry_count].target,
+           sizeof(quicklink_entries[quicklink_entry_count].target), "%s",
+           target);
+  quicklink_entry_count++;
 }
 
 static void alias_entries_set(const char *target, const char *alias) {
@@ -3135,105 +3181,10 @@ static bool sk_config_parse_path(void) {
   return true;
 }
 
-static bool sk_config_write(void) {
-  if (!sk_config_path[0] && !sk_config_parse_path())
-    return false;
-
-  size_t cap = 4096;
-  char *buf = malloc(cap);
-  if (!buf)
-    return false;
-  buf[0] = '\0';
-  size_t len = 0;
-  int w = snprintf(buf, cap,
-                   "# sk_config generated. Hand edits are overwritten on next "
-                   "save.\n[hotkeys]\n");
-  if (w < 0) {
-    free(buf);
-    return false;
-  }
-  len = (size_t)w;
-
-  char enc[1024];
-  for (int i = 0; i < hotkey_entry_count; i++) {
-    if (!config_toml_encode_string(hotkey_entries[i].name, enc, sizeof(enc)))
-      continue;
-    char val[1024];
-    if (!config_toml_encode_string(hotkey_entries[i].hotkey, val, sizeof(val)))
-      continue;
-    size_t need = len + strlen(enc) + strlen(val) + 8;
-    if (need > cap) {
-      char *grown = realloc(buf, cap * 2);
-      if (!grown) {
-        free(buf);
-        return false;
-      }
-      cap *= 2;
-      buf = grown;
-    }
-    w = snprintf(buf + len, cap - len, "%s = %s\n", enc, val);
-    len += (size_t)w;
-  }
-
-  {
-    const char *alias_sec = "\n[aliases]\n";
-    if (len + strlen(alias_sec) + 1 > cap) {
-      char *grown = realloc(buf, cap * 2);
-      if (!grown) {
-        free(buf);
-        return false;
-      }
-      cap *= 2;
-      buf = grown;
-    }
-    memcpy(buf + len, alias_sec, strlen(alias_sec) + 1);
-    len += strlen(alias_sec);
-  }
-
-  for (int i = 0; i < alias_entry_count; i++) {
-    if (!config_toml_encode_string(alias_entries[i].target, enc, sizeof(enc)))
-      continue;
-    char val[1024];
-    if (!config_toml_encode_string(alias_entries[i].alias, val, sizeof(val)))
-      continue;
-    size_t need = len + strlen(enc) + strlen(val) + 8;
-    if (need > cap) {
-      char *grown = realloc(buf, cap * 2);
-      if (!grown) {
-        free(buf);
-        return false;
-      }
-      cap *= 2;
-      buf = grown;
-    }
-    w = snprintf(buf + len, cap - len, "%s = %s\n", enc, val);
-    len += (size_t)w;
-  }
-
-  char tmp[1088];
-  snprintf(tmp, sizeof(tmp), "%s.tmp.%d", sk_config_path, (int)getpid());
-  FILE *f = fopen(tmp, "wb");
-  if (!f) {
-    free(buf);
-    log_error("sk_config: open %s failed", tmp);
-    return false;
-  }
-  bool ok = fwrite(buf, 1, len, f) == len;
-  if (fclose(f) != 0)
-    ok = false;
-  free(buf);
-  if (!ok) {
-    remove(tmp);
-    log_error("sk_config: write %s failed", tmp);
-    return false;
-  }
-  if (!Platform_AtomicRename(tmp, sk_config_path)) {
-    remove(tmp);
-    log_error("sk_config: rename %s failed", tmp);
-    return false;
-  }
-  return true;
+static bool sk_config_ready(void) {
+  return sk_config_path[0] != '\0' || sk_config_parse_path();
 }
+
 
 static bool sk_config_apply_entry(const ConfigTomlEntry *e, void *user) {
   (void)user;
@@ -3256,6 +3207,8 @@ static bool sk_config_apply_entry(const ConfigTomlEntry *e, void *user) {
     hotkey_entries_set(e->key, body);
   } else if (strcmp(e->section, "aliases") == 0) {
     alias_entries_set(e->key, body);
+  } else if (strcmp(e->section, "quicklinks") == 0) {
+    quicklink_entries_set(e->key, body);
   } else {
     log_warn("sk_config: unknown section [%s], ignoring", e->section);
   }
@@ -3307,7 +3260,11 @@ static void sk_config_migrate_hotkeys_txt(const char *dir) {
     log_info("sk_config: migrated %zu hotkey(s) from "
              "control_center/hotkeys.txt",
              migrated);
-    sk_config_write();
+    if (sk_config_ready())
+      for (int i = 0; i < hotkey_entry_count; i++)
+        config_section_set(sk_config_path, "hotkeys",
+                           hotkey_entries[i].name,
+                           hotkey_entries[i].hotkey);
   }
 }
 
@@ -3385,7 +3342,9 @@ bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
     snprintf(old_hotkey, sizeof(old_hotkey), "%s", hotkey_entries[i].hotkey);
 
   hotkey_entries_set(spec->name, spec->hotkey);
-  if (!sk_config_write())
+  if (!sk_config_ready() ||
+      !config_section_set(sk_config_path, "hotkeys", spec->name,
+                          spec->hotkey))
     log_error("sk_config: failed to save %s", sk_config_path);
 
   if (old_hotkey[0] && !sk_string_equals_ci(old_hotkey, spec->hotkey))
@@ -3420,7 +3379,8 @@ bool sk_config_clear_hotkey(const char *name) {
   char hk[SK_CONFIG_HOTKEY_MAX];
   snprintf(hk, sizeof(hk), "%s", hotkey_entries[i].hotkey);
   hotkey_entries_remove(i);
-  sk_config_write();
+  if (sk_config_ready())
+    config_section_clear(sk_config_path, "hotkeys", name);
   sk_unregister_hotkey(hk);
   sk_config_unlock();
   return true;
@@ -3488,7 +3448,8 @@ bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
       if (cur)
         sk_remove_alias(cur);
       alias_entries_remove(i);
-      sk_config_write();
+      if (sk_config_ready())
+        config_section_clear(sk_config_path, "aliases", spec->target);
     } else {
       const char *cur = sk_alias_for(spec->target);
       if (cur)
@@ -3499,7 +3460,8 @@ bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
   }
 
   alias_entries_set(spec->target, alias);
-  if (!sk_config_write())
+  if (!sk_config_ready() ||
+      !config_section_set(sk_config_path, "aliases", spec->target, alias))
     log_error("sk_config: failed to save %s", sk_config_path);
   sk_register_alias(.alias = alias, .target = spec->target);
   sk_config_unlock();
@@ -3550,22 +3512,44 @@ char *sk_config_alias_value_at(int index) {
   return out;
 }
 
-int sk_config_quicklink_count(void) { return (int)quicklink_count(); }
+int sk_config_quicklink_count(void) {
+  sk_config_lock();
+  sk_config_init_locked();
+  int n = quicklink_entry_count;
+  sk_config_unlock();
+  return n;
+}
 
 char *sk_config_quicklink_name_at(int index) {
-  if (index < 0)
-    return NULL;
-  char buf[1024];
-  if (!quicklink_at((size_t)index, buf, sizeof(buf), NULL, 0))
-    return NULL;
-  return strdup(buf);
+  sk_config_lock();
+  sk_config_init_locked();
+  bool ok = index >= 0 && index < quicklink_entry_count;
+  char *out = ok ? strdup(quicklink_entries[index].name) : NULL;
+  sk_config_unlock();
+  return out;
 }
 
 char *sk_config_quicklink_value_at(int index) {
-  if (index < 0)
-    return NULL;
-  char buf[1024];
-  if (!quicklink_at((size_t)index, NULL, 0, buf, sizeof(buf)))
-    return NULL;
-  return strdup(buf);
+  sk_config_lock();
+  sk_config_init_locked();
+  bool ok = index >= 0 && index < quicklink_entry_count;
+  char *out = ok ? strdup(quicklink_entries[index].target) : NULL;
+  sk_config_unlock();
+  return out;
+}
+
+bool sk_config_set_quicklink(const char *name, const char *target) {
+  if (!name || !name[0] || !target || !target[0])
+    return false;
+  if (strlen(name) >= SK_CONFIG_NAME_MAX ||
+      strlen(target) >= SK_CONFIG_QUICKLINK_TARGET_MAX)
+    return false;
+  sk_config_lock();
+  sk_config_init_locked();
+  quicklink_entries_set(name, target);
+  if (!sk_config_ready() ||
+      !config_section_set(sk_config_path, "quicklinks", name, target))
+    log_error("sk_config: failed to save %s", sk_config_path);
+  sk_config_unlock();
+  return true;
 }

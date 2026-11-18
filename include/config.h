@@ -14,9 +14,6 @@ bool config_load(void);
 bool config_reload(void);
 void config_unload(void);
 void config_save(void);
-size_t quicklink_count(void);
-bool quicklink_at(size_t index, char *name_out, size_t name_cap,
-                  char *target_out, size_t target_cap);
 
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 

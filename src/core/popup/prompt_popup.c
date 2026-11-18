@@ -59,6 +59,7 @@ static void prompt_popup_on_show(Popup *self) {
   data->state->height = data->h;
   const char *title = data->spec.title ? data->spec.title : "Skald";
   data->state->window_title = (char *)title;
+  data->state->render_data = data->spec.render_data;
   data->state->eb->filter[0] = '\0';
   if (data->spec.initial_text && data->spec.initial_text[0]) {
     safe_copy(data->state->eb->filter, sizeof(data->state->eb->filter),
