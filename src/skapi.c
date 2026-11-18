@@ -1884,13 +1884,7 @@ SkColor ski_get_pixel_color(int x, int y) {
 SkColor sk_get_pixel_color(SkPos pos) {
   return ski_get_pixel_color(pos.x, pos.y);
 }
-bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b) {
-  SkColor c = ski_get_pixel_color(x, y);
-  return c.r == r && c.g == g && c.b == b;
-}
-bool sk_color_matches(SkPos pos, SkColor color) {
-  return ski_color_matches(pos.x, pos.y, color.r, color.g, color.b);
-}
+
 bool ski_move_to_pos(int x, int y) { return Platform_MoveToPos(x, y); }
 bool sk_move_to_pos(SkPos pos) { return ski_move_to_pos(pos.x, pos.y); }
 bool ski_click_at(int x, int y) { return ski_move_to_pos(x, y) && sk_click(); }
@@ -1992,6 +1986,54 @@ static bool type_text_common(const char *s) {
 bool sk_type_text(const char *s) { return type_text_common(s); }
 
 void sk_sleep(double seconds) { sk_sleep_platform(seconds); }
+
+static bool pixel_color_matches_tol(SkColor c, SkColor target, int tolerance) {
+  int tol = tolerance > 0 ? tolerance : 0;
+  int dr = (int)c.r - (int)target.r;
+  if (dr < 0)
+    dr = -dr;
+  if (dr > tol)
+    return false;
+  int dg = (int)c.g - (int)target.g;
+  if (dg < 0)
+    dg = -dg;
+  if (dg > tol)
+    return false;
+  int db = (int)c.b - (int)target.b;
+  if (db < 0)
+    db = -db;
+  return db <= tol;
+}
+bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b,
+                       int tolerance) {
+  SkColor target = {.r = r, .g = g, .b = b};
+  SkColor c = ski_get_pixel_color(x, y);
+  return pixel_color_matches_tol(c, target, tolerance);
+}
+bool sk_color_matches(SkPos pos, SkColor color, int tolerance) {
+  return ski_color_matches(pos.x, pos.y, color.r, color.g, color.b, tolerance);
+}
+bool ski_wait_pixel(int x, int y, size_t r, size_t g, size_t b, int tolerance,
+                    double timeout) {
+  SkColor target = {.r = r, .g = g, .b = b};
+  if (timeout <= 0.0)
+    timeout = 10.0;
+  int tol = tolerance > 0 ? tolerance : 0;
+  int steps = (int)(timeout / 0.01);
+  for (int i = 0;; i++) {
+    SkColor c = ski_get_pixel_color(x, y);
+    if (pixel_color_matches_tol(c, target, tol))
+      return true;
+    if (i >= steps)
+      return false;
+    sk_sleep(0.01);
+  }
+}
+bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout) {
+  return ski_wait_pixel(pos.x, pos.y, color.r, color.g, color.b, tolerance,
+                        timeout);
+}
+
 
 #define SKI_LIB_TRACK_MAX 32
 
