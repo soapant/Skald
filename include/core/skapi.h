@@ -229,6 +229,10 @@ bool sk_close_windows_by_title(const char *needle);
 bool sk_close_windows_by_id(const char *needle);
 
 bool sk_reload_config(void);
+bool sk_set_theme(const char *name);
+const char *sk_get_theme(void);
+int sk_theme_count(void);
+const char *sk_theme_name_at(int index);
 
 int sk_get_screen_width(void);
 
