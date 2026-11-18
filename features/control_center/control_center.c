@@ -574,13 +574,34 @@ static bool cc_launch_app_as_admin(void) {
   return true;
 }
 
+typedef struct {
+  char name[512];
+  char url[512];
+} Quicklink;
+
+static Quicklink cc_quicklink_draft = {0};
+
 // https://youtube.com
 static void cc_quicklinksub_render(PromptState *state) {
     sk_place_editbox();
 }
 
+static bool cc_quicklinksub_enter(PromptState *state) {
+  Quicklink *quicklink = state->render_data;
+  if (quicklink && state->eb->filter != NULL && state->eb->filter[0] != '\0')
+    cc_copy(quicklink->name, sizeof(quicklink->name), state->eb->filter);
+  bool ok = quicklink &&
+            sk_config_set_quicklink(quicklink->name, quicklink->url);
+  if (!ok) {
+    sk_message(.message = "Failed To Save Quicklink");
+    return false;
+  }
+  atomic_store(&cc_entries_dirty, true);
+  return true;
+}
+
 static bool cc_quicklink_enter(PromptState *state) {
-  char buf[600];
+  static char buf[600];
   if (!sk_string_starts_with(state->eb->filter, "https://")) return false;
 
   char* temp_after = sk_string_cut_after(state->eb->filter, ':');
@@ -597,8 +618,12 @@ static bool cc_quicklink_enter(PromptState *state) {
     default_name[0] = toupper((unsigned char)default_name[0]);
   }
 
+  cc_copy(cc_quicklink_draft.url, sizeof(cc_quicklink_draft.url),
+          state->eb->filter);
+  cc_copy(cc_quicklink_draft.name, sizeof(cc_quicklink_draft.name),
+          default_name);
   snprintf(buf, sizeof(buf), "Enter Name For Url (%s) (Default:%s)", state->eb->filter, default_name);
-  sk_subwindow(.title = "QuicklinkSub", .h = 60, .placeholder = buf, .render = cc_quicklinksub_render);
+  sk_subwindow(.title = "QuicklinkSub", .h = 60, .placeholder = buf, .render = cc_quicklinksub_render,.enter=cc_quicklinksub_enter,.render_data=&cc_quicklink_draft);
   
   free(website_name);
   return true;
