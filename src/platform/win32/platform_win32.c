@@ -397,7 +397,28 @@ char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
   return out;
 }
 
+static bool s_bundled_font_done = false;
+
+static bool win32_is_bundled_face(const char *face_name) {
+  return face_name &&
+         (_stricmp(face_name, "0xProto Nerd Font") == 0 ||
+          _stricmp(face_name, "0xProtoNerdFont") == 0);
+}
+
+static bool win32_register_bundled_font(const char *face_name) {
+  if (s_bundled_font_done)
+    return true;
+  if (!win32_is_bundled_face(face_name))
+    return false;
+  const char *path = "resources/fonts/0xProtoNerdFont-Regular.ttf";
+  int added = AddFontResourceExA(path, FR_PRIVATE | FR_NOT_ENUM, 0);
+  s_bundled_font_done = added > 0;
+  return s_bundled_font_done;
+}
+
 FontHandle Platform_CreateFont(int size, const char *face_name) {
+  win32_register_bundled_font(face_name);
+
   int h = -size;
   static bool s_font_loaded = false;
   if (!s_font_loaded) {
