@@ -588,7 +588,7 @@ static void cc_quicklinksub_render(PromptState *state) {
 
 static bool cc_quicklinksub_enter(PromptState *state) {
   Quicklink *quicklink = state->render_data;
-  if (quicklink && state->eb->filter != NULL && state->eb->filter[0] != '\0')
+  if (quicklink && state->eb->filter[0] != '\0')
     cc_copy(quicklink->name, sizeof(quicklink->name), state->eb->filter);
   bool ok = quicklink &&
             sk_config_set_quicklink(quicklink->name, quicklink->url);
@@ -601,7 +601,7 @@ static bool cc_quicklinksub_enter(PromptState *state) {
 }
 
 static bool cc_quicklink_enter(PromptState *state) {
-  static char buf[600];
+  static char buf[800];
   if (!sk_string_starts_with(state->eb->filter, "https://")) return false;
 
   char* temp_after = sk_string_cut_after(state->eb->filter, ':');
