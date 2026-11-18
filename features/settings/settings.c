@@ -93,8 +93,13 @@ static void settings_render(PromptState *state) {
       state->lb->selected_index < state->lb->item_count) {
     const SkSettingsEntrySpec *entry =
         settings_entry_by_name(state->lb->selected_text);
-    if (entry && entry->render)
+    if (entry && entry->render) {
+      int saved_x = 0, saved_y = 0;
+      sk_get_draw_offset(&saved_x, &saved_y);
+      sk_set_draw_offset(SETTINGS_SEP_X + 8, 8);
       entry->render(entry->ud);
+      sk_set_draw_offset(saved_x, saved_y);
+    }
   }
 }
 
