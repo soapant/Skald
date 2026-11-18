@@ -72,6 +72,7 @@ typedef struct {
   bool filled;
   int radius;
   bool rounded;
+  float angle;
 } DrawRect;
 
 typedef struct {

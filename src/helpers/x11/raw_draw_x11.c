@@ -1,6 +1,8 @@
 #include "helpers/x11/raw_draw_x11.h"
 #include "config_values.h"
 
+#include <math.h>
+
 #define RAW_LINE_CAP 4096
 
 __thread Display *g_draw_dpy = NULL;
@@ -504,4 +506,278 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   }
 
   Platform_DestroyFont(font);
+}
+
+static float x11_rot_norm(float angle) {
+  float a = fmodf(angle, 360.0f);
+  if (a < 0.0f)
+    a += 360.0f;
+  if (a >= 360.0f)
+    a -= 360.0f;
+  return a;
+}
+
+static void x11_rot_bbox(float angle, int w, int h, int *out_w, int *out_h) {
+  float a = x11_rot_norm(angle) * (float)(M_PI / 180.0);
+  float c = fabsf(cosf(a)), s = fabsf(sinf(a));
+  *out_w = (int)ceilf((float)w * c + (float)h * s);
+  *out_h = (int)ceilf((float)w * s + (float)h * c);
+}
+
+static void x11_rot_transform(XTransform *t, float angle, double dst_cx,
+                              double dst_cy, double src_cx, double src_cy) {
+  double a = (double)x11_rot_norm(angle) * (M_PI / 180.0);
+  double c = cos(a), s = sin(a);
+  double e11 = c, e12 = s;
+  double e21 = -s, e22 = c;
+  double e13 = src_cx - (e11 * dst_cx + e12 * dst_cy);
+  double e23 = src_cy - (e21 * dst_cx + e22 * dst_cy);
+  t->matrix[0][0] = XDoubleToFixed(e11);
+  t->matrix[0][1] = XDoubleToFixed(e12);
+  t->matrix[0][2] = XDoubleToFixed(e13);
+  t->matrix[1][0] = XDoubleToFixed(e21);
+  t->matrix[1][1] = XDoubleToFixed(e22);
+  t->matrix[1][2] = XDoubleToFixed(e23);
+  t->matrix[2][0] = XDoubleToFixed(0.0);
+  t->matrix[2][1] = XDoubleToFixed(0.0);
+  t->matrix[2][2] = XDoubleToFixed(1.0);
+}
+
+static unsigned char *x11_rot_rect_pixels(int w, int h, float radius,
+                                          bool filled, float thickness,
+                                          unsigned long hex,
+                                          unsigned short alpha16) {
+  unsigned char *buf = (unsigned char *)calloc((size_t)w * (size_t)h * 4, 1);
+  if (!buf)
+    return NULL;
+  float bx = (float)w * 0.5f, by = (float)h * 0.5f;
+  float r = radius;
+  if (r > bx)
+    r = bx;
+  if (r > by)
+    r = by;
+  if (r < 0.0f)
+    r = 0.0f;
+  float t = thickness > 0.0f ? thickness : 1.0f;
+  unsigned char cr = (unsigned char)((hex >> 16) & 0xFF);
+  unsigned char cg = (unsigned char)((hex >> 8) & 0xFF);
+  unsigned char cb = (unsigned char)(hex & 0xFF);
+  for (int py = 0; py < h; py++) {
+    for (int px = 0; px < w; px++) {
+      float dx = fabsf((float)px + 0.5f - bx) - (bx - r);
+      float dy = fabsf((float)py + 0.5f - by) - (by - r);
+      float ox = fmaxf(dx, 0.0f), oy = fmaxf(dy, 0.0f);
+      float sd = sqrtf(ox * ox + oy * oy) + fminf(fmaxf(dx, dy), 0.0f) - r;
+      float cov;
+      if (filled) {
+        cov = 0.5f - sd;
+      } else {
+        float ad = fabsf(sd) - t * 0.5f;
+        cov = 0.5f - ad;
+      }
+      if (cov <= 0.0f)
+        continue;
+      if (cov > 1.0f)
+        cov = 1.0f;
+      float a8 = ((float)alpha16 / 65535.0f) * cov;
+      unsigned char A = (unsigned char)(a8 * 255.0f + 0.5f);
+      if (A == 0)
+        continue;
+      size_t o = ((size_t)py * (size_t)w + (size_t)px) * 4;
+      buf[o + 0] = A;
+      buf[o + 1] = (unsigned char)((float)cr * a8 + 0.5f);
+      buf[o + 2] = (unsigned char)((float)cg * a8 + 0.5f);
+      buf[o + 3] = (unsigned char)((float)cb * a8 + 0.5f);
+    }
+  }
+  return buf;
+}
+
+static void x11_rot_composite(Display *dpy, XftDraw *xd, Visual *vis,
+                              Picture src, int dst_x, int dst_y, int bw,
+                              int bh, float angle, double dst_cx, double dst_cy,
+                              double src_cx, double src_cy) {
+  XRenderSetPictureFilter(dpy, src, FilterBilinear, NULL, 0);
+  XTransform t;
+  x11_rot_transform(&t, angle, dst_cx, dst_cy, src_cx, src_cy);
+  XRenderSetPictureTransform(dpy, src, &t);
+  XRenderPictFormat *dfmt = XRenderFindVisualFormat(dpy, vis);
+  Picture dst = dfmt ? XRenderCreatePicture(dpy, XftDrawDrawable(xd), dfmt, 0,
+                                            NULL)
+                     : 0;
+  bool ok = false;
+  if (dst) {
+    XRenderComposite(dpy, PictOpOver, src, None, dst, dst_x, dst_y, 0, 0,
+                     dst_x, dst_y, (unsigned int)bw, (unsigned int)bh);
+    XRenderFreePicture(dpy, dst);
+    ok = true;
+  }
+  return ok;
+}
+
+bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec) {
+  if (!x11_raw_can_draw() || !spec)
+    return false;
+  Display *dpy = g_draw_dpy;
+  XftDraw *xd = g_draw_xd;
+  int w = spec->w, h = spec->h;
+  if (w <= 0 || h <= 0)
+    return false;
+  int x = spec->x + draw_state_get()->off_x;
+  int y = spec->y + draw_state_get()->off_y;
+  float angle = spec->angle;
+  float cx = (float)x + (float)w * 0.5f;
+  float cy = (float)y + (float)h * 0.5f;
+  int bw = 0, bh = 0;
+  x11_rot_bbox(angle, w, h, &bw, &bh);
+  int bx = (int)lroundf(cx - (float)bw * 0.5f);
+  int by = (int)lroundf(cy - (float)bh * 0.5f);
+  int t = draw_thickness_px(spec->thickness);
+  if (spec->filled) {
+    draw_measure_track(bx, by, bw, bh);
+  } else {
+    draw_measure_track(bx - t, by - t, bw + 2 * t, bh + 2 * t);
+  }
+  float radius = 0.0f;
+  if (spec->rounded && spec->radius > 0) {
+    radius = (float)spec->radius;
+    if (radius > (float)w * 0.5f)
+      radius = (float)w * 0.5f;
+    if (radius > (float)h * 0.5f)
+      radius = (float)h * 0.5f;
+  }
+  unsigned short target_alpha = spec->opaque ? 0xFFFFu : opacity_alpha16();
+  unsigned char *buf =
+      x11_rot_rect_pixels(w, h, radius, spec->filled,
+                          t > 0 ? (float)t : 1.0f, spec->color, target_alpha);
+  if (!buf)
+    return false;
+  Pixmap pm = 0;
+  Picture pic = 0;
+  bool ok = x11_upload_argb(dpy, 0, buf, w, h, &pm, &pic);
+  free(buf);
+  if (!ok)
+    return false;
+  ok = x11_rot_composite(dpy, xd, g_draw_vis, pic, bx, by, bw, bh, angle,
+                         (double)cx, (double)cy, (double)w * 0.5,
+                         (double)h * 0.5);
+  if (pic)
+    XRenderFreePicture(dpy, pic);
+  if (pm)
+    XFreePixmap(dpy, pm);
+  XFlush(dpy);
+  return ok;
+}
+
+bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
+  if (!x11_raw_can_draw() || !spec || !spec->text || !spec->text[0])
+    return false;
+  Display *dpy = g_draw_dpy;
+  XftDraw *xd = g_draw_xd;
+  int off_x = draw_state_get()->off_x, off_y = draw_state_get()->off_y;
+  int x = spec->x + off_x;
+  int y = spec->y + off_y;
+  float angle = spec->angle;
+  FontHandle fh = spec->font;
+  bool need_destroy = false;
+  if (!FH_TO_XFT(fh)) {
+    if (spec->fontsize) {
+      fh = x11_create_font_on_display(dpy, spec->fontsize, UsedFont);
+    } else {
+      fh = x11_create_font_on_display(dpy, FontSize, UsedFont);
+    }
+    need_destroy = true;
+  }
+  XftFont *xf = FH_TO_XFT(fh);
+  if (!xf) {
+    if (need_destroy)
+      Platform_DestroyFont(fh);
+    return false;
+  }
+  int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
+  int len = (int)strlen(spec->text);
+  int tw = x11_measure_utf8_fallback(dpy, xf, spec->text, len, fontsize);
+  int lh = xf->ascent + xf->descent;
+  if (tw <= 0 || lh <= 0) {
+    if (need_destroy)
+      Platform_DestroyFont(fh);
+    return false;
+  }
+  const char *a = spec->align ? spec->align : "CENTER";
+  bool centered = string_contains_ci(a, "CENTER");
+  bool right = !centered && string_contains_ci(a, "RIGHT");
+  int ux = centered ? x - tw / 2 : (right ? x - tw : x);
+  float cx = (float)ux + (float)tw * 0.5f;
+  float cy = (float)y + (float)lh * 0.5f;
+  int bw = 0, bh = 0;
+  x11_rot_bbox(angle, tw, lh, &bw, &bh);
+  int bx = (int)lroundf(cx - (float)bw * 0.5f);
+  int by = (int)lroundf(cy - (float)bh * 0.5f);
+  draw_measure_track(bx, by, bw, bh);
+
+  int screen = DefaultScreen(dpy);
+  XVisualInfo vinfo;
+  if (!XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
+    if (need_destroy)
+      Platform_DestroyFont(fh);
+    return false;
+  }
+  Pixmap pm = XCreatePixmap(dpy, RootWindow(dpy, screen), (unsigned int)tw,
+                            (unsigned int)lh, 32);
+  if (!pm) {
+    if (need_destroy)
+      Platform_DestroyFont(fh);
+    return false;
+  }
+  Colormap cmap = XCreateColormap(dpy, RootWindow(dpy, screen), vinfo.visual,
+                                  AllocNone);
+  {
+    GC gc = XCreateGC(dpy, pm, 0, NULL);
+    XSetForeground(dpy, gc, 0);
+    XFillRectangle(dpy, pm, gc, 0, 0, (unsigned int)tw, (unsigned int)lh);
+    XFreeGC(dpy, gc);
+  }
+  XftDraw *td = XftDrawCreate(dpy, pm, vinfo.visual, cmap);
+  if (!td) {
+    XFreePixmap(dpy, pm);
+    XFreeColormap(dpy, cmap);
+    if (need_destroy)
+      Platform_DestroyFont(fh);
+    return false;
+  }
+  unsigned long color =
+      spec->color == COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec->color;
+  XftColor col;
+  x11_xft_color_cached(dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+  XftDrawStringUtf8(td, &col, xf, 0, xf->ascent, (FcChar8 *)spec->text, len);
+  XftDrawDestroy(td);
+
+  Picture src = XRenderCreatePicture(
+      dpy, pm, XRenderFindStandardFormat(dpy, PictStandardARGB32), 0, NULL);
+  bool ok = false;
+  if (src) {
+    XRenderSetPictureFilter(dpy, src, FilterBilinear, NULL, 0);
+    XTransform t;
+    x11_rot_transform(&t, angle, (double)bx + (double)bw * 0.5,
+                      (double)by + (double)bh * 0.5,
+                      (double)tw * 0.5, (double)lh * 0.5);
+    XRenderSetPictureTransform(dpy, src, &t);
+    XRenderPictFormat *dfmt = XRenderFindVisualFormat(dpy, g_draw_vis);
+    Picture dst = dfmt ? XRenderCreatePicture(dpy, XftDrawDrawable(xd), dfmt,
+                                              0, NULL)
+                       : 0;
+    if (dst) {
+      XRenderComposite(dpy, PictOpOver, src, None, dst, bx, by, 0, 0, bx, by,
+                       (unsigned int)bw, (unsigned int)bh);
+      XRenderFreePicture(dpy, dst);
+      ok = true;
+    }
+    XRenderFreePicture(dpy, src);
+  }
+  XFreePixmap(dpy, pm);
+  XFreeColormap(dpy, cmap);
+  if (need_destroy)
+    Platform_DestroyFont(fh);
+  XFlush(dpy);
+  return ok;
 }

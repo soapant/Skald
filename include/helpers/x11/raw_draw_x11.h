@@ -49,6 +49,8 @@ XftFont *x11_line_font(Display *dpy, int size);
 void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
                              EditboxSpec *eb, EditboxX11Metrics *metrics);
 bool x11_raw_can_draw(void);
+bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec);
+bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec);
 GC x11_raw_gc_for(Display *dpy, Drawable d);
 GC x11_raw_prepare(unsigned long color, int thickness);
 

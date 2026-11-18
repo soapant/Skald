@@ -59,6 +59,8 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
 bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return false;
+  if (spec.angle != 0.0f)
+    return x11_raw_draw_text_rotated(&spec);
   int _ox = draw_state_get()->off_x;
   int _oy = draw_state_get()->off_y;
   int x = spec.x + _ox;
@@ -239,6 +241,9 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   if (w <= 0 || h <= 0) {
     return false;
   }
+
+  if (angle != 0.0f)
+    return x11_raw_draw_rect_rotated(&spec);
 
   x += draw_state_get()->off_x;
   y += draw_state_get()->off_y;
