@@ -90,9 +90,9 @@ typedef struct {
   int max_height = (spec).max_height;                                          \
   double timeout = (spec).timeout;                                             \
   ColorRef color = (spec).color;                                               \
-  void (*render)(void *ud) = (spec).render;                                     \
-  void *render_data = (spec).render_data;                                          \
-  const char *name = (spec).name;                                                  \
+  void (*render)(void *ud) = (spec).render;                                    \
+  void *render_data = (spec).render_data;                                      \
+  const char *name = (spec).name;                                              \
   int fps = (spec).fps
 
 #define ANCHORED_MSG_UNPACK(spec)                                              \
@@ -101,7 +101,7 @@ typedef struct {
   int rect_y = (spec).y;                                                       \
   int rect_w = (spec).w;                                                       \
   int rect_h = (spec).h;                                                       \
-  bool rounded = (spec).rounded;                                             \
+  bool rounded = (spec).rounded;                                               \
   int radius = (spec).radius;                                                  \
   int h_slot = (spec).h_slot;                                                  \
   int v_slot = (spec).v_slot;                                                  \
@@ -112,11 +112,11 @@ typedef struct {
   double timeout = (spec).timeout;                                             \
   ColorRef color = (spec).color;                                               \
   bool no_bg = (spec).no_bg;                                                   \
-  void (*render)(void *ud) = (spec).render;                                     \
-  void *render_data = (spec).render_data;                                          \
-  int want_width = (spec).width;                                                   \
-  int want_height = (spec).height;                                                 \
-  const char *name = (spec).name;                                                  \
+  void (*render)(void *ud) = (spec).render;                                    \
+  void *render_data = (spec).render_data;                                      \
+  int want_width = (spec).width;                                               \
+  int want_height = (spec).height;                                             \
+  const char *name = (spec).name;                                              \
   int fps = (spec).fps
 
 #define HTTP_CONNECT_TIMEOUT_S 10

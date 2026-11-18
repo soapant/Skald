@@ -61,7 +61,8 @@ static void settings_remaps_render(void *ud) { (void)ud; }
 
 static void settings_list(PromptState *state) {
   if (!sk_listbox_begin(.lb = state->lb, .item_height = SETTINGS_ROW_H,
-                        .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y, .w = SETTINGS_SIDEBAR_W,
+                        .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y,
+                        .w = SETTINGS_SIDEBAR_W,
                         .h = state->height - SETTINGS_LIST_Y - 4))
     return;
   SkListItemCtx ctx;
@@ -83,10 +84,12 @@ static void settings_list(PromptState *state) {
 
 static void settings_render(PromptState *state) {
 
-  sk_draw_rect(.w=SETTINGS_SIDEBAR_W,.h=state->height,.color=sk_color_lerp(COLOR_BG, SK_BLACK, 0.72f),.filled=true,.rounded=false);
+  sk_draw_rect(.w = SETTINGS_SIDEBAR_W, .h = state->height,
+               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.72f),
+               .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H,.fontsize=16);
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .fontsize = 16);
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
                .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W, .y2 = SETTINGS_SEP_Y,
@@ -113,10 +116,9 @@ static void settings_render(PromptState *state) {
 
 static void trigger_settings(void) {
   sk_window(.title = "Settings", .placeholder = "Search settings",
-            .refresh = settings_refresh,
-            .enter = settings_enter, .ctrl_enter = settings_ctrl_enter,
-            .tab = settings_tab, .render = settings_render,
-            .no_separators = true);
+            .refresh = settings_refresh, .enter = settings_enter,
+            .ctrl_enter = settings_ctrl_enter, .tab = settings_tab,
+            .render = settings_render, .no_separators = true);
 }
 
 SKALD_FEATURE_INIT {

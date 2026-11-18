@@ -22,8 +22,7 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
       .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
 }
 
-void editbox_resolve_place(const EditboxPlaceSpec *spec,
-                           PromptState *state,
+void editbox_resolve_place(const EditboxPlaceSpec *spec, PromptState *state,
                            EditboxPlace *out) {
   if (!out || !spec)
     return;
@@ -170,7 +169,8 @@ int editbox_caret_y(int box_top, int ascent, int descent, int fontsize) {
 }
 
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
-                                   int text_len, const EditboxMetrics *metrics) {
+                                   int text_len,
+                                   const EditboxMetrics *metrics) {
   if (!spec || !state || !metrics)
     return;
   int cursor_x = metrics->cursor_x, text_w = metrics->text_w;
@@ -294,13 +294,13 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
     unsigned long col = get_rainbow_color(
         nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, 1.0f);
     Platform_DrawTextRaw((DrawTextRawSpec){.x = tx,
-                                             .y = spec->text_y,
-                                             .text = buf,
-                                             .color = col,
-                                             .font = spec->font,
-                                             .align = "",
-                                             .pad = 0,
-                                             .fontsize = spec->fontsize});
+                                           .y = spec->text_y,
+                                           .text = buf,
+                                           .color = col,
+                                           .font = spec->font,
+                                           .align = "",
+                                           .pad = 0,
+                                           .fontsize = spec->fontsize});
     pos += cl;
     ci++;
   }
@@ -400,15 +400,15 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
     if (layout->draw_selection) {
       Platform_DrawRectRaw(
           (DrawRectRawSpec){.x = layout->sel_x0,
-                              .y = spec->caret_y,
-                              .w = layout->sel_x1 - layout->sel_x0,
-                              .h = spec->caret_h,
-                              .color = tint,
-                              .radius = 0,
-                              .rounded = false,
-                              .opaque = true,
-                              .thickness = 1,
-                              .filled = true}
+                            .y = spec->caret_y,
+                            .w = layout->sel_x1 - layout->sel_x0,
+                            .h = spec->caret_h,
+                            .color = tint,
+                            .radius = 0,
+                            .rounded = false,
+                            .opaque = true,
+                            .thickness = 1,
+                            .filled = true}
 
       );
     }
@@ -420,26 +420,26 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
         editbox_draw_rainbow(spec, layout);
       } else {
         Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->draw_x,
-                                                 .y = spec->text_y,
-                                                 .text = spec->text,
-                                                 .color = spec->text_color,
-                                                 .font = spec->font,
-                                                 .align = "",
-                                                 .pad = 0,
-                                                 .fontsize = spec->fontsize});
+                                               .y = spec->text_y,
+                                               .text = spec->text,
+                                               .color = spec->text_color,
+                                               .font = spec->font,
+                                               .align = "",
+                                               .pad = 0,
+                                               .fontsize = spec->fontsize});
       }
     } else if (spec->placeholder && spec->placeholder[0]) {
       unsigned long ph =
           color_lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
       Platform_DrawTextRaw(
           (DrawTextRawSpec){.x = layout->draw_x,
-                              .y = spec->text_y + spec->placeholder_dy,
-                              .text = spec->placeholder,
-                              .color = ph,
-                              .font = spec->font,
-                              .align = "",
-                              .pad = 0,
-                              .fontsize = spec->fontsize});
+                            .y = spec->text_y + spec->placeholder_dy,
+                            .text = spec->placeholder,
+                            .color = ph,
+                            .font = spec->font,
+                            .align = "",
+                            .pad = 0,
+                            .fontsize = spec->fontsize});
     }
   }
 
@@ -448,15 +448,15 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
       return;
     }
     Platform_DrawRectRaw((DrawRectRawSpec){.x = layout->caret_x,
-                                             .y = spec->caret_y,
-                                             .w = layout->caret_w,
-                                             .h = spec->caret_h,
-                                             .color = rgb_to_hex(COLOR_CURSOR),
-                                             .radius = 0,
-                                             .rounded = false,
-                                             .opaque = true,
-                                             .thickness = 1,
-                                             .filled = true});
+                                           .y = spec->caret_y,
+                                           .w = layout->caret_w,
+                                           .h = spec->caret_h,
+                                           .color = rgb_to_hex(COLOR_CURSOR),
+                                           .radius = 0,
+                                           .rounded = false,
+                                           .opaque = true,
+                                           .thickness = 1,
+                                           .filled = true});
     if (layout->caret_w > 1) {
       const char *src = spec->password_mode ? NULL : spec->text;
       int srclen = spec->text_len;
@@ -479,13 +479,13 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
         int ty =
             is_placeholder ? spec->text_y + spec->placeholder_dy : spec->text_y;
         Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->caret_x,
-                                                 .y = ty,
-                                                 .text = ch,
-                                                 .color = bg,
-                                                 .font = spec->font,
-                                                 .align = "",
-                                                 .pad = 0,
-                                                 .fontsize = spec->fontsize});
+                                               .y = ty,
+                                               .text = ch,
+                                               .color = bg,
+                                               .font = spec->font,
+                                               .align = "",
+                                               .pad = 0,
+                                               .fontsize = spec->fontsize});
       }
     }
   }

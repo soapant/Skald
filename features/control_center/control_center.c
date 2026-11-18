@@ -582,16 +582,14 @@ typedef struct {
 
 static Quicklink cc_quicklink_draft = {0};
 
-static void cc_quicklinksub_render(PromptState *state) {
-    sk_place_editbox();
-}
+static void cc_quicklinksub_render(PromptState *state) { sk_place_editbox(); }
 
 static bool cc_quicklinksub_enter(PromptState *state) {
   Quicklink *quicklink = state->render_data;
   if (quicklink && state->eb->filter[0] != '\0')
     cc_copy(quicklink->name, sizeof(quicklink->name), state->eb->filter);
-  bool ok = quicklink &&
-            sk_config_set_quicklink(quicklink->name, quicklink->url);
+  bool ok =
+      quicklink && sk_config_set_quicklink(quicklink->name, quicklink->url);
   if (!ok) {
     sk_message(.message = "Failed To Save Quicklink");
     return false;
@@ -602,18 +600,21 @@ static bool cc_quicklinksub_enter(PromptState *state) {
 
 static bool cc_quicklink_enter(PromptState *state) {
   static char buf[800];
-  if (!sk_string_starts_with(state->eb->filter, "https://")) return false;
+  if (!sk_string_starts_with(state->eb->filter, "https://"))
+    return false;
 
-  char* temp_after = sk_string_cut_after(state->eb->filter, ':');
-  if (!temp_after) return false;
+  char *temp_after = sk_string_cut_after(state->eb->filter, ':');
+  if (!temp_after)
+    return false;
   temp_after += 2;
 
-  char* website_name = sk_string_cut_before(temp_after, '.');
-  if (!website_name) return false;
+  char *website_name = sk_string_cut_before(temp_after, '.');
+  if (!website_name)
+    return false;
 
   char default_name[256];
   snprintf(default_name, sizeof(default_name), "%s", website_name);
-  
+
   if (default_name[0] != '\0') {
     default_name[0] = toupper((unsigned char)default_name[0]);
   }
@@ -622,25 +623,28 @@ static bool cc_quicklink_enter(PromptState *state) {
           state->eb->filter);
   cc_copy(cc_quicklink_draft.name, sizeof(cc_quicklink_draft.name),
           default_name);
-  snprintf(buf, sizeof(buf), "Enter Name For Url (%s) (Default:%s)", state->eb->filter, default_name);
-  sk_subwindow(.title = "QuicklinkSub", .h = 60, .placeholder = buf, .render = cc_quicklinksub_render,.enter=cc_quicklinksub_enter,.render_data=&cc_quicklink_draft);
-  
+  snprintf(buf, sizeof(buf), "Enter Name For Url (%s) (Default:%s)",
+           state->eb->filter, default_name);
+  sk_subwindow(.title = "QuicklinkSub", .h = 60, .placeholder = buf,
+               .render = cc_quicklinksub_render, .enter = cc_quicklinksub_enter,
+               .render_data = &cc_quicklink_draft);
+
   free(website_name);
   return true;
 }
 
-static void cc_quicklink_render(PromptState *state) {
-  sk_place_editbox();
-}
+static void cc_quicklink_render(PromptState *state) { sk_place_editbox(); }
 
 static bool cc_add_quicklink(void) {
-  sk_subwindow(.title = "Quicklink", .h = 60,
-               .enter = cc_quicklink_enter, .render = cc_quicklink_render,.placeholder="Enter Quicklink Url");
+  sk_subwindow(.title = "Quicklink", .h = 60, .enter = cc_quicklink_enter,
+               .render = cc_quicklink_render,
+               .placeholder = "Enter Quicklink Url");
   return false;
 }
 
 static void cc_fill_add_quicklink(void) {
-  CcEntry *e = cc_entry_add("Add Quicklink", "Quicklink", NULL, "/internet.svg");
+  CcEntry *e =
+      cc_entry_add("Add Quicklink", "Quicklink", NULL, "/internet.svg");
   if (e) {
     e->on_enter = cc_add_quicklink;
     e->keep_open = true;
@@ -1124,8 +1128,8 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
   int name_w = sk_get_text_width(ctx->text, FontSize);
   if (icon)
     sk_draw_image(.path = icon, .x = ctx->x + CC_ITEM_TEXT_X,
-                  .y = ctx->y + (ctx->h - FontSize) / 2 - 1,
-                  .w = FontSize, .h = FontSize);
+                  .y = ctx->y + (ctx->h - FontSize) / 2 - 1, .w = FontSize,
+                  .h = FontSize);
   sk_draw_text(.x = name_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = ctx->text,
                .align = "LEFT", .pad = 0);
 
@@ -1332,7 +1336,8 @@ static void cc_open_control(void) {
 static int cc_sub_w(void) { return cc_width / 4; }
 static int cc_sub_h(void) { return cc_height / 7; }
 static int cc_sub_x(void) { return cc_width / 2 + cc_sub_w() - 10; }
-//for some reason this needs to be - 50 for linux to look good prio windows for now
+// for some reason this needs to be - 50 for linux to look good prio windows for
+// now
 static int cc_sub_y(void) { return cc_height / 2 - 30; }
 
 static const char *cc_action_names[] = {"Register Hotkey", "Register Alias"};

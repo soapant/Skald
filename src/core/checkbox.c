@@ -136,27 +136,27 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                  int border_radius, unsigned long body,
                                  unsigned long border_col, bool with_border) {
   Platform_DrawRectRaw((DrawRectRawSpec){.x = x,
-                                           .y = y,
-                                           .w = w,
-                                           .h = h,
-                                           .color = body,
-                                           .radius = body_radius,
-                                           .rounded = body_round,
-                                           .opaque = true,
-                                           .thickness = thick,
-                                           .filled = true});
+                                         .y = y,
+                                         .w = w,
+                                         .h = h,
+                                         .color = body,
+                                         .radius = body_radius,
+                                         .rounded = body_round,
+                                         .opaque = true,
+                                         .thickness = thick,
+                                         .filled = true});
   if (!with_border)
     return;
   Platform_DrawRectRaw((DrawRectRawSpec){.x = x,
-                                           .y = y,
-                                           .w = w,
-                                           .h = h,
-                                           .color = border_col,
-                                           .radius = border_radius,
-                                           .rounded = true,
-                                           .opaque = true,
-                                           .thickness = thick,
-                                           .filled = false});
+                                         .y = y,
+                                         .w = w,
+                                         .h = h,
+                                         .color = border_col,
+                                         .radius = border_radius,
+                                         .rounded = true,
+                                         .opaque = true,
+                                         .thickness = thick,
+                                         .filled = false});
 }
 
 FontHandle s_font;
