@@ -1460,8 +1460,8 @@ static void cc_alias_render(PromptState *state) {
 
   sk_place_editbox(.x = (state->width - 160) / 2,
                    .y = (state->height - 30) / 2 + 6, .w = 160, .h = 26,
-                   .placeholder = "alias name", .caret_height = 16,
-                   .caret_width = 1, .caret_y = 40, .font_size = 14);
+                   .placeholder = "alias name", .caret_h = 16,
+                   .caret_w = 1, .caret_y = 40, .font_size = 14);
 }
 
 static bool cc_alias_enter(PromptState *state) {

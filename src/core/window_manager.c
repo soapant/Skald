@@ -185,8 +185,8 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
   if (top && top->type == POPUP_PROMPT)
     prompt_popup_get_bounds(top, &px, &py, &pw, &ph);
   if (pw <= 0 || ph <= 0) {
-    pw = (int)(PromptWidth * Platform_GetUIScale());
-    ph = (int)(PromptHeight * Platform_GetUIScale());
+    pw = (int)(PromptW * Platform_GetUIScale());
+    ph = (int)(PromptH * Platform_GetUIScale());
     px = -1;
   }
   if (px < 0 || py < 0)
