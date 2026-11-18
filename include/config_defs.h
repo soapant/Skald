@@ -27,6 +27,7 @@
   X(const char *, FeaturePath, "features")                                     \
   X(const char *, IconPath, "resources/Skald.ico")                             \
   X(const char *, ControlHotkey, "Alt+Space")                                  \
+  X(const char *, SettingsHotkey, "Alt+D")                                \
   X(const char *, ReloadFeaturesHotkey, "Alt+R")                               \
   X(const char *, ActionsHotkey, "Ctrl+K")                                     \
   X(const char *, RegHotkey, "Ctrl+Shift+E")                                   \

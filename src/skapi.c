@@ -57,6 +57,7 @@
 #pragma GCC diagnostic pop
 #include "config_values.h"
 #include "core/cc_registry.h"
+#include "core/settings_registry.h"
 #include "core/skapi_input.h"
 #include "core/types.h"
 #include "core/types/color.h"
@@ -2703,6 +2704,18 @@ typedef struct {
   char owner[OWNER_PATH_MAX];
 } SkCcEntry;
 
+#define SETTINGS_MAX_ENTRIES 128
+
+typedef struct {
+  SettingsEntrySpec pub;
+  char name[256];
+  char icon[1024];
+  char owner[OWNER_PATH_MAX];
+} SkSettingsEntry;
+
+static int settings_entry_count = 0;
+static SkSettingsEntry settings_entries[SETTINGS_MAX_ENTRIES];
+
 static int cc_entry_count = 0;
 static SkCcEntry cc_entries[4096];
 
@@ -2795,6 +2808,74 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   if (spec->type && strcmp(spec->type, "Feature") == 0)
     feature_list_add(spec->display_name, spec->on_action, spec->icon, e->owner);
   return true;
+}
+
+static void st_dup(char *dst, size_t cap, const char *src) {
+  snprintf(dst, cap, "%s", src ? src : "");
+}
+
+bool sk_settings_entry_add(const SettingsEntrySpec *spec) {
+  if (!spec || !spec->name || !spec->name[0])
+    return false;
+  int slot = -1;
+  for (int i = 0; i < settings_entry_count; i++) {
+    if (settings_entries[i].name[0] &&
+        strcmp(settings_entries[i].name, spec->name) == 0) {
+      slot = i;
+      break;
+    }
+  }
+  if (slot < 0) {
+    if (settings_entry_count >= SETTINGS_MAX_ENTRIES)
+      return false;
+    slot = settings_entry_count++;
+  }
+  SkSettingsEntry *e = &settings_entries[slot];
+  memset(e, 0, sizeof(*e));
+  st_dup(e->name, sizeof(e->name), spec->name);
+  char icon_asset[MAX_PATH];
+  if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
+      feature_path_resolve_asset_path(__builtin_return_address(0), spec->icon,
+                                      icon_asset, sizeof(icon_asset))) {
+    st_dup(e->icon, sizeof(e->icon), icon_asset);
+  } else {
+    st_dup(e->icon, sizeof(e->icon), spec->icon);
+  }
+  e->pub.name = e->name;
+  e->pub.icon = e->icon;
+  e->pub.render = spec->render;
+  e->pub.ud = spec->ud;
+  if (spec->render)
+    owner_resolve_for_func((void *)(uintptr_t)spec->render, e->owner,
+                           sizeof(e->owner));
+  return true;
+}
+
+int sk_settings_entry_count(void) { return settings_entry_count; }
+
+const SettingsEntrySpec *sk_settings_entry_at(int index) {
+  if (index < 0 || index >= settings_entry_count)
+    return NULL;
+  return &settings_entries[index].pub;
+}
+
+void settings_registry_purge_owner(const char *path_a, const char *path_b) {
+  if (!path_a && !path_b)
+    return;
+  int out = 0;
+  for (int i = 0; i < settings_entry_count; i++) {
+    if (owner_module_matches(settings_entries[i].owner, path_a, path_b))
+      continue;
+    if (out != i) {
+      settings_entries[out] = settings_entries[i];
+      settings_entries[out].pub.name = settings_entries[out].name;
+      settings_entries[out].pub.icon = settings_entries[out].icon;
+    }
+    out++;
+  }
+  for (int i = out; i < settings_entry_count; i++)
+    memset(&settings_entries[i], 0, sizeof(settings_entries[i]));
+  settings_entry_count = out;
 }
 
 int sk_cc_entry_count(void) { return cc_entry_count; }

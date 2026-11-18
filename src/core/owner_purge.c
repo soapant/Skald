@@ -2,6 +2,7 @@
 
 #include "core/cap_registry.h"
 #include "core/cc_registry.h"
+#include "core/settings_registry.h"
 #include "core/hover_widget.h"
 #include "core/snippet_manager.h"
 #include "core/widget_registry.h"
@@ -19,6 +20,7 @@ void purge_owner_set(const char *path_a, const char *path_b,
   snippet_purge_owner(path_a, path_b);
   widget_purge_owner(path_a, path_b, widget_gen);
   cc_registry_purge_owner(path_a, path_b);
+  settings_registry_purge_owner(path_a, path_b);
   feature_list_purge_owner(path_a, path_b);
   key_callback_purge_owner(path_a, path_b);
   key_purge_interceptor_owner(path_a, path_b);
