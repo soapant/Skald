@@ -1026,7 +1026,8 @@ void ski_message(const SkMessageSpec *spec) {
                                .name = spec->name,
                                .render_data = spec->render_data,
                                .rounded = spec->rounded,
-                               .radius = spec->radius});
+                               .radius = spec->radius,
+                               .fps = spec->fps});
     return;
   }
   display_message_slot(&(MessageSlotSpec){.message = spec->message,
@@ -1042,7 +1043,8 @@ void ski_message(const SkMessageSpec *spec) {
                                           .win_w = spec->w,
                                           .win_h = spec->h,
                                           .rounded = spec->rounded,
-                                          .radius = spec->radius});
+                                          .radius = spec->radius,
+                                          .fps = spec->fps});
 }
 
 bool sk_launch_browser(const char *url) {

@@ -550,7 +550,8 @@ void display_message_slot(const MessageSlotSpec *spec) {
                                                           .height = spec->win_h,
                                                           .name = spec->name,
                                                           .rounded = spec->rounded,
-                                                          .radius = spec->radius});
+                                                          .radius = spec->radius,
+                                                          .fps = spec->fps});
 }
 
 void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,

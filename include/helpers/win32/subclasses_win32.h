@@ -20,6 +20,7 @@ typedef struct {
   double timeout;
   ULONGLONG deadline_ms;
   char name[64];
+  int fps;
 } FadeWindowData;
 
 typedef struct {

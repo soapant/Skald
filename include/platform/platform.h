@@ -22,6 +22,7 @@ typedef struct {
   const char *name;
   bool rounded;
   int radius;
+  int fps;
 } AnchoredMessageSpec;
 
 typedef struct {
@@ -36,6 +37,7 @@ typedef struct {
   const char *name;
   bool rounded;
   int radius;
+  int fps;
 } CreateDisplayMessageWindowSpec;
 
 typedef struct {
@@ -60,6 +62,7 @@ typedef struct {
   const char *name;
   bool rounded;
   int radius;
+  int fps;
 } DisplayMessageSpec;
 
 #define HOVER_MSG_UNPACK(spec)                                                 \
@@ -89,7 +92,8 @@ typedef struct {
   ColorRef color = (spec).color;                                               \
   void (*render)(void *ud) = (spec).render;                                     \
   void *render_data = (spec).render_data;                                          \
-  const char *name = (spec).name
+  const char *name = (spec).name;                                                  \
+  int fps = (spec).fps
 
 #define ANCHORED_MSG_UNPACK(spec)                                              \
   const char *message = (spec).message;                                        \
@@ -112,7 +116,8 @@ typedef struct {
   void *render_data = (spec).render_data;                                          \
   int want_width = (spec).width;                                                   \
   int want_height = (spec).height;                                                 \
-  const char *name = (spec).name
+  const char *name = (spec).name;                                                  \
+  int fps = (spec).fps
 
 #define HTTP_CONNECT_TIMEOUT_S 10
 #define HTTP_TIMEOUT_S 30
