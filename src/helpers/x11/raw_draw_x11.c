@@ -605,14 +605,12 @@ static void x11_rot_composite(Display *dpy, XftDraw *xd, Visual *vis,
   Picture dst = dfmt ? XRenderCreatePicture(dpy, XftDrawDrawable(xd), dfmt, 0,
                                             NULL)
                      : 0;
-  bool ok = false;
   if (dst) {
     XRenderComposite(dpy, PictOpOver, src, None, dst, dst_x, dst_y, 0, 0,
                      dst_x, dst_y, (unsigned int)bw, (unsigned int)bh);
     XRenderFreePicture(dpy, dst);
-    ok = true;
   }
-  return ok;
+  return;
 }
 
 bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec) {
@@ -658,7 +656,7 @@ bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec) {
   free(buf);
   if (!ok)
     return false;
-  ok = x11_rot_composite(dpy, xd, g_draw_vis, pic, bx, by, bw, bh, angle,
+  x11_rot_composite(dpy, xd, g_draw_vis, pic, bx, by, bw, bh, angle,
                          (double)cx, (double)cy, (double)w * 0.5,
                          (double)h * 0.5);
   if (pic)
