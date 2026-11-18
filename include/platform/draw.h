@@ -14,7 +14,8 @@
   bool rounded = (spec).rounded;                                               \
   bool opaque = (spec).opaque;                                                 \
   float thickness = (spec).thickness;                                          \
-  bool filled = (spec).filled
+  bool filled = (spec).filled;                                                 \
+  float angle = (spec).angle
 
 void Platform_FlushDraw(void);
 
@@ -35,6 +36,7 @@ typedef struct {
   bool opaque;
   float thickness;
   bool filled;
+  float angle;
 } DrawRectRawSpec;
 
 typedef struct {
@@ -58,6 +60,7 @@ typedef struct {
   const char *align;
   int pad;
   int fontsize;
+  float angle;
 } DrawTextRawSpec;
 
 typedef struct {

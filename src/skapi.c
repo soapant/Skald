@@ -1359,7 +1359,8 @@ bool ski_draw_text(const SkTextSpec *spec) {
                                                   .font = fh,
                                                   .align = (char *)align,
                                                   .pad = spec->pad,
-                                                  .fontsize = spec->fontsize});
+                                                  .fontsize = spec->fontsize,
+                                                  .angle = spec->angle});
 }
 
 typedef int (*SkWrapMeasureFn)(void *ctx, const char *s, int n);
@@ -1561,7 +1562,8 @@ bool ski_draw_rect(const DrawRect *spec) {
       .rounded = spec->rounded ? spec->rounded : RoundedCorners,
       .opaque = !transparent,
       .thickness = spec->thickness,
-      .filled = spec->filled});
+      .filled = spec->filled,
+      .angle = spec->angle});
 }
 
 int sk_rand_num_between(int min, int max) {

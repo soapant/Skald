@@ -10,6 +10,7 @@ static bool settings_ctrl_enter(PromptState *state) { return false; }
 static void settings_tab(PromptState *state) {}
 
 static void settings_render(PromptState *state) {
+  sk_draw_text(.text="ADAWJDKWJAKd",.angle=130.0,.x=100,.y=100,.fontsize=30);
 }
 
 static void trigger_settings(void) {
