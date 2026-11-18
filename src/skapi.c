@@ -209,15 +209,39 @@ SkStringList sk_load_file_list(const char *filepath) {
   return list;
 }
 
-long sk_load_file(const char *filepath, char *buffer, long buffer_size) {
-  if (!filepath || !buffer || buffer_size <= 0)
-    return -1;
-  buffer[0] = '\0';
+static char *file_read_all_alloc(const char *path) {
+  FILE *f = fopen(path, "rb");
+  if (!f)
+    return NULL;
+  if (fseek(f, 0, SEEK_END) != 0) {
+    fclose(f);
+    return NULL;
+  }
+  long sz = ftell(f);
+  if (sz < 0) {
+    fclose(f);
+    return NULL;
+  }
+  rewind(f);
+  char *buf = (char *)malloc((size_t)sz + 1);
+  if (!buf) {
+    fclose(f);
+    return NULL;
+  }
+  size_t got = fread(buf, 1, (size_t)sz, f);
+  buf[got] = '\0';
+  fclose(f);
+  return buf;
+}
+
+char *sk_load_file(const char *filepath) {
+  if (!filepath)
+    return NULL;
   char full[MAX_PATH];
   if (!sk_resolve_caller_path(__builtin_return_address(0), filepath, full,
                               sizeof(full), "sk_load_file"))
-    return -1;
-  return file_read_all(full, buffer, buffer_size);
+    return NULL;
+  return file_read_all_alloc(full);
 }
 
 bool sk_free_list(const char *list[], int count) {
@@ -330,9 +354,11 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   return true;
 }
 
-bool sk_write_temp_file(const char *name, const void *data, size_t len,
-                        char *out_path, size_t out_len) {
-  return temp_file_write(name, data, len, out_path, out_len);
+char *sk_write_temp_file(const char *name, const void *data, size_t len) {
+  char path[2048];
+  if (!temp_file_write(name, data, len, path, sizeof(path)))
+    return NULL;
+  return strdup(path);
 }
 
 char *sk_read_file_to_string(const char *path, size_t *out_len) {
@@ -369,9 +395,10 @@ char *sk_read_file_to_string(const char *path, size_t *out_len) {
   return buf;
 }
 
-long sk_read_entire_file(const char *full_path, char *buffer,
-                         long buffer_size) {
-  return file_read_all(full_path, buffer, buffer_size);
+char *sk_read_entire_file(const char *full_path) {
+  if (!full_path)
+    return NULL;
+  return file_read_all_alloc(full_path);
 }
 
 bool sk_write_string_to_file(const char *path, const char *content) {
@@ -461,17 +488,19 @@ bool sk_remove_line_contains(const char *path, const char *substr) {
   return filter_lines(path, substr, true);
 }
 
-bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
-                           bool *out_nodisplay) {
+char *sk_parse_desktop_file(const char *path, bool *out_nodisplay) {
 
-  if (!path || !out_name)
-    return false;
+  if (!path)
+    return NULL;
+  char name_buf[512] = {0};
+  char *out_name = name_buf;
+  size_t n = sizeof(name_buf);
   char expanded[MAX_PATH];
   if (!expand_path(path, expanded, sizeof(expanded)))
     safe_copy(expanded, sizeof(expanded), path);
   FILE *f = fopen(expanded, "r");
   if (!f)
-    return false;
+    return NULL;
   char line[1024];
   bool found = false;
   if (out_nodisplay)
@@ -496,7 +525,7 @@ bool sk_parse_desktop_file(const char *path, char *out_name, size_t n,
     }
   }
   fclose(f);
-  return found;
+  return found ? strdup(name_buf) : NULL;
 }
 
 static void resolve_window_list(const char *const *wl, const char *const *bl,
@@ -651,31 +680,28 @@ void sk_enable_global_hotkeys(void) { hotkey_set_suspended(false); }
 
 int sk_hotkey_count(void) { return hotkey_count(); }
 
-static bool hotkey_binding_format(const HotkeyBinding *b, char *out,
-                                  size_t cap) {
-  if (!b || !out || cap == 0)
-    return false;
+static char *hotkey_binding_format(const HotkeyBinding *b) {
+  if (!b)
+    return NULL;
   HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
-  if (!hotkey_string_format(key, out, (int)cap)) {
-    out[0] = '\0';
-    return false;
-  }
-  return true;
+  char tmp[256];
+  if (!hotkey_string_format(key, tmp, (int)sizeof(tmp)))
+    return NULL;
+  return strdup(tmp);
 }
 
-bool sk_hotkey_string_at(int index, char *out, size_t cap) {
-  return hotkey_binding_format(hotkey_get(index), out, cap);
+char *sk_hotkey_string_at(int index) {
+  return hotkey_binding_format(hotkey_get(index));
 }
 
-bool sk_hotkey_for_ud(void *ud, char *out, size_t cap) {
-  return hotkey_binding_format(hotkey_find_by_ud(ud), out, cap);
+char *sk_hotkey_for_ud(void *ud) {
+  return hotkey_binding_format(hotkey_find_by_ud(ud));
 }
 
 void sk_register_deferred_init(void (*cb)(void)) { deferred_init_register(cb); }
 
-bool sk_hotkey_for_callback(void (*cb)(void), char *out, size_t cap) {
-  return hotkey_binding_format(hotkey_find_by_callback((HotkeyCallback)cb), out,
-                               cap);
+char *sk_hotkey_for_callback(void (*cb)(void)) {
+  return hotkey_binding_format(hotkey_find_by_callback((HotkeyCallback)cb));
 }
 
 bool sk_hotkey_taken(const char *hotkey) {
@@ -873,12 +899,10 @@ void sk_set_edit_cursor(int position) { UI_SetCursorPosition(position); }
 
 int sk_get_edit_cursor(void) { return UI_GetCursorPosition(); }
 
-void sk_get_edit_text(char *buffer, size_t cap) {
-  if (!buffer || cap == 0) {
-    return;
-  }
-  buffer[0] = '\0';
-  UI_GetCurrentTextEdit(buffer, cap);
+char *sk_get_edit_text(void) {
+  char tmp[8192];
+  UI_GetCurrentTextEdit(tmp, sizeof(tmp));
+  return strdup(tmp);
 }
 
 static void hover_popup_frame(void *ud) {
@@ -2074,14 +2098,11 @@ void sk_send_hotkey(const char *hotkey_string) {
   remap_send_combo(hotkey_string);
 }
 
-bool sk_hotkey_to_string(SkKey key, char *out, size_t cap) {
-  if (!out || cap == 0)
-    return false;
-  if (!hotkey_string_format(key, out, (int)cap)) {
-    out[0] = '\0';
-    return false;
-  }
-  return true;
+char *sk_hotkey_to_string(SkKey key) {
+  char tmp[256];
+  if (!hotkey_string_format(key, tmp, (int)sizeof(tmp)))
+    return NULL;
+  return strdup(tmp);
 }
 
 SkKey sk_hotkey_from_string(const char *str) {
@@ -2103,8 +2124,11 @@ void sk_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud) {
 int sk_get_key_pressed(void) { return input_get_pressed_key(); }
 char sk_get_char_pressed(void) { return input_get_pressed_char(); }
 
-bool sk_vk_to_name(int vk, char *out, size_t cap) {
-  return input_vk_to_name(vk, out, cap);
+char *sk_vk_to_name(int vk) {
+  char tmp[64];
+  if (!input_vk_to_name(vk, tmp, sizeof(tmp)))
+    return NULL;
+  return strdup(tmp);
 }
 
 bool sk_poll_key(SkKeyEvent *out) {
@@ -2160,48 +2184,53 @@ void sk_clear_key_queue(void) { global_key_clear(); }
 
 bool sk_is_flag_prefix(char c) { return c == '-' || c == '/'; }
 
-size_t sk_extract_flag_name(char *p, char *out, size_t cap) {
+char *sk_extract_flag_name(const char *p) {
   size_t n = 0;
   while (p[n] && !isspace((unsigned char)p[n]) && p[n] != '=')
     n++;
-  if (n >= cap)
-    n = cap - 1;
+  char *out = (char *)malloc(n + 1);
+  if (!out)
+    return NULL;
   memcpy(out, p, n);
   out[n] = '\0';
-  return n;
+  return out;
 }
 
-bool sk_extract_quoted(char **pp, char *out, size_t cap) {
+char *sk_extract_quoted(char **pp) {
   char *p = *pp;
   char q = *p++;
   char *s = p;
   while (*p && *p != q)
     p++;
-  size_t len = p - s;
-  if (len >= cap)
-    len = cap - 1;
+  size_t len = (size_t)(p - s);
+  char *out = (char *)malloc(len + 1);
+  if (!out)
+    return NULL;
   memcpy(out, s, len);
   out[len] = '\0';
   if (*p == q)
     p++;
   *pp = p;
-  return true;
+  return out;
 }
 
-bool sk_extract_value(char **pp, char *out, size_t cap) {
+char *sk_extract_value(char **pp) {
   char *p = *pp;
   if (*p == '"' || *p == '\'')
-    return sk_extract_quoted(pp, out, cap);
+    return sk_extract_quoted(pp);
   char *s = p;
   while (*p && !isspace((unsigned char)*p))
     p++;
-  size_t len = p - s;
-  if (len >= cap)
-    len = cap - 1;
+  size_t len = (size_t)(p - s);
+  if (len == 0)
+    return NULL;
+  char *out = (char *)malloc(len + 1);
+  if (!out)
+    return NULL;
   memcpy(out, s, len);
   out[len] = '\0';
   *pp = p;
-  return len > 0;
+  return out;
 }
 
 bool sk_next_flag(char *p) {
@@ -2239,22 +2268,27 @@ SkFlagList sk_parse_flags(const char *input) {
     p++;
     if (*p == '-')
       p++;
-    char name[64] = {0};
-    size_t nlen = sk_extract_flag_name(p, name, sizeof(name));
-    p += nlen;
-    char valbuf[256] = {0};
+    char *name = sk_extract_flag_name(p);
+    if (!name)
+      break;
+    p += strlen(name);
+    char *valbuf = NULL;
     bool has_val = false;
     if (*p == '=') {
       p++;
-      has_val = sk_extract_value(&p, valbuf, sizeof(valbuf));
+      valbuf = sk_extract_value(&p);
+      has_val = valbuf != NULL;
     } else {
       char *save = p;
       while (*p && isspace((unsigned char)*p))
         p++;
       if (*p && !sk_is_flag_prefix(*p)) {
-        has_val = sk_extract_value(&p, valbuf, sizeof(valbuf));
+        valbuf = sk_extract_value(&p);
+        has_val = valbuf != NULL;
         if (has_val && sk_next_flag(p)) {
           has_val = false;
+          free(valbuf);
+          valbuf = NULL;
           p = save;
           while (*p && isspace((unsigned char)*p))
             p++;
@@ -2271,9 +2305,11 @@ SkFlagList sk_parse_flags(const char *input) {
     SkFlag *f = &arr[out.count++];
     memset(f, 0, sizeof(*f));
     snprintf(f->name, sizeof(f->name), "%s", name);
+    free(name);
     if (has_val) {
       snprintf(f->value, sizeof(f->value), "%s", valbuf);
       f->has_value = true;
+      free(valbuf);
     }
   }
   free(copy);
@@ -2532,7 +2568,7 @@ void sk_widget_set_render(SkWidget *widget, SkWidgetRenderFn render) {
   widget_set_render(widget, render);
 }
 
-void sk_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
+char *sk_format_bytes(unsigned long long bytes) {
   const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB"};
   const int count = sizeof(units) / sizeof(units[0]);
 
@@ -2544,11 +2580,13 @@ void sk_format_bytes(unsigned long long bytes, char *buf, size_t buflen) {
     i++;
   }
 
+  char buf[64];
   if (i == 0) {
-    snprintf(buf, buflen, "%llu %s", bytes, units[i]);
+    snprintf(buf, sizeof(buf), "%llu %s", bytes, units[i]);
   } else {
-    snprintf(buf, buflen, "%.1f %s", value, units[i]);
+    snprintf(buf, sizeof(buf), "%.1f %s", value, units[i]);
   }
+  return strdup(buf);
 }
 SkNetStatus sk_net_status(void) { return sk_net_status_platform(); }
 
@@ -3358,18 +3396,15 @@ bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
   return true;
 }
 
-bool sk_config_get_hotkey(const char *name, char *out, size_t cap) {
-  if (!name || !out || cap == 0)
-    return false;
-  out[0] = '\0';
+char *sk_config_get_hotkey(const char *name) {
+  if (!name)
+    return NULL;
   sk_config_lock();
   sk_config_init_locked();
   int i = hotkey_index_of(name);
-  if (i >= 0)
-    snprintf(out, cap, "%s", hotkey_entries[i].hotkey);
-  bool ok = i >= 0;
+  char *out = i >= 0 ? strdup(hotkey_entries[i].hotkey) : NULL;
   sk_config_unlock();
-  return ok;
+  return out;
 }
 
 bool sk_config_clear_hotkey(const char *name) {
@@ -3416,23 +3451,22 @@ int sk_config_hotkey_count(void) {
   return n;
 }
 
-bool sk_config_hotkey_at(int index, char *name_out, size_t name_cap,
-                         char *hotkey_out, size_t hotkey_cap) {
-  if (name_out && name_cap == 0)
-    return false;
-  if (hotkey_out && hotkey_cap == 0)
-    return false;
+char *sk_config_hotkey_name_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
   bool ok = index >= 0 && index < hotkey_entry_count;
-  if (ok) {
-    if (name_out)
-      snprintf(name_out, name_cap, "%s", hotkey_entries[index].name);
-    if (hotkey_out)
-      snprintf(hotkey_out, hotkey_cap, "%s", hotkey_entries[index].hotkey);
-  }
+  char *out = ok ? strdup(hotkey_entries[index].name) : NULL;
   sk_config_unlock();
-  return ok;
+  return out;
+}
+
+char *sk_config_hotkey_value_at(int index) {
+  sk_config_lock();
+  sk_config_init_locked();
+  bool ok = index >= 0 && index < hotkey_entry_count;
+  char *out = ok ? strdup(hotkey_entries[index].hotkey) : NULL;
+  sk_config_unlock();
+  return out;
 }
 
 bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
@@ -3472,18 +3506,15 @@ bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
   return true;
 }
 
-bool sk_config_get_alias(const char *target, char *out, size_t cap) {
-  if (!target || !out || cap == 0)
-    return false;
-  out[0] = '\0';
+char *sk_config_get_alias(const char *target) {
+  if (!target)
+    return NULL;
   sk_config_lock();
   sk_config_init_locked();
   int i = alias_index_of(target);
-  if (i >= 0)
-    snprintf(out, cap, "%s", alias_entries[i].alias);
-  bool ok = i >= 0;
+  char *out = i >= 0 ? strdup(alias_entries[i].alias) : NULL;
   sk_config_unlock();
-  return ok;
+  return out;
 }
 
 bool sk_config_clear_alias(const char *target) {
@@ -3501,21 +3532,40 @@ int sk_config_alias_count(void) {
   return n;
 }
 
-bool sk_config_alias_at(int index, char *target_out, size_t target_cap,
-                        char *alias_out, size_t alias_cap) {
-  if (target_out && target_cap == 0)
-    return false;
-  if (alias_out && alias_cap == 0)
-    return false;
+char *sk_config_alias_target_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
   bool ok = index >= 0 && index < alias_entry_count;
-  if (ok) {
-    if (target_out)
-      snprintf(target_out, target_cap, "%s", alias_entries[index].target);
-    if (alias_out)
-      snprintf(alias_out, alias_cap, "%s", alias_entries[index].alias);
-  }
+  char *out = ok ? strdup(alias_entries[index].target) : NULL;
   sk_config_unlock();
-  return ok;
+  return out;
+}
+
+char *sk_config_alias_value_at(int index) {
+  sk_config_lock();
+  sk_config_init_locked();
+  bool ok = index >= 0 && index < alias_entry_count;
+  char *out = ok ? strdup(alias_entries[index].alias) : NULL;
+  sk_config_unlock();
+  return out;
+}
+
+int sk_config_quicklink_count(void) { return (int)quicklink_count(); }
+
+char *sk_config_quicklink_name_at(int index) {
+  if (index < 0)
+    return NULL;
+  char buf[1024];
+  if (!quicklink_at((size_t)index, buf, sizeof(buf), NULL, 0))
+    return NULL;
+  return strdup(buf);
+}
+
+char *sk_config_quicklink_value_at(int index) {
+  if (index < 0)
+    return NULL;
+  char buf[1024];
+  if (!quicklink_at((size_t)index, NULL, 0, buf, sizeof(buf)))
+    return NULL;
+  return strdup(buf);
 }
