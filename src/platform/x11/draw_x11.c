@@ -68,8 +68,8 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   FontHandle fh = spec.font;
   bool needDestroy = false;
   if (!FH_TO_XFT(fh)) {
-    if (spec.fontsize) {
-      fh = x11_create_font_on_display(g_draw_dpy, spec.fontsize, UsedFont);
+    if (spec.font_size) {
+      fh = x11_create_font_on_display(g_draw_dpy, spec.font_size, UsedFont);
     } else {
       fh = x11_create_font_on_display(g_draw_dpy, FontSize, UsedFont);
     }
@@ -84,10 +84,10 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
     if (mf) {
       tw = x11_measure_utf8_fallback(
           g_draw_dpy, mf, spec.text, (int)strlen(spec.text),
-          spec.fontsize > 0 ? spec.fontsize : FontSize);
+          spec.font_size > 0 ? spec.font_size : FontSize);
     }
     int th = mf ? (mf->ascent + mf->descent)
-                : (spec.fontsize > 0 ? spec.fontsize : FontSize);
+                : (spec.font_size > 0 ? spec.font_size : FontSize);
     int bx = x;
     if (string_contains_ci(a, "CENTER"))
       bx = x - tw / 2;
@@ -110,14 +110,14 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
     int len = (int)strlen(spec.text);
     if (len == 1 && xf &&
         x11_raw_line_push(x, y, spec.text[0], color, fh, needDestroy,
-                          spec.fontsize)) {
+                          spec.font_size)) {
       needDestroy = false;
     } else {
       x11_raw_line_flush();
       if (xf)
         x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + (xf->ascent),
                                xf, spec.text, len,
-                               spec.fontsize > 0 ? spec.fontsize : FontSize);
+                               spec.font_size > 0 ? spec.font_size : FontSize);
     }
   }
   if (needDestroy)
@@ -129,8 +129,8 @@ void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return;
   XftFont *xf = FH_TO_XFT(spec.font);
-  int ascent = xf ? xf->ascent : (spec.fontsize * 3 / 4);
-  int descent = xf ? xf->descent : (spec.fontsize / 4);
+  int ascent = xf ? xf->ascent : (spec.font_size * 3 / 4);
+  int descent = xf ? xf->descent : (spec.font_size / 4);
   int line_height = ascent + descent;
   draw_text_centered_impl(&spec, line_height);
 }
@@ -139,12 +139,12 @@ int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
   if (!spec.text || spec.len <= 0)
     return 0;
   if (!g_draw_dpy)
-    return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2;
-  XftFont *xf = x11_line_font(g_draw_dpy, spec.fontsize);
+    return spec.len * (spec.font_size > 0 ? spec.font_size : FontSize) / 2;
+  XftFont *xf = x11_line_font(g_draw_dpy, spec.font_size);
   if (!xf)
-    return spec.len * (spec.fontsize > 0 ? spec.fontsize : FontSize) / 2;
+    return spec.len * (spec.font_size > 0 ? spec.font_size : FontSize) / 2;
   return x11_measure_utf8_fallback(g_draw_dpy, xf, spec.text, spec.len,
-                                   spec.fontsize > 0 ? spec.fontsize
+                                   spec.font_size > 0 ? spec.font_size
                                                      : FontSize);
 }
 
@@ -153,7 +153,7 @@ bool Platform_DrawTextLine(DrawTextLineSpec spec) {
     return false;
   int x = spec.x + draw_state_get()->off_x;
   int y = spec.y + draw_state_get()->off_y;
-  XftFont *xf = x11_line_font(g_draw_dpy, spec.fontsize);
+  XftFont *xf = x11_line_font(g_draw_dpy, spec.font_size);
   if (!xf)
     return false;
   unsigned long color =
@@ -163,7 +163,7 @@ bool Platform_DrawTextLine(DrawTextLineSpec spec) {
                        &col);
   x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf,
                          spec.text, spec.len,
-                         spec.fontsize > 0 ? spec.fontsize : FontSize);
+                         spec.font_size > 0 ? spec.font_size : FontSize);
   return true;
 }
 
@@ -197,7 +197,7 @@ void x11_draw_edit_background(const PromptState *state, Display *dpy,
                           .font = font,
                           .align = "LEFT",
                           .pad = PROMPT_FOOTER_PAD,
-                          .fontsize = FontSize});
+                          .font_size = FontSize});
 }
 
 static void draw_editbox_part(PromptState *state, Display *dpy, XftDraw *xd,

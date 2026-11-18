@@ -22,7 +22,7 @@ typedef struct {
 typedef struct {
   const char *name;
   char *text;
-  int fontsize;
+  int font_size;
   int x;
   int y;
   int w;

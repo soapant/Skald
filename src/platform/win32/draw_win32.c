@@ -75,9 +75,9 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   int dy = 0;
   HFONT hfont = spec.font.hfont
                     ? spec.font.hfont
-                    : win32_font_for_text(wide, wlen, spec.fontsize, &old, &dy);
+                    : win32_font_for_text(wide, wlen, spec.font_size, &old, &dy);
   if (!hfont)
-    hfont = win32_sized_font(spec.fontsize);
+    hfont = win32_sized_font(spec.font_size);
   if (!old && hfont)
     old = (HFONT)SelectObject(g_draw_hdc, hfont);
 
@@ -98,9 +98,9 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   msz.cy = 0;
   if (measuring || centered || right || rotated) {
     if (dy != 0) {
-      HFONT nf = win32_sized_font(spec.fontsize);
+      HFONT nf = win32_sized_font(spec.font_size);
       if (!nf)
-        nf = win32_sized_font(spec.fontsize);
+        nf = win32_sized_font(spec.font_size);
       if (nf) {
         HFONT t2 = (HFONT)SelectObject(g_draw_hdc, nf);
         GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
@@ -164,7 +164,7 @@ void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
     return;
   }
   HFONT hfont =
-      spec.font.hfont ? spec.font.hfont : win32_sized_font(spec.fontsize);
+      spec.font.hfont ? spec.font.hfont : win32_sized_font(spec.font_size);
   HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
   TEXTMETRICW tm = {0};
   GetTextMetricsW(g_draw_hdc, &tm);
@@ -180,15 +180,15 @@ int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
   if (!spec.text || spec.len <= 0)
     return 0;
   if (!g_draw_hdc)
-    return spec.len * (spec.fontsize > 0 ? spec.fontsize : 16) / 2;
+    return spec.len * (spec.font_size > 0 ? spec.font_size : 16) / 2;
   int wlen = 0;
   wchar_t *wide = win32_widen(spec.text, spec.len, &wlen);
   if (!wide)
     return 0;
   HFONT old = NULL;
-  HFONT hfont = win32_font_for_text(wide, wlen, spec.fontsize, &old, NULL);
+  HFONT hfont = win32_font_for_text(wide, wlen, spec.font_size, &old, NULL);
   if (!hfont)
-    hfont = win32_sized_font(spec.fontsize);
+    hfont = win32_sized_font(spec.font_size);
   SIZE sz;
   sz.cx = 0;
   GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &sz);
@@ -208,7 +208,7 @@ bool Platform_DrawTextLine(DrawTextLineSpec spec) {
   wchar_t *wide = win32_widen(spec.text, spec.len, &wlen);
   if (!wide)
     return false;
-  HFONT hfont = win32_sized_font(spec.fontsize);
+  HFONT hfont = win32_sized_font(spec.font_size);
   HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
   SetBkMode(g_draw_hdc, TRANSPARENT);
   SetTextColor(g_draw_hdc, color);
@@ -343,19 +343,19 @@ static bool draw_rect_raw_body(DrawRectRawSpec spec) {
   return true;
 }
 
-int Platform_GetTextLineHeight(int fontsize) {
-  if (fontsize <= 0)
-    fontsize = FontSize;
+int Platform_GetTextLineHeight(int font_size) {
+  if (font_size <= 0)
+    font_size = FontSize;
   if (!g_draw_hdc)
-    return fontsize;
-  FontHandle font = Platform_CreateFont(fontsize, UsedFont);
+    return font_size;
+  FontHandle font = Platform_CreateFont(font_size, UsedFont);
   HFONT old = font.hfont ? (HFONT)SelectObject(g_draw_hdc, font.hfont) : NULL;
   TEXTMETRICW tm = {0};
   GetTextMetricsW(g_draw_hdc, &tm);
   if (old)
     SelectObject(g_draw_hdc, old);
   Platform_DestroyFont(font);
-  return tm.tmHeight > 0 ? (int)tm.tmHeight : fontsize;
+  return tm.tmHeight > 0 ? (int)tm.tmHeight : font_size;
 }
 
 bool Platform_DrawLineRaw(DrawLineRawSpec spec) {

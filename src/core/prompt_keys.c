@@ -229,7 +229,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       const char *text = listbox_info_row(state->lb, idx);
       if (text && text[0]) {
         int tw = Platform_MeasureTextWidth((MeasureTextWidthSpec){
-            .text = text, .len = (int)strlen(text), .fontsize = FontSize});
+            .text = text, .len = (int)strlen(text), .font_size = FontSize});
         int avail = state->width > 2 * PROMPT_ITEM_TEXT_X
                         ? state->width - 2 * PROMPT_ITEM_TEXT_X
                         : state->width;

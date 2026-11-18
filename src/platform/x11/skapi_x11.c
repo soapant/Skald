@@ -263,9 +263,9 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
                                             .y = spec->y,
                                             .w = spec->w,
                                             .h = spec->h,
-                                            .fontsize = spec->fontsize},
+                                            .font_size = spec->font_size},
                         state, &place);
-  int fs = place.fontsize;
+  int fs = place.font_size;
   const char *buf = place.buf;
   int text_len = place.text_len;
   int cursor = place.cursor;
@@ -324,7 +324,7 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
                             .font = fh,
                             .align = "LEFT",
                             .pad = PROMPT_FOOTER_PAD,
-                            .fontsize = FontSize});
+                            .font_size = FontSize});
     }
   }
   if (needDestroy)

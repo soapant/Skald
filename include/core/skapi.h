@@ -391,7 +391,7 @@ typedef struct {
   int y;
   unsigned long color;
   FontHandle font;
-  int fontsize;
+  int font_size;
   const char *align;
   int pad;
   bool no_hscroll;
@@ -409,7 +409,7 @@ typedef struct {
   int max_width;
   int line_height;
   const char *text;
-  int fontsize;
+  int font_size;
   SkCharPos *out_positions;
 } SkMeasureSpec;
 
@@ -422,7 +422,7 @@ typedef struct {
   int x;
   int y;
   const char *text;
-  int fontsize;
+  int font_size;
   const char *align;
   int pad;
 } SkTextBoundsSpec;
@@ -560,9 +560,9 @@ bool ski_draw_circle(const SkCircle *spec);
 
 int sk_rand_num_between(int min, int max);
 
-int sk_get_text_width(const char *text, int fontsize);
+int sk_get_text_width(const char *text, int font_size);
 
-int sk_get_text_height(int fontsize);
+int sk_get_text_height(int font_size);
 
 ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t);
 void sk_set_draw_offset(int dx, int dy);
@@ -1100,7 +1100,7 @@ float sk_slider_fraction_fmt(const char *fmt, ...);
 int sk_slider_percent_fmt(const char *fmt, ...);
 bool sk_slider_set_value_fmt(float value, const char *fmt, ...);
 SkPos sk_get_widget_pos_fmt(const char *fmt, ...);
-int sk_get_text_width_fmt(int fontsize, const char *fmt, ...);
+int sk_get_text_width_fmt(int font_size, const char *fmt, ...);
 void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt, ...);
 SkFlagList sk_parse_flags_fmt(const char *fmt, ...);
 SkLibrary sk_library_open_fmt(const char *fmt, ...);
