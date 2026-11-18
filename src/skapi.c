@@ -998,15 +998,15 @@ void ski_message(const SkMessageSpec *spec) {
       return;
     }
     Platform_HoverMessage((HoverMessageSpec){.key = spec->hover_key,
-                                               .message = spec->message,
-                                               .x = spec->x,
-                                               .y = spec->y,
-                                               .w = w,
-                                               .h = h,
-                                               .max_width = mw,
-                                               .max_height = mh,
-                                               .color = color,
-                                               .no_bg = spec->no_bg});
+                                             .message = spec->message,
+                                             .x = spec->x,
+                                             .y = spec->y,
+                                             .w = w,
+                                             .h = h,
+                                             .max_width = mw,
+                                             .max_height = mh,
+                                             .color = color,
+                                             .no_bg = spec->no_bg});
     return;
   }
   MessageSlot slot = spec->slot ? spec->slot : (spec->render ? FREE : AUTO);
@@ -1015,21 +1015,21 @@ void ski_message(const SkMessageSpec *spec) {
   } else if (slot == FREE) {
     Platform_DisplayMessage(
         (DisplayMessageSpec){.message = spec->message,
-                               .x = spec->x,
-                               .y = spec->y,
-                               .no_bg = spec->no_bg,
-                               .w = w,
-                               .h = h,
-                               .max_width = mw,
-                               .max_height = mh,
-                               .timeout = timeout,
-                               .color = color,
-                               .render = spec->render ? spec->render : NULL,
-                               .name = spec->name,
-                               .render_data = spec->render_data,
-                               .rounded = spec->rounded,
-                               .radius = spec->radius,
-                               .fps = spec->fps});
+                             .x = spec->x,
+                             .y = spec->y,
+                             .no_bg = spec->no_bg,
+                             .w = w,
+                             .h = h,
+                             .max_width = mw,
+                             .max_height = mh,
+                             .timeout = timeout,
+                             .color = color,
+                             .render = spec->render ? spec->render : NULL,
+                             .name = spec->name,
+                             .render_data = spec->render_data,
+                             .rounded = spec->rounded,
+                             .radius = spec->radius,
+                             .fps = spec->fps});
     return;
   }
   display_message_slot(&(MessageSlotSpec){.message = spec->message,
@@ -1284,9 +1284,7 @@ bool sk_close_windows_by_id(const char *needle) {
 
 bool sk_reload_config(void) { return config_reload(); }
 
-const char *sk_get_theme(void) {
-  return (Theme && Theme[0]) ? Theme : NULL;
-}
+const char *sk_get_theme(void) { return (Theme && Theme[0]) ? Theme : NULL; }
 
 int sk_theme_count(void) { return (int)theme_count(); }
 
@@ -1342,10 +1340,10 @@ unsigned long sk_listbox_get_current_standard_color(void) {
     return 0;
   unsigned long ncol, bcol, pcol;
   item_get_colors((GetItemColorsSpec){.idx = idx,
-                                        .count = sk_list_lb->item_count,
-                                        .num_color = &ncol,
-                                        .body_color = &bcol,
-                                        .plain_color = &pcol});
+                                      .count = sk_list_lb->item_count,
+                                      .num_color = &ncol,
+                                      .body_color = &bcol,
+                                      .plain_color = &pcol});
   return pcol;
 }
 
@@ -1375,20 +1373,19 @@ bool ski_draw_text(const SkTextSpec *spec) {
   }
   int draw_x = spec->x - (spec->no_hscroll ? 0 : listbox_get_row_h_scroll());
   int draw_y = spec->y;
-  if (draw_state_get()->listbox_rows &&
-      draw_state_get()->win32_listbox_surface)
+  if (draw_state_get()->listbox_rows && draw_state_get()->win32_listbox_surface)
     draw_y += 3;
   const char *align = spec->align ? spec->align : "LEFT";
   FontHandle fh = spec->font;
   return Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
-                                                  .y = draw_y,
-                                                  .text = real_text,
-                                                  .color = col,
-                                                  .font = fh,
-                                                  .align = (char *)align,
-                                                  .pad = spec->pad,
-                                                  .fontsize = spec->fontsize,
-                                                  .angle = spec->angle});
+                                                .y = draw_y,
+                                                .text = real_text,
+                                                .color = col,
+                                                .font = fh,
+                                                .align = (char *)align,
+                                                .pad = spec->pad,
+                                                .fontsize = spec->fontsize,
+                                                .angle = spec->angle});
 }
 
 typedef int (*SkWrapMeasureFn)(void *ctx, const char *s, int n);
@@ -1628,8 +1625,7 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
   else
     r.x = base - w / 2;
   r.y = spec->y;
-  if (draw_state_get()->listbox_rows &&
-      draw_state_get()->win32_listbox_surface)
+  if (draw_state_get()->listbox_rows && draw_state_get()->win32_listbox_surface)
     r.y += 3;
   r.w = w;
   r.h = h;
@@ -1662,10 +1658,11 @@ ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t) {
   return (ColorRef)(rr | (rg << 8) | (rb << 16));
 }
 
-
 void sk_set_draw_offset(int dx, int dy) { set_draw_offset(dx, dy); }
 
-void sk_get_draw_offset(int *out_x, int *out_y) { get_draw_offset(out_x, out_y); }
+void sk_get_draw_offset(int *out_x, int *out_y) {
+  get_draw_offset(out_x, out_y);
+}
 char *sk_http_get(const char *url) { return http_get(url); }
 
 char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
@@ -1695,13 +1692,12 @@ bool ski_draw_line(const Line *spec) {
     col = COLOR_TEXT;
   else
     col = rgb_to_hex(col);
-  return Platform_DrawLineRaw(
-      (DrawLineRawSpec){.x1 = spec->x1,
-                          .y1 = spec->y1,
-                          .x2 = spec->x2,
-                          .y2 = spec->y2,
-                          .color = col,
-                          .thickness = spec->thickness});
+  return Platform_DrawLineRaw((DrawLineRawSpec){.x1 = spec->x1,
+                                                .y1 = spec->y1,
+                                                .x2 = spec->x2,
+                                                .y2 = spec->y2,
+                                                .color = col,
+                                                .thickness = spec->thickness});
 }
 
 bool ski_draw_circle(const Circle *spec) {
@@ -1715,10 +1711,10 @@ bool ski_draw_circle(const Circle *spec) {
     col = rgb_to_hex(col);
   return Platform_DrawCircleRaw(
       (DrawCircleRawSpec){.cx = spec->x,
-                            .cy = spec->y,
-                            .radius = spec->radius,
-                            .color = col,
-                            .thickness = spec->thickness});
+                          .cy = spec->y,
+                          .radius = spec->radius,
+                          .color = col,
+                          .thickness = spec->thickness});
 }
 
 static bool listbox_begin_common(const ListSpec *spec) {
@@ -1788,8 +1784,8 @@ static bool listbox_next_common(SkListItemCtx *out) {
 void sk_listbox_end(void) {
   listbox_set_row_h_scroll(0);
   if (prompt_list_bottom_margin() > 0 && sk_list_y0 >= 0) {
-    draw_prompt_separator((DrawPromptSeparatorSpec){
-        .y = sk_list_y0 + sk_list_h, .width = sk_list_fw});
+    draw_prompt_separator((DrawPromptSeparatorSpec){.y = sk_list_y0 + sk_list_h,
+                                                    .width = sk_list_fw});
   }
   Platform_ListboxBackendEnd();
   sk_list_lb = NULL;
@@ -1863,9 +1859,7 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec) {
   return checkbox_place(spec);
 }
 
-bool ski_place_slider(const SkSliderSpec *spec) {
-  return slider_place(spec);
-}
+bool ski_place_slider(const SkSliderSpec *spec) { return slider_place(spec); }
 
 bool sk_slider_is_hovered(const char *name) { return slider_is_hovered(name); }
 bool sk_slider_is_clicked(const char *name) { return slider_is_clicked(name); }
@@ -1888,7 +1882,9 @@ SkWindowList sk_get_all_window_ids(void) { return Platform_GetWindowIds(); }
 SkColor ski_get_pixel_color(int x, int y) {
   return Platform_GetPixelColor(x, y);
 }
-SkColor sk_get_pixel_color(SkPos pos) { return ski_get_pixel_color(pos.x, pos.y); }
+SkColor sk_get_pixel_color(SkPos pos) {
+  return ski_get_pixel_color(pos.x, pos.y);
+}
 bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b) {
   SkColor c = ski_get_pixel_color(x, y);
   return c.r == r && c.g == g && c.b == b;
@@ -3010,7 +3006,9 @@ bool ski_hotkey_down(int vk_code, int mods) {
   return true;
 }
 
-bool sk_hotkey_down(SkKey key) { return ski_hotkey_down(key.vk_code, key.mods); }
+bool sk_hotkey_down(SkKey key) {
+  return ski_hotkey_down(key.vk_code, key.mods);
+}
 
 void sk_register_key_interceptor(SkKeyInterceptorFn fn) {
   key_register_interceptor((KeyInterceptorFn)fn);
@@ -3284,8 +3282,8 @@ static void hotkey_entries_set(const char *name, const char *hotkey) {
 static void quicklink_entries_set(const char *name, const char *target) {
   int i = quicklink_index_of(name);
   if (i >= 0) {
-    snprintf(quicklink_entries[i].target,
-             sizeof(quicklink_entries[i].target), "%s", target);
+    snprintf(quicklink_entries[i].target, sizeof(quicklink_entries[i].target),
+             "%s", target);
     return;
   }
   if (quicklink_entry_count >= SK_CONFIG_MAX_ENTRIES) {
@@ -3331,7 +3329,6 @@ static bool sk_config_parse_path(void) {
 static bool sk_config_ready(void) {
   return sk_config_path[0] != '\0' || sk_config_parse_path();
 }
-
 
 static bool sk_config_apply_entry(const ConfigTomlEntry *e, void *user) {
   (void)user;
@@ -3409,8 +3406,7 @@ static void sk_config_migrate_hotkeys_txt(const char *dir) {
              migrated);
     if (sk_config_ready())
       for (int i = 0; i < hotkey_entry_count; i++)
-        config_section_set(sk_config_path, "hotkeys",
-                           hotkey_entries[i].name,
+        config_section_set(sk_config_path, "hotkeys", hotkey_entries[i].name,
                            hotkey_entries[i].hotkey);
   }
 }
@@ -3490,8 +3486,7 @@ bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
 
   hotkey_entries_set(spec->name, spec->hotkey);
   if (!sk_config_ready() ||
-      !config_section_set(sk_config_path, "hotkeys", spec->name,
-                          spec->hotkey))
+      !config_section_set(sk_config_path, "hotkeys", spec->name, spec->hotkey))
     log_error("sk_config: failed to save %s", sk_config_path);
 
   if (old_hotkey[0] && !sk_string_equals_ci(old_hotkey, spec->hotkey))

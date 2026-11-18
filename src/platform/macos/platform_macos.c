@@ -171,12 +171,9 @@ void Platform_DismissIndefiniteMessage(void) {}
 
 void Platform_DisplayMessage(DisplayMessageSpec spec) { UNUSED(spec); }
 
-void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
-  UNUSED(spec);
-}
+void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) { UNUSED(spec); }
 
-void Platform_CreateDisplayMessageWindow(
-    CreateDisplayMessageWindowSpec spec) {
+void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec) {
   UNUSED(spec);
 }
 

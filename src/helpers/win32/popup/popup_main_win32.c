@@ -265,10 +265,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
 
         listbox_set_geometry(list_top, item_h, visible);
 
-        listbox_hover_focus(hlb, list_top, item_h, hlb->view_offset, visible,
-                               PROMPT_SEL_X,
-                               PROMPT_SEL_X + (rect.right - rect.left) -
-                                   PROMPT_SEL_W_SHRINK);
+        listbox_hover_focus(
+            hlb, list_top, item_h, hlb->view_offset, visible, PROMPT_SEL_X,
+            PROMPT_SEL_X + (rect.right - rect.left) - PROMPT_SEL_W_SHRINK);
       }
     }
     InvalidateRect(hwnd, NULL, FALSE);
@@ -552,10 +551,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           orig_cnt = lb->item_count;
         }
         item_get_colors((GetItemColorsSpec){.idx = orig_idx,
-                                              .count = orig_cnt,
-                                              .num_color = &ncol,
-                                              .body_color = &bcol,
-                                              .plain_color = &pcol});
+                                            .count = orig_cnt,
+                                            .num_color = &ncol,
+                                            .body_color = &bcol,
+                                            .plain_color = &pcol});
         SetTextColor(pdis->hDC, ncol);
         DrawTextA(pdis->hDC, textBuffer, -1, &textRect,
                   DT_SINGLELINE | DT_VCENTER);
@@ -678,10 +677,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             int orig_idx = estate->lb->matching_indices[list_idx];
             int orig_cnt = estate->lb->item_count;
             item_get_colors((GetItemColorsSpec){.idx = orig_idx,
-                                                  .count = orig_cnt,
-                                                  .num_color = &ncol,
-                                                  .body_color = &bcol,
-                                                  .plain_color = &pcol});
+                                                .count = orig_cnt,
+                                                .num_color = &ncol,
+                                                .body_color = &bcol,
+                                                .plain_color = &pcol});
 
             int row_h_scroll = (list_idx == estate->lb->selected_index)
                                    ? estate->lb->text_hscroll
@@ -691,13 +690,13 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             if (row_h_scroll > 0)
               draw_x -= row_h_scroll;
             Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
-                                                     .y = y + pad_top,
-                                                     .text = draw_text,
-                                                     .color = ncol,
-                                                     .font = FH_NULL,
-                                                     .align = "LEFT",
-                                                     .pad = 0,
-                                                     .fontsize = FontSize});
+                                                   .y = y + pad_top,
+                                                   .text = draw_text,
+                                                   .color = ncol,
+                                                   .font = FH_NULL,
+                                                   .align = "LEFT",
+                                                   .pad = 0,
+                                                   .fontsize = FontSize});
           }
           draw_state_get()->win32_listbox_surface = false;
 
