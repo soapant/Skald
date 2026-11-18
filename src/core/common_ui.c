@@ -817,7 +817,7 @@ void draw_text_centered_impl(const DrawTextCenteredSpec *spec,
   int tw = Platform_MeasureTextWidth(
       (MeasureTextWidthSpec){.text = spec->text,
                              .len = (int)strlen(spec->text),
-                             .fontsize = spec->fontsize});
+                             .font_size = spec->font_size});
   int tx = spec->x + (spec->w - tw) / 2;
   int ty = spec->y + (spec->h - line_height) / 2;
   Platform_DrawTextRaw((DrawTextRawSpec){.x = tx,
@@ -827,7 +827,7 @@ void draw_text_centered_impl(const DrawTextCenteredSpec *spec,
                                          .font = spec->font,
                                          .align = "LEFT",
                                          .pad = 0,
-                                         .fontsize = spec->fontsize});
+                                         .font_size = spec->font_size});
 }
 
 int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,

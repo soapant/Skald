@@ -390,15 +390,15 @@ void Platform_DirClose(DirIter *it) {
   free(it);
 }
 
-int Platform_GetTextLineHeight(int fontsize) {
-  if (fontsize <= 0)
-    fontsize = FontSize;
+int Platform_GetTextLineHeight(int font_size) {
+  if (font_size <= 0)
+    font_size = FontSize;
   Display *dpy = x11_get_display();
   if (!dpy)
-    return fontsize;
-  FontHandle font = x11_create_font_on_display(dpy, fontsize, UsedFont);
+    return font_size;
+  FontHandle font = x11_create_font_on_display(dpy, font_size, UsedFont);
   const XftFont *xf = FH_TO_XFT(font);
-  int r = xf ? xf->ascent + xf->descent : fontsize;
+  int r = xf ? xf->ascent + xf->descent : font_size;
   Platform_DestroyFont(font);
   return r;
 }

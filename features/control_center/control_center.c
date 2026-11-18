@@ -1109,14 +1109,14 @@ static void cc_refresh(PromptState *state) {
 
 static void cc_draw_hotkey_chip(const char *hotkey, int right_x, int y) {
   int font = FontSize - CC_HOTKEY_FONT_DELTA;
-  SkRect r = sk_text_bounds(.text = hotkey, .fontsize = font, .x = right_x,
+  SkRect r = sk_text_bounds(.text = hotkey, .font_size = font, .x = right_x,
                             .y = y, .align = "RIGHT");
   r.filled = true;
   r.radius = 4;
   r.color = SK_DARK_GRAY;
   ski_draw_rect(&r);
   sk_draw_text(.x = right_x, .y = y, .text = hotkey, .align = "RIGHT", .pad = 0,
-               .color = SK_GRAY, .fontsize = font);
+               .color = SK_GRAY, .font_size = font);
 }
 
 static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
@@ -1162,7 +1162,7 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
     int alias_w = sk_get_text_width(chip, FontSize - 3);
     if (cursor + alias_w + CC_TYPE_GAP <= left_limit) {
       sk_draw_text(.x = cursor, .y = ctx->y + CC_ITEM_TEXT_Y, .text = chip,
-                   .align = "LEFT", .color = SK_GRAY, .fontsize = FontSize);
+                   .align = "LEFT", .color = SK_GRAY, .font_size = FontSize);
       cursor += alias_w + CC_TYPE_GAP;
     }
   }
@@ -1176,7 +1176,7 @@ static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
       sk_draw_text(.x = cursor,
                    .y = ctx->y + CC_ITEM_TEXT_Y + CC_TYPE_SIZE_DELTA,
                    .text = e->type, .align = "LEFT", .pad = 0,
-                   .fontsize = tag_size, .color = CC_TYPE_COLOR);
+                   .font_size = tag_size, .color = CC_TYPE_COLOR);
       cursor += tag_w + CC_TYPE_GAP;
     }
   }
@@ -1213,11 +1213,11 @@ static void cc_on_actions_render(SkPlaceState state) {
   int lh_hotkey = sk_get_text_height(20);
   sk_draw_text(.x = state.rect.x + 20,
                .y = state.rect.y - 2 + (h - lh_title) / 2, .text = "Actions",
-               .align = "LEFT", .color = SK_DARK_GRAY, .fontsize = 16);
+               .align = "LEFT", .color = SK_DARK_GRAY, .font_size = 16);
 
   sk_draw_text(.x = state.rect.x + 100,
                .y = state.rect.y - 2 + (h - lh_hotkey) / 2, .text = hotkey,
-               .align = "LEFT", .fontsize = 20);
+               .align = "LEFT", .font_size = 20);
 }
 
 static void cc_render(PromptState *state) {
@@ -1358,7 +1358,7 @@ static void cc_actions_render(PromptState *state) {
                .color = COLOR_BORDER);
   while (sk_listbox_next(&ctx)) {
     sk_draw_text(.y = ctx.y - 3, .text = ctx.text, .align = "LEFT", .pad = 10,
-                 .fontsize = 20);
+                 .font_size = 20);
   }
   sk_listbox_end();
 }
@@ -1436,7 +1436,7 @@ static void cc_hotkey_capture_render(PromptState *state) {
   if (cc_flashing && sk_end_timer(cc_flash_timer) >= 1.0)
     cc_flashing = false;
 
-  sk_draw_text(.x = 25, .y = 20, .text = "Hold A Key Sequence", .fontsize = 15,
+  sk_draw_text(.x = 25, .y = 20, .text = "Hold A Key Sequence", .font_size = 15,
                .color = SK_GRAY, .align = "LEFT");
 
   sk_draw_rect(.x = 20, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
@@ -1444,7 +1444,7 @@ static void cc_hotkey_capture_render(PromptState *state) {
 
   if (combo[0] || cc_flashing)
     sk_draw_text(.x = 27, .y = state->height / 2,
-                 .text = combo[0] ? combo : cc_captured_hotkey, .fontsize = 22,
+                 .text = combo[0] ? combo : cc_captured_hotkey, .font_size = 22,
                  .color = cc_flashing ? SK_DARK_GREEN : SK_GRAY,
                  .align = "LEFT");
 }
@@ -1455,13 +1455,13 @@ static void cc_alias_render(PromptState *state) {
   char label[284];
   snprintf(label, sizeof(label), "Alias For: %s", cc_register_target);
 
-  sk_draw_text(.x = 14, .y = 8, .text = label, .fontsize = 15, .color = SK_GRAY,
+  sk_draw_text(.x = 14, .y = 8, .text = label, .font_size = 15, .color = SK_GRAY,
                .align = "LEFT", .pad = 0);
 
   sk_place_editbox(.x = (state->width - 160) / 2,
                    .y = (state->height - 30) / 2 + 6, .w = 160, .h = 26,
                    .placeholder = "alias name", .caret_height = 16,
-                   .caret_width = 1, .caret_y = 40, .fontsize = 14);
+                   .caret_width = 1, .caret_y = 40, .font_size = 14);
 }
 
 static bool cc_alias_enter(PromptState *state) {

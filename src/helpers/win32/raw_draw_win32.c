@@ -196,7 +196,7 @@ bool win32_text_needs_boost(const wchar_t *wide, int len) {
   return win32_text_any(wide, len, win32_pred_boost);
 }
 
-HFONT win32_font_for_text(const wchar_t *wide, int len, int fontsize,
+HFONT win32_font_for_text(const wchar_t *wide, int len, int font_size,
                           HFONT *out_prev, int *out_dy) {
 
   HFONT prev = NULL;
@@ -205,13 +205,13 @@ HFONT win32_font_for_text(const wchar_t *wide, int len, int fontsize,
   if (win32_text_is_symbolic(wide, len)) {
     bool boost = win32_text_needs_boost(wide, len);
     int want = boost
-                   ? (fontsize * WIN32_SYMBOL_SIZE_NUM / WIN32_SYMBOL_SIZE_DEN)
-                   : fontsize;
+                   ? (font_size * WIN32_SYMBOL_SIZE_NUM / WIN32_SYMBOL_SIZE_DEN)
+                   : font_size;
     HFONT sf = win32_symbol_font(want, wide, len);
     if (sf) {
-      HFONT nf = win32_sized_font(fontsize);
+      HFONT nf = win32_sized_font(font_size);
       if (!nf)
-        nf = win32_sized_font(fontsize);
+        nf = win32_sized_font(font_size);
       HFONT tmp = nf ? (HFONT)SelectObject(g_draw_hdc, nf) : NULL;
       TEXTMETRICW ts;
       ts.tmAscent = 0;
@@ -231,9 +231,9 @@ HFONT win32_font_for_text(const wchar_t *wide, int len, int fontsize,
       return sf;
     }
   }
-  HFONT hfont = win32_sized_font(fontsize);
+  HFONT hfont = win32_sized_font(font_size);
   if (!hfont)
-    hfont = win32_sized_font(fontsize);
+    hfont = win32_sized_font(font_size);
   if (hfont)
     prev = (HFONT)SelectObject(g_draw_hdc, hfont);
   if (out_prev)

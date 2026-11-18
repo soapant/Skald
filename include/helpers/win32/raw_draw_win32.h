@@ -80,7 +80,7 @@ HFONT win32_symbol_font(int size, const wchar_t *wide, int len);
 bool win32_text_is_symbolic(const wchar_t *wide, int len);
 bool win32_font_covers(HFONT f, const wchar_t *wide, int len);
 bool win32_text_needs_boost(const wchar_t *wide, int len);
-HFONT win32_font_for_text(const wchar_t *wide, int len, int fontsize,
+HFONT win32_font_for_text(const wchar_t *wide, int len, int font_size,
                           HFONT *out_old, int *out_dy);
 COLORREF win32_colorref(unsigned long hex);
 COLORREF win32_resolve_color(unsigned long hex, bool opaque);

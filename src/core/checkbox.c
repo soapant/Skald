@@ -233,9 +233,9 @@ void checkbox_draw(const CheckboxSpec *spec) {
                            spec->border);
     }
     if (spec->text) {
-      int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
+      int font_size = spec->font_size > 0 ? spec->font_size : FontSize;
       if (!Platform_FontInitialized(s_font))
-        s_font = Platform_CreateFont(fontsize, UsedFont);
+        s_font = Platform_CreateFont(font_size, UsedFont);
       Platform_DrawTextCentered((DrawTextCenteredSpec){
           .x = spec->x,
           .y = spec->y,
@@ -245,7 +245,7 @@ void checkbox_draw(const CheckboxSpec *spec) {
           .color =
               spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
           .font = s_font,
-          .fontsize = fontsize});
+          .font_size = font_size});
     }
   }
 }
@@ -284,7 +284,7 @@ bool checkbox_place(const CheckboxSpec *spec) {
   cb->x = spec->x;
   cb->y = spec->y;
   cb->text = spec->text;
-  cb->fontsize = spec->fontsize;
+  cb->font_size = spec->font_size;
   cb->text_color = spec->text_color;
   cb->render = spec->render;
 

@@ -1279,7 +1279,7 @@ void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                          .font = font,
                                          .align = "LEFT",
                                          .pad = XOffset,
-                                         .fontsize = FontSize});
+                                         .font_size = FontSize});
 }
 
 static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,

@@ -234,10 +234,10 @@ void x11_raw_line_flush(void) {
 }
 
 bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
-                       FontHandle fh, bool owned, int fontsize) {
+                       FontHandle fh, bool owned, int font_size) {
   if (raw_count > 0) {
     bool same =
-        (y == raw_y) && (fontsize == raw_fontsize) && (raw_xd == g_draw_xd);
+        (y == raw_y) && (font_size == raw_fontsize) && (raw_xd == g_draw_xd);
     if (same && raw_count >= 2)
       same = (x == raw_x0 + raw_count * raw_pitch);
     if (same && raw_count == 1) {
@@ -260,7 +260,7 @@ bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
     raw_x0 = x;
     raw_y = y;
     raw_pitch = 0;
-    raw_fontsize = fontsize;
+    raw_fontsize = font_size;
     raw_font = fh;
     raw_font_owned = owned;
     raw_dpy = g_draw_dpy;
@@ -678,8 +678,8 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
   FontHandle fh = spec->font;
   bool need_destroy = false;
   if (!FH_TO_XFT(fh)) {
-    if (spec->fontsize) {
-      fh = x11_create_font_on_display(dpy, spec->fontsize, UsedFont);
+    if (spec->font_size) {
+      fh = x11_create_font_on_display(dpy, spec->font_size, UsedFont);
     } else {
       fh = x11_create_font_on_display(dpy, FontSize, UsedFont);
     }
@@ -691,9 +691,9 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
       Platform_DestroyFont(fh);
     return false;
   }
-  int fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize;
+  int font_size = spec->font_size > 0 ? spec->font_size : FontSize;
   int len = (int)strlen(spec->text);
-  int tw = x11_measure_utf8_fallback(dpy, xf, spec->text, len, fontsize);
+  int tw = x11_measure_utf8_fallback(dpy, xf, spec->text, len, font_size);
   int lh = xf->ascent + xf->descent;
   if (tw <= 0 || lh <= 0) {
     if (need_destroy)

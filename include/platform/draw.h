@@ -59,7 +59,7 @@ typedef struct {
   FontHandle font;
   const char *align;
   int pad;
-  int fontsize;
+  int font_size;
   float angle;
 } DrawTextRawSpec;
 
@@ -68,7 +68,7 @@ typedef struct {
   const char *text;
   unsigned long color;
   FontHandle font;
-  int fontsize;
+  int font_size;
 } DrawTextCenteredSpec;
 
 typedef struct {
@@ -76,7 +76,7 @@ typedef struct {
   const char *text;
   int len;
   unsigned long color;
-  int fontsize;
+  int font_size;
 } DrawTextLineSpec;
 
 typedef struct {
@@ -91,7 +91,7 @@ typedef struct {
 typedef struct {
   const char *text;
   int len;
-  int fontsize;
+  int font_size;
 } MeasureTextWidthSpec;
 
 bool Platform_DrawRectRaw(DrawRectRawSpec spec);
@@ -104,6 +104,6 @@ int Platform_MeasureTextWidth(MeasureTextWidthSpec spec);
 bool Platform_DrawTextLine(DrawTextLineSpec spec);
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
-int Platform_GetTextLineHeight(int fontsize);
+int Platform_GetTextLineHeight(int font_size);
 
 #endif

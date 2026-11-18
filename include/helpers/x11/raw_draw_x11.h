@@ -44,7 +44,7 @@ extern __thread Colormap g_draw_cmap;
 
 void x11_raw_line_flush(void);
 bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
-                       FontHandle fh, bool owned, int fontsize);
+                       FontHandle fh, bool owned, int font_size);
 XftFont *x11_line_font(Display *dpy, int size);
 void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
                              EditboxSpec *eb, EditboxX11Metrics *metrics);

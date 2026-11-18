@@ -19,7 +19,7 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
   return Platform_MeasureTextWidth((MeasureTextWidthSpec){
       .text = text,
       .len = len,
-      .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
+      .font_size = spec->font_size > 0 ? spec->font_size : FontSize});
 }
 
 void editbox_resolve_place(const EditboxPlaceSpec *spec, PromptState *state,
@@ -29,9 +29,9 @@ void editbox_resolve_place(const EditboxPlaceSpec *spec, PromptState *state,
   memset(out, 0, sizeof(*out));
   out->state = state;
   int x = spec->x, y = spec->y, w = spec->w, h = spec->h;
-  int fontsize = spec->fontsize;
+  int font_size = spec->font_size;
   const char *buffer = spec->buffer;
-  int fs = fontsize > 0 ? fontsize : FontSize;
+  int fs = font_size > 0 ? font_size : FontSize;
   const char *buf = buffer;
   if (!buf)
     buf = state ? state->eb->filter : "";
@@ -42,7 +42,7 @@ void editbox_resolve_place(const EditboxPlaceSpec *spec, PromptState *state,
   out->x = x;
   out->w = w;
   out->h = h;
-  out->fontsize = fs;
+  out->font_size = fs;
   out->buf = buf;
   out->text_len = (int)strlen(buf);
   out->cursor = state && state->eb ? (int)state->eb->cursor : out->text_len;
@@ -75,7 +75,7 @@ void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
   init_args.text_w = text_w;
   init_args.ascent = ascent;
   init_args.descent = descent;
-  init_args.fontsize = place->fontsize;
+  init_args.font_size = place->font_size;
   init_args.font = font;
   init_args.text_color = ui->color_text;
   init_args.bg_color = ui->color_bg;
@@ -116,7 +116,7 @@ void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args) {
   out->caret_x = args->caret_x;
   out->caret_y = args->caret_y;
   out->caret_pos = args->caret_pos;
-  out->fontsize = args->fontsize;
+  out->font_size = args->font_size;
   out->font = args->font;
 }
 
@@ -139,9 +139,9 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->text_y = in->y;
   int caret_auto_y =
       editbox_caret_y(in->y, in->ascent, in->descent,
-                      in->fontsize > 0 ? in->fontsize : FontSize);
+                      in->font_size > 0 ? in->font_size : FontSize);
   out->caret_y = in->caret_y > 0 ? in->caret_y : caret_auto_y;
-  out->fontsize = in->fontsize > 0 ? in->fontsize : FontSize;
+  out->font_size = in->font_size > 0 ? in->font_size : FontSize;
   out->caret_height =
       in->caret_height > 0 ? in->caret_height : prompt_caret_height();
   out->caret_width = in->caret_width;
@@ -160,9 +160,9 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
                             &out->sel_end, &out->has_selection);
 }
 
-int editbox_caret_y(int box_top, int ascent, int descent, int fontsize) {
+int editbox_caret_y(int box_top, int ascent, int descent, int font_size) {
   int line_h = ascent + descent;
-  int fs = fontsize > 0 ? fontsize : FontSize;
+  int fs = font_size > 0 ? font_size : FontSize;
   if (line_h <= 0 || fs <= 0)
     return box_top;
   return box_top + (line_h - fs) / 2 + (PROMPT_DEADCURSOR_Y / 4);
@@ -288,7 +288,7 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
              Platform_MeasureTextWidth((MeasureTextWidthSpec){
                  .text = spec->text,
                  .len = (int)pos,
-                 .fontsize = spec->fontsize > 0 ? spec->fontsize : FontSize});
+                 .font_size = spec->font_size > 0 ? spec->font_size : FontSize});
     if (spec->rainbow_limit_x >= 0 && tx >= spec->rainbow_limit_x)
       break;
     unsigned long col = get_rainbow_color(
@@ -300,7 +300,7 @@ static void editbox_draw_rainbow(const EditboxSpec *spec,
                                            .font = spec->font,
                                            .align = "",
                                            .pad = 0,
-                                           .fontsize = spec->fontsize});
+                                           .font_size = spec->font_size});
     pos += cl;
     ci++;
   }
@@ -426,7 +426,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                                                .font = spec->font,
                                                .align = "",
                                                .pad = 0,
-                                               .fontsize = spec->fontsize});
+                                               .font_size = spec->font_size});
       }
     } else if (spec->placeholder && spec->placeholder[0]) {
       unsigned long ph =
@@ -439,7 +439,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                             .font = spec->font,
                             .align = "",
                             .pad = 0,
-                            .fontsize = spec->fontsize});
+                            .font_size = spec->font_size});
     }
   }
 
@@ -485,7 +485,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                                                .font = spec->font,
                                                .align = "",
                                                .pad = 0,
-                                               .fontsize = spec->fontsize});
+                                               .font_size = spec->font_size});
       }
     }
   }
