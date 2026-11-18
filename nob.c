@@ -522,6 +522,7 @@ static const char *sdk_files[] = {
     "core/cc_registry.h",
     "core/checkbox.h",
     "core/slider.h",
+    "core/settings_registry.h",
     "core/clipboard_history.h",
     "core/context.h",
     "core/skapi.h",

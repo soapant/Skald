@@ -12,6 +12,7 @@
 #include "core/types/skapi_types.h"
 #include "core/checkbox.h"
 #include "core/slider.h"
+#include "core/settings_registry.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
 #include "core/skapi_input.h"
@@ -49,6 +50,7 @@ typedef struct {
 } SkFeatureList;
 typedef CheckboxSpec SkCheckboxSpec;
 typedef SliderSpec SkSliderSpec;
+typedef SettingsEntrySpec SkSettingsEntrySpec;
 typedef PlaceState SkPlaceState;
 typedef ClipboardEntry SkClipboardEntry;
 typedef ClipboardHistory SkClipboardHistory;
@@ -816,6 +818,10 @@ typedef CcEntrySpec SkCcEntrySpec;
 
 #define sk_add_feature(...) sk_add_to_cc(.type = "Feature", __VA_ARGS__)
 
+#define sk_add_settings_entry(...) sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
+
+bool sk_settings_entry_add(const SkSettingsEntrySpec *spec);
+
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 
 typedef struct {
@@ -878,6 +884,10 @@ bool sk_config_set_quicklink(const char *name, const char *target);
 int sk_cc_entry_count(void);
 
 const CcEntrySpec *sk_cc_entry_at(int index);
+
+int sk_settings_entry_count(void);
+
+const SettingsEntrySpec *sk_settings_entry_at(int index);
 
 bool ski_add_dep(const char *dep_name, const char *owner_file);
 

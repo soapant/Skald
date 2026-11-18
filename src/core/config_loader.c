@@ -63,6 +63,7 @@ static const ConfigEntry config_entries[] = {
     {"FeaturePath", CONFIG_STRING, &FeaturePath},
     {"IconPath", CONFIG_STRING, &IconPath},
     {"ControlHotkey", CONFIG_STRING, &ControlHotkey},
+    {"SettingsHotkey", CONFIG_STRING, &SettingsHotkey},
     {"ReloadFeaturesHotkey", CONFIG_STRING, &ReloadFeaturesHotkey},
     {"ActionsHotkey", CONFIG_STRING, &ActionsHotkey},
     {"RegHotkey", CONFIG_STRING, &RegHotkey},
