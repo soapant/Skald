@@ -2,15 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SETTINGS_SIDEBAR_W 208
+#define SETTINGS_SIDEBAR_W 170
 #define SETTINGS_EB_X 0
 #define SETTINGS_EB_Y 12
-#define SETTINGS_EB_W (SETTINGS_SIDEBAR_W - SETTINGS_EB_X - 6)
 #define SETTINGS_EB_H 34
 #define SETTINGS_SEP_Y (SETTINGS_EB_Y + SETTINGS_EB_H + 8)
 #define SETTINGS_LIST_Y (SETTINGS_SEP_Y + 6)
 #define SETTINGS_ROW_H 38
-#define SETTINGS_SEP_X (SETTINGS_SIDEBAR_W + 12)
 #define SETTINGS_MAX_NAMES 96
 
 static const char *settings_names[SETTINGS_MAX_NAMES];
@@ -51,11 +49,19 @@ static bool settings_ctrl_enter(PromptState *state) { return false; }
 
 static void settings_tab(PromptState *state) {}
 
-static void settings_empty_render(void *ud) { (void)ud; }
+static void settings_quicklinks_render(void *ud) { (void)ud; }
+
+static void settings_config_render(void *ud) { (void)ud; }
+
+static void settings_snippets_render(void *ud) { (void)ud; }
+
+static void settings_hotkeys_render(void *ud) { (void)ud; }
+
+static void settings_remaps_render(void *ud) { (void)ud; }
 
 static void settings_list(PromptState *state) {
   if (!sk_listbox_begin(.lb = state->lb, .item_height = SETTINGS_ROW_H,
-                        .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y, .w = 220,
+                        .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y, .w = SETTINGS_SIDEBAR_W,
                         .h = state->height - SETTINGS_LIST_Y - 4))
     return;
   SkListItemCtx ctx;
@@ -77,14 +83,16 @@ static void settings_list(PromptState *state) {
 
 static void settings_render(PromptState *state) {
 
+  sk_draw_rect(.w=SETTINGS_SIDEBAR_W,.h=state->height,.color=sk_color_lerp(COLOR_BG, SK_BLACK, 0.72f),.filled=true,.rounded=false);
+
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_EB_W, .h = SETTINGS_EB_H,.fontsize=18);
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H,.fontsize=16);
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
-               .x2 = SETTINGS_EB_X + SETTINGS_EB_W + 18, .y2 = SETTINGS_SEP_Y,
+               .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W, .y2 = SETTINGS_SEP_Y,
                .color = COLOR_BORDER);
 
-  sk_draw_line(.x1 = SETTINGS_SEP_X, .x2 = SETTINGS_SEP_X,
+  sk_draw_line(.x1 = SETTINGS_SIDEBAR_W, .x2 = SETTINGS_SIDEBAR_W,
                .y2 = state->height, .color = COLOR_BORDER);
 
   settings_list(state);
@@ -96,7 +104,7 @@ static void settings_render(PromptState *state) {
     if (entry && entry->render) {
       int saved_x = 0, saved_y = 0;
       sk_get_draw_offset(&saved_x, &saved_y);
-      sk_set_draw_offset(SETTINGS_SEP_X + 8, 8);
+      sk_set_draw_offset(SETTINGS_SIDEBAR_W + 8, 8);
       entry->render(entry->ud);
       sk_set_draw_offset(saved_x, saved_y);
     }
@@ -104,7 +112,7 @@ static void settings_render(PromptState *state) {
 }
 
 static void trigger_settings(void) {
-  sk_window(.title = "Settings", .placeholder = "Search settings...",
+  sk_window(.title = "Settings", .placeholder = "Search settings",
             .refresh = settings_refresh,
             .enter = settings_enter, .ctrl_enter = settings_ctrl_enter,
             .tab = settings_tab, .render = settings_render,
@@ -117,13 +125,13 @@ SKALD_FEATURE_INIT {
                  .icon = "/settings.png");
 
   sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
-                        .render = settings_empty_render);
+                        .render = settings_quicklinks_render);
   sk_add_settings_entry(.name = "Config", .icon = "/settings.png",
-                        .render = settings_empty_render);
+                        .render = settings_config_render);
   sk_add_settings_entry(.name = "Snippets", .icon = "/snippets.png",
-                        .render = settings_empty_render);
+                        .render = settings_snippets_render);
   sk_add_settings_entry(.name = "Hotkeys", .icon = "/hotkeys.png",
-                        .render = settings_empty_render);
+                        .render = settings_hotkeys_render);
   sk_add_settings_entry(.name = "Remaps", .icon = "/remaps.png",
-                        .render = settings_empty_render);
+                        .render = settings_remaps_render);
 }
