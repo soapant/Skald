@@ -945,18 +945,21 @@ static void hover_popup_ctx_free(void *ud) {
     free(p);
 }
 
+#define SK_FMT_BUFFER()                                    \
+  char buf[1024];                                        \
+  va_list args;                                          \
+  va_start(args, fmt);                                   \
+  vsnprintf(buf, sizeof(buf), fmt, args);                \
+  va_end(args)
+
 void sk_message_fmt(const SkMessageSpec *spec, const char *fmt, ...) {
-  char buffer[1024];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buffer, sizeof(buffer), fmt, args);
-  va_end(args);
+  SK_FMT_BUFFER();
   SkMessageSpec final;
   if (spec)
     final = *spec;
   else
     memset(&final, 0, sizeof(final));
-  final.message = buffer;
+  final.message = buf;
   ski_message(&final);
 }
 
@@ -3695,3 +3698,309 @@ bool sk_config_set_quicklink(const char *name, const char *target) {
   sk_config_unlock();
   return true;
 }
+
+bool sk_copy_to_clipboard_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_copy_to_clipboard(buf);
+}
+
+bool sk_copy_file_path_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_copy_file_path(buf);
+}
+
+bool sk_paste_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_paste(buf);
+}
+
+bool sk_get_all_files_from_dir_fmt(char **list_of_allowed_extensions, ListOfFiles *list_of_files, char **list_of_names_to_ignore, bool strip_extension, int max_depth, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_get_all_files_from_dir(buf, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension, max_depth);
+}
+
+SkStringList sk_load_file_list_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_load_file_list(buf);
+}
+
+bool sk_file_exists_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_file_exists(buf);
+}
+
+bool sk_prewarm_image_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_prewarm_image(buf);
+}
+
+bool sk_write_to_file_fmt(const char *lines[], int count, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_write_to_file(buf, lines, count);
+}
+
+int sk_get_icon_size_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_get_icon_size(buf);
+}
+
+bool sk_launch_detached_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_launch_detached(buf);
+}
+
+bool sk_terminate_process_by_name_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_terminate_process_by_name(buf);
+}
+
+bool sk_process_running_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_process_running(buf);
+}
+
+void sk_send_hotkey_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_send_hotkey(buf);
+}
+
+SkKey sk_hotkey_from_string_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_hotkey_from_string(buf);
+}
+
+bool sk_launch_browser_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_launch_browser(buf);
+}
+
+bool sk_query_browser_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_query_browser(buf);
+}
+
+bool sk_focus_window_by_title_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_focus_window_by_title(buf);
+}
+
+SkWindowHandle sk_get_window_id_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_get_window_id(buf);
+}
+
+SkWindowHandle sk_get_window_by_root_atom_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_get_window_by_root_atom(buf);
+}
+
+bool sk_window_set_long_property_fmt(SkWindowHandle window, long value, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_window_set_long_property(window, buf, value);
+}
+
+bool sk_window_send_message_fmt(SkWindowHandle window, long data, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_window_send_message(window, buf, data);
+}
+
+bool sk_dismiss_message_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_dismiss_message(buf);
+}
+
+bool sk_message_active_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_message_active(buf);
+}
+
+bool sk_close_windows_by_title_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_close_windows_by_title(buf);
+}
+
+bool sk_close_windows_by_id_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_close_windows_by_id(buf);
+}
+
+bool sk_set_theme_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_set_theme(buf);
+}
+
+void sk_set_edit_text_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_set_edit_text(buf);
+}
+
+bool sk_checkbox_is_checked_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_checkbox_is_checked(buf);
+}
+
+bool sk_checkbox_is_hovered_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_checkbox_is_hovered(buf);
+}
+
+bool sk_checkbox_is_clicked_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_checkbox_is_clicked(buf);
+}
+
+bool sk_button_is_checked_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_button_is_checked(buf);
+}
+
+bool sk_button_is_hovered_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_button_is_hovered(buf);
+}
+
+bool sk_button_is_clicked_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_button_is_clicked(buf);
+}
+
+bool sk_slider_is_hovered_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_slider_is_hovered(buf);
+}
+
+bool sk_slider_is_clicked_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_slider_is_clicked(buf);
+}
+
+bool sk_slider_is_dragging_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_slider_is_dragging(buf);
+}
+
+float sk_slider_value_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_slider_value(buf);
+}
+
+float sk_slider_fraction_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_slider_fraction(buf);
+}
+
+int sk_slider_percent_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_slider_percent(buf);
+}
+
+bool sk_slider_set_value_fmt(float value, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_slider_set_value(buf, value);
+}
+
+SkPos sk_get_widget_pos_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_get_widget_pos(buf);
+}
+
+int sk_get_text_width_fmt(int fontsize, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_get_text_width(buf, fontsize);
+}
+
+void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_http_get_async(buf, cb, userdata);
+}
+
+SkFlagList sk_parse_flags_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_parse_flags(buf);
+}
+
+SkLibrary sk_library_open_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_library_open(buf);
+}
+
+void sk_library_register_fmt(SkLibrary handle, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_library_register(buf, handle);
+}
+
+SkLibrary sk_library_get_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_library_get(buf);
+}
+
+void sk_hashmap_put_fmt(SkHashMap **map, long value, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_hashmap_put(map, buf, value);
+}
+
+void sk_hashmap_add_fmt(SkHashMap **map, long delta, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_hashmap_add(map, buf, delta);
+}
+
+long sk_hashmap_get_fmt(SkHashMap *map, long def, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_hashmap_get(map, buf, def);
+}
+
+bool sk_hashmap_has_fmt(SkHashMap *map, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_hashmap_has(map, buf);
+}
+
+bool sk_hashmap_del_fmt(SkHashMap **map, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_hashmap_del(map, buf);
+}
+
+bool sk_is_window_open_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_is_window_open(buf);
+}
+
+bool sk_type_text_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_type_text(buf);
+}
+
+bool sk_config_clear_hotkey_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_config_clear_hotkey(buf);
+}
+
+bool sk_config_bind_hotkey_fmt(SkConfigFn cb, void *ud, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_config_bind_hotkey(buf, cb, ud);
+}
+
+bool sk_config_clear_alias_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_config_clear_alias(buf);
+}
+
+bool sk_hotkey_taken_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_hotkey_taken(buf);
+}
+
+void sk_reload_feature_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_reload_feature(buf);
+}
+
+void sk_cap_register_abi_fmt(unsigned abi, void *fn, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_cap_register_abi(buf, abi, fn);
+}
+
+void sk_cap_bind_declare_fmt(void *consumer, const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  sk_cap_bind_declare(buf, consumer);
+}
+
