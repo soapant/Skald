@@ -1738,7 +1738,7 @@ static bool listbox_begin_common(const ListSpec *spec) {
   listbox_apply_pending_scroll(lb, lay.visible);
   listbox_set_geometry(sk_list_y0, sk_list_itemH, lay.visible);
   listbox_hover_focus(lb, sk_list_y0, sk_list_itemH, lb->view_offset,
-                      lay.visible);
+                      lay.visible, sk_list_bx, sk_list_bx + sk_list_bw);
   draw_state_get()->listbox_rows = true;
   return true;
 }

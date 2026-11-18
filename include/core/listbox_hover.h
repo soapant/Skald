@@ -13,7 +13,8 @@ void listbox_invalidate_mouse_pos(void);
 int listbox_row_at_y(const ListBoxInfo *lb, int list_top, int item_height,
                      int top_index, int visible_count, int mouse_y);
 bool listbox_hover_focus(ListBoxInfo *lb, int list_top, int item_height,
-                         int top_index, int visible_count);
+                         int top_index, int visible_count, int left_x,
+                         int right_x);
 void listbox_focus_by_keyboard(void);
 void listbox_set_row_h_scroll(int px);
 int listbox_get_row_h_scroll(void);

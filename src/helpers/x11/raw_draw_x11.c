@@ -477,7 +477,8 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   listbox_apply_pending_scroll(lb, visible);
 
   listbox_set_geometry(y0, item_h, visible);
-  listbox_hover_focus(lb, y0, item_h, lb->view_offset, visible);
+  listbox_hover_focus(lb, y0, item_h, lb->view_offset, visible, PROMPT_SEL_X,
+                      PROMPT_SEL_X + state->width - PROMPT_SEL_W_SHRINK);
 
   for (int i = 0; i < visible; i++) {
     int idx = lb->view_offset + i;

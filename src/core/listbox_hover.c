@@ -139,7 +139,7 @@ int listbox_row_at_y(const ListBoxInfo *lb, int top_y, int row_h, int top_index,
 }
 
 bool listbox_hover_focus(ListBoxInfo *lb, int top_y, int row_h, int top_index,
-                         int rows_visible) {
+                         int rows_visible, int left_x, int right_x) {
 
   if (!lb || lb->item_count <= 0)
     return false;
@@ -158,6 +158,8 @@ bool listbox_hover_focus(ListBoxInfo *lb, int top_y, int row_h, int top_index,
   hover_x = mx;
   hover_y = my;
   if (!moved)
+    return false;
+  if (mx < left_x || mx >= right_x)
     return false;
   listbox_focus_by_mouse();
   int idx = listbox_row_at_y(lb, top_y, row_h, top_index, rows_visible, my);
