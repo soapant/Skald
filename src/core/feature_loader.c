@@ -27,6 +27,7 @@
 #include "core/hover_widget.h"
 #include "core/cap_registry.h"
 #include "core/snippet_manager.h"
+#include "helpers/helpers_fs.h"
 #include "helpers/helpers_input_state.h"
 
 #define DEFERRED_INIT_MAX 32
@@ -1040,6 +1041,67 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       UNLOCK();
       return true;
     }
+  }
+  if (src_path && src_path[0]) {
+    if (!ensure_feature_capacity(feature_count + 1)) {
+      log_error("reload %s: feature table full, new feature not loaded", name);
+      UNLOCK();
+      return false;
+    }
+    manifest_write_baseline(name);
+    char new_src[512];
+    fl_copy(new_src, sizeof(new_src), src_path);
+    char *uniquepath =
+        reload_lib_unique_copy(src_path, new_src, ++reload_seq, NULL);
+    if (!uniquepath) {
+      log_error("reload %s: copy of new build failed", name);
+      UNLOCK();
+      return false;
+    }
+    LibHandle h = Platform_LoadLibrary(uniquepath);
+    if (!h) {
+      log_error("reload %s failed: %s (new feature, not loaded)", name,
+                Platform_GetLoadError());
+      remove(uniquepath);
+      free(uniquepath);
+      UNLOCK();
+      return false;
+    }
+    typedef void (*InitFn)(void);
+    InitFn init = (InitFn)Platform_GetSymbol(h, "skald_feature_init");
+    if (!init)
+      init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
+    if (!init) {
+      log_error("reload %s: no init symbol, new feature not loaded", name);
+      Platform_UnloadLibrary(h);
+      remove(uniquepath);
+      free(uniquepath);
+      UNLOCK();
+      return false;
+    }
+    LoadedFeature *f = &features[feature_count++];
+    memset(f, 0, sizeof(*f));
+    safe_copy(f->name, sizeof(f->name), name);
+    safe_copy(f->path, sizeof(f->path), uniquepath);
+    safe_copy(f->uniq, sizeof(f->uniq), uniquepath);
+    f->handle = h;
+    feature_init_count++;
+    {
+      const char *ext = Platform_LibExtension();
+      char dll[512];
+      snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", name,
+               ext ? ext : "");
+      if (!file_copy_path(uniquepath, dll))
+        log_warn("reload %s: could not persist %s (will rebuild next start)",
+                 name, dll);
+    }
+    free(uniquepath);
+    UNLOCK();
+    deferred_init_run_all();
+    LOCK();
+    log_info("reloaded %s (new feature)", name);
+    UNLOCK();
+    return true;
   }
   char file[512];
   snprintf(file, sizeof(file), "%s%s", name, Platform_LibExtension());
