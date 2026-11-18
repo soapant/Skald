@@ -1,7 +1,49 @@
 #include "core/skapi.h"
 #include <stdio.h>
+#include <string.h>
 
-static void settings_refresh(PromptState *state) {}
+#define SETTINGS_SIDEBAR_W 208
+#define SETTINGS_EB_X 0
+#define SETTINGS_EB_Y 12
+#define SETTINGS_EB_W (SETTINGS_SIDEBAR_W - SETTINGS_EB_X - 6)
+#define SETTINGS_EB_H 34
+#define SETTINGS_SEP_Y (SETTINGS_EB_Y + SETTINGS_EB_H + 8)
+#define SETTINGS_LIST_Y (SETTINGS_SEP_Y + 6)
+#define SETTINGS_ROW_H 38
+#define SETTINGS_SEP_X (SETTINGS_SIDEBAR_W + 12)
+#define SETTINGS_MAX_NAMES 96
+
+static const char *settings_names[SETTINGS_MAX_NAMES];
+static int settings_name_count = 0;
+
+static void settings_collect_names(void) {
+  int n = sk_settings_entry_count();
+  int c = 0;
+  for (int i = 0; i < n && c < SETTINGS_MAX_NAMES; i++) {
+    const SkSettingsEntrySpec *e = sk_settings_entry_at(i);
+    if (e && e->name && e->name[0])
+      settings_names[c++] = e->name;
+  }
+  settings_name_count = c;
+}
+
+static const SkSettingsEntrySpec *settings_entry_by_name(const char *name) {
+  if (!name || !name[0])
+    return NULL;
+  int n = sk_settings_entry_count();
+  for (int i = 0; i < n; i++) {
+    const SkSettingsEntrySpec *e = sk_settings_entry_at(i);
+    if (e && e->name && strcmp(e->name, name) == 0)
+      return e;
+  }
+  return NULL;
+}
+
+static void settings_refresh(PromptState *state) {
+  settings_collect_names();
+  sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
+                      .items = settings_names, .count = settings_name_count);
+}
 
 static bool settings_enter(PromptState *state) { return true; }
 
@@ -9,17 +51,74 @@ static bool settings_ctrl_enter(PromptState *state) { return false; }
 
 static void settings_tab(PromptState *state) {}
 
+static void settings_empty_render(void *ud) { (void)ud; }
+
+static void settings_list(PromptState *state) {
+  SkListSpec spec = {.lb = state->lb, .item_height = SETTINGS_ROW_H,.w=220};
+
+  if (!sk_listbox_begin(&spec))
+    return;
+  SkListItemCtx ctx;
+  while (sk_listbox_next(&ctx)) {
+    const SkSettingsEntrySpec *entry = settings_entry_by_name(ctx.text);
+    int row_y = ctx.y;
+    int row_h = ctx.h;
+
+    if (entry && entry->icon && entry->icon[0]) {
+      sk_draw_image(.path = entry->icon, .x = ctx.x + 10,
+                    .y = row_y + (row_h - 20) / 2, .w = 18, .h = 18);
+    }
+    sk_draw_text(.text = ctx.text, .x = ctx.x + 36,
+                 .y = row_y + (row_h - sk_get_text_height(15)) / 2,
+                 .align = "LEFT", .color = COLOR_TEXT, .fontsize = 15);
+  }
+  sk_listbox_end();
+}
+
 static void settings_render(PromptState *state) {
+
+  sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
+                   .w = SETTINGS_EB_W, .h = SETTINGS_EB_H,.fontsize=18);
+
+  sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
+               .x2 = SETTINGS_EB_X + SETTINGS_EB_W + 18, .y2 = SETTINGS_SEP_Y,
+               .color = COLOR_BORDER);
+
+  sk_draw_line(.x1 = SETTINGS_SEP_X, .x2 = SETTINGS_SEP_X,
+               .y2 = state->height, .color = COLOR_BORDER);
+
+  settings_list(state);
+
+  if (state->lb && state->lb->selected_index >= 0 &&
+      state->lb->selected_index < state->lb->item_count) {
+    const SkSettingsEntrySpec *entry =
+        settings_entry_by_name(state->lb->selected_text);
+    if (entry && entry->render)
+      entry->render(entry->ud);
+  }
 }
 
 static void trigger_settings(void) {
-  sk_window(.title = "Settings", .refresh = settings_refresh,
+  sk_window(.title = "Settings", .placeholder = "Search settings...",
+            .refresh = settings_refresh,
             .enter = settings_enter, .ctrl_enter = settings_ctrl_enter,
-            .tab = settings_tab, .render = settings_render);
+            .tab = settings_tab, .render = settings_render,
+            .no_separators = true);
 }
 
 SKALD_FEATURE_INIT {
-  sk_register_hotkey(.hotkey = "Alt+D", .cb = trigger_settings);
+  sk_register_hotkey(.hotkey = (char *)SettingsHotkey, .cb = trigger_settings);
   sk_add_feature(.display_name = "Settings", .on_action = trigger_settings,
                  .icon = "/settings.png");
+
+  sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
+                        .render = settings_empty_render);
+  sk_add_settings_entry(.name = "Config", .icon = "/settings.png",
+                        .render = settings_empty_render);
+  sk_add_settings_entry(.name = "Snippets", .icon = "/snippets.png",
+                        .render = settings_empty_render);
+  sk_add_settings_entry(.name = "Hotkeys", .icon = "/hotkeys.png",
+                        .render = settings_empty_render);
+  sk_add_settings_entry(.name = "Remaps", .icon = "/remaps.png",
+                        .render = settings_empty_render);
 }
