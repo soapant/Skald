@@ -174,7 +174,7 @@ void feature_loader_drain_retired_unloads(void) {
              defer_unloads[i].owner);
     Platform_UnloadLibrary(defer_unloads[i].handle);
     if (defer_unloads[i].uniq[0])
-      remove(defer_unloads[i].uniq);
+      file_remove_path(defer_unloads[i].uniq);
   }
   defer_unload_count = 0;
   Platform_MutexUnlock(feature_mutex);
@@ -994,10 +994,12 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
         return false;
       }
       LibHandle h = Platform_LoadLibrary(uniquepath);
+      if (h)
+        file_remove_path(uniquepath);
       if (!h) {
         log_error("reload %s failed: %s (keeping old)", name,
                   Platform_GetLoadError());
-        remove(uniquepath);
+        file_remove_path(uniquepath);
         free(uniquepath);
         UNLOCK();
         return false;
@@ -1009,7 +1011,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       if (!init) {
         log_error("reload %s: no init symbol, keeping old", name);
         Platform_UnloadLibrary(h);
-        remove(uniquepath);
+        file_remove_path(uniquepath);
         free(uniquepath);
         UNLOCK();
         return false;
@@ -1059,10 +1061,12 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       return false;
     }
     LibHandle h = Platform_LoadLibrary(uniquepath);
+    if (h)
+      file_remove_path(uniquepath);
     if (!h) {
       log_error("reload %s failed: %s (new feature, not loaded)", name,
                 Platform_GetLoadError());
-      remove(uniquepath);
+      file_remove_path(uniquepath);
       free(uniquepath);
       UNLOCK();
       return false;
@@ -1074,7 +1078,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
     if (!init) {
       log_error("reload %s: no init symbol, new feature not loaded", name);
       Platform_UnloadLibrary(h);
-      remove(uniquepath);
+      file_remove_path(uniquepath);
       free(uniquepath);
       UNLOCK();
       return false;
