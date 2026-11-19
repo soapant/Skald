@@ -263,7 +263,7 @@ bool Platform_PasteContent(const char *content) {
   if (!wbuf)
     return false;
   MultiByteToWideChar(CP_UTF8, 0, content, -1, wbuf, wchars);
-  int code_units = wchars - 1; /* don't paste the trailing NUL */
+  int code_units = wchars - 1;
 
   INPUT *inputs = (INPUT *)calloc((size_t)code_units * 2, sizeof(INPUT));
   if (!inputs) {
