@@ -2843,11 +2843,9 @@ typedef struct {
   float min_value;
   float max_value;
   float value;
-  void *ud;
-  void (*on_click)(SkSettingsEntry *entry, void *ud);
-  void (*on_change_b)(SkSettingsEntry *entry, void *ud, bool checked);
-  void (*on_change_f)(SkSettingsEntry *entry, void *ud, float value);
-  void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
+  void (*on_click)(void);
+  void (*on_change)(void);
+  void (*on_hover)(void);
 } SkSettingsBlock;
 
 struct SettingsEntry {
@@ -3049,9 +3047,8 @@ int ski_settings_entry_add_checkbox(SkSettingsEntry *entry,
   if (!b)
     return -1;
   b->initial = spec->initial;
-  b->on_change_b = spec->on_change;
+  b->on_click = spec->on_click;
   b->on_hover = spec->on_hover;
-  b->ud = spec->ud;
   {
     char key[SK_CONFIG_SETTING_KEY_MAX];
     SkSettingsEntry *e = settings_entry_resolve(entry);
@@ -3083,7 +3080,6 @@ int ski_settings_entry_add_button(SkSettingsEntry *entry,
            spec->label ? spec->label : "");
   b->on_click = spec->on_click;
   b->on_hover = spec->on_hover;
-  b->ud = spec->ud;
   return idx;
 }
 
@@ -3121,9 +3117,8 @@ int ski_settings_entry_add_slider(SkSettingsEntry *entry,
   b->min_value = min_value;
   b->max_value = max_value;
   b->value = initial;
-  b->on_change_f = spec->on_change;
+  b->on_change = spec->on_change;
   b->on_hover = spec->on_hover;
-  b->ud = spec->ud;
   {
     char key[SK_CONFIG_SETTING_KEY_MAX];
     SkSettingsEntry *e = settings_entry_resolve(entry);
@@ -3198,12 +3193,9 @@ static void dispatch_widget_click(void) {
   if (b->type == SETTINGS_BLOCK_CHECKBOX) {
     bool checked = checkbox_is_checked(b->title, PLACE_CHECKBOX);
     persist_block_value(e, b, checked ? "true" : "false");
-    if (b->on_change_b)
-      b->on_change_b(e, b->ud, checked);
-  } else if (b->type == SETTINGS_BLOCK_BUTTON) {
-    if (b->on_click)
-      b->on_click(e, b->ud);
   }
+  if (b->on_click)
+    b->on_click();
 }
 
 static void dispatch_widget_hover(void) {
@@ -3211,17 +3203,8 @@ static void dispatch_widget_hover(void) {
   SkSettingsBlock *b = dispatch_block();
   if (!b)
     return;
-  bool hovered;
-  if (b->type == SETTINGS_BLOCK_SLIDER) {
-    hovered = slider_is_hovered(b->title);
-  } else {
-    hovered =
-        checkbox_is_hovered(b->title, b->type == SETTINGS_BLOCK_BUTTON
-                                         ? PLACE_BUTTON
-                                         : PLACE_CHECKBOX);
-  }
   if (b->on_hover)
-    b->on_hover(e, b->ud, hovered);
+    b->on_hover();
 }
 
 static void dispatch_slider_change(float value) {
@@ -3235,8 +3218,8 @@ static void dispatch_slider_change(float value) {
     snprintf(buf, sizeof(buf), "%g", value);
     persist_block_value(e, b, buf);
   }
-  if (b->on_change_f)
-    b->on_change_f(e, b->ud, value);
+  if (b->on_change)
+    b->on_change();
 }
 
 static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
