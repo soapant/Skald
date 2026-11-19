@@ -8,7 +8,7 @@
 #define MAX_VISIBLE_ITEMS 10000
 #endif
 
-typedef struct ListBoxInfo ListBoxInfo;
+typedef struct ListBox ListBox;
 typedef struct PromptState PromptState;
 typedef struct PromptCallbacks PromptCallbacks;
 
@@ -25,9 +25,9 @@ typedef struct {
   int sel_end;
   int scroll_offset;
   char *placeholder;
-} EditBoxInfo;
+} EditBox;
 
-struct ListBoxInfo {
+struct ListBox {
   char (*items)[LISTBOX_ROW_BYTES];
   int items_cap;
   int item_count;
@@ -43,8 +43,8 @@ struct ListBoxInfo {
 struct PromptState {
   int width, height;
   char *window_title;
-  EditBoxInfo *eb;
-  ListBoxInfo *lb;
+  EditBox *eb;
+  ListBox *lb;
   PromptCallbacks *callbacks;
   void *render_data;
   bool no_bg;
@@ -94,10 +94,10 @@ typedef void (*KeyCallback)(int vkCode);
 
 typedef void (*CloseCallback)(void);
 
-void listbox_info_free(ListBoxInfo *lb);
-bool listbox_info_ensure_rows(ListBoxInfo *lb, int rows);
-const char *listbox_info_row(const ListBoxInfo *lb, int idx);
-void listbox_info_init(ListBoxInfo *lb);
+void listbox_info_free(ListBox *lb);
+bool listbox_info_ensure_rows(ListBox *lb, int rows);
+const char *listbox_info_row(const ListBox *lb, int idx);
+void listbox_info_init(ListBox *lb);
 
 typedef struct {
   const char *title;

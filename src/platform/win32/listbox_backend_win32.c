@@ -62,7 +62,7 @@ void Platform_ListboxBackendEnd(void) {
   b_hdc = NULL;
 }
 
-PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb) {
+PromptState *Platform_ListboxBackendPromptState(const ListBox *lb) {
   PromptState *ps = prompt_popup_find_state(lb);
   if (ps)
     return ps;

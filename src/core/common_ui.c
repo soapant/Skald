@@ -195,7 +195,7 @@ static int fuzzy_score(const char *text, const char *pattern) {
   return score;
 }
 
-static void populate_capture_selection(ListBoxInfo *lb, char *out_text,
+static void populate_capture_selection(ListBox *lb, char *out_text,
                                        size_t out_size, int *out_sel) {
   int current_sel = lb->selected_index;
   if (out_sel)
@@ -277,7 +277,7 @@ populate_item_matches(const char *search_text, const char *clean_filter,
   return string_contains_ci(norm_search, clean_filter);
 }
 
-static int populate_filter(ListBoxInfo *lb, const char **items, int item_count,
+static int populate_filter(ListBox *lb, const char **items, int item_count,
                            const char *clean_filter,
                            bool (*filter_match)(const char *, const char *)) {
   int total_matches = 0;
@@ -296,7 +296,7 @@ static int populate_filter(ListBoxInfo *lb, const char **items, int item_count,
   return total_matches;
 }
 
-static void populate_rank_matches(ListBoxInfo *lb, const char **items,
+static void populate_rank_matches(ListBox *lb, const char **items,
                                   const char *clean_filter, int total_matches) {
   if (clean_filter[0] == '\0' || total_matches <= 1)
     return;
@@ -321,7 +321,7 @@ static void populate_rank_matches(ListBoxInfo *lb, const char **items,
       }
 }
 
-static void populate_ensure_matches(ListBoxInfo *lb, int item_count,
+static void populate_ensure_matches(ListBox *lb, int item_count,
                                     const char *clean_filter,
                                     int *total_matches) {
   if (*total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
@@ -336,7 +336,7 @@ static void populate_ensure_matches(ListBoxInfo *lb, int item_count,
     *total_matches = pool_max;
 }
 
-static void populate_build_cache(ListBoxInfo *lb, const char **items,
+static void populate_build_cache(ListBox *lb, const char **items,
                                  int total_matches) {
   if (total_matches > MAX_VISIBLE_ITEMS)
     total_matches = MAX_VISIBLE_ITEMS;
@@ -359,7 +359,7 @@ static void populate_build_cache(ListBoxInfo *lb, const char **items,
   }
 }
 
-static void populate_update_ui(ListBoxInfo *lb, int total_matches,
+static void populate_update_ui(ListBox *lb, int total_matches,
                                const char *filter) {
   UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
@@ -388,7 +388,7 @@ static void populate_update_ui(ListBoxInfo *lb, int total_matches,
   UI_LB_EndUpdate();
 }
 
-void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
+void populate_listbox(ListBox *lb, const char *filter, const char **items,
                       int item_count,
                       bool (*filter_match)(const char *item,
                                            const char *filter)) {

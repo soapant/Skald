@@ -8,7 +8,7 @@
 #include "platform/platform.h"
 
 TEST(populate_normal_mode_selects_first) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana", "apricot"};
   populate_listbox(&lb, "", items, 3, NULL);
@@ -18,7 +18,7 @@ TEST(populate_normal_mode_selects_first) {
 }
 
 TEST(populate_insert_mode_empty_filter_no_selection) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana", "apricot"};
   populate_listbox(&lb, "", items, 3, NULL);
@@ -27,7 +27,7 @@ TEST(populate_insert_mode_empty_filter_no_selection) {
 }
 
 TEST(populate_filter_narrows) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana", "apricot"};
   populate_listbox(&lb, "ap", items, 3, NULL);
@@ -36,7 +36,7 @@ TEST(populate_filter_narrows) {
 }
 
 TEST(populate_no_match) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
   populate_listbox(&lb, "zzz", items, 2, NULL);
@@ -45,7 +45,7 @@ TEST(populate_no_match) {
 }
 
 TEST(populate_empty_items) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   populate_listbox(&lb, "", NULL, 0, NULL);
   ASSERT_EQ_INT(lb.total_matches, 0);
@@ -53,7 +53,7 @@ TEST(populate_empty_items) {
 }
 
 TEST(filter_handles_double_spaces) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"hello world", "hello  world", "hello   world",
                          "helloworld"};
@@ -68,7 +68,7 @@ TEST(filter_handles_double_spaces) {
 }
 
 TEST(ui_set_selection_unchanged_index_keeps_hscroll) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
   populate_listbox(&lb, "", items, 2, NULL);
@@ -80,7 +80,7 @@ TEST(ui_set_selection_unchanged_index_keeps_hscroll) {
 }
 
 TEST(ui_set_selection_new_index_resets_hscroll) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
   populate_listbox(&lb, "", items, 2, NULL);
@@ -92,7 +92,7 @@ TEST(ui_set_selection_new_index_resets_hscroll) {
 }
 
 TEST(ui_navigate_to_same_index_keeps_hscroll) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
   populate_listbox(&lb, "", items, 2, NULL);
@@ -104,7 +104,7 @@ TEST(ui_navigate_to_same_index_keeps_hscroll) {
 }
 
 TEST(ui_navigate_to_new_index_resets_hscroll) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
   populate_listbox(&lb, "", items, 2, NULL);
@@ -116,7 +116,7 @@ TEST(ui_navigate_to_new_index_resets_hscroll) {
 }
 
 TEST(listbox_info_init_sets_hscroll_zero) {
-  static ListBoxInfo lb;
+  static ListBox lb;
   listbox_info_init(&lb);
   ASSERT_EQ_INT(lb.text_hscroll, 0);
 }

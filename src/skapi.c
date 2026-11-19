@@ -886,7 +886,7 @@ void ski_populate_listbox(const SkPopulateListboxSpec *spec) {
                    spec->filter_match);
 }
 
-bool sk_is_selected(ListBoxInfo *lb) {
+bool sk_is_selected(ListBox *lb) {
   if (!lb)
     return false;
   return lb->selected_index != -1;
@@ -1109,7 +1109,7 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   int y = spec->y ? spec->y : 0;
   int w = spec->w ? spec->w : 600;
   int h = spec->h ? spec->h : 50;
-  ListBoxInfo *lb = spec ? spec->lb : NULL;
+  ListBox *lb = spec ? spec->lb : NULL;
   int *out_index = spec ? spec->out_index : NULL;
   int idx = lb ? lb->selected_index : -1;
   int true_idx = (lb && idx >= 0 && idx < lb->item_count)
@@ -1325,7 +1325,7 @@ char *ski_popup(const PopupSpec *spec) {
   return r ? strdup(r) : NULL;
 }
 
-static __thread ListBoxInfo *sk_list_lb;
+static __thread ListBox *sk_list_lb;
 static __thread ListSpec sk_list_spec;
 static __thread int sk_list_y0, sk_list_itemH, sk_list_visible, sk_list_cur,
     sk_list_h;
@@ -1719,7 +1719,7 @@ bool ski_draw_circle(const Circle *spec) {
 static bool listbox_begin_common(const ListSpec *spec) {
   if (!spec)
     return false;
-  ListBoxInfo *lb = spec->lb;
+  ListBox *lb = spec->lb;
   if (!lb) {
     return false;
   }

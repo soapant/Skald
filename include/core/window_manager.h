@@ -73,7 +73,7 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec);
 int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h);
 CloseCallback prompt_popup_take_on_close(Popup *p);
-PromptState *prompt_popup_find_state(const ListBoxInfo *lb);
+PromptState *prompt_popup_find_state(const ListBox *lb);
 Popup *prompt_popup_find_popup_by_handle(WindowHandle handle);
 PromptState *prompt_popup_get_top_prompt_state(void);
 

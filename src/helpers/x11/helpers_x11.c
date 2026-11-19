@@ -624,7 +624,7 @@ bool x11_xft_color_cached(Display *dpy, Visual *vis, Colormap cmap,
   return true;
 }
 
-const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
+const char *x11_listbox_item_display_text(ListBox *lb, int idx, char *trunc,
                                           size_t trunc_size) {
   const char *base_text = lb ? listbox_info_row(lb, idx) : NULL;
   snprintf(trunc, trunc_size, "%.80s", base_text ? base_text : "");
@@ -1235,7 +1235,7 @@ unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
 
 void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                 Colormap cmap, FontHandle font,
-                                XftColor *plain_color, ListBoxInfo *lb,
+                                XftColor *plain_color, ListBox *lb,
                                 const char *icon_path, int idx, int y) {
   const XftFont *xf = FH_TO_XFT(font);
   if (!xf)

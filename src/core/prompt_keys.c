@@ -141,7 +141,7 @@ bool prompt_handle_list_click(PromptState *state, bool ctrl, bool shift,
   listbox_get_geometry(&list_top, &item_height, &visible_count);
   if (item_height <= 0 || visible_count <= 0)
     return false;
-  ListBoxInfo *lb = state->lb;
+  ListBox *lb = state->lb;
   int mx = 0, my = 0;
   if (!listbox_client_mouse_pos(&mx, &my))
     return false;

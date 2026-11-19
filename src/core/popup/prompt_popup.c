@@ -48,7 +48,7 @@ static void prompt_popup_on_show(Popup *self) {
   data->state = calloc(1, sizeof(PromptState));
   if (!data->state)
     return;
-  data->state->eb = calloc(1, sizeof(EditBoxInfo));
+  data->state->eb = calloc(1, sizeof(EditBox));
   if (!data->state->eb) {
     free(data->state);
     data->state = NULL;
@@ -74,7 +74,7 @@ static void prompt_popup_on_show(Popup *self) {
     data->state->eb->placeholder = strdup(data->spec.placeholder);
   }
   if (data->spec.items || data->spec.refresh || data->spec.render) {
-    data->state->lb = calloc(1, sizeof(ListBoxInfo));
+    data->state->lb = calloc(1, sizeof(ListBox));
   } else {
     data->state->lb = NULL;
   }
@@ -333,14 +333,14 @@ static Popup *prompt_find_popup(bool (*match)(Popup *p, void *arg), void *arg) {
 }
 
 static bool prompt_lb_matches(Popup *p, void *arg) {
-  return ((PromptState *)p->user_data)->lb == (const ListBoxInfo *)arg;
+  return ((PromptState *)p->user_data)->lb == (const ListBox *)arg;
 }
 
 static bool prompt_handle_matches(Popup *p, void *arg) {
   return WH_EQUALS(p->handle, *(WindowHandle *)arg);
 }
 
-PromptState *prompt_popup_find_state(const ListBoxInfo *lb) {
+PromptState *prompt_popup_find_state(const ListBox *lb) {
   Popup *p = prompt_find_popup(prompt_lb_matches, (void *)lb);
   return p ? (PromptState *)p->user_data : NULL;
 }

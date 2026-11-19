@@ -120,7 +120,7 @@ bool listbox_client_mouse_pos(int *out_x, int *out_y) {
   return true;
 }
 
-int listbox_row_at_y(const ListBoxInfo *lb, int top_y, int row_h, int top_index,
+int listbox_row_at_y(const ListBox *lb, int top_y, int row_h, int top_index,
                      int rows_visible, int pos_y) {
 
   if (!lb || row_h <= 0 || rows_visible <= 0) {
@@ -138,7 +138,7 @@ int listbox_row_at_y(const ListBoxInfo *lb, int top_y, int row_h, int top_index,
   return idx;
 }
 
-bool listbox_hover_focus(ListBoxInfo *lb, int top_y, int row_h, int top_index,
+bool listbox_hover_focus(ListBox *lb, int top_y, int row_h, int top_index,
                          int rows_visible, int left_x, int right_x) {
 
   if (!lb || lb->item_count <= 0)
@@ -177,7 +177,7 @@ int listbox_take_scroll(void) {
   return rows;
 }
 
-void listbox_scroll_by(ListBoxInfo *lb, int rows, int rows_visible) {
+void listbox_scroll_by(ListBox *lb, int rows, int rows_visible) {
   if (!lb || rows == 0) {
     return;
   }
@@ -206,7 +206,7 @@ void listbox_scroll_by(ListBoxInfo *lb, int rows, int rows_visible) {
   UI_RequestPopupRepaint();
 }
 
-void listbox_apply_pending_scroll(ListBoxInfo *lb, int rows_visible) {
+void listbox_apply_pending_scroll(ListBox *lb, int rows_visible) {
   int rows = listbox_take_scroll();
   if (rows == 0)
     return;
@@ -226,7 +226,7 @@ int listbox_scroll_top_for(int index, int rows_visible, int count) {
   return new_top;
 }
 
-void listbox_scroll_to_selection(ListBoxInfo *lb) {
+void listbox_scroll_to_selection(ListBox *lb) {
   if (!lb || lb->selected_index < 0 || lb->item_count <= 0)
     return;
   int visible = UI_LB_GetVisibleCount();
@@ -255,7 +255,7 @@ void listbox_get_geometry(int *out_list_top, int *out_item_height,
     *out_visible_count = visible_count;
 }
 
-void listbox_navigate_up(ListBoxInfo *lb) {
+void listbox_navigate_up(ListBox *lb) {
   if (!lb)
     return;
   listbox_focus_by_keyboard();
@@ -267,7 +267,7 @@ void listbox_navigate_up(ListBoxInfo *lb) {
   UI_NavigateTo(lb, sel);
 }
 
-void listbox_navigate_down(ListBoxInfo *lb) {
+void listbox_navigate_down(ListBox *lb) {
   if (!lb)
     return;
   listbox_focus_by_keyboard();
@@ -286,7 +286,7 @@ void listbox_navigate_down(ListBoxInfo *lb) {
   UI_NavigateTo(lb, sel);
 }
 
-void listbox_info_free(ListBoxInfo *lb) {
+void listbox_info_free(ListBox *lb) {
   if (!lb)
     return;
   free(lb->items);
@@ -295,7 +295,7 @@ void listbox_info_free(ListBoxInfo *lb) {
   lb->item_count = 0;
 }
 
-bool listbox_info_ensure_rows(ListBoxInfo *lb, int rows) {
+bool listbox_info_ensure_rows(ListBox *lb, int rows) {
   if (!lb || rows <= 0 || rows > MAX_VISIBLE_ITEMS)
     return false;
   if (lb->items && rows <= lb->items_cap)
@@ -316,7 +316,7 @@ bool listbox_info_ensure_rows(ListBoxInfo *lb, int rows) {
   return true;
 }
 
-const char *listbox_info_row(const ListBoxInfo *lb, int idx) {
+const char *listbox_info_row(const ListBox *lb, int idx) {
   if (!lb || !lb->items)
     return NULL;
   if (idx < 0 || idx >= lb->item_count)
@@ -326,7 +326,7 @@ const char *listbox_info_row(const ListBoxInfo *lb, int idx) {
   return lb->items[idx];
 }
 
-void listbox_info_init(ListBoxInfo *lb) {
+void listbox_info_init(ListBox *lb) {
   if (!lb)
     return;
   listbox_info_free(lb);

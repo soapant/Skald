@@ -101,7 +101,7 @@ typedef struct {
 } Timer;
 
 typedef struct {
-  ListBoxInfo *lb;
+  ListBox *lb;
   const char **items;
   int count;
   int x;
