@@ -3142,7 +3142,9 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     sk_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10,
                   .w = 128, .h = 128);
   if (entry->desc[0])
-    sk_draw_text(.text = entry->desc, .color = SK_GRAY, .x = 30, .y = 150);
+    sk_draw_text(.text = entry->desc, .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f),
+                   .x = 30,
+                   .y = 150);
   sk_draw_line(.x1 = -7, .y1 = 210, .x2 = pane_w + 17, .y2 = 210,
                .color = COLOR_BORDER);
 
@@ -3153,14 +3155,16 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     s_dispatch_entry = entry;
     s_dispatch_index = i;
     int x = 10, y = cursor, w = pane_w - 20;
-    sk_draw_rect(.x = x, .y = y, .w = w, .h = 60, .color = SK_DARK_GRAY,
+    sk_draw_rect(.x = x, .y = y, .w = w, .h = 60, .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.085f),
                  .filled = true, .radius = 6);
     if (b->title[0])
       sk_draw_text(.text = b->title, .x = x + 10, .y = y + 8,
-                   .color = SK_LIGHT_GRAY, .align = "LEFT");
+                   .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.82f),
+                   .align = "LEFT");
     if (b->sub[0])
       sk_draw_text(.text = b->sub, .x = x + 10, .y = y + 30,
-                   .color = SK_GRAY, .align = "LEFT");
+                   .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f),
+                   .align = "LEFT");
     int right = x + w - 10;
     if (b->type == SETTINGS_BLOCK_CHECKBOX) {
       sk_place_checkbox(.name = b->title, .x = right - 32, .y = y + 14,

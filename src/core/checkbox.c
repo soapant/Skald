@@ -17,8 +17,13 @@
 #define CHECKBOX_BASE 16
 #define CHECKBOX_ICON_PATH "resources/check.png"
 
-#define CHECKBOX_WHITE RGB(155, 155, 155)
-#define CHECKBOX_GRAY RGB(68, 68, 68)
+static ColorRef widget_accent(void) {
+  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.66f);
+}
+
+static ColorRef widget_neutral(void) {
+  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.30f);
+}
 #define CHECKBOX_DARK_GRAY RGB(14, 14, 14)
 
 static CheckboxSpec checkboxes[CHECKBOX_MAX];
@@ -185,14 +190,14 @@ void checkbox_draw(const CheckboxSpec *spec) {
     spec->render(st);
     return;
   }
-  unsigned long def_cb_border = spec->hovered ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+  unsigned long def_cb_border = spec->hovered ? widget_accent() : widget_neutral();
   unsigned long def_btn_border =
-      (spec->clicked || spec->hovered) ? CHECKBOX_WHITE : CHECKBOX_GRAY;
+      (spec->clicked || spec->hovered) ? widget_accent() : widget_neutral();
 
   unsigned long def_cb_body =
-      spec->hovered ? CHECKBOX_GRAY
+      spec->hovered ? widget_neutral()
                     : (spec->bg_color ? spec->bg_color : COLOR_BG);
-  unsigned long def_btn_body = (spec->clicked || spec->hovered) ? CHECKBOX_GRAY
+  unsigned long def_btn_body = (spec->clicked || spec->hovered) ? widget_neutral()
                                : spec->bg_color                 ? spec->bg_color
                                                                 : COLOR_BG;
 
@@ -243,7 +248,8 @@ void checkbox_draw(const CheckboxSpec *spec) {
           .h = h,
           .text = spec->text,
           .color =
-              spec->text_color ? rgb_to_hex(spec->text_color) : CHECKBOX_WHITE,
+              spec->text_color ? rgb_to_hex(spec->text_color)
+                                         : rgb_to_hex(widget_accent()),
           .font = s_font,
           .font_size = font_size});
     }

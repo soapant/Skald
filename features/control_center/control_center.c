@@ -18,7 +18,7 @@
 #define CC_HOTKEY_FONT_DELTA 6
 #define CC_TYPE_LABEL "Command"
 #define CC_CALC_ROW_ICON "/calculator.png"
-#define CC_TYPE_COLOR SK_GRAY
+#define CC_TYPE_COLOR sk_color_lerp(COLOR_BG, SK_BLACK, 0.32f)
 
 static size_t cc_copy(char *dst, size_t size, const char *src) {
   if (size == 0)
@@ -1113,7 +1113,7 @@ static void cc_draw_hotkey_chip(const char *hotkey, int right_x, int y) {
                             .y = y, .align = "RIGHT");
   r.filled = true;
   r.radius = 4;
-  r.color = SK_DARK_GRAY;
+  r.color = CC_TYPE_COLOR;
   ski_draw_rect(&r);
   sk_draw_text(.x = right_x, .y = y, .text = hotkey, .align = "RIGHT", .pad = 0,
                .color = SK_GRAY, .font_size = font);
@@ -1203,17 +1203,17 @@ static void cc_on_actions_render(SkPlaceState state) {
 
   sk_draw_rect(.x = state.rect.x + 95, .y = state.rect.y - 2,
                .w = state.rect.w - 95, .h = state.rect.h, .filled = true,
-               .color = SK_DARK_GRAY, .radius = 6);
+               .color = CC_TYPE_COLOR, .radius = 6);
   if (state.hovered)
     sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2,
                  .w = state.rect.w - 15, .h = state.rect.h, .filled = true,
-                 .color = SK_GRAY, .radius = 6);
+                 .color = CC_TYPE_COLOR, .radius = 6);
   int h = state.rect.h;
   int lh_title = sk_get_text_height(16);
   int lh_hotkey = sk_get_text_height(20);
   sk_draw_text(.x = state.rect.x + 20,
                .y = state.rect.y - 2 + (h - lh_title) / 2, .text = "Actions",
-               .align = "LEFT", .color = SK_DARK_GRAY, .font_size = 16);
+               .align = "LEFT", .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.32f), .font_size = 16);
 
   sk_draw_text(.x = state.rect.x + 100,
                .y = state.rect.y - 2 + (h - lh_hotkey) / 2, .text = hotkey,
@@ -1440,7 +1440,7 @@ static void cc_hotkey_capture_render(PromptState *state) {
                .color = SK_GRAY, .align = "LEFT");
 
   sk_draw_rect(.x = 20, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
-               .color = cc_flashing ? SK_GRAY : SK_DARK_GRAY, .filled = true);
+               .color = cc_flashing ? CC_TYPE_COLOR : sk_color_lerp(COLOR_BG, SK_BLACK, 0.12f), .filled = true);
 
   if (combo[0] || cc_flashing)
     sk_draw_text(.x = 27, .y = state->height / 2,
