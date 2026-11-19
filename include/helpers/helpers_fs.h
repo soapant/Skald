@@ -15,5 +15,6 @@ bool feature_path_get(const char *feature, const char *name, char *out,
 bool feature_path_data_dir_exists(const char *stem);
 
 bool file_copy_path(const char *src, const char *dst);
+bool file_remove_path(const char *path);
 
 #endif

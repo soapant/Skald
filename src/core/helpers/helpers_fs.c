@@ -178,3 +178,9 @@ bool file_copy_path(const char *src, const char *dst) {
     remove(dst);
   return ok;
 }
+
+bool file_remove_path(const char *path) {
+  if (!path || !path[0])
+    return false;
+  return remove(path) == 0;
+}
