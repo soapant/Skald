@@ -16,9 +16,17 @@
 
 #define SLIDER_MAX 1024
 #define SLIDER_MIN_SPAN 1e-6f
-#define SLIDER_WHITE RGB(155, 155, 155)
-#define SLIDER_GRAY RGB(68, 68, 68)
-#define SLIDER_THUMB RGB(240, 240, 240)
+static ColorRef widget_accent(void) {
+  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.66f);
+}
+
+static ColorRef widget_neutral(void) {
+  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.30f);
+}
+
+static ColorRef widget_thumb(void) {
+  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.92f);
+}
 
 static SliderSpec sliders[SLIDER_MAX];
 static int slider_count = 0;
@@ -271,12 +279,12 @@ void slider_draw(const SliderSpec *spec) {
       rgb_to_hex(spec->bg_color ? spec->bg_color : COLOR_BG);
   unsigned long fill = rgb_to_hex(spec->fill_color
                                       ? spec->fill_color
-                                      : (spec->hovered ? SLIDER_WHITE
-                                                       : SLIDER_GRAY));
+                                      : (spec->hovered ? widget_accent()
+                                                       : widget_neutral()));
   unsigned long thumb =
-      rgb_to_hex(spec->thumb_color ? spec->thumb_color : SLIDER_THUMB);
+      rgb_to_hex(spec->thumb_color ? spec->thumb_color : widget_thumb());
   unsigned long track_border =
-      rgb_to_hex(spec->hovered ? SLIDER_WHITE : SLIDER_GRAY);
+      rgb_to_hex(spec->hovered ? widget_accent() : widget_neutral());
 
   if (!spec->no_bg) {
     Platform_DrawRectRaw(
