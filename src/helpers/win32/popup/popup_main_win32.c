@@ -611,7 +611,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         FillRect(paintDC, &ps.rcPaint,
                  cached_brush(&s_bg_brush, &s_bg_color, COLOR_BG));
       }
-      win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
     }
     if (SkaldContext_Get()->window.prompt_callbacks.render) {
       SkaldContext_Get()->window.editbox_placed = false;
@@ -737,6 +736,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (hMainFont)
         DeleteObject(hMainFont);
     }
+    win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
     if (useRenderBuf) {
       BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
              ps.rcPaint.right - ps.rcPaint.left,
