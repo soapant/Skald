@@ -50,6 +50,9 @@ static bool settings_ctrl_enter(PromptState *state) { return false; }
 static void settings_tab(PromptState *state) {}
 
 static void settings_quicklinks_render(void *ud) {
+  sk_draw_rect(.x=-7,.y=-10,.w = 740, .h = 220,
+               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.42f),
+               .filled = true, .rounded = false);
    char* desc = "Add Quicklinks for your most commonly opened websites.";
    sk_draw_image(.path="/quicklinks.png",.x=(PromptW - SETTINGS_SIDEBAR_W) / 2 - 64,.y=10,.w=128,.h=128);
    sk_draw_text(.text=desc,.color=SK_GRAY,
@@ -57,13 +60,16 @@ static void settings_quicklinks_render(void *ud) {
                 .y = 150
                 );
 
+
   sk_draw_line(.x1 = -7, .y1 = 210,
                .x2 = PromptW, .y2 = 210,
                .color = COLOR_BORDER);
 
+
   sk_draw_rect(.x=10,.y=250,.w=700,.h=60,.color=SK_DARK_GRAY,.filled=true,.radius=6);
   sk_draw_text(.text = "Add Quicklink",.x=20,.y=250,.color=SK_LIGHT_GRAY);
   sk_draw_text(.text = "Blah Balh balhda bal ha ",.x=20,.y=275,.color=SK_GRAY);
+
   sk_place_checkbox(.name="blah",.x=650,.y=264,.w=32,.h=32);
 }
 
@@ -120,6 +126,7 @@ static void settings_render(PromptState *state) {
 
   sk_draw_line(.x1 = SETTINGS_SIDEBAR_W, .x2 = SETTINGS_SIDEBAR_W,
                .y2 = state->height, .color = COLOR_BORDER);
+
 
   settings_list(state);
 
