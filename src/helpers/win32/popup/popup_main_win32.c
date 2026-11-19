@@ -29,13 +29,13 @@
 
 #define IDC_LIST_BOX 102
 
-static ListBoxInfo *win32_get_lb_from_popup(HWND hPopup) {
+static ListBox *win32_get_lb_from_popup(HWND hPopup) {
   if (hPopup && IsWindow(hPopup)) {
     const PromptState *state = win32_prompt_state_from_hwnd(hPopup);
     if (state) {
       return state->lb;
     }
-    return (ListBoxInfo *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
+    return (ListBox *)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
   }
   return NULL;
 }
@@ -203,7 +203,7 @@ static HBRUSH cached_brush(HBRUSH *cache, COLORREF *cached, COLORREF want) {
 LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                       LPARAM lParam) {
 
-  ListBoxInfo *lb = win32_get_lb_from_popup(hwnd);
+  ListBox *lb = win32_get_lb_from_popup(hwnd);
   WindowManager *_wm_guard = WindowManager_Get();
   Popup *_top_guard = _wm_guard ? WindowManager_GetTopPopup(_wm_guard) : NULL;
   if (_top_guard && _top_guard->type == POPUP_PROMPT &&
@@ -257,7 +257,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
       PromptState *hst = win32_prompt_state_from_hwnd(hwnd);
       if (hst && hst->lb != NULL) {
-        ListBoxInfo *hlb = hst->lb;
+        ListBox *hlb = hst->lb;
         int list_top = prompt_list_top();
         int item_h = prompt_row_height();
         int visible =

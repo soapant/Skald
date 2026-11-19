@@ -21,7 +21,7 @@ int draw_line_prep(const DrawLineRawSpec *spec, int off_x, int off_y, int *x1,
                    int *y1, int *x2, int *y2);
 int draw_circle_prep(const DrawCircleRawSpec *spec, int off_x, int off_y,
                      int *cx, int *cy);
-void populate_listbox(ListBoxInfo *lb, const char *filter, const char **items,
+void populate_listbox(ListBox *lb, const char *filter, const char **items,
                       int item_count,
                       bool (*filter_match)(const char *item,
                                            const char *filter));
@@ -113,19 +113,19 @@ void set_draw_offset(int dx, int dy);
 void get_draw_offset(int *out_x, int *out_y);
 
 bool is_popup_active(WindowHandle hPopupWnd);
-void UI_SetSelection(ListBoxInfo *lb, int index);
-void UI_LB_SetCount(ListBoxInfo *lb, int count);
+void UI_SetSelection(ListBox *lb, int index);
+void UI_LB_SetCount(ListBox *lb, int count);
 void UI_LB_BeginUpdate(void);
 void UI_LB_EndUpdate(void);
 void UI_RequestPopupRepaint(void);
 void UI_LegacySyncRepaint(void);
-int UI_LB_GetViewTop(const ListBoxInfo *lb);
+int UI_LB_GetViewTop(const ListBox *lb);
 int UI_LB_GetVisibleCount(void);
 void UI_LB_SetVisibleCount(int count);
-void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index);
-void UI_NavigateTo(ListBoxInfo *lb, int index);
-void UI_NavigateUp(ListBoxInfo *lb);
-void UI_NavigateDown(ListBoxInfo *lb);
+void UI_LB_ScrollToTop(ListBox *lb, int top_index);
+void UI_NavigateTo(ListBox *lb, int index);
+void UI_NavigateUp(ListBox *lb);
+void UI_NavigateDown(ListBox *lb);
 
 void UI_Edit_GetSel(uint32_t *start, uint32_t *end);
 void UI_GetCurrentTextEdit(char *buffer, size_t cap);
@@ -136,7 +136,7 @@ int UI_InsertText(const char *utf8, int len);
 void UI_DeleteForward(void);
 void UI_SyncFilterFromEdit(void);
 void UI_ApplyFilterToEdit(void);
-ListBoxInfo *UI_GetPopupListBox(void);
+ListBox *UI_GetPopupListBox(void);
 void UI_SyncEditCursor(int pos);
 int UI_InsertChar(wchar_t wc);
 

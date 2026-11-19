@@ -171,7 +171,7 @@ bool Platform_DrawTextLine(DrawTextLineSpec spec) {
 }
 
 void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
-                        FontHandle font, ListBoxInfo *lb, int idx, int y,
+                        FontHandle font, ListBox *lb, int idx, int y,
                         int text_x, const char *icon_path) {
   unsigned long ncol, bcol, pcol;
   item_get_colors((GetItemColorsSpec){.idx = idx,

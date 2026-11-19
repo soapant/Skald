@@ -28,11 +28,11 @@ void x11_init_argb_image(Display *dpy, XImage *img, unsigned char *data, int w,
 bool x11_upload_argb(Display *dpy, Drawable ref, unsigned char *argb, int w,
                      int h, Pixmap *out_pm, Picture *out_pic);
 
-const char *x11_listbox_item_display_text(ListBoxInfo *lb, int idx, char *trunc,
+const char *x11_listbox_item_display_text(ListBox *lb, int idx, char *trunc,
                                           size_t trunc_size);
 void x11_draw_listbox_item_text(Display *dpy, XftDraw *xd, Visual *vis,
                                 Colormap cmap, FontHandle font,
-                                XftColor *plain_color, ListBoxInfo *lb,
+                                XftColor *plain_color, ListBox *lb,
                                 const char *icon_path, int idx, int y);
 void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            Colormap cmap, unsigned long hex,

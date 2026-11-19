@@ -460,7 +460,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   if (!state || !state->lb)
     return;
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
-  ListBoxInfo *lb = state->lb;
+  ListBox *lb = state->lb;
 
   int item_h = prompt_row_height();
   int y0 = prompt_list_top();

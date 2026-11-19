@@ -92,7 +92,7 @@ void UI_ApplyFilterToEdit(void) {
     prompt->eb->filter[sizeof(prompt->eb->filter) - 1] = '\0';
 }
 
-ListBoxInfo *UI_GetPopupListBox(void) {
+ListBox *UI_GetPopupListBox(void) {
   const PromptState *prompt = ui_top_prompt();
   return prompt ? prompt->lb : NULL;
 }

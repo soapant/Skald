@@ -65,6 +65,6 @@ void Platform_ListboxBackendEnd(void) {
   b_cmap = 0;
 }
 
-PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb) {
+PromptState *Platform_ListboxBackendPromptState(const ListBox *lb) {
   return prompt_popup_find_state(lb);
 }

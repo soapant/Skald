@@ -6,7 +6,7 @@
 #include "core/types.h"
 #include "core/types/prompt.h"
 
-void UI_SetSelection(ListBoxInfo *lb, int index) {
+void UI_SetSelection(ListBox *lb, int index) {
   if (!lb)
     return;
   if (lb->selected_index == index)
@@ -27,19 +27,19 @@ void UI_LB_EndUpdate(void) {
     lb_update_depth--;
 }
 
-void UI_LB_SetCount(ListBoxInfo *lb, int count) {
+void UI_LB_SetCount(ListBox *lb, int count) {
   if (lb)
     lb->item_count = count;
   UI_RequestPopupRepaint();
 }
 
-int UI_LB_GetViewTop(const ListBoxInfo *lb) { return lb ? lb->view_offset : 0; }
+int UI_LB_GetViewTop(const ListBox *lb) { return lb ? lb->view_offset : 0; }
 
 int UI_LB_GetVisibleCount(void) { return lb_visible_count; }
 
 void UI_LB_SetVisibleCount(int count) { lb_visible_count = count; }
 
-void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
+void UI_LB_ScrollToTop(ListBox *lb, int top_index) {
   if (!lb)
     return;
   int visible = UI_LB_GetVisibleCount();
@@ -53,7 +53,7 @@ void UI_LB_ScrollToTop(ListBoxInfo *lb, int top_index) {
   UI_RequestPopupRepaint();
 }
 
-void UI_NavigateTo(ListBoxInfo *lb, int index) {
+void UI_NavigateTo(ListBox *lb, int index) {
   if (!lb)
     return;
   int count = lb->item_count;
@@ -81,12 +81,12 @@ void UI_NavigateTo(ListBoxInfo *lb, int index) {
   UI_RequestPopupRepaint();
 }
 
-void UI_NavigateUp(ListBoxInfo *lb) {
+void UI_NavigateUp(ListBox *lb) {
   listbox_navigate_up(lb);
   UI_RequestPopupRepaint();
 }
 
-void UI_NavigateDown(ListBoxInfo *lb) {
+void UI_NavigateDown(ListBox *lb) {
   listbox_navigate_down(lb);
   UI_RequestPopupRepaint();
 }
