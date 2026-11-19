@@ -1,10 +1,15 @@
 #ifndef SETTINGS_REGISTRY_H
 #define SETTINGS_REGISTRY_H
 
+#include <stdbool.h>
+
+typedef struct SkSettingsEntry SkSettingsEntry;
+
 typedef struct {
   const char *name;
   const char *icon;
-  void (*render)(void *ud);
+  const char *desc;
+  void (*render)(SkSettingsEntry *entry, void *ud);
   void *ud;
 } SettingsEntrySpec;
 
