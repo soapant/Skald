@@ -260,17 +260,23 @@ static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by) {
   return result;
 }
 
-static unsigned char *rect_border_argb(int w, int h, float radius,
+static unsigned char *rect_border_argb(int rect_w, int rect_h, float radius,
                                        float thickness, unsigned long color,
-                                       float alpha) {
+                                       float alpha, int *out_w, int *out_h) {
+  int pad = (int)thickness / 2 + 2;
+  int w = rect_w + 2 * pad, h = rect_h + 2 * pad;
+  if (radius > (float)rect_w * 0.5f)
+    radius = (float)rect_w * 0.5f;
+  if (radius > (float)rect_h * 0.5f)
+    radius = (float)rect_h * 0.5f;
   unsigned char *buf = calloc((size_t)w * (size_t)h * 4, 1);
   if (!buf)
     return NULL;
   float cr = (float)((color >> 16) & 0xFF);
   float cg = (float)((color >> 8) & 0xFF);
   float cb = (float)(color & 0xFF);
-  float rx = (float)w * 0.5f - radius;
-  float ry = (float)h * 0.5f - radius;
+  float rx = (float)rect_w * 0.5f - radius;
+  float ry = (float)rect_h * 0.5f - radius;
   for (int py = 0; py < h; py++) {
     float pyc = (float)py + 0.5f - (float)h * 0.5f;
     for (int px = 0; px < w; px++) {
@@ -297,6 +303,10 @@ static unsigned char *rect_border_argb(int w, int h, float radius,
       buf[o + 3] = A;
     }
   }
+  if (out_w)
+    *out_w = w;
+  if (out_h)
+    *out_h = h;
   return buf;
 }
 
@@ -356,12 +366,13 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   {
     float r2 = (float)r;
     float alpha = (float)target_alpha / 65535.0f;
-    int pad = t / 2 + 2;
-    unsigned char *buf =
-        rect_border_argb(w + 2 * pad, h + 2 * pad, r2, (float)t, color, alpha);
+    int bw = 0, bh = 0;
+    unsigned char *buf = rect_border_argb(w, h, r2, (float)t, color, alpha,
+                                          &bw, &bh);
     if (!buf)
       return false;
-    return blit_argb_buf(buf, w + 2 * pad, h + 2 * pad, x - pad, y - pad);
+    return blit_argb_buf(buf, bw, bh, (int)x - (bw - (int)w) / 2,
+                         (int)y - (bh - (int)h) / 2);
   }
   return true;
 }

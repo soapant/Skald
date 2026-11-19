@@ -840,17 +840,51 @@ typedef struct SkSettingsEntry SkSettingsEntry;
 #define sk_add_settings_entry(...)                                             \
   sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
 
+typedef struct {
+  const char *title;
+  const char *sub;
+  bool initial;
+  void (*on_change)(SkSettingsEntry *entry, void *ud, bool checked);
+  void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
+  void *ud;
+} SkSettingsCheckboxSpec;
+
+typedef struct {
+  const char *title;
+  const char *sub;
+  const char *label;
+  void (*on_click)(SkSettingsEntry *entry, void *ud);
+  void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
+  void *ud;
+} SkSettingsButtonSpec;
+
+typedef struct {
+  const char *title;
+  const char *sub;
+  float min_value;
+  float max_value;
+  float initial;
+  void (*on_change)(SkSettingsEntry *entry, void *ud, float value);
+  void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
+  void *ud;
+} SkSettingsSliderSpec;
+
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
-int sk_settings_entry_add_checkbox(SkSettingsEntry *entry, const char *name,
-                                   const char *title, const char *sub,
-                                   bool initial);
-int sk_settings_entry_add_button(SkSettingsEntry *entry, const char *name,
-                                 const char *title, const char *sub,
-                                 const char *label);
-int sk_settings_entry_add_slider(SkSettingsEntry *entry, const char *name,
-                                 const char *title, const char *sub,
-                                 float min_value, float max_value,
-                                 float initial);
+#define sk_settings_entry_add_checkbox(entry, ...)                             \
+  ski_settings_entry_add_checkbox(entry,                                       \
+                                  &(SkSettingsCheckboxSpec){__VA_ARGS__})
+#define sk_settings_entry_add_button(entry, ...)                              \
+  ski_settings_entry_add_button(entry,                                        \
+                                &(SkSettingsButtonSpec){__VA_ARGS__})
+#define sk_settings_entry_add_slider(entry, ...)                              \
+  ski_settings_entry_add_slider(entry,                                        \
+                                &(SkSettingsSliderSpec){__VA_ARGS__})
+int ski_settings_entry_add_checkbox(SkSettingsEntry *entry,
+                                    const SkSettingsCheckboxSpec *spec);
+int ski_settings_entry_add_button(SkSettingsEntry *entry,
+                                  const SkSettingsButtonSpec *spec);
+int ski_settings_entry_add_slider(SkSettingsEntry *entry,
+                                  const SkSettingsSliderSpec *spec);
 
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 

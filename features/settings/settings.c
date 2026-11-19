@@ -121,8 +121,9 @@ SKALD_FEATURE_INIT {
       sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
                             .desc = "Add Quicklinks for your most commonly "
                                     "opened websites.");
-  sk_settings_entry_add_checkbox(ql, "blah", "Add Quicklink",
-                                 "Blah Balh balhda bal ha", false);
+  sk_settings_entry_add_slider(ql,
+                                 .title = "Add Quicklink",
+                                 .sub = "Add a quicklink to appear in cc");
 
   sk_add_settings_entry(.name = "Config", .icon = "/settings.png",
                         .desc = "Coming soon.");
