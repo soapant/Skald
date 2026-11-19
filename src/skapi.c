@@ -2769,7 +2769,6 @@ typedef struct {
 
 typedef struct {
   unsigned char type;
-  char name[64];
   char title[128];
   char sub[256];
   char label[64];
@@ -2777,6 +2776,11 @@ typedef struct {
   float min_value;
   float max_value;
   float value;
+  void *ud;
+  void (*on_click)(SkSettingsEntry *entry, void *ud);
+  void (*on_change_b)(SkSettingsEntry *entry, void *ud, bool checked);
+  void (*on_change_f)(SkSettingsEntry *entry, void *ud, float value);
+  void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
 } SkSettingsBlock;
 
 typedef struct SkSettingsEntry {
@@ -2925,9 +2929,8 @@ SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
   e->pub.desc = e->desc;
   e->pub.render = spec->render ? spec->render : settings_entry_builtin_render;
   e->pub.ud = spec->ud;
-  if (spec->render)
-    owner_resolve_for_func((void *)(uintptr_t)spec->render, e->owner,
-                           sizeof(e->owner));
+  owner_resolve_for_func(__builtin_return_address(0), e->owner,
+                         sizeof(e->owner));
   return e;
 }
 
@@ -2939,59 +2942,108 @@ static SkSettingsEntry *settings_entry_resolve(SkSettingsEntry *e) {
   return e;
 }
 
-static int settings_entry_add_block(SkSettingsEntry *e, SkSettingsBlock b) {
-  e = settings_entry_resolve(e);
-  if (!e || e->block_count >= SETTINGS_MAX_BLOCKS)
+static SkSettingsBlock *settings_block_at(SkSettingsEntry *entry, int index) {
+  SkSettingsEntry *e = settings_entry_resolve(entry);
+  if (!e || index < 0 || index >= e->block_count)
+    return NULL;
+  return &e->blocks[index];
+}
+
+static bool settings_block_title_ok(const char *title) {
+  return title && title[0];
+}
+
+static int settings_entry_add_block_typed(SkSettingsEntry *entry, int type,
+                                          const char *title, const char *sub,
+                                          void *anchor) {
+  SkSettingsEntry *e = settings_entry_resolve(entry);
+  if (!e || !settings_block_title_ok(title))
     return -1;
-  e->blocks[e->block_count] = b;
+  if (e->block_count >= SETTINGS_MAX_BLOCKS)
+    return -1;
+  if (e->owner[0] == '\0' && anchor)
+    owner_resolve_for_func(anchor, e->owner, sizeof(e->owner));
+  SkSettingsBlock *b = &e->blocks[e->block_count];
+  memset(b, 0, sizeof(*b));
+  b->type = (unsigned char)type;
+  snprintf(b->title, sizeof(b->title), "%s", title);
+  snprintf(b->sub, sizeof(b->sub), "%s", sub ? sub : "");
   return e->block_count++;
 }
 
-int sk_settings_entry_add_checkbox(SkSettingsEntry *entry, const char *name,
-                                   const char *title, const char *sub,
-                                   bool initial) {
-  SkSettingsBlock b;
-  memset(&b, 0, sizeof(b));
-  b.type = SETTINGS_BLOCK_CHECKBOX;
-  snprintf(b.name, sizeof(b.name), "%s", name ? name : "");
-  snprintf(b.title, sizeof(b.title), "%s", title ? title : "");
-  snprintf(b.sub, sizeof(b.sub), "%s", sub ? sub : "");
-  b.initial = initial;
-  return b.name[0] ? settings_entry_add_block(entry, b) : -1;
+int ski_settings_entry_add_checkbox(SkSettingsEntry *entry,
+                                    const SkSettingsCheckboxSpec *spec) {
+  if (!spec)
+    return -1;
+  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_CHECKBOX,
+                                           spec->title, spec->sub,
+                                           __builtin_return_address(0));
+  SkSettingsBlock *b = settings_block_at(entry, idx);
+  if (!b)
+    return -1;
+  b->initial = spec->initial;
+  b->on_change_b = spec->on_change;
+  b->on_hover = spec->on_hover;
+  b->ud = spec->ud;
+  return idx;
 }
 
-int sk_settings_entry_add_button(SkSettingsEntry *entry, const char *name,
-                                 const char *title, const char *sub,
-                                 const char *label) {
-  SkSettingsBlock b;
-  memset(&b, 0, sizeof(b));
-  b.type = SETTINGS_BLOCK_BUTTON;
-  snprintf(b.name, sizeof(b.name), "%s", name ? name : "");
-  snprintf(b.title, sizeof(b.title), "%s", title ? title : "");
-  snprintf(b.sub, sizeof(b.sub), "%s", sub ? sub : "");
-  snprintf(b.label, sizeof(b.label), "%s", label ? label : "");
-  return b.name[0] ? settings_entry_add_block(entry, b) : -1;
+int ski_settings_entry_add_button(SkSettingsEntry *entry,
+                                  const SkSettingsButtonSpec *spec) {
+  if (!spec)
+    return -1;
+  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_BUTTON,
+                                           spec->title, spec->sub,
+                                           __builtin_return_address(0));
+  SkSettingsBlock *b = settings_block_at(entry, idx);
+  if (!b)
+    return -1;
+  snprintf(b->label, sizeof(b->label), "%s",
+           spec->label ? spec->label : "");
+  b->on_click = spec->on_click;
+  b->on_hover = spec->on_hover;
+  b->ud = spec->ud;
+  return idx;
 }
 
-int sk_settings_entry_add_slider(SkSettingsEntry *entry, const char *name,
-                                 const char *title, const char *sub,
-                                 float min_value, float max_value,
-                                 float initial) {
-  if (min_value > max_value) {
+int ski_settings_entry_add_slider(SkSettingsEntry *entry,
+                                  const SkSettingsSliderSpec *spec) {
+  if (!spec)
+    return -1;
+  float min_value = spec->min_value;
+  float max_value = spec->max_value;
+  if (min_value == 0.0f && max_value == 0.0f && spec->initial == 0.0f) {
+    min_value = 0.0f;
+    max_value = 100.0f;
+  } else if (max_value == min_value) {
+    log_error("settings slider '%s' has empty range (%g..%g), using 0..100",
+              spec->title ? spec->title : "", (double)min_value,
+              (double)max_value);
+    min_value = 0.0f;
+    max_value = 100.0f;
+  } else if (min_value > max_value) {
     float t = min_value;
     min_value = max_value;
     max_value = t;
   }
-  SkSettingsBlock b;
-  memset(&b, 0, sizeof(b));
-  b.type = SETTINGS_BLOCK_SLIDER;
-  snprintf(b.name, sizeof(b.name), "%s", name ? name : "");
-  snprintf(b.title, sizeof(b.title), "%s", title ? title : "");
-  snprintf(b.sub, sizeof(b.sub), "%s", sub ? sub : "");
-  b.min_value = min_value;
-  b.max_value = max_value;
-  b.value = initial;
-  return b.name[0] ? settings_entry_add_block(entry, b) : -1;
+  float initial = spec->initial;
+  if (initial < min_value)
+    initial = min_value;
+  if (initial > max_value)
+    initial = max_value;
+  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_SLIDER,
+                                           spec->title, spec->sub,
+                                           __builtin_return_address(0));
+  SkSettingsBlock *b = settings_block_at(entry, idx);
+  if (!b)
+    return -1;
+  b->min_value = min_value;
+  b->max_value = max_value;
+  b->value = initial;
+  b->on_change_f = spec->on_change;
+  b->on_hover = spec->on_hover;
+  b->ud = spec->ud;
+  return idx;
 }
 
 int sk_settings_entry_count(void) { return settings_entry_count; }
@@ -3022,6 +3074,58 @@ void settings_registry_purge_owner(const char *path_a, const char *path_b) {
   settings_entry_count = out;
 }
 
+static SkSettingsEntry *s_dispatch_entry = NULL;
+static int s_dispatch_index = -1;
+
+static SkSettingsBlock *dispatch_block(void) {
+  if (!s_dispatch_entry || s_dispatch_index < 0)
+    return NULL;
+  return &s_dispatch_entry->blocks[s_dispatch_index];
+}
+
+static void dispatch_widget_click(void) {
+  SkSettingsEntry *e = s_dispatch_entry;
+  SkSettingsBlock *b = dispatch_block();
+  if (!b)
+    return;
+  if (b->type == SETTINGS_BLOCK_CHECKBOX) {
+    bool checked = checkbox_is_checked(b->title, PLACE_CHECKBOX);
+    if (b->on_change_b)
+      b->on_change_b(e, b->ud, checked);
+  } else if (b->type == SETTINGS_BLOCK_BUTTON) {
+    if (b->on_click)
+      b->on_click(e, b->ud);
+  }
+}
+
+static void dispatch_widget_hover(void) {
+  SkSettingsEntry *e = s_dispatch_entry;
+  SkSettingsBlock *b = dispatch_block();
+  if (!b)
+    return;
+  bool hovered;
+  if (b->type == SETTINGS_BLOCK_SLIDER) {
+    hovered = slider_is_hovered(b->title);
+  } else {
+    hovered =
+        checkbox_is_hovered(b->title, b->type == SETTINGS_BLOCK_BUTTON
+                                         ? PLACE_BUTTON
+                                         : PLACE_CHECKBOX);
+  }
+  if (b->on_hover)
+    b->on_hover(e, b->ud, hovered);
+}
+
+static void dispatch_slider_change(float value) {
+  SkSettingsEntry *e = s_dispatch_entry;
+  SkSettingsBlock *b = dispatch_block();
+  if (!b)
+    return;
+  b->value = value;
+  if (b->on_change_f)
+    b->on_change_f(e, b->ud, value);
+}
+
 static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
   (void)ud;
   if (!entry)
@@ -3046,6 +3150,8 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     SkSettingsBlock *b = &entry->blocks[i];
     if (cursor + 60 > PromptH - draw_state_get()->off_y)
       break;
+    s_dispatch_entry = entry;
+    s_dispatch_index = i;
     int x = 10, y = cursor, w = pane_w - 20;
     sk_draw_rect(.x = x, .y = y, .w = w, .h = 60, .color = SK_DARK_GRAY,
                  .filled = true, .radius = 6);
@@ -3057,26 +3163,33 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
                    .color = SK_GRAY, .align = "LEFT");
     int right = x + w - 10;
     if (b->type == SETTINGS_BLOCK_CHECKBOX) {
-      sk_place_checkbox(.name = b->name, .x = right - 32, .y = y + 14,
-                        .w = 32, .h = 32, .checked = b->initial);
+      sk_place_checkbox(.name = b->title, .x = right - 32, .y = y + 14,
+                        .w = 32, .h = 32, .checked = b->initial,
+                        .on_click = dispatch_widget_click,
+                        .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_BUTTON) {
       int bw = sk_get_text_width(b->label, FontSize) + 28;
       if (bw < 64)
         bw = 64;
-      sk_place_button(.name = b->name, .x = right - bw, .y = y + 16,
-                      .w = bw, .h = 28, .text = b->label);
+      sk_place_button(.name = b->title, .x = right - bw, .y = y + 16,
+                      .w = bw, .h = 28, .text = b->label,
+                      .on_click = dispatch_widget_click,
+                      .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_SLIDER) {
       float range = b->max_value - b->min_value;
       float step = range >= 10.0f ? 1.0f : range / 100.0f;
       if (step <= 0.0f)
         step = 1.0f;
-      sk_place_slider(.name = b->name, .x = right - 180, .y = y + 20,
+      sk_place_slider(.name = b->title, .x = right - 180, .y = y + 20,
                       .w = 180, .h = 20, .min_value = b->min_value,
                       .max_value = b->max_value, .step = step,
-                      .value = b->value);
+                      .value = b->value, .on_change = dispatch_slider_change,
+                      .on_hover = dispatch_widget_hover);
     }
     cursor += 70;
   }
+  s_dispatch_entry = NULL;
+  s_dispatch_index = -1;
 }
 
 int sk_cc_entry_count(void) { return cc_entry_count; }
