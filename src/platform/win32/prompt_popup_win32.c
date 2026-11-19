@@ -1,5 +1,6 @@
 #include "config_values.h"
 #include "core/context.h"
+#include "core/prompt_geometry.h"
 #include "core/types/color.h"
 #include "core/types/keys.h"
 #include "core/window_manager.h"
@@ -137,6 +138,8 @@ void Platform_PromptPopupRender(Popup *self) {
   if (state->callbacks->render) {
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
+    if (state->lb && !state->no_separators)
+      draw_prompt_band(0, prompt_list_top(), state->width);
     state->callbacks->render(state);
     draw_state_get()->suppress_separators = sep_prev;
   }

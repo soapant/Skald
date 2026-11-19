@@ -464,6 +464,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
 
   int item_h = prompt_row_height();
   int y0 = prompt_list_top();
+  draw_prompt_band(0, y0, state->width);
   draw_prompt_separator(
       (DrawPromptSeparatorSpec){.y = y0, .width = state->width});
   int y_offset = PROMPT_LIST_BOTTOM_TITLE;

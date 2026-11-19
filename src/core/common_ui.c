@@ -77,6 +77,22 @@ void draw_prompt_separator(DrawPromptSeparatorSpec spec) {
                                          .filled = true});
 }
 
+void draw_prompt_band(int y, int bottom_y, int width) {
+  if (width <= 0 || bottom_y <= y)
+    return;
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = 0,
+                                         .y = y,
+                                         .w = width,
+                                         .h = bottom_y - y,
+                                         .color = rgb_to_hex(
+                                             color_lerp(COLOR_BG, RGB(0, 0, 0), 0.43f)),
+                                         .radius = 0,
+                                         .rounded = false,
+                                         .opaque = true,
+                                         .thickness = 0,
+                                         .filled = true});
+}
+
 void item_get_colors(GetItemColorsSpec spec) {
   unsigned long col_text = rgb_to_hex(COLOR_TEXT);
   float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
