@@ -29,19 +29,18 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = "everforest-dark"
+  Theme = "pastel"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = false
   EnableBorders = true
-  RainbowText = false
   WindowTitleText = false
   CloseOnLossOfFocus = false
 
 [color]
-  BG = "#2D353B"
-  TEXT = "#D3C6AA"
-  SELECTED_TEXT = "#272E33"
-  CURSOR = "#D3C6AA"
-  BORDER = "#4C565D"
+  BG = "#262430"
+  TEXT = "#EEECF5"
+  SELECTED_TEXT = "#1E1D28"
+  CURSOR = "#EEECF5"
+  BORDER = "#605D70"
 # </skald-config-generated>

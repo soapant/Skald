@@ -364,8 +364,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_CTLCOLOREDIT: {
     HDC hdc = (HDC)wParam;
-    COLORREF tc =
-        RainbowText ? get_rainbow_color(0.5f, 0.85f, 1.0f) : COLOR_TEXT;
+    COLORREF tc = COLOR_TEXT;
     if (prompt_win_no_bg()) {
       SetTextColor(hdc, tc);
       SetBkMode(hdc, TRANSPARENT);

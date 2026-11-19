@@ -46,7 +46,6 @@ typedef struct {
 
   const char *align;
   int placeholder_dy;
-  int rainbow_limit_x;
 
   const char *placeholder;
   ColorRef text_color;

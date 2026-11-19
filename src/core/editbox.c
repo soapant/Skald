@@ -152,7 +152,6 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
                          ? in->placeholder
                          : (in->state ? in->state->eb->placeholder : NULL);
   out->placeholder_dy = 2;
-  out->rainbow_limit_x = -1;
   out->text_color = in->text_color;
   out->bg_color = in->bg_color;
   out->font = in->font;
@@ -210,7 +209,6 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   spec->caret_y = editbox_caret_y(edit_y, ascent, descent, FontSize);
   spec->caret_h = prompt_caret_height();
   spec->placeholder_dy = 2;
-  spec->rainbow_limit_x = -1;
   spec->placeholder = state->eb->placeholder;
   spec->text_color = rgb_to_hex(COLOR_TEXT);
   spec->font = font;
@@ -264,46 +262,6 @@ int editbox_scroll_offset(const EditboxSpec *spec) {
   if (scroll < 0)
     scroll = 0;
   return scroll;
-}
-
-static void editbox_draw_rainbow(const EditboxSpec *spec,
-                                 const EditboxLayout *layout) {
-  int text_len = spec->text_len;
-  int nchars = 0;
-  for (int p = 0; p < text_len;) {
-    int cl = utf8_lead_len((unsigned char)spec->text[p]);
-    p += cl;
-    nchars++;
-  }
-  int ci = 0;
-  size_t pos = 0;
-  while (pos < (size_t)text_len) {
-    int cl = utf8_lead_len((unsigned char)spec->text[pos]);
-    if (pos + (size_t)cl > (size_t)text_len)
-      cl = (int)((size_t)text_len - pos);
-    char buf[8];
-    memcpy(buf, spec->text + pos, cl);
-    buf[cl] = '\0';
-    int tx = layout->draw_x +
-             Platform_MeasureTextWidth((MeasureTextWidthSpec){
-                 .text = spec->text,
-                 .len = (int)pos,
-                 .font_size = spec->font_size > 0 ? spec->font_size : FontSize});
-    if (spec->rainbow_limit_x >= 0 && tx >= spec->rainbow_limit_x)
-      break;
-    unsigned long col = get_rainbow_color(
-        nchars > 1 ? (float)ci / (float)(nchars - 1) : 0.5f, 0.85f, 1.0f);
-    Platform_DrawTextRaw((DrawTextRawSpec){.x = tx,
-                                           .y = spec->text_y,
-                                           .text = buf,
-                                           .color = col,
-                                           .font = spec->font,
-                                           .align = "",
-                                           .pad = 0,
-                                           .font_size = spec->font_size});
-    pos += cl;
-    ci++;
-  }
 }
 
 void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
@@ -416,18 +374,14 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
 
   if (parts & EDITBOX_PART_TEXT) {
     if (spec->text_len > 0 && !spec->password_mode) {
-      if (RainbowText) {
-        editbox_draw_rainbow(spec, layout);
-      } else {
-        Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->draw_x,
-                                               .y = spec->text_y,
-                                               .text = spec->text,
-                                               .color = spec->text_color,
-                                               .font = spec->font,
-                                               .align = "",
-                                               .pad = 0,
-                                               .font_size = spec->font_size});
-      }
+      Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->draw_x,
+                                             .y = spec->text_y,
+                                             .text = spec->text,
+                                             .color = spec->text_color,
+                                             .font = spec->font,
+                                             .align = "",
+                                             .pad = 0,
+                                             .font_size = spec->font_size});
     } else if (spec->placeholder && spec->placeholder[0]) {
       unsigned long ph =
           color_lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);

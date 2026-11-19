@@ -73,7 +73,6 @@ static const ConfigEntry config_entries[] = {
     {"MessagesEnabled", CONFIG_BOOL, &MessagesEnabled},
     {"EnableAutoPairing", CONFIG_BOOL, &EnableAutoPairing},
     {"EnableBorders", CONFIG_BOOL, &EnableBorders},
-    {"RainbowText", CONFIG_BOOL, &RainbowText},
     {"WindowTitleText", CONFIG_BOOL, &WindowTitleText},
     {"CloseOnLossOfFocus", CONFIG_BOOL, &CloseOnLossOfFocus},
     {"COLOR_BG", CONFIG_COLORREF, &COLOR_BG},

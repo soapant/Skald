@@ -37,7 +37,6 @@
   X(bool, MessagesEnabled, true)                                               \
   X(bool, EnableAutoPairing, false)                                            \
   X(bool, EnableBorders, true)                                                 \
-  X(bool, RainbowText, false)                                                  \
   X(bool, WindowTitleText, false)                                              \
   X(bool, CloseOnLossOfFocus, false)                                           \
   X(ColorRef, COLOR_BG, RGB(15, 15, 15))                                       \
