@@ -212,9 +212,9 @@ void checkbox_draw(const CheckboxSpec *spec) {
     int w = spec->w > 0 ? spec->w : 16;
     int h = spec->h > 0 ? spec->h : 16;
     if (!spec->no_bg) {
-      checkbox_fill_border(spec->x, spec->y, w, h, thick, 0, false,
-                           CornerRadius / 3, checkbox_body, checkbox_border,
-                           spec->border);
+      checkbox_fill_border(spec->x, spec->y, w, h, thick, CornerRadius / 3,
+                           true, CornerRadius / 3, checkbox_body,
+                           checkbox_border, spec->border);
     }
 
     if (spec->checked) {
