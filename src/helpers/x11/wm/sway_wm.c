@@ -772,7 +772,6 @@ static void sway_json_extract_field(const char *json, const char *at,
     out[m] = '\0';
     return;
   }
-  /* null / number */
   const char *e = p;
   while (e < end && *e &&
          (*e != ',' && *e != '}' && *e != ']' && !iscntrl((unsigned char)*e)))

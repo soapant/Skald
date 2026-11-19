@@ -383,7 +383,6 @@ static bool niri_close_windows(const char *needle, bool by_id) {
   for (char *p = json; (p = strstr(p, "\"id\":")); p += 5) {
     char *next = strstr(p + 5, "\"id\":");
     char *limit = next ? next : json + strlen(json);
-    /* bound the scan to this window object */
     size_t save_len = (size_t)(limit - p);
     char *obj = malloc(save_len + 1);
     if (!obj)
