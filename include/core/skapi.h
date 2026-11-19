@@ -844,18 +844,16 @@ typedef struct {
   const char *title;
   const char *sub;
   bool initial;
-  void (*on_change)(SkSettingsEntry *entry, void *ud, bool checked);
-  void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
-  void *ud;
+  void (*on_click)(void);
+  void (*on_hover)(void);
 } SkSettingsCheckboxSpec;
 
 typedef struct {
   const char *title;
   const char *sub;
   const char *label;
-  void (*on_click)(SkSettingsEntry *entry, void *ud);
-  void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
-  void *ud;
+  void (*on_click)(void);
+  void (*on_hover)(void);
 } SkSettingsButtonSpec;
 
 typedef struct {
@@ -864,9 +862,8 @@ typedef struct {
   float min_value;
   float max_value;
   float initial;
-  void (*on_change)(SkSettingsEntry *entry, void *ud, float value);
-  void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
-  void *ud;
+  void (*on_change)(void);
+  void (*on_hover)(void);
 } SkSettingsSliderSpec;
 
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
