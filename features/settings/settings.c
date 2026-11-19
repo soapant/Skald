@@ -50,17 +50,21 @@ static bool settings_ctrl_enter(PromptState *state) { return false; }
 static void settings_tab(PromptState *state) {}
 
 static void settings_quicklinks_render(void *ud) {
-  static ListBoxInfo pane;
    char* desc = "Add Quicklinks for your most commonly opened websites.";
-   sk_draw_image(.path="/quicklinks.png",.x=(PromptWidth - SETTINGS_SIDEBAR_W) / 2 - 64,.y=10,.w=128,.h=128);
+   sk_draw_image(.path="/quicklinks.png",.x=(PromptW - SETTINGS_SIDEBAR_W) / 2 - 64,.y=10,.w=128,.h=128);
    sk_draw_text(.text=desc,.color=SK_GRAY,
                 .x = 30,
                 .y = 150
                 );
 
   sk_draw_line(.x1 = -7, .y1 = 210,
-               .x2 = PromptWidth, .y2 = 210,
+               .x2 = PromptW, .y2 = 210,
                .color = COLOR_BORDER);
+
+  sk_draw_rect(.x=10,.y=250,.w=700,.h=60,.color=SK_DARK_GRAY,.filled=true,.radius=6);
+  sk_draw_text(.text = "Add Quicklink",.x=20,.y=250,.color=SK_LIGHT_GRAY);
+  sk_draw_text(.text = "Blah Balh balhda bal ha ",.x=20,.y=275,.color=SK_GRAY);
+  sk_place_checkbox(.name="blah",.x=650,.y=264,.w=32,.h=32);
 }
 
 static void settings_config_render(void *ud) {
@@ -97,21 +101,21 @@ static void settings_list(PromptState *state) {
     }
     sk_draw_text(.text = ctx.text, .x = ctx.x + 36,
                  .y = row_y + (row_h - sk_get_text_height(15)) / 2,
-                 .align = "LEFT", .color = COLOR_TEXT, .fontsize = 15);
+                 .align = "LEFT", .color = COLOR_TEXT, .font_size = 15);
   }
   sk_listbox_end();
 }
 
 static void settings_render(PromptState *state) {
   sk_draw_rect(.w = SETTINGS_SIDEBAR_W, .h = state->height,
-               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.72f),
+               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.32f),
                .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .fontsize = 16,.caret_height=19,.caret_y = SETTINGS_EB_H / 2);
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16,.caret_h=19,.caret_y = SETTINGS_EB_H / 2);
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
-               .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W, .y2 = SETTINGS_SEP_Y,
+               .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W - 2, .y2 = SETTINGS_SEP_Y,
                .color = COLOR_BORDER);
 
   sk_draw_line(.x1 = SETTINGS_SIDEBAR_W, .x2 = SETTINGS_SIDEBAR_W,
