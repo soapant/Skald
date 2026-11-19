@@ -2751,6 +2751,73 @@ int sk_get_screen_height(void) {
   return h;
 }
 
+#define SK_CONFIG_SETTING_KEY_MAX 384
+#define SK_CONFIG_SETTING_VALUE_MAX 1024
+#define SK_CONFIG_MAX_ENTRIES 256
+
+static void sk_config_init_locked(void);
+static void sk_config_lock(void);
+static void sk_config_unlock(void);
+
+typedef struct {
+  char key[SK_CONFIG_SETTING_KEY_MAX];
+  char value[SK_CONFIG_SETTING_VALUE_MAX];
+} SkConfigSettingEntry;
+
+static int setting_entry_count = 0;
+static SkConfigSettingEntry setting_entries[SK_CONFIG_MAX_ENTRIES];
+
+static const char *setting_lookup_locked(const char *key) {
+  for (int i = 0; i < setting_entry_count; i++)
+    if (strcmp(setting_entries[i].key, key) == 0)
+      return setting_entries[i].value;
+  return NULL;
+}
+
+static void setting_entries_set(const char *key, const char *value) {
+  for (int i = 0; i < setting_entry_count; i++) {
+    if (strcmp(setting_entries[i].key, key) == 0) {
+      snprintf(setting_entries[i].value, sizeof(setting_entries[i].value),
+               "%s", value ? value : "");
+      return;
+    }
+  }
+  if (setting_entry_count >= SK_CONFIG_MAX_ENTRIES) {
+    log_error("sk_config: setting table full, dropping '%s'", key);
+    return;
+  }
+  SkConfigSettingEntry *e = &setting_entries[setting_entry_count++];
+  snprintf(e->key, sizeof(e->key), "%s", key);
+  snprintf(e->value, sizeof(e->value), "%s", value ? value : "");
+}
+
+static bool setting_parse_bool(const char *v, bool *out) {
+  if (!v || !out)
+    return false;
+  if (!strcmp(v, "true") || !strcmp(v, "TRUE") || !strcmp(v, "True") ||
+      !strcmp(v, "1") || !strcmp(v, "yes") || !strcmp(v, "on")) {
+    *out = true;
+    return true;
+  }
+  if (!strcmp(v, "false") || !strcmp(v, "FALSE") || !strcmp(v, "False") ||
+      !strcmp(v, "0") || !strcmp(v, "no") || !strcmp(v, "off")) {
+    *out = false;
+    return true;
+  }
+  return false;
+}
+
+static bool setting_parse_float(const char *v, float *out) {
+  if (!v || !*v || !out)
+    return false;
+  char *end = NULL;
+  float f = strtof(v, &end);
+  if (!end || *end != '\0')
+    return false;
+  *out = f;
+  return true;
+}
+
 typedef struct {
   SkCcEntrySpec pub;
   char display_name[1024];
@@ -2985,6 +3052,20 @@ int ski_settings_entry_add_checkbox(SkSettingsEntry *entry,
   b->on_change_b = spec->on_change;
   b->on_hover = spec->on_hover;
   b->ud = spec->ud;
+  {
+    char key[SK_CONFIG_SETTING_KEY_MAX];
+    SkSettingsEntry *e = settings_entry_resolve(entry);
+    if (e) {
+      sk_config_lock();
+      sk_config_init_locked();
+      snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
+      const char *p = setting_lookup_locked(key);
+      bool seeded;
+      if (setting_parse_bool(p, &seeded))
+        b->initial = seeded;
+      sk_config_unlock();
+    }
+  }
   return idx;
 }
 
@@ -3043,6 +3124,25 @@ int ski_settings_entry_add_slider(SkSettingsEntry *entry,
   b->on_change_f = spec->on_change;
   b->on_hover = spec->on_hover;
   b->ud = spec->ud;
+  {
+    char key[SK_CONFIG_SETTING_KEY_MAX];
+    SkSettingsEntry *e = settings_entry_resolve(entry);
+    if (e) {
+      sk_config_lock();
+      sk_config_init_locked();
+      snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
+      const char *p = setting_lookup_locked(key);
+      float seeded;
+      if (setting_parse_float(p, &seeded)) {
+        if (seeded < min_value)
+          seeded = min_value;
+        if (seeded > max_value)
+          seeded = max_value;
+        b->value = seeded;
+      }
+      sk_config_unlock();
+    }
+  }
   return idx;
 }
 
@@ -3083,6 +3183,13 @@ static SkSettingsBlock *dispatch_block(void) {
   return &s_dispatch_entry->blocks[s_dispatch_index];
 }
 
+static void persist_block_value(const SkSettingsEntry *e,
+                                const SkSettingsBlock *b, const char *value) {
+  char key[SK_CONFIG_SETTING_KEY_MAX];
+  snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
+  sk_config_set_setting(key, value);
+}
+
 static void dispatch_widget_click(void) {
   SkSettingsEntry *e = s_dispatch_entry;
   SkSettingsBlock *b = dispatch_block();
@@ -3090,6 +3197,7 @@ static void dispatch_widget_click(void) {
     return;
   if (b->type == SETTINGS_BLOCK_CHECKBOX) {
     bool checked = checkbox_is_checked(b->title, PLACE_CHECKBOX);
+    persist_block_value(e, b, checked ? "true" : "false");
     if (b->on_change_b)
       b->on_change_b(e, b->ud, checked);
   } else if (b->type == SETTINGS_BLOCK_BUTTON) {
@@ -3122,6 +3230,11 @@ static void dispatch_slider_change(float value) {
   if (!b)
     return;
   b->value = value;
+  {
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%g", value);
+    persist_block_value(e, b, buf);
+  }
   if (b->on_change_f)
     b->on_change_f(e, b->ud, value);
 }
@@ -3133,11 +3246,12 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
   int pane_w = PromptW - draw_state_get()->off_x;
   if (pane_w < 240)
     pane_w = 240;
-  int cursor = 250;
+  int cursor = 220;
 
   sk_draw_rect(.x = -7, .y = -10, .w = pane_w + 24, .h = 220,
                .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.42f),
                .filled = true, .rounded = false);
+
   if (entry->icon[0])
     sk_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10,
                   .w = 128, .h = 128);
@@ -3155,7 +3269,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     s_dispatch_entry = entry;
     s_dispatch_index = i;
     int x = 10, y = cursor, w = pane_w - 20;
-    sk_draw_rect(.x = x, .y = y, .w = w, .h = 60, .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.085f),
+    sk_draw_rect(.x = x, .y = y, .w = w, .h = 60, .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
                  .filled = true, .radius = 6);
     if (b->title[0])
       sk_draw_text(.text = b->title, .x = x + 10, .y = y + 8,
@@ -3457,7 +3571,6 @@ void sk_close_window(void) {
 #define SK_PATH_SEP '/'
 #endif
 
-#define SK_CONFIG_MAX_ENTRIES 256
 #define SK_CONFIG_NAME_MAX 384
 #define SK_CONFIG_HOTKEY_MAX 64
 #define SK_CONFIG_ALIAS_MAX 128
@@ -3656,6 +3769,8 @@ static bool sk_config_apply_entry(const ConfigTomlEntry *e, void *user) {
     alias_entries_set(e->key, body);
   } else if (strcmp(e->section, "quicklinks") == 0) {
     quicklink_entries_set(e->key, body);
+  } else if (strcmp(e->section, "settings") == 0) {
+    setting_entries_set(e->key, body);
   } else {
     log_warn("sk_config: unknown section [%s], ignoring", e->section);
   }
@@ -3979,6 +4094,85 @@ char *sk_config_quicklink_value_at(int index) {
   sk_config_init_locked();
   bool ok = index >= 0 && index < quicklink_entry_count;
   char *out = ok ? strdup(quicklink_entries[index].target) : NULL;
+  sk_config_unlock();
+  return out;
+}
+
+bool sk_config_set_setting(const char *key, const char *value) {
+  if (!key || !key[0] || !value)
+    return false;
+  if (strlen(key) >= SK_CONFIG_SETTING_KEY_MAX ||
+      strlen(value) >= SK_CONFIG_SETTING_VALUE_MAX) {
+    log_error("sk_config: setting '%.80s' too long", key);
+    return false;
+  }
+  sk_config_lock();
+  sk_config_init_locked();
+  setting_entries_set(key, value);
+  if (!sk_config_ready() ||
+      !config_section_set(sk_config_path, "settings", key, value))
+    log_error("sk_config: failed to save %s", sk_config_path);
+  sk_config_unlock();
+  return true;
+}
+
+char *sk_config_get_setting(const char *key) {
+  if (!key || !key[0])
+    return NULL;
+  sk_config_lock();
+  sk_config_init_locked();
+  const char *p = setting_lookup_locked(key);
+  char *out = p ? strdup(p) : NULL;
+  sk_config_unlock();
+  return out;
+}
+
+bool sk_config_get_setting_bool(const char *key, bool *out) {
+  if (!out)
+    return false;
+  sk_config_lock();
+  sk_config_init_locked();
+  const char *p = setting_lookup_locked(key);
+  bool ok = setting_parse_bool(p, out);
+  sk_config_unlock();
+  return ok;
+}
+
+bool sk_config_get_setting_float(const char *key, float *out) {
+  if (!out)
+    return false;
+  sk_config_lock();
+  sk_config_init_locked();
+  const char *p = setting_lookup_locked(key);
+  bool ok = setting_parse_float(p, out);
+  sk_config_unlock();
+  return ok;
+}
+
+int sk_config_setting_count(void) {
+  sk_config_lock();
+  sk_config_init_locked();
+  int n = setting_entry_count;
+  sk_config_unlock();
+  return n;
+}
+
+const char *sk_config_setting_name_at(int index) {
+  sk_config_lock();
+  sk_config_init_locked();
+  const char *out =
+      (index >= 0 && index < setting_entry_count) ? setting_entries[index].key
+                                                 : NULL;
+  sk_config_unlock();
+  return out;
+}
+
+const char *sk_config_setting_value_at(int index) {
+  sk_config_lock();
+  sk_config_init_locked();
+  const char *out =
+      (index >= 0 && index < setting_entry_count) ? setting_entries[index].value
+                                                 : NULL;
   sk_config_unlock();
   return out;
 }
