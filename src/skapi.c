@@ -1364,7 +1364,7 @@ bool ski_draw_text(const SkTextSpec *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  if (col == COLOR_AUTO) {
+  if (col == 0 || col == COLOR_AUTO) {
     unsigned long cur = sk_listbox_get_current_standard_color();
     col = cur ? cur : rgb_to_hex(COLOR_TEXT);
   } else {
@@ -1573,7 +1573,7 @@ bool ski_draw_rect(const DrawRect *spec) {
   }
   unsigned long col = spec->color;
   bool transparent = spec->transparent;
-  if (col == COLOR_AUTO)
+  if (col == 0 || col == COLOR_AUTO)
     col = COLOR_TEXT;
   col = rgb_to_hex(col);
   return Platform_DrawRectRaw((DrawRectRawSpec){
@@ -1687,7 +1687,7 @@ bool ski_draw_line(const Line *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  if (col == COLOR_AUTO)
+  if (col == 0 || col == COLOR_AUTO)
     col = COLOR_TEXT;
   else
     col = rgb_to_hex(col);
@@ -1704,7 +1704,7 @@ bool ski_draw_circle(const Circle *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  if (col == COLOR_AUTO)
+  if (col == 0 || col == COLOR_AUTO)
     col = COLOR_TEXT;
   else
     col = rgb_to_hex(col);
@@ -3199,7 +3199,6 @@ static void dispatch_widget_click(void) {
 }
 
 static void dispatch_widget_hover(void) {
-  SkSettingsEntry *e = s_dispatch_entry;
   SkSettingsBlock *b = dispatch_block();
   if (!b)
     return;
@@ -4169,13 +4168,25 @@ const char *sk_config_setting_value_at(int index) {
 }
 
 bool sk_config_set_quicklink(const char *name, const char *target) {
-  if (!name || !name[0] || !target || !target[0])
-    return false;
-  if (strlen(name) >= SK_CONFIG_NAME_MAX ||
-      strlen(target) >= SK_CONFIG_QUICKLINK_TARGET_MAX)
+  if (!name || !name[0])
     return false;
   sk_config_lock();
   sk_config_init_locked();
+  int i = quicklink_index_of(name);
+  if (!target || !target[0]) {
+    if (i >= 0) {
+      quicklink_entries_remove(i);
+      if (sk_config_ready())
+        config_section_clear(sk_config_path, "quicklinks", name);
+    }
+    sk_config_unlock();
+    return true;
+  }
+  if (strlen(name) >= SK_CONFIG_NAME_MAX ||
+      strlen(target) >= SK_CONFIG_QUICKLINK_TARGET_MAX) {
+    sk_config_unlock();
+    return false;
+  }
   quicklink_entries_set(name, target);
   if (!sk_config_ready() ||
       !config_section_set(sk_config_path, "quicklinks", name, target))
