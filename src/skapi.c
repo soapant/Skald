@@ -4128,7 +4128,7 @@ char *sk_config_get_setting(const char *key) {
 }
 
 bool sk_config_get_setting_bool(const char *key, bool *out) {
-  if (!out)
+  if (!out || !key)
     return false;
   sk_config_lock();
   sk_config_init_locked();
@@ -4139,7 +4139,7 @@ bool sk_config_get_setting_bool(const char *key, bool *out) {
 }
 
 bool sk_config_get_setting_float(const char *key, float *out) {
-  if (!out)
+  if (!out || !key)
     return false;
   sk_config_lock();
   sk_config_init_locked();
@@ -4147,6 +4147,14 @@ bool sk_config_get_setting_float(const char *key, float *out) {
   bool ok = setting_parse_float(p, out);
   sk_config_unlock();
   return ok;
+}
+
+bool sk_config_has_setting(const char *key) {
+  sk_config_lock();
+  sk_config_init_locked();
+  bool out = key && setting_lookup_locked(key) != NULL;
+  sk_config_unlock();
+  return out;
 }
 
 int sk_config_setting_count(void) {
