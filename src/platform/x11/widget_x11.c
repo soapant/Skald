@@ -134,7 +134,7 @@ static void x11_widget_frame(void *ud) {
   if (widget->base.fn)
     widget->base.fn(widget->base.ud);
   Platform_FlushDraw();
-  x11_draw_window_border(dpy, widget->win, widget->base.w, widget->base.h,
+  x11_draw_window_border(dpy, widget->win, NULL, widget->base.w, widget->base.h,
                          widget->base.no_bg);
   XFlush(dpy);
 }

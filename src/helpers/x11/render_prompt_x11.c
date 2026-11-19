@@ -218,10 +218,10 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   }
   x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();
+  x11_draw_window_border(dpy, dbl, vis, w, h, state && state->no_bg);
   GC gc = XCreateGC(dpy, *win, 0, NULL);
   XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
   XFreeGC(dpy, gc);
-  x11_draw_window_border(dpy, *win, w, h, state && state->no_bg);
   XFlush(dpy);
   return true;
 }

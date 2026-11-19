@@ -13,8 +13,8 @@
   FontSize = 19
   IconSize = 32
   WidgetGap = 10
-  PromptWidth = 900
-  PromptHeight = 640
+  PromptW = 900
+  PromptH = 640
   PromptX = -1
   PromptY = -1
   UsedTerminal = ""
@@ -29,7 +29,7 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = "nightfox"
+  Theme = ""
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = false
@@ -39,9 +39,9 @@
   CloseOnLossOfFocus = false
 
 [color]
-  BG = "#13161E"
-  TEXT = "#CDCFD5"
-  SELECTED_TEXT = "#0E1016"
-  CURSOR = "#CDCFD5"
-  BORDER = "#33363F"
+  BG = "#0F0F0F"
+  TEXT = "#FFFFFF"
+  SELECTED_TEXT = "#000000"
+  CURSOR = "#FFFFFF"
+  BORDER = "#808080"
 # </skald-config-generated>
