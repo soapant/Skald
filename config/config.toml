@@ -29,7 +29,7 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = "modus-vivendi-tinted"
+  Theme = "tokyo-night-storm"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = false
@@ -39,9 +39,9 @@
   CloseOnLossOfFocus = false
 
 [color]
-  BG = "#0D0E1C"
-  TEXT = "#FFFFFF"
-  SELECTED_TEXT = "#303A6F"
-  CURSOR = "#FFFFFF"
-  BORDER = "#61647A"
+  BG = "#24283B"
+  TEXT = "#C0CAF5"
+  SELECTED_TEXT = "#292E42"
+  CURSOR = "#C0CAF5"
+  BORDER = "#565F89"
 # </skald-config-generated>
