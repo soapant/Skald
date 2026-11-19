@@ -108,7 +108,7 @@ static void settings_list(PromptState *state) {
 
 static void settings_render(PromptState *state) {
   sk_draw_rect(.w = SETTINGS_SIDEBAR_W, .h = state->height,
-               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.32f),
+               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.82f),
                .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
