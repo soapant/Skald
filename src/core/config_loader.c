@@ -134,9 +134,9 @@ static bool config_visit(const ConfigTomlEntry *e, void *user) {
     return false;
   int idx = config_find(e->section, e->key);
   if (idx < 0) {
-    log_error("config: unknown key '%s' in [%s]", e->key,
+    log_error("config: unknown key '%s' in [%s] (ignored)", e->key,
               e->section[0] ? e->section : "(root)");
-    return false;
+    return true;
   }
   const ConfigEntry *ent = &config_entries[idx];
   ConfigAssign *a = &st->items[st->count];
