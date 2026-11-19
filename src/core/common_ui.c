@@ -94,20 +94,13 @@ void draw_prompt_band(int y, int bottom_y, int width) {
 }
 
 void item_get_colors(GetItemColorsSpec spec) {
-  unsigned long col_text = rgb_to_hex(COLOR_TEXT);
-  float t = (spec.count > 1) ? (float)spec.idx / (float)(spec.count - 1)
-                             : (float)spec.idx / 10.0f;
-  unsigned long col_rainbow = rgb_to_hex(get_rainbow_color(t, 0.55f, 1.0f));
-  unsigned long n = col_text, b = col_text, p = col_rainbow;
-  if (RainbowText) {
-    n = b = p = col_rainbow;
-  }
+  unsigned long col = rgb_to_hex(COLOR_TEXT);
   if (spec.num_color)
-    *spec.num_color = n;
+    *spec.num_color = col;
   if (spec.body_color)
-    *spec.body_color = b;
+    *spec.body_color = col;
   if (spec.plain_color)
-    *spec.plain_color = p;
+    *spec.plain_color = col;
 }
 
 static bool fuzzy_match(const char *text, const char *pattern) {
@@ -436,54 +429,6 @@ void populate_listbox(ListBox *lb, const char *filter, const char **items,
   lb->total_matches = total_matches;
 
   log_info("populate_listbox completed for filter='%s'", filter ? filter : "");
-}
-
-ColorRef get_rainbow_color(float t, float s, float v) {
-  if (RainbowText) {
-    float hue = t * 240.0f;
-    float h = hue / 60.0f;
-    int i = ((int)h) % 6;
-    float f = h - (int)h;
-    float p = v * (1 - s);
-    float q = v * (1 - s * f);
-    float t_ = v * (1 - s * (1 - f));
-    float r = 0.0f, g = 0.0f, b = 0.0f;
-    switch (i) {
-    case 0:
-      r = v;
-      g = t_;
-      b = p;
-      break;
-    case 1:
-      r = q;
-      g = v;
-      b = p;
-      break;
-    case 2:
-      r = p;
-      g = v;
-      b = t_;
-      break;
-    case 3:
-      r = p;
-      g = q;
-      b = v;
-      break;
-    case 4:
-      r = t_;
-      g = p;
-      b = v;
-      break;
-    case 5:
-      r = v;
-      g = p;
-      b = q;
-      break;
-    }
-    return RGB((uint8_t)(r * 255), (uint8_t)(g * 255), (uint8_t)(b * 255));
-  } else {
-    return COLOR_TEXT;
-  }
 }
 
 SlotRect message_slot_to_rect(MessageSlot slot, int prompt_gap) {
