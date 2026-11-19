@@ -835,10 +835,22 @@ typedef CcEntrySpec SkCcEntrySpec;
 
 #define sk_add_feature(...) sk_add_to_cc(.type = "Feature", __VA_ARGS__)
 
+typedef struct SkSettingsEntry SkSettingsEntry;
+
 #define sk_add_settings_entry(...)                                             \
   sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
 
-bool sk_settings_entry_add(const SkSettingsEntrySpec *spec);
+SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
+int sk_settings_entry_add_checkbox(SkSettingsEntry *entry, const char *name,
+                                   const char *title, const char *sub,
+                                   bool initial);
+int sk_settings_entry_add_button(SkSettingsEntry *entry, const char *name,
+                                 const char *title, const char *sub,
+                                 const char *label);
+int sk_settings_entry_add_slider(SkSettingsEntry *entry, const char *name,
+                                 const char *title, const char *sub,
+                                 float min_value, float max_value,
+                                 float initial);
 
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 

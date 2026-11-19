@@ -49,48 +49,8 @@ static bool settings_ctrl_enter(PromptState *state) { return false; }
 
 static void settings_tab(PromptState *state) {}
 
-static void settings_quicklinks_render(void *ud) {
-  sk_draw_rect(.x=-7,.y=-10,.w = 740, .h = 220,
-               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.42f),
-               .filled = true, .rounded = false);
-   char* desc = "Add Quicklinks for your most commonly opened websites.";
-   sk_draw_image(.path="/quicklinks.png",.x=(PromptW - SETTINGS_SIDEBAR_W) / 2 - 64,.y=10,.w=128,.h=128);
-   sk_draw_text(.text=desc,.color=SK_GRAY,
-                .x = 30,
-                .y = 150
-                );
-
-
-  sk_draw_line(.x1 = -7, .y1 = 210,
-               .x2 = PromptW, .y2 = 210,
-               .color = COLOR_BORDER);
-
-
-  sk_draw_rect(.x=10,.y=250,.w=700,.h=60,.color=SK_DARK_GRAY,.filled=true,.radius=6);
-  sk_draw_text(.text = "Add Quicklink",.x=20,.y=250,.color=SK_LIGHT_GRAY);
-  sk_draw_text(.text = "Blah Balh balhda bal ha ",.x=20,.y=275,.color=SK_GRAY);
-
-  sk_place_checkbox(.name="blah",.x=650,.y=264,.w=32,.h=32);
-}
-
-static void settings_config_render(void *ud) {
-  (void)ud;
-}
-
-static void settings_snippets_render(void *ud) {
-  (void)ud;
-}
-
-static void settings_hotkeys_render(void *ud) {
-  (void)ud;
-}
-
-static void settings_remaps_render(void *ud) {
-  (void)ud;
-}
-
 static void settings_list(PromptState *state) {
-  if (!sk_listbox_begin(.lb = state->lb, .item_height = SETTINGS_ROW_H,
+  if (!sk_listbox_begin(.lb = state->lb,
                         .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y,
                         .w = SETTINGS_SIDEBAR_W,
                         .h = state->height - SETTINGS_LIST_Y - 4))
@@ -103,10 +63,10 @@ static void settings_list(PromptState *state) {
 
     if (entry && entry->icon && entry->icon[0]) {
       sk_draw_image(.path = entry->icon, .x = ctx.x + 10,
-                    .y = row_y + (row_h - 20) / 2, .w = 18, .h = 18);
+                    .y = row_y + (row_h - 18) / 2, .w = 18, .h = 18);
     }
     sk_draw_text(.text = ctx.text, .x = ctx.x + 36,
-                 .y = row_y + (row_h - sk_get_text_height(15)) / 2,
+                 .y = row_y + 3,
                  .align = "LEFT", .color = COLOR_TEXT, .font_size = 15);
   }
   sk_listbox_end();
@@ -118,7 +78,7 @@ static void settings_render(PromptState *state) {
                .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16,.caret_h=19,.caret_y = SETTINGS_EB_H / 2);
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16,.caret_h=19);
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
                .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W - 2, .y2 = SETTINGS_SEP_Y,
@@ -138,7 +98,8 @@ static void settings_render(PromptState *state) {
       int saved_x = 0, saved_y = 0;
       sk_get_draw_offset(&saved_x, &saved_y);
       sk_set_draw_offset(SETTINGS_SIDEBAR_W + 8, 8);
-      entry->render(entry->ud);
+      /* pub is the first member of SkSettingsEntry */
+      entry->render((SkSettingsEntry *)entry, entry->ud);
       sk_set_draw_offset(saved_x, saved_y);
     }
   }
@@ -156,14 +117,19 @@ SKALD_FEATURE_INIT {
   sk_add_feature(.display_name = "Settings", .on_action = trigger_settings,
                  .icon = "/settings.png");
 
-  sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
-                        .render = settings_quicklinks_render);
+  SkSettingsEntry *ql =
+      sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
+                            .desc = "Add Quicklinks for your most commonly "
+                                    "opened websites.");
+  sk_settings_entry_add_checkbox(ql, "blah", "Add Quicklink",
+                                 "Blah Balh balhda bal ha", false);
+
   sk_add_settings_entry(.name = "Config", .icon = "/settings.png",
-                        .render = settings_config_render);
+                        .desc = "Coming soon.");
   sk_add_settings_entry(.name = "Snippets", .icon = "/snippets.png",
-                        .render = settings_snippets_render);
+                        .desc = "Coming soon.");
   sk_add_settings_entry(.name = "Hotkeys", .icon = "/hotkeys.png",
-                        .render = settings_hotkeys_render);
+                        .desc = "Coming soon.");
   sk_add_settings_entry(.name = "Remaps", .icon = "/remaps.png",
-                        .render = settings_remaps_render);
+                        .desc = "Coming soon.");
 }
