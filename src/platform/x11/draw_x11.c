@@ -234,6 +234,72 @@ void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
   draw_editbox_part(state, dpy, xd, vis, cmap, font, EDITBOX_PART_CARET);
 }
 
+static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by) {
+  if (!buf || w <= 0 || h <= 0)
+    return false;
+  Pixmap pm = 0;
+  Picture pic = 0;
+  bool ok = x11_upload_argb(g_draw_dpy, 0, buf, w, h, &pm, &pic);
+  free(buf);
+  if (!ok)
+    return false;
+  XRenderPictFormat *dfmt = XRenderFindVisualFormat(g_draw_dpy, g_draw_vis);
+  Picture dst = dfmt ? XRenderCreatePicture(g_draw_dpy,
+                                            XftDrawDrawable(g_draw_xd),
+                                            dfmt, 0, NULL)
+                     : 0;
+  bool result = false;
+  if (dst) {
+    XRenderComposite(g_draw_dpy, PictOpOver, pic, None, dst, 0, 0, 0, 0, bx, by,
+                     (unsigned int)w, (unsigned int)h);
+    result = true;
+    XRenderFreePicture(g_draw_dpy, dst);
+  }
+  XRenderFreePicture(g_draw_dpy, pic);
+  XFreePixmap(g_draw_dpy, pm);
+  return result;
+}
+
+static unsigned char *rect_border_argb(int w, int h, float radius,
+                                       float thickness, unsigned long color,
+                                       float alpha) {
+  unsigned char *buf = calloc((size_t)w * (size_t)h * 4, 1);
+  if (!buf)
+    return NULL;
+  float cr = (float)((color >> 16) & 0xFF);
+  float cg = (float)((color >> 8) & 0xFF);
+  float cb = (float)(color & 0xFF);
+  float rx = (float)w * 0.5f - radius;
+  float ry = (float)h * 0.5f - radius;
+  for (int py = 0; py < h; py++) {
+    float pyc = (float)py + 0.5f - (float)h * 0.5f;
+    for (int px = 0; px < w; px++) {
+      float pxc = (float)px + 0.5f - (float)w * 0.5f;
+      float ax = fabsf(pxc) - rx;
+      float ay = fabsf(pyc) - ry;
+      float qx = fmaxf(ax, 0.0f), qy = fmaxf(ay, 0.0f);
+      float sd = sqrtf(qx * qx + qy * qy) + fminf(fmaxf(ax, ay), 0.0f) - radius;
+      if (sd > 0.0f)
+        continue;
+      float cov = thickness + sd;
+      if (cov <= 0.0f)
+        continue;
+      if (cov > 1.0f)
+        cov = 1.0f;
+      float a8 = alpha * cov;
+      unsigned char A = (unsigned char)(a8 * 255.0f + 0.5f);
+      if (A == 0)
+        continue;
+      size_t o = ((size_t)py * (size_t)w + (size_t)px) * 4;
+      buf[o + 0] = (unsigned char)(cb * a8 + 0.5f);
+      buf[o + 1] = (unsigned char)(cg * a8 + 0.5f);
+      buf[o + 2] = (unsigned char)(cr * a8 + 0.5f);
+      buf[o + 3] = A;
+    }
+  }
+  return buf;
+}
+
 bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   RECT_RAW_UNPACK(spec);
 
@@ -287,46 +353,15 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
     return true;
   }
 
-  Drawable d = XftDrawDrawable(g_draw_xd);
-  GC gc = x11_raw_gc_for(g_draw_dpy, d);
-  if (!gc) {
-    return false;
-  }
-  XftColor col;
-  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color, target_alpha,
-                       &col);
-  XSetForeground(g_draw_dpy, gc, col.pixel);
-  XSetLineAttributes(g_draw_dpy, gc, t, LineSolid, CapButt, JoinMiter);
-  if (want_round) {
-    if (r > 0) {
-      XArc arcs[4] = {
-          {(short)x, (short)y, (unsigned short)(r * 2), (unsigned short)(r * 2),
-           90 * 64, 90 * 64},
-          {(short)(x + w - r * 2), (short)y, (unsigned short)(r * 2),
-           (unsigned short)(r * 2), 0 * 64, 90 * 64},
-          {(short)(x + w - r * 2), (short)(y + h - r * 2),
-           (unsigned short)(r * 2), (unsigned short)(r * 2), 270 * 64, 90 * 64},
-          {(short)x, (short)(y + h - r * 2), (unsigned short)(r * 2),
-           (unsigned short)(r * 2), 180 * 64, 90 * 64}};
-      XDrawArcs(g_draw_dpy, d, gc, arcs, 4);
-
-      XSegment segments[4] = {{x + r, y, x + w - r, y},
-                              {x + w, y + r, x + w, y + h - r},
-                              {x + r, y + h, x + w - r, y + h},
-                              {x, y + r, x, y + h - r}};
-      XDrawSegments(g_draw_dpy, d, gc, segments, 4);
-    } else {
-      XDrawRectangle(g_draw_dpy, d, gc, x, y, w, h);
-    }
-  } else {
-    XftColor border_col;
-    x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
-                         target_alpha, &border_col);
-
-    XftDrawRect(g_draw_xd, &border_col, x, y, w, t);
-    XftDrawRect(g_draw_xd, &border_col, x, y + h - t, w, t);
-    XftDrawRect(g_draw_xd, &border_col, x, y, t, h);
-    XftDrawRect(g_draw_xd, &border_col, x + w - t, y, t, h);
+  {
+    float r2 = (float)r;
+    float alpha = (float)target_alpha / 65535.0f;
+    int pad = t / 2 + 2;
+    unsigned char *buf =
+        rect_border_argb(w + 2 * pad, h + 2 * pad, r2, (float)t, color, alpha);
+    if (!buf)
+      return false;
+    return blit_argb_buf(buf, w + 2 * pad, h + 2 * pad, x - pad, y - pad);
   }
   return true;
 }
@@ -429,27 +464,7 @@ bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   float alpha = 1.0f;
   unsigned char *buf = line_argb_buffer(x1 - bx, y1 - by, x2 - bx, y2 - by, w,
                                         h, spec.color, (float)thickness, alpha);
-  if (!buf)
-    return false;
-  Pixmap pm = 0;
-  Picture pic = 0;
-  bool ok = x11_upload_argb(g_draw_dpy, 0, buf, w, h, &pm, &pic);
-  free(buf);
-  if (!ok)
-    return false;
-  XRenderPictFormat *dfmt =
-      XRenderFindVisualFormat(g_draw_dpy, g_draw_vis);
-  Picture dst = dfmt ? XRenderCreatePicture(g_draw_dpy, XftDrawDrawable(g_draw_xd),
-                                            dfmt, 0, NULL)
-                     : 0;
-  if (dst) {
-    XRenderComposite(g_draw_dpy, PictOpOver, pic, None, dst, 0, 0, 0, 0, bx, by,
-                     (unsigned int)w, (unsigned int)h);
-    XRenderFreePicture(g_draw_dpy, dst);
-  }
-  XRenderFreePicture(g_draw_dpy, pic);
-  XFreePixmap(g_draw_dpy, pm);
-  return dst != 0;
+  return blit_argb_buf(buf, w, h, bx, by);
 }
 
 bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
