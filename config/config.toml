@@ -10,7 +10,7 @@
   MessageScreenGap = 20
   WindowOpacity = 235.0
   UsedFont = "0xProto Nerd Font"
-  FontSize = 19
+  FontSize = 18
   IconSize = 32
   WidgetGap = 10
   PromptW = 900
@@ -29,7 +29,7 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = "cyberpunk"
+  Theme = "modus-vivendi-tinted"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = false
@@ -39,9 +39,9 @@
   CloseOnLossOfFocus = false
 
 [color]
-  BG = "#0D0D18"
-  TEXT = "#E0E0FF"
-  SELECTED_TEXT = "#080810"
+  BG = "#0D0E1C"
+  TEXT = "#FFFFFF"
+  SELECTED_TEXT = "#303A6F"
   CURSOR = "#FFFFFF"
-  BORDER = "#2A2A3E"
+  BORDER = "#61647A"
 # </skald-config-generated>
