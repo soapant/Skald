@@ -835,7 +835,7 @@ typedef CcEntrySpec SkCcEntrySpec;
 
 #define sk_add_feature(...) sk_add_to_cc(.type = "Feature", __VA_ARGS__)
 
-typedef struct SkSettingsEntry SkSettingsEntry;
+typedef SettingsEntry SkSettingsEntry;
 
 #define sk_add_settings_entry(...)                                             \
   sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})

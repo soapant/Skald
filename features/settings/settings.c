@@ -98,7 +98,6 @@ static void settings_render(PromptState *state) {
       int saved_x = 0, saved_y = 0;
       sk_get_draw_offset(&saved_x, &saved_y);
       sk_set_draw_offset(SETTINGS_SIDEBAR_W + 8, 8);
-      /* pub is the first member of SkSettingsEntry */
       entry->render((SkSettingsEntry *)entry, entry->ud);
       sk_set_draw_offset(saved_x, saved_y);
     }

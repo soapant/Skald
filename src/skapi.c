@@ -2850,7 +2850,7 @@ typedef struct {
   void (*on_hover)(SkSettingsEntry *entry, void *ud, bool hovered);
 } SkSettingsBlock;
 
-typedef struct SkSettingsEntry {
+struct SettingsEntry {
   SettingsEntrySpec pub;
   char name[256];
   char icon[1024];
@@ -2858,7 +2858,7 @@ typedef struct SkSettingsEntry {
   char desc[512];
   int block_count;
   SkSettingsBlock blocks[SETTINGS_MAX_BLOCKS];
-} SkSettingsEntry;
+};
 
 static int settings_entry_count = 0;
 static SkSettingsEntry settings_entries[SETTINGS_MAX_ENTRIES];
