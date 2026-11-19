@@ -277,7 +277,7 @@ char *sk_string_slice(const char *str, int start, int end);
 SkStringList sk_string_split(const char *str, const char *delimiter);
 
 typedef struct {
-  ListBoxInfo *lb;
+  ListBox *lb;
   const char *filter;
   const char **items;
   int count;
@@ -288,7 +288,7 @@ void ski_populate_listbox(const SkPopulateListboxSpec *spec);
 #define sk_populate_listbox(...)                                               \
   ski_populate_listbox(&(SkPopulateListboxSpec){__VA_ARGS__})
 
-bool sk_is_selected(ListBoxInfo *lb);
+bool sk_is_selected(ListBox *lb);
 
 void sk_set_edit_text(const char *text);
 
@@ -304,7 +304,7 @@ typedef struct {
   int y;
   int w;
   int h;
-  ListBoxInfo *lb;
+  ListBox *lb;
   int *out_index;
 } SkEditPopupSpec;
 

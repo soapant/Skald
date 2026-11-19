@@ -221,7 +221,7 @@ bool Platform_ListboxBackendBegin(int item_height_override,
 void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
                                           int fw, int frame_h, bool sel);
 void Platform_ListboxBackendEnd(void);
-PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb);
+PromptState *Platform_ListboxBackendPromptState(const ListBox *lb);
 
 void Platform_ShutdownUI(void);
 void Platform_RenderThreadMiniSleep(int milliseconds);

@@ -242,7 +242,7 @@ void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
 
 void Platform_ListboxBackendEnd(void) {}
 
-PromptState *Platform_ListboxBackendPromptState(const ListBoxInfo *lb) {
+PromptState *Platform_ListboxBackendPromptState(const ListBox *lb) {
   UNUSED(lb);
   return NULL;
 }

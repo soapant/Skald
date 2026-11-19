@@ -34,7 +34,7 @@ void x11_draw_edit_text(PromptState *state, Display *dpy, XftDraw *xd,
 void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
                           Visual *vis, Colormap cmap, FontHandle font);
 void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
-                        FontHandle font, ListBoxInfo *lb, int idx, int y,
+                        FontHandle font, ListBox *lb, int idx, int y,
                         int text_x, const char *icon_path);
 
 extern __thread Display *g_draw_dpy;
