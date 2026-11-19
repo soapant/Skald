@@ -4,7 +4,7 @@
   MessageAfterEachHotkey = false
   TimeOutForMessages = 1
   HotkeyRepeatDelayMs = 300
-  DebugMode = true
+  DebugMode = false
   RoundedCorners = true
   CornerRadius = 14
   MessageScreenGap = 20
@@ -29,7 +29,7 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = ""
+  Theme = "cyberpunk"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = false
@@ -39,9 +39,9 @@
   CloseOnLossOfFocus = false
 
 [color]
-  BG = "#0F0F0F"
-  TEXT = "#FFFFFF"
-  SELECTED_TEXT = "#000000"
+  BG = "#0D0D18"
+  TEXT = "#E0E0FF"
+  SELECTED_TEXT = "#080810"
   CURSOR = "#FFFFFF"
-  BORDER = "#808080"
+  BORDER = "#2A2A3E"
 # </skald-config-generated>
