@@ -879,6 +879,14 @@ SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
 #define sk_settings_entry_add_slider(entry, ...)                              \
   ski_settings_entry_add_slider(entry,                                        \
                                 &(SkSettingsSliderSpec){__VA_ARGS__})
+bool sk_config_set_setting(const char *key, const char *value);
+char *sk_config_get_setting(const char *key);
+bool sk_config_get_setting_bool(const char *key, bool *out);
+bool sk_config_get_setting_float(const char *key, float *out);
+int sk_config_setting_count(void);
+const char *sk_config_setting_name_at(int index);
+const char *sk_config_setting_value_at(int index);
+
 int ski_settings_entry_add_checkbox(SkSettingsEntry *entry,
                                     const SkSettingsCheckboxSpec *spec);
 int ski_settings_entry_add_button(SkSettingsEntry *entry,
