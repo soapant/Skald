@@ -3,13 +3,13 @@
 
 #include <stdbool.h>
 
-typedef struct SkSettingsEntry SkSettingsEntry;
+typedef struct SettingsEntry SettingsEntry;
 
 typedef struct {
   const char *name;
   const char *icon;
   const char *desc;
-  void (*render)(SkSettingsEntry *entry, void *ud);
+  void (*render)(SettingsEntry *entry, void *ud);
   void *ud;
 } SettingsEntrySpec;
 
