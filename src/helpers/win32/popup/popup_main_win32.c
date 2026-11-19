@@ -625,6 +625,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         s_in_render = true;
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = state->no_separators;
+        if (state->lb && !state->no_separators)
+          draw_prompt_band(0, prompt_list_top(), state->width);
         state->callbacks->render(state);
         draw_state_get()->suppress_separators = sep_prev;
         s_in_render = false;
@@ -636,6 +638,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = estate->no_separators;
         win32_set_draw_context(paintDC);
+        if (estate->lb) {
+          draw_prompt_band(0, prompt_list_top() - 2,
+                           rect.right - rect.left);
+        }
         extern void Platform_DrawPromptEditbox(PromptState * state);
         Platform_DrawPromptEditbox(estate);
 
