@@ -75,8 +75,6 @@ static size_t hot_suffix_len(const char *s, size_t len) {
     if (!(s[back - 4] == '.' && s[back - 3] == 'h' && s[back - 2] == 'o' &&
           s[back - 1] == 't'))
       return len;
-    if (back - 4 < 0)
-      return len;
     len = back - 4;
   }
   return len;

@@ -259,7 +259,8 @@ static void win32_rotate_end(HDC hdc, int saved) {
 }
 
 bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
-  RECT_RAW_UNPACK(spec);
+  int w = spec.w, h = spec.h;
+  float angle = spec.angle;
 
   if (!g_draw_hdc || w <= 0 || h <= 0) {
     return false;
@@ -267,8 +268,8 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
 
   if (angle != 0.0f) {
     int saved = win32_rotate_begin(g_draw_hdc, angle,
-                                   x + draw_state_get()->off_x + w / 2.0f,
-                                   y + draw_state_get()->off_y + h / 2.0f);
+                                   spec.x + draw_state_get()->off_x + w / 2.0f,
+                                   spec.y + draw_state_get()->off_y + h / 2.0f);
     bool ok = draw_rect_raw_body(spec);
     win32_rotate_end(g_draw_hdc, saved);
     return ok;
@@ -278,6 +279,7 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
 
 static bool draw_rect_raw_body(DrawRectRawSpec spec) {
   RECT_RAW_UNPACK(spec);
+  (void)angle;
 
   if (!g_draw_hdc || w <= 0 || h <= 0) {
     return false;

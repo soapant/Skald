@@ -485,7 +485,7 @@ bool sk_slider_set_value(const char *name, float value);
 #define sk_button_checked sk_button_is_checked
 
 #define sk_draw_text(...)                                                      \
-  ski_draw_text(&(SkTextSpec){.color = COLOR_AUTO, __VA_ARGS__})
+  ski_draw_text(&(SkTextSpec){__VA_ARGS__})
 #define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
@@ -550,13 +550,13 @@ bool ski_draw_line(const SkLine *spec);
 bool ski_draw_circle(const SkCircle *spec);
 
 #define sk_draw_rect(...)                                                      \
-  ski_draw_rect(&(DrawRect){.color = COLOR_AUTO, __VA_ARGS__})
+  ski_draw_rect(&(DrawRect){__VA_ARGS__})
 
 #define sk_draw_line(...)                                                      \
-  ski_draw_line(&(Line){.color = COLOR_AUTO, __VA_ARGS__})
+  ski_draw_line(&(Line){__VA_ARGS__})
 
 #define sk_draw_circle(...)                                                    \
-  ski_draw_circle(&(Circle){.color = COLOR_AUTO, __VA_ARGS__})
+  ski_draw_circle(&(Circle){__VA_ARGS__})
 
 int sk_rand_num_between(int min, int max);
 
