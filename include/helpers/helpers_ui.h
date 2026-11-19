@@ -49,7 +49,6 @@ typedef enum {
   FREE
 } MessageSlot;
 
-ColorRef get_rainbow_color(float t, float s, float v);
 void update_text_caret(void);
 
 #define MSG_PROMPT_GAP_DEFAULT 300

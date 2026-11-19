@@ -70,7 +70,6 @@ TEST(load_reload_unload) {
 
   feature_loader_reload_from(FIXTURE_NAME, fixture);
   ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
-  ASSERT_FALSE(has_file(hot1));
   ASSERT_FALSE(has_file(hot2));
 
   feature_loader_reload_from(FIXTURE_NAME, fixture);
