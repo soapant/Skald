@@ -1,5 +1,8 @@
 #include "helpers/x11/raw_draw_x11.h"
 #include "helpers/x11/window_factory_x11.h"
+#include "helpers/x11/drawing_x11.h"
+#include "helpers/helpers_ui.h"
+#include <math.h>
 #define RAW_LINE_CAP 4096
 
 bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius) {
@@ -328,18 +331,125 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   return true;
 }
 
+static unsigned char *line_argb_buffer(const int x1, const int y1,
+                                       const int x2, const int y2,
+                                       const int w, const int h,
+                                       const unsigned long color,
+                                       const float thickness, const float alpha) {
+  if (x1 == x2 || y1 == y2) {
+    unsigned char *buf = calloc((size_t)w * (size_t)h * 4, 1);
+    if (!buf)
+      return NULL;
+    float cr = (float)((color >> 16) & 0xFF);
+    float cg = (float)((color >> 8) & 0xFF);
+    float cb = (float)(color & 0xFF);
+    for (int py = 0; py < h; py++) {
+      for (int px = 0; px < w; px++) {
+        if (x1 == x2) {
+          int d = px - x1;
+          int ad = d < 0 ? -d : d;
+          int half = (int)thickness / 2;
+          if (ad > half)
+            continue;
+        } else {
+          int d = py - y1;
+          int ad = d < 0 ? -d : d;
+          int half = (int)thickness / 2;
+          if (ad > half)
+            continue;
+        }
+        float a8 = alpha;
+        size_t o = ((size_t)py * (size_t)w + (size_t)px) * 4;
+        buf[o + 0] = (unsigned char)(cb * a8 + 0.5f);
+        buf[o + 1] = (unsigned char)(cg * a8 + 0.5f);
+        buf[o + 2] = (unsigned char)(cr * a8 + 0.5f);
+        buf[o + 3] = (unsigned char)(a8 * 255.0f + 0.5f);
+      }
+    }
+    return buf;
+  }
+  unsigned char *buf = calloc((size_t)w * (size_t)h * 4, 1);
+  if (!buf)
+    return NULL;
+  float fx1 = (float)x1, fy1 = (float)y1;
+  float fx2 = (float)x2, fy2 = (float)y2;
+  float dx = fx2 - fx1, dy = fy2 - fy1;
+  float len2 = dx * dx + dy * dy;
+  float cr = (float)((color >> 16) & 0xFF);
+  float cg = (float)((color >> 8) & 0xFF);
+  float cb = (float)(color & 0xFF);
+  float radius = thickness * 0.5f;
+  for (int py = 0; py < h; py++) {
+    for (int px = 0; px < w; px++) {
+      float pxc = (float)px + 0.5f - fx1;
+      float pyc = (float)py + 0.5f - fy1;
+      float d;
+      if (len2 < 1e-6f) {
+        d = sqrtf(pxc * pxc + pyc * pyc);
+      } else {
+        float tt = (pxc * dx + pyc * dy) / len2;
+        if (tt < 0.0f)
+          tt = 0.0f;
+        else if (tt > 1.0f)
+          tt = 1.0f;
+        float qx = pxc - tt * dx, qy = pyc - tt * dy;
+        d = sqrtf(qx * qx + qy * qy);
+      }
+      float cov = radius - d + 0.5f;
+      if (cov <= 0.0f)
+        continue;
+      if (cov > 1.0f)
+        cov = 1.0f;
+      float a8 = alpha * cov;
+      unsigned char A = (unsigned char)(a8 * 255.0f + 0.5f);
+      if (A == 0)
+        continue;
+      size_t o = ((size_t)py * (size_t)w + (size_t)px) * 4;
+      buf[o + 0] = (unsigned char)(cb * a8 + 0.5f);
+      buf[o + 1] = (unsigned char)(cg * a8 + 0.5f);
+      buf[o + 2] = (unsigned char)(cr * a8 + 0.5f);
+      buf[o + 3] = A;
+    }
+  }
+  return buf;
+}
+
 bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   if (!x11_raw_can_draw())
     return false;
   int x1, y1, x2, y2;
   int t = draw_line_prep(&spec, draw_state_get()->off_x,
                          draw_state_get()->off_y, &x1, &y1, &x2, &y2);
-  GC gc = x11_raw_prepare(spec.color, t);
-  if (!gc)
+  int thickness = t > 0 ? t : 1;
+  int pad = (int)((float)thickness * 0.5f) + 2;
+  int bx = (x1 < x2 ? x1 : x2) - pad;
+  int by = (y1 < y2 ? y1 : y2) - pad;
+  int w = abs(x2 - x1) + thickness + 2 * pad;
+  int h = abs(y2 - y1) + thickness + 2 * pad;
+  float alpha = 1.0f;
+  unsigned char *buf = line_argb_buffer(x1 - bx, y1 - by, x2 - bx, y2 - by, w,
+                                        h, spec.color, (float)thickness, alpha);
+  if (!buf)
     return false;
-  Drawable d = XftDrawDrawable(g_draw_xd);
-  XDrawLine(g_draw_dpy, d, gc, x1, y1, x2, y2);
-  return true;
+  Pixmap pm = 0;
+  Picture pic = 0;
+  bool ok = x11_upload_argb(g_draw_dpy, 0, buf, w, h, &pm, &pic);
+  free(buf);
+  if (!ok)
+    return false;
+  XRenderPictFormat *dfmt =
+      XRenderFindVisualFormat(g_draw_dpy, g_draw_vis);
+  Picture dst = dfmt ? XRenderCreatePicture(g_draw_dpy, XftDrawDrawable(g_draw_xd),
+                                            dfmt, 0, NULL)
+                     : 0;
+  if (dst) {
+    XRenderComposite(g_draw_dpy, PictOpOver, pic, None, dst, 0, 0, 0, 0, bx, by,
+                     (unsigned int)w, (unsigned int)h);
+    XRenderFreePicture(g_draw_dpy, dst);
+  }
+  XRenderFreePicture(g_draw_dpy, pic);
+  XFreePixmap(g_draw_dpy, pm);
+  return dst != 0;
 }
 
 bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {

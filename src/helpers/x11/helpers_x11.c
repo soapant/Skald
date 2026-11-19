@@ -194,12 +194,6 @@ static bool x11_font_has(XftFont *f, FcChar32 cp) {
     return true;
   if (!FcCharSetHasChar(cs, cp))
     return false;
-  FT_Face face = XftLockFace(f);
-  if (face) {
-    bool ft = FcFreeTypeCharIndex(face, cp) != 0;
-    XftUnlockFace(f);
-    return ft;
-  }
   return true;
 }
 
@@ -1987,24 +1981,27 @@ static Picture border_slot_get_or_create(Display *dpy, int w, int h) {
   return pic;
 }
 
-void x11_draw_window_border(Display *dpy, Drawable drw, int w, int h,
-                            bool no_bg) {
-  if (!dpy || !drw || no_bg || !EnableBorders)
+void x11_draw_window_border(Display *dpy, Drawable drw, Visual *vis,
+                            int w, int h, bool no_bg) {
+  if (!dpy || !drw || no_bg || !EnableBorders) {
     return;
+  }
+  Visual *use_vis = vis;
+  if (!use_vis) {
+    XWindowAttributes attrs;
+    if (XGetWindowAttributes(dpy, drw, &attrs))
+      use_vis = attrs.visual;
+  }
+  XRenderPictFormat *dst_fmt = use_vis
+      ? XRenderFindVisualFormat(dpy, use_vis)
+      : NULL;
   pthread_mutex_lock(&border_mtx);
   Picture src = border_slot_get_or_create(dpy, w, h);
-  if (src) {
-    XWindowAttributes attrs;
-    if (XGetWindowAttributes(dpy, drw, &attrs)) {
-      XRenderPictFormat *dst_fmt = XRenderFindVisualFormat(dpy, attrs.visual);
-      if (dst_fmt) {
-        Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
-        if (dst) {
-          XRenderComposite(dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, 0, 0, w,
-                           h);
-          XRenderFreePicture(dpy, dst);
-        }
-      }
+  if (dst_fmt && src) {
+    Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
+    if (dst) {
+      XRenderComposite(dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, 0, 0, w, h);
+      XRenderFreePicture(dpy, dst);
     }
   }
   pthread_mutex_unlock(&border_mtx);

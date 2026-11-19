@@ -312,7 +312,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
 
   x11_set_draw_context(NULL, NULL, NULL, 0);
   XftDrawDestroy(xd);
-  x11_draw_window_border(dpy, win, w, h, no_bg);
+  x11_draw_window_border(dpy, win, NULL, w, h, no_bg);
   XFlush(dpy);
 }
 
