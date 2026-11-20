@@ -465,8 +465,8 @@ static bool is_space(char c) {
   return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
-static bool stale_with_dep(const char *src, const char *obj,
-                           const char *dep_file_path) {
+static bool stale_with_dep_file(const char *src, const char *obj,
+                                const char *dep_file_path) {
   if (!nob_file_exists(obj))
     return true;
   if (nob_needs_rebuild1(obj, src) != 0)
@@ -512,8 +512,12 @@ static bool stale_with_dep(const char *src, const char *obj,
   return false;
 }
 
+static bool stale_with_dep(const char *src, const char *obj) {
+  return stale_with_dep_file(src, obj, dep_path(src));
+}
+
 static bool stale(const char *src, const char *obj) {
-  return stale_with_dep(src, obj, dep_path(src));
+  return stale_with_dep(src, obj);
 }
 
 static const char *sdk_files[] = {
@@ -632,7 +636,7 @@ static bool build_features(void) {
                        (nob_file_exists(main_implib) &&
                         nob_needs_rebuild1(so, main_implib) != 0);
       } else {
-        need_rebuild = stale_with_dep(src, so, feature_dep_path(src));
+        need_rebuild = stale_with_dep_file(src, so, feature_dep_path(src));
       }
     }
     if (!need_rebuild)
@@ -862,18 +866,22 @@ static bool run_tests(void) {
   const char *support_obj = NULL;
   if (nob_file_exists("tests/support.c")) {
     support_obj = nob_temp_sprintf("%s/support.o", test_build_folder);
-    Nob_Cmd scmd = {0};
-    if (target_win32) {
-      nob_cmd_append(&scmd, CROSS_CC);
-    } else {
-      append_cc(&scmd);
-    }
-    append_san_flags(&scmd);
-    nob_cmd_append(&scmd, "-I", "include", "-I", "tests", "-O2", "-c",
-                   "tests/support.c", "-o", support_obj);
-    if (!nob_cmd_run(&scmd)) {
-      nob_log(NOB_ERROR, "Failed to build test support");
-      return false;
+    const char *support_dep = nob_temp_sprintf("%s/support.d", test_build_folder);
+    if (stale_with_dep_file("tests/support.c", support_obj, support_dep)) {
+      Nob_Cmd scmd = {0};
+      if (target_win32) {
+        nob_cmd_append(&scmd, CROSS_CC);
+      } else {
+        append_cc(&scmd);
+      }
+      append_san_flags(&scmd);
+      nob_cmd_append(&scmd, "-I", "include", "-I", "tests", "-O2", "-MMD",
+                     "-MP", "-MF", support_dep, "-c", "tests/support.c", "-o",
+                     support_obj);
+      if (!nob_cmd_run(&scmd)) {
+        nob_log(NOB_ERROR, "Failed to build test support");
+        return false;
+      }
     }
   }
 
@@ -882,34 +890,47 @@ static bool run_tests(void) {
     snprintf(fixture_dir, sizeof(fixture_dir), "%s/fixture", test_build_folder);
     if (!nob_mkdir_if_not_exists(fixture_dir))
       return false;
-    if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.dll", fixture_dir)))
-      nob_delete_file(nob_temp_sprintf("%s/reload_probe.dll", fixture_dir));
-    if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.so", fixture_dir)))
-      nob_delete_file(nob_temp_sprintf("%s/reload_probe.so", fixture_dir));
-    if (nob_file_exists(nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir)))
-      nob_delete_file(nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir));
-    Nob_Cmd fcmd = {0};
-    append_cc(&fcmd);
-    nob_cc_flags(&fcmd);
-    append_dep_cflags(&fcmd);
 #if defined(__APPLE__)
-    nob_cmd_append(&fcmd, "-dynamiclib", "-I", "include",
-                   "tests/fixtures/reload_probe.c", "-o",
-                   nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir));
+    const char *fixture_out =
+        nob_temp_sprintf("%s/reload_probe.dylib", fixture_dir);
 #elif defined(_WIN32)
-    nob_cmd_append(&fcmd, "-shared", "-I", "include",
-                   "tests/fixtures/reload_probe.c", "-o",
-                   nob_temp_sprintf("%s/reload_probe.dll", fixture_dir));
+    const char *fixture_out =
+        nob_temp_sprintf("%s/reload_probe.dll", fixture_dir);
 #else
-    nob_cmd_append(&fcmd, "-shared", "-fPIC", "-I", "include",
-                   "tests/fixtures/reload_probe.c", "-o",
-                   nob_temp_sprintf("%s/reload_probe.so", fixture_dir));
+    const char *fixture_out =
+        nob_temp_sprintf("%s/reload_probe.so", fixture_dir);
 #endif
-    if (!nob_cmd_run(&fcmd)) {
-      nob_log(NOB_ERROR, "Failed to build reload_probe fixture");
-      return false;
+    if (nob_needs_rebuild1(fixture_out, "tests/fixtures/reload_probe.c") != 0) {
+      Nob_Cmd fcmd = {0};
+      append_cc(&fcmd);
+      nob_cc_flags(&fcmd);
+      append_dep_cflags(&fcmd);
+#if defined(__APPLE__)
+      nob_cmd_append(&fcmd, "-dynamiclib", "-I", "include",
+                     "tests/fixtures/reload_probe.c", "-o", fixture_out);
+#elif defined(_WIN32)
+      nob_cmd_append(&fcmd, "-shared", "-I", "include",
+                     "tests/fixtures/reload_probe.c", "-o", fixture_out);
+#else
+      nob_cmd_append(&fcmd, "-shared", "-fPIC", "-I", "include",
+                     "tests/fixtures/reload_probe.c", "-o", fixture_out);
+#endif
+      if (!nob_cmd_run(&fcmd)) {
+        nob_log(NOB_ERROR, "Failed to build reload_probe fixture");
+        return false;
+      }
     }
   }
+
+  Nob_File_Paths link_deps = {0};
+  for (size_t i = 0; i < sources.count; ++i) {
+    const char *src = sources.items[i];
+    if (strcmp(src, "src/main.c") == 0 || strcmp(src, "src\\main.c") == 0)
+      continue;
+    nob_da_append(&link_deps, strdup(obj_path(src)));
+  }
+  if (support_obj)
+    nob_da_append(&link_deps, strdup(support_obj));
 
   size_t failed = 0;
   size_t suite_count = test_sources.count;
@@ -925,25 +946,36 @@ static bool run_tests(void) {
       if (dot)
         *dot = '\0';
       const char *out = nob_temp_sprintf("build/win_tests/%s.exe", name);
-      Nob_Cmd cmd = {0};
-      nob_cmd_append(&cmd, CROSS_CC);
-      nob_cmd_append(
-          &cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src,
-          nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder));
-      if (support_obj)
-        nob_cmd_append(&cmd, support_obj);
-      for (size_t i = 0; i < sources.count; ++i) {
-        if (strcmp(sources.items[i], "src/main.c") == 0 ||
-            strcmp(sources.items[i], "src\\main.c") == 0)
+      const char *test_obj = nob_temp_sprintf("%s/%s.o", test_build_folder, name);
+      const char *test_dep = nob_temp_sprintf("%s/%s.d", test_build_folder, name);
+      if (stale_with_dep_file(src, test_obj, test_dep)) {
+        Nob_Cmd ccmd = {0};
+        nob_cmd_append(&ccmd, CROSS_CC);
+        nob_cmd_append(
+            &ccmd, "-I", "include", "-I", "tests", "-O2", "-Wall", "-MMD",
+            "-MP", "-MF", test_dep, "-c", src,
+            nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder),
+            "-o", test_obj);
+        if (!nob_cmd_run(&ccmd)) {
+          nob_log(NOB_ERROR, "Failed to compile test %s", src);
+          failed++;
           continue;
-        nob_cmd_append(&cmd, obj_path(sources.items[i]));
+        }
       }
-      nob_cmd_append(&cmd, WIN_LINK_FLAGS, "-o", out);
-      nob_log(NOB_INFO, "Building test %s", out);
-      if (!nob_cmd_run(&cmd)) {
-        nob_log(NOB_ERROR, "Failed to build test %s", src);
-        failed++;
-        continue;
+      if (nob_needs_rebuild(out, (const char **)link_deps.items,
+                            link_deps.count) != 0 ||
+          nob_needs_rebuild1(out, test_obj) != 0) {
+        Nob_Cmd cmd = {0};
+        nob_cmd_append(&cmd, CROSS_CC, test_obj);
+        for (size_t i = 0; i < link_deps.count; ++i)
+          nob_cmd_append(&cmd, link_deps.items[i]);
+        nob_cmd_append(&cmd, WIN_LINK_FLAGS, "-o", out);
+        nob_log(NOB_INFO, "Linking test %s", out);
+        if (!nob_cmd_run(&cmd)) {
+          nob_log(NOB_ERROR, "Failed to build test %s", src);
+          failed++;
+          continue;
+        }
       }
       built++;
     }
@@ -973,29 +1005,44 @@ static bool run_tests(void) {
     if (!nob_sv_ends_with_cstr(nob_sv_from_cstr(out), ".exe"))
       out = nob_temp_sprintf("%s.exe", out);
 #endif
-    Nob_Cmd cmd = {0};
-    append_cc(&cmd);
-    nob_cmd_append(
-        &cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src,
-        nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder));
-    append_san_flags(&cmd);
-    append_dep_cflags(&cmd);
-    if (support_obj)
-      nob_cmd_append(&cmd, support_obj);
-    for (size_t i = 0; i < sources.count; ++i) {
-      if (strcmp(sources.items[i], "src/main.c") == 0 ||
-          strcmp(sources.items[i], "src\\main.c") == 0)
-        continue;
-      nob_cmd_append(&cmd, obj_path(sources.items[i]));
+    const char *test_obj = nob_temp_sprintf("%s/%s.o", test_build_folder, name);
+    const char *test_dep = nob_temp_sprintf("%s/%s.d", test_build_folder, name);
+    bool build_failed = false;
+    if (stale_with_dep_file(src, test_obj, test_dep)) {
+      Nob_Cmd ccmd = {0};
+      append_cc(&ccmd);
+      nob_cmd_append(
+          &ccmd, "-I", "include", "-I", "tests", "-O2", "-Wall", "-MMD", "-MP",
+          "-MF", test_dep, "-c", src,
+          nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder), "-o",
+          test_obj);
+      append_san_flags(&ccmd);
+      append_dep_cflags(&ccmd);
+      if (!nob_cmd_run(&ccmd)) {
+        build_failed = true;
+      }
     }
+    if (!build_failed &&
+        (nob_needs_rebuild(out, (const char **)link_deps.items,
+                           link_deps.count) != 0 ||
+         nob_needs_rebuild1(out, test_obj) != 0)) {
+      Nob_Cmd cmd = {0};
+      append_cc(&cmd);
+      nob_cmd_append(&cmd, test_obj);
+      for (size_t i = 0; i < link_deps.count; ++i)
+        nob_cmd_append(&cmd, link_deps.items[i]);
 #if defined(_WIN32)
-    nob_cmd_append(&cmd, "-Wl,--export-all-symbols");
+      nob_cmd_append(&cmd, "-Wl,--export-all-symbols");
 #endif
-    append_dep_ldflags(&cmd);
-    append_san_flags(&cmd);
-    nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
+      append_dep_ldflags(&cmd);
+      append_san_flags(&cmd);
+      nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
+      if (!nob_cmd_run(&cmd)) {
+        build_failed = true;
+      }
+    }
     snprintf(suite_names[t], sizeof(suite_names[t]), "%s", name);
-    if (!nob_cmd_run(&cmd)) {
+    if (build_failed) {
       snprintf(suite_names[t], sizeof(suite_names[t]), "%s (BUILD FAILED)",
                name);
       suite_ok[t] = false;
@@ -1036,11 +1083,13 @@ static bool run_tests(void) {
     nob_log(NOB_ERROR, "%zu of %zu test suite(s) failed", failed, suite_count);
     free(suite_names);
     free(suite_ok);
+    nob_da_free(link_deps);
     return false;
   }
   nob_log(NOB_INFO, "All %zu test suite(s) passed", suite_count);
   free(suite_names);
   free(suite_ok);
+  nob_da_free(link_deps);
   return true;
 }
 
