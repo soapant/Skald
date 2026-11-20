@@ -371,20 +371,6 @@ typedef PromptSpec SkPromptSpec;
 
 void ski_window(const SkPromptSpec *spec);
 
-typedef enum {
-  FLANCHOR_TOP_LEFT,
-  FLANCHOR_TOP_CENTER,
-  FLANCHOR_TOP_RIGHT,
-  FLANCHOR_CENTER_LEFT,
-  FLANCHOR_CENTER,
-  FLANCHOR_CENTER_RIGHT,
-  FLANCHOR_BOTTOM_LEFT,
-  FLANCHOR_BOTTOM_CENTER,
-  FLANCHOR_BOTTOM_RIGHT,
-  FLANCHOR_FILL_WIDTH,
-  FLANCHOR_FILL_HEIGHT
-} SkAnchor;
-
 typedef struct {
   const char *text;
   int x;
@@ -524,23 +510,9 @@ bool ski_listbox_begin(const SkListSpec *spec);
 
 bool sk_listbox_next(SkListItemCtx *out);
 void sk_listbox_end(void);
-int sk_listbox_get_count(void);
 
-bool sk_draw_text_anchored(SkAnchor anchor, int offset_x, int offset_y,
-                           const char *text);
-bool sk_place_editbox_anchored(SkAnchor anchor, int offset_x, int offset_y,
-                               int w, int h, const char *buffer);
-bool sk_place_listbox_anchored(SkAnchor anchor, int offset_x, int offset_y,
-                               int w, int h, const char **items, int count);
-bool sk_draw_image_anchored(SkAnchor anchor, int offset_x, int offset_y, int w,
-                            int h, const char *path);
-
-void sk_layout_begin_column_anchored(SkAnchor anchor, int start_x, int start_y,
-                                     int gap);
 void sk_layout_begin_column(int start_x, int start_y, int gap);
 void sk_layout_end_column(void);
-void sk_layout_begin_row_anchored(SkAnchor anchor, int start_x, int start_y,
-                                  int gap);
 void sk_layout_begin_row(int start_x, int start_y, int gap);
 void sk_layout_end_row(void);
 bool sk_draw_text_auto(const char *text);
@@ -562,12 +534,6 @@ void sk_widget_show(SkWidget *widget);
 
 void sk_widget_hide(SkWidget *widget);
 void sk_widget_destroy(SkWidget *widget);
-
-void sk_widget_set_render(SkWidget *widget, SkWidgetRenderFn render);
-
-void *sk_load_image(const char *path);
-
-void sk_free_image(void *image);
 
 #define SK_DRAW_ALPHA_OPAQUE 255
 #define SK_DRAW_ALPHA_TRANSPARENT 128
