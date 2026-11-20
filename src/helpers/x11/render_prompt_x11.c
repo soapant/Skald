@@ -143,7 +143,9 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
   if (state->callbacks && state->callbacks->render) {
     checkbox_frame_begin();
     slider_frame_begin();
-    focus_frame_begin(state->lb != NULL);
+    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
+                      state->height - prompt_list_top() -
+                          prompt_list_bottom_margin());
     x11_set_draw_context(dpy, NULL, NULL, 0);
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
@@ -209,7 +211,9 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   if (state->callbacks->render != NULL) {
     checkbox_frame_begin();
     slider_frame_begin();
-    focus_frame_begin(state->lb != NULL);
+    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
+                      state->height - prompt_list_top() -
+                          prompt_list_bottom_margin());
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb && !state->no_separators)
