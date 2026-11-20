@@ -124,7 +124,6 @@ bool focus_select(const char *name) {
   snprintf(s_saved_name, sizeof(s_saved_name), "%s", s_entries[idx].name);
   s_saved_kind = s_entries[idx].kind;
   s_saved_seen = true;
-  log_info("focus: select '%s' (kind=%d)", s_saved_name, (int)s_saved_kind);
   return true;
 }
 

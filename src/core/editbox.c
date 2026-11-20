@@ -566,10 +566,6 @@ int editbox_registry_place(PromptState *state, const char *name, char *buffer,
   entry->h = h;
   entry->placed = true;
   int idx = (int)(entry - state->editboxes);
-  log_info("editbox place: name='%s' idx=%d buf=%p size=%zu rect=%d,%d %dx%d "
-           "active=%d",
-           entry->name, idx, (void *)entry->buffer, entry->buffer_size,
-           entry->x, entry->y, entry->w, entry->h, state->active_editbox);
   return idx;
 }
 
@@ -622,14 +618,9 @@ void editbox_registry_tick(PromptState *state) {
   int mx = 0, my = 0;
   bool down = false;
   editbox_registry_mouse(&mx, &my, &down);
-  if (state->editbox_count > 0)
-    log_info("editbox tick: mouse=%d,%d down=%d active_before=%d count=%d", mx,
-             my, down ? 1 : 0, state->active_editbox, state->editbox_count);
   if (state->active_editbox < 0 && state->editbox_count > 0) {
     state->active_editbox = 0;
     focus_set_pseudo(FOCUS_KIND_EDITBOX);
-    log_info("editbox tick: default active '%s' idx=0",
-             state->editboxes[0].name);
   }
   for (int i = 0; i < state->editbox_count; i++) {
     PromptEditbox *entry = &state->editboxes[i];
@@ -661,8 +652,6 @@ void editbox_registry_sync(PromptState *state) {
     size_t n = strnlen(entry->eb.filter, cap - 1);
     memcpy(entry->buffer, entry->eb.filter, n);
     entry->buffer[n] = '\0';
-    log_info("editbox sync: name='%s' eb=%p buffer=%p text='%s'", entry->name,
-             (void *)&entry->eb, (void *)entry->buffer, entry->eb.filter);
   }
 }
 

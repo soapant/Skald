@@ -3123,6 +3123,7 @@ struct SettingsEntry {
   char owner[OWNER_PATH_MAX];
   char desc[512];
   int block_count;
+  int scroll_y;
   SkSettingsBlock blocks[SETTINGS_MAX_BLOCKS];
 };
 
@@ -3228,6 +3229,7 @@ static void st_dup(char *dst, size_t cap, const char *src) {
 }
 
 static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud);
+static SkSettingsEntry *s_settings_scroll_entry = NULL;
 
 SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
   if (!spec || !spec->name || !spec->name[0])
@@ -3750,8 +3752,37 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
   sk_draw_line(.x1 = -7, .y1 = 210, .x2 = pane_w + 17, .y2 = 210,
                .color = COLOR_BORDER);
 
+  if (s_settings_scroll_entry != entry) {
+    s_settings_scroll_entry = entry;
+    entry->scroll_y = 0;
+  }
+  int base_off_y = draw_state_get()->off_y;
+  int view_h = PromptH - base_off_y - 210;
+  if (view_h < 40)
+    view_h = 40;
+  char scroll_name[300];
+  snprintf(scroll_name, sizeof(scroll_name), "settings:%s", entry->name);
+  ScrollAreaSpec scroll_spec = {
+      .name = scroll_name,
+      .x = 0,
+      .y = 210,
+      .w = pane_w,
+      .h = view_h,
+      .content_w = 0,
+      .content_h = entry->block_count * 70,
+      .off_y = &entry->scroll_y,
+      .wheel_px = 70,
+      .owner = entry->owner,
+  };
+  bool scrolled = scroll_area_begin(&scroll_spec);
+  int view_top = 210 + (scrolled ? entry->scroll_y : 0);
+
   for (int i = 0; i < entry->block_count; i++) {
     SkSettingsBlock *b = &entry->blocks[i];
+    if (cursor < view_top) {
+      cursor += 70;
+      continue;
+    }
     if (cursor + 60 > PromptH - draw_state_get()->off_y)
       break;
     s_dispatch_entry = entry;
@@ -3900,6 +3931,8 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     }
   }
 
+  if (scrolled)
+    scroll_area_end();
   s_dispatch_entry = NULL;
   s_dispatch_index = -1;
   s_dispatch_option = -1;
