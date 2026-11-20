@@ -992,7 +992,9 @@ ski_settings_entry_add_editbox(SkSettingsEntry *entry,
 const char *sk_settings_editbox_get(SkSettingsEditboxGroup group,
                                     const char *name);
 bool sk_settings_editbox_set(SkSettingsEditboxGroup group, const char *name,
-                             const char *value);
+                              const char *value);
+int sk_settings_editbox_right_offset(int pane_w, int width);
+
 
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 

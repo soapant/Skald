@@ -3072,7 +3072,7 @@ typedef struct {
 } SkCcEntry;
 
 #define SETTINGS_MAX_ENTRIES 128
-#define SETTINGS_MAX_BLOCKS 32
+#define SETTINGS_MAX_BLOCKS 128
 
 #define SETTINGS_BLOCK_CHECKBOX 1
 #define SETTINGS_BLOCK_BUTTON 2
@@ -3082,6 +3082,11 @@ typedef struct {
 
 #define SETTINGS_EDITBOX_MAX_FIELDS 8
 #define SETTINGS_EDITBOX_KEY_MAX 192
+
+#define SETTINGS_ROW_X 10
+#define SETTINGS_ROW_W_PAD 20
+#define SETTINGS_ROW_EDGE_PAD 10
+#define SETTINGS_EDITBOX_BASE_X 360
 
 typedef struct {
   char name[64];
@@ -3582,6 +3587,14 @@ bool sk_settings_editbox_set(SkSettingsEditboxGroup group, const char *name,
   return true;
 }
 
+int sk_settings_editbox_right_offset(int pane_w, int width) {
+  int row_w = pane_w - SETTINGS_ROW_W_PAD;
+  int right = SETTINGS_ROW_X + row_w - SETTINGS_ROW_EDGE_PAD;
+  int base = SETTINGS_ROW_X + SETTINGS_EDITBOX_BASE_X;
+  int offset = right - width - base;
+  return offset > 0 ? offset : 0;
+}
+
 int sk_settings_entry_count(void) { return settings_entry_count; }
 
 const SettingsEntrySpec *sk_settings_entry_at(int index) {
@@ -3658,6 +3671,7 @@ static void dispatch_widget_click(void) {
   }
   if (b->type == SETTINGS_BLOCK_CHECKBOX) {
     bool checked = checkbox_is_checked(b->title, PLACE_CHECKBOX);
+    b->initial = checked;
     persist_block_value(e, b, checked ? "true" : "false");
   }
   if (b->on_click)
@@ -3788,7 +3802,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     s_dispatch_entry = entry;
     s_dispatch_index = i;
     focus_ctx_remember(b->title, entry, i, -1);
-    int x = 10, y = cursor, w = pane_w - 20;
+    int x = SETTINGS_ROW_X, y = cursor, w = pane_w - SETTINGS_ROW_W_PAD;
     sk_draw_rect(.x = x, .y = y, .w = w, .h = 60,
                  .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
                  .filled = true, .radius = 6);
@@ -3800,7 +3814,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
       sk_draw_text(.text = b->sub, .x = x + 10, .y = y + 30,
                    .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f),
                    .align = "LEFT");
-    int right = x + w - 10;
+    int right = x + w - SETTINGS_ROW_EDGE_PAD;
     if (b->type == SETTINGS_BLOCK_CHECKBOX) {
       sk_place_checkbox(.name = b->title, .x = right - 32, .y = y + 14, .w = 32,
                         .h = 32, .checked = b->initial,
@@ -3825,7 +3839,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
                       .value = b->value, .on_change = dispatch_slider_change,
                       .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_EDITBOX) {
-      int ex = x + 360 + b->x_offset;
+      int ex = x + SETTINGS_EDITBOX_BASE_X + b->x_offset;
       const int gap = 30;
       for (int fi = 0; fi < b->field_count; fi++) {
         SkSettingsEditboxFieldBlock *f = &b->fields[fi];

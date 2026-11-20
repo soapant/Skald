@@ -119,13 +119,13 @@ sudo usermod -aG input $USER
 
 Download the latest `.zip` from the [Releases page](https://github.com/soapant/skald/releases), extract it, and run `skald.exe`.
 
-## How it Works
+## 🏗️ How it Works
 
 Skald is split into two halves: **the Core** and **Features**.
 
-- **The Core (Control Center):** The only hardcoded part of Skald. It handles global hotkeys for Hot Reloading, Aliases, and the feature loader. It acts as the "OS" of the launcher.
+- **The Core:** The hardcoded parts of Skald. This includes the **Control Center** (global hotkeys, hot reloading, aliases) and the **Settings GUI** (which must always exist to let you change fundamental configs). The Core acts as the "OS" of the launcher.
 - **Features:** Everything else is a `.c` file compiled into a `.so` (Linux) or `.dll` (Windows). If you want a clipboard history, you drop `clipboard_history.c` into the `FeaturePath` folder configured in `config.toml`. If you don't want it, just delete it.
-- **Manifests:** Every feature has a `.toml` file in its directory. It stores the feature's name, description, what it provides (via the Capability System), and what dependencies it requires to run (right now most of it is empty will be filled out later on).
+- **Manifests:** Every feature has a `.toml` file in its directory. It stores the feature's name, description, what it provides (via the Capability System), and what dependencies it requires to run (right now most of it is empty and will be filled out later on).
 
 ## Known Issues (Early Development)
 

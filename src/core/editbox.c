@@ -145,8 +145,14 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->x = in->x;
   out->y = in->y;
   out->w = in->w;
-  out->inset = PROMPT_EDIT_INSET;
-  out->visible_w = in->w - PROMPT_EDIT_SCROLL_PAD;
+  if (in->text_w > 0 &&
+      in->w < in->text_w + PROMPT_EDIT_SCROLL_PAD + 16) {
+    out->inset = 6;
+    out->visible_w = in->w - 8;
+  } else {
+    out->inset = PROMPT_EDIT_INSET;
+    out->visible_w = in->w - PROMPT_EDIT_SCROLL_PAD;
+  }
   out->scroll = in->state ? in->state->eb->scroll_offset : 0;
   out->cursor_x = in->cursor_x;
   out->text_w = in->text_w;

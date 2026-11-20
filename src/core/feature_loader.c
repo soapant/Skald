@@ -204,8 +204,6 @@ static void defer_unload(LibHandle handle, const char *uniq,
 
 static void sweep_retired_libs(void) {
   const WindowManager *wm = WindowManager_Get();
-  checkbox_reset_all();
-  slider_reset_all();
   int n = 0;
   for (int i = 0; i < retired_count; i++) {
     bool alive = false;
@@ -227,6 +225,8 @@ static void sweep_retired_libs(void) {
     if (alive) {
       retired[n++] = retired[i];
     } else {
+      checkbox_reset_all();
+      slider_reset_all();
       purge_owner_set(retired[i].owner, NULL, retired[i].owner_gen);
       log_info("deferring unload of retired lib %s", retired[i].owner);
       defer_unload(retired[i].handle, retired[i].uniq, retired[i].owner);
