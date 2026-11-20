@@ -1,5 +1,6 @@
 #include "config_values.h"
 #include "core/context.h"
+#include "core/editbox.h"
 #include "core/prompt_geometry.h"
 #include "core/types/color.h"
 #include "core/types/keys.h"
@@ -141,6 +142,8 @@ void Platform_PromptPopupRender(Popup *self) {
     draw_state_get()->suppress_separators = state->no_separators;
     if (draw_band && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
+    editbox_registry_tick(state);
+    editbox_registry_begin_frame(state);
     state->callbacks->render(state);
     prompt_band_commit_placed();
     draw_state_get()->suppress_separators = sep_prev;

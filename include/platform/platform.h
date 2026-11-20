@@ -328,13 +328,5 @@ bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
                                   const char *argv[], size_t argv_cap);
 bool Platform_AtomicRename(const char *old_path, const char *new_path);
 
-typedef struct {
-  int edit_cursor_width;
-  int edit_cursor_height;
-  int editbox_padding;
-  int listbox_padding;
-  int listbox_item_height;
-} Metrics;
-
 void Platform_InvalidatePrompt(void);
 #endif

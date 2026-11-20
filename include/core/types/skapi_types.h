@@ -15,7 +15,9 @@ typedef enum {
 } SkNetStatus;
 
 typedef struct {
-  const char *buffer;
+  const char *name;
+  char *buffer;
+  size_t buffer_size;
   int x;
   int y;
   int w;
