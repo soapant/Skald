@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#if !defined(_WIN32)
+#if defined(__linux__)
 #include <sys/eventfd.h>
+#endif
+#if !defined(_WIN32)
 #include <unistd.h>
 #include <fcntl.h>
 #endif
@@ -52,23 +54,24 @@ static int pending_tail = 0;
 static void *q_mutex = NULL;
 static unsigned long pending_dropped = 0;
 
+#if defined(__linux__)
 static int wake_fd = -1;
+#endif
+
 int hotkey_wake_fd(void) {
-#if defined(_WIN32)
-  return -1;
-#else
+#if defined(__linux__)
   if (wake_fd < 0)
     wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
   return wake_fd;
+#else
+  return -1;
 #endif
 }
 
 static void hotkey_wake(void) {
+#if defined(__linux__)
   if (wake_fd < 0)
     return;
-#if defined(_WIN32)
-  return;
-#else
   unsigned long long one = 1;
   ssize_t wr = write(wake_fd, &one, sizeof(one));
   (void)wr;

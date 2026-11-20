@@ -21,9 +21,10 @@
       "-Lbuild/winlibs", "-liphlpapi"
 #elif defined(__APPLE__)
 #define CC_FLAGS CC_COMMON_FLAGS
-#define LINK_FLAGS                                                             \
-  "-lm", "-ldl", "-Wl,-undefined,dynamic_lookup", "-framework", "Cocoa",       \
+#define APPLE_LINK_FLAGS                                                       \
+  "-lm", "-ldl", "-Wl,-export_dynamic", "-framework", "Cocoa",                 \
       "-framework", "CoreGraphics"
+#define LINK_FLAGS APPLE_LINK_FLAGS, "-Wl,-undefined,dynamic_lookup"
 #define PKG_CFLAGS_PKGS_STR "libcurl"
 #define PKG_LIBS_PKGS_STR " libcurl"
 #else
@@ -2154,7 +2155,11 @@ int main(int argc, char **argv) {
 #endif
     append_dep_ldflags(&cmd);
     append_san_flags(&cmd);
+#if defined(__APPLE__)
+    nob_cmd_append(&cmd, APPLE_LINK_FLAGS);
+#else
     nob_cmd_append(&cmd, LINK_FLAGS);
+#endif
   }
 
   nob_log(NOB_INFO, "Linking %s", output);
