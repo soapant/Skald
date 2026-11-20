@@ -40,7 +40,12 @@ void checkbox_frame_begin(void) { cb_mouse.valid = false; }
 
 static void checkbox_focus_activate(void *owner) {
   CheckboxSpec *cb = (CheckboxSpec *)owner;
-  if (cb && cb->on_click)
+  if (!cb)
+    return;
+  cb->clicked = true;
+  if (!cb->button)
+    cb->checked = !cb->checked;
+  if (cb->on_click)
     cb->on_click();
 }
 

@@ -619,7 +619,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (state && state->callbacks && state->callbacks->render) {
         checkbox_frame_begin();
         slider_frame_begin();
-        focus_frame_begin(state->lb != NULL);
+        focus_frame_begin(state->lb != NULL, 0, prompt_list_top(),
+                          state->width,
+                          state->height - prompt_list_top() -
+                              prompt_list_bottom_margin());
         win32_set_draw_context(paintDC);
         draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;

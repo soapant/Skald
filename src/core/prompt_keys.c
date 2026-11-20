@@ -375,10 +375,15 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   }
   if (vk == VK_RETURN) {
     if (widget_focus()) {
-      focus_activate();
+      log_info("keys: enter -> activate widget '%s'",
+               focus_name() ? focus_name() : "-");
+      if (!focus_activate())
+        log_warn("keys: enter activation failed for '%s'",
+                 focus_name() ? focus_name() : "-");
       prompt_refresh(state);
       return true;
     }
+    log_info("keys: enter -> prompt callback");
     prompt_trigger_enter(state, ctrl, shift, alt);
     return true;
   }

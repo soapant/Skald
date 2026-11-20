@@ -460,13 +460,33 @@ float sk_slider_fraction(const char *name);
 int sk_slider_percent(const char *name);
 bool sk_slider_set_value(const char *name, float value);
 
+typedef enum {
+  SK_FOCUS_NONE = 0,
+  SK_FOCUS_BUTTON,
+  SK_FOCUS_CHECKBOX,
+  SK_FOCUS_SLIDER,
+  SK_FOCUS_LISTBOX,
+  SK_FOCUS_EDITBOX,
+  SK_FOCUS_CUSTOM
+} SkFocusKind;
+
+typedef enum {
+  SK_FOCUS_LEFT = 0,
+  SK_FOCUS_RIGHT,
+  SK_FOCUS_UP,
+  SK_FOCUS_DOWN
+} SkFocusDir;
+
+SkFocusKind sk_focus_kind(void);
 bool sk_focus_is(const char *name);
 bool sk_focus_has_entries(void);
 const char *sk_focus_name(void);
-bool sk_focus_move(int dir);
-bool sk_focus_activate(void);
+bool sk_focus_move_next(void);
+bool sk_focus_move_before(void);
+bool sk_focus_move_dir(SkFocusDir dir);
+bool sk_activate_focused(void);
 bool sk_focus_adjust(int dir);
-void sk_focus_listbox(void);
+bool sk_set_focus(SkFocusKind kind);
 void sk_focus_clear(void);
 
 #define sk_checkbox_hovered sk_checkbox_is_hovered
