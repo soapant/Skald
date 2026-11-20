@@ -183,7 +183,7 @@ bool input_vk_to_name(int vk, char *out, size_t cap) {
 
 #define GLOBAL_KEY_RING 512
 
-static PlatformKeyEvent gkeys[GLOBAL_KEY_RING];
+static KeyEvent gkeys[GLOBAL_KEY_RING];
 static int gkey_head = 0, gkey_tail = 0;
 static unsigned long gkey_dropped = 0;
 static void *gkey_mutex = NULL;
@@ -216,10 +216,10 @@ static unsigned long long input_now_us(void) {
   return whole * 1000000ULL + rem * 1000000ULL / (unsigned long long)freq;
 }
 
-void global_key_push(const PlatformKeyEvent *ev) {
+void global_key_push(const KeyEvent *ev) {
   if (!ev)
     return;
-  PlatformKeyEvent stamped = *ev;
+  KeyEvent stamped = *ev;
   stamped.t_us = input_now_us();
   GKEY_LOCK();
   int nxt = (gkey_tail + 1) % GLOBAL_KEY_RING;
@@ -233,7 +233,7 @@ void global_key_push(const PlatformKeyEvent *ev) {
   GKEY_UNLOCK();
 }
 
-bool global_key_pop(PlatformKeyEvent *out) {
+bool global_key_pop(KeyEvent *out) {
   if (!out)
     return false;
   bool got = false;
@@ -265,7 +265,7 @@ unsigned long global_key_dropped(void) {
 
 #define GLOBAL_MOUSE_RING 256
 
-static PlatformMouseEvent gmice[GLOBAL_MOUSE_RING];
+static MouseEvent gmice[GLOBAL_MOUSE_RING];
 static int gmouse_head = 0, gmouse_tail = 0;
 static unsigned long gmouse_dropped = 0;
 static bool mbtn_down[MOUSE_BTN_MAX] = {0};
@@ -286,12 +286,12 @@ int global_mouse_full(void) {
   return next == gmouse_head;
 }
 
-void global_mouse_push(const PlatformMouseEvent *ev) {
+void global_mouse_push(const MouseEvent *ev) {
   if (!ev)
     return;
   if (global_mouse_full())
     return;
-  PlatformMouseEvent stamped = *ev;
+  MouseEvent stamped = *ev;
   stamped.t_us = input_now_us();
   GMOUSE_LOCK();
   int nxt = (gmouse_tail + 1) % GLOBAL_MOUSE_RING;
@@ -305,7 +305,7 @@ void global_mouse_push(const PlatformMouseEvent *ev) {
   GMOUSE_UNLOCK();
 }
 
-bool global_mouse_pop(PlatformMouseEvent *out) {
+bool global_mouse_pop(MouseEvent *out) {
   if (!out)
     return false;
   bool got = false;
@@ -356,5 +356,76 @@ bool input_mouse_state_down(int button) {
   GMOUSE_LOCK();
   bool d = mbtn_down[button];
   GMOUSE_UNLOCK();
+  return d;
+}
+
+#define GLOBAL_SCROLL_RING 128
+
+static ScrollEvent gscrolls[GLOBAL_SCROLL_RING];
+static int gscroll_head = 0, gscroll_tail = 0;
+static unsigned long gscroll_dropped = 0;
+static void *gscroll_mutex = NULL;
+static void gscroll_lock_init(void) {
+  if (!gscroll_mutex)
+    gscroll_mutex = Platform_MutexCreate();
+}
+#define GSCROLL_LOCK()                                                         \
+  do {                                                                         \
+    gscroll_lock_init();                                                       \
+    Platform_MutexLock(gscroll_mutex);                                         \
+  } while (0)
+#define GSCROLL_UNLOCK() Platform_MutexUnlock(gscroll_mutex)
+
+void global_scroll_push(const ScrollEvent *ev) {
+  if (!ev)
+    return;
+  ScrollEvent stamped = *ev;
+  stamped.t_us = input_now_us();
+  GSCROLL_LOCK();
+  int nxt = (gscroll_tail + 1) % GLOBAL_SCROLL_RING;
+  if (nxt == gscroll_head) {
+    gscroll_dropped++;
+    GSCROLL_UNLOCK();
+    return;
+  }
+  gscrolls[gscroll_tail] = stamped;
+  gscroll_tail = nxt;
+  GSCROLL_UNLOCK();
+}
+
+bool global_scroll_pop(ScrollEvent *out) {
+  if (!out)
+    return false;
+  bool got = false;
+  GSCROLL_LOCK();
+  if (gscroll_head != gscroll_tail) {
+    *out = gscrolls[gscroll_head];
+    gscroll_head = (gscroll_head + 1) % GLOBAL_SCROLL_RING;
+    got = true;
+  }
+  GSCROLL_UNLOCK();
+  return got;
+}
+
+void global_scroll_clear(void) {
+  GSCROLL_LOCK();
+  gscroll_head = gscroll_tail = 0;
+  gscroll_dropped = 0;
+  GSCROLL_UNLOCK();
+}
+
+int global_scroll_pending(void) {
+  GSCROLL_LOCK();
+  int n = gscroll_tail - gscroll_head;
+  if (n < 0)
+    n += GLOBAL_SCROLL_RING;
+  GSCROLL_UNLOCK();
+  return n;
+}
+
+unsigned long global_scroll_dropped(void) {
+  GSCROLL_LOCK();
+  unsigned long d = gscroll_dropped;
+  GSCROLL_UNLOCK();
   return d;
 }

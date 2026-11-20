@@ -19,9 +19,11 @@
 #include "helpers/win32/subclasses_win32.h"
 #include "helpers/win32/common_ui_win32.h"
 #include "helpers/win32/bg_image_win32.h"
+#include "helpers/helpers_input_state.h"
 #include "wingdi.h"
 #include "platform/platform.h"
 #include "core/listbox_hover.h"
+#include "core/scroll_area.h"
 #include "core/prompt_keys.h"
 #include "core/checkbox.h"
 #include "core/focus.h"
@@ -277,10 +279,21 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_MOUSEWHEEL: {
     short delta = (short)HIWORD(wParam);
-    int rows = (delta > 0) ? -LISTBOX_WHEEL_ROWS : LISTBOX_WHEEL_ROWS;
-    listbox_publish_mouse_pos((short)(lParam & 0xFFFF),
-                              (short)((lParam >> 16) & 0xFFFF));
-    listbox_queue_scroll(rows);
+    int steps = delta / WHEEL_DELTA;
+    if (steps == 0)
+      steps = delta > 0 ? 1 : -1;
+    int notches = -steps;
+    int mx = 0, my = 0;
+    if (Platform_GetMousePos(&mx, &my)) {
+      listbox_publish_mouse_pos(mx, my);
+      ScrollEvent scroll = {0};
+      scroll.x = mx;
+      scroll.y = my;
+      scroll.dy = notches;
+      global_scroll_push(&scroll);
+      if (!scroll_area_dispatch_wheel(mx, my, 0, notches))
+        listbox_queue_scroll(notches * LISTBOX_WHEEL_ROWS);
+    }
     InvalidateRect(hwnd, NULL, FALSE);
     return 0;
   }
