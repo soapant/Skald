@@ -520,8 +520,8 @@ void sk_focus_clear(void);
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
 #define sk_listbox_begin(...) ski_listbox_begin(&(SkListSpec){__VA_ARGS__})
 
-unsigned long sk_listbox_get_current_standard_color(void);
 bool ski_listbox_begin(const SkListSpec *spec);
+
 bool sk_listbox_next(SkListItemCtx *out);
 void sk_listbox_end(void);
 int sk_listbox_get_count(void);

@@ -173,16 +173,8 @@ bool Platform_DrawTextLine(DrawTextLineSpec spec) {
 void x11_draw_list_item(Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap,
                         FontHandle font, ListBox *lb, int idx, int y,
                         int text_x, const char *icon_path) {
-  unsigned long ncol, bcol, pcol;
-  item_get_colors((GetItemColorsSpec){.idx = idx,
-                                      .count = lb->item_count,
-                                      .num_color = &ncol,
-                                      .body_color = &bcol,
-                                      .plain_color = &pcol});
-  XftColor ncolor, bcolor, pcolor;
-  x11_xft_color_cached(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
-  x11_xft_color_cached(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
-  x11_xft_color_cached(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
+  XftColor pcolor;
+  x11_xft_color_cached(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &pcolor);
   x11_draw_listbox_item_text(dpy, xd, vis, cmap, font, &pcolor, lb,
                              (char *)icon_path, idx, y);
 }

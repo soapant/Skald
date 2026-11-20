@@ -542,20 +542,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
         HFONT hOldMainFont =
             hMainFont ? (HFONT)SelectObject(pdis->hDC, hMainFont) : NULL;
-        unsigned long ncol, bcol, pcol;
-        int orig_idx = (int)pdis->itemID;
-        int orig_cnt = lb ? lb->item_count : 0;
-        if (lb && (int)pdis->itemID >= 0 &&
-            (UINT)pdis->itemID < (UINT)lb->item_count) {
-          orig_idx = lb->matching_indices[pdis->itemID];
-          orig_cnt = lb->item_count;
-        }
-        item_get_colors((GetItemColorsSpec){.idx = orig_idx,
-                                            .count = orig_cnt,
-                                            .num_color = &ncol,
-                                            .body_color = &bcol,
-                                            .plain_color = &pcol});
-        SetTextColor(pdis->hDC, ncol);
+        SetTextColor(pdis->hDC, rgb_to_hex(COLOR_TEXT));
         DrawTextA(pdis->hDC, textBuffer, -1, &textRect,
                   DT_SINGLELINE | DT_VCENTER);
         SelectObject(pdis->hDC, hOldMainFont);
@@ -681,17 +668,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             if (!text)
               continue;
 
-            unsigned long ncol = rgb_to_hex(COLOR_TEXT),
-                          bcol = rgb_to_hex(COLOR_TEXT),
-                          pcol = rgb_to_hex(COLOR_TEXT);
-            int orig_idx = estate->lb->matching_indices[list_idx];
-            int orig_cnt = estate->lb->item_count;
-            item_get_colors((GetItemColorsSpec){.idx = orig_idx,
-                                                .count = orig_cnt,
-                                                .num_color = &ncol,
-                                                .body_color = &bcol,
-                                                .plain_color = &pcol});
-
             int row_h_scroll = (list_idx == estate->lb->selected_index)
                                    ? estate->lb->text_hscroll
                                    : 0;
@@ -702,7 +678,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
                                                    .y = y + pad_top,
                                                    .text = draw_text,
-                                                   .color = ncol,
+                                                   .color = rgb_to_hex(COLOR_TEXT),
                                                    .font = FH_NULL,
                                                    .align = "LEFT",
                                                    .pad = 0,
