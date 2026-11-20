@@ -729,16 +729,31 @@ static void note_feature_built(const char *ent_name, const char *dll,
   utime(dll, &times);
 }
 
+static bool persist_hot_lib(const char *out, const char *dll) {
+  if (Platform_AtomicRename(out, dll))
+    return true;
+  if (file_copy_path(out, dll)) {
+    remove(out);
+    return true;
+  }
+  log_warn("hot-reload: could not persist %s (will rebuild next start)", dll);
+  return false;
+}
+
 static int finish_hot_build(const char *ent_name, const char *dll,
                             const char *out, long long src_mtime, bool ok) {
+  bool persisted = false;
   if (ok)
     ok = feature_loader_reload_from(ent_name, out);
+  if (ok)
+    persisted = persist_hot_lib(out, dll);
   remove(out);
   if (!ok) {
     feature_mark_failed(ent_name, (time_t)src_mtime);
     return 0;
   }
-  note_feature_built(ent_name, dll, src_mtime);
+  if (persisted)
+    note_feature_built(ent_name, dll, src_mtime);
   return 1;
 }
 
