@@ -32,6 +32,7 @@
 #include "core/thread_registry.h"
 #include "core/http.h"
 #include "core/owner_purge.h"
+#include "core/scroll_area.h"
 
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
@@ -1829,6 +1830,30 @@ SkPos sk_get_draw_offset(void) {
   ski_get_draw_offset(&x, &y);
   return (SkPos){x, y};
 }
+
+bool ski_scroll_begin(const SkScrollSpec *spec) {
+  if (!spec)
+    return false;
+  char owner[OWNER_PATH_MAX] = {0};
+  owner_resolve_for_func(__builtin_return_address(0), owner, sizeof(owner));
+  ScrollAreaSpec inner = {
+      .name = spec->name,
+      .x = spec->x,
+      .y = spec->y,
+      .w = spec->w,
+      .h = spec->h,
+      .content_w = spec->content_w,
+      .content_h = spec->content_h,
+      .off_x = spec->off_x,
+      .off_y = spec->off_y,
+      .wheel_px = spec->wheel_px,
+      .owner = owner,
+  };
+  return scroll_area_begin(&inner);
+}
+
+void sk_scroll_end(void) { scroll_area_end(); }
+
 char *sk_http_get(const char *url) { return http_get(url); }
 
 char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
@@ -2443,7 +2468,7 @@ char *sk_vk_to_name(int vk) {
 bool sk_poll_key(SkKeyEvent *out) {
   if (!out)
     return false;
-  PlatformKeyEvent ev;
+  KeyEvent ev;
   if (!global_key_pop(&ev))
     return false;
   out->vk = ev.vk;
@@ -2458,7 +2483,7 @@ bool sk_poll_key(SkKeyEvent *out) {
 bool sk_poll_mouse(SkMouseEvent *out) {
   if (!out)
     return false;
-  PlatformMouseEvent ev;
+  MouseEvent ev;
   if (!global_mouse_pop(&ev))
     return false;
   out->button = ev.button;
@@ -2470,6 +2495,25 @@ bool sk_poll_mouse(SkMouseEvent *out) {
   out->t_us = ev.t_us;
   return true;
 }
+
+bool sk_poll_scroll(SkScrollEvent *out) {
+  if (!out)
+    return false;
+  ScrollEvent ev;
+  if (!global_scroll_pop(&ev))
+    return false;
+  out->x = ev.x;
+  out->y = ev.y;
+  out->dx = ev.dx;
+  out->dy = ev.dy;
+  out->mods = ev.mods;
+  out->t_us = ev.t_us;
+  return true;
+}
+
+int sk_scroll_queue_len(void) { return global_scroll_pending(); }
+
+void sk_clear_scroll_queue(void) { global_scroll_clear(); }
 
 int sk_mouse_queue_len(void) { return global_mouse_pending(); }
 

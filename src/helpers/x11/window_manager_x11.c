@@ -11,6 +11,7 @@
 #include "core/window_manager.h"
 #include "deps/log.h"
 #include "core/listbox_hover.h"
+#include "core/scroll_area.h"
 #include "core/prompt_keys.h"
 #include "helpers/helpers_input_state.h"
 #include "platform/platform.h"
@@ -193,10 +194,19 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
   case ButtonPress:
     if (ev->xbutton.button == Button4 || ev->xbutton.button == Button5) {
       int wx = 0, wy = 0;
-      if (Platform_GetMousePos(&wx, &wy))
+      int notches = ev->xbutton.button == Button4 ? -1 : 1;
+      if (Platform_GetMousePos(&wx, &wy)) {
         listbox_publish_mouse_pos(wx, wy);
-      listbox_queue_scroll(ev->xbutton.button == Button4 ? -LISTBOX_WHEEL_ROWS
-                                                         : LISTBOX_WHEEL_ROWS);
+        ScrollEvent scroll = {0};
+        scroll.x = wx;
+        scroll.y = wy;
+        scroll.dy = notches;
+        scroll.mods = remap_current_mods();
+        global_scroll_push(&scroll);
+        if (!scroll_area_dispatch_wheel(wx, wy, 0, notches)) {
+          listbox_queue_scroll(notches * LISTBOX_WHEEL_ROWS);
+        }
+      }
       if (top->vtable && top->vtable->on_render) {
         top->vtable->on_render(top);
       }

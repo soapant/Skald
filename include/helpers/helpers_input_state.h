@@ -10,7 +10,7 @@ typedef struct {
   bool down;
   bool repeat;
   unsigned long long t_us;
-} PlatformKeyEvent;
+} KeyEvent;
 
 void input_state_update(int vk, bool down, int mods, int char_hint);
 bool input_is_key_down(int vk);
@@ -26,8 +26,8 @@ int input_get_pressed_key(void);
 char input_get_pressed_char(void);
 bool input_vk_to_name(int vk, char *out, size_t cap);
 
-void global_key_push(const PlatformKeyEvent *ev);
-bool global_key_pop(PlatformKeyEvent *out);
+void global_key_push(const KeyEvent *ev);
+bool global_key_pop(KeyEvent *out);
 void global_key_clear(void);
 int global_key_pending(void);
 unsigned long global_key_dropped(void);
@@ -49,14 +49,29 @@ typedef struct {
   bool down;
   bool repeat;
   unsigned long long t_us;
-} PlatformMouseEvent;
+} MouseEvent;
 
-void global_mouse_push(const PlatformMouseEvent *ev);
+void global_mouse_push(const MouseEvent *ev);
 int global_mouse_full(void);
-bool global_mouse_pop(PlatformMouseEvent *out);
+bool global_mouse_pop(MouseEvent *out);
 void global_mouse_clear(void);
 int global_mouse_pending(void);
 unsigned long global_mouse_dropped(void);
 bool input_mouse_state_down(int button);
 void input_update_mouse_button(int button, bool down);
+
+typedef struct {
+  int x;
+  int y;
+  int dx;
+  int dy;
+  int mods;
+  unsigned long long t_us;
+} ScrollEvent;
+
+void global_scroll_push(const ScrollEvent *ev);
+bool global_scroll_pop(ScrollEvent *out);
+void global_scroll_clear(void);
+int global_scroll_pending(void);
+unsigned long global_scroll_dropped(void);
 #endif
