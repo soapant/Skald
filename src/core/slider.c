@@ -47,7 +47,8 @@ static void slider_focus_step(void *owner, int dir) {
   SliderSpec *sl = (SliderSpec *)owner;
   if (!sl)
     return;
-  float step = sl->step > 0.0f ? sl->step : (sl->max_value - sl->min_value) / 100.0f;
+  float step =
+      sl->step > 0.0f ? sl->step : (sl->max_value - sl->min_value) / 100.0f;
   if (step <= 0.0f)
     return;
   float value = sl->value + (float)dir * step;
@@ -323,10 +324,9 @@ void slider_draw(const SliderSpec *spec) {
 
   unsigned long track_bg =
       rgb_to_hex(spec->bg_color ? spec->bg_color : COLOR_BG);
-  unsigned long fill = rgb_to_hex(spec->fill_color
-                                      ? spec->fill_color
-                                      : (active ? widget_accent()
-                                                : widget_neutral()));
+  unsigned long fill = rgb_to_hex(
+      spec->fill_color ? spec->fill_color
+                       : (active ? widget_accent() : widget_neutral()));
   unsigned long thumb =
       rgb_to_hex(spec->thumb_color ? spec->thumb_color : widget_thumb());
   unsigned long track_border =

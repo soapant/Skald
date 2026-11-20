@@ -45,8 +45,7 @@ static bool editbox_focused(const PromptState *state) {
          (state && state->editbox_count == 0);
 }
 
-static bool selection(const PromptState *state, int *out_ss,
-                                  int *out_se) {
+static bool selection(const PromptState *state, int *out_ss, int *out_se) {
   int ss = 0, se = 0;
   if (!edit_state_get_selection(&ss, &se))
     return false;
@@ -465,4 +464,3 @@ done:
   editbox_registry_sync(state);
   return handled;
 }
-

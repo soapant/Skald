@@ -226,8 +226,7 @@ void checkbox_draw(const CheckboxSpec *spec) {
       (spec->clicked || active) ? widget_accent() : widget_neutral();
 
   unsigned long def_cb_body =
-      active ? widget_neutral()
-             : (spec->bg_color ? spec->bg_color : COLOR_BG);
+      active ? widget_neutral() : (spec->bg_color ? spec->bg_color : COLOR_BG);
   unsigned long def_btn_body = (spec->clicked || active) ? widget_neutral()
                                : spec->bg_color          ? spec->bg_color
                                                          : COLOR_BG;
@@ -278,9 +277,8 @@ void checkbox_draw(const CheckboxSpec *spec) {
           .w = w,
           .h = h,
           .text = spec->text,
-          .color =
-              spec->text_color ? rgb_to_hex(spec->text_color)
-                                         : rgb_to_hex(widget_accent()),
+          .color = spec->text_color ? rgb_to_hex(spec->text_color)
+                                    : rgb_to_hex(widget_accent()),
           .font = s_font,
           .font_size = font_size});
     }

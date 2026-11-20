@@ -73,9 +73,10 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   if (!wide)
     return false;
   int dy = 0;
-  HFONT hfont = spec.font.hfont
-                    ? spec.font.hfont
-                    : win32_font_for_text(wide, wlen, spec.font_size, &old, &dy);
+  HFONT hfont =
+      spec.font.hfont
+          ? spec.font.hfont
+          : win32_font_for_text(wide, wlen, spec.font_size, &old, &dy);
   if (!hfont)
     hfont = win32_sized_font(spec.font_size);
   if (!old && hfont)

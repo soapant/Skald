@@ -204,8 +204,7 @@ bool focus_move_direction(FocusDirection dir) {
     log_warn("focus: no entry direction=%d from '%s'", (int)dir, cur->name);
     return false;
   }
-  log_info("focus: move direction=%d -> '%s'", (int)dir,
-           s_entries[best].name);
+  log_info("focus: move direction=%d -> '%s'", (int)dir, s_entries[best].name);
   return focus_select(s_entries[best].name);
 }
 

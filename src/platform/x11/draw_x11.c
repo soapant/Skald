@@ -148,7 +148,7 @@ int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
     return spec.len * (spec.font_size > 0 ? spec.font_size : FontSize) / 2;
   return x11_measure_utf8_fallback(g_draw_dpy, xf, spec.text, spec.len,
                                    spec.font_size > 0 ? spec.font_size
-                                                     : FontSize);
+                                                      : FontSize);
 }
 
 bool Platform_DrawTextLine(DrawTextLineSpec spec) {
@@ -236,10 +236,10 @@ static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by) {
   if (!ok)
     return false;
   XRenderPictFormat *dfmt = XRenderFindVisualFormat(g_draw_dpy, g_draw_vis);
-  Picture dst = dfmt ? XRenderCreatePicture(g_draw_dpy,
-                                            XftDrawDrawable(g_draw_xd),
-                                            dfmt, 0, NULL)
-                     : 0;
+  Picture dst =
+      dfmt ? XRenderCreatePicture(g_draw_dpy, XftDrawDrawable(g_draw_xd), dfmt,
+                                  0, NULL)
+           : 0;
   bool result = false;
   if (dst) {
     XRenderComposite(g_draw_dpy, PictOpOver, pic, None, dst, 0, 0, 0, 0, bx, by,
@@ -359,8 +359,8 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
     float r2 = (float)r;
     float alpha = (float)target_alpha / 65535.0f;
     int bw = 0, bh = 0;
-    unsigned char *buf = rect_border_argb(w, h, r2, (float)t, color, alpha,
-                                          &bw, &bh);
+    unsigned char *buf =
+        rect_border_argb(w, h, r2, (float)t, color, alpha, &bw, &bh);
     if (!buf)
       return false;
     return blit_argb_buf(buf, bw, bh, (int)x - (bw - (int)w) / 2,
@@ -369,11 +369,11 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   return true;
 }
 
-static unsigned char *line_argb_buffer(const int x1, const int y1,
-                                       const int x2, const int y2,
-                                       const int w, const int h,
+static unsigned char *line_argb_buffer(const int x1, const int y1, const int x2,
+                                       const int y2, const int w, const int h,
                                        const unsigned long color,
-                                       const float thickness, const float alpha) {
+                                       const float thickness,
+                                       const float alpha) {
   if (x1 == x2 || y1 == y2) {
     unsigned char *buf = calloc((size_t)w * (size_t)h * 4, 1);
     if (!buf)

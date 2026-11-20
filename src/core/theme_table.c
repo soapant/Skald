@@ -108,8 +108,8 @@ static const ThemeEntry themes[] = {
      RGB(77, 77, 76), RGB(175, 175, 175)},
     {"papercolor-dark", RGB(28, 28, 28), RGB(208, 208, 208), RGB(68, 68, 68),
      RGB(175, 215, 135), RGB(95, 95, 95)},
-    {"papercolor-light", RGB(238, 238, 238), RGB(68, 68, 68), RGB(208, 208, 208),
-     RGB(0, 135, 175), RGB(175, 175, 175)},
+    {"papercolor-light", RGB(238, 238, 238), RGB(68, 68, 68),
+     RGB(208, 208, 208), RGB(0, 135, 175), RGB(175, 175, 175)},
     {"iceberg-dark", RGB(22, 24, 33), RGB(198, 200, 209), RGB(39, 44, 66),
      RGB(198, 200, 209), RGB(68, 74, 102)},
     {"iceberg-light", RGB(232, 233, 236), RGB(38, 42, 57), RGB(203, 207, 222),
@@ -193,8 +193,7 @@ static const ThemeEntry themes[] = {
     {"peach-sorbet", RGB(255, 242, 232), RGB(68, 44, 34), RGB(242, 216, 198),
      RGB(235, 106, 68), RGB(206, 172, 150)},
     {"slate-cobalt", RGB(24, 32, 48), RGB(214, 224, 244), RGB(44, 58, 86),
-     RGB(112, 164, 255), RGB(76, 98, 138)}
-};
+     RGB(112, 164, 255), RGB(76, 98, 138)}};
 
 static bool theme_name_eq(const char *a, const char *b) {
   if (!a || !b)

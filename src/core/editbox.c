@@ -156,8 +156,7 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
                       in->font_size > 0 ? in->font_size : FontSize);
   out->caret_y = in->caret_y > 0 ? in->caret_y : caret_auto_y;
   out->font_size = in->font_size > 0 ? in->font_size : FontSize;
-  out->caret_h =
-      in->caret_h > 0 ? in->caret_h : prompt_caret_height();
+  out->caret_h = in->caret_h > 0 ? in->caret_h : prompt_caret_height();
   out->caret_w = in->caret_w;
   out->caret_x = in->caret_x;
   out->caret_pos = in->caret_pos;
@@ -485,8 +484,8 @@ static void editbox_registry_mouse(int *out_x, int *out_y, bool *out_down) {
   if (top)
     have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
   if (!have_origin)
-    have_origin = Platform_WindowToRoot(
-        SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
+    have_origin =
+        Platform_WindowToRoot(SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
   if (have_origin) {
     mx -= wx;
     my -= wy;
@@ -567,7 +566,8 @@ int editbox_registry_place(PromptState *state, const char *name, char *buffer,
   entry->h = h;
   entry->placed = true;
   int idx = (int)(entry - state->editboxes);
-  log_info("editbox place: name='%s' idx=%d buf=%p size=%zu rect=%d,%d %dx%d active=%d",
+  log_info("editbox place: name='%s' idx=%d buf=%p size=%zu rect=%d,%d %dx%d "
+           "active=%d",
            entry->name, idx, (void *)entry->buffer, entry->buffer_size,
            entry->x, entry->y, entry->w, entry->h, state->active_editbox);
   return idx;
@@ -623,9 +623,8 @@ void editbox_registry_tick(PromptState *state) {
   bool down = false;
   editbox_registry_mouse(&mx, &my, &down);
   if (state->editbox_count > 0)
-    log_info("editbox tick: mouse=%d,%d down=%d active_before=%d count=%d",
-             mx, my, down ? 1 : 0, state->active_editbox,
-             state->editbox_count);
+    log_info("editbox tick: mouse=%d,%d down=%d active_before=%d count=%d", mx,
+             my, down ? 1 : 0, state->active_editbox, state->editbox_count);
   if (state->active_editbox < 0 && state->editbox_count > 0) {
     state->active_editbox = 0;
     focus_set_pseudo(FOCUS_KIND_EDITBOX);
@@ -636,8 +635,8 @@ void editbox_registry_tick(PromptState *state) {
     PromptEditbox *entry = &state->editboxes[i];
     if (!entry->placed)
       continue;
-    bool over = mx >= entry->x && mx < entry->x + entry->w &&
-                my >= entry->y && my < entry->y + entry->h;
+    bool over = mx >= entry->x && mx < entry->x + entry->w && my >= entry->y &&
+                my < entry->y + entry->h;
     if (down && !entry->was_down && over) {
       state->active_editbox = i;
       edit_state_end_selection();
@@ -657,14 +656,13 @@ void editbox_registry_sync(PromptState *state) {
   PromptEditbox *entry = &state->editboxes[state->active_editbox];
   if (!entry->buffer)
     return;
-  size_t cap = entry->buffer_size > 0 ? entry->buffer_size
-                                      : sizeof(entry->eb.filter);
+  size_t cap =
+      entry->buffer_size > 0 ? entry->buffer_size : sizeof(entry->eb.filter);
   size_t n = strnlen(entry->eb.filter, cap - 1);
   memcpy(entry->buffer, entry->eb.filter, n);
   entry->buffer[n] = '\0';
-  log_info("editbox sync: name='%s' eb=%p buffer=%p text='%s'",
-           entry->name, (void *)&entry->eb, (void *)entry->buffer,
-           entry->eb.filter);
+  log_info("editbox sync: name='%s' eb=%p buffer=%p text='%s'", entry->name,
+           (void *)&entry->eb, (void *)entry->buffer, entry->eb.filter);
 }
 
 const char *editbox_registry_active_name(const PromptState *state) {
