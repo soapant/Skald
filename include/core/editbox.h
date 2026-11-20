@@ -5,6 +5,7 @@
 
 #include "core/types.h"
 #include "core/types/window.h"
+#include "platform/platform.h"
 
 typedef int (*EditboxMeasureFn)(const char *text, int len, void *user);
 
@@ -52,6 +53,7 @@ typedef struct {
   ColorRef bg_color;
   FontHandle font;
   int font_size;
+  const Metrics *metrics;
   int caret_h;
   int caret_w;
   int caret_x;
@@ -177,5 +179,16 @@ void editbox_layout(EditboxSpec *spec, EditboxLayout *out);
 void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                   int parts);
 void editbox_render(EditboxSpec *spec, EditboxLayout *out);
+
+void editbox_registry_begin(PromptState *state);
+void editbox_registry_begin_frame(PromptState *state);
+int editbox_registry_place(PromptState *state, const char *name, char *buffer,
+                           size_t buffer_size, int x, int y, int w, int h);
+PromptEditbox *editbox_registry_find(PromptState *state, const char *name);
+void editbox_registry_tick(PromptState *state);
+void editbox_registry_sync(PromptState *state);
+void editbox_registry_set_active(PromptState *state, const char *name);
+void editbox_registry_cycle(PromptState *state, int dir);
+const char *editbox_registry_active_name(const PromptState *state);
 
 #endif

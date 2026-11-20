@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 #include "core/context.h"
+#include "core/editbox.h"
 #include "core/prompt_geometry.h"
 #include "core/checkbox.h"
 #include "core/focus.h"
@@ -152,6 +153,8 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
     draw_state_get()->suppress_separators = state->no_separators;
     if (draw_band && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
+    editbox_registry_tick(state);
+    editbox_registry_begin_frame(state);
     state->callbacks->render(state);
     prompt_band_commit_placed();
     focus_frame_end();
@@ -220,6 +223,8 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     draw_state_get()->suppress_separators = state->no_separators;
     if (draw_band && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
+    editbox_registry_tick(state);
+    editbox_registry_begin_frame(state);
     state->callbacks->render(state);
     prompt_band_commit_placed();
     focus_frame_end();

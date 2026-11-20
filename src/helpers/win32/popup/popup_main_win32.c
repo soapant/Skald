@@ -7,6 +7,7 @@
 #include "helpers/win32/win32_state.h"
 #include "deps/log.h"
 #include "core/context.h"
+#include "core/editbox.h"
 #include "core/window_manager.h"
 #include <commctrl.h>
 #include "helpers/helpers_text.h"
@@ -617,6 +618,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         draw_state_get()->suppress_separators = state->no_separators;
         if (draw_band && !state->no_separators)
           draw_prompt_band(0, prompt_list_top(), state->width);
+        editbox_registry_tick(state);
+        editbox_registry_begin_frame(state);
         state->callbacks->render(state);
         prompt_band_commit_placed();
         focus_frame_end();

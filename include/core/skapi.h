@@ -428,6 +428,10 @@ typedef struct {
 bool ski_draw_text(const SkTextSpec *spec);
 bool ski_draw_image(const SkImageSpec *spec);
 bool ski_place_editbox(const SkEditSpec *spec);
+const char *sk_editbox_text(const char *name);
+bool sk_editbox_set_text(const char *name, const char *text);
+const char *sk_editbox_active(void);
+void sk_editbox_set_active(const char *name);
 bool ski_place_listbox(const SkListSpec *spec);
 bool ski_place_checkbox(const SkCheckboxSpec *spec);
 bool ski_place_slider(const SkSliderSpec *spec);

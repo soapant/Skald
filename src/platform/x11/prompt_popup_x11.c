@@ -120,9 +120,14 @@ void Platform_PromptPopupDestroyWindow(Popup *self) {
 
 bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   PromptState *state = self ? (PromptState *)self->user_data : NULL;
+  log_info("x11 popup on_key: state=%p vk=%d", (void *)state,
+           key ? key->vk : -1);
   if (!state)
     return true;
-  if (prompt_handle_key(state, key))
+  bool handled = prompt_handle_key(state, key);
+  log_info("x11 popup on_key: handled=%d vk=%d", handled ? 1 : 0,
+           key ? key->vk : -1);
+  if (handled)
     return true;
 
   if (key->text_len > 0) {

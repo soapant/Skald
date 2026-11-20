@@ -14,6 +14,7 @@
 
 #include "core/context.h"
 #include "core/checkbox.h"
+#include "core/editbox.h"
 #include "core/focus.h"
 #include "core/types/file.h"
 #include "core/types/prompt.h"
@@ -1578,7 +1579,81 @@ bool ski_place_editbox(const SkEditSpec *spec) {
     return false;
   }
   SkaldContext_Get()->window.editbox_placed = true;
-  return sk_place_editbox_platform(spec);
+  SkEditSpec copy = *spec;
+  PromptState *state = prompt_popup_get_top_prompt_state();
+  if (state && spec->name && spec->name[0]) {
+    int idx = editbox_registry_place(state, spec->name, spec->buffer,
+                                     spec->buffer_size, spec->x, spec->y,
+                                     spec->w, spec->h);
+    if (idx >= 0) {
+      PromptEditbox *entry = &state->editboxes[idx];
+      if (state->active_editbox < 0)
+        state->active_editbox = idx;
+      copy.buffer = entry->eb.filter;
+      if (state->active_editbox == idx) {
+        state->eb = &entry->eb;
+      } else {
+        EditBox tmp;
+        memset(&tmp, 0, sizeof(tmp));
+        snprintf(tmp.filter, sizeof(tmp.filter), "%s", entry->eb.filter);
+        tmp.cursor = strlen(tmp.filter);
+        EditBox *saved = state->eb;
+        int saved_active = state->active_editbox;
+        state->eb = &tmp;
+        state->active_editbox = idx;
+        bool ok = sk_place_editbox_platform(&copy);
+        state->active_editbox = saved_active;
+        state->eb = saved;
+        return ok;
+      }
+    }
+  }
+  return sk_place_editbox_platform(&copy);
+}
+
+const char *sk_editbox_text(const char *name) {
+  PromptState *state = prompt_popup_get_top_prompt_state();
+  if (!state)
+    return NULL;
+  if (name && name[0]) {
+    PromptEditbox *entry = editbox_registry_find(state, name);
+    return entry ? entry->eb.filter : NULL;
+  }
+  return state->eb ? state->eb->filter : NULL;
+}
+
+bool sk_editbox_set_text(const char *name, const char *text) {
+  if (!text)
+    return false;
+  PromptState *state = prompt_popup_get_top_prompt_state();
+  if (!state)
+    return false;
+  EditBox *eb = NULL;
+  if (name && name[0]) {
+    PromptEditbox *entry = editbox_registry_find(state, name);
+    if (!entry)
+      return false;
+    eb = &entry->eb;
+  } else {
+    eb = state->eb;
+  }
+  if (!eb)
+    return false;
+  safe_copy(eb->filter, sizeof(eb->filter), text);
+  eb->cursor = strlen(eb->filter);
+  eb->sel_start = -1;
+  eb->sel_end = -1;
+  eb->scroll_offset = 0;
+  editbox_registry_sync(state);
+  return true;
+}
+
+const char *sk_editbox_active(void) {
+  return editbox_registry_active_name(prompt_popup_get_top_prompt_state());
+}
+
+void sk_editbox_set_active(const char *name) {
+  editbox_registry_set_active(prompt_popup_get_top_prompt_state(), name);
 }
 
 bool ski_draw_image(const SkImageSpec *spec) {
@@ -3509,7 +3584,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
       if (bw > w)
         bw = w;
       sk_place_button(.name = b->title, .x = right - bw, .y = y + 16,
-                      .w = bw, .h = 28, .text = label,
+                      .w = bw, .h = 28, .text = (char *)label,
                       .on_click = dispatch_widget_click,
                       .on_hover = dispatch_widget_hover);
       if (b->open && count > 0) {
@@ -3567,7 +3642,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
         focus_ctx_remember(opt_name, open_entry, open_index, i);
         sk_place_button(.name = opt_name, .x = open_x + 4,
                         .y = panel_y + 2 + i * (opt_h + gap),
-                        .w = open_w - 8, .h = opt_h, .text = text,
+                        .w = open_w - 8, .h = opt_h, .text = (char *)text,
                         .on_click = dispatch_widget_click,
                         .on_hover = dispatch_widget_hover);
       }
@@ -3812,7 +3887,13 @@ void run_every_purge_owner(const char *path_a, const char *path_b) {
   }
 }
 
-SkMetrics *sk_get_metrics(void) { return metrics_get(); }
+SkMetrics *sk_get_metrics(void) {
+  PromptState *state = prompt_popup_get_top_prompt_state();
+  if (state && state->active_editbox >= 0 &&
+      state->active_editbox < state->editbox_count)
+    return &state->editboxes[state->active_editbox].metrics;
+  return metrics_get();
+}
 
 void *sk_get_active_prompt(void) {
   WindowManager *wm = WindowManager_Get();

@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "core/context.h"
+#include "core/editbox.h"
 #include "core/focus.h"
 #include "core/types/prompt.h"
 #include "core/types/window.h"
@@ -169,18 +170,25 @@ bool prompt_handle_list_click(PromptState *state, bool ctrl, bool shift,
 bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   if (!state || !key)
     return false;
+  log_info("keys: enter vk=%d boxes=%d active=%d", key->vk,
+           state->editbox_count, state->active_editbox);
+  editbox_registry_tick(state);
+  bool handled = false;
   int vk = key->vk;
   bool ctrl = key->ctrl;
   bool shift = key->shift;
   bool alt = key->alt;
 
   SkaldContext *ctx = SkaldContext_Get();
-  if (!ctx)
-    return false;
+  if (!ctx) {
+    handled = false;
+    goto done;
+  }
 
   if (ctx->window.editbox_placed && key_invoke_interceptor(key)) {
     Platform_InvalidatePrompt();
-    return true;
+    handled = true;
+    goto done;
   }
 
   if (ctrl && (vk == 'A' || vk == 'a')) {
@@ -189,7 +197,8 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     edit_state_update_selection(len);
     state->eb->cursor = len;
     prompt_refresh(state);
-    return true;
+    handled = true;
+    goto done;
   }
   if (ctrl && (vk == 'C' || vk == 'c')) {
     int ss = 0, se = 0;
@@ -204,12 +213,14 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
         Platform_CopyToClipboard(buf);
       }
     }
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_BACK) {
     if (prompt_delete_selection(state)) {
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     listbox_focus_by_mouse();
     if (ctrl) {
@@ -223,23 +234,27 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     }
     listbox_focus_by_mouse();
     prompt_refresh(state);
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_ESCAPE) {
     WindowManager *wm = WindowManager_Get();
     if (wm && wm->popup_count > 1) {
       WindowManager_PopPopup(wm);
-      return true;
+      handled = true;
+      goto done;
     }
     ctx->window.selection_complete = true;
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_RIGHT) {
     if (!editbox_focused()) {
       log_info("keys: right -> focus ring");
       focus_move(1);
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     if (state->lb && state->lb->item_count > 0 &&
         state->lb->selected_index >= 0) {
@@ -257,46 +272,54 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
           if (state->lb->text_hscroll > max_scroll)
             state->lb->text_hscroll = max_scroll;
           prompt_refresh(state);
-          return true;
+          handled = true;
+          goto done;
         }
       }
     }
     edit_state_end_selection();
     cursor_forward(&state->eb->cursor, strlen(state->eb->filter));
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_LEFT) {
     if (!editbox_focused()) {
       log_info("keys: left -> focus ring");
       focus_move(-1);
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     if (state->lb && state->lb->item_count > 0 && state->lb->text_hscroll > 0) {
       state->lb->text_hscroll -= 24;
       if (state->lb->text_hscroll < 0)
         state->lb->text_hscroll = 0;
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     edit_state_end_selection();
     cursor_back(&state->eb->cursor);
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_HOME) {
     edit_state_end_selection();
     state->eb->cursor = 0;
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_END) {
     edit_state_end_selection();
     state->eb->cursor = (int)strlen(state->eb->filter);
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_UP) {
     if (ctrl) {
       state->eb->cursor = 0;
-      return true;
+      handled = true;
+      goto done;
     }
     log_info("keys: up focus='%s' kind=%d entries=%d lb_count=%d",
              focus_name() ? focus_name() : "-", (int)focus_kind(),
@@ -306,13 +329,15 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       log_info("keys: up -> widget ring");
       focus_move(-1);
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     if (focus_has_entries() && focus_kind() != FOCUS_KIND_LISTBOX) {
       log_info("keys: up -> widget ring fallback");
       focus_move(-1);
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     if (state->lb) {
       int before = state->lb->selected_index;
@@ -323,12 +348,14 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
         focus_move(-1);
       }
     }
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_DOWN) {
     if (ctrl) {
       state->eb->cursor = (int)strlen(state->eb->filter);
-      return true;
+      handled = true;
+      goto done;
     }
     log_info("keys: down focus='%s' kind=%d entries=%d lb_count=%d",
              focus_name() ? focus_name() : "-", (int)focus_kind(),
@@ -338,13 +365,15 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       log_info("keys: down -> widget ring");
       focus_move(1);
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     if (focus_has_entries() && focus_kind() != FOCUS_KIND_LISTBOX) {
       log_info("keys: down -> widget ring fallback");
       focus_move(1);
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     if (state->lb) {
       int before = state->lb->selected_index;
@@ -355,23 +384,30 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
         focus_move(1);
       }
     }
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_DELETE) {
     if (prompt_delete_selection(state)) {
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     listbox_focus_by_mouse();
     if (edit_buffer_delete_char(state->eb->filter, &state->eb->cursor)) {
       prompt_refresh(state);
     }
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == VK_TAB) {
-    if (ctx->window.prompt_callbacks.tab)
-      ctx->window.prompt_callbacks.tab(state);
-    return true;
+    log_info("keys: tab shift=%d boxes=%d active=%d", shift ? 1 : 0,
+             state->editbox_count, state->active_editbox);
+    editbox_registry_cycle(state, shift ? -1 : 1);
+    log_info("keys: tab done active=%d", state->active_editbox);
+    prompt_refresh(state);
+    handled = true;
+    goto done;
   }
   if (vk == VK_RETURN) {
     if (widget_focus()) {
@@ -381,35 +417,42 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
         log_warn("keys: enter activation failed for '%s'",
                  focus_name() ? focus_name() : "-");
       prompt_refresh(state);
-      return true;
+      handled = true;
+      goto done;
     }
     log_info("keys: enter -> prompt callback");
     prompt_trigger_enter(state, ctrl, shift, alt);
-    return true;
+    handled = true;
+    goto done;
   }
   if ((shift || ctrl) && vk == COPY_SELECTION_KEY) {
     Platform_CopyToClipboard(ctx->window.output_buffer);
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == HELP_SCREEN_KEY && ctrl) {
     if (ctx->window.prompt_callbacks.help)
       ctx->window.prompt_callbacks.help();
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == EDIT_TEXT_KEY && ctrl) {
     if (ctx->window.prompt_callbacks.edit)
       ctx->window.prompt_callbacks.edit(state);
-    return true;
+    handled = true;
+    goto done;
   }
   if (vk == 'V' && ctrl) {
     char *clip = Platform_GetClipboardEntry();
     if (!clip) {
-      return true;
+      handled = true;
+      goto done;
     }
     clip[strcspn(clip, "\r\n")] = '\0';
     if (clip[0] == '\0') {
       free(clip);
-      return true;
+      handled = true;
+      goto done;
     }
     prompt_delete_selection(state);
     size_t cur_len = strlen(state->eb->filter);
@@ -426,21 +469,29 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     }
     free(clip);
     prompt_refresh(state);
-    return true;
+    handled = true;
+    goto done;
   }
   if (ctrl) {
     if (vk == VK_OEM_MINUS) {
       FontSize -= 1;
       Platform_ResetUIScale();
       config_save();
-      return true;
+      handled = true;
+      goto done;
     }
     if (vk == VK_OEM_PLUS) {
       FontSize += 1;
       Platform_ResetUIScale();
       config_save();
-      return true;
+      handled = true;
+      goto done;
     }
   }
-  return false;
+  handled = false;
+  goto done;
+done:
+  editbox_registry_sync(state);
+  return handled;
 }
+
