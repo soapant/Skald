@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "core/context.h"
+#include "core/focus.h"
 #include "core/types/prompt.h"
 #include "core/types/keys.h"
 #include "core/window_manager.h"
@@ -198,6 +199,7 @@ int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h) {
 Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
   if (!wm || !spec)
     return NULL;
+  focus_clear();
 
   int scale = (int)Platform_GetUIScale();
   if (scale <= 0)

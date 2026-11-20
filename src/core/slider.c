@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "deps/log.h"
+#include "core/focus.h"
 #include "core/types/color.h"
 #include "core/types/window.h"
 #include "core/window_manager.h"
@@ -16,6 +17,9 @@
 
 #define SLIDER_MAX 1024
 #define SLIDER_MIN_SPAN 1e-6f
+
+static float slider_snap(const SliderSpec *sl, float v);
+
 static ColorRef widget_accent(void) {
   return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.66f);
 }
@@ -38,6 +42,30 @@ static struct {
 } sl_mouse;
 
 void slider_frame_begin(void) { sl_mouse.valid = false; }
+
+static void slider_focus_step(void *owner, int dir) {
+  SliderSpec *sl = (SliderSpec *)owner;
+  if (!sl)
+    return;
+  float step = sl->step > 0.0f ? sl->step : (sl->max_value - sl->min_value) / 100.0f;
+  if (step <= 0.0f)
+    return;
+  float value = sl->value + (float)dir * step;
+  if (value < sl->min_value)
+    value = sl->min_value;
+  if (value > sl->max_value)
+    value = sl->max_value;
+  value = slider_snap(sl, value);
+  if (value == sl->value)
+    return;
+  sl->value = value;
+  if (sl->on_input)
+    sl->on_input(value);
+  if (sl->on_change)
+    sl->on_change(value);
+}
+
+static void slider_focus_activate(void *owner) { slider_focus_step(owner, 1); }
 
 static void slider_mouse(int *out_x, int *out_y, bool *out_down) {
 
@@ -247,9 +275,26 @@ static void slider_track_geometry(const SliderSpec *sl, int *tx, int *ty,
   *rsize = ts;
 }
 
+static void slider_focus_outline(const SliderSpec *spec, int x, int y, int w,
+                                 int h) {
+  if (!spec || !spec->focused)
+    return;
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = x - 3,
+                                         .y = y - 3,
+                                         .w = w + 6,
+                                         .h = h + 6,
+                                         .color = rgb_to_hex(widget_accent()),
+                                         .radius = 6,
+                                         .rounded = true,
+                                         .opaque = true,
+                                         .thickness = 2,
+                                         .filled = false});
+}
+
 void slider_draw(const SliderSpec *spec) {
   if (!spec)
     return;
+  bool active = spec->hovered || spec->focused;
   int tw =
       spec->w > 0 ? spec->w : (spec->orientation == SLIDER_VERTICAL ? 16 : 150);
   int th =
@@ -263,12 +308,13 @@ void slider_draw(const SliderSpec *spec) {
     st.rect.h = th;
     st.name = spec->name;
     st.orientation = spec->orientation;
-    st.hovered = spec->hovered;
+    st.hovered = active;
     st.dragging = spec->dragging;
     st.clicked = spec->clicked;
     st.value = spec->value;
     st.fraction = slider_fraction_of(spec);
     spec->render(st);
+    slider_focus_outline(spec, spec->x, spec->y, tw, th);
     return;
   }
 
@@ -279,12 +325,12 @@ void slider_draw(const SliderSpec *spec) {
       rgb_to_hex(spec->bg_color ? spec->bg_color : COLOR_BG);
   unsigned long fill = rgb_to_hex(spec->fill_color
                                       ? spec->fill_color
-                                      : (spec->hovered ? widget_accent()
-                                                       : widget_neutral()));
+                                      : (active ? widget_accent()
+                                                : widget_neutral()));
   unsigned long thumb =
       rgb_to_hex(spec->thumb_color ? spec->thumb_color : widget_thumb());
   unsigned long track_border =
-      rgb_to_hex(spec->hovered ? widget_accent() : widget_neutral());
+      rgb_to_hex(active ? widget_accent() : widget_neutral());
 
   if (!spec->no_bg) {
     Platform_DrawRectRaw(
@@ -360,6 +406,7 @@ void slider_draw(const SliderSpec *spec) {
                                          .opaque = true,
                                          .thickness = 1,
                                          .filled = false});
+  slider_focus_outline(spec, tx, ty, twk, thk);
 }
 
 bool slider_place(const SliderSpec *spec) {
@@ -412,6 +459,10 @@ bool slider_place(const SliderSpec *spec) {
   sl->on_hover = spec->on_hover;
   sl->render = spec->render;
 
+  focus_register(spec->name, FOCUS_KIND_SLIDER, x, y, w, h, sl,
+                 slider_focus_activate, slider_focus_step);
+  sl->focused = focus_is(spec->name);
+
   if (fresh)
     sl->value = slider_snap(sl, seed);
 
@@ -429,6 +480,7 @@ bool slider_place(const SliderSpec *spec) {
 
   if (down && !sl->was_down) {
     if (hovered) {
+      focus_select(spec->name);
       sl->dragging = true;
       sl->clicked = true;
       float nv = slider_snap(sl, slider_value_of_axis(sl, axis, span));

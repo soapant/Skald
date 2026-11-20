@@ -23,6 +23,7 @@
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
 #include "core/checkbox.h"
+#include "core/focus.h"
 #include "core/slider.h"
 #include "core/draw_state.h"
 #include "core/draw_state.h"
@@ -618,6 +619,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (state && state->callbacks && state->callbacks->render) {
         checkbox_frame_begin();
         slider_frame_begin();
+        focus_frame_begin(state->lb != NULL);
         win32_set_draw_context(paintDC);
         draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;
@@ -626,6 +628,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         if (state->lb && !state->no_separators)
           draw_prompt_band(0, prompt_list_top(), state->width);
         state->callbacks->render(state);
+        focus_frame_end();
         draw_state_get()->suppress_separators = sep_prev;
         s_in_render = false;
         draw_state_get()->win32_listbox_surface = false;

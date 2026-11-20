@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "core/context.h"
+#include "core/focus.h"
 #include "config_values.h"
 #include "core/timer.h"
 #include "core/types/window.h"
@@ -13,6 +14,7 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_input_state.h"
 #include "platform/platform.h"
+#include "deps/log.h"
 
 static bool mouse_valid = false;
 static int mouse_x = 0;
@@ -162,6 +164,7 @@ bool listbox_hover_focus(ListBox *lb, int top_y, int row_h, int top_index,
   if (mx < left_x || mx >= right_x)
     return false;
   listbox_focus_by_mouse();
+  focus_set_pseudo_passive(FOCUS_KIND_LISTBOX);
   int idx = listbox_row_at_y(lb, top_y, row_h, top_index, rows_visible, my);
   if (idx < 0 || idx == lb->selected_index)
     return false;
@@ -259,6 +262,7 @@ void listbox_navigate_up(ListBox *lb) {
   if (!lb)
     return;
   listbox_focus_by_keyboard();
+  focus_set_pseudo_passive(FOCUS_KIND_LISTBOX);
   int sel = lb->selected_index;
   if (sel >= 0)
     sel--;
@@ -271,6 +275,7 @@ void listbox_navigate_down(ListBox *lb) {
   if (!lb)
     return;
   listbox_focus_by_keyboard();
+  focus_set_pseudo_passive(FOCUS_KIND_LISTBOX);
   int count = lb->item_count;
   if (count <= 0)
     return;

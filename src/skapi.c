@@ -14,6 +14,7 @@
 
 #include "core/context.h"
 #include "core/checkbox.h"
+#include "core/focus.h"
 #include "core/types/file.h"
 #include "core/types/prompt.h"
 #include "core/widget_registry.h"
@@ -30,6 +31,7 @@
 #include "core/thread_registry.h"
 #include "core/http.h"
 #include "core/owner_purge.h"
+
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
 #include "core/skapi.h"
@@ -43,6 +45,46 @@
 #include "core/feature_path.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
+
+#define FOCUS_CTX_MAX 512
+typedef struct {
+  char name[256];
+  SkSettingsEntry *entry;
+  int index;
+} FocusBlockCtx;
+
+static FocusBlockCtx s_focus_ctx[FOCUS_CTX_MAX];
+static int s_focus_ctx_count = 0;
+
+static FocusBlockCtx *focus_ctx_find(const char *name) {
+  if (!name || !name[0])
+    return NULL;
+  for (int i = 0; i < s_focus_ctx_count; i++) {
+    if (strcmp(s_focus_ctx[i].name, name) == 0)
+      return &s_focus_ctx[i];
+  }
+  return NULL;
+}
+
+static void focus_ctx_remember(const char *name, SkSettingsEntry *entry,
+                               int index) {
+  if (!name || !name[0])
+    return;
+  FocusBlockCtx *ctx = focus_ctx_find(name);
+  if (!ctx) {
+    if (s_focus_ctx_count >= FOCUS_CTX_MAX)
+      return;
+    ctx = &s_focus_ctx[s_focus_ctx_count++];
+    snprintf(ctx->name, sizeof(ctx->name), "%s", name);
+  }
+  ctx->entry = entry;
+  ctx->index = index;
+}
+
+static void dispatch_widget_click(void);
+static void dispatch_slider_change(float value);
+static void dispatch_focus_click(void);
+static void dispatch_focus_change(float value);
 #include "platform/widget.h"
 #include "core/hover_widget.h"
 #include "platform/wm_platform.h"
@@ -1855,10 +1897,33 @@ bool sk_button_is_clicked(const char *name) {
 }
 
 bool ski_place_checkbox(const SkCheckboxSpec *spec) {
+  if (spec && spec->name && focus_ctx_find(spec->name) &&
+      spec->on_click == dispatch_widget_click) {
+    SkCheckboxSpec copy = *spec;
+    copy.on_click = dispatch_focus_click;
+    return checkbox_place(&copy);
+  }
   return checkbox_place(spec);
 }
 
-bool ski_place_slider(const SkSliderSpec *spec) { return slider_place(spec); }
+bool ski_place_slider(const SkSliderSpec *spec) {
+  if (spec && spec->name && focus_ctx_find(spec->name) &&
+      spec->on_change == dispatch_slider_change) {
+    SkSliderSpec copy = *spec;
+    copy.on_change = dispatch_focus_change;
+    return slider_place(&copy);
+  }
+  return slider_place(spec);
+}
+
+bool sk_focus_is(const char *name) { return focus_is(name); }
+bool sk_focus_has_entries(void) { return focus_has_entries(); }
+const char *sk_focus_name(void) { return focus_name(); }
+bool sk_focus_move(int dir) { return focus_move(dir); }
+bool sk_focus_activate(void) { return focus_activate(); }
+bool sk_focus_adjust(int dir) { return focus_adjust(dir); }
+void sk_focus_listbox(void) { focus_set_pseudo(FOCUS_KIND_LISTBOX); }
+void sk_focus_clear(void) { focus_clear(); }
 
 bool sk_slider_is_hovered(const char *name) { return slider_is_hovered(name); }
 bool sk_slider_is_clicked(const char *name) { return slider_is_clicked(name); }
@@ -3167,6 +3232,7 @@ void settings_registry_purge_owner(const char *path_a, const char *path_b) {
   for (int i = out; i < settings_entry_count; i++)
     memset(&settings_entries[i], 0, sizeof(settings_entries[i]));
   settings_entry_count = out;
+  s_focus_ctx_count = 0;
 }
 
 static SkSettingsEntry *s_dispatch_entry = NULL;
@@ -3196,6 +3262,38 @@ static void dispatch_widget_click(void) {
   }
   if (b->on_click)
     b->on_click();
+}
+
+static void dispatch_focus_click(void) {
+  FocusBlockCtx *ctx = focus_ctx_find(focus_name());
+  if (!ctx) {
+    log_error("focus: no settings context for '%s'",
+              focus_name() ? focus_name() : "(null)");
+    return;
+  }
+  SkSettingsEntry *saved_entry = s_dispatch_entry;
+  int saved_index = s_dispatch_index;
+  s_dispatch_entry = ctx->entry;
+  s_dispatch_index = ctx->index;
+  dispatch_widget_click();
+  s_dispatch_entry = saved_entry;
+  s_dispatch_index = saved_index;
+}
+
+static void dispatch_focus_change(float value) {
+  FocusBlockCtx *ctx = focus_ctx_find(focus_name());
+  if (!ctx) {
+    log_error("focus: no settings context for '%s'",
+              focus_name() ? focus_name() : "(null)");
+    return;
+  }
+  SkSettingsEntry *saved_entry = s_dispatch_entry;
+  int saved_index = s_dispatch_index;
+  s_dispatch_entry = ctx->entry;
+  s_dispatch_index = ctx->index;
+  dispatch_slider_change(value);
+  s_dispatch_entry = saved_entry;
+  s_dispatch_index = saved_index;
 }
 
 static void dispatch_widget_hover(void) {
@@ -3250,6 +3348,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
       break;
     s_dispatch_entry = entry;
     s_dispatch_index = i;
+    focus_ctx_remember(b->title, entry, i);
     int x = 10, y = cursor, w = pane_w - 20;
     sk_draw_rect(.x = x, .y = y, .w = w, .h = 60, .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
                  .filled = true, .radius = 6);

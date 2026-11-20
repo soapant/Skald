@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "core/context.h"
+#include "core/focus.h"
 #include "core/types/prompt.h"
 #include "core/types/window.h"
 #include "core/window_manager.h"
@@ -32,7 +33,18 @@ void prompt_refresh(PromptState *state) {
   }
 }
 
-static bool prompt_keys_selection(const PromptState *state, int *out_ss,
+static bool widget_focus(void) {
+  FocusKind kind = focus_kind();
+  return kind == FOCUS_KIND_BUTTON || kind == FOCUS_KIND_CHECKBOX ||
+         kind == FOCUS_KIND_SLIDER || kind == FOCUS_KIND_CUSTOM;
+}
+
+static bool editbox_focused(void) {
+  FocusKind kind = focus_kind();
+  return kind == FOCUS_KIND_EDITBOX || kind == FOCUS_KIND_NONE;
+}
+
+static bool selection(const PromptState *state, int *out_ss,
                                   int *out_se) {
   int ss = 0, se = 0;
   if (!edit_state_get_selection(&ss, &se))
@@ -57,7 +69,7 @@ bool prompt_delete_selection(PromptState *state) {
     return false;
   int ss = 0, se = 0;
   int len = (int)strlen(state->eb->filter);
-  if (!prompt_keys_selection(state, &ss, &se))
+  if (!selection(state, &ss, &se))
     return false;
   if (se > ss) {
     memmove(state->eb->filter + ss, state->eb->filter + se, len - se + 1);
@@ -181,7 +193,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   }
   if (ctrl && (vk == 'C' || vk == 'c')) {
     int ss = 0, se = 0;
-    if (prompt_keys_selection(state, &ss, &se)) {
+    if (selection(state, &ss, &se)) {
       if (se > ss) {
         char buf[512];
         int n = se - ss;
@@ -223,6 +235,12 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_RIGHT) {
+    if (!editbox_focused()) {
+      log_info("keys: right -> focus ring");
+      focus_move(1);
+      prompt_refresh(state);
+      return true;
+    }
     if (state->lb && state->lb->item_count > 0 &&
         state->lb->selected_index >= 0) {
       int idx = state->lb->selected_index;
@@ -248,6 +266,12 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_LEFT) {
+    if (!editbox_focused()) {
+      log_info("keys: left -> focus ring");
+      focus_move(-1);
+      prompt_refresh(state);
+      return true;
+    }
     if (state->lb && state->lb->item_count > 0 && state->lb->text_hscroll > 0) {
       state->lb->text_hscroll -= 24;
       if (state->lb->text_hscroll < 0)
@@ -274,8 +298,30 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       state->eb->cursor = 0;
       return true;
     }
+    log_info("keys: up focus='%s' kind=%d entries=%d lb_count=%d",
+             focus_name() ? focus_name() : "-", (int)focus_kind(),
+             focus_has_entries() ? 1 : 0,
+             state->lb ? state->lb->item_count : -1);
+    if (widget_focus()) {
+      log_info("keys: up -> widget ring");
+      focus_move(-1);
+      prompt_refresh(state);
+      return true;
+    }
+    if (focus_has_entries() && focus_kind() != FOCUS_KIND_LISTBOX) {
+      log_info("keys: up -> widget ring fallback");
+      focus_move(-1);
+      prompt_refresh(state);
+      return true;
+    }
     if (state->lb) {
+      int before = state->lb->selected_index;
+      log_info("keys: up -> listbox");
       UI_NavigateUp(state->lb);
+      if (state->lb->selected_index == before && focus_has_entries()) {
+        log_info("keys: up -> widget ring (listbox top)");
+        focus_move(-1);
+      }
     }
     return true;
   }
@@ -284,8 +330,31 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       state->eb->cursor = (int)strlen(state->eb->filter);
       return true;
     }
-    if (state->lb)
+    log_info("keys: down focus='%s' kind=%d entries=%d lb_count=%d",
+             focus_name() ? focus_name() : "-", (int)focus_kind(),
+             focus_has_entries() ? 1 : 0,
+             state->lb ? state->lb->item_count : -1);
+    if (widget_focus()) {
+      log_info("keys: down -> widget ring");
+      focus_move(1);
+      prompt_refresh(state);
+      return true;
+    }
+    if (focus_has_entries() && focus_kind() != FOCUS_KIND_LISTBOX) {
+      log_info("keys: down -> widget ring fallback");
+      focus_move(1);
+      prompt_refresh(state);
+      return true;
+    }
+    if (state->lb) {
+      int before = state->lb->selected_index;
+      log_info("keys: down -> listbox");
       UI_NavigateDown(state->lb);
+      if (state->lb->selected_index == before && focus_has_entries()) {
+        log_info("keys: down -> widget ring (listbox bottom)");
+        focus_move(1);
+      }
+    }
     return true;
   }
   if (vk == VK_DELETE) {
@@ -305,6 +374,11 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     return true;
   }
   if (vk == VK_RETURN) {
+    if (widget_focus()) {
+      focus_activate();
+      prompt_refresh(state);
+      return true;
+    }
     prompt_trigger_enter(state, ctrl, shift, alt);
     return true;
   }

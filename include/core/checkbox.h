@@ -33,6 +33,7 @@ typedef struct {
   bool hovered;
   bool was_down;
   bool clicked;
+  bool focused;
   int thickness;
   ColorRef text_color;
   ColorRef hovered_color;
