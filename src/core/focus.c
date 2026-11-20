@@ -53,7 +53,7 @@ void focus_frame_begin(bool include_listbox, int lb_x, int lb_y, int lb_w,
   if (include_listbox) {
     focus_register(FOCUS_LISTBOX_NAME, FOCUS_KIND_LISTBOX, lb_x, lb_y, lb_w,
                    lb_h, NULL, NULL, NULL);
-    if (!s_saved_name[0])
+    if (!s_saved_name[0] && s_saved_kind != FOCUS_KIND_EDITBOX)
       focus_select(FOCUS_LISTBOX_NAME);
   }
 }
