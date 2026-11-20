@@ -162,10 +162,9 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
 }
 
 static void x11_handle_key_release(XKeyEvent *ev) {
-
   KeySym ks;
   char buf[32];
-  int len = XLookupString(ev, buf, sizeof(buf), &ks, NULL);
+  XLookupString(ev, buf, sizeof(buf), &ks, NULL);
   int vk = x11_keysym_to_vk(ks);
   int mods = remap_current_mods();
   if (vk)

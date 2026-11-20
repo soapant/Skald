@@ -23,7 +23,6 @@
 #define CLIP_INCR_CHUNK (64u * 1024u)
 #define CLIP_READ_TRIES 40
 
-static volatile long cl_seq = 0;
 static long cl_reads = 0;
 static long cl_read_fail = 0;
 static long cl_selclear = 0;
@@ -40,12 +39,11 @@ static long cl_ms_since(void) {
 static long cl_t0 = 0;
 
 static void cl_trace(const char *what, const char *fmt, ...) {
-
+  (void)what;
   if (!DebugMode) {
     return;
   }
   va_list ap;
-  long n = ++cl_seq;
   char buf[512];
   va_start(ap, fmt);
   vsnprintf(buf, sizeof(buf), fmt, ap);

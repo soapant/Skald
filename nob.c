@@ -875,7 +875,7 @@ static bool run_tests(void) {
         append_cc(&scmd);
       }
       append_san_flags(&scmd);
-      nob_cmd_append(&scmd, "-I", "include", "-I", "tests", "-O2", "-MMD",
+      nob_cmd_append(&scmd, "-I", "include", "-I", "tests","-MMD",
                      "-MP", "-MF", support_dep, "-c", "tests/support.c", "-o",
                      support_obj);
       if (!nob_cmd_run(&scmd)) {
@@ -952,7 +952,7 @@ static bool run_tests(void) {
         Nob_Cmd ccmd = {0};
         nob_cmd_append(&ccmd, CROSS_CC);
         nob_cmd_append(
-            &ccmd, "-I", "include", "-I", "tests", "-O2", "-Wall", "-MMD",
+            &ccmd, "-I", "include", "-I", "tests","-Wall", "-MMD",
             "-MP", "-MF", test_dep, "-c", src,
             nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder),
             "-o", test_obj);
@@ -1012,7 +1012,7 @@ static bool run_tests(void) {
       Nob_Cmd ccmd = {0};
       append_cc(&ccmd);
       nob_cmd_append(
-          &ccmd, "-I", "include", "-I", "tests", "-O2", "-Wall", "-MMD", "-MP",
+          &ccmd, "-I", "include", "-I", "tests","-Wall", "-MMD", "-MP",
           "-MF", test_dep, "-c", src,
           nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder), "-o",
           test_obj);

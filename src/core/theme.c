@@ -102,9 +102,11 @@ static bool theme_pin_visit(const ConfigTomlEntry *e, void *user) {
   if (!config_toml_color_ref(body, &v))
     return true;
   char name[64];
-  if (strlen(e->key) + 7 > sizeof(name))
+  const int prefix_len = (int)(sizeof("COLOR_") - 1);
+  const int key_cap = (int)sizeof(name) - prefix_len - 1;
+  int written = snprintf(name, sizeof(name), "COLOR_%.*s", key_cap, e->key);
+  if (written < 0 || written >= (int)sizeof(name))
     return true;
-  snprintf(name, sizeof(name), "COLOR_%s", e->key);
   pin_add(name, v);
   return true;
 }
