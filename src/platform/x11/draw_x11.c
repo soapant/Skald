@@ -3,6 +3,7 @@
 #include "helpers/x11/drawing_x11.h"
 #include "helpers/helpers_ui.h"
 #include <math.h>
+#include <pthread.h>
 #define RAW_LINE_CAP 4096
 
 bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius) {
@@ -238,13 +239,15 @@ void x11_draw_edit_cursor(PromptState *state, Display *dpy, XftDraw *xd,
   draw_editbox_part(state, dpy, xd, vis, cmap, font, EDITBOX_PART_CARET);
 }
 
-static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by) {
+static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by,
+                          bool owned) {
   if (!buf || w <= 0 || h <= 0)
     return false;
   Pixmap pm = 0;
   Picture pic = 0;
   bool ok = x11_upload_argb(g_draw_dpy, 0, buf, w, h, &pm, &pic);
-  free(buf);
+  if (owned)
+    free(buf);
   if (!ok)
     return false;
   XRenderPictFormat *dfmt = XRenderFindVisualFormat(g_draw_dpy, g_draw_vis);
@@ -264,9 +267,10 @@ static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by) {
   return result;
 }
 
-static unsigned char *rect_border_argb(int rect_w, int rect_h, float radius,
-                                       float thickness, unsigned long color,
-                                       float alpha, int *out_w, int *out_h) {
+static unsigned char *make_rect_border_argb(int rect_w, int rect_h,
+                                            float radius, float thickness,
+                                            unsigned long color, float alpha,
+                                            int *out_w, int *out_h) {
   int pad = (int)thickness / 2 + 2;
   int w = rect_w + 2 * pad, h = rect_h + 2 * pad;
   if (radius > (float)rect_w * 0.5f)
@@ -311,6 +315,97 @@ static unsigned char *rect_border_argb(int rect_w, int rect_h, float radius,
     *out_w = w;
   if (out_h)
     *out_h = h;
+  return buf;
+}
+
+#define RECT_BORDER_CACHE_CAP 128
+
+typedef struct {
+  int w, h;
+  int bw, bh;
+  float radius, thickness, alpha;
+  unsigned long color;
+  unsigned char *buf;
+  unsigned long used;
+} RectBorderCacheEntry;
+
+static RectBorderCacheEntry g_rect_border_cache[RECT_BORDER_CACHE_CAP];
+static unsigned long g_rect_border_cache_tick = 0;
+static pthread_mutex_t g_rect_border_cache_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static bool rect_border_cache_key_eq(const RectBorderCacheEntry *e, int w,
+                                     int h, float radius, float thickness,
+                                     unsigned long color, float alpha) {
+  return e->w == w && e->h == h && e->radius == radius &&
+         e->thickness == thickness && e->color == color && e->alpha == alpha;
+}
+
+static unsigned char *rect_border_argb(int rect_w, int rect_h, float radius,
+                                       float thickness, unsigned long color,
+                                       float alpha, int *out_w, int *out_h,
+                                       bool *out_owned) {
+  if (radius > (float)rect_w * 0.5f)
+    radius = (float)rect_w * 0.5f;
+  if (radius > (float)rect_h * 0.5f)
+    radius = (float)rect_h * 0.5f;
+
+  int pad = (int)thickness / 2 + 2;
+  int w = rect_w + 2 * pad, h = rect_h + 2 * pad;
+  bool cacheable = w > 0 && h > 0 && w <= 1024 && h <= 1024;
+  if (!cacheable) {
+    *out_owned = true;
+    return make_rect_border_argb(rect_w, rect_h, radius, thickness, color,
+                                 alpha, out_w, out_h);
+  }
+
+  pthread_mutex_lock(&g_rect_border_cache_lock);
+  unsigned long stamp = ++g_rect_border_cache_tick;
+  for (int i = 0; i < RECT_BORDER_CACHE_CAP; i++) {
+    RectBorderCacheEntry *e = &g_rect_border_cache[i];
+    if (e->buf && rect_border_cache_key_eq(e, w, h, radius, thickness, color,
+                                           alpha)) {
+      e->used = stamp;
+      if (out_w)
+        *out_w = e->bw;
+      if (out_h)
+        *out_h = e->bh;
+      *out_owned = false;
+      pthread_mutex_unlock(&g_rect_border_cache_lock);
+      return e->buf;
+    }
+  }
+
+  int victim = 0;
+  for (int i = 1; i < RECT_BORDER_CACHE_CAP; i++) {
+    RectBorderCacheEntry *a = &g_rect_border_cache[i];
+    RectBorderCacheEntry *b = &g_rect_border_cache[victim];
+    if (!a->buf || (!b->buf || a->used < b->used))
+      victim = i;
+    if (!a->buf)
+      break;
+  }
+
+  unsigned char *buf = make_rect_border_argb(rect_w, rect_h, radius, thickness,
+                                             color, alpha, out_w, out_h);
+  if (!buf) {
+    pthread_mutex_unlock(&g_rect_border_cache_lock);
+    return NULL;
+  }
+
+  RectBorderCacheEntry *dst = &g_rect_border_cache[victim];
+  free(dst->buf);
+  dst->w = w;
+  dst->h = h;
+  dst->bw = out_w ? *out_w : w;
+  dst->bh = out_h ? *out_h : h;
+  dst->radius = radius;
+  dst->thickness = thickness;
+  dst->color = color;
+  dst->alpha = alpha;
+  dst->buf = buf;
+  dst->used = stamp;
+  *out_owned = false;
+  pthread_mutex_unlock(&g_rect_border_cache_lock);
   return buf;
 }
 
@@ -371,12 +466,13 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
     float r2 = (float)r;
     float alpha = (float)target_alpha / 65535.0f;
     int bw = 0, bh = 0;
-    unsigned char *buf =
-        rect_border_argb(w, h, r2, (float)t, color, alpha, &bw, &bh);
+    bool owned = false;
+    unsigned char *buf = rect_border_argb(w, h, r2, (float)t, color, alpha,
+                                          &bw, &bh, &owned);
     if (!buf)
       return false;
     return blit_argb_buf(buf, bw, bh, (int)x - (bw - (int)w) / 2,
-                         (int)y - (bh - (int)h) / 2);
+                         (int)y - (bh - (int)h) / 2, owned);
   }
   return true;
 }
@@ -479,7 +575,7 @@ bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   float alpha = 1.0f;
   unsigned char *buf = line_argb_buffer(x1 - bx, y1 - by, x2 - bx, y2 - by, w,
                                         h, spec.color, (float)thickness, alpha);
-  return blit_argb_buf(buf, w, h, bx, by);
+  return blit_argb_buf(buf, w, h, bx, by, true);
 }
 
 bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {

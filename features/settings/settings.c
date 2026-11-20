@@ -115,12 +115,12 @@ SKALD_FEATURE_INIT {
   static char ql_name[128];
   static char ql_url[512];
   SkSettingsEditboxField fields[] = {
-      {.name = "name",
+      {.name = "quicklink_name",
        .label = "Name:",
        .buffer = ql_name,
        .buffer_size = sizeof(ql_name),
        .width = 100},
-      {.name = "url",
+      {.name = "quicklink_url",
        .label = "Url:",
        .buffer = ql_url,
        .buffer_size = sizeof(ql_url),
