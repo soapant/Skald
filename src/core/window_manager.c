@@ -207,8 +207,11 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   if (!spec->subwindow && wm->popup_count > 0)
     return NULL;
   SkaldContext *ctx = SkaldContext_Get();
-  if (ctx)
+  if (ctx) {
     ctx->window.editbox_placed = false;
+    ctx->window.listbox_placed = false;
+    ctx->window.band_active = false;
+  }
   event_bus_trigger(EVENT_PROMPT_OPEN);
   return prompt_user_run(wm, spec);
 }
