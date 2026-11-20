@@ -1207,7 +1207,7 @@ static void cc_on_actions_render(SkPlaceState state) {
   if (state.hovered)
     sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2,
                  .w = state.rect.w - 15, .h = state.rect.h, .filled = true,
-                 .color = sk_color_lerp(COLOR_BG,SK_WHITE,0.5f), .radius = 6);
+                 .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.5f), .radius = 6);
   int h = state.rect.h;
   int lh_title = sk_get_text_height(16);
   int lh_hotkey = sk_get_text_height(20);
@@ -1219,8 +1219,8 @@ static void cc_on_actions_render(SkPlaceState state) {
 
   sk_draw_text(.x = state.rect.x + 100,
                .y = state.rect.y - 2 + (h - lh_hotkey) / 2, .text = hotkey,
-               .align = "LEFT", .font_size = 20,.color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.32f),
-               );
+               .align = "LEFT", .font_size = 20,
+               .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.32f), );
 }
 
 static void cc_render(PromptState *state) {

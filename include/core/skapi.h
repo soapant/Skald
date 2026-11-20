@@ -903,8 +903,7 @@ typedef struct {
 
 #define SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT 70
 
-typedef void (*SkSettingsEditboxChangeFn)(const char *name,
-                                          const char *value);
+typedef void (*SkSettingsEditboxChangeFn)(const char *name, const char *value);
 
 typedef struct {
   const char *name;
@@ -940,8 +939,10 @@ SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
 #define sk_settings_entry_add_dropdown(entry, ...)                             \
   ski_settings_entry_add_dropdown(entry, &(SkSettingsDropdownSpec){__VA_ARGS__})
 #define sk_settings_entry_add_editbox(entry, ...)                              \
-  ski_settings_entry_add_editbox(entry, &(SkSettingsEditboxSpec){             \
-      .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
+  ski_settings_entry_add_editbox(                                              \
+      entry,                                                                   \
+      &(SkSettingsEditboxSpec){                                                \
+          .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
 bool sk_config_set_setting(const char *key, const char *value);
 char *sk_config_get_setting(const char *key);
 bool sk_config_get_setting_bool(const char *key, bool *out);

@@ -37,7 +37,8 @@ void prompt_refresh(PromptState *state) {
 static bool prompt_primary_editbox_active(PromptState *state) {
   if (!state || state->editbox_count == 0)
     return true;
-  if (state->active_editbox < 0 || state->active_editbox >= state->editbox_count)
+  if (state->active_editbox < 0 ||
+      state->active_editbox >= state->editbox_count)
     return false;
   return state->editboxes[state->active_editbox].primary;
 }

@@ -866,7 +866,8 @@ static bool run_tests(void) {
   const char *support_obj = NULL;
   if (nob_file_exists("tests/support.c")) {
     support_obj = nob_temp_sprintf("%s/support.o", test_build_folder);
-    const char *support_dep = nob_temp_sprintf("%s/support.d", test_build_folder);
+    const char *support_dep =
+        nob_temp_sprintf("%s/support.d", test_build_folder);
     if (stale_with_dep_file("tests/support.c", support_obj, support_dep)) {
       Nob_Cmd scmd = {0};
       if (target_win32) {
@@ -875,8 +876,8 @@ static bool run_tests(void) {
         append_cc(&scmd);
       }
       append_san_flags(&scmd);
-      nob_cmd_append(&scmd, "-I", "include", "-I", "tests","-MMD",
-                     "-MP", "-MF", support_dep, "-c", "tests/support.c", "-o",
+      nob_cmd_append(&scmd, "-I", "include", "-I", "tests", "-MMD", "-MP",
+                     "-MF", support_dep, "-c", "tests/support.c", "-o",
                      support_obj);
       if (!nob_cmd_run(&scmd)) {
         nob_log(NOB_ERROR, "Failed to build test support");
@@ -946,14 +947,16 @@ static bool run_tests(void) {
       if (dot)
         *dot = '\0';
       const char *out = nob_temp_sprintf("build/win_tests/%s.exe", name);
-      const char *test_obj = nob_temp_sprintf("%s/%s.o", test_build_folder, name);
-      const char *test_dep = nob_temp_sprintf("%s/%s.d", test_build_folder, name);
+      const char *test_obj =
+          nob_temp_sprintf("%s/%s.o", test_build_folder, name);
+      const char *test_dep =
+          nob_temp_sprintf("%s/%s.d", test_build_folder, name);
       if (stale_with_dep_file(src, test_obj, test_dep)) {
         Nob_Cmd ccmd = {0};
         nob_cmd_append(&ccmd, CROSS_CC);
         nob_cmd_append(
-            &ccmd, "-I", "include", "-I", "tests","-Wall", "-MMD",
-            "-MP", "-MF", test_dep, "-c", src,
+            &ccmd, "-I", "include", "-I", "tests", "-Wall", "-MMD", "-MP",
+            "-MF", test_dep, "-c", src,
             nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder),
             "-o", test_obj);
         if (!nob_cmd_run(&ccmd)) {
@@ -1012,8 +1015,8 @@ static bool run_tests(void) {
       Nob_Cmd ccmd = {0};
       append_cc(&ccmd);
       nob_cmd_append(
-          &ccmd, "-I", "include", "-I", "tests","-Wall", "-MMD", "-MP",
-          "-MF", test_dep, "-c", src,
+          &ccmd, "-I", "include", "-I", "tests", "-Wall", "-MMD", "-MP", "-MF",
+          test_dep, "-c", src,
           nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder), "-o",
           test_obj);
       append_san_flags(&ccmd);
@@ -1022,10 +1025,9 @@ static bool run_tests(void) {
         build_failed = true;
       }
     }
-    if (!build_failed &&
-        (nob_needs_rebuild(out, (const char **)link_deps.items,
-                           link_deps.count) != 0 ||
-         nob_needs_rebuild1(out, test_obj) != 0)) {
+    if (!build_failed && (nob_needs_rebuild(out, (const char **)link_deps.items,
+                                            link_deps.count) != 0 ||
+                          nob_needs_rebuild1(out, test_obj) != 0)) {
       Nob_Cmd cmd = {0};
       append_cc(&cmd);
       nob_cmd_append(&cmd, test_obj);

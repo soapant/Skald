@@ -1437,15 +1437,15 @@ bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
     col = rgb_to_hex(COLOR_TEXT);
   else
     col = rgb_to_hex(col);
-  Platform_DrawTextCentered((DrawTextCenteredSpec){.x = spec->x,
-                                                   .y = spec->y,
-                                                   .w = spec->w,
-                                                   .h = spec->h,
-                                                   .text = real_text,
-                                                   .color = col,
-                                                   .font = spec->font,
-                                                   .font_size =
-                                                       spec->font_size});
+  Platform_DrawTextCentered(
+      (DrawTextCenteredSpec){.x = spec->x,
+                             .y = spec->y,
+                             .w = spec->w,
+                             .h = spec->h,
+                             .text = real_text,
+                             .color = col,
+                             .font = spec->font,
+                             .font_size = spec->font_size});
   return true;
 }
 
@@ -1626,9 +1626,9 @@ bool ski_place_editbox(const SkEditSpec *spec) {
   if (state && name && name[0]) {
     int dx = 0, dy = 0;
     get_draw_offset(&dx, &dy);
-    int idx = editbox_registry_place(state, name, buffer, buffer_size,
-                                     spec->x + dx, spec->y + dy, spec->w,
-                                     spec->h);
+    int idx =
+        editbox_registry_place(state, name, buffer, buffer_size, spec->x + dx,
+                               spec->y + dy, spec->w, spec->h);
     if (idx >= 0) {
       PromptEditbox *entry = &state->editboxes[idx];
       if (state->active_editbox < 0)
@@ -3424,10 +3424,9 @@ int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
   return idx;
 }
 
-static SkSettingsBlock *settings_editbox_group_block(
-    SkSettingsEditboxGroup group) {
-  if (group.entry < 0 || group.entry >= settings_entry_count ||
-      group.block < 0)
+static SkSettingsBlock *
+settings_editbox_group_block(SkSettingsEditboxGroup group) {
+  if (group.entry < 0 || group.entry >= settings_entry_count || group.block < 0)
     return NULL;
   SkSettingsEntry *e = &settings_entries[group.entry];
   SkSettingsBlock *b = settings_block_at(e, group.block);
@@ -3470,10 +3469,9 @@ ski_settings_entry_add_editbox(SkSettingsEntry *entry,
         !spec->fields[i].buffer || spec->fields[i].buffer_size < 2)
       return invalid;
   }
-  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_EDITBOX,
-                                           spec->title ? spec->title : "Editbox",
-                                           spec->sub,
-                                           __builtin_return_address(0));
+  int idx = settings_entry_add_block_typed(
+      entry, SETTINGS_BLOCK_EDITBOX, spec->title ? spec->title : "Editbox",
+      spec->sub, __builtin_return_address(0));
   if (idx < 0)
     return invalid;
   SkSettingsEntry *e = settings_entry_resolve(entry);
@@ -3701,9 +3699,10 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     sk_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10, .w = 128,
                   .h = 128);
   if (entry->desc[0])
-    sk_draw_text_centered(
-        .x = 30, .y = 140, .w = pane_w - 60, .h = 60, .text = entry->desc,
-        .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f));
+    sk_draw_text_centered(.x = 30, .y = 140, .w = pane_w - 60, .h = 60,
+                          .text = entry->desc,
+                          .color =
+                              color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f));
   sk_draw_line(.x1 = -7, .y1 = 210, .x2 = pane_w + 17, .y2 = 210,
                .color = COLOR_BORDER);
 
