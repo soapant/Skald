@@ -1418,6 +1418,37 @@ bool ski_draw_text(const SkTextSpec *spec) {
                                                 .angle = spec->angle});
 }
 
+bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
+  if (!spec)
+    return false;
+  const char *real_text = spec->text;
+  char tmp[2] = {0};
+  if ((uintptr_t)real_text < 256) {
+    if (!real_text)
+      return false;
+    tmp[0] = (char)(uintptr_t)real_text;
+    tmp[1] = '\0';
+    real_text = tmp;
+  }
+  if (!real_text)
+    return false;
+  unsigned long col = spec->color;
+  if (col == 0 || col == COLOR_AUTO)
+    col = rgb_to_hex(COLOR_TEXT);
+  else
+    col = rgb_to_hex(col);
+  Platform_DrawTextCentered((DrawTextCenteredSpec){.x = spec->x,
+                                                   .y = spec->y,
+                                                   .w = spec->w,
+                                                   .h = spec->h,
+                                                   .text = real_text,
+                                                   .color = col,
+                                                   .font = spec->font,
+                                                   .font_size =
+                                                       spec->font_size});
+  return true;
+}
+
 typedef int (*SkWrapMeasureFn)(void *ctx, const char *s, int n);
 
 typedef struct {
@@ -3662,9 +3693,9 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     sk_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10, .w = 128,
                   .h = 128);
   if (entry->desc[0])
-    sk_draw_text(.text = entry->desc,
-                 .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f),
-                 .x = 30, .y = 150);
+    sk_draw_text_centered(
+        .x = 30, .y = 140, .w = pane_w - 60, .h = 60, .text = entry->desc,
+        .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f));
   sk_draw_line(.x1 = -7, .y1 = 210, .x2 = pane_w + 17, .y2 = 210,
                .color = COLOR_BORDER);
 
