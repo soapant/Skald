@@ -308,7 +308,11 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   eb.measure = x11_editbox_measure;
   eb.measure_user = &metrics;
 
-  editbox_render(&eb, NULL);
+  EditboxLayout lay;
+  editbox_layout(&eb, &lay);
+  editbox_draw(&eb, &lay,
+               spec->hide_caret ? (EDITBOX_PART_TINT | EDITBOX_PART_TEXT)
+                                : EDITBOX_PART_ALL);
   if (state)
     state->eb->scroll_offset = eb.scroll;
 

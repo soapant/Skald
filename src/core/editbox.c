@@ -398,7 +398,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                                              .font_size = spec->font_size});
     } else if (spec->placeholder && spec->placeholder[0]) {
       unsigned long ph =
-          color_lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
+          color_lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(RGB(0,0,0)), 0.45f);
       Platform_DrawTextRaw(
           (DrawTextRawSpec){.x = layout->draw_x,
                             .y = spec->text_y + spec->placeholder_dy,
@@ -650,19 +650,20 @@ void editbox_registry_tick(PromptState *state) {
 }
 
 void editbox_registry_sync(PromptState *state) {
-  if (!state || state->active_editbox < 0 ||
-      state->active_editbox >= state->editbox_count)
+  if (!state)
     return;
-  PromptEditbox *entry = &state->editboxes[state->active_editbox];
-  if (!entry->buffer)
-    return;
-  size_t cap =
-      entry->buffer_size > 0 ? entry->buffer_size : sizeof(entry->eb.filter);
-  size_t n = strnlen(entry->eb.filter, cap - 1);
-  memcpy(entry->buffer, entry->eb.filter, n);
-  entry->buffer[n] = '\0';
-  log_info("editbox sync: name='%s' eb=%p buffer=%p text='%s'", entry->name,
-           (void *)&entry->eb, (void *)entry->buffer, entry->eb.filter);
+  for (int i = 0; i < state->editbox_count; i++) {
+    PromptEditbox *entry = &state->editboxes[i];
+    if (!entry->buffer)
+      continue;
+    size_t cap =
+        entry->buffer_size > 0 ? entry->buffer_size : sizeof(entry->eb.filter);
+    size_t n = strnlen(entry->eb.filter, cap - 1);
+    memcpy(entry->buffer, entry->eb.filter, n);
+    entry->buffer[n] = '\0';
+    log_info("editbox sync: name='%s' eb=%p buffer=%p text='%s'", entry->name,
+             (void *)&entry->eb, (void *)entry->buffer, entry->eb.filter);
+  }
 }
 
 const char *editbox_registry_active_name(const PromptState *state) {

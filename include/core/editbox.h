@@ -1,6 +1,8 @@
 #ifndef EDITBOX_H
 #define EDITBOX_H
 
+#define PROMPT_PRIMARY_EDITBOX_NAME "__prompt__"
+
 #include <stdbool.h>
 
 #include "core/types.h"

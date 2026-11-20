@@ -46,6 +46,7 @@ typedef struct {
   int x, y, w, h;
   bool placed;
   bool was_down;
+  bool primary;
 } PromptEditbox;
 
 struct ListBox {

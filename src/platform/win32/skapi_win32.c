@@ -237,7 +237,11 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
 
   bool prev_lb = draw_state_get()->win32_listbox_surface;
   draw_state_get()->win32_listbox_surface = false;
-  editbox_render(&eb, NULL);
+  EditboxLayout lay;
+  editbox_layout(&eb, &lay);
+  editbox_draw(&eb, &lay,
+               spec->hide_caret ? (EDITBOX_PART_TINT | EDITBOX_PART_TEXT)
+                                : EDITBOX_PART_ALL);
   draw_state_get()->win32_listbox_surface = prev_lb;
   if (state)
     state->eb->scroll_offset = eb.scroll;

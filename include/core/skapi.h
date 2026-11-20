@@ -887,6 +887,35 @@ typedef struct {
   void *ud;
 } SkSettingsDropdownSpec;
 
+#define SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT 70
+
+typedef void (*SkSettingsEditboxChangeFn)(const char *name,
+                                          const char *value);
+
+typedef struct {
+  const char *name;
+  const char *label;
+  char *buffer;
+  size_t buffer_size;
+  int width;
+} SkSettingsEditboxField;
+
+typedef struct {
+  const char *title;
+  const char *sub;
+  const SkSettingsEditboxField *fields;
+  int field_count;
+  int x_offset;
+  SkSettingsEditboxChangeFn on_change;
+} SkSettingsEditboxSpec;
+
+typedef struct {
+  int entry;
+  int block;
+} SkSettingsEditboxGroup;
+
+#define SK_SETTINGS_EDITBOX_INVALID ((SkSettingsEditboxGroup){-1, -1})
+
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
 #define sk_settings_entry_add_checkbox(entry, ...)                             \
   ski_settings_entry_add_checkbox(entry, &(SkSettingsCheckboxSpec){__VA_ARGS__})
@@ -896,6 +925,9 @@ SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
   ski_settings_entry_add_slider(entry, &(SkSettingsSliderSpec){__VA_ARGS__})
 #define sk_settings_entry_add_dropdown(entry, ...)                             \
   ski_settings_entry_add_dropdown(entry, &(SkSettingsDropdownSpec){__VA_ARGS__})
+#define sk_settings_entry_add_editbox(entry, ...)                              \
+  ski_settings_entry_add_editbox(entry, &(SkSettingsEditboxSpec){             \
+      .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
 bool sk_config_set_setting(const char *key, const char *value);
 char *sk_config_get_setting(const char *key);
 bool sk_config_get_setting_bool(const char *key, bool *out);
@@ -913,6 +945,13 @@ int ski_settings_entry_add_slider(SkSettingsEntry *entry,
                                   const SkSettingsSliderSpec *spec);
 int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
                                     const SkSettingsDropdownSpec *spec);
+SkSettingsEditboxGroup
+ski_settings_entry_add_editbox(SkSettingsEntry *entry,
+                               const SkSettingsEditboxSpec *spec);
+const char *sk_settings_editbox_get(SkSettingsEditboxGroup group,
+                                    const char *name);
+bool sk_settings_editbox_set(SkSettingsEditboxGroup group, const char *name,
+                             const char *value);
 
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 
