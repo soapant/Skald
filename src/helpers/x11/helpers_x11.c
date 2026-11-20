@@ -420,7 +420,8 @@ int x11_measure_utf8_fallback(Display *dpy, XftFont *xf, const char *s, int n,
         width = xft_width(dpy, xf, s, n);
       else
         width =
-            x11_utf8_fallback_runs(dpy, xf, s, n, px, x11_measure_run, NULL);
+            x11_utf8_fallback_runs(dpy, xf, (const unsigned char *)s, n, px,
+                                  x11_measure_run, NULL);
     }
     pthread_mutex_lock(&measure_mtx);
     if (epoch == g_measure_epoch)

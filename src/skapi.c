@@ -3491,8 +3491,16 @@ ski_settings_entry_add_editbox(SkSettingsEntry *entry,
     snprintf(dst->name, sizeof(dst->name), "%s", src->name);
     snprintf(dst->label, sizeof(dst->label), "%s",
              src->label ? src->label : src->name);
-    snprintf(dst->key, sizeof(dst->key), "%s/%s",
-             e->owner[0] ? e->owner : e->name, src->name);
+    const char *prefix = e->owner[0] ? e->owner : e->name;
+    size_t key_len = strnlen(prefix, sizeof(dst->key) - 1);
+    memcpy(dst->key, prefix, key_len);
+    if (key_len + 1 < sizeof(dst->key)) {
+      dst->key[key_len++] = '/';
+      size_t name_len = strnlen(src->name, sizeof(dst->key) - key_len - 1);
+      memcpy(dst->key + key_len, src->name, name_len);
+      key_len += name_len;
+    }
+    dst->key[key_len] = '\0';
     dst->buffer = src->buffer;
     dst->buffer_size = src->buffer_size;
     dst->width = src->width > 0 ? src->width : 60;
