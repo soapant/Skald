@@ -577,6 +577,19 @@ void sk_set_draw_offset(SkPos pos);
 
 SkPos sk_get_draw_offset(void);
 
+typedef struct {
+  const char *name;
+  int x, y, w, h;
+  int content_w, content_h;
+  int *off_x;
+  int *off_y;
+  int wheel_px;
+} SkScrollSpec;
+
+#define sk_scroll_begin(...) ski_scroll_begin(&(SkScrollSpec){__VA_ARGS__})
+bool ski_scroll_begin(const SkScrollSpec *spec);
+void sk_scroll_end(void);
+
 char *sk_http_get(const char *url);
 
 char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len);
@@ -829,6 +842,19 @@ typedef struct {
 } SkMouseEvent;
 
 bool sk_poll_mouse(SkMouseEvent *out);
+
+typedef struct {
+  int x;
+  int y;
+  int dx;
+  int dy;
+  int mods;
+  unsigned long long t_us;
+} SkScrollEvent;
+
+bool sk_poll_scroll(SkScrollEvent *out);
+int sk_scroll_queue_len(void);
+void sk_clear_scroll_queue(void);
 
 int sk_mouse_queue_len(void);
 

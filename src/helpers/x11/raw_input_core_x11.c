@@ -190,7 +190,7 @@ static void x11_queue_mouse_event(struct input_event *ev) {
     input_update_mouse_button(btn, false);
     int rmx = 0, rmy = 0;
     Platform_GetMousePos(&rmx, &rmy);
-    PlatformMouseEvent rev;
+    MouseEvent rev;
     rev.button = btn;
     rev.x = rmx;
     rev.y = rmy;
@@ -206,7 +206,7 @@ static void x11_queue_mouse_event(struct input_event *ev) {
   }
   int mx = 0, my = 0;
   Platform_GetMousePos(&mx, &my);
-  PlatformMouseEvent mev;
+  MouseEvent mev;
   mev.button = btn;
   mev.x = mx;
   mev.y = my;
@@ -986,7 +986,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     remap_update_phys(x11_convert_key_to_windows_vk(code), val);
   }
   {
-    PlatformKeyEvent gev;
+    KeyEvent gev;
     gev.vk = x11_convert_key_to_windows_vk(code);
     gev.scancode = code;
     gev.mods = remap_current_mods();

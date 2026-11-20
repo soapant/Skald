@@ -3,6 +3,7 @@
 #include "core/cap_registry.h"
 #include "core/cc_registry.h"
 #include "core/settings_registry.h"
+#include "core/scroll_area.h"
 #include "core/hover_widget.h"
 #include "core/snippet_manager.h"
 #include "core/widget_registry.h"
@@ -26,5 +27,6 @@ void purge_owner_set(const char *path_a, const char *path_b,
   key_purge_interceptor_owner(path_a, path_b);
   event_bus_purge_owner(path_a, path_b);
   hover_widget_purge_owner(path_a, path_b);
+  scroll_area_purge_owner(path_a, path_b);
   Platform_MessagePopup_PurgeOwner(path_a, path_b);
 }

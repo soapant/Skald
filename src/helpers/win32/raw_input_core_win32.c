@@ -66,7 +66,7 @@ void win32_handle_raw_mouse_input(LPARAM lParam) {
   } else
     is_btn = false;
 
-  PlatformMouseEvent mev;
+  MouseEvent mev;
   memset(&mev, 0, sizeof(mev));
   mev.x = (int)pt.x;
   mev.y = (int)pt.y;
@@ -76,7 +76,7 @@ void win32_handle_raw_mouse_input(LPARAM lParam) {
     bool was_down = input_mouse_state_down(btn);
     if (down && was_down) {
       input_update_mouse_button(btn, false);
-      PlatformMouseEvent rev;
+      MouseEvent rev;
       memset(&rev, 0, sizeof(rev));
       rev.button = btn;
       rev.x = mev.x;
@@ -143,7 +143,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
       if (_isDown || _isUp) {
         int _vk = (int)_rk->vkCode;
         int _val = _isDown ? 1 : 0;
-        PlatformKeyEvent _gev;
+        KeyEvent _gev;
         _gev.vk = _vk;
         _gev.scancode = (int)_rk->scanCode;
         _gev.mods = 0;
