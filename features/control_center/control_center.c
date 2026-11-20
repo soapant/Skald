@@ -1213,7 +1213,9 @@ static void cc_on_actions_render(SkPlaceState state) {
   int lh_hotkey = sk_get_text_height(20);
   sk_draw_text(.x = state.rect.x + 20,
                .y = state.rect.y - 2 + (h - lh_title) / 2, .text = "Actions",
-               .align = "LEFT", .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.32f), .font_size = 16);
+               .align = "LEFT",
+               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.32f),
+               .font_size = 16);
 
   sk_draw_text(.x = state.rect.x + 100,
                .y = state.rect.y - 2 + (h - lh_hotkey) / 2, .text = hotkey,
@@ -1324,8 +1326,8 @@ static void cc_open_control(void) {
             .ctrl_enter = cc_ctrl_enter, .shift_enter = cc_shift_enter,
             .ctrl_shift_enter = cc_ctrl_shift_enter,
             .ctrl_alt_enter = cc_ctrl_alt_enter,
-            .shift_alt_enter = cc_shift_alt_enter,
-            .render = cc_render, .on_close = cc_on_close);
+            .shift_alt_enter = cc_shift_alt_enter, .render = cc_render,
+            .on_close = cc_on_close);
 }
 
 static int cc_sub_w(void) { return cc_width / 4; }
@@ -1434,7 +1436,9 @@ static void cc_hotkey_capture_render(PromptState *state) {
                .color = SK_GRAY, .align = "LEFT");
 
   sk_draw_rect(.x = 20, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
-               .color = cc_flashing ? CC_TYPE_COLOR : sk_color_lerp(COLOR_BG, SK_BLACK, 0.12f), .filled = true);
+               .color = cc_flashing ? CC_TYPE_COLOR
+                                    : sk_color_lerp(COLOR_BG, SK_BLACK, 0.12f),
+               .filled = true);
 
   if (combo[0] || cc_flashing)
     sk_draw_text(.x = 27, .y = state->height / 2,
@@ -1449,13 +1453,13 @@ static void cc_alias_render(PromptState *state) {
   char label[284];
   snprintf(label, sizeof(label), "Alias For: %s", cc_register_target);
 
-  sk_draw_text(.x = 14, .y = 8, .text = label, .font_size = 15, .color = SK_GRAY,
-               .align = "LEFT", .pad = 0);
+  sk_draw_text(.x = 14, .y = 8, .text = label, .font_size = 15,
+               .color = SK_GRAY, .align = "LEFT", .pad = 0);
 
   sk_place_editbox(.x = (state->width - 160) / 2,
                    .y = (state->height - 30) / 2 + 6, .w = 160, .h = 26,
-                   .placeholder = "alias name", .caret_h = 16,
-                   .caret_w = 1, .caret_y = 40, .font_size = 14);
+                   .placeholder = "alias name", .caret_h = 16, .caret_w = 1,
+                   .caret_y = 40, .font_size = 14);
 }
 
 static bool cc_alias_enter(PromptState *state) {

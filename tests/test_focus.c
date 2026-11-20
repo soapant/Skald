@@ -121,11 +121,9 @@ TEST(focus_passive_listbox_selects_ring_entry) {
 TEST(focus_move_direction_picks_axis_neighbor) {
   focus_clear();
   focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("center", FOCUS_KIND_BUTTON, 50, 50, 10, 10, NULL, NULL,
-                 NULL);
+  focus_register("center", FOCUS_KIND_BUTTON, 50, 50, 10, 10, NULL, NULL, NULL);
   focus_register("left", FOCUS_KIND_CHECKBOX, 0, 50, 10, 10, NULL, NULL, NULL);
-  focus_register("right", FOCUS_KIND_SLIDER, 100, 50, 10, 10, NULL, NULL,
-                 NULL);
+  focus_register("right", FOCUS_KIND_SLIDER, 100, 50, 10, 10, NULL, NULL, NULL);
   focus_register("top", FOCUS_KIND_CUSTOM, 50, 0, 10, 10, NULL, NULL, NULL);
   focus_register("bottom", FOCUS_KIND_BUTTON, 50, 100, 10, 10, NULL, NULL,
                  NULL);

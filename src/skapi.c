@@ -986,11 +986,11 @@ static void hover_popup_ctx_free(void *ud) {
     free(p);
 }
 
-#define SK_FMT_BUFFER()                                    \
-  char buf[1024];                                        \
-  va_list args;                                          \
-  va_start(args, fmt);                                   \
-  vsnprintf(buf, sizeof(buf), fmt, args);                \
+#define SK_FMT_BUFFER()                                                        \
+  char buf[1024];                                                              \
+  va_list args;                                                                \
+  va_start(args, fmt);                                                         \
+  vsnprintf(buf, sizeof(buf), fmt, args);                                      \
   va_end(args)
 
 void sk_message_fmt(const SkMessageSpec *spec, const char *fmt, ...) {
@@ -1177,7 +1177,7 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
     if (ctx) {
       ctx->window.editbox_placed = false;
       ctx->window.listbox_placed = false;
-    ctx->window.band_active = false;
+      ctx->window.band_active = false;
     }
   }
   event_bus_trigger(EVENT_PROMPT_OPEN);
@@ -1843,8 +1843,7 @@ static bool listbox_begin_common(const ListSpec *spec) {
   item_h = item_h > 0 ? item_h : bi.item_h;
   PromptState *st = Platform_ListboxBackendPromptState(lb);
   ListboxLayout lay;
-  listbox_compute_layout(spec, bi.list_top, item_h,
-                         st ? st->width : PromptW,
+  listbox_compute_layout(spec, bi.list_top, item_h, st ? st->width : PromptW,
                          st ? st->height : PromptH, lb->item_count, &lay);
   sk_list_spec = *spec;
   sk_list_lb = lb;
@@ -1995,9 +1994,7 @@ bool sk_focus_move_dir(SkFocusDir dir) {
 }
 bool sk_activate_focused(void) { return focus_activate(); }
 bool sk_focus_adjust(int dir) { return focus_adjust(dir); }
-bool sk_set_focus(SkFocusKind kind) {
-  return focus_set_kind((FocusKind)kind);
-}
+bool sk_set_focus(SkFocusKind kind) { return focus_set_kind((FocusKind)kind); }
 void sk_focus_clear(void) { focus_clear(); }
 
 bool sk_slider_is_hovered(const char *name) { return slider_is_hovered(name); }
@@ -2076,9 +2073,7 @@ bool ski_move_to_pos_rel(int rx, int ry) {
   }
   return ski_move_to_pos(abs.x, abs.y);
 }
-bool sk_move_to_pos_rel(SkPos pos) {
-  return ski_move_to_pos_rel(pos.x, pos.y);
-}
+bool sk_move_to_pos_rel(SkPos pos) { return ski_move_to_pos_rel(pos.x, pos.y); }
 
 bool ski_click_at_rel(int rx, int ry) {
   SkPos abs;
@@ -2189,7 +2184,6 @@ bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout) {
   return ski_wait_pixel(pos.x, pos.y, color.r, color.g, color.b, tolerance,
                         timeout);
 }
-
 
 #define SKI_LIB_TRACK_MAX 32
 
@@ -2929,8 +2923,8 @@ static const char *setting_lookup_locked(const char *key) {
 static void setting_entries_set(const char *key, const char *value) {
   for (int i = 0; i < setting_entry_count; i++) {
     if (strcmp(setting_entries[i].key, key) == 0) {
-      snprintf(setting_entries[i].value, sizeof(setting_entries[i].value),
-               "%s", value ? value : "");
+      snprintf(setting_entries[i].value, sizeof(setting_entries[i].value), "%s",
+               value ? value : "");
       return;
     }
   }
@@ -3243,14 +3237,13 @@ int ski_settings_entry_add_button(SkSettingsEntry *entry,
                                   const SkSettingsButtonSpec *spec) {
   if (!spec)
     return -1;
-  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_BUTTON,
-                                           spec->title, spec->sub,
-                                           __builtin_return_address(0));
+  int idx =
+      settings_entry_add_block_typed(entry, SETTINGS_BLOCK_BUTTON, spec->title,
+                                     spec->sub, __builtin_return_address(0));
   SkSettingsBlock *b = settings_block_at(entry, idx);
   if (!b)
     return -1;
-  snprintf(b->label, sizeof(b->label), "%s",
-           spec->label ? spec->label : "");
+  snprintf(b->label, sizeof(b->label), "%s", spec->label ? spec->label : "");
   b->on_click = spec->on_click;
   b->on_hover = spec->on_hover;
   return idx;
@@ -3281,9 +3274,9 @@ int ski_settings_entry_add_slider(SkSettingsEntry *entry,
     initial = min_value;
   if (initial > max_value)
     initial = max_value;
-  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_SLIDER,
-                                           spec->title, spec->sub,
-                                           __builtin_return_address(0));
+  int idx =
+      settings_entry_add_block_typed(entry, SETTINGS_BLOCK_SLIDER, spec->title,
+                                     spec->sub, __builtin_return_address(0));
   SkSettingsBlock *b = settings_block_at(entry, idx);
   if (!b)
     return -1;
@@ -3519,12 +3512,12 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
                .filled = true, .rounded = false);
 
   if (entry->icon[0])
-    sk_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10,
-                  .w = 128, .h = 128);
+    sk_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10, .w = 128,
+                  .h = 128);
   if (entry->desc[0])
-    sk_draw_text(.text = entry->desc, .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f),
-                   .x = 30,
-                   .y = 150);
+    sk_draw_text(.text = entry->desc,
+                 .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f),
+                 .x = 30, .y = 150);
   sk_draw_line(.x1 = -7, .y1 = 210, .x2 = pane_w + 17, .y2 = 210,
                .color = COLOR_BORDER);
 
@@ -3536,7 +3529,8 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     s_dispatch_index = i;
     focus_ctx_remember(b->title, entry, i, -1);
     int x = 10, y = cursor, w = pane_w - 20;
-    sk_draw_rect(.x = x, .y = y, .w = w, .h = 60, .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
+    sk_draw_rect(.x = x, .y = y, .w = w, .h = 60,
+                 .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
                  .filled = true, .radius = 6);
     if (b->title[0])
       sk_draw_text(.text = b->title, .x = x + 10, .y = y + 8,
@@ -3548,16 +3542,16 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
                    .align = "LEFT");
     int right = x + w - 10;
     if (b->type == SETTINGS_BLOCK_CHECKBOX) {
-      sk_place_checkbox(.name = b->title, .x = right - 32, .y = y + 14,
-                        .w = 32, .h = 32, .checked = b->initial,
+      sk_place_checkbox(.name = b->title, .x = right - 32, .y = y + 14, .w = 32,
+                        .h = 32, .checked = b->initial,
                         .on_click = dispatch_widget_click,
                         .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_BUTTON) {
       int bw = sk_get_text_width(b->label, FontSize) + 28;
       if (bw < 64)
         bw = 64;
-      sk_place_button(.name = b->title, .x = right - bw, .y = y + 16,
-                      .w = bw, .h = 28, .text = b->label,
+      sk_place_button(.name = b->title, .x = right - bw, .y = y + 16, .w = bw,
+                      .h = 28, .text = b->label,
                       .on_click = dispatch_widget_click,
                       .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_SLIDER) {
@@ -3565,8 +3559,8 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
       float step = range >= 10.0f ? 1.0f : range / 100.0f;
       if (step <= 0.0f)
         step = 1.0f;
-      sk_place_slider(.name = b->title, .x = right - 180, .y = y + 20,
-                      .w = 180, .h = 20, .min_value = b->min_value,
+      sk_place_slider(.name = b->title, .x = right - 180, .y = y + 20, .w = 180,
+                      .h = 20, .min_value = b->min_value,
                       .max_value = b->max_value, .step = step,
                       .value = b->value, .on_change = dispatch_slider_change,
                       .on_hover = dispatch_widget_hover);
@@ -3583,8 +3577,8 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
         bw = 96;
       if (bw > w)
         bw = w;
-      sk_place_button(.name = b->title, .x = right - bw, .y = y + 16,
-                      .w = bw, .h = 28, .text = (char *)label,
+      sk_place_button(.name = b->title, .x = right - bw, .y = y + 16, .w = bw,
+                      .h = 28, .text = (char *)label,
                       .on_click = dispatch_widget_click,
                       .on_hover = dispatch_widget_hover);
       if (b->open && count > 0) {
@@ -3621,8 +3615,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
       visible = open_count;
     if (visible > 0) {
       int panel_h = visible * (opt_h + gap) + 4;
-      int panel_y = up ? open_trigger_y - panel_h - 4
-                       : open_trigger_y + 28 + 4;
+      int panel_y = up ? open_trigger_y - panel_h - 4 : open_trigger_y + 28 + 4;
       sk_draw_rect(.x = open_x - 3, .y = panel_y, .w = open_w + 6, .h = panel_h,
                    .color = color_lerp(COLOR_BG, SK_BLACK, 0.22f),
                    .filled = true, .radius = 6);
@@ -3641,8 +3634,8 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
         s_dispatch_option = i;
         focus_ctx_remember(opt_name, open_entry, open_index, i);
         sk_place_button(.name = opt_name, .x = open_x + 4,
-                        .y = panel_y + 2 + i * (opt_h + gap),
-                        .w = open_w - 8, .h = opt_h, .text = (char *)text,
+                        .y = panel_y + 2 + i * (opt_h + gap), .w = open_w - 8,
+                        .h = opt_h, .text = (char *)text,
                         .on_click = dispatch_widget_click,
                         .on_hover = dispatch_widget_hover);
       }
@@ -4518,9 +4511,9 @@ int sk_config_setting_count(void) {
 const char *sk_config_setting_name_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  const char *out =
-      (index >= 0 && index < setting_entry_count) ? setting_entries[index].key
-                                                 : NULL;
+  const char *out = (index >= 0 && index < setting_entry_count)
+                        ? setting_entries[index].key
+                        : NULL;
   sk_config_unlock();
   return out;
 }
@@ -4528,9 +4521,9 @@ const char *sk_config_setting_name_at(int index) {
 const char *sk_config_setting_value_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  const char *out =
-      (index >= 0 && index < setting_entry_count) ? setting_entries[index].value
-                                                 : NULL;
+  const char *out = (index >= 0 && index < setting_entry_count)
+                        ? setting_entries[index].value
+                        : NULL;
   sk_config_unlock();
   return out;
 }
@@ -4593,7 +4586,8 @@ bool sk_prewarm_image_fmt(const char *fmt, ...) {
   return sk_prewarm_image(buf);
 }
 
-bool sk_write_to_file_fmt(const char *lines[], int count, const char *fmt, ...) {
+bool sk_write_to_file_fmt(const char *lines[], int count, const char *fmt,
+                          ...) {
   SK_FMT_BUFFER();
   return sk_write_to_file(buf, lines, count);
 }
@@ -4653,12 +4647,14 @@ SkWindowHandle sk_get_window_by_root_atom_fmt(const char *fmt, ...) {
   return sk_get_window_by_root_atom(buf);
 }
 
-bool sk_window_set_long_property_fmt(SkWindowHandle window, long value, const char *fmt, ...) {
+bool sk_window_set_long_property_fmt(SkWindowHandle window, long value,
+                                     const char *fmt, ...) {
   SK_FMT_BUFFER();
   return sk_window_set_long_property(window, buf, value);
 }
 
-bool sk_window_send_message_fmt(SkWindowHandle window, long data, const char *fmt, ...) {
+bool sk_window_send_message_fmt(SkWindowHandle window, long data,
+                                const char *fmt, ...) {
   SK_FMT_BUFFER();
   return sk_window_send_message(window, buf, data);
 }
@@ -4768,7 +4764,8 @@ int sk_get_text_width_fmt(int font_size, const char *fmt, ...) {
   return sk_get_text_width(buf, font_size);
 }
 
-void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt, ...) {
+void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt,
+                           ...) {
   SK_FMT_BUFFER();
   sk_http_get_async(buf, cb, userdata);
 }
@@ -4862,4 +4859,3 @@ void sk_cap_bind_declare_fmt(void *consumer, const char *fmt, ...) {
   SK_FMT_BUFFER();
   sk_cap_bind_declare(buf, consumer);
 }
-

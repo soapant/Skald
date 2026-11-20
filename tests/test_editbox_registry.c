@@ -16,8 +16,7 @@ TEST(editbox_registry_routes_active_box) {
   state.active_editbox = -1;
 
   char buf[16] = "hello";
-  int idx = editbox_registry_place(&state, "a", buf, sizeof(buf),
-                                   0, 0, 10, 10);
+  int idx = editbox_registry_place(&state, "a", buf, sizeof(buf), 0, 0, 10, 10);
   ASSERT_TRUE(idx >= 0);
   PromptEditbox *entry = editbox_registry_find(&state, "a");
   ASSERT_TRUE(entry != NULL);

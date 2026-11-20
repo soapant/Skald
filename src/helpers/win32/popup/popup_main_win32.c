@@ -607,8 +607,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (state && state->callbacks && state->callbacks->render) {
         checkbox_frame_begin();
         slider_frame_begin();
-        focus_frame_begin(state->lb != NULL, 0, prompt_list_top(),
-                          state->width,
+        focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
                           state->height - prompt_list_top() -
                               prompt_list_bottom_margin());
         win32_set_draw_context(paintDC);
@@ -635,8 +634,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         win32_set_draw_context(paintDC);
         if (estate->lb) {
           SkaldContext_Get()->window.listbox_placed = true;
-          draw_prompt_band(0, prompt_list_top() - 2,
-                           rect.right - rect.left);
+          draw_prompt_band(0, prompt_list_top() - 2, rect.right - rect.left);
         }
         extern void Platform_DrawPromptEditbox(PromptState * state);
         Platform_DrawPromptEditbox(estate);
@@ -680,14 +678,15 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             int draw_x = 14;
             if (row_h_scroll > 0)
               draw_x -= row_h_scroll;
-            Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
-                                                   .y = y + pad_top,
-                                                   .text = draw_text,
-                                                   .color = rgb_to_hex(COLOR_TEXT),
-                                                   .font = FH_NULL,
-                                                   .align = "LEFT",
-                                                   .pad = 0,
-                                                   .font_size = FontSize});
+            Platform_DrawTextRaw(
+                (DrawTextRawSpec){.x = draw_x,
+                                  .y = y + pad_top,
+                                  .text = draw_text,
+                                  .color = rgb_to_hex(COLOR_TEXT),
+                                  .font = FH_NULL,
+                                  .align = "LEFT",
+                                  .pad = 0,
+                                  .font_size = FontSize});
           }
           draw_state_get()->win32_listbox_surface = false;
 

@@ -48,9 +48,8 @@ static bool settings_enter(PromptState *state) { return true; }
 static bool settings_ctrl_enter(PromptState *state) { return false; }
 
 static void settings_list(PromptState *state) {
-  if (!sk_listbox_begin(.lb = state->lb,
-                        .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y,
-                        .w = SETTINGS_SIDEBAR_W,
+  if (!sk_listbox_begin(.lb = state->lb, .x = SETTINGS_EB_X,
+                        .y = SETTINGS_LIST_Y, .w = SETTINGS_SIDEBAR_W,
                         .h = state->height - SETTINGS_LIST_Y - 4))
     return;
   SkListItemCtx ctx;
@@ -63,8 +62,7 @@ static void settings_list(PromptState *state) {
       sk_draw_image(.path = entry->icon, .x = ctx.x + 10,
                     .y = row_y + (row_h - 18) / 2, .w = 18, .h = 18);
     }
-    sk_draw_text(.text = ctx.text, .x = ctx.x + 36,
-                 .y = row_y + 3,
+    sk_draw_text(.text = ctx.text, .x = ctx.x + 36, .y = row_y + 3,
                  .align = "LEFT", .color = COLOR_TEXT, .font_size = 15);
   }
   sk_listbox_end();
@@ -76,15 +74,15 @@ static void settings_render(PromptState *state) {
                .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16,.caret_h=19);
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16,
+                   .caret_h = 19);
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
-               .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W - 2, .y2 = SETTINGS_SEP_Y,
-               .color = COLOR_BORDER);
+               .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W - 2,
+               .y2 = SETTINGS_SEP_Y, .color = COLOR_BORDER);
 
   sk_draw_line(.x1 = SETTINGS_SIDEBAR_W, .x2 = SETTINGS_SIDEBAR_W,
                .y2 = state->height, .color = COLOR_BORDER);
-
 
   settings_list(state);
 
@@ -105,8 +103,8 @@ static void settings_render(PromptState *state) {
 static void trigger_settings(void) {
   sk_window(.title = "Settings", .placeholder = "Search settings",
             .refresh = settings_refresh, .enter = settings_enter,
-            .ctrl_enter = settings_ctrl_enter,
-            .render = settings_render, .no_separators = true);
+            .ctrl_enter = settings_ctrl_enter, .render = settings_render,
+            .no_separators = true);
 }
 
 SKALD_FEATURE_INIT {
@@ -118,8 +116,7 @@ SKALD_FEATURE_INIT {
       sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
                             .desc = "Add Quicklinks for your most commonly "
                                     "opened websites.");
-  sk_settings_entry_add_checkbox(ql,
-                                 .title = "Add Quicklink",
+  sk_settings_entry_add_checkbox(ql, .title = "Add Quicklink",
                                  .sub = "Add a quicklink to appear in cc");
 
   sk_add_settings_entry(.name = "Config", .icon = "/settings.png",

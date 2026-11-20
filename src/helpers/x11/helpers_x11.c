@@ -1981,8 +1981,8 @@ static Picture border_slot_get_or_create(Display *dpy, int w, int h) {
   return pic;
 }
 
-void x11_draw_window_border(Display *dpy, Drawable drw, Visual *vis,
-                            int w, int h, bool no_bg) {
+void x11_draw_window_border(Display *dpy, Drawable drw, Visual *vis, int w,
+                            int h, bool no_bg) {
   if (!dpy || !drw || no_bg || !EnableBorders) {
     return;
   }
@@ -1992,9 +1992,8 @@ void x11_draw_window_border(Display *dpy, Drawable drw, Visual *vis,
     if (XGetWindowAttributes(dpy, drw, &attrs))
       use_vis = attrs.visual;
   }
-  XRenderPictFormat *dst_fmt = use_vis
-      ? XRenderFindVisualFormat(dpy, use_vis)
-      : NULL;
+  XRenderPictFormat *dst_fmt =
+      use_vis ? XRenderFindVisualFormat(dpy, use_vis) : NULL;
   pthread_mutex_lock(&border_mtx);
   Picture src = border_slot_get_or_create(dpy, w, h);
   if (dst_fmt && src) {
