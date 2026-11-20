@@ -104,6 +104,8 @@ int Platform_GetUnscaledFontSize(void) {
   return base_font_size > 0 ? base_font_size : FontSize;
 }
 
+int Platform_EditboxPlaceholderOffset(void) { return 0; }
+
 void Platform_ResetUIScale(void) {
   base_font_size = FontSize;
   ui_scale_apply_locked();
