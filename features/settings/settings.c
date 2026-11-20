@@ -47,8 +47,6 @@ static bool settings_enter(PromptState *state) { return true; }
 
 static bool settings_ctrl_enter(PromptState *state) { return false; }
 
-static void settings_tab(PromptState *state) {}
-
 static void settings_list(PromptState *state) {
   if (!sk_listbox_begin(.lb = state->lb,
                         .x = SETTINGS_EB_X, .y = SETTINGS_LIST_Y,
@@ -107,7 +105,7 @@ static void settings_render(PromptState *state) {
 static void trigger_settings(void) {
   sk_window(.title = "Settings", .placeholder = "Search settings",
             .refresh = settings_refresh, .enter = settings_enter,
-            .ctrl_enter = settings_ctrl_enter, .tab = settings_tab,
+            .ctrl_enter = settings_ctrl_enter,
             .render = settings_render, .no_separators = true);
 }
 

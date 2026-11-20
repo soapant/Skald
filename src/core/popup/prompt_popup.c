@@ -57,6 +57,8 @@ static void prompt_popup_on_show(Popup *self) {
   }
 
   data->state->eb->cursor = 0;
+  data->state->default_eb = data->state->eb;
+  data->state->active_editbox = -1;
   data->state->width = data->w;
   data->state->height = data->h;
   const char *title = data->spec.title ? data->spec.title : "Skald";
@@ -113,8 +115,6 @@ static void prompt_popup_on_show(Popup *self) {
   ctx2->window.prompt_callbacks.shift_alt_enter =
       data->spec.shift_alt_enter ? data->spec.shift_alt_enter
                                  : data->saved_callbacks.shift_alt_enter;
-  ctx2->window.prompt_callbacks.tab =
-      data->spec.tab ? data->spec.tab : data->saved_callbacks.tab;
   ctx2->window.prompt_callbacks.render =
       data->spec.render ? data->spec.render : data->saved_callbacks.render;
   data->state->callbacks = &SkaldContext_Get()->window.prompt_callbacks;
@@ -160,6 +160,8 @@ static void prompt_popup_on_render(Popup *self) {
 }
 
 static bool prompt_popup_on_key(Popup *self, const PopupKeyEvent *key) {
+  log_info("popup on_key: self=%p vk=%d text_len=%d", (void *)self,
+           key ? key->vk : -1, key ? key->text_len : -1);
   return Platform_PromptPopupOnKey(self, key);
 }
 
@@ -169,8 +171,12 @@ static void prompt_popup_destroy(Popup *self) {
   Platform_PromptPopupDestroyWindow(self);
   if (data->state) {
     listbox_info_free(data->state->lb);
-    free(data->state->eb->placeholder);
-    free(data->state->eb);
+    for (int i = 0; i < data->state->editbox_count; i++)
+      free(data->state->editboxes[i].eb.placeholder);
+    EditBox *def = data->state->default_eb ? data->state->default_eb
+                                           : data->state->eb;
+    free(def->placeholder);
+    free(def);
     free(data->state);
   }
   free(data);

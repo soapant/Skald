@@ -19,6 +19,14 @@ typedef void (*RenderCallback)(PromptState *state);
 #define LISTBOX_ROW_BYTES 512
 
 typedef struct {
+  int edit_cursor_width;
+  int edit_cursor_height;
+  int editbox_padding;
+  int listbox_padding;
+  int listbox_item_height;
+} Metrics;
+
+typedef struct {
   char filter[512];
   size_t cursor;
   int sel_start;
@@ -26,6 +34,19 @@ typedef struct {
   int scroll_offset;
   char *placeholder;
 } EditBox;
+
+#define PROMPT_EDITBOX_MAX 32
+
+typedef struct {
+  char name[128];
+  EditBox eb;
+  char *buffer;
+  size_t buffer_size;
+  Metrics metrics;
+  int x, y, w, h;
+  bool placed;
+  bool was_down;
+} PromptEditbox;
 
 struct ListBox {
   char (*items)[LISTBOX_ROW_BYTES];
@@ -44,6 +65,10 @@ struct PromptState {
   int width, height;
   char *window_title;
   EditBox *eb;
+  EditBox *default_eb;
+  PromptEditbox editboxes[PROMPT_EDITBOX_MAX];
+  int editbox_count;
+  int active_editbox;
   ListBox *lb;
   PromptCallbacks *callbacks;
   void *render_data;
@@ -67,8 +92,6 @@ typedef bool (*CtrlAltEnterCallback)(PromptState *state);
 
 typedef bool (*ShiftAltEnterCallback)(PromptState *state);
 
-typedef void (*TabCallback)(PromptState *state);
-
 typedef void (*EditCallback)(PromptState *state);
 
 typedef void (*FilterCallback)(const char *item, const char *filter);
@@ -83,7 +106,6 @@ typedef struct PromptCallbacks {
   CtrlShiftEnterCallback ctrl_shift_enter;
   CtrlAltEnterCallback ctrl_alt_enter;
   ShiftAltEnterCallback shift_alt_enter;
-  TabCallback tab;
   HelpCallback help;
   RenderCallback render;
   EditCallback edit;
@@ -109,7 +131,6 @@ typedef struct {
   CtrlShiftEnterCallback ctrl_shift_enter;
   CtrlAltEnterCallback ctrl_alt_enter;
   ShiftAltEnterCallback shift_alt_enter;
-  TabCallback tab;
   RenderCallback render;
   EditCallback edit;
   FilterCallback filter;

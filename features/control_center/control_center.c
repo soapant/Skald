@@ -1300,12 +1300,6 @@ CC_DEFINE_ENTER(cc_shift_alt_enter, CC_RUN_SHIFT_ALT)
 
 static void cc_on_close(void) { cc_run_pending(); }
 
-static void cc_tab(PromptState *state) {
-  const CcEntry *e = cc_find(state->lb->selected_text);
-  if (e && e->on_tab)
-    e->on_tab();
-}
-
 static void cc_reload(void) {
   int features = sk_reload_all_features();
   int config = sk_reload_config();
@@ -1330,7 +1324,7 @@ static void cc_open_control(void) {
             .ctrl_enter = cc_ctrl_enter, .shift_enter = cc_shift_enter,
             .ctrl_shift_enter = cc_ctrl_shift_enter,
             .ctrl_alt_enter = cc_ctrl_alt_enter,
-            .shift_alt_enter = cc_shift_alt_enter, .tab = cc_tab,
+            .shift_alt_enter = cc_shift_alt_enter,
             .render = cc_render, .on_close = cc_on_close);
 }
 
