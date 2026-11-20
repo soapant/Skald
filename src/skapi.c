@@ -1831,10 +1831,6 @@ bool sk_listbox_next(SkListItemCtx *out) {
   return listbox_next_common(out);
 }
 
-int sk_listbox_get_count(void) {
-  return sk_list_lb ? sk_list_lb->item_count : 0;
-}
-
 bool ski_place_listbox(const SkListSpec *spec) {
   if (!spec) {
     return false;
@@ -2723,10 +2719,6 @@ void sk_widget_show(SkWidget *widget) { widget_show(widget); }
 void sk_widget_hide(SkWidget *widget) { widget_hide(widget); }
 
 void sk_widget_destroy(SkWidget *widget) { widget_destroy(widget); }
-
-void sk_widget_set_render(SkWidget *widget, SkWidgetRenderFn render) {
-  widget_set_render(widget, render);
-}
 
 char *sk_format_bytes(unsigned long long bytes) {
   const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB"};
