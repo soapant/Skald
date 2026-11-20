@@ -93,16 +93,6 @@ void draw_prompt_band(int y, int bottom_y, int width) {
                                          .filled = true});
 }
 
-void item_get_colors(GetItemColorsSpec spec) {
-  unsigned long col = rgb_to_hex(COLOR_TEXT);
-  if (spec.num_color)
-    *spec.num_color = col;
-  if (spec.body_color)
-    *spec.body_color = col;
-  if (spec.plain_color)
-    *spec.plain_color = col;
-}
-
 static bool fuzzy_match(const char *text, const char *pattern) {
   if (!pattern || !pattern[0])
     return true;

@@ -1373,21 +1373,6 @@ static __thread int sk_list_y0, sk_list_itemH, sk_list_visible, sk_list_cur,
     sk_list_h;
 static __thread int sk_list_bx, sk_list_bw, sk_list_fw, sk_list_fh;
 
-unsigned long sk_listbox_get_current_standard_color(void) {
-  if (!sk_list_lb || sk_list_cur == 0)
-    return 0;
-  int idx = sk_list_lb->view_offset + sk_list_cur - 1;
-  if (idx < 0 || idx >= sk_list_lb->item_count)
-    return 0;
-  unsigned long ncol, bcol, pcol;
-  item_get_colors((GetItemColorsSpec){.idx = idx,
-                                      .count = sk_list_lb->item_count,
-                                      .num_color = &ncol,
-                                      .body_color = &bcol,
-                                      .plain_color = &pcol});
-  return pcol;
-}
-
 bool ski_draw_text(const SkTextSpec *spec) {
   if (!spec) {
     return false;
@@ -1406,12 +1391,10 @@ bool ski_draw_text(const SkTextSpec *spec) {
     return false;
   }
   unsigned long col = spec->color;
-  if (col == 0 || col == COLOR_AUTO) {
-    unsigned long cur = sk_listbox_get_current_standard_color();
-    col = cur ? cur : rgb_to_hex(COLOR_TEXT);
-  } else {
+  if (col == 0 || col == COLOR_AUTO)
+    col = rgb_to_hex(COLOR_TEXT);
+  else
     col = rgb_to_hex(col);
-  }
   int draw_x = spec->x - (spec->no_hscroll ? 0 : listbox_get_row_h_scroll());
   int draw_y = spec->y;
   if (draw_state_get()->listbox_rows && draw_state_get()->win32_listbox_surface)
