@@ -45,13 +45,14 @@ static int focus_find(const char *name) {
   return -1;
 }
 
-void focus_frame_begin(bool include_listbox) {
+void focus_frame_begin(bool include_listbox, int lb_x, int lb_y, int lb_w,
+                       int lb_h) {
   s_count = 0;
   s_current = -1;
   s_saved_seen = false;
   if (include_listbox) {
-    focus_register(FOCUS_LISTBOX_NAME, FOCUS_KIND_LISTBOX, 0, 0, 0, 0, NULL,
-                   NULL, NULL);
+    focus_register(FOCUS_LISTBOX_NAME, FOCUS_KIND_LISTBOX, lb_x, lb_y, lb_w,
+                   lb_h, NULL, NULL, NULL);
     if (!s_saved_name[0])
       focus_select(FOCUS_LISTBOX_NAME);
   }
@@ -127,6 +128,19 @@ bool focus_select(const char *name) {
   return true;
 }
 
+bool focus_set_kind(FocusKind kind) {
+  if (kind == FOCUS_KIND_NONE) {
+    focus_clear();
+    return true;
+  }
+  for (int i = 0; i < s_count; i++) {
+    if (s_entries[i].kind == kind && focus_is_selectable(s_entries[i].kind))
+      return focus_select(s_entries[i].name);
+  }
+  focus_set_pseudo(kind);
+  return true;
+}
+
 bool focus_move(int dir) {
   if (s_count <= 0) {
     log_warn("focus: move dir=%d with no registered widgets", dir);
@@ -144,6 +158,55 @@ bool focus_move(int dir) {
   }
   log_warn("focus: move dir=%d found no widget entries", dir);
   return false;
+}
+
+bool focus_move_direction(FocusDirection dir) {
+  if (s_current < 0 || s_count <= 0) {
+    log_warn("focus: move direction=%d with no selection", (int)dir);
+    return false;
+  }
+  FocusEntry *cur = &s_entries[s_current];
+  int cx = cur->x + cur->w / 2;
+  int cy = cur->y + cur->h / 2;
+  int best = -1;
+  long best_score = 0;
+  for (int i = 0; i < s_count; i++) {
+    if (i == s_current || !focus_is_selectable(s_entries[i].kind))
+      continue;
+    FocusEntry *cand = &s_entries[i];
+    int nx = cand->x + cand->w / 2;
+    int ny = cand->y + cand->h / 2;
+    long forward = 0, lateral = 0;
+    if (dir == FOCUS_RIGHT) {
+      forward = nx - cx;
+      lateral = ny - cy;
+    } else if (dir == FOCUS_LEFT) {
+      forward = cx - nx;
+      lateral = cy - ny;
+    } else if (dir == FOCUS_DOWN) {
+      forward = ny - cy;
+      lateral = nx - cx;
+    } else {
+      forward = cy - ny;
+      lateral = cx - nx;
+    }
+    if (forward <= 0)
+      continue;
+    if (lateral < 0)
+      lateral = -lateral;
+    long score = lateral * 8 + forward;
+    if (best < 0 || score < best_score) {
+      best = i;
+      best_score = score;
+    }
+  }
+  if (best < 0) {
+    log_warn("focus: no entry direction=%d from '%s'", (int)dir, cur->name);
+    return false;
+  }
+  log_info("focus: move direction=%d -> '%s'", (int)dir,
+           s_entries[best].name);
+  return focus_select(s_entries[best].name);
 }
 
 bool focus_activate(void) {

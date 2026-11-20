@@ -16,7 +16,15 @@ typedef enum {
 typedef void (*FocusActivateFn)(void *owner);
 typedef void (*FocusAdjustFn)(void *owner, int dir);
 
-void focus_frame_begin(bool include_listbox);
+typedef enum {
+  FOCUS_LEFT = 0,
+  FOCUS_RIGHT,
+  FOCUS_UP,
+  FOCUS_DOWN
+} FocusDirection;
+
+void focus_frame_begin(bool include_listbox, int lb_x, int lb_y, int lb_w,
+                       int lb_h);
 void focus_frame_end(void);
 void focus_register(const char *name, FocusKind kind, int x, int y, int w,
                     int h, void *owner, FocusActivateFn activate,
@@ -26,7 +34,9 @@ bool focus_has_entries(void);
 FocusKind focus_kind(void);
 const char *focus_name(void);
 bool focus_select(const char *name);
+bool focus_set_kind(FocusKind kind);
 bool focus_move(int dir);
+bool focus_move_direction(FocusDirection dir);
 bool focus_activate(void);
 bool focus_adjust(int dir);
 void focus_set_pseudo(FocusKind kind);

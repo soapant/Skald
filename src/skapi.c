@@ -1916,13 +1916,20 @@ bool ski_place_slider(const SkSliderSpec *spec) {
   return slider_place(spec);
 }
 
+SkFocusKind sk_focus_kind(void) { return (SkFocusKind)focus_kind(); }
 bool sk_focus_is(const char *name) { return focus_is(name); }
 bool sk_focus_has_entries(void) { return focus_has_entries(); }
 const char *sk_focus_name(void) { return focus_name(); }
-bool sk_focus_move(int dir) { return focus_move(dir); }
-bool sk_focus_activate(void) { return focus_activate(); }
+bool sk_focus_move_next(void) { return focus_move(1); }
+bool sk_focus_move_before(void) { return focus_move(-1); }
+bool sk_focus_move_dir(SkFocusDir dir) {
+  return focus_move_direction((FocusDirection)dir);
+}
+bool sk_activate_focused(void) { return focus_activate(); }
 bool sk_focus_adjust(int dir) { return focus_adjust(dir); }
-void sk_focus_listbox(void) { focus_set_pseudo(FOCUS_KIND_LISTBOX); }
+bool sk_set_focus(SkFocusKind kind) {
+  return focus_set_kind((FocusKind)kind);
+}
 void sk_focus_clear(void) { focus_clear(); }
 
 bool sk_slider_is_hovered(const char *name) { return slider_is_hovered(name); }
