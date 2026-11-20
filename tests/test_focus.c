@@ -155,6 +155,19 @@ TEST(focus_set_kind_selects_first_match) {
   ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_NONE);
 }
 
+TEST(focus_pseudo_editbox_survives_listbox_frame) {
+  focus_clear();
+  focus_frame_begin(true, 0, 0, 100, 100);
+  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_set_pseudo(FOCUS_KIND_EDITBOX);
+  ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_EDITBOX);
+  focus_frame_end();
+  focus_frame_begin(true, 0, 0, 100, 100);
+  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_EDITBOX);
+  ASSERT_TRUE(focus_name() == NULL);
+}
+
 int main(void) {
   RUN(focus_move_cycles_widgets);
   RUN(focus_activate_invokes_callback);
@@ -166,5 +179,6 @@ int main(void) {
   RUN(focus_passive_listbox_selects_ring_entry);
   RUN(focus_move_direction_picks_axis_neighbor);
   RUN(focus_set_kind_selects_first_match);
+  RUN(focus_pseudo_editbox_survives_listbox_frame);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
