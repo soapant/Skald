@@ -131,11 +131,23 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
 void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return;
-  XftFont *xf = FH_TO_XFT(spec.font);
+  FontHandle fh = spec.font;
+  bool need_destroy = false;
+  if (!FH_TO_XFT(fh)) {
+    int px = spec.font_size > 0 ? spec.font_size : FontSize;
+    fh = x11_create_font_on_display(g_draw_dpy, px, UsedFont);
+    if (!FH_TO_XFT(fh))
+      return;
+    need_destroy = true;
+    spec.font = fh;
+  }
+  XftFont *xf = FH_TO_XFT(fh);
   int ascent = xf ? xf->ascent : (spec.font_size * 3 / 4);
   int descent = xf ? xf->descent : (spec.font_size / 4);
   int line_height = ascent + descent;
   draw_text_centered_impl(&spec, line_height);
+  if (need_destroy)
+    Platform_DestroyFont(fh);
 }
 
 int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
