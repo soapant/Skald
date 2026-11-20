@@ -373,7 +373,6 @@ static void populate_build_cache(ListBox *lb, const char **items,
 
 static void populate_update_ui(ListBox *lb, int total_matches,
                                const char *filter) {
-  UI_LB_BeginUpdate();
   UI_LB_SetCount(lb, total_matches);
   bool has_filter = filter && filter[0] != '\0';
   size_t flen = filter ? strlen(filter) : 0;
@@ -397,7 +396,6 @@ static void populate_update_ui(ListBox *lb, int total_matches,
   if (total_matches == 0) {
     Platform_DismissDisplayMessage();
   }
-  UI_LB_EndUpdate();
 }
 
 void populate_listbox(ListBox *lb, const char *filter, const char **items,
@@ -407,6 +405,7 @@ void populate_listbox(ListBox *lb, const char *filter, const char **items,
   if (!lb)
     return;
 
+  UI_LB_BeginUpdate();
   if (!filter)
     filter = "";
   int current_sel;
@@ -432,6 +431,7 @@ void populate_listbox(ListBox *lb, const char *filter, const char **items,
   lb->total_matches = total_matches;
 
   log_info("populate_listbox completed for filter='%s'", filter ? filter : "");
+  UI_LB_EndUpdate();
 }
 
 SlotRect message_slot_to_rect(MessageSlot slot, int prompt_gap) {
