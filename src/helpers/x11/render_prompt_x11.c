@@ -8,6 +8,7 @@
 #include "core/context.h"
 #include "core/prompt_geometry.h"
 #include "core/checkbox.h"
+#include "core/focus.h"
 #include "core/slider.h"
 #include "platform/draw.h"
 #include "deps/log.h"
@@ -142,12 +143,14 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
   if (state->callbacks && state->callbacks->render) {
     checkbox_frame_begin();
     slider_frame_begin();
+    focus_frame_begin(state->lb != NULL);
     x11_set_draw_context(dpy, NULL, NULL, 0);
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
     state->callbacks->render(state);
+    focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   } else {
     bool sep_prev = draw_state_get()->suppress_separators;
@@ -206,11 +209,13 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   if (state->callbacks->render != NULL) {
     checkbox_frame_begin();
     slider_frame_begin();
+    focus_frame_begin(state->lb != NULL);
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
     state->callbacks->render(state);
+    focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   } else {
     bool sep_prev = draw_state_get()->suppress_separators;
