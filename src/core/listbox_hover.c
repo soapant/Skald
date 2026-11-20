@@ -206,7 +206,6 @@ void listbox_scroll_by(ListBox *lb, int rows, int rows_visible) {
       sel = lb->item_count - 1;
     lb->selected_index = sel;
   }
-  UI_RequestPopupRepaint();
 }
 
 void listbox_apply_pending_scroll(ListBox *lb, int rows_visible) {
