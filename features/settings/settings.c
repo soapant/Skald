@@ -153,9 +153,8 @@ static int cfg_field_width(const char *text) {
   static void cfg_##cfg_name##_click(void) {                                   \
     char key[256];                                                             \
     snprintf(key, sizeof(key), "Config.%s", #cfg_name);                        \
-    bool value = false;                                                        \
-    if (sk_config_get_setting_bool(key, &value)) {                             \
-      cfg_name = value;                                                        \
+    if (sk_config_has_setting(key)) {                                          \
+      cfg_name = sk_config_get_setting_bool(key);                              \
       cfg_commit();                                                            \
     }                                                                          \
   }                                                                            \

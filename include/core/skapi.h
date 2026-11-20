@@ -971,8 +971,8 @@ SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
           .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
 bool sk_config_set_setting(const char *key, const char *value);
 char *sk_config_get_setting(const char *key);
-bool sk_config_get_setting_bool(const char *key, bool *out);
-bool sk_config_get_setting_float(const char *key, float *out);
+bool sk_config_get_setting_bool(const char *key);
+float sk_config_get_setting_float(const char *key);
 bool sk_config_has_setting(const char *key);
 int sk_config_setting_count(void);
 const char *sk_config_setting_name_at(int index);

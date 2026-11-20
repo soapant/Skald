@@ -4775,26 +4775,28 @@ char *sk_config_get_setting(const char *key) {
   return out;
 }
 
-bool sk_config_get_setting_bool(const char *key, bool *out) {
-  if (!out || !key)
+bool sk_config_get_setting_bool(const char *key) {
+  if (!key)
     return false;
   sk_config_lock();
   sk_config_init_locked();
   const char *p = setting_lookup_locked(key);
-  bool ok = setting_parse_bool(p, out);
+  bool value = false;
+  setting_parse_bool(p, &value);
   sk_config_unlock();
-  return ok;
+  return value;
 }
 
-bool sk_config_get_setting_float(const char *key, float *out) {
-  if (!out || !key)
-    return false;
+float sk_config_get_setting_float(const char *key) {
+  if (!key)
+    return 0.0f;
   sk_config_lock();
   sk_config_init_locked();
   const char *p = setting_lookup_locked(key);
-  bool ok = setting_parse_float(p, out);
+  float value = 0.0f;
+  setting_parse_float(p, &value);
   sk_config_unlock();
-  return ok;
+  return value;
 }
 
 bool sk_config_has_setting(const char *key) {
