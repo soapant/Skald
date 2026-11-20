@@ -269,8 +269,6 @@ void checkbox_draw(const CheckboxSpec *spec) {
     }
     if (spec->text) {
       int font_size = spec->font_size > 0 ? spec->font_size : FontSize;
-      if (!Platform_FontInitialized(s_font))
-        s_font = Platform_CreateFont(font_size, UsedFont);
       Platform_DrawTextCentered((DrawTextCenteredSpec){
           .x = spec->x,
           .y = spec->y,
@@ -279,7 +277,6 @@ void checkbox_draw(const CheckboxSpec *spec) {
           .text = spec->text,
           .color = spec->text_color ? rgb_to_hex(spec->text_color)
                                     : rgb_to_hex(widget_accent()),
-          .font = s_font,
           .font_size = font_size});
     }
   }
