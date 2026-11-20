@@ -387,7 +387,7 @@ int WindowManager_Run(WindowManager *wm) {
     if (XkbGetAutoRepeatRate(dpy, XkbUseCoreKbd, &x11_saved_delay,
                              &x11_saved_interval)) {
       x11_autorepeat_saved = true;
-      XkbSetAutoRepeatRate(dpy, XkbUseCoreKbd, 300, 33);
+      XkbSetAutoRepeatRate(dpy, XkbUseCoreKbd, HotkeyRepeatDelayMs, 33);
       XSync(dpy, False);
     }
   }
