@@ -1,6 +1,8 @@
 #ifndef PROMPT_H
 #define PROMPT_H
 
+#define LISTBOX_SEPARATOR_MIN_LIST_H 70
+
 #include <stddef.h>
 #include <stdbool.h>
 

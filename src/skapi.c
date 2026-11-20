@@ -1379,6 +1379,7 @@ static __thread ListSpec sk_list_spec;
 static __thread int sk_list_y0, sk_list_itemH, sk_list_visible, sk_list_cur,
     sk_list_h;
 static __thread int sk_list_bx, sk_list_bw, sk_list_fw, sk_list_fh;
+static __thread bool sk_list_separators;
 
 bool ski_draw_text(const SkTextSpec *spec) {
   if (!spec) {
@@ -1933,6 +1934,7 @@ static bool listbox_begin_common(const ListSpec *spec) {
   sk_list_fw = lay.fw;
   sk_list_fh = lay.fh;
   sk_list_h = lay.list_h;
+  sk_list_separators = lay.list_h >= LISTBOX_SEPARATOR_MIN_LIST_H;
   sk_list_visible = lay.visible;
   sk_list_cur = 0;
   UI_LB_SetVisibleCount(lay.visible);
@@ -1954,7 +1956,7 @@ static bool listbox_next_common(SkListItemCtx *out) {
   if (idx < 0 || idx >= sk_list_lb->item_count)
     return false;
   int y = sk_list_y0 + sk_list_cur * sk_list_itemH;
-  if (sk_list_cur == 0)
+  if (sk_list_separators && sk_list_cur == 0)
     draw_prompt_separator(
         (DrawPromptSeparatorSpec){.y = sk_list_y0, .width = sk_list_fw});
   bool sel = (idx == sk_list_lb->selected_index);
@@ -1974,7 +1976,7 @@ static bool listbox_next_common(SkListItemCtx *out) {
 
 void sk_listbox_end(void) {
   listbox_set_row_h_scroll(0);
-  if (prompt_list_bottom_margin() > 0 && sk_list_y0 >= 0) {
+  if (sk_list_separators && prompt_list_bottom_margin() > 0 && sk_list_y0 >= 0) {
     draw_prompt_separator((DrawPromptSeparatorSpec){.y = sk_list_y0 + sk_list_h,
                                                     .width = sk_list_fw});
   }
