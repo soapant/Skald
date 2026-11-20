@@ -147,11 +147,13 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
                       state->height - prompt_list_top() -
                           prompt_list_bottom_margin());
     x11_set_draw_context(dpy, NULL, NULL, 0);
+    bool draw_band = prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    if (state->lb && !state->no_separators)
+    if (draw_band && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
     state->callbacks->render(state);
+    prompt_band_commit_placed();
     focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   } else {
@@ -170,7 +172,6 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   if (!state || !win || *win == None || !dpy) {
     return false;
   }
-  SkaldContext_Get()->window.editbox_placed = false;
   int w = state->width;
   int h = state->height;
   XWindowAttributes attrs;
@@ -214,11 +215,13 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
                       state->height - prompt_list_top() -
                           prompt_list_bottom_margin());
+    bool draw_band = prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    if (state->lb && !state->no_separators)
+    if (draw_band && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
     state->callbacks->render(state);
+    prompt_band_commit_placed();
     focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   } else {

@@ -51,6 +51,7 @@ typedef struct {
   char name[256];
   SkSettingsEntry *entry;
   int index;
+  int option;
 } FocusBlockCtx;
 
 static FocusBlockCtx s_focus_ctx[FOCUS_CTX_MAX];
@@ -67,7 +68,7 @@ static FocusBlockCtx *focus_ctx_find(const char *name) {
 }
 
 static void focus_ctx_remember(const char *name, SkSettingsEntry *entry,
-                               int index) {
+                               int index, int option) {
   if (!name || !name[0])
     return;
   FocusBlockCtx *ctx = focus_ctx_find(name);
@@ -79,6 +80,7 @@ static void focus_ctx_remember(const char *name, SkSettingsEntry *entry,
   }
   ctx->entry = entry;
   ctx->index = index;
+  ctx->option = option;
 }
 
 static void dispatch_widget_click(void);
@@ -1171,8 +1173,11 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   pspec.h = h;
   {
     SkaldContext *ctx = SkaldContext_Get();
-    if (ctx)
+    if (ctx) {
       ctx->window.editbox_placed = false;
+      ctx->window.listbox_placed = false;
+    ctx->window.band_active = false;
+    }
   }
   event_bus_trigger(EVENT_PROMPT_OPEN);
   char *r = prompt_user_run(wm, &pspec);
@@ -1783,6 +1788,7 @@ static bool listbox_begin_common(const ListSpec *spec) {
   listbox_hover_focus(lb, sk_list_y0, sk_list_itemH, lb->view_offset,
                       lay.visible, sk_list_bx, sk_list_bx + sk_list_bw);
   draw_state_get()->listbox_rows = true;
+  SkaldContext_Get()->window.listbox_placed = true;
   return true;
 }
 
@@ -2904,6 +2910,7 @@ typedef struct {
 #define SETTINGS_BLOCK_CHECKBOX 1
 #define SETTINGS_BLOCK_BUTTON 2
 #define SETTINGS_BLOCK_SLIDER 3
+#define SETTINGS_BLOCK_DROPDOWN 4
 
 typedef struct {
   unsigned char type;
@@ -2914,9 +2921,17 @@ typedef struct {
   float min_value;
   float max_value;
   float value;
+  const char **options;
+  int option_count;
+  SkSettingsDropdownOptionsFn get_options;
+  void *options_ud;
+  int selected;
+  bool open;
   void (*on_click)(void);
   void (*on_change)(void);
   void (*on_hover)(void);
+  SkSettingsDropdownSelectFn on_select;
+  void *ud;
 } SkSettingsBlock;
 
 struct SettingsEntry {
@@ -3085,6 +3100,25 @@ static SkSettingsBlock *settings_block_at(SkSettingsEntry *entry, int index) {
   return &e->blocks[index];
 }
 
+static int dropdown_options(const SkSettingsBlock *b,
+                            const char ***out_options) {
+  if (!b) {
+    if (out_options)
+      *out_options = NULL;
+    return 0;
+  }
+  if (b->get_options) {
+    const char **options = NULL;
+    int count = b->get_options(&options, b->options_ud);
+    if (out_options)
+      *out_options = options;
+    return count > 0 ? count : 0;
+  }
+  if (out_options)
+    *out_options = b->options;
+  return b->option_count > 0 ? b->option_count : 0;
+}
+
 static bool settings_block_title_ok(const char *title) {
   return title && title[0];
 }
@@ -3212,6 +3246,55 @@ int ski_settings_entry_add_slider(SkSettingsEntry *entry,
   return idx;
 }
 
+int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
+                                    const SkSettingsDropdownSpec *spec) {
+  if (!spec)
+    return -1;
+  const char **options = spec->options;
+  int count = spec->option_count > 0 ? spec->option_count : 0;
+  if (spec->get_options) {
+    options = NULL;
+    count = spec->get_options(&options, spec->options_ud);
+    if (count < 0)
+      count = 0;
+  }
+  int selected = spec->initial >= 0 ? spec->initial : (count > 0 ? 0 : -1);
+  if (selected >= count)
+    selected = count > 0 ? 0 : -1;
+  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_DROPDOWN,
+                                           spec->title, spec->sub,
+                                           __builtin_return_address(0));
+  SkSettingsBlock *b = settings_block_at(entry, idx);
+  if (!b)
+    return -1;
+  b->options = options;
+  b->option_count = count;
+  b->get_options = spec->get_options;
+  b->options_ud = spec->options_ud;
+  b->selected = selected;
+  b->on_select = spec->on_select;
+  b->on_hover = spec->on_hover;
+  b->ud = spec->ud;
+  {
+    char key[SK_CONFIG_SETTING_KEY_MAX];
+    SkSettingsEntry *e = settings_entry_resolve(entry);
+    if (e) {
+      sk_config_lock();
+      sk_config_init_locked();
+      snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
+      const char *saved = setting_lookup_locked(key);
+      if (saved)
+        for (int i = 0; i < count; i++)
+          if (options && options[i] && strcmp(saved, options[i]) == 0) {
+            b->selected = i;
+            break;
+          }
+      sk_config_unlock();
+    }
+  }
+  return idx;
+}
+
 int sk_settings_entry_count(void) { return settings_entry_count; }
 
 const SettingsEntrySpec *sk_settings_entry_at(int index) {
@@ -3243,6 +3326,7 @@ void settings_registry_purge_owner(const char *path_a, const char *path_b) {
 
 static SkSettingsEntry *s_dispatch_entry = NULL;
 static int s_dispatch_index = -1;
+static int s_dispatch_option = -1;
 
 static SkSettingsBlock *dispatch_block(void) {
   if (!s_dispatch_entry || s_dispatch_index < 0)
@@ -3262,6 +3346,29 @@ static void dispatch_widget_click(void) {
   SkSettingsBlock *b = dispatch_block();
   if (!b)
     return;
+  if (b->type == SETTINGS_BLOCK_DROPDOWN) {
+    if (s_dispatch_option < 0) {
+      bool open = !b->open;
+      for (int i = 0; i < e->block_count; i++)
+        if (e->blocks[i].type == SETTINGS_BLOCK_DROPDOWN)
+          e->blocks[i].open = false;
+      b->open = open;
+      return;
+    }
+    const char **options = NULL;
+    int count = dropdown_options(b, &options);
+    if (s_dispatch_option >= count)
+      return;
+    b->selected = s_dispatch_option;
+    b->open = false;
+    const char *option =
+        options && options[b->selected] ? options[b->selected] : NULL;
+    if (option)
+      persist_block_value(e, b, option);
+    if (b->on_select)
+      b->on_select(option, b->selected, b->ud);
+    return;
+  }
   if (b->type == SETTINGS_BLOCK_CHECKBOX) {
     bool checked = checkbox_is_checked(b->title, PLACE_CHECKBOX);
     persist_block_value(e, b, checked ? "true" : "false");
@@ -3279,11 +3386,14 @@ static void dispatch_focus_click(void) {
   }
   SkSettingsEntry *saved_entry = s_dispatch_entry;
   int saved_index = s_dispatch_index;
+  int saved_option = s_dispatch_option;
   s_dispatch_entry = ctx->entry;
   s_dispatch_index = ctx->index;
+  s_dispatch_option = ctx->option;
   dispatch_widget_click();
   s_dispatch_entry = saved_entry;
   s_dispatch_index = saved_index;
+  s_dispatch_option = saved_option;
 }
 
 static void dispatch_focus_change(float value) {
@@ -3333,6 +3443,12 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
   if (pane_w < 240)
     pane_w = 240;
   int cursor = 220;
+  SkSettingsBlock *open_block = NULL;
+  SkSettingsEntry *open_entry = NULL;
+  int open_index = -1;
+  int open_x = 0, open_trigger_y = 0, open_w = 0;
+  const char **open_options = NULL;
+  int open_count = 0;
 
   sk_draw_rect(.x = -7, .y = -10, .w = pane_w + 24, .h = 220,
                .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.42f),
@@ -3354,7 +3470,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
       break;
     s_dispatch_entry = entry;
     s_dispatch_index = i;
-    focus_ctx_remember(b->title, entry, i);
+    focus_ctx_remember(b->title, entry, i, -1);
     int x = 10, y = cursor, w = pane_w - 20;
     sk_draw_rect(.x = x, .y = y, .w = w, .h = 60, .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
                  .filled = true, .radius = 6);
@@ -3390,11 +3506,88 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
                       .max_value = b->max_value, .step = step,
                       .value = b->value, .on_change = dispatch_slider_change,
                       .on_hover = dispatch_widget_hover);
+    } else if (b->type == SETTINGS_BLOCK_DROPDOWN) {
+      const char **options = NULL;
+      int count = dropdown_options(b, &options);
+      if (b->selected >= count)
+        b->selected = count > 0 ? 0 : -1;
+      const char *label = "Select...";
+      if (b->selected >= 0 && options && options[b->selected])
+        label = options[b->selected];
+      int bw = sk_get_text_width(label, FontSize) + 34;
+      if (bw < 96)
+        bw = 96;
+      if (bw > w)
+        bw = w;
+      sk_place_button(.name = b->title, .x = right - bw, .y = y + 16,
+                      .w = bw, .h = 28, .text = label,
+                      .on_click = dispatch_widget_click,
+                      .on_hover = dispatch_widget_hover);
+      if (b->open && count > 0) {
+        open_block = b;
+        open_entry = entry;
+        open_index = i;
+        open_options = options;
+        open_count = count;
+        open_x = right - bw;
+        open_trigger_y = y + 16;
+        open_w = bw;
+      }
     }
     cursor += 70;
   }
+
+  if (open_block && open_w > 0) {
+    const int opt_h = 28, gap = 2;
+    int bottom = PromptH - draw_state_get()->off_y - 4;
+    int below = bottom - (open_trigger_y + 28 + 4);
+    int above = open_trigger_y - 4;
+    int need = open_count * (opt_h + gap) + 6;
+    bool up = false;
+    int visible = open_count;
+    if (need > below && need <= above)
+      up = true;
+    if (up) {
+      if (need > above)
+        visible = above / (opt_h + gap);
+    } else if (need > below) {
+      visible = below / (opt_h + gap);
+    }
+    if (visible > open_count)
+      visible = open_count;
+    if (visible > 0) {
+      int panel_h = visible * (opt_h + gap) + 4;
+      int panel_y = up ? open_trigger_y - panel_h - 4
+                       : open_trigger_y + 28 + 4;
+      sk_draw_rect(.x = open_x - 3, .y = panel_y, .w = open_w + 6, .h = panel_h,
+                   .color = color_lerp(COLOR_BG, SK_BLACK, 0.22f),
+                   .filled = true, .radius = 6);
+      for (int i = 0; i < visible; i++) {
+        const char *text =
+            (open_options && open_options[i]) ? open_options[i] : "";
+        char opt_name[256];
+        snprintf(opt_name, sizeof(opt_name), "%s##%d", open_block->title, i);
+        if (i == open_block->selected)
+          sk_draw_rect(.x = open_x + 4, .y = panel_y + 2 + i * (opt_h + gap),
+                       .w = open_w - 8, .h = opt_h,
+                       .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.10f),
+                       .filled = true, .radius = 4);
+        s_dispatch_entry = open_entry;
+        s_dispatch_index = open_index;
+        s_dispatch_option = i;
+        focus_ctx_remember(opt_name, open_entry, open_index, i);
+        sk_place_button(.name = opt_name, .x = open_x + 4,
+                        .y = panel_y + 2 + i * (opt_h + gap),
+                        .w = open_w - 8, .h = opt_h, .text = text,
+                        .on_click = dispatch_widget_click,
+                        .on_hover = dispatch_widget_hover);
+      }
+    }
+  }
+
   s_dispatch_entry = NULL;
   s_dispatch_index = -1;
+  s_dispatch_option = -1;
 }
 
 int sk_cc_entry_count(void) { return cc_entry_count; }

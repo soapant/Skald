@@ -93,6 +93,19 @@ void draw_prompt_band(int y, int bottom_y, int width) {
                                          .filled = true});
 }
 
+bool prompt_band_take_placed(void) {
+  SkaldContext *ctx = SkaldContext_Get();
+  ctx->window.editbox_placed = false;
+  ctx->window.listbox_placed = false;
+  return ctx->window.band_active;
+}
+
+void prompt_band_commit_placed(void) {
+  SkaldContext *ctx = SkaldContext_Get();
+  ctx->window.band_active =
+      ctx->window.editbox_placed && ctx->window.listbox_placed;
+}
+
 static bool fuzzy_match(const char *text, const char *pattern) {
   if (!pattern || !pattern[0])
     return true;

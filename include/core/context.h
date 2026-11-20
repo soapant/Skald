@@ -18,6 +18,8 @@ typedef struct {
   WindowHandle hPopupWnd;
   bool selection_complete;
   bool editbox_placed;
+  bool listbox_placed;
+  bool band_active;
   char output_buffer[1024];
   char *current_feature;
   const char *title;

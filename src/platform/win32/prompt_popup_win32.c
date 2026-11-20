@@ -136,11 +136,13 @@ void Platform_PromptPopupRender(Popup *self) {
   if (!state)
     return;
   if (state->callbacks->render) {
+    bool draw_band = prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    if (state->lb && !state->no_separators)
+    if (draw_band && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
     state->callbacks->render(state);
+    prompt_band_commit_placed();
     draw_state_get()->suppress_separators = sep_prev;
   }
 }

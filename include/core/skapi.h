@@ -873,6 +873,24 @@ typedef struct {
   void (*on_hover)(void);
 } SkSettingsSliderSpec;
 
+typedef int (*SkSettingsDropdownOptionsFn)(const char ***out_options,
+                                            void *ud);
+typedef void (*SkSettingsDropdownSelectFn)(const char *option, int index,
+                                           void *ud);
+
+typedef struct {
+  const char *title;
+  const char *sub;
+  const char **options;
+  int option_count;
+  SkSettingsDropdownOptionsFn get_options;
+  void *options_ud;
+  int initial;
+  SkSettingsDropdownSelectFn on_select;
+  void (*on_hover)(void);
+  void *ud;
+} SkSettingsDropdownSpec;
+
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
 #define sk_settings_entry_add_checkbox(entry, ...)                             \
   ski_settings_entry_add_checkbox(entry,                                       \
@@ -883,6 +901,9 @@ SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
 #define sk_settings_entry_add_slider(entry, ...)                              \
   ski_settings_entry_add_slider(entry,                                        \
                                 &(SkSettingsSliderSpec){__VA_ARGS__})
+#define sk_settings_entry_add_dropdown(entry, ...)                            \
+  ski_settings_entry_add_dropdown(entry,                                      \
+                                  &(SkSettingsDropdownSpec){__VA_ARGS__})
 bool sk_config_set_setting(const char *key, const char *value);
 char *sk_config_get_setting(const char *key);
 bool sk_config_get_setting_bool(const char *key, bool *out);
@@ -898,6 +919,8 @@ int ski_settings_entry_add_button(SkSettingsEntry *entry,
                                   const SkSettingsButtonSpec *spec);
 int ski_settings_entry_add_slider(SkSettingsEntry *entry,
                                   const SkSettingsSliderSpec *spec);
+int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
+                                    const SkSettingsDropdownSpec *spec);
 
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 
