@@ -4,6 +4,7 @@
 
 #include "core/context.h"
 #include "core/focus.h"
+#include "core/prompt_geometry.h"
 #include "core/types/prompt.h"
 #include "core/types/keys.h"
 #include "core/window_manager.h"
@@ -85,7 +86,10 @@ static void prompt_popup_on_show(Popup *self) {
   data->state->no_bg = data->spec.no_bg;
   data->state->bg_color = data->spec.bg_color;
   data->state->password_mode = data->spec.password_mode;
-  data->state->no_separators = data->spec.no_separators;
+  int list_h = data->h - prompt_list_top() - prompt_list_bottom_margin();
+  data->state->no_separators =
+      data->spec.no_separators || data->spec.auto_scale ||
+      list_h < LISTBOX_SEPARATOR_MIN_LIST_H;
   if (data->state->lb)
     data->state->lb->selected_index = -1;
   self->user_data = data->state;
