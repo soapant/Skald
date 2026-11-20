@@ -474,6 +474,9 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
     visible = 1;
   if (visible > lb->item_count)
     visible = lb->item_count;
+  if (visible <= 1 && lb->selected_index >= 0 &&
+      lb->selected_index < lb->item_count)
+    lb->view_offset = lb->selected_index;
   UI_LB_SetVisibleCount(visible);
 
   listbox_apply_pending_scroll(lb, visible);

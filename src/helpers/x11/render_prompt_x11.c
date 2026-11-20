@@ -160,12 +160,16 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
     focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   } else {
+    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
+                      state->height - prompt_list_top() -
+                          prompt_list_bottom_margin());
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb)
       x11_draw_prompt_user_listbox(dpy, win, state);
     x11_draw_prompt_user_edit_control(dpy, win, state);
     draw_state_get()->suppress_separators = sep_prev;
+    focus_frame_end();
   }
   XFlush(dpy);
   return true;
@@ -230,6 +234,9 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   } else {
+    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
+                      state->height - prompt_list_top() -
+                          prompt_list_bottom_margin());
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb) {
@@ -237,6 +244,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     }
     x11_draw_prompt_user_edit_control_on_draw(dpy, xdDbl, vis, cmap, state);
     draw_state_get()->suppress_separators = sep_prev;
+    focus_frame_end();
   }
   x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();

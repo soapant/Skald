@@ -642,6 +642,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     } else {
       PromptState *estate = win32_prompt_state_from_hwnd(hwnd);
       if (estate) {
+        focus_frame_begin(estate->lb != NULL, 0, prompt_list_top(),
+                          estate->width,
+                          estate->height - prompt_list_top() -
+                              prompt_list_bottom_margin());
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = estate->no_separators;
         win32_set_draw_context(paintDC);
@@ -666,6 +670,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           int visible_count =
               (rect.bottom - prompt_list_bottom_margin() - list_top) /
               row_height;
+          if (visible_count <= 1 && estate->lb->selected_index >= 0 &&
+              estate->lb->selected_index < count)
+            estate->lb->view_offset = estate->lb->selected_index;
           listbox_apply_pending_scroll(estate->lb, visible_count);
           int view_offset = estate->lb->view_offset;
 
@@ -708,6 +715,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
               .width = rect.right - rect.left});
         }
         draw_state_get()->suppress_separators = sep_prev;
+        focus_frame_end();
         win32_set_draw_context(NULL);
       }
     }
