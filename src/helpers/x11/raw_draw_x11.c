@@ -459,6 +459,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
 
   if (!state || !state->lb)
     return;
+  SkaldContext_Get()->window.listbox_placed = true;
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   ListBox *lb = state->lb;
 

@@ -127,6 +127,8 @@ static void prompt_popup_on_show(Popup *self) {
   ctx2->window.current_feature = (char *)title;
   ctx2->window.title = title;
   ctx2->window.editbox_placed = true;
+  ctx2->window.listbox_placed = false;
+  ctx2->window.band_active = false;
   if (data->spec.refresh)
     data->spec.refresh(data->state);
 }
