@@ -80,11 +80,6 @@ typedef struct {
 } DrawTextLineSpec;
 
 typedef struct {
-  int idx, count;
-  unsigned long *num_color, *body_color, *plain_color;
-} GetItemColorsSpec;
-
-typedef struct {
   int y, width;
 } DrawPromptSeparatorSpec;
 
