@@ -40,9 +40,9 @@ static bool widget_focus(void) {
          kind == FOCUS_KIND_SLIDER || kind == FOCUS_KIND_CUSTOM;
 }
 
-static bool editbox_focused(void) {
-  FocusKind kind = focus_kind();
-  return kind == FOCUS_KIND_EDITBOX || kind == FOCUS_KIND_NONE;
+static bool editbox_focused(const PromptState *state) {
+  return focus_kind() == FOCUS_KIND_EDITBOX ||
+         (state && state->editbox_count == 0);
 }
 
 static bool selection(const PromptState *state, int *out_ss,
@@ -249,33 +249,12 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     goto done;
   }
   if (vk == VK_RIGHT) {
-    if (!editbox_focused()) {
+    if (!editbox_focused(state)) {
       log_info("keys: right -> focus ring");
       focus_move(1);
       prompt_refresh(state);
       handled = true;
       goto done;
-    }
-    if (state->lb && state->lb->item_count > 0 &&
-        state->lb->selected_index >= 0) {
-      int idx = state->lb->selected_index;
-      const char *text = listbox_info_row(state->lb, idx);
-      if (text && text[0]) {
-        int tw = Platform_MeasureTextWidth((MeasureTextWidthSpec){
-            .text = text, .len = (int)strlen(text), .font_size = FontSize});
-        int avail = state->width > 2 * PROMPT_ITEM_TEXT_X
-                        ? state->width - 2 * PROMPT_ITEM_TEXT_X
-                        : state->width;
-        int max_scroll = tw > avail ? tw - avail : 0;
-        if (max_scroll > 0) {
-          state->lb->text_hscroll += 24;
-          if (state->lb->text_hscroll > max_scroll)
-            state->lb->text_hscroll = max_scroll;
-          prompt_refresh(state);
-          handled = true;
-          goto done;
-        }
-      }
     }
     edit_state_end_selection();
     cursor_forward(&state->eb->cursor, strlen(state->eb->filter));
@@ -283,17 +262,9 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     goto done;
   }
   if (vk == VK_LEFT) {
-    if (!editbox_focused()) {
+    if (!editbox_focused(state)) {
       log_info("keys: left -> focus ring");
       focus_move(-1);
-      prompt_refresh(state);
-      handled = true;
-      goto done;
-    }
-    if (state->lb && state->lb->item_count > 0 && state->lb->text_hscroll > 0) {
-      state->lb->text_hscroll -= 24;
-      if (state->lb->text_hscroll < 0)
-        state->lb->text_hscroll = 0;
       prompt_refresh(state);
       handled = true;
       goto done;
