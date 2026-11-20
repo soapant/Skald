@@ -398,7 +398,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                                              .font_size = spec->font_size});
     } else if (spec->placeholder && spec->placeholder[0]) {
       unsigned long ph =
-          color_lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(RGB(0,0,0)), 0.45f);
+          color_lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(RGB(0, 0, 0)), 0.45f);
       Platform_DrawTextRaw(
           (DrawTextRawSpec){.x = layout->draw_x,
                             .y = spec->text_y + spec->placeholder_dy,
