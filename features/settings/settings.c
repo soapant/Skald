@@ -112,12 +112,22 @@ SKALD_FEATURE_INIT {
   sk_add_feature(.display_name = "Settings", .on_action = trigger_settings,
                  .icon = "/settings.png");
 
+  static char ql_name[128];
+  static char ql_url[512];
+  SkSettingsEditboxField fields[] = {
+      {.name = "name", .label = "Name:", .buffer = ql_name,
+       .buffer_size = sizeof(ql_name),.width=100},
+      {.name = "url", .label = "Url:", .buffer = ql_url,
+       .buffer_size = sizeof(ql_url),.width=280},
+  };
+
   SkSettingsEntry *ql =
       sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
                             .desc = "Add Quicklinks for your most commonly "
                                     "opened websites.");
-  sk_settings_entry_add_checkbox(ql, .title = "Add Quicklink",
-                                 .sub = "Add a quicklink to appear in cc");
+  sk_settings_entry_add_editbox(
+      ql, .title = "Add Quicklink", .sub = "Add a quicklink to appear in cc",
+      .fields = fields, .field_count = 2,.x_offset=0);
 
   sk_add_settings_entry(.name = "Config", .icon = "/settings.png",
                         .desc = "Coming soon.");

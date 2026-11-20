@@ -34,6 +34,20 @@ void prompt_refresh(PromptState *state) {
   }
 }
 
+static bool prompt_primary_editbox_active(PromptState *state) {
+  if (!state || state->editbox_count == 0)
+    return true;
+  if (state->active_editbox < 0 || state->active_editbox >= state->editbox_count)
+    return false;
+  return state->editboxes[state->active_editbox].primary;
+}
+
+static void prompt_refresh_typing(PromptState *state) {
+  if (!prompt_primary_editbox_active(state))
+    return;
+  prompt_refresh(state);
+}
+
 static bool widget_focus(void) {
   FocusKind kind = focus_kind();
   return kind == FOCUS_KIND_BUTTON || kind == FOCUS_KIND_CHECKBOX ||
@@ -93,7 +107,7 @@ void prompt_insert_text(PromptState *state, const char *text, int len) {
                           text, (size_t)len);
   state->eb->cursor = (int)fcur;
   listbox_focus_by_mouse();
-  prompt_refresh(state);
+  prompt_refresh_typing(state);
 }
 
 typedef bool (*PromptEnterFn)(PromptState *state);
@@ -195,7 +209,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     edit_state_begin_selection(0);
     edit_state_update_selection(len);
     state->eb->cursor = len;
-    prompt_refresh(state);
+    prompt_refresh_typing(state);
     handled = true;
     goto done;
   }
@@ -217,7 +231,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   }
   if (vk == VK_BACK) {
     if (prompt_delete_selection(state)) {
-      prompt_refresh(state);
+      prompt_refresh_typing(state);
       handled = true;
       goto done;
     }
@@ -232,7 +246,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       state->eb->cursor = (int)fcur;
     }
     listbox_focus_by_mouse();
-    prompt_refresh(state);
+    prompt_refresh_typing(state);
     handled = true;
     goto done;
   }
@@ -395,7 +409,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     handled = true;
     goto done;
   }
-  if ((shift || ctrl) && vk == COPY_SELECTION_KEY) {
+  if ((ctrl) && vk == COPY_SELECTION_KEY) {
     Platform_CopyToClipboard(ctx->window.output_buffer);
     handled = true;
     goto done;
@@ -438,7 +452,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       state->eb->cursor += (int)clip_len;
     }
     free(clip);
-    prompt_refresh(state);
+    prompt_refresh_typing(state);
     handled = true;
     goto done;
   }

@@ -10,7 +10,7 @@
 #define CC_COMMON_FLAGS                                                        \
   "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
       "-Wextra", "-Wshadow", "-Wmissing-prototypes", "-Wstrict-prototypes",    \
-      "-Wformat=2", "-Wundef", "-Wvla"
+      "-Wformat=2", "-Wundef", "-Wvla", "-Wno-override-init"
 
 #if defined(_WIN32)
 #define CC_FLAGS CC_COMMON_FLAGS
@@ -40,7 +40,8 @@
 #define WIN_CC_FLAGS                                                           \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
       "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-MMD", "-MP",     \
-      "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter"
+      "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter",        \
+      "-Wno-override-init"
 
 #define WIN_LINK_FLAGS                                                         \
   "-static", "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32",   \

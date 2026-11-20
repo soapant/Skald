@@ -1580,16 +1580,39 @@ bool ski_place_editbox(const SkEditSpec *spec) {
   }
   SkaldContext_Get()->window.editbox_placed = true;
   SkEditSpec copy = *spec;
+  copy.hide_caret = false;
   PromptState *state = prompt_popup_get_top_prompt_state();
-  if (state && spec->name && spec->name[0]) {
-    int idx = editbox_registry_place(state, spec->name, spec->buffer,
-                                     spec->buffer_size, spec->x, spec->y,
-                                     spec->w, spec->h);
+  const char *name = spec->name;
+  char *buffer = spec->buffer;
+  size_t buffer_size = spec->buffer_size;
+  bool primary = spec->primary || !name || !name[0];
+  if (state && primary && !buffer && state->default_eb) {
+    buffer = state->default_eb->filter;
+    buffer_size = sizeof(state->default_eb->filter);
+  }
+  if (state && (!name || !name[0]))
+    name = PROMPT_PRIMARY_EDITBOX_NAME;
+  if (state && name && name[0]) {
+    int dx = 0, dy = 0;
+    get_draw_offset(&dx, &dy);
+    int idx = editbox_registry_place(state, name, buffer, buffer_size,
+                                     spec->x + dx, spec->y + dy, spec->w,
+                                     spec->h);
     if (idx >= 0) {
       PromptEditbox *entry = &state->editboxes[idx];
       if (state->active_editbox < 0)
         state->active_editbox = idx;
+      entry->primary = primary;
+      if (primary && (!copy.placeholder || !copy.placeholder[0])) {
+        const char *ph = state->default_eb->placeholder;
+        if (!entry->eb.placeholder || !ph ||
+            strcmp(entry->eb.placeholder, ph) != 0) {
+          free(entry->eb.placeholder);
+          entry->eb.placeholder = ph ? strdup(ph) : NULL;
+        }
+      }
       copy.buffer = entry->eb.filter;
+      copy.hide_caret = state->active_editbox != idx;
       if (state->active_editbox == idx) {
         state->eb = &entry->eb;
       } else {
@@ -2980,6 +3003,20 @@ typedef struct {
 #define SETTINGS_BLOCK_BUTTON 2
 #define SETTINGS_BLOCK_SLIDER 3
 #define SETTINGS_BLOCK_DROPDOWN 4
+#define SETTINGS_BLOCK_EDITBOX 5
+
+#define SETTINGS_EDITBOX_MAX_FIELDS 8
+#define SETTINGS_EDITBOX_KEY_MAX 192
+
+typedef struct {
+  char name[64];
+  char label[128];
+  char key[SETTINGS_EDITBOX_KEY_MAX];
+  char *buffer;
+  size_t buffer_size;
+  int width;
+  char last_value[512];
+} SkSettingsEditboxFieldBlock;
 
 typedef struct {
   unsigned char type;
@@ -2998,6 +3035,10 @@ typedef struct {
   void (*on_hover)(void);
   SkSettingsDropdownSelectFn on_select;
   void *ud;
+  SkSettingsEditboxFieldBlock fields[SETTINGS_EDITBOX_MAX_FIELDS];
+  int field_count;
+  int x_offset;
+  SkSettingsEditboxChangeFn on_edit_change;
 } SkSettingsBlock;
 
 struct SettingsEntry {
@@ -3352,6 +3393,112 @@ int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
   return idx;
 }
 
+static SkSettingsBlock *settings_editbox_group_block(
+    SkSettingsEditboxGroup group) {
+  if (group.entry < 0 || group.entry >= settings_entry_count ||
+      group.block < 0)
+    return NULL;
+  SkSettingsEntry *e = &settings_entries[group.entry];
+  SkSettingsBlock *b = settings_block_at(e, group.block);
+  if (!b || b->type != SETTINGS_BLOCK_EDITBOX)
+    return NULL;
+  return b;
+}
+
+static SkSettingsEditboxFieldBlock *
+settings_editbox_field_find(SkSettingsBlock *b, const char *name) {
+  if (!b || b->type != SETTINGS_BLOCK_EDITBOX || !name || !name[0])
+    return NULL;
+  for (int i = 0; i < b->field_count; i++)
+    if (strcmp(b->fields[i].name, name) == 0)
+      return &b->fields[i];
+  return NULL;
+}
+
+static void settings_editbox_field_copy(char *dst, size_t dst_cap,
+                                        const char *src, size_t src_cap) {
+  size_t n = 0;
+  if (src && src_cap > 0) {
+    n = strnlen(src, src_cap - 1);
+    memcpy(dst, src, n);
+  }
+  if (n >= dst_cap)
+    n = dst_cap - 1;
+  dst[n] = '\0';
+}
+
+SkSettingsEditboxGroup
+ski_settings_entry_add_editbox(SkSettingsEntry *entry,
+                               const SkSettingsEditboxSpec *spec) {
+  SkSettingsEditboxGroup invalid = SK_SETTINGS_EDITBOX_INVALID;
+  if (!spec || !spec->fields || spec->field_count < 1 ||
+      spec->field_count > SETTINGS_EDITBOX_MAX_FIELDS)
+    return invalid;
+  for (int i = 0; i < spec->field_count; i++) {
+    if (!spec->fields[i].name || !spec->fields[i].name[0] ||
+        !spec->fields[i].buffer || spec->fields[i].buffer_size < 2)
+      return invalid;
+  }
+  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_EDITBOX,
+                                           spec->title ? spec->title : "Editbox",
+                                           spec->sub,
+                                           __builtin_return_address(0));
+  if (idx < 0)
+    return invalid;
+  SkSettingsEntry *e = settings_entry_resolve(entry);
+  if (!e)
+    return invalid;
+  SkSettingsBlock *b = settings_block_at(e, idx);
+  if (!b)
+    return invalid;
+  b->field_count = spec->field_count;
+  b->x_offset = spec->x_offset;
+  b->on_edit_change = spec->on_change;
+  for (int i = 0; i < spec->field_count; i++) {
+    const SkSettingsEditboxField *src = &spec->fields[i];
+    SkSettingsEditboxFieldBlock *dst = &b->fields[i];
+    snprintf(dst->name, sizeof(dst->name), "%s", src->name);
+    snprintf(dst->label, sizeof(dst->label), "%s",
+             src->label ? src->label : src->name);
+    snprintf(dst->key, sizeof(dst->key), "%s/%s",
+             e->owner[0] ? e->owner : e->name, src->name);
+    dst->buffer = src->buffer;
+    dst->buffer_size = src->buffer_size;
+    dst->width = src->width > 0 ? src->width : 60;
+    settings_editbox_field_copy(dst->last_value, sizeof(dst->last_value),
+                                dst->buffer, dst->buffer_size);
+  }
+  SkSettingsEditboxGroup group = {(int)(e - settings_entries), idx};
+  return group;
+}
+
+const char *sk_settings_editbox_get(SkSettingsEditboxGroup group,
+                                    const char *name) {
+  SkSettingsBlock *b = settings_editbox_group_block(group);
+  SkSettingsEditboxFieldBlock *f = settings_editbox_field_find(b, name);
+  if (!f)
+    return NULL;
+  const char *live = sk_editbox_text(f->key);
+  return live ? live : f->buffer;
+}
+
+bool sk_settings_editbox_set(SkSettingsEditboxGroup group, const char *name,
+                             const char *value) {
+  if (!value)
+    return false;
+  SkSettingsBlock *b = settings_editbox_group_block(group);
+  SkSettingsEditboxFieldBlock *f = settings_editbox_field_find(b, name);
+  if (!f)
+    return false;
+  if (sk_editbox_set_text(f->key, value))
+    settings_editbox_field_copy(f->last_value, sizeof(f->last_value), value,
+                                strlen(value) + 1);
+  safe_copy(f->buffer, f->buffer_size, value);
+  settings_editbox_field_copy(f->last_value, sizeof(f->last_value), f->buffer,
+                              f->buffer_size);
+  return true;
+}
+
 int sk_settings_entry_count(void) { return settings_entry_count; }
 
 const SettingsEntrySpec *sk_settings_entry_at(int index) {
@@ -3564,6 +3711,35 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
                       .max_value = b->max_value, .step = step,
                       .value = b->value, .on_change = dispatch_slider_change,
                       .on_hover = dispatch_widget_hover);
+    } else if (b->type == SETTINGS_BLOCK_EDITBOX) {
+      int ex = x + 360 + b->x_offset;
+      const int gap = 30;
+      for (int fi = 0; fi < b->field_count; fi++) {
+        SkSettingsEditboxFieldBlock *f = &b->fields[fi];
+        int field_w = f->width;
+        if (ex + field_w > right)
+          field_w = right - ex;
+        if (field_w < 32)
+          field_w = 32;
+        sk_draw_rect(.x = ex - 3, .y = y + 13, .w = field_w + 6, .h = 34,
+                     .color = color_lerp(COLOR_BG, SK_BLACK, 0.28f),
+                     .filled = true, .radius = 6);
+        sk_place_editbox(.name = f->key, .x = ex, .y = y + 16, .w = field_w,
+                         .h = 28, .buffer = f->buffer,
+                         .buffer_size = f->buffer_size,
+                         .placeholder = f->label);
+        ex += field_w + gap;
+        const char *current = sk_editbox_text(f->key);
+        if (!current)
+          current = f->buffer;
+        if (strcmp(current, f->last_value) != 0) {
+          safe_copy(f->buffer, f->buffer_size, current);
+          settings_editbox_field_copy(f->last_value, sizeof(f->last_value),
+                                      current, strlen(current) + 1);
+          if (b->on_edit_change)
+            b->on_edit_change(f->name, current);
+        }
+      }
     } else if (b->type == SETTINGS_BLOCK_DROPDOWN) {
       const char **options = NULL;
       int count = dropdown_options(b, &options);

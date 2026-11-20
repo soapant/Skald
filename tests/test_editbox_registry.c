@@ -34,7 +34,34 @@ TEST(editbox_registry_routes_active_box) {
   ASSERT_TRUE(state.eb == &legacy);
 }
 
+TEST(editbox_registry_syncs_all_boxes) {
+  PromptState state;
+  memset(&state, 0, sizeof(state));
+  EditBox legacy;
+  memset(&legacy, 0, sizeof(legacy));
+  state.default_eb = &legacy;
+  state.eb = &legacy;
+  state.active_editbox = -1;
+
+  char first[16] = "a";
+  char second[16] = "b";
+  int first_idx =
+      editbox_registry_place(&state, "first", first, sizeof(first), 0, 0, 10, 10);
+  int second_idx = editbox_registry_place(&state, "second", second,
+                                          sizeof(second), 20, 0, 10, 10);
+  ASSERT_TRUE(first_idx >= 0);
+  ASSERT_TRUE(second_idx >= 0);
+
+  strcpy(state.editboxes[first_idx].eb.filter, "aa");
+  strcpy(state.editboxes[second_idx].eb.filter, "bb");
+  state.active_editbox = second_idx;
+  editbox_registry_sync(&state);
+  ASSERT_EQ_STR(first, "aa");
+  ASSERT_EQ_STR(second, "bb");
+}
+
 int main(void) {
   RUN(editbox_registry_routes_active_box);
+  RUN(editbox_registry_syncs_all_boxes);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
