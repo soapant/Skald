@@ -460,6 +460,15 @@ float sk_slider_fraction(const char *name);
 int sk_slider_percent(const char *name);
 bool sk_slider_set_value(const char *name, float value);
 
+bool sk_focus_is(const char *name);
+bool sk_focus_has_entries(void);
+const char *sk_focus_name(void);
+bool sk_focus_move(int dir);
+bool sk_focus_activate(void);
+bool sk_focus_adjust(int dir);
+void sk_focus_listbox(void);
+void sk_focus_clear(void);
+
 #define sk_checkbox_hovered sk_checkbox_is_hovered
 #define sk_checkbox_clicked sk_checkbox_is_clicked
 #define sk_slider_hovered sk_slider_is_hovered

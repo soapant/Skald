@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "deps/log.h"
+#include "core/focus.h"
 #include "core/types/color.h"
 #include "core/types/window.h"
 #include "core/window_manager.h"
@@ -36,6 +37,12 @@ static struct {
 } cb_mouse;
 
 void checkbox_frame_begin(void) { cb_mouse.valid = false; }
+
+static void checkbox_focus_activate(void *owner) {
+  CheckboxSpec *cb = (CheckboxSpec *)owner;
+  if (cb && cb->on_click)
+    cb->on_click();
+}
 
 static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
 
@@ -174,7 +181,25 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
 
 FontHandle s_font;
 
+static void checkbox_focus_outline(const CheckboxSpec *spec) {
+  if (!spec || !spec->focused)
+    return;
+  int w = spec->w > 0 ? spec->w : (spec->button ? 100 : 16);
+  int h = spec->h > 0 ? spec->h : (spec->button ? 24 : 16);
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = spec->x - 3,
+                                         .y = spec->y - 3,
+                                         .w = w + 6,
+                                         .h = h + 6,
+                                         .color = rgb_to_hex(widget_accent()),
+                                         .radius = 6,
+                                         .rounded = true,
+                                         .opaque = true,
+                                         .thickness = 2,
+                                         .filled = false});
+}
+
 void checkbox_draw(const CheckboxSpec *spec) {
+  bool active = spec->hovered || spec->focused;
   if (spec->render) {
     PlaceState st;
     memset(&st, 0, sizeof(st));
@@ -184,22 +209,23 @@ void checkbox_draw(const CheckboxSpec *spec) {
     st.rect.h = spec->h > 0 ? spec->h : (spec->button ? 24 : 16);
     st.name = spec->name;
     st.kind = spec->button ? PLACE_BUTTON : PLACE_CHECKBOX;
-    st.hovered = spec->hovered;
+    st.hovered = active;
     st.checked = spec->checked;
     st.clicked = spec->clicked;
     spec->render(st);
+    checkbox_focus_outline(spec);
     return;
   }
-  unsigned long def_cb_border = spec->hovered ? widget_accent() : widget_neutral();
+  unsigned long def_cb_border = active ? widget_accent() : widget_neutral();
   unsigned long def_btn_border =
-      (spec->clicked || spec->hovered) ? widget_accent() : widget_neutral();
+      (spec->clicked || active) ? widget_accent() : widget_neutral();
 
   unsigned long def_cb_body =
-      spec->hovered ? widget_neutral()
-                    : (spec->bg_color ? spec->bg_color : COLOR_BG);
-  unsigned long def_btn_body = (spec->clicked || spec->hovered) ? widget_neutral()
-                               : spec->bg_color                 ? spec->bg_color
-                                                                : COLOR_BG;
+      active ? widget_neutral()
+             : (spec->bg_color ? spec->bg_color : COLOR_BG);
+  unsigned long def_btn_body = (spec->clicked || active) ? widget_neutral()
+                               : spec->bg_color          ? spec->bg_color
+                                                         : COLOR_BG;
 
   unsigned long checkbox_border =
       spec->hovered_color ? spec->hovered_color : def_cb_border;
@@ -254,6 +280,7 @@ void checkbox_draw(const CheckboxSpec *spec) {
           .font_size = font_size});
     }
   }
+  checkbox_focus_outline(spec);
 }
 
 bool checkbox_place(const CheckboxSpec *spec) {
@@ -294,6 +321,11 @@ bool checkbox_place(const CheckboxSpec *spec) {
   cb->text_color = spec->text_color;
   cb->render = spec->render;
 
+  focus_register(spec->name,
+                 spec->button ? FOCUS_KIND_BUTTON : FOCUS_KIND_CHECKBOX, x, y,
+                 w, h, cb, checkbox_focus_activate, NULL);
+  cb->focused = focus_is(spec->name);
+
   int mx = 0, my = 0;
   bool down = false;
   checkbox_mouse(&mx, &my, &down);
@@ -313,6 +345,7 @@ bool checkbox_place(const CheckboxSpec *spec) {
       cb->checked = !cb->checked;
       cb->clicked = true;
       clicked = true;
+      focus_select(spec->name);
     }
   }
   cb->was_down = down;

@@ -44,6 +44,7 @@ typedef struct {
   bool dragging;
   bool clicked;
   bool was_down;
+  bool focused;
   void (*on_input)(float value);
   void (*on_change)(float value);
   void (*on_hover)(void);
