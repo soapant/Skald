@@ -2921,10 +2921,7 @@ typedef struct {
   float min_value;
   float max_value;
   float value;
-  const char **options;
-  int option_count;
-  SkSettingsDropdownOptionsFn get_options;
-  void *options_ud;
+  SkSettingsDropdownOptionsFn refresh_options;
   int selected;
   bool open;
   void (*on_click)(void);
@@ -3107,16 +3104,12 @@ static int dropdown_options(const SkSettingsBlock *b,
       *out_options = NULL;
     return 0;
   }
-  if (b->get_options) {
-    const char **options = NULL;
-    int count = b->get_options(&options, b->options_ud);
-    if (out_options)
-      *out_options = options;
-    return count > 0 ? count : 0;
-  }
   if (out_options)
-    *out_options = b->options;
-  return b->option_count > 0 ? b->option_count : 0;
+    *out_options = NULL;
+  if (!b->refresh_options)
+    return 0;
+  int count = b->refresh_options(out_options);
+  return count > 0 ? count : 0;
 }
 
 static bool settings_block_title_ok(const char *title) {
@@ -3250,11 +3243,10 @@ int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
                                     const SkSettingsDropdownSpec *spec) {
   if (!spec)
     return -1;
-  const char **options = spec->options;
-  int count = spec->option_count > 0 ? spec->option_count : 0;
-  if (spec->get_options) {
-    options = NULL;
-    count = spec->get_options(&options, spec->options_ud);
+  const char **options = NULL;
+  int count = 0;
+  if (spec->refresh_options) {
+    count = spec->refresh_options(&options);
     if (count < 0)
       count = 0;
   }
@@ -3267,10 +3259,7 @@ int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
   SkSettingsBlock *b = settings_block_at(entry, idx);
   if (!b)
     return -1;
-  b->options = options;
-  b->option_count = count;
-  b->get_options = spec->get_options;
-  b->options_ud = spec->options_ud;
+  b->refresh_options = spec->refresh_options;
   b->selected = selected;
   b->on_select = spec->on_select;
   b->on_hover = spec->on_hover;
