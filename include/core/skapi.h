@@ -873,18 +873,14 @@ typedef struct {
   void (*on_hover)(void);
 } SkSettingsSliderSpec;
 
-typedef int (*SkSettingsDropdownOptionsFn)(const char ***out_options,
-                                            void *ud);
+typedef int (*SkSettingsDropdownOptionsFn)(const char ***out_options);
 typedef void (*SkSettingsDropdownSelectFn)(const char *option, int index,
                                            void *ud);
 
 typedef struct {
   const char *title;
   const char *sub;
-  const char **options;
-  int option_count;
-  SkSettingsDropdownOptionsFn get_options;
-  void *options_ud;
+  SkSettingsDropdownOptionsFn refresh_options;
   int initial;
   SkSettingsDropdownSelectFn on_select;
   void (*on_hover)(void);
