@@ -118,6 +118,7 @@ void UI_SetSelection(ListBox *lb, int index);
 void UI_LB_SetCount(ListBox *lb, int count);
 void UI_LB_BeginUpdate(void);
 void UI_LB_EndUpdate(void);
+void UI_LB_RequestRepaint(void);
 void UI_RequestPopupRepaint(void);
 void UI_LegacySyncRepaint(void);
 int UI_LB_GetViewTop(const ListBox *lb);
