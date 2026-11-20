@@ -387,6 +387,17 @@ typedef struct {
 typedef struct {
   int x;
   int y;
+  int w;
+  int h;
+  const char *text;
+  unsigned long color;
+  FontHandle font;
+  int font_size;
+} SkTextCenteredSpec;
+
+typedef struct {
+  int x;
+  int y;
 } SkCharPos;
 
 typedef struct {
@@ -426,6 +437,7 @@ typedef struct {
 } SkImageSpec;
 
 bool ski_draw_text(const SkTextSpec *spec);
+bool ski_draw_text_centered(const SkTextCenteredSpec *spec);
 bool ski_draw_image(const SkImageSpec *spec);
 bool ski_place_editbox(const SkEditSpec *spec);
 const char *sk_editbox_text(const char *name);
@@ -504,6 +516,8 @@ void sk_focus_clear(void);
 #define sk_button_checked sk_button_is_checked
 
 #define sk_draw_text(...) ski_draw_text(&(SkTextSpec){__VA_ARGS__})
+#define sk_draw_text_centered(...)                                             \
+  ski_draw_text_centered(&(SkTextCenteredSpec){__VA_ARGS__})
 #define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
