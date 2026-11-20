@@ -80,17 +80,17 @@ void draw_prompt_separator(DrawPromptSeparatorSpec spec) {
 void draw_prompt_band(int y, int bottom_y, int width) {
   if (width <= 0 || bottom_y <= y)
     return;
-  Platform_DrawRectRaw((DrawRectRawSpec){.x = 0,
-                                         .y = y,
-                                         .w = width,
-                                         .h = bottom_y - y,
-                                         .color = rgb_to_hex(
-                                             color_lerp(COLOR_BG, RGB(0, 0, 0), 0.43f)),
-                                         .radius = 0,
-                                         .rounded = false,
-                                         .opaque = true,
-                                         .thickness = 0,
-                                         .filled = true});
+  Platform_DrawRectRaw((DrawRectRawSpec){
+      .x = 0,
+      .y = y,
+      .w = width,
+      .h = bottom_y - y,
+      .color = rgb_to_hex(color_lerp(COLOR_BG, RGB(0, 0, 0), 0.43f)),
+      .radius = 0,
+      .rounded = false,
+      .opaque = true,
+      .thickness = 0,
+      .filled = true});
 }
 
 bool prompt_band_take_placed(void) {

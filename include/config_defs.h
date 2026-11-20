@@ -16,8 +16,8 @@
   X(int, FontSize, 20)                                                         \
   X(int, IconSize, 32)                                                         \
   X(int, WidgetGap, 10)                                                        \
-  X(int, PromptW, 900)                                                     \
-  X(int, PromptH, 640)                                                    \
+  X(int, PromptW, 900)                                                         \
+  X(int, PromptH, 640)                                                         \
   X(int, PromptX, -1)                                                          \
   X(int, PromptY, -1)                                                          \
   X(const char *, UsedTerminal, "")                                            \

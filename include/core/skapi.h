@@ -503,8 +503,7 @@ void sk_focus_clear(void);
 #define sk_button_clicked sk_button_is_clicked
 #define sk_button_checked sk_button_is_checked
 
-#define sk_draw_text(...)                                                      \
-  ski_draw_text(&(SkTextSpec){__VA_ARGS__})
+#define sk_draw_text(...) ski_draw_text(&(SkTextSpec){__VA_ARGS__})
 #define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
@@ -544,14 +543,11 @@ bool ski_draw_line(const SkLine *spec);
 
 bool ski_draw_circle(const SkCircle *spec);
 
-#define sk_draw_rect(...)                                                      \
-  ski_draw_rect(&(DrawRect){__VA_ARGS__})
+#define sk_draw_rect(...) ski_draw_rect(&(DrawRect){__VA_ARGS__})
 
-#define sk_draw_line(...)                                                      \
-  ski_draw_line(&(Line){__VA_ARGS__})
+#define sk_draw_line(...) ski_draw_line(&(Line){__VA_ARGS__})
 
-#define sk_draw_circle(...)                                                    \
-  ski_draw_circle(&(Circle){__VA_ARGS__})
+#define sk_draw_circle(...) ski_draw_circle(&(Circle){__VA_ARGS__})
 
 int sk_rand_num_between(int min, int max);
 
@@ -893,17 +889,13 @@ typedef struct {
 
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
 #define sk_settings_entry_add_checkbox(entry, ...)                             \
-  ski_settings_entry_add_checkbox(entry,                                       \
-                                  &(SkSettingsCheckboxSpec){__VA_ARGS__})
-#define sk_settings_entry_add_button(entry, ...)                              \
-  ski_settings_entry_add_button(entry,                                        \
-                                &(SkSettingsButtonSpec){__VA_ARGS__})
-#define sk_settings_entry_add_slider(entry, ...)                              \
-  ski_settings_entry_add_slider(entry,                                        \
-                                &(SkSettingsSliderSpec){__VA_ARGS__})
-#define sk_settings_entry_add_dropdown(entry, ...)                            \
-  ski_settings_entry_add_dropdown(entry,                                      \
-                                  &(SkSettingsDropdownSpec){__VA_ARGS__})
+  ski_settings_entry_add_checkbox(entry, &(SkSettingsCheckboxSpec){__VA_ARGS__})
+#define sk_settings_entry_add_button(entry, ...)                               \
+  ski_settings_entry_add_button(entry, &(SkSettingsButtonSpec){__VA_ARGS__})
+#define sk_settings_entry_add_slider(entry, ...)                               \
+  ski_settings_entry_add_slider(entry, &(SkSettingsSliderSpec){__VA_ARGS__})
+#define sk_settings_entry_add_dropdown(entry, ...)                             \
+  ski_settings_entry_add_dropdown(entry, &(SkSettingsDropdownSpec){__VA_ARGS__})
 bool sk_config_set_setting(const char *key, const char *value);
 char *sk_config_get_setting(const char *key);
 bool sk_config_get_setting_bool(const char *key, bool *out);
@@ -1160,8 +1152,10 @@ bool sk_query_browser_fmt(const char *fmt, ...);
 bool sk_focus_window_by_title_fmt(const char *fmt, ...);
 SkWindowHandle sk_get_window_id_fmt(const char *fmt, ...);
 SkWindowHandle sk_get_window_by_root_atom_fmt(const char *fmt, ...);
-bool sk_window_set_long_property_fmt(SkWindowHandle window, long value, const char *fmt, ...);
-bool sk_window_send_message_fmt(SkWindowHandle window, long data, const char *fmt, ...);
+bool sk_window_set_long_property_fmt(SkWindowHandle window, long value,
+                                     const char *fmt, ...);
+bool sk_window_send_message_fmt(SkWindowHandle window, long data,
+                                const char *fmt, ...);
 bool sk_dismiss_message_fmt(const char *fmt, ...);
 bool sk_message_active_fmt(const char *fmt, ...);
 bool sk_close_windows_by_title_fmt(const char *fmt, ...);
@@ -1183,7 +1177,8 @@ int sk_slider_percent_fmt(const char *fmt, ...);
 bool sk_slider_set_value_fmt(float value, const char *fmt, ...);
 SkPos sk_get_widget_pos_fmt(const char *fmt, ...);
 int sk_get_text_width_fmt(int font_size, const char *fmt, ...);
-void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt, ...);
+void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt,
+                           ...);
 SkFlagList sk_parse_flags_fmt(const char *fmt, ...);
 SkLibrary sk_library_open_fmt(const char *fmt, ...);
 void sk_library_register_fmt(SkLibrary handle, const char *fmt, ...);

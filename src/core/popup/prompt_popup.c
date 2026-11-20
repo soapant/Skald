@@ -173,8 +173,8 @@ static void prompt_popup_destroy(Popup *self) {
     listbox_info_free(data->state->lb);
     for (int i = 0; i < data->state->editbox_count; i++)
       free(data->state->editboxes[i].eb.placeholder);
-    EditBox *def = data->state->default_eb ? data->state->default_eb
-                                           : data->state->eb;
+    EditBox *def =
+        data->state->default_eb ? data->state->default_eb : data->state->eb;
     free(def->placeholder);
     free(def);
     free(data->state);
