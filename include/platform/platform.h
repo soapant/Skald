@@ -203,6 +203,7 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 
 FontHandle Platform_CreateFont(int size, const char *face_name);
 void Platform_DestroyFont(FontHandle font);
+int Platform_EditboxPlaceholderOffset(void);
 void Platform_GetTextExtents(FontHandle font, const char *text, int max_width,
                              int *outWidth, int *outHeight);
 int Platform_InitializeTrayIcon(void);

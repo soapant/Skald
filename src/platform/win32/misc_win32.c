@@ -492,4 +492,6 @@ void Platform_ApplyUIScale(void) {}
 
 int Platform_GetUnscaledFontSize(void) { return FontSize; }
 
+int Platform_EditboxPlaceholderOffset(void) { return 2; }
+
 void Platform_ResetUIScale(void) {}

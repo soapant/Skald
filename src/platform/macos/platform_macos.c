@@ -377,6 +377,8 @@ float Platform_GetUIScale(void) { return 1.0f; }
 
 int Platform_GetUnscaledFontSize(void) { return 16; }
 
+int Platform_EditboxPlaceholderOffset(void) { return 2; }
+
 void Platform_ResetUIScale(void) {}
 
 bool Platform_CloseActiveWindow(void) { return false; }
