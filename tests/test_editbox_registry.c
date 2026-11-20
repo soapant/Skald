@@ -45,8 +45,8 @@ TEST(editbox_registry_syncs_all_boxes) {
 
   char first[16] = "a";
   char second[16] = "b";
-  int first_idx =
-      editbox_registry_place(&state, "first", first, sizeof(first), 0, 0, 10, 10);
+  int first_idx = editbox_registry_place(&state, "first", first, sizeof(first),
+                                         0, 0, 10, 10);
   int second_idx = editbox_registry_place(&state, "second", second,
                                           sizeof(second), 20, 0, 10, 10);
   ASSERT_TRUE(first_idx >= 0);

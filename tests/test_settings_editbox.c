@@ -8,9 +8,13 @@ TEST(settings_editbox_group_get_and_set) {
   static char first[16] = "one";
   static char second[16] = "two";
   SkSettingsEditboxField fields[] = {
-      {.name = "first", .label = "First", .buffer = first,
+      {.name = "first",
+       .label = "First",
+       .buffer = first,
        .buffer_size = sizeof(first)},
-      {.name = "second", .label = "Second", .buffer = second,
+      {.name = "second",
+       .label = "Second",
+       .buffer = second,
        .buffer_size = sizeof(second)},
   };
 
@@ -18,9 +22,9 @@ TEST(settings_editbox_group_get_and_set) {
                                                  .icon = "", .desc = "");
   ASSERT_TRUE(entry != NULL);
 
-  SkSettingsEditboxGroup group =
-      sk_settings_entry_add_editbox(entry, .title = "Values", .sub = "Two boxes",
-                                    .fields = fields, .field_count = 2);
+  SkSettingsEditboxGroup group = sk_settings_entry_add_editbox(
+      entry, .title = "Values", .sub = "Two boxes", .fields = fields,
+      .field_count = 2);
   ASSERT_TRUE(group.entry >= 0);
   ASSERT_TRUE(group.block >= 0);
   ASSERT_EQ_STR(sk_settings_editbox_get(group, "first"), "one");
