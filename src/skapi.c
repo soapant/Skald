@@ -1682,10 +1682,18 @@ ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t) {
   return (ColorRef)(rr | (rg << 8) | (rb << 16));
 }
 
-void sk_set_draw_offset(int dx, int dy) { set_draw_offset(dx, dy); }
+void ski_set_draw_offset(int dx, int dy) { set_draw_offset(dx, dy); }
 
-void sk_get_draw_offset(int *out_x, int *out_y) {
+void ski_get_draw_offset(int *out_x, int *out_y) {
   get_draw_offset(out_x, out_y);
+}
+
+void sk_set_draw_offset(SkPos pos) { ski_set_draw_offset(pos.x, pos.y); }
+
+SkPos sk_get_draw_offset(void) {
+  int x = 0, y = 0;
+  ski_get_draw_offset(&x, &y);
+  return (SkPos){x, y};
 }
 char *sk_http_get(const char *url) { return http_get(url); }
 
@@ -1945,18 +1953,24 @@ bool sk_right_click(void) { return Platform_ClickButton(2); }
 bool sk_emit_mouse_button(int button, bool down) {
   return Platform_MouseButtonDown(button, down);
 }
-bool sk_emit_mouse_button_at(SkPos pos, int button, bool down) {
-  bool moved = sk_move_to_pos(pos);
+bool ski_emit_mouse_button_at(int x, int y, int button, bool down) {
+  bool moved = ski_move_to_pos(x, y);
   return moved && Platform_MouseButtonDown(button, down);
 }
-bool sk_click_button_at(SkPos pos, int button) {
-  bool moved = sk_move_to_pos(pos);
+bool sk_emit_mouse_button_at(SkPos pos, int button, bool down) {
+  return ski_emit_mouse_button_at(pos.x, pos.y, button, down);
+}
+bool ski_click_button_at(int x, int y, int button) {
+  bool moved = ski_move_to_pos(x, y);
   bool down = moved && Platform_MouseButtonDown(button, true);
   if (!down) {
     return false;
   }
   sk_sleep(0.02);
   return Platform_MouseButtonDown(button, false);
+}
+bool sk_click_button_at(SkPos pos, int button) {
+  return ski_click_button_at(pos.x, pos.y, button);
 }
 bool sk_mouse_scroll(int notches) { return Platform_MouseScroll(notches); }
 
@@ -1974,36 +1988,46 @@ static bool rel_to_abs(int rx, int ry, SkPos *out) {
   return true;
 }
 
-bool sk_move_to_pos_rel(int rx, int ry) {
+bool ski_move_to_pos_rel(int rx, int ry) {
   SkPos abs;
   if (!rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  return sk_move_to_pos(abs);
+  return ski_move_to_pos(abs.x, abs.y);
+}
+bool sk_move_to_pos_rel(SkPos pos) {
+  return ski_move_to_pos_rel(pos.x, pos.y);
 }
 
-bool sk_click_at_rel(int rx, int ry) {
+bool ski_click_at_rel(int rx, int ry) {
   SkPos abs;
   if (!rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  return sk_click_at(abs);
+  return ski_click_at(abs.x, abs.y);
+}
+bool sk_click_at_rel(SkPos pos) { return ski_click_at_rel(pos.x, pos.y); }
+
+bool ski_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
+  SkPos abs;
+  if (!rel_to_abs(rx, ry, &abs)) {
+    return false;
+  }
+  return ski_emit_mouse_button_at(abs.x, abs.y, button, down);
+}
+bool sk_emit_mouse_button_at_rel(SkPos pos, int button, bool down) {
+  return ski_emit_mouse_button_at_rel(pos.x, pos.y, button, down);
 }
 
-bool sk_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
+bool ski_click_button_at_rel(int rx, int ry, int button) {
   SkPos abs;
   if (!rel_to_abs(rx, ry, &abs)) {
     return false;
   }
-  return sk_emit_mouse_button_at(abs, button, down);
+  return ski_click_button_at(abs.x, abs.y, button);
 }
-
-bool sk_click_button_at_rel(int rx, int ry, int button) {
-  SkPos abs;
-  if (!rel_to_abs(rx, ry, &abs)) {
-    return false;
-  }
-  return sk_click_button_at(abs, button);
+bool sk_click_button_at_rel(SkPos pos, int button) {
+  return ski_click_button_at_rel(pos.x, pos.y, button);
 }
 
 void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }

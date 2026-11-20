@@ -511,10 +511,6 @@ bool ski_listbox_begin(const SkListSpec *spec);
 bool sk_listbox_next(SkListItemCtx *out);
 void sk_listbox_end(void);
 
-void sk_layout_begin_column(int start_x, int start_y, int gap);
-void sk_layout_end_column(void);
-void sk_layout_begin_row(int start_x, int start_y, int gap);
-void sk_layout_end_row(void);
 bool sk_draw_text_auto(const char *text);
 bool sk_place_editbox_auto(int w, int h, const char *buffer);
 bool sk_place_listbox_auto(int w, int h, const char **items, int count);
@@ -560,8 +556,12 @@ int sk_get_text_width(const char *text, int font_size);
 int sk_get_text_height(int font_size);
 
 ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t);
-void sk_set_draw_offset(int dx, int dy);
-void sk_get_draw_offset(int *out_x, int *out_y);
+
+void ski_set_draw_offset(int dx, int dy);
+void ski_get_draw_offset(int *out_x, int *out_y);
+void sk_set_draw_offset(SkPos pos);
+
+SkPos sk_get_draw_offset(void);
 
 char *sk_http_get(const char *url);
 
@@ -718,7 +718,11 @@ bool sk_right_click(void);
 
 bool sk_emit_mouse_button(int button, bool down);
 
+bool ski_emit_mouse_button_at(int x, int y, int button, bool down);
+
 bool sk_emit_mouse_button_at(SkPos pos, int button, bool down);
+
+bool ski_click_button_at(int x, int y, int button);
 
 bool sk_click_button_at(SkPos pos, int button);
 
@@ -729,13 +733,21 @@ void sk_emit_key(int vk, bool down);
 #define sk_move_mouse sk_move_to_pos
 #define sk_click() sk_left_click()
 
-bool sk_move_to_pos_rel(int rx, int ry);
+bool ski_move_to_pos_rel(int rx, int ry);
 
-bool sk_click_at_rel(int rx, int ry);
+bool sk_move_to_pos_rel(SkPos pos);
 
-bool sk_emit_mouse_button_at_rel(int rx, int ry, int button, bool down);
+bool ski_click_at_rel(int rx, int ry);
 
-bool sk_click_button_at_rel(int rx, int ry, int button);
+bool sk_click_at_rel(SkPos pos);
+
+bool ski_emit_mouse_button_at_rel(int rx, int ry, int button, bool down);
+
+bool sk_emit_mouse_button_at_rel(SkPos pos, int button, bool down);
+
+bool ski_click_button_at_rel(int rx, int ry, int button);
+
+bool sk_click_button_at_rel(SkPos pos, int button);
 
 bool sk_type_text(const char *s);
 
