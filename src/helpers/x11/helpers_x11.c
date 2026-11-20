@@ -1,4 +1,6 @@
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_fs.h"
+#include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
@@ -781,6 +783,104 @@ bool x11_upload_argb(Display *dpy, Drawable ref, unsigned char *argb, int w,
   return true;
 }
 
+#define ARGB_DISK_MAGIC 0x534b415242000001ull
+
+typedef struct {
+  uint64_t magic;
+  uint64_t mtime;
+  uint64_t size;
+  int32_t w;
+  int32_t h;
+} ArgbDiskHeader;
+
+static uint64_t argb_disk_hash(const char *path, long long mtime,
+                               long long size, int w, int h) {
+  uint64_t hash = 1469598103934665603ull;
+  for (const unsigned char *p = (const unsigned char *)path; *p; p++) {
+    hash ^= *p;
+    hash *= 1099511628211ull;
+  }
+  const uint64_t fields[4] = {(uint64_t)mtime, (uint64_t)size, (uint64_t)w,
+                              (uint64_t)h};
+  for (int i = 0; i < 4; i++) {
+    hash ^= fields[i];
+    hash *= 1099511628211ull;
+  }
+  return hash;
+}
+
+static bool argb_disk_path(char *out, size_t out_len, const char *path,
+                           long long mtime, long long size, int w, int h) {
+  static bool ready = false;
+  char dir[512];
+  char cache_dir[640];
+  if (!ready) {
+    if (!data_dir(dir, sizeof(dir)))
+      return false;
+    snprintf(cache_dir, sizeof(cache_dir), "%s/imgcache", dir);
+    Platform_MkdirIfNotExists(cache_dir);
+    ready = true;
+  }
+  if (!data_dir(dir, sizeof(dir)))
+    return false;
+  snprintf(out, out_len, "%s/imgcache/%016llx.argb", dir,
+           (unsigned long long)argb_disk_hash(path, mtime, size, w, h));
+  return true;
+}
+
+static bool argb_disk_load(const char *path, long long mtime, long long size,
+                           int w, int h, unsigned char **out_argb) {
+  char cache_path[768];
+  if (!argb_disk_path(cache_path, sizeof(cache_path), path, mtime, size, w, h))
+    return false;
+  FILE *f = fopen(cache_path, "rb");
+  if (!f)
+    return false;
+  ArgbDiskHeader header = {0};
+  if (fread(&header, sizeof(header), 1, f) != 1) {
+    fclose(f);
+    return false;
+  }
+  if (header.magic != ARGB_DISK_MAGIC || header.mtime != (uint64_t)mtime ||
+      header.size != (uint64_t)size || header.w != (int32_t)w ||
+      header.h != (int32_t)h) {
+    fclose(f);
+    return false;
+  }
+  size_t bytes = (size_t)w * (size_t)h * 4;
+  unsigned char *buf = malloc(bytes);
+  if (!buf) {
+    fclose(f);
+    return false;
+  }
+  if (fread(buf, 1, bytes, f) != bytes) {
+    free(buf);
+    fclose(f);
+    return false;
+  }
+  fclose(f);
+  *out_argb = buf;
+  return true;
+}
+
+static void argb_disk_store(const char *path, long long mtime, long long size,
+                            int w, int h, const unsigned char *argb) {
+  char cache_path[768];
+  if (!argb_disk_path(cache_path, sizeof(cache_path), path, mtime, size, w, h))
+    return;
+  char tmp_path[800];
+  snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", cache_path);
+  FILE *f = fopen(tmp_path, "wb");
+  if (!f)
+    return;
+  ArgbDiskHeader header = {ARGB_DISK_MAGIC, (uint64_t)mtime, (uint64_t)size,
+                           (int32_t)w, (int32_t)h};
+  fwrite(&header, sizeof(header), 1, f);
+  fwrite(argb, 1, (size_t)w * (size_t)h * 4, f);
+  fclose(f);
+  rename(tmp_path, cache_path);
+}
+
 static bool image_cache_store(Display *dpy, Drawable ref, const char *path,
                               int w, int h, Picture *out_pic) {
   if (!dpy || !path || !path[0] || w <= 0 || h <= 0)
@@ -791,32 +891,48 @@ static bool image_cache_store(Display *dpy, Drawable ref, const char *path,
     return false;
   if (!ref)
     ref = DefaultRootWindow(dpy);
+  long long mtime = (long long)st.st_mtime;
+  long long size = (long long)st.st_size;
   pthread_mutex_lock(&decode_mtx);
-  unsigned char *argb = decode_locked(path, &w, &h);
+  unsigned char *argb = NULL;
+  bool from_disk = argb_disk_load(path, mtime, size, w, h, &argb);
+  if (!from_disk)
+    argb = decode_locked(path, &w, &h);
   if (!argb) {
     pthread_mutex_unlock(&decode_mtx);
     return false;
   }
+  if (!from_disk)
+    argb_disk_store(path, mtime, size, w, h, argb);
   Pixmap pm = 0;
   Picture pic = 0;
   bool uploaded = x11_upload_argb(dpy, ref, argb, w, h, &pm, &pic);
+  if (from_disk)
+    free(argb);
   pthread_mutex_unlock(&decode_mtx);
   if (!uploaded)
     return false;
   pthread_mutex_lock(&img_cache_mtx);
-  x11_img_cache_put(dpy, path, w, h, (long long)st.st_mtime,
-                    (long long)st.st_size, pm, pic);
+  x11_img_cache_put(dpy, path, w, h, mtime, size, pm, pic);
   if (out_pic)
     *out_pic = pic;
   return true;
 }
 
 bool x11_prewarm_image(Display *dpy, const char *path) {
-  if (!dpy)
+  if (!dpy || !path || !path[0])
     return false;
+  int size = IconSize > 0 ? IconSize : 32;
+  Pixmap pm = 0;
+  Picture cached = 0;
+  pthread_mutex_lock(&img_cache_mtx);
+  bool hit = x11_img_cache_get(path, size, size, &pm, &cached);
+  pthread_mutex_unlock(&img_cache_mtx);
+  if (hit)
+    return true;
   Picture pic = 0;
-  bool ok = image_cache_store(dpy, DefaultRootWindow(dpy), path, FontSize,
-                              FontSize, &pic);
+  bool ok = image_cache_store(dpy, DefaultRootWindow(dpy), path, size, size,
+                              &pic);
   if (!ok)
     return false;
   pthread_mutex_unlock(&img_cache_mtx);
