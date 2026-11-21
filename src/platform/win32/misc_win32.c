@@ -417,8 +417,7 @@ bool Platform_GetFeatureBuildArgv(const char *src, const char *out_tmp,
 }
 
 bool Platform_AtomicRename(const char *old_path, const char *new_path) {
-  return MoveFileExA(old_path, new_path,
-                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+  return MoveFileExA(old_path, new_path, MOVEFILE_REPLACE_EXISTING) != 0;
 }
 
 int64_t Platform_TimerNowTicks(void) {
