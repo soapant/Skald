@@ -925,12 +925,16 @@ typedef SettingsDropdownOptionsFn SkSettingsDropdownOptionsFn;
 typedef SettingsDropdownSelectFn SkSettingsDropdownSelectFn;
 typedef SettingsDropdownSpec SkSettingsDropdownSpec;
 typedef SettingsEditboxChangeFn SkSettingsEditboxChangeFn;
+typedef SettingsEditboxType SkSettingsEditboxType;
 typedef SettingsEditboxField SkSettingsEditboxField;
 typedef SettingsEditboxSpec SkSettingsEditboxSpec;
 typedef SettingsEditboxGroup SkSettingsEditboxGroup;
 
 #define SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT SETTINGS_EDITBOX_X_OFFSET_DEFAULT
 #define SK_SETTINGS_EDITBOX_INVALID ((SkSettingsEditboxGroup){-1, -1})
+#define SK_SETTINGS_EDITBOX_STRING SETTINGS_EDITBOX_STRING
+#define SK_SETTINGS_EDITBOX_INT SETTINGS_EDITBOX_INT
+#define SK_SETTINGS_EDITBOX_FLOAT SETTINGS_EDITBOX_FLOAT
 
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
 #define sk_settings_entry_add_checkbox(entry, ...)                             \
@@ -947,9 +951,17 @@ SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
       &(SkSettingsEditboxSpec){                                                \
           .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
 bool sk_config_set_setting(const char *key, const char *value);
+bool sk_config_set_setting_int(const char *key, int value);
+bool sk_config_set_setting_float(const char *key, float value);
 char *sk_config_get_setting(const char *key);
+bool sk_config_get_setting_string(const char *key, char *out, size_t out_len,
+                                  const char *fallback);
 bool sk_config_get_setting_bool(const char *key);
+int sk_config_get_setting_int(const char *key, int fallback);
 float sk_config_get_setting_float(const char *key);
+float sk_config_get_setting_float_or(const char *key, float fallback);
+int sk_parse_int(const char *text, int fallback);
+float sk_parse_float(const char *text, float fallback);
 bool sk_config_has_setting(const char *key);
 int sk_config_setting_count(void);
 const char *sk_config_setting_name_at(int index);

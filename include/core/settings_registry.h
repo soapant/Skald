@@ -17,12 +17,23 @@ typedef struct {
 
 typedef void (*SettingsEditboxChangeFn)(const char *name, const char *value);
 
+typedef enum {
+  SETTINGS_EDITBOX_STRING = 0,
+  SETTINGS_EDITBOX_INT,
+  SETTINGS_EDITBOX_FLOAT
+} SettingsEditboxType;
+
 typedef struct {
   const char *name;
   const char *label;
   char *buffer;
   size_t buffer_size;
   int width;
+  const char *config_key;
+  const char *default_value;
+  SettingsEditboxType type;
+  float min_value;
+  float max_value;
 } SettingsEditboxField;
 
 typedef struct {
@@ -44,8 +55,7 @@ typedef struct {
 #define SETTINGS_EDITBOX_X_OFFSET_DEFAULT SETTINGS_EDITBOX_X_OFFSET_AUTO
 
 typedef int (*SettingsDropdownOptionsFn)(const char ***out_options);
-typedef void (*SettingsDropdownSelectFn)(const char *option, int index,
-                                         void *ud);
+typedef void (*SettingsDropdownSelectFn)(const char *option, int index);
 
 typedef struct {
   const char *title;
@@ -54,7 +64,6 @@ typedef struct {
   int initial;
   SettingsDropdownSelectFn on_select;
   void (*on_hover)(void);
-  void *ud;
 } SettingsDropdownSpec;
 
 typedef struct {
