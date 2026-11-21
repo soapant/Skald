@@ -484,7 +484,8 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
 #define settings_place_slider(...)                                             \
   settings_place_slider_impl(&(SettingsPlaceSliderSpec){__VA_ARGS__})
 #define settings_place_editbox(...)                                            \
-  settings_place_editbox_impl(&(SettingsPlaceEditboxSpec){__VA_ARGS__})
+  settings_place_editbox_impl(                                                 \
+      &(SettingsPlaceEditboxSpec){.no_tab = true, __VA_ARGS__})
 #define settings_draw_rect(...)                                                \
   settings_draw_rect_local(&(DrawRect){__VA_ARGS__})
 #define settings_draw_text(...)                                                \
@@ -1245,7 +1246,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
                    .h = 28, .font_size = 14, .caret_h = 16,
                    .buffer = entry->search_filter,
                    .buffer_size = sizeof(entry->search_filter),
-                   .placeholder = "Search this section");
+                   .placeholder = "Search this section", .no_tab = false);
   settings_draw_line(.x1 = -7, .y1 = 210, .x2 = pane_w + 17, .y2 = 210,
                .color = COLOR_BORDER);
 
