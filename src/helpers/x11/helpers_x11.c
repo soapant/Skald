@@ -1605,6 +1605,54 @@ static unsigned long x11_background_color_at(void) {
          (base & 0xFF);
 }
 
+#define ROUND_MASK_MAX_RADIUS 128
+static unsigned char *round_masks[4][ROUND_MASK_MAX_RADIUS + 1];
+static pthread_mutex_t round_mask_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void x11_round_mask_fill(unsigned char *out, int corner, int radius) {
+  const float edge_lo = (float)radius - 0.5f;
+  const float edge_hi = (float)radius + 0.5f;
+  const float edge_sq_lo = edge_lo * edge_lo;
+  const float edge_sq_hi = edge_hi * edge_hi;
+  for (int dy = 0; dy < radius; dy++) {
+    float ddy = (corner & 2) ? (float)(dy + 1) : (float)(dy - radius);
+    for (int dx = 0; dx < radius; dx++) {
+      float ddx = (corner & 1) ? (float)(dx + 1) : (float)(dx - radius);
+      float d_sq = ddx * ddx + ddy * ddy;
+      unsigned char cov = 0;
+      if (d_sq < edge_sq_hi) {
+        if (d_sq <= edge_sq_lo) {
+          cov = 255;
+        } else {
+          float d = sqrtf(d_sq);
+          float f = edge_hi - d;
+          if (f < 0.0f)
+            f = 0.0f;
+          if (f > 1.0f)
+            f = 1.0f;
+          cov = (unsigned char)(f * 255.0f + 0.5f);
+        }
+      }
+      out[dy * radius + dx] = cov;
+    }
+  }
+}
+
+static const unsigned char *x11_round_mask(int corner, int radius) {
+  if (radius < 1 || radius > ROUND_MASK_MAX_RADIUS)
+    return NULL;
+  pthread_mutex_lock(&round_mask_mutex);
+  unsigned char *mask = round_masks[corner][radius];
+  if (!mask) {
+    mask = (unsigned char *)malloc((size_t)radius * (size_t)radius);
+    if (mask)
+      x11_round_mask_fill(mask, corner, radius);
+    round_masks[corner][radius] = mask;
+  }
+  pthread_mutex_unlock(&round_mask_mutex);
+  return mask;
+}
+
 void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
                            Colormap cmap, unsigned long hex,
                            unsigned short alpha16, int x, int y, int w, int h,
@@ -1626,52 +1674,51 @@ void x11_fill_rounded_rect(Display *dpy, XftDraw *xd, Visual *vis,
   XftDrawRect(xd, &solid, x, y + radius, radius, h - 2 * radius);
   XftDrawRect(xd, &solid, x + w - radius, y + radius, radius, h - 2 * radius);
 
-  const float edge_lo = (float)radius - 0.5f;
-  const float edge_hi = (float)radius + 0.5f;
-  const float edge_sq_lo = edge_lo * edge_lo;
-  const float edge_sq_hi = edge_hi * edge_hi;
+  const unsigned long backdrop = x11_background_color_at();
+  XftColor corner_colors[256];
+  bool corner_color_ready[256] = {false};
 
   for (int corner = 0; corner < 4; corner++) {
-    int cx = (corner % 2 == 0) ? x + radius : x + w - radius - 1;
-    int cy = (corner < 2) ? y + radius : y + h - radius - 1;
-    int ox0 = (corner % 2 == 0) ? x : x + w - radius;
-    int oy0 = (corner < 2) ? y : y + h - radius;
-    for (int dy = 0; dy < radius; dy++) {
-      for (int dx = 0; dx < radius; dx++) {
-        float px = ox0 + dx + 0.5f;
-        float py = oy0 + dy + 0.5f;
-        float ddx2 = px - (cx + 0.5f);
-        float ddy2 = py - (cy + 0.5f);
-        float d_sq = ddx2 * ddx2 + ddy2 * ddy2;
-        if (d_sq >= edge_sq_hi)
-          continue;
-        unsigned short a;
-        if (d_sq <= edge_sq_lo) {
-          a = alpha16;
-        } else {
-          float d = sqrtf(d_sq);
-          float cov = (edge_hi - d);
-          if (cov < 0.0f)
-            cov = 0.0f;
-          if (cov > 1.0f)
-            cov = 1.0f;
-          a = (unsigned short)((float)alpha16 * cov + 0.5f);
-        }
-        if (a == 0)
-          continue;
-        float cov = (float)a / (float)(alpha16 ? alpha16 : 1);
-        if (cov > 1.0f)
-          cov = 1.0f;
-        unsigned long backdrop = x11_background_color_at();
-        unsigned long mixed = color_lerp(backdrop, hex, cov);
-        XftColor px_c = solid;
-        px_c.color.red = (unsigned short)(((mixed >> 16) & 0xFF) * 257);
-        px_c.color.green = (unsigned short)(((mixed >> 8) & 0xFF) * 257);
-        px_c.color.blue = (unsigned short)((mixed & 0xFF) * 257);
-        px_c.color.alpha = 0xFFFF;
-        XftDrawRect(xd, &px_c, ox0 + dx, oy0 + dy, 1, 1);
+    int ox0 = (corner & 1) ? x + w - radius : x;
+    int oy0 = (corner & 2) ? y + h - radius : y;
+    const unsigned char *mask = x11_round_mask(corner, radius);
+    unsigned char *local_mask = NULL;
+    if (!mask && radius > ROUND_MASK_MAX_RADIUS) {
+      local_mask = (unsigned char *)malloc((size_t)radius * (size_t)radius);
+      if (local_mask) {
+        x11_round_mask_fill(local_mask, corner, radius);
+        mask = local_mask;
       }
     }
+    if (!mask)
+      continue;
+    for (int dy = 0; dy < radius; dy++) {
+      int run_start = 0;
+      unsigned char run_cov = mask[dy * radius];
+      for (int dx = 1; dx <= radius; dx++) {
+        unsigned char cov = (dx < radius) ? mask[dy * radius + dx] : 0;
+        if (cov == run_cov)
+          continue;
+        if (run_cov) {
+          if (!corner_color_ready[run_cov]) {
+            unsigned long mixed =
+                color_lerp(backdrop, hex, (float)run_cov / 255.0f);
+            XftColor c = solid;
+            c.color.red = (unsigned short)(((mixed >> 16) & 0xFF) * 257);
+            c.color.green = (unsigned short)(((mixed >> 8) & 0xFF) * 257);
+            c.color.blue = (unsigned short)((mixed & 0xFF) * 257);
+            c.color.alpha = 0xFFFF;
+            corner_colors[run_cov] = c;
+            corner_color_ready[run_cov] = true;
+          }
+          XftDrawRect(xd, &corner_colors[run_cov], ox0 + run_start, oy0 + dy,
+                      dx - run_start, 1);
+        }
+        run_start = dx;
+        run_cov = cov;
+      }
+    }
+    free(local_mask);
   }
 }
 

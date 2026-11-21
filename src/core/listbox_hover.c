@@ -34,6 +34,9 @@ static int pub_x = 0;
 static int pub_y = 0;
 static int hover_throttle_ms = 0;
 static int64_t last_hover_ticks = 0;
+static bool window_origin_valid = false;
+static int window_origin_x = 0;
+static int window_origin_y = 0;
 
 static bool listbox_hover_throttled(void) {
   if (hover_throttle_ms <= 0)
@@ -57,7 +60,28 @@ void listbox_focus_by_keyboard(void) {
 
 void listbox_focus_by_mouse(void) { focus_by_keyboard = false; }
 
+bool listbox_window_origin(int *out_x, int *out_y) {
+  if (!window_origin_valid) {
+    WindowManager *wm = WindowManager_Get();
+    Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    bool ok = Platform_WindowToRoot(SkaldContext_Get()->window.hPopupWnd,
+                                    &window_origin_x, &window_origin_y);
+    if (!ok && top)
+      ok = Platform_WindowToRoot(top->handle, &window_origin_x,
+                                 &window_origin_y);
+    if (!ok)
+      return false;
+    window_origin_valid = true;
+  }
+  if (out_x)
+    *out_x = window_origin_x;
+  if (out_y)
+    *out_y = window_origin_y;
+  return true;
+}
+
 void listbox_publish_mouse_pos(int x, int y) {
+  window_origin_valid = false;
   if (pub_set && (pub_x != x || pub_y != y))
     mouse_moved = true;
   pub_x = x;
@@ -72,6 +96,7 @@ void listbox_invalidate_mouse_pos(void) {
   mouse_valid = false;
   mouse_moved = false;
   hover_pos_set = false;
+  window_origin_valid = false;
 }
 
 bool listbox_client_mouse_pos(int *out_x, int *out_y) {
@@ -91,11 +116,7 @@ bool listbox_client_mouse_pos(int *out_x, int *out_y) {
   int wx = 0, wy = 0, dx = 0, dy = 0;
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-  bool have_origin =
-      Platform_WindowToRoot(SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
-  if (!have_origin && top)
-    have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
-  if (have_origin) {
+  if (listbox_window_origin(&wx, &wy)) {
     mx -= wx;
     my -= wy;
   }

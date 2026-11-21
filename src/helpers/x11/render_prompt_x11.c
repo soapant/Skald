@@ -30,6 +30,10 @@ static Visual *pbuf_vis = NULL;
 static Colormap pbuf_cmap = None;
 static Pixmap pbuf_pm = None;
 static XftDraw *pbuf_xd = NULL;
+static bool prompt_attrs_valid = false;
+static Display *prompt_attrs_dpy = NULL;
+static Window prompt_attrs_win = None;
+static XWindowAttributes prompt_attrs;
 
 static void x11_pbuf_drop(void) {
 
@@ -49,11 +53,14 @@ static void x11_pbuf_drop(void) {
   pbuf_depth = 0;
   pbuf_vis = NULL;
   pbuf_cmap = None;
+  prompt_attrs_valid = false;
 }
 
 void x11_release_prompt_buffer(Display *dpy, Window win) {
   if (pbuf_dpy == dpy && pbuf_win == win)
     x11_pbuf_drop();
+  if (prompt_attrs_dpy == dpy && prompt_attrs_win == win)
+    prompt_attrs_valid = false;
 }
 
 static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
@@ -181,9 +188,15 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   }
   int w = state->width;
   int h = state->height;
-  XWindowAttributes attrs;
-  if (!XGetWindowAttributes(dpy, *win, &attrs))
-    return prompt_render_fallback(dpy, win, state, w, h);
+  if (!prompt_attrs_valid || prompt_attrs_dpy != dpy ||
+      prompt_attrs_win != *win) {
+    if (!XGetWindowAttributes(dpy, *win, &prompt_attrs))
+      return prompt_render_fallback(dpy, win, state, w, h);
+    prompt_attrs_dpy = dpy;
+    prompt_attrs_win = *win;
+    prompt_attrs_valid = true;
+  }
+  XWindowAttributes attrs = prompt_attrs;
   Visual *vis = attrs.visual;
   int depth = attrs.depth;
   Colormap cmap = attrs.colormap;

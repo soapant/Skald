@@ -242,9 +242,18 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
     }
     break;
   case MotionNotify: {
+    XEvent last = *ev;
+    XEvent next;
+    while (XPending(dpy)) {
+      XPeekEvent(dpy, &next);
+      if (next.type != MotionNotify)
+        break;
+      XNextEvent(dpy, &next);
+      last = next;
+    }
     int wx = 0, wy = 0;
     if (Platform_WindowToRoot(top->handle, &wx, &wy))
-      listbox_publish_mouse_pos(wx + ev->xmotion.x, wy + ev->xmotion.y);
+      listbox_publish_mouse_pos(wx + last.xmotion.x, wy + last.xmotion.y);
     if (top->vtable && top->vtable->on_render) {
       top->vtable->on_render(top);
       XFlush(dpy);
