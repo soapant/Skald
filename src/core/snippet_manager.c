@@ -9,12 +9,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "deps/stb_ds.h"
 
-#define SNIPPET_MAX_BINDINGS 64
 #define SNIPPET_BUF_CAP 128
 
-static SnippetBinding snippets[SNIPPET_MAX_BINDINGS];
-static int snippet_count = 0;
+static SnippetBinding *snippets;
+#define snippet_count arrlenu(snippets)
 static SnippetFireFn fire_fn = NULL;
 
 static char buf[SNIPPET_BUF_CAP];
@@ -25,7 +25,7 @@ void snippet_set_fire_fn(SnippetFireFn fn) { fire_fn = fn; }
 void snippet_reset_buffer(void) { buf_len = 0; }
 
 const SnippetBinding *snippet_get_binding(int index) {
-  if (index < 0 || index >= snippet_count)
+  if (index < 0 || (size_t)index >= snippet_count)
     return NULL;
   return &snippets[index];
 }
@@ -61,7 +61,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
   if (!owner[0] && caller)
     owner_resolve_for_func(caller, owner, sizeof(owner));
 
-  for (int i = 0; i < snippet_count; i++) {
+  for (size_t i = 0; i < snippet_count; i++) {
     if (snippets[i].trigger && strcmp(snippets[i].trigger, trigger) == 0) {
       int nwin = 0;
       if (windows) {
@@ -108,9 +108,8 @@ bool snippet_register_internal(const char *trigger, const char *text,
       return true;
     }
   }
-  if (snippet_count >= SNIPPET_MAX_BINDINGS)
-    return false;
-  SnippetBinding *b = &snippets[snippet_count];
+  SnippetBinding nb;
+  SnippetBinding *b = &nb;
   memset(b, 0, sizeof(*b));
   b->trigger = strdup(trigger);
   if (!b->trigger)
@@ -150,7 +149,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
       b->window_count = n;
     }
   }
-  snippet_count++;
+  arrput(snippets, nb);
   snippet_reset_buffer();
   return true;
 }
@@ -158,47 +157,36 @@ bool snippet_register_internal(const char *trigger, const char *text,
 bool snippet_unregister_internal(const char *trigger) {
   if (!trigger || !trigger[0])
     return false;
-  int n = 0;
-  bool found = false;
-  for (int i = 0; i < snippet_count; i++) {
+  for (size_t i = 0; i < snippet_count;) {
     if (snippets[i].trigger && strcmp(snippets[i].trigger, trigger) == 0) {
       snippet_free_binding(&snippets[i]);
-      found = true;
-      continue;
+      arrdel(snippets, i);
+      return true;
     }
-    if (n != i)
-      snippets[n] = snippets[i];
-    n++;
+    i++;
   }
-  if (n != snippet_count)
-    memset(&snippets[n], 0,
-           (size_t)(snippet_count - n) * sizeof(SnippetBinding));
-  snippet_count = n;
-  return found;
+  return false;
 }
 
 void snippet_purge_owner(const char *path_a, const char *path_b) {
   if (owner_purge_inactive(path_a, path_b))
     return;
 
-  int n = 0;
-  for (int i = 0; i < snippet_count; i++) {
+  size_t dropped = 0;
+  for (size_t i = 0; i < snippet_count;) {
     if (owner_module_matches(snippets[i].owner, path_a, path_b)) {
       log_info("snippet '%s' purged (owner unloaded)",
                snippets[i].trigger ? snippets[i].trigger : "?");
       snippet_free_binding(&snippets[i]);
+      arrdel(snippets, i);
+      dropped++;
       continue;
     }
-    if (n != i)
-      snippets[n] = snippets[i];
-    n++;
+    i++;
   }
-  int dropped = snippet_count - n;
   if (dropped > 0) {
-    memset(&snippets[n], 0,
-           (size_t)(snippet_count - n) * sizeof(SnippetBinding));
-    snippet_count = n;
-    log_info("snippet purged %d binding%s", dropped, dropped == 1 ? "" : "s");
+    log_info("snippet purged %zu binding%s", dropped,
+             dropped == 1 ? "" : "s");
   }
 }
 
@@ -268,7 +256,7 @@ static void snippet_push_char(char c) {
 }
 
 static int snippet_match(void) {
-  for (int i = 0; i < snippet_count; i++) {
+  for (size_t i = 0; i < snippet_count; i++) {
     if (!snippets[i].trigger || !snippets[i].trigger[0])
       continue;
     size_t tlen = strlen(snippets[i].trigger);

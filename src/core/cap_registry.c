@@ -5,6 +5,7 @@
 #include "core/feature_loader.h"
 #include "helpers/helpers_owner.h"
 #include "platform/platform.h"
+#include "deps/stb_ds.h"
 
 typedef struct {
   char key[CAP_KEY_LEN];
@@ -13,8 +14,8 @@ typedef struct {
   void *fn;
 } Cap;
 
-static Cap caps[CAP_MAX];
-static int cap_count = 0;
+static Cap *caps;
+#define cap_count arrlenu(caps)
 static volatile unsigned cap_gen = 1;
 
 static void *cap_mutex = NULL;
@@ -53,7 +54,7 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
   char owner[OWNER_PATH_MAX];
   owner_resolve_for_func(fn, owner, sizeof(owner));
 
-  for (int i = 0; i < cap_count; i++) {
+  for (size_t i = 0; i < cap_count; i++) {
     if (strcmp(caps[i].key, key) != 0)
       continue;
     if (caps[i].fn == fn) {
@@ -73,12 +74,7 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     return;
   }
 
-  if (cap_count >= CAP_MAX) {
-    log_error("cap table full, dropping '%s'", key);
-    cap_unlock();
-    return;
-  }
-  Cap *c = &caps[cap_count++];
+  Cap *c = arraddnptr(caps, 1);
   snprintf(c->key, CAP_KEY_LEN, "%s", key);
   snprintf(c->owner, sizeof(c->owner), "%s", owner);
   c->abi = abi;
@@ -95,7 +91,7 @@ void *cap_resolve_abi(const char *key, unsigned abi) {
   if (!key || !key[0])
     return NULL;
   cap_lock();
-  for (int i = 0; i < cap_count; i++) {
+  for (size_t i = 0; i < cap_count; i++) {
     if (strcmp(caps[i].key, key) != 0)
       continue;
     if (caps[i].abi != abi) {
@@ -123,7 +119,7 @@ void cap_bind_declare(const char *key, void *consumer) {
   }
 
   cap_lock();
-  for (int i = 0; i < cap_count; i++) {
+  for (size_t i = 0; i < cap_count; i++) {
     if (strcmp(caps[i].key, key) != 0)
       continue;
     if (caps[i].abi != CAP_ABI_V1) {
@@ -152,17 +148,16 @@ void cap_purge_owner(const char *path_a, const char *path_b) {
     return;
   }
 
-  int n = 0;
   cap_lock();
-  for (int i = 0; i < cap_count; i++) {
+  size_t before = cap_count;
+  for (size_t i = 0; i < cap_count;) {
     if (owner_module_matches(caps[i].owner, path_a, path_b)) {
+      arrdel(caps, i);
       continue;
     }
-    caps[n++] = caps[i];
+    i++;
   }
-  int dropped = cap_count - n;
-  cap_count = n;
-  if (dropped > 0) {
+  if (cap_count != before) {
     cap_gen++;
   }
   cap_unlock();

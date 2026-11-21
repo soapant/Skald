@@ -6,7 +6,6 @@
 
 #define CAP_ABI_V1 1u
 
-#define CAP_MAX 640
 #define CAP_KEY_LEN 96
 
 void cap_register_abi(const char *key, unsigned abi, void *fn);

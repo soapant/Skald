@@ -4,8 +4,8 @@
 #include <string.h>
 
 #include "deps/log.h"
+#include "deps/stb_ds.h"
 
-#define FOCUS_MAX 1024
 #define FOCUS_NAME_MAX 256
 #define FOCUS_LISTBOX_NAME "__listbox__"
 
@@ -18,8 +18,8 @@ typedef struct {
   FocusAdjustFn adjust;
 } FocusEntry;
 
-static FocusEntry s_entries[FOCUS_MAX];
-static int s_count = 0;
+static FocusEntry *s_entries;
+#define s_count (int)arrlenu(s_entries)
 static int s_current = -1;
 
 static char s_saved_name[FOCUS_NAME_MAX];
@@ -47,7 +47,7 @@ static int focus_find(const char *name) {
 
 void focus_frame_begin(bool include_listbox, int lb_x, int lb_y, int lb_w,
                        int lb_h) {
-  s_count = 0;
+  arrsetlen(s_entries, 0);
   s_current = -1;
   s_saved_seen = false;
   if (include_listbox) {
@@ -69,14 +69,14 @@ void focus_frame_end(void) {
 void focus_register(const char *name, FocusKind kind, int x, int y, int w,
                     int h, void *owner, FocusActivateFn activate,
                     FocusAdjustFn adjust) {
-  if (!name || !name[0] || s_count >= FOCUS_MAX)
+  if (!name || !name[0])
     return;
   int idx = focus_find(name);
   if (idx >= 0) {
     s_current = idx;
     return;
   }
-  FocusEntry *e = &s_entries[s_count];
+  FocusEntry *e = arraddnptr(s_entries, 1);
   snprintf(e->name, sizeof(e->name), "%s", name);
   e->kind = kind;
   e->x = x;
@@ -86,7 +86,7 @@ void focus_register(const char *name, FocusKind kind, int x, int y, int w,
   e->owner = owner;
   e->activate = activate;
   e->adjust = adjust;
-  idx = s_count++;
+  idx = s_count - 1;
   if (s_saved_name[0] && strcmp(s_saved_name, name) == 0 &&
       s_saved_kind == kind) {
     s_current = idx;

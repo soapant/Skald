@@ -8,6 +8,7 @@
 #include "config_values.h"
 #include "core/types/color.h"
 #include "core/config_toml.h"
+#include "deps/stb_ds.h"
 
 #ifndef CONFIG_SRC
 #define CONFIG_SRC "config/config.toml"
@@ -28,14 +29,13 @@ static ColorRef *theme_targets[] = {
 };
 
 #define THEME_SLOT_COUNT (sizeof(theme_slots) / sizeof(theme_slots[0]))
-#define THEME_MAX_PINNED 32
 typedef struct {
   char name[64];
   ColorRef value;
 } PinnedColor;
 
-static PinnedColor theme_pinned[THEME_MAX_PINNED];
-static int theme_pinned_count = 0;
+static PinnedColor *theme_pinned;
+#define theme_pinned_count arrlenu(theme_pinned)
 
 static bool slot_offset(const char *name, size_t *off) {
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++) {
@@ -59,21 +59,18 @@ static bool matches_any_theme(size_t off, ColorRef value) {
 }
 
 static bool pin_add(const char *name, ColorRef value) {
-  for (int i = 0; i < theme_pinned_count; i++) {
+  for (size_t i = 0; i < theme_pinned_count; i++) {
     if (strcmp(theme_pinned[i].name, name) == 0)
       return true;
   }
-  if (theme_pinned_count >= THEME_MAX_PINNED)
-    return false;
-  snprintf(theme_pinned[theme_pinned_count].name, sizeof(theme_pinned[0].name),
-           "%s", name);
-  theme_pinned[theme_pinned_count].value = value;
-  theme_pinned_count++;
+  PinnedColor *p = arraddnptr(theme_pinned, 1);
+  snprintf(p->name, sizeof(p->name), "%s", name);
+  p->value = value;
   return true;
 }
 
 static bool pin_lookup(const char *name, ColorRef *out) {
-  for (int i = 0; i < theme_pinned_count; i++) {
+  for (size_t i = 0; i < theme_pinned_count; i++) {
     if (strcmp(theme_pinned[i].name, name) == 0) {
       if (out)
         *out = theme_pinned[i].value;
@@ -112,18 +109,14 @@ static bool theme_pin_visit(const ConfigTomlEntry *e, void *user) {
 }
 
 bool theme_pin_scan_file(const char *path) {
-  memset(theme_pinned, 0, sizeof(theme_pinned));
-  theme_pinned_count = 0;
+  arrsetlen(theme_pinned, 0);
   if (!path || !path[0])
     return false;
   ConfigTomlStatus st = config_toml_parse(path, theme_pin_visit, NULL);
   return st == CONFIG_TOML_OK;
 }
 
-void theme_reset_pinned(void) {
-  memset(theme_pinned, 0, sizeof(theme_pinned));
-  theme_pinned_count = 0;
-}
+void theme_reset_pinned(void) { arrsetlen(theme_pinned, 0); }
 
 bool theme_color_pinned(const char *name) {
   if (!name || !name[0])

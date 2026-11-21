@@ -6,18 +6,21 @@
 
 #include "core/config_section.h"
 #include "core/config_toml.h"
+#include "core/toml_common.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 
-static bool section_is_bare_key(const char *s) {
-  if (!s || !*s)
-    return false;
-  for (const char *p = s; *p; p++) {
-    char c = *p;
-    if (!(isalnum((unsigned char)c) || c == '_' || c == '-'))
-      return false;
+static bool section_is_bare_key(const char *s) { return toml_is_bare_key(s); }
+
+static ConfigTomlStatus section_fail(ConfigTomlError *err,
+                                     ConfigTomlStatus status,
+                                     const char *message) {
+  if (err) {
+    err->status = status;
+    err->line = 0;
+    snprintf(err->message, sizeof(err->message), "%s", message ? message : "");
   }
-  return true;
+  return status;
 }
 
 static bool section_encode_key(char *out, size_t cap, const char *name) {
@@ -35,8 +38,7 @@ static char *section_trim(const char *s, size_t len) {
     s++;
     len--;
   }
-  while (len > 0 && isspace((unsigned char)s[len - 1]))
-    len--;
+  len = toml_trim_right_len(s, len);
   char *out = (char *)malloc(len + 1);
   if (!out)
     return NULL;
@@ -46,26 +48,15 @@ static char *section_trim(const char *s, size_t len) {
 }
 
 static size_t section_strip_comment(const char *s, size_t len) {
-  bool in_string = false;
-  for (size_t i = 0; i < len; i++) {
-    char c = s[i];
-    if (in_string) {
-      if (c == '\\' && i + 1 < len) {
-        i++;
-        continue;
-      }
-      if (c == '"')
-        in_string = false;
-      continue;
-    }
-    if (c == '"') {
-      in_string = true;
-      continue;
-    }
-    if (c == '#')
-      return i;
-  }
-  return len;
+  char *buf = (char *)malloc(len + 1);
+  if (!buf)
+    return len;
+  memcpy(buf, s, len);
+  buf[len] = '\0';
+  toml_strip_comment(buf, buf, len + 1);
+  size_t n = strlen(buf);
+  free(buf);
+  return n;
 }
 
 static int section_parse_entry_line(const char *line, size_t line_len,
@@ -376,21 +367,40 @@ static bool section_apply(const char *path, const char *section,
   return true;
 }
 
-bool config_section_set(const char *path, const char *section, const char *name,
-                        const char *value) {
+ConfigTomlStatus config_section_set_ex(const char *path, const char *section,
+                                       const char *name, const char *value,
+                                       ConfigTomlError *err) {
+  config_toml_error_clear(err);
   if (!path || !path[0] || !section || !section[0] || !name || !name[0] ||
       !value || !value[0])
-    return false;
+    return section_fail(err, CONFIG_TOML_ERR_ARG, "missing path/section/name/value");
   if (!section_is_bare_key(section))
-    return false;
-  return section_apply(path, section, name, value, false);
+    return section_fail(err, CONFIG_TOML_ERR_PARSE, "invalid section name");
+  if (!section_apply(path, section, name, value, false))
+    return section_fail(err, CONFIG_TOML_ERR_IO, "could not update config section");
+  return CONFIG_TOML_OK;
+}
+
+ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
+                                         const char *name,
+                                         ConfigTomlError *err) {
+  config_toml_error_clear(err);
+  if (!path || !path[0] || !section || !section[0] || !name || !name[0])
+    return section_fail(err, CONFIG_TOML_ERR_ARG, "missing path/section/name");
+  if (!section_is_bare_key(section))
+    return section_fail(err, CONFIG_TOML_ERR_PARSE, "invalid section name");
+  if (!section_apply(path, section, name, NULL, true))
+    return section_fail(err, CONFIG_TOML_ERR_IO, "could not clear config section");
+  return CONFIG_TOML_OK;
+}
+
+bool config_section_set(const char *path, const char *section, const char *name,
+                        const char *value) {
+  return config_section_set_ex(path, section, name, value, NULL) ==
+         CONFIG_TOML_OK;
 }
 
 bool config_section_clear(const char *path, const char *section,
                           const char *name) {
-  if (!path || !path[0] || !section || !section[0] || !name || !name[0])
-    return false;
-  if (!section_is_bare_key(section))
-    return false;
-  return section_apply(path, section, name, NULL, true);
+  return config_section_clear_ex(path, section, name, NULL) == CONFIG_TOML_OK;
 }

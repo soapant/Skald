@@ -24,12 +24,25 @@ typedef enum {
   CONFIG_TOML_OK = 0,
   CONFIG_TOML_ERR_IO,
   CONFIG_TOML_ERR_PARSE,
+  CONFIG_TOML_ERR_ARG,
+  CONFIG_TOML_ERR_REJECTED,
 } ConfigTomlStatus;
+
+typedef struct {
+  ConfigTomlStatus status;
+  int line;
+  char message[256];
+} ConfigTomlError;
+
+void config_toml_error_clear(ConfigTomlError *err);
+const char *config_toml_status_name(ConfigTomlStatus status);
 
 typedef bool (*ConfigTomlVisitFn)(const ConfigTomlEntry *entry, void *user);
 
 ConfigTomlStatus config_toml_parse(const char *path, ConfigTomlVisitFn visit,
                                    void *user);
+ConfigTomlStatus config_toml_parse_ex(const char *path, ConfigTomlVisitFn visit,
+                                      void *user, ConfigTomlError *err);
 
 bool config_toml_decode_string(const char *raw, char *out, size_t out_cap);
 

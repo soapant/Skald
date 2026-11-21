@@ -10,8 +10,7 @@
 #include "core/widget_registry.h"
 #include "helpers/helpers_render_thread.h"
 #include "helpers/helpers_owner.h"
-
-#define HOVER_WIDGET_MAX 8
+#include "deps/stb_ds.h"
 
 typedef struct {
   char key[64];
@@ -28,13 +27,14 @@ typedef struct {
   bool dead;
 } HoverWidgetSlot;
 
-static HoverWidgetSlot hover_widgets[HOVER_WIDGET_MAX];
+static HoverWidgetSlot **hover_widgets;
+#define hover_widget_count arrlenu(hover_widgets)
 
 static int hover_widget_find(const char *key) {
-  for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
-    if (hover_widgets[i].w && !hover_widgets[i].dead &&
-        strcmp(hover_widgets[i].key, key) == 0)
-      return i;
+  for (size_t i = 0; i < hover_widget_count; i++) {
+    if (hover_widgets[i]->w && !hover_widgets[i]->dead &&
+        strcmp(hover_widgets[i]->key, key) == 0)
+      return (int)i;
   }
   return -1;
 }
@@ -68,12 +68,18 @@ static void hover_widget_destroy_slot(HoverWidgetSlot *s) {
   PlatformWidget *w = s->w;
   void (*release)(void *) = s->release;
   void *release_ud = s->release_ud;
-  memset(s, 0, sizeof(*s));
+  for (size_t i = 0; i < hover_widget_count; i++) {
+    if (hover_widgets[i] == s) {
+      arrdel(hover_widgets, i);
+      break;
+    }
+  }
   if (w) {
     widget_set_frame_callback(w, NULL, NULL);
     Platform_Widget_Destroy(w);
     Platform_Widget_FlushDestruction();
   }
+  free(s);
   if (release)
     release(release_ud);
 }
@@ -84,7 +90,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
                                void (*release)(void *ud), void *release_ud) {
   int idx = hover_widget_find(key);
   if (idx >= 0) {
-    HoverWidgetSlot *s = &hover_widgets[idx];
+    HoverWidgetSlot *s = hover_widgets[idx];
     void (*old_release)(void *) = s->release;
     void *old_release_ud = s->release_ud;
     s->render = render;
@@ -118,20 +124,13 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
       old_release(old_release_ud);
     return;
   }
-  idx = -1;
-  for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
-    if (!hover_widgets[i].w) {
-      idx = i;
-      break;
-    }
-  }
-  if (idx < 0) {
+  HoverWidgetSlot *s = (HoverWidgetSlot *)calloc(1, sizeof(*s));
+  if (!s) {
     if (release)
       release(release_ud);
     return;
   }
-  HoverWidgetSlot *s = &hover_widgets[idx];
-  memset(s, 0, sizeof(*s));
+  arrput(hover_widgets, s);
   snprintf(s->key, sizeof(s->key), "%s", key);
   s->render = render;
   s->ud = ud;
@@ -148,9 +147,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   PlatformWidget *pw =
       Platform_Widget_Create(x - w / 2, y - h / 2, w, h, fps, no_bg, NULL, key);
   if (!pw) {
-    memset(s, 0, sizeof(*s));
-    if (release)
-      release(release_ud);
+    hover_widget_destroy_slot(s);
     return;
   }
   s->w = pw;
@@ -167,7 +164,7 @@ static void hover_widget_hide_apply(const char *key) {
   if (idx < 0) {
     return;
   }
-  hover_widget_destroy_slot(&hover_widgets[idx]);
+  hover_widget_destroy_slot(hover_widgets[idx]);
 }
 
 void hover_widget_purge_owner(const char *path_a, const char *path_b) {
@@ -175,8 +172,8 @@ void hover_widget_purge_owner(const char *path_a, const char *path_b) {
     return;
   }
   bool any = false;
-  for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
-    HoverWidgetSlot *s = &hover_widgets[i];
+  for (size_t i = 0; i < hover_widget_count; i++) {
+    HoverWidgetSlot *s = hover_widgets[i];
     if (!s->w || s->dead) {
       continue;
     }
@@ -189,10 +186,12 @@ void hover_widget_purge_owner(const char *path_a, const char *path_b) {
     return;
   }
   render_thread_sync();
-  for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
-    if (hover_widgets[i].dead) {
-      hover_widget_destroy_slot(&hover_widgets[i]);
+  for (size_t i = 0; i < hover_widget_count;) {
+    if (hover_widgets[i]->dead) {
+      hover_widget_destroy_slot(hover_widgets[i]);
+      continue;
     }
+    i++;
   }
 }
 

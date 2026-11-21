@@ -6,6 +6,7 @@
 #include "helpers/x11/raw_platform_x11.h"
 #include "helpers/x11/drawing_x11.h"
 #include "helpers/helpers_misc.h"
+#include "helpers/x11/clipboard_backend_x11.h"
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 
@@ -994,60 +995,25 @@ char *Platform_GetIconPath(char *app_path) {
 int Platform_CopyToClipboard(const char *text) {
   if (!text)
     return 0;
-  long long t0 = Platform_GetWallClockMs();
-  int wr = 0;
-  int xr = 0;
-  log_info("COPY BEGIN pid=%d len=%d text='%s' WAYLAND_DISPLAY=%s "
-           "HYPRLAND_INSTANCE_SIGNATURE=%s",
-           (int)getpid(), (int)strlen(text), text,
-           getenv("WAYLAND_DISPLAY") ? getenv("WAYLAND_DISPLAY") : "(unset)",
-           getenv("HYPRLAND_INSTANCE_SIGNATURE") ? "set" : "(unset)");
-  if (x11_clipboard_available()) {
-    long long tw = Platform_GetWallClockMs();
-    wr = x11_clipboard_set_text(text);
-    log_info("COPY step1 wayland ret=%d ms=%lld", wr,
-             Platform_GetWallClockMs() - tw);
-  } else {
-    log_info("COPY step1 wayland SKIPPED (no WAYLAND_DISPLAY)");
-  }
-  long long tx = Platform_GetWallClockMs();
-  xr = x11_clipboard_set_text(text);
-  log_info("COPY step2 x11 ret=%d ms=%lld", xr, Platform_GetWallClockMs() - tx);
-  if (!wr && !xr)
-    log_warn("Platform_CopyToClipboard failed both backends");
-  log_info("COPY END total_ms=%lld len=%d wr=%d xr=%d",
-           Platform_GetWallClockMs() - t0, (int)strlen(text), wr, xr);
-  return (wr || xr);
+  x11_clipboard_backend_init();
+  int ok = x11_clipboard_backend_set_text(text);
+  if (!ok)
+    log_warn("Platform_CopyToClipboard failed all clipboard backends");
+  return ok;
 }
 
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
   if (!png || len == 0)
     return 0;
-  int wr = 0;
-  int xr = 0;
-  if (x11_clipboard_available()) {
-    wr = x11_clipboard_set_image(png, len);
-    log_info("Platform_CopyImageToClipboard wayland=%d", wr);
-  }
-  xr = x11_clipboard_set_image(png, len);
-  log_info("Platform_CopyImageToClipboard x11=%d", xr);
-  if (!wr && !xr)
-    log_warn("Platform_CopyImageToClipboard failed both backends");
-  return (wr || xr);
+  x11_clipboard_backend_init();
+  return x11_clipboard_backend_set_image(png, len);
 }
 
 int Platform_SetFileToClipboard(const char *path) {
   if (!path || path[0] == 0)
     return 0;
-  int wr = 0;
-  int xr = 0;
-  if (x11_clipboard_available()) {
-    wr = x11_clipboard_set_file(path);
-    log_info("Platform_SetFileToClipboard wayland=%d", wr);
-  }
-  xr = x11_clipboard_set_file(path);
-  log_info("Platform_SetFileToClipboard x11=%d", xr);
-  return (wr || xr);
+  x11_clipboard_backend_init();
+  return x11_clipboard_backend_set_file(path);
 }
 
 char *Platform_RunArgvCapture(const char *const argv[], const char *stdin_data,
@@ -1242,6 +1208,7 @@ bool Platform_InitDisplaySafe(void) {
       globfree(&g);
     }
   }
+  x11_clipboard_backend_init();
   if (!x11_init_display()) {
     log_info("Continuing without X11 display (headless mode)");
     return false;
@@ -1250,8 +1217,7 @@ bool Platform_InitDisplaySafe(void) {
 }
 
 void Platform_CleanupDisplaySafe(void) {
-  x11_clipboard_shutdown();
-  x11_clipboard_shutdown();
+  x11_clipboard_backend_shutdown();
   x11_cleanup_display();
 }
 

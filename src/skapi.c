@@ -2338,15 +2338,13 @@ bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout) {
                         timeout);
 }
 
-#define SKI_LIB_TRACK_MAX 32
-
 typedef struct {
   SkLibrary lib;
   char canon[MAX_PATH];
 } SkiLibTrack;
 
-static SkiLibTrack ski_lib_track[SKI_LIB_TRACK_MAX];
-static size_t ski_lib_track_count = 0;
+static SkiLibTrack *ski_lib_track;
+#define ski_lib_track_count arrlenu(ski_lib_track)
 
 static bool sk_lib_canonical_path(const char *path, char *out, size_t cap) {
   if (!path || !out || cap == 0)
@@ -2372,18 +2370,13 @@ static bool sk_lib_path_equal(const char *a, const char *b) {
 }
 
 static void ski_lib_track_add(SkLibrary lib, const char *canon) {
-  if (ski_lib_track_count >= SKI_LIB_TRACK_MAX) {
-    log_error("sk_library_open: tracking table full, not tracking '%s'", canon);
-    return;
-  }
-  SkiLibTrack *e = &ski_lib_track[ski_lib_track_count++];
+  SkiLibTrack *e = arraddnptr(ski_lib_track, 1);
   e->lib = lib;
   snprintf(e->canon, sizeof(e->canon), "%s", canon);
 }
 
 static void ski_lib_track_remove(size_t idx) {
-  ski_lib_track[idx] = ski_lib_track[ski_lib_track_count - 1];
-  ski_lib_track_count--;
+  arrdelswap(ski_lib_track, idx);
 }
 
 SkLibrary sk_library_open(const char *path) {
@@ -2926,30 +2919,27 @@ typedef struct {
   SkLibrary handle;
 } LibraryEntry;
 
-static LibraryEntry library_registry[32];
-static int registry_count = 0;
+static LibraryEntry *library_registry;
+#define registry_count arrlenu(library_registry)
 
 void sk_library_register(const char *name, SkLibrary handle) {
   if (!name || !handle)
     return;
-  for (int i = 0; i < registry_count; ++i) {
+  for (size_t i = 0; i < registry_count; ++i) {
     if (strcmp(library_registry[i].name, name) == 0) {
       library_registry[i].handle = handle;
       return;
     }
   }
-  if (registry_count < 32) {
-    snprintf(library_registry[registry_count].name,
-             sizeof(library_registry[registry_count].name), "%s", name);
-    library_registry[registry_count].handle = handle;
-    registry_count++;
-  }
+  LibraryEntry *e = arraddnptr(library_registry, 1);
+  snprintf(e->name, sizeof(e->name), "%s", name);
+  e->handle = handle;
 }
 
 SkLibrary sk_library_get(const char *name) {
   if (!name)
     return NULL;
-  for (int i = 0; i < registry_count; ++i) {
+  for (size_t i = 0; i < registry_count; ++i) {
     if (strcmp(library_registry[i].name, name) == 0)
       return library_registry[i].handle;
   }
@@ -3071,42 +3061,37 @@ int sk_get_screen_height(void) {
 
 #define SK_CONFIG_SETTING_KEY_MAX 384
 #define SK_CONFIG_SETTING_VALUE_MAX 1024
-#define SK_CONFIG_MAX_ENTRIES 256
 
 static void sk_config_init_locked(void);
 static void sk_config_lock(void);
 static void sk_config_unlock(void);
 
 typedef struct {
-  char key[SK_CONFIG_SETTING_KEY_MAX];
-  char value[SK_CONFIG_SETTING_VALUE_MAX];
+  char *key;
+  char *value;
 } SkConfigSettingEntry;
 
-static int setting_entry_count = 0;
-static SkConfigSettingEntry setting_entries[SK_CONFIG_MAX_ENTRIES];
+static SkConfigSettingEntry *setting_entries;
+#define setting_entry_count arrlenu(setting_entries)
 
 static const char *setting_lookup_locked(const char *key) {
-  for (int i = 0; i < setting_entry_count; i++)
+  for (size_t i = 0; i < setting_entry_count; i++)
     if (strcmp(setting_entries[i].key, key) == 0)
       return setting_entries[i].value;
   return NULL;
 }
 
 static void setting_entries_set(const char *key, const char *value) {
-  for (int i = 0; i < setting_entry_count; i++) {
+  for (size_t i = 0; i < setting_entry_count; i++) {
     if (strcmp(setting_entries[i].key, key) == 0) {
-      snprintf(setting_entries[i].value, sizeof(setting_entries[i].value), "%s",
-               value ? value : "");
+      free(setting_entries[i].value);
+      setting_entries[i].value = strdup(value ? value : "");
       return;
     }
   }
-  if (setting_entry_count >= SK_CONFIG_MAX_ENTRIES) {
-    log_error("sk_config: setting table full, dropping '%s'", key);
-    return;
-  }
-  SkConfigSettingEntry *e = &setting_entries[setting_entry_count++];
-  snprintf(e->key, sizeof(e->key), "%s", key);
-  snprintf(e->value, sizeof(e->value), "%s", value ? value : "");
+  SkConfigSettingEntry *e = arraddnptr(setting_entries, 1);
+  e->key = strdup(key);
+  e->value = strdup(value ? value : "");
 }
 
 static bool setting_parse_bool(const char *v, bool *out) {
@@ -3168,24 +3153,32 @@ typedef struct {
   char owner[OWNER_PATH_MAX];
 } SkCcEntry;
 
-static int cc_entry_count = 0;
-static SkCcEntry cc_entries[4096];
+static SkCcEntry *cc_entries;
+#define cc_entry_count arrlenu(cc_entries)
 
-#define SK_CC_DEP_OWNERS 256
-static char cc_dep_owners[SK_CC_DEP_OWNERS][OWNER_PATH_MAX];
-static int cc_dep_owner_count = 0;
+static void cc_rebind_all(void) {
+  for (size_t i = 0; i < cc_entry_count; i++) {
+    SkCcEntry *e = &cc_entries[i];
+    e->pub.display_name = e->display_name;
+    e->pub.internal_name = e->internal_name;
+    e->pub.icon = e->icon;
+    e->pub.type = e->type;
+  }
+}
+
+static char (*cc_dep_owners)[OWNER_PATH_MAX];
+#define cc_dep_owner_count arrlenu(cc_dep_owners)
 
 static bool cc_dep_seen(const char *owner) {
-  for (int i = 0; i < cc_dep_owner_count; i++)
+  for (size_t i = 0; i < cc_dep_owner_count; i++)
     if (strcmp(cc_dep_owners[i], owner) == 0)
       return true;
   return false;
 }
 
 static void cc_dep_mark(const char *owner) {
-  if (cc_dep_owner_count >= SK_CC_DEP_OWNERS)
-    return;
-  snprintf(cc_dep_owners[cc_dep_owner_count++], OWNER_PATH_MAX, "%s", owner);
+  char (*e)[OWNER_PATH_MAX] = arraddnptr(cc_dep_owners, 1);
+  snprintf(*e, OWNER_PATH_MAX, "%s", owner);
 }
 
 static const char *cc_dup(char *dst, size_t cap, const char *src) {
@@ -3197,17 +3190,16 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   if (!spec)
     return false;
   int slot = -1;
-  for (int i = 0; i < cc_entry_count; i++) {
+  for (size_t i = 0; i < cc_entry_count; i++) {
     if (spec->display_name && cc_entries[i].display_name[0] &&
         strcmp(cc_entries[i].display_name, spec->display_name) == 0) {
-      slot = i;
+      slot = (int)i;
       break;
     }
   }
   if (slot < 0) {
-    if (cc_entry_count >= 4096)
-      return false;
-    slot = cc_entry_count++;
+    slot = (int)cc_entry_count;
+    arrput(cc_entries, (SkCcEntry){0});
   }
   SkCcEntry *e = &cc_entries[slot];
   memset(e, 0, sizeof(*e));
@@ -3259,6 +3251,7 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   }
   if (spec->type && strcmp(spec->type, "Feature") == 0)
     feature_list_add(spec->display_name, spec->on_action, spec->icon, e->owner);
+  cc_rebind_all();
   return true;
 }
 
@@ -3335,10 +3328,10 @@ const SettingsEntrySpec *sk_settings_entry_at(int index) {
   return settings_entry_at(index);
 }
 
-int sk_cc_entry_count(void) { return cc_entry_count; }
+int sk_cc_entry_count(void) { return (int)cc_entry_count; }
 
 const SkCcEntrySpec *sk_cc_entry_at(int index) {
-  if (index < 0 || index >= cc_entry_count)
+  if (index < 0 || (size_t)index >= cc_entry_count)
     return NULL;
   return &cc_entries[index].pub;
 }
@@ -3346,74 +3339,61 @@ const SkCcEntrySpec *sk_cc_entry_at(int index) {
 void cc_registry_purge_owner(const char *path_a, const char *path_b) {
   if (!path_a && !path_b)
     return;
-  int out = 0;
-  for (int i = 0; i < cc_entry_count; i++) {
-    if (owner_module_matches(cc_entries[i].owner, path_a, path_b))
+  for (size_t i = 0; i < cc_entry_count;) {
+    if (owner_module_matches(cc_entries[i].owner, path_a, path_b)) {
+      arrdel(cc_entries, i);
       continue;
-    if (out != i) {
-      cc_entries[out] = cc_entries[i];
-      cc_entries[out].pub.display_name = cc_entries[out].display_name;
-      cc_entries[out].pub.internal_name = cc_entries[out].internal_name;
-      cc_entries[out].pub.icon = cc_entries[out].icon;
-      cc_entries[out].pub.type = cc_entries[out].type;
     }
-    out++;
+    i++;
   }
-  for (int i = out; i < cc_entry_count; i++)
-    memset(&cc_entries[i], 0, sizeof(cc_entries[i]));
-  cc_entry_count = out;
+  cc_rebind_all();
 }
 
-#define SK_MAX_ALIASES 1024
-static char alias_alias[SK_MAX_ALIASES][128];
-static char alias_target[SK_MAX_ALIASES][256];
-static int alias_count = 0;
+typedef struct {
+  char *alias;
+  char *target;
+} SkAliasEntry;
+
+static SkAliasEntry *sk_alias_entries;
+#define alias_count arrlenu(sk_alias_entries)
 
 bool ski_add_alias(const SkAliasSpec *spec) {
   if (!spec || !spec->alias || !spec->target)
     return false;
-  if (alias_count >= SK_MAX_ALIASES)
-    return false;
-  for (int i = 0; i < alias_count; i++) {
-    if (strcmp(alias_target[i], spec->target) == 0) {
-      snprintf(alias_alias[i], sizeof(alias_alias[i]), "%s", spec->alias);
+  for (size_t i = 0; i < alias_count; i++) {
+    if (strcmp(sk_alias_entries[i].target, spec->target) == 0) {
+      free(sk_alias_entries[i].alias);
+      sk_alias_entries[i].alias = strdup(spec->alias);
       return true;
     }
   }
-  snprintf(alias_alias[alias_count], sizeof(alias_alias[alias_count]), "%s",
-           spec->alias);
-  snprintf(alias_target[alias_count], sizeof(alias_target[alias_count]), "%s",
-           spec->target);
-  alias_count++;
+  SkAliasEntry *e = arraddnptr(sk_alias_entries, 1);
+  e->alias = strdup(spec->alias);
+  e->target = strdup(spec->target);
   return true;
 }
 
 bool ski_remove_alias(const char *alias) {
   if (!alias)
     return false;
-  int n = 0;
-  bool found = false;
-  for (int i = 0; i < alias_count; i++) {
-    if (strcmp(alias_alias[i], alias) == 0) {
-      found = true;
-      continue;
+  for (size_t i = 0; i < alias_count;) {
+    if (strcmp(sk_alias_entries[i].alias, alias) == 0) {
+      free(sk_alias_entries[i].alias);
+      free(sk_alias_entries[i].target);
+      arrdel(sk_alias_entries, i);
+      return true;
     }
-    if (n != i) {
-      memmove(alias_alias[n], alias_alias[i], sizeof(alias_alias[n]));
-      memmove(alias_target[n], alias_target[i], sizeof(alias_target[n]));
-    }
-    n++;
+    i++;
   }
-  alias_count = n;
-  return found;
+  return false;
 }
 
 const char *sk_alias_for(const char *target) {
   if (!target)
     return NULL;
-  for (int i = 0; i < alias_count; i++) {
-    if (strcmp(alias_target[i], target) == 0)
-      return alias_alias[i];
+  for (size_t i = 0; i < alias_count; i++) {
+    if (strcmp(sk_alias_entries[i].target, target) == 0)
+      return sk_alias_entries[i].alias;
   }
   return NULL;
 }
@@ -3623,14 +3603,14 @@ typedef struct {
   char target[SK_CONFIG_QUICKLINK_TARGET_MAX];
 } SkConfigQuicklinkEntry;
 
-static SkConfigHotkeyEntry hotkey_entries[SK_CONFIG_MAX_ENTRIES];
-static int hotkey_entry_count = 0;
+static SkConfigHotkeyEntry *hotkey_entries;
+#define hotkey_entry_count arrlenu(hotkey_entries)
 
-static SkConfigAliasEntry alias_entries[SK_CONFIG_MAX_ENTRIES];
-static int alias_entry_count = 0;
+static SkConfigAliasEntry *alias_entries;
+#define alias_entry_count arrlenu(alias_entries)
 
-static SkConfigQuicklinkEntry quicklink_entries[SK_CONFIG_MAX_ENTRIES];
-static int quicklink_entry_count = 0;
+static SkConfigQuicklinkEntry *quicklink_entries;
+#define quicklink_entry_count arrlenu(quicklink_entries)
 
 static void *sk_config_mutex = NULL;
 static char sk_config_path[1024];
@@ -3651,7 +3631,7 @@ static void sk_config_unlock(void) {
 static int hotkey_index_of(const char *name) {
   if (!name)
     return -1;
-  for (int i = 0; i < hotkey_entry_count; i++)
+  for (size_t i = 0; i < hotkey_entry_count; i++)
     if (sk_string_equals_ci(hotkey_entries[i].name, name))
       return i;
   return -1;
@@ -3660,7 +3640,7 @@ static int hotkey_index_of(const char *name) {
 static int hotkey_index_by_key(const char *hotkey) {
   if (!hotkey)
     return -1;
-  for (int i = 0; i < hotkey_entry_count; i++)
+  for (size_t i = 0; i < hotkey_entry_count; i++)
     if (sk_string_equals_ci(hotkey_entries[i].hotkey, hotkey))
       return i;
   return -1;
@@ -3669,7 +3649,7 @@ static int hotkey_index_by_key(const char *hotkey) {
 static int alias_index_of(const char *target) {
   if (!target)
     return -1;
-  for (int i = 0; i < alias_entry_count; i++)
+  for (size_t i = 0; i < alias_entry_count; i++)
     if (sk_string_equals_ci(alias_entries[i].target, target))
       return i;
   return -1;
@@ -3678,35 +3658,17 @@ static int alias_index_of(const char *target) {
 static int quicklink_index_of(const char *name) {
   if (!name)
     return -1;
-  for (int i = 0; i < quicklink_entry_count; i++)
+  for (size_t i = 0; i < quicklink_entry_count; i++)
     if (sk_string_equals_ci(quicklink_entries[i].name, name))
       return i;
   return -1;
 }
 
-static void hotkey_entries_remove(int i) {
-  for (int j = i; j + 1 < hotkey_entry_count; j++)
-    hotkey_entries[j] = hotkey_entries[j + 1];
-  memset(&hotkey_entries[hotkey_entry_count - 1], 0,
-         sizeof(hotkey_entries[hotkey_entry_count - 1]));
-  hotkey_entry_count--;
-}
+static void hotkey_entries_remove(int i) { arrdel(hotkey_entries, i); }
 
-static void quicklink_entries_remove(int i) {
-  for (int j = i; j + 1 < quicklink_entry_count; j++)
-    quicklink_entries[j] = quicklink_entries[j + 1];
-  memset(&quicklink_entries[quicklink_entry_count - 1], 0,
-         sizeof(quicklink_entries[quicklink_entry_count - 1]));
-  quicklink_entry_count--;
-}
+static void quicklink_entries_remove(int i) { arrdel(quicklink_entries, i); }
 
-static void alias_entries_remove(int i) {
-  for (int j = i; j + 1 < alias_entry_count; j++)
-    alias_entries[j] = alias_entries[j + 1];
-  memset(&alias_entries[alias_entry_count - 1], 0,
-         sizeof(alias_entries[alias_entry_count - 1]));
-  alias_entry_count--;
-}
+static void alias_entries_remove(int i) { arrdel(alias_entries, i); }
 
 static void hotkey_entries_set(const char *name, const char *hotkey) {
   int i = hotkey_index_of(name);
@@ -3715,15 +3677,9 @@ static void hotkey_entries_set(const char *name, const char *hotkey) {
              hotkey);
     return;
   }
-  if (hotkey_entry_count >= SK_CONFIG_MAX_ENTRIES) {
-    log_error("sk_config: hotkey table full");
-    return;
-  }
-  snprintf(hotkey_entries[hotkey_entry_count].name,
-           sizeof(hotkey_entries[hotkey_entry_count].name), "%s", name);
-  snprintf(hotkey_entries[hotkey_entry_count].hotkey,
-           sizeof(hotkey_entries[hotkey_entry_count].hotkey), "%s", hotkey);
-  hotkey_entry_count++;
+  SkConfigHotkeyEntry *e = arraddnptr(hotkey_entries, 1);
+  snprintf(e->name, sizeof(e->name), "%s", name);
+  snprintf(e->hotkey, sizeof(e->hotkey), "%s", hotkey);
 }
 
 static void quicklink_entries_set(const char *name, const char *target) {
@@ -3733,16 +3689,9 @@ static void quicklink_entries_set(const char *name, const char *target) {
              "%s", target);
     return;
   }
-  if (quicklink_entry_count >= SK_CONFIG_MAX_ENTRIES) {
-    log_error("sk_config: quicklink table full");
-    return;
-  }
-  snprintf(quicklink_entries[quicklink_entry_count].name,
-           sizeof(quicklink_entries[quicklink_entry_count].name), "%s", name);
-  snprintf(quicklink_entries[quicklink_entry_count].target,
-           sizeof(quicklink_entries[quicklink_entry_count].target), "%s",
-           target);
-  quicklink_entry_count++;
+  SkConfigQuicklinkEntry *e = arraddnptr(quicklink_entries, 1);
+  snprintf(e->name, sizeof(e->name), "%s", name);
+  snprintf(e->target, sizeof(e->target), "%s", target);
 }
 
 static void alias_entries_set(const char *target, const char *alias) {
@@ -3752,15 +3701,9 @@ static void alias_entries_set(const char *target, const char *alias) {
              alias);
     return;
   }
-  if (alias_entry_count >= SK_CONFIG_MAX_ENTRIES) {
-    log_error("sk_config: alias table full");
-    return;
-  }
-  snprintf(alias_entries[alias_entry_count].target,
-           sizeof(alias_entries[alias_entry_count].target), "%s", target);
-  snprintf(alias_entries[alias_entry_count].alias,
-           sizeof(alias_entries[alias_entry_count].alias), "%s", alias);
-  alias_entry_count++;
+  SkConfigAliasEntry *e = arraddnptr(alias_entries, 1);
+  snprintf(e->target, sizeof(e->target), "%s", target);
+  snprintf(e->alias, sizeof(e->alias), "%s", alias);
 }
 
 static bool sk_config_parse_path(void) {
@@ -3854,7 +3797,7 @@ static void sk_config_migrate_hotkeys_txt(const char *dir) {
              "control_center/hotkeys.txt",
              migrated);
     if (sk_config_ready())
-      for (int i = 0; i < hotkey_entry_count; i++)
+      for (size_t i = 0; i < hotkey_entry_count; i++)
         config_section_set(sk_config_path, "hotkeys", hotkey_entries[i].name,
                            hotkey_entries[i].hotkey);
   }
@@ -3871,19 +3814,21 @@ static void sk_config_init_locked(void) {
     log_error("sk_config: data dir unavailable, config persistence disabled");
     return;
   }
-  ConfigTomlStatus st =
-      config_toml_parse(sk_config_path, sk_config_apply_entry, NULL);
+  ConfigTomlError err;
+  ConfigTomlStatus st = config_toml_parse_ex(sk_config_path,
+                                             sk_config_apply_entry, NULL, &err);
   if (st == CONFIG_TOML_ERR_IO)
     log_info("sk_config: %s not found, starting with empty tables",
              sk_config_path);
-  else if (st == CONFIG_TOML_ERR_PARSE)
-    log_error("sk_config: parse failed for %s, keeping defaults",
-              sk_config_path);
+  else if (st != CONFIG_TOML_OK)
+    log_error("sk_config: %s failed at line %d (%s): %s, keeping defaults",
+              sk_config_path, err.line, config_toml_status_name(st),
+              err.message[0] ? err.message : "invalid config");
 
   if (dir[0])
     sk_config_migrate_hotkeys_txt(dir);
 
-  for (int i = 0; i < alias_entry_count; i++)
+  for (size_t i = 0; i < alias_entry_count; i++)
     sk_register_alias(.alias = alias_entries[i].alias,
                       .target = alias_entries[i].target);
 }
@@ -3997,7 +3942,7 @@ bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud) {
 int sk_config_hotkey_count(void) {
   sk_config_lock();
   sk_config_init_locked();
-  int n = hotkey_entry_count;
+  int n = (int)hotkey_entry_count;
   sk_config_unlock();
   return n;
 }
@@ -4005,7 +3950,7 @@ int sk_config_hotkey_count(void) {
 char *sk_config_hotkey_name_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  bool ok = index >= 0 && index < hotkey_entry_count;
+  bool ok = index >= 0 && (size_t)index < hotkey_entry_count;
   char *out = ok ? strdup(hotkey_entries[index].name) : NULL;
   sk_config_unlock();
   return out;
@@ -4014,7 +3959,7 @@ char *sk_config_hotkey_name_at(int index) {
 char *sk_config_hotkey_value_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  bool ok = index >= 0 && index < hotkey_entry_count;
+  bool ok = index >= 0 && (size_t)index < hotkey_entry_count;
   char *out = ok ? strdup(hotkey_entries[index].hotkey) : NULL;
   sk_config_unlock();
   return out;
@@ -4080,7 +4025,7 @@ bool sk_config_clear_alias(const char *target) {
 int sk_config_alias_count(void) {
   sk_config_lock();
   sk_config_init_locked();
-  int n = alias_entry_count;
+  int n = (int)alias_entry_count;
   sk_config_unlock();
   return n;
 }
@@ -4088,7 +4033,7 @@ int sk_config_alias_count(void) {
 char *sk_config_alias_target_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  bool ok = index >= 0 && index < alias_entry_count;
+  bool ok = index >= 0 && (size_t)index < alias_entry_count;
   char *out = ok ? strdup(alias_entries[index].target) : NULL;
   sk_config_unlock();
   return out;
@@ -4097,7 +4042,7 @@ char *sk_config_alias_target_at(int index) {
 char *sk_config_alias_value_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  bool ok = index >= 0 && index < alias_entry_count;
+  bool ok = index >= 0 && (size_t)index < alias_entry_count;
   char *out = ok ? strdup(alias_entries[index].alias) : NULL;
   sk_config_unlock();
   return out;
@@ -4106,7 +4051,7 @@ char *sk_config_alias_value_at(int index) {
 int sk_config_quicklink_count(void) {
   sk_config_lock();
   sk_config_init_locked();
-  int n = quicklink_entry_count;
+  int n = (int)quicklink_entry_count;
   sk_config_unlock();
   return n;
 }
@@ -4114,7 +4059,7 @@ int sk_config_quicklink_count(void) {
 char *sk_config_quicklink_name_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  bool ok = index >= 0 && index < quicklink_entry_count;
+  bool ok = index >= 0 && (size_t)index < quicklink_entry_count;
   char *out = ok ? strdup(quicklink_entries[index].name) : NULL;
   sk_config_unlock();
   return out;
@@ -4123,7 +4068,7 @@ char *sk_config_quicklink_name_at(int index) {
 char *sk_config_quicklink_value_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  bool ok = index >= 0 && index < quicklink_entry_count;
+  bool ok = index >= 0 && (size_t)index < quicklink_entry_count;
   char *out = ok ? strdup(quicklink_entries[index].target) : NULL;
   sk_config_unlock();
   return out;
@@ -4232,7 +4177,7 @@ bool sk_config_has_setting(const char *key) {
 int sk_config_setting_count(void) {
   sk_config_lock();
   sk_config_init_locked();
-  int n = setting_entry_count;
+  int n = (int)setting_entry_count;
   sk_config_unlock();
   return n;
 }
@@ -4240,7 +4185,7 @@ int sk_config_setting_count(void) {
 const char *sk_config_setting_name_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  const char *out = (index >= 0 && index < setting_entry_count)
+  const char *out = (index >= 0 && (size_t)index < setting_entry_count)
                         ? setting_entries[index].key
                         : NULL;
   sk_config_unlock();
@@ -4250,7 +4195,7 @@ const char *sk_config_setting_name_at(int index) {
 const char *sk_config_setting_value_at(int index) {
   sk_config_lock();
   sk_config_init_locked();
-  const char *out = (index >= 0 && index < setting_entry_count)
+  const char *out = (index >= 0 && (size_t)index < setting_entry_count)
                         ? setting_entries[index].value
                         : NULL;
   sk_config_unlock();

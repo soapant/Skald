@@ -212,38 +212,38 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
   return prompt_user_run(wm, spec);
 }
 
-#define MAX_EVENT_CALLBACKS 16
 struct EventSlot {
   EventCallback cb;
   char owner[OWNER_PATH_MAX];
 };
-static struct EventSlot event_registry[2][MAX_EVENT_CALLBACKS] = {0};
+static struct EventSlot *event_registry[2];
 
 void event_bus_register(Event event, EventCallback cb) {
   if (event < 0 || event >= 2 || !cb)
     return;
-  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
+  struct EventSlot *slot = NULL;
+  for (size_t i = 0; i < arrlenu(event_registry[event]); ++i) {
     if (event_registry[event][i].cb == NULL) {
-      event_registry[event][i].owner[0] = '\0';
-      owner_resolve_for_func((void *)cb, event_registry[event][i].owner,
-                             sizeof(event_registry[event][i].owner));
-      if (event_registry[event][i].owner[0] == '\0') {
-        log_warn("event_bus_register: cannot resolve owner, dropping callback");
-        return;
-      }
-      event_registry[event][i].cb = cb;
-      return;
+      slot = &event_registry[event][i];
+      break;
     }
   }
-  log_error(
-      "event_bus_register: event %d table is full (%d slots), callback dropped",
-      event, MAX_EVENT_CALLBACKS);
+  if (!slot)
+    slot = arraddnptr(event_registry[event], 1);
+  slot->cb = NULL;
+  slot->owner[0] = '\0';
+  owner_resolve_for_func((void *)cb, slot->owner, sizeof(slot->owner));
+  if (slot->owner[0] == '\0') {
+    log_warn("event_bus_register: cannot resolve owner, dropping callback");
+    return;
+  }
+  slot->cb = cb;
 }
 
 void event_bus_unregister(Event event, EventCallback cb) {
   if (event < 0 || event >= 2)
     return;
-  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
+  for (size_t i = 0; i < arrlenu(event_registry[event]); ++i) {
     if (event_registry[event][i].cb == cb) {
       event_registry[event][i].cb = NULL;
       event_registry[event][i].owner[0] = '\0';
@@ -256,7 +256,7 @@ void event_bus_purge_owner(const char *path_a, const char *path_b) {
   if (owner_purge_inactive(path_a, path_b))
     return;
   for (int e = 0; e < 2; ++e) {
-    for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
+    for (size_t i = 0; i < arrlenu(event_registry[e]); ++i) {
       if (event_registry[e][i].cb &&
           owner_module_matches(event_registry[e][i].owner, path_a, path_b)) {
         event_registry[e][i].cb = NULL;
@@ -269,7 +269,7 @@ void event_bus_purge_owner(const char *path_a, const char *path_b) {
 void event_bus_trigger(Event event) {
   if (event < 0 || event >= 2)
     return;
-  for (int i = 0; i < MAX_EVENT_CALLBACKS; ++i) {
+  for (size_t i = 0; i < arrlenu(event_registry[event]); ++i) {
     if (event_registry[event][i].cb) {
       event_registry[event][i].cb();
     }
@@ -279,5 +279,6 @@ void event_bus_trigger(Event event) {
 void WindowManager_Reset(void) {
   popup_push_in_progress = false;
   window_manager = NULL;
-  memset(event_registry, 0, sizeof(event_registry));
+  arrfree(event_registry[0]);
+  arrfree(event_registry[1]);
 }

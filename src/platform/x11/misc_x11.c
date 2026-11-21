@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include "wm/wm.h"
 #include "helpers/x11/clipboard_x11.h"
-#include "helpers/x11/clipboard_x11.h"
+#include "helpers/x11/clipboard_backend_x11.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_misc.h"
 #include "config_values.h"
@@ -233,7 +233,9 @@ char *Platform_GetClipboardEntry(void) {
   static unsigned long last_owner = 0;
   static bool owner_seen = false;
   long long now = Platform_GetWallClockMs();
-  unsigned long owner = x11_clipboard_owner();
+  x11_clipboard_backend_init();
+  bool wayland = x11_clipboard_backend_is_wayland();
+  unsigned long owner = wayland ? 1 : x11_clipboard_owner();
   if (!owner_seen || owner != last_owner) {
     owner_seen = true;
     last_owner = owner;
@@ -245,16 +247,7 @@ char *Platform_GetClipboardEntry(void) {
   if (fail_streak > 0 && now < next_in_ms) {
     return NULL;
   }
-  char *out = NULL;
-  if (x11_clipboard_available()) {
-    out = x11_clipboard_get_text();
-    if (out) {
-      fail_streak = 0;
-      next_in_ms = 0;
-      return out;
-    }
-  }
-  out = x11_clipboard_get_text();
+  char *out = x11_clipboard_backend_get_text();
   if (!out) {
     fail_streak++;
     if (fail_streak > 4)
