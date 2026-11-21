@@ -184,7 +184,7 @@ static void checkbox_focus_outline(const CheckboxSpec *spec) {
                                          .w = w + 6,
                                          .h = h + 6,
                                          .color = rgb_to_hex(widget_accent()),
-                                         .radius = CornerRadius / 1.2,
+                                         .radius = CornerRadius / 1.5,
                                          .rounded = true,
                                          .opaque = true,
                                          .thickness = 2,
@@ -235,8 +235,8 @@ void checkbox_draw(const CheckboxSpec *spec) {
     int w = spec->w > 0 ? spec->w : 16;
     int h = spec->h > 0 ? spec->h : 16;
     if (!spec->no_bg) {
-      checkbox_fill_border(spec->x, spec->y, w, h, thick, CornerRadius / 1.2,
-                           true, CornerRadius / 1.2, checkbox_body,
+      checkbox_fill_border(spec->x, spec->y, w, h, thick, CornerRadius / 1.5,
+                           true, CornerRadius / 1.5, checkbox_body,
                            checkbox_border, spec->border);
     }
 
