@@ -59,7 +59,6 @@ float slider_value(const char *name);
 float slider_fraction(const char *name);
 int slider_percent(const char *name);
 bool slider_set_value(const char *name, float value);
-void slider_reset_all(void);
 void slider_draw(const SliderSpec *spec);
 bool slider_place(const SliderSpec *spec);
 
