@@ -5,6 +5,7 @@
   TimeOutForMessages = 1
   HotkeyRepeatDelayMs = 300
   DebugMode = false
+  CompactMode = true
   RoundedCorners = true
   CornerRadius = 14
   MessageScreenGap = 20

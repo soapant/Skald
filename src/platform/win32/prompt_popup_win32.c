@@ -161,7 +161,7 @@ void Platform_PromptPopupRender(Popup *self) {
                       state->height - prompt_list_top() -
                           prompt_list_bottom_margin());
     editbox_registry_register_focus(state);
-    if (draw_band && !state->no_separators)
+    if (draw_band)
       draw_prompt_band(0, prompt_list_top(), state->width);
     editbox_registry_tick(state);
     editbox_registry_begin_frame(state);

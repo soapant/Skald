@@ -1071,6 +1071,26 @@ static const char *cc_names[MAX_VISIBLE_ITEMS + 1];
 static int cc_width, cc_height;
 static char cc_selected_text[256];
 
+#define CC_COMPACT_HEIGHT 55
+static bool cc_compact_mode = false;
+static bool cc_compact_expanded = false;
+
+static void cc_update_compact_size(const PromptState *state) {
+  if (!cc_compact_mode || !state || !state->eb)
+    return;
+  bool expanded = state->eb->filter[0] != '\0';
+  if (expanded == cc_compact_expanded)
+    return;
+  SkRect bounds = sk_get_window_bounds();
+  if (bounds.w <= 0 || bounds.h <= 0)
+    return;
+  int target_h = expanded ? PromptH : CC_COMPACT_HEIGHT;
+  bounds.y -= (target_h - bounds.h) / 2;
+  bounds.h = target_h;
+  if (ski_resize_window(&bounds))
+    cc_compact_expanded = expanded;
+}
+
 static bool cc_filter_match(const char *item, const char *filter) {
   if (!item || !filter || !filter[0])
     return true;
@@ -1081,6 +1101,7 @@ static bool cc_filter_match(const char *item, const char *filter) {
 }
 
 static void cc_refresh(PromptState *state) {
+  cc_update_compact_size(state);
   if (atomic_load(&cc_entries_dirty))
     cc_build();
   else
@@ -1233,10 +1254,11 @@ static void cc_render(PromptState *state) {
   cc_height = state->height;
 
   sk_place_editbox();
-  sk_place_button(.name = "Actions", .x = state->width - 200,
-                  .y = state->height - 30, .w = 180,
-                  .render = cc_on_actions_render,
-                  .on_click = cc_open_actions_window);
+  if (!cc_compact_mode || cc_compact_expanded)
+    sk_place_button(.name = "Actions", .x = state->width - 200,
+                    .y = state->height - 30, .w = 180,
+                    .render = cc_on_actions_render,
+                    .on_click = cc_open_actions_window);
 
   if (sk_hotkey_down(sk_hotkey_from_string(ActionsHotkey)))
     cc_open_actions_window();
@@ -1300,7 +1322,11 @@ CC_DEFINE_ENTER(cc_ctrl_shift_enter, CC_RUN_CTRL_SHIFT)
 CC_DEFINE_ENTER(cc_ctrl_alt_enter, CC_RUN_CTRL_ALT)
 CC_DEFINE_ENTER(cc_shift_alt_enter, CC_RUN_SHIFT_ALT)
 
-static void cc_on_close(void) { cc_run_pending(); }
+static void cc_on_close(void) {
+  cc_compact_mode = false;
+  cc_compact_expanded = false;
+  cc_run_pending();
+}
 
 static void cc_reload(void) {
   int features = sk_reload_all_features();
@@ -1321,7 +1347,10 @@ static void cc_reload(void) {
 
 static void cc_open_control(void) {
   atomic_store(&cc_entries_dirty, true);
+  cc_compact_mode = CompactMode;
+  cc_compact_expanded = false;
   sk_window(.title = "Control", .placeholder = "Search For Something...",
+            .h = cc_compact_mode ? CC_COMPACT_HEIGHT : PromptH,
             .refresh = cc_refresh, .enter = cc_enter,
             .ctrl_enter = cc_ctrl_enter, .shift_enter = cc_shift_enter,
             .ctrl_shift_enter = cc_ctrl_shift_enter,

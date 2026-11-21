@@ -86,12 +86,19 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
 }
 
 bool Platform_PromptPopupResize(Popup *self, int x, int y, int w, int h) {
-  (void)self;
-  (void)x;
-  (void)y;
-  (void)w;
-  (void)h;
-  return false;
+  if (w <= 0 || h <= 0 || !self)
+    return false;
+  WindowManager *wm = (WindowManager *)self->manager;
+  Display *dpy = wm ? wm->display : x11_get_display();
+  Window win = self->handle.xid;
+  if (!dpy || win == None)
+    return false;
+  XMoveResizeWindow(dpy, win, x, y, (unsigned)w, (unsigned)h);
+  x11_apply_shape(dpy, win, w, h, RoundedCorners,
+                  RoundedCorners ? CornerRadius : 0);
+  x11_release_prompt_buffer(dpy, win);
+  XSync(dpy, False);
+  return true;
 }
 
 void Platform_PromptPopupHideWindow(Popup *self) {

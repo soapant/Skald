@@ -201,6 +201,8 @@ DEFINE_CFG_INT(TimeOutForMessages,
 DEFINE_CFG_INT(HotkeyRepeatDelayMs,
                "Delay before held hotkeys repeat, in milliseconds.")
 DEFINE_CFG_BOOL(DebugMode, "Enable verbose debug output.")
+DEFINE_CFG_BOOL(CompactMode,
+                "Start the command center compact until you type.")
 DEFINE_CFG_BOOL(RoundedCorners, "Use rounded window corners.")
 DEFINE_CFG_INT(CornerRadius, "Radius used for rounded corners.")
 DEFINE_CFG_INT(MessageScreenGap, "Gap between messages and the screen edge.")
@@ -279,6 +281,7 @@ static void cfg_add_all(void) {
   cfg_add_TimeOutForMessages(entry);
   cfg_add_HotkeyRepeatDelayMs(entry);
   cfg_add_DebugMode(entry);
+  cfg_add_CompactMode(entry);
   cfg_add_RoundedCorners(entry);
   cfg_add_CornerRadius(entry);
   cfg_add_MessageScreenGap(entry);
