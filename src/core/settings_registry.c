@@ -557,6 +557,7 @@ bool settings_focus_ctx_has(const char *name) {
 #define SETTINGS_ROW_W_PAD 20
 #define SETTINGS_ROW_EDGE_PAD 10
 #define SETTINGS_EDITBOX_BASE_X 360
+#define SETTINGS_EDITBOX_FIELD_GAP 30
 
 #define SETTINGS_VIEW_TOP 260
 #define SETTINGS_ROW_START SETTINGS_VIEW_TOP
@@ -997,6 +998,13 @@ int settings_editbox_right_offset(int pane_w, int width) {
   return offset > 0 ? offset : 0;
 }
 
+static int settings_editbox_auto_offset(const SettingsBlock *b, int pane_w) {
+  int total = 0;
+  for (int i = 0; i < b->field_count; i++)
+    total += b->fields[i].width + (i ? SETTINGS_EDITBOX_FIELD_GAP : 0);
+  return settings_editbox_right_offset(pane_w, total);
+}
+
 int settings_entry_count(void) { return settings_entry_total; }
 
 void settings_scroll_to_block(const char *entry_name, int block_index) {
@@ -1334,8 +1342,11 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
                       .value = b->value, .on_change = settings_dispatch_slider_change,
                       .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_EDITBOX) {
-      int ex = x + SETTINGS_EDITBOX_BASE_X + b->x_offset;
-      const int gap = 30;
+      int offset = b->x_offset;
+      if (offset == SETTINGS_EDITBOX_X_OFFSET_AUTO)
+        offset = settings_editbox_auto_offset(b, pane_w);
+      int ex = x + SETTINGS_EDITBOX_BASE_X + offset;
+      const int gap = SETTINGS_EDITBOX_FIELD_GAP;
       for (int fi = 0; fi < b->field_count; fi++) {
         SettingsEditboxFieldBlock *f = &b->fields[fi];
         int field_w = f->width;
