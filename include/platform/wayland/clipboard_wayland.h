@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool Platform_WaylandClipboard_Available(void);
 int Platform_WaylandClipboard_SetText(const char *text);
 int Platform_WaylandClipboard_SetImage(const unsigned char *png, size_t len);
 int Platform_WaylandClipboard_SetFile(const char *path);

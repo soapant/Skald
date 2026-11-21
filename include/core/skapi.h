@@ -920,8 +920,6 @@ typedef SettingsEntry SkSettingsEntry;
 typedef SettingsCheckboxSpec SkSettingsCheckboxSpec;
 typedef SettingsButtonSpec SkSettingsButtonSpec;
 typedef SettingsSliderSpec SkSettingsSliderSpec;
-typedef SettingsDropdownOptionsFn SkSettingsDropdownOptionsFn;
-typedef SettingsDropdownSelectFn SkSettingsDropdownSelectFn;
 typedef SettingsDropdownSpec SkSettingsDropdownSpec;
 typedef SettingsEditboxChangeFn SkSettingsEditboxChangeFn;
 typedef SettingsEditboxType SkSettingsEditboxType;

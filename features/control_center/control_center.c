@@ -1194,7 +1194,6 @@ static void cc_open_actions_window(void);
 static void cc_open_register_window(int kind);
 
 static void cc_on_actions_render(SkPlaceState state) {
-
   char hotkey[64];
   cc_copy(hotkey, sizeof(hotkey), ActionsHotkey);
   char *plus = strchr(hotkey, '+');

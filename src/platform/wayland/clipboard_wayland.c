@@ -814,8 +814,6 @@ static void wl_drop_source(struct wl_proxy **slot) {
   }
 }
 
-bool Platform_WaylandClipboard_Available(void) { return x11_env_is_wayland(); }
-
 static void wl_publish_locked(void) {
 
   wl_req_count += 2;
