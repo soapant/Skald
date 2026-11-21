@@ -1335,14 +1335,6 @@ static bool chk_layer_exempt(const char *path_norm) {
   return false;
 }
 
-static bool chk_ci_sk_func(const char *buf, size_t beg, size_t end) {
-  size_t n = end - beg;
-  if (n <= 3)
-    return false;
-  return tolower((unsigned char)buf[beg]) == 's' &&
-         tolower((unsigned char)buf[beg + 1]) == 'k' && buf[beg + 2] == '_';
-}
-
 static bool chk_ci_platform_func(const char *buf, size_t beg, size_t end) {
   size_t n = end - beg;
   if (n <= 9)
