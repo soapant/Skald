@@ -143,8 +143,6 @@ static bool cfg_parse_float(const char *text, float *out) {
   return true;
 }
 
-static int cfg_pane_w(void) { return PromptW - SETTINGS_SIDEBAR_W - 8; }
-
 static int cfg_field_width(const char *text) {
   if (!text || !text[0])
     return 150;
@@ -183,7 +181,6 @@ static int cfg_field_width(const char *text) {
         .buffer_size = sizeof(cfg_buf_##cfg_name), .width = width}};           \
     sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
                                   .fields = fields, .field_count = 1,          \
-                                   .x_offset = sk_settings_editbox_right_offset(cfg_pane_w(), width), \
                                    .on_change = cfg_##cfg_name##_change);        \
   }
 
@@ -207,7 +204,6 @@ static int cfg_field_width(const char *text) {
         .buffer_size = sizeof(cfg_buf_##cfg_name), .width = width}};           \
     sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
                                   .fields = fields, .field_count = 1,          \
-                                   .x_offset = sk_settings_editbox_right_offset(cfg_pane_w(), width), \
                                    .on_change = cfg_##cfg_name##_change);        \
   }
 
@@ -229,7 +225,6 @@ static int cfg_field_width(const char *text) {
         .buffer_size = sizeof(cfg_buf_##cfg_name), .width = width}};           \
     sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
                                   .fields = fields, .field_count = 1,          \
-                                   .x_offset = sk_settings_editbox_right_offset(cfg_pane_w(), width), \
                                    .on_change = cfg_##cfg_name##_change);        \
   }
 
@@ -383,7 +378,7 @@ SKALD_FEATURE_INIT {
                                     "opened websites.");
   sk_settings_entry_add_editbox(
       ql, .title = "Add Quicklink", .sub = "Add a quicklink to appear in cc",
-      .fields = fields, .field_count = 2, .x_offset = 0);
+      .fields = fields, .field_count = 2);
 
   sk_add_settings_entry(.name = "Snippets", .icon = "/snippets.png",
 
