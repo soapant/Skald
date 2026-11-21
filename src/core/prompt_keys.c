@@ -61,6 +61,20 @@ static bool editbox_focused(const PromptState *state) {
          (state && state->editbox_count == 0);
 }
 
+static bool prompt_focus_step(PromptState *state, int dir,
+                              FocusDirection spatial) {
+  const char *before = focus_name();
+  bool moved = focus_move_direction(spatial);
+  if (!moved)
+    moved = focus_move(dir);
+  log_info("keys: focus step spatial=%d dir=%d '%s' -> '%s' (%d)", (int)spatial,
+           dir, before ? before : "-", focus_name() ? focus_name() : "-",
+           moved ? 1 : 0);
+  if (moved)
+    prompt_refresh(state);
+  return moved;
+}
+
 static bool selection(const PromptState *state, int *out_ss, int *out_se) {
   int ss = 0, se = 0;
   if (!edit_state_get_selection(&ss, &se))
@@ -266,8 +280,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   if (vk == VK_RIGHT) {
     if (!editbox_focused(state)) {
       log_info("keys: right -> focus ring");
-      focus_move(1);
-      prompt_refresh(state);
+      prompt_focus_step(state, 1, FOCUS_RIGHT);
       handled = true;
       goto done;
     }
@@ -279,8 +292,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   if (vk == VK_LEFT) {
     if (!editbox_focused(state)) {
       log_info("keys: left -> focus ring");
-      focus_move(-1);
-      prompt_refresh(state);
+      prompt_focus_step(state, -1, FOCUS_LEFT);
       handled = true;
       goto done;
     }
@@ -313,15 +325,13 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
              state->lb ? state->lb->item_count : -1);
     if (widget_focus()) {
       log_info("keys: up -> widget ring");
-      focus_move(-1);
-      prompt_refresh(state);
+      prompt_focus_step(state, -1, FOCUS_UP);
       handled = true;
       goto done;
     }
     if (focus_has_entries() && focus_kind() != FOCUS_KIND_LISTBOX) {
       log_info("keys: up -> widget ring fallback");
-      focus_move(-1);
-      prompt_refresh(state);
+      prompt_focus_step(state, -1, FOCUS_UP);
       handled = true;
       goto done;
     }
@@ -331,7 +341,8 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       UI_NavigateUp(state->lb);
       if (state->lb->selected_index == before && focus_has_entries()) {
         log_info("keys: up -> widget ring (listbox top)");
-        focus_move(-1);
+        if (focus_move(-1))
+          prompt_refresh(state);
       }
     }
     handled = true;
@@ -349,15 +360,13 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
              state->lb ? state->lb->item_count : -1);
     if (widget_focus()) {
       log_info("keys: down -> widget ring");
-      focus_move(1);
-      prompt_refresh(state);
+      prompt_focus_step(state, 1, FOCUS_DOWN);
       handled = true;
       goto done;
     }
     if (focus_has_entries() && focus_kind() != FOCUS_KIND_LISTBOX) {
       log_info("keys: down -> widget ring fallback");
-      focus_move(1);
-      prompt_refresh(state);
+      prompt_focus_step(state, 1, FOCUS_DOWN);
       handled = true;
       goto done;
     }
@@ -367,7 +376,8 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       UI_NavigateDown(state->lb);
       if (state->lb->selected_index == before && focus_has_entries()) {
         log_info("keys: down -> widget ring (listbox bottom)");
-        focus_move(1);
+        if (focus_move(1))
+          prompt_refresh(state);
       }
     }
     handled = true;

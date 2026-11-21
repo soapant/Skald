@@ -4,6 +4,7 @@
 #include "test.h"
 
 #include "core/editbox.h"
+#include "core/focus.h"
 #include "core/types/prompt.h"
 
 TEST(editbox_registry_routes_active_box) {
@@ -60,8 +61,43 @@ TEST(editbox_registry_syncs_all_boxes) {
   ASSERT_EQ_STR(second, "bb");
 }
 
+TEST(editbox_registry_participates_in_focus_ring) {
+  PromptState state;
+  memset(&state, 0, sizeof(state));
+  EditBox legacy;
+  memset(&legacy, 0, sizeof(legacy));
+  state.default_eb = &legacy;
+  state.eb = &legacy;
+  state.active_editbox = -1;
+
+  char first[16] = "a";
+  char second[16] = "b";
+  int first_idx =
+      editbox_registry_place(&state, "first", first, sizeof(first), 0, 0, 10, 10);
+  ASSERT_TRUE(first_idx >= 0);
+  int second_idx =
+      editbox_registry_place(&state, "second", second, sizeof(second), 20, 0,
+                             10, 10);
+  ASSERT_TRUE(second_idx >= 0);
+  state.editboxes[first_idx].no_tab = true;
+
+  focus_clear();
+  focus_frame_begin(false, 0, 0, 0, 0);
+  editbox_registry_register_focus(&state);
+  ASSERT_TRUE(focus_move(1));
+  ASSERT_EQ_STR(focus_name(), "editbox:first");
+  ASSERT_TRUE(focus_move(1));
+  ASSERT_EQ_STR(focus_name(), "editbox:second");
+  ASSERT_TRUE(state.eb == &state.editboxes[second_idx].eb);
+
+  editbox_registry_set_active(&state, "first");
+  ASSERT_TRUE(focus_is("editbox:first"));
+  focus_clear();
+}
+
 int main(void) {
   RUN(editbox_registry_routes_active_box);
   RUN(editbox_registry_syncs_all_boxes);
+  RUN(editbox_registry_participates_in_focus_ring);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

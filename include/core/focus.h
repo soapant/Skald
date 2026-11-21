@@ -40,6 +40,7 @@ bool focus_move_direction(FocusDirection dir);
 bool focus_activate(void);
 bool focus_adjust(int dir);
 void focus_set_pseudo(FocusKind kind);
+void focus_set_pseudo_named(FocusKind kind, const char *name);
 void focus_set_pseudo_passive(FocusKind kind);
 void focus_clear(void);
 

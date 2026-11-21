@@ -1,6 +1,7 @@
 #include "config_values.h"
 #include "core/context.h"
 #include "core/editbox.h"
+#include "core/focus.h"
 #include "core/prompt_geometry.h"
 #include "core/types/color.h"
 #include "core/types/keys.h"
@@ -140,12 +141,17 @@ void Platform_PromptPopupRender(Popup *self) {
     bool draw_band = prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
+    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
+                      state->height - prompt_list_top() -
+                          prompt_list_bottom_margin());
+    editbox_registry_register_focus(state);
     if (draw_band && !state->no_separators)
       draw_prompt_band(0, prompt_list_top(), state->width);
     editbox_registry_tick(state);
     editbox_registry_begin_frame(state);
     state->callbacks->render(state);
     prompt_band_commit_placed();
+    focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   }
 }

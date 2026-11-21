@@ -1,6 +1,7 @@
 #include "core/focus.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "deps/log.h"
@@ -32,7 +33,8 @@ static bool focus_is_widget_kind(FocusKind kind) {
 }
 
 static bool focus_is_selectable(FocusKind kind) {
-  return focus_is_widget_kind(kind) || kind == FOCUS_KIND_LISTBOX;
+  return focus_is_widget_kind(kind) || kind == FOCUS_KIND_LISTBOX ||
+         kind == FOCUS_KIND_EDITBOX;
 }
 
 static int focus_find(const char *name) {
@@ -58,11 +60,30 @@ void focus_frame_begin(bool include_listbox, int lb_x, int lb_y, int lb_w,
   }
 }
 
+static int focus_entry_cmp(const void *a, const void *b) {
+  const FocusEntry *ea = (const FocusEntry *)a;
+  const FocusEntry *eb = (const FocusEntry *)b;
+  if (ea->y != eb->y)
+    return ea->y < eb->y ? -1 : 1;
+  if (ea->x != eb->x)
+    return ea->x < eb->x ? -1 : 1;
+  return strcmp(ea->name, eb->name);
+}
+
 void focus_frame_end(void) {
   if (focus_is_widget_kind(s_saved_kind) && !s_saved_seen) {
     log_warn("focus: dropped stale widget '%s' (kind=%d)", s_saved_name,
              (int)s_saved_kind);
     focus_clear();
+  }
+  if (s_count > 1) {
+    char selected[FOCUS_NAME_MAX];
+    bool had = s_current >= 0;
+    if (had)
+      snprintf(selected, sizeof(selected), "%s", s_entries[s_current].name);
+    qsort(s_entries, (size_t)s_count, sizeof(*s_entries), focus_entry_cmp);
+    if (had)
+      s_current = focus_find(selected);
   }
 }
 
@@ -72,11 +93,13 @@ void focus_register(const char *name, FocusKind kind, int x, int y, int w,
   if (!name || !name[0])
     return;
   int idx = focus_find(name);
+  FocusEntry *e;
   if (idx >= 0) {
-    s_current = idx;
-    return;
+    e = &s_entries[idx];
+  } else {
+    e = arraddnptr(s_entries, 1);
+    idx = s_count - 1;
   }
-  FocusEntry *e = arraddnptr(s_entries, 1);
   snprintf(e->name, sizeof(e->name), "%s", name);
   e->kind = kind;
   e->x = x;
@@ -86,7 +109,6 @@ void focus_register(const char *name, FocusKind kind, int x, int y, int w,
   e->owner = owner;
   e->activate = activate;
   e->adjust = adjust;
-  idx = s_count - 1;
   if (s_saved_name[0] && strcmp(s_saved_name, name) == 0 &&
       s_saved_kind == kind) {
     s_current = idx;
@@ -124,6 +146,8 @@ bool focus_select(const char *name) {
   snprintf(s_saved_name, sizeof(s_saved_name), "%s", s_entries[idx].name);
   s_saved_kind = s_entries[idx].kind;
   s_saved_seen = true;
+  if (s_entries[idx].kind == FOCUS_KIND_EDITBOX && s_entries[idx].activate)
+    s_entries[idx].activate(s_entries[idx].owner);
   return true;
 }
 
@@ -193,7 +217,9 @@ bool focus_move_direction(FocusDirection dir) {
       continue;
     if (lateral < 0)
       lateral = -lateral;
-    long score = lateral * 8 + forward;
+    long score = forward * 8 + lateral;
+    if (s_entries[i].kind == FOCUS_KIND_LISTBOX)
+      score += 1000000;
     if (best < 0 || score < best_score) {
       best = i;
       best_score = score;
@@ -237,18 +263,25 @@ bool focus_adjust(int dir) {
   return true;
 }
 
-void focus_set_pseudo(FocusKind kind) {
+void focus_set_pseudo_named(FocusKind kind, const char *name) {
   if (kind == FOCUS_KIND_LISTBOX && focus_find(FOCUS_LISTBOX_NAME) >= 0) {
     log_info("focus: select listbox ring entry");
     focus_select(FOCUS_LISTBOX_NAME);
     return;
   }
-  log_info("focus: set pseudo kind=%d (was '%s' kind=%d)", (int)kind,
-           s_saved_name[0] ? s_saved_name : "-", (int)s_saved_kind);
-  s_current = -1;
+  int idx = name ? focus_find(name) : -1;
   s_saved_name[0] = '\0';
+  if (name)
+    snprintf(s_saved_name, sizeof(s_saved_name), "%s", name);
   s_saved_kind = kind;
-  s_saved_seen = false;
+  s_current = idx;
+  s_saved_seen = idx >= 0;
+  log_info("focus: set pseudo kind=%d name='%s' (idx=%d)", (int)kind,
+           s_saved_name[0] ? s_saved_name : "-", idx);
+}
+
+void focus_set_pseudo(FocusKind kind) {
+  focus_set_pseudo_named(kind, NULL);
 }
 
 void focus_set_pseudo_passive(FocusKind kind) {

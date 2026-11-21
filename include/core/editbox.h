@@ -193,6 +193,7 @@ int editbox_registry_place(PromptState *state, const char *name, char *buffer,
                            size_t buffer_size, int x, int y, int w, int h);
 PromptEditbox *editbox_registry_find(PromptState *state, const char *name);
 void editbox_registry_tick(PromptState *state);
+void editbox_registry_register_focus(PromptState *state);
 void editbox_registry_sync(PromptState *state);
 void editbox_registry_set_active(PromptState *state, const char *name);
 void editbox_registry_cycle(PromptState *state, int dir);
