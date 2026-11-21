@@ -1026,8 +1026,7 @@ static void settings_editbox_persist(const SettingsEditboxFieldBlock *f) {
   settings_config_set(f->meta->config_key, f->buffer);
 }
 
-SettingsEditboxGroup
-settings_entry_add_editbox(SettingsEntry *entry,
+SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
                            const SettingsEditboxSpec *spec) {
   SettingsEditboxGroup invalid = SETTINGS_EDITBOX_INVALID;
   if (!spec || !spec->fields || spec->field_count < 1 ||
@@ -1514,9 +1513,10 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
           field_w = right - ex;
         if (field_w < 32)
           field_w = 32;
-        settings_draw_rect(.x = ex - 3, .y = y + 13, .w = field_w + 6, .h = 34,
+        settings_draw_rect(.x = ex - 3, .y = y + 19, .w = field_w + 6, .h = 28,
                            .color = color_lerp(COLOR_BG, RGB(0, 0, 0), 0.28f),
                            .filled = true, .radius = 6);
+
         settings_place_editbox(.name = f->key, .x = ex, .y = y + 16,
                                .w = field_w, .h = 28, .buffer = f->buffer,
                                .buffer_size = f->buffer_size,
