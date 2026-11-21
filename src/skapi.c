@@ -3090,6 +3090,16 @@ typedef struct {
 #define SETTINGS_ROW_EDGE_PAD 10
 #define SETTINGS_EDITBOX_BASE_X 360
 
+#define SETTINGS_VIEW_TOP 210
+#define SETTINGS_ROW_START 220
+#define SETTINGS_ROW_STEP 70
+
+#define SETTINGS_DROPDOWN_MAX_VISIBLE 6
+#define SETTINGS_DROPDOWN_OPT_H 28
+#define SETTINGS_DROPDOWN_OPT_GAP 2
+#define SETTINGS_DROPDOWN_OPT_PAD 30
+#define SETTINGS_DROPDOWN_OPT_MIN_W 64
+
 typedef struct {
   char name[64];
   char label[128];
@@ -3112,6 +3122,7 @@ typedef struct {
   SkSettingsDropdownOptionsFn refresh_options;
   int selected;
   bool open;
+  int dropdown_scroll_y;
   void (*on_click)(void);
   void (*on_change)(void);
   void (*on_hover)(void);
@@ -3304,6 +3315,12 @@ static int dropdown_options(const SkSettingsBlock *b,
     return 0;
   int count = b->refresh_options(out_options);
   return count > 0 ? count : 0;
+}
+
+static int dropdown_option_width(const char *text) {
+  int w = sk_get_text_width(text ? text : "", FontSize) +
+          SETTINGS_DROPDOWN_OPT_PAD;
+  return w < SETTINGS_DROPDOWN_OPT_MIN_W ? SETTINGS_DROPDOWN_OPT_MIN_W : w;
 }
 
 static bool settings_block_title_ok(const char *title) {
@@ -3655,6 +3672,23 @@ static void dispatch_widget_click(void) {
         if (e->blocks[i].type == SETTINGS_BLOCK_DROPDOWN)
           e->blocks[i].open = false;
       b->open = open;
+      if (open) {
+        b->dropdown_scroll_y = 0;
+        int view_h = PromptH - SETTINGS_VIEW_TOP;
+        if (view_h < 40)
+          view_h = 40;
+        int max_scroll = e->block_count * SETTINGS_ROW_STEP - view_h;
+        if (max_scroll < 0)
+          max_scroll = 0;
+        int want_scroll = SETTINGS_ROW_START +
+                          s_dispatch_index * SETTINGS_ROW_STEP -
+                          SETTINGS_VIEW_TOP;
+        if (want_scroll < 0)
+          want_scroll = 0;
+        if (want_scroll > max_scroll)
+          want_scroll = max_scroll;
+        e->scroll_y = want_scroll;
+      }
       return;
     }
     const char **options = NULL;
@@ -3745,7 +3779,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
   int pane_w = PromptW - draw_state_get()->off_x;
   if (pane_w < 240)
     pane_w = 240;
-  int cursor = 220;
+  int cursor = SETTINGS_ROW_START;
   SkSettingsBlock *open_block = NULL;
   SkSettingsEntry *open_entry = NULL;
   int open_index = -1;
@@ -3772,8 +3806,9 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     s_settings_scroll_entry = entry;
     entry->scroll_y = 0;
   }
-  int base_off_y = draw_state_get()->off_y;
-  int view_h = PromptH - base_off_y - 210;
+  int base_off_x = 0, base_off_y = 0;
+  get_draw_offset(&base_off_x, &base_off_y);
+  int view_h = PromptH - base_off_y - SETTINGS_VIEW_TOP;
   if (view_h < 40)
     view_h = 40;
   char scroll_name[300];
@@ -3781,22 +3816,22 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
   ScrollAreaSpec scroll_spec = {
       .name = scroll_name,
       .x = 0,
-      .y = 210,
+      .y = SETTINGS_VIEW_TOP,
       .w = pane_w,
       .h = view_h,
       .content_w = 0,
-      .content_h = entry->block_count * 70,
+      .content_h = entry->block_count * SETTINGS_ROW_STEP,
       .off_y = &entry->scroll_y,
-      .wheel_px = 70,
+      .wheel_px = SETTINGS_ROW_STEP,
       .owner = entry->owner,
   };
   bool scrolled = scroll_area_begin(&scroll_spec);
-  int view_top = 210 + (scrolled ? entry->scroll_y : 0);
+  int view_top = SETTINGS_VIEW_TOP + (scrolled ? entry->scroll_y : 0);
 
   for (int i = 0; i < entry->block_count; i++) {
     SkSettingsBlock *b = &entry->blocks[i];
     if (cursor < view_top) {
-      cursor += 70;
+      cursor += SETTINGS_ROW_STEP;
       continue;
     }
     if (cursor + 60 > PromptH - draw_state_get()->off_y)
@@ -3877,7 +3912,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
       const char *label = "Select...";
       if (b->selected >= 0 && options && options[b->selected])
         label = options[b->selected];
-      int bw = sk_get_text_width(label, FontSize) + 34;
+      int bw = sk_get_text_width(label, FontSize) + 40;
       if (bw < 96)
         bw = 96;
       if (bw > w)
@@ -3892,63 +3927,97 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
         open_index = i;
         open_options = options;
         open_count = count;
-        open_x = right - bw;
-        open_trigger_y = y + 16;
+        open_x = right - bw + draw_state_get()->off_x - base_off_x;
+        open_trigger_y = y + 16 + draw_state_get()->off_y - base_off_y;
         open_w = bw;
       }
     }
     cursor += 70;
   }
 
+  if (scrolled)
+    scroll_area_end();
+
   if (open_block && open_w > 0) {
-    const int opt_h = 28, gap = 2;
+    const int row_h = SETTINGS_DROPDOWN_OPT_H + SETTINGS_DROPDOWN_OPT_GAP;
+    int panel_x = open_x - 3;
+    int panel_y = open_trigger_y + 28 + 4;
     int bottom = PromptH - draw_state_get()->off_y - 4;
-    int below = bottom - (open_trigger_y + 28 + 4);
-    int above = open_trigger_y - 4;
-    int need = open_count * (opt_h + gap) + 6;
-    bool up = false;
+    int room = bottom - panel_y - 4;
     int visible = open_count;
-    if (need > below && need <= above)
-      up = true;
-    if (up) {
-      if (need > above)
-        visible = above / (opt_h + gap);
-    } else if (need > below) {
-      visible = below / (opt_h + gap);
-    }
-    if (visible > open_count)
-      visible = open_count;
+    if (visible > SETTINGS_DROPDOWN_MAX_VISIBLE)
+      visible = SETTINGS_DROPDOWN_MAX_VISIBLE;
+    if (room / row_h < visible)
+      visible = room / row_h;
     if (visible > 0) {
-      int panel_h = visible * (opt_h + gap) + 4;
-      int panel_y = up ? open_trigger_y - panel_h - 4 : open_trigger_y + 28 + 4;
-      sk_draw_rect(.x = open_x - 3, .y = panel_y, .w = open_w + 6, .h = panel_h,
+      int max_opt_w = 0;
+      for (int i = 0; i < open_count; i++) {
+        int w = dropdown_option_width(open_options ? open_options[i] : NULL);
+        if (w > max_opt_w)
+          max_opt_w = w;
+      }
+      int avail_w = PromptW - draw_state_get()->off_x - panel_x - 6;
+      if (avail_w < SETTINGS_DROPDOWN_OPT_MIN_W + 6)
+        avail_w = SETTINGS_DROPDOWN_OPT_MIN_W + 6;
+      if (max_opt_w > avail_w)
+        max_opt_w = avail_w;
+      int panel_w = max_opt_w + 6;
+      int panel_h = visible * row_h + 4;
+      if (panel_y + panel_h > bottom)
+        panel_y = bottom - panel_h;
+
+      sk_draw_rect(.x = panel_x, .y = panel_y, .w = panel_w, .h = panel_h,
                    .color = color_lerp(COLOR_BG, SK_BLACK, 0.22f),
                    .filled = true, .radius = 6);
-      for (int i = 0; i < visible; i++) {
+
+      char dropdown_scroll_name[512];
+      snprintf(dropdown_scroll_name, sizeof(dropdown_scroll_name),
+               "settings:dropdown:%s:%s", open_entry->name, open_block->title);
+      ScrollAreaSpec dropdown_scroll = {
+          .name = dropdown_scroll_name,
+          .x = panel_x + 2,
+          .y = panel_y + 2,
+          .w = panel_w - 4,
+          .h = visible * row_h,
+          .content_w = 0,
+          .content_h = open_count * row_h,
+          .off_y = &open_block->dropdown_scroll_y,
+          .wheel_px = row_h,
+          .owner = open_entry->owner,
+      };
+      bool dropdown_scrolled = scroll_area_begin(&dropdown_scroll);
+      checkbox_frame_begin();
+      int top = dropdown_scrolled ? open_block->dropdown_scroll_y : 0;
+      int first = top / row_h;
+      int last = first + visible;
+      if (last > open_count)
+        last = open_count;
+      for (int i = first; i < last; i++) {
         const char *text =
             (open_options && open_options[i]) ? open_options[i] : "";
+        int opt_w = dropdown_option_width(text);
+        if (opt_w > panel_w - 8)
+          opt_w = panel_w - 8;
+        int y = panel_y + 4 + i * row_h;
         char opt_name[256];
         snprintf(opt_name, sizeof(opt_name), "%s##%d", open_block->title, i);
         if (i == open_block->selected)
-          sk_draw_rect(.x = open_x + 4, .y = panel_y + 2 + i * (opt_h + gap),
-                       .w = open_w - 8, .h = opt_h,
+          sk_draw_rect(.x = panel_x + 4, .y = y, .w = opt_w,
+                       .h = SETTINGS_DROPDOWN_OPT_H,
                        .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.10f),
                        .filled = true, .radius = 4);
         s_dispatch_entry = open_entry;
         s_dispatch_index = open_index;
         s_dispatch_option = i;
         focus_ctx_remember(opt_name, open_entry, open_index, i);
-        sk_place_button(.name = opt_name, .x = open_x + 4,
-                        .y = panel_y + 2 + i * (opt_h + gap), .w = open_w - 8,
-                        .h = opt_h, .text = (char *)text,
+        sk_place_button(.name = opt_name, .x = panel_x + 4, .y = y, .w = opt_w,
+                        .h = SETTINGS_DROPDOWN_OPT_H, .text = (char *)text,
                         .on_click = dispatch_widget_click,
                         .on_hover = dispatch_widget_hover);
       }
+      scroll_area_end();
     }
   }
-
-  if (scrolled)
-    scroll_area_end();
   s_dispatch_entry = NULL;
   s_dispatch_index = -1;
   s_dispatch_option = -1;
