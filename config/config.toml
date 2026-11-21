@@ -29,7 +29,7 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = "tokyo-night"
+  Theme = "github-dark"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = true
@@ -38,9 +38,9 @@
   CloseOnLossOfFocus = false
 
 [color]
-  BG = "#1A1B26"
-  TEXT = "#C0CAF5"
-  SELECTED_TEXT = "#10111C"
-  CURSOR = "#C0CAF5"
-  BORDER = "#414868"
+  BG = "#0D1117"
+  TEXT = "#C9D1D9"
+  SELECTED_TEXT = "#161B22"
+  CURSOR = "#C9D1D9"
+  BORDER = "#30363D"
 # </skald-config-generated>

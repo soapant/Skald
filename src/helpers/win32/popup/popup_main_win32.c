@@ -47,14 +47,17 @@ static ListBox *win32_get_lb_from_popup(HWND hPopup) {
 static bool s_swallow_next_char = false;
 
 static bool s_repaint_queued = false;
+static bool s_repaint_pending = false;
 
 static bool s_in_render = false;
 
 void win32_popup_request_repaint(HWND hPopup) {
   if (!hPopup || !IsWindow(hPopup))
     return;
-  if (s_in_render)
+  if (s_in_render) {
+    s_repaint_pending = true;
     return;
+  }
   if (s_repaint_queued)
     return;
   s_repaint_queued = true;
@@ -638,6 +641,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         draw_state_get()->suppress_separators = sep_prev;
         s_in_render = false;
         draw_state_get()->win32_listbox_surface = false;
+        if (s_repaint_pending) {
+          s_repaint_pending = false;
+          win32_popup_request_repaint(hwnd);
+        }
       }
     } else {
       PromptState *estate = win32_prompt_state_from_hwnd(hwnd);
