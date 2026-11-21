@@ -456,7 +456,8 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
   int line_h = Platform_GetTextLineHeight(fs);
   EditboxUiSpec ui = {.color_text = COLOR_TEXT,
                       .color_bg = COLOR_BG,
-                      .placeholder = spec->placeholder};
+                      .placeholder = spec->placeholder,
+                      .caret_h = spec->caret_h};
   EditboxSpec eb;
   editbox_spec_from_place(
       &eb, &place, state, &ui,
@@ -465,7 +466,6 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
                         .ascent = (line_h * 3) / 4,
                         .descent = line_h - (line_h * 3) / 4,
                         .font = FH_NULL});
-  eb.caret_h = spec->caret_h;
   int y_off = Platform_EditboxPlaceholderOffset();
   eb.text_y += y_off;
   eb.placeholder_dy = 0;
