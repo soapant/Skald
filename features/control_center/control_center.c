@@ -1376,63 +1376,20 @@ static char cc_register_target[256];
 static char cc_captured_hotkey[128];
 static SkTimer cc_flash_timer;
 static bool cc_flashing;
-static int cc_last_key;
-
-static void cc_append(char *buf, size_t cap, const char *s) {
-  size_t len = strlen(buf);
-  if (len < cap)
-    snprintf(buf + len, cap - len, "%s", s);
-}
-
-static int cc_pressed_key(char *name, size_t cap) {
-  for (int vk = 32; vk < 256; vk++) {
-    if (!sk_is_key_pressed(vk))
-      continue;
-    char *vk_name = sk_vk_to_name(vk);
-    if (!vk_name)
-      continue;
-    snprintf(name, cap, "%s", vk_name);
-    free(vk_name);
-    return vk;
-  }
-  return 0;
-}
 
 static void cc_hotkey_capture_render(PromptState *state) {
-  sk_disable_global_hotkeys();
-
   char combo[128] = "";
-  if (sk_ctrl_pressed())
-    cc_append(combo, sizeof(combo), "Ctrl+");
-  if (sk_alt_pressed())
-    cc_append(combo, sizeof(combo), "Alt+");
-  if (sk_shift_pressed())
-    cc_append(combo, sizeof(combo), "Shift+");
-  if (sk_super_pressed())
-    cc_append(combo, sizeof(combo), "Super+");
-
-  bool has_modifier =
-      sk_ctrl_pressed() || sk_alt_pressed() || sk_shift_pressed();
-
-  char key_name[8] = "";
-  int key = cc_pressed_key(key_name, sizeof(key_name));
-  if (key)
-    cc_append(combo, sizeof(combo), key_name);
-  size_t len = strlen(combo);
-  if (len > 0 && combo[len - 1] == '+')
-    combo[len - 1] = '\0';
-
-  if (combo[0] && key && key != cc_last_key && has_modifier) {
+  if (sk_hotkey_capture_poll(combo, sizeof(combo))) {
     cc_bind_hotkey(cc_register_target, combo);
     cc_copy(cc_captured_hotkey, sizeof(cc_captured_hotkey), combo);
     cc_flashing = true;
     cc_flash_timer = sk_start_timer();
-    sk_enable_global_hotkeys();
+    sk_hotkey_capture_begin();
   }
-  cc_last_key = key;
   if (cc_flashing && sk_end_timer(cc_flash_timer) >= 1.0)
     cc_flashing = false;
 
+  const char *preview = sk_hotkey_capture_preview();
   sk_draw_text(.x = 25, .y = 20, .text = "Hold A Key Sequence", .font_size = 15,
                .color = SK_GRAY, .align = "LEFT");
 
@@ -1441,14 +1398,15 @@ static void cc_hotkey_capture_render(PromptState *state) {
                                     : sk_color_lerp(COLOR_BG, SK_BLACK, 0.12f),
                .filled = true);
 
-  if (combo[0] || cc_flashing)
+  if (preview[0] || cc_flashing)
     sk_draw_text(.x = 27, .y = state->height / 2,
-                 .text = combo[0] ? combo : cc_captured_hotkey, .font_size = 22,
+                 .text = preview[0] ? preview : cc_captured_hotkey,
+                 .font_size = 22,
                  .color = cc_flashing ? SK_DARK_GREEN : SK_GRAY,
                  .align = "LEFT");
 }
 
-static void cc_hotkey_capture_close(void) { sk_enable_global_hotkeys(); }
+static void cc_hotkey_capture_close(void) { sk_hotkey_capture_end(); }
 
 static void cc_alias_render(PromptState *state) {
   char label[284];
@@ -1477,17 +1435,19 @@ static void cc_open_register_window(int kind) {
   if (kind != 0 && kind != 1)
     return;
   cc_copy(cc_register_target, sizeof(cc_register_target), cc_selected_text);
-  sk_disable_global_hotkeys();
-  if (kind == 0)
+  if (kind == 0) {
+    sk_hotkey_capture_begin();
     sk_subwindow(.title = "Hotkey Reg", .x = cc_sub_x(),
                  .y = cc_sub_y() + cc_sub_h() * 2, .w = cc_sub_w(),
                  .h = cc_sub_h(), .render = cc_hotkey_capture_render,
                  .on_close = cc_hotkey_capture_close);
-  else
+  } else {
+    sk_disable_global_hotkeys();
     sk_subwindow(.title = "Alias Reg", .x = cc_sub_x(),
                  .y = cc_sub_y() + cc_sub_h() * 2, .w = cc_sub_w(),
                  .h = cc_sub_h(), .render = cc_alias_render,
                  .enter = cc_alias_enter, .on_close = cc_alias_close);
+  }
 }
 
 static void cc_deferred_build(void) { cc_build(); }
