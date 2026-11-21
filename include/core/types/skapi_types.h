@@ -34,6 +34,7 @@ typedef struct {
   int caret_pos;
   bool hide_caret;
   bool primary;
+  bool no_tab;
 } SkEditSpec;
 
 typedef struct {

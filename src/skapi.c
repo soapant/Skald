@@ -1697,6 +1697,7 @@ bool ski_place_editbox(const SkEditSpec *spec) {
       if (state->active_editbox < 0)
         state->active_editbox = idx;
       entry->primary = primary;
+      entry->no_tab = spec->no_tab;
       if (primary && (!copy.placeholder || !copy.placeholder[0])) {
         const char *ph = state->default_eb->placeholder;
         if (!entry->eb.placeholder || !ph ||
@@ -4085,7 +4086,7 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
         sk_place_editbox(.name = f->key, .x = ex, .y = y + 16, .w = field_w,
                          .h = 28, .buffer = f->buffer,
                          .buffer_size = f->buffer_size,
-                         .placeholder = f->label);
+                         .placeholder = f->label, .no_tab = true);
         ex += field_w + gap;
         const char *current = sk_editbox_text(f->key);
         if (!current)

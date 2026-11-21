@@ -606,7 +606,7 @@ void editbox_registry_cycle(PromptState *state, int dir) {
   int step = dir >= 0 ? 1 : -1;
   for (int i = 0; i < state->editbox_count; i++) {
     cur = (cur + step + state->editbox_count) % state->editbox_count;
-    if (!state->editboxes[cur].placed)
+    if (!state->editboxes[cur].placed || state->editboxes[cur].no_tab)
       continue;
     state->active_editbox = cur;
     edit_state_end_selection();
