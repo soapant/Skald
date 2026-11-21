@@ -467,7 +467,9 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
   eb.caret_h = spec->caret_h;
   int parts = active ? EDITBOX_PART_ALL
                      : (EDITBOX_PART_TINT | EDITBOX_PART_TEXT);
-  editbox_draw(&eb, NULL, parts);
+  EditboxLayout lay;
+  editbox_layout(&eb, &lay);
+  editbox_draw(&eb, &lay, parts);
   entry->eb.scroll_offset = eb.scroll;
   state->active_editbox = saved_active;
   state->eb = saved;
