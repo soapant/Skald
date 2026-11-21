@@ -119,30 +119,6 @@ static void cfg_commit(void) {
   UI_RequestPopupRepaint();
 }
 
-static bool cfg_parse_int(const char *text, int *out) {
-  if (!text || !out)
-    return false;
-  char *end = NULL;
-  long value = strtol(text, &end, 10);
-  if (!end || end == text || *end)
-    return false;
-  if (value < INT_MIN || value > INT_MAX)
-    return false;
-  *out = (int)value;
-  return true;
-}
-
-static bool cfg_parse_float(const char *text, float *out) {
-  if (!text || !out)
-    return false;
-  char *end = NULL;
-  float value = strtof(text, &end);
-  if (!end || end == text || *end)
-    return false;
-  *out = value;
-  return true;
-}
-
 #define DEFINE_CFG_BOOL(cfg_name, cfg_desc)                                    \
   static void cfg_##cfg_name##_click(void) {                                   \
     char key[256];                                                             \
@@ -162,9 +138,7 @@ static bool cfg_parse_float(const char *text, float *out) {
   static char cfg_buf_##cfg_name[64];                                          \
   static void cfg_##cfg_name##_change(const char *field, const char *value) {   \
     (void)field;                                                               \
-    int parsed = 0;                                                            \
-    if (cfg_parse_int(value, &parsed))                                         \
-      cfg_name = parsed;                                                       \
+    cfg_name = sk_parse_int(value, cfg_name);                                  \
     cfg_commit();                                                              \
   }                                                                            \
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
@@ -183,9 +157,7 @@ static bool cfg_parse_float(const char *text, float *out) {
   static char cfg_buf_##cfg_name[64];                                          \
   static void cfg_##cfg_name##_change(const char *field, const char *value) {   \
     (void)field;                                                               \
-    float parsed = 0.0f;                                                       \
-    if (cfg_parse_float(value, &parsed))                                       \
-      cfg_name = parsed;                                                       \
+    cfg_name = sk_parse_float(value, cfg_name);                                \
     cfg_commit();                                                              \
   }                                                                            \
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
@@ -274,9 +246,8 @@ static int cfg_theme_options(const char ***out_options) {
   return count;
 }
 
-static void cfg_theme_select(const char *option, int index, void *ud) {
+static void cfg_theme_select(const char *option, int index) {
   (void)index;
-  (void)ud;
   if (option && sk_set_theme(option))
     UI_RequestPopupRepaint();
 }

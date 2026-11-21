@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdint.h>
 #include "helpers/helpers_fs.h"
 #include <stdlib.h>
@@ -3133,6 +3134,29 @@ static bool setting_parse_float(const char *v, float *out) {
   return true;
 }
 
+static bool setting_parse_int(const char *v, int *out) {
+  if (!v || !*v || !out)
+    return false;
+  char *end = NULL;
+  long n = strtol(v, &end, 10);
+  if (!end || *end != '\0' || n < INT_MIN || n > INT_MAX)
+    return false;
+  *out = (int)n;
+  return true;
+}
+
+int sk_parse_int(const char *text, int fallback) {
+  int out = fallback;
+  setting_parse_int(text, &out);
+  return out;
+}
+
+float sk_parse_float(const char *text, float fallback) {
+  float out = fallback;
+  setting_parse_float(text, &out);
+  return out;
+}
+
 typedef struct {
   SkCcEntrySpec pub;
   char display_name[1024];
@@ -4120,6 +4144,18 @@ bool sk_config_set_setting(const char *key, const char *value) {
   return true;
 }
 
+bool sk_config_set_setting_int(const char *key, int value) {
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%d", value);
+  return sk_config_set_setting(key, buf);
+}
+
+bool sk_config_set_setting_float(const char *key, float value) {
+  char buf[64];
+  snprintf(buf, sizeof(buf), "%.6g", value);
+  return sk_config_set_setting(key, buf);
+}
+
 char *sk_config_get_setting(const char *key) {
   if (!key || !key[0])
     return NULL;
@@ -4129,6 +4165,18 @@ char *sk_config_get_setting(const char *key) {
   char *out = p ? strdup(p) : NULL;
   sk_config_unlock();
   return out;
+}
+
+bool sk_config_get_setting_string(const char *key, char *out, size_t out_len,
+                                  const char *fallback) {
+  if (!out || out_len == 0)
+    return false;
+  char *saved = sk_config_get_setting(key);
+  const char *value = (saved && saved[0]) ? saved
+                                         : (fallback ? fallback : "");
+  snprintf(out, out_len, "%s", value);
+  free(saved);
+  return true;
 }
 
 bool sk_config_get_setting_bool(const char *key) {
@@ -4143,13 +4191,29 @@ bool sk_config_get_setting_bool(const char *key) {
   return value;
 }
 
-float sk_config_get_setting_float(const char *key) {
+int sk_config_get_setting_int(const char *key, int fallback) {
   if (!key)
-    return 0.0f;
+    return fallback;
   sk_config_lock();
   sk_config_init_locked();
   const char *p = setting_lookup_locked(key);
-  float value = 0.0f;
+  int value = fallback;
+  setting_parse_int(p, &value);
+  sk_config_unlock();
+  return value;
+}
+
+float sk_config_get_setting_float(const char *key) {
+  return sk_config_get_setting_float_or(key, 0.0f);
+}
+
+float sk_config_get_setting_float_or(const char *key, float fallback) {
+  if (!key)
+    return fallback;
+  sk_config_lock();
+  sk_config_init_locked();
+  const char *p = setting_lookup_locked(key);
+  float value = fallback;
   setting_parse_float(p, &value);
   sk_config_unlock();
   return value;

@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -552,6 +553,7 @@ bool settings_focus_ctx_has(const char *name) {
 
 #define SETTINGS_EDITBOX_MAX_FIELDS 8
 #define SETTINGS_EDITBOX_KEY_MAX 192
+#define SETTINGS_EDITBOX_VALUE_MAX 512
 
 #define SETTINGS_ROW_X 10
 #define SETTINGS_ROW_W_PAD 20
@@ -578,12 +580,22 @@ static int settings_view_height(int base_off_y) {
 #define SETTINGS_DROPDOWN_OPT_MIN_W 64
 
 typedef struct {
+  char config_key[SETTINGS_CONFIG_KEY_MAX];
+  char default_value[SETTINGS_EDITBOX_VALUE_MAX];
+  unsigned char value_type;
+  float min_value;
+  float max_value;
+} SettingsEditboxFieldMeta;
+
+typedef struct {
   char name[64];
   char label[128];
   char key[SETTINGS_EDITBOX_KEY_MAX];
   char *buffer;
   size_t buffer_size;
   int width;
+  bool owns_buffer;
+  SettingsEditboxFieldMeta *meta;
   char last_value[512];
 } SettingsEditboxFieldBlock;
 
@@ -604,7 +616,6 @@ typedef struct {
   void (*on_change)(void);
   void (*on_hover)(void);
   SettingsDropdownSelectFn on_select;
-  void *ud;
   SettingsEditboxFieldBlock fields[SETTINGS_EDITBOX_MAX_FIELDS];
   int field_count;
   int x_offset;
@@ -634,6 +645,7 @@ static void st_dup(char *dst, size_t cap, const char *src) {
 }
 
 static void settings_entry_builtin_render(SettingsEntry *entry, void *ud);
+static void settings_entry_free_editbox_buffers(SettingsEntry *entry);
 
 static void settings_entry_capture_render(void *ud) {
   SettingsEntry *entry = (SettingsEntry *)ud;
@@ -668,6 +680,7 @@ SettingsEntry *settings_entry_add(const SettingsEntrySpec *spec) {
   }
   SettingsEntry *e = &settings_entries[slot];
   search_index_destroy(e->search);
+  settings_entry_free_editbox_buffers(e);
   memset(e, 0, sizeof(*e));
   st_dup(e->name, sizeof(e->name), spec->name);
   st_dup(e->desc, sizeof(e->desc), spec->desc ? spec->desc : "");
@@ -858,7 +871,6 @@ int settings_entry_add_dropdown(SettingsEntry *entry,
   b->selected = selected;
   b->on_select = spec->on_select;
   b->on_hover = spec->on_hover;
-  b->ud = spec->ud;
   {
     char key[SETTINGS_CONFIG_KEY_MAX];
     SettingsEntry *e = settings_entry_resolve(entry);
@@ -899,6 +911,102 @@ settings_editbox_field_find(SettingsBlock *b, const char *name) {
   return NULL;
 }
 
+static unsigned char settings_value_type(const SettingsEditboxFieldBlock *f) {
+  return f && f->meta ? f->meta->value_type : SETTINGS_EDITBOX_STRING;
+}
+
+static float settings_value_min(const SettingsEditboxFieldBlock *f) {
+  return f && f->meta ? f->meta->min_value : 0.0f;
+}
+
+static float settings_value_max(const SettingsEditboxFieldBlock *f) {
+  return f && f->meta ? f->meta->max_value : 0.0f;
+}
+
+static bool settings_value_parse_int(const char *text, int *out) {
+  if (!text || !text[0] || !out)
+    return false;
+  char *end = NULL;
+  long value = strtol(text, &end, 10);
+  if (!end || end == text || *end || value < INT_MIN || value > INT_MAX)
+    return false;
+  *out = (int)value;
+  return true;
+}
+
+static bool settings_value_parse_float(const char *text, float *out) {
+  if (!text || !text[0] || !out)
+    return false;
+  char *end = NULL;
+  float value = strtof(text, &end);
+  if (!end || end == text || *end)
+    return false;
+  *out = value;
+  return true;
+}
+
+static void settings_value_normalize(const SettingsEditboxFieldBlock *field,
+                                     const char *input, char *out,
+                                     size_t out_cap) {
+  if (!out || out_cap == 0)
+    return;
+  if (!input)
+    input = "";
+  unsigned char value_type = settings_value_type(field);
+  if (value_type == SETTINGS_EDITBOX_STRING) {
+    safe_copy(out, out_cap, input);
+    return;
+  }
+  if (value_type == SETTINGS_EDITBOX_INT) {
+    int value = 0;
+    if (!settings_value_parse_int(input, &value) &&
+        !settings_value_parse_int(field->buffer ? field->buffer : "", &value))
+      settings_value_parse_int(
+          field->meta ? field->meta->default_value : "0", &value);
+    float min_value = settings_value_min(field);
+    float max_value = settings_value_max(field);
+    if (min_value != 0.0f && value < (int)min_value)
+      value = (int)min_value;
+    if (max_value != 0.0f && value > (int)max_value)
+      value = (int)max_value;
+    snprintf(out, out_cap, "%d", value);
+    return;
+  }
+  float value = 0.0f;
+  if (!settings_value_parse_float(input, &value) &&
+      !settings_value_parse_float(field->buffer ? field->buffer : "", &value))
+    settings_value_parse_float(
+        field->meta ? field->meta->default_value : "0", &value);
+  float min_value = settings_value_min(field);
+  float max_value = settings_value_max(field);
+  if (min_value != 0.0f && value < min_value)
+    value = min_value;
+  if (max_value != 0.0f && value > max_value)
+    value = max_value;
+  snprintf(out, out_cap, "%.6g", value);
+}
+
+static void settings_entry_free_editbox_buffers(SettingsEntry *entry) {
+  if (!entry)
+    return;
+  for (int i = 0; i < entry->block_count; i++) {
+    SettingsBlock *b = &entry->blocks[i];
+    if (b->type != SETTINGS_BLOCK_EDITBOX)
+      continue;
+    for (int j = 0; j < b->field_count; j++) {
+      SettingsEditboxFieldBlock *f = &b->fields[j];
+      free(f->meta);
+      f->meta = NULL;
+      if (f->owns_buffer) {
+        free(f->buffer);
+        f->buffer = NULL;
+        f->buffer_size = 0;
+        f->owns_buffer = false;
+      }
+    }
+  }
+}
+
 static void settings_editbox_field_copy(char *dst, size_t dst_cap,
                                         const char *src, size_t src_cap) {
   size_t n = 0;
@@ -911,6 +1019,12 @@ static void settings_editbox_field_copy(char *dst, size_t dst_cap,
   dst[n] = '\0';
 }
 
+static void settings_editbox_persist(const SettingsEditboxFieldBlock *f) {
+  if (!f || !f->meta || !f->meta->config_key[0] || !f->buffer)
+    return;
+  settings_config_set(f->meta->config_key, f->buffer);
+}
+
 SettingsEditboxGroup
 settings_entry_add_editbox(SettingsEntry *entry,
                                const SettingsEditboxSpec *spec) {
@@ -919,8 +1033,15 @@ settings_entry_add_editbox(SettingsEntry *entry,
       spec->field_count > SETTINGS_EDITBOX_MAX_FIELDS)
     return invalid;
   for (int i = 0; i < spec->field_count; i++) {
-    if (!spec->fields[i].name || !spec->fields[i].name[0] ||
-        !spec->fields[i].buffer || spec->fields[i].buffer_size < 2)
+    const SettingsEditboxField *src = &spec->fields[i];
+    if (!src->name || !src->name[0])
+      return invalid;
+    if (src->config_key && src->config_key[0]) {
+      if (src->type > SETTINGS_EDITBOX_FLOAT)
+        return invalid;
+      continue;
+    }
+    if (!src->buffer || src->buffer_size < 2)
       return invalid;
   }
   int idx = settings_entry_add_block_typed(
@@ -953,8 +1074,34 @@ settings_entry_add_editbox(SettingsEntry *entry,
       key_len += name_len;
     }
     dst->key[key_len] = '\0';
-    dst->buffer = src->buffer;
-    dst->buffer_size = src->buffer_size;
+    if (src->config_key && src->config_key[0]) {
+      SettingsEditboxFieldMeta *meta = calloc(1, sizeof(*meta));
+      if (!meta)
+        return invalid;
+      snprintf(meta->config_key, sizeof(meta->config_key), "%s",
+               src->config_key);
+      snprintf(meta->default_value, sizeof(meta->default_value), "%s",
+               src->default_value ? src->default_value : "");
+      meta->value_type = (unsigned char)src->type;
+      meta->min_value = src->min_value;
+      meta->max_value = src->max_value;
+      dst->meta = meta;
+      dst->buffer = calloc(1, SETTINGS_EDITBOX_VALUE_MAX);
+      if (!dst->buffer)
+        return invalid;
+      dst->buffer_size = SETTINGS_EDITBOX_VALUE_MAX;
+      dst->owns_buffer = true;
+      char *saved = settings_config_get(meta->config_key);
+      const char *initial =
+          saved && saved[0] ? saved
+                            : (meta->default_value[0] ? meta->default_value
+                                                      : "");
+      settings_value_normalize(dst, initial, dst->buffer, dst->buffer_size);
+      free(saved);
+    } else {
+      dst->buffer = src->buffer;
+      dst->buffer_size = src->buffer_size;
+    }
     dst->width = src->width;
     settings_editbox_field_copy(dst->last_value, sizeof(dst->last_value),
                                 dst->buffer, dst->buffer_size);
@@ -981,12 +1128,15 @@ bool settings_editbox_set(SettingsEditboxGroup group, const char *name,
   SettingsEditboxFieldBlock *f = settings_editbox_field_find(b, name);
   if (!f)
     return false;
-  if (settings_editbox_set_text(f->key, value))
-    settings_editbox_field_copy(f->last_value, sizeof(f->last_value), value,
-                                strlen(value) + 1);
-  safe_copy(f->buffer, f->buffer_size, value);
+  char normalized[SETTINGS_EDITBOX_VALUE_MAX];
+  settings_value_normalize(f, value, normalized, sizeof(normalized));
+  if (settings_editbox_set_text(f->key, normalized))
+    settings_editbox_field_copy(f->last_value, sizeof(f->last_value), normalized,
+                                strlen(normalized) + 1);
+  safe_copy(f->buffer, f->buffer_size, normalized);
   settings_editbox_field_copy(f->last_value, sizeof(f->last_value), f->buffer,
                               f->buffer_size);
+  settings_editbox_persist(f);
   return true;
 }
 
@@ -1041,8 +1191,10 @@ void settings_registry_purge_owner(const char *path_a, const char *path_b) {
   }
   int out = 0;
   for (int i = 0; i < settings_entry_total; i++) {
-    if (owner_module_matches(settings_entries[i].owner, path_a, path_b))
+    if (owner_module_matches(settings_entries[i].owner, path_a, path_b)) {
+      settings_entry_free_editbox_buffers(&settings_entries[i]);
       continue;
+    }
     if (out != i) {
       settings_entries[out] = settings_entries[i];
       settings_entries[out].pub.name = settings_entries[out].name;
@@ -1115,7 +1267,7 @@ void settings_dispatch_widget_click(void) {
     if (option)
       persist_block_value(e, b, option);
     if (b->on_select)
-      b->on_select(option, b->selected, b->ud);
+      b->on_select(option, b->selected);
     return;
   }
   if (b->type == SETTINGS_BLOCK_CHECKBOX) {
@@ -1368,11 +1520,14 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
         if (!current)
           current = f->buffer;
         if (strcmp(current, f->last_value) != 0) {
-          safe_copy(f->buffer, f->buffer_size, current);
+          char normalized[SETTINGS_EDITBOX_VALUE_MAX];
+          settings_value_normalize(f, current, normalized, sizeof(normalized));
+          safe_copy(f->buffer, f->buffer_size, normalized);
           settings_editbox_field_copy(f->last_value, sizeof(f->last_value),
                                       current, strlen(current) + 1);
+          settings_editbox_persist(f);
           if (b->on_edit_change)
-            b->on_edit_change(f->name, current);
+            b->on_edit_change(f->name, f->buffer);
         }
       }
     } else if (b->type == SETTINGS_BLOCK_DROPDOWN) {
