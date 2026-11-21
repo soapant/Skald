@@ -928,8 +928,52 @@ void sk_string_list_free(StringList *list) { string_list_free(list); }
 void ski_populate_listbox(const SkPopulateListboxSpec *spec) {
   if (!spec)
     return;
+  if (search_index_current())
+    return;
   populate_listbox(spec->lb, spec->filter, spec->items, spec->count,
                    spec->filter_match);
+}
+
+SkSearchIndex *sk_search_create(void) { return search_index_create(); }
+
+void sk_search_destroy(SkSearchIndex *idx) { search_index_destroy(idx); }
+
+void sk_search_push_context(SkSearchIndex *idx, int source_id,
+                            const char *context) {
+  search_index_push_context(idx, source_id, context);
+}
+
+void sk_search_pop_context(SkSearchIndex *idx) { search_index_pop_context(idx); }
+
+void sk_search_add_text(SkSearchIndex *idx, const char *text,
+                        SkSearchKind kind, const char *widget_name,
+                        const char *value) {
+  search_index_add_text(idx, text, kind, widget_name, value);
+}
+
+void sk_search_set_activate(SkSearchIndex *idx, SkSearchActivateFn activate,
+                            void *ud) {
+  search_index_set_activate(idx, activate, ud);
+}
+
+void sk_search_reindex(SkSearchIndex *idx, SkSearchRenderFn render, void *ud) {
+  search_index_reindex(idx, render, ud);
+}
+
+int sk_search_query(SkSearchIndex *idx, const char *filter) {
+  return search_index_query(idx, filter);
+}
+
+int sk_search_hit_count(const SkSearchIndex *idx) {
+  return search_index_hit_count(idx);
+}
+
+const SkSearchHit *sk_search_hit_at(const SkSearchIndex *idx, int i) {
+  return search_index_hit_at(idx, i);
+}
+
+void sk_search_activate(SkSearchIndex *idx, int hit_i) {
+  search_index_activate(idx, hit_i);
 }
 
 bool sk_is_selected(ListBox *lb) {
@@ -1398,6 +1442,11 @@ bool ski_draw_text(const SkTextSpec *spec) {
   if (!real_text) {
     return false;
   }
+  if (search_index_current()) {
+    if (real_text[0])
+      search_index_add_text(NULL, real_text, SK_SEARCH_TEXT, NULL, NULL);
+    return true;
+  }
   unsigned long col = spec->color;
   if (col == 0 || col == COLOR_AUTO)
     col = rgb_to_hex(COLOR_TEXT);
@@ -1434,6 +1483,11 @@ bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
   }
   if (!real_text)
     return false;
+  if (search_index_current()) {
+    if (real_text[0])
+      search_index_add_text(NULL, real_text, SK_SEARCH_TEXT, NULL, NULL);
+    return true;
+  }
   unsigned long col = spec->color;
   if (col == 0 || col == COLOR_AUTO)
     col = rgb_to_hex(COLOR_TEXT);
@@ -1611,6 +1665,13 @@ bool ski_place_editbox(const SkEditSpec *spec) {
   if (!spec) {
     return false;
   }
+  if (search_index_current()) {
+    const char *name = (spec->name && spec->name[0]) ? spec->name
+                                                     : PROMPT_PRIMARY_EDITBOX_NAME;
+    if (strncmp(name, "settings-search:", 16) != 0)
+      search_index_add_text(NULL, spec->buffer, SK_SEARCH_EDITBOX, name, NULL);
+    return true;
+  }
   SkaldContext_Get()->window.editbox_placed = true;
   SkEditSpec copy = *spec;
   copy.hide_caret = false;
@@ -1716,6 +1777,8 @@ bool ski_draw_image(const SkImageSpec *spec) {
   if (!spec || !spec->path || !spec->path[0]) {
     return false;
   }
+  if (search_index_current())
+    return true;
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
   char asset[MAX_PATH];
@@ -1732,6 +1795,8 @@ bool ski_draw_rect(const DrawRect *spec) {
   if (!spec) {
     return false;
   }
+  if (search_index_current())
+    return true;
   unsigned long col = spec->color;
   bool transparent = spec->transparent;
   if (col == 0 || col == COLOR_AUTO)
@@ -1879,6 +1944,8 @@ bool ski_draw_line(const Line *spec) {
   if (!spec) {
     return false;
   }
+  if (search_index_current())
+    return true;
   unsigned long col = spec->color;
   if (col == 0 || col == COLOR_AUTO)
     col = COLOR_TEXT;
@@ -1896,6 +1963,8 @@ bool ski_draw_circle(const Circle *spec) {
   if (!spec) {
     return false;
   }
+  if (search_index_current())
+    return true;
   unsigned long col = spec->color;
   if (col == 0 || col == COLOR_AUTO)
     col = COLOR_TEXT;
@@ -1991,6 +2060,11 @@ void sk_listbox_end(void) {
 bool ski_listbox_begin(const SkListSpec *spec) {
   if (!spec)
     return false;
+  if (search_index_current()) {
+    for (int i = 0; i < spec->count && spec->items; i++)
+      search_index_add_text(NULL, spec->items[i], SK_SEARCH_TEXT, NULL, NULL);
+    return false;
+  }
   return listbox_begin_common(spec);
 }
 
@@ -2045,7 +2119,16 @@ bool sk_button_is_clicked(const char *name) {
 }
 
 bool ski_place_checkbox(const SkCheckboxSpec *spec) {
-  if (spec && spec->name && focus_ctx_find(spec->name) &&
+  if (!spec)
+    return false;
+  if (search_index_current()) {
+    SkSearchKind kind =
+        spec->button ? SK_SEARCH_BUTTON : SK_SEARCH_CHECKBOX;
+    const char *text = (spec->text && spec->text[0]) ? spec->text : spec->name;
+    search_index_add_text(NULL, text, kind, spec->name, NULL);
+    return true;
+  }
+  if (spec->name && focus_ctx_find(spec->name) &&
       spec->on_click == dispatch_widget_click) {
     SkCheckboxSpec copy = *spec;
     copy.on_click = dispatch_focus_click;
@@ -2055,7 +2138,16 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec) {
 }
 
 bool ski_place_slider(const SkSliderSpec *spec) {
-  if (spec && spec->name && focus_ctx_find(spec->name) &&
+  if (!spec)
+    return false;
+  if (search_index_current()) {
+    char value[32];
+    snprintf(value, sizeof(value), "%g", spec->value);
+    search_index_add_text(NULL, spec->name, SK_SEARCH_SLIDER, spec->name,
+                          value);
+    return true;
+  }
+  if (spec->name && focus_ctx_find(spec->name) &&
       spec->on_change == dispatch_slider_change) {
     SkSliderSpec copy = *spec;
     copy.on_change = dispatch_focus_change;
@@ -3090,9 +3182,17 @@ typedef struct {
 #define SETTINGS_ROW_EDGE_PAD 10
 #define SETTINGS_EDITBOX_BASE_X 360
 
-#define SETTINGS_VIEW_TOP 210
-#define SETTINGS_ROW_START 220
+#define SETTINGS_VIEW_TOP 260
+#define SETTINGS_ROW_START SETTINGS_VIEW_TOP
 #define SETTINGS_ROW_STEP 70
+#define SETTINGS_ROW_LEAD (SETTINGS_ROW_START - SETTINGS_VIEW_TOP)
+
+static int settings_view_height(int base_off_y) {
+  int h = PromptH - base_off_y - SETTINGS_VIEW_TOP;
+  if (h < SETTINGS_ROW_STEP)
+    h = SETTINGS_ROW_STEP;
+  return (h / SETTINGS_ROW_STEP) * SETTINGS_ROW_STEP;
+}
 
 #define SETTINGS_DROPDOWN_MAX_VISIBLE 6
 #define SETTINGS_DROPDOWN_OPT_H 28
@@ -3142,6 +3242,10 @@ struct SettingsEntry {
   char desc[512];
   int block_count;
   int scroll_y;
+  char search_filter[128];
+  char last_search_filter[128];
+  bool search_capturing;
+  SearchIndex *search;
   SkSettingsBlock blocks[SETTINGS_MAX_BLOCKS];
 };
 
@@ -3247,6 +3351,20 @@ static void st_dup(char *dst, size_t cap, const char *src) {
 }
 
 static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud);
+
+static void settings_entry_capture_render(void *ud) {
+  SkSettingsEntry *entry = (SkSettingsEntry *)ud;
+  if (!entry)
+    return;
+  char saved[sizeof(entry->search_filter)];
+  memcpy(saved, entry->search_filter, sizeof(saved));
+  entry->search_filter[0] = '\0';
+  entry->search_capturing = true;
+  settings_entry_builtin_render(entry, NULL);
+  entry->search_capturing = false;
+  memcpy(entry->search_filter, saved, sizeof(saved));
+}
+
 static SkSettingsEntry *s_settings_scroll_entry = NULL;
 
 SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
@@ -3266,6 +3384,7 @@ SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
     slot = settings_entry_count++;
   }
   SkSettingsEntry *e = &settings_entries[slot];
+  search_index_destroy(e->search);
   memset(e, 0, sizeof(*e));
   st_dup(e->name, sizeof(e->name), spec->name);
   st_dup(e->desc, sizeof(e->desc), spec->desc ? spec->desc : "");
@@ -3616,6 +3735,32 @@ int sk_settings_editbox_right_offset(int pane_w, int width) {
 
 int sk_settings_entry_count(void) { return settings_entry_count; }
 
+void sk_settings_scroll_to_block(const char *entry_name, int block_index) {
+  if (!entry_name || block_index < 0)
+    return;
+  SkSettingsEntry *entry = NULL;
+  for (int i = 0; i < settings_entry_count; i++) {
+    if (strcmp(settings_entries[i].name, entry_name) == 0) {
+      entry = &settings_entries[i];
+      break;
+    }
+  }
+  if (!entry || block_index >= entry->block_count)
+    return;
+  int view_h = settings_view_height(0);
+  int max_scroll =
+      SETTINGS_ROW_LEAD + entry->block_count * SETTINGS_ROW_STEP - view_h;
+  if (max_scroll < 0)
+    max_scroll = 0;
+  int want = SETTINGS_ROW_START + block_index * SETTINGS_ROW_STEP -
+             SETTINGS_VIEW_TOP - SETTINGS_ROW_STEP;
+  if (want < 0)
+    want = 0;
+  if (want > max_scroll)
+    want = max_scroll;
+  entry->scroll_y = want;
+}
+
 const SettingsEntrySpec *sk_settings_entry_at(int index) {
   if (index < 0 || index >= settings_entry_count)
     return NULL;
@@ -3625,6 +3770,10 @@ const SettingsEntrySpec *sk_settings_entry_at(int index) {
 void settings_registry_purge_owner(const char *path_a, const char *path_b) {
   if (!path_a && !path_b)
     return;
+  for (int i = 0; i < settings_entry_count; i++) {
+    search_index_destroy(settings_entries[i].search);
+    settings_entries[i].search = NULL;
+  }
   int out = 0;
   for (int i = 0; i < settings_entry_count; i++) {
     if (owner_module_matches(settings_entries[i].owner, path_a, path_b))
@@ -3674,10 +3823,9 @@ static void dispatch_widget_click(void) {
       b->open = open;
       if (open) {
         b->dropdown_scroll_y = 0;
-        int view_h = PromptH - SETTINGS_VIEW_TOP;
-        if (view_h < 40)
-          view_h = 40;
-        int max_scroll = e->block_count * SETTINGS_ROW_STEP - view_h;
+        int view_h = settings_view_height(0);
+        int max_scroll =
+            SETTINGS_ROW_LEAD + e->block_count * SETTINGS_ROW_STEP - view_h;
         if (max_scroll < 0)
           max_scroll = 0;
         int want_scroll = SETTINGS_ROW_START +
@@ -3776,6 +3924,40 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
   (void)ud;
   if (!entry)
     return;
+  bool capturing = search_index_current() != NULL;
+  char search_name[320];
+  snprintf(search_name, sizeof(search_name), "settings-search:%s", entry->name);
+  if (!capturing) {
+    const char *live = sk_editbox_text(search_name);
+    if (live && strcmp(live, entry->search_filter) != 0)
+      snprintf(entry->search_filter, sizeof(entry->search_filter), "%s", live);
+  }
+  bool scoped_search =
+      !capturing && !entry->search_capturing && entry->search_filter[0];
+  bool block_match[SETTINGS_MAX_BLOCKS];
+  memset(block_match, 0, sizeof(block_match));
+  int match_count = entry->block_count;
+  if (scoped_search) {
+    if (!entry->search)
+      entry->search = search_index_create();
+    if (strcmp(entry->search_filter, entry->last_search_filter) != 0) {
+      snprintf(entry->last_search_filter, sizeof(entry->last_search_filter),
+               "%s", entry->search_filter);
+      entry->scroll_y = 0;
+    }
+    search_index_reindex(entry->search, settings_entry_capture_render, entry);
+    int hits = search_index_query(entry->search, entry->search_filter);
+    match_count = 0;
+    for (int h = 0; h < hits; h++) {
+      const SearchHit *hit = search_index_hit_at(entry->search, h);
+      if (!hit || hit->source_id < 0 || hit->source_id >= entry->block_count)
+        continue;
+      if (!block_match[hit->source_id]) {
+        block_match[hit->source_id] = true;
+        match_count++;
+      }
+    }
+  }
   int pane_w = PromptW - draw_state_get()->off_x;
   if (pane_w < 240)
     pane_w = 240;
@@ -3795,47 +3977,59 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     sk_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10, .w = 128,
                   .h = 128);
   if (entry->desc[0])
-    sk_draw_text_centered(.x = 30, .y = 140, .w = pane_w - 60, .h = 60,
+    sk_draw_text_centered(.x = 30, .y = 138, .w = pane_w - 60, .h = 36,
                           .text = entry->desc,
                           .color =
                               color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f));
+  sk_draw_rect(.x=5,.y=218,.w=200,.h=28,.color=sk_color_lerp(COLOR_BG,RGB(0,0,0),0.5f),.filled=true,.radius=9);
+  sk_place_editbox(.name = search_name, .x = 5, .y = 220, .w = 200,
+                   .h = 28, .font_size = 14, .caret_h = 16,
+                   .buffer = entry->search_filter,
+                   .buffer_size = sizeof(entry->search_filter),
+                   .placeholder = "Search this section");
   sk_draw_line(.x1 = -7, .y1 = 210, .x2 = pane_w + 17, .y2 = 210,
                .color = COLOR_BORDER);
 
-  if (s_settings_scroll_entry != entry) {
+  if (!capturing && s_settings_scroll_entry != entry) {
     s_settings_scroll_entry = entry;
     entry->scroll_y = 0;
   }
   int base_off_x = 0, base_off_y = 0;
   get_draw_offset(&base_off_x, &base_off_y);
-  int view_h = PromptH - base_off_y - SETTINGS_VIEW_TOP;
-  if (view_h < 40)
-    view_h = 40;
-  char scroll_name[300];
-  snprintf(scroll_name, sizeof(scroll_name), "settings:%s", entry->name);
-  ScrollAreaSpec scroll_spec = {
-      .name = scroll_name,
-      .x = 0,
-      .y = SETTINGS_VIEW_TOP,
-      .w = pane_w,
-      .h = view_h,
-      .content_w = 0,
-      .content_h = entry->block_count * SETTINGS_ROW_STEP,
-      .off_y = &entry->scroll_y,
-      .wheel_px = SETTINGS_ROW_STEP,
-      .owner = entry->owner,
-  };
-  bool scrolled = scroll_area_begin(&scroll_spec);
-  int view_top = SETTINGS_VIEW_TOP + (scrolled ? entry->scroll_y : 0);
+  bool scrolled = false;
+  int view_top = SETTINGS_VIEW_TOP;
+  if (!capturing) {
+    int view_h = settings_view_height(base_off_y);
+    char scroll_name[300];
+    snprintf(scroll_name, sizeof(scroll_name), "settings:%s", entry->name);
+    ScrollAreaSpec scroll_spec = {
+        .name = scroll_name,
+        .x = 0,
+        .y = SETTINGS_VIEW_TOP,
+        .w = pane_w,
+        .h = view_h,
+        .content_w = 0,
+        .content_h = SETTINGS_ROW_LEAD + match_count * SETTINGS_ROW_STEP,
+        .off_y = &entry->scroll_y,
+        .wheel_px = SETTINGS_ROW_STEP,
+        .owner = entry->owner,
+    };
+    scrolled = scroll_area_begin(&scroll_spec);
+    view_top = SETTINGS_VIEW_TOP + (scrolled ? entry->scroll_y : 0);
+  }
 
   for (int i = 0; i < entry->block_count; i++) {
     SkSettingsBlock *b = &entry->blocks[i];
-    if (cursor < view_top) {
+    if (scoped_search && !block_match[i])
+      continue;
+    if (!capturing && cursor < view_top) {
       cursor += SETTINGS_ROW_STEP;
       continue;
     }
-    if (cursor + 60 > PromptH - draw_state_get()->off_y)
+    if (!capturing && cursor >= PromptH - draw_state_get()->off_y)
       break;
+    if (capturing)
+      search_index_push_context(NULL, i, b->title);
     s_dispatch_entry = entry;
     s_dispatch_index = i;
     focus_ctx_remember(b->title, entry, i, -1);
@@ -3907,6 +4101,11 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
     } else if (b->type == SETTINGS_BLOCK_DROPDOWN) {
       const char **options = NULL;
       int count = dropdown_options(b, &options);
+      if (capturing) {
+        for (int oi = 0; oi < count; oi++)
+          search_index_add_text(NULL, options ? options[oi] : NULL,
+                                SK_SEARCH_DROPDOWN, b->title, NULL);
+      }
       if (b->selected >= count)
         b->selected = count > 0 ? 0 : -1;
       const char *label = "Select...";
@@ -3932,7 +4131,9 @@ static void settings_entry_builtin_render(SkSettingsEntry *entry, void *ud) {
         open_w = bw;
       }
     }
-    cursor += 70;
+    if (capturing)
+      search_index_pop_context(NULL);
+    cursor += SETTINGS_ROW_STEP;
   }
 
   if (scrolled)
