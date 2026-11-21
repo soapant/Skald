@@ -19,6 +19,7 @@
 #include "core/clipboard_history.h"
 #include "config.h"
 #include "core/cc_registry.h"
+#include "core/search_index.h"
 
 typedef StringList SkStringList;
 typedef HotkeyKey SkKey;
@@ -53,6 +54,36 @@ typedef SliderSpec SkSliderSpec;
 typedef SettingsEntrySpec SkSettingsEntrySpec;
 typedef PlaceState SkPlaceState;
 typedef ClipboardEntry SkClipboardEntry;
+
+typedef SearchKind SkSearchKind;
+typedef SearchHit SkSearchHit;
+typedef SearchIndex SkSearchIndex;
+typedef SearchRenderFn SkSearchRenderFn;
+typedef SearchActivateFn SkSearchActivateFn;
+
+#define SK_SEARCH_TEXT SEARCH_KIND_TEXT
+#define SK_SEARCH_BUTTON SEARCH_KIND_BUTTON
+#define SK_SEARCH_CHECKBOX SEARCH_KIND_CHECKBOX
+#define SK_SEARCH_SLIDER SEARCH_KIND_SLIDER
+#define SK_SEARCH_EDITBOX SEARCH_KIND_EDITBOX
+#define SK_SEARCH_DROPDOWN SEARCH_KIND_DROPDOWN
+#define SK_SEARCH_CUSTOM SEARCH_KIND_CUSTOM
+
+SkSearchIndex *sk_search_create(void);
+void sk_search_destroy(SkSearchIndex *idx);
+void sk_search_push_context(SkSearchIndex *idx, int source_id,
+                            const char *context);
+void sk_search_pop_context(SkSearchIndex *idx);
+void sk_search_add_text(SkSearchIndex *idx, const char *text,
+                        SkSearchKind kind, const char *widget_name,
+                        const char *value);
+void sk_search_set_activate(SkSearchIndex *idx, SkSearchActivateFn activate,
+                            void *ud);
+void sk_search_reindex(SkSearchIndex *idx, SkSearchRenderFn render, void *ud);
+int sk_search_query(SkSearchIndex *idx, const char *filter);
+int sk_search_hit_count(const SkSearchIndex *idx);
+const SkSearchHit *sk_search_hit_at(const SkSearchIndex *idx, int i);
+void sk_search_activate(SkSearchIndex *idx, int hit_i);
 typedef ClipboardHistory SkClipboardHistory;
 
 typedef struct {
@@ -1060,6 +1091,7 @@ int sk_cc_entry_count(void);
 const CcEntrySpec *sk_cc_entry_at(int index);
 
 int sk_settings_entry_count(void);
+void sk_settings_scroll_to_block(const char *entry_name, int block_index);
 
 const SettingsEntrySpec *sk_settings_entry_at(int index);
 
