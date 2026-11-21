@@ -74,9 +74,8 @@ void sk_search_destroy(SkSearchIndex *idx);
 void sk_search_push_context(SkSearchIndex *idx, int source_id,
                             const char *context);
 void sk_search_pop_context(SkSearchIndex *idx);
-void sk_search_add_text(SkSearchIndex *idx, const char *text,
-                        SkSearchKind kind, const char *widget_name,
-                        const char *value);
+void sk_search_add_text(SkSearchIndex *idx, const char *text, SkSearchKind kind,
+                        const char *widget_name, const char *value);
 void sk_search_set_activate(SkSearchIndex *idx, SkSearchActivateFn activate,
                             void *ud);
 void sk_search_reindex(SkSearchIndex *idx, SkSearchRenderFn render, void *ud);
@@ -981,9 +980,8 @@ ski_settings_entry_add_editbox(SkSettingsEntry *entry,
 const char *sk_settings_editbox_get(SkSettingsEditboxGroup group,
                                     const char *name);
 bool sk_settings_editbox_set(SkSettingsEditboxGroup group, const char *name,
-                              const char *value);
+                             const char *value);
 int sk_settings_editbox_right_offset(int pane_w, int width);
-
 
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 

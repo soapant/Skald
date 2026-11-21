@@ -42,7 +42,8 @@ static int settings_config_count = 0;
 static SettingsConfigEntry settings_config_entries[256];
 static char settings_config_path[1024];
 static bool settings_config_loaded = false;
-static void (*settings_config_notify)(const char *key, const char *value) = NULL;
+static void (*settings_config_notify)(const char *key,
+                                      const char *value) = NULL;
 
 void settings_config_set_notify(void (*notify)(const char *key,
                                                const char *value)) {
@@ -134,7 +135,8 @@ static bool settings_config_set(const char *key, const char *value) {
   if (existing)
     snprintf((char *)existing, SETTINGS_CONFIG_VALUE_MAX, "%s", value);
   else if (settings_config_count < 256) {
-    SettingsConfigEntry *out = &settings_config_entries[settings_config_count++];
+    SettingsConfigEntry *out =
+        &settings_config_entries[settings_config_count++];
     snprintf(out->key, sizeof(out->key), "%s", key);
     snprintf(out->value, sizeof(out->value), "%s", value);
   }
@@ -223,17 +225,17 @@ static bool settings_draw_text_local(const SettingsDrawTextSpec *spec) {
     return true;
   }
   const char *align = spec->align ? spec->align : "LEFT";
-  return Platform_DrawTextRaw((DrawTextRawSpec){.x = spec->x,
-                                                .y = spec->y,
-                                                .text = spec->text,
-                                                .color = settings_color(
-                                                    spec->color),
-                                                .align = (char *)align,
-                                                .font_size = spec->font_size});
+  return Platform_DrawTextRaw(
+      (DrawTextRawSpec){.x = spec->x,
+                        .y = spec->y,
+                        .text = spec->text,
+                        .color = settings_color(spec->color),
+                        .align = (char *)align,
+                        .font_size = spec->font_size});
 }
 
-static bool settings_draw_text_centered_local(
-    const SettingsDrawTextCenteredSpec *spec) {
+static bool
+settings_draw_text_centered_local(const SettingsDrawTextCenteredSpec *spec) {
   if (!spec || !spec->text)
     return false;
   if (settings_capturing()) {
@@ -241,14 +243,14 @@ static bool settings_draw_text_centered_local(
       search_index_add_text(NULL, spec->text, SEARCH_KIND_TEXT, NULL, NULL);
     return true;
   }
-  Platform_DrawTextCentered((DrawTextCenteredSpec){
-      .x = spec->x,
-      .y = spec->y,
-      .w = spec->w,
-      .h = spec->h,
-      .text = spec->text,
-      .color = settings_color(spec->color),
-      .font_size = spec->font_size});
+  Platform_DrawTextCentered(
+      (DrawTextCenteredSpec){.x = spec->x,
+                             .y = spec->y,
+                             .w = spec->w,
+                             .h = spec->h,
+                             .text = spec->text,
+                             .color = settings_color(spec->color),
+                             .font_size = spec->font_size});
   return true;
 }
 
@@ -271,13 +273,13 @@ static bool settings_draw_line_local(const Line *spec) {
     return false;
   if (settings_capturing())
     return true;
-  return Platform_DrawLineRaw((DrawLineRawSpec){.x1 = spec->x1,
-                                                .y1 = spec->y1,
-                                                .x2 = spec->x2,
-                                                .y2 = spec->y2,
-                                                .color = settings_color(
-                                                    spec->color),
-                                                .thickness = spec->thickness});
+  return Platform_DrawLineRaw(
+      (DrawLineRawSpec){.x1 = spec->x1,
+                        .y1 = spec->y1,
+                        .x2 = spec->x2,
+                        .y2 = spec->y2,
+                        .color = settings_color(spec->color),
+                        .thickness = spec->thickness});
 }
 
 static const char *settings_editbox_text(const char *name) {
@@ -425,9 +427,9 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
   PromptState *state = prompt_popup_get_top_prompt_state();
   int dx = 0, dy = 0;
   get_draw_offset(&dx, &dy);
-  int idx = editbox_registry_place(state, name, spec->buffer, spec->buffer_size,
-                                   spec->x + dx, spec->y + dy, spec->w,
-                                   spec->h);
+  int idx =
+      editbox_registry_place(state, name, spec->buffer, spec->buffer_size,
+                             spec->x + dx, spec->y + dy, spec->w, spec->h);
   if (idx < 0)
     return false;
   PromptEditbox *entry = &state->editboxes[idx];
@@ -470,8 +472,8 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
   eb.text_y += y_off;
   eb.placeholder_dy = 0;
   eb.caret_y += y_off;
-  int parts = active ? EDITBOX_PART_ALL
-                     : (EDITBOX_PART_TINT | EDITBOX_PART_TEXT);
+  int parts =
+      active ? EDITBOX_PART_ALL : (EDITBOX_PART_TINT | EDITBOX_PART_TEXT);
   EditboxLayout lay;
   editbox_layout(&eb, &lay);
   editbox_draw(&eb, &lay, parts);
@@ -484,7 +486,7 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
 #define settings_place_checkbox(...)                                           \
   settings_place_checkbox_impl(&(SettingsPlaceCheckboxSpec){__VA_ARGS__}, false)
 #define settings_place_button(...)                                             \
-  settings_place_checkbox_impl(                                                 \
+  settings_place_checkbox_impl(                                                \
       &(SettingsPlaceCheckboxSpec){.button = true, __VA_ARGS__}, true)
 #define settings_place_slider(...)                                             \
   settings_place_slider_impl(&(SettingsPlaceSliderSpec){__VA_ARGS__})
@@ -496,7 +498,8 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
 #define settings_draw_text(...)                                                \
   settings_draw_text_local(&(SettingsDrawTextSpec){__VA_ARGS__})
 #define settings_draw_text_centered(...)                                       \
-  settings_draw_text_centered_local(&(SettingsDrawTextCenteredSpec){__VA_ARGS__})
+  settings_draw_text_centered_local(                                           \
+      &(SettingsDrawTextCenteredSpec){__VA_ARGS__})
 #define settings_draw_image(...)                                               \
   settings_draw_image_local(&(SettingsDrawImageSpec){__VA_ARGS__})
 #define settings_draw_line(...) settings_draw_line_local(&(Line){__VA_ARGS__})
@@ -709,8 +712,7 @@ static SettingsBlock *settings_block_at(SettingsEntry *entry, int index) {
   return &e->blocks[index];
 }
 
-static int dropdown_options(const SettingsBlock *b,
-                            const char ***out_options) {
+static int dropdown_options(const SettingsBlock *b, const char ***out_options) {
   if (!b) {
     if (out_options)
       *out_options = NULL;
@@ -753,7 +755,7 @@ static int settings_entry_add_block_typed(SettingsEntry *entry, int type,
 }
 
 int settings_entry_add_checkbox(SettingsEntry *entry,
-                                    const SettingsCheckboxSpec *spec) {
+                                const SettingsCheckboxSpec *spec) {
   if (!spec)
     return -1;
   int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_CHECKBOX,
@@ -778,7 +780,7 @@ int settings_entry_add_checkbox(SettingsEntry *entry,
 }
 
 int settings_entry_add_button(SettingsEntry *entry,
-                                  const SettingsButtonSpec *spec) {
+                              const SettingsButtonSpec *spec) {
   if (!spec)
     return -1;
   int idx =
@@ -794,7 +796,7 @@ int settings_entry_add_button(SettingsEntry *entry,
 }
 
 int settings_entry_add_slider(SettingsEntry *entry,
-                                  const SettingsSliderSpec *spec) {
+                              const SettingsSliderSpec *spec) {
   if (!spec)
     return -1;
   float min_value = spec->min_value;
@@ -848,7 +850,7 @@ int settings_entry_add_slider(SettingsEntry *entry,
 }
 
 int settings_entry_add_dropdown(SettingsEntry *entry,
-                                    const SettingsDropdownSpec *spec) {
+                                const SettingsDropdownSpec *spec) {
   if (!spec)
     return -1;
   const char **options = NULL;
@@ -890,8 +892,7 @@ int settings_entry_add_dropdown(SettingsEntry *entry,
   return idx;
 }
 
-static SettingsBlock *
-settings_editbox_group_block(SettingsEditboxGroup group) {
+static SettingsBlock *settings_editbox_group_block(SettingsEditboxGroup group) {
   if (group.entry < 0 || group.entry >= settings_entry_total || group.block < 0)
     return NULL;
   SettingsEntry *e = &settings_entries[group.entry];
@@ -961,8 +962,8 @@ static void settings_value_normalize(const SettingsEditboxFieldBlock *field,
     int value = 0;
     if (!settings_value_parse_int(input, &value) &&
         !settings_value_parse_int(field->buffer ? field->buffer : "", &value))
-      settings_value_parse_int(
-          field->meta ? field->meta->default_value : "0", &value);
+      settings_value_parse_int(field->meta ? field->meta->default_value : "0",
+                               &value);
     float min_value = settings_value_min(field);
     float max_value = settings_value_max(field);
     if (min_value != 0.0f && value < (int)min_value)
@@ -975,8 +976,8 @@ static void settings_value_normalize(const SettingsEditboxFieldBlock *field,
   float value = 0.0f;
   if (!settings_value_parse_float(input, &value) &&
       !settings_value_parse_float(field->buffer ? field->buffer : "", &value))
-    settings_value_parse_float(
-        field->meta ? field->meta->default_value : "0", &value);
+    settings_value_parse_float(field->meta ? field->meta->default_value : "0",
+                               &value);
   float min_value = settings_value_min(field);
   float max_value = settings_value_max(field);
   if (min_value != 0.0f && value < min_value)
@@ -1027,7 +1028,7 @@ static void settings_editbox_persist(const SettingsEditboxFieldBlock *f) {
 
 SettingsEditboxGroup
 settings_entry_add_editbox(SettingsEntry *entry,
-                               const SettingsEditboxSpec *spec) {
+                           const SettingsEditboxSpec *spec) {
   SettingsEditboxGroup invalid = SETTINGS_EDITBOX_INVALID;
   if (!spec || !spec->fields || spec->field_count < 1 ||
       spec->field_count > SETTINGS_EDITBOX_MAX_FIELDS)
@@ -1093,9 +1094,9 @@ settings_entry_add_editbox(SettingsEntry *entry,
       dst->owns_buffer = true;
       char *saved = settings_config_get(meta->config_key);
       const char *initial =
-          saved && saved[0] ? saved
-                            : (meta->default_value[0] ? meta->default_value
-                                                      : "");
+          saved && saved[0]
+              ? saved
+              : (meta->default_value[0] ? meta->default_value : "");
       settings_value_normalize(dst, initial, dst->buffer, dst->buffer_size);
       free(saved);
     } else {
@@ -1110,8 +1111,7 @@ settings_entry_add_editbox(SettingsEntry *entry,
   return group;
 }
 
-const char *settings_editbox_get(SettingsEditboxGroup group,
-                                    const char *name) {
+const char *settings_editbox_get(SettingsEditboxGroup group, const char *name) {
   SettingsBlock *b = settings_editbox_group_block(group);
   SettingsEditboxFieldBlock *f = settings_editbox_field_find(b, name);
   if (!f)
@@ -1121,7 +1121,7 @@ const char *settings_editbox_get(SettingsEditboxGroup group,
 }
 
 bool settings_editbox_set(SettingsEditboxGroup group, const char *name,
-                             const char *value) {
+                          const char *value) {
   if (!value)
     return false;
   SettingsBlock *b = settings_editbox_group_block(group);
@@ -1131,8 +1131,8 @@ bool settings_editbox_set(SettingsEditboxGroup group, const char *name,
   char normalized[SETTINGS_EDITBOX_VALUE_MAX];
   settings_value_normalize(f, value, normalized, sizeof(normalized));
   if (settings_editbox_set_text(f->key, normalized))
-    settings_editbox_field_copy(f->last_value, sizeof(f->last_value), normalized,
-                                strlen(normalized) + 1);
+    settings_editbox_field_copy(f->last_value, sizeof(f->last_value),
+                                normalized, strlen(normalized) + 1);
   safe_copy(f->buffer, f->buffer_size, normalized);
   settings_editbox_field_copy(f->last_value, sizeof(f->last_value), f->buffer,
                               f->buffer_size);
@@ -1219,8 +1219,8 @@ static SettingsBlock *dispatch_block(void) {
   return &s_dispatch_entry->blocks[s_dispatch_index];
 }
 
-static void persist_block_value(const SettingsEntry *e,
-                                const SettingsBlock *b, const char *value) {
+static void persist_block_value(const SettingsEntry *e, const SettingsBlock *b,
+                                const char *value) {
   char key[SETTINGS_CONFIG_KEY_MAX];
   snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
   settings_config_set(key, value);
@@ -1387,25 +1387,28 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
   int open_count = 0;
 
   settings_draw_rect(.x = -7, .y = -10, .w = pane_w + 24, .h = 220,
-               .color = settings_color_lerp(COLOR_BG, RGB(0, 0, 0), 0.42f),
-               .filled = true, .rounded = false);
+                     .color =
+                         settings_color_lerp(COLOR_BG, RGB(0, 0, 0), 0.42f),
+                     .filled = true, .rounded = false);
 
   if (entry->icon[0])
-    settings_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10, .w = 128,
-                  .h = 128);
+    settings_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10,
+                        .w = 128, .h = 128);
   if (entry->desc[0])
     settings_draw_text_centered(.x = 30, .y = 138, .w = pane_w - 60, .h = 36,
-                          .text = entry->desc,
-                          .color =
-                              color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f));
-  settings_draw_rect(.x=5,.y=218,.w=200,.h=28,.color=settings_color_lerp(COLOR_BG,RGB(0,0,0),0.5f),.filled=true,.radius=9);
+                                .text = entry->desc,
+                                .color = color_lerp(COLOR_BG,
+                                                    RGB(255, 255, 255), 0.48f));
+  settings_draw_rect(.x = 5, .y = 218, .w = 200, .h = 28,
+                     .color = settings_color_lerp(COLOR_BG, RGB(0, 0, 0), 0.5f),
+                     .filled = true, .radius = 9);
   settings_place_editbox(.name = search_name, .x = 5, .y = 218, .w = 200,
-                   .h = 28, .font_size = 14, .caret_h = 16,
-                   .buffer = entry->search_filter,
-                   .buffer_size = sizeof(entry->search_filter),
-                   .placeholder = "Search this section", .no_tab = false);
+                         .h = 28, .font_size = 14, .caret_h = 16,
+                         .buffer = entry->search_filter,
+                         .buffer_size = sizeof(entry->search_filter),
+                         .placeholder = "Search this section", .no_tab = false);
   settings_draw_line(.x1 = -7, .y1 = 210, .x2 = pane_w + 17, .y2 = 210,
-               .color = COLOR_BORDER);
+                     .color = COLOR_BORDER);
 
   if (!capturing && s_settings_scroll_entry != entry) {
     s_settings_scroll_entry = entry;
@@ -1452,47 +1455,50 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
     focus_ctx_remember(b->title, entry, i, -1);
     int x = SETTINGS_ROW_X, y = cursor, w = pane_w - SETTINGS_ROW_W_PAD;
     settings_draw_rect(.x = x, .y = y, .w = w, .h = 60,
-                 .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
-                 .filled = true, .radius = 6);
+                       .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
+                       .filled = true, .radius = 6);
     if (b->title[0])
       settings_draw_text(.text = b->title, .x = x + 10, .y = y + 8,
-                   .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.82f),
-                   .align = "LEFT");
+                         .color =
+                             color_lerp(COLOR_BG, RGB(255, 255, 255), 0.82f),
+                         .align = "LEFT");
     if (b->sub[0])
       settings_draw_text(.text = b->sub, .x = x + 10, .y = y + 30,
-                   .color = color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f),
-                   .align = "LEFT");
+                         .color =
+                             color_lerp(COLOR_BG, RGB(255, 255, 255), 0.48f),
+                         .align = "LEFT");
     int right = x + w - SETTINGS_ROW_EDGE_PAD;
     if (b->type == SETTINGS_BLOCK_CHECKBOX) {
-      settings_place_checkbox(.name = b->title, .x = right - 32, .y = y + 14, .w = 32,
-                        .h = 32, .checked = b->initial,
-                        .on_click = settings_dispatch_widget_click,
-                        .on_hover = dispatch_widget_hover);
+      settings_place_checkbox(.name = b->title, .x = right - 32, .y = y + 14,
+                              .w = 32, .h = 32, .checked = b->initial,
+                              .on_click = settings_dispatch_widget_click,
+                              .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_BUTTON) {
       int bw = settings_text_width(b->label, FontSize) + 28;
       if (bw < 64)
         bw = 64;
-      settings_place_button(.name = b->title, .x = right - bw, .y = y + 16, .w = bw,
-                      .h = 28, .text = b->label,
-                      .on_click = settings_dispatch_widget_click,
-                      .on_hover = dispatch_widget_hover);
+      settings_place_button(.name = b->title, .x = right - bw, .y = y + 16,
+                            .w = bw, .h = 28, .text = b->label,
+                            .on_click = settings_dispatch_widget_click,
+                            .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_SLIDER) {
       float range = b->max_value - b->min_value;
       float step = range >= 10.0f ? 1.0f : range / 100.0f;
       if (step <= 0.0f)
         step = 1.0f;
-      settings_place_slider(.name = b->title, .x = right - 180, .y = y + 20, .w = 180,
-                      .h = 20, .min_value = b->min_value,
-                      .max_value = b->max_value, .step = step,
-                      .value = b->value, .on_change = settings_dispatch_slider_change,
-                      .on_hover = dispatch_widget_hover);
+      settings_place_slider(.name = b->title, .x = right - 180, .y = y + 20,
+                            .w = 180, .h = 20, .min_value = b->min_value,
+                            .max_value = b->max_value, .step = step,
+                            .value = b->value,
+                            .on_change = settings_dispatch_slider_change,
+                            .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_EDITBOX) {
       int widths[SETTINGS_EDITBOX_MAX_FIELDS];
       int total = 0;
       for (int fi = 0; fi < b->field_count; fi++) {
         SettingsEditboxFieldBlock *f = &b->fields[fi];
-        int fw = f->width > 0 ? f->width
-                              : editbox_auto_width(f->buffer, FontSize);
+        int fw =
+            f->width > 0 ? f->width : editbox_auto_width(f->buffer, FontSize);
         widths[fi] = fw;
         total += fw + (fi ? SETTINGS_EDITBOX_FIELD_GAP : 0);
       }
@@ -1509,12 +1515,12 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
         if (field_w < 32)
           field_w = 32;
         settings_draw_rect(.x = ex - 3, .y = y + 13, .w = field_w + 6, .h = 34,
-                     .color = color_lerp(COLOR_BG, RGB(0, 0, 0), 0.28f),
-                     .filled = true, .radius = 6);
-        settings_place_editbox(.name = f->key, .x = ex, .y = y + 16, .w = field_w,
-                         .h = 28, .buffer = f->buffer,
-                         .buffer_size = f->buffer_size,
-                         .placeholder = f->label, .no_tab = true);
+                           .color = color_lerp(COLOR_BG, RGB(0, 0, 0), 0.28f),
+                           .filled = true, .radius = 6);
+        settings_place_editbox(.name = f->key, .x = ex, .y = y + 16,
+                               .w = field_w, .h = 28, .buffer = f->buffer,
+                               .buffer_size = f->buffer_size,
+                               .placeholder = f->label, .no_tab = true);
         ex += field_w + gap;
         const char *current = settings_editbox_text(f->key);
         if (!current)
@@ -1548,10 +1554,10 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
         bw = 96;
       if (bw > w)
         bw = w;
-      settings_place_button(.name = b->title, .x = right - bw, .y = y + 16, .w = bw,
-                      .h = 28, .text = (char *)label,
-                      .on_click = settings_dispatch_widget_click,
-                      .on_hover = dispatch_widget_hover);
+      settings_place_button(.name = b->title, .x = right - bw, .y = y + 16,
+                            .w = bw, .h = 28, .text = (char *)label,
+                            .on_click = settings_dispatch_widget_click,
+                            .on_hover = dispatch_widget_hover);
       if (b->open && count > 0) {
         open_block = b;
         open_entry = entry;
@@ -1600,8 +1606,8 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
         panel_y = bottom - panel_h;
 
       settings_draw_rect(.x = panel_x, .y = panel_y, .w = panel_w, .h = panel_h,
-                   .color = color_lerp(COLOR_BG, RGB(0, 0, 0), 0.22f),
-                   .filled = true, .radius = 6);
+                         .color = color_lerp(COLOR_BG, RGB(0, 0, 0), 0.22f),
+                         .filled = true, .radius = 6);
 
       char dropdown_scroll_name[512];
       snprintf(dropdown_scroll_name, sizeof(dropdown_scroll_name),
@@ -1636,17 +1642,19 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
         snprintf(opt_name, sizeof(opt_name), "%s##%d", open_block->title, i);
         if (i == open_block->selected)
           settings_draw_rect(.x = panel_x + 4, .y = y, .w = opt_w,
-                       .h = SETTINGS_DROPDOWN_OPT_H,
-                       .color = settings_color_lerp(COLOR_BG, RGB(255, 255, 255), 0.10f),
-                       .filled = true, .radius = 4);
+                             .h = SETTINGS_DROPDOWN_OPT_H,
+                             .color = settings_color_lerp(
+                                 COLOR_BG, RGB(255, 255, 255), 0.10f),
+                             .filled = true, .radius = 4);
         s_dispatch_entry = open_entry;
         s_dispatch_index = open_index;
         s_dispatch_option = i;
         focus_ctx_remember(opt_name, open_entry, open_index, i);
-        settings_place_button(.name = opt_name, .x = panel_x + 4, .y = y, .w = opt_w,
-                        .h = SETTINGS_DROPDOWN_OPT_H, .text = (char *)text,
-                        .on_click = settings_dispatch_widget_click,
-                        .on_hover = dispatch_widget_hover);
+        settings_place_button(.name = opt_name, .x = panel_x + 4, .y = y,
+                              .w = opt_w, .h = SETTINGS_DROPDOWN_OPT_H,
+                              .text = (char *)text,
+                              .on_click = settings_dispatch_widget_click,
+                              .on_hover = dispatch_widget_hover);
       }
       scroll_area_end();
     }

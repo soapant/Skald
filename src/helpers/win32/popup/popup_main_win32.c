@@ -649,10 +649,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     } else {
       PromptState *estate = win32_prompt_state_from_hwnd(hwnd);
       if (estate) {
-        focus_frame_begin(estate->lb != NULL, 0, prompt_list_top(),
-                          estate->width,
-                          estate->height - prompt_list_top() -
-                              prompt_list_bottom_margin());
+        focus_frame_begin(
+            estate->lb != NULL, 0, prompt_list_top(), estate->width,
+            estate->height - prompt_list_top() - prompt_list_bottom_margin());
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = estate->no_separators;
         win32_set_draw_context(paintDC);

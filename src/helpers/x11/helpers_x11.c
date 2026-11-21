@@ -931,8 +931,8 @@ bool x11_prewarm_image(Display *dpy, const char *path) {
   if (hit)
     return true;
   Picture pic = 0;
-  bool ok = image_cache_store(dpy, DefaultRootWindow(dpy), path, size, size,
-                              &pic);
+  bool ok =
+      image_cache_store(dpy, DefaultRootWindow(dpy), path, size, size, &pic);
   if (!ok)
     return false;
   pthread_mutex_unlock(&img_cache_mtx);

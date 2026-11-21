@@ -918,11 +918,12 @@ void sk_search_push_context(SkSearchIndex *idx, int source_id,
   search_index_push_context(idx, source_id, context);
 }
 
-void sk_search_pop_context(SkSearchIndex *idx) { search_index_pop_context(idx); }
+void sk_search_pop_context(SkSearchIndex *idx) {
+  search_index_pop_context(idx);
+}
 
-void sk_search_add_text(SkSearchIndex *idx, const char *text,
-                        SkSearchKind kind, const char *widget_name,
-                        const char *value) {
+void sk_search_add_text(SkSearchIndex *idx, const char *text, SkSearchKind kind,
+                        const char *widget_name, const char *value) {
   search_index_add_text(idx, text, kind, widget_name, value);
 }
 
@@ -1641,8 +1642,9 @@ bool ski_place_editbox(const SkEditSpec *spec) {
     return false;
   }
   if (search_index_current()) {
-    const char *name = (spec->name && spec->name[0]) ? spec->name
-                                                     : PROMPT_PRIMARY_EDITBOX_NAME;
+    const char *name = (spec->name && spec->name[0])
+                           ? spec->name
+                           : PROMPT_PRIMARY_EDITBOX_NAME;
     if (strncmp(name, "settings-search:", 16) != 0)
       search_index_add_text(NULL, spec->buffer, SK_SEARCH_EDITBOX, name, NULL);
     return true;
@@ -2023,7 +2025,8 @@ static bool listbox_next_common(SkListItemCtx *out) {
 
 void sk_listbox_end(void) {
   listbox_set_row_h_scroll(0);
-  if (sk_list_separators && prompt_list_bottom_margin() > 0 && sk_list_y0 >= 0) {
+  if (sk_list_separators && prompt_list_bottom_margin() > 0 &&
+      sk_list_y0 >= 0) {
     draw_prompt_separator((DrawPromptSeparatorSpec){.y = sk_list_y0 + sk_list_h,
                                                     .width = sk_list_fw});
   }
@@ -2100,8 +2103,7 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec) {
   if (!spec)
     return false;
   if (search_index_current()) {
-    SkSearchKind kind =
-        spec->button ? SK_SEARCH_BUTTON : SK_SEARCH_CHECKBOX;
+    SkSearchKind kind = spec->button ? SK_SEARCH_BUTTON : SK_SEARCH_CHECKBOX;
     const char *text = (spec->text && spec->text[0]) ? spec->text : spec->name;
     search_index_add_text(NULL, text, kind, spec->name, NULL);
     return true;
@@ -3303,8 +3305,9 @@ int ski_settings_entry_add_dropdown(SettingsEntry *entry,
   return settings_entry_add_dropdown(entry, spec);
 }
 
-SettingsEditboxGroup ski_settings_entry_add_editbox(
-    SettingsEntry *entry, const SettingsEditboxSpec *spec) {
+SettingsEditboxGroup
+ski_settings_entry_add_editbox(SettingsEntry *entry,
+                               const SettingsEditboxSpec *spec) {
   return settings_entry_add_editbox(entry, spec);
 }
 
@@ -4172,8 +4175,7 @@ bool sk_config_get_setting_string(const char *key, char *out, size_t out_len,
   if (!out || out_len == 0)
     return false;
   char *saved = sk_config_get_setting(key);
-  const char *value = (saved && saved[0]) ? saved
-                                         : (fallback ? fallback : "");
+  const char *value = (saved && saved[0]) ? saved : (fallback ? fallback : "");
   snprintf(out, out_len, "%s", value);
   free(saved);
   return true;

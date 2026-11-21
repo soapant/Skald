@@ -75,9 +75,8 @@ void search_index_pop_context(SearchIndex *idx) {
   idx->stack_depth--;
 }
 
-void search_index_add_text(SearchIndex *idx, const char *text,
-                           SearchKind kind, const char *widget_name,
-                           const char *value) {
+void search_index_add_text(SearchIndex *idx, const char *text, SearchKind kind,
+                           const char *widget_name, const char *value) {
   if (!idx)
     idx = g_capture_index;
   if (!idx || idx->entry_count >= SEARCH_MAX_ENTRIES)
