@@ -85,6 +85,15 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   return true;
 }
 
+bool Platform_PromptPopupResize(Popup *self, int x, int y, int w, int h) {
+  (void)self;
+  (void)x;
+  (void)y;
+  (void)w;
+  (void)h;
+  return false;
+}
+
 void Platform_PromptPopupHideWindow(Popup *self) {
   Display *dpy = x11_get_display();
   if (dpy) {

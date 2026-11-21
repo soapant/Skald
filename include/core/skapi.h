@@ -1207,6 +1207,9 @@ void sk_register_key_interceptor(SkKeyInterceptorFn fn);
 
 void sk_close_window(void);
 
+bool ski_resize_window(const SkRect *rect);
+#define sk_resize_window(...) ski_resize_window(&(SkRect){__VA_ARGS__})
+
 #endif
 
 bool sk_copy_to_clipboard_fmt(const char *fmt, ...);

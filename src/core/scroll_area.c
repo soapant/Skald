@@ -182,7 +182,7 @@ void scroll_area_end(void) {
   SCROLL_LOCK();
   if (g_draw_depth > 0) {
     ScrollDrawFrame frame = arrlast(g_draw_stack);
-    arrpop(g_draw_stack);
+    (void)arrpop(g_draw_stack);
     base_off_x = frame.base_off_x;
     base_off_y = frame.base_off_y;
     restore = true;

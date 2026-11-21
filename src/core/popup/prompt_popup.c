@@ -9,6 +9,7 @@
 #include "core/types/keys.h"
 #include "core/window_manager.h"
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_ui.h"
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "platform/wm_platform.h"
@@ -206,6 +207,31 @@ int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h) {
   if (h)
     *h = d->h;
   return 1;
+}
+
+bool prompt_popup_resize_current(int x, int y, int w, int h) {
+  if (w <= 0 || h <= 0)
+    return false;
+  WindowManager *wm = WindowManager_Get();
+  if (!wm)
+    return false;
+  Popup *p = WindowManager_GetTopPopup(wm);
+  if (!p || p->type != POPUP_PROMPT)
+    return false;
+  PromptPopupData *data = (PromptPopupData *)p;
+  if (!Platform_PromptPopupResize(p, x, y, w, h))
+    return false;
+  data->x = x;
+  data->y = y;
+  data->w = w;
+  data->h = h;
+  if (data->state) {
+    data->state->width = w;
+    data->state->height = h;
+  }
+  Platform_InvalidatePrompt();
+  UI_RequestPopupRepaint();
+  return true;
 }
 
 Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {

@@ -3576,6 +3576,12 @@ void sk_close_window(void) {
   SkaldContext_Get()->window.selection_complete = true;
 }
 
+bool ski_resize_window(const SkRect *rect) {
+  if (!rect)
+    return false;
+  return prompt_popup_resize_current(rect->x, rect->y, rect->w, rect->h);
+}
+
 #if defined(_WIN32)
 #define SK_PATH_SEP '\\'
 #else

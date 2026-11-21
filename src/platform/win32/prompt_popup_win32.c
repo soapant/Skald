@@ -91,6 +91,22 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   return true;
 }
 
+bool Platform_PromptPopupResize(Popup *self, int x, int y, int w, int h) {
+  if (w <= 0 || h <= 0)
+    return false;
+  HWND hwnd = self ? WH_TO_HWND(self->handle) : NULL;
+  if (!hwnd || !IsWindow(hwnd))
+    hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
+  if (!hwnd || !IsWindow(hwnd))
+    return false;
+  if (!SetWindowPos(hwnd, NULL, x, y, w, h,
+                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER))
+    return false;
+  win32_apply_rounded_corners(hwnd, w, h);
+  UpdateWindow(hwnd);
+  return true;
+}
+
 void Platform_PromptPopupHideWindow(Popup *self) {
   HWND ctx_hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   HWND hwnd = self ? WH_TO_HWND(self->handle) : ctx_hwnd;

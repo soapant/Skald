@@ -1229,7 +1229,7 @@ void settings_registry_purge_owner(const char *path_a, const char *path_b) {
     }
     i++;
   }
-  arrsetlen(s_focus_ctx, 0);
+  arrfree(s_focus_ctx);
 }
 
 static int s_dispatch_index = -1;

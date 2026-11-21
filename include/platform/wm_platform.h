@@ -12,6 +12,7 @@ void Platform_GetMonitorGeometry(int *x, int *y, int *w, int *h);
 
 void Platform_PromptFlushDisplay(WindowManager *wm);
 bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h);
+bool Platform_PromptPopupResize(Popup *self, int x, int y, int w, int h);
 void Platform_PromptPopupHideWindow(Popup *self);
 void Platform_PromptPopupRender(Popup *self);
 void Platform_PromptPopupDestroyWindow(Popup *self);
