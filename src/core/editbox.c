@@ -17,6 +17,18 @@
 #include "deps/log.h"
 #include "config_values.h"
 
+int editbox_auto_width(const char *text, int font_size) {
+  int w = 0;
+  if (text && text[0]) {
+    w = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+        .text = text, .len = (int)strlen(text), .font_size = font_size});
+  }
+  w += EDITBOX_TIGHT_INSET + EDITBOX_TIGHT_RIGHT_PAD;
+  if (w < 24)
+    w = 24;
+  return w;
+}
+
 static const Metrics *editbox_state_metrics(PromptState *state) {
   if (state && state->active_editbox >= 0 &&
       state->active_editbox < state->editbox_count)
@@ -48,8 +60,12 @@ void editbox_resolve_place(const EditboxPlaceSpec *spec, PromptState *state,
   const char *buf = buffer;
   if (!buf)
     buf = state ? state->eb->filter : "";
-  if (w <= 0)
-    w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
+  if (w <= 0) {
+    w = editbox_auto_width(buf, fs);
+    int avail = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
+    if (w > avail)
+      w = avail;
+  }
   if (h <= 0)
     h = prompt_custom_edit_height();
   out->x = x;
@@ -147,8 +163,8 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->w = in->w;
   if (in->text_w > 0 &&
       in->w < in->text_w + PROMPT_EDIT_SCROLL_PAD + 16) {
-    out->inset = 6;
-    out->visible_w = in->w - 8;
+    out->inset = EDITBOX_TIGHT_INSET;
+    out->visible_w = in->w - EDITBOX_TIGHT_INSET - 2;
   } else {
     out->inset = PROMPT_EDIT_INSET;
     out->visible_w = in->w - PROMPT_EDIT_SCROLL_PAD;
