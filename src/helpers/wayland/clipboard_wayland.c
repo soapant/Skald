@@ -2,7 +2,7 @@
 #include "helpers/helpers_text.h"
 #include <time.h>
 #if defined(SKALD_WAYLAND_SESSION)
-#include "platform/wayland/clipboard_wayland.h"
+#include "helpers/wayland/clipboard_wayland.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "core/clipboard_history.h"
@@ -845,7 +845,7 @@ static void wl_publish_locked(void) {
            wl.display_get_error(wl_dpy));
 }
 
-int Platform_WaylandClipboard_SetText(const char *text) {
+int wayland_clipboard_set_text(const char *text) {
   if (!text)
     return 0;
   wl_trace("API SetText", "len=%d text='%s'", (int)strlen(text), text);
@@ -888,7 +888,7 @@ int Platform_WaylandClipboard_SetText(const char *text) {
   return 1;
 }
 
-int Platform_WaylandClipboard_SetImage(const unsigned char *png, size_t len) {
+int wayland_clipboard_set_image(const unsigned char *png, size_t len) {
   if (!png || len == 0)
     return 0;
   if (!wl_setup())
@@ -915,7 +915,7 @@ int Platform_WaylandClipboard_SetImage(const unsigned char *png, size_t len) {
   return 1;
 }
 
-int Platform_WaylandClipboard_SetFile(const char *path) {
+int wayland_clipboard_set_file(const char *path) {
   if (!path || path[0] == 0)
     return 0;
   char *uri = clipboard_path_to_uri_list(path);
@@ -953,7 +953,7 @@ static const char *wl_pick_mime_locked(void) {
   return NULL;
 }
 
-char *Platform_WaylandClipboard_GetText(void) {
+char *wayland_clipboard_get_text(void) {
   wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
            (void *)wl_offer, wl_has_selection ? 1 : 0, wl_offer_mime_count);
   if (!wl_setup()) {
@@ -1074,7 +1074,7 @@ char *Platform_WaylandClipboard_GetText(void) {
   return out;
 }
 
-void Platform_WaylandClipboard_Shutdown(void) {
+void wayland_clipboard_shutdown(void) {
   if (!wl_ready && !wl_handle) {
     return;
   }
