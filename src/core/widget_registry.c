@@ -16,9 +16,10 @@
 #include "helpers/helpers_input_state.h"
 #include "config_values.h"
 #include "core/types/window.h"
+#include "deps/stb_ds.h"
 
-static Widget *widgets[WIDGET_MAX];
-static int widget_count = 0;
+static Widget **widgets;
+#define widget_count arrlenu(widgets)
 static int widget_seq = 0;
 static unsigned widget_gen = 1;
 
@@ -50,7 +51,7 @@ unsigned widget_current_generation(void) { return widget_gen; }
 static Widget *widget_find_by_name_locked(const char *name) {
   if (!name || !name[0])
     return NULL;
-  for (int i = 0; i < widget_count; i++) {
+  for (size_t i = 0; i < widget_count; i++) {
     if (widgets[i] && strcmp(widgets[i]->name, name) == 0)
       return widgets[i];
   }
@@ -231,18 +232,17 @@ static void widget_reap(void *ud) {
   Widget *w = (Widget *)ud;
   if (!w)
     return;
-  int n = 0;
   W_LOCK();
-  for (int i = 0; i < widget_count; i++) {
+  for (size_t i = 0; i < widget_count;) {
     if (widgets[i] == w) {
       if (w->owner)
         free(w->owner);
       w->owner = NULL;
+      arrdel(widgets, i);
       continue;
     }
-    widgets[n++] = widgets[i];
+    i++;
   }
-  widget_count = n;
   W_UNLOCK();
   free(w);
 }
@@ -259,18 +259,17 @@ void widget_destroy(Widget *widget) {
   render_thread_sync();
 
   if (!posted) {
-    int n = 0;
     W_LOCK();
-    for (int i = 0; i < widget_count; i++) {
+    for (size_t i = 0; i < widget_count;) {
       if (widgets[i] == widget) {
         if (widget->owner)
           free(widget->owner);
         widget->owner = NULL;
+        arrdel(widgets, i);
         continue;
       }
-      widgets[n++] = widgets[i];
+      i++;
     }
-    widget_count = n;
     W_UNLOCK();
   }
   if (widget_count > 0)
@@ -285,7 +284,7 @@ void widget_purge_owner(const char *path_a, const char *path_b,
 
   bool matched = false;
   W_LOCK();
-  for (int i = 0; i < widget_count; i++) {
+  for (size_t i = 0; i < widget_count; i++) {
     Widget *w = widgets[i];
     if (!w)
       continue;
@@ -313,18 +312,16 @@ void widget_purge_owner(const char *path_a, const char *path_b,
 
   render_thread_sync();
 
-  int n = 0;
   W_LOCK();
-  for (int i = 0; i < widget_count; i++) {
+  for (size_t i = 0; i < widget_count;) {
     Widget *w = widgets[i];
-    if (!w)
-      continue;
-    if (widget_owner_matches(w, path_a, path_b) && w->gen <= generation) {
+    if (w && widget_owner_matches(w, path_a, path_b) &&
+        w->gen <= generation) {
+      arrdel(widgets, i);
       continue;
     }
-    widgets[n++] = w;
+    i++;
   }
-  widget_count = n;
   W_UNLOCK();
   if (widget_count > 0)
     widget_relayout();
@@ -335,7 +332,7 @@ bool widget_owner_active(const char *path) {
   if (!path || !path[0])
     return false;
   W_LOCK();
-  for (int i = 0; i < widget_count; i++) {
+  for (size_t i = 0; i < widget_count; i++) {
     const Widget *w = widgets[i];
     if (w && widget_owner_matches(w, path, NULL)) {
       W_UNLOCK();
@@ -395,13 +392,12 @@ static void widget_relayout(void) {
     int gap;
     int key;
   } LayoutItem;
-  LayoutItem items[WIDGET_MAX];
-  int n = 0;
+  LayoutItem *items = NULL;
   W_LOCK();
-  for (int i = 0; i < widget_count; i++) {
+  for (size_t i = 0; i < widget_count; i++) {
     Widget *w = widgets[i];
     if (w && !w->free_pos) {
-      LayoutItem *it = &items[n++];
+      LayoutItem *it = arraddnptr(items, 1);
       it->widget = w;
       it->w = w->w;
       it->h = w->h;
@@ -412,6 +408,7 @@ static void widget_relayout(void) {
     }
   }
   W_UNLOCK();
+  int n = (int)arrlenu(items);
   for (int i = 1; i < n; i++) {
     LayoutItem key = items[i];
     int k = i - 1;
@@ -452,6 +449,7 @@ static void widget_relayout(void) {
     widget_apply_geometry(it->widget, px, py);
     st->cursor = from_right ? px - g : px + it->w + g;
   }
+  arrfree(items);
 }
 
 Widget *widget_create(const WidgetSpec *spec) {
@@ -463,16 +461,11 @@ Widget *widget_create(const WidgetSpec *spec) {
   Widget *widget = widget_find_by_name_locked(spec->name);
   bool fresh = (widget == NULL);
   if (fresh) {
-    if (widget_count >= WIDGET_MAX) {
-      W_UNLOCK();
-      log_warn("widget_create: widget table full");
-      return NULL;
-    }
     widget = (Widget *)calloc(1, sizeof(*widget));
     if (widget) {
       snprintf(widget->name, WIDGET_NAME_MAX, "%s", spec->name);
       widget->seq = widget_seq++;
-      widgets[widget_count++] = widget;
+      arrput(widgets, widget);
     }
   }
   if (!widget) {

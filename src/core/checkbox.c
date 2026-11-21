@@ -13,8 +13,8 @@
 #include "platform/platform.h"
 #include "config_values.h"
 #include "core/context.h"
+#include "deps/stb_ds.h"
 
-#define CHECKBOX_MAX 1024
 #define CHECKBOX_BASE 16
 #define CHECKBOX_ICON_PATH "resources/check.png"
 
@@ -27,8 +27,8 @@ static ColorRef widget_neutral(void) {
 }
 #define CHECKBOX_DARK_GRAY RGB(14, 14, 14)
 
-static CheckboxSpec checkboxes[CHECKBOX_MAX];
-static int checkbox_count = 0;
+static CheckboxSpec **checkboxes;
+#define checkbox_count arrlenu(checkboxes)
 
 static struct {
   bool valid;
@@ -95,10 +95,10 @@ static CheckboxSpec *checkbox_find(const char *name, int kind) {
 
   if (!name)
     return NULL;
-  for (int i = 0; i < checkbox_count; i++) {
-    if (strcmp(checkboxes[i].name, name) == 0 &&
-        checkboxes[i].button == (kind == PLACE_BUTTON))
-      return &checkboxes[i];
+  for (size_t i = 0; i < checkbox_count; i++) {
+    if (strcmp(checkboxes[i]->name, name) == 0 &&
+        checkboxes[i]->button == (kind == PLACE_BUTTON))
+      return checkboxes[i];
   }
   return NULL;
 }
@@ -108,12 +108,9 @@ static CheckboxSpec *checkbox_intern(const char *name, int kind, bool seed) {
   CheckboxSpec *cb = checkbox_find(name, kind);
   if (cb)
     return cb;
-  if (checkbox_count >= CHECKBOX_MAX) {
-    log_error("checkbox table full (%d), refusing '%s'", CHECKBOX_MAX, name);
+  cb = (CheckboxSpec *)calloc(1, sizeof(*cb));
+  if (!cb)
     return NULL;
-  }
-  cb = &checkboxes[checkbox_count++];
-  memset(cb, 0, sizeof(*cb));
   cb->button = (kind == PLACE_BUTTON);
   cb->checkbox = (kind == PLACE_CHECKBOX);
   cb->checked = seed;
@@ -121,9 +118,10 @@ static CheckboxSpec *checkbox_intern(const char *name, int kind, bool seed) {
   cb->border = true;
   cb->name = strdup(name);
   if (!cb->name) {
-    checkbox_count--;
+    free(cb);
     return NULL;
   }
+  arrput(checkboxes, cb);
   return cb;
 }
 

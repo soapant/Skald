@@ -29,29 +29,25 @@
 #include "core/snippet_manager.h"
 #include "helpers/helpers_fs.h"
 #include "helpers/helpers_input_state.h"
+#include "deps/stb_ds.h"
 
-#define DEFERRED_INIT_MAX 32
-static void (*deferred_inits[DEFERRED_INIT_MAX])(void);
-static int deferred_count = 0;
+static void (**deferred_inits)(void);
+#define deferred_count arrlenu(deferred_inits)
 
 void deferred_init_register(void (*cb)(void)) {
   if (!cb)
     return;
-  if (deferred_count >= DEFERRED_INIT_MAX) {
-    log_error("deferred init queue full (%d), dropping registration",
-              DEFERRED_INIT_MAX);
-    return;
-  }
-  deferred_inits[deferred_count++] = cb;
+  arrput(deferred_inits, cb);
 }
 
 void deferred_init_run_all(void) {
-  for (int i = 0; i < deferred_count; i++) {
-    void (*cb)(void) = deferred_inits[i];
-    deferred_inits[i] = NULL;
-    cb();
+  void (**cbs)(void) = deferred_inits;
+  deferred_inits = NULL;
+  for (size_t i = 0; i < arrlenu(cbs); i++) {
+    if (cbs[i])
+      cbs[i]();
   }
-  deferred_count = 0;
+  arrfree(cbs);
 }
 
 static void fl_copy(char *dst, size_t dst_size, const char *src) {
@@ -156,8 +152,8 @@ typedef struct {
   char owner[512];
 } DeferredUnload;
 
-static DeferredUnload defer_unloads[DEFERRED_INIT_MAX];
-static int defer_unload_count = 0;
+static DeferredUnload *defer_unloads;
+#define defer_unload_count arrlenu(defer_unloads)
 
 static void feature_mutex_init(void);
 static void *feature_mutex;
@@ -169,14 +165,14 @@ void feature_loader_drain_retired_unloads(void) {
     return;
   feature_mutex_init();
   Platform_MutexLock(feature_mutex);
-  for (int i = 0; i < defer_unload_count; i++) {
+  for (size_t i = 0; i < defer_unload_count; i++) {
     log_info("draining deferred unload of retired lib %s",
              defer_unloads[i].owner);
     Platform_UnloadLibrary(defer_unloads[i].handle);
     if (defer_unloads[i].uniq[0])
       file_remove_path(defer_unloads[i].uniq);
   }
-  defer_unload_count = 0;
+  arrsetlen(defer_unloads, 0);
   Platform_MutexUnlock(feature_mutex);
 }
 
@@ -184,15 +180,7 @@ static void defer_unload(LibHandle handle, const char *uniq,
                          const char *owner) {
   if (!handle)
     return;
-  if (defer_unload_count >= DEFERRED_INIT_MAX) {
-    log_error("deferred unload list full, unloading %s inline",
-              owner ? owner : "?");
-    Platform_UnloadLibrary(handle);
-    if (uniq && uniq[0])
-      remove(uniq);
-    return;
-  }
-  DeferredUnload *u = &defer_unloads[defer_unload_count++];
+  DeferredUnload *u = arraddnptr(defer_unloads, 1);
   u->handle = handle;
   u->uniq[0] = '\0';
   u->owner[0] = '\0';
@@ -590,9 +578,13 @@ bool feature_loader_load_all_from_dir(const char *dir) {
     char mpath[512];
     if (!manifest_path(names[i], mpath, sizeof(mpath)))
       continue;
-    if (!manifest_parse_file(mpath, names[i], &mans[i]) || !mans[i].valid) {
-      log_error("feature '%s': manifest %s is malformed, skipping", names[i],
-                mpath);
+    ConfigTomlError merr;
+    ConfigTomlStatus mst = manifest_parse_file_ex(mpath, names[i], &mans[i],
+                                                  &merr);
+    if (mst != CONFIG_TOML_OK || !mans[i].valid) {
+      log_error("feature '%s': manifest %s %s (line %d): %s, skipping",
+                names[i], mpath, config_toml_status_name(mst), merr.line,
+                merr.message[0] ? merr.message : "malformed");
       continue;
     }
     mans[i].valid = true;
@@ -661,22 +653,19 @@ bool feature_loader_load_all_from_dir(const char *dir) {
   return true;
 }
 
-static struct {
+typedef struct {
   char dir[256];
   time_t src_mtime;
-} s_failed[64];
-static int s_failed_count = 0;
+} FailedFeature;
+
+static FailedFeature *s_failed;
+#define s_failed_count arrlenu(s_failed)
 
 static void feature_mark_failed(const char *dir, time_t mtime) {
-  if (s_failed_count < 64) {
-    safe_copy(s_failed[s_failed_count].dir,
-              sizeof(s_failed[s_failed_count].dir), dir);
-    s_failed[s_failed_count].src_mtime = mtime;
-    s_failed_count++;
-  }
+  FailedFeature *f = arraddnptr(s_failed, 1);
+  safe_copy(f->dir, sizeof(f->dir), dir);
+  f->src_mtime = mtime;
 }
-
-#define FEATURE_BUILD_Q_MAX 32
 
 typedef struct {
   char ent_name[256];
@@ -692,10 +681,10 @@ typedef struct {
 } FeatureBuildDone;
 
 static void *build_mutex;
-static FeatureBuildJob build_queue[FEATURE_BUILD_Q_MAX];
-static int build_queue_count;
-static FeatureBuildDone build_done[FEATURE_BUILD_Q_MAX];
-static int build_done_count;
+static FeatureBuildJob *build_queue;
+#define build_queue_count arrlenu(build_queue)
+static FeatureBuildDone *build_done;
+#define build_done_count arrlenu(build_done)
 static int builds_in_flight;
 static bool reload_session_active;
 static int reload_session_ok;
@@ -717,7 +706,7 @@ static void build_mutex_init(void) {
 
 static void note_feature_built(const char *ent_name, const char *dll,
                                long long src_mtime) {
-  for (int fi = 0; fi < s_failed_count; fi++) {
+  for (size_t fi = 0; fi < s_failed_count; fi++) {
     if (strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) == 0)
       s_failed[fi].src_mtime = 0;
   }
@@ -763,9 +752,7 @@ static void *feature_build_worker_main(void *unused) {
     B_LOCK();
     if (build_queue_count > 0) {
       job = build_queue[0];
-      memmove(build_queue, build_queue + 1,
-              sizeof(build_queue[0]) * (size_t)(build_queue_count - 1));
-      build_queue_count--;
+      arrdel(build_queue, 0);
       have = true;
     }
     B_UNLOCK();
@@ -776,14 +763,9 @@ static void *feature_build_worker_main(void *unused) {
     bool ok = reload_lib_compile(job.src, job.out, "hot-reload");
     B_LOCK();
     builds_in_flight--;
-    if (build_done_count < FEATURE_BUILD_Q_MAX) {
-      build_done[build_done_count].job = job;
-      build_done[build_done_count].ok = ok;
-      build_done_count++;
-    } else {
-      remove(job.out);
-      log_warn("feature build result for %s dropped, queue full", job.ent_name);
-    }
+    FeatureBuildDone *d = arraddnptr(build_done, 1);
+    d->job = job;
+    d->ok = ok;
     B_UNLOCK();
   }
   return NULL;
@@ -791,19 +773,13 @@ static void *feature_build_worker_main(void *unused) {
 
 static bool feature_build_enqueue(const FeatureBuildJob *job) {
   B_LOCK();
-  if (build_queue_count >= FEATURE_BUILD_Q_MAX ||
-      builds_in_flight >= FEATURE_BUILD_Q_MAX) {
-    B_UNLOCK();
-    return false;
-  }
-  build_queue[build_queue_count] = *job;
-  build_queue_count++;
+  arrput(build_queue, *job);
   builds_in_flight++;
   if (!build_worker && !build_worker_failed) {
     build_worker = Platform_ThreadCreate(feature_build_worker_main, NULL);
     if (!build_worker) {
       builds_in_flight--;
-      build_queue_count--;
+      arrdel(build_queue, build_queue_count - 1);
       build_worker_failed = true;
       log_warn("hot-reload worker failed to start, hot reload disabled");
       B_UNLOCK();
@@ -815,23 +791,20 @@ static bool feature_build_enqueue(const FeatureBuildJob *job) {
 }
 
 void feature_loader_service_builds(void) {
-  FeatureBuildDone done[FEATURE_BUILD_Q_MAX];
-  int n = 0;
+  FeatureBuildDone *done = NULL;
   B_LOCK();
-  n = build_done_count;
-  if (n > 0) {
-    memcpy(done, build_done, sizeof(build_done[0]) * (size_t)n);
-    build_done_count = 0;
-  }
+  done = build_done;
+  build_done = NULL;
   B_UNLOCK();
   int ok_n = 0, fail_n = 0;
-  for (int i = 0; i < n; i++) {
+  for (size_t i = 0; i < arrlenu(done); i++) {
     if (finish_hot_build(done[i].job.ent_name, done[i].job.dll, done[i].job.out,
                          done[i].job.src_mtime, done[i].ok))
       ok_n++;
     else
       fail_n++;
   }
+  arrfree(done);
   if (!reload_session_active)
     return;
   reload_session_ok += ok_n;
@@ -879,7 +852,7 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     if (reload_lib_is_fresh(src, dll))
       continue;
     bool known_bad = false;
-    for (int fi = 0; fi < s_failed_count; fi++) {
+    for (size_t fi = 0; fi < s_failed_count; fi++) {
       if (s_failed[fi].src_mtime == src_mtime &&
           strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) == 0) {
         known_bad = true;

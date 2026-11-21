@@ -4,10 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define SEARCH_MAX_ENTRIES 2048
-#define SEARCH_MAX_HITS 1024
-#define SEARCH_MAX_STACK 64
+#include "deps/stb_ds.h"
 
 typedef struct {
   int source_id;
@@ -23,12 +20,9 @@ typedef struct {
 } SearchContext;
 
 struct SearchIndex {
-  SearchEntry entries[SEARCH_MAX_ENTRIES];
-  int entry_count;
-  SearchHit hits[SEARCH_MAX_HITS];
-  int hit_count;
-  SearchContext stack[SEARCH_MAX_STACK];
-  int stack_depth;
+  SearchEntry *entries;
+  SearchHit *hits;
+  SearchContext *stack;
   SearchActivateFn activate;
   void *ud;
 };
@@ -44,14 +38,21 @@ SearchIndex *search_index_create(void) {
   return idx;
 }
 
-void search_index_destroy(SearchIndex *idx) { free(idx); }
+void search_index_destroy(SearchIndex *idx) {
+  if (!idx)
+    return;
+  arrfree(idx->entries);
+  arrfree(idx->hits);
+  arrfree(idx->stack);
+  free(idx);
+}
 
 void search_index_clear(SearchIndex *idx) {
   if (!idx)
     return;
-  idx->entry_count = 0;
-  idx->hit_count = 0;
-  idx->stack_depth = 0;
+  arrsetlen(idx->entries, 0);
+  arrsetlen(idx->hits, 0);
+  arrsetlen(idx->stack, 0);
 }
 
 SearchIndex *search_index_current(void) { return g_capture_index; }
@@ -60,9 +61,9 @@ void search_index_push_context(SearchIndex *idx, int source_id,
                                const char *context) {
   if (!idx)
     idx = g_capture_index;
-  if (!idx || idx->stack_depth >= SEARCH_MAX_STACK)
+  if (!idx)
     return;
-  SearchContext *c = &idx->stack[idx->stack_depth++];
+  SearchContext *c = arraddnptr(idx->stack, 1);
   c->source_id = source_id;
   search_copy(c->context, sizeof(c->context), context);
 }
@@ -70,16 +71,16 @@ void search_index_push_context(SearchIndex *idx, int source_id,
 void search_index_pop_context(SearchIndex *idx) {
   if (!idx)
     idx = g_capture_index;
-  if (!idx || idx->stack_depth <= 0)
+  if (!idx || arrlenu(idx->stack) == 0)
     return;
-  idx->stack_depth--;
+  arrpop(idx->stack);
 }
 
 void search_index_add_text(SearchIndex *idx, const char *text, SearchKind kind,
                            const char *widget_name, const char *value) {
   if (!idx)
     idx = g_capture_index;
-  if (!idx || idx->entry_count >= SEARCH_MAX_ENTRIES)
+  if (!idx)
     return;
   if ((!text || !text[0]) && (!value || !value[0]) &&
       (!widget_name || !widget_name[0]))
@@ -99,22 +100,22 @@ void search_index_add_text(SearchIndex *idx, const char *text, SearchKind kind,
 
   int source_id = -1;
   char context[128] = {0};
-  if (idx->stack_depth > 0) {
-    const SearchContext *c = &idx->stack[idx->stack_depth - 1];
+  if (arrlenu(idx->stack) > 0) {
+    const SearchContext *c = &arrlast(idx->stack);
     source_id = c->source_id;
     search_copy(context, sizeof(context), c->context);
   }
 
   char name[128];
   search_copy(name, sizeof(name), widget_name);
-  for (int i = 0; i < idx->entry_count; i++) {
+  for (size_t i = 0; i < arrlenu(idx->entries); i++) {
     const SearchEntry *e = &idx->entries[i];
     if (e->source_id == source_id && e->kind == kind &&
         strcmp(e->text, combined) == 0 && strcmp(e->widget_name, name) == 0)
       return;
   }
 
-  SearchEntry *e = &idx->entries[idx->entry_count++];
+  SearchEntry *e = arraddnptr(idx->entries, 1);
   e->source_id = source_id;
   e->kind = kind;
   search_copy(e->text, sizeof(e->text), combined);
@@ -202,12 +203,12 @@ static int score_field(const char *field, const char *query, int penalty) {
 int search_index_query(SearchIndex *idx, const char *filter) {
   if (!idx)
     return 0;
-  idx->hit_count = 0;
+  arrsetlen(idx->hits, 0);
   char query[128];
   normalize_query(filter, query, sizeof(query));
   bool empty = query[0] == '\0';
 
-  for (int i = 0; i < idx->entry_count; i++) {
+  for (size_t i = 0; i < arrlenu(idx->entries); i++) {
     const SearchEntry *e = &idx->entries[i];
     int score;
     if (empty) {
@@ -228,19 +229,18 @@ int search_index_query(SearchIndex *idx, const char *filter) {
       continue;
 
     int target = -1;
-    for (int j = 0; j < idx->hit_count; j++) {
+    size_t nhits = arrlenu(idx->hits);
+    for (size_t j = 0; j < nhits; j++) {
       if (idx->hits[j].source_id == e->source_id) {
-        target = j;
+        target = (int)j;
         break;
       }
     }
     if (target >= 0 && score >= idx->hits[target].score)
       continue;
-    if (target < 0 && idx->hit_count >= SEARCH_MAX_HITS)
-      break;
 
     SearchHit *h =
-        target >= 0 ? &idx->hits[target] : &idx->hits[idx->hit_count++];
+        target >= 0 ? &idx->hits[target] : arraddnptr(idx->hits, 1);
     h->source_id = e->source_id;
     h->kind = e->kind;
     h->score = score;
@@ -249,7 +249,8 @@ int search_index_query(SearchIndex *idx, const char *filter) {
     search_copy(h->widget_name, sizeof(h->widget_name), e->widget_name);
   }
 
-  for (int i = 1; i < idx->hit_count; i++) {
+  int nhits = (int)arrlenu(idx->hits);
+  for (int i = 1; i < nhits; i++) {
     SearchHit cur = idx->hits[i];
     int j = i - 1;
     while (j >= 0 && (idx->hits[j].score > cur.score ||
@@ -260,21 +261,22 @@ int search_index_query(SearchIndex *idx, const char *filter) {
     }
     idx->hits[j + 1] = cur;
   }
-  return idx->hit_count;
+  return nhits;
 }
 
 int search_index_hit_count(const SearchIndex *idx) {
-  return idx ? idx->hit_count : 0;
+  return idx ? (int)arrlenu(idx->hits) : 0;
 }
 
 const SearchHit *search_index_hit_at(const SearchIndex *idx, int i) {
-  if (!idx || i < 0 || i >= idx->hit_count)
+  if (!idx || i < 0 || (size_t)i >= arrlenu(idx->hits))
     return NULL;
   return &idx->hits[i];
 }
 
 void search_index_activate(SearchIndex *idx, int hit_i) {
-  if (!idx || !idx->activate || hit_i < 0 || hit_i >= idx->hit_count)
+  if (!idx || !idx->activate || hit_i < 0 ||
+      (size_t)hit_i >= arrlenu(idx->hits))
     return;
   const SearchHit *h = &idx->hits[hit_i];
   idx->activate(idx->ud, h->source_id, h->kind, h->widget_name);

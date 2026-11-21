@@ -14,8 +14,8 @@
 #include "platform/platform.h"
 #include "config_values.h"
 #include "core/context.h"
+#include "deps/stb_ds.h"
 
-#define SLIDER_MAX 1024
 #define SLIDER_MIN_SPAN 1e-6f
 
 static float slider_snap(const SliderSpec *sl, float v);
@@ -32,8 +32,8 @@ static ColorRef widget_thumb(void) {
   return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.92f);
 }
 
-static SliderSpec sliders[SLIDER_MAX];
-static int slider_count = 0;
+static SliderSpec **sliders;
+#define slider_count arrlenu(sliders)
 
 static struct {
   bool valid;
@@ -114,9 +114,9 @@ static SliderSpec *slider_find(const char *name) {
 
   if (!name)
     return NULL;
-  for (int i = 0; i < slider_count; i++) {
-    if (strcmp(sliders[i].name, name) == 0)
-      return &sliders[i];
+  for (size_t i = 0; i < slider_count; i++) {
+    if (strcmp(sliders[i]->name, name) == 0)
+      return sliders[i];
   }
   return NULL;
 }
@@ -129,12 +129,9 @@ static SliderSpec *slider_intern(const char *name, float seed,
   SliderSpec *sl = slider_find(name);
   if (sl)
     return sl;
-  if (slider_count >= SLIDER_MAX) {
-    log_error("slider table full (%d), refusing '%s'", SLIDER_MAX, name);
+  sl = (SliderSpec *)calloc(1, sizeof(*sl));
+  if (!sl)
     return NULL;
-  }
-  sl = &sliders[slider_count++];
-  memset(sl, 0, sizeof(*sl));
   sl->orientation = SLIDER_HORIZONTAL;
   sl->min_value = 0.0f;
   sl->max_value = 100.0f;
@@ -143,9 +140,10 @@ static SliderSpec *slider_intern(const char *name, float seed,
   sl->border = true;
   sl->name = strdup(name);
   if (!sl->name) {
-    slider_count--;
+    free(sl);
     return NULL;
   }
+  arrput(sliders, sl);
   if (out_fresh)
     *out_fresh = true;
   return sl;

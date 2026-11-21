@@ -256,13 +256,16 @@ static bool config_file_unchanged(void) {
 static bool config_load_path(const char *path) {
   ConfigStaging st;
   memset(&st, 0, sizeof(st));
-  ConfigTomlStatus status = config_toml_parse(path, config_visit, &st);
+  ConfigTomlError err;
+  ConfigTomlStatus status = config_toml_parse_ex(path, config_visit, &st, &err);
   if (status != CONFIG_TOML_OK) {
     config_staging_free(&st);
     if (status == CONFIG_TOML_ERR_IO)
       log_error("config open %s failed, running on defaults", path);
     else
-      log_error("config parse failed for %s, keeping previous config", path);
+      log_error("config %s failed at line %d (%s): %s, keeping previous config",
+                path, err.line, config_toml_status_name(status),
+                err.message[0] ? err.message : "invalid config");
     return false;
   }
   config_staging_commit(&st);

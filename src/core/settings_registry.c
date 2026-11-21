@@ -29,17 +29,18 @@
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "core/settings_registry.h"
+#include "deps/stb_ds.h"
 
 #define SETTINGS_CONFIG_KEY_MAX 384
 #define SETTINGS_CONFIG_VALUE_MAX 1024
 
 typedef struct {
-  char key[SETTINGS_CONFIG_KEY_MAX];
-  char value[SETTINGS_CONFIG_VALUE_MAX];
+  char *key;
+  char *value;
 } SettingsConfigEntry;
 
-static int settings_config_count = 0;
-static SettingsConfigEntry settings_config_entries[256];
+static SettingsConfigEntry *settings_config_entries;
+#define settings_config_count arrlenu(settings_config_entries)
 static char settings_config_path[1024];
 static bool settings_config_loaded = false;
 static void (*settings_config_notify)(const char *key,
@@ -53,7 +54,7 @@ void settings_config_set_notify(void (*notify)(const char *key,
 static const char *settings_config_find(const char *key) {
   if (!key)
     return NULL;
-  for (int i = 0; i < settings_config_count; i++)
+  for (size_t i = 0; i < settings_config_count; i++)
     if (strcmp(settings_config_entries[i].key, key) == 0)
       return settings_config_entries[i].value;
   return NULL;
@@ -68,14 +69,18 @@ static bool settings_config_apply(const ConfigTomlEntry *entry, void *ud) {
     return true;
   const char *existing = settings_config_find(entry->key);
   if (existing) {
-    snprintf((char *)existing, SETTINGS_CONFIG_VALUE_MAX, "%s", value);
+    for (size_t i = 0; i < settings_config_count; i++) {
+      if (settings_config_entries[i].value == existing) {
+        free(settings_config_entries[i].value);
+        settings_config_entries[i].value = strdup(value);
+        break;
+      }
+    }
     return true;
   }
-  if (settings_config_count >= 256)
-    return true;
-  SettingsConfigEntry *out = &settings_config_entries[settings_config_count++];
-  snprintf(out->key, sizeof(out->key), "%s", entry->key);
-  snprintf(out->value, sizeof(out->value), "%s", value);
+  SettingsConfigEntry *out = arraddnptr(settings_config_entries, 1);
+  out->key = strdup(entry->key);
+  out->value = strdup(value);
   return true;
 }
 
@@ -93,7 +98,14 @@ static void settings_config_init(void) {
 #endif
   snprintf(settings_config_path, sizeof(settings_config_path),
            "%s%ccore%cskald.toml", dir, sep, sep);
-  config_toml_parse(settings_config_path, settings_config_apply, NULL);
+  ConfigTomlError err;
+  ConfigTomlStatus st =
+      config_toml_parse_ex(settings_config_path, settings_config_apply, NULL,
+                           &err);
+  if (st == CONFIG_TOML_ERR_PARSE || st == CONFIG_TOML_ERR_REJECTED)
+    log_warn("settings: config %s failed at line %d (%s): %s",
+             settings_config_path, err.line, config_toml_status_name(st),
+             err.message[0] ? err.message : "invalid config");
 }
 
 static bool settings_config_has(const char *key) {
@@ -132,13 +144,18 @@ static bool settings_config_set(const char *key, const char *value) {
     return false;
   settings_config_init();
   const char *existing = settings_config_find(key);
-  if (existing)
-    snprintf((char *)existing, SETTINGS_CONFIG_VALUE_MAX, "%s", value);
-  else if (settings_config_count < 256) {
-    SettingsConfigEntry *out =
-        &settings_config_entries[settings_config_count++];
-    snprintf(out->key, sizeof(out->key), "%s", key);
-    snprintf(out->value, sizeof(out->value), "%s", value);
+  if (existing) {
+    for (size_t i = 0; i < settings_config_count; i++) {
+      if (settings_config_entries[i].value == existing) {
+        free(settings_config_entries[i].value);
+        settings_config_entries[i].value = strdup(value);
+        break;
+      }
+    }
+  } else {
+    SettingsConfigEntry *out = arraddnptr(settings_config_entries, 1);
+    out->key = strdup(key);
+    out->value = strdup(value);
   }
   if (settings_config_notify)
     settings_config_notify(key, value);
@@ -504,7 +521,6 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
   settings_draw_image_local(&(SettingsDrawImageSpec){__VA_ARGS__})
 #define settings_draw_line(...) settings_draw_line_local(&(Line){__VA_ARGS__})
 
-#define FOCUS_CTX_MAX 512
 typedef struct {
   char name[256];
   SettingsEntry *entry;
@@ -512,13 +528,13 @@ typedef struct {
   int option;
 } FocusBlockCtx;
 
-static FocusBlockCtx s_focus_ctx[FOCUS_CTX_MAX];
-static int s_focus_ctx_count = 0;
+static FocusBlockCtx *s_focus_ctx;
+#define s_focus_ctx_count arrlenu(s_focus_ctx)
 
 static FocusBlockCtx *focus_ctx_find(const char *name) {
   if (!name || !name[0])
     return NULL;
-  for (int i = 0; i < s_focus_ctx_count; i++) {
+  for (size_t i = 0; i < s_focus_ctx_count; i++) {
     if (strcmp(s_focus_ctx[i].name, name) == 0)
       return &s_focus_ctx[i];
   }
@@ -531,9 +547,7 @@ static void focus_ctx_remember(const char *name, SettingsEntry *entry,
     return;
   FocusBlockCtx *ctx = focus_ctx_find(name);
   if (!ctx) {
-    if (s_focus_ctx_count >= FOCUS_CTX_MAX)
-      return;
-    ctx = &s_focus_ctx[s_focus_ctx_count++];
+    ctx = arraddnptr(s_focus_ctx, 1);
     snprintf(ctx->name, sizeof(ctx->name), "%s", name);
   }
   ctx->entry = entry;
@@ -545,16 +559,12 @@ bool settings_focus_ctx_has(const char *name) {
   return focus_ctx_find(name) != NULL;
 }
 
-#define SETTINGS_MAX_ENTRIES 128
-#define SETTINGS_MAX_BLOCKS 128
-
 #define SETTINGS_BLOCK_CHECKBOX 1
 #define SETTINGS_BLOCK_BUTTON 2
 #define SETTINGS_BLOCK_SLIDER 3
 #define SETTINGS_BLOCK_DROPDOWN 4
 #define SETTINGS_BLOCK_EDITBOX 5
 
-#define SETTINGS_EDITBOX_MAX_FIELDS 8
 #define SETTINGS_EDITBOX_KEY_MAX 192
 #define SETTINGS_EDITBOX_VALUE_MAX 512
 
@@ -619,7 +629,7 @@ typedef struct {
   void (*on_change)(void);
   void (*on_hover)(void);
   SettingsDropdownSelectFn on_select;
-  SettingsEditboxFieldBlock fields[SETTINGS_EDITBOX_MAX_FIELDS];
+  SettingsEditboxFieldBlock *fields;
   int field_count;
   int x_offset;
   SettingsEditboxChangeFn on_edit_change;
@@ -637,11 +647,15 @@ struct SettingsEntry {
   char last_search_filter[128];
   bool search_capturing;
   SearchIndex *search;
-  SettingsBlock blocks[SETTINGS_MAX_BLOCKS];
+  SettingsBlock *blocks;
+  bool *block_match;
 };
 
-static int settings_entry_total = 0;
-static SettingsEntry settings_entries[SETTINGS_MAX_ENTRIES];
+static SettingsEntry **settings_entries;
+#define settings_entry_total arrlenu(settings_entries)
+
+static SettingsEntry *s_settings_scroll_entry;
+static SettingsEntry *s_dispatch_entry;
 
 static void st_dup(char *dst, size_t cap, const char *src) {
   snprintf(dst, cap, "%s", src ? src : "");
@@ -663,27 +677,30 @@ static void settings_entry_capture_render(void *ud) {
   memcpy(entry->search_filter, saved, sizeof(saved));
 }
 
-static SettingsEntry *s_settings_scroll_entry = NULL;
-
 SettingsEntry *settings_entry_add(const SettingsEntrySpec *spec) {
   if (!spec || !spec->name || !spec->name[0])
     return NULL;
-  int slot = -1;
-  for (int i = 0; i < settings_entry_total; i++) {
-    if (settings_entries[i].name[0] &&
-        strcmp(settings_entries[i].name, spec->name) == 0) {
-      slot = i;
+  SettingsEntry *e = NULL;
+  for (size_t i = 0; i < settings_entry_total; i++) {
+    if (settings_entries[i]->name[0] &&
+        strcmp(settings_entries[i]->name, spec->name) == 0) {
+      e = settings_entries[i];
       break;
     }
   }
-  if (slot < 0) {
-    if (settings_entry_total >= SETTINGS_MAX_ENTRIES)
+  if (!e) {
+    e = (SettingsEntry *)calloc(1, sizeof(*e));
+    if (!e)
       return NULL;
-    slot = settings_entry_total++;
+    arrput(settings_entries, e);
   }
-  SettingsEntry *e = &settings_entries[slot];
   search_index_destroy(e->search);
   settings_entry_free_editbox_buffers(e);
+  for (size_t i = 0; i < (size_t)e->block_count; i++)
+    arrfree(e->blocks[i].fields);
+  arrfree(e->blocks);
+  arrfree(e->block_match);
+  e->block_count = 0;
   memset(e, 0, sizeof(*e));
   st_dup(e->name, sizeof(e->name), spec->name);
   st_dup(e->desc, sizeof(e->desc), spec->desc ? spec->desc : "");
@@ -700,9 +717,17 @@ SettingsEntry *settings_entry_add(const SettingsEntrySpec *spec) {
 static SettingsEntry *settings_entry_resolve(SettingsEntry *e) {
   if (!e)
     return NULL;
-  if (e < settings_entries || e >= settings_entries + SETTINGS_MAX_ENTRIES)
-    return NULL;
-  return e;
+  for (size_t i = 0; i < settings_entry_total; i++)
+    if (settings_entries[i] == e)
+      return e;
+  return NULL;
+}
+
+static int settings_entry_index(const SettingsEntry *e) {
+  for (size_t i = 0; i < settings_entry_total; i++)
+    if (settings_entries[i] == e)
+      return (int)i;
+  return -1;
 }
 
 static SettingsBlock *settings_block_at(SettingsEntry *entry, int index) {
@@ -742,16 +767,15 @@ static int settings_entry_add_block_typed(SettingsEntry *entry, int type,
   SettingsEntry *e = settings_entry_resolve(entry);
   if (!e || !settings_block_title_ok(title))
     return -1;
-  if (e->block_count >= SETTINGS_MAX_BLOCKS)
-    return -1;
   if (e->owner[0] == '\0' && anchor)
     owner_resolve_for_func(anchor, e->owner, sizeof(e->owner));
-  SettingsBlock *b = &e->blocks[e->block_count];
+  SettingsBlock *b = arraddnptr(e->blocks, 1);
   memset(b, 0, sizeof(*b));
   b->type = (unsigned char)type;
   snprintf(b->title, sizeof(b->title), "%s", title);
   snprintf(b->sub, sizeof(b->sub), "%s", sub ? sub : "");
-  return e->block_count++;
+  e->block_count++;
+  return e->block_count - 1;
 }
 
 int settings_entry_add_checkbox(SettingsEntry *entry,
@@ -893,9 +917,10 @@ int settings_entry_add_dropdown(SettingsEntry *entry,
 }
 
 static SettingsBlock *settings_editbox_group_block(SettingsEditboxGroup group) {
-  if (group.entry < 0 || group.entry >= settings_entry_total || group.block < 0)
+  if (group.entry < 0 || (size_t)group.entry >= settings_entry_total ||
+      group.block < 0)
     return NULL;
-  SettingsEntry *e = &settings_entries[group.entry];
+  SettingsEntry *e = settings_entries[group.entry];
   SettingsBlock *b = settings_block_at(e, group.block);
   if (!b || b->type != SETTINGS_BLOCK_EDITBOX)
     return NULL;
@@ -1029,8 +1054,7 @@ static void settings_editbox_persist(const SettingsEditboxFieldBlock *f) {
 SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
                            const SettingsEditboxSpec *spec) {
   SettingsEditboxGroup invalid = SETTINGS_EDITBOX_INVALID;
-  if (!spec || !spec->fields || spec->field_count < 1 ||
-      spec->field_count > SETTINGS_EDITBOX_MAX_FIELDS)
+  if (!spec || !spec->fields || spec->field_count < 1)
     return invalid;
   for (int i = 0; i < spec->field_count; i++) {
     const SettingsEditboxField *src = &spec->fields[i];
@@ -1055,12 +1079,14 @@ SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
   SettingsBlock *b = settings_block_at(e, idx);
   if (!b)
     return invalid;
-  b->field_count = spec->field_count;
+  b->field_count = 0;
   b->x_offset = spec->x_offset;
   b->on_edit_change = spec->on_change;
   for (int i = 0; i < spec->field_count; i++) {
     const SettingsEditboxField *src = &spec->fields[i];
-    SettingsEditboxFieldBlock *dst = &b->fields[i];
+    SettingsEditboxFieldBlock *dst = arraddnptr(b->fields, 1);
+    memset(dst, 0, sizeof(*dst));
+    b->field_count++;
     snprintf(dst->name, sizeof(dst->name), "%s", src->name);
     snprintf(dst->label, sizeof(dst->label), "%s",
              src->label ? src->label : src->name);
@@ -1106,7 +1132,7 @@ SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
     settings_editbox_field_copy(dst->last_value, sizeof(dst->last_value),
                                 dst->buffer, dst->buffer_size);
   }
-  SettingsEditboxGroup group = {(int)(e - settings_entries), idx};
+  SettingsEditboxGroup group = {settings_entry_index(e), idx};
   return group;
 }
 
@@ -1147,15 +1173,15 @@ int settings_editbox_right_offset(int pane_w, int width) {
   return offset > 0 ? offset : 0;
 }
 
-int settings_entry_count(void) { return settings_entry_total; }
+int settings_entry_count(void) { return (int)settings_entry_total; }
 
 void settings_scroll_to_block(const char *entry_name, int block_index) {
   if (!entry_name || block_index < 0)
     return;
   SettingsEntry *entry = NULL;
-  for (int i = 0; i < settings_entry_total; i++) {
-    if (strcmp(settings_entries[i].name, entry_name) == 0) {
-      entry = &settings_entries[i];
+  for (size_t i = 0; i < settings_entry_total; i++) {
+    if (strcmp(settings_entries[i]->name, entry_name) == 0) {
+      entry = settings_entries[i];
       break;
     }
   }
@@ -1176,39 +1202,36 @@ void settings_scroll_to_block(const char *entry_name, int block_index) {
 }
 
 const SettingsEntrySpec *settings_entry_at(int index) {
-  if (index < 0 || index >= settings_entry_total)
+  if (index < 0 || (size_t)index >= settings_entry_total)
     return NULL;
-  return &settings_entries[index].pub;
+  return &settings_entries[index]->pub;
 }
 
 void settings_registry_purge_owner(const char *path_a, const char *path_b) {
   if (!path_a && !path_b)
     return;
-  for (int i = 0; i < settings_entry_total; i++) {
-    search_index_destroy(settings_entries[i].search);
-    settings_entries[i].search = NULL;
-  }
-  int out = 0;
-  for (int i = 0; i < settings_entry_total; i++) {
-    if (owner_module_matches(settings_entries[i].owner, path_a, path_b)) {
-      settings_entry_free_editbox_buffers(&settings_entries[i]);
+  for (size_t i = 0; i < settings_entry_total;) {
+    SettingsEntry *e = settings_entries[i];
+    if (owner_module_matches(e->owner, path_a, path_b)) {
+      search_index_destroy(e->search);
+      settings_entry_free_editbox_buffers(e);
+      for (size_t k = 0; k < (size_t)e->block_count; k++)
+        arrfree(e->blocks[k].fields);
+      arrfree(e->blocks);
+      arrfree(e->block_match);
+      if (s_settings_scroll_entry == e)
+        s_settings_scroll_entry = NULL;
+      if (s_dispatch_entry == e)
+        s_dispatch_entry = NULL;
+      free(e);
+      arrdel(settings_entries, i);
       continue;
     }
-    if (out != i) {
-      settings_entries[out] = settings_entries[i];
-      settings_entries[out].pub.name = settings_entries[out].name;
-      settings_entries[out].pub.icon = settings_entries[out].icon;
-      settings_entries[out].pub.desc = settings_entries[out].desc;
-    }
-    out++;
+    i++;
   }
-  for (int i = out; i < settings_entry_total; i++)
-    memset(&settings_entries[i], 0, sizeof(settings_entries[i]));
-  settings_entry_total = out;
-  s_focus_ctx_count = 0;
+  arrsetlen(s_focus_ctx, 0);
 }
 
-static SettingsEntry *s_dispatch_entry = NULL;
 static int s_dispatch_index = -1;
 static int s_dispatch_option = -1;
 
@@ -1350,8 +1373,11 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
   }
   bool scoped_search =
       !capturing && !entry->search_capturing && entry->search_filter[0];
-  bool block_match[SETTINGS_MAX_BLOCKS];
-  memset(block_match, 0, sizeof(block_match));
+  if ((size_t)entry->block_count > arrlenu(entry->block_match))
+    arrsetlen(entry->block_match, (size_t)entry->block_count);
+  bool *block_match = entry->block_match;
+  if (entry->block_count > 0)
+    memset(block_match, 0, (size_t)entry->block_count * sizeof(*block_match));
   int match_count = entry->block_count;
   if (scoped_search) {
     if (!entry->search)
@@ -1492,7 +1518,10 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
                             .on_change = settings_dispatch_slider_change,
                             .on_hover = dispatch_widget_hover);
     } else if (b->type == SETTINGS_BLOCK_EDITBOX) {
-      int widths[SETTINGS_EDITBOX_MAX_FIELDS];
+      int *widths = NULL;
+      if (b->field_count > 0)
+        memset(arraddnptr(widths, b->field_count), 0,
+               (size_t)b->field_count * sizeof(*widths));
       int total = 0;
       for (int fi = 0; fi < b->field_count; fi++) {
         SettingsEditboxFieldBlock *f = &b->fields[fi];
@@ -1536,6 +1565,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
             b->on_edit_change(f->name, f->buffer);
         }
       }
+      arrfree(widths);
     } else if (b->type == SETTINGS_BLOCK_DROPDOWN) {
       const char **options = NULL;
       int count = dropdown_options(b, &options);

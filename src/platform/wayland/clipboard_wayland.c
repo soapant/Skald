@@ -2,7 +2,7 @@
 #include "helpers/helpers_text.h"
 #include <time.h>
 #if defined(SKALD_WAYLAND_SESSION)
-#include "helpers/x11/clipboard_x11.h"
+#include "platform/wayland/clipboard_wayland.h"
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include "core/clipboard_history.h"
@@ -814,7 +814,7 @@ static void wl_drop_source(struct wl_proxy **slot) {
   }
 }
 
-bool x11_clipboard_available(void) { return x11_env_is_wayland(); }
+bool Platform_WaylandClipboard_Available(void) { return x11_env_is_wayland(); }
 
 static void wl_publish_locked(void) {
 
@@ -847,7 +847,7 @@ static void wl_publish_locked(void) {
            wl.display_get_error(wl_dpy));
 }
 
-int x11_clipboard_set_text(const char *text) {
+int Platform_WaylandClipboard_SetText(const char *text) {
   if (!text)
     return 0;
   wl_trace("API SetText", "len=%d text='%s'", (int)strlen(text), text);
@@ -890,7 +890,7 @@ int x11_clipboard_set_text(const char *text) {
   return 1;
 }
 
-int x11_clipboard_set_image(const unsigned char *png, size_t len) {
+int Platform_WaylandClipboard_SetImage(const unsigned char *png, size_t len) {
   if (!png || len == 0)
     return 0;
   if (!wl_setup())
@@ -917,7 +917,7 @@ int x11_clipboard_set_image(const unsigned char *png, size_t len) {
   return 1;
 }
 
-int x11_clipboard_set_file(const char *path) {
+int Platform_WaylandClipboard_SetFile(const char *path) {
   if (!path || path[0] == 0)
     return 0;
   char *uri = clipboard_path_to_uri_list(path);
@@ -955,7 +955,7 @@ static const char *wl_pick_mime_locked(void) {
   return NULL;
 }
 
-char *x11_clipboard_get_text(void) {
+char *Platform_WaylandClipboard_GetText(void) {
   wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
            (void *)wl_offer, wl_has_selection ? 1 : 0, wl_offer_mime_count);
   if (!wl_setup()) {
@@ -1076,7 +1076,7 @@ char *x11_clipboard_get_text(void) {
   return out;
 }
 
-void x11_clipboard_shutdown(void) {
+void Platform_WaylandClipboard_Shutdown(void) {
   if (!wl_ready && !wl_handle) {
     return;
   }

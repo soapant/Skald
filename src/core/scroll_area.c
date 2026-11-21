@@ -7,9 +7,8 @@
 #include "core/window_manager.h"
 #include "helpers/helpers_ui.h"
 #include "platform/platform.h"
+#include "deps/stb_ds.h"
 
-#define SCROLL_AREA_MAX 32
-#define SCROLL_DRAW_STACK_MAX 32
 #define SCROLL_STALE_LIMIT 256
 #define SCROLL_DEFAULT_WHEEL_PX 48
 
@@ -37,9 +36,10 @@ typedef struct {
   int base_off_y;
 } ScrollDrawFrame;
 
-static ScrollSlot g_slots[SCROLL_AREA_MAX];
-static ScrollDrawFrame g_draw_stack[SCROLL_DRAW_STACK_MAX];
-static int g_draw_depth = 0;
+static ScrollSlot **g_slots;
+#define g_slot_count arrlenu(g_slots)
+static ScrollDrawFrame *g_draw_stack;
+#define g_draw_depth arrlenu(g_draw_stack)
 static unsigned long g_seq = 0;
 static void *g_scroll_mutex = NULL;
 
@@ -69,15 +69,15 @@ static int clamp_scroll(int value, int content, int view) {
 static void scroll_purge_stale(void) {
   unsigned long cutoff =
       g_seq > SCROLL_STALE_LIMIT ? g_seq - SCROLL_STALE_LIMIT : 0;
-  for (int i = 0; i < SCROLL_AREA_MAX; i++) {
-    if (g_slots[i].used && g_slots[i].seq < cutoff)
-      memset(&g_slots[i], 0, sizeof(g_slots[i]));
+  for (size_t i = 0; i < g_slot_count; i++) {
+    if (g_slots[i]->used && g_slots[i]->seq < cutoff)
+      memset(g_slots[i], 0, sizeof(*g_slots[i]));
   }
 }
 
 static int scroll_slot_find(const ScrollAreaSpec *spec) {
-  for (int i = 0; i < SCROLL_AREA_MAX; i++) {
-    ScrollSlot *slot = &g_slots[i];
+  for (size_t i = 0; i < g_slot_count; i++) {
+    ScrollSlot *slot = g_slots[i];
     if (!slot->used)
       continue;
     if (spec->name && spec->name[0]) {
@@ -91,19 +91,23 @@ static int scroll_slot_find(const ScrollAreaSpec *spec) {
 }
 
 static int scroll_slot_alloc(void) {
-  for (int i = 0; i < SCROLL_AREA_MAX; i++) {
-    if (!g_slots[i].used)
-      return i;
+  for (size_t i = 0; i < g_slot_count; i++) {
+    if (!g_slots[i]->used)
+      return (int)i;
   }
-  int oldest = 0;
-  unsigned long oldest_seq = g_slots[0].seq;
-  for (int i = 1; i < SCROLL_AREA_MAX; i++) {
-    if (g_slots[i].seq < oldest_seq) {
+  if (g_slot_count == 0) {
+    arrput(g_slots, (ScrollSlot *)calloc(1, sizeof(ScrollSlot)));
+    return 0;
+  }
+  size_t oldest = 0;
+  unsigned long oldest_seq = g_slots[0]->seq;
+  for (size_t i = 1; i < g_slot_count; i++) {
+    if (g_slots[i]->seq < oldest_seq) {
       oldest = i;
-      oldest_seq = g_slots[i].seq;
+      oldest_seq = g_slots[i]->seq;
     }
   }
-  return oldest;
+  return (int)oldest;
 }
 
 static void scroll_area_window_origin(int *out_x, int *out_y) {
@@ -121,9 +125,6 @@ static void scroll_area_window_origin(int *out_x, int *out_y) {
 bool scroll_area_begin(const ScrollAreaSpec *spec) {
   if (!spec || spec->w <= 0 || spec->h <= 0)
     return false;
-  if (g_draw_depth >= SCROLL_DRAW_STACK_MAX)
-    return false;
-
   int base_off_x = 0, base_off_y = 0;
   get_draw_offset(&base_off_x, &base_off_y);
   int origin_x = 0, origin_y = 0;
@@ -143,7 +144,7 @@ bool scroll_area_begin(const ScrollAreaSpec *spec) {
   int index = scroll_slot_find(spec);
   if (index < 0)
     index = scroll_slot_alloc();
-  ScrollSlot *slot = &g_slots[index];
+  ScrollSlot *slot = g_slots[index];
 
   memset(slot, 0, sizeof(*slot));
   slot->used = true;
@@ -165,10 +166,10 @@ bool scroll_area_begin(const ScrollAreaSpec *spec) {
     snprintf(slot->owner, sizeof(slot->owner), "%s", spec->owner);
   slot->seq = ++g_seq;
 
-  g_draw_stack[g_draw_depth].slot = index;
-  g_draw_stack[g_draw_depth].base_off_x = base_off_x;
-  g_draw_stack[g_draw_depth].base_off_y = base_off_y;
-  g_draw_depth++;
+  ScrollDrawFrame *frame = arraddnptr(g_draw_stack, 1);
+  frame->slot = index;
+  frame->base_off_x = base_off_x;
+  frame->base_off_y = base_off_y;
   SCROLL_UNLOCK();
 
   set_draw_offset(base_off_x - off_x, base_off_y - off_y);
@@ -180,10 +181,10 @@ void scroll_area_end(void) {
   bool restore = false;
   SCROLL_LOCK();
   if (g_draw_depth > 0) {
-    g_draw_depth--;
-    base_off_x = g_draw_stack[g_draw_depth].base_off_x;
-    base_off_y = g_draw_stack[g_draw_depth].base_off_y;
-    g_draw_stack[g_draw_depth].slot = -1;
+    ScrollDrawFrame frame = arrlast(g_draw_stack);
+    arrpop(g_draw_stack);
+    base_off_x = frame.base_off_x;
+    base_off_y = frame.base_off_y;
     restore = true;
   }
   SCROLL_UNLOCK();
@@ -199,19 +200,19 @@ bool scroll_area_dispatch_wheel(int root_x, int root_y, int dx, int dy) {
   SCROLL_LOCK();
   int best = -1;
   unsigned long best_seq = 0;
-  for (int i = 0; i < SCROLL_AREA_MAX; i++) {
-    ScrollSlot *slot = &g_slots[i];
+  for (size_t i = 0; i < g_slot_count; i++) {
+    ScrollSlot *slot = g_slots[i];
     if (!slot->used || slot->seq <= best_seq)
       continue;
     if (root_x < slot->root_x || root_y < slot->root_y)
       continue;
     if (root_x >= slot->root_x + slot->w || root_y >= slot->root_y + slot->h)
       continue;
-    best = i;
+    best = (int)i;
     best_seq = slot->seq;
   }
   if (best >= 0) {
-    ScrollSlot *slot = &g_slots[best];
+    ScrollSlot *slot = g_slots[best];
     int off_x = slot->off_x ? *slot->off_x : 0;
     int off_y = slot->off_y ? *slot->off_y : 0;
     off_x = clamp_scroll(off_x + dx * slot->wheel_px, slot->content_w, slot->w);
@@ -228,8 +229,8 @@ bool scroll_area_dispatch_wheel(int root_x, int root_y, int dx, int dy) {
 
 void scroll_area_purge_owner(const char *path_a, const char *path_b) {
   SCROLL_LOCK();
-  for (int i = 0; i < SCROLL_AREA_MAX; i++) {
-    ScrollSlot *slot = &g_slots[i];
+  for (size_t i = 0; i < g_slot_count; i++) {
+    ScrollSlot *slot = g_slots[i];
     if (!slot->used)
       continue;
     if (owner_module_matches(slot->owner, path_a, path_b))

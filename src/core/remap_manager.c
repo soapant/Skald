@@ -4,10 +4,10 @@
 #include "core/types/window.h"
 #include "platform/platform.h"
 #include "deps/log.h"
+#include "deps/stb_ds.h"
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_REMAPS 64
 #define MAX_SRC_VKS 8
 #define REMAP_MAX_WINDOWS 8
 
@@ -22,8 +22,8 @@ typedef struct {
   int window_count;
 } RemapBinding;
 
-static RemapBinding remaps[MAX_REMAPS];
-static int remap_count = 0;
+static RemapBinding *remaps;
+#define remap_count arrlenu(remaps)
 
 static int phys_vk[256] = {0};
 static int virt_vk[256] = {0};
@@ -43,8 +43,6 @@ static bool remap_window_eq(const char *a, const char *b) {
 bool remap_register_internal(const char *src, const char *dst, bool whitelist,
                              const char *const *windows) {
   if (!src || !dst)
-    return false;
-  if (remap_count >= MAX_REMAPS)
     return false;
   RemapBinding b = {0};
   b.whitelist = whitelist;
@@ -90,7 +88,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
     b.dst_vk = dst_vks[0];
   else
     b.dst_vk = 0;
-  for (int i = 0; i < remap_count; i++) {
+  for (size_t i = 0; i < remap_count; i++) {
     const RemapBinding *e = &remaps[i];
     if (e->src_mods == b.src_mods && e->dst_mods == b.dst_mods &&
         e->dst_vk == b.dst_vk && e->src_vk_count == b.src_vk_count &&
@@ -113,7 +111,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
       }
     }
   }
-  remaps[remap_count++] = b;
+  arrput(remaps, b);
   return true;
 }
 
@@ -401,21 +399,27 @@ bool remap_handle_vk(int vk_code, int value) {
     return false;
   if (value == 2)
     return false;
-  bool active_before[MAX_REMAPS] = {0};
-  for (int i = 0; i < remap_count; i++)
+  bool *active_before = NULL;
+  bool *active_after = NULL;
+  bool *allowed = NULL;
+  if (remap_count > 0) {
+    memset(arraddnptr(active_before, remap_count), 0,
+           remap_count * sizeof(*active_before));
+    memset(arraddnptr(active_after, remap_count), 0,
+           remap_count * sizeof(*active_after));
+    memset(arraddnptr(allowed, remap_count), 1,
+           remap_count * sizeof(*allowed));
+  }
+  for (size_t i = 0; i < remap_count; i++)
     active_before[i] = binding_active(&remaps[i]);
 
   remap_update_phys(vk_code, value);
 
-  bool active_after[MAX_REMAPS] = {0};
-  for (int i = 0; i < remap_count; i++)
+  for (size_t i = 0; i < remap_count; i++)
     active_after[i] = binding_active(&remaps[i]);
 
-  bool allowed[MAX_REMAPS];
-  for (int i = 0; i < remap_count; i++)
-    allowed[i] = true;
   bool need_title = false;
-  for (int i = 0; i < remap_count; i++) {
+  for (size_t i = 0; i < remap_count; i++) {
     if (remaps[i].window_count > 0) {
       need_title = true;
       break;
@@ -424,14 +428,14 @@ bool remap_handle_vk(int vk_code, int value) {
   const char *title = NULL;
   if (need_title)
     title = Platform_GetActiveWindowTitle();
-  for (int i = 0; i < remap_count; i++) {
+  for (size_t i = 0; i < remap_count; i++) {
     if (remaps[i].window_count > 0)
       allowed[i] =
           window_list_allows(remaps[i].window_count, remaps[i].whitelist,
                              remaps[i].windows, title);
   }
 
-  for (int i = 0; i < remap_count; i++) {
+  for (size_t i = 0; i < remap_count; i++) {
     RemapBinding *b = &remaps[i];
     bool before = active_before[i];
     bool after = active_after[i];
@@ -445,7 +449,7 @@ bool remap_handle_vk(int vk_code, int value) {
   }
 
   bool swallow = false;
-  for (int i = 0; i < remap_count; i++) {
+  for (size_t i = 0; i < remap_count; i++) {
     const RemapBinding *b = &remaps[i];
     bool before = active_before[i] && allowed[i];
     bool after = active_after[i] && allowed[i];
@@ -480,6 +484,9 @@ bool remap_handle_vk(int vk_code, int value) {
         swallow = true;
     }
   }
+  arrfree(active_before);
+  arrfree(active_after);
+  arrfree(allowed);
   return swallow;
 }
 

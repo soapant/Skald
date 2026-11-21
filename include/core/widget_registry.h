@@ -5,7 +5,6 @@
 #include "core/types.h"
 #include "platform/widget.h"
 
-#define WIDGET_MAX 32
 #define WIDGET_NAME_MAX 64
 #define WIDGET_DEFAULT_PAD 12
 #define WIDGET_PROVISIONAL_W 160
