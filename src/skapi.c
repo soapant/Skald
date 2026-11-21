@@ -53,6 +53,7 @@
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
+#include "core/hotkey_capture.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "helpers/helpers_render_thread.h"
@@ -681,6 +682,20 @@ bool ski_unregister_hotkey(const char *hotkey) {
 void sk_disable_global_hotkeys(void) { hotkey_set_suspended(true); }
 
 void sk_enable_global_hotkeys(void) { hotkey_set_suspended(false); }
+
+void sk_hotkey_capture_begin(void) { hotkey_capture_begin(); }
+
+bool sk_hotkey_capture_poll(char *out, size_t cap) {
+  return hotkey_capture_poll(out, cap);
+}
+
+const char *sk_hotkey_capture_preview(void) { return hotkey_capture_preview(); }
+
+const char *sk_hotkey_capture_last(void) { return hotkey_capture_last(); }
+
+bool sk_hotkey_capture_active(void) { return hotkey_capture_active(); }
+
+void sk_hotkey_capture_end(void) { hotkey_capture_end(); }
 
 int sk_hotkey_count(void) { return hotkey_count(); }
 
