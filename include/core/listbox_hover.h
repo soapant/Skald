@@ -8,6 +8,7 @@
 #define MOUSE_RECHECK_INTERVAL_MS 80
 
 bool listbox_client_mouse_pos(int *out_x, int *out_y);
+bool listbox_window_origin(int *out_x, int *out_y);
 void listbox_publish_mouse_pos(int x, int y);
 void listbox_invalidate_mouse_pos(void);
 int listbox_row_at_y(const ListBox *lb, int list_top, int item_height,

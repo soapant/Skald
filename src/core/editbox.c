@@ -10,6 +10,7 @@
 #include "core/window_manager.h"
 #include "helpers/helpers_input_state.h"
 #include "core/prompt_geometry.h"
+#include "core/listbox_hover.h"
 #include "core/types/window.h"
 #include "helpers/helpers_ui.h"
 #include "platform/draw.h"
@@ -496,25 +497,8 @@ static void editbox_registry_mouse(int *out_x, int *out_y, bool *out_down) {
   *out_y = -9999;
   *out_down = false;
   int mx = 0, my = 0;
-  if (!Platform_GetMousePos(&mx, &my))
+  if (!listbox_client_mouse_pos(&mx, &my))
     return;
-  int wx = 0, wy = 0;
-  WindowManager *wm = WindowManager_Get();
-  Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-  bool have_origin = false;
-  if (top)
-    have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
-  if (!have_origin)
-    have_origin =
-        Platform_WindowToRoot(SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
-  if (have_origin) {
-    mx -= wx;
-    my -= wy;
-  }
-  int dx = 0, dy = 0;
-  get_draw_offset(&dx, &dy);
-  mx -= dx;
-  my -= dy;
   *out_x = mx;
   *out_y = my;
   *out_down = input_mouse_state_down(MOUSE_BTN_LEFT);
