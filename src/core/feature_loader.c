@@ -172,7 +172,7 @@ void feature_loader_drain_retired_unloads(void) {
     if (defer_unloads[i].uniq[0])
       file_remove_path(defer_unloads[i].uniq);
   }
-  arrsetlen(defer_unloads, 0);
+  arrfree(defer_unloads);
   Platform_MutexUnlock(feature_mutex);
 }
 

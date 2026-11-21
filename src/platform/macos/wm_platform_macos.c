@@ -31,6 +31,15 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   return false;
 }
 
+bool Platform_PromptPopupResize(Popup *self, int x, int y, int w, int h) {
+  (void)self;
+  (void)x;
+  (void)y;
+  (void)w;
+  (void)h;
+  return false;
+}
+
 void Platform_PromptPopupHideWindow(Popup *self) { (void)self; }
 
 void Platform_PromptPopupRender(Popup *self) { (void)self; }
