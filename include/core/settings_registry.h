@@ -40,7 +40,8 @@ typedef struct {
 } SettingsEditboxGroup;
 
 #define SETTINGS_EDITBOX_INVALID ((SettingsEditboxGroup){-1, -1})
-#define SETTINGS_EDITBOX_X_OFFSET_DEFAULT 70
+#define SETTINGS_EDITBOX_X_OFFSET_AUTO (-1)
+#define SETTINGS_EDITBOX_X_OFFSET_DEFAULT SETTINGS_EDITBOX_X_OFFSET_AUTO
 
 typedef int (*SettingsDropdownOptionsFn)(const char ***out_options);
 typedef void (*SettingsDropdownSelectFn)(const char *option, int index,
