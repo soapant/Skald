@@ -143,12 +143,6 @@ static bool cfg_parse_float(const char *text, float *out) {
   return true;
 }
 
-static int cfg_field_width(const char *text) {
-  if (!text || !text[0])
-    return 150;
-  return sk_get_text_width(text, FontSize) + 34;
-}
-
 #define DEFINE_CFG_BOOL(cfg_name, cfg_desc)                                    \
   static void cfg_##cfg_name##_click(void) {                                   \
     char key[256];                                                             \
@@ -175,10 +169,9 @@ static int cfg_field_width(const char *text) {
   }                                                                            \
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
     snprintf(cfg_buf_##cfg_name, sizeof(cfg_buf_##cfg_name), "%d", cfg_name);   \
-    int width = cfg_field_width(cfg_buf_##cfg_name);                             \
     SkSettingsEditboxField fields[] = {{                                       \
         .name = #cfg_name, .label = "", .buffer = cfg_buf_##cfg_name,           \
-        .buffer_size = sizeof(cfg_buf_##cfg_name), .width = width}};           \
+        .buffer_size = sizeof(cfg_buf_##cfg_name)}};           \
     sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
                                   .fields = fields, .field_count = 1,          \
                                    .on_change = cfg_##cfg_name##_change);        \
@@ -198,10 +191,9 @@ static int cfg_field_width(const char *text) {
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
     snprintf(cfg_buf_##cfg_name, sizeof(cfg_buf_##cfg_name), "%.0f",            \
              (double)cfg_name);                                                \
-    int width = cfg_field_width(cfg_buf_##cfg_name);                             \
     SkSettingsEditboxField fields[] = {{                                       \
         .name = #cfg_name, .label = "", .buffer = cfg_buf_##cfg_name,           \
-        .buffer_size = sizeof(cfg_buf_##cfg_name), .width = width}};           \
+        .buffer_size = sizeof(cfg_buf_##cfg_name)}};           \
     sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
                                   .fields = fields, .field_count = 1,          \
                                    .on_change = cfg_##cfg_name##_change);        \
@@ -219,10 +211,9 @@ static int cfg_field_width(const char *text) {
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
     snprintf(cfg_buf_##cfg_name, sizeof(cfg_buf_##cfg_name), "%s",             \
              cfg_name ? cfg_name : "");                                        \
-    int width = cfg_field_width(cfg_buf_##cfg_name);                             \
     SkSettingsEditboxField fields[] = {{                                       \
         .name = #cfg_name, .label = "", .buffer = cfg_buf_##cfg_name,           \
-        .buffer_size = sizeof(cfg_buf_##cfg_name), .width = width}};           \
+        .buffer_size = sizeof(cfg_buf_##cfg_name)}};           \
     sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
                                   .fields = fields, .field_count = 1,          \
                                    .on_change = cfg_##cfg_name##_change);        \

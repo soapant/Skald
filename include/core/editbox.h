@@ -11,6 +11,11 @@
 
 typedef int (*EditboxMeasureFn)(const char *text, int len, void *user);
 
+#define EDITBOX_TIGHT_INSET 6
+#define EDITBOX_TIGHT_RIGHT_PAD 4
+
+int editbox_auto_width(const char *text, int font_size);
+
 typedef enum {
   EDITBOX_SEL_EXCLUSIVE = 0,
   EDITBOX_SEL_INCLUSIVE = 1,
