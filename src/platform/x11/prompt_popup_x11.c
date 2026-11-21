@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "core/window_manager.h"
+#include "core/draw_state.h"
 #include "wm/wm.h"
 #include "platform/draw.h"
 #include "config.h"
@@ -93,6 +94,8 @@ void Platform_PromptPopupHideWindow(Popup *self) {
 }
 
 void Platform_PromptPopupRender(Popup *self) {
+  if (!draw_state_begin_render())
+    return;
   WindowManager *wm = (WindowManager *)self->manager;
   Display *dpy = wm ? wm->display : NULL;
   if (dpy) {
@@ -102,11 +105,13 @@ void Platform_PromptPopupRender(Popup *self) {
       x11_render_prompt_user(dpy, &self->handle.xid,
                              (PromptState *)self->user_data);
       set_transparent_window(false);
-      return;
+    } else {
+      x11_render_prompt_user(dpy, &self->handle.xid,
+                             (PromptState *)self->user_data);
     }
-    x11_render_prompt_user(dpy, &self->handle.xid,
-                           (PromptState *)self->user_data);
   }
+  if (draw_state_end_render())
+    Platform_PromptPopupRender(self);
 }
 
 void Platform_PromptPopupDestroyWindow(Popup *self) {

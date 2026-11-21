@@ -19,10 +19,14 @@ typedef struct {
   bool win32_listbox_surface;
   bool listbox_rows;
   bool suppress_separators;
+  bool rendering;
+  bool repaint_pending;
 } DrawCanvas;
 
 DrawCanvas *draw_state_get(void);
 void draw_state_offset(int *x, int *y);
+bool draw_state_begin_render(void);
+bool draw_state_end_render(void);
 
 void draw_state_begin_measure(void);
 void draw_state_reset(void);

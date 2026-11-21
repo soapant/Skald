@@ -6,6 +6,25 @@ static __thread DrawCanvas draw_state;
 
 DrawCanvas *draw_state_get(void) { return &draw_state; }
 
+bool draw_state_begin_render(void) {
+  DrawCanvas *ds = draw_state_get();
+  if (ds->rendering) {
+    ds->repaint_pending = true;
+    return false;
+  }
+  ds->rendering = true;
+  return true;
+}
+
+bool draw_state_end_render(void) {
+  DrawCanvas *ds = draw_state_get();
+  ds->rendering = false;
+  if (!ds->repaint_pending)
+    return false;
+  ds->repaint_pending = false;
+  return true;
+}
+
 void draw_state_reset(void) { memset(draw_state_get(), 0, sizeof(DrawCanvas)); }
 
 void draw_state_begin_measure(void) {

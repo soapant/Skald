@@ -6,6 +6,7 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_text.h"
 #include "core/window_manager.h"
+#include "core/draw_state.h"
 #include "core/context.h"
 #include "core/listbox_hover.h"
 #include "core/prompt_keys.h"
@@ -31,6 +32,11 @@ bool is_popup_active(WindowHandle hPopupWnd) {
 }
 
 void UI_RequestPopupRepaint(void) {
+  DrawCanvas *ds = draw_state_get();
+  if (ds->rendering) {
+    ds->repaint_pending = true;
+    return;
+  }
   WindowManager *wm = WindowManager_Get();
   if (!wm)
     return;
