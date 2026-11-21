@@ -1034,7 +1034,6 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
           (ShutdownFn)Platform_GetSymbol(old, "skald_feature_shutdown");
       if (shut)
         shut();
-      slider_reset_all();
       unsigned retire_gen = widget_current_generation();
       char retire_owner[512];
       fl_copy(retire_owner, sizeof(retire_owner),
