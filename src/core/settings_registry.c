@@ -433,10 +433,7 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
   if (state->active_editbox < 0)
     state->active_editbox = idx;
   entry->no_tab = spec->no_tab;
-  EditBox tmp;
-  memset(&tmp, 0, sizeof(tmp));
-  snprintf(tmp.filter, sizeof(tmp.filter), "%s", entry->eb.filter);
-  tmp.cursor = strlen(tmp.filter);
+  bool active = state->active_editbox == idx;
   EditBox *saved = state->eb;
   int saved_active = state->active_editbox;
   state->eb = &entry->eb;
@@ -468,11 +465,12 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
                         .descent = line_h - (line_h * 3) / 4,
                         .font = FH_NULL});
   eb.caret_h = spec->caret_h;
-  editbox_render(&eb, NULL);
+  int parts = active ? EDITBOX_PART_ALL
+                     : (EDITBOX_PART_TINT | EDITBOX_PART_TEXT);
+  editbox_draw(&eb, NULL, parts);
   entry->eb.scroll_offset = eb.scroll;
   state->active_editbox = saved_active;
   state->eb = saved;
-  (void)tmp;
   return true;
 }
 
