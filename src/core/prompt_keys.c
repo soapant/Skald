@@ -46,6 +46,7 @@ static bool prompt_primary_editbox_active(PromptState *state) {
 static void prompt_refresh_typing(PromptState *state) {
   if (!prompt_primary_editbox_active(state))
     return;
+  editbox_registry_sync(state);
   prompt_refresh(state);
 }
 
