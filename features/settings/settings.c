@@ -41,7 +41,9 @@ static const SkSettingsEntrySpec *settings_entry_by_name(const char *name) {
 
 static void settings_refresh(PromptState *state) {
   settings_collect_names();
-  sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
+  const char *filter =
+      (state && state->default_eb) ? state->default_eb->filter : "";
+  sk_populate_listbox(.lb = state->lb, .filter = filter,
                       .items = settings_names, .count = settings_name_count);
 }
 
