@@ -22,8 +22,8 @@
 #elif defined(__APPLE__)
 #define CC_FLAGS CC_COMMON_FLAGS
 #define APPLE_LINK_FLAGS                                                       \
-  "-lm", "-ldl", "-Wl,-export_dynamic", "-framework", "Cocoa",                 \
-      "-framework", "CoreGraphics"
+  "-lm", "-ldl", "-Wl,-export_dynamic", "-framework", "Cocoa", "-framework",   \
+      "CoreGraphics"
 #define LINK_FLAGS APPLE_LINK_FLAGS, "-Wl,-undefined,dynamic_lookup"
 #define PKG_CFLAGS_PKGS_STR "libcurl"
 #define PKG_LIBS_PKGS_STR " libcurl"

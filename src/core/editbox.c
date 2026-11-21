@@ -161,8 +161,7 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->x = in->x;
   out->y = in->y;
   out->w = in->w;
-  if (in->text_w > 0 &&
-      in->w < in->text_w + PROMPT_EDIT_SCROLL_PAD + 16) {
+  if (in->text_w > 0 && in->w < in->text_w + PROMPT_EDIT_SCROLL_PAD + 16) {
     out->inset = EDITBOX_TIGHT_INSET;
     out->visible_w = in->w - EDITBOX_TIGHT_INSET - 2;
   } else {

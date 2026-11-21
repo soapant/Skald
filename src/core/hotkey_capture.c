@@ -90,9 +90,8 @@ bool hotkey_capture_poll(char *out, size_t cap) {
   if (!s_capture.active || s_capture.captured)
     return false;
 
-  if (s_capture.waiting_release &&
-      (!input_is_key_down(s_capture.last_vk) ||
-       input_was_key_released(s_capture.last_vk)))
+  if (s_capture.waiting_release && (!input_is_key_down(s_capture.last_vk) ||
+                                    input_was_key_released(s_capture.last_vk)))
     s_capture.waiting_release = false;
 
   int mods = capture_current_mods();

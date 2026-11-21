@@ -37,9 +37,8 @@ SearchIndex *search_index_current(void);
 void search_index_push_context(SearchIndex *idx, int source_id,
                                const char *context);
 void search_index_pop_context(SearchIndex *idx);
-void search_index_add_text(SearchIndex *idx, const char *text,
-                           SearchKind kind, const char *widget_name,
-                           const char *value);
+void search_index_add_text(SearchIndex *idx, const char *text, SearchKind kind,
+                           const char *widget_name, const char *value);
 void search_index_set_activate(SearchIndex *idx, SearchActivateFn activate,
                                void *ud);
 void search_index_reindex(SearchIndex *idx, SearchRenderFn render, void *ud);

@@ -101,8 +101,9 @@ int settings_entry_add_slider(SettingsEntry *entry,
                               const SettingsSliderSpec *spec);
 int settings_entry_add_dropdown(SettingsEntry *entry,
                                 const SettingsDropdownSpec *spec);
-SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
-                                                const SettingsEditboxSpec *spec);
+SettingsEditboxGroup
+settings_entry_add_editbox(SettingsEntry *entry,
+                           const SettingsEditboxSpec *spec);
 const char *settings_editbox_get(SettingsEditboxGroup group, const char *name);
 bool settings_editbox_set(SettingsEditboxGroup group, const char *name,
                           const char *value);

@@ -129,53 +129,53 @@ static void cfg_commit(void) {
     }                                                                          \
   }                                                                            \
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
-    sk_settings_entry_add_checkbox(entry, .title = #cfg_name, .sub = cfg_desc,  \
+    sk_settings_entry_add_checkbox(entry, .title = #cfg_name, .sub = cfg_desc, \
                                    .initial = cfg_name,                        \
-                                   .on_click = cfg_##cfg_name##_click);         \
+                                   .on_click = cfg_##cfg_name##_click);        \
   }
 
 #define DEFINE_CFG_INT(cfg_name, cfg_desc)                                     \
   static char cfg_buf_##cfg_name[64];                                          \
-  static void cfg_##cfg_name##_change(const char *field, const char *value) {   \
+  static void cfg_##cfg_name##_change(const char *field, const char *value) {  \
     (void)field;                                                               \
     cfg_name = sk_parse_int(value, cfg_name);                                  \
     cfg_commit();                                                              \
   }                                                                            \
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
-    snprintf(cfg_buf_##cfg_name, sizeof(cfg_buf_##cfg_name), "%d", cfg_name);   \
-    SkSettingsEditboxField fields[] = {{                                       \
-        .name = #cfg_name, .label = "", .buffer = cfg_buf_##cfg_name,           \
-        .buffer_size = sizeof(cfg_buf_##cfg_name)}};           \
-    sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
+    snprintf(cfg_buf_##cfg_name, sizeof(cfg_buf_##cfg_name), "%d", cfg_name);  \
+    SkSettingsEditboxField fields[] = {                                        \
+        {.name = #cfg_name,                                                    \
+         .label = "",                                                          \
+         .buffer = cfg_buf_##cfg_name,                                         \
+         .buffer_size = sizeof(cfg_buf_##cfg_name)}};                          \
+    sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,  \
                                   .fields = fields, .field_count = 1,          \
-                                   .on_change = cfg_##cfg_name##_change);        \
+                                  .on_change = cfg_##cfg_name##_change);       \
   }
-
-
 
 #define DEFINE_CFG_FLOAT(cfg_name, cfg_desc)                                   \
   static char cfg_buf_##cfg_name[64];                                          \
-  static void cfg_##cfg_name##_change(const char *field, const char *value) {   \
+  static void cfg_##cfg_name##_change(const char *field, const char *value) {  \
     (void)field;                                                               \
     cfg_name = sk_parse_float(value, cfg_name);                                \
     cfg_commit();                                                              \
   }                                                                            \
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
-    snprintf(cfg_buf_##cfg_name, sizeof(cfg_buf_##cfg_name), "%.0f",            \
+    snprintf(cfg_buf_##cfg_name, sizeof(cfg_buf_##cfg_name), "%.0f",           \
              (double)cfg_name);                                                \
-    SkSettingsEditboxField fields[] = {{                                       \
-        .name = #cfg_name, .label = "", .buffer = cfg_buf_##cfg_name,           \
-        .buffer_size = sizeof(cfg_buf_##cfg_name)}};           \
-    sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
+    SkSettingsEditboxField fields[] = {                                        \
+        {.name = #cfg_name,                                                    \
+         .label = "",                                                          \
+         .buffer = cfg_buf_##cfg_name,                                         \
+         .buffer_size = sizeof(cfg_buf_##cfg_name)}};                          \
+    sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,  \
                                   .fields = fields, .field_count = 1,          \
-                                   .on_change = cfg_##cfg_name##_change);        \
+                                  .on_change = cfg_##cfg_name##_change);       \
   }
-
-
 
 #define DEFINE_CFG_STRING(cfg_name, cfg_desc)                                  \
   static char cfg_buf_##cfg_name[512];                                         \
-  static void cfg_##cfg_name##_change(const char *field, const char *value) {   \
+  static void cfg_##cfg_name##_change(const char *field, const char *value) {  \
     (void)field;                                                               \
     cfg_name = cfg_buf_##cfg_name;                                             \
     cfg_commit();                                                              \
@@ -183,20 +183,21 @@ static void cfg_commit(void) {
   static void cfg_add_##cfg_name(SkSettingsEntry *entry) {                     \
     snprintf(cfg_buf_##cfg_name, sizeof(cfg_buf_##cfg_name), "%s",             \
              cfg_name ? cfg_name : "");                                        \
-    SkSettingsEditboxField fields[] = {{                                       \
-        .name = #cfg_name, .label = "", .buffer = cfg_buf_##cfg_name,           \
-        .buffer_size = sizeof(cfg_buf_##cfg_name)}};           \
-    sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,   \
+    SkSettingsEditboxField fields[] = {                                        \
+        {.name = #cfg_name,                                                    \
+         .label = "",                                                          \
+         .buffer = cfg_buf_##cfg_name,                                         \
+         .buffer_size = sizeof(cfg_buf_##cfg_name)}};                          \
+    sk_settings_entry_add_editbox(entry, .title = #cfg_name, .sub = cfg_desc,  \
                                   .fields = fields, .field_count = 1,          \
-                                   .on_change = cfg_##cfg_name##_change);        \
+                                  .on_change = cfg_##cfg_name##_change);       \
   }
-
-
 
 DEFINE_CFG_BOOL(Tray, "Show the skald tray icon.")
 DEFINE_CFG_BOOL(RememberLastIndex, "Remember the last selected item.")
 DEFINE_CFG_BOOL(MessageAfterEachHotkey, "Show a message after each hotkey.")
-DEFINE_CFG_INT(TimeOutForMessages, "How long messages stay visible, in seconds.")
+DEFINE_CFG_INT(TimeOutForMessages,
+               "How long messages stay visible, in seconds.")
 DEFINE_CFG_INT(HotkeyRepeatDelayMs,
                "Delay before held hotkeys repeat, in milliseconds.")
 DEFINE_CFG_BOOL(DebugMode, "Enable verbose debug output.")
@@ -262,11 +263,10 @@ static void cfg_add_Theme(SkSettingsEntry *entry) {
       break;
     }
   }
-  sk_settings_entry_add_dropdown(entry, .title = "Theme",
-                                 .sub = "Active UI theme.",
-                                 .refresh_options = cfg_theme_options,
-                                 .initial = initial,
-                                 .on_select = cfg_theme_select);
+  sk_settings_entry_add_dropdown(
+      entry, .title = "Theme", .sub = "Active UI theme.",
+      .refresh_options = cfg_theme_options, .initial = initial,
+      .on_select = cfg_theme_select);
 }
 
 static void cfg_add_all(void) {
@@ -315,7 +315,7 @@ static void cfg_add_all(void) {
 SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = (char *)SettingsHotkey, .cb = trigger_settings);
   sk_add_feature(.display_name = "Settings", .on_action = trigger_settings,
-                  .icon = "/settings.png");
+                 .icon = "/settings.png");
   cfg_add_all();
 
   static char ql_name[128];
@@ -338,9 +338,9 @@ SKALD_FEATURE_INIT {
       sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
                             .desc = "Add Quicklinks for your most commonly "
                                     "opened websites.");
-  sk_settings_entry_add_editbox(
-      ql, .title = "Add Quicklink", .sub = "Add a quicklink to appear in cc",
-      .fields = fields, .field_count = 2);
+  sk_settings_entry_add_editbox(ql, .title = "Add Quicklink",
+                                .sub = "Add a quicklink to appear in cc",
+                                .fields = fields, .field_count = 2);
 
   sk_add_settings_entry(.name = "Snippets", .icon = "/snippets.png",
 

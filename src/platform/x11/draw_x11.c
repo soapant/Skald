@@ -362,8 +362,8 @@ static unsigned char *rect_border_argb(int rect_w, int rect_h, float radius,
   unsigned long stamp = ++g_rect_border_cache_tick;
   for (int i = 0; i < RECT_BORDER_CACHE_CAP; i++) {
     RectBorderCacheEntry *e = &g_rect_border_cache[i];
-    if (e->buf && rect_border_cache_key_eq(e, w, h, radius, thickness, color,
-                                           alpha)) {
+    if (e->buf &&
+        rect_border_cache_key_eq(e, w, h, radius, thickness, color, alpha)) {
       e->used = stamp;
       if (out_w)
         *out_w = e->bw;
@@ -467,8 +467,8 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
     float alpha = (float)target_alpha / 65535.0f;
     int bw = 0, bh = 0;
     bool owned = false;
-    unsigned char *buf = rect_border_argb(w, h, r2, (float)t, color, alpha,
-                                          &bw, &bh, &owned);
+    unsigned char *buf =
+        rect_border_argb(w, h, r2, (float)t, color, alpha, &bw, &bh, &owned);
     if (!buf)
       return false;
     return blit_argb_buf(buf, bw, bh, (int)x - (bw - (int)w) / 2,
