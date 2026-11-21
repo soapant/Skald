@@ -50,7 +50,6 @@ void checkbox_frame_begin(void);
 bool checkbox_is_checked(const char *name, int kind);
 bool checkbox_is_hovered(const char *name, int kind);
 bool checkbox_is_clicked(const char *name, int kind);
-void checkbox_reset_all(void);
 bool checkbox_place(const CheckboxSpec *spec);
 void checkbox_draw(const CheckboxSpec *spec);
 

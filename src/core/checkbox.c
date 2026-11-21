@@ -142,18 +142,6 @@ bool checkbox_is_clicked(const char *name, int kind) {
   return cb ? cb->clicked : false;
 }
 
-void checkbox_reset_all(void) {
-  for (int i = 0; i < checkbox_count; i++) {
-    checkboxes[i].checked = false;
-    checkboxes[i].clicked = false;
-    checkboxes[i].hovered = false;
-    checkboxes[i].was_down = false;
-    checkboxes[i].on_click = NULL;
-    checkboxes[i].on_hover = NULL;
-    checkboxes[i].render = NULL;
-  }
-}
-
 static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                  int body_radius, bool body_round,
                                  int border_radius, unsigned long body,
