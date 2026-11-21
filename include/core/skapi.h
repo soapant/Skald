@@ -918,72 +918,18 @@ typedef SettingsEntry SkSettingsEntry;
 #define sk_add_settings_entry(...)                                             \
   sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
 
-typedef struct {
-  const char *title;
-  const char *sub;
-  bool initial;
-  void (*on_click)(void);
-  void (*on_hover)(void);
-} SkSettingsCheckboxSpec;
+typedef SettingsCheckboxSpec SkSettingsCheckboxSpec;
+typedef SettingsButtonSpec SkSettingsButtonSpec;
+typedef SettingsSliderSpec SkSettingsSliderSpec;
+typedef SettingsDropdownOptionsFn SkSettingsDropdownOptionsFn;
+typedef SettingsDropdownSelectFn SkSettingsDropdownSelectFn;
+typedef SettingsDropdownSpec SkSettingsDropdownSpec;
+typedef SettingsEditboxChangeFn SkSettingsEditboxChangeFn;
+typedef SettingsEditboxField SkSettingsEditboxField;
+typedef SettingsEditboxSpec SkSettingsEditboxSpec;
+typedef SettingsEditboxGroup SkSettingsEditboxGroup;
 
-typedef struct {
-  const char *title;
-  const char *sub;
-  const char *label;
-  void (*on_click)(void);
-  void (*on_hover)(void);
-} SkSettingsButtonSpec;
-
-typedef struct {
-  const char *title;
-  const char *sub;
-  float min_value;
-  float max_value;
-  float initial;
-  void (*on_change)(void);
-  void (*on_hover)(void);
-} SkSettingsSliderSpec;
-
-typedef int (*SkSettingsDropdownOptionsFn)(const char ***out_options);
-typedef void (*SkSettingsDropdownSelectFn)(const char *option, int index,
-                                           void *ud);
-
-typedef struct {
-  const char *title;
-  const char *sub;
-  SkSettingsDropdownOptionsFn refresh_options;
-  int initial;
-  SkSettingsDropdownSelectFn on_select;
-  void (*on_hover)(void);
-  void *ud;
-} SkSettingsDropdownSpec;
-
-#define SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT 70
-
-typedef void (*SkSettingsEditboxChangeFn)(const char *name, const char *value);
-
-typedef struct {
-  const char *name;
-  const char *label;
-  char *buffer;
-  size_t buffer_size;
-  int width;
-} SkSettingsEditboxField;
-
-typedef struct {
-  const char *title;
-  const char *sub;
-  const SkSettingsEditboxField *fields;
-  int field_count;
-  int x_offset;
-  SkSettingsEditboxChangeFn on_change;
-} SkSettingsEditboxSpec;
-
-typedef struct {
-  int entry;
-  int block;
-} SkSettingsEditboxGroup;
-
+#define SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT SETTINGS_EDITBOX_X_OFFSET_DEFAULT
 #define SK_SETTINGS_EDITBOX_INVALID ((SkSettingsEditboxGroup){-1, -1})
 
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
