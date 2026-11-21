@@ -231,19 +231,6 @@ bool slider_set_value(const char *name, float value) {
   return true;
 }
 
-void slider_reset_all(void) {
-  for (int i = 0; i < slider_count; i++) {
-    sliders[i].hovered = false;
-    sliders[i].dragging = false;
-    sliders[i].clicked = false;
-    sliders[i].was_down = false;
-    sliders[i].on_input = NULL;
-    sliders[i].on_change = NULL;
-    sliders[i].on_hover = NULL;
-    sliders[i].render = NULL;
-  }
-}
-
 static void slider_track_geometry(const SliderSpec *sl, int *tx, int *ty,
                                   int *tw, int *th, int *rx, int *ry,
                                   int *rsize) {

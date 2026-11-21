@@ -225,8 +225,6 @@ static void sweep_retired_libs(void) {
     if (alive) {
       retired[n++] = retired[i];
     } else {
-      checkbox_reset_all();
-      slider_reset_all();
       purge_owner_set(retired[i].owner, NULL, retired[i].owner_gen);
       log_info("deferring unload of retired lib %s", retired[i].owner);
       defer_unload(retired[i].handle, retired[i].uniq, retired[i].owner);
@@ -1036,7 +1034,6 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
           (ShutdownFn)Platform_GetSymbol(old, "skald_feature_shutdown");
       if (shut)
         shut();
-      checkbox_reset_all();
       slider_reset_all();
       unsigned retire_gen = widget_current_generation();
       char retire_owner[512];
