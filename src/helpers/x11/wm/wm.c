@@ -165,7 +165,6 @@ WindowList wm_get_window_titles(void) {
   result = x11_get_window_titles();
   if (result.windows != NULL)
     return result;
-  log_error("GetWindowTitles Didn't Work");
   return empty;
 }
 WindowList wm_get_window_ids(void) {
@@ -188,7 +187,6 @@ WindowList wm_get_window_ids(void) {
   result = x11_get_window_names();
   if (result.windows != NULL)
     return result;
-  log_error("GetWindowNames Didn't Work");
   return empty;
 }
 
@@ -205,7 +203,6 @@ bool wm_close_active_window(void) {
   }
   if (x11_close_active_window())
     return true;
-  log_error("CloseActiveWindow Didn't Work");
   return false;
 }
 
@@ -222,7 +219,6 @@ bool wm_toggle_fullscreen_active(void) {
   }
   if (x11_toggle_fullscreen_active())
     return true;
-  log_error("ToggleFullscreenActive Didn't Work");
   return false;
 }
 
@@ -241,7 +237,6 @@ bool wm_move_active_window_to_monitor(bool right) {
     return true;
   if (x11_move_active_window_to_monitor(right))
     return true;
-  log_error("MoveActiveWindowToMonitor Didn't Work");
   return false;
 }
 
@@ -260,7 +255,6 @@ bool wm_move_active_window_left(void) {
     return true;
   if (x11_move_active_window_left())
     return true;
-  log_error("MoveActiveWindowLeft Didn't Work");
   return false;
 }
 
@@ -279,7 +273,6 @@ bool wm_move_active_window_right(void) {
     return true;
   if (x11_move_active_window_right())
     return true;
-  log_error("MoveActiveWindowRight Didn't Work");
   return false;
 }
 
@@ -296,7 +289,6 @@ bool wm_move_active_window_up(void) {
   }
   if (x11_move_active_window_up())
     return true;
-  log_error("MoveActiveWindowUp Didn't Work");
   return false;
 }
 
@@ -313,7 +305,6 @@ bool wm_move_active_window_down(void) {
   }
   if (x11_move_active_window_down())
     return true;
-  log_error("MoveActiveWindowDown Didn't Work");
   return false;
 }
 
@@ -330,7 +321,6 @@ bool wm_focus_window_left(void) {
   }
   if (x11_focus_window_left())
     return true;
-  log_error("FocusWindowLeft Didn't Work");
   return false;
 }
 
@@ -347,7 +337,6 @@ bool wm_focus_window_right(void) {
   }
   if (x11_focus_window_right())
     return true;
-  log_error("FocusWindowRight Didn't Work");
   return false;
 }
 
@@ -364,7 +353,6 @@ bool wm_focus_window_up(void) {
   }
   if (x11_focus_window_up())
     return true;
-  log_error("FocusWindowUp Didn't Work");
   return false;
 }
 
@@ -381,7 +369,6 @@ bool wm_focus_window_down(void) {
   }
   if (x11_focus_window_down())
     return true;
-  log_error("FocusWindowDown Didn't Work");
   return false;
 }
 
@@ -412,7 +399,6 @@ bool wm_minimize_active_window(void) {
   }
   if (x11_minimize_active_window())
     return true;
-  log_error("MinimizeActiveWindow Didn't Work");
   return false;
 }
 
@@ -445,7 +431,6 @@ bool wm_toggle_maximize_active(void) {
   }
   if (x11_toggle_maximize_active())
     return true;
-  log_error("ToggleMaximizeActive Didn't Work");
   return false;
 }
 
@@ -462,7 +447,6 @@ bool wm_toggle_always_on_top_active(void) {
   }
   if (x11_toggle_always_on_top_active())
     return true;
-  log_error("ToggleAlwaysOnTopActive Didn't Work");
   return false;
 }
 
@@ -479,7 +463,6 @@ bool wm_raise_active_window(void) {
   }
   if (x11_raise_active_window())
     return true;
-  log_error("RaiseActiveWindow Didn't Work");
   return false;
 }
 
@@ -496,7 +479,6 @@ bool wm_lower_active_window(void) {
   }
   if (x11_lower_active_window())
     return true;
-  log_error("LowerActiveWindow Didn't Work");
   return false;
 }
 
@@ -513,7 +495,6 @@ bool wm_center_active_window(void) {
   }
   if (x11_center_active_window())
     return true;
-  log_error("CenterActiveWindow Didn't Work");
   return false;
 }
 
@@ -530,7 +511,6 @@ bool wm_snap_active_window(SnapPreset preset) {
   }
   if (x11_snap_active_window(preset))
     return true;
-  log_error("SnapActiveWindow Didn't Work");
   return false;
 }
 
@@ -552,7 +532,6 @@ long wm_get_active_window_pid(void) {
   long pid = x11_get_active_window_pid();
   if (pid)
     return pid;
-  log_error("GetActiveWindowPid Didn't Work");
   return 0;
 }
 
@@ -571,7 +550,6 @@ bool wm_switch_to_workspace(int index) {
   }
   if (x11_switch_to_workspace(index))
     return true;
-  log_error("SwitchToWorkspace Didn't Work");
   return false;
 }
 
@@ -590,7 +568,6 @@ bool wm_move_active_window_to_workspace(int index) {
   }
   if (x11_move_active_window_to_workspace(index))
     return true;
-  log_error("MoveActiveWindowToWorkspace Didn't Work");
   return false;
 }
 
@@ -609,7 +586,6 @@ bool wm_set_active_window_opacity(int percent) {
   }
   if (x11_set_active_window_opacity(percent))
     return true;
-  log_error("SetActiveWindowOpacity Didn't Work");
   return false;
 }
 
@@ -626,7 +602,6 @@ bool wm_close_windows_matching_title(const char *needle) {
   }
   if (x11_close_windows_by_title(needle))
     return true;
-  log_error("CloseWindowsByTitle Didn't Work");
   return false;
 }
 
@@ -643,6 +618,5 @@ bool wm_close_windows_matching_id(const char *needle) {
   }
   if (x11_close_windows_by_id(needle))
     return true;
-  log_error("CloseWindowsById Didn't Work");
   return false;
 }
