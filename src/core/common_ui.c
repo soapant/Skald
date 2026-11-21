@@ -102,8 +102,7 @@ bool prompt_band_take_placed(void) {
 
 void prompt_band_commit_placed(void) {
   SkaldContext *ctx = SkaldContext_Get();
-  ctx->window.band_active =
-      ctx->window.editbox_placed && ctx->window.listbox_placed;
+  ctx->window.band_active = ctx->window.editbox_placed;
 }
 
 static bool fuzzy_match(const char *text, const char *pattern) {

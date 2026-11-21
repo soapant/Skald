@@ -228,6 +228,10 @@ bool prompt_popup_resize_current(int x, int y, int w, int h) {
   if (data->state) {
     data->state->width = w;
     data->state->height = h;
+    int list_h = h - prompt_list_top() - prompt_list_bottom_margin();
+    data->state->no_separators = data->spec.no_separators ||
+                                 data->spec.auto_scale ||
+                                 list_h < LISTBOX_SEPARATOR_MIN_LIST_H;
   }
   Platform_InvalidatePrompt();
   UI_RequestPopupRepaint();

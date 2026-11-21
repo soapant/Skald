@@ -8,6 +8,7 @@
   X(int, TimeOutForMessages, 1)                                                \
   X(int, HotkeyRepeatDelayMs, 300)                                             \
   X(bool, DebugMode, false)                                                    \
+  X(bool, CompactMode, false)                                                  \
   X(bool, RoundedCorners, true)                                                \
   X(int, CornerRadius, 14)                                                     \
   X(int, MessageScreenGap, 20)                                                 \

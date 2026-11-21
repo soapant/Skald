@@ -159,7 +159,7 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
     bool draw_band = prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    if (draw_band && !state->no_separators)
+    if (draw_band)
       draw_prompt_band(0, prompt_list_top(), state->width);
     editbox_registry_tick(state);
     editbox_registry_begin_frame(state);
@@ -241,7 +241,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     bool draw_band = prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    if (draw_band && !state->no_separators)
+    if (draw_band)
       draw_prompt_band(0, prompt_list_top(), state->width);
     editbox_registry_tick(state);
     editbox_registry_begin_frame(state);

@@ -3582,6 +3582,15 @@ bool ski_resize_window(const SkRect *rect) {
   return prompt_popup_resize_current(rect->x, rect->y, rect->w, rect->h);
 }
 
+SkRect sk_get_window_bounds(void) {
+  SkRect rect = {0};
+  WindowManager *wm = WindowManager_Get();
+  Popup *popup = wm ? WindowManager_GetTopPopup(wm) : NULL;
+  if (!prompt_popup_get_bounds(popup, &rect.x, &rect.y, &rect.w, &rect.h))
+    return (SkRect){0};
+  return rect;
+}
+
 #if defined(_WIN32)
 #define SK_PATH_SEP '\\'
 #else

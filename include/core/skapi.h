@@ -1209,6 +1209,7 @@ void sk_close_window(void);
 
 bool ski_resize_window(const SkRect *rect);
 #define sk_resize_window(...) ski_resize_window(&(SkRect){__VA_ARGS__})
+SkRect sk_get_window_bounds(void);
 
 #endif
 

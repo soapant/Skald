@@ -44,6 +44,7 @@ static const ConfigEntry config_entries[] = {
     {"TimeOutForMessages", CONFIG_INT, &TimeOutForMessages},
     {"HotkeyRepeatDelayMs", CONFIG_INT, &HotkeyRepeatDelayMs},
     {"DebugMode", CONFIG_BOOL, &DebugMode},
+    {"CompactMode", CONFIG_BOOL, &CompactMode},
     {"RoundedCorners", CONFIG_BOOL, &RoundedCorners},
     {"CornerRadius", CONFIG_INT, &CornerRadius},
     {"MessageScreenGap", CONFIG_INT, &MessageScreenGap},
