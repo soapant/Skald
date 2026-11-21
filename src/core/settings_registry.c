@@ -1511,8 +1511,8 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
         int field_w = widths[fi];
         if (ex + field_w > right)
           field_w = right - ex;
-        if (field_w < 32)
-          field_w = 32;
+        if (field_w < 16)
+          field_w = 16;
         settings_draw_rect(.x = ex - 3, .y = y + 19, .w = field_w + 6, .h = 28,
                            .color = color_lerp(COLOR_BG, RGB(0, 0, 0), 0.28f),
                            .filled = true, .radius = 6);
