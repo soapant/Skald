@@ -1654,6 +1654,8 @@ bool ski_place_editbox(const SkEditSpec *spec) {
   char *buffer = spec->buffer;
   size_t buffer_size = spec->buffer_size;
   bool primary = spec->primary || !name || !name[0];
+  if (primary && copy.w <= 0 && state)
+    copy.w = state->width;
   if (state && primary && !buffer && state->default_eb) {
     buffer = state->default_eb->filter;
     buffer_size = sizeof(state->default_eb->filter);
@@ -1665,7 +1667,7 @@ bool ski_place_editbox(const SkEditSpec *spec) {
     get_draw_offset(&dx, &dy);
     int idx =
         editbox_registry_place(state, name, buffer, buffer_size, spec->x + dx,
-                               spec->y + dy, spec->w, spec->h);
+                               spec->y + dy, copy.w, spec->h);
     if (idx >= 0) {
       PromptEditbox *entry = &state->editboxes[idx];
       if (state->active_editbox < 0)
