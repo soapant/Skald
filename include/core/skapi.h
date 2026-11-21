@@ -1066,6 +1066,13 @@ bool ski_unregister_hotkey(const char *hotkey);
 void sk_disable_global_hotkeys(void);
 void sk_enable_global_hotkeys(void);
 
+void sk_hotkey_capture_begin(void);
+bool sk_hotkey_capture_poll(char *out, size_t cap);
+const char *sk_hotkey_capture_preview(void);
+const char *sk_hotkey_capture_last(void);
+bool sk_hotkey_capture_active(void);
+void sk_hotkey_capture_end(void);
+
 int sk_hotkey_count(void);
 char *sk_hotkey_string_at(int index);
 bool sk_hotkey_taken(const char *hotkey);
