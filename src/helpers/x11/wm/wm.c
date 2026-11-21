@@ -71,7 +71,6 @@ char *wm_get_active_window_title(void) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0)
       return buffer;
   }
-  log_error("Couldn't Get Active Window Title");
   return NULL;
 }
 
@@ -123,7 +122,6 @@ bool wm_focus_by_title(const char *title) {
   if (x11_focus_window_title(title)) {
     return true;
   }
-  log_error("Couldn't Focus By Title %s", title);
   return NULL;
 }
 

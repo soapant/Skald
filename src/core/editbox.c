@@ -574,6 +574,50 @@ int editbox_registry_place(PromptState *state, const char *name, char *buffer,
   return idx;
 }
 
+#define EDITBOX_FOCUS_PREFIX "editbox:"
+
+static void editbox_focus_name(char *out, size_t out_size,
+                               const PromptEditbox *entry) {
+  snprintf(out, out_size, "%s%s", EDITBOX_FOCUS_PREFIX, entry->name);
+}
+
+static void editbox_focus_set(PromptState *state, int idx) {
+  char name[160];
+  editbox_focus_name(name, sizeof(name), &state->editboxes[idx]);
+  state->active_editbox = idx;
+  edit_state_end_selection();
+  focus_set_pseudo_named(FOCUS_KIND_EDITBOX, name);
+  editbox_registry_begin(state);
+}
+
+static void editbox_focus_activate(void *owner) {
+  PromptState *state = (PromptState *)owner;
+  const char *name = focus_name();
+  if (!state || !name)
+    return;
+  const char *prefix = EDITBOX_FOCUS_PREFIX;
+  if (strncmp(name, prefix, strlen(prefix)) != 0)
+    return;
+  PromptEditbox *entry = editbox_registry_find(state, name + strlen(prefix));
+  if (!entry)
+    return;
+  editbox_focus_set(state, (int)(entry - state->editboxes));
+}
+
+void editbox_registry_register_focus(PromptState *state) {
+  if (!state)
+    return;
+  for (int i = 0; i < state->editbox_count; i++) {
+    PromptEditbox *entry = &state->editboxes[i];
+    if (!entry->placed)
+      continue;
+    char name[160];
+    editbox_focus_name(name, sizeof(name), entry);
+    focus_register(name, FOCUS_KIND_EDITBOX, entry->x, entry->y, entry->w,
+                   entry->h, state, editbox_focus_activate, NULL);
+  }
+}
+
 void editbox_registry_set_active(PromptState *state, const char *name) {
   if (!state)
     return;
@@ -585,7 +629,11 @@ void editbox_registry_set_active(PromptState *state, const char *name) {
       log_warn("editbox set active: unknown name '%s'", name);
       return;
     }
-    state->active_editbox = (int)(entry - state->editboxes);
+    editbox_focus_set(state, (int)(entry - state->editboxes));
+    log_info("editbox set active: name='%s' idx=%d eb=%p",
+             name && name[0] ? name : "(legacy)", state->active_editbox,
+             (void *)state->eb);
+    return;
   }
   edit_state_end_selection();
   focus_set_pseudo(FOCUS_KIND_EDITBOX);
@@ -607,10 +655,7 @@ void editbox_registry_cycle(PromptState *state, int dir) {
     cur = (cur + step + state->editbox_count) % state->editbox_count;
     if (!state->editboxes[cur].placed || state->editboxes[cur].no_tab)
       continue;
-    state->active_editbox = cur;
-    edit_state_end_selection();
-    focus_set_pseudo(FOCUS_KIND_EDITBOX);
-    editbox_registry_begin(state);
+    editbox_focus_set(state, cur);
     log_info("editbox cycle: dir=%d active='%s' idx=%d", dir,
              state->editboxes[cur].name, cur);
     return;
@@ -624,8 +669,7 @@ void editbox_registry_tick(PromptState *state) {
   bool down = false;
   editbox_registry_mouse(&mx, &my, &down);
   if (state->active_editbox < 0 && state->editbox_count > 0) {
-    state->active_editbox = 0;
-    focus_set_pseudo(FOCUS_KIND_EDITBOX);
+    editbox_focus_set(state, 0);
   }
   for (int i = 0; i < state->editbox_count; i++) {
     PromptEditbox *entry = &state->editboxes[i];
@@ -634,14 +678,13 @@ void editbox_registry_tick(PromptState *state) {
     bool over = mx >= entry->x && mx < entry->x + entry->w && my >= entry->y &&
                 my < entry->y + entry->h;
     if (down && !entry->was_down && over) {
-      state->active_editbox = i;
-      edit_state_end_selection();
-      focus_set_pseudo(FOCUS_KIND_EDITBOX);
+      editbox_focus_set(state, i);
       log_info("editbox tick: clicked '%s' idx=%d rect=%d,%d %dx%d",
                entry->name, i, entry->x, entry->y, entry->w, entry->h);
     }
     entry->was_down = down;
   }
+  editbox_registry_register_focus(state);
   editbox_registry_begin(state);
 }
 

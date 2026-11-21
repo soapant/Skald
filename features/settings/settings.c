@@ -108,7 +108,7 @@ static void trigger_settings(void) {
   sk_window(.title = "Settings", .placeholder = "Search settings",
             .refresh = settings_refresh, .enter = settings_enter,
             .ctrl_enter = settings_ctrl_enter, .render = settings_render,
-            .no_separators = true);
+            .no_separators = true,.w=900,.h=640);
 }
 
 static void cfg_commit(void) {

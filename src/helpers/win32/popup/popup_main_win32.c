@@ -626,6 +626,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
                           state->height - prompt_list_top() -
                               prompt_list_bottom_margin());
+        editbox_registry_register_focus(state);
         win32_set_draw_context(paintDC);
         draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;
@@ -652,6 +653,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         focus_frame_begin(
             estate->lb != NULL, 0, prompt_list_top(), estate->width,
             estate->height - prompt_list_top() - prompt_list_bottom_margin());
+        editbox_registry_register_focus(estate);
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = estate->no_separators;
         win32_set_draw_context(paintDC);
