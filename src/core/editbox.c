@@ -170,7 +170,7 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->placeholder = in->placeholder
                          ? in->placeholder
                          : (in->state ? in->state->eb->placeholder : NULL);
-  out->placeholder_dy = Platform_EditboxPlaceholderOffset();
+  out->placeholder_dy = 0;
   out->text_color = in->text_color;
   out->bg_color = in->bg_color;
   out->font = in->font;
@@ -228,7 +228,7 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   spec->text_y = edit_y;
   spec->caret_y = editbox_caret_y(edit_y, ascent, descent, FontSize);
   spec->caret_h = prompt_caret_height();
-  spec->placeholder_dy = Platform_EditboxPlaceholderOffset();
+  spec->placeholder_dy = 0;
   spec->placeholder = state->eb->placeholder;
   spec->text_color = rgb_to_hex(COLOR_TEXT);
   spec->font = font;
