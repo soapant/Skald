@@ -9,7 +9,6 @@ typedef enum {
   X11_CLIPBOARD_BACKEND_WAYLAND = 1,
 } X11ClipboardBackendKind;
 
-X11ClipboardBackendKind x11_clipboard_backend_kind(void);
 bool x11_clipboard_backend_is_wayland(void);
 
 void x11_clipboard_backend_init(void);

@@ -6,7 +6,6 @@
 typedef struct _XDisplay Display;
 typedef union _XEvent XEvent;
 
-bool x11_clipboard_available(void);
 void x11_clipboard_ensure_started(void);
 void x11_clipboard_shutdown(void);
 int x11_clipboard_set_text(const char *text);

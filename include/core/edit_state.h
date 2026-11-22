@@ -13,6 +13,5 @@ void edit_state_begin_selection(int cursor);
 void edit_state_update_selection(int cursor);
 void edit_state_end_selection(void);
 bool edit_state_get_selection(int *out_start, int *out_end);
-void edit_state_reset(void);
 
 #endif

@@ -422,10 +422,3 @@ int global_scroll_pending(void) {
   GSCROLL_UNLOCK();
   return n;
 }
-
-unsigned long global_scroll_dropped(void) {
-  GSCROLL_LOCK();
-  unsigned long d = gscroll_dropped;
-  GSCROLL_UNLOCK();
-  return d;
-}

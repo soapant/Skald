@@ -170,8 +170,6 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                          .filled = false});
 }
 
-FontHandle s_font;
-
 static void checkbox_focus_outline(const CheckboxSpec *spec) {
   if (!spec || !spec->focused)
     return;

@@ -481,17 +481,6 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
   }
 }
 
-void editbox_render(EditboxSpec *spec, EditboxLayout *out) {
-  if (!spec) {
-    return;
-  }
-  EditboxLayout layout;
-  editbox_layout(spec, &layout);
-  editbox_draw(spec, &layout, EDITBOX_PART_ALL);
-  if (out)
-    *out = layout;
-}
-
 static void editbox_registry_mouse(int *out_x, int *out_y, bool *out_down) {
   *out_x = -9999;
   *out_y = -9999;

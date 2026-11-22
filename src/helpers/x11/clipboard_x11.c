@@ -716,5 +716,4 @@ char *x11_clipboard_get_text(void) {
 #if !defined(SKALD_WAYLAND_SESSION)
 #include "helpers/x11/clipboard_x11.h"
 
-bool x11_clipboard_available(void) { return true; }
 #endif

@@ -1278,8 +1278,6 @@ void Platform_CleanupPlatformResources(void) {
     extern void x11_wm_cleanup_cursor_display(void);
     x11_wm_cleanup_cursor_display();
   }
-  extern void FcFini(void);
-  FcFini();
 }
 
 int Platform_InitializeTrayIcon(void) { return 0; }

@@ -21,12 +21,6 @@ void edit_state_end_selection(void) {
   sel.head = 0;
 }
 
-void edit_state_reset(void) {
-  sel.active = false;
-  sel.anchor = 0;
-  sel.head = 0;
-}
-
 bool edit_state_get_selection(int *out_start, int *out_end) {
   if (!sel.active)
     return false;

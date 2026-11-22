@@ -276,9 +276,3 @@ void event_bus_trigger(Event event) {
   }
 }
 
-void WindowManager_Reset(void) {
-  popup_push_in_progress = false;
-  window_manager = NULL;
-  arrfree(event_registry[0]);
-  arrfree(event_registry[1]);
-}
