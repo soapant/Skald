@@ -185,7 +185,6 @@ int editbox_scroll_offset(const EditboxSpec *spec);
 void editbox_layout(EditboxSpec *spec, EditboxLayout *out);
 void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                   int parts);
-void editbox_render(EditboxSpec *spec, EditboxLayout *out);
 
 void editbox_registry_begin(PromptState *state);
 void editbox_registry_begin_frame(PromptState *state);

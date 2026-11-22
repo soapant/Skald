@@ -574,15 +574,6 @@ void widget_hide(Widget *widget) {
   render_thread_post(widget_apply_hide, widget);
 }
 
-void widget_set_render(Widget *widget, WidgetRenderFn render) {
-  if (!widget_valid(widget))
-    return;
-  widget->render = render;
-  if (widget_is_valid(widget->win)) {
-    widget_invalidate(widget->win);
-  }
-}
-
 static bool widget_apply_fps(PlatformWidget *widget, int fps) {
   PlatformWidgetBase *base = (PlatformWidgetBase *)widget;
   if (!widget || base->dead)

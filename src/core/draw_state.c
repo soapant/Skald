@@ -25,8 +25,6 @@ bool draw_state_end_render(void) {
   return true;
 }
 
-void draw_state_reset(void) { memset(draw_state_get(), 0, sizeof(DrawCanvas)); }
-
 void draw_state_begin_measure(void) {
   DrawCanvas *ds = draw_state_get();
   ds->measuring = true;

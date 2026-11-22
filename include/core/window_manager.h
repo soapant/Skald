@@ -52,7 +52,6 @@ WindowManager *WindowManager_Create(void);
 void WindowManager_Destroy(WindowManager *wm);
 int WindowManager_Run(WindowManager *wm);
 WindowManager *WindowManager_Get(void);
-void WindowManager_Reset(void);
 Popup *WindowManager_PushPopup(WindowManager *wm, Popup *popup);
 void WindowManager_PopPopup(WindowManager *wm);
 void WindowManager_DrainSelectionComplete(WindowManager *wm);
@@ -75,8 +74,6 @@ int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h);
 bool prompt_popup_resize_current(int x, int y, int w, int h);
 bool prompt_popup_resize_current_animated(int x, int y, int w, int h,
                                           int duration_ms);
-bool prompt_popup_resize_animation_active(void);
-void prompt_popup_tick_resize_animation(void);
 void prompt_popup_tick_resize_animation_popup(Popup *p);
 CloseCallback prompt_popup_take_on_close(Popup *p);
 PromptState *prompt_popup_find_state(const ListBox *lb);

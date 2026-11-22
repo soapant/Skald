@@ -73,5 +73,4 @@ void global_scroll_push(const ScrollEvent *ev);
 bool global_scroll_pop(ScrollEvent *out);
 void global_scroll_clear(void);
 int global_scroll_pending(void);
-unsigned long global_scroll_dropped(void);
 #endif

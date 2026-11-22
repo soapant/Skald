@@ -10,10 +10,6 @@
 static X11ClipboardBackendKind s_backend = X11_CLIPBOARD_BACKEND_X11;
 static bool s_initialized = false;
 
-X11ClipboardBackendKind x11_clipboard_backend_kind(void) {
-  return s_backend;
-}
-
 bool x11_clipboard_backend_is_wayland(void) {
   return s_backend == X11_CLIPBOARD_BACKEND_WAYLAND;
 }

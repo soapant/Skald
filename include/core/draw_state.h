@@ -29,7 +29,6 @@ bool draw_state_begin_render(void);
 bool draw_state_end_render(void);
 
 void draw_state_begin_measure(void);
-void draw_state_reset(void);
 void draw_state_track_measure(int x, int y, int w, int h);
 void draw_state_end_measure(int *out_w, int *out_h);
 

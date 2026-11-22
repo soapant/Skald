@@ -105,7 +105,6 @@ bool widget_valid(const Widget *widget);
 Pos Widget_GetPos(const char *name);
 void widget_show(Widget *widget);
 void widget_hide(Widget *widget);
-void widget_set_render(Widget *widget, WidgetRenderFn render);
 void widget_set_fps(PlatformWidget *window, int fps);
 
 bool widget_is_valid(const PlatformWidget *widget);
