@@ -939,13 +939,41 @@ static void call_feature_shutdown(LibHandle handle) {
 
 void feature_loader_shutdown(void) {
   LOCK();
+  int count = feature_count;
+  LibHandle *handles = NULL;
+  if (count > 0) {
+    handles = (LibHandle *)calloc((size_t)count, sizeof(*handles));
+    if (!handles)
+      log_error("feature_loader_shutdown: cannot snapshot feature handles");
+  }
+  for (int i = 0; i < count && handles; i++)
+    handles[i] = features[i].handle;
+  UNLOCK();
+
+  if (handles) {
+    for (int i = 0; i < count; i++) {
+      if (handles[i])
+        call_feature_shutdown(handles[i]);
+    }
+    free(handles);
+  }
+
+  LOCK();
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
-      call_feature_shutdown(features[i].handle);
       purge_owner_set(NULL, features[i].path, widget_bump_generation());
-      features[i].uniq[0] = '\0';
+      Platform_UnloadLibrary(features[i].handle);
+      if (features[i].uniq[0])
+        file_remove_path(features[i].uniq);
       features[i].handle = 0;
+      features[i].uniq[0] = '\0';
     }
+  }
+  for (int i = 0; i < retired_count; i++) {
+    purge_owner_set(retired[i].owner, NULL, retired[i].owner_gen);
+    Platform_UnloadLibrary(retired[i].handle);
+    if (retired[i].uniq[0])
+      file_remove_path(retired[i].uniq);
   }
   free(retired);
   retired = NULL;
@@ -956,6 +984,8 @@ void feature_loader_shutdown(void) {
   features = NULL;
   feature_cap = 0;
   UNLOCK();
+
+  feature_loader_drain_retired_unloads();
   log_info("feature_loader_shutdown completed");
 }
 

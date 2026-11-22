@@ -138,5 +138,5 @@ ConfigTomlStatus manifest_parse_file_ex(const char *path, const char *name,
 bool manifest_parse_file(const char *path, const char *name,
                          FeatureManifest *out) {
   ConfigTomlStatus st = manifest_parse_file_ex(path, name, out, NULL);
-  return st == CONFIG_TOML_OK || st == CONFIG_TOML_ERR_PARSE;
+  return st == CONFIG_TOML_OK;
 }

@@ -71,7 +71,11 @@ static const char *get_default_browser(int slot) {
     break;
   }
   free(browser_files.files);
-  StringList l = File_ReadLines("~/.config/mimeapps.list");
+  char mimeapps_path[1024];
+  if (!expand_path("~/.config/mimeapps.list", mimeapps_path,
+                   sizeof(mimeapps_path)))
+    return default_apps_x11[slot];
+  StringList l = File_ReadLines(mimeapps_path);
   for (size_t i = 0; i < l.count; i++) {
     const char *line = l.items[i];
     if (!string_contains_ci(line, "text/html"))
@@ -104,7 +108,10 @@ static const char *get_default_browser(int slot) {
 static const char *get_default_shell(int slot) {
   default_apps_x11[slot][0] = '\0';
   const char *shell = getenv("SHELL");
-  const char *name = strrchr(shell, '/') ? strrchr(shell, '/') + 1 : shell;
+  if (!shell || !shell[0])
+    return default_apps_x11[slot];
+  const char *slash = strrchr(shell, '/');
+  const char *name = slash ? slash + 1 : shell;
   snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", name);
   return default_apps_x11[slot];
 }

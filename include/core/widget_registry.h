@@ -51,8 +51,6 @@ typedef struct WidgetState {
   bool hovered;
 } WidgetState;
 
-typedef void (*WidgetRenderFn)(WidgetState *state);
-
 typedef struct Widget Widget;
 struct Widget {
   char name[WIDGET_NAME_MAX];

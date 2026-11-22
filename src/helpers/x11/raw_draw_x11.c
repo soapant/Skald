@@ -228,9 +228,8 @@ void x11_raw_line_flush(void) {
   raw_map_x0 = x0;
   raw_map_pitch = pitch;
   raw_map_xd = xd;
-  for (int k = 0; k < nu; k++)
-    if (owned)
-      Platform_DestroyFont(raw_font);
+  if (owned)
+    Platform_DestroyFont(raw_font);
 }
 
 bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
@@ -369,13 +368,8 @@ void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
                               Visual *vis, Colormap cmap, int y, int h,
                               bool selected) {
   if (selected) {
-    if (state->no_bg) {
-      x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                    rgb_to_hex(COLOR_SELECTED_TEXT));
-    } else {
-      x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                    rgb_to_hex(COLOR_SELECTED_TEXT));
-    }
+    x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
+                                  rgb_to_hex(COLOR_SELECTED_TEXT));
   }
 }
 

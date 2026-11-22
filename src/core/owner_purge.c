@@ -2,6 +2,7 @@
 
 #include "core/cap_registry.h"
 #include "core/cc_registry.h"
+#include "core/remap_manager.h"
 #include "core/settings_registry.h"
 #include "core/scroll_area.h"
 #include "core/hover_widget.h"
@@ -17,6 +18,7 @@ void purge_owner_set(const char *path_a, const char *path_b,
                      unsigned widget_gen) {
   cap_purge_owner(path_a, path_b);
   hotkey_purge_owner(path_a, path_b);
+  remap_purge_owner(path_a, path_b);
   config_hotkey_registry_purge_owner(path_a, path_b);
   run_every_purge_owner(path_a, path_b);
   snippet_purge_owner(path_a, path_b);

@@ -73,5 +73,5 @@ int main(void) {
   RUN(search_index_query_empty_and_no_match);
   RUN(search_index_query_ranks_exact_match_first);
   RUN(search_index_activate_uses_hit_source);
-  return 0;
+  return TEST_SUMMARY() != 0 ? 1 : 0;
 }

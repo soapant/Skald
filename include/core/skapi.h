@@ -1251,8 +1251,6 @@ bool ski_resize_window(const SkRect *rect);
 bool ski_resize_window_animated(const SkRect *rect, int duration_ms);
 SkRect sk_get_window_bounds(void);
 
-#endif
-
 bool sk_copy_to_clipboard_fmt(const char *fmt, ...);
 bool sk_copy_file_path_fmt(const char *fmt, ...);
 bool sk_paste_fmt(const char *fmt, ...);
@@ -1317,3 +1315,5 @@ bool sk_hotkey_taken_fmt(const char *fmt, ...);
 void sk_reload_feature_fmt(const char *fmt, ...);
 void sk_cap_register_abi_fmt(unsigned abi, void *fn, const char *fmt, ...);
 void sk_cap_bind_declare_fmt(void *consumer, const char *fmt, ...);
+
+#endif

@@ -29,14 +29,14 @@ static int hotkey_total = 0;
 static int hotkey_capacity = 0;
 static bool hotkeys_suspended = false;
 
-static void hotkey_binding_free_blacklist(HotkeyBinding *b) {
+static void hotkey_binding_free_window_list(HotkeyBinding *b) {
   if (!b)
     return;
-  for (int i = 0; i < b->blacklist_count; i++)
-    free(b->blacklist[i]);
-  free(b->blacklist);
-  b->blacklist = NULL;
-  b->blacklist_count = 0;
+  for (int i = 0; i < b->window_count; i++)
+    free(b->window_list[i]);
+  free(b->window_list);
+  b->window_list = NULL;
+  b->window_count = 0;
 }
 
 void hotkey_set_suspended(bool suspended) { hotkeys_suspended = suspended; }
@@ -281,13 +281,13 @@ bool hotkey_has_keyboard_binding(void) {
   return false;
 }
 
-static bool hotkey_blacklist_match(const HotkeyBinding *b, const char *title) {
-  if (!b->blacklist || b->blacklist_count == 0)
+static bool hotkey_window_list_match(const HotkeyBinding *b, const char *title) {
+  if (!b->window_list || b->window_count == 0)
     return false;
-  for (int j = 0; j < b->blacklist_count; j++) {
-    if (b->blacklist[j][0] == '\0')
+  for (int j = 0; j < b->window_count; j++) {
+    if (b->window_list[j][0] == '\0')
       continue;
-    if (title && string_contains_ci(title, b->blacklist[j]))
+    if (title && string_contains_ci(title, b->window_list[j]))
       return true;
   }
   return false;
@@ -302,15 +302,15 @@ bool hotkey_mouse_button_bound(int btn) {
       continue;
     const HotkeyBinding *b = &hotkeys[i];
     if (b->whitelist) {
-      if (!b->blacklist || b->blacklist_count == 0)
+      if (!b->window_list || b->window_count == 0)
         continue;
       const char *title = Platform_GetActiveWindowId();
-      if (!hotkey_blacklist_match(b, title))
+      if (!hotkey_window_list_match(b, title))
         continue;
     } else {
-      if (b->blacklist && b->blacklist_count > 0) {
+      if (b->window_list && b->window_count > 0) {
         const char *title = Platform_GetActiveWindowId();
-        if (hotkey_blacklist_match(b, title))
+        if (hotkey_window_list_match(b, title))
           continue;
       }
     }
@@ -367,7 +367,7 @@ bool hotkey_register_internal(HotkeyBinding binding) {
   for (int i = 0; i < hotkey_total; i++) {
     if (hotkeys[i].vk_code == binding.vk_code &&
         hotkeys[i].modifiers == binding.modifiers) {
-      hotkey_binding_free_blacklist(&hotkeys[i]);
+      hotkey_binding_free_window_list(&hotkeys[i]);
       hotkeys[i] = binding;
       return true;
     }
@@ -389,7 +389,7 @@ bool hotkey_unregister_internal(int vk_code, int modifiers) {
   bool found = false;
   for (int i = 0; i < hotkey_total; i++) {
     if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers) {
-      hotkey_binding_free_blacklist(&hotkeys[i]);
+      hotkey_binding_free_window_list(&hotkeys[i]);
       found = true;
       continue;
     }
@@ -408,7 +408,7 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
     if (owner_module_matches(hotkeys[i].owner, path_a, path_b)) {
       log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)",
                hotkeys[i].vk_code, hotkeys[i].modifiers);
-      hotkey_binding_free_blacklist(&hotkeys[i]);
+      hotkey_binding_free_window_list(&hotkeys[i]);
       continue;
     }
     hotkeys[n++] = hotkeys[i];
@@ -480,24 +480,24 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
   bool title_fetched = false;
 
   if (!b->whitelist) {
-    if (b->blacklist && b->blacklist_count > 0) {
+    if (b->window_list && b->window_count > 0) {
       if (!title_fetched) {
         title = Platform_GetActiveWindowId();
         title_fetched = true;
       }
-      if (hotkey_blacklist_match(b, title))
+      if (hotkey_window_list_match(b, title))
         return false;
     }
     return true;
   }
 
-  if (!b->blacklist || b->blacklist_count == 0)
+  if (!b->window_list || b->window_count == 0)
     return false;
   if (!title_fetched) {
     title = Platform_GetActiveWindowId();
     title_fetched = true;
   }
-  return hotkey_blacklist_match(b, title);
+  return hotkey_window_list_match(b, title);
 }
 
 bool hotkey_process(int vk_code, int modifiers) {

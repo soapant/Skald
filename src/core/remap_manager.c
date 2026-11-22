@@ -1,4 +1,5 @@
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_owner.h"
 #include "core/remap_manager.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
@@ -20,6 +21,7 @@ typedef struct {
   bool whitelist;
   char *windows[REMAP_MAX_WINDOWS];
   int window_count;
+  char owner[OWNER_PATH_MAX];
 } RemapBinding;
 
 static RemapBinding *remaps;
@@ -29,6 +31,30 @@ static int phys_vk[256] = {0};
 static int virt_vk[256] = {0};
 static unsigned long long key_seq[256] = {0};
 static unsigned long long seq_counter = 0;
+
+static bool *scratch_before;
+static bool *scratch_after;
+static bool *scratch_allowed;
+static size_t scratch_cap = 0;
+
+static bool remap_scratch_reserve(size_t n) {
+  if (n <= scratch_cap)
+    return true;
+  bool *p = realloc(scratch_before, n * sizeof(*p));
+  if (!p)
+    return false;
+  scratch_before = p;
+  p = realloc(scratch_after, n * sizeof(*p));
+  if (!p)
+    return false;
+  scratch_after = p;
+  p = realloc(scratch_allowed, n * sizeof(*p));
+  if (!p)
+    return false;
+  scratch_allowed = p;
+  scratch_cap = n;
+  return true;
+}
 
 bool remap_has_bindings(void) { return remap_count > 0; }
 
@@ -41,11 +67,12 @@ static bool remap_window_eq(const char *a, const char *b) {
 }
 
 bool remap_register_internal(const char *src, const char *dst, bool whitelist,
-                             const char *const *windows) {
+                             const char *const *windows, void *caller) {
   if (!src || !dst)
     return false;
   RemapBinding b = {0};
   b.whitelist = whitelist;
+  owner_resolve_for_func(caller, b.owner, sizeof(b.owner));
   if (windows) {
     for (int i = 0; windows[i] != NULL && b.window_count < REMAP_MAX_WINDOWS;
          i++) {
@@ -92,7 +119,8 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
     const RemapBinding *e = &remaps[i];
     if (e->src_mods == b.src_mods && e->dst_mods == b.dst_mods &&
         e->dst_vk == b.dst_vk && e->src_vk_count == b.src_vk_count &&
-        e->whitelist == b.whitelist && e->window_count == b.window_count) {
+        e->whitelist == b.whitelist && e->window_count == b.window_count &&
+        strcmp(e->owner, b.owner) == 0) {
       bool same = true;
       for (int k = 0; k < b.src_vk_count; k++)
         if (e->src_vks[k] != b.src_vks[k]) {
@@ -399,17 +427,16 @@ bool remap_handle_vk(int vk_code, int value) {
     return false;
   if (value == 2)
     return false;
-  bool *active_before = NULL;
-  bool *active_after = NULL;
-  bool *allowed = NULL;
-  if (remap_count > 0) {
-    memset(arraddnptr(active_before, remap_count), 0,
-           remap_count * sizeof(*active_before));
-    memset(arraddnptr(active_after, remap_count), 0,
-           remap_count * sizeof(*active_after));
-    memset(arraddnptr(allowed, remap_count), 1,
-           remap_count * sizeof(*allowed));
+  if (!remap_scratch_reserve(remap_count)) {
+    remap_update_phys(vk_code, value);
+    return false;
   }
+  bool *active_before = scratch_before;
+  bool *active_after = scratch_after;
+  bool *allowed = scratch_allowed;
+  memset(active_before, 0, remap_count * sizeof(*active_before));
+  memset(active_after, 0, remap_count * sizeof(*active_after));
+  memset(allowed, 1, remap_count * sizeof(*allowed));
   for (size_t i = 0; i < remap_count; i++)
     active_before[i] = binding_active(&remaps[i]);
 
@@ -484,12 +511,26 @@ bool remap_handle_vk(int vk_code, int value) {
         swallow = true;
     }
   }
-  arrfree(active_before);
-  arrfree(active_after);
-  arrfree(allowed);
   return swallow;
 }
 
 bool remap_should_swallow_vk(int vk_code, int value) {
   return remap_handle_vk(vk_code, value);
+}
+
+void remap_purge_owner(const char *path_a, const char *path_b) {
+  if (owner_purge_inactive(path_a, path_b))
+    return;
+  size_t n = 0;
+  for (size_t i = 0; i < remap_count; i++) {
+    if (owner_module_matches(remaps[i].owner, path_a, path_b)) {
+      remap_release_binding(&remaps[i], true);
+      for (int k = 0; k < remaps[i].window_count; k++)
+        free(remaps[i].windows[k]);
+      continue;
+    }
+    remaps[n++] = remaps[i];
+  }
+  if (n < remap_count)
+    arrsetlen(remaps, n);
 }

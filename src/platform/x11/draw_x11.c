@@ -525,7 +525,6 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
     return blit_argb_buf(buf, bw, bh, (int)x - (bw - (int)w) / 2,
                          (int)y - (bh - (int)h) / 2, owned);
   }
-  return true;
 }
 
 static unsigned char *line_argb_buffer(const int x1, const int y1, const int x2,

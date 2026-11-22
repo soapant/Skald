@@ -11,9 +11,10 @@ typedef bool (*HotkeyCondition)(void);
 typedef struct {
   int vk_code;
   int modifiers;
-  char **blacklist;
-  int blacklist_count;
+  char **window_list;
+  int window_count;
   bool whitelist;
+  bool valid;
   HotkeyCallback hotkey_callback;
   HotkeyCallbackUd hotkey_callback_ud;
   bool (*should_swallow)(void);

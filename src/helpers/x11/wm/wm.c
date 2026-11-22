@@ -122,7 +122,7 @@ bool wm_focus_by_title(const char *title) {
   if (x11_focus_window_title(title)) {
     return true;
   }
-  return NULL;
+  return false;
 }
 
 char *wm_paste(const char *content) {

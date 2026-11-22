@@ -231,7 +231,7 @@ static bool section_apply(const char *path, const char *section,
     }
   }
 
-  char enc_key[512], enc_val[1100];
+  char enc_key[512] = {0}, enc_val[1100] = {0};
   if (!is_clear) {
     if (!section_encode_key(enc_key, sizeof(enc_key), name)) {
       free(lines);

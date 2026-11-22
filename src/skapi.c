@@ -553,7 +553,8 @@ bool ski_register_remapping(const SkRemappingSpec *spec) {
   const char *const *windows;
   bool whitelist;
   resolve_window_list(wl, bl, &windows, &whitelist);
-  return remap_register_internal(spec->src, spec->dst, whitelist, windows);
+  return remap_register_internal(spec->src, spec->dst, whitelist, windows,
+                                 (void *)__builtin_return_address(0));
 }
 
 static void snippet_fire(int idx, int del) {
@@ -666,6 +667,8 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   resolve_window_list(wl, bl, &bw, &whitelist);
   HotkeyBinding binding = hotkey_convert_into_binding(
       (char *)spec->hotkey, spec->cb, NULL, bw, whitelist, spec->ud);
+  if (!binding.valid)
+    return false;
   binding.hotkey_callback_ud = spec->cb_ud;
   binding.hold = false;
   binding.should_swallow = spec->should_swallow;
@@ -676,7 +679,9 @@ bool ski_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
   HotkeyBinding binding = hotkey_convert_into_binding((char *)hotkey, NULL,
-                                                      NULL, NULL, false, NULL);
+                                                       NULL, NULL, false, NULL);
+  if (!binding.valid)
+    return false;
   return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
 }
 
@@ -4162,6 +4167,12 @@ static bool config_hotkey_binding_bind(ConfigHotkeyBinding *b) {
   HotkeyBinding binding =
       hotkey_convert_into_binding(hotkey, b->cb, NULL, windows, whitelist,
                                   b->ud);
+  if (!binding.valid) {
+    arrfree(wl);
+    arrfree(bl);
+    free(hotkey);
+    return false;
+  }
   binding.hotkey_callback_ud = b->cb_ud;
   binding.hold = false;
   binding.should_swallow = b->should_swallow;

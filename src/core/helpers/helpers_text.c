@@ -63,7 +63,10 @@ hotkey_convert_into_binding(char *hotkey_string,
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 
-  hotkey_string_parse(hotkey_string, &key);
+  output.valid = hotkey_string_parse(hotkey_string, &key);
+  if (!output.valid)
+    log_warn("hotkey_convert_into_binding: invalid hotkey string '%s'",
+             hotkey_string ? hotkey_string : "(null)");
 
   output.vk_code = key.vk_code;
   output.modifiers = key.mods;
@@ -76,35 +79,35 @@ hotkey_convert_into_binding(char *hotkey_string,
     int cnt = 0;
     while (optional_blacklistedwindows[cnt] != NULL)
       cnt++;
-    output.blacklist_count = cnt;
+    output.window_count = cnt;
 
     if (cnt > 0) {
-      output.blacklist = (char **)calloc((size_t)cnt, sizeof(char *));
-      if (!output.blacklist) {
+      output.window_list = (char **)calloc((size_t)cnt, sizeof(char *));
+      if (!output.window_list) {
         log_error("hotkey_convert_into_binding: blacklist alloc failed (%d)",
                   cnt);
-        output.blacklist_count = 0;
+        output.window_count = 0;
         return output;
       }
       for (int i = 0; i < cnt; i++) {
-        output.blacklist[i] = strdup(optional_blacklistedwindows[i]);
-        if (!output.blacklist[i]) {
+        output.window_list[i] = strdup(optional_blacklistedwindows[i]);
+        if (!output.window_list[i]) {
           log_error("hotkey_convert_into_binding: strdup failed for entry %d",
                     i);
           for (int j = 0; j < i; j++)
-            free(output.blacklist[j]);
-          free(output.blacklist);
-          output.blacklist = NULL;
-          output.blacklist_count = 0;
+            free(output.window_list[j]);
+          free(output.window_list);
+          output.window_list = NULL;
+          output.window_count = 0;
           return output;
         }
       }
     } else {
-      output.blacklist = NULL;
+      output.window_list = NULL;
     }
   } else {
-    output.blacklist = NULL;
-    output.blacklist_count = 0;
+    output.window_list = NULL;
+    output.window_count = 0;
   }
   return output;
 }
