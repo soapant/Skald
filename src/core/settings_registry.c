@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -697,6 +698,20 @@ static SettingsEntry *s_dispatch_entry;
 
 static void st_dup(char *dst, size_t cap, const char *src) {
   snprintf(dst, cap, "%s", src ? src : "");
+}
+
+static void settings_pretty_title(const char *src, char *dst, size_t cap) {
+  if (!dst || cap == 0)
+    return;
+  size_t o = 0;
+  for (size_t i = 0; src && src[i] && o + 1 < cap; i++) {
+    if (i && isupper((unsigned char)src[i]) &&
+        (islower((unsigned char)src[i - 1]) ||
+         isdigit((unsigned char)src[i - 1])))
+      dst[o++] = ' ';
+    dst[o++] = src[i];
+  }
+  dst[o] = '\0';
 }
 
 static void settings_entry_builtin_render(SettingsEntry *entry, void *ud);
@@ -1491,6 +1506,8 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
 
   for (int i = 0; i < entry->block_count; i++) {
     SettingsBlock *b = &entry->blocks[i];
+    char pretty_title[512];
+    settings_pretty_title(b->title, pretty_title, sizeof(pretty_title));
     if (scoped_search && !block_match[i])
       continue;
     if (!capturing && cursor < view_top) {
@@ -1500,7 +1517,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
     if (!capturing && cursor >= PromptH - draw_state_get()->off_y)
       break;
     if (capturing)
-      search_index_push_context(NULL, i, b->title);
+      search_index_push_context(NULL, i, pretty_title);
     s_dispatch_entry = entry;
     s_dispatch_index = i;
     focus_ctx_remember(b->title, entry, i, -1);
@@ -1509,7 +1526,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
                        .color = color_lerp(COLOR_BG, RGB(205, 205, 205), 0.05f),
                        .filled = true, .radius = 6);
     if (b->title[0])
-      settings_draw_text(.text = b->title, .x = x + 10, .y = y + 8,
+      settings_draw_text(.text = pretty_title, .x = x + 10, .y = y + 8,
                          .color =
                              color_lerp(COLOR_BG, RGB(255, 255, 255), 0.82f),
                          .align = "LEFT");
@@ -1598,7 +1615,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
       if (capturing) {
         for (int oi = 0; oi < count; oi++)
           search_index_add_text(NULL, options ? options[oi] : NULL,
-                                SEARCH_KIND_DROPDOWN, b->title, NULL);
+                                SEARCH_KIND_DROPDOWN, pretty_title, NULL);
       }
       if (b->selected >= count)
         b->selected = count > 0 ? 0 : -1;
