@@ -1,6 +1,7 @@
-#include <string.h>
-#include <stdlib.h>
+#include <stdatomic.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "helpers/helpers_render_thread.h"
 #include "helpers/helpers_monitor.h"
@@ -11,6 +12,7 @@
 #define RT_IDLE_SLEEP_US 20000
 #define RT_DEFAULT_FPS 1
 #define RT_MAX_SLEEP_US 16000
+#define RT_SYNC_TIMEOUT_MS 5000
 
 typedef struct {
   RenderFrameFn fn;
@@ -21,10 +23,11 @@ static RtCallback *callbacks;
 static RtCallback *pending;
 #define count arrlenu(callbacks)
 #define pending_count arrlenu(pending)
-static volatile bool running = false;
-static volatile bool quit = false;
+
+static atomic_bool g_running = false;
+static atomic_bool g_quit = false;
+static atomic_int g_frame_rate = RT_DEFAULT_FPS;
 static __thread bool is_thread = false;
-static int frame_rate = RT_DEFAULT_FPS;
 
 static void rt_run_pending(void) {
   Platform_RenderThreadLock();
@@ -42,7 +45,7 @@ static void rt_run_pending(void) {
 
 void render_thread_main(void) {
   is_thread = true;
-  while (!quit) {
+  while (!atomic_load_explicit(&g_quit, memory_order_acquire)) {
     RtCallback *snap = NULL;
     size_t n = 0;
     Platform_RenderThreadLock();
@@ -59,39 +62,55 @@ void render_thread_main(void) {
     }
     arrfree(snap);
 
-    long us = (n == 0)
-                  ? RT_IDLE_SLEEP_US
-                  : (1000000L / (frame_rate > 0 ? frame_rate : RT_DEFAULT_FPS));
+    int fps = atomic_load_explicit(&g_frame_rate, memory_order_relaxed);
+    long us = (n == 0) ? RT_IDLE_SLEEP_US
+                       : (1000000L / (fps > 0 ? fps : RT_DEFAULT_FPS));
     if (us > RT_MAX_SLEEP_US)
       us = RT_MAX_SLEEP_US;
     Platform_RenderThreadLock();
-    if (!quit && pending_count == 0)
+    if (!atomic_load_explicit(&g_quit, memory_order_acquire) &&
+        pending_count == 0)
       Platform_RenderThreadWaitTimed(us);
     Platform_RenderThreadUnlock();
   }
 }
 
 bool render_thread_ensure_started(int fps) {
-  if (fps > frame_rate)
-    frame_rate = fps;
-  if (running)
+  int rate = atomic_load_explicit(&g_frame_rate, memory_order_relaxed);
+  while (fps > rate &&
+         !atomic_compare_exchange_weak_explicit(&g_frame_rate, &rate, fps,
+                                                memory_order_relaxed,
+                                                memory_order_relaxed)) {
+  }
+  if (atomic_load_explicit(&g_running, memory_order_acquire))
     return true;
-  quit = false;
+  atomic_store_explicit(&g_quit, false, memory_order_release);
   if (!Platform_RenderThreadStart()) {
     log_warn("render thread: backend start failed, widget frames disabled");
     return false;
   }
-  running = true;
+  atomic_store_explicit(&g_running, true, memory_order_release);
   return true;
 }
 
 void render_thread_stop(void) {
-  if (!running)
+  if (!atomic_load_explicit(&g_running, memory_order_acquire))
     return;
-  quit = true;
+  atomic_store_explicit(&g_quit, true, memory_order_release);
   Platform_RenderThreadWakeAll();
   Platform_RenderThreadJoin();
-  running = false;
+  atomic_store_explicit(&g_running, false, memory_order_release);
+
+  Platform_RenderThreadLock();
+  RtCallback *undelivered = pending;
+  pending = NULL;
+  Platform_RenderThreadUnlock();
+  for (size_t i = 0; i < arrlenu(undelivered); i++) {
+    if (undelivered[i].fn)
+      undelivered[i].fn(undelivered[i].ud);
+  }
+  arrfree(undelivered);
+
   Platform_RenderThreadLock();
   arrfree(callbacks);
   arrfree(pending);
@@ -99,7 +118,8 @@ void render_thread_stop(void) {
 }
 
 bool render_thread_post(RenderFrameFn fn, void *ud) {
-  if (!fn || !running)
+  if (!fn || !atomic_load_explicit(&g_running, memory_order_acquire) ||
+      atomic_load_explicit(&g_quit, memory_order_acquire))
     return false;
   Platform_RenderThreadLock();
   RtCallback *e = arraddnptr(pending, 1);
@@ -111,14 +131,16 @@ bool render_thread_post(RenderFrameFn fn, void *ud) {
 }
 
 void render_thread_wake(void) {
-  if (!running)
+  if (!atomic_load_explicit(&g_running, memory_order_acquire))
     return;
   Platform_RenderThreadLock();
   Platform_RenderThreadWakeOne();
   Platform_RenderThreadUnlock();
 }
 
-bool render_thread_is_running(void) { return running; }
+bool render_thread_is_running(void) {
+  return atomic_load_explicit(&g_running, memory_order_acquire);
+}
 
 void *render_thread_display(void) { return Platform_RenderThreadDisplay(); }
 
@@ -151,20 +173,27 @@ bool render_thread_remove_frame_callback(RenderFrameFn fn, const void *ud) {
   return removed;
 }
 
+typedef enum {
+  RT_SYNC_PENDING = 0,
+  RT_SYNC_DONE,
+  RT_SYNC_ABANDONED
+} RtSyncState;
+
 typedef struct {
-  volatile int done;
-  volatile int abandoned;
+  atomic_int state;
 } RtSync;
 
 static void rt_sync_mark(void *ud) {
   RtSync *s = (RtSync *)ud;
   if (!s)
     return;
-  if (s->abandoned) {
-    free(s);
+  int expected = RT_SYNC_PENDING;
+  if (atomic_compare_exchange_strong_explicit(&s->state, &expected, RT_SYNC_DONE,
+                                              memory_order_acq_rel,
+                                              memory_order_acquire))
     return;
-  }
-  s->done = 1;
+  if (expected == RT_SYNC_ABANDONED)
+    free(s);
 }
 
 void render_thread_sync(void) {
@@ -175,22 +204,28 @@ void render_thread_sync(void) {
   RtSync *s = (RtSync *)malloc(sizeof(*s));
   if (!s)
     return;
-  s->done = 0;
-  s->abandoned = 0;
+  atomic_store_explicit(&s->state, RT_SYNC_PENDING, memory_order_relaxed);
   if (!render_thread_post(rt_sync_mark, s)) {
     free(s);
     return;
   }
   long long start = Platform_GetWallClockMs();
   for (;;) {
-    if (s->done) {
+    int state = atomic_load_explicit(&s->state, memory_order_acquire);
+    if (state == RT_SYNC_DONE) {
       free(s);
       return;
     }
-    long long now = Platform_GetWallClockMs();
-    if (now - start >= 5000) {
+    if (state == RT_SYNC_ABANDONED)
+      return;
+    if (Platform_GetWallClockMs() - start >= RT_SYNC_TIMEOUT_MS) {
       log_warn("render thread sync timed out after 5s");
-      s->abandoned = 1;
+      int expected = RT_SYNC_PENDING;
+      atomic_compare_exchange_strong_explicit(
+          &s->state, &expected, RT_SYNC_ABANDONED, memory_order_acq_rel,
+          memory_order_acquire);
+      if (expected == RT_SYNC_DONE)
+        free(s);
       return;
     }
     Platform_RenderThreadMiniSleep(1);

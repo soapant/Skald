@@ -1,7 +1,6 @@
 #ifndef HELPERS_TEXT_H
 #define HELPERS_TEXT_H
 
-#include "helpers/helpers_text.h"
 #include "core/types/file.h"
 #include "core/types/window.h"
 #include "core/types/keys.h"

@@ -1598,8 +1598,7 @@ static void chk_include_check(const char *path, char *line, int lineno,
   memcpy(name, base, blen);
   name[blen] = '\0';
 
-  if (strcmp(name, "skapi.h") == 0 || strcmp(name, "skapi_types.h") == 0 ||
-      strcmp(name, "skapi_platform.h") == 0) {
+  if (strcmp(name, "skapi.h") == 0 || strcmp(name, "skapi_types.h") == 0) {
     check_state.skapi_violations++;
     char msg[512];
     snprintf(msg, sizeof(msg),

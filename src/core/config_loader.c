@@ -9,8 +9,6 @@
 #include <stdint.h>
 
 #include "platform/platform.h"
-
-static void config_cache_info(const char *path);
 #include "config.h"
 #include "core/theme.h"
 #include "deps/log.h"

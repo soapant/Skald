@@ -2905,11 +2905,11 @@ void ski_profile_end(uint64_t ticks) {
     ms = 0.0;
 
   if (ms >= 1000.0)
-    log_debug("[profile] %.3f s", ms / 1000.0);
+    printf("[profile] %.3f s \n", ms / 1000.0);
   else if (ms >= 1.0)
-    log_debug("[profile] %.3f ms", ms);
+    printf("[profile] %.3f ms \n", ms);
   else
-    log_debug("[profile] %.3f µs", ms * 1000.0);
+    printf("[profile] %.3f µs \n", ms * 1000.0);
 }
 
 void sk_profile_end(SkTimer timer) { ski_profile_end(timer.ticks); }

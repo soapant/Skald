@@ -11,7 +11,7 @@ It is highly recommended that you only use the API for basic system control. Thi
 
 `skapi_x11.c` and `skapi_win32.c` are **only** for `sk_*_platform` functions — the platform implementations of the public `skapi.h` API General `Platform_*` helpers live in `platform/` — never in `skapi_x11.c`/ `skapi_win32.c`.
 
-Along with that, the platform files must not `#include "core/skapi.h" or "platform/skapi_platform.h"`. They use `platform.h` and the `core/types/*` headers instead. If removing the include breaks the build, treat it as a bug: the platform layer is not supposed to depend on the public feature API.
+Along with that, the platform files must not `#include "core/skapi.h"`. The `sk_*_platform` hook declarations live in `core/types/skapi_types.h` (there is no separate `skapi_platform.h`). They use `platform.h` and the `core/types/*` headers instead. If removing an include breaks the build, treat it as a bug: the platform layer is not supposed to depend on the public feature API.
 
 ## How to Learn the API
 If you already know how to program in C, the best way to learn is to read the code itself. **Code is documentation.** You can skip the rest of this file and dive straight into the source code of the core features.
