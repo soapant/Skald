@@ -115,7 +115,6 @@ bool wm_get_mouse_pos(int *x, int *y);
 
 WindowHandle wm_get_active_window_handle(void);
 WindowHandle wm_find_window_by_id(const char *id);
-WindowHandle wm_get_window_handle(const char *selector);
 WindowHandle wm_get_held_window(void);
 bool wm_focus_by_id(const char *id);
 bool wm_focus_window_handle(WindowHandle window);

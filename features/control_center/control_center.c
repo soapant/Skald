@@ -1233,7 +1233,7 @@ static void cc_on_actions_render(SkPlaceState state) {
   sk_draw_text(.x = state.rect.x + 20,
                .y = state.rect.y - 2 + (h - lh_title) / 2, .text = "Actions",
                .align = "LEFT",
-               .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.32f),
+               .color = CC_TYPE_COLOR,
                .font_size = 16);
 
   sk_draw_text(.x = state.rect.x + 100,

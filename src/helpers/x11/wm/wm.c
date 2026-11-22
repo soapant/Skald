@@ -665,28 +665,6 @@ WindowHandle wm_find_window_by_id(const char *id) {
   return WH_NULL;
 }
 
-WindowHandle wm_get_window_handle(const char *selector) {
-  if (!selector || !selector[0])
-    return WH_NULL;
-  if (!x11_env_is_wayland()) {
-    unsigned long xid = x11_find_window_by_title(selector);
-    if (!xid)
-      xid = x11_find_window_by_id(selector);
-    return xid ? WH_FROM_XID(xid) : WH_NULL;
-  }
-  if (wm_focus_by_title(selector)) {
-    WindowHandle h = wm_get_active_window_handle();
-    if (!WH_EQUALS(h, WH_NULL))
-      return h;
-  }
-  if (wm_focus_by_id(selector)) {
-    WindowHandle h = wm_get_active_window_handle();
-    if (!WH_EQUALS(h, WH_NULL))
-      return h;
-  }
-  return WH_NULL;
-}
-
 bool wm_focus_window_handle(WindowHandle window) {
   if (WH_EQUALS(window, WH_NULL))
     return false;
