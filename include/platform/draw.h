@@ -25,6 +25,11 @@ void Platform_DrawPromptEditCursor(PromptState *state);
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius);
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h);
+ImageBuffer *Platform_CaptureWindowByTitle(const char *title);
+ImageBuffer *Platform_CaptureWindowById(const char *id);
+void Platform_FreeImage(ImageBuffer *image);
+bool Platform_DrawImageBuffer(const ImageBuffer *image, int x, int y, int w,
+                              int h);
 
 #define COLOR_AUTO (~0UL)
 

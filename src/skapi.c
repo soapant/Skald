@@ -1753,14 +1753,33 @@ void sk_editbox_set_active(const char *name) {
   editbox_registry_set_active(prompt_popup_get_top_prompt_state(), name);
 }
 
+SkImage sk_image_from_window_title(const char *title) {
+  ImageBuffer *img = Platform_CaptureWindowByTitle(title);
+  SkImage out = img ? *img : (SkImage){0};
+  free(img);
+  return out;
+}
+
+SkImage sk_image_from_window_id(const char *id) {
+  ImageBuffer *img = Platform_CaptureWindowById(id);
+  SkImage out = img ? *img : (SkImage){0};
+  free(img);
+  return out;
+}
+
+void sk_image_free(SkImage image) { Platform_FreeImage(&image); }
+
 bool ski_draw_image(const SkImageSpec *spec) {
-  if (!spec || !spec->path || !spec->path[0]) {
+  if (!spec)
     return false;
-  }
   if (search_index_current())
     return true;
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
+  if (spec->image.pixels && spec->image.w > 0 && spec->image.h > 0)
+    return Platform_DrawImageBuffer(&spec->image, spec->x, spec->y, w, h);
+  if (!spec->path || !spec->path[0])
+    return false;
   char asset[MAX_PATH];
   const char *path = spec->path;
   if ((path[0] == '/' || path[0] == '\\') &&

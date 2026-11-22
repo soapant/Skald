@@ -10,6 +10,13 @@
 #include "core/types/window.h"
 #include "core/types/file.h"
 
+typedef struct {
+  int w;
+  int h;
+  unsigned char *pixels;
+  void *platform;
+} ImageBuffer;
+
 typedef void (*DirChangeCallback)(const char *full_path, int added);
 
 #endif

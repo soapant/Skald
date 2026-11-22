@@ -26,6 +26,7 @@ typedef HotkeyKey SkKey;
 typedef WindowHandle SkWindowHandle;
 
 typedef struct PlatformWidget PlatformWidget;
+typedef ImageBuffer SkImage;
 typedef RgbColor SkColor;
 typedef Metrics SkMetrics;
 typedef Event SkEvent;
@@ -460,11 +461,16 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec);
 
 typedef struct {
   const char *path;
+  SkImage image;
   int x;
   int y;
   int w;
   int h;
 } SkImageSpec;
+
+SkImage sk_image_from_window_title(const char *title);
+SkImage sk_image_from_window_id(const char *id);
+void sk_image_free(SkImage image);
 
 bool ski_draw_text(const SkTextSpec *spec);
 bool ski_draw_text_centered(const SkTextCenteredSpec *spec);

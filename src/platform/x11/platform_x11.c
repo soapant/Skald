@@ -1,4 +1,9 @@
 #include <stdarg.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include "wm/x11_wm.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_text.h"
@@ -560,6 +565,86 @@ WindowHandle Platform_GetWindowByTitle(const char *title) {
   if (w != 0)
     h.xid = w;
   return h;
+}
+
+static int x11_mask_shift(unsigned long mask) {
+  int shift = 0;
+  while (mask && !(mask & 1UL)) {
+    mask >>= 1;
+    shift++;
+  }
+  return shift;
+}
+
+static ImageBuffer *x11_capture_window(Display *dpy, Window win) {
+  if (!dpy || win == None)
+    return NULL;
+  XWindowAttributes attrs;
+  if (!XGetWindowAttributes(dpy, win, &attrs) || attrs.width <= 0 ||
+      attrs.height <= 0)
+    return NULL;
+  XImage *xi = XGetImage(dpy, win, 0, 0, (unsigned int)attrs.width,
+                         (unsigned int)attrs.height, AllPlanes, ZPixmap);
+  if (!xi)
+    return NULL;
+  ImageBuffer *out = calloc(1, sizeof(*out));
+  if (!out) {
+    XDestroyImage(xi);
+    return NULL;
+  }
+  out->w = attrs.width;
+  out->h = attrs.height;
+  out->pixels = malloc((size_t)out->w * (size_t)out->h * 4);
+  if (!out->pixels) {
+    free(out);
+    XDestroyImage(xi);
+    return NULL;
+  }
+  int rs = x11_mask_shift(xi->red_mask);
+  int gs = x11_mask_shift(xi->green_mask);
+  int bs = x11_mask_shift(xi->blue_mask);
+  for (int y = 0; y < out->h; y++) {
+    for (int x = 0; x < out->w; x++) {
+      unsigned long px = XGetPixel(xi, x, y);
+      uint32_t r = (uint32_t)((px & xi->red_mask) >> rs);
+      uint32_t g = (uint32_t)((px & xi->green_mask) >> gs);
+      uint32_t b = (uint32_t)((px & xi->blue_mask) >> bs);
+      uint32_t argb = (255u << 24) | (r << 16) | (g << 8) | b;
+      memcpy(out->pixels + ((size_t)y * (size_t)out->w + (size_t)x) * 4,
+             &argb, 4);
+    }
+  }
+  XDestroyImage(xi);
+  return out;
+}
+
+ImageBuffer *Platform_CaptureWindowByTitle(const char *title) {
+  Display *dpy = x11_get_display();
+  if (!dpy || !title || !title[0])
+    return NULL;
+  unsigned long w = x11_find_window_by_title(title);
+  if (w == 0)
+    return NULL;
+  return x11_capture_window(dpy, (Window)w);
+}
+
+ImageBuffer *Platform_CaptureWindowById(const char *id) {
+  Display *dpy = x11_get_display();
+  if (!dpy || !id || !id[0])
+    return NULL;
+  unsigned long w = x11_find_window_by_id(id);
+  if (w == 0)
+    return NULL;
+  return x11_capture_window(dpy, (Window)w);
+}
+
+void Platform_FreeImage(ImageBuffer *image) {
+  if (!image)
+    return;
+  free(image->pixels);
+  free(image->platform);
+  image->pixels = NULL;
+  image->platform = NULL;
 }
 
 WindowHandle Platform_GetWindowByRootAtom(const char *atom) {

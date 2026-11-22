@@ -267,6 +267,57 @@ static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by,
   return result;
 }
 
+static bool blit_argb_buf_scaled(const unsigned char *buf, int w, int h,
+                                 int bx, int by, int dw, int dh) {
+  if (!buf || w <= 0 || h <= 0 || dw <= 0 || dh <= 0 || !g_draw_dpy ||
+      !g_draw_xd)
+    return false;
+  Pixmap pm = 0;
+  Picture pic = 0;
+  if (!x11_upload_argb(g_draw_dpy, 0, (unsigned char *)buf, w, h, &pm, &pic))
+    return false;
+  XRenderPictFormat *dfmt = XRenderFindVisualFormat(g_draw_dpy, g_draw_vis);
+  Picture dst = dfmt ? XRenderCreatePicture(g_draw_dpy,
+                                            XftDrawDrawable(g_draw_xd), dfmt,
+                                            0, NULL)
+                     : 0;
+  bool result = false;
+  if (dst) {
+    if (w != dw || h != dh) {
+      XTransform transform = {{
+          {XDoubleToFixed((double)w / (double)dw), 0, 0},
+          {0, XDoubleToFixed((double)h / (double)dh), 0},
+          {0, 0, XDoubleToFixed(1)},
+      }};
+      XRenderSetPictureTransform(g_draw_dpy, pic, &transform);
+      XRenderSetPictureFilter(g_draw_dpy, pic, FilterGood, NULL, 0);
+    }
+    XRenderComposite(g_draw_dpy, PictOpOver, pic, None, dst, 0, 0, 0, 0, bx, by,
+                     (unsigned int)dw, (unsigned int)dh);
+    result = true;
+    XRenderFreePicture(g_draw_dpy, dst);
+  }
+  XRenderFreePicture(g_draw_dpy, pic);
+  XFreePixmap(g_draw_dpy, pm);
+  return result;
+}
+
+bool Platform_DrawImageBuffer(const ImageBuffer *image, int x, int y, int w,
+                              int h) {
+  if (!image || !image->pixels || image->w <= 0 || image->h <= 0)
+    return false;
+  if (!g_draw_dpy || !g_draw_xd)
+    return false;
+  x += draw_state_get()->off_x;
+  y += draw_state_get()->off_y;
+  if (w <= 0)
+    w = image->w;
+  if (h <= 0)
+    h = image->h;
+  draw_measure_track(x, y, w, h);
+  return blit_argb_buf_scaled(image->pixels, image->w, image->h, x, y, w, h);
+}
+
 static unsigned char *make_rect_border_argb(int rect_w, int rect_h,
                                             float radius, float thickness,
                                             unsigned long color, float alpha,

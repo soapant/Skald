@@ -329,6 +329,34 @@ char *x11_paste(const char *content) {
   return strdup("");
 }
 
+unsigned long x11_find_window_by_id(const char *id) {
+  if (!id || !id[0])
+    return 0;
+  Display *display = x11_get_display();
+  if (!display)
+    return 0;
+  int nclients = 0;
+  Window *clients = x11_client_list(display, &nclients);
+  if (!clients || nclients <= 0) {
+    free(clients);
+    return 0;
+  }
+  unsigned long found = 0;
+  for (int i = 0; i < nclients; i++) {
+    char *cls = x11_get_res_class(display, clients[i]);
+    if (!cls)
+      continue;
+    if (strcasestr(cls, id)) {
+      found = (unsigned long)clients[i];
+      free(cls);
+      break;
+    }
+    free(cls);
+  }
+  free(clients);
+  return found;
+}
+
 unsigned long x11_find_window_by_title(const char *title) {
   if (!title || !title[0])
     return 0;

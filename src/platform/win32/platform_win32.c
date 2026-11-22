@@ -534,6 +534,105 @@ static HWND win32_find_window_by_title(const char *title) {
   return hwnd;
 }
 
+static ImageBuffer *win32_capture_hwnd(HWND hwnd) {
+  if (!hwnd || !IsWindow(hwnd))
+    return NULL;
+  RECT rc;
+  if (!GetWindowRect(hwnd, &rc))
+    return NULL;
+  int w = rc.right - rc.left;
+  int h = rc.bottom - rc.top;
+  if (w <= 0 || h <= 0)
+    return NULL;
+
+  HDC screen = GetDC(NULL);
+  if (!screen)
+    return NULL;
+  HDC mem = CreateCompatibleDC(screen);
+  if (!mem) {
+    ReleaseDC(NULL, screen);
+    return NULL;
+  }
+  BITMAPINFO bi;
+  memset(&bi, 0, sizeof(bi));
+  bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+  bi.bmiHeader.biWidth = w;
+  bi.bmiHeader.biHeight = -h;
+  bi.bmiHeader.biPlanes = 1;
+  bi.bmiHeader.biBitCount = 32;
+  bi.bmiHeader.biCompression = BI_RGB;
+  void *bits = NULL;
+  HBITMAP bmp = CreateDIBSection(screen, &bi, DIB_RGB_COLORS, &bits, NULL, 0);
+  if (!bmp || !bits) {
+    if (bmp)
+      DeleteObject(bmp);
+    DeleteDC(mem);
+    ReleaseDC(NULL, screen);
+    return NULL;
+  }
+  HGDIOBJ old = SelectObject(mem, bmp);
+  BOOL ok = PrintWindow(hwnd, mem, 2);
+  if (!ok)
+    BitBlt(mem, 0, 0, w, h, screen, rc.left, rc.top, SRCCOPY);
+  GdiFlush();
+  SelectObject(mem, old);
+
+  ImageBuffer *out = calloc(1, sizeof(*out));
+  if (!out) {
+    DeleteObject(bmp);
+    DeleteDC(mem);
+    ReleaseDC(NULL, screen);
+    return NULL;
+  }
+  out->w = w;
+  out->h = h;
+  out->pixels = malloc((size_t)w * (size_t)h * 4);
+  if (out->pixels)
+    memcpy(out->pixels, bits, (size_t)w * (size_t)h * 4);
+  else {
+    free(out);
+    out = NULL;
+  }
+  DeleteObject(bmp);
+  DeleteDC(mem);
+  ReleaseDC(NULL, screen);
+  return out;
+}
+
+ImageBuffer *Platform_CaptureWindowByTitle(const char *title) {
+  return win32_capture_hwnd(win32_find_window_by_title(title));
+}
+
+ImageBuffer *Platform_CaptureWindowById(const char *id) {
+  if (!id || !id[0])
+    return NULL;
+  WindowList titles = {0}, names = {0};
+  win32_collect_pair(&titles, &names);
+  HWND found = NULL;
+  for (int i = 0; i < names.count && i < titles.count; i++) {
+    if (string_contains_ci(names.windows[i], id)) {
+      found = win32_find_window_by_title(titles.windows[i]);
+      break;
+    }
+  }
+  for (int i = 0; i < titles.count; i++)
+    free(titles.windows[i]);
+  for (int i = 0; i < names.count; i++)
+    free(names.windows[i]);
+  free(titles.windows);
+  free(names.windows);
+  return win32_capture_hwnd(found);
+}
+
+void Platform_FreeImage(ImageBuffer *image) {
+  if (!image)
+    return;
+  free(image->pixels);
+  free(image->platform);
+  image->pixels = NULL;
+  image->platform = NULL;
+}
+
 WindowHandle Platform_GetWindowByRootAtom(const char *atom) {
   (void)atom;
   return WH_NULL;

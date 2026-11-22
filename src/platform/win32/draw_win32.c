@@ -405,6 +405,58 @@ bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
   return true;
 }
 
+bool Platform_DrawImageBuffer(const ImageBuffer *image, int x, int y, int w,
+                              int h) {
+  if (!image || !image->pixels || image->w <= 0 || image->h <= 0)
+    return false;
+  if (!g_draw_hdc)
+    return false;
+  x += draw_state_get()->off_x;
+  y += draw_state_get()->off_y;
+  if (draw_state_get()->listbox_rows && draw_state_get()->win32_listbox_surface)
+    y -= 2;
+  if (w <= 0)
+    w = image->w;
+  if (h <= 0)
+    h = image->h;
+  draw_measure_track(x, y, w, h);
+
+  win32_gdip_ensure();
+  if (g_gdip_token == 0)
+    return false;
+  if (s_cached_hdc != g_draw_hdc || !s_cached_g) {
+    if (s_cached_g) {
+      GdipDeleteGraphics(s_cached_g);
+      s_cached_g = NULL;
+    }
+    s_cached_hdc = g_draw_hdc;
+    if (GdipCreateFromHDC(g_draw_hdc, &s_cached_g) != Ok || !s_cached_g) {
+      s_cached_hdc = NULL;
+      return false;
+    }
+    GdipSetInterpolationMode(s_cached_g, InterpolationModeNearestNeighbor);
+    GdipSetPixelOffsetMode(s_cached_g, PixelOffsetModeNone);
+  }
+  GpBitmap *bmp = NULL;
+  if (GdipCreateBitmapFromScan0(image->w, image->h, image->w * 4,
+                                PixelFormat32bppARGB, image->pixels,
+                                &bmp) != Ok ||
+      !bmp)
+    return false;
+  bool scaled = w != image->w || h != image->h;
+  if (scaled) {
+    GdipSetInterpolationMode(s_cached_g, InterpolationModeHighQualityBicubic);
+    GdipSetPixelOffsetMode(s_cached_g, PixelOffsetModeHighQuality);
+  }
+  GpStatus status = GdipDrawImageRectI(s_cached_g, bmp, x, y, w, h);
+  if (scaled) {
+    GdipSetInterpolationMode(s_cached_g, InterpolationModeNearestNeighbor);
+    GdipSetPixelOffsetMode(s_cached_g, PixelOffsetModeNone);
+  }
+  GdipDisposeImage((GpImage *)bmp);
+  return status == Ok;
+}
+
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   if (!path || !path[0])
     return false;
