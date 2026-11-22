@@ -57,6 +57,7 @@ void WindowManager_PopPopup(WindowManager *wm);
 void WindowManager_DrainSelectionComplete(WindowManager *wm);
 Popup *WindowManager_GetTopPopup(const WindowManager *wm);
 int WindowManager_TopPopupFps(WindowManager *wm);
+void WindowManager_RenderTick(WindowManager *wm);
 void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
 void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
 void WindowManager_GetDefaultPromptPosition(int win_w, int win_h, int *out_x,

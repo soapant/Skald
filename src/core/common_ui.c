@@ -634,11 +634,8 @@ char *prompt_user_run(WindowManager *wm, const PromptSpec *spec) {
         interval = 1;
       if (now - last_tick >= interval) {
         last_tick = now;
-        Popup *top = WindowManager_GetTopPopup(wm);
-        if (top && top->vtable && top->vtable->on_render) {
-          top->vtable->on_render(top);
-          Platform_PromptFlushDisplay(wm);
-        }
+        WindowManager_RenderTick(wm);
+        Platform_PromptFlushDisplay(wm);
       }
     }
   }

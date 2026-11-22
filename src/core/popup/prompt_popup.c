@@ -171,12 +171,19 @@ static void prompt_popup_on_hide(Popup *self) {
   Platform_PromptPopupHideWindow(self);
 }
 
-static void prompt_popup_on_render(Popup *self) {
+static void prompt_popup_render_now(Popup *self) {
   const PromptPopupData *data = (PromptPopupData *)self;
   prompt_popup_tick_resize_animation_popup(self);
   if (!data->state)
     return;
   Platform_PromptPopupRender(self);
+}
+
+static void prompt_popup_on_render(Popup *self) {
+  const PromptPopupData *data = (PromptPopupData *)self;
+  if (data->spec.fps > 0)
+    return;
+  prompt_popup_render_now(self);
 }
 
 static bool prompt_popup_on_key(Popup *self, const PopupKeyEvent *key) {
@@ -422,6 +429,16 @@ int WindowManager_TopPopupFps(WindowManager *wm) {
     return 0;
   PromptPopupData *data = (PromptPopupData *)top;
   return data->spec.fps;
+}
+
+void WindowManager_RenderTick(WindowManager *wm) {
+  Popup *top = WindowManager_GetTopPopup(wm);
+  if (!top || top->type != POPUP_PROMPT)
+    return;
+  PromptPopupData *data = (PromptPopupData *)top;
+  if (data->spec.fps <= 0)
+    return;
+  prompt_popup_render_now(top);
 }
 
 bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x,
