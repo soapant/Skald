@@ -618,3 +618,184 @@ bool wm_close_windows_matching_id(const char *needle) {
     return true;
   return false;
 }
+
+bool wm_focus_by_id(const char *id) {
+  if (!id || !id[0])
+    return false;
+  if (x11_env_is_wayland()) {
+    if (focus_window_id_kwin(id))
+      return true;
+    if (focus_window_id_niri(id))
+      return true;
+    if (focus_window_id_hyprland(id))
+      return true;
+    if (focus_window_id_sway(id))
+      return true;
+  }
+  return x11_focus_window_id(id);
+}
+
+WindowHandle wm_get_active_window_handle(void) {
+  if (x11_env_is_wayland()) {
+    WindowHandle h = get_active_handle_kwin();
+    if (!WH_EQUALS(h, WH_NULL))
+      return h;
+    h = get_active_handle_niri();
+    if (!WH_EQUALS(h, WH_NULL))
+      return h;
+    h = get_active_handle_hyprland();
+    if (!WH_EQUALS(h, WH_NULL))
+      return h;
+    h = get_active_handle_sway();
+    if (!WH_EQUALS(h, WH_NULL))
+      return h;
+  }
+  return x11_get_active_window_handle();
+}
+
+WindowHandle wm_find_window_by_id(const char *id) {
+  if (!id || !id[0])
+    return WH_NULL;
+  if (!x11_env_is_wayland()) {
+    unsigned long xid = x11_find_window_by_id(id);
+    return xid ? WH_FROM_XID(xid) : WH_NULL;
+  }
+  if (wm_focus_by_id(id))
+    return wm_get_active_window_handle();
+  return WH_NULL;
+}
+
+WindowHandle wm_get_window_handle(const char *selector) {
+  if (!selector || !selector[0])
+    return WH_NULL;
+  if (!x11_env_is_wayland()) {
+    unsigned long xid = x11_find_window_by_title(selector);
+    if (!xid)
+      xid = x11_find_window_by_id(selector);
+    return xid ? WH_FROM_XID(xid) : WH_NULL;
+  }
+  if (wm_focus_by_title(selector)) {
+    WindowHandle h = wm_get_active_window_handle();
+    if (!WH_EQUALS(h, WH_NULL))
+      return h;
+  }
+  if (wm_focus_by_id(selector)) {
+    WindowHandle h = wm_get_active_window_handle();
+    if (!WH_EQUALS(h, WH_NULL))
+      return h;
+  }
+  return WH_NULL;
+}
+
+bool wm_focus_window_handle(WindowHandle window) {
+  if (WH_EQUALS(window, WH_NULL))
+    return false;
+  if (WH_HAS_ID(window))
+    return wm_focus_by_id(WH_TO_ID(window));
+  return x11_focus_window_xid(WH_TO_XID(window));
+}
+
+static bool wm_move_active_window_to_xy(int x, int y) {
+  if (x11_env_is_wayland()) {
+    if (move_active_window_to_xy_kwin(x, y))
+      return true;
+    if (move_active_window_to_xy_hyprland(x, y))
+      return true;
+    if (move_active_window_to_xy_sway(x, y))
+      return true;
+    if (move_active_window_to_xy_niri(x, y))
+      return true;
+  }
+  return x11_move_active_window_to(x, y);
+}
+
+static bool wm_set_active_window_size(int w, int h) {
+  if (x11_env_is_wayland()) {
+    if (set_active_window_size_kwin(w, h))
+      return true;
+    if (set_active_window_size_hyprland(w, h))
+      return true;
+    if (set_active_window_size_sway(w, h))
+      return true;
+    if (set_active_window_size_niri(w, h))
+      return true;
+  }
+  return x11_set_active_window_size(w, h);
+}
+
+static bool wm_get_active_window_geometry(DrawRect *out) {
+  if (x11_env_is_wayland()) {
+    if (get_active_window_geometry_kwin(out))
+      return true;
+    if (get_active_window_geometry_niri(out))
+      return true;
+    if (get_active_window_geometry_hyprland(out))
+      return true;
+    if (get_active_window_geometry_sway(out))
+      return true;
+  }
+  return x11_get_active_window_geometry(out);
+}
+
+bool wm_move_window(WindowHandle window, int x, int y) {
+  if (!WH_HAS_ID(window) && WH_TO_XID(window))
+    return x11_move_window_xid(WH_TO_XID(window), x, y);
+  if (!wm_focus_window_handle(window))
+    return false;
+  return wm_move_active_window_to_xy(x, y);
+}
+
+bool wm_set_window_size(WindowHandle window, int w, int h) {
+  if (!WH_HAS_ID(window) && WH_TO_XID(window))
+    return x11_set_window_size_xid(WH_TO_XID(window), w, h);
+  if (!wm_focus_window_handle(window))
+    return false;
+  return wm_set_active_window_size(w, h);
+}
+
+bool wm_set_window_opacity_for(WindowHandle window, int percent) {
+  if (!WH_HAS_ID(window) && WH_TO_XID(window))
+    return x11_set_window_opacity_xid(WH_TO_XID(window), percent);
+  if (!wm_focus_window_handle(window))
+    return false;
+  return wm_set_active_window_opacity(percent);
+}
+
+DrawRect wm_get_window_geometry(WindowHandle window) {
+  DrawRect r = {0};
+  if (!WH_HAS_ID(window) && WH_TO_XID(window)) {
+    x11_get_window_geometry_xid(WH_TO_XID(window), &r);
+    return r;
+  }
+  if (!wm_focus_window_handle(window))
+    return r;
+  wm_get_active_window_geometry(&r);
+  return r;
+}
+
+bool wm_set_window_geometry(WindowHandle window, DrawRect rect) {
+  if (!WH_HAS_ID(window) && WH_TO_XID(window))
+    return x11_set_window_geometry_xid(WH_TO_XID(window), rect);
+  if (rect.w <= 0 || rect.h <= 0)
+    return false;
+  if (!wm_focus_window_handle(window))
+    return false;
+  if (!wm_move_active_window_to_xy(rect.x, rect.y))
+    return false;
+  return wm_set_active_window_size(rect.w, rect.h);
+}
+
+WindowHandle wm_get_held_window(void) {
+  int mx = 0, my = 0;
+  if (!wm_get_mouse_pos(&mx, &my))
+    return WH_NULL;
+  WindowHandle h = wm_get_active_window_handle();
+  if (WH_EQUALS(h, WH_NULL))
+    return WH_NULL;
+  DrawRect r = wm_get_window_geometry(h);
+  if (r.w <= 0 || r.h <= 0)
+    return WH_NULL;
+  if (mx < r.x || my < r.y || mx >= r.x + r.w || my >= r.y + r.h)
+    return WH_NULL;
+  return h;
+}

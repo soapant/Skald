@@ -282,6 +282,13 @@ bool Platform_MoveActiveWindowToWorkspace(int index);
 bool Platform_SetActiveWindowOpacity(int percent);
 bool Platform_CloseWindowsByTitle(const char *needle);
 bool Platform_CloseWindowsById(const char *needle);
+WindowHandle Platform_GetWindowById(const char *id);
+WindowHandle Platform_GetHeldWindow(void);
+bool Platform_MoveWindow(WindowHandle window, int x, int y);
+bool Platform_SetWindowSize(WindowHandle window, int w, int h);
+bool Platform_SetWindowOpacityFor(WindowHandle window, int percent);
+DrawRect Platform_GetWindowGeometry(WindowHandle window);
+bool Platform_SetWindowGeometry(WindowHandle window, DrawRect rect);
 bool Platform_LaunchDetached(const char *command);
 const char *Platform_GetDefaultApp(DefaultAppKind kind);
 bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,

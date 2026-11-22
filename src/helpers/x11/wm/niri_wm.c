@@ -422,3 +422,124 @@ bool close_windows_matching_title_niri(const char *needle) {
 bool close_windows_matching_id_niri(const char *needle) {
   return niri_close_windows(needle, true);
 }
+
+WindowHandle get_active_handle_niri(void) {
+  if (!niri_is_active())
+    return WH_NULL;
+  char *json =
+      Platform_RunTerminalCommand("niri msg --json focused-window", false);
+  if (!json || !json[0]) {
+    free(json);
+    return WH_NULL;
+  }
+  const char *p = strstr(json, "\"id\":");
+  long id = p ? strtol(p + 5, NULL, 10) : 0;
+  free(json);
+  if (!id)
+    return WH_NULL;
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%ld", id);
+  return WH_FROM_ID(buf);
+}
+
+static int niri_id_for_app_id(const char *app_id) {
+  if (!niri_is_active() || !app_id)
+    return 0;
+  char *json = Platform_RunTerminalCommand("niri msg --json windows", false);
+  if (!json || !json[0]) {
+    free(json);
+    return 0;
+  }
+  int found = 0;
+  const char *p = json;
+  while (1) {
+    const char *idpos = strstr(p, "\"id\":");
+    if (!idpos)
+      break;
+    int id = atoi(idpos + 5);
+    const char *apos = strstr(idpos, "\"app_id\":\"");
+    const char *nextid = strstr(idpos + 5, "\"id\":");
+    if (!apos || (nextid && apos > nextid)) {
+      p = idpos + 5;
+      continue;
+    }
+    char value[512];
+    niri_copy_json_string(apos + 10, value, sizeof(value));
+    if (value[0] && !strcasecmp(value, app_id)) {
+      found = id;
+      break;
+    }
+    p = apos + 10;
+  }
+  free(json);
+  return found;
+}
+
+bool focus_window_id_niri(const char *id) {
+  if (!id || !id[0] || !niri_is_active())
+    return false;
+  int target = atoi(id);
+  if (target <= 0)
+    target = niri_id_for_app_id(id);
+  if (target <= 0)
+    return false;
+  char cmd[96];
+  snprintf(cmd, sizeof(cmd), "niri msg action focus-window --id %d", target);
+  return niri_exec(cmd);
+}
+
+bool move_active_window_to_xy_niri(int x, int y) {
+  (void)x;
+  (void)y;
+  log_error("niri has no absolute window positioning (scrollable layout)");
+  return false;
+}
+
+bool set_active_window_size_niri(int w, int h) {
+  (void)w;
+  (void)h;
+  log_error("niri has no absolute window sizing (scrollable layout)");
+  return false;
+}
+
+static bool niri_json_int(const char *json, const char *key, int *out) {
+  const char *p = strstr(json, key);
+  if (!p)
+    return false;
+  p += strlen(key);
+  while (*p == ' ' || *p == ':')
+    p++;
+  char *end = NULL;
+  long v = strtol(p, &end, 10);
+  if (!end || end == p)
+    return false;
+  *out = (int)v;
+  return true;
+}
+
+bool get_active_window_geometry_niri(DrawRect *out) {
+  if (!out)
+    return false;
+  memset(out, 0, sizeof(*out));
+  if (!niri_is_active())
+    return false;
+  char *json =
+      Platform_RunTerminalCommand("niri msg --json focused-window", false);
+  if (!json || !json[0]) {
+    free(json);
+    return false;
+  }
+  int x = 0, y = 0, w = 0, h = 0;
+  bool ok = niri_json_int(json, "\"x\":", &x) &&
+            niri_json_int(json, "\"y\":", &y) &&
+            niri_json_int(json, "\"width\":", &w) &&
+            niri_json_int(json, "\"height\":", &h);
+  free(json);
+  if (!ok || w <= 0 || h <= 0)
+    return false;
+  out->x = x;
+  out->y = y;
+  out->w = w;
+  out->h = h;
+  return true;
+}

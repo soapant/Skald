@@ -39,5 +39,10 @@ bool snap_active_window_niri(SnapPreset preset);
 long get_pid_niri(void);
 bool inject_key_niri(int vk, int down);
 bool get_mouse_pos_niri(int *x, int *y);
+WindowHandle get_active_handle_niri(void);
+bool focus_window_id_niri(const char *id);
+bool move_active_window_to_xy_niri(int x, int y);
+bool set_active_window_size_niri(int w, int h);
+bool get_active_window_geometry_niri(DrawRect *out);
 
 #endif

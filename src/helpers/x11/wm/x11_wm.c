@@ -1083,6 +1083,157 @@ bool x11_set_active_window_opacity(int percent) {
   return _x11_err == 0;
 }
 
+WindowHandle x11_get_active_window_handle(void) {
+  Display *display = x11_get_display();
+  if (!display)
+    return WH_NULL;
+  Window focus = x11_focused_window(display);
+  return focus == None ? WH_NULL : WH_FROM_XID(focus);
+}
+
+bool x11_focus_window_xid(unsigned long xid) {
+  Display *display = x11_get_display();
+  if (!display || xid == 0)
+    return false;
+  return x11_activate_window(display, (Window)xid);
+}
+
+bool x11_focus_window_id(const char *id) {
+  if (!id || !id[0])
+    return false;
+  char *end = NULL;
+  int base = (id[0] == '0' && (id[1] == 'x' || id[1] == 'X')) ? 16 : 10;
+  unsigned long xid = strtoul(id, &end, base);
+  if (end && end != id && *end == '\0' && xid != 0) {
+    Display *display = x11_get_display();
+    int x = 0, y = 0, w = 0, h = 0;
+    if (display && x11_window_geom(display, (Window)xid, &x, &y, &w, &h))
+      return x11_focus_window_xid(xid);
+    xid = 0;
+  }
+  xid = x11_find_window_by_id(id);
+  return xid ? x11_focus_window_xid(xid) : false;
+}
+
+bool x11_move_active_window_to(int x, int y) {
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  int cx = 0, cy = 0, cw = 0, ch = 0;
+  if (!x11_window_geom(display, focus, &cx, &cy, &cw, &ch))
+    return false;
+  return x11_moveresize_window(display, focus, x, y, cw, ch);
+}
+
+bool x11_set_active_window_size(int w, int h) {
+  Display *display = x11_get_display();
+  if (!display || w <= 0 || h <= 0)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  int x = 0, y = 0, cw = 0, ch = 0;
+  if (!x11_window_geom(display, focus, &x, &y, &cw, &ch))
+    return false;
+  return x11_moveresize_window(display, focus, x, y, w, h);
+}
+
+bool x11_get_active_window_geometry(DrawRect *out) {
+  if (!out)
+    return false;
+  memset(out, 0, sizeof(*out));
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  int x = 0, y = 0, w = 0, h = 0;
+  if (!x11_window_geom(display, focus, &x, &y, &w, &h))
+    return false;
+  out->x = x;
+  out->y = y;
+  out->w = w;
+  out->h = h;
+  return true;
+}
+
+bool x11_get_window_geometry_xid(unsigned long xid, DrawRect *out) {
+  if (!out || xid == 0)
+    return false;
+  memset(out, 0, sizeof(*out));
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  int x = 0, y = 0, w = 0, h = 0;
+  if (!x11_window_geom(display, (Window)xid, &x, &y, &w, &h))
+    return false;
+  out->x = x;
+  out->y = y;
+  out->w = w;
+  out->h = h;
+  return true;
+}
+
+bool x11_move_window_xid(unsigned long xid, int x, int y) {
+  if (xid == 0)
+    return false;
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  int cx = 0, cy = 0, cw = 0, ch = 0;
+  if (!x11_window_geom(display, (Window)xid, &cx, &cy, &cw, &ch))
+    return false;
+  return x11_moveresize_window(display, (Window)xid, x, y, cw, ch);
+}
+
+bool x11_set_window_size_xid(unsigned long xid, int w, int h) {
+  if (xid == 0 || w <= 0 || h <= 0)
+    return false;
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  int x = 0, y = 0, cw = 0, ch = 0;
+  if (!x11_window_geom(display, (Window)xid, &x, &y, &cw, &ch))
+    return false;
+  return x11_moveresize_window(display, (Window)xid, x, y, w, h);
+}
+
+bool x11_set_window_opacity_xid(unsigned long xid, int percent) {
+  if (xid == 0)
+    return false;
+  if (percent < 0)
+    percent = 0;
+  if (percent > 100)
+    percent = 100;
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  Atom op = XInternAtom(display, "_NET_WM_WINDOW_OPACITY", False);
+  unsigned long v =
+      (unsigned long)(((double)percent / 100.0) * 4294967295.0 + 0.5);
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XChangeProperty(display, (Window)xid, op, XA_CARDINAL, 32, PropModeReplace,
+                  (unsigned char *)&v, 1);
+  XSync(display, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
+}
+
+bool x11_set_window_geometry_xid(unsigned long xid, DrawRect rect) {
+  if (xid == 0 || rect.w <= 0 || rect.h <= 0)
+    return false;
+  Display *display = x11_get_display();
+  if (!display)
+    return false;
+  return x11_moveresize_window(display, (Window)xid, rect.x, rect.y, rect.w,
+                               rect.h);
+}
+
 static bool x11_close_window(Display *display, Window w) {
   Atom close_atom = XInternAtom(display, "_NET_CLOSE_WINDOW", False);
   XEvent ev;

@@ -220,8 +220,19 @@ bool sk_query_browser(const char *query);
 
 bool sk_focus_window_by_title(const char *title);
 
-SkWindowHandle sk_get_window_id(const char *title);
-SkWindowHandle sk_get_window_by_root_atom(const char *atom);
+SkWindowHandle sk_find_window_by_title(const char *title);
+SkWindowHandle sk_find_window_by_root_atom(const char *atom);
+
+SkWindowHandle sk_get_held_window(void);
+
+bool sk_move_window(SkWindowHandle window, int x, int y);
+bool sk_set_window_size(SkWindowHandle window, int w, int h);
+bool sk_set_window_opacity(SkWindowHandle window, int percent);
+SkRect sk_get_window_geometry(SkWindowHandle window);
+bool ski_set_window_geometry(SkWindowHandle window, const SkRect *rect);
+
+#define sk_set_window_geometry(window, ...)                                    \
+  ski_set_window_geometry(window, &(SkRect){__VA_ARGS__})
 
 bool sk_window_set_string_property(SkWindowHandle window, const char *atom,
                                    const char *value);
@@ -1236,8 +1247,9 @@ SkKey sk_hotkey_from_string_fmt(const char *fmt, ...);
 bool sk_launch_browser_fmt(const char *fmt, ...);
 bool sk_query_browser_fmt(const char *fmt, ...);
 bool sk_focus_window_by_title_fmt(const char *fmt, ...);
-SkWindowHandle sk_get_window_id_fmt(const char *fmt, ...);
-SkWindowHandle sk_get_window_by_root_atom_fmt(const char *fmt, ...);
+SkWindowHandle sk_find_window_by_title_fmt(const char *fmt, ...);
+SkWindowHandle sk_find_window_by_root_atom_fmt(const char *fmt, ...);
+SkWindowHandle sk_find_window_by_id_fmt(const char *fmt, ...);
 bool sk_window_set_long_property_fmt(SkWindowHandle window, long value,
                                      const char *fmt, ...);
 bool sk_window_send_message_fmt(SkWindowHandle window, long data,

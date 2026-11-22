@@ -113,4 +113,16 @@ bool wm_close_windows_matching_title(const char *needle);
 bool wm_close_windows_matching_id(const char *needle);
 bool wm_get_mouse_pos(int *x, int *y);
 
+WindowHandle wm_get_active_window_handle(void);
+WindowHandle wm_find_window_by_id(const char *id);
+WindowHandle wm_get_window_handle(const char *selector);
+WindowHandle wm_get_held_window(void);
+bool wm_focus_by_id(const char *id);
+bool wm_focus_window_handle(WindowHandle window);
+bool wm_move_window(WindowHandle window, int x, int y);
+bool wm_set_window_size(WindowHandle window, int w, int h);
+bool wm_set_window_opacity_for(WindowHandle window, int percent);
+DrawRect wm_get_window_geometry(WindowHandle window);
+bool wm_set_window_geometry(WindowHandle window, DrawRect rect);
+
 #endif

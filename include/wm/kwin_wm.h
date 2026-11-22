@@ -39,5 +39,10 @@ bool snap_active_window_kwin(SnapPreset preset);
 long get_pid_kwin(void);
 bool inject_key_kwin(int vk, int down);
 bool get_mouse_pos_kwin(int *x, int *y);
+WindowHandle get_active_handle_kwin(void);
+bool focus_window_id_kwin(const char *id);
+bool move_active_window_to_xy_kwin(int x, int y);
+bool set_active_window_size_kwin(int w, int h);
+bool get_active_window_geometry_kwin(DrawRect *out);
 
 #endif

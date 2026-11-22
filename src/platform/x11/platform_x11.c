@@ -743,6 +743,32 @@ bool Platform_CloseWindowsById(const char *needle) {
   return wm_close_windows_matching_id(needle);
 }
 
+WindowHandle Platform_GetWindowById(const char *id) {
+  return wm_find_window_by_id(id);
+}
+
+WindowHandle Platform_GetHeldWindow(void) { return wm_get_held_window(); }
+
+bool Platform_MoveWindow(WindowHandle window, int x, int y) {
+  return wm_move_window(window, x, y);
+}
+
+bool Platform_SetWindowSize(WindowHandle window, int w, int h) {
+  return wm_set_window_size(window, w, h);
+}
+
+bool Platform_SetWindowOpacityFor(WindowHandle window, int percent) {
+  return wm_set_window_opacity_for(window, percent);
+}
+
+DrawRect Platform_GetWindowGeometry(WindowHandle window) {
+  return wm_get_window_geometry(window);
+}
+
+bool Platform_SetWindowGeometry(WindowHandle window, DrawRect rect) {
+  return wm_set_window_geometry(window, rect);
+}
+
 bool Platform_LowerActiveWindow(void) { return wm_lower_active_window(); }
 
 bool Platform_CenterActiveWindow(void) { return wm_center_active_window(); }

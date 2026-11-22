@@ -38,4 +38,9 @@ bool snap_active_window_hyprland(SnapPreset preset);
 long get_pid_hyprland(void);
 bool inject_key_hyprland(int vk, int down);
 bool get_mouse_pos_hyprland(int *x, int *y);
+WindowHandle get_active_handle_hyprland(void);
+bool focus_window_id_hyprland(const char *id);
+bool move_active_window_to_xy_hyprland(int x, int y);
+bool set_active_window_size_hyprland(int w, int h);
+bool get_active_window_geometry_hyprland(DrawRect *out);
 #endif

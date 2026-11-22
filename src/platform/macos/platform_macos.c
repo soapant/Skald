@@ -456,6 +456,45 @@ bool Platform_CloseWindowsById(const char *needle) {
   return false;
 }
 
+WindowHandle Platform_GetHeldWindow(void) { return WH_NULL; }
+
+bool Platform_MoveWindow(WindowHandle window, int x, int y) {
+  UNUSED(window);
+  UNUSED(x);
+  UNUSED(y);
+  return false;
+}
+
+bool Platform_SetWindowSize(WindowHandle window, int w, int h) {
+  UNUSED(window);
+  UNUSED(w);
+  UNUSED(h);
+  return false;
+}
+
+bool Platform_SetWindowOpacityFor(WindowHandle window, int percent) {
+  UNUSED(window);
+  UNUSED(percent);
+  return false;
+}
+
+DrawRect Platform_GetWindowGeometry(WindowHandle window) {
+  UNUSED(window);
+  DrawRect r = {0};
+  return r;
+}
+
+bool Platform_SetWindowGeometry(WindowHandle window, DrawRect rect) {
+  UNUSED(window);
+  UNUSED(rect);
+  return false;
+}
+
+WindowHandle Platform_GetWindowById(const char *id) {
+  UNUSED(id);
+  return WH_NULL;
+}
+
 bool Platform_LaunchDetached(const char *command) {
   UNUSED(command);
   return false;

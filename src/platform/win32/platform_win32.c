@@ -2082,3 +2082,117 @@ bool Platform_CloseWindowsById(const char *needle) {
   EnumWindows(win32_close_enum, (LPARAM)&ctx);
   return ctx.count > 0;
 }
+
+WindowHandle Platform_GetHeldWindow(void) {
+  POINT pt;
+  if (!GetCursorPos(&pt))
+    return WH_NULL;
+  HWND hwnd = WindowFromPoint(pt);
+  if (!hwnd)
+    return WH_NULL;
+  hwnd = GetAncestor(hwnd, GA_ROOT);
+  return hwnd ? WH_FROM_HWND(hwnd) : WH_NULL;
+}
+
+bool Platform_MoveWindow(WindowHandle window, int x, int y) {
+  HWND hwnd = WH_TO_HWND(window);
+  if (!hwnd || !IsWindow(hwnd))
+    return false;
+  return SetWindowPos(hwnd, NULL, x, y, 0, 0,
+                      SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != 0;
+}
+
+bool Platform_SetWindowSize(WindowHandle window, int w, int h) {
+  HWND hwnd = WH_TO_HWND(window);
+  if (!hwnd || !IsWindow(hwnd) || w <= 0 || h <= 0)
+    return false;
+  return SetWindowPos(hwnd, NULL, 0, 0, w, h,
+                      SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE) != 0;
+}
+
+bool Platform_SetWindowOpacityFor(WindowHandle window, int percent) {
+  HWND hwnd = WH_TO_HWND(window);
+  if (!hwnd || !IsWindow(hwnd))
+    return false;
+  if (percent < 0)
+    percent = 0;
+  if (percent > 100)
+    percent = 100;
+  LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
+  SetWindowLongA(hwnd, GWL_EXSTYLE, ex | WS_EX_LAYERED);
+  BYTE alpha = (BYTE)((255.0 * percent) / 100.0 + 0.5);
+  SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA);
+  if (percent == 100) {
+    SetWindowLongA(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
+    SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+  }
+  return true;
+}
+
+DrawRect Platform_GetWindowGeometry(WindowHandle window) {
+  DrawRect r = {0};
+  HWND hwnd = WH_TO_HWND(window);
+  if (!hwnd || !IsWindow(hwnd))
+    return r;
+  RECT rc;
+  if (!GetWindowRect(hwnd, &rc))
+    return r;
+  r.x = rc.left;
+  r.y = rc.top;
+  r.w = (int)(rc.right - rc.left);
+  r.h = (int)(rc.bottom - rc.top);
+  return r;
+}
+
+bool Platform_SetWindowGeometry(WindowHandle window, DrawRect rect) {
+  HWND hwnd = WH_TO_HWND(window);
+  if (!hwnd || !IsWindow(hwnd) || rect.w <= 0 || rect.h <= 0)
+    return false;
+  return SetWindowPos(hwnd, NULL, rect.x, rect.y, rect.w, rect.h,
+                      SWP_NOZORDER | SWP_NOACTIVATE) != 0;
+}
+
+typedef struct {
+  const char *exe;
+  HWND hwnd;
+} win32_exe_find_ctx;
+
+static BOOL CALLBACK win32_find_by_exe_enum(HWND hwnd, LPARAM lparam) {
+  win32_exe_find_ctx *ctx = (win32_exe_find_ctx *)lparam;
+  if (!IsWindowVisible(hwnd))
+    return TRUE;
+  DWORD pid = 0;
+  GetWindowThreadProcessId(hwnd, &pid);
+  if (!pid)
+    return TRUE;
+  HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+  if (!process)
+    return TRUE;
+  char path[MAX_PATH];
+  DWORD size = sizeof(path);
+  bool matched = false;
+  if (QueryFullProcessImageNameA(process, 0, path, &size) && size > 0) {
+    const char *base = strrchr(path, '\\');
+    base = base ? base + 1 : path;
+    char name[MAX_PATH];
+    safe_copy(name, sizeof(name), base);
+    size_t n = strlen(name);
+    if (n > 4 && _stricmp(name + n - 4, ".exe") == 0)
+      name[n - 4] = '\0';
+    if (_stricmp(name, ctx->exe) == 0 || strstr(name, ctx->exe)) {
+      ctx->hwnd = hwnd;
+      matched = true;
+    }
+  }
+  CloseHandle(process);
+  return matched ? FALSE : TRUE;
+}
+
+WindowHandle Platform_GetWindowById(const char *id) {
+  if (!id || !id[0])
+    return WH_NULL;
+  win32_exe_find_ctx ctx = {id, NULL};
+  EnumWindows(win32_find_by_exe_enum, (LPARAM)&ctx);
+  return ctx.hwnd ? WH_FROM_HWND(ctx.hwnd) : WH_NULL;
+}

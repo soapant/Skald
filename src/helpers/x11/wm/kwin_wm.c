@@ -150,6 +150,9 @@ static bool kwin_run_script(const char *body) {
 static char *kwin_records = NULL;
 static char *kwin_active_title = NULL;
 static char *kwin_active_class = NULL;
+static int kwin_geom_x = 0, kwin_geom_y = 0, kwin_geom_w = 0,
+           kwin_geom_h = 0;
+static bool kwin_geom_valid = false;
 static long long kwin_snap_at = 0;
 static bool kwin_q_loaded = false;
 static int kwin_q_id = -1;
@@ -175,6 +178,9 @@ static const char kwin_q_body[] =
     "\"+(workspace.activeWindow?cf(workspace.activeWindow):\"\"));"
     "print(\"SKALDQC "
     "\"+(workspace.activeWindow?cc(workspace.activeWindow):\"\"));"
+    "var __g=workspace.activeWindow?workspace.activeWindow.frameGeometry:null;"
+    "print(\"SKALDG \"+(__g?(__g.x+\" \"+__g.y+\" \"+__g.width+\" \"+__g."
+    "height):\"0 0 0 0\"));"
     "})();";
 
 static bool kwin_q_load(void) {
@@ -258,6 +264,10 @@ static void kwin_snap_store(const char *blob) {
       which = 'c';
       val = p + 8;
       vlen = len - 8;
+    } else if (len > 8 && !strncmp(p, "SKALDG ", 8)) {
+      which = 'g';
+      val = p + 8;
+      vlen = len - 8;
     }
     if (which) {
       while (vlen > 0 && (val[vlen - 1] == '\r' || val[vlen - 1] == '\n'))
@@ -272,9 +282,19 @@ static void kwin_snap_store(const char *blob) {
         } else if (which == 'a') {
           free(at);
           at = v;
-        } else {
+        } else if (which == 'c') {
           free(ac);
           ac = v;
+        } else {
+          int gx = 0, gy = 0, gw = 0, gh = 0;
+          if (sscanf(v, "%d %d %d %d", &gx, &gy, &gw, &gh) == 4) {
+            kwin_geom_x = gx;
+            kwin_geom_y = gy;
+            kwin_geom_w = gw;
+            kwin_geom_h = gh;
+            kwin_geom_valid = gw > 0 && gh > 0;
+          }
+          free(v);
         }
       }
     }
@@ -327,7 +347,8 @@ static bool kwin_snapshot_locked(void) {
       }
       char *log = Platform_RunTerminalCommand(
           "journalctl --user -o cat --since=\"-5s\" 2>/dev/null | grep -a -e "
-          "\"SKALDQR \" -e \"SKALDQA \" -e \"SKALDQC \" | tail -6",
+          "\"SKALDQR \" -e \"SKALDQA \" -e \"SKALDQC \" -e \"SKALDG \" | "
+          "tail -8",
           false);
       if (log && log[0] &&
           (strstr(log, "SKALDQR ") || strstr(log, "SKALDQA "))) {
@@ -711,4 +732,76 @@ bool close_windows_matching_title_kwin(const char *needle) {
 
 bool close_windows_matching_id_kwin(const char *needle) {
   return kwin_close_windows(needle, true);
+}
+
+WindowHandle get_active_handle_kwin(void) {
+  char id[256] = {0};
+  if (!get_id_kwin(id, sizeof(id)) || !id[0])
+    return WH_NULL;
+  return WH_FROM_ID(id);
+}
+
+bool focus_window_id_kwin(const char *id) {
+  if (!id || !id[0] || !kwin_is_active())
+    return false;
+  char esc[512];
+  size_t o = 0;
+  for (const char *s = id; *s && o + 2 < sizeof(esc); s++) {
+    if (*s == '\\' || *s == '\'')
+      esc[o++] = '\\';
+    esc[o++] = (char)tolower((unsigned char)*s);
+  }
+  esc[o] = '\0';
+  char body[1200];
+  snprintf(body, sizeof(body),
+           "var n='%s';var ws=workspace.stackingOrder;for(var "
+           "i=0;i<ws.length;i++){var w=ws[i];if(!w)continue;var "
+           "v=String(w.resourceClass||'').toLowerCase();if(v.indexOf(n)!==-1){"
+           "workspace.activeWindow=w;break;}}",
+           esc);
+  return kwin_run_script(body);
+}
+
+bool move_active_window_to_xy_kwin(int x, int y) {
+  if (!kwin_is_active())
+    return false;
+  char body[512];
+  snprintf(body, sizeof(body),
+           "var a=workspace.activeWindow;if(!a){throw 'skald: no window';}var "
+           "g=a.frameGeometry;a.frameGeometry={x:%d,y:%d,width:g.width,height:"
+           "g.height};",
+           x, y);
+  return kwin_run_script(body);
+}
+
+bool set_active_window_size_kwin(int w, int h) {
+  if (!kwin_is_active() || w <= 0 || h <= 0)
+    return false;
+  char body[512];
+  snprintf(body, sizeof(body),
+           "var a=workspace.activeWindow;if(!a){throw 'skald: no window';}var "
+           "g=a.frameGeometry;a.frameGeometry={x:g.x,y:g.y,width:%d,height:%d}"
+           ";",
+           w, h);
+  return kwin_run_script(body);
+}
+
+bool get_active_window_geometry_kwin(DrawRect *out) {
+  if (!out)
+    return false;
+  memset(out, 0, sizeof(*out));
+  if (!kwin_is_active())
+    return false;
+  if (!kwin_snapshot_locked())
+    return false;
+  if (!kwin_geom_valid) {
+    kwin_snap_at = 0;
+    if (!kwin_snapshot_locked() || !kwin_geom_valid)
+      return false;
+  }
+  out->x = kwin_geom_x;
+  out->y = kwin_geom_y;
+  out->w = kwin_geom_w;
+  out->h = kwin_geom_h;
+  return true;
 }

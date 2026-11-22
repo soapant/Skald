@@ -1243,12 +1243,40 @@ bool sk_focus_window_by_title(const char *title) {
   return Platform_FocusWindow(title);
 }
 
-SkWindowHandle sk_get_window_id(const char *title) {
+SkWindowHandle sk_find_window_by_title(const char *title) {
   return Platform_GetWindowByTitle(title);
 }
 
-SkWindowHandle sk_get_window_by_root_atom(const char *atom) {
+SkWindowHandle sk_find_window_by_root_atom(const char *atom) {
   return Platform_GetWindowByRootAtom(atom);
+}
+
+SkWindowHandle sk_find_window_by_id(const char *id) {
+  return Platform_GetWindowById(id);
+}
+
+SkWindowHandle sk_get_held_window(void) { return Platform_GetHeldWindow(); }
+
+bool sk_move_window(SkWindowHandle window, int x, int y) {
+  return Platform_MoveWindow(window, x, y);
+}
+
+bool sk_set_window_size(SkWindowHandle window, int w, int h) {
+  return Platform_SetWindowSize(window, w, h);
+}
+
+bool sk_set_window_opacity(SkWindowHandle window, int percent) {
+  return Platform_SetWindowOpacityFor(window, percent);
+}
+
+SkRect sk_get_window_geometry(SkWindowHandle window) {
+  return Platform_GetWindowGeometry(window);
+}
+
+bool ski_set_window_geometry(SkWindowHandle window, const SkRect *rect) {
+  if (!rect)
+    return false;
+  return Platform_SetWindowGeometry(window, *rect);
 }
 
 bool sk_window_set_string_property(SkWindowHandle window, const char *atom,
@@ -4352,14 +4380,19 @@ bool sk_focus_window_by_title_fmt(const char *fmt, ...) {
   return sk_focus_window_by_title(buf);
 }
 
-SkWindowHandle sk_get_window_id_fmt(const char *fmt, ...) {
+SkWindowHandle sk_find_window_by_title_fmt(const char *fmt, ...) {
   SK_FMT_BUFFER();
-  return sk_get_window_id(buf);
+  return sk_find_window_by_title(buf);
 }
 
-SkWindowHandle sk_get_window_by_root_atom_fmt(const char *fmt, ...) {
+SkWindowHandle sk_find_window_by_root_atom_fmt(const char *fmt, ...) {
   SK_FMT_BUFFER();
-  return sk_get_window_by_root_atom(buf);
+  return sk_find_window_by_root_atom(buf);
+}
+
+SkWindowHandle sk_find_window_by_id_fmt(const char *fmt, ...) {
+  SK_FMT_BUFFER();
+  return sk_find_window_by_id(buf);
 }
 
 bool sk_window_set_long_property_fmt(SkWindowHandle window, long value,

@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 #include "core/types/prompt.h"
 #if defined(__linux__)
 typedef struct _XDisplay Display;
@@ -16,6 +18,7 @@ typedef struct WindowHandle {
 #elif defined(__linux__)
   unsigned long xid;
 #endif
+  char id[256];
 } WindowHandle;
 
 typedef struct FontHandle {
@@ -29,14 +32,30 @@ typedef struct FontHandle {
 
 #define WH_NULL ((WindowHandle){0})
 
+static inline WindowHandle WH_FROM_ID(const char *s) {
+  WindowHandle h = WH_NULL;
+  if (s)
+    snprintf(h.id, sizeof(h.id), "%s", s);
+  return h;
+}
+
+#define WH_TO_ID(h) ((h).id)
+#define WH_HAS_ID(h) ((h).id[0] != '\0')
+
 #if defined(_WIN32)
 #define WH_FROM_HWND(h) ((WindowHandle){.hwnd = (void *)(h)})
 #define WH_TO_HWND(h) ((h).hwnd)
-#define WH_EQUALS(a, b) ((a).hwnd == (b).hwnd)
+#define WH_EQUALS(a, b)                                                        \
+  (WH_HAS_ID(a) || WH_HAS_ID(b)                                               \
+       ? (WH_HAS_ID(a) && WH_HAS_ID(b) && !strcmp((a).id, (b).id))            \
+       : (a).hwnd == (b).hwnd)
 #elif defined(__linux__)
 #define WH_FROM_XID(x) ((WindowHandle){.xid = (unsigned long)(x)})
 #define WH_TO_XID(h) ((h).xid)
-#define WH_EQUALS(a, b) ((a).xid == (b).xid)
+#define WH_EQUALS(a, b)                                                        \
+  (WH_HAS_ID(a) || WH_HAS_ID(b)                                               \
+       ? (WH_HAS_ID(a) && WH_HAS_ID(b) && !strcmp((a).id, (b).id))            \
+       : (a).xid == (b).xid)
 #endif
 
 #define FH_NULL ((FontHandle){0})

@@ -769,3 +769,122 @@ bool close_windows_matching_title_hyprland(const char *needle) {
 bool close_windows_matching_id_hyprland(const char *needle) {
   return hypr_close_windows(needle, true);
 }
+
+WindowHandle get_active_handle_hyprland(void) {
+  char address[128] = {0};
+  if (!hypr_parse_activewindow_field("address", address, sizeof(address)))
+    return WH_NULL;
+  return WH_FROM_ID(address);
+}
+
+static bool hypr_json_int_array(const char *json, const char *key, int *a,
+                                int *b) {
+  const char *p = strstr(json, key);
+  if (!p)
+    return false;
+  p += strlen(key);
+  while (*p == ' ' || *p == ':')
+    p++;
+  if (*p != '[')
+    return false;
+  char *end = NULL;
+  long v0 = strtol(p + 1, &end, 10);
+  if (!end || end == p + 1)
+    return false;
+  p = end;
+  while (*p == ' ' || *p == ',')
+    p++;
+  char *end2 = NULL;
+  long v1 = strtol(p, &end2, 10);
+  if (!end2 || end2 == p)
+    return false;
+  if (a)
+    *a = (int)v0;
+  if (b)
+    *b = (int)v1;
+  return true;
+}
+
+static bool hypr_address_for_id(const char *id, char *out, size_t cap) {
+  out[0] = '\0';
+  if (!hypr_bus())
+    return false;
+  char *json = Platform_RunTerminalCommand("hyprctl clients -j", false);
+  if (!json || !json[0]) {
+    free(json);
+    return false;
+  }
+  bool found = false;
+  for (char *p = json; (p = strstr(p, "\"address\":")); p += 10) {
+    char *next = strstr(p + 10, "\"address\":");
+    char *limit = next ? next : json + strlen(json);
+    char address[64] = {0}, clazz[512] = {0};
+    hypr_json_field(p, limit, "\"address\":", address, sizeof(address));
+    hypr_json_field(p, limit, "\"class\":", clazz, sizeof(clazz));
+    if (address[0] && clazz[0] && string_contains_ci(clazz, id)) {
+      snprintf(out, cap, "%s", address);
+      found = true;
+      break;
+    }
+  }
+  free(json);
+  return found;
+}
+
+bool focus_window_id_hyprland(const char *id) {
+  if (!id || !id[0] || !hypr_bus())
+    return false;
+  char address[128] = {0};
+  if (id[0] == '0' && (id[1] == 'x' || id[1] == 'X')) {
+    snprintf(address, sizeof(address), "%s", id);
+  } else if (!hypr_address_for_id(id, address, sizeof(address))) {
+    return false;
+  }
+  char cmd[512];
+  snprintf(cmd, sizeof(cmd),
+           "hyprctl dispatch 'hl.dsp.focus({ window = \"address:%s\" })'",
+           address);
+  return hypr_exec(cmd);
+}
+
+bool move_active_window_to_xy_hyprland(int x, int y) {
+  if (!hypr_bus())
+    return false;
+  char cmd[256];
+  snprintf(cmd, sizeof(cmd),
+           "hyprctl dispatch 'hl.dsp.window.move({ x = %d, y = %d })'", x, y);
+  return hypr_exec(cmd);
+}
+
+bool set_active_window_size_hyprland(int w, int h) {
+  if (!hypr_bus() || w <= 0 || h <= 0)
+    return false;
+  char cmd[256];
+  snprintf(cmd, sizeof(cmd),
+           "hyprctl dispatch 'hl.dsp.window.resize({ x = %d, y = %d })'", w, h);
+  return hypr_exec(cmd);
+}
+
+bool get_active_window_geometry_hyprland(DrawRect *out) {
+  if (!out)
+    return false;
+  memset(out, 0, sizeof(*out));
+  if (!hypr_bus())
+    return false;
+  char *json = Platform_RunTerminalCommand("hyprctl activewindow -j", false);
+  if (!json || !json[0]) {
+    free(json);
+    return false;
+  }
+  int x = 0, y = 0, w = 0, h = 0;
+  bool ok = hypr_json_int_array(json, "\"at\":", &x, &y) &&
+            hypr_json_int_array(json, "\"size\":", &w, &h);
+  free(json);
+  if (!ok || w <= 0 || h <= 0)
+    return false;
+  out->x = x;
+  out->y = y;
+  out->w = w;
+  out->h = h;
+  return true;
+}

@@ -40,4 +40,15 @@ bool x11_center_active_window(void);
 bool x11_snap_active_window(SnapPreset preset);
 long x11_get_active_window_pid(void);
 bool x11_get_mouse_pos(int *x, int *y);
+WindowHandle x11_get_active_window_handle(void);
+bool x11_focus_window_xid(unsigned long xid);
+bool x11_focus_window_id(const char *id);
+bool x11_move_active_window_to(int x, int y);
+bool x11_set_active_window_size(int w, int h);
+bool x11_get_active_window_geometry(DrawRect *out);
+bool x11_get_window_geometry_xid(unsigned long xid, DrawRect *out);
+bool x11_move_window_xid(unsigned long xid, int x, int y);
+bool x11_set_window_size_xid(unsigned long xid, int w, int h);
+bool x11_set_window_opacity_xid(unsigned long xid, int percent);
+bool x11_set_window_geometry_xid(unsigned long xid, DrawRect rect);
 #endif

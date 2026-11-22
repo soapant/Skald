@@ -862,3 +862,126 @@ bool set_active_window_opacity_sway(int percent) {
   snprintf(cmd, sizeof(cmd), "swaymsg opacity %.2f", (double)percent / 100.0);
   return sway_exec(cmd);
 }
+
+static const char *sway_focused_pos(const char *json) {
+  const char *p = strstr(json, "\"focused\":true");
+  if (p)
+    return p;
+  return strstr(json, "\"focused\": true");
+}
+
+static const char *sway_nearest_before(const char *json, const char *pos,
+                                       const char *key) {
+  const char *last = NULL;
+  const char *p = json;
+  while ((p = strstr(p, key)) && p < pos) {
+    last = p;
+    p += strlen(key);
+  }
+  return last;
+}
+
+static bool sway_json_int_at(const char *json, const char *key, int *out) {
+  const char *p = strstr(json, key);
+  if (!p)
+    return false;
+  p += strlen(key);
+  while (*p == ' ' || *p == ':' || *p == ',')
+    p++;
+  char *end = NULL;
+  long v = strtol(p, &end, 10);
+  if (!end || end == p)
+    return false;
+  *out = (int)v;
+  return true;
+}
+
+WindowHandle get_active_handle_sway(void) {
+  char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
+  if (!json || !json[0]) {
+    free(json);
+    return WH_NULL;
+  }
+  const char *focus = sway_focused_pos(json);
+  const char *idp = focus ? sway_nearest_before(json, focus, "\"id\":") : NULL;
+  int con_id = idp ? atoi(idp + 5) : 0;
+  free(json);
+  if (!con_id)
+    return WH_NULL;
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%d", con_id);
+  return WH_FROM_ID(buf);
+}
+
+bool focus_window_id_sway(const char *id) {
+  if (!id || !id[0] || !sway_bus())
+    return false;
+  char *end = NULL;
+  long con_id = strtol(id, &end, 10);
+  if (end && end != id && *end == '\0' && con_id > 0)
+    return sway_focus_by_con_id((int)con_id);
+  char escaped[1024];
+  size_t o = 0;
+  for (const char *s = id; *s && o + 2 < sizeof(escaped); s++) {
+    if (*s == '"' || *s == '\\')
+      escaped[o++] = '\\';
+    escaped[o++] = *s;
+  }
+  escaped[o] = '\0';
+  char criteria[1200];
+  snprintf(criteria, sizeof(criteria), "[app_id=\"%s\"] focus", escaped);
+  const char *argv[] = {"swaymsg", criteria, NULL};
+  return succeded_sway(Platform_RunArgvCapture(argv, NULL, NULL));
+}
+
+bool move_active_window_to_xy_sway(int x, int y) {
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "swaymsg move position %d px %d px", x, y);
+  return sway_exec(cmd);
+}
+
+bool set_active_window_size_sway(int w, int h) {
+  if (w <= 0 || h <= 0)
+    return false;
+  char cmd[160];
+  snprintf(cmd, sizeof(cmd),
+           "swaymsg resize set width %d px height %d px", w, h);
+  return sway_exec(cmd);
+}
+
+bool get_active_window_geometry_sway(DrawRect *out) {
+  if (!out)
+    return false;
+  memset(out, 0, sizeof(*out));
+  char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
+  if (!json || !json[0]) {
+    free(json);
+    return false;
+  }
+  const char *focus = sway_focused_pos(json);
+  const char *rect = focus ? sway_nearest_before(json, focus, "\"rect\":") : NULL;
+  bool ok = false;
+  if (rect) {
+    int x = 0, y = 0, w = 0, h = 0;
+    const char *rend = strchr(rect, '}');
+    if (!rend)
+      rend = rect + strlen(rect);
+    char tmp[1024] = {0};
+    size_t n = (size_t)(rend - rect);
+    if (n >= sizeof(tmp))
+      n = sizeof(tmp) - 1;
+    memcpy(tmp, rect, n);
+    ok = sway_json_int_at(tmp, "\"x\":", &x) &&
+         sway_json_int_at(tmp, "\"y\":", &y) &&
+         sway_json_int_at(tmp, "\"width\":", &w) &&
+         sway_json_int_at(tmp, "\"height\":", &h);
+    if (ok) {
+      out->x = x;
+      out->y = y;
+      out->w = w;
+      out->h = h;
+    }
+  }
+  free(json);
+  return ok;
+}

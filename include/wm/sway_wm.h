@@ -38,5 +38,10 @@ bool snap_active_window_sway(SnapPreset preset);
 long get_pid_sway(void);
 bool inject_key_sway(int vk, int down);
 bool get_mouse_pos_sway(int *x, int *y);
+WindowHandle get_active_handle_sway(void);
+bool focus_window_id_sway(const char *id);
+bool move_active_window_to_xy_sway(int x, int y);
+bool set_active_window_size_sway(int w, int h);
+bool get_active_window_geometry_sway(DrawRect *out);
 
 #endif
