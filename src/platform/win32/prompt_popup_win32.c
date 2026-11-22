@@ -154,15 +154,13 @@ void Platform_PromptPopupRender(Popup *self) {
   if (!state)
     return;
   if (state->callbacks->render) {
-    bool draw_band = prompt_band_take_placed();
+    prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
                       state->height - prompt_list_top() -
                           prompt_list_bottom_margin());
     editbox_registry_register_focus(state);
-    if (draw_band)
-      draw_prompt_band(0, prompt_list_top(), state->width);
     editbox_registry_tick(state);
     editbox_registry_begin_frame(state);
     state->callbacks->render(state);

@@ -618,7 +618,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       }
     }
     if (SkaldContext_Get()->window.prompt_callbacks.render) {
-      bool draw_band = prompt_band_take_placed();
+      prompt_band_take_placed();
       PromptState *state = win32_prompt_state_from_hwnd(hwnd);
       if (state && state->callbacks && state->callbacks->render) {
         checkbox_frame_begin();
@@ -632,8 +632,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         s_in_render = true;
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = state->no_separators;
-        if (draw_band)
-          draw_prompt_band(0, prompt_list_top(), state->width);
         editbox_registry_tick(state);
         editbox_registry_begin_frame(state);
         state->callbacks->render(state);
@@ -657,10 +655,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = estate->no_separators;
         win32_set_draw_context(paintDC);
-        if (estate->lb) {
+        if (estate->lb)
           SkaldContext_Get()->window.listbox_placed = true;
-          draw_prompt_band(0, prompt_list_top() - 2, rect.right - rect.left);
-        }
         extern void Platform_DrawPromptEditbox(PromptState * state);
         Platform_DrawPromptEditbox(estate);
 

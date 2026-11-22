@@ -72,7 +72,6 @@ void prompt_process_pending_subwindow(void);
 bool terminal_guard(const char *working_dir, const char *extra_args);
 Metrics *metrics_get(void);
 void draw_prompt_separator(DrawPromptSeparatorSpec spec);
-void draw_prompt_band(int y, int bottom_y, int width);
 bool prompt_band_take_placed(void);
 void prompt_band_commit_placed(void);
 void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,
