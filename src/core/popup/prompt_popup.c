@@ -51,6 +51,7 @@ static void prompt_popup_on_show(Popup *self) {
            wm->popup_count);
 
   Platform_PromptPopupShowWindow(self, data->x, data->y, data->w, data->h);
+  Platform_PromptPopupResize(self, data->x, data->y, data->w, data->h);
   {
     bool want_rounded =
         data->spec.rounded ? data->spec.rounded : RoundedCorners;
@@ -388,9 +389,7 @@ Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
 
   int x = spec->x;
   int y = spec->y;
-  if (x == 0 && y == 0) {
-    WindowManager_GetDefaultPromptPosition(layout_w, layout_h, &x, &y);
-  } else {
+  if (spec->subwindow) {
     int wx = 0, wy = 0;
     Popup *top = WindowManager_GetTopPopup(wm);
     bool have_origin = false;
@@ -404,6 +403,12 @@ Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
       x += wx;
       y += wy;
     }
+  } else {
+    int anchor_h = spec->h > 0 ? PromptH : layout_h;
+    if (x == 0)
+      WindowManager_GetDefaultPromptPosition(layout_w, anchor_h, &x, NULL);
+    if (y == 0)
+      WindowManager_GetDefaultPromptPosition(layout_w, anchor_h, NULL, &y);
   }
 
   PromptPopupData *data = calloc(1, sizeof(PromptPopupData));

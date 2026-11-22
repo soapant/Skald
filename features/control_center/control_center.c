@@ -1085,7 +1085,6 @@ static void cc_update_compact_size(const PromptState *state) {
   if (bounds.w <= 0 || bounds.h <= 0)
     return;
   int target_h = expanded ? PromptH : CC_COMPACT_HEIGHT;
-  bounds.y -= (target_h - bounds.h) / 2;
   bounds.h = target_h;
   ski_resize_window_animated(&bounds, 160);
   cc_compact_expanded = expanded;

@@ -93,6 +93,7 @@ bool Platform_PromptPopupResize(Popup *self, int x, int y, int w, int h) {
   Window win = self->handle.xid;
   if (!dpy || win == None)
     return false;
+  x11_set_fixed_size_hints(dpy, win, w, h);
   XMoveResizeWindow(dpy, win, x, y, (unsigned)w, (unsigned)h);
   x11_apply_shape(dpy, win, w, h, RoundedCorners,
                   RoundedCorners ? CornerRadius : 0);

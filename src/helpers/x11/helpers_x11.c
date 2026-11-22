@@ -1408,16 +1408,13 @@ static void x11_set_net_wm_state_skip(Display *dpy, Window win) {
                   (unsigned char *)states, 2);
 }
 
-static void x11_set_fixed_size_hints(Display *dpy, Window win, int x, int y,
-                                     int w, int h) {
+void x11_set_fixed_size_hints(Display *dpy, Window win, int w, int h) {
   XSizeHints *sh = XAllocSizeHints();
-  sh->flags = PMinSize | PMaxSize | USPosition;
+  sh->flags = PMinSize | PMaxSize;
   sh->min_width = w;
   sh->min_height = h;
   sh->max_width = w;
   sh->max_height = h;
-  sh->x = x;
-  sh->y = y;
   XSetWMNormalHints(dpy, win, sh);
   XFree(sh);
 }
@@ -1554,7 +1551,7 @@ static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
   XSetWMHints(dpy, win, hints);
   XFree(hints);
   if (override_redirect && niri_is_active()) {
-    x11_set_fixed_size_hints(dpy, win, x, y, w, h);
+    x11_set_fixed_size_hints(dpy, win, w, h);
   }
   XSelectInput(dpy, win, event_mask);
   if (RoundedCorners && CornerRadius > 0) {
@@ -2186,7 +2183,7 @@ Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h) {
     XGetInputFocus(dpy, &focus_win, &revert_to);
     if (focus_win != None && focus_win != PointerRoot && focus_win != win)
       XSetTransientForHint(dpy, win, focus_win);
-    x11_set_fixed_size_hints(dpy, win, x, y, w, h);
+    x11_set_fixed_size_hints(dpy, win, w, h);
   }
   if (RoundedCorners && CornerRadius > 0)
     x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
