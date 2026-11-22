@@ -1489,7 +1489,50 @@ bool ski_draw_text(const SkTextSpec *spec) {
                                                 .align = (char *)align,
                                                 .pad = spec->pad,
                                                 .font_size = spec->font_size,
-                                                .angle = spec->angle});
+                                                 .angle = spec->angle});
+}
+
+static int text_segment_width(const SkTextSegment *seg, int font_size) {
+  if (!seg || !seg->text)
+    return 0;
+  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
+      .text = seg->text, .len = (int)strlen(seg->text), .font_size = font_size});
+}
+
+bool ski_draw_text_segments(const SkTextSegmentsSpec *spec) {
+  if (!spec || !spec->segments || spec->count <= 0)
+    return false;
+  int total = 0;
+  for (int i = 0; i < spec->count; i++)
+    total += text_segment_width(&spec->segments[i], spec->font_size);
+  int start_x = spec->pad > 0 ? spec->pad : spec->x;
+  const char *align = spec->align ? spec->align : "LEFT";
+  if (string_contains_ci(align, "CENTER"))
+    start_x -= total / 2;
+  else if (string_contains_ci(align, "RIGHT"))
+    start_x -= total;
+  int cx = start_x;
+  bool ok = true;
+  for (int i = 0; i < spec->count; i++) {
+    const SkTextSegment *seg = &spec->segments[i];
+    if (!seg->text || !seg->text[0])
+      continue;
+    unsigned long color = seg->color;
+    if (color == 0 || color == COLOR_AUTO)
+      color = spec->color;
+    if (!ski_draw_text(&(SkTextSpec){.text = seg->text,
+                                     .x = cx,
+                                     .y = spec->y,
+                                     .color = color,
+                                     .font = spec->font,
+                                     .font_size = spec->font_size,
+                                     .align = "LEFT",
+                                     .no_hscroll = spec->no_hscroll,
+                                     .angle = spec->angle}))
+      ok = false;
+    cx += text_segment_width(seg, spec->font_size);
+  }
+  return ok;
 }
 
 bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {

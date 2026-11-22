@@ -489,6 +489,30 @@ void sk_image_free(SkImage image);
 
 bool ski_draw_text(const SkTextSpec *spec);
 bool ski_draw_text_centered(const SkTextCenteredSpec *spec);
+
+typedef struct {
+  const char *text;
+  ColorRef color;
+} SkTextSegment;
+
+typedef struct {
+  const SkTextSegment *segments;
+  int count;
+  int x;
+  int y;
+  unsigned long color;
+  FontHandle font;
+  int font_size;
+  const char *align;
+  int pad;
+  bool no_hscroll;
+  float angle;
+} SkTextSegmentsSpec;
+
+bool ski_draw_text_segments(const SkTextSegmentsSpec *spec);
+#define sk_draw_text_segments(...)                                             \
+  ski_draw_text_segments(&(SkTextSegmentsSpec){__VA_ARGS__})
+
 bool ski_draw_image(const SkImageSpec *spec);
 bool ski_place_editbox(const SkEditSpec *spec);
 const char *sk_editbox_text(const char *name);
