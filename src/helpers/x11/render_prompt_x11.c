@@ -21,6 +21,16 @@
 #include "platform/platform.h"
 #include "core/draw_state.h"
 
+static void prompt_state_update_delta(PromptState *state) {
+  long long now_ticks = Platform_TimerNowTicks();
+  long long freq = Platform_TimerTickFrequency();
+  if (state->last_frame_ticks && freq > 0)
+    state->delta_time =
+        (double)(now_ticks - state->last_frame_ticks) * 1000.0 /
+        (double)freq;
+  state->last_frame_ticks = now_ticks;
+}
+
 static Display *pbuf_dpy = NULL;
 static Window pbuf_win = None;
 static int pbuf_w = 0;
@@ -149,6 +159,7 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
   x11_draw_background(dpy, *win, w, h);
   x11_set_draw_context(dpy, NULL, NULL, 0);
   if (state->callbacks && state->callbacks->render) {
+    prompt_state_update_delta(state);
     checkbox_frame_begin();
     slider_frame_begin();
     focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
@@ -230,6 +241,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   }
   x11_set_draw_context(dpy, xdDbl, vis, cmap);
   if (state->callbacks->render != NULL) {
+    prompt_state_update_delta(state);
     checkbox_frame_begin();
     slider_frame_begin();
     focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,

@@ -80,6 +80,8 @@ struct PromptState {
   bool password_mode;
   ColorRef bg_color;
   bool no_separators;
+  double delta_time;
+  long long last_frame_ticks;
 };
 
 typedef void (*RefreshCallback)(PromptState *state);

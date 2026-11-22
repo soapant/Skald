@@ -14,6 +14,7 @@
 #include "helpers/win32/common_ui_win32.h"
 #include "helpers/win32/win32_state.h"
 #include "core/draw_state.h"
+#include "platform/platform.h"
 #include <windows.h>
 
 static HWND g_prev_fg = NULL;
@@ -154,6 +155,13 @@ void Platform_PromptPopupRender(Popup *self) {
   if (!state)
     return;
   if (state->callbacks->render) {
+    long long now_ticks = Platform_TimerNowTicks();
+    long long freq = Platform_TimerTickFrequency();
+    if (state->last_frame_ticks && freq > 0)
+      state->delta_time =
+          (double)(now_ticks - state->last_frame_ticks) * 1000.0 /
+          (double)freq;
+    state->last_frame_ticks = now_ticks;
     prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;

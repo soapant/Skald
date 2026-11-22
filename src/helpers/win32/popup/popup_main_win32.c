@@ -621,6 +621,13 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       prompt_band_take_placed();
       PromptState *state = win32_prompt_state_from_hwnd(hwnd);
       if (state && state->callbacks && state->callbacks->render) {
+        long long now_ticks = Platform_TimerNowTicks();
+        long long freq = Platform_TimerTickFrequency();
+        if (state->last_frame_ticks && freq > 0)
+          state->delta_time =
+              (double)(now_ticks - state->last_frame_ticks) * 1000.0 /
+              (double)freq;
+        state->last_frame_ticks = now_ticks;
         checkbox_frame_begin();
         slider_frame_begin();
         focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,

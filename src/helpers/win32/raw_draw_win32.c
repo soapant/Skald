@@ -85,6 +85,62 @@ static bool win32_cache_stale(DWORD now, DWORD *checked_ms, const char *path,
   return true;
 }
 
+static void win32_dib_release(HDC dc, HBITMAP dib) {
+  if (dc)
+    DeleteDC(dc);
+  if (dib)
+    DeleteObject(dib);
+}
+
+static GpBitmap *win32_create_dib_bitmap(int w, int h, HBITMAP *out_dib,
+                                         HDC *out_dc, void **out_bits) {
+  BITMAPINFO bmi;
+  ZeroMemory(&bmi, sizeof(bmi));
+  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+  bmi.bmiHeader.biWidth = w;
+  bmi.bmiHeader.biHeight = -h;
+  bmi.bmiHeader.biPlanes = 1;
+  bmi.bmiHeader.biBitCount = 32;
+  bmi.bmiHeader.biCompression = BI_RGB;
+  void *bits = NULL;
+  HDC screen = win32_screen_dc();
+  HBITMAP dib = CreateDIBSection(screen, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
+  if (!dib || !bits) {
+    if (dib)
+      DeleteObject(dib);
+    return NULL;
+  }
+  HDC dc = CreateCompatibleDC(screen);
+  if (!dc) {
+    DeleteObject(dib);
+    return NULL;
+  }
+  if (!SelectObject(dc, dib)) {
+    win32_dib_release(dc, dib);
+    return NULL;
+  }
+  GpBitmap *bmp = NULL;
+  if (GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppPARGB, bits,
+                                &bmp) != Ok ||
+      !bmp) {
+    win32_dib_release(dc, dib);
+    return NULL;
+  }
+  *out_dib = dib;
+  *out_dc = dc;
+  *out_bits = bits;
+  return bmp;
+}
+
+static bool win32_bits_opaque(const void *bits, int w, int h) {
+  const unsigned char *p = (const unsigned char *)bits;
+  size_t n = (size_t)w * (size_t)h * 4;
+  for (size_t i = 3; i < n; i += 4)
+    if (p[i] != 255)
+      return false;
+  return true;
+}
+
 bool win32_text_is_symbolic(const wchar_t *wide, int len) {
   return win32_text_any(wide, len, win32_pred_symbolic);
 }
