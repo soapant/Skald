@@ -389,7 +389,15 @@ Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
 
   int x = spec->x;
   int y = spec->y;
-  if (spec->subwindow) {
+  bool explicit_x = x != 0;
+  bool explicit_y = y != 0;
+  if (!explicit_x)
+    WindowManager_GetDefaultPromptPosition(layout_w, layout_h, &x, NULL);
+  if (!explicit_y) {
+    int anchor_h = spec->anchor_y_to_prompt_h ? PromptH : layout_h;
+    WindowManager_GetDefaultPromptPosition(layout_w, anchor_h, NULL, &y);
+  }
+  if (explicit_x || explicit_y) {
     int wx = 0, wy = 0;
     Popup *top = WindowManager_GetTopPopup(wm);
     bool have_origin = false;
@@ -400,15 +408,11 @@ Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
       have_origin = Platform_WindowToRoot(hMain, &wx, &wy);
     }
     if (have_origin) {
-      x += wx;
-      y += wy;
+      if (explicit_x)
+        x += wx;
+      if (explicit_y)
+        y += wy;
     }
-  } else {
-    int anchor_h = spec->h > 0 ? PromptH : layout_h;
-    if (x == 0)
-      WindowManager_GetDefaultPromptPosition(layout_w, anchor_h, &x, NULL);
-    if (y == 0)
-      WindowManager_GetDefaultPromptPosition(layout_w, anchor_h, NULL, &y);
   }
 
   PromptPopupData *data = calloc(1, sizeof(PromptPopupData));
