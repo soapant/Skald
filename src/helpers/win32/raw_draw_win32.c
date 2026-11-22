@@ -433,8 +433,12 @@ static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
   *size = fad.nFileSizeLow ^ (fad.nFileSizeHigh * 2654435761u);
 }
 
-void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {
-
+void *win32_img_cache_get(const char *path, HDC screen, int w, int h,
+                          HDC *out_dc, bool *out_opaque) {
+  if (out_dc)
+    *out_dc = NULL;
+  if (out_opaque)
+    *out_opaque = false;
   HBITMAP found = NULL;
   DWORD now = GetTickCount();
   win32_img_cache_lock();
@@ -446,21 +450,29 @@ void *win32_img_cache_get(const char *path, HDC screen, int w, int h) {
       continue;
     if (strcmp(s->key, path) != 0)
       continue;
-    if (win32_cache_stale(now, &s->checked_ms, path, &s->mtime, s->size,
-                          (void **)&s->bmp)) {
+    if (win32_entry_changed(now, &s->checked_ms, path, &s->mtime, s->size)) {
+      win32_gdip_dispose(s->bmp);
+      win32_dib_release(s->dc, s->dib);
+      s->bmp = NULL;
+      s->dib = NULL;
+      s->dc = NULL;
       s->failed = 0;
       continue;
     }
     s->stamp = ++img_cache_tick;
     found = s->bmp ? s->bmp : WIN32_IMG_FAILED;
+    if (s->bmp && out_dc)
+      *out_dc = s->dc;
+    if (s->bmp && out_opaque)
+      *out_opaque = s->opaque;
     break;
   }
   win32_img_cache_unlock();
   return found;
 }
 
-void win32_img_cache_put(const char *path, HDC screen, int w, int h,
-                         void *bmp) {
+void win32_img_cache_put(const char *path, HDC screen, int w, int h, void *bmp,
+                         HBITMAP dib, HDC dc, bool opaque) {
 
   FILETIME ft;
   DWORD size;
@@ -497,6 +509,7 @@ void win32_img_cache_put(const char *path, HDC screen, int w, int h,
     slot = 0;
   Win32ImgSlot *s = &img_cache[slot];
   win32_gdip_dispose(s->bmp);
+  win32_dib_release(s->dc, s->dib);
   snprintf(s->key, sizeof(s->key), "%s", path);
   s->w = w;
   s->h = h;
@@ -504,6 +517,9 @@ void win32_img_cache_put(const char *path, HDC screen, int w, int h,
   s->size = size;
   s->screen = screen;
   s->bmp = bmp;
+  s->dib = dib;
+  s->dc = dc;
+  s->opaque = opaque;
   s->failed = (bmp == NULL) ? 1 : 0;
   s->checked_ms = GetTickCount();
   s->stamp = ++img_cache_tick;
@@ -567,9 +583,9 @@ void win32_src_cache_put(const char *path, void *src) {
 void win32_img_cache_free_all(void) {
   win32_img_cache_lock();
   for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-    if (img_cache[i].bmp) {
+    if (img_cache[i].bmp)
       win32_gdip_dispose(img_cache[i].bmp);
-    }
+    win32_dib_release(img_cache[i].dc, img_cache[i].dib);
     memset(&img_cache[i], 0, sizeof(img_cache[i]));
   }
   for (int i = 0; i < WIN32_SRC_CACHE_SLOTS; i++) {
@@ -616,7 +632,14 @@ GpBitmap *win32_load_shell_icon_bitmap(const char *path) {
   return win32_load_shell_icon_ex(path, false);
 }
 
-void *win32_load_scaled_bitmap(const char *path, int w, int h) {
+void *win32_load_scaled_bitmap(const char *path, int w, int h, HBITMAP *out_dib,
+                               HDC *out_dc, bool *out_opaque) {
+  if (out_dib)
+    *out_dib = NULL;
+  if (out_dc)
+    *out_dc = NULL;
+  if (out_opaque)
+    *out_opaque = false;
 
   win32_gdip_ensure();
   if (g_gdip_token == 0) {
@@ -648,10 +671,21 @@ void *win32_load_scaled_bitmap(const char *path, int w, int h) {
     win32_src_cache_put(path, src);
   }
 
-  GpBitmap *out = NULL;
-  if (GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppPARGB, NULL,
-                                &out) != Ok ||
-      !out) {
+  PixelFormat src_format = PixelFormatUndefined;
+  GdipGetImagePixelFormat(src, &src_format);
+  bool source_opaque =
+      src_format != PixelFormat32bppARGB &&
+      src_format != PixelFormat32bppPARGB &&
+      src_format != PixelFormat64bppARGB &&
+      src_format != PixelFormat64bppPARGB &&
+      src_format != PixelFormat16bppARGB1555;
+
+  HBITMAP dib = NULL;
+  HDC dc = NULL;
+  void *bits = NULL;
+  GpBitmap *out = win32_create_dib_bitmap(w, h, &dib, &dc, &bits);
+  if (!out) {
+    log_error("img: cannot create dib %dx%d", w, h);
     return NULL;
   }
   GpGraphics *g = NULL;
@@ -665,6 +699,12 @@ void *win32_load_scaled_bitmap(const char *path, int w, int h) {
   } else {
     log_error("img: ctx st=%d", (int)_gs);
   }
+  if (out_dib)
+    *out_dib = dib;
+  if (out_dc)
+    *out_dc = dc;
+  if (out_opaque)
+    *out_opaque = source_opaque || win32_bits_opaque(bits, w, h);
   return out;
 }
 

@@ -51,6 +51,9 @@ typedef struct {
   DWORD size;
   HDC screen;
   void *bmp;
+  HBITMAP dib;
+  HDC dc;
+  bool opaque;
   ULONGLONG stamp;
   DWORD checked_ms;
   int failed;
@@ -91,12 +94,15 @@ void win32_gdip_dispose(void *img);
 HDC win32_screen_dc(void);
 void win32_img_cache_lock(void);
 void win32_img_cache_unlock(void);
-void *win32_img_cache_get(const char *path, HDC screen, int w, int h);
-void win32_img_cache_put(const char *path, HDC screen, int w, int h, void *img);
+void *win32_img_cache_get(const char *path, HDC screen, int w, int h,
+                          HDC *out_dc, bool *out_opaque);
+void win32_img_cache_put(const char *path, HDC screen, int w, int h, void *img,
+                         HBITMAP dib, HDC dc, bool opaque);
 void *win32_src_cache_get(const char *path);
 void win32_src_cache_put(const char *path, void *src);
 void win32_img_cache_free_all(void);
-void *win32_load_scaled_bitmap(const char *path, int w, int h);
+void *win32_load_scaled_bitmap(const char *path, int w, int h, HBITMAP *out_dib,
+                               HDC *out_dc, bool *out_opaque);
 void *win32_load_shell_icon_bitmap(const char *path);
 void *win32_load_shell_icon_ex(const char *path, bool use_file_attributes);
 void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max);

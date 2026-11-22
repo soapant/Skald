@@ -25,12 +25,15 @@ bool Platform_PrewarmImage(char *path) {
   HDC screen = win32_screen_dc();
   if (!screen)
     return false;
-  void *bmp = win32_img_cache_get(path, screen, FontSize, FontSize);
+  void *bmp = win32_img_cache_get(path, screen, FontSize, FontSize, NULL, NULL);
   if (bmp == WIN32_IMG_FAILED)
     return false;
   if (!bmp) {
-    bmp = win32_load_scaled_bitmap(path, FontSize, FontSize);
-    win32_img_cache_put(path, screen, FontSize, FontSize, bmp);
+    HBITMAP dib = NULL;
+    HDC dc = NULL;
+    bool opaque = false;
+    bmp = win32_load_scaled_bitmap(path, FontSize, FontSize, &dib, &dc, &opaque);
+    win32_img_cache_put(path, screen, FontSize, FontSize, bmp, dib, dc, opaque);
   }
   return bmp != NULL;
 }
@@ -428,16 +431,22 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     return false;
   }
 
-  void *bmp = win32_img_cache_get(path, screen, w, h);
-  if (bmp == WIN32_IMG_FAILED) {
+  HDC img_dc = NULL;
+  bool opaque = false;
+  void *bmp = win32_img_cache_get(path, screen, w, h, &img_dc, &opaque);
+  if (bmp == WIN32_IMG_FAILED)
     return false;
-  }
   if (!bmp) {
-    bmp = win32_load_scaled_bitmap(path, w, h);
-    win32_img_cache_put(path, screen, w, h, bmp);
+    HBITMAP dib = NULL;
+    bmp = win32_load_scaled_bitmap(path, w, h, &dib, &img_dc, &opaque);
+    win32_img_cache_put(path, screen, w, h, bmp, dib, img_dc, opaque);
   }
-  if (!bmp) {
+  if (!bmp)
     return false;
+
+  if (img_dc && opaque) {
+    BitBlt(g_draw_hdc, x, y, w, h, img_dc, 0, 0, SRCCOPY);
+    return true;
   }
 
   win32_gdip_ensure();
@@ -463,6 +472,9 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     GdipSetCompositingQuality(s_cached_g, CompositingQualityHighSpeed);
     GdipSetSmoothingMode(s_cached_g, SmoothingModeHighSpeed);
   }
+  GdipSetCompositingMode(
+      s_cached_g,
+      opaque ? CompositingModeSourceCopy : CompositingModeSourceOver);
 
   GpStatus status = GdipDrawImageRectI(s_cached_g, (GpBitmap *)bmp, x, y, w, h);
   if (status != Ok) {
