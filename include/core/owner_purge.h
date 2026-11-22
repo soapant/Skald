@@ -2,6 +2,8 @@
 #define OWNER_PURGE_H
 
 void run_every_purge_owner(const char *path_a, const char *path_b);
+void config_hotkey_registry_purge_owner(const char *path_a,
+                                        const char *path_b);
 void purge_owner_set(const char *path_a, const char *path_b,
                      unsigned widget_gen);
 

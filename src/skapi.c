@@ -3681,6 +3681,22 @@ static SkConfigAliasEntry *alias_entries;
 static SkConfigQuicklinkEntry *quicklink_entries;
 #define quicklink_entry_count arrlenu(quicklink_entries)
 
+typedef struct {
+  char *display_name;
+  char *key;
+  char *default_hotkey;
+  char **whitelist;
+  char **blacklist;
+  void (*cb)(void);
+  HotkeyCallbackUd cb_ud;
+  void *ud;
+  bool (*should_swallow)(void);
+  char *owner;
+} ConfigHotkeyBinding;
+
+static ConfigHotkeyBinding *config_hotkey_bindings;
+#define config_hotkey_binding_count arrlenu(config_hotkey_bindings)
+
 static void *sk_config_mutex = NULL;
 static char sk_config_path[1024];
 static bool sk_config_loaded = false;
@@ -4032,6 +4048,149 @@ char *sk_config_hotkey_value_at(int index) {
   char *out = ok ? strdup(hotkey_entries[index].hotkey) : NULL;
   sk_config_unlock();
   return out;
+}
+
+static int config_hotkey_binding_index(const char *key) {
+  if (!key)
+    return -1;
+  for (size_t i = 0; i < config_hotkey_binding_count; i++)
+    if (sk_string_equals_ci(config_hotkey_bindings[i].key, key))
+      return (int)i;
+  return -1;
+}
+
+char *sk_config_hotkey_display_name_at(int index) {
+  char *key = sk_config_hotkey_name_at(index);
+  if (!key)
+    return NULL;
+  int binding = config_hotkey_binding_index(key);
+  free(key);
+  if (binding < 0)
+    return NULL;
+  return strdup(config_hotkey_bindings[binding].display_name);
+}
+
+static void config_hotkey_strings_free(char **strings) {
+  for (size_t i = 0; i < arrlenu(strings); i++)
+    free(strings[i]);
+  arrfree(strings);
+}
+
+static void config_hotkey_strings_copy(char ***out, const char *const *src) {
+  arrfree(*out);
+  *out = NULL;
+  if (!src)
+    return;
+  for (int i = 0; src[i]; i++)
+    arrput(*out, strdup(src[i]));
+}
+
+static void config_hotkey_binding_free(ConfigHotkeyBinding *b) {
+  if (!b)
+    return;
+  free(b->display_name);
+  free(b->key);
+  free(b->default_hotkey);
+  free(b->owner);
+  config_hotkey_strings_free(b->whitelist);
+  config_hotkey_strings_free(b->blacklist);
+}
+
+static const char **config_hotkey_string_view(char **strings) {
+  const char **out = NULL;
+  for (size_t i = 0; i < arrlenu(strings); i++)
+    arrput(out, strings[i]);
+  return out;
+}
+
+static bool config_hotkey_binding_bind(ConfigHotkeyBinding *b) {
+  if (!b)
+    return false;
+  char *hotkey = sk_config_get_hotkey(b->key);
+  if (!hotkey)
+    return false;
+  sk_unregister_hotkey(hotkey);
+  const char **wl = config_hotkey_string_view(b->whitelist);
+  const char **bl = config_hotkey_string_view(b->blacklist);
+  const char *const *windows = NULL;
+  bool whitelist = false;
+  resolve_window_list(wl, bl, &windows, &whitelist);
+  HotkeyBinding binding =
+      hotkey_convert_into_binding(hotkey, b->cb, NULL, windows, whitelist,
+                                  b->ud);
+  binding.hotkey_callback_ud = b->cb_ud;
+  binding.hold = false;
+  binding.should_swallow = b->should_swallow;
+  bool ok = hotkey_register_internal(binding);
+  arrfree(wl);
+  arrfree(bl);
+  free(hotkey);
+  return ok;
+}
+
+bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec) {
+  if (!spec || !spec->name || !spec->name[0] || !spec->key || !spec->key[0] ||
+      !spec->default_hotkey || !spec->default_hotkey[0] ||
+      (!spec->cb && !spec->cb_ud))
+    return false;
+  HotkeyKey parsed;
+  if (!hotkey_string_parse(spec->default_hotkey, &parsed))
+    return false;
+
+  int existing = config_hotkey_binding_index(spec->key);
+  if (existing >= 0) {
+    config_hotkey_binding_free(&config_hotkey_bindings[existing]);
+    arrdel(config_hotkey_bindings, existing);
+  }
+
+  ConfigHotkeyBinding b = {0};
+  b.display_name = strdup(spec->name);
+  b.key = strdup(spec->key);
+  b.default_hotkey = strdup(spec->default_hotkey);
+  config_hotkey_strings_copy(&b.whitelist,
+                             (const char *const *)spec->whitelist);
+  config_hotkey_strings_copy(&b.blacklist,
+                             (const char *const *)spec->blacklist);
+  b.cb = spec->cb;
+  b.cb_ud = spec->cb_ud;
+  b.ud = spec->ud;
+  b.should_swallow = spec->should_swallow;
+
+  void *anchor = (void *)__builtin_return_address(0);
+  if (spec->cb)
+    anchor = (void *)(uintptr_t)spec->cb;
+  else if (spec->cb_ud)
+    anchor = (void *)(uintptr_t)spec->cb_ud;
+  char owner[OWNER_PATH_MAX];
+  owner_resolve_for_func(anchor, owner, sizeof(owner));
+  b.owner = strdup(owner);
+
+  arrput(config_hotkey_bindings, b);
+  int index = (int)config_hotkey_binding_count - 1;
+
+  char *stored = sk_config_get_hotkey(spec->key);
+  if (!stored)
+    sk_config_set_hotkey(.name = spec->key, .hotkey = spec->default_hotkey);
+  else
+    free(stored);
+  return config_hotkey_binding_bind(&config_hotkey_bindings[index]);
+}
+
+void sk_init_all_hotkeys(void) {
+  for (size_t i = 0; i < config_hotkey_binding_count; i++)
+    config_hotkey_binding_bind(&config_hotkey_bindings[i]);
+}
+
+void config_hotkey_registry_purge_owner(const char *path_a,
+                                        const char *path_b) {
+  if (owner_purge_inactive(path_a, path_b))
+    return;
+  for (int i = (int)config_hotkey_binding_count - 1; i >= 0; i--) {
+    if (!owner_module_matches(config_hotkey_bindings[i].owner, path_a, path_b))
+      continue;
+    config_hotkey_binding_free(&config_hotkey_bindings[i]);
+    arrdel(config_hotkey_bindings, i);
+  }
 }
 
 bool ski_config_set_alias(const SkConfigAliasSpec *spec) {

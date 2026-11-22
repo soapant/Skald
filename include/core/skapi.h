@@ -222,6 +222,7 @@ bool sk_focus_window_by_title(const char *title);
 
 SkWindowHandle sk_find_window_by_title(const char *title);
 SkWindowHandle sk_find_window_by_root_atom(const char *atom);
+SkWindowHandle sk_find_window_by_id(const char *id);
 
 SkWindowHandle sk_get_held_window(void);
 
@@ -1043,6 +1044,7 @@ bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud);
 
 int sk_config_hotkey_count(void);
 char *sk_config_hotkey_name_at(int index);
+char *sk_config_hotkey_display_name_at(int index);
 char *sk_config_hotkey_value_at(int index);
 
 bool ski_config_set_alias(const SkConfigAliasSpec *spec);
@@ -1087,6 +1089,23 @@ typedef struct {
 bool ski_register_hotkey(const SkHotkeySpec *spec);
 bool ski_unregister_hotkey(const char *hotkey);
 #define sk_unregister_hotkey(hk) ski_unregister_hotkey((hk))
+
+typedef struct {
+  const char *name;
+  const char *key;
+  const char *default_hotkey;
+  void (*cb)(void);
+  void (*cb_ud)(void *);
+  bool (*should_swallow)(void);
+  const char *whitelist[16];
+  const char *blacklist[16];
+  void *ud;
+} SkConfigHotkeyRegisterSpec;
+
+#define sk_register_config_hotkey(...)                                         \
+  ski_register_config_hotkey(&(SkConfigHotkeyRegisterSpec){__VA_ARGS__})
+
+bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec);
 
 void sk_disable_global_hotkeys(void);
 void sk_enable_global_hotkeys(void);
