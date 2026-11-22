@@ -64,7 +64,7 @@ static void settings_list(PromptState *state) {
 
     if (entry && entry->icon && entry->icon[0]) {
       sk_draw_image(.path = entry->icon, .x = ctx.x + 10,
-                    .y = row_y + (row_h - 18) / 2, .w = 18, .h = 18);
+                    .y = row_y + (row_h - 20) / 2, .w = 18, .h = 18);
     }
     sk_draw_text(.text = ctx.text, .x = ctx.x + 36, .y = row_y + 3,
                  .align = "LEFT", .color = COLOR_TEXT, .font_size = 15);
@@ -111,13 +111,7 @@ static void trigger_settings(void) {
             .no_separators = true,.w=900,.h=640);
 }
 
-static void cfg_commit(void) {
-  config_save();
-  Platform_ResetUIScale();
-  Platform_ApplyUIScale();
-  Platform_PrewarmBackgroundPixmap();
-  UI_RequestPopupRepaint();
-}
+static void cfg_commit(void) { sk_commit_config(); }
 
 #define DEFINE_CFG_BOOL(cfg_name, cfg_desc)                                    \
   static void cfg_##cfg_name##_click(void) {                                   \
@@ -252,7 +246,7 @@ static int cfg_theme_options(const char ***out_options) {
 static void cfg_theme_select(const char *option, int index) {
   (void)index;
   if (option && sk_set_theme(option))
-    UI_RequestPopupRepaint();
+    sk_refresh_ui();
 }
 
 static void cfg_add_Theme(SkSettingsEntry *entry) {
@@ -317,6 +311,7 @@ static void cfg_add_all(void) {
 
 SKALD_FEATURE_INIT {
   sk_register_hotkey(.hotkey = (char *)SettingsHotkey, .cb = trigger_settings);
+
   sk_add_feature(.display_name = "Settings", .on_action = trigger_settings,
                  .icon = "/settings.png");
   cfg_add_all();
@@ -341,6 +336,7 @@ SKALD_FEATURE_INIT {
       sk_add_settings_entry(.name = "Quicklinks", .icon = "/quicklinks.png",
                             .desc = "Add Quicklinks for your most commonly "
                                     "opened websites.");
+
   sk_settings_entry_add_editbox(ql, .title = "Add Quicklink",
                                 .sub = "Add a quicklink to appear in cc",
                                 .fields = fields, .field_count = 2);
@@ -349,7 +345,7 @@ SKALD_FEATURE_INIT {
 
                         .desc = "Coming soon.");
   sk_add_settings_entry(.name = "Hotkeys", .icon = "/hotkeys.png",
-                        .desc = "Coming soon.");
+                        .desc = "Edit registered hotkeys.");
   sk_add_settings_entry(.name = "Remaps", .icon = "/remaps.png",
                         .desc = "Coming soon.");
 }

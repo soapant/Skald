@@ -1380,6 +1380,20 @@ bool sk_close_windows_by_id(const char *needle) {
 
 bool sk_reload_config(void) { return config_reload(); }
 
+void sk_save_config(void) { config_save(); }
+
+void sk_refresh_ui(void) {
+  Platform_ResetUIScale();
+  Platform_ApplyUIScale();
+  Platform_PrewarmBackgroundPixmap();
+  UI_RequestPopupRepaint();
+}
+
+void sk_commit_config(void) {
+  sk_save_config();
+  sk_refresh_ui();
+}
+
 const char *sk_get_theme(void) { return (Theme && Theme[0]) ? Theme : NULL; }
 
 int sk_theme_count(void) { return (int)theme_count(); }
@@ -3697,6 +3711,9 @@ typedef struct {
 static ConfigHotkeyBinding *config_hotkey_bindings;
 #define config_hotkey_binding_count arrlenu(config_hotkey_bindings)
 
+static void config_hotkey_register_bound(const char *name, const char *hotkey,
+                                         SkConfigFn cb, void *ud);
+
 static void *sk_config_mutex = NULL;
 static char sk_config_path[1024];
 static bool sk_config_loaded = false;
@@ -3924,12 +3941,14 @@ void sk_config_init(void) {
   sk_config_unlock();
 }
 
-static void hotkey_bind_live(const char *hotkey, SkConfigFn cb, void *ud) {
-  if (!hotkey || !cb)
+static void hotkey_bind_live(const char *name, const char *hotkey,
+                             SkConfigFn cb, void *ud) {
+  if (!name || !hotkey || !cb)
     return;
   sk_unregister_hotkey(hotkey);
   sk_register_hotkey(.hotkey = (char *)hotkey, .cb_ud = (HotkeyCallbackUd)cb,
                      .ud = ud);
+  config_hotkey_register_bound(name, hotkey, cb, ud);
 }
 
 bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
@@ -3971,7 +3990,7 @@ bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
   if (old_hotkey[0] && !sk_string_equals_ci(old_hotkey, spec->hotkey))
     sk_unregister_hotkey(old_hotkey);
   if (spec->cb)
-    hotkey_bind_live(spec->hotkey, spec->cb, spec->ud);
+    hotkey_bind_live(spec->name, spec->hotkey, spec->cb, spec->ud);
   sk_config_unlock();
   return true;
 }
@@ -4019,7 +4038,7 @@ bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud) {
   }
   char hk[SK_CONFIG_HOTKEY_MAX];
   snprintf(hk, sizeof(hk), "%s", hotkey_entries[i].hotkey);
-  hotkey_bind_live(hk, cb, ud);
+  hotkey_bind_live(name, hk, cb, ud);
   sk_config_unlock();
   return true;
 }
@@ -4094,6 +4113,31 @@ static void config_hotkey_binding_free(ConfigHotkeyBinding *b) {
   free(b->owner);
   config_hotkey_strings_free(b->whitelist);
   config_hotkey_strings_free(b->blacklist);
+}
+
+static void config_hotkey_register_bound(const char *name, const char *hotkey,
+                                         SkConfigFn cb, void *ud) {
+  if (!name || !hotkey || !cb)
+    return;
+  int existing = config_hotkey_binding_index(name);
+  if (existing >= 0) {
+    ConfigHotkeyBinding *b = &config_hotkey_bindings[existing];
+    b->cb = NULL;
+    b->cb_ud = (HotkeyCallbackUd)cb;
+    b->ud = ud;
+    return;
+  }
+
+  ConfigHotkeyBinding b = {0};
+  b.display_name = strdup(name);
+  b.key = strdup(name);
+  b.default_hotkey = strdup(hotkey);
+  b.cb_ud = (HotkeyCallbackUd)cb;
+  b.ud = ud;
+  char owner[OWNER_PATH_MAX];
+  owner_resolve_for_func((void *)(uintptr_t)cb, owner, sizeof(owner));
+  b.owner = strdup(owner);
+  arrput(config_hotkey_bindings, b);
 }
 
 static const char **config_hotkey_string_view(char **strings) {
