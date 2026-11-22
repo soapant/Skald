@@ -1087,8 +1087,8 @@ static void cc_update_compact_size(const PromptState *state) {
   int target_h = expanded ? PromptH : CC_COMPACT_HEIGHT;
   bounds.y -= (target_h - bounds.h) / 2;
   bounds.h = target_h;
-  if (ski_resize_window(&bounds))
-    cc_compact_expanded = expanded;
+  ski_resize_window_animated(&bounds, 160);
+  cc_compact_expanded = expanded;
 }
 
 static bool cc_filter_match(const char *item, const char *filter) {

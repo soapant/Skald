@@ -3582,6 +3582,13 @@ bool ski_resize_window(const SkRect *rect) {
   return prompt_popup_resize_current(rect->x, rect->y, rect->w, rect->h);
 }
 
+bool ski_resize_window_animated(const SkRect *rect, int duration_ms) {
+  if (!rect)
+    return false;
+  return prompt_popup_resize_current_animated(rect->x, rect->y, rect->w,
+                                              rect->h, duration_ms);
+}
+
 SkRect sk_get_window_bounds(void) {
   SkRect rect = {0};
   WindowManager *wm = WindowManager_Get();

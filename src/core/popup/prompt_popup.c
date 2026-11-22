@@ -19,17 +19,27 @@
 #include "core/types/window.h"
 
 typedef struct {
+  bool active;
+  long long start_ms;
+  int duration_ms;
+  int from_x, from_y, from_w, from_h;
+  int to_x, to_y, to_w, to_h;
+} PopupResizeAnim;
+
+typedef struct {
   Popup base;
   PromptSpec spec;
   PromptState *state;
   PromptCallbacks saved_callbacks;
   WindowHandle prev_hPopupWnd;
   int x, y, w, h;
+  PopupResizeAnim resize_anim;
 } PromptPopupData;
 
 static void prompt_popup_on_show(Popup *self) {
 
   PromptPopupData *data = (PromptPopupData *)self;
+  data->resize_anim.active = false;
   WindowManager *wm = (WindowManager *)self->manager;
   SkaldContext *ctx = SkaldContext_Get();
   ctx->window.selection_complete = false;
@@ -159,6 +169,7 @@ static void prompt_popup_on_hide(Popup *self) {
 
 static void prompt_popup_on_render(Popup *self) {
   const PromptPopupData *data = (PromptPopupData *)self;
+  prompt_popup_tick_resize_animation_popup(self);
   if (!data->state)
     return;
   Platform_PromptPopupRender(self);
@@ -209,18 +220,13 @@ int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h) {
   return 1;
 }
 
-bool prompt_popup_resize_current(int x, int y, int w, int h) {
+static bool prompt_popup_apply_bounds(Popup *p, int x, int y, int w, int h,
+                                      bool from_animation) {
   if (w <= 0 || h <= 0)
     return false;
-  WindowManager *wm = WindowManager_Get();
-  if (!wm)
-    return false;
-  Popup *p = WindowManager_GetTopPopup(wm);
-  if (!p || p->type != POPUP_PROMPT)
-    return false;
-  PromptPopupData *data = (PromptPopupData *)p;
   if (!Platform_PromptPopupResize(p, x, y, w, h))
     return false;
+  PromptPopupData *data = (PromptPopupData *)p;
   data->x = x;
   data->y = y;
   data->w = w;
@@ -234,8 +240,88 @@ bool prompt_popup_resize_current(int x, int y, int w, int h) {
                                  list_h < LISTBOX_SEPARATOR_MIN_LIST_H;
   }
   Platform_InvalidatePrompt();
-  UI_RequestPopupRepaint();
+  if (!from_animation)
+    UI_RequestPopupRepaint();
   return true;
+}
+
+bool prompt_popup_resize_current(int x, int y, int w, int h) {
+  WindowManager *wm = WindowManager_Get();
+  if (!wm)
+    return false;
+  Popup *p = WindowManager_GetTopPopup(wm);
+  if (!p || p->type != POPUP_PROMPT)
+    return false;
+  ((PromptPopupData *)p)->resize_anim.active = false;
+  return prompt_popup_apply_bounds(p, x, y, w, h, false);
+}
+
+bool prompt_popup_resize_current_animated(int x, int y, int w, int h,
+                                          int duration_ms) {
+  if (w <= 0 || h <= 0)
+    return false;
+  WindowManager *wm = WindowManager_Get();
+  if (!wm)
+    return false;
+  Popup *p = WindowManager_GetTopPopup(wm);
+  if (!p || p->type != POPUP_PROMPT)
+    return false;
+  PromptPopupData *data = (PromptPopupData *)p;
+  PopupResizeAnim *anim = &data->resize_anim;
+  anim->active = true;
+  anim->start_ms = Platform_GetWallClockMs();
+  anim->duration_ms = duration_ms > 0 ? duration_ms : 1;
+  anim->from_x = data->x;
+  anim->from_y = data->y;
+  anim->from_w = data->w;
+  anim->from_h = data->h;
+  anim->to_x = x;
+  anim->to_y = y;
+  anim->to_w = w;
+  anim->to_h = h;
+  prompt_popup_tick_resize_animation_popup(p);
+  return true;
+}
+
+bool prompt_popup_resize_animation_active(void) {
+  WindowManager *wm = WindowManager_Get();
+  if (!wm)
+    return false;
+  Popup *p = WindowManager_GetTopPopup(wm);
+  if (!p || p->type != POPUP_PROMPT)
+    return false;
+  return ((PromptPopupData *)p)->resize_anim.active;
+}
+
+void prompt_popup_tick_resize_animation_popup(Popup *p) {
+  if (!p || p->type != POPUP_PROMPT)
+    return;
+  PromptPopupData *data = (PromptPopupData *)p;
+  PopupResizeAnim *anim = &data->resize_anim;
+  if (!anim->active)
+    return;
+  long long elapsed = Platform_GetWallClockMs() - anim->start_ms;
+  if (elapsed >= anim->duration_ms) {
+    anim->active = false;
+    prompt_popup_apply_bounds(p, anim->to_x, anim->to_y, anim->to_w,
+                              anim->to_h, true);
+    return;
+  }
+  float t = (float)elapsed / (float)anim->duration_ms;
+  float inv = 1.0f - t;
+  float eased = 1.0f - inv * inv * inv;
+  int x = anim->from_x + (int)((anim->to_x - anim->from_x) * eased + 0.5f);
+  int y = anim->from_y + (int)((anim->to_y - anim->from_y) * eased + 0.5f);
+  int w = anim->from_w + (int)((anim->to_w - anim->from_w) * eased + 0.5f);
+  int h = anim->from_h + (int)((anim->to_h - anim->from_h) * eased + 0.5f);
+  prompt_popup_apply_bounds(p, x, y, w, h, true);
+}
+
+void prompt_popup_tick_resize_animation(void) {
+  WindowManager *wm = WindowManager_Get();
+  if (!wm)
+    return;
+  prompt_popup_tick_resize_animation_popup(WindowManager_GetTopPopup(wm));
 }
 
 Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
