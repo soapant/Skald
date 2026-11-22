@@ -18,6 +18,7 @@ Window x11_create_display_message_window_ex(Display *dpy, int x, int y, int w,
                                             int h, bool clickable, bool rounded,
                                             int radius);
 void x11_apply_click_through(Display *dpy, Window win);
+void x11_set_fixed_size_hints(Display *dpy, Window win, int w, int h);
 void x11_apply_shape_rounded_window(Display *dpy, Window win, int w, int h);
 void x11_apply_shape(Display *dpy, Window win, int w, int h, bool rounded,
                      int radius);
