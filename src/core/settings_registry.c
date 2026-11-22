@@ -164,6 +164,43 @@ static bool settings_config_set(const char *key, const char *value) {
   return config_section_set(settings_config_path, "settings", key, value);
 }
 
+static bool settings_config_remove(const char *key) {
+  if (!key || !key[0])
+    return false;
+  settings_config_init();
+  bool found = false;
+  for (size_t i = 0; i < settings_config_count; i++) {
+    if (strcmp(settings_config_entries[i].key, key) != 0)
+      continue;
+    free(settings_config_entries[i].key);
+    free(settings_config_entries[i].value);
+    arrdel(settings_config_entries, i);
+    found = true;
+    break;
+  }
+  if (!settings_config_path[0])
+    return found;
+  bool ok = config_section_clear(settings_config_path, "settings", key);
+  return found && ok;
+}
+
+static void settings_config_migrate(const char *from, const char *to) {
+  if (!from || !to || !from[0] || !to[0] || strcmp(from, to) == 0)
+    return;
+  settings_config_init();
+  if (settings_config_find(to))
+    return;
+  const char *value = settings_config_find(from);
+  if (!value)
+    return;
+  char *copy = strdup(value);
+  if (!copy)
+    return;
+  settings_config_set(to, copy);
+  settings_config_remove(from);
+  free(copy);
+}
+
 static bool settings_capturing(void) { return search_index_current() != NULL; }
 
 static unsigned long settings_color(unsigned long color) {
@@ -614,6 +651,7 @@ typedef struct {
 
 typedef struct {
   unsigned char type;
+  char key[SETTINGS_CONFIG_KEY_MAX];
   char title[128];
   char sub[256];
   char label[64];
@@ -762,8 +800,8 @@ static bool settings_block_title_ok(const char *title) {
 }
 
 static int settings_entry_add_block_typed(SettingsEntry *entry, int type,
-                                          const char *title, const char *sub,
-                                          void *anchor) {
+                                          const char *key, const char *title,
+                                          const char *sub, void *anchor) {
   SettingsEntry *e = settings_entry_resolve(entry);
   if (!e || !settings_block_title_ok(title))
     return -1;
@@ -774,6 +812,13 @@ static int settings_entry_add_block_typed(SettingsEntry *entry, int type,
   b->type = (unsigned char)type;
   snprintf(b->title, sizeof(b->title), "%s", title);
   snprintf(b->sub, sizeof(b->sub), "%s", sub ? sub : "");
+  char legacy[SETTINGS_CONFIG_KEY_MAX];
+  snprintf(legacy, sizeof(legacy), "%s.%s", e->name, title);
+  if (key && key[0])
+    snprintf(b->key, sizeof(b->key), "%s", key);
+  else
+    snprintf(b->key, sizeof(b->key), "%s", legacy);
+  settings_config_migrate(legacy, b->key);
   e->block_count++;
   return e->block_count - 1;
 }
@@ -783,7 +828,7 @@ int settings_entry_add_checkbox(SettingsEntry *entry,
   if (!spec)
     return -1;
   int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_CHECKBOX,
-                                           spec->title, spec->sub,
+                                           spec->key, spec->title, spec->sub,
                                            __builtin_return_address(0));
   SettingsBlock *b = settings_block_at(entry, idx);
   if (!b)
@@ -791,15 +836,8 @@ int settings_entry_add_checkbox(SettingsEntry *entry,
   b->initial = spec->initial;
   b->on_click = spec->on_click;
   b->on_hover = spec->on_hover;
-  {
-    char key[SETTINGS_CONFIG_KEY_MAX];
-    SettingsEntry *e = settings_entry_resolve(entry);
-    if (e) {
-      snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
-      if (settings_config_has(key))
-        b->initial = settings_config_get_bool(key);
-    }
-  }
+  if (settings_config_has(b->key))
+    b->initial = settings_config_get_bool(b->key);
   return idx;
 }
 
@@ -807,9 +845,9 @@ int settings_entry_add_button(SettingsEntry *entry,
                               const SettingsButtonSpec *spec) {
   if (!spec)
     return -1;
-  int idx =
-      settings_entry_add_block_typed(entry, SETTINGS_BLOCK_BUTTON, spec->title,
-                                     spec->sub, __builtin_return_address(0));
+  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_BUTTON,
+                                           spec->key, spec->title, spec->sub,
+                                           __builtin_return_address(0));
   SettingsBlock *b = settings_block_at(entry, idx);
   if (!b)
     return -1;
@@ -844,9 +882,9 @@ int settings_entry_add_slider(SettingsEntry *entry,
     initial = min_value;
   if (initial > max_value)
     initial = max_value;
-  int idx =
-      settings_entry_add_block_typed(entry, SETTINGS_BLOCK_SLIDER, spec->title,
-                                     spec->sub, __builtin_return_address(0));
+  int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_SLIDER,
+                                           spec->key, spec->title, spec->sub,
+                                           __builtin_return_address(0));
   SettingsBlock *b = settings_block_at(entry, idx);
   if (!b)
     return -1;
@@ -855,20 +893,13 @@ int settings_entry_add_slider(SettingsEntry *entry,
   b->value = initial;
   b->on_change = spec->on_change;
   b->on_hover = spec->on_hover;
-  {
-    char key[SETTINGS_CONFIG_KEY_MAX];
-    SettingsEntry *e = settings_entry_resolve(entry);
-    if (e) {
-      snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
-      if (settings_config_has(key)) {
-        float seeded = settings_config_get_float(key);
-        if (seeded < min_value)
-          seeded = min_value;
-        if (seeded > max_value)
-          seeded = max_value;
-        b->value = seeded;
-      }
-    }
+  if (settings_config_has(b->key)) {
+    float seeded = settings_config_get_float(b->key);
+    if (seeded < min_value)
+      seeded = min_value;
+    if (seeded > max_value)
+      seeded = max_value;
+    b->value = seeded;
   }
   return idx;
 }
@@ -888,7 +919,7 @@ int settings_entry_add_dropdown(SettingsEntry *entry,
   if (selected >= count)
     selected = count > 0 ? 0 : -1;
   int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_DROPDOWN,
-                                           spec->title, spec->sub,
+                                           spec->key, spec->title, spec->sub,
                                            __builtin_return_address(0));
   SettingsBlock *b = settings_block_at(entry, idx);
   if (!b)
@@ -898,19 +929,14 @@ int settings_entry_add_dropdown(SettingsEntry *entry,
   b->on_select = spec->on_select;
   b->on_hover = spec->on_hover;
   {
-    char key[SETTINGS_CONFIG_KEY_MAX];
-    SettingsEntry *e = settings_entry_resolve(entry);
-    if (e) {
-      snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
-      char *saved = settings_config_get(key);
-      if (saved) {
-        for (int i = 0; i < count; i++)
-          if (options && options[i] && strcmp(saved, options[i]) == 0) {
-            b->selected = i;
-            break;
-          }
-        free(saved);
-      }
+    char *saved = settings_config_get(b->key);
+    if (saved) {
+      for (int i = 0; i < count; i++)
+        if (options && options[i] && strcmp(saved, options[i]) == 0) {
+          b->selected = i;
+          break;
+        }
+      free(saved);
     }
   }
   return idx;
@@ -1069,8 +1095,9 @@ SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
       return invalid;
   }
   int idx = settings_entry_add_block_typed(
-      entry, SETTINGS_BLOCK_EDITBOX, spec->title ? spec->title : "Editbox",
-      spec->sub, __builtin_return_address(0));
+      entry, SETTINGS_BLOCK_EDITBOX, NULL,
+      spec->title ? spec->title : "Editbox", spec->sub,
+      __builtin_return_address(0));
   if (idx < 0)
     return invalid;
   SettingsEntry *e = settings_entry_resolve(entry);
@@ -1243,9 +1270,8 @@ static SettingsBlock *dispatch_block(void) {
 
 static void persist_block_value(const SettingsEntry *e, const SettingsBlock *b,
                                 const char *value) {
-  char key[SETTINGS_CONFIG_KEY_MAX];
-  snprintf(key, sizeof(key), "%s.%s", e->name, b->title);
-  settings_config_set(key, value);
+  (void)e;
+  settings_config_set(b->key, value);
 }
 
 void settings_dispatch_widget_click(void) {

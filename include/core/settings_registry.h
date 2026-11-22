@@ -58,6 +58,7 @@ typedef int (*SettingsDropdownOptionsFn)(const char ***out_options);
 typedef void (*SettingsDropdownSelectFn)(const char *option, int index);
 
 typedef struct {
+  const char *key;
   const char *title;
   const char *sub;
   SettingsDropdownOptionsFn refresh_options;
@@ -67,6 +68,7 @@ typedef struct {
 } SettingsDropdownSpec;
 
 typedef struct {
+  const char *key;
   const char *title;
   const char *sub;
   bool initial;
@@ -75,6 +77,7 @@ typedef struct {
 } SettingsCheckboxSpec;
 
 typedef struct {
+  const char *key;
   const char *title;
   const char *sub;
   const char *label;
@@ -83,6 +86,7 @@ typedef struct {
 } SettingsButtonSpec;
 
 typedef struct {
+  const char *key;
   const char *title;
   const char *sub;
   float min_value;
