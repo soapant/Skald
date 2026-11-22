@@ -154,6 +154,7 @@ typedef struct {
   int y;
   bool subwindow;
   bool no_separators;
+  bool anchor_y_to_prompt_h;
   bool rounded;
   int radius;
 } PromptSpec;

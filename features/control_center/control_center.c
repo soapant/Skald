@@ -1086,7 +1086,7 @@ static void cc_update_compact_size(const PromptState *state) {
     return;
   int target_h = expanded ? PromptH : CC_COMPACT_HEIGHT;
   bounds.h = target_h;
-  ski_resize_window_animated(&bounds, 160);
+  ski_resize_window_animated(&bounds, 40);
   cc_compact_expanded = expanded;
 }
 
@@ -1226,7 +1226,7 @@ static void cc_on_actions_render(SkPlaceState state) {
   if (state.hovered)
     sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2,
                  .w = state.rect.w - 15, .h = state.rect.h, .filled = true,
-                 .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.5f), .radius = 6);
+                 .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.2f), .radius = 6);
   int h = state.rect.h;
   int lh_title = sk_get_text_height(16);
   int lh_hotkey = sk_get_text_height(20);
@@ -1350,6 +1350,7 @@ static void cc_open_control(void) {
   cc_compact_expanded = false;
   sk_window(.title = "Control", .placeholder = "Search For Something...",
             .h = cc_compact_mode ? CC_COMPACT_HEIGHT : PromptH,
+            .anchor_y_to_prompt_h = cc_compact_mode,
             .refresh = cc_refresh, .enter = cc_enter,
             .ctrl_enter = cc_ctrl_enter, .shift_enter = cc_shift_enter,
             .ctrl_shift_enter = cc_ctrl_shift_enter,
