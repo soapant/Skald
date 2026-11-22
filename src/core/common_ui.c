@@ -626,13 +626,19 @@ char *prompt_user_run(WindowManager *wm, const PromptSpec *spec) {
       mouse_top->vtable->on_render(mouse_top);
       Platform_PromptFlushDisplay(wm);
     }
-    long long now = Platform_GetWallClockMs();
-    if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
-      last_tick = now;
-      Popup *top = WindowManager_GetTopPopup(wm);
-      if (top && top->vtable && top->vtable->on_render) {
-        top->vtable->on_render(top);
-        Platform_PromptFlushDisplay(wm);
+    int fps = WindowManager_TopPopupFps(wm);
+    if (fps > 0) {
+      long long now = Platform_GetWallClockMs();
+      long long interval = 1000 / fps;
+      if (interval < 1)
+        interval = 1;
+      if (now - last_tick >= interval) {
+        last_tick = now;
+        Popup *top = WindowManager_GetTopPopup(wm);
+        if (top && top->vtable && top->vtable->on_render) {
+          top->vtable->on_render(top);
+          Platform_PromptFlushDisplay(wm);
+        }
       }
     }
   }

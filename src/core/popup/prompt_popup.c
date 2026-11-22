@@ -416,12 +416,12 @@ Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {
   return WindowManager_PushPopup(wm, (Popup *)data);
 }
 
-bool WindowManager_TopPopupWantsTick(WindowManager *wm) {
+int WindowManager_TopPopupFps(WindowManager *wm) {
   Popup *top = WindowManager_GetTopPopup(wm);
   if (!top || top->type != POPUP_PROMPT)
-    return false;
+    return 0;
   PromptPopupData *data = (PromptPopupData *)top;
-  return data->spec.tick;
+  return data->spec.fps;
 }
 
 bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x,

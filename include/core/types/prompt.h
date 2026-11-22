@@ -145,7 +145,7 @@ typedef struct {
   const char *placeholder;
   const char *initial_text;
   void *render_data;
-  bool tick;
+  int fps;
   bool auto_scale;
   bool no_bg;
   bool password_mode;
