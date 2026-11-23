@@ -60,12 +60,8 @@ static bool sway_tree_field(char *buffer, int buffer_size, const char *key) {
     return false;
   }
   buffer[0] = '\0';
-  sway_ensure_sock();
-  if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) {
-    log_error("SWAYSOCK and I3SOCK not set buffer='%s' buffer_size=%d",
-              buffer ? buffer : "null", buffer_size);
+  if (!sway_bus())
     return false;
-  }
   char *command_output = Platform_RunTerminalCommand(
       "swaymsg -t get_tree --raw | grep -A 40 '\"focused\": true'", false);
   if (!command_output) {

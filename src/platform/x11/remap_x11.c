@@ -16,6 +16,18 @@
 #include <X11/extensions/XTest.h>
 #endif
 
+enum {
+  EMIT_BACKEND_NONE = 0,
+  EMIT_BACKEND_UINPUT,
+  EMIT_BACKEND_COMPOSITOR,
+  EMIT_BACKEND_YDOTOOL,
+  EMIT_BACKEND_WTYPE,
+  EMIT_BACKEND_XDOTOOL,
+  EMIT_BACKEND_XTEST,
+};
+
+static int emit_backend[256];
+
 static int vk_to_linux(int vk_code) {
   int linux_code = x11_vk_to_linux_key(vk_code);
   if (!linux_code) {
@@ -218,16 +230,49 @@ static bool inject_xtest(int vk_code, int down) {
 #endif
 }
 
-void Platform_EmitKey(int vk_code, int down) {
-  if (Platform_InjectKey(vk_code, down))
-    return;
-  if (inject_uinput(vk_code, down))
-    return;
-  if (inject_ydotool(vk_code, down))
-    return;
-  if (inject_wtype(vk_code, down))
-    return;
-  if (inject_xdotool(vk_code, down))
-    return;
-  inject_xtest(vk_code, down);
+static bool emit_try(int backend, int vk_code, int down) {
+  switch (backend) {
+  case EMIT_BACKEND_UINPUT:
+    return inject_uinput(vk_code, down);
+  case EMIT_BACKEND_COMPOSITOR:
+    return Platform_InjectKey(vk_code, down);
+  case EMIT_BACKEND_YDOTOOL:
+    return inject_ydotool(vk_code, down);
+  case EMIT_BACKEND_WTYPE:
+    return inject_wtype(vk_code, down);
+  case EMIT_BACKEND_XDOTOOL:
+    return inject_xdotool(vk_code, down);
+  case EMIT_BACKEND_XTEST:
+    return inject_xtest(vk_code, down);
+  default:
+    return false;
+  }
+}
+
+bool Platform_EmitKey(int vk_code, int down) {
+  if (vk_code < 0 || vk_code >= 256)
+    return false;
+  static const int order[] = {
+      EMIT_BACKEND_UINPUT, EMIT_BACKEND_COMPOSITOR, EMIT_BACKEND_YDOTOOL,
+      EMIT_BACKEND_WTYPE,  EMIT_BACKEND_XDOTOOL,   EMIT_BACKEND_XTEST,
+  };
+  if (!down) {
+    int cached = emit_backend[vk_code];
+    if (cached && emit_try(cached, vk_code, 0)) {
+      emit_backend[vk_code] = EMIT_BACKEND_NONE;
+      return true;
+    }
+  }
+  for (size_t i = 0; i < sizeof(order) / sizeof(order[0]); i++) {
+    int backend = order[i];
+    if (!down && backend == emit_backend[vk_code])
+      continue;
+    if (!emit_try(backend, vk_code, down))
+      continue;
+    emit_backend[vk_code] = down ? backend : EMIT_BACKEND_NONE;
+    return true;
+  }
+  if (!down)
+    emit_backend[vk_code] = EMIT_BACKEND_NONE;
+  return false;
 }

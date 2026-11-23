@@ -20,6 +20,7 @@
 
 static bool hypr_numeric_activewindow_field(const char *field, char *buffer,
                                             int buffer_size);
+static bool hypr_bus(void);
 
 static bool hypr_sock_live(const char *sig) {
 
@@ -98,7 +99,8 @@ static bool hypr_parse_activewindow_field(const char *field, char *buffer,
   if (!field || !buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
-  hypr_ensure_sig();
+  if (!hypr_bus())
+    return false;
   char *output = Platform_RunTerminalCommand("hyprctl activewindow -j", false);
   if (!output || output[0] == '\0') {
     log_error("hypr activewindow empty for field='%s'", field);
@@ -329,7 +331,7 @@ bool move_active_window_down_hyprland(void) {
 
 bool inject_key_hyprland(int vk, int down) {
   if (!down)
-    return true;
+    return false;
   hypr_ensure_sig();
   const char *sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
   const char *runtime = x11_env_xdg_runtime_dir();
@@ -581,7 +583,8 @@ static bool hypr_numeric_activewindow_field(const char *field, char *buffer,
   if (!field || !buffer || buffer_size <= 0)
     return false;
   buffer[0] = '\0';
-  hypr_ensure_sig();
+  if (!hypr_bus())
+    return false;
   char *output = Platform_RunTerminalCommand("hyprctl activewindow -j", false);
   if (!output || output[0] == '\0') {
     log_error("hypr activewindow empty for field='%s'", field);

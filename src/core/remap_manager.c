@@ -158,12 +158,18 @@ void remap_update_phys(int vk_code, int value) {
   }
 }
 
+static void emit_tracked(int vk, int down) {
+  if (!Platform_EmitKey(vk, down)) {
+    log_error("remap: emit failed vk=%d down=%d", vk, down);
+    return;
+  }
+  virt_vk[vk] = down ? 1 : 0;
+}
+
 void remap_reset(void) {
   for (int i = 0; i < 256; i++) {
-    if (virt_vk[i]) {
-      Platform_EmitKey(i, 0);
-      virt_vk[i] = 0;
-    }
+    if (virt_vk[i])
+      emit_tracked(i, 0);
     phys_vk[i] = 0;
     key_seq[i] = 0;
   }
@@ -268,133 +274,106 @@ static void remap_fire_binding(RemapBinding *b, int trigger_vk) {
   for (int k = 0; k < b->src_vk_count; k++) {
     int sv = b->src_vks[k];
     if (sv != trigger_vk) {
-      Platform_EmitKey(sv, 0);
-      virt_vk[sv] = 0;
+      emit_tracked(sv, 0);
     }
   }
   if (b->src_mods & HOTKEY_MOD_CTRL) {
     if (phys_vk[VK_LCONTROL]) {
-      Platform_EmitKey(VK_LCONTROL, 0);
-      virt_vk[VK_LCONTROL] = 0;
+      emit_tracked(VK_LCONTROL, 0);
     }
     if (phys_vk[VK_RCONTROL]) {
-      Platform_EmitKey(VK_RCONTROL, 0);
-      virt_vk[VK_RCONTROL] = 0;
+      emit_tracked(VK_RCONTROL, 0);
     }
   }
   if (b->src_mods & HOTKEY_MOD_ALT) {
     if (phys_vk[VK_LMENU]) {
-      Platform_EmitKey(VK_LMENU, 0);
-      virt_vk[VK_LMENU] = 0;
+      emit_tracked(VK_LMENU, 0);
     }
     if (phys_vk[VK_RMENU]) {
-      Platform_EmitKey(VK_RMENU, 0);
-      virt_vk[VK_RMENU] = 0;
+      emit_tracked(VK_RMENU, 0);
     }
   }
   if (b->src_mods & HOTKEY_MOD_SHIFT) {
     if (phys_vk[VK_LSHIFT]) {
-      Platform_EmitKey(VK_LSHIFT, 0);
-      virt_vk[VK_LSHIFT] = 0;
+      emit_tracked(VK_LSHIFT, 0);
     }
     if (phys_vk[VK_RSHIFT]) {
-      Platform_EmitKey(VK_RSHIFT, 0);
-      virt_vk[VK_RSHIFT] = 0;
+      emit_tracked(VK_RSHIFT, 0);
     }
   }
   if (b->src_mods & HOTKEY_MOD_SUPER) {
     if (phys_vk[VK_LWIN]) {
-      Platform_EmitKey(VK_LWIN, 0);
-      virt_vk[VK_LWIN] = 0;
+      emit_tracked(VK_LWIN, 0);
     }
     if (phys_vk[VK_RWIN]) {
-      Platform_EmitKey(VK_RWIN, 0);
-      virt_vk[VK_RWIN] = 0;
+      emit_tracked(VK_RWIN, 0);
     }
   }
   if (b->dst_mods & HOTKEY_MOD_CTRL) {
-    Platform_EmitKey(VK_LCONTROL, 1);
-    virt_vk[VK_LCONTROL] = 1;
+    emit_tracked(VK_LCONTROL, 1);
   }
   if (b->dst_mods & HOTKEY_MOD_SHIFT) {
-    Platform_EmitKey(VK_LSHIFT, 1);
-    virt_vk[VK_LSHIFT] = 1;
+    emit_tracked(VK_LSHIFT, 1);
   }
   if (b->dst_mods & HOTKEY_MOD_ALT) {
-    Platform_EmitKey(VK_LMENU, 1);
-    virt_vk[VK_LMENU] = 1;
+    emit_tracked(VK_LMENU, 1);
   }
   if (b->dst_mods & HOTKEY_MOD_SUPER) {
-    Platform_EmitKey(VK_LWIN, 1);
-    virt_vk[VK_LWIN] = 1;
+    emit_tracked(VK_LWIN, 1);
   }
   if (b->dst_vk) {
-    Platform_EmitKey(b->dst_vk, 1);
-    virt_vk[b->dst_vk] = 1;
+    emit_tracked(b->dst_vk, 1);
   }
 }
 
 static void remap_release_binding(RemapBinding *b, bool restore_src) {
   if (b->dst_vk && virt_vk[b->dst_vk]) {
-    Platform_EmitKey(b->dst_vk, 0);
-    virt_vk[b->dst_vk] = 0;
+    emit_tracked(b->dst_vk, 0);
   }
   if ((b->dst_mods & HOTKEY_MOD_CTRL) && virt_vk[VK_LCONTROL]) {
-    Platform_EmitKey(VK_LCONTROL, 0);
-    virt_vk[VK_LCONTROL] = 0;
+    emit_tracked(VK_LCONTROL, 0);
   }
   if ((b->dst_mods & HOTKEY_MOD_SHIFT) && virt_vk[VK_LSHIFT]) {
-    Platform_EmitKey(VK_LSHIFT, 0);
-    virt_vk[VK_LSHIFT] = 0;
+    emit_tracked(VK_LSHIFT, 0);
   }
   if ((b->dst_mods & HOTKEY_MOD_ALT) && virt_vk[VK_LMENU]) {
-    Platform_EmitKey(VK_LMENU, 0);
-    virt_vk[VK_LMENU] = 0;
+    emit_tracked(VK_LMENU, 0);
   }
   if ((b->dst_mods & HOTKEY_MOD_SUPER) && virt_vk[VK_LWIN]) {
-    Platform_EmitKey(VK_LWIN, 0);
-    virt_vk[VK_LWIN] = 0;
+    emit_tracked(VK_LWIN, 0);
   }
   if (!restore_src)
     return;
   if (b->src_mods & HOTKEY_MOD_CTRL) {
     if (phys_vk[VK_LCONTROL]) {
-      Platform_EmitKey(VK_LCONTROL, 1);
-      virt_vk[VK_LCONTROL] = 1;
+      emit_tracked(VK_LCONTROL, 1);
     }
     if (phys_vk[VK_RCONTROL]) {
-      Platform_EmitKey(VK_RCONTROL, 1);
-      virt_vk[VK_RCONTROL] = 1;
+      emit_tracked(VK_RCONTROL, 1);
     }
   }
   if (b->src_mods & HOTKEY_MOD_ALT) {
     if (phys_vk[VK_LMENU]) {
-      Platform_EmitKey(VK_LMENU, 1);
-      virt_vk[VK_LMENU] = 1;
+      emit_tracked(VK_LMENU, 1);
     }
     if (phys_vk[VK_RMENU]) {
-      Platform_EmitKey(VK_RMENU, 1);
-      virt_vk[VK_RMENU] = 1;
+      emit_tracked(VK_RMENU, 1);
     }
   }
   if (b->src_mods & HOTKEY_MOD_SHIFT) {
     if (phys_vk[VK_LSHIFT]) {
-      Platform_EmitKey(VK_LSHIFT, 1);
-      virt_vk[VK_LSHIFT] = 1;
+      emit_tracked(VK_LSHIFT, 1);
     }
     if (phys_vk[VK_RSHIFT]) {
-      Platform_EmitKey(VK_RSHIFT, 1);
-      virt_vk[VK_RSHIFT] = 1;
+      emit_tracked(VK_RSHIFT, 1);
     }
   }
   if (b->src_mods & HOTKEY_MOD_SUPER) {
     if (phys_vk[VK_LWIN]) {
-      Platform_EmitKey(VK_LWIN, 1);
-      virt_vk[VK_LWIN] = 1;
+      emit_tracked(VK_LWIN, 1);
     }
     if (phys_vk[VK_RWIN]) {
-      Platform_EmitKey(VK_RWIN, 1);
-      virt_vk[VK_RWIN] = 1;
+      emit_tracked(VK_RWIN, 1);
     }
   }
 }

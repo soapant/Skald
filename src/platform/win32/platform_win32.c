@@ -1665,7 +1665,7 @@ void Platform_InvalidatePrompt(void) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
-void Platform_EmitKey(int vk_code, int down) {
+bool Platform_EmitKey(int vk_code, int down) {
   log_warn("Platform_EmitKey win32 vk=%d down=%d", vk_code, down);
   INPUT inp = {0};
   inp.type = INPUT_KEYBOARD;
@@ -1679,7 +1679,9 @@ void Platform_EmitKey(int vk_code, int down) {
   if (sent != 1) {
     log_error("Platform_EmitKey FAILED vk=%d down=%d sent=%u err=%lu", vk_code,
               down, (unsigned)sent, GetLastError());
+    return false;
   }
+  return true;
 }
 
 bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud) {
