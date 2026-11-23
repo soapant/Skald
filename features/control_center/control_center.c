@@ -1434,10 +1434,10 @@ static void cc_hotkey_capture_render(PromptState *state) {
     cc_bind_hotkey(cc_register_target, combo);
     cc_copy(cc_captured_hotkey, sizeof(cc_captured_hotkey), combo);
     cc_flashing = true;
-    cc_flash_timer = sk_start_timer();
+    cc_flash_timer = sk_timer_start();
     sk_hotkey_capture_begin();
   }
-  if (cc_flashing && sk_end_timer(cc_flash_timer) >= 1.0)
+  if (cc_flashing && sk_timer_end(cc_flash_timer) >= 1.0)
     cc_flashing = false;
 
   const char *preview = sk_hotkey_capture_preview();

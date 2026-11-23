@@ -1002,7 +1002,7 @@ static SkHoverPopupCtx *hover_popup_ctx_new(const SkMessageSpec *spec) {
   p->render_data = spec->render_data;
   p->w = spec->w > 0 ? spec->w : WIDGET_PROVISIONAL_W;
   p->h = spec->h > 0 ? spec->h : WIDGET_PROVISIONAL_H;
-  p->created_at = sk_start_timer();
+  p->created_at = sk_timer_start();
   p->pad = WIDGET_DEFAULT_PAD;
   return p;
 }
@@ -1397,6 +1397,7 @@ void sk_refresh_ui(void) {
 
 void sk_request_refresh(void) {
   prompt_refresh(prompt_popup_get_top_prompt_state());
+  UI_RequestPopupRepaint();
 }
 
 void sk_commit_config(void) {
@@ -3040,13 +3041,13 @@ void sk_run_after_time(double seconds, void (*callback)(void)) {
   }
 }
 
-SkTimer sk_start_timer(void) { return Platform_StartTimer(); }
+SkTimer sk_timer_start(void) { return Platform_StartTimer(); }
 
 double ski_end_timer(uint64_t ticks) {
   return Platform_EndTimer((SkTimer){.ticks = ticks});
 }
 
-double sk_end_timer(SkTimer t) { return ski_end_timer(t.ticks); }
+double sk_timer_end(SkTimer t) { return ski_end_timer(t.ticks); }
 
 char *sk_get_active_window_title(void) {
   char *title = Platform_GetActiveWindowTitle();
@@ -3168,7 +3169,7 @@ const SkHashMap *sk_hashmap_at(SkHashMap *map, size_t index) {
   return &map[index];
 }
 
-SkTimer sk_profile_start(void) { return sk_start_timer(); }
+SkTimer sk_profile_start(void) { return sk_timer_start(); }
 
 void ski_profile_end(uint64_t ticks) {
   double ms = ski_end_timer(ticks);

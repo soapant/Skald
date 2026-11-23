@@ -84,6 +84,7 @@ int sk_search_query(SkSearchIndex *idx, const char *filter);
 int sk_search_hit_count(const SkSearchIndex *idx);
 const SkSearchHit *sk_search_hit_at(const SkSearchIndex *idx, int i);
 void sk_search_activate(SkSearchIndex *idx, int hit_i);
+
 typedef ClipboardHistory SkClipboardHistory;
 
 typedef struct {
@@ -720,11 +721,11 @@ bool sk_next_flag(char *p);
 
 void sk_free_flags(SkFlagList *list);
 
-SkTimer sk_start_timer(void);
+SkTimer sk_timer_start(void);
 
 double ski_end_timer(uint64_t ticks);
 
-double sk_end_timer(SkTimer t);
+double sk_timer_end(SkTimer t);
 
 SkTimer sk_profile_start(void);
 
