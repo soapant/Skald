@@ -100,6 +100,9 @@ static void cc_register_config_hotkeys(void);
 static void cc_fill_quicklinks(void);
 static void cc_quicklinks_clear(void);
 static void cc_fill_add_quicklink(void);
+static void cc_fill_add_feature_shortcut(void);
+static void cc_fill_feature_shortcuts(void);
+static void cc_feature_shortcuts_clear(void);
 static void cc_stage(const CcEntry *e, CcRunMode mode);
 static bool cc_run_pending(void);
 static const CcEntry *cc_find(const char *label);
@@ -126,6 +129,7 @@ static CcEntry *cc_entry_add(const char *label, const char *type,
   CcEntry *e = cc_entry_new();
   if (!e)
     return NULL;
+  if (!icon) icon = "./resources/Skald.png";
   cc_copy(e->label, sizeof(e->label), label);
   cc_copy(e->type, sizeof(e->type), type);
   e->payload = payload;
@@ -165,13 +169,17 @@ static void cc_fill_feature_entries(void) {
 static void cc_build(void) {
   atomic_store(&cc_entries_dirty, false);
   cc_quicklinks_clear();
+  cc_feature_shortcuts_clear();
   cc_entry_count = 0;
 
   cc_fill_applications(MAX_VISIBLE_ITEMS - sk_cc_entry_count() -
-                       sk_config_quicklink_count());
+                       sk_config_quicklink_count() -
+                       sk_config_feature_shortcut_count());
   cc_fill_feature_entries();
   cc_fill_add_quicklink();
+  cc_fill_add_feature_shortcut();
   cc_fill_quicklinks();
+  cc_fill_feature_shortcuts();
   cc_entry_base = cc_entry_count;
   cc_register_config_hotkeys();
 }
@@ -658,6 +666,73 @@ static void cc_fill_add_quicklink(void) {
   if (e) {
     e->on_enter = cc_add_quicklink;
     e->keep_open = true;
+  }
+}
+
+static void cc_feature_shortcut_render(PromptState *state) { (void)state; }
+
+static bool cc_add_feature_shortcut(void) {
+  sk_subwindow(.title = "Feature Shortcut", .h = 60,
+               .render = cc_feature_shortcut_render);
+  return false;
+}
+
+static void cc_fill_add_feature_shortcut(void) {
+  CcEntry *e = cc_entry_add("Add Shortcut", "Shortcut", NULL, NULL);
+  if (e) {
+    e->on_enter = cc_add_feature_shortcut;
+    e->keep_open = true;
+  }
+}
+
+static bool cc_run_feature_shortcut(void) {
+  if (!cc_staged_payload || !cc_staged_payload[0])
+    return false;
+  return sk_run_feature_shortcut(cc_staged_payload);
+}
+
+static char **cc_feature_shortcut_names;
+static size_t cc_feature_shortcut_name_count;
+static size_t cc_feature_shortcut_name_cap;
+
+static void cc_feature_shortcuts_clear(void) {
+  for (size_t i = 0; i < cc_feature_shortcut_name_count; i++)
+    free(cc_feature_shortcut_names[i]);
+  free(cc_feature_shortcut_names);
+  cc_feature_shortcut_names = NULL;
+  cc_feature_shortcut_name_count = 0;
+  cc_feature_shortcut_name_cap = 0;
+}
+
+static const char *cc_feature_shortcut_track(char *name) {
+  if (cc_feature_shortcut_name_count == cc_feature_shortcut_name_cap) {
+    size_t cap = cc_feature_shortcut_name_cap ? cc_feature_shortcut_name_cap * 2
+                                              : 8;
+    char **grown = realloc(cc_feature_shortcut_names,
+                           cap * sizeof(*grown));
+    if (!grown)
+      return NULL;
+    cc_feature_shortcut_names = grown;
+    cc_feature_shortcut_name_cap = cap;
+  }
+  cc_feature_shortcut_names[cc_feature_shortcut_name_count++] = name;
+  return name;
+}
+
+static void cc_fill_feature_shortcuts(void) {
+  int n = sk_config_feature_shortcut_count();
+  for (int i = 0; i < n; i++) {
+    char *name = sk_config_feature_shortcut_name_at(i);
+    if (!name)
+      continue;
+    const char *tracked = cc_feature_shortcut_track(name);
+    if (!tracked) {
+      free(name);
+      continue;
+    }
+    CcEntry *e = cc_entry_add(tracked, "Shortcut", tracked, NULL);
+    if (e)
+      e->on_enter = cc_run_feature_shortcut;
   }
 }
 

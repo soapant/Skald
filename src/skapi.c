@@ -39,6 +39,18 @@
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
 #include "core/skapi.h"
+#include "core/listbox_hover.h"
+
+static bool g_headless_active;
+static bool g_headless_capturing;
+static bool g_headless_spec_valid;
+static PromptSpec g_headless_spec;
+static PromptState *g_headless_state;
+
+static PromptState *sk_current_prompt_state(void) {
+  return g_headless_state ? g_headless_state
+                          : prompt_popup_get_top_prompt_state();
+}
 #include "core/config_section.h"
 #include "core/listbox_hover.h"
 #include "helpers/helpers_monitor.h"
@@ -1032,7 +1044,7 @@ void sk_message_fmt(const SkMessageSpec *spec, const char *fmt, ...) {
 }
 
 void ski_message(const SkMessageSpec *spec) {
-  if (!MessagesEnabled)
+  if (g_headless_active || !MessagesEnabled)
     return;
   if (!spec)
     return;
@@ -1396,7 +1408,7 @@ void sk_refresh_ui(void) {
 }
 
 void sk_request_refresh(void) {
-  prompt_refresh(prompt_popup_get_top_prompt_state());
+  prompt_refresh(sk_current_prompt_state());
   UI_RequestPopupRepaint();
 }
 
@@ -1905,7 +1917,7 @@ bool ski_place_editbox(const SkEditSpec *spec) {
   SkaldContext_Get()->window.editbox_placed = true;
   SkEditSpec copy = *spec;
   copy.hide_caret = false;
-  PromptState *state = prompt_popup_get_top_prompt_state();
+  PromptState *state = sk_current_prompt_state();
   const char *name = spec->name;
   char *buffer = spec->buffer;
   size_t buffer_size = spec->buffer_size;
@@ -1962,7 +1974,7 @@ bool ski_place_editbox(const SkEditSpec *spec) {
 }
 
 const char *sk_editbox_text(const char *name) {
-  PromptState *state = prompt_popup_get_top_prompt_state();
+  PromptState *state = sk_current_prompt_state();
   if (!state)
     return NULL;
   if (name && name[0]) {
@@ -1975,7 +1987,7 @@ const char *sk_editbox_text(const char *name) {
 bool sk_editbox_set_text(const char *name, const char *text) {
   if (!text)
     return false;
-  PromptState *state = prompt_popup_get_top_prompt_state();
+  PromptState *state = sk_current_prompt_state();
   if (!state)
     return false;
   EditBox *eb = NULL;
@@ -1999,11 +2011,11 @@ bool sk_editbox_set_text(const char *name, const char *text) {
 }
 
 const char *sk_editbox_active(void) {
-  return editbox_registry_active_name(prompt_popup_get_top_prompt_state());
+  return editbox_registry_active_name(sk_current_prompt_state());
 }
 
 void sk_editbox_set_active(const char *name) {
-  editbox_registry_set_active(prompt_popup_get_top_prompt_state(), name);
+  editbox_registry_set_active(sk_current_prompt_state(), name);
 }
 
 SkImage sk_image_from_window_title(const char *title) {
@@ -3671,6 +3683,14 @@ const char *sk_alias_for(const char *target) {
 }
 
 void ski_window(const SkPromptSpec *spec) {
+  if (g_headless_active) {
+    if (g_headless_capturing && spec) {
+      g_headless_spec = *spec;
+      g_headless_spec_valid = true;
+      g_headless_capturing = false;
+    }
+    return;
+  }
   WindowManager_ShowPrompt(WindowManager_Get(), spec);
 }
 
@@ -3821,7 +3841,7 @@ void run_every_purge_owner(const char *path_a, const char *path_b) {
 }
 
 SkMetrics *sk_get_metrics(void) {
-  PromptState *state = prompt_popup_get_top_prompt_state();
+  PromptState *state = sk_current_prompt_state();
   if (state && state->active_editbox >= 0 &&
       state->active_editbox < state->editbox_count)
     return &state->editboxes[state->active_editbox].metrics;
@@ -3881,6 +3901,7 @@ SkRect sk_get_window_bounds(void) {
 #define SK_CONFIG_ALIAS_MAX 128
 #define SK_CONFIG_TARGET_MAX 256
 #define SK_CONFIG_QUICKLINK_TARGET_MAX 1024
+#define SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX 1024
 
 typedef struct {
   char name[SK_CONFIG_NAME_MAX];
@@ -3905,6 +3926,15 @@ static SkConfigAliasEntry *alias_entries;
 
 static SkConfigQuicklinkEntry *quicklink_entries;
 #define quicklink_entry_count arrlenu(quicklink_entries)
+
+typedef struct {
+  char name[SK_CONFIG_NAME_MAX];
+  char target[SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
+  char registered_hotkey[SK_CONFIG_HOTKEY_MAX];
+} SkConfigFeatureShortcutEntry;
+
+static SkConfigFeatureShortcutEntry *feature_shortcut_entries;
+#define feature_shortcut_entry_count arrlenu(feature_shortcut_entries)
 
 typedef struct {
   char *display_name;
@@ -3977,9 +4007,22 @@ static int quicklink_index_of(const char *name) {
   return -1;
 }
 
+static int feature_shortcut_index_of(const char *name) {
+  if (!name)
+    return -1;
+  for (size_t i = 0; i < feature_shortcut_entry_count; i++)
+    if (sk_string_equals_ci(feature_shortcut_entries[i].name, name))
+      return i;
+  return -1;
+}
+
 static void hotkey_entries_remove(int i) { arrdel(hotkey_entries, i); }
 
 static void quicklink_entries_remove(int i) { arrdel(quicklink_entries, i); }
+
+static void feature_shortcut_entries_remove(int i) {
+  arrdel(feature_shortcut_entries, i);
+}
 
 static void alias_entries_remove(int i) { arrdel(alias_entries, i); }
 
@@ -4005,6 +4048,21 @@ static void quicklink_entries_set(const char *name, const char *target) {
   SkConfigQuicklinkEntry *e = arraddnptr(quicklink_entries, 1);
   snprintf(e->name, sizeof(e->name), "%s", name);
   snprintf(e->target, sizeof(e->target), "%s", target);
+}
+
+static void feature_shortcut_entries_set(const char *name,
+                                          const char *target) {
+  int i = feature_shortcut_index_of(name);
+  if (i >= 0) {
+    snprintf(feature_shortcut_entries[i].target,
+             sizeof(feature_shortcut_entries[i].target), "%s", target);
+    return;
+  }
+  SkConfigFeatureShortcutEntry *e =
+      arraddnptr(feature_shortcut_entries, 1);
+  snprintf(e->name, sizeof(e->name), "%s", name);
+  snprintf(e->target, sizeof(e->target), "%s", target);
+  e->registered_hotkey[0] = '\0';
 }
 
 static void alias_entries_set(const char *target, const char *alias) {
@@ -4056,6 +4114,8 @@ static bool sk_config_apply_entry(const ConfigTomlEntry *e, void *user) {
     alias_entries_set(e->key, body);
   } else if (strcmp(e->section, "quicklinks") == 0) {
     quicklink_entries_set(e->key, body);
+  } else if (strcmp(e->section, "feature_shortcuts") == 0) {
+    feature_shortcut_entries_set(e->key, body);
   } else if (strcmp(e->section, "settings") == 0) {
     setting_entries_set(e->key, body);
   } else {
@@ -4116,6 +4176,231 @@ static void sk_config_migrate_hotkeys_txt(const char *dir) {
   }
 }
 
+static bool feature_shortcut_parse(const char *target, char *hotkey,
+                                   size_t hotkey_cap, char *feature,
+                                   size_t feature_cap, char *filter,
+                                   size_t filter_cap) {
+  if (!target || !hotkey || !feature || !filter)
+    return false;
+  const char *first = strchr(target, '|');
+  if (!first)
+    return false;
+  const char *second = strchr(first + 1, '|');
+  if (!second)
+    return false;
+  size_t hotkey_len = (size_t)(first - target);
+  size_t feature_len = (size_t)(second - (first + 1));
+  size_t filter_len = strlen(second + 1);
+  if (!hotkey_len || !feature_len || !filter_len)
+    return false;
+  if (hotkey_len >= hotkey_cap || feature_len >= feature_cap ||
+      filter_len >= filter_cap)
+    return false;
+  memcpy(hotkey, target, hotkey_len);
+  hotkey[hotkey_len] = '\0';
+  memcpy(feature, first + 1, feature_len);
+  feature[feature_len] = '\0';
+  memcpy(filter, second + 1, filter_len);
+  filter[filter_len] = '\0';
+  HotkeyKey key;
+  return hotkey_string_parse(hotkey, &key);
+}
+
+static void feature_shortcut_headless_destroy(PromptState *state) {
+  if (!state)
+    return;
+  free(state->eb->placeholder);
+  listbox_info_free(state->lb);
+  free(state->eb);
+  free(state->lb);
+  free(state);
+}
+
+static PromptState *feature_shortcut_headless_create(const PromptSpec *spec,
+                                                     PromptCallbacks *cb) {
+  PromptState *state = calloc(1, sizeof(*state));
+  EditBox *eb = calloc(1, sizeof(*eb));
+  ListBox *lb = calloc(1, sizeof(*lb));
+  if (!state || !eb || !lb) {
+    free(state);
+    free(eb);
+    free(lb);
+    return NULL;
+  }
+  listbox_info_init(lb);
+  state->eb = eb;
+  state->default_eb = eb;
+  state->active_editbox = -1;
+  state->width = spec->w > 0 ? spec->w : 600;
+  state->height = spec->h > 0 ? spec->h : 70;
+  state->window_title = (char *)spec->title;
+  state->render_data = spec->render_data;
+  state->lb = lb;
+  state->callbacks = cb;
+  state->no_bg = spec->no_bg;
+  state->bg_color = spec->bg_color;
+  state->password_mode = spec->password_mode;
+  state->no_separators = spec->no_separators || spec->auto_scale;
+  if (spec->initial_text && spec->initial_text[0])
+    snprintf(eb->filter, sizeof(eb->filter), "%s", spec->initial_text);
+  if (spec->placeholder && spec->placeholder[0])
+    eb->placeholder = strdup(spec->placeholder);
+  eb->cursor = (size_t)strlen(eb->filter);
+  return state;
+}
+
+static void feature_shortcut_select(ListBox *lb, const char *filter) {
+  if (!lb || !filter || !filter[0])
+    return;
+  int fallback = -1;
+  for (int i = 0; i < lb->item_count; i++) {
+    const char *row = listbox_info_row(lb, i);
+    if (!row || !row[0])
+      continue;
+    if (strcmp(row, filter) == 0) {
+      UI_SetSelection(lb, i);
+      return;
+    }
+    if (fallback < 0 && strstr(row, filter))
+      fallback = i;
+  }
+  if (fallback >= 0)
+    UI_SetSelection(lb, fallback);
+}
+
+static PromptCallbacks feature_shortcut_make_callbacks(
+    const PromptSpec *spec, const PromptCallbacks *saved) {
+  PromptCallbacks cb = *saved;
+  if (spec->refresh)
+    cb.refresh = spec->refresh;
+  if (spec->enter)
+    cb.enter = spec->enter;
+  if (spec->ctrl_enter)
+    cb.ctrl_enter = spec->ctrl_enter;
+  if (spec->shift_enter)
+    cb.shift_enter = spec->shift_enter;
+  if (spec->ctrl_shift_enter)
+    cb.ctrl_shift_enter = spec->ctrl_shift_enter;
+  if (spec->ctrl_alt_enter)
+    cb.ctrl_alt_enter = spec->ctrl_alt_enter;
+  if (spec->shift_alt_enter)
+    cb.shift_alt_enter = spec->shift_alt_enter;
+  if (spec->render)
+    cb.render = spec->render;
+  if (spec->edit)
+    cb.edit = spec->edit;
+  if (spec->filter)
+    cb.filter = spec->filter;
+  if (spec->help)
+    cb.help = spec->help;
+  return cb;
+}
+
+static void feature_shortcut_run(const char *name) {
+  int index = feature_shortcut_index_of(name);
+  if (index < 0)
+    return;
+  char hotkey[SK_CONFIG_HOTKEY_MAX];
+  char feature[128];
+  char filter[SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
+  if (!feature_shortcut_parse(feature_shortcut_entries[index].target, hotkey,
+                              sizeof(hotkey), feature, sizeof(feature), filter,
+                              sizeof(filter)))
+    return;
+  const CcEntrySpec *target = NULL;
+  for (int i = 0; i < sk_cc_entry_count(); i++) {
+    const CcEntrySpec *entry = sk_cc_entry_at(i);
+    if (entry && entry->display_name &&
+        strcmp(entry->display_name, feature) == 0) {
+      target = entry;
+      break;
+    }
+  }
+  if (!target || !target->on_action)
+    return;
+
+  SkaldContext *ctx = SkaldContext_Get();
+  PromptCallbacks saved_callbacks =
+      ctx ? ctx->window.prompt_callbacks : (PromptCallbacks){0};
+  char *saved_feature = ctx ? ctx->window.current_feature : NULL;
+  const char *saved_title = ctx ? ctx->window.title : NULL;
+
+  g_headless_active = true;
+  g_headless_capturing = true;
+  g_headless_spec_valid = false;
+  target->on_action();
+  g_headless_capturing = false;
+  if (!g_headless_spec_valid)
+    goto done;
+
+  PromptSpec spec = g_headless_spec;
+  PromptCallbacks cb =
+      feature_shortcut_make_callbacks(&spec, &saved_callbacks);
+  PromptState *state = feature_shortcut_headless_create(&spec, &cb);
+  if (!state)
+    goto done;
+  snprintf(state->eb->filter, sizeof(state->eb->filter), "%s", filter);
+  state->eb->cursor = (size_t)strlen(filter);
+  if (ctx) {
+    ctx->window.prompt_callbacks = cb;
+    ctx->window.current_feature = (char *)feature;
+    ctx->window.title = spec.title;
+  }
+  g_headless_state = state;
+  if (cb.refresh)
+    cb.refresh(state);
+  feature_shortcut_select(state->lb, filter);
+  if (cb.enter)
+    cb.enter(state);
+  g_headless_state = NULL;
+  feature_shortcut_headless_destroy(state);
+
+done:
+  if (ctx) {
+    ctx->window.prompt_callbacks = saved_callbacks;
+    ctx->window.current_feature = saved_feature;
+    ctx->window.title = saved_title;
+  }
+  g_headless_active = false;
+  g_headless_spec_valid = false;
+}
+
+static void feature_shortcut_hotkey_cb(void *ud) {
+  feature_shortcut_run((const char *)ud);
+}
+
+bool sk_run_feature_shortcut(const char *name) {
+  if (!name || !name[0])
+    return false;
+  feature_shortcut_run(name);
+  return true;
+}
+
+static void feature_shortcut_register_entry(int index) {
+  SkConfigFeatureShortcutEntry *entry = &feature_shortcut_entries[index];
+  char hotkey[SK_CONFIG_HOTKEY_MAX];
+  char feature[128];
+  char filter[SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
+  if (!feature_shortcut_parse(entry->target, hotkey, sizeof(hotkey), feature,
+                              sizeof(feature), filter, sizeof(filter)))
+    return;
+  if (entry->registered_hotkey[0] &&
+      strcmp(entry->registered_hotkey, hotkey) != 0)
+    sk_unregister_hotkey(entry->registered_hotkey);
+  char *ud = strdup(entry->name);
+  if (!ud)
+    return;
+  sk_register_hotkey(.hotkey = hotkey, .cb_ud = feature_shortcut_hotkey_cb,
+                     .ud = ud);
+  snprintf(entry->registered_hotkey, sizeof(entry->registered_hotkey), "%s",
+           hotkey);
+}
+
+static void feature_shortcut_register_hotkeys_locked(void) {
+  for (size_t i = 0; i < feature_shortcut_entry_count; i++)
+    feature_shortcut_register_entry((int)i);
+}
+
 static void sk_config_init_locked(void) {
   if (sk_config_loaded)
     return;
@@ -4144,6 +4429,7 @@ static void sk_config_init_locked(void) {
   for (size_t i = 0; i < alias_entry_count; i++)
     sk_register_alias(.alias = alias_entries[i].alias,
                       .target = alias_entries[i].target);
+  feature_shortcut_register_hotkeys_locked();
 }
 
 void sk_config_init(void) {
@@ -4563,6 +4849,32 @@ char *sk_config_quicklink_value_at(int index) {
   return out;
 }
 
+int sk_config_feature_shortcut_count(void) {
+  sk_config_lock();
+  sk_config_init_locked();
+  int n = (int)feature_shortcut_entry_count;
+  sk_config_unlock();
+  return n;
+}
+
+char *sk_config_feature_shortcut_name_at(int index) {
+  sk_config_lock();
+  sk_config_init_locked();
+  bool ok = index >= 0 && (size_t)index < feature_shortcut_entry_count;
+  char *out = ok ? strdup(feature_shortcut_entries[index].name) : NULL;
+  sk_config_unlock();
+  return out;
+}
+
+char *sk_config_feature_shortcut_value_at(int index) {
+  sk_config_lock();
+  sk_config_init_locked();
+  bool ok = index >= 0 && (size_t)index < feature_shortcut_entry_count;
+  char *out = ok ? strdup(feature_shortcut_entries[index].target) : NULL;
+  sk_config_unlock();
+  return out;
+}
+
 bool sk_config_set_setting(const char *key, const char *value) {
   if (!key || !key[0] || !value)
     return false;
@@ -4715,6 +5027,47 @@ bool sk_config_set_quicklink(const char *name, const char *target) {
   if (!sk_config_ready() ||
       !config_section_set(sk_config_path, "quicklinks", name, target))
     log_error("sk_config: failed to save %s", sk_config_path);
+  sk_config_unlock();
+  return true;
+}
+
+bool sk_config_set_feature_shortcut(const char *name, const char *target) {
+  if (!name || !name[0])
+    return false;
+  sk_config_lock();
+  sk_config_init_locked();
+  int i = feature_shortcut_index_of(name);
+  if (!target || !target[0]) {
+    if (i >= 0) {
+      if (feature_shortcut_entries[i].registered_hotkey[0])
+        sk_unregister_hotkey(feature_shortcut_entries[i].registered_hotkey);
+      feature_shortcut_entries_remove(i);
+      if (sk_config_ready())
+        config_section_clear(sk_config_path, "feature_shortcuts", name);
+    }
+    sk_config_unlock();
+    return true;
+  }
+  if (strlen(name) >= SK_CONFIG_NAME_MAX ||
+      strlen(target) >= SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX) {
+    sk_config_unlock();
+    return false;
+  }
+  char hotkey[SK_CONFIG_HOTKEY_MAX];
+  char feature[128];
+  char filter[SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
+  if (!feature_shortcut_parse(target, hotkey, sizeof(hotkey), feature,
+                              sizeof(feature), filter, sizeof(filter))) {
+    sk_config_unlock();
+    return false;
+  }
+  feature_shortcut_entries_set(name, target);
+  if (!sk_config_ready() ||
+      !config_section_set(sk_config_path, "feature_shortcuts", name, target))
+    log_error("sk_config: failed to save %s", sk_config_path);
+  i = feature_shortcut_index_of(name);
+  if (i >= 0)
+    feature_shortcut_register_entry(i);
   sk_config_unlock();
   return true;
 }

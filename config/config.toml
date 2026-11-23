@@ -30,7 +30,7 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = "slate-cobalt"
+  Theme = "cobalt2"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = true
@@ -39,9 +39,9 @@
   CloseOnLossOfFocus = false
 
 [color]
-  BG = "#182030"
-  TEXT = "#D6E0F4"
-  SELECTED_TEXT = "#2C3A56"
-  CURSOR = "#70A4FF"
-  BORDER = "#4C628A"
+  BG = "#122738"
+  TEXT = "#FFFFFF"
+  SELECTED_TEXT = "#0050A4"
+  CURSOR = "#FFC600"
+  BORDER = "#2D5C80"
 # </skald-config-generated>
