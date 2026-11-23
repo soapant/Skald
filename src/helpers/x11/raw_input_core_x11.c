@@ -588,6 +588,10 @@ void x11_uinput_emit(const struct input_event *ev) {
     perror("[UINPUT] write syn");
 }
 
+static long long g_enter_phys_down_ms;
+
+long long x11_enter_phys_down_ms(void) { return g_enter_phys_down_ms; }
+
 void x11_uinput_release_all(void) {
   if (x11_uinput_fd < 0)
     return;
@@ -979,6 +983,8 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   }
   int code = ev->code;
   int val = ev->value;
+  if (ev->type == EV_KEY && code == KEY_ENTER && val == 1)
+    g_enter_phys_down_ms = Platform_GetWallClockMs();
   if (ev->type == EV_KEY && val != 0)
     Platform_DismissIndefiniteMessage();
   if (code < 0 || code > KEY_MAX) {

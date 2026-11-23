@@ -32,6 +32,7 @@
 #include <sys/time.h>
 #include <linux/input.h>
 #include "helpers/x11/clipboard_x11.h"
+#include "helpers/x11/env_helpers_x11.h"
 #include "helpers/x11/input_x11.h"
 #include "helpers/helpers_render_thread.h"
 #include "platform/widget.h"
@@ -118,6 +119,13 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   KeySym ks;
   char buf[32];
   int len = XLookupString(ev, buf, sizeof(buf), &ks, NULL);
+  if ((ks == XK_Return || ks == XK_KP_Enter) && x11_env_is_wayland() &&
+      x11_uinput_fd_get() >= 0) {
+    long long since_phys = Platform_GetWallClockMs() -
+                           x11_enter_phys_down_ms();
+    if (since_phys < 0 || since_phys > 200)
+      return;
+  }
   if (ks == XK_Control_L || ks == XK_Control_R)
     mods |= HOTKEY_MOD_CTRL;
   else if (ks == XK_Alt_L || ks == XK_Alt_R)
