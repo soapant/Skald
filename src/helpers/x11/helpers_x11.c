@@ -1588,7 +1588,8 @@ static void x11_apply_shape_rounded(Display *dpy, Window win, int w, int h,
       XFillRectangle(dpy, mask, gc, x, y, 1, 1);
     }
   }
-  XShapeCombineMask(dpy, win, ShapeBounding, 0, 0, mask, ShapeSet);
+  int shape_kind = x11_env_is_wayland() ? ShapeInput : ShapeBounding;
+  XShapeCombineMask(dpy, win, shape_kind, 0, 0, mask, ShapeSet);
   XSync(dpy, False);
   XFreePixmap(dpy, mask);
   XFreeGC(dpy, gc);

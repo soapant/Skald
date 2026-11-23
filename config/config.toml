@@ -13,7 +13,7 @@
   UsedFont = "0xProto Nerd Font"
   FontSize = 18
   IconSize = 32
-  EnableIcons = false
+  EnableIcons = true
   WidgetGap = 10
   PromptW = 900
   PromptH = 640
