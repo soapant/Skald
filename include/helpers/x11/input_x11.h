@@ -45,6 +45,7 @@ bool x11_grab_blocked(void);
 int x11_init_uinput(void);
 void x11_destroy_uinput(void);
 void x11_uinput_emit(const struct input_event *ev);
+void x11_uinput_release_all(void);
 void x11_mouse_grab_begin(void);
 void x11_mouse_grab_end(void);
 void x11_mouse_forward(const struct input_event *ev, int grabbed);

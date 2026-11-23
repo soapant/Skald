@@ -588,6 +588,20 @@ void x11_uinput_emit(const struct input_event *ev) {
     perror("[UINPUT] write syn");
 }
 
+void x11_uinput_release_all(void) {
+  if (x11_uinput_fd < 0)
+    return;
+  struct input_event ev;
+  memset(&ev, 0, sizeof(ev));
+  for (int i = 0; i < 2; i++) {
+    gettimeofday(&ev.time, NULL);
+    ev.type = EV_KEY;
+    ev.code = KEY_ENTER;
+    ev.value = i == 0 ? 1 : 0;
+    x11_uinput_emit(&ev);
+  }
+}
+
 void x11_scan_keyboards(void) {
   x11_install_cleanup_handlers();
   x11_release_rejected_devices();
@@ -920,6 +934,11 @@ void x11_set_suppress(int linux_code, bool v) {
   x11_suppress_ms[linux_code] = v ? x11_now_ms() : 0;
 }
 
+static void x11_forward_evdev(struct input_event *ev, bool grabbed) {
+  if (grabbed && x11_uinput_fd >= 0)
+    x11_uinput_emit(ev);
+}
+
 bool x11_handle_global_key(int key_code, int value) {
   remap_update_phys(x11_convert_key_to_windows_vk(key_code), value);
   if (value == 0) {
@@ -1008,8 +1027,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       x11_set_suppress(code, true);
       return true;
     }
-    if (grabbed && x11_uinput_fd >= 0)
-      x11_uinput_emit(ev);
+    x11_forward_evdev(ev, grabbed);
     return false;
   }
   struct timeval now;
@@ -1032,13 +1050,12 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       if (grabbed && x11_uinput_fd >= 0) {
         if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
           return false;
-        x11_uinput_emit(ev);
+        x11_forward_evdev(ev, grabbed);
       }
       return false;
     }
     if (val == 1) {
-      if (grabbed && x11_uinput_fd >= 0)
-        x11_uinput_emit(ev);
+      x11_forward_evdev(ev, grabbed);
       return false;
     }
   }
@@ -1055,7 +1072,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
         return true;
       if (snippet_feed_vk(x11_convert_key_to_windows_vk(code), val, true))
         return false;
-      x11_uinput_emit(ev);
+      x11_forward_evdev(ev, grabbed);
     } else {
       static bool warned = false;
       if (!warned) {

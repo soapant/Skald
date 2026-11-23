@@ -324,6 +324,8 @@ int WindowManager_Run(WindowManager *wm) {
     x11_uinput_fd_set(init_uinput());
     if (x11_uinput_fd_get() < 0) {
       log_warn("continuing without uinput (no swallow)");
+    } else {
+      x11_uinput_release_all();
     }
   }
 
@@ -338,10 +340,12 @@ int WindowManager_Run(WindowManager *wm) {
     if (x11_uinput_fd_get() < 0 && !x11_grab_blocked()) {
       log_warn("input grab forcing uinput init despite use_grab=%d", use_grab);
       x11_uinput_fd_set(init_uinput());
-      if (x11_uinput_fd_get() >= 0)
+      if (x11_uinput_fd_get() >= 0) {
         log_warn("input grab uinput forced fd=%d", x11_uinput_fd_get());
-      else
+        x11_uinput_release_all();
+      } else {
         log_warn("input grab uinput force failed, fallback XTest will be used");
+      }
     }
     if (x11_uinput_fd_get() >= 0) {
       x11_clear_suppress();
@@ -386,6 +390,7 @@ int WindowManager_Run(WindowManager *wm) {
           }
         }
       }
+      x11_uinput_release_all();
     } else {
       log_warn(
           "keyboard grab skipped: no uinput, not grabbing to avoid bricking");
