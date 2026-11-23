@@ -75,10 +75,23 @@ TEST(capture_poll_bare_key) {
   hotkey_capture_end();
 }
 
+TEST(capture_poll_live_mods) {
+  input_state_clear();
+  hotkey_capture_begin();
+
+  input_state_update('K', true, HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT, 0);
+
+  char out[64] = "";
+  ASSERT_TRUE(hotkey_capture_poll(out, sizeof(out)));
+  ASSERT_EQ_STR(out, "Ctrl+Shift+K");
+  hotkey_capture_end();
+}
+
 int main(void) {
   RUN(capture_begin_end);
   RUN(capture_poll_combo);
   RUN(capture_poll_modifier_preview);
   RUN(capture_poll_bare_key);
+  RUN(capture_poll_live_mods);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

@@ -16,6 +16,7 @@ static void *key_ud = NULL;
 static char cb_owner[OWNER_PATH_MAX] = {0};
 static char char_queue[32] = {0};
 static int char_head = 0, char_tail = 0;
+static int last_mods = 0;
 
 #define INHIBIT_MOD_COUNT 11
 static const int kInhibitMods[INHIBIT_MOD_COUNT] = {
@@ -31,6 +32,7 @@ void input_state_inhibit_mods(void) {
   memset(pressed, 0, sizeof(pressed));
   memset(released, 0, sizeof(released));
   input_state_clear_queue();
+  last_mods = 0;
 }
 
 static int norm_vk(int vk) {
@@ -42,6 +44,7 @@ void input_state_update(int vk, bool down, int mods, int char_hint) {
   int nv = norm_vk(vk);
   if (nv < 0 || nv >= 256)
     return;
+  last_mods = mods;
   bool was = down_map[nv];
   if (down) {
     down_map[nv] = true;
@@ -66,6 +69,8 @@ void input_state_update(int vk, bool down, int mods, int char_hint) {
   if (key_cb)
     key_cb(nv, down, mods, key_ud);
 }
+
+int input_last_mods(void) { return last_mods; }
 
 bool input_is_key_down(int vk) {
   vk = norm_vk(vk);
@@ -116,6 +121,7 @@ void input_state_clear(void) {
     released[i] = false;
   }
   char_head = char_tail = 0;
+  last_mods = 0;
 }
 
 void input_state_clear_queue(void) { char_head = char_tail = 0; }

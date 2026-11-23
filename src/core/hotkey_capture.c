@@ -40,7 +40,7 @@ static bool capture_is_modifier_vk(int vk) {
 }
 
 static int capture_current_mods(void) {
-  int mods = 0;
+  int mods = input_last_mods();
   if (key_is_ctrl_pressed())
     mods |= HOTKEY_MOD_CTRL;
   if (key_is_shift_pressed())

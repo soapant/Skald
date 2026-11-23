@@ -13,6 +13,7 @@ typedef struct {
 } KeyEvent;
 
 void input_state_update(int vk, bool down, int mods, int char_hint);
+int input_last_mods(void);
 bool input_is_key_down(int vk);
 bool input_was_key_pressed(int vk);
 bool input_was_key_released(int vk);
