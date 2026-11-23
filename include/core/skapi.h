@@ -328,6 +328,7 @@ typedef struct {
   const char **items;
   int count;
   bool (*filter_match)(const char *item, const char *filter);
+  int (*item_rank)(int item_index);
 } SkPopulateListboxSpec;
 
 void ski_populate_listbox(const SkPopulateListboxSpec *spec);

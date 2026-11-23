@@ -25,6 +25,11 @@ void populate_listbox(ListBox *lb, const char *filter, const char **items,
                       int item_count,
                       bool (*filter_match)(const char *item,
                                            const char *filter));
+void populate_listbox_ranked(ListBox *lb, const char *filter,
+                             const char **items, int item_count,
+                             bool (*filter_match)(const char *item,
+                                                  const char *filter),
+                             int (*item_rank)(int item_index));
 
 typedef enum {
   AUTO = 0,

@@ -185,6 +185,15 @@ static const CcEntry *cc_find(const char *label) {
   return NULL;
 }
 
+static const CcEntry *cc_entry_for_row(const ListBox *lb, int row) {
+  if (!lb || row < 0 || row >= lb->total_matches)
+    return NULL;
+  int raw = lb->matching_indices[row];
+  if (raw < 0 || raw >= cc_entry_count)
+    return NULL;
+  return &cc_entries[raw];
+}
+
 static void (*cc_pending_action)(void);
 static CcHandler cc_pending_fn;
 static char cc_pending_label[256];
@@ -1099,6 +1108,12 @@ static bool cc_filter_match(const char *item, const char *filter) {
   return alias && sk_string_contains_ci(alias, filter);
 }
 
+static int cc_item_rank(int index) {
+  if (index < 0 || index >= cc_entry_count)
+    return 1;
+  return strcmp(cc_entries[index].type, "Feature") == 0 ? 0 : 1;
+}
+
 static void cc_refresh(PromptState *state) {
   cc_update_compact_size(state);
   if (atomic_load(&cc_entries_dirty))
@@ -1115,7 +1130,8 @@ static void cc_refresh(PromptState *state) {
 
   sk_populate_listbox(.lb = state->lb, .filter = state->eb->filter,
                       .items = cc_names, .count = n,
-                      .filter_match = cc_filter_match);
+                      .filter_match = cc_filter_match,
+                      .item_rank = cc_item_rank);
 
   if (state->lb->total_matches == 0 && n < MAX_VISIBLE_ITEMS) {
     CcEntry *fallback = cc_add_fallback();
@@ -1139,8 +1155,11 @@ static void cc_draw_hotkey_chip(const char *hotkey, int right_x, int y) {
                .color = SK_GRAY, .font_size = font);
 }
 
-static void cc_draw_row(const SkListItemCtx *ctx, int type_x) {
-  const CcEntry *e = cc_find(ctx->text);
+static void cc_draw_row(const SkListItemCtx *ctx, const ListBox *lb, int row,
+                        int type_x) {
+  const CcEntry *e = cc_entry_for_row(lb, row);
+  if (!e)
+    e = cc_find(ctx->text);
   const char *icon = (e && e->icon[0]) ? e->icon : NULL;
   if (!icon && cc_calc_label[0] && strcmp(ctx->text, cc_calc_label) == 0)
     icon = CC_CALC_ROW_ICON;
@@ -1271,7 +1290,7 @@ static void cc_render(PromptState *state) {
   int type_x = state->width - CC_ITEM_TEXT_X;
   SkListItemCtx ctx;
   while (sk_listbox_next(&ctx))
-    cc_draw_row(&ctx, type_x);
+    cc_draw_row(&ctx, state->lb, ctx.idx, type_x);
   sk_listbox_end();
 }
 
@@ -1291,7 +1310,9 @@ static bool cc_enter(PromptState *state) {
   if (cc_copy_calc_result(state))
     return true;
   if (sk_is_selected(state->lb)) {
-    const CcEntry *e = cc_find(state->lb->selected_text);
+    const CcEntry *e = cc_entry_for_row(state->lb, state->lb->selected_index);
+    if (!e)
+      e = cc_find(state->lb->selected_text);
     cc_stage(e, CC_RUN_ENTER);
     if (e && e->keep_open)
       return cc_run_pending();
@@ -1306,7 +1327,9 @@ static bool cc_enter_with(PromptState *state, CcRunMode mode) {
     sk_query_browser(state->eb->filter);
     return true;
   }
-  const CcEntry *e = cc_find(state->lb->selected_text);
+  const CcEntry *e = cc_entry_for_row(state->lb, state->lb->selected_index);
+  if (!e)
+    e = cc_find(state->lb->selected_text);
   cc_stage(e, mode);
   if (e && e->keep_open)
     return cc_run_pending();

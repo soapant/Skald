@@ -292,7 +292,8 @@ static int populate_filter(ListBox *lb, const char **items, int item_count,
 }
 
 static void populate_rank_matches(ListBox *lb, const char **items,
-                                  const char *clean_filter, int total_matches) {
+                                  const char *clean_filter, int total_matches,
+                                  int (*item_rank)(int item_index)) {
   if (clean_filter[0] == '\0' || total_matches <= 1)
     return;
   int scores[MAX_VISIBLE_ITEMS];
@@ -305,15 +306,18 @@ static void populate_rank_matches(ListBox *lb, const char **items,
       scores[i] = 500 + levenshtein(txt, clean_filter) * 20;
   }
   for (int i = 0; i < total_matches - 1; i++)
-    for (int j = i + 1; j < total_matches; j++)
-      if (scores[j] < scores[i]) {
-        int ti = lb->matching_indices[i];
+    for (int j = i + 1; j < total_matches; j++) {
+      int ri = item_rank ? item_rank(lb->matching_indices[i]) : 0;
+      int rj = item_rank ? item_rank(lb->matching_indices[j]) : 0;
+      if (rj < ri || (rj == ri && scores[j] < scores[i])) {
+        int tm = lb->matching_indices[i];
         lb->matching_indices[i] = lb->matching_indices[j];
-        lb->matching_indices[j] = ti;
+        lb->matching_indices[j] = tm;
         int ts = scores[i];
         scores[i] = scores[j];
         scores[j] = ts;
       }
+    }
 }
 
 static void populate_ensure_matches(ListBox *lb, int item_count,
@@ -385,6 +389,14 @@ void populate_listbox(ListBox *lb, const char *filter, const char **items,
                       int item_count,
                       bool (*filter_match)(const char *item,
                                            const char *filter)) {
+  populate_listbox_ranked(lb, filter, items, item_count, filter_match, NULL);
+}
+
+void populate_listbox_ranked(ListBox *lb, const char *filter,
+                             const char **items, int item_count,
+                             bool (*filter_match)(const char *item,
+                                                  const char *filter),
+                             int (*item_rank)(int item_index)) {
   if (!lb)
     return;
 
@@ -403,7 +415,7 @@ void populate_listbox(ListBox *lb, const char *filter, const char **items,
   total_matches =
       populate_filter(lb, items, item_count, clean_filter, filter_match);
 
-  populate_rank_matches(lb, items, clean_filter, total_matches);
+  populate_rank_matches(lb, items, clean_filter, total_matches, item_rank);
 
   populate_ensure_matches(lb, item_count, clean_filter, &total_matches);
 

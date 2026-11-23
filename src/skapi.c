@@ -910,8 +910,8 @@ void ski_populate_listbox(const SkPopulateListboxSpec *spec) {
     return;
   if (search_index_current())
     return;
-  populate_listbox(spec->lb, spec->filter, spec->items, spec->count,
-                   spec->filter_match);
+  populate_listbox_ranked(spec->lb, spec->filter, spec->items, spec->count,
+                          spec->filter_match, spec->item_rank);
 }
 
 SkSearchIndex *sk_search_create(void) { return search_index_create(); }
