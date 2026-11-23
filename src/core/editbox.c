@@ -172,7 +172,7 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->scroll = in->state ? in->state->eb->scroll_offset : 0;
   out->cursor_x = in->cursor_x;
   out->text_w = in->text_w;
-  out->text_y = in->y;
+  out->text_y = in->y + Platform_EditboxPlaceholderOffset();
   int caret_auto_y =
       editbox_caret_y(in->y, in->ascent, in->descent,
                       in->font_size > 0 ? in->font_size : FontSize);
@@ -241,7 +241,7 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   spec->scroll = state->eb->scroll_offset;
   spec->cursor_x = cursor_x;
   spec->text_w = text_w;
-  spec->text_y = edit_y;
+  spec->text_y = edit_y + Platform_EditboxPlaceholderOffset();
   spec->caret_y = editbox_caret_y(edit_y, ascent, descent, FontSize);
   spec->caret_h = prompt_caret_height();
   spec->placeholder_dy = 0;

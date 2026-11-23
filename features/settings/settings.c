@@ -64,7 +64,7 @@ static void settings_list(PromptState *state) {
 
     if (entry && entry->icon && entry->icon[0]) {
       sk_draw_image(.path = entry->icon, .x = ctx.x + 10,
-                    .y = row_y + (row_h - 20) / 2, .w = 18, .h = 18);
+                    .y = ctx.y + 6, .w = 18, .h = 18);
     }
     sk_draw_text(.text = ctx.text, .x = ctx.x + 36, .y = row_y + 3,
                  .align = "LEFT", .color = COLOR_TEXT, .font_size = 15);
@@ -78,8 +78,7 @@ static void settings_render(PromptState *state) {
                .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16,
-                   .caret_h = 19);
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16);
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
                .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W - 2,

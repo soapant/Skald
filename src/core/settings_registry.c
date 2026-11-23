@@ -524,7 +524,6 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
                         .descent = line_h - (line_h * 3) / 4,
                         .font = FH_NULL});
   int y_off = Platform_EditboxPlaceholderOffset();
-  eb.text_y += y_off;
   eb.placeholder_dy = 0;
   eb.caret_y += y_off;
   int parts =
