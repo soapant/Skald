@@ -1672,15 +1672,14 @@ static CURL *http_new(const char *url, size_t limit, HttpBuf *buf) {
     return NULL;
   memset(buf, 0, sizeof(*buf));
   buf->limit = limit;
-  if (limit) {
-    buf->buf = (char *)malloc(limit + 1);
-    if (!buf->buf) {
-      curl_easy_cleanup(c);
-      return NULL;
-    }
-    buf->buf[0] = '\0';
-    buf->cap = limit + 1;
+  size_t initial = limit && limit < 4096 ? limit + 1 : 4096;
+  buf->buf = (char *)malloc(initial);
+  if (!buf->buf) {
+    curl_easy_cleanup(c);
+    return NULL;
   }
+  buf->buf[0] = '\0';
+  buf->cap = initial;
   curl_easy_setopt(c, CURLOPT_URL, url);
   curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, http_write_cb);
   curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)buf);
@@ -1690,18 +1689,33 @@ static CURL *http_new(const char *url, size_t limit, HttpBuf *buf) {
   return c;
 }
 
+static bool http_status_ok(CURL *c) {
+  long status = 0;
+  if (curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &status) != CURLE_OK)
+    return false;
+  return status == 0 || (status >= 200 && status < 300);
+}
+
 static char *http_finish(CURL *c, HttpBuf *buf, CURLcode res, size_t *out_len) {
-  if (out_len)
-    *out_len = buf->len;
-  if (res != CURLE_OK) {
-    log_warn("http transfer failed: %s", curl_easy_strerror(res));
+  bool ok = res == CURLE_OK && http_status_ok(c);
+  if (!ok) {
+    if (out_len)
+      *out_len = 0;
+    if (res != CURLE_OK)
+      log_warn("http transfer failed: %s", curl_easy_strerror(res));
+    else {
+      long status = 0;
+      curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &status);
+      log_warn("http request failed with status %ld", status);
+    }
     curl_easy_cleanup(c);
     free(buf->buf);
+    buf->buf = NULL;
     return NULL;
   }
+  if (out_len)
+    *out_len = buf->len;
   curl_easy_cleanup(c);
-  if (!buf->buf)
-    buf->buf = (char *)calloc(1, 1);
   return buf->buf;
 }
 
@@ -1766,10 +1780,14 @@ bool Platform_HttpSaveToFile(const char *url, const char *path) {
   curl_easy_setopt(c, CURLOPT_WRITEDATA, (void *)f);
   http_setopt_common(c);
   CURLcode res = curl_easy_perform(c);
+  bool status_ok = res == CURLE_OK && http_status_ok(c);
   curl_easy_cleanup(c);
   fclose(f);
-  if (res != CURLE_OK) {
-    log_warn("http transfer failed: %s", curl_easy_strerror(res));
+  if (!status_ok) {
+    if (res != CURLE_OK)
+      log_warn("http transfer failed: %s", curl_easy_strerror(res));
+    else
+      log_warn("http download returned a non-success status for %s", url);
     remove(path);
     return false;
   }

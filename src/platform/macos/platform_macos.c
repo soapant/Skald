@@ -258,8 +258,6 @@ void Platform_RenderThreadMiniSleep(int milliseconds) {
   nanosleep(&ts, NULL);
 }
 
-void Platform_RenderThreadInit(void) {}
-
 void Platform_RenderThreadLock(void) {}
 
 void Platform_RenderThreadUnlock(void) {}

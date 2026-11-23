@@ -13,7 +13,6 @@ static pthread_mutex_t rt_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t rt_cond = PTHREAD_COND_INITIALIZER;
 static Display *rt_dpy = NULL;
 
-void Platform_RenderThreadInit(void) {}
 void Platform_RenderThreadLock(void) { pthread_mutex_lock(&rt_lock); }
 void Platform_RenderThreadUnlock(void) { pthread_mutex_unlock(&rt_lock); }
 void Platform_RenderThreadWakeOne(void) { pthread_cond_signal(&rt_cond); }

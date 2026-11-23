@@ -10,6 +10,9 @@
 #include "deps/log.h"
 #include "platform/platform.h"
 
+#define CONFIG_SECTION_HEADER_MAX 96
+#define CONFIG_SECTION_NAME_MAX (CONFIG_SECTION_HEADER_MAX - 3)
+
 static bool section_is_bare_key(const char *s) { return toml_is_bare_key(s); }
 
 static ConfigTomlStatus section_fail(ConfigTomlError *err,
@@ -131,6 +134,12 @@ typedef struct {
 
 static bool section_apply(const char *path, const char *section,
                           const char *name, const char *value, bool is_clear) {
+  if (!section_is_bare_key(section) ||
+      strlen(section) >= CONFIG_SECTION_NAME_MAX) {
+    log_error("config-section: invalid or too long section name '%s'", section);
+    return false;
+  }
+
   char *orig = NULL;
   long fsize = 0;
   FILE *f = fopen(path, "rb");
@@ -192,7 +201,7 @@ static bool section_apply(const char *path, const char *section,
     }
   }
 
-  char header[96];
+  char header[CONFIG_SECTION_HEADER_MAX];
   snprintf(header, sizeof(header), "[%s]", section);
 
   size_t sec_header = SIZE_MAX;
@@ -277,7 +286,29 @@ static bool section_apply(const char *path, const char *section,
   bool found = sec_header != SIZE_MAX;
   size_t entry_len = strlen(enc_key) + 3 + strlen(enc_val) + 1;
 
-  size_t cap = (size_t)fsize + entry_len + 64;
+  size_t cap = 0;
+  for (size_t i = 0; i < line_count; i++) {
+    if (is_clear && i == replace_idx)
+      continue;
+    if (!is_clear && i == replace_idx) {
+      cap += entry_len;
+      continue;
+    }
+    if (!is_clear && sec_header != SIZE_MAX && i == sec_end &&
+        replace_idx == SIZE_MAX)
+      cap += entry_len;
+    cap += lines[i].count;
+    if (lines[i].count == 0 ||
+        orig[lines[i].offset + lines[i].count - 1] != '\n')
+      cap += 1;
+  }
+  if (!found && !is_clear) {
+    cap += 1;
+    cap += 1 + strlen(header) + 1;
+    cap += entry_len;
+  } else if (!is_clear && replace_idx == SIZE_MAX && sec_end == line_count) {
+    cap += entry_len;
+  }
   char *out = malloc(cap + 1);
   if (!out) {
     free(lines);
@@ -374,7 +405,8 @@ ConfigTomlStatus config_section_set_ex(const char *path, const char *section,
   if (!path || !path[0] || !section || !section[0] || !name || !name[0] ||
       !value || !value[0])
     return section_fail(err, CONFIG_TOML_ERR_ARG, "missing path/section/name/value");
-  if (!section_is_bare_key(section))
+  if (!section_is_bare_key(section) ||
+      strlen(section) >= CONFIG_SECTION_NAME_MAX)
     return section_fail(err, CONFIG_TOML_ERR_PARSE, "invalid section name");
   if (!section_apply(path, section, name, value, false))
     return section_fail(err, CONFIG_TOML_ERR_IO, "could not update config section");
@@ -387,7 +419,8 @@ ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
   config_toml_error_clear(err);
   if (!path || !path[0] || !section || !section[0] || !name || !name[0])
     return section_fail(err, CONFIG_TOML_ERR_ARG, "missing path/section/name");
-  if (!section_is_bare_key(section))
+  if (!section_is_bare_key(section) ||
+      strlen(section) >= CONFIG_SECTION_NAME_MAX)
     return section_fail(err, CONFIG_TOML_ERR_PARSE, "invalid section name");
   if (!section_apply(path, section, name, NULL, true))
     return section_fail(err, CONFIG_TOML_ERR_IO, "could not clear config section");

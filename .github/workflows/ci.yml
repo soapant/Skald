@@ -56,3 +56,25 @@ jobs:
 
       - name: Build and test with ASan + UBSan
         run: ASAN_OPTIONS=detect_leaks=0 ./nob --asan --test --dynamic
+
+  linux-wayland:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config \
+            libcurl4-openssl-dev \
+            libx11-dev libxft-dev libfontconfig-dev libfreetype-dev \
+            libxext-dev libxrandr-dev libxrender-dev libxtst-dev libxi-dev \
+            libglib2.0-dev libwayland-dev libgpg-error-dev libp11-kit-dev \
+            libmount-dev
+
+      - name: Bootstrap nob
+        run: cc -O2 nob.c -o nob
+
+      - name: Build with Wayland backend
+        run: ./nob --wayland --dynamic

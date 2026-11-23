@@ -2039,6 +2039,7 @@ void sk_editbox_set_active(const char *name) {
 SkImage sk_image_from_window_title(const char *title) {
   ImageBuffer *img = Platform_CaptureWindowByTitle(title);
   SkImage out = img ? *img : (SkImage){0};
+  Platform_FreeImage(img);
   free(img);
   return out;
 }
@@ -2046,6 +2047,7 @@ SkImage sk_image_from_window_title(const char *title) {
 SkImage sk_image_from_window_id(const char *id) {
   ImageBuffer *img = Platform_CaptureWindowById(id);
   SkImage out = img ? *img : (SkImage){0};
+  Platform_FreeImage(img);
   free(img);
   return out;
 }

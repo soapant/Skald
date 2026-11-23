@@ -204,6 +204,48 @@ TEST(set_then_parse_with_config_toml) {
   remove(PATH);
 }
 
+TEST(set_long_section_name_without_trailing_newline) {
+  char section[93];
+  memset(section, 'a', sizeof(section) - 1);
+  section[sizeof(section) - 1] = '\0';
+  seed("x");
+  ASSERT_TRUE(config_section_set(PATH, section, "Key", "value"));
+  char *s = slurp();
+  ASSERT_TRUE(s != NULL);
+  if (s) {
+    ASSERT_TRUE(strstr(s, section) != NULL);
+    ASSERT_TRUE(strstr(s, "Key = \"value\"") != NULL);
+    free(s);
+  }
+  remove(PATH);
+}
+
+TEST(set_overlong_section_name_is_rejected) {
+  char section[128];
+  memset(section, 'b', sizeof(section) - 1);
+  section[sizeof(section) - 1] = '\0';
+  remove(PATH);
+  ConfigTomlError err;
+  ASSERT_EQ_INT((int)config_section_set_ex(PATH, section, "Key", "value", &err),
+                (int)CONFIG_TOML_ERR_PARSE);
+  char *s = slurp();
+  ASSERT_TRUE(s == NULL);
+  free(s);
+}
+
+TEST(set_preserves_last_line_without_newline) {
+  seed("[hotkeys]\nA = \"1\"");
+  ASSERT_TRUE(config_section_set(PATH, "hotkeys", "B", "2"));
+  char *s = slurp();
+  ASSERT_TRUE(s != NULL);
+  if (s) {
+    ASSERT_TRUE(strstr(s, "A = \"1\"") != NULL);
+    ASSERT_TRUE(strstr(s, "B = \"2\"") != NULL);
+    free(s);
+  }
+  remove(PATH);
+}
+
 int main(void) {
   RUN(set_creates_missing_file);
   RUN(set_appends_inside_existing_section_before_next_section);
@@ -219,5 +261,8 @@ int main(void) {
   RUN(clear_missing_section_is_noop_true);
   RUN(clear_missing_file_is_noop_true);
   RUN(set_then_parse_with_config_toml);
+  RUN(set_long_section_name_without_trailing_newline);
+  RUN(set_overlong_section_name_is_rejected);
+  RUN(set_preserves_last_line_without_newline);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

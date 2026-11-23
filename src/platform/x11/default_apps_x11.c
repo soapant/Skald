@@ -68,7 +68,6 @@ static const char *get_default_browser(int slot) {
         return default_apps_x11[slot];
       }
     }
-    break;
   }
   free(browser_files.files);
   char mimeapps_path[1024];

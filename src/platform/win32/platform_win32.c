@@ -1333,12 +1333,11 @@ void Platform_ShutdownUI(void) {
 static void win32_http_buf_init(HttpBuf *buf, size_t limit) {
   memset(buf, 0, sizeof(*buf));
   buf->limit = limit;
-  if (limit) {
-    buf->buf = (char *)malloc(limit + 1);
-    if (buf->buf) {
-      buf->buf[0] = '\0';
-      buf->cap = limit + 1;
-    }
+  size_t initial = limit && limit < 4096 ? limit + 1 : 4096;
+  buf->buf = (char *)malloc(initial);
+  if (buf->buf) {
+    buf->buf[0] = '\0';
+    buf->cap = initial;
   }
 }
 
@@ -1357,7 +1356,9 @@ char *Platform_HttpCollect(const char *url, const char *method,
                               HTTP_MAX_REDIRECTS);
   if (out_len)
     *out_len = buf.len;
-  if (ok < 200 || ok >= 300) {
+  if (ok < 200 || ok >= 300 || buf.overflow) {
+    if (out_len)
+      *out_len = 0;
     free(buf.buf);
     return NULL;
   }
@@ -1519,6 +1520,20 @@ redirect_loop: {
           dwRead = (DWORD)space_left;
         }
         if (dwRead > 0) {
+          size_t need = resp_buf->len + (size_t)dwRead + 1;
+          if (need > resp_buf->cap) {
+            size_t cap = resp_buf->cap ? resp_buf->cap : 4096;
+            while (cap < need)
+              cap *= 2;
+            char *grown = (char *)realloc(resp_buf->buf, cap);
+            if (!grown) {
+              resp_buf->overflow = true;
+              free(pszOutBuffer);
+              break;
+            }
+            resp_buf->buf = grown;
+            resp_buf->cap = cap;
+          }
           memcpy(resp_buf->buf + resp_buf->len, pszOutBuffer, dwRead);
           resp_buf->len += dwRead;
           resp_buf->buf[resp_buf->len] = '\0';

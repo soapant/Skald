@@ -127,6 +127,8 @@ static const char *wl_read_guard(const void *offer) {
              "hyprland pid %ld present (data-control receive crashes it)",
              wl_hypr_pid);
     wl_read_disabled = true;
+    log_warn("wayland clipboard: clipboard reads disabled: %s",
+             wl_read_block_reason);
     return wl_read_block_reason;
   }
   if (offer == wl_dead_offer)
@@ -767,6 +769,8 @@ static bool wl_setup(void) {
     snprintf(wl_read_block_reason, sizeof(wl_read_block_reason),
              "hyprland pid %ld present (data-control receive crashes it)",
              wl_hypr_pid);
+    log_warn("wayland clipboard: clipboard reads disabled: %s",
+             wl_read_block_reason);
   }
   return true;
 }

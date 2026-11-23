@@ -103,7 +103,6 @@ const char *Platform_GetDefaultApp(DefaultAppKind kind) {
   if (kind < 0 || kind >= DEFAULT_APP_COUNT)
     return "";
 
-  const char *progid = NULL;
   const char *fallback_name = NULL;
 
   switch (kind) {
@@ -119,13 +118,8 @@ const char *Platform_GetDefaultApp(DefaultAppKind kind) {
     return default_apps_win32[kind];
   }
 
-  if (progid && progid[0] != '\0') {
-    snprintf(default_apps_win32[kind], sizeof(default_apps_win32[kind]), "%s",
-             progid);
-  } else {
-    snprintf(default_apps_win32[kind], sizeof(default_apps_win32[kind]), "%s",
-             fallback_name);
-  }
+  snprintf(default_apps_win32[kind], sizeof(default_apps_win32[kind]), "%s",
+           fallback_name);
   return default_apps_win32[kind];
 }
 

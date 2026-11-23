@@ -6,6 +6,7 @@
 #include "test.h"
 
 #include "core/widget_registry.h"
+#include "helpers/helpers_owner.h"
 
 TEST(empty_registry_reports_inactive_owner) {
   ASSERT_FALSE(widget_owner_active("some/bogus-owner.so"));
@@ -59,10 +60,37 @@ TEST(concurrent_purge_and_lookup_smoke) {
   ASSERT_EQ_INT(concurrent_owner_checks, 0);
 }
 
+static void registry_stub_render(WidgetState *state) { (void)state; }
+
+TEST(create_then_purge_owner_removes_widget) {
+  char owner[OWNER_PATH_MAX];
+  owner_resolve_for_func((void *)test_create_then_purge_owner_removes_widget,
+                         owner, sizeof(owner));
+  WidgetSpec spec = {0};
+  spec.name = "test_registry_widget";
+  spec.w = 40;
+  spec.h = 20;
+  spec.slot = WIDGET_FREE;
+  spec.x = 12;
+  spec.y = 12;
+  spec.fps = 1;
+  spec.render = registry_stub_render;
+
+  Widget *w = widget_create(&spec);
+  ASSERT_TRUE(w != NULL);
+  ASSERT_TRUE(widget_valid(w));
+  if (owner[0]) {
+    ASSERT_TRUE(widget_owner_active(owner));
+    widget_purge_owner(owner, NULL, widget_current_generation());
+    ASSERT_FALSE(widget_owner_active(owner));
+  }
+}
+
 int main(void) {
   RUN(empty_registry_reports_inactive_owner);
   RUN(purge_owner_on_empty_registry_does_not_deadlock);
   RUN(generation_protocol_is_monotonic);
   RUN(concurrent_purge_and_lookup_smoke);
+  RUN(create_then_purge_owner_removes_widget);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

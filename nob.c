@@ -115,6 +115,7 @@ static void append_san_flags(Nob_Cmd *cmd) {
 }
 
 static bool target_win32 = false;
+static bool want_wayland = false;
 static const char *obj_dir = BUILD_FOLDER "/obj";
 static bool release = false;
 static bool werror = false;
@@ -170,7 +171,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
         if (nob_sv_ends_with_cstr(path, "_macos.c"))
           return true;
 #endif
-        if (!getenv("WAYLAND_DISPLAY"))
+        if (!want_wayland && !getenv("WAYLAND_DISPLAY"))
           if (nob_sv_ends_with_cstr(path, "_wayland.c"))
             return true;
       }
@@ -400,7 +401,7 @@ static void append_wayland_session_flags(Nob_Cmd *cmd) {
   if (target_win32)
     return;
 #if !defined(_WIN32)
-  if (getenv("WAYLAND_DISPLAY"))
+  if (want_wayland || getenv("WAYLAND_DISPLAY"))
     nob_cmd_append(cmd, "-DSKALD_WAYLAND_SESSION");
 #else
   (void)cmd;
@@ -1758,8 +1759,6 @@ static bool check_walk(Nob_Walk_Entry entry) {
       chk_sk_ident_scan(path, lineno, out, strlen(out), sk_layer_exempt);
 
     if (preproc) {
-      if (!exempt && !sk_layer_exempt)
-        chk_sk_ident_scan(path, lineno, out, strlen(out), sk_layer_exempt);
       lineno++;
       continue;
     }
@@ -1869,13 +1868,15 @@ int main(int argc, char **argv) {
     if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
       printf("Usage: %s [-a|--all] [-w|--win32] [-r|--run] [-R|--release] "
              "[-t|--test] [-A|--asan] [-c|--check] [-W|--werror] "
-             "[-D|--dynamic]\n",
+             "[-D|--dynamic] [--wayland]\n",
              argv[0]);
       printf("  -a, --all      Run nob, nob -t, nob -w and nob -c\n");
       printf("  -w, --win32    Cross compile for Windows using MinGW\n");
       printf("  -D, --dynamic  Link external dependencies dynamically "
              "(static by default)\n");
       printf("  -W, --werror   Build the main app with warnings as errors\n");
+      printf("      --wayland  Include the Wayland clipboard backend in the "
+             "build\n");
       printf("  -r, --run      Run skald after build\n");
       printf("  -R, --release  Build a self-contained release/ bundle: "
              "skald[.exe],\n"
@@ -1916,6 +1917,8 @@ int main(int argc, char **argv) {
       sanitize = true;
     if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--check") == 0)
       do_check = 1;
+    if (strcmp(argv[i], "--wayland") == 0)
+      want_wayland = true;
     if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--all") == 0)
       do_all = 1;
   }

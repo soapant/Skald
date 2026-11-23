@@ -10,8 +10,6 @@ static CRITICAL_SECTION rt_lock;
 static CONDITION_VARIABLE rt_cond;
 static volatile LONG rt_lock_ready = 0;
 
-void Platform_RenderThreadInit(void) {}
-
 static void rt_ensure_lock(void) {
   if (rt_lock_ready == 2)
     return;

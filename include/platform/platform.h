@@ -226,7 +226,6 @@ PromptState *Platform_ListboxBackendPromptState(const ListBox *lb);
 
 void Platform_ShutdownUI(void);
 void Platform_RenderThreadMiniSleep(int milliseconds);
-void Platform_RenderThreadInit(void);
 void Platform_RenderThreadLock(void);
 void Platform_RenderThreadUnlock(void);
 void Platform_RenderThreadWakeOne(void);
