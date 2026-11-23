@@ -1540,6 +1540,163 @@ bool ski_draw_text_segments(const SkTextSegmentsSpec *spec) {
   return ok;
 }
 
+typedef struct {
+  char text[256];
+  unsigned long color;
+  int width;
+  int lead;
+  int breaks;
+  int x;
+  int line;
+} SkWrappedWord;
+
+static void wrapped_word_push(SkWrappedWord **words, int *count, int *cap,
+                              const char *s, size_t len, unsigned long color,
+                              int lead, int breaks, int font_size) {
+  if (!len)
+    return;
+  if (*count >= *cap) {
+    int nc = *cap ? *cap * 2 : 32;
+    SkWrappedWord *grown = realloc(*words, (size_t)nc * sizeof(**words));
+    if (!grown)
+      return;
+    *words = grown;
+    *cap = nc;
+  }
+  SkWrappedWord *w = &(*words)[(*count)++];
+  if (len >= sizeof(w->text))
+    len = sizeof(w->text) - 1;
+  memcpy(w->text, s, len);
+  w->text[len] = '\0';
+  w->color = color;
+  w->width = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+      .text = w->text, .len = (int)len, .font_size = font_size});
+  w->lead = lead;
+  w->breaks = breaks;
+  w->x = 0;
+  w->line = 0;
+}
+
+int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
+  if (!spec)
+    return 0;
+  int fs = spec->font_size > 0 ? spec->font_size : FontSize;
+  int line_h = spec->line_height > 0 ? spec->line_height : fs + 4;
+  int max_w = spec->max_width > 40 ? spec->max_width : 40;
+  if (search_index_current()) {
+    if (spec->segments && spec->count > 0) {
+      for (int i = 0; i < spec->count; i++) {
+        const char *text = spec->segments[i].text;
+        if (text && text[0])
+          search_index_add_text(NULL, text, SK_SEARCH_TEXT, NULL, NULL);
+      }
+    } else if (spec->text && spec->text[0]) {
+      search_index_add_text(NULL, spec->text, SK_SEARCH_TEXT, NULL, NULL);
+    }
+    return spec->y;
+  }
+  bool use_segments = spec->segments && spec->count > 0;
+  int nseg = use_segments ? spec->count : (spec->text ? 1 : 0);
+  if (!nseg)
+    return spec->y;
+  SkWrappedWord *words = NULL;
+  int count = 0, cap = 0;
+  int space_w = sk_get_text_width(" ", fs);
+  int pending_breaks = 0;
+  int lead = 0;
+  for (int si = 0; si < nseg; si++) {
+    const char *text = use_segments ? spec->segments[si].text : spec->text;
+    unsigned long color = use_segments ? spec->segments[si].color : spec->color;
+    if (!text)
+      continue;
+    char word[256];
+    size_t wn = 0;
+    for (const char *p = text; *p; p++) {
+      unsigned char ch = (unsigned char)*p;
+      if (ch == '\n') {
+        if (wn) {
+          wrapped_word_push(&words, &count, &cap, word, wn, color, lead,
+                            pending_breaks, fs);
+          wn = 0;
+          pending_breaks = 0;
+        }
+        pending_breaks++;
+        lead = 0;
+        continue;
+      }
+      if (isspace(ch)) {
+        if (wn) {
+          wrapped_word_push(&words, &count, &cap, word, wn, color, lead,
+                            pending_breaks, fs);
+          wn = 0;
+          pending_breaks = 0;
+          lead = 0;
+        }
+        lead++;
+        continue;
+      }
+      if (wn < sizeof(word) - 1)
+        word[wn++] = (char)ch;
+    }
+    if (wn)
+      wrapped_word_push(&words, &count, &cap, word, wn, color, lead,
+                        pending_breaks, fs);
+  }
+  int line = 0, cx = 0, max_line = 0;
+  for (int i = 0; i < count; i++) {
+    SkWrappedWord *w = &words[i];
+    if (w->breaks) {
+      line += w->breaks;
+      cx = 0;
+    }
+    cx += w->lead * space_w;
+    if (cx > 0 && cx + w->width > max_w) {
+      line++;
+      cx = w->lead * space_w;
+    }
+    w->line = line;
+    w->x = cx;
+    cx += w->width;
+    if (line > max_line)
+      max_line = line;
+  }
+  max_line += pending_breaks;
+  int *line_w = calloc((size_t)max_line + 1, sizeof(*line_w));
+  if (!line_w) {
+    free(words);
+    return spec->y;
+  }
+  for (int i = 0; i < count; i++) {
+    SkWrappedWord *w = &words[i];
+    int end = w->x + w->width;
+    if (line_w[w->line] < end)
+      line_w[w->line] = end;
+  }
+  const char *align = spec->align ? spec->align : "LEFT";
+  for (int i = 0; i < count; i++) {
+    SkWrappedWord *w = &words[i];
+    int offset = 0;
+    if (string_contains_ci(align, "CENTER"))
+      offset = (max_w - line_w[w->line]) / 2;
+    else if (string_contains_ci(align, "RIGHT"))
+      offset = max_w - line_w[w->line];
+    if (offset < 0)
+      offset = 0;
+    ski_draw_text(&(SkTextSpec){.text = w->text,
+                                .x = spec->x + offset + w->x,
+                                .y = spec->y + w->line * line_h,
+                                .color = w->color,
+                                .font = spec->font,
+                                .font_size = fs,
+                                .align = "LEFT",
+                                .no_hscroll = spec->no_hscroll,
+                                .angle = spec->angle});
+  }
+  free(line_w);
+  free(words);
+  return spec->y + (max_line + 1) * line_h;
+}
+
 bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
   if (!spec)
     return false;

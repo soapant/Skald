@@ -515,6 +515,27 @@ bool ski_draw_text_segments(const SkTextSegmentsSpec *spec);
 #define sk_draw_text_segments(...)                                             \
   ski_draw_text_segments(&(SkTextSegmentsSpec){__VA_ARGS__})
 
+typedef struct {
+  const char *text;
+  const SkTextSegment *segments;
+  int count;
+  int x;
+  int y;
+  int max_width;
+  int line_height;
+  unsigned long color;
+  FontHandle font;
+  int font_size;
+  const char *align;
+  int pad;
+  bool no_hscroll;
+  float angle;
+} SkTextWrappedSpec;
+
+int ski_draw_text_wrapped(const SkTextWrappedSpec *spec);
+#define sk_draw_text_wrapped(...)                                              \
+  ski_draw_text_wrapped(&(SkTextWrappedSpec){__VA_ARGS__})
+
 bool ski_draw_image(const SkImageSpec *spec);
 bool ski_place_editbox(const SkEditSpec *spec);
 const char *sk_editbox_text(const char *name);
