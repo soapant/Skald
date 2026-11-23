@@ -731,8 +731,10 @@ static void cc_fill_feature_shortcuts(void) {
       continue;
     }
     CcEntry *e = cc_entry_add(tracked, "Shortcut", tracked, NULL);
-    if (e)
+    if (e) {
       e->on_enter = cc_run_feature_shortcut;
+      e->keep_open = true;
+    }
   }
 }
 
