@@ -91,6 +91,7 @@ static CcEntry *cc_entries;
 static int cc_entry_count;
 static int cc_entry_cap;
 static int cc_entry_base;
+static const CcEntry *cc_fallback_entry;
 
 static atomic_bool cc_entries_dirty = true;
 static atomic_bool cc_stopping;
@@ -194,7 +195,13 @@ static const CcEntry *cc_find(const char *label) {
 }
 
 static const CcEntry *cc_entry_for_row(const ListBox *lb, int row) {
-  if (!lb || row < 0 || row >= lb->total_matches)
+  if (!lb || row < 0 || row >= lb->item_count)
+    return NULL;
+  const char *text = lb->items ? lb->items[row] : NULL;
+  if (cc_fallback_entry && text &&
+      strcmp(text, cc_fallback_entry->label) == 0)
+    return cc_fallback_entry;
+  if (row >= lb->total_matches)
     return NULL;
   int raw = lb->matching_indices[row];
   if (raw < 0 || raw >= cc_entry_count)
@@ -1193,6 +1200,7 @@ static int cc_item_rank(int index) {
 
 static void cc_refresh(PromptState *state) {
   cc_update_compact_size(state);
+  cc_fallback_entry = NULL;
   if (atomic_load(&cc_entries_dirty))
     cc_build();
   else
@@ -1213,6 +1221,7 @@ static void cc_refresh(PromptState *state) {
   if (state->lb->total_matches == 0 && n < MAX_VISIBLE_ITEMS) {
     CcEntry *fallback = cc_add_fallback();
     if (fallback) {
+      cc_fallback_entry = fallback;
       cc_names[n] = fallback->label;
       sk_populate_listbox(.lb = state->lb, .filter = "", .items = &cc_names[n],
                           .count = 1);
