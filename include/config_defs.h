@@ -16,6 +16,7 @@
   X(const char *, UsedFont, "0xProto Nerd Font")                               \
   X(int, FontSize, 20)                                                         \
   X(int, IconSize, 32)                                                         \
+  X(bool, EnableIcons, true)                                                   \
   X(int, WidgetGap, 10)                                                        \
   X(int, PromptW, 900)                                                         \
   X(int, PromptH, 640)                                                         \

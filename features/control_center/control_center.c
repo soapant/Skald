@@ -1246,11 +1246,14 @@ static void cc_draw_row(const SkListItemCtx *ctx, const ListBox *lb, int row,
   const CcEntry *e = cc_entry_for_row(lb, row);
   if (!e)
     e = cc_find(ctx->text);
-  const char *icon = (e && e->icon[0]) ? e->icon : NULL;
-  if (!icon && cc_calc_label[0] && strcmp(ctx->text, cc_calc_label) == 0)
-    icon = CC_CALC_ROW_ICON;
+  const char *icon = NULL;
+  if (EnableIcons) {
+    icon = (e && e->icon[0]) ? e->icon : NULL;
+    if (!icon && cc_calc_label[0] && strcmp(ctx->text, cc_calc_label) == 0)
+      icon = CC_CALC_ROW_ICON;
+  }
 
-  int name_x = ctx->x + CC_ITEM_TEXT_X + FontSize + CC_ICON_GAP;
+  int name_x = ctx->x + CC_ITEM_TEXT_X + (icon ? FontSize + CC_ICON_GAP : 0);
   int name_w = sk_get_text_width(ctx->text, FontSize);
   if (icon)
     sk_draw_image(.path = icon, .x = ctx->x + CC_ITEM_TEXT_X,

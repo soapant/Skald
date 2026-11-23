@@ -1456,7 +1456,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
                          settings_color_lerp(COLOR_BG, RGB(0, 0, 0), 0.42f),
                      .filled = true, .rounded = false);
 
-  if (entry->icon[0])
+  if (entry->icon[0] && EnableIcons)
     settings_draw_image(.path = entry->icon, .x = pane_w / 2 - 64, .y = 10,
                         .w = 128, .h = 128);
   if (entry->desc[0])

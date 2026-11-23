@@ -50,6 +50,7 @@ static const ConfigEntry config_entries[] = {
     {"UsedFont", CONFIG_STRING, &UsedFont},
     {"FontSize", CONFIG_INT, &FontSize},
     {"IconSize", CONFIG_INT, &IconSize},
+    {"EnableIcons", CONFIG_BOOL, &EnableIcons},
     {"WidgetGap", CONFIG_INT, &WidgetGap},
     {"PromptW", CONFIG_INT, &PromptW},
     {"PromptH", CONFIG_INT, &PromptH},

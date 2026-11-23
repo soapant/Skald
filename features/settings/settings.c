@@ -60,13 +60,14 @@ static void settings_list(PromptState *state) {
   while (sk_listbox_next(&ctx)) {
     const SkSettingsEntrySpec *entry = settings_entry_by_name(ctx.text);
     int row_y = ctx.y;
-    int row_h = ctx.h;
 
-    if (entry && entry->icon && entry->icon[0]) {
+    int text_x = ctx.x + 10;
+    if (EnableIcons && entry && entry->icon && entry->icon[0]) {
       sk_draw_image(.path = entry->icon, .x = ctx.x + 10,
                     .y = ctx.y + 6, .w = 18, .h = 18);
+      text_x = ctx.x + 36;
     }
-    sk_draw_text(.text = ctx.text, .x = ctx.x + 36, .y = row_y + 3,
+    sk_draw_text(.text = ctx.text, .x = text_x, .y = row_y + 3,
                  .align = "LEFT", .color = COLOR_TEXT, .font_size = 15);
   }
   sk_listbox_end();
@@ -203,6 +204,7 @@ DEFINE_CFG_FLOAT(WindowOpacity, "Window opacity from 0 to 255.")
 DEFINE_CFG_STRING(UsedFont, "Font family used by the UI.")
 DEFINE_CFG_INT(FontSize, "Base UI font size.")
 DEFINE_CFG_INT(IconSize, "Base icon size.")
+DEFINE_CFG_BOOL(EnableIcons, "Draw icons in lists.")
 DEFINE_CFG_INT(WidgetGap, "Spacing between widgets.")
 DEFINE_CFG_INT(PromptW, "Prompt window width.")
 DEFINE_CFG_INT(PromptH, "Prompt window height.")
@@ -282,6 +284,7 @@ static void cfg_add_all(void) {
   cfg_add_UsedFont(entry);
   cfg_add_FontSize(entry);
   cfg_add_IconSize(entry);
+  cfg_add_EnableIcons(entry);
   cfg_add_WidgetGap(entry);
   cfg_add_PromptW(entry);
   cfg_add_PromptH(entry);
