@@ -29,6 +29,7 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_input_state.h"
 #include "core/window_manager.h"
+#include "core/prompt_keys.h"
 #include "core/theme.h"
 #include "core/thread_registry.h"
 #include "core/http.h"
@@ -1394,6 +1395,10 @@ void sk_refresh_ui(void) {
   UI_RequestPopupRepaint();
 }
 
+void sk_request_refresh(void) {
+  prompt_refresh(prompt_popup_get_top_prompt_state());
+}
+
 void sk_commit_config(void) {
   sk_save_config();
   sk_refresh_ui();
@@ -2205,7 +2210,7 @@ bool sk_button_is_hovered(const char *name) {
 }
 
 bool sk_button_is_clicked(const char *name) {
-  return checkbox_is_clicked(name, PLACE_BUTTON);
+  return checkbox_take_clicked(name, PLACE_BUTTON);
 }
 
 bool ski_place_checkbox(const SkCheckboxSpec *spec) {

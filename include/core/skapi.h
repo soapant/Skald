@@ -282,6 +282,7 @@ bool sk_close_windows_by_id(const char *needle);
 bool sk_reload_config(void);
 void sk_save_config(void);
 void sk_refresh_ui(void);
+void sk_request_refresh(void);
 void sk_commit_config(void);
 bool sk_set_theme(const char *name);
 const char *sk_get_theme(void);

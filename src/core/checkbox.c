@@ -140,6 +140,14 @@ bool checkbox_is_clicked(const char *name, int kind) {
   return cb ? cb->clicked : false;
 }
 
+bool checkbox_take_clicked(const char *name, int kind) {
+  CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  if (!cb || !cb->clicked)
+    return false;
+  cb->clicked = false;
+  return true;
+}
+
 static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                  int body_radius, bool body_round,
                                  int border_radius, unsigned long body,
