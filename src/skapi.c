@@ -1612,7 +1612,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
   int fs = spec->font_size > 0 ? spec->font_size : FontSize;
   int line_h = spec->line_height > 0 ? spec->line_height : fs + 4;
   int max_w = spec->max_width > 40 ? spec->max_width : 40;
-  if (search_index_current()) {
+  if (search_index_current() && !spec->measure_only) {
     if (spec->segments && spec->count > 0) {
       for (int i = 0; i < spec->count; i++) {
         const char *text = spec->segments[i].text;
@@ -1701,25 +1701,27 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
     if (line_w[w->line] < end)
       line_w[w->line] = end;
   }
-  const char *align = spec->align ? spec->align : "LEFT";
-  for (int i = 0; i < count; i++) {
-    SkWrappedWord *w = &words[i];
-    int offset = 0;
-    if (string_contains_ci(align, "CENTER"))
-      offset = (max_w - line_w[w->line]) / 2;
-    else if (string_contains_ci(align, "RIGHT"))
-      offset = max_w - line_w[w->line];
-    if (offset < 0)
-      offset = 0;
-    ski_draw_text(&(SkTextSpec){.text = w->text,
-                                .x = spec->x + offset + w->x,
-                                .y = spec->y + w->line * line_h,
-                                .color = w->color,
-                                .font = spec->font,
-                                .font_size = fs,
-                                .align = "LEFT",
-                                .no_hscroll = spec->no_hscroll,
-                                .angle = spec->angle});
+  if (!spec->measure_only) {
+    const char *align = spec->align ? spec->align : "LEFT";
+    for (int i = 0; i < count; i++) {
+      SkWrappedWord *w = &words[i];
+      int offset = 0;
+      if (string_contains_ci(align, "CENTER"))
+        offset = (max_w - line_w[w->line]) / 2;
+      else if (string_contains_ci(align, "RIGHT"))
+        offset = max_w - line_w[w->line];
+      if (offset < 0)
+        offset = 0;
+      ski_draw_text(&(SkTextSpec){.text = w->text,
+                                  .x = spec->x + offset + w->x,
+                                  .y = spec->y + w->line * line_h,
+                                  .color = w->color,
+                                  .font = spec->font,
+                                  .font_size = fs,
+                                  .align = "LEFT",
+                                  .no_hscroll = spec->no_hscroll,
+                                  .angle = spec->angle});
+    }
   }
   free(line_w);
   free(words);

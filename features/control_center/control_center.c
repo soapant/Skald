@@ -1471,8 +1471,6 @@ static void cc_open_control(void) {
 static int cc_sub_w(void) { return cc_width / 4; }
 static int cc_sub_h(void) { return cc_height / 7; }
 static int cc_sub_x(void) { return cc_width / 2 + cc_sub_w() - 10; }
-// for some reason this needs to be - 50 for linux to look good prio windows for
-// now
 static int cc_sub_y(void) { return cc_height / 2 - 30; }
 
 static const char *cc_action_names[] = {"Register Hotkey", "Register Alias"};
@@ -1528,7 +1526,7 @@ static void cc_hotkey_capture_render(PromptState *state) {
 
   const char *preview = sk_hotkey_capture_preview();
   sk_draw_text(.x = 25, .y = 20, .text = "Hold A Key Sequence", .font_size = 15,
-               .color = SK_GRAY, .align = "LEFT");
+               .color = CC_TYPE_COLOR, .align = "LEFT");
 
   sk_draw_rect(.x = 20, .y = state->height / 2, .h = 40, .w = 180, .radius = 6,
                .color = cc_flashing ? CC_TYPE_COLOR
@@ -1575,13 +1573,13 @@ static void cc_open_register_window(int kind) {
   if (kind == 0) {
     sk_hotkey_capture_begin();
     sk_subwindow(.title = "Hotkey Reg", .x = cc_sub_x(),
-                 .y = cc_sub_y() + cc_sub_h() * 2, .w = cc_sub_w(),
+                 .y = cc_sub_y() + cc_sub_h() * 2 + 30, .w = cc_sub_w(),
                  .h = cc_sub_h(), .render = cc_hotkey_capture_render,
                  .on_close = cc_hotkey_capture_close);
   } else {
     sk_disable_global_hotkeys();
     sk_subwindow(.title = "Alias Reg", .x = cc_sub_x(),
-                 .y = cc_sub_y() + cc_sub_h() * 2, .w = cc_sub_w(),
+                 .y = cc_sub_y() + cc_sub_h() * 2 + 30, .w = cc_sub_w(),
                  .h = cc_sub_h(), .render = cc_alias_render,
                  .enter = cc_alias_enter, .on_close = cc_alias_close);
   }

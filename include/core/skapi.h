@@ -531,6 +531,7 @@ typedef struct {
   int pad;
   bool no_hscroll;
   float angle;
+  bool measure_only;
 } SkTextWrappedSpec;
 
 int ski_draw_text_wrapped(const SkTextWrappedSpec *spec);
