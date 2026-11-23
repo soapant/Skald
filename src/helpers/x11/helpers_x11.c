@@ -2080,9 +2080,12 @@ static Picture border_slot_get_or_create(Display *dpy, int w, int h) {
   unsigned int pr = hr * a / 255, pg = hg * a / 255, pb = hb * a / 255;
   for (int y = 0; y < h; y++) {
     unsigned char *row = buf + (size_t)y * (size_t)w * 4;
-    bool band = (y < t) || (y >= h - t);
     for (int x = 0; x < w; x++) {
-      if (!band && x >= t && x < w - t)
+      bool edge = (x < t) || (x >= w - t) || (y < t) || (y >= h - t);
+      if (!edge)
+        continue;
+      if (r > t && ((x < r) || (x >= w - r)) &&
+          ((y < r) || (y >= h - r)))
         continue;
       uint32_t px = (uint32_t)((a << 24) | (pr << 16) | (pg << 8) | pb);
       memcpy(row + (size_t)x * 4, &px, 4);
