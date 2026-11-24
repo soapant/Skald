@@ -910,6 +910,127 @@ void url_build_search_url(const char *engine, const char *query, char *out,
   snprintf(out, cap, "%s", templ);
 }
 
+static void text_wrap_record(Pos *out, int maxout, int *count, int x,
+                             int y) {
+  int i = (*count)++;
+  if (out && i < maxout) {
+    out[i].x = x;
+    out[i].y = y;
+  }
+}
+
+static int text_wrap_place_word(TextWrapMeasureFn measure, void *ctx,
+                                const char *text, int ws, int we, int wx,
+                                int rowtop, Pos *out, int maxout,
+                                int *count) {
+  int i = ws;
+  while (i < we) {
+    int j = i + utf8_lead_len((unsigned char)text[i]);
+    if (j > we)
+      j = we;
+    int px = wx + measure(ctx, text + ws, i - ws);
+    for (int m = i; m < j; m++)
+      text_wrap_record(out, maxout, count, px, rowtop);
+    i = j;
+  }
+  return measure(ctx, text + ws, we - ws);
+}
+
+int text_wrap_layout(const char *text, int x0, int y0, int max_width,
+                     int line_height, TextWrapMeasureFn measure, void *ctx,
+                     Pos *out, int maxout) {
+  int count = 0;
+  int len = (int)strlen(text);
+  int avail = max_width < 40 ? 40 : max_width;
+  int space_w = measure(ctx, " ", 1);
+  int row = 0;
+  int p = 0;
+  int lw = 0;
+  bool has = false;
+  while (p < len) {
+    if (text[p] == '\n') {
+      text_wrap_record(out, maxout, &count, x0, y0 + (row + 1) * line_height);
+      row++;
+      lw = 0;
+      has = false;
+      p++;
+      continue;
+    }
+    int ws = p;
+    while (ws < len && (text[ws] == ' ' || text[ws] == '\t'))
+      ws++;
+    for (int m = p; m < ws; m++)
+      text_wrap_record(out, maxout, &count, x0 + (has ? lw : 0),
+                       y0 + row * line_height);
+    if (ws >= len)
+      break;
+    if (text[ws] == '\n') {
+      p = ws;
+      continue;
+    }
+    int we = ws;
+    while (we < len && text[we] != ' ' && text[we] != '\t' && text[we] != '\n')
+      we++;
+    int ww = measure(ctx, text + ws, we - ws);
+    int rowtop = y0 + row * line_height;
+    if (ww > avail) {
+      if (has) {
+        row++;
+        rowtop = y0 + row * line_height;
+        lw = 0;
+        has = false;
+      }
+      int c = ws;
+      while (c < we) {
+        int lo = 0, hi = we - c;
+        while (lo < hi) {
+          int mid = (lo + hi + 1) / 2;
+          if (measure(ctx, text + c, mid) <= avail)
+            lo = mid;
+          else
+            hi = mid - 1;
+        }
+        int n = lo;
+        while (n > 0 && (((unsigned char)text[c + n] & 0xC0) == 0x80))
+          n--;
+        if (n <= 0) {
+          n = utf8_lead_len((unsigned char)text[c]);
+          if (n > we - c)
+            n = we - c;
+        }
+        if (c + n >= we) {
+          lw = text_wrap_place_word(measure, ctx, text, c, we, x0, rowtop, out,
+                                    maxout, &count);
+          has = true;
+          c = we;
+          break;
+        }
+        text_wrap_place_word(measure, ctx, text, c, c + n, x0, rowtop, out,
+                             maxout, &count);
+        row++;
+        rowtop = y0 + row * line_height;
+        c += n;
+      }
+      p = we;
+      continue;
+    }
+    int add = ww + (has ? space_w : 0);
+    if (has && lw + add > avail) {
+      row++;
+      rowtop = y0 + row * line_height;
+      lw = 0;
+      has = false;
+    }
+    int wx = x0 + (has ? lw + space_w : 0);
+    int pxw = text_wrap_place_word(measure, ctx, text, ws, we, wx, rowtop, out,
+                                   maxout, &count);
+    lw = has ? lw + space_w + pxw : pxw;
+    has = true;
+    p = we;
+  }
+  return count;
+}
+
 int utf8_lead_len(unsigned char c) {
   if (c < 0x80)
     return 1;

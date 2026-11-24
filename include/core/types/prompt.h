@@ -3,8 +3,14 @@
 
 #define LISTBOX_SEPARATOR_MIN_LIST_H 70
 
+typedef struct {
+  int x;
+  int y;
+} Pos;
+
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifndef MAX_VISIBLE_ITEMS
 #define MAX_VISIBLE_ITEMS 10000
@@ -38,6 +44,16 @@ typedef struct {
 } EditBox;
 
 #define PROMPT_EDITBOX_MAX 32
+#define EDITBOX_WRAP_MAX_CHARS 513
+
+typedef struct {
+  uint64_t key;
+  int len;
+  int line_h;
+  int max_width;
+  int count;
+  Pos positions[EDITBOX_WRAP_MAX_CHARS];
+} EditboxWrapCache;
 
 typedef struct {
   char name[128];
@@ -50,6 +66,8 @@ typedef struct {
   bool was_down;
   bool primary;
   bool no_tab;
+  bool wrapped;
+  EditboxWrapCache wrap_cache;
 } PromptEditbox;
 
 struct ListBox {

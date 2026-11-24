@@ -177,9 +177,10 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
   editbox_resolve_place(&(EditboxPlaceSpec){.buffer = spec->buffer,
                                             .x = spec->x,
                                             .y = spec->y,
-                                            .w = spec->w,
-                                            .h = spec->h,
-                                            .font_size = spec->font_size},
+                                             .w = spec->w,
+                                             .h = spec->h,
+                                             .font_size = spec->font_size,
+                                             .wrapped = spec->wrapped},
                         state, &place);
   int fs = place.font_size;
   const char *buf = place.buf;

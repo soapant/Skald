@@ -2,8 +2,15 @@
 #define HELPERS_TEXT_H
 
 #include "core/types/file.h"
+#include "core/types/prompt.h"
 #include "core/types/window.h"
 #include "core/types/keys.h"
+
+typedef int (*TextWrapMeasureFn)(void *ctx, const char *text, int len);
+
+int text_wrap_layout(const char *text, int x0, int y0, int max_width,
+                     int line_height, TextWrapMeasureFn measure, void *ctx,
+                     Pos *out, int maxout);
 
 typedef struct {
   char **items;

@@ -454,10 +454,11 @@ typedef struct {
   int font_size;
 } SkTextCenteredSpec;
 
-typedef struct {
-  int x;
-  int y;
-} SkCharPos;
+typedef int (*SkWrapMeasureFn)(void *ctx, const char *text, int len);
+
+int ski_text_wrap_layout(const char *text, int x0, int y0, int max_width,
+                         int line_height, SkWrapMeasureFn measure, void *ctx,
+                         SkPos *out, int maxout);
 
 typedef struct {
   int x;
@@ -466,7 +467,7 @@ typedef struct {
   int line_height;
   const char *text;
   int font_size;
-  SkCharPos *out_positions;
+  SkPos *out_positions;
 } SkMeasureSpec;
 
 #define sk_measure_text_wrapped(...)                                           \
@@ -633,6 +634,8 @@ void sk_focus_clear(void);
   ski_draw_text_centered(&(SkTextCenteredSpec){__VA_ARGS__})
 #define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
+#define sk_place_editbox_wrapped(...)                                          \
+  ski_place_editbox(&(SkEditSpec){.wrapped = true, __VA_ARGS__})
 #define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
 #define sk_listbox_begin(...) ski_listbox_begin(&(SkListSpec){__VA_ARGS__})
 

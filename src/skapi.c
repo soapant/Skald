@@ -1818,136 +1818,17 @@ bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
   return true;
 }
 
-typedef int (*SkWrapMeasureFn)(void *ctx, const char *s, int n);
+int ski_text_wrap_layout(const char *text, int x0, int y0, int max_width,
+                         int line_height, SkWrapMeasureFn measure, void *ctx,
+                         SkPos *out, int maxout) {
+  return text_wrap_layout(text, x0, y0, max_width, line_height, measure, ctx,
+                          out, maxout);
+}
 
 typedef struct {
   unsigned long color;
   int font_size;
 } SkWrapCtx;
-
-static void wrap_record(SkCharPos *out, int maxout, int *count, int x, int y) {
-  int i = *count;
-  (*count)++;
-  if (out && i < maxout) {
-    out[i].x = x;
-    out[i].y = y;
-  }
-}
-
-static int wrap_place_word(SkWrapMeasureFn measure, void *ctx, const char *text,
-                           int ws, int we, int wx, int rowtop, SkCharPos *out,
-                           int maxout, int *count) {
-
-  int i = ws;
-  while (i < we) {
-    int j = i + utf8_lead_len((unsigned char)text[i]);
-    if (j > we)
-      j = we;
-    int px = wx + measure(ctx, text + ws, i - ws);
-    for (int m = i; m < j; m++)
-      wrap_record(out, maxout, count, px, rowtop);
-    i = j;
-  }
-  return measure(ctx, text + ws, we - ws);
-}
-
-static int wrap_layout(const char *text, int x0, int y0, int max_width,
-                       int line_height, SkWrapMeasureFn measure, void *ctx,
-                       SkCharPos *out, int maxout) {
-
-  int count = 0;
-  int len = (int)strlen(text);
-  int avail = max_width;
-  if (avail < 40)
-    avail = 40;
-  int space_w = measure(ctx, " ", 1);
-  int row = 0;
-  int p = 0;
-  int lw = 0;
-  bool has = false;
-  while (p < len) {
-    if (text[p] == '\n') {
-      wrap_record(out, maxout, &count, x0, y0 + (row + 1) * line_height);
-      row++;
-      lw = 0;
-      has = false;
-      p++;
-      continue;
-    }
-    int ws = p;
-    while (ws < len && (text[ws] == ' ' || text[ws] == '\t'))
-      ws++;
-    for (int m = p; m < ws; m++)
-      wrap_record(out, maxout, &count, x0 + (has ? lw : 0),
-                  y0 + row * line_height);
-    if (ws >= len)
-      break;
-    if (text[ws] == '\n') {
-      p = ws;
-      continue;
-    }
-    int we = ws;
-    while (we < len && text[we] != ' ' && text[we] != '\t' && text[we] != '\n')
-      we++;
-    int ww = measure(ctx, text + ws, we - ws);
-    int rowtop = y0 + row * line_height;
-    if (ww > avail) {
-      if (has) {
-        row++;
-        rowtop = y0 + row * line_height;
-        lw = 0;
-        has = false;
-      }
-      int c = ws;
-      while (c < we) {
-        int lo = 0, hi = we - c;
-        while (lo < hi) {
-          int mid = (lo + hi + 1) / 2;
-          if (measure(ctx, text + c, mid) <= avail)
-            lo = mid;
-          else
-            hi = mid - 1;
-        }
-        int n = lo;
-        while (n > 0 && (((unsigned char)text[c + n] & 0xC0) == 0x80))
-          n--;
-        if (n <= 0) {
-          n = utf8_lead_len((unsigned char)text[c]);
-          if (n > we - c)
-            n = we - c;
-        }
-        if (c + n >= we) {
-          lw = wrap_place_word(measure, ctx, text, c, we, x0, rowtop, out,
-                               maxout, &count);
-          has = true;
-          c = we;
-          break;
-        }
-        wrap_place_word(measure, ctx, text, c, c + n, x0, rowtop, out, maxout,
-                        &count);
-        row++;
-        rowtop = y0 + row * line_height;
-        c += n;
-      }
-      p = we;
-      continue;
-    }
-    int add = ww + (has ? space_w : 0);
-    if (has && lw + add > avail) {
-      row++;
-      rowtop = y0 + row * line_height;
-      lw = 0;
-      has = false;
-    }
-    int wx = x0 + (has ? lw + space_w : 0);
-    int pxw = wrap_place_word(measure, ctx, text, ws, we, wx, rowtop, out,
-                              maxout, &count);
-    lw = has ? lw + space_w + pxw : pxw;
-    has = true;
-    p = we;
-  }
-  return count;
-}
 
 static int wrap_measure_thunk(void *ctx, const char *s, int n) {
 
@@ -1970,8 +1851,9 @@ int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
   ctx.color = 0;
   ctx.font_size = font_size;
   int cap = (int)strlen(spec->text) + 1;
-  return wrap_layout(spec->text, spec->x, spec->y, spec->max_width, line_height,
-                     wrap_measure_thunk, &ctx, spec->out_positions, cap);
+  return text_wrap_layout(spec->text, spec->x, spec->y, spec->max_width,
+                          line_height, wrap_measure_thunk, &ctx,
+                          spec->out_positions, cap);
 }
 
 bool ski_place_editbox(const SkEditSpec *spec) {
@@ -2015,6 +1897,7 @@ bool ski_place_editbox(const SkEditSpec *spec) {
         state->active_editbox = idx;
       entry->primary = primary;
       entry->no_tab = spec->no_tab;
+      entry->wrapped = spec->wrapped;
       const char *ph = copy.placeholder;
       if (primary && (!ph || !ph[0]) && state->default_eb)
         ph = state->default_eb->placeholder;

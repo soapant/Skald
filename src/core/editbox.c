@@ -30,6 +30,8 @@ int editbox_auto_width(const char *text, int font_size) {
   return w;
 }
 
+static EditboxWrapCache *editbox_prompt_wrap_cache(PromptState *state);
+
 static const Metrics *editbox_state_metrics(PromptState *state) {
   if (state && state->active_editbox >= 0 &&
       state->active_editbox < state->editbox_count)
@@ -73,6 +75,7 @@ void editbox_resolve_place(const EditboxPlaceSpec *spec, PromptState *state,
   out->w = w;
   out->h = h;
   out->font_size = fs;
+  out->wrapped = spec->wrapped;
   out->buf = buf;
   out->text_len = (int)strlen(buf);
   out->cursor = state && state->eb ? (int)state->eb->cursor : out->text_len;
@@ -105,6 +108,7 @@ void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
   init_args.text_w = text_w;
   init_args.ascent = ascent;
   init_args.descent = descent;
+  init_args.wrapped = place->wrapped;
   init_args.font_size = place->font_size;
   init_args.font = font;
   init_args.text_color = ui->color_text;
@@ -118,6 +122,7 @@ void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
   EditboxInit ebi;
   editbox_init_from_spec(&ebi, &init_args);
   editbox_build_spec(out, &ebi);
+  out->wrap_cache = editbox_prompt_wrap_cache(state);
 }
 
 void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args) {
@@ -134,6 +139,7 @@ void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args) {
   out->h = args->h;
   out->cursor_x = args->cursor_x;
   out->text_w = args->text_w;
+  out->wrapped = args->wrapped;
   out->ascent = args->ascent;
   out->descent = args->descent;
   out->text_color =
@@ -158,11 +164,14 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->text = in->text;
   out->text_len = in->text_len;
   out->cursor = in->cursor;
+  out->wrapped = in->wrapped;
   out->sel_mode = EDITBOX_SEL_INCLUSIVE_CARET;
   out->x = in->x;
   out->y = in->y;
   out->w = in->w;
-  if (in->text_w > 0 && in->w < in->text_w + PROMPT_EDIT_SCROLL_PAD + 16) {
+  out->h = in->h;
+  if (!in->wrapped && in->text_w > 0 &&
+      in->w < in->text_w + PROMPT_EDIT_SCROLL_PAD + 16) {
     out->inset = EDITBOX_TIGHT_INSET;
     out->visible_w = in->w - EDITBOX_TIGHT_INSET - 2;
   } else {
@@ -202,6 +211,20 @@ int editbox_caret_y(int box_top, int ascent, int descent, int font_size) {
   return box_top + (line_h - fs) / 2 + (PROMPT_DEADCURSOR_Y / 4);
 }
 
+static bool editbox_prompt_wrapped(const PromptState *state) {
+  if (state && state->active_editbox >= 0 &&
+      state->active_editbox < state->editbox_count)
+    return state->editboxes[state->active_editbox].wrapped;
+  return false;
+}
+
+static EditboxWrapCache *editbox_prompt_wrap_cache(PromptState *state) {
+  if (state && state->active_editbox >= 0 &&
+      state->active_editbox < state->editbox_count)
+    return &state->editboxes[state->active_editbox].wrap_cache;
+  return NULL;
+}
+
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                    int text_len,
                                    const EditboxMetrics *metrics) {
@@ -215,10 +238,12 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   editbox_resolve_selection(state, text_len, true, &sel_start, &sel_end,
                             &has_sel);
   memset(spec, 0, sizeof(*spec));
+  spec->wrap_cache = editbox_prompt_wrap_cache(state);
   spec->metrics = editbox_state_metrics(state);
   spec->text = state->eb->filter;
   spec->text_len = text_len;
   spec->cursor = state->eb->cursor;
+  spec->wrapped = editbox_prompt_wrapped(state);
   spec->password_mode = state->password_mode;
   spec->sel_start = sel_start;
   spec->sel_end = sel_end;
@@ -236,6 +261,7 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   spec->x = 0;
   spec->y = edit_y;
   spec->w = state->width;
+  spec->h = state->height;
   spec->inset = PROMPT_EDIT_INSET;
   spec->visible_w = state->width - PROMPT_EDIT_SCROLL_PAD;
   spec->scroll = state->eb->scroll_offset;
@@ -300,6 +326,158 @@ int editbox_scroll_offset(const EditboxSpec *spec) {
   return scroll;
 }
 
+typedef struct {
+  const EditboxSpec *spec;
+  const char *text;
+} EditboxWrapCtx;
+
+static int editbox_wrap_measure(void *ctx, const char *text, int len) {
+  EditboxWrapCtx *wrap = (EditboxWrapCtx *)ctx;
+  return wrap ? editbox_measure(wrap->spec, text, len) : 0;
+}
+
+static int editbox_wrap_line_height(const EditboxSpec *spec) {
+  int line_h = spec->font_size + 4;
+  return line_h > 4 ? line_h : FontSize + 4;
+}
+
+static uint64_t editbox_wrap_key(const char *text, int len, int line_h,
+                                 int max_width) {
+  uint64_t h = 1469598103934665603ULL;
+  for (int i = 0; i < len; i++) {
+    h ^= (unsigned char)text[i];
+    h *= 1099511628211ULL;
+  }
+  int meta[2] = {line_h, max_width};
+  for (int i = 0; i < 2; i++) {
+    h ^= (uint32_t)meta[i];
+    h *= 1099511628211ULL;
+  }
+  return h;
+}
+
+static const Pos *editbox_wrap_positions(const EditboxSpec *spec,
+                                                 const char *text, int line_h,
+                                                 int *count) {
+  static __thread Pos fallback[EDITBOX_WRAP_MAX_CHARS];
+  const char *src = text ? text : "";
+  int len = (int)strlen(src);
+  int max_width = spec->visible_w;
+  uint64_t key = editbox_wrap_key(src, len, line_h, max_width);
+  EditboxWrapCache *cache = spec->wrap_cache;
+  if (cache && cache->key == key && cache->len == len &&
+      cache->line_h == line_h && cache->max_width == max_width) {
+    if (count)
+      *count = cache->count;
+    return cache->positions;
+  }
+  Pos *out = cache ? cache->positions : fallback;
+  int cap = len + 1 < EDITBOX_WRAP_MAX_CHARS ? len + 1
+                                              : EDITBOX_WRAP_MAX_CHARS;
+  EditboxWrapCtx ctx = {spec, src};
+  int n = text_wrap_layout(src, 0, 0, max_width, line_h, editbox_wrap_measure,
+                           &ctx, out, cap);
+  if (cache) {
+    cache->key = key;
+    cache->len = len;
+    cache->line_h = line_h;
+    cache->max_width = max_width;
+    cache->count = n;
+  }
+  if (count)
+    *count = n;
+  return out;
+}
+
+static void editbox_wrap_caret(const EditboxSpec *spec, const Pos *pos,
+                               int count, int line_h, int x0, int y0,
+                               int *out_x, int *out_y, int *out_line) {
+  int cursor = spec->cursor;
+  if (cursor < 0)
+    cursor = 0;
+  if (cursor > spec->text_len)
+    cursor = spec->text_len;
+  int x = x0;
+  int y = y0;
+  if (count > 0) {
+    if (cursor < count) {
+      x = x0 + pos[cursor].x;
+      y = y0 + pos[cursor].y;
+    } else {
+      x = x0 + pos[count - 1].x;
+      y = y0 + pos[count - 1].y;
+      if (spec->text_len > 0) {
+        int start = spec->text_len - 1;
+        while (start > 0 &&
+               (((unsigned char)spec->text[start] & 0xC0) == 0x80))
+          start--;
+        x += editbox_measure(spec, spec->text + start,
+                             spec->text_len - start);
+      }
+    }
+  }
+  int line = (y - y0) / line_h;
+  if (line < 0)
+    line = 0;
+  if (out_x)
+    *out_x = x;
+  if (out_y)
+    *out_y = y;
+  if (out_line)
+    *out_line = line;
+}
+
+static void editbox_wrap_draw_text(const EditboxSpec *spec, int draw_y,
+                                   const char *text, unsigned long color) {
+  if (!text || !text[0])
+    return;
+  int len = (int)strlen(text);
+  if (len <= 0)
+    return;
+  int line_h = editbox_wrap_line_height(spec);
+  int x0 = spec->x + spec->inset;
+  int y0 = spec->text_y;
+  int count = 0;
+  const Pos *positions =
+      editbox_wrap_positions(spec, text, line_h, &count);
+  if (count <= 0)
+    return;
+  char line[1024];
+  int start = 0;
+  for (int i = 1; i <= count; i++) {
+    if (i < count && positions[i].y == positions[start].y)
+      continue;
+    int end = i;
+    while (end > start && text[end - 1] == '\n')
+      end--;
+    if (end > start) {
+      int n = end - start;
+      if (n >= (int)sizeof(line))
+        n = (int)sizeof(line) - 1;
+      memcpy(line, text + start, (size_t)n);
+      line[n] = '\0';
+      Platform_DrawTextRaw((DrawTextRawSpec){.x = x0 + positions[start].x,
+                                             .y = y0 + positions[start].y -
+                                                  draw_y,
+                                             .text = line,
+                                             .color = color,
+                                             .font = spec->font,
+                                             .align = "",
+                                             .pad = 0,
+                                             .font_size = spec->font_size});
+    }
+    start = i;
+  }
+}
+
+static int editbox_caret_width(const EditboxSpec *spec) {
+  int caret_w = spec->caret_w > 0 ? spec->caret_w : 1;
+  const Metrics *metrics = spec->metrics ? spec->metrics : metrics_get();
+  if (spec->caret_w <= 0 && metrics && metrics->edit_cursor_width > 0)
+    caret_w = metrics->edit_cursor_width;
+  return caret_w;
+}
+
 void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
   if (!spec) {
     return;
@@ -307,6 +485,42 @@ void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
 
   EditboxLayout layout;
   memset(&layout, 0, sizeof(layout));
+
+  if (spec->wrapped) {
+    int line_h = editbox_wrap_line_height(spec);
+    int x0 = spec->x + spec->inset;
+    int y0 = spec->text_y;
+    int count = 0;
+    const Pos *positions =
+        editbox_wrap_positions(spec, spec->text, line_h, &count);
+    int caret_x = 0, caret_y = 0, caret_line = 0;
+    editbox_wrap_caret(spec, positions, count, line_h, x0, y0, &caret_x,
+                       &caret_y, &caret_line);
+    int max_y = 0;
+    for (int i = 0; i < count; i++)
+      if (positions[i].y > max_y)
+        max_y = positions[i].y;
+    int line_count = max_y / line_h + 1;
+    int visible = spec->h > 0 ? spec->h / line_h : 1;
+    if (visible < 1)
+      visible = 1;
+    int scroll_y = 0;
+    if (caret_line >= visible)
+      scroll_y = (caret_line - visible + 1) * line_h;
+    layout.draw_x = x0;
+    layout.cursor_draw_x = caret_x;
+    layout.caret_x = caret_x;
+    layout.caret_w = editbox_caret_width(spec);
+    layout.caret_y = caret_y - scroll_y + 4;
+    layout.caret_text_y = caret_y - scroll_y;
+    layout.scroll_y = scroll_y;
+    layout.line_count = line_count;
+    layout.caret_line = caret_line;
+    spec->scroll = 0;
+    if (out)
+      *out = layout;
+    return;
+  }
 
   int scroll = editbox_scroll_offset(spec);
   spec->scroll = scroll;
@@ -328,10 +542,7 @@ void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
 
   int lo = spec->x + PROMPT_CARET_LO_CLAMP;
   int hi = spec->x + spec->w - PROMPT_CARET_HI_CLAMP;
-  int caret_w = spec->caret_w > 0 ? spec->caret_w : 1;
-  const Metrics *metrics = spec->metrics ? spec->metrics : metrics_get();
-  if (spec->caret_w <= 0 && metrics && metrics->edit_cursor_width > 0)
-    caret_w = metrics->edit_cursor_width;
+  int caret_w = editbox_caret_width(spec);
 
   if (spec->has_selection) {
     int sel_start = spec->sel_start < 0 ? 0 : spec->sel_start;
@@ -388,6 +599,62 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
     return;
   }
   unsigned long bg = spec->bg_color ? spec->bg_color : rgb_to_hex(COLOR_BG);
+
+  if (spec->wrapped) {
+    if ((parts & EDITBOX_PART_TEXT) && !spec->password_mode) {
+      if (spec->text_len > 0) {
+        editbox_wrap_draw_text(spec, layout->scroll_y, spec->text,
+                               spec->text_color);
+      } else if (spec->placeholder && spec->placeholder[0]) {
+        unsigned long ph =
+            color_lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(RGB(0, 0, 0)), 0.45f);
+        editbox_wrap_draw_text(spec, layout->scroll_y, spec->placeholder, ph);
+      }
+    }
+    if ((parts & EDITBOX_PART_CARET) && !spec->password_mode) {
+      Platform_DrawRectRaw((DrawRectRawSpec){.x = layout->caret_x,
+                                             .y = layout->caret_y,
+                                             .w = layout->caret_w,
+                                             .h = spec->caret_h,
+                                             .color = rgb_to_hex(COLOR_CURSOR),
+                                             .radius = 0,
+                                             .rounded = false,
+                                             .opaque = true,
+                                             .thickness = 1,
+                                             .filled = true});
+      if (layout->caret_w > 1) {
+        const char *src = spec->text;
+        int srclen = spec->text_len;
+        bool is_placeholder = false;
+        if ((!src || srclen <= 0) && spec->placeholder && spec->placeholder[0]) {
+          src = spec->placeholder;
+          srclen = (int)strlen(src);
+          is_placeholder = true;
+        }
+        (void)is_placeholder;
+        if (src && spec->cursor >= 0 && spec->cursor < srclen) {
+          int cl = 1;
+          while (spec->cursor + cl < srclen &&
+                 ((unsigned char)src[spec->cursor + cl] & 0xC0) == 0x80)
+            cl++;
+          if (cl > 7)
+            cl = 7;
+          char ch[8];
+          memcpy(ch, src + spec->cursor, (size_t)cl);
+          ch[cl] = '\0';
+          Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->caret_x,
+                                                 .y = layout->caret_text_y,
+                                                 .text = ch,
+                                                 .color = bg,
+                                                 .font = spec->font,
+                                                 .align = "",
+                                                 .pad = 0,
+                                                 .font_size = spec->font_size});
+        }
+      }
+    }
+    return;
+  }
 
   if (parts & EDITBOX_PART_TINT) {
     unsigned long tint = color_lerp(bg, rgb_to_hex(COLOR_CURSOR), 0.72f);

@@ -107,10 +107,6 @@ typedef struct {
 } Circle;
 
 typedef struct {
-  int x, y;
-} Pos;
-
-typedef struct {
   char **windows;
   int count;
 } WindowList;

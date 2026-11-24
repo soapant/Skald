@@ -108,7 +108,6 @@ static void x11_drain_selection_complete(Display *dpy, WindowManager *wm) {
 
 static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
                                  WindowManager *wm) {
-
   int mods = 0;
   if (ev->state & ControlMask)
     mods |= HOTKEY_MOD_CTRL;

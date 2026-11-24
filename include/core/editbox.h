@@ -33,6 +33,7 @@ typedef struct {
   int text_len;
   int cursor;
   bool password_mode;
+  bool wrapped;
 
   int sel_start;
   int sel_end;
@@ -42,6 +43,7 @@ typedef struct {
   int x;
   int y;
   int w;
+  int h;
   int inset;
   int visible_w;
   int scroll;
@@ -68,6 +70,7 @@ typedef struct {
 
   EditboxMeasureFn measure;
   void *measure_user;
+  EditboxWrapCache *wrap_cache;
 } EditboxSpec;
 
 typedef struct {
@@ -79,6 +82,11 @@ typedef struct {
   bool draw_selection;
   int caret_x;
   int caret_w;
+  int caret_y;
+  int caret_text_y;
+  int scroll_y;
+  int line_count;
+  int caret_line;
 } EditboxLayout;
 
 typedef struct {
@@ -104,6 +112,7 @@ typedef struct {
   int caret_x;
   int caret_y;
   int caret_pos;
+  bool wrapped;
 } EditboxInit;
 
 typedef struct {
@@ -117,6 +126,7 @@ typedef struct {
   int h;
   int y_raw;
   int font_size;
+  bool wrapped;
 } EditboxPlace;
 
 typedef struct {
@@ -134,6 +144,7 @@ typedef struct {
   const char *buffer;
   int x, y, w, h;
   int font_size;
+  bool wrapped;
 } EditboxPlaceSpec;
 
 typedef struct {
@@ -167,6 +178,7 @@ typedef struct {
   int caret_x;
   int caret_y;
   int caret_pos;
+  bool wrapped;
 } EditboxInitFromSpec;
 
 void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args);
