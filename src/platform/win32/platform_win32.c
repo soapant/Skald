@@ -1292,13 +1292,17 @@ void Platform_InitUI(void) {
   wcFade.lpszClassName = MESSAGE_CLASS;
   RegisterClassA(&wcFade);
 
-  s_win32_keyboard_hook =
-      SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, NULL, 0);
-  if (!s_win32_keyboard_hook) {
-    log_warn("WH_KEYBOARD_LL hook FAILED to install err=%lu", GetLastError());
+  if (IsDebuggerPresent()) {
+    log_warn("WH_KEYBOARD_LL hook skipped (debugger present); polling keys");
   } else {
-    log_warn("WH_KEYBOARD_LL hook installed handle=%p",
-             (void *)s_win32_keyboard_hook);
+    s_win32_keyboard_hook =
+        SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, NULL, 0);
+    if (!s_win32_keyboard_hook) {
+      log_warn("WH_KEYBOARD_LL hook FAILED to install err=%lu", GetLastError());
+    } else {
+      log_warn("WH_KEYBOARD_LL hook installed handle=%p",
+               (void *)s_win32_keyboard_hook);
+    }
   }
 
   win32_register_raw_mouse(WH_TO_HWND(s_tray_wnd));

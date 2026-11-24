@@ -1,5 +1,79 @@
 #include "helpers/win32/raw_input_core_win32.h"
 
+static int win32_key_mods(void) {
+  int mods = 0;
+  if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+    mods |= HOTKEY_MOD_CTRL;
+  if (GetAsyncKeyState(VK_MENU) & 0x8000)
+    mods |= HOTKEY_MOD_ALT;
+  if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+    mods |= HOTKEY_MOD_SHIFT;
+  if (GetAsyncKeyState(VK_LWIN) & 0x8000 ||
+      GetAsyncKeyState(VK_RWIN) & 0x8000)
+    mods |= HOTKEY_MOD_SUPER;
+  return mods;
+}
+
+static int win32_key_hint(int vk, int mods) {
+  if (vk == 0x20)
+    return ' ';
+  if (vk >= '0' && vk <= '9') {
+    if (mods & HOTKEY_MOD_SHIFT) {
+      static const char sd[] = ")!@#$%^&*(";
+      return sd[vk - '0'];
+    }
+    return vk;
+  }
+  if (vk >= 'A' && vk <= 'Z')
+    return (mods & HOTKEY_MOD_SHIFT) ? vk : vk - 'A' + 'a';
+  if (vk >= 0x60 && vk <= 0x69)
+    return '0' + (vk - 0x60);
+  if (vk == 0x6A)
+    return '*';
+  if (vk == 0x6B)
+    return '+';
+  if (vk == 0x6C)
+    return ',';
+  if (vk == 0x6D)
+    return '-';
+  if (vk == 0x6E)
+    return '.';
+  if (vk == 0x6F)
+    return '/';
+  return 0;
+}
+
+void win32_poll_global_keys(void) {
+  if (!IsDebuggerPresent())
+    return;
+  static bool s_down[256];
+  for (int vk = 0; vk < 256; vk++) {
+    bool down = (GetAsyncKeyState(vk) & 0x8000) != 0;
+    if (down == s_down[vk])
+      continue;
+    s_down[vk] = down;
+    int mods = win32_key_mods();
+    KeyEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.vk = vk;
+    ev.mods = mods;
+    ev.down = down;
+    ev.repeat = false;
+    input_state_update(vk, down, mods, down ? win32_key_hint(vk, mods) : 0);
+    global_key_push(&ev);
+    remap_should_swallow_vk(vk, down ? 1 : 0);
+    if (down) {
+      Platform_DismissIndefiniteMessage();
+      hotkey_process(vk, mods);
+      WindowManager *wm = WindowManager_Get();
+      if (!wm || !WindowManager_GetTopPopup(wm))
+        snippet_feed_vk(vk, 1, true);
+    } else {
+      hotkey_key_up(vk);
+    }
+  }
+}
+
 void win32_register_raw_mouse(HWND hwnd) {
   if (!hwnd || !IsWindow(hwnd)) {
     return;
@@ -146,16 +220,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         KeyEvent _gev;
         _gev.vk = _vk;
         _gev.scancode = (int)_rk->scanCode;
-        _gev.mods = 0;
-        if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
-          _gev.mods |= HOTKEY_MOD_CTRL;
-        if (GetAsyncKeyState(VK_MENU) & 0x8000)
-          _gev.mods |= HOTKEY_MOD_ALT;
-        if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
-          _gev.mods |= HOTKEY_MOD_SHIFT;
-        if (GetAsyncKeyState(VK_LWIN) & 0x8000 ||
-            GetAsyncKeyState(VK_RWIN) & 0x8000)
-          _gev.mods |= HOTKEY_MOD_SUPER;
+        _gev.mods = win32_key_mods();
         _gev.down = _isDown;
         _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
         if (_isDown)
@@ -163,33 +228,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         static unsigned long long s_last_keydown_ms[256] = {0};
         unsigned long long now_ms = GetTickCount64();
         {
-          int _hint = 0;
-          if (_isDown) {
-            if (_vk == 0x20)
-              _hint = ' ';
-            else if (_vk >= '0' && _vk <= '9') {
-              if (_gev.mods & HOTKEY_MOD_SHIFT) {
-                const char *sd = ")!@#$%^&*(";
-                _hint = sd[_vk - '0'];
-              } else
-                _hint = _vk;
-            } else if (_vk >= 'A' && _vk <= 'Z')
-              _hint = (_gev.mods & HOTKEY_MOD_SHIFT) ? _vk : _vk - 'A' + 'a';
-            else if (_vk >= 0x60 && _vk <= 0x69)
-              _hint = '0' + (_vk - 0x60);
-            else if (_vk == 0x6A)
-              _hint = '*';
-            else if (_vk == 0x6B)
-              _hint = '+';
-            else if (_vk == 0x6C)
-              _hint = ',';
-            else if (_vk == 0x6D)
-              _hint = '-';
-            else if (_vk == 0x6E)
-              _hint = '.';
-            else if (_vk == 0x6F)
-              _hint = '/';
-          }
+          int _hint = _isDown ? win32_key_hint(_vk, _gev.mods) : 0;
           if (_isDown) {
             if (!s_key_is_down[_vk & 0xFF] ||
                 (now_ms - s_last_keydown_ms[_vk & 0xFF]) >=

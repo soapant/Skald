@@ -19,6 +19,8 @@
 LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
                                          LPARAM lParam);
 
+void win32_poll_global_keys(void);
+
 void win32_register_raw_mouse(HWND hwnd);
 void win32_handle_raw_mouse_input(LPARAM lParam);
 

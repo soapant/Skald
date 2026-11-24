@@ -9,6 +9,7 @@
 #include "platform/platform.h"
 #include <windows.h>
 #include "core/feature_loader.h"
+#include "helpers/win32/raw_input_core_win32.h"
 
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
@@ -34,6 +35,7 @@ int WindowManager_Run(WindowManager *wm) {
       DispatchMessage(&msg);
     }
     Platform_Widget_DrainClicks();
+    win32_poll_global_keys();
     hotkey_drain_pending();
     if (!got)
       Sleep(10);
@@ -57,6 +59,7 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
   }
   if (!got)
     MsgWaitForMultipleObjects(0, NULL, FALSE, 16, QS_ALLINPUT);
+  win32_poll_global_keys();
   hotkey_drain_pending();
   {
     int mx = 0, my = 0;
