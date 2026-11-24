@@ -7,6 +7,7 @@
 #include <X11/X.h>
 
 unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h);
+bool x11_get_image_size(const char *path, int *out_w, int *out_h);
 
 bool x11_bg_image_enabled(void);
 Pixmap x11_bg_image_tile(Display *dpy, int w, int h);

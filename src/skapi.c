@@ -2078,6 +2078,26 @@ bool ski_draw_image(const SkImageSpec *spec) {
   return Platform_DrawImageAt(path, spec->x, spec->y, w, h);
 }
 
+SkSize ski_get_image_size(const char *path, int *w, int *h) {
+  SkSize size = {0};
+  if (w)
+    *w = 0;
+  if (h)
+    *h = 0;
+  if (!path || !path[0])
+    return size;
+  int pw = 0, ph = 0;
+  if (!Platform_GetImageSize(path, &pw, &ph))
+    return size;
+  size.w = pw;
+  size.h = ph;
+  if (w)
+    *w = pw;
+  if (h)
+    *h = ph;
+  return size;
+}
+
 bool ski_draw_rect(const DrawRect *spec) {
   if (!spec) {
     return false;

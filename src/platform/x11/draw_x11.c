@@ -1,3 +1,4 @@
+#include "helpers/x11/bg_image_x11.h"
 #include "helpers/x11/raw_draw_x11.h"
 #include "helpers/x11/window_factory_x11.h"
 #include "helpers/x11/drawing_x11.h"
@@ -58,6 +59,10 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   draw_measure_track(x, y, w, h);
   return x11_draw_image_scaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y, w,
                                h);
+}
+
+bool Platform_GetImageSize(const char *path, int *w, int *h) {
+  return x11_get_image_size(path, w, h);
 }
 
 bool Platform_DrawTextRaw(DrawTextRawSpec spec) {

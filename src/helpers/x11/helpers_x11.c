@@ -1328,6 +1328,17 @@ static unsigned char *decode_locked(const char *path, int *out_w, int *out_h) {
   return decoded_cache[idx].argb;
 }
 
+bool x11_get_image_size(const char *path, int *out_w, int *out_h) {
+  if (!path || !path[0] || !out_w || !out_h)
+    return false;
+  int w = 0, h = 0, channels = 0;
+  if (!stbi_info(path, &w, &h, &channels) || w <= 0 || h <= 0)
+    return false;
+  *out_w = w;
+  *out_h = h;
+  return true;
+}
+
 unsigned char *x11_decode_image_argb(const char *path, int *out_w, int *out_h) {
   pthread_mutex_lock(&decode_mtx);
   int dst_w = *out_w;

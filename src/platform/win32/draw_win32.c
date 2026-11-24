@@ -566,3 +566,30 @@ void Platform_DrawPromptEditbox(PromptState *state) {
 void Platform_DrawPromptEditCursor(PromptState *state) {
   win32_draw_prompt_editbox(state, EDITBOX_PART_CARET, false);
 }
+
+bool Platform_GetImageSize(const char *path, int *w, int *h) {
+  if (!w || !h)
+    return false;
+  *w = 0;
+  *h = 0;
+  if (!path || !path[0])
+    return false;
+  win32_gdip_ensure();
+  if (!g_gdip_token)
+    return false;
+  wchar_t wpath[MAX_PATH * 2];
+  win32_utf8_to_wide(path, wpath,
+                     (int)(sizeof(wpath) / sizeof(wpath[0])));
+  GpBitmap *bmp = NULL;
+  if (GdipCreateBitmapFromFile(wpath, &bmp) != Ok || !bmp)
+    return false;
+  UINT gw = 0, gh = 0;
+  bool ok = GdipGetImageWidth((GpImage *)bmp, &gw) == Ok &&
+            GdipGetImageHeight((GpImage *)bmp, &gh) == Ok;
+  GdipDisposeImage((GpImage *)bmp);
+  if (!ok)
+    return false;
+  *w = (int)gw;
+  *h = (int)gh;
+  return true;
+}

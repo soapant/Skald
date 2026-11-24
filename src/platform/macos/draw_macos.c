@@ -35,6 +35,15 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   return true;
 }
 
+bool Platform_GetImageSize(const char *path, int *w, int *h) {
+  (void)path;
+  if (w)
+    *w = 0;
+  if (h)
+    *h = 0;
+  return false;
+}
+
 bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   (void)spec;
   return true;
