@@ -1321,21 +1321,34 @@ static void cc_draw_row(const SkListItemCtx *ctx, const ListBox *lb, int row,
 static void cc_open_actions_window(void);
 static void cc_open_register_window(int kind);
 
+static SkRect cc_keycap_box(const char *key, float x, int y, float font_size,
+                            int narrow_radius) {
+  SkRect box = sk_text_bounds(.text = key, .font_size = font_size, .x = x,
+                              .y = y, .align = "LEFT");
+  box.radius = 6;
+  box.y -= 0.5f;
+  if (box.w < 15.0f) {
+    box.w = 15.0f;
+    box.radius = narrow_radius;
+  }
+  return box;
+}
+
 static void cc_on_actions_render(SkPlaceState state) {
   char hotkey[64];
   cc_copy(hotkey, sizeof(hotkey), ActionsHotkey);
-  SkStringList string_list = sk_string_split(hotkey, "+");
-  float spacing = string_list.count > 2 ? 4.0f : 6.0f;
-  float font_size = 20;
+  SkStringList keys = sk_string_split(hotkey, "+");
+  const float spacing = keys.count > 2 ? 4.0f : 6.0f;
+  const float font_size = 20;
+
   float caps_w = 0.0f;
-  for (size_t i = 0; i < string_list.count; i++) {
-    int tw = sk_get_text_width(string_list.items[i], (int)font_size);
-    if (tw < 15)
-      tw = 15;
-    caps_w += tw;
+  for (size_t i = 0; i < keys.count; i++) {
+    int tw = sk_get_text_width(keys.items[i], (int)font_size);
+    caps_w += tw < 15 ? 15 : tw;
   }
-  if (string_list.count > 1)
-    caps_w += (float)(string_list.count - 1) * spacing;
+  if (keys.count > 1)
+    caps_w += (float)(keys.count - 1) * spacing;
+
   float cap_left = state.rect.x + sk_get_text_width("Actions", 16);
   float cap_right = state.rect.x + state.rect.w - caps_w + 12;
   float start_x = state.rect.x + (state.rect.w / 2.0f) + 10.0f;
@@ -1343,22 +1356,13 @@ static void cc_on_actions_render(SkPlaceState state) {
     start_x = cap_left;
   if (start_x > cap_right)
     start_x = cap_right;
-  float cursor_x = start_x;
 
-  for (size_t i = 0; i < string_list.count; i++) {
-    const char *key = string_list.items[i];
-    SkRect bounds = sk_text_bounds(.text = key, .font_size = font_size,
-                                   .x = cursor_x, .y = state.rect.y,
-                                   .align = "LEFT");
-    SkRect box = bounds;
+  float cursor_x = start_x;
+  for (size_t i = 0; i < keys.count; i++) {
+    SkRect box = cc_keycap_box(keys.items[i], cursor_x, state.rect.y,
+                               font_size, 4);
     box.filled = true;
     box.color = CC_TYPE_COLOR;
-    box.radius = 6;
-    box.y -= 0.5f;
-    if (box.w < 15.0f) {
-      box.w = 15.0f;
-      box.radius = 4;
-    }
     ski_draw_rect(&box);
     cursor_x += box.w + spacing;
   }
@@ -1372,34 +1376,23 @@ static void cc_on_actions_render(SkPlaceState state) {
                  .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.2f), .radius = 6);
 
   cursor_x = start_x;
-  for (size_t i = 0; i < string_list.count; i++) {
-    const char *key = string_list.items[i];
-    SkRect bounds = sk_text_bounds(.text = key, .font_size = font_size,
-                                   .x = cursor_x, .y = state.rect.y,
-                                   .align = "LEFT");
-    SkRect box = bounds;
-    box.radius = 6;
-    box.y -= 0.5f;
-    if (box.w < 15.0f) {
-      box.w = 15.0f;
-      box.radius = 2;
-    }
-    float text_y = box.y + (box.h - bounds.h) / 2.0f - 2.0f;
-    sk_draw_text(.x = bounds.x, .y = text_y, .text = key, .align = "LEFT",
-                 .font_size = font_size,
+  for (size_t i = 0; i < keys.count; i++) {
+    SkRect box = cc_keycap_box(keys.items[i], cursor_x, state.rect.y,
+                               font_size, 2);
+    sk_draw_text(.x = box.x, .y = box.y - 2.0f, .text = keys.items[i],
+                 .align = "LEFT", .font_size = font_size,
                  .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.32f));
     cursor_x += box.w + spacing;
   }
 
-  int h = state.rect.h;
   int lh_title = sk_get_text_height(16);
   sk_draw_text(.x = state.rect.x + 16,
-               .y = state.rect.y - 2 + (h - lh_title) / 2, .text = "Actions",
-               .align = "LEFT",
+               .y = state.rect.y - 2 + (state.rect.h - lh_title) / 2,
+               .text = "Actions", .align = "LEFT",
                .color = sk_color_lerp(COLOR_BG, SK_GRAY, 0.52f),
                .font_size = 16);
 
-  sk_string_list_free(&string_list);
+  sk_string_list_free(&keys);
 }
 
 static void cc_render(PromptState *state) {
