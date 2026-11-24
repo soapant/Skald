@@ -120,6 +120,12 @@ TEST(listbox_info_init_sets_hscroll_zero) {
   listbox_info_init(&lb);
   ASSERT_EQ_INT(lb.text_hscroll, 0);
 }
+
+TEST(listbox_scroll_top_keeps_rows_above_selection) {
+  ASSERT_EQ_INT(listbox_scroll_top_for(40, 10, 100), 35);
+  ASSERT_EQ_INT(listbox_scroll_top_for(2, 10, 100), 0);
+  ASSERT_EQ_INT(listbox_scroll_top_for(95, 10, 100), 90);
+}
 int main(void) {
   RUN(populate_normal_mode_selects_first);
   RUN(populate_insert_mode_empty_filter_no_selection);
@@ -132,5 +138,6 @@ int main(void) {
   RUN(ui_navigate_to_same_index_keeps_hscroll);
   RUN(ui_navigate_to_new_index_resets_hscroll);
   RUN(listbox_info_init_sets_hscroll_zero);
+  RUN(listbox_scroll_top_keeps_rows_above_selection);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

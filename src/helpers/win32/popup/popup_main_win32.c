@@ -681,6 +681,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           int visible_count =
               (rect.bottom - prompt_list_bottom_margin() - list_top) /
               row_height;
+          if (visible_count < 1)
+            visible_count = 1;
+          listbox_set_geometry(list_top, row_height, visible_count);
+          UI_LB_SetVisibleCount(visible_count);
           if (visible_count <= 1 && estate->lb->selected_index >= 0 &&
               estate->lb->selected_index < count)
             estate->lb->view_offset = estate->lb->selected_index;

@@ -252,7 +252,9 @@ int listbox_scroll_top_for(int index, int rows_visible, int count) {
 void listbox_scroll_to_selection(ListBox *lb) {
   if (!lb || lb->selected_index < 0 || lb->item_count <= 0)
     return;
-  int visible = UI_LB_GetVisibleCount();
+  int geom_visible = 0;
+  listbox_get_geometry(NULL, NULL, &geom_visible);
+  int visible = geom_visible > 0 ? geom_visible : UI_LB_GetVisibleCount();
   if (visible <= 0)
     visible = 16;
   int old_top = UI_LB_GetViewTop(lb);
