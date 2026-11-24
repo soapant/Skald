@@ -124,6 +124,16 @@ static const char *sdk_dir = BUILD_FOLDER "/sdk";
 static const char *features_dir = BUILD_FOLDER "/features";
 static const char *main_implib = BUILD_FOLDER "/main.lib.a";
 
+static bool wayland_session_active(void) {
+  if (target_win32)
+    return false;
+#if !defined(_WIN32)
+  return want_wayland || getenv("WAYLAND_DISPLAY") != NULL;
+#else
+  return false;
+#endif
+}
+
 static Nob_File_Paths sources = {0};
 static Nob_File_Paths feature_sources = {0};
 static Nob_File_Paths test_sources = {0};
@@ -171,7 +181,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
         if (nob_sv_ends_with_cstr(path, "_macos.c"))
           return true;
 #endif
-        if (!want_wayland && !getenv("WAYLAND_DISPLAY"))
+        if (!wayland_session_active())
           if (nob_sv_ends_with_cstr(path, "_wayland.c"))
             return true;
       }
@@ -247,7 +257,8 @@ static const char *obj_file_path(const char *src, const char *ext) {
   for (char *p = flat; *p; p++)
     if (*p == '/' || *p == '\\')
       *p = '_';
-  return nob_temp_sprintf("%s/%s%s", obj_dir, flat, ext);
+  const char *suffix = wayland_session_active() ? ".wl" : ".x11";
+  return nob_temp_sprintf("%s/%s%s%s", obj_dir, flat, suffix, ext);
 }
 
 static const char *obj_path(const char *src) {
@@ -398,10 +409,8 @@ static void append_dep_ldflags(Nob_Cmd *cmd) { (void)cmd; }
 #endif
 
 static void append_wayland_session_flags(Nob_Cmd *cmd) {
-  if (target_win32)
-    return;
 #if !defined(_WIN32)
-  if (want_wayland || getenv("WAYLAND_DISPLAY"))
+  if (wayland_session_active())
     nob_cmd_append(cmd, "-DSKALD_WAYLAND_SESSION");
 #else
   (void)cmd;
