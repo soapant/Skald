@@ -3775,7 +3775,18 @@ void ski_window(const SkPromptSpec *spec) {
     }
     return;
   }
-  WindowManager_ShowPrompt(WindowManager_Get(), spec);
+  WindowManager *wm = WindowManager_Get();
+  if (AllowWindowOverride && wm && wm->popup_count > 0 && spec &&
+      !spec->subwindow &&
+      (!ctx || !ctx->window.window_override_in_progress)) {
+    if (ctx)
+      ctx->window.window_override_in_progress = true;
+    while (wm->popup_count > 0)
+      WindowManager_PopPopup(wm);
+    if (ctx)
+      ctx->window.window_override_in_progress = false;
+  }
+  WindowManager_ShowPrompt(wm, spec);
 }
 
 const char *sk_get_user_name(void) { return Platform_GetRealUser(); }

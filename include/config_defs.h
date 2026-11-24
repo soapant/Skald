@@ -41,6 +41,7 @@
   X(bool, EnableBorders, true)                                                 \
   X(bool, WindowTitleText, false)                                              \
   X(bool, CloseOnLossOfFocus, false)                                           \
+  X(bool, AllowWindowOverride, false)                                           \
   X(ColorRef, COLOR_BG, RGB(15, 15, 15))                                       \
   X(ColorRef, COLOR_TEXT, RGB(255, 255, 255))                                  \
   X(ColorRef, COLOR_SELECTED_TEXT, RGB(0, 0, 0))                               \

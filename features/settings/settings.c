@@ -227,7 +227,8 @@ DEFINE_CFG_BOOL(MessagesEnabled, "Enable popup messages.")
 DEFINE_CFG_BOOL(EnableAutoPairing, "Automatically pair ' with ' ( with ) etc.")
 DEFINE_CFG_BOOL(EnableBorders, "Draw window borders.")
 DEFINE_CFG_BOOL(WindowTitleText, "Show window title text.")
-DEFINE_CFG_BOOL(CloseOnLossOfFocus, "Close popups when focus is lost.")
+DEFINE_CFG_BOOL(CloseOnLossOfFocus, "Close active window when focus is lost.")
+DEFINE_CFG_BOOL(AllowWindowOverride, "Allows windows to replace one another")
 
 #define CFG_THEME_MAX 64
 
@@ -309,6 +310,7 @@ static void cfg_add_all(void) {
   cfg_add_EnableBorders(entry);
   cfg_add_WindowTitleText(entry);
   cfg_add_CloseOnLossOfFocus(entry);
+  cfg_add_AllowWindowOverride(entry);
 }
 
 SKALD_FEATURE_INIT {
