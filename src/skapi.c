@@ -4296,6 +4296,8 @@ static bool feature_shortcut_run(const char *name) {
   HeadlessDispatch *headless = ctx ? &ctx->window.headless : NULL;
   if (!headless)
     goto done;
+  arrfree(headless->filter);
+  headless->filter = NULL;
   headless->active = true;
   headless->capturing = true;
   headless->spec_valid = false;
@@ -4312,7 +4314,18 @@ static bool feature_shortcut_run(const char *name) {
   PromptState *live = prompt_popup_get_top_prompt_state();
   log_info("feature_shortcut: live prompt %s", live ? "found" : "missing");
   if (!live || !live->eb) {
-    log_error("feature_shortcut: no live prompt editbox");
+    for (const char *p = filter; *p; p++)
+      arrput(headless->filter, *p);
+    arrput(headless->filter, '\0');
+    spec.initial_text = headless->filter;
+    spec.subwindow = false;
+    headless->active = false;
+    headless->capturing = false;
+    headless->spec_valid = false;
+    headless->state = NULL;
+    ctx->window.auto_enter_pending = true;
+    WindowManager_ShowPrompt(WindowManager_Get(), &spec);
+    ctx->window.auto_enter_pending = false;
     goto done;
   }
   PromptCallbacks cb = feature_shortcut_make_callbacks(&spec, &base_callbacks);
@@ -4348,6 +4361,8 @@ static bool feature_shortcut_run(const char *name) {
 done:
   log_info("feature_shortcut: dispatch end close=%d", should_close);
   if (ctx) {
+    arrfree(ctx->window.headless.filter);
+    ctx->window.headless.filter = NULL;
     ctx->window.headless.active = false;
     ctx->window.headless.spec_valid = false;
     ctx->window.headless.state = NULL;

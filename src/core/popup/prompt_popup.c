@@ -4,6 +4,7 @@
 
 #include "core/context.h"
 #include "core/focus.h"
+#include "core/prompt_keys.h"
 #include "core/prompt_geometry.h"
 #include "core/types/prompt.h"
 #include "core/types/keys.h"
@@ -150,6 +151,10 @@ static void prompt_popup_on_show(Popup *self) {
   ctx2->window.band_active = false;
   if (data->spec.refresh)
     data->spec.refresh(data->state);
+  if (ctx2->window.auto_enter_pending) {
+    ctx2->window.auto_enter_pending = false;
+    prompt_trigger_enter(data->state, false, false, false);
+  }
 }
 
 static void prompt_popup_on_hide(Popup *self) {

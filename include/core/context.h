@@ -20,11 +20,13 @@ typedef struct {
   bool spec_valid;
   PromptSpec spec;
   PromptState *state;
+  char *filter;
 } HeadlessDispatch;
 
 typedef struct {
   WindowHandle hPopupWnd;
   bool selection_complete;
+  bool auto_enter_pending;
   bool editbox_placed;
   bool listbox_placed;
   bool band_active;
