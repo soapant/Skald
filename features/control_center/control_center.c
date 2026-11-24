@@ -1327,6 +1327,7 @@ static SkRect cc_keycap_box(const char *key, float x, int y, float font_size,
                               .y = y, .align = "LEFT");
   box.radius = 6;
   box.y -= 0.5f;
+  box.h -= 0.5f;
   if (box.w < 15.0f) {
     box.w = 15.0f;
     box.radius = narrow_radius;

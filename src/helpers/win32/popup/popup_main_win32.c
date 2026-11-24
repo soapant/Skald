@@ -552,20 +552,20 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       RECT textRect = pdis->rcItem;
       textRect.left += PROMPT_ITEM_TEXT_X;
 
-      win32_set_draw_context(pdis->hDC);
       if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
         return TRUE;
-      } else {
-        HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
-        HFONT hOldMainFont =
-            hMainFont ? (HFONT)SelectObject(pdis->hDC, hMainFont) : NULL;
-        SetTextColor(pdis->hDC, rgb_to_hex(COLOR_TEXT));
-        DrawTextA(pdis->hDC, textBuffer, -1, &textRect,
-                  DT_SINGLELINE | DT_VCENTER);
-        SelectObject(pdis->hDC, hOldMainFont);
-        if (hMainFont)
-          DeleteObject(hMainFont);
       }
+      win32_set_draw_context(pdis->hDC);
+      HFONT hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+      HFONT hOldMainFont =
+          hMainFont ? (HFONT)SelectObject(pdis->hDC, hMainFont) : NULL;
+      SetTextColor(pdis->hDC, rgb_to_hex(COLOR_TEXT));
+      DrawTextA(pdis->hDC, textBuffer, -1, &textRect,
+                DT_SINGLELINE | DT_VCENTER);
+      SelectObject(pdis->hDC, hOldMainFont);
+      if (hMainFont)
+        DeleteObject(hMainFont);
+      win32_set_draw_context(NULL);
       return TRUE;
     }
     break;
@@ -766,6 +766,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
              ps.rcPaint.top, SRCCOPY);
       SelectObject(memDC, oldBmp);
     }
+    win32_set_draw_context(NULL);
     EndPaint(hwnd, &ps);
   } break;
   case WM_ERASEBKGND: {

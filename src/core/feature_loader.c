@@ -386,7 +386,6 @@ static void manifest_add_entry(const char *name, const char *section,
   else
     m.dep_count++;
   manifest_write_full(name, &m);
-  log_info("manifest '%s' %s += %s", name, section, entry);
 }
 void feature_loader_manifest_add_provides(const char *owner_path,
                                           const char *key) {

@@ -44,6 +44,7 @@ static void layer_release(PlatformWidget *widget) {
       SelectObject(widget->layer_dc, widget->layer_old);
     if (widget->layer_bmp)
       DeleteObject(widget->layer_bmp);
+    win32_set_draw_context(NULL);
     DeleteDC(widget->layer_dc);
     win32_release_draw_cache();
   }
